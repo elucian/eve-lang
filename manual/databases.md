@@ -48,7 +48,7 @@ To connect to database we must use "connect" command. This command can be implem
 ```
 aspect connect(credential:String):
   db:=Database(credential, signature); -- create a database instance
-aspect;
+over;
 ```
 
 Connection will trigger an error if module.version literal do not match database internal signature. To fix this error programmer must fix the database internal signature or the model signature. This is a feature implemented in the language to force users to sign database models.
@@ -100,7 +100,7 @@ This kind of structure can be used to create a queue.
 
 ### Record usage
 * A record can be used to store an entity that have attributes; 
-* A record can be used as parameter into a function or aspect;
+* A record can be used as parameter into a function or over;
 * A record can contain attributes of type record called sub-records;
 * A function can return a record variable as a result;
 * A array  or a matrix can contain a collection of records;
@@ -162,7 +162,7 @@ aspect main:
   with;
   
   print("#s is single." <+ catalog[1].name)
-aspect;
+over;
 ```
 
 Console:  
@@ -191,10 +191,10 @@ We can use keyword Record to define a variable of type record with unknonw struc
 ```
 given
   person ∈ Record;
-quest
+begin:
   -- differed structure
   person:= (name:"John", age:21);
-quest;
+ready;
 ```
 
 ## Tables

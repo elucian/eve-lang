@@ -60,7 +60,7 @@ class;
 
 aspect <name>(<params>) is
   -- asoect defubutuib
-aspect;
+over;
 
 +-----------------------------------------------
    Last line of a module can be a comment
@@ -92,9 +92,9 @@ The compiler search modules in local library first then in module folder then in
 ## Define Region
 This region is for declaration of global "members". 
 
-* constant  ::=  Identifier := value :  type;
-* variable  ::=  identifier := value ∈  type;
-* reference ::=  identifier := value @  type;
+* constant  ::=  type : Identifier := value;
+* variable  ::=  type : identifier := value;
+* reference ::=  type @ identifier := value;
 
 Global members are visible in current module and modules that imports it. 
 
@@ -103,14 +103,14 @@ Global members are visible in current module and modules that imports it.
 One aspect is a named region that can receive input/output parameters.
 
 ```
-aspect name(parameters) is
+aspect name(parameters):
   -- executable region
   ...
-recover
+recover:
   -- error handler
-finalize
+finalize:
   -- finalization region
-aspect;
+over;
 ```
 
 ## aspect name
@@ -123,8 +123,8 @@ If the module is executable using "run" command, it must contain a "main" aspect
 Parameters are defined in round brackets () separated by comma. Each parameter must have a name and a type. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- param_name := <value> ∈ <type>; -- input parameter
- param_name := <value> @ <type>; -- output parameter
+ param_name ::= type : name := value; -- input parameter
+ param_name ::= type @ name; -- output parameter
 ```
 1. One aspect can receive one or more parameters;
 1. Parameters having initial values are optional;
@@ -142,9 +142,9 @@ One aspect can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-aspect main(*args ∈ [String]) is
+aspect main(Array[String]() * args):
   print(args); 
-aspect;
+over;
 ```
 
 ## Aspect scope
@@ -162,23 +162,23 @@ To execute an aspect mention name of the aspect and the arguments. Arguments are
 ```
 
 ## Aspect termination
-An aspect end at the last statement before the keyword aspect; Program execution will continue with the next statement after the aspect call. Keyword "exit" or "panic" can terminate a aspect early. Exit from main aspect will stop the program. 
+An aspect end at the last statement before the keyword over; Program execution will continue with the next statement after the aspect call. Keyword "exit" or "panic" can terminate a aspect early. Exit from main aspect will stop the program. 
 
 **Example:**
 ```
-aspect test(a ∈ Integer) is
+aspect test(Integer: a):
   print(a);
-aspect;
+over;
 
-aspect main(*args ∈ List of String) is
+aspect main(List[String]: *args):
   -- number of arguments received:
-  var c := args.count();
+  Integer: c := args.count();
   
   -- verify condition and exit
   exit if c ≡ 0;
   
-  test(c); -- aspect call
-aspect;
+  solve test(c); -- aspect call
+over;
 ```
 
 ## Side Effects
@@ -195,22 +195,22 @@ Program heaving a private aspect add_numbers:
 ```
 -- global variables
 global
-  var $result: Integer;
+  Integer $result;
 
 local  
-  var p1, p2 ∈ Integer;
+  Integer p1, p2;
 
 aspect add_numbers() is
   $result := p1 + p2; --side effect
   print($result);
-aspect;
+over;
 
 aspect main() is
   p1 := 10;
   p2 := 20;
   add_numbers;   
   expect $result = 30;  
-aspect;
+over;
 ```
 
 **using output parameters**
@@ -218,18 +218,18 @@ aspect;
 To avoid system and global variables use output parameters:
 
 ```
-aspect add(p1,p2 ∈ integer, out @ Integer) is
+aspect add(integer: p1,p2, Integer @ out):
   out := p1+p2;
-aspect;
+over;
 
-aspect main is
-  result ∈ Integer;
+aspect main:
+  Integer: result;
   -- reference argument require a variable
-  add(1,2, out : result);
+  solve add(1,2, out : result);
   print (result); -- expected value 3
   -- negative test
-  add(1,2,4); -- error, "out" parameter require variable argument
-aspect;
+  solve add(1,2,4); -- error, "out" parameter require variable argument
+over;
 ```
 
 Notes: 
@@ -249,7 +249,7 @@ In multiple dispatch many parameters can be used to identify a aspect. A aspect 
 **aspect Restrictions**
 * A aspect call is a statement, can not be used in expressions;
 * A aspect with result can be used with assign operator ":=" or a modifier.
-* We can not create methods, data types or classes inside a aspect;
+* We can not create methods, data types or classes inside a over;
 * We can not create references to methods:
 
 
@@ -275,10 +275,10 @@ EVE uses _control statements_ to describe a blocks of code that are controlled b
 
  statement | path/blocks | description
 -----------|-------------|---------------------------
- test      | multi-path  | decision splitter
- split     | multi-path  | value based selector 
+ when      | double-path | decision splitter
+ quest     | multi-path  | value based selector 
  while     | repetitive  | conditional repetition
- quest     | nulti-block | quest / error multi case
+ trial     | nulti-block | trial / error multi case
 
 **Read next:** [control.md](control.md)
 
@@ -287,13 +287,13 @@ EVE uses _control statements_ to describe a blocks of code that are controlled b
 A function can have parameters and produce one or more results. 
 
 ```
-function <name>(<method_parameters>) => (<result> ∈ <data_type>, ...) is
-  <statements>
+function name(parameters) => (type :result, ...):
+  -- statements
   ...
-  <result> := <expression>;
-recover
+  result := expression;
+recover:
   -- error handler
-finalize
+finalize:
   -- finalization region 
 function;
 ```
@@ -302,10 +302,7 @@ function;
 The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed. 
 
 **syntax**
-```
-  -- this is not a correct call:
-  <function_name>();  
-  
+``` 
   -- call with no arguments:
   <result> := <function_name>();  
   
@@ -313,7 +310,7 @@ The call for a function is using name of the function and round brackets () for 
   <result> := <function_name>(<value>, <value> ...); 
   
   -- call using parameter names for mapping
-  <result> := <function_name>(<param> := <value>, <param> := <value> ...); 
+  <result> := <function_name>(<param> := <value>, <param> := <value> ...);   
 ```
 
 **Parameters**
@@ -329,15 +326,15 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 -- function declaration
-function sum(a, b ∈ Integer) => (r ∈ Integer) is
+function sum(Integer: a, b) => (Integer: r):
   r := a + b;
 function;
   
 aspect main() is
-  r ∈ Integer;  
+  Integer: r;  
   r := sum(10,20); -- function call
   print(r);        -- this will print 30
-aspect;
+over;
 ```
 
 ## Rules
@@ -351,10 +348,15 @@ Rules are deterministic λ expressions similar to mathematical functions.
 * can be used in control structures;
 * cab be created in functions or methods.
 
-**declaration**
+**pattern**
 ```
-define
-  name(parameters) => (expression) ∈ result_type;
+given
+  rule rule_name(parameters) => type: (expression);
+  type: x;
+begin
+  -- call rule with arguments
+  x := rule_name(arguments);
+ready;  
 ```
 
 **restrictions...**
@@ -401,14 +403,14 @@ A rule can have multiple conditional expressions named nodes.
 ```
 aspect main:
   -- create a lambda expression
-  xp(p1,p2 ∈ Integer) => ( 0 if p1 ≡ 0, 0 if p2 ≡ 0, p1+p2) ∈ Integer;    
+  xp(Integer: p1, p2) => Integer: ( 0 if p1 ≡ 0, 0 if p2 ≡ 0, p1+p2);    
   -- local x
-  x ∈ Integer;
+  Integer: x; 
   -- use lambda expression  
   x := xp(0,1); print(x); -- 0 
   x := xp(1,0); print(x); -- 0
   x := xp(2,2); print(x); -- 4  
-aspect;
+over;
 ```
 
 **anonymous expressions**
@@ -423,59 +425,49 @@ Expressions can be anonymous. These can be used as arguments or in assign statem
 **example**
 ```
 given
-  b := F ∈ Logic;
-  v := 0 ∈ Integer;   
-quest  
+  Logic: b := F;
+  Integer: v := 0;   
+begin
   v := (1 if b , 2);   
   print v; --> 2
-quest;  
+ready;  
 ```
 
 ## Rule as parameter
 
-An aspect or function can receive one or more rules. 
+An aspect or function can receive one or more call-back rules. 
 
 **Example:**
 ```
-aspect test( f() => p ∈ Logic):
-  given
-    v := 0 ∈ Integer;
-  quest  
-    v := f(); -- execute f  
-    print(v) --> 1;
-  quest;  
-aspect;
+aspect test(Integer: f(Logic: x), Logic: p):
+  -- call parameter function
+  print f(p) --> 1;
+over;
 
-aspect main is  
+aspect main:  
   -- define foo as a rule
-  given
-    foo(b ∈ Logic) => (1 if b , 2);
-  solve
-    -- use foo as argument  
-    print test(foo,T);  -- expect 1
-    print test(foo,F);  -- expect 2  
-  solve;  
-aspect;
+  rule foo(Logic: b) => Integer: (1 if b , 2);
+  -- use foo as call-back argument  
+  print test(foo,T);  -- expect 1
+  print test(foo,F);  -- expect 2 
+over;
 ```
 
-## Recursive Function
-A function that call itself is recursive;
+## Recursive Rules
+A rule that call itself is recursive;
 
 **Example:**
 ```
-aspect main(p ∈ Integer):
+aspect main(Integer: p):
   -- define a local recursive function 
-  given
-    factorial(n ∈ Integer) => (1 if n ≡ 0 , n * factorial(n-1));
-  quest
-    -- result variable must be declared before use
-    r ∈ Integer;
+  rule  factorial(Integer: n) => Integer: (1 if n ≡ 0 , n * factorial(n-1));
+  -- result variable must be declared before use
+  Integer: r;
   
-    -- call recursive function
-    r := factorial(p);   
-    print("#n" <+ r);
-  quest;  
-aspect;
+  -- call recursive function
+  r := factorial(p);   
+  print("#n" <+ r);
+over;
 ```
 
 ```

@@ -22,8 +22,8 @@ In Level we use English keywords with no abbreviations.
 | function | start a declaration region for free functions
 | aspect   | start a declaration region for subroutines with no result
 | class    | create a composite data type for object oriented programming
-| split    | multi-path variable selector
-| quest    | single-path non-repetitive block
+| quest    | multi-path variable selector
+| begin    | single-path non-repetitive block
 | while    | conditional repetition block
 | trial    | exception handling block
 | with     | qualifier suppression block for records
@@ -47,7 +47,7 @@ In Level we use English keywords with no abbreviations.
 | alias    | usend in import region to give alias to a module
 | given    | establish local scope for any block statement
 | do       | start a repetitive block: while & for
-| else     | alternative path for case statement 
+| else     | alternative path for when statement 
 | default  | used for switch sections to declare default branch
 | case     | multi-case trial regions
 | error    | trial specific error handler

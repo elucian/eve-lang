@@ -13,13 +13,14 @@ aspect test_array()
   -- scan array and modify element by element
   given
     m := my_array.capacity();
-  for i ∈ [1..m] do
+    i ∈ [1..m]
+  scan i do
     my_array[i] := i; 
-  for;
+  scan;
   -- array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1]);
   print ("This is the last element: {1}"  <+ my_array[?]);
-aspect;
+over;
 ```
 
 **console:**
@@ -43,11 +44,11 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 -- a matrix having 2 rows and 2 columns
 -- initialize all elements with 100
 given
-  m ∈ Matrix(2,2) of Integer;
-quest
+  m ∈ Matrix[Integer](2,2);
+begin:
   m := 100;
   print (m);
-quest;
+ready;
 ```
 
 ```
@@ -59,8 +60,8 @@ quest;
 
 ```
 given
-  m ∈ Matrix(2,2) of Integer;
-quest
+  m ∈ Matrix[Integer](2,2);
+begin:
   m := 100;
   -- modify all elements
   m[*] += 10; 
@@ -75,7 +76,7 @@ quest
   m[*,1] += 1;
   m[*,2] += 2;
   print(m); --> [[1,2],[2,3]]
-quest;
+ready;
 ```
 
 **Memory impedance**
@@ -95,18 +96,22 @@ In this example we traverse all the rows then all the column, this is the most e
 
 ```
 aspect main:
-  m ∈ Matrix(3,3) of String(2); 
-resolve  
-  m := [['a0','b0','c0'],
-        ['a1','b1','c1'],
-        ['a2','b2','c2']];
-
-  for col ∈ [1..3] do   -- traverse columns
-    for row ∈ [1..3] do -- traverse row first
-      print(m[row,col]);
-    for;
-  for;
-aspect;
+  given
+    m ∈ Matrix[String(2)](3,3);
+  solve  
+    m := [['a0','b0','c0'],
+          ['a1','b1','c1'],
+          ['a2','b2','c2']];
+    given
+      col ∈ [1..3] 
+      row ∈ [1..3]
+    scan col do   -- traverse columns
+      scan row do -- traverse row first
+        print(m[row,col]);
+      scan;
+    scan;
+  solve  
+over;
 ```
 
 ##  Arrays Slicing
@@ -128,9 +133,9 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-aspect main:
-  a := [0,1,2,3,4,5,6,7,8,9];
-  b ∈ Array of Integer;
+aspect main 
+  Array a := [0,1,2,3,4,5,6,7,8,9] <: [Integer];
+  Array b ? [Integer];
 
   print(a[1..?]);   --will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1]);   --will print [0]
@@ -138,12 +143,12 @@ aspect main:
  
   -- modify elements in a slice
   b := a[1..4]  
-  for i ∈ [1..4] do
+  for i <: b do
     a[i] += 2; 
   for; 
   -- first 4 elements of (a) are modified
   print(a)  -- will print: [2,3,4,5,4,5,6,7,8,9]
-aspect;
+over;
 ```
 
 ### Set builders
@@ -172,10 +177,10 @@ Collection members can be copy into the new collection using a comprehension not
 given
    source  := [0,1,2,2,2,2];
    new_set ∈ Set;
-quest
+begin:
    -- eliminate duplicates using set comprehension
    mew_set := { x | x ∈ my_list }; --> {0,1,2} 
-quest;
+ready;
 ```
 
 ## Filtering
@@ -186,9 +191,9 @@ Build notation can use expressions to filter out elements during comprehension o
 given
    my_list := [0,1,2,3,4,5];
    my_set  ∈ Set;
-quest
+begin:
    my_set := { x | x ∈ my_list and x%2 ≡ 0 }; --> {0,2,4} 
-quest;
+ready;
 ```
 
 ## Mapping
@@ -199,11 +204,11 @@ The elements in one set or list can be transformed by a function or expression t
 given
    source := {0,1,2,3,4,5};
    target ∈ Hash; 
-quest
+begin:
    -- create Hash pairs (key, value) for Hash map
    --> { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
    target := { (x : x^2) | x ∈ source }; 
-quest;
+ready;
 ```
 
 ## List Concatenation
@@ -219,7 +224,7 @@ define
 aspect main:
   c := a + b;
   print(c); --will print:['a','b','c','1','2','3']
-aspect;
+over;
 ```
 
 ## Join() built-in
@@ -228,10 +233,10 @@ The join function receive a list and convert elements into a string separated be
 ```
 given
   str ∈ String;
-quest
+begin:
   str := join([1,2,3],",");
   print (str); --> "1,2,3"
-quest;  
+ready;  
 ```
 
 ### Split built-in
@@ -240,10 +245,10 @@ The join function receive a list and convert elements into a string separated be
 ```
 given
   lst ∈ List of Integer;
-quest
+begin:
   lst := split("1,2,3",",");
   print (lst); --> (1,2,3);
-quest;  
+ready;  
 ```
 
 ### List operations
@@ -329,7 +334,7 @@ aspect main:
     stop if (element ≡ "d");    
     write(',');
   for;
-aspect;
+over;
 ```
 > c,d
 
@@ -360,7 +365,7 @@ aspect main:
   for (k : v) ∈ my_map do  
     print('("' + k + '",' + v +')');
   for;
-aspect;
+over;
 ```
 Will print:
 ```
@@ -380,14 +385,14 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 given
   my_map := {(1:'a'),(2:'b'),(3:'c')};
   my_key := 3;
-quest
-  case my_key <: my_map then
+begin:
+  when my_key ∈ my_map then
      print('True'); -- expected
-  else
+  else:
      print('False');
      abort;
-  case;
-quest;   
+  ready;
+ready;   
 ```
 
 
@@ -395,12 +400,14 @@ quest;
 ```
 -- create new elements in the hash collection
 aspect main()
-  animals ∈ Hash of (String, String);
-resolve
-  animals['Bear'] := 'dog';
-  animals['Kiwi'] := 'bird';
-  print(animals);
-aspect;
+  given
+    animals ∈ Hash of (String, String);
+  begin
+    animals['Bear'] := 'dog';
+    animals['Kiwi'] := 'bird';
+    print(animals);
+  ready;  
+over;
 ```
 
 Will print:
@@ -421,7 +428,6 @@ define
    animals := {};
    
 aspect main()
-resolve
   --create 1 more element
   animals.append('Rover','dog');
 
@@ -429,7 +435,7 @@ resolve
   animals['Bear'] := 'dog';
   animals['Kiwi'] := 'bird';
   print(animals);
-aspect;
+over;
 ```
 output:
 ```
@@ -450,12 +456,12 @@ Strings can be concatenated using:
 -- this is example of string concatenation
 given
   str ∈ String; 
-quest
+begin:
   -- set string value using different operators
   str := "this " + "string";  --> 'this string'
   str := "this " - " string"; --> 'this string'
   str := "this"_"string";     --> 'this string'
-quest;
+ready;
 ```
 
 **path concatenation**
@@ -464,8 +470,10 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 ```
 given
   s ∈ String;
+begin:  
   s := 'te' . 'st'; --> "te/st" --Linux
   s := 'te' . 'st'; --> "te\st" --Windows
+ready;  
 ```
 
 ## Text concatenation

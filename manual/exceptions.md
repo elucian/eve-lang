@@ -25,9 +25,9 @@ There are two alternative statements to create user defined exceptions.
 
 ```
 -- raise exception
-case <condition> then
+when <condition> then
   raise(<code>,"message");
-case;
+ready;
 
 -- conditional 
 raise(<code>,"message") if <condition>;
@@ -38,11 +38,11 @@ Using keyword _"fail"_ user can quick create an exception that has no message or
 
 ```
 -- quick exception
-case <condition> then 
+when <condition> then 
   fail;
-else
+when:
   pass;
-case;
+ready;
 
 -- conditional exception
 fail if <condition>;
@@ -62,7 +62,7 @@ aspect main:
   a := 1/0;  
 recover
   print($error.message);
-aspect;
+over;
 ```
 
 ```
@@ -74,9 +74,9 @@ Most exceptions are recoverable except the exception created by panic statement.
 
 **Example:**
 ```
-case <condition> then
-   panic;
-case;
+when <condition> then
+  panic;
+ready;
 ```
 
 **Todo:** System exception codes are not yet defined. In the example code 1000 is hypothetical;

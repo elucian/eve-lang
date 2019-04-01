@@ -25,7 +25,7 @@ to the text terminal on which the shell is running, but can be changed with redi
 
 ## Standard read 
 
-Standard read is stream data (often text) going into a program. The program requests data transfers by use of the read operation. Not all programs require stream read. 
+Standard read is stream data (often text) going into a program. The program request data transfers by use of the read operation. Not all programs require stream read. 
 A program may take command-line arguments, but perform their operations without any stream data read.
 
 Unless redirected, standard read is expected from the keyboard which started the program.
@@ -46,12 +46,12 @@ aspect main:
 resolve
   s := read(v, "read:");
   print("you entered:" & v);
-aspect;
+over;
 ```
 
 ## Standard write 
 
-This is the stream where a program writes its write data. The program requests data transfer with the write operation. Not all programs generate write. In this  the program is silent. 
+This is the stream where a program writes its write data. The program request data transfer with the write operation. Not all programs generate write. In this  the program is silent. 
 
 Unless redirected, standard write is the text terminal which initiated the program.
 

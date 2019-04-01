@@ -62,17 +62,17 @@ define
 aspect main() is
   p1, p2 ∈ Point;      -- implicit constructor
   p3 := {1,1} ∈ Point; -- initial value for Point
-  quest
+  begin
   -- modification using constants
     p1.a := 1;
     p1.b := 2;  
     
     -- modification using literal
     p2 := {2, 2};
-  quest; 
+  ready; 
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
   print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b));  
-aspect;
+over;
 ```
 output:
 ```
@@ -144,7 +144,7 @@ aspect main()
   i := 9223372036854775807;
   n := 18446744073709551615;
   r := 0.25;  
-aspect;
+over;
 ```
 
 ### Complex number
@@ -183,12 +183,12 @@ Complex -> Real ->  Natural -> Integer.
 given
   a := 2 ∈ Integer;
   b := 1.5 ∈ Real;
-quest
+begin:
   b := a; -- this implicit cast is possible b ≡ 2.0
   b := a + 3.5; -- add 3.5 then assign result to b ≡ 5.5
   a := b;       -- error: can not assign Real to Integer
   a := 1.5;      -- error: can not assign Real to Integer
-quest;
+ready;
 ```
 
 ## Explicit coercion
@@ -199,7 +199,7 @@ Examples of explicit coercion:
 given
   a := 0 ∈ Integer;
   b := 1.5 ∈ Real;
-quest
+begin:
   -- explicit coercion lose (0.5)
   a := floor(b); 
   print(a); -- will print: 1
@@ -207,7 +207,7 @@ quest
   -- explicit coercion add (0.5)
   a := ceiling(b); 
   print(a); -- will print: 2
-quest;
+ready;
 ```
 
 **Number to a string**
@@ -216,9 +216,9 @@ quest;
 given
   s ∈ String;
   v := 1000 ∈ Integer;
-quest  
+begin:  
   s := format(v); -- explicit coercion s:="1000"
-quest  
+begin:  
 ```
 
 **String to a number**
@@ -231,11 +231,11 @@ given
   b ∈ Real;
   s := "1000" ∈ String;
   r := "200.02" ∈ String;
-quest
+begin:
   v := parse(s); -- make v ≡ 1000
   v := parse(r); -- make v ≡ 200 and decimal .02 is lost
   b := parse(r); -- make b ≡ 200.02 and decimal .02 is preserved
-quest;
+ready;
 ```
 
 **Note:** 
@@ -256,9 +256,9 @@ This is a logical deduction of variable type from literal or constructor using "
 -- Define a list of 10 elements using type inference:
 given
   ls := (0,1,2,3,4,5,6,7,8,9);
-quest
+begin:
   print(ls.type()); --> List
-quest;  
+ready;  
 ```
 
 ## Default types
@@ -312,12 +312,12 @@ given
   v := T;
   r := (name:"test", age:"24"); 
   m := {"key1":"value1","ley2":"value2"}; 
-quest
+begin:
   -- check variable types using introspection
   print("v is of type " + type(v));
   print("r is of type " + type(r));
   print("m is of type " + type(m));
-quest;
+ready;
 ```
 run test  
 ```
@@ -337,15 +337,15 @@ In EVE the type is first class value. For type introspection we can use:
 given
   i  := 1.5 ∈ Real;
   it ∈ Type;
-quest
-  case i ∈ Real then
+begin:
+  when i ∈ Real then
     print("Yes i is Real");
-  else
+  else:
     print("No i is not Real");
-  case;
+  ready;
   it := type(i);
   print("type of i is #t" <+ it)
-quest;
+ready;
 ```
 
 ## Partial Inference
@@ -460,18 +460,18 @@ aspect main() is
     message:='middle of the week';
   split;
   print('Is', message);  
-aspect;
+over;
 ```
 **Note** For private enumerations you can use a record type.
 
 **Range**
 We can use Ordinal to create a range of values:
 ```
-test if today ∈ [Monday..Friday] do
+when if today ∈ [Monday..Friday] do
    print ("Have a nice day!");
-else do
+else:
    print ("Have a happy weekend!");  
-test;
+when;
 ```
 
 **Operators**
@@ -480,10 +480,10 @@ Ordinal is a set of Natural numbers. The Ordinal type is ordered, therefore is s
 ```
 given
   v := Friday ∈ Day;
-quest
+begin:
   v += 1; 
   expect v ≡ Saturday;
-quest;  
+ready;  
 ```
 
 ## Gradual typing
@@ -534,7 +534,7 @@ A variant can change its data type at runtime:
 ```
 given
   v,x,t ∈ Real | Integer;
-quest
+begin:
   -- positive example
   v := 1;   -- v is Integer
   x := 1.5; -- x is Real    
@@ -545,7 +545,7 @@ quest
   
   -- negative examples
   v := x;  -- ERROR: v is Integer
-quest;
+ready;
 ```
 
 ## Reference
@@ -560,7 +560,7 @@ aspect invert(x, y ∈ (Integer | Real)):
   i := x; -- intermediate value
   y := x; -- first  switch
   x := i; -- second switch
-aspect;
+over;
 
 aspect main:
   x,y ∈ Integer;
@@ -575,7 +575,7 @@ aspect main:
   a := 1.5;
   b := 2.5;  
   invert(a,b);  
-aspect;
+over;
 ```
 
 ## Strings 
@@ -607,14 +607,14 @@ In EVE strings are immutable. If we use a modifier ":=" new memory is allocated.
 ```
 aspect test_string:
   str, ref ∈ String; -- initial "" 
-  quest
+  begin
     str := 'First value';  -- new reference
     ref :=  str;           -- borrow reference
     str := 'First value';  -- new reference
-  quest;
+  ready;
   expect  (str ≡ ref); -- equivalent value
   expect !(str = ref); -- different references
-aspect;
+over;
 ```
 
 ## String comparison
@@ -662,11 +662,11 @@ When can create a date literal using 3 reversible functions:
 ```
 given
   date ∈ Date;
-quest
+begin:
   date := "2019/01/30" -> YDM;
   date := "30/01/2019" -> DMY;
   date := "01/30/2019" -> MDY;
-quest;  
+ready;  
 ```
 
 **Date printing**
@@ -713,10 +713,10 @@ given
 ```
 given
   time1, time2, time3 ∈ Time; 
-quest
+begin:
   time1 := "23:63" -> T24;   
   time2 := "23:63:59,99" -> T24;   
   time3 := "11:63:59pm,99ms" -> T12;   
-quest;
+ready;
 ```
 **Read next:** [Composite Types](composite.md)

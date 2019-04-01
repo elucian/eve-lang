@@ -10,7 +10,7 @@ The only thing required is signature.
 | Function  | Description
 |-----------|---------------------------------------------------------------
 |length     | return capacity of the string
-|count      | return number of characters except quest spaces
+|count      | return number of characters except begin spaces
 |truncate   | reduce the capacity of the string to specified dimension
 |fill       | replace all characters in string with other same character
 |clear      | erase all characters in a string and replace them with spaces

@@ -18,12 +18,12 @@ Classes are derived from a single base class that is the root Class. To design m
 class[(<generic_types>)] <class_name>(<parameters>) <: <base_class>
   -- define attributes
   <attributes>
-make
+setup:
   object := <base_class>(); -- object initialization  
   ... 
-scrub
+scrap:
   <object_dispose_region> 
-class;
+over;
 ```
 
 ## Arguments
@@ -34,11 +34,11 @@ A class can have parameters used for object initialization declared in "receive"
 given
   -- declare object
   <object_name> ∈ <class_name>;
-quest
+begin:
   -- create object 
   <object_name> := <class_name>(<param>:value[,<param>:value]...);
   ...
-quest;
+ready;
 ```
 
 ## Instance _object_
@@ -46,7 +46,7 @@ The "object" is the current instance that is created.  It is visible in class co
 
 **Syntax:**
 ```
-create
+setup
   object := <base_class>(<arguments>);
 ```
 
@@ -79,13 +79,13 @@ A class can have a single constructor. A constructor can use decision statements
 
 ```
 ...
-create
-  case <condition> then
+setup
+  when <condition>:
     object := <base_class>(<some_arguments>);
-  else
+  else:
     object := <base_class>(<other_arguments>);
-  case;
-class;
+  ready;
+over;
 ```
 
 ## Object Initialization
@@ -100,16 +100,16 @@ aspect main:
   o,n ∈ Integer;    
   o := 1; 
   n := 1; 
-  case o = n then
+  when o = n then
     print("o and n objects are the same"); --> unexpected
     fail;
-  else
+  else:
     print("n and o are not the same"); -->expected
-  case;
+  ready;
   -- verify
   expect  (o ≡ n); -- equivalent  
   expect !(o = n); -- not the same 
-aspect;
+over;
 ```
 
 ## Generic Class

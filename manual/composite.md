@@ -14,18 +14,14 @@ An array is a collection of elements stored in order of natural index. Array ele
 
 **array declaration** 
 ```
--- declaration of an array with capacity "c" and max index := c. 
-define
-  <array_type> <: Array(c) of <type>; 
-  
--- using the array type declared above
+-- declaration of an array with capacity
 global
-  <array_name> ∈ <array_type>; -- initialized with zero
-  <array_name> := <constant> ∈ <array_type>; -- initialized with constant
+  Array array_name[type](capacity);              -- initialized with zero
+  Array array_name[type](capacity) *= constant;  -- initialized with constant
 ```
 
 **array capacity**
-An array have fix capacity "c" that must be specified when the Array memory is allocated. You can’t add or remove elements from array once the capacity is established. This is because array  elements are stored in a contiguous computer memory space with no gaps.
+An array have fix capacity that must be specified when the Array memory is allocated. You can’t add or remove elements from array once the capacity is established. This is because array  elements are stored in a contiguous computer memory space with no gaps.
 
 **array literals**
 
@@ -38,7 +34,7 @@ In the next example we  am array with capacity of 3 elements.
 ```
 -- array declaration and initialization
 global
-   my_array := [1,2,3] ∈ Array(3) of integer;
+   Array my_array[Integer](3) := [1,2,3];
 ```
 
 **array constructor**
@@ -48,25 +44,25 @@ An array  capacity can be established using a parameter and a constructor. All e
 ```
 -- variable array size depending upon parameter n
 aspect test(n ∈ Integer)
-  my_array := 0 ∈ Array(n); 
-aspect;
+  Array my_array(n) *= 0;
+over;
 ```
 
 **array inference**
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  my_array := 0   ∈ Array(10); --> of integer
-  my_array := 0.0 ∈ Array(10); --> of real 
-  my_array := ""  ∈ Array(10); --> of Text
-  my_array := ''  ∈ Array(10); --> of String
+  Array my_array(10) *= 0   ; --> of integer
+  Array my_array(10) *= 0.0 ; --> of real 
+  Array my_array(10) *= ""  ; --> of Text
+  Array my_array(10) *= ''  ; --> of String
 ```
 
 The most convenient way to an Array using full inference literal:
 ```
 global
-   -- capacity is 4 and element type is string
-   my_array := ['a','bc','def','chk'];
+  -- capacity is 4 and element type is string
+  Array my_array := ['a','bc','def','chk'];
 ```
 
 **Note:** my_array will be a list if the Array keyword is missing.
@@ -77,7 +73,7 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   <matrix_name> := <constant> ∈ Matrix(n,m) of <type>;
+   Matrix matrix_name[type](n,m)  *= constant ;
 ```
 
 **example:**
@@ -85,12 +81,12 @@ global
 --  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
   m := '__' ∈ Matrix(3,3) of String(2); 
-quest
+begin:
   m[1] := ['a0','b0','c0'];
   m[2] := ['a1','b1','c1'];
   m[3] := ['a2','b2','c2'];
   print m;
-quest;
+ready;
 ```
 
 **matrix elements**
@@ -134,20 +130,20 @@ given
 
 Literals can be used for initialization:
 ```
-define
-  c_list := (‘a’, ’b’, ’c’) ∈ List of String(1);
-  n_list := (1, 2, 3) ∈ List of Integer;  
+given
+  List c_list[Char]    := ('a', 'b', 'c');
+  List n_list[Integer] := (1, 2, 3);  
 ```
 
 Literals can be used in expressions:
 ```
 given
   -- define empty list if native types
-  c_list := () ∈ List of integer; 
-quest
-  -- modify the list using update ":=" 
+  List c_list[integer] := (); 
+scope
+  -- update list using  ":=" 
   c_list := (1,2,3); 
-quest;
+scope;
 ```
 
 ## Set
@@ -156,59 +152,60 @@ In mathematics a set is an abstract data structure that can store certain values
 **syntax**
 
 ```
-define
-  <set_type> <: Set of <type>; --  a type
-global  
-  <set_name> ∈ <set_type>; --  a variable
+given
+  Set name[type] := {};
 ```
 
-**Set restrictions**
-
-* All elements of a set must have the same type
-* Set elements can have only comparable types: {number, string}.
-
-**Example:**
-```
-global
-  my_set := {0,1,2,3,4,5,6,7,8,9} ∈ Set of integer;
-```
 **Empty Set**
 
 An empty set is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is empty. This is also called zero value for set.
 
+**Set restrictions**
+
+* All elements of a set must have the same type
+* Set elements can have only comparable types: {ordinal, number, string}.
+
+**Example:**
+```
+given
+  Set my_set[integer] := {0,1,2,3,4,5,6,7,8,9}
+```
+
 **Mutability**
 
-A set can be modified in memory during run-time. For this a set must implement several procedures and functions. A set is based on a generic class that you will learn later. This generic has the required functions already implemented.
+A set can be modified during run-time using operators. 
 
-* append() append a new value to a set
-* remove() remove a specific element from a set
-* clear()  remove all elements from a set, equivalent to <set> := {}
+* append: += 
+* remove: -= 
+* clear : := {} 
 
 ### Union
 
-Adding multiple elements to a set is possible using union operator ‘|’.
+Union operator ∪ combine two sets.
+
 ```
 given
-  first := {0,1,2,3,4,5,6,7,8,9};
-  second ∈ Set of Integer;
-quest
-  second := first | {0,1,2,10}; --set union
-  print(second) ; 
-quest;
+  Set first := {0,1,2,3,4,5,6,7,8,9};
+  Set second[Integer] := {};
+begin:
+  second := first ∪ {0,1,2,10}; --set union
+  print(second) ; -- {0,1,2,3,4,5,6,7,8,9,10}
+ready;
 ```
 
-expected
-```
-{0,1,2,3,4,5,6,7,8,9,10}
-```
 ### Intersection
-Two sets can be intersected, so that common elements are stored into a new set using the set intersection operator ‘&’. The result is also a set and can be an empty set when collections do not have common elements.
+Intersect operator ∩ find common elements:
 
 ```
-print ({1,2,3,4} & {3,4,5}); --> {3,4}
+given 
+  Set test := {};
+begin:  
+  test := {1,2,3,4} ∩ {3,4,5}; 
+  print test; --> {3,4}
+ready;  
 ```
 
-## Hash
+## Hash Map
 
 It is called "H" due to similar aspect of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
 
@@ -217,23 +214,17 @@ It is called "H" due to similar aspect of letter H representing a connection, li
 
 **syntax**
 ```
-define
-  <type_name> <: Hash of (<key_type>, <value_type>);
-```
-
-**Hash literals**
-```
-global
-  <var_name> := {(<key>:<value>), ...};
+given
+  Hash name(key_type:value_type) := {(key:value), ...};
 ```
 
 **Example**
 ```
 given
-   my_dictionary ∈ Hash of (String :Integer);
-quest   
-   my_dictionary := {('one':1), ('two':2)};
-quest   
+   Hash dictionary(String :Integer) := {};
+begin:   
+   dictionary := {('one':1), ('two':2)};
+begin:   
 ```
 
 ## Unicode Strings
@@ -244,8 +235,11 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 
 **Example:**
 ```
-   us := "I can write Greek: \αβγδ\.";
-   print(us);
+given
+   Text us := "I can write Greek: \αβγδ\.";
+begin:   
+   print(us);   
+ready;   
 ```
 > I can write Greek: "αβγδ".
 
@@ -264,13 +258,13 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 -- declaration example of a text literal
 given
-  my_text ∈ Text;
-quest
+  Text my_text := "";
+begin:
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
              and looks like work." 
   print(my_text);
-quest;
+nigeb;
 ```
 
 **Output:**
