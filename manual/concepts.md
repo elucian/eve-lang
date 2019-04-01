@@ -26,13 +26,13 @@ These concepts are common to any computer language in Algol family.
 
 Keywords are English words familiar to programmers used in logical semantic structures easy to grasp. We prefer English since the computer was invented in England so they deserve this honor.
 
-* [keywords](keywords.md) 
+* [Keywords](keywords.md) 
 
 **Operators:**
 
 EVE has ASCII and Unicode operators. Unicode operators require one space before and one after. ASCII operators do not require space separator. Unicode and ASCII operators usually are independent used and not combined.
 
-* [operators](operators.md) 
+* [Operators](operators.md) 
 
 ## Data types
 A type is a data representation also considered as a "set" of data. It can be a supe-set/subset from which a variable can have values. For example Integer, Real, Complex, Rational or String are pre-defined data types. 
@@ -56,19 +56,23 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 **patterns:**
 ```
 global
-  var <name> ∈ <Type>;                -- use default value
-  var <name> := <value> ∈ <Type>;     -- specific value and type
-  var <name1>, <name2> ...:= <value>; -- multiple variables in one assignment
-  
+  -- use default value
+  type: var_name;                
+  -- specific value and type
+  type: var_name := value;
+  -- multiple variables in one assignment
+  type: var_name1, name2 ...:= value; 
+  -- diverse values in one statement
+  type: var_name1:=value1, var_name2 := value2; 
 ```
 
 **examples**
 ```
 global  
-  var a ∈ Integer; 
-  var b := 1 ∈ Integer; 
-  var d := 2.5 ∈ Real;      
-  var x,y,z := 0.0 ∈ Real;  
+  Integer: a ; 
+  Integer: b := 1; 
+  Real: d := 2.5;      
+  Real: x,y,z := 0.0;  
 ```
 
 **default value**
@@ -107,14 +111,14 @@ Alternative notation for "power" function:
 ```
 x² ≡ x^2
 
-A ⁺ ⁻ · ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ 
+A ⁺ ⁻ ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ 
 A ⁱ ʲ ᵏ ⁿ ᵒ ᵖ ʳ ˢ ˣ ʸ ᶻ 
 A ᵃ ᵇ ᶜ ᵈ ᵉ ᶠ ᵍ ʰ ⁱ ʲ ᵏ ᶩ ᵐ ⁿ ᵒ ᵖ ʳ ˢ ᵗ ᵘ ᵛ ʷ ˣ ʸ ᶻ 
 A ᴬ ᴮ ᴰ ᴱ ᴳ ᴴ ᴵ ᴶ ᴷ ᴸ ᴹ ᴺ ᴼ ᴾ ᴿ ᵀ ᵁ ᵂ 
 ```
 **Note:** Limited superscript expressions:
 ```
-x⁻¹·⁵ 
+x ⁻¹ 
 xⁿ⁻¹
 xⁿ⁺¹
 ```

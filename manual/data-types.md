@@ -427,7 +427,7 @@ Ordinal type is usually a finite set that can be enumerated using a literal. In 
 
 ```
 define
-  <name> <: Ordinal {symbol := <value>, ... };
+  type: <name> <: Ordinal(symbol:<value>, ... );
 
 ```
 
@@ -441,24 +441,23 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 **Example:**
 ```
 define
-  Day <: Ordinal {.Sunday:1, .Monday, .Tuesday, .Wednesday, 
-        .Thursday, .Friday, .Saturday};  
+  type:Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
 
-aspect main() is  
+aspect main:
   message ∈ String;
   given:
-    today := today() ∈ Day;  
-  split
-    when today ∈ (Friday, Saturday, Sunday) do
+    Day: today := today();  
+  quest:
+    when today ∈ (Friday, Saturday, Sunday):
       message:='weekend';
       ...
-    when today = Monday do
+    when today = Monday:
       message:='first workday';
-    when today = Friday do
+    when today = Friday:
       message:='last workday';
   other
     message:='middle of the week';
-  split;
+  quest;
   print('Is', message);  
 over;
 ```
@@ -467,7 +466,7 @@ over;
 **Range**
 We can use Ordinal to create a range of values:
 ```
-when if today ∈ [Monday..Friday] do
+when today ∈ [Monday..Friday]:
    print ("Have a nice day!");
 else:
    print ("Have a happy weekend!");  
@@ -475,11 +474,12 @@ when;
 ```
 
 **Operators**
-Ordinal is a set of Natural numbers. The Ordinal type is ordered, therefore is suitable for relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication with ordinal values.
+Ordinal is a ordered set of Natural numbers identified by a name. Ordinal is a discrete numeral type so it has support for  relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
 
 ```
+-- using type Day declared before
 given:
-  v := Friday ∈ Day;
+  Day: v := Friday;
 begin:
   v += 1; 
   expect v ≡ Saturday;
@@ -497,7 +497,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 **Syntax:**
 ```
 define
-  <variant_name> <: Variant  of (<Type> | <Type> | ... );
+  type: <variant_name> <: Variant (<Type> | <Type> | ... );
 
 global  
   v ∈ <variant_type>;
@@ -520,7 +520,7 @@ For this we need Null type.
 **Examples:**
 ```
 define
-  Number <: Variant of (Integer | Real | Null) ;
+  Type: Number <: Variant (Integer | Real | Null) ;
 
 global
   x := Null ∈ Number;
@@ -533,12 +533,12 @@ A variant can change its data type at runtime:
 
 ```
 given:
-  v,x,t ∈ Real | Integer;
+  (Real | Integer) : v, x ,t ;
 begin:
   -- positive example
-  v := 1;   -- v is Integer
-  x := 1.5; -- x is Real    
-  t := 1/2; -- make t Real
+  v := 1;     -- v is Integer
+  x := 1.5;   -- x is Real    
+  t := 1 ÷ 2; -- make t Real
   
   -- safe conversion
   t := 120; -- safe conversion
@@ -553,9 +553,9 @@ ready;
 A variant is a way to create a generic aspect.
 
 ```
-aspect invert(x, y ∈ (Integer | Real)):
-  i  ∈ (Integer | Real); 
-  assert !(type(x) = type(y));  
+aspect invert(Integer | Real: x, y):
+  Integer | Real: i;
+  assert type(x) ≠ type(y);  
   
   i := x; -- intermediate value
   y := x; -- first  switch
@@ -563,8 +563,8 @@ aspect invert(x, y ∈ (Integer | Real)):
 over;
 
 aspect main:
-  x,y ∈ Integer;
-  a,b ∈ Real;
+  Integer: x,y;
+  Real: a,b;
   
   -- invert two Integer numbers
   x := 10;
@@ -595,9 +595,9 @@ String can be initialized with a constant using single quotes or double quotes.
 By default value of string is "", equivalent to empty symbol: ∅; 
 
 ```
-define
-  <string_name> := '"'  ∈ String; -- limited 255 capacity string
-  <string_name> := "''" ∈ Text;   -- unlimited Unicode string
+global
+  String: string_name := '"'  ; -- limited 255 capacity string
+  Text:   text_name   := "''" ;   -- unlimited Unicode text
 ```
 
 ## Mutability
@@ -606,28 +606,32 @@ In EVE strings are immutable. If we use a modifier ":=" new memory is allocated.
 **Example:**
 ```
 aspect test_string:
-  str, ref ∈ String; -- initial "" 
+  String : str; -- initial "" 
+  String @ ref; -- string reference
   begin
-    str := 'First value';  -- new reference
-    ref :=  str;           -- borrow reference
-    str := 'First value';  -- new reference
+    str := 'First value';   -- create new reference
+    ref :=  str;            -- borrow reference
+    str := 'First value';   -- create new reference
   ready;
-  expect  (str ≡ ref); -- equivalent value
-  expect !(str = ref); -- different references
+  expect  (str = ref); -- T  equal value
+  expect  (str ≡ ref); -- F  different references
 over;
 ```
 
+Note: You can create garbage in Bee if you loose reference to strings.
+
 ## String comparison
 
-* Two strings are compared using relation operators: { ≡, <, >, ≥, ≤ }. 
+* Two strings are compared using relation operators: { =, ≠, <, >, ≥, ≤ }. 
 * Two strings that have identical characters are equivalent regardless of quotation. 
 * The length of the string is the number of represented characters: '' is counting 1 
 
 **Example:**
 ```
-'this'  ≡ 'this';   --> ⊤
-'this ' ≡ 'this';   --> ⊥
-' this' ≡ 'this';   --> ⊥
+'this'  = 'this';   --> T (same exact value)
+'this ' = 'this';   --> F (not same value)
+' this' = 'this';   --> F (not same value)
+'this'  ≡ 'this';   --> F (not same location)
 ```
 
 ## Null strings
@@ -635,8 +639,11 @@ over;
 We can test if a string is null using "is Null" expression.
 
 ```
- str ∈ String; 
+given: 
+ String: str; 
+begin 
  print("str is null") if str is Null; 
+ready; 
 ```
 
 ## Calendar
@@ -661,7 +668,7 @@ When can create a date literal using 3 reversible functions:
 
 ```
 given:
-  date ∈ Date;
+  Date: date;
 begin:
   date := "2019/01/30" -> YDM;
   date := "30/01/2019" -> DMY;
@@ -705,14 +712,14 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given:
-  time ∈ Time; --> '00:00' 
+  Time: time; --> '00:00' 
 ```
 
 **Example**
 
 ```
 given:
-  time1, time2, time3 ∈ Time; 
+  Time: time1, time2, time3; 
 begin:
   time1 := "23:63" -> T24;   
   time2 := "23:63:59,99" -> T24;   
