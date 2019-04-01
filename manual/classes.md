@@ -31,7 +31,7 @@ A class can have parameters used for object initialization declared in "receive"
 
 **example**
 ```
-given
+given:
   -- declare object
   <object_name> ∈ <class_name>;
 begin:

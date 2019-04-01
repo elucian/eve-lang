@@ -14,7 +14,7 @@
             <Keywords name="Numbers, suffix2"></Keywords>
             <Keywords name="Numbers, range"></Keywords>
             <Keywords name="Operators1">. , : ; | - + * / ^ &amp; ? ! % \ = &lt; &gt; ~ @</Keywords>
-            <Keywords name="Operators2">of as is if and &#x03BB; &#x03C0; &#x22A4; &#x22A5; &#x2208; &#x2261; &#x2248; &#x2260; &#x2264; &#x2265; &#x2194; &#x00AC; &#x2295; &#x2227; &#x2228; &#x00B7; &#x00B1; &#x00D7; &#x00F7; &#x2282; &#x2205; &#x222A; &#x2229; &#x2191; &#x2193; &#x2190; &#x2192;</Keywords>
+            <Keywords name="Operators2">as is if &#x03BB; &#x03C0; &#x2208; &#x2261; &#x2248; &#x2260; &#x2264; &#x2265; &#x2194; &#x00AC; &#x2295; &#x2227; &#x2228; &#x00B7; &#x00B1; &#x00D7; &#x00F7; &#x2282; &#x2205; &#x222A; &#x2229; &#x2191; &#x2193; &#x2190; &#x2192;</Keywords>
             <Keywords name="Folders in code1, open"></Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
             <Keywords name="Folders in code1, close"></Keywords>
@@ -24,14 +24,14 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">import define module function class aspect method cursor view global local public private read write print from use all of item alias setup clean recover finalize  over scrap</Keywords>
-            <Keywords name="Keywords2">begin when given quest cover trial case error other final go among match default while for do cycle with else error final scan then ready repeat</Keywords>
+            <Keywords name="Keywords1">import define module function class aspect method cursor view global local public private read write print from use all of item alias setup clean recover finalize over scrap</Keywords>
+            <Keywords name="Keywords2">begin when given quest cover trial case error other final go among match default while for do cycle with else error final scan then ready repeat next </Keywords>
             <Keywords name="Keywords3">Record Tuple Vector Matrix List Array Hash Set Table Index Database Function Logic Short Long Integer Natural Real Decimal Rational Number Ordinal Complex String Unicode Text Class Variant Null View Date Time Char</Keywords>
-            <Keywords name="Keywords4">exit abort solve retry skip fail pass raise report assert expect redo resume stop done next loop panic&#x000D;&#x000A; </Keywords>
-            <Keywords name="Keywords5">logic short long integer natural real &#x000D;&#x000A;decimal rational type</Keywords>
+            <Keywords name="Keywords4">exit abort solve retry skip fail pass raise report assert expect redo resume stop panic&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords5">logic short long integer natural real &#x000D;&#x000A;decimal rational type rule</Keywords>
             <Keywords name="Keywords6">key select ascending descending commit rollback create remove drop insert update delete append from where order by group having join collect into limit offset fetch filter values map to using set in offset clear</Keywords>
             <Keywords name="Keywords7">$ #</Keywords>
-            <Keywords name="Keywords8">T F n m</Keywords>
+            <Keywords name="Keywords8">T F a b c d e f g h i j k m n o p r s t u v x y z</Keywords>
             <Keywords name="Delimiters">00( 01 02) 03&quot; 04\ 05&quot; 06[ 07 08] 09&apos; 10\ 11&apos; 12{ 13 14} 15` 16 17` 18|* 19 20*| 21{* 22 23*}</Keywords>
         </KeywordLists>
         <Styles>
@@ -53,7 +53,7 @@
             <WordsStyle name="FOLDER IN COMMENT" fgColor="800000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="DELIMITERS1" fgColor="00FFFF" bgColor="FFFFFF" fontName="" fontStyle="1" nesting="117575711" />
             <WordsStyle name="DELIMITERS2" fgColor="AAAA55" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
-            <WordsStyle name="DELIMITERS3" fgColor="00FFFF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="20488" />
+            <WordsStyle name="DELIMITERS3" fgColor="00FFFF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="151560" />
             <WordsStyle name="DELIMITERS4" fgColor="FFFF00" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="DELIMITERS5" fgColor="00FFFF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="50331649" />
             <WordsStyle name="DELIMITERS6" fgColor="00FFFF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="117702655" />

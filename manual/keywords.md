@@ -19,9 +19,10 @@ In Level we use English keywords with no abbreviations.
 ## Blocks of code
 | Keyword  | Description
 |----------|-------------------------------------------------------------
-| function | start a declaration region for free functions
+| function | start a declaration region for free function
 | aspect   | start a declaration region for subroutines with no result
 | class    | create a composite data type for object oriented programming
+| method   | create a subroutine specific to a class
 | quest    | multi-path variable selector
 | begin    | single-path non-repetitive block
 | while    | conditional repetition block
@@ -34,14 +35,12 @@ In Level we use English keywords with no abbreviations.
 |----------|-------------------------------------------------------
 | is       | check data type: x is Null \| x is Integer
 | as       | execute explicit cast to other data type
-| of       | used to declare a composite type
 | if       | create a conditional augment for simple statements
 | from     | bring members into current name-space
-| use      | enumerate members to be used in current namespace
-| all      | specify "all" members to be used in current namespace
-| redo     | check while condition and repeat the block from the beginning
-| next     | used in scan block to continue with next iteration
-| loop     | restart cycle from the beginning usually controled by if
+| use      | enumerate members to be used in current name-space
+| all      | specify "all" members to be used in current name-space
+| next     | used to mark end of scan block and continue with next value
+| skip     | jump over all other statements to the end of any repetitive block
 | stop     | interrupt the cycle and continue with next statement
 | from     | used to bring members into current name-space
 | alias    | usend in import region to give alias to a module

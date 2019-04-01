@@ -54,12 +54,12 @@ define
   -- constants
   -- variables
   
-class <name> is
+class <name>:
   -- class_definition
 class;  
 
-aspect <name>(<params>) is
-  -- asoect defubutuib
+aspect <name>(<params>):
+  -- aspect definition
 over;
 
 +-----------------------------------------------
@@ -79,9 +79,9 @@ Is used to include one or several modules separated by comma. Import region cont
 **syntax**
 ```
 import 
-  alias <alias> := <$SYSTEM_VARIABLE>.<relative_path>.<module_name>; 
+  alias name := $PATH_VARIABLE.relative_path.module_name; 
   ...
-  from  <module_name> | <alias>  use all | <member_name>[,<member_name>]...;
+  from  alias_name | module_name  use all | use member_name,...;
   ...
 
 ```
@@ -259,9 +259,9 @@ Classes are composite data types. Once class can be used to create objects.
 ```
 class name(parameters) <: base_class is
   -- definition_region
-setup
+setup:
   -- constructor region
-clean
+scrap:
   -- release region
 class;
 ```
@@ -295,7 +295,7 @@ recover:
   -- error handler
 finalize:
   -- finalization region 
-function;
+over;
 ```
 
 **Function call**
@@ -328,7 +328,7 @@ There is a difference between the parameter and the argument. The parameter is a
 -- function declaration
 function sum(Integer: a, b) => (Integer: r):
   r := a + b;
-function;
+over;
   
 aspect main() is
   Integer: r;  
@@ -350,7 +350,7 @@ Rules are deterministic λ expressions similar to mathematical functions.
 
 **pattern**
 ```
-given
+given:
   rule rule_name(parameters) => type: (expression);
   type: x;
 begin
@@ -424,7 +424,7 @@ Expressions can be anonymous. These can be used as arguments or in assign statem
 
 **example**
 ```
-given
+given:
   Logic: b := F;
   Integer: v := 0;   
 begin
@@ -460,7 +460,7 @@ A rule that call itself is recursive;
 ```
 aspect main(Integer: p):
   -- define a local recursive function 
-  rule  factorial(Integer: n) => Integer: (1 if n ≡ 0 , n * factorial(n-1));
+  rule factorial(Integer: n) => Integer: (1 if n ≡ 0 , n * factorial(n-1));
   -- result variable must be declared before use
   Integer: r;
   

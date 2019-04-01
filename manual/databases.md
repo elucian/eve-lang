@@ -148,7 +148,7 @@ aspect main:
   print("#s and #s are lovers." <+ (person1.name, person2.name));
 
   -- create an array with 30 new persons
-  given
+  given:
     i ∈ Integer;
   while i ≤ 10 do
     catalog[i] := Person("John Doe", 20);
@@ -189,7 +189,7 @@ global
 We can use keyword Record to define a variable of type record with unknonw structure;
 
 ```
-given
+given:
   person ∈ Record;
 begin:
   -- differed structure
@@ -267,7 +267,7 @@ We can open a table and traverse the table step by step using do. This operation
 **pattern**
 ```
 table_name.open(READ); 
-given
+given:
   --use introspection to declare current_record
   current_record ∈ table_name.record(); 
 while ⊤ do

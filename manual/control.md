@@ -16,7 +16,7 @@ Given, establish a new declaration region for a block statement.
 
 **syntax**
 ```
-given
+given:
   -- local declarations
 begin:
   -- local scope 
@@ -24,7 +24,7 @@ ready;
 ```
 
 **Notes:** 
-* given is optional region for <block>
+* given:is optional region for <block>
 * block ∈ { when, cycle, while, scan, trial }
 * one blocks is ending with keywords: { ready \| repeat}
 
@@ -67,8 +67,8 @@ The quest is a multi-path value based selector. It is used in conjunction with {
 **syntax:**
 
 ```
-given 
-  val := <expression>;
+given: 
+  type: val := <expression>;
 quest:
   if val = <value1>:
     -- first path
@@ -84,10 +84,10 @@ It is possible to use more then one value using a list, range or collection.
 
 **Example:**
 ```
-aspect test(Integer p:=0): 
-  message ∈ String;
-  given 
-    Integer v := p + 4;
+aspect test(Integer: p:=0): 
+  String: message := "";
+  given: 
+    Integer: v := p + 4;
   quest:
     if v ∈ (1,2,3):
       message := "first match";
@@ -113,7 +113,7 @@ over;
 Create repetitive statement block.
 
 ```
-given
+given:
   -- control variables
 cycle:
   -- modify control variable
@@ -125,12 +125,12 @@ repeat;
 **example**
 
 ```
-given
-  Integer a := 10;
+given:
+  Integer: a := 10;
 cycle:
   a -= 1;
   -- conditional repetition
-  loop if (a % 2 = 0);  
+  skip if (a % 2 = 0);  
   write a;  
   -- conditional termination
   write ','; 
@@ -155,9 +155,9 @@ cycle one:
   -- outer cycle
   cycle two:
     -- inner cycle
-    redo one if condition;
+    skip one if condition;
     ...    
-    redo two if condition;
+    skip two if condition;
     ...
     stop one if condition;    
   repeat;  
@@ -186,11 +186,11 @@ Execute a block of code as long as one condition is true.
 
 **Syntax:**
 ```
-given 
+given: 
   <local_variable>
 while <condition>:
   <statement>
-  loop if <condition>;
+  skip if <condition>;
   ...
   stop if <condition>;
   ...
@@ -201,16 +201,18 @@ repeat;
 ```
 --example of collection iteration
 aspect main() go
-  given 
-    test := ["a","b","c","d","e"];
-    i := 0 ∈ Natural;
+  given: 
+    Array: test := ["a","b","c","d","e"];
+    Integer i := 0;
   while i < test.length:
     element := my_list[i];
+    i += 1;
     -- shortcut 
-    when element ≥ "c":
-       write(element);
-       write(',') if element ≠ "e"; 
-    ready;       
+    when element < "c":
+      skip;
+    when;
+    write(element);
+    write(',') if element ≠ "e"; 
   repeat;
 over;
 ```
@@ -231,14 +233,14 @@ Note:
 
 **Pattern:**
 ``` 
-given
-  min := <constant>;
-  max := <constant>;  
-  var ∈ Z[min..max];
-scan var:
+given:
+  Integer: min := <constant>;
+  Integer: max := <constant>;  
+  Integer: var ;
+scan var ∈ Z[min..max]:
   -- block statements;
   ...
-repeat;
+next var;
 ```
 
 **Notes:**    
@@ -248,18 +250,18 @@ repeat;
 
 Example of forward iteration:
 ```
-given
-  i := 0 ∈ Z[0..10] 
-scan i:
+given:
+  Integer: i := 0; 
+scan i ∈ Z[0..10]:
   -- force next iteration
   when (i % 2 ≡ 0):
-    next;
-  else
+    skip;
+  else:
     -- write only odd numbers
     write(i);  
     write(',') if i < 10;  
   ready;
-repeat;
+next i;
 ```
 > 1,3,5,7,9
 
@@ -285,7 +287,7 @@ The "trial" statement execute a process that can fail for some reason.
 | resume| resume trial with next case
 
 ```
-given
+given:
   -- declaration
 trial:
   -- initialization
@@ -301,9 +303,9 @@ error <code1>:
 error <code2>:
   <patch_statement>  
 ...  
-other
+other:
   <other_errors>  
-final
+final:
   <finalization>
 ready;
 ```

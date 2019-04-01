@@ -180,7 +180,7 @@ Explicit conversion is possible but _unsafe_ in this direction:
 Complex -> Real ->  Natural -> Integer. 
 
 ```
-given
+given:
   a := 2 ∈ Integer;
   b := 1.5 ∈ Real;
 begin:
@@ -196,7 +196,7 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 
 Examples of explicit coercion:   
 ```
-given
+given:
   a := 0 ∈ Integer;
   b := 1.5 ∈ Real;
 begin:
@@ -213,7 +213,7 @@ ready;
 **Number to a string**
 
 ```
-given
+given:
   s ∈ String;
   v := 1000 ∈ Integer;
 begin:  
@@ -226,7 +226,7 @@ begin:
 This can be done using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
 ```
-given
+given:
   v ∈ Integer;
   b ∈ Real;
   s := "1000" ∈ String;
@@ -254,7 +254,7 @@ This is a logical deduction of variable type from literal or constructor using "
 
 ```
 -- Define a list of 10 elements using type inference:
-given
+given:
   ls := (0,1,2,3,4,5,6,7,8,9);
 begin:
   print(ls.type()); --> List
@@ -308,7 +308,7 @@ Type inference is welcome when type is difficult to create.
 Examples of type inference:
 
 ```
-given
+given:
   v := T;
   r := (name:"test", age:"24"); 
   m := {"key1":"value1","ley2":"value2"}; 
@@ -334,7 +334,7 @@ In EVE the type is first class value. For type introspection we can use:
 2. operator "is"
 
 ```
-given
+given:
   i  := 1.5 ∈ Real;
   it ∈ Type;
 begin:
@@ -446,7 +446,7 @@ define
 
 aspect main() is  
   message ∈ String;
-  given
+  given:
     today := today() ∈ Day;  
   split
     when today ∈ (Friday, Saturday, Sunday) do
@@ -478,7 +478,7 @@ when;
 Ordinal is a set of Natural numbers. The Ordinal type is ordered, therefore is suitable for relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication with ordinal values.
 
 ```
-given
+given:
   v := Friday ∈ Day;
 begin:
   v += 1; 
@@ -488,7 +488,7 @@ ready;
 
 ## Gradual typing
 
-Gradual typing is a type system in which some variables may be given types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "Variant".
+Gradual typing is a type system in which some variables may be given:types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "Variant".
 
 **Variant Types**
 
@@ -532,7 +532,7 @@ global
 A variant can change its data type at runtime:
 
 ```
-given
+given:
   v,x,t ∈ Real | Integer;
 begin:
   -- positive example
@@ -660,7 +660,7 @@ When can create a date literal using 3 reversible functions:
 **Note:** A reversible function is overloaded.
 
 ```
-given
+given:
   date ∈ Date;
 begin:
   date := "2019/01/30" -> YDM;
@@ -704,14 +704,14 @@ xx: can be: (am/pm)
 
 **default zero time**
 ```
-given
+given:
   time ∈ Time; --> '00:00' 
 ```
 
 **Example**
 
 ```
-given
+given:
   time1, time2, time3 ∈ Time; 
 begin:
   time1 := "23:63" -> T24;   

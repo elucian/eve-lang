@@ -2,7 +2,7 @@
 
 --example of collection iteration
 aspect main() go
-  given 
+  given:
     test := ["a","b","c","d","e"];
     i := 0 ∈ Natural;
   while i < test.length:

@@ -79,7 +79,7 @@ global
 **example:**
 ```
 --  a matrix m that has 2 dimensions with 3 rows and 3 columns.
-given
+given:
   m := '__' ∈ Matrix(3,3) of String(2); 
 begin:
   m[1] := ['a0','b0','c0'];
@@ -114,7 +114,7 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **examples**
 ```
-given
+given:
   n_list ∈ List of Integer;
   o_list ∈ List of Class;
   s_list ∈ List of String;
@@ -130,14 +130,14 @@ given
 
 Literals can be used for initialization:
 ```
-given
+given:
   List c_list[Char]    := ('a', 'b', 'c');
   List n_list[Integer] := (1, 2, 3);  
 ```
 
 Literals can be used in expressions:
 ```
-given
+given:
   -- define empty list if native types
   List c_list[integer] := (); 
 scope
@@ -152,7 +152,7 @@ In mathematics a set is an abstract data structure that can store certain values
 **syntax**
 
 ```
-given
+given:
   Set name[type] := {};
 ```
 
@@ -167,7 +167,7 @@ An empty set is represented like this: {} and can be assigned to a set if you wi
 
 **Example:**
 ```
-given
+given:
   Set my_set[integer] := {0,1,2,3,4,5,6,7,8,9}
 ```
 
@@ -184,7 +184,7 @@ A set can be modified during run-time using operators.
 Union operator ∪ combine two sets.
 
 ```
-given
+given:
   Set first := {0,1,2,3,4,5,6,7,8,9};
   Set second[Integer] := {};
 begin:
@@ -197,7 +197,7 @@ ready;
 Intersect operator ∩ find common elements:
 
 ```
-given 
+given:
   Set test := {};
 begin:  
   test := {1,2,3,4} ∩ {3,4,5}; 
@@ -214,13 +214,13 @@ It is called "H" due to similar aspect of letter H representing a connection, li
 
 **syntax**
 ```
-given
+given:
   Hash name(key_type:value_type) := {(key:value), ...};
 ```
 
 **Example**
 ```
-given
+given:
    Hash dictionary(String :Integer) := {};
 begin:   
    dictionary := {('one':1), ('two':2)};
@@ -235,7 +235,7 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 
 **Example:**
 ```
-given
+given:
    Text us := "I can write Greek: \αβγδ\.";
 begin:   
    print(us);   
@@ -257,7 +257,7 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 
 ```
 -- declaration example of a text literal
-given
+given:
   Text my_text := "";
 begin:
   my_text:= "Opportunity is missed by most people 

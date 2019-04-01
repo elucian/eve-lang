@@ -9,14 +9,14 @@ Array elements have very fast direct access by index.
 ```
 aspect test_array()
   --array  with capacity of 10 elements
-  my_array ∈ Array(10) of Integer; 
+  Array[Integer](10): my_array; 
   -- scan array and modify element by element
-  given
-    m := my_array.capacity();
-    i ∈ [1..m]
-  scan i do
+  given:
+    Integer: m := my_array.capacity();
+    Integer: i;
+  scan i  ∈ [1..m]:
     my_array[i] := i; 
-  scan;
+  next i;
   -- array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1]);
   print ("This is the last element: {1}"  <+ my_array[?]);
@@ -43,11 +43,11 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ```
 -- a matrix having 2 rows and 2 columns
 -- initialize all elements with 100
-given
-  m ∈ Matrix[Integer](2,2);
+given:
+  Matrix[Integer](2,2); M;
 begin:
-  m := 100;
-  print (m);
+  M := 100;
+  print (M);
 ready;
 ```
 
@@ -59,23 +59,23 @@ ready;
 * A matrix can support scalar operations like Array
 
 ```
-given
-  m ∈ Matrix[Integer](2,2);
+given:
+  Matrix[Integer](2,2):M;
 begin:
-  m := 100;
+  M := 100;
   -- modify all elements
-  m[*] += 10; 
-  print(m); --> [[110,110],[110,110]]
+  M[*] += 10; 
+  print(M); --> [[110,110],[110,110]]
 
   -- modify an entire row 
-  m[1,*] := 0;
-  m[1,*] := 1;
-  print(m); --> [[0,0],[1,1]]
+  M[1,*] := 0;
+  M[1,*] := 1;
+  print(M); --> [[0,0],[1,1]]
   
   -- modify an entire column
-  m[*,1] += 1;
-  m[*,2] += 2;
-  print(m); --> [[1,2],[2,3]]
+  M[*,1] += 1;
+  M[*,2] += 2;
+  print(M); --> [[1,2],[2,3]]
 ready;
 ```
 
@@ -96,21 +96,18 @@ In this example we traverse all the rows then all the column, this is the most e
 
 ```
 aspect main:
-  given
-    m ∈ Matrix[String(2)](3,3);
-  solve  
-    m := [['a0','b0','c0'],
-          ['a1','b1','c1'],
-          ['a2','b2','c2']];
-    given
-      col ∈ [1..3] 
-      row ∈ [1..3]
-    scan col do   -- traverse columns
-      scan row do -- traverse row first
-        print(m[row,col]);
-      scan;
-    scan;
-  solve  
+  Matrix[String(2)](3,3): M;  
+  M :=  ⎡'a0','b0','c0'⎤
+        ⎢'a1','b1','c1'⎥
+        ⎣'a2','b2','c2'⎦                        
+  given:
+    Integer: col;
+    Integer: row;
+  scan col ∈ [1..3]:     -- traverse columns
+    scan row ∈ [1..3]:   -- traverse row first
+      print(M[row,col]);
+    next row;
+  next col;
 over;
 ```
 
@@ -155,7 +152,7 @@ over;
 
 You can define elements of a subset from a set using the following construction:
 ```
-<sub_set> := { <var> | <var> ∈ <set_name> and <filter_expression>}
+<sub_set> := { <var> : <var> ∈ <set_name>, <filter_expression>}
 ```
 
 Symbol "|" is the filter operator and is derived from mathematics. 
@@ -164,7 +161,7 @@ We can use \<var> to create the \<filter_expression>.
 Example of a new set defined from a range:
 
 ```
-  new_set := { x | x <: [-10..10] };
+  new_set := { x | x ∈ [-10..10] };
 ```
 
 ## Collection Casting
@@ -174,12 +171,13 @@ Collection members can be copy into the new collection using a comprehension not
 
 **Example:**
 ```
-given
-   source  := [0,1,2,2,2,2];
-   new_set ∈ Set;
+given:
+   List: source  := [0,1,2,2,2,2];
+   Set : new_set := {};
 begin:
    -- eliminate duplicates using set comprehension
-   mew_set := { x | x ∈ my_list }; --> {0,1,2} 
+   mew_set := { x | x ∈ my_list }; 
+   print my_set; --> {0,1,2} 
 ready;
 ```
 
@@ -188,11 +186,12 @@ Build notation can use expressions to filter out elements during comprehension o
 
 **Example:**
 ```
-given
-   my_list := [0,1,2,3,4,5];
-   my_set  ∈ Set;
+given:
+   List: my_list := [0,1,2,3,4,5];
+   Set:  my_set  := {};
 begin:
-   my_set := { x | x ∈ my_list and x%2 ≡ 0 }; --> {0,2,4} 
+   my_set := { x | x ∈ my_list, x%2 ≡ 0 }; 
+   print my_set; --> {0,2,4} 
 ready;
 ```
 
@@ -201,7 +200,7 @@ The elements in one set or list can be transformed by a function or expression t
 
 **Example:**
 ```
-given
+given:
    source := {0,1,2,3,4,5};
    target ∈ Hash; 
 begin:
@@ -216,14 +215,13 @@ List concatenation is done using operator “+”. This operator represent union
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-define
-  a := ('a','b','c') ∈ List;
-  b := ('1','2','3') ∈ List;
-  c := () ∈ List; 
-
 aspect main:
+  List: a := ('a','b','c');
+  List: b := ('1','2','3');
+  List: c := (); 
+
   c := a + b;
-  print(c); --will print:['a','b','c','1','2','3']
+  print(c); --['a','b','c','1','2','3']
 over;
 ```
 
@@ -231,8 +229,8 @@ over;
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
-given
-  str ∈ String;
+given:
+  String: str;
 begin:
   str := join([1,2,3],",");
   print (str); --> "1,2,3"
@@ -243,11 +241,11 @@ ready;
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
-given
-  lst ∈ List of Integer;
+given:
+  List[Integer]: lst := ();
 begin:
   lst := split("1,2,3",",");
-  print (lst); --> (1,2,3);
+  print lst; --> (1,2,3);
 ready;  
 ```
 
@@ -295,16 +293,18 @@ A special _while loop_ that is executed for each element belonging to a collecti
 The operator "<:" is used to define control variables specific to this kind of cycle.
 
 ```
-for <element> ∈ <collection> do
-   <statements>;
-     ...
-   next [if <condition>];
-   <statements>
+given:
+  type : element;
+scan element ∈ collection:
+  <statements>;
     ...
-   done [if <condition>];
-   <statements>
+  skip [if <condition>];
+  <statements>
    ...
-for;
+  stop [if <condition>];
+  <statements>
+  ...
+next element;
 ```
 
 ### Iterator element
@@ -323,17 +323,18 @@ It is possible to change the normal logical flow of iteration using shortcuts or
 ```
 --example of collection iteration
 aspect main:
-  given
-    my_list := ["a","b","c","d","e"]; 
-  for element ∈ my_list do
+  List my_list := ["a","b","c","d","e"]; 
+  given:
+    Integer: element;
+  scan element ∈ my_list:
     -- continue shortcut
-    loop if element < "c"
+    skip if element < "c"
     write(element);
  
     -- fast forward 
     stop if (element ≡ "d");    
     write(',');
-  for;
+  next element;
 over;
 ```
 > c,d
@@ -360,11 +361,14 @@ Map and set are similar collections and both can be used for iteration:
 **Example:**
 ```
 aspect main:
-  my_map := {"a":1,"b":2,"c":3};
+  Hash: my_map := {("a":1),("b":2),("c":3)};
   -- print pairs (key:value)
-  for (k : v) ∈ my_map do  
+  given:
+    String : k;
+    Integer: v;
+  scan (k,v) ∈ my_map:
     print('("' + k + '",' + v +')');
-  for;
+  next;
 over;
 ```
 Will print:
@@ -382,9 +386,9 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 **example:**
 ```
 -- check if a key is present in a hash collection
-given
-  my_map := {(1:'a'),(2:'b'),(3:'c')};
-  my_key := 3;
+given:
+  Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
+  Integer: my_key := 3;
 begin:
   when my_key ∈ my_map then
      print('True'); -- expected
@@ -395,13 +399,12 @@ begin:
 ready;   
 ```
 
-
 **example**
 ```
 -- create new elements in the hash collection
 aspect main()
-  given
-    animals ∈ Hash of (String, String);
+  given:
+    Hash(String, String): animals := {};
   begin
     animals['Bear'] := 'dog';
     animals['Kiwi'] := 'bird';
@@ -410,7 +413,7 @@ aspect main()
 over;
 ```
 
-Will print:
+Output:
 ```
 {('Bear':'dog'),('Kiwi':'bird')};
 ```
@@ -418,14 +421,14 @@ Will print:
 ## Type inference
 
 * The default type inference for empty "set" is {}
-* An empty hash map will be created using notation {()} 
+* An empty hash map will be created using notation {} 
 
 ### Example
 ```
-define
-   --declaration of a new map initialized with one element
-   --type inference will tell us he element types (String, String);
-   animals := {};
+local
+  --declaration of a new map initialized with one element
+  --type inference will tell us he element types (String, String);
+  Hash: animals := {};
    
 aspect main()
   --create 1 more element
@@ -446,21 +449,20 @@ output:
 
 Strings can be concatenated using:
 
-* string concatenation operator: "+"
-* string trim and concatenation: "-"
-* space concatenation operator : "_"
-* path concatenation operator  : "."
+* string concatenation operator: ".+."
+* coma string concatenation    : ".,."
+* space concatenation operator : "._."
+* path concatenation operator  : "./."
 
 **Example:**
 ```
 -- this is example of string concatenation
-given
-  str ∈ String; 
+given:
+  String: str := ""; 
 begin:
   -- set string value using different operators
-  str := "this " + "string";  --> 'this string'
-  str := "this " - " string"; --> 'this string'
-  str := "this"_"string";     --> 'this string'
+  str := "this " .+. "string";   --> 'this string'
+  str := "this " ._.  " string"; --> 'this string'
 ready;
 ```
 
@@ -468,8 +470,8 @@ ready;
 Two strings can be concatenated using concatenation operator ".". This operator is used to concatenate "path" strings. The "." is converted to \ or / depending on the operating system.
 
 ```
-given
-  s ∈ String;
+given:
+  String: s := "";
 begin:  
   s := 'te' . 'st'; --> "te/st" --Linux
   s := 'te' . 'st'; --> "te\st" --Windows
@@ -515,8 +517,8 @@ unicode ≠
 **Using Hash**
 ```
 aspect main:
-  template := "Hey look at this #{key1} it #{key2}";
-  my_map   := {"key1":"test","key2":"works!" };
+  String: template := "Hey look at this #{key1} it #{key2}";
+  Hash:   my_map   := {("key1":"test"),("key2":"works!")};
   print(template.format(my_map)); --using format function
 aspect main;
 ```
@@ -529,9 +531,9 @@ Hey look at this test it works!
 **Using Array**
 ```
 aspect main:
-  template := "Hey look at this #[0] it #[1]";
-  my_set   := ["test","works!"];
-  print(template <+ my_set);
+  String: template := "Hey look at this #[0] it #[1]";
+  List: my_list    := ("test","works!");
+  print (template <+ my_set);
 aspect main;
 ```
 
@@ -547,7 +549,7 @@ Number type is implementing format() aspect. This aspect has one string paramete
   aspect format(n ∈ Number, f ∈ String) ∈ String;
 ```
 
-Where "f" is a pattern: 'ap:m.d'
+Where "f" is a pattern: '(ap:m.d)'
 
 * a is alignment one of {<,>,^}, 
 * p is the padding character: {'_','.',' ',0...}
@@ -562,17 +564,17 @@ Where "f" is a pattern: 'ap:m.d'
 ```
 ### Format examples:
 ```
- '>_:10)'  -- right align string fill with spaces to 10 characters
- '>0:10.2' -- right align fill with 0 up to 10 digits and use 2 decimals
+ '(>_:10)'  -- right align string fill with spaces to 10 characters
+ '(>0:10.2)' -- right align fill with 0 up to 10 digits and use 2 decimals
 ```
 
 ### Text functions
 
-* Text.format(str: Text, map: Map) : Text;
-* Text.replace(str: Text, target: String, arrow: String) : Text;
-* Text.find(str: Text, patern: String) : Integer;
-* Text.count(str: Text, patern: String) : Integer;
-* Text.length(str: Text) : integer;
+* Text:    format (Text: str, Hash: map);
+* Text:    replace(Text: str, String: target, String: arrow );
+* integer: find   (Text: str, String: patern);
+* integer: count  (Text: str, String: patern);
+* integer: length (Text: str);
 
 **Reading a Text**
 
