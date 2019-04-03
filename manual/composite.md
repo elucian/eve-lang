@@ -43,7 +43,7 @@ An array  capacity can be established using a parameter and a constructor. All e
 
 ```
 -- variable array size depending upon parameter n
-aspect test(n ∈ Integer)
+method test(n ∈ Integer)
   Array my_array(n) *= 0;
 over;
 ```
@@ -207,7 +207,7 @@ ready;
 
 ## Hash Map
 
-It is called "H" due to similar aspect of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
+It is called "H" due to similar method of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
 
 * Hash is set of (<key>:<value>) pairs; 
 * The key must be one of {Integer, Natural, String} and is unique;

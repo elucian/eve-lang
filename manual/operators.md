@@ -1,6 +1,6 @@
 ## Single Symbols
 
-In the syntax description "..." represent content and ",,," represents a sequence of elements. In descriptions vertical bar "|" represents OR. Some operators can have multiple purposes depending on the context and data types.
+In the syntax description "..." represent content and ",,," represents a sequence of elements. In descriptions vertical bar "|" represents second alternative. Some operators can have multiple purposes depending on the context and data types.
 
 
 ## Delimiters
@@ -24,9 +24,9 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | ;     | The end of any statement \| Statement separator
 | .     | Decimal separator \| Member of {record, module, object}
 | ,     | Enumeration for elements in a sequence
-| ∈     | Declare type  \| Belong to set
+| ∈     | Belong to set
 | @     | Require reference \| Input/Output parameter
-| :     | Value pair-up \| Argument by name
+| :     | Type pair-up \| Value pair-up \| Argument pair-up
 | \*    | Variable arguments \| Multiple of something
 
 ## Double symbols
@@ -37,7 +37,7 @@ Level use two symbols to create a additional operators.
 |------|---------------------------------------------------------------
 |--    | Single line comment start |\ end of line comment
 |..    | range representation or slice [n..m] 
-|:>    | Receive output argument from aspect I/O parameter
+|:>    | Receive output argument from method I/O parameter
 |+>    | Data pipeline fetch or select into: collection
 |=+    | Outer join operator used in data "select" statement
 |<:    | Declare user define type using a type descriptor
@@ -93,15 +93,14 @@ Modifiers are in-place operators. They change value of the left operand with val
 Level use two symbols to create a additional operators.
 
 |Symbol| Description
-|------|---------------------------------------------------------------
-|  ↔   | Logical equivalent
-|  ≡   | Equivalent    \| Value comparison \| (data comparison)
-|  ≈   | Approximative (across type equivalent)
-|  =   | Shallow comparison \| Same reference
-|  >   | Greater then 
-|  <   | Less then    
-|  ≥   | Greater then or equal to
-|  ≤   | Less then or equal to
+|------|----------------------------------------------------------------
+|  =   | Deep comparison \| Same value \| Same attributes \| Same type
+|  ≡   | Equivalent  \| Value comparison \| (data comparison)
+|  ≈   | Approximative equal  (used like a ≈ b ± 0.25)
+|  >   | Greater than 
+|  <   | Less than    
+|  ≥   | Greater than or equal to
+|  ≤   | Less than or equal to
         
 ## Collection operators
 
@@ -116,15 +115,14 @@ In following table A, B, C are sets and x is a member: numeric or string
         
 ## Logical operators
 
-These operators are expected logical values ⊤ := True, ⊥ := False
+These operators are expected logical values T := True, F := False
 
 | Symbol | Description
 |--------|-----------------------------------------------
-|  ↔     |  EQ  (equivalent)
-|  ¬     |  NOT (negation) 
-|  ∧     |  AND (intersection) 
-|  ∨     |  OR  (union)
-|  ⊕     |  Exclusive OR
+|  NOT   | logic NOT (negation) 
+|  AND   | logic AND (intersection) 
+|  OR    | logic OR  (union)
+|  XOR   | logic Exclusive OR
 
 ## Bitwise operators
 
@@ -132,33 +130,31 @@ These operators are working for Natural numbers ≥ 0
 
  symbol | description
 --------|----------------------------------
-  ←     | shift bits to left  
-  →     | shift bits to right
-  ¬     | bit not (unary)
-  &     | bit and
-  \|    | bit or
-  ~     | bit xor
-  ↑     | bit NAND 
-  ↓     | bit NOR  
+  \<\<  | shift bits to left  
+  \>\>  | shift bits to right
+  not   | bitwise NOT (unary)
+  and   | bitwise AND
+  or    | bitwise OR
+  xor   | bitwise XOR
 
 **Binary operators**
 
- A    | B   |A ↔ B |A & B  | A \|B | A ~ B
-------|-----|------|-------|-------|--------
- 00   | 00  |  1   |00     | 00    |  00    
- 01   | 00  |  0   |00     | 01    |  01    
- 11   | 01  |  0   |01     | 11    |  10    
- 10   | 11  |  0   |10     | 11    |  01    
- 11   | 11  |  1   |11     | 11    |  00    
+ A    | B   |A and B|A or B | A xor B
+------|-----|-------|-------|--------
+ 00   | 00  |00     | 00    |  00    
+ 01   | 00  |00     | 01    |  01    
+ 11   | 01  |01     | 11    |  10    
+ 10   | 11  |10     | 11    |  01    
+ 11   | 11  |11     | 11    |  00    
 
 **Unary operators**
 
- A    | A ← 1 | A → 2 |  ¬ A
-------|-------|-------|-------
- 0000 | 0000  | 0000  | 1111
- 1111 | 1110  | 0011  | 0000
- 0111 | 1110  | 0001  | 1000
- 0110 | 1100  | 0001  | 1001
+ A    |A \<\< 1 | A />/>2 |  not A
+------|---------|---------|-------
+ 0000 | 0000    | 0000    | 1111
+ 1111 | 1110    | 0011    | 0000
+ 0111 | 1110    | 0001    | 1000
+ 0110 | 1100    | 0001    | 1001
 
 **See also:** [Wikipedia Bitwise Operation](https://en.wikipedia.org/wiki/Bitwise_operation)
 

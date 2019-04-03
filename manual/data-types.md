@@ -59,7 +59,7 @@ define
 define
   type Point <: Record ( a, b ∈ Integer);
 
-aspect main() is
+method main() is
   p1, p2 ∈ Point;      -- implicit constructor
   p3 := {1,1} ∈ Point; -- initial value for Point
   begin
@@ -135,7 +135,7 @@ Precision Real numbers is variable depending on the size of the number. The numb
 **example**
 
 ```
-aspect main()
+method main()
   -- declare variable
   i ∈ Integer; 
   n ∈ Natural;
@@ -398,11 +398,11 @@ Symbol  | Description
   ∨     | logical OR
   ∧     | logical AND
   ¬     | logical NOT
-
+  ~     | logical XOR
 
 Table of truth for logical operators: 
 
- A    | B   |! A | A & B | A \| B | A ~ B
+ A    | B   |¬ A | A ∧ B | A ∨  B | A ~ B
 ------|-----|----|-------|--------|-------
  T    |T    | F  | T     | T      | F    
  T    |F    | F  | F     | T      | T   
@@ -443,7 +443,7 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 define
   type:Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
 
-aspect main:
+method main:
   message ∈ String;
   given:
     Day: today := today();  
@@ -550,10 +550,10 @@ ready;
 
 ## Reference
 
-A variant is a way to create a generic aspect.
+A variant is a way to create a generic method.
 
 ```
-aspect invert(Integer | Real: x, y):
+method invert(Integer | Real: x, y):
   Integer | Real: i;
   assert type(x) ≠ type(y);  
   
@@ -562,8 +562,8 @@ aspect invert(Integer | Real: x, y):
   x := i; -- second switch
 over;
 
-aspect main:
-  Integer: x,y;
+method main:
+  Integer x,y;
   Real: a,b;
   
   -- invert two Integer numbers
@@ -605,7 +605,7 @@ In EVE strings are immutable. If we use a modifier ":=" new memory is allocated.
 
 **Example:**
 ```
-aspect test_string:
+method test_string:
   String : str; -- initial "" 
   String @ ref; -- string reference
   begin

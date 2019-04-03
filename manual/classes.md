@@ -96,7 +96,7 @@ We can use comparison operators: "=" and "≡" with objects. First comparison "=
 
 **Example:**
 ```
-aspect main:
+method main:
   o,n ∈ Integer;    
   o := 1; 
   n := 1; 

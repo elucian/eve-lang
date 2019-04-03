@@ -10,7 +10,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Modules](#modules)
 * [Regions](#regions)
 * [Classes](#classes)
-* [Methods](#methods)
+* [methods](#methods)
 * [Conditionals](#conditionals)
 * [Control flow](#control)
 * [Functions](#functions)
@@ -32,7 +32,7 @@ Modules are source code files having extension: *.eve. Module names starts with 
 ## Regions
 Each module is divided into regions. Each region is identified by one of these keywords:
 
-{import, define, global, class, aspect} 
+{import, define, global, class, method} 
 
 **members**
 Members of each region are indented two spaces from left side. A region terminate with region name follow by semi column. Regions can be repeated but can not be nested.
@@ -48,19 +48,21 @@ $ystem_variable
 ...
 import
   import_region
+import;
 
 define
   -- types
   -- constants
   -- variables
+define;
   
-class <name>:
+class name:
   -- class_definition
 class;  
 
-aspect <name>(<params>):
-  -- aspect definition
-over;
+method main(params):
+  -- method definition
+method;
 
 +-----------------------------------------------
    Last line of a module can be a comment
@@ -98,12 +100,12 @@ This region is for declaration of global "members".
 
 Global members are visible in current module and modules that imports it. 
 
-## Methods
+## methods
 
-One aspect is a named region that can receive input/output parameters.
+A method is a subroutine that can receive input/output parameters and have side-effects.
 
 ```
-aspect name(parameters):
+method name(parameters):
   -- executable region
   ...
 recover:
@@ -113,11 +115,11 @@ finalize:
 over;
 ```
 
-## aspect name
-A aspect is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The aspect are doing something, therefore the best names for methods are verbs.
+## method name
+A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The method are doing something, therefore the best names for methods are verbs.
 
-## Main aspect
-If the module is executable using "run" command, it must contain a "main" aspect. This aspect is executed first. If main aspect is missing then the module is a library module and can be imported in other modules but can not be executed.
+## Main method
+If the module is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the module is a library module and can be imported in other modules but can not be executed.
 
 ## Parameters
 Parameters are defined in round brackets () separated by comma. Each parameter must have a name and a type. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
@@ -126,7 +128,7 @@ Parameters are defined in round brackets () separated by comma. Each parameter m
  param_name ::= type : name := value; -- input parameter
  param_name ::= type @ name; -- output parameter
 ```
-1. One aspect can receive one or more parameters;
+1. One method can receive one or more parameters;
 1. Parameters having initial values are optional;
 1. We can pass arguments by position, or by name;
 1. Input parameters are pass by value;
@@ -134,7 +136,7 @@ Parameters are defined in round brackets () separated by comma. Each parameter m
 
 ## Variadic parameters
 
-One aspect can receive multiple arguments of the same type separated by comma into one parameter.
+One method can receive multiple arguments of the same type separated by comma into one parameter.
 
 * The variadic parameter name start with "*" prefix. 
 * The surplus of arguments are captured into last parameter named: "*args". 
@@ -142,70 +144,70 @@ One aspect can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-aspect main(Array[String]() * args):
+method main(Array[String]() * args):
   print(args); 
 over;
 ```
 
 ## Aspect scope
 
-Every aspect can define local variables, constants or functions. This is called local scope. Members defined in local scope are short leaving and are removed once the aspect is resolved. In this scope a aspect can implement attributes using "@" prefix. Attributes are static properties of the aspect. 
+Every method can define local variables, constants or functions. This is called local scope. Members defined in local scope are short leaving and are removed once the method is resolved. In this scope a method can implement attributes using "@" prefix. Attributes are factor properties of the method. 
 
 ## Aspect Execution
-To execute an aspect mention name of the aspect and the arguments. Arguments are enclosed in round parentheses separated by comma.  If an aspect do not have parameters or it have one single parameter the empty list () after the aspect name is not required.
+To execute an method you use keyword "solve" then method name followed by arguments. Arguments are enclosed in round parentheses separated by comma.  If an method do not have parameters or it have one single parameter the empty list () after the method name is not required.
 
-**aspect call**
+**method call**
 ```
-  <method_name>;
-  <method_name>  <one_argument>;  
-  <method_name> (<argument_list>);
+  solve <method_name>;
+  solve <method_name>  <one_argument>;  
+  solve <method_name> (<argument_list>);
 ```
 
 ## Aspect termination
-An aspect end at the last statement before the keyword over; Program execution will continue with the next statement after the aspect call. Keyword "exit" or "panic" can terminate a aspect early. Exit from main aspect will stop the program. 
+An method end with keyword over or exit; Program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
 
 **Example:**
 ```
-aspect test(Integer: a):
-  print(a);
+method test(Integer a):
+  print (a);
 over;
 
-aspect main(List[String]: *args):
+method main(List[String]: *args):
   -- number of arguments received:
-  Integer: c := args.count();
+  Integer c := args.count();
   
   -- verify condition and exit
-  exit if c ≡ 0;
+  exit if c = 0;
   
-  solve test(c); -- aspect call
+  solve test(c); -- method call
 over;
 ```
 
 ## Side Effects
-* The aspect can have access to system variables;
-* A aspect can open and write into a file;
-* A aspect can print a message or accept input from console;
+* The method can have access to system variables;
+* A method can open and write into a file;
+* A method can print a message or accept input from console;
 * If we modify external variables, this is a side-effect;
 * A good practice is to use parameters and no side-effects;
 
 **using side-effects**
 
-Program heaving a private aspect add_numbers: 
+Program heaving a private method add_numbers: 
 
 ```
 -- global variables
 global
   Integer $result;
 
-local  
+static
   Integer p1, p2;
 
-aspect add_numbers() is
+method add_numbers() is
   $result := p1 + p2; --side effect
   print($result);
 over;
 
-aspect main() is
+method main() is
   p1 := 10;
   p2 := 20;
   add_numbers;   
@@ -218,12 +220,12 @@ over;
 To avoid system and global variables use output parameters:
 
 ```
-aspect add(integer: p1,p2, Integer @ out):
+method add(integer: p1,p2, Integer @ out):
   out := p1+p2;
 over;
 
-aspect main:
-  Integer: result;
+method main:
+  Integer result;
   -- reference argument require a variable
   solve add(1,2, out : result);
   print (result); -- expected value 3
@@ -238,17 +240,16 @@ Notes:
 
 ## Single dispatch
 
-Dispatch is a form of selection specific to methods and functions. This is a way to identify one _overloaded_ aspect or function by its signature.
+Dispatch is a form of selection specific to methods and functions. This is a way to identify one _overloaded_ method or function by its signature.
 
 Wikipedia: [name mangling](https://en.wikipedia.org/wiki/Name_mangling)
 
 ## Multiple dispatch
 
-In multiple dispatch many parameters can be used to identify a aspect. A aspect signature include aspect name and parameter types: both input and output parameters are included in aspect signature.
+In multiple dispatch many parameters can be used to identify a method. A method signature include method name and parameter types: both input and output parameters are included in method signature.
 
-**aspect Restrictions**
-* A aspect call is a statement, can not be used in expressions;
-* A aspect with result can be used with assign operator ":=" or a modifier.
+**method Restrictions**
+* A method call is a statement, can not be used in expressions;
 * We can not create methods, data types or classes inside a over;
 * We can not create references to methods:
 
@@ -326,12 +327,12 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 -- function declaration
-function sum(Integer: a, b) => (Integer: r):
+function sum(Integer a, b) => (Integer r):
   r := a + b;
 over;
   
-aspect main() is
-  Integer: r;  
+method main() is
+  Integer r;  
   r := sum(10,20); -- function call
   print(r);        -- this will print 30
 over;
@@ -401,11 +402,11 @@ A rule can have multiple conditional expressions named nodes.
 
 **example**
 ```
-aspect main:
+method main:
   -- create a lambda expression
-  xp(Integer: p1, p2) => Integer: ( 0 if p1 ≡ 0, 0 if p2 ≡ 0, p1+p2);    
+  xp(Integer p1, p2) => Integer ( 0 if p1 ≡ 0, 0 if p2 ≡ 0, p1+p2);    
   -- local x
-  Integer: x; 
+  Integer x; 
   -- use lambda expression  
   x := xp(0,1); print(x); -- 0 
   x := xp(1,0); print(x); -- 0
@@ -426,7 +427,7 @@ Expressions can be anonymous. These can be used as arguments or in assign statem
 ```
 given:
   Logic: b := F;
-  Integer: v := 0;   
+  Integer v := 0;   
 begin
   v := (1 if b , 2);   
   print v; --> 2
@@ -435,18 +436,18 @@ ready;
 
 ## Rule as parameter
 
-An aspect or function can receive one or more call-back rules. 
+An method or function can receive one or more call-back rules. 
 
 **Example:**
 ```
-aspect test(Integer: f(Logic: x), Logic: p):
+method test(Integer f(Logic: x), Logic: p):
   -- call parameter function
   print f(p) --> 1;
 over;
 
-aspect main:  
+method main:  
   -- define foo as a rule
-  rule foo(Logic: b) => Integer: (1 if b , 2);
+  rule foo(Logic: b) => Integer (1 if b , 2);
   -- use foo as call-back argument  
   print test(foo,T);  -- expect 1
   print test(foo,F);  -- expect 2 
@@ -458,11 +459,11 @@ A rule that call itself is recursive;
 
 **Example:**
 ```
-aspect main(Integer: p):
+method main(Integer p):
   -- define a local recursive function 
-  rule factorial(Integer: n) => Integer: (1 if n ≡ 0 , n * factorial(n-1));
+  rule factorial(Integer n) => Integer (1 if n ≡ 0 , n * factorial(n-1));
   -- result variable must be declared before use
-  Integer: r;
+  Integer r;
   
   -- call recursive function
   r := factorial(p);   

@@ -69,8 +69,8 @@ global
 **examples**
 ```
 global  
-  Integer: a ; 
-  Integer: b := 1; 
+  Integer a ; 
+  Integer b := 1; 
   Real: d := 2.5;      
   Real: x,y,z := 0.0;  
 ```
@@ -198,6 +198,6 @@ write (3,4);
 * to avoid new line use coma separated parameters
 * to avoid new line you can use "write" statement instead of "print"
 * multiple expressions or arguments are separated by comma
-* you can omit the parentheses when you call a aspect with one single parameter
+* you can omit the parentheses when you call a method with one single parameter
 
 **Read next:** [Structure.md](structure.md)

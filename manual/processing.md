@@ -7,14 +7,14 @@ By using collections and control structures one can load, modify and store data.
 Array elements have very fast direct access by index. 
 
 ```
-aspect test_array()
+method test_array:
   --array  with capacity of 10 elements
   Array[Integer](10): my_array; 
   -- scan array and modify element by element
   given:
-    Integer: m := my_array.capacity();
-    Integer: i;
-  scan i  ∈ [1..m]:
+    Integer m := my_array.capacity();
+    Integer i;
+  scan i ∈ [1..m]:
     my_array[i] := i; 
   next i;
   -- array  elements are identified using [index]
@@ -30,7 +30,7 @@ This is the last element: 10
 ```
 
 **capacity**
-An array can changing capacity. This can be done using built-in aspect _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
+An array can changing capacity. This can be done using built-in method _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
 
 ```
   <array_name>.extend(c);
@@ -95,14 +95,14 @@ When you traverse elements use rows first, than you change the column. A process
 In this example we traverse all the rows then all the column, this is the most efficient way to traverse a matrix.
 
 ```
-aspect main:
-  Matrix[String(2)](3,3): M;  
+method main:
+  Matrix[String(2)](3,3): M;    
   M :=  ⎡'a0','b0','c0'⎤
         ⎢'a1','b1','c1'⎥
-        ⎣'a2','b2','c2'⎦                        
+        ⎣'a2','b2','c2'⎦;        
   given:
-    Integer: col;
-    Integer: row;
+    Integer col;
+    Integer row;
   scan col ∈ [1..3]:     -- traverse columns
     scan row ∈ [1..3]:   -- traverse row first
       print(M[row,col]);
@@ -130,19 +130,21 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-aspect main 
-  Array a := [0,1,2,3,4,5,6,7,8,9] <: [Integer];
-  Array b ? [Integer];
+method main: 
+  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
+  Array[Integer]: b :: a[1..4];
 
   print(a[1..?]);   --will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1]);   --will print [0]
-  print(a[2..4]);   --will print [1,2,3]
+  print(a[1..4]);   --will print [1,2,3]
  
-  -- modify elements in a slice
-  b := a[1..4]  
-  for i <: b do
-    a[i] += 2; 
-  for; 
+  -- create b as slice reference from a
+  given
+    Integer i;
+  scan i ∈ b:
+    a[i] += 2;
+  next i; 
+  
   -- first 4 elements of (a) are modified
   print(a)  -- will print: [2,3,4,5,4,5,6,7,8,9]
 over;
@@ -152,7 +154,8 @@ over;
 
 You can define elements of a subset from a set using the following construction:
 ```
-<sub_set> := { <var> : <var> ∈ <set_name>, <filter_expression>}
+given
+   Set: sub_set := { var | var ∈ set_name AND filter_expression}
 ```
 
 Symbol "|" is the filter operator and is derived from mathematics. 
@@ -187,8 +190,8 @@ Build notation can use expressions to filter out elements during comprehension o
 **Example:**
 ```
 given:
-   List: my_list := [0,1,2,3,4,5];
-   Set:  my_set  := {};
+   List my_list := [0,1,2,3,4,5];
+   Set  my_set  := {};
 begin:
    my_set := { x | x ∈ my_list, x%2 ≡ 0 }; 
    print my_set; --> {0,2,4} 
@@ -215,10 +218,10 @@ List concatenation is done using operator “+”. This operator represent union
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-aspect main:
-  List: a := ('a','b','c');
-  List: b := ('1','2','3');
-  List: c := (); 
+method main:
+  List[Char] a := ('a','b','c');
+  List[Char] b := ('1','2','3');
+  List[Char] c := (); 
 
   c := a + b;
   print(c); --['a','b','c','1','2','3']
@@ -290,57 +293,59 @@ A list has properties that can be used in logical expressions:
 ## Iteration
 
 A special _while loop_ that is executed for each element belonging to a collection.
-The operator "<:" is used to define control variables specific to this kind of cycle.
 
+**template**
 ```
 given:
-  type : element;
+  type_name element;
 scan element ∈ collection:
-  <statements>;
+  -- statements;
     ...
   skip [if <condition>];
-  <statements>
+  -- statements
    ...
   stop [if <condition>];
-  <statements>
+  -- statements
   ...
 next element;
 ```
 
+
+
 ### Iterator element
 
-The "element" is local to iteration and is used a control variable. The type of the "element" is cloned from the collection member type.
+The "element" is local to iteration and is used a control variable. The type of the "element" is must match collection member type.
 
-### Premature termination
+### Early termination
 The iteration stops normally when all elements from collection have been visited.
-It is possible to change the normal logical flow of iteration using shortcuts or fast forward.
+It is possible to change this using shortcuts or fast forward.
 
-* next - will continue from beginning of block
-* done - will continue after the block end
+* skip - will continue from beginning of block
+* stop - will continue after the block end
 
 **Program Example**
 
 ```
 --example of collection iteration
-aspect main:
-  List my_list := ["a","b","c","d","e"]; 
+method main:
+  List[Char] my_list := ['a','b','c','d','e']; 
   given:
-    Integer: element;
+    Char: element;
   scan element ∈ my_list:
     -- continue shortcut
-    skip if element < "c"
+    skip if element < 'c'
     write(element);
  
     -- fast forward 
-    stop if (element ≡ "d");    
+    stop if (element = 'd');    
     write(',');
   next element;
 over;
 ```
 > c,d
 
-## Iterable collections
-Any iterable collection have common methods that are available to traverse the collection elements. Iterable collections have a current cursor, first and last element and capacity or length. 
+## Scan able collections
+All collections have some common methods that are available to traverse the collection elements. Scan enable collections have a current element, first and last element and capacity or length. 
 
 {List, Hash, Set} 
 
@@ -349,23 +354,21 @@ Any iterable collection have common methods that are available to traverse the c
 * length     - retrieve the number of elements 
 * capacity   - retrieve the maximum capacity or 0
 * next       - position cursor to next element 
-* prior      - position cursor to previous element 
-* current    - retrieve the current element
-* first      - is first element (boolean)
-* last       - is last element (boolean)
-* start      - go to first position, make first:=True
+* first      - reference to first element
+* last       - reference to last element
+
 
 ## Set Iteration
 Map and set are similar collections and both can be used for iteration:
 
 **Example:**
 ```
-aspect main:
+method main:
   Hash: my_map := {("a":1),("b":2),("c":3)};
   -- print pairs (key:value)
   given:
     String : k;
-    Integer: v;
+    Integer v;
   scan (k,v) ∈ my_map:
     print('("' + k + '",' + v +')');
   next;
@@ -380,7 +383,7 @@ Will print:
 
 ## Hash collections
 
-Hashes are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this aspect.
+Hashes are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
 
 
 **example:**
@@ -388,7 +391,7 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 -- check if a key is present in a hash collection
 given:
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
-  Integer: my_key := 3;
+  Integer my_key := 3;
 begin:
   when my_key ∈ my_map then
      print('True'); -- expected
@@ -402,7 +405,7 @@ ready;
 **example**
 ```
 -- create new elements in the hash collection
-aspect main()
+method main()
   given:
     Hash(String, String): animals := {};
   begin
@@ -430,7 +433,7 @@ local
   --type inference will tell us he element types (String, String);
   Hash: animals := {};
    
-aspect main()
+method main:
   --create 1 more element
   animals.append('Rover','dog');
 
@@ -516,11 +519,11 @@ unicode ≠
 
 **Using Hash**
 ```
-aspect main:
+method main:
   String: template := "Hey look at this #{key1} it #{key2}";
   Hash:   my_map   := {("key1":"test"),("key2":"works!")};
   print(template.format(my_map)); --using format function
-aspect main;
+method main;
 ```
 
 Expect output:
@@ -530,11 +533,11 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-aspect main:
+method main:
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
   print (template <+ my_set);
-aspect main;
+method main;
 ```
 
 Expect Output:
@@ -543,10 +546,10 @@ Hey look at this test it works!
 ```
 
 ## Numeric format
-Number type is implementing format() aspect. This aspect has one string parameter that is optional.
+Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-  aspect format(n ∈ Number, f ∈ String) ∈ String;
+  method format(n ∈ Number, f ∈ String) ∈ String;
 ```
 
 Where "f" is a pattern: '(ap:m.d)'

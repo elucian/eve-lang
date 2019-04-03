@@ -4,13 +4,18 @@ Exception is interrupting the current logical flow and jump to the recover regio
 
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System $error variable contains several members that are fill-in by the EVE program when exception is created: 
 ```
-$error <: Record of (
-   code: Integer, 
-   message: String, 
-   section_name: String, 
-   module_name:  String, 
-   line_number:  String
-);
+-- system global exception type
+define
+   type: .Exception <: Record: (
+                         code: Integer, 
+                         message: String, 
+                         section_name: String, 
+                         module_name:  String, 
+                         line_number:  String
+                        );
+-- global variable for holding current error
+global
+   Exception: $error;
 ```
 ## Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -25,12 +30,12 @@ There are two alternative statements to create user defined exceptions.
 
 ```
 -- raise exception
-when <condition> then
-  raise(<code>,"message");
+when condition then
+  raise (code,"message");
 ready;
 
 -- conditional 
-raise(<code>,"message") if <condition>;
+raise (code,"message") if <condition>;
 ```
 
 ## Quick exception
@@ -38,30 +43,30 @@ Using keyword _"fail"_ user can quick create an exception that has no message or
 
 ```
 -- quick exception
-when <condition> then 
+when condition then 
   fail;
 when:
   pass;
 ready;
 
 -- conditional exception
-fail if <condition>;
+fail if condition;
 ```
 
 ## Exception handling
 
-**recover:** region define an "exception handling region" for a aspect.
+**recover:** region define an "exception handling region" for a method.
 
 In this region developer can use control statements like "switch","case" to analyze the $error. Developer can decide to stop the program, print a message and resume the program using _resume_ keyword.
 
 **Example:** 
 
 ```
-aspect main:
-  a ∈ Real; 
-  a := 1/0;  
+method main:
+  Real: a; 
+  a := 1 ÷ 0;  
 recover
-  print($error.message);
+  print ($error.message);
 over;
 ```
 
@@ -69,16 +74,26 @@ over;
 Error: Numeric division by zero.
 ```
 
-## Unrecoverable exception
+## Panic
+
 Most exceptions are recoverable except the exception created by panic statement.
 
 **Example:**
 ```
-when <condition> then
+when condition:
   panic;
 ready;
 ```
 
-**Todo:** System exception codes are not yet defined. In the example code 1000 is hypothetical;
+## Assert
+
+The assert statement is very simple. It check a condition and raise an assert error if condition is false. Does not produce any error message but: "Assert error in line x".
+```
+  assert condition;
+```
+
+## Expect
+The expect statement is similar to assert. It verify an expression and  it produce "Unexpected error."
+
 
 **Read next:** [Data Processing](processing.md)

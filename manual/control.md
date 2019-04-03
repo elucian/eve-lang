@@ -84,10 +84,10 @@ It is possible to use more then one value using a list, range or collection.
 
 **Example:**
 ```
-aspect test(Integer: p:=0): 
+method test(Integer p:=0): 
   String: message := "";
   given: 
-    Integer: v := p + 4;
+    Integer v := p + 4;
   quest:
     if v ∈ (1,2,3):
       message := "first match";
@@ -126,7 +126,7 @@ repeat;
 
 ```
 given:
-  Integer: a := 10;
+  Integer a := 10;
 cycle:
   a -= 1;
   -- conditional repetition
@@ -200,7 +200,7 @@ repeat;
 
 ```
 --example of collection iteration
-aspect main() go
+method main:
   given: 
     Array: test := ["a","b","c","d","e"];
     Integer i := 0;
@@ -234,9 +234,9 @@ Note:
 **Pattern:**
 ``` 
 given:
-  Integer: min := <constant>;
-  Integer: max := <constant>;  
-  Integer: var ;
+  Integer min := <constant>;
+  Integer max := <constant>;  
+  Integer var ;
 scan var ∈ Z[min..max]:
   -- block statements;
   ...
@@ -251,7 +251,7 @@ next var;
 Example of forward iteration:
 ```
 given:
-  Integer: i := 0; 
+  Integer i := 0; 
 scan i ∈ Z[0..10]:
   -- force next iteration
   when (i % 2 ≡ 0):

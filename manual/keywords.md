@@ -19,10 +19,9 @@ In Level we use English keywords with no abbreviations.
 ## Blocks of code
 | Keyword  | Description
 |----------|-------------------------------------------------------------
-| function | start a declaration region for free function
-| aspect   | start a declaration region for subroutines with no result
+| function | start a declaration region for subroutine with result
+| method   | start a declaration region for subroutine with no result
 | class    | create a composite data type for object oriented programming
-| method   | create a subroutine specific to a class
 | quest    | multi-path variable selector
 | begin    | single-path non-repetitive block
 | while    | conditional repetition block
@@ -66,4 +65,4 @@ In Level we use English keywords with no abbreviations.
 |----------|-------------------------------------------------------
 | Class    | the ancestor class for all classes
 | object   | current instance of a class
-| result   | result of a aspect if result names are not specified
+| result   | result of a method if result names are not specified

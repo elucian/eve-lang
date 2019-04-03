@@ -43,10 +43,10 @@ import
 
 One application can connect to a database that is current database or default database and one or more source databases. A specific kind of application called "pipeline" can pull data from sources to update current database with new data. 
 
-To connect to database we must use "connect" command. This command can be implemented as aspect or function in the model and must be exported. Once connected the instance of the model remain in memory until we call: "disconnect". 
+To connect to database we must use "connect" command. This command can be implemented as method or function in the model and must be exported. Once connected the instance of the model remain in memory until we call: "disconnect". 
 
 ```
-aspect connect(credential:String):
+method connect(credential:String):
   db:=Database(credential, signature); -- create a database instance
 over;
 ```
@@ -138,7 +138,7 @@ A record instance is a variable of type record. The memory is allocated using th
 define
   Person <: Record of (name:String(32), age:Integer );
 
-aspect main:
+method main:
   person1,person2 ∈ Person;   -- two variables of type Person
   catalog ∈ Array(10) of Person; -- a collection of Persons
 
@@ -282,7 +282,7 @@ table_name.close();
 ```
 
 ### Mutating a table
-We can modify a table using current_record. This is a record created using the for...in do or a record created with fetch aspect. The record has "rowid" inside that can be used to create database update SQL.
+We can modify a table using current_record. This is a record created using the for...in do or a record created with fetch method. The record has "rowid" inside that can be used to create database update SQL.
 
 ```
 map <current_record> to <source_record> set
