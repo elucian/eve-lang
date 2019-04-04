@@ -1,6 +1,6 @@
 ## Syntax Overview
 
-ΞVΞ is a free form language inspired from Ada, PL/SQL, Python and Ruby. 
+ΞVΞ is a free form language inspired from Ada, PL/SQL, Java, Python and Ruby. 
 
 ## Syntax Index
 
