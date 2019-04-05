@@ -1,6 +1,6 @@
 ## Syntax Overview
 
-ΞVΞ is a free form language inspired from PL/SQL, Java and Ruby. 
+ΞVΞ is a free form language inspired from SQL, Java and Ruby. 
 
 ## Syntax Index
 
