@@ -66,10 +66,10 @@ A record is a group of elements that are called fields or members. The elements 
 
 ```
 define
-  <record_type> :(<member_name>:<type>, ...) <: Record;
+  type <record_type> <: Record (<member_name>:<type>, ...)  ;
 
-define  
-  <var_name> ∈ <record_type>;
+global
+  <record_type> <var_name>;
 ```
 
 ### Recursive Records
@@ -78,8 +78,7 @@ An important application of recursion in computer science is in defining dynamic
 ```
 -- example of single recursive node
 define
-   Node <: Record of
-   ( 
+   type Node <: Record ( 
      data: Integer,  --integer data
      previous: Node  --reference to previous node
    );
@@ -89,8 +88,7 @@ This kind of structure can be used to create a stack.
 ```
 -- example of double recursive node
 define
-   Node <: Record of
-   (
+   type Node <: Record (
      data: Integer,  --integer data
      previous: Node, --reference to previous node
      next: Node      --reference to next node
@@ -136,11 +134,11 @@ A record instance is a variable of type record. The memory is allocated using th
 ```
 -- we declare a record type  
 define
-  Person <: Record of (name:String(32), age:Integer );
+  Type Person <: Record (name:String(32), age:Integer );
 
 method main:
-  person1,person2 ∈ Person;   -- two variables of type Person
-  catalog ∈ Array(10) of Person; -- a collection of Persons
+  Person person1,person2;   -- two variables of type Person
+  catalog ∈ Array[Person](10); -- a collection of Persons
 
   -- creating persons using record literals
   person1 := (name:"John", age:21);
@@ -181,7 +179,7 @@ It can be used to define the record using a constant. After first assignment the
 
 ```
 global
-  person := (name:"John", age:21);
+  Record person := (name:"John", age:21);
 ```
 
 ## Gradual Types
@@ -190,7 +188,7 @@ We can use keyword Record to define a variable of type record with unknonw struc
 
 ```
 given:
-  person ∈ Record;
+  Record person;
 begin:
   -- differed structure
   person:= (name:"John", age:21);
@@ -206,14 +204,12 @@ Tables can be stored in databases and represent collection of records. Tables ar
 
 **pattern**
 ```
-define
-  <table_name> <: Table of
-  (
+global
+  Table table_name(
      <filed_name>:<data_type>,
      <filed_name>:<data_type>,
      ... 
-  )
-  key (<field_name>[,<field_name>]...);
+  );
 ```
 
 The record for a table has restrictions: 
@@ -267,17 +263,15 @@ We can open a table and traverse the table step by step using do. This operation
 **pattern**
 ```
 table_name.open(READ); 
-given:
+given
   --use introspection to declare current_record
-  current_record ∈ table_name.record(); 
-while ⊤ do
-  fetch table_name to current_record;
-  with current_record map
+  Record current_record;   
+scan current_record ∈ table_name go
+  map current_record 
     --use current_record fields
     ... 
-  with; 
-  done if table_name.end();
-while;
+  ready; 
+repeat
 table_name.close();
 ```
 

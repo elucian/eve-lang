@@ -6,7 +6,6 @@ EVE is modular language. Scripts are files with extension *.eve stored on a serv
 
 Next bookmarks will lead you to the main concepts required to understand EVE program structure.
 
-* [Server](#server)
 * [Modules](#modules)
 * [Regions](#regions)
 * [Classes](#classes)
@@ -18,12 +17,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Expressions](#expressions)
 * [Recursion](#Recursion)
 * [Dispatch](#dispatch)
-
-## Server
-
-EVE program is hosted using a virtual machine named Merlin. This is a program capable of running multiple EVE sessions in parallel. Each session represents one application.
-
-You can run same application in two different sessions. The sessions are independent and encapsulated. That means sessions can not communicate two each other.
+* [Server](#server)
 
 ## Modules
 
@@ -56,11 +50,11 @@ define
   -- variables
 define;
   
-class name:
+class name
   -- class_definition
 class;  
 
-method main(params):
+method main(params)
   -- method definition
 method;
 
@@ -105,14 +99,10 @@ Global members are visible in current module and modules that imports it.
 A method is a subroutine that can receive input/output parameters and have side-effects.
 
 ```
-method name(parameters):
+method name(parameters)
   -- executable region
   ...
-recover:
-  -- error handler
-finalize:
-  -- finalization region
-over;
+over
 ```
 
 ## method name
@@ -146,31 +136,30 @@ One method can receive multiple arguments of the same type separated by comma in
 ```
 method main(Array[String]() * args):
   print(args); 
-over;
+over
 ```
 
-## Aspect scope
+## Method scope
 
 Every method can define local variables, constants or functions. This is called local scope. Members defined in local scope are short leaving and are removed once the method is resolved. In this scope a method can implement attributes using "@" prefix. Attributes are factor properties of the method. 
 
-## Aspect Execution
+## Method Execution
 To execute an method you use keyword "solve" then method name followed by arguments. Arguments are enclosed in round parentheses separated by comma.  If an method do not have parameters or it have one single parameter the empty list () after the method name is not required.
 
 **method call**
 ```
-  solve <method_name>;
-  solve <method_name>  <one_argument>;  
-  solve <method_name> (<argument_list>);
+  method_name () 
+  method_name (argument_list)
 ```
 
-## Aspect termination
+## Method termination
 An method end with keyword over or exit; Program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
 
 **Example:**
 ```
 method test(Integer a):
   print (a);
-over;
+over
 
 method main(List[String]: *args):
   -- number of arguments received:
@@ -179,8 +168,8 @@ method main(List[String]: *args):
   -- verify condition and exit
   exit if c = 0;
   
-  solve test(c); -- method call
-over;
+  call test(c); -- method call
+over
 ```
 
 ## Side Effects
@@ -205,14 +194,14 @@ static
 method add_numbers() is
   $result := p1 + p2; --side effect
   print($result);
-over;
+over
 
 method main() is
   p1 := 10;
   p2 := 20;
   add_numbers;   
   expect $result = 30;  
-over;
+over
 ```
 
 **using output parameters**
@@ -220,18 +209,18 @@ over;
 To avoid system and global variables use output parameters:
 
 ```
-method add(integer: p1,p2, Integer @ out):
-  out := p1+p2;
-over;
+method add(integer p1,p2, Integer @out)
+  @out := p1+p2;
+over
 
-method main:
+method main()
   Integer result;
   -- reference argument require a variable
-  solve add(1,2, out : result);
+  add(1,2, @out:result);
   print (result); -- expected value 3
   -- negative test
-  solve add(1,2,4); -- error, "out" parameter require variable argument
-over;
+  add(1,2,4); -- error, "out" parameter require variable argument
+over
 ```
 
 Notes: 
@@ -250,7 +239,7 @@ In multiple dispatch many parameters can be used to identify a method. A method 
 
 **method Restrictions**
 * A method call is a statement, can not be used in expressions;
-* We can not create methods, data types or classes inside a over;
+* We can not create methods, data types or classes inside a over
 * We can not create references to methods:
 
 
@@ -258,13 +247,13 @@ In multiple dispatch many parameters can be used to identify a method. A method 
 Classes are composite data types. Once class can be used to create objects.
 
 ```
-class name(parameters) <: base_class is
+class name(parameters) <: base_class
   -- definition_region
-setup:
+setup
   -- constructor region
-scrap:
+scrap
   -- release region
-class;
+over
 ```
 
 ***Read more:** [Classes](classes.md)
@@ -288,15 +277,11 @@ EVE uses _control statements_ to describe a blocks of code that are controlled b
 A function can have parameters and produce one or more results. 
 
 ```
-function name(parameters) => (type :result, ...):
+function name(parameters) => (result_type result, ...)
   -- statements
   ...
   result := expression;
-recover:
-  -- error handler
-finalize:
-  -- finalization region 
-over;
+over
 ```
 
 **Function call**
@@ -327,51 +312,23 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 -- function declaration
-function sum(Integer a, b) => (Integer r):
-  r := a + b;
-over;
+function sum(Integer a, b) => (Integer result)
+  result := a + b;
+over
   
-method main() is
+method main()
   Integer r;  
   r := sum(10,20); -- function call
   print(r);        -- this will print 30
-over;
+over
 ```
-
-## Rules
-
-Rules are deterministic λ expressions similar to mathematical functions.
-
-**Notes:** Rules are "first class" objects. 
-
-* may be stored in data structures;
-* can be passed as arguments;
-* can be used in control structures;
-* cab be created in functions or methods.
-
-**pattern**
-```
-given:
-  rule rule_name(parameters) => type: (expression);
-  type: x;
-begin
-  -- call rule with arguments
-  x := rule_name(arguments);
-ready;  
-```
-
-**restrictions...**
-
-* rules are deterministic
-* rules do not have secondary effects;
-* rules do not have output parameters; 
 
 ## Conditionals
 
 A condition is using an expression that can have values T or F.   
 **syntax**
 ```
-  <statement> if (<condition>);
+  statement if (condition);
 ```
 
 **example**
@@ -386,13 +343,13 @@ print "False" if ¬ F;  -- this will print False
 * can not be used in conjunction with region keywords
 * can not be used in conjunction with declarations
 
-## Pattern match
+## λ expression
 
-A rule can have multiple conditional expressions named nodes. 
+An λ expression can have multiple conditionals named nodes. 
 
 **syntax:**
 ```
-  identifier(parameters) := (value/xp if condition,...default_value) ∈ type;
+  identifier := (value <- condition,...default_value);
 ```
 
 **nodes**
@@ -402,78 +359,31 @@ A rule can have multiple conditional expressions named nodes.
 
 **example**
 ```
-method main:
-  -- create a lambda expression
-  xp(Integer p1, p2) => Integer ( 0 if p1 ≡ 0, 0 if p2 ≡ 0, p1+p2);    
-  -- local x
-  Integer x; 
-  -- use lambda expression  
-  x := xp(0,1); print(x); -- 0 
-  x := xp(1,0); print(x); -- 0
-  x := xp(2,2); print(x); -- 4  
-over;
-```
-
-**anonymous expressions**
-
-Expressions can be anonymous. These can be used as arguments or in assign statement.
-
-**syntax**
-```
-  x := (<result> if <condition>,...<default>); 
+method main()
+  Integer p1, p2, x;
+  p1 := 2
+  p2 := 1
+  -- using λ expression  
+  x:= ( 0 <- p1 ≡ 0, 0 <- p2 ≡ 0, p1+p2)
+  print(x); -- 3 
+over
 ```
 
 **example**
 ```
-given:
-  Logic: b := F;
+given
+  Logic   b := F;
   Integer v := 0;   
 begin
-  v := (1 if b , 2);   
+  v := (1 <- b, 2);   
   print v; --> 2
-ready;  
+ready  
 ```
 
-## Rule as parameter
+## Server
 
-An method or function can receive one or more call-back rules. 
+EVE program is hosted using a virtual machine named Merlin. This is a program capable of running multiple EVE sessions in parallel. Each session represents one application.
 
-**Example:**
-```
-method test(Integer f(Logic: x), Logic: p):
-  -- call parameter function
-  print f(p) --> 1;
-over;
-
-method main:  
-  -- define foo as a rule
-  rule foo(Logic: b) => Integer (1 if b , 2);
-  -- use foo as call-back argument  
-  print test(foo,T);  -- expect 1
-  print test(foo,F);  -- expect 2 
-over;
-```
-
-## Recursive Rules
-A rule that call itself is recursive;
-
-**Example:**
-```
-method main(Integer p):
-  -- define a local recursive function 
-  rule factorial(Integer n) => Integer (1 if n ≡ 0 , n * factorial(n-1));
-  -- result variable must be declared before use
-  Integer r;
-  
-  -- call recursive function
-  r := factorial(p);   
-  print("#n" <+ r);
-over;
-```
-
-```
-> run do_factorial(4)
-> 24
-```
+You can run same application in two different sessions. The sessions are independent and encapsulated. That means sessions can not communicate two each other.
 
 **Read next**: [Control Flow](control.md)

@@ -57,11 +57,11 @@ define
 **Example:**
 ```
 define
-  type Point <: Record ( a, b ∈ Integer);
+  type Point <: Record (Integer a, b );
 
 method main() is
-  p1, p2 ∈ Point;      -- implicit constructor
-  p3 := {1,1} ∈ Point; -- initial value for Point
+  Point p1, p2;      -- implicit constructor
+  Point p3 := {1,1}; -- initial value for Point
   begin
   -- modification using constants
     p1.a := 1;
@@ -69,7 +69,7 @@ method main() is
     
     -- modification using literal
     p2 := {2, 2};
-  ready; 
+  ready 
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
   print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b));  
 over;
@@ -137,9 +137,9 @@ Precision Real numbers is variable depending on the size of the number. The numb
 ```
 method main()
   -- declare variable
-  i ∈ Integer; 
-  n ∈ Natural;
-  r ∈ Real;
+  Integer i; 
+  Natural n;
+  Real r;
   -- modify variables
   i := 9223372036854775807;
   n := 18446744073709551615;
@@ -180,15 +180,15 @@ Explicit conversion is possible but _unsafe_ in this direction:
 Complex -> Real ->  Natural -> Integer. 
 
 ```
-given:
-  a := 2 ∈ Integer;
-  b := 1.5 ∈ Real;
-begin:
-  b := a; -- this implicit cast is possible b ≡ 2.0
-  b := a + 3.5; -- add 3.5 then assign result to b ≡ 5.5
-  a := b;       -- error: can not assign Real to Integer
-  a := 1.5;      -- error: can not assign Real to Integer
-ready;
+given
+  Integer a := 2
+  Real b := 1.5 
+begin
+  b := a -- this implicit cast is possible b ≡ 2.0
+  b := a + 3.5 -- add 3.5 then assign result to b ≡ 5.5
+  a := b       -- error: can not assign Real to Integer
+  a := 1.5     -- error: can not assign Real to Integer
+ready
 ```
 
 ## Explicit coercion
@@ -196,29 +196,29 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 
 Examples of explicit coercion:   
 ```
-given:
-  a := 0 ∈ Integer;
-  b := 1.5 ∈ Real;
-begin:
+given
+  Integer a := 0
+  Real    b := 1.5
+begin
   -- explicit coercion lose (0.5)
-  a := floor(b); 
-  print(a); -- will print: 1
+  a := floor(b)
+  print(a) -- will print: 1
  
   -- explicit coercion add (0.5)
-  a := ceiling(b); 
-  print(a); -- will print: 2
-ready;
+  a := ceiling(b) 
+  print(a) -- will print: 2
+ready
 ```
 
 **Number to a string**
 
 ```
-given:
-  s ∈ String;
-  v := 1000 ∈ Integer;
-begin:  
-  s := format(v); -- explicit coercion s:="1000"
-begin:  
+given
+  String s 
+  Integer v := 1000
+begin  
+  s := format(v) -- explicit coercion s:="1000"
+ready  
 ```
 
 **String to a number**
@@ -226,16 +226,16 @@ begin:
 This can be done using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
 ```
-given:
-  v ∈ Integer;
-  b ∈ Real;
-  s := "1000" ∈ String;
-  r := "200.02" ∈ String;
-begin:
+given
+  Integer v 
+  Real    b
+  String  s := "1000"
+  String  r := "200.02"
+begin
   v := parse(s); -- make v ≡ 1000
   v := parse(r); -- make v ≡ 200 and decimal .02 is lost
   b := parse(r); -- make b ≡ 200.02 and decimal .02 is preserved
-ready;
+ready
 ```
 
 **Note:** 
@@ -254,11 +254,11 @@ This is a logical deduction of variable type from literal or constructor using "
 
 ```
 -- Define a list of 10 elements using type inference:
-given:
-  ls := (0,1,2,3,4,5,6,7,8,9);
-begin:
+given
+  List ls := (0,1,2,3,4,5,6,7,8,9);
+begin
   print(ls.type()); --> List
-ready;  
+ready  
 ```
 
 ## Default types
@@ -308,16 +308,16 @@ Type inference is welcome when type is difficult to create.
 Examples of type inference:
 
 ```
-given:
-  v := T;
-  r := (name:"test", age:"24"); 
-  m := {"key1":"value1","ley2":"value2"}; 
-begin:
+given
+  Logic  v := T;
+  Record r := (name:"test", age:"24"); 
+  Hash   m := {("key1":"value1"),("ley2":"value2")}; 
+begin
   -- check variable types using introspection
   print("v is of type " + type(v));
   print("r is of type " + type(r));
   print("m is of type " + type(m));
-ready;
+ready
 ```
 run test  
 ```
@@ -334,18 +334,18 @@ In EVE the type is first class value. For type introspection we can use:
 2. operator "is"
 
 ```
-given:
-  i  := 1.5 ∈ Real;
-  it ∈ Type;
-begin:
-  when i ∈ Real then
+given
+  Real i := 1.5;
+  Type it;
+begin
+  when i ∈ Real do
     print("Yes i is Real");
-  else:
+  else
     print("No i is not Real");
-  ready;
+  done
   it := type(i);
   print("type of i is #t" <+ it)
-ready;
+ready
 ```
 
 ## Partial Inference
@@ -355,7 +355,7 @@ Sometimes the type is partially specified to improve type declaration.
 ```
 define
   -- member type is inferred from literal 
-  a := 0 ∈ Array[](10);
+  Array[](10) a := 0;
 ```
 ## Logic type
 
@@ -381,7 +381,7 @@ define
 Probably best to define Logic type is Ordinal:
 ```
 define
-  Logic <: Ordinal { .T , .F };
+  type Logic <: Ordinal { .T , .F };
 ```
 
 **Relation Operators**
@@ -427,7 +427,7 @@ Ordinal type is usually a finite set that can be enumerated using a literal. In 
 
 ```
 define
-  type: <name> <: Ordinal(symbol:<value>, ... );
+  type <name> <: Ordinal(symbol:<value>, ... );
 
 ```
 
@@ -441,36 +441,36 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 **Example:**
 ```
 define
-  type:Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
+  type Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
 
-method main:
-  message ∈ String;
-  given:
-    Day: today := today();  
-  quest:
-    when today ∈ (Friday, Saturday, Sunday):
-      message:='weekend';
+method main()
+  String message
+  given
+    Day: today := today()  
+  quest
+    if today ∈ (Friday, Saturday, Sunday) then
+      message:='weekend'
       ...
-    when today = Monday:
-      message:='first workday';
-    when today = Friday:
-      message:='last workday';
+    if today = Monday then
+      message:='first workday'
+    if today = Friday then
+      message:='last workday'
   other
-    message:='middle of the week';
-  quest;
-  print('Is', message);  
-over;
+    message:='middle of the week'
+  ready
+  print('Is', message)
+over
 ```
 **Note** For private enumerations you can use a record type.
 
 **Range**
 We can use Ordinal to create a range of values:
 ```
-when today ∈ [Monday..Friday]:
+when (today ∈ [Monday..Friday]) do
    print ("Have a nice day!");
-else:
+else
    print ("Have a happy weekend!");  
-when;
+done
 ```
 
 **Operators**
@@ -478,17 +478,17 @@ Ordinal is a ordered set of Natural numbers identified by a name. Ordinal is a d
 
 ```
 -- using type Day declared before
-given:
+given
   Day: v := Friday;
-begin:
+begin
   v += 1; 
   expect v ≡ Saturday;
-ready;  
+ready  
 ```
 
 ## Gradual typing
 
-Gradual typing is a type system in which some variables may be given:types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "Variant".
+Gradual typing is a type system in which some variables may be giventypes and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "Variant".
 
 **Variant Types**
 
@@ -532,9 +532,9 @@ global
 A variant can change its data type at runtime:
 
 ```
-given:
+given
   (Real | Integer) : v, x ,t ;
-begin:
+begin
   -- positive example
   v := 1;     -- v is Integer
   x := 1.5;   -- x is Real    
@@ -545,7 +545,7 @@ begin:
   
   -- negative examples
   v := x;  -- ERROR: v is Integer
-ready;
+ready
 ```
 
 ## Reference
@@ -612,9 +612,9 @@ method test_string:
     str := 'First value';   -- create new reference
     ref :=  str;            -- borrow reference
     str := 'First value';   -- create new reference
-  ready;
-  expect  (str = ref); -- T  equal value
-  expect  (str ≡ ref); -- F  different references
+  ready
+  expect (str = ref); -- T  equal value
+  expect (str ≡ ref); -- F  different references
 over;
 ```
 
@@ -639,11 +639,11 @@ Note: You can create garbage in Bee if you loose reference to strings.
 We can test if a string is null using "is Null" expression.
 
 ```
-given: 
- String: str; 
+given 
+  String: str; 
 begin 
- print("str is null") if str is Null; 
-ready; 
+  print("str is null") if str is Null; 
+ready 
 ```
 
 ## Calendar
@@ -667,13 +667,13 @@ When can create a date literal using 3 reversible functions:
 **Note:** A reversible function is overloaded.
 
 ```
-given:
+given
   Date: date;
-begin:
+begin
   date := "2019/01/30" -> YDM;
   date := "30/01/2019" -> DMY;
   date := "01/30/2019" -> MDY;
-ready;  
+ready  
 ```
 
 **Date printing**
@@ -711,19 +711,19 @@ xx: can be: (am/pm)
 
 **default zero time**
 ```
-given:
+given
   Time: time; --> '00:00' 
 ```
 
 **Example**
 
 ```
-given:
+given
   Time: time1, time2, time3; 
-begin:
+begin
   time1 := "23:63" -> T24;   
   time2 := "23:63:59,99" -> T24;   
   time3 := "11:63:59pm,99ms" -> T12;   
-ready;
+ready
 ```
 **Read next:** [Composite Types](composite.md)

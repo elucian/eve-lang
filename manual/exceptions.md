@@ -7,7 +7,7 @@ The exception is a variable of type record that is created when exception is rai
 -- system global exception type
 define
    type: .Exception <: Record: (
-                         code: Integer, 
+                         code: Integer , 
                          message: String, 
                          section_name: String, 
                          module_name:  String, 
@@ -32,7 +32,7 @@ There are two alternative statements to create user defined exceptions.
 -- raise exception
 when condition then
   raise (code,"message");
-ready;
+ready
 
 -- conditional 
 raise (code,"message") if <condition>;
@@ -47,7 +47,7 @@ when condition then
   fail;
 when:
   pass;
-ready;
+ready
 
 -- conditional exception
 fail if condition;
@@ -62,12 +62,12 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-method main:
+method main()
   Real: a; 
   a := 1 ÷ 0;  
 recover
   print ($error.message);
-over;
+over
 ```
 
 ```
@@ -82,7 +82,7 @@ Most exceptions are recoverable except the exception created by panic statement.
 ```
 when condition:
   panic;
-ready;
+ready
 ```
 
 ## Assert

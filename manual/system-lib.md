@@ -41,11 +41,11 @@ read(prompt ∈ Sting) => String;
 
 **Example:**
 ```
-method main:
+method main()
   String: s;
   s := read(v, "read:");
   print("you entered:" & v);
-over;
+over
 ```
 
 ## Standard write 

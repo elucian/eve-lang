@@ -23,7 +23,7 @@ setup:
   ... 
 scrap:
   <object_dispose_region> 
-over;
+over
 ```
 
 ## Arguments
@@ -31,14 +31,14 @@ A class can have parameters used for object initialization declared in "receive"
 
 **example**
 ```
-given:
+given
   -- declare object
   <object_name> ∈ <class_name>;
-begin:
+begin
   -- create object 
   <object_name> := <class_name>(<param>:value[,<param>:value]...);
   ...
-ready;
+ready
 ```
 
 ## Instance _object_
@@ -82,10 +82,10 @@ A class can have a single constructor. A constructor can use decision statements
 setup
   when <condition>:
     object := <base_class>(<some_arguments>);
-  else:
+  else
     object := <base_class>(<other_arguments>);
-  ready;
-over;
+  ready
+over
 ```
 
 ## Object Initialization
@@ -96,20 +96,20 @@ We can use comparison operators: "=" and "≡" with objects. First comparison "=
 
 **Example:**
 ```
-method main:
-  o,n ∈ Integer;    
+method main()
+  o,n ∈ Integer ;    
   o := 1; 
   n := 1; 
   when o = n then
     print("o and n objects are the same"); --> unexpected
     fail;
-  else:
+  else
     print("n and o are not the same"); -->expected
-  ready;
+  ready
   -- verify
   expect  (o ≡ n); -- equivalent  
   expect !(o = n); -- not the same 
-over;
+over
 ```
 
 ## Generic Class

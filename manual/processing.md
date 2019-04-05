@@ -9,9 +9,9 @@ Array elements have very fast direct access by index.
 ```
 method test_array:
   --array  with capacity of 10 elements
-  Array[Integer](10): my_array; 
+  Array[Integer ](10): my_array; 
   -- scan array and modify element by element
-  given:
+  given
     Integer m := my_array.capacity();
     Integer i;
   scan i ∈ [1..m]:
@@ -20,7 +20,7 @@ method test_array:
   -- array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1]);
   print ("This is the last element: {1}"  <+ my_array[?]);
-over;
+over
 ```
 
 **console:**
@@ -43,12 +43,12 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ```
 -- a matrix having 2 rows and 2 columns
 -- initialize all elements with 100
-given:
-  Matrix[Integer](2,2); M;
-begin:
+given
+  Matrix[Integer ](2,2); M;
+begin
   M := 100;
   print (M);
-ready;
+ready
 ```
 
 ```
@@ -59,9 +59,9 @@ ready;
 * A matrix can support scalar operations like Array
 
 ```
-given:
-  Matrix[Integer](2,2):M;
-begin:
+given
+  Matrix[Integer ](2,2):M;
+begin
   M := 100;
   -- modify all elements
   M[*] += 10; 
@@ -76,7 +76,7 @@ begin:
   M[*,1] += 1;
   M[*,2] += 2;
   print(M); --> [[1,2],[2,3]]
-ready;
+ready
 ```
 
 **Memory impedance**
@@ -95,12 +95,12 @@ When you traverse elements use rows first, than you change the column. A process
 In this example we traverse all the rows then all the column, this is the most efficient way to traverse a matrix.
 
 ```
-method main:
+method main()
   Matrix[String(2)](3,3): M;    
   M :=  ⎡'a0','b0','c0'⎤
         ⎢'a1','b1','c1'⎥
         ⎣'a2','b2','c2'⎦;        
-  given:
+  given
     Integer col;
     Integer row;
   scan col ∈ [1..3]:     -- traverse columns
@@ -108,7 +108,7 @@ method main:
       print(M[row,col]);
     next row;
   next col;
-over;
+over
 ```
 
 ##  Arrays Slicing
@@ -130,9 +130,9 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-method main: 
-  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
-  Array[Integer]: b :: a[1..4];
+method main() 
+  Array[Integer ]: a := [0,1,2,3,4,5,6,7,8,9];
+  Array[Integer ]: b :: a[1..4];
 
   print(a[1..?]);   --will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1]);   --will print [0]
@@ -147,7 +147,7 @@ method main:
   
   -- first 4 elements of (a) are modified
   print(a)  -- will print: [2,3,4,5,4,5,6,7,8,9]
-over;
+over
 ```
 
 ### Set builders
@@ -174,14 +174,14 @@ Collection members can be copy into the new collection using a comprehension not
 
 **Example:**
 ```
-given:
+given
    List: source  := [0,1,2,2,2,2];
    Set : new_set := {};
-begin:
+begin
    -- eliminate duplicates using set comprehension
    mew_set := { x | x ∈ my_list }; 
    print my_set; --> {0,1,2} 
-ready;
+ready
 ```
 
 ## Filtering
@@ -189,13 +189,13 @@ Build notation can use expressions to filter out elements during comprehension o
 
 **Example:**
 ```
-given:
+given
    List my_list := [0,1,2,3,4,5];
    Set  my_set  := {};
-begin:
+begin
    my_set := { x | x ∈ my_list, x%2 ≡ 0 }; 
    print my_set; --> {0,2,4} 
-ready;
+ready
 ```
 
 ## Mapping
@@ -203,14 +203,14 @@ The elements in one set or list can be transformed by a function or expression t
 
 **Example:**
 ```
-given:
+given
    source := {0,1,2,3,4,5};
    target ∈ Hash; 
-begin:
+begin
    -- create Hash pairs (key, value) for Hash map
    --> { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
    target := { (x : x^2) | x ∈ source }; 
-ready;
+ready
 ```
 
 ## List Concatenation
@@ -218,38 +218,38 @@ List concatenation is done using operator “+”. This operator represent union
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-method main:
+method main()
   List[Char] a := ('a','b','c');
   List[Char] b := ('1','2','3');
   List[Char] c := (); 
 
   c := a + b;
   print(c); --['a','b','c','1','2','3']
-over;
+over
 ```
 
 ## Join() built-in
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
-given:
+given
   String: str;
-begin:
+begin
   str := join([1,2,3],",");
   print (str); --> "1,2,3"
-ready;  
+ready  
 ```
 
 ### Split built-in
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
-given:
-  List[Integer]: lst := ();
-begin:
+given
+  List[Integer ]: lst := ();
+begin
   lst := split("1,2,3",",");
   print lst; --> (1,2,3);
-ready;  
+ready  
 ```
 
 ### List operations
@@ -296,7 +296,7 @@ A special _while loop_ that is executed for each element belonging to a collecti
 
 **template**
 ```
-given:
+given
   type_name element;
 scan element ∈ collection:
   -- statements;
@@ -327,9 +327,9 @@ It is possible to change this using shortcuts or fast forward.
 
 ```
 --example of collection iteration
-method main:
+method main()
   List[Char] my_list := ['a','b','c','d','e']; 
-  given:
+  given
     Char: element;
   scan element ∈ my_list:
     -- continue shortcut
@@ -340,7 +340,7 @@ method main:
     stop if (element = 'd');    
     write(',');
   next element;
-over;
+over
 ```
 > c,d
 
@@ -363,16 +363,16 @@ Map and set are similar collections and both can be used for iteration:
 
 **Example:**
 ```
-method main:
+method main()
   Hash: my_map := {("a":1),("b":2),("c":3)};
   -- print pairs (key:value)
-  given:
+  given
     String : k;
     Integer v;
   scan (k,v) ∈ my_map:
     print('("' + k + '",' + v +')');
   next;
-over;
+over
 ```
 Will print:
 ```
@@ -389,31 +389,31 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 **example:**
 ```
 -- check if a key is present in a hash collection
-given:
+given
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer my_key := 3;
-begin:
+begin
   when my_key ∈ my_map then
      print('True'); -- expected
-  else:
+  else
      print('False');
      abort;
-  ready;
-ready;   
+  ready
+ready   
 ```
 
 **example**
 ```
 -- create new elements in the hash collection
 method main()
-  given:
+  given
     Hash(String, String): animals := {};
   begin
     animals['Bear'] := 'dog';
     animals['Kiwi'] := 'bird';
     print(animals);
-  ready;  
-over;
+  ready  
+over
 ```
 
 Output:
@@ -433,7 +433,7 @@ local
   --type inference will tell us he element types (String, String);
   Hash: animals := {};
    
-method main:
+method main()
   --create 1 more element
   animals.append('Rover','dog');
 
@@ -441,7 +441,7 @@ method main:
   animals['Bear'] := 'dog';
   animals['Kiwi'] := 'bird';
   print(animals);
-over;
+over
 ```
 output:
 ```
@@ -460,25 +460,25 @@ Strings can be concatenated using:
 **Example:**
 ```
 -- this is example of string concatenation
-given:
+given
   String: str := ""; 
-begin:
+begin
   -- set string value using different operators
   str := "this " .+. "string";   --> 'this string'
   str := "this " ._.  " string"; --> 'this string'
-ready;
+ready
 ```
 
 **path concatenation**
 Two strings can be concatenated using concatenation operator ".". This operator is used to concatenate "path" strings. The "." is converted to \ or / depending on the operating system.
 
 ```
-given:
+given
   String: s := "";
-begin:  
+begin  
   s := 'te' . 'st'; --> "te/st" --Linux
   s := 'te' . 'st'; --> "te\st" --Windows
-ready;  
+ready  
 ```
 
 ## Text concatenation
@@ -519,7 +519,7 @@ unicode ≠
 
 **Using Hash**
 ```
-method main:
+method main()
   String: template := "Hey look at this #{key1} it #{key2}";
   Hash:   my_map   := {("key1":"test"),("key2":"works!")};
   print(template.format(my_map)); --using format function
@@ -533,7 +533,7 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-method main:
+method main()
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
   print (template <+ my_set);

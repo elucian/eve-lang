@@ -35,20 +35,20 @@ EVE has ASCII and Unicode operators. Unicode operators require one space before 
 * [Operators](operators.md) 
 
 ## Data types
-A type is a data representation also considered as a "set" of data. It can be a supe-set/subset from which a variable can have values. For example Integer, Real, Complex, Rational or String are pre-defined data types. 
+A data type is an abstract set or class that describe data representation. 
 
-**Syntax:**
+There are 3 kind of data in EVE
+
+* basic type 
+* composite type 
+* class
+
+**syntax:**
+
+A composite data type is declared like this:
 ```
-define
-  <Name> <: <type_descriptor>;
-define;  
+type Type_Name <: Type_descriptor;
 ```
-
-**Notes:** 
-
-* Developers can define new data types in each module. 
-* Members defined in define region are public or private.
-* Public member names start with "." prefix.
 
 ## Variables
 A variable is represented by an identifier, and is associated to a type. Variable can be changed during the execution of the program using modifier operators { :=, +=, *:=, /:= ...}. 
@@ -57,13 +57,13 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 ```
 global
   -- use default value
-  type: var_name;                
+  type_name var_name;                
   -- specific value and type
-  type: var_name := value;
+  type_name var_name := value;
   -- multiple variables in one assignment
-  type: var_name1, name2 ...:= value; 
+  type_name var_name1, name2 ...:= value; 
   -- diverse values in one statement
-  type: var_name1:=value1, var_name2 := value2; 
+  type_name var_name1:=value1, var_name2 := value2; 
 ```
 
 **examples**
@@ -71,14 +71,14 @@ global
 global  
   Integer a ; 
   Integer b := 1; 
-  Real: d := 2.5;      
-  Real: x,y,z := 0.0;  
+  Real d := 2.5;      
+  Real x,y,z := 0.0;  
 ```
 
 **default value**
-When type is specified, and the initializer ":=" is missing the variable takes default "zero" value. This value is different for each data type. For example zero value for Real numbers is 0.0 and for strings is "". Notice the "zero" value is not Null. 
+When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Real numbers is 0.0 and for strings is "". Notice the "zero" value is not Null. 
 
-**system variables**
+## System variables
 We define system variables using "$" name prefix. _Environment Variables_ from OS are created automatically along with other "implicit" variables required by EVE semantics. 
 
 ## Modify Value 
@@ -109,7 +109,7 @@ X ₐ ₑ ₕ ᵢ ⱼ ₖ ₗ ₘ ₙ ₒ ₚ ᵣ ₛ ₜ ᵤ ᵥ ₓ
 Alternative notation for "power" function:
 
 ```
-x² ≡ x^2
+x² = x^2
 
 A ⁺ ⁻ ⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ 
 A ⁱ ʲ ᵏ ⁿ ᵒ ᵖ ʳ ˢ ˣ ʸ ᶻ 

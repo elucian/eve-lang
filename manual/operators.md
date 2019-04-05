@@ -42,6 +42,8 @@ Level use two symbols to create a additional operators.
 |=+    | Outer join operator used in data "select" statement
 |<:    | Declare user define type using a type descriptor
 |<+    | Unpack operator |\ Template operator
+|->    | Coercion operator
+|<-    | Implication operator
 
 ## String delimiters
 
@@ -119,10 +121,10 @@ These operators are expected logical values T := True, F := False
 
 | Symbol | Description
 |--------|-----------------------------------------------
-|  NOT   | logic NOT (negation) 
-|  AND   | logic AND (intersection) 
-|  OR    | logic OR  (union)
-|  XOR   | logic Exclusive OR
+|  ¬     | logic NOT (negation) 
+|  ∧     | logic AND (intersection) 
+|  ∨     | logic OR  (union)
+|  ~     | logic Exclusive OR
 
 ## Bitwise operators
 
@@ -132,14 +134,14 @@ These operators are working for Natural numbers ≥ 0
 --------|----------------------------------
   \<\<  | shift bits to left  
   \>\>  | shift bits to right
-  not   | bitwise NOT (unary)
-  and   | bitwise AND
-  or    | bitwise OR
-  xor   | bitwise XOR
+  ¬     | bitwise NOT (unary)
+  ∧     | bitwise AND
+  ∨     | bitwise OR
+  ~     | bitwise XOR
 
 **Binary operators**
 
- A    | B   |A and B|A or B | A xor B
+ A    | B   |A  ∧  B| A ∨ B | A ~ B
 ------|-----|-------|-------|--------
  00   | 00  |00     | 00    |  00    
  01   | 00  |00     | 01    |  01    
@@ -149,7 +151,7 @@ These operators are working for Natural numbers ≥ 0
 
 **Unary operators**
 
- A    |A \<\< 1 | A />/>2 |  not A
+ A    |A \<\< 1 | A />/>2 |  ¬ A
 ------|---------|---------|-------
  0000 | 0000    | 0000    | 1111
  1111 | 1110    | 0011    | 0000
