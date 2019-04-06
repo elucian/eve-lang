@@ -129,15 +129,15 @@ These operators are working for Natural:numbers ≥ 0
  symbol | description
 --------|----------------------------------
   \<-   | shift bits to left  
-  \->   | shift bits to right
+  -\>   | shift bits to right
   !     | bitwise NOT (unary)
   &     | bitwise AND
-  |     | bitwise OR
+  \|    | bitwise OR
   ~     | bitwise XOR
 
 **Binary operators**
 
- A    | B   |A  &  B| A | B | A ~ B
+ A    | B   |A  &  B| A \| B| A ~ B
 ------|-----|-------|-------|--------
  00   | 00  |00     | 00    |  00    
  01   | 00  |00     | 01    |  01    
@@ -147,7 +147,7 @@ These operators are working for Natural:numbers ≥ 0
 
 **Unary operators**
 
- A    |A \<-  1 | A -/>2  | !A
+ A    |A \<-  1 | A -\>2  | !A
 ------|---------|---------|-------
  0000 | 0000    | 0000    | 1111
  1111 | 1110    | 0011    | 0000
