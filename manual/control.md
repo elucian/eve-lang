@@ -203,12 +203,12 @@ repeat
 **example**
 
 ```
-create x   := 9
-create a,r := 0
-
+given
+   Integer: x   := 9
+   Integer: a,r := 0
 cycle
   r := x % 2
-  a := (0 | r = 0, 1)
+  a := (0: r = 0, 1)
   write "{1}:{2}" <+ (x,a)
   x -= 1
   write ','

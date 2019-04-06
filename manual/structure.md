@@ -13,8 +13,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Conditionals](#conditionals)
 * [Control flow](#control)
 * [Functions](#functions)
-* [Pattern match](#pattern-match)
-* [Expressions](#expressions)
+* [Expressions](#λ-expressions)
 * [Recursion](#Recursion)
 * [Dispatch](#dispatch)
 * [Server](#server)
@@ -336,8 +335,8 @@ A condition is using an expression that can have values T or F.
 
 **example**
 ```
-print "True"  if   T;  -- this will print True
-print "False" if ¬ F;  -- this will print False
+print "True"  if  T;  -- this will print True
+print "False" if !F;  -- this will print False
 
 ```
 
@@ -352,7 +351,7 @@ An λ expression can have multiple conditionals named nodes.
 
 **syntax:**
 ```
-  identifier := (value <- condition,...default_value);
+  identifier := (value:condition,...default_value);
 ```
 
 **nodes**
@@ -367,7 +366,7 @@ method: main()
   p1 := 2
   p2 := 1
   -- using λ expression  
-  x:= ( 0 <- p1 = 0, 0 <- p2 = 0, p1+p2)
+  x:= ( 0 : p1 = 0, 0 : p2 = 0, p1+p2)
   print(x); -- 3 
 over
 ```
@@ -378,7 +377,7 @@ given
   Logic:   b := F;
   Integer: v := 0;   
 begin
-  v := (1 <- b, 2);   
+  v := (1 : b, 2);   
   print v; --> 2
 ready  
 ```
