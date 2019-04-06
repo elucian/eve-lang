@@ -46,7 +46,7 @@ One application can connect to a database that is current database or default da
 To connect to database we must use "connect" command. This command can be implemented as method or function in the model and must be exported. Once connected the instance of the model remain in memory until we call: "disconnect". 
 
 ```
-method connect(credential:String):
+method:connect(credential:String):
   db:=Database(credential, signature); -- create a database instance
 over;
 ```
@@ -134,11 +134,11 @@ A record instance is a variable of type record. The memory is allocated using th
 ```
 -- we declare a record type  
 define
-  Type Person <: Record (name:String(32), age:Integer );
+  type: Person <: Record (name:String(32), age:Integer: );
 
-method main:
-  Person person1,person2;   -- two variables of type Person
-  catalog ∈ Array[Person](10); -- a collection of Persons
+method: main:
+  Person: person1,person2     -- two variables of type Person
+  Array[Person](10): catalog  -- a collection of Persons
 
   -- creating persons using record literals
   person1 := (name:"John", age:21);
@@ -147,17 +147,17 @@ method main:
 
   -- create an array with 30 new persons
   given:
-    i ∈ Integer;
-  while i ≤ 10 do
+    Integer: i;
+  while (i ≤ 10) do
     catalog[i] := Person("John Doe", 20);
     i += 1; 
-  while;
+  done;
 
   -- change first person using "with...do"
-  with catalog[1] set
+  with catalog[1]
     name := "Ispas Inca";
     age  := "17"; 
-  with;
+  ready;
   
   print("#s is single." <+ catalog[1].name)
 over;
@@ -179,7 +179,7 @@ It can be used to define the record using a constant. After first assignment the
 
 ```
 global
-  Record person := (name:"John", age:21);
+  Record: person := (name:"John", age:21)
 ```
 
 ## Gradual Types
@@ -187,12 +187,12 @@ global
 We can use keyword Record to define a variable of type record with unknonw structure;
 
 ```
-given:
-  Record person;
-begin:
+given
+  Record: person;
+begin
   -- differed structure
-  person:= (name:"John", age:21);
-ready;
+  person:= (name:"John", age:21)
+ready
 ```
 
 ## Tables
@@ -205,11 +205,11 @@ Tables can be stored in databases and represent collection of records. Tables ar
 **pattern**
 ```
 global
-  Table table_name(
-     <filed_name>:<data_type>,
-     <filed_name>:<data_type>,
+  Table: table_name[
+     data_type>: filed_name,
+     data_type>: filed_name,
      ... 
-  );
+  ]
 ```
 
 The record for a table has restrictions: 
@@ -250,7 +250,7 @@ We can scan tables using for...do like a normal collection. No need to learn any
 
 **Example:**
 ```
-for <record_name> ∈ <table_name> do
+for <record_name> <: <table_name> do
   ... --use <record_name>
 for;
 ```
@@ -266,7 +266,7 @@ table_name.open(READ);
 given
   --use introspection to declare current_record
   Record current_record;   
-scan current_record ∈ table_name go
+scan current_record <: table_name go
   map current_record 
     --use current_record fields
     ... 
@@ -331,11 +331,12 @@ A data view is a query template. Having a view defined can improve productivity.
 **View Example:**
 ```
 define
-  view_name <: View of (
-    filed_name:<type>,
-    filed_name:<type>,
+   View
+   
+   [
+    type: filed_name,
     ...
-   )
+   ]: view_name
    from <table_name> [as alias][,<table_name>] ...
    [join  <join_expression>]   
    [where <filter_expression>]
@@ -360,7 +361,7 @@ One table is the leading table. The second table must be related to the first ta
 We can scan view using for...do. This is the most common way to scan all records in a view. The scan will open the view, automatically read all records and close the view. The only thing we need to do is to use the record.
 
 ``` 
-for <current_record> ∈ <view_name> do  
+for <current_record> <: <view_name> do  
   print (<current_record>);
 for;
 ```
@@ -422,7 +423,7 @@ fetch <cursor_name> to <list_of_records> [limit N];
 ```
 **using for do...**
 ```
-for <record_name> ∈ <cursor_name> do
+for <record_name> <: <cursor_name> do
   with <record_name> map
      ... --use record fields
   with;
