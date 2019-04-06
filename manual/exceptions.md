@@ -6,13 +6,13 @@ The exception is a variable of type record that is created when exception is rai
 ```
 -- system global exception type
 define
-   type: .Exception <: Record: (
-                         code: Integer , 
-                         message: String, 
-                         section_name: String, 
-                         module_name:  String, 
-                         line_number:  String
-                        );
+   type: .Exception <: Record[
+                          Integer: code 
+                         ,String:  message 
+                         ,String:  section_name 
+                         ,String:  module_name 
+                         ,String:  line_number  
+                       ]
 -- global variable for holding current error
 global
    Exception: $error;
@@ -31,11 +31,11 @@ There are two alternative statements to create user defined exceptions.
 ```
 -- raise exception
 when condition then
-  raise (code,"message");
+  raise (code,"message")
 ready
 
 -- conditional 
-raise (code,"message") if <condition>;
+raise (code,"message") if (condition)
 ```
 
 ## Quick exception
@@ -43,10 +43,10 @@ Using keyword _"fail"_ user can quick create an exception that has no message or
 
 ```
 -- quick exception
-when condition then 
-  fail;
-when:
-  pass;
+when (condition) begin
+  fail
+else
+  pass
 ready
 
 -- conditional exception
@@ -62,9 +62,9 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-method main()
+method: main()
   Real: a; 
-  a := 1 ÷ 0;  
+  a := 1 / 0;  
 recover
   print ($error.message);
 over
@@ -80,8 +80,8 @@ Most exceptions are recoverable except the exception created by panic statement.
 
 **Example:**
 ```
-when condition:
-  panic;
+when (condition) begin
+  panic
 ready
 ```
 

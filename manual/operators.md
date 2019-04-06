@@ -11,9 +11,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | (,,,)     | List notation \| Ternary expressions
 | [,,,]     | Array literal [1,2,3] \| Matrix [ [1,2],[3,4] ]
 | {,,,}     | Data record \| Ordinal type \| Set of values
-|\|\*...\*\|| Expression comments (inside large expressions)
-| +-...-+   | Multi-line comments
-| {\*...\*} | Nested comments
+|\|\*..\*\| | Nested comments
 
 ## Single symbols
 
@@ -24,10 +22,10 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | ;     | The end of any statement \| Statement separator
 | .     | Decimal separator \| Member of {record, module, object}
 | ,     | Enumeration for elements in a sequence
-| ∈     | Belong to set
+| <:    | Belong to set
 | @     | Require reference \| Input/Output parameter
 | :     | Type pair-up \| Value pair-up \| Argument pair-up
-| \*    | Variable arguments \| Multiple of something
+| \*    | Variable arguments \| Multiplication
 
 ## Double symbols
 
@@ -44,8 +42,10 @@ Level use two symbols to create a additional operators.
 |<+    | Unpack operator |\ Template operator
 |->    | Coercion operator
 |<-    | Implication operator
+|==    | Shallow comparison
 
-## String delimiters
+
+## String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
@@ -53,27 +53,22 @@ Level use two symbols to create a additional operators.
 |'x'   | ASCII string literal
 |"x"   | Unicode string literal
 
-## String concatenation
+## String: concatenation
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-| .+.  | Concatenate two strings as they are. No trim is performed!
-| .,.  | Concatenate two strings, trim first and separate with comma
-| ._.  | Concatenate two strings, trim both and separate with one space
-| ./.  | Concatenate two strings with "/" separator and de-duplicate "//"   
-| .\\. | Concatenate two strings with "\\" separator and de-duplicate "\\"   
+|  &   | Concatenate two strings as they are. No trim is performed!
+|  /   | Concatenate two strings with "/" separator and de-duplicate "//"   
+|  \\  | Concatenate two strings with "\\" separator and de-duplicate "\\"   
 
 ## Numeric operators
 
 |Symbol |  Description
 |-------|----------------------------------------------------------------
-| /     | Rational division (fraction)
-| ±     | Tolerance relation:  x ≈ y ± 0.01
+| /     | Real division
+| *     | Numeric multiplication \| Scalar operator (alt+250) 
 | ^     | Power operator. Example: x^n is the x to the power of n.
-| ·     | Numeric multiplication \| Scalar operator (alt+250) 
-| ÷     | Real number division \| Scalar operator
 | %     | Reminder operator \| Scalar operator
-| ×     | Matrix multiplication \| Vector × Matrix
 | \+    | Numeric addition \| Concatenation \| Union
 | \-    | Subtraction (dual operator)
 
@@ -85,8 +80,8 @@ Modifiers are in-place operators. They change value of the left operand with val
 | :=   | new value \| replace existing value  
 | +=   | addition \| scalar addition
 | -=   | subtraction  \| scalar subtraction
-| ÷=   | division  \| scalar division
-| ·=   | multiplication \| scalar multiplication
+| /=   | division  \| scalar division
+| *=   | multiplication \| scalar multiplication
 | %=   | reminder \| scalar reminder
 | ^=   | power \| scalar power
 
@@ -95,14 +90,15 @@ Modifiers are in-place operators. They change value of the left operand with val
 Level use two symbols to create a additional operators.
 
 |Symbol| Description
-|------|----------------------------------------------------------------
-|  =   | Deep comparison \| Same value \| Same attributes \| Same type
-|  ≡   | Equivalent  \| Value comparison \| (data comparison)
-|  ≈   | Approximative equal  (used like a ≈ b ± 0.25)
+|------|-----------------------------------------------------------------------
+|  =   | Equal: deep comparison \| Same type + Equal values \| Equal attributes 
 |  >   | Greater than 
 |  <   | Less than    
-|  ≥   | Greater than or equal to
-|  ≤   | Less than or equal to
+|  <>  | Not equal: deep comparison, equivalent to !(a = b)
+|  >=  | Greater than or equal to
+|  <=  | Less than or equal to
+|  ==  | Reference comparison  \| Same reference
+|  !=  | Reference comparison  \| Different references
         
 ## Collection operators
 
@@ -110,10 +106,10 @@ In following table A, B, C are sets and x is a member: numeric or string
 
 |Operator | Result  | Description
 |---------|---------|-------------------------------------------------------------------
-| A ∩  B  | new set | Intersect A with B, use with : like C := A & B (return a new set)
-| A ∪  B  | new set | Union A with B, use with : like C := A | B (return a new set)
-| A ⊂  B  | logic   | verify is A is subset of B
-| x ∈  A  | logic   | verify if x is a member of collection
+| A |  B  | new set | Intersect A with B, use with : like C := A & B (return a new set)
+| A &  B  | new set | Union A with B, use with : like C := A | B (return a new set)
+| A <= B  | logic   | verify is A is subset of B
+| x <: A  | logic   | verify if x is a member of collection
         
 ## Logical operators
 
@@ -121,27 +117,27 @@ These operators are expected logical values T := True, F := False
 
 | Symbol | Description
 |--------|-----------------------------------------------
-|  ¬     | logic NOT (negation) 
-|  ∧     | logic AND (intersection) 
-|  ∨     | logic OR  (union)
+|  !     | logic NOT (negation) 
+|  &     | logic AND (intersection) 
+|  |     | logic OR  (union)
 |  ~     | logic Exclusive OR
 
 ## Bitwise operators
 
-These operators are working for Natural numbers ≥ 0
+These operators are working for Natural:numbers ≥ 0
 
  symbol | description
 --------|----------------------------------
-  \<\<  | shift bits to left  
-  \>\>  | shift bits to right
-  ¬     | bitwise NOT (unary)
-  ∧     | bitwise AND
-  ∨     | bitwise OR
+  \<-   | shift bits to left  
+  \->   | shift bits to right
+  !     | bitwise NOT (unary)
+  &     | bitwise AND
+  |     | bitwise OR
   ~     | bitwise XOR
 
 **Binary operators**
 
- A    | B   |A  ∧  B| A ∨ B | A ~ B
+ A    | B   |A  &  B| A | B | A ~ B
 ------|-----|-------|-------|--------
  00   | 00  |00     | 00    |  00    
  01   | 00  |00     | 01    |  01    
@@ -151,7 +147,7 @@ These operators are working for Natural numbers ≥ 0
 
 **Unary operators**
 
- A    |A \<\< 1 | A />/>2 |  ¬ A
+ A    |A \<-  1 | A -/>2  | !A
 ------|---------|---------|-------
  0000 | 0000    | 0000    | 1111
  1111 | 1110    | 0011    | 0000
@@ -159,5 +155,3 @@ These operators are working for Natural numbers ≥ 0
  0110 | 1100    | 0001    | 1001
 
 **See also:** [Wikipedia Bitwise Operation](https://en.wikipedia.org/wiki/Bitwise_operation)
-
-

@@ -36,12 +36,12 @@ The read statement can print a text (prompt) then wait until user type and press
 
 Function read declaration
 ```
-read(prompt ∈ Sting) => String;
+read(prompt <: Sting) => String;
 ```
 
 **Example:**
 ```
-method main()
+method: main()
   String: s;
   s := read(v, "read:");
   print("you entered:" & v);
@@ -60,7 +60,9 @@ This will help developers to make dynamic write.
 Is user responsibility to make a line break using an escape \n or \r inside the string parameter.
 
 ```
-method write(*str ∈ String);
+method: write(*str <: String)
+ ...
+over
 ```
 
 write sting can contain an escaped end of line character.
@@ -83,7 +85,9 @@ that is (pass, fail) but also to display at the console some feedback.
 ## Function _print_
 This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beggining of the next line. So the _print_ function is more like println() from other languages.
 ```
-method print(*str ∈ String);
+method: print(*str <: String)
+...
+over
 ```
 
 The sting do not have to contain the end of line character. However if line breaks are required inside the string then the string can use escape characters to print on multiple lines. This is unusual for a program but is possible.

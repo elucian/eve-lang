@@ -26,7 +26,7 @@ ready
 **Notes:** 
 
 * given is optional region for <block>
-* block ∈ { when, cycle, while, scan, trial }
+* block <: { when, cycle, while, scan, trial }
 * one blocks is ending with keywords: { ready \| repeat}
 
 ## When
@@ -38,41 +38,41 @@ When, can be used in conjunction with {do, else} keywords to create a dual path 
 
 1.single path selector
 ```
-when <expression> do
+begin if (expression) 
   -- single path
-done
+ready
 ```
   
 2.dual path selector
 ```  
-when <expression> do
+begin if (expression) 
    -- true path
 else
    -- false path
-done
+ready
 ```
   
 3.nested selector 
 ```  
-when <expression>   do
-  when <expression> do
-   -- first path
-  done
-done
+begin if (expression) 
+  begin if (expression) 
+   -- nested path
+  ready
+ready
 ```
 
 4.ladder
 
 ```  
-when <expression>     do
+begin if (expression) 
    -- first path
-else if <expression>  do
+else  if (expression)
    -- second path
-else if <expression>  do
+else  if (expression)
    -- third path
 else
    -- last path
-done
+ready
 ```
 
 
@@ -86,13 +86,13 @@ The quest is a multi-path value based selector. It is used in conjunction with {
 given 
   type: val := expression
 quest val
-  is constant1 then
+  is (constant1) then
     -- first path
     ...
-  is constant2 then
+  is (constant2) then
     -- second path
     ...
-  in (val_list) then
+  in (val_list)  then
     -- third path
 cover
   -- default path
@@ -104,18 +104,18 @@ It is possible to use more then one value using a list, range or collection.
 
 **Example:**
 ```
-method test(Integer p:=0) 
-  String: message := "";
+method: test(Integer: p:=0) 
+  String: message := ""
   given 
-    Integer v := p + 4
-  quest
-    if v ∈ (1,2,3) then
+    Integer: v := p + 4
+  quest v
+    in (1,2,3) then
       message := "first match";
       ...
-    if v ∈ [1..8] then
+    in [1..8]  then
       message := "second match";
       ...
-    if v ∈ [5..10] then
+    in [5..10] then
       message := "third match";      
   cover
     message := "no match";
@@ -135,6 +135,18 @@ over
 
 Create repetitive statement block.
 
+
+**pattern**
+```
+given
+  -- control variables
+cycle
+  -- repeating block
+  ...
+repeat if (condition)
+```
+
+**interruptions**
 ```
 given
   -- control variables
@@ -151,7 +163,7 @@ repeat
 
 ```
 given
-  Integer a := 10
+  Integer: a := 10
 cycle
   a -= 1
   -- conditional repetition
@@ -199,11 +211,10 @@ cycle
   a := (0 | r = 0, 1)
   write "{1}:{2}" <+ (x,a)
   x -= 1
-  when x = 5 do
-    write ','; stop
-  done
-repeat
-print --> 9:1, 8:0, 7:1, 6:0, 5:1
+  write ','
+repeat if (x < 5)
+
+print --> 9:1, 8:0, 7:1, 6:0, 5:1,
 ```
 
 ## While
@@ -228,10 +239,10 @@ done
 
 ```
 -- example of collection iteration
-method main()
+method: main()
   given 
-    Array test := ["a","b","c","d","e"]
-    Integer i := 0
+    Array:test := ["a","b","c","d","e"]
+    Integer: i := 0
   while (i < test.length) do
     element := my_list[i];
     i += 1
@@ -260,33 +271,33 @@ Note:
 **Pattern:**
 ``` 
 given
-  Integer min := <constant>;
-  Integer max := <constant>;  
-  Integer var ;
-scan var ∈ Z[min..max]
+  Integer: min := constant
+  Integer: max := constant  
+  Integer: var ;
+scan var <: Z[min..max]
   -- block statements;
   ...
 next
 ```
 
 **Notes:**    
-* The "given" keyword create a local scope. 
 * Control variable is automatic incremented;
 * Control variable must be declared in local scope;
 
 Example of forward iteration:
 ```
 given
-  Integer i := 0 
-scan i ∈ Z[0..10]
+  Integer: i := 0 
+scan i <: Z[0..10]
   -- force next iteration
-  when (i % 2 ≡ 0) do
+  if (i % 2 = 0)  
+  begin
     skip
   else
     -- write only odd numbers
     write(i)  
     write(',') if (i < 10)  
-  done
+  ready
 next
 ```
 > 1,3,5,7,9
@@ -317,16 +328,16 @@ given
   -- declaration
 trial
   -- initialization
-  case name_1
+  case: name_1
     abort if (condition)
-  case name_2
+  case: name_2
     retry name_1 if (condition)
-  case name_3
+  case: name_3
     solve name_4 if (condition)
   ...    
-error code1
+error: code1
   patch_statement
-error code2
+error: code2
   patch_statement  
 ...  
 other
@@ -362,15 +373,15 @@ The exception is a variable of type record that is created when exception is rai
 -- system global exception type
 define
    type .Exception <: Record (
-                         Integer code, 
-                         String  message, 
-                         String  section_name, 
-                         String  module_name, 
-                         String  line_number  
+                         Integer: code, 
+                         String:  message, 
+                         String:  section_name, 
+                         String:  module_name, 
+                         String:  line_number  
                         )
 -- global variable for holding current error
 global
-   Exception: $error;
+   Exception: $error
 ```
 ## Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -385,12 +396,7 @@ There are two alternative statements to create user defined exceptions.
 
 ```
 -- raise exception
-when condition do
-  raise (code,"message")
-done
-
--- conditional 
-raise (code,"message") if <condition>
+raise (code,"message") if (condition)
 ```
 
 ## Quick exception
@@ -398,11 +404,11 @@ Using keyword _"fail"_ user can quick create an exception that has no message or
 
 ```
 -- quick exception
-when condition do 
+begin if (condition) 
   fail
 else
   pass
-done
+ready
 
 -- conditional exception
 fail if (condition)
@@ -417,8 +423,8 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-method main()
-  Real a 
+method: main()
+  Real: a 
   a := 1 ÷ 0
 recover
   print $error.message
@@ -435,23 +441,23 @@ Most exceptions are recoverable except the exception created by panic statement.
 
 **Example:**
 ```
-when condition do
-  panic
-done
+panic if (condition)
 ```
 
 ## Assert
 
 The assert statement is very simple. It check a condition and raise an assert error if condition is false. Does not produce any error message but: "Assert error in line x".
 ```
-  assert condition;
+  assert (condition)
 ```
 
 ## Expect
 The expect statement is similar to assert. It verify an expression and  it produce "Unexpected error."
 
+```
+  expect (condition)
+```
 
-**Read next:** [Data Processing](processing.md)
 **directive**
 
 * #trace:on|off  -- create trace records for ...errors

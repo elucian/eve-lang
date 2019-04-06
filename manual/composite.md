@@ -10,14 +10,13 @@ Composite types represents groups of multiple elements.
 
 ## Array
 
-An array is a collection of elements stored in order of natural index. Array elements all must have same data type and can be native or references. Array index start from 1 to last index ≡ capacity.
+An array is a collection of elements stored in order of natural index. Array elements all must have same data type and can be native or references. Array index start from 1 to last index = capacity.
 
 **array declaration** 
 ```
 -- declaration of an array with capacity
 global
-  Array array_name[element_type](capacity);              -- initialized with zero
-  Array array_name[element_type](capacity) *= constant;  -- initialized with constant
+  Array: array_name[element_type](capacity)
 ```
 
 **array capacity**
@@ -34,7 +33,7 @@ In the next example we  am array with capacity of 3 elements.
 ```
 -- array declaration and initialization
 global
-   Array my_array[Integer](3) := [1,2,3];
+   Array: my_array[Integer](3) := [1,2,3];
 ```
 
 **array constructor**
@@ -43,8 +42,8 @@ An array  capacity can be established using a parameter and a constructor. All e
 
 ```
 -- variable array size depending upon parameter n
-method test(n ∈ Integer)
-  Array my_array(n) *= 0;
+method: test(Integer: n)
+  Array: my_array(n);
 over;
 ```
 
@@ -52,17 +51,17 @@ over;
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  Array my_array(10) *= 0   ; --> of integer
-  Array my_array(10) *= 0.0 ; --> of real 
-  Array my_array(10) *= ""  ; --> of Text
-  Array my_array(10) *= ''  ; --> of String
+  Array: my_array(10) := 0   -- integer
+  Array: my_array(10) := 0.0 -- real 
+  Array: my_array(10) := ""  -- Text
+  Array: my_array(10) := ''  -- String
 ```
 
 The most convenient way to an Array using full inference literal:
 ```
 global
   -- capacity is 4 and element type is string
-  Array my_array := ['a','bc','def','chk'];
+  Array: my_array := ['a','bc','def','chk'];
 ```
 
 **Note:** my_array will be a list if the Array keyword is missing.
@@ -73,19 +72,19 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   Matrix matrix_name[type](n,m)  *= constant ;
+   Matrix: matrix_name[type](n,m) := constant;
 ```
 
 **example:**
 ```
 --  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
-  m := '__' ∈ Matrix(3,3) of String(2); 
+  Matrix[String(2)](3,3): m := '__'
 begin
-  m[1] := ['a0','b0','c0'];
-  m[2] := ['a1','b1','c1'];
-  m[3] := ['a2','b2','c2'];
-  print m;
+  m[1] := ['a1','b1','c1']
+  m[2] := ['a2','b2','c2']
+  m[3] := ['a3','b3','c3']
+  print m
 ready
 ```
 
@@ -103,8 +102,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-   <list_name> ∈ List of <type_name>;
-   <list_name> := (<constant>, <constant>, ...);
+   List[type_name]: list_name
+   List: list_name := (<constant>, <constant>, ...)
 ```
 
 **notes:**
@@ -115,45 +114,44 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  n_list ∈ List of Integer;
-  o_list ∈ List of Class;
-  s_list ∈ List of String;
+  List[Integer]: n_list 
+  List[Object] : o_list 
+  List[String] : s_list 
 ```
+
 **list literals**
  
-* Initialization of a list can be done using assign operator ":="
-* List literals enclosed in round bracket.
-* Elements are separated by comma. (,,,). 
-* All elements are using the same type.
+* List literals enclosed in round bracket
+* Elements are separated by comma. (,,,) 
+* All elements are using the same type
 
 **examples**
 
 Literals can be used for initialization:
 ```
 given
-  List c_list[Char]    := ('a', 'b', 'c');
-  List n_list[Integer] := (1, 2, 3);  
+  List[Char]   : c_list := ('a', 'b', 'c')
+  List[Integer]: n_list := (1, 2, 3)  
 ```
 
 Literals can be used in expressions:
 ```
 given
   -- define empty list if native types
-  List c_list[integer] := (); 
+  List[integer]: c_list := () 
 begin
   -- update list using  ":=" 
-  c_list := (1,2,3); 
+  c_list := (1,2,3) 
 ready
 ```
 
 ## Set
 In mathematics a set is an abstract data structure that can store certain values, without any particular order, and no repeated values. Sets are fast to search, add or remove elements. However, you have to know the element value in order to search for it or to remove it from the set. 
 
-**syntax**
+**declaration**
 
 ```
-given
-  Set name[type] := {};
+  Set[type] :name := {} 
 ```
 
 **Empty Set**
@@ -163,33 +161,38 @@ An empty set is represented like this: {} and can be assigned to a set if you wi
 **Set restrictions**
 
 * All elements of a set must have the same type
-* Set elements can have only comparable types: {ordinal, number, string}.
+* Set elements can have only comparable types: {Ordinal, Numeric, String. Text}.
 
 **Example:**
 ```
 given
-  Set my_set[integer] := {0,1,2,3,4,5,6,7,8,9}
+  Set[integer]: my_set := {0,1,2,3,4,5,6,7,8,9}
 ```
 
 **Mutability**
 
 A set can be modified during run-time using operators. 
 
-* append: += 
-* remove: -= 
-* clear : := {} 
+* += for append 
+* -= for remove  
+* := for replace 
 
+```
+  my_set    += 1;  -- try to append element 1
+  my_set[*] += 1;  -- modify each element
+  my_set    := {}; -- remove all elements  
+```
 ### Union
 
 Union operator ∪ combine two sets.
 
 ```
 given
-  Set first := {0,1,2,3,4,5,6,7,8,9};
-  Set second[Integer] := {};
+  Set: first := {0,1,2,3,4,5,6,7,8,9}
+  Set[Integer]: second := {}
 begin
-  second := first ∪ {0,1,2,10}; --set union
-  print(second) ; -- {0,1,2,3,4,5,6,7,8,9,10}
+  second := first ∪ {0,1,2,10} --set union
+  print(second) -- {0,1,2,3,4,5,6,7,8,9,10}
 ready
 ```
 
@@ -198,7 +201,7 @@ Intersect operator ∩ find common elements:
 
 ```
 given
-  Set test := {};
+  Set: test := {}
 begin
   test := {1,2,3,4} ∩ {3,4,5}; 
   print test; --> {3,4}
@@ -207,7 +210,7 @@ ready
 
 ## Hash Map
 
-It is called "H" due to similar method of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
+It is called "H" due to similar method:of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
 
 * Hash is set of (<key>:<value>) pairs; 
 * The key must be one of {Integer, Natural, String} and is unique;
@@ -215,13 +218,13 @@ It is called "H" due to similar method of letter H representing a connection, li
 **syntax**
 ```
 given
-  Hash name(key_type:value_type) := {(key:value), ...};
+  Hash[key_type, value_type]: name := {(key:value), ...};
 ```
 
 **Example**
 ```
 given
-   Hash dictionary(String :Integer) := {};
+   Hash[String, Integer]: dictionary := {};
 begin   
    dictionary := {('one':1), ('two':2)};
 ready
@@ -236,9 +239,9 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 **Example:**
 ```
 given
-   Text us := "I can write Greek: \αβγδ\."
+  Text: us := "I can write Greek: \αβγδ\."
 begin
-   print(us)   
+  print (us)   
 ready   
 ```
 > I can write Greek: "αβγδ".
@@ -258,12 +261,12 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 -- declaration example of a text literal
 given
-  Text my_text := ""
+  Text: my_text := ""
 begin
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
              and looks like work." 
-  print(my_text);
+  print (my_text)
 ready
 ```
 

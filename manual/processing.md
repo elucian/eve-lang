@@ -7,16 +7,16 @@ By using collections and control structures one can load, modify and store data.
 Array elements have very fast direct access by index. 
 
 ```
-method test_array:
+method: test_array()
   --array  with capacity of 10 elements
-  Array[Integer ](10): my_array; 
+  Array[Integer](10): my_array 
   -- scan array and modify element by element
   given
-    Integer m := my_array.capacity();
-    Integer i;
-  scan i ∈ [1..m]:
-    my_array[i] := i; 
-  next i;
+    Integer: m := my_array.capacity()
+    Integer: i
+  scan (i <: [1..m])
+    my_array[i] := i 
+  next
   -- array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1]);
   print ("This is the last element: {1}"  <+ my_array[?]);
@@ -44,10 +44,10 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 -- a matrix having 2 rows and 2 columns
 -- initialize all elements with 100
 given
-  Matrix[Integer ](2,2); M;
+  Matrix[Integer: ](2,2): M
 begin
-  M := 100;
-  print (M);
+  M := 100
+  print (M)
 ready
 ```
 
@@ -60,7 +60,7 @@ ready
 
 ```
 given
-  Matrix[Integer ](2,2):M;
+  Matrix[Integer: ](2,2):M
 begin
   M := 100;
   -- modify all elements
@@ -95,16 +95,16 @@ When you traverse elements use rows first, than you change the column. A process
 In this example we traverse all the rows then all the column, this is the most efficient way to traverse a matrix.
 
 ```
-method main()
+method: main()
   Matrix[String(2)](3,3): M;    
   M :=  ⎡'a0','b0','c0'⎤
         ⎢'a1','b1','c1'⎥
         ⎣'a2','b2','c2'⎦;        
   given
-    Integer col;
-    Integer row;
-  scan col ∈ [1..3]:     -- traverse columns
-    scan row ∈ [1..3]:   -- traverse row first
+    Integer: col;
+    Integer: row;
+  scan col <: [1..3]:     -- traverse columns
+    scan row <: [1..3]:   -- traverse row first
       print(M[row,col]);
     next row;
   next col;
@@ -130,9 +130,9 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-method main() 
-  Array[Integer ]: a := [0,1,2,3,4,5,6,7,8,9];
-  Array[Integer ]: b :: a[1..4];
+method: main() 
+  Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9];
+  Array[Integer: ]: b :: a[1..4];
 
   print(a[1..?]);   --will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1]);   --will print [0]
@@ -140,8 +140,8 @@ method main()
  
   -- create b as slice reference from a
   given
-    Integer i;
-  scan i ∈ b:
+    Integer: i;
+  scan i <: b:
     a[i] += 2;
   next i; 
   
@@ -155,7 +155,7 @@ over
 You can define elements of a subset from a set using the following construction:
 ```
 given
-   Set: sub_set := { var | var ∈ set_name AND filter_expression}
+   Set: sub_set := { var | var <: set_name AND filter_expression}
 ```
 
 Symbol "|" is the filter operator and is derived from mathematics. 
@@ -164,7 +164,7 @@ We can use \<var> to create the \<filter_expression>.
 Example of a new set defined from a range:
 
 ```
-  new_set := { x | x ∈ [-10..10] };
+  new_set := { x | x <: [-10..10] };
 ```
 
 ## Collection Casting
@@ -179,7 +179,7 @@ given
    Set : new_set := {};
 begin
    -- eliminate duplicates using set comprehension
-   mew_set := { x | x ∈ my_list }; 
+   mew_set := { x | x <: my_list }; 
    print my_set; --> {0,1,2} 
 ready
 ```
@@ -193,7 +193,7 @@ given
    List my_list := [0,1,2,3,4,5];
    Set  my_set  := {};
 begin
-   my_set := { x | x ∈ my_list, x%2 ≡ 0 }; 
+   my_set := { x | x <: my_list, x%2 = 0 }; 
    print my_set; --> {0,2,4} 
 ready
 ```
@@ -205,11 +205,11 @@ The elements in one set or list can be transformed by a function or expression t
 ```
 given
    source := {0,1,2,3,4,5};
-   target ∈ Hash; 
+   target <: Hash; 
 begin
    -- create Hash pairs (key, value) for Hash map
    --> { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x : x^2) | x ∈ source }; 
+   target := { (x : x^2) | x <: source }; 
 ready
 ```
 
@@ -218,7 +218,7 @@ List concatenation is done using operator “+”. This operator represent union
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-method main()
+method: main()
   List[Char] a := ('a','b','c');
   List[Char] b := ('1','2','3');
   List[Char] c := (); 
@@ -245,7 +245,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  List[Integer ]: lst := ();
+  List[Integer: ]: lst := ();
 begin
   lst := split("1,2,3",",");
   print lst; --> (1,2,3);
@@ -298,7 +298,7 @@ A special _while loop_ that is executed for each element belonging to a collecti
 ```
 given
   type_name element;
-scan element ∈ collection:
+scan element <: collection:
   -- statements;
     ...
   skip [if <condition>];
@@ -327,11 +327,11 @@ It is possible to change this using shortcuts or fast forward.
 
 ```
 --example of collection iteration
-method main()
+method: main()
   List[Char] my_list := ['a','b','c','d','e']; 
   given
     Char: element;
-  scan element ∈ my_list:
+  scan element <: my_list:
     -- continue shortcut
     skip if element < 'c'
     write(element);
@@ -363,13 +363,13 @@ Map and set are similar collections and both can be used for iteration:
 
 **Example:**
 ```
-method main()
+method: main()
   Hash: my_map := {("a":1),("b":2),("c":3)};
   -- print pairs (key:value)
   given
-    String : k;
-    Integer v;
-  scan (k,v) ∈ my_map:
+    String: : k;
+    Integer: v;
+  scan (k,v) <: my_map:
     print('("' + k + '",' + v +')');
   next;
 over
@@ -391,21 +391,18 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 -- check if a key is present in a hash collection
 given
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
-  Integer my_key := 3;
-begin
-  when my_key ∈ my_map then
-     print('True'); -- expected
-  else
-     print('False');
-     abort;
-  ready
+  Integer: my_key := 3;
+begin if (my_key <: my_map)
+  print('True'); -- expected
+else
+  print('False');
 ready   
 ```
 
 **example**
 ```
 -- create new elements in the hash collection
-method main()
+method: main()
   given
     Hash(String, String): animals := {};
   begin
@@ -433,7 +430,7 @@ local
   --type inference will tell us he element types (String, String);
   Hash: animals := {};
    
-method main()
+method: main()
   --create 1 more element
   animals.append('Rover','dog');
 
@@ -448,7 +445,7 @@ output:
 {('Rover':'dog'),('Bear':'dog'),('Kiwi':'bird')};  
 ```
 
-## String concatenation
+## String: concatenation
 
 Strings can be concatenated using:
 
@@ -483,7 +480,7 @@ ready
 
 ## Text concatenation
 
-String and text can be concatenated using the string concatenation operators: {+, - , _ }. A normal string can be implicit converted into a text. However a text can not be converted into a string without force casting string(<text_variable>). This may return good string or gibberish depending on text_variable content.
+String: and text can be concatenated using the string concatenation operators: {+, - , _ }. A normal string can be implicit converted into a text. However a text can not be converted into a string without force casting string(<text_variable>). This may return good string or gibberish depending on text_variable content.
 
 ## Text template
 We use hash "#" to create a placeholder into a Text. We use "<+" operator to replace the placeholder with values. If placeholder is not found the compiler raise an error. If the string is a variable this verification is not possible at compile time so maybe you get a run-time error.
@@ -519,11 +516,11 @@ unicode ≠
 
 **Using Hash**
 ```
-method main()
+method: main()
   String: template := "Hey look at this #{key1} it #{key2}";
   Hash:   my_map   := {("key1":"test"),("key2":"works!")};
   print(template.format(my_map)); --using format function
-method main;
+over
 ```
 
 Expect output:
@@ -533,11 +530,11 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-method main()
+method: main()
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
   print (template <+ my_set);
-method main;
+over;
 ```
 
 Expect Output:
@@ -549,7 +546,9 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-  method format(n ∈ Number, f ∈ String) ∈ String;
+  method: format(n <: Number, f <: String) <: String
+    ...
+  over
 ```
 
 Where "f" is a pattern: '(ap:m.d)'

@@ -12,8 +12,8 @@ Basic types are abstract wrappers to native types.
 | type     | description
 |----------|----------------------------------------------------
 | Integer  | integer on 64 bits (signed)
-| Natural  | integer on 64 bits (unsigned)
-| Real     | double precision number (signed)
+| Natural: | integer on 64 bits (unsigned)
+| Real:     | double precision number (signed)
 | Rational | fixed precision number (signed)
 | Null     | Is a reference type that represents Null reference
 
@@ -25,7 +25,7 @@ Composite data types are unions of data elements of heterogeneous types.
 |----------|----------------------------------------------------
 | Ordinal  | Enumeration of ideas, cases or terms
 | Record   | Heterogeneous collection of elements in a database
-| String   | Create an ASCII string ('delimited using single quotes')
+| String:   | Create an ASCII string ('delimited using single quotes')
 | Unicode  | reserved but not used in level1 ("delimited with double quotes")
 | Logic    | Is a Ordinal type having values {⊥, ⊤}
 
@@ -36,17 +36,17 @@ Collections are groups of data elements of same type.
 | type     | description
 |----------|----------------------------------------------------------------
 | List     | Dynamic unsorted enumeration of values or objects
-| Table    | Enumeration of (key:value) pairs unique sorted by key
-| Cluster  | Enumeration of unique elements of the same type sorted by value
+| Hash     | Enumeration of (key:value) pairs unique sorted by key
+| Set      | Enumeration of unique elements of the same type sorted by value
 
 ## User Defined
 
-A data type can be _defined_ using symbol "<:".
+A data type can be _defined_ using symbol "<:" and keyword: "type".
 
 **Syntax:**
 ```
 define
-  type <type_name> <: <super_type> ( parameters );
+  type: <type_name> <: <super_type> ( parameters )
 ```
 **Notes:**
 
@@ -57,22 +57,22 @@ define
 **Example:**
 ```
 define
-  type Point <: Record (Integer a, b );
+  type: Point <: Record (Integer: a, b )
 
-method main() is
-  Point p1, p2;      -- implicit constructor
-  Point p3 := {1,1}; -- initial value for Point
-  begin
+method: main()
+  Point: p1, p2      -- implicit constructor
+  Point: p3 := {1,1} -- initial value for Point
+
   -- modification using constants
-    p1.a := 1;
-    p1.b := 2;  
-    
-    -- modification using literal
-    p2 := {2, 2};
-  ready 
-  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
-  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b));  
-over;
+  p1.a := 1
+  p1.b := 2  
+  
+  -- modification using literal
+  p2 := {2, 2}
+  
+  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
+  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
+over
 ```
 output:
 ```
@@ -93,14 +93,14 @@ In EVE we can have two categories of numbers:
 
 |type    |Chars  |Bytes|min |max   |maximum number	
 |--------|-------|-----|----|------|-------------------------
-|Integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
-|Natural |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
+|Integer: |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
+|Natural:|20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
  
 For conversion into characters:
 
 * The number of characters required for integer numbers is 20. (19+sign);
  
-### Real numbers
+### Real: numbers
 
 The type _Real_ is represented using floating precision numbers.   
 Floating decimal numbers are most simply described by 3 integers:
@@ -112,14 +112,14 @@ Floating decimal numbers are most simply described by 3 integers:
 The numerical value of a finite number is −1ˢ × c × 2ⁿ
 Using this formula EVE define one single type: Real.
 
-Real is double-precision 64-bit IEEE 754:  
+Real: is double-precision 64-bit IEEE 754:  
 sign has 1bit, exponent has 11 bits and coefficient has 52 bits;
 
 |type     |Digits |Bytes|maximum number	
 |---------|-------|-----|----------------------------------
-|Real     |15     |8    |≤ 1.8 × 10³⁰⁸
+|Real:     |15     |8    |≤ 1.8 × 10³⁰⁸
 
-Precision Real numbers is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Real and back without loosing any digit. Think of it like a digital display from a packet calculator.
+Precision Real: numbers is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Real: and back without loosing any digit. Think of it like a digital display from a packet calculator.
 
 **See also:** [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation#Other_bases)
 
@@ -135,11 +135,11 @@ Precision Real numbers is variable depending on the size of the number. The numb
 **example**
 
 ```
-method main()
+method: main()
   -- declare variable
-  Integer i; 
-  Natural n;
-  Real r;
+  Integer: i; 
+  Natural: n;
+  Real: r;
   -- modify variables
   i := 9223372036854775807;
   n := 18446744073709551615;
@@ -156,7 +156,7 @@ A complex number is a number that can be expressed in the form (a + bj), where a
   (-3.5-2j)    | Complex number. (-a-bj). Both a and b can be positive or negative real numbers.
 
 ### Rational number
-A rational number is a fraction between two numbers Q := Z/N where Q is the rational number, Z is Integer and N is Natural number. So Q number is using 8 + 8 := 16 bytes. The division is not executed but postponed until the number is used in an expression after simplification.
+A rational number is a fraction between two numbers Q := Z/N where Q is the rational number, Z is Integer: and N is Natural:number. So Q number is using 8 + 8 := 16 bytes. The division is not executed but postponed until the number is used in an expression after simplification.
 
 ## Data Coercion
 In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is done to take advantage of type hierarchies and type representations. 
@@ -173,21 +173,21 @@ to accommodate the data types and return an accurate result.  Automatic conversi
 
 Implicit conversion is possible and _safe_ in this direction:
 
-Integer -> Natural -> Real -> Complex.
+Integer: -> Natural:-> Real: -> Complex.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-Complex -> Real ->  Natural -> Integer. 
+Complex -> Real: ->  Natural:-> Integer. 
 
 ```
 given
-  Integer a := 2
-  Real b := 1.5 
+  Integer: a := 2
+  Real: b := 1.5 
 begin
-  b := a -- this implicit cast is possible b ≡ 2.0
-  b := a + 3.5 -- add 3.5 then assign result to b ≡ 5.5
-  a := b       -- error: can not assign Real to Integer
-  a := 1.5     -- error: can not assign Real to Integer
+  b := a -- this implicit cast is possible b = 2.0
+  b := a + 3.5 -- add 3.5 then assign result to b = 5.5
+  a := b       -- error: can not assign Real: to Integer
+  a := 1.5     -- error: can not assign Real: to Integer
 ready
 ```
 
@@ -197,8 +197,8 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 Examples of explicit coercion:   
 ```
 given
-  Integer a := 0
-  Real    b := 1.5
+  Integer: a := 0
+  Real:    b := 1.5
 begin
   -- explicit coercion lose (0.5)
   a := floor(b)
@@ -214,27 +214,27 @@ ready
 
 ```
 given
-  String s 
-  Integer v := 1000
+  String: s 
+  Integer: v := 1000
 begin  
   s := format(v) -- explicit coercion s:="1000"
 ready  
 ```
 
-**String to a number**
+**String: to a number**
 
 This can be done using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
 ```
 given
-  Integer v 
-  Real    b
-  String  s := "1000"
-  String  r := "200.02"
+  Integer: v 
+  Real:    b
+  String:  s := "1000"
+  String:  r := "200.02"
 begin
-  v := parse(s); -- make v ≡ 1000
-  v := parse(r); -- make v ≡ 200 and decimal .02 is lost
-  b := parse(r); -- make b ≡ 200.02 and decimal .02 is preserved
+  v := parse(s); -- make v = 1000
+  v := parse(r); -- make v = 200 and decimal .02 is lost
+  b := parse(r); -- make b = 200.02 and decimal .02 is preserved
 ready
 ```
 
@@ -309,21 +309,20 @@ Examples of type inference:
 
 ```
 given
-  Logic  v := T;
-  Record r := (name:"test", age:"24"); 
-  Hash   m := {("key1":"value1"),("ley2":"value2")}; 
+  Record: r := (name:"test", age:"24"); 
+  Hash:   m := {('key1':"value1"),('ley2':"value2")}; 
 begin
   -- check variable types using introspection
-  print("v is of type " + type(v));
-  print("r is of type " + type(r));
-  print("m is of type " + type(m));
+  print("name  is of type " + type(v.name));
+  print("key   is of type " + type(m.key));
+  print("value is of type " + type(m.value));
 ready
 ```
 run test  
 ```
-v is of type Logic
-r is of type Record  
-m is of type Hash  
+name is of type Test
+key is of type String
+value is of type Text  
 ```
 
 ## Check type
@@ -335,10 +334,10 @@ In EVE the type is first class value. For type introspection we can use:
 
 ```
 given
-  Real i := 1.5;
+  Real: i := 1.5;
   Type it;
 begin
-  when i ∈ Real do
+  when i <: Real do
     print("Yes i is Real");
   else
     print("No i is not Real");
@@ -372,7 +371,7 @@ True     | Logic.T       | 00000000 00000001
 **syntax**
 ```
 define
- <variable_name> ∈ Logic; --> default F
+ Logic: <variable_name>; --> default F
 ```
 
 
@@ -381,7 +380,7 @@ define
 Probably best to define Logic type is Ordinal:
 ```
 define
-  type Logic <: Ordinal { .T , .F };
+  type: Logic <: Ordinal { .T , .F }
 ```
 
 **Relation Operators**
@@ -395,25 +394,25 @@ Logical operators are expecting logical operands.
 
 Symbol  | Description
 --------|-------------------------------------------
-  ∨     | logical OR
-  ∧     | logical AND
-  ¬     | logical NOT
+  !     | logical NOT
+  &     | logical AND
+  |     | logical OR
   ~     | logical XOR
 
 Table of truth for logical operators: 
 
- A    | B   |¬ A | A ∧ B | A ∨  B | A ~ B
-------|-----|----|-------|--------|-------
- T    |T    | F  | T     | T      | F    
- T    |F    | F  | F     | T      | T   
- F    |T    | T  | F     | T      | T
- F    |F    | T  | F     | F      | F
+ A    | B   | !A | A & B | A | B | A ~ B
+------|-----|----|-------|-------|-------
+ T    | T   | F  | T     | T     | F    
+ T    | F   | F  | F     | T     | T   
+ F    | T   | T  | F     | T     | T
+ F    | F   | T  | F     | F     | F
 
 **Logical expressions**
 
 A logical expression is a demonstration or logical deduction having result T or F. The order of operations can be controlled using operator precedence and parentheses (). 
 
-Operator precedence: {¬, ∧, ∨, ~}
+Operator precedence: {!, &, |, ~}
 
 Result of logical expressions can be used into a conditional statement to make a decision. 
 Also results of logical expressions can be stored in logical variables to be used later in other conditions.
@@ -441,14 +440,14 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 **Example:**
 ```
 define
-  type Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
+  type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
 
-method main()
-  String message
+method: main()
+  String: message
   given
     Day: today := today()  
   quest
-    if today ∈ (Friday, Saturday, Sunday) then
+    if today <: (Friday, Saturday, Sunday) then
       message:='weekend'
       ...
     if today = Monday then
@@ -466,7 +465,7 @@ over
 **Range**
 We can use Ordinal to create a range of values:
 ```
-when (today ∈ [Monday..Friday]) do
+when (today <: [Monday..Friday]) do
    print ("Have a nice day!");
 else
    print ("Have a happy weekend!");  
@@ -474,7 +473,7 @@ done
 ```
 
 **Operators**
-Ordinal is a ordered set of Natural numbers identified by a name. Ordinal is a discrete numeral type so it has support for  relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
+Ordinal is a ordered set of Natural:numbers identified by a name. Ordinal is a discrete numeral type so it has support for  relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
 
 ```
 -- using type Day declared before
@@ -482,7 +481,7 @@ given
   Day: v := Friday;
 begin
   v += 1; 
-  expect v ≡ Saturday;
+  expect v = Saturday;
 ready  
 ```
 
@@ -500,7 +499,7 @@ define
   type: <variant_name> <: Variant (<Type> | <Type> | ... );
 
 global  
-  v ∈ <variant_type>;
+  v <: <variant_type>;
 ```
 
 ## Variant Properties
@@ -514,16 +513,16 @@ global
 
 For this we need Null type. 
 
-* The Null type is usually String and is a curious type.
+* The Null type is usually String: and is a curious type.
 * It can have only one value: Null and is not printable.
 
 **Examples:**
 ```
 define
-  Type: Number <: Variant (Integer | Real | Null) ;
+  Type: Number <: Variant (Integer: | Real: | Null) ;
 
 global
-  x := Null ∈ Number;
+  x := Null <: Number;
   
 ```
 
@@ -533,11 +532,11 @@ A variant can change its data type at runtime:
 
 ```
 given
-  (Real | Integer) : v, x ,t ;
+  (Real | Integer): v, x ,t ;
 begin
   -- positive example
   v := 1;     -- v is Integer
-  x := 1.5;   -- x is Real    
+  x := 1.5;   -- x is Real:    
   t := 1 ÷ 2; -- make t Real
   
   -- safe conversion
@@ -553,8 +552,8 @@ ready
 A variant is a way to create a generic method.
 
 ```
-method invert(Integer | Real: x, y):
-  Integer | Real: i;
+method: invert(Integer | Real: x, y)
+  (Integer | Real): i
   assert type(x) ≠ type(y);  
   
   i := x; -- intermediate value
@@ -562,20 +561,20 @@ method invert(Integer | Real: x, y):
   x := i; -- second switch
 over;
 
-method main:
-  Integer x,y;
-  Real: a,b;
+method: main()
+  Integer: x, y
+  Real: a, b
   
-  -- invert two Integer numbers
-  x := 10;
-  y := 20;  
-  invert(x,y);    
+  -- invert two Integer: numbers
+  x := 10
+  y := 20  
+  invert(x, y)
   
-  --invert two Real numbers
-  a := 1.5;
-  b := 2.5;  
-  invert(a,b);  
-over;
+  --invert two Real: numbers
+  a := 1.5
+  b := 2.5
+  invert(a, b)
+over
 ```
 
 ## Strings 
@@ -590,14 +589,14 @@ There is one single type of string with two literal notations.
 **Note:** 
 Single quoted character is similar to "char" data type from C language.
 
-## String declaration
+## String: declaration
 String can be initialized with a constant using single quotes or double quotes. 
 By default value of string is "", equivalent to empty symbol: ∅; 
 
 ```
 global
-  String: string_name := '"'  ; -- limited 255 capacity string
-  Text:   text_name   := "''" ;   -- unlimited Unicode text
+  String: string_name := '"'   -- limited 255 capacity string
+  Text:   text_name   := "''"  -- unlimited Unicode text
 ```
 
 ## Mutability
@@ -605,22 +604,22 @@ In EVE strings are immutable. If we use a modifier ":=" new memory is allocated.
 
 **Example:**
 ```
-method test_string:
-  String : str; -- initial "" 
-  String @ ref; -- string reference
+method: test_string()
+  String : str -- initial "" 
+  String @ ref -- string reference
   begin
-    str := 'First value';   -- create new reference
-    ref :=  str;            -- borrow reference
-    str := 'First value';   -- create new reference
+    str := 'First value'   -- create new reference
+    ref ::  str            -- borrow reference
+    str := 'First value'   -- create new reference
   ready
-  expect (str = ref); -- T  equal value
-  expect (str ≡ ref); -- F  different references
+  expect (str = ref) -- T  equal value
+  expect (str = ref) -- F  different references
 over;
 ```
 
 Note: You can create garbage in Bee if you loose reference to strings.
 
-## String comparison
+## String: comparison
 
 * Two strings are compared using relation operators: { =, ≠, <, >, ≥, ≤ }. 
 * Two strings that have identical characters are equivalent regardless of quotation. 
@@ -628,10 +627,10 @@ Note: You can create garbage in Bee if you loose reference to strings.
 
 **Example:**
 ```
-'this'  = 'this';   --> T (same exact value)
-'this ' = 'this';   --> F (not same value)
-' this' = 'this';   --> F (not same value)
-'this'  ≡ 'this';   --> F (not same location)
+print ('this'  = 'this')   --> T (same exact value)
+print ('this ' = 'this')   --> F (not same value)
+print (' this' = 'this')   --> F (not same value)
+print ('this'  = 'this')   --> F (not same location)
 ```
 
 ## Null strings
@@ -640,9 +639,9 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  String: str; 
+  String: str 
 begin 
-  print("str is null") if str is Null; 
+  print("str is null") if str is Null 
 ready 
 ```
 
@@ -660,19 +659,19 @@ In EVE we represent calendar date.
 
 When can create a date literal using 3 reversible functions:
 
-* YDM => "YYYYDDMM";
-* DMY => "DD/MM/YYYY";
-* MDY => "MM/DD/YYYY";
+* YDM => "YYYYDDMM"
+* DMY => "DD/MM/YYYY"
+* MDY => "MM/DD/YYYY"
 
 **Note:** A reversible function is overloaded.
 
 ```
 given
-  Date: date;
+  Date: date
 begin
-  date := "2019/01/30" -> YDM;
-  date := "30/01/2019" -> DMY;
-  date := "01/30/2019" -> MDY;
+  date := "2019/01/30" -> YDM
+  date := "30/01/2019" -> DMY
+  date := "01/30/2019" -> MDY
 ready  
 ```
 
@@ -680,9 +679,9 @@ ready
 
 Date representation can be changed with each print by using date format.
 ```
-   print(date.YDM());
-   print(date.DMI());
-   print(date.MDI());   
+   print(date.YDM())
+   print(date.DMI())
+   print(date.MDI())   
 ```
 
 ## Duration
@@ -703,8 +702,8 @@ Time is represented as a number on 8 bytes.
 
 Time format is created using two reversible functions: T12() and T24()
 
-*  T12 accept format ("hhhh:mm:ss,9999ms"); 
-*  T24 accept format ("hhhh:mm:ssxx, 9999ms" );
+*  T12 accept format ("hhhh:mm:ss,9999ms") 
+*  T24 accept format ("hhhh:mm:ssxx, 9999ms" )
 
 ss: can be 0..60 seconds  
 xx: can be: (am/pm)
@@ -712,18 +711,18 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given
-  Time: time; --> '00:00' 
+  Time: time --> '00:00' 
 ```
 
 **Example**
 
 ```
 given
-  Time: time1, time2, time3; 
+  Time: time1, time2, time3 
 begin
-  time1 := "23:63" -> T24;   
-  time2 := "23:63:59,99" -> T24;   
-  time3 := "11:63:59pm,99ms" -> T12;   
+  time1 := "23:63" -> T24   
+  time2 := "23:63:59,99" -> T24   
+  time3 := "11:63:59pm,99ms" -> T12   
 ready
 ```
 **Read next:** [Composite Types](composite.md)

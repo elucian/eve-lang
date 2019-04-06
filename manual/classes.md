@@ -33,7 +33,7 @@ A class can have parameters used for object initialization declared in "receive"
 ```
 given
   -- declare object
-  <object_name> ∈ <class_name>;
+  <object_name> <: <class_name>;
 begin
   -- create object 
   <object_name> := <class_name>(<param>:value[,<param>:value]...);
@@ -80,7 +80,7 @@ A class can have a single constructor. A constructor can use decision statements
 ```
 ...
 setup
-  when <condition>:
+  begin if (condition):
     object := <base_class>(<some_arguments>);
   else
     object := <base_class>(<other_arguments>);
@@ -89,25 +89,25 @@ over
 ```
 
 ## Object Initialization
-Objects can be declared and initialize in a single statement using operator ":=" with constructor or can be declared first using "∈" and initialize later using operator ":=" with the constructor call. 
+Objects can be declared and initialize in a single statement using operator ":=" with constructor or can be declared first using "<:" and initialize later using operator ":=" with the constructor call. 
 
 ## Comparing objects
-We can use comparison operators: "=" and "≡" with objects. First comparison "=" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If all attributes are equal and have same base class the objects are equivalent.
+We can use comparison operators: "=" and "=" with objects. First comparison "=" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If all attributes are equal and have same base class the objects are equivalent.
 
 **Example:**
 ```
-method main()
-  o,n ∈ Integer ;    
+method: main()
+  Integer: o,n
   o := 1; 
   n := 1; 
-  when o = n then
+  begin if (o = n)
     print("o and n objects are the same"); --> unexpected
     fail;
   else
     print("n and o are not the same"); -->expected
   ready
   -- verify
-  expect  (o ≡ n); -- equivalent  
+  expect  (o = n); -- equivalent  
   expect !(o = n); -- not the same 
 over
 ```

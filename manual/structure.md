@@ -42,21 +42,24 @@ $ystem_variable
 ...
 import
   import_region
-import;
 
 define
   -- types
   -- constants
   -- variables
-define;
   
-class name
+class: name
   -- class_definition
-class;  
+over
 
-method main(params)
-  -- method definition
-method;
+method: main(params)
+  -- method:definition
+over
+
+function: main(params) => type
+  -- method:definition
+over
+
 
 +-----------------------------------------------
    Last line of a module can be a comment
@@ -70,7 +73,7 @@ Order of regions is important. You can not use members before they are defined. 
 System variable start with prefix "$" and are global variables. System variables are defined in EVE core library. Programmers can use system variables to find modules. Before define and import keyword there is a region where user can define new system variables. 
 
 ## Import region
-Is used to include one or several modules separated by comma. Import region contains also _"from"_ clause. This is used to indicate what public members we will use without the qualifier. If we do not specify than all members can be accessed only by dot notation: <alias>.<member>;
+Is used to include one or several modules separated by comma. Import region contains also _"from"_ clause. This is used to indicate what members we will use without the qualifier. If we do not specify than all members can be accessed only by dot notation: alias.member;
 
 **syntax**
 ```
@@ -99,14 +102,14 @@ Global members are visible in current module and modules that imports it.
 A method is a subroutine that can receive input/output parameters and have side-effects.
 
 ```
-method name(parameters)
+method: name(parameters)
   -- executable region
   ...
 over
 ```
 
-## method name
-A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The method are doing something, therefore the best names for methods are verbs.
+## Method name
+A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
 
 ## Main method
 If the module is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the module is a library module and can be imported in other modules but can not be executed.
@@ -134,8 +137,8 @@ One method can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-method main(Array[String]() * args):
-  print(args); 
+method: main(Array[String]() * args)
+  print(args)
 over
 ```
 
@@ -153,17 +156,17 @@ To execute an method you use keyword "solve" then method name followed by argume
 ```
 
 ## Method termination
-An method end with keyword over or exit; Program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
+A method end with keyword over or exit; Program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
 
 **Example:**
 ```
-method test(Integer a):
+method: test(Integer: a)
   print (a);
 over
 
-method main(List[String]: *args):
+method: main(List[String]: *args)
   -- number of arguments received:
-  Integer c := args.count();
+  Integer: c := args.count();
   
   -- verify condition and exit
   exit if c = 0;
@@ -186,17 +189,17 @@ Program heaving a private method add_numbers:
 ```
 -- global variables
 global
-  Integer $result;
+  Integer: $result;
 
 static
-  Integer p1, p2;
+  Integer: p1, p2;
 
-method add_numbers() is
+method: add_numbers()
   $result := p1 + p2; --side effect
   print($result);
 over
 
-method main() is
+method: main()
   p1 := 10;
   p2 := 20;
   add_numbers;   
@@ -209,12 +212,12 @@ over
 To avoid system and global variables use output parameters:
 
 ```
-method add(integer p1,p2, Integer @out)
+method: add(integer p1,p2, Integer: @out)
   @out := p1+p2;
 over
 
-method main()
-  Integer result;
+method: main()
+  Integer: result;
   -- reference argument require a variable
   add(1,2, @out:result);
   print (result); -- expected value 3
@@ -247,7 +250,7 @@ In multiple dispatch many parameters can be used to identify a method. A method 
 Classes are composite data types. Once class can be used to create objects.
 
 ```
-class name(parameters) <: base_class
+class: name(parameters) <: base_class
   -- definition_region
 setup
   -- constructor region
@@ -277,7 +280,7 @@ EVE uses _control statements_ to describe a blocks of code that are controlled b
 A function can have parameters and produce one or more results. 
 
 ```
-function name(parameters) => (result_type result, ...)
+function: name(parameters) => (result_type: result, ...)
   -- statements
   ...
   result := expression;
@@ -312,12 +315,12 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 -- function declaration
-function sum(Integer a, b) => (Integer result)
+function: sum(Integer: a, b) => (Integer: result)
   result := a + b;
 over
   
-method main()
-  Integer r;  
+method: main()
+  Integer: r;  
   r := sum(10,20); -- function call
   print(r);        -- this will print 30
 over
@@ -359,12 +362,12 @@ An λ expression can have multiple conditionals named nodes.
 
 **example**
 ```
-method main()
-  Integer p1, p2, x;
+method: main()
+  Integer: p1, p2, x;
   p1 := 2
   p2 := 1
   -- using λ expression  
-  x:= ( 0 <- p1 ≡ 0, 0 <- p2 ≡ 0, p1+p2)
+  x:= ( 0 <- p1 = 0, 0 <- p2 = 0, p1+p2)
   print(x); -- 3 
 over
 ```
@@ -372,8 +375,8 @@ over
 **example**
 ```
 given
-  Logic   b := F;
-  Integer v := 0;   
+  Logic:   b := F;
+  Integer: v := 0;   
 begin
   v := (1 <- b, 2);   
   print v; --> 2
