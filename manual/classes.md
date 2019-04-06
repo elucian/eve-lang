@@ -15,15 +15,15 @@ Classes are derived from a single base class that is the root Class. To design m
 
 **syntax:**
 ```
-class[(<generic_types>)] <class_name>(<parameters>) <: <base_class>
-  -- define attributes
+class: class_name(parameters) <: base_class
+  ** define attributes
   <attributes>
-setup:
-  object := <base_class>(); -- object initialization  
+start
+  object := <base_class>(); ** object initialization  
   ... 
-scrap:
+scrap
   <object_dispose_region> 
-over
+finish;
 ```
 
 ## Arguments
@@ -32,11 +32,11 @@ A class can have parameters used for object initialization declared in "receive"
 **example**
 ```
 given
-  -- declare object
-  <object_name> <: <class_name>;
+  ** declare object
+  class_name: object_name
 begin
-  -- create object 
-  <object_name> := <class_name>(<param>:value[,<param>:value]...);
+  ** create object 
+  object_name := class_name(param:value,...);
   ...
 ready
 ```
@@ -46,8 +46,8 @@ The "object" is the current instance that is created.  It is visible in class co
 
 **Syntax:**
 ```
-setup
-  object := <base_class>(<arguments>);
+start
+  object := base_class(arguments)
 ```
 
 ## Declaration regions
@@ -72,20 +72,20 @@ Between symbol ":" and keyword "create" there are 3 declaration regions.
 ```
 
 ## Class Tree
-There is a special class that has name _"Class"_ and represents the "root" class. Each classes can grow from Class or from other "base class" forming _"class tree"_.
+There is a special class that has name _"Object"_ and represents the "root" class. Each classes can grow from Object or from other "base class" forming _"class tree"_.
 
 ## Constructor
 A class can have a single constructor. A constructor can use decision statements based on parameter values to create _"object"_ in different ways based on several conditions. This is a smart constructor.
 
 ```
 ...
-setup
-  begin if (condition):
-    object := <base_class>(<some_arguments>);
+start
+  when (condition) begin
+    object := base_class(some_arguments)
   else
-    object := <base_class>(<other_arguments>);
+    object := base_class(<other_arguments>)
   ready
-over
+finish
 ```
 
 ## Object Initialization
@@ -98,18 +98,21 @@ We can use comparison operators: "=" and "=" with objects. First comparison "=" 
 ```
 method: main()
   Integer: o,n
-  o := 1; 
-  n := 1; 
-  begin if (o = n)
-    print("o and n objects are the same"); --> unexpected
-    fail;
+start  
+  o := 1
+  n := 1 
+  when (o = n) begin
+    ** unexpected
+    print("o and n objects are the same") 
+    fail
   else
-    print("n and o are not the same"); -->expected
+    ** expected
+    print("n and o are not the same") 
   ready
-  -- verify
+  ** verify
   expect  (o = n); -- equivalent  
   expect !(o = n); -- not the same 
-over
+finish;
 ```
 
 ## Generic Class
@@ -118,14 +121,19 @@ A class can receive <generic_types> parameters. This allows to create generic al
 
 **Generic Class:**
 ```
-class (<Generic_Parameters>) GenericName(<parameters>) <: Class:
+class[Generic_Parameters]: Generic_Name(parameters) <: Base_Class
+  -- declarations
+start
+  -- constructor
+finish;
 ```
 
 ## Using Generic Type
 Generic class is used to define a subtype then you can declare one or more instance of the new type:
+
 ```
--- create new type from generic
-<new_type> <: <generic_class> of <type>;
+** create new object from generic
+Generic_class[element_type]: new_type;
 
 ```
 

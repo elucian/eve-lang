@@ -14,7 +14,7 @@ An array is a collection of elements stored in order of natural index. Array ele
 
 **array declaration** 
 ```
--- declaration of an array with capacity
+** declaration of an array with capacity
 global
   Array: array_name[element_type](capacity)
 ```
@@ -31,7 +31,7 @@ Arrays are represented by an enumeration of elements enclosed by square brackets
 In the next example we  am array with capacity of 3 elements.
 
 ```
--- array declaration and initialization
+** array declaration and initialization
 global
    Array: my_array[Integer](3) := [1,2,3];
 ```
@@ -41,26 +41,27 @@ global
 An array  capacity can be established using a parameter and a constructor. All elements of a array  can be set to a single value using operator ":=" during declaration. 
 
 ```
--- variable array size depending upon parameter n
+** variable array size depending upon parameter n
 method: test(Integer: n)
+start
   Array: my_array(n);
-over;
+finish;
 ```
 
 **array inference**
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  Array: my_array(10) := 0   -- integer
-  Array: my_array(10) := 0.0 -- real 
-  Array: my_array(10) := ""  -- Text
-  Array: my_array(10) := ''  -- String
+  Array: my_array(10) := 0   ** integer
+  Array: my_array(10) := 0.0 ** real 
+  Array: my_array(10) := ""  ** Text
+  Array: my_array(10) := ''  ** String
 ```
 
 The most convenient way to an Array using full inference literal:
 ```
 global
-  -- capacity is 4 and element type is string
+  ** capacity is 4 and element type is string
   Array: my_array := ['a','bc','def','chk'];
 ```
 
@@ -77,7 +78,7 @@ global
 
 **example:**
 ```
---  a matrix m that has 2 dimensions with 3 rows and 3 columns.
+**  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
   Matrix[String(2)](3,3): m := '__'
 begin
@@ -92,8 +93,8 @@ ready
 Matrix elements can be addressed by subscript starting from 1:
 
 ```
-var_name[1,1] -- is the first element of the matrix.
-var_name[?,?] -- is the last element of a matrix.
+var_name[1,1] ** is the first element of the matrix.
+var_name[?,?] ** is the last element of a matrix.
 ```
 
 ## List
@@ -137,10 +138,10 @@ given
 Literals can be used in expressions:
 ```
 given
-  -- define empty list if native types
+  ** define empty list if native types
   List[integer]: c_list := () 
 begin
-  -- update list using  ":=" 
+  ** update list using  ":=" 
   c_list := (1,2,3) 
 ready
 ```
@@ -178,9 +179,9 @@ A set can be modified during run-time using operators.
 * := for replace 
 
 ```
-  my_set    += 1;  -- try to append element 1
-  my_set[*] += 1;  -- modify each element
-  my_set    := {}; -- remove all elements  
+  my_set    += 1;  ** try to append element 1
+  my_set[*] += 1;  ** modify each element
+  my_set    := {}; ** remove all elements  
 ```
 ### Union
 
@@ -192,7 +193,7 @@ given
   Set[Integer]: second := {}
 begin
   second := first ∪ {0,1,2,10} --set union
-  print(second) -- {0,1,2,3,4,5,6,7,8,9,10}
+  print(second) ** {0,1,2,3,4,5,6,7,8,9,10}
 ready
 ```
 
@@ -204,7 +205,7 @@ given
   Set: test := {}
 begin
   test := {1,2,3,4} ∩ {3,4,5}; 
-  print test; --> {3,4}
+  print test; ** {3,4}
 ready  
 ```
 
@@ -259,7 +260,7 @@ Text can contain multiple lines of symbols separated with end of line character.
 A text literal can be defined on multiple lines and will preserve the end of line.
 
 ```
--- declaration example of a text literal
+** declaration example of a text literal
 given
   Text: my_text := ""
 begin

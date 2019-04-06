@@ -42,10 +42,11 @@ read(prompt <: Sting) => String;
 **Example:**
 ```
 method: main()
-  String: s;
-  s := read(v, "read:");
-  print("you entered:" & v);
-over
+  String: s
+start  
+  s := read(v, "read:")
+  print("you entered:" & v)
+finish;
 ```
 
 ## Standard write 
@@ -62,7 +63,7 @@ Is user responsibility to make a line break using an escape \n or \r inside the 
 ```
 method: write(*str <: String)
  ...
-over
+finish;
 ```
 
 write sting can contain an escaped end of line character.
@@ -87,7 +88,7 @@ This function send the string to standard write then is also sending an end of l
 ```
 method: print(*str <: String)
 ...
-over
+finish;
 ```
 
 The sting do not have to contain the end of line character. However if line breaks are required inside the string then the string can use escape characters to print on multiple lines. This is unusual for a program but is possible.

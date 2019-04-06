@@ -19,13 +19,13 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |-------|--------------------------------------------------------------
 | \#    | Directive or macro \| Template placeholder
 | $     | System environment variable prefix
+| @     | Require reference \| Input/Output parameter
 | ;     | The end of any statement \| Statement separator
 | .     | Decimal separator \| Member of {record, module, object}
 | ,     | Enumeration for elements in a sequence
 | <:    | Belong to set
-| @     | Require reference \| Input/Output parameter
-| :     | Type pair-up \| Value pair-up \| Argument pair-up
-| \*    | Variable arguments \| Multiplication
+| :     | Define name \| Pair-up operator
+| \*    | Multiplication \| Variable arguments
 
 ## Double symbols
 
@@ -33,8 +33,9 @@ Level use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|--    | Single line comment start |\ end of line comment
-|..    | range representation or slice [n..m] 
+|\#\#  | Single line comment for heading comments
+|\*\*  | Single line comment \| end of line comment
+|..    | Range representation or slice [n..m] 
 |:>    | Receive output argument from method I/O parameter
 |+>    | Data pipeline fetch or select into: collection
 |=+    | Outer join operator used in data "select" statement

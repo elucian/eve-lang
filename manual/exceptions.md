@@ -4,7 +4,7 @@ Exception is interrupting the current logical flow and jump to the recover regio
 
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System $error variable contains several members that are fill-in by the EVE program when exception is created: 
 ```
--- system global exception type
+** system global exception type
 define
    type: .Exception <: Record[
                           Integer: code 
@@ -13,7 +13,7 @@ define
                          ,String:  module_name 
                          ,String:  line_number  
                        ]
--- global variable for holding current error
+** global variable for holding current error
 global
    Exception: $error;
 ```
@@ -29,12 +29,12 @@ when there is a _"run-time error"_ and program can not continue.
 There are two alternative statements to create user defined exceptions.
 
 ```
--- raise exception
+** raise exception
 when condition then
   raise (code,"message")
 ready
 
--- conditional 
+** conditional 
 raise (code,"message") if (condition)
 ```
 
@@ -42,14 +42,14 @@ raise (code,"message") if (condition)
 Using keyword _"fail"_ user can quick create an exception that has no message or continue program using _"pass"_. Fail is used most frequent in combination with conditional statement "when" or "if". 
 
 ```
--- quick exception
+** quick exception
 when (condition) begin
   fail
 else
   pass
 ready
 
--- conditional exception
+** conditional exception
 fail if condition;
 ```
 
@@ -64,10 +64,11 @@ In this region developer can use control statements like "switch","case" to anal
 ```
 method: main()
   Real: a; 
+start  
   a := 1 / 0;  
 recover
   print ($error.message);
-over
+finish;
 ```
 
 ```

@@ -5,6 +5,7 @@ These concepts are common to any computer language in Algol family.
 **bookmarks**
 
 * [punctuation](#punctuation)
+* [comments](#comments)
 * [keywords](#keywords)
 * [operators](#operators)
 * [data types](#data-types)
@@ -19,16 +20,44 @@ These concepts are common to any computer language in Algol family.
 * Each statement start with a lowercase keyword and is ending at end of line; 
 * Native data types, variables, labels and methods use lowercase letters and numbers;
 * Composite data types and classes start with capital letters;
-* Constants usually start also with capital letters;
 * System variables use prefix "$". User can define new system variables;
 
-**Keywords**
+## Comments
+
+* Eve has single line comments starting with "**"
+* Eve has end of line comments starting with "--"
+* Eve has multi line comments between /* ... */
+
+**examples**
+```
+********************************************
+** Single line comment at beginning of line
+********************************************
+/*
+  Multiple line comments, can be used to create
+  extensive documentation or comment out a code
+*/
+
+## Start of line comments
+  ** indented comment is enabled
+
+print ** end of line comment is enabled  
+
+```
+
+**Notes:**
+
+* One single character "#" is a compiler directive;
+* One single character "*" is multiplication operator;
+* Nested comments are supported for multi-line comments;
+
+## Keywords
 
 Keywords are English words familiar to programmers used in logical semantic structures easy to grasp. We prefer English since the computer was invented in England so they deserve this honor.
 
 * [Keywords](keywords.md) 
 
-**Operators:**
+## Operators:
 
 EVE has ASCII and Unicode operators. Unicode operators require one space before and one after. ASCII operators do not require space separator. Unicode and ASCII operators usually are independent used and not combined.
 
@@ -56,24 +85,24 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 **patterns:**
 ```
 global
-  -- use default value
+  ** use default value
   type_name: var_name;                
-  -- specific value and type
+  ** specific value and type
   type_name: var_name := value;
-  -- multiple variables in one assignment
+  ** multiple variables in one assignment
   type_name: var_name1, name2 ...:= value; 
-  -- diverse values in one statement
+  ** diverse values in one statement
   type_name: var_name1:=value1, var_name2 := value2; 
 ```
 
 **examples**
 ```
 global  
-  -- integer numbers
+  ** integer numbers
   Integer: a  
   Integer: b := 1 
 
-  -- real numbers
+  ** real numbers
   Real: d := 2.5
   Real: x,y,z := 0.0  
 ```
@@ -100,13 +129,15 @@ You can have multiple statements on one line separated using ";"
 **examples**
 ```
 global  
-  -- integer numbers
+  ** integer numbers
   Integer: a; b := 1 
-  print (a, b) -- expect: 0 1
+  print  (a, b)  
+  expect (a = 0, b = 1)
   
-  -- real numbers
+  ** real numbers
   Real: d := 2.5 ; x,y,z := .0  
-  print (d, x, y, z) -- 2.5 .0 .0 .0   
+  print  (d, x, y, z) 
+  expect (d = 2.5, x = .0, y = .0, z = .0)
 ```
 
 ## Multiple lines
@@ -119,12 +150,14 @@ given
   Integer: x 
   Matrix : a
 begin  
-  -- broken expression
+  ** broken expression
   x := 1 + 2 +
        3 + 4 + 5
-  expect x = 15 -- all 5 numbers are in sum  
+       
+  ** all 5 numbers are in sum         
+  expect x = 15 
 
-  -- broken matrix
+  ** broken matrix
   a := [ 
          [1,2],
          [3,4],
@@ -133,7 +166,7 @@ begin
 ready  
 ```
 
-## Identifier names
+## Identifiers
 The name of identifiers in EVE can have a length of 64 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). A variable can contain underscore but can not start or with underscore. 
 
 The underscore is equivalent to space. So the identifiers that have space in a JSON or in a database can be mapped to internal variables that use underscore instead of a space. Variable names can not start with numbers. 
@@ -174,23 +207,23 @@ Expressions are created using identifiers, operators, functions and constant lit
 
 **Examples**
 ```
--- simple expressions in put statement
--- no need for parentheses for a single value
-print 10; -- print 10
+** simple expressions in put statement
+** no need for parentheses for a single value
+print 10; ** print 10
 print "this is a test";
 
---complex expressions can use ()  
-print (10 + 10 + 15);     -- math
-print (10 > 5) | (2 < 3); -- logical
+** complex expressions can use ()  
+print (10 + 10 + 15);     ** math
+print (10 > 5) | (2 < 3); ** logical
 
---multiple expressions in a line
-print (1,',',2,',',3); --expect 1,2,3
-print (10, 11, 12);    --expected 101112   
+** multiple expressions in a line
+print (1,',',2,',',3) ** expect 1,2,3
+print (10, 11, 12);   ** expected 101112   
 
---avoid new line after 2
+** avoid new line after 2
 write (1,2);
 write (3,4);  
---> expect 1234
+print ** expect 1234
 ```
 
 **Notes:** 

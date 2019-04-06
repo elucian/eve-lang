@@ -32,9 +32,9 @@ Members of each region are indented two spaces from left side. A region terminat
 
 **syntax**
 ```
-+-----------------------------------------------
-   First line of a module can be a comment
------------------------------------------------+
+************************************************
+**   First line of a module can be a comment  **
+************************************************
 #module_directive
 ...
 $ystem_variable
@@ -42,27 +42,27 @@ $ystem_variable
 import
   import_region
 
+## head comment
 define
-  -- types
-  -- constants
-  -- variables
+  ** types
+  ** constants
+  ** variables
   
 class: name
-  -- class_definition
-over
+  ** class_definition
+finish;
 
-method: main(params)
-  -- method:definition
-over
+method: main(params)   
+  ** method_definition
+finish;
 
 function: main(params) => type
-  -- method:definition
-over
-
-
-+-----------------------------------------------
-   Last line of a module can be a comment
------------------------------------------------+
+  ** function_definition
+finish.
+/****************************************************
+  Usually after finish we use ";" to continue
+  Last "finish" is terminated with "." to end module 
+****************************************************/ 
 ```
 
 ## Declaration order
@@ -102,9 +102,11 @@ A method is a subroutine that can receive input/output parameters and have side-
 
 ```
 method: name(parameters)
-  -- executable region
+  ** declaration region
+start
+  ** executable region
   ...
-over
+finish;
 ```
 
 ## Method name
@@ -117,8 +119,8 @@ If the module is executable using "run" command, it must contain a "main" method
 Parameters are defined in round brackets () separated by comma. Each parameter must have a name and a type. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- param_name ::= type : name := value; -- input parameter
- param_name ::= type @ name; -- output parameter
+ param_name ::= type : name := value; ** input parameter
+ param_name ::= type @ name; ** output parameter
 ```
 1. One method can receive one or more parameters;
 1. Parameters having initial values are optional;
@@ -138,7 +140,7 @@ One method can receive multiple arguments of the same type separated by comma in
 ```
 method: main(Array[String]() * args)
   print(args)
-over
+finish;
 ```
 
 ## Method scope
@@ -155,23 +157,24 @@ To execute an method you use keyword "solve" then method name followed by argume
 ```
 
 ## Method termination
-A method end with keyword over or exit; Program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
+A method end with keyword finish or exit. When method is terminated, program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
 
 **Example:**
 ```
 method: test(Integer: a)
+start
   print (a);
-over
+finish;
 
 method: main(List[String]: *args)
-  -- number of arguments received:
+  ** number of arguments received:
   Integer: c := args.count();
-  
-  -- verify condition and exit
+start  
+  ** verify condition and exit
   exit if c = 0;
   
-  call test(c); -- method call
-over
+  test(c); ** method call
+finish;
 ```
 
 ## Side Effects
@@ -186,7 +189,7 @@ over
 Program heaving a private method add_numbers: 
 
 ```
--- global variables
+** global variables
 global
   Integer: $result;
 
@@ -194,16 +197,18 @@ static
   Integer: p1, p2;
 
 method: add_numbers()
-  $result := p1 + p2; --side effect
+start
+  $result := p1 + p2 **side effect  
   print($result);
-over
+finish;
 
 method: main()
+start
   p1 := 10;
   p2 := 20;
   add_numbers;   
   expect $result = 30;  
-over
+finish;
 ```
 
 **using output parameters**
@@ -212,17 +217,19 @@ To avoid system and global variables use output parameters:
 
 ```
 method: add(integer p1,p2, Integer: @out)
+start
   @out := p1+p2;
-over
+finish;
 
 method: main()
   Integer: result;
-  -- reference argument require a variable
+start  
+  ** reference argument require a variable
   add(1,2, @out:result);
-  print (result); -- expected value 3
-  -- negative test
-  add(1,2,4); -- error, "out" parameter require variable argument
-over
+  print (result); ** expected value 3
+  ** negative test
+  add(1,2,4); ** error, "out" parameter require variable argument
+finish;
 ```
 
 Notes: 
@@ -250,12 +257,12 @@ Classes are composite data types. Once class can be used to create objects.
 
 ```
 class: name(parameters) <: base_class
-  -- definition_region
-setup
-  -- constructor region
+  ** definition_region
+start
+  ** constructor region
 scrap
-  -- release region
-over
+  ** release region
+finish;
 ```
 
 ***Read more:** [Classes](classes.md)
@@ -280,10 +287,12 @@ A function can have parameters and produce one or more results.
 
 ```
 function: name(parameters) => (result_type: result, ...)
-  -- statements
+  ** declaration
+start
+  ** statements
   ...
   result := expression;
-over
+finish;
 ```
 
 **Function call**
@@ -291,13 +300,13 @@ The call for a function is using name of the function and round brackets () for 
 
 **syntax**
 ``` 
-  -- call with no arguments:
+  ** call with no arguments:
   <result> := <function_name>();  
   
-  -- call with arguments mapped by position
+  ** call with arguments mapped by position
   <result> := <function_name>(<value>, <value> ...); 
   
-  -- call using parameter names for mapping
+  ** call using parameter names for mapping
   <result> := <function_name>(<param> := <value>, <param> := <value> ...);   
 ```
 
@@ -313,16 +322,18 @@ There is a difference between the parameter and the argument. The parameter is a
 
 **Example:**
 ```
--- function declaration
+** function declaration
 function: sum(Integer: a, b) => (Integer: result)
+start
   result := a + b;
-over
+finish;
   
 method: main()
-  Integer: r;  
-  r := sum(10,20); -- function call
-  print(r);        -- this will print 30
-over
+  Integer: r
+start  
+  r := sum(10,20)  -- function call
+  print(r)         -- this will print 30
+finish;
 ```
 
 ## Conditionals
@@ -335,8 +346,8 @@ A condition is using an expression that can have values T or F.
 
 **example**
 ```
-print "True"  if  T;  -- this will print True
-print "False" if !F;  -- this will print False
+print "True"  if  T;  ** this will print True
+print "False" if !F;  ** this will print False
 
 ```
 
@@ -362,13 +373,14 @@ An λ expression can have multiple conditionals named nodes.
 **example**
 ```
 method: main()
-  Integer: p1, p2, x;
+  Integer: p1, p2, x
+start  
   p1 := 2
   p2 := 1
-  -- using λ expression  
+  ** using λ expression  
   x:= ( 0 : p1 = 0, 0 : p2 = 0, p1+p2)
-  print(x); -- 3 
-over
+  print(x); ** 3 
+finish;
 ```
 
 **example**
@@ -378,7 +390,7 @@ given
   Integer: v := 0;   
 begin
   v := (1 : b, 2);   
-  print v; --> 2
+  print v; ** 2
 ready  
 ```
 

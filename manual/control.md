@@ -17,9 +17,9 @@ Given, establish a new declaration region for a block statement.
 **syntax**
 ```
 given
-  -- local declarations
+  ** local declarations
 begin
-  -- local scope 
+  ** local scope 
 ready
 ```
 
@@ -38,25 +38,25 @@ When, can be used in conjunction with {do, else} keywords to create a dual path 
 
 1.single path selector
 ```
-begin if (expression) 
-  -- single path
+when (expression) begin 
+  ** single path
 ready
 ```
   
 2.dual path selector
 ```  
-begin if (expression) 
-   -- true path
+when (expression) begin
+   ** true path
 else
-   -- false path
+   ** false path
 ready
 ```
   
 3.nested selector 
 ```  
-begin if (expression) 
-  begin if (expression) 
-   -- nested path
+when (expression) begin 
+  when (expression) begin
+   ** nested path
   ready
 ready
 ```
@@ -64,14 +64,14 @@ ready
 4.ladder
 
 ```  
-begin if (expression) 
-   -- first path
-else  if (expression)
-   -- second path
-else  if (expression)
-   -- third path
-else
-   -- last path
+when (expression) begin 
+   ** first path
+else if (expression)
+   ** second path
+else if (expression)
+   ** third path
+else if (expression)
+   ** last path
 ready
 ```
 
@@ -84,18 +84,18 @@ The quest is a multi-path value based selector. It is used in conjunction with {
 
 ```
 given 
-  type: val := expression
-quest val
+  value_typ: val := expression
+quest val begin
   is (constant1) then
-    -- first path
+    ** first path
     ...
   is (constant2) then
-    -- second path
+    ** second path
     ...
   in (val_list)  then
-    -- third path
+    ** third path
 cover
-  -- default path
+  ** default path
 ready
 ```
 
@@ -106,26 +106,26 @@ It is possible to use more then one value using a list, range or collection.
 ```
 method: test(Integer: p:=0) 
   String: message := ""
+start 
   given 
     Integer: v := p + 4
-  quest v
+  quest v begin
     in (1,2,3) then
       message := "first match";
-      ...
     in [1..8]  then
       message := "second match";
-      ...
     in [5..10] then
       message := "third match";      
   cover
     message := "no match";
   ready
   print message; 
-over
+finish;
 ```
 
 **notes:**
 
+* The "all" keyword is optional 
 * Each condition is evaluated in order from top down one time;
 * When no condition is satisfied the _"other"_ branch is executed.
 * To evaluate next condition we can use 3 dots: "...", that means "next".
@@ -139,9 +139,9 @@ Create repetitive statement block.
 **pattern**
 ```
 given
-  -- control variables
+  ** control variables
 cycle
-  -- repeating block
+  ** repeating block
   ...
 repeat if (condition)
 ```
@@ -149,7 +149,7 @@ repeat if (condition)
 **interruptions**
 ```
 given
-  -- control variables
+  ** control variables
 cycle
   ...
   skip if (condition)
@@ -166,10 +166,10 @@ given
   Integer: a := 10
 cycle
   a -= 1
-  -- conditional repetition
+  ** conditional repetition
   skip if (a % 2 = 0)  
   write a  
-  -- conditional termination
+  ** conditional termination
   write ',' 
   stop if (a < 0)
 repeat
@@ -187,14 +187,14 @@ Nested cycles are supported:
 **pattern:** 
 
 ```
--- label 2 nested cycles 
+** label 2 nested cycles 
 cycle
-  -- outer cycle
+  ** outer cycle
   cycle
-    -- skip both cycles
+    ** skip both cycles
     skip all if (condition)
     ...    
-    -- stop both cycles
+    ** stop both cycles
     stop all if (condition)    
   repeat  
 repeat  
@@ -214,7 +214,7 @@ cycle
   write ','
 repeat if (x < 5)
 
-print --> 9:1, 8:0, 7:1, 6:0, 5:1,
+print ** 9:1, 8:0, 7:1, 6:0, 5:1,
 ```
 
 ## While
@@ -224,21 +224,21 @@ Execute a block of code as long as one condition is true.
 **Syntax:**
 ```
 given 
-  -- local_variables
+  ** local_variables
 while (condition) do
-  -- statements
+  ** statements
   skip if (condition)
   ...
   stop if (condition)
   ...
 else
-  -- statements  
+  ** statements  
 done
 ```
 **example**
 
 ```
--- example of collection iteration
+** example of collection iteration
 method: main()
   given 
     Array:test := ["a","b","c","d","e"]
@@ -246,12 +246,12 @@ method: main()
   while (i < test.length) do
     element := my_list[i];
     i += 1
-    -- shortcut 
+    ** shortcut 
     skip if (element < "c")
     write(element);
     write(',') if (element ≠ "e") 
   done
-over
+finish;
 ```
 > "c","d","e"
 
@@ -260,7 +260,7 @@ over
 Scan a "range", that is a _subset_ from a continuous _type_ using syntax: `[n..m]`.  
 
 ```
-[0..10]  -- {0,1,2,3,4,5,6,7,8,9,10}
+[0..10]  ** {0,1,2,3,4,5,6,7,8,9,10}
 ```
 Note: 
 
@@ -275,7 +275,7 @@ given
   Integer: max := constant  
   Integer: var ;
 scan var <: Z[min..max]
-  -- block statements;
+  ** block statements;
   ...
 next
 ```
@@ -289,12 +289,12 @@ Example of forward iteration:
 given
   Integer: i := 0 
 scan i <: Z[0..10]
-  -- force next iteration
+  ** force next iteration
   if (i % 2 = 0)  
   begin
     skip
   else
-    -- write only odd numbers
+    ** write only odd numbers
     write(i)  
     write(',') if (i < 10)  
   ready
@@ -325,9 +325,9 @@ The "trial" statement execute a process that can fail for some reason.
 
 ```
 given
-  -- declaration
+  ** declaration
 trial
-  -- initialization
+  ** initialization
   case: name_1
     abort if (condition)
   case: name_2
@@ -370,7 +370,7 @@ Exception is interrupting the current logical flow and jump to the recover regio
 
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System $error variable contains several members that are fill-in by the EVE program when exception is created: 
 ```
--- system global exception type
+** system global exception type
 define
    type .Exception <: Record (
                          Integer: code, 
@@ -379,7 +379,7 @@ define
                          String:  module_name, 
                          String:  line_number  
                         )
--- global variable for holding current error
+** global variable for holding current error
 global
    Exception: $error
 ```
@@ -395,7 +395,7 @@ when there is a _"run-time error"_ and program can not continue.
 There are two alternative statements to create user defined exceptions.
 
 ```
--- raise exception
+** raise exception
 raise (code,"message") if (condition)
 ```
 
@@ -403,14 +403,14 @@ raise (code,"message") if (condition)
 Using keyword _"fail"_ user can quick create an exception that has no message or continue program using _"pass"_. Fail is used most frequent in combination with conditional statement "when" or "if". 
 
 ```
--- quick exception
+** quick exception
 begin if (condition) 
   fail
 else
   pass
 ready
 
--- conditional exception
+** conditional exception
 fail if (condition)
 ```
 
@@ -425,10 +425,11 @@ In this region developer can use control statements like "switch","case" to anal
 ```
 method: main()
   Real: a 
+start  
   a := 1 ÷ 0
 recover
   print $error.message
-over
+finish;
 ```
 
 ```
@@ -460,7 +461,7 @@ The expect statement is similar to assert. It verify an expression and  it produ
 
 **directive**
 
-* #trace:on|off  -- create trace records for ...errors
-* #echo:on|off   -- each case print out to console when is executed
+* #trace:on|off  ** create trace records for ...errors
+* #echo:on|off   ** each case print out to console when is executed
 
 **Read next:** [Data Types](data-types.md)

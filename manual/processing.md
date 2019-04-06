@@ -10,17 +10,18 @@ Array elements have very fast direct access by index.
 method: test_array()
   --array  with capacity of 10 elements
   Array[Integer](10): my_array 
-  -- scan array and modify element by element
+  ** scan array and modify element by element
+start  
   given
     Integer: m := my_array.capacity()
     Integer: i
   scan (i <: [1..m])
     my_array[i] := i 
   next
-  -- array  elements are identified using [index]
-  print ("This is the first element: {1}" <+ my_array[1]);
-  print ("This is the last element: {1}"  <+ my_array[?]);
-over
+  ** array  elements are identified using [index]
+  print ("This is the first element: {1}" <+ my_array[1])
+  print ("This is the last element: {1}"  <+ my_array[?])
+finish;
 ```
 
 **console:**
@@ -41,8 +42,8 @@ An array can changing capacity. This can be done using built-in method _extend_.
 Modify all elements of the matrix is possible using [*] and assign operator “ := ”
 
 ```
--- a matrix having 2 rows and 2 columns
--- initialize all elements with 100
+** a matrix having 2 rows and 2 columns
+** initialize all elements with 100
 given
   Matrix[Integer: ](2,2): M
 begin
@@ -63,19 +64,19 @@ given
   Matrix[Integer: ](2,2):M
 begin
   M := 100;
-  -- modify all elements
+  ** modify all elements
   M[*] += 10; 
-  print(M); --> [[110,110],[110,110]]
+  print(M); ** [[110,110],[110,110]]
 
-  -- modify an entire row 
+  ** modify an entire row 
   M[1,*] := 0;
   M[1,*] := 1;
-  print(M); --> [[0,0],[1,1]]
+  print(M); ** [[0,0],[1,1]]
   
-  -- modify an entire column
+  ** modify an entire column
   M[*,1] += 1;
   M[*,2] += 2;
-  print(M); --> [[1,2],[2,3]]
+  print(M); ** [[1,2],[2,3]]
 ready
 ```
 
@@ -96,19 +97,20 @@ In this example we traverse all the rows then all the column, this is the most e
 
 ```
 method: main()
-  Matrix[String(2)](3,3): M;    
+  Matrix[String(2)](3,3): M; 
+start  
   M :=  ⎡'a0','b0','c0'⎤
         ⎢'a1','b1','c1'⎥
         ⎣'a2','b2','c2'⎦;        
   given
     Integer: col;
     Integer: row;
-  scan col <: [1..3]:     -- traverse columns
-    scan row <: [1..3]:   -- traverse row first
+  scan col <: [1..3]:     ** traverse columns
+    scan row <: [1..3]:   ** traverse row first
       print(M[row,col]);
     next row;
   next col;
-over
+finish;
 ```
 
 ##  Arrays Slicing
@@ -138,16 +140,16 @@ method: main()
   print(a[1..1]);   --will print [0]
   print(a[1..4]);   --will print [1,2,3]
  
-  -- create b as slice reference from a
+  ** create b as slice reference from a
   given
     Integer: i;
   scan i <: b:
     a[i] += 2;
   next i; 
   
-  -- first 4 elements of (a) are modified
-  print(a)  -- will print: [2,3,4,5,4,5,6,7,8,9]
-over
+  ** first 4 elements of (a) are modified
+  print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
+finish
 ```
 
 ### Set builders
@@ -178,9 +180,9 @@ given
    List: source  := [0,1,2,2,2,2];
    Set : new_set := {};
 begin
-   -- eliminate duplicates using set comprehension
+   ** eliminate duplicates using set comprehension
    mew_set := { x | x <: my_list }; 
-   print my_set; --> {0,1,2} 
+   print my_set; ** {0,1,2} 
 ready
 ```
 
@@ -194,7 +196,7 @@ given
    Set  my_set  := {};
 begin
    my_set := { x | x <: my_list, x%2 = 0 }; 
-   print my_set; --> {0,2,4} 
+   print my_set; ** {0,2,4} 
 ready
 ```
 
@@ -207,8 +209,8 @@ given
    source := {0,1,2,3,4,5};
    target <: Hash; 
 begin
-   -- create Hash pairs (key, value) for Hash map
-   --> { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
+   ** create Hash pairs (key, value) for Hash map
+   ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
    target := { (x : x^2) | x <: source }; 
 ready
 ```
@@ -222,10 +224,10 @@ method: main()
   List[Char] a := ('a','b','c');
   List[Char] b := ('1','2','3');
   List[Char] c := (); 
-
+start
   c := a + b;
-  print(c); --['a','b','c','1','2','3']
-over
+  print(c)**['a','b','c','1','2','3']
+finish
 ```
 
 ## Join() built-in
@@ -236,7 +238,7 @@ given
   String: str;
 begin
   str := join([1,2,3],",");
-  print (str); --> "1,2,3"
+  print (str); ** "1,2,3"
 ready  
 ```
 
@@ -248,7 +250,7 @@ given
   List[Integer: ]: lst := ();
 begin
   lst := split("1,2,3",",");
-  print lst; --> (1,2,3);
+  print lst; ** (1,2,3);
 ready  
 ```
 
@@ -286,8 +288,8 @@ Following other functions should be available
 ### Special attributes
 A list has properties that can be used in logical expressions:
 
-* <list>.empty()  --> True or False
-* <list>.full()   --> True or False
+* <list>.empty()  ** True or False
+* <list>.full()   ** True or False
 
 
 ## Iteration
@@ -299,13 +301,13 @@ A special _while loop_ that is executed for each element belonging to a collecti
 given
   type_name element;
 scan element <: collection:
-  -- statements;
+  ** statements;
     ...
   skip [if <condition>];
-  -- statements
+  ** statements
    ...
   stop [if <condition>];
-  -- statements
+  ** statements
   ...
 next element;
 ```
@@ -329,18 +331,19 @@ It is possible to change this using shortcuts or fast forward.
 --example of collection iteration
 method: main()
   List[Char] my_list := ['a','b','c','d','e']; 
+start  
   given
     Char: element;
   scan element <: my_list:
-    -- continue shortcut
+    ** continue shortcut
     skip if element < 'c'
     write(element);
  
-    -- fast forward 
+    ** fast forward 
     stop if (element = 'd');    
     write(',');
   next element;
-over
+finish
 ```
 > c,d
 
@@ -365,14 +368,15 @@ Map and set are similar collections and both can be used for iteration:
 ```
 method: main()
   Hash: my_map := {("a":1),("b":2),("c":3)};
-  -- print pairs (key:value)
+start  
+  ** print pairs (key:value)
   given
     String: : k;
     Integer: v;
   scan (k,v) <: my_map:
     print('("' + k + '",' + v +')');
   next;
-over
+finish
 ```
 Will print:
 ```
@@ -388,12 +392,12 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 
 **example:**
 ```
--- check if a key is present in a hash collection
+** check if a key is present in a hash collection
 given
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer: my_key := 3;
 begin if (my_key <: my_map)
-  print('True'); -- expected
+  print('True'); ** expected
 else
   print('False');
 ready   
@@ -401,8 +405,9 @@ ready
 
 **example**
 ```
--- create new elements in the hash collection
+** create new elements in the hash collection
 method: main()
+start
   given
     Hash(String, String): animals := {};
   begin
@@ -410,7 +415,7 @@ method: main()
     animals['Kiwi'] := 'bird';
     print(animals);
   ready  
-over
+finish
 ```
 
 Output:
@@ -431,6 +436,7 @@ local
   Hash: animals := {};
    
 method: main()
+start
   --create 1 more element
   animals.append('Rover','dog');
 
@@ -438,7 +444,7 @@ method: main()
   animals['Bear'] := 'dog';
   animals['Kiwi'] := 'bird';
   print(animals);
-over
+finish
 ```
 output:
 ```
@@ -456,13 +462,13 @@ Strings can be concatenated using:
 
 **Example:**
 ```
--- this is example of string concatenation
+** this is example of string concatenation
 given
   String: str := ""; 
 begin
-  -- set string value using different operators
-  str := "this " .+. "string";   --> 'this string'
-  str := "this " ._.  " string"; --> 'this string'
+  ** set string value using different operators
+  str := "this " .+. "string";   ** 'this string'
+  str := "this " ._.  " string"; ** 'this string'
 ready
 ```
 
@@ -473,8 +479,8 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 given
   String: s := "";
 begin  
-  s := 'te' . 'st'; --> "te/st" --Linux
-  s := 'te' . 'st'; --> "te\st" --Windows
+  s := 'te' . 'st'; ** "te/st" --Linux
+  s := 'te' . 'st'; ** "te\st" --Windows
 ready  
 ```
 
@@ -517,10 +523,11 @@ unicode ≠
 **Using Hash**
 ```
 method: main()
-  String: template := "Hey look at this #{key1} it #{key2}";
-  Hash:   my_map   := {("key1":"test"),("key2":"works!")};
-  print(template.format(my_map)); --using format function
-over
+  String: template := "Hey look at this #{key1} it #{key2}"
+  Hash:   my_map   := {("key1":"test"),("key2":"works!")}
+start  
+  print(template.format(my_map))**using format function
+finish
 ```
 
 Expect output:
@@ -533,8 +540,9 @@ Hey look at this test it works!
 method: main()
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
+start  
   print (template <+ my_set);
-over;
+finish;
 ```
 
 Expect Output:
@@ -566,8 +574,8 @@ Where "f" is a pattern: '(ap:m.d)'
 ```
 ### Format examples:
 ```
- '(>_:10)'  -- right align string fill with spaces to 10 characters
- '(>0:10.2)' -- right align fill with 0 up to 10 digits and use 2 decimals
+ '(>_:10)'  ** right align string fill with spaces to 10 characters
+ '(>0:10.2)' ** right align fill with 0 up to 10 digits and use 2 decimals
 ```
 
 ### Text functions

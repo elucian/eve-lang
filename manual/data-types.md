@@ -12,8 +12,8 @@ Basic types are abstract wrappers to native types.
 | type     | description
 |----------|----------------------------------------------------
 | Integer  | integer on 64 bits (signed)
-| Natural: | integer on 64 bits (unsigned)
-| Real:     | double precision number (signed)
+| Natural  | integer on 64 bits (unsigned)
+| Real     | double precision number (signed)
 | Rational | fixed precision number (signed)
 | Null     | Is a reference type that represents Null reference
 
@@ -25,9 +25,9 @@ Composite data types are unions of data elements of heterogeneous types.
 |----------|----------------------------------------------------
 | Ordinal  | Enumeration of ideas, cases or terms
 | Record   | Heterogeneous collection of elements in a database
-| String:   | Create an ASCII string ('delimited using single quotes')
-| Unicode  | reserved but not used in level1 ("delimited with double quotes")
-| Logic    | Is a Ordinal type having values {⊥, ⊤}
+| String   | Create an ASCII string: ('delimited using single quotes')
+| Text     | Double quoted unlimited string: ("delimited with double quotes")
+| Logic    | Is a Ordinal type having values:  False, True
 
 
 ## Collections
@@ -60,19 +60,19 @@ define
   type: Point <: Record (Integer: a, b )
 
 method: main()
-  Point: p1, p2      -- implicit constructor
-  Point: p3 := {1,1} -- initial value for Point
-
-  -- modification using constants
+  Point: p1, p2      ** implicit constructor
+  Point: p3 := {1,1} ** initial value for Point
+start
+  ** modification using constants
   p1.a := 1
   p1.b := 2  
   
-  -- modification using literal
+  ** modification using literal
   p2 := {2, 2}
   
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
   print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
-over
+finish
 ```
 output:
 ```
@@ -136,15 +136,16 @@ Precision Real: numbers is variable depending on the size of the number. The num
 
 ```
 method: main()
-  -- declare variable
+  ** declare variable
   Integer: i; 
   Natural: n;
   Real: r;
-  -- modify variables
+start  
+  ** modify variables
   i := 9223372036854775807;
   n := 18446744073709551615;
   r := 0.25;  
-over;
+finish;
 ```
 
 ### Complex number
@@ -184,10 +185,10 @@ given
   Integer: a := 2
   Real: b := 1.5 
 begin
-  b := a -- this implicit cast is possible b = 2.0
-  b := a + 3.5 -- add 3.5 then assign result to b = 5.5
-  a := b       -- error: can not assign Real: to Integer
-  a := 1.5     -- error: can not assign Real: to Integer
+  b := a ** this implicit cast is possible b = 2.0
+  b := a + 3.5 ** add 3.5 then assign result to b = 5.5
+  a := b       ** error: can not assign Real: to Integer
+  a := 1.5     ** error: can not assign Real: to Integer
 ready
 ```
 
@@ -200,13 +201,13 @@ given
   Integer: a := 0
   Real:    b := 1.5
 begin
-  -- explicit coercion lose (0.5)
+  ** explicit coercion lose (0.5)
   a := floor(b)
-  print(a) -- will print: 1
+  print(a) ** will print: 1
  
-  -- explicit coercion add (0.5)
+  ** explicit coercion add (0.5)
   a := ceiling(b) 
-  print(a) -- will print: 2
+  print(a) ** will print: 2
 ready
 ```
 
@@ -217,7 +218,7 @@ given
   String: s 
   Integer: v := 1000
 begin  
-  s := format(v) -- explicit coercion s:="1000"
+  s := format(v) ** explicit coercion s:="1000"
 ready  
 ```
 
@@ -232,9 +233,9 @@ given
   String:  s := "1000"
   String:  r := "200.02"
 begin
-  v := parse(s); -- make v = 1000
-  v := parse(r); -- make v = 200 and decimal .02 is lost
-  b := parse(r); -- make b = 200.02 and decimal .02 is preserved
+  v := parse(s); ** make v = 1000
+  v := parse(r); ** make v = 200 and decimal .02 is lost
+  b := parse(r); ** make b = 200.02 and decimal .02 is preserved
 ready
 ```
 
@@ -253,11 +254,11 @@ This is a logical deduction of variable type from literal or constructor using "
 **Example:**
 
 ```
--- Define a list of 10 elements using type inference:
+** Define a list of 10 elements using type inference:
 given
   List ls := (0,1,2,3,4,5,6,7,8,9);
 begin
-  print(ls.type()); --> List
+  print(ls.type()); ** List
 ready  
 ```
 
@@ -312,7 +313,7 @@ given
   Record: r := (name:"test", age:"24"); 
   Hash:   m := {('key1':"value1"),('ley2':"value2")}; 
 begin
-  -- check variable types using introspection
+  ** check variable types using introspection
   print("name  is of type " + type(v.name));
   print("key   is of type " + type(m.key));
   print("value is of type " + type(m.value));
@@ -353,7 +354,7 @@ Sometimes the type is partially specified to improve type declaration.
 
 ```
 define
-  -- member type is inferred from literal 
+  ** member type is inferred from literal 
   Array[](10) a := 0;
 ```
 ## Logic type
@@ -371,7 +372,7 @@ True     | Logic.T       | 00000000 00000001
 **syntax**
 ```
 define
- Logic: <variable_name>; --> default F
+ Logic: <variable_name>; ** default F
 ```
 
 
@@ -444,6 +445,7 @@ define
 
 method: main()
   String: message
+start  
   given
     Day: today := today()  
   quest
@@ -458,7 +460,7 @@ method: main()
     message:='middle of the week'
   ready
   print('Is', message)
-over
+finish;
 ```
 **Note** For private enumerations you can use a record type.
 
@@ -476,7 +478,7 @@ done
 Ordinal is a ordered set of Natural:numbers identified by a name. Ordinal is a discrete numeral type so it has support for  relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
 
 ```
--- using type Day declared before
+** using type Day declared before
 given
   Day: v := Friday;
 begin
@@ -534,16 +536,16 @@ A variant can change its data type at runtime:
 given
   (Real | Integer): v, x ,t ;
 begin
-  -- positive example
-  v := 1;     -- v is Integer
-  x := 1.5;   -- x is Real:    
-  t := 1 ÷ 2; -- make t Real
+  ** positive example
+  v := 1;     ** v is Integer
+  x := 1.5;   ** x is Real:    
+  t := 1 ÷ 2; ** make t Real
   
-  -- safe conversion
-  t := 120; -- safe conversion
+  ** safe conversion
+  t := 120; ** safe conversion
   
-  -- negative examples
-  v := x;  -- ERROR: v is Integer
+  ** negative examples
+  v := x;  ** ERROR: v is Integer
 ready
 ```
 
@@ -554,18 +556,19 @@ A variant is a way to create a generic method.
 ```
 method: invert(Integer | Real: x, y)
   (Integer | Real): i
+start  
   assert type(x) ≠ type(y);  
   
-  i := x; -- intermediate value
-  y := x; -- first  switch
-  x := i; -- second switch
-over;
+  i := x; ** intermediate value
+  y := x; ** first  switch
+  x := i; ** second switch
+finish;
 
 method: main()
   Integer: x, y
   Real: a, b
-  
-  -- invert two Integer: numbers
+start  
+  ** invert two Integer: numbers
   x := 10
   y := 20  
   invert(x, y)
@@ -574,7 +577,7 @@ method: main()
   a := 1.5
   b := 2.5
   invert(a, b)
-over
+finish
 ```
 
 ## Strings 
@@ -595,8 +598,8 @@ By default value of string is "", equivalent to empty symbol: ∅;
 
 ```
 global
-  String: string_name := '"'   -- limited 255 capacity string
-  Text:   text_name   := "''"  -- unlimited Unicode text
+  String: string_name := '"'   ** limited 255 capacity string
+  Text:   text_name   := "''"  ** unlimited Unicode text
 ```
 
 ## Mutability
@@ -605,16 +608,16 @@ In EVE strings are immutable. If we use a modifier ":=" new memory is allocated.
 **Example:**
 ```
 method: test_string()
-  String : str -- initial "" 
-  String @ ref -- string reference
+  String : str ** initial "" 
+  String @ ref ** string reference
   begin
-    str := 'First value'   -- create new reference
-    ref ::  str            -- borrow reference
-    str := 'First value'   -- create new reference
+    str := 'First value'   ** create new reference
+    ref ::  str            ** borrow reference
+    str := 'First value'   ** create new reference
   ready
-  expect (str = ref) -- T  equal value
-  expect (str = ref) -- F  different references
-over;
+  expect (str = ref) ** T  equal value
+  expect (str = ref) ** F  different references
+finish;
 ```
 
 Note: You can create garbage in Bee if you loose reference to strings.
@@ -627,10 +630,10 @@ Note: You can create garbage in Bee if you loose reference to strings.
 
 **Example:**
 ```
-print ('this'  = 'this')   --> T (same exact value)
-print ('this ' = 'this')   --> F (not same value)
-print (' this' = 'this')   --> F (not same value)
-print ('this'  = 'this')   --> F (not same location)
+print ('this'  = 'this')   ** T (same exact value)
+print ('this ' = 'this')   ** F (not same value)
+print (' this' = 'this')   ** F (not same value)
+print ('this'  = 'this')   ** F (not same location)
 ```
 
 ## Null strings
@@ -711,7 +714,7 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given
-  Time: time --> '00:00' 
+  Time: time ** '00:00' 
 ```
 
 **Example**

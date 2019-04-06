@@ -1,16 +1,16 @@
 #driver "while"
 
 --example of collection iteration
-method main() go
-  given:
-    test := ["a","b","c","d","e"];
-    i := 0 ∈ Natural;
-  while i < test.length:
-    element := my_list[i];
+method main()
+  Array: test := ["a","b","c","d","e"]
+  Natural: i := 1
+start
+  while (i <= test.length) do
+    element := my_list[i]
     -- shortcut 
-    when element ≥ "c":
-       write(element);
-       write(',') if element ≠ "e"; 
-    ready;       
-  repeat;
-over;
+    when (element ≥ "c")
+       write (element)
+       write (',') if (element <> "e")
+    ready
+  done
+finish.

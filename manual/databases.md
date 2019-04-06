@@ -47,8 +47,8 @@ To connect to database we must use "connect" command. This command can be implem
 
 ```
 method:connect(credential:String):
-  db:=Database(credential, signature); -- create a database instance
-over;
+  db:=Database(credential, signature); ** create a database instance
+finish;
 ```
 
 Connection will trigger an error if module.version literal do not match database internal signature. To fix this error programmer must fix the database internal signature or the model signature. This is a feature implemented in the language to force users to sign database models.
@@ -76,7 +76,7 @@ global
 An important application of recursion in computer science is in defining dynamic data structures such as lists and trees. Recursive data structures can dynamically grow to a theoretically infinite size.
 
 ```
--- example of single recursive node
+** example of single recursive node
 define
    type Node <: Record ( 
      data: Integer,  --integer data
@@ -86,7 +86,7 @@ define
 This kind of structure can be used to create a stack.
 
 ```
--- example of double recursive node
+** example of double recursive node
 define
    type Node <: Record (
      data: Integer,  --integer data
@@ -132,20 +132,20 @@ A record instance is a variable of type record. The memory is allocated using th
 
 **Example:**
 ```
--- we declare a record type  
+** we declare a record type  
 define
   type: Person <: Record (name:String(32), age:Integer: );
 
-method: main:
-  Person: person1,person2     -- two variables of type Person
-  Array[Person](10): catalog  -- a collection of Persons
-
-  -- creating persons using record literals
+method: main()
+  Person: person1,person2     ** two variables of type Person
+  Array[Person](10): catalog  ** a collection of Persons
+start
+  ** creating persons using record literals
   person1 := (name:"John", age:21);
   person2 := (name:"Vera", age:20);
   print("#s and #s are lovers." <+ (person1.name, person2.name));
 
-  -- create an array with 30 new persons
+  ** create an array with 30 new persons
   given:
     Integer: i;
   while (i ≤ 10) do
@@ -153,14 +153,14 @@ method: main:
     i += 1; 
   done;
 
-  -- change first person using "with...do"
+  ** change first person using "with...do"
   with catalog[1]
     name := "Ispas Inca";
     age  := "17"; 
   ready;
   
   print("#s is single." <+ catalog[1].name)
-over;
+finish;
 ```
 
 Console:  
@@ -190,7 +190,7 @@ We can use keyword Record to define a variable of type record with unknonw struc
 given
   Record: person;
 begin
-  -- differed structure
+  ** differed structure
   person:= (name:"John", age:21)
 ready
 ```
