@@ -48,7 +48,7 @@ To connect to database we must use "connect" command. This command can be implem
 ```
 method:connect(credential:String):
   db:=Database(credential, signature); ** create a database instance
-finish
+return
 ```
 
 Connection will trigger an error if module.version literal do not match database internal signature. To fix this error programmer must fix the database internal signature or the model signature. This is a feature implemented in the language to force users to sign database models.
@@ -139,7 +139,7 @@ define
 method: main()
   Person: person1,person2     ** two variables of type Person
   Array[Person](10): catalog  ** a collection of Persons
-start
+process
   ** creating persons using record literals
   person1 := (name:"John", age:21);
   person2 := (name:"Vera", age:20);
@@ -160,7 +160,7 @@ start
   ready;
   
   print("#s is single." <+ catalog[1].name)
-finish
+return
 ```
 
 Console:  

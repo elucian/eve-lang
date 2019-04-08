@@ -64,11 +64,11 @@ In this region developer can use control statements like "switch","case" to anal
 ```
 method: main()
   Real: a; 
-start  
+process  
   a := 1 / 0;  
 recover
   print ($error.message);
-finish
+return
 ```
 
 ```

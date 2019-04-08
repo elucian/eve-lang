@@ -43,9 +43,9 @@ An array  capacity can be established using a parameter and a constructor. All e
 ```
 ** variable array size depending upon parameter n
 method: test(Integer: n)
-start
+process
   Array: my_array(n);
-finish
+return
 ```
 
 **array inference**

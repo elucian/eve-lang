@@ -62,7 +62,7 @@ define
 method: main()
   Point: p1, p2      ** implicit constructor
   Point: p3 := {1,1} ** initial value for Point
-start
+process
   ** modification using constants
   p1.a := 1
   p1.b := 2  
@@ -72,7 +72,7 @@ start
   
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
   print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
-finish
+return
 ```
 output:
 ```
@@ -140,12 +140,12 @@ method: main()
   Integer: i; 
   Natural: n;
   Real: r;
-start  
+process  
   ** modify variables
   i := 9223372036854775807;
   n := 18446744073709551615;
   r := 0.25;  
-finish
+return
 ```
 
 ### Complex number
@@ -445,7 +445,7 @@ define
 
 method: main()
   String: message
-start  
+process  
   given
     Day: today := today()  
   quest
@@ -460,7 +460,7 @@ start
     message:='middle of the week'
   ready
   print('Is', message)
-finish
+return
 ```
 **Note** For private enumerations you can use a record type.
 
@@ -556,18 +556,18 @@ A variant is a way to create a generic method.
 ```
 method: invert(Integer | Real: x, y)
   Integer | Real :i
-start  
+process  
   assert type(x) <> type(y);  
   
   i := x; ** intermediate value
   y := x; ** first  switch
   x := i; ** second switch
-finish
+return
 
 method: main()
   Integer: x, y
   Real: a, b
-start  
+process  
   ** invert two Integer: numbers
   x := 10
   y := 20  
@@ -577,7 +577,7 @@ start
   a := 1.5
   b := 2.5
   invert(a, b)
-finish
+return
 ```
 
 ## Strings 
@@ -617,7 +617,7 @@ method: test_string()
   ready
   expect (str = ref) ** T  equal value
   expect (str = ref) ** F  different references
-finish
+return
 ```
 
 Note: You can create garbage in Bee if you loose reference to strings.

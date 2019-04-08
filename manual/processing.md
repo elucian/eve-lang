@@ -11,7 +11,7 @@ method: test_array()
   ** array  with capacity of 10 elements
   Array[Integer](10): my_array 
   ** scan array and modify element by element
-start  
+process  
   given
     Integer: m := my_array.capacity()
     Integer: i
@@ -21,7 +21,7 @@ start
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
   print ("This is the last element: {1}"  <+ my_array[?])
-finish
+return
 ```
 
 **console:**
@@ -98,7 +98,7 @@ In this example we traverse all the rows then all the column, this is the most e
 ```
 method: main()
   Matrix[String(2)](3,3): M; 
-start  
+process  
   M :=  ⎡'a0','b0','c0'⎤
         ⎢'a1','b1','c1'⎥
         ⎣'a2','b2','c2'⎦;        
@@ -110,7 +110,7 @@ start
       print(M[row,col]);
     next row;
   next col;
-finish
+return
 ```
 
 ##  Arrays Slicing
@@ -149,7 +149,7 @@ method: main()
   
   ** first 4 elements of (a) are modified
   print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
-finish
+return
 ```
 
 ### Set builders
@@ -224,10 +224,10 @@ method: main()
   List[Char] a := ('a','b','c');
   List[Char] b := ('1','2','3');
   List[Char] c := (); 
-start
+process
   c := a + b;
   print(c)**['a','b','c','1','2','3']
-finish
+return
 ```
 
 ## Join() built-in
@@ -331,7 +331,7 @@ It is possible to change this using shortcuts or fast forward.
 --example of collection iteration
 method: main()
   List[Char] my_list := ['a','b','c','d','e']; 
-start  
+process  
   given
     Char: element;
   scan element <: my_list:
@@ -343,7 +343,7 @@ start
     stop if (element = 'd');    
     write(',');
   next element;
-finish
+return
 ```
 > c,d
 
@@ -368,7 +368,7 @@ Map and set are similar collections and both can be used for iteration:
 ```
 method: main()
   Hash: my_map := {("a":1),("b":2),("c":3)};
-start  
+process  
   ** print pairs (key:value)
   given
     String: : k;
@@ -376,7 +376,7 @@ start
   scan (k,v) <: my_map:
     print('("' + k + '",' + v +')');
   next;
-finish
+return
 ```
 Will print:
 ```
@@ -407,7 +407,7 @@ ready
 ```
 ** create new elements in the hash collection
 method: main()
-start
+process
   given
     Hash(String, String): animals := {};
   begin
@@ -415,7 +415,7 @@ start
     animals['Kiwi'] := 'bird';
     print(animals);
   ready  
-finish
+return
 ```
 
 Output:
@@ -436,7 +436,7 @@ local
   Hash: animals := {};
    
 method: main()
-start
+process
   ** create 1 more element
   animals.append('Rover','dog');
 
@@ -444,7 +444,7 @@ start
   animals['Bear'] := 'dog';
   animals['Kiwi'] := 'bird';
   print(animals);
-finish
+return
 ```
 output:
 ```
@@ -525,9 +525,9 @@ unicode ≠
 method: main()
   String: template := "Hey look at this #{key1} it #{key2}"
   Hash:   my_map   := {("key1":"test"),("key2":"works!")}
-start  
+process  
   print(template.format(my_map))**using format function
-finish
+return
 ```
 
 Expect output:
@@ -540,9 +540,9 @@ Hey look at this test it works!
 method: main()
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
-start  
+process  
   print (template <+ my_set);
-finish
+return
 ```
 
 Expect Output:

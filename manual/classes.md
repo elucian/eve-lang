@@ -18,12 +18,12 @@ Classes are derived from a single base class that is the root Class. To design m
 class: class_name(parameters) <: base_class
   ** define attributes
   <attributes>
-start
+create
   object := <base_class>(); ** object initialization  
   ... 
 scrap
   <object_dispose_region> 
-finish
+return
 ```
 
 ## Arguments
@@ -46,7 +46,7 @@ The "object" is the current instance that is created.  It is visible in class co
 
 **Syntax:**
 ```
-start
+create
   object := base_class(arguments)
 ```
 
@@ -79,13 +79,13 @@ A class can have a single constructor. A constructor can use decision statements
 
 ```
 ...
-start
+create
   when (condition) do
     object := base_class(some_arguments)
   else
     object := base_class(<other_arguments>)
   ready
-finish
+return
 ```
 
 ## Object Initialization
@@ -98,7 +98,7 @@ We can use comparison operators: "=" and "=" with objects. First comparison "=" 
 ```
 method: main()
   Integer: o,n
-start  
+process  
   o := 1
   n := 1 
   when (o = n) do
@@ -112,7 +112,7 @@ start
   ** verify
   expect  (o = n); ** equivalent  
   expect !(o = n); ** not the same 
-finish
+return
 ```
 
 ## Generic Class
@@ -123,9 +123,9 @@ A class can receive <generic_types> parameters. This allows to create generic al
 ```
 class[Generic_Parameters]: Generic_Name(parameters) <: Base_Class
   ** declarations
-start
+create
   ** constructor
-finish
+return
 ```
 
 ## Using Generic Type

@@ -49,18 +49,18 @@ define
   
 class: name
   ** class_definition
-finish
+return
 
 method: main(params)   
   ** method_definition
-finish
+return
 
 function: main(params) => type
   ** function_definition
-finish
+return
 /****************************************************
-  Usually after finish we use ";" to continue
-  Last "finish" is terminated with "." to end module 
+  Usually after return we use ";" to continue
+  Last "return" is terminated with "." to end module 
 ****************************************************/ 
 ```
 
@@ -102,10 +102,10 @@ A method is a subroutine that can receive input/output parameters and have side-
 ```
 method: name(parameters)
   ** declaration region
-start
+process
   ** executable region
   ...
-finish
+return
 ```
 
 ## Method name
@@ -139,7 +139,7 @@ One method can receive multiple arguments of the same type separated by comma in
 ```
 method: main(Array[String]() * args)
   print(args)
-finish
+return
 ```
 
 ## Method scope
@@ -156,24 +156,24 @@ To execute an method you use keyword "solve" then method name followed by argume
 ```
 
 ## Method termination
-A method end with keyword finish or exit. When method is terminated, program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
+A method end with keyword return or exit. When method is terminated, program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. Exit from the "main" method will stop the program execution early. 
 
 **Example:**
 ```
 method: test(Integer: a)
-start
+process
   print (a);
-finish
+return
 
 method: main(List[String]: *args)
   ** number of arguments received:
   Integer: c := args.count();
-start  
+process  
   ** verify condition and exit
   exit if c = 0;
   
   test(c); ** method call
-finish
+return
 ```
 
 ## Side Effects
@@ -194,18 +194,18 @@ global
 local
   Integer: p1, p2;
 method: add_numbers()
-start
+process
   $result := p1 + p2 **side effect  
   print($result);
-finish
+return
 
 method: main()
-start
+process
   p1 := 10;
   p2 := 20;
-  add_numbers;   
+  add_numbers();   
   expect $result = 30;  
-finish
+return
 ```
 
 **using output parameters**
@@ -214,19 +214,19 @@ To avoid system and global variables use output parameters:
 
 ```
 method: add(integer p1,p2, Integer: @out)
-start
+process
   @out := p1+p2;
-finish
+return
 
 method: main()
   Integer: result;
-start  
+process  
   ** reference argument require a variable
   add(1,2, @out:result);
   print (result); ** expected value 3
   ** negative test
   add(1,2,4); ** error, "out" parameter require variable argument
-finish
+return
 ```
 
 **Notes:**
@@ -253,11 +253,11 @@ Classes are composite data types. Once class can be used to create objects.
 ```
 class: name(parameters) <: base_class
   ** definition_region
-start
+create
   ** constructor region
 scrap
   ** release region
-finish
+return
 ```
 
 ***Read more:** [Classes](classes.md)
@@ -283,11 +283,11 @@ A function can have parameters and produce one or more results.
 ```
 function: name(parameters) => (result_type: result, ...)
   ** declaration
-start
+process
   ** statements
   ...
   result := expression;
-finish
+return
 ```
 
 **Function call**
@@ -319,16 +319,16 @@ There is a difference between the parameter and the argument. The parameter is a
 ```
 ** function declaration
 function: sum(Integer: a, b) => (Integer: result)
-start
+process
   result := a + b;
-finish
+return
   
-method: main()
+method: main() 
   Integer: r
-start  
+process  
   r := sum(10,20)  ** function call
   print(r)         ** this will print 30
-finish
+return
 ```
 
 ## Conditionals
@@ -369,13 +369,13 @@ An λ expression can have multiple conditionals named nodes.
 ```
 method: main()
   Integer: p1, p2, x
-start  
+process
   p1 := 2
   p2 := 1
   ** using λ expression  
-  x:= ( 0 : p1 = 0, 0 : p2 = 0, p1+p2)
+  x  := ( 0 : p1 = 0, 0 : p2 = 0, p1+p2)
   print(x); ** 3 
-finish
+return
 ```
 
 **example**

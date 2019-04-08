@@ -106,7 +106,7 @@ It is possible to use more then one value using a list, range or collection.
 ```
 method: test(Integer: p:=0) 
   String: message := ""
-start 
+process 
   given 
     Integer: v := p + 4
   quest v
@@ -120,7 +120,7 @@ start
     message := "no match";
   ready
   print message; 
-finish
+return
 ```
 
 **notes:**
@@ -249,7 +249,7 @@ method: main()
     write(element);
     write(',') if (element ≠ "e") 
   redo
-finish
+return
 ```
 > "c","d","e"
 
@@ -422,11 +422,11 @@ In this region developer can use control statements like "switch","case" to anal
 ```
 method: main()
   Real: a 
-start  
+process  
   a := 1 ÷ 0
 recover
   print $error.message
-finish
+return
 ```
 
 ```
