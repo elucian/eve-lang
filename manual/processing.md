@@ -8,7 +8,7 @@ Array elements have very fast direct access by index.
 
 ```
 method: test_array()
-  --array  with capacity of 10 elements
+  ** array  with capacity of 10 elements
   Array[Integer](10): my_array 
   ** scan array and modify element by element
 start  
@@ -21,7 +21,7 @@ start
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
   print ("This is the last element: {1}"  <+ my_array[?])
-finish;
+finish
 ```
 
 **console:**
@@ -31,7 +31,7 @@ This is the last element: 10
 ```
 
 **capacity**
-An array can changing capacity. This can be done using built-in method _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
+An array can changing capacity. This can be ready using built-in method _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
 
 ```
   <array_name>.extend(c);
@@ -110,7 +110,7 @@ start
       print(M[row,col]);
     next row;
   next col;
-finish;
+finish
 ```
 
 ##  Arrays Slicing
@@ -136,9 +136,9 @@ method: main()
   Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9];
   Array[Integer: ]: b :: a[1..4];
 
-  print(a[1..?]);   --will print [0,1,2,3,4,5,6,7,8,9]
-  print(a[1..1]);   --will print [0]
-  print(a[1..4]);   --will print [1,2,3]
+  print(a[1..?]);   ** will print [0,1,2,3,4,5,6,7,8,9]
+  print(a[1..1]);   ** will print [0]
+  print(a[1..4]);   ** will print [1,2,3]
  
   ** create b as slice reference from a
   given
@@ -216,7 +216,7 @@ ready
 ```
 
 ## List Concatenation
-List concatenation is done using operator “+”. This operator represent union. 
+List concatenation is ready using operator “+”. This operator represent union. 
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
@@ -299,17 +299,17 @@ A special _while loop_ that is executed for each element belonging to a collecti
 **template**
 ```
 given
-  type_name element;
-scan element <: collection:
+  type_name: element
+scan element <: collection do
   ** statements;
     ...
-  skip [if <condition>];
+  skip [if <condition>]
   ** statements
    ...
-  stop [if <condition>];
+  stop [if <condition>]
   ** statements
   ...
-next element;
+next
 ```
 
 
@@ -431,16 +431,16 @@ Output:
 ### Example
 ```
 local
-  --declaration of a new map initialized with one element
-  --type inference will tell us he element types (String, String);
+  ** declaration of a new map initialized with one element
+  ** type inference will tell us he element types (String, String);
   Hash: animals := {};
    
 method: main()
 start
-  --create 1 more element
+  ** create 1 more element
   animals.append('Rover','dog');
 
-  --use direct assignment to create 2 more element
+  ** use direct assignment to create 2 more element
   animals['Bear'] := 'dog';
   animals['Kiwi'] := 'bird';
   print(animals);
@@ -479,8 +479,8 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 given
   String: s := "";
 begin  
-  s := 'te' . 'st'; ** "te/st" --Linux
-  s := 'te' . 'st'; ** "te\st" --Windows
+  s := 'te' . 'st'; ** "te/st" ** Linux
+  s := 'te' . 'st'; ** "te\st" ** Windows
 ready  
 ```
 
@@ -542,7 +542,7 @@ method: main()
   List: my_list    := ("test","works!");
 start  
   print (template <+ my_set);
-finish;
+finish
 ```
 
 Expect Output:

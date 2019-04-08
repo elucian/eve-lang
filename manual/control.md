@@ -26,7 +26,7 @@ ready
 **Notes:** 
 
 * given is optional region for <block>
-* block <: { when, cycle, while, scan, trial }
+* block <: { when, quest, cycle, while, scan, trial }
 * one blocks is ending with keywords: { ready \| repeat}
 
 ## When
@@ -38,14 +38,14 @@ When, can be used in conjunction with {do, else} keywords to create a dual path 
 
 1.single path selector
 ```
-when (expression) begin 
+when (expression) do
   ** single path
 ready
 ```
   
 2.dual path selector
 ```  
-when (expression) begin
+when (expression) do
    ** true path
 else
    ** false path
@@ -54,8 +54,8 @@ ready
   
 3.nested selector 
 ```  
-when (expression) begin 
-  when (expression) begin
+when (expression) do
+  when (expression) do
    ** nested path
   ready
 ready
@@ -64,13 +64,13 @@ ready
 4.ladder
 
 ```  
-when (expression) begin 
+when (expression)    do
    ** first path
-else if (expression)
+else if (expression) do
    ** second path
-else if (expression)
+else if (expression) do
    ** third path
-else if (expression)
+else if (expression) do
    ** last path
 ready
 ```
@@ -85,14 +85,14 @@ The quest is a multi-path value based selector. It is used in conjunction with {
 ```
 given 
   value_typ: val := expression
-quest val begin
-  is (constant1) then
+quest val
+  is (constant1) do
     ** first path
     ...
-  is (constant2) then
+  is (constant2) do
     ** second path
     ...
-  in (val_list)  then
+  in (val_list)  do
     ** third path
 cover
   ** default path
@@ -109,18 +109,18 @@ method: test(Integer: p:=0)
 start 
   given 
     Integer: v := p + 4
-  quest v begin
-    in (1,2,3) then
+  quest v
+    in (1,2,3) do
       message := "first match";
-    in [1..8]  then
+    in [1..8]  do
       message := "second match";
-    in [5..10] then
+    in [5..10] do
       message := "third match";      
   cover
     message := "no match";
   ready
   print message; 
-finish;
+finish
 ```
 
 **notes:**
@@ -231,9 +231,7 @@ while (condition) do
   ...
   stop if (condition)
   ...
-else
-  ** statements  
-done
+repeat
 ```
 **example**
 
@@ -250,8 +248,8 @@ method: main()
     skip if (element < "c")
     write(element);
     write(',') if (element ≠ "e") 
-  done
-finish;
+  redo
+finish
 ```
 > "c","d","e"
 
@@ -274,7 +272,7 @@ given
   Integer: min := constant
   Integer: max := constant  
   Integer: var ;
-scan var <: Z[min..max]
+scan var <: Z[min..max] do
   ** block statements;
   ...
 next
@@ -288,10 +286,9 @@ Example of forward iteration:
 ```
 given
   Integer: i := 0 
-scan i <: Z[0..10]
+scan i <: Z[0..10] do
   ** force next iteration
-  if (i % 2 = 0)  
-  begin
+  when (i % 2 = 0) do
     skip
   else
     ** write only odd numbers
@@ -328,11 +325,11 @@ given
   ** declaration
 trial
   ** initialization
-  case: name_1
+  case: name_1 do
     abort if (condition)
-  case: name_2
+  case: name_2 do
     retry name_1 if (condition)
-  case: name_3
+  case: name_3 do
     solve name_4 if (condition)
   ...    
 error: code1
@@ -404,7 +401,7 @@ Using keyword _"fail"_ user can quick create an exception that has no message or
 
 ```
 ** quick exception
-begin if (condition) 
+when (condition) do
   fail
 else
   pass
@@ -429,7 +426,7 @@ start
   a := 1 ÷ 0
 recover
   print $error.message
-finish;
+finish
 ```
 
 ```

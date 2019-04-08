@@ -50,15 +50,15 @@ define
   
 class: name
   ** class_definition
-finish;
+finish
 
 method: main(params)   
   ** method_definition
-finish;
+finish
 
 function: main(params) => type
   ** function_definition
-finish.
+finish
 /****************************************************
   Usually after finish we use ";" to continue
   Last "finish" is terminated with "." to end module 
@@ -106,7 +106,7 @@ method: name(parameters)
 start
   ** executable region
   ...
-finish;
+finish
 ```
 
 ## Method name
@@ -140,7 +140,7 @@ One method can receive multiple arguments of the same type separated by comma in
 ```
 method: main(Array[String]() * args)
   print(args)
-finish;
+finish
 ```
 
 ## Method scope
@@ -164,7 +164,7 @@ A method end with keyword finish or exit. When method is terminated, program exe
 method: test(Integer: a)
 start
   print (a);
-finish;
+finish
 
 method: main(List[String]: *args)
   ** number of arguments received:
@@ -174,7 +174,7 @@ start
   exit if c = 0;
   
   test(c); ** method call
-finish;
+finish
 ```
 
 ## Side Effects
@@ -200,7 +200,7 @@ method: add_numbers()
 start
   $result := p1 + p2 **side effect  
   print($result);
-finish;
+finish
 
 method: main()
 start
@@ -208,7 +208,7 @@ start
   p2 := 20;
   add_numbers;   
   expect $result = 30;  
-finish;
+finish
 ```
 
 **using output parameters**
@@ -219,7 +219,7 @@ To avoid system and global variables use output parameters:
 method: add(integer p1,p2, Integer: @out)
 start
   @out := p1+p2;
-finish;
+finish
 
 method: main()
   Integer: result;
@@ -229,7 +229,7 @@ start
   print (result); ** expected value 3
   ** negative test
   add(1,2,4); ** error, "out" parameter require variable argument
-finish;
+finish
 ```
 
 Notes: 
@@ -262,7 +262,7 @@ start
   ** constructor region
 scrap
   ** release region
-finish;
+finish
 ```
 
 ***Read more:** [Classes](classes.md)
@@ -292,7 +292,7 @@ start
   ** statements
   ...
   result := expression;
-finish;
+finish
 ```
 
 **Function call**
@@ -326,14 +326,14 @@ There is a difference between the parameter and the argument. The parameter is a
 function: sum(Integer: a, b) => (Integer: result)
 start
   result := a + b;
-finish;
+finish
   
 method: main()
   Integer: r
 start  
-  r := sum(10,20)  -- function call
-  print(r)         -- this will print 30
-finish;
+  r := sum(10,20)  ** function call
+  print(r)         ** this will print 30
+finish
 ```
 
 ## Conditionals
@@ -380,7 +380,7 @@ start
   ** using λ expression  
   x:= ( 0 : p1 = 0, 0 : p2 = 0, p1+p2)
   print(x); ** 3 
-finish;
+finish
 ```
 
 **example**

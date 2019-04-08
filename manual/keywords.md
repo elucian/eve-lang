@@ -1,6 +1,6 @@
 ## Reserved keywords
 
-In Level we use English keywords with no abbreviations.
+In EVE we use English keywords with no abbreviations.
 
 ## Establish regions
 
@@ -8,11 +8,9 @@ In Level we use English keywords with no abbreviations.
 |----------|---------------------------------------------------------
 | import   | start import region
 | global   | declare global variables and constants
-| define   | start a declaration region for: types and functions 
-| public   | define a public region in a class
-| private  | define a private region in a class
-| setup    | define object initialization region
-| clean    | define object disposal region
+| define   | start a declaration region for types
+| start    | define object initialization region
+| scrap    | define object disposal region
 | recover  | define a recover region for methods
 | finalize | define a finalize region for methods
 
@@ -32,22 +30,23 @@ In Level we use English keywords with no abbreviations.
 
 | Keyword  | Description
 |----------|-------------------------------------------------------
-| is       | check data type: x is Null \| x is Integer
+| is       | check data type: x is Null \| quest associated keyword
+| in       | check data type: x is Null \| quest associated keyword
+| do       | start a repetitive block: while & for
 | as       | execute explicit cast to other data type
 | if       | create a conditional augment for simple statements
 | from     | bring members into current name-space
 | use      | enumerate members to be used in current name-space
 | all      | specify "all" members to be used in current name-space
-| next     | used to mark end of scan block and continue with next value
 | from     | used to bring members into current name-space
 | alias    | usend in import region to give alias to a module
 | given    | establish local scope for any block statement
-| do       | start a repetitive block: while & for
 | else     | alternative path for when statement 
 | cover    | used for switch sections to declare default branch
 | case     | multi-case trial regions
 | error    | trial specific error handler
 | other    | trial general error handler
+| next     | used to mark end of scan block and continue with next value
 
 ## Interruption statements
 

@@ -15,7 +15,7 @@ define
                        ]
 ** global variable for holding current error
 global
-   Exception: $error;
+   Exception: $error
 ```
 ## Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -30,7 +30,7 @@ There are two alternative statements to create user defined exceptions.
 
 ```
 ** raise exception
-when condition then
+when condition do
   raise (code,"message")
 ready
 
@@ -43,7 +43,7 @@ Using keyword _"fail"_ user can quick create an exception that has no message or
 
 ```
 ** quick exception
-when (condition) begin
+when (condition) do
   fail
 else
   pass
@@ -68,7 +68,7 @@ start
   a := 1 / 0;  
 recover
   print ($error.message);
-finish;
+finish
 ```
 
 ```
@@ -81,7 +81,7 @@ Most exceptions are recoverable except the exception created by panic statement.
 
 **Example:**
 ```
-when (condition) begin
+when (condition) do
   panic
 ready
 ```

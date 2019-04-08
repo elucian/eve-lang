@@ -23,7 +23,7 @@ start
   ... 
 scrap
   <object_dispose_region> 
-finish;
+finish
 ```
 
 ## Arguments
@@ -80,7 +80,7 @@ A class can have a single constructor. A constructor can use decision statements
 ```
 ...
 start
-  when (condition) begin
+  when (condition) do
     object := base_class(some_arguments)
   else
     object := base_class(<other_arguments>)
@@ -101,7 +101,7 @@ method: main()
 start  
   o := 1
   n := 1 
-  when (o = n) begin
+  when (o = n) do
     ** unexpected
     print("o and n objects are the same") 
     fail
@@ -110,9 +110,9 @@ start
     print("n and o are not the same") 
   ready
   ** verify
-  expect  (o = n); -- equivalent  
-  expect !(o = n); -- not the same 
-finish;
+  expect  (o = n); ** equivalent  
+  expect !(o = n); ** not the same 
+finish
 ```
 
 ## Generic Class
@@ -122,10 +122,10 @@ A class can receive <generic_types> parameters. This allows to create generic al
 **Generic Class:**
 ```
 class[Generic_Parameters]: Generic_Name(parameters) <: Base_Class
-  -- declarations
+  ** declarations
 start
-  -- constructor
-finish;
+  ** constructor
+finish
 ```
 
 ## Using Generic Type

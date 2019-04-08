@@ -48,7 +48,7 @@ To connect to database we must use "connect" command. This command can be implem
 ```
 method:connect(credential:String):
   db:=Database(credential, signature); ** create a database instance
-finish;
+finish
 ```
 
 Connection will trigger an error if module.version literal do not match database internal signature. To fix this error programmer must fix the database internal signature or the model signature. This is a feature implemented in the language to force users to sign database models.
@@ -79,8 +79,8 @@ An important application of recursion in computer science is in defining dynamic
 ** example of single recursive node
 define
    type Node <: Record ( 
-     data: Integer,  --integer data
-     previous: Node  --reference to previous node
+     data: Integer,  ** integer data
+     previous: Node  ** reference to previous node
    );
 ```
 This kind of structure can be used to create a stack.
@@ -89,9 +89,9 @@ This kind of structure can be used to create a stack.
 ** example of double recursive node
 define
    type Node <: Record (
-     data: Integer,  --integer data
-     previous: Node, --reference to previous node
-     next: Node      --reference to next node
+     data: Integer,  ** integer data
+     previous: Node, ** reference to previous node
+     next: Node      ** reference to next node
    );
 ```
 This kind of structure can be used to create a queue.
@@ -148,19 +148,19 @@ start
   ** create an array with 30 new persons
   given:
     Integer: i;
-  while (i ≤ 10) do
+  while (i <= 10) do
     catalog[i] := Person("John Doe", 20);
     i += 1; 
-  done;
+  redo;
 
   ** change first person using "with...do"
-  with catalog[1]
-    name := "Ispas Inca";
-    age  := "17"; 
+  with catalog[1] do
+    name := "Ispas Inca"
+    age  := "17" 
   ready;
   
   print("#s is single." <+ catalog[1].name)
-finish;
+finish
 ```
 
 Console:  
@@ -251,7 +251,7 @@ We can scan tables using for...do like a normal collection. No need to learn any
 **Example:**
 ```
 for <record_name> <: <table_name> do
-  ... --use <record_name>
+  ... ** use <record_name>
 for;
 ```
 ### Opening a table
@@ -264,11 +264,11 @@ We can open a table and traverse the table step by step using do. This operation
 ```
 table_name.open(READ); 
 given
-  --use introspection to declare current_record
+  ** use introspection to declare current_record
   Record current_record;   
 scan current_record <: table_name go
   map current_record 
-    --use current_record fields
+    ** use current_record fields
     ... 
   ready; 
 repeat
@@ -287,7 +287,7 @@ map;
 ```
 
 ## Data Transactions
-Data model can work with transactions. We can start a transaction manually then we can make multiple modifications in the tables. After all modifications are done we can commit or rollback changes. Notice transactions are always clean. Nobody can read data that is not committed to disk.
+Data model can work with transactions. We can start a transaction manually then we can make multiple modifications in the tables. After all modifications are ready we can commit or rollback changes. Notice transactions are always clean. Nobody can read data that is not committed to disk.
 
 ## Working with multiple tables
 We can scan many tables in the same time. We can have nested cycles and we can decide when to update or discard changes. Nothing is saved until we apply "commit". If no commit is issued the changes are automatically committed when we close the model.
@@ -409,7 +409,7 @@ cursor;
 ```
 
 ### Using a cursor
-A cursor can be open, fetch and closed. This can be done also using _for_ do. 
+A cursor can be open, fetch and closed. This can be ready also using _for_ do. 
 We can fetch row by row or in bulk for several rows or all rows. This may be too much if the data set is very large. 
 
 **Syntax:**
@@ -425,7 +425,7 @@ fetch <cursor_name> to <list_of_records> [limit N];
 ```
 for <record_name> <: <cursor_name> do
   with <record_name> map
-     ... --use record fields
+     ... ** use record fields
   with;
 for;
 ```
@@ -590,7 +590,7 @@ update target_table [as <target>] set (field_name:value[,field_name:value])
 ## Execution
 Update statement is executed immediate. We can execute a statement once or many times into a do. 
 After several modifications we can issue db.commit. If we do not commit changes will not be saved. 
-An automatic commit will be done when we close the database. It is better to do a rollback or commit before we do so.
+An automatic commit will be ready when we close the database. It is better to do a rollback or commit before we do so.
 
 After execution we can use _"query"_ object to check the status of last update command. 
 Some interesting attributes can be: query.updated, query.sql. We can use this to debug the program in  of errors.

@@ -145,7 +145,7 @@ start
   i := 9223372036854775807;
   n := 18446744073709551615;
   r := 0.25;  
-finish;
+finish
 ```
 
 ### Complex number
@@ -160,7 +160,7 @@ A complex number is a number that can be expressed in the form (a + bj), where a
 A rational number is a fraction between two numbers Q := Z/N where Q is the rational number, Z is Integer: and N is Natural:number. So Q number is using 8 + 8 := 16 bytes. The division is not executed but postponed until the number is used in an expression after simplification.
 
 ## Data Coercion
-In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is done to take advantage of type hierarchies and type representations. 
+In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. 
 If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.
 
 ## Polymorphic operators
@@ -224,7 +224,7 @@ ready
 
 **String: to a number**
 
-This can be done using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
+This can be ready using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
 ```
 given
@@ -342,7 +342,7 @@ begin
     print("Yes i is Real");
   else
     print("No i is not Real");
-  done
+  ready
   it := type(i);
   print("type of i is #t" <+ it)
 ready
@@ -460,7 +460,7 @@ start
     message:='middle of the week'
   ready
   print('Is', message)
-finish;
+finish
 ```
 **Note** For private enumerations you can use a record type.
 
@@ -471,7 +471,7 @@ when (today <: [Monday..Friday]) do
    print ("Have a nice day!");
 else
    print ("Have a happy weekend!");  
-done
+ready
 ```
 
 **Operators**
@@ -555,14 +555,14 @@ A variant is a way to create a generic method.
 
 ```
 method: invert(Integer | Real: x, y)
-  (Integer | Real): i
+  Integer | Real :i
 start  
-  assert type(x) ≠ type(y);  
+  assert type(x) <> type(y);  
   
   i := x; ** intermediate value
   y := x; ** first  switch
   x := i; ** second switch
-finish;
+finish
 
 method: main()
   Integer: x, y
@@ -573,7 +573,7 @@ start
   y := 20  
   invert(x, y)
   
-  --invert two Real: numbers
+  ** invert two Real: numbers
   a := 1.5
   b := 2.5
   invert(a, b)
@@ -617,7 +617,7 @@ method: test_string()
   ready
   expect (str = ref) ** T  equal value
   expect (str = ref) ** F  different references
-finish;
+finish
 ```
 
 Note: You can create garbage in Bee if you loose reference to strings.
@@ -644,7 +644,7 @@ We can test if a string is null using "is Null" expression.
 given 
   String: str 
 begin 
-  print("str is null") if str is Null 
+  print("str is null") if (str is Null)
 ready 
 ```
 

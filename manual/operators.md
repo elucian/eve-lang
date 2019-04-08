@@ -7,29 +7,28 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
-| (...)     | Complex expression \| Precedence of operations. 
-| (,,,)     | List notation \| Ternary expressions
-| [,,,]     | Array literal [1,2,3] \| Matrix [ [1,2],[3,4] ]
-| {,,,}     | Data record \| Ordinal type \| Set of values
-|\|\*..\*\| | Nested comments
+| (...)     | Expression \| List literal \| Data record
+| [,,,]     | Range \| Index \| Array literals \| Parameterize types
+| {,,,}     | Ordinal type \| Set of values \| Hash map
+| /*..*/    | Block comments \| Nested comments
 
 ## Single symbols
 
 |Symbol | Description
 |-------|--------------------------------------------------------------
 | \#    | Directive or macro \| Template placeholder
-| $     | System environment variable prefix
+| $     | System variable prefix \| Global variable
 | @     | Require reference \| Input/Output parameter
-| ;     | The end of any statement \| Statement separator
-| .     | Decimal separator \| Member of {record, module, object}
-| ,     | Enumeration for elements in a sequence
-| <:    | Belong to set
+| ;     | Statement separator \| End of block
 | :     | Define name \| Pair-up operator
+| .     | Decimal separator \| Public member \| Member of ,,,
+| ,     | Enumeration for elements \| complex expression 
+| <:    | Element belonging operator instead of ∈
 | \*    | Multiplication \| Variable arguments
 
 ## Double symbols
 
-Level use two symbols to create a additional operators.
+Eve use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
@@ -88,7 +87,7 @@ Modifiers are in-place operators. They change value of the left operand with val
 
 ## Relation Operators
 
-Level use two symbols to create a additional operators.
+EVE use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|-----------------------------------------------------------------------
@@ -100,7 +99,8 @@ Level use two symbols to create a additional operators.
 |  <=  | Less than or equal to
 |  ==  | Reference comparison  \| Same reference
 |  !=  | Reference comparison  \| Different references
-        
+   
+ 
 ## Collection operators
 
 In following table A, B, C are sets and x is a member: numeric or string

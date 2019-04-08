@@ -45,7 +45,7 @@ An array  capacity can be established using a parameter and a constructor. All e
 method: test(Integer: n)
 start
   Array: my_array(n);
-finish;
+finish
 ```
 
 **array inference**
@@ -192,7 +192,7 @@ given
   Set: first := {0,1,2,3,4,5,6,7,8,9}
   Set[Integer]: second := {}
 begin
-  second := first ∪ {0,1,2,10} --set union
+  second := first ∪ {0,1,2,10} ** set union
   print(second) ** {0,1,2,3,4,5,6,7,8,9,10}
 ready
 ```
