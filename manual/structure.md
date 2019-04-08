@@ -9,15 +9,14 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Modules](#modules)
 * [Regions](#regions)
 * [Classes](#classes)
-* [methods](#methods)
-* [Conditionals](#conditionals)
+* [Methods](#methods)
+* [Dispatch](#dispatch)
+* [Parameters](#parameters)
 * [Control flow](#control)
 * [Functions](#functions)
-* [Expressions](#λ-expressions)
-* [Recursion](#Recursion)
-* [Dispatch](#dispatch)
+* [Conditionals](#conditionals)
+* [Expressions](#expressions)
 * [Server](#server)
-
 ## Modules
 
 Modules are source code files having extension: *.eve. Module names starts with lowercase letter can contain underscore and digits but no special characters. Longer names that use several words will separate with underscore. The module name can be 64 characters long.
@@ -192,10 +191,8 @@ Program heaving a private method add_numbers:
 ** global variables
 global
   Integer: $result;
-
-static
+local
   Integer: p1, p2;
-
 method: add_numbers()
 start
   $result := p1 + p2 **side effect  
@@ -232,24 +229,22 @@ start
 finish
 ```
 
-Notes: 
+**Notes:**
+
 * Output parameters are usually the last parameters;
 * Output arguments must be specified by name;
+* A method call is a statement, can not be used in expressions;
+* We can not create methods, data types or classes inside a method;
+* We can not create references to methods;
 
-## Single dispatch
+## Dispatch
 
 Dispatch is a form of selection specific to methods and functions. This is a way to identify one _overloaded_ method or function by its signature.
 
-Wikipedia: [name mangling](https://en.wikipedia.org/wiki/Name_mangling)
-
-## Multiple dispatch
-
 In multiple dispatch many parameters can be used to identify a method. A method signature include method name and parameter types: both input and output parameters are included in method signature.
 
-**method Restrictions**
-* A method call is a statement, can not be used in expressions;
-* We can not create methods, data types or classes inside a over
-* We can not create references to methods:
+
+**Wikipedia:** [name mangling](https://en.wikipedia.org/wiki/Name_mangling)
 
 
 ## Classes
@@ -341,7 +336,7 @@ finish
 A condition is using an expression that can have values T or F.   
 **syntax**
 ```
-  statement if (condition);
+  statement if (condition)
 ```
 
 **example**
@@ -356,7 +351,7 @@ print "False" if !F;  ** this will print False
 * can not be used in conjunction with region keywords
 * can not be used in conjunction with declarations
 
-## λ expression
+## Expressions
 
 An λ expression can have multiple conditionals named nodes. 
 
@@ -386,18 +381,18 @@ finish
 **example**
 ```
 given
-  Logic:   b := F;
-  Integer: v := 0;   
+  Logic:   b := F
+  Integer: v := 0   
 begin
-  v := (1 : b, 2);   
+  v := (1 : b, 2)   
   print v; ** 2
 ready  
 ```
 
 ## Server
 
-EVE program is hosted using a virtual machine named Merlin. This is a program capable of running multiple EVE sessions in parallel. Each session represents one application.
+EVE program is hosted using a virtual machine. This is a program capable of running multiple sessions in parallel. Each session represents one application.
 
-You can run same application in two different sessions. The sessions are independent and encapsulated. That means sessions can not communicate two each other.
+You can run same application in different sessions. The sessions are independent and encapsulated. That means sessions can not communicate with each other.
 
 **Read next**: [Control Flow](control.md)

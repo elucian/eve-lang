@@ -10,7 +10,7 @@ These concepts are common to any computer language in Algol family.
 * [operators](#operators)
 * [data types](#data-types)
 * [variables](#variables)
-* [identifiers](#identifier-names)
+* [identifiers](#identifiers)
 * [expressions](#expressions)
 
 ## Punctuation
