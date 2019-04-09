@@ -8,7 +8,7 @@ EVE is data oriented language. There are three kind of data types:
 
 **bookmarks**
 * [Numeric Types](#numeric-types)
-* [Data Coercion](#data-coercion
+* [Data Coercion](#data-coercion)
 * [Type inference](#type-inference)
 * [Gradual typing](#gradual-typing)
 * [String type](#string-type)
