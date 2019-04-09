@@ -6,6 +6,7 @@ These concepts are common to any computer language in Algol family.
 
 * [punctuation](#punctuation)
 * [comments](#comments)
+* [directives](#directives)
 * [keywords](#keywords)
 * [operators](#operators)
 * [data types](#data-types)
@@ -26,23 +27,19 @@ These concepts are common to any computer language in Algol family.
 
 * Eve has single line comments starting with "**"
 * Eve has end of line comments starting with "--"
-* Eve has multi line comments between /* ... */
+* Eve has multi line comments between (* ... *)
 
 **examples**
 ```
-********************************************
-** Single line comment at beginning of line
-********************************************
-/*
-  Multiple line comments, can be used to create
-  extensive documentation or comment out a code
-*/
+## Title comment
+  ** indented comment
 
-## Start of line comments
-  ** indented comment is enabled
+** Single line comment
 
+(*
+  Multiple line comments
+*)
 print ** end of line comment is enabled  
-
 ```
 
 **Notes:**
@@ -50,6 +47,43 @@ print ** end of line comment is enabled
 * One single character "#" is a compiler directive;
 * One single character "*" is multiplication operator;
 * Nested comments are supported for multi-line comments;
+
+## Directives
+Any module need at least one directive. If directive is missing the compiler will not recognize the file category and will signal an error. The directive is very important part of EVE code.
+
+The name of the file is enclosed in "" and is the first statement after initial comments. This name must match the file-name. If the file-name is renamed the source code will not be recognized and an error will be signaling the incorrect file name.
+
+```
+#driver  "name"
+#module  "name"
+#library "name"
+```
+
+**description**
+* a _driver_ is the main module of the application
+* a _module_ can be executed from driver or other module
+* a _library_ is a repository file that can be imported in other modules
+
+**properties**
+
+* a library can not be executed but only imported
+* a library do not contain method main()
+* a module can not be imported but only executed
+* a module must contain method main()
+
+A _library_ is a reusable component. It contains mostly public members: 
+
+{constants, types, classes, methods, functions}
+
+* after first load a library remain resident in memory
+* a library is loaded only once even if is imported multiple times
+* circular import is possible but we protect against infinite loop
+* a library usually do not import itself, but it is possible 
+
+A _module_ is a executable script. It contains mostly private members:
+
+* you can run a module once or many times
+* module is not resident in memory once finished
 
 ## Keywords
 
@@ -122,50 +156,6 @@ The previous value of the variable is discarded if there is no other reference t
   variable_name := <expression 
 ```
 
-## Multiple statements
-
-You can have multiple statements on one line separated using ";"
-
-**examples**
-```
-global  
-  ** integer numbers
-  Integer: a; b := 1 
-  print  (a, b)  
-  expect (a = 0, b = 1)
-  
-  ** real numbers
-  Real: d := 2.5 ; x,y,z := .0  
-  print  (d, x, y, z) 
-  expect (d = 2.5, x = .0, y = .0, z = .0)
-```
-
-## Multiple lines
-
-One expression can span multiple lines. The expression may be enclosed in parenthesis or quotation marks. Arithmetic expressions can terminate with operator and continue on next line with operand. EVE do not use the "continuation" operator like Python: "\\"
-
-**example
-```
-given 
-  Integer: x 
-  Matrix : a
-begin  
-  ** broken expression
-  x := 1 + 2 +
-       3 + 4 + 5
-       
-  ** all 5 numbers are in sum         
-  expect x = 15 
-
-  ** broken matrix
-  a := [ 
-         [1,2],
-         [3,4],
-         [5,6]
-       ]       
-ready  
-```
-
 ## Identifiers
 The name of identifiers in EVE can have a length of 64 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). A variable can contain underscore but can not start or with underscore. 
 
@@ -207,31 +197,79 @@ Expressions are created using identifiers, operators, functions and constant lit
 
 **Examples**
 ```
-** simple expressions in put statement
-** no need for parentheses for a single value
-print 10; ** print 10
-print "this is a test";
+** simple expressions in print statement
+print (10) ** print 10
+print ("this is a test")
 
 ** complex expressions can use ()  
-print (10 + 10 + 15);     ** math
-print (10 > 5) | (2 < 3); ** logical
+print (10 + 10 + 15)   ** math
+print (10 > 5 | 2 < 3) ** logical
 
-** multiple expressions in a line
-print (1,',',2,',',3) ** expect 1,2,3
-print (10, 11, 12);   ** expected 101112   
+** print result for multiple expressions
+print (1, 2, 3)       
+print (10, 11, 12)   
 
-** avoid new line after 2
-write (1,2);
-write (3,4);  
-print ** expect 1234
+** avoid new line and print
+write (1,2)
+write (3,4)  
+
+** now create new line
+print ** expect 1234 
 ```
 
 **Notes:** 
 * print statement can receive multiple parameters
 * print statement add new line by default
-* to avoid new line use coma separated parameters
 * to avoid new line you can use "write" statement instead of "print"
 * multiple expressions or arguments are separated by comma
-* you can omit the parentheses when you call a method:with one single parameter
+
+## Multiple statements
+
+You can have multiple statements on one line separated using ";"
+
+**examples**
+```
+given
+  ** integer numbers
+  Integer: a; b := 1 
+begin  
+  print  (a, b)  
+  expect (a = 0, b = 1)
+ready
+
+given  
+  ** real numbers
+  Real: d := 2.5 ; x,y,z := .0  
+begin  
+  print  (d, x, y, z) 
+  expect (d = 2.5, x = .0, y = .0, z = .0)
+ready  
+```
+
+## Multiple lines
+
+One expression can span multiple lines. The expression may be enclosed in parenthesis or quotation marks. Arithmetic expressions can terminate with operator and continue on next line with operand. EVE do not use the "continuation" operator like Python: "\\"
+
+**example
+```
+given 
+  Integer: x 
+  Matrix : a
+begin  
+  ** broken expression
+  x := 1 + 2 +
+       3 + 4 + 5
+       
+  ** all 5 numbers are in sum         
+  expect x = 15 
+
+  ** broken matrix
+  a := [ 
+         [1,2],
+         [3,4],
+         [5,6]
+       ]       
+ready  
+```
 
 **Read next:** [Structure.md](structure.md)

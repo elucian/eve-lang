@@ -13,7 +13,7 @@ The only thing required is signature.
 |count      | return number of characters except begin spaces
 |truncate   | reduce the capacity of the string to specified dimension
 |fill       | replace all characters in string with other same character
-|clear      | erase all characters in a string and replace them with spaces
+|erase      | erase all characters in a string and replace them with spaces
 |find       | search one sub-string in string 
 |replace    | replace a sub-string in a string with another
 |parse      | convert a string in number
@@ -23,6 +23,6 @@ The only thing required is signature.
 |center     | move string in the middle of capacity and adding spaces left and right
 |indent     | increase string count to specified length adding spaces to the left
 |pad        | increase string count to specified length adding spaces to the right
-|join       | join two strings with a separator, and create a new string
+
 
 **Read next:**[System Library](system-lib.md)

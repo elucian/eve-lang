@@ -9,20 +9,31 @@ In EVE we use English keywords with no abbreviations.
 | import   | start import region
 | global   | declare global variables and constants
 | define   | start a declaration region for types
-| start    | define object initialization region
+| process  | start execution region for methods and functions
+| create   | start constructor region for classes
 | scrap    | define object disposal region
 | recover  | define a recover region for methods
 | finalize | define a finalize region for methods
 
-## Blocks of code
+## Member declaration
 | Keyword  | Description
 |----------|-------------------------------------------------------------
 | function | start a declaration region for subroutine with result
 | method   | start a declaration region for subroutine with no result
 | class    | create a composite data type for object oriented programming
+
+
+## Blocks of code/sections
+
+| Keyword  | Description
+|----------|-------------------------------------------------------------
+| given    | establish local scope for any block statement 
 | begin    | single-path non-repetitive block
-| while    | conditional repetition block
+| when     | multi-path conditional block
 | quest    | multi-path variable selector
+| cycle    | unconditional repetitive block
+| while    | conditional repetition block
+| scan     | start an examination loop
 | trial    | exception handling block
 | with     | qualifier suppression block for records
 
@@ -40,7 +51,6 @@ In EVE we use English keywords with no abbreviations.
 | all      | specify "all" members to be used in current name-space
 | from     | used to bring members into current name-space
 | alias    | usend in import region to give alias to a module
-| given    | establish local scope for any block statement
 | else     | alternative path for when statement 
 | cover    | used for switch sections to declare default branch
 | case     | multi-case trial regions
@@ -67,5 +77,5 @@ In EVE we use English keywords with no abbreviations.
 
 | variable | Description
 |----------|-------------------------------------------------------
-| myself   | current instance of a class
+| object   | current instance of a class, current object
 | result   | result of a function if result names are not specified

@@ -6,13 +6,13 @@ The exception is a variable of type record that is created when exception is rai
 ```
 ** system global exception type
 define
-   type: .Exception <: Record[
-                          Integer: code 
-                         ,String:  message 
-                         ,String:  section_name 
-                         ,String:  module_name 
-                         ,String:  line_number  
-                       ]
+   type: .Exception <: 
+   Record[ Integer: code 
+          ,String : message 
+          ,String : section_name 
+          ,String : module_name 
+          ,String : line_number  
+         ]
 ** global variable for holding current error
 global
    Exception: $error
@@ -63,11 +63,11 @@ In this region developer can use control statements like "switch","case" to anal
 
 ```
 method: main()
-  Real: a; 
+  Real: a 
 process  
-  a := 1 / 0;  
+  a := 1 / 0  
 recover
-  print ($error.message);
+  print ($error.message)
 return
 ```
 

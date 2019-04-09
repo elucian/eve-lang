@@ -10,11 +10,11 @@ Array elements have very fast direct access by index.
 method: test_array()
   ** array  with capacity of 10 elements
   Array[Integer](10): my_array 
-  ** scan array and modify element by element
 process  
   given
     Integer: m := my_array.capacity()
     Integer: i
+  ** scan array and modify element by element    
   scan (i <: [1..m])
     my_array[i] := i 
   next
@@ -429,36 +429,31 @@ Output:
 * An empty hash map will be created using notation {} 
 
 ### Example
-```
-local
-  ** declaration of a new map initialized with one element
-  ** type inference will tell us he element types (String, String);
-  Hash: animals := {};
-   
+```  
 method: main()
+  Hash: animals := {} ** partial declaration
 process
-  ** create 1 more element
-  animals.append('Rover','dog');
+  ** establish element types S:U
+  animals['Rover'] := "dog"
 
   ** use direct assignment to create 2 more element
-  animals['Bear'] := 'dog';
-  animals['Kiwi'] := 'bird';
+  animals['Bear'] := "dog";
+  animals['Kiwi'] := "bird";
   print(animals);
 return
 ```
 output:
 ```
-{('Rover':'dog'),('Bear':'dog'),('Kiwi':'bird')};  
+{('Rover':"dog"),('Bear':"dog"),('Kiwi':"bird")};  
 ```
 
 ## String: concatenation
 
 Strings can be concatenated using:
 
-* string concatenation operator: ".+."
-* coma string concatenation    : ".,."
-* space concatenation operator : "._."
-* path concatenation operator  : "./."
+* string concatenation operator: "&"
+* trim and concatenation operator: "+"
+* path concatenation operator  : "/"
 
 **Example:**
 ```
@@ -467,8 +462,8 @@ given
   String: str := ""; 
 begin
   ** set string value using different operators
-  str := "this " .+. "string";   ** 'this string'
-  str := "this " ._.  " string"; ** 'this string'
+  str := "this "&" string";   ** "this  string"
+  str := "this "+" string";   ** "this string"
 ready
 ```
 
@@ -479,8 +474,8 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 given
   String: s := "";
 begin  
-  s := 'te' . 'st'; ** "te/st" ** Linux
-  s := 'te' . 'st'; ** "te\st" ** Windows
+  s := 'te/' / '/st'; ** "te/st" ** Linux
+  s := 'te/' / '/st'; ** "te\st" ** Windows
 ready  
 ```
 
@@ -554,9 +549,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-  method: format(n <: Number, f <: String) <: String
-    ...
-  over
+method: format(n <: Number, f <: String) <: String
 ```
 
 Where "f" is a pattern: '(ap:m.d)'

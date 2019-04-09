@@ -182,20 +182,20 @@ repeat
 
 ### Nested cycles
 
-Nested cycles are supported:
+Nested cycles can be labeled
 
 **pattern:** 
 
 ```
 ** label 2 nested cycles 
-cycle
+cycle: outer
   ** outer cycle
-  cycle
+  cycle: inner
     ** skip both cycles
-    skip all if (condition)
+    skip outer if (condition)
     ...    
     ** stop both cycles
-    stop all if (condition)    
+    stop outer if (condition)    
   repeat  
 repeat  
 ```
