@@ -1,18 +1,18 @@
 ## Data Types
 
-EVE is data oriented language. There are two kind of data types:
+EVE is data oriented language. There are three kind of data types:
 
 * [Basic Types](#basic-types)
 * [Composite Types](#composite-types)
 * [User Defined](#user-defined)
 
 **bookmarks**
-* [User Defined](#user-defined)
 * [Numeric Types](#numeric-types)
+* [Data Coercion](#data-coercion
 * [Type inference](#type-inference)
 * [Gradual typing](#gradual-typing)
 * [String type](#string-type)
-* [Calendar type](#calendar-type)
+* [Calendar date](#calendar-date)
 * [Time Duration](#time-duration)
 
 ## Basic Types
@@ -169,16 +169,16 @@ A complex number is a number that can be expressed in the form (a + bj), where a
 ### Rational number
 A rational number is a fraction between two numbers Q := Z/N where Q is the rational number, Z is Integer: and N is Natural:number. So Q number is using 8 + 8 := 16 bytes. The division is not executed but postponed until the number is used in an expression after simplification.
 
-## Data Coercion
-In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. 
-If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.
-
 ## Polymorphic operators
 In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with many kind of numbers. So the numeric operators are not very specific to a number type. This property of operators is called _"polymorphic"_ and is a problem for computer science.
 
 Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician or engineer. Therefore some other languages are introducing polymorphic operators.
 
-## Implicit data conversion
+## Data Coercion
+In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. 
+If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.
+
+## Implicit coercion
 In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion 
 to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of data the program will generate a _run-time error_.
 
@@ -193,7 +193,7 @@ Complex -> Real: ->  Natural:-> Integer.
 ```
 given
   Integer: a := 2
-  Real: b := 1.5 
+  Real:    b := 1.5 
 begin
   b := a ** this implicit cast is possible b = 2.0
   b := a + 3.5 ** add 3.5 then assign result to b = 5.5
