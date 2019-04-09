@@ -20,7 +20,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | \#    | Directive or macro \| Template placeholder
 | $     | System variable prefix \| Global variable
 | @     | Require reference \| Input/Output parameter
-| ;     | Statement separator \| End of block
+| ;     | Statement separator \| Forward declaration
 | :     | Define name \| Pair-up operator
 | .     | Decimal separator \| Public member \| Member of ,,,
 | ,     | Enumeration for elements \| complex expression 

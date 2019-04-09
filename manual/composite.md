@@ -33,7 +33,7 @@ In the next example we  am array with capacity of 3 elements.
 ```
 ** array declaration and initialization
 global
-   Array: my_array[Integer](3) := [1,2,3];
+   Array: my_array[Integer](3) := [1,2,3]
 ```
 
 **array constructor**
@@ -44,7 +44,7 @@ An array  capacity can be established using a parameter and a constructor. All e
 ** variable array size depending upon parameter n
 method: test(Integer: n)
 process
-  Array: my_array(n);
+  Array: my_array(n)
 return
 ```
 
@@ -62,7 +62,7 @@ The most convenient way to an Array using full inference literal:
 ```
 global
   ** capacity is 4 and element type is string
-  Array: my_array := ['a','bc','def','chk'];
+  Array: my_array := ['a','bc','def','chk']
 ```
 
 **Note:** my_array will be a list if the Array keyword is missing.
@@ -73,7 +73,7 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   Matrix: matrix_name[type](n,m) := constant;
+   Matrix: matrix_name[type](n,m) := constant
 ```
 
 **example:**
@@ -179,9 +179,9 @@ A set can be modified during run-time using operators.
 * := for replace 
 
 ```
-  my_set    += 1;  ** try to append element 1
-  my_set[*] += 1;  ** modify each element
-  my_set    := {}; ** remove all elements  
+  my_set    += 1  ** try to append element 1
+  my_set[*] += 1  ** modify each element
+  my_set    := {} ** remove all elements  
 ```
 ### Union
 
@@ -204,8 +204,8 @@ Intersect operator ∩ find common elements:
 given
   Set: test := {}
 begin
-  test := {1,2,3,4} ∩ {3,4,5}; 
-  print test; ** {3,4}
+  test := {1,2,3,4} ∩ {3,4,5} 
+  print test ** {3,4}
 ready  
 ```
 
@@ -219,15 +219,15 @@ It is called "H" due to similar method:of letter H representing a connection, li
 **syntax**
 ```
 given
-  Hash[key_type, value_type]: name := {(key:value), ...};
+  Hash[key_type, value_type]: name := {(key:value), ...}
 ```
 
 **Example**
 ```
 given
-   Hash[String, Integer]: dictionary := {};
+   Hash[String, Integer]: dictionary := {}
 begin   
-   dictionary := {('one':1), ('two':2)};
+   dictionary := {('one':1), ('two':2)}
 ready
 ```
 

@@ -19,7 +19,7 @@ class: class_name(parameters) <: base_class
   ** define attributes
   <attributes>
 create
-  object := <base_class>(); ** object initialization  
+  object := <base_class>() ** object initialization  
   ... 
 scrap
   <object_dispose_region> 
@@ -36,7 +36,7 @@ given
   class_name: object_name
 begin
   ** create object 
-  object_name := class_name(param:value,...);
+  object_name := class_name(param:value,...)
   ...
 ready
 ```
@@ -110,8 +110,8 @@ process
     print("n and o are not the same") 
   ready
   ** verify
-  expect  (o = n); ** equivalent  
-  expect !(o = n); ** not the same 
+  expect  (o = n) ** equivalent  
+  expect !(o = n) ** not the same 
 return
 ```
 

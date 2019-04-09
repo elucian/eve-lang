@@ -34,7 +34,7 @@ This is the last element: 10
 An array can changing capacity. This can be ready using built-in method _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
 
 ```
-  <array_name>.extend(c);
+  <array_name>.extend(c)
 ```
 
 ## Matrix Operations
@@ -63,20 +63,20 @@ ready
 given
   Matrix[Integer: ](2,2):M
 begin
-  M := 100;
+  M := 100
   ** modify all elements
-  M[*] += 10; 
-  print(M); ** [[110,110],[110,110]]
+  M[*] += 10 
+  print(M) ** [[110,110],[110,110]]
 
   ** modify an entire row 
-  M[1,*] := 0;
-  M[1,*] := 1;
-  print(M); ** [[0,0],[1,1]]
+  M[1,*] := 0
+  M[1,*] := 1
+  print(M) ** [[0,0],[1,1]]
   
   ** modify an entire column
-  M[*,1] += 1;
-  M[*,2] += 2;
-  print(M); ** [[1,2],[2,3]]
+  M[*,1] += 1
+  M[*,2] += 2
+  print(M) ** [[1,2],[2,3]]
 ready
 ```
 
@@ -97,19 +97,19 @@ In this example we traverse all the rows then all the column, this is the most e
 
 ```
 method: main()
-  Matrix[String(2)](3,3): M; 
+  Matrix[String(2)](3,3): M 
 process  
   M :=  ⎡'a0','b0','c0'⎤
         ⎢'a1','b1','c1'⎥
-        ⎣'a2','b2','c2'⎦;        
+        ⎣'a2','b2','c2'⎦        
   given
-    Integer: col;
-    Integer: row;
+    Integer: col
+    Integer: row
   scan col <: [1..3]:     ** traverse columns
     scan row <: [1..3]:   ** traverse row first
-      print(M[row,col]);
-    next row;
-  next col;
+      print(M[row,col])
+    next row
+  next col
 return
 ```
 
@@ -119,7 +119,7 @@ A slice is a small portion from an Array created with range operator "[..]"
 
 **syntax**
 ```
-   <slice_name> := <collection>[n..m];
+   <slice_name> := <collection>[n..m]
 ```
 
 Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements. 
@@ -133,19 +133,19 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 **Example:**
 ```
 method: main() 
-  Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9];
-  Array[Integer: ]: b :: a[1..4];
+  Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9]
+  Array[Integer: ]: b :: a[1..4]
 
-  print(a[1..?]);   ** will print [0,1,2,3,4,5,6,7,8,9]
-  print(a[1..1]);   ** will print [0]
-  print(a[1..4]);   ** will print [1,2,3]
+  print(a[1..?])   ** will print [0,1,2,3,4,5,6,7,8,9]
+  print(a[1..1])   ** will print [0]
+  print(a[1..4])   ** will print [1,2,3]
  
   ** create b as slice reference from a
   given
-    Integer: i;
-  scan i <: b:
-    a[i] += 2;
-  next i; 
+    Integer: i
+  scan i <: b do
+    a[i] += 2
+  next 
   
   ** first 4 elements of (a) are modified
   print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
@@ -166,7 +166,7 @@ We can use \<var> to create the \<filter_expression>.
 Example of a new set defined from a range:
 
 ```
-  new_set := { x | x <: [-10..10] };
+  new_set := { x | x <: [-10..10] }
 ```
 
 ## Collection Casting
@@ -177,12 +177,12 @@ Collection members can be copy into the new collection using a comprehension not
 **Example:**
 ```
 given
-   List: source  := [0,1,2,2,2,2];
-   Set : new_set := {};
+   List: source  := [0,1,2,2,2,2]
+   Set : new_set := {}
 begin
    ** eliminate duplicates using set comprehension
-   mew_set := { x | x <: my_list }; 
-   print my_set; ** {0,1,2} 
+   mew_set := { x | x <: my_list } 
+   print my_set ** {0,1,2} 
 ready
 ```
 
@@ -192,10 +192,10 @@ Build notation can use expressions to filter out elements during comprehension o
 **Example:**
 ```
 given
-   List my_list := [0,1,2,3,4,5];
-   Set  my_set  := {};
+   List my_list := [0,1,2,3,4,5]
+   Set  my_set  := {}
 begin
-   my_set := { x | x <: my_list, x%2 = 0 }; 
+   my_set := { x | x <: my_list, x%2 = 0 } 
    print my_set; ** {0,2,4} 
 ready
 ```
@@ -206,12 +206,12 @@ The elements in one set or list can be transformed by a function or expression t
 **Example:**
 ```
 given
-   source := {0,1,2,3,4,5};
-   target <: Hash; 
+   source := {0,1,2,3,4,5}
+   target <: Hash 
 begin
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x : x^2) | x <: source }; 
+   target := { (x : x^2) | x <: source } 
 ready
 ```
 
@@ -221,11 +221,11 @@ Therefore List union act very similar to append, except we add multiple elements
 
 ```
 method: main()
-  List[Char] a := ('a','b','c');
-  List[Char] b := ('1','2','3');
-  List[Char] c := (); 
+  List[Char] a := ('a','b','c')
+  List[Char] b := ('1','2','3')
+  List[Char] c := () 
 process
-  c := a + b;
+  c := a + b
   print(c)**['a','b','c','1','2','3']
 return
 ```
@@ -235,10 +235,10 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  String: str;
+  String: str
 begin
-  str := join([1,2,3],",");
-  print (str); ** "1,2,3"
+  str := join([1,2,3],",")
+  print (str) ** "1,2,3"
 ready  
 ```
 
@@ -247,10 +247,10 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  List[Integer: ]: lst := ();
+  List[Integer: ]: lst := ()
 begin
-  lst := split("1,2,3",",");
-  print lst; ** (1,2,3);
+  lst := split("1,2,3",",")
+  print lst ** (1,2,3)
 ready  
 ```
 
@@ -330,18 +330,18 @@ It is possible to change this using shortcuts or fast forward.
 ```
 --example of collection iteration
 method: main()
-  List[Char] my_list := ['a','b','c','d','e']; 
+  List[Char] my_list := ['a','b','c','d','e'] 
 process  
   given
-    Char: element;
+    Char: element
   scan element <: my_list:
     ** continue shortcut
     skip if element < 'c'
-    write(element);
+    write(element)
  
     ** fast forward 
-    stop if (element = 'd');    
-    write(',');
+    stop if (element = 'd')    
+    write(',')
   next element;
 return
 ```
@@ -367,15 +367,15 @@ Map and set are similar collections and both can be used for iteration:
 **Example:**
 ```
 method: main()
-  Hash: my_map := {("a":1),("b":2),("c":3)};
+  Hash: my_map := {("a":1),("b":2),("c":3)}
 process  
   ** print pairs (key:value)
   given
-    String: : k;
-    Integer: v;
-  scan (k,v) <: my_map:
-    print('("' + k + '",' + v +')');
-  next;
+    String: k
+    Integer: v
+  scan (k,v) <: my_map do
+    print('("' + k + '",' + v +')')
+  next
 return
 ```
 Will print:
@@ -394,12 +394,12 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 ```
 ** check if a key is present in a hash collection
 given
-  Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
-  Integer: my_key := 3;
+  Hash: my_map := {(1:'a'),(2:'b'),(3:'c')}
+  Integer: my_key := 3
 begin if (my_key <: my_map)
-  print('True'); ** expected
+  print('True') ** expected
 else
-  print('False');
+  print('False')
 ready   
 ```
 
@@ -409,18 +409,18 @@ ready
 method: main()
 process
   given
-    Hash(String, String): animals := {};
+    Hash(String, String): animals := {}
   begin
-    animals['Bear'] := 'dog';
-    animals['Kiwi'] := 'bird';
-    print(animals);
+    animals['Bear'] := 'dog'
+    animals['Kiwi'] := 'bird'
+    print(animals)
   ready  
 return
 ```
 
 Output:
 ```
-{('Bear':'dog'),('Kiwi':'bird')};
+{('Bear':'dog'),('Kiwi':'bird')}
 ```
 
 ## Type inference
@@ -437,14 +437,14 @@ process
   animals['Rover'] := "dog"
 
   ** use direct assignment to create 2 more element
-  animals['Bear'] := "dog";
-  animals['Kiwi'] := "bird";
-  print(animals);
+  animals['Bear'] := "dog"
+  animals['Kiwi'] := "bird"
+  print(animals)
 return
 ```
 output:
 ```
-{('Rover':"dog"),('Bear':"dog"),('Kiwi':"bird")};  
+{('Rover':"dog"),('Bear':"dog"),('Kiwi':"bird")}  
 ```
 
 ## String: concatenation
@@ -459,11 +459,11 @@ Strings can be concatenated using:
 ```
 ** this is example of string concatenation
 given
-  String: str := ""; 
+  String: str := "" 
 begin
   ** set string value using different operators
-  str := "this "&" string";   ** "this  string"
-  str := "this "+" string";   ** "this string"
+  str := "this "&" string"   ** "this  string"
+  str := "this "+" string"   ** "this string"
 ready
 ```
 
@@ -472,10 +472,10 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 
 ```
 given
-  String: s := "";
+  String: s := ""
 begin  
-  s := 'te/' / '/st'; ** "te/st" ** Linux
-  s := 'te/' / '/st'; ** "te\st" ** Windows
+  s := 'te/' / '/st' ** "te/st" ** Linux
+  s := 'te/' / '/st' ** "te\st" ** Windows
 ready  
 ```
 
@@ -493,9 +493,9 @@ We use hash "#" to create a placeholder into a Text. We use "<+" operator to rep
 #[] := Array placeholder    
 
 ```
-print ("number #n" <+ 10);
-print ("strings #s and #s" <+ ('10','even'));
-print ("unicode #u" <+ 'U+2260');
+print ("number #n" <+ 10)
+print ("strings #s and #s" <+ ('10','even'))
+print ("unicode #u" <+ 'U+2260')
 ```
 **Expected output:**
 ```
@@ -533,10 +533,10 @@ Hey look at this test it works!
 **Using Array**
 ```
 method: main()
-  String: template := "Hey look at this #[0] it #[1]";
-  List: my_list    := ("test","works!");
+  String: template := "Hey look at this #[0] it #[1]"
+  List: my_list    := ("test","works!")
 process  
-  print (template <+ my_set);
+  print (template <+ my_set)
 return
 ```
 
@@ -573,11 +573,11 @@ Where "f" is a pattern: '(ap:m.d)'
 
 ### Text functions
 
-* Text:    format (Text: str, Hash: map);
-* Text:    replace(Text: str, String: target, String: arrow );
-* integer: find   (Text: str, String: patern);
-* integer: count  (Text: str, String: patern);
-* integer: length (Text: str);
+* Text:    format (Text: str, Hash: map)
+* Text:    replace(Text: str, String: target, String: arrow )
+* integer: find   (Text: str, String: patern)
+* integer: count  (Text: str, String: patern)
+* integer: length (Text: str)
 
 **Reading a Text**
 

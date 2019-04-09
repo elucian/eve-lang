@@ -101,4 +101,4 @@ The sting do not have to contain the end of line character. However if line brea
 ## Usability
 Print() support only strings. It can not print anything else. Therefore user must cast a variable into a string before printing.
 
-**Read next:**[console](console.md);
+**Read next:**[console](console.md)

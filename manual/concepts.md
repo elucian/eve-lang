@@ -110,7 +110,7 @@ There are 3 kind of data in EVE
 
 A composite data type is declared like this:
 ```
-type Type_Name <: Type_descriptor;
+type Type_Name <: Type_descriptor
 ```
 
 ## Variables
@@ -120,13 +120,13 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 ```
 global
   ** use default value
-  type_name: var_name;                
+  type_name: var_name                
   ** specific value and type
-  type_name: var_name := value;
+  type_name: var_name := value
   ** multiple variables in one assignment
-  type_name: var_name1, name2 ...:= value; 
+  type_name: var_name1, name2 ...:= value 
   ** diverse values in one statement
-  type_name: var_name1:=value1, var_name2 := value2; 
+  type_name: var_name1:=value1, var_name2 := value2 
 ```
 
 **examples**
@@ -225,13 +225,13 @@ print ** expect 1234
 
 ## Multiple statements
 
-You can have multiple statements on one line separated using ";"
+You can have multiple statements on one line separated using ""
 
 **examples**
 ```
 given
   ** integer numbers
-  Integer: a; b := 1 
+  Integer: a := 0 ; b := 1 
 begin  
   print  (a, b)  
   expect (a = 0, b = 1)

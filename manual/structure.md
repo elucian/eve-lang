@@ -61,7 +61,7 @@ function: name(params) => type
   ** function_definition
 return
 ******************************************************
-**  Usually after return we use ";" to continue        
+**  Usually after return we use "" to continue        
 **  Last "return" is terminated with "." to end module  
 ******************************************************* 
 ```
@@ -125,8 +125,8 @@ If the module is executable using "run" command, it must contain a "main" method
 Parameters are defined in round brackets () separated by comma. Each parameter must have a name and a type. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- param_name ::= type : name := value; ** input parameter
- param_name ::= type @ name; ** output parameter
+ param_name ::= type : name := value ** input parameter
+ param_name ::= type @ name ** output parameter
 ```
 1. One method can receive one or more parameters;
 1. Parameters having initial values are optional;
@@ -169,7 +169,7 @@ A method block end with keyword return. When method is terminated, program execu
 ```
 method: test(Integer: a)
 process
-  print (a);
+  print (a)
 return
 
 method: main(List[String]: *args)
@@ -364,7 +364,7 @@ An λ expression can have multiple conditionals named nodes.
 
 **syntax:**
 ```
-  identifier := (value if condition,...default_value);
+  identifier := (value if condition,...default_value)
 ```
 
 **nodes**

@@ -36,7 +36,7 @@ One application can connect to one or more models. Once connected the model memb
 
 ```
 import
-   from <model_name> use <list_of_members> | all;
+   from <model_name> use <list_of_members> | all
 ```
 
 ## Connection
@@ -47,7 +47,7 @@ To connect to database we must use "connect" command. This command can be implem
 
 ```
 method:connect(credential:String):
-  db:=Database(credential, signature); ** create a database instance
+  db:=Database(credential, signature) ** create a database instance
 return
 ```
 
@@ -66,10 +66,10 @@ A record is a group of elements that are called fields or members. The elements 
 
 ```
 define
-  type <record_type> <: Record (<member_name>:<type>, ...)  ;
+  type <record_type> <: Record (<member_name>:<type>, ...)
 
 global
-  <record_type> <var_name>;
+  <record_type> <var_name>
 ```
 
 ### Recursive Records
@@ -81,7 +81,7 @@ define
    type Node <: Record ( 
      data: Integer,  ** integer data
      previous: Node  ** reference to previous node
-   );
+   )
 ```
 This kind of structure can be used to create a stack.
 
@@ -92,7 +92,7 @@ define
      data: Integer,  ** integer data
      previous: Node, ** reference to previous node
      next: Node      ** reference to next node
-   );
+   )
 ```
 This kind of structure can be used to create a queue.
 
@@ -134,30 +134,30 @@ A record instance is a variable of type record. The memory is allocated using th
 ```
 ** we declare a record type  
 define
-  type: Person <: Record (name:String(32), age:Integer: );
+  type: Person <: Record (name:String(32), age:Integer: )
 
 method: main()
   Person: person1,person2     ** two variables of type Person
   Array[Person](10): catalog  ** a collection of Persons
 process
   ** creating persons using record literals
-  person1 := (name:"John", age:21);
-  person2 := (name:"Vera", age:20);
-  print("#s and #s are lovers." <+ (person1.name, person2.name));
+  person1 := (name:"John", age:21)
+  person2 := (name:"Vera", age:20)
+  print("#s and #s are lovers." <+ (person1.name, person2.name))
 
   ** create an array with 30 new persons
   given:
-    Integer: i;
+    Integer: i
   while (i <= 10) do
-    catalog[i] := Person("John Doe", 20);
-    i += 1; 
-  redo;
+    catalog[i] := Person("John Doe", 20)
+    i += 1 
+  repeat
 
   ** change first person using "with...do"
   with catalog[1] do
     name := "Ispas Inca"
     age  := "17" 
-  ready;
+  ready
   
   print("#s is single." <+ catalog[1].name)
 return
@@ -188,7 +188,7 @@ We can use keyword Record to define a variable of type record with unknonw struc
 
 ```
 given
-  Record: person;
+  Record: person
 begin
   ** differed structure
   person:= (name:"John", age:21)
@@ -262,7 +262,7 @@ We can open a table and traverse the table step by step using do. This operation
 
 **pattern**
 ```
-table_name.open(READ); 
+table_name.open(READ) 
 given
   ** use introspection to declare current_record
   Record current_record;   
@@ -272,7 +272,7 @@ scan current_record <: table_name go
     ... 
   ready; 
 repeat
-table_name.close();
+table_name.close()
 ```
 
 ### Mutating a table
@@ -283,7 +283,7 @@ map <current_record> to <source_record> set
    <current_field>:<source_field>;
    ...
 map;
-<current_table>.update();
+<current_table>.update()
 ```
 
 ## Data Transactions
@@ -305,7 +305,7 @@ We use _define_ region to define indexes in database structure. These indexes ca
 
 ```
 define
-  <index_name>(<table_name>) <: Index of (<field_name>[,field_name] ...);
+  <index_name>(<table_name>) <: Index of (<field_name>[,field_name] ...)
 ```
 
 ### Create indexes
@@ -340,13 +340,13 @@ define
    from <table_name> [as alias][,<table_name>] ...
    [join  <join_expression>]   
    [where <filter_expression>]
-   [order by <field_name>];
+   [order by <field_name>]
 ```
 
 ### View Rules
 * Tables can have alias that are internal to the view;
 * You specify a list of fields, each field can be qualified with table alias;
-* Table in view are connected using join relations (:=, =+);
+* Table in view are connected using join relations (:=, =+)
 * Views can not be updated, they are read only structures;
 * Views are created inside databases, therefore EVE variables can not be used in views;
 
@@ -362,7 +362,7 @@ We can scan view using for...do. This is the most common way to scan all records
 
 ``` 
 for <current_record> <: <view_name> do  
-  print (<current_record>);
+  print (<current_record>)
 for;
 ```
 
@@ -416,9 +416,9 @@ We can fetch row by row or in bulk for several rows or all rows. This may be too
 
 **using fetch...**
 ```
-<cursor_name>.open(<arguments>);
+<cursor_name>.open(<arguments>)
 fetch <cursor_name> to <record_variable>;
-fetch <cursor_name> to <list_of_records> [limit N];
+fetch <cursor_name> to <list_of_records> [limit N]
 <cursor_name>.close;
 ```
 **using for do...**
@@ -483,7 +483,7 @@ In standard SQL there is no Append statement so we stick with SQL and use "inser
 
 **One row:**
 ```
-insert into <table> (<field>:value[,<field>:value] ...);
+insert into <table> (<field>:value[,<field>:value] ...)
 ```
 **One record:**
 ```
@@ -498,7 +498,7 @@ insert into <table>
   select (<field> as field, <field> as <field>)
   from <table>[,<table>]...
   [join...]
-  [where ...];
+  [where ...]
 ```
 
 **From collection:**
@@ -611,13 +611,13 @@ delete from <table_name> where <search_condition>;
 2. Using sub-query
 ```
 delete from <table_name> where 
-   <field_name> in (select field_name from <table> where <search_condition>);
+   <field_name> in (select field_name from <table> where <search_condition>)
 ```
 
 3. Using in operator
 ```
 delete from <table_name> where 
-   <field_name> in (set_of_variables);
+   <field_name> in (set_of_variables)
 ```
 
 **Read next:**[Standard Library](standard-lib.md)

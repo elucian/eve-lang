@@ -4,7 +4,7 @@ EVE has a versatile set of control statements:
 
 * [given](#given)
 * [when](#when)
-* [begin](#begin)
+* [quest](#quest)
 * [cycle](#cycle)
 * [while](#while)
 * [scan](#scan)
@@ -111,15 +111,15 @@ process
     Integer: v := p + 4
   quest v
     in (1,2,3) do
-      message := "first match";
+      message := "first match"
     in [1..8]  do
-      message := "second match";
+      message := "second match"
     in [5..10] do
-      message := "third match";      
+      message := "third match"      
   cover
-    message := "no match";
+    message := "no match"
   ready
-  print message; 
+  print (message) 
 return
 ```
 
@@ -242,13 +242,13 @@ method: main()
     Array:test := ["a","b","c","d","e"]
     Integer: i := 0
   while (i < test.length) do
-    element := my_list[i];
+    element := my_list[i]
     i += 1
     ** shortcut 
     skip if (element < "c")
-    write(element);
+    write(element)
     write(',') if (element ≠ "e") 
-  redo
+  repeat
 return
 ```
 > "c","d","e"

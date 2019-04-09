@@ -86,8 +86,8 @@ In EVE we can have two categories of numbers:
 
  Category     | EVE Types
 --------------|-------------------------
- Discrete:    | Integer, Natural;
- Continuous:  | Real, Rational, Complex;
+ Discrete:    | Integer, Natural
+ Continuous:  | Real, Rational, Complex
 
 ### Discrete numbers:
 
@@ -98,7 +98,7 @@ In EVE we can have two categories of numbers:
  
 For conversion into characters:
 
-* The number of characters required for integer numbers is 20. (19+sign);
+* The number of characters required for integer numbers is 20. (19+sign)
  
 ### Real: numbers
 
@@ -137,14 +137,14 @@ Precision Real: numbers is variable depending on the size of the number. The num
 ```
 method: main()
   ** declare variable
-  Integer: i; 
-  Natural: n;
-  Real: r;
+  Integer: i 
+  Natural: n
+  Real: r
 process  
   ** modify variables
-  i := 9223372036854775807;
-  n := 18446744073709551615;
-  r := 0.25;  
+  i := 9223372036854775807
+  n := 18446744073709551615
+  r := 0.25  
 return
 ```
 
@@ -233,9 +233,9 @@ given
   String:  s := "1000"
   String:  r := "200.02"
 begin
-  v := parse(s); ** make v = 1000
-  v := parse(r); ** make v = 200 and decimal .02 is lost
-  b := parse(r); ** make b = 200.02 and decimal .02 is preserved
+  v := parse(s) ** make v = 1000
+  v := parse(r) ** make v = 200 and decimal .02 is lost
+  b := parse(r) ** make b = 200.02 and decimal .02 is preserved
 ready
 ```
 
@@ -256,9 +256,9 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List ls := (0,1,2,3,4,5,6,7,8,9);
+  List ls := (0,1,2,3,4,5,6,7,8,9)
 begin
-  print(ls.type()); ** List
+  print(ls.type()) ** List
 ready  
 ```
 
@@ -310,13 +310,13 @@ Examples of type inference:
 
 ```
 given
-  Record: r := (name:"test", age:"24"); 
-  Hash:   m := {('key1':"value1"),('ley2':"value2")}; 
+  Record: r := (name:"test", age:"24") 
+  Hash:   m := {('key1':"value1"),('ley2':"value2")} 
 begin
   ** check variable types using introspection
-  print("name  is of type " + type(v.name));
-  print("key   is of type " + type(m.key));
-  print("value is of type " + type(m.value));
+  print("name  is of type " + type(v.name))
+  print("key   is of type " + type(m.key))
+  print("value is of type " + type(m.value))
 ready
 ```
 run test  
@@ -335,15 +335,15 @@ In EVE the type is first class value. For type introspection we can use:
 
 ```
 given
-  Real: i := 1.5;
-  Type it;
+  Real: i := 1.5
+  Type it
 begin
   when i <: Real do
-    print("Yes i is Real");
+    print("Yes i is Real")
   else
-    print("No i is not Real");
+    print("No i is not Real")
   ready
-  it := type(i);
+  it := type(i)
   print("type of i is #t" <+ it)
 ready
 ```
@@ -355,7 +355,7 @@ Sometimes the type is partially specified to improve type declaration.
 ```
 define
   ** member type is inferred from literal 
-  Array[](10) a := 0;
+  Array[](10) a := 0
 ```
 ## Logic type
 
@@ -372,7 +372,7 @@ True     | Logic.T       | 00000000 00000001
 **syntax**
 ```
 define
- Logic: <variable_name>; ** default F
+ Logic: <variable_name> ** default F
 ```
 
 
@@ -427,7 +427,7 @@ Ordinal type is usually a finite set that can be enumerated using a literal. In 
 
 ```
 define
-  type <name> <: Ordinal(symbol:<value>, ... );
+  type <name> <: Ordinal(symbol:<value>, ... )
 
 ```
 
@@ -441,7 +441,7 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 **Example:**
 ```
 define
-  type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);  
+  type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday)  
 
 method: main()
   String: message
@@ -468,9 +468,9 @@ return
 We can use Ordinal to create a range of values:
 ```
 when (today <: [Monday..Friday]) do
-   print ("Have a nice day!");
+   print ("Have a nice day!")
 else
-   print ("Have a happy weekend!");  
+   print ("Have a happy weekend!")  
 ready
 ```
 
@@ -480,10 +480,10 @@ Ordinal is a ordered set of Natural:numbers identified by a name. Ordinal is a d
 ```
 ** using type Day declared before
 given
-  Day: v := Friday;
+  Day: v := Friday
 begin
-  v += 1; 
-  expect v = Saturday;
+  v += 1 
+  expect v = Saturday
 ready  
 ```
 
@@ -498,10 +498,10 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 **Syntax:**
 ```
 define
-  type: <variant_name> <: Variant (<Type> | <Type> | ... );
+  type: <variant_name> <: Variant (<Type> | <Type> | ... )
 
 global  
-  v <: <variant_type>;
+  variant_type: v
 ```
 
 ## Variant Properties
@@ -521,10 +521,10 @@ For this we need Null type.
 **Examples:**
 ```
 define
-  Type: Number <: Variant (Integer: | Real: | Null) ;
+  Type: Number <: Variant (Integer | Real | Null)
 
 global
-  x := Null <: Number;
+  Number: x := Null
   
 ```
 
@@ -534,18 +534,18 @@ A variant can change its data type at runtime:
 
 ```
 given
-  (Real | Integer): v, x ,t ;
+  Real | Integer: v, x ,t 
 begin
   ** positive example
-  v := 1;     ** v is Integer
-  x := 1.5;   ** x is Real:    
-  t := 1 ÷ 2; ** make t Real
+  v := 1     ** v is Integer
+  x := 1.5   ** x is Real:    
+  t := 1 ÷ 2 ** make t Real
   
   ** safe conversion
-  t := 120; ** safe conversion
+  t := 12 ** safe conversion
   
   ** negative examples
-  v := x;  ** ERROR: v is Integer
+  v := x  ** ERROR: v is Integer
 ready
 ```
 
@@ -557,11 +557,11 @@ A variant is a way to create a generic method.
 method: invert(Integer | Real: x, y)
   Integer | Real :i
 process  
-  assert type(x) <> type(y);  
+  assert type(x) <> type(y)  
   
-  i := x; ** intermediate value
-  y := x; ** first  switch
-  x := i; ** second switch
+  i := x ** intermediate value
+  y := x ** first  switch
+  x := i ** second switch
 return
 
 method: main()
