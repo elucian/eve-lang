@@ -2,12 +2,82 @@
 
 Composite types represents groups of multiple elements. 
  
+* [ordinal](#ordinal) 
 * [array](#array)
 * [matrix](#matrix)
 * [list](#list)
 * [set](#set)
 * [hash](#hash)
 * [text](#text)
+
+## Ordinal
+
+A ordinal is an enumeration of terms. It is an ordered list of identifiers that can represent things, ideas, concepts, keywords. Each item has an identifier name that can be uppercase, lowercase or mixed . To each item we associate a value that is two Byte number that starts from 0 to N. Maxim number of items is 65535.
+
+**Syntax:**
+Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using curly brackets {} separated by comma. In the next example we define the days of the week in EVE:
+
+```
+define
+  type <name> <: Ordinal(symbol:<value>, ... )
+
+```
+
+## Usage
+Ordinal type is suitable for creation of options that can be used for switch statement. 
+
+* Value of first element can be specified. If is not specified it starts from: 1.    
+* Values of next elements can not be specified. That is next element is previous element +1.   
+* Elements declared in a Ordinal type are public is we use "." prefix
+
+**Example:**
+```
+define
+  type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday)  
+
+method: main()
+  String: message
+process  
+  given
+    Day: today := today()  
+  quest
+    if today <: (Friday, Saturday, Sunday) then
+      message:='weekend'
+      ...
+    if today = Monday then
+      message:='first workday'
+    if today = Friday then
+      message:='last workday'
+  other
+    message:='middle of the week'
+  ready
+  print('Is', message)
+return
+```
+**Note** For private enumerations you can use a record type.
+
+**Range**
+We can use Ordinal to create a range of values:
+```
+when (today <: [Monday..Friday]) do
+   print ("Have a nice day!")
+else
+   print ("Have a happy weekend!")  
+ready
+```
+
+**Operators**
+Ordinal is a ordered set of Natural:numbers identified by a name. Ordinal is a discrete numeral type so it has support for  relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
+
+```
+** using type Day declared before
+given
+  Day: v := Friday
+begin
+  v += 1 
+  expect v = Saturday
+ready  
+```
 
 ## Array
 
