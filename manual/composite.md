@@ -7,6 +7,7 @@ Composite types represents groups of multiple elements.
 * [list](#list)
 * [set](#set)
 * [hash](#hash)
+* [text](#text)
 
 ## Array
 
@@ -209,7 +210,7 @@ begin
 ready  
 ```
 
-## Hash Map
+## Hash
 
 It is called "H" due to similar method:of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
 
@@ -231,31 +232,11 @@ begin
 ready
 ```
 
-## Unicode Strings
-The _Unicode_ is a standard for representation of writing for all human languages. An Unicode string is a set of _code points_ using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII strings. There are many encoding techniques available. Java uses UTF-32. We will probably use UTF-8 to be more efficient.
-
-See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set), 
-[unicode characters](https://en.wikipedia.org/wiki/List_of_Unicode_characters#Character_reference_overview)
-
-**Example:**
-```
-given
-  Text: us := "I can write Greek: \αβγδ\."
-begin
-  print (us)   
-ready   
-```
-> I can write Greek: "αβγδ".
-
-To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. 
-The preferred font for EVE programming is "DejaVu Sans Mono". 
-
-
-## Large Text
+## Text
 
 Text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. Text can be modified while strings are immutable.
 
-## Text Literal
+**Literal**
 
 A text literal can be defined on multiple lines and will preserve the end of line.
 
@@ -277,4 +258,25 @@ ready
  because it is dressed in overalls 
  and looks like work."
 ```
+
+**Unicode**
+
+The _Unicode_ is a standard for representation of writing for all human languages. An Unicode string is a set of _code points_ using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII strings. There are many encoding techniques available. Java uses UTF-32. We will probably use UTF-8 to be more efficient.
+
+See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set), 
+[unicode characters](https://en.wikipedia.org/wiki/List_of_Unicode_characters#Character_reference_overview)
+
+**Example:**
+```
+given
+  Text: us := "I can write Greek: \αβγδ\."
+begin
+  print (us)   
+ready   
+```
+> I can write Greek: "αβγδ".
+
+To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. 
+The preferred font for EVE programming is "DejaVu Sans Mono". 
+
 **Read next:** [Classes](classes.md)
