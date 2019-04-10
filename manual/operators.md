@@ -7,11 +7,11 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
-| (\*_\*)   | Block comments \| Nested comments
-|\|\*_\*\|  | Inside expression comments
-| (_,_,_)   | Expression \| List literal \| Data record
-| [_,_,_]   | Range \| Index \| Array literals \| Parameterize types
-| {_,_,_}   | Ordinal type \| Set of values \| Hash map
+| `(*_*)`   | Block comments \| Nested comments
+| `|*_*|`   | Inside expression comments
+| `(_,_,_)` | Expression \| List literal \| Data record
+| `[_,_,_]` | Range \| Index \| Array literals \| Parameterize types
+| `{_,_,_}` | Ordinal type \| Set of values \| Hash map
 
 
 ## Single symbols
