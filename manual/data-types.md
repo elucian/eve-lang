@@ -24,7 +24,6 @@ Basic types are abstract wrappers to native types.
 | Integer  | integer on 64 bits (signed)
 | Natural  | integer on 64 bits (unsigned)
 | Real     | double precision number (signed)
-| Rational | fixed precision number (signed)
 | Null     | Is a reference type that represents Null reference
 
 
@@ -103,8 +102,8 @@ In EVE we can have two categories of numbers:
 
 |type    |Chars  |Bytes|min |max   |maximum number	
 |--------|-------|-----|----|------|-------------------------
-|Integer: |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
-|Natural:|20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
+|Integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
+|Natural |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
  
 For conversion into characters:
 
@@ -127,7 +126,7 @@ sign has 1bit, exponent has 11 bits and coefficient has 52 bits;
 
 |type     |Digits |Bytes|maximum number	
 |---------|-------|-----|----------------------------------
-|Real:     |15     |8    |≤ 1.8 × 10³⁰⁸
+|Real     |15     |8    |≤ 1.8 × 10³⁰⁸
 
 Precision Real: numbers is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Real: and back without loosing any digit. Think of it like a digital display from a packet calculator.
 
@@ -166,8 +165,6 @@ A complex number is a number that can be expressed in the form (a + bj), where a
   (1+2.56j)    | Complex number. (a+bj). When b is 0 the number is compatibe with a real number.
   (-3.5-2j)    | Complex number. (-a-bj). Both a and b can be positive or negative real numbers.
 
-### Rational number
-A rational number is a fraction between two numbers Q := Z/N where Q is the rational number, Z is Integer: and N is Natural:number. So Q number is using 8 + 8 := 16 bytes. The division is not executed but postponed until the number is used in an expression after simplification.
 
 ## Polymorphic operators
 In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with many kind of numbers. So the numeric operators are not very specific to a number type. This property of operators is called _"polymorphic"_ and is a problem for computer science.
@@ -293,7 +290,7 @@ Literal      | Type
 Literal    | Type
 -----------|---------------
 []         | Array
-{}         | Cluster/Hash
+{}         | Set/Hash
 ()         | List
 ""         | Text
 ''         | String
@@ -304,10 +301,10 @@ Literal    | Type
 
 Literal      | Type
 -------------|-----------------
-('a','b','c')| List    of  String
-(1,2,3)      | List    of  Integer
-[1,2,...]    | Array   of  Integer
-{1,2,...}    | Cluster of  Integer
+('a','b','c')| List[String]
+(1,2,3)      | List[Integer]
+[1,2,...]    | Array[Integer]
+{1,2,...}    | Set[Integer]
 {a,b,c}      | Ordinal
 (x:'b',y:'d')| Record
 {1:'a',2:'b'}| Hash
@@ -346,9 +343,9 @@ In EVE the type is first class value. For type introspection we can use:
 ```
 given
   Real: i := 1.5
-  Type it
+  Type: it
 begin
-  when i <+ Real do
+  when i is Real do
     print("Yes i is Real")
   else
     print("No i is not Real")
@@ -376,13 +373,13 @@ In Latin the "falsus" and "verum" are translated to false and true.
 
 name     |    value      | binary 
 ---------|---------------|------------------------------
-False    | Logic.F       | 00000000 00000000 
-True     | Logic.T       | 00000000 00000001
+False    | Logic.False   | 00000000 00000000 
+True     | Logic.True    | 00000000 00000001
 
 **syntax**
 ```
 define
- Logic: <variable_name> ** default F
+ Logic: variable_name ** default False
 ```
 
 
@@ -391,7 +388,7 @@ define
 Probably best to define Logic type is Ordinal:
 ```
 define
-  type: Logic <: Ordinal { .T , .F }
+  type: Logic <: Ordinal { .False , .True }
 ```
 
 **Relation Operators**
