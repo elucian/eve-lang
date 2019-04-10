@@ -6,8 +6,8 @@ The exception is a variable of type record that is created when exception is rai
 ```
 ** system global exception type
 define
-   type: .Exception <: 
-   Record[ Integer: code 
+   type: .Exception <: Record[ 
+           Integer: code 
           ,String : message 
           ,String : section_name 
           ,String : module_name 

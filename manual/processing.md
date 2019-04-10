@@ -45,7 +45,7 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ** a matrix having 2 rows and 2 columns
 ** initialize all elements with 100
 given
-  Matrix[Integer: ](2,2): M
+  Matrix[Integer](2,2): M
 begin
   M := 100
   print (M)
@@ -61,7 +61,7 @@ ready
 
 ```
 given
-  Matrix[Integer: ](2,2):M
+  Matrix[Integer](2,2):M
 begin
   M := 100
   ** modify all elements
@@ -135,7 +135,7 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 method: main() 
   Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9]
   Array[Integer: ]: b :: a[1..4]
-
+process
   print(a[1..?])   ** will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1])   ** will print [0]
   print(a[1..4])   ** will print [1,2,3]
@@ -505,7 +505,7 @@ unicode ≠
 ```
 
 **Notes**: 
-* Operator <+ is polymorph. 
+* Operator <+ is polymorph and overloaded. 
 * For template we can use numbers, strings, lists, hashes, arrays
 
 
@@ -518,10 +518,11 @@ unicode ≠
 **Using Hash**
 ```
 method: main()
-  String: template := "Hey look at this #{key1} it #{key2}"
-  Hash:   my_map   := {("key1":"test"),("key2":"works!")}
+  Text: template := "Hey look at this #{key1} it #{key2}"
+  Hash: my_map   := {("key1":"test"),("key2":"works!")}
 process  
-  print(template.format(my_map))**using format function
+  ** using format function
+  print(template.format(my_map)) 
 return
 ```
 
