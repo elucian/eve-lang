@@ -66,10 +66,10 @@ A record is a group of elements that are called fields or members. The elements 
 
 ```
 define
-  type <record_type> <: Record (<member_name>:<type>, ...)
+  type: record_type <: Record (member_name:type, ...)
 
 global
-  <record_type> <var_name>
+  var_name: record_type 
 ```
 
 ### Recursive Records
@@ -78,7 +78,7 @@ An important application of recursion in computer science is in defining dynamic
 ```
 ** example of single recursive node
 define
-   type Node <: Record ( 
+   type: Node <: Record ( 
      data: Integer,  ** integer data
      previous: Node  ** reference to previous node
    )
@@ -88,7 +88,7 @@ This kind of structure can be used to create a stack.
 ```
 ** example of double recursive node
 define
-   type Node <: Record (
+   type: Node <: Record (
      data: Integer,  ** integer data
      previous: Node, ** reference to previous node
      next: Node      ** reference to next node

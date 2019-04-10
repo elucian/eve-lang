@@ -24,7 +24,6 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | :     | Define name \| Pair-up operator
 | .     | Decimal separator \| Public member \| Member of ,,,
 | ,     | Enumeration for elements \| complex expression 
-| <:    | Element belonging operator instead of ∈
 | \*    | Multiplication \| Variable arguments
 
 ## Double symbols
@@ -36,15 +35,11 @@ Eve use two symbols to create a additional operators.
 |\#\#  | Single line comment for heading comments
 |\*\*  | Single line comment \| end of line comment
 |..    | Range representation or slice [n..m] 
-|:>    | Receive output argument from method I/O parameter
+|::    | Receive output argument from method I/O parameter
 |+>    | Data pipeline fetch or select into: collection
 |=+    | Outer join operator used in data "select" statement
-|<:    | Declare user define type using a type descriptor
-|<+    | Unpack operator |\ Template operator
-|->    | Coercion operator
-|<-    | Implication operator
-|==    | Shallow comparison
-
+|<:    | Declare user define type / sub-type 
+|<+    | Stream |\ Unpack  |\ Template
 
 ## String: delimiters
 
@@ -92,7 +87,7 @@ EVE use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|-----------------------------------------------------------------------
-|  =   | Equal: deep comparison \| Same type + Equal values \| Equal attributes 
+|  =   | Equal: deep comparison \| Same type & value 
 |  >   | Greater than 
 |  <   | Less than    
 |  <>  | Not equal: deep comparison, equivalent to !(a = b)
@@ -108,10 +103,12 @@ In following table A, B, C are sets and x is a member: numeric or string
 
 |Operator | Result  | Description
 |---------|---------|-------------------------------------------------------------------
-| A |  B  | new set | Intersect A with B, use with : like C := A & B (return a new set)
-| A &  B  | new set | Union A with B, use with : like C := A | B (return a new set)
-| A <= B  | logic   | verify is A is subset of B
-| x <: A  | logic   | verify if x is a member of collection
+| x ! A   | logic   | verify if x is a not member of collection A
+| x ? A   | logic   | verify if x is a member of collection A
+| A | B   | new set | Intersect A with B, use with : like C := A & B (return a new set)
+| A & B   | new set | Union A with B, use with : like C := A | B (return a new set)
+| A < B   | logic   | verify is A is subset of B
+| A > B   | logic   | verify is A is superset of B
         
 ## Logical operators
 

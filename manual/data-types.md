@@ -56,7 +56,7 @@ A data type can be _defined_ using symbol "<:" and keyword: "type".
 **Syntax:**
 ```
 define
-  type: <type_name> <: <super_type> ( parameters )
+  type: type_name <: super_type (parameters)
 ```
 **Notes:**
 
@@ -348,7 +348,7 @@ given
   Real: i := 1.5
   Type it
 begin
-  when i <: Real do
+  when i <+ Real do
     print("Yes i is Real")
   else
     print("No i is not Real")
@@ -439,7 +439,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 **Syntax:**
 ```
 define
-  type: <variant_name> <: Variant (<Type> | <Type> | ... )
+  type: variant_name <: Variant (<Type> | <Type> | ... )
 
 global  
   variant_type: v

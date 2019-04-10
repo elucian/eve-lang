@@ -26,7 +26,7 @@ ready
 **Notes:** 
 
 * given is optional region for <block>
-* block <: { when, quest, cycle, while, scan, trial }
+* block is { when, quest, cycle, while, scan, trial }
 * one blocks is ending with keywords: { ready \| repeat}
 
 ## When
@@ -86,13 +86,13 @@ The quest is a multi-path value based selector. It is used in conjunction with {
 given 
   value_typ: val := expression
 quest val
-  is (constant1) do
+  if (val = constant1) do
     ** first path
     ...
-  is (constant2) do
+  if (val = constant2) do
     ** second path
     ...
-  in (val_list)  do
+  if (val ? val_list)  do
     ** third path
 cover
   ** default path
@@ -110,13 +110,14 @@ process
   given 
     Integer: v := p + 4
   quest v
-    in (1,2,3) do
+    if v ? (1,2,3) do
       message := "first match"
-    in [1..8]  do
+    if v ? [1..8]  do
       message := "second match"
-    in [5..10] do
+    if v ? [5..10] do
       message := "third match"      
   cover
+    ** other cases
     message := "no match"
   ready
   print (message) 
@@ -272,7 +273,7 @@ given
   Integer: min := constant
   Integer: max := constant  
   Integer: var ;
-scan var <: Z[min..max] do
+scan var <+ Z[min..max] do
   ** block statements;
   ...
 next
@@ -286,7 +287,7 @@ Example of forward iteration:
 ```
 given
   Integer: i := 0 
-scan i <: Z[0..10] do
+scan i <- Z[0..10] do
   ** force next iteration
   when (i % 2 = 0) do
     skip

@@ -97,7 +97,7 @@ We can use comparison operators: "=" and "=" with objects. First comparison "=" 
 **Example:**
 ```
 method: main()
-  Integer: o,n
+  Integer: o,n ** boxed integers
 process  
   o := 1
   n := 1 
@@ -110,18 +110,20 @@ process
     print("n and o are not the same") 
   ready
   ** verify
-  expect  (o = n) ** equivalent  
-  expect !(o = n) ** not the same 
+  expect  (o  = n) ** equivalent  
+  expect !(o <> n) ** not divergent
+  expect  (o != n) ** not the same
+  expect !(o == n) ** not the same 
 return
 ```
 
 ## Generic Class
 
-A class can receive <generic_types> parameters. This allows to create generic algorithms for different data types. A similar effect can be created using variant parameters. The difference is at compile time the generic types create more efficient code.
+A class can receive type as parameters. This allows to create generic algorithms for different data types. A similar effect can be created using variant parameters. The difference is at compile time the generic types create more efficient code.
 
 **Generic Class:**
 ```
-class[Generic_Parameters]: Generic_Name(parameters) <: Base_Class
+class[Generic_Type]: Generic_Name(parameter:Generic_Type) <: Base_Class
   ** declarations
 create
   ** constructor
@@ -133,7 +135,7 @@ Generic class is used to define a subtype then you can declare one or more insta
 
 ```
 ** create new object from generic
-Generic_class[element_type]: new_type;
+type new_type: Generic_class[generic_type]
 
 ```
 

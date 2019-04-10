@@ -15,7 +15,7 @@ process
     Integer: m := my_array.capacity()
     Integer: i
   ** scan array and modify element by element    
-  scan (i <: [1..m])
+  scan i <+ [1..m] do
     my_array[i] := i 
   next
   ** array  elements are identified using [index]
@@ -105,8 +105,8 @@ process
   given
     Integer: col
     Integer: row
-  scan col <: [1..3]:     ** traverse columns
-    scan row <: [1..3]:   ** traverse row first
+  scan col <+ [1..3]:     ** traverse columns
+    scan row <+ [1..3]:   ** traverse row first
       print(M[row,col])
     next row
   next col
@@ -143,7 +143,7 @@ method: main()
   ** create b as slice reference from a
   given
     Integer: i
-  scan i <: b do
+  scan i <+ b do
     a[i] += 2
   next 
   
@@ -157,7 +157,7 @@ return
 You can define elements of a subset from a set using the following construction:
 ```
 given
-   Set: sub_set := { var | var <: set_name AND filter_expression}
+   Set: sub_set := { var : var <+ set_name AND filter_expression}
 ```
 
 Symbol "|" is the filter operator and is derived from mathematics. 
@@ -166,7 +166,7 @@ We can use \<var> to create the \<filter_expression>.
 Example of a new set defined from a range:
 
 ```
-  new_set := { x | x <: [-10..10] }
+  new_set := { x : x <+ [-10..10] }
 ```
 
 ## Collection Casting
@@ -181,7 +181,7 @@ given
    Set : new_set := {}
 begin
    ** eliminate duplicates using set comprehension
-   mew_set := { x | x <: my_list } 
+   mew_set := { x : x <+ my_list } 
    print my_set ** {0,1,2} 
 ready
 ```
@@ -195,7 +195,7 @@ given
    List my_list := [0,1,2,3,4,5]
    Set  my_set  := {}
 begin
-   my_set := { x | x <: my_list, x%2 = 0 } 
+   my_set := { x : x <+ my_list, x%2 = 0 } 
    print my_set; ** {0,2,4} 
 ready
 ```
@@ -207,11 +207,11 @@ The elements in one set or list can be transformed by a function or expression t
 ```
 given
    source := {0,1,2,3,4,5}
-   target <: Hash 
+   Hash: target := {}
 begin
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x : x^2) | x <: source } 
+   target := { (x : x^2) : x <+ source } 
 ready
 ```
 
@@ -300,7 +300,7 @@ A special _while loop_ that is executed for each element belonging to a collecti
 ```
 given
   type_name: element
-scan element <: collection do
+scan element <+ collection do
   ** statements;
     ...
   skip [if <condition>]
@@ -334,7 +334,7 @@ method: main()
 process  
   given
     Char: element
-  scan element <: my_list:
+  scan element <+ my_list:
     ** continue shortcut
     skip if element < 'c'
     write(element)
@@ -373,7 +373,7 @@ process
   given
     String: k
     Integer: v
-  scan (k,v) <: my_map do
+  scan (k,v) <+ my_map do
     print('("' + k + '",' + v +')')
   next
 return
@@ -396,7 +396,7 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 given
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')}
   Integer: my_key := 3
-begin if (my_key <: my_map)
+begin if (my_key <+ my_map)
   print('True') ** expected
 else
   print('False')
@@ -549,7 +549,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-method: format(n <: Number, f <: String) <: String
+method: format(Number: n, String: f) => String
 ```
 
 Where "f" is a pattern: '(ap:m.d)'

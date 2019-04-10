@@ -19,7 +19,7 @@ Ordinal type is usually a finite set that can be enumerated using a literal. In 
 
 ```
 define
-  type <name> <: Ordinal(symbol:<value>, ... )
+  type <type_name> <: Ordinal(symbol:<value>, ... )
 
 ```
 
@@ -41,7 +41,7 @@ process
   given
     Day: today := today()  
   quest
-    if today <: (Friday, Saturday, Sunday) then
+    if today <+ (Friday, Saturday, Sunday) then
       message:='weekend'
       ...
     if today = Monday then
@@ -59,7 +59,7 @@ return
 **Range**
 We can use Ordinal to create a range of values:
 ```
-when (today <: [Monday..Friday]) do
+when (today <+ [Monday..Friday]) do
    print ("Have a nice day!")
 else
    print ("Have a happy weekend!")  

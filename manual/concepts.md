@@ -110,7 +110,7 @@ There are 3 kind of data in EVE
 
 A composite data type is declared like this:
 ```
-type Type_Name <: Type_descriptor
+type Type_Name <+ Type_descriptor
 ```
 
 ## Variables
