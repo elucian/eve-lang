@@ -106,7 +106,7 @@ In following table A, B, C are sets and x is a member: numeric or string
 |---------|---------|-------------------------------------------------------------------
 | x ! A   | logic   | verify if x is a not member of collection A
 | x ? A   | logic   | verify if x is a member of collection A
-| A | B   | new set | Intersect A with B, use with : like C := A & B (return a new set)
+| A \| B  | new set | Intersect A with B, use with : like C := A & B (return a new set)
 | A & B   | new set | Union A with B, use with : like C := A | B (return a new set)
 | A < B   | logic   | verify is A is subset of B
 | A > B   | logic   | verify is A is superset of B
@@ -119,7 +119,7 @@ These operators are expected logical values T := True, F := False
 |--------|-----------------------------------------------
 |  !     | logic NOT (negation) 
 |  &     | logic AND (intersection) 
-|  |     | logic OR  (union)
+|  \|    | logic OR  (union)
 |  ~     | logic Exclusive OR
 
 ## Bitwise operators
