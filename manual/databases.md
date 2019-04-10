@@ -483,8 +483,8 @@ append to table_name (field_name:value,...)
 
 **One record:**
 ```
-insert in table_name <+ record_name
-append to table_name <+ record_name
+insert in table_name map record_name
+append to table_name map record_name
 ```
 
 **Multiple rows:**
@@ -498,8 +498,8 @@ append to table_name
 
 **From collection:**
 ```
-insert in table_name <+ record_collection
-append to table_name <+ record_collection
+insert in table_name map record_collection
+append to table_name map record_collection
 ```
 
 ## SQL Execution
@@ -531,7 +531,7 @@ Update statement is part of DML language. EVE statement for update is a little b
 
 1. Single table update:
 ```
-update table_name set (field_name:expression,...)
+update table_name map (field_name:expression,...)
   where where_condition
 ```
 **note:** 
@@ -540,28 +540,28 @@ update table_name set (field_name:expression,...)
 
 2. Use Record variable:
 ```
-update table_name set (table_field:record_field...) <+ record_variable 
+update table_name map (table_field:record_field...) <: record_variable 
   where where_condition
 ```
 **note:** In the where_condition we can use fields from record variable.
 
 3. Use all fields from a record variable:
 ```
-update table_name <+ record_variable 
+update table_name <: record_variable 
   where where_condition
 ```
 **note:** In the where_condition we can use fields from record variable.
 
 4. Use all fields from a record collection:
 ```
-update table_name <+ list_of_records 
+update table_name <: list_of_records 
   where where_condition;
 ```
 **note:** In the where_condition we can use fields from record variable.
 
 5. Join tables for update:
 ```
-update target_alias = target_table set (target_alias.field_name:source_alias.field_name,...)
+update target_alias = target_table map (target_alias.field_name:source_alias.field_name,...)
   from source_alias = source_table
   join   source_alias.field_name == target_alias.field_name
   where filter_expression
@@ -572,7 +572,7 @@ update target_alias = target_table set (target_alias.field_name:source_alias.fie
 
 6. Using sub-query:
 ```
-update target_alias = target_table set (field_name:value,...)
+update target_alias = target_table map (field_name:value,...)
   from source_alias = (select (list_of_fields) 
         from source_tables
         join join_relations

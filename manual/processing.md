@@ -192,8 +192,8 @@ Build notation can use expressions to filter out elements during comprehension o
 **Example:**
 ```
 given
-   List my_list := [0,1,2,3,4,5]
-   Set  my_set  := {}
+   List: my_list := [0,1,2,3,4,5]
+   Set:  my_set  := {}
 begin
    my_set := { x : x <+ my_list, x%2 = 0 } 
    print my_set; ** {0,2,4} 
