@@ -407,12 +407,12 @@ Symbol  | Description
 --------|-------------------------------------------
   !     | logical NOT
   &     | logical AND
-  |     | logical OR
+  \|    | logical OR
   ~     | logical XOR
 
 Table of truth for logical operators: 
 
- A    | B   | !A | A & B | A | B | A ~ B
+ A    | B   | !A | A & B | A \|B | A ~ B
 ------|-----|----|-------|-------|-------
  T    | T   | F  | T     | T     | F    
  T    | F   | F  | F     | T     | T   
@@ -423,7 +423,7 @@ Table of truth for logical operators:
 
 A logical expression is a demonstration or logical deduction having result T or F. The order of operations can be controlled using operator precedence and parentheses (). 
 
-Operator precedence: {!, &, |, ~}
+Operator precedence:` {!, &, |, ~} `
 
 Result of logical expressions can be used into a conditional statement to make a decision. 
 Also results of logical expressions can be stored in logical variables to be used later in other conditions.
