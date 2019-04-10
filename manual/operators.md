@@ -7,8 +7,8 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
-| (*_*)     | Block comments \| Nested comments
-| |*_*|     | Inside expression comments
+| (\*_\*)   | Block comments \| Nested comments
+|\|\*_\*\|  | Inside expression comments
 | (...)     | Expression \| List literal \| Data record
 | [,,,]     | Range \| Index \| Array literals \| Parameterize types
 | {,,,}     | Ordinal type \| Set of values \| Hash map
@@ -46,9 +46,9 @@ Eve use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|`x`   | Single ASCII character 
-|'x'   | ASCII string literal
-|"x"   | Unicode string literal
+|\`x\` | Single  UTF32 character (4 bytes)
+|'x'   | Limited capacity literal: UTF32 (max: 128 characters)
+|"x"   | Unicode string literalS UTF8
 
 ## String: concatenation
 
