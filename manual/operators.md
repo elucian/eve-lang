@@ -9,9 +9,9 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |-----------|--------------------------------------------------------------
 | (\*_\*)   | Block comments \| Nested comments
 |\|\*_\*\|  | Inside expression comments
-| (...)     | Expression \| List literal \| Data record
-| [,,,]     | Range \| Index \| Array literals \| Parameterize types
-| {,,,}     | Ordinal type \| Set of values \| Hash map
+| (_,_,_)   | Expression \| List literal \| Data record
+| [_,_,_]   | Range \| Index \| Array literals \| Parameterize types
+| {_,_,_}   | Ordinal type \| Set of values \| Hash map
 
 
 ## Single symbols
@@ -37,10 +37,10 @@ Eve use two symbols to create a additional operators.
 |\*\*  | Single line comment \| end of line comment
 |..    | Range representation or slice [n..m] 
 |::    | Receive output argument from method I/O parameter
-|+>    | Data pipeline fetch or select into: collection
 |=+    | Outer join operator used in data "select" statement
 |<:    | Declare user define type / sub-type 
-|<+    | Stream |\ Unpack  |\ Template
+|<+    | Injector \| Unpack  \| Template \| Data source
+|+>    | Fetch or select into: collection \| Destination
 
 ## String: delimiters
 
