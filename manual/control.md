@@ -256,7 +256,7 @@ return
 
 ## Scan
 
-Scan a "range", that is a _subset_ from a continuous _type_ using syntax: `[n..m]`.  
+Scan a "range", that is a _subset_ from a discrete _type_ using syntax: `[n..m]`.  
 
 ```
 [0..10]  ** {0,1,2,3,4,5,6,7,8,9,10}
@@ -273,7 +273,7 @@ given
   Integer: min := constant
   Integer: max := constant  
   Integer: var ;
-scan var <+ Z[min..max] do
+scan var <: Z[min..max] do
   ** block statements;
   ...
 next
@@ -287,7 +287,7 @@ Example of forward iteration:
 ```
 given
   Integer: i := 0 
-scan i <- Z[0..10] do
+scan i <: Z[0..10] do
   ** force next iteration
   when (i % 2 = 0) do
     skip

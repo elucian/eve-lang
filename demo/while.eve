@@ -4,7 +4,7 @@
 method main()
   Array: test := ["a","b","c","d","e"]
   Natural: i := 1
-start
+process
   while (i <= test.length) do
     element := my_list[i]
     ** shortcut 
@@ -12,5 +12,5 @@ start
        write (element)
        write (',') if (element <> "e")
     ready
-  redo
-finish.
+  repeat
+return;

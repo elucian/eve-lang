@@ -202,7 +202,7 @@ given
 Literals can be used for initialization:
 ```
 given
-  List[Char]   : c_list := ('a', 'b', 'c')
+  List[Symbol]   : c_list := ('a', 'b', 'c')
   List[Integer]: n_list := (1, 2, 3)  
 ```
 
@@ -331,7 +331,7 @@ ready
 
 **Unicode**
 
-The _Unicode_ is a standard for representation of writing for all human languages. An Unicode string is a set of _code points_ using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII strings. There are many encoding techniques available. Java uses UTF-32. We will probably use UTF-8 to be more efficient.
+The _Unicode_ is a standard for representation of writing for all human languages. An Unicode string is a set of _code points_ using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII. There are many encoding techniques available. Java uses UTF-16. We will probably use UTF-8 to be more efficient.
 
 See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set), 
 [unicode characters](https://en.wikipedia.org/wiki/List_of_Unicode_characters#Character_reference_overview)

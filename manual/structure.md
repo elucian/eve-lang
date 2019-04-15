@@ -45,9 +45,10 @@ import
 
 ## head comment
 define
-  ** types
-  ** constants
-  ** variables
+  ** static
+  ** type
+global
+  ** public variables
   
 class: name
   ** class_definition

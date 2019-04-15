@@ -1,12 +1,13 @@
 ## Data Types
 
-EVE is data oriented language. There are three kind of data types:
+EVE is data oriented language. There are four kind of data types:
 
 * [Basic Types](#basic-types)
 * [Composite Types](#composite-types)
+* [Collection Types)(#collections)
 * [User Defined](#user-defined)
 
-**bookmarks**
+**concepts**
 * [Numeric Types](#numeric-types)
 * [Data Coercion](#data-coercion)
 * [Type inference](#type-inference)
@@ -20,23 +21,26 @@ EVE is data oriented language. There are three kind of data types:
 Basic types are abstract wrappers to native types. 
 
 | type     | description
-|----------|----------------------------------------------------
-| Integer  | integer on 64 bits (signed)
-| Natural  | integer on 64 bits (unsigned)
-| Real     | double precision number (signed)
-| Null     | Is a reference type that represents Null reference
+|----------|-------------------------------------------------------
+| Char     | integer on 8  bit (unsigned)
+| Logic    | Is a Ordinal type having values:  False = 0, True = 1
+| Symbol   | integer on 32 bit (unsigned)
+| Integer  | integer on 64 bit (signed)
+| Natural  | integer on 64 bit (unsigned)
+| Real     | double precision number on 8 bit (signed) 
 
 
 ## Composite Types
+
 Composite data types are unions of data elements of heterogeneous types.
  
 | type     | description
 |----------|----------------------------------------------------
 | Ordinal  | Enumeration of ideas, cases or terms
 | Record   | Heterogeneous collection of elements in a database
-| String   | Create an ASCII string: ('delimited using single quotes')
-| Text     | Double quoted unlimited string: ("delimited with double quotes")
-| Logic    | Is a Ordinal type having values:  False, True
+| String   | Limited capacity string: ('single quoted')
+| Text     | Unlimited capacity string: ("double quoted")
+| Null     | is a reference type that represents Null reference
 
 
 ## Collections
@@ -47,6 +51,8 @@ Collections are groups of data elements of same type.
 | List     | Dynamic unsorted enumeration of values or objects
 | Hash     | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
+
+**Note:** Composite data types are references
 
 ## User Defined
 
@@ -96,7 +102,7 @@ In EVE we can have two categories of numbers:
  Category     | EVE Types
 --------------|-------------------------
  Discrete:    | Integer, Natural
- Continuous:  | Real, Rational, Complex
+ Continuous:  | Real
 
 ### Discrete numbers:
 
@@ -157,19 +163,10 @@ process
 return
 ```
 
-### Complex number
-A complex number is a number that can be expressed in the form (a + bj), where a and b are _real_ numbers and j is the imaginary unit, that satisfies the equation j^2 := −1. In this expression, a is the real part and b is the imaginary part of the complex number.
-
-   Example     | Description
----------------|-------------------------------------------------------------------------
-  (1+2.56j)    | Complex number. (a+bj). When b is 0 the number is compatibe with a real number.
-  (-3.5-2j)    | Complex number. (-a-bj). Both a and b can be positive or negative real numbers.
-
-
 ## Polymorphic operators
-In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with many kind of numbers. So the numeric operators are not very specific to a number type. This property of operators is called _"polymorphic"_ and is a problem for computer science.
+In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or real. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
 
-Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician or engineer. Therefore some other languages are introducing polymorphic operators.
+Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore some other languages are introducing polymorphic operators.
 
 ## Data Coercion
 In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. 
@@ -177,15 +174,15 @@ If not designed properly the coercion can be a fatal mistake. EVE is a safe lang
 
 ## Implicit coercion
 In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion 
-to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of data the program will generate a _run-time error_.
+to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a _run-time error_. To prevent this EVE will implement a safe compile-time check.
 
 Implicit conversion is possible and _safe_ in this direction:
 
-Integer: -> Natural:-> Real: -> Complex.
+Integer -> Natural -> Real -> String.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-Complex -> Real: ->  Natural:-> Integer. 
+String -> Real ->  Natural:-> Integer 
 
 ```
 given
@@ -200,7 +197,7 @@ ready
 ```
 
 ## Explicit coercion
-Explicit coercion is a _forced conversion_. Can be used to convert backwards from higher data range to lower data range or from continuous numbers to discrete numbers. This however can cause a data or precision loss. Explicit coercion is using a functions. The function apply to an expression or variable that need coercion and return a result of a new data type.
+Explicit coercion is a _forced conversion_. Can be used to convert backwards from higher data range to lower data range or from continuous numbers to discrete numbers. This however can cause a data or precision loss. Explicit coercion is using a function.
 
 Examples of explicit coercion:   
 ```
@@ -214,6 +211,10 @@ begin
  
   ** explicit coercion add (0.5)
   a := ceiling(b) 
+  print(a) ** will print: 2
+
+  ** explicit coercion rounding:  
+  a := round(b) 
   print(a) ** will print: 2
 ready
 ```
@@ -237,8 +238,8 @@ This can be ready using the casting function parse(), only if the string contain
 given
   Integer: v 
   Real:    b
-  String:  s := "1000"
-  String:  r := "200.02"
+  String:  s := '1000'
+  String:  r := '200.02'
 begin
   v := parse(s) ** make v = 1000
   v := parse(r) ** make v = 200 and decimal .02 is lost
@@ -249,7 +250,7 @@ ready
 **Note:** 
  Build-in functions that are located in EVE "default" module:
  
- { parse(), format(), ceiling(), floor() }
+ { parse(), format(), ceiling(), floor() round()}
  
  This module is one of the standard modules that are automatically included in any EVE program. 
 
@@ -263,9 +264,10 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List ls := (0,1,2,3,4,5,6,7,8,9)
+  List: ls := (0,1,2,3,4,5,6,7,8,9)
 begin
-  print(ls.type()) ** List
+  print(ls.type()) 
+  ** expect: List[Integer]
 ready  
 ```
 
@@ -279,11 +281,10 @@ Literal      | Type
 -------------|-----------------
  9           | Integer
 -9           | Integer
-0x9ABCDEF    | Natural
+0x9ABCDEF    | Hexadecimal -> Natural
+0b1010101    | Binary -> Natural
 9.9          | Real
-1E2          | Real
-1e2          | Real
-1/123        | Rational
+U+0001       | Unicode symbol code
 
 **Zero literals**
 
@@ -338,7 +339,7 @@ value is of type Text
 In EVE the type is first class value. For type introspection we can use:
 
 1. built-in type() function
-2. operator "is"
+2. operator _is_
 
 ```
 given
@@ -395,7 +396,7 @@ define
 
 Logic values can be compared using relation operators:    
 
-{↔, >, <, ≤, ≥}.  
+{ =, >, <, <=, >=}.  
 
 **Logic Operators**
 Logical operators are expecting logical operands. 
@@ -436,7 +437,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 **Syntax:**
 ```
 define
-  type: variant_name <: Variant (<Type> | <Type> | ... )
+  type: variant_name <: Variant (type_name | type_name | ... )
 
 global  
   variant_type: v
@@ -477,27 +478,27 @@ begin
   ** positive example
   v := 1     ** v is Integer
   x := 1.5   ** x is Real:    
-  t := 1 ÷ 2 ** make t Real
+  t := 1 / 2 ** make t Real
   
   ** safe conversion
-  t := 12 ** safe conversion
+  t := 12 ** t is Real
   
   ** negative examples
-  v := x  ** ERROR: v is Integer
+  v := x  ** ERROR: v is Integer 
 ready
 ```
 
 A variant is a way to create a generic method.
 
 ```
-method: invert(Integer | Real: x, y)
-  Integer | Real :i
+method: switch(Integer | Real @ x, y)
+  Integer | Real @ i
 process  
-  assert type(x) <> type(y)  
+  assert type(x) = type(y)  
   
-  i := x ** intermediate value
-  y := x ** first  switch
-  x := i ** second switch
+  i :: x ** intermediate reference
+  x :: y ** first  switch
+  y :: x ** second switch
 return
 
 method: main()
@@ -507,69 +508,83 @@ process
   ** invert two Integer: numbers
   x := 10
   y := 20  
-  invert(x, y)
+  switch(x, y)
   
   ** invert two Real: numbers
   a := 1.5
   b := 2.5
-  invert(a, b)
+  switch(a, b)
 return
 ```
 
-## String type 
+## Single symbol
 
-There is one single type of string with two literal notations. 
+Symbols are Unicode UTF32. That is using 32 bit integer code points. EVE has two literal notations for symbols: 
 
-* String, has limited capacity default 255 characters;
-* Double quote constants are used for Text and Unicode;
-* Single quote constants are limited to ASCII;
-* Double quote is escaped using single quote two times: "''double quoted''"
+* Single-quoted string like: 'α'
+* U+HHHH   from: U+0000   to U+FFFF
+* U-HHHHHH from: U+000000 to U+FFFFFF
 
-**Note:** 
-Single quoted character is similar to "char" data type from C language.
+A symbol can be used to create Array of symbols that have direct access by index. Array of symbols have a capacity and can be more or less full. In array one or more symbols can have value NUL = U+0000. This is also the default value used for string initialization.
+
+## String type
+
+In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings are immutable and can store single line of text. Double quoted strings are complex data structured stored as rope or radix tree. 
+
+* Single quoted string, has default capacity 1024 bytes;
+* Double quote strings have unrestricted capacity;
 
 ### String: declaration
 String can be initialized with a constant using single quotes or double quotes. 
-By default value of string is "", equivalent to empty symbol: ∅; 
+By default value of string is "" or '' is equivalent to Null; 
 
 ```
 global
-  String: string_name := '"'   ** limited 255 capacity string
-  Text:   text_name   := "''"  ** unlimited Unicode text
+  String(24): short_string := '' ** this string can hold 24 symbols, 24*4 = 96 bytes
+  String: string_name      := '' ** default capacity 1024 can hold 256 ASCII symbols
+  Text:   text_name        := "" ** variable capacity string can hold many rows
 ```
 
 ### String: mutability
-In EVE strings are immutable. If we use a modifier ":=" new memory is allocated.
+In EVE strings are mutable. If you use `:=` new memory is allocated. If you use a modifier: `+=` the string is fill too capacity. If the capacity is over the limit you will get an error: "capacity overflow".
 
 **Example:**
 ```
 method: test_string()
-  String : str ** initial "" 
-  String @ ref ** string reference
-  begin
-    str := 'First value'   ** create new reference
-    ref ::  str            ** borrow reference
-    str := 'First value'   ** create new reference
-  ready
-  expect (str = ref) ** T  equal value
-  expect (str = ref) ** F  different references
+  String : str := 'First value'  
+  String : ref := 'Second value' 
+process  
+  expect (str <> ref) ** different value
+  expect (str != ref) ** different locations  
+  
+  ref :: str  ** borrow reference
+  expect (str =  ref) ** same value
+  expect (str == ref) ** same location  
+  print (ref)  ** 'First value'
+  
+  ** if we modify str, ref will not be modified
+  str := 'Third value' ** new string location
+  expect (str != ref)  ** different locations  
+  ** ref remain unmodified
+  print (ref)  ** 'First value'
 return
 ```
 
-Note: You can create garbage in Bee if you loose reference to strings.
+**Note:** You can create garbage in EVE if you loose reference to strings.
 
 ### String: comparison
 
-* Two strings are compared using relation operators: { =, ≠, <, >, ≥, ≤ }. 
-* Two strings that have identical characters are equivalent regardless of quotation. 
-* The length of the string is the number of represented characters: '' is counting 1 
+* Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
+* Two strings that have identical characters are equivalent regardless of quotation;
+* The length of the string is the number of represented characters: '' is counting 0; 
 
 **Example:**
+
 ```
-print ('this'  = 'this')   ** T (same exact value)
-print ('this ' = 'this')   ** F (not same value)
-print (' this' = 'this')   ** F (not same value)
-print ('this'  = 'this')   ** F (not same location)
+print ('this' = 'this')    ** True (same value)
+print ("this" = 'this')    ** True (same value)
+print (' this' <> 'this')  ** True (not same value)
+print ('this ' <> 'this')  ** True (not same value)
 ```
 
 ### Null strings
@@ -578,9 +593,11 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  String: str 
+  String: str := ""
 begin 
-  print("str is null") if (str is Null)
+  expect (str is Null)
+  expect (str = '')
+  expect (str = "")
 ready 
 ```
 
@@ -590,15 +607,15 @@ In EVE we represent calendar date.
 
 **Date storage**
 
-* Date type is internally stored as number on 4 bytes.
-* First byte store the day, second byte store the month.
-* Last 2 bytes store the year. 
+* Date type is internally stored as number on 4 bytes;
+* First byte store the day, second byte store the month;
+* Last 2 bytes store the year; 
 
 **Date literals**
 
 When can create a date literal using 3 reversible functions:
 
-* YDM => "YYYYDDMM"
+* YDM => "YYYY/DD/MM"
 * DMY => "DD/MM/YYYY"
 * MDY => "MM/DD/YYYY"
 

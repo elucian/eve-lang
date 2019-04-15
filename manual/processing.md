@@ -108,8 +108,8 @@ process
   scan col <+ [1..3]:     ** traverse columns
     scan row <+ [1..3]:   ** traverse row first
       print(M[row,col])
-    next row
-  next col
+    next
+  next
 return
 ```
 
@@ -221,9 +221,9 @@ Therefore List union act very similar to append, except we add multiple elements
 
 ```
 method: main()
-  List[Char] a := ('a','b','c')
-  List[Char] b := ('1','2','3')
-  List[Char] c := () 
+  List[Symbol] a := ('a','b','c')
+  List[Symbol] b := ('1','2','3')
+  List[Symbol] c := () 
 process
   c := a + b
   print(c)**['a','b','c','1','2','3']
@@ -330,10 +330,10 @@ It is possible to change this using shortcuts or fast forward.
 ```
 --example of collection iteration
 method: main()
-  List[Char] my_list := ['a','b','c','d','e'] 
+  List[Symbol] my_list := ['a','b','c','d','e'] 
 process  
   given
-    Char: element
+    Symbol: element
   scan element <+ my_list:
     ** continue shortcut
     skip if element < 'c'
