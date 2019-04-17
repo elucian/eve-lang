@@ -273,7 +273,7 @@ given
   Integer: min := constant
   Integer: max := constant  
   Integer: var ;
-scan var <: Z[min..max] do
+scan var <+ Z[min..max] do
   ** block statements;
   ...
 next
@@ -287,7 +287,7 @@ Example of forward iteration:
 ```
 given
   Integer: i := 0 
-scan i <: Z[0..10] do
+scan i <+ Z[0..10] do
   ** force next iteration
   when (i % 2 = 0) do
     skip
@@ -301,7 +301,7 @@ next
 > 1,3,5,7,9
 
 **Notes:**
-* scan can be shortcut using next;
+* scan can be shortcut using skip;
 * scan can be terminated early using stop;
 
 ## Trial

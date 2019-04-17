@@ -25,9 +25,9 @@ These concepts are common to any computer language in Algol family.
 
 ## Comments
 
-* Eve has single line comments starting with "**"
-* Eve has end of line comments starting with "--"
-* Eve has multi line comments between (* ... *)
+* Eve title of comments starting with "##"
+* Eve single line comments starting with "**"
+* Eve has multi line comments between {* ... *}
 
 **examples**
 ```
@@ -36,9 +36,9 @@ These concepts are common to any computer language in Algol family.
 
 ** Single line comment
 
-(*
+{*
   Multiple line comments
-*)
+*}
 print ** end of line comment is enabled  
 ```
 
@@ -49,27 +49,25 @@ print ** end of line comment is enabled
 * Nested comments are supported for multi-line comments;
 
 ## Directives
-Any module need at least one directive. If directive is missing the compiler will not recognize the file category and will signal an error. The directive is very important part of EVE code.
+Directives are module properties that are communicated to the compiler. Directives represent module meta-data. One module can have multiple directives usually at beginning of the module. Directives start with "#" and are used by the compiler to establish different behaviors. 
 
-The name of the file is enclosed in "" and is the first statement after initial comments. This name must match the file-name. If the file-name is renamed the source code will not be recognized and an error will be signaling the incorrect file name.
-
+**examples**
 ```
-#driver  "name"
-#module  "name"
-#library "name"
+#trace:on
+#debug:on
+#break:point
+#print:variable
 ```
 
-**description**
-* a _driver_ is the main module of the application
-* a _module_ can be executed from driver or other module
-* a _library_ is a repository file that can be imported in other modules
+## Modules
+
+EVE is a modular system based on modules. Every module is a script that can be parsed in memory. After this module methods can be executed. User can decide what module will be parsed and executed first by using configuration files or console commands. 
 
 **properties**
 
-* a library can not be executed but only imported
-* a library do not contain method main()
-* a module can not be imported but only executed
-* a module must contain method main()
+* a module can be imported in other modules using "import";
+* a module can call methods and use other members from other modules;
+* a module that do not contain method main() is called library;
 
 A _library_ is a reusable component. It contains mostly public members: 
 
@@ -77,13 +75,14 @@ A _library_ is a reusable component. It contains mostly public members:
 
 * after first load a library remain resident in memory
 * a library is loaded only once even if is imported multiple times
-* circular import is possible but we protect against infinite loop
-* a library usually do not import itself, but it is possible 
+* circular import is possible but we protect against infinite recursion
+* a library usually do not import itself, this is an error
 
 A _module_ is a executable script. It contains mostly private members:
 
-* you can run a module once or many times
-* module is not resident in memory once finished
+* main method from a module is usually public;
+* public methods are exported using "export" region;
+* export region is last region in a module;
 
 ## Keywords
 
@@ -98,13 +97,13 @@ EVE has ASCII and Unicode operators. Unicode operators require one space before 
 * [Operators](operators.md) 
 
 ## Data types
-A data type is an abstract set or class that describe data representation. 
+A data type is an abstract concept that describe data representation. 
 
-There are 3 kind of data in EVE
+There are 3 kind of data types in EVE
 
-* basic type 
-* composite type 
-* class
+* basic types 
+* composite types 
+* class of object
 
 **syntax:**
 
@@ -114,7 +113,7 @@ type Type_Name <+ Type_descriptor
 ```
 
 ## Variables
-A variable is represented by an identifier, and is associated to a type. Variable can be changed during the execution of the program using modifier operators { :=, +=, *=, /= ...}. 
+A variable is represented by an identifier, and is associated to a type. Variables can be changed during the execution of the program using modifier operators { :=, +=, *=, /= ...}. Conceptual variables are native types or references to composite types.
 
 **patterns:**
 ```
@@ -142,14 +141,14 @@ global
 ```
 
 **default value**
-When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Real: numbers is 0.0 and for strings is "". Notice the "zero" value is not Null. 
+When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Real: numbers is 0.0 and for strings is "". 
 
 ## System variables
 We define system variables using "$" name prefix. _Environment Variables_ from OS are created automatically along with other "implicit" variables required by EVE semantics. 
 
 ## Modify Value 
-The assign operator ":=" is used to execute an expression and assign the result to a variable. 
-The previous value of the variable is discarded if there is no other reference to it.
+The assign operator ":=" is used to execute an expression and assign the result to a variable.  
+The previous value of the variable is discarded if there is no other reference to it.  
 
 **Syntax:**
 ```
@@ -158,9 +157,6 @@ The previous value of the variable is discarded if there is no other reference t
 
 ## Identifiers
 The name of identifiers in EVE can have a length of 64 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). A variable can contain underscore but can not start or with underscore. 
-
-The underscore is equivalent to space. So the identifiers that have space in a JSON or in a database can be mapped to internal variables that use underscore instead of a space. Variable names can not start with numbers. 
-
 
 **These are valid identifiers**  
 ```
@@ -171,15 +167,14 @@ The underscore is equivalent to space. So the identifiers that have space in a J
 ```
 **These are invalid identifiers**  
 ```
- 1`st
- \_this  
- this\_  
- \_this\_  
+ 1st
+ \_not_valid  
+ not_valid\_  
+ \_not_valid\_  
 ```
 
 **Naming variables**
-Variables usually have a meaning or a purpose therefore variable must have a proper name.  
-Variables can not have are the language reserved keywords. Therefore we advise for variables to use a prefix.
+We advise for variables to use a prefix.
 
 * "v_" is a good prefix for local  variables;
 * "p_" is a good prefix for input  parameters;
@@ -225,30 +220,26 @@ print ** expect 1234
 
 ## Multiple statements
 
-You can have multiple statements on one line separated using ""
+You can have multiple statements on one line separated using ";"
 
 **examples**
 ```
 given
   ** integer numbers
-  Integer: a := 0 ; b := 1 
+  Integer: a := 0 ; Real: b := 1.5 
 begin  
   print  (a, b)  
-  expect (a = 0, b = 1)
+  expect (a = 0, b = 1.5)
 ready
-
-given  
-  ** real numbers
-  Real: d := 2.5 ; x,y,z := .0  
-begin  
-  print  (d, x, y, z) 
-  expect (d = 2.5, x = .0, y = .0, z = .0)
-ready  
 ```
 
 ## Multiple lines
 
-One expression can span multiple lines. The expression may be enclosed in parenthesis or quotation marks. Arithmetic expressions can terminate with operator and continue on next line with operand. EVE do not use the "continuation" operator like Python: "\\"
+One expression can span multiple lines. 
+
+* The expression may be enclosed in parenthesis or quotation marks. 
+* Arithmetic expressions can terminate with operator and continue on next line. 
+* EVE do not use the "continuation" operator like Python: "\\"
 
 **example
 ```

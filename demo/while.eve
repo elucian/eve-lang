@@ -13,6 +13,4 @@ process
        write (',') if (element <> "e")
     ready
   repeat
-return 
-
-over.
+return.

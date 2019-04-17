@@ -206,7 +206,7 @@ The elements in one set or list can be transformed by a function or expression t
 **Example:**
 ```
 given
-   source := {0,1,2,3,4,5}
+   Set:  source := {0,1,2,3,4,5}
    Hash: target := {}
 begin
    ** create Hash pairs (key, value) for Hash map
@@ -221,9 +221,9 @@ Therefore List union act very similar to append, except we add multiple elements
 
 ```
 method: main()
-  List[Symbol] a := ('a','b','c')
-  List[Symbol] b := ('1','2','3')
-  List[Symbol] c := () 
+  List[Symbol]: a := ('a','b','c')
+  List[Symbol]: b := ('1','2','3')
+  List[Symbol]: c := () 
 process
   c := a + b
   print(c)**['a','b','c','1','2','3']
