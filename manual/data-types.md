@@ -87,7 +87,7 @@ process
   
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
   print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
-return
+return;
 ```
 output:
 ```
@@ -160,7 +160,7 @@ process
   i := 9223372036854775807
   n := 18446744073709551615
   r := 0.25  
-return
+return;
 ```
 
 ## Polymorphic operators
@@ -193,7 +193,7 @@ begin
   b := a + 3.5 ** add 3.5 then assign result to b = 5.5
   a := b       ** error: can not assign Real: to Integer
   a := 1.5     ** error: can not assign Real: to Integer
-ready
+ready;
 ```
 
 ## Explicit coercion
@@ -216,7 +216,7 @@ begin
   ** explicit coercion rounding:  
   a := round(b) 
   print(a) ** will print: 2
-ready
+ready;
 ```
 
 **Number to a string**
@@ -244,7 +244,7 @@ begin
   v := parse(s) ** make v = 1000
   v := parse(r) ** make v = 200 and decimal .02 is lost
   b := parse(r) ** make b = 200.02 and decimal .02 is preserved
-ready
+ready;
 ```
 
 **Note:** 
@@ -325,7 +325,7 @@ begin
   print("name  is of type " + type(v.name))
   print("key   is of type " + type(m.key))
   print("value is of type " + type(m.value))
-ready
+ready;
 ```
 run test  
 ```
@@ -350,10 +350,10 @@ begin
     print("Yes i is Real")
   else
     print("No i is not Real")
-  ready
+  ready;
   it := type(i)
   print("type of i is #t" <+ it)
-ready
+ready;
 ```
 
 ## Partial Inference
@@ -485,7 +485,7 @@ begin
   
   ** negative examples
   v := x  ** ERROR: v is Integer 
-ready
+ready;
 ```
 
 A variant is a way to create a generic method.
@@ -499,7 +499,7 @@ process
   i :: x ** intermediate reference
   x :: y ** first  switch
   y :: x ** second switch
-return
+return;
 
 method: main()
   Integer: x, y
@@ -514,7 +514,7 @@ process
   a := 1.5
   b := 2.5
   switch(a, b)
-return
+return;
 ```
 
 ## Single symbol
@@ -567,7 +567,7 @@ process
   expect (str != ref)  ** different locations  
   ** ref remain unmodified
   print (ref)  ** 'First value'
-return
+return;
 ```
 
 **Note:** You can create garbage in EVE if you loose reference to strings.
@@ -679,6 +679,6 @@ begin
   time1 := "23:63" -> T24   
   time2 := "23:63:59,99" -> T24   
   time3 := "11:63:59pm,99ms" -> T12   
-ready
+ready;
 ```
 **Read next:** [Composite Types](composite.md)

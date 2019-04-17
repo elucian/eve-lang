@@ -23,7 +23,7 @@ create
   ... 
 scrap
   <object_dispose_region> 
-return
+return;
 ```
 
 ## Arguments
@@ -38,7 +38,7 @@ begin
   ** create object 
   object_name := class_name(param:value,...)
   ...
-ready
+ready;
 ```
 
 ## Instance _object_
@@ -84,8 +84,8 @@ create
     object := base_class(some_arguments)
   else
     object := base_class(<other_arguments>)
-  ready
-return
+  ready;
+return;
 ```
 
 ## Object Initialization
@@ -108,13 +108,13 @@ process
   else
     ** expected
     print("n and o are not the same") 
-  ready
+  ready;
   ** verify
   expect  (o  = n) ** equivalent  
   expect !(o <> n) ** not divergent
   expect  (o != n) ** not the same
   expect !(o == n) ** not the same 
-return
+return;
 ```
 
 ## Generic Class
@@ -127,7 +127,7 @@ class[Generic_Type]: Generic_Name(parameter:Generic_Type) <: Base_Class
   ** declarations
 create
   ** constructor
-return
+return;
 ```
 
 ## Using Generic Type

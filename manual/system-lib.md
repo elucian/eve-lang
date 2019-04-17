@@ -46,7 +46,7 @@ method: main()
 process  
   s := read(v, "read:")
   print("you entered:" & v)
-return
+return;
 ```
 
 ## Standard write 
@@ -63,7 +63,7 @@ Is user responsibility to make a line break using an escape \n or \r inside the 
 ```
 method: write( String * str )
  ...
-return
+return;
 ```
 
 write sting can contain an escaped end of line character.
@@ -88,7 +88,7 @@ This function send the string to standard write then is also sending an end of l
 ```
 method: print(String * str)
 ...
-return
+return;
 ```
 
 The sting do not have to contain the end of line character. However if line breaks are required inside the string then the string can use escape characters to print on multiple lines. This is unusual for a program but is possible.

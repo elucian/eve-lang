@@ -52,15 +52,15 @@ global
   
 class: name
   ** class_definition
-return
+return;
 
 method: name(params)   
   ** method_definition
-return
+return;
 
 function: name(params) => type
   ** function_definition
-return
+return;
 ******************************************************
 **  Usually after return we use "" to continue        
 **  Last "return" is terminated with "." to end module  
@@ -113,7 +113,7 @@ method: name(parameters)
 process
   ** executable region
   ...
-return
+return;
 ```
 
 ## Method name
@@ -147,7 +147,7 @@ One method can receive multiple arguments of the same type separated by comma in
 ```
 method: main(Array[String]() * args)
   print(args)
-return
+return;
 ```
 
 ## Method scope
@@ -171,7 +171,7 @@ A method block end with keyword return. When method is terminated, program execu
 method: test(Integer: a)
 process
   print (a)
-return
+return;
 
 method: main(List[String]: *args)
   ** number of arguments received:
@@ -181,7 +181,7 @@ process
   exit if c = 0
   
   test(c) ** method call
-return
+return;
 ```
 
 ## Side Effects
@@ -207,7 +207,7 @@ process
   **side effects  
   test := p1 + p2 
   print(test)
-return
+return;
 
 method: main()
 process
@@ -215,7 +215,7 @@ process
   p2 := 20
   add_numbers()   
   expect result = 30  
-return
+return;
 ```
 
 **using output parameters**
@@ -226,7 +226,7 @@ To avoid system and global variables you use output parameters:
 method: add(integer: p1,p2, Integer @ out)
 process
   out := p1+p2
-return
+return;
 
 method: main()
   Integer @ result
@@ -236,7 +236,7 @@ process
   print (result) ** expected value 3
   ** negative test
   add(1,2,4) ** error, "out" parameter require variable argument
-return
+return;
 ```
 
 **Notes:**
@@ -265,7 +265,7 @@ create
   ** constructor region
 scrap
   ** release region
-return
+return;
 ```
 
 ***Read more:** [Classes](classes.md)
@@ -295,7 +295,7 @@ process
   ** statements
   ...
   result := expression
-return
+return;
 ```
 
 **Function call**
@@ -329,14 +329,14 @@ There is a difference between the parameter and the argument. The parameter is a
 function: sum(Integer: a, b) => (Integer: result)
 process
   result := a + b
-return
+return;
   
 method: main() 
   Integer: r
 process  
   r := sum(10,20)  ** function call
   print(r)         ** this will print 30
-return
+return;
 ```
 
 ## Conditionals
@@ -383,7 +383,7 @@ process
   ** using λ expression  
   x  := ( 0 if p1 = 0, 0 if p2 = 0, p1+p2)
   print x ** expect: 3 
-return
+return;
 ```
 
 **example**

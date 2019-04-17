@@ -20,7 +20,7 @@ given
   ** local declarations
 begin
   ** local scope 
-ready
+ready;
 ```
 
 **Notes:** 
@@ -40,7 +40,7 @@ When, can be used in conjunction with {do, else} keywords to create a dual path 
 ```
 when (expression) do
   ** single path
-ready
+ready;
 ```
   
 2.dual path selector
@@ -49,7 +49,7 @@ when (expression) do
    ** true path
 else
    ** false path
-ready
+ready;
 ```
   
 3.nested selector 
@@ -57,8 +57,8 @@ ready
 when (expression) do
   when (expression) do
    ** nested path
-  ready
-ready
+  ready;
+ready;
 ```
 
 4.ladder
@@ -72,7 +72,7 @@ else if (expression) do
    ** third path
 else if (expression) do
    ** last path
-ready
+ready;
 ```
 
 
@@ -96,7 +96,7 @@ quest val
     ** third path
 cover
   ** default path
-ready
+ready;
 ```
 
 **Using list and range**
@@ -119,9 +119,9 @@ process
   cover
     ** other cases
     message := "no match"
-  ready
+  ready;
   print (message) 
-return
+return;
 ```
 
 **notes:**
@@ -157,7 +157,7 @@ cycle
   ...
   stop if (condition)
   ...
-repeat
+repeat;
 ```
 
 **example**
@@ -173,7 +173,7 @@ cycle
   ** conditional termination
   write ',' 
   stop if (a < 0)
-repeat
+repeat;
 ```
 
 **Notes:** 
@@ -232,7 +232,7 @@ while (condition) do
   ...
   stop if (condition)
   ...
-repeat
+repeat;
 ```
 **example**
 
@@ -249,8 +249,8 @@ method: main()
     skip if (element < "c")
     write(element)
     write(',') if (element ≠ "e") 
-  repeat
-return
+  repeat;
+return;
 ```
 > "c","d","e"
 
@@ -276,7 +276,7 @@ given
 scan var <+ Z[min..max] do
   ** block statements;
   ...
-next
+next;
 ```
 
 **Notes:**    
@@ -295,8 +295,8 @@ scan i <+ Z[0..10] do
     ** write only odd numbers
     write(i)  
     write(',') if (i < 10)  
-  ready
-next
+  ready;
+next;
 ```
 > 1,3,5,7,9
 
@@ -342,7 +342,7 @@ other
   other_errors  
 after
   finalization
-ready
+ready;
 ```
 
 **error**
@@ -406,7 +406,7 @@ when (condition) do
   fail
 else
   pass
-ready
+ready;
 
 ** conditional exception
 fail if (condition)
@@ -427,7 +427,7 @@ process
   a := 1 ÷ 0
 recover
   print $error.message
-return
+return;
 ```
 
 ```

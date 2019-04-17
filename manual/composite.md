@@ -50,9 +50,9 @@ process
       message:='last workday'
   other
     message:='middle of the week'
-  ready
+  ready;
   print('Is', message)
-return
+return;
 ```
 **Note** For private enumerations you can use a record type.
 
@@ -63,7 +63,7 @@ when (today <+ [Monday..Friday]) do
    print ("Have a nice day!")
 else
    print ("Have a happy weekend!")  
-ready
+ready;
 ```
 
 **Operators**
@@ -116,7 +116,7 @@ An array  capacity can be established using a parameter and a constructor. All e
 method: test(Integer: n)
 process
   Array: my_array(n)
-return
+return;
 ```
 
 **array inference**
@@ -157,7 +157,7 @@ begin
   m[2] := ['a2','b2','c2']
   m[3] := ['a3','b3','c3']
   print m
-ready
+ready;
 ```
 
 **matrix elements**
@@ -214,7 +214,7 @@ given
 begin
   ** update list using  ":=" 
   c_list := (1,2,3) 
-ready
+ready;
 ```
 
 ## Set
@@ -265,7 +265,7 @@ given
 begin
   second := first ∪ {0,1,2,10} ** set union
   print(second) ** {0,1,2,3,4,5,6,7,8,9,10}
-ready
+ready;
 ```
 
 ### Intersection
@@ -299,7 +299,7 @@ given
    Hash[String, Integer]: dictionary := {}
 begin   
    dictionary := {('one':1), ('two':2)}
-ready
+ready;
 ```
 
 ## Text
@@ -319,7 +319,7 @@ begin
              because it is dressed in overalls 
              and looks like work." 
   print (my_text)
-ready
+ready;
 ```
 
 **Output:**

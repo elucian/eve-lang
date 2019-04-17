@@ -17,11 +17,11 @@ process
   ** scan array and modify element by element    
   scan i <+ [1..m] do
     my_array[i] := i 
-  next
+  next;
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
   print ("This is the last element: {1}"  <+ my_array[?])
-return
+return;
 ```
 
 **console:**
@@ -49,7 +49,7 @@ given
 begin
   M := 100
   print (M)
-ready
+ready;
 ```
 
 ```
@@ -77,7 +77,7 @@ begin
   M[*,1] += 1
   M[*,2] += 2
   print(M) ** [[1,2],[2,3]]
-ready
+ready;
 ```
 
 **Memory impedance**
@@ -108,9 +108,9 @@ process
   scan col <+ [1..3]:     ** traverse columns
     scan row <+ [1..3]:   ** traverse row first
       print(M[row,col])
-    next
-  next
-return
+    next;
+  next;
+return;
 ```
 
 ##  Arrays Slicing
@@ -145,11 +145,11 @@ process
     Integer: i
   scan i <+ b do
     a[i] += 2
-  next 
+  next;
   
   ** first 4 elements of (a) are modified
   print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
-return
+return;
 ```
 
 ### Set builders
@@ -183,7 +183,7 @@ begin
    ** eliminate duplicates using set comprehension
    mew_set := { x : x <+ my_list } 
    print my_set ** {0,1,2} 
-ready
+ready;
 ```
 
 ## Filtering
@@ -197,7 +197,7 @@ given
 begin
    my_set := { x : x <+ my_list, x%2 = 0 } 
    print my_set; ** {0,2,4} 
-ready
+ready;
 ```
 
 ## Mapping
@@ -212,7 +212,7 @@ begin
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
    target := { (x : x^2) : x <+ source } 
-ready
+ready;
 ```
 
 ## List Concatenation
@@ -227,7 +227,7 @@ method: main()
 process
   c := a + b
   print(c)**['a','b','c','1','2','3']
-return
+return;
 ```
 
 ## Join() built-in
@@ -251,7 +251,7 @@ given
 begin
   lst := split("1,2,3",",")
   print lst ** (1,2,3)
-ready  
+ready;
 ```
 
 ### List operations
@@ -309,7 +309,7 @@ scan element <+ collection do
   stop [if <condition>]
   ** statements
   ...
-next
+next;
 ```
 
 
@@ -342,8 +342,8 @@ process
     ** fast forward 
     stop if (element = 'd')    
     write(',')
-  next element;
-return
+  next;
+return;
 ```
 > c,d
 
@@ -375,8 +375,8 @@ process
     Integer: v
   scan (k,v) <+ my_map do
     print('("' + k + '",' + v +')')
-  next
-return
+  next;
+return;
 ```
 Will print:
 ```
@@ -414,8 +414,8 @@ process
     animals['Bear'] := 'dog'
     animals['Kiwi'] := 'bird'
     print(animals)
-  ready  
-return
+  ready;
+return;
 ```
 
 Output:
@@ -440,7 +440,7 @@ process
   animals['Bear'] := "dog"
   animals['Kiwi'] := "bird"
   print(animals)
-return
+return;
 ```
 output:
 ```
@@ -464,7 +464,7 @@ begin
   ** set string value using different operators
   str := "this "&" string"   ** "this  string"
   str := "this "+" string"   ** "this string"
-ready
+ready;
 ```
 
 **path concatenation**
@@ -523,7 +523,7 @@ method: main()
 process  
   ** using format function
   print(template.format(my_map)) 
-return
+return;
 ```
 
 Expect output:
@@ -538,7 +538,7 @@ method: main()
   List: my_list    := ("test","works!")
 process  
   print (template <+ my_set)
-return
+return;
 ```
 
 Expect Output:

@@ -32,7 +32,7 @@ There are two alternative statements to create user defined exceptions.
 ** raise exception
 when condition do
   raise (code,"message")
-ready
+ready;
 
 ** conditional 
 raise (code,"message") if (condition)
@@ -47,7 +47,7 @@ when (condition) do
   fail
 else
   pass
-ready
+ready;
 
 ** conditional exception
 fail if condition;
@@ -68,7 +68,7 @@ process
   a := 1 / 0  
 recover
   print ($error.message)
-return
+return;
 ```
 
 ```
@@ -83,7 +83,7 @@ Most exceptions are recoverable except the exception created by panic statement.
 ```
 when (condition) do
   panic
-ready
+ready;
 ```
 
 ## Assert

@@ -13,6 +13,7 @@ These concepts are common to any computer language in Algol family.
 * [variables](#variables)
 * [identifiers](#identifiers)
 * [expressions](#expressions)
+* [statements](#statements)
 
 ## Punctuation
 
@@ -218,11 +219,20 @@ print ** expect 1234
 * to avoid new line you can use "write" statement instead of "print"
 * multiple expressions or arguments are separated by comma
 
-## Multiple statements
+## Statements
 
-You can have multiple statements on one line separated using ";"
+One statement can be declarative or imperative. 
+
+* A statement is usually a line of code source terminated with new line
+* Sometimes a statement extend on several lines
+* Sometimes multiple statements are in the same line, separated by ";"
+* A group of several statements is called a block of code
+* A block of code usually is terminated by one final keyword and ";"
+* The final keyword is different for different statements;
 
 **examples**
+
+The most simple block statement start with "begin" and end with "ready;"
 ```
 given
   ** integer numbers
@@ -230,8 +240,10 @@ given
 begin  
   print  (a, b)  
   expect (a = 0, b = 1.5)
-ready
+ready;
 ```
+
+**Note:** last statement in a program is ending with "." instead of ";"
 
 ## Multiple lines
 
@@ -260,7 +272,7 @@ begin
          [3,4],
          [5,6]
        ]       
-ready  
+ready;
 ```
 
 **Read next:** [Structure.md](structure.md)
