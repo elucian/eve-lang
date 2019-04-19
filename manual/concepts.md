@@ -50,7 +50,7 @@ print ** end of line comment is enabled
 * Nested comments are supported for multi-line comments;
 
 ## Directives
-Directives are module properties that are communicated to the compiler. Directives represent module meta-data. One module can have multiple directives usually at beginning of the module. Directives start with "#" and are used by the compiler to establish different behaviors. 
+Directives are script properties that are communicated to the compiler. Directives represent script meta-data. One script can have multiple directives usually at beginning of the script. Directives start with "#" and are used by the compiler to establish different behaviors. 
 
 **examples**
 ```
@@ -60,15 +60,15 @@ Directives are module properties that are communicated to the compiler. Directiv
 #print:variable
 ```
 
-## Modules
+## Scripts
 
-EVE is a modular system based on modules. Every module is a script that can be parsed in memory. After this module methods can be executed. User can decide what module will be parsed and executed first by using configuration files or console commands. 
+EVE is a modular system based on Scripts. Every script is a script that can be parsed in memory. After this script methods can be executed. User can decide what script will be parsed and executed first by using configuration files or console commands. 
 
 **properties**
 
-* a module can be imported in other modules using "import";
-* a module can call methods and use other members from other modules;
-* a module that do not contain method main() is called library;
+* a script can be imported in other Scripts using "import";
+* a script can call methods and use other members from other Scripts;
+* a script that do not contain method main() is called library;
 
 A _library_ is a reusable component. It contains mostly public members: 
 
@@ -79,11 +79,11 @@ A _library_ is a reusable component. It contains mostly public members:
 * circular import is possible but we protect against infinite recursion
 * a library usually do not import itself, this is an error
 
-A _module_ is a executable script. It contains mostly private members:
+A _script_ is a executable script. It contains mostly private members:
 
-* main method from a module is usually public;
+* main method from a script is usually public;
 * public methods are exported using "export" region;
-* export region is last region in a module;
+* export region is last region in a script;
 
 ## Keywords
 

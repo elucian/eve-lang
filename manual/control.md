@@ -1,13 +1,13 @@
 ## Control Flow
 
-EVE has a versatile set of control statements:
+This is a set of block statements: 
 
 * [given](#given)
 * [when](#when)
 * [quest](#quest)
 * [cycle](#cycle)
 * [while](#while)
-* [scan](#scan)
+* [visit](#visit)
 * [trial](#trial)
 
 ## Given
@@ -19,19 +19,18 @@ Given, establish a new declaration region for a block statement.
 given
   ** local declarations
 begin
-  ** local scope 
+  ** local statements
 ready;
 ```
 
 **Notes:** 
 
-* given is optional region for <block>
-* block is { when, quest, cycle, while, scan, trial }
-* one blocks is ending with keywords: { ready \| repeat}
+* keyword _given_ start a local scope for any block statement
+* one blocks is ending with keywords: { ready \| repeat \| next}
 
 ## When
 
-When, can be used in conjunction with {do, else} keywords to create a dual path fork based on logic expressions;
+This keyword in conjunction with {do, else} declare a multi-path block selector;
 
 
 **patterns**
@@ -75,10 +74,9 @@ else if (expression) do
 ready;
 ```
 
-
 ## Quest
 
-The quest is a multi-path value based selector. It is used in conjunction with { "if" and "cover" }
+The quest is a multi-path value based selector. It is used in conjunction with { "if" and "other" }
 
 **syntax:**
 
@@ -92,9 +90,9 @@ quest val
   if (val = constant2) do
     ** second path
     ...
-  if (val ? val_list)  do
+  if (val <: value_list)  do
     ** third path
-cover
+other
   ** default path
 ready;
 ```
@@ -104,19 +102,19 @@ It is possible to use more then one value using a list, range or collection.
 
 **Example:**
 ```
-method: test(Integer: p:=0) 
+method test(Integer: p:=0) 
   String: message := ""
 process 
   given 
     Integer: v := p + 4
   quest v
-    if v ? (1,2,3) do
+    if v <: (1,2,3) do
       message := "first match"
-    if v ? [1..8]  do
+    if v <: [1..8]  do
       message := "second match"
-    if v ? [5..10] do
+    if v <: [5..10] do
       message := "third match"      
-  cover
+  other
     ** other cases
     message := "no match"
   ready;
@@ -144,7 +142,7 @@ given
 cycle
   ** repeating block
   ...
-repeat if (condition)
+repeat if (condition);
 ```
 
 **interruptions**
@@ -189,16 +187,16 @@ Nested cycles can be labeled
 
 ```
 ** label 2 nested cycles 
-cycle: outer
+cycle
   ** outer cycle
-  cycle: inner
+  cycle
     ** skip both cycles
-    skip outer if (condition)
+    skip all if (condition)
     ...    
     ** stop both cycles
-    stop outer if (condition)    
-  repeat  
-repeat  
+    stop all if (condition)    
+  repeat;
+repeat;
 ```
 
 **example**
@@ -213,7 +211,7 @@ cycle
   write "{1}:{2}" <+ (x,a)
   x -= 1
   write ','
-repeat if (x < 5)
+repeat if (x < 5);
 
 print ** 9:1, 8:0, 7:1, 6:0, 5:1,
 ```
@@ -326,16 +324,16 @@ given
   ** declaration
 trial
   ** initialization
-  case: name_1 do
+  case name_1 do
     abort if (condition)
-  case: name_2 do
+  case name_2 do
     retry name_1 if (condition)
-  case: name_3 do
+  case name_3 do
     solve name_4 if (condition)
   ...    
-error: code1
+error code1
   patch_statement
-error: code2
+error code2
   patch_statement  
 ...  
 other
@@ -374,7 +372,7 @@ define
                          Integer: code, 
                          String:  message, 
                          String:  section_name, 
-                         String:  module_name, 
+                         String:  script_name, 
                          String:  line_number  
                         )
 ** global variable for holding current error

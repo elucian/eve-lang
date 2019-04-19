@@ -66,7 +66,7 @@ define
 **Notes:**
 
 * Users can define new types as subset or group of basic types;
-* A module can _import_ defined types or from other modules;
+* A script can _import_ defined types or from other Scripts;
 * A data type is declared in a _define_ region;
 
 **Example:**
@@ -248,11 +248,11 @@ ready;
 ```
 
 **Note:** 
- Build-in functions that are located in EVE "default" module:
+ Build-in functions that are located in EVE "default" script:
  
  { parse(), format(), ceiling(), floor() round()}
  
- This module is one of the standard modules that are automatically included in any EVE program. 
+ This script is one of the standard Scripts that are automatically included in any EVE program. 
 
 
 ## Type inference

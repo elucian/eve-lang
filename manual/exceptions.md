@@ -10,7 +10,7 @@ define
            Integer: code 
           ,String : message 
           ,String : section_name 
-          ,String : module_name 
+          ,String : script_name 
           ,String : line_number  
          ]
 ** global variable for holding current error
@@ -50,7 +50,7 @@ else
 ready;
 
 ** conditional exception
-fail if condition;
+fail if (condition)
 ```
 
 ## Exception handling
@@ -90,7 +90,7 @@ ready;
 
 The assert statement is very simple. It check a condition and raise an assert error if condition is false. Does not produce any error message but: "Assert error in line x".
 ```
-  assert condition;
+  assert (condition);
 ```
 
 ## Expect

@@ -20,7 +20,7 @@ process
   next;
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
-  print ("This is the last element: {1}"  <+ my_array[?])
+  print ("This is the last element: {1}"  <+ my_array[m])
 return;
 ```
 
@@ -312,11 +312,9 @@ scan element <+ collection do
 next;
 ```
 
-
-
 ### Iterator element
 
-The "element" is local to iteration and is used a control variable. The type of the "element" is must match collection member type.
+The "element" is local to iteration and is used as control variable.
 
 ### Early termination
 The iteration stops normally when all elements from collection have been visited.
@@ -488,14 +486,14 @@ We use hash "#" to create a placeholder into a Text. We use "<+" operator to rep
 
 #s  := sub-string placeholder   
 #n  := integer or real number   
-#u  := Unicode placeholder: example "≠" is 'U+2260'
+#u  := Unicode placeholder: example "≠" is U+2260
 #{} := Hash key placeholder 
 #[] := Array placeholder    
 
 ```
 print ("number #n" <+ 10)
 print ("strings #s and #s" <+ ('10','even'))
-print ("unicode #u" <+ 'U+2260')
+print ("unicode #u" <+ U+2260)
 ```
 **Expected output:**
 ```

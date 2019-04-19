@@ -1,12 +1,12 @@
 ## ΞVΞ Structure
 
-EVE is modular language. Scripts are files with extension *.eve stored on a server in project folders. The main folder contains one or more master modules. Each represents an application entry point and can be executed in a separated session. 
+EVE is scripting language. Scripts are files with extension *.eve stored on a server in project folders. The main folder contains one or more master scripts. Each represents an application entry point and can be executed in a separated session.
 
 **Bookmarks:**
 
 Next bookmarks will lead you to the main concepts required to understand EVE program structure.
 
-* [Modules](#modules)
+* [Scripts](#Scripts)
 * [Regions](#regions)
 * [Classes](#classes)
 * [Methods](#methods)
@@ -18,37 +18,43 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Expressions](#expressions)
 * [Server](#server)
 * [Execution](#drivers)
-## Modules
 
-Modules are source code files having extension: *.eve. Module names starts with lowercase letter can contain underscore and digits but no special characters. Longer names that use several words will separate with underscore. The module name can be 64 characters long.
+## Scripts
+
+Scripts are source code files having extension: *.eve. script names starts with lowercase letter can contain underscore and digits but no special characters. Longer names that use several words will separate with underscore. The script name can be 64 characters long.
 
 ## Regions
-Each module is divided into regions. Each region is identified by one of these keywords:
+Each script is divided into regions. Each region is identified by one of these keywords:
 
 {import, define, global, class, method} 
 
 **members**
-Members of each region are indented two spaces from left side. A region terminate with region name follow by semi column. Regions can be repeated but can not be nested.
+Members belonging to a region are indented two spaces from left side. A region terminate when other region starts or indentation is changed. Regions can be repeated but can not be nested.
 
 **syntax**
 ```
 ************************************************
-**   First line of a module can be a comment  **
+**   First line of a script can be a comment  **
 ************************************************
-#directive
+** system region has zero indentation
+** system region contains directives and system variables
 #directive
 ...
-$ystem_variable
-...
+
+** define global constants
+$system_variable  := value/expression
+$system_constant := value/expression
+
 import
-  import_region
+  ** import_region
 
 ## head comment
 define
-  ** static
-  ** type
+  ** type declarations 
+
+## global variables
 global
-  ** public variables
+  ** variable declaration
   
 class: name
   ** class_definition
@@ -60,38 +66,36 @@ return;
 
 function: name(params) => type
   ** function_definition
-return;
-******************************************************
-**  Usually after return we use "" to continue        
-**  Last "return" is terminated with "." to end module  
-******************************************************* 
+return.
+## footer comment
 ```
 
 ## Declaration order
-Order of regions is important. You can not use members before they are defined. Directives are usually on top follow by globals then other regions can be interlaced.
+Order of regions is important. You can not use members before they are defined. Directives are usually on top follow by system declarations then import and then type declarations and globals. Last we declare in random order several other members: {functions, methods, classes}
+
 
 ## System variables
-System variable start with prefix "$" and are global variables. System variables are defined in EVE core library. Programmers can use system variables to find modules. Before define and import keyword there is a region where user can define new system variables. 
+System variable start with prefix "$" and are global variables. System variables are defined in EVE core library. Programmers can use system variables to find Scripts. Before define and import keyword there is a region where user can define new system variables. 
 
 ## Import region
-Is used to include one or several modules separated by comma. Import region contains also _"from"_ clause. This is used to indicate what members we will use without the qualifier. If we do not specify than all members can be accessed only by dot notation: alias.member;
+Is used to include one or several scripts separated by comma. Import region contains also _"from"_ clause. This is used to indicate what members we will use without the qualifier. If we do not specify than script members can be accessed only by dot notation: qualifier.member;
 
 **syntax**
 ```
 import 
-  alias: alias_name := $PATH_VARIABLE.relative_path.library_name 
+  qualifier := $PATH/relative_path/script_name.eve 
   ...
-  from alias_name use all 
-  from alias_name use member_name,...
+  from qualifier use all 
+  from qualifier use member_name,...
   ...
 
 ```
 **location**
-The compiler search modules in local library first then in module folder then in EVE standard library then in path $LEV_PATH. Finally if file is not found the program fail to compile. We can specify the relative path before module name in the import region using "." to separate folder names.  
+The compiler search scripts in local library first then in script folder then in EVE standard library then in path $EVE_PATH. Finally if file is not found the program fail to compile. We can specify the relative path before script name in the import region using "/" to separate folder names.  
 
 **Note:** 
 
-* Only a #library or #module can be imported not a #driver
+* Only a #library or #script can be imported not a #driver
 * A #driver can be executed but can not be imported
 
 ## Define Region
@@ -101,12 +105,17 @@ This region is for declaration of global "members".
 * variable  ::=  type : identifier := value;
 * reference ::=  type @ identifier := value;
 
-Global members are visible in current module and modules that imports it. 
+Global members are visible in current script and Scripts that imports it. 
 
 ## Methods
 
-A method is a subroutine that can receive input/output parameters and have side-effects.
+A method is a named block of code.
 
+* it can define input/output parameters;
+* can have local defined variables;
+* is terminated with statement return;
+
+**prototype**
 ```
 method: name(parameters)
   ** declaration region
@@ -120,7 +129,7 @@ return;
 A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
 
 ## Main method
-If the module is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the module is a library module and can be imported in other modules but can not be executed.
+If the script is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the script is a library and can be imported in other scripts but can not be executed using run command.
 
 ## Parameters
 Parameters are defined in round brackets () separated by comma. Each parameter must have a name and a type. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
@@ -139,9 +148,9 @@ Parameters are defined in round brackets () separated by comma. Each parameter m
 
 One method can receive multiple arguments of the same type separated by comma into one parameter.
 
-* The variadic parameter name start with "*" prefix. 
-* The surplus of arguments are captured into last parameter named: "*args". 
-* We can use any name instead of "args" but this is the default name. 
+* The variadic parameter name are declared using "*" instead of ":". 
+* The surplus of arguments are captured into last parameter named: "args". 
+* We can use any name instead of "args" but this is the usual name.
 
 **example**
 ```
@@ -150,27 +159,30 @@ method: main(Array[String]() * args)
 return;
 ```
 
-## Method scope
+## Method context
 
-Every method can define local variables, constants or functions. This is called local scope. Members defined in local scope are short leaving and are removed once the method is resolved. In this scope a method can implement attributes using "@" prefix. Attributes are factor properties of the method. 
+Every method can define local variables. Members defined in local context are short leaving and are removed once the method is resolved. In this context a method can implement attributes using "." prefix. Attributes are properties of the method and can be accessed after method execution. 
 
 ## Method Execution
-To execute an method you use keyword "solve" then method name followed by arguments. Arguments are enclosed in round parentheses separated by comma.  If an method do not have parameters or it have one single parameter the empty list () after the method name is not required.
+To execute an method you use method name followed by arguments. Arguments are enclosed in round parentheses separated by comma like a list. If an method do not have parameters or it have one single parameter the empty list () after the method name is not required to execute method.
 
 **method call**
 ```
+  method_name  
+  method_name;
   method_name () 
   method_name (argument_list)
 ```
 
 ## Method termination
-A method block end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword "exit" or "panic" can terminate a method early. 
+A method block end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keywords "exit", "fail" or "panic" can terminate a method early. 
 
 **Example:**
 ```
 method: test(Integer: a)
 process
-  print (a)
+  ** print is a system method
+  print a 
 return;
 
 method: main(List[String]: *args)
@@ -180,16 +192,17 @@ process
   ** verify condition and exit
   exit if c = 0
   
-  test(c) ** method call
+  test (c) ** method call
 return;
 ```
 
 ## Side Effects
-* A method have access to global variables;
-* A method can open and write into a file;
-* A method can print a message or accept input from console;
-* If we modify global variables, this is a side-effect;
-* A good practice is to use parameters no side-effects;
+
+We have mention side-effects that are:
+
+* A method who modify a global variable;
+* A method who open and write into a file;
+* A method who print a message or accept input from console;
 
 **using side-effects**
 
@@ -269,18 +282,6 @@ return;
 ```
 
 ***Read more:** [Classes](classes.md)
-
-## Control 
-
-EVE uses _control statements_ to describe a blocks of code that are controlled by conditional expressions. A control statement has a local scope defined with keyword "given". Usually in this scope we declare one or more control variables.
-
-
- statement | path/blocks | description
------------|-------------|---------------------------
- when      | double-path | decision splitter
- quest     | multi-path  | value based selector 
- while     | repetitive  | conditional repetition
- trial     | nulti-block | trial / error multi case
 
 **Read next:** [control.md](control.md)
 
@@ -412,30 +413,29 @@ To execute a program or application there are 2 methods:
 1. Using the command line with parameters
 2. Using console command line with commands
 
-eve:> run driver_name
+eve:> run script_name
 
-Only driver files and modules can be executed. Library files must be imported. You can executed a module from a driver or from another module. When you execute a module the _main_ method is executed. This is the only public method of a module. If a module do not have the _main_ method then it must be a #library.
 
 **notes**
-
-* You can use _alias_ to create an alias for module name before you run it. 
-* You can use _from_  to import public members from a library and avoid dot notation.
-
+* You can executed script methods from another script
+* Only scripts that have main() method can be executed 
+* You can use _alias_ to create an alias for script name before you run it 
+* You can use _from_  to import public members from a library and avoid dot notation
 
 **Example:**
 ```
 #driver "test"
 
 import 
-   alias: my_lib    := $pro_lib/my_lib.eve
-   alias: my_module := $pro_mod/my_module   
+   my_lib    := $pro_lib/my_lib.eve
+   my_script := $pro_mod/my_script   
    
    from: my_lib use all
 
-** you can run a module with arguments
+** you can run a script with arguments
 method main()
 process
-  run my_module(arguments)
+  run my_script(arguments)
 method
 ```
 

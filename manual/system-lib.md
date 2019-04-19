@@ -97,6 +97,3 @@ The sting do not have to contain the end of line character. However if line brea
 \n is LF 
 \r is CR+LF
 ```
-
-## Usability
-Print() support only strings. It can not print anything else. Therefore user must cast a variable into a string before printing.

@@ -50,7 +50,7 @@ In EVE we use English keywords with no abbreviations.
 | use      | enumerate members to be used in current name-space
 | all      | specify "all" members to be used in current name-space
 | from     | used to bring members into current name-space
-| alias    | usend in import region to give alias to a module
+| alias    | usend in import region to give alias to a script
 | else     | alternative path for when statement 
 | cover    | used for switch sections to declare default branch
 | case     | multi-case trial regions
