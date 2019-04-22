@@ -34,11 +34,11 @@ A class can have parameters used for object initialization declared in "receive"
 given
   ** declare object
   class_name: object_name
-begin
+do
   ** create object 
   object_name := class_name(param:value,...)
   ...
-ready;
+done;
 ```
 
 ## Instance _object_
@@ -84,7 +84,7 @@ create
     object := base_class(some_arguments)
   else
     object := base_class(<other_arguments>)
-  ready;
+  done;
 return;
 ```
 
@@ -108,7 +108,7 @@ process
   else
     ** expected
     print("n and o are not the same") 
-  ready;
+  done;
   ** verify
   expect  (o  = n) ** equivalent  
   expect !(o <> n) ** not divergent

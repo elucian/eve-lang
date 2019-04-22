@@ -13,11 +13,12 @@ method: test_array()
 process  
   given
     Integer: m := my_array.capacity()
-    Integer: i
+    Integer: i := 1
   ** scan array and modify element by element    
-  scan i <+ [1..m] do
-    my_array[i] := i 
-  next;
+  while i < m do
+    my_array[i] := i     
+    i += 1
+  repeat;
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
   print ("This is the last element: {1}"  <+ my_array[m])
@@ -46,10 +47,10 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ** initialize all elements with 100
 given
   Matrix[Integer](2,2): M
-begin
-  M := 100
+do
+  M[*] := 100
   print (M)
-ready;
+done;
 ```
 
 ```
@@ -62,8 +63,8 @@ ready;
 ```
 given
   Matrix[Integer](2,2):M
-begin
-  M := 100
+do
+  M[*] := 100
   ** modify all elements
   M[*] += 10 
   print(M) ** [[110,110],[110,110]]
@@ -77,7 +78,7 @@ begin
   M[*,1] += 1
   M[*,2] += 2
   print(M) ** [[1,2],[2,3]]
-ready;
+done;
 ```
 
 **Memory impedance**
@@ -103,13 +104,14 @@ process
         ⎢'a1','b1','c1'⎥
         ⎣'a2','b2','c2'⎦        
   given
-    Integer: col
-    Integer: row
-  scan col <+ [1..3]:     ** traverse columns
-    scan row <+ [1..3]:   ** traverse row first
-      print(M[row,col])
-    next;
-  next;
+    Integer: row, col := 1
+  while col <= 3 do     ** traverse columns
+    while row <= 3 do   ** traverse row first
+      print M[row,col]
+      row += 1
+    repeat;
+    col += 1
+  repeat;
 return;
 ```
 
@@ -134,18 +136,14 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 ```
 method: main() 
   Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9]
-  Array[Integer: ]: b :: a[1..4]
+  Array[Integer: ]: b :: a[1..4] ** slice reference
 process
   print(a[1..?])   ** will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1])   ** will print [0]
   print(a[1..4])   ** will print [1,2,3]
  
-  ** create b as slice reference from a
-  given
-    Integer: i
-  scan i <+ b do
-    a[i] += 2
-  next;
+  ** modify slice b (reference to a)
+  b[*] += 2
   
   ** first 4 elements of (a) are modified
   print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
@@ -157,16 +155,16 @@ return;
 You can define elements of a subset from a set using the following construction:
 ```
 given
-   Set: sub_set := { var : var <+ set_name AND filter_expression}
+   Set: sub_set := { var : var in set_name & filter_expression}
 ```
 
-Symbol "|" is the filter operator and is derived from mathematics. 
-We can use \<var> to create the \<filter_expression>.
+Symbol ":" is the filter operator. 
+We can use _var_ to create the _filter_expression_.
 
 Example of a new set defined from a range:
 
 ```
-  new_set := { x : x <+ [-10..10] }
+  new_set := { x : x in [-10..10] }
 ```
 
 ## Collection Casting
@@ -179,11 +177,11 @@ Collection members can be copy into the new collection using a comprehension not
 given
    List: source  := [0,1,2,2,2,2]
    Set : new_set := {}
-begin
+do
    ** eliminate duplicates using set comprehension
-   mew_set := { x : x <+ my_list } 
+   mew_set := { x : x in my_list } 
    print my_set ** {0,1,2} 
-ready;
+done;
 ```
 
 ## Filtering
@@ -194,10 +192,10 @@ Build notation can use expressions to filter out elements during comprehension o
 given
    List: my_list := [0,1,2,3,4,5]
    Set:  my_set  := {}
-begin
-   my_set := { x : x <+ my_list, x%2 = 0 } 
+do
+   my_set := { x : x in my_list & (x % 2 = 0) } 
    print my_set; ** {0,2,4} 
-ready;
+done;
 ```
 
 ## Mapping
@@ -208,11 +206,11 @@ The elements in one set or list can be transformed by a function or expression t
 given
    Set:  source := {0,1,2,3,4,5}
    Hash: target := {}
-begin
+do
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x : x^2) : x <+ source } 
-ready;
+   target := { (x:x^2): x in source } 
+done;
 ```
 
 ## List Concatenation
@@ -236,10 +234,10 @@ The join function receive a list and convert elements into a string separated be
 ```
 given
   String: str
-begin
+do
   str := join([1,2,3],",")
   print (str) ** "1,2,3"
-ready  
+done;  
 ```
 
 ### Split built-in
@@ -248,10 +246,10 @@ The join function receive a list and convert elements into a string separated be
 ```
 given
   List[Integer: ]: lst := ()
-begin
+do
   lst := split("1,2,3",",")
   print lst ** (1,2,3)
-ready;
+done;
 ```
 
 ### List operations
@@ -288,8 +286,8 @@ Following other functions should be available
 ### Special attributes
 A list has properties that can be used in logical expressions:
 
-* <list>.empty()  ** True or False
-* <list>.full()   ** True or False
+* list.empty()  ** True or False
+* list.full()   ** True or False
 
 
 ## Iteration
@@ -299,17 +297,12 @@ A special _while loop_ that is executed for each element belonging to a collecti
 **template**
 ```
 given
-  type_name: element
-scan element <+ collection do
-  ** statements;
-    ...
-  skip [if <condition>]
-  ** statements
-   ...
-  stop [if <condition>]
+  type_name: element := collection.first()
+while element is not Null do
   ** statements
   ...
-next;
+  element := collection.next(element)
+repeat;
 ```
 
 ### Iterator element
@@ -317,50 +310,48 @@ next;
 The "element" is local to iteration and is used as control variable.
 
 ### Early termination
-The iteration stops normally when all elements from collection have been visited.
-It is possible to change this using shortcuts or fast forward.
-
-* skip - will continue from beginning of block
-* stop - will continue after the block end
+It is possible to change this using stop keyword. 
 
 **Program Example**
 
 ```
---example of collection iteration
+** example of collection iteration
 method: main()
   List[Symbol] my_list := ['a','b','c','d','e'] 
 process  
   given
-    Symbol: element
-  scan element <+ my_list:
-    ** continue shortcut
-    skip if element < 'c'
+    Symbol: element := my_list[1]
+    Integer: x := 1
+  while True
     write(element)
- 
-    ** fast forward 
-    stop if (element = 'd')    
-    write(',')
-  next;
+    if (element = 'd') do
+       stop ** early termination
+    else
+       write(',')           
+    done;
+    element := my_list[x++]
+  repeat;
 return;
 ```
 > c,d
 
-## Scan able collections
-All collections have some common methods that are available to traverse the collection elements. Scan enable collections have a current element, first and last element and capacity or length. 
+## Visit items
+
+Collections have common methods that enable traversal using a visitor. 
 
 {List, Hash, Set} 
 
 **built-in:**
 
-* length     - retrieve the number of elements 
-* capacity   - retrieve the maximum capacity or 0
-* next       - position cursor to next element 
-* first      - reference to first element
-* last       - reference to last element
-
+* count      - retrieve the number of elements 
+* capacity   - retrieve the maximum capacity
+* next       - position next element 
+* first      - position to first element
+* last       - position to last element
+* this       - reference to current element
 
 ## Set Iteration
-Map and set are similar collections and both can be used for iteration:
+Map and set are similar. We can visit all elements:
 
 **Example:**
 ```
@@ -369,11 +360,11 @@ method: main()
 process  
   ** print pairs (key:value)
   given
-    String: k
-    Integer: v
-  scan (k,v) <+ my_map do
-    print('("' + k + '",' + v +')')
-  next;
+    String: key
+    Integer: value
+  visit (key, value) in my_map do
+    print('("' + key + '",' + value +')');
+  repeat;
 return;
 ```
 Will print:
@@ -394,11 +385,11 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 given
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')}
   Integer: my_key := 3
-begin if (my_key <+ my_map)
+if (my_key in my_map) do
   print('True') ** expected
 else
   print('False')
-ready   
+done
 ```
 
 **example**
@@ -408,11 +399,11 @@ method: main()
 process
   given
     Hash(String, String): animals := {}
-  begin
+  do
     animals['Bear'] := 'dog'
     animals['Kiwi'] := 'bird'
     print(animals)
-  ready;
+  done;
 return;
 ```
 
@@ -458,11 +449,11 @@ Strings can be concatenated using:
 ** this is example of string concatenation
 given
   String: str := "" 
-begin
+do
   ** set string value using different operators
   str := "this "&" string"   ** "this  string"
   str := "this "+" string"   ** "this string"
-ready;
+done;
 ```
 
 **path concatenation**
@@ -471,10 +462,10 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 ```
 given
   String: s := ""
-begin  
+do  
   s := 'te/' / '/st' ** "te/st" ** Linux
   s := 'te/' / '/st' ** "te\st" ** Windows
-ready  
+done;
 ```
 
 ## Text concatenation

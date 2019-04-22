@@ -340,39 +340,32 @@ process
 return;
 ```
 
-## Conditionals
+## Ternary operator
 
-A condition is using an expression that can have values T or F.   
+A ternary operator is "?". Can be used with conditional expressions to return one value or other.   
 **syntax**
 ```
-  statement if (condition)
+  value ? (condition) : value
 ```
 
 **example**
 ```
-print "True"  if  True;  ** this will print True
-print "False" if !False;  ** this will print False
-
+print ("True" ? True)
 ```
 
-**restriction:** 
+## λ expressions
 
-* can not be used in conjunction with region keywords
-* can not be used in conjunction with declarations
-
-## Expressions
-
-An λ expression can have multiple conditionals named nodes. 
+An λ expression we can use multiple conditionals nodes separated by comma:
 
 **syntax:**
 ```
-  identifier := (value if condition,...default_value)
+  identifier := (value ? condition,...:default_value)
 ```
 
 **nodes**
-* each node is evaluated until one return a value
+* each node is evaluated until one is true
 * each node can return one single value
-* the last node do not use a condition
+* the last node do not use a condition but ":"
 
 **example**
 ```
@@ -382,7 +375,7 @@ process
   p1 := 2
   p2 := 1
   ** using λ expression  
-  x  := ( 0 if p1 = 0, 0 if p2 = 0, p1+p2)
+  x  := ( 0 ? p1 = 0, 0 ? p2 = 0: p1+p2)
   print x ** expect: 3 
 return;
 ```
@@ -392,10 +385,10 @@ return;
 given
   Logic:   b := F
   Integer: v := 0   
-begin
-  v := (1 if b, 2)   
+do
+  v := (1 ? b : 2)   
   print v ** expect 2  
-ready  
+done; 
 ```
 
 ## Server

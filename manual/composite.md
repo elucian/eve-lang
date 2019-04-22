@@ -50,7 +50,7 @@ process
       message:='last workday'
   other
     message:='middle of the week'
-  ready;
+  done;
   print('Is', message)
 return;
 ```
@@ -63,7 +63,7 @@ when (today <+ [Monday..Friday]) do
    print ("Have a nice day!")
 else
    print ("Have a happy weekend!")  
-ready;
+done;
 ```
 
 **Operators**
@@ -73,10 +73,10 @@ Ordinal is a ordered set of Natural:numbers identified by a name. Ordinal is a d
 ** using type Day declared before
 given
   Day: v := Friday
-begin
+do
   v += 1 
   expect v = Saturday
-ready  
+done;
 ```
 
 ## Array
@@ -152,12 +152,12 @@ global
 **  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
   Matrix[String(2)](3,3): m := '__'
-begin
+do
   m[1] := ['a1','b1','c1']
   m[2] := ['a2','b2','c2']
   m[3] := ['a3','b3','c3']
   print m
-ready;
+done;
 ```
 
 **matrix elements**
@@ -211,10 +211,10 @@ Literals can be used in expressions:
 given
   ** define empty list if native types
   List[integer]: c_list := () 
-begin
+do
   ** update list using  ":=" 
   c_list := (1,2,3) 
-ready;
+done;
 ```
 
 ## Set
@@ -262,10 +262,10 @@ Union operator ∪ combine two sets.
 given
   Set: first := {0,1,2,3,4,5,6,7,8,9}
   Set[Integer]: second := {}
-begin
+do
   second := first | {0,1,2,10} ** set union
   print(second) ** {0,1,2,3,4,5,6,7,8,9,10}
-ready;
+done;
 ```
 
 ### Intersection
@@ -274,10 +274,10 @@ Intersect operator ∩ find common elements:
 ```
 given
   Set: test := {}
-begin
+do
   test := {1,2,3,4} ∩ {3,4,5} 
   print test ** {3,4}
-ready  
+done;
 ```
 
 ## Hash
@@ -299,7 +299,7 @@ given
    Hash[String, Integer]: dictionary := {}
 begin   
    dictionary := {('one':1), ('two':2)}
-ready;
+done;
 ```
 
 ## Text
@@ -314,12 +314,12 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ** declaration example of a text literal
 given
   Text: my_text := ""
-begin
+do
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
              and looks like work." 
   print (my_text)
-ready;
+done;
 ```
 
 **Output:**
@@ -340,9 +340,9 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 ```
 given
   Text: us := "I can write Greek: \αβγδ\."
-begin
+do
   print (us)   
-ready   
+done;
 ```
 > I can write Greek: "αβγδ".
 

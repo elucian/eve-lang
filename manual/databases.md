@@ -151,7 +151,7 @@ process
   with catalog[1] do
     name := "Ispas Inca"
     age  := "17" 
-  ready;
+  done;
   
   print("#s is single." <+ catalog[1].name)
 return;
@@ -183,10 +183,10 @@ We can use keyword Record to define a variable of type record with unknown struc
 ```
 given
   Record: person
-begin
+do
   ** differed structure
   person:= (name:"John", age:21)
-ready;
+done;
 ```
 
 ## Tables
@@ -221,7 +221,7 @@ scan current_record <+ table_name do
   with current_record do
     ** use current_record fields
     ... 
-  ready 
+  done;
 repeat;
 
 ```
@@ -244,7 +244,7 @@ scan current_record <+ db.table_name do
   with (current_record, source_record) do
      current_field := source_field
      ...
-  ready;
+  done;
   ** update single row
   current_table.update()
 repeat;
@@ -374,7 +374,7 @@ given
 scan current_record  <+ Cursor_Type(arguments) do
   with record_name do
      ... ** use record fields
-  ready;
+  done;
 next;
 print $cursor.fetched;
 ```

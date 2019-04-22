@@ -188,12 +188,12 @@ String -> Real ->  Natural:-> Integer
 given
   Integer: a := 2
   Real:    b := 1.5 
-begin
+do
   b := a ** this implicit cast is possible b = 2.0
   b := a + 3.5 ** add 3.5 then assign result to b = 5.5
   a := b       ** error: can not assign Real: to Integer
   a := 1.5     ** error: can not assign Real: to Integer
-ready;
+done;
 ```
 
 ## Explicit coercion
@@ -204,7 +204,7 @@ Examples of explicit coercion:
 given
   Integer: a := 0
   Real:    b := 1.5
-begin
+do
   ** explicit coercion lose (0.5)
   a := floor(b)
   print(a) ** will print: 1
@@ -216,7 +216,7 @@ begin
   ** explicit coercion rounding:  
   a := round(b) 
   print(a) ** will print: 2
-ready;
+done;
 ```
 
 **Number to a string**
@@ -227,7 +227,7 @@ given
   Integer: v := 1000
 begin  
   s := format(v) ** explicit coercion s:="1000"
-ready  
+done;
 ```
 
 **String: to a number**
@@ -240,11 +240,11 @@ given
   Real:    b
   String:  s := '1000'
   String:  r := '200.02'
-begin
+do
   v := parse(s) ** make v = 1000
   v := parse(r) ** make v = 200 and decimal .02 is lost
   b := parse(r) ** make b = 200.02 and decimal .02 is preserved
-ready;
+done;
 ```
 
 **Note:** 
@@ -265,10 +265,10 @@ This is a logical deduction of variable type from literal or constructor using "
 ** Define a list of 10 elements using type inference:
 given
   List: ls := (0,1,2,3,4,5,6,7,8,9)
-begin
+do
   print(ls.type()) 
   ** expect: List[Integer]
-ready  
+done; 
 ```
 
 ## Default types
@@ -320,12 +320,12 @@ Examples of type inference:
 given
   Record: r := (name:"test", age:"24") 
   Hash:   m := {('key1':"value1"),('ley2':"value2")} 
-begin
+do
   ** check variable types using introspection
   print("name  is of type " + type(v.name))
   print("key   is of type " + type(m.key))
   print("value is of type " + type(m.value))
-ready;
+done;
 ```
 run test  
 ```
@@ -345,15 +345,15 @@ In EVE the type is first class value. For type introspection we can use:
 given
   Real: i := 1.5
   Type: it
-begin
+do
   when i is Real do
     print("Yes i is Real")
   else
     print("No i is not Real")
-  ready;
+  done;
   it := type(i)
   print("type of i is #t" <+ it)
-ready;
+done;
 ```
 
 ## Partial Inference
@@ -474,7 +474,7 @@ A variant can change its data type at runtime:
 ```
 given
   Real | Integer: v, x ,t 
-begin
+do
   ** positive example
   v := 1     ** v is Integer
   x := 1.5   ** x is Real:    
@@ -485,7 +485,7 @@ begin
   
   ** negative examples
   v := x  ** ERROR: v is Integer 
-ready;
+done;
 ```
 
 A variant is a way to create a generic method.
@@ -598,7 +598,7 @@ begin
   expect (str is Null)
   expect (str = '')
   expect (str = "")
-ready 
+done;
 ```
 
 ## Calendar date
@@ -624,11 +624,11 @@ When can create a date literal using 3 reversible functions:
 ```
 given
   Date: date
-begin
+do
   date := "2019/01/30" -> YDM
   date := "30/01/2019" -> DMY
   date := "01/30/2019" -> MDY
-ready  
+done;
 ```
 
 **Date printing**
@@ -675,10 +675,10 @@ given
 ```
 given
   Time: time1, time2, time3 
-begin
+do
   time1 := "23:63" -> T24   
   time2 := "23:63:59,99" -> T24   
   time3 := "11:63:59pm,99ms" -> T12   
-ready;
+done;
 ```
 **Read next:** [Composite Types](composite.md)
