@@ -1,6 +1,6 @@
 # ΞVΞ Concepts
 
-These concepts are common to any computer language in Algol family. 
+ΞVΞ is a free form language inspired from Java and Ruby. 
 
 **bookmarks**
 
