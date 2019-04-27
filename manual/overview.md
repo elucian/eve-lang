@@ -1,4 +1,4 @@
-# ΞVΞ Concepts
+# Syntax Overview
 
 ΞVΞ is a free form language inspired from Java and Ruby. 
 

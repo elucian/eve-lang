@@ -1,10 +1,6 @@
-## Syntax Overview
+## EVE Manual
 
-ΞVΞ is a free form language inspired from Java and Ruby and PL/SQL. 
-
-## Syntax Index
-
-To learn EVE you can read next pages in order top down:
+To learn EVE you can read next pages in order:
 
 **overalls**
 
@@ -13,8 +9,6 @@ To learn EVE you can read next pages in order top down:
 1. [Operators](operators.md)
 
 **tutorial**
-
-Every page has bookmarks on top and a reference on bottom for next page.
 
 1. [Syntax overview](overview.md)
 1. [Program structure](structure.md)
@@ -28,5 +22,18 @@ Every page has bookmarks on top and a reference on bottom for next page.
 1. [Standard library](standard-lib.md)
 1. [System library](system-lib.md)
 
-
 **Read next:** [Syntax Overview](overview.md)
+
+**tools**
+
+Download and import Notepad++ custom language file for EVE:
+
+[eve-md.xml](../tools/eve-md.xml)
+
+**demo:**
+
+Demo files are for learning but also for testing:
+
+*[Quest](../demo/quest.eve)
+*[While](../demo/while.eve)
+

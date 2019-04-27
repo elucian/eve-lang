@@ -39,7 +39,7 @@ raise (code,"message") if (condition)
 ```
 
 ## Quick exception
-Using keyword _"fail"_ user can quick create an exception that has no message or continue program using _"pass"_. Fail is used most frequent in combination with conditional statement "when" or "if". 
+Using keyword _"fail"_ user can quickly create an exception that has no message or continue program using _"pass"_. Fail is used most frequent in combination with conditional statement "when" or "if". Fail has _code_ = 1 and no message.
 
 ```
 ** quick exception
@@ -55,19 +55,21 @@ fail if (condition)
 
 ## Exception handling
 
-**recover:** region define an "exception handling region" for a method.
+Recover: region define an "exception handling region" for a method.
 
 In this region developer can use control statements like "switch","case" to analyze the $error. Developer can decide to stop the program, print a message and resume the program using _resume_ keyword.
 
 **Example:** 
 
 ```
-method: main()
-  Real: a 
+method: main() => ()
+  Real: a
 process  
-  a := 1 / 0  
+  a := 1 / 0
 recover
   print ($error.message)
+closure
+  ** continuation after error recovery    
 return;
 ```
 
@@ -75,26 +77,24 @@ return;
 Error: Numeric division by zero.
 ```
 
-## Panic
+## Halt
 
-Most exceptions are recoverable except the exception created by panic statement.
+This is a way to release all locked resources and stop the program.
 
 **Example:**
 ```
 when (condition) do
-  panic
+  halt
 done;
 ```
 
-## Assert
-
-The assert statement is very simple. It check a condition and raise an assert error if condition is false. Does not produce any error message but: "Assert error in line x".
-```
-  assert (condition);
-```
-
 ## Expect
-The expect statement is similar to assert. It verify an expression and  it produce "Unexpected error."
+
+The expect statement is very simple. It check a condition and raise an error if condition is false. Does not produce any error message but: "Unexpected error in line: N".
+
+```
+  expect (condition)
+```
 
 
 **Read next:** [Data Processing](processing.md)

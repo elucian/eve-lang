@@ -6,18 +6,16 @@ EVE is scripting language. Scripts are files with extension *.eve stored on a se
 
 Next bookmarks will lead you to the main concepts required to understand EVE program structure.
 
-* [Scripts](#Scripts)
+* [Scripts](#scripts)
 * [Regions](#regions)
 * [Classes](#classes)
 * [Methods](#methods)
-* [Dispatch](#dispatch)
-* [Parameters](#parameters)
-* [Control flow](#control)
 * [Functions](#functions)
-* [Conditionals](#conditionals)
 * [Expressions](#expressions)
-* [Server](#server)
-* [Execution](#drivers)
+* [Parameters](#parameters)
+* [Dispatch](#dispatch)
+* [Test cases](#test-cases)
+* [Program Execution](#program-execution)
 
 ## Scripts
 
@@ -41,8 +39,8 @@ Members belonging to a region are indented two spaces from left side. A region t
 #directive
 ...
 
-** define global constants
-$system_variable  := value/expression
+** system variables
+$system_variable := value/expression
 $system_constant := value/expression
 
 import
@@ -50,7 +48,7 @@ import
 
 ## head comment
 define
-  ** type declarations 
+  ** constant declarations 
 
 ## global variables
 global
@@ -117,7 +115,7 @@ A method is a named block of code.
 
 **prototype**
 ```
-method: name(parameters)
+method: name(parameters) => (results)
   ** declaration region
 process
   ** executable region
@@ -125,26 +123,32 @@ process
 return;
 ```
 
-## Method name
+**Notes:**
+* symbol ":" after method is mandatory, like for any other declaration, 
+* parameters are optional but empty list () is required if there are no parameters,
+* results are optional but => () is required if there are no results.
+
+**Method name**
 A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
 
-## Main method
-If the script is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the script is a library and can be imported in other scripts but can not be executed using run command.
+**Main method**
+If a script is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the script is a library and can be imported in other scripts but can not be executed using run command.
 
-## Parameters
-Parameters are defined in round brackets () separated by comma. Each parameter must have a name and a type. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
+**Parameters**
+Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
  param_name ::= type : name := value ** input parameter
  param_name ::= type @ name ** output parameter
 ```
+
 1. One method can receive one or more parameters;
 1. Parameters having initial values are optional;
 1. We can pass arguments by position, or by name;
 1. Input parameters are pass by value;
 1. Output parameters are pass by reference;
 
-## Variadic parameters
+**Variadic parameters**
 
 One method can receive multiple arguments of the same type separated by comma into one parameter.
 
@@ -154,38 +158,42 @@ One method can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-method: main(Array[String]() * args)
+method: main(Array[String]() * args) => ()
   print(args)
 return;
 ```
 
-## Method context
+**Method context**
 
-Every method can define local variables. Members defined in local context are short leaving and are removed once the method is resolved. In this context a method can implement attributes using "." prefix. Attributes are properties of the method and can be accessed after method execution. 
+Every method has a local context. Members defined in local context belong to the method. In this context a method can implement attributes using "." prefix. Attributes are properties of the method and can be accessed before and after method execution. 
 
-## Method Execution
-To execute an method you use method name followed by arguments. Arguments are enclosed in round parentheses separated by comma like a list. If an method do not have parameters or it have one single parameter the empty list () after the method name is not required to execute method.
+**Method results**
 
-**method call**
+A method can have results defined after operator "=>" in a list: (results). The result values can be computed in method context. Results can be captured or ignored by a method call.
+
+
+**Method call**
+Methods can be used like statements. A method call can be done using method name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no argument paratheses are optional.
+
 ```
-  method_name  
   method_name;
-  method_name () 
-  method_name (argument_list)
+  method_name argument_value;
+  method_name (argument_list);
+  method_name (argument_list) +> (result_arguments);
 ```
 
 ## Method termination
-A method block end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keywords "exit", "fail" or "panic" can terminate a method early. 
+A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keywords "exit", "fail" or "panic" can terminate a method early. 
 
 **Example:**
 ```
-method: test(Integer: a)
+method: test(Integer: a) => ()
 process
   ** print is a system method
   print a 
 return;
 
-method: main(List[String]: *args)
+method: main(List[String]: *args) => ()
   ** number of arguments received:
   Integer: c := args.count()
 process  
@@ -198,15 +206,15 @@ return;
 
 ## Side Effects
 
-We have mention side-effects that are:
+We have mention side-effects: that can be one of:
 
-* A method who modify a global variable;
-* A method who open and write into a file;
-* A method who print a message or accept input from console;
+* modify a global variable;
+* open and write into a file;
+* print a message or accept input from console;
 
 **using side-effects**
 
-Program heaving a private method add_numbers: 
+Next method add_numbers has 2 side effects: 
 
 ```
 ** global variables
@@ -215,14 +223,14 @@ global
   Integer: test 
   Integer: p1, p2
   
-method: add_numbers()
+method: add_numbers() => ()
 process
   **side effects  
   test := p1 + p2 
-  print(test)
+  print (test)
 return;
 
-method: main()
+method: main() => ()
 process
   p1 := 10
   p2 := 20
@@ -236,19 +244,19 @@ return;
 To avoid system and global variables you use output parameters:
 
 ```
-method: add(integer: p1,p2, Integer @ out)
+method: add(integer: p1,p2, Integer @ out) => ()
 process
   out := p1+p2
 return;
 
-method: main()
+method: main() => ()
   Integer @ result
 process  
   ** reference argument require a variable
   add(1,2, out :: result)
   print (result) ** expected value 3
   ** negative test
-  add(1,2,4) ** error, "out" parameter require variable argument
+  add (1,2,4) ** error, "out" parameter require variable argument
 return;
 ```
 
@@ -260,43 +268,12 @@ return;
 * We can not create methods, data types or classes inside a method;
 * We can not create references to methods;
 
-## Dispatch
-
-Dispatch is a form of selection specific to methods and functions. This is a way to identify one _overloaded_ method or function by its signature. A method signature include method name and parameter types.
-
-
-**Wikipedia:** [name mangling](https://en.wikipedia.org/wiki/Name_mangling)
-
-
-## Classes
-Classes are composite smart data types. We use a class to create objects.
-
-```
-class: name(parameters) <: base_class
-  ** definition_region
-create
-  ** constructor region
-scrap
-  ** release region
-return;
-```
-
-***Read more:** [Classes](classes.md)
-
-**Read next:** [control.md](control.md)
-
 ## Functions
 
-A function can have parameters and produce one or more results. 
+A function can have parameters and produce one single result. 
 
 ```
-function: name(parameters) => (result_type: result, ...)
-  ** declaration
-process
-  ** statements
-  ...
-  result := expression
-return;
+function: name(parameters) => type: (expression)
 ```
 
 **Function call**
@@ -316,8 +293,8 @@ The call for a function is using name of the function and round brackets () for 
 
 **Parameters**
 
-* Parameters are declared in parenthesis () after the function name. 
-* Each parameter has name and type and can have one default value. 
+* Parameters are declared in parenthesis () after the function name, 
+* Each parameter has name and type and can have one default value, 
 * When a function is called each parameter receive a value that is called argument. 
 
 **Arguments**
@@ -327,12 +304,9 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function: sum(Integer: a, b) => (Integer: result)
-process
-  result := a + b
-return;
+function: sum(Integer: a, b) => Integer:(a + b)
   
-method: main() 
+method: main() => ()
   Integer: r
 process  
   r := sum(10,20)  ** function call
@@ -340,7 +314,7 @@ process
 return;
 ```
 
-## Ternary operator
+## Expressions
 
 A ternary operator is "?". Can be used with conditional expressions to return one value or other.   
 **syntax**
@@ -369,7 +343,7 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **example**
 ```
-method: main()
+method: main() => ()
   Integer: p1, p2, x
 process
   p1 := 2
@@ -383,7 +357,7 @@ return;
 **example**
 ```
 given
-  Logic:   b := F
+  Logic:   b := False
   Integer: v := 0   
 do
   v := (1 ? b : 2)   
@@ -391,15 +365,70 @@ do
 done; 
 ```
 
-## Server
+
+## Dispatch
+
+Dispatch is a form of subroutine selection by signature. It makes possible multiple subroutines with the same and different parameters. These kind of subroutines are _overloaded_. Subroutine signature include name, parameter types and result types.
+
+**Wikipedia:** [name mangling](https://en.wikipedia.org/wiki/Name_mangling)
+
+## Classes
+Classes are composite smart data types. We use a class to create objects.
+
+```
+class: name(parameters) <: base_class
+  ** definition_region
+create
+  ** constructor region
+discard
+  ** release region
+return;
+```
+
+**Read more:** [Classes](classes.md)
+
+## Test cases 
+
+A method can be organized as a workflow of multiple use-cases that can fail.
+
+```
+method main() => ()
+process
+  ** initialization
+  case: c1("description") do
+    ...
+    abort if (condition)
+  case: c2("description") do
+    ...
+    solve s4 if (condition)    
+  case: c3("description") do
+    ...
+    retry s1 if (condition)    
+  case: c4("description") do    
+    ...
+recover  
+  ** exception region
+  ...
+  resume if (condition)
+closure
+  ** finalization region
+  ...    
+return;
+```
+
+New keywords:
+
+* abort, will terminate the method early
+* solve, will continue with a forward case
+* retry, will continue with a previous case
+
+## Program Execution
 
 EVE program is hosted using a virtual machine. This is capable of running multiple sessions in parallel. Each session represents one independent application. You can run same application in different sessions. The sessions are independent and encapsulated. That means sessions can not communicate with each other.
 
 Server is in charge of allocating memory for one session before the application starts. There is no shared memory. That is a session is dedicated for a single application. After application is terminated the memory is released.
 
 This is the reason EVE do not use parallel programming. The server is handling all the parallel work. EVE applications are single threaded applications. This also simplify the interpreter. There is no possibility to have race conditions or unexpected results.
-
-## Execution
 
 To execute a program or application there are 2 methods:
 
@@ -415,7 +444,7 @@ eve:> run script_name
 * You can use _alias_ to create an alias for script name before you run it 
 * You can use _from_  to import public members from a library and avoid dot notation
 
-**Example:**
+**pattern example:**
 ```
 #driver "test"
 
@@ -426,10 +455,11 @@ import
    from: my_lib use all
 
 ** you can run a script with arguments
-method main()
+method main() => ()
 process
-  run my_script(arguments)
-method
+  run my_script(arguments) +> (results)
+return;
 ```
+
 
 **Read next**: [Control Flow](control.md)

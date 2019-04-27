@@ -3,9 +3,10 @@
 EVE has only 4 control statements: 
 
 * [do](#do)
-* [if](#if)
+* [when](#when)
 * [quest](#quest)
 * [while](#while)
+* [scan](#scan)
 
 ## do
 
@@ -25,7 +26,7 @@ done;
 * keyword _given_ start a local scope for any block statement
 * one blocks is ending with keywords: { ready \| repeat \| next}
 
-## if do
+## when
 
 This keyword in conjunction with {do, else} declare a multi-path block selector;
 
@@ -36,14 +37,14 @@ This keyword in conjunction with {do, else} declare a multi-path block selector;
 ```
 given
   ** local variables
-if (expression) do
+when (expression) do
   ** single path
 done;
 ```
   
 2.dual path selector
 ```  
-if (expression) do
+when (expression) do
    ** true path
 else
    ** false path
@@ -52,8 +53,8 @@ done;
   
 3.nested selector 
 ```  
-if (expression) do
-  if (expression) do
+when (expression) do
+  when (expression) do
    ** nested path
   done;
 done;
@@ -61,21 +62,19 @@ done;
 
 ## Quest
 
-The quest is a multi-path value based selector. It is used in conjunction with { "if" and "other" }
+The quest is a multi-path value based selector. It is used in conjunction with { "do", "other" }
 
 **syntax:**
 
 ```
 given 
   value_typ: val := expression
-quest
-  when (val = constant1) do
+quest val
+  ?:constant1 do
     ** first path
-    ...
-  when (val = constant2) do
+  ?:constant2 do
     ** second path
-    ...
-  when (val <: value_list) do
+  ?:constant3 do
     ** third path
 other
   ** default path
@@ -92,18 +91,18 @@ method test(Integer: p:=0)
 process 
   given 
     Integer: v := p + 4
-  quest
-    when v in (1,2,3) do
+  quest v
+    ?:(1,2,3) do
       message := "first match"
-    when v in [1..8]  do
+    ?:[1..8]  do
       message := "second match"
-    when v in [5..10] do
+    ?:[5..10] do
       message := "third match"      
   other
     ** other cases
     message := "no match"
   done;
-  print (message) 
+  print (message); 
 return;
 ```
 
@@ -123,10 +122,13 @@ Execute a block of code as long as one condition is true.
 given 
   ** local_variables
 while (condition) do
-  ** statements
+  ** forced iteration
+  skip if (condition)
+  ** eary intreruption
+  stop if (condition)
 else
   ** alternative path  
-done;
+redo;
 ```
 **example**
 
@@ -144,23 +146,26 @@ method: main()
        write(element)
        write(',') if (element ≠ "e") 
     done;   
-  repeat;
+  done;
 return;
 ```
 > "c","d","e"
 
-** range **
+## Scan
 
+Scan block use a control variable to visit all elements in a range or collection.
 
 **Pattern:**
 ``` 
 given 
   Integer:var := 0  ** initial value
-  Integer:max := 10 ** max value
-while var <= max do
+scan [min..max] +> var do
   ** block statements;
-  var += 1;
-repeat;
+  skip if (condition)
+  ** eary intreruption
+  stop if (condition)
+  ...
+next;
 ```
 
 **Notes:**    
@@ -171,13 +176,13 @@ Example of range iteration:
 ```
 given
   Integer: i := 0
-while i < 10 do
+scan [0..10] +> i do
   if (i % 2 <> 0) do
     ** write only odd numbers
     write(i)  
     write(',') if (i < 10)  
   done;
-repeat;
+redo;
 ```
 > 1,3,5,7,9
 

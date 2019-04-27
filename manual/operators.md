@@ -7,11 +7,10 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
-| {`*_*`}   | Block comments \| Nested comments
-| \|`*_*`\| | Inside expression comments
-| (`_,_,_`) | Expression \| List literal \| Data record
-| [`_,_,_`] | Range \| Index \| Array literals \| Parameterize types
-| {`_,_,_`} | Ordinal type \| Set of values \| Hash map
+| `/*...*/` | Block comments \| Nested comments
+| `(_,_,_)` | Expression \| List literal \| Data record
+| `[_,_,_]` | Range \| Index \| Array literals \| Parameterize types
+| `{_,_,_}` | Ordinal type \| Set of values \| Hash map
 
 
 ## Single symbols
@@ -20,12 +19,12 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |-------|--------------------------------------------------------------
 | \#    | Directive or macro \| Template placeholder
 | $     | System variable prefix \| Global variable
-| @     | Require reference \| Input/Output parameter
+| @     | Explicit reference \| Input/Output parameter
 | ;     | Statement separator \| Forward declaration
 | :     | Define name \| Pair-up operator
 | .     | Decimal separator \| Public member \| Member of ,,,
 | ,     | Enumeration for elements \| complex expression 
-| \*    | Multiplication \| Variable arguments
+| \*    | Variable arguments \| Multiplica
 
 ## Double symbols
 
@@ -40,7 +39,7 @@ Eve use two symbols to create a additional operators.
 |=+    | Outer join operator used in data "select" statement
 |<:    | Declare user define type / sub-type 
 |<+    | Injector \| Unpack  \| Template \| Data source
-|+>    | Fetch or select into: collection \| Destination
+|+>    | Fetch or select into: collection \| Destination
 
 ## String: delimiters
 
@@ -74,7 +73,7 @@ Modifiers are in-place operators. They change value of the left operand with val
 
 |Symbol| Description
 |------|------------------------------------------------------------------
-| :=   | new value \| replace existing value  
+| :=   | new value \| copy value \|replace value  
 | +=   | addition \| scalar addition
 | -=   | subtraction  \| scalar subtraction
 | /=   | division  \| scalar division
@@ -104,12 +103,12 @@ In following table A, B, C are collections and x is a member: numeric, string or
 
 |Operator | Result  | Description
 |---------|---------|-------------------------------------------------------------------
-| x ! A   | logic   | verify if x is a not member of collection A
-| x ? A   | logic   | verify if x is a member of collection A
-| A &  B  | new     | Intersect A with B, use with : like C := A & B (return a new set)
-| A \| B  | new     | Union A with B, use with : like C := A | B (return a new set)
-| A <  B  | logic   | verify is A is subset of B
-| A >  B  | logic   | verify is A is superset of B
+| x !: A  | logic   | verify if x is not member of collection A
+| x ?: A  | logic   | verify if x is a member of collection A
+| A && B  | new     | Intersect A with B, use with : like C := A && B (return a new set)
+| A \|\| B| new     | Union A with B, use with : like C := A || B (return a new set)
+| A <= B  | logic   | verify is A is subset of B
+| A >= B  | logic   | verify is A is superset of B
 | C += x  | append  | append element x in C
 | C += B  | append  | append collection B to C
         
@@ -119,10 +118,10 @@ These operators are expected logical values T := True, F := False
 
 | Symbol | Description
 |--------|-----------------------------------------------
-|  !     | logic NOT (negation) 
-|  &     | logic AND (intersection) 
-|  \|    | logic OR  (union)
-|  ~     | logic Exclusive OR
+|  not   | logic NOT (negation) 
+|  and   | logic AND (intersection) 
+|  or    | logic OR  (union)
+|  xor   | logic Exclusive OR
 
 ## Bitwise operators
 
@@ -130,8 +129,8 @@ These operators are working for Natural:numbers ≥ 0
 
  symbol | description
 --------|----------------------------------
-  \<-   | shift bits to left  
-  -\>   | shift bits to right
+  \<\<  | shift bits to left  
+  \>\>  | shift bits to right
   !     | bitwise NOT (unary)
   &     | bitwise AND
   \|    | bitwise OR
@@ -149,7 +148,7 @@ These operators are working for Natural:numbers ≥ 0
 
 **Unary operators**
 
- A    |A \<-  1 | A -\>2  | !A
+ A    |A \<\<  1| A \>\>2 | !A
 ------|---------|---------|-------
  0000 | 0000    | 0000    | 1111
  1111 | 1110    | 0011    | 0000
