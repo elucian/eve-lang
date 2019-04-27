@@ -139,4 +139,4 @@ type new_type: Generic_class[generic_type]
 
 ```
 
-**Read next:**[Exceptions](exceptions.md)
+**Read next:** [Exceptions](exceptions.md)

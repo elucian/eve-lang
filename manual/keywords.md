@@ -77,3 +77,5 @@ In EVE we use English keywords with no abbreviations.
 |----------|------------------------------------------------------------
 | object   | current instance of a class, current object
 | result   | default result of a method when a name is not specified
+
+**read next:** [Operators](operators.md)

@@ -577,4 +577,4 @@ An EVE application can communicate with external world using JSON. Once a databa
 [MySQL](https://www.mysql.com/)
 }
 
-**Read next:**[Standard Library](standard-lib.md)
+**Read next:** [Standard Library](standard-lib.md)

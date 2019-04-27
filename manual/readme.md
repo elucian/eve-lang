@@ -22,7 +22,7 @@ To learn EVE you can read next pages in order:
 1. [Standard library](standard-lib.md)
 1. [System library](system-lib.md)
 
-**tools**
+**tools:**
 
 Download and import Notepad++ custom language file for EVE:
 
@@ -32,7 +32,7 @@ Download and import Notepad++ custom language file for EVE:
 
 Demo files are for learning but also for testing:
 
-*[Quest](../demo/quest.eve)
-*[While](../demo/while.eve)
+* [Quest](../demo/quest.eve)
+* [While](../demo/while.eve)
 
 **Read next:** [Syntax Overview](overview.md)

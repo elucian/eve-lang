@@ -53,30 +53,30 @@ define
 ## global variables
 global
   ** variable declaration
-  
-class: name
+
+## member declarations
+function: name(params) => (expression)
+
+class: name(params) <: superclass
   ** class_definition
 return;
 
-method: name(params)   
+method: name(params) => (result_list)
   ** method_definition
 return;
 
-function: name(params) => type
-  ** function_definition
-return.
 ## footer comment
 ```
 
 ## Declaration order
-Order of regions is important. You can not use members before they are defined. Directives are usually on top follow by system declarations then import and then type declarations and globals. Last we declare in random order several other members: {functions, methods, classes}
+Order of regions is important but it can be interleced with other declarations. You can not use members before they are defined. Directives are usually on top follow by system declarations then import and then global variable declarations. Last we declare in random order several: {functions, methods, classes}.
 
 
 ## System variables
-System variable start with prefix "$" and are global variables. System variables are defined in EVE core library. Programmers can use system variables to find Scripts. Before define and import keyword there is a region where user can define new system variables. 
+System variable start with prefix "$". System variables are defined in EVE core library. Programmers can use system variables. Before define and import keyword there is a region where user can define new system variables. System declaration region use zero zpace indentation. 
 
 ## Import region
-Is used to include one or several scripts separated by comma. Import region contains also _"from"_ clause. This is used to indicate what members we will use without the qualifier. If we do not specify than script members can be accessed only by dot notation: qualifier.member;
+Is used to include one or several scripts one on each line. Import region contains also _"from"_ clause. This is used to indicate what members we will use without dot qualifier. If we do not specify than script members can be accessed only with qualifier;
 
 **syntax**
 ```
