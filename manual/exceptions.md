@@ -6,13 +6,13 @@ The exception is a variable of type record that is created when exception is rai
 ```
 ** system global exception type
 define
-   type: .Exception <: Record[ 
+   type: .Exception <: Record( 
            Integer: code 
           ,String : message 
           ,String : section_name 
           ,String : script_name 
           ,String : line_number  
-         ]
+         )
 ** global variable for holding current error
 global
    Exception: $error
@@ -38,21 +38,6 @@ done;
 raise (code,"message") if (condition)
 ```
 
-## Quick exception
-Using keyword _"fail"_ user can quickly create an exception that has no message or continue program using _"pass"_. Fail is used most frequent in combination with conditional statement "when" or "if". Fail has _code_ = 1 and no message.
-
-```
-** quick exception
-when (condition) do
-  fail
-else
-  pass
-done;
-
-** conditional exception
-fail if (condition)
-```
-
 ## Exception handling
 
 Recover: region define an "exception handling region" for a method.
@@ -69,7 +54,7 @@ process
 recover
   print ($error.message)
 closure
-  ** continuation after error recovery    
+  ** close process
 return;
 ```
 
@@ -93,8 +78,16 @@ done;
 The expect statement is very simple. It check a condition and raise an error if condition is false. Does not produce any error message but: "Unexpected error in line: N".
 
 ```
+  ** precondition
   expect (condition)
+  
+  ** equivalent
+  raise ("Unexpected error") if (condition)
 ```
 
+**note:**
+* can be used as pre-condition
+* can be used as post-condition
+* unexpect error has code = 0
 
 **Read next:** [Data Processing](processing.md)

@@ -1,13 +1,14 @@
 ## Data Types
 
-EVE is data oriented language. There are four kind of data types:
+EVE is a gradual type language. It has four kind of data types:
 
 * [Basic Types](#basic-types)
 * [Composite Types](#composite-types)
 * [Collection Types)(#collections)
-* [User Defined](#user-defined)
+* [User Defined Types](#user-defined)
 
-**concepts**
+**bookmarks**
+
 * [Numeric Types](#numeric-types)
 * [Data Coercion](#data-coercion)
 * [Type inference](#type-inference)
@@ -23,11 +24,13 @@ Basic types are abstract wrappers to native types.
 | type     | description
 |----------|-------------------------------------------------------
 | Char     | integer on 8  bit (unsigned)
-| Logic    | Is a Ordinal type having values:  False = 0, True = 1
 | Symbol   | integer on 32 bit (unsigned)
 | Integer  | integer on 64 bit (signed)
 | Natural  | integer on 64 bit (unsigned)
 | Real     | double precision number on 8 bit (signed) 
+| Ordinal  | Enumeration of ideas, cases or terms
+| Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
+| Null     | is a reference type that represents Null reference
 
 
 ## Composite Types
@@ -35,28 +38,35 @@ Basic types are abstract wrappers to native types.
 Composite data types are unions of data elements of heterogeneous types.
  
 | type     | description
-|----------|----------------------------------------------------
-| Ordinal  | Enumeration of ideas, cases or terms
-| Record   | Heterogeneous collection of elements in a database
+|----------|---------------------------------------------------------------
+| Record   | Heterogeneous collection of elements with fix structure 
 | String   | Limited capacity string: ('single quoted')
 | Text     | Unlimited capacity string: ("double quoted")
-| Null     | is a reference type that represents Null reference
-
-
-## Collections
-Collections are groups of data elements of same type.
-
-| type     | description
-|----------|----------------------------------------------------------------
-| List     | Dynamic unsorted enumeration of values or objects
-| Hash     | Enumeration of (key:value) pairs unique sorted by key
+| List     | Dynamic unsorted enumeration of values or objects of same type
+| Table    | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
 
 **Note:** Composite data types are references
 
+## Physical measurements
+
+EVE has ready to use support for physical measurements:
+
+| type     | description
+|----------|---------------------------------------------------------------
+| Date     | Calendar date     
+| Time     | Calendar time
+| Duration | Delta time / duration hours/minutes/seconds
+| Angle    | Degree angle between two lines
+| Length   | Dimension of objects or distance
+| Distance | The travel distance between to points in space
+
+**See also:** [UCUM](http://unitsofmeasure.org/ucum.html)
+
+
 ## User Defined
 
-A data type can be _defined_ using symbol "<:" and keyword: "type".
+A sub-type can be _defined_ using symbol "<:" and keyword: "type".
 
 **Syntax:**
 ```
@@ -225,7 +235,7 @@ done;
 given
   String: s 
   Integer: v := 1000
-begin  
+do  
   s := format(v) ** explicit coercion s:="1000"
 done;
 ```
@@ -594,7 +604,7 @@ We can test if a string is null using "is Null" expression.
 ```
 given 
   String: str := ""
-begin 
+do 
   expect (str is Null)
   expect (str = '')
   expect (str = "")

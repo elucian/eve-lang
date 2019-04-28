@@ -198,9 +198,9 @@ method: main(List[String]: *args) => ()
   Integer: c := args.count()
 process  
   ** verify condition and exit
-  exit if c = 0
+  abort if c = 0
   
-  test (c) ** method call
+  test c ** method call
 return;
 ```
 
@@ -460,6 +460,5 @@ process
   run my_script(arguments) +> (results)
 return;
 ```
-
 
 **Read next**: [Control Flow](control.md)

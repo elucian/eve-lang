@@ -2,29 +2,31 @@
 
 EVE has only 4 control statements: 
 
-* [do](#do)
+* [with](#with)
 * [when](#when)
 * [quest](#quest)
 * [while](#while)
 * [scan](#scan)
 
-## do
+## With
 
-Given, establish a new declaration region for a block statement. 
+Establish a declaration region and qualifier supression block. 
 
 **syntax**
 ```
 given
   ** local declarations
-do
+with qualifier := long_qualifier do
   ** local statements
+  method_name()  ** instead of: qualifier.method_name()
+  var := function_name() ** instead of qualifier.function_name()
 done;
 ```
 
 **Notes:** 
 
 * keyword _given_ start a local scope for any block statement
-* one blocks is ending with keywords: { ready \| repeat \| next}
+* one blocks is ending with keywords: { done \| next}
 
 ## when
 
@@ -36,7 +38,7 @@ This keyword in conjunction with {do, else} declare a multi-path block selector;
 1.single path selector
 ```
 given
-  ** local variables
+  ** local context
 when (expression) do
   ** single path
 done;
@@ -88,9 +90,8 @@ It is possible to use more then one value using a list, range or collection.
 ```
 method test(Integer: p:=0) 
   String: message := ""
+  Integer: v := p + 4  
 process 
-  given 
-    Integer: v := p + 4
   quest v
     ?:(1,2,3) do
       message := "first match"
@@ -119,8 +120,8 @@ Execute a block of code as long as one condition is true.
 
 **Syntax:**
 ```
-given 
-  ** local_variables
+given
+  ** local context
 while (condition) do
   ** forced iteration
   skip if (condition)
@@ -134,10 +135,10 @@ redo;
 
 ```
 ** example of collection iteration
-method: main()
-  given 
-    Array:test := ["a","b","c","d","e"]
-    Integer: i := 0
+method: main() => ()
+  Array:test := ["a","b","c","d","e"]
+  Integer: i := 0
+process
   while (i < test.length) do
     element := my_list[i]
     i += 1
