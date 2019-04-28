@@ -461,4 +461,16 @@ process
 return;
 ```
 
+**using halt**
+
+This is a way to release all locked resources and stop the program with error code -1.
+
+**Example:**
+```
+when (condition) do
+  halt
+done;
+```
+
+
 **Read next**: [Control Flow](control.md)

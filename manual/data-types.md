@@ -2,16 +2,19 @@
 
 EVE is a gradual type language. It has four kind of data types:
 
-* [Basic Types](#basic-types)
-* [Composite Types](#composite-types)
-* [Collection Types)(#collections)
-* [User Defined Types](#user-defined)
+* [Basic](#basic-types)
+* [Numeric](#numeric-types)
+* [Composite](#composite-types)
+* [Collections](#collections)
+* [Physical](#physical-types)
+* [User defined](#user-defined)
 
 **bookmarks**
 
-* [Numeric Types](#numeric-types)
+
 * [Data Coercion](#data-coercion)
 * [Type inference](#type-inference)
+* [Default types](default-types) 
 * [Gradual typing](#gradual-typing)
 * [String type](#string-type)
 * [Calendar date](#calendar-date)
@@ -48,7 +51,7 @@ Composite data types are unions of data elements of heterogeneous types.
 
 **Note:** Composite data types are references
 
-## Physical measurements
+## Physical Types
 
 EVE has ready to use support for physical measurements:
 
@@ -62,48 +65,6 @@ EVE has ready to use support for physical measurements:
 | Distance | The travel distance between to points in space
 
 **See also:** [UCUM](http://unitsofmeasure.org/ucum.html)
-
-
-## User Defined
-
-A sub-type can be _defined_ using symbol "<:" and keyword: "type".
-
-**Syntax:**
-```
-define
-  type: type_name <: super_type (parameters)
-```
-**Notes:**
-
-* Users can define new types as subset or group of basic types;
-* A script can _import_ defined types or from other Scripts;
-* A data type is declared in a _define_ region;
-
-**Example:**
-```
-define
-  type: Point <: Record (Integer: a, b )
-
-method: main()
-  Point: p1, p2      ** implicit constructor
-  Point: p3 := {1,1} ** initial value for Point
-process
-  ** modification using constants
-  p1.a := 1
-  p1.b := 2  
-  
-  ** modification using literal
-  p2 := {2, 2}
-  
-  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
-  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
-return;
-```
-output:
-```
-p1 = (a:1, b:1)      
-p2 = (a:2, b:2)
-```
 
 ## Numeric Types
 
@@ -146,9 +107,7 @@ sign has 1bit, exponent has 11 bits and coefficient has 52 bits;
 
 Precision Real: numbers is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Real: and back without loosing any digit. Think of it like a digital display from a packet calculator.
 
-**See also:** [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation#Other_bases)
-
-### Numeric literals
+**Numeric literals**
 
    Example     | Description
 ---------------|-------------------------------------------------------------------------
@@ -173,16 +132,54 @@ process
 return;
 ```
 
-## Polymorphic operators
-In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or real. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
+**See also:** [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation#Other_bases)
 
-Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore some other languages are introducing polymorphic operators.
+## User Defined
+
+A sub-type can be _defined_ using symbol "<:" and keyword: "type".
+
+**Syntax:**
+```
+define
+  type: type_name <: super_type (parameters)
+```
+**Notes:**
+
+* Users can define new types as subset or group of basic types;
+* A script can _import_ defined types or from other Scripts;
+* A data type is declared in a _define_ region;
+
+**Example:**
+```
+define
+  type: Point <: Record (Integer: a, b )
+
+method: main()
+  Point: p1, p2      ** implicit constructor
+  Point: p3 := {1,1} ** initial value for Point
+process
+  ** modification using constants
+  p1.a := 1
+  p1.b := 2  
+  
+  ** modification using literal
+  p2 := {2, 2}
+  
+  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
+  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
+return;
+```
+output:
+```
+p1 = (a:1, b:1)      
+p2 = (a:2, b:2)
+```
 
 ## Data Coercion
 In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. 
 If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.
 
-## Implicit coercion
+### Implicit coercion
 In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion 
 to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a _run-time error_. To prevent this EVE will implement a safe compile-time check.
 
@@ -206,7 +203,7 @@ do
 done;
 ```
 
-## Explicit coercion
+### Explicit coercion
 Explicit coercion is a _forced conversion_. Can be used to convert backwards from higher data range to lower data range or from continuous numbers to discrete numbers. This however can cause a data or precision loss. Explicit coercion is using a function.
 
 Examples of explicit coercion:   
@@ -365,6 +362,11 @@ do
   print("type of i is #t" <+ it)
 done;
 ```
+
+## Polymorphic operators
+In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or real. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
+
+Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore some other languages are introducing polymorphic operators.
 
 ## Partial Inference
 
