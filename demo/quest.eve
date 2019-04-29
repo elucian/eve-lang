@@ -1,26 +1,25 @@
-+--------------------------
- quest statement demo
----------------------------+
+****************************
+** quest statement demo
+****************************
 #driver "sw"
 
-make msg @ S;
-make var ∈ Z;
-read(var,"var:>");
-quest var:
-  case 0:
-    alter msg := "zero";
-  case 1:
-    alter msg := "one";
-  case (1,3,5,7,9):
-    alter msg := "odd";
-  case [1..3]:
-    alter msg := "small";
-  case [4..9]:
-    msg := "large";
-cover:
-  msg := "Undexpected";
-ready;
+String: msg
+Integer: var
 
-print msg;
+read (var,"var:>")
+quest var
+  ?:0 do
+    msg := "zero"
+  ?:1 do
+    msg := "one"
+  ?:(1,3,5,7,9) do
+    msg := "odd"
+  ?:[1..3] do
+    msg := "small"
+  ?:[4..9]:
+    msg := "large"
+other
+  msg := "Undexpected"
+done
 
-over.
+print msg

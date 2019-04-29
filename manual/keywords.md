@@ -62,14 +62,13 @@ In EVE we use English keywords with no abbreviations.
 
 | Keyword  | Description
 |----------|-------------------------------------------------------------------
-| abort    | silent stop a method and return control to the caller
+| exit     | silent stop a method and return control to the caller
 | stop     | early terminate execution of a method / function
 | skip     | jump over all other statements to the end of any repetitive block
 | raise    | create recoverable exception with error code and message
 | retry    | multi-case jump backwards to specified case
 | solve    | multi-case jump forward to specified case
 | resume   | used in trial error handlers to continue with next case
-| halt     | suddenly finalize a program and create an error
 
 ## Default variables
 

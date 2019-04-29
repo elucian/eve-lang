@@ -59,11 +59,11 @@ function: name(params) => (expression)
 
 class: name(params) <: superclass
   ** class_definition
-return;
+return
 
 method: name(params) => (result_list)
   ** method_definition
-return;
+return
 
 ## footer comment
 ```
@@ -81,10 +81,7 @@ Is used to include one or several scripts one on each line. Import region contai
 **syntax**
 ```
 import 
-  qualifier := $PATH/relative_path/script_name.eve 
-  ...
-  from qualifier use all 
-  from qualifier use member_name,...
+  qualifier := $path/relative_path/script_name.eve:(*) 
   ...
 
 ```
@@ -111,7 +108,7 @@ A method is a named block of code.
 
 * it can define input/output parameters;
 * can have local defined variables;
-* is terminated with statement return;
+* is terminated with statement return
 
 **prototype**
 ```
@@ -120,7 +117,7 @@ method: name(parameters) => (results)
 process
   ** executable region
   ...
-return;
+return
 ```
 
 **Notes:**
@@ -160,7 +157,7 @@ One method can receive multiple arguments of the same type separated by comma in
 ```
 method: main(Array[String]() * args) => ()
   print(args)
-return;
+return
 ```
 
 **Method context**
@@ -183,7 +180,7 @@ Methods can be used like statements. A method call can be done using method name
 ```
 
 ## Method termination
-A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keywords "exit", "fail" or "panic" can terminate a method early. 
+A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword _exit_ can terminate a method early and no error is signaled. To signal an error you can use _raise_ keyword.
 
 **Example:**
 ```
@@ -191,17 +188,17 @@ method: test(Integer: a) => ()
 process
   ** print is a system method
   print a 
-return;
+return
 
 method: main(List[String]: *args) => ()
   ** number of arguments received:
   Integer: c := args.count()
 process  
   ** verify condition and exit
-  abort if c = 0
+  exit if c = 0
   
   test c ** method call
-return;
+return
 ```
 
 ## Side Effects
@@ -228,7 +225,7 @@ process
   **side effects  
   test := p1 + p2 
   print (test)
-return;
+return
 
 method: main() => ()
 process
@@ -236,7 +233,7 @@ process
   p2 := 20
   add_numbers()   
   expect result = 30  
-return;
+return
 ```
 
 **using output parameters**
@@ -244,20 +241,20 @@ return;
 To avoid system and global variables you use output parameters:
 
 ```
-method: add(integer: p1,p2, Integer @ out) => ()
+method: add(Integer: p1,p2, Integer @ out) => ()
 process
   out := p1+p2
-return;
+return
 
 method: main() => ()
-  Integer @ result
+  Integer: result
 process  
   ** reference argument require a variable
-  add(1,2, out :: result)
+  add(1,2, out: result)
   print (result) ** expected value 3
   ** negative test
   add (1,2,4) ** error, "out" parameter require variable argument
-return;
+return
 ```
 
 **Notes:**
@@ -311,7 +308,7 @@ method: main() => ()
 process  
   r := sum(10,20)  ** function call
   print(r)         ** this will print 30
-return;
+return
 ```
 
 ## Expressions
@@ -351,7 +348,7 @@ process
   ** using λ expression  
   x  := ( 0 ? p1 = 0, 0 ? p2 = 0: p1+p2)
   print x ** expect: 3 
-return;
+return
 ```
 
 **example**
@@ -361,8 +358,9 @@ given
   Integer: v := 0   
 do
   v := (1 ? b : 2)   
-  print v ** expect 2  
-done; 
+  expect v = 2  
+  print v   
+done 
 ```
 
 
@@ -382,7 +380,7 @@ create
   ** constructor region
 discard
   ** release region
-return;
+return
 ```
 
 **Read more:** [Classes](classes.md)
@@ -392,7 +390,7 @@ return;
 A method can be organized as a workflow of multiple use-cases that can fail.
 
 ```
-method main() => ()
+method: main() => ()
 process
   ** initialization
   case: c1("description") do
@@ -413,7 +411,7 @@ recover
 closure
   ** finalization region
   ...    
-return;
+return
 ```
 
 New keywords:
@@ -441,24 +439,21 @@ eve:> run script_name
 **notes**
 * You can executed script methods from another script
 * Only scripts that have main() method can be executed 
-* You can use _alias_ to create an alias for script name before you run it 
-* You can use _from_  to import public members from a library and avoid dot notation
+* You can use _alias_ to create an alternative name for a script
 
 **pattern example:**
 ```
 #driver "test"
 
 import 
-   my_lib    := $pro_lib/my_lib.eve
-   my_script := $pro_mod/my_script   
-   
-   from: my_lib use all
+   my_lib    := $pro_lib/my_lib.eve:(*)
+   my_script := $pro_mod/my_script:(member_name,...)   
 
 ** you can run a script with arguments
-method main() => ()
+method: main() => ()
 process
   run my_script(arguments) +> (results)
-return;
+return
 ```
 
 **using halt**
@@ -467,10 +462,13 @@ This is a way to release all locked resources and stop the program with error co
 
 **Example:**
 ```
+** using when prefix condition
 when (condition) do
-  halt
-done;
-```
+  exit
+done
 
+** using if postfix condition
+exit if (condition)
+```
 
 **Read next**: [Control Flow](control.md)

@@ -14,14 +14,14 @@ EVE language is using single inheritance similar to Java.
  
 ## Concept
 
-A class is smart composite data type. It implement properties and methods required to create objects. Objects are _state machines_ that are instantiated on demand and released from memory when they are no longer needed. The most important characteristics of objects are:
+A class is a smart composite data type. It implement properties and methods required to create objects. Objects are _state machines_ that are instantiated on demand and released from memory when they are no longer needed. The most important characteristics of objects are:
 
 * Encapsulation: each object has its own states;
 * Inheritance: an object inherit its base class;
 * Polymorphic: an object can play its base class role;
 
 ## Design
-A classes is inherited from a base class or from Root class.
+A class is inherited from a base class or from root class called: Object.
 
 **pattern:**
 ```
@@ -37,7 +37,7 @@ create
 discard
   ** object release region
   ...
-return;
+return
 ```
 
 ## Parameters 
@@ -52,7 +52,7 @@ do
   ** create object 
   object_name := class_name(param:value,...)
   ...
-done;
+done
 ```
 
 ## Instance
@@ -103,8 +103,8 @@ create
     object := base_class(some_arguments)
   else
     object := base_class(<other_arguments>)
-  done;
-return;
+  done
+return
 ```
 
 **Initialization**
@@ -127,13 +127,13 @@ process
   else
     ** expected
     print("n and o are not the same") 
-  done;
+  done
   ** verify
   expect  (o  = n) ** equivalent  
   expect !(o <> n) ** not divergent
   expect  (o != n) ** not the same
   expect !(o == n) ** not the same 
-return;
+return
 ```
 
 ## Generics
@@ -146,7 +146,7 @@ class[Generic_Type,...]: Generic_Name(parameter:Generic_Type,...) <: Base_Class
   ** declarations
 create
   ** constructor
-return;
+return
 ```
 
 **Using Generic:**

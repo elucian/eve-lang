@@ -105,8 +105,8 @@ In following table A, B, C are collections and x is a member: numeric, string or
 |---------|---------|-------------------------------------------------------------------
 | x !: A  | logic   | verify if x is not member of collection A
 | x ?: A  | logic   | verify if x is a member of collection A
-| A && B  | new     | Intersect A with B, use with : like C := A && B (return a new set)
-| A \|\| B| new     | Union A with B, use with : like C := A || B (return a new set)
+| A &  B  | new     | Intersect A with B, use with : like C := A & B (return a new set)
+| A \| B  | new     | Union A with B, use with : like C := A \| B (return a new set)
 | A <= B  | logic   | verify is A is subset of B
 | A >= B  | logic   | verify is A is superset of B
 | C += x  | append  | append element x in C

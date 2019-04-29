@@ -232,7 +232,7 @@ One statement can be declarative or imperative.
 
 **examples**
 
-The most simple block statement start with "begin" and end with "done;"
+The most simple block statement start with "begin" and end with "done"
 ```
 given
   ** integer numbers
@@ -240,7 +240,7 @@ given
 begin  
   print  (a, b)  
   expect (a = 0, b = 1.5)
-done;
+done
 ```
 
 **Note:** last statement in a program is ending with "." instead of ";"
@@ -272,7 +272,7 @@ begin
          [3,4],
          [5,6]
        ]       
-done;
+done
 ```
 
 **Read next:** [Structure.md](structure.md)

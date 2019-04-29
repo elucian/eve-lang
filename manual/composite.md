@@ -7,7 +7,7 @@ Composite types represents groups of multiple elements.
 * [matrix](#matrix)
 * [list](#list)
 * [set](#set)
-* [hash](#hash)
+* [table](#table)
 * [text](#text)
 * [exception](#exception)
 
@@ -51,9 +51,9 @@ process
       message:='last workday'
   other
     message:='middle of the week'
-  done;
+  done
   print('Is', message)
-return;
+return
 ```
 **Note** For private enumerations you can use a record type.
 
@@ -64,7 +64,7 @@ when (today <+ [Monday..Friday]) do
    print ("Have a nice day!")
 else
    print ("Have a happy weekend!")  
-done;
+done
 ```
 
 **Operators**
@@ -77,7 +77,7 @@ given
 do
   v += 1 
   expect v = Saturday
-done;
+done
 ```
 
 ## Array
@@ -117,7 +117,7 @@ An array  capacity can be established using a parameter and a constructor. All e
 method: test(Integer: n)
 process
   Array: my_array(n)
-return;
+return
 ```
 
 **array inference**
@@ -158,7 +158,7 @@ do
   m[2] := ['a2','b2','c2']
   m[3] := ['a3','b3','c3']
   print m
-done;
+done
 ```
 
 **matrix elements**
@@ -215,7 +215,7 @@ given
 do
   ** update list using  ":=" 
   c_list := (1,2,3) 
-done;
+done
 ```
 
 ## Set
@@ -234,13 +234,7 @@ An empty set is represented like this: {} and can be assigned to a set if you wi
 **Set restrictions**
 
 * All elements of a set must have the same type
-* Set elements can have only comparable types: {Ordinal, Numeric, String. Text}.
-
-**Example:**
-```
-given
-  Set[integer]: my_set := {0,1,2,3,4,5,6,7,8,9}
-```
+* Set elements can have only comparable types: {Ordinal, Numeric, String, Text}.
 
 **Mutability**
 
@@ -250,14 +244,19 @@ A set can be modified during run-time using operators.
 * -= for remove  
 * := for replace 
 
+**Example:**
 ```
+given
+  Set[integer]: my_set := {0,1,2,3,4,5,6,7,8,9}
+do
   my_set    += 1  ** try to append element 1
   my_set[*] += 1  ** modify each element
   my_set    := {} ** remove all elements  
+done  
 ```
 ### Union
 
-Union operator ∪ combine two sets.
+Use union operator | combine two sets.
 
 ```
 given
@@ -266,41 +265,43 @@ given
 do
   second := first | {0,1,2,10} ** set union
   print(second) ** {0,1,2,3,4,5,6,7,8,9,10}
-done;
+done
 ```
 
 ### Intersection
-Intersect operator ∩ find common elements:
+Intersect operator & find common elements:
 
 ```
 given
   Set: test := {}
 do
-  test := {1,2,3,4} ∩ {3,4,5} 
+  test := {1,2,3,4} & {3,4,5} 
   print test ** {3,4}
-done;
+done
 ```
 
-## Hash
+**Note:** Operators "|" and "&" are overloaded betwise operators
+
+## Table
 
 It is called "H" due to similar method:of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
 
-* Hash is set of (<key>:<value>) pairs; 
+* Table is set of (key:value) pairs; 
 * The key must be one of {Integer, Natural, String} and is unique;
 
 **syntax**
 ```
 given
-  Hash[key_type, value_type]: name := {(key:value), ...}
+  Table[key_type, value_type]: name := {(key:value), ...}
 ```
 
 **Example**
 ```
 given
-   Hash[String, Integer]: dictionary := {}
+   Table[String, Integer]: dictionary := {}
 begin   
    dictionary := {('one':1), ('two':2)}
-done;
+done
 ```
 
 ## Text
@@ -320,7 +321,7 @@ do
              because it is dressed in overalls 
              and looks like work." 
   print (my_text)
-done;
+done
 ```
 
 **Output:**
@@ -343,7 +344,7 @@ given
   Text: us := "I can write Greek: \αβγδ\."
 do
   print (us)   
-done;
+done
 ```
 > I can write Greek: "αβγδ".
 
@@ -384,7 +385,7 @@ There are two alternative statements to create user defined exceptions.
 ** raise exception
 when condition do
   raise (code,"message")
-done;
+done
 
 ** conditional 
 raise (code,"message") if (condition)
@@ -407,7 +408,7 @@ recover
   print ($error.message)
 closure
   ** close process
-return;
+return
 ```
 
 ```

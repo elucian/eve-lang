@@ -20,7 +20,7 @@ with qualifier := long_qualifier do
   ** local statements
   method_name()  ** instead of: qualifier.method_name()
   var := function_name() ** instead of qualifier.function_name()
-done;
+done
 ```
 
 **Notes:** 
@@ -41,7 +41,7 @@ given
   ** local context
 when (expression) do
   ** single path
-done;
+done
 ```
   
 2.dual path selector
@@ -50,7 +50,7 @@ when (expression) do
    ** true path
 else
    ** false path
-done;
+done
 ```
   
 3.nested selector 
@@ -58,13 +58,14 @@ done;
 when (expression) do
   when (expression) do
    ** nested path
-  done;
-done;
+  done
+done
 ```
 
 ## Quest
 
-The quest is a multi-path value based selector. It is used in conjunction with { "do", "other" }
+The quest is a multi-path value based selector. 
+It is used in conjunction with { "do", "other", "done"}
 
 **syntax:**
 
@@ -80,7 +81,7 @@ quest val
     ** third path
 other
   ** default path
-done;
+done
 ```
 
 **Using list and range**
@@ -102,9 +103,9 @@ process
   other
     ** other cases
     message := "no match"
-  done;
-  print (message); 
-return;
+  done
+  print (message) 
+return
 ```
 
 **notes:**
@@ -129,7 +130,7 @@ while (condition) do
   stop if (condition)
 else
   ** alternative path  
-redo;
+repeat
 ```
 **example**
 
@@ -146,9 +147,9 @@ process
     if (element >= "c") do
        write(element)
        write(',') if (element ≠ "e") 
-    done;   
-  done;
-return;
+    done   
+  repeat
+return
 ```
 > "c","d","e"
 
@@ -166,7 +167,7 @@ scan [min..max] +> var do
   ** eary intreruption
   stop if (condition)
   ...
-next;
+next
 ```
 
 **Notes:**    
@@ -178,12 +179,12 @@ Example of range iteration:
 given
   Integer: i := 0
 scan [0..10] +> i do
-  if (i % 2 <> 0) do
+  when (i % 2 <> 0) do
     ** write only odd numbers
     write(i)  
     write(',') if (i < 10)  
-  done;
-redo;
+  done
+next
 ```
 > 1,3,5,7,9
 

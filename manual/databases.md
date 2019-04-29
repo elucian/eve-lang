@@ -44,7 +44,7 @@ method: connect(String: user, password, dbname)
 process  
   credential := user + '/' + password + '@'+ dbname
   db.connect(credential) 
-return;
+return
 ```
 
 ## Structure
@@ -151,10 +151,10 @@ process
   with catalog[1] do
     name := "Ispas Inca"
     age  := "17" 
-  done;
+  done
   
   print("#s is single." <+ catalog[1].name)
-return;
+return
 ```
 
 Console:  
@@ -186,7 +186,7 @@ given
 do
   ** differed structure
   person:= (name:"John", age:21)
-done;
+done
 ```
 
 ## Tables
@@ -221,7 +221,7 @@ scan current_record <+ table_name do
   with current_record do
     ** use current_record fields
     ... 
-  done;
+  done
 repeat;
 
 ```
@@ -244,7 +244,7 @@ scan current_record <+ db.table_name do
   with (current_record, source_record) do
      current_field := source_field
      ...
-  done;
+  done
   ** update single row
   current_table.update()
 repeat;
@@ -374,7 +374,7 @@ given
 scan current_record  <+ Cursor_Type(arguments) do
   with record_name do
      ... ** use record fields
-  done;
+  done
 next;
 print $cursor.fetched;
 ```

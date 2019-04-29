@@ -22,7 +22,7 @@ process
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
   print ("This is the last element: {1}"  <+ my_array[m])
-return;
+return
 ```
 
 **console:**
@@ -50,7 +50,7 @@ given
 do
   M[*] := 100
   print (M)
-done;
+done
 ```
 
 ```
@@ -78,7 +78,7 @@ do
   M[*,1] += 1
   M[*,2] += 2
   print(M) ** [[1,2],[2,3]]
-done;
+done
 ```
 
 **Memory impedance**
@@ -112,7 +112,7 @@ process
     repeat;
     col += 1
   repeat;
-return;
+return
 ```
 
 ##  Arrays Slicing
@@ -147,7 +147,7 @@ process
   
   ** first 4 elements of (a) are modified
   print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
-return;
+return
 ```
 
 ### Set builders
@@ -181,7 +181,7 @@ do
    ** eliminate duplicates using set comprehension
    mew_set := { x : x in my_list } 
    print my_set ** {0,1,2} 
-done;
+done
 ```
 
 ## Filtering
@@ -195,7 +195,7 @@ given
 do
    my_set := { x : x in my_list & (x % 2 = 0) } 
    print my_set; ** {0,2,4} 
-done;
+done
 ```
 
 ## Mapping
@@ -210,7 +210,7 @@ do
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
    target := { (x:x^2): x in source } 
-done;
+done
 ```
 
 ## List Concatenation
@@ -225,7 +225,7 @@ method: main()
 process
   c := a + b
   print(c)**['a','b','c','1','2','3']
-return;
+return
 ```
 
 ## Join() built-in
@@ -237,7 +237,7 @@ given
 do
   str := join([1,2,3],",")
   print (str) ** "1,2,3"
-done;  
+done  
 ```
 
 ### Split built-in
@@ -249,7 +249,7 @@ given
 do
   lst := split("1,2,3",",")
   print lst ** (1,2,3)
-done;
+done
 ```
 
 ### List operations
@@ -328,10 +328,10 @@ process
        stop ** early termination
     else
        write(',')           
-    done;
+    done
     element := my_list[x++]
   repeat;
-return;
+return
 ```
 > c,d
 
@@ -365,7 +365,7 @@ process
   visit (key, value) in my_map do
     print('("' + key + '",' + value +')');
   repeat;
-return;
+return
 ```
 Will print:
 ```
@@ -403,8 +403,8 @@ process
     animals['Bear'] := 'dog'
     animals['Kiwi'] := 'bird'
     print(animals)
-  done;
-return;
+  done
+return
 ```
 
 Output:
@@ -429,7 +429,7 @@ process
   animals['Bear'] := "dog"
   animals['Kiwi'] := "bird"
   print(animals)
-return;
+return
 ```
 output:
 ```
@@ -453,7 +453,7 @@ do
   ** set string value using different operators
   str := "this "&" string"   ** "this  string"
   str := "this "+" string"   ** "this string"
-done;
+done
 ```
 
 **path concatenation**
@@ -465,7 +465,7 @@ given
 do  
   s := 'te/' / '/st' ** "te/st" ** Linux
   s := 'te/' / '/st' ** "te\st" ** Windows
-done;
+done
 ```
 
 ## Text concatenation
@@ -512,7 +512,7 @@ method: main()
 process  
   ** using format function
   print(template.format(my_map)) 
-return;
+return
 ```
 
 Expect output:
@@ -527,7 +527,7 @@ method: main()
   List: my_list    := ("test","works!")
 process  
   print (template <+ my_set)
-return;
+return
 ```
 
 Expect Output:
