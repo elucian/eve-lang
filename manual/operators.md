@@ -24,7 +24,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | :     | Define name \| Pair-up operator
 | .     | Decimal separator \| Public member \| Member of ,,,
 | ,     | Enumeration for elements \| complex expression 
-| \*    | Variable arguments \| Multiplica
+| \*    | Variable arguments \| Multiplication
 
 ## Double symbols
 
@@ -38,16 +38,16 @@ Eve use two symbols to create a additional operators.
 |::    | Receive output argument from method I/O parameter
 |=+    | Outer join operator used in data "select" statement
 |<:    | Declare user define type / sub-type 
-|<+    | Injector \| Unpack  \| Template \| Data source
-|+>    | Fetch or select into: collection \| Destination
+|<+    | Template injector \| Data source provider
+|+>    | Result colector \| Visitor element
 
 ## String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
 |\`x\` | Single  UTF32 character (4 bytes)
-|'x'   | Limited capacity literal: UTF32 (max: 128 characters)
-|"x"   | Unicode string literalS UTF8
+|'x'   | Limited capacity string: UTF8 (max: 128 characters)
+|"x"   | Variable capacity string: UTF8 (unlimited)
 
 ## String: concatenation
 

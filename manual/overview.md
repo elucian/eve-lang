@@ -49,75 +49,59 @@ print ** end of line comment is enabled
 * One single character "*" is multiplication operator;
 * Nested comments are supported for multi-line comments;
 
+
+
 ## Directives
 Directives are script properties that are communicated to the compiler. Directives represent script meta-data. One script can have multiple directives usually at beginning of the script. Directives start with "#" and are used by the compiler to establish different behaviors. 
 
 **examples**
 ```
-#trace:on
-#debug:on
-#break:point
-#print:variable
+#trace:on/off
+#debug:on/off
+#break:name
 ```
-
-## Scripts
-
-EVE is a modular system based on Scripts. Every script is a script that can be parsed in memory. After this script methods can be executed. User can decide what script will be parsed and executed first by using configuration files or console commands. 
-
-**properties**
-
-* a script can be imported in other Scripts using "import";
-* a script can call methods and use other members from other Scripts;
-* a script that do not contain method main() is called library;
-
-A _library_ is a reusable component. It contains mostly public members: 
-
-{constants, types, classes, methods, functions}
-
-* after first load a library remain resident in memory
-* a library is loaded only once even if is imported multiple times
-* circular import is possible but we protect against infinite recursion
-* a library usually do not import itself, this is an error
-
-A _script_ is a executable script. It contains mostly private members:
-
-* main method from a script is usually public;
-* public methods are exported using "export" region;
-* export region is last region in a script;
 
 ## Keywords
 
-Keywords are English words familiar to programmers used in logical semantic structures easy to grasp. We prefer English since the computer was invented in England so they deserve this honor.
+Keywords are English words familiar to programmers used in logical semantic structures easy to grasp. Computer was invented in England during WW2 so, we prefer English even though a computer language could be created using keywords from other languages.
 
-* [Keywords](keywords.md) 
+Details: [Keywords](keywords.md) 
 
-## Operators:
+## Operators
 
-EVE has ASCII and Unicode operators. Unicode operators require one space before and one after. ASCII operators do not require space separator. Unicode and ASCII operators usually are independent used and not combined.
+EVE us ASCII symbols for operators. One operator can be a single character or a combination of two characters. 
 
-* [Operators](operators.md) 
+** Single Character:
+
+{ = : ~ ! @ # $ % ^ & * _ * - + / < >}
+
+** Two Character:
+
+{ := != <> => >= <= +> <+ <: .. }
+
+** Delimiters
+
+{ , : ; . }
+
+Details: [Operators](operators.md) 
 
 ## Data types
 A data type is an abstract concept that describe data representation. 
 
-There are 3 kind of data types in EVE
+There are 4 kind of data types in EVE:
 
-* basic types 
-* composite types 
-* class of object
-
-**syntax:**
-
-A composite data type is declared like this:
-```
-type Type_Name <+ Type_descriptor
-```
+* [basic types](data-types.md)
+* [composite types](composite.md)
+* [classes](classes.md)
 
 ## Variables
 A variable is represented by an identifier, and is associated to a type. Variables can be changed during the execution of the program using modifier operators { :=, +=, *=, /= ...}. Conceptual variables are native types or references to composite types.
 
 **patterns:**
 ```
+** define type
+type: type_name[parameters] <: type_descriptor
+
 global
   ** use default value
   type_name: var_name                
@@ -153,7 +137,7 @@ The previous value of the variable is discarded if there is no other reference t
 
 **Syntax:**
 ```
-  variable_name := <expression 
+  variable_name := expression 
 ```
 
 ## Identifiers

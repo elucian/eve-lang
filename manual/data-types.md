@@ -1,6 +1,8 @@
 ## Data Types
 
-EVE is a gradual type language. It has four kind of data types:
+EVE is a gradual typed language, with predefined types. 
+
+**bookmarks**
 
 * [Basic](#basic-types)
 * [Numeric](#numeric-types)
@@ -8,10 +10,6 @@ EVE is a gradual type language. It has four kind of data types:
 * [Collections](#collections)
 * [Physical](#physical-types)
 * [User defined](#user-defined)
-
-**bookmarks**
-
-
 * [Data Coercion](#data-coercion)
 * [Type inference](#type-inference)
 * [Default types](default-types) 
@@ -22,12 +20,12 @@ EVE is a gradual type language. It has four kind of data types:
 
 ## Basic Types
 
-Basic types are abstract wrappers to native types. 
+Basic types are abstract wrappers to OS native types. 
 
 | type     | description
 |----------|-------------------------------------------------------
-| Char     | integer on 8  bit (unsigned)
-| Symbol   | integer on 32 bit (unsigned)
+| Char     | integer on 8  bit (unsigned) (ASCII)
+| Symbol   | integer on 32 bit (unsigned) (UTF32)
 | Integer  | integer on 64 bit (signed)
 | Natural  | integer on 64 bit (unsigned)
 | Real     | double precision number on 8 bit (signed) 
@@ -71,7 +69,7 @@ EVE has ready to use support for physical measurements:
 In EVE we can have two categories of numbers:
 
  Category     | EVE Types
---------------|-------------------------
+--------------|------------------------------------------------------------
  Discrete:    | Integer, Natural
  Continuous:  | Real
 
@@ -120,7 +118,7 @@ Precision Real: numbers is variable depending on the size of the number. The num
 
 ```
 method: main()
-  ** declare variable
+  ** declare variables
   Integer: i 
   Natural: n
   Real: r
@@ -140,8 +138,7 @@ A sub-type can be _defined_ using symbol "<:" and keyword: "type".
 
 **Syntax:**
 ```
-define
-  type: type_name <: super_type (parameters)
+type: type_name <: super_type (parameters)
 ```
 **Notes:**
 
@@ -151,8 +148,7 @@ define
 
 **Example:**
 ```
-define
-  type: Point <: Record (Integer: a, b )
+type: Point <: Record (Integer: a, b )
 
 method: main()
   Point: p1, p2      ** implicit constructor

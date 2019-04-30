@@ -1,12 +1,12 @@
 ## ΞVΞ Structure
 
-EVE is scripting language. Scripts are files with extension *.eve stored on a server in project folders. The main folder contains one or more master scripts. Each represents an application entry point and can be executed in a separated session.
+Next bookmarks will lead you to the main concepts required to understand EVE program structure.
 
 **Bookmarks:**
 
-Next bookmarks will lead you to the main concepts required to understand EVE program structure.
-
 * [Scripts](#scripts)
+* [Suites](#suites)
+* [Libraries](#Libraries)
 * [Regions](#regions)
 * [Classes](#classes)
 * [Methods](#methods)
@@ -15,33 +15,71 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Parameters](#parameters)
 * [Dispatch](#dispatch)
 * [Test cases](#test-cases)
-* [Program Execution](#program-execution)
+* [Execution](#execution)
 
 ## Scripts
 
 Scripts are source code files having extension: *.eve. script names starts with lowercase letter can contain underscore and digits but no special characters. Longer names that use several words will separate with underscore. The script name can be 64 characters long.
+
+**directive**
+```
+#script:name("description")
+```
+
+**properties**
+
+* one script can be imported in other script;
+* one script can use public members defined in other scripts;
+* one script is not independent, it can run only from a suite;
+
+## Suites
+A suite is a master script that lead an application. Each suite can import or execute one or more scripts. Suites are stored in project root folder. A suite can have  associated one or more configuration files. The configuration file contains parameter/value pairs used to generate the: _system variables_.
+
+**directive**
+```
+#suite:name("description")
+```
+
+**properties**
+
+* one suite can import one or more scripts;
+* one suite is independent, can not be imported in other scripts or suites;
+* one suite can receive values for system variables using a configuration file;
+* one suite can be run with a different configuration file do perform different task;
+
+## Libraries
+
+A _library_ is a reusable script located in a library folder.
+
+* a library can be shared between multiple projects;
+* using import several library files can be loaded from a folder;
+* circular import is possible: we protect against infinite recursion;
+* a library script is loaded only once even if is imported multiple times;
+
+**directive**
+The header of library must contain directive:
+
+```
+#library:name("description")
+```
+
+**Note:** 
+* file_name and library name must be the same
+* if one identifier is not found in local context a library is searched
 
 ## Regions
 Each script is divided into regions. Each region is identified by one of these keywords:
 
 {import, define, global, class, method} 
 
-**members**
-Members belonging to a region are indented two spaces from left side. A region terminate when other region starts or indentation is changed. Regions can be repeated but can not be nested.
-
 **syntax**
 ```
-************************************************
-**   First line of a script can be a comment  **
-************************************************
-** system region has zero indentation
-** system region contains directives and system variables
-#directive
+** introductory comment
+#directive:value
 ...
 
 ** system variables
 $system_variable := value/expression
-$system_constant := value/expression
 
 import
   ** import_region
@@ -54,6 +92,9 @@ define
 global
   ** variable declaration
 
+## type declaration
+type: name[parameters] <: type_descriptor
+
 ## member declarations
 function: name(params) => (expression)
 
@@ -64,51 +105,59 @@ return
 method: name(params) => (result_list)
   ** method_definition
 return
-
-## footer comment
+** footer comment
 ```
+
 
 ## Declaration order
 Order of regions is important but it can be interleced with other declarations. You can not use members before they are defined. Directives are usually on top follow by system declarations then import and then global variable declarations. Last we declare in random order several: {functions, methods, classes}.
-
 
 ## System variables
 System variable start with prefix "$". System variables are defined in EVE core library. Programmers can use system variables. Before define and import keyword there is a region where user can define new system variables. System declaration region use zero zpace indentation. 
 
 ## Import region
-Is used to include one or several scripts one on each line. Import region contains also _"from"_ clause. This is used to indicate what members we will use without dot qualifier. If we do not specify than script members can be accessed only with qualifier;
+
+Is used to include one or several scripts into current script: 
 
 **syntax**
 ```
 import 
-  qualifier := $path/relative_path/script_name.eve:(*) 
+  $path/relative_path/script_name:(*) 
+  $path/relative_path/script_name:(class_name,...)
+
+** qualifier alias
+alias
+  qualifier := script_name.class_name;
   ...
-
 ```
-**location**
-The compiler search scripts in local library first then in script folder then in EVE standard library then in path $EVE_PATH. Finally if file is not found the program fail to compile. We can specify the relative path before script name in the import region using "/" to separate folder names.  
 
-**Note:** 
+**path**
 
-* Only a #library or #script can be imported not a #driver
-* A #driver can be executed but can not be imported
+Several system variables provided by EVE environment:
 
-## Define Region
-This region is for declaration of global "members". 
+* $eve_home  -- eve runtime
+* $pro_home  -- project home
+* $eve_lib   -- eve lib folder
+* $pro_lib   -- project lib folder
+
+## Define region
+
+Define region is for declaration of global variables and constants:
 
 * constant  ::=  type : Identifier := value;
 * variable  ::=  type : identifier := value;
 * reference ::=  type @ identifier := value;
 
-Global members are visible in current script and Scripts that imports it. 
+Global members are visible in current script and suites that imports it. 
 
 ## Methods
 
-A method is a named block of code.
+A method is a named block of code that can be executed multiple times.
 
 * it can define input/output parameters;
 * can have local defined variables;
-* is terminated with statement return
+* can have one or more results;
+* is terminated with statement return;
 
 **prototype**
 ```
@@ -121,9 +170,9 @@ return
 ```
 
 **Notes:**
-* symbol ":" after method is mandatory, like for any other declaration, 
+
 * parameters are optional but empty list () is required if there are no parameters,
-* results are optional but => () is required if there are no results.
+* results are optional but symbols => and empty list () is required if there are no results.
 
 **Method name**
 A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
@@ -135,8 +184,8 @@ If a script is executable using "run" command, it must contain a "main" method. 
 Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- param_name ::= type : name := value ** input parameter
- param_name ::= type @ name ** output parameter
+ parameter ::= Type : name := value ** input parameter
+ parameter ::= Type @ name ** output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -149,7 +198,7 @@ Parameters are defined in round brackets () separated by comma. Each parameter m
 
 One method can receive multiple arguments of the same type separated by comma into one parameter.
 
-* The variadic parameter name are declared using "*" instead of ":". 
+* The variadic parameter name are declared using "*" instead of ":" or "@". 
 * The surplus of arguments are captured into last parameter named: "args". 
 * We can use any name instead of "args" but this is the usual name.
 
@@ -162,11 +211,11 @@ return
 
 **Method context**
 
-Every method has a local context. Members defined in local context belong to the method. In this context a method can implement attributes using "." prefix. Attributes are properties of the method and can be accessed before and after method execution. 
+Every method has a local context. Members defined in local context are private. In this context a method can implement static attributes using "." prefix. These attributes are properties of the method and can be accessed from current script using dot notation. 
 
 **Method results**
 
-A method can have results defined after operator "=>" in a list: (results). The result values can be computed in method context. Results can be captured or ignored by a method call.
+A method can have results defined after operator "=>" in a list: (results). The result values can be computed in method context. Results can be captured using symbol "+>" or can be ignored. Symbol "+>" is called "colector operator".
 
 
 **Method call**
@@ -179,8 +228,8 @@ Methods can be used like statements. A method call can be done using method name
   method_name (argument_list) +> (result_arguments);
 ```
 
-## Method termination
-A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword _exit_ can terminate a method early and no error is signaled. To signal an error you can use _raise_ keyword.
+**Method termination**
+A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword _exit_ can terminate a method early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a method using _quit_ but this will also terminate the main suite,
 
 **Example:**
 ```
@@ -203,7 +252,7 @@ return
 
 ## Side Effects
 
-We have mention side-effects: that can be one of:
+A method can have side-effects: 
 
 * modify a global variable;
 * open and write into a file;
@@ -211,7 +260,7 @@ We have mention side-effects: that can be one of:
 
 **using side-effects**
 
-Next method add_numbers has 2 side effects: 
+Next method add numbers and has 2 side effects: 
 
 ```
 ** global variables
@@ -238,7 +287,7 @@ return
 
 **using output parameters**
 
-To avoid system and global variables you use output parameters:
+To avoid system and global variables you can use output parameters:
 
 ```
 method: add(Integer: p1,p2, Integer @ out) => ()
@@ -270,7 +319,7 @@ return
 A function can have parameters and produce one single result. 
 
 ```
-function: name(parameters) => type: (expression)
+function: name(parameters) => Type: (expression)
 ```
 
 **Function call**
@@ -285,7 +334,7 @@ The call for a function is using name of the function and round brackets () for 
   <result> := <function_name>(value, ...) 
   
   ** call using parameter names for mapping
-  <result> := <function_name>(param : value ...)   
+  <result> := <function_name>(param:value ...)   
 ```
 
 **Parameters**
@@ -301,7 +350,7 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function: sum(Integer: a, b) => Integer:(a + b)
+function: sum(Integer: a, b) => Integer: (a + b)
   
 method: main() => ()
   Integer: r
@@ -378,16 +427,16 @@ class: name(parameters) <: base_class
   ** definition_region
 create
   ** constructor region
-discard
+remove
   ** release region
 return
 ```
 
 **Read more:** [Classes](classes.md)
 
-## Test cases 
+## Test case 
 
-A method can be organized as a workflow of multiple use-cases that can fail.
+A method can be organized as a workflow of multiple test-cases that can fail.
 
 ```
 method: main() => ()
@@ -420,45 +469,56 @@ New keywords:
 * solve, will continue with a forward case
 * retry, will continue with a previous case
 
-## Program Execution
+## Execution
 
-EVE program is hosted using a virtual machine. This is capable of running multiple sessions in parallel. Each session represents one independent application. You can run same application in different sessions. The sessions are independent and encapsulated. That means sessions can not communicate with each other.
+EVE suites are executed using a virtual machine. This is capable of running one single suite at a time. You can run same suite in different sessions with different startup parameters. Each session is independent. 
 
-Server is in charge of allocating memory for one session before the application starts. There is no shared memory. That is a session is dedicated for a single application. After application is terminated the memory is released.
-
-This is the reason EVE do not use parallel programming. The server is handling all the parallel work. EVE applications are single threaded applications. This also simplify the interpreter. There is no possibility to have race conditions or unexpected results.
-
-To execute a program or application there are 2 methods:
+**memory**
+Server is in charge of allocating memory for one session before the application starts. There is no shared memory between sessions. That is a session is dedicated for a single application. After application is terminated the memory is released.
+ 
+To start an application there are 2 methods:
 
 1. Using the command line with parameters
 2. Using console command line with commands
 
-eve:> run script_name
+eve:> run path/suite_name -c file.cfg -m 2048GB
 
-
-**notes**
-* You can executed script methods from another script
-* Only scripts that have main() method can be executed 
-* You can use _alias_ to create an alternative name for a script
-
-**pattern example:**
+**syncron:**
 ```
-#driver "test"
+#suite:test("module run test")
 
 import 
-   my_lib    := $pro_lib/my_lib.eve:(*)
-   my_script := $pro_mod/my_script:(member_name,...)   
-
+  $pro_mod/module_name
+   
 ** you can run a script with arguments
 method: main() => ()
 process
-  run my_script(arguments) +> (results)
+  run module_name.main(arguments) +> (results)
 return
 ```
 
-**using halt**
+**parallel:**
+```
+#suite:test("module run test")
 
-This is a way to release all locked resources and stop the program with error code -1.
+import 
+  $pro_mod/module_name
+
+method: main() => ()
+process
+  ** execute a module in parallel
+  act $pro_mod/module_name(arguments,channel)
+  act $pro_mod/module_name(arguments,channel) 
+  ** whait for all scripts to finish
+  rest
+  ** print the results
+  print (channel)
+return
+```
+
+**using exit**
+
+Using exit in main() will end script execution.
 
 **Example:**
 ```
@@ -469,6 +529,21 @@ done
 
 ** using if postfix condition
 exit if (condition)
+```
+
+**using quit**
+
+This is a way to release all locked resources and stop the main suite.
+
+**Example:**
+```
+** using when prefix condition
+when (condition) do
+  quit
+done
+
+** using if postfix condition
+quit if (condition)
 ```
 
 **Read next**: [Control Flow](control.md)

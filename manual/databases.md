@@ -27,7 +27,7 @@ A data model is using a database. For this the model is connecting using adapter
 
 ```
 import
-   alias: Oracle := $EVE_LIB.db.oracle.eve          
+   $eve_lib/db/oracle:(Database)
 ```
 
 ## Connection
@@ -39,7 +39,7 @@ To connect to database we must use "connect" method. Once connected the data mod
 ```
 method: connect(String: user, password, dbname)
   ** create a database instance
-  Oracle.Database: db
+  Database: db
   String: credential
 process  
   credential := user + '/' + password + '@'+ dbname
@@ -59,8 +59,7 @@ One database provide a structure for tables. An application can read structure a
 A record is a group of elements that are called fields or members. The elements can be native types, collections or other records. A variable can be defined based on a record type.
 
 ```
-define
-  type: Type_Name <: Record (field_name:type, ...)
+type: Type_Name <: Record (field_name:type, ...)
 
 global
   Type_Name: record_name
@@ -71,22 +70,20 @@ An important application of recursion in computer science is in defining dynamic
 
 ```
 ** example of single recursive node
-define
-   type: Node <: Record ( 
-     Integer: data,   ** integer data
-     Node: previous   ** reference to previous node
-   )
+type: Node <: Record ( 
+  Integer: data,   ** integer data
+  Node: previous   ** reference to previous node
+)
 ```
 This kind of structure can be used to create a data chain.
 
 ```
 ** example of double recursive node
-define
-   type: Node <: Record (
-     Integer: data,  ** integer data
-     Node: previous, ** reference to previous node
-     Node: next      ** reference to next node
-   )
+type: Node <: Record (
+  Integer: data,  ** integer data
+  Node: previous, ** reference to previous node
+  Node: next      ** reference to next node
+)
 ```
 This kind of structure can be used to create a queue.
 
@@ -127,8 +124,7 @@ A record instance is a variable of type record. The memory is allocated using th
 **Example:**
 ```
 ** we declare a record type  
-define
-  type: Person <: Record (String(32): name, Integer: age )
+type: Person <: Record (String(32): name, Integer: age )
 
 method: main()
   Person: person1,person2     ** two variables of type Person
@@ -157,7 +153,7 @@ process
 return
 ```
 
-Console:  
+**Console:**  
 ```
 John and Vera are lovers.
 Ispas Inca is single.  
@@ -222,7 +218,7 @@ scan current_record <+ table_name do
     ** use current_record fields
     ... 
   done
-repeat;
+repeat
 
 ```
 
@@ -247,7 +243,7 @@ scan current_record <+ db.table_name do
   done
   ** update single row
   current_table.update()
-repeat;
+repeat
 ** commit all pending updates
 db.commit();
 
@@ -294,7 +290,7 @@ given
   Record: current_record
 scan current_record <+ database.view_name do  
   print (current_record)
-scan
+next
 ```
 
 ## Database Built In
@@ -361,7 +357,7 @@ while !cursor_name.finish() do
   current_record := cursor_name.fetch();
   ** use record-list
   ...
-repeat;
+repeat
 cursor_name.close();
 ```
 
@@ -375,7 +371,7 @@ scan current_record  <+ Cursor_Type(arguments) do
   with record_name do
      ... ** use record fields
   done
-next;
+next
 print $cursor.fetched;
 ```
 
@@ -426,7 +422,7 @@ append to table_name
   select (field_target:field_source, ...)
   from alias = table_source,...
   join join_expression
-  where filter_expression;
+  where filter_expression  
 ```
 
 **From collection:**
@@ -470,8 +466,8 @@ update table_name <+ eve_record_list;
 ```
 update target (target.field_name:source.field_name,...)
   from source
-  join  source.field_name == target.field_name
-  where filter_expression;
+  join source.field_name == target.field_name
+ where filter_expression;
 ```
 **note:** 
 * you can not use outer join =+ for update. 
@@ -553,19 +549,6 @@ SQL and DML statement will inject properties into global object called: $query. 
 The adapters will allow direct communication between EVE application and target database. EVE can generate specific SQL code from source database and convert data structure to the target database. This code is dynamically created and can be spool-out using SQL introspection.
 
 TODO: Define built-ins for SQL generator
-
-## Sage Code
-As a reminder the standard insert statement ins SQL looks like this:
-
-```
-insert into table_name 
-  (field, field, field ...) 
-values
-  (value, value, value ...)
-```
-
-When the list of fields is large then the mapping between the field name and the value is very difficult to read. You have to count the number of comas to be sure. In EVE we have change this to map directly a value to a filed_name using ":" pair up operator.
-
 
 ## Data Communication
 An EVE application can communicate with external world using JSON. Once a database model is designed we can create an interface for a model to read/write data using JSON data blocks that can transfer one or more records over TCP-IP protocol. This communication is transparent to EVE users. It is used by database adapters.
