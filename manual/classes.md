@@ -111,7 +111,7 @@ return
 Objects can be declared and initialize in a single statement using operator ":=" with constructor or can be declared first using "<:" and initialize later using operator ":=" with the constructor call. 
 
 ## Comparing objects
-We can use comparison operators: "=" and "=" with objects. First comparison "=" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If all attributes are equal and have same base class the objects are equivalent.
+We can use comparison operators: "==" and "=" with objects. First comparison "==" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If is the same class and all attributes are equal the objects are equivalent.
 
 **Example:**
 ```

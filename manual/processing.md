@@ -18,7 +18,7 @@ process
   while i < m do
     my_array[i] := i     
     i += 1
-  repeat;
+  repeat
   ** array  elements are identified using [index]
   print ("This is the first element: {1}" <+ my_array[1])
   print ("This is the last element: {1}"  <+ my_array[m])
@@ -100,18 +100,20 @@ In this example we traverse all the rows then all the column, this is the most e
 method: main()
   Matrix[String(2)](3,3): M 
 process  
-  M :=  ⎡'a0','b0','c0'⎤
-        ⎢'a1','b1','c1'⎥
-        ⎣'a2','b2','c2'⎦        
+  M := [ 
+         ['a0','b0','c0'],
+         ['a1','b1','c1'],
+         ['a2','b2','c2']
+       ]        
   given
     Integer: row, col := 1
   while col <= 3 do     ** traverse columns
     while row <= 3 do   ** traverse row first
       print M[row,col]
       row += 1
-    repeat;
+    repeat
     col += 1
-  repeat;
+  repeat
 return
 ```
 
@@ -121,7 +123,7 @@ A slice is a small portion from an Array created with range operator "[..]"
 
 **syntax**
 ```
-   <slice_name> := <collection>[n..m]
+   slice_name := collection[n..m]
 ```
 
 Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements. 
@@ -134,9 +136,9 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-method: main() 
-  Array[Integer: ]: a := [0,1,2,3,4,5,6,7,8,9]
-  Array[Integer: ]: b :: a[1..4] ** slice reference
+method: main() => ()
+  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9]
+  Array[Integer]: b :: a[1..4] ** slice reference
 process
   print(a[1..?])   ** will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1])   ** will print [0]
@@ -302,7 +304,7 @@ while element is not Null do
   ** statements
   ...
   element := collection.next(element)
-repeat;
+repeat
 ```
 
 ### Iterator element
@@ -330,7 +332,7 @@ process
        write(',')           
     done
     element := my_list[x++]
-  repeat;
+  repeat
 return
 ```
 > c,d
@@ -364,7 +366,7 @@ process
     Integer: value
   visit (key, value) in my_map do
     print('("' + key + '",' + value +')');
-  repeat;
+  repeat
 return
 ```
 Will print:

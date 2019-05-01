@@ -19,12 +19,14 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 
 ## Scripts
 
-Scripts are source code files having extension: *.eve. script names starts with lowercase letter can contain underscore and digits but no special characters. Longer names that use several words will separate with underscore. The script name can be 64 characters long.
+Scripts are source files having extension: *.eve. Script names are using lowercase letters can contain underscore and digits but no special characters or Unicode. Longer names that use several words can be separate with underscore. The script name can be 64 characters long.
 
 **directive**
 ```
-#script:name("description")
+#script:name("long_name")
 ```
+
+Script has a longer name/ descriptive name for reporting.
 
 **properties**
 
@@ -37,8 +39,10 @@ A suite is a master script that lead an application. Each suite can import or ex
 
 **directive**
 ```
-#suite:name("description")
+#suite:name("long_name")
 ```
+
+Suite has a longer name/ descriptive name for reporting.
 
 **properties**
 
@@ -51,8 +55,8 @@ A suite is a master script that lead an application. Each suite can import or ex
 
 A _library_ is a shared folder containing reusable scripts.
 
-* a library can be shared between multiple projects;
-* using import several scripts can be loaded from a folder;
+* library contain generic functionality and can be shared between multiple projects;
+* using import several scripts can be loaded from a folder at once;
 * circular import is possible: we protect against infinite recursion;
 * after import you can call public members of a library using dot notation;
 
@@ -112,18 +116,19 @@ System variable start with prefix "$". Before import there is a flat region wher
 
 ## Import region
 
-Is used to include one or several scripts into current script: 
+Is used to include members from several other scripts into current script: 
 
 **syntax**
 ```
 import 
-  $user_path/relative_path/*.eve 
+  $user_path/relative_path/*.eve:(*) 
   $user_path/relative_path/script_name.eve:(*)
   $user_path/relative_path/script_name.eve:(member_name,...)
 
 ** member alias
 alias
-  name := script_name.member_name;
+  name := script_name
+  name := script_name.member_name
   ...
 ```
 

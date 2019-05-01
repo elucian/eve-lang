@@ -141,7 +141,7 @@ process
   while (i <= 10) do
     catalog[i] := Person("John Doe", 20)
     i += 1 
-  repeat;
+  repeat
 
   ** change first person using "with...do"
   with catalog[1] do
