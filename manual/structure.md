@@ -6,7 +6,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 
 * [Scripts](#scripts)
 * [Suites](#suites)
-* [Libraries](#Libraries)
+* [Library](#library)
 * [Regions](#regions)
 * [Classes](#classes)
 * [Methods](#methods)
@@ -47,73 +47,68 @@ A suite is a master script that lead an application. Each suite can import or ex
 * one suite can receive values for system variables using a configuration file;
 * one suite can be run with a different configuration file do perform different task;
 
-## Libraries
+## Library
 
-A _library_ is a reusable script located in a library folder.
+A _library_ is a shared folder containing reusable scripts.
 
 * a library can be shared between multiple projects;
-* using import several library files can be loaded from a folder;
+* using import several scripts can be loaded from a folder;
 * circular import is possible: we protect against infinite recursion;
-* a library script is loaded only once even if is imported multiple times;
-
-**directive**
-The header of library must contain directive:
-
-```
-#library:name("description")
-```
-
-**Note:** 
-* file_name and library name must be the same
-* if one identifier is not found in local context a library is searched
+* after import you can call public members of a library using dot notation;
 
 ## Regions
-Each script is divided into regions. Each region is identified by one of these keywords:
+A script file is divided into regions using keywords: {import, define, global, class, method} 
 
-{import, define, global, class, method} 
-
-**syntax**
+**script syntax**
 ```
-** introductory comment
-#directive:value
+*****************************************
+** Header comment
+*****************************************
+** start wotj directives
+#script:name("long-name")
 ...
 
-** system variables
+## system variables
 $system_variable := value/expression
+...
 
+** import_region
 import
-  ** import_region
+   ...
 
-## head comment
-define
-  ** constant declarations 
-
-## global variables
+## global constants and variables
 global
-  ** variable declaration
+  ** constant
+  ** variable
+  ** reference
+  ...
 
 ## type declaration
 type: name[parameters] <: type_descriptor
+...
 
-## member declarations
+** function declaration
 function: name(params) => (expression)
+...
 
+** class declaration
 class: name(params) <: superclass
-  ** class_definition
+  ...
 return
 
+** method declaration
 method: name(params) => (result_list)
-  ** method_definition
+  ...
 return
-** footer comment
 ```
 
-
 ## Declaration order
-Order of regions is important but it can be interleced with other declarations. You can not use members before they are defined. Directives are usually on top follow by system declarations then import and then global variable declarations. Last we declare in random order several: {functions, methods, classes}.
+Order of regions is important. You can not use members before they are defined. Directives are usually on top follow by system variables then: { import, type, global }. Last we declare active members: {functions, classes, methods}.
 
 ## System variables
-System variable start with prefix "$". System variables are defined in EVE core library. Programmers can use system variables. Before define and import keyword there is a region where user can define new system variables. System declaration region use zero zpace indentation. 
+System variable start with prefix "$". Before import there is a flat region where user can define new system variables using zero space indentation. System variables are usually loaded from a configuration file (*.cfg) and do not need to be declared explicit. They are just known by EVE runtime and can be used in all scripts. 
+
+**Note:** System variables are immutable!
 
 ## Import region
 
@@ -122,33 +117,53 @@ Is used to include one or several scripts into current script:
 **syntax**
 ```
 import 
-  $path/relative_path/script_name:(*) 
-  $path/relative_path/script_name:(class_name,...)
+  $user_path/relative_path/*.eve 
+  $user_path/relative_path/script_name.eve:(*)
+  $user_path/relative_path/script_name.eve:(member_name,...)
 
-** qualifier alias
+** member alias
 alias
-  qualifier := script_name.class_name;
+  name := script_name.member_name;
   ...
 ```
 
-**path**
+**note:** 
+* $user_path is any path defined by the user
+* member alias can be any member: type, class, function, method
+* using :(*) will import all members in current context
+* using :(member_name,...) will import specified members in current context
 
-Several system variables provided by EVE environment:
+**user_path**
 
-* $eve_home  -- eve runtime
-* $pro_home  -- project home
-* $eve_lib   -- eve lib folder
-* $pro_lib   -- project lib folder
+Several system variables are provided by EVE environment:
 
-## Define region
+* $eve_home  :eve runtime
+* $pro_home  :project home
+* $eve_lib   :eve lib folder
+* $pro_lib   :project lib folder
 
-Define region is for declaration of global variables and constants:
+## Global region
 
-* constant  ::=  type : Identifier := value;
-* variable  ::=  type : identifier := value;
-* reference ::=  type @ identifier := value;
+Global region is for declarations of:
 
-Global members are visible in current script and suites that imports it. 
+* constant  ::=  Type : identifier := value;
+* variable  ::=  Type : identifier := value;
+* reference ::=  Type : identifier :: value;
+
+Global members are visible in current script with no prefix. 
+
+**public**
+
+Global public members must start with a dot prefix:
+
+**example**
+```
+global
+  Real: .PI := 3.14 ** global & public constant
+  Real:  pi := 3.14 ** global & private variable
+```
+
+**note:** constant is using capital letters
 
 ## Methods
 
@@ -411,7 +426,6 @@ do
   print v   
 done 
 ```
-
 
 ## Dispatch
 

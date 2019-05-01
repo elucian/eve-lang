@@ -13,14 +13,14 @@ Composite types represents groups of multiple elements.
 
 ## Ordinal
 
-A ordinal is an enumeration of terms. It is an ordered list of identifiers that can represent things, ideas, concepts, keywords. Each item has an identifier name that can be uppercase, lowercase or mixed . To each item we associate a value that is two Byte number that starts from 0 to N. Maxim number of items is 65535.
+Ordinal type is an ordered list of identifiers that can represent things, ideas, concepts, keywords. Each item has an identifier name that can be uppercase, lowercase or mixed . To each item we associate a value that is two byte number starting from 0 to N. Maxim number of items is 65535.
 
 **Syntax:**
-Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using curly brackets {} separated by comma. In the next example we define the days of the week in EVE:
+Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
 define
-  type <type_name> <: Ordinal(symbol:<value>, ... )
+  type <type_name> <: Ordinal (symbol:<value>, ... )
 
 ```
 
@@ -68,7 +68,7 @@ done
 ```
 
 **Operators**
-Ordinal is a ordered set of Natural:numbers identified by a name. Ordinal is a discrete numeral type so it has support for  relation operators: { <, >, ≤, ≥ }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
+Ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
 
 ```
 ** using type Day declared before
@@ -92,7 +92,7 @@ global
 ```
 
 **array capacity**
-An array have fix capacity that must be specified when the Array memory is allocated. You can’t add or remove elements from array once the capacity is established. This is because array  elements are stored in a contiguous computer memory space with no gaps.
+An array have fix capacity that must be specified when the Array memory is allocated. You can’t add or remove elements from array once the capacity is established. This is because array elements are stored in a contiguous memory range with no gaps.
 
 **array literals**
 
@@ -100,7 +100,7 @@ Arrays are represented by an enumeration of elements enclosed by square brackets
 
 **array initialization**
 
-In the next example we  am array with capacity of 3 elements.
+In the next example we define an array with capacity of 3 elements.
 
 ```
 ** array declaration and initialization
@@ -110,7 +110,7 @@ global
 
 **array constructor**
 
-An array  capacity can be established using a parameter and a constructor. All elements of a array  can be set to a single value using operator ":=" during declaration. 
+An array can be established using a constructor. All elements of a array can be set to a single value using operator ":=" during declaration. 
 
 ```
 ** variable array size depending upon parameter n
@@ -124,20 +124,18 @@ return
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  Array: my_array(10) := 0   ** integer
-  Array: my_array(10) := 0.0 ** real 
-  Array: my_array(10) := ""  ** Text
-  Array: my_array(10) := ''  ** String
+  Array: my_array(10) := 0   ** integer number
+  Array: my_array(10) := 0.0 ** real number
+  Array: my_array(10) := ""  ** text with variable size
+  Array: my_array(10) := ''  ** string with capacity 1024 bytes
 ```
 
-The most convenient way to an Array using full inference literal:
+The most convenient way to define an Array is by using inference literals:
 ```
 global
-  ** capacity is 4 and element type is string
+  ** array with capacity 4 of strings 
   Array: my_array := ['a','bc','def','chk']
 ```
-
-**Note:** my_array will be a list if the Array keyword is missing.
 
 ## Matrix
 A matrix is a multidimensional array that is a collection of elements organized in rows and columns. Usually a matrix have two logical dimensions but multiple dimensions are possible.A matrix has a predefined capacity and occupy a fixed memory size.
@@ -176,7 +174,7 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **syntax**
 ```
    List[type_name]: list_name
-   List: list_name := (<constant>, <constant>, ...)
+   List:list_name := (<constant>, <constant>, ...)
 ```
 
 **notes:**
@@ -203,15 +201,15 @@ given
 Literals can be used for initialization:
 ```
 given
-  List[Symbol]   : c_list := ('a', 'b', 'c')
-  List[Integer]: n_list := (1, 2, 3)  
+  List[Symbol]  : c_list := ('a', 'b', 'c')
+  List[Integer] : n_list := (1, 2, 3)  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  List[integer]: c_list := () 
+  List[integer]: c_list
 do
   ** update list using  ":=" 
   c_list := (1,2,3) 
@@ -219,12 +217,12 @@ done
 ```
 
 ## Set
-In mathematics a set is an abstract data structure that can store certain values, without any particular order, and no repeated values. Sets are fast to search, add or remove elements. However, you have to know the element value in order to search for it or to remove it from the set. 
+In mathematics a set is an abstract data structure that can store certain values, without any particular order, and no repeated values. Sets are fast to search, add or remove elements from. However, you have to know the element value in order to search for it or to remove it from the set. 
 
 **declaration**
 
 ```
-  Set[type] :name := {} 
+  Set[type] :name
 ```
 
 **Empty Set**
@@ -234,26 +232,35 @@ An empty set is represented like this: {} and can be assigned to a set if you wi
 **Set restrictions**
 
 * All elements of a set must have the same type
-* Set elements can have only comparable types: {Ordinal, Numeric, String, Text}.
+* Set elements can have only comparable types: {Ordinal, Numeric, String}.
 
 **Mutability**
 
 A set can be modified during run-time using operators. 
 
 * += for append 
-* -= for remove  
+* -= for delete  
 * := for replace 
 
 **Example:**
 ```
 given
-  Set[integer]: my_set := {0,1,2,3,4,5,6,7,8,9}
+  Set[integer]: my_set := {0,2,3}
 do
-  my_set    += 1  ** try to append element 1
-  my_set[*] += 1  ** modify each element
-  my_set    := {} ** remove all elements  
+  ** append element 1
+  my_set    += 1  
+  expect my_set = {0,1,2,3}
+  
+  ** modify all elements
+  my_set[*] += 1  
+  expect my_set = {1,2,3,4}
+  
+  ** remove all elements  
+  my_set    := {} 
+  expect my_set = {}
 done  
 ```
+
 ### Union
 
 Use union operator | combine two sets.

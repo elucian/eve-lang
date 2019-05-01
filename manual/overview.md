@@ -17,7 +17,7 @@
 
 ## Punctuation
 
-* EVE is using infix expressions like other popular languages;
+* EVE is using infix expressions like Java and other popular languages;
 * Multiple expressions can be separated with comma and enclosed in parenthesis;
 * Each statement start with a lowercase keyword and is ending at end of line; 
 * Native data types, variables, labels and methods use lowercase letters and numbers;

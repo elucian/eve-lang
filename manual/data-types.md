@@ -40,12 +40,12 @@ Composite data types are unions of data elements of heterogeneous types.
  
 | type     | description
 |----------|---------------------------------------------------------------
-| Record   | Heterogeneous collection of elements with fix structure 
 | String   | Limited capacity string: ('single quoted')
 | Text     | Unlimited capacity string: ("double quoted")
 | List     | Dynamic unsorted enumeration of values or objects of same type
 | Table    | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
+| Record   | Heterogeneous collection of elements with fix structure 
 
 **Note:** Composite data types are references
 
@@ -61,6 +61,7 @@ EVE has ready to use support for physical measurements:
 | Angle    | Degree angle between two lines
 | Length   | Dimension of objects or distance
 | Distance | The travel distance between to points in space
+...
 
 **See also:** [UCUM](http://unitsofmeasure.org/ucum.html)
 
@@ -134,17 +135,17 @@ return
 
 ## User Defined
 
-A sub-type can be _defined_ using symbol "<:" and keyword: "type".
+User data type can be _defined_ using symbol "<:" and keyword: "type".
 
 **Syntax:**
 ```
-type: type_name <: super_type (parameters)
+type: type_name <: type_descriptor (parameters)
 ```
 **Notes:**
 
-* Users can define new types as subset or group of basic types;
-* A script can _import_ defined types or from other Scripts;
-* A data type is declared in a _define_ region;
+* Users can define constrained sub-types or group of basic types;
+* A script can _import_ public types defined in other scripts;
+* A data type can be declared only in script or suite context;
 
 **Example:**
 ```
@@ -176,8 +177,7 @@ In computer science coercion is used to implicitly or explicitly change  an enti
 If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.
 
 ### Implicit coercion
-In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion 
-to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a _run-time error_. To prevent this EVE will implement a safe compile-time check.
+In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a _run-time error_. To prevent this EVE will implement a safe compile-time check.
 
 Implicit conversion is possible and _safe_ in this direction:
 
@@ -192,7 +192,7 @@ given
   Integer: a := 2
   Real:    b := 1.5 
 do
-  b := a ** this implicit cast is possible b = 2.0
+  b := a       ** this implicit cast is possible b = 2.0
   b := a + 3.5 ** add 3.5 then assign result to b = 5.5
   a := b       ** error: can not assign Real: to Integer
   a := 1.5     ** error: can not assign Real: to Integer
@@ -270,7 +270,7 @@ given
   List: ls := (0,1,2,3,4,5,6,7,8,9)
 do
   print(ls.type()) 
-  ** expect: List[Integer]
+  expect ls is List[Integer]
 done 
 ```
 
@@ -313,66 +313,53 @@ Literal      | Type
 (x:'b',y:'d')| Record
 {1:'a',2:'b'}| Hash
 
+
+### Type Inference
+
+Sometimes the type is partially specified to simplify type declarations:
+
+```
+define
+  ** member type is inferred from literal: 0 = Integer
+  Array[](10) a := 0
+```
        
 ### Type verification
-Type inference is welcome when type is difficult to create.
 
-Examples of type inference:
+We can verify the type using "is" operator:
 
 ```
 given
   Record: r := (name:"test", age:"24") 
-  Hash:   m := {('key1':"value1"),('ley2':"value2")} 
+  Table:  t := {('key1':"value1"),('ley2':"value2")} 
 do
   ** check variable types using introspection
-  print("name  is of type " + type(v.name))
-  print("key   is of type " + type(m.key))
-  print("value is of type " + type(m.value))
+  expect v.name  is Text
+  expect v.key   is String
+  expect m.value is Text
 done
 ```
-run test  
-```
-name is of type Test
-key is of type String
-value is of type Text  
-```
 
-## Check type
+## Printing type()
 
-In EVE the type is first class value. For type introspection we can use:
-
-1. built-in type() function
-2. operator _is_
+For type introspection we can use type() built-in function:
 
 ```
 given
   Real: i := 1.5
-  Type: it
 do
-  when i is Real do
-    print("Yes i is Real")
-  else
-    print("No i is not Real")
-  done
-  it := type(i)
-  print("type of i is #t" <+ it)
+  expect i is Real
+  print("type of i is \s" <+ type(i))
 done
 ```
 
 ## Polymorphic operators
 In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or real. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
 
-Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore some other languages are introducing polymorphic operators.
+Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
 
-## Partial Inference
+Operators are mapped to functions. To design polimorphic operators we overload the function signature using type dispatch. The dispatch is happening by left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
 
-Sometimes the type is partially specified to improve type declaration.
-
-```
-define
-  ** member type is inferred from literal 
-  Array[](10) a := 0
-```
 ## Logic type
 
 In Latin the "falsus" and "verum" are translated to false and true.
@@ -390,7 +377,6 @@ True     | Logic.True    | 00000000 00000001
 define
  Logic: variable_name ** default False
 ```
-
 
 **internal design**
 
@@ -444,8 +430,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-define
-  type: variant_name <: Variant (type_name | type_name | ... )
+type: variant_type <: Variant (type_name | type_name | ... )
 
 global  
   variant_type: v
@@ -453,22 +438,20 @@ global
 
 ## Variant Properties
 
-* Variant data type is a reference;
 * Variant data type is assigned at runtime;
 * One variant can have a single value at a time;
 * One variant is a "union" of several types
 
 ## Making a null-able type
 
-For this we need Null type. 
+For this we use a special type: Null 
 
-* The Null type is usually String: and is a curious type.
-* It can have only one value: Null and is not printable.
+* The Null type is a curious type;
+* It can have only one value = Null;
 
 **Examples:**
 ```
-define
-  Type: Number <: Variant (Integer | Real | Null)
+type: Number <: Variant (Integer | Real | Null)
 
 global
   Number: x := Null
@@ -477,8 +460,9 @@ global
 
 **Usability**
 
-A variant can change its data type at runtime:
+A variant can establish its data type at runtime:
 
+**example:**
 ```
 given
   Real | Integer: v, x ,t 
@@ -502,14 +486,14 @@ A variant is a way to create a generic method.
 method: switch(Integer | Real @ x, y)
   Integer | Real @ i
 process  
-  assert type(x) = type(y)  
+  expect type(x) = type(y)  
   
   i :: x ** intermediate reference
   x :: y ** first  switch
   y :: x ** second switch
 return
 
-method: main()
+method: main() => ()
   Integer: x, y
   Real: a, b
 process  
@@ -527,30 +511,30 @@ return
 
 ## Single symbol
 
-Symbols are Unicode UTF32. That is using 32 bit integer code points. EVE has two literal notations for symbols: 
+Symbols are Unicode UTF32. That is using 32 bit integer:
 
-* Single-quoted string like: 'α'
+* Single-quoted strings like: 'α'
 * U+HHHH   from: U+0000   to U+FFFF
 * U-HHHHHH from: U+000000 to U+FFFFFF
 
-A symbol can be used to create Array of symbols that have direct access by index. Array of symbols have a capacity and can be more or less full. In array one or more symbols can have value NUL = U+0000. This is also the default value used for string initialization.
+**usability**
+A symbol can be used to create an Array of symbols that have direct access by index. Array of symbols have a capacity and can be more or less full. In array one or more symbols can have value NUL = U+0000. This is also the default value used for string initialization.
 
 ## String type
 
-In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings are immutable and can store single line of text. Double quoted strings are complex data structured stored as rope or radix tree. 
+In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings can store a single line. Double quoted strings can store multiple lines of text separated by new line "\n".
 
 * Single quoted string, has default capacity 1024 bytes;
 * Double quote strings have unrestricted capacity;
 
 ### String: declaration
-String can be initialized with a constant using single quotes or double quotes. 
-By default value of string is "" or '' is equivalent to Null; 
+String can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
 global
-  String(24): short_string := '' ** this string can hold 24 symbols, 24*4 = 96 bytes
-  String: string_name      := '' ** default capacity 1024 can hold 256 ASCII symbols
-  Text:   text_name        := "" ** variable capacity string can hold many rows
+  String(100): short_string := '' ** this string can hold 100 symbols, 100*4 = 400 bytes
+  String: string_name       := '' ** default capacity 1024 can hold 256 ASCII symbols
+  Text: text_name           := "" ** variable capacity string can hold many lines of text
 ```
 
 ### String: mutability
@@ -560,31 +544,39 @@ In EVE strings are mutable. If you use `:=` new memory is allocated. If you use 
 ```
 method: test_string()
   String : str := 'First value'  
-  String : ref := 'Second value' 
+  String : ref := 'First value' 
 process  
-  expect (str <> ref) ** different value
+  expect (str  = ref) ** same value
   expect (str != ref) ** different locations  
   
   ref :: str  ** borrow reference
   expect (str =  ref) ** same value
   expect (str == ref) ** same location  
-  print (ref)  ** 'First value'
   
-  ** if we modify str, ref will not be modified
-  str := 'Third value' ** new string location
-  expect (str != ref)  ** different locations  
-  ** ref remain unmodified
-  print (ref)  ** 'First value'
+  ** if we modify "str" then "ref" will apear modified
+  str += ":test" 
+  expect ref = "First value:test"
+  expect str = ref ** the reference is holding
+  
+  ** if we recreate str, ref will not be modified
+  str := 'Second value' ** new string location
+  expect (str != ref)   ** different location now  
+  ** reference was broken, ref is pointing to old value
+  print (ref)  ** 'First value:test'
 return
 ```
 
-**Note:** You can create garbage in EVE if you loose reference to strings.
+**Note:** 
+
+* You can create garbage in EVE if you loose references to strings;
+* Provision for large capacity strings is not recommended, use Text instead;
 
 ### String: comparison
 
 * Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
 * Two strings that have identical characters are equivalent regardless of quotation;
-* The length of the string is the number of represented characters: '' is counting 0; 
+* The length of the string is the number of represented symbols: '' is counting 0; 
+* The capacity of a string is alwasy greater or equal than length.
 
 **Example:**
 
@@ -636,16 +628,12 @@ do
   date := "2019/01/30" -> YDM
   date := "30/01/2019" -> DMY
   date := "01/30/2019" -> MDY
+
+  **printing**  
+  print date.YDM()
+  print date.DMI()
+  print date.MDI()   
 done
-```
-
-**Date printing**
-
-Date representation can be changed with each print by using date format.
-```
-   print(date.YDM())
-   print(date.DMI())
-   print(date.MDI())   
 ```
 
 ## Time Duration
