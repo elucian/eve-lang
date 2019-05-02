@@ -104,17 +104,17 @@ process
          ['a0','b0','c0'],
          ['a1','b1','c1'],
          ['a2','b2','c2']
-       ]        
+       ];     
   given
-    Integer: row, col := 1
+    Integer: row, col := 1;
   while col <= 3 do     ** traverse columns
     while row <= 3 do   ** traverse row first
-      print M[row,col]
-      row += 1
-    repeat
-    col += 1
-  repeat
-return
+      print M[row,col];
+      row += 1;
+    repeat;
+    col += 1;
+  repeat;
+return;
 ```
 
 ##  Arrays Slicing
@@ -137,19 +137,19 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 **Example:**
 ```
 method: main() => ()
-  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9]
-  Array[Integer]: b :: a[1..4] ** slice reference
+  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
+  Array[Integer]: b :: a[1..4]; ** slice reference
 process
-  print(a[1..?])   ** will print [0,1,2,3,4,5,6,7,8,9]
-  print(a[1..1])   ** will print [0]
-  print(a[1..4])   ** will print [1,2,3]
+  print(a[1..?]);   ** will print [0,1,2,3,4,5,6,7,8,9]
+  print(a[1..1]);   ** will print [0]
+  print(a[1..4]);   ** will print [1,2,3]
  
   ** modify slice b (reference to a)
-  b[*] += 2
+  b[*] += 2;
   
   ** first 4 elements of (a) are modified
-  print(a)  ** will print: [2,3,4,5,4,5,6,7,8,9]
-return
+  print(a);  ** will print: [2,3,4,5,4,5,6,7,8,9]
+return;
 ```
 
 ### Set builders
@@ -177,13 +177,13 @@ Collection members can be copy into the new collection using a comprehension not
 **Example:**
 ```
 given
-   List: source  := [0,1,2,2,2,2]
-   Set : new_set := {}
+   List: source  := [0,1,2,2,2,2];
+   Set : new_set := {};
 do
    ** eliminate duplicates using set comprehension
-   mew_set := { x : x in my_list } 
-   print my_set ** {0,1,2} 
-done
+   mew_set := { x : x in my_list };
+   print my_set; ** {0,1,2} 
+done;
 ```
 
 ## Filtering
@@ -192,12 +192,12 @@ Build notation can use expressions to filter out elements during comprehension o
 **Example:**
 ```
 given
-   List: my_list := [0,1,2,3,4,5]
-   Set:  my_set  := {}
+   List: my_list := [0,1,2,3,4,5];
+   Set:  my_set  := {};
 do
-   my_set := { x : x in my_list & (x % 2 = 0) } 
+   my_set := { x : x in my_list & (x % 2 = 0) };
    print my_set; ** {0,2,4} 
-done
+done;
 ```
 
 ## Mapping
@@ -220,14 +220,14 @@ List concatenation is ready using operator “+”. This operator represent unio
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-method: main()
-  List[Symbol]: a := ('a','b','c')
-  List[Symbol]: b := ('1','2','3')
-  List[Symbol]: c := () 
+method: main() => ()
+  List[Symbol]: a := ('a','b','c');
+  List[Symbol]: b := ('1','2','3');
+  List[Symbol]: c := ();
 process
-  c := a + b
-  print(c)**['a','b','c','1','2','3']
-return
+  c := a + b;
+  print(c)**['a','b','c','1','2','3'];
+return;
 ```
 
 ## Join() built-in
@@ -235,11 +235,11 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  String: str
+  String: str;
 do
-  str := join([1,2,3],",")
-  print (str) ** "1,2,3"
-done  
+  str := join([1,2,3],",");
+  print (str) ** "1,2,3";
+done; 
 ```
 
 ### Split built-in
@@ -250,8 +250,8 @@ given
   List[Integer: ]: lst;
 do
   lst := split("1,2,3",",");
-  print lst ** (1,2,3);
-done
+  print lst; ** (1,2,3)
+done;
 ```
 
 ### List operations
@@ -303,8 +303,8 @@ given
 while element is not Null do
   ** statements
   ...
-  element := collection.next(element)
-repeat
+  element := collection.next(element);
+repeat;
 ```
 
 ### Iterator element

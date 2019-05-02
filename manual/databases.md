@@ -245,7 +245,7 @@ scan db.table_name +> current_record do
   done;
   ** update single row
   current_table.update();
-repeat
+repeat;
 ** commit all pending updates
 db.commit();
 

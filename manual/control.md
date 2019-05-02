@@ -130,7 +130,7 @@ while (condition) do
   stop if (condition);
 else
   ** alternative path  
-repeat
+repeat;
 ```
 **example**
 
