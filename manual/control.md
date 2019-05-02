@@ -18,9 +18,9 @@ given
   ** local declarations
 with qualifier := long_qualifier do
   ** local statements
-  method_name()  ** instead of: qualifier.method_name()
-  var := function_name() ** instead of qualifier.function_name()
-done
+  method_name();  ** instead of: qualifier.method_name()
+  var := function_name(); ** instead of qualifier.function_name()
+done;
 ```
 
 **Notes:** 
@@ -41,7 +41,7 @@ given
   ** local context
 when (expression) do
   ** single path
-done
+done;
 ```
   
 2.dual path selector
@@ -50,7 +50,7 @@ when (expression) do
    ** true path
 else
    ** false path
-done
+done;
 ```
   
 3.nested selector 
@@ -58,8 +58,8 @@ done
 when (expression) do
   when (expression) do
    ** nested path
-  done
-done
+  done;
+done;
 ```
 
 ## Quest
@@ -73,15 +73,15 @@ It is used in conjunction with { "do", "other", "done"}
 given 
   value_typ: val := expression
 quest val
-  ?:constant1 do
+  ?: constant1 do
     ** first path
-  ?:constant2 do
+  ?: constant2 do
     ** second path
-  ?:constant3 do
+  ?: constant3 do
     ** third path
 other
   ** default path
-done
+done;
 ```
 
 **Using list and range**
@@ -89,23 +89,23 @@ It is possible to use more then one value using a list, range or collection.
 
 **Example:**
 ```
-method test(Integer: p:=0) 
-  String: message := ""
-  Integer: v := p + 4  
+method test(Integer: p:=0) => ()
+  String: message := "";
+  Integer: v := p + 4;
 process 
   quest v
-    ?:(1,2,3) do
-      message := "first match"
-    ?:[1..8]  do
-      message := "second match"
-    ?:[5..10] do
-      message := "third match"      
+    ?: (1,2,3) do
+      message := "first match";
+    ?: [1..8]  do
+      message := "second match";
+    ?: [5..10] do
+      message := "third match";    
   other
     ** other cases
     message := "no match"
-  done
-  print (message) 
-return
+  done;
+  print (message);
+return;
 ```
 
 **notes:**
@@ -125,9 +125,9 @@ given
   ** local context
 while (condition) do
   ** forced iteration
-  skip if (condition)
+  skip if (condition);
   ** eary intreruption
-  stop if (condition)
+  stop if (condition);
 else
   ** alternative path  
 repeat
@@ -137,19 +137,19 @@ repeat
 ```
 ** example of collection iteration
 method: main() => ()
-  Array:test := ["a","b","c","d","e"]
-  Integer: i := 0
+  Array:test := ["a","b","c","d","e"];
+  Integer: i := 0;
 process
   while (i < test.length) do
-    element := my_list[i]
-    i += 1
+    element := my_list[i];
+    i += 1;
     ** shortcut 
     if (element >= "c") do
-       write(element)
-       write(',') if (element ≠ "e") 
-    done   
-  repeat
-return
+       write(element);
+       write(',') if (element ≠ "e");
+    done;
+  repeat;
+return;
 ```
 > "c","d","e"
 
@@ -160,14 +160,14 @@ Scan block use a control variable to visit all elements in a range or collection
 **Pattern:**
 ``` 
 given 
-  Integer:var := 0  ** initial value
+  Integer:var := 0;  ** initial value
 scan [min..max] +> var do
   ** block statements;
-  skip if (condition)
+  skip if (condition);
   ** eary intreruption
-  stop if (condition)
+  stop if (condition);
   ...
-next
+next;
 ```
 
 **Notes:**    
@@ -177,14 +177,14 @@ next
 Example of range iteration:
 ```
 given
-  Integer: i := 0
+  Integer: i := 0;
 scan [0..10] +> i do
   when (i % 2 <> 0) do
     ** write only odd numbers
-    write(i)  
-    write(',') if (i < 10)  
-  done
-next
+    write(i);
+    write(',') if (i < 10);
+  done;
+next;
 ```
 > 1,3,5,7,9
 

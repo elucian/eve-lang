@@ -19,8 +19,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-define
-  type <type_name> <: Ordinal (symbol:<value>, ... )
+type: <type_name> <: Ordinal (symbol:<value>, ... );
 
 ```
 
@@ -33,27 +32,26 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-define
-  type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday)  
+type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
 
-method: main()
-  String: message
+method: main() => ()
+  String: message;
 process  
   given
-    Day: today := today()  
-  quest
-    if today <+ (Friday, Saturday, Sunday) then
-      message:='weekend'
+    Day: today := today();
+  quest today
+    ?: Friday, Saturday, Sunday do
+      message:='weekend';
       ...
-    if today = Monday then
-      message:='first workday'
-    if today = Friday then
-      message:='last workday'
+    ?: Monday do
+      message:='first workday';
+    ?: Friday do
+      message:='last workday';
   other
-    message:='middle of the week'
-  done
-  print('Is', message)
-return
+    message:='middle of the week';
+  done;
+  print('Is', message);
+return;
 ```
 **Note** For private enumerations you can use a record type.
 
@@ -61,10 +59,10 @@ return
 We can use Ordinal to create a range of values:
 ```
 when (today <+ [Monday..Friday]) do
-   print ("Have a nice day!")
+   print ("Have a nice day!");
 else
-   print ("Have a happy weekend!")  
-done
+   print ("Have a happy weekend!");
+done;
 ```
 
 **Operators**
@@ -73,11 +71,11 @@ Ordinal is a discrete numeral type so it has support for relation operators: { =
 ```
 ** using type Day declared before
 given
-  Day: v := Friday
+  Day: v := Friday;
 do
-  v += 1 
-  expect v = Saturday
-done
+  v += 1; 
+  expect v = Saturday;
+done;
 ```
 
 ## Array
@@ -88,7 +86,7 @@ An array is a collection of elements stored in order of natural index. Array ele
 ```
 ** declaration of an array with capacity
 global
-  Array: array_name[element_type](capacity)
+  Array: array_name[element_type](capacity);
 ```
 
 **array capacity**
@@ -105,7 +103,7 @@ In the next example we define an array with capacity of 3 elements.
 ```
 ** array declaration and initialization
 global
-   Array: my_array[Integer](3) := [1,2,3]
+   Array: my_array[Integer](3) := [1,2,3];
 ```
 
 **array constructor**
@@ -114,27 +112,27 @@ An array can be established using a constructor. All elements of a array can be 
 
 ```
 ** variable array size depending upon parameter n
-method: test(Integer: n)
+method: test(Integer: n) => ()
 process
-  Array: my_array(n)
-return
+  Array: my_array(n);
+return;
 ```
 
 **array inference**
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  Array: my_array(10) := 0   ** integer number
-  Array: my_array(10) := 0.0 ** real number
-  Array: my_array(10) := ""  ** text with variable size
-  Array: my_array(10) := ''  ** string with capacity 1024 bytes
+  Array: my_array(10) := 0;   ** integer number
+  Array: my_array(10) := 0.0; ** real number
+  Array: my_array(10) := "";  ** text with variable size
+  Array: my_array(10) := '';  ** string with capacity 1024 bytes
 ```
 
 The most convenient way to define an Array is by using inference literals:
 ```
 global
   ** array with capacity 4 of strings 
-  Array: my_array := ['a','bc','def','chk']
+  Array: my_array := ['a','bc','def','chk'];
 ```
 
 ## Matrix
@@ -143,28 +141,28 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   Matrix: matrix_name[type](n,m) := constant
+   Matrix: matrix_name[type](n,m) := constant;
 ```
 
 **example:**
 ```
 **  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
-  Matrix[String(2)](3,3): m := '__'
+  Matrix[String(2)](3,3): m := '__';
 do
-  m[1] := ['a1','b1','c1']
-  m[2] := ['a2','b2','c2']
-  m[3] := ['a3','b3','c3']
-  print m
-done
+  m[1] := ['a1','b1','c1'];
+  m[2] := ['a2','b2','c2'];
+  m[3] := ['a3','b3','c3'];
+  print m;
+done;
 ```
 
 **matrix elements**
 Matrix elements can be addressed by subscript starting from 1:
 
 ```
-var_name[1,1] ** is the first element of the matrix.
-var_name[?,?] ** is the last element of a matrix.
+var_name[1,1]; ** is the first element of the matrix.
+var_name[?,?]; ** is the last element of a matrix.
 ```
 
 ## List
@@ -173,8 +171,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-   List[type_name]: list_name
-   List:list_name := (<constant>, <constant>, ...)
+   List[type_name]: list_name;
+   List:list_name := (<constant>, <constant>, ...);
 ```
 
 **notes:**
@@ -185,9 +183,9 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  List[Integer]: n_list 
-  List[Object] : o_list 
-  List[String] : s_list 
+  List[Integer]: n_list; 
+  List[Object] : o_list; 
+  List[String] : s_list; 
 ```
 
 **list literals**
@@ -201,19 +199,19 @@ given
 Literals can be used for initialization:
 ```
 given
-  List[Symbol]  : c_list := ('a', 'b', 'c')
-  List[Integer] : n_list := (1, 2, 3)  
+  List[Symbol]  : c_list := ('a', 'b', 'c');
+  List[Integer] : n_list := (1, 2, 3);  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  List[integer]: c_list
+  List[integer]: c_list;
 do
   ** update list using  ":=" 
-  c_list := (1,2,3) 
-done
+  c_list := (1,2,3); 
+done;
 ```
 
 ## Set
@@ -222,7 +220,8 @@ In mathematics a set is an abstract data structure that can store certain values
 **declaration**
 
 ```
-  Set[type] :name
+global
+  Set[type] :name;
 ```
 
 **Empty Set**
@@ -245,19 +244,19 @@ A set can be modified during run-time using operators.
 **Example:**
 ```
 given
-  Set[integer]: my_set := {0,2,3}
+  Set[integer]: my_set := {0,2,3};
 do
   ** append element 1
-  my_set    += 1  
-  expect my_set = {0,1,2,3}
+  my_set    += 1;  
+  expect my_set = {0,1,2,3};
   
   ** modify all elements
-  my_set[*] += 1  
-  expect my_set = {1,2,3,4}
+  my_set[*] += 1;  
+  expect my_set = {1,2,3,4};
   
   ** remove all elements  
-  my_set    := {} 
-  expect my_set = {}
+  my_set    := {}; 
+  expect my_set = {};
 done  
 ```
 
@@ -267,12 +266,12 @@ Use union operator | combine two sets.
 
 ```
 given
-  Set: first := {0,1,2,3,4,5,6,7,8,9}
-  Set[Integer]: second := {}
+  Set: first := {0,1,2,3,4,5,6,7,8,9};
+  Set[Integer]: second := {};
 do
-  second := first | {0,1,2,10} ** set union
-  print(second) ** {0,1,2,3,4,5,6,7,8,9,10}
-done
+  second := first | {0,1,2,10}; ** set union
+  print(second); ** {0,1,2,3,4,5,6,7,8,9,10}
+done;
 ```
 
 ### Intersection
@@ -280,11 +279,11 @@ Intersect operator & find common elements:
 
 ```
 given
-  Set: test := {}
+  Set: test := {};
 do
-  test := {1,2,3,4} & {3,4,5} 
-  print test ** {3,4}
-done
+  test := {1,2,3,4} & {3,4,5}; 
+  print test; ** {3,4}
+done;
 ```
 
 **Note:** Operators "|" and "&" are overloaded betwise operators
@@ -299,16 +298,16 @@ It is called "H" due to similar method:of letter H representing a connection, li
 **syntax**
 ```
 given
-  Table[key_type, value_type]: name := {(key:value), ...}
+  Table[key_type, value_type]: name := {(key:value), ...};
 ```
 
 **Example**
 ```
 given
-   Table[String, Integer]: dictionary := {}
+   Table[String, Integer]: dictionary := {};
 begin   
-   dictionary := {('one':1), ('two':2)}
-done
+   dictionary := {('one':1), ('two':2)};
+done;
 ```
 
 ## Text
@@ -322,13 +321,13 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 ** declaration example of a text literal
 given
-  Text: my_text := ""
+  Text: my_text := "";
 do
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
-             and looks like work." 
-  print (my_text)
-done
+             and looks like work."; 
+  print (my_text);
+done;
 ```
 
 **Output:**
@@ -348,10 +347,10 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 **Example:**
 ```
 given
-  Text: us := "I can write Greek: \αβγδ\."
+  Text: us := "I can write Greek: \αβγδ\.";
 do
-  print (us)   
-done
+  print (us);
+done;
 ```
 > I can write Greek: "αβγδ".
 
@@ -372,10 +371,10 @@ define
           ,String : section_name 
           ,String : script_name 
           ,String : line_number  
-         )
+         );
 ** global variable for holding current error
 global
-   Exception: $error
+   Exception: $error;
 ```
 ### Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -391,11 +390,11 @@ There are two alternative statements to create user defined exceptions.
 ```
 ** raise exception
 when condition do
-  raise (code,"message")
-done
+  raise (code,"message");
+done;
 
 ** conditional 
-raise (code,"message") if (condition)
+raise (code,"message") if (condition);
 ```
 
 ### Exception handling
@@ -408,14 +407,14 @@ In this region developer can use control statements like "switch","case" to anal
 
 ```
 method: main() => ()
-  Real: a
+  Real: a;
 process  
-  a := 1 / 0
+  a := 1 / 0;
 recover
-  print ($error.message)
+  print ($error.message);
 closure
   ** close process
-return
+return;
 ```
 
 ```
@@ -428,10 +427,10 @@ The expect statement is very simple. It check a condition and raise an error if 
 
 ```
   ** precondition
-  expect (condition)
+  expect (condition);
   
   ** equivalent
-  raise ("Unexpected error") if (condition)
+  raise ("Unexpected error") if (condition);
 ```
 
 **note:**

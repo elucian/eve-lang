@@ -27,7 +27,9 @@ A data model is using a database. For this the model is connecting using adapter
 
 ```
 import
-   $eve_lib/db/oracle:(Database)
+   $eve_lib/db/oracle:(Database);
+
+alias: Oracle := db.oracle.Database;   
 ```
 
 ## Connection
@@ -37,14 +39,14 @@ One application can connect to one target database that and one or more source d
 To connect to database we must use "connect" method. Once connected the data model remain in memory until we call: "disconnect". 
 
 ```
-method: connect(String: user, password, dbname)
+method: connect(String: user, password, dbname) => ()
   ** create a database instance
-  Database: db
-  String: credential
+  Oracle: db;
+  String: credential;
 process  
-  credential := user + '/' + password + '@'+ dbname
-  db.connect(credential) 
-return
+  credential := user + '/' + password + '@'+ dbname;
+  db.connect(credential); 
+return;
 ```
 
 ## Structure
@@ -59,10 +61,10 @@ One database provide a structure for tables. An application can read structure a
 A record is a group of elements that are called fields or members. The elements can be native types, collections or other records. A variable can be defined based on a record type.
 
 ```
-type: Type_Name <: Record (field_name:type, ...)
+type: Type_Name <: Record (field_name:type, ...);
 
 global
-  Type_Name: record_name
+  Type_Name: record_name;
 ```
 
 ### Recursive Records
@@ -73,7 +75,7 @@ An important application of recursion in computer science is in defining dynamic
 type: Node <: Record ( 
   Integer: data,   ** integer data
   Node: previous   ** reference to previous node
-)
+);
 ```
 This kind of structure can be used to create a data chain.
 
@@ -83,7 +85,7 @@ type: Node <: Record (
   Integer: data,  ** integer data
   Node: previous, ** reference to previous node
   Node: next      ** reference to next node
-)
+);
 ```
 This kind of structure can be used to create a queue.
 
@@ -124,33 +126,33 @@ A record instance is a variable of type record. The memory is allocated using th
 **Example:**
 ```
 ** we declare a record type  
-type: Person <: Record (String(32): name, Integer: age )
+type: Person <: Record (String(32): name, Integer: age );
 
-method: main()
-  Person: person1,person2     ** two variables of type Person
-  Array[Person](10): catalog  ** a collection of Persons
+method: main() => ()
+  Person: person1,person2;     ** two variables of type Person
+  Array[Person](10): catalog;  ** a collection of Persons
 process
   ** creating persons using record literals
-  person1 := (name:"John", age:21)
-  person2 := (name:"Vera", age:20)
-  print("#s and #s are lovers." <+ (person1.name, person2.name))
+  person1 := (name:"John", age:21);
+  person2 := (name:"Vera", age:20);
+  print("#s and #s are lovers." <+ (person1.name, person2.name));
 
   ** create an array with 30 new persons
   given:
     Integer: i
   while (i <= 10) do
-    catalog[i] := Person("John Doe", 20)
-    i += 1 
-  repeat
+    catalog[i] := Person("John Doe", 20);
+    i += 1; 
+  repeat;
 
   ** change first person using "with...do"
   with catalog[1] do
-    name := "Ispas Inca"
-    age  := "17" 
-  done
+    name := "Ispas Inca";
+    age  := "17"; 
+  done;
   
-  print("#s is single." <+ catalog[1].name)
-return
+  print("#s is single." <+ catalog[1].name);
+return;
 ```
 
 **Console:**  
@@ -169,7 +171,7 @@ It can be used to define the record using a constant literal. After first assign
 
 ```
 global
-  Record: person := (name:"John", age:21)
+  Record: person := (name:"John", age:21);
 ```
 
 ## Gradual Types
@@ -181,8 +183,8 @@ given
   Record: person
 do
   ** differed structure
-  person:= (name:"John", age:21)
-done
+  person:= (name:"John", age:21);
+done;
 ```
 
 ## Tables
@@ -213,12 +215,12 @@ You can scan one table like a collection. No need to learn anything new. The tab
 given
   ** use introspection to declare current_record
   Record: current_record(record_fields)   
-scan current_record <+ table_name do
+scan table_name +> current_record do
   with current_record do
     ** use current_record fields
     ... 
-  done
-repeat
+  done;
+repeat;
 
 ```
 
@@ -229,20 +231,20 @@ After update you can commit or rollback changes. EVE do not perform automatic co
 
 ```
 define
-  type: Type_Nme <: Record(record_fields)   
+  type: Type_Nme <: Record(record_fields);   
   
 given
   ** use introspection to declare current_record
-  Type_Name: current_record
-  Type_Name: source_record := (record_literal)
-scan current_record <+ db.table_name do
+  Type_Name: current_record;
+  Type_Name: source_record := (record_literal);
+scan db.table_name +> current_record do
   ** update current_record from source_record
   with (current_record, source_record) do
-     current_field := source_field
+     current_field := source_field;
      ...
-  done
+  done;
   ** update single row
-  current_table.update()
+  current_table.update();
 repeat
 ** commit all pending updates
 db.commit();
@@ -287,10 +289,10 @@ We can scan view using _scan_ statement. This is the most common way to access a
 
 ``` 
 given
-  Record: current_record
+  Record: current_record;
 scan current_record <+ database.view_name do  
-  print (current_record)
-next
+  print (current_record);
+next;
 ```
 
 ## Database Built In
@@ -350,14 +352,14 @@ A cursor can be open or close. We can fetch row by row. Also you can use _scan_ 
 
 **using fetch...**
 ```
-cursor_name:= Cursor_Type.open(arguments)
+cursor_name:= Cursor_Type.open(arguments);
 given
   Cursor_Type: current_record;
 while !cursor_name.finish() do
   current_record := cursor_name.fetch();
   ** use record-list
   ...
-repeat
+repeat;
 cursor_name.close();
 ```
 
@@ -366,12 +368,12 @@ cursor_name.close();
 #buffer:10
 
 given 
-  Cursor_Type: current_record 
+  Cursor_Type: current_record;
 scan current_record  <+ Cursor_Type(arguments) do
   with record_name do
      ... ** use record fields
-  done
-next
+  done;
+next;
 print $cursor.fetched;
 ```
 
@@ -404,16 +406,16 @@ To create new data we have two options: Insert data or Append data. In standard 
 
 **One row:**
 ```
-insert in table_name (field_name:value,...)
-append to table_name (field_name:value,...)
+insert in table_name (field_name:value,...);
+append to table_name (field_name:value,...);
 ```
 
 **Note:** Unlike the classic SQL we use pair operator (':') to have improved readability.
 
 **One record:**
 ```
-insert in table_name <+ record_name
-append to table_name <+ record_name
+insert in table_name <+ record_name;
+append to table_name <+ record_name;
 ```
 
 **Multiple rows:**
@@ -422,7 +424,7 @@ append to table_name
   select (field_target:field_source, ...)
   from alias = table_source,...
   join join_expression
-  where filter_expression  
+  where filter_expression;
 ```
 
 **From collection:**

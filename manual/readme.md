@@ -1,6 +1,6 @@
 ## EVE Manual
 
-To learn EVE you can read next pages in order:
+EVE is down to earth pragmatic language. 
 
 **overalls**
 
@@ -8,6 +8,8 @@ To learn EVE you can read next pages in order:
 1. [Operators](operators.md)
 
 **tutorial**
+
+To learn EVE you can read next pages in order:
 
 1. [Syntax overview](overview.md)
 1. [Program structure](structure.md)
@@ -22,7 +24,7 @@ To learn EVE you can read next pages in order:
 
 **tools:**
 
-Download and import Notepad++ custom language file for EVE:
+Syntax color highlighter for Notepad++
 
 [eve-md.xml](../tools/eve-md.xml)
 

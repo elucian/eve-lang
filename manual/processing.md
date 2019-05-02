@@ -7,22 +7,22 @@ By using collections and control structures one can load, modify and store data.
 Array elements have very fast direct access by index. 
 
 ```
-method: test_array()
+method: test_array() => ()
   ** array  with capacity of 10 elements
-  Array[Integer](10): my_array 
+  Array[Integer](10): my_array;
 process  
   given
-    Integer: m := my_array.capacity()
-    Integer: i := 1
+    Integer: m := my_array.capacity();
+    Integer: i := 1;
   ** scan array and modify element by element    
   while i < m do
-    my_array[i] := i     
-    i += 1
-  repeat
+    my_array[i] := i;     
+    i += 1;
+  repeat;
   ** array  elements are identified using [index]
-  print ("This is the first element: {1}" <+ my_array[1])
-  print ("This is the last element: {1}"  <+ my_array[m])
-return
+  print ("This is the first element: {1}" <+ my_array[1]);
+  print ("This is the last element: {1}"  <+ my_array[m]);
+return;
 ```
 
 **console:**
@@ -46,11 +46,11 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ** a matrix having 2 rows and 2 columns
 ** initialize all elements with 100
 given
-  Matrix[Integer](2,2): M
+  Matrix[Integer](2,2): M;
 do
-  M[*] := 100
-  print (M)
-done
+  M[*] := 100;
+  print (M);
+done;
 ```
 
 ```
@@ -62,23 +62,23 @@ done
 
 ```
 given
-  Matrix[Integer](2,2):M
+  Matrix[Integer](2,2):M;
 do
-  M[*] := 100
+  M[*] := 100;
   ** modify all elements
-  M[*] += 10 
-  print(M) ** [[110,110],[110,110]]
+  M[*] += 10;
+  print(M); ** [[110,110],[110,110]]
 
   ** modify an entire row 
-  M[1,*] := 0
-  M[1,*] := 1
-  print(M) ** [[0,0],[1,1]]
+  M[1,*] := 0;
+  M[1,*] := 1;
+  print(M); ** [[0,0],[1,1]]
   
   ** modify an entire column
-  M[*,1] += 1
-  M[*,2] += 2
-  print(M) ** [[1,2],[2,3]]
-done
+  M[*,1] += 1;
+  M[*,2] += 2;
+  print(M); ** [[1,2],[2,3]];0
+done;
 ```
 
 **Memory impedance**
@@ -206,13 +206,13 @@ The elements in one set or list can be transformed by a function or expression t
 **Example:**
 ```
 given
-   Set:  source := {0,1,2,3,4,5}
-   Hash: target := {}
+   Set:  source := {0,1,2,3,4,5};
+   Hash: target := {};
 do
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x:x^2): x in source } 
-done
+   target := { (x:x^2): x in source } ;
+done;
 ```
 
 ## List Concatenation
@@ -247,10 +247,10 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  List[Integer: ]: lst := ()
+  List[Integer: ]: lst;
 do
-  lst := split("1,2,3",",")
-  print lst ** (1,2,3)
+  lst := split("1,2,3",",");
+  print lst ** (1,2,3);
 done
 ```
 
@@ -318,22 +318,22 @@ It is possible to change this using stop keyword.
 
 ```
 ** example of collection iteration
-method: main()
-  List[Symbol] my_list := ['a','b','c','d','e'] 
+method: main() => ()
+  List[Symbol] my_list := ['a','b','c','d','e']; 
 process  
   given
-    Symbol: element := my_list[1]
-    Integer: x := 1
-  while True
-    write(element)
+    Symbol: element := my_list[1];
+    Integer: x := 1;
+  while True do
+    write(element);
     if (element = 'd') do
-       stop ** early termination
+       stop ** early termination;
     else
-       write(',')           
-    done
-    element := my_list[x++]
-  repeat
-return
+       write(',');
+    done;
+    element := my_list[x++];
+  repeat;
+return;
 ```
 > c,d
 
@@ -357,17 +357,17 @@ Map and set are similar. We can visit all elements:
 
 **Example:**
 ```
-method: main()
-  Hash: my_map := {("a":1),("b":2),("c":3)}
+method: main() => ()
+  Hash: my_map := {("a":1),("b":2),("c":3)};
 process  
   ** print pairs (key:value)
   given
-    String: key
-    Integer: value
-  visit (key, value) in my_map do
+    String: key;
+    Integer: value;
+  scan my_map +> (key, value) do
     print('("' + key + '",' + value +')');
-  repeat
-return
+  repeat;
+return;
 ```
 Will print:
 ```
@@ -385,28 +385,28 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 ```
 ** check if a key is present in a hash collection
 given
-  Hash: my_map := {(1:'a'),(2:'b'),(3:'c')}
-  Integer: my_key := 3
+  Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
+  Integer: my_key := 3;
 if (my_key in my_map) do
-  print('True') ** expected
+  print('True'); ** expected
 else
-  print('False')
-done
+  print('False');
+done;
 ```
 
 **example**
 ```
 ** create new elements in the hash collection
-method: main()
+method: main() => ()
 process
   given
-    Hash(String, String): animals := {}
+    Hash(String, String): animals := {};
   do
-    animals['Bear'] := 'dog'
-    animals['Kiwi'] := 'bird'
-    print(animals)
-  done
-return
+    animals['Bear'] := 'dog';
+    animals['Kiwi'] := 'bird';
+    print(animals);
+  done;
+return;
 ```
 
 Output:
@@ -421,17 +421,17 @@ Output:
 
 ### Example
 ```  
-method: main()
-  Hash: animals := {} ** partial declaration
+method: main() => ()
+  Hash: animals := {}; ** partial declaration
 process
   ** establish element types S:U
-  animals['Rover'] := "dog"
+  animals['Rover'] := "dog";
 
   ** use direct assignment to create 2 more element
-  animals['Bear'] := "dog"
-  animals['Kiwi'] := "bird"
-  print(animals)
-return
+  animals['Bear'] := "dog";
+  animals['Kiwi'] := "bird";
+  print(animals);
+return;
 ```
 output:
 ```
@@ -450,12 +450,12 @@ Strings can be concatenated using:
 ```
 ** this is example of string concatenation
 given
-  String: str := "" 
+  String: str := ""; 
 do
   ** set string value using different operators
-  str := "this "&" string"   ** "this  string"
-  str := "this "+" string"   ** "this string"
-done
+  str := "this "&" string";   ** "this  string"
+  str := "this "+" string";  ** "this string"
+done;
 ```
 
 **path concatenation**
@@ -463,11 +463,11 @@ Two strings can be concatenated using concatenation operator ".". This operator 
 
 ```
 given
-  String: s := ""
+  String: s := "";
 do  
-  s := 'te/' / '/st' ** "te/st" ** Linux
-  s := 'te/' / '/st' ** "te\st" ** Windows
-done
+  s := 'te/' / '/st'; ** "te/st" ** Linux
+  s := 'te/' / '/st'; ** "te\st" ** Windows
+done;
 ```
 
 ## Text concatenation
@@ -484,9 +484,9 @@ We use hash "#" to create a placeholder into a Text. We use "<+" operator to rep
 #[] := Array placeholder    
 
 ```
-print ("number #n" <+ 10)
-print ("strings #s and #s" <+ ('10','even'))
-print ("unicode #u" <+ U+2260)
+print ("number #n" <+ 10);
+print ("strings #s and #s" <+ ('10','even'));
+print ("unicode #u" <+ U+2260);
 ```
 **Expected output:**
 ```
@@ -508,13 +508,13 @@ unicode ≠
 
 **Using Hash**
 ```
-method: main()
-  Text: template := "Hey look at this #{key1} it #{key2}"
-  Hash: my_map   := {("key1":"test"),("key2":"works!")}
+method: main() => ()
+  Text: template := "Hey look at this #{key1} it #{key2}";
+  Hash: my_map   := {("key1":"test"),("key2":"works!")};
 process  
   ** using format function
-  print(template.format(my_map)) 
-return
+  print template.format(my_map);
+return;
 ```
 
 Expect output:
@@ -524,12 +524,12 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-method: main()
-  String: template := "Hey look at this #[0] it #[1]"
-  List: my_list    := ("test","works!")
+method: main() => ()
+  String: template := "Hey look at this #[0] it #[1]";
+  List: my_list    := ("test","works!");
 process  
-  print (template <+ my_set)
-return
+  print (template <+ my_set);
+return;
 ```
 
 Expect Output:
@@ -541,7 +541,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-method: format(Number: n, String: f) => String
+method: format(Number: n, String: f) => String;
 ```
 
 Where "f" is a pattern: '(ap:m.d)'
@@ -565,11 +565,11 @@ Where "f" is a pattern: '(ap:m.d)'
 
 ### Text functions
 
-* Text:    format (Text: str, Hash: map)
-* Text:    replace(Text: str, String: target, String: arrow )
-* integer: find   (Text: str, String: patern)
-* integer: count  (Text: str, String: patern)
-* integer: length (Text: str)
+* Text:    format (Text: str, Hash: map);
+* Text:    replace(Text: str, String: target, String: arrow );
+* integer: find   (Text: str, String: patern);
+* integer: count  (Text: str, String: patern);
+* integer: length (Text: str);
 
 **Reading a Text**
 

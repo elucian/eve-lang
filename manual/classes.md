@@ -37,7 +37,7 @@ create
 discard
   ** object release region
   ...
-return
+return;
 ```
 
 ## Parameters 
@@ -47,12 +47,12 @@ A class can have parameters that receive values during object initialization. Yo
 ```
 given
   ** declare object from arbitrary class
-  class_name: object_name
+  class_name: object_name;
 do
   ** create object 
-  object_name := class_name(param:value,...)
+  object_name := class_name(param:value,...);
   ...
-done
+done;
 ```
 
 ## Instance
@@ -100,11 +100,11 @@ A class can have a single constructor. A constructor can use decision statements
 ...
 create
   when (condition) do
-    object := base_class(some_arguments)
+    object := base_class(some_arguments);
   else
-    object := base_class(<other_arguments>)
-  done
-return
+    object := base_class(<other_arguments>);
+  done;
+return;
 ```
 
 **Initialization**
@@ -115,25 +115,24 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 
 **Example:**
 ```
-method: main()
-  Integer: o,n ** boxed integers
+method: main() => ()
+  Integer: o,n; ** boxed integers
 process  
-  o := 1
-  n := 1 
+  o := 1;
+  n := 1; 
   when (o = n) do
     ** unexpected
-    print("o and n objects are the same") 
-    fail
+    print("o and n objects are the same");
   else
     ** expected
-    print("n and o are not the same") 
-  done
-  ** verify
+    print("n and o are not the same");
+  done;
+  ** expectations
   expect  (o  = n) ** equivalent  
   expect !(o <> n) ** not divergent
   expect  (o != n) ** not the same
   expect !(o == n) ** not the same 
-return
+return;
 ```
 
 ## Generics
@@ -146,7 +145,7 @@ class[Generic_Type,...]: Generic_Name(parameter:Generic_Type,...) <: Base_Class
   ** declarations
 create
   ** constructor
-return
+return;
 ```
 
 **Using Generic:**
@@ -154,7 +153,7 @@ Generic class is used to define a subtype then you can declare one or more insta
 
 ```
 ** create new object from generic
-type: new_type <: Generic_class[generic_type]
+type: new_type <: Generic_class[generic_type];
 
 ```
 

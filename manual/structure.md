@@ -98,12 +98,12 @@ function: name(params) => (expression)
 ** class declaration
 class: name(params) <: superclass
   ...
-return
+return;
 
 ** method declaration
 method: name(params) => (result_list)
   ...
-return
+return;
 ```
 
 ## Declaration order
@@ -121,14 +121,14 @@ Is used to include members from several other scripts into current script:
 **syntax**
 ```
 import 
-  $user_path/relative_path/*.eve:(*) 
-  $user_path/relative_path/script_name.eve:(*)
-  $user_path/relative_path/script_name.eve:(member_name,...)
+  $user_path/relative_path/*.eve:(*); 
+  $user_path/relative_path/script_name.eve:(*);
+  $user_path/relative_path/script_name.eve:(member_name,...);
 
 ** member alias
 alias
-  name := script_name
-  name := script_name.member_name
+  name := script_name;
+  name := script_name.member_name;
   ...
 ```
 
@@ -164,8 +164,8 @@ Global public members must start with a dot prefix:
 **example**
 ```
 global
-  Real: .PI := 3.14 ** global & public constant
-  Real:  pi := 3.14 ** global & private variable
+  Real: .PI := 3.14; ** global & public constant
+  Real:  pi := 3.14; ** global & private variable
 ```
 
 **note:** constant is using capital letters
@@ -186,7 +186,7 @@ method: name(parameters) => (results)
 process
   ** executable region
   ...
-return
+return;
 ```
 
 **Notes:**
@@ -225,8 +225,8 @@ One method can receive multiple arguments of the same type separated by comma in
 **example**
 ```
 method: main(Array[String]() * args) => ()
-  print(args)
-return
+  print(args);
+return;
 ```
 
 **Method context**
@@ -256,18 +256,18 @@ A method end with keyword return. When method is terminated, program execution w
 method: test(Integer: a) => ()
 process
   ** print is a system method
-  print a 
-return
+  print a; 
+return;
 
 method: main(List[String]: *args) => ()
   ** number of arguments received:
-  Integer: c := args.count()
+  Integer: c := args.count();
 process  
   ** verify condition and exit
-  exit if c = 0
+  exit if c = 0;
   
-  test c ** method call
-return
+  test c; ** method call
+return;
 ```
 
 ## Side Effects
@@ -286,23 +286,23 @@ Next method add numbers and has 2 side effects:
 ** global variables
 
 global
-  Integer: test 
-  Integer: p1, p2
+  Integer: test; 
+  Integer: p1, p2;
   
 method: add_numbers() => ()
 process
   **side effects  
-  test := p1 + p2 
-  print (test)
-return
+  test := p1 + p2 ;
+  print (test);
+return;
 
 method: main() => ()
 process
-  p1 := 10
-  p2 := 20
-  add_numbers()   
-  expect result = 30  
-return
+  p1 := 10;
+  p2 := 20;
+  add_numbers();
+  expect result = 30;
+return;
 ```
 
 **using output parameters**
@@ -312,18 +312,18 @@ To avoid system and global variables you can use output parameters:
 ```
 method: add(Integer: p1,p2, Integer @ out) => ()
 process
-  out := p1+p2
-return
+  out := p1+p2;
+return;
 
 method: main() => ()
-  Integer: result
+  Integer: result;
 process  
   ** reference argument require a variable
-  add(1,2, out: result)
-  print (result) ** expected value 3
+  add(1,2, out: result);
+  print (result); ** expected value 3
   ** negative test
-  add (1,2,4) ** error, "out" parameter require variable argument
-return
+  add (1,2,4); ** error, "out" parameter require variable argument
+return;
 ```
 
 **Notes:**
@@ -339,7 +339,7 @@ return
 A function can have parameters and produce one single result. 
 
 ```
-function: name(parameters) => Type: (expression)
+function: name(parameters) => Type: (expression);
 ```
 
 **Function call**
@@ -370,14 +370,14 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function: sum(Integer: a, b) => Integer: (a + b)
+function: sum(Integer: a, b) => Integer: (a + b);
   
-method: main() => ()
-  Integer: r
+method: main() => ();
+  Integer: r;
 process  
-  r := sum(10,20)  ** function call
-  print(r)         ** this will print 30
-return
+  r := sum(10,20);  ** function call
+  print(r);         ** this will print 30
+return;
 ```
 
 ## Expressions
@@ -390,7 +390,7 @@ A ternary operator is "?". Can be used with conditional expressions to return on
 
 **example**
 ```
-print ("True" ? True)
+print ("True" ? True);
 ```
 
 ## λ expressions
@@ -410,26 +410,26 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 **example**
 ```
 method: main() => ()
-  Integer: p1, p2, x
+  Integer: p1, p2, x;
 process
-  p1 := 2
-  p2 := 1
+  p1 := 2;
+  p2 := 1;
   ** using λ expression  
-  x  := ( 0 ? p1 = 0, 0 ? p2 = 0: p1+p2)
-  print x ** expect: 3 
-return
+  x  := ( 0 ? p1 = 0, 0 ? p2 = 0: p1+p2);
+  print x; ** expect: 3 
+return;
 ```
 
 **example**
 ```
 given
-  Logic:   b := False
-  Integer: v := 0   
+  Logic:   b := False;
+  Integer: v := 0;   
 do
-  v := (1 ? b : 2)   
-  expect v = 2  
-  print v   
-done 
+  v := (1 ? b : 2);   
+  expect v = 2;  
+  print v;   
+done; 
 ```
 
 ## Dispatch
@@ -448,7 +448,7 @@ create
   ** constructor region
 remove
   ** release region
-return
+return;
 ```
 
 **Read more:** [Classes](classes.md)
@@ -463,13 +463,13 @@ process
   ** initialization
   case: c1("description") do
     ...
-    abort if (condition)
+    abort if (condition);
   case: c2("description") do
     ...
-    solve s4 if (condition)    
+    solve s4 if (condition);    
   case: c3("description") do
     ...
-    retry s1 if (condition)    
+    retry s1 if (condition);    
   case: c4("description") do    
     ...
 recover  
@@ -479,7 +479,7 @@ recover
 closure
   ** finalization region
   ...    
-return
+return;
 ```
 
 New keywords:
@@ -512,8 +512,8 @@ import
 ** you can run a script with arguments
 method: main() => ()
 process
-  run module_name.main(arguments) +> (results)
-return
+  run module_name.main(arguments) +> (results);
+return;
 ```
 
 **parallel:**
@@ -526,13 +526,13 @@ import
 method: main() => ()
 process
   ** execute a module in parallel
-  act $pro_mod/module_name(arguments,channel)
-  act $pro_mod/module_name(arguments,channel) 
+  act $pro_mod/module_name(arguments,channel);
+  act $pro_mod/module_name(arguments,channel); 
   ** whait for all scripts to finish
-  rest
+  rest;
   ** print the results
-  print (channel)
-return
+  print (channel);
+return;
 ```
 
 **using exit**
@@ -543,11 +543,11 @@ Using exit in main() will end script execution.
 ```
 ** using when prefix condition
 when (condition) do
-  exit
-done
+  exit;
+done;
 
 ** using if postfix condition
-exit if (condition)
+exit if (condition);
 ```
 
 **using quit**
@@ -558,11 +558,11 @@ This is a way to release all locked resources and stop the main suite.
 ```
 ** using when prefix condition
 when (condition) do
-  quit
-done
+  quit;
+done;
 
 ** using if postfix condition
-quit if (condition)
+quit if (condition);
 ```
 
 **Read next**: [Control Flow](control.md)

@@ -100,29 +100,29 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 **patterns:**
 ```
 ** define type
-type: type_name[parameters] <: type_descriptor
+type: type_name[parameters] <: type_descriptor;
 
 global
   ** use default value
-  type_name: var_name                
+  type_name: var_name;
   ** specific value and type
-  type_name: var_name := value
+  type_name: var_name := value;
   ** multiple variables in one assignment
-  type_name: var_name1, name2 ...:= value 
+  type_name: var_name1, name2 ...:= value;
   ** diverse values in one statement
-  type_name: var_name1:=value1, var_name2 := value2 
+  type_name: var_name1:=value1, var_name2 := value2;
 ```
 
 **examples**
 ```
 global  
   ** integer numbers
-  Integer: a  
-  Integer: b := 1 
+  Integer: a;
+  Integer: b := 1;
 
   ** real numbers
-  Real: d := 2.5
-  Real: x,y,z := 0.0  
+  Real: d := 2.5;
+  Real: x,y,z := 0.0;
 ```
 
 **default value**
@@ -178,23 +178,23 @@ Expressions are created using identifiers, operators, functions and constant lit
 **Examples**
 ```
 ** simple expressions in print statement
-print (10) ** print 10
-print ("this is a test")
+print  10; ** print 10
+print "this is a test";
 
 ** complex expressions can use ()  
-print (10 + 10 + 15)   ** math
-print (10 > 5 | 2 < 3) ** logical
+print 10 + 10 + 15;   ** math
+print 10 > 5 | 2 < 3; ** logical
 
-** print result for multiple expressions
-print (1, 2, 3)       
-print (10, 11, 12)   
+** list of expressions are enclosed in ()
+print (1, 2, 3);
+print (10, 11, 12);
 
 ** avoid new line and print
-write (1,2)
-write (3,4)  
+write (1,2);
+write (3,4);  
 
 ** now create new line
-print ** expect 1234 
+print; ** expect 1234 
 ```
 
 **Notes:** 
@@ -220,14 +220,13 @@ The most simple block statement start with "begin" and end with "done"
 ```
 given
   ** integer numbers
-  Integer: a := 0 ; Real: b := 1.5 
-begin  
-  print  (a, b)  
-  expect (a = 0, b = 1.5)
-done
+  Integer: a := 0; 
+  Real:    b := 1.5; 
+begin
+  print  (a, b);
+  expect (a = 0, b = 1.5);
+done;
 ```
-
-**Note:** last statement in a program is ending with "." instead of ";"
 
 ## Multiple lines
 
@@ -240,23 +239,23 @@ One expression can span multiple lines.
 **example
 ```
 given 
-  Integer: x 
-  Matrix : a
+  Integer: x; 
+  Matrix : a;
 begin  
   ** broken expression
   x := 1 + 2 +
-       3 + 4 + 5
+       3 + 4 + 5;
        
   ** all 5 numbers are in sum         
-  expect x = 15 
+  expect x = 15; 
 
   ** broken matrix
   a := [ 
          [1,2],
          [3,4],
          [5,6]
-       ]       
-done
+       ];
+done;
 ```
 
 **Read next:** [Structure.md](structure.md)

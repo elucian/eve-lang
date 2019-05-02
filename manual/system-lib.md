@@ -41,12 +41,12 @@ read (String: prompt) => String;
 
 **Example:**
 ```
-method: main()
-  String: s
+method: main() => ()
+  String: s;
 process  
-  s := read(v, "read:")
-  print("you entered:" & v)
-return
+  s := read(v, "read:");
+  print("you entered:" & v);
+return;
 ```
 
 ## Standard write 
@@ -61,9 +61,9 @@ This will help developers to make dynamic write.
 Is user responsibility to make a line break using an escape \n or \r inside the string parameter.
 
 ```
-method: write( String * str )
+method: write( String * str ) => ()
  ...
-return
+return;
 ```
 
 write sting can contain an escaped end of line character.
@@ -86,9 +86,9 @@ that is (pass, fail) but also to display at the console some feedback.
 ## Function _print_
 This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beggining of the next line. So the _print_ function is more like println() from other languages.
 ```
-method: print(String * str)
+method: print(String * str) => ()
 ...
-return
+return;
 ```
 
 The sting do not have to contain the end of line character. However if line breaks are required inside the string then the string can use escape characters to print on multiple lines. This is unusual for a program but is possible.

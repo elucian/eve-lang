@@ -10,13 +10,13 @@ EVE is a gradual typed language, with predefined types.
 * [Collections](#collections)
 * [Physical](#physical-types)
 * [User defined](#user-defined)
-* [Data Coercion](#data-coercion)
+* [Data coercion](#data-coercion)
 * [Type inference](#type-inference)
 * [Default types](default-types) 
 * [Gradual typing](#gradual-typing)
 * [String type](#string-type)
 * [Calendar date](#calendar-date)
-* [Time Duration](#time-duration)
+* [Time duration](#time-duration)
 
 ## Basic Types
 
@@ -63,7 +63,11 @@ EVE has ready to use support for physical measurements:
 | Distance | The travel distance between to points in space
 ...
 
-**See also:** [UCUM](http://unitsofmeasure.org/ucum.html)
+See also: [UCUM](http://unitsofmeasure.org/ucum.html)
+
+**note:** 
+* In the future we will cover a complete set of physical types
+* Physical types include a measurement unit controlled by directives
 
 ## Numeric Types
 
@@ -118,17 +122,17 @@ Precision Real: numbers is variable depending on the size of the number. The num
 **example**
 
 ```
-method: main()
+method: main() => ()
   ** declare variables
-  Integer: i 
-  Natural: n
-  Real: r
+  Integer: i; 
+  Natural: n;
+  Real: r;
 process  
   ** modify variables
-  i := 9223372036854775807
-  n := 18446744073709551615
-  r := 0.25  
-return
+  i := 9223372036854775807;
+  n := 18446744073709551615;
+  r := 0.25;
+return;
 ```
 
 **See also:** [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation#Other_bases)
@@ -149,21 +153,21 @@ type: type_name <: type_descriptor (parameters)
 
 **Example:**
 ```
-type: Point <: Record (Integer: a, b )
+type: Point <: Record (Integer: a, b );
 
-method: main()
-  Point: p1, p2      ** implicit constructor
-  Point: p3 := {1,1} ** initial value for Point
+method: main() => ()
+  Point: p1, p2;      ** implicit constructor
+  Point: p3 := {1,1}; ** initial value for Point
 process
   ** modification using constants
-  p1.a := 1
-  p1.b := 2  
+  p1.a := 1;
+  p1.b := 2; 
   
   ** modification using literal
-  p2 := {2, 2}
+  p2 := {2, 2};
   
-  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b))
-  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b))  
+  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
+  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b));  
 return
 ```
 output:
@@ -189,14 +193,14 @@ String -> Real ->  Natural:-> Integer
 
 ```
 given
-  Integer: a := 2
-  Real:    b := 1.5 
+  Integer: a := 2;
+  Real:    b := 1.5; 
 do
-  b := a       ** this implicit cast is possible b = 2.0
-  b := a + 3.5 ** add 3.5 then assign result to b = 5.5
-  a := b       ** error: can not assign Real: to Integer
-  a := 1.5     ** error: can not assign Real: to Integer
-done
+  b := a;       ** this implicit cast is possible b = 2.0
+  b := a + 3.5; ** add 3.5 then assign result to b = 5.5
+  a := b;       ** error: can not assign Real: to Integer
+  a := 1.5;     ** error: can not assign Real: to Integer
+done;
 ```
 
 ### Explicit coercion
@@ -205,31 +209,31 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 Examples of explicit coercion:   
 ```
 given
-  Integer: a := 0
-  Real:    b := 1.5
+  Integer: a := 0;
+  Real:    b := 1.5;
 do
   ** explicit coercion lose (0.5)
-  a := floor(b)
-  print(a) ** will print: 1
+  a := floor(b);
+  print(a); ** will print: 1
  
   ** explicit coercion add (0.5)
-  a := ceiling(b) 
-  print(a) ** will print: 2
+  a := ceiling(b); 
+  print(a); ** will print: 2
 
   ** explicit coercion rounding:  
-  a := round(b) 
-  print(a) ** will print: 2
-done
+  a := round(b);
+  print(a); ** will print: 2
+done;
 ```
 
 **Number to a string**
 
 ```
 given
-  String: s 
-  Integer: v := 1000
+  String: s; 
+  Integer: v := 1000;
 do  
-  s := format(v) ** explicit coercion s:="1000"
+  s := format(v); ** explicit coercion s:="1000"
 done
 ```
 
@@ -239,15 +243,15 @@ This can be ready using the casting function parse(), only if the string contain
 
 ```
 given
-  Integer: v 
-  Real:    b
-  String:  s := '1000'
-  String:  r := '200.02'
+  Integer: v; 
+  Real:    b;
+  String:  s := '1000';
+  String:  r := '200.02';
 do
-  v := parse(s) ** make v = 1000
-  v := parse(r) ** make v = 200 and decimal .02 is lost
-  b := parse(r) ** make b = 200.02 and decimal .02 is preserved
-done
+  v := parse(s): ** make v = 1000
+  v := parse(r): ** make v = 200 and decimal .02 is lost
+  b := parse(r): ** make b = 200.02 and decimal .02 is preserved
+done;
 ```
 
 **Note:** 
@@ -267,10 +271,10 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List: ls := (0,1,2,3,4,5,6,7,8,9)
+  List: ls := (0,1,2,3,4,5,6,7,8,9);
 do
-  print(ls.type()) 
-  expect ls is List[Integer]
+  print ls.type(); 
+  expect ls is List[Integer];
 done 
 ```
 
@@ -330,14 +334,14 @@ We can verify the type using "is" operator:
 
 ```
 given
-  Record: r := (name:"test", age:"24") 
-  Table:  t := {('key1':"value1"),('ley2':"value2")} 
+  Record: r := (name:"test", age:"24"); 
+  Table:  t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
-  expect v.name  is Text
-  expect v.key   is String
-  expect m.value is Text
-done
+  expect v.name  is Text;
+  expect v.key   is String;
+  expect m.value is Text;
+done;
 ```
 
 ## Printing type()
@@ -346,11 +350,11 @@ For type introspection we can use type() built-in function:
 
 ```
 given
-  Real: i := 1.5
+  Real: i := 1.5;
 do
-  expect i is Real
-  print("type of i is \s" <+ type(i))
-done
+  expect i is Real;
+  print "type of i is \s" <+ type(i);
+done;
 ```
 
 ## Polymorphic operators
@@ -374,16 +378,15 @@ True     | Logic.True    | 00000000 00000001
 
 **syntax**
 ```
-define
- Logic: variable_name ** default False
+global
+  Logic: variable_name; ** default False
 ```
 
 **internal design**
 
 Probably best to define Logic type is Ordinal:
 ```
-define
-  type: Logic <: Ordinal { .False , .True }
+type: Logic <: Ordinal { .False , .True };
 ```
 
 **Relation Operators**
@@ -430,10 +433,10 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-type: variant_type <: Variant (type_name | type_name | ... )
+type: variant_type <: Variant (type_name | type_name | ... );
 
 global  
-  variant_type: v
+  variant_type: v;
 ```
 
 ## Variant Properties
@@ -451,10 +454,10 @@ For this we use a special type: Null
 
 **Examples:**
 ```
-type: Number <: Variant (Integer | Real | Null)
+type: Number <: Variant (Integer | Real | Null);
 
 global
-  Number: x := Null
+  Number: x := Null;
   
 ```
 
@@ -465,47 +468,47 @@ A variant can establish its data type at runtime:
 **example:**
 ```
 given
-  Real | Integer: v, x ,t 
+  Real | Integer: v, x ,t;
 do
   ** positive example
-  v := 1     ** v is Integer
-  x := 1.5   ** x is Real:    
-  t := 1 / 2 ** make t Real
+  v := 1;     ** v is Integer
+  x := 1.5;   ** x is Real:    
+  t := 1 / 2; ** make t Real
   
   ** safe conversion
-  t := 12 ** t is Real
+  t := 12; ** t is Real
   
   ** negative examples
-  v := x  ** ERROR: v is Integer 
-done
+  v := x;  ** ERROR: v is Integer 
+done;
 ```
 
 A variant is a way to create a generic method.
 
 ```
-method: switch(Integer | Real @ x, y)
+method: switch(Integer | Real @ x, y) => ()
   Integer | Real @ i
 process  
   expect type(x) = type(y)  
   
-  i :: x ** intermediate reference
-  x :: y ** first  switch
-  y :: x ** second switch
-return
+  i :: x; ** intermediate reference
+  x :: y; ** first  switch
+  y :: x; ** second switch
+return;
 
 method: main() => ()
-  Integer: x, y
-  Real: a, b
+  Integer: x, y;
+  Real: a, b;
 process  
   ** invert two Integer: numbers
-  x := 10
-  y := 20  
-  switch(x, y)
+  x := 10;
+  y := 20;  
+  switch(x, y);
   
   ** invert two Real: numbers
-  a := 1.5
-  b := 2.5
-  switch(a, b)
+  a := 1.5;
+  b := 2.5;
+  switch(a, b);
 return
 ```
 
@@ -532,9 +535,9 @@ String can be initialized with a constant literal using single quotes or double 
 
 ```
 global
-  String(100): short_string := '' ** this string can hold 100 symbols, 100*4 = 400 bytes
-  String: string_name       := '' ** default capacity 1024 can hold 256 ASCII symbols
-  Text: text_name           := "" ** variable capacity string can hold many lines of text
+  String(100): short_string := ''; ** this string can hold 100 symbols, 100*4 = 400 bytes
+  String: string_name       := ''; ** default capacity 1024 can hold 256 ASCII symbols
+  Text: text_name           := ""; ** variable capacity string can hold many lines of text
 ```
 
 ### String: mutability
@@ -543,27 +546,27 @@ In EVE strings are mutable. If you use `:=` new memory is allocated. If you use 
 **Example:**
 ```
 method: test_string()
-  String : str := 'First value'  
-  String : ref := 'First value' 
+  String : str := 'First value';  
+  String : ref := 'First value'; 
 process  
-  expect (str  = ref) ** same value
-  expect (str != ref) ** different locations  
+  expect (str  = ref); ** same value
+  expect (str != ref); ** different locations  
   
-  ref :: str  ** borrow reference
-  expect (str =  ref) ** same value
-  expect (str == ref) ** same location  
+  ref :: str;  ** borrow reference
+  expect (str =  ref); ** same value
+  expect (str == ref); ** same location  
   
   ** if we modify "str" then "ref" will apear modified
-  str += ":test" 
-  expect ref = "First value:test"
-  expect str = ref ** the reference is holding
+  str += ":test"; 
+  expect ref = "First value:test";
+  expect str = ref; ** the reference is holding
   
   ** if we recreate str, ref will not be modified
-  str := 'Second value' ** new string location
-  expect (str != ref)   ** different location now  
+  str := 'Second value'; ** new string location
+  expect str != ref;   ** different location now  
   ** reference was broken, ref is pointing to old value
-  print (ref)  ** 'First value:test'
-return
+  print ref;  ** 'First value:test'
+return;
 ```
 
 **Note:** 
@@ -581,10 +584,10 @@ return
 **Example:**
 
 ```
-print ('this' = 'this')    ** True (same value)
-print ("this" = 'this')    ** True (same value)
-print (' this' <> 'this')  ** True (not same value)
-print ('this ' <> 'this')  ** True (not same value)
+print ('this' = 'this');    ** True (same value)
+print ("this" = 'this');    ** True (same value)
+print (' this' <> 'this');  ** True (not same value)
+print ('this ' <> 'this');  ** True (not same value)
 ```
 
 ### Null strings
@@ -593,12 +596,12 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  String: str := ""
+  String: str := "";
 do 
-  expect (str is Null)
-  expect (str = '')
-  expect (str = "")
-done
+  expect (str is Null);
+  expect (str = '');
+  expect (str = "");
+done;
 ```
 
 ## Calendar date
@@ -623,17 +626,17 @@ When can create a date literal using 3 reversible functions:
 
 ```
 given
-  Date: date
+  Date: date;
 do
-  date := "2019/01/30" -> YDM
-  date := "30/01/2019" -> DMY
-  date := "01/30/2019" -> MDY
+  date := "2019/01/30" -> YDM;
+  date := "30/01/2019" -> DMY;
+  date := "01/30/2019" -> MDY;
 
   **printing**  
-  print date.YDM()
-  print date.DMI()
-  print date.MDI()   
-done
+  print date.YDM();
+  print date.DMI();
+  print date.MDI();  
+done;
 ```
 
 ## Time Duration
@@ -663,18 +666,18 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given
-  Time: time ** '00:00' 
+  Time: time; ** '00:00' 
 ```
 
 **Example**
 
 ```
 given
-  Time: time1, time2, time3 
+  Time: time1, time2, time3; 
 do
-  time1 := "23:63" -> T24   
-  time2 := "23:63:59,99" -> T24   
-  time3 := "11:63:59pm,99ms" -> T12   
-done
+  time1 := "23:63" -> T24;
+  time2 := "23:63:59,99" -> T24;
+  time3 := "11:63:59pm,99ms" -> T12;
+done;
 ```
 **Read next:** [Composite Types](composite.md)
