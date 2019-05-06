@@ -7,7 +7,7 @@ By using collections and control structures one can load, modify and store data.
 Array elements have very fast direct access by index. 
 
 ```
-method: test_array() => ()
+method test_array() => ()
   ** array  with capacity of 10 elements
   Array[Integer](10): my_array;
 process  
@@ -67,17 +67,17 @@ do
   M[*] := 100;
   ** modify all elements
   M[*] += 10;
-  print(M); ** [[110,110],[110,110]]
+  print(M); -- [[110,110],[110,110]]
 
   ** modify an entire row 
   M[1,*] := 0;
   M[1,*] := 1;
-  print(M); ** [[0,0],[1,1]]
+  print(M); -- [[0,0],[1,1]]
   
   ** modify an entire column
   M[*,1] += 1;
   M[*,2] += 2;
-  print(M); ** [[1,2],[2,3]];0
+  print(M); -- [[1,2],[2,3]]
 done;
 ```
 
@@ -97,7 +97,7 @@ When you traverse elements use rows first, than you change the column. A process
 In this example we traverse all the rows then all the column, this is the most efficient way to traverse a matrix.
 
 ```
-method: main()
+method main()
   Matrix[String(2)](3,3): M 
 process  
   M := [ 
@@ -136,23 +136,23 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-method: main() => ()
+method main() => ()
   Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
-  Array[Integer]: b :: a[1..4]; ** slice reference
+  Array[Integer]: b :: a[1..4]; -- slice reference
 process
-  print(a[1..?]);   ** will print [0,1,2,3,4,5,6,7,8,9]
-  print(a[1..1]);   ** will print [0]
-  print(a[1..4]);   ** will print [1,2,3]
+  print(a[1..?]);   -- will print [0,1,2,3,4,5,6,7,8,9]
+  print(a[1..1]);   -- will print [0]
+  print(a[1..4]);   -- will print [1,2,3]
  
   ** modify slice b (reference to a)
   b[*] += 2;
   
   ** first 4 elements of (a) are modified
-  print(a);  ** will print: [2,3,4,5,4,5,6,7,8,9]
+  print(a);  -- will print: [2,3,4,5,4,5,6,7,8,9]
 return;
 ```
 
-### Set builders
+## Set builders
 
 You can define elements of a subset from a set using the following construction:
 ```
@@ -182,7 +182,7 @@ given
 do
    ** eliminate duplicates using set comprehension
    mew_set := { x : x in my_list };
-   print my_set; ** {0,1,2} 
+   print my_set; -- {0,1,2} 
 done;
 ```
 
@@ -196,7 +196,7 @@ given
    Set:  my_set  := {};
 do
    my_set := { x : x in my_list & (x % 2 = 0) };
-   print my_set; ** {0,2,4} 
+   print my_set; -- {0,2,4} 
 done;
 ```
 
@@ -211,7 +211,7 @@ given
 do
    ** create Hash pairs (key, value) for Hash map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x:x^2): x in source } ;
+   target := { (x : x^2): x in source };
 done;
 ```
 
@@ -220,13 +220,13 @@ List concatenation is ready using operator “+”. This operator represent unio
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-method: main() => ()
+method main() => ()
   List[Symbol]: a := ('a','b','c');
   List[Symbol]: b := ('1','2','3');
   List[Symbol]: c := ();
 process
   c := a + b;
-  print(c)**['a','b','c','1','2','3'];
+  print(c) -- ['a','b','c','1','2','3'];
 return;
 ```
 
@@ -238,7 +238,7 @@ given
   String: str;
 do
   str := join([1,2,3],",");
-  print (str) ** "1,2,3";
+  print (str) -- "1,2,3";
 done; 
 ```
 
@@ -250,7 +250,7 @@ given
   List[Integer: ]: lst;
 do
   lst := split("1,2,3",",");
-  print lst; ** (1,2,3)
+  print lst; -- (1,2,3)
 done;
 ```
 
@@ -280,16 +280,16 @@ Two operations are possible
 ### Other built-ins
 
 Following other functions should be available
-* append(value) – can append an element at the end of the list
-* insert(value) – can insert an element at the beginning of the list
-* delete(value) – can delete one element at specified index
-* count() - retrieve the number of elements 
+* list.append(value) -- can append an element at the end of the list
+* list.insert(value) -- can insert an element at the beginning of the list
+* list.delete(value) -- can delete one element at specified index
+* list.count() -- retrieve the number of elements 
 
 ### Special attributes
 A list has properties that can be used in logical expressions:
 
-* list.empty()  ** True or False
-* list.full()   ** True or False
+* list.empty()  -- True or False
+* list.full()   -- True or False
 
 
 ## Iteration
@@ -306,40 +306,32 @@ while element is not Null do
   element := collection.next(element);
 repeat;
 ```
-
-### Iterator element
-
 The "element" is local to iteration and is used as control variable.
 
-### Early termination
-It is possible to change this using stop keyword. 
-
-**Program Example**
+**example**
 
 ```
-** example of collection iteration
-method: main() => ()
-  List[Symbol] my_list := ['a','b','c','d','e']; 
+method main() => ()
+  List[Symbol]: my_list := ['a','b','c','d','e']; 
 process  
   given
-    Symbol: element := my_list[1];
+    Symbol: element;
     Integer: x := 1;
-  while True do
-    write(element);
-    if (element = 'd') do
-       stop ** early termination;
+  scan my_list +> element do
+    write element;
+    when element = 'd' do
+      stop -- early termination;
     else
-       write(',');
+      write(',');
     done;
-    element := my_list[x++];
-  repeat;
+  next;
 return;
 ```
 > c,d
 
 ## Visit items
 
-Collections have common methods that enable traversal using a visitor. 
+Collections have common methods that enable traversal using _scan_. 
 
 {List, Hash, Set} 
 
@@ -353,11 +345,11 @@ Collections have common methods that enable traversal using a visitor.
 * this       - reference to current element
 
 ## Set Iteration
-Map and set are similar. We can visit all elements:
+Hash map and set are similar. We can visit all elements:
 
 **Example:**
 ```
-method: main() => ()
+method main() => ()
   Hash: my_map := {("a":1),("b":2),("c":3)};
 process  
   ** print pairs (key:value)
@@ -388,7 +380,7 @@ given
   Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer: my_key := 3;
 if (my_key in my_map) do
-  print('True'); ** expected
+  print('True'); -- expected
 else
   print('False');
 done;
@@ -397,7 +389,7 @@ done;
 **example**
 ```
 ** create new elements in the hash collection
-method: main() => ()
+method main() => ()
 process
   given
     Hash(String, String): animals := {};
@@ -421,8 +413,8 @@ Output:
 
 ### Example
 ```  
-method: main() => ()
-  Hash: animals := {}; ** partial declaration
+method main() => ()
+  Hash: animals := {}; -- partial declaration
 process
   ** establish element types S:U
   animals['Rover'] := "dog";
@@ -442,9 +434,9 @@ output:
 
 Strings can be concatenated using:
 
-* string concatenation operator: "&"
-* trim and concatenation operator: "+"
-* path concatenation operator  : "/"
+* fast concatenation operator: "&"
+* trim concatenation operator: "+"
+* path concatenation operator: "/"
 
 **Example:**
 ```
@@ -453,26 +445,26 @@ given
   String: str := ""; 
 do
   ** set string value using different operators
-  str := "this "&" string";   ** "this  string"
-  str := "this "+" string";  ** "this string"
+  str := "this " & " string";  -- "this  string"
+  str := "this " + " string";  -- "this string"
 done;
 ```
 
 **path concatenation**
-Two strings can be concatenated using concatenation operator ".". This operator is used to concatenate "path" strings. The "." is converted to \ or / depending on the operating system.
+Two strings can be concatenated using concatenation operator "/" or "\\". This operator is used to concatenate "path" strings or URL locations. Notice "\\" is also escape character used for string templates.
 
 ```
 given
   String: s := "";
 do  
-  s := 'te/' / '/st'; ** "te/st" ** Linux
-  s := 'te/' / '/st'; ** "te\st" ** Windows
+  s := 'te/' / '/st'; -- "te/st" Linux
+  s := 'te/' \ '/st'; -- "te\st" Windows
 done;
 ```
 
 ## Text concatenation
 
-String: and text can be concatenated using the string concatenation operators: {+, - , _ }. A normal string can be implicit converted into a text. However a text can not be converted into a string without force casting string(<text_variable>). This may return good string or gibberish depending on text_variable content.
+String: and text can be concatenated using the string concatenation operators: {+, &}. 
 
 ## Text template
 We use hash "#" to create a placeholder into a Text. We use "<+" operator to replace the placeholder with values. If placeholder is not found the compiler raise an error. If the string is a variable this verification is not possible at compile time so maybe you get a run-time error.
@@ -496,8 +488,8 @@ unicode ≠
 ```
 
 **Notes**: 
-* Operator <+ is polymorph and overloaded. 
-* For template we can use numbers, strings, lists, hashes, arrays
+* Injector "<+" is polymorph and overloaded operator. 
+* For template we can use: numbers, strings, lists, hashes, arrays
 
 
 ## How to use a template?
@@ -508,7 +500,7 @@ unicode ≠
 
 **Using Hash**
 ```
-method: main() => ()
+method main() => ()
   Text: template := "Hey look at this #{key1} it #{key2}";
   Hash: my_map   := {("key1":"test"),("key2":"works!")};
 process  
@@ -524,7 +516,7 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-method: main() => ()
+method main() => ()
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
 process  
@@ -541,7 +533,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-method: format(Number: n, String: f) => String;
+method format(Number: n, String: f) => (String);
 ```
 
 Where "f" is a pattern: '(ap:m.d)'

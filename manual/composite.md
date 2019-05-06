@@ -34,20 +34,20 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 ```
 type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
 
-method: main() => ()
+method main() => ()
   String: message;
 process  
   given
     Day: today := today();
-  quest today
-    ?: Friday, Saturday, Sunday do
-      message:='weekend';
+  quest today:
+    match (Friday, Saturday, Sunday) do
+       message:='weekend';
       ...
-    ?: Monday do
-      message:='first workday';
-    ?: Friday do
-      message:='last workday';
-  other
+    match (Monday) do
+       message:='first workday';
+    match (Friday) do
+       message:='last workday';
+  none
     message:='middle of the week';
   done;
   print('Is', message);
@@ -71,7 +71,7 @@ Ordinal is a discrete numeral type so it has support for relation operators: { =
 ```
 ** using type Day declared before
 given
-  Day: v := Friday;
+  Day v := Friday;
 do
   v += 1; 
   expect v = Saturday;
@@ -86,7 +86,7 @@ An array is a collection of elements stored in order of natural index. Array ele
 ```
 ** declaration of an array with capacity
 global
-  Array: array_name[element_type](capacity);
+  Array array_name[element_type](capacity);
 ```
 
 **array capacity**
@@ -112,7 +112,7 @@ An array can be established using a constructor. All elements of a array can be 
 
 ```
 ** variable array size depending upon parameter n
-method: test(Integer: n) => ()
+method test(Integer: n) => ()
 process
   Array: my_array(n);
 return;
@@ -290,7 +290,7 @@ done;
 
 ## Table
 
-It is called "H" due to similar method:of letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
+It is called "H" due to similar methodof letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
 
 * Table is set of (key:value) pairs; 
 * The key must be one of {Integer, Natural, String} and is unique;
@@ -406,7 +406,7 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-method: main() => ()
+method main() => ()
   Real: a;
 process  
   a := 1 / 0;

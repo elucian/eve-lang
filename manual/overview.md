@@ -1,6 +1,6 @@
 # Syntax Overview
 
-ΞVΞ is a free form language inspired from Java and Ruby. 
+EVE is a free form language inspired from Java and Ruby. 
 
 **bookmarks**
 
@@ -23,6 +23,7 @@
 * Native data types, variables, labels and methods use lowercase letters and numbers;
 * Composite data types and classes start with capital letters;
 * System variables use prefix "$". User can define new system variables;
+* Public attributes and published members start with dot "." prefix;
 
 ## Comments
 
@@ -32,15 +33,17 @@
 
 **examples**
 ```
+*************************************
+**  Boxed comments using: "**"     **
+*************************************
+
 ## Title comment
   ** indented comment
 
-** Single line comment
+; Single line comment **
+{Test} ** test
 
-{*
-  Multiple line comments
-*}
-print ** end of line comment is enabled  
+print; end of line comment 
 ```
 
 **Notes:**
@@ -81,7 +84,7 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 ** Delimiters
 
-{ , : ; . }
+"{...}" "(...)" "..." '...' "," ":" "." ";" 
 
 Details: [Operators](operators.md) 
 
@@ -100,7 +103,7 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 **patterns:**
 ```
 ** define type
-type: type_name[parameters] <: type_descriptor;
+type type_name[parameters] <: type_descriptor;
 
 global
   ** use default value
@@ -178,12 +181,12 @@ Expressions are created using identifiers, operators, functions and constant lit
 **Examples**
 ```
 ** simple expressions in print statement
-print  10; ** print 10
+print  10; 
 print "this is a test";
 
 ** complex expressions can use ()  
-print 10 + 10 + 15;   ** math
-print 10 > 5 | 2 < 3; ** logical
+print 10 + 10 + 15;   -- numeric expression
+print 10 > 5 | 2 < 3; -- logical expression
 
 ** list of expressions are enclosed in ()
 print (1, 2, 3);
@@ -194,7 +197,7 @@ write (1,2);
 write (3,4);  
 
 ** now create new line
-print; ** expect 1234 
+print; -- 1234 
 ```
 
 **Notes:** 
@@ -236,17 +239,17 @@ One expression can span multiple lines.
 * Arithmetic expressions can terminate with operator and continue on next line. 
 * EVE do not use the "continuation" operator like Python: "\\"
 
-**example
+**example**
 ```
 given 
   Integer: x; 
-  Matrix : a;
+  Matrix : a; 
 begin  
   ** broken expression
   x := 1 + 2 +
        3 + 4 + 5;
        
-  ** all 5 numbers are in sum         
+  ** all 5 numbers are in 
   expect x = 15; 
 
   ** broken matrix

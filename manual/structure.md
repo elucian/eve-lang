@@ -23,7 +23,7 @@ Scripts are source files having extension: *.eve. Script names are using lowerca
 
 **directive**
 ```
-#script:name("long_name")
+script name("long_name")
 ```
 
 Script has a longer name/ descriptive name for reporting.
@@ -68,40 +68,42 @@ A script file is divided into regions using keywords: {import, define, global, c
 *****************************************
 ** Header comment
 *****************************************
-** start wotj directives
-#script:name("long-name")
-...
+script | suite
+  $name        : 'name' -- script name
+  $main        : 'main' -- main method
+  $description : 'long-name'
+  $echo        : 'off'
+  $debug       : 'off'
+  $trace       : 'off'  
 
-## system variables
-$system_variable := value/expression
-...
 
+...
 ** import_region
 import
-   ...
+  -- import library
 
-## global constants and variables
+** global constants and variables
 global
-  ** constant
-  ** variable
-  ** reference
+  $x  := 0 :Integer; -- constant
+  #y  := 0 :Integer; -- variable
+  @z  := 0 :Integer; -- reference
   ...
 
-## type declaration
-type: name[parameters] <: type_descriptor
-...
+** type declaration
+type name[parameters]: type_descriptor
 
 ** function declaration
-function: name(params) => (expression)
+function 
+  name(params): Type := (expression);
 ...
 
 ** class declaration
-class: name(params) <: superclass
+class name(params): superclass
   ...
 return;
 
 ** method declaration
-method: name(params) => (result_list)
+method name(params) => (result: Type, ...)
   ...
 return;
 ```
@@ -164,8 +166,8 @@ Global public members must start with a dot prefix:
 **example**
 ```
 global
-  Real: .PI := 3.14; ** global & public constant
-  Real:  pi := 3.14; ** global & private variable
+  con .PI := 3.14; -- global & public constant
+  var  pi := 3.14; -- global & private variable
 ```
 
 **note:** constant is using capital letters
@@ -181,7 +183,7 @@ A method is a named block of code that can be executed multiple times.
 
 **prototype**
 ```
-method: name(parameters) => (results)
+method name(parameters) => (results)
   ** declaration region
 process
   ** executable region
@@ -224,7 +226,7 @@ One method can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-method: main(Array[String]() * args) => ()
+method main(Array[String]() * args) => ()
   print(args);
 return;
 ```
@@ -253,13 +255,13 @@ A method end with keyword return. When method is terminated, program execution w
 
 **Example:**
 ```
-method: test(Integer: a) => ()
+method test(Integer: a) => ()
 process
   ** print is a system method
   print a; 
 return;
 
-method: main(List[String]: *args) => ()
+method main(List[String]: *args) => ()
   ** number of arguments received:
   Integer: c := args.count();
 process  
@@ -284,19 +286,19 @@ Next method add numbers and has 2 side effects:
 
 ```
 ** global variables
-
 global
-  Integer: test; 
-  Integer: p1, p2;
-  
-method: add_numbers() => ()
+  test :Integer; 
+  p1   :Integer; 
+  p2   :Integer; 
+
+method add_numbers():Integer 
 process
   **side effects  
   test := p1 + p2 ;
   print (test);
 return;
 
-method: main() => ()
+method main()
 process
   p1 := 10;
   p2 := 20;
@@ -310,12 +312,12 @@ return;
 To avoid system and global variables you can use output parameters:
 
 ```
-method: add(Integer: p1,p2, Integer @ out) => ()
+method add(p1,p2: Integer out @ Integer) => ()
 process
   out := p1+p2;
 return;
 
-method: main() => ()
+method main() => ()
   Integer: result;
 process  
   ** reference argument require a variable
@@ -370,13 +372,13 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function: sum(Integer: a, b) => Integer: (a + b);
+function sum(Integer: a, b) => Integer: (a + b);
   
-method: main() => ();
+method main() => ()
   Integer: r;
 process  
-  r := sum(10,20);  ** function call
-  print(r);         ** this will print 30
+  r := sum(10,20);  -- function call
+  print(r);         -- this will print 30
 return;
 ```
 
@@ -409,7 +411,7 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **example**
 ```
-method: main() => ()
+method main() => ()
   Integer: p1, p2, x;
 process
   p1 := 2;
@@ -458,19 +460,19 @@ return;
 A method can be organized as a workflow of multiple test-cases that can fail.
 
 ```
-method: main() => ()
+method main() => ()
 process
   ** initialization
-  case: c1("description") do
+  case c1("description") do
     ...
-    abort if (condition);
-  case: c2("description") do
+    exit if (condition);
+  case c2("description") do
     ...
     solve s4 if (condition);    
-  case: c3("description") do
+  case c3("description") do
     ...
     retry s1 if (condition);    
-  case: c4("description") do    
+  case c4("description") do    
     ...
 recover  
   ** exception region
@@ -484,7 +486,7 @@ return;
 
 New keywords:
 
-* abort, will terminate the method early
+* exit,  will terminate the method early
 * solve, will continue with a forward case
 * retry, will continue with a previous case
 
@@ -510,7 +512,7 @@ import
   $pro_mod/module_name
    
 ** you can run a script with arguments
-method: main() => ()
+method main() => ()
 process
   run module_name.main(arguments) +> (results);
 return;
@@ -523,11 +525,11 @@ return;
 import 
   $pro_mod/module_name
 
-method: main() => ()
+method main() => ()
 process
   ** execute a module in parallel
-  act $pro_mod/module_name(arguments,channel);
-  act $pro_mod/module_name(arguments,channel); 
+  act module_name(arguments,channel);
+  act module_name(arguments,channel); 
   ** whait for all scripts to finish
   rest;
   ** print the results

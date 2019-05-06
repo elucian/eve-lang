@@ -18,8 +18,8 @@ given
   ** local declarations
 with qualifier := long_qualifier do
   ** local statements
-  method_name();  ** instead of: qualifier.method_name()
-  var := function_name(); ** instead of qualifier.function_name()
+  method_name();  -- instead of: qualifier.method_name()
+  var := function_name(); -- instead of qualifier.function_name()
 done;
 ```
 
@@ -73,13 +73,13 @@ It is used in conjunction with { "do", "other", "done"}
 given 
   value_typ: val := expression
 quest val
-  ?: constant1 do
+  match constant1 do
     ** first path
-  ?: constant2 do
+  match constant2 do
     ** second path
-  ?: constant3 do
+  match constant3 do
     ** third path
-other
+none
   ** default path
 done;
 ```
@@ -94,14 +94,13 @@ method test(Integer: p:=0) => ()
   Integer: v := p + 4;
 process 
   quest v
-    ?: (1,2,3) do
+    match (1,2,3) do
       message := "first match";
-    ?: [1..8]  do
+    match [1..8]  do
       message := "second match";
-    ?: [5..10] do
+    match [5..10] do
       message := "third match";    
-  other
-    ** other cases
+  none
     message := "no match"
   done;
   print (message);
@@ -136,7 +135,7 @@ repeat;
 
 ```
 ** example of collection iteration
-method: main() => ()
+method main() => ()
   Array:test := ["a","b","c","d","e"];
   Integer: i := 0;
 process
@@ -164,7 +163,7 @@ given
 scan [min..max] +> var do
   ** block statements;
   skip if (condition);
-  ** eary intreruption
+  ** eary interruption
   stop if (condition);
   ...
 next;

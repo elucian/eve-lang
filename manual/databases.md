@@ -39,7 +39,7 @@ One application can connect to one target database that and one or more source d
 To connect to database we must use "connect" method. Once connected the data model remain in memory until we call: "disconnect". 
 
 ```
-method: connect(String: user, password, dbname) => ()
+method connect(String: user, password, dbname) => ()
   ** create a database instance
   Oracle: db;
   String: credential;
@@ -128,7 +128,7 @@ A record instance is a variable of type record. The memory is allocated using th
 ** we declare a record type  
 type: Person <: Record (String(32): name, Integer: age );
 
-method: main() => ()
+method main() => ()
   Person: person1,person2;     ** two variables of type Person
   Array[Person](10): catalog;  ** a collection of Persons
 process

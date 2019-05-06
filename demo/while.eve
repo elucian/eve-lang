@@ -2,8 +2,8 @@
 ** example of collection iteration
 **********************************
 method main() => ()
-  Array: test := ["a","b","c","d","e"]
-  Natural: i  := 1
+  Array:   test := ["a","b","c","d","e"]
+  Natural: i    := 1
 process
   while (i <= test.length) do
     element := my_list[i]

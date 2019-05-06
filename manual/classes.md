@@ -25,14 +25,15 @@ A class is inherited from a base class or from root class called: Object.
 
 **pattern:**
 ```
-class: class_name(parameters) <: base_class
+class class_name(parameters): base_class
   ** object attributes
   ...
 static
   ** class attributes  
   ...
 create
-  object := <base_class>() ** object initialization  
+  ** object initialization  
+  object := base_class();
   ... 
 discard
   ** object release region
@@ -115,23 +116,16 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 
 **Example:**
 ```
-method: main() => ()
-  Integer: o,n; ** boxed integers
+method main() => ()
+  Integer: o,n; -- boxed integers
 process  
   o := 1;
   n := 1; 
-  when (o = n) do
-    ** unexpected
-    print("o and n objects are the same");
-  else
-    ** expected
-    print("n and o are not the same");
-  done;
   ** expectations
-  expect  (o  = n) ** equivalent  
-  expect !(o <> n) ** not divergent
-  expect  (o != n) ** not the same
-  expect !(o == n) ** not the same 
+  expect  (o  = n) -- equivalent  
+  expect !(o <> n) -- not divergent
+  expect  (o != n) -- not the same
+  expect !(o == n) -- not the same 
 return;
 ```
 
@@ -141,7 +135,7 @@ A class can receive type as parameters. This allows to create generic algorithms
 
 **Generic Class:**
 ```
-class[Generic_Type,...]: Generic_Name(parameter:Generic_Type,...) <: Base_Class
+class [Generic_Type,...] Generic_Name (parameter:Generic_Type,...) <: Base_Class
   ** declarations
 create
   ** constructor

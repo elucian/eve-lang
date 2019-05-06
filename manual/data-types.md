@@ -122,7 +122,7 @@ Precision Real: numbers is variable depending on the size of the number. The num
 **example**
 
 ```
-method: main() => ()
+method main() => ()
   ** declare variables
   Integer: i; 
   Natural: n;
@@ -155,7 +155,7 @@ type: type_name <: type_descriptor (parameters)
 ```
 type: Point <: Record (Integer: a, b );
 
-method: main() => ()
+method main() => ()
   Point: p1, p2;      ** implicit constructor
   Point: p3 := {1,1}; ** initial value for Point
 process
@@ -471,32 +471,32 @@ given
   Real | Integer: v, x ,t;
 do
   ** positive example
-  v := 1;     ** v is Integer
-  x := 1.5;   ** x is Real:    
-  t := 1 / 2; ** make t Real
+  v := 1;     -- v is Integer
+  x := 1.5;   -- x is Real:    
+  t := 1 / 2; -- make t Real
   
   ** safe conversion
-  t := 12; ** t is Real
+  t := 12; -- t is Real
   
   ** negative examples
-  v := x;  ** ERROR: v is Integer 
+  v := x;  -- ERROR: v is Integer 
 done;
 ```
 
 A variant is a way to create a generic method.
 
 ```
-method: switch(Integer | Real @ x, y) => ()
+method switch(Integer | Real @ x, y) => ()
   Integer | Real @ i
 process  
   expect type(x) = type(y)  
   
-  i :: x; ** intermediate reference
-  x :: y; ** first  switch
-  y :: x; ** second switch
+  i :: x; -- intermediate reference
+  x :: y; -- first  switch
+  y :: x; -- second switch
 return;
 
-method: main() => ()
+method main() => ()
   Integer: x, y;
   Real: a, b;
 process  
@@ -535,9 +535,9 @@ String can be initialized with a constant literal using single quotes or double 
 
 ```
 global
-  String(100): short_string := ''; ** this string can hold 100 symbols, 100*4 = 400 bytes
-  String: string_name       := ''; ** default capacity 1024 can hold 256 ASCII symbols
-  Text: text_name           := ""; ** variable capacity string can hold many lines of text
+  String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
+  String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
+  Text: text_name           := ""; -- variable capacity string can hold many lines of text
 ```
 
 ### String: mutability
@@ -545,7 +545,7 @@ In EVE strings are mutable. If you use `:=` new memory is allocated. If you use 
 
 **Example:**
 ```
-method: test_string()
+method test_string()
   String : str := 'First value';  
   String : ref := 'First value'; 
 process  
@@ -584,10 +584,10 @@ return;
 **Example:**
 
 ```
-print ('this' = 'this');    ** True (same value)
-print ("this" = 'this');    ** True (same value)
-print (' this' <> 'this');  ** True (not same value)
-print ('this ' <> 'this');  ** True (not same value)
+print ('this' = 'this');    -- True (same value)
+print ("this" = 'this');    -- True (same value)
+print (' this' <> 'this');  -- True (not same value)
+print ('this ' <> 'this');  -- True (not same value)
 ```
 
 ### Null strings
