@@ -79,16 +79,19 @@ Summary: [Keywords](keywords.md)
 EVE us ASCII symbols for operators. One operator can be a single character or a combination of two characters. 
 
 ** Single Character:
-
+```
 { = : ~ ! @ % ^ & * - + / < >}
-
+```
 ** Two Character:
-
+```
 { := != <> => >= <= +> <+ <: .. :: }
-
+```
 ** Delimiters
 
-"{...}" "(...)" "..." '...' "," ":" "." ";" 
+```
+, : . ; "" '' 
+( ) [ ] { } 
+```
 
 Details: [Operators](operators.md) 
 
