@@ -9,7 +9,7 @@ EVE is a free form language inspired from Java and Ruby.
 * [directives](#directives)
 * [keywords](#keywords)
 * [operators](#operators)
-* [data types](#data-types)
+* [data type](#data-type)
 * [variables](#variables)
 * [identifiers](#identifiers)
 * [expressions](#expressions)
@@ -20,16 +20,21 @@ EVE is a free form language inspired from Java and Ruby.
 * EVE is using infix expressions like Java and other popular languages;
 * Multiple expressions can be separated with comma and enclosed in parenthesis;
 * Each statement start with a lowercase keyword and is ending at end of line; 
-* Native data types, variables, labels and methods use lowercase letters and numbers;
-* Composite data types and classes start with capital letters;
-* System variables use prefix "$". User can define new system variables;
-* Public attributes and published members start with dot "." prefix;
+* Local identifiers use lowercase letters and numbers;
+* Public members start with one capital letter, can contain lowercase letters and digits;
+* System environment variables use prefix "$". These are global constants in Bee; 
+* Constants  use prefix "$" and can start with uppercase if they are also public;
+* Variables  use prefix "#" and can start with uppercase if they are also public;
+* References use prefix "@" and can start with uppercase if they are also public;
+* Scoping operator is "." not "::" like it is frequent in other languages;
 
 ## Comments
 
-* Eve title of comments starting with "##"
-* Eve single line comments starting with "**"
-* Eve has multi line comments between {* ... *}
+* Title comment is using ## two hashes like wiki pages
+* Sub-title comment and line separators are using: "**"
+* End of line comment can be done using "--"
+* Boxed comments are using notation "+-...-+"
+* Outline comments are using pair "|* ... *|"
 
 **examples**
 ```
@@ -40,35 +45,34 @@ EVE is a free form language inspired from Java and Ruby.
 ## Title comment
   ** indented comment
 
-; Single line comment **
-{Test} ** test
+** Single line comment
+print; 
++------------------------------------
+|  fancy boxed comments to explain  |
+|  code, can span multiple lines    |
+------------------------------------+
 
-print; end of line comment 
 ```
 
 **Notes:**
+* Nested comments are supported for out-line comments;
+* End of line comments are ending after new line;
 
-* One single character "#" is a compiler directive;
-* One single character "*" is multiplication operator;
-* Nested comments are supported for multi-line comments;
-
-
-
-## Directives
-Directives are script properties that are communicated to the compiler. Directives represent script meta-data. One script can have multiple directives usually at beginning of the script. Directives start with "#" and are used by the compiler to establish different behaviors. 
+## Attributes
+One module can have multiple attributes usually declared at beginning of the module. Attributes start with "." and are used by the compiler to establish general settings for a particular module. 
 
 **examples**
 ```
-#trace:on/off
-#debug:on/off
-#break:name
+module
+  .name := :='test'
+  .description :='test'
 ```
 
 ## Keywords
 
-Keywords are English words familiar to programmers used in logical semantic structures easy to grasp. Computer was invented in England during WW2 so, we prefer English even though a computer language could be created using keywords from other languages.
+Keywords are English reserved words used in statements. Computer was invented in England during WW2 so, we prefer English words even though a computer language could be created using keywords from other spoken languages.
 
-Details: [Keywords](keywords.md) 
+Summary: [Keywords](keywords.md) 
 
 ## Operators
 
@@ -76,11 +80,11 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 ** Single Character:
 
-{ = : ~ ! @ # $ % ^ & * _ * - + / < >}
+{ = : ~ ! @ % ^ & * - + / < >}
 
 ** Two Character:
 
-{ := != <> => >= <= +> <+ <: .. }
+{ := != <> => >= <= +> <+ <: .. :: }
 
 ** Delimiters
 
@@ -88,31 +92,32 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 Details: [Operators](operators.md) 
 
-## Data types
-A data type is an abstract concept that describe data representation. 
+## Data type
 
-There are 4 kind of data types in EVE:
+Data type is an abstract concept that describe data representation. 
 
-* [basic types](data-types.md)
+There are 3 kind of data types in EVE:
+
+* [basic types](basic.md)
 * [composite types](composite.md)
 * [classes](classes.md)
 
 ## Variables
-A variable is represented by an identifier, and is associated to a type. Variables can be changed during the execution of the program using modifier operators { :=, +=, *=, /= ...}. Conceptual variables are native types or references to composite types.
+A variable is represented by an identifier, and is associated to a type. Variables can be changed during the execution of the program using modifier operators { :=, +=, *=, /= ...}. Variables are abstract concepts can can represent memory locations or values that can be moved around in different memory locations or processor registry.
 
 **patterns:**
 ```
-** define type
+** user can define a type
 type type_name[parameters] <: type_descriptor;
 
 global
-  ** use default value
+  ** use type to define a variable
   type_name: var_name;
-  ** specific value and type
+  ** with specific value and type
   type_name: var_name := value;
   ** multiple variables in one assignment
   type_name: var_name1, name2 ...:= value;
-  ** diverse values in one statement
+  ** multiple variables with diverse values
   type_name: var_name1:=value1, var_name2 := value2;
 ```
 
@@ -134,7 +139,7 @@ When a variable is specified, and the initializer ":=" is missing the variable t
 ## System variables
 We define system variables using "$" name prefix. _Environment Variables_ from OS are created automatically along with other "implicit" variables required by EVE semantics. 
 
-## Modify Value 
+## Assign Value 
 The assign operator ":=" is used to execute an expression and assign the result to a variable.  
 The previous value of the variable is discarded if there is no other reference to it.  
 
@@ -149,7 +154,7 @@ The name of identifiers in EVE can have a length of 64 characters. A name starts
 **These are valid identifiers**  
 ```
  x, y, z
- a₁,a₂,aₙ  
+ a1,a2,a3  
  thisIsOK
  this_is_ok  
 ```
@@ -161,12 +166,12 @@ The name of identifiers in EVE can have a length of 64 characters. A name starts
  \_not_valid\_  
 ```
 
-**Naming variables**
-We advise for variables to use a prefix.
+**Prefix**
+Variables, constants and references are using a _sigil_.
 
-* "v_" is a good prefix for local  variables;
-* "p_" is a good prefix for input  parameters;
-* "o_" is a good prefix for output parameters;
+* "$"  is for constants and system variables;
+* "#"  is for native variables: Numeric / Symbol;
+* "@"  is for references or composite types: String / Collection;
 
 ## Expressions
 
@@ -185,8 +190,8 @@ print  10;
 print "this is a test";
 
 ** complex expressions can use ()  
-print 10 + 10 + 15;   -- numeric expression
-print 10 > 5 | 2 < 3; -- logical expression
+print (10 + 10 + 15);     -- numeric expression
+print (10 > 5) | (2 < 3); -- logical expression
 
 ** list of expressions are enclosed in ()
 print (1, 2, 3);

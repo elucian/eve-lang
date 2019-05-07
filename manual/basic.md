@@ -148,8 +148,8 @@ type: type_name <: type_descriptor (parameters)
 **Notes:**
 
 * Users can define constrained sub-types or group of basic types;
-* A script can _import_ public types defined in other scripts;
-* A data type can be declared only in script or suite context;
+* A module can _import_ public types defined in other modules;
+* A data type can be declared only in module global context;
 
 **Example:**
 ```
@@ -255,11 +255,11 @@ done;
 ```
 
 **Note:** 
- Build-in functions that are located in EVE "default" script:
+ Build-in functions that are located in EVE _default_ library:
  
  { parse(), format(), ceiling(), floor() round()}
  
- This script is one of the standard Scripts that are automatically included in any EVE program. 
+ This module is one of the standard modules that are automatically included in any EVE program. 
 
 
 ## Type inference

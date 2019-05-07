@@ -4,7 +4,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 
 **Bookmarks:**
 
-* [Scripts](#scripts)
+* [Modules](#modules)
 * [Suites](#suites)
 * [Library](#library)
 * [Regions](#regions)
@@ -17,85 +17,72 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Test cases](#test-cases)
 * [Execution](#execution)
 
-## Scripts
+## Modules
 
-Scripts are source files having extension: *.eve. Script names are using lowercase letters can contain underscore and digits but no special characters or Unicode. Longer names that use several words can be separate with underscore. The script name can be 64 characters long.
-
-**directive**
-```
-script name("long_name")
-```
-
-Script has a longer name/ descriptive name for reporting.
+Modules are source files having extension: *.eve. Module names are using lowercase letters, can also contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 64 characters long.
 
 **properties**
 
-* one script can be imported in other script;
-* one script can use public members defined in other scripts;
-* one script is not independent, it can run only from a suite;
+* one module can use public members from other modules;
+* one module can have public member used in other modules;
 
-## Suites
-A suite is a master script that lead an application. Each suite can import or execute one or more scripts. Suites are stored in project root folder. A suite can have  associated one or more configuration files. The configuration file contains parameter/value pairs used to generate the: _system variables_.
-
-**directive**
-```
-#suite:name("long_name")
-```
-
-Suite has a longer name/ descriptive name for reporting.
+## Main module
+Any module that contains method main() is a main module and can lead a run-time session. A module can have associated one or more configuration files. The configuration file contain parameter/value pairs used to generate the: _system variables_.
 
 **properties**
 
-* one suite can import one or more scripts;
-* one suite is independent, can not be imported in other scripts or suites;
-* one suite can receive values for system variables using a configuration file;
-* one suite can be run with a different configuration file do perform different task;
+* main module is independent, can not be imported in other modules or suites;
+* main module can receive values for system variables using a configuration file;
+* main module do not have public methods and do not have output variables;
 
 ## Library
 
-A _library_ is a shared folder containing reusable scripts.
+A _library_ is a shared folder containing reusable modules.
 
 * library contain generic functionality and can be shared between multiple projects;
-* using import several scripts can be loaded from a folder at once;
+* using import several modules can be loaded from a folder at once;
 * circular import is possible: we protect against infinite recursion;
 * after import you can call public members of a library using dot notation;
 
 ## Regions
-A script file is divided into regions using keywords: {import, define, global, class, method} 
+A module file is divided into regions using keywords: {import, define, global, class, method} 
 
-**script syntax**
+**module syntax**
 ```
 *****************************************
-** Header comment
+** Header comments: module purpose
 *****************************************
-script | suite
-  $name        : 'name' -- script name
-  $main        : 'main' -- main method
-  $description : 'long-name'
-  $echo        : 'off'
-  $debug       : 'off'
-  $trace       : 'off'  
-
-
+module
+  .name        := 'module name'; 
+  .description := 'short description';
+  .echo        := 'off';
+  .debug       := 'off';
+  .trace       := 'off';   
 ...
-** import_region
+** import region
 import
-  -- import library
+  library_name
 
-** global constants and variables
+** type declaration
+type 
+  name[parameters]: type_descriptor;
+  ...
+
+** public constants and variables
 global
   $x  := 0 :Integer; -- constant
   #y  := 0 :Integer; -- variable
   @z  := 0 :Integer; -- reference
   ...
 
-** type declaration
-type name[parameters]: type_descriptor
-
+** local constants and variables
+local
+  v : type_name; 
+  
 ** function declaration
 function 
   name(params): Type := (expression);
-...
+  ...
 
 ** class declaration
 class name(params): superclass
@@ -109,16 +96,16 @@ return;
 ```
 
 ## Declaration order
-Order of regions is important. You can not use members before they are defined. Directives are usually on top follow by system variables then: { import, type, global }. Last we declare active members: {functions, classes, methods}.
+Order of regions by default is: {module, import, type, global, function, class, method}. Method and class declarations can be alternated. You can define multiple regions of the same type. 
 
 ## System variables
-System variable start with prefix "$". Before import there is a flat region where user can define new system variables using zero space indentation. System variables are usually loaded from a configuration file (*.cfg) and do not need to be declared explicit. They are just known by EVE runtime and can be used in all scripts. 
+System variable start with prefix "$". Before import user can define module attributes. These are system variables using zero space indentation. System variables are usually loaded from a configuration file (*.cfg) and do not need to be declared explicit. They are just known by EVE runtime and can be used in all modules. 
 
 **Note:** System variables are immutable!
 
 ## Import region
 
-Is used to include members from several other scripts into current script: 
+Is used to include members from several other modules into current module: 
 
 **syntax**
 ```
@@ -157,7 +144,7 @@ Global region is for declarations of:
 * variable  ::=  Type : identifier := value;
 * reference ::=  Type : identifier :: value;
 
-Global members are visible in current script with no prefix. 
+Global members are visible in current module with no prefix. 
 
 **public**
 
@@ -200,7 +187,7 @@ return;
 A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
 
 **Main method**
-If a script is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the script is a library and can be imported in other scripts but can not be executed using run command.
+If a module is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the module is a library and can be imported in other modules but can not be executed using run command.
 
 **Parameters**
 Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
@@ -233,7 +220,7 @@ return;
 
 **Method context**
 
-Every method has a local context. Members defined in local context are private. In this context a method can implement static attributes using "." prefix. These attributes are properties of the method and can be accessed from current script using dot notation. 
+Every method has a local context. Members defined in local context are private. In this context a method can implement static attributes using "." prefix. These attributes are properties of the method and can be accessed from current module using dot notation. 
 
 **Method results**
 
@@ -511,7 +498,7 @@ eve:> run path/suite_name -c file.cfg -m 2048GB
 import 
   $pro_mod/module_name
    
-** you can run a script with arguments
+** you can run a module with arguments
 method main() => ()
 process
   run module_name.main(arguments) +> (results);
@@ -530,7 +517,7 @@ process
   ** execute a module in parallel
   act module_name(arguments,channel);
   act module_name(arguments,channel); 
-  ** whait for all scripts to finish
+  ** whait for all modules to finish
   rest;
   ** print the results
   print (channel);
@@ -539,7 +526,7 @@ return;
 
 **using exit**
 
-Using exit in main() will end script execution.
+Using exit in main() will end module execution.
 
 **Example:**
 ```

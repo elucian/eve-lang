@@ -364,14 +364,13 @@ Exception is interrupting the current logical flow and jump to the recover regio
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System $error variable contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-define
-   type: .Exception <: Record( 
-           Integer: code 
-          ,String : message 
-          ,String : section_name 
-          ,String : script_name 
-          ,String : line_number  
-         );
+type: .Exception <: Record( 
+        Integer: code 
+       ,String : message 
+       ,String : method_name 
+       ,String : module_name 
+       ,String : line_number  
+      );
 ** global variable for holding current error
 global
    Exception: $error;

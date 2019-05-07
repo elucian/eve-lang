@@ -23,7 +23,7 @@ EVE include a descriptive database layer. We use native keywords to facilitate c
 A data model is a complex data structure created with tables, columns and indexes. EVE can read database models using meta-data query and can use a model to read and update a database. This kind of application is called _data-centric_ application.
 
 **adapter**
-A data model is using a database. For this the model is connecting using adapters to a database. We import an adapter using {sqlite |oracle | pgsql} library. Each library uses API to communicate to a database. 
+A data model is using a database. For this the model is connecting using adapters to a database. We import an adapter using {sqlite | oracle | pgsql} library. Each library uses API to communicate to a database. 
 
 ```
 import
@@ -53,8 +53,8 @@ return;
 One database provide a structure for tables. An application can read structure and create in-memory data model. Then it can perform operations on data but not on the database structure. We do not bypass the database administrator job. 
 
 **notes:**
-1. Data structure can be created using SQL scripts;
-2. Data structure can be updated/modified using SQL evolution scripts;
+1. Data structure can be created using SQL modules;
+2. Data structure can be updated/modified using SQL evolution modules;
 3. After database structure is updated an EVE application should recompile;
 
 ## Record
