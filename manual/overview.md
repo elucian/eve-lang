@@ -87,7 +87,7 @@ Single character:
 Two characters:
 ```
 { := :: != <> => >= <= +> <+ <: .. }
-
+```
 Delimiters:
 ```
 , : . ; "" '' 
