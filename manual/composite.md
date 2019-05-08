@@ -20,7 +20,7 @@ An array is a collection of elements stored in order of natural index. Array ele
 ```
 ** declaration of an array with capacity
 global
-  Array array_name[element_type](capacity);
+  @Array array_name[element_type](capacity);
 ```
 
 **array capacity**
@@ -75,14 +75,14 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   Matrix: matrix_name[type](n,m) := constant;
+   @Matrix: matrix_name[type](n,m) := constant;
 ```
 
 **example:**
 ```
 **  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
-  Matrix[String(2)](3,3): m := '__';
+  @Matrix[String(2)](3,3): m := '__';
 do
   m[1] := ['a1','b1','c1'];
   m[2] := ['a2','b2','c2'];
@@ -92,7 +92,7 @@ done;
 ```
 
 **matrix elements**
-Matrix elements can be addressed by subscript starting from 1:
+@Matrix elements can be addressed by subscript starting from 1:
 
 ```
 var_name[1,1]; -- is the first element of the matrix.

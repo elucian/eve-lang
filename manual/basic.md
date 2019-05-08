@@ -335,7 +335,7 @@ Sometimes the type is partially specified to simplify type declarations:
 ```
 define
   ** member type is inferred from literal: 0 = Integer
-  Array[](10) a := 0
+  @Array[](10) a := 0
 ```
        
 ### Type verification

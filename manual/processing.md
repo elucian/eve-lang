@@ -9,7 +9,7 @@ Array elements have very fast direct access by index.
 ```
 method test_array() => ()
   ** array  with capacity of 10 elements
-  Array[Integer](10): my_array;
+  @Array[Integer](10): my_array;
 process  
   given
     Integer: m := my_array.capacity();
@@ -46,7 +46,7 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ** a matrix having 2 rows and 2 columns
 ** initialize all elements with 100
 given
-  Matrix[Integer](2,2): M;
+  @Matrix[Integer](2,2): M;
 do
   M[*] := 100;
   print (M);
@@ -62,7 +62,7 @@ done;
 
 ```
 given
-  Matrix[Integer](2,2):M;
+  @Matrix[Integer](2,2):M;
 do
   M[*] := 100;
   ** modify all elements
@@ -137,8 +137,8 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 **Example:**
 ```
 method main() => ()
-  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
-  Array[Integer]: b :: a[1..4]; -- slice reference
+  @Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
+  @Array[Integer]: b :: a[1..4]; -- slice reference
 process
   print(a[1..?]);   -- will print [0,1,2,3,4,5,6,7,8,9]
   print(a[1..1]);   -- will print [0]
@@ -157,7 +157,7 @@ return;
 You can define elements of a subset from a set using the following construction:
 ```
 given
-   @Set: sub_set := { var : var in set_name & filter_expression}
+  @Set: sub_set := { var : var in set_name & filter_expression}
 ```
 
 Symbol ":" is the filter operator. 

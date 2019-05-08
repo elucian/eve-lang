@@ -213,7 +213,7 @@ One method can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-method main(Array[String]() * args) => ()
+method main(@Array[@String]() * args) => ()
   print(args);
 return;
 ```
