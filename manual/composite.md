@@ -32,13 +32,13 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-type: Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
+type: @Day <: @Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
 
 method main() => ()
-  String: message;
+  @String: message;
 process  
   given
-    Day: today := today();
+    @Day: today := today();
   quest today:
     match (Friday, Saturday, Sunday) do
        message:='weekend';
@@ -71,7 +71,7 @@ Ordinal is a discrete numeral type so it has support for relation operators: { =
 ```
 ** using type Day declared before
 given
-  Day v := Friday;
+  @Day v := Friday;
 do
   v += 1; 
   expect v = Saturday;
@@ -122,10 +122,10 @@ return;
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  Array: my_array(10) := 0;   ** integer number
-  Array: my_array(10) := 0.0; ** real number
-  Array: my_array(10) := "";  ** text with variable size
-  Array: my_array(10) := '';  ** string with capacity 1024 bytes
+  Array: my_array(10) := 0;   -- integer number
+  Array: my_array(10) := 0.0; -- real number
+  Array: my_array(10) := "";  -- text with variable size
+  Array: my_array(10) := '';  -- string with capacity 1024 bytes
 ```
 
 The most convenient way to define an Array is by using inference literals:
@@ -161,8 +161,8 @@ done;
 Matrix elements can be addressed by subscript starting from 1:
 
 ```
-var_name[1,1]; ** is the first element of the matrix.
-var_name[?,?]; ** is the last element of a matrix.
+var_name[1,1]; -- is the first element of the matrix.
+var_name[?,?]; -- is the last element of a matrix.
 ```
 
 ## List
@@ -171,8 +171,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-   List[type_name]: list_name;
-   List:list_name := (<constant>, <constant>, ...);
+  @List[type_name]: list_name;
+  @List:list_name := (<constant>, <constant>, ...);
 ```
 
 **notes:**
@@ -183,9 +183,9 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  List[Integer]: n_list; 
-  List[Object] : o_list; 
-  List[String] : s_list; 
+  @List[Integer]: n_list; 
+  @List[@Object] : o_list; 
+  @List[@String] : s_list; 
 ```
 
 **list literals**
@@ -199,15 +199,15 @@ given
 Literals can be used for initialization:
 ```
 given
-  List[Symbol]  : c_list := ('a', 'b', 'c');
-  List[Integer] : n_list := (1, 2, 3);  
+  @List[Symbol]  : c_list := ('a', 'b', 'c');
+  @List[Integer] : n_list := (1, 2, 3);  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  List[integer]: c_list;
+  @List[Integer]: c_list;
 do
   ** update list using  ":=" 
   c_list := (1,2,3); 
@@ -266,11 +266,11 @@ Use union operator | combine two sets.
 
 ```
 given
-  Set: first := {0,1,2,3,4,5,6,7,8,9};
-  Set[Integer]: second := {};
+  @Set: first := {0,1,2,3,4,5,6,7,8,9};
+  @Set[Integer]: second := {};
 do
-  second := first | {0,1,2,10}; ** set union
-  print(second); ** {0,1,2,3,4,5,6,7,8,9,10}
+  second := first | {0,1,2,10}; -- set union
+  print(second); -- {0,1,2,3,4,5,6,7,8,9,10}
 done;
 ```
 
@@ -282,7 +282,7 @@ given
   Set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
-  print test; ** {3,4}
+  print test; -- {3,4}
 done;
 ```
 
@@ -298,13 +298,13 @@ It is called "H" due to similar methodof letter H representing a connection, lin
 **syntax**
 ```
 given
-  Table[key_type, value_type]: name := {(key:value), ...};
+  @Table[key_type, value_type]: name := {(key:value), ...};
 ```
 
 **Example**
 ```
 given
-   Table[String, Integer]: dictionary := {};
+   @Table[@String, Integer]: dictionary := {};
 begin   
    dictionary := {('one':1), ('two':2)};
 done;
@@ -321,7 +321,7 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 ** declaration example of a text literal
 given
-  Text: my_text := "";
+  @Text: my_text := "";
 do
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
@@ -347,7 +347,7 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 **Example:**
 ```
 given
-  Text: us := "I can write Greek: \αβγδ\.";
+  @Text: us := "I can write Greek: \αβγδ\.";
 do
   print (us);
 done;
@@ -361,19 +361,19 @@ The preferred font for EVE programming is "DejaVu Sans Mono".
 
 Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In EVE all exceptions are considered errors.
 
-The exception is a variable of type record that is created when exception is raised and is available in the recover block. System $error variable contains several members that are fill-in by the EVE program when exception is created: 
+The exception is a variable of type record that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-type: .Exception <: Record( 
-        Integer: code 
-       ,String : message 
-       ,String : method_name 
-       ,String : module_name 
-       ,String : line_number  
+type: @Exception <: @Record( 
+         Integer: code 
+       ,@String : message 
+       ,@String : method_name 
+       ,@String : module_name 
+       ,@String : line_number  
       );
 ** global variable for holding current error
 global
-   Exception: $error;
+   @Exception: #Error;
 ```
 ### Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -400,7 +400,7 @@ raise (code,"message") if (condition);
 
 Recover: region define an "exception handling region" for a method.
 
-In this region developer can use control statements like "switch","case" to analyze the $error. Developer can decide to stop the program, print a message and resume the program using _resume_ keyword.
+In this region developer can use control statements like "switch","case" to analyze the #Error. Developer can decide to stop the program, print a message and resume the program using _resume_ keyword.
 
 **Example:** 
 
@@ -410,7 +410,7 @@ method main() => ()
 process  
   a := 1 / 0;
 recover
-  print ($error.message);
+  print (#Error.message);
 closure
   ** close process
 return;

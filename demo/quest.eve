@@ -1,34 +1,30 @@
 ****************************
 ** quest statement demo
 ****************************
-#driver "sw"
-
-msg @ String;  -- reference to String
-var @ Integer; -- reference to Integer
-
-read (var,"var:>")
-
-quest var:
-  match 0 do
-    msg := "zero";
-    ...
-  match 1 do
-    msg := "one";
-    ...
-  match (0,2,4,6,8) do
-    msg := "even";
-    ...
-  match (1,3,5,7,9) do
-    msg := "odd";
-    ...
-  match [1..4] do
-    msg := "small";
-  match [5..9] do
-    msg := "large";
-none
-  msg := "Unexpected";
-done;
-
-print msg
-
-exit;
+method main() => ()
+  @String:  msg ;  -- reference to String
+  Integer: var ;  -- reference to Integer
+process
+  read (var,"var:>");
+  quest var:
+    match 0 do
+      msg := "zero";
+      ...
+    match 1 do
+      msg := "one";
+      ...
+    match (0,2,4,6,8) do
+      msg := "even";
+      ...
+    match (1,3,5,7,9) do
+      msg := "odd";
+      ...
+    match [1..4] do
+      msg := "small";
+    match [5..9] do
+      msg := "large";
+  none
+    msg := "Unexpected";
+  done;
+  print msg;
+return;

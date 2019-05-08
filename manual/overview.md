@@ -23,14 +23,14 @@ EVE is a free form language inspired from Java and Ruby.
 * Local identifiers use lowercase letters and numbers;
 * Public members start with one capital letter, can contain lowercase letters and digits;
 * System environment variables use prefix "$". These are global constants in Bee; 
-* Constants  use prefix "$" and can start with uppercase if they are also public;
-* Variables  use prefix "#" and can start with uppercase if they are also public;
-* References use prefix "@" and can start with uppercase if they are also public;
-* Scoping operator is "." not "::" like it is frequent in other languages;
+* System constants use prefix "$" and can start with uppercase if they are also public;
+* System variables use prefix "#" and can start with uppercase if they are also public;
+* References types use prefix "@" and can start with uppercase if they are also public;
+* Scoping operator is "." not "::". You can use alias or module name as scope qualifier;
 
 ## Comments
 
-* Title comment is using ## two hashes like wiki pages
+* Title comment is using ## two hashes like Wiki pages
 * Sub-title comment and line separators are using: "**"
 * End of line comment can be done using "--"
 * Boxed comments are using notation "+-...-+"
@@ -59,7 +59,7 @@ print;
 * End of line comments are ending after new line;
 
 ## Attributes
-One module can have multiple attributes usually declared at beginning of the module. Attributes start with "." and are used by the compiler to establish general settings for a particular module. 
+One module can have multiple attributes usually declared at beginning of the module. Attributes start with ".". 
 
 **examples**
 ```
@@ -67,6 +67,8 @@ module
   .name := :='test'
   .description :='test'
 ```
+
+**note:** You can define new attributes.
 
 ## Keywords
 
@@ -78,16 +80,15 @@ Summary: [Keywords](keywords.md)
 
 EVE us ASCII symbols for operators. One operator can be a single character or a combination of two characters. 
 
-** Single Character:
+Single character:
 ```
 { = : ~ ! @ % ^ & * - + / < >}
 ```
-** Two Character:
+Two characters:
 ```
-{ := != <> => >= <= +> <+ <: .. :: }
-```
-** Delimiters
+{ := :: != <> => >= <= +> <+ <: .. }
 
+Delimiters:
 ```
 , : . ; "" '' 
 ( ) [ ] { } 
@@ -172,9 +173,9 @@ The name of identifiers in EVE can have a length of 64 characters. A name starts
 **Prefix**
 Variables, constants and references are using a _sigil_.
 
-* "$"  is for constants and system variables;
-* "#"  is for native variables: Numeric / Symbol;
-* "@"  is for references or composite types: String / Collection;
+* "$"  is for system constants/ environment variables;
+* "#"  is for system variables/ control variables;
+* "@"  is for reference type or composite types;
 
 ## Expressions
 
@@ -251,7 +252,7 @@ One expression can span multiple lines.
 ```
 given 
   Integer: x; 
-  Matrix : a; 
+ @Matrix : a; 
 begin  
   ** broken expression
   x := 1 + 2 +

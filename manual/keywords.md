@@ -27,7 +27,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 ## Blocks of code/sections
 
 | Keyword  | Description
-|----------|-------------------------------------------------------------
+|----------|---------------------------------------------------------------------
 | given    | establish local scope for a block statement 
 | begin    | single-path non-repetitive block
 | with     | qualifier suppression block for records
@@ -40,7 +40,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 ## Operator keywords
 
 | Keyword  | Description
-|----------|-------------------------------------------------------
+|----------|-----------------------------------------------------------------
 | is       | check data type: x is Null \| quest associated keyword
 | in       | check data type: x is Null \| quest associated keyword
 | as       | execute explicit cast to other data type
@@ -78,16 +78,9 @@ For keywords, EVE use English reserved words, without any abbreviation.
 ## Default variables
 
 | variable | Description
-|----------|------------------------------------------------------------
+|----------|------------------------------------------------------------------
 | object   | current instance of a class, current object
 | result   | default result of a method when a name is not specified
 
-## Other keywords
-
-EVE uses other reserved words that are gradually explained in syntax manual.
-
-* Directives
-* Data types
-* Data query
 
 **read next:** [Operators](operators.md)

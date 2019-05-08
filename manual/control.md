@@ -90,7 +90,7 @@ It is possible to use more then one value using a list, range or collection.
 **Example:**
 ```
 method test(Integer: p:=0) => ()
-  String: message := "";
+  @String: message := "";
   Integer: v := p + 4;
 process 
   quest v
@@ -159,11 +159,11 @@ Scan block use a control variable to visit all elements in a range or collection
 **Pattern:**
 ``` 
 given 
-  Integer:var := 0;  ** initial value
+  Integer:var := 0;  -- initial value
 scan [min..max] +> var do
   ** block statements;
   skip if (condition);
-  ** eary interruption
+  ** early interruption
   stop if (condition);
   ...
 next;

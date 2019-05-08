@@ -1,4 +1,4 @@
-## ΞVΞ Structure
+## EVE Structure
 
 Next bookmarks will lead you to the main concepts required to understand EVE program structure.
 
@@ -70,9 +70,9 @@ type
 
 ** public constants and variables
 global
-  $x  := 0 :Integer; -- constant
-  #y  := 0 :Integer; -- variable
-  @z  := 0 :Integer; -- reference
+  Integer: x := 0 ; -- constant
+  Integer: y := 0 ; -- variable
+ @Integer: z := 0 ; -- reference
   ...
 
 ** local constants and variables
@@ -142,7 +142,7 @@ Global region is for declarations of:
 
 * constant  ::=  Type : identifier := value;
 * variable  ::=  Type : identifier := value;
-* reference ::=  Type : identifier :: value;
+* reference ::= @Type : identifier :: value;
 
 Global members are visible in current module with no prefix. 
 
@@ -153,8 +153,8 @@ Global public members must start with a dot prefix:
 **example**
 ```
 global
-  con .PI := 3.14; -- global & public constant
-  var  pi := 3.14; -- global & private variable
+  Real: PI := 3.14; -- global constant
+  Real: pi := 3.14; -- global variable
 ```
 
 **note:** constant is using capital letters
@@ -193,8 +193,8 @@ If a module is executable using "run" command, it must contain a "main" method. 
 Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- parameter ::= Type : name := value ** input parameter
- parameter ::= Type @ name ** output parameter
+ parameter ::= Type: #name := value -- input parameter
+ parameter ::= Type: @name          -- output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -238,7 +238,7 @@ Methods can be used like statements. A method call can be done using method name
 ```
 
 **Method termination**
-A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword _exit_ can terminate a method early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a method using _quit_ but this will also terminate the main suite,
+A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword _exit_ can terminate a method early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a method using _quit_ but this will also terminate the main module,
 
 **Example:**
 ```
@@ -248,14 +248,14 @@ process
   print a; 
 return;
 
-method main(List[String]: *args) => ()
+method main(@List[@String]: *args) => ()
   ** number of arguments received:
   Integer: c := args.count();
 process  
   ** verify condition and exit
   exit if c = 0;
   
-  test c; ** method call
+  test c; -- method call
 return;
 ```
 
@@ -274,11 +274,11 @@ Next method add numbers and has 2 side effects:
 ```
 ** global variables
 global
-  test :Integer; 
-  p1   :Integer; 
-  p2   :Integer; 
+ Integer: test ; 
+ Integer: p1   ; 
+ Integer: p2   ; 
 
-method add_numbers():Integer 
+method add_numbers() => ()
 process
   **side effects  
   test := p1 + p2 ;
@@ -287,8 +287,8 @@ return;
 
 method main()
 process
-  p1 := 10;
-  p2 := 20;
+  p1 := 10; -- side effect
+  p2 := 20; -- side effect
   add_numbers();
   expect result = 30;
 return;
@@ -299,19 +299,19 @@ return;
 To avoid system and global variables you can use output parameters:
 
 ```
-method add(p1,p2: Integer out @ Integer) => ()
+method add(Integer: p1,p2, @Integer: out ) => ()
 process
-  out := p1+p2;
+  out := p1 + p2;
 return;
 
 method main() => ()
   Integer: result;
 process  
   ** reference argument require a variable
-  add(1,2, out: result);
-  print (result); ** expected value 3
+  add(1,2, @out: result);
+  print (result); -- expected value 3
   ** negative test
-  add (1,2,4); ** error, "out" parameter require variable argument
+  add (1,2,4); -- error, "out" parameter require variable argument
 return;
 ```
 
@@ -337,13 +337,13 @@ The call for a function is using name of the function and round brackets () for 
 **syntax**
 ``` 
   ** call with no arguments:
-  <result> := <function_name>()  
+  result := function_name()  
   
   ** call with arguments mapped by position
-  <result> := <function_name>(value, ...) 
+  result := function_name(value, ...) 
   
   ** call using parameter names for mapping
-  <result> := <function_name>(param:value ...)   
+  result := function_name(param:value ...)   
 ```
 
 **Parameters**
@@ -405,7 +405,7 @@ process
   p2 := 1;
   ** using λ expression  
   x  := ( 0 ? p1 = 0, 0 ? p2 = 0: p1+p2);
-  print x; ** expect: 3 
+  print x; -- expect: 3 
 return;
 ```
 
@@ -479,7 +479,7 @@ New keywords:
 
 ## Execution
 
-EVE suites are executed using a virtual machine. This is capable of running one single suite at a time. You can run same suite in different sessions with different startup parameters. Each session is independent. 
+EVE modules are executed using a virtual machine. You can run the virtual machine as a service or as console application. You can run only a main module. Each module run in a different sessions with different startup parameters. Each session is independent. 
 
 **memory**
 Server is in charge of allocating memory for one session before the application starts. There is no shared memory between sessions. That is a session is dedicated for a single application. After application is terminated the memory is released.
@@ -489,12 +489,10 @@ To start an application there are 2 methods:
 1. Using the command line with parameters
 2. Using console command line with commands
 
-eve:> run path/suite_name -c file.cfg -m 2048GB
+eve:> run path/module_name -c file.cfg -m 2048GB
 
-**syncron:**
+**synchrony:**
 ```
-#suite:test("module run test")
-
 import 
   $pro_mod/module_name
    
@@ -507,17 +505,18 @@ return;
 
 **parallel:**
 ```
-#suite:test("module run test")
-
 import 
   $pro_mod/module_name
 
+global
+  @List: channel 
+
 method main() => ()
 process
-  ** execute a module in parallel
+  ** execute a modules in asynchronouslu
   act module_name(arguments,channel);
   act module_name(arguments,channel); 
-  ** whait for all modules to finish
+  ** wait for all modules to finish
   rest;
   ** print the results
   print (channel);

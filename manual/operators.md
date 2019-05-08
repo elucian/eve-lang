@@ -2,7 +2,6 @@
 
 In the syntax description "..." represent content and ",,," represents a sequence of elements. In descriptions vertical bar "|" represents second alternative. Some operators can have multiple purposes depending on the context and data types.
 
-
 ## Delimiters
 
 |Symbol     | Description
@@ -10,7 +9,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | `/*...*/` | Block comments \| Nested comments
 | `(_,_,_)` | Expression \| List literal \| Data record
 | `[_,_,_]` | Range \| Index \| Array literals \| Parameterize types
-| `{_,_,_}` | Ordinal type \| Set of values \| Hash map
+| `{_,_,_}` | Ordinal type \| Set of values \| Table map
 
 
 ## Single symbols
@@ -19,29 +18,28 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |-------|--------------------------------------------------------------
 | \#    | Directive or macro \| Template placeholder
 | $     | System variable prefix \| Global variable
-| @     | Explicit reference \| Input/Output parameter
+| @     | Explicit reference  \| Input/Output parameter
 | ;     | Statement separator \| Forward declaration
-| :     | Define name \| Pair-up operator
+| :     | Pair-up operator \| Define type for variables
 | .     | Decimal separator \| Public member \| Member of ,,,
 | ,     | Enumeration for elements \| complex expression 
 | \*    | Variable arguments \| Multiplication
 
 ## Double symbols
 
-Eve use two symbols to create a additional operators.
+Eve use two symbols to create supplementary operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
 |\#\#  | Single line comment for heading comments
 |\*\*  | Single line comment \| end of line comment
 |..    | Range representation or slice [n..m] 
-|::    | Receive output argument from method I/O parameter
 |=+    | Outer join operator used in data "select" statement
 |<:    | Declare user define type / sub-type 
 |<+    | Template injector \| Data source provider
-|+>    | Result colector \| Visitor element
+|+>    | Result collector \| Visitor element
 
-## String: delimiters
+## @String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
@@ -49,7 +47,7 @@ Eve use two symbols to create a additional operators.
 |'x'   | Limited capacity string: UTF8 (max: 128 characters)
 |"x"   | Variable capacity string: UTF8 (unlimited)
 
-## String: concatenation
+## @String: concatenation
 
 |Symbol| Description
 |------|---------------------------------------------------------------
@@ -73,7 +71,8 @@ Modifiers are in-place operators. They change value of the left operand with val
 
 |Symbol| Description
 |------|------------------------------------------------------------------
-| :=   | new value \| copy value \|replace value  
+| ::   | share a reference \| transfer by share
+| :=   | new reference \| copy value \| replace value  
 | +=   | addition \| scalar addition
 | -=   | subtraction  \| scalar subtraction
 | /=   | division  \| scalar division
@@ -87,19 +86,20 @@ EVE use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|-----------------------------------------------------------------------
-|  =   | Equal: deep comparison \| Same type & value 
+|  =   | Equal: same value 
 |  >   | Greater than 
 |  <   | Less than    
-|  <>  | Not equal: deep comparison, equivalent to !(a = b)
 |  >=  | Greater than or equal to
 |  <=  | Less than or equal to
 |  ==  | Reference comparison  \| Same reference
-|  !=  | Reference comparison  \| Different references
-   
+
+**Notes:**   
+* For divergence use:  not(a = b) or !(a = b)
+* For different location: not(a == b) or !(a == b)
  
 ## Collection operators
 
-In following table A, B, C are collections and x is a member: numeric, string or record
+In following table: `A, B, C` are collections and `x` is a member:
 
 |Operator | Result  | Description
 |---------|---------|-------------------------------------------------------------------
@@ -107,8 +107,8 @@ In following table A, B, C are collections and x is a member: numeric, string or
 | x ?: A  | logic   | verify if x is a member of collection A
 | A &  B  | new     | Intersect A with B, use with : like C := A & B (return a new set)
 | A \| B  | new     | Union A with B, use with : like C := A \| B (return a new set)
-| A <= B  | logic   | verify is A is subset of B
-| A >= B  | logic   | verify is A is superset of B
+| A <: B  | logic   | verify if A is subset of B: In math: ⊂
+| A >: B  | logic   | verify if B is subset of A: In math: ⊃
 | C += x  | append  | append element x in C
 | C += B  | append  | append collection B to C
         

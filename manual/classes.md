@@ -117,14 +117,12 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 **Example:**
 ```
 method main() => ()
-  Integer: o,n; -- boxed integers
+ @Integer: o,n; -- boxed integers
 process  
   o := 1;
   n := 1; 
   ** expectations
   expect  (o  = n) -- equivalent  
-  expect !(o <> n) -- not divergent
-  expect  (o != n) -- not the same
   expect !(o == n) -- not the same 
 return;
 ```

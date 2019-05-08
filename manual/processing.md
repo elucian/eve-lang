@@ -98,7 +98,7 @@ In this example we traverse all the rows then all the column, this is the most e
 
 ```
 method main()
-  Matrix[String(2)](3,3): M 
+  @Matrix[@String(2)](3,3): M 
 process  
   M := [ 
          ['a0','b0','c0'],
@@ -157,7 +157,7 @@ return;
 You can define elements of a subset from a set using the following construction:
 ```
 given
-   Set: sub_set := { var : var in set_name & filter_expression}
+   @Set: sub_set := { var : var in set_name & filter_expression}
 ```
 
 Symbol ":" is the filter operator. 
@@ -177,8 +177,8 @@ Collection members can be copy into the new collection using a comprehension not
 **Example:**
 ```
 given
-   List: source  := [0,1,2,2,2,2];
-   Set : new_set := {};
+   @List: source  := [0,1,2,2,2,2];
+   @Set : new_set := {};
 do
    ** eliminate duplicates using set comprehension
    mew_set := { x : x in my_list };
@@ -192,8 +192,8 @@ Build notation can use expressions to filter out elements during comprehension o
 **Example:**
 ```
 given
-   List: my_list := [0,1,2,3,4,5];
-   Set:  my_set  := {};
+   @List: my_list := [0,1,2,3,4,5];
+   @Set:  my_set  := {};
 do
    my_set := { x : x in my_list & (x % 2 = 0) };
    print my_set; -- {0,2,4} 
@@ -206,10 +206,10 @@ The elements in one set or list can be transformed by a function or expression t
 **Example:**
 ```
 given
-   Set:  source := {0,1,2,3,4,5};
-   Hash: target := {};
+   @Set:  source := {0,1,2,3,4,5};
+   @Table: target := {};
 do
-   ** create Hash pairs (key, value) for Hash map
+   ** create Table pairs (key, value) for Table map
    ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
    target := { (x : x^2): x in source };
 done;
@@ -221,9 +221,9 @@ Therefore List union act very similar to append, except we add multiple elements
 
 ```
 method main() => ()
-  List[Symbol]: a := ('a','b','c');
-  List[Symbol]: b := ('1','2','3');
-  List[Symbol]: c := ();
+  @List[Symbol]: a := ('a','b','c');
+  @List[Symbol]: b := ('1','2','3');
+  @List[Symbol]: c := ();
 process
   c := a + b;
   print(c) -- ['a','b','c','1','2','3'];
@@ -235,7 +235,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  String: str;
+  @String: str;
 do
   str := join([1,2,3],",");
   print (str) -- "1,2,3";
@@ -247,7 +247,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  List[Integer: ]: lst;
+  @List[Integer: ]: lst;
 do
   lst := split("1,2,3",",");
   print lst; -- (1,2,3)
@@ -312,7 +312,7 @@ The "element" is local to iteration and is used as control variable.
 
 ```
 method main() => ()
-  List[Symbol]: my_list := ['a','b','c','d','e']; 
+  @List[Symbol]: my_list := ['a','b','c','d','e']; 
 process  
   given
     Symbol: element;
@@ -333,7 +333,7 @@ return;
 
 Collections have common methods that enable traversal using _scan_. 
 
-{List, Hash, Set} 
+{List, Table, Set} 
 
 **built-in:**
 
@@ -345,16 +345,16 @@ Collections have common methods that enable traversal using _scan_.
 * this       - reference to current element
 
 ## Set Iteration
-Hash map and set are similar. We can visit all elements:
+Table map and set are similar. We can visit all elements:
 
 **Example:**
 ```
 method main() => ()
-  Hash: my_map := {("a":1),("b":2),("c":3)};
+  @Table: my_map := {("a":1),("b":2),("c":3)};
 process  
   ** print pairs (key:value)
   given
-    String: key;
+    @String: key;
     Integer: value;
   scan my_map +> (key, value) do
     print('("' + key + '",' + value +')');
@@ -368,16 +368,16 @@ Will print:
 ("c",3)
 ```
 
-## Hash collections
+## Table collections
 
-Hashes are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
+Tablees are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
 
 
 **example:**
 ```
 ** check if a key is present in a hash collection
 given
-  Hash: my_map := {(1:'a'),(2:'b'),(3:'c')};
+  @Table: my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer: my_key := 3;
 if (my_key in my_map) do
   print('True'); -- expected
@@ -392,7 +392,7 @@ done;
 method main() => ()
 process
   given
-    Hash(String, String): animals := {};
+    @Table(@String, @String): animals := {};
   do
     animals['Bear'] := 'dog';
     animals['Kiwi'] := 'bird';
@@ -414,7 +414,7 @@ Output:
 ### Example
 ```  
 method main() => ()
-  Hash: animals := {}; -- partial declaration
+  @Table: animals := {}; -- partial declaration
 process
   ** establish element types S:U
   animals['Rover'] := "dog";
@@ -442,7 +442,7 @@ Strings can be concatenated using:
 ```
 ** this is example of string concatenation
 given
-  String: str := ""; 
+  @String: str := ""; 
 do
   ** set string value using different operators
   str := "this " & " string";  -- "this  string"
@@ -455,7 +455,7 @@ Two strings can be concatenated using concatenation operator "/" or "\\". This o
 
 ```
 given
-  String: s := "";
+  @String: s := "";
 do  
   s := 'te/' / '/st'; -- "te/st" Linux
   s := 'te/' \ '/st'; -- "te\st" Windows
@@ -472,7 +472,7 @@ We use hash "#" to create a placeholder into a Text. We use "<+" operator to rep
 #s  := sub-string placeholder   
 #n  := integer or real number   
 #u  := Unicode placeholder: example "≠" is U+2260
-#{} := Hash key placeholder 
+#{} := Table key placeholder 
 #[] := Array placeholder    
 
 ```
@@ -498,11 +498,11 @@ unicode ≠
 * Use the _format_ build in function to replace placeholders with values
 * Alternative use operators: <+ to replace template with values
 
-**Using Hash**
+**Using Table**
 ```
 method main() => ()
-  Text: template := "Hey look at this #{key1} it #{key2}";
-  Hash: my_map   := {("key1":"test"),("key2":"works!")};
+  @Text: template := "Hey look at this #{key1} it #{key2}";
+  @Table: my_map   := {("key1":"test"),("key2":"works!")};
 process  
   ** using format function
   print template.format(my_map);
@@ -517,7 +517,7 @@ Hey look at this test it works!
 **Using Array**
 ```
 method main() => ()
-  String: template := "Hey look at this #[0] it #[1]";
+  @String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
 process  
   print (template <+ my_set);
@@ -533,7 +533,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-method format(Number: n, String: f) => (String);
+method format(Number: n, @String: f) => (@String);
 ```
 
 Where "f" is a pattern: '(ap:m.d)'
@@ -557,11 +557,11 @@ Where "f" is a pattern: '(ap:m.d)'
 
 ### Text functions
 
-* Text:    format (Text: str, Hash: map);
-* Text:    replace(Text: str, String: target, String: arrow );
-* integer: find   (Text: str, String: patern);
-* integer: count  (Text: str, String: patern);
-* integer: length (Text: str);
+* Text:    format (@Text: str, @Table: map);
+* Text:    replace(@Text: str, @String: target, @String: arrow );
+* integer: find   (@Text: str, @String: patern);
+* integer: count  (@Text: str, @String: patern);
+* integer: length (@Text: str);
 
 **Reading a Text**
 

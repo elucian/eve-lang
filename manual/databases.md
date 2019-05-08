@@ -39,10 +39,10 @@ One application can connect to one target database that and one or more source d
 To connect to database we must use "connect" method. Once connected the data model remain in memory until we call: "disconnect". 
 
 ```
-method connect(String: user, password, dbname) => ()
+method connect(@String: user, password, dbname) => ()
   ** create a database instance
-  Oracle: db;
-  String: credential;
+  @Oracle: db;
+  @String: credential;
 process  
   credential := user + '/' + password + '@'+ dbname;
   db.connect(credential); 
@@ -126,11 +126,11 @@ A record instance is a variable of type record. The memory is allocated using th
 **Example:**
 ```
 ** we declare a record type  
-type: Person <: Record (String(32): name, Integer: age );
+type: @Person <: @Record (@String(32): name, Integer: age );
 
 method main() => ()
-  Person: person1,person2;     ** two variables of type Person
-  Array[Person](10): catalog;  ** a collection of Persons
+  @Person: person1,person2;     -- two variables of type Person
+  @Array[Person](10): catalog;  -- a collection of Persons
 process
   ** creating persons using record literals
   person1 := (name:"John", age:21);
@@ -141,7 +141,7 @@ process
   given:
     Integer: i
   while (i <= 10) do
-    catalog[i] := Person("John Doe", 20);
+    catalog[i] := @Person("John Doe", 20);
     i += 1; 
   repeat;
 
@@ -171,7 +171,7 @@ It can be used to define the record using a constant literal. After first assign
 
 ```
 global
-  Record: person := (name:"John", age:21);
+  @Record: person := (name:"John", age:21);
 ```
 
 ## Gradual Types
@@ -180,7 +180,7 @@ We can use keyword Record to define a variable of type record with unknown struc
 
 ```
 given
-  Record: person
+  @Record: person
 do
   ** differed structure
   person:= (name:"John", age:21);
@@ -214,7 +214,7 @@ You can scan one table like a collection. No need to learn anything new. The tab
 ```
 given
   ** use introspection to declare current_record
-  Record: current_record(record_fields)   
+  @Record: current_record(record_fields)   
 scan table_name +> current_record do
   with current_record do
     ** use current_record fields
@@ -289,7 +289,7 @@ We can scan view using _scan_ statement. This is the most common way to access a
 
 ``` 
 given
-  Record: current_record;
+  @Record: current_record;
 scan current_record <+ database.view_name do  
   print (current_record);
 next;

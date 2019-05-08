@@ -33,41 +33,46 @@ Basic types are abstract wrappers to OS native types.
 | Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
 | Null     | is a reference type that represents Null reference
 
+**note:** 
+* Basic type name start with uppercase letter.
+* Boxed type use prefix "@" like @Integer, @Symbol
 
 ## Composite Types
 
-Composite data types are unions of data elements of heterogeneous types.
+Composite data types are unions of data elements.
  
 | type     | description
 |----------|---------------------------------------------------------------
-| String   | Limited capacity string: ('single quoted')
-| Text     | Unlimited capacity string: ("double quoted")
-| List     | Dynamic unsorted enumeration of values or objects of same type
-| Table    | Enumeration of (key:value) pairs unique sorted by key
-| Set      | Enumeration of unique elements of the same type sorted by value
-| Record   | Heterogeneous collection of elements with fix structure 
+| @String  | Limited capacity string: ('single quoted')
+| @Text    | Unlimited capacity string: ("double quoted")
+| @List    | Dynamic unsorted enumeration of values or objects of same type
+| @Table   | Enumeration of (key:value) pairs unique sorted by key
+| @Set     | Enumeration of unique elements of the same type sorted by value
+| @Record  | Heterogeneous collection of elements with fix structure 
 
-**Note:** Composite data types are references
+**Notes:** 
+* Composite data types are references
+* Composite type name is use prefix "@"
 
 ## Physical Types
 
-EVE has ready to use support for physical measurements:
+EVE is going to use support physical measurement units:
 
-| type     | description
-|----------|---------------------------------------------------------------
-| Date     | Calendar date     
-| Time     | Calendar time
-| Duration | Delta time / duration hours/minutes/seconds
-| Angle    | Degree angle between two lines
-| Length   | Dimension of objects or distance
-| Distance | The travel distance between to points in space
+| type      | description
+|-----------|---------------------------------------------------------------
+| @Date     | Calendar date     
+| @Time     | Calendar time
+| @Duration | Delta time / duration hours/minutes/seconds
+| @Angle    | Degree angle between two lines
+| @Length   | Dimension of objects or distance
+| @Distance | The travel distance between to points in space
 ...
 
 See also: [UCUM](http://unitsofmeasure.org/ucum.html)
 
 **note:** 
 * In the future we will cover a complete set of physical types
-* Physical types include a measurement unit controlled by directives
+* Physical types include a measurement unit 
 
 ## Numeric Types
 
@@ -88,6 +93,7 @@ In EVE we can have two categories of numbers:
 For conversion into characters:
 
 * The number of characters required for integer numbers is 20. (19+sign)
+* For Real numbers, conversion into characters is controled by #precision directive
  
 ### Real numbers
 
@@ -123,12 +129,12 @@ Precision Real: numbers is variable depending on the size of the number. The num
 
 ```
 method main() => ()
-  ** declare variables
+**declare variables
   Integer: i; 
   Natural: n;
   Real: r;
 process  
-  ** modify variables
+**modify variables
   i := 9223372036854775807;
   n := 18446744073709551615;
   r := 0.25;
@@ -153,17 +159,17 @@ type: type_name <: type_descriptor (parameters)
 
 **Example:**
 ```
-type: Point <: Record (Integer: a, b );
+type: @Point <: @Record (Integer: a, b );
 
 method main() => ()
-  Point: p1, p2;      ** implicit constructor
-  Point: p3 := {1,1}; ** initial value for Point
+  @Point: p1, p2;      -- use implicit constructor
+  @Point: p3 := {1,1}; -- initial value for Point
 process
-  ** modification using constants
+**modification using constants
   p1.a := 1;
   p1.b := 2; 
   
-  ** modification using literal
+**reset Point using a literal
   p2 := {2, 2};
   
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
@@ -185,21 +191,21 @@ In EVE the arithmetic operators are polymorphic. Numeric operators can do implic
 
 Implicit conversion is possible and _safe_ in this direction:
 
-Integer -> Natural -> Real -> String.
+Integer -> Natural -> Real -> @String.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-String -> Real ->  Natural:-> Integer 
+@String -> Real ->  Natural:-> Integer 
 
 ```
 given
   Integer: a := 2;
   Real:    b := 1.5; 
 do
-  b := a;       ** this implicit cast is possible b = 2.0
-  b := a + 3.5; ** add 3.5 then assign result to b = 5.5
-  a := b;       ** error: can not assign Real: to Integer
-  a := 1.5;     ** error: can not assign Real: to Integer
+  b := a;       -- this implicit cast is possible b = 2.0
+  b := a + 3.5; -- add 3.5 then assign result to b = 5.5
+  a := b;       -- error: can not assign Real: to Integer
+  a := 1.5;     -- error: can not assign Real: to Integer
 done;
 ```
 
@@ -214,15 +220,15 @@ given
 do
   ** explicit coercion lose (0.5)
   a := floor(b);
-  print(a); ** will print: 1
+  print (a); -- will print: 1
  
   ** explicit coercion add (0.5)
   a := ceiling(b); 
-  print(a); ** will print: 2
+  print (a); -- will print: 2
 
   ** explicit coercion rounding:  
   a := round(b);
-  print(a); ** will print: 2
+  print (a); -- will print: 2
 done;
 ```
 
@@ -230,11 +236,11 @@ done;
 
 ```
 given
-  String: s; 
+  @String: s; 
   Integer: v := 1000;
 do  
-  s := format(v); ** explicit coercion s:="1000"
-done
+  s := format(v); -- explicit coercion s = '1000'
+done;
 ```
 
 **String: to a number**
@@ -245,12 +251,12 @@ This can be ready using the casting function parse(), only if the string contain
 given
   Integer: v; 
   Real:    b;
-  String:  s := '1000';
-  String:  r := '200.02';
+  @String: s := '1000';
+  @String: r := '200.02';
 do
-  v := parse(s): ** make v = 1000
-  v := parse(r): ** make v = 200 and decimal .02 is lost
-  b := parse(r): ** make b = 200.02 and decimal .02 is preserved
+  v := parse(s); -- make v = 1000
+  v := parse(r); -- make v = 200 and decimal .02 is lost
+  b := parse(r); -- make b = 200.02 and decimal .02 is preserved
 done;
 ```
 
@@ -271,10 +277,10 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List: ls := (0,1,2,3,4,5,6,7,8,9);
+  @List: ls := (0,1,2,3,4,5,6,7,8,9);
 do
-  print ls.type(); 
-  expect ls is List[Integer];
+  print  ls.type(); -- @List[Integer]
+  expect ls is @List[Integer];
 done 
 ```
 
@@ -288,20 +294,20 @@ Literal      | Type
 -------------|-----------------
  9           | Integer
 -9           | Integer
-0x9ABCDEF    | Hexadecimal -> Natural
-0b1010101    | Binary -> Natural
+0x9ABCDEF    | Natural
+0b1010101    | Natural
 9.9          | Real
-U+0001       | Unicode symbol code
+U+0001       | Symbol
 
 **Zero literals**
 
 Literal    | Type
 -----------|---------------
-[]         | Array
-{}         | Set/Hash
-()         | List
-""         | Text
-''         | String
+[]         | @Array
+{}         | @Set/Table
+()         | @List
+""         | @Text
+''         | @String
 0          | Integer
 0.0        | Real
            
@@ -309,13 +315,15 @@ Literal    | Type
 
 Literal      | Type
 -------------|-----------------
-('a','b','c')| List[String]
-(1,2,3)      | List[Integer]
-[1,2,...]    | Array[Integer]
-{1,2,...}    | Set[Integer]
-{a,b,c}      | Ordinal
-(x:'b',y:'d')| Record
-{1:'a',2:'b'}| Hash
+{a:0,b,c}    | Ordinal
+(`a`,`b`,`c`)| @List[Symbol]
+('a','b','c')| @List[Char]
+("a","b","c")| @List[@Text]
+(1,2,3)      | @List[Integer]
+[1,2,...]    | @Array[Integer]
+{1,2,...}    | @Set[Integer]
+(x:'b',y:'d')| @Record
+{1:'a',2:'b'}| @Table
 
 
 ### Type Inference
@@ -334,13 +342,14 @@ We can verify the type using "is" operator:
 
 ```
 given
-  Record: r := (name:"test", age:"24"); 
-  Table:  t := {('key1':"value1"),('ley2':"value2")};
+  @Record: r := (name:"test", age:"24"); 
+  @Table:  t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
-  expect v.name  is Text;
-  expect v.key   is String;
-  expect m.value is Text;
+  expect r.name  is @Text;
+  expect r.age   is @Text;
+  expect t.key   is @String;
+  expect t.value is @Text;
 done;
 ```
 
@@ -379,7 +388,7 @@ True     | Logic.True    | 00000000 00000001
 **syntax**
 ```
 global
-  Logic: variable_name; ** default False
+  Logic: variable_name; -- default False
 ```
 
 **internal design**
@@ -486,10 +495,10 @@ done;
 A variant is a way to create a generic method.
 
 ```
-method switch(Integer | Real @ x, y) => ()
-  Integer | Real @ i
+method switch(@Integer | @Real: x, y) => ()
+  @Integer | @Real: i
 process  
-  expect type(x) = type(y)  
+  expect type(x) = type(y);
   
   i :: x; -- intermediate reference
   x :: y; -- first  switch
@@ -497,19 +506,20 @@ process
 return;
 
 method main() => ()
-  Integer: x, y;
+  Integer: y;
   Real: a, b;
 process  
   ** invert two Integer: numbers
   x := 10;
   y := 20;  
   switch(x, y);
-  
+  expect (x = 20) and (y = 10);
   ** invert two Real: numbers
   a := 1.5;
   b := 2.5;
   switch(a, b);
-return
+  expect (a = 2.5) and (b = 1.5);
+return;
 ```
 
 ## Single symbol
@@ -530,42 +540,42 @@ In EVE There are two types of strings. Single quoted and double quoted strings. 
 * Single quoted string, has default capacity 1024 bytes;
 * Double quote strings have unrestricted capacity;
 
-### String: declaration
+### @String: declaration
 String can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
 global
-  String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
-  String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
-  Text: text_name           := ""; -- variable capacity string can hold many lines of text
+  @String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
+  @String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
+  @Text: text_name           := ""; -- variable capacity string can hold many lines of text
 ```
 
-### String: mutability
+### @String: mutability
 In EVE strings are mutable. If you use `:=` new memory is allocated. If you use a modifier: `+=` the string is fill too capacity. If the capacity is over the limit you will get an error: "capacity overflow".
 
 **Example:**
 ```
 method test_string()
-  String : str := 'First value';  
-  String : ref := 'First value'; 
+  @String: str := 'First value';  
+  @String: ref := 'First value'; 
 process  
-  expect (str  = ref); ** same value
-  expect (str != ref); ** different locations  
+  expect (str  = ref); -- same value
+  expect!(str == ref); -- different locations  
   
-  ref :: str;  ** borrow reference
-  expect (str =  ref); ** same value
-  expect (str == ref); ** same location  
+  ref :: str;  -- reset reference
+  expect (str =  ref); -- same value
+  expect (str == ref); -- same location  
   
-  ** if we modify "str" then "ref" will apear modified
+  ** if we modify "str" then "ref" will appear modified
   str += ":test"; 
   expect ref = "First value:test";
-  expect str = ref; ** the reference is holding
+  expect str = ref; -- the reference is holding
   
-  ** if we recreate str, ref will not be modified
-  str := 'Second value'; ** new string location
-  expect str != ref;   ** different location now  
+  ** if we recreate str, reference is reset
+  str := 'Secibd value'; -- new string location
+  expect !(str == ref);   -- different locations
   ** reference was broken, ref is pointing to old value
-  print ref;  ** 'First value:test'
+  print ref;  -- 'First value:test'
 return;
 ```
 
@@ -574,7 +584,7 @@ return;
 * You can create garbage in EVE if you loose references to strings;
 * Provision for large capacity strings is not recommended, use Text instead;
 
-### String: comparison
+### @String: comparison
 
 * Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
 * Two strings that have identical characters are equivalent regardless of quotation;
@@ -596,7 +606,7 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  String: str := "";
+  @String: str := "";
 do 
   expect (str is Null);
   expect (str = '');
@@ -626,7 +636,7 @@ When can create a date literal using 3 reversible functions:
 
 ```
 given
-  Date: date;
+  @Date: date;
 do
   date := "2019/01/30" -> YDM;
   date := "30/01/2019" -> DMY;
@@ -666,14 +676,14 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given
-  Time: time; ** '00:00' 
+  @Time: time; -- '00:00' 
 ```
 
 **Example**
 
 ```
 given
-  Time: time1, time2, time3; 
+  @Time: time1, time2, time3; 
 do
   time1 := "23:63" -> T24;
   time2 := "23:63:59,99" -> T24;
