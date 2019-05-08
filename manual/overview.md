@@ -182,7 +182,7 @@ Variables, constants and references are using a _sigil_.
 Expressions are created using identifiers, operators, functions and constant literals. 
 
 * can be combined to create more complex expressions;
-* have type that is calculated using type inference;
+* have a type that is calculated using type inference;
 * can be assigned to variables using ":=" or "<+" operators;
 * can be printed to console using "print" or "write" methods;
 * can use () to establish order of operations;

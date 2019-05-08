@@ -14,13 +14,13 @@ Composite types represents groups of multiple elements.
 
 ## Array
 
-An array is a collection of elements stored in order of natural index. Array elements all must have same data type and can be native or references. Array index start from 1 to last index = capacity.
+An array is a collection of elements stored in order of natural index. Array elements all must have same data type and can be native or references. Default array index start from 1 to capacity. 
 
 **array declaration** 
 ```
 ** declaration of an array with capacity
 global
-  @Array array_name[element_type](capacity);
+  @Array[element_type](capacity): array_name;
 ```
 
 **array capacity**
@@ -37,18 +37,18 @@ In the next example we define an array with capacity of 3 elements.
 ```
 ** array declaration and initialization
 global
-   @Array: my_array[Integer](3) := [1,2,3];
+   @Arrayy[Integer](3): my_arra := [1,2,3];
 ```
 
 **array constructor**
 
-An array can be established using a constructor. All elements of a array can be set to a single value using operator ":=" during declaration. 
+An array can be established using a constructor. All elements of a array can be set to a single value using operator ":=" during declaration. Default constructor for an array is the array variable name follow by parameter (c):capacity.
 
 ```
-** variable array size depending upon parameter n
-method test(Integer: n) => ()
+** define a constructor con based on based constructor: my_array()
+method con(Integer: capacity) => (@Array[Integer]: my_array)
 process
-  @Array: my_array(n);
+  my_array(capacity) := 0;
 return;
 ```
 
@@ -56,17 +56,25 @@ return;
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  @Array: my_array(10) := 0;   -- integer number
-  @Array: my_array(10) := 0.0; -- real number
-  @Array: my_array(10) := "";  -- text with variable size
-  @Array: my_array(10) := '';  -- string with capacity 1024 bytes
+  @Array(10): my_array := 0;   -- integer number
+  @Array(10): my_array := 0.0; -- real number
+  @Array(10): my_array := "";  -- text with variable size
+  @Array(10): my_array := '';  -- string with capacity 1024 bytes
 ```
 
 The most convenient way to define an Array is by using inference literals:
 ```
 global
-  ** array with capacity 4 of strings 
+  ** array with capacity 4 of type strings 
   @Array: my_array := ['a','bc','def','chk'];
+```
+
+**array elements**
+@Array elements can be addressed by subscript starting from 1:
+
+```
+my_array[1];   -- is the first element of Array
+my_array[-1];  -- is the last element of Array
 ```
 
 ## Matrix
@@ -75,7 +83,7 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   @Matrix: matrix_name[type](n,m) := constant;
+   @Matrix[type](n,m): matrix_name := constant;
 ```
 
 **example:**
@@ -95,8 +103,8 @@ done;
 @Matrix elements can be addressed by subscript starting from 1:
 
 ```
-var_name[1,1]; -- is the first element of the matrix.
-var_name[?,?]; -- is the last element of a matrix.
+var_name[1,1];   -- is the first element of the matrix.
+var_name[-1,-1]; -- is the last element of a matrix.
 ```
 
 ## List
@@ -106,7 +114,7 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **syntax**
 ```
   @List[type_name]: list_name;
-  @List:list_name := (<constant>, <constant>, ...);
+  @List: list_name := (<constant>, <constant>, ...);
 ```
 
 **notes:**
@@ -117,7 +125,7 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  @List[Integer]: n_list; 
+  @List[Integer] : n_list; 
   @List[@Object] : o_list; 
   @List[@String] : s_list; 
 ```
@@ -178,7 +186,7 @@ A set can be modified during run-time using operators.
 **Example:**
 ```
 given
-  Set[integer]: my_set := {0,2,3};
+  @Set[integer]: my_set := {0,2,3};
 do
   ** append element 1
   my_set    += 1;  
@@ -213,7 +221,7 @@ Intersect operator & find common elements:
 
 ```
 given
-  Set: test := {};
+  @Set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
   print test; -- {3,4}

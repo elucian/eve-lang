@@ -103,8 +103,6 @@ In following table: `A, B, C` are collections and `x` is a member:
 
 |Operator | Result  | Description
 |---------|---------|-------------------------------------------------------------------
-| x !: A  | logic   | verify if x is not member of collection A
-| x ?: A  | logic   | verify if x is a member of collection A
 | A &  B  | new     | Intersect A with B, use with : like C := A & B (return a new set)
 | A \| B  | new     | Union A with B, use with : like C := A \| B (return a new set)
 | A <: B  | logic   | verify if A is subset of B: In math: ⊂
@@ -118,6 +116,8 @@ These operators are expected logical values T := True, F := False
 
 | Symbol | Description
 |--------|-----------------------------------------------
+|  is    | Check if element has a specified type
+|  in    | Check if element is member in collection
 |  not   | logic NOT (negation) 
 |  and   | logic AND (intersection) 
 |  or    | logic OR  (union)

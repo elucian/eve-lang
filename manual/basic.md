@@ -269,6 +269,7 @@ done;
  
  This module is one of the standard modules that are automatically included in any EVE program. 
 
+Details: [Numeric Format](processing.md#numeric-format)
 
 ## Type inference
 
@@ -373,7 +374,7 @@ In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate w
 
 Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
 
-Operators are mapped to functions. To design polimorphic operators we overload the function signature using type dispatch. The dispatch is happening by left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
+Operators are mapped to functions. To design polymorphic operators we overload the function signature using type dispatch. The dispatch is happening by left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
 
 ## Ordinal type
 

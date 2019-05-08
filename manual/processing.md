@@ -4,8 +4,14 @@ By using collections and control structures one can load, modify and store data.
 
 ## Working with arrays
 
-Array elements have very fast direct access by index. 
+Array elements have very fast direct access by index.
 
+**note**
+* index start from one
+* negative index is counting from the end toward the beginning
+* a range of elements is established using range notation: [n..m]
+
+**example**
 ```
 method test_array() => ()
   ** array  with capacity of 10 elements
@@ -19,9 +25,14 @@ process
     my_array[i] := i;     
     i += 1;
   repeat;
-  ** array  elements are identified using [index]
-  print ("This is the first element: {1}" <+ my_array[1]);
-  print ("This is the last element: {1}"  <+ my_array[m]);
+  ** array  elements using escape template \[]
+  print ("This is the first element: \[1]" <+ my_array); 
+  print ("This is the last element: \[-1]"  <+ my_array);
+  
+  ** range of array elements are comma separated [1,2,3]
+  print ("These are the first two: \[1..2]"  <+ my_array);
+  print ("These are the lat two: \[-2..-1]"  <+ my_array);
+  print ("These are all except lat two: \[1..-3]"  <+ my_array);
 return;
 ```
 
@@ -35,7 +46,7 @@ This is the last element: 10
 An array can changing capacity. This can be ready using built-in method _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
 
 ```
-  <array_name>.extend(c)
+  array_name.extend(c)
 ```
 
 ## Matrix Operations
@@ -140,9 +151,10 @@ method main() => ()
   @Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
   @Array[Integer]: b :: a[1..4]; -- slice reference
 process
-  print(a[1..?]);   -- will print [0,1,2,3,4,5,6,7,8,9]
+  print(a[1..-1]);  -- will print [0,1,2,3,4,5,6,7,8,9]
+  print(a[-3..-1]); -- will print [7,8,9]
   print(a[1..1]);   -- will print [0]
-  print(a[1..4]);   -- will print [1,2,3]
+  print(a[1..4]);   -- will print [1,2,3,4]
  
   ** modify slice b (reference to a)
   b[*] += 2;
@@ -195,7 +207,7 @@ given
    @List: my_list := [0,1,2,3,4,5];
    @Set:  my_set  := {};
 do
-   my_set := { x : x in my_list & (x % 2 = 0) };
+   my_set := { x : x in my_list and (x % 2 = 0) };
    print my_set; -- {0,2,4} 
 done;
 ```
@@ -206,7 +218,7 @@ The elements in one set or list can be transformed by a function or expression t
 **Example:**
 ```
 given
-   @Set:  source := {0,1,2,3,4,5};
+   @Set:   source := {0,1,2,3,4,5};
    @Table: target := {};
 do
    ** create Table pairs (key, value) for Table map
@@ -226,7 +238,7 @@ method main() => ()
   @List[Symbol]: c := ();
 process
   c := a + b;
-  print(c) -- ['a','b','c','1','2','3'];
+  print c; -- ['a','b','c','1','2','3'];
 return;
 ```
 
@@ -247,7 +259,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  @List[Integer: ]: lst;
+  @List[Integer]: lst;
 do
   lst := split("1,2,3",",");
   print lst; -- (1,2,3)
@@ -280,23 +292,22 @@ Two operations are possible
 ### Other built-ins
 
 Following other functions should be available
-* list.append(value) -- can append an element at the end of the list
-* list.insert(value) -- can insert an element at the beginning of the list
-* list.delete(value) -- can delete one element at specified index
-* list.count() -- retrieve the number of elements 
+* @List.append(value) -- can append an element at the end of the list
+* @List.insert(value) -- can insert an element at the beginning of the list
+* @List.delete(value) -- can delete one element at specified index
+* @List.count() -- retrieve the number of elements 
 
 ### Special attributes
 A list has properties that can be used in logical expressions:
 
-* list.empty()  -- True or False
-* list.full()   -- True or False
-
+* @List.empty()  -- True or False
+* @List.full()   -- True or False
 
 ## Iteration
 
 A special _while loop_ that is executed for each element belonging to a collection.
 
-**template**
+**pattern**
 ```
 given
   type_name: element := collection.first()
@@ -345,7 +356,7 @@ Collections have common methods that enable traversal using _scan_.
 * this       - reference to current element
 
 ## Set Iteration
-Table map and set are similar. We can visit all elements:
+Table and Set are similar. We can visit all elements using _scan_:
 
 **Example:**
 ```
@@ -356,7 +367,7 @@ process
   given
     @String: key;
     Integer: value;
-  scan my_map +> (key, value) do
+  scan my_map +> (key:value) do
     print('("' + key + '",' + value +')');
   repeat;
 return;
@@ -370,14 +381,14 @@ Will print:
 
 ## Table collections
 
-Tablees are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
+Tables are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
 
 
 **example:**
 ```
 ** check if a key is present in a hash collection
 given
-  @Table: my_map := {(1:'a'),(2:'b'),(3:'c')};
+  @Table:  my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer: my_key := 3;
 if (my_key in my_map) do
   print('True'); -- expected
@@ -467,45 +478,60 @@ done;
 String: and text can be concatenated using the string concatenation operators: {+, &}. 
 
 ## Text template
-We use hash "#" to create a placeholder into a Text. We use "<+" operator to replace the placeholder with values. If placeholder is not found the compiler raise an error. If the string is a variable this verification is not possible at compile time so maybe you get a run-time error.
-
-#s  := sub-string placeholder   
-#n  := integer or real number   
-#u  := Unicode placeholder: example "≠" is U+2260
-#{} := Table key placeholder 
-#[] := Array placeholder    
+We use hash "\{}" to create a placeholder into a Text. We use "<+" operator to replace the placeholder with values. If placeholder is not found the compiler raise an error. If the string is a variable this verification is not possible at compile time so maybe you get a run-time error.
 
 ```
-print ("number #n" <+ 10);
-print ("strings #s and #s" <+ ('10','even'));
-print ("unicode #u" <+ U+2260);
+\s  : single string placeholder   
+\q  : quoted string
+\n  : single natural/integer number  
+\u  : single Unicode placeholder
+\t  : time 12 format
+\t12: time 12 format 
+\t24: time 24 format
+\d  : date DMY format
+\dmy: date format DD/MM/YYYY
+\mdy: date format MM/DD/YYYY
+\() : [numeric format](#numeric-format)
+\{} : Member name/ Key value: placeholder
+\[] : Array or List member placeholder
+```
+
+**examples**
+```
+print "Numbers: \n and \n" <+ (10, 11);
+print "Strings: \s and \s" <+ ('odd','even');
+print "Quoted:  \q and \q" <+ ('odd','even');
+print "Unicode: \u and \u" <+ (U+2260,U+2261);
 ```
 **Expected output:**
 ```
-number 10
-strings 10 and even
-unicode ≠
+Numbers: 10 and 11
+Strings: odd and even
+Quoted: "odd" and "even"
+Unicode: ≠ and ≡
 ```
 
 **Notes**: 
 * Injector "<+" is polymorph and overloaded operator. 
-* For template we can use: numbers, strings, lists, hashes, arrays
+* For template you can use: { tuple, list, table, array }
 
+## Large template
 
-## How to use a template?
-* Create a map collection of elements
-* Create the template text 
-* Use the _format_ build in function to replace placeholders with values
-* Alternative use operators: <+ to replace template with values
+A large template can be stored into a file, loaded from file and format().
+
+1. Create a map collection of elements;
+2. Create the template text;
+3. Use _scan_ and injector: "<+" expression to replace template row by row;
+4. Alternative use _format()_ build-in to replace placeholders in all text;
 
 **Using Table**
 ```
 method main() => ()
-  @Text: template := "Hey look at this #{key1} it #{key2}";
-  @Table: my_map   := {("key1":"test"),("key2":"works!")};
+  @Text:  template := "Hey look at this \{key1} it \{key2}";
+  @Table: map      := {("key1":"test"),("key2":"works!")};
 process  
   ** using format function
-  print template.format(my_map);
+  print template.format(map);
 return;
 ```
 
@@ -518,7 +544,7 @@ Hey look at this test it works!
 ```
 method main() => ()
   @String: template := "Hey look at this #[0] it #[1]";
-  List: my_list    := ("test","works!");
+  @List: my_list    := ("test","works!");
 process  
   print (template <+ my_set);
 return;
@@ -533,7 +559,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-method format(Number: n, @String: f) => (@String);
+method format(Number: n, @String: f) => @String;
 ```
 
 Where "f" is a pattern: '(ap:m.d)'
