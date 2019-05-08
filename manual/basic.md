@@ -13,6 +13,8 @@ EVE is a gradual typed language, with predefined types.
 * [Data coercion](#data-coercion)
 * [Type inference](#type-inference)
 * [Default types](default-types) 
+* [Ordinal type](ordinal-type)
+* [Logical type](logical-type)
 * [Gradual typing](#gradual-typing)
 * [String type](#string-type)
 * [Calendar date](#calendar-date)
@@ -20,7 +22,7 @@ EVE is a gradual typed language, with predefined types.
 
 ## Basic Types
 
-Basic types are abstract wrappers to OS native types. 
+Basic types are fixed size native types. 
 
 | type     | description
 |----------|-------------------------------------------------------
@@ -31,7 +33,8 @@ Basic types are abstract wrappers to OS native types.
 | Real     | double precision number on 8 bit (signed) 
 | Ordinal  | Enumeration of ideas, cases or terms
 | Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
-| Null     | is a reference type that represents Null reference
+| Date     | Calendar date     
+| Time     | Calendar time
 
 **note:** 
 * Basic type name start with uppercase letter.
@@ -43,6 +46,7 @@ Composite data types are unions of data elements.
  
 | type     | description
 |----------|---------------------------------------------------------------
+| @Null    | is a reference type = Null constant reference
 | @String  | Limited capacity string: ('single quoted')
 | @Text    | Unlimited capacity string: ("double quoted")
 | @List    | Dynamic unsorted enumeration of values or objects of same type
@@ -60,8 +64,6 @@ EVE is going to use support physical measurement units:
 
 | type      | description
 |-----------|---------------------------------------------------------------
-| @Date     | Calendar date     
-| @Time     | Calendar time
 | @Duration | Delta time / duration hours/minutes/seconds
 | @Angle    | Degree angle between two lines
 | @Length   | Dimension of objects or distance
@@ -373,7 +375,74 @@ Some languages define different operators for integers and floating decimal numb
 
 Operators are mapped to functions. To design polimorphic operators we overload the function signature using type dispatch. The dispatch is happening by left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
 
-## Logic type
+## Ordinal type
+
+Ordinal type is an ordered list of identifiers that can represent things, ideas, concepts, keywords. Each item has an identifier name that can be uppercase, lowercase or mixed . To each item we associate a value that is two byte number starting from 0 to N. Maxim number of items is 65535.
+
+**Syntax:**
+Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
+
+```
+type: <type_name> <: Ordinal (symbol:<value>, ... );
+
+```
+
+## Usage
+Ordinal type is suitable for creation of options that can be used for switch statement. 
+
+* Value of first element can be specified. If is not specified it starts from: 1.    
+* Values of next elements can not be specified. That is next element is previous element +1.   
+* Elements declared in a Ordinal type are public is we use "." prefix
+
+**Example:**
+```
+type: @Day <: @Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
+
+method main() => ()
+  @String: message;
+process  
+  given
+    @Day: today := today();
+  quest today:
+    match (Friday, Saturday, Sunday) do
+       message:='weekend';
+      ...
+    match (Monday) do
+       message:='first workday';
+    match (Friday) do
+       message:='last workday';
+  none
+    message:='middle of the week';
+  done;
+  print('Is', message);
+return;
+```
+**Note** For private enumerations you can use a record type.
+
+**Range**
+We can use Ordinal to create a range of values:
+```
+when (today <+ [Monday..Friday]) do
+   print ("Have a nice day!");
+else
+   print ("Have a happy weekend!");
+done;
+```
+
+**Operators**
+Ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
+
+```
+** using type Day declared before
+given
+  @Day v := Friday;
+do
+  v += 1; 
+  expect v = Saturday;
+done;
+```
+
+## Logical type
 
 In Latin the "falsus" and "verum" are translated to false and true.
 
@@ -434,7 +503,7 @@ Also results of logical expressions can be stored in logical variables to be use
 
 ## Gradual typing
 
-Gradual typing is a type system in which some variables may be giventypes and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "Variant".
+Gradual typing is a type system in which some variables may be given types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "Variant".
 
 **Variant Types**
 
@@ -456,17 +525,17 @@ global
 
 ## Making a null-able type
 
-For this we use a special type: Null 
+For this we use a special type: @Null 
 
-* The Null type is a curious type;
+* The @Null type is a curious type;
 * It can have only one value = Null;
 
 **Examples:**
 ```
-type: Number <: Variant (Integer | Real | Null);
+type: @Number <: Variant (@Integer | @Real | @Null);
 
 global
-  Number: x := Null;
+  @Number: x := Null;
   
 ```
 
@@ -533,86 +602,6 @@ Symbols are Unicode UTF32. That is using 32 bit integer:
 **usability**
 A symbol can be used to create an Array of symbols that have direct access by index. Array of symbols have a capacity and can be more or less full. In array one or more symbols can have value NUL = U+0000. This is also the default value used for string initialization.
 
-## String type
-
-In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings can store a single line. Double quoted strings can store multiple lines of text separated by new line "\n".
-
-* Single quoted string, has default capacity 1024 bytes;
-* Double quote strings have unrestricted capacity;
-
-### @String: declaration
-String can be initialized with a constant literal using single quotes or double quotes. 
-
-```
-global
-  @String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
-  @String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
-  @Text: text_name           := ""; -- variable capacity string can hold many lines of text
-```
-
-### @String: mutability
-In EVE strings are mutable. If you use `:=` new memory is allocated. If you use a modifier: `+=` the string is fill too capacity. If the capacity is over the limit you will get an error: "capacity overflow".
-
-**Example:**
-```
-method test_string()
-  @String: str := 'First value';  
-  @String: ref := 'First value'; 
-process  
-  expect (str  = ref); -- same value
-  expect!(str == ref); -- different locations  
-  
-  ref :: str;  -- reset reference
-  expect (str =  ref); -- same value
-  expect (str == ref); -- same location  
-  
-  ** if we modify "str" then "ref" will appear modified
-  str += ":test"; 
-  expect ref = "First value:test";
-  expect str = ref; -- the reference is holding
-  
-  ** if we recreate str, reference is reset
-  str := 'Secibd value'; -- new string location
-  expect !(str == ref);   -- different locations
-  ** reference was broken, ref is pointing to old value
-  print ref;  -- 'First value:test'
-return;
-```
-
-**Note:** 
-
-* You can create garbage in EVE if you loose references to strings;
-* Provision for large capacity strings is not recommended, use Text instead;
-
-### @String: comparison
-
-* Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
-* Two strings that have identical characters are equivalent regardless of quotation;
-* The length of the string is the number of represented symbols: '' is counting 0; 
-* The capacity of a string is alwasy greater or equal than length.
-
-**Example:**
-
-```
-print ('this' = 'this');    -- True (same value)
-print ("this" = 'this');    -- True (same value)
-print (' this' <> 'this');  -- True (not same value)
-print ('this ' <> 'this');  -- True (not same value)
-```
-
-### Null strings
-
-We can test if a string is null using "is Null" expression.
-
-```
-given 
-  @String: str := "";
-do 
-  expect (str is Null);
-  expect (str = '');
-  expect (str = "");
-done;
-```
 
 ## Calendar date
 
@@ -636,7 +625,7 @@ When can create a date literal using 3 reversible functions:
 
 ```
 given
-  @Date: date;
+  Date: date;
 do
   date := "2019/01/30" -> YDM;
   date := "30/01/2019" -> DMY;
@@ -676,14 +665,14 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given
-  @Time: time; -- '00:00' 
+  Time: time; -- '00:00' 
 ```
 
-**Example**
+**Example:**
 
 ```
 given
-  @Time: time1, time2, time3; 
+  Time: time1, time2, time3; 
 do
   time1 := "23:63" -> T24;
   time2 := "23:63:59,99" -> T24;

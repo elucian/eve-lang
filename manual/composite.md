@@ -8,75 +8,9 @@ Composite types represents groups of multiple elements.
 * [list](#list)
 * [set](#set)
 * [table](#table)
+* [string](#string)
 * [text](#text)
 * [exception](#exception)
-
-## Ordinal
-
-Ordinal type is an ordered list of identifiers that can represent things, ideas, concepts, keywords. Each item has an identifier name that can be uppercase, lowercase or mixed . To each item we associate a value that is two byte number starting from 0 to N. Maxim number of items is 65535.
-
-**Syntax:**
-Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
-
-```
-type: <type_name> <: Ordinal (symbol:<value>, ... );
-
-```
-
-## Usage
-Ordinal type is suitable for creation of options that can be used for switch statement. 
-
-* Value of first element can be specified. If is not specified it starts from: 1.    
-* Values of next elements can not be specified. That is next element is previous element +1.   
-* Elements declared in a Ordinal type are public is we use "." prefix
-
-**Example:**
-```
-type: @Day <: @Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
-
-method main() => ()
-  @String: message;
-process  
-  given
-    @Day: today := today();
-  quest today:
-    match (Friday, Saturday, Sunday) do
-       message:='weekend';
-      ...
-    match (Monday) do
-       message:='first workday';
-    match (Friday) do
-       message:='last workday';
-  none
-    message:='middle of the week';
-  done;
-  print('Is', message);
-return;
-```
-**Note** For private enumerations you can use a record type.
-
-**Range**
-We can use Ordinal to create a range of values:
-```
-when (today <+ [Monday..Friday]) do
-   print ("Have a nice day!");
-else
-   print ("Have a happy weekend!");
-done;
-```
-
-**Operators**
-Ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
-
-```
-** using type Day declared before
-given
-  @Day v := Friday;
-do
-  v += 1; 
-  expect v = Saturday;
-done;
-```
 
 ## Array
 
@@ -310,6 +244,87 @@ begin
 done;
 ```
 
+## String
+
+In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings can store a single line. Double quoted strings can store multiple lines of text separated by new line "\n".
+
+* Single quoted string, has default capacity 1024 bytes;
+* Double quote strings have unrestricted capacity;
+
+### String: declaration
+String can be initialized with a constant literal using single quotes or double quotes. 
+
+```
+global
+  @String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
+  @String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
+  @Text: text_name           := ""; -- variable capacity string can hold many lines of text
+```
+
+### String: mutability
+In EVE strings are mutable. If you use `:=` new memory is allocated. If you use a modifier: `+=` the string is fill too capacity. If the capacity is over the limit you will get an error: "capacity overflow".
+
+**Example:**
+```
+method test_string()
+  @String: str := 'First value';  
+  @String: ref := 'First value'; 
+process  
+  expect (str  = ref); -- same value
+  expect!(str == ref); -- different locations  
+  
+  ref :: str;  -- reset reference
+  expect (str =  ref); -- same value
+  expect (str == ref); -- same location  
+  
+  ** if we modify "str" then "ref" will appear modified
+  str += ":test"; 
+  expect ref = "First value:test";
+  expect str = ref; -- the reference is holding
+  
+  ** if we recreate str, reference is reset
+  str := 'Secibd value'; -- new string location
+  expect !(str == ref);   -- different locations
+  ** reference was broken, ref is pointing to old value
+  print ref;  -- 'First value:test'
+return;
+```
+
+**Note:** 
+
+* You can create garbage in EVE if you loose references to strings;
+* Provision for large capacity strings is not recommended, use Text instead;
+
+### String: comparison
+
+* Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
+* Two strings that have identical characters are equivalent regardless of quotation;
+* The length of the string is the number of represented symbols: '' is counting 0; 
+* The capacity of a string is alwasy greater or equal than length.
+
+**Example:**
+
+```
+print ('this' = 'this');    -- True (same value)
+print ("this" = 'this');    -- True (same value)
+print (' this' <> 'this');  -- True (not same value)
+print ('this ' <> 'this');  -- True (not same value)
+```
+
+### Null strings
+
+We can test if a string is null using "is Null" expression.
+
+```
+given 
+  @String: str := "";
+do 
+  expect (str is Null);
+  expect (str = '');
+  expect (str = "");
+done;
+```
+
 ## Text
 
 Text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. Text can be modified while strings are immutable.
@@ -435,6 +450,6 @@ The expect statement is very simple. It check a condition and raise an error if 
 **note:**
 * can be used as pre-condition
 * can be used as post-condition
-* unexpect error has code = 0
+* unexpected error has code = 0
 
 **Read next:** [Classes](classes.md)
