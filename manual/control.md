@@ -1,37 +1,56 @@
 ## Control Flow
 
-EVE has only 4 control statements: 
+EVE has only 5 control statements: 
 
+* [do](#do)
 * [with](#with)
 * [when](#when)
 * [quest](#quest)
 * [while](#while)
 * [scan](#scan)
 
-## With
+**Notes:** 
 
-Establish a declaration region and qualifier supression block. 
+* keyword _given_ start a local scope for any block statement
+* one blocks is ending with keywords: { done \| next \| repeat}
+
+## Do
+
+Non repetitive anonymous block with local scope. 
 
 **syntax**
 ```
 given
   ** local declarations
+  ...
+do
+  ** local statements
+  ... 
+done;
+```
+
+## With
+
+Establish a declaration region and qualifier suppression block. 
+
+**syntax**
+```
+given
+  ** local declarations
+  Type: var;
 with qualifier := long_qualifier do
   ** local statements
   method_name();  -- instead of: qualifier.method_name()
   var := function_name(); -- instead of qualifier.function_name()
+  ...
 done;
 ```
 
-**Notes:** 
-
-* keyword _given_ start a local scope for any block statement
-* one blocks is ending with keywords: { done \| next}
+long_qualifier ::= file_name.class_name | file_name.record_name
 
 ## when
 
 This keyword in conjunction with {do, else} declare a multi-path block selector;
-
 
 **patterns**
 
@@ -39,8 +58,10 @@ This keyword in conjunction with {do, else} declare a multi-path block selector;
 ```
 given
   ** local context
+  ... 
 when (expression) do
   ** single path
+  ...
 done;
 ```
   
@@ -48,19 +69,36 @@ done;
 ```  
 when (expression) do
    ** true path
+   ...
 else
    ** false path
+   ...
 done;
 ```
   
 3.nested selector 
 ```  
 when (expression) do
+  ...
   when (expression) do
    ** nested path
+   ...
   done;
 done;
 ```
+
+4.ladder selector
+
+```  
+when (expression)    do
+  ...
+else if (expression) do
+  ...
+else if (expression) do
+  ... 
+else
+  ...
+done;
 
 ## Quest
 
@@ -125,7 +163,7 @@ given
 while (condition) do
   ** forced iteration
   skip if (condition);
-  ** eary intreruption
+  ** early interruption
   stop if (condition);
 else
   ** alternative path  
