@@ -103,7 +103,7 @@ In the next example we define an array with capacity of 3 elements.
 ```
 ** array declaration and initialization
 global
-   Array: my_array[Integer](3) := [1,2,3];
+   @Array: my_array[Integer](3) := [1,2,3];
 ```
 
 **array constructor**
@@ -114,7 +114,7 @@ An array can be established using a constructor. All elements of a array can be 
 ** variable array size depending upon parameter n
 method test(Integer: n) => ()
 process
-  Array: my_array(n);
+  @Array: my_array(n);
 return;
 ```
 
@@ -122,17 +122,17 @@ return;
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  Array: my_array(10) := 0;   -- integer number
-  Array: my_array(10) := 0.0; -- real number
-  Array: my_array(10) := "";  -- text with variable size
-  Array: my_array(10) := '';  -- string with capacity 1024 bytes
+  @Array: my_array(10) := 0;   -- integer number
+  @Array: my_array(10) := 0.0; -- real number
+  @Array: my_array(10) := "";  -- text with variable size
+  @Array: my_array(10) := '';  -- string with capacity 1024 bytes
 ```
 
 The most convenient way to define an Array is by using inference literals:
 ```
 global
   ** array with capacity 4 of strings 
-  Array: my_array := ['a','bc','def','chk'];
+  @Array: my_array := ['a','bc','def','chk'];
 ```
 
 ## Matrix

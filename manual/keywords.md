@@ -61,7 +61,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | done     | finalization keyword for non repetitive blocks 
 | next     | finalize a scan block and start next iteration
 | repeat   | trigger a condition check, finalize if condition yield false
-| return   | terminate a method or a class constructor block
+| return   | terminate a method or a class declaration
 
 ## Interruption statements
 

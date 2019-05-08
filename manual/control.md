@@ -12,7 +12,7 @@ EVE has only 5 control statements:
 **Notes:** 
 
 * keyword _given_ start a local scope for any block statement
-* one blocks is ending with keywords: { done \| next \| repeat}
+* one blocks is ending with keywords: { done; \| next; \| repeat;}
 
 ## Do
 
@@ -174,7 +174,7 @@ repeat;
 ```
 ** example of collection iteration
 method main() => ()
-  Array:test := ["a","b","c","d","e"];
+  @Array:test := ["a","b","c","d","e"];
   Integer: i := 0;
 process
   while (i < test.length) do
