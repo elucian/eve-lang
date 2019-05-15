@@ -171,11 +171,16 @@ The name of identifiers in EVE can have a length of 64 characters. A name starts
 ```
 
 **Prefix**
-Variables, constants and references are using a _sigil_.
+System variables, system constants and composite types are using a prefix.
 
 * "$"  is for system constants/ environment variables;
 * "#"  is for system variables/ control variables;
-* "@"  is for reference type or composite types;
+* "@"  is for reference type or composite type;
+
+**notes:**
+* Prefix is improving color coding convention for new types;
+* Prefix is reducing collision between local and global names;
+* In other languages this kind of prefix is called _sigil_;
 
 ## Expressions
 
@@ -198,22 +203,22 @@ print (10 + 10 + 15);     -- numeric expression
 print (10 > 5) | (2 < 3); -- logical expression
 
 ** list of expressions are enclosed in ()
-print (1, 2, 3);
-print (10, 11, 12);
+print (1, 2, 3);    -- expect: 1 2 3
+print (10, 11, 12); -- expect: 10 11 12
 
-** avoid new line and print
+** using write to: avoid new line and print
 write (1,2);
 write (3,4);  
 
-** now create new line
+** now create a new line
 print; -- 1234 
 ```
 
 **Notes:** 
-* print statement can receive multiple parameters
+* print statement can receive multiple arguments in parenthesis ()
 * print statement add new line by default
+* print statement will separate different values using one space 
 * to avoid new line you can use "write" statement instead of "print"
-* multiple expressions or arguments are separated by comma
 
 ## Statements
 
@@ -232,7 +237,7 @@ The most simple block statement start with "begin" and end with "done"
 ```
 given
   ** integer numbers
-  Integer: a := 0; 
+  Integer: a := 0;
   Real:    b := 1.5; 
 begin
   print  (a, b);
@@ -244,9 +249,9 @@ done;
 
 One expression can span multiple lines. 
 
-* The expression may be enclosed in parenthesis or quotation marks. 
-* Arithmetic expressions can terminate with operator and continue on next line. 
-* EVE do not use the "continuation" operator like Python: "\\"
+* The expression may be enclosed in parenthesis or quotation marks; 
+* Arithmetic expressions can use an operator to continue on next line;
+
 
 **example**
 ```
@@ -254,14 +259,18 @@ given
   Integer: x; 
  @Matrix : a; 
 begin  
-  ** broken expression
+  ** multi-row expression
   x := 1 + 2 +
        3 + 4 + 5;
+
+  ** ERROR: ↓ (missing ";") 
+  x := 1 + 2 
+     + 3 + 4 + 5;
        
   ** all 5 numbers are in 
   expect x = 15; 
 
-  ** broken matrix
+  ** multi-row matrix
   a := [ 
          [1,2],
          [3,4],

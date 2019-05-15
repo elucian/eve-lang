@@ -29,10 +29,10 @@ A data model is using a database. For this the model is connecting using adapter
 import
    $eve_lib/db/oracle:(Database);
 
-alias: Oracle := db.oracle.Database;   
+alias: @Oracle := db.oracle.Database;   
 ```
 
-## Connection
+### Connection
 
 One application can connect to one target database that and one or more source databases. A specific kind of application called "pipeline" can pull data from sources to update target database. 
 
@@ -49,14 +49,36 @@ process
 return;
 ```
 
-## Structure
+### Structure
 One database provide a structure for tables. An application can read structure and create in-memory data model. Then it can perform operations on data but not on the database structure. We do not bypass the database administrator job. 
 
 **notes:**
 1. Data structure can be created using SQL modules;
 2. Data structure can be updated/modified using SQL evolution modules;
 3. After database structure is updated an EVE application should recompile;
+4. Data structure can be used at compile time by EVE;
 
+### Analyze
+Before using a table it must be analyzed, this is possible only if a database connection is established.
+
+```
+
+analyze
+  -- analyze source tables
+  @source.*;
+  @source.prefix_*;
+  @source:(table_name,...);
+  
+  -- analyze target tables
+  @target.*;
+  @target.prefix_*;  
+  @target:(table_name,...);
+```
+
+**Note**  
+* Configuration file must provide $source, $target names for databases.
+* TODO: Establish credential variable names for debug time connection 
+  
 ## Record
 A record is a group of elements that are called fields or members. The elements can be native types, collections or other records. A variable can be defined based on a record type.
 
@@ -81,10 +103,10 @@ This kind of structure can be used to create a data chain.
 
 ```
 ** example of double recursive node
-type: Node <: Record (
-  Integer: data,  ** integer data
-  Node: previous, ** reference to previous node
-  Node: next      ** reference to next node
+type: @Node <: @Record (
+  Integer: data,   -- integer data
+  @Node: previous, -- reference to previous node
+  @Node: next      -- reference to next node
 );
 ```
 This kind of structure can be used to create a queue.
@@ -129,7 +151,7 @@ A record instance is a variable of type record. The memory is allocated using th
 type: @Person <: @Record (@String(32): name, Integer: age );
 
 method main() => ()
-  @Person: person1,person2;     -- two variables of type Person
+  @Person: person1, person2;    -- two variables of type Person
   @Array[Person](10): catalog;  -- a collection of Persons
 process
   ** creating persons using record literals
@@ -180,7 +202,7 @@ We can use keyword Record to define a variable of type record with unknown struc
 
 ```
 given
-  @Record: person
+  @Record: person;
 do
   ** differed structure
   person:= (name:"John", age:21);
@@ -308,18 +330,19 @@ next;
 ## Cursor
 
 * A cursor is special section that is based on one single select statement; 
-* Cursor can return a structure that is a record or a table row_type; 
+* Cursor can return a structure that is like a record; 
 * A cursor yields one record at a time on demand using fetch;
-* EVE uses a modified SQL dialect to create a cursor.
 
 **Syntax:**
-
 ```
-cursor: Cursor_Type(parameters) <: select (
-    data_type: table_name.field_name,
-    ...)
-  from  table_name+, ...
-  join  table_name.field == table_name.field
+cursor cursor_name(parameters) <: select (
+         data_type: table_name.field_name,
+         ...
+        )
+   from first_table, 
+        second_table,
+        ...
+   join table_name.field == table_name.field, ...
   where filter_expression ...
   group by field_names,...
   order by field_names,...;  
@@ -327,9 +350,9 @@ cursor: Cursor_Type(parameters) <: select (
 
 **Note:**
 
-* One single table can be updated with a cursor
-* Updatability table has a "+" sign suffix
-* A cursor is also a record type 
+* A cursor generate a record type: described in select clause;
+* One single table can be updated with a cursor: first_table;
+
 
 ### Cursor methods
 
@@ -346,35 +369,37 @@ cursor: Cursor_Type(parameters) <: select (
 * One table or view can be used as a cursor;
 
 ### Using a cursor
-A cursor can be open or close. We can fetch row by row. Also you can use _scan_ that is faster.  To improve performance you can use a #buffer directive. With #buffer:10 you will fetch 10 records at a time. By default the buffer is not active: #buffer:1
+You can open a cursor use it then close it. You can fetch row by row from cursor. Also you can use _scan_ that is optimized using memory cache.  To improve performance you can use a "buffer" system variable. With buffer = 10 you will fetch 10 records at a time. By default the buffer is not active: buffer = 1. This have no effect for while loop.
 
 **Syntax:**
 
 **using fetch...**
 ```
-cursor_name:= Cursor_Type.open(arguments);
-given
-  Cursor_Type: current_record;
-while !cursor_name.finish() do
-  current_record := cursor_name.fetch();
-  ** use record-list
-  ...
-repeat;
-cursor_name.close();
+cursor_name.open(arguments);
+given  
+  cursor_name: current_record;
+while not cursor_name.finish() do
+  current_record := cursor_name.fetch() ;
+  with current_record do
+     ** use record members    
+    ...
+  done  
+done;  
+cursor_name.close(); -- cursor_name is no longer available
 ```
 
 **using scan**
 ```
-#buffer:10
-
+#cursor.buffer := 10
 given 
-  Cursor_Type: current_record;
-scan current_record  <+ Cursor_Type(arguments) do
+  cursor_name: current_record;
+scan cursor_name(arguments) +> current_record  do
   with record_name do
-     ... ** use record fields
+    -- use record fields
+    ... 
   done;
 next;
-print $cursor.fetched;
+print #cursor.fetched; 
 ```
 
 **Notes:** 
@@ -398,7 +423,6 @@ print $cursor.fetched;
 * Notice offset can increase the response time;
 
 We can use group by to calculate aggregate functions: sum(), average(), count(), maxim(), median(), minim(). These functions are translated to SQL dialect. We parse the statement and convert to SQL before we sent it to the database for execution.
-
 
 ## Insert statement
 
@@ -440,7 +464,7 @@ Update statement is part of DML language. EVE statement for update is a little b
 
 1. Single table update:
 ```
-update table_name (field_name:{eve_variable},...)
+update table_name (field_name:eve_variable,...) <+ #global
   where filter_condition;
 ```
 
@@ -460,7 +484,7 @@ update table_name <+ eve_record
 
 4. Use all fields from a record collection:
 ```
-update table_name <+ eve_record_list;
+update table_name <+ record_list;
 ```
 **note:**  You can not use where with list of records.
 
@@ -468,8 +492,8 @@ update table_name <+ eve_record_list;
 ```
 update target (target.field_name:source.field_name,...)
   from source
-  join source.field_name == target.field_name
- where filter_expression;
+  join source.field_name = target.field_name
+ where filter_condition;
 ```
 **note:** 
 * you can not use outer join =+ for update. 
@@ -482,13 +506,19 @@ update target (target.field:source.field,...)
      (select list_of_fields 
         from source_tables
        where search_condition)
-  where filter_expression;
+  where filter_condition <+ eve_source;
 ```
 
-**note:** 
-* In this query, search_condition can include fields from target_table.
-* Filter expression is referring to target table
+filter_condition ::= field_name op {eve_variable}
+filter_condition ::= {eve_variable} op field_name 
+op ::= {=, <=, >=}
 
+
+
+**note:** 
+* In this query, search_condition can include fields from target_table;
+* Filter expression is referring to target table;
+* Composite filter conditions are available using logic operators: {and, or, not}.
 
 ## Delete
 
@@ -517,35 +547,35 @@ delete from table_name
 3. Using list unpacking
 ```
 delete from table_name 
- where field_name <+ (eve_list);
+ where field_name <+ eve_list;
 ```
 
 ## SQL Execution
 
-SQL Is declarative language. Behind the scene we generate complex code that is dynamically created and executed. For debug purpose we enable introspection. 
+SQL Is declarative language. Behind the scene we generate complex code that is dynamically created and executed. For debug purpose we enable introspection using system variables: #query, #cursor. 
 
 * Before execution the statement is converted into SQL string. 
-* We can visualize this string by using: $query.sql to debug the application. 
-* Also we can use $query.count to see how many records are inserted. 
+* We can visualize this string by using: #query.sql to debug the application. 
+* Also we can use #query.count to see how many records are inserted. 
 * After insert/append we need to issue db.commit or else the modifications are lost.
 
 ### Global Properties
-SQL and DML statement will inject properties into global object called: $query. We can interrogate properties of $query after last DML statement. Also $cursor is providing information about last used cursor. 
+SQL and DML statement will inject properties into global object called: #query. We can interrogate properties of #query after last DML statement. Also #cursor is providing information about last used cursor. 
 
 **last query**
-* $query.count; 
-* $query.plan; 
-* $query.sql;
-* $query.deleted; 
-* $query.updated; 
+* #query.count; 
+* #query.plan; 
+* #query.sql;
+* #query.updated; 
+* #query.deleted; 
 
 **last cursor**
-* $cursor.status; 
-* $cursor.plan; 
-* $cursor.sql;
-* $cursor.updated; 
-* $cursor.fetched; 
-* $cursor.finish; 
+* #cursor.status; 
+* #cursor.plan; 
+* #cursor.sql;
+* #cursor.updated; 
+* #cursor.fetched; 
+* #cursor.finish; 
 
 ## SQL Generator
 The adapters will allow direct communication between EVE application and target database. EVE can generate specific SQL code from source database and convert data structure to the target database. This code is dynamically created and can be spool-out using SQL introspection.
