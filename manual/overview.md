@@ -25,7 +25,7 @@ EVE is a free form language inspired from Java and Ruby.
 * System environment variables use prefix "$". These are global constants in Bee; 
 * System constants use prefix "$" and can start with uppercase if they are also public;
 * System variables use prefix "#" and can start with uppercase if they are also public;
-* References types use prefix "@" and can start with uppercase if they are also public;
+* Reference types use prefix "@" and can start with uppercase if they are also public;
 * Scoping operator is "." not "::". You can use alias or module name as scope qualifier;
 
 ## Comments
@@ -59,13 +59,12 @@ print;
 * End of line comments are ending after new line;
 
 ## Attributes
-One module can have multiple attributes usually declared at beginning of the module. Attributes start with ".". 
+One module can have multiple attributes usually declared at beginning of the module: 
 
 **examples**
 ```
-module
-  .name := :='test'
-  .description :='test'
+#module.name := 'test'
+#module.description :='test'
 ```
 
 **note:** You can define new attributes.
@@ -171,14 +170,13 @@ The name of identifiers in EVE can have a length of 64 characters. A name starts
 ```
 
 **Prefix**
-System variables, system constants and composite types are using a prefix.
+System constants, system variables and reference data types are using a prefix.
 
 * "$"  is for system constants/ environment variables;
 * "#"  is for system variables/ control variables;
-* "@"  is for reference type or composite type;
+* "@"  is prefix for a data type
 
 **notes:**
-* Prefix is improving color coding convention for new types;
 * Prefix is reducing collision between local and global names;
 * In other languages this kind of prefix is called _sigil_;
 
@@ -252,13 +250,12 @@ One expression can span multiple lines.
 * The expression may be enclosed in parenthesis or quotation marks; 
 * Arithmetic expressions can use an operator to continue on next line;
 
-
 **example**
 ```
 given 
   Integer: x; 
  @Matrix : a; 
-begin  
+do  
   ** multi-row expression
   x := 1 + 2 +
        3 + 4 + 5;

@@ -148,13 +148,13 @@ Global members are visible in current module with no prefix.
 
 **public**
 
-Global public members must start with a dot prefix:
+Public members must start with a dot prefix:
 
 **example**
 ```
 global
-  Real: PI := 3.14; -- global constant
-  Real: pi := 3.14; -- global variable
+  Real:.PI := 3.14; -- public constant
+  Real:.pi := 3.14; -- public variable
 ```
 
 **note:** constant is using capital letters
@@ -444,7 +444,7 @@ return;
 
 ## Test case 
 
-A method can be organized as a workflow of multiple test-cases that can fail.
+A method can be organized as a work-flow of multiple test-cases that can fail.
 
 ```
 method main() => ()
