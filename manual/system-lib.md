@@ -68,8 +68,8 @@ return;
 
 write sting can contain an escaped end of line character.
 ```
-\n is LF 
-\r is CR+LF
+\LF   is LF 
+\CRLF is CR+LF
 ```
 
 ### Usability
@@ -94,6 +94,6 @@ return;
 The sting do not have to contain the end of line character. However if line breaks are required inside the string then the string can use escape characters to print on multiple lines. This is unusual for a program but is possible.
 
 ```
-\n is LF 
-\r is CR+LF
+\LF is LF 
+\CRLF is CR+LF
 ```

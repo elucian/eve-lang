@@ -6,10 +6,10 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
-| `/*...*/` | Block comments \| Nested comments
+|`\|*...*\|`| Block comments \| Nested comments 
 | `(_,_,_)` | Expression \| List literal \| Data record
 | `[_,_,_]` | Range \| Index \| Array literals \| Parameterize types
-| `{_,_,_}` | Ordinal type \| Set of values \| Table map
+| `{_,_,_}` | Ordinal type \| Set of values \| Table type *| 
 
 
 ## Single symbols
@@ -31,8 +31,8 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|\#\#  | Single line comment for heading comments
-|\*\*  | Single line comment \| end of line comment
+|\#\#  | Single line comment (title)
+|\*\*  | Single line comment (subtitle)
 |..    | Range representation or slice [n..m] 
 |=+    | Outer join operator used in data "select" statement
 |->    | Pipeline operator (usual data casting)
