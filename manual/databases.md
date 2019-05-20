@@ -29,7 +29,7 @@ A data model is using a database. For this the model is connecting using adapter
 import
    $eve_lib/db/oracle:(Database);
 
-alias: @Oracle := db.oracle.Database;   
+alias: Oracle := db.oracle.Database;   
 ```
 
 ### Connection
@@ -39,10 +39,10 @@ One application can connect to one target database that and one or more source d
 To connect to database we must use "connect" method. Once connected the data model remain in memory until we call: "disconnect". 
 
 ```
-method connect(@String: user, password, dbname) => ()
+method connect(String: user, password, dbname):
   ** create a database instance
-  @Oracle: db;
-  @String: credential;
+  Oracle: db;
+  String: credential;
 process  
   credential := user + '/' + password + '@'+ dbname;
   db.connect(credential); 
@@ -65,14 +65,14 @@ Before using a table it must be analyzed, this is possible only if a database co
 
 analyze
   -- analyze source tables
-  @source.*;
-  @source.prefix_*;
-  @source:(table_name,...);
+  source.*;
+  source.prefix_*;
+  source:(table_name,...);
   
   -- analyze target tables
-  @target.*;
-  @target.prefix_*;  
-  @target:(table_name,...);
+  target.*;
+  target.prefix_*;  
+  target:(table_name,...);
 ```
 
 **Note**  
@@ -83,7 +83,7 @@ analyze
 A record is a group of elements that are called fields or members. The elements can be native types, collections or other records. A variable can be defined based on a record type.
 
 ```
-type: Type_Name <: Record (field_name:type, ...);
+type Type_Name <: Record (field_name:type, ...);
 
 global
   Type_Name: record_name;
@@ -94,7 +94,7 @@ An important application of recursion in computer science is in defining dynamic
 
 ```
 ** example of single recursive node
-type: Node <: Record ( 
+type Node <: Record ( 
   Integer: data,   ** integer data
   Node: previous   ** reference to previous node
 );
@@ -103,10 +103,10 @@ This kind of structure can be used to create a data chain.
 
 ```
 ** example of double recursive node
-type: @Node <: @Record (
+type Node <: Record (
   Integer: data,   -- integer data
-  @Node: previous, -- reference to previous node
-  @Node: next      -- reference to next node
+  Node: previous, -- reference to previous node
+  Node: next      -- reference to next node
 );
 ```
 This kind of structure can be used to create a queue.
@@ -148,11 +148,11 @@ A record instance is a variable of type record. The memory is allocated using th
 **Example:**
 ```
 ** we declare a record type  
-type: @Person <: @Record (@String(32): name, Integer: age );
+type Person <: Record (String(32): name, Integer: age );
 
-method main() => ()
-  @Person: person1, person2;    -- two variables of type Person
-  @Array[Person](10): catalog;  -- a collection of Persons
+method main():
+  Person: person1, person2;    -- two variables of type Person
+  Array[Person](10): catalog;  -- a collection of Persons
 process
   ** creating persons using record literals
   person1 := (name:"John", age:21);
@@ -193,7 +193,7 @@ It can be used to define the record using a constant literal. After first assign
 
 ```
 global
-  @Record: person := (name:"John", age:21);
+  Record: person := (name:"John", age:21);
 ```
 
 ## Gradual Types
@@ -202,7 +202,7 @@ We can use keyword Record to define a variable of type record with unknown struc
 
 ```
 given
-  @Record: person;
+  Record: person;
 do
   ** differed structure
   person:= (name:"John", age:21);
@@ -236,7 +236,7 @@ You can scan one table like a collection. No need to learn anything new. The tab
 ```
 given
   ** use introspection to declare current_record
-  @Record: current_record(record_fields)   
+  Record: current_record(record_fields)   
 scan table_name +> current_record do
   with current_record do
     ** use current_record fields
@@ -253,7 +253,7 @@ After update you can commit or rollback changes. EVE do not perform automatic co
 
 ```
 define
-  type: Type_Nme <: Record(record_fields);   
+  type Type_Nme <: Record(record_fields);   
   
 given
   ** use introspection to declare current_record
@@ -311,7 +311,7 @@ We can scan view using _scan_ statement. This is the most common way to access a
 
 ``` 
 given
-  @Record: current_record;
+  Record: current_record;
 scan current_record <+ database.view_name do  
   print (current_record);
 next;
@@ -336,7 +336,7 @@ next;
 **Syntax:**
 ```
 cursor cursor_name(parameters) <: select (
-         data_type: table_name.field_name,
+         data_type table_name.field_name,
          ...
         )
    from first_table, 
@@ -350,7 +350,7 @@ cursor cursor_name(parameters) <: select (
 
 **Note:**
 
-* A cursor generate a record type: described in select clause;
+* A cursor generate a record type described in select clause;
 * One single table can be updated with a cursor: first_table;
 
 
@@ -580,7 +580,7 @@ SQL and DML statement will inject properties into global object called: #query. 
 ## SQL Generator
 The adapters will allow direct communication between EVE application and target database. EVE can generate specific SQL code from source database and convert data structure to the target database. This code is dynamically created and can be spool-out using SQL introspection.
 
-TODO: Define built-ins for SQL generator
+TODO: Define built-in SQL generator
 
 ## Data Communication
 An EVE application can communicate with external world using JSON. Once a database model is designed we can create an interface for a model to read/write data using JSON data blocks that can transfer one or more records over TCP-IP protocol. This communication is transparent to EVE users. It is used by database adapters.

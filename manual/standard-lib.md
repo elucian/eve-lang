@@ -10,9 +10,9 @@ The only thing required is signature.
 | Function  | Description
 |-----------|---------------------------------------------------------------
 |length     | return capacity of the string
-|count      | return number of characters except begin spaces
+|count      | return number of true symbols and spaces except ending spaces
 |truncate   | reduce the capacity of the string to specified dimension
-|fill       | replace all characters in string with other same character
+|fill       | replace all characters in string with same periodic characters
 |erase      | erase all characters in a string and replace them with spaces
 |find       | search one sub-string in string 
 |replace    | replace a sub-string in a string with another

@@ -116,8 +116,8 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 
 **Example:**
 ```
-method main() => ()
- @Integer: o,n; -- boxed integers
+method main():
+ Integer: o,n; -- boxed integers
 process  
   o := 1;
   n := 1; 
@@ -141,11 +141,11 @@ return;
 ```
 
 **Using Generic:**
-Generic class is used to define a subtype then you can declare one or more instance of the new type:
+Generic class is used to define a subtype then you can declare one or more instance of the new type
 
 ```
 ** create new object from generic
-type: new_type <: Generic_class[generic_type];
+type new_type <: Generic_class[generic_type];
 
 ```
 

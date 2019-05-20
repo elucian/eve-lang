@@ -1,10 +1,10 @@
 **********************************
 ** example of collection iteration
 **********************************
-method main() => ()
-   @Array  : test := ['a','b','c','d','e'];
-   @String : element; 
-   Natural : i := 1;
+method main():
+   Array  : test := ['a','b','c','d','e'];
+   String : element; 
+   Natural: i := 1;
 process
   while i <= test.length() do
     element :: test[i]; -- transfer a reference    

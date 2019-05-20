@@ -1,6 +1,6 @@
 ## EVE Structure
 
-Next bookmarks will lead you to the main concepts required to understand EVE program structure.
+Next bookmarks will lead you to the main concepts required to understand EVE projects.
 
 **Bookmarks:**
 
@@ -21,7 +21,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 
 Modules are source files having extension: *.eve. Module names are using lowercase letters, can also contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 64 characters long.
 
-**properties**
+**members**
 
 * one module can use public members from other modules;
 * one module can have public member used in other modules;
@@ -72,7 +72,7 @@ type
 global
   Integer: x := 0 ; -- constant
   Integer: y := 0 ; -- variable
- @Integer: z := 0 ; -- reference
+  Integer: z := 0 ; -- reference
   ...
 
 ** local constants and variables
@@ -193,8 +193,8 @@ If a module is executable using "run" command, it must contain a "main" method. 
 Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- parameter ::= Type: #name := value -- input parameter
- parameter ::= Type: @name          -- output parameter
+ parameter ::= type #name := value -- input parameter
+ parameter ::= type @name          -- output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -213,7 +213,7 @@ One method can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-method main(@Array[@String]() * args) => ()
+method main(Array[String]() * args):
   print(args);
 return;
 ```
@@ -242,13 +242,13 @@ A method end with keyword return. When method is terminated, program execution w
 
 **Example:**
 ```
-method test(Integer: a) => ()
+method test(Integer: a):
 process
   ** print is a system method
   print a; 
 return;
 
-method main(@List[@String]: *args) => ()
+method main(List[String]: *args):
   ** number of arguments received:
   Integer: c := args.count();
 process  
@@ -278,7 +278,7 @@ global
  Integer: p1   ; 
  Integer: p2   ; 
 
-method add_numbers() => ()
+method add_numbers():
 process
   **side effects  
   test := p1 + p2 ;
@@ -299,12 +299,12 @@ return;
 To avoid system and global variables you can use output parameters:
 
 ```
-method add(Integer: p1,p2, @Integer: out ) => ()
+method add(Integer: p1,p2, Integer: out ):
 process
   out := p1 + p2;
 return;
 
-method main() => ()
+method main():
   Integer: result;
 process  
   ** reference argument require a variable
@@ -328,7 +328,7 @@ return;
 A function can have parameters and produce one single result. 
 
 ```
-function: name(parameters) => Type: (expression);
+function: name(parameters) => type (expression);
 ```
 
 **Function call**
@@ -361,7 +361,7 @@ There is a difference between the parameter and the argument. The parameter is a
 ** function declaration
 function sum(Integer: a, b) => Integer: (a + b);
   
-method main() => ()
+method main():
   Integer: r;
 process  
   r := sum(10,20);  -- function call
@@ -371,15 +371,15 @@ return;
 
 ## Expressions
 
-A ternary operator is "?". Can be used with conditional expressions to return one value or other.   
+A ternary operator is "if". Can be used with conditional expressions to return one value or other.   
 **syntax**
 ```
-  value ? (condition) : value
+  value if (condition) : value
 ```
 
 **example**
 ```
-print ("True" ? True);
+print ("True" if True);
 ```
 
 ## λ expressions
@@ -388,7 +388,7 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **syntax:**
 ```
-  identifier := (value ? condition,...:default_value)
+  identifier := (value if condition,...:default_value)
 ```
 
 **nodes**
@@ -398,13 +398,13 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **example**
 ```
-method main() => ()
+method main():
   Integer: p1, p2, x;
 process
   p1 := 2;
   p2 := 1;
   ** using λ expression  
-  x  := ( 0 ? p1 = 0, 0 ? p2 = 0: p1+p2);
+  x  := ( 0 if p1 = 0, 0 if p2 = 0: p1+p2);
   print x; -- expect: 3 
 return;
 ```
@@ -415,7 +415,7 @@ given
   Logic:   b := False;
   Integer: v := 0;   
 do
-  v := (1 ? b : 2);   
+  v := (1 if b : 2);   
   expect v = 2;  
   print v;   
 done; 
@@ -447,7 +447,7 @@ return;
 A method can be organized as a work-flow of multiple test-cases that can fail.
 
 ```
-method main() => ()
+method main():
 process
   ** initialization
   case c1("description") do
@@ -497,7 +497,7 @@ import
   $pro_mod/module_name
    
 ** you can run a module with arguments
-method main() => ()
+method main():
 process
   run module_name.main(arguments) +> (results);
 return;
@@ -509,9 +509,9 @@ import
   $pro_mod/module_name
 
 global
-  @List: channel 
+  List: channel 
 
-method main() => ()
+method main():
 process
   ** execute a modules in asynchronouslu
   act module_name(arguments,channel);
@@ -553,4 +553,4 @@ done;
 quit if (condition);
 ```
 
-**Read next**: [Control Flow](control.md)
+**Read next**: [Syntax Overview](overview.md)

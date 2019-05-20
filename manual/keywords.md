@@ -29,7 +29,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | Keyword  | Description
 |----------|---------------------------------------------------------------------
 | given    | establish local scope for a block statement 
-| begin    | single-path non-repetitive block
+| do       | single-path non-repetitive block
 | with     | qualifier suppression block for records
 | when     | multi-path conditional block
 | quest    | multi-path variable selector
@@ -41,8 +41,8 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------
-| is       | check data type: x is Null \| quest associated keyword
-| in       | check data type: x is Null \| quest associated keyword
+| is       | check data type x is Null \| quest associated keyword
+| in       | check data type x is Null \| quest associated keyword
 | as       | execute explicit cast to other data type
 | not      | logical NOT operator
 | and      | logical AND operator

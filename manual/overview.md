@@ -25,7 +25,7 @@ EVE is a free form language inspired from Java and Ruby.
 * System environment variables use prefix "$". These are global constants in Bee; 
 * System constants use prefix "$" and can start with uppercase if they are also public;
 * System variables use prefix "#" and can start with uppercase if they are also public;
-* Reference types use prefix "@" and can start with uppercase if they are also public;
+* Reference types use prefix  "@" and can start with uppercase if they are also public;
 * Scoping operator is "." not "::". You can use alias or module name as scope qualifier;
 
 ## Comments
@@ -43,7 +43,7 @@ EVE is a free form language inspired from Java and Ruby.
 *************************************
 
 ## Title comment
-  ** indented comment
+  -- indented comment
 
 ** Single line comment
 print; 
@@ -231,13 +231,13 @@ One statement can be declarative or imperative.
 
 **examples**
 
-The most simple block statement start with "begin" and end with "done"
+The most simple block statement start with "do" and end with "done"
 ```
 given
   ** integer numbers
   Integer: a := 0;
   Real:    b := 1.5; 
-begin
+do
   print  (a, b);
   expect (a = 0, b = 1.5);
 done;
@@ -254,7 +254,7 @@ One expression can span multiple lines.
 ```
 given 
   Integer: x; 
- @Matrix : a; 
+  Matrix : a; 
 do  
   ** multi-row expression
   x := 1 + 2 +
@@ -276,4 +276,4 @@ do
 done;
 ```
 
-**Read next:** [Structure.md](structure.md)
+**Read next:**  [Control Flow](control.md)

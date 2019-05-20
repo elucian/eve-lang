@@ -37,7 +37,7 @@ Establish a declaration region and qualifier suppression block.
 ```
 given
   ** local declarations
-  Type: var;
+  type var;
 with qualifier := long_qualifier do
   ** local statements
   method_name();  -- instead of: qualifier.method_name()
@@ -127,8 +127,8 @@ It is possible to use more then one value using a list, range or collection.
 
 **Example:**
 ```
-method test(Integer: p:=0) => ()
-  @String: message := "";
+method test(Integer: p:=0):
+  String: message := "";
   Integer: v := p + 4;
 process 
   quest v
@@ -173,8 +173,8 @@ repeat;
 
 ```
 ** example of collection iteration
-method main() => ()
-  @Array:test := ["a","b","c","d","e"];
+method main():
+  Array:test := ["a","b","c","d","e"];
   Integer: i := 0;
 process
   while (i < test.length) do

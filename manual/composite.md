@@ -4,6 +4,7 @@ Composite types represents groups of multiple elements.
  
 * [ordinal](#ordinal) 
 * [array](#array)
+* [slice](#slice)
 * [matrix](#matrix)
 * [list](#list)
 * [set](#set)
@@ -20,7 +21,7 @@ An array is a collection of elements stored in order of natural index. Array ele
 ```
 ** declaration of an array with capacity
 global
-  @Array[element_type](capacity): array_name;
+  Array[element_type](capacity): array_name;
 ```
 
 **array capacity**
@@ -37,7 +38,7 @@ In the next example we define an array with capacity of 3 elements.
 ```
 ** array declaration and initialization
 global
-   @Arrayy[Integer](3): my_arra := [1,2,3];
+   Array[Integer](3): my_arra := [1,2,3];
 ```
 
 **array constructor**
@@ -46,7 +47,7 @@ An array can be established using a constructor. All elements of a array can be 
 
 ```
 ** define a constructor con based on based constructor: my_array()
-method con(Integer: capacity) => (@Array[Integer]: my_array)
+method con(Integer: capacity) => (Array[Integer]: my_array):
 process
   my_array(capacity) := 0;
 return;
@@ -56,21 +57,21 @@ return;
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
 global
-  @Array(10): my_array := 0;   -- integer number
-  @Array(10): my_array := 0.0; -- real number
-  @Array(10): my_array := "";  -- text with variable size
-  @Array(10): my_array := '';  -- string with capacity 1024 bytes
+  Array(10): my_array := 0;   -- integer number
+  Array(10): my_array := 0.0; -- real number
+  Array(10): my_array := "";  -- text with variable size
+  Array(10): my_array := '';  -- string with capacity 1024 bytes
 ```
 
 The most convenient way to define an Array is by using inference literals:
 ```
 global
   ** array with capacity 4 of type strings 
-  @Array: my_array := ['a','bc','def','chk'];
+  Array: my_array := ['a','bc','def','chk'];
 ```
 
 **array elements**
-@Array elements can be addressed by subscript starting from 1:
+Array elements can be addressed by subscript starting from 1:
 
 ```
 my_array[1];   -- is the first element of Array
@@ -83,14 +84,14 @@ A matrix is a multidimensional array that is a collection of elements organized 
 **syntax:** 
 ```
 global
-   @Matrix[type](n,m): matrix_name := constant;
+   Matrix[type](n,m): matrix_name := constant;
 ```
 
 **example:**
 ```
 **  a matrix m that has 2 dimensions with 3 rows and 3 columns.
 given
-  @Matrix[String(2)](3,3): m := '__';
+  Matrix[String(2)](3,3): m := '__';
 do
   m[1] := ['a1','b1','c1'];
   m[2] := ['a2','b2','c2'];
@@ -100,7 +101,7 @@ done;
 ```
 
 **matrix elements**
-@Matrix elements can be addressed by subscript starting from 1:
+Matrix elements can be addressed by subscript starting from 1:
 
 ```
 var_name[1,1];   -- is the first element of the matrix.
@@ -113,8 +114,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-  @List[type_name]: list_name;
-  @List: list_name := (<constant>, <constant>, ...);
+  List[type_name]: list_name;
+  List: list_name := (<constant>, <constant>, ...);
 ```
 
 **notes:**
@@ -125,9 +126,9 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  @List[Integer] : n_list; 
-  @List[@Object] : o_list; 
-  @List[@String] : s_list; 
+  List[Integer] : n_list; 
+  List[Object]  : o_list; 
+  List[String]  : s_list; 
 ```
 
 **list literals**
@@ -141,15 +142,15 @@ given
 Literals can be used for initialization:
 ```
 given
-  @List[Symbol]  : c_list := ('a', 'b', 'c');
-  @List[Integer] : n_list := (1, 2, 3);  
+  List[Symbol]  : c_list := ('a', 'b', 'c');
+  List[Integer] : n_list := (1, 2, 3);  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  @List[Integer]: c_list;
+  List[Integer]: c_list;
 do
   ** update list using  ":=" 
   c_list := (1,2,3); 
@@ -186,7 +187,7 @@ A set can be modified during run-time using operators.
 **Example:**
 ```
 given
-  @Set[integer]: my_set := {0,2,3};
+  Set[integer]: my_set := {0,2,3};
 do
   ** append element 1
   my_set    += 1;  
@@ -208,8 +209,8 @@ Use union operator | combine two sets.
 
 ```
 given
-  @Set: first := {0,1,2,3,4,5,6,7,8,9};
-  @Set[Integer]: second := {};
+  Set: first := {0,1,2,3,4,5,6,7,8,9};
+  Set[Integer]: second := {};
 do
   second := first | {0,1,2,10}; -- set union
   print(second); -- {0,1,2,3,4,5,6,7,8,9,10}
@@ -221,7 +222,7 @@ Intersect operator & find common elements:
 
 ```
 given
-  @Set: test := {};
+  Set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
   print test; -- {3,4}
@@ -240,15 +241,15 @@ It is called "H" due to similar methodof letter H representing a connection, lin
 **syntax**
 ```
 given
-  @Table[key_type, value_type]: name := {(key:value), ...};
+  Table[key_type, value_type]: name := {(key:value), ...};
 ```
 
 **Example**
 ```
 given
-   @Table[@String, Integer]: dictionary := {};
-begin   
-   dictionary := {('one':1), ('two':2)};
+  Table[String, Integer]: dictionary := {};
+do   
+  dictionary := {('one':1), ('two':2)};
 done;
 ```
 
@@ -264,9 +265,9 @@ String can be initialized with a constant literal using single quotes or double 
 
 ```
 global
-  @String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
-  @String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
-  @Text: text_name           := ""; -- variable capacity string can hold many lines of text
+  String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
+  String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
+  Text: text_name           := ""; -- variable capacity string can hold many lines of text
 ```
 
 ### String: mutability
@@ -275,8 +276,8 @@ In EVE strings are mutable. If you use `:=` new memory is allocated. If you use 
 **Example:**
 ```
 method test_string()
-  @String: str := 'First value';  
-  @String: ref := 'First value'; 
+  String: str := 'First value';  
+  String: ref := 'First value'; 
 process  
   expect (str  = ref); -- same value
   expect!(str == ref); -- different locations  
@@ -325,9 +326,9 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  @String: str := "";
+  String: str := "";
 do 
-  expect (str is Null);
+  expect (str = null);
   expect (str = '');
   expect (str = "");
 done;
@@ -344,7 +345,7 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 ** declaration example of a text literal
 given
-  @Text: my_text := "";
+  Text: my_text := "";
 do
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
@@ -370,7 +371,7 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 **Example:**
 ```
 given
-  @Text: us := "I can write Greek: \αβγδ\.";
+  Text: us := "I can write Greek: \αβγδ\.";
 do
   print (us);
 done;
@@ -387,16 +388,16 @@ Exception is interrupting the current logical flow and jump to the recover regio
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-type: @Exception <: @Record( 
+type Exception <: Record( 
          Integer: code 
-       ,@String : message 
-       ,@String : method_name 
-       ,@String : module_name 
-       ,@String : line_number  
+       ,String : message 
+       ,String : method_name 
+       ,String : module_name 
+       ,String : line_number  
       );
 ** global variable for holding current error
 global
-   @Exception: #Error;
+  Exception: #Error;
 ```
 ### Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -428,7 +429,7 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-method main() => ()
+method main():
   Real: a;
 process  
   a := 1 / 0;

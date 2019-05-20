@@ -36,27 +36,20 @@ Basic types are fixed size native types.
 | Date     | Calendar date     
 | Time     | Calendar time
 
-**note:** 
-* Basic type name start with uppercase letter.
-* Boxed type use prefix "@" like @Integer, @Symbol
-
 ## Composite Types
 
 Composite data types are unions of data elements.
  
 | type     | description
 |----------|---------------------------------------------------------------
-| @Null    | is a reference type = Null constant reference
-| @String  | Limited capacity string: ('single quoted')
-| @Text    | Unlimited capacity string: ("double quoted")
-| @List    | Dynamic unsorted enumeration of values or objects of same type
-| @Table   | Enumeration of (key:value) pairs unique sorted by key
-| @Set     | Enumeration of unique elements of the same type sorted by value
-| @Record  | Heterogeneous collection of elements with fix structure 
+| Null     | is a reference type = Null constant reference
+| String   | Limited capacity string: ('single quoted')
+| Text     | Unlimited capacity string: ("double quoted")
+| List     | Dynamic unsorted enumeration of values or objects of same type
+| Table    | Enumeration of (key:value) pairs unique sorted by key
+| Set      | Enumeration of unique elements of the same type sorted by value
+| Record   | Heterogeneous collection of elements with fix structure 
 
-**Notes:** 
-* Composite data types are references
-* Composite type name is use prefix "@"
 
 ## Physical Types
 
@@ -64,17 +57,17 @@ EVE is going to use support physical measurement units:
 
 | type      | description
 |-----------|---------------------------------------------------------------
-| @Duration | Delta time / duration hours/minutes/seconds
-| @Angle    | Degree angle between two lines
-| @Length   | Dimension of objects or distance
-| @Distance | The travel distance between to points in space
+| Duration  | Delta time / duration hours/minutes/seconds
+| Angle     | Degree angle between two lines
+| Length    | Dimension of objects or distance
+| Distance  | The travel distance between to points in space
 ...
 
 See also: [UCUM](http://unitsofmeasure.org/ucum.html)
 
 **note:** 
 * In the future we will cover a complete set of physical types
-* Physical types include a measurement unit 
+* Physical types include measurement unit and transformation methods 
 
 ## Numeric Types
 
@@ -107,7 +100,7 @@ Floating decimal numbers are most simply described by 3 integers:
 * n: an exponent   
 
 The numerical value of a finite number is −1ˢ × c × 2ⁿ
-Using this formula EVE define one single type: Real.
+Using this formula EVE define one single type Real.
 
 Real: is double-precision 64-bit IEEE 754:  
 sign has 1bit, exponent has 11 bits and coefficient has 52 bits;
@@ -130,7 +123,7 @@ Precision Real: numbers is variable depending on the size of the number. The num
 **example**
 
 ```
-method main() => ()
+method main():
 **declare variables
   Integer: i; 
   Natural: n;
@@ -147,11 +140,11 @@ return;
 
 ## User Defined
 
-User data type can be _defined_ using symbol "<:" and keyword: "type".
+User types can be _defined_ using symbol "<:" and keyword: "type".
 
 **Syntax:**
 ```
-type: type_name <: type_descriptor (parameters)
+type type_name <: type_descriptor (parameters)
 ```
 **Notes:**
 
@@ -161,11 +154,11 @@ type: type_name <: type_descriptor (parameters)
 
 **Example:**
 ```
-type: @Point <: @Record (Integer: a, b );
+type Point <: Record (Integer: a, b );
 
-method main() => ()
-  @Point: p1, p2;      -- use implicit constructor
-  @Point: p3 := {1,1}; -- initial value for Point
+method main():
+  Point: p1, p2;      -- use implicit constructor
+  Point: p3 := {1,1}; -- initial value for Point
 process
 **modification using constants
   p1.a := 1;
@@ -176,7 +169,7 @@ process
   
   print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
   print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b));  
-return
+return;
 ```
 output:
 ```
@@ -193,11 +186,11 @@ In EVE the arithmetic operators are polymorphic. Numeric operators can do implic
 
 Implicit conversion is possible and _safe_ in this direction:
 
-Integer -> Natural -> Real -> @String.
+Integer -> Natural -> Real -> String.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-@String -> Real ->  Natural:-> Integer 
+String -> Real ->  Natural:-> Integer 
 
 ```
 given
@@ -238,7 +231,7 @@ done;
 
 ```
 given
-  @String: s; 
+  String: s; 
   Integer: v := 1000;
 do  
   s := format(v); -- explicit coercion s = '1000'
@@ -253,8 +246,8 @@ This can be ready using the casting function parse(), only if the string contain
 given
   Integer: v; 
   Real:    b;
-  @String: s := '1000';
-  @String: r := '200.02';
+  String: s := '1000';
+  String: r := '200.02';
 do
   v := parse(s); -- make v = 1000
   v := parse(r); -- make v = 200 and decimal .02 is lost
@@ -280,10 +273,10 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  @List: ls := (0,1,2,3,4,5,6,7,8,9);
+  List: ls := (0,1,2,3,4,5,6,7,8,9);
 do
-  print  ls.type(); -- @List[Integer]
-  expect ls is @List[Integer];
+  print  ls.type(); -- List[Integer]
+  expect ls is List[Integer];
 done 
 ```
 
@@ -306,11 +299,11 @@ U+0001       | Symbol
 
 Literal    | Type
 -----------|---------------
-[]         | @Array
-{}         | @Set/Table
-()         | @List
-""         | @Text
-''         | @String
+[]         | Array
+{}         | Set/Table
+()         | List
+""         | Text
+''         | String
 0          | Integer
 0.0        | Real
            
@@ -319,14 +312,14 @@ Literal    | Type
 Literal      | Type
 -------------|-----------------
 {a:0,b,c}    | Ordinal
-(`a`,`b`,`c`)| @List[Symbol]
-('a','b','c')| @List[Char]
-("a","b","c")| @List[@Text]
-(1,2,3)      | @List[Integer]
-[1,2,...]    | @Array[Integer]
-{1,2,...}    | @Set[Integer]
-(x:'b',y:'d')| @Record
-{1:'a',2:'b'}| @Table
+(`a`,`b`,`c`)| List[Symbol]
+('a','b','c')| List[Char]
+("a","b","c")| List[Text]
+(1,2,3)      | List[Integer]
+[1,2,...]    | Array[Integer]
+{1,2,...}    | Set[Integer]
+(x:'b',y:'d')| Record
+{1:'a',2:'b'}| Table
 
 
 ### Type Inference
@@ -336,7 +329,7 @@ Sometimes the type is partially specified to simplify type declarations:
 ```
 define
   ** member type is inferred from literal: 0 = Integer
-  @Array[](10) a := 0
+  Array[](10) a := 0
 ```
        
 ### Type verification
@@ -345,14 +338,14 @@ We can verify the type using "is" operator:
 
 ```
 given
-  @Record: r := (name:"test", age:"24"); 
-  @Table:  t := {('key1':"value1"),('ley2':"value2")};
+  Record: r := (name:"test", age:"24"); 
+  Table:  t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
-  expect r.name  is @Text;
-  expect r.age   is @Text;
-  expect t.key   is @String;
-  expect t.value is @Text;
+  expect r.name  ? Text;
+  expect r.age   ? Text;
+  expect t.key   ? String;
+  expect t.value ? Text;
 done;
 ```
 
@@ -364,7 +357,7 @@ For type introspection we can use type() built-in function:
 given
   Real: i := 1.5;
 do
-  expect i is Real;
+  expect i ? Real;
   print "type of i is \s" <+ type(i);
 done;
 ```
@@ -384,7 +377,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-type: <type_name> <: Ordinal (symbol:<value>, ... );
+type <type_name> <: Ordinal (symbol:<value>, ... );
 
 ```
 
@@ -397,13 +390,13 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-type: @Day <: @Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
+type Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
 
-method main() => ()
-  @String: message;
+method main():
+  String: message;
 process  
   given
-    @Day: today := today();
+    Day: today := today();
   quest today:
     match (Friday, Saturday, Sunday) do
        message:='weekend';
@@ -436,7 +429,7 @@ Ordinal is a discrete numeral type so it has support for relation operators: { =
 ```
 ** using type Day declared before
 given
-  @Day v := Friday;
+  Day v := Friday;
 do
   v += 1; 
   expect v = Saturday;
@@ -465,7 +458,7 @@ global
 
 Probably best to define Logic type is Ordinal:
 ```
-type: Logic <: Ordinal { .False , .True };
+type Logic <: Ordinal { .False , .True };
 ```
 
 **Relation Operators**
@@ -512,10 +505,10 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-type: variant_type <: Variant (type_name | type_name | ... );
+type variant_type <: Variant (type_name | type_name | ... );
 
 global  
-  variant_type: v;
+  variant_type v;
 ```
 
 ## Variant Properties
@@ -526,17 +519,17 @@ global
 
 ## Making a null-able type
 
-For this we use a special type: @Null 
+For this we use a special type Null 
 
-* The @Null type is a curious type;
+* The Null type is a curious type;
 * It can have only one value = Null;
 
 **Examples:**
 ```
-type: @Number <: Variant (@Integer | @Real | @Null);
+type Number <: Variant (Integer | Real | Null);
 
 global
-  @Number: x := Null;
+  Number: x := Null;
   
 ```
 
@@ -565,17 +558,17 @@ done;
 A variant is a way to create a generic method.
 
 ```
-method switch(@Integer | @Real: x, y) => ()
-  @Integer | @Real: i
+method switch(Integer | Real: x, y):
+  Integer | Real: i
 process  
   expect type(x) = type(y);
   
-  i :: x; -- intermediate reference
-  x :: y; -- first  switch
-  y :: x; -- second switch
+  i := x; -- intermediate reference
+  x := y; -- first  switch
+  y := x; -- second switch
 return;
 
-method main() => ()
+method main():
   Integer: y;
   Real: a, b;
 process  
@@ -618,9 +611,9 @@ In EVE we represent calendar date.
 
 When can create a date literal using 3 reversible functions:
 
-* YDM => "YYYY/DD/MM"
-* DMY => "DD/MM/YYYY"
-* MDY => "MM/DD/YYYY"
+* YDM = "YYYY/DD/MM"
+* DMY = "DD/MM/YYYY"
+* MDY = "MM/DD/YYYY"
 
 **Note:** A reversible function is overloaded.
 

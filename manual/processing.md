@@ -2,6 +2,16 @@
 
 By using collections and control structures one can load, modify and store data.
 
+*[Working with arrays](#Working-with-arrays)
+*[Matrix Operations](#Matrix-Operations)
+*[Arrays Slicing](#Arrays-Slicing)
+*[Collection Casting](#Collection-Casting)
+*[Set builders](#Set-builders)
+*[List operations](#List-operations)
+*[Collection Iteration](#Collection-Iteration)
+*[Scanning items](#Scanning-items)
+*[Text template](#Text-template)
+
 ## Working with arrays
 
 Array elements have very fast direct access by index.
@@ -9,13 +19,13 @@ Array elements have very fast direct access by index.
 **note**
 * index start from one
 * negative index is counting from the end toward the beginning
-* a range of elements is established using range notation: [n..m]
+* range of elements is established using notation: [n..m]
 
 **example**
 ```
-method test_array() => ()
+method test_array():
   ** array  with capacity of 10 elements
-  @Array[Integer](10): my_array;
+  Array[Integer](10): my_array;
 process  
   given
     Integer: m := my_array.capacity();
@@ -57,7 +67,7 @@ Modify all elements of the matrix is possible using [*] and assign operator “ 
 ** a matrix having 2 rows and 2 columns
 ** initialize all elements with 100
 given
-  @Matrix[Integer](2,2): M;
+  Matrix[Integer](2,2): M;
 do
   M[*] := 100;
   print (M);
@@ -73,7 +83,7 @@ done;
 
 ```
 given
-  @Matrix[Integer](2,2):M;
+  Matrix[Integer](2,2):M;
 do
   M[*] := 100;
   ** modify all elements
@@ -109,7 +119,7 @@ In this example we traverse all the rows then all the column, this is the most e
 
 ```
 method main()
-  @Matrix[@String(2)](3,3): M 
+  Matrix[String(2)](3,3): M 
 process  
   M := [ 
          ['a0','b0','c0'],
@@ -134,7 +144,7 @@ A slice is a small portion from an Array created with range operator "[..]"
 
 **syntax**
 ```
-   slice_name := collection[n..m]
+   Slice: slice_name := collection[n..m]
 ```
 
 Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements. 
@@ -147,9 +157,9 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-method main() => ()
-  @Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
-  @Array[Integer]: b :: a[1..4]; -- slice reference
+method main():
+  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
+  Array[Integer]: b :: a[1..4]; -- slice reference
 process
   print(a[1..-1]);  -- will print [0,1,2,3,4,5,6,7,8,9]
   print(a[-3..-1]); -- will print [7,8,9]
@@ -167,18 +177,21 @@ return;
 ## Set builders
 
 You can define elements of a subset from a set using the following construction:
+
 ```
 given
-  @Set: sub_set := { var : var in set_name & filter_expression}
+  Set: sub_set := { var if var in set_name & filter_expression}
 ```
 
-Symbol ":" is the filter operator. 
-We can use _var_ to create the _filter_expression_.
+You can use _var_ to create the _filter_expression_.
 
-Example of a new set defined from a range:
+
+**example:**
+
+New set defined from a range:
 
 ```
-  new_set := { x : x in [-10..10] }
+  new_set := { x if x in [-10..10] };
 ```
 
 ## Collection Casting
@@ -189,65 +202,72 @@ Collection members can be copy into the new collection using a comprehension not
 **Example:**
 ```
 given
-   @List: source  := [0,1,2,2,2,2];
-   @Set : new_set := {};
+   List: source  := [0,1,2,2,2,2];
+   Set : new_set := {};
 do
    ** eliminate duplicates using set comprehension
-   mew_set := { x : x in my_list };
+   mew_set := { x if x in my_list };
    print my_set; -- {0,1,2} 
 done;
 ```
 
-## Filtering
+## Collection Filtering
 Build notation can use expressions to filter out elements during comprehension operation.
 
 **Example:**
 ```
 given
-   @List: my_list := [0,1,2,3,4,5];
-   @Set:  my_set  := {};
+   List: my_list := [0,1,2,3,4,5];
+   Set:  my_set  := {};
 do
-   my_set := { x : x in my_list and (x % 2 = 0) };
+   my_set := { x if x in my_list and (x % 2 = 0) };
    print my_set; -- {0,2,4} 
 done;
 ```
 
-## Mapping
+## Collection Mapping
 The elements in one set or list can be transformed by a function or expression to create a new collection.
 
 **Example:**
 ```
 given
-   @Set:   source := {0,1,2,3,4,5};
-   @Table: target := {};
+   Set:   source := {0,1,2,3,4,5};
+   Table: target := {};
 do
-   ** create Table pairs (key, value) for Table map
-   ** { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := { (x : x^2): x in source };
+   -- create Table pairs (key, value) for Table map
+   -- { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
+   target := {(x:x^2) if x in source };
 done;
 ```
 
-## List Concatenation
+## List operations
+We can add elements to a list or remove elements from the list using next operations: 
+
+* .insert()
+* .append()
+* .delete()
+
+### List Concatenation
 List concatenation is ready using operator “+”. This operator represent union. 
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-method main() => ()
-  @List[Symbol]: a := ('a','b','c');
-  @List[Symbol]: b := ('1','2','3');
-  @List[Symbol]: c := ();
+method main():
+  List[Symbol]: a := ('a','b','c');
+  List[Symbol]: b := ('1','2','3');
+  List[Symbol]: c := ();
 process
   c := a + b;
   print c; -- ['a','b','c','1','2','3'];
 return;
 ```
 
-## Join() built-in
+### Join() built-in
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
 given
-  @String: str;
+  String: str;
 do
   str := join([1,2,3],",");
   print (str) -- "1,2,3";
@@ -259,19 +279,12 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  @List[Integer]: lst;
+  List[Integer]: lst;
 do
   lst := split("1,2,3",",");
   print lst; -- (1,2,3)
 done;
 ```
-
-### List operations
-We can add elements to a list or remove elements from the list using next operations: 
-
-* insert()
-* append()
-* delete()
 
 ### List as queue
 
@@ -292,18 +305,18 @@ Two operations are possible
 ### Other built-ins
 
 Following other functions should be available
-* @List.append(value) -- can append an element at the end of the list
-* @List.insert(value) -- can insert an element at the beginning of the list
-* @List.delete(value) -- can delete one element at specified index
-* @List.count() -- retrieve the number of elements 
+* List.append(value) -- can append an element at the end of the list
+* List.insert(value) -- can insert an element at the beginning of the list
+* List.delete(value) -- can delete one element at specified index
+* List.count() -- retrieve the number of elements 
 
 ### Special attributes
 A list has properties that can be used in logical expressions:
 
-* @List.empty()  -- True or False
-* @List.full()   -- True or False
+* List.empty()  -- True or False
+* List.full()   -- True or False
 
-## Iteration
+## Collection Iteration
 
 A special _while loop_ that is executed for each element belonging to a collection.
 
@@ -311,19 +324,20 @@ A special _while loop_ that is executed for each element belonging to a collecti
 ```
 given
   type_name: element := collection.first()
-while element is not Null do
+while element is not null do
   ** statements
   ...
   element := collection.next(element);
 repeat;
 ```
+
 The "element" is local to iteration and is used as control variable.
 
 **example**
 
 ```
-method main() => ()
-  @List[Symbol]: my_list := ['a','b','c','d','e']; 
+method main():
+  List[Symbol]: my_list := ['a','b','c','d','e']; 
 process  
   given
     Symbol: element;
@@ -340,7 +354,7 @@ return;
 ```
 > c,d
 
-## Visit items
+## Scanning items
 
 Collections have common methods that enable traversal using _scan_. 
 
@@ -355,23 +369,24 @@ Collections have common methods that enable traversal using _scan_.
 * last       - position to last element
 * this       - reference to current element
 
-## Set Iteration
+### Set Iteration
 Table and Set are similar. We can visit all elements using _scan_:
 
 **Example:**
 ```
-method main() => ()
-  @Table: my_map := {("a":1),("b":2),("c":3)};
+method main():
+  Table: my_map := {("a":1),("b":2),("c":3)};
 process  
   ** print pairs (key:value)
   given
-    @String: key;
+    String: key;
     Integer: value;
   scan my_map +> (key:value) do
     print('("' + key + '",' + value +')');
   repeat;
 return;
 ```
+
 Will print:
 ```
 ("a",1)
@@ -388,9 +403,9 @@ Tables are sorted in memory by _key_ for faster search. It is more difficult to 
 ```
 ** check if a key is present in a hash collection
 given
-  @Table:  my_map := {(1:'a'),(2:'b'),(3:'c')};
+  Table:  my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer: my_key := 3;
-if (my_key in my_map) do
+when (my_key in my_map) do
   print('True'); -- expected
 else
   print('False');
@@ -400,10 +415,10 @@ done;
 **example**
 ```
 ** create new elements in the hash collection
-method main() => ()
+method main():
 process
   given
-    @Table(@String, @String): animals := {};
+    Table(String, String): animals := {};
   do
     animals['Bear'] := 'dog';
     animals['Kiwi'] := 'bird';
@@ -424,8 +439,8 @@ Output:
 
 ### Example
 ```  
-method main() => ()
-  @Table: animals := {}; -- partial declaration
+method main():
+  Table: animals := {}; -- partial declaration
 process
   ** establish element types S:U
   animals['Rover'] := "dog";
@@ -453,7 +468,7 @@ Strings can be concatenated using:
 ```
 ** this is example of string concatenation
 given
-  @String: str := ""; 
+  String: str := ""; 
 do
   ** set string value using different operators
   str := "this " & " string";  -- "this  string"
@@ -466,7 +481,7 @@ Two strings can be concatenated using concatenation operator "/" or "\\". This o
 
 ```
 given
-  @String: s := "";
+  String: s := "";
 do  
   s := 'te/' / '/st'; -- "te/st" Linux
   s := 'te/' \ '/st'; -- "te\st" Windows
@@ -526,9 +541,9 @@ A large template can be stored into a file, loaded from file and format().
 
 **Using Table**
 ```
-method main() => ()
-  @Text:  template := "Hey look at this \{key1} it \{key2}";
-  @Table: map      := {("key1":"test"),("key2":"works!")};
+method main():
+  Text:  template := "Hey look at this \{key1} it \{key2}";
+  Table: map      := {("key1":"test"),("key2":"works!")};
 process  
   ** using format function
   print template.format(map);
@@ -542,9 +557,9 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-method main() => ()
-  @String: template := "Hey look at this #[0] it #[1]";
-  @List: my_list    := ("test","works!");
+method main():
+  String: template := "Hey look at this #[0] it #[1]";
+  List: my_list    := ("test","works!");
 process  
   print (template <+ my_set);
 return;
@@ -559,7 +574,7 @@ Hey look at this test it works!
 Number type is implementing format() method. This method has one string parameter that is optional.
 
 ```
-method format(Number: n, @String: f) => @String;
+method format(Number: n, String: f) => String;
 ```
 
 Where "f" is a pattern: '(ap:m.d)'
@@ -583,17 +598,17 @@ Where "f" is a pattern: '(ap:m.d)'
 
 ### Text functions
 
-* Text:    format (@Text: str, @Table: map);
-* Text:    replace(@Text: str, @String: target, @String: arrow );
-* integer: find   (@Text: str, @String: patern);
-* integer: count  (@Text: str, @String: patern);
-* integer: length (@Text: str);
+* Text:    format (Text: str, Table: map);
+* Text:    replace(Text: str, String: target, String: arrow );
+* integer: find   (Text: str, String: patern);
+* integer: count  (Text: str, String: patern);
+* integer: length (Text: str);
 
 **Reading a Text**
 
-Text is iterable by "word". The word separator is space. So we can read a text string word by word not line by line. We can use "for" iteration to check every word in the text. This makes EVE a text reader.
+Text is iterable by "word". The word separator is one space. So we can read a text string word by word not line by line. We can use "for" iteration to check every word in the text. One word can not start/end with space. 
 
 **Note:**
-The text also support escape sequences like a normal string. However in a text literal we do not have to escape the quote symbols: "'" and '"'. However we have to escape three dots: "\..." inside text to avoid early termination by mistake.
+The text also support escape sequences like a normal string. However in a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "« »" like "«quoted»"
 
 **Read next:** [Databases](databases.md)

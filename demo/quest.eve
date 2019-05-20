@@ -1,8 +1,8 @@
 ****************************
 ** quest statement demo
 ****************************
-method main() => ()
-  @String:  msg ;  -- reference to String
+method main():
+  String:  msg ;  -- reference to String
   Integer: var ;  -- reference to Integer
 process
   read (var,"var:>");

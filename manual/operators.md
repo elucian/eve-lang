@@ -39,7 +39,7 @@ Eve use two symbols to create supplementary operators.
 |<+    | Template injector \| Data source provider
 |+>    | Result collector \| Visitor element
 
-## @String: delimiters
+## String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
@@ -47,17 +47,18 @@ Eve use two symbols to create supplementary operators.
 |'x'   | Limited capacity string: UTF8 (max: 128 characters)
 |"x"   | Variable capacity string: UTF8 (unlimited)
 
-## @String: concatenation
+## String: concatenation
 
 |Symbol| Description
-|------|---------------------------------------------------------------
+|------|---------------------------------------------------------------------
+|  +   | Concatenate two strings after trimming first string
 |  &   | Concatenate two strings as they are. No trim is performed!
 |  /   | Concatenate two strings with "/" separator and de-duplicate "//"   
-|  \\  | Concatenate two strings with "\\" separator and de-duplicate "\\"   
+|  .   | Concatenate two strings with "\\" or "/" depending on the: $platform
 
 ## Numeric operators
 
-|Symbol |  Description
+|Symbol | Description
 |-------|----------------------------------------------------------------
 | /     | Real division
 | *     | Numeric multiplication \| Scalar operator (alt+250) 
@@ -71,8 +72,8 @@ Modifiers are in-place operators. They change value of the left operand with val
 
 |Symbol| Description
 |------|------------------------------------------------------------------
-| ::   | share a reference \| transfer by share
-| :=   | new reference \| copy value \| replace value  
+| ::   | copy value \| assign by copy
+| :=   | new reference \| reset value  \| assign by share
 | +=   | addition \| scalar addition
 | -=   | subtraction  \| scalar subtraction
 | /=   | division  \| scalar division
@@ -86,6 +87,7 @@ EVE use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|-----------------------------------------------------------------------
+|  ?   | Is of type: expect right operand to be a data type/
 |  =   | Equal: same value 
 |  >   | Greater than 
 |  <   | Less than    
@@ -116,8 +118,7 @@ These operators are expected logical values T := True, F := False
 
 | Symbol | Description
 |--------|-----------------------------------------------
-|  is    | Check if element has a specified type
-|  in    | Check if element is member in collection
+|  in    | logic belong to: ∈
 |  not   | logic NOT (negation) 
 |  and   | logic AND (intersection) 
 |  or    | logic OR  (union)
