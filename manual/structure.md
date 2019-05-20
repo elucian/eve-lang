@@ -90,7 +90,7 @@ class name(params): superclass
 return;
 
 ** method declaration
-method name(params) => (result: Type, ...)
+method name(params) => (result: Type, ...):
   ...
 return;
 ```
@@ -142,7 +142,6 @@ Global region is for declarations of:
 
 * constant  ::=  Type : identifier := value;
 * variable  ::=  Type : identifier := value;
-* reference ::= @Type : identifier :: value;
 
 Global members are visible in current module with no prefix. 
 
@@ -163,14 +162,15 @@ global
 
 A method is a named block of code that can be executed multiple times.
 
-* it can define input/output parameters;
+* can have input/output parameters;
 * can have local defined variables;
 * can have one or more results;
-* is terminated with statement return;
+* is ending with statement return;
+* early termination use keyword exit;
 
 **prototype**
 ```
-method name(parameters) => (results)
+method name(parameters) => (results):
   ** declaration region
 process
   ** executable region
@@ -193,8 +193,8 @@ If a module is executable using "run" command, it must contain a "main" method. 
 Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 ```
- parameter ::= type #name := value -- input parameter
- parameter ::= type @name          -- output parameter
+ parameter ::= type : name := value -- input parameter
+ parameter ::= type @ name          -- output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -253,8 +253,7 @@ method main(List[String]: *args):
   Integer: c := args.count();
 process  
   ** verify condition and exit
-  exit if c = 0;
-  
+  exit if c = 0;  
   test c; -- method call
 return;
 ```
@@ -299,7 +298,7 @@ return;
 To avoid system and global variables you can use output parameters:
 
 ```
-method add(Integer: p1,p2, Integer: out ):
+method add(Integer: p1,p2, Integer @ out ):
 process
   out := p1 + p2;
 return;
@@ -308,7 +307,7 @@ method main():
   Integer: result;
 process  
   ** reference argument require a variable
-  add(1,2, @out: result);
+  add(1,2, result);
   print (result); -- expected value 3
   ** negative test
   add (1,2,4); -- error, "out" parameter require variable argument

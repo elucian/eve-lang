@@ -3,11 +3,11 @@
 **********************************
 method main():
    Array  : test := ['a','b','c','d','e'];
-   String : element; 
+   Symbol : element; 
    Natural: i := 1;
 process
   while i <= test.length() do
-    element :: test[i]; -- transfer a reference    
+    element := test[i]; -- transfer a reference to symbol   
     ** shortcut 
     when (element >= 'c') do
        write (element);

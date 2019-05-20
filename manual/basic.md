@@ -342,10 +342,10 @@ given
   Table:  t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
-  expect r.name  ? Text;
-  expect r.age   ? Text;
-  expect t.key   ? String;
-  expect t.value ? Text;
+  expect r.name  is Text;
+  expect r.age   is Text;
+  expect t.key   is String;
+  expect t.value is Text;
 done;
 ```
 
@@ -357,7 +357,7 @@ For type introspection we can use type() built-in function:
 given
   Real: i := 1.5;
 do
-  expect i ? Real;
+  expect i is Real;
   print "type of i is \s" <+ type(i);
 done;
 ```

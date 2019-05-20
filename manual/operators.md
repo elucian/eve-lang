@@ -16,11 +16,11 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol | Description
 |-------|--------------------------------------------------------------
-| \#    | Directive or macro \| Template placeholder
-| $     | System variable prefix \| Global variable
-| @     | Explicit reference  \| Input/Output parameter
-| ;     | Statement separator \| Forward declaration
-| :     | Pair-up operator \| Define type for variables
+| \#    | System variable prefix
+| $     | System constant prefix
+| @     | Input/Output parameter
+| ;     | Statement separator \| End of statement
+| :     | Define type or named block \| Value pair-up operator (a:b)
 | .     | Decimal separator \| Public member \| Member of ,,,
 | ,     | Enumeration for elements \| complex expression 
 | \*    | Variable arguments \| Multiplication
@@ -35,6 +35,7 @@ Eve use two symbols to create supplementary operators.
 |\*\*  | Single line comment \| end of line comment
 |..    | Range representation or slice [n..m] 
 |=+    | Outer join operator used in data "select" statement
+|->    | Pipeline operator (usual data casting)
 |<:    | Declare user define type / sub-type 
 |<+    | Template injector \| Data source provider
 |+>    | Result collector \| Visitor element
@@ -87,7 +88,6 @@ EVE use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|-----------------------------------------------------------------------
-|  ?   | Is of type: expect right operand to be a data type/
 |  =   | Equal: same value 
 |  >   | Greater than 
 |  <   | Less than    
@@ -117,8 +117,9 @@ In following table: `A, B, C` are collections and `x` is a member:
 These operators are expected logical values T := True, F := False
 
 | Symbol | Description
-|--------|-----------------------------------------------
-|  in    | logic belong to: ∈
+|--------|----------------------------------------------------------------
+|  is    | check type: is Type or is Null, is not Null
+|  in    | logic belong to: instead of ∈
 |  not   | logic NOT (negation) 
 |  and   | logic AND (intersection) 
 |  or    | logic OR  (union)

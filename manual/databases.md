@@ -163,7 +163,7 @@ process
   given:
     Integer: i
   while (i <= 10) do
-    catalog[i] := @Person("John Doe", 20);
+    catalog[i] := Person("John Doe", 20);
     i += 1; 
   repeat;
 

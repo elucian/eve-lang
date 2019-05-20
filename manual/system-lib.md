@@ -84,7 +84,7 @@ This provide functionality to the program to return results not only numeric (0,
 that is (pass, fail) but also to display at the console some feedback. 
 
 ## Function _print_
-This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beggining of the next line. So the _print_ function is more like println() from other languages.
+This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beginning of the next line. So the _print_ function is like println() from other languages.
 ```
 method print(String * str):
 ...
