@@ -44,7 +44,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 |----------|-----------------------------------------------------------------
 | is       | check data type x is Null \| quest associated keyword
 | in       | check data type x is Null \| quest associated keyword
-| as       | execute explicit cast to other data type
 | not      | logical NOT operator
 | and      | logical AND operator
 | or       | logical OR  operator

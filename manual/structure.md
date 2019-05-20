@@ -69,12 +69,12 @@ type
   ...
 
 constant
-  Integer: x := 0 ; -- constant
+  Integer: x := 0; -- constant
   
 ** public constants and variables
 variable
-  Integer: y := 0 ; -- variable
-  Integer: z := 0 ; -- reference
+  Integer: y := 0; -- variable
+  Integer: z := 0; -- reference
   ...
 
 ** local constants and variables
@@ -120,32 +120,31 @@ Is used to include members from several other modules into current module:
 
 **syntax**
 ```
-$user_path := $root_path.relative_path
+$user_path := $root_path/relative_path
 
 import 
-  $user_path:(script_name.eve,...);
-  $user_path:(prefix_*.eve,...);
-  $user_path:(*); 
+  $user_path:(script_name,...); -- specific modules
+  $user_path:(prefix_*,...);    -- group of modules
+  $user_path:(*);               -- all modules
   
 ** member alias
 alias
   name := script_name;
-  name := script_name?member_name;
+  name := script_name.member_name;
   ...
 ```
 
 **note:** 
 * $user_path is any path defined by the user
+* spaces in file-names will be converted to "_" in aliases
 * member alias can be any member: type, class, function, method
-* using :(*) will import all members in current context
-* using :(member_name,...) will import specified members in current context
 
 ## Global region
 
 Global region is for declarations of:
 
-* constant  ::=  Type : identifier := value;
-* variable  ::=  Type : identifier := value;
+* constant  ::=  type_name: identifier := value;
+* variable  ::=  type_name: identifier := value;
 
 Global members are visible in current module with no prefix. 
 
@@ -196,9 +195,18 @@ If a module is executable using "run" command, it must contain a "main" method. 
 **Parameters**
 Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
+**mandatory**
 ```
- parameter ::= type : name := value -- input parameter
- parameter ::= type @ name          -- output parameter
+ -- mandatory parameters do not have initial value
+ parameter ::= type_name : parameter_name -- input parameter
+ parameter ::= type_name @ parameter_name -- output parameter
+```
+
+**optional**
+```
+ -- optional parameters have explicit initial value
+ parameter ::= type_name : parameter_name := value -- input parameter
+ parameter ::= type_name @ parameter_name := value -- output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -277,14 +285,14 @@ Next method add numbers and has 2 side effects:
 ```
 ** global variables
 variable
- Integer: test ; 
- Integer: p1   ; 
- Integer: p2   ; 
+ Integer: test; 
+ Integer: p1;   
+ Integer: p2;   
 
 method add_numbers():
 process
   **side effects  
-  test := p1 + p2 ;
+  test := p1 + p2;
   print (test);
 return;
 

@@ -159,14 +159,14 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 ```
 method main():
   Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
-  Array[Integer]: b :: a[1..4]; -- slice reference
+  Slice[Integer]: b := a[1..4];
 process
-  print(a[1..-1]);  -- will print [0,1,2,3,4,5,6,7,8,9]
-  print(a[-3..-1]); -- will print [7,8,9]
-  print(a[1..1]);   -- will print [0]
-  print(a[1..4]);   -- will print [1,2,3,4]
+  print a[1..-1];  -- will print [0,1,2,3,4,5,6,7,8,9]
+  print a[-3..-1]; -- will print [7,8,9]
+  print a[1..1];   -- will print [0]
+  print a[1..4];   -- will print [1,2,3,4]
  
-  ** modify slice b (reference to a)
+  ** modify slice b
   b[*] += 2;
   
   ** first 4 elements of (a) are modified

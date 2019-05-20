@@ -21,10 +21,10 @@ Non repetitive anonymous block with local scope.
 **syntax**
 ```
 given
-  ** local declarations
+  -- local declarations
   ...
 do
-  ** local statements
+  -- local statements
   ... 
 done;
 ```
@@ -36,10 +36,10 @@ Establish a declaration region and qualifier suppression block.
 **syntax**
 ```
 given
-  ** local declarations
+  -- local declarations
   type var;
 with qualifier := long_qualifier do
-  ** local statements
+  -- local statements
   method_name();  -- instead of: qualifier.method_name()
   var := function_name(); -- instead of qualifier.function_name()
   ...
@@ -57,10 +57,10 @@ This keyword in conjunction with {do, else} declare a multi-path block selector;
 1.single path selector
 ```
 given
-  ** local context
+  -- local context
   ... 
 when (expression) do
-  ** single path
+  -- single path
   ...
 done;
 ```
@@ -68,11 +68,11 @@ done;
 2.dual path selector
 ```  
 when (expression) do
-   ** true path
-   ...
+  -- true path
+  ...
 else
-   ** false path
-   ...
+  -- false path
+  ...
 done;
 ```
   
@@ -81,7 +81,7 @@ done;
 when (expression) do
   ...
   when (expression) do
-   ** nested path
+   -- nested path
    ...
   done;
 done;
@@ -113,13 +113,17 @@ given
   value_typ: val := expression
 quest val
   match constant1 do
-    ** first path
+    -- first path
+    ...
   match constant2 do
-    ** second path
+    -- second path
+    ...
   match constant3 do
-    ** third path
+    -- third path
+    ...
 none
-  ** default path
+  -- default path
+  ...
 done;
 ```
 
@@ -160,14 +164,14 @@ Execute a block of code as long as one condition is true.
 **Syntax:**
 ```
 given
-  ** local context
+  -- local context
 while (condition) do
-  ** forced iteration
+  -- forced iteration
   skip if (condition);
-  ** early interruption
+  -- early interruption
   stop if (condition);
 else
-  ** alternative path  
+  -- alternative path  
 repeat;
 ```
 **example**
@@ -181,7 +185,7 @@ process
   while (i < test.length) do
     element := my_list[i];
     i += 1;
-    ** shortcut 
+    -- shortcut 
     if (element >= "c") do
        write(element);
        write(',') if (element ≠ "e");
@@ -198,11 +202,13 @@ Scan block use a control variable to visit all elements in a range or collection
 **Pattern:**
 ``` 
 given 
-  Integer:var := 0;  -- initial value
+  Integer:var := 0;  -- control variable
 scan [min..max] +> var do
-  ** block statements;
+  -- block statements;
+  ...
+  -- next iteration
   skip if (condition);
-  ** early interruption
+  -- early interruption
   stop if (condition);
   ...
 next;
@@ -215,12 +221,12 @@ next;
 Example of range iteration:
 ```
 given
-  Integer: i := 0;
+  Integer: i := 0; -- control variable
 scan [0..10] +> i do
   when (i % 2 <> 0) do
-    ** write only odd numbers
-    write(i);
-    write(',') if (i < 10);
+    -- write only odd numbers
+    write i;
+    write ',' if (i < 10);
   done;
 next;
 ```

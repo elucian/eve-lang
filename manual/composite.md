@@ -279,23 +279,24 @@ method test_string()
   String: str := 'First value';  
   String: ref := 'First value'; 
 process  
-  expect (str  = ref); -- same value
-  expect!(str == ref); -- different locations  
+  expect  (str  = ref); -- same value
+  expect !(str == ref); -- different locations  
   
-  ref :: str;  -- reset reference
+  ref := str;  -- reset ref
   expect (str =  ref); -- same value
   expect (str == ref); -- same location  
   
   ** if we modify "str" then "ref" will appear modified
-  str += ":test"; 
-  expect ref = "First value:test";
-  expect str = ref; -- the reference is holding
+  str += ":"; -- mutable string
+  expect ref = "First value:";
+  expect str == ref; -- the reference is holding
   
   ** if we recreate str, reference is reset
-  str := 'Secibd value'; -- new string location
-  expect !(str == ref);   -- different locations
+  str := 'First value:'; -- new string location
+  expect str = ref;      -- same value
+  expect !(str == ref);  -- different locations
   ** reference was broken, ref is pointing to old value
-  print ref;  -- 'First value:test'
+  print ref;  -- 'First value:'
 return;
 ```
 

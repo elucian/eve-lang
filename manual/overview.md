@@ -25,7 +25,7 @@ EVE is a free form language inspired from Java and Ruby.
 * System environment variables use prefix "$". These are global constants in Bee; 
 * System constants use prefix "$" and they are global and public;
 * System variables use prefix "#" and they are global and public;
-* Scoping operator is "." not "::". You can use alias or module name as scope qualifier;
+* Scoping operator is "." unlike "::" that is used in C++ and Rust. 
 
 ## Comments
 

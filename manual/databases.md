@@ -379,7 +379,7 @@ cursor_name.open(arguments);
 given  
   cursor_name: current_record;
 while not cursor_name.finish() do
-  current_record := cursor_name.fetch() ;
+  current_record := cursor_name.fetch();
   with current_record do
      ** use record members    
     ...

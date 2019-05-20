@@ -72,9 +72,9 @@ Eve use two symbols to create supplementary operators.
 Modifiers are in-place operators. They change value of the left operand with value of the right operand. Each modifier is created using one operator symbol follow by equal symbol "=" with no space between.
 
 |Symbol| Description
-|------|------------------------------------------------------------------
-| ::   | copy value \| assign by copy
-| :=   | new reference \| reset value  \| assign by share
+|------|--------------------------------------------------------------------
+| ::   | assign by copy  \| explicit copy \| cloning
+| :=   | assign by share \| reset reference \| borrowing
 | +=   | addition \| scalar addition
 | -=   | subtraction  \| scalar subtraction
 | /=   | division  \| scalar division
@@ -119,7 +119,7 @@ These operators are expected logical values T := True, F := False
 | Symbol | Description
 |--------|----------------------------------------------------------------
 |  is    | check type: is Type or is Null, is not Null
-|  in    | logic belong to: instead of ∈
+|  in    | logic belong to: instead of "∈"
 |  not   | logic NOT (negation) 
 |  and   | logic AND (intersection) 
 |  or    | logic OR  (union)
