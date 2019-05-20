@@ -19,13 +19,12 @@ EVE is a free form language inspired from Java and Ruby.
 
 * EVE is using infix expressions like Java and other popular languages;
 * Multiple expressions can be separated with comma and enclosed in parenthesis;
-* Each statement start with a lowercase keyword and is ending at end of line; 
+* Each statement start with a lowercase keyword and is ending semicolon; 
 * Local identifiers use lowercase letters and numbers;
 * Public members start with one capital letter, can contain lowercase letters and digits;
 * System environment variables use prefix "$". These are global constants in Bee; 
-* System constants use prefix "$" and can start with uppercase if they are also public;
-* System variables use prefix "#" and can start with uppercase if they are also public;
-* Reference types use prefix  "@" and can start with uppercase if they are also public;
+* System constants use prefix "$" and they are global and public;
+* System variables use prefix "#" and they are global and public;
 * Scoping operator is "." not "::". You can use alias or module name as scope qualifier;
 
 ## Comments

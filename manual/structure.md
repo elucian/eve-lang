@@ -14,7 +14,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Expressions](#expressions)
 * [Parameters](#parameters)
 * [Dispatch](#dispatch)
-* [Test cases](#test-cases)
+* [Test cases](#test-cases)∨
 * [Execution](#execution)
 
 ## Modules
@@ -32,7 +32,7 @@ Any module that contains method main() is a main module and can lead a run-time 
 **properties**
 
 * main module is independent, can not be imported in other modules or suites;
-* main module can receive values for system variables using a configuration file;
+* main module can receive values for constants using a configuration file;
 * main module do not have public methods and do not have output variables;
 
 ## Library
@@ -68,9 +68,11 @@ type
   name[parameters]: type_descriptor;
   ...
 
-** public constants and variables
-global
+constant
   Integer: x := 0 ; -- constant
+  
+** public constants and variables
+variable
   Integer: y := 0 ; -- variable
   Integer: z := 0 ; -- reference
   ...
@@ -96,12 +98,21 @@ return;
 ```
 
 ## Declaration order
-Order of regions by default is: {module, import, type, global, function, class, method}. Method and class declarations can be alternated. You can define multiple regions of the same type. 
+Order of regions by default is: {module, import, type, constant, variable, function, class, method}. Method and class declarations can be alternated. You can define multiple regions of the same type. 
 
-## System variables
-System variable start with prefix "$". Before import user can define module attributes. These are system variables using zero space indentation. System variables are usually loaded from a configuration file (*.cfg) and do not need to be declared explicit. They are just known by EVE runtime and can be used in all modules. 
+## System constants
+System constants start with prefix "$", usually loaded from a configuration file (*.cfg) and do not need to be declared explicit in _constant_ region. They are known by EVE runtime and can be used in all modules. 
 
-**Note:** System variables are immutable!
+**Note:** 
+* System constants are immutable!
+* System constants can be defined in a library.
+
+Several system constants are provided by EVE environment:
+
+* $eve_home  :eve runtime
+* $pro_home  :project home
+* $eve_lib   :eve lib folder
+* $pro_lib   :project lib folder
 
 ## Import region
 
@@ -109,15 +120,17 @@ Is used to include members from several other modules into current module:
 
 **syntax**
 ```
-import 
-  $user_path/relative_path/*.eve:(*); 
-  $user_path/relative_path/script_name.eve:(*);
-  $user_path/relative_path/script_name.eve:(member_name,...);
+$user_path := $root_path.relative_path
 
+import 
+  $user_path:(script_name.eve,...);
+  $user_path:(prefix_*.eve,...);
+  $user_path:(*); 
+  
 ** member alias
 alias
   name := script_name;
-  name := script_name.member_name;
+  name := script_name?member_name;
   ...
 ```
 
@@ -126,15 +139,6 @@ alias
 * member alias can be any member: type, class, function, method
 * using :(*) will import all members in current context
 * using :(member_name,...) will import specified members in current context
-
-**user_path**
-
-Several system variables are provided by EVE environment:
-
-* $eve_home  :eve runtime
-* $pro_home  :project home
-* $eve_lib   :eve lib folder
-* $pro_lib   :project lib folder
 
 ## Global region
 
@@ -151,7 +155,7 @@ Public members must start with a dot prefix:
 
 **example**
 ```
-global
+variable
   Real:.PI := 3.14; -- public constant
   Real:.pi := 3.14; -- public variable
 ```
@@ -272,7 +276,7 @@ Next method add numbers and has 2 side effects:
 
 ```
 ** global variables
-global
+variable
  Integer: test ; 
  Integer: p1   ; 
  Integer: p2   ; 
@@ -463,7 +467,7 @@ process
 recover  
   ** exception region
   ...
-  resume if (condition)
+  resume if (condition);
 closure
   ** finalization region
   ...    
@@ -507,7 +511,7 @@ return;
 import 
   $pro_mod/module_name
 
-global
+variable
   List: channel 
 
 method main():

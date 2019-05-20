@@ -1,6 +1,6 @@
 ## Data Types
 
-EVE is a gradual typed language, with predefined types. 
+EVE is a gradual typed language. Next I will describe basic types:
 
 **bookmarks**
 
@@ -329,7 +329,7 @@ Sometimes the type is partially specified to simplify type declarations:
 ```
 define
   ** member type is inferred from literal: 0 = Integer
-  Array[](10) a := 0
+  Array[](10): a := 0;
 ```
        
 ### Type verification
@@ -450,7 +450,7 @@ True     | Logic.True    | 00000000 00000001
 
 **syntax**
 ```
-global
+variable
   Logic: variable_name; -- default False
 ```
 
@@ -505,10 +505,10 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-type variant_type <: Variant (type_name | type_name | ... );
+type Variant_Name <: Variant (type_name | type_name | ... );
 
-global  
-  variant_type v;
+variable
+  Variant_Name: v;
 ```
 
 ## Variant Properties
@@ -528,7 +528,7 @@ For this we use a special type Null
 ```
 type Number <: Variant (Integer | Real | Null);
 
-global
+variable
   Number: x := Null;
   
 ```

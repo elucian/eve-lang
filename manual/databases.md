@@ -85,7 +85,7 @@ A record is a group of elements that are called fields or members. The elements 
 ```
 type Type_Name <: Record (field_name:type, ...);
 
-global
+variable
   Type_Name: record_name;
 ```
 
@@ -95,8 +95,8 @@ An important application of recursion in computer science is in defining dynamic
 ```
 ** example of single recursive node
 type Node <: Record ( 
-  Integer: data,   ** integer data
-  Node: previous   ** reference to previous node
+  Integer: data,   -- integer data
+  Node: previous   -- reference to previous node
 );
 ```
 This kind of structure can be used to create a data chain.
@@ -104,7 +104,7 @@ This kind of structure can be used to create a data chain.
 ```
 ** example of double recursive node
 type Node <: Record (
-  Integer: data,   -- integer data
+  Integer: data,  -- integer data
   Node: previous, -- reference to previous node
   Node: next      -- reference to next node
 );
@@ -192,7 +192,7 @@ Ispas Inca is single.
 It can be used to define the record using a constant literal. After first assignment the record structure is immutable. Type inference can be used only for attributes, so it is a partial inference.
 
 ```
-global
+variable
   Record: person := (name:"John", age:21);
 ```
 
@@ -465,20 +465,20 @@ Update statement is part of DML language. EVE statement for update is a little b
 1. Single table update:
 ```
 update table_name (field_name:eve_variable,...) <+ #global
-  where filter_condition;
+ where filter_condition;
 ```
 
 2. Use Record variable:
 ```
 update table_name (table_field:record_field...) <+ eve_record
-  where filter_condition;
+ where filter_condition;
 ```
 **note:** In the where_condition we can use fields from record variable.
 
 3. Use all fields from EVE record variable:
 ```
 update table_name <+ eve_record
-  where filter_condition;
+ where filter_condition;
 ```
 **note:** In the where_condition we can use fields from record variable.
 

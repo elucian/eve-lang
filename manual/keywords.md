@@ -8,7 +8,8 @@ For keywords, EVE use English reserved words, without any abbreviation.
 |----------|-----------------------------------------------------------------------
 | import   | start import region
 | define   | start a declaration region for user defined sub-types
-| global   | declare global variables or constants (constants start with uppercase)
+| constant | declare module constants (start with "." if is public)
+| variable | declare module variables (start with "." if is public)
 | process  | start executable region for a method and constructor for a class
 | create   | start constructor region for a classes
 | remove   | define object disposal region, executed when object is out of scope
@@ -19,10 +20,10 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
-| method   | start a declaration region for subroutine with no result
-| class    | create a composite data type for object oriented programming
-| function | start a declaration region for subroutine with result
+| method   | start a named block of code
+| function | start a declaration region for named expression
 | type     | define sub-type or composite super-type
+| class    | define a composite data type for object oriented programming
 
 ## Blocks of code/sections
 
