@@ -20,7 +20,6 @@ An array is a collection of elements stored in order of natural index. Array ele
 **array declaration** 
 ```
 ** declaration of an array with capacity
-variable
   Array[element_type](capacity): array_name;
 ```
 
@@ -37,7 +36,6 @@ In the next example we define an array with capacity of 3 elements.
 
 ```
 ** array declaration and initialization
-variable
    Array[Integer](3): my_arra := [1,2,3];
 ```
 
@@ -56,8 +54,7 @@ return;
 **array inference**
 When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
 ```
-variable
-  Array(10): my_array := 0;   -- integer number
+  Array(10): my_array := 0;   --  Integer number
   Array(10): my_array := 0.0; -- real number
   Array(10): my_array := "";  -- text with variable size
   Array(10): my_array := '';  -- string with capacity 1024 bytes
@@ -65,7 +62,6 @@ variable
 
 The most convenient way to define an Array is by using inference literals:
 ```
-variable
   ** array with capacity 4 of type strings 
   Array: my_array := ['a','bc','def','chk'];
 ```
@@ -83,8 +79,7 @@ A matrix is a multidimensional array that is a collection of elements organized 
 
 **syntax:** 
 ```
-variable
-   Matrix[type](n,m): matrix_name := constant;
+   Matrix[type](n,m): matrix_name := expression;
 ```
 
 **example:**
@@ -114,8 +109,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-  List[type_name]: list_name;
-  List: list_name := (<constant>, <constant>, ...);
+  List[Class_Name]: list_name; -- new empty list
+  List: list_name := (value, ...); -- new populate list
 ```
 
 **notes:**
@@ -142,8 +137,8 @@ given
 Literals can be used for initialization:
 ```
 given
-  List[Symbol]  : c_list := ('a', 'b', 'c');
-  List[Integer] : n_list := (1, 2, 3);  
+  List[Symbol] : c_list := ('a', 'b', 'c');
+  List[Integer]: n_list := (1, 2, 3);  
 ```
 
 Literals can be used in expressions:
@@ -163,7 +158,6 @@ In mathematics a set is an abstract data structure that can store certain values
 **declaration**
 
 ```
-variable
   Set[type] :name;
 ```
 
@@ -247,7 +241,7 @@ given
 **Example**
 ```
 given
-  Table[String, Integer]: dictionary := {};
+  Table[String,  Integer]: dictionary := {};
 do   
   dictionary := {('one':1), ('two':2)};
 done;
@@ -264,7 +258,6 @@ In EVE There are two types of strings. Single quoted and double quoted strings. 
 String can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
-variable
   String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
   String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
   Text: text_name           := ""; -- variable capacity string can hold many lines of text
@@ -389,8 +382,8 @@ Exception is interrupting the current logical flow and jump to the recover regio
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-type Exception <: Record( 
-         Integer: code 
+class Exception <: Record( 
+        Integer: code 
        ,String : message 
        ,String : method_name 
        ,String : module_name 
@@ -398,7 +391,7 @@ type Exception <: Record(
       );
 ** global variable for holding current error
 variable
-  Exception: #Error;
+  Exception: #error;
 ```
 ### Run-time errors
 Exceptions can be system exceptions or user defined exceptions.
@@ -435,26 +428,24 @@ method main():
 process  
   a := 1 / 0;
 recover
-  print (#Error.message);
-closure
-  ** close process
+  print (#error.message);
 return;
 ```
 
 ```
-Error: Numeric division by zero.
+error: numeric division by zero.
 ```
 
 ### Using expect
 
-The expect statement is very simple. It check a condition and raise an error if condition is false. Does not produce any error message but: "Unexpected error in line: N".
+The expect statement check a condition and raise an error if condition is false. Error message is default: "Unexpected error in line: N".
 
 ```
   ** precondition
   expect (condition);
   
   ** equivalent
-  raise ("Unexpected error") if (condition);
+  raise ("Unexpected error in line \n" <+ #error.line_number ) if (condition);
 ```
 
 **note:**

@@ -7,7 +7,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | import   | start import region
-| define   | start a declaration region for user defined sub-types
 | constant | declare module constants (start with "." if is public)
 | variable | declare module variables (start with "." if is public)
 | process  | start executable region for a method and constructor for a class
@@ -68,6 +67,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | Keyword  | Description
 |----------|-------------------------------------------------------------------
 | exit     | silent stop a method and return control to the caller
+| quit     | close resources, release memory and stop program execution
 | stop     | early terminate execution of a method / function
 | skip     | jump over all other statements to the end of any repetitive block
 | raise    | create recoverable exception with error code and message

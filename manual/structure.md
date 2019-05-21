@@ -23,11 +23,13 @@ Modules are source files having extension: *.eve. Module names are using lowerca
 
 **members**
 
+* public member identifier start with "." prefix;
 * one module can use public members from other modules;
 * one module can have public member used in other modules;
 
+
 ## Main module
-Any module that contains method main() is a main module and can lead a run-time session. A module can have associated one or more configuration files. The configuration file contain parameter/value pairs used to generate the: _system variables_.
+Any module that contains method main() is a main module and can lead a run-time session. A module can have associated one or more configuration files. The configuration file contain parameter/value pairs used to generate the: _global constants_.
 
 **properties**
 
@@ -42,7 +44,7 @@ A _library_ is a shared folder containing reusable modules.
 * library contain generic functionality and can be shared between multiple projects;
 * using import several modules can be loaded from a folder at once;
 * circular import is possible: we protect against infinite recursion;
-* after import you can call public members of a library using dot notation;
+* after import you can call public members of a library using _dot notation_;
 
 ## Regions
 A module file is divided into regions using keywords: {import, define, global, class, method} 
@@ -52,42 +54,35 @@ A module file is divided into regions using keywords: {import, define, global, c
 *****************************************
 ** Header comments: module purpose
 *****************************************
-module
-  .name        := 'module name'; 
-  .description := 'short description';
-  .echo        := 'off';
-  .debug       := 'off';
-  .trace       := 'off';   
+#module.name        := 'module name'; 
+#module.description := 'short description';
+
 ...
 ** import region
 import
-  library_name
+  alias := $path/library_name
 
-** type declaration
-type 
-  name[parameters]: type_descriptor;
+** primitive class declaration
+class name[parameters] <: class_descriptor;
   ...
 
+** module scope constants
 constant
-  Integer: x := 0; -- constant
+  Integer: zero := 0; -- constant
   
-** public constants and variables
+** module scope variables
 variable
-  Integer: y := 0; -- variable
-  Integer: z := 0; -- reference
+  Integer: x := 0; -- variable
+  Integer: y := 0; -- reference
   ...
-
-** local constants and variables
-local
-  v : type_name; 
   
 ** function declaration
 function 
   name(params): Type := (expression);
   ...
 
-** class declaration
-class name(params): superclass
+** advanced class declaration
+class name(params) <: superclass:
   ...
 return;
 
@@ -100,19 +95,49 @@ return;
 ## Declaration order
 Order of regions by default is: {module, import, type, constant, variable, function, class, method}. Method and class declarations can be alternated. You can define multiple regions of the same type. 
 
-## System constants
-System constants start with prefix "$", usually loaded from a configuration file (*.cfg) and do not need to be declared explicit in _constant_ region. They are known by EVE runtime and can be used in all modules. 
+## Global region
+
+Global region is first region in the file, with 0 space indentation: 
+
+**declare**
+
+* global constants  ::=  $identifier := value;
+* global variables  ::=  #identifier := value;
+
+Global members are visible in application with no prefix. 
+
+### Global constants
+Global constants start with prefix "$". Usually are loaded from a configuration file (*.cfg) and do not need to be declared explicit in a _constant_ region. They are known by EVE runtime and can be used in all modules. 
 
 **Note:** 
-* System constants are immutable!
-* System constants can be defined in a library.
+* Global constants can be defined in a configuration file
+* Global constants can be defined in a library.
 
-Several system constants are provided by EVE environment:
+Several global constants are provided by EVE environment:
 
 * $eve_home  :eve runtime
 * $pro_home  :project home
 * $eve_lib   :eve lib folder
 * $pro_lib   :project lib folder
+
+### Global variables
+
+Global variables are defined in standard library.
+
+**examples**
+```
+#error  -- contains last error message
+#stack  -- contains debug information about current call stack
+#trace  -- contains reporting information about executed statements
+#level  -- contains how deep is the current call stack
+#count  -- contains last query count: updated/inserted/deleted records
+#query  -- contains last native query statement
+```
+
+**notes:** 
+* User can create new global variables specific to one application;
+* Prefix "#" is used to avoid scope qualifier and improve code readability;
+
 
 ## Import region
 
@@ -120,17 +145,16 @@ Is used to include members from several other modules into current module:
 
 **syntax**
 ```
+-- define global constant
 $user_path := $root_path/relative_path
 
 import 
-  $user_path:(script_name,...); -- specific modules
-  $user_path:(prefix_*,...);    -- group of modules
-  $user_path:(*);               -- all modules
+  $user_path:(member_name,...);  -- specific members
+  $user_path:(*);                -- all public members
   
 ** member alias
 alias
-  name := script_name;
-  name := script_name.member_name;
+  name := module_name.member_name;
   ...
 ```
 
@@ -139,27 +163,33 @@ alias
 * spaces in file-names will be converted to "_" in aliases
 * member alias can be any member: type, class, function, method
 
-## Global region
+## Shared constants
 
-Global region is for declarations of:
+Shared constants are declared in _constant_ region:
 
-* constant  ::=  type_name: identifier := value;
-* variable  ::=  type_name: identifier := value;
+**example**
+```
+constant
+  Real: PI := 3.14; -- local constant
+```
 
-Global members are visible in current module with no prefix. 
+**note:** 
+* Constants are immutable variables;
+* Usually constants are using uppercase letters;
 
-**public**
 
-Public members must start with a dot prefix:
+## Shared variables
+
+Shared variables are declared in _variable_ region:
 
 **example**
 ```
 variable
-  Real:.PI := 3.14; -- public constant
-  Real:.pi := 3.14; -- public variable
+  Real: pi := 3.14; -- local variable
 ```
 
-**note:** constant is using capital letters
+**note:** 
+* Shared variables are static
 
 ## Methods
 
@@ -198,15 +228,15 @@ Parameters are defined in round brackets () separated by comma. Each parameter m
 **mandatory**
 ```
  -- mandatory parameters do not have initial value
- parameter ::= type_name : parameter_name -- input parameter
- parameter ::= type_name @ parameter_name -- output parameter
+ parameter ::= Class_Name : parameter_name -- input parameter
+ parameter ::= Class_Name @ parameter_name -- output parameter
 ```
 
 **optional**
 ```
  -- optional parameters have explicit initial value
- parameter ::= type_name : parameter_name := value -- input parameter
- parameter ::= type_name @ parameter_name := value -- output parameter
+ parameter ::= Class_Name : parameter_name := value -- input parameter
+ parameter ::= Class_Name @ parameter_name := value -- output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -283,11 +313,11 @@ A method can have side-effects:
 Next method add numbers and has 2 side effects: 
 
 ```
-** global variables
+** local variables
 variable
- Integer: test; 
- Integer: p1;   
- Integer: p2;   
+  Integer: test; 
+  Integer: p1;   
+  Integer: p2;   
 
 method add_numbers():
 process
@@ -307,10 +337,10 @@ return;
 
 **using output parameters**
 
-To avoid system and global variables you can use output parameters:
+To avoid module variables you can use output parameters:
 
 ```
-method add(Integer: p1,p2, Integer @ out ):
+method add(Integer: p1,p2,  Integer @ out ):
 process
   out := p1 + p2;
 return;
@@ -370,7 +400,7 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function sum(Integer: a, b) => Integer: (a + b);
+function sum(Integer: a, b) =>  Integer: (a + b);
   
 method main():
   Integer: r;
@@ -439,10 +469,20 @@ Dispatch is a form of subroutine selection by signature. It makes possible multi
 **Wikipedia:** [name mangling](https://en.wikipedia.org/wiki/Name_mangling)
 
 ## Classes
-Classes are composite smart data types. We use a class to create objects.
+Classes are composite data types. We use a classes to create multiple objects with same structure. Each object is a reference to a location in memory were the object is stored. An object is also called instance of a class.
+
+**There are two kind of classes.**
+
+**primitive classes:**
 
 ```
-class: name(parameters) <: base_class
+class Class_Name <: class_descriptor;
+```
+
+**advanced classes:**
+
+```
+class name(parameters) <: base_class:
   ** definition_region
 create
   ** constructor region
@@ -490,7 +530,9 @@ New keywords:
 
 ## Execution
 
-EVE modules are executed using a virtual machine. You can run the virtual machine as a service or as console application. You can run only a main module. Each module run in a different sessions with different startup parameters. Each session is independent. 
+EVE modules are executed using a virtual machine. You can run the virtual machine as a service or as console application. In console mode you can run only a one module. In service mode you can run multiple sessions with different startup parameters. Each session is independent and can run one single module. 
+
+Service mode is using a general configuration file: eve.cfg. This file contains information about all application locations and configuration files for each session. After the service starts this file is parsed and each applications start automatically. The service will create a log file for each application.
 
 **memory**
 Server is in charge of allocating memory for one session before the application starts. There is no shared memory between sessions. That is a session is dedicated for a single application. After application is terminated the memory is released.
@@ -502,37 +544,6 @@ To start an application there are 2 methods:
 
 eve:> run path/module_name -c file.cfg -m 2048GB
 
-**synchrony:**
-```
-import 
-  $pro_mod/module_name
-   
-** you can run a module with arguments
-method main():
-process
-  run module_name.main(arguments) +> (results);
-return;
-```
-
-**parallel:**
-```
-import 
-  $pro_mod/module_name
-
-variable
-  List: channel 
-
-method main():
-process
-  ** execute a modules in asynchronouslu
-  act module_name(arguments,channel);
-  act module_name(arguments,channel); 
-  ** wait for all modules to finish
-  rest;
-  ** print the results
-  print (channel);
-return;
-```
 
 **using exit**
 

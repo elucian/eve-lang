@@ -25,7 +25,7 @@ A class is inherited from a base class or from root class called: Object.
 
 **pattern:**
 ```
-class class_name(parameters): base_class
+class Class_Name(parameters) <: base_class:
   ** object attributes
   ...
 static
@@ -48,10 +48,10 @@ A class can have parameters that receive values during object initialization. Yo
 ```
 given
   ** declare object from arbitrary class
-  class_name: object_name;
+  Class_Name: object_name;
 do
   ** create object 
-  object_name := class_name(param:value,...);
+  object_name := Class_Name(param:value,...);
   ...
 done;
 ```
@@ -88,7 +88,7 @@ Class attributes are static and can be accessed using two qualifiers:
 
 ```
   object_name.class_attribute;
-  class_name.class_attribute;
+  Class_Name.class_attribute;
 ```
 
 **Class Tree**
@@ -117,7 +117,7 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 **Example:**
 ```
 method main():
- Integer: o,n; -- boxed integers
+  Integer: o,n; -- boxed  Integers
 process  
   o := 1;
   n := 1; 
@@ -133,7 +133,7 @@ A class can receive type as parameters. This allows to create generic algorithms
 
 **Generic Class:**
 ```
-class [Generic_Type,...] Generic_Name (parameter:Generic_Type,...) <: Base_Class
+class[Generic_Type,...] Generic_Name(Generic_Type:parameter,...) <: Base_Class
   ** declarations
 create
   ** constructor
@@ -145,7 +145,7 @@ Generic class is used to define a subtype then you can declare one or more insta
 
 ```
 ** create new object from generic
-type new_type <: Generic_class[generic_type];
+class Class_Name <: Generic_class[generic_type];
 
 ```
 

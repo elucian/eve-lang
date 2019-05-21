@@ -20,11 +20,9 @@ EVE is a free form language inspired from Java and Ruby.
 * EVE is using infix expressions like Java and other popular languages;
 * Multiple expressions can be separated with comma and enclosed in parenthesis;
 * Each statement start with a lowercase keyword and is ending semicolon; 
-* Local identifiers use lowercase letters and numbers;
-* Public members start with one capital letter, can contain lowercase letters and digits;
-* System environment variables use prefix "$". These are global constants in Bee; 
-* System constants use prefix "$" and they are global and public;
-* System variables use prefix "#" and they are global and public;
+* Global constants use prefix "$" and they are also public;
+* Global variables use prefix "#" and they are also public;
+* Class identifier start with one capital letter;
 * Scoping operator is "." unlike "::" that is used in C++ and Rust. 
 
 ## Comments
@@ -110,23 +108,23 @@ A variable is represented by an identifier, and is associated to a type. Variabl
 **patterns:**
 ```
 ** user can define a type
-type type_name[parameters] <: type_descriptor;
+class Class_Name[parameters] <: type_descriptor;
 
 global
   ** use type to define a variable
-  type_name: var_name;
+  Class_Name: var_name;
   ** with specific value and type
-  type_name: var_name := value;
+  Class_Name: var_name := value;
   ** multiple variables in one assignment
-  type_name: var_name1, name2 ...:= value;
+  Class_Name: var_name1, name2 ...:= value;
   ** multiple variables with diverse values
-  type_name: var_name1:=value1, var_name2 := value2;
+  Class_Name: var_name1:=value1, var_name2 := value2;
 ```
 
 **examples**
 ```
 global  
-  ** integer numbers
+  **  Integer numbers
   Integer: a;
   Integer: b := 1;
 
@@ -138,8 +136,8 @@ global
 **default value**
 When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Real: numbers is 0.0 and for strings is "". 
 
-## System variables
-We define system variables using "$" name prefix. _Environment Variables_ from OS are created automatically along with other "implicit" variables required by EVE semantics. 
+## Global variables
+We define global variables using "$" name prefix. _Environment Variables_ from OS are created automatically along with other "implicit" variables required by EVE semantics. 
 
 ## Assign Value 
 The assign operator ":=" is used to execute an expression and assign the result to a variable.  
@@ -169,10 +167,10 @@ The name of identifiers in EVE can have a length of 64 characters. A name starts
 ```
 
 **Prefix**
-System constants, system variables and reference data types are using a prefix.
+Global constants, global variables and reference data types are using a prefix.
 
-* "$"  is for system constants/ environment variables;
-* "#"  is for system variables/ control variables;
+* "$"  is for global constants/ environment variables;
+* "#"  is for global variables/ control variables;
 * "@"  is prefix for a data type
 
 **notes:**
@@ -233,7 +231,7 @@ One statement can be declarative or imperative.
 The most simple block statement start with "do" and end with "done"
 ```
 given
-  ** integer numbers
+  **  Integer numbers
   Integer: a := 0;
   Real:    b := 1.5; 
 do

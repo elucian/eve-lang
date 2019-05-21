@@ -26,10 +26,10 @@ Basic types are fixed size native types.
 
 | type     | description
 |----------|-------------------------------------------------------
-| Char     | integer on 8  bit (unsigned) (ASCII)
-| Symbol   | integer on 32 bit (unsigned) (UTF32)
-| Integer  | integer on 64 bit (signed)
-| Natural  | integer on 64 bit (unsigned)
+| Char     | Integer on 8  bit (unsigned) (ASCII)
+| Symbol   | Integer on 32 bit (unsigned) (UTF32)
+| Integer  | Integer on 64 bit (signed)
+| Natural  | Integer on 64 bit (unsigned)
 | Real     | double precision number on 8 bit (signed) 
 | Ordinal  | Enumeration of ideas, cases or terms
 | Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
@@ -87,13 +87,13 @@ In EVE we can have two categories of numbers:
  
 For conversion into characters:
 
-* The number of characters required for integer numbers is 20. (19+sign)
+* The number of characters required for  Integer numbers is 20. (19+sign)
 * For Real numbers, conversion into characters is controled by #precision directive
  
 ### Real numbers
 
 The type _Real_ is represented using floating precision numbers.   
-Floating decimal numbers are most simply described by 3 integers:
+Floating decimal numbers are most simply described by 3  Integers:
 
 * s: a sign (0 or 1)  
 * c: a coefficient  
@@ -115,8 +115,8 @@ Precision Real: numbers is variable depending on the size of the number. The num
 
    Example     | Description
 ---------------|-------------------------------------------------------------------------
-0              | integer zero
-1234567890     | integer number using symbols: {0,1,2,3,4,5,6,7,8,9}
+0              | Integer zero
+1234567890     | Integer number using symbols: {0,1,2,3,4,5,6,7,8,9}
 0.5            | real number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
 0.0            | real number
 
@@ -144,7 +144,7 @@ User types can be _defined_ using symbol "<:" and keyword: "type".
 
 **Syntax:**
 ```
-type type_name <: type_descriptor (parameters)
+class Class_Name <: type_descriptor (parameters)
 ```
 **Notes:**
 
@@ -154,7 +154,7 @@ type type_name <: type_descriptor (parameters)
 
 **Example:**
 ```
-type Point <: Record (Integer: a, b );
+class Point <: Record (Integer: a, b );
 
 method main():
   Point: p1, p2;      -- use implicit constructor
@@ -190,7 +190,7 @@ Integer -> Natural -> Real -> String.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-String -> Real ->  Natural:-> Integer 
+String -> Real ->  Natural:->  Integer 
 
 ```
 given
@@ -199,8 +199,8 @@ given
 do
   b := a;       -- this implicit cast is possible b = 2.0
   b := a + 3.5; -- add 3.5 then assign result to b = 5.5
-  a := b;       -- error: can not assign Real: to Integer
-  a := 1.5;     -- error: can not assign Real: to Integer
+  a := b;       -- error: can not assign Real: to  Integer
+  a := 1.5;     -- error: can not assign Real: to  Integer
 done;
 ```
 
@@ -328,7 +328,7 @@ Sometimes the type is partially specified to simplify type declarations:
 
 ```
 define
-  ** member type is inferred from literal: 0 = Integer
+  ** member type is inferred from literal: 0 =  Integer
   Array[](10): a := 0;
 ```
        
@@ -365,7 +365,7 @@ done;
 ## Polymorphic operators
 In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or real. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
 
-Some languages define different operators for integers and floating decimal numbers. For example in OCaml the operator "/" can divide integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
+Some languages define different operators for  Integers and floating decimal numbers. For example in OCaml the operator "/" can divide  Integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
 
 Operators are mapped to functions. To design polymorphic operators we overload the function signature using type dispatch. The dispatch is happening by left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
 
@@ -377,7 +377,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-type <type_name> <: Ordinal (symbol:<value>, ... );
+class Class_Name <: Ordinal (symbol:<value>, ... );
 
 ```
 
@@ -390,7 +390,7 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-type Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
+class Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
 
 method main():
   String: message;
@@ -458,7 +458,7 @@ variable
 
 Probably best to define Logic type is Ordinal:
 ```
-type Logic <: Ordinal { .False , .True };
+class Logic <: Ordinal { .False , .True };
 ```
 
 **Relation Operators**
@@ -505,7 +505,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-type Variant_Name <: Variant (type_name | type_name | ... );
+class Variant_Name <: Variant (Type | Type | ... );
 
 variable
   Variant_Name: v;
@@ -526,7 +526,7 @@ For this we use a special type Null
 
 **Examples:**
 ```
-type Number <: Variant (Integer | Real | Null);
+class Number <: Variant (Integer | Real | Null);
 
 variable
   Number: x := Null;
@@ -543,7 +543,7 @@ given
   Real | Integer: v, x ,t;
 do
   ** positive example
-  v := 1;     -- v is Integer
+  v := 1;     -- v is  Integer
   x := 1.5;   -- x is Real:    
   t := 1 / 2; -- make t Real
   
@@ -551,7 +551,7 @@ do
   t := 12; -- t is Real
   
   ** negative examples
-  v := x;  -- ERROR: v is Integer 
+  v := x;  -- ERROR: v is  Integer 
 done;
 ```
 
@@ -572,7 +572,7 @@ method main():
   Integer: y;
   Real: a, b;
 process  
-  ** invert two Integer: numbers
+  ** invert two  Integer: numbers
   x := 10;
   y := 20;  
   switch(x, y);
@@ -587,7 +587,7 @@ return;
 
 ## Single symbol
 
-Symbols are Unicode UTF32. That is using 32 bit integer:
+Symbols are Unicode UTF32. That is using 32 bit  Integer:
 
 * Single-quoted strings like: 'α'
 * U+HHHH   from: U+0000   to U+FFFF

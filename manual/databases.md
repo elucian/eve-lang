@@ -29,7 +29,7 @@ A data model is using a database. For this the model is connecting using adapter
 import
    $eve_lib/db/oracle:(Database);
 
-alias: Oracle := db.oracle.Database;   
+alias Oracle := db.oracle.Database;   
 ```
 
 ### Connection
@@ -83,10 +83,10 @@ analyze
 A record is a group of elements that are called fields or members. The elements can be native types, collections or other records. A variable can be defined based on a record type.
 
 ```
-type Type_Name <: Record (field_name:type, ...);
+class Class_Name <: Record (field_name:type, ...);
 
 variable
-  Type_Name: record_name;
+  Class_Name: record_name;
 ```
 
 ### Recursive Records
@@ -94,8 +94,8 @@ An important application of recursion in computer science is in defining dynamic
 
 ```
 ** example of single recursive node
-type Node <: Record ( 
-  Integer: data,   -- integer data
+class Node <: Record ( 
+  Integer: data,   --  Integer data
   Node: previous   -- reference to previous node
 );
 ```
@@ -103,8 +103,8 @@ This kind of structure can be used to create a data chain.
 
 ```
 ** example of double recursive node
-type Node <: Record (
-  Integer: data,  -- integer data
+class Node <: Record (
+  Integer: data,  --  Integer data
   Node: previous, -- reference to previous node
   Node: next      -- reference to next node
 );
@@ -148,7 +148,7 @@ A record instance is a variable of type record. The memory is allocated using th
 **Example:**
 ```
 ** we declare a record type  
-type Person <: Record (String(32): name, Integer: age );
+class Person <: Record (String(32): name,  Integer: age );
 
 method main():
   Person: person1, person2;    -- two variables of type Person
@@ -252,13 +252,12 @@ We can modify a table using current_record. First you modify record fields. Then
 After update you can commit or rollback changes. EVE do not perform automatic commit. If you forget to commit the changes are lost when you close the database connection.
 
 ```
-define
-  type Type_Nme <: Record(record_fields);   
+class Class_Nme <: Record(record_fields);   
   
 given
   ** use introspection to declare current_record
-  Type_Name: current_record;
-  Type_Name: source_record := (record_literal);
+  Class_Name: current_record;
+  Class_Name: source_record := (record_literal);
 scan db.table_name +> current_record do
   ** update current_record from source_record
   with (current_record, source_record) do
@@ -552,7 +551,7 @@ delete from table_name
 
 ## SQL Execution
 
-SQL Is declarative language. Behind the scene we generate complex code that is dynamically created and executed. For debug purpose we enable introspection using system variables: #query, #cursor. 
+SQL Is declarative language. Behind the scene we generate complex code that is dynamically created and executed. For debug purpose we enable introspection using global variables: #query, #cursor. 
 
 * Before execution the statement is converted into SQL string. 
 * We can visualize this string by using: #query.sql to debug the application. 

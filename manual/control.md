@@ -37,7 +37,7 @@ Establish a declaration region and qualifier suppression block.
 ```
 given
   -- local declarations
-  type var;
+  Class_Name: var;
 with qualifier := long_qualifier do
   -- local statements
   method_name();  -- instead of: qualifier.method_name()
@@ -46,7 +46,7 @@ with qualifier := long_qualifier do
 done;
 ```
 
-long_qualifier ::= file_name.class_name | file_name.record_name
+long_qualifier ::= file_name.Class_Name | file_name.record_name
 
 ## when
 

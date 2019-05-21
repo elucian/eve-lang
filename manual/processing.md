@@ -323,7 +323,7 @@ A special _while loop_ that is executed for each element belonging to a collecti
 **pattern**
 ```
 given
-  type_name: element := collection.first()
+  Class_Name: element := collection.first()
 while element is not null do
   ** statements
   ...
@@ -600,9 +600,9 @@ Where "f" is a pattern: '(ap:m.d)'
 
 * Text:    format (Text: str, Table: map);
 * Text:    replace(Text: str, String: target, String: arrow );
-* integer: find   (Text: str, String: patern);
-* integer: count  (Text: str, String: patern);
-* integer: length (Text: str);
+*  Integer: find   (Text: str, String: patern);
+*  Integer: count  (Text: str, String: patern);
+*  Integer: length (Text: str);
 
 **Reading a Text**
 
