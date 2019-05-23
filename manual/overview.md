@@ -6,7 +6,6 @@ EVE is a free form language inspired from Java and Ruby.
 
 * [punctuation](#punctuation)
 * [comments](#comments)
-* [directives](#directives)
 * [keywords](#keywords)
 * [operators](#operators)
 * [data type](#data-type)
@@ -55,35 +54,62 @@ print;
 * Nested comments are supported for out-line comments;
 * End of line comments are ending after new line;
 
-## Attributes
-One module can have multiple attributes usually declared at beginning of the module: 
-
-**examples**
-```
-#module.name := 'test'
-#module.description :='test'
-```
-
-**note:** You can define new attributes.
-
 ## Keywords
 
 Keywords are English reserved words used in statements. Computer was invented in England during WW2 so, we prefer English words even though a computer language could be created using keywords from other spoken languages.
 
 Summary: [Keywords](keywords.md) 
 
+## Identifiers
+The name of identifiers in EVE can have a length of 30 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). A variable can contain underscore but can not start or with underscore. 
+
+**These are valid identifiers**  
+```
+ x, y, z
+ a1,a2,a3  
+ thisIsOK
+ this_is_ok  
+```
+
+**These are invalid identifiers**  
+```
+ 1st
+ \_not_valid  
+ not_valid\_  
+ \_not_valid\_  
+```
+
+**Prefix**
+Global reference identifiers start with a reserved symbol:
+
+* $global_constant;
+* #global_variable;
+
+**notes:**
+* Prefix is reducing collision between local and global name scope;
+* In other languages this kind of prefix is called _sigil_;
+* A global variable can be a record of values accessible with dot notation.
+
+**examples:**
+```
+#module.name := 'test';
+#module.description :='It is just a test';
+```
+
 ## Operators
 
 EVE us ASCII symbols for operators. One operator can be a single character or a combination of two characters. 
 
-Single character:
+Single characters:
 ```
-{ = : ~ ! @ % ^ & * - + / < >}
+{ = : ~ ! ? @ % ^ & * - + / < >}
 ```
+
 Two characters:
 ```
 { := :: != <> => >= <= +> <+ <: .. }
 ```
+
 Delimiters:
 ```
 , : . ; "" '' 
@@ -103,14 +129,15 @@ There are 3 kind of data types in EVE:
 * [classes](classes.md)
 
 ## Variables
-A variable is represented by an identifier, and is associated to a type. Variables can be changed during the execution of the program using modifier operators { :=, +=, *=, /= ...}. Variables are abstract concepts can can represent memory locations or values that can be moved around in different memory locations or processor registry.
+A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing memory locations or primitive values that can be moved around in different memory locations. Variables can be altered during the execution of the program using modifier operators: { :=, +=, *=, /= ...}. 
 
 **patterns:**
 ```
-** user can define a type
-class Class_Name[parameters] <: type_descriptor;
+** define alias for a data type
+alias Class_Name := super_class {parameters};
 
-global
+** shared variables
+variable
   ** use type to define a variable
   Class_Name: var_name;
   ** with specific value and type
@@ -123,59 +150,38 @@ global
 
 **examples**
 ```
-global  
-  **  Integer numbers
+variable 
+  ** two integer numbers
   Integer: a;
   Integer: b := 1;
-
-  ** real numbers
-  Real: d := 2.5;
+  ** multiple real numbers
+  Real: d := 2.5; 
   Real: x,y,z := 0.0;
 ```
 
-**default value**
-When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Real: numbers is 0.0 and for strings is "". 
-
-## Global variables
-We define global variables using "$" name prefix. _Environment Variables_ from OS are created automatically along with other "implicit" variables required by EVE semantics. 
+**zero value**
+When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Integers = 0 for Real = 0.0 and for String = ''. 
 
 ## Assign Value 
-The assign operator ":=" is used to execute an expression and assign the result to a variable.  
-The previous value of the variable is discarded if there is no other reference to it.  
+Assign value can be done using operator: ":=". But this operator has a strange behavior that you must understand to avoid unintended side-effects. It transfer a value "by sharing". It transfers a memory location not the underline value:
 
 **Syntax:**
 ```
-  variable_name := expression 
+  identifier := variable_name;  -- share a reference to variable
+  identifier := function_name;   -- share a reference to function
+  identifier := literal;         -- mutate value / initialize
+  identifier := expression;      -- mutate value / initialize
+  identifier := function_name(); -- mutate value / reset value
 ```
 
-## Identifiers
-The name of identifiers in EVE can have a length of 64 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). A variable can contain underscore but can not start or with underscore. 
+**clone:**
 
-**These are valid identifiers**  
-```
- x, y, z
- a1,a2,a3  
- thisIsOK
- this_is_ok  
-```
-**These are invalid identifiers**  
-```
- 1st
- \_not_valid  
- not_valid\_  
- \_not_valid\_  
-```
+To make a clone/copy underline value from a reference you must use symbol "::" (dereference).
 
-**Prefix**
-Global constants, global variables and reference data types are using a prefix.
-
-* "$"  is for global constants/ environment variables;
-* "#"  is for global variables/ control variables;
-* "@"  is prefix for a data type
-
-**notes:**
-* Prefix is reducing collision between local and global names;
-* In other languages this kind of prefix is called _sigil_;
+**Syntax:**
+```
+  variable_name :: reference; -- make a clone
+```
 
 ## Expressions
 
@@ -185,7 +191,7 @@ Expressions are created using identifiers, operators, functions and constant lit
 * have a type that is calculated using type inference;
 * can be assigned to variables using ":=" or "<+" operators;
 * can be printed to console using "print" or "write" methods;
-* can use () to establish order of operations;
+* can use round paranthesis () to establish order of operations;
 
 **Examples**
 ```
@@ -194,8 +200,8 @@ print  10;
 print "this is a test";
 
 ** complex expressions can use ()  
-print (10 + 10 + 15);     -- numeric expression
-print (10 > 5) | (2 < 3); -- logical expression
+print (10 + 10 + 15);       -- numeric expression
+print ((10 > 5) | (2 < 3)); -- logical expression
 
 ** list of expressions are enclosed in ()
 print (1, 2, 3);    -- expect: 1 2 3

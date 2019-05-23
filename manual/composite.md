@@ -2,7 +2,6 @@
 
 Composite types represents groups of multiple elements. 
  
-* [ordinal](#ordinal) 
 * [array](#array)
 * [slice](#slice)
 * [matrix](#matrix)
@@ -382,14 +381,15 @@ Exception is interrupting the current logical flow and jump to the recover regio
 The exception is a variable of type record that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-class Exception <: Record( 
+alias Exception: Record { 
         Integer: code 
        ,String : message 
        ,String : method_name 
        ,String : module_name 
        ,String : line_number  
-      );
-** global variable for holding current error
+      };
+
+** global variable for last error
 variable
   Exception: #error;
 ```
@@ -423,7 +423,7 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-method main():
+method main:
   Real: a;
 process  
   a := 1 / 0;

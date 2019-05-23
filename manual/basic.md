@@ -9,7 +9,7 @@ EVE is a gradual typed language. Next I will describe basic types:
 * [Composite](#composite-types)
 * [Collections](#collections)
 * [Physical](#physical-types)
-* [User defined](#user-defined)
+* [Alias](#Alias)
 * [Data coercion](#data-coercion)
 * [Type inference](#type-inference)
 * [Default types](default-types) 
@@ -49,21 +49,6 @@ Composite data types are unions of data elements.
 | Table    | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
 | Record   | Heterogeneous collection of elements with fix structure 
-
-
-## Physical Types
-
-EVE is going to use support physical measurement units:
-
-| type      | description
-|-----------|---------------------------------------------------------------
-| Duration  | Delta time / duration hours/minutes/seconds
-| Angle     | Degree angle between two lines
-| Length    | Dimension of objects or distance
-| Distance  | The travel distance between to points in space
-...
-
-See also: [UCUM](http://unitsofmeasure.org/ucum.html)
 
 **note:** 
 * In the future we will cover a complete set of physical types
@@ -123,7 +108,7 @@ Precision Real: numbers is variable depending on the size of the number. The num
 **example**
 
 ```
-method main():
+method main:
 **declare variables
   Integer: i; 
   Natural: n;
@@ -138,13 +123,13 @@ return;
 
 **See also:** [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation#Other_bases)
 
-## User Defined
+## Alias
 
-User types can be _defined_ using symbol "<:" and keyword: "type".
+User types can be _defined_ using symbol ":=" and keyword: "alias".
 
 **Syntax:**
 ```
-class Class_Name <: type_descriptor (parameters)
+alias Alias_Name := Generic_Class {parameters}
 ```
 **Notes:**
 
@@ -154,9 +139,9 @@ class Class_Name <: type_descriptor (parameters)
 
 **Example:**
 ```
-class Point <: Record (Integer: a, b );
+alias Point := Record {Integer: a, b};
 
-method main():
+method main:
   Point: p1, p2;      -- use implicit constructor
   Point: p3 := {1,1}; -- initial value for Point
 process
@@ -273,7 +258,7 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List: ls := (0,1,2,3,4,5,6,7,8,9);
+  List: ls := [0,1,2,3,4,5,6,7,8,9];
 do
   print  ls.type(); -- List[Integer]
   expect ls is List[Integer];
@@ -311,25 +296,21 @@ Literal    | Type
 
 Literal      | Type
 -------------|-----------------
-{a:0,b,c}    | Ordinal
-(`a`,`b`,`c`)| List[Symbol]
-('a','b','c')| List[Char]
-("a","b","c")| List[Text]
-(1,2,3)      | List[Integer]
-[1,2,...]    | Array[Integer]
-{1,2,...}    | Set[Integer]
-(x:'b',y:'d')| Record
-{1:'a',2:'b'}| Table
+{a:0, b, c}  | Ordinal
+{x:'b',y:'d'}| Object
+[`a`,`b`,`c`]| List{Symbol}
+['a','b','c']| List{Char}
+["a","b","c"]| List{Text}
 
 
 ### Type Inference
 
-Sometimes the type is partially specified to simplify type declarations:
+Sometimes the type is partially specified to simplify type declaration:
 
 ```
 define
-  ** member type is inferred from literal: 0 =  Integer
-  Array[](10): a := 0;
+  ** member type is inferred later from first member
+  List: a := [];
 ```
        
 ### Type verification
@@ -377,7 +358,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-class Class_Name <: Ordinal (symbol:<value>, ... );
+alias Name := Ordinal {symbol:value, ... };
 
 ```
 
@@ -390,9 +371,9 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-class Day <: Ordinal (.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday);
+alias Day:= Ordinal {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday};
 
-method main():
+method main:
   String: message;
 process  
   given
@@ -458,7 +439,7 @@ variable
 
 Probably best to define Logic type is Ordinal:
 ```
-class Logic <: Ordinal { .False , .True };
+alias Logic := Ordinal { .False , .True };
 ```
 
 **Relation Operators**
@@ -505,10 +486,10 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-class Variant_Name <: Variant (Type | Type | ... );
+alias Name := Variant {Type | Type | ... };
 
 variable
-  Variant_Name: v;
+  Name: v;
 ```
 
 ## Variant Properties
@@ -526,7 +507,7 @@ For this we use a special type Null
 
 **Examples:**
 ```
-class Number <: Variant (Integer | Real | Null);
+class Number : Variant {Integer | Real | Null};
 
 variable
   Number: x := Null;
@@ -568,7 +549,7 @@ process
   y := x; -- second switch
 return;
 
-method main():
+method main:
   Integer: y;
   Real: a, b;
 process  

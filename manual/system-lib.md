@@ -41,7 +41,7 @@ read (String: prompt) => String;
 
 **Example:**
 ```
-method main():
+method main:
   String: s;
 process  
   s := read(v, "read:");

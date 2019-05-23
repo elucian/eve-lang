@@ -84,7 +84,7 @@ To access object attributes we can use dot notation:
 ```
 
 **Class attribute**
-Class attributes are static and can be accessed using two qualifiers:
+Class attributes are static and can be accessed using two scope qualifiers:
 
 ```
   object_name.class_attribute;
@@ -109,14 +109,14 @@ return;
 ```
 
 **Initialization**
-Objects can be declared and initialize in a single statement using operator ":=" with constructor or can be declared first using "<:" and initialize later using operator ":=" with the constructor call. 
+Objects can be declared and initialize in a single statement using operator ":=" with constructor or can be declared first using "∈" and initialize later using operator ":=" with the a constructor call. 
 
 ## Comparing objects
 We can use comparison operators: "==" and "=" with objects. First comparison "==" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If is the same class and all attributes are equal the objects are equivalent.
 
 **Example:**
 ```
-method main():
+method main:
   Integer: o,n; -- boxed  Integers
 process  
   o := 1;
@@ -133,7 +133,7 @@ A class can receive type as parameters. This allows to create generic algorithms
 
 **Generic Class:**
 ```
-class[Generic_Type,...] Generic_Name(Generic_Type:parameter,...) <: Base_Class
+class {Generic_Type,...} Generic_Name(Generic_Type: parameter,...) <: Base_Class:
   ** declarations
 create
   ** constructor
@@ -141,11 +141,19 @@ return;
 ```
 
 **Using Generic:**
-Generic class is used to define a subtype then you can declare one or more instance of the new type
+Generic class is used to define a subtype then you can declare one or more objects using alias type:
 
 ```
-** create new object from generic
-class Class_Name <: Generic_class[generic_type];
+** declare new alias type from generic
+alias Type_Name := Generic_class {Type_Name};
+
+** create new object: using new type with arguments
+variable
+  object_name := Type_Name(argument:Type_Name,...);
+
+** alternative: create new object directly from generic type
+variable  
+  onject_name := Generic_class{Type_Name}(argument:Type_Name,...);
 
 ```
 

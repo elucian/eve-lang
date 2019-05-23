@@ -21,7 +21,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 |----------|-----------------------------------------------------------------------
 | method   | start a named block of code
 | function | start a declaration region for named expression
-| type     | define sub-type or composite super-type
+| alias    | define alias for data-type or member name from imported modules
 | class    | define a composite data type for object oriented programming
 
 ## Blocks of code/sections
@@ -30,7 +30,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 |----------|---------------------------------------------------------------------
 | given    | establish local scope for a block statement 
 | do       | single-path non-repetitive block
-| with     | qualifier suppression block for records
+| with     | scope qualifier suppression block for records
 | when     | multi-path conditional block
 | quest    | multi-path variable selector
 | while    | conditional repetition block

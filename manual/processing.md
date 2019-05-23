@@ -118,8 +118,8 @@ When you traverse elements use rows first, than you change the column. A process
 In this example we traverse all the rows then all the column, this is the most efficient way to traverse a matrix.
 
 ```
-method main()
-  Matrix[String(2)](3,3): M 
+method main:
+  Matrix{String(2)}(3,3): M;
 process  
   M := [ 
          ['a0','b0','c0'],
@@ -157,9 +157,9 @@ Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements.
 
 **Example:**
 ```
-method main():
-  Array[Integer]: a := [0,1,2,3,4,5,6,7,8,9];
-  Slice[Integer]: b := a[1..4];
+method main:
+  Array{Integer}: a := [0,1,2,3,4,5,6,7,8,9];
+  Slice{Integer}: b := a[1..4];
 process
   print a[1..-1];  -- will print [0,1,2,3,4,5,6,7,8,9]
   print a[-3..-1]; -- will print [7,8,9]
@@ -252,7 +252,7 @@ List concatenation is ready using operator “+”. This operator represent unio
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-method main():
+method main:
   List[Symbol]: a := ('a','b','c');
   List[Symbol]: b := ('1','2','3');
   List[Symbol]: c := ();
@@ -336,7 +336,7 @@ The "element" is local to iteration and is used as control variable.
 **example**
 
 ```
-method main():
+method main:
   List[Symbol]: my_list := ['a','b','c','d','e']; 
 process  
   given
@@ -374,14 +374,14 @@ Table and Set are similar. We can visit all elements using _scan_:
 
 **Example:**
 ```
-method main():
+method main:
   Table: my_map := {("a":1),("b":2),("c":3)};
 process  
   ** print pairs (key:value)
   given
     String: key;
     Integer: value;
-  scan my_map +> (key:value) do
+  scan my_map :> (key:value) do
     print('("' + key + '",' + value +')');
   repeat;
 return;
@@ -415,7 +415,7 @@ done;
 **example**
 ```
 ** create new elements in the hash collection
-method main():
+method main:
 process
   given
     Table(String, String): animals := {};
@@ -439,7 +439,7 @@ Output:
 
 ### Example
 ```  
-method main():
+method main:
   Table: animals := {}; -- partial declaration
 process
   ** establish element types S:U
@@ -536,12 +536,13 @@ A large template can be stored into a file, loaded from file and format().
 
 1. Create a map collection of elements;
 2. Create the template text;
-3. Use _scan_ and injector: "<+" expression to replace template row by row;
-4. Alternative use _format()_ build-in to replace placeholders in all text;
+3. Use _scan_ to visit all elements;
+4. Use injector operator: "<+" to replace template row by row;
+5. Alternative use _format()_ build-in to replace placeholders in all text;
 
 **Using Table**
 ```
-method main():
+method main:
   Text:  template := "Hey look at this \{key1} it \{key2}";
   Table: map      := {("key1":"test"),("key2":"works!")};
 process  
@@ -557,7 +558,7 @@ Hey look at this test it works!
 
 **Using Array**
 ```
-method main():
+method main:
   String: template := "Hey look at this #[0] it #[1]";
   List: my_list    := ("test","works!");
 process  

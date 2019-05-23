@@ -36,7 +36,8 @@ Eve use two symbols to create supplementary operators.
 |..    | Range representation or slice [n..m] 
 |=+    | Outer join operator used in data "select" statement
 |->    | Pipeline operator (usual data casting)
-|<:    | Declare user define type / sub-type 
+|<:    | Declare sub-type for a class
+|:>    | Declare visitor in scan statement
 |<+    | Template injector \| Data source provider
 |+>    | Result collector \| Visitor element
 

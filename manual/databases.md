@@ -83,10 +83,10 @@ analyze
 A record is a group of elements that are called fields or members. The elements can be native types, collections or other records. A variable can be defined based on a record type.
 
 ```
-class Class_Name <: Record (field_name:type, ...);
+alias Record_Name: Record {field_name:type, ...};
 
 variable
-  Class_Name: record_name;
+  Record_Name: variable_name;
 ```
 
 ### Recursive Records
@@ -94,10 +94,10 @@ An important application of recursion in computer science is in defining dynamic
 
 ```
 ** example of single recursive node
-class Node <: Record ( 
-  Integer: data,   --  Integer data
-  Node: previous   -- reference to previous node
-);
+alias Node := Record {
+                      Integer: data,   --  Integer data
+                      Node: previous   -- reference to previous node
+                     };
 ```
 This kind of structure can be used to create a data chain.
 
@@ -131,15 +131,15 @@ Record literals can be used so save records in files. A array  of records can be
 
 **Example**
 ```
-(
+{
   Name: "John",
-  Address: (
+  Address: {
     streetAddress: "21 2nd Street",
     city: "New York",
     state: "NY",
     postalCode: "10021-3100"
-  )
-)
+  }
+}
 ```
 
 ### Record instance
@@ -148,9 +148,9 @@ A record instance is a variable of type record. The memory is allocated using th
 **Example:**
 ```
 ** we declare a record type  
-class Person <: Record (String(32): name,  Integer: age );
+alias Person := Record {String(32): name,  Integer: age };
 
-method main():
+method main:
   Person: person1, person2;    -- two variables of type Person
   Array[Person](10): catalog;  -- a collection of Persons
 process
@@ -237,7 +237,7 @@ You can scan one table like a collection. No need to learn anything new. The tab
 given
   ** use introspection to declare current_record
   Record: current_record(record_fields)   
-scan table_name +> current_record do
+scan table_name :> current_record do
   with current_record do
     ** use current_record fields
     ... 
@@ -252,13 +252,13 @@ We can modify a table using current_record. First you modify record fields. Then
 After update you can commit or rollback changes. EVE do not perform automatic commit. If you forget to commit the changes are lost when you close the database connection.
 
 ```
-class Class_Nme <: Record(record_fields);   
+alias Class_Nme := Record {record_fields};   
   
 given
   ** use introspection to declare current_record
   Class_Name: current_record;
   Class_Name: source_record := (record_literal);
-scan db.table_name +> current_record do
+scan db.table_name :> current_record do
   ** update current_record from source_record
   with (current_record, source_record) do
      current_field := source_field;
@@ -311,7 +311,7 @@ We can scan view using _scan_ statement. This is the most common way to access a
 ``` 
 given
   Record: current_record;
-scan current_record <+ database.view_name do  
+scan database.view_name :> current_record do  
   print (current_record);
 next;
 ```
@@ -392,7 +392,7 @@ cursor_name.close(); -- cursor_name is no longer available
 #cursor.buffer := 10
 given 
   cursor_name: current_record;
-scan cursor_name(arguments) +> current_record  do
+scan cursor_name(arguments) :> current_record  do
   with record_name do
     -- use record fields
     ... 
@@ -445,7 +445,7 @@ append to table_name <+ record_name;
 ```
 append to table_name
   select (field_target:field_source, ...)
-  from alias = table_source,...
+  from src := table_source,...
   join join_expression
   where filter_expression;
 ```

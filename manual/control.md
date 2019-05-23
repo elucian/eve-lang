@@ -31,7 +31,7 @@ done;
 
 ## With
 
-Establish a declaration region and qualifier suppression block. 
+Establish a declaration region and scope qualifier suppression block. 
 
 **syntax**
 ```
@@ -178,7 +178,7 @@ repeat;
 
 ```
 ** example of collection iteration
-method main():
+method main:
   Array:test := ["a","b","c","d","e"];
   Integer: i := 0;
 process
@@ -203,7 +203,7 @@ Scan block use a control variable to visit all elements in a range or collection
 ``` 
 given 
   Integer:var := 0;  -- control variable
-scan [min..max] +> var do
+scan [min..max] :> var do
   -- block statements;
   ...
   -- next iteration
@@ -222,7 +222,7 @@ Example of range iteration:
 ```
 given
   Integer: i := 0; -- control variable
-scan [0..10] +> i do
+scan [0..10] :> i do
   when (i % 2 <> 0) do
     -- write only odd numbers
     write i;

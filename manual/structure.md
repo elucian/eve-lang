@@ -5,36 +5,36 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 **Bookmarks:**
 
 * [Modules](#modules)
-* [Suites](#suites)
 * [Library](#library)
 * [Regions](#regions)
+* [Globals](#globals)
 * [Classes](#classes)
 * [Methods](#methods)
 * [Functions](#functions)
 * [Expressions](#expressions)
 * [Parameters](#parameters)
 * [Dispatch](#dispatch)
-* [Test cases](#test-cases)∨
+* [Test cases](#test-cases)
 * [Execution](#execution)
 
 ## Modules
 
-Modules are source files having extension: *.eve. Module names are using lowercase letters, can also contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 64 characters long.
+Modules are source files having extension: *.eve. Module names are using lowercase letters, can also contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long.
 
 **members**
 
 * public member identifier start with "." prefix;
 * one module can use public members from other modules;
 * one module can have public member used in other modules;
-
+* member identifier names can be 30 characters long;
 
 ## Main module
-Any module that contains method main() is a main module and can lead a run-time session. A module can have associated one or more configuration files. The configuration file contain parameter/value pairs used to generate the: _global constants_.
+Any module that contains method main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _global constants_.
 
 **properties**
 
 * main module is independent, can not be imported in other modules or suites;
-* main module can receive values for constants using a configuration file;
+* main module receive parameters as constants from a configuration file;
 * main module do not have public methods and do not have output variables;
 
 ## Library
@@ -43,7 +43,7 @@ A _library_ is a shared folder containing reusable modules.
 
 * library contain generic functionality and can be shared between multiple projects;
 * using import several modules can be loaded from a folder at once;
-* circular import is possible: we protect against infinite recursion;
+* circular import is possible: run-time environment has a protection against infinite recursion;
 * after import you can call public members of a library using _dot notation_;
 
 ## Regions
@@ -54,23 +54,23 @@ A module file is divided into regions using keywords: {import, define, global, c
 *****************************************
 ** Header comments: module purpose
 *****************************************
+** global region
 #module.name        := 'module name'; 
 #module.description := 'short description';
-
 ...
 ** import region
 import
-  alias := $path/library_name
+  from $path/library_name use (*);
 
 ** primitive class declaration
-class name[parameters] <: class_descriptor;
+alias name := class_name {generic_parameters};
   ...
 
-** module scope constants
+** shared constants
 constant
   Integer: zero := 0; -- constant
   
-** module scope variables
+** shared variables
 variable
   Integer: x := 0; -- variable
   Integer: y := 0; -- reference
@@ -78,7 +78,7 @@ variable
   
 ** function declaration
 function 
-  name(params): Type := (expression);
+  Type: name(params) => (expression);
   ...
 
 ** advanced class declaration
@@ -87,7 +87,7 @@ class name(params) <: superclass:
 return;
 
 ** method declaration
-method name(params) => (result: Type, ...):
+method name(params):
   ...
 return;
 ```
@@ -95,9 +95,9 @@ return;
 ## Declaration order
 Order of regions by default is: {module, import, type, constant, variable, function, class, method}. Method and class declarations can be alternated. You can define multiple regions of the same type. 
 
-## Global region
+## Globals
 
-Global region is first region in the file, with 0 space indentation: 
+Globals are declared in first module region, with 0 space indentation: 
 
 **declare**
 
@@ -149,19 +149,16 @@ Is used to include members from several other modules into current module:
 $user_path := $root_path/relative_path
 
 import 
-  $user_path:(member_name,...);  -- specific members
-  $user_path:(*);                -- all public members
-  
-** member alias
-alias
-  name := module_name.member_name;
+  from $user_path use (member_name,...);  -- specific members
+  from $user_path use (*);                -- all public members
   ...
 ```
 
 **note:** 
-* $user_path is any path defined by the user
-* spaces in file-names will be converted to "_" in aliases
-* member alias can be any member: type, class, function, method
+* $user_path is any path defined by the user;
+* spaces in file-names are not supported you must use: "_" instead;
+* member alias can rename any member type: {constant, variable, function, method};
+* class aliases are final instances of generic classes;
 
 ## Shared constants
 
@@ -174,9 +171,8 @@ constant
 ```
 
 **note:** 
-* Constants are immutable variables;
-* Usually constants are using uppercase letters;
-
+* Constants are immutable;
+* Usually constant identifiers are using uppercase letters;
 
 ## Shared variables
 
@@ -189,32 +185,35 @@ variable
 ```
 
 **note:** 
-* Shared variables are static
+* Shared variables are static;
+* Variable names are using lowercase letters;
 
 ## Methods
 
 A method is a named block of code that can be executed multiple times.
 
-* can have input/output parameters;
-* can have local defined variables;
-* can have one or more results;
-* is ending with statement return;
-* early termination use keyword exit;
+* start with keyword _method_;
+* has a name identifier followed by a list of parameters;
+* after parameter list we use ":" (defined as);
+* can have local defined variables after ":";
+* early transfer can be done using keyword _exit_;
+* is ending with _return_ statement;
 
 **prototype**
 ```
-method name(parameters) => (results):
+method name(parameters):
   ** declaration region
 process
   ** executable region
+  exit if (condition);
   ...
 return;
 ```
 
 **Notes:**
 
-* parameters are optional but empty list () is required if there are no parameters,
-* results are optional but symbols => and empty list () is required if there are no results.
+* empty list () it is not required when there are no parameters only ":" is mandatory;
+* unlike a function, a method can have side-effects but do not return a result.
 
 **Method name**
 A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
@@ -223,7 +222,7 @@ A method is extending the language with domain specific algorithms. It must have
 If a module is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the module is a library and can be imported in other modules but can not be executed using run command.
 
 **Parameters**
-Parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
+Formal parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
 
 **mandatory**
 ```
@@ -241,21 +240,24 @@ Parameters are defined in round brackets () separated by comma. Each parameter m
 
 1. One method can receive one or more parameters;
 1. Parameters having initial values are optional;
-1. We can pass arguments by position, or by name;
-1. Input parameters are pass by value;
-1. Output parameters are pass by reference;
+1. Values used for parameters are called arguments;
+1. You can assign arguments using name:value pairs or by position;
+1. Input parameters are pass "by copy"   (like ::);
+1. Output parameters are pass "by share" (like :=);
 
 **Variadic parameters**
 
-One method can receive multiple arguments of the same type separated by comma into one parameter.
+One method can receive multiple arguments of the same type separated by comma into one list.
 
-* The variadic parameter name are declared using "*" instead of ":" or "@". 
-* The surplus of arguments are captured into last parameter named: "args". 
+* First arguments can be captured using normal parameters;
+* The surplus of arguments are captured into last parameter named: "args";
+* A method can have one single variadic parameter;
+* The variadic parameter name is declared using "*" instead of ":" or "@". 
 * We can use any name instead of "args" but this is the usual name.
 
 **example**
 ```
-method main(Array[String]() * args):
+method test(List{String} * args):
   print(args);
 return;
 ```
@@ -264,19 +266,13 @@ return;
 
 Every method has a local context. Members defined in local context are private. In this context a method can implement static attributes using "." prefix. These attributes are properties of the method and can be accessed from current module using dot notation. 
 
-**Method results**
-
-A method can have results defined after operator "=>" in a list: (results). The result values can be computed in method context. Results can be captured using symbol "+>" or can be ignored. Symbol "+>" is called "colector operator".
-
-
 **Method call**
-Methods can be used like statements. A method call can be done using method name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no argument paratheses are optional.
+Methods can be used like statements. A method call can be done using method name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no arguments parentheses are not required.
 
 ```
-  method_name;
-  method_name argument_value;
-  method_name (argument_list);
-  method_name (argument_list) +> (result_arguments);
+  method_name;                  -- call method without arguments
+  method_name argument_value;   -- call method with single argument
+  method_name (argument_list);  -- call method with a list of arguments
 ```
 
 **Method termination**
@@ -304,7 +300,7 @@ return;
 
 A method can have side-effects: 
 
-* modify a global variable;
+* modify a shared variable;
 * open and write into a file;
 * print a message or accept input from console;
 
@@ -319,18 +315,18 @@ variable
   Integer: p1;   
   Integer: p2;   
 
-method add_numbers():
+method add_numbers:
 process
   **side effects  
   test := p1 + p2;
   print (test);
 return;
 
-method main()
+method main:
 process
   p1 := 10; -- side effect
   p2 := 20; -- side effect
-  add_numbers();
+  add_numbers;
   expect result = 30;
 return;
 ```
@@ -345,64 +341,70 @@ process
   out := p1 + p2;
 return;
 
-method main():
+method main:
   Integer: result;
 process  
   ** reference argument require a variable
   add(1,2, result);
   print (result); -- expected value 3
   ** negative test
-  add (1,2,4); -- error, "out" parameter require variable argument
+  add (1,2,4); -- error, "out" parameter require a variable
 return;
 ```
 
 **Notes:**
 
 * Output parameters are usually the last parameters;
-* Output arguments must be specified by name;
 * A method call is a statement, can not be used in expressions;
-* We can not create methods, data types or classes inside a method;
-* We can not create references to methods;
+* You can not create nested members in methods;
+* You can not create references to methods;
 
 ## Functions
 
-A function can have parameters and produce one single result. 
+A function can have parameters and can produce one result with explicit Type. 
 
 ```
-function: name(parameters) => type (expression);
+function Type: name(parameters) => (expression);
 ```
 
 **Function call**
 The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed. 
 
-**syntax**
+**pattern:**
 ``` 
+given 
+  type: result;
+do  
   ** call with no arguments:
-  result := function_name()  
+  result := function_name();
   
   ** call with arguments mapped by position
-  result := function_name(value, ...) 
+  result := function_name(value, ...);
   
-  ** call using parameter names for mapping
-  result := function_name(param:value ...)   
+  ** call using parameter names and pair-up operator ":"
+  result := function_name(parameter:value ...);
+done;  
 ```
 
-**Parameters**
+**note:**
+value ::= constant | variable | expression | function call
+
+**formal parameters**
 
 * Parameters are declared in parenthesis () after the function name, 
 * Each parameter has name and type and can have one default value, 
 * When a function is called each parameter receive a value that is called argument. 
 
-**Arguments**
+**call arguments**
 
 There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters in the function call. Arguments can be literals, constants or variables. 
 
 **Example:**
 ```
 ** function declaration
-function sum(Integer: a, b) =>  Integer: (a + b);
+function Integer: sum(Integer: a, b) =>  (a + b);
   
-method main():
+method main:
   Integer: r;
 process  
   r := sum(10,20);  -- function call
@@ -439,7 +441,7 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **example**
 ```
-method main():
+method main:
   Integer: p1, p2, x;
 process
   p1 := 2;
@@ -471,19 +473,10 @@ Dispatch is a form of subroutine selection by signature. It makes possible multi
 ## Classes
 Classes are composite data types. We use a classes to create multiple objects with same structure. Each object is a reference to a location in memory were the object is stored. An object is also called instance of a class.
 
-**There are two kind of classes.**
-
-**primitive classes:**
-
-```
-class Class_Name <: class_descriptor;
-```
-
-**advanced classes:**
 
 ```
 class name(parameters) <: base_class:
-  ** definition_region
+  ** definition region
 create
   ** constructor region
 remove
@@ -498,7 +491,7 @@ return;
 A method can be organized as a work-flow of multiple test-cases that can fail.
 
 ```
-method main():
+method main:
 process
   ** initialization
   case c1("description") do
@@ -547,7 +540,7 @@ eve:> run path/module_name -c file.cfg -m 2048GB
 
 **using exit**
 
-Using exit in main() will end module execution.
+Using exit from _main_ will end module execution.
 
 **Example:**
 ```
@@ -562,7 +555,7 @@ exit if (condition);
 
 **using quit**
 
-This is a way to release all locked resources and stop the main suite.
+This is a way to release all locked resources and stop the application session.
 
 **Example:**
 ```
