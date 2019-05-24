@@ -5,14 +5,13 @@ EVE has only 5 control statements:
 * [do](#do)
 * [with](#with)
 * [when](#when)
-* [quest](#quest)
 * [while](#while)
 * [scan](#scan)
 
 **Notes:** 
 
 * keyword _given_ start a local scope for any block statement
-* one blocks is ending with keywords: { done; \| next; \| repeat;}
+* one blocks is ending with keywords: { done \| next \| repeat}
 
 ## Do
 
@@ -101,62 +100,6 @@ else
 done;
 ```
 
-## Quest
-
-The quest is a multi-path value based selector. 
-It is used in conjunction with { "do", "other", "done"}
-
-**syntax:**
-
-```
-given 
-  value_typ: val := expression
-quest val
-  match constant1 do
-    -- first path
-    ...
-  match constant2 do
-    -- second path
-    ...
-  match constant3 do
-    -- third path
-    ...
-none
-  -- default path
-  ...
-done;
-```
-
-**Using list and range**
-It is possible to use more then one value using a list, range or collection. 
-
-**Example:**
-```
-method test(Integer: p:=0):
-  String: message := "";
-  Integer: v := p + 4;
-process 
-  quest v
-    match (1,2,3) do
-      message := "first match";
-    match [1..8]  do
-      message := "second match";
-    match [5..10] do
-      message := "third match";    
-  none
-    message := "no match"
-  done;
-  print (message);
-return;
-```
-
-**notes:**
-
-* Each condition is evaluated in order from top down one time;
-* When no condition is satisfied the _"other"_ branch is executed.
-* To evaluate next condition we can use 3 dots: "...", that means "next".
-
-
 ## While
 
 Execute a block of code as long as one condition is true.
@@ -179,7 +122,7 @@ repeat;
 ```
 ** example of collection iteration
 method main:
-  Array:test := ["a","b","c","d","e"];
+  List:test := ["a","b","c","d","e"];
   Integer: i := 0;
 process
   while (i < test.length) do

@@ -2,9 +2,6 @@
 
 By using collections and control structures one can load, modify and store data.
 
-*[Working with arrays](#Working-with-arrays)
-*[Matrix Operations](#Matrix-Operations)
-*[Arrays Slicing](#Arrays-Slicing)
 *[Collection Casting](#Collection-Casting)
 *[Set builders](#Set-builders)
 *[List operations](#List-operations)
@@ -12,167 +9,6 @@ By using collections and control structures one can load, modify and store data.
 *[Scanning items](#Scanning-items)
 *[Text template](#Text-template)
 
-## Working with arrays
-
-Array elements have very fast direct access by index.
-
-**note**
-* index start from one
-* negative index is counting from the end toward the beginning
-* range of elements is established using notation: [n..m]
-
-**example**
-```
-method test_array():
-  ** array  with capacity of 10 elements
-  Array[Integer](10): my_array;
-process  
-  given
-    Integer: m := my_array.capacity();
-    Integer: i := 1;
-  ** scan array and modify element by element    
-  while i < m do
-    my_array[i] := i;     
-    i += 1;
-  repeat;
-  ** array  elements using escape template \[]
-  print ("This is the first element: \[1]" <+ my_array); 
-  print ("This is the last element: \[-1]"  <+ my_array);
-  
-  ** range of array elements are comma separated [1,2,3]
-  print ("These are the first two: \[1..2]"  <+ my_array);
-  print ("These are the lat two: \[-2..-1]"  <+ my_array);
-  print ("These are all except lat two: \[1..-3]"  <+ my_array);
-return;
-```
-
-**console:**
-```
-This is the first element: 1   
-This is the last element: 10   
-```
-
-**capacity**
-An array can changing capacity. This can be ready using built-in method _extend_. The relocation will update any eventual references to the same array so the modification is consistent. The old memory location is free.
-
-```
-  array_name.extend(c)
-```
-
-## Matrix Operations
-
-Modify all elements of the matrix is possible using [*] and assign operator “ := ”
-
-```
-** a matrix having 2 rows and 2 columns
-** initialize all elements with 100
-given
-  Matrix[Integer](2,2): M;
-do
-  M[*] := 100;
-  print (M);
-done;
-```
-
-```
-[[100,100],[100,100]]
-```
-
-* A matrix can be initialized using literals or constructor. 
-* A matrix can support scalar operations like Array
-
-```
-given
-  Matrix[Integer](2,2):M;
-do
-  M[*] := 100;
-  ** modify all elements
-  M[*] += 10;
-  print(M); -- [[110,110],[110,110]]
-
-  ** modify an entire row 
-  M[1,*] := 0;
-  M[1,*] := 1;
-  print(M); -- [[0,0],[1,1]]
-  
-  ** modify an entire column
-  M[*,1] += 1;
-  M[*,2] += 2;
-  print(M); -- [[1,2],[2,3]]
-done;
-```
-
-**Memory impedance**
-
-Matrices are multidimensional while computer memory is linear. This is an impedance mismatch that require mapping. Some computer languages organize matrices row by row and some others organize memory column by column. The difference between the orders lies in which elements of an array are contiguous in memory. 
-
-[Row-major and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order)
-
-**Transposition**
-Passing a memory matrix from one computer language into another can require a transposition that can be a performance bottleneck. EVE uses row-major order therefore passing matrix arguments is the most efficient with Rust and C++ languages.  
-
-**Matrix Traversal**
-When you traverse elements use rows first, than you change the column. A processor will use the internal cache more efficient in this way. If the matrix is large this can be a significant performance issue.
-
-**Example:**
-In this example we traverse all the rows then all the column, this is the most efficient way to traverse a matrix.
-
-```
-method main:
-  Matrix{String(2)}(3,3): M;
-process  
-  M := [ 
-         ['a0','b0','c0'],
-         ['a1','b1','c1'],
-         ['a2','b2','c2']
-       ];     
-  given
-    Integer: row, col := 1;
-  while col <= 3 do     ** traverse columns
-    while row <= 3 do   ** traverse row first
-      print M[row,col];
-      row += 1;
-    repeat;
-    col += 1;
-  repeat;
-return;
-```
-
-##  Arrays Slicing
-
-A slice is a small portion from an Array created with range operator "[..]" 
-
-**syntax**
-```
-   Slice: slice_name := collection[n..m]
-```
-
-Where (n,m) are 2 optional numbers: n ≥ 1, m <= number of elements. 
-
-**notes**
-
-* Slice is "zero cost" view. It does not allocate new memory. 
-* Slice is a collection references to original elements. 
-* If we modify elements of slice you actually modify the original.  
-
-**Example:**
-```
-method main:
-  Array{Integer}: a := [0,1,2,3,4,5,6,7,8,9];
-  Slice{Integer}: b := a[1..4];
-process
-  print a[1..-1];  -- will print [0,1,2,3,4,5,6,7,8,9]
-  print a[-3..-1]; -- will print [7,8,9]
-  print a[1..1];   -- will print [0]
-  print a[1..4];   -- will print [1,2,3,4]
- 
-  ** modify slice b
-  b[*] += 2;
-  
-  ** first 4 elements of (a) are modified
-  print(a);  -- will print: [2,3,4,5,4,5,6,7,8,9]
-return;
-```
 
 ## Set builders
 
@@ -180,7 +16,7 @@ You can define elements of a subset from a set using the following construction:
 
 ```
 given
-  Set: sub_set := { var if var in set_name & filter_expression}
+  Set: sub_set := { var for var in set_name & filter_expression}
 ```
 
 You can use _var_ to create the _filter_expression_.
@@ -191,7 +27,7 @@ You can use _var_ to create the _filter_expression_.
 New set defined from a range:
 
 ```
-  new_set := { x if x in [-10..10] };
+  new_set := { x for x in [-10..10] };
 ```
 
 ## Collection Casting
@@ -206,7 +42,7 @@ given
    Set : new_set := {};
 do
    ** eliminate duplicates using set comprehension
-   mew_set := { x if x in my_list };
+   mew_set := { x for x in my_list };
    print my_set; -- {0,1,2} 
 done;
 ```
@@ -220,7 +56,7 @@ given
    List: my_list := [0,1,2,3,4,5];
    Set:  my_set  := {};
 do
-   my_set := { x if x in my_list and (x % 2 = 0) };
+   my_set := { x for x in my_list and (x % 2 = 0) };
    print my_set; -- {0,2,4} 
 done;
 ```
@@ -232,11 +68,11 @@ The elements in one set or list can be transformed by a function or expression t
 ```
 given
    Set:   source := {0,1,2,3,4,5};
-   Table: target := {};
+   Hash: target := {};
 do
-   -- create Table pairs (key, value) for Table map
+   -- create Hash pairs (key, value) for Hash map
    -- { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := {(x:x^2) if x in source };
+   target := {(x:x^2) for x in source };
 done;
 ```
 
@@ -253,9 +89,9 @@ Therefore List union act very similar to append, except we add multiple elements
 
 ```
 method main:
-  List[Symbol]: a := ('a','b','c');
-  List[Symbol]: b := ('1','2','3');
-  List[Symbol]: c := ();
+  List{Symbol}: a := ['a','b','c'];
+  List{Symbol}: b := ['1','2','3'];
+  List{Symbol}: c := [];
 process
   c := a + b;
   print c; -- ['a','b','c','1','2','3'];
@@ -279,7 +115,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  List[Integer]: lst;
+  List{Integer}: lst;
 do
   lst := split("1,2,3",",");
   print lst; -- (1,2,3)
@@ -337,7 +173,7 @@ The "element" is local to iteration and is used as control variable.
 
 ```
 method main:
-  List[Symbol]: my_list := ['a','b','c','d','e']; 
+  List{Symbol}: my_list := ['a','b','c','d','e']; 
 process  
   given
     Symbol: element;
@@ -358,7 +194,7 @@ return;
 
 Collections have common methods that enable traversal using _scan_. 
 
-{List, Table, Set} 
+{List, Hash, Set} 
 
 **built-in:**
 
@@ -370,12 +206,12 @@ Collections have common methods that enable traversal using _scan_.
 * this       - reference to current element
 
 ### Set Iteration
-Table and Set are similar. We can visit all elements using _scan_:
+Hash and Set are similar. We can visit all elements using _scan_:
 
 **Example:**
 ```
 method main:
-  Table: my_map := {("a":1),("b":2),("c":3)};
+  Hash: my_map := {("a":1),("b":2),("c":3)};
 process  
   ** print pairs (key:value)
   given
@@ -394,16 +230,16 @@ Will print:
 ("c",3)
 ```
 
-## Table collections
+## Hash collections
 
-Tables are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
+Hashs are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
 
 
 **example:**
 ```
 ** check if a key is present in a hash collection
 given
-  Table:  my_map := {(1:'a'),(2:'b'),(3:'c')};
+  Hash:  my_map := {(1:'a'),(2:'b'),(3:'c')};
   Integer: my_key := 3;
 when (my_key in my_map) do
   print('True'); -- expected
@@ -418,7 +254,7 @@ done;
 method main:
 process
   given
-    Table(String, String): animals := {};
+    Hash(String, String): animals := {};
   do
     animals['Bear'] := 'dog';
     animals['Kiwi'] := 'bird';
@@ -440,7 +276,7 @@ Output:
 ### Example
 ```  
 method main:
-  Table: animals := {}; -- partial declaration
+  Hash: animals := {}; -- partial declaration
 process
   ** establish element types S:U
   animals['Rover'] := "dog";
@@ -507,8 +343,8 @@ We use hash "\{}" to create a placeholder into a Text. We use "<+" operator to r
 \dmy: date format DD/MM/YYYY
 \mdy: date format MM/DD/YYYY
 \() : [numeric format](#numeric-format)
-\{} : Member name/ Key value: placeholder
-\[] : Array or List member placeholder
+\[] : List member access by index
+\{} : Object attribute / Value by Key in Hash Hash
 ```
 
 **examples**
@@ -528,7 +364,7 @@ Unicode: ≠ and ≡
 
 **Notes**: 
 * Injector "<+" is polymorph and overloaded operator. 
-* For template you can use: { tuple, list, table, array }
+* For template data source you can use: { tuple, list, set, hash}
 
 ## Large template
 
@@ -540,11 +376,11 @@ A large template can be stored into a file, loaded from file and format().
 4. Use injector operator: "<+" to replace template row by row;
 5. Alternative use _format()_ build-in to replace placeholders in all text;
 
-**Using Table**
+**Using Hash**
 ```
 method main:
-  Text:  template := "Hey look at this \{key1} it \{key2}";
-  Table: map      := {("key1":"test"),("key2":"works!")};
+  Text: template := "Hey look at this \{key1} it \{key2}";
+  Hash: map      := {("key1":"test"),("key2":"works!")};
 process  
   ** using format function
   print template.format(map);
@@ -556,11 +392,11 @@ Expect output:
 Hey look at this test it works!
 ```
 
-**Using Array**
+**Using Lists**
 ```
 method main:
   String: template := "Hey look at this #[0] it #[1]";
-  List: my_list    := ("test","works!");
+  List: my_list    := ["test","works!"];
 process  
   print (template <+ my_set);
 return;
@@ -599,8 +435,8 @@ Where "f" is a pattern: '(ap:m.d)'
 
 ### Text functions
 
-* Text:    format (Text: str, Table: map);
-* Text:    replace(Text: str, String: target, String: arrow );
+*  Text:    format (Text: str, Hash: map);
+*  Text:    replace(Text: str, String: target, String: arrow );
 *  Integer: find   (Text: str, String: patern);
 *  Integer: count  (Text: str, String: patern);
 *  Integer: length (Text: str);

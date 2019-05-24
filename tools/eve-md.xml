@@ -24,7 +24,7 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">import alias define type static module function class as method cursor view constant variable read write print item process recover closure return create remove</Keywords>
+            <Keywords name="Keywords1">import alias define static module function class as method cursor view constant variable read write print item process recover closure return create remove use</Keywords>
             <Keywords name="Keywords2">given begin over when do else done quest match none case other while repeat with and scan next</Keywords>
             <Keywords name="Keywords3">Exception Object Record Vector Matrix List Array Hash Set Table Index Database File Function Logic Short Long Char Integer Natural Real Decimal Rational Number Ordinal Complex String Text Variant View Date Time Symbol Type Duration Distance Length Angle</Keywords>
             <Keywords name="Keywords4">run act exit raise expect solve retry resume stop skip quit rest continue&#x000D;&#x000A;</Keywords>

@@ -284,7 +284,7 @@ U+0001       | Symbol
 
 Literal    | Type
 -----------|---------------
-[]         | Array
+[]         | List
 {}         | Set/Table
 ()         | List
 ""         | Text
@@ -574,9 +574,7 @@ Symbols are Unicode UTF32. That is using 32 bit  Integer:
 * U+HHHH   from: U+0000   to U+FFFF
 * U-HHHHHH from: U+000000 to U+FFFFFF
 
-**usability**
-A symbol can be used to create an Array of symbols that have direct access by index. Array of symbols have a capacity and can be more or less full. In array one or more symbols can have value NUL = U+0000. This is also the default value used for string initialization.
-
+Value NUL = U+0000. This is also the default value.
 
 ## Calendar date
 

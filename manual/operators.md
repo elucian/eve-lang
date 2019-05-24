@@ -6,10 +6,10 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
-|`\|*...*\|`| Block comments \| Nested comments 
+|`\|*...*\|`| Outline block comments   *|
 | `(_,_,_)` | Expression \| List literal \| Data record
-| `[_,_,_]` | Range \| Index \| Array literals \| Parameterize types
-| `{_,_,_}` | Ordinal type \| Set of values \| Table type *| 
+| `[_,_,_]` | Range \| Index \| List literals 
+| `{_,_,_}` | Ordinal type \| Set of values \| Table type \| Generic types
 
 
 ## Single symbols

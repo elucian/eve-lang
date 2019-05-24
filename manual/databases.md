@@ -116,18 +116,16 @@ This kind of structure can be used to create a queue.
 * A record can be used as parameter into a function or method;
 * A record can contain attributes of type record called nested records;
 * A function can return a record variable as a result;
-* A list, array or a matrix can contain a collection of records;
-* A record can contain references to arrays and matrices;
+* A list, set or table can contain records;
 
 ### Restrictions
 * Records are static structures. Once defined we can not add new fields; 
-* Records can not contain arrays, lists or matrices but can contain references to them;
-* Records can not be used until they are initialized using default constructor or literal; 
+* Records can not be used until they are initialized; 
 
 ### Record literals
 A record literal is enclosed in parenthesis (,,,) having elements separated by coma. Elements of a record literal are represented using pairs separated by ":" like name:value. The record literal can span one or many lines and is similar to JSON notation. 
 
-Record literals can be used so save records in files. A array  of records can be saved and can be loaded from files very fast using this format and is human readable. So I guess this can be a data format, but not a very efficient one.
+Record literals can be used to save records in files. A list of records can be saved and can be loaded from files very fast using this human readable format. This can be a data format, but not a very efficient one though.
 
 **Example**
 ```
@@ -151,17 +149,17 @@ A record instance is a variable of type record. The memory is allocated using th
 alias Person := Record {String(32): name,  Integer: age };
 
 method main:
-  Person: person1, person2;    -- two variables of type Person
-  Array[Person](10): catalog;  -- a collection of Persons
+  Person: person1, person2;   -- two variables of type Person
+  List{Person}(10): catalog;  -- list collection of 10 Persons
 process
   ** creating persons using record literals
   person1 := (name:"John", age:21);
   person2 := (name:"Vera", age:20);
   print("#s and #s are lovers." <+ (person1.name, person2.name));
 
-  ** create an array with 30 new persons
+  ** create an list with 10 new persons
   given:
-    Integer: i
+    Integer: i := 1; 
   while (i <= 10) do
     catalog[i] := Person("John Doe", 20);
     i += 1; 
@@ -193,7 +191,7 @@ It can be used to define the record using a constant literal. After first assign
 
 ```
 variable
-  Record: person := (name:"John", age:21);
+  Record: person := {name:"John", age:21};
 ```
 
 ## Gradual Types
@@ -205,7 +203,7 @@ given
   Record: person;
 do
   ** differed structure
-  person:= (name:"John", age:21);
+  person:= {name:"John", age:21};
 done;
 ```
 
@@ -235,8 +233,8 @@ You can scan one table like a collection. No need to learn anything new. The tab
 **pattern**
 ```
 given
-  ** use introspection to declare current_record
-  Record: current_record(record_fields)   
+  ** structure of record is establish later
+  Record: current_record;  -- partial declaration
 scan table_name :> current_record do
   with current_record do
     ** use current_record fields

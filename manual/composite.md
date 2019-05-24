@@ -2,105 +2,12 @@
 
 Composite types represents groups of multiple elements. 
  
-* [array](#array)
-* [slice](#slice)
-* [matrix](#matrix)
 * [list](#list)
 * [set](#set)
-* [table](#table)
+* [hash](#hash)
 * [string](#string)
 * [text](#text)
 * [exception](#exception)
-
-## Array
-
-An array is a collection of elements stored in order of natural index. Array elements all must have same data type and can be native or references. Default array index start from 1 to capacity. 
-
-**array declaration** 
-```
-** declaration of an array with capacity
-  Array[element_type](capacity): array_name;
-```
-
-**array capacity**
-An array have fix capacity that must be specified when the Array memory is allocated. You can’t add or remove elements from array once the capacity is established. This is because array elements are stored in a contiguous memory range with no gaps.
-
-**array literals**
-
-Arrays are represented by an enumeration of elements enclosed by square brackets and delimited by comma [,,,]. An empty array is theoretical possible but not usable. When an array is initialized the capacity of the array  will be the same with the number of elements.
-
-**array initialization**
-
-In the next example we define an array with capacity of 3 elements.
-
-```
-** array declaration and initialization
-   Array[Integer](3): my_arra := [1,2,3];
-```
-
-**array constructor**
-
-An array can be established using a constructor. All elements of a array can be set to a single value using operator ":=" during declaration. Default constructor for an array is the array variable name follow by parameter (c):capacity.
-
-```
-** define a constructor con based on based constructor: my_array()
-method con(Integer: capacity) => (Array[Integer]: my_array):
-process
-  my_array(capacity) := 0;
-return;
-```
-
-**array inference**
-When declare a array we can use a literal to initialize the array with value. Array type can be partial declared. That is we can have a logical deduction of missing information from literals.
-```
-  Array(10): my_array := 0;   --  Integer number
-  Array(10): my_array := 0.0; -- real number
-  Array(10): my_array := "";  -- text with variable size
-  Array(10): my_array := '';  -- string with capacity 1024 bytes
-```
-
-The most convenient way to define an Array is by using inference literals:
-```
-  ** array with capacity 4 of type strings 
-  Array: my_array := ['a','bc','def','chk'];
-```
-
-**array elements**
-Array elements can be addressed by subscript starting from 1:
-
-```
-my_array[1];   -- is the first element of Array
-my_array[-1];  -- is the last element of Array
-```
-
-## Matrix
-A matrix is a multidimensional array that is a collection of elements organized in rows and columns. Usually a matrix have two logical dimensions but multiple dimensions are possible.A matrix has a predefined capacity and occupy a fixed memory size.
-
-**syntax:** 
-```
-   Matrix[type](n,m): matrix_name := expression;
-```
-
-**example:**
-```
-**  a matrix m that has 2 dimensions with 3 rows and 3 columns.
-given
-  Matrix[String(2)](3,3): m := '__';
-do
-  m[1] := ['a1','b1','c1'];
-  m[2] := ['a2','b2','c2'];
-  m[3] := ['a3','b3','c3'];
-  print m;
-done;
-```
-
-**matrix elements**
-Matrix elements can be addressed by subscript starting from 1:
-
-```
-var_name[1,1];   -- is the first element of the matrix.
-var_name[-1,-1]; -- is the last element of a matrix.
-```
 
 ## List
 
@@ -108,8 +15,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-  List[Class_Name]: list_name; -- new empty list
-  List: list_name := (value, ...); -- new populate list
+  List{Type}: list_name := [];     -- new empty list
+  List: list_name := [value, ...]; -- new populate list
 ```
 
 **notes:**
@@ -120,34 +27,34 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  List[Integer] : n_list; 
-  List[Object]  : o_list; 
-  List[String]  : s_list; 
+  List{Integer} : n_list; 
+  List{Object}  : o_list; 
+  List{String}  : s_list; 
 ```
 
 **list literals**
  
-* List literals enclosed in round bracket
-* Elements are separated by comma. (,,,) 
-* All elements are using the same type
+* List literals enclosed in square brackets,
+* Elements are separated by comma,
+* All elements are having the same type.
 
 **examples**
 
 Literals can be used for initialization:
 ```
 given
-  List[Symbol] : c_list := ('a', 'b', 'c');
-  List[Integer]: n_list := (1, 2, 3);  
+  List{Symbol} : c_list := ['a', 'b', 'c'];
+  List{Integer}: n_list := [1, 2, 3];  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  List[Integer]: c_list;
+  List{Integer}: c_list := [];
 do
-  ** update list using  ":=" 
-  c_list := (1,2,3); 
+  ** alter list using  ":=" 
+  c_list := [1,2,3]; 
 done;
 ```
 
@@ -157,7 +64,7 @@ In mathematics a set is an abstract data structure that can store certain values
 **declaration**
 
 ```
-  Set[type] :name;
+  Set{type}: set_name;
 ```
 
 **Empty Set**
@@ -180,7 +87,7 @@ A set can be modified during run-time using operators.
 **Example:**
 ```
 given
-  Set[integer]: my_set := {0,2,3};
+  Set{Integer}: my_set := {0,2,3};
 do
   ** append element 1
   my_set    += 1;  
@@ -203,7 +110,7 @@ Use union operator | combine two sets.
 ```
 given
   Set: first := {0,1,2,3,4,5,6,7,8,9};
-  Set[Integer]: second := {};
+  Set{Integer}: second := {};
 do
   second := first | {0,1,2,10}; -- set union
   print(second); -- {0,1,2,3,4,5,6,7,8,9,10}
@@ -224,25 +131,29 @@ done;
 
 **Note:** Operators "|" and "&" are overloaded betwise operators
 
-## Table
+## Hash
 
-It is called "H" due to similar methodof letter H representing a connection, link or bridge between two columns, the key column is in tirect relation to a value.
+It is called "Hash" due to similar letter H representing a connection between two columns: the key column and value column.
 
-* Table is set of (key:value) pairs; 
-* The key must be one of {Integer, Natural, String} and is unique;
+* Hash is set of (key:value) pairs; 
+* The key must be sortable: { number, ordinal, string };
 
 **syntax**
 ```
-given
-  Table[key_type, value_type]: name := {(key:value), ...};
+alias Table_Name := Hash{key_type, value_type}; -- type alias 
+
+variable
+  Hash{key_type, value_type}: name; -- explicit type
+  Hash: name := {(key:value), ...}; -- implicit type
+  Table_Name := {(key:value), ...}; -- using alias
 ```
 
 **Example**
 ```
 given
-  Table[String,  Integer]: dictionary := {};
+  Hash{String,  Integer}: table := {}; -- empty table
 do   
-  dictionary := {('one':1), ('two':2)};
+  table := {('one':1), ('two':2)};
 done;
 ```
 

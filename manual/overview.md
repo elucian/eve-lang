@@ -257,7 +257,7 @@ One expression can span multiple lines.
 ```
 given 
   Integer: x; 
-  Matrix : a; 
+  Hash   : a; 
 do  
   ** multi-row expression
   x := 1 + 2 +
@@ -270,12 +270,12 @@ do
   ** all 5 numbers are in 
   expect x = 15; 
 
-  ** multi-row matrix
-  a := [ 
-         [1,2],
-         [3,4],
-         [5,6]
-       ];
+  ** multi-row hash table
+  a := { 
+         (1:2),
+         (3:4),
+         (5:6)
+       };
 done;
 ```
 
