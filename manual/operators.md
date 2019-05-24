@@ -9,7 +9,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |`\|*...*\|`| Outline block comments   *|
 | `(_,_,_)` | Expression \| List literal \| Data record
 | `[_,_,_]` | Range \| Index \| List literals 
-| `{_,_,_}` | Ordinal type \| Set of values \| Table type \| Generic types
+| `{_,_,_}` | Ordinal type \| Set of values \| Hash type \| Generic types
 
 
 ## Single symbols

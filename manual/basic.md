@@ -46,7 +46,7 @@ Composite data types are unions of data elements.
 | String   | Limited capacity string: ('single quoted')
 | Text     | Unlimited capacity string: ("double quoted")
 | List     | Dynamic unsorted enumeration of values or objects of same type
-| Table    | Enumeration of (key:value) pairs unique sorted by key
+| Hash     | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
 | Record   | Heterogeneous collection of elements with fix structure 
 
@@ -285,7 +285,7 @@ U+0001       | Symbol
 Literal    | Type
 -----------|---------------
 []         | List
-{}         | Set/Table
+{}         | Set/Hash
 ()         | List
 ""         | Text
 ''         | String
@@ -320,7 +320,7 @@ We can verify the type using "is" operator:
 ```
 given
   Record: r := (name:"test", age:"24"); 
-  Table:  t := {('key1':"value1"),('ley2':"value2")};
+  Hash:   t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
   expect r.name  is Text;
