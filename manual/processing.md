@@ -2,10 +2,9 @@
 
 By using collections and control structures one can load, modify and store data.
 
-*[List operations](#List-operations)
-*[Collection Iteration](#Collection-Iteration)
-*[Scanning items](#Scanning-items)
-*[Text template](#Text-template)
+* [List operations](#List-operations)
+* [Collection Iteration](#Collection-Iteration)
+* [Scanning items](#Scanning-items)
 
 ## List operations
 We can add elements to a list or remove elements from the list using next operations: 
