@@ -48,7 +48,7 @@ Composite data types are unions of data elements.
 | List     | Dynamic unsorted enumeration of values or objects of same type
 | Hash     | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
-| Record   | Heterogeneous collection of elements with fix structure 
+| Object   | Base class for creation of plain simple objects
 
 **note:** 
 * In the future we will cover a complete set of physical types
@@ -139,13 +139,19 @@ alias Alias_Name := Generic_Class {parameters}
 
 **Example:**
 ```
-alias Point := Record {Integer: a, b};
+class Point(Real: x,y) <: Object:
+  Real: .x, .y;
+create
+  object := Object();
+  .x := x;
+  .y := y;
+return;
 
 method main:
   Point: p1, p2;      -- use implicit constructor
   Point: p3 := {1,1}; -- initial value for Point
 process
-**modification using constants
+**modification using constant literals
   p1.a := 1;
   p1.b := 2; 
   
@@ -302,7 +308,6 @@ Literal      | Type
 ['a','b','c']| List{Char}
 ["a","b","c"]| List{Text}
 
-
 ### Type Inference
 
 Sometimes the type is partially specified to simplify type declaration:
@@ -319,7 +324,7 @@ We can verify the type using "is" operator:
 
 ```
 given
-  Record: r := (name:"test", age:"24"); 
+  Object: r := {name:"test", age:"24"}; 
   Hash:   t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
@@ -392,12 +397,11 @@ process
   print('Is', message);
 return;
 ```
-**Note** For private enumerations you can use a record type.
 
 **Range**
 We can use Ordinal to create a range of values:
 ```
-when (today <+ [Monday..Friday]) do
+when (today in [Monday..Friday]) do
    print ("Have a nice day!");
 else
    print ("Have a happy weekend!");

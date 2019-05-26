@@ -2,79 +2,10 @@
 
 By using collections and control structures one can load, modify and store data.
 
-*[Collection Casting](#Collection-Casting)
-*[Set builders](#Set-builders)
 *[List operations](#List-operations)
 *[Collection Iteration](#Collection-Iteration)
 *[Scanning items](#Scanning-items)
 *[Text template](#Text-template)
-
-
-## Set builders
-
-You can define elements of a subset from a set using the following construction:
-
-```
-given
-  Set: sub_set := { var for var in set_name & filter_expression}
-```
-
-You can use _var_ to create the _filter_expression_.
-
-
-**example:**
-
-New set defined from a range:
-
-```
-  new_set := { x for x in [-10..10] };
-```
-
-## Collection Casting
-
-It is common for one collection to be created based on elements from another collection. 
-Collection members can be copy into the new collection using a comprehension notation: 
-
-**Example:**
-```
-given
-   List: source  := [0,1,2,2,2,2];
-   Set : new_set := {};
-do
-   ** eliminate duplicates using set comprehension
-   mew_set := { x for x in my_list };
-   print my_set; -- {0,1,2} 
-done;
-```
-
-## Collection Filtering
-Build notation can use expressions to filter out elements during comprehension operation.
-
-**Example:**
-```
-given
-   List: my_list := [0,1,2,3,4,5];
-   Set:  my_set  := {};
-do
-   my_set := { x for x in my_list and (x % 2 = 0) };
-   print my_set; -- {0,2,4} 
-done;
-```
-
-## Collection Mapping
-The elements in one set or list can be transformed by a function or expression to create a new collection.
-
-**Example:**
-```
-given
-   Set:   source := {0,1,2,3,4,5};
-   Hash: target := {};
-do
-   -- create Hash pairs (key, value) for Hash map
-   -- { 0:0, 1:1, 2:4, 3:9, 4:16, 5:25} 
-   target := {(x:x^2) for x in source };
-done;
-```
 
 ## List operations
 We can add elements to a list or remove elements from the list using next operations: 
@@ -328,114 +259,9 @@ done;
 
 String: and text can be concatenated using the string concatenation operators: {+, &}. 
 
-## Text template
-We use hash "\{}" to create a placeholder into a Text. We use "<+" operator to replace the placeholder with values. If placeholder is not found the compiler raise an error. If the string is a variable this verification is not possible at compile time so maybe you get a run-time error.
 
-```
-\s  : single string placeholder   
-\q  : quoted string
-\n  : single natural/integer number  
-\u  : single Unicode placeholder
-\t  : time 12 format
-\t12: time 12 format 
-\t24: time 24 format
-\d  : date DMY format
-\dmy: date format DD/MM/YYYY
-\mdy: date format MM/DD/YYYY
-\() : [numeric format](#numeric-format)
-\[] : List member access by index
-\{} : Object attribute / Value by Key in Hash Hash
-```
+## Text functions
 
-**examples**
-```
-print "Numbers: \n and \n" <+ (10, 11);
-print "Strings: \s and \s" <+ ('odd','even');
-print "Quoted:  \q and \q" <+ ('odd','even');
-print "Unicode: \u and \u" <+ (U+2260,U+2261);
-```
-**Expected output:**
-```
-Numbers: 10 and 11
-Strings: odd and even
-Quoted: "odd" and "even"
-Unicode: ≠ and ≡
-```
-
-**Notes**: 
-* Injector "<+" is polymorph and overloaded operator. 
-* For template data source you can use: { tuple, list, set, hash}
-
-## Large template
-
-A large template can be stored into a file, loaded from file and format().
-
-1. Create a map collection of elements;
-2. Create the template text;
-3. Use _scan_ to visit all elements;
-4. Use injector operator: "<+" to replace template row by row;
-5. Alternative use _format()_ build-in to replace placeholders in all text;
-
-**Using Hash**
-```
-method main:
-  Text: template := "Hey look at this \{key1} it \{key2}";
-  Hash: map      := {("key1":"test"),("key2":"works!")};
-process  
-  ** using format function
-  print template.format(map);
-return;
-```
-
-Expect output:
-```
-Hey look at this test it works!
-```
-
-**Using Lists**
-```
-method main:
-  String: template := "Hey look at this #[0] it #[1]";
-  List: my_list    := ["test","works!"];
-process  
-  print (template <+ my_set);
-return;
-```
-
-Expect Output:
-```
-Hey look at this test it works!
-```
-
-## Numeric format
-Number type is implementing format() method. This method has one string parameter that is optional.
-
-```
-method format(Number: n, String: f) => String;
-```
-
-Where "f" is a pattern: '(ap:m.d)'
-
-* a is alignment one of {<,>,^}, 
-* p is the padding character: {'_','.',' ',0...}
-* m is the length 
-* d is number of decimals 
-
-### Alignment symbol "a" can be one of:
-```
-> is used to align to the right
-< is used to align to the left
-^ is used to align to center
-```
-### Format examples:
-```
- '(>_:10)'  ** right align string fill with spaces to 10 characters
- '(>0:10.2)' ** right align fill with 0 up to 10 digits and use 2 decimals
-```
-
-### Text functions
-
-*  Text:    format (Text: str, Hash: map);
 *  Text:    replace(Text: str, String: target, String: arrow );
 *  Integer: find   (Text: str, String: patern);
 *  Integer: count  (Text: str, String: patern);

@@ -68,7 +68,7 @@ alias name := class_name {generic_parameters};
 
 ** shared constants
 constant
-  Integer: zero := 0; -- constant
+  ZERO :: 0; -- constant
   
 ** shared variables
 variable
@@ -130,14 +130,11 @@ Global variables are defined in standard library.
 #stack  -- contains debug information about current call stack
 #trace  -- contains reporting information about executed statements
 #level  -- contains how deep is the current call stack
-#count  -- contains last query count: updated/inserted/deleted records
-#query  -- contains last native query statement
 ```
 
 **notes:** 
 * User can create new global variables specific to one application;
 * Prefix "#" is used to avoid scope qualifier and improve code readability;
-
 
 ## Import region
 
@@ -167,12 +164,14 @@ Shared constants are declared in _constant_ region:
 **example**
 ```
 constant
-  Real: PI := 3.14; -- local constant
+  PI :: 3.14; -- local constant
 ```
 
 **note:** 
 * Constants are immutable;
-* Usually constant identifiers are using uppercase letters;
+* Usual constant identifiers are using uppercase letters;
+* Constants are using operator "::" for initialization;
+* Constant type is implicit defined using type inference;
 
 ## Shared variables
 
@@ -187,6 +186,7 @@ variable
 **note:** 
 * Shared variables are static;
 * Variable names are using lowercase letters;
+* Type variable is explicit specified before variable identifier;
 
 ## Methods
 
@@ -242,8 +242,6 @@ Formal parameters are defined in round brackets () separated by comma. Each para
 1. Parameters having initial values are optional;
 1. Values used for parameters are called arguments;
 1. You can assign arguments using name:value pairs or by position;
-1. Input parameters are pass "by copy"   (like ::);
-1. Output parameters are pass "by share" (like :=);
 
 **Variadic parameters**
 
@@ -473,7 +471,6 @@ Dispatch is a form of subroutine selection by signature. It makes possible multi
 ## Classes
 Classes are composite data types. We use a classes to create multiple objects with same structure. Each object is a reference to a location in memory were the object is stored. An object is also called instance of a class.
 
-
 ```
 class name(parameters) <: base_class:
   ** definition region
@@ -483,7 +480,6 @@ remove
   ** release region
 return;
 ```
-
 **Read more:** [Classes](classes.md)
 
 ## Test case 

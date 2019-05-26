@@ -7,7 +7,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |Symbol     | Description
 |-----------|--------------------------------------------------------------
 |`\|*...*\|`| Outline block comments   *|
-| `(_,_,_)` | Expression \| List literal \| Data record
+| `(_,_,_)` | Expression \| List literal
 | `[_,_,_]` | Range \| Index \| List literals 
 | `{_,_,_}` | Ordinal type \| Set of values \| Hash type \| Generic types
 
@@ -34,12 +34,14 @@ Eve use two symbols to create supplementary operators.
 |\#\#  | Single line comment (title)
 |\*\*  | Single line comment (subtitle)
 |..    | Range representation or slice [n..m] 
+|::    | Define a constant
 |=+    | Outer join operator used in data "select" statement
 |->    | Pipeline operator (usual data casting)
 |<:    | Declare sub-type for a class
 |:>    | Declare visitor in scan statement
 |<+    | Template injector \| Data source provider
 |+>    | Result collector \| Visitor element
+
 
 ## String: delimiters
 
@@ -74,7 +76,7 @@ Modifiers are in-place operators. They change value of the left operand with val
 
 |Symbol| Description
 |------|--------------------------------------------------------------------
-| ::   | assign by copy  \| explicit copy \| cloning
+| :+   | assign by copy  \| explicit copy \| cloning
 | :=   | assign by share \| reset reference \| borrowing
 | +=   | addition \| scalar addition
 | -=   | subtraction  \| scalar subtraction
@@ -89,12 +91,15 @@ EVE use two symbols to create a additional operators.
 
 |Symbol| Description
 |------|-----------------------------------------------------------------------
-|  =   | Equal: same value 
+|  =   | Equivalent  \| Deep comparison
+|  !=  | Divergent   \| Deep comparison
+|  ==  | Same reference \| Shallow comparison
+|  <>  | Different references \| Shallow comparison
 |  >   | Greater than 
 |  <   | Less than    
 |  >=  | Greater than or equal to
 |  <=  | Less than or equal to
-|  ==  | Reference comparison  \| Same reference
+
 
 **Notes:**   
 * For divergence use:  not(a = b) or !(a = b)

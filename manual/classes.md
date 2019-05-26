@@ -23,7 +23,19 @@ A class is a smart composite data type. It implement properties and methods requ
 ## Design
 A class is inherited from a base class or from root class called: Object.
 
-**pattern:**
+**simple objects**
+
+You can create simple objects using Object constructor:
+
+```
+variable
+  object := Object {attribute:value, ...};
+```
+
+**complex object**
+
+You can create more complex object using a class.
+
 ```
 class Class_Name(parameters) <: base_class:
   ** object attributes
@@ -33,7 +45,7 @@ static
   ...
 create
   ** object initialization  
-  object := base_class();
+  object := base_class(type:argument,...);
   ... 
 discard
   ** object release region
@@ -95,7 +107,7 @@ Class attributes are static and can be accessed using two scope qualifiers:
 There is a special class that has name _"Object"_ and represents the "root" class. Each classes can grow from Object or from other "base class" forming _"class tree"_.
 
 ## Constructor
-A class can have a single constructor. A constructor can use decision statements based on parameter values to create _"object"_ in different ways based on several conditions. This is a smart constructor.
+A class can have a single constructor. A constructor can use decision statements based on parameter values to create _"object"_ in different ways based on several conditions. This is a flexible constructor.
 
 ```
 ...
@@ -103,7 +115,7 @@ create
   when (condition) do
     object := base_class(some_arguments);
   else
-    object := base_class(<other_arguments>);
+    object := base_class(other_arguments);
   done;
 return;
 ```

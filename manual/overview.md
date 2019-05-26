@@ -88,7 +88,7 @@ Global reference identifiers start with a reserved symbol:
 **notes:**
 * Prefix is reducing collision between local and global name scope;
 * In other languages this kind of prefix is called _sigil_;
-* A global variable can be a record of values accessible with dot notation.
+* A global variable can be an object with attribute.
 
 **examples:**
 ```
@@ -107,7 +107,7 @@ Single characters:
 
 Two characters:
 ```
-{ := :: != <> => >= <= +> <+ <: .. }
+{ := :+ != <> => >= <= +> <+ <: .. }
 ```
 
 Delimiters:
@@ -180,7 +180,7 @@ To make a clone/copy underline value from a reference you must use symbol "::" (
 
 **Syntax:**
 ```
-  variable_name :: reference; -- make a clone
+  variable_name :+ reference; -- make a clone
 ```
 
 ## Expressions
