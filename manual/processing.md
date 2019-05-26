@@ -3,8 +3,10 @@
 By using collections and control structures one can load, modify and store data.
 
 * [List operations](#List-operations)
-* [Collection Iteration](#Collection-Iteration)
+* [Collection iteration](#Collection-iteration)
 * [Scanning items](#Scanning-items)
+* [Using hash table](#Using-hash-table)
+* [Text functions](#Text-functions)
 
 ## List operations
 We can add elements to a list or remove elements from the list using next operations: 
@@ -13,7 +15,8 @@ We can add elements to a list or remove elements from the list using next operat
 * .append()
 * .delete()
 
-### List Concatenation
+**List concatenation**
+
 List concatenation is ready using operator “+”. This operator represent union. 
 Therefore List union act very similar to append, except we add multiple elements. 
 
@@ -28,7 +31,8 @@ process
 return;
 ```
 
-### Join() built-in
+**Join() built-in**
+
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
@@ -40,7 +44,7 @@ do
 done; 
 ```
 
-### Split built-in
+**Split built-in**
 The join function receive a list and convert elements into a string separated be specified character.
 
 ```
@@ -52,14 +56,14 @@ do
 done;
 ```
 
-### List as queue
+**List as queue**
 
 Two operations are possible
 
 * enqueue()  append to the end of the List
 * dequeue()  extract first element from the List
 
-### List as stack
+**List as stack**
 
 Two operations are possible
 
@@ -68,7 +72,7 @@ Two operations are possible
 
 **Note:** There is no protection about using a List as stack or queue. 
 
-### Other built-ins
+**Other built-ins**
 
 Following other functions should be available
 * List.append(value) -- can append an element at the end of the list
@@ -76,13 +80,13 @@ Following other functions should be available
 * List.delete(value) -- can delete one element at specified index
 * List.count() -- retrieve the number of elements 
 
-### Special attributes
+**Special attributes**
 A list has properties that can be used in logical expressions:
 
 * List.empty()  -- True or False
 * List.full()   -- True or False
 
-## Collection Iteration
+## Collection iteration
 
 A special _while loop_ that is executed for each element belonging to a collection.
 
@@ -135,7 +139,7 @@ Collections have common methods that enable traversal using _scan_.
 * last       - position to last element
 * this       - reference to current element
 
-### Set Iteration
+**set iteration**
 Hash and Set are similar. We can visit all elements using _scan_:
 
 **Example:**
@@ -160,7 +164,7 @@ Will print:
 ("c",3)
 ```
 
-## Hash collections
+## Using hash table
 
 Hashs are sorted in memory by _key_ for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this method.
 
@@ -197,11 +201,6 @@ Output:
 ```
 {('Bear':'dog'),('Kiwi':'bird')}
 ```
-
-## Type inference
-
-* The default type inference for empty "set" is {}
-* An empty hash map will be created using notation {} 
 
 ### Example
 ```  
@@ -253,11 +252,6 @@ do
   s := 'te/' \ '/st'; -- "te\st" Windows
 done;
 ```
-
-## Text concatenation
-
-String: and text can be concatenated using the string concatenation operators: {+, &}. 
-
 
 ## Text functions
 
