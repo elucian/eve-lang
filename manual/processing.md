@@ -448,4 +448,4 @@ Text is iterable by "word". The word separator is one space. So we can read a te
 **Note:**
 The text also support escape sequences like a normal string. However in a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "« »" like "«quoted»"
 
-**Read next:** [Databases](databases.md)
+**Read next:** [Standard](standard.md)

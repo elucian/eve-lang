@@ -18,9 +18,8 @@ To learn EVE syntax you can read next pages in order:
 1. [Composite types](composite.md)
 1. [Object oriented](classes.md)
 1. [Data processing](processing.md)
-1. [Database layer](databases.md)
-1. [Standard library](standard-lib.md)
-1. [System library](system-lib.md)
+1. [Standard library](standard.md)
+1. [System library](system.md)
 
 **tools:**
 

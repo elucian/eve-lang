@@ -25,4 +25,4 @@ The only thing required is signature.
 |pad        | increase string count to specified length adding spaces to the right
 
 
-**Read next:**[System Library](system-lib.md)
+**Read next:**[System Library](system.md)
