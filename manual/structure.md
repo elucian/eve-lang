@@ -68,12 +68,12 @@ alias name := class_name {generic_parameters};
 
 ** shared constants
 constant
-  ZERO :: 0; -- constant
+  IDENTIFIER :: value; -- constant
   
 ** shared variables
 variable
-  Integer: x := 0; -- variable
-  Integer: y := 0; -- reference
+  Type: x;         -- default value
+  Type: y:= value; -- specific value
   ...
   
 ** function declaration
@@ -93,11 +93,11 @@ return;
 ```
 
 ## Declaration order
-Order of regions by default is: {module, import, type, constant, variable, function, class, method}. Method and class declarations can be alternated. You can define multiple regions of the same type. 
+Order of regions by default is: {globals, import, type, constant, variable, function, class, method}. Methods and classes can alternate. You can define multiple regions of the same type when members depend on each other. 
 
 ## Globals
 
-Globals are declared in first module region, with 0 space indentation: 
+Globals are declared in first module region, with zero space indentation: 
 
 **declare**
 
@@ -168,8 +168,8 @@ constant
 ```
 
 **note:** 
-* Constants are immutable;
-* Usual constant identifiers are using uppercase letters;
+* Constants are immutable entities;
+* Constant identifiers are using uppercase;
 * Constants are using operator "::" for initialization;
 * Constant type is implicit defined using type inference;
 
@@ -194,10 +194,10 @@ A method is a named block of code that can be executed multiple times.
 
 * start with keyword _method_;
 * has a name identifier followed by a list of parameters;
-* after parameter list we use ":" (defined as);
-* can have local defined variables after ":";
+* after parameter list () use ":"
+* can have local variables defined after ":"
 * early transfer can be done using keyword _exit_;
-* is ending with _return_ statement;
+* is ending with _return_ statement, that is mandatory;
 
 **prototype**
 ```
@@ -212,7 +212,7 @@ return;
 
 **Notes:**
 
-* empty list () it is not required when there are no parameters only ":" is mandatory;
+* empty list () it is not required when there are no parameters defined only ":" is mandatory;
 * unlike a function, a method can have side-effects but do not return a result.
 
 **Method name**
@@ -304,7 +304,7 @@ A method can have side-effects:
 
 **using side-effects**
 
-Next method add numbers and has 2 side effects: 
+Next method: "add_numbers" has 2 side effects: 
 
 ```
 ** local variables
@@ -316,8 +316,8 @@ variable
 method add_numbers:
 process
   **side effects  
-  test := p1 + p2;
-  print (test);
+  test := p1 + p2; -- first side-effect
+  print (test);    -- second side-effect
 return;
 
 method main:
@@ -331,7 +331,7 @@ return;
 
 **using output parameters**
 
-To avoid module variables you can use output parameters:
+To avoid shared variables you can use input/output parameters:
 
 ```
 method add(Integer: p1,p2,  Integer @ out ):
@@ -359,19 +359,27 @@ return;
 
 ## Functions
 
-A function can have parameters and can produce one result with explicit Type. 
+Functions are declared in a region that start with keyword: "function".
 
 ```
-function Type: name(parameters) => (expression);
+function 
+  Type: name(parameters) => (expression);
 ```
+
+* A function can have parameters; 
+* A function has a single result;
+* Result type is declared before function name. 
 
 **Function call**
 The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed. 
 
 **pattern:**
 ``` 
+function
+  Type: function_name() => (expression);
+  
 given 
-  type: result;
+  Type: result;
 do  
   ** call with no arguments:
   result := function_name();
@@ -488,6 +496,7 @@ A method can be organized as a work-flow of multiple test-cases that can fail.
 
 ```
 method main:
+  ** local context
 process
   ** initialization
   case c1("description") do
@@ -511,15 +520,16 @@ closure
 return;
 ```
 
-New keywords:
+**New keywords:**
 
-* exit,  will terminate the method early
-* solve, will continue with a forward case
-* retry, will continue with a previous case
+* exit,   will terminate the method early
+* solve,  will continue with a forward case
+* retry,  will continue with a previous case
+* resume, will continue with next case after the one that failed
 
 ## Execution
 
-EVE modules are executed using a virtual machine. You can run the virtual machine as a service or as console application. In console mode you can run only a one module. In service mode you can run multiple sessions with different startup parameters. Each session is independent and can run one single module. 
+EVE modules are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console mode you can _run_ only a one module. In service mode you can _run_ multiple sessions with different startup parameters. Each session is independent and can _run_ one single module. 
 
 Service mode is using a general configuration file: eve.cfg. This file contains information about all application locations and configuration files for each session. After the service starts this file is parsed and each applications start automatically. The service will create a log file for each application.
 
