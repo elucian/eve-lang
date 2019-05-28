@@ -22,7 +22,8 @@ EVE is a free form language inspired from Java and Ruby.
 * Global constants use prefix "$" and they are also public;
 * Global variables use prefix "#" and they are also public;
 * Class identifier start with one capital letter;
-* Scoping operator is "." unlike "::" that is used in C++ and Rust. 
+* Scoping operator is "." unlike "::" that is used in C++ and Rust;
+* Statement regions and nested blocks use mandatory indentation;
 
 ## Comments
 

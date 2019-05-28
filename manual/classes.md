@@ -14,7 +14,7 @@ EVE language is using single inheritance similar to Java.
  
 ## Concept
 
-A class is a smart composite data type. It implement properties and methods required to create objects. Objects are _state machines_ that are instantiated on demand and released from memory when they are no longer needed. The most important characteristics of objects are:
+A class is a composite data type. It implement properties and methods required to create objects. Objects are _state machines_ that are instantiated on demand and released from memory when they are no longer needed. The most important characteristics of objects are:
 
 * Encapsulation: each object has its own states;
 * Inheritance: an object inherit its base class;
@@ -25,12 +25,14 @@ A class is inherited from a base class or from root class called: Object.
 
 **simple objects**
 
-You can create simple objects using Object constructor:
+You can create simple objects using Object default constructor:
 
 ```
 variable
-  object := Object {attribute:value, ...};
+  object := Object (attribute:value, ...);
 ```
+
+One object can receive attribute names that do not exist. Default constructor will create new attributes automatic and assign the value for each. Attributes do not need to be created for default constructor. However after object is created the structure is locked: no other attributes can be added.
 
 **complex object**
 
@@ -38,14 +40,11 @@ You can create more complex object using a class.
 
 ```
 class Class_Name(parameters) <: base_class:
-  ** object attributes
-  ...
-static
-  ** class attributes  
+  ** class local context
   ...
 create
-  ** object initialization  
-  object := base_class(type:argument,...);
+  ** call base class constructor
+  object := base_class(object_attribute:argument,...);
   ... 
 discard
   ** object release region
@@ -54,7 +53,7 @@ return;
 ```
 
 ## Parameters 
-A class can have parameters that receive values during object initialization. You can define optional parameters with default value using assignment (param_name := value). Native type parameters are pass by value, composite types and objects are pass by reference.
+A class can have parameters that receive values during object initialization. You can define optional parameters with default values using a pair: (Type:param_name:=value). Parameters can be received "by copy" or "by share". Parameters received by share are declared using symbol "@" instead of ":"
 
 **example**
 ```
@@ -104,7 +103,7 @@ Class attributes are static and can be accessed using two scope qualifiers:
 ```
 
 **Class Tree**
-There is a special class that has name _"Object"_ and represents the "root" class. Each classes can grow from Object or from other "base class" forming _"class tree"_.
+There is a special class that has name _"Object"_ and represents the "root" class. Each classes can grow from Object or from other "base class" forming a _"class tree"_.
 
 ## Constructor
 A class can have a single constructor. A constructor can use decision statements based on parameter values to create _"object"_ in different ways based on several conditions. This is a flexible constructor.

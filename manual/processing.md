@@ -255,10 +255,10 @@ done;
 
 ## Text functions
 
-*  Text:    replace(Text: str, String: target, String: arrow );
-*  Integer: find   (Text: str, String: patern);
-*  Integer: count  (Text: str, String: patern);
-*  Integer: length (Text: str);
+* Text:    replace(Text: str, String: target, String: arrow );
+* Integer: find   (Text: str, String: patern);
+* Integer: count  (Text: str, String: patern);
+* Integer: length (Text: str);
 
 **Reading a Text**
 
