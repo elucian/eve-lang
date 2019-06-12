@@ -4,6 +4,8 @@
 </a>
 </p>
 
+<p align="center"><i>A domain specific language for back-end data services.<i/></p>
+
 ------------------------------------------------------------------------------------------
 <p align="center"> <a href=manual/readme.md>User Manual</a>
 </p>

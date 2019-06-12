@@ -2,31 +2,15 @@
 
 EVE has only 5 control statements: 
 
-* [do](#do)
 * [with](#with)
 * [when](#when)
 * [while](#while)
-* [scan](#scan)
+* [given](#given)
 
 **Notes:** 
 
 * keyword _given_ start a local scope for any block statement
 * one blocks is ending with keywords: { done \| next \| repeat}
-
-## Do
-
-Non repetitive anonymous block with local scope. 
-
-**syntax**
-```
-given
-  -- local declarations
-  ...
-do
-  -- local statements
-  ... 
-done;
-```
 
 ## With
 
@@ -34,9 +18,6 @@ Establish a declaration region and scope qualifier suppression block.
 
 **syntax**
 ```
-given
-  -- local declarations
-  Class_Name: var;
 with qualifier := long_qualifier do
   -- local statements
   method_name();  -- instead of: qualifier.method_name()
@@ -55,9 +36,6 @@ This keyword in conjunction with {do, else} declare a multi-path block selector;
 
 1.single path selector
 ```
-given
-  -- local context
-  ... 
 when (expression) do
   -- single path
   ...
@@ -106,8 +84,6 @@ Execute a block of code as long as one condition is true.
 
 **Syntax:**
 ```
-given
-  -- local context
 while (condition) do
   -- forced iteration
   skip if (condition);
@@ -144,9 +120,7 @@ Scan block use a control variable to visit all elements in a range or collection
 
 **Pattern:**
 ``` 
-given 
-  Integer:var := 0;  -- control variable
-scan [min..max] :> var do
+given Integer: var <: (min..max) do
   -- block statements;
   ...
   -- next iteration
@@ -163,14 +137,10 @@ next;
 
 Example of range iteration:
 ```
-given
-  Integer: i := 0; -- control variable
-scan [0..10] :> i do
-  when (i % 2 <> 0) do
-    -- write only odd numbers
-    write i;
-    write ',' if (i < 10);
-  done;
+given Integer: i <: (1..10:2) do
+  -- write only odd numbers
+  write i;
+  write ',' if (i < 10);
 next;
 ```
 > 1,3,5,7,9
