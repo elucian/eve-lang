@@ -502,28 +502,30 @@ return;
 
 ## Test cases 
 
-A method can be organized as a work-flow of multiple test-cases that can fail.
+A method can be organized as a work-flow of multiple steps that can pass or fail depending on conditions.
 
 ```
 method main:
   ** local context
 process
   ** initialization
-  case c1("description") do
+  ...
+  step c1("description") do
     ...
     exit if (condition);
-  case c2("description") do
+  step c2("description") do
     ...
-    solve s4 if (condition);    
-  case c3("description") do
+    pass if (condition);    
+  step c3("description") do
     ...
-    retry s1 if (condition);    
-  case c4("description") do    
+    fail if (condition);    
+  step c4("description") do    
     ...
 recover  
   ** exception region
   ...
   resume if (condition);
+  ...
 closure
   ** finalization region
   ...    

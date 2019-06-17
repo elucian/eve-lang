@@ -4,6 +4,7 @@ EVE has only 5 control statements:
 
 * [with](#with)
 * [when](#when)
+* [case](#case)
 * [while](#while)
 * [given](#given)
 
@@ -64,19 +65,19 @@ when (expression) do
 done;
 ```
 
-4.ladder selector
+## Case
 
-```  
-when (expression)    do
-  ...
-else if (expression) do
-  ...
-else if (expression) do
-  ... 
+It is a multi-path selector based on a condition:
+
+case (condition) do
+  ** first case  
+case (condition) do
+  ** second case
+case (condition) do
+  ** third case
 else
-  ...
+  ** default case  
 done;
-```
 
 ## While
 
@@ -114,7 +115,7 @@ return;
 ```
 > "c","d","e"
 
-## Scan
+## Given
 
 Scan block use a control variable to visit all elements in a range or collection.
 

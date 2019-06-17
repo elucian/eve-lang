@@ -2,27 +2,28 @@
 
 For keywords, EVE use English reserved words, without any abbreviation.
 
-## Establish regions
+## Define regions
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | import   | start import region
 | constant | declare module constants (start with "." if is public)
 | variable | declare module variables (start with "." if is public)
+| alias    | define alias for data-type or member name from imported modules
+| function | start a declaration region for named expression
+
+## Define subregions
+
+| Keyword  | Description
+|----------|-----------------------------------------------------------------------
+| class    | define a composite data type for object oriented programming
+| method   | define a named block of code
 | process  | start executable region for a method and constructor for a class
 | create   | start constructor region for a classes
 | remove   | define object disposal region, executed when object is out of scope
 | recover  | define a recover region for methods
 | closure  | define a finalization region for methods
-
-## Define identifiers
-
-| Keyword  | Description
-|----------|-----------------------------------------------------------------------
-| class    | define a composite data type for object oriented programming
-| alias    | define alias for data-type or member name from imported modules
-| method   | start a named block of code
-| function | start a declaration region for named expression
+| return   | terminate a method/function or a class declaration
 
 ## Blocks of code/sections
 
@@ -35,7 +36,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | quest    | multi-path variable selector
 | while    | conditional repetition block
 | scan     | start an examination loop
-
 
 ## Operator keywords
 
@@ -55,7 +55,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 |----------|-----------------------------------------------------------------
 | do       | start a repetitive block: while & for
 | else     | alternative path for when & while statements 
-| case     | define a pasway in multi-case methods
+| case     | define a pas-way in multi-case methods
 | other    | define alternative pasway in a quest
 | done     | finalization keyword for non repetitive blocks 
 | next     | finalize a scan block and start next iteration
@@ -73,7 +73,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | retry    | multi-case jump backwards to specified case
 | solve    | multi-case jump forward to specified case
 | resume   | used in trial error handlers to continue with next case
-| return   | terminate a method/function or a class declaration
 
 ## Default variables
 

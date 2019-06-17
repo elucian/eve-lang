@@ -1,4 +1,4 @@
-## @single Symbols
+## Single Symbols
 
 In the syntax description "..." represent content and ",,," represents a sequence of elements. In descriptions vertical bar "|" represents second alternative. Some operators can have multiple purposes depending on the context and data types.
 
@@ -12,7 +12,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | `{_,_,_}`   | Ordinal type \| @set of values \| @hash type \| Generic types
 
 
-## @single symbols
+## Single symbols
 
 |Symbol | Description
 |-------|--------------------------------------------------------------
@@ -26,7 +26,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | \*    | Variable arguments \| Multiplication
 | \|    | Used in set builders and hash map builders
 
-## @double symbols
+## Double symbols
 
 Eve use two symbols to create supplementary operators.
 
@@ -43,7 +43,7 @@ Eve use two symbols to create supplementary operators.
 |+>    | Result collector \| Visitor element
 
 
-## @string: delimiters
+## String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
@@ -51,7 +51,7 @@ Eve use two symbols to create supplementary operators.
 |'x'   | Limited capacity string: UTF8 (max: 128 characters)
 |"x"   | Variable capacity string: UTF8 (unlimited)
 
-## @string: concatenation
+## String: concatenation
 
 |Symbol| Description
 |------|---------------------------------------------------------------------
@@ -73,6 +73,7 @@ Eve use two symbols to create supplementary operators.
 | \-    | Subtraction \| @string concatenation \| @set difference
 
 ## Modifiers 
+
 Modifiers are in-place operators. They change value of the left operand with value of the right operand. Each modifier is created using one operator symbol follow by equal symbol "=" with no space between.
 
 |Symbol| Description
@@ -110,17 +111,19 @@ EVE use two symbols to create a additional operators.
 
 In following table: `A, B, C` are collections and `x` is a member:
 
-|Operator | Result  | Description
-|---------|---------|-------------------------------------------------------------------
-| A.+. B  | new     | Intersect A with B, use with   := like C := A.+.B (return a new set)
-| A.-. B  | new     | Symmetric difference, use with := like C := A.-.B (return a new set)
-| A +  B  | new     | Union A with B, use with       := like C := A + B (return a new set)
-| A -  B  | new     | Difference A with B, use with  := like C := A - B (return a new set)
-| A <: B  | logic   | verify if A is subset of B: In math: ⊂
-| A >: B  | logic   | verify if B is subset of A: In math: ⊃
-| C += x  | append  | append a clone of x to C (assign by clone)
-| C +< x  | append  | append element x in C    
-| C -= x  | remove  | remove element x from C  
+|Operator   | Result  | Description
+|-----------|---------|-------------------------------------------------------------------
+| A `++` B  | new     | Union A with B: ∪     use like C := A ++ B (return a new set)
+| A `||` B  | new     | Intersect A with B: ∩ use like C := A || B (return a new set)
+| A `- ` B  | new     | Simple difference,    use like C := A -  B (return a new set)
+| A `--` B  | new     | Symmetric difference, use like C := A -- B (return a new set)
+| A `<:` B  | logic   | verify if A is subset of B: In math: ⊂
+| A `:>` B  | logic   | verify if B is subset of A: In math: ⊃
+| C `+:` x  | append  | append a copy of element x to C    
+| C `+=` x  | append  | append a reference of element x to C
+| C `-=` x  | remove  | remove element == x from C  
+| C `-:` x  | remove  | find and remove first element = x from C  
+| C `-*` x  | remove  | find and remove all elements  = x from C  
         
 ## Logical operators
 
