@@ -56,9 +56,12 @@ A module file is divided into regions using keywords: {import, define, global, c
 *****************************************
 ** Header comments: module purpose
 *****************************************
-module name:
+
 ** global region
+$constant := "value";
+&variable := {1,2,3};
 ...
+
 ** import region
 import
   from $path/library_name use (*);
