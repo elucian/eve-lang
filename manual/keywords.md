@@ -19,10 +19,10 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
+| class    | define a composite data type for object oriented programming
+| alias    | define alias for data-type or member name from imported modules
 | method   | start a named block of code
 | function | start a declaration region for named expression
-| alias    | define alias for data-type or member name from imported modules
-| class    | define a composite data type for object oriented programming
 
 ## Blocks of code/sections
 
@@ -43,6 +43,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 |----------|-----------------------------------------------------------------
 | is       | check data type x is Null \| quest associated keyword
 | in       | check data type x is Null \| quest associated keyword
+| if       | conditional operator
 | not      | logical NOT operator
 | and      | logical AND operator
 | or       | logical OR  operator
@@ -52,7 +53,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------
-| if       | create a conditional augment for simple statements
 | do       | start a repetitive block: while & for
 | else     | alternative path for when & while statements 
 | case     | define a pasway in multi-case methods
@@ -60,7 +60,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | done     | finalization keyword for non repetitive blocks 
 | next     | finalize a scan block and start next iteration
 | repeat   | trigger a condition check, finalize if condition yield false
-| return   | terminate a method or a class declaration
 
 ## Interruption statements
 
@@ -74,6 +73,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | retry    | multi-case jump backwards to specified case
 | solve    | multi-case jump forward to specified case
 | resume   | used in trial error handlers to continue with next case
+| return   | terminate a method/function or a class declaration
 
 ## Default variables
 

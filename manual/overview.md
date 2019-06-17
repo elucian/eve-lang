@@ -20,40 +20,42 @@ EVE is a free form language inspired from Java and Ruby.
 * Multiple expressions can be separated with comma and enclosed in parenthesis;
 * Each statement start with a lowercase keyword and is ending semicolon; 
 * Global constants use prefix "$" and they are also public;
-* Global variables use prefix "#" and they are also public;
-* Class identifier start with one capital letter;
-* Scoping operator is "." unlike "::" that is used in C++ and Rust;
+* Global variables use prefix "&" and they are also public;
+* Class and reference type identifiers start with "@" prefix;
+* Alias identifiers and constants usually start with capital letters;
+* Public variables and constants start with "." prefix;
 * Statement regions and nested blocks use mandatory indentation;
 
 ## Comments
 
-* Title comment is using ## two hashes like Wiki pages
-* Sub-title comment and line separators are using: "**"
-* End of line comment can be done using "--"
-* Boxed comments are using notation "+-...-+"
-* Outline comments are using pair "|* ... *|"
+* Is used for single-line header comment like Wiki pages: `#`
+* Single line comment or end of line comment: `**` 
+* Boxed comments are using notation: `+-...-+` 
+* Outline comments are using notation: `\|\* ... \*\|`
 
 **examples**
 ```
-*************************************
-**  Boxed comments using: "**"     **
-*************************************
+# Title comment
 
-## Title comment
-  -- indented comment
-
-** Single line comment
+** single line comment
 print; 
 +------------------------------------
 |  fancy boxed comments to explain  |
 |  code, can span multiple lines    |
 ------------------------------------+
+*************************************
+**  Boxed comment for old printer  **
+*************************************
 
+# Expression comment
+a := a + 1 |* *(a - 1) *| -1;
+
+over. ** end of line comment
 ```
 
 **Notes:**
-* Nested comments are supported for out-line comments;
-* End of line comments are ending after new line;
+* Outline comments are supported inside expressions;
+* A statement can continue after end of line comment;
 
 ## Keywords
 
@@ -62,6 +64,7 @@ Keywords are English reserved words used in statements. Computer was invented in
 Summary: [Keywords](keywords.md) 
 
 ## Identifiers
+
 The name of identifiers in EVE can have a length of 30 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). A variable can contain underscore but can not start or with underscore. 
 
 **These are valid identifiers**  
@@ -84,7 +87,7 @@ The name of identifiers in EVE can have a length of 30 characters. A name starts
 Global reference identifiers start with a reserved symbol:
 
 * $global_constant;
-* #global_variable;
+* &global_variable;
 
 **notes:**
 * Prefix is reducing collision between local and global name scope;
@@ -101,14 +104,14 @@ Global reference identifiers start with a reserved symbol:
 
 EVE us ASCII symbols for operators. One operator can be a single character or a combination of two characters. 
 
-Single characters:
+@single characters:
 ```
-{ = : ~ ! ? @ % ^ & * - + / < >}
+{ = : ~ ! ? % ^ * - + / < >}
 ```
 
 Two characters:
 ```
-{ := :+ != <> => >= <= +> <+ <: .. }
+{ := :: != <> => >= <= +> <+ <: .. }
 ```
 
 Delimiters:
@@ -117,7 +120,7 @@ Delimiters:
 ( ) [ ] { } 
 ```
 
-Details: [Operators](operators.md) 
+**Details:** [Operators](operators.md) 
 
 ## Data type
 
@@ -130,11 +133,15 @@ There are 3 kind of data types in EVE:
 * [classes](classes.md)
 
 ## Variables
+
 A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing memory locations or primitive values that can be moved around in different memory locations. Variables can be altered during the execution of the program using modifier operators: { :=, +=, *=, /= ...}. 
 
 **patterns:**
 ```
-** define alias for a data type
+** define alias for a: 
+data type
+
+** alias names have to start with uppercase letters.   
 alias Class_Name := super_class {parameters};
 
 ** shared variables
@@ -153,35 +160,36 @@ variable
 ```
 variable 
   ** two integer numbers
-  Integer: a;
-  Integer: b := 1;
-  ** multiple real numbers
-  Real: d := 2.5; 
-  Real: x,y,z := 0.0;
+  @integer: a;
+  @integer: b := 1;
+  ** multiple @double numbers
+  @double: d := 2.5; 
+  @double: x,y,z := 0.0;
 ```
 
 **zero value**
-When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Integers = 0 for Real = 0.0 and for String = ''. 
+When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Integers = 0 for @double = 0.0 and for @string = ''. 
 
-## Assign Value 
+## Assign Value
+ 
 Assign value can be done using operator: ":=". But this operator has a strange behavior that you must understand to avoid unintended side-effects. It transfer a value "by sharing". It transfers a memory location not the underline value:
 
 **Syntax:**
 ```
-  identifier := variable_name;  -- share a reference to variable
-  identifier := function_name;   -- share a reference to function
-  identifier := literal;         -- mutate value / initialize
-  identifier := expression;      -- mutate value / initialize
-  identifier := function_name(); -- mutate value / reset value
+  identifier := variable_name;   ** share a reference to variable
+  identifier := function_name;   ** share a reference to function
+  identifier := literal;         ** mutate value / initialize
+  identifier := expression;      ** mutate value / initialize
+  identifier := function_name(); ** mutate value / reset value
 ```
 
 **clone:**
 
-To make a clone/copy underline value from a reference you must use symbol "::" (dereference).
+To make a clone/copy underline value from a reference you must use symbol "::" (clone).
 
 **Syntax:**
 ```
-  variable_name :+ reference; -- make a clone
+  variable_name :: reference; ** make a clone
 ```
 
 ## Expressions
@@ -201,19 +209,19 @@ print  10;
 print "this is a test";
 
 ** complex expressions can use ()  
-print (10 + 10 + 15);       -- numeric expression
-print ((10 > 5) | (2 < 3)); -- logical expression
+print (10 + 10 + 15);       ** numeric expression
+print ((10 > 5) | (2 < 3)); ** logical expression
 
 ** list of expressions are enclosed in ()
-print (1, 2, 3);    -- expect: 1 2 3
-print (10, 11, 12); -- expect: 10 11 12
+print (1, 2, 3);    ** expect: 1 2 3
+print (10, 11, 12); ** expect: 10 11 12
 
 ** using write to: avoid new line and print
 write (1,2);
 write (3,4);  
 
 ** now create a new line
-print; -- 1234 
+print; ** 1234 
 ```
 
 **Notes:** 
@@ -238,9 +246,9 @@ One statement can be declarative or imperative.
 The most simple block statement start with "do" and end with "done"
 ```
 given
-  **  Integer numbers
-  Integer: a := 0;
-  Real:    b := 1.5; 
+  **  @integer numbers
+  @integer: a := 0;
+  @double:    b := 1.5; 
 do
   print  (a, b);
   expect (a = 0, b = 1.5);
@@ -257,8 +265,8 @@ One expression can span multiple lines.
 **example**
 ```
 given 
-  Integer: x; 
-  Hash   : a; 
+  @integer: x; 
+  @hash   : a; 
 do  
   ** multi-row expression
   x := 1 + 2 +

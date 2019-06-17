@@ -4,51 +4,61 @@ EVE is a gradual typed language. Next I will describe basic types:
 
 **bookmarks**
 
+* [Scalar](#scalar-types)
 * [Basic](#basic-types)
-* [Numeric](#numeric-types)
 * [Composite](#composite-types)
 * [Collections](#collections)
 * [Physical](#physical-types)
 * [Alias](#Alias)
 * [Data coercion](#data-coercion)
-* [Type inference](#type-inference)
+* [@type inference](#type-inference)
 * [Default types](default-types) 
 * [Ordinal type](ordinal-type)
 * [Logical type](logical-type)
 * [Gradual typing](#gradual-typing)
-* [String type](#string-type)
 * [Calendar date](#calendar-date)
 * [Time duration](#time-duration)
 
+## Scalar Types
+
+Scalar types are fixed size data types mapped to native OS types. 
+
+| reference|native|description
+|----------|------|------------------------------------------------------
+| @byte    | u8   |Unsigned on 8  bit (UTF8)
+| @word    | u16  |Unsigned on 16 bit (UTF16)
+| @binary  | u32  |Unsigned on 32 bit (UTF32)
+| @natural | u64  |Unsigned on 64 bit 
+| @short   | i16  |Signed on 16 bit 
+| @integer | i32  |Signed on 32 bit
+| @long    | i64  |Signed on 64 bit 
+| @single  | f32  |Float precision number on 4 byte
+| @double  | f64  |Float precision number on 8 byte
+
 ## Basic Types
 
-Basic types are fixed size native types. 
-
-| type     | description
-|----------|-------------------------------------------------------
-| Char     | Integer on 8  bit (unsigned) (ASCII)
-| Symbol   | Integer on 32 bit (unsigned) (UTF32)
-| Integer  | Integer on 64 bit (signed)
-| Natural  | Integer on 64 bit (unsigned)
-| Real     | double precision number on 8 bit (signed) 
-| Ordinal  | Enumeration of ideas, cases or terms
-| Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
-| Date     | Calendar date     
-| Time     | Calendar time
+| reference| description
+|----------|---------------------------------------------------------------
+| @ordinal | Enumeration of symbols, ideas or terms
+| @object  | Base class for creation of plain simple objects
+| @null    | Null data type. Have one value: null
+| @date    | Calendar date     
+| @time    | Calendar time
+| @logic   | Is a Ordinal subtype having values:  false = 0, true = 1
 
 ## Composite Types
 
 Composite data types are unions of data elements.
  
-| type     | description
-|----------|---------------------------------------------------------------
-| Null     | is a reference type = Null constant reference
-| String   | Limited capacity string: ('single quoted')
-| Text     | Unlimited capacity string: ("double quoted")
-| List     | Dynamic unsorted enumeration of values or objects of same type
-| Hash     | Enumeration of (key:value) pairs unique sorted by key
-| Set      | Enumeration of unique elements of the same type sorted by value
-| Object   | Base class for creation of plain simple objects
+| type      | description
+|-----------|---------------------------------------------------------------
+| @numeric  | Numeric variant that can be Null
+| @string   | Limited capacity string:   ('single quoted')
+| @text     | Unlimited capacity string: ("double quoted")
+| @list     | Dynamic unsorted enumeration of values or objects of same type
+| @hash     | Enumeration of (key:value) pairs unique sorted by key
+| @set      | Enumeration of unique elements of the same type sorted by value
+| @exception| Composite type derived from @Object base class
 
 **note:** 
 * In the future we will cover a complete set of physical types
@@ -60,24 +70,24 @@ In EVE we can have two categories of numbers:
 
  Category     | EVE Types
 --------------|------------------------------------------------------------
- Discrete:    | Integer, Natural
- Continuous:  | Real
+ Discrete:    | @byte, @word, @binary, @integer, @natural
+ Continuous:  | @single, @double, 
 
 ### Discrete numbers:
 
-|type    |Chars  |Bytes|min |max   |maximum number	
-|--------|-------|-----|----|------|-------------------------
-|Integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
-|Natural |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
+|type     |Chars  |Bytes|min |max   |maximum number	
+|---------|-------|-----|----|------|-------------------------
+|@integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
+|@natural |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
  
 For conversion into characters:
 
-* The number of characters required for  Integer numbers is 20. (19+sign)
-* For Real numbers, conversion into characters is controled by #precision directive
+* The number of characters required for @integer numbers is 20. (19+sign)
+* For @double numbers, conversion into characters is controled by #precision directive
  
-### Real numbers
+### @double numbers
 
-The type _Real_ is represented using floating precision numbers.   
+The type _Double_ is represented using floating precision numbers.   
 Floating decimal numbers are most simply described by 3  Integers:
 
 * s: a sign (0 or 1)  
@@ -85,34 +95,35 @@ Floating decimal numbers are most simply described by 3  Integers:
 * n: an exponent   
 
 The numerical value of a finite number is −1ˢ × c × 2ⁿ
-Using this formula EVE define one single type Real.
+Using this formula EVE define two floating point types.
 
-Real: is double-precision 64-bit IEEE 754:  
-sign has 1bit, exponent has 11 bits and coefficient has 52 bits;
+@single: is single-precision 32-bit IEEE 754:  
+@double: is double-precision 64-bit IEEE 754:  
 
 |type     |Digits |Bytes|maximum number	
 |---------|-------|-----|----------------------------------
-|Real     |15     |8    |≤ 1.8 × 10³⁰⁸
+|@single  |7      |4    |≤ 3.4 × 10³⁸
+|@double  |16     |8    |≤ 1.8 × 10³⁰⁸
 
-Precision Real: numbers is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Real: and back without loosing any digit. Think of it like a digital display from a packet calculator.
+Precision is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a @double: and back without loosing any digit. Think of it like a digital display from a packet calculator.
 
 **Numeric literals**
 
-   Example     | Description
----------------|-------------------------------------------------------------------------
-0              | Integer zero
-1234567890     | Integer number using symbols: {0,1,2,3,4,5,6,7,8,9}
-0.5            | real number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
-0.0            | real number
+Example | Description
+--------|-------------------------------------------------------------------------
+0       | @integer zero
+123     | @integer number using symbols: {0,1,2,3,4,5,6,7,8,9}
+1/2     | @single  number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
+0.5     | @double  number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
 
 **example**
 
 ```
 method main:
 **declare variables
-  Integer: i; 
-  Natural: n;
-  Real: r;
+  @integer: i; 
+  @natural: n;
+  @double : r;
 process  
 **modify variables
   i := 9223372036854775807;
@@ -139,17 +150,17 @@ alias Alias_Name := Generic_Class {parameters}
 
 **Example:**
 ```
-class Point(Real: x,y) <: Object:
-  Real: .x, .y;
+class Point(@double: x,y) <: @Object:
+  @double: .x, .y;
 create
-  object := Object();
+  object := {};
   .x := x;
   .y := y;
 return;
 
 method main:
-  Point: p1, p2;      -- use implicit constructor
-  Point: p3 := {1,1}; -- initial value for Point
+  @point: p1, p2;      ** use implicit constructor
+  @point: p3 := {1,1}; ** initial value for Point
 process
 **modification using constant literals
   p1.a := 1;
@@ -177,21 +188,21 @@ In EVE the arithmetic operators are polymorphic. Numeric operators can do implic
 
 Implicit conversion is possible and _safe_ in this direction:
 
-Integer -> Natural -> Real -> String.
+@byte -> @word -> @binary -> @natural -> @integer -> @single -> @double.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-String -> Real ->  Natural:->  Integer 
+@double ->  @single -> @integer -> @natural -> @binary -> @word -> @byte
 
 ```
 given
-  Integer: a := 2;
-  Real:    b := 1.5; 
+  @integer: a := 2;
+  @double:  b := 1.5; 
 do
-  b := a;       -- this implicit cast is possible b = 2.0
-  b := a + 3.5; -- add 3.5 then assign result to b = 5.5
-  a := b;       -- error: can not assign Real: to  Integer
-  a := 1.5;     -- error: can not assign Real: to  Integer
+  b := a;       ** this implicit cast is possible b = 2.0
+  b := a + 3.5; ** add 3.5 then assign result to b = 5.5
+  a := b;       ** error: can not assign @double: to  @integer
+  a := 1.5;     ** error: can not assign @double: to  @integer
 done;
 ```
 
@@ -201,20 +212,21 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 Examples of explicit coercion:   
 ```
 given
-  Integer: a := 0;
-  Real:    b := 1.5;
+  @integer: a := 0;
+  @double : b := 1.5;
 do
-  ** explicit coercion lose (0.5)
-  a := floor(b);
-  print (a); -- will print: 1
- 
-  ** explicit coercion add (0.5)
-  a := ceiling(b); 
-  print (a); -- will print: 2
 
-  ** explicit coercion rounding:  
+**explicit coercion lose (0.5)
+  a := floor(b);
+  print (a); ** will print: 1
+ 
+**explicit coercion add (0.5)
+  a := ceiling(b); 
+  print (a); ** will print: 2
+
+**explicit coercion rounding:  
   a := round(b);
-  print (a); -- will print: 2
+  print (a); ** will print: 2
 done;
 ```
 
@@ -222,27 +234,27 @@ done;
 
 ```
 given
-  String: s; 
-  Integer: v := 1000;
+  @string : s; 
+  @integer : v := 1000;
 do  
-  s := format(v); -- explicit coercion s = '1000'
+  s := format(v); ** explicit coercion s = '1000'
 done;
 ```
 
-**String: to a number**
+**@string: to a number**
 
 This can be ready using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
 ```
 given
-  Integer: v; 
-  Real:    b;
-  String: s := '1000';
-  String: r := '200.02';
+  @integer  : v; 
+  @double   : b;
+  @string  : s := '1000';
+  @string  : r := '200.02';
 do
-  v := parse(s); -- make v = 1000
-  v := parse(r); -- make v = 200 and decimal .02 is lost
-  b := parse(r); -- make b = 200.02 and decimal .02 is preserved
+  v := parse(s); ** make v = 1000
+  v := parse(r); ** make v = 200 and decimal .02 is lost
+  b := parse(r); ** make b = 200.02 and decimal .02 is preserved
 done;
 ```
 
@@ -255,7 +267,7 @@ done;
 
 Details: [Numeric Format](processing.md#numeric-format)
 
-## Type inference
+## @type inference
 
 This is a logical deduction of variable type from literal or constructor using ":=" operator.
 
@@ -264,10 +276,10 @@ This is a logical deduction of variable type from literal or constructor using "
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List: ls := [0,1,2,3,4,5,6,7,8,9];
+  @list: ls := [0,1,2,3,4,5,6,7,8,9];
 do
-  print  ls.type(); -- List[Integer]
-  expect ls is List[Integer];
+  print  ls.type(); ** @list[@integer]
+  expect ls is @list[@integer];
 done 
 ```
 
@@ -277,61 +289,62 @@ Literals are representations of specific particular data type in source code.
 **Basic types**
 Next notation use "9" to show any digit in range [0..9].
 
-Literal      | Type
+Literal      | @type
 -------------|-----------------
- 9           | Integer
--9           | Integer
-0x9ABCDEF    | Natural
-0b1010101    | Natural
-9.9          | Real
-U+0001       | Symbol
+ 9           | @integer
+-9           | @integer
+0x9ABCDEF    | @natural
+0b1010101    | Binary
+9.9          | @double
+U+0001       | Word
+U-FFFFFFFF   | Binary
 
 **Zero literals**
 
-Literal    | Type
+Literal    | @type
 -----------|---------------
-[]         | List
-{}         | Set/Hash
-()         | List
-""         | Text
-''         | String
-0          | Integer
-0.0        | Real
+[]         | @list
+{}         | @set/@hash
+()         | @list
+""         | @text
+''         | @string
+0          | @integer
+0.0        | @double
            
 **Collection literals**
 
-Literal      | Type
+Literal      | @type
 -------------|-----------------
 {a:0, b, c}  | Ordinal
-{x:'b',y:'d'}| Object
-[`a`,`b`,`c`]| List{Symbol}
-['a','b','c']| List{Char}
-["a","b","c"]| List{Text}
+{x:'b',y:'d'}| @Object
+[1, 2, 3]    | @list{@byte}
+['a','b','c']| @list{@string}
+["a","b","c"]| @list{@text}
 
-### Type Inference
+### @type Inference
 
 Sometimes the type is partially specified to simplify type declaration:
 
 ```
 define
   ** member type is inferred later from first member
-  List: a := [];
+  @list: a := [];
 ```
        
-### Type verification
+### @type verification
 
 We can verify the type using "is" operator:
 
 ```
 given
-  Object: r := {name:"test", age:"24"}; 
-  Hash:   t := {('key1':"value1"),('ley2':"value2")};
+  @Object: r := {name:"test", age:"24"}; 
+  @hash:   t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
-  expect r.name  is Text;
-  expect r.age   is Text;
-  expect t.key   is String;
-  expect t.value is Text;
+  expect r.name  is @text;
+  expect r.age   is @text;
+  expect t.key   is @string;
+  expect t.value is @text;
 done;
 ```
 
@@ -341,15 +354,15 @@ For type introspection we can use type() built-in function:
 
 ```
 given
-  Real: i := 1.5;
+  @double: i := 1.5;
 do
-  expect i is Real;
+  expect i is @double;
   print "type of i is \s" <+ type(i);
 done;
 ```
 
 ## Polymorphic operators
-In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or real. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
+In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or @double. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
 
 Some languages define different operators for  Integers and floating decimal numbers. For example in OCaml the operator "/" can divide  Integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
 
@@ -363,7 +376,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-alias Name := Ordinal {symbol:value, ... };
+alias Name := {symbol:value, ... } <: $ordinal;
 
 ```
 
@@ -376,10 +389,10 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-alias Day:= Ordinal {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday};
+alias Day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: $ordinal;
 
 method main:
-  String: message;
+  @string: message;
 process  
   given
     Day: today := today();
@@ -430,20 +443,20 @@ In Latin the "falsus" and "verum" are translated to false and true.
 
 name     |    value      | binary 
 ---------|---------------|------------------------------
-False    | Logic.False   | 00000000 00000000 
-True     | Logic.True    | 00000000 00000001
+false    | Logic.false   | 00000000 00000000 
+true     | Logic.true    | 00000000 00000001
 
 **syntax**
 ```
 variable
-  Logic: variable_name; -- default False
+  @logic: variable_name; ** default false
 ```
 
 **internal design**
 
 Probably best to define Logic type is Ordinal:
 ```
-alias Logic := Ordinal { .False , .True };
+alias Logic := { .false , .true } <: Ordinal;
 ```
 
 **Relation Operators**
@@ -490,7 +503,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-alias Name := Variant {Type | Type | ... };
+alias Name := Variant {@type | @type | ... };
 
 variable
   Name: v;
@@ -511,7 +524,7 @@ For this we use a special type Null
 
 **Examples:**
 ```
-class Number : Variant {Integer | Real | Null};
+class Number : Variant {@integer | @double | Null};
 
 variable
   Number: x := Null;
@@ -525,44 +538,44 @@ A variant can establish its data type at runtime:
 **example:**
 ```
 given
-  Real | Integer: v, x ,t;
+  @double | @integer: v, x ,t;
 do
   ** positive example
-  v := 1;     -- v is  Integer
-  x := 1.5;   -- x is Real:    
-  t := 1 / 2; -- make t Real
+  v := 1;     ** v is  @integer
+  x := 1.5;   ** x is @double:    
+  t := 1 / 2; ** make t @double
   
   ** safe conversion
-  t := 12; -- t is Real
+  t := 12; ** t is @double
   
   ** negative examples
-  v := x;  -- ERROR: v is  Integer 
+  v := x;  ** ERROR: v is  @integer 
 done;
 ```
 
 A variant is a way to create a generic method.
 
 ```
-method switch(Integer | Real: x, y):
-  Integer | Real: i
+method switch(@integer | @double: x, y):
+  @integer | @double: i
 process  
   expect type(x) = type(y);
   
-  i := x; -- intermediate reference
-  x := y; -- first  switch
-  y := x; -- second switch
+  i := x; ** intermediate reference
+  x := y; ** first  switch
+  y := x; ** second switch
 return;
 
 method main:
-  Integer: y;
-  Real: a, b;
+  @integer: y;
+  @double: a, b;
 process  
-  ** invert two  Integer: numbers
+  ** invert two  @integer: numbers
   x := 10;
   y := 20;  
   switch(x, y);
   expect (x = 20) and (y = 10);
-  ** invert two Real: numbers
+  ** invert two @double: numbers
   a := 1.5;
   b := 2.5;
   switch(a, b);
@@ -570,11 +583,11 @@ process
 return;
 ```
 
-## Single symbol
+## @single symbol
 
-Symbols are Unicode UTF32. That is using 32 bit  Integer:
+Symbols are Unicode UTF32. That is using 32 bit  @integer:
 
-* Single-quoted strings like: 'α'
+* @single-quoted strings like: 'α'
 * U+HHHH   from: U+0000   to U+FFFF
 * U-HHHHHH from: U+000000 to U+FFFFFF
 
@@ -602,7 +615,7 @@ When can create a date literal using 3 reversible functions:
 
 ```
 given
-  Date: date;
+  @date: date;
 do
   date := "2019/01/30" -> YDM;
   date := "30/01/2019" -> DMY;
@@ -642,14 +655,14 @@ xx: can be: (am/pm)
 **default zero time**
 ```
 given
-  Time: time; -- '00:00' 
+  @time: time; ** '00:00' 
 ```
 
 **Example:**
 
 ```
 given
-  Time: time1, time2, time3; 
+  @time: time1, time2, time3; 
 do
   time1 := "23:63" -> T24;
   time2 := "23:63:59,99" -> T24;

@@ -29,6 +29,7 @@ Modules are source files having extension: *.eve. Module names are using lowerca
 * member identifier names can be 30 characters long;
 
 ## Main module
+
 Any module that contains method main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _global constants_.
 
 **properties**
@@ -47,6 +48,7 @@ A _library_ is a shared folder containing reusable modules.
 * after import you can call public members of a library using _dot notation_;
 
 ## Regions
+
 A module file is divided into regions using keywords: {import, define, global, class, method} 
 
 **module syntax**
@@ -54,31 +56,33 @@ A module file is divided into regions using keywords: {import, define, global, c
 *****************************************
 ** Header comments: module purpose
 *****************************************
+module name:
 ** global region
-#module.name        := 'module name'; 
-#module.description := 'short description';
 ...
 ** import region
 import
   from $path/library_name use (*);
 
 ** primitive class declaration
-alias name := class_name {generic_parameters};
+alias 
+  Name := library_name.class_name;
+  Name := class_name{generic_parameters};
   ...
 
 ** shared constants
 constant
-  IDENTIFIER :: value; -- constant
+  @type: NAME := value; ** constant
   
 ** shared variables
 variable
-  Type: x;         -- default value
-  Type: y:= value; -- specific value
+  @type: x;          ** default value
+  @type: y := value; ** specify value
+  @type: z :: y;     ** copy value
   ...
   
 ** function declaration
 function 
-  Type: name(params) => (expression);
+  @type: name(params) => (expression);
   ...
 
 ** advanced class declaration
@@ -93,6 +97,7 @@ return;
 ```
 
 ## Declaration order
+
 Order of regions by default is: {globals, import, type, constant, variable, function, class, method}. Methods and classes can alternate. You can define multiple regions of the same type when members depend on each other. 
 
 ## Globals
@@ -106,7 +111,8 @@ Globals are declared in first module region, with zero space indentation:
 
 Global members are visible in application with no prefix. 
 
-### Global constants
+## Global constants
+
 Global constants start with prefix "$". Usually are loaded from a configuration file (*.cfg) and do not need to be declared explicit in a _constant_ region. They are known by EVE runtime and can be used in all modules. 
 
 **Note:** 
@@ -120,16 +126,16 @@ Several global constants are provided by EVE environment:
 * $eve_lib   :eve lib folder
 * $pro_lib   :project lib folder
 
-### Global variables
+## Global variables
 
 Global variables are defined in standard library.
 
 **examples**
 ```
-#error  -- contains last error message
-#stack  -- contains debug information about current call stack
-#trace  -- contains reporting information about executed statements
-#level  -- contains how deep is the current call stack
+#error  ** contains last error message
+#stack  ** contains debug information about current call stack
+#trace  ** contains reporting information about executed statements
+#level  ** contains how deep is the current call stack
 ```
 
 **notes:** 
@@ -146,8 +152,8 @@ Is used to include members from several other modules into current module:
 $user_path := $root_path/relative_path
 
 import 
-  from $user_path use (member_name,...);  -- specific members
-  from $user_path use (*);                -- all public members
+  from $user_path use (member_name,...);  ** specific members
+  from $user_path use (*);                ** all public members
   ...
 ```
 
@@ -164,13 +170,14 @@ Shared constants are declared in _constant_ region:
 **example**
 ```
 constant
-  PI :: 3.14; -- local constant
+  @double: .PI := 3.14; ** local constant
 ```
 
 **note:** 
 * Constants are immutable entities;
-* Constant identifiers are using uppercase;
-* Constants are using operator "::" for initialization;
+* Constant identifiers are using uppercase letters;
+* Public constants are using dot prefix: "."
+* Constants are using operator ":=" for initialization;
 * Constant type is implicit defined using type inference;
 
 ## Shared variables
@@ -180,13 +187,13 @@ Shared variables are declared in _variable_ region:
 **example**
 ```
 variable
-  Real: pi := 3.14; -- local variable
+  @double: pi := 3.14; ** shared variable
 ```
 
 **note:** 
 * Shared variables are static;
 * Variable names are using lowercase letters;
-* Type variable is explicit specified before variable identifier;
+* Variable data type is specified before the identifier;
 
 ## Methods
 
@@ -226,16 +233,16 @@ Formal parameters are defined in round brackets () separated by comma. Each para
 
 **mandatory**
 ```
- -- mandatory parameters do not have initial value
- parameter ::= Class_Name : parameter_name -- input parameter
- parameter ::= Class_Name @ parameter_name -- output parameter
+ ** mandatory parameters do not have initial value
+ parameter ::= Class_Name : parameter_name ** input parameter
+ parameter ::= Class_Name @ parameter_name ** output parameter
 ```
 
 **optional**
 ```
- -- optional parameters have explicit initial value
- parameter ::= Class_Name : parameter_name := value -- input parameter
- parameter ::= Class_Name @ parameter_name := value -- output parameter
+ ** optional parameters have explicit initial value
+ parameter ::= Class_Name : parameter_name := value ** input parameter
+ parameter ::= Class_Name @ parameter_name := value ** output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -255,7 +262,7 @@ One method can receive multiple arguments of the same type separated by comma in
 
 **example**
 ```
-method test(List{String} * args):
+method test(@list{@string} * args):
   print(args);
 return;
 ```
@@ -268,9 +275,9 @@ Every method has a local context. Members defined in local context are private. 
 Methods can be used like statements. A method call can be done using method name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no arguments parentheses are not required.
 
 ```
-  method_name;                  -- call method without arguments
-  method_name argument_value;   -- call method with single argument
-  method_name (argument_list);  -- call method with a list of arguments
+  method_name;                  ** call method without arguments
+  method_name argument_value;   ** call method with single argument
+  method_name (argument_list);  ** call method with a list of arguments
 ```
 
 **Method termination**
@@ -278,19 +285,19 @@ A method end with keyword return. When method is terminated, program execution w
 
 **Example:**
 ```
-method test(Integer: a):
+method test(@integer: a):
 process
   ** print is a system method
   print a; 
 return;
 
-method main(List[String]: *args):
+method main(@list[@string]: *args):
   ** number of arguments received:
-  Integer: c := args.count();
+  @integer: c := args.count();
 process  
   ** verify condition and exit
   exit if c = 0;  
-  test c; -- method call
+  test c; ** method call
 return;
 ```
 
@@ -309,21 +316,21 @@ Next method: "add_numbers" has 2 side effects:
 ```
 ** local variables
 variable
-  Integer: test; 
-  Integer: p1;   
-  Integer: p2;   
+  @integer: test; 
+  @integer: p1;   
+  @integer: p2;   
 
 method add_numbers:
 process
   **side effects  
-  test := p1 + p2; -- first side-effect
-  print (test);    -- second side-effect
+  test := p1 + p2; ** first side-effect
+  print (test);    ** second side-effect
 return;
 
 method main:
 process
-  p1 := 10; -- side effect
-  p2 := 20; -- side effect
+  p1 := 10; ** side effect
+  p2 := 20; ** side effect
   add_numbers;
   expect result = 30;
 return;
@@ -334,19 +341,19 @@ return;
 To avoid shared variables you can use input/output parameters:
 
 ```
-method add(Integer: p1,p2,  Integer @ out ):
+method add(@@integer: p1 = 0, p2 = 1,  @@integer + out):
 process
   out := p1 + p2;
 return;
 
 method main:
-  Integer: result;
+  @integer: result;
 process  
   ** reference argument require a variable
   add(1,2, result);
-  print (result); -- expected value 3
+  print (result); ** expected value 3
   ** negative test
-  add (1,2,4); -- error, "out" parameter require a variable
+  add (1,2,4); ** error, "out" parameter require a variable
 return;
 ```
 
@@ -363,11 +370,11 @@ Functions are declared in a region that start with keyword: "function".
 
 ```
 function 
-  Type: name(parameters) => (expression);
+  @type: name(parameters) => (expression);
 ```
 
 * A function can have parameters; 
-* A function has a single result;
+* A function can have a single result;
 * Result type is declared before function name. 
 
 **Function call**
@@ -376,10 +383,10 @@ The call for a function is using name of the function and round brackets () for 
 **pattern:**
 ``` 
 function
-  Type: function_name() => (expression);
+  @type: function_name() => (expression);
   
 given 
-  Type: result;
+  @type: result;
 do  
   ** call with no arguments:
   result := function_name();
@@ -408,13 +415,13 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function Integer: sum(Integer: a, b) =>  (a + b);
+function @integer: sum(@integer: a, b) =>  (a + b);
   
 method main:
-  Integer: r;
+  @integer: r;
 process  
-  r := sum(10,20);  -- function call
-  print(r);         -- this will print 30
+  r := sum(10,20);  ** function call
+  print(r);         ** this will print 30
 return;
 ```
 
@@ -423,12 +430,12 @@ return;
 A ternary operator is "if". Can be used with conditional expressions to return one value or other.   
 **syntax**
 ```
-  value if (condition) : value
+  a := (value if (condition) | value)
 ```
 
 **example**
 ```
-print ("True" if True);
+print "true" if True;
 ```
 
 ## λ expressions
@@ -437,32 +444,32 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **syntax:**
 ```
-  identifier := (value if condition,...:default_value)
+  identifier := (value if condition,...| default_value)
 ```
 
 **nodes**
 * each node is evaluated until one is true
 * each node can return one single value
-* the last node do not use a condition but ":"
+* the last node do not use a condition but "|"
 
 **example**
 ```
 method main:
-  Integer: p1, p2, x;
+  @integer: p1, p2, x;
 process
   p1 := 2;
   p2 := 1;
   ** using λ expression  
-  x  := ( 0 if p1 = 0, 0 if p2 = 0: p1+p2);
-  print x; -- expect: 3 
+  x  := ( 0 if p1 = 0, 0 if p2 = 0 | p1+p2);
+  print x; ** expect: 3 
 return;
 ```
 
 **example**
 ```
 given
-  Logic:   b := False;
-  Integer: v := 0;   
+  @logic:   b := false;
+  @integer: v := 0;   
 do
   v := (1 if b : 2);   
   expect v = 2;  
@@ -490,7 +497,7 @@ return;
 ```
 **Read more:** [Classes](classes.md)
 
-## Test case 
+## Test cases 
 
 A method can be organized as a work-flow of multiple test-cases that can fail.
 

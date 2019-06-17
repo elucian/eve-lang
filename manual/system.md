@@ -36,13 +36,13 @@ The read statement can print a text (prompt) then wait until user type and press
 
 Function read declaration
 ```
-read (String: prompt) => String;
+read (@string: prompt) => @string;
 ```
 
 **Example:**
 ```
 method main:
-  String: s;
+  @string: s;
 process  
   s := read(v, "read:");
   print("you entered:" & v);
@@ -61,7 +61,7 @@ This will help developers to make dynamic write.
 Is user responsibility to make a line break using an escape \n or \r inside the string parameter.
 
 ```
-method write( String * str ):
+method write( @string * str ):
  ...
 return;
 ```
@@ -86,7 +86,7 @@ that is (pass, fail) but also to display at the console some feedback.
 ## Function _print_
 This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beginning of the next line. So the _print_ function is like println() from other languages.
 ```
-method print(String * str):
+method print(@string * str):
 ...
 return;
 ```

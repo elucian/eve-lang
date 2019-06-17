@@ -10,7 +10,7 @@ EVE has only 5 control statements:
 **Notes:** 
 
 * keyword _given_ start a local scope for any block statement
-* one blocks is ending with keywords: { done \| next \| repeat}
+* one {* blocks *} is ending with keywords: { done \| next \| repeat}
 
 ## With
 
@@ -19,9 +19,9 @@ Establish a declaration region and scope qualifier suppression block.
 **syntax**
 ```
 with qualifier := long_qualifier do
-  -- local statements
-  method_name();  -- instead of: qualifier.method_name()
-  var := function_name(); -- instead of qualifier.function_name()
+  ** local statements
+  method_name();  ** instead of: qualifier.method_name()
+  var := function_name(); ** instead of qualifier.function_name()
   ...
 done;
 ```
@@ -37,7 +37,7 @@ This keyword in conjunction with {do, else} declare a multi-path block selector;
 1.single path selector
 ```
 when (expression) do
-  -- single path
+  ** single path
   ...
 done;
 ```
@@ -45,10 +45,10 @@ done;
 2.dual path selector
 ```  
 when (expression) do
-  -- true path
+  ** true path
   ...
 else
-  -- false path
+  ** false path
   ...
 done;
 ```
@@ -58,7 +58,7 @@ done;
 when (expression) do
   ...
   when (expression) do
-   -- nested path
+   ** nested path
    ...
   done;
 done;
@@ -85,12 +85,12 @@ Execute a block of code as long as one condition is true.
 **Syntax:**
 ```
 while (condition) do
-  -- forced iteration
+  ** forced iteration
   skip if (condition);
-  -- early interruption
+  ** early interruption
   stop if (condition);
 else
-  -- alternative path  
+  ** alternative path  
 repeat;
 ```
 **example**
@@ -98,13 +98,13 @@ repeat;
 ```
 ** example of collection iteration
 method main:
-  List:test := ["a","b","c","d","e"];
-  Integer: i := 0;
+  @list:test := ["a","b","c","d","e"];
+  @integer: i := 0;
 process
   while (i < test.length) do
     element := my_list[i];
     i += 1;
-    -- shortcut 
+    ** shortcut 
     if (element >= "c") do
        write(element);
        write(',') if (element ≠ "e");
@@ -120,12 +120,12 @@ Scan block use a control variable to visit all elements in a range or collection
 
 **Pattern:**
 ``` 
-given Integer: var <: (min..max) do
-  -- block statements;
+given @integer: var <: (min..max) do
+  ** block statements;
   ...
-  -- next iteration
+  ** next iteration
   skip if (condition);
-  -- early interruption
+  ** early interruption
   stop if (condition);
   ...
 next;
@@ -137,8 +137,8 @@ next;
 
 Example of range iteration:
 ```
-given Integer: i <: (1..10:2) do
-  -- write only odd numbers
+given @integer: i <: (1..10:2) do
+  ** write only odd numbers
   write i;
   write ',' if (i < 10);
 next;

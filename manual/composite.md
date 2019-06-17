@@ -9,14 +9,14 @@ Composite types represents groups of multiple elements.
 * [text](#text)
 * [exception](#exception)
 
-## List
+## @list
 
 A list is a consecutive sequence of elements having a dynamic capacity. 
 
 **syntax**
 ```
-  List{Type}: list_name := [];     -- new empty list
-  List: list_name := [value, ...]; -- new populate list
+  @list{@type}: list_name := [];     ** new empty list
+  @list: list_name := [value, ...]; ** new populate list
 ```
 
 **notes:**
@@ -27,14 +27,14 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  List{Integer} : n_list; 
-  List{Object}  : o_list; 
-  List{String}  : s_list; 
+  @list{@integer} : n_list; 
+  @list{@object}  : o_list; 
+  @list{@string}  : s_list; 
 ```
 
 **list literals**
  
-* List literals enclosed in square brackets,
+* @list literals enclosed in square brackets,
 * Elements are separated by comma,
 * All elements are having the same type.
 
@@ -43,38 +43,38 @@ given
 Literals can be used for initialization:
 ```
 given
-  List{Symbol} : c_list := ['a', 'b', 'c'];
-  List{Integer}: n_list := [1, 2, 3];  
+  @list{Symbol} : c_list := ['a', 'b', 'c'];
+  @list{@integer}: n_list := [1, 2, 3];  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  List{Integer}: c_list := [];
+  @list{@integer}: c_list := [];
 do
   ** alter list using  ":=" 
   c_list := [1,2,3]; 
 done;
 ```
 
-## Set
+## @set
 In mathematics a set is an abstract data structure that can store certain values, without any particular order, and no repeated values. Sets are fast to search, add or remove elements from. However, you have to know the element value in order to search for it or to remove it from the set. 
 
 **declaration**
 
 ```
-  Set{type}: set_name;
+  @set{type}: set_name;
 ```
 
-**Empty Set**
+**Empty @set**
 
 An empty set is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is empty. This is also called zero value for set.
 
-**Set restrictions**
+**@set restrictions**
 
 * All elements of a set must have the same type
-* Set elements can have only comparable types: {Ordinal, Numeric, String}.
+* @set elements can have only comparable types: {Ordinal, Numeric, @string}.
 
 **Mutability**
 
@@ -87,7 +87,7 @@ A set can be modified during run-time using operators.
 **Example:**
 ```
 given
-  Set{Integer}: my_set := {0,2,3};
+  @set{@integer}: my_set := {0,2,3};
 do
   ** append element 1
   my_set    += 1;  
@@ -109,11 +109,11 @@ Use union operator | combine two sets.
 
 ```
 given
-  Set: first := {0,1,2,3,4,5,6,7,8,9};
-  Set{Integer}: second := {};
+  @set: first := {0,1,2,3,4,5,6,7,8,9};
+  @set{@integer}: second := {};
 do
-  second := first | {0,1,2,10}; -- set union
-  print(second); -- {0,1,2,3,4,5,6,7,8,9,10}
+  second := first | {0,1,2,10}; ** set union
+  print(second); ** {0,1,2,3,4,5,6,7,8,9,10}
 done;
 ```
 
@@ -122,93 +122,93 @@ Intersect operator & find common elements:
 
 ```
 given
-  Set: test := {};
+  @set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
-  print test; -- {3,4}
+  print test; ** {3,4}
 done;
 ```
 
 **Note:** Operators "|" and "&" are overloaded betwise operators
 
-## Hash
+## @hash
 
-It is called "Hash" due to similar letter H representing a connection between two columns: the key column and value column.
+It is called "@hash" due to similar letter H representing a connection between two columns: the key column and value column.
 
-* Hash is set of (key:value) pairs; 
+* @hash is set of (key:value) pairs; 
 * The key must be sortable: { number, ordinal, string };
 
 **syntax**
 ```
-alias Table_Name := Hash{key_type, value_type}; -- type alias 
+alias Table_Name := @hash{key_type, value_type}; ** type alias 
 
 variable
-  Hash{key_type, value_type}: name; -- explicit type
-  Hash: name := {(key:value), ...}; -- implicit type
-  Table_Name := {(key:value), ...}; -- using alias
+  @hash{key_type, value_type}: name; ** explicit type
+  @hash: name := {(key:value), ...}; ** implicit type
+  Table_Name := {(key:value), ...}; ** using alias
 ```
 
 **Example**
 ```
 given
-  Hash{String,  Integer}: table := {}; -- empty table
+  @hash{@string,  @integer}: table := {}; ** empty table
 do   
   table := {('one':1), ('two':2)};
 done;
 ```
 
-## String
+## @string
 
-In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings can store a single line. Double quoted strings can store multiple lines of text separated by new line "\n".
+In EVE There are two types of strings. @single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. @single quoted strings can store a single line. @double quoted strings can store multiple lines of text separated by new line "\n".
 
-* Single quoted string, has default capacity 1024 bytes;
-* Double quote strings have unrestricted capacity;
+* @single quoted string, has default capacity 1024 bytes;
+* @double quote strings have unrestricted capacity;
 
-### String: declaration
-String can be initialized with a constant literal using single quotes or double quotes. 
+### @string: declaration
+@string can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
-  String(100): short_string := ''; -- this string can hold 100 symbols, 100*4 = 400 bytes
-  String: string_name       := ''; -- default capacity 1024 can hold 256 ASCII symbols
-  Text: text_name           := ""; -- variable capacity string can hold many lines of text
+  @string(100): short_string := ''; ** this string can hold 100 symbols, 100*4 = 400 bytes
+  @string: string_name       := ''; ** default capacity 1024 can hold 256 ASCII symbols
+  @text: text_name           := ""; ** variable capacity string can hold many lines of text
 ```
 
-### String: mutability
+### @string: mutability
 In EVE strings are mutable. If you use `:=` new memory is allocated. If you use a modifier: `+=` the string is fill too capacity. If the capacity is over the limit you will get an error: "capacity overflow".
 
 **Example:**
 ```
 method test_string()
-  String: str := 'First value';  
-  String: ref := 'First value'; 
+  @string: str := 'First value';  
+  @string: ref := 'First value'; 
 process  
-  expect  (str  = ref); -- same value
-  expect !(str == ref); -- different locations  
+  expect  (str  = ref); ** same value
+  expect !(str == ref); ** different locations  
   
-  ref := str;  -- reset ref
-  expect (str =  ref); -- same value
-  expect (str == ref); -- same location  
+  ref := str;  ** reset ref
+  expect (str =  ref); ** same value
+  expect (str == ref); ** same location  
   
   ** if we modify "str" then "ref" will appear modified
-  str += ":"; -- mutable string
+  str += ":"; ** mutable string
   expect ref = "First value:";
-  expect str == ref; -- the reference is holding
+  expect str == ref; ** the reference is holding
   
   ** if we recreate str, reference is reset
-  str := 'First value:'; -- new string location
-  expect str = ref;      -- same value
-  expect !(str == ref);  -- different locations
+  str := 'First value:'; ** new string location
+  expect str = ref;      ** same value
+  expect !(str == ref);  ** different locations
   ** reference was broken, ref is pointing to old value
-  print ref;  -- 'First value:'
+  print ref;  ** 'First value:'
 return;
 ```
 
 **Note:** 
 
 * You can create garbage in EVE if you loose references to strings;
-* Provision for large capacity strings is not recommended, use Text instead;
+* Provision for large capacity strings is not recommended, use @text instead;
 
-### String: comparison
+### @string: comparison
 
 * Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
 * Two strings that have identical characters are equivalent regardless of quotation;
@@ -218,10 +218,10 @@ return;
 **Example:**
 
 ```
-print ('this' = 'this');    -- True (same value)
-print ("this" = 'this');    -- True (same value)
-print (' this' <> 'this');  -- True (not same value)
-print ('this ' <> 'this');  -- True (not same value)
+print ('this' = 'this');    ** true (same value)
+print ("this" = 'this');    ** true (same value)
+print (' this' <> 'this');  ** true (not same value)
+print ('this ' <> 'this');  ** true (not same value)
 ```
 
 ### Null strings
@@ -230,7 +230,7 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  String: str := "";
+  @string: str := "";
 do 
   expect (str = null);
   expect (str = '');
@@ -238,9 +238,9 @@ do
 done;
 ```
 
-## Text
+## @text
 
-Text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. Text can be modified while strings are immutable.
+@text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. @text can be modified while strings are immutable.
 
 **Literal**
 
@@ -249,7 +249,7 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 ** declaration example of a text literal
 given
-  Text: my_text := "";
+  @text: my_text := "";
 do
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
@@ -275,7 +275,7 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 **Example:**
 ```
 given
-  Text: us := "I can write Greek: \αβγδ\.";
+  @text: us := "I can write Greek: \αβγδ\.";
 do
   print (us);
 done;
@@ -289,15 +289,15 @@ The preferred font for EVE programming is "DejaVu Sans Mono".
 
 Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In EVE all exceptions are considered errors.
 
-The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
+The exception is a variable of type @Object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-alias Exception: Object { 
-        Integer: code 
-       ,String : message 
-       ,String : method_name 
-       ,String : module_name 
-       ,String : line_number  
+alias Exception: @Object { 
+        @integer: code 
+       ,@string : message 
+       ,@string : method_name 
+       ,@string : module_name 
+       ,@string : line_number  
       };
 
 ** global variable for last error
@@ -335,7 +335,7 @@ In this region developer can use control statements like "switch","case" to anal
 
 ```
 method main:
-  Real: a;
+  @double: a;
 process  
   a := 1 / 0;
 recover
