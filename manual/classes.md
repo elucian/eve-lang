@@ -1,4 +1,4 @@
-## @Object Oriented
+## @object Oriented
 
 EVE language is using single inheritance similar to Java.
 
@@ -21,15 +21,15 @@ A class is a composite data type. It implement properties and methods required t
 * Polymorphic: an object can play its base class role;
 
 ## Design
-A class is inherited from a base class or from root class called: @Object.
+A class is inherited from a base class or from root class called: @object.
 
 **simple objects**
 
-You can create simple objects using @Object default constructor:
+You can create simple objects using @object default constructor:
 
 ```
 variable
-  @Object := {attribute:value, ...} ;
+  @object := {attribute:value, ...} ;
 ```
 
 One object can receive attribute names that do not exist. Default constructor will create new attributes automatic and assign the value for each. Attributes do not need to be created for default constructor. However after object is created the structure is locked: no other attributes can be added.
@@ -103,7 +103,7 @@ Class attributes are static and can be accessed using two scope qualifiers:
 ```
 
 **Class Tree**
-There is a special class that has name _"@object"_ and represents the "root" class. Each classes can grow from @Object or from other "base class" forming a _"class tree"_.
+There is a special class that has name _"@object"_ and represents the "root" class. Each classes can grow from @object or from other "base class" forming a _"class tree"_.
 
 ## Constructor
 A class can have a single constructor. A constructor can use decision statements based on parameter values to create _"object"_ in different ways based on several conditions. This is a flexible constructor.

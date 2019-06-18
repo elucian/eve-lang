@@ -2,29 +2,18 @@
 ** quest statement demo
 ****************************
 method main():
-  String:  msg ;  -- reference to String
-  Integer: var ;  -- reference to Integer
+  String:  msg ;  ** reference to String
+  Integer: var ;  ** reference to Integer
 process
-  read (var,"var:>");
+  print ("Enter a number: 1..9");
+  read  (var,"var:>");
   quest var:
-    match 0 do
-      msg := "zero";
-      ...
-    match 1 do
-      msg := "one";
-      ...
-    match (0,2,4,6,8) do
+    match 2,4,6,8 do
       msg := "even";
-      ...
     match (1,3,5,7,9) do
       msg := "odd";
-      ...
-    match [1..4] do
-      msg := "small";
-    match [5..9] do
-      msg := "large";
   none
-    msg := "Unexpected";
+    msg := "0: Unexpected";
   done;
   print msg;
 return;

@@ -74,7 +74,7 @@ An empty set is represented like this: {} and can be assigned to a set if you wi
 **@set restrictions**
 
 * All elements of a set must have the same type
-* @set elements can have only comparable types: {Ordinal, Numeric, @string}.
+* @set elements can have only comparable types: {@ordinal, Numeric, @string}.
 
 **Mutability**
 
@@ -136,7 +136,7 @@ done;
 It is called "@hash" due to similar letter H representing a connection between two columns: the key column and value column.
 
 * @hash is set of (key:value) pairs; 
-* The key must be sortable: { number, ordinal, string };
+* The key must be sortable: { @number, @ordinal, @string };
 
 **syntax**
 ```
@@ -289,10 +289,10 @@ The preferred font for EVE programming is "DejaVu Sans Mono".
 
 Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In EVE all exceptions are considered errors.
 
-The exception is a variable of type @Object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
+The exception is a variable of type @object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-alias Exception: @Object { 
+alias Exception: @object { 
         @integer: code 
        ,@string : message 
        ,@string : method_name 
@@ -300,7 +300,7 @@ alias Exception: @Object {
        ,@string : line_number  
       };
 
-** global variable for last error
+** system variables for last error
 variable
   Exception: #error;
 ```
@@ -337,7 +337,7 @@ In this region developer can use control statements like "switch","case" to anal
 method main:
   @double: a;
 process  
-  a := 1 / 0;
+  alter a := 1 / 0;
 recover
   print (#error.message);
 return;

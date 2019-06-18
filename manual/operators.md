@@ -9,22 +9,23 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |`\|\*...*\|` | Outline block comments \| Expression comments
 | `(_,_,_)`   | Expression \| @list literal
 | `[_,_,_]`   | Range \| Index \| @list literals 
-| `{_,_,_}`   | Ordinal type \| @set of values \| @hash type \| Generic types
+| `{_,_,_}`   | @ordinal type \| @set of values \| @hash type \| Generic types
 
 
 ## Single symbols
 
 |Symbol | Description
 |-------|--------------------------------------------------------------
-| &     | System variable prefix
-| $     | System constant prefix
-| @     | Reference type prefix \| Class name prefix
-| ;     | Statement separator \| End of statement
-| :     | Define constant   \| Pair-up operator (a:b)
-| .     | Decimal separator \| Public member \| Member of ,,,
-| ,     | Enumeration for elements \| complex expression 
-| \*    | Variable arguments \| Multiplication
-| \|    | Used in set builders and hash map builders
+| `&`   | System variable prefix
+| `$`   | System constant prefix
+| `@`   | Reference type prefix \| Class name prefix
+| `#`   | Single line comment
+| `;`   | Statement separator \| End of statement
+| `:`   | Define constant   \| Pair-up operator (a:b)
+| `.`   | Decimal separator \| Public member \| Member of ,,,
+| `,`   | Enumeration for elements \| complex expression 
+| `*`   | Variable arguments \| Multiplication
+| `|`   | Used in set builders and hash map builders
 
 ## Double symbols
 
@@ -32,15 +33,14 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|\#\#  | @single line comment (title)
-|\*\*  | @single line comment (subtitle)
-|..    | Domain (n..m) or slice [n..m] 
-|=+    | Outer join operator used in data "select" statement
-|->    | Pipeline operator (usual data casting)
-|<:    | Declare sub-type for a class
-|:>    | Declare visitor in scan statement
-|<+    | Template injector \| Data source provider
-|+>    | Result collector \| Visitor element
+|`\*\*`| Single line comment | End of line comment 
+| `..` | Domain (n..m) or slice [n..m] 
+| `=+` | Outer join operator used in data "select" statement
+| `as` | Pipeline operator (usual data casting)
+| `<:` | Declare sub-type for a class
+| `:>` | Declare visitor in scan statement
+| `<+` | Template injector \| Data source provider
+| `+>` | Result collector \| Visitor element
 
 
 ## String: delimiters
@@ -48,29 +48,29 @@ Eve use two symbols to create supplementary operators.
 |Symbol| Description
 |------|---------------------------------------------------------------
 |\`x\` | @single  UTF32 character (4 bytes)
-|'x'   | Limited capacity string: UTF8 (max: 128 characters)
-|"x"   | Variable capacity string: UTF8 (unlimited)
+| 'x'  | Limited capacity string: UTF8 (max: 128 characters)
+| "x"  | Variable capacity string: UTF8 (unlimited)
 
 ## String: concatenation
 
 |Symbol| Description
 |------|---------------------------------------------------------------------
-|  -   | Concatenate two strings after trimming first string
-|  +   | Concatenate two strings as they are. No trim is performed!
-|  /   | Concatenate two strings with "/" separator and de-duplicate "//"   
-|  \   | Concatenate two strings with "\\" separator and de-duplicate "\\\\"   
-|  .   | Concatenate two strings with "\\" or "/" depending on the: $platform
+|  `-` | Concatenate two strings after trimming first string
+|  `+` | Concatenate two strings as they are. No trim is performed!
+|  `/` | Concatenate two strings with "/" separator and de-duplicate "//"   
+|  `\` | Concatenate two strings with "\\" separator and de-duplicate "\\\\"   
+|  `.` | Concatenate two strings with "\\" or "/" depending on the: $platform
 
 ## Numeric operators
 
 |Symbol | Description
 |-------|----------------------------------------------------------------
-| /     | @double division \| Fraction literal
-| *     | Numeric multiplication \| Scalar operator
-| ^     | Power operator. Example: x^n is the x to the power of n.
-| %     | Reminder operator \| Scalar operator
-| \+    | Numeric addition \| @string concatenation \| @set union
-| \-    | Subtraction \| @string concatenation \| @set difference
+| `/`   | @double division \| Fraction literal
+| `*`   | Numeric multiplication \| Scalar operator
+| `^`   | Power operator. Example: x^n is the x to the power of n.
+| `%`   | Reminder operator \| Scalar operator
+| `+`   | Numeric addition \| @string concatenation \| @set union
+| `-`   | Subtraction \| @string concatenation \| @set difference
 
 ## Modifiers 
 
@@ -93,14 +93,14 @@ EVE use two symbols to create a additional operators.
 
 |Symbol | Description
 |-------|-----------------------------------------------------------------------
-|  `==` | Equivalent \| Deep comparison
-|  `<>` | Different  \| Deep comparison
-|  `?=` | Same objects      \| Shallow comparison
-|  `!=` | Divergent objects \| Shallow comparison
-|  `> ` | Greater than 
-|  `< ` | Less than    
-|  `>=` | Greater than or equal to
-|  `<=` | Less than or equal to
+| `==`  | Equivalent \| Deep comparison
+| `<>`  | Different  \| Deep comparison
+| `?=`  | Same objects      \| Shallow comparison
+| `!=`  | Divergent objects \| Shallow comparison
+| `> `  | Greater than 
+| `< `  | Less than    
+| `>=`  | Greater than or equal to
+| `<=`  | Less than or equal to
 
 
 **Notes:**   
@@ -138,6 +138,17 @@ These operators are expected logical values T := true, F := false
 |  or    | logic OR  (union)
 |  xor   | logic Exclusive OR
 
+
+Table of truth for logical operators: 
+
+ A     | B     | not A | A and B| A or B| A xor B
+-------|-------|-------|--------|-------|-------
+ True  | True  | False | True   | True  | False    
+ True  | False | False | False  | True  | True   
+ False | True  | True  | False  | True  | True
+ False | False | True  | False  | False | False
+
+
 ## Bitwise operators
 
 These operators are working for natural numbers ≥ 0
@@ -155,11 +166,11 @@ These operators are working for natural numbers ≥ 0
 
  A    | B   |A.and.B| A.or.B| A.xor.B
 ------|-----|-------|-------|--------
- 00   | 00  |00     | 00    |  00    
- 01   | 00  |00     | 01    |  01    
- 11   | 01  |01     | 11    |  10    
- 10   | 11  |10     | 11    |  01    
- 11   | 11  |11     | 11    |  00    
+ 00   | 00  | 00    | 00    |  00    
+ 01   | 00  | 00    | 01    |  01    
+ 11   | 01  | 01    | 11    |  10    
+ 10   | 11  | 10    | 11    |  01    
+ 11   | 11  | 11    | 11    |  00    
 
 **Unary operators**
 

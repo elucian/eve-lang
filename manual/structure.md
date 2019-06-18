@@ -30,7 +30,7 @@ Modules are source files having extension: *.eve. Module names are using lowerca
 
 ## Main module
 
-Any module that contains method main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _global constants_.
+Any module that contains method main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
 
 **properties**
 
@@ -74,7 +74,7 @@ alias
 
 ** shared constants
 constant
-  @type: NAME := value; ** constant
+  @type: Name := value; ** constant
   
 ** shared variables
 variable
@@ -109,40 +109,40 @@ Globals are declared in first module region, with zero space indentation:
 
 **declare**
 
-* global constants  ::=  $identifier := value;
-* global variables  ::=  #identifier := value;
+* system constants  ::=  $identifier := value;
+* system variabless ::=  &identifier := value;
 
 Global members are visible in application with no prefix. 
 
-## Global constants
+## System constants
 
-Global constants start with prefix "$". Usually are loaded from a configuration file (*.cfg) and do not need to be declared explicit in a _constant_ region. They are known by EVE runtime and can be used in all modules. 
+System constants start with prefix "$". Usually are loaded from a configuration file (*.cfg) and do not need to be declared explicit in a _constant_ region. They are known by EVE runtime and can be used in all modules. 
 
 **Note:** 
-* Global constants can be defined in a configuration file
-* Global constants can be defined in a library.
+* System constants can be defined in a configuration file
+* System constants can be defined in a library.
 
-Several global constants are provided by EVE environment:
+Several system constants are provided by EVE environment:
 
 * $eve_home  :eve runtime
 * $pro_home  :project home
 * $eve_lib   :eve lib folder
 * $pro_lib   :project lib folder
 
-## Global variables
+## System variables
 
-Global variables are defined in standard library.
+System variables are starting with prefix "&" and are defined in standard library.
 
 **examples**
 ```
-#error  ** contains last error message
-#stack  ** contains debug information about current call stack
-#trace  ** contains reporting information about executed statements
-#level  ** contains how deep is the current call stack
+&error  ** contains last error message
+&stack  ** contains debug information about current call stack
+&trace  ** contains reporting information about executed statements
+&level  ** contains how deep is the current call stack
 ```
 
 **notes:** 
-* User can create new global variables specific to one application;
+* User can create new system variables specific to one application;
 * Prefix "#" is used to avoid scope qualifier and improve code readability;
 
 ## Import region
@@ -168,17 +168,17 @@ import
 
 ## Shared constants
 
-Shared constants are declared in _constant_ region:
+Shared constants are declared in _constant_ region.
 
 **example**
 ```
 constant
-  @double: .PI := 3.14; ** local constant
+  @double: .Pi := 3.14; ** local constant
 ```
 
 **note:** 
 * Constants are immutable entities;
-* Constant identifiers are using uppercase letters;
+* Constant identifiers are starting with one uppercase letter;
 * Public constants are using dot prefix: "."
 * Constants are using operator ":=" for initialization;
 * Constant type is implicit defined using type inference;
@@ -195,8 +195,8 @@ variable
 
 **note:** 
 * Shared variables are static;
-* Variable names are using lowercase letters;
-* Variable data type is specified before the identifier;
+* Identifiers are using lowercase letters;
+* Data type is specified before the identifier;
 
 ## Methods
 
@@ -326,15 +326,15 @@ variable
 method add_numbers:
 process
   **side effects  
-  test := p1 + p2; ** first side-effect
+  alter test := p1 + p2; ** first side-effect
   print (test);    ** second side-effect
 return;
 
 method main:
 process
-  p1 := 10; ** side effect
-  p2 := 20; ** side effect
-  add_numbers;
+  alter p1 := 10; ** side effect
+  alter p2 := 20; ** side effect
+  add_numbers();  ** call method add_numbers;
   expect result = 30;
 return;
 ```
@@ -344,7 +344,7 @@ return;
 To avoid shared variables you can use input/output parameters:
 
 ```
-method add(@@integer: p1 = 0, p2 = 1,  @@integer + out):
+method add(@@integer: p1 = 0, p2 = 1,  @integer + out):
 process
   out := p1 + p2;
 return;

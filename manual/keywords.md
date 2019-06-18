@@ -12,10 +12,14 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | alias    | define alias for data-type or member name from imported modules
 | function | start a declaration region for named expression
 
-## Define subregions
+## Semantic keywords
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
+| forge    | create a new object reference / object instantiation on the heap
+| clone    | copy a reference into another reference
+| alter    | modify underline value or content for a variable
+| reset    | replace reference with another reference 
 | class    | define a composite data type for object oriented programming
 | method   | define a named block of code
 | process  | start executable region for a method and constructor for a class
@@ -29,13 +33,19 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|---------------------------------------------------------------------
-| given    | establish local scope for a block statement 
-| do       | single-path non-repetitive block
+| do       | start a block or branch of a block
 | with     | scope qualifier suppression block for records
 | when     | multi-path conditional block
+| else     | alternative path for when & while statements 
 | quest    | multi-path variable selector
+| other    | define alternative pas-way in a quest
+| case     | define a pas-way in multi-case methods
+| given    | establish local scope for a block statement 
 | while    | conditional repetition block
 | scan     | start an examination loop
+| repeat   | trigger a condition check, finalize if condition yield false
+| done     | finalization keyword for non repetitive blocks 
+| next     | finalize a scan block and start next iteration
 
 ## Operator keywords
 
@@ -49,17 +59,6 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | or       | logical OR  operator
 | xor      | logical XOR operator
 
-## Semantic keywords
-
-| Keyword  | Description
-|----------|-----------------------------------------------------------------
-| do       | start a repetitive block: while & for
-| else     | alternative path for when & while statements 
-| case     | define a pas-way in multi-case methods
-| other    | define alternative pasway in a quest
-| done     | finalization keyword for non repetitive blocks 
-| next     | finalize a scan block and start next iteration
-| repeat   | trigger a condition check, finalize if condition yield false
 
 ## Interruption statements
 

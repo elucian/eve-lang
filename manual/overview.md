@@ -19,8 +19,8 @@ EVE is a free form language inspired from Java and Ruby.
 * EVE is using infix expressions like Java and other popular languages;
 * Multiple expressions can be separated with comma and enclosed in parenthesis;
 * Each statement start with a lowercase keyword and is ending semicolon; 
-* Global constants use prefix "$" and they are also public;
-* Global variables use prefix "&" and they are also public;
+* System constants use prefix "$" and they are also public;
+* System variabless use prefix "&" and they are also public;
 * Class and reference type identifiers start with "@" prefix;
 * Alias identifiers and constants usually start with capital letters;
 * Public variables and constants start with "." prefix;
@@ -43,6 +43,7 @@ print;
 |  fancy boxed comments to explain  |
 |  code, can span multiple lines    |
 ------------------------------------+
+
 *************************************
 **  Boxed comment for old printer  **
 *************************************
@@ -91,14 +92,9 @@ Global reference identifiers start with a reserved symbol:
 
 **notes:**
 * Prefix is reducing collision between local and global name scope;
-* In other languages this kind of prefix is called _sigil_;
-* A global variable can be an object with attribute.
+* In other languages this kind of prefix is called _sigil_
+* A system variables can be an object with attribute.
 
-**examples:**
-```
-#module.name := 'test';
-#module.description :='It is just a test';
-```
 
 ## Operators
 
@@ -139,21 +135,20 @@ A variable is represented by an identifier, and is pair-up with a type using ":"
 **patterns:**
 ```
 ** define alias for a: 
-data type
 
 ** alias names have to start with uppercase letters.   
-alias Class_Name := super_class {parameters};
+alias @class_name := @super_class {parameters};
 
 ** shared variables
 variable
   ** use type to define a variable
-  Class_Name: var_name;
+  @class_name: var_name;
   ** with specific value and type
-  Class_Name: var_name := value;
+  @class_name: var_name := value;
   ** multiple variables in one assignment
-  Class_Name: var_name1, name2 ...:= value;
+  @class_name: var_name1, name2 ...:= value;
   ** multiple variables with diverse values
-  Class_Name: var_name1:=value1, var_name2 := value2;
+  @class_name: var_name1:=value1, var_name2 := value2;
 ```
 
 **examples**
@@ -269,22 +264,22 @@ given
   @hash   : a; 
 do  
   ** multi-row expression
-  x := 1 + 2 +
-       3 + 4 + 5;
+  alter x := 1 + 2 +
+        3 + 4 + 5;
 
   ** ERROR: ↓ (missing ";") 
-  x := 1 + 2 
-     + 3 + 4 + 5;
+  alter x := 1 + 2 
+        + 3 + 4 + 5;
        
   ** all 5 numbers are in 
   expect x = 15; 
 
   ** multi-row hash table
-  a := { 
+  alter a := { 
          (1:2),
          (3:4),
          (5:6)
-       };
+        };
 done;
 ```
 

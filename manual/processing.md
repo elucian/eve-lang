@@ -51,7 +51,7 @@ The join function receive a list and convert elements into a string separated be
 given
   @list{@integer}: lst;
 do
-  lst := split("1,2,3",",");
+  alter lst := split("1,2,3",",");
   print lst; ** (1,2,3)
 done;
 ```
@@ -97,7 +97,7 @@ given
 while element is not null do
   **statements
   ...
-  element := collection.next(element);
+  alter element := collection.next(element);
 repeat;
 ```
 
@@ -107,14 +107,14 @@ The "element" is local to iteration and is used as control variable.
 
 ```
 method main:
-  @list{Symbol}: my_list := ['a','b','c','d','e']; 
+  @list{symbol}: my_list := ['a','b','c','d','e']; 
 process  
   given
-    Symbol: element;
+    @iterator: e <: my_list;
     @integer: x := 1;
-  scan my_list +> element do
-    write element;
-    when element = 'd' do
+  scan my_list do
+    write e;
+    when e = 'd' do
       stop ** early termination;
     else
       write(',');
@@ -149,9 +149,9 @@ method main:
 process  
   ** print pairs (key:value)
   given
-    @string: key;
-    @integer: value;
-  scan my_map :> (key:value) do
+    @symbol: key;
+    @binary: value;
+  scan my_map +> (key,value) do
     print('("' + key + '",' + value +')');
   repeat;
 return;

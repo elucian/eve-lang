@@ -7,7 +7,7 @@ method main():
    Natural: i := 1;
 process
   while i <= test.length() do
-    element := test[i]; -- transfer a reference to symbol   
+    element := test[i]; ** transfer a reference to symbol   
     ** shortcut 
     when (element >= 'c') do
        write (element);
