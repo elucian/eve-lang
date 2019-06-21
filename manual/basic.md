@@ -126,9 +126,9 @@ method main:
   @natural: n;
   @double : r;
 process  
-  alter i := 9223372036854775807; ** maximum
-  alter n := 18446744073709551615;** maximum
-  alter r := 1/2; ** 0.5
+  alter i := 9223372036854775807; ! maximum
+  alter n := 18446744073709551615; ! maximum
+  alter r := 1/2; ! 0.5
 return;
 ```
 
@@ -158,8 +158,8 @@ create
 return;
 
 method main:
-  @point: p1, p2;      ** use implicit constructor
-  @point: p3 := {1,1}; ** initial value for Point
+  @point: p1, p2;      ! use implicit constructor
+  @point: p3 := {1,1}; ! initial value for Point
 process
 **modification using constant literals
   alter p1.a := 1;
@@ -198,10 +198,10 @@ given
   @integer: a := 2;
   @double:  b := 1.5; 
 do
-  alter b := a;       ** this implicit cast is possible b = 2.0
-  alter b := a + 3.5; ** add 3.5 then assign result to b = 5.5
-  alter a := b;       ** error: can not assign @double: to  @integer
-  alter a := 1.5;     ** error: can not assign @double: to  @integer
+  alter b := a;       ! this implicit cast is possible b = 2.0
+  alter b := a + 3.5; ! add 3.5 then assign result to b = 5.5
+  alter a := b;       ! error: can not assign @double: to  @integer
+  alter a := 1.5;     ! error: can not assign @double: to  @integer
 done;
 ```
 
@@ -217,15 +217,15 @@ do
 
 **explicit coercion lose (0.5)
   alter  a := floor(b);
-  print (a); ** will print: 1
+  print (a); ! will print: 1
  
 **explicit coercion add (0.5)
   alter  a := ceiling(b); 
-  print (a); ** will print: 2
+  print (a); ! will print: 2
 
 **explicit coercion rounding:  
   alter  a := round(b);
-  print (a); ** will print: 2
+  print (a); ! will print: 2
 done;
 ```
 
@@ -236,7 +236,7 @@ given
   @string : s; 
   @integer : v := 1000;
 do  
-  alter s := format(v); ** explicit coercion s = '1000'
+  alter s := format(v); ! explicit coercion s = '1000'
 done;
 ```
 
@@ -251,9 +251,9 @@ given
   @string  : s := '1000';
   @string  : r := '200.02';
 do
-  alter v := parse(s); ** make v = 1000
-  alter v := parse(r); ** make v = 200 and decimal .02 is lost
-  alter b := parse(r); ** make b = 200.02 and decimal .02 is preserved
+  alter v := parse(s); ! make v = 1000
+  alter v := parse(r); ! make v = 200 and decimal .02 is lost
+  alter b := parse(r); ! make b = 200.02 and decimal .02 is preserved
 done;
 ```
 
@@ -275,9 +275,9 @@ This is a logical deduction of data type from constant literals.
 ```
 ** Define a list of 10 elements using type inference:
 given
-  @list: ls := [0,1,2,3,4,5,6,7,8,9]; ** element is @integer
+  @list: ls := [0,1,2,3,4,5,6,7,8,9]; ! element is @integer
 do
-  print  ls.type(); ** @list[@integer]
+  print  ls.type(); ! @list[@integer]
   expect ls is @list[@integer];
 done 
 ```
@@ -448,7 +448,7 @@ True     | Logic.True    | 00000000 00000001
 **syntax**
 ```
 variable
-  @logic: variable_name; ** default false
+  @logic: variable_name; ! default false
 ```
 
 **internal design**
@@ -480,7 +480,7 @@ A @variant is a polymorphic variable that can have multiple types but only one a
 alias @name := {@type | @type | ... } <: @variant;
 
 variable 
-  name: v; ** declare single variable
+  name: v; ! declare single variable
 ```
 
 ## @variant Properties
@@ -514,15 +514,15 @@ given
   @double | @integer: v, x ,t;
 do
   ** positive example
-  alter v := 1;     ** v is  @integer
-  alter x := 1.5;   ** x is @double:    
-  alter t := 1 / 2; ** make t @double
+  alter v := 1;     ! v is  @integer
+  alter x := 1.5;   ! x is @double:    
+  alter t := 1 / 2; ! make t @double
   
   ** safe conversion
-  alter t := 12; ** t is @double
+  alter t := 12; ! t is @double
   
   ** negative examples
-  alter v := x;  ** ERROR: v is  @integer 
+  alter v := x;  ! ERROR: v is  @integer 
 done;
 ```
 
@@ -534,9 +534,9 @@ method swap(@integer | @double: x, y):
 process  
   expect type(x) = type(y);
   
-  alter i := x; ** intermediate reference
-  alter x := y; ** first  swap
-  alter y := x; ** second swap
+  alter i := x; ! intermediate reference
+  alter x := y; ! first  swap
+  alter y := x; ! second swap
 return;
 
 method main:
@@ -590,9 +590,9 @@ When can create a date literal using 3 format functions:
 given
   @date: date := "2019/01/30" -> ydm;
 do
-  print date -> ydm; ** 2019/01/30
-  print date -> dmy; ** 30/01/2019
-  print date -> mdy; ** 01/30/2019
+  print date -> ydm; ! 2019/01/30
+  print date -> dmy; ! 30/01/2019
+  print date -> mdy; ! 01/30/2019
 done;
 ```
 
@@ -624,7 +624,7 @@ xx: can be: (am/pm)
 
 ```
 given
-  @time: time1, time2, time3; ** '00:00' 
+  @time: time1, time2, time3; ! '00:00' 
 do
   alter time1 := "23:63" -> t24;
   alter time2 := "23:63:59,99" -> t24;

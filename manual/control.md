@@ -23,8 +23,8 @@ Establish a declaration region and scope qualifier suppression block.
 ```
 with qualifier := long_qualifier do
   ** local statements
-  method_name();  ** instead of: qualifier.method_name()
-  alter var := function_name(); ** instead of qualifier.function_name()
+  method_name();  ! instead of: qualifier.method_name()
+  alter var := function_name(); ! instead of qualifier.function_name()
   ...
 done;
 ```
@@ -111,7 +111,7 @@ Is used to define a local scope for a simple block or repetitive block of code.
 **Pattern:**
 ``` 
 given 
-  @type_name: var_name; ** local variable  
+  @type_name: var_name; ! local variable  
   ...
 do
   ** block statements;

@@ -128,13 +128,13 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 **Example:**
 ```
 method main:
-  @integer: o,n; ** boxed  Integers
+  @integer: o,n; ! boxed  Integers
 process  
   o := 1;
   n := 1; 
   ** expectations
-  expect  (o  = n) ** equivalent  
-  expect !(o == n) ** not the same 
+  expect  (o  = n); ! equivalent  
+  expect  (o <> n); ! not the same location
 return;
 ```
 

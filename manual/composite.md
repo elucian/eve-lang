@@ -15,8 +15,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-  @list{@type}: list_name := [];     ** new empty list
-  @list: list_name := [value, ...]; ** new populate list
+  @list{@type}: list_name := [];     ! new empty list
+  @list: list_name := [value, ...]; ! new populate list
 ```
 
 **notes:**
@@ -112,8 +112,8 @@ given
   @set: first := {0,1,2,3,4,5,6,7,8,9};
   @set{@integer}: second := {};
 do
-  second := first | {0,1,2,10}; ** set union
-  print(second); ** {0,1,2,3,4,5,6,7,8,9,10}
+  second := first | {0,1,2,10}; ! set union
+  print(second); ! {0,1,2,3,4,5,6,7,8,9,10}
 done;
 ```
 
@@ -125,7 +125,7 @@ given
   @set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
-  print test; ** {3,4}
+  print test; ! {3,4}
 done;
 ```
 
@@ -140,18 +140,18 @@ It is called "@hash" due to similar letter H representing a connection between t
 
 **syntax**
 ```
-alias Table_Name := @hash{key_type, value_type}; ** type alias 
+alias Table_Name := @hash{key_type, value_type}; ! type alias 
 
 variable
-  @hash{key_type, value_type}: name; ** explicit type
-  @hash: name := {(key:value), ...}; ** implicit type
-  Table_Name := {(key:value), ...}; ** using alias
+  @hash{key_type, value_type}: name; ! explicit type
+  @hash: name := {(key:value), ...}; ! implicit type
+  Table_Name := {(key:value), ...}; ! using alias
 ```
 
 **Example**
 ```
 given
-  @hash{@string,  @integer}: table := {}; ** empty table
+  @hash{@string,  @integer}: table := {}; ! empty table
 do   
   table := {('one':1), ('two':2)};
 done;
@@ -168,9 +168,9 @@ In EVE There are two types of strings. @single quoted and double quoted strings.
 @string can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
-  @string(100): short_string := ''; ** this string can hold 100 symbols, 100*4 = 400 bytes
-  @string: string_name       := ''; ** default capacity 1024 can hold 256 ASCII symbols
-  @text: text_name           := ""; ** variable capacity string can hold many lines of text
+  @string(100): short_string := ''; ! this string can hold 100 symbols, 100*4 = 400 bytes
+  @string: string_name       := ''; ! default capacity 1024 can hold 256 ASCII symbols
+  @text: text_name           := ""; ! variable capacity string can hold many lines of text
 ```
 
 ### @string: mutability
@@ -182,24 +182,24 @@ method test_string()
   @string: str := 'First value';  
   @string: ref := 'First value'; 
 process  
-  expect  (str  = ref); ** same value
-  expect !(str == ref); ** different locations  
+  expect  (str  = ref); ! same value
+  expect  (str <> ref); ! different locations  
   
-  ref := str;  ** reset ref
-  expect (str =  ref); ** same value
-  expect (str == ref); ** same location  
+  ref := str;  ! reset ref
+  expect (str =  ref); ! same value
+  expect (str == ref); ! same location  
   
   ** if we modify "str" then "ref" will appear modified
-  str += ":"; ** mutable string
+  str += ":"; ! mutable string
   expect ref = "First value:";
-  expect str == ref; ** the reference is holding
+  expect str == ref; ! the reference is holding
   
   ** if we recreate str, reference is reset
-  str := 'First value:'; ** new string location
-  expect str = ref;      ** same value
-  expect !(str == ref);  ** different locations
+  str := 'First value:'; ! new string location
+  expect str = ref;      ! same value
+  expect str <> ref;     ! different locations
   ** reference was broken, ref is pointing to old value
-  print ref;  ** 'First value:'
+  print ref;  ! 'First value:'
 return;
 ```
 
@@ -218,10 +218,10 @@ return;
 **Example:**
 
 ```
-print ('this' = 'this');    ** true (same value)
-print ("this" = 'this');    ** true (same value)
-print (' this' <> 'this');  ** true (not same value)
-print ('this ' <> 'this');  ** true (not same value)
+print ('this' = 'this');    ! true (same value)
+print ("this" = 'this');    ! true (same value)
+print (' this' <> 'this');  ! true (not same value)
+print ('this ' <> 'this');  ! true (not same value)
 ```
 
 ### Null strings

@@ -6,7 +6,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol       | Description
 |-------------|--------------------------------------------------------------
-|`\|\*...*\|` | Outline block comments \| Expression comments
+|`\+\-...\-\+`| Block comments \| Expression comments
 | `(_,_,_)`   | Expression \| @list literal
 | `[_,_,_]`   | Range \| Index \| @list literals 
 | `{_,_,_}`   | @ordinal type \| @set of values \| @hash type \| Generic types
@@ -16,10 +16,10 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol | Description
 |-------|--------------------------------------------------------------
-| `&`   | System variable prefix
+| `!`   | End of line comment
+| `#`   | System variable prefix
 | `$`   | System constant prefix
 | `@`   | Reference type prefix \| Class name prefix
-| `#`   | Single line comment
 | `;`   | Statement separator \| End of statement
 | `:`   | Define constant   \| Pair-up operator (a:b)
 | `.`   | Decimal separator \| Public member \| Member of ,,,
@@ -65,7 +65,7 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol | Description
 |-------|----------------------------------------------------------------
-| `/`   | @double division \| Fraction literal
+| `\`   | Numeric division \| Fraction literal
 | `*`   | Numeric multiplication \| Scalar operator
 | `^`   | Power operator. Example: x^n is the x to the power of n.
 | `%`   | Reminder operator \| Scalar operator
@@ -93,10 +93,10 @@ EVE use two symbols to create a additional operators.
 
 |Symbol | Description
 |-------|-----------------------------------------------------------------------
+| `=`   | The same   \| Shallow comparison
+| `~=`  | Different  \| Shallow comparison
 | `==`  | Equivalent \| Deep comparison
-| `<>`  | Different  \| Deep comparison
-| `?=`  | Same objects      \| Shallow comparison
-| `!=`  | Divergent objects \| Shallow comparison
+| `<>`  | Divergent  \| Deep comparison
 | `> `  | Greater than 
 | `< `  | Less than    
 | `>=`  | Greater than or equal to
@@ -104,7 +104,7 @@ EVE use two symbols to create a additional operators.
 
 
 **Notes:**   
-* For divergence use:     not (a = b)  or (a != b)
+* For divergence use:     not (a = b)  or (a ~= b)
 * For different location: not (a == b) or (a <> b)
  
 ## Collection operators
@@ -113,13 +113,13 @@ In following table: `A, B, C` are collections and `x` is a member:
 
 |Operator   | Result  | Description
 |-----------|---------|-------------------------------------------------------------------
-| A `++` B  | new     | Union A with B: ∪     use like C := A ++ B (return a new set)
+| A `&&` B  | new     | Union A with B: ∪     use like C := A && B (return a new set)
 | A `||` B  | new     | Intersect A with B: ∩ use like C := A || B (return a new set)
 | A `- ` B  | new     | Simple difference,    use like C := A -  B (return a new set)
 | A `--` B  | new     | Symmetric difference, use like C := A -- B (return a new set)
 | A `<:` B  | logic   | verify if A is subset of B: In math: ⊂
 | A `:>` B  | logic   | verify if B is subset of A: In math: ⊃
-| C `+:` x  | append  | append a copy of element x to C    
+| C `+:` x  | append  | append a deep copy of element x to C    
 | C `+=` x  | append  | append a reference of element x to C
 | C `-=` x  | remove  | remove element == x from C  
 | C `-:` x  | remove  | find and remove first element = x from C  

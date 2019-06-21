@@ -15,9 +15,9 @@ We can add elements to a list or remove elements from the list using next operat
 * .append()
 * .delete()
 
-**@list concatenation**
+**List concatenation**
 
-@list concatenation is ready using operator “+”. This operator represent union. 
+List concatenation is ready using operator “+”. This operator represent union. 
 Therefore @list union act very similar to append, except we add multiple elements. 
 
 ```
@@ -27,7 +27,7 @@ method main:
   @list{Symbol}: c := [];
 process
   c := a + b;
-  print c; ** ['a','b','c','1','2','3'];
+  print c; ! ['a','b','c','1','2','3'];
 return;
 ```
 
@@ -52,18 +52,18 @@ given
   @list{@integer}: lst;
 do
   alter lst := split("1,2,3",",");
-  print lst; ** (1,2,3)
+  print lst; ! (1,2,3)
 done;
 ```
 
-**@list as queue**
+**List as queue**
 
 Two operations are possible
 
 * enqueue()  append to the end of the @list
 * dequeue()  extract first element from the @list
 
-**@list as stack**
+**List as stack**
 
 Two operations are possible
 
@@ -75,10 +75,10 @@ Two operations are possible
 **Other built-ins**
 
 Following other functions should be available
-* @list.append(value) ** can append an element at the end of the list
-* @list.insert(value) ** can insert an element at the beginning of the list
-* @list.delete(value) ** can delete one element at specified index
-* @list.count() ** retrieve the number of elements 
+* @list.append(value) :can append an element at the end of the list
+* @list.insert(value) :can insert an element at the beginning of the list
+* @list.delete(value) :can delete one element at specified index
+* @list.count()       :retrieve the number of elements 
 
 **Special attributes**
 A list has properties that can be used in logical expressions:
@@ -115,7 +115,7 @@ process
   scan my_list do
     write e;
     when e = 'd' do
-      stop ** early termination;
+      stop; ! early termination;
     else
       write(',');
     done;
@@ -176,7 +176,7 @@ given
   @hash:  my_map := {(1:'a'),(2:'b'),(3:'c')};
   @integer: my_key := 3;
 when (my_key in my_map) do
-  print('true'); ** expected
+  print('true'); ! expected
 else
   print('false');
 done;
@@ -203,9 +203,10 @@ Output:
 ```
 
 ### Example
+
 ```  
 method main:
-  @hash: animals := {}; ** partial declaration
+  @hash: animals := {}; ! partial declaration
 process
   ** establish element types S:U
   animals['Rover'] := "dog";
@@ -236,8 +237,8 @@ given
   @string: str := ""; 
 do
   ** set string value using different operators
-  str := "this " & " string";  ** "this  string"
-  str := "this " + " string";  ** "this string"
+  str := "this " & " string";  ! "this  string"
+  str := "this " + " string";  ! "this string"
 done;
 ```
 
@@ -248,8 +249,8 @@ Two strings can be concatenated using concatenation operator "/" or "\\". This o
 given
   @string: s := "";
 do  
-  s := 'te/' / '/st'; ** "te/st" Linux
-  s := 'te/' \ '/st'; ** "te\st" Windows
+  s := 'te/' / '/st'; ! "te/st" Linux
+  s := 'te/' \ '/st'; ! "te\st" Windows
 done;
 ```
 

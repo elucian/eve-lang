@@ -2,8 +2,8 @@
 ** quest statement demo
 ****************************
 method main():
-  String:  msg ;  ** reference to String
-  Integer: var ;  ** reference to Integer
+  @string:  msg ;  ! reference to String
+  @integer: var ;  ! reference to Integer
 process
   print ("Enter a number: 1..9");
   read  (var,"var:>");

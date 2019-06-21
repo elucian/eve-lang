@@ -59,7 +59,7 @@ A module file is divided into regions using keywords: {import, define, global, c
 
 ** global region
 $constant := "value";
-&variable := {1,2,3};
+#variable := {1,2,3};
 ...
 
 ** import region
@@ -74,13 +74,13 @@ alias
 
 ** shared constants
 constant
-  @type: Name := value; ** constant
+  @type: Name := value; ! constant
   
 ** shared variables
 variable
-  @type: x;          ** default value
-  @type: y := value; ** specify value
-  @type: z :: y;     ** copy value
+  @type: x;          ! default value
+  @type: y := value; ! specify value
+  @type: z :: y;     ! copy value
   ...
   
 ** function declaration
@@ -135,10 +135,10 @@ System variables are starting with prefix "&" and are defined in standard librar
 
 **examples**
 ```
-&error  ** contains last error message
-&stack  ** contains debug information about current call stack
-&trace  ** contains reporting information about executed statements
-&level  ** contains how deep is the current call stack
+#error  ! contains last error message
+#stack  ! contains debug information about current call stack
+#trace  ! contains reporting information about executed statements
+#level  ! contains how deep is the current call stack
 ```
 
 **notes:** 
@@ -155,8 +155,8 @@ Is used to include members from several other modules into current module:
 $user_path := $root_path/relative_path
 
 import 
-  from $user_path use (member_name,...);  ** specific members
-  from $user_path use (*);                ** all public members
+  from $user_path use (member_name,...);  ! specific members
+  from $user_path use (*);                ! all public members
   ...
 ```
 
@@ -173,7 +173,7 @@ Shared constants are declared in _constant_ region.
 **example**
 ```
 constant
-  @double: .Pi := 3.14; ** local constant
+  @double: .Pi := 3.14; ! local constant
 ```
 
 **note:** 
@@ -190,7 +190,7 @@ Shared variables are declared in _variable_ region:
 **example**
 ```
 variable
-  @double: pi := 3.14; ** shared variable
+  @double: pi := 3.14; ! shared variable
 ```
 
 **note:** 
@@ -237,15 +237,15 @@ Formal parameters are defined in round brackets () separated by comma. Each para
 **mandatory**
 ```
  ** mandatory parameters do not have initial value
- parameter ::= Class_Name : parameter_name ** input parameter
- parameter ::= Class_Name @ parameter_name ** output parameter
+ parameter ::= Class_Name : parameter_name ! input parameter
+ parameter ::= Class_Name @ parameter_name ! output parameter
 ```
 
 **optional**
 ```
  ** optional parameters have explicit initial value
- parameter ::= Class_Name : parameter_name := value ** input parameter
- parameter ::= Class_Name @ parameter_name := value ** output parameter
+ parameter ::= Class_Name : parameter_name := value ! input parameter
+ parameter ::= Class_Name @ parameter_name := value ! output parameter
 ```
 
 1. One method can receive one or more parameters;
@@ -278,9 +278,9 @@ Every method has a local context. Members defined in local context are private. 
 Methods can be used like statements. A method call can be done using method name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no arguments parentheses are not required.
 
 ```
-  method_name;                  ** call method without arguments
-  method_name argument_value;   ** call method with single argument
-  method_name (argument_list);  ** call method with a list of arguments
+  method_name;                  ! call method without arguments
+  method_name argument_value;   ! call method with single argument
+  method_name (argument_list);  ! call method with a list of arguments
 ```
 
 **Method termination**
@@ -300,7 +300,7 @@ method main(@list[@string]: *args):
 process  
   ** verify condition and exit
   exit if c = 0;  
-  test c; ** method call
+  test c; ! method call
 return;
 ```
 
@@ -326,15 +326,15 @@ variable
 method add_numbers:
 process
   **side effects  
-  alter test := p1 + p2; ** first side-effect
-  print (test);    ** second side-effect
+  alter test := p1 + p2; ! first side-effect
+  print (test);    ! second side-effect
 return;
 
 method main:
 process
-  alter p1 := 10; ** side effect
-  alter p2 := 20; ** side effect
-  add_numbers();  ** call method add_numbers;
+  alter p1 := 10; ! side effect
+  alter p2 := 20; ! side effect
+  add_numbers();  ! call method add_numbers;
   expect result = 30;
 return;
 ```
@@ -354,9 +354,9 @@ method main:
 process  
   ** reference argument require a variable
   add(1,2, result);
-  print (result); ** expected value 3
+  print (result); ! expected value 3
   ** negative test
-  add (1,2,4); ** error, "out" parameter require a variable
+  add (1,2,4); ! error, "out" parameter require a variable
 return;
 ```
 
@@ -423,8 +423,8 @@ function @integer: sum(@integer: a, b) =>  (a + b);
 method main:
   @integer: r;
 process  
-  r := sum(10,20);  ** function call
-  print(r);         ** this will print 30
+  r := sum(10,20);  ! function call
+  print(r);         ! this will print 30
 return;
 ```
 
@@ -464,7 +464,7 @@ process
   p2 := 1;
   ** using λ expression  
   x  := ( 0 if p1 = 0, 0 if p2 = 0 | p1+p2);
-  print x; ** expect: 3 
+  print x; ! expect: 3 
 return;
 ```
 

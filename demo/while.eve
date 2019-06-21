@@ -2,16 +2,16 @@
 ** example of collection iteration
 **********************************
 method main():
-   Array  : test := ['a','b','c','d','e'];
-   Symbol : element; 
-   Natural: i := 1;
+  @array  : test := ['a','b','c','d','e'];
+  @symbol : element; 
+  @natural: i := 1;
 process
   while i <= test.length() do
-    element := test[i]; ** transfer a reference to symbol   
+    element := test[i]; ! transfer a reference to symbol   
     ** shortcut 
     when (element >= 'c') do
-       write (element);
-       write (',') if (element <> 'e');
+      write (element);
+      write (',') if (element <> 'e');
     done;
   repeat;
 return;
