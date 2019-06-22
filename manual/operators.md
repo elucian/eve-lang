@@ -17,6 +17,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |Symbol | Description
 |-------|--------------------------------------------------------------
 | `!`   | End of line comment
+| `?`   | String template find & replace
 | `#`   | System variable prefix
 | `$`   | System constant prefix
 | `@`   | Reference type prefix \| Class name prefix
@@ -37,10 +38,9 @@ Eve use two symbols to create supplementary operators.
 | `..` | Domain (n..m) or slice [n..m] 
 | `=+` | Outer join operator used in data "select" statement
 | `as` | Pipeline operator (usual data casting)
-| `<:` | Declare sub-type for a class
-| `:>` | Declare visitor in scan statement
-| `<+` | Template injector \| Data source provider
-| `+>` | Result collector \| Visitor element
+| `<:` | Declare sub-type for a class 
+| `<+` | Unpacking operator
+
 
 
 ## String: delimiters
@@ -113,12 +113,13 @@ In following table: `A, B, C` are collections and `x` is a member:
 
 |Operator   | Result  | Description
 |-----------|---------|-------------------------------------------------------------------
-| A `&&` B  | new     | Union A with B: ∪     use like C := A && B (return a new set)
-| A `||` B  | new     | Intersect A with B: ∩ use like C := A || B (return a new set)
-| A `- ` B  | new     | Simple difference,    use like C := A -  B (return a new set)
-| A `--` B  | new     | Symmetric difference, use like C := A -- B (return a new set)
-| A `<:` B  | logic   | verify if A is subset of B: In math: ⊂
-| A `:>` B  | logic   | verify if B is subset of A: In math: ⊃
+| A `&`  B  | set     | Union A with B: ∪     use like C := A &  B (return a new set)
+| A `|`  B  | set     | Intersect A with B: ∩ use like C := A |  B (return a new set)
+| A `- ` B  | set     | Simple difference,    use like C := A -  B (return a new set)
+| A `--` B  | set     | Symmetric difference, use like C := A -- B (return a new set)
+| A `+`  B  | list    | Concatenate two lists use like L := A +  B (return a new list)
+| A `<=` B  | logic   | verify if A is subset of B: In math: ⊂
+| A `>=` B  | logic   | verify if B is subset of A: In math: ⊃
 | C `+:` x  | append  | append a deep copy of element x to C    
 | C `+=` x  | append  | append a reference of element x to C
 | C `-=` x  | remove  | remove element == x from C  
@@ -131,6 +132,7 @@ These operators are expected logical values T := true, F := false
 
 | Symbol | Description
 |--------|----------------------------------------------------------------
+|  if    | conditional operator
 |  is    | check type: is @type or is Null, is not Null
 |  in    | logic belong to: instead of "∈"
 |  not   | logic NOT (negation) 

@@ -107,7 +107,7 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 Two characters:
 ```
-{ := :: =/ <> => >= <= +> <+ <: .. ./ /. // }
+{ := :: =/ <> => >= <= <+ <: .. ./ /. // }
 ```
 
 Delimiters:

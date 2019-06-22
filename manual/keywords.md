@@ -42,7 +42,7 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | case     | define a pas-way in multi-case methods
 | given    | establish local scope for a block statement 
 | while    | conditional repetition block
-| scan     | start an examination loop
+| for      | start an examination loop
 | repeat   | trigger a condition check, finalize if condition yield false
 | done     | finalization keyword for non repetitive blocks 
 | next     | finalize a scan block and start next iteration
@@ -51,9 +51,9 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------
+| if       | conditional operator
 | is       | check data type x is Null \| quest associated keyword
 | in       | check data type x is Null \| quest associated keyword
-| if       | conditional operator
 | not      | logical NOT operator
 | and      | logical AND operator
 | or       | logical OR  operator

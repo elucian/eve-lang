@@ -8,12 +8,12 @@ EVE has only 7 control statements:
 * [quest](#quest)
 * [given](#given)
 * [while](#while)
-* [scan](#scan)
+* [for](#for-do)
 
 **Notes:** 
 
 * keyword _given_ start a local scope for any block statement
-* one {* blocks *} is ending with keywords: { done \| next \| repeat}
+* one block is ending with keywords: { done \| next \| repeat}
 
 ## With
 
@@ -31,7 +31,7 @@ done;
 
 long_qualifier ::= file_name.Class_Name | file_name.record_name
 
-## when
+## When
 
 This keyword in conjunction with {do, else} declare a multi-path block selector;
 
@@ -161,7 +161,7 @@ repeat;
 > "c","d","e"
 > i = 5
 
-## Scan
+## For do
 
 This block use one or more control variables to visit elements in a collection or domain.
 
@@ -169,7 +169,7 @@ This block use one or more control variables to visit elements in a collection o
 ``` 
 given 
   @integer: var;
-scan (min..max) +> var do
+for var in (min..max) do
   ** block statements;
   ...
   ** next iteration
@@ -190,7 +190,7 @@ Example of range iteration:
 ```
 given 
   @integer: i;
-scan (1..10:2) +> i do
+for i in (1..10:2)  do
   ** write only odd numbers
   write i;
   write ',' if (i < 10);

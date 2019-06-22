@@ -1,4 +1,4 @@
-## @object Oriented
+## Object Oriented
 
 EVE language is using single inheritance similar to Java.
 
@@ -86,7 +86,7 @@ A class can have object attributes and class attributes.
 * We declare object attributes in default region after base_class;
 * We declare class attributes after keyword: static;
 
-**@object attributes**
+**Object attributes**
 
 To access object attributes we can use dot notation:
 
@@ -146,8 +146,10 @@ A class can receive type as parameters. This allows to create generic algorithms
 ```
 class {Generic_Type,...} Generic_Name(Generic_Type: parameter,...) <: Base_Class:
   ** declarations
+  ...
 create
   ** constructor
+  ...
 return;
 ```
 

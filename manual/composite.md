@@ -43,7 +43,7 @@ given
 Literals can be used for initialization:
 ```
 given
-  @list{Symbol} : c_list := ['a', 'b', 'c'];
+  @list{@symbol} : c_list := ['a', 'b', 'c'];
   @list{@integer}: n_list := [1, 2, 3];  
 ```
 
@@ -67,11 +67,11 @@ In mathematics a set is an abstract data structure that can store certain values
   @set{type}: set_name;
 ```
 
-**Empty @set**
+**Empty set**
 
 An empty set is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is empty. This is also called zero value for set.
 
-**@set restrictions**
+**Set restrictions**
 
 * All elements of a set must have the same type
 * @set elements can have only comparable types: {@ordinal, Numeric, @string}.

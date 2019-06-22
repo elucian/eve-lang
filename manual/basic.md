@@ -140,7 +140,7 @@ User types can be _defined_ using symbol ":=" and keyword: "alias".
 
 **Syntax:**
 ```
-alias Alias_Name := Generic_Class {parameters}
+alias @alias_name := Generic_Class {parameters}
 ```
 **Notes:**
 
@@ -240,7 +240,7 @@ do
 done;
 ```
 
-**@string: to a number**
+**string: to a number**
 
 This can be ready using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
@@ -376,7 +376,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-alias Name := {symbol:value, ... } <: @ordinal;
+alias Name := {identifier:value, ... } <: @ordinal;
 ```
 
 **Usage**
@@ -471,7 +471,7 @@ Also results of logical expressions can be stored in logical variables to be use
 
 Gradual typing is a type system in which some variables may be given types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called "@variant".
 
-**@variant Types**
+**Variant Types**
 
 A @variant is a polymorphic variable that can have multiple types but only one at a time:
 
@@ -560,7 +560,7 @@ return;
 
 Symbols are Unicode UTF32. That is using 32 bit  @integer:
 
-* @single-quoted strings like: 'α'
+* Single-quoted strings like: 'α'
 * U+HHHH   from: U+0000   to U+FFFF
 * U-HHHHHH from: U+000000 to U+FFFFFF
 

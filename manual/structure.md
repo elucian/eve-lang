@@ -110,7 +110,7 @@ Globals are declared in first module region, with zero space indentation:
 **declare**
 
 * system constants  ::=  $identifier := value;
-* system variabless ::=  &identifier := value;
+* system variabless ::=  #identifier := value;
 
 Global members are visible in application with no prefix. 
 
@@ -131,7 +131,7 @@ Several system constants are provided by EVE environment:
 
 ## System variables
 
-System variables are starting with prefix "&" and are defined in standard library.
+System variables are starting with prefix "#" and are defined in standard library.
 
 **examples**
 ```
@@ -464,7 +464,7 @@ process
   p2 := 1;
   ** using λ expression  
   x  := ( 0 if p1 = 0, 0 if p2 = 0 | p1+p2);
-  print x; ! expect: 3 
+  print x; !expect: 3 
 return;
 ```
 
@@ -553,8 +553,9 @@ To start an application there are 2 methods:
 1. Using the command line with parameters
 2. Using console command line with commands
 
+```
 eve:> run path/module_name -c file.cfg -m 2048GB
-
+```
 
 **using exit**
 

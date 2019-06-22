@@ -2,13 +2,13 @@
 
 By using collections and control structures one can load, modify and store data.
 
-* [@list operations](#@list-operations)
+* [List operations](#@list-operations)
 * [Collection iteration](#Collection-iteration)
 * [Scanning items](#Scanning-items)
 * [Using hash table](#Using-hash-table)
-* [@text functions](#@text-functions)
+* [Text functions](#@text-functions)
 
-## @list operations
+## List operations
 We can add elements to a list or remove elements from the list using next operations: 
 
 * .insert()
@@ -22,9 +22,9 @@ Therefore @list union act very similar to append, except we add multiple element
 
 ```
 method main:
-  @list{Symbol}: a := ['a','b','c'];
-  @list{Symbol}: b := ['1','2','3'];
-  @list{Symbol}: c := [];
+  @list{@symbol}: a := ['a','b','c'];
+  @list{@symbol}: b := ['1','2','3'];
+  @list{@symbol}: c := [];
 process
   c := a + b;
   print c; ! ['a','b','c','1','2','3'];
@@ -107,12 +107,11 @@ The "element" is local to iteration and is used as control variable.
 
 ```
 method main:
-  @list{symbol}: my_list := ['a','b','c','d','e']; 
+  @list{@symbol}: my_list := ['a','b','c','d','e']; 
 process  
   given
-    @iterator: e <: my_list;
-    @integer: x := 1;
-  scan my_list do
+    @string: e;
+  scan e in my_list do
     write e;
     when e = 'd' do
       stop; ! early termination;
@@ -126,7 +125,7 @@ return;
 
 ## Scanning items
 
-Collections have common methods that enable traversal using _scan_. 
+Collections have common methods that enable traversal using _for_ loop. 
 
 {@list, @hash, @set} 
 
@@ -140,7 +139,7 @@ Collections have common methods that enable traversal using _scan_.
 * this       - reference to current element
 
 **set iteration**
-@hash and @set are similar. We can visit all elements using _scan_:
+@hash and @set are similar. We can visit all elements using _for_ loop:
 
 **Example:**
 ```
@@ -151,7 +150,7 @@ process
   given
     @symbol: key;
     @binary: value;
-  scan my_map +> (key,value) do
+  for (key,value) in my_map do
     print('("' + key + '",' + value +')');
   repeat;
 return;
@@ -227,7 +226,8 @@ output:
 Strings can be concatenated using:
 
 * fast concatenation operator: "&"
-* trim concatenation operator: "+"
+* left trim concatenation operator: "+"
+* all  trim concatenation operator: "-"
 * path concatenation operator: "/"
 
 **Example:**
@@ -239,6 +239,8 @@ do
   ** set string value using different operators
   str := "this " & " string";  ! "this  string"
   str := "this " + " string";  ! "this string"
+  str := "this " . " string";  ! "this/string"
+  str := "this " - " "      ;  ! "this"  
 done;
 ```
 
@@ -254,16 +256,12 @@ do
 done;
 ```
 
-## @text functions
+## Text functions
 
 * @text:    replace(@text: str, @string: target, @string: arrow );
 * @integer: find   (@text: str, @string: patern);
 * @integer: count  (@text: str, @string: patern);
 * @integer: length (@text: str);
-
-**Reading a @text**
-
-@text is iterable by "word". The word separator is one space. So we can read a text string word by word not line by line. We can use "for" iteration to check every word in the text. One word can not start/end with space. 
 
 **Note:**
 The text also support escape sequences like a normal string. However in a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "« »" like "«quoted»"
