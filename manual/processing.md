@@ -111,7 +111,7 @@ method main:
 process  
   given
     @string: e;
-  scan e in my_list do
+  for e in my_list do
     write e;
     when e = 'd' do
       stop; ! early termination;
