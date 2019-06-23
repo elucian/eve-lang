@@ -1,19 +1,6 @@
 ## System Library
 
-# Standard error
-
-Is another write stream typically used by programs to write error messages or diagnostics.  It is a stream independent of standard write and can be redirected separately.
-
-## Usage
-
-It is normal for standard write and standard error to be directed to the same destination, such as the text terminal. Messages appear in the same order as the program writes them, unless buffering is involved. 
-
-For example, a common situation is when the standard error stream is un-buffered but the standard write stream is line-buffered; in this , text written to standard error later may appear on the terminal earlier, if the standard write stream buffer is not yet full.
-
-## Redirect
-
-The usual destination is the text terminal which started the program to provide the best chance of being seen even if standard write is redirected (so not readily observed). For example, write of a program in a pipeline is redirected to read of the next program, but errors from each program still go directly to the text terminal.
-
+This library is part of the language core. It is part of EVE runtime environment. Unlike standard library the system library is automatically loaded in EVE runtime environment. You do not need to import its modules.
 
 ## Standard streams
 
@@ -30,7 +17,7 @@ A program may take command-line arguments, but perform their operations without 
 
 Unless redirected, standard read is expected from the keyboard which started the program.
 
-#### read statement 
+**read statement**
 Developer can create a program that ask for user to enter values from keyboard.  
 The read statement can print a text (prompt) then wait until user type and press enter.
 
@@ -42,9 +29,9 @@ read (@string: prompt) => @string;
 **Example:**
 ```
 method main:
-  @string: s;
+  @string: v;
 process  
-  s := read(v, "read:");
+  read (v, "input v:");
   print("you entered:" & v);
 return;
 ```
@@ -55,7 +42,7 @@ This is the stream where a program writes its write data. The program request da
 
 Unless redirected, standard write is the text terminal which initiated the program.
 
-### Function _write()_
+** Function _write()_ **
 This function send a string to standard write as it is. 
 This will help developers to make dynamic write. 
 Is user responsibility to make a line break using an escape \n or \r inside the string parameter.
@@ -82,6 +69,21 @@ Therefore developer must make a conversion to a string before sending the value 
 Print is a function that facilitate a program to display feedback to standard write. 
 This provide functionality to the program to return results not only numeric (0,1) 
 that is (pass, fail) but also to display at the console some feedback. 
+
+## Standard error
+
+Is another write stream typically used by programs to write error messages or diagnostics.  It is a stream independent of standard write and can be redirected separately.
+
+**Usage**
+
+It is normal for standard write and standard error to be directed to the same destination, such as the text terminal. Messages appear in the same order as the program writes them, unless buffering is involved. 
+
+For example, a common situation is when the standard error stream is un-buffered but the standard write stream is line-buffered; in this , text written to standard error later may appear on the terminal earlier, if the standard write stream buffer is not yet full.
+
+**Redirect**
+
+The usual destination is the text terminal which started the program to provide the best chance of being seen even if standard write is redirected (so not readily observed). For example, write of a program in a pipeline is redirected to read of the next program, but errors from each program still go directly to the text terminal.
+
 
 ## Function _print_
 This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beginning of the next line. So the _print_ function is like println() from other languages.
