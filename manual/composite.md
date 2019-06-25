@@ -9,14 +9,14 @@ Composite types represents groups of multiple elements.
 * [text](#text)
 * [exception](#exception)
 
-## @list
+## List
 
 A list is a consecutive sequence of elements having a dynamic capacity. 
 
 **syntax**
 ```
-  @list{@type}: list_name := [];     ! new empty list
-  @list: list_name := [value, ...]; ! new populate list
+  @list{@type}: list_name := [];     //  new empty list
+  @list: list_name := [value, ...]; //  new populate list
 ```
 
 **notes:**
@@ -58,7 +58,7 @@ do
 done;
 ```
 
-## @set
+## Set
 In mathematics a set is an abstract data structure that can store certain values, without any particular order, and no repeated values. Sets are fast to search, add or remove elements from. However, you have to know the element value in order to search for it or to remove it from the set. 
 
 **declaration**
@@ -90,15 +90,15 @@ given
   @set{@integer}: my_set := {0,2,3};
 do
   ** append element 1
-  my_set    += 1;  
+  alter  my_set    += 1;  
   expect my_set = {0,1,2,3};
   
   ** modify all elements
-  my_set[*] += 1;  
-  expect my_set = {1,2,3,4};
+  alter  my_set[*] := 0;  
+  expect my_set = {0,0,0,0};
   
   ** remove all elements  
-  my_set    := {}; 
+  alter  my_set    := {}; 
   expect my_set = {};
 done  
 ```
@@ -112,8 +112,8 @@ given
   @set: first := {0,1,2,3,4,5,6,7,8,9};
   @set{@integer}: second := {};
 do
-  second := first | {0,1,2,10}; ! set union
-  print(second); ! {0,1,2,3,4,5,6,7,8,9,10}
+  second := first | {0,1,2,10}; //  set union
+  print(second); //  {0,1,2,3,4,5,6,7,8,9,10}
 done;
 ```
 
@@ -125,13 +125,13 @@ given
   @set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
-  print test; ! {3,4}
+  print test; //  {3,4}
 done;
 ```
 
 **Note:** Operators "|" and "&" are overloaded betwise operators
 
-## @hash
+## Hash
 
 It is called "@hash" due to similar letter H representing a connection between two columns: the key column and value column.
 
@@ -140,66 +140,66 @@ It is called "@hash" due to similar letter H representing a connection between t
 
 **syntax**
 ```
-alias Table_Name := @hash{key_type, value_type}; ! type alias 
+alias Table_Name := @hash{key_type, value_type}; //  type alias 
 
 variable
-  @hash{key_type, value_type}: name; ! explicit type
-  @hash: name := {(key:value), ...}; ! implicit type
-  Table_Name := {(key:value), ...}; ! using alias
+  @hash{key_type, value_type}: name; //  explicit type
+  @hash: name := {(key:value), ...}; //  implicit type
+  Table_Name := {(key:value), ...}; //  using alias
 ```
 
 **Example**
 ```
 given
-  @hash{@string,  @integer}: table := {}; ! empty table
+  @hash{@string,  @integer}: table := {}; //  empty table
 do   
   table := {('one':1), ('two':2)};
 done;
 ```
 
-## @string
+## String
 
 In EVE There are two types of strings. @single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. @single quoted strings can store a single line. @double quoted strings can store multiple lines of text separated by new line "\n".
 
 * @single quoted string, has default capacity 1024 bytes;
 * @double quote strings have unrestricted capacity;
 
-### @string: declaration
+### String: declaration
 @string can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
-  @string(100): short_string := ''; ! this string can hold 100 symbols, 100*4 = 400 bytes
-  @string: string_name       := ''; ! default capacity 1024 can hold 256 ASCII symbols
-  @text: text_name           := ""; ! variable capacity string can hold many lines of text
+  @string(100): short_string := ''; //  this string can hold 100 symbols, 100*4 = 400 bytes
+  @string: string_name       := ''; //  default capacity 1024 can hold 256 ASCII symbols
+  @text: text_name           := ""; //  variable capacity string can hold many lines of text
 ```
 
-### @string: mutability
+### String: mutability
 In EVE strings are mutable. If you use `:=` new memory is allocated. If you use a modifier: `+=` the string is fill too capacity. If the capacity is over the limit you will get an error: "capacity overflow".
 
 **Example:**
 ```
-method test_string()
+routine test_string()
   @string: str := 'First value';  
   @string: ref := 'First value'; 
 process  
-  expect  (str  = ref); ! same value
-  expect  (str <> ref); ! different locations  
+  expect  (str  = ref); //  same value
+  expect  (str <> ref); //  different locations  
   
-  ref := str;  ! reset ref
-  expect (str =  ref); ! same value
-  expect (str == ref); ! same location  
+  alter  ref := str;   //  reset ref
+  expect (str =  ref); //  same value
+  expect (str == ref); //  same location  
   
   ** if we modify "str" then "ref" will appear modified
-  str += ":"; ! mutable string
+  alter  str += ":"; //  mutable string
   expect ref = "First value:";
-  expect str == ref; ! the reference is holding
+  expect str == ref; //  the reference is holding
   
   ** if we recreate str, reference is reset
-  str := 'First value:'; ! new string location
-  expect str = ref;      ! same value
-  expect str <> ref;     ! different locations
+  str := 'First value:'; //  new string location
+  expect str = ref;      //  same value
+  expect str <> ref;     //  different locations
   ** reference was broken, ref is pointing to old value
-  print ref;  ! 'First value:'
+  print ref;  //  'First value:'
 return;
 ```
 
@@ -208,7 +208,7 @@ return;
 * You can create garbage in EVE if you loose references to strings;
 * Provision for large capacity strings is not recommended, use @text instead;
 
-### @string: comparison
+### String: comparison
 
 * Two strings are compared using relation operators: { =, <>, <, >, >=, <= }; 
 * Two strings that have identical characters are equivalent regardless of quotation;
@@ -218,10 +218,10 @@ return;
 **Example:**
 
 ```
-print ('this' = 'this');    ! true (same value)
-print ("this" = 'this');    ! true (same value)
-print (' this' <> 'this');  ! true (not same value)
-print ('this ' <> 'this');  ! true (not same value)
+print ('this' = 'this');    //  true (same value)
+print ("this" = 'this');    //  true (same value)
+print (' this' <> 'this');  //  true (not same value)
+print ('this ' <> 'this');  //  true (not same value)
 ```
 
 ### Null strings
@@ -238,7 +238,7 @@ do
 done;
 ```
 
-## @text
+## Text
 
 @text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. @text can be modified while strings are immutable.
 
@@ -295,7 +295,7 @@ The exception is a variable of type @object that is created when exception is ra
 alias Exception: @object { 
         @integer: code 
        ,@string : message 
-       ,@string : method_name 
+       ,@string : routine_name 
        ,@string : module_name 
        ,@string : line_number  
       };
@@ -327,14 +327,14 @@ raise (code,"message") if (condition);
 
 ### Exception handling
 
-Recover: region define an "exception handling region" for a method.
+Recover: region define an "exception handling region" for a routine.
 
 In this region developer can use control statements like "switch","case" to analyze the #Error. Developer can decide to stop the program, print a message and resume the program using _resume_ keyword.
 
 **Example:** 
 
 ```
-method main:
+routine main:
   @double: a;
 process  
   alter a := 1 / 0;

@@ -1,8 +1,9 @@
 ## Reserved keywords
 
-For keywords, EVE use English reserved words, without any abbreviation.
+EVE use 51 English reserved words, without any abbreviations. You can not use these words as identifiers.
 
-## Define regions
+
+## Definition regions
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
@@ -12,22 +13,32 @@ For keywords, EVE use English reserved words, without any abbreviation.
 | alias    | define alias for data-type or member name from imported modules
 | function | start a declaration region for named expression
 
-## Semantic keywords
+
+## Memory allocation
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | forge    | create a new object reference / object instantiation on the heap
-| clone    | copy a reference into another reference
-| alter    | modify underline value or content for a variable
-| reset    | replace reference with another reference 
-| class    | define a composite data type for object oriented programming
-| method   | define a named block of code
-| process  | start executable region for a method and constructor for a class
+| clone    | copy a reference into another reference, with deep copy operator "::"
+| reset    | replace a reference with another reference just created by a constructor
+| strap    | borrow  a reference with from existing reference or element
+| alter    | modify underline value of a reference or value of a native variable
 | create   | start constructor region for a classes
 | remove   | define object disposal region, executed when object is out of scope
+
+## Semantic keywords
+
+| Keyword  | Description
+|----------|-----------------------------------------------------------------------
+| class    | define a composite data type for object oriented programming
+| feature  | define a design pattern that can be _enabled_ by a class
+| augment  | define an augment for an existing class
+| routine  | define a named block of code belonging to a module
+| routine   | define a named block of code belonging to a class
+| process  | start executable region for a routine and constructor for a class
 | recover  | define a recover region for methods
 | closure  | define a finalization region for methods
-| return   | terminate a method/function or a class declaration
+| return   | terminate a routine/function or a class declaration
 
 ## Blocks of code/sections
 
@@ -64,21 +75,25 @@ For keywords, EVE use English reserved words, without any abbreviation.
 
 | Keyword  | Description
 |----------|-------------------------------------------------------------------
-| exit     | silent stop a method and return control to the caller
+| exit     | silent stop a routine and return control to the caller
 | quit     | close resources, release memory and stop program execution
-| stop     | early terminate execution of a method / function
+| stop     | early terminate execution of a routine / function
 | skip     | jump over all other statements to the end of any repetitive block
 | raise    | create recoverable exception with error code and message
-| retry    | multi-case jump backwards to specified case
-| solve    | multi-case jump forward to specified case
-| resume   | used in trial error handlers to continue with next case
+| fail     | create standard work-flow error if condition is true
+| pass     | create standard unexpected error if condition is true
+| abort    | abort process and clear error object
+| retry    | work-flow jump backwards to specified step
+| solve    | work-flow jump forward to specified step
+| resume   | used in work-flow handlers to continue with next step
+
 
 ## Default variables
 
-| variable | Description
-|----------|------------------------------------------------------------------
-| object   | current instance of a class, current object
-| result   | default result of a method when a name is not specified
-
+| variable  | Description
+|-----------|------------------------------------------------------------------
+| object    | current instance of a class, current object
+| result    | default result of a routine when a name is not specified
+| error     | current exception object of type @exception
 
 **read next:** [Operators](operators.md)

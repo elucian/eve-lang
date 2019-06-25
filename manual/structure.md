@@ -9,12 +9,12 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Regions](#regions)
 * [Globals](#globals)
 * [Classes](#classes)
-* [Methods](#methods)
+* [Routines](#methods)
 * [Functions](#functions)
 * [Expressions](#expressions)
 * [Parameters](#parameters)
 * [Dispatch](#dispatch)
-* [Test cases](#test-cases)
+* [Work-flow](#work-flow)
 * [Execution](#execution)
 
 ## Modules
@@ -30,7 +30,7 @@ Modules are source files having extension: *.eve. Module names are using lowerca
 
 ## Main module
 
-Any module that contains method main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
+Any module that contains routine main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
 
 **properties**
 
@@ -49,7 +49,7 @@ A _library_ is a shared folder containing reusable modules.
 
 ## Regions
 
-A module file is divided into regions using keywords: {import, define, global, class, method} 
+A module file is divided into regions using keywords: {import, define, global, class, routine} 
 
 **module syntax**
 ```
@@ -74,13 +74,12 @@ alias
 
 ** shared constants
 constant
-  @type: Name := value; ! constant
+  @type: Name := value; //  constant
   
 ** shared variables
 variable
-  @type: x;          ! default value
-  @type: y := value; ! specify value
-  @type: z :: y;     ! copy value
+  @type: x;          // default value
+  @type: y := value; //  specify value
   ...
   
 ** function declaration
@@ -93,15 +92,15 @@ class name(params) <: superclass:
   ...
 return;
 
-** method declaration
-method name(params):
+** routine declaration
+routine name(params):
   ...
 return;
 ```
 
 ## Declaration order
 
-Order of regions by default is: {globals, import, type, constant, variable, function, class, method}. Methods and classes can alternate. You can define multiple regions of the same type when members depend on each other. 
+Order of regions by default is: {globals, import, type, constant, variable, function, class, routine}. Routines and classes can alternate. You can define multiple regions of the same type when members depend on each other. 
 
 ## Globals
 
@@ -135,10 +134,10 @@ System variables are starting with prefix "#" and are defined in standard librar
 
 **examples**
 ```
-#error  ! contains last error message
-#stack  ! contains debug information about current call stack
-#trace  ! contains reporting information about executed statements
-#level  ! contains how deep is the current call stack
+#error  ** contains last error message
+#stack  ** contains debug information about current call stack
+#trace  ** contains reporting information about executed statements
+#level  ** contains how deep is the current call stack
 ```
 
 **notes:** 
@@ -155,15 +154,15 @@ Is used to include members from several other modules into current module:
 $user_path := $root_path/relative_path
 
 import 
-  from $user_path use (member_name,...);  ! specific members
-  from $user_path use (*);                ! all public members
+  from $user_path use (member_name,...);  //  specific members
+  from $user_path use (*);                // all public members
   ...
 ```
 
 **note:** 
 * $user_path is any path defined by the user;
 * spaces in file-names are not supported you must use: "_" instead;
-* member alias can rename any member type: {constant, variable, function, method};
+* member alias can rename any member type: {constant, variable, function, routine};
 * class aliases are final instances of generic classes;
 
 ## Shared constants
@@ -173,7 +172,7 @@ Shared constants are declared in _constant_ region.
 **example**
 ```
 constant
-  @double: .Pi := 3.14; ! local constant
+  @double: .Pi := 3.14; //  local constant
 ```
 
 **note:** 
@@ -190,7 +189,7 @@ Shared variables are declared in _variable_ region:
 **example**
 ```
 variable
-  @double: pi := 3.14; ! shared variable
+  @double: pi := 3.14; //  shared variable
 ```
 
 **note:** 
@@ -198,11 +197,11 @@ variable
 * Identifiers are using lowercase letters;
 * Data type is specified before the identifier;
 
-## Methods
+## Routines
 
-A method is a named block of code that can be executed multiple times.
+A routine is a named block of code that can be executed multiple times.
 
-* start with keyword _method_;
+* start with keyword _routine_;
 * has a name identifier followed by a list of parameters;
 * after parameter list () use ":"
 * can have local variables defined after ":"
@@ -211,7 +210,7 @@ A method is a named block of code that can be executed multiple times.
 
 **prototype**
 ```
-method name(parameters):
+routine name(parameters):
   ** declaration region
 process
   ** executable region
@@ -223,13 +222,13 @@ return;
 **Notes:**
 
 * empty list () it is not required when there are no parameters defined only ":" is mandatory;
-* unlike a function, a method can have side-effects but do not return a result.
+* unlike a function, a routine can have side-effects but do not return a result.
 
-**Method name**
-A method is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
+**Routine name**
+A routine is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
 
-**Main method**
-If a module is executable using "run" command, it must contain a "main" method. This method is executed first. If main method is missing then the module is a library and can be imported in other modules but can not be executed using run command.
+**Main routine**
+If a module is executable using "run" command, it must contain a "main" routine. This routine is executed first. If main routine is missing then the module is a library and can be imported in other modules but can not be executed using run command.
 
 **Parameters**
 Formal parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
@@ -237,76 +236,76 @@ Formal parameters are defined in round brackets () separated by comma. Each para
 **mandatory**
 ```
  ** mandatory parameters do not have initial value
- parameter ::= Class_Name : parameter_name ! input parameter
- parameter ::= Class_Name @ parameter_name ! output parameter
+ parameter ::= @class_name > parameter_name ** input parameter
+ parameter ::= @class_name < parameter_name ** output parameter
 ```
 
 **optional**
 ```
  ** optional parameters have explicit initial value
- parameter ::= Class_Name : parameter_name := value ! input parameter
- parameter ::= Class_Name @ parameter_name := value ! output parameter
+ parameter ::= @class_name > parameter_name := value ** input parameter
+ parameter ::= @class_name < parameter_name := value ** output parameter
 ```
 
-1. One method can receive one or more parameters;
+1. One routine can receive one or more parameters;
 1. Parameters having initial values are optional;
 1. Values used for parameters are called arguments;
 1. You can assign arguments using name:value pairs or by position;
 
 **Variadic parameters**
 
-One method can receive multiple arguments of the same type separated by comma into one list.
+One routine can receive multiple arguments of the same type separated by comma into one list.
 
 * First arguments can be captured using normal parameters;
 * The surplus of arguments are captured into last parameter named: "args";
-* A method can have one single variadic parameter;
+* A routine can have one single variadic parameter;
 * The variadic parameter name is declared using "*" instead of ":" or "@". 
 * We can use any name instead of "args" but this is the usual name.
 
 **example**
 ```
-method test(@list{@string} * args):
+routine test(@list{@string} * args):
   print(args);
 return;
 ```
 
-**Method context**
+**Routine context**
 
-Every method has a local context. Members defined in local context are private. In this context a method can implement static attributes using "." prefix. These attributes are properties of the method and can be accessed from current module using dot notation. 
+Every routine has a local context. Members defined in local context are private. In this context a routine can implement static attributes using "." prefix. These attributes are properties of the routine and can be accessed from current module using dot notation. 
 
-**Method call**
-Methods can be used like statements. A method call can be done using method name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no arguments parentheses are not required.
+**Routine call**
+Routines can be used like statements. A routine call can be done using routine name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no arguments parentheses are not required.
 
 ```
-  method_name;                  ! call method without arguments
-  method_name argument_value;   ! call method with single argument
-  method_name (argument_list);  ! call method with a list of arguments
+  routine_name;                  // call routine without arguments
+  routine_name argument_value;   //  call routine with single argument
+  routine_name (argument_list);  //  call routine with a list of arguments
 ```
 
-**Method termination**
-A method end with keyword return. When method is terminated, program execution will continue with the next statement after the method call. Keyword _exit_ can terminate a method early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a method using _quit_ but this will also terminate the main module,
+**Routine termination**
+A routine end with keyword return. When routine is terminated, program execution will continue with the next statement after the routine call. Keyword _exit_ can terminate a routine early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a routine using _quit_ but this will also terminate the main module,
 
 **Example:**
 ```
-method test(@integer: a):
+routine test(@integer: a):
 process
-  ** print is a system method
+  ** print is a system routine
   print a; 
 return;
 
-method main(@list[@string]: *args):
+routine main(@list[@string]: *args):
   ** number of arguments received:
   @integer: c := args.count();
 process  
   ** verify condition and exit
   exit if c = 0;  
-  test c; ! method call
+  test c; //  routine call
 return;
 ```
 
 ## Side Effects
 
-A method can have side-effects: 
+A routine can have side-effects: 
 
 * modify a shared variable;
 * open and write into a file;
@@ -314,7 +313,7 @@ A method can have side-effects:
 
 **using side-effects**
 
-Next method: "add_numbers" has 2 side effects: 
+Next routine: "add_numbers" has 2 side effects: 
 
 ```
 ** local variables
@@ -323,18 +322,18 @@ variable
   @integer: p1;   
   @integer: p2;   
 
-method add_numbers:
+routine add_numbers:
 process
   **side effects  
-  alter test := p1 + p2; ! first side-effect
-  print (test);    ! second side-effect
+  alter test := p1 + p2; //  first side-effect
+  print (test);          //  second side-effect
 return;
 
-method main:
+routine main:
 process
-  alter p1 := 10; ! side effect
-  alter p2 := 20; ! side effect
-  add_numbers();  ! call method add_numbers;
+  alter p1 := 10; //  side effect
+  alter p2 := 20; //  side effect
+  add_numbers();  //  call routine add_numbers;
   expect result = 30;
 return;
 ```
@@ -344,26 +343,26 @@ return;
 To avoid shared variables you can use input/output parameters:
 
 ```
-method add(@@integer: p1 = 0, p2 = 1,  @integer + out):
+routine add(@@integer: p1 = 0, p2 = 1,  @integer + out):
 process
   out := p1 + p2;
 return;
 
-method main:
+routine main:
   @integer: result;
 process  
   ** reference argument require a variable
   add(1,2, result);
-  print (result); ! expected value 3
+  print(result); //  expected value 3
   ** negative test
-  add (1,2,4); ! error, "out" parameter require a variable
+  add(1,2,4);    //  error, "out" parameter require a variable
 return;
 ```
 
 **Notes:**
 
 * Output parameters are usually the last parameters;
-* A method call is a statement, can not be used in expressions;
+* A routine call is a statement, can not be used in expressions;
 * You can not create nested members in methods;
 * You can not create references to methods;
 
@@ -420,11 +419,11 @@ There is a difference between the parameter and the argument. The parameter is a
 ** function declaration
 function @integer: sum(@integer: a, b) =>  (a + b);
   
-method main:
+routine main:
   @integer: r;
 process  
-  r := sum(10,20);  ! function call
-  print(r);         ! this will print 30
+  r := sum(10,20);  // function call
+  print(r);         // this will print 30
 return;
 ```
 
@@ -441,30 +440,30 @@ A ternary operator is "if". Can be used with conditional expressions to return o
 print "true" if True;
 ```
 
-## λ expressions
+### λ expressions
 
 An λ expression we can use multiple conditionals nodes separated by comma:
 
 **syntax:**
 ```
-  identifier := (value if condition,...| default_value)
+  identifier := (value if condition,...: default_value)
 ```
 
 **nodes**
 * each node is evaluated until one is true
 * each node can return one single value
-* the last node do not use a condition but "|"
+* the last node do not use a condition but ":"
 
 **example**
 ```
-method main:
+routine main:
   @integer: p1, p2, x;
 process
   p1 := 2;
   p2 := 1;
   ** using λ expression  
-  x  := ( 0 if p1 = 0, 0 if p2 = 0 | p1+p2);
-  print x; !expect: 3 
+  x  := ( 0 if p1 = 0, 0 if p2 = 0 : p1+p2);
+  print x; // expect: 3 
 return;
 ```
 
@@ -500,12 +499,12 @@ return;
 ```
 **Read more:** [Classes](classes.md)
 
-## Test cases 
+## Work-flow
 
-A method can be organized as a work-flow of multiple steps that can pass or fail depending on conditions.
+A routine can be organized as a work-flow with multiple steps that can _pass_ or _fail_ depending on conditions.
 
 ```
-method main:
+routine main:
   ** local context
 process
   ** initialization
@@ -534,7 +533,7 @@ return;
 
 **New keywords:**
 
-* exit,   will terminate the method early
+* exit,   will terminate the routine early
 * solve,  will continue with a forward case
 * retry,  will continue with a previous case
 * resume, will continue with next case after the one that failed

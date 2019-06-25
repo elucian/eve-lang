@@ -23,13 +23,13 @@ Establish a declaration region and scope qualifier suppression block.
 ```
 with qualifier := long_qualifier do
   ** local statements
-  method_name();  ! instead of: qualifier.method_name()
-  alter var := function_name(); ! instead of qualifier.function_name()
+  routine_name();  //  instead of: qualifier.routine_name()
+  alter var := function_name(); //  instead of qualifier.function_name()
   ...
 done;
 ```
 
-long_qualifier ::= file_name.Class_Name | file_name.record_name
+long_qualifier ::= file_name.@class_name | file_name.record_name
 
 ## When
 
@@ -111,7 +111,7 @@ Is used to define a local scope for a simple block or repetitive block of code.
 **Pattern:**
 ``` 
 given 
-  @type_name: var_name; ! local variable  
+  @type_name: var_name; //  local variable  
   ...
 do
   ** block statements;
@@ -143,13 +143,15 @@ repeat;
 
 ```
 ** example of collection iteration
+routine test: 
+  @list: this := ["a","b","c","d","e"];
+process
 given
-  @list:test := ["a","b","c","d","e"];
   @integer: i := 0;
   @symbol: e;
-while i < test.length() do
-  alter e := my_list[i];
-  alter i += 1;
+while i < this.length() do
+  strap  e := this[i];
+  alter  i := i + 1;
   when e  >= "c" do
     write e;
     write ',' if e ≠ "e";

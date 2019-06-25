@@ -28,7 +28,7 @@ read (@string: prompt) => @string;
 
 **Example:**
 ```
-method main:
+routine main:
   @string: v;
 process  
   read (v, "input v:");
@@ -48,7 +48,7 @@ This will help developers to make dynamic write.
 Is user responsibility to make a line break using an escape \n or \r inside the string parameter.
 
 ```
-method write( @string * str ):
+routine write( @string * str ):
  ...
 return;
 ```
@@ -88,7 +88,7 @@ The usual destination is the text terminal which started the program to provide 
 ## Function _print_
 This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beginning of the next line. So the _print_ function is like println() from other languages.
 ```
-method print(@string * str):
+routine print(@string * str):
 ...
 return;
 ```

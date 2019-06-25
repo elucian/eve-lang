@@ -51,7 +51,7 @@ print;
 # Expression comment
 a := a + 1 |* *(a - 1) *| -1;
 
-over. ! end of line comment
+over. ** end of line comment
 ```
 
 **Notes:**
@@ -107,7 +107,7 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 Two characters:
 ```
-{ := :: =/ <> => >= <= <+ <: .. ./ /. // }
+{ := :: =/ <> => >= <= <+ <: .. .! !. !! }
 ```
 
 Delimiters:
@@ -130,7 +130,7 @@ There are 3 kind of data types in EVE:
 
 ## Variables
 
-A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing memory locations or primitive values that can be moved around in different memory locations. Variables can be altered during the execution of the program using modifier operators: { :=, +=, *=, /= ...}. 
+A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing memory locations or primitive values that can be moved around in different memory locations. Variables can be altered during the execution of the program using modifier operators: { :=, :: } and keyword _alter_. 
 
 **patterns:**
 ```
@@ -171,11 +171,11 @@ Assign value can be done using operator: ":=". But this operator has a strange b
 
 **Syntax:**
 ```
-  identifier := variable_name;   ! share a reference to variable
-  identifier := function_name;   ! share a reference to function
-  identifier := literal;         ! mutate value / initialize
-  identifier := expression;      ! mutate value / initialize
-  identifier := function_name(); ! mutate value / reset value
+  identifier := variable_name;   //  share a reference to variable
+  identifier := function_name;   //  share a reference to function
+  identifier := literal;         //  mutate value / initialize
+  identifier := expression;      //  mutate value / initialize
+  identifier := function_name(); //  mutate value / reset value
 ```
 
 **clone:**
@@ -184,7 +184,7 @@ To make a clone/copy underline value from a reference you must use symbol "::" (
 
 **Syntax:**
 ```
-  variable_name :: reference; ! make a clone
+  variable_name :: reference; //  make a clone
 ```
 
 ## Expressions
@@ -204,19 +204,19 @@ print  10;
 print "this is a test";
 
 ** complex expressions can use ()  
-print (10 + 10 + 15);       ! numeric expression
-print ((10 > 5) | (2 < 3)); ! logical expression
+print (10 + 10 + 15);       //  numeric expression
+print ((10 > 5) | (2 < 3)); //  logical expression
 
 ** list of expressions are enclosed in ()
-print (1, 2, 3);    ! expect: 1 2 3
-print (10, 11, 12); ! expect: 10 11 12
+print (1, 2, 3);    //  expect: 1 2 3
+print (10, 11, 12); //  expect: 10 11 12
 
 ** using write to: avoid new line and print
 write (1,2);
 write (3,4);  
 
 ** now create a new line
-print; ! 1234 
+print; //  1234 
 ```
 
 **Notes:** 

@@ -29,7 +29,7 @@ You can create simple objects using @object default constructor:
 
 ```
 variable
-  @object := {attribute:value, ...} ;
+  @object: object_name := (attribute:value, ...);
 ```
 
 One object can receive attribute names that do not exist. Default constructor will create new attributes automatic and assign the value for each. Attributes do not need to be created for default constructor. However after object is created the structure is locked: no other attributes can be added.
@@ -39,14 +39,14 @@ One object can receive attribute names that do not exist. Default constructor wi
 You can create more complex object using a class.
 
 ```
-class Class_Name(parameters) <: base_class:
+class @class_name(parameters) <: base_class:
   ** class local context
   ...
 create
   ** call base class constructor
-  object := base_class(object_attribute:argument,...);
+  forge object := (object_attribute:argument,...);
   ... 
-discard
+remove
   ** object release region
   ...
 return;
@@ -59,20 +59,20 @@ A class can have parameters that receive values during object initialization. Yo
 ```
 given
   ** declare object from arbitrary class
-  Class_Name: object_name;
+  @class_name: object_name;
 do
   ** create object 
-  object_name := Class_Name(param:value,...);
+  forge object_name := (param:value,...);
   ...
 done;
 ```
 
 ## Instance
-The "object" is the current instance that is created explicit.  It is initialized in class constructor and is visible in all methods of the class. In the creation region _object_ must be initialized from base class. In Java language current "object" is called "this". I have chosen "object" instead. You can not use this name for something else.
+The _object_ is the current instance that is created using forge or implicit constructor. Object can be initialized explicit in the creation region of the class using this syntax:
 
 **Syntax:**
 ```
-  object := base_class(arguments);
+  inherit object := (arguments);
 ```
 
 **Note:** 
@@ -99,7 +99,7 @@ Class attributes are static and can be accessed using two scope qualifiers:
 
 ```
   object_name.class_attribute;
-  Class_Name.class_attribute;
+  @class_name.class_attribute;
 ```
 
 **Class Tree**
@@ -127,14 +127,14 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 
 **Example:**
 ```
-method main:
-  @integer: o,n; ! boxed  Integers
+routine main:
+  @integer: o,n; //  boxed  Integers
 process  
-  o := 1;
-  n := 1; 
+  alter o := 1;
+  alter n := 1; 
   ** expectations
-  expect  (o  = n); ! equivalent  
-  expect  (o <> n); ! not the same location
+  expect  (o  = n); //  equivalent  
+  expect  (o <> n); //  not the same location
 return;
 ```
 
@@ -158,15 +158,16 @@ Generic class is used to define a subtype then you can declare one or more objec
 
 ```
 ** declare new alias type from generic
-alias Type_Name := Generic_class {Type_Name};
+alias 
+  @new_type := @generic_class{Type_Name};
 
-** create new object: using new type with arguments
+** create new object: using new alias with arguments
 variable
-  object_name := Type_Name(argument:Type_Name,...);
+  @new_type: object_name := (argument:Type_Name,...);
 
 ** alternative: create new object directly from generic type
 variable  
-  onject_name := Generic_class{Type_Name}(argument:Type_Name,...);
+  @generic_class{Type_Name}: onject_name := (argument:Type_Name,...);
 
 ```
 

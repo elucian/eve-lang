@@ -6,7 +6,8 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol       | Description
 |-------------|--------------------------------------------------------------
-|`\+\-...\-\+`| Block comments \| Expression comments
+|`\+\-...\-\+`| Block comments   \| Expression comment
+| `:(...):`   | Outline comments \| Nested comments
 | `(_,_,_)`   | Expression \| @list literal
 | `[_,_,_]`   | Range \| Index \| @list literals 
 | `{_,_,_}`   | @ordinal type \| @set of values \| @hash type \| Generic types
@@ -16,7 +17,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol | Description
 |-------|--------------------------------------------------------------
-| `!`   | End of line comment
+| `!`   | Negation symbol
 | `?`   | String template find & replace
 | `#`   | System variable prefix
 | `$`   | System constant prefix
@@ -36,10 +37,17 @@ Eve use two symbols to create supplementary operators.
 |------|---------------------------------------------------------------
 |`\*\*`| Single line comment | End of line comment 
 | `..` | Domain (n..m) or slice [n..m] 
+| `.!` | Domain exclude upper limit
+| `!.` | Domain exclude lower limit
+| `!!` | Domain exclude both limits
 | `=+` | Outer join operator used in data "select" statement
-| `as` | Pipeline operator (usual data casting)
+| `->` | Pipeline operator (usual data casting)
 | `<:` | Declare sub-type for a class 
 | `<+` | Unpacking operator
+| `::` | assign by copy  \| explicit cloning
+| `:=` | assign by share \| reset reference \| borrowing
+
+
 
 
 
@@ -72,40 +80,26 @@ Eve use two symbols to create supplementary operators.
 | `+`   | Numeric addition \| @string concatenation \| @set union
 | `-`   | Subtraction \| @string concatenation \| @set difference
 
-## Modifiers 
-
-Modifiers are in-place operators. They change value of the left operand with value of the right operand. Each modifier is created using one operator symbol follow by equal symbol "=" with no space between.
-
-|Symbol| Description
-|------|--------------------------------------------------------------------
-|`::`  | assign by copy  \| explicit cloning
-|`:=`  | assign by share \| reset reference \| borrowing
-|`+=`  | addition \| scalar addition
-|`-=`  | subtraction  \| scalar subtraction
-|`/=`  | division  \| scalar division
-|`*=`  | multiplication \| scalar multiplication
-|`%=`  | reminder \| scalar reminder
-|`^=`  | power \| scalar power
 
 ## Relation Operators
 
 EVE use two symbols to create a additional operators.
 
 |Symbol | Description
-|-------|-----------------------------------------------------------------------
-| `=`   | The same   \| Shallow comparison
-| `~=`  | Different  \| Shallow comparison
-| `==`  | Equivalent \| Deep comparison
-| `<>`  | Divergent  \| Deep comparison
+|-------|--------------------------------------------------------------------------
+| `=`   | Shallow comparison \| (same reference or native value)
+| `/=`  | Shallow comparison \| (different reference or native value)
+| `==`  | Deep comparison    \| (same attributes or elements)
+| `!=`  | Deep comparison    \| (divergent attributes or elements) 
 | `> `  | Greater than 
-| `< `  | Less than    
+| `< `  | Less than 
 | `>=`  | Greater than or equal to
 | `<=`  | Less than or equal to
 
 
 **Notes:**   
-* For divergence use:     not (a = b)  or (a ~= b)
-* For different location: not (a == b) or (a <> b)
+* For divergence use:     not (a = b)  or (a != b)
+* For different location: not (a == b) or (a /= b)
  
 ## Collection operators
 
@@ -115,16 +109,16 @@ In following table: `A, B, C` are collections and `x` is a member:
 |-----------|---------|-------------------------------------------------------------------
 | A `&`  B  | set     | Union A with B: ∪     use like C := A &  B (return a new set)
 | A `|`  B  | set     | Intersect A with B: ∩ use like C := A |  B (return a new set)
-| A `- ` B  | set     | Simple difference,    use like C := A -  B (return a new set)
+| A `-`  B  | set     | Simple difference,    use like C := A -  B (return a new set)
 | A `--` B  | set     | Symmetric difference, use like C := A -- B (return a new set)
-| A `+`  B  | list    | Concatenate two lists use like L := A +  B (return a new list)
+| A `++` B  | list    | Concatenate two lists use like L := A ++ B (return a new list)
 | A `<=` B  | logic   | verify if A is subset of B: In math: ⊂
 | A `>=` B  | logic   | verify if B is subset of A: In math: ⊃
 | C `+:` x  | append  | append a deep copy of element x to C    
 | C `+=` x  | append  | append a reference of element x to C
-| C `-=` x  | remove  | remove element == x from C  
-| C `-:` x  | remove  | find and remove first element = x from C  
-| C `-*` x  | remove  | find and remove all elements  = x from C  
+| C `-=` x  | remove  | remove element = x from C  
+| C `-?` x  | remove  | find and remove first element == x from C  
+| C `-*` x  | remove  | find and remove all elements  == x from C  
         
 ## Logical operators
 
