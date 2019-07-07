@@ -432,7 +432,7 @@ return;
 A ternary operator is "if". Can be used with conditional expressions to return one value or other.   
 **syntax**
 ```
-  a := (value if (condition) | value)
+  a := (value if (condition) , value)
 ```
 
 **example**
