@@ -47,7 +47,7 @@ Eve use two symbols to create supplementary operators.
 | `=+` | Outer join operator used in data "select" statement
 | `->` | Pipeline operator (usual data casting)
 | `<:` | Define sub-type for a class 
-| `<+` | Unpacking operator
+| `<+` | Output parameter
 | `::` | Explicit clone operator  \| Attributes deep copy
 | `:=` | Assign value \| reset reference \| share reference
 
@@ -64,8 +64,8 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------------
-|  `-` | Concatenate two strings after trimming first string
-|  `+` | Concatenate two strings as they are. No trim is performed!
+|  `+` | Concatenate two strings after trimming first string
+|  `&` | Concatenate one string with other string or or numeric type
 |  `/` | Concatenate two strings with "/" separator and de-duplicate "//"   
 |  `\` | Concatenate two strings with "\\" separator and de-duplicate "\\\\"   
 |  `.` | Concatenate two strings with "\\" or "/" depending on the: $platform
@@ -89,9 +89,9 @@ EVE use two symbols to create a additional operators.
 |Symbol | Description
 |-------|--------------------------------------------------------------------------
 | `=`   | Equal \| deep comparison  \| (equal values & attributes)
-| `!=`  | Different \| deep comparison \| (different value & attributes) 
+| `<>`  | Different \| deep comparison \| (different value & attributes) 
 | `==`  | Shallow comparison \| (same objects or data types)
-| `~=`  | Shallow comparison \| (different objects or data types)
+| `!=`  | Shallow comparison \| (different objects or data types)
 | `> `  | Greater than value
 | `< `  | Less than value
 | `>=`  | Greater than or equal to values
@@ -99,8 +99,8 @@ EVE use two symbols to create a additional operators.
 
 
 **Notes:**   
-* For divergence use:     not (a = b)  or (a != b)
-* For different location: not (a == b) or (a /= b)
+* For different value use: not (a = b)  or (a <> b)
+* For different location:  not (a == b) or (a != b)
  
 ## Collection operators
 
@@ -167,7 +167,7 @@ These operators are working for natural numbers ≥ 0
 
 **Binary operators**
 
- A    | B   | A.&.B  | A.|.B  | A.+.B
+ A    | B   | `A.&.B`| `A.|.B`| `A.+.B`
 ------|-----|--------|--------|---------
  00   | 00  | 00     | 00     |  00    
  01   | 00  | 00     | 01     |  01    
@@ -177,7 +177,7 @@ These operators are working for natural numbers ≥ 0
 
 **Unary operators**
 
- A    |A .<. 1  | A .>. 1  | ~.A
+ A    |`A.<.1`  | `A.>.1`  | `~.A`
 ------|---------|----------|----------
  0000 | 0000    | 0000     | 1111
  1111 | 1110    | 0011     | 0000

@@ -1,11 +1,11 @@
 <NotepadPlus>
     <UserLang name="Eve MD" ext="eve md" udlVersion="2.1">
         <Settings>
-            <Global caseIgnored="no" allowFoldOfComments="yes" foldCompact="yes" forcePureLC="2" decimalSeparator="0" />
-            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="yes" Keywords8="no" />
+            <Global caseIgnored="no" allowFoldOfComments="yes" foldCompact="yes" forcePureLC="2" decimalSeparator="2" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="yes" Keywords8="yes" />
         </Settings>
         <KeywordLists>
-            <Keywords name="Comments">00** 01 02 03+- 04-+</Keywords>
+            <Keywords name="Comments">00# 00** 01 02 03+- 04-+</Keywords>
             <Keywords name="Numbers, prefix1">0b</Keywords>
             <Keywords name="Numbers, prefix2">0x U+</Keywords>
             <Keywords name="Numbers, extras1">A B C D E F</Keywords>
@@ -14,7 +14,7 @@
             <Keywords name="Numbers, suffix2"></Keywords>
             <Keywords name="Numbers, range"></Keywords>
             <Keywords name="Operators1">. , : ; | - + * / ^ ? ! % \ = &lt; &gt; ~ &amp;</Keywords>
-            <Keywords name="Operators2">if as is in to not and or xor shl shr</Keywords>
+            <Keywords name="Operators2">if as is in to not and or xor</Keywords>
             <Keywords name="Folders in code1, open"></Keywords>
             <Keywords name="Folders in code1, middle"></Keywords>
             <Keywords name="Folders in code1, close"></Keywords>
@@ -24,15 +24,15 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">read write print item process recover closure remove from use create return routine method class feature augment step alter forge reset clone strap inherit</Keywords>
+            <Keywords name="Keywords1">read write print item process recover cleanup remove from use create module function routine method class feature augment return step </Keywords>
             <Keywords name="Keywords2">do with given begin over when case else done quest match other while repeat for next</Keywords>
-            <Keywords name="Keywords3">import constant variable alias cursor view module function record </Keywords>
+            <Keywords name="Keywords3">import inherit alter store forge clone share reset &#x000D;&#x000A;constant variable alias cursor view record</Keywords>
             <Keywords name="Keywords4">run act exit raise expect solve retry resume stop skip quit rest continue abort pass fail&#x000D;&#x000A;</Keywords>
-            <Keywords name="Keywords5">select insert update delete append</Keywords>
-            <Keywords name="Keywords6">ascending descending commit rollback discard where order by group join into limit offset open close fetch analyze</Keywords>
-            <Keywords name="Keywords7">@ # $</Keywords>
-            <Keywords name="Keywords8">u8 u16 u32 u64 i16 i32 i64 f32 f64 &#x000D;&#x000A;Null True False result object error&#x000D;&#x000A;ydm dmy mdy t12 t24&#x000D;&#x000A;</Keywords>
-            <Keywords name="Delimiters">00( 01 02) 03&quot; 04\ 05&quot; 06[ 07 08] 09&apos; 10\ 11&apos; 12{ 13 14} 15` 16 17` 18// 19 20((EOL)) 21:( 22 23):</Keywords>
+            <Keywords name="Keywords5">select insert update delete append&#x000D;&#x000A;ascending descending commit rollback discard where order by group join into limit offset open close fetch analyze</Keywords>
+            <Keywords name="Keywords6">YDM DMY MDY T12 T24&#x000D;&#x000A;Null True False &#x000D;&#x000A;result object error&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords7">@ $&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords8">A B C D E F G H I J K L M N O P R S T U V W X Y Z</Keywords>
+            <Keywords name="Delimiters">00( 01 02) 03&quot; 03&apos; 04\ 05&quot; 05&apos; 06[ 07 08] 09``` 10 11``` 12{ 13 14} 15` 16 17` 18// 19 20((EOL)) 21/* 22 23*/</Keywords>
         </KeywordLists>
         <Styles>
             <WordsStyle name="DEFAULT" fgColor="C0C0C0" bgColor="400000" fontName="DejaVu Sans Mono" fontStyle="0" fontSize="20" nesting="0" />
@@ -46,17 +46,17 @@
             <WordsStyle name="KEYWORDS5" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS6" fgColor="FF80FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS7" fgColor="8080FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
-            <WordsStyle name="KEYWORDS8" fgColor="808000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="80FFFF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="OPERATORS" fgColor="FF0080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="FOLDER IN CODE1" fgColor="804040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="FOLDER IN CODE2" fgColor="808000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="FOLDER IN COMMENT" fgColor="800000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
-            <WordsStyle name="DELIMITERS1" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="1" nesting="117691039" />
+            <WordsStyle name="DELIMITERS1" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="1" nesting="117670551" />
             <WordsStyle name="DELIMITERS2" fgColor="AAAA55" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
-            <WordsStyle name="DELIMITERS3" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" nesting="117657743" />
-            <WordsStyle name="DELIMITERS4" fgColor="FFFF00" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
-            <WordsStyle name="DELIMITERS5" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" nesting="117506975" />
-            <WordsStyle name="DELIMITERS6" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" nesting="117702655" />
+            <WordsStyle name="DELIMITERS3" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" nesting="117637271" />
+            <WordsStyle name="DELIMITERS4" fgColor="C0C0C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="117702647" />
+            <WordsStyle name="DELIMITERS5" fgColor="FFFFFF" bgColor="000000" fontName="" fontStyle="0" nesting="117670807" />
+            <WordsStyle name="DELIMITERS6" fgColor="FFFF00" bgColor="000000" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="DELIMITERS7" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="DELIMITERS8" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="128" />
         </Styles>
