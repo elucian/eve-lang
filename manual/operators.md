@@ -6,11 +6,12 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol       | Description
 |-------------|--------------------------------------------------------------
-|`\+\-...\-\+`| Block comments   \| Expression comment
-| `:(...):`   | Outline comments \| Nested comments
-| `(_,_,_)`   | Expression \| @list literal
-| `[_,_,_]`   | Range \| Index \| @list literals 
-| `{_,_,_}`   | @ordinal type \| @set of values \| @hash type \| Generic types
+| `+-...-+`   | Block comments   \| Expression comment
+| `/*...*/`   | Outline comments \| Nested comments
+| `(_,_,_)`   | Expression \| List literal
+| `[_,_,_]`   | Range \| Index \| List literals 
+| `{_,_,_}`   | Ordinal type \| Set of values \| Hash type \| Generic types
+| `#(....)`   | String interpolation (placeholder) for operator "?"
 
 
 ## Single symbols
@@ -23,11 +24,14 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | `$`   | System constant prefix
 | `@`   | Reference type prefix \| Class name prefix
 | `;`   | Statement separator \| End of statement
-| `:`   | Define constant   \| Pair-up operator (a:b)
+| `:`   | Define something   \| Pair-up operator (a:b)
+| `=`   | Setup initial value for something
+| `~`   | Check if two variables have same type
 | `.`   | Decimal separator \| Public member \| Member of ,,,
 | `,`   | Enumeration for elements \| complex expression 
 | `*`   | Variable arguments \| Multiplication
-| `|`   | Used in set builders and hash map builders
+| `|`   | Used in set builders \| Set union "∪"
+| `&`   | String concatenation \| Set intersection "∩"
 
 ## Double symbols
 
@@ -42,21 +46,18 @@ Eve use two symbols to create supplementary operators.
 | `!!` | Domain exclude both limits
 | `=+` | Outer join operator used in data "select" statement
 | `->` | Pipeline operator (usual data casting)
-| `<:` | Declare sub-type for a class 
+| `<:` | Define sub-type for a class 
 | `<+` | Unpacking operator
-| `::` | assign by copy  \| explicit cloning
-| `:=` | assign by share \| reset reference \| borrowing
-
-
-
+| `::` | Explicit clone operator  \| Attributes deep copy
+| `:=` | Assign value \| reset reference \| share reference
 
 
 ## String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|\`x\` | @single  UTF32 character (4 bytes)
-| 'x'  | Limited capacity string: UTF8 (max: 128 characters)
+|\`x\` | Single  UTF32 character (4 bytes)
+| 'x'  | Limited capacity string:  UTF8 (max: 128 characters)
 | "x"  | Variable capacity string: UTF8 (unlimited)
 
 ## String: concatenation
@@ -73,12 +74,12 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol | Description
 |-------|----------------------------------------------------------------
-| `\`   | Numeric division \| Fraction literal
 | `*`   | Numeric multiplication \| Scalar operator
+| `/`   | Numeric division
 | `^`   | Power operator. Example: x^n is the x to the power of n.
 | `%`   | Reminder operator \| Scalar operator
-| `+`   | Numeric addition \| @string concatenation \| @set union
-| `-`   | Subtraction \| @string concatenation \| @set difference
+| `+`   | Numeric addition \| String concatenation \| Set union
+| `-`   | Numeric subtraction \| String concatenation \| Set difference
 
 
 ## Relation Operators
@@ -87,14 +88,14 @@ EVE use two symbols to create a additional operators.
 
 |Symbol | Description
 |-------|--------------------------------------------------------------------------
-| `=`   | Shallow comparison \| (same reference or native value)
-| `/=`  | Shallow comparison \| (different reference or native value)
-| `==`  | Deep comparison    \| (same attributes or elements)
-| `!=`  | Deep comparison    \| (divergent attributes or elements) 
-| `> `  | Greater than 
-| `< `  | Less than 
-| `>=`  | Greater than or equal to
-| `<=`  | Less than or equal to
+| `=`   | Equal \| deep comparison  \| (equal values & attributes)
+| `!=`  | Different \| deep comparison \| (different value & attributes) 
+| `==`  | Shallow comparison \| (same objects or data types)
+| `~=`  | Shallow comparison \| (different objects or data types)
+| `> `  | Greater than value
+| `< `  | Less than value
+| `>=`  | Greater than or equal to values
+| `<=`  | Less than or equal to values
 
 
 **Notes:**   
@@ -122,13 +123,15 @@ In following table: `A, B, C` are collections and `x` is a member:
         
 ## Logical operators
 
-These operators are expected logical values T := true, F := false
+These operators are expected logical values T = true, F = false
 
 | Symbol | Description
 |--------|----------------------------------------------------------------
 |  if    | conditional operator
-|  is    | check type: is @type or is Null, is not Null
+|  is    | check Type: is Type or is not Type instead of "==="
+|  is not| check Type: is Type or is not Type instead of "!==="
 |  in    | logic belong to: instead of "∈"
+|  not in| logic not belong to: instead of "!∈"
 |  not   | logic NOT (negation) 
 |  and   | logic AND (intersection) 
 |  or    | logic OR  (union)
@@ -137,45 +140,49 @@ These operators are expected logical values T := true, F := false
 
 Table of truth for logical operators: 
 
- A     | B     | not A | A and B| A or B| A xor B
--------|-------|-------|--------|-------|-------
- True  | True  | False | True   | True  | False    
- True  | False | False | False  | True  | True   
- False | True  | True  | False  | True  | True
- False | False | True  | False  | False | False
+ A     | B     | A and B| A or B| A xor B
+-------|-------|--------|-------|-------
+ True  | True  | True   | True  | False    
+ True  | False | False  | True  | True   
+ False | True  | False  | True  | True
+ False | False | False  | False | False
 
+Unary operator not:
+
+* not False = True
+* not True  = False
 
 ## Bitwise operators
 
 These operators are working for natural numbers ≥ 0
 
- symbol | description
---------|----------------------------------
-  not.  | bitwise NOT (unary)
- .and.  | bitwise AND
- .or.   | bitwise OR
- .xor.  | bitwise XOR
- .shl.  | shift bits to left  
- .shr.  | shift bits to right
+ symbol  | description
+---------|------------------------------
+   ~.    | bitwise NOT (unary)
+  .&.    | bitwise AND
+  .|.    | bitwise OR
+  .+.    | bitwise XOR
+  .<.    | shift bits to left  
+  .>.    | shift bits to right
 
 **Binary operators**
 
- A    | B   |A.and.B| A.or.B| A.xor.B
-------|-----|-------|-------|--------
- 00   | 00  | 00    | 00    |  00    
- 01   | 00  | 00    | 01    |  01    
- 11   | 01  | 01    | 11    |  10    
- 10   | 11  | 10    | 11    |  01    
- 11   | 11  | 11    | 11    |  00    
+ A    | B   | A.&.B  | A.|.B  | A.+.B
+------|-----|--------|--------|---------
+ 00   | 00  | 00     | 00     |  00    
+ 01   | 00  | 00     | 01     |  01    
+ 11   | 01  | 01     | 11     |  10    
+ 10   | 11  | 10     | 11     |  01    
+ 11   | 11  | 11     | 11     |  00    
 
 **Unary operators**
 
- A    |A.shl.1  | A.shr.1 | not.A
-------|---------|---------|-------
- 0000 | 0000    | 0000    | 1111
- 1111 | 1110    | 0011    | 0000
- 0111 | 1110    | 0001    | 1000
- 0110 | 1100    | 0001    | 1001
+ A    |A .<. 1  | A .>. 1  | ~.A
+------|---------|----------|----------
+ 0000 | 0000    | 0000     | 1111
+ 1111 | 1110    | 0011     | 0000
+ 0111 | 1110    | 0001     | 1000
+ 0110 | 1100    | 0001     | 1001
 
 **See also:** [Wikipedia Bitwise Operation](https://en.wikipedia.org/wiki/Bitwise_operation)
 
