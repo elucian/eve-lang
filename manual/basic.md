@@ -13,7 +13,7 @@ EVE is a gradual typed language. Next I will describe basic types:
 * [Data coercion](#data-coercion)
 * [Type inference](#type-inference)
 * [Default types](default-types) 
-* [Ordinal type](ordinal-type)
+* [Ordinal type](Ordinal-type)
 * [Logical type](logical-type)
 * [Gradual typing](#gradual-typing)
 * [Calendar date](#calendar-date)
@@ -27,24 +27,24 @@ Scalar types are fixed size data types mapped to native OS types.
 |----------|------|------------------------------------------------------
 | @byte    | u8   |Unsigned on 8  bit 
 | @word    | u16  |Unsigned on 16 bit 
-| @binary  | u32  |Unsigned on 32 bit 
+| Binary  | u32  |Unsigned on 32 bit 
 | @natural | u64  |Unsigned on 64 bit 
 | @short   | i16  |Signed on 16 bit 
-| @integer | i32  |Signed on 32 bit
+| Integer | i32  |Signed on 32 bit
 | @long    | i64  |Signed on 64 bit 
-| @single  | f32  |Float precision number on 4 byte
-| @double  | f64  |Float precision number on 8 byte
+| Single  | f32  |Float precision number on 4 byte
+| Double  | f64  |Float precision number on 8 byte
 
 ## Basic Types
 
 | reference| description
 |----------|---------------------------------------------------------------
-| @ordinal | Enumeration of symbols, ideas or terms
+| Ordinal | Enumeration of symbols, ideas or terms
 | @object  | Base class for creation of plain simple objects
 | @null    | Null data type. Have one constant value: Null
 | @date    | Calendar date     
 | @time    | Calendar time
-| @logic   | Is a @ordinal subtype having values:  false = 0, true = 1
+| Logic   | Is a Ordinal subtype having values:  false = 0, true = 1
 
 ## Composite Types
 
@@ -53,12 +53,12 @@ Composite data types are unions of data elements.
 | type      | description
 |-----------|---------------------------------------------------------------
 | @numeric  | Numeric variant that can be Null
-| @symbol   | Single Unicode symbol UTF-32
-| @string   | Limited capacity string:   ('single quoted')
-| @text     | Unlimited capacity string: ("double quoted")
-| @list     | Dynamic unsorted enumeration of values or objects of same type
-| @hash     | Enumeration of (key:value) pairs unique sorted by key
-| @set      | Enumeration of unique elements of the same type sorted by value
+| Symbol   | Single Unicode symbol UTF-32
+| String   | Limited capacity string:   ('single quoted')
+| Text     | Unlimited capacity string: ("double quoted")
+| List     | Dynamic unsorted enumeration of values or objects of same type
+| Hash     | Enumeration of (key:value) pairs unique sorted by key
+| Set      | Enumeration of unique elements of the same type sorted by value
 | @exception| Composite type derived from @object base class
 
 **note:** 
@@ -71,20 +71,20 @@ In EVE we can have two categories of numbers:
 
  Category     | EVE Types
 --------------|------------------------------------------------------------
- Discrete:    | @byte, @word, @binary, @integer, @natural
- Continuous:  | @single, @double, 
+ Discrete:    | @byte, @word, Binary, Integer, @natural
+ Continuous:  | Single, Double, 
 
 ### Discrete numbers:
 
 |type     |Chars  |Bytes|min |max   |maximum number	
 |---------|-------|-----|----|------|-------------------------
-|@integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
+|Integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
 |@natural |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
  
 For conversion into characters:
 
-* The number of characters required for @integer numbers is 20. (19+sign)
-* For @double numbers, conversion into characters is controled by #precision directive
+* The number of characters required for Integer numbers is 20. (19+sign)
+* For Double numbers, conversion into characters is controled by #precision directive
  
 ### Double numbers
 
@@ -98,32 +98,32 @@ Floating decimal numbers are most simply described by 3  Integers:
 The numerical value of a finite number is −1ˢ × c × 2ⁿ
 Using this formula EVE define two floating point types.
 
-@single: is single-precision 32-bit IEEE 754:  
-@double: is double-precision 64-bit IEEE 754:  
+Single: is single-precision 32-bit IEEE 754:  
+Double: is double-precision 64-bit IEEE 754:  
 
 |type     |Digits |Bytes|maximum number	
 |---------|-------|-----|----------------------------------
-|@single  |7      |4    |≤ 3.4 × 10³⁸
-|@double  |16     |8    |≤ 1.8 × 10³⁰⁸
+|Single  |7      |4    |≤ 3.4 × 10³⁸
+|Double  |16     |8    |≤ 1.8 × 10³⁰⁸
 
-Precision is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a @double: and back without loosing any digit. Think of it like a digital display from a packet calculator.
+Precision is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Double: and back without loosing any digit. Think of it like a digital display from a packet calculator.
 
 **Numeric literals**
 
 Example | Description
 --------|-------------------------------------------------------------------------
-0       | @integer zero
-123     | @integer number using symbols: {0,1,2,3,4,5,6,7,8,9}
-1/2     | @single  number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
-0.5     | @double  number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
+0       | Integer zero
+123     | Integer number using symbols: {0,1,2,3,4,5,6,7,8,9}
+1/2     | Single  number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
+0.5     | Double  number use symbols: {.,0,1,2,3,4,5,6,7,8,9}
 
 **example**
 
 ```
 routine main:
-  @integer: i; 
+  Integer: i; 
   @natural: n;
-  @double : r;
+  Double : r;
 process  
   alter i := 9223372036854775807; //  maximum
   alter n := 18446744073709551615; //  maximum
@@ -149,8 +149,8 @@ alias @alias_name := Generic_Class {parameters}
 
 **Example:**
 ```
-class Point(@double: x,y) <: @object:
-  @double: .x, .y;
+class Point(Double: x,y) <: @object:
+  Double: .x, .y;
 create
   alter .x := x;
   alter .y := y;
@@ -167,8 +167,8 @@ process
 **reset Point using a literal
   alter p2 := {2, 2};
   
-  print ("p1 = (a:#n, b:#n)" <+ (p1.a,p1.b));
-  print ("p2 = (a:#n, b:#n)" <+ (p2.a,p2.b));  
+  print ("p1 = (a:#n, b:#n)" ? (p1.a,p1.b));
+  print ("p2 = (a:#n, b:#n)" ? (p2.a,p2.b));  
 return;
 ```
 output:
@@ -186,21 +186,21 @@ In EVE the arithmetic operators are polymorphic. Numeric operators can do implic
 
 Implicit conversion is possible and _safe_ in this direction:
 
-@byte as @word as @binary as @natural as @integer as @single as @double.
+@byte as @word as Binary as @natural as Integer as Single as Double.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-@double as  @single as @integer as @natural as @binary as @word as @byte
+Double as  Single as Integer as @natural as Binary as @word as @byte
 
 ```
 given
-  @integer: a := 2;
-  @double:  b := 1.5; 
+  Integer: a := 2;
+  Double:  b := 1.5; 
 do
   alter b := a;       //  this implicit cast is possible b = 2.0
   alter b := a + 3.5; //  add 3.5 then assign result to b = 5.5
-  alter a := b;       //  error: can not assign @double: to  @integer
-  alter a := 1.5;     //  error: can not assign @double: to  @integer
+  alter a := b;       //  error: can not assign Double: to  Integer
+  alter a := 1.5;     //  error: can not assign Double: to  Integer
 done;
 ```
 
@@ -210,8 +210,8 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 Examples of explicit coercion:   
 ```
 given
-  @integer: a := 0;
-  @double : b := 1.5;
+  Integer: a := 0;
+  Double : b := 1.5;
 do
 
 **explicit coercion lose (0.5)
@@ -232,8 +232,8 @@ done;
 
 ```
 given
-  @string : s; 
-  @integer : v := 1000;
+  String : s; 
+  Integer : v := 1000;
 do  
   alter s := format(v); //  explicit coercion s = '1000'
 done;
@@ -245,10 +245,10 @@ This can be ready using the casting function parse(), only if the string contain
 
 ```
 given
-  @integer : v; 
-  @double  : b;
-  @string  : s := '1000';
-  @string  : r := '200.02';
+  Integer : v; 
+  Double  : b;
+  String  : s := '1000';
+  String  : r := '200.02';
 do
   alter v := parse(s); //  make v = 1000
   alter v := parse(r); //  make v = 200 and decimal .02 is lost
@@ -274,10 +274,10 @@ This is a logical deduction of data type from constant literals.
 ```
 ** Define a list of 10 elements using type inference:
 given
-  @list: ls := [0,1,2,3,4,5,6,7,8,9]; //  initialized list of @integer
+  List: ls := [0,1,2,3,4,5,6,7,8,9]; //  initialized list of Integer
 do
-  print  ls.type(); //  @list[@integer]
-  expect ls is @list[@integer];
+  print  ls.type(); //  List[Integer]
+  expect ls is List[Integer];
 done 
 ```
 
@@ -287,37 +287,37 @@ Literals are representations of specific particular data type in source code.
 **Basic types**
 Next notation use "9" to show any digit in range [0..9].
 
-Literal      | @type
+Literal      | Type
 -------------|-----------------
- 9           | @integer
--9           | @integer
+ 9           | Integer
+-9           | Integer
 0x9ABCDEF    | @natural
-0b1010101    | @binary
-9.9          | @double
+0b1010101    | Binary
+9.9          | Double
 U+0001       | @word
-U-FFFFFFFF   | @binary
+U-FFFFFFFF   | Binary
 
 **Zero literals**
 
-Literal    | @type
+Literal    | Type
 -----------|---------------
-[]         | @list
-{}         | @set/@hash
-()         | @list
-""         | @text
-''         | @string
-0          | @integer
-0.0        | @double
+[]         | List
+{}         | Set/Hash
+()         | List
+""         | Text
+''         | String
+0          | Integer
+0.0        | Double
            
 **Collection literals**
 
-Literal      | @type
+Literal      | Type
 -------------|-----------------
-{a:0, b, c}  | @ordinal
+{a:0, b, c}  | Ordinal
 {x:'b',y:'d'}| @object
-[1, 2, 3]    | @list{@byte}
-['a','b','c']| @list{@symbol}
-["a","b","c"]| @list{@text}
+[1, 2, 3]    | List{@byte}
+['a','b','c']| List{Symbol}
+["a","b","c"]| List{Text}
 
 ### Type Inference
 
@@ -326,7 +326,7 @@ Sometimes the type is partially specified to simplify type declaration:
 ```
 variable
   ** member type is inferred later from first member
-  @list: a := [];
+  List: a := [];
 ```
        
 ### Type verification
@@ -336,13 +336,13 @@ We can verify the type using "is" operator:
 ```
 given
   @object: r := {name:"test", age:"24"}; 
-  @hash:   t := {('key1':"value1"),('ley2':"value2")};
+  Hash:   t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
-  expect r.name  is @text;
-  expect r.age   is @text;
-  expect t.key   is @string;
-  expect t.value is @text;
+  expect r.name  is Text;
+  expect r.age   is Text;
+  expect t.key   is String;
+  expect t.value is Text;
 done;
 ```
 
@@ -352,16 +352,16 @@ For type introspection we can use type() built-in function:
 
 ```
 given
-  @double: i := 1.5;
+  Double: i := 1.5;
 do
-  expect i is @double;
-  print "type of i is \s" <+ type(i);
+  expect i is Double;
+  print "type of i is \s" ? type(i);
 done;
 ```
 
 ## Polymorphic operators
 
-In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or @double. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
+In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or Double. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
 
 Some languages define different operators for  Integers and floating decimal numbers. For example in OCaml the operator "/" can divide  Integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
 
@@ -375,7 +375,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-alias Name := {identifier:value, ... } <: @ordinal;
+alias Name := {identifier:value, ... } <: Ordinal;
 ```
 
 **Usage**
@@ -384,14 +384,14 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 * Value of first element can be specified. If is not specified it starts from: 1.    
 * Values of next elements can not be specified. That is next element is previous element +1.   
-* Elements declared in a @ordinal type are public is we use "." prefix
+* Elements declared in a Ordinal type are public is we use "." prefix
 
 **Example:**
 ```
-alias @day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: @ordinal;
+alias @day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: Ordinal;
 
 routine main:
-  @string: message;
+  String: message;
 process  
   given
     @day: today := today();
@@ -410,7 +410,7 @@ return;
 ```
 
 **Domain:**
-We can use @ordinal to create a domain:
+We can use Ordinal to create a domain:
 ```
 when today in (Monday..Friday) do
    print ("Have a nice day!");
@@ -420,7 +420,7 @@ done;
 ```
 
 **Operators**
-@ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
+Ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
 
 ```
 ** using type Day declared before
@@ -447,14 +447,14 @@ True     | Logic.True    | 00000000 00000001
 **syntax**
 ```
 variable
-  @logic: variable_name; //  default false
+  Logic: variable_name; //  default false
 ```
 
 **internal design**
 
-Probably best to define Logic type is @ordinal:
+Probably best to define Logic type is Ordinal:
 ```
-alias Logic := { .False , .True } <: @ordinal;
+alias Logic := { .False , .True } <: Ordinal;
 ```
 
 **Logical expressions**
@@ -476,7 +476,7 @@ A @variant is a polymorphic variable that can have multiple types but only one a
 
 **Syntax:**
 ```
-alias @name := {@type | @type | ... } <: @variant;
+alias @name := {Type | Type | ... } <: @variant;
 
 variable 
   name: v; //  declare single variable
@@ -497,7 +497,7 @@ For this we use a special type Null
 
 **Examples:**
 ```
-alias @number: {@integer | @double | @null} <: @variant;
+alias @number: {Integer | Double | @null} <: @variant;
 
 variable
   @number: x := Null;  
@@ -510,26 +510,26 @@ A variant can establish its data type at runtime:
 **example:**
 ```
 given
-  @double | @integer: v, x ,t;
+  Double | Integer: v, x ,t;
 do
   ** positive example
-  alter v := 1;     //  v is  @integer
-  alter x := 1.5;   //  x is @double:    
-  alter t := 1 / 2; //  make t @double
+  alter v := 1;     //  v is  Integer
+  alter x := 1.5;   //  x is Double:    
+  alter t := 1 / 2; //  make t Double
   
   ** safe conversion
-  alter t := 12; //  t is @double
+  alter t := 12; //  t is Double
   
   ** negative examples
-  alter v := x;  //  ERROR: v is  @integer 
+  alter v := x;  //  ERROR: v is  Integer 
 done;
 ```
 
 A variant is a way to create a generic routine.
 
 ```
-routine swap(@integer | @double: x, y):
-  @integer | @double: i
+routine swap(Integer | Double: x, y):
+  Integer | Double: i
 process  
   expect type(x) = type(y);
   
@@ -539,15 +539,15 @@ process
 return;
 
 routine main:
-  @integer: y;
-  @double: a, b;
+  Integer: y;
+  Double: a, b;
 process  
-  ** invert two  @integer: numbers
+  ** invert two  Integer: numbers
   alter  x := 10;
   alter  y := 20;  
   swap(x, y);
   expect (x = 20) and (y = 10);
-  ** invert two @double: numbers
+  ** invert two Double: numbers
   alter a := 1.5;
   alter b := 2.5;
   swap(a, b);
@@ -557,7 +557,7 @@ return;
 
 ## Single symbol
 
-Symbols are Unicode UTF32. That is using 32 bit  @integer:
+Symbols are Unicode UTF32. That is using 32 bit  Integer:
 
 * Single-quoted strings like: 'α'
 * U+HHHH   from: U+0000   to U+FFFF

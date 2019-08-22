@@ -19,20 +19,20 @@ Unless redirected, standard read is expected from the keyboard which started the
 
 **read statement**
 Developer can create a program that ask for user to enter values from keyboard.  
-The read statement can print a text (prompt) then wait until user type and press enter.
+The read statement can output a text then wait until user type the text and press enter.
 
 Function read declaration
 ```
-read (@string: prompt) => @string;
+read (String: prompt) => String;
 ```
 
 **Example:**
 ```
 routine main:
-  @string: v;
+  String: v;
 process  
-  read (v, "input v:");
-  print("you entered:" & v);
+  read  (v, "input v:");
+  write ("you entered:" & v);
 return;
 ```
 
@@ -48,10 +48,16 @@ This will help developers to make dynamic write.
 Is user responsibility to make a line break using an escape \n or \r inside the string parameter.
 
 ```
-routine write( @string * str ):
+routine write(String * args, Logic:eol=True, String:sep=" "):
  ...
 return;
 ```
+
+**parameters:**
+
+* eol:False will cause "write" to not sent new line to console
+* sep:","  will cause "write" to separate arguments by comma
+* wrp: > n will cause end of line after n characters 
 
 write sting can contain an escaped end of line character.
 ```
@@ -63,12 +69,6 @@ write sting can contain an escaped end of line character.
 write function support only strings. It can not print anything else. 
 Therefore developer must make a conversion to a string before sending the value to write.
 
-
-# Console Printing
-
-Print is a function that facilitate a program to display feedback to standard write. 
-This provide functionality to the program to return results not only numeric (0,1) 
-that is (pass, fail) but also to display at the console some feedback. 
 
 ## Standard error
 
@@ -88,7 +88,7 @@ The usual destination is the text terminal which started the program to provide 
 ## Function _print_
 This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beginning of the next line. So the _print_ function is like println() from other languages.
 ```
-routine print(@string * str):
+routine print(String * str):
 ...
 return;
 ```

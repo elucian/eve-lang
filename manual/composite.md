@@ -15,8 +15,8 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 
 **syntax**
 ```
-  @list{@type}: list_name := [];     //  new empty list
-  @list: list_name := [value, ...]; //  new populate list
+  List{Type}: list_name := [];     //  new empty list
+  List: list_name := [value, ...]; //  new populate list
 ```
 
 **notes:**
@@ -27,14 +27,14 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 **examples**
 ```
 given
-  @list{@integer} : n_list; 
-  @list{@object}  : o_list; 
-  @list{@string}  : s_list; 
+  List{Integer} : n_list; 
+  List{@object}  : o_list; 
+  List{String}  : s_list; 
 ```
 
 **list literals**
  
-* @list literals enclosed in square brackets,
+* List literals enclosed in square brackets,
 * Elements are separated by comma,
 * All elements are having the same type.
 
@@ -43,15 +43,15 @@ given
 Literals can be used for initialization:
 ```
 given
-  @list{@symbol} : c_list := ['a', 'b', 'c'];
-  @list{@integer}: n_list := [1, 2, 3];  
+  List{Symbol} : c_list := ['a', 'b', 'c'];
+  List{Integer}: n_list := [1, 2, 3];  
 ```
 
 Literals can be used in expressions:
 ```
 given
   ** define empty list if native types
-  @list{@integer}: c_list := [];
+  List{Integer}: c_list := [];
 do
   ** alter list using  ":=" 
   c_list := [1,2,3]; 
@@ -64,7 +64,7 @@ In mathematics a set is an abstract data structure that can store certain values
 **declaration**
 
 ```
-  @set{type}: set_name;
+  Set{type}: set_name;
 ```
 
 **Empty set**
@@ -74,7 +74,7 @@ An empty set is represented like this: {} and can be assigned to a set if you wi
 **Set restrictions**
 
 * All elements of a set must have the same type
-* @set elements can have only comparable types: {@ordinal, Numeric, @string}.
+* Set elements can have only comparable types: {Ordinal, Numeric, String}.
 
 **Mutability**
 
@@ -87,7 +87,7 @@ A set can be modified during run-time using operators.
 **Example:**
 ```
 given
-  @set{@integer}: my_set := {0,2,3};
+  Set{Integer}: my_set := {0,2,3};
 do
   ** append element 1
   alter  my_set    += 1;  
@@ -109,8 +109,8 @@ Use union operator | combine two sets.
 
 ```
 given
-  @set: first := {0,1,2,3,4,5,6,7,8,9};
-  @set{@integer}: second := {};
+  Set: first := {0,1,2,3,4,5,6,7,8,9};
+  Set{Integer}: second := {};
 do
   second := first | {0,1,2,10}; //  set union
   print(second); //  {0,1,2,3,4,5,6,7,8,9,10}
@@ -122,7 +122,7 @@ Intersect operator & find common elements:
 
 ```
 given
-  @set: test := {};
+  Set: test := {};
 do
   test := {1,2,3,4} & {3,4,5}; 
   print test; //  {3,4}
@@ -133,25 +133,25 @@ done;
 
 ## Hash
 
-It is called "@hash" due to similar letter H representing a connection between two columns: the key column and value column.
+It is called "Hash" due to similar letter H representing a connection between two columns: the key column and value column.
 
-* @hash is set of (key:value) pairs; 
-* The key must be sortable: { @number, @ordinal, @string };
+* Hash is set of (key:value) pairs; 
+* The key must be sortable: { @number, Ordinal, String };
 
 **syntax**
 ```
-alias Table_Name := @hash{key_type, value_type}; //  type alias 
+alias Table_Name := Hash{key_type, value_type}; //  type alias 
 
 variable
-  @hash{key_type, value_type}: name; //  explicit type
-  @hash: name := {(key:value), ...}; //  implicit type
+  Hash{key_type, value_type}: name; //  explicit type
+  Hash: name := {(key:value), ...}; //  implicit type
   Table_Name := {(key:value), ...}; //  using alias
 ```
 
 **Example**
 ```
 given
-  @hash{@string,  @integer}: table := {}; //  empty table
+  Hash{String,  Integer}: table := {}; //  empty table
 do   
   table := {('one':1), ('two':2)};
 done;
@@ -159,18 +159,18 @@ done;
 
 ## String
 
-In EVE There are two types of strings. @single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. @single quoted strings can store a single line. @double quoted strings can store multiple lines of text separated by new line "\n".
+In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation but same encoding: UTF8. Single quoted strings can store a single line. Double quoted strings can store multiple lines of text separated by new line "\n".
 
-* @single quoted string, has default capacity 1024 bytes;
-* @double quote strings have unrestricted capacity;
+* Single quoted string, has default capacity 1024 bytes;
+* Double quote strings have unrestricted capacity;
 
 ### String: declaration
-@string can be initialized with a constant literal using single quotes or double quotes. 
+String can be initialized with a constant literal using single quotes or double quotes. 
 
 ```
-  @string(100): short_string := ''; //  this string can hold 100 symbols, 100*4 = 400 bytes
-  @string: string_name       := ''; //  default capacity 1024 can hold 256 ASCII symbols
-  @text: text_name           := ""; //  variable capacity string can hold many lines of text
+  String(100): short_string := ''; //  this string can hold 100 symbols, 100*4 = 400 bytes
+  String: string_name       := ''; //  default capacity 1024 can hold 256 ASCII symbols
+  Text: text_name           := ""; //  variable capacity string can hold many lines of text
 ```
 
 ### String: mutability
@@ -179,8 +179,8 @@ In EVE strings are mutable. If you use `:=` new memory is allocated. If you use 
 **Example:**
 ```
 routine test_string()
-  @string: str := 'First value';  
-  @string: ref := 'First value'; 
+  String: str := 'First value';  
+  String: ref := 'First value'; 
 process  
   expect  (str  = ref); //  same value
   expect  (str <> ref); //  different locations  
@@ -206,7 +206,7 @@ return;
 **Note:** 
 
 * You can create garbage in EVE if you loose references to strings;
-* Provision for large capacity strings is not recommended, use @text instead;
+* Provision for large capacity strings is not recommended, use Text instead;
 
 ### String: comparison
 
@@ -230,7 +230,7 @@ We can test if a string is null using "is Null" expression.
 
 ```
 given 
-  @string: str := "";
+  String: str := "";
 do 
   expect (str = null);
   expect (str = '');
@@ -240,7 +240,7 @@ done;
 
 ## Text
 
-@text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. @text can be modified while strings are immutable.
+Text can contain multiple lines of symbols separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. Text can be modified while strings are immutable.
 
 **Literal**
 
@@ -249,7 +249,7 @@ A text literal can be defined on multiple lines and will preserve the end of lin
 ```
 ** declaration example of a text literal
 given
-  @text: my_text := "";
+  Text: my_text := "";
 do
   my_text:= "Opportunity is missed by most people 
              because it is dressed in overalls 
@@ -275,7 +275,7 @@ See also: [wikipedia ucs](https://en.wikipedia.org/wiki/Universal_Coded_Characte
 **Example:**
 ```
 given
-  @text: us := "I can write Greek: \αβγδ\.";
+  Text: us := "I can write Greek: \αβγδ\.";
 do
   print (us);
 done;
@@ -293,11 +293,11 @@ The exception is a variable of type @object that is created when exception is ra
 ```
 ** system global exception type
 alias Exception: @object { 
-        @integer: code 
-       ,@string : message 
-       ,@string : routine_name 
-       ,@string : module_name 
-       ,@string : line_number  
+        Integer: code 
+       ,String : message 
+       ,String : routine_name 
+       ,String : module_name 
+       ,String : line_number  
       };
 
 ** system variables for last error
@@ -335,7 +335,7 @@ In this region developer can use control statements like "switch","case" to anal
 
 ```
 routine main:
-  @double: a;
+  Double: a;
 process  
   alter a := 1 / 0;
 recover
@@ -356,7 +356,7 @@ The expect statement check a condition and raise an error if condition is false.
   expect (condition);
   
   ** equivalent
-  raise ("Unexpected error in line \n" <+ #error.line_number ) if (condition);
+  raise ("Unexpected error in line \n" ? @error.line_number ) if (condition);
 ```
 
 **note:**

@@ -39,12 +39,12 @@ One object can receive attribute names that do not exist. Default constructor wi
 You can create more complex object using a class.
 
 ```
-class @class_name(parameters) <: base_class:
+class ClassName(parameters) <: base_class:
   ** class local context
   ...
 create
   ** call base class constructor
-  forge object := (object_attribute:argument,...);
+  forge object := base_class(object_attribute:argument,...);
   ... 
 remove
   ** object release region
@@ -53,13 +53,13 @@ return;
 ```
 
 ## Parameters 
-A class can have parameters that receive values during object initialization. You can define optional parameters with default values using a pair: (@type:param_name:=value). Parameters can be received "by copy" or "by share". Parameters received by share are declared using symbol "@" instead of ":"
+A class can have parameters that receive values during object initialization. You can define optional parameters with default values using a pair: (TypeName:param_name:=value). Parameters can be received "by copy" or "by share". Parameters received by share are declared using symbol "@" instead of ":"
 
 **example**
 ```
 given
   ** declare object from arbitrary class
-  @class_name: object_name;
+  ClassName: object_name;
 do
   ** create object 
   forge object_name := (param:value,...);
@@ -99,7 +99,7 @@ Class attributes are static and can be accessed using two scope qualifiers:
 
 ```
   object_name.class_attribute;
-  @class_name.class_attribute;
+  ClassName.class_attribute;
 ```
 
 **Class Tree**
@@ -128,7 +128,7 @@ We can use comparison operators: "==" and "=" with objects. First comparison "==
 **Example:**
 ```
 routine main:
-  @integer: o,n; //  boxed  Integers
+  Integer: o,n; //  boxed  Integers
 process  
   alter o := 1;
   alter n := 1; 
@@ -144,7 +144,7 @@ A class can receive type as parameters. This allows to create generic algorithms
 
 **Generic Class:**
 ```
-class {Generic_Type,...} Generic_Name(Generic_Type: parameter,...) <: Base_Class:
+class {Generic_Type,...} Generic_Name(Generic_TypeName: parameter,...) <: Base_Class:
   ** declarations
   ...
 create
@@ -154,7 +154,7 @@ return;
 ```
 
 **Using Generic:**
-Generic class is used to define a subtype then you can declare one or more objects using alias type:
+Generic class is used to define a subtype then you can declare one or more objects using alias TypeName:
 
 ```
 ** declare new alias type from generic
@@ -163,7 +163,7 @@ alias
 
 ** create new object: using new alias with arguments
 variable
-  @new_type: object_name := (argument:Type_Name,...);
+  @new_TypeName: object_name := (argument:Type_Name,...);
 
 ** alternative: create new object directly from generic type
 variable  

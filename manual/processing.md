@@ -2,11 +2,11 @@
 
 By using collections and control structures one can load, modify and store data.
 
-* [List operations](#@list-operations)
+* [List operations](#List-operations)
 * [Collection iteration](#Collection-iteration)
 * [Scanning items](#Scanning-items)
 * [Using hash table](#Using-hash-table)
-* [Text functions](#@text-functions)
+* [Text functions](#Text-functions)
 
 ## List operations
 We can add elements to a list or remove elements from the list using next operations: 
@@ -16,14 +16,14 @@ We can add elements to a list or remove elements from the list using next operat
 
 **List concatenation**
 
-List concatenation is ready using operator “+”. This operator represent union. 
-Therefore @list union act very similar to append, except we add multiple elements. 
+List concatenation is ready using operator “++”. This operator represent union. 
+Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
 routine main:
-  @list{@symbol}: a := ['a','b','c']; //  initialized collection
-  @list{@symbol}: b := ['1','2','3']; //  initialized collection
-  @list{@symbol}: c; //  deferred initialization require forge
+  List{Symbol}: a = ['a','b','c']; //  initialized collection
+  List{Symbol}: b = ['1','2','3']; //  initialized collection
+  List{Symbol}: c; //  deferred initialization require forge
 process
   forge c := a ++ b;
   print c; //  ['a','b','c','1','2','3'];
@@ -36,7 +36,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  @string: str; //  Null String
+  String: str; //  Null String
 do
   forge str := join([1,2,3],",");
   print str; // "1,2,3"
@@ -48,7 +48,7 @@ The join function receive a list and convert elements into a string separated be
 
 ```
 given
-  @list{@integer}: lst; //  Null List
+  List{Integer}: lst; //  Null List
 do
   ** initialize new reference for "lst"
   forge lst := split("1,2,3",","); 
@@ -60,8 +60,8 @@ done;
 
 Two operations are possible
 
-* enqueue() append to the end of the @list
-* dequeue() extract first element from the @list
+* enqueue() append to the end of the List
+* dequeue() extract first element from the List
 
 **List as stack**
 
@@ -70,21 +70,21 @@ Two operations are possible
 * push() - can append element in top of the stack
 * pop()  - can extract the last element of the stack 
 
-**Note:** There is no protection about using a @list as stack or queue. 
+**Note:** There is no protection about using a List as stack or queue. 
 
 **Other built-ins**
 
 Following other functions should be available
-* @list.append(value) :can append an element at the end of the list
-* @list.insert(value) :can insert an element at the beginning of the list
-* @list.delete(value) :can delete one element at specified index
-* @list.count()       :retrieve the number of elements 
+* List.append(value) :can append an element at the end of the list
+* List.insert(value) :can insert an element at the beginning of the list
+* List.delete(value) :can delete one element at specified index
+* List.count()       :retrieve the number of elements 
 
 **Special attributes**
 A list has properties that can be used in logical expressions:
 
-* @list.empty()  ** true or false
-* @list.full()   ** true or false
+* List.empty()  ** true or false
+* List.full()   ** true or false
 
 ## Collection iteration
 
@@ -93,11 +93,11 @@ A special _while loop_ that is executed for each element belonging to a collecti
 **pattern**
 ```
 given
-  @class_name: element := collection.first();
+  ClassName: element := collection.first();
 while element is not null do
   ** statements
   ...
-  strap element := collection.next(element);
+  alter element := collection.next(element);
 repeat;
 ```
 
@@ -107,14 +107,14 @@ The "element" is local to iteration and is used as control variable.
 
 ```
 routine main:
-  @list{@symbol}: my_list; //  this list is Null
+  List{Symbol}: my_list; //  this list is Null
 process  
   forge my_list := ['a','b','c','d','e'];
   given
-    @string: e;
-  for e in my_list do
-    write e;
-    when e = 'd' do
+    String: e;
+  for element in my_list do
+    write element;
+    when element = 'd' do
       stop; //  early termination;
     else
       write(',');
@@ -128,7 +128,7 @@ return;
 
 Collections have common methods that enable traversal using _for_ loop. 
 
-{@list, @hash, @set} 
+{List, Hash, Set} 
 
 **built-in:**
 
@@ -140,18 +140,18 @@ Collections have common methods that enable traversal using _for_ loop.
 * this       - reference to current element
 
 **set iteration**
-@hash and @set are similar. We can visit all elements using _for_ loop:
+Hash and Set are similar. We can visit all elements using _for_ loop:
 
 **Example:**
 ```
 routine main:
-  @hash: my_map;
+  Hash: my_map;
 process  
   forge my_map := {("a":1),("b":2),("c":3)};
   given
-    @symbol: key;
-    @binary: value;
-  for (key,value) in my_map do
+    Symbol: key;
+    Binary: value;
+  for (key:value) in my_map do
     ** print pairs (key:value)
     print('("' + key + '",' + value +')');
   repeat;
@@ -173,17 +173,13 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 **example:**
 ```
 routine main:
-  @hash: my_map; //  uninitialized collection
+  Hash: my_map; //  uninitialized collection
 process
   ** initialize my_map with values
   forge my_map := {(1:'a'),(2:'b'),(3:'c')};
   
   ** check if a key is present in a hash collection
-  when 3 in my_map do
-    print('true'); //  expected
-  else
-    print('false');! unexpected
-  done;
+  expect 3 in my_map; // pass
 return;  
 ```
 
@@ -191,7 +187,7 @@ return;
 ```
 ** create new elements in the hash collection
 routine main:
-  @hash(@string, @string): animals := {}; //  empty initialization
+  Hash(String, String): animals; // empty collection
 process
   ** forge is not necessary here
   append animals['Bear'] += 'dog';
@@ -211,7 +207,7 @@ Output:
 
 ```  
 routine main:
-  @hash: animals := {}; //  empty initialization
+  Hash: animals; //  empty collection
 process
   ** establish element types S:U
   append animals['Rover'] += "dog";
@@ -243,7 +239,7 @@ Strings can be concatenated using:
 ```
 ** this is example of string concatenation
 given
-  @string: str := "";  //  Null String
+  String: str := "";  //  Null String
 do
   ** set string value using different operators
   alter str := "this " & "_string";  //  "this_string"
@@ -259,7 +255,7 @@ Two strings can be concatenated using concatenation operator "/" or "\\". This o
 
 ```
 given
-  @string: s := "";
+  String: s = ""; //initialization is redundant
 do  
   alter s := 'te/' / '/st'; //  "te/st" Linux
   alter s := 'te/' \ '/st'; //  "te\st" Windows
@@ -268,12 +264,12 @@ done;
 
 ## Text functions
 
-* @text:    replace(@text: str, @string: target, @string: arrow );
-* @integer: find   (@text: str, @string: patern);
-* @integer: count  (@text: str, @string: patern);
-* @integer: length (@text: str);
+* Text:    replace(Text: str, String: target, String: arrow );
+* Integer: find   (Text: str, String: patern);
+* Integer: count  (Text: str, String: patern);
+* Integer: length (Text: str);
 
 **Note:**
-The text also support escape sequences like a normal string. However in a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "« »" like "«quoted»"
+The text also support escape sequences like a normal string. In a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "« »" like "«quoted»"
 
 **Read next:** [Standard](standard.md)

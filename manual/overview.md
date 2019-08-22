@@ -1,6 +1,6 @@
 ## Syntax Overview
 
-EVE is a free form language inspired from Java and Ruby. 
+EVE is a free form language inspired from Ada, Java and Ruby. 
 
 **bookmarks**
 
@@ -16,22 +16,21 @@ EVE is a free form language inspired from Java and Ruby.
 
 ## Punctuation
 
-* EVE is using infix expressions like Java and other popular languages;
-* Multiple expressions can be separated with comma and enclosed in parenthesis;
-* Each statement start with a lowercase keyword and is ending semicolon; 
-* System constants use prefix "$" and they are also public;
-* System variabless use prefix "&" and they are also public;
-* Class and reference type identifiers start with "@" prefix;
-* Alias identifiers and constants usually start with capital letters;
-* Public variables and constants start with "." prefix;
+* EVE is using infix expressions like Java and other popular languages,
+* Multiple expressions can be separated with comma and enclosed in parenthesis,
+* Each statement start with a keyword and is ending semicolon,
+* System constants use prefix "$" and they are also public,
+* System variables use prefix "@" and they are also public,
+* Type identifiers and classes start with capital letters,
+* Public variables and constants start with "." prefix,
 * Statement regions and nested blocks use mandatory indentation;
 
 ## Comments
 
-* Is used for single-line header comment like Wiki pages: `#`
-* Single line comment or end of line comment: `**` 
+* Hash sign "#" is used for single-line header comment,
+* Single line comment is using two start: `**` 
 * Boxed comments are using notation: `+-...-+` 
-* Outline comments are using notation: `\|\* ... \*\|`
+* Expression comments are using notation: `/* ... */`
 
 **examples**
 ```
@@ -49,7 +48,7 @@ print;
 *************************************
 
 # Expression comment
-a := a + 1 |* *(a - 1) *| -1;
+a := a + 1 /* *(a - 1) */ -1;
 
 over. ** end of line comment
 ```
@@ -88,7 +87,7 @@ The name of identifiers in EVE can have a length of 30 characters. A name starts
 Global reference identifiers start with a reserved symbol:
 
 * $global_constant;
-* &global_variable;
+* @global_variable;
 
 **notes:**
 * Prefix is reducing collision between local and global name scope;
@@ -98,22 +97,27 @@ Global reference identifiers start with a reserved symbol:
 
 ## Operators
 
-EVE us ASCII symbols for operators. One operator can be a single character or a combination of two characters. 
+EVE us ASCII symbols for operators. One operator can be a single character or a combination of two or 3 characters. 
 
-@single characters:
+**Single symbol:**
 ```
-{ = : ~ ? % ^ * - + / < >}
-```
-
-Two characters:
-```
-{ := :: =/ <> => >= <= <+ <: .. .! !. !! }
+{ : = ~ ? % ^ * - + / < > }
 ```
 
-Delimiters:
+**Two symbols:**
 ```
-, : . ; "" '' 
-( ) [ ] { } 
+{ := :: != <> => >= <= <+ <: .. .! !. !! ~. += -= *= /= %= ^= &= |= }
+```
+
+**Three symbols:**
+```
+{ .<. .>. .|. .&.}
+```
+
+**Delimiters:**
+```
+, : . ; "_" '_' `_`
+(...) [...] {...} #(...)
 ```
 
 **Details:** [Operators](operators.md) 
@@ -130,40 +134,40 @@ There are 3 kind of data types in EVE:
 
 ## Variables
 
-A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing memory locations or primitive values that can be moved around in different memory locations. Variables can be altered during the execution of the program using modifier operators: { :=, :: } and keyword _alter_. 
+A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing primitive values or references to memory locations. Variables can be altered during the program execution using keyword _alter_ and _modifiers_ like: { :=, ::, +=, -= ... }. 
 
 **patterns:**
 ```
 ** define alias for a: 
 
 ** alias names have to start with uppercase letters.   
-alias @class_name := @super_class {parameters};
+alias Class_name := Super_class {parameters};
 
 ** shared variables
 variable
   ** use type to define a variable
-  @class_name: var_name;
+  Class_name: var_name;
   ** with specific value and type
-  @class_name: var_name := value;
+  Class_name: var_name := value;
   ** multiple variables in one assignment
-  @class_name: var_name1, name2 ...:= value;
+  Class_name: var_name1, name2 ...:= value;
   ** multiple variables with diverse values
-  @class_name: var_name1:=value1, var_name2 := value2;
+  Class_name: var_name1:=value1, var_name2 := value2;
 ```
 
 **examples**
 ```
 variable 
   ** two integer numbers
-  @integer: a;
-  @integer: b := 1;
-  ** multiple @double numbers
-  @double: d := 2.5; 
-  @double: x,y,z := 0.0;
+  Integer: a;
+  Integer: b := 1;
+  ** multiple Double numbers
+  Double: d := 2.5; 
+  Double: x,y,z := 0.0;
 ```
 
 **zero value**
-When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Integers = 0 for @double = 0.0 and for @string = ''. 
+When a variable is specified, and the initializer ":=" is missing the variable takes default zero value. This value is different for each data type. For example zero value for Integers = 0 for Double = 0.0 and for String = ''. 
 
 ## Assign Value
  
@@ -193,9 +197,9 @@ Expressions are created using identifiers, operators, functions and constant lit
 
 * can be combined to create more complex expressions;
 * have a type that is calculated using type inference;
-* can be assigned to variables using ":=" or "<+" operators;
+* can be assigned to variables using ":=" or "?" operators;
 * can be printed to console using "print" or "write" methods;
-* can use round paranthesis () to establish order of operations;
+* can use round parenthesis () to establish order of operations;
 
 **Examples**
 ```
@@ -204,8 +208,8 @@ print  10;
 print "this is a test";
 
 ** complex expressions can use ()  
-print (10 + 10 + 15);       //  numeric expression
-print ((10 > 5) | (2 < 3)); //  logical expression
+print (10 + 10 + 15);      //  numeric expression
+print (10 > 5) or (2 < 3); //  logical expression
 
 ** list of expressions are enclosed in ()
 print (1, 2, 3);    //  expect: 1 2 3
@@ -215,7 +219,7 @@ print (10, 11, 12); //  expect: 10 11 12
 write (1,2);
 write (3,4);  
 
-** now create a new line
+** now create a new line and output the text
 print; //  1234 
 ```
 
@@ -229,12 +233,10 @@ print; //  1234
 
 One statement can be declarative or imperative. 
 
-* A statement is usually a line of code source terminated with new line
-* Sometimes a statement extend on several lines
-* Sometimes multiple statements are in the same line, separated by ";"
-* A group of several statements is called a block of code
-* A block of code usually is terminated by one final keyword and ";"
-* The final keyword is different for different statements;
+* A statement is usually a single line of code
+* A statement can extend on several lines and finalize with ";"
+* A group of several statements is called a code block,
+* A block of code is finalized with a suggestive keyword and ";"
 
 **examples**
 
@@ -242,8 +244,8 @@ The most simple block statement start with "do" and end with "done"
 ```
 given
   ** Integer numbers
-  @integer: a := 0;
-  @double:    b := 1.5; 
+  Integer: a := 0;
+  Double:    b := 1.5; 
 do
   print  (a, b);
   expect (a = 0, b = 1.5);
@@ -260,8 +262,8 @@ One expression can span multiple lines.
 **example**
 ```
 given 
-  @integer: x;
-  @hash   : a; 
+  Integer: x;
+  Hash   : a; 
 do  
   ** multi-row expression
   alter x := 1 + 2 +

@@ -12,32 +12,33 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | variable | declare module variables (start with "." if is public)
 | alias    | define alias for data-type or member name from imported modules
 | function | start a declaration region for named expression
-
+| routine  | create a sub-routine similar to a void function
 
 ## Memory allocation
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
+| store    | define a constant
 | forge    | create a new object reference / object instantiation on the heap
+| alter    | modify underline value of a reference or value of a native variable
 | clone    | copy a reference into another reference, with deep copy operator "::"
 | reset    | replace a reference with another reference just created by a constructor
-| strap    | borrow  a reference with from existing reference or element
-| alter    | modify underline value of a reference or value of a native variable
-| create   | start constructor region for a classes
-| remove   | define object disposal region, executed when object is out of scope
+| share    | share  a reference from existing reference
 
 ## Semantic keywords
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | class    | define a composite data type for object oriented programming
+| create   | start constructor region for a classes
+| remove   | define object disposal region, executed when object is out of scope
 | feature  | define a design pattern that can be _enabled_ by a class
 | augment  | define an augment for an existing class
 | routine  | define a named block of code belonging to a module
-| routine   | define a named block of code belonging to a class
+| method   | define a named block of code belonging to a class
 | process  | start executable region for a routine and constructor for a class
 | recover  | define a recover region for methods
-| closure  | define a finalization region for methods
+| cleanup  | define a finalization region for routines
 | return   | terminate a routine/function or a class declaration
 
 ## Blocks of code/sections

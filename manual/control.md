@@ -29,7 +29,7 @@ with qualifier := long_qualifier do
 done;
 ```
 
-long_qualifier ::= file_name.@class_name | file_name.record_name
+long_qualifier ::= file_name.ClassName | file_name.record_name
 
 ## When
 
@@ -111,7 +111,7 @@ Is used to define a local scope for a simple block or repetitive block of code.
 **Pattern:**
 ``` 
 given 
-  @type_name: var_name; //  local variable  
+  Type_name: var_name; //  local variable  
   ...
 do
   ** block statements;
@@ -144,17 +144,16 @@ repeat;
 ```
 ** example of collection iteration
 routine test: 
-  @list: this := ["a","b","c","d","e"];
+  List: this := ["a","b","c","d","e"];
 process
 given
-  @integer: i := 0;
-  @symbol: e;
+  Integer: i := 0;
+  Symbol: e;
 while i < this.length() do
   strap  e := this[i];
   alter  i := i + 1;
   when e  >= "c" do
-    write e;
-    write ',' if e ≠ "e";
+    print (e & (',' if e ≠ "e", ""),EOL)
   done;
 else
   print ('i = ' + i);  
@@ -170,7 +169,7 @@ This block use one or more control variables to visit elements in a collection o
 **Pattern:**
 ``` 
 given 
-  @integer: var;
+  Integer: var;
 for var in (min..max) do
   ** block statements;
   ...
@@ -191,7 +190,7 @@ next;
 Example of range iteration:
 ```
 given 
-  @integer: i;
+  Integer: i;
 for i in (1..10:2)  do
   ** write only odd numbers
   write i;

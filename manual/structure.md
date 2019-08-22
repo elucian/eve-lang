@@ -9,7 +9,7 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Regions](#regions)
 * [Globals](#globals)
 * [Classes](#classes)
-* [Routines](#methods)
+* [Routines](#routine)
 * [Functions](#functions)
 * [Expressions](#expressions)
 * [Parameters](#parameters)
@@ -57,38 +57,38 @@ A module file is divided into regions using keywords: {import, define, global, c
 ** Header comments: module purpose
 *****************************************
 
-** global region
-$constant := "value";
-#variable := {1,2,3};
+** global region 
+$constant := "value"; // system constant
+@variable := {1,2,3}; // system variable
 ...
 
 ** import region
 import
   from $path/library_name use (*);
 
-** primitive class declaration
+** qualifier suppression
 alias 
-  Name := library_name.class_name;
-  Name := class_name{generic_parameters};
+  ClassName := library_name.class_name;
+  ClassName := class_name{generic_parameters};
   ...
 
 ** shared constants
 constant
-  @type: Name := value; //  constant
+  TypeName: NAME := value; //  constant (UPPERCASE NAMES)
   
 ** shared variables
 variable
-  @type: x;          // default value
-  @type: y := value; //  specify value
+  TypeName: x;          // default value
+  TypeName: y := value; //  specify value
   ...
   
 ** function declaration
 function 
-  @type: name(params) => (expression);
+  TypeName: name(params) => (expression);
   ...
 
 ** advanced class declaration
-class name(params) <: superclass:
+class ClassName(params) <: Superclass:
   ...
 return;
 
@@ -150,7 +150,7 @@ Is used to include members from several other modules into current module:
 
 **syntax**
 ```
--- define global constant
+** define global constant
 $user_path := $root_path/relative_path
 
 import 
@@ -162,25 +162,25 @@ import
 **note:** 
 * $user_path is any path defined by the user;
 * spaces in file-names are not supported you must use: "_" instead;
-* member alias can rename any member type: {constant, variable, function, routine};
+* member alias can rename any member TypeName: {constant, variable, function, routine};
 * class aliases are final instances of generic classes;
 
 ## Shared constants
 
-Shared constants are declared in _constant_ region.
+Shared constants are declared in _constant_ region, with "." prefix.
 
 **example**
 ```
 constant
-  @double: .Pi := 3.14; //  local constant
+  Double: .PI = 3.14; // shared constant
 ```
 
 **note:** 
-* Constants are immutable entities;
-* Constant identifiers are starting with one uppercase letter;
-* Public constants are using dot prefix: "."
-* Constants are using operator ":=" for initialization;
-* Constant type is implicit defined using type inference;
+* Constants are immutable entities, they can not be altered,
+* Constant identifiers are starting with one uppercase letter,
+* Public constants are using dot prefix: ".",
+* Private constants are using underscore prefix "_",
+* Constants are using operator "=" for initialization,
 
 ## Shared variables
 
@@ -189,7 +189,7 @@ Shared variables are declared in _variable_ region:
 **example**
 ```
 variable
-  @double: pi := 3.14; //  shared variable
+  Double: pi = 3.14; //  shared variable
 ```
 
 **note:** 
@@ -209,15 +209,19 @@ A routine is a named block of code that can be executed multiple times.
 * is ending with _return_ statement, that is mandatory;
 
 **prototype**
+
+Routine with result:
 ```
-routine name(parameters):
+routine name(type:parameter, ...):
   ** declaration region
 process
   ** executable region
   exit if (condition);
   ...
+  result_name := value;
 return;
 ```
+
 
 **Notes:**
 
@@ -236,48 +240,54 @@ Formal parameters are defined in round brackets () separated by comma. Each para
 **mandatory**
 ```
  ** mandatory parameters do not have initial value
- parameter ::= @class_name > parameter_name ** input parameter
- parameter ::= @class_name < parameter_name ** output parameter
+ parameter ::= ClassName > parameter_name [= value] // input parameter
+ parameter ::= ClassName < parameter_name [= value] // output parameter
+ parameter ::= ClassName : parameter_name [= value] // input & output parameter
 ```
 
-**optional**
-```
- ** optional parameters have explicit initial value
- parameter ::= @class_name > parameter_name := value ** input parameter
- parameter ::= @class_name < parameter_name := value ** output parameter
-```
-
-1. One routine can receive one or more parameters;
-1. Parameters having initial values are optional;
-1. Values used for parameters are called arguments;
+1. One routine can receive one or more parameters,
+1. Parameters having initial values are optional,
+1. Values used for parameters in routine call are named arguments,
 1. You can assign arguments using name:value pairs or by position;
 
-**Variadic parameters**
+**Variable list of arguments**
 
-One routine can receive multiple arguments of the same type separated by comma into one list.
+One routine can receive multiple arguments of the same type separated by comma into a list.
 
-* First arguments can be captured using normal parameters;
-* The surplus of arguments are captured into last parameter named: "args";
-* A routine can have one single variadic parameter;
-* The variadic parameter name is declared using "*" instead of ":" or "@". 
-* We can use any name instead of "args" but this is the usual name.
+* First arguments can be captured using normal parameters,
+* The surplus of arguments are captured into last parameter named: "*args",
+* A routine can have one single parameter for variable list of arguments,
+* The list parameter name is declared using "*" instead of { ":", "<", ">"},
+* We can use any name instead of "*args" but this is the usual name.
 
 **example**
 ```
-routine test(@list{@string} * args):
+routine test(List{String} * args):
   print(args);
 return;
+
+** call routine with variable number of arguments
+test ("a","b","c"); // use 3 arguments
+test ("a","b");     // use 2 arguments
+
+** you can use operator "*" to _spread_ collection elements
+given
+  Set{Integer} argument;
+do
+  forge argument := {1, 2, 3};
+  test (*argument);  // spread collection elements
+done;  
 ```
 
 **Routine context**
 
-Every routine has a local context. Members defined in local context are private. In this context a routine can implement static attributes using "." prefix. These attributes are properties of the routine and can be accessed from current module using dot notation. 
+Every routine has a local context. In this context a routine can implement variables with no prefix. These variables are can not be accessed from outside of the routine. 
 
 **Routine call**
-Routines can be used like statements. A routine call can be done using routine name followed by argument list, enclosed in round parentheses separated by comma. For one single argument, or no arguments parentheses are not required.
+Routines can be used like statements. A routine call can be done using routine name followed by argument list. For one single argument, or no arguments parentheses are not required.
 
 ```
-  routine_name;                  // call routine without arguments
+  routine_name;                  //  call routine without arguments
   routine_name argument_value;   //  call routine with single argument
   routine_name (argument_list);  //  call routine with a list of arguments
 ```
@@ -287,15 +297,15 @@ A routine end with keyword return. When routine is terminated, program execution
 
 **Example:**
 ```
-routine test(@integer: a):
+routine test(Integer: a):
 process
   ** print is a system routine
   print a; 
 return;
 
-routine main(@list[@string]: *args):
+routine main(List[String]: *args):
   ** number of arguments received:
-  @integer: c := args.count();
+  Integer: c := args.count();
 process  
   ** verify condition and exit
   exit if c = 0;  
@@ -318,14 +328,14 @@ Next routine: "add_numbers" has 2 side effects:
 ```
 ** local variables
 variable
-  @integer: test; 
-  @integer: p1;   
-  @integer: p2;   
+  Integer: test; 
+  Integer: p1;   
+  Integer: p2;   
 
 routine add_numbers:
 process
   **side effects  
-  alter test := p1 + p2; //  first side-effect
+  reset test := p1 + p2; //  first side-effect
   print (test);          //  second side-effect
 return;
 
@@ -333,7 +343,7 @@ routine main:
 process
   alter p1 := 10; //  side effect
   alter p2 := 20; //  side effect
-  add_numbers();  //  call routine add_numbers;
+  add_numbers;    //  call routine add_numbers;
   expect result = 30;
 return;
 ```
@@ -343,13 +353,13 @@ return;
 To avoid shared variables you can use input/output parameters:
 
 ```
-routine add(@@integer: p1 = 0, p2 = 1,  @integer + out):
+routine add(Integer: p1 = 0, p2 = 1,  Integer <+ out):
 process
-  out := p1 + p2;
+  alter out := p1 + p2;
 return;
 
 routine main:
-  @integer: result;
+  Integer: result;
 process  
   ** reference argument require a variable
   add(1,2, result);
@@ -372,7 +382,7 @@ Functions are declared in a region that start with keyword: "function".
 
 ```
 function 
-  @type: name(parameters) => (expression);
+  TypeName: name(parameters) => (expression);
 ```
 
 * A function can have parameters; 
@@ -385,10 +395,10 @@ The call for a function is using name of the function and round brackets () for 
 **pattern:**
 ``` 
 function
-  @type: function_name() => (expression);
+  TypeName: function_name() => (expression);
   
 given 
-  @type: result;
+  TypeName: result;
 do  
   ** call with no arguments:
   result := function_name();
@@ -417,10 +427,10 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function @integer: sum(@integer: a, b) =>  (a + b);
+function Integer: sum(Integer: a, b) =>  (a + b);
   
 routine main:
-  @integer: r;
+  Integer: r;
 process  
   r := sum(10,20);  // function call
   print(r);         // this will print 30
@@ -457,7 +467,7 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 **example**
 ```
 routine main:
-  @integer: p1, p2, x;
+  Integer: p1, p2, x;
 process
   p1 := 2;
   p2 := 1;
@@ -470,10 +480,10 @@ return;
 **example**
 ```
 given
-  @logic:   b := false;
-  @integer: v := 0;   
+  Logic:   b := false;
+  Integer: v := 0;   
 do
-  v := (1 if b : 2);   
+  alter v := (1 if b : 2);   
   expect v = 2;  
   print v;   
 done; 
@@ -525,7 +535,7 @@ recover
   ...
   resume if (condition);
   ...
-closure
+cleanup
   ** finalization region
   ...    
 return;
