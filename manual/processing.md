@@ -20,7 +20,7 @@ List concatenation is ready using operator “++”. This operator represent uni
 Therefore List union act very similar to append, except we add multiple elements. 
 
 ```
-routine main:
+routine main():
   List{Symbol}: a = ['a','b','c']; //  initialized collection
   List{Symbol}: b = ['1','2','3']; //  initialized collection
   List{Symbol}: c; //  deferred initialization require forge
@@ -106,7 +106,7 @@ The "element" is local to iteration and is used as control variable.
 **example**
 
 ```
-routine main:
+routine main():
   List{Symbol}: my_list; //  this list is Null
 process  
   forge my_list := ['a','b','c','d','e'];
@@ -144,7 +144,7 @@ Hash and Set are similar. We can visit all elements using _for_ loop:
 
 **Example:**
 ```
-routine main:
+routine main():
   Hash: my_map;
 process  
   forge my_map := {("a":1),("b":2),("c":3)};
@@ -172,7 +172,7 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 
 **example:**
 ```
-routine main:
+routine main():
   Hash: my_map; //  uninitialized collection
 process
   ** initialize my_map with values
@@ -186,7 +186,7 @@ return;
 **example**
 ```
 ** create new elements in the hash collection
-routine main:
+routine main():
   Hash(String, String): animals; // empty collection
 process
   ** forge is not necessary here
@@ -206,7 +206,7 @@ Output:
 **Example**
 
 ```  
-routine main:
+routine main():
   Hash: animals; //  empty collection
 process
   ** establish element types S:U

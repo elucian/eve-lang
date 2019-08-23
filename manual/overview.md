@@ -106,7 +106,7 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 **Two symbols:**
 ```
-{ := :: != <> => >= <= <+ <: .. .! !. !! ~. += -= *= /= %= ^= &= |= }
+{ := :: == != <> => >= <= <+ <: .. .! !. !! ~. += -= *= /= %= ^= &= |= }
 ```
 
 **Three symbols:**
@@ -205,7 +205,7 @@ Expressions are created using identifiers, operators, functions and constant lit
 ```
 ** simple expressions in print statement
 print  10; 
-print "this is a test";
+write "this is a test";
 
 ** complex expressions can use ()  
 print (10 + 10 + 15);      //  numeric expression

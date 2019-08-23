@@ -120,7 +120,7 @@ Example | Description
 **example**
 
 ```
-routine main:
+routine main():
   Integer: i; 
   @natural: n;
   Double : r;
@@ -156,7 +156,7 @@ create
   alter .y := y;
 return;
 
-routine main:
+routine main():
   @point: p1, p2;      //  use implicit constructor
   @point: p3 := {1,1}; //  initial value for Point
 process
@@ -216,7 +216,7 @@ do
 
 **explicit coercion lose (0.5)
   alter  a := floor(b);
-  print (a); //  will print: 1
+  write  a; //  will print: 1
  
 **explicit coercion add (0.5)
   alter  a := ceiling(b); 
@@ -355,7 +355,7 @@ given
   Double: i := 1.5;
 do
   expect i is Double;
-  print "type of i is \s" ? type(i);
+  write "type of i is \s" ? type(i);
 done;
 ```
 
@@ -390,7 +390,7 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 ```
 alias @day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: Ordinal;
 
-routine main:
+routine main():
   String: message;
 process  
   given
@@ -538,7 +538,7 @@ process
   alter y := x; //  second swap
 return;
 
-routine main:
+routine main():
   Integer: y;
   Double: a, b;
 process  

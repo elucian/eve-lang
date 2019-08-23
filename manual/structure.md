@@ -58,8 +58,8 @@ A module file is divided into regions using keywords: {import, define, global, c
 *****************************************
 
 ** global region 
-$constant := "value"; // system constant
-@variable := {1,2,3}; // system variable
+$sys_con := "value"; // system constant
+@sys_var := {1,2,3}; // system variable
 ...
 
 ** import region
@@ -68,13 +68,13 @@ import
 
 ** qualifier suppression
 alias 
-  ClassName := library_name.class_name;
-  ClassName := class_name{generic_parameters};
+  ClassName = library_name.class_name;
+  ClassName = class_name{generic_parameters};
   ...
 
 ** shared constants
 constant
-  TypeName: NAME := value; //  constant (UPPERCASE NAMES)
+  TypeName: NAME = value; //  constant (UPPERCASE NAMES)
   
 ** shared variables
 variable
@@ -263,7 +263,7 @@ One routine can receive multiple arguments of the same type separated by comma i
 **example**
 ```
 routine test(List{String} * args):
-  print(args);
+  write args;
 return;
 
 ** call routine with variable number of arguments
@@ -292,6 +292,10 @@ Routines can be used like statements. A routine call can be done using routine n
   routine_name (argument_list);  //  call routine with a list of arguments
 ```
 
+argument_value ::= constant literal, expression or variable
+argument_list  := agument_name:argument_value, ...
+
+
 **Routine termination**
 A routine end with keyword return. When routine is terminated, program execution will continue with the next statement after the routine call. Keyword _exit_ can terminate a routine early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a routine using _quit_ but this will also terminate the main module,
 
@@ -303,7 +307,7 @@ process
   print a; 
 return;
 
-routine main(List[String]: *args):
+routine main(List{String}: *args):
   ** number of arguments received:
   Integer: c := args.count();
 process  
@@ -339,7 +343,7 @@ process
   print (test);          //  second side-effect
 return;
 
-routine main:
+routine main():
 process
   alter p1 := 10; //  side effect
   alter p2 := 20; //  side effect
@@ -358,12 +362,12 @@ process
   alter out := p1 + p2;
 return;
 
-routine main:
+routine main():
   Integer: result;
 process  
   ** reference argument require a variable
   add(1,2, result);
-  print(result); //  expected value 3
+  write result; //  expected value 3
   ** negative test
   add(1,2,4);    //  error, "out" parameter require a variable
 return;
@@ -401,13 +405,13 @@ given
   TypeName: result;
 do  
   ** call with no arguments:
-  result := function_name();
+  alter result := function_name();
   
   ** call with arguments mapped by position
-  result := function_name(value, ...);
+  alter result := function_name(value, ...);
   
   ** call using parameter names and pair-up operator ":"
-  result := function_name(parameter:value ...);
+  alter result := function_name(parameter:value ...);
 done;  
 ```
 
@@ -427,13 +431,13 @@ There is a difference between the parameter and the argument. The parameter is a
 **Example:**
 ```
 ** function declaration
-function Integer: sum(Integer: a, b) =>  (a + b);
+function sum(Integer: a, b) =>  Integer:(a + b);
   
-routine main:
+routine main():
   Integer: r;
 process  
   r := sum(10,20);  // function call
-  print(r);         // this will print 30
+  write r;          // this will print 30
 return;
 ```
 
@@ -447,7 +451,7 @@ A ternary operator is "if". Can be used with conditional expressions to return o
 
 **example**
 ```
-print "true" if True;
+write "true" if True;
 ```
 
 ### λ expressions
@@ -466,7 +470,7 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **example**
 ```
-routine main:
+routine main():
   Integer: p1, p2, x;
 process
   p1 := 2;
@@ -514,7 +518,7 @@ return;
 A routine can be organized as a work-flow with multiple steps that can _pass_ or _fail_ depending on conditions.
 
 ```
-routine main:
+routine main():
   ** local context
 process
   ** initialization

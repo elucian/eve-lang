@@ -143,7 +143,7 @@ repeat;
 
 ```
 ** example of collection iteration
-routine test: 
+routine test(): 
   List: this := ["a","b","c","d","e"];
 process
 given
@@ -153,7 +153,7 @@ while i < this.length() do
   strap  e := this[i];
   alter  i := i + 1;
   when e  >= "c" do
-    print (e & (',' if e ≠ "e", ""),EOL)
+    print e & (',' if e <> "e")
   done;
 else
   print ('i = ' + i);  
@@ -193,9 +193,10 @@ given
   Integer: i;
 for i in (1..10:2)  do
   ** write only odd numbers
-  write i;
+  write i
   write ',' if (i < 10);
 next;
+print;
 ```
 > 1,3,5,7,9
 

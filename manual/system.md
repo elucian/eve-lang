@@ -28,7 +28,7 @@ read (String: prompt) => String;
 
 **Example:**
 ```
-routine main:
+routine main():
   String: v;
 process  
   read  (v, "input v:");
@@ -83,19 +83,3 @@ For example, a common situation is when the standard error stream is un-buffered
 **Redirect**
 
 The usual destination is the text terminal which started the program to provide the best chance of being seen even if standard write is redirected (so not readily observed). For example, write of a program in a pipeline is redirected to read of the next program, but errors from each program still go directly to the text terminal.
-
-
-## Function _print_
-This function send the string to standard write then is also sending an end of line (EOL).  This will put cursor on the beginning of the next line. So the _print_ function is like println() from other languages.
-```
-routine print(String * str):
-...
-return;
-```
-
-The sting do not have to contain the end of line character. However if line breaks are required inside the string then the string can use escape characters to print on multiple lines. This is unusual for a program but is possible.
-
-```
-\LF is LF 
-\CRLF is CR+LF
-```

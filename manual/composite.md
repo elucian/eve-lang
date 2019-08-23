@@ -113,7 +113,7 @@ given
   Set{Integer}: second := {};
 do
   second := first | {0,1,2,10}; //  set union
-  print(second); //  {0,1,2,3,4,5,6,7,8,9,10}
+  write second; //  {0,1,2,3,4,5,6,7,8,9,10}
 done;
 ```
 
@@ -183,7 +183,7 @@ routine test_string()
   String: ref := 'First value'; 
 process  
   expect  (str  = ref); //  same value
-  expect  (str <> ref); //  different locations  
+  expect  (str != ref); //  different locations  
   
   alter  ref := str;   //  reset ref
   expect (str =  ref); //  same value
@@ -196,8 +196,8 @@ process
   
   ** if we recreate str, reference is reset
   str := 'First value:'; //  new string location
-  expect str = ref;      //  same value
-  expect str <> ref;     //  different locations
+  expect str  = ref;     //  same value
+  expect str != ref;     //  different locations
   ** reference was broken, ref is pointing to old value
   print ref;  //  'First value:'
 return;
@@ -334,7 +334,7 @@ In this region developer can use control statements like "switch","case" to anal
 **Example:** 
 
 ```
-routine main:
+routine main():
   Double: a;
 process  
   alter a := 1 / 0;

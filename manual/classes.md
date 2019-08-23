@@ -21,15 +21,15 @@ A class is a composite data type. It implement properties and methods required t
 * Polymorphic: an object can play its base class role;
 
 ## Design
-A class is inherited from a base class or from root class called: @object.
+A class is inherited from a base class or from root class called: Object.
 
 **simple objects**
 
-You can create simple objects using @object default constructor:
+You can create simple objects using Object default constructor notation {}:
 
 ```
 variable
-  @object: object_name := (attribute:value, ...);
+  Object: object_name = {attribute:value, ...};
 ```
 
 One object can receive attribute names that do not exist. Default constructor will create new attributes automatic and assign the value for each. Attributes do not need to be created for default constructor. However after object is created the structure is locked: no other attributes can be added.
@@ -51,9 +51,11 @@ remove
   ...
 return;
 ```
+**Initialization**
+Objects can be declared and initialized in a single statement, or can be declared first initialize later.  Once declared an object is empty {}, it does not have attributes until it is initialized with a JSON literal or a constructor.
 
 ## Parameters 
-A class can have parameters that receive values during object initialization. You can define optional parameters with default values using a pair: (TypeName:param_name:=value). Parameters can be received "by copy" or "by share". Parameters received by share are declared using symbol "@" instead of ":"
+A class can have parameters that receive values during initialization. You can define optional parameters with default values using pair notation like ( TypeName: param_name = value). Parameters can be received values using a constructor call, that is similar to a function call. Parameters can be also assigned using JSON literal/
 
 **example**
 ```
@@ -61,8 +63,8 @@ given
   ** declare object from arbitrary class
   ClassName: object_name;
 do
-  ** create object 
-  forge object_name := (param:value,...);
+  ** create object using constructor
+  forge object_name := ClassName(param:value,...);
   ...
 done;
 ```
@@ -112,29 +114,32 @@ A class can have a single constructor. A constructor can use decision statements
 ...
 create
   when (condition) do
-    object := base_class(some_arguments);
+    forge object := base_class(some_arguments);
   else
-    object := base_class(other_arguments);
+    forge object := base_class(other_arguments);
   done;
 return;
 ```
-
-**Initialization**
-Objects can be declared and initialize in a single statement using operator ":=" with constructor or can be declared first using "∈" and initialize later using operator ":=" with the a constructor call. 
 
 ## Comparing objects
 We can use comparison operators: "==" and "=" with objects. First comparison "==" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If is the same class and all attributes are equal the objects are equivalent.
 
 **Example:**
 ```
-routine main:
+routine main():
   Integer: o,n; //  boxed  Integers
 process  
   alter o := 1;
   alter n := 1; 
-  ** expectations
-  expect  (o  = n); //  equivalent  
-  expect  (o <> n); //  not the same location
+  
+  ** equal values
+  expect  (o  = n); 
+  expect  not (o <> n); 
+  
+  ** not the same location
+  expect  (o != n);     
+  expect  not (o == n); 
+
 return;
 ```
 
@@ -159,15 +164,15 @@ Generic class is used to define a subtype then you can declare one or more objec
 ```
 ** declare new alias type from generic
 alias 
-  @new_type := @generic_class{Type_Name};
+  New_Type := Generic_Class{Type_Name};
 
 ** create new object: using new alias with arguments
 variable
-  @new_TypeName: object_name := (argument:Type_Name,...);
+  New_Type: object_name = {argument:value,...};
 
 ** alternative: create new object directly from generic type
 variable  
-  @generic_class{Type_Name}: onject_name := (argument:Type_Name,...);
+  Generic_Class{Type_Name}: onject_name := {argument:value,...};
 
 ```
 
