@@ -11,16 +11,16 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | alias    | define alias for data-type or member name from imported modules
 | constant | declare module constants (start with "." if is public)
 | variable | declare module variables (start with "." if is public)
+| function | start a declaration region for named expression
 
 ## Memory allocation
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
-| store    | define a constant
 | forge    | create a new object reference / object instantiation on the heap
+| reset    | replace a reference with another reference just created by a constructor
 | alter    | modify underline value of a reference or value of a native variable
 | clone    | copy a reference into another reference, with deep copy operator "::"
-| reset    | replace a reference with another reference just created by a constructor
 | share    | share  a reference from existing reference
 
 ## Semantic keywords
@@ -28,7 +28,6 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | class    | define a composite data type for object oriented programming
-| function | start a declaration region for named expression
 | routine  | create a sub-routine similar to a void function
 | create   | start constructor region for a classes
 | remove   | define object disposal region, executed when object is out of scope

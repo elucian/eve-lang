@@ -47,7 +47,7 @@ Eve use two symbols to create supplementary operators.
 | `=+` | Outer join operator used in data "select" statement
 | `<:` | Define sub-type for a class 
 | `<+` | Output parameter
-| `:=` | Assign value \| reset reference \| share reference
+| `:=` | Assign value. Used with: { forge, clone, reset, share }
 
 
 ## String: delimiters
