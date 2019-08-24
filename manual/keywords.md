@@ -8,11 +8,9 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | import   | start import region
+| alias    | define alias for data-type or member name from imported modules
 | constant | declare module constants (start with "." if is public)
 | variable | declare module variables (start with "." if is public)
-| alias    | define alias for data-type or member name from imported modules
-| function | start a declaration region for named expression
-| routine  | create a sub-routine similar to a void function
 
 ## Memory allocation
 
@@ -30,6 +28,8 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | class    | define a composite data type for object oriented programming
+| function | start a declaration region for named expression
+| routine  | create a sub-routine similar to a void function
 | create   | start constructor region for a classes
 | remove   | define object disposal region, executed when object is out of scope
 | feature  | define a design pattern that can be _enabled_ by a class
@@ -48,13 +48,13 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | do       | start a block or branch of a block
 | with     | scope qualifier suppression block for records
 | when     | multi-path conditional block
-| else     | alternative path for when & while statements 
-| quest    | multi-path variable selector
-| other    | define alternative pas-way in a quest
+| else     | alternative path for { when, case, while } statements 
+| check    | multi-path variable selector
 | case     | define a pas-way in multi-case methods
 | given    | establish local scope for a block statement 
+| cycle    | unconditional repetitive block
 | while    | conditional repetition block
-| for      | start an examination loop
+| for      | visitor iteration loop 
 | repeat   | trigger a condition check, finalize if condition yield false
 | done     | finalization keyword for non repetitive blocks 
 | next     | finalize a scan block and start next iteration

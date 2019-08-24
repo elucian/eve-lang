@@ -2,11 +2,12 @@
 
 EVE has only 7 control statements: 
 
+* [given](#given)
 * [with](#with)
 * [when](#when)
 * [case](#case)
-* [quest](#quest)
-* [given](#given)
+* [check](#check)
+* [cycle](#while)
 * [while](#while)
 * [for](#for-do)
 
@@ -15,13 +16,29 @@ EVE has only 7 control statements:
 * keyword _given_ start a local scope for any block statement
 * one block is ending with keywords: { done \| next \| repeat}
 
+## Given
+
+Is used to define a local scope for any block of code.
+
+**Pattern:**
+``` 
+given 
+  Type_name: var_name; //  local variable  
+  ...
+do
+  ** block statements;
+  ...
+  abort if condition;  
+done;
+```
+
 ## With
 
-Establish a declaration region and scope qualifier suppression block. 
+Keyword "with" establish local region and scope qualifier suppression block. 
 
 **syntax**
 ```
-with qualifier := long_qualifier do
+with qualifier do
   ** local statements
   routine_name();  //  instead of: qualifier.routine_name()
   alter var := function_name(); //  instead of qualifier.function_name()
@@ -29,11 +46,11 @@ with qualifier := long_qualifier do
 done;
 ```
 
-long_qualifier ::= file_name.ClassName | file_name.record_name
+qualifier ::=  ModuleName | ClassName | RecordName
 
 ## When
 
-This keyword in conjunction with {do, else} declare a multi-path block selector;
+Keyword "when" in conjunction with {do and else} declare a multi-path block selector;
 
 **patterns**
 
@@ -59,6 +76,7 @@ done;
 3.nested selector 
 ```  
 when expression do
+  ** direct path
   ...
   when expression do
    ** nested path
@@ -69,7 +87,7 @@ done;
 
 ## Case
 
-It is a multi-path selector based on a condition:
+It is a multi-path selector based on multiple conditions:
 
 case condition do
   ** first case  
@@ -81,43 +99,42 @@ else
   ** default case  
 done;
 
-## Quest
+## Check
 
-Is is a multi-path value based selector similar to switch:
+Using "check" and "match" you can create a multi-path selector.
 
 ```
-quest value:
+check value:
   match c do
     ...
   match c1,c2... do
     ...
-other
+else
   ...
 done;
 ```
 
 **Note:**
-* it can match only constants or enumeration of constants
-* it can not match an expression or a domain 
-* only one branch can be executed
-* other is executed when no match was found
-* quest is stopping on first match
+* it can match only constants,
+* it can match a list of constants,
+* it can not match an expressions,
+* it can not match domain of values,
+* execution stop on first match or else.
 
+## Cycle
 
-## Given
+Execute a block of code until is interrupted using "stop"
 
-Is used to define a local scope for a simple block or repetitive block of code.
-
-**Pattern:**
-``` 
-given 
-  Type_name: var_name; //  local variable  
+**Syntax:**
+```
+cycle
+  ** shortcut iteration
+  skip if condition;
   ...
-do
-  ** block statements;
+  ** early interruption
+  stop if condition;
   ...
-  abort if condition;  
-done;
+repeat;
 ```
 
 ## While
@@ -144,23 +161,28 @@ repeat;
 ```
 ** example of collection iteration
 routine test(): 
-  List: this := ["a","b","c","d","e"];
+  List: this = ["a","b","c","d","e"];  
 process
-given
-  Integer: i := 0;
-  Symbol: e;
-while i < this.length() do
-  strap  e := this[i];
-  alter  i := i + 1;
-  when e  >= "c" do
-    print e & (',' if e <> "e")
-  done;
-else
-  print ('i = ' + i);  
-repeat;
+  given
+    Integer: i := 0;
+    Symbol: e;
+  while i < this.length() do
+    share  e := this[i];
+    alter  i := i + 1;
+    when e  >= "c" do
+      print e & (',' if e <> "e")
+    done;
+  else
+    print ('i = ' + i);  
+  repeat;
+return;  
 ```
-> "c","d","e"
-> i = 5
+
+**output**
+```
+"c","d","e"
+i = 5
+```
 
 ## For do
 
@@ -191,9 +213,9 @@ Example of range iteration:
 ```
 given 
   Integer: i;
-for i in (1..10:2)  do
+for i in (1..10:2) do
   ** write only odd numbers
-  write i
+  write i;
   write ',' if (i < 10);
 next;
 print;

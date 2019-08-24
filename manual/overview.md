@@ -37,20 +37,23 @@ EVE is a free form language inspired from Ada, Java and Ruby.
 # Title comment
 
 ** single line comment
-print; 
 +------------------------------------
-|  fancy boxed comments to explain  |
-|  code, can span multiple lines    |
+|  Boxed comments for headers       |
+|  it can span multiple lines       |
 ------------------------------------+
-
+module test:
 *************************************
 **  Boxed comment for old printer  **
 *************************************
 
-# Expression comment
-a := a + 1 /* *(a - 1) */ -1;
+# Expression comment /*...*/
+given
+  Integer a;
+do  
+  alter a := a + 1 /* *(a - 1) */ -1;
+done;  
 
-over. ** end of line comment
+module. // end of module
 ```
 
 **Notes:**
@@ -106,7 +109,7 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 **Two symbols:**
 ```
-{ := :: == != <> => >= <= <+ <: .. .! !. !! ~. += -= *= /= %= ^= &= |= }
+{ := == != <> => >= <= <+ <: .. .! !. !! ~. += -= *= /= %= ^= &= |= }
 ```
 
 **Three symbols:**
@@ -175,11 +178,11 @@ Assign value can be done using operator: ":=". But this operator has a strange b
 
 **Syntax:**
 ```
-  identifier := variable_name;   //  share a reference to variable
-  identifier := function_name;   //  share a reference to function
-  identifier := literal;         //  mutate value / initialize
-  identifier := expression;      //  mutate value / initialize
-  identifier := function_name(); //  mutate value / reset value
+  alter identifier := variable_name;   //  share a reference to variable
+  alter identifier := function_name;   //  share a reference to function
+  alter identifier := literal;         //  mutate value / initialize
+  alter identifier := expression;      //  mutate value / initialize
+  alter identifier := function_name(); //  mutate value / reset value
 ```
 
 **clone:**
@@ -188,7 +191,7 @@ To make a clone/copy underline value from a reference you must use symbol "::" (
 
 **Syntax:**
 ```
-  variable_name :: reference; //  make a clone
+  clone variable_name := reference_name; //  make a clone
 ```
 
 ## Expressions

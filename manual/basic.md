@@ -395,7 +395,7 @@ routine main():
 process  
   given
     @day: today := today();
-  quest today:
+  check today:
     match (Friday, Saturday, Sunday) do
       alter message:='weekend';
     match (Monday) do

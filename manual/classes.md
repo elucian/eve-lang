@@ -113,7 +113,7 @@ A class can have a single constructor. A constructor can use decision statements
 ```
 ...
 create
-  when (condition) do
+  when condition do
     forge object := base_class(some_arguments);
   else
     forge object := base_class(other_arguments);

@@ -31,7 +31,7 @@ Syntax color highlighter for Notepad++
 
 Demo files are for learning but also for testing:
 
-* [Quest](../demo/quest.eve)
+* [Check](../demo/check.eve)
 * [While](../demo/while.eve)
 
 **Read next:** [Structure.md](structure.md)

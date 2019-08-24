@@ -322,7 +322,7 @@ when condition do
 done;
 
 ** conditional 
-raise (code,"message") if (condition);
+raise (code,"message") if condition;
 ```
 
 ### Exception handling
@@ -353,10 +353,10 @@ The expect statement check a condition and raise an error if condition is false.
 
 ```
   ** precondition
-  expect (condition);
+  expect condition;
   
   ** equivalent
-  raise ("Unexpected error in line \n" ? @error.line_number ) if (condition);
+  raise ("Unexpected error in line \n" ? @error.line_number ) if condition;
 ```
 
 **note:**

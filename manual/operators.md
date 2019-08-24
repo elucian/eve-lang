@@ -48,7 +48,6 @@ Eve use two symbols to create supplementary operators.
 | `->` | Pipeline operator (usual data casting)
 | `<:` | Define sub-type for a class 
 | `<+` | Output parameter
-| `::` | Explicit clone operator  \| Attributes deep copy
 | `:=` | Assign value \| reset reference \| share reference
 
 

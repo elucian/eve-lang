@@ -53,9 +53,10 @@ A module file is divided into regions using keywords: {import, define, global, c
 
 **module syntax**
 ```
-*****************************************
-** Header comments: module purpose
-*****************************************
++-----------------------------------------
+|   Header comments: module purpose      |
++----------------------------------------+
+module main:
 
 ** global region 
 $sys_con := "value"; // system constant
@@ -78,13 +79,13 @@ constant
   
 ** shared variables
 variable
-  TypeName: x;          // default value
-  TypeName: y := value; //  specify value
+  TypeName: x;         // default value = 0
+  TypeName: y = value; // specify value ≠ 0
   ...
   
 ** function declaration
 function 
-  TypeName: name(params) => (expression);
+  TypeName:name(params) => (expression);
   ...
 
 ** advanced class declaration
@@ -96,6 +97,8 @@ return;
 routine name(params):
   ...
 return;
+
+module. // end module main
 ```
 
 ## Declaration order
@@ -109,7 +112,7 @@ Globals are declared in first module region, with zero space indentation:
 **declare**
 
 * system constants  ::=  $identifier := value;
-* system variabless ::=  #identifier := value;
+* system variabless ::=  @identifier := value;
 
 Global members are visible in application with no prefix. 
 
@@ -130,19 +133,17 @@ Several system constants are provided by EVE environment:
 
 ## System variables
 
-System variables are starting with prefix "#" and are defined in standard library.
+System variables are starting with prefix "@" and are defined in standard library.
 
-**examples**
-```
-#error  ** contains last error message
-#stack  ** contains debug information about current call stack
-#trace  ** contains reporting information about executed statements
-#level  ** contains how deep is the current call stack
-```
+* @error  :contains last error message
+* @stack  :contains debug information about current call stack
+* @trace  :contains reporting information about executed statements
+* @level  :contains how deep is the current call stack
+
 
 **notes:** 
 * User can create new system variables specific to one application;
-* Prefix "#" is used to avoid scope qualifier and improve code readability;
+* Prefix "@" is used to avoid scope qualifier and improve code readability;
 
 ## Import region
 
@@ -154,7 +155,7 @@ Is used to include members from several other modules into current module:
 $user_path := $root_path/relative_path
 
 import 
-  from $user_path use (member_name,...);  //  specific members
+  from $user_path use (member_name,...);  // specific members
   from $user_path use (*);                // all public members
   ...
 ```
@@ -172,7 +173,7 @@ Shared constants are declared in _constant_ region, with "." prefix.
 **example**
 ```
 constant
-  Double: .PI = 3.14; // shared constant
+  Double:.PI = 3.14; // shared constant
 ```
 
 **note:** 
@@ -189,7 +190,7 @@ Shared variables are declared in _variable_ region:
 **example**
 ```
 variable
-  Double: pi = 3.14; //  shared variable
+  Double :pi = 3.14; //  shared variable
 ```
 
 **note:** 
@@ -212,20 +213,22 @@ A routine is a named block of code that can be executed multiple times.
 
 Routine with result:
 ```
-routine name(type:parameter, ...):
+routine name(Type:parameter, Type<result...):
   ** declaration region
+  ...
 process
   ** executable region
-  exit if (condition);
+  exit if condition;
   ...
-  result_name := value;
+  result := value; //result parameter
 return;
 ```
 
 
 **Notes:**
 
-* empty list () it is not required when there are no parameters defined only ":" is mandatory;
+* empty list () is required even if there are no parameters defined;
+* output parameters are declared with symbol "<" instead of ":";
 * unlike a function, a routine can have side-effects but do not return a result.
 
 **Routine name**
@@ -240,8 +243,8 @@ Formal parameters are defined in round brackets () separated by comma. Each para
 **mandatory**
 ```
  ** mandatory parameters do not have initial value
- parameter ::= ClassName > parameter_name [= value] // input parameter
- parameter ::= ClassName < parameter_name [= value] // output parameter
+ parameter ::= ClassName > parameter_name [= value] // input only parameter   (by copy)
+ parameter ::= ClassName < parameter_name [= value] // force output parameter (by reference)
  parameter ::= ClassName : parameter_name [= value] // input & output parameter
 ```
 
@@ -262,7 +265,7 @@ One routine can receive multiple arguments of the same type separated by comma i
 
 **example**
 ```
-routine test(List{String} * args):
+routine test(List{String} *args):
   write args;
 return;
 
@@ -309,8 +312,8 @@ return;
 
 routine main(List{String}: *args):
   ** number of arguments received:
-  Integer: c := args.count();
-process  
+  Integer: c = args.length;
+process
   ** verify condition and exit
   exit if c = 0;  
   test c; //  routine call
@@ -340,7 +343,7 @@ routine add_numbers:
 process
   **side effects  
   reset test := p1 + p2; //  first side-effect
-  print (test);          //  second side-effect
+  print test;            //  second side-effect
 return;
 
 routine main():
@@ -357,7 +360,7 @@ return;
 To avoid shared variables you can use input/output parameters:
 
 ```
-routine add(Integer: p1 = 0, p2 = 1,  Integer <+ out):
+routine add(Integer: p1 = 0, p2 = 1,  Integer < out):
 process
   alter out := p1 + p2;
 return;
@@ -367,7 +370,7 @@ routine main():
 process  
   ** reference argument require a variable
   add(1,2, result);
-  write result; //  expected value 3
+  print result; //  expected value 3
   ** negative test
   add(1,2,4);    //  error, "out" parameter require a variable
 return;
@@ -376,9 +379,10 @@ return;
 **Notes:**
 
 * Output parameters are usually the last parameters;
-* A routine call is a statement, can not be used in expressions;
-* You can not create nested members in methods;
-* You can not create references to methods;
+* Routine calls are statements, not expressions;
+* Routines can have local variables, constants and functions;
+* You can not create nested routines;
+* You can not create references to routines;
 
 ## Functions
 
@@ -389,9 +393,13 @@ function
   TypeName: name(parameters) => (expression);
 ```
 
-* A function can have parameters; 
-* A function can have a single result;
-* Result type is declared before function name. 
+* A function can have only input parameters, 
+* A function can have a one single result,
+* A function can have a single expression,
+* A function can be created by a routine,
+* A routine can receive parameters of type function,
+* Result type is declared before function name,
+* You can declare more than one function in same region.
 
 **Function call**
 The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed. 
@@ -399,7 +407,7 @@ The call for a function is using name of the function and round brackets () for 
 **pattern:**
 ``` 
 function
-  TypeName: function_name() => (expression);
+  TypeName: function_name(Type : param = value,...) => (expression);
   
 given 
   TypeName: result;
@@ -416,7 +424,10 @@ done;
 ```
 
 **note:**
-value ::= constant | variable | expression | function call
+Argument value can be anything that translate to a value of expected type:
+
+* value ::= constant | variable 
+* value ::= expression | other function call
 
 **formal parameters**
 
@@ -426,18 +437,16 @@ value ::= constant | variable | expression | function call
 
 **call arguments**
 
-There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters in the function call. Arguments can be literals, constants or variables. 
+There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters with a function call. Arguments can be literals, constants or variables. 
 
 **Example:**
 ```
-** function declaration
-function sum(Integer: a, b) =>  Integer:(a + b);
-  
+** main routine  
 routine main():
-  Integer: r;
+  Integer: sum(Integer: a, b) => (a + b); // local function
 process  
-  r := sum(10,20);  // function call
-  write r;          // this will print 30
+  print sum(1,2);  // 3
+  print sum(2,4);  // 6
 return;
 ```
 
@@ -446,12 +455,12 @@ return;
 A ternary operator is "if". Can be used with conditional expressions to return one value or other.   
 **syntax**
 ```
-  a := (value if (condition) , value)
+alter a := (value if condition, value)
 ```
 
 **example**
 ```
-write "true" if True;
+write ("true" if True, "false"); // true
 ```
 
 ### λ expressions
@@ -460,13 +469,13 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 
 **syntax:**
 ```
-  identifier := (value if condition,...: default_value)
+  identifier := (value if condition,...,default_value)
 ```
 
 **nodes**
-* each node is evaluated until one is true
-* each node can return one single value
-* the last node do not use a condition but ":"
+* each node is evaluated until one is true,
+* each node can return one single value,
+* the last node do not use a condition but ","
 
 **example**
 ```
@@ -476,7 +485,7 @@ process
   p1 := 2;
   p2 := 1;
   ** using λ expression  
-  x  := ( 0 if p1 = 0, 0 if p2 = 0 : p1+p2);
+  x  := ( 0 if p1 = 0, 0 if p2 = 0, p1+p2);
   print x; // expect: 3 
 return;
 ```
@@ -487,7 +496,7 @@ given
   Logic:   b := false;
   Integer: v := 0;   
 do
-  alter v := (1 if b : 2);   
+  alter v := (1 if b, 2);   
   expect v = 2;  
   print v;   
 done; 
@@ -525,19 +534,19 @@ process
   ...
   step c1("description") do
     ...
-    exit if (condition);
+    exit if condition;
   step c2("description") do
     ...
-    pass if (condition);    
+    pass if condition;    
   step c3("description") do
     ...
-    fail if (condition);    
+    fail if condition;    
   step c4("description") do    
     ...
 recover  
   ** exception region
   ...
-  resume if (condition);
+  resume if condition;
   ...
 cleanup
   ** finalization region
@@ -577,12 +586,12 @@ Using exit from _main_ will end module execution.
 **Example:**
 ```
 ** using when prefix condition
-when (condition) do
+when condition do
   exit;
 done;
 
 ** using if postfix condition
-exit if (condition);
+exit if condition;
 ```
 
 **using quit**
@@ -592,12 +601,12 @@ This is a way to release all locked resources and stop the application session.
 **Example:**
 ```
 ** using when prefix condition
-when (condition) do
+when condition do
   quit;
 done;
 
 ** using if postfix condition
-quit if (condition);
+quit if condition;
 ```
 
 **Read next**: [Syntax Overview](overview.md)

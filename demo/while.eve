@@ -1,13 +1,15 @@
 **********************************
 ** example of collection iteration
 **********************************
+module while:
+
 method main():
-  @array  : test := ['a','b','c','d','e'];
-  @symbol : element; 
-  @natural: i := 1;
-process
+  Array  : test = ['a','b','c','d','e'];
+  Symbol : element; 
+  Natural: i := 1;
+trial
   while i <= test.length() do
-    element := test[i]; ! transfer a reference to symbol   
+    element := test[i]; // transfer a reference to symbol   
     ** shortcut 
     when (element >= 'c') do
       write (element);
@@ -15,3 +17,5 @@ process
     done;
   repeat;
 return;
+
+module. // end of module

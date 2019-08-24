@@ -24,7 +24,7 @@ routine main():
   List{Symbol}: a = ['a','b','c']; //  initialized collection
   List{Symbol}: b = ['1','2','3']; //  initialized collection
   List{Symbol}: c; //  deferred initialization require forge
-process
+run
   forge c := a ++ b;
   print c; //  ['a','b','c','1','2','3'];
 return;
@@ -78,13 +78,15 @@ Following other functions should be available
 * List.append(value) :can append an element at the end of the list
 * List.insert(value) :can insert an element at the beginning of the list
 * List.delete(value) :can delete one element at specified index
-* List.count()       :retrieve the number of elements 
+* List.length        :retrieve the number of elements 
 
 **Special attributes**
 A list has properties that can be used in logical expressions:
 
-* List.empty()  ** true or false
-* List.full()   ** true or false
+```
+List.empty();  // true or false
+List.full();   // true or false
+```
 
 ## Collection iteration
 
@@ -120,9 +122,9 @@ process
       write(',');
     done;
   next;
+  print; // c,d
 return;
 ```
-> c,d
 
 ## Scanning items
 
