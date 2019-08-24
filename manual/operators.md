@@ -45,7 +45,6 @@ Eve use two symbols to create supplementary operators.
 | `!.` | Domain exclude lower limit
 | `!!` | Domain exclude both limits
 | `=+` | Outer join operator used in data "select" statement
-| `->` | Pipeline operator (usual data casting)
 | `<:` | Define sub-type for a class 
 | `<+` | Output parameter
 | `:=` | Assign value \| reset reference \| share reference
@@ -55,7 +54,6 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|\`x\` | Single  UTF32 character (4 bytes)
 | 'x'  | Limited capacity string:  UTF8 (max: 128 characters)
 | "x"  | Variable capacity string: UTF8 (unlimited)
 

@@ -105,7 +105,7 @@ Class attributes are static and can be accessed using two scope qualifiers:
 ```
 
 **Class Tree**
-There is a special class that has name _"@object"_ and represents the "root" class. Each classes can grow from @object or from other "base class" forming a _"class tree"_.
+There is a special class that has name _"Object"_ and represents the "root" class. Each classes can grow from Object or from other "base class" forming a _"class tree"_.
 
 ## Constructor
 A class can have a single constructor. A constructor can use decision statements based on parameter values to create _"object"_ in different ways based on several conditions. This is a flexible constructor.

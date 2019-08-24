@@ -25,41 +25,41 @@ Scalar types are fixed size data types mapped to native OS types.
 
 | reference|native|description
 |----------|------|------------------------------------------------------
-| @byte    | u8   |Unsigned on 8  bit 
-| @word    | u16  |Unsigned on 16 bit 
-| Binary  | u32  |Unsigned on 32 bit 
-| @natural | u64  |Unsigned on 64 bit 
-| @short   | i16  |Signed on 16 bit 
-| Integer | i32  |Signed on 32 bit
-| @long    | i64  |Signed on 64 bit 
-| Single  | f32  |Float precision number on 4 byte
-| Double  | f64  |Float precision number on 8 byte
+| Byte     | u8   |Unsigned on 8  bit 
+| Word     | u16  |Unsigned on 16 bit 
+| Binary   | u32  |Unsigned on 32 bit 
+| Natural  | u64  |Unsigned on 64 bit 
+| Short    | i16  |Signed on 16 bit 
+| Integer  | i32  |Signed on 32 bit
+| Long     | i64  |Signed on 64 bit 
+| Single   | f32  |Float precision number on 4 byte
+| Double   | f64  |Float precision number on 8 byte
 
 ## Basic Types
 
 | reference| description
 |----------|---------------------------------------------------------------
-| Ordinal | Enumeration of symbols, ideas or terms
-| @object  | Base class for creation of plain simple objects
-| @null    | Null data type. Have one constant value: Null
-| @date    | Calendar date     
-| @time    | Calendar time
-| Logic   | Is a Ordinal subtype having values:  false = 0, true = 1
+| Ordinal  | Enumeration of symbols, ideas or terms
+| Object   | Base class for creation of plain simple objects
+| Null     | Null data type. Have one constant value: Null
+| Date     | Calendar date     
+| Time     | Calendar time
+| Logic    | Is a Ordinal subtype having values:  false = 0, true = 1
 
 ## Composite Types
 
 Composite data types are unions of data elements.
  
-| type      | description
-|-----------|---------------------------------------------------------------
-| @numeric  | Numeric variant that can be Null
+| type     | description
+|----------|---------------------------------------------------------------
+| Numeric  | Numeric variant that can be Null
 | Symbol   | Single Unicode symbol UTF-32
 | String   | Limited capacity string:   ('single quoted')
 | Text     | Unlimited capacity string: ("double quoted")
 | List     | Dynamic unsorted enumeration of values or objects of same type
 | Hash     | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
-| @exception| Composite type derived from @object base class
+| Exception| Composite type derived from Object base class
 
 **note:** 
 * In the future we will cover a complete set of physical types
@@ -71,15 +71,15 @@ In EVE we can have two categories of numbers:
 
  Category     | EVE Types
 --------------|------------------------------------------------------------
- Discrete:    | @byte, @word, Binary, Integer, @natural
+ Discrete:    | Byte, Word, Binary, Integer, Natural
  Continuous:  | Single, Double, 
 
 ### Discrete numbers:
 
 |type     |Chars  |Bytes|min |max   |maximum number	
 |---------|-------|-----|----|------|-------------------------
-|Integer |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
-|@natural |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
+|Integer  |20     |8    |-2⁶³|2⁶³-1 |≤ 9,223,372,036,854,775,807
+|Natural  |20     |8    |0   |2⁶⁴-1 |≤ 18,446,744,073,709,551,615
  
 For conversion into characters:
 
@@ -103,8 +103,8 @@ Double: is double-precision 64-bit IEEE 754:
 
 |type     |Digits |Bytes|maximum number	
 |---------|-------|-----|----------------------------------
-|Single  |7      |4    |≤ 3.4 × 10³⁸
-|Double  |16     |8    |≤ 1.8 × 10³⁰⁸
+|Single   |7      |4    |≤ 3.4 × 10³⁸
+|Double   |16     |8    |≤ 1.8 × 10³⁰⁸
 
 Precision is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Double: and back without loosing any digit. Think of it like a digital display from a packet calculator.
 
@@ -122,7 +122,7 @@ Example | Description
 ```
 routine main():
   Integer: i; 
-  @natural: n;
+  Natural: n;
   Double : r;
 process  
   alter i := 9223372036854775807; //  maximum
@@ -149,7 +149,7 @@ alias @alias_name := Generic_Class {parameters}
 
 **Example:**
 ```
-class Point(Double: x,y) <: @object:
+class Point(Double: x,y) <: Object:
   Double: .x, .y;
 create
   alter .x := x;
@@ -186,11 +186,11 @@ In EVE the arithmetic operators are polymorphic. Numeric operators can do implic
 
 Implicit conversion is possible and _safe_ in this direction:
 
-@byte as @word as Binary as @natural as Integer as Single as Double.
+Byte as Word as Binary as Natural as Integer as Single as Double.
 
 Explicit conversion is possible but _unsafe_ in this direction:
 
-Double as  Single as Integer as @natural as Binary as @word as @byte
+Double as  Single as Integer as Natural as Binary as Word as Byte
 
 ```
 given
@@ -291,10 +291,10 @@ Literal      | Type
 -------------|-----------------
  9           | Integer
 -9           | Integer
-0x9ABCDEF    | @natural
+0x9ABCDEF    | Natural
 0b1010101    | Binary
 9.9          | Double
-U+0001       | @word
+U+0001       | Word
 U-FFFFFFFF   | Binary
 
 **Zero literals**
@@ -314,8 +314,8 @@ Literal    | Type
 Literal      | Type
 -------------|-----------------
 {a:0, b, c}  | Ordinal
-{x:'b',y:'d'}| @object
-[1, 2, 3]    | List{@byte}
+{x:'b',y:'d'}| Object
+[1, 2, 3]    | List{Byte}
 ['a','b','c']| List{Symbol}
 ["a","b","c"]| List{Text}
 
@@ -335,7 +335,7 @@ We can verify the type using "is" operator:
 
 ```
 given
-  @object: r := {name:"test", age:"24"}; 
+  Object: r := {name:"test", age:"24"}; 
   Hash:   t := {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
@@ -402,7 +402,7 @@ process
       alter message:='first workday';
     match (Friday) do
       alter message:='last workday';
-  other
+  else
     alter message:='middle of the week';
   done;
   print ('Is', message);
@@ -410,7 +410,7 @@ return;
 ```
 
 **Domain:**
-We can use Ordinal to create a domain:
+You can use Ordinal to create a domain:
 ```
 when today in (Monday..Friday) do
    print ("Have a nice day!");
@@ -420,7 +420,7 @@ done;
 ```
 
 **Operators**
-Ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. We can perform addition, subtraction, multiplication.
+Ordinal is a discrete numeral type so it has support for relation operators: { =, <, >, <=, >= }. It can be incremented and decremented using += and -=. On ordinals you can perform addition, subtraction, multiplication.
 
 ```
 ** using type Day declared before
@@ -434,20 +434,20 @@ done;
 
 ## Logical type
 
-In Latin the "falsus" and "verum" are translated to false and true.
+In Latin the "falsus" and "verum" are translated in English to "false" and "true".
 
 * falsus := ⊥ defined by ⊥ := ¬ ⊤  and  ( P ∧ ¬P )
 * verum  := ⊤ defined by ⊤ := ¬ ⊥  and  ( P ∨ ¬P )
 
-name     |    value      | binary 
----------|---------------|------------------------------
-False    | Logic.False   | 00000000 00000000 
-True     | Logic.True    | 00000000 00000001
+|name     |    value      | binary 
+|---------|---------------|------------------------------
+|False    | Logic.False   | 00000000 00000000 
+|True     | Logic.True    | 00000000 00000001
 
 **syntax**
 ```
 variable
-  Logic: variable_name; //  default false
+  Logic: variable_name; //  default False
 ```
 
 **internal design**
@@ -472,19 +472,19 @@ Gradual typing is a type system in which some variables may be given types and t
 
 **Variant Types**
 
-A @variant is a polymorphic variable that can have multiple types but only one at a time:
+A Variant is a polymorphic variable that can have multiple types but only one at a time:
 
 **Syntax:**
 ```
-alias @name := {Type | Type | ... } <: @variant;
+alias Name := {Type | Type | ... } <: Variant;
 
 variable 
-  name: v; //  declare single variable
+  Name: v; //  declare single variable
 ```
 
 ## Variant Properties
 
-* @variant data type is assigned at runtime;
+* Variant data type is assigned at runtime;
 * One variant can have a single value at a time;
 * One variant is a "union" of several types
 
@@ -497,10 +497,10 @@ For this we use a special type Null
 
 **Examples:**
 ```
-alias @number: {Integer | Double | @null} <: @variant;
+alias Number: {Integer | Double | Null} <: @variant;
 
 variable
-  @number: x := Null;  
+  Number: x := Null;  
 ```
 
 **Usability**
@@ -587,11 +587,11 @@ When can create a date literal using 3 format functions:
 
 ```
 given
-  @date: date := "2019/01/30" -> ydm;
+  Date: date := "2019/01/30" as YDM
 do
-  print date -> ydm; //  2019/01/30
-  print date -> dmy; //  30/01/2019
-  print date -> mdy; //  01/30/2019
+  print date as YDM; //  2019/01/30
+  print date as DMY; //  30/01/2019
+  print date as MDY; //  01/30/2019
 done;
 ```
 
@@ -613,8 +613,8 @@ Time is represented as a number on 8 bytes.
 
 Time format is created using two reversible functions: t12() and t24()
 
-*  t12 accept format ("hhhh:mm:ss,9999ms") 
-*  t24 accept format ("hhhh:mm:ssxx, 9999ms" )
+*  T12 accept format ("hhhh:mm:ss,9999ms") 
+*  T24 accept format ("hhhh:mm:ssxx, 9999ms" )
 
 ss: can be 0..60 seconds  
 xx: can be: (am/pm)
@@ -623,11 +623,11 @@ xx: can be: (am/pm)
 
 ```
 given
-  @time: time1, time2, time3; //  '00:00' 
+  Time: time1, time2, time3; //  '00:00' 
 do
-  alter time1 := "23:63" -> t24;
-  alter time2 := "23:63:59,99" -> t24;
-  alter time3 := "11:63:59pm,99ms" -> t12;
+  alter time1 := "23:63" as T24;
+  alter time2 := "23:63:59,99" as T24;
+  alter time3 := "11:63:59pm,99ms" as T12;
 done;
 ```
 **Read next:** [Composite Types](composite.md)

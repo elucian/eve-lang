@@ -95,6 +95,6 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 |-----------|------------------------------------------------------------------
 | object    | current instance of a class, current object
 | result    | default result of a routine when a name is not specified
-| error     | current exception object of type @exception
+| error     | current exception object of type Exception
 
 **read next:** [Operators](operators.md)

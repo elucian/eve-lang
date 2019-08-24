@@ -28,7 +28,7 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 ```
 given
   List{Integer} : n_list; 
-  List{@object}  : o_list; 
+  List{Object} : o_list; 
   List{String}  : s_list; 
 ```
 
@@ -136,7 +136,7 @@ done;
 It is called "Hash" due to similar letter H representing a connection between two columns: the key column and value column.
 
 * Hash is set of (key:value) pairs; 
-* The key must be sortable: { @number, Ordinal, String };
+* The key must be sortable: { Number, Ordinal, String };
 
 **syntax**
 ```
@@ -289,10 +289,10 @@ The preferred font for EVE programming is "DejaVu Sans Mono".
 
 Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In EVE all exceptions are considered errors.
 
-The exception is a variable of type @object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
+The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-alias Exception: @object { 
+alias Exception: Object { 
         Integer: code 
        ,String : message 
        ,String : routine_name 

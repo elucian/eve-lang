@@ -24,7 +24,7 @@ routine main():
   List{Symbol}: a = ['a','b','c']; //  initialized collection
   List{Symbol}: b = ['1','2','3']; //  initialized collection
   List{Symbol}: c; //  deferred initialization require forge
-run
+process
   forge c := a ++ b;
   print c; //  ['a','b','c','1','2','3'];
 return;
