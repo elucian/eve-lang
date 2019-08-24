@@ -42,23 +42,25 @@ EVE is a free form language inspired from Ada, Java and Ruby.
 |  it can span multiple lines       |
 ------------------------------------+
 module test:
+
+# Main routine: ( this is title)
+routine main():
+  Integer a;
+process
+  ** Expression comment /*...*/
+  alter a := a + 1 /* *(a - 1) */ -1;  
+return;  
+
+module. // end of module
 *************************************
 **  Boxed comment for old printer  **
 *************************************
-
-# Expression comment /*...*/
-given
-  Integer a;
-do  
-  alter a := a + 1 /* *(a - 1) */ -1;
-done;  
-
-module. // end of module
 ```
 
 **Notes:**
 * Outline comments are supported inside expressions;
 * A statement can continue after end of line comment;
+* After module. you can add comments on many lines;
 
 ## Keywords
 
@@ -178,11 +180,11 @@ Assign value can be done using operator: ":=". But this operator has a strange b
 
 **Syntax:**
 ```
-  alter identifier := variable_name;   //  share a reference to variable
-  alter identifier := function_name;   //  share a reference to function
-  alter identifier := literal;         //  mutate value / initialize
-  alter identifier := expression;      //  mutate value / initialize
-  alter identifier := function_name(); //  mutate value / reset value
+alter identifier := variable_name;   //  share a reference to variable
+alter identifier := function_name;   //  share a reference to function
+alter identifier := literal;         //  mutate value / initialize
+alter identifier := expression;      //  mutate value / initialize
+alter identifier := function_name(); //  mutate value / reset value
 ```
 
 **clone:**
@@ -191,7 +193,7 @@ To make a clone/copy underline value from a reference you must use symbol "::" (
 
 **Syntax:**
 ```
-  clone variable_name := reference_name; //  make a clone
+clone variable_name := reference_name; //  make a clone
 ```
 
 ## Expressions
@@ -248,7 +250,7 @@ The most simple block statement start with "do" and end with "done"
 given
   ** Integer numbers
   Integer: a := 0;
-  Double:    b := 1.5; 
+  Double:  b := 1.5; 
 do
   print  (a, b);
   expect (a = 0, b = 1.5);
