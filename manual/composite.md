@@ -90,7 +90,7 @@ given
   Set{Integer}: my_set := {0,2,3};
 do
   ** append element 1
-  alter  my_set    += 1;  
+  alter  my_set += 1;  
   expect my_set = {0,1,2,3};
   
   ** modify all elements
@@ -98,8 +98,8 @@ do
   expect my_set = {0,0,0,0};
   
   ** remove all elements  
-  alter  my_set    := {}; 
-  expect my_set = {};
+  alter  my_set := {}; 
+  expect my_set  = {};
 done  
 ```
 
@@ -179,13 +179,13 @@ In EVE strings are mutable. If you use `:=` new memory is allocated. If you use 
 **Example:**
 ```
 routine test_string()
-  String: str := 'First value';  
-  String: ref := 'First value'; 
+  String: str := "First value";  
+  String: ref := "First value"; 
 process  
   expect  (str  = ref); //  same value
   expect  (str != ref); //  different locations  
   
-  alter  ref := str;   //  reset ref
+  share  ref := str;   //  reset ref
   expect (str =  ref); //  same value
   expect (str == ref); //  same location  
   
@@ -195,11 +195,13 @@ process
   expect str == ref; //  the reference is holding
   
   ** if we recreate str, reference is reset
-  str := 'First value:'; //  new string location
+  reset  str := "First value:"; //  new string location
   expect str  = ref;     //  same value
   expect str != ref;     //  different locations
-  ** reference was broken, ref is pointing to old value
-  print ref;  //  'First value:'
+  ** ref is pointing to a different location
+  alter ref  := "New value:"
+  print ref;  //  New value:
+  print str;  //  First value:
 return;
 ```
 
@@ -232,7 +234,7 @@ We can test if a string is null using "is Null" expression.
 given 
   String: str := "";
 do 
-  expect (str = null);
+  expect (str = Null);
   expect (str = '');
   expect (str = "");
 done;
@@ -260,9 +262,9 @@ done;
 
 **Output:**
 ```
-"Opportunity is missed by most people 
- because it is dressed in overalls 
- and looks like work."
+Opportunity is missed by most people 
+because it is dressed in overalls 
+and looks like work.
 ```
 
 **Unicode**

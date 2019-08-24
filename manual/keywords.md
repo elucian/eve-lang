@@ -37,7 +37,7 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | method   | define a named block of code belonging to a class
 | process  | start executable region for a routine and constructor for a class
 | recover  | define a recover region for methods
-| cleanup  | define a finalization region for routines
+| release  | define a finalization region for routines
 | return   | terminate a routine/function or a class declaration
 
 ## Blocks of code/sections
