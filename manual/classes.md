@@ -121,6 +121,37 @@ create
 return;
 ```
 
+**Example:**
+```
+class Point(Double: x,y) <: Object:
+  Double: .x, .y;
+create
+  alter .x := x;
+  alter .y := y;
+return;
+
+routine main():
+  Point: p1, p2;      //  use implicit constructor
+  Point: p3 := {1,1}; //  initial value for Point
+process
+**modification using constant literals
+  alter p1.a := 1;
+  alter p1.b := 2; 
+  
+**reset Point using a literal
+  alter p2 := {2, 2};
+  
+  print ("p1 = (a:#n, b:#n)" ? (p1.a,p1.b));
+  print ("p2 = (a:#n, b:#n)" ? (p2.a,p2.b));  
+return;
+```
+output:
+```
+p1 = (a:1, b:1)      
+p2 = (a:2, b:2)
+```
+
+
 ## Comparing objects
 We can use comparison operators: "==" and "=" with objects. First comparison "==" will compare the object location. If the objects have same location they are also equal. Second compare object class and object attributes. If is the same class and all attributes are equal the objects are equivalent.
 
@@ -176,4 +207,4 @@ variable
 
 ```
 
-**Read next:** [Data Processing](processing.md)
+**Read next:** [Data processing](processing.md)

@@ -28,9 +28,20 @@ Modules are source files having extension: *.eve. Module names are using lowerca
 * one module can have public member used in other modules;
 * member identifier names can be 30 characters long;
 
+### Drivers
+A _driver_ is the main application module. It has the role to lead the application main thread. When _driver_ execution is over the application give control back to the operating system.
+
+**notes:**
+
+* A _driver_ is the application entry point,
+* Any application must have one single _driver_,
+* A _driver_ can read configuration files at startup,
+* A driver can be terminated early using keywords: _halt_, or _fail_.
+
+
 ## Main module
 
-Any module that contains routine main() is the application main module and can lead a run-time session. A main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
+Module that contains routine main() is the application main module. Main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
 
 **properties**
 
@@ -85,7 +96,7 @@ variable
   
 ** function declaration
 function 
-  TypeName:name(params) => (expression);
+  TypeName: name(params) => (expression);
   ...
 
 ** advanced class declaration
@@ -98,8 +109,20 @@ routine name(params):
   ...
 return;
 
+** rogue statements
+given
+  ...
+do  
+  ...
+done;
+
 module. // end module main
 ```
+
+### Rogue statement
+
+A _driver_ or _aspect_ can contain statements that do not belong to any rule. These are called _rogue_ statements and are driving the program execution. Rogue statements are executed top down until to last keyword that is usually _over_.
+
 
 ## Declaration order
 
@@ -578,6 +601,19 @@ To start an application there are 2 methods:
 ```
 eve:> run path/module_name -c file.cfg -m 2048GB
 ```
+
+**driver:**
+
+When a program is executed the driver is located and executed first. If a program do not have a "driver", it can not be executed nor compiled. The driver is the program main entry point. It is executed only once. 
+
+**aspect:**
+
+One aspect is executed from driver or from another aspect. When executed rogue statements of an aspect are executed top down in sequential order. You can not run an aspect from itself. Recursive aspects are not supported.
+
+**module:**
+
+The driver or aspect can load numerous modules. After loading, all public elements can be executed on demand. Before execution the driver can interact with the user to ask for input. After executing it can print feedback and reuse or 
+
 
 **using exit**
 

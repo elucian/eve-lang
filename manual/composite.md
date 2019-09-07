@@ -28,7 +28,7 @@ A list is a consecutive sequence of elements having a dynamic capacity.
 ```
 given
   List{Integer} : n_list; 
-  List{Object} : o_list; 
+  List{Object}  : o_list; 
   List{String}  : s_list; 
 ```
 
@@ -366,4 +366,4 @@ The expect statement check a condition and raise an error if condition is false.
 * can be used as post-condition
 * unexpected error has code = 0
 
-**Read next:** [Classes](classes.md)
+**Read next:** [Control Flow](control.md)

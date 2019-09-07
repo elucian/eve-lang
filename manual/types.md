@@ -5,7 +5,7 @@ EVE is a gradual typed language. Next I will describe basic types:
 **bookmarks**
 
 * [Scalar](#scalar-types)
-* [Basic](#basic-types)
+* [Primitive](#primitive-types)
 * [Composite](#composite-types)
 * [Collections](#collections)
 * [Physical](#physical-types)
@@ -35,16 +35,17 @@ Scalar types are fixed size data types mapped to native OS types.
 | Single   | f32  |Float precision number on 4 byte
 | Double   | f64  |Float precision number on 8 byte
 
-## Basic Types
+## Primitive Types
 
 | reference| description
 |----------|---------------------------------------------------------------
+| Numeric  | Numeric variant that can be Null = ""
+| Symbol   | Single Unicode symbol UTF-32
 | Ordinal  | Enumeration of symbols, ideas or terms
-| Object   | Base class for creation of plain simple objects
-| Null     | Null data type. Have one constant value: Null
 | Date     | Calendar date     
 | Time     | Calendar time
-| Logic    | Is a Ordinal subtype having values:  false = 0, true = 1
+| Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
+| Domain   | Domain data type (x..y:ratio) 
 
 ## Composite Types
 
@@ -52,13 +53,12 @@ Composite data types are unions of data elements.
  
 | type     | description
 |----------|---------------------------------------------------------------
-| Numeric  | Numeric variant that can be Null
-| Symbol   | Single Unicode symbol UTF-32
 | String   | Limited capacity string:   ('single quoted')
 | Text     | Unlimited capacity string: ("double quoted")
 | List     | Dynamic unsorted enumeration of values or objects of same type
 | Hash     | Enumeration of (key:value) pairs unique sorted by key
 | Set      | Enumeration of unique elements of the same type sorted by value
+| Object   | Base class for creation of plain simple objects
 | Exception| Composite type derived from Object base class
 
 **note:** 
@@ -71,8 +71,8 @@ In EVE we can have two categories of numbers:
 
  Category     | EVE Types
 --------------|------------------------------------------------------------
- Discrete:    | Byte, Word, Binary, Integer, Natural
- Continuous:  | Single, Double, 
+ Discrete     | Byte, Word, Binary, Integer, Natural
+ Continuous   | Single, Double, 
 
 ### Discrete numbers:
 
@@ -121,11 +121,11 @@ Example | Description
 
 ```
 routine main():
-  Integer: i; 
-  Natural: n;
-  Double : r;
+  Integer: i; // Initial value = 0
+  Natural: n; // Initial value = 0
+  Double : r; // Initial value = 0
 process  
-  alter i := 9223372036854775807; //  maximum
+  alter i := 9223372036854775807;  //  maximum
   alter n := 18446744073709551615; //  maximum
   alter r := 1/2; //  0.5
 return;
@@ -133,49 +133,20 @@ return;
 
 **See also:** [scientific notation](https://en.wikipedia.org/wiki/Scientific_notation#Other_bases)
 
-## Alias
+## User types
 
-User types can be _defined_ using symbol ":=" and keyword: "alias".
+User types can be _defined_ using symbols ":", "<:" and keyword: "type".
 
 **Syntax:**
 ```
-alias @alias_name := Generic_Class {parameters}
+type type_name: Generic_Class {parameters}
+
 ```
 **Notes:**
 
 * Users can define constrained sub-types or group of basic types;
 * A module can _import_ public types defined in other modules;
 * A data type can be declared only in module global context;
-
-**Example:**
-```
-class Point(Double: x,y) <: Object:
-  Double: .x, .y;
-create
-  alter .x := x;
-  alter .y := y;
-return;
-
-routine main():
-  @point: p1, p2;      //  use implicit constructor
-  @point: p3 := {1,1}; //  initial value for Point
-process
-**modification using constant literals
-  alter p1.a := 1;
-  alter p1.b := 2; 
-  
-**reset Point using a literal
-  alter p2 := {2, 2};
-  
-  print ("p1 = (a:#n, b:#n)" ? (p1.a,p1.b));
-  print ("p2 = (a:#n, b:#n)" ? (p2.a,p2.b));  
-return;
-```
-output:
-```
-p1 = (a:1, b:1)      
-p2 = (a:2, b:2)
-```
 
 ## Data Coercion
 In computer science coercion is used to implicitly or explicitly change  an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. 

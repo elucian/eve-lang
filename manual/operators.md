@@ -6,9 +6,9 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 
 |Symbol       | Description
 |-------------|--------------------------------------------------------------
-| `+-...-+`   | Block comments   \| Expression comment
-| `/*...*/`   | Outline comments \| Nested comments
-| `(_,_,_)`   | Expression \| List literal
+| `+-...-+`   | Block comments   \| Header comments
+| `/*...*/`   | Outline comments \| Expression comment
+| `(_,_,_)`   | Expression \| Tuple literal
 | `[_,_,_]`   | Range \| Index \| List literals 
 | `{_,_,_}`   | Ordinal type \| Set of values \| Hash type \| Generic types
 | `#(....)`   | String interpolation (placeholder) for operator "?"
@@ -17,7 +17,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 ## Single symbols
 
 |Symbol | Description
-|-------|--------------------------------------------------------------
+|-------|-------------------------------------------------------------------
 | `!`   | Negation symbol
 | `?`   | String template find & replace
 | `#`   | System variable prefix
@@ -30,7 +30,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 | `.`   | Decimal separator \| Public member \| Member of ,,,
 | `,`   | Enumeration for elements \| complex expression 
 | `*`   | Variable arguments \| Multiplication
-| `|`   | Used in set builders \| Set union "∪"
+| `\|`  | Used in set builders \| Set union "∪"
 | `&`   | String concatenation \| Set intersection "∩"
 
 ## Double symbols
@@ -46,14 +46,18 @@ Eve use two symbols to create supplementary operators.
 | `!!` | Domain exclude both limits
 | `=+` | Outer join operator used in data "select" statement
 | `<:` | Define sub-type for a class 
-| `<+` | Output parameter
-| `:=` | Assign value. Used with: { forge, clone, reset, share }
+| `<+` | Append to the end of a collection
+| `+>` | Append to the beginning of a collection
+| `<<` | Shift ordered collection to left with n: X := C << n
+| `>>` | Shift ordered collection to right with n: Y := C >> n 
+| `:=` | Assign value of expression: Used with: { forge, clone, reset, share }
 
 
 ## String: delimiters
 
 |Symbol| Description
 |------|---------------------------------------------------------------
+| `x`  | Single symbol max (UTF32)
 | 'x'  | Limited capacity string:  UTF8 (max: 128 characters)
 | "x"  | Variable capacity string: UTF8 (unlimited)
 
@@ -105,16 +109,15 @@ In following table: `A, B, C` are collections and `x` is a member:
 
 |Operator   | Result  | Description
 |-----------|---------|-------------------------------------------------------------------
-| A `&`  B  | set     | Union A with B: ∪     use like C := A &  B (return a new set)
-| A `|`  B  | set     | Intersect A with B: ∩ use like C := A |  B (return a new set)
+| A `|`  B  | set     | Union A with B: ∪     use like C := A |  B (return a new set)
+| A `&`  B  | set     | Intersect A with B: ∩ use like C := A &  B (return a new set)
 | A `-`  B  | set     | Simple difference,    use like C := A -  B (return a new set)
 | A `--` B  | set     | Symmetric difference, use like C := A -- B (return a new set)
 | A `++` B  | list    | Concatenate two lists use like L := A ++ B (return a new list)
 | A `<=` B  | logic   | verify if A is subset of B: In math: ⊂
 | A `>=` B  | logic   | verify if B is subset of A: In math: ⊃
-| C `+:` x  | append  | append a deep copy of element x to C    
-| C `+=` x  | append  | append a reference of element x to C
-| C `-=` x  | remove  | remove element = x from C  
+| C `<+` x  | list    | append element x to C at the end    
+| C `+>` x  | list    | append element x to C at the beginning
 | C `-?` x  | remove  | find and remove first element == x from C  
 | C `-*` x  | remove  | find and remove all elements  == x from C  
         
@@ -125,8 +128,8 @@ These operators are expected logical values T = true, F = false
 | Symbol | Description
 |--------|----------------------------------------------------------------
 |  if    | conditional operator
-|  is    | check Type: is Type or is not Type instead of "==="
-|  is not| check Type: is Type or is not Type instead of "!==="
+|  is    | check element is of Type
+|  is not| check element is not of Type
 |  in    | logic belong to: instead of "∈"
 |  not in| logic not belong to: instead of "!∈"
 |  not   | logic NOT (negation) 

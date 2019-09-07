@@ -222,4 +222,4 @@ print;
 ```
 > 1,3,5,7,9
 
-**Read next:** [Basic Types](basic.md)
+**Read next:** [Classes](classes.md)

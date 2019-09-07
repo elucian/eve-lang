@@ -13,9 +13,9 @@ To learn EVE syntax you can read next pages in order:
 
 1. [Project structure](structure.md)
 1. [Syntax overview](overview.md)
-1. [Control flow](control.md)
-1. [Basic types](basic.md)
+1. [Data types](types.md)
 1. [Composite types](composite.md)
+1. [Control flow](control.md)
 1. [Object oriented](classes.md)
 1. [Data processing](processing.md)
 1. [Standard library](standard.md)

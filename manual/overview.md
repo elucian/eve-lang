@@ -8,7 +8,6 @@ EVE is a free form language inspired from Ada, Java and Ruby.
 * [comments](#comments)
 * [keywords](#keywords)
 * [operators](#operators)
-* [data type](#data-type)
 * [variables](#variables)
 * [identifiers](#identifiers)
 * [expressions](#expressions)
@@ -35,8 +34,6 @@ EVE is a free form language inspired from Ada, Java and Ruby.
 **examples**
 ```
 # Title comment
-
-** single line comment
 +------------------------------------
 |  Boxed comments for headers       |
 |  it can span multiple lines       |
@@ -127,19 +124,9 @@ EVE us ASCII symbols for operators. One operator can be a single character or a 
 
 **Details:** [Operators](operators.md) 
 
-## Data type
-
-Data type is an abstract concept that describe data representation. 
-
-There are 3 kind of data types in EVE:
-
-* [basic types](basic.md)
-* [composite types](composite.md)
-* [classes](classes.md)
-
 ## Variables
 
-A variable is represented by an identifier, and is pair-up with a type using ":". Variables are abstract concepts representing primitive values or references to memory locations. Variables can be altered during the program execution using keyword _alter_ and _modifiers_ like: { :=, ::, +=, -= ... }. 
+A variable is represented by an identifier, and is pair-up with a data type using ":". Variables are abstract concepts representing primitive values or references to memory locations. Variables can be altered during the program execution using keyword _alter_ and _modifiers_ like: { :=, ::, +=, -= ... }. 
 
 **patterns:**
 ```
@@ -230,9 +217,9 @@ print; //  1234
 
 **Notes:** 
 * print statement can receive multiple arguments in parenthesis ()
-* print statement add new line by default
+* print statement add new line by default, that can be suppress using eol = False
 * print statement will separate different values using one space 
-* to avoid new line you can use "write" statement instead of "print"
+* write statement will output to console and do not add end of line
 
 ## Statements
 
@@ -272,16 +259,9 @@ given
 do  
   ** multi-row expression
   alter x := 1 + 2 +
-        3 + 4 + 5;
+             3 + 4 + 5;
 
-  ** ERROR: ↓ (missing ";") 
-  alter x := 1 + 2 
-        + 3 + 4 + 5;
-       
-  ** all 5 numbers are in 
-  expect x = 15; 
-
-  ** multi-row hash table
+  ** multi-row literal 
   alter a := { 
          (1:2),
          (3:4),
@@ -290,4 +270,4 @@ do
 done;
 ```
 
-**Read next:**  [Control Flow](control.md)
+**Read next:**  [Data Types](types.md)
