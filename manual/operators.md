@@ -159,16 +159,16 @@ These operators are working for natural numbers ≥ 0
 
  symbol  | description
 ---------|------------------------------
-   ~.    | bitwise NOT (unary)
-  .&.    | bitwise AND
-  .|.    | bitwise OR
-  .+.    | bitwise XOR
-  .<.    | shift bits to left  
-  .>.    | shift bits to right
+  ` ~. ` | bitwise NOT (unary)
+  `.&. ` | bitwise AND
+  `.\|.` | bitwise OR
+  `.+. ` | bitwise XOR
+  `.<. ` | shift bits to left  
+  `.>. ` | shift bits to right
 
 **Binary operators**
 
- A    | B   | `A.&.B`| `A.|.B`| `A.+.B`
+ A    | B   | `A.&.B`|`A.\|.B`| `A.+.B`
 ------|-----|--------|--------|---------
  00   | 00  | 00     | 00     |  00    
  01   | 00  | 00     | 01     |  01    
