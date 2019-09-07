@@ -7,7 +7,7 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |Symbol       | Description
 |-------------|--------------------------------------------------------------
 | `+-...-+`   | Block comments   \| Header comments
-| `/*...*/`   | Outline comments \| Expression comment
+| `/*...*/`   | Outline comments \| Expression comments
 | `(_,_,_)`   | Expression \| Tuple literal
 | `[_,_,_]`   | Range \| Index \| List literals 
 | `{_,_,_}`   | Ordinal type \| Set of values \| Hash type \| Generic types
@@ -20,9 +20,9 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |-------|-------------------------------------------------------------------
 | `!`   | Negation symbol
 | `?`   | String template find & replace
-| `#`   | System variable prefix
+| `#`   | Title comment a module level (not indented)
 | `$`   | System constant prefix
-| `@`   | Reference type prefix \| Class name prefix
+| `@`   | System variable prefix
 | `;`   | Statement separator \| End of statement
 | `:`   | Define something   \| Pair-up operator (a:b)
 | `=`   | Setup initial value for something
@@ -39,7 +39,8 @@ Eve use two symbols to create supplementary operators.
 
 |Symbol| Description
 |------|---------------------------------------------------------------
-|`\*\*`| Single line comment | End of line comment 
+| `**` | Single line comment | Indented at least 2 spaces
+| `//` | End of line comment | Not usable in expressions
 | `..` | Domain (n..m) or slice [n..m] 
 | `.!` | Domain exclude upper limit
 | `!.` | Domain exclude lower limit
