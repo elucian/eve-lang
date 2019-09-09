@@ -133,18 +133,18 @@ A variable is represented by an identifier, and is pair-up with a data type usin
 ** define alias for a: 
 
 ** alias names have to start with uppercase letters.   
-alias Class_name := Super_class {parameters};
+type Type_name := super_type {parameters};
 
 ** shared variables
 variable
   ** use type to define a variable
-  Class_name: var_name;
+  Type_name: var_name;
   ** with specific value and type
-  Class_name: var_name := value;
+  Type_name: var_name := value;
   ** multiple variables in one assignment
-  Class_name: var_name1, name2 ...:= value;
+  Type_name: var_name1, name2 ...:= value;
   ** multiple variables with diverse values
-  Class_name: var_name1:=value1, var_name2 := value2;
+  Type_name: var_name1:=value1, var_name2 := value2;
 ```
 
 **examples**

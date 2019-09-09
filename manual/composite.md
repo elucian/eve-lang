@@ -140,7 +140,7 @@ It is called "Hash" due to similar letter H representing a connection between tw
 
 **syntax**
 ```
-alias Table_Name := Hash{key_type, value_type}; //  type alias 
+type Table_Name: Hash{key_type, value_type}; //  type alias 
 
 variable
   Hash{key_type, value_type}: name; //  explicit type
@@ -195,7 +195,7 @@ process
   expect str == ref; //  the reference is holding
   
   ** if we recreate str, reference is reset
-  reset  str := "First value:"; //  new string location
+  forge  str := "First value:"; //  new string location
   expect str  = ref;     //  same value
   expect str != ref;     //  different locations
   ** ref is pointing to a different location
@@ -294,7 +294,7 @@ Exception is interrupting the current logical flow and jump to the recover regio
 The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system global exception type
-alias Exception: Object { 
+type Exception: Object { 
         Integer: code 
        ,String : message 
        ,String : routine_name 

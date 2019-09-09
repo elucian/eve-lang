@@ -194,8 +194,8 @@ Generic class is used to define a subtype then you can declare one or more objec
 
 ```
 ** declare new alias type from generic
-alias 
-  New_Type := Generic_Class{Type_Name};
+type 
+  New_Type: Generic_Class{Type_Name};
 
 ** create new object: using new alias with arguments
 variable

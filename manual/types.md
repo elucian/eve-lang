@@ -332,11 +332,11 @@ done;
 
 ## Polymorphic operators
 
-In mathematics there are very few operators: {+, -, ÷ , ⋅} that can operate with any kind of numbers: negative, positive, rational or Double. So the numeric operators are not very specific. This property of operators is called _"polymorphic"_ and is a problem for computer science.
+In mathematics there are very few operators: {+, -, / , * } that can operate with any kind of numbers: negative, positive, rational or real. Operators are not bound to specific data types. Therefore these operators are called _"polymorphic"_.
 
-Some languages define different operators for  Integers and floating decimal numbers. For example in OCaml the operator "/" can divide  Integers while "/." can divide floating numbers. This is unexpected for a mathematician. Therefore EVE languages is using polymorphic operators.
+Some languages define different operators for  Integers and Floating decimal numbers. For example in OCaml the operator "/" can divide  Integers while "/." can divide Floating point decimal numbers. This is unexpected for a mathematician who is expecting to use one single operator for division. 
 
-Operators are mapped to functions. To design polymorphic operators we overload the function signature using type dispatch. The dispatch is happening by left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
+In EVE, operators are mapped to functions. To design polymorphic operators we overload the function signature using type dispatch. The dispatch is using left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.
 
 ## Ordinal type
 
@@ -346,7 +346,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-alias Name := {identifier:value, ... } <: Ordinal;
+type Name := {identifier:value, ... } <: Ordinal;
 ```
 
 **Usage**
@@ -359,13 +359,13 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-alias @day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: Ordinal;
+type Day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: Ordinal;
 
 routine main():
   String: message;
 process  
   given
-    @day: today := today();
+    Day: today = today();
   check today:
     match (Friday, Saturday, Sunday) do
       alter message:='weekend';
@@ -425,7 +425,7 @@ variable
 
 Probably best to define Logic type is Ordinal:
 ```
-alias Logic := { .False , .True } <: Ordinal;
+type Logic := { .False , .True } <: Ordinal;
 ```
 
 **Logical expressions**
@@ -447,7 +447,7 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-alias Name := {Type | Type | ... } <: Variant;
+type Name := {Type | Type | ... } <: Variant;
 
 variable 
   Name: v; //  declare single variable
@@ -468,7 +468,7 @@ For this we use a special type Null
 
 **Examples:**
 ```
-alias Number: {Integer | Double | Null} <: @variant;
+type Number: {Integer | Double | Null} <: Variant;
 
 variable
   Number: x := Null;  
@@ -514,14 +514,14 @@ routine main():
   Double: a, b;
 process  
   ** invert two  Integer: numbers
-  alter  x := 10;
-  alter  y := 20;  
-  swap(x, y);
+  alter x := 10;
+  alter y := 20;  
+  apply swap(x, y);
   expect (x = 20) and (y = 10);
   ** invert two Double: numbers
   alter a := 1.5;
   alter b := 2.5;
-  swap(a, b);
+  apply swap(a, b);
   expect (a = 2.5) and (b = 1.5);
 return;
 ```

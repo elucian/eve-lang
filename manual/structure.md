@@ -109,7 +109,7 @@ routine name(params):
   ...
 return;
 
-** rogue statements
+** executable statements
 given
   ...
 do  
@@ -134,8 +134,8 @@ Globals are declared in first module region, with zero space indentation:
 
 **declare**
 
-* system constants  ::=  $identifier := value;
-* system variabless ::=  @identifier := value;
+* system constants ::=  $identifier := value;
+* system variables ::=  @identifier := value;
 
 Global members are visible in application with no prefix. 
 
@@ -236,7 +236,7 @@ A routine is a named block of code that can be executed multiple times.
 
 Routine with result:
 ```
-routine name(Type:parameter, Type<result...):
+routine name(Type : parameter, Type < result...):
   ** declaration region
   ...
 process
@@ -293,15 +293,15 @@ routine test(List{String} *args):
 return;
 
 ** call routine with variable number of arguments
-test ("a","b","c"); // use 3 arguments
-test ("a","b");     // use 2 arguments
+apply test ("a","b","c"); // use 3 arguments
+apply test ("a","b");     // use 2 arguments
 
 ** you can use operator "*" to _spread_ collection elements
 given
   Set{Integer} argument;
 do
   forge argument := {1, 2, 3};
-  test (*argument);  // spread collection elements
+  apply test (*argument);  // spread collection elements
 done;  
 ```
 
@@ -338,8 +338,8 @@ routine main(List{String}: *args):
   Integer: c = args.length;
 process
   ** verify condition and exit
-  exit if c = 0;  
-  test c; //  routine call
+  exit if c = 0;  // early interruption  
+  apply test(c);  // routine call
 return;
 ```
 
@@ -362,18 +362,18 @@ variable
   Integer: p1;   
   Integer: p2;   
 
-routine add_numbers:
+routine add_numbers():
 process
   **side effects  
-  reset test := p1 + p2; //  first side-effect
+  alter test := p1 + p2; //  first side-effect
   print test;            //  second side-effect
 return;
 
 routine main():
 process
-  alter p1 := 10; //  side effect
-  alter p2 := 20; //  side effect
-  add_numbers;    //  call routine add_numbers;
+  alter  p1 := 10;     //  side effect
+  alter  p2 := 20;     //  side effect
+  apply  add_numbers;  //  call routine add_numbers;
   expect result = 30;
 return;
 ```
@@ -392,10 +392,10 @@ routine main():
   Integer: result;
 process  
   ** reference argument require a variable
-  add(1,2, result);
-  print result; //  expected value 3
+  apply add(1,2, result);
+  print result;     //  expected value 3
   ** negative test
-  add(1,2,4);    //  error, "out" parameter require a variable
+  apply add(1,2,4); //  error, "out" parameter require a variable
 return;
 ```
 
@@ -505,10 +505,10 @@ An λ expression we can use multiple conditionals nodes separated by comma:
 routine main():
   Integer: p1, p2, x;
 process
-  p1 := 2;
-  p2 := 1;
+  alter p1 := 2;
+  alter p2 := 1;
   ** using λ expression  
-  x  := ( 0 if p1 = 0, 0 if p2 = 0, p1+p2);
+  alter x  := (0 if p1 = 0, 0 if p2 = 0, p1+p2);
   print x; // expect: 3 
 return;
 ```
@@ -519,9 +519,9 @@ given
   Logic:   b := false;
   Integer: v := 0;   
 do
-  alter v := (1 if b, 2);   
-  expect v = 2;  
-  print v;   
+  alter  v := (1 if b, 2);   
+  expect v == 2;  
+  print  v;   
 done; 
 ```
 
@@ -580,8 +580,8 @@ return;
 **New keywords:**
 
 * exit,   will terminate the routine early
-* solve,  will continue with a forward case
-* retry,  will continue with a previous case
+* retry,  will continue with a previous or backward specified case
+* skip,   will continue with a next or specific forward case
 * resume, will continue with next case after the one that failed
 
 ## Execution
@@ -630,19 +630,19 @@ done;
 exit if condition;
 ```
 
-**using quit**
+**using over**
 
-This is a way to release all locked resources and stop the application session.
+This is a way to release all locked resources and terminate the application session.
 
 **Example:**
 ```
 ** using when prefix condition
 when condition do
-  quit;
+  over;
 done;
 
 ** using if postfix condition
-quit if condition;
+over if condition;
 ```
 
 **Read next**: [Syntax Overview](overview.md)

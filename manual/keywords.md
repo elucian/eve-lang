@@ -8,7 +8,7 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | import   | start import region
-| alias    | define alias for data-type or member name from imported modules
+| type     | define data-type or sub-type 
 | constant | declare module constants (start with "." if is public)
 | variable | declare module variables (start with "." if is public)
 | function | start a declaration region for named expression
@@ -18,7 +18,6 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
 | forge    | create a new object reference / object instantiation on the heap
-| reset    | replace a reference with another reference just created by a constructor
 | alter    | modify underline value of a reference or value of a native variable
 | clone    | copy a reference into another reference, with deep copy operator "::"
 | share    | share  a reference from existing reference
@@ -76,15 +75,15 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 | Keyword  | Description
 |----------|-------------------------------------------------------------------
 | exit     | silent stop a routine and return control to the caller
-| quit     | close resources, release memory and stop program execution
+| over     | close resources, release memory and stop program execution
 | stop     | early terminate execution of a routine / function
-| skip     | jump over all other statements to the end of any repetitive block
+| skip     | jump over all other statements to the end of block
 | raise    | create recoverable exception with error code and message
 | fail     | create standard work-flow error if condition is true
 | pass     | create standard unexpected error if condition is true
-| abort    | abort process and clear error object
+| abort    | abort current process and clear error object
 | retry    | work-flow jump backwards to specified step
-| solve    | work-flow jump forward to specified step
+| apply    | interrupt current execution and wait for subroutine execution
 | resume   | used in work-flow handlers to continue with next step
 
 
