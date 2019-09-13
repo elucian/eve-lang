@@ -70,8 +70,8 @@ A module file is divided into regions using keywords: {import, define, global, c
 module main:
 
 ** global region 
-$sys_con := "value"; // system constant
-@sys_var := {1,2,3}; // system variable
+$sys_con = "value"; // system constant
+@sys_var = {1,2,3}; // system variable
 ...
 
 ** import region
@@ -175,7 +175,7 @@ Is used to include members from several other modules into current module:
 **syntax**
 ```
 ** define global constant
-$user_path := $root_path/relative_path
+$user_path = $root_path/relative_path
 
 import 
   from $user_path use (member_name,...);  // specific members
@@ -213,7 +213,7 @@ Shared variables are declared in _variable_ region:
 **example**
 ```
 variable
-  Double :pi = 3.14; //  shared variable
+  Double: pi = 3.14; //  shared variable
 ```
 
 **note:** 
@@ -236,7 +236,7 @@ A routine is a named block of code that can be executed multiple times.
 
 Routine with result:
 ```
-routine name(Type : parameter, Type < result...):
+routine name(Type: parameter, Type < result...):
   ** declaration region
   ...
 process
@@ -298,9 +298,9 @@ apply test ("a","b");     // use 2 arguments
 
 ** you can use operator "*" to _spread_ collection elements
 given
-  Set{Integer} argument;
+  Set{Integer}: argument;
 do
-  forge argument := {1, 2, 3};
+  store argument := {1, 2, 3};
   apply test (*argument);  // spread collection elements
 done;  
 ```
@@ -433,10 +433,10 @@ function
   TypeName: function_name(Type : param = value,...) => (expression);
   
 given 
-  TypeName: result;
+  TypeName: result; //not initialized (require store)
 do  
   ** call with no arguments:
-  alter result := function_name();
+  store result := function_name();
   
   ** call with arguments mapped by position
   alter result := function_name(value, ...);
@@ -508,7 +508,7 @@ process
   alter p1 := 2;
   alter p2 := 1;
   ** using λ expression  
-  alter x  := (0 if p1 = 0, 0 if p2 = 0, p1+p2);
+  alter x  := (0 if p1 == 0, 0 if p2 == 0, p1+p2);
   print x; // expect: 3 
 return;
 ```
@@ -516,8 +516,8 @@ return;
 **example**
 ```
 given
-  Logic:   b := false;
-  Integer: v := 0;   
+  Logic:   b = False;
+  Integer: v = 0;   
 do
   alter  v := (1 if b, 2);   
   expect v == 2;  

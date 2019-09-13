@@ -35,17 +35,21 @@ Scalar types are fixed size data types mapped to native OS types.
 | Single   | f32  |Float precision number on 4 byte
 | Double   | f64  |Float precision number on 8 byte
 
+**Note:** Scalar types are automatically initialized to 0
+
 ## Primitive Types
 
 | reference| description
 |----------|---------------------------------------------------------------
-| Numeric  | Numeric variant that can be Null = ""
+| Numeric  | Numeric variant that can be Null
 | Symbol   | Single Unicode symbol UTF-32
 | Ordinal  | Enumeration of symbols, ideas or terms
 | Date     | Calendar date     
 | Time     | Calendar time
 | Logic    | Is a Ordinal subtype having values:  False = 0, True = 1
 | Domain   | Domain data type (x..y:ratio) 
+
+**Note:** Primitive types require explicit initialization otherwise they are Null
 
 ## Composite Types
 
@@ -123,7 +127,7 @@ Example | Description
 routine main():
   Integer: i; // Initial value = 0
   Natural: n; // Initial value = 0
-  Double : r; // Initial value = 0
+  Double : r; // Initial value = 0.00
 process  
   alter i := 9223372036854775807;  //  maximum
   alter n := 18446744073709551615; //  maximum
@@ -135,11 +139,13 @@ return;
 
 ## User types
 
-User types can be _defined_ using symbols ":", "<:" and keyword: "type".
+User types can be _defined_ using symbols "=", "<:" and keyword: "type".
 
 **Syntax:**
 ```
-type type_name: Generic_Class {parameters}
+type type_name = (sub-domain) <: Super_Type;  // define a sub-domain
+type type_name = {attributes} <: Super_Class; // define extra attributes for a super_class
+type type_name = {attributes} <: Generic_Class{generic_parameters};
 
 ```
 **Notes:**
@@ -155,18 +161,17 @@ If not designed properly the coercion can be a fatal mistake. EVE is a safe lang
 **Implicit coercion**
 In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion to accommodate the data types and return an accurate result.  Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a _run-time error_. To prevent this EVE will implement a safe compile-time check.
 
-Implicit conversion is possible and _safe_ in this direction:
+**notes:**
 
-Byte as Word as Binary as Natural as Integer as Single as Double.
-
-Explicit conversion is possible but _unsafe_ in this direction:
-
-Double as  Single as Integer as Natural as Binary as Word as Byte
+* Implicit conversion is possible and _safe_ in this direction:
+* Byte as Word as Binary as Natural as Integer as Single as Double.
+* Explicit conversion is possible but _unsafe_ in this direction:
+* Double as  Single as Integer as Natural as Binary as Word as Byte
 
 ```
 given
-  Integer: a := 2;
-  Double:  b := 1.5; 
+  Integer: a = 2;
+  Double:  b = 1.5; 
 do
   alter b := a;       //  this implicit cast is possible b = 2.0
   alter b := a + 3.5; //  add 3.5 then assign result to b = 5.5
@@ -181,8 +186,8 @@ Explicit coercion is a _forced conversion_. Can be used to convert backwards fro
 Examples of explicit coercion:   
 ```
 given
-  Integer: a := 0;
-  Double : b := 1.5;
+  Integer: a = 0;
+  Double : b = 1.5;
 do
 
 **explicit coercion lose (0.5)
@@ -203,8 +208,8 @@ done;
 
 ```
 given
-  String : s; 
-  Integer : v := 1000;
+  String  : s; 
+  Integer : v = 1000;
 do  
   alter s := format(v); //  explicit coercion s = '1000'
 done;
@@ -218,8 +223,8 @@ This can be ready using the casting function parse(), only if the string contain
 given
   Integer : v; 
   Double  : b;
-  String  : s := '1000';
-  String  : r := '200.02';
+  String  : s = '1000';
+  String  : r = '200.02';
 do
   alter v := parse(s); //  make v = 1000
   alter v := parse(r); //  make v = 200 and decimal .02 is lost
@@ -245,7 +250,7 @@ This is a logical deduction of data type from constant literals.
 ```
 ** Define a list of 10 elements using type inference:
 given
-  List: ls := [0,1,2,3,4,5,6,7,8,9]; //  initialized list of Integer
+  List: ls = [0,1,2,3,4,5,6,7,8,9]; //  initialized list of Integer
 do
   print  ls.type(); //  List[Integer]
   expect ls is List[Integer];
@@ -306,8 +311,8 @@ We can verify the type using "is" operator:
 
 ```
 given
-  Object: r := {name:"test", age:"24"}; 
-  Hash:   t := {('key1':"value1"),('ley2':"value2")};
+  Object: r = {name:"test", age:"24"}; 
+  Hash:   t = {('key1':"value1"),('ley2':"value2")};
 do
   ** check variable types using introspection
   expect r.name  is Text;
@@ -323,7 +328,7 @@ For type introspection we can use type() built-in function:
 
 ```
 given
-  Double: i := 1.5;
+  Double: i = 1.5;
 do
   expect i is Double;
   write "type of i is \s" ? type(i);
@@ -346,7 +351,7 @@ Ordinal type is an ordered list of identifiers that can represent things, ideas,
 Ordinal type is usually a finite set that can be enumerated using a literal. In mathematics a set of items is represented using round brackets () separated by comma. In the next example we define the days of the week in EVE:
 
 ```
-type Name := {identifier:value, ... } <: Ordinal;
+type Name = {identifier:value, ... } <: Ordinal;
 ```
 
 **Usage**
@@ -359,7 +364,7 @@ Ordinal type is suitable for creation of options that can be used for switch sta
 
 **Example:**
 ```
-type Day := {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: Ordinal;
+type Day = {.Sunday:1, .Monday, .Tuesday, .Wednesday, .Thursday, .Friday, .Saturday} <: Ordinal;
 
 routine main():
   String: message;
@@ -396,7 +401,7 @@ Ordinal is a discrete numeral type so it has support for relation operators: { =
 ```
 ** using type Day declared before
 given
-  @day v  := Friday;
+  Day: v = Friday;
 do
   alter  v := v + 1; 
   expect v = Saturday;
@@ -418,14 +423,14 @@ In Latin the "falsus" and "verum" are translated in English to "false" and "true
 **syntax**
 ```
 variable
-  Logic: variable_name; //  default False
+  Logic: name = False; // explicit initialization
 ```
 
 **internal design**
 
 Probably best to define Logic type is Ordinal:
 ```
-type Logic := { .False , .True } <: Ordinal;
+type Logic = { .False , .True } <: Ordinal;
 ```
 
 **Logical expressions**
@@ -447,10 +452,10 @@ A Variant is a polymorphic variable that can have multiple types but only one at
 
 **Syntax:**
 ```
-type Name := {Type | Type | ... } <: Variant;
+type Name = {Type | Type | ... } <: Variant;
 
 variable 
-  Name: v; //  declare single variable
+  Name: v = value; //  declare single variable (with initial value)
 ```
 
 ## Variant Properties
@@ -468,10 +473,10 @@ For this we use a special type Null
 
 **Examples:**
 ```
-type Number: {Integer | Double | Null} <: Variant;
+type Number = {Integer | Double | Null} <: Variant;
 
 variable
-  Number: x := Null;  
+  Number: x; // default value is Null
 ```
 
 **Usability**
@@ -510,19 +515,19 @@ process
 return;
 
 routine main():
-  Integer: y;
-  Double: a, b;
+  Integer: y;   // default zero
+  Double: a, b; // default zero
 process  
   ** invert two  Integer: numbers
   alter x := 10;
   alter y := 20;  
   apply swap(x, y);
-  expect (x = 20) and (y = 10);
+  expect (x == 20) and (y == 10);
   ** invert two Double: numbers
   alter a := 1.5;
   alter b := 2.5;
   apply swap(a, b);
-  expect (a = 2.5) and (b = 1.5);
+  expect (a == 2.5) and (b == 1.5);
 return;
 ```
 
@@ -594,7 +599,7 @@ xx: can be: (am/pm)
 
 ```
 given
-  Time: time1, time2, time3; //  '00:00' 
+  Time: (time1, time2, time3) = "00:00";
 do
   alter time1 := "23:63" as T24;
   alter time2 := "23:63:59,99" as T24;

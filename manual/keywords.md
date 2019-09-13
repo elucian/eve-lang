@@ -17,10 +17,10 @@ EVE use 51 English reserved words, without any abbreviations. You can not use th
 
 | Keyword  | Description
 |----------|-----------------------------------------------------------------------
-| forge    | create a new object reference / object instantiation on the heap
-| alter    | modify underline value of a reference or value of a native variable
-| clone    | copy a reference into another reference, with deep copy operator "::"
-| share    | share  a reference from existing reference
+| store    | create a new object reference / object is allocated on the heap
+| alter    | modify underline value of a reference or underline value or primitive
+| clone    | copy a reference into another reference, making a deep copy
+| share    | share  a reference from existing reference, is allocated on stack
 
 ## Semantic keywords
 

@@ -40,7 +40,7 @@ Keyword "with" establish local region and scope qualifier suppression block.
 ```
 with qualifier do
   ** local statements
-  routine_name();  //  instead of: qualifier.routine_name()
+  apply routine_name();         //  instead of: qualifier.routine_name()
   alter var := function_name(); //  instead of qualifier.function_name()
   ...
 done;
@@ -164,13 +164,13 @@ routine test():
   List: this = ["a","b","c","d","e"];  
 process
   given
-    Integer: i := 0;
+    Integer: i = 0;
     Symbol: e;
   while i < this.length() do
     share  e := this[i];
     alter  i := i + 1;
     when e  >= "c" do
-      print e & (',' if e <> "e")
+      print e & (',' if e is not this.tail)
     done;
   else
     print ('i = ' + i);  
@@ -209,7 +209,7 @@ next;
 * Control variable is auto-incremented using next;
 * Control variable must be declared in local scope;
 
-Example of range iteration:
+Example of range iteration using step ratio 2:
 ```
 given 
   Integer: i;

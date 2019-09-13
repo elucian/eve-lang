@@ -44,7 +44,7 @@ class ClassName(parameters) <: base_class:
   ...
 create
   ** call base class constructor
-  forge object := base_class(object_attribute:argument,...);
+  store object := base_class(object_attribute:argument,...);
   ... 
 remove
   ** object release region
@@ -64,13 +64,13 @@ given
   ClassName: object_name;
 do
   ** create object using constructor
-  forge object_name := ClassName(param:value,...);
+  store object_name := ClassName(param:value,...);
   ...
 done;
 ```
 
 ## Instance
-The _object_ is the current instance that is created using forge or implicit constructor. Object can be initialized explicit in the creation region of the class using this syntax:
+The _object_ is the current instance that is created using store or implicit constructor. Object can be initialized explicit in the creation region of the class using this syntax:
 
 **Syntax:**
 ```
@@ -114,9 +114,9 @@ A class can have a single constructor. A constructor can use decision statements
 ...
 create
   when condition do
-    forge object := base_class(some_arguments);
+    store object := base_class(some_arguments);
   else
-    forge object := base_class(other_arguments);
+    store object := base_class(other_arguments);
   done;
 return;
 ```
@@ -195,7 +195,7 @@ Generic class is used to define a subtype then you can declare one or more objec
 ```
 ** declare new alias type from generic
 type 
-  New_Type: Generic_Class{Type_Name};
+  New_Type = Generic_Class{Type_Name};
 
 ** create new object: using new alias with arguments
 variable

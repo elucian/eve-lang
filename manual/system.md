@@ -29,7 +29,7 @@ read (String: prompt) => String;
 **Example:**
 ```
 routine main():
-  String: v;
+  String: v = ""; //empty string
 process  
   read  (v, "input v:");
   write ("you entered:" & v);

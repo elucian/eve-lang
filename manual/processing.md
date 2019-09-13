@@ -23,9 +23,9 @@ Therefore List union act very similar to append, except we add multiple elements
 routine main():
   List{Symbol}: a = ['a','b','c']; //  initialized collection
   List{Symbol}: b = ['1','2','3']; //  initialized collection
-  List{Symbol}: c; //  deferred initialization require forge
+  List{Symbol}: c; //  deferred initialization require store for initialization
 process
-  forge c := a ++ b;
+  store c := a ++ b;
   print c; //  ['a','b','c','1','2','3'];
 return;
 ```
@@ -38,7 +38,7 @@ The join function receive a list and convert elements into a string separated be
 given
   String: str; //  Null String
 do
-  forge str := join([1,2,3],",");
+  store str := join([1,2,3],",");
   print str; // "1,2,3"
 done; 
 ```
@@ -51,7 +51,7 @@ given
   List{Integer}: lst; //  Null List
 do
   ** initialize new reference for "lst"
-  forge lst := split("1,2,3",","); 
+  store lst := split("1,2,3",","); 
   print lst; // (1,2,3)
 done;
 ```
@@ -111,12 +111,12 @@ The "element" is local to iteration and is used as control variable.
 routine main():
   List{Symbol}: my_list; //  this list is Null
 process  
-  forge my_list := ['a','b','c','d','e'];
+  store my_list := ['a','b','c','d','e'];
   given
     String: e;
   for element in my_list do
     write element;
-    when element = 'd' do
+    when element == 'd' do
       stop; //  early termination;
     else
       write(',');
@@ -149,7 +149,7 @@ Hash and Set are similar. We can visit all elements using _for_ loop:
 routine main():
   Hash: my_map;
 process  
-  forge my_map := {("a":1),("b":2),("c":3)};
+  store my_map := {("a":1),("b":2),("c":3)};
   given
     Symbol: key;
     Binary: value;
@@ -175,10 +175,10 @@ Hashes are sorted in memory by _key_ for faster search. It is more difficult to 
 **example:**
 ```
 routine main():
-  Hash: my_map; //  uninitialized collection
+  Hash: my_map; //uninitialized collection
 process
   ** initialize my_map with values
-  forge my_map := {(1:'a'),(2:'b'),(3:'c')};
+  store my_map := {(1:'a'),(2:'b'),(3:'c')};
   
   ** check if a key is present in a hash collection
   expect 3 in my_map; // pass
@@ -189,9 +189,9 @@ return;
 ```
 ** create new elements in the hash collection
 routine main():
-  Hash(String, String): animals; // empty collection
+  Hash(String, String): animals = {}; //empty collection
 process
-  ** forge is not necessary here
+  ** store is not necessary here
   append animals['Bear'] += 'dog';
   append animals['Kiwi'] += 'bird';
 
@@ -209,7 +209,7 @@ Output:
 
 ```  
 routine main():
-  Hash: animals; //  empty collection
+  Hash: animals = {}; //empty collection
 process
   ** establish element types S:U
   append animals['Rover'] += "dog";
@@ -241,7 +241,7 @@ Strings can be concatenated using:
 ```
 ** this is example of string concatenation
 given
-  String: str := "";  //  Null String
+  String: str = "";  //Empty String
 do
   ** set string value using different operators
   alter str := "this " & "_string";  //  "this_string"
@@ -257,7 +257,7 @@ Two strings can be concatenated using concatenation operator "/" or "\\". This o
 
 ```
 given
-  String: s = ""; //initialization is redundant
+  String: s = ""; //empty string
 do  
   alter s := 'te/' / '/st'; //  "te/st" Linux
   alter s := 'te/' \ '/st'; //  "te\st" Windows

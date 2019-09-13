@@ -42,7 +42,7 @@ module test:
 
 # Main routine: ( this is title)
 routine main():
-  Integer a;
+  Integer: a = 0;
 process
   ** Expression comment /*...*/
   alter a := a + 1 /* *(a - 1) */ -1;  
@@ -151,11 +151,11 @@ variable
 ```
 variable 
   ** two integer numbers
-  Integer: a;
-  Integer: b := 1;
+  Integer: a = 0;
+  Integer: b = 1;
   ** multiple Double numbers
-  Double: d := 2.5; 
-  Double: x,y,z := 0.0;
+  Double: d = 2.5; 
+  Double: x,y,z = 0.0;
 ```
 
 **zero value**
@@ -176,7 +176,7 @@ alter identifier := function_name(); //  mutate value / reset value
 
 **clone:**
 
-To make a clone/copy underline value from a reference you must use symbol "::" (clone).
+To make a clone/copy underline value from a reference you must use _clone_ keyword.
 
 **Syntax:**
 ```
@@ -236,8 +236,8 @@ The most simple block statement start with "do" and end with "done"
 ```
 given
   ** Integer numbers
-  Integer: a := 0;
-  Double:  b := 1.5; 
+  Integer: a = 0;
+  Double : b = 1.5; 
 do
   print  (a, b);
   expect (a = 0, b = 1.5);

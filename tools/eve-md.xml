@@ -24,10 +24,10 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">read write print item process recover cleanup remove from use create module function routine method class feature augment return step </Keywords>
-            <Keywords name="Keywords2">do with given begin over when case else done quest match other while repeat for next</Keywords>
-            <Keywords name="Keywords3">import inherit alter store forge clone share reset &#x000D;&#x000A;constant variable alias cursor view record</Keywords>
-            <Keywords name="Keywords4">run act exit raise expect solve retry resume stop skip quit rest continue abort pass fail&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords1">module read write print item process recover release remove from use create routine method class feature augment return trial step</Keywords>
+            <Keywords name="Keywords2">with given do done when else case check match cycle while for repeat next</Keywords>
+            <Keywords name="Keywords3">import inherit alter store save clone share reset &#x000D;&#x000A;constant variable function type alias cursor view record</Keywords>
+            <Keywords name="Keywords4">apply begin defer exit raise expect retry resume stop skip rest continue abort pass fail over&#x000D;&#x000A;</Keywords>
             <Keywords name="Keywords5">select insert update delete append&#x000D;&#x000A;ascending descending commit rollback discard where order by group join into limit offset open close fetch analyze</Keywords>
             <Keywords name="Keywords6">YDM DMY MDY T12 T24&#x000D;&#x000A;Null True False &#x000D;&#x000A;result object error&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
             <Keywords name="Keywords7">@ $&#x000D;&#x000A;</Keywords>
@@ -36,12 +36,12 @@
         </KeywordLists>
         <Styles>
             <WordsStyle name="DEFAULT" fgColor="C0C0C0" bgColor="400000" fontName="DejaVu Sans Mono" fontStyle="0" fontSize="20" nesting="0" />
-            <WordsStyle name="COMMENTS" fgColor="808040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="256" />
+            <WordsStyle name="COMMENTS" fgColor="808040" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="LINE COMMENTS" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="NUMBERS" fgColor="C0C0C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS1" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS2" fgColor="0080C0" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
-            <WordsStyle name="KEYWORDS3" fgColor="FF00FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="8080FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS4" fgColor="FF0000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS5" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />
             <WordsStyle name="KEYWORDS6" fgColor="FF80FF" bgColor="FFFFFF" fontName="" fontStyle="0" nesting="0" />

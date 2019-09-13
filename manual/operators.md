@@ -46,12 +46,12 @@ Eve use two symbols to create supplementary operators.
 | `!.` | Domain exclude lower limit
 | `!!` | Domain exclude both limits
 | `=+` | Outer join operator used in data "select" statement
-| `<:` | Define sub-type for a class 
+| `<:` | Define sub-type for a class or super-type
 | `<+` | Append to the end of a collection
 | `+>` | Append to the beginning of a collection
 | `<<` | Shift ordered collection to left with n: X := C << n
 | `>>` | Shift ordered collection to right with n: Y := C >> n 
-| `:=` | Assign value of expression: Used with: { forge, clone, reset, share }
+| `:=` | Assign value of expression: Used with: { store, clone, reset, share }
 
 
 ## String: delimiters
@@ -90,19 +90,13 @@ EVE use two symbols to create a additional operators.
 
 |Symbol | Description
 |-------|--------------------------------------------------------------------------
-| `=`   | Equal \| deep comparison  \| (equal values & attributes)
-| `<>`  | Different \| deep comparison \| (different value & attributes) 
-| `==`  | Shallow comparison \| (same objects or data types)
-| `!=`  | Shallow comparison \| (different objects or data types)
+| `==`  | Equal \| deep comparison
+| `!=`  | Different value \| (deep comparison)
 | `> `  | Greater than value
 | `< `  | Less than value
 | `>=`  | Greater than or equal to values
 | `<=`  | Less than or equal to values
 
-
-**Notes:**   
-* For different value use: not (a = b)  or (a <> b)
-* For different location:  not (a == b) or (a != b)
  
 ## Collection operators
 
@@ -124,13 +118,13 @@ In following table: `A, B, C` are collections and `x` is a member:
         
 ## Logical operators
 
-These operators are expected logical values T = true, F = false
+These operators are expected logical values T = True, F = False
 
 | Symbol | Description
-|--------|----------------------------------------------------------------
+|--------|--------------------------------------------------------------------
 |  if    | conditional operator
-|  is    | check element is of Type
-|  is not| check element is not of Type
+|  is    | check element is of Type or same reference (object)
+|  is not| check element is not of Type or different references (objects)
 |  in    | logic belong to: instead of "∈"
 |  not in| logic not belong to: instead of "!∈"
 |  not   | logic NOT (negation) 
