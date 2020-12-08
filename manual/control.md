@@ -1,13 +1,10 @@
 ## Control Flow
 
-EVE has only 7 control statements: 
+EVE has 6 control statements: 
 
-* [given](#given)
-* [with](#with)
-* [when](#when)
-* [case](#case)
-* [check](#check)
-* [cycle](#while)
+* [task](#task)
+* [if](#if)
+* [swith](#swith)
 * [while](#while)
 * [for](#for-do)
 
@@ -16,126 +13,75 @@ EVE has only 7 control statements:
 * keyword _given_ start a local scope for any block statement
 * one block is ending with keywords: { done \| next \| repeat}
 
-## Given
+## task
 
 Is used to define a local scope for any block of code.
 
 **Pattern:**
 ``` 
-given 
+task 
   Type_name: var_name; //  local variable  
   ...
-do
+begin
   ** block statements;
   ...
-  abort if condition;  
-done;
-```
-
-## With
-
-Keyword "with" establish local region and scope qualifier suppression block. 
-
-**syntax**
-```
-with qualifier do
-  ** local statements
-  apply routine_name();         //  instead of: qualifier.routine_name()
-  alter var := function_name(); //  instead of qualifier.function_name()
-  ...
-done;
+  if condition then abort;
+end task;
 ```
 
 qualifier ::=  ModuleName | ClassName | RecordName
 
-## When
+## if
 
-Keyword "when" in conjunction with {do and else} declare a multi-path block selector;
+Keyword "when" in conjunction with {then and else} declare a multi-path block selector;
 
 **patterns**
 
 1.single path selector
 ```
-when expression do
+if expression begin
   ** single path
   ...
-done;
+end if;
 ```
   
 2.dual path selector
 ```  
-when expression do
+if expression begin
   ** true path
   ...
 else
   ** false path
   ...
-done;
+end if;
 ```
   
 3.nested selector 
 ```  
-when expression do
+if expression begin
   ** direct path
   ...
-  when expression do
+  if expression begin
    ** nested path
    ...
-  done;
-done;
+  end if;
+end if;
 ```
 
-## Case
+## Switch
 
 It is a multi-path selector based on multiple conditions:
 
-case condition do
-  ** first case  
-case condition do
-  ** second case
-case condition do
-  ** third case
-else
-  ** default case  
-done;
-
-## Check
-
-Using "check" and "match" you can create a multi-path selector.
-
-```
-check value:
-  match c do
-    ...
-  match c1,c2... do
-    ...
-else
-  ...
-done;
-```
-
-**Note:**
-* it can match only constants,
-* it can match a list of constants,
-* it can not match an expressions,
-* it can not match domain of values,
-* execution stop on first match or else.
-
-## Cycle
-
-Execute a block of code until is interrupted using "stop"
-
-**Syntax:**
-```
-cycle
-  ** shortcut iteration
-  skip if condition;
-  ...
-  ** early interruption
-  stop if condition;
-  ...
-repeat;
-```
+switch x begin
+    case condition(x) go
+        ** first case  
+    case condition(x) go
+        ** second case
+    case condition(x) go
+        ** third case
+    else
+        ** default case  
+end switch;
 
 ## While
 
@@ -143,39 +89,39 @@ Execute a block of code as long as one condition is true.
 
 **Syntax:**
 ```
-while condition do
+while condition begin
   ** shortcut iteration
-  skip if condition;
+  if condition then repeat;
   ...
   ** early interruption
-  stop if condition;
+  if condition then break;
   ...
 else
   ** alternative path  
   ...
-repeat;
+end while;
 ```
 
 **example**
 
 ```
 ** example of collection iteration
-routine test(): 
+method test(): 
   List: this = ["a","b","c","d","e"];  
-process
-  given
-    Integer: i = 0;
-    Symbol: e;
-  while i < this.length() do
+  Integer: i = 0;
+  Symbol: e;  
+begin
+  while i < this.length() 
+  begin
     share  e := this[i];
     alter  i := i + 1;
-    when e  >= "c" do
+    if e  >= "c" then
       print e & (',' if e is not this.tail)
-    done;
+    end if;
   else
     print ('i = ' + i);  
-  repeat;
-return;  
+  end while;
+end method;  
 ```
 
 **output**
@@ -184,24 +130,23 @@ return;
 i = 5
 ```
 
-## For do
+## For
 
 This block use one or more control variables to visit elements in a collection or domain.
 
 **Pattern:**
 ``` 
-given 
-  Integer: var;
-for var in (min..max) do
+for var in (min..max) 
+begin
   ** block statements;
   ...
   ** next iteration
-  skip if condition;
+  if condition then repeat;
   ...  
   ** early interruption
-  stop if condition;
+  if condition then break 
   ...
-next;
+end for;
 ```
 
 **Notes:**    
@@ -211,13 +156,16 @@ next;
 
 Example of range iteration using step ratio 2:
 ```
-given 
+task
   Integer: i;
-for i in (1..10:2) do
-  ** write only odd numbers
-  write i;
-  write ',' if (i < 10);
-next;
+begin  
+  for i in (1..10:2) 
+  begin
+    ** write only odd numbers
+    write i;
+    write ',' if (i < 10);
+  end for;
+end task;  
 print;
 ```
 > 1,3,5,7,9

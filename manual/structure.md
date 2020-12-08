@@ -1,10 +1,10 @@
 ## EVE Structure
 
-Next bookmarks will lead you to the main concepts required to understand EVE projects.
+Next bookmarks will lead you to the main concepts required to understand EVE.
 
 **Bookmarks:**
 
-* [Modules](#modules)
+* [Package](#package)
 * [Library](#library)
 * [Regions](#regions)
 * [Globals](#globals)
@@ -17,19 +17,19 @@ Next bookmarks will lead you to the main concepts required to understand EVE pro
 * [Work-flow](#work-flow)
 * [Execution](#execution)
 
-## Modules
+## Packages
 
-Modules are source files having extension: *.eve. Module names are using lowercase letters, can also contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long.
+Packages are source files having extension: *.eve. Module names are using lowercase letters, can also contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The package name can be 30 characters long.
 
 **members**
 
 * public member identifier start with "." prefix;
-* one module can use public members from other modules;
-* one module can have public member used in other modules;
+* one package can use public members from other packages;
+* one package can have public member used in other packages;
 * member identifier names can be 30 characters long;
 
 ### Drivers
-A _driver_ is the main application module. It has the role to lead the application main thread. When _driver_ execution is over the application give control back to the operating system.
+A _driver_ is the main application package. It has the role to lead the application main thread. When _driver_ execution is over the application give control back to the operating system.
 
 **notes:**
 
@@ -39,35 +39,35 @@ A _driver_ is the main application module. It has the role to lead the applicati
 * A driver can be terminated early using keywords: _halt_, or _fail_.
 
 
-## Main module
+## Main package
 
-Module that contains routine main() is the application main module. Main module can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
+Module that contains routine main() is the application main package. Main package can have associated one or more configuration files. The configuration file contain parameter:value pairs used to setup: _system constants_.
 
 **properties**
 
-* main module is independent, can not be imported in other modules or suites;
-* main module receive parameters as constants from a configuration file;
-* main module do not have public methods and do not have output variables;
+* main package is independent, can not be imported in other packages or suites;
+* main package receive parameters as constants from a configuration file;
+* main package do not have public methods and do not have output variables;
 
 ## Library
 
-A _library_ is a shared folder containing reusable modules.
+A _library_ is a shared folder containing reusable packages.
 
 * library contain generic functionality and can be shared between multiple projects;
-* using import several modules can be loaded from a folder at once;
+* using import several packages can be loaded from a folder at once;
 * circular import is possible: run-time environment has a protection against infinite recursion;
 * after import you can call public members of a library using _dot notation_;
 
 ## Regions
 
-A module file is divided into regions using keywords: {import, define, global, class, routine} 
+A package file is divided into regions using keywords: {import, define, global, class, routine} 
 
-**module syntax**
+**package syntax**
 ```
 +-----------------------------------------
-|   Header comments: module purpose      |
+|   Header comments: package purpose     |
 +----------------------------------------+
-module main:
+package main:
 
 ** global region 
 $sys_con = "value"; // system constant
@@ -86,7 +86,7 @@ alias
 
 ** shared constants
 constant
-  TypeName: NAME = value; //  constant (UPPERCASE NAMES)
+  TypeName: NAME = value; // constant (UPPERCASE NAMES)
   
 ** shared variables
 variable
@@ -105,18 +105,21 @@ class ClassName(params) <: Superclass:
 return;
 
 ** routine declaration
-routine name(params):
+procedure name(params):
   ...
 return;
 
 ** executable statements
-given
+task    
   ...
-do  
+begin
   ...
-done;
+end task;
 
-module. // end module main
+process
+   // package initialization process
+   ...
+return.
 ```
 
 ### Rogue statement
@@ -130,7 +133,7 @@ Order of regions by default is: {globals, import, type, constant, variable, func
 
 ## Globals
 
-Globals are declared in first module region, with zero space indentation: 
+Globals are declared in first package region, with zero space indentation: 
 
 **declare**
 
@@ -141,7 +144,7 @@ Global members are visible in application with no prefix.
 
 ## System constants
 
-System constants start with prefix "$". Usually are loaded from a configuration file (*.cfg) and do not need to be declared explicit in a _constant_ region. They are known by EVE runtime and can be used in all modules. 
+System constants start with prefix "$". Usually are loaded from a configuration file (*.cfg) and do not need to be declared explicit in a _constant_ region. They are known by EVE runtime and can be used in all packages. 
 
 **Note:** 
 * System constants can be defined in a configuration file
@@ -170,7 +173,7 @@ System variables are starting with prefix "@" and are defined in standard librar
 
 ## Import region
 
-Is used to include members from several other modules into current module: 
+Is used to include members from several other packages into current package: 
 
 **syntax**
 ```
@@ -241,7 +244,7 @@ routine name(Type: parameter, Type < result...):
   ...
 process
   ** executable region
-  exit if condition;
+  if condition then exit;
   ...
   result := value; //result parameter
 return;
@@ -258,7 +261,7 @@ return;
 A routine is extending the language with domain specific algorithms. It must have suggestive names so that other developers can understand its purpose. The methods are doing something, therefore the best names for methods are verbs.
 
 **Main routine**
-If a module is executable using "run" command, it must contain a "main" routine. This routine is executed first. If main routine is missing then the module is a library and can be imported in other modules but can not be executed using run command.
+If a package is executable using "run" command, it must contain a "main" routine. This routine is executed first. If main routine is missing then the package is a library and can be imported in other packages but can not be executed using run command.
 
 **Parameters**
 Formal parameters are defined in round brackets () separated by comma. Each parameter must have type and name. Using parameters require several conventions to resolve many requirements. General syntax for parameter name is:
@@ -288,7 +291,7 @@ One routine can receive multiple arguments of the same type separated by comma i
 
 **example**
 ```
-routine test(List{String} *args):
+routine test(List{String} *args) has
   write args;
 return;
 
@@ -297,12 +300,12 @@ apply test ("a","b","c"); // use 3 arguments
 apply test ("a","b");     // use 2 arguments
 
 ** you can use operator "*" to _spread_ collection elements
-given
+task    
   Set{Integer}: argument;
-do
+begin
   store argument := {1, 2, 3};
   apply test (*argument);  // spread collection elements
-done;  
+end task;  
 ```
 
 **Routine context**
@@ -319,11 +322,11 @@ Routines can be used like statements. A routine call can be done using routine n
 ```
 
 argument_value ::= constant literal, expression or variable
-argument_list  := agument_name:argument_value, ...
+argument_list  ::= agument_name:argument_value, ...
 
 
 **Routine termination**
-A routine end with keyword return. When routine is terminated, program execution will continue with the next statement after the routine call. Keyword _exit_ can terminate a routine early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a routine using _quit_ but this will also terminate the main module,
+A routine end with keyword return. When routine is terminated, program execution will continue with the next statement after the routine call. Keyword _exit_ can terminate a routine early and no error is signaled. To signal an error you must use _raise_ keyword. You can terminate a routine using _quit_ but this will also terminate the main package,
 
 **Example:**
 ```
@@ -412,7 +415,7 @@ return;
 Functions are declared in a region that start with keyword: "function".
 
 ```
-function 
+function* 
   TypeName: name(parameters) => (expression);
 ```
 
@@ -429,12 +432,11 @@ The call for a function is using name of the function and round brackets () for 
 
 **pattern:**
 ``` 
-function
-  TypeName: function_name(Type : param = value,...) => (expression);
+function TypeName: function_name(Type : param = value,...) => (expression);
   
-given 
+task 
   TypeName: result; //not initialized (require store)
-do  
+begin
   ** call with no arguments:
   store result := function_name();
   
@@ -443,7 +445,7 @@ do
   
   ** call using parameter names and pair-up operator ":"
   alter result := function_name(parameter:value ...);
-done;  
+end task;  
 ```
 
 **note:**
@@ -476,6 +478,7 @@ return;
 ## Expressions
 
 A ternary operator is "if". Can be used with conditional expressions to return one value or other.   
+
 **syntax**
 ```
 alter a := (value if condition, value)
@@ -483,24 +486,24 @@ alter a := (value if condition, value)
 
 **example**
 ```
-write ("true" if True, "false"); // true
+write ("true" ? True, "false"); // true
 ```
+## λ expressions
 
-### λ expressions
-
-An λ expression we can use multiple conditionals nodes separated by comma:
+An λ expression we can use multiple conditionals nodes separated by comma
 
 **syntax:**
 ```
-  identifier := (value if condition,...,default_value)
+  identifier := (value if condition,... default_value)
 ```
 
 **nodes**
-* each node is evaluated until one is true,
-* each node can return one single value,
-* the last node do not use a condition but ","
+* each node is evaluated until one is true;
+* each node can return one single value;
+* the last node do not use a condition but ",";
 
-**example**
+**example:**
+
 ```
 routine main():
   Integer: p1, p2, x;
@@ -508,21 +511,21 @@ process
   alter p1 := 2;
   alter p2 := 1;
   ** using λ expression  
-  alter x  := (0 if p1 == 0, 0 if p2 == 0, p1+p2);
+  alter x  := (0 ? p1 == 0, 0 ? p2 == 0, p1+p2);
   print x; // expect: 3 
 return;
 ```
 
 **example**
 ```
-given
+task
   Logic:   b = False;
   Integer: v = 0;   
-do
-  alter  v := (1 if b, 2);   
+begin
+  alter  v := (1 ? b, 2);   
   expect v == 2;  
   print  v;   
-done; 
+end task; 
 ```
 
 ## Dispatch
@@ -555,16 +558,16 @@ routine main():
 process
   ** initialization
   ...
-  step c1("description") do
+  step c1("description") try
     ...
-    exit if condition;
-  step c2("description") do
+    if condition then exit;
+  step c2("description") try
     ...
-    pass if condition;    
-  step c3("description") do
+    if condition then pass;    
+  step c3("description") try
     ...
-    fail if condition;    
-  step c4("description") do    
+    if condition then fail 
+  step c4("description") try
     ...
 recover  
   ** exception region
@@ -582,11 +585,11 @@ return;
 * exit,   will terminate the routine early
 * retry,  will continue with a previous or backward specified case
 * skip,   will continue with a next or specific forward case
-* resume, will continue with next case after the one that failed
+* resume  will continue with next case after the one that failed
 
 ## Execution
 
-EVE modules are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console mode you can _run_ only a one module. In service mode you can _run_ multiple sessions with different startup parameters. Each session is independent and can _run_ one single module. 
+EVE packages are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console mode you can _run_ only a one package. In service mode you can _run_ multiple sessions with different startup parameters. Each session is independent and can _run_ one single package. 
 
 Service mode is using a general configuration file: eve.cfg. This file contains information about all application locations and configuration files for each session. After the service starts this file is parsed and each applications start automatically. The service will create a log file for each application.
 
@@ -610,24 +613,21 @@ When a program is executed the driver is located and executed first. If a progra
 
 One aspect is executed from driver or from another aspect. When executed rogue statements of an aspect are executed top down in sequential order. You can not run an aspect from itself. Recursive aspects are not supported.
 
-**module:**
+**package:**
 
-The driver or aspect can load numerous modules. After loading, all public elements can be executed on demand. Before execution the driver can interact with the user to ask for input. After executing it can print feedback and reuse or 
+The driver or aspect can load numerous packages. After loading, all public elements can be executed on demand. Before execution the driver can interact with the user to ask for input. After executing it can print feedback and reuse or 
 
 
 **using exit**
 
-Using exit from _main_ will end module execution.
+Using exit from _main_ will end package execution.
 
 **Example:**
 ```
 ** using when prefix condition
-when condition do
+if condition then
   exit;
-done;
-
-** using if postfix condition
-exit if condition;
+end if;
 ```
 
 **using over**
@@ -637,12 +637,9 @@ This is a way to release all locked resources and terminate the application sess
 **Example:**
 ```
 ** using when prefix condition
-when condition do
+if condition then
   over;
-done;
-
-** using if postfix condition
-over if condition;
+end if;
 ```
 
 **Read next**: [Syntax Overview](overview.md)

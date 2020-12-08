@@ -59,14 +59,14 @@ A class can have parameters that receive values during initialization. You can d
 
 **example**
 ```
-given
+task
   ** declare object from arbitrary class
   ClassName: object_name;
-do
+begin
   ** create object using constructor
   store object_name := ClassName(param:value,...);
   ...
-done;
+end task;
 ```
 
 ## Instance
@@ -113,11 +113,11 @@ A class can have a single constructor. A constructor can use decision statements
 ```
 ...
 create
-  when condition do
+  if condition then
     store object := base_class(some_arguments);
   else
     store object := base_class(other_arguments);
-  done;
+  end if   ;
 return;
 ```
 
@@ -180,7 +180,7 @@ A class can receive type as parameters. This allows to create generic algorithms
 
 **Generic Class:**
 ```
-class {Generic_Type,...} Generic_Name(Generic_TypeName: parameter,...) <: Base_Class:
+class {Generic_Type,...} Generic_Name(Generic_TypeName: parameter,...)<:Base_Class: 
   ** declarations
   ...
 create
