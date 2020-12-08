@@ -7,7 +7,7 @@
 ΞVΞ stands for: Extract Validate Export:
 
 | # | Goal Summary  |  Details
-|---|---------------|--------------------------------------------------------------------------
+|---|---------------|------------------------------------------------------------
 | 1 | Extract       | Enable data extraction from multiple databases
 | 2 | Validate      | Enable automatic data verification and validation 
 | 3 | Export        | Can create external files in different data formats
@@ -44,6 +44,8 @@ process
   alter v_var := add(param1, param2);
   con.print ("result:",v_var);
 return;
+
+end driver;
 ```
 
 **Syntax Attributes**
@@ -60,7 +62,7 @@ In previous example you can observe following attributes:
 
 ## Compared to Java
 
-* EVE is a declarative language unlike Java that is object oriented. In EVE you can use objects, methods, routines, functions, expressions and statements. You can create new classes if you need to, but most of the time you don't. 
+* EVE is a declarative language unlike Java that is object oriented. In EVE you can use objects, methods, routines, functions, expressions and statements. You can create new classes if you need to, but most of the time you don''t. 
 * In EVE symbol equal "=" is performing a deep value comparison while "==" perform an shallow comparison. In Java there is no deep comparison operator, only shallow comparison. 
 * In EVE assign operator is ":=" inherited from Ada. Operator "=" can be used for initialize constants, variables or parameters. In logical expressions "=" will create a logical response. Do not confound the two.
 * In Java you must use "New" keyword to initialize an object. But this must be used after "=" and is not a function. Its design is inconsistent with imperative pattern. Most beginners will forget to use this keyword because its inconsistent design. EVE use keyword "forge" to create new objects and this is an imperative keyword.

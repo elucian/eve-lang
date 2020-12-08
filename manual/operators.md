@@ -20,8 +20,8 @@ In the syntax description "..." represent content and ",,," represents a sequenc
 |-------|-------------------------------------------------------------------
 | `!`   | Negation symbol
 | `?`   | String template find & replace
-| `#`   | Title comment a module level (not indented)
-| `$`   | System constant prefix
+| `#`   | Comment (title) at beggining of line (not indented)
+| `$`   | Platform (environment) variable prefix
 | `@`   | System variable prefix
 | `;`   | Statement separator \| End of statement
 | `:`   | Define something   \| Pair-up operator (a:b)

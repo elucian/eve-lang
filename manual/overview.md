@@ -38,7 +38,7 @@ EVE is a free form language inspired from Ada, Java and Ruby.
 |  Boxed comments for headers       |
 |  it can span multiple lines       |
 ------------------------------------+
-module test:
+package test:
 
 # Main routine: ( this is title)
 routine main():
@@ -48,7 +48,7 @@ process
   alter a := a + 1 /* *(a - 1) */ -1;  
 return;  
 
-module. // end of module
+end package. // end of package
 *************************************
 **  Boxed comment for old printer  **
 *************************************
@@ -136,7 +136,7 @@ A variable is represented by an identifier, and is pair-up with a data type usin
 type Type_name := super_type {parameters};
 
 ** shared variables
-variable
+global
   ** use type to define a variable
   Type_name: var_name;
   ** with specific value and type
@@ -149,7 +149,7 @@ variable
 
 **examples**
 ```
-variable 
+global
   ** two integer numbers
   Integer: a = 0;
   Integer: b = 1;
@@ -234,14 +234,14 @@ One statement can be declarative or imperative.
 
 The most simple block statement start with "do" and end with "done"
 ```
-given
+local
   ** Integer numbers
   Integer: a = 0;
   Double : b = 1.5; 
-do
+begin
   print  (a, b);
   expect (a = 0, b = 1.5);
-done;
+end;
 ```
 
 ## Multiple lines
@@ -253,10 +253,10 @@ One expression can span multiple lines.
 
 **example**
 ```
-given 
+local
   Integer: x;
   Hash   : a; 
-do  
+begin
   ** multi-row expression
   alter x := 1 + 2 +
              3 + 4 + 5;
@@ -267,7 +267,7 @@ do
          (3:4),
          (5:6)
         };
-done;
+end local;
 ```
 
 **Read next:**  [Data Types](types.md)

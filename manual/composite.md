@@ -305,7 +305,7 @@ The preferred font for EVE programming is "DejaVu Sans Mono".
 
 Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In EVE all exceptions are considered errors.
 
-The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable #Error contains several members that are fill-in by the EVE program when exception is created: 
+The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable @error contains several members that are fill-in by the EVE program when exception is created: 
 ```
 ** system exception type
 type .Exception = { 

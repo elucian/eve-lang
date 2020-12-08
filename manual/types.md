@@ -207,12 +207,12 @@ done;
 **Number to a string**
 
 ```
-given
+task
   String  : s; 
   Integer : v = 1000;
-do  
+begin
   alter s := format(v); //  explicit coercion s = '1000'
-done;
+end task;
 ```
 
 **string: to a number**
@@ -220,16 +220,16 @@ done;
 This can be ready using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception. 
 
 ```
-given
+local
   Integer : v; 
   Double  : b;
   String  : s = '1000';
   String  : r = '200.02';
-do
+begin
   alter v := parse(s); //  make v = 1000
   alter v := parse(r); //  make v = 200 and decimal .02 is lost
   alter b := parse(r); //  make b = 200.02 and decimal .02 is preserved
-done;
+end;
 ```
 
 **Note:** 
