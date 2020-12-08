@@ -2,7 +2,6 @@
 
 EVE has 6 control statements: 
 
-* [task](#task)
 * [if](#if)
 * [swith](#swith)
 * [while](#while)
@@ -12,22 +11,6 @@ EVE has 6 control statements:
 
 * keyword _given_ start a local scope for any block statement
 * one block is ending with keywords: { done \| next \| repeat}
-
-## task
-
-Is used to define a local scope for any block of code.
-
-**Pattern:**
-``` 
-task 
-  Type_name: var_name; //  local variable  
-  ...
-begin
-  ** block statements;
-  ...
-  if condition then abort;
-end task;
-```
 
 qualifier ::=  ModuleName | ClassName | RecordName
 
@@ -39,7 +22,7 @@ Keyword "when" in conjunction with {then and else} declare a multi-path block se
 
 1.single path selector
 ```
-if expression begin
+if expression then
   ** single path
   ...
 end if;
@@ -47,7 +30,7 @@ end if;
   
 2.dual path selector
 ```  
-if expression begin
+if expression then
   ** true path
   ...
 else
@@ -57,31 +40,51 @@ end if;
 ```
   
 3.nested selector 
-```  
-if expression begin
+``` 
+local
+  // defome local scope 
+if expression then
   ** direct path
   ...
-  if expression begin
-   ** nested path
+  if expression then
+  ** nested path
    ...
   end if;
 end if;
 ```
 
-## Switch
+4.ladder
 
-It is a multi-path selector based on multiple conditions:
+``` 
+if expression then
+  ** direct path
+  ...
+orif expression then
+   ** second path
+   ...
+orif expression then
+   ** third path
+   ...  
+else
+   ** alternative path
+end if;
+```
+ 
+## loop
 
-switch x begin
-    case condition(x) go
-        ** first case  
-    case condition(x) go
-        ** second case
-    case condition(x) go
-        ** third case
-    else
-        ** default case  
-end switch;
+Execute a block of code until a break statement is encounter.
+
+**Syntax:**
+```
+label: loop
+  ** shortcut iteration
+  if condition then repeat;
+  ...
+  ** early interruption
+  if condition then break;
+  ...
+end loop label;
+```
 
 ## While
 
@@ -89,7 +92,7 @@ Execute a block of code as long as one condition is true.
 
 **Syntax:**
 ```
-while condition begin
+while condition loop
   ** shortcut iteration
   if condition then repeat;
   ...
@@ -99,29 +102,29 @@ while condition begin
 else
   ** alternative path  
   ...
-end while;
+end loop;
 ```
 
 **example**
 
 ```
 ** example of collection iteration
-method test(): 
+routine test(): 
   List: this = ["a","b","c","d","e"];  
   Integer: i = 0;
   Symbol: e;  
-begin
-  while i < this.length() 
-  begin
-    share  e := this[i];
+process
+  while i < this.length() loop
+  share  e := this[i];
     alter  i := i + 1;
     if e  >= "c" then
-      print e & (',' if e is not this.tail)
+      write e & (',' if e is not this.tail)
     end if;
   else
-    print ('i = ' + i);  
-  end while;
-end method;  
+    write ('i = ' + i);  
+  end loop;
+  print;
+return;  
 ```
 
 **output**
@@ -136,8 +139,7 @@ This block use one or more control variables to visit elements in a collection o
 
 **Pattern:**
 ``` 
-for var in (min..max) 
-begin
+for var in (min..max) loop
   ** block statements;
   ...
   ** next iteration
@@ -146,7 +148,7 @@ begin
   ** early interruption
   if condition then break 
   ...
-end for;
+end loop;
 ```
 
 **Notes:**    
@@ -156,16 +158,11 @@ end for;
 
 Example of range iteration using step ratio 2:
 ```
-task
-  Integer: i;
-begin  
-  for i in (1..10:2) 
-  begin
-    ** write only odd numbers
-    write i;
-    write ',' if (i < 10);
-  end for;
-end task;  
+for i in (1..10:2) loop
+  ** write only odd numbers
+  write i;
+  write ',' if (i < 10);
+end loop;
 print;
 ```
 > 1,3,5,7,9
