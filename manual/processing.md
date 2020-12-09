@@ -116,7 +116,7 @@ process
     String: e;
   for element in my_list do
     write element;
-    when element == 'd' do
+    if element == 'd' do
       stop; //  early termination;
     else
       write(',');

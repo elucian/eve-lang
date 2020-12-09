@@ -1,13 +1,13 @@
 ## Control Flow
 
-EVE has 6 control statements: 
+EVE has 6 control statements:
 
 * [if](#if)
 * [swith](#swith)
 * [while](#while)
 * [for](#for-do)
 
-**Notes:** 
+**Notes:**
 
 * keyword _given_ start a local scope for any block statement
 * one block is ending with keywords: { done \| next \| repeat}
@@ -27,9 +27,9 @@ if expression then
   ...
 end if;
 ```
-  
+
 2.dual path selector
-```  
+```
 if expression then
   ** true path
   ...
@@ -38,11 +38,11 @@ else
   ...
 end if;
 ```
-  
-3.nested selector 
-``` 
+
+3.nested selector
+```
 local
-  // defome local scope 
+  // defome local scope
 if expression then
   ** direct path
   ...
@@ -55,7 +55,7 @@ end if;
 
 4.ladder
 
-``` 
+```
 if expression then
   ** direct path
   ...
@@ -64,12 +64,12 @@ orif expression then
    ...
 orif expression then
    ** third path
-   ...  
+   ...
 else
    ** alternative path
 end if;
 ```
- 
+
 ## loop
 
 Execute a block of code until a break statement is encounter.
@@ -100,7 +100,7 @@ while condition loop
   if condition then break;
   ...
 else
-  ** alternative path  
+  ** alternative path
   ...
 end loop;
 ```
@@ -109,22 +109,22 @@ end loop;
 
 ```
 ** example of collection iteration
-routine test(): 
-  List: this = ["a","b","c","d","e"];  
+routine test():
+  List: this = ["a","b","c","d","e"];
   Integer: i = 0;
-  Symbol: e;  
+  Symbol:  e;
 process
   while i < this.length() loop
-  share  e := this[i];
+    share  e := this[i];
     alter  i := i + 1;
     if e  >= "c" then
       write e & (',' if e is not this.tail)
     end if;
   else
-    write ('i = ' + i);  
+    write ('i = ' + i);
   end loop;
   print;
-return;  
+return;
 ```
 
 **output**
@@ -138,20 +138,20 @@ i = 5
 This block use one or more control variables to visit elements in a collection or domain.
 
 **Pattern:**
-``` 
+```
 for var in (min..max) loop
   ** block statements;
   ...
   ** next iteration
   if condition then repeat;
-  ...  
+  ...
   ** early interruption
-  if condition then break 
+  if condition then break
   ...
 end loop;
 ```
 
-**Notes:**    
+**Notes:**
 
 * Control variable is auto-incremented using next;
 * Control variable must be declared in local scope;
