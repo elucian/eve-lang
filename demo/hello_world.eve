@@ -1,0 +1,9 @@
+driver hello_world:
+
+import 
+    con := $lib.console;
+
+routine main:    
+process
+    con.print ("Hello World!");
+return;
