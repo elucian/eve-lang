@@ -1,20 +1,20 @@
 # comments in EVE language
-
 +-------------------------------
-|  New style comment boxes     |
+|  New style boxed comments    |
 +------------------------------+
 driver comment_demo:
+
+global Integer a = 0;
 
 *******************************
 ** old style boxed comments  **
 *******************************
-
-# Main routine: ( this is mandatory )
-routine main:
-    Integer a = 0;
 process
-    ** Next we use expression comment:
+    ** Next we use expression comments:    
     a := a + 1 /* *(a - 1) */ -1;
-return;
-
-end driver. // end of module
+    
+    /* expression comments are similar to C++
+       comments. we use expression comments
+       for commenting out code for debug */
+       
+return; // end of line comment

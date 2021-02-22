@@ -1,0 +1,10 @@
+driver assign_demo:
+globals 
+    ** initialization statements
+    Integer a = 2;
+    Double  b:= a + 0.5;
+process   
+    ** verification statements   
+    expect a == 2;
+    expect b == 2.5;
+return; 

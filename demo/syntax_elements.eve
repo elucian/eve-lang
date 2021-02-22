@@ -1,0 +1,27 @@
+# Progra example written in EVE
++-----------------------------------------
+| a driver can receive parameters        |
++----------------------------------------+
+driver syntax_elements(Integer p1, p2):
+
+** use a system library
+import
+    con := $lib.console;
+
+globals
+** start declaration region
+    Integer v1, v2;
+    
+** define two local functions
+functions
+    Integer add(Integer p1, p2) => (p1+p2);
+    Integer sub(Integer p1, p2) => (p1-p2);
+    
+** define executable region    
+process
+    con.print ("param1:#p1, #p2");
+    v1 := add(p1, p2);
+    v2 := sub(p1, p2);
+    con.print ("result: #v1");
+    con.print ("result: #v2");
+return;
