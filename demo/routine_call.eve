@@ -1,0 +1,17 @@
+# driver with parameters
+driver routine_call(List[String]: *args):
+
+routine test(Integer a): 
+process
+    ** print is a system routine
+    print 'argument list has # members' ? a; 
+return;
+
+locals
+    ** number of arguments received:
+    Integer c := args.length();
+process
+    ** verify condition and exit
+    exit if c == 0;  // early interruption  
+    apply test(c);   // routine call
+return;
