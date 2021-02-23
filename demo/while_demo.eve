@@ -1,0 +1,19 @@
+**********************************
+** example of collection iteration
+**********************************
+driver while_demo:
+
+globals
+    Array   test = ['a','b','c','d','e'];
+    Symbol  element; 
+    Natural i = 1;
+
+process
+    while i <= test.length() loop
+        element := test[i];
+        if (element >= 'c') then
+            write (element);
+            write (',') if (element != 'e');
+        end if;
+    end loop;
+return; // end of module
