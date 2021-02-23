@@ -1,0 +1,15 @@
+** domain demo
+driver domain_demo:  
+process 
+    print [0..1]; // [0..1]
+    
+    ** using domain
+    expect 0   in [0..1]; 
+    expect 1   in [0..1]; 
+    expect 0.5 in [0..1];     
+
+    ** exclude limits
+    expect 0 not in [0!.1];
+    expect 1 not in [0.!1];  
+    expect 0.5 in [0!!1];
+return;    

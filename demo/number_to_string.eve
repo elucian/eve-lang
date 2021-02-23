@@ -1,0 +1,10 @@
+#convert number to string
+driver number_to_string:
+
+global
+  String  s; 
+  Integer v = 1000;
+process
+  s := format(v); //  explicit coercion s = '1000'
+  expect s == a'1000'
+return;

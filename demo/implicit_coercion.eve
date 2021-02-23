@@ -1,0 +1,13 @@
+#example of implicit conversion
+driver implicit_coercion:
+
+globals
+  Integer a = 2;
+  Double  b = 1.5; 
+  
+process
+  b := a;       //  this implicit cast is possible b = 2.0
+  b := a + 3.5; //  add 3.5 then assign result to b = 5.5
+  a := b;       //  error: can not assign Double to  Integer
+  a := 1.5;     //  error: can not assign Double to  Integer
+return;

@@ -1,0 +1,16 @@
+#numeric range demo
+driver numeric_range:
+
+process
+  print (0..5);    // (0,1,2,3,4,5)
+  print (0.!5);    // (0,1,2,3,4)
+  print (0!.5);    // (1,2,3,4,5)
+  print (0..10:2); // (0,2,4,6,8,10)
+
+  ** test range  
+  expect 0 in (0..5); 
+  expect 5 in (0..5); 
+  ** test limits
+  expect 0 not in (0!.5);     
+  expect 5 not in (0.!5);   
+return;  

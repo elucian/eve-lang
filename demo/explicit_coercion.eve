@@ -1,0 +1,20 @@
+# explicit coercion in EVE
+driver explicit_coercion:
+
+globals
+  Integer a = 0;
+  Double  b = 1.5;
+
+process
+  ** explicit coercion lose (0.5)
+  a := floor(b);
+  write  a; //will print: 1
+ 
+  ** explicit coercion add (0.5)
+  a := ceiling(b); 
+  print  a; //will print: 2
+
+  ** explicit coercion rounding:  
+  a := round(b);
+  print  a; //  will print: 2
+return;

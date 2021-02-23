@@ -1,0 +1,9 @@
+# using symbol ranges
+driver symbol_range:
+process 
+  print ('0'..'5') // ('0','1','2','3','4','5')
+
+  ** following statements should pass
+  expect ('0' in ('0'..'9'));  //will pass   
+  expect ('X' in ('A'..'Z'));  //will pass
+return;  
