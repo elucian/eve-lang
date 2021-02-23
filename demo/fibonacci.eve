@@ -1,0 +1,25 @@
++----------------------------
+|  Demo Fibonacci rule      |
++---------------------------+
+driver fibomacci:
+
+import $eve_lib.console.(*);
+
+** declare Fibonacci rule
+routine fib(Integer n) => (y ∈ N):
+  if (n = 1) ∨ (n = 0) then
+    alter y := 1; //first value
+  else     
+    alter y := fib(n-1) + fib(n-2);
+  end if;
+return;
+
+globals
+   Integer r; // result
+process:
+   ** call fib rule using argument 5
+   make r := fib(n:5);
+   
+   ** print the result to console
+   print r;
+return;
