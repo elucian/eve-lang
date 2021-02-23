@@ -1,0 +1,18 @@
+#variant type demo
+driver variant_type:
+
+globals
+    Double | Integer v, x ,t;
+    
+process   
+    ** safe conversion
+    t := 1 / 2;    // make t Double    
+    t := 12;       // change the type
+    print type(t); // Integer
+    
+    ** unsafe conversion
+    x := 1.5;     //  x is Double    
+    v := 1;       //  v is  Integer    
+    v := x;       //  v becomes Double     
+    print type(v) // Double
+return;

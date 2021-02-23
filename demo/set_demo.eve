@@ -1,0 +1,22 @@
+#demo for using a set
+driver set_demo:
+
+global Set[Integer] my_set = {0,2,3}; 
+    
+process
+    ** append element 1
+    my_set += 1;  
+    expect my_set == {0,1,2,3};
+
+    ** remove element 2
+    my_set -= 2;  
+    expect my_set == {0,1,3};
+    
+    ** modify all elements
+    my_set[*] := 0;  
+    expect my_set == {0,0,0};
+    
+    ** remove all elements  
+    my_set := {}; 
+    expect my_set == {};
+return;

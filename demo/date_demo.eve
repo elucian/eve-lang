@@ -1,0 +1,10 @@
+#using "as" operator with Date
+driver date_demo:
+
+global Date: date := "2019/01/30" as YDM
+
+process
+    print date as YDM; //  2019/01/30
+    print date as DMY; //  30/01/2019
+    print date as MDY; //  01/30/2019
+return;

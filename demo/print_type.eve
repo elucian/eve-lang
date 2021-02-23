@@ -1,0 +1,9 @@
+# introspection demo
+driver print_type:
+
+global  Double i = 1.5;
+  
+process
+  expect i is Double;
+  print "type of i is \s" ? type(i);
+return;

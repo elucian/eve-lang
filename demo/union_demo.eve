@@ -1,0 +1,11 @@
+# combine two sets using "|" = (or)
+driver union_demo:
+
+globals
+    Set first = {0,1,2,3,4,5,6,7,8,9};
+    Set[Integer] second; // Null set    
+    
+process
+    store  second := first || {0,1,2,10}; // create set
+    expect second == {0,1,2,3,4,5,6,7,8,9,10};
+return;

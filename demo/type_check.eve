@@ -1,0 +1,16 @@
+# using operator "is" to check type
+driver type_check:
+
+globals
+    ** define object and initialize
+    Object r = {name:"test", age:"24"};  
+    ** define hash table
+    Map    t = {('key1':"value1"),('ley2':"value2")}; 
+
+process
+    ** check variable types using introspection
+    expect r.name  is Text;
+    expect r.age   is Text;
+    expect t.key   is String;
+    expect t.value is Text;
+return;
