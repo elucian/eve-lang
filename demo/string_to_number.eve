@@ -1,6 +1,6 @@
 #string to number conversion
 driver string_to_number:
-globals
+locals
   Integer  v; 
   Double   b;
   String   s = '1000';

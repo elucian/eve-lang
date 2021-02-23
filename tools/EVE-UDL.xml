@@ -24,13 +24,13 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">package read write print item process recover release remove from use create routine method class feature augment return trial step try</Keywords>
+            <Keywords name="Keywords1">driver aspect module read write print item process recover release remove from use create routine method class feature augment return trial step try</Keywords>
             <Keywords name="Keywords2">task begin end case switch while for&#x000D;&#x000A;if then else orif with loop</Keywords>
-            <Keywords name="Keywords3">import inherit alter store save clone share reset &#x000D;&#x000A;constant variable function type alias cursor view record</Keywords>
+            <Keywords name="Keywords3">import inherit alter store save clone share reset &#x000D;&#x000A;function type alias cursor view record global globals locals local functions</Keywords>
             <Keywords name="Keywords4">apply begin defer exit skip raise expect retry resume break repeat rest abort pass fail over halt&#x000D;&#x000A;</Keywords>
             <Keywords name="Keywords5">select insert update delete append&#x000D;&#x000A;ascending descending commit rollback discard where order by group join into limit offset open close fetch analyze</Keywords>
             <Keywords name="Keywords6">YDM DMY MDY T12 T24&#x000D;&#x000A;Null True False &#x000D;&#x000A;result object error&#x000D;&#x000A;&#x000D;&#x000A;</Keywords>
-            <Keywords name="Keywords7">@ $&#x000D;&#x000A;</Keywords>
+            <Keywords name="Keywords7">@ $ a&apos; b&apos; u&apos;&#x000D;&#x000A;</Keywords>
             <Keywords name="Keywords8">A B C D E F G H I J K L M N O P R S T U V W X Y Z</Keywords>
             <Keywords name="Delimiters">00( 01 02) 03&quot; 04\ 05&quot; 06[ 07 08] 09&apos; 10 11&apos; 12{ 13 14} 15+- 16 17-+ 18// 19 20((EOL)) 21# 22 23((EOL))</Keywords>
         </KeywordLists>

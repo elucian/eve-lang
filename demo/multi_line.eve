@@ -1,7 +1,7 @@
 # multiple line demo
 driver multi_line:
 
-globals
+locals
     Integer x;
     Hash    a;
     

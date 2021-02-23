@@ -1,7 +1,7 @@
 # working with strings
 driver test_string:
 
-globals
+locals
     String str = 'First value'; //mutable string
     String ref = 'First value'; //mutable string
 process  

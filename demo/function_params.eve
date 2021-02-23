@@ -1,0 +1,10 @@
+# demo function with parameters
+driver function_params:
+
+functions
+    Integer sum(Integer a, b) =&gt; (a + b); 
+    
+process  
+    print sum(1,2);  // 3
+    print sum(2,4);  // 6
+return;

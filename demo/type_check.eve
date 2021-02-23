@@ -1,7 +1,7 @@
 # using operator "is" to check type
 driver type_check:
 
-globals
+locals
     ** define object and initialize
     Object r = {name:"test", age:"24"};  
     ** define hash table

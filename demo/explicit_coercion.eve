@@ -1,7 +1,7 @@
 # explicit coercion in EVE
 driver explicit_coercion:
 
-globals
+locals
   Integer a = 0;
   Double  b = 1.5;
 

@@ -12,7 +12,7 @@ process
     y := x; //  second swap
 return;
 
-globals
+locals
     Integer y;   // default zero
     Double a, b; // default zero
     

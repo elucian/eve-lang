@@ -1,7 +1,7 @@
 +----------------------------
 |  Demo Fibonacci rule      |
 +---------------------------+
-driver fibomacci:
+driver fibonacci:
 
 import $eve_lib.console.(*);
 
@@ -14,7 +14,7 @@ routine fib(Integer n) => (y ∈ N):
   end if;
 return;
 
-globals
+locals
    Integer r; // result
 process:
    ** call fib rule using argument 5

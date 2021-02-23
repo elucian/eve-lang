@@ -1,0 +1,19 @@
+#demo function call
+driver function_call:
+
+functions 
+    TypeName: function_name(Type : param = value,...) =&gt; (expression);
+  
+locals
+    TypeName result; //not initialized (require store);
+    
+process    
+    ** call with no arguments:
+    result := function_name();
+    
+    ** call with arguments mapped by position
+    result := function_name(value, ...);
+    
+    ** call using parameter names and pair-up operator ":"
+    result := function_name(parameter:value ...);
+return;

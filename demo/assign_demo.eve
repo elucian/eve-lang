@@ -1,5 +1,5 @@
 driver assign_demo:
-globals 
+locals 
     ** initialization statements
     Integer a = 2;
     Double  b:= a + 0.5;

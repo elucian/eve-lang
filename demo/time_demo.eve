@@ -1,6 +1,6 @@
 # time demo
 driver time_demo:
-globals
+locals
     Time time1 = time2 = time3 = "00:00";
 process
     time1 := "23:63" as T24;

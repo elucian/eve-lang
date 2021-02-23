@@ -1,7 +1,7 @@
 #numeric literals
 driver numeric_literals:
 
-globals
+locals
     Integer i; // Initial value = 0
     Natural n; // Initial value = 0
     Double  r; // Initial value = 0.00

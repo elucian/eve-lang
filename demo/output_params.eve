@@ -1,0 +1,17 @@
+#demo output parameters
+driver output_params:
+
+routine add(Integer p1 = 0, p2 = 1,  Integer .out):
+process
+    out := p1 + p2;
+return;
+
+locals
+    Integer result;
+process  
+    ** reference argument require a variable
+    apply add(1,2, result);
+    print result;     //  expected value 3
+    ** negative test
+    apply add(1,2,4); //  error, "out" parameter require a variable
+return;

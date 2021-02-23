@@ -1,7 +1,7 @@
 #example of implicit conversion
 driver implicit_coercion:
 
-globals
+locals
   Integer a = 2;
   Double  b = 1.5; 
   
