@@ -9,8 +9,8 @@ globals
 
 process
     ** check variable types using introspection
-    expect r.name  is Text;
-    expect r.age   is Text;
-    expect t.key   is String;
-    expect t.value is Text;
+    expect type(r.name)  is Text;
+    expect type(r.age)   is Text;
+    expect type(t.key)   is String;
+    expect type(t.value) is Text;
 return;

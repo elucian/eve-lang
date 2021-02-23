@@ -1,0 +1,31 @@
+# working with strings
+driver test_string:
+
+globals
+    String str = 'First value'; //mutable string
+    String ref = 'First value'; //mutable string
+process  
+    expect (str == ref);     //  same value
+    expect (str is not ref); //  different locations  
+    
+    ** assign := work by reference not by value
+    ref := str;   //  reset ref
+    expect (str == ref); //  same value
+    expect (str is ref); //  same reference 
+    
+    ** if we modify "str" then "ref" will appear modified
+    str <+ ":"; //  mutate string "str"
+    expect str == 'First value:'; //  modified
+    expect ref == "First value:"; //  also modified
+    expect str is ref; // the reference is holding
+    
+    ** if we recreate str, reference is reset
+    str := 'First value:'; //  new string location
+    expect str == ref;     //  same value
+    expect str is not ref; //  different location
+
+    ** ref is pointing to a different location
+    ref  := 'New value:'
+    print ref;  //  New value: (modified)
+    print str;  //  First value: (initial value)
+return;

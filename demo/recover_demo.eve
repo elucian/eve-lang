@@ -1,0 +1,8 @@
+#using recover
+driver recover_demo:
+    global Double a = 0.00;
+process  
+    a := 1/0;
+recover
+    print @error.message;
+return;

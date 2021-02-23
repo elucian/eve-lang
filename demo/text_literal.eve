@@ -1,0 +1,10 @@
+# declaration of a text literal
+driver text_literal:
+    global Text my_text;    
+process
+    my_text:=
+       "Opportunity is missed by most people 
+        because it is dressed in overalls 
+        and looks like work.";
+    print (my_text);
+return;

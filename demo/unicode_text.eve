@@ -1,0 +1,6 @@
+# text typehas unicode support
+driver unicode_text:
+    Text us = "I can write Greek: \"αβγδ\"";
+process
+    print us;
+return;

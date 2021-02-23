@@ -1,0 +1,18 @@
+# null string demo
+driver null_string:
+
+globals 
+    String str;      //Null string (not initialized)
+    String btr = ''; //Not Null (default capacity)
+    
+process
+    ** null string
+    expect (str == Null); 
+    expect (str != '');   
+    expect (str != "");  
+    
+    ** initialized string
+    expect (btr is not Null);        
+    expect (btr == "");       
+    expect (btr == '');           
+return;

@@ -1,0 +1,8 @@
+#demo how to initialize a Map
+driver map_init_demo:
+    ** Null table (require initialization)
+    Map{String,Integer} table; 
+process
+    ** initialize table
+    table := {('one':1), ('two':2)}; 
+return;
