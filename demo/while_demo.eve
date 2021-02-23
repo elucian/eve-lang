@@ -1,19 +1,20 @@
-**********************************
 ** example of collection iteration
-**********************************
 driver while_demo:
-
-globals
-    Array   test = ['a','b','c','d','e'];
-    Symbol  element; 
-    Natural i = 1;
-
+    List this := ["a","b","c","d","e"];
+    Integer i := 0;
+    Symbol  e;
 process
-    while i <= test.length() loop
-        element := test[i];
-        if (element >= 'c') then
-            write (element);
-            write (',') if (element != 'e');
+    while i < this.length() loop
+        e := this[i];
+        i := i + 1;
+        if e  >= "c" then
+            write e; 
+            if e is not this.tail then
+               write ','; 
+            end if;   
         end if;
+    else
+        write ('i = ' + i);
     end loop;
-return; // end of module
+    print;
+return;
