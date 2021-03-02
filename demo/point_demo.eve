@@ -1,0 +1,20 @@
+# define a "Point" class
+driver point_demo:
+
+class Point(Double x = 0, y = 0):
+    Double .x, .y; //public attributes
+create
+    .x := x;
+    .y := y;
+return;
+
+locals
+    Point: p1, p2; //declare two Null points 
+process
+    ** initialize the points
+    p1 := Point(x:1, y:2);    
+    p2 := Point(x:2, y:2);   
+    ** use string patterns to print attributes 
+    print ("p1 = (a:#n, b:#n)" ? (p1.a,p1.b));
+    print ("p2 = (a:#n, b:#n)" ? (p2.a,p2.b));  
+return;
