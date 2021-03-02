@@ -1,0 +1,22 @@
+#object comparison demo
+driver object_compare:
+
+locals
+    Integer o = n = 1; // context variables
+process  
+    ** equal values and types
+    expect  o  == n; 
+    expect  not (o != n);     
+    
+    ** not the same location
+    expect  not (o is n); 
+    expect  o is not n;     
+   
+    ** alter one value        
+    n := 2; 
+
+    ** equal values and types
+    expect  o  != n; 
+    expect  not (o == n);     
+    
+return;
