@@ -4,7 +4,7 @@
 </a>
 </p>
 
-<p align="center"><i>Extraction Virtual Engine<i/></p>
+<p align="center"><i>Extract Validate Export<i/></p>
 
 ------------------------------------------------------------------------------------------
 <p align="center"> <a href=https://sagecode.net/eve/index.html>EVE User Manual</a>
