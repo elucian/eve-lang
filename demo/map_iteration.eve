@@ -1,0 +1,13 @@
+# map iteration
+driver map_iteration:
+
+locals
+  Map my_map := {("a":1),("b":2),("c":3)};
+  Symbol key;
+  Integer value;  
+process  
+  for (key: value) in my_map loop
+    ** print pairs (key:value)
+    print('("' + key + '",' + value +')');
+  end loop;
+return;

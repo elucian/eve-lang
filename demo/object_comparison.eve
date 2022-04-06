@@ -17,6 +17,5 @@ process
 
     ** equal values and types
     expect  o  != n; 
-    expect  not (o == n);     
-    
+    expect  not (o == n);         
 return;

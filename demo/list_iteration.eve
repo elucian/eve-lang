@@ -1,0 +1,18 @@
+# list iteration
+driver list_iteration:
+
+locals
+  List[String] my_list; //  Null
+  String e;
+process
+  my_list := ['a','b','c','d','e'];
+  for e in my_list loop
+    write e;
+    if e == 'd' then
+      break; //  early termination;
+    else
+      write(',');
+    end if;
+  end loop;
+  print; // c,d
+return;

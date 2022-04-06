@@ -1,0 +1,9 @@
+#list join() demo
+driver list_join:
+
+locals
+  String str; //  Null String
+process
+  store str := join([1,2,3],",");
+  print str; // "1,2,3"
+return;

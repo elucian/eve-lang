@@ -1,0 +1,12 @@
+** example of string concatenation
+driver string_concat:
+
+locals  
+  String str = "";  //empty String
+process
+  ** set string value using different operators
+  str := " this " + " string"; expect str == " this  string";
+  str := " this " - " string"; expect str == "this string";  
+  str := "this/" / " string"; expect str == "this/string";  
+  str := "this"  .   string ; expect str == "this/string";  
+return;
