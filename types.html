@@ -1,0 +1,893 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Sage-Code EVE lang type system.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, types, gradual, language, system">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Website title -->
+  <title>EVE Types</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- EVE code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Sage-Code custom CSS -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<h1>EVE Data Types</h1>
+
+<div class="alert alert-secondary shadow-sm">
+The purpose of any programming language is to manipulate data. On the lowest level, data is basically 0 and 1 signals. EVE is a high level language so our idea of data type is more complex. EVE has a gradual-typing system that will be explained below.
+</div>
+
+<p>Let's describe the basic types:</p>
+
+<h4>Bookmarks</h4>
+<ul>
+<li><a href="#primitive-types">Primitive Types</a></li>
+<li><a href="#single-char">Single character</a></li>
+<li><a href="#composite-types">Composite</a></li>
+<li><a href="#data-coercion">Data coercion</a></li>
+<li><a href="#type-inference">Type inference</a></li>
+<li><a href="#default-types">Default types</a></li>
+<li><a href="#logical-type">Logical type</a></li>
+<li><a href="#gradual-typing">Gradual typing</a></li>
+<li><a href="#calendar-date">Calendar date</a></li>
+<li><a href="#time-duration">Time duration</a></li>
+</ul>
+
+<h2><a id="primitive-types"/>Primitive Types</h2>
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Class Name</th>
+<th>Description</th>
+<th>Minim</th>
+<th>Maxim</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Integer</td>
+<td>Signed on 64 bit</td>
+<td>-2⁶³</td>
+<td>2⁶³-1</td>
+</tr>
+<tr>
+<td>Natural</td>
+<td>Unsigned on 64 bit</td>
+<td>0</td>
+<td>2⁶⁴-1</td>
+</tr>
+<td>Decimal</td>
+<td>Float precision number on 8 bytes</td>
+<td>0</td>
+<td>1.8 × 10³⁰⁸</td>
+</tr>
+<tr>
+<td>Unicode</td>
+<td>Single Unicode symbol UTF-32 4 bytes</td>
+<td>0</td>
+<td>2³²-1</td>
+</tr>
+<tr>
+<td>Ordinal</td>
+<td>Enumeration of symbols, Short 16 bit</td>
+<td>0</td>
+<td>2¹⁶-1</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>Calendar date</td>
+<td>01/01/0001</td>
+<td>01/01/9999</td>
+</tr>
+<tr>
+<td>Time</td>
+<td>Time of the day (24h)</td>
+<td>0</td>
+<td>8.64e+7ms</td>
+</tr>
+<tr>
+<td>Logic</td>
+<td>Is a Ordinal subtype having values: False = 0, True = 1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+<div class="alert alert-success"><b>Note:</b>&nbsp;Primitive types get zero initial values automatically and can not be Null. This is a major thing in EVE. No null primitive-types! Numeric values have initial value zero.</div>
+
+
+<h2><a id="numeric-types"></a>Numeric Types</h2>
+<p>In EVE we can have two categories of numbers:</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Category</th>
+<th>EVE Types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Discrete</td>
+<td>Ordinal,  Integer, Natural, Range</td>
+</tr>
+<tr>
+<td>Continuous</td>
+<td>Single, Double, Decimal, Domain</td>
+</tr>
+</tbody>
+</table>
+
+<h3><a id="discrete-numbers" class="anchor" href="#discrete-numbers"></a>
+Discrete numbers:</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>type</th>
+<th>Chars</th>
+<th>Bytes</th>
+<th>min</th>
+<th>max</th>
+<th>maximum number</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Integer</td>
+<td>20</td>
+<td>8</td>
+<td>-2⁶&sup3;</td>
+<td>2⁶&sup3;-1</td>
+<td>&le; 9,223,372,036,854,775,807</td>
+</tr>
+<tr>
+<td>Natural</td>
+<td>20</td>
+<td>8</td>
+<td>0</td>
+<td>2⁶⁴-1</td>
+<td>&le; 18,446,744,073,709,551,615</td>
+</tr>
+</tbody>
+</table>
+<p>For conversion into characters:</p>
+<ul>
+<li>The number of characters required for Integer numbers is 20. (19+sign)</li>
+<li>For Double numbers, conversion into characters is controled by #precision directive</li>
+</ul>
+
+
+<h3><a id="double-numbers"></a>Continuous numbers</h3>
+<p>The type&nbsp;<em>Double</em>&nbsp;is represented using floating precision numbers.<br />Floating decimal numbers are most simply described by 3 Integers:</p>
+<ul>
+<li>s: a sign (0 or 1)</li>
+<li>c: a coefficient</li>
+<li>n: an exponent</li>
+</ul>
+<p>The numerical value of a finite number is &minus;1ˢ &times; c &times; 2ⁿ Using this formula EVE define two floating point types.</p>
+<p>Single: is single-precision 32-bit IEEE 754:<br />Double is double-precision 64-bit IEEE 754:</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>type</th>
+<th>Digits</th>
+<th>Bytes</th>
+<th>maximum number</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single</td>
+<td>7</td>
+<td>4</td>
+<td>&le; 3.4 &times; 10&sup3;⁸</td>
+</tr>
+<tr>
+<td>Double</td>
+<td>16</td>
+<td>8</td>
+<td>&le; 1.8 &times; 10&sup3;⁰⁸</td>
+</tr>
+</tbody>
+</table>
+<p>Precision is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Double and back without loosing any digit. Think of it like a digital display from a packet calculator.</p>
+
+<h4>Numeric literals</h4>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Integer zero</td>
+</tr>
+<tr>
+<td>123</td>
+<td>Integer number using symbols: {0,1,2,3,4,5,6,7,8,9}</td>
+</tr>
+<tr>
+<td>1/2</td>
+<td>Single number use symbols: {.,0,1,2,3,4,5,6,7,8,9}</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>Double number use symbols: {.,0,1,2,3,4,5,6,7,8,9}</td>
+</tr>
+</tbody>
+</table>
+<h4>Example:</h4>
+<pre><code class="language-eve">#numeric literals
+driver numeric_literals:
+
+local
+    Integer i; // Initial value = 0
+    Natural n; // Initial value = 0
+    Double  r; // Initial value = 0.00
+process
+    i := 9223372036854775807;  //  maximum
+    n := 18446744073709551615; //  maximum
+    r := 1/2; //  0.5
+return;
+</code></pre>
+<p><b>See also:</b>&nbsp;<a href="https://en.wikipedia.org/wiki/Scientific_notation#Other_bases" rel="nofollow">scientific notation</a></p>
+
+<h2><a id="single-char"/>Single Character</h2>
+
+<p>For representing a single character you can use one of two conventions: single quoted strings are ASCII encoded while double quoted strings are Unicode UTF-8. For single character literals we do not use a string prefix.</p>
+
+<h3>ASCII</h3>
+
+<p>These symbols are represented using 172 ASCII not extended ASCII</p>
+
+<ul>
+<li>Single-quoted character like: 'a'</li>
+<li>Single-quoted number like: '5'</li>
+</ul>
+
+<p>Value NUL = ''. This is also the default value.</p>
+
+<h3>Unicode</h3>
+
+<p>These symbols are unicode UTF32. That is using 32 bit Integer</p>
+<ul>
+<li>Double-quoted strings like: "&alpha;"</li>
+<li>U+HHHH from: U+0000 to U+FFFF</li>
+<li>U-HHHHHH from: U+000000 to U+FFFFFF</li>
+</ul>
+<p>Value NUL = U+0000. This is also the default value.</p>
+
+
+<h2><a id="composite-types"/>Composite Types</h2>
+<p>Composite data types are unions of data elements. A composite variable that is not initialized can have Null value that is similar to zero but different. Some of these types are going to be explained later. We enumerate them all here to grasp the idea.</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Class Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Range</td>
+<td>Discrete range of numbers equaly distanced (x..y:ratio)</td>
+</tr>
+<tr>
+<td>Domain</td>
+<td>Continuous domain delimited by loer and upper bound [x..y]</td>
+</tr>
+<tr>
+<td>String</td>
+<td>Single quoted string: a'...' or b'...'</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>Variable capacity string: a"..." or u"..."</td>
+</tr>
+<tr>
+<td>List</td>
+<td>Dynamic unsorted enumeration of values or objects of same type</td>
+</tr>
+<tr>
+<td>Map</td>
+<td>Enumeration of (key:value) pairs unique sorted by key</td>
+</tr>
+<tr>
+<td>Set</td>
+<td>Enumeration of unique elements of the same type sorted by value</td>
+</tr>
+<tr>
+<td>Object</td>
+<td>Base class for creation of plain simple objects</td>
+</tr>
+<tr>
+<td>Exception</td>
+<td>Composite type derived from Object base class</td>
+</tr>
+</tbody>
+</table>
+
+<h2><a id="range" class="anchor" href="#range"></a>Range</h2>
+<p>A range is a notation that can create a sub-set of integer numbers.</p>
+
+<h4>Syntax:</h4>
+<pre><code class="language-eve">range ::= (min..max:ratio);
+</code></pre>
+
+
+<h4>Notes:</h4>
+<ul>
+<li>Limits are included by default,</li>
+<li>Upper or lower limits can be excluded using "!" instead of "."</li>
+<li>Range notation can be open at one end or both ends.</li>
+</ul>
+
+<h4>Example:</h4>
+
+<p>Numeric ranges:</p>
+
+<pre><code class="language-eve">#numeric range demo
+driver numeric_range:
+process
+  print (0..5);    // (0,1,2,3,4,5)
+  print (0.!5);    // (0,1,2,3,4)
+  print (0!.5);    // (1,2,3,4,5)
+  print (0..10:2); // (0,2,4,6,8,10)
+
+  ** test range
+  expect 0 in (0..5);
+  expect 5 in (0..5);
+  ** test limits
+  expect 0 not in (0!.5);
+  expect 5 not in (0.!5);
+return;
+</code></pre>
+
+<h4>Example:</h4>
+
+<p>Symbol ranges:</p>
+
+<pre><code class="language-eve"># using symbol ranges
+driver symbol_range:
+process
+  print ('0'..'5') // ('0','1','2','3','4','5')
+
+  ** following statements should pass
+  expect '0' in ('0'..'9');  //will pass
+  expect 'X' in ('A'..'Z');  //will pass
+return;
+</code></pre>
+
+<h4>Notes:</h4>
+<ul>
+<li>The implicit ratio is 1 and is optional</li>
+<li>Ratio cam be integer or decimal number</li>
+</ul>
+
+<h2><a id="domain"/>Domain</h2>
+
+<p>Domains are similar to ranges, except they cover continuous numbers not discrete range. So you can not print an entire domain. If you try, an infitinet loop may trigger so when you print a domain it will be printed as it is defined unlike the range that is expanded.</p>
+
+<h4>Syntax:</h4>
+<pre><code class="language-eve">domain ::= [min..max] &lt;: Super_Type
+</code></pre>
+
+<h4>Examples:</h4>
+<pre><code class="language-eve"># domain demo
+driver domain_demo:
+process
+    print [0..1]; // [0..1]
+
+    ** using domain
+    expect 0   in [0..1];
+    expect 1   in [0..1];
+    expect 0.5 in [0..1];
+
+    ** exclude limits
+    expect 0 not in [0!.1];
+    expect 1 not in [0.!1];
+    expect 0.5 in [0!!1];
+return;
+</code></pre>
+
+<h2><a id="data-coercion"></a>Data Coercion</h2>
+<p>In computer science coercion is used to implicitly or explicitly change an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.</p>
+
+<p><b>Implicit coercion</b>&nbsp;In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion to accommodate the data types and return an accurate result. Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a&nbsp;<em>run-time error</em>. To prevent this EVE will implement a safe compile-time check.</p>
+
+<h4>Notes:</h4>
+<ul>
+<li>Implicit conversion is possible and&nbsp;<em>safe</em>&nbsp;:</li>
+<li>Explicit conversion is possible but&nbsp;<em>unsafe</em>&nbsp;:</li>
+</ul>
+
+<pre><code class="language-eve">#example of implicit conversion
+driver implicit_coercion:
+
+local
+  Integer a = 2;
+  Double  b = 1.5;
+
+process
+  b := a;       //  this implicit cast is possible b = 2.0
+  b := a + 3.5; //  add 3.5 then assign result to b = 5.5
+  a := b;       //  error: can not assign Double to  Integer
+  a := 1.5;     //  error: can not assign Double to  Integer
+return;
+</code></pre>
+
+<p><b>Explicit coercion</b>&nbsp;Explicit coercion is a&nbsp;<em>forced conversion</em>. Can be used to convert backwards from higher data range to lower data range or from continuous numbers to discrete numbers. This however can cause a data or precision loss. Explicit coercion is using a function.</p>
+
+<p>Examples of explicit coercion:</p>
+<pre><code class="language-eve"># explicit coercion in EVE
+driver explicit_coercion:
+
+local
+  Integer a = 0;
+  Double  b = 1.5;
+
+process
+**explicit coercion lose (0.5)
+  a := floor(b);
+  write  a; //will print: 1
+
+**explicit coercion add (0.5)
+  a := ceiling(b);
+  print  a; //will print: 2
+
+**explicit coercion rounding:
+  a := round(b);
+  print  a; //  will print: 2
+return;
+</code></pre>
+
+<p><b>Number to a string</b></p>
+<pre><code class="language-eve">#convert number to string
+driver number_to_string:
+
+global
+  String  s;
+  Integer v = 1000;
+process
+  s := format(v); //  explicit coercion s = '1000'
+  expect s == a'1000'
+return;
+</code></pre>
+
+<p><b>String to a number</b></p>
+<p>This can be ready using the casting function parse(), only if the string contains a number. Otherwise the conversion fail and will rise and exception.</p>
+
+<pre><code class="language-eve">#string to number conversion
+driver string_to_number:
+local
+  Integer  v;
+  Double   b;
+  String   s = '1000';
+  String   r = '200.02';
+process
+  v := parse(s); //  make v = 1000
+  v := parse(r); //  make v = 200 and decimal .02 is lost
+  b := parse(r); //  make b = 200.02 and decimal .02 is preserved
+return;
+</code></pre>
+
+<p><b>Note:</b>&nbsp;Build-in functions that are located in EVE&nbsp;<em>default</em>&nbsp;library: { parse(), format(), ceiling(), floor() round()}.  This module is one of the standard modules that are automatically included in any EVE program.</p>
+
+<h2><a id="type-inference"></a>Type inference</h2>
+
+<p>This is a logical deduction of data type from constant literals.</p>
+
+<h4>Example:</h4>
+<pre><code class="language-eve">#test type inference
+driver type_inference:
+
+** Define a list of 10 elements using type inference
+global List ls = [0,1,2,3,4,5,6,7,8,9]; //  initialized list of Integer
+
+process
+  print  ls.type(); //  List[Integer]
+  expect ls is List[Integer];
+return;
+</code></pre>
+
+<h2><a id="default-types"></a>Default types</h2>
+<p>Literals are representations of specific particular data type in source code.</p>
+<p><b>Basic types</b>&nbsp;Next notation use "9" to show any digit in range [0..9].</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th style="width:50%">Literal</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>-9</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>0x9ABCDEF</td>
+<td>Natural</td>
+</tr>
+<tr>
+<td>0b1010101</td>
+<td>Binary</td>
+</tr>
+<tr>
+<td>9.9</td>
+<td>Double</td>
+</tr>
+<tr>
+<td>U+0001</td>
+<td>Word</td>
+</tr>
+<tr>
+<td>U-FFFFFFFF</td>
+<td>Binary</td>
+</tr>
+</tbody>
+</table>
+<p><b>Zero literals</b></p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th style="width:50%">Literal</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[]</td>
+<td>List</td>
+</tr>
+<tr>
+<td>{}</td>
+<td>Set/Map</td>
+</tr>
+<tr>
+<td>()</td>
+<td>List</td>
+</tr>
+<tr>
+<td>""</td>
+<td>Text</td>
+</tr>
+<tr>
+<td>''</td>
+<td>String</td>
+</tr>
+<tr>
+<td>0</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>0.0</td>
+<td>Double</td>
+</tr>
+</tbody>
+</table>
+<p><b>Collection literals</b></p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th style="width:50%">Literal</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>{a:0, b, c}</td>
+<td>Ordinal</td>
+</tr>
+<tr>
+<td>{x:'b',y:'d'}</td>
+<td>Object</td>
+</tr>
+<tr>
+<td>[1, 2, 3]</td>
+<td>List[Byte]</td>
+</tr>
+<tr>
+<td>['a','b','c']</td>
+<td>List[Symbol]</td>
+</tr>
+<tr>
+<td>["a","b","c"]</td>
+<td>List[Text]</td>
+</tr>
+</tbody>
+</table>
+<h3><a id="type-inference-1"></a>Type Inference</h3>
+
+<p>Sometimes the type is partially specified to simplify type declaration:</p>
+<pre><code class="language-eve"># gradual type declaration
+global
+    ** member type is inferred later from first member
+    List a := [];
+</code></pre>
+
+<h3>Type verification</h3>
+<p>We can verify the type using "is" operator:</p>
+<pre><code class="language-eve"># using operator "is" to check type
+driver type_check:
+
+local
+    ** define object and initialize
+    Object r = {name:"test", age:"24"};
+    ** define hash table
+    Map    t = {('key1':"value1"),('ley2':"value2")};
+process
+    ** check variable types using introspection
+    expect type(r.name)  is Text;
+    expect type(r.age)   is Text;
+    expect type(t.key)   is String;
+    expect type(t.value) is Text;
+return;
+</code></pre>
+
+
+<h2><a id="printing-type"></a>Printing type()</h2>
+<p>For type introspection we can use type() built-in function:</p>
+<pre><code class="language-eve"># introspection demo
+driver print_type:
+
+global  Double i = 1.5;
+
+process
+  expect i.type() is Double;
+  print "type of i is \s" ? i.type();
+return;
+</code></pre>
+
+
+<h2><a id="polymorphic-operators"</a>Polymorphic operators</h2>
+<p>In mathematics there are very few operators: {+, -, / , * } that can operate with any kind of numbers: negative, positive, rational or real. Operators are not bound to specific data types. Therefore these operators are called&nbsp;<em>"polymorphic"</em>.</p>
+<p>Some languages define different operators for Integers and Floating decimal numbers. For example in OCaml the operator "/" can divide Integers while "/." can divide Floating point decimal numbers. This is unexpected for a mathematician who is expecting to use one single operator for division.</p>
+<p>In EVE, operators are mapped to functions. To design polymorphic operators we overload the function signature using type dispatch. The dispatch is using left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.</p>
+
+<h2><a id="logical-type" class="anchor" href="#logical-type"></a>Logical type</h2>
+<p>In Latin the "falsus" and "verum" are translated in English to "false" and "true".</p>
+<ul>
+<li>falsus := &perp; defined by &perp; := &not; ⊤ and ( P &and; &not;P )</li>
+<li>verum := ⊤ defined by ⊤ := &not; &perp; and ( P &or; &not;P )</li>
+</ul>
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>name</th>
+<th>value</th>
+<th>binary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>False</td>
+<td>Logic.False</td>
+<td>00000000 00000000</td>
+</tr>
+<tr>
+<td>True</td>
+<td>Logic.True</td>
+<td>00000000 00000001</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Syntax:</h4>
+<pre class="language-eve">
+Logic: name = False; // explicit initialization
+</pre>
+
+<p><b>Internal design</b></p>
+<p>Probably best to define Logic type is Ordinal:</p>
+
+<pre class="language-eve">
+type Logic = { .False , .True } &lt;: Ordinal;
+</pre>
+
+<p><b>Logical expressions</b></p>
+<p>A logical expression is a demonstration or logical deduction having result <em>True</em> or <em>False.</em>  Operator precedence is: {not, and, or, xor}. The order of operations can be controlled using operator precedence and round parentheses.</p>
+
+<p>Result of logical expressions can be used into a conditional statement to make a decision. Also results of logical expressions can be stored in logical variables to be used later in other conditions.</p>
+
+<h2><a id="gradual-typing"></a>Gradual typing</h2>
+<p>Gradual typing is a type system in which some variables may be given types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called <em>variant</em>.</p>
+
+<p><b>Variant Types</b></p>
+<p>A Variant is a polymorphic variable that can have multiple types but only one at a time:</p>
+
+<h4>Syntax:</h4>
+
+<pre><code class="language-eve">** define variant subtype
+class Variant_Name: &lt;: Variant{Type | Type | ... };
+
+**  declare single variable (with initial value)
+global Variant_Name v = value;
+</code></pre>
+
+<h2><a id="variant-properties" class="anchor" href="#variant-properties"></a>Variant Properties</h2>
+<ul>
+<li>Variant data type is assigned at runtime;</li>
+<li>One variant can have a single value at a time;</li>
+<li>One variant is a "union" of several types</li>
+</ul>
+
+<h3>Making a null-able type</h3>
+<p>For this we use a special type Null</p>
+<ul>
+<li>The Null type is a curious type;</li>
+<li>It can have only one value = Null;</li>
+</ul>
+
+<h4>Pattern:</h4>
+<pre><code class="language-eve">** define nullable variant
+class Number: &lt;: Variant{Integer | Double | Null};
+
+** use nullable variant
+global Number: x; // default value is Null
+</code></pre>
+
+<p><b>Usability</b></p>
+<p>A variant can establish its data type at runtime:</p>
+
+<h4>Example 1:</h4>
+
+<p>In next example variant we use a variant that can be Double or Integer.</p>
+
+<pre><code class="language-eve">#variant type demo
+driver variant_type:
+
+local
+    Double | Integer v, x ,t;
+
+process
+    ** safe conversion
+    t := 1 / 2;   // make t Double
+    t := 12;      // change type
+    print type(t) // Integer
+
+    ** unsafe conversion
+    x := 1.5;   //  x is Double
+    v := 1; //  v is  Integer
+    v := x; //  v becomes Double
+    print type(v) // Double
+return;
+</code></pre>
+
+<h4>Example 2:</h4>
+
+<p>A variant is a way to create a generic routine. For this we use variant parameters:</p>
+
+<pre><code class="language-eve"># variant parameter in routines
+driver variant_params:
+
+** define a subroutine that can swap two numbers
+routine swap(Integer | Double x, y):
+    Integer | Double i
+process
+    expect type(x) = type(y);
+
+    i := x; //  intermediate reference
+    x := y; //  first  swap
+    y := x; //  second swap
+return;
+
+local
+    Integer y;   // default zero
+    Double a, b; // default zero
+
+process
+    ** invert two  Integer numbers
+    x := 10;
+    y := 20;
+    swap(x, y);
+    expect (x == 20) and (y == 10);
+    ** invert two Double numbers
+    a := 1.5;
+    b := 2.5;
+    swap(a, b);
+    expect (a == 2.5) and (b == 1.5);
+return;
+</code></pre>
+
+<h2><a id="calendar-date" class="anchor" href="#calendar-date"></a>Calendar date</h2>
+<p>In EVE we represent calendar date.</p>
+<p><b>Date storage</b></p>
+<ul>
+<li>Date type is internally stored as number on 4 bytes;</li>
+<li>First byte store the day, second byte store the month;</li>
+<li>Last 2 bytes store the year;</li>
+</ul>
+<p><b>Date literals</b></p>
+<p>When can create a date literal using 3 format functions:</p>
+<ul>
+<li>ydm() format: "YYYY/DD/MM"</li>
+<li>dmy() format: "DD/MM/YYYY"</li>
+<li>ydm() format: "MM/DD/YYYY"</li>
+</ul>
+<p><b>Note:</b>&nbsp;A reversible function is overloaded.</p>
+<pre><code class="language-eve">#overloaded function
+routine main:
+    Date: date := "2019/01/30" as YDM
+process
+    print date as YDM; //  2019/01/30
+    print date as DMY; //  30/01/2019
+    print date as MDY; //  01/30/2019
+return;
+</code></pre>
+
+
+<h2><a id="time-duration" class="anchor" href="#time-duration"></a>Time Duration</h2>
+<p>Time data type can be used to represent duration.</p>
+<ul>
+<li>EVE duration can represent minimum 1 millisecond.</li>
+<li>EVE duration can represent maximum 4294967296 hours.</li>
+</ul>
+<p><b>Representation</b>&nbsp;Time is represented as a number on 8 bytes.</p>
+<ul>
+<li>First 2 bytes are the milliseconds.</li>
+<li>Next 2 bytes are representing seconds and minutes.</li>
+<li>Last 4 bytes represents hours.</li>
+</ul>
+<p><b>Conversion</b></p>
+<p>Time format is created using two reversible functions: t12() and t24()</p>
+<ul>
+<li>T12 accept format ("hhhh:mm:ss,9999ms")</li>
+<li>T24 accept format ("hhhh:mm:ssxx, 9999ms" )</li>
+</ul>
+<p>ss: can be 0..60 seconds<br />xx: can be: (am/pm)</p>
+<h4>Example:</h4>
+
+<pre><code class="language-eve"># time demo
+driver time_demo:
+local
+    Time time1 = time2 = time3 = "00:00";
+process
+    time1 := "23:63" as T24;
+    time2 := "23:63:59,99" as T24;
+    time3 := "11:63:59pm,99ms" as T12;
+return;
+</code></pre>
+
+
+<hr>
+<p><b>Read next:</b>
+<a href="collections.html">Collections</a></p>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>

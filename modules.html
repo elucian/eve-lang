@@ -1,0 +1,197 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Sage-Code EVE language specification.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, language">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Website title -->
+  <title>EVE Modules</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- EVE code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Sage-Code custom CSS -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<h1>Standard Library</h1>
+
+<div class="alert alert-secondary shadow-sm">
+This is a library that is imported by default into the language. We do not have to use import. It contains built-in functions that can be implemented in EVE or in other language. The only thing required is signature.
+</div>
+
+<h2><a id="built-in-functions"></a>Built IN functions:</h2>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>length</td>
+<td>return capacity of the string</td>
+</tr>
+<tr>
+<td>count</td>
+<td>return number of true symbols and spaces except ending spaces</td>
+</tr>
+<tr>
+<td>truncate</td>
+<td>reduce the capacity of the string to specified dimension</td>
+</tr>
+<tr>
+<td>fill</td>
+<td>replace all characters in string with same periodic characters</td>
+</tr>
+<tr>
+<td>erase</td>
+<td>erase all characters in a string and replace them with spaces</td>
+</tr>
+<tr>
+<td>find</td>
+<td>search one sub-string in string</td>
+</tr>
+<tr>
+<td>replace</td>
+<td>replace a sub-string in a string with another</td>
+</tr>
+<tr>
+<td>parse</td>
+<td>convert a string in number</td>
+</tr>
+<tr>
+<td>trim</td>
+<td>remove spaces from start and end of a string</td>
+</tr>
+<tr>
+<td>left</td>
+<td>remove all spaces from left making string to align left</td>
+</tr>
+<tr>
+<td>right</td>
+<td>remove all spaces at the right making string to align right</td>
+</tr>
+<tr>
+<td>center</td>
+<td>move string in the middle of capacity and adding spaces left and right</td>
+</tr>
+<tr>
+<td>indent</td>
+<td>increase string count to specified length adding spaces to the left</td>
+</tr>
+<tr>
+<td>pad</td>
+<td>increase string count to specified length adding spaces to the right</td>
+</tr>
+</tbody>
+</table>
+
+
+<h1>System Library</h1>
+<div class="alert alert-secondary shadow-sm">This library is part of the language core. It is part of EVE runtime environment. Unlike standard library the system library is automatically loaded in EVE runtime environment. You do not need to import its modules.</div>
+
+
+<h2><a id="standard-streams"></a>Standard streams</h2>
+<p>In computer programming,&nbsp;<em>standard streams</em>&nbsp;are read and write communication channels between computer program and its environment. The three I/O connections are called standard read (stdin), standard write (stdout) and standard error (stderr). These channels are connected to the program when program starts.</p>
+<p>When a program is executed via an interactive shell, the streams are typically connected to the text terminal on which the shell is running, but can be changed with redirection, using a pipeline.</p>
+
+
+<h2><a id="standard-read" ></a>Standard read</h2>
+<p>Standard read is stream data (often text) going into a program. The program request data transfers by use of the read operation. Not all programs require stream read. A program may take command-line arguments, but perform their operations without any stream data read.</p>
+<p>Unless redirected, standard read is expected from the keyboard which started the program.</p>
+<p><b>read statement</b>&nbsp;Developer can create a program that ask for user to enter values from keyboard.<br />The read statement can output a text then wait until user type the text and press enter.</p>
+<p>Function read declaration</p>
+<pre><code class="language-eve">read (String: prompt) =&gt; String;
+</code></pre>
+<h4>Example:</h4>
+<pre><code class="language-eve">routine main:
+  String: v = ""; //empty string
+process
+  read  (v, "input v:");
+  write ("you entered:" &amp; v);
+return;
+</code></pre>
+
+
+<h2><a id="standard-write"></a>Standard write</h2>
+<p>This is the stream where a program writes its write data. The program request data transfer with the write operation. Not all programs generate write. In this the program is silent.</p>
+<p>Unless redirected, standard write is the text terminal which initiated the program.</p>
+<p>** Function&nbsp;<em>write()</em>&nbsp;** This function send a string to standard write as it is. This will help developers to make dynamic write. Is user responsibility to make a line break using an escape \n or \r inside the string parameter.</p>
+<pre><code class="language-eve">routine write(String * args, Logic:eol=True, String:sep=" "):
+ ...
+return;
+</code></pre>
+<p><b>parameters:</b></p>
+<ul>
+<li>eol:False will cause "write" to not sent new line to console</li>
+<li>sep:"," will cause "write" to separate arguments by comma</li>
+<li>wrp: &gt; n will cause end of line after n characters</li>
+</ul>
+<p>write sting can contain an escaped end of line character.</p>
+<pre><code class="language-eve">\LF   is LF
+\CRLF is CR+LF
+</code></pre>
+<h3><a id="usability" ></a>Usability</h3>
+<p>write function support only strings. It can not print anything else. Therefore developer must make a conversion to a string before sending the value to write.</p>
+
+
+<h2><a id="standard-error"></a>Standard error</h2>
+<p>Is another write stream typically used by programs to write error messages or diagnostics. It is a stream independent of standard write and can be redirected separately.</p>
+<p><b>Usage</b></p>
+<p>It is normal for standard write and standard error to be directed to the same destination, such as the text terminal. Messages appear in the same order as the program writes them, unless buffering is involved.</p>
+<p>For example, a common situation is when the standard error stream is un-buffered but the standard write stream is line-buffered; in this , text written to standard error later may appear on the terminal earlier, if the standard write stream buffer is not yet full.</p>
+<p><b>Redirect</b></p>
+<p>The usual destination is the text terminal which started the program to provide the best chance of being seen even if standard write is redirected (so not readily observed). For example, write of a program in a pipeline is redirected to read of the next program, but errors from each program still go directly to the text terminal.</p>
+
+<pre><code class="language-eve">** example of collection iteration
+routine test():
+  List this = ["a","b","c","d","e"];
+  Integer i = 0;
+  Symbol:  e;
+process
+  while i &lt; this.length() loop
+    e := this[i];
+    i := i + 1;
+    if e  >= "c" then
+      write e & (',' if e is not this.tail)
+    end if;
+  else
+    write ('i = ' + i);
+  end loop;
+  print;
+return;
+</code></pre>
+
+
+<!-- work in progress-->
+
+<hr>
+<p><b>Go back to:</b>
+<a href="index.html">EVE Tutorial</a></p>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>

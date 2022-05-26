@@ -1,0 +1,387 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Sage-Code EVE data processing.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, data, processing, design, patterns">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Website title -->
+  <title>EVE Processing</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- EVE code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Sage-Code custom CSS -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<h1>EVE Data Processing</h1>
+
+<div class="alert alert-secondary shadow-sm">EVE language is all about data processing. By using collections and control structures one can load, validate, modify and store data. In this article we review some of the concepts we already know to create useful design patterns for data processing.
+</div>
+
+<h4>Bookmarks:</h4>
+
+<ul>
+<li><a href="#main-subroutine">Main process</a></li>
+<li><a href="#list-operations">List operations</a></li>
+<li><a href="#collection-iteration">Collection iteration</a></li>
+<li><a href="#scanning-items">Scanning items</a></li>
+<li><a href="#using-map-table">Using map table</a></li>
+<li><a href="#text-functions">Text functions</a></li>
+</ul>
+
+<h2><a id="main-subroutine"/>Main Process</h2>
+
+<p>A driver or an aspect can have a <em>main process</em> that is executable. This can be divided into tasks. Each task can resolve one small use-case. Tasks are executed in serial mode. No matter if a task "pass" or "fail", the process continue until the end if not interrupted.</p>
+
+<h4>Pattern:</h4>
+
+<pre><code class="language-eve"># define process with tasks
+local
+    ** local declarations
+    ....
+process
+    ** preconditions
+    exit if condition;
+    ....
+    ** open resources
+    ...
+    task c1:"description" try
+        ...
+        skip if condition;
+    task c2:"description" try
+        ...
+        over if condition;
+    task c3:"description" try
+        ...
+        pass if condition;
+    task c4:"description" try
+        ...
+        fail if condition;
+recover
+    ** exception region
+    ...
+    retry if condition;
+    ...
+    raise if condition;
+release
+    ** close resources
+    ...
+report
+    ** report the errors
+    ...
+return;
+</code></pre>
+
+<h2><a id="processes"></a>Process Description</h2>
+
+<p>A process is a set of tasks that can&nbsp;<em>pass</em>&nbsp;or&nbsp;<em>fail</em>&nbsp;. Any driver, aspect or routine can implement one process. A process can be divided into tasks. All tasks of a single process are execute sequential from top downs. When the last task is finished the process is ending.</p>
+
+<h4>Keywords:</h4>
+
+<table class="table table-sm table-bordered">
+<tr><th>process</th><td>create one process (driver/aspect/routine)    </td></tr>
+<tr><th>task   </th><td>create one step in the process                </td></tr>
+<tr><th>try    </th><td>begin task executable region                  </td></tr>
+<tr><th>pass   </th><td>end current task with result "pass"           </td></tr>
+<tr><th>fail   </th><td>end current task with result "fail"           </td></tr>
+<tr><th>skip   </th><td>continue to specified next task               </td></tr>
+<tr><th>retry  </th><td>redo the task that raise a recoverable error  </td></tr>
+<tr><th>abort  </th><td>ignore all next tasks and execute the release </td></tr>
+<tr><th>raise  </th><td>issued from recover, propagate the error      </td></tr>
+</table>
+
+
+<h4>Interruptions</h4>
+
+<p>Interruption keywords (exit, halt, over) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used for processes that are not divided into tasks. Using these keywords, a process is interrupted but the finalization regions are not executed.</p>
+
+<h2><a id="list-operations"></a>List operations</h2>
+<p>There are many things you can do with a list. Most important are implemented as built-in functions or special operators:</p>
+
+<p><b>List concatenation</b></p>
+<p>List concatenation is ready using operator &ldquo;++&rdquo;. This operator represent union. Therefore List union act very similar to append, except we add multiple elements.</p>
+<pre><code class="language-eve">#list demo
+driver list_concat:
+
+local
+  List[Symbol] a = ['a','b','c']; //  initialized
+  List[Symbol] b = ['1','2','3']; //  initialized
+  List[Symbol] c; //  beginred initialization
+process
+  c := a ++ b;
+  print c; //  ['a','b','c','1','2','3'];
+return;
+</code></pre>
+
+<p><b>Join() built-in</b></p>
+<p>The join function receive a list and convert elements into a string separated be specified character.</p>
+<pre><code class="language-eve">#list join() demo
+driver list_join:
+
+local
+  String str; //  Null String
+process
+  str := join([1,2,3],",");
+  print str; // "1,2,3"
+return;
+</code></pre>
+
+<p><b>Split built-in</b>&nbsp;The join function receive a list and convert elements into a string separated be specified character.</p>
+<pre><code class="language-eve">**list split demo
+driver list_split:
+
+local
+  List[Integer] lst; //  Null List
+process
+  ** initialize new reference for "lst"
+  lst := split("1,2,3",",");
+  print  lst; // (1,2,3)
+return;
+</code></pre>
+<p><b>List as queue</b></p>
+<p>Two operations are possible</p>
+<ul>
+<li>enqueue() append to the end of the List</li>
+<li>dequeue() extract first element from the List</li>
+</ul>
+<p><b>List as stack</b></p>
+<p>Two operations are possible</p>
+<ul>
+<li>push() - can append element in top of the stack</li>
+<li>pop() - can extract the last element of the stack</li>
+</ul>
+<p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue.</p>
+<p><b>Other built-ins</b></p>
+<p>Following other functions should be available</p>
+<ul>
+<li>List.append(value) :can append an element at the end of the list</li>
+<li>List.insert(value) :can insert an element at the beginning of the list</li>
+<li>List.delete(value) :can delete one element at specified index</li>
+<li>List.length :retrieve the number of elements</li>
+</ul>
+<p><b>Special attributes</b>&nbsp;A list has properties that can be used in logical expressions:</p>
+<pre><code class="language-eve">List.empty();  // true or false
+List.full();   // true or false
+</code></pre>
+
+
+<h2><a id="collection-iteration"></a>Collection iteration</h2>
+<p>A special&nbsp;<em>while loop</em>&nbsp;that is executed for each element belonging to a collection.</p>
+
+<h4>Pattern:</h4>
+
+<pre><code class="language-eve">#iteration
+local
+    ClassName element := collection.first();
+process
+    cycle: while element is not null loop
+       ** statements
+       ...
+       element := element.next();
+       ...
+       write element;
+    end cycle;
+    print;
+return;
+</code></pre>
+
+<p>The "element" is local to iteration and is used as control variable.</p>
+
+<h4>Example:</h4>
+
+<pre><code class="language-eve"># list iteration
+driver list_iteration:
+
+local
+  List[Symbol] my_list; //  this list is Null
+  String e;
+process
+  my_list := ['a','b','c','d','e'];
+  for e in my_list loop
+    write e;
+    case: when e == 'd' then
+      break; //  early termination;
+    other
+      write(',');
+    end case;
+  end loop;
+  print; // c,d
+return;
+</code></pre>
+
+<h2><a id="using-map-table"></a>Using map table</h2>
+<p>Maps are sorted in memory by&nbsp;<em>key</em>&nbsp;for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this routine.</p>
+
+<h3>Map Initialization</h3>
+
+<p>Initialize a collection later than declaration.</p>
+
+<pre><code class="language-eve"># local map initialization
+driver map_init:
+
+local
+  Map my_map; //uninitialized collection
+process
+  ** initialize my_map with values
+  my_map := {(1:'a'),(2:'b'),(3:'c')};
+
+  ** check if a key is present in a map collection
+  expect 3 in my_map; // pass
+return;
+</code></pre>
+
+<h3>Create Elements</h3>
+
+<pre><code class="language-eve">** create new elements
+driver map_append:
+  Map(String, String): animals = {}; //empty collection
+process
+  ** create new element pairs
+  animals += ('Bear':'dog');
+  animals += ('Kiwi':'bird');
+
+  ** verify effect of append
+  print  animals;
+return;
+</code></pre>
+
+<h4>Output:</h4>
+<pre><code class="language-eve">{('Bear':'dog'),('Kiwi':'bird')}
+</code></pre>
+
+<h3>Modify Elements</h3>
+<pre><code class="language-eve">#update a map
+driver map_update:
+
+local
+  Map animals = {("dogs":0),("birds":0)};
+process
+  ** print the new collection
+  print  animals;
+
+  ** modify the collection
+  animals['dogs']   := 1; //new element
+  animals['birds']  := 2; //new element
+  animals['birds']  += 3; //alter element
+
+  ** print the new collection
+  print  animals;
+return;
+</code></pre>
+
+<h4>Output:</h4>
+<pre class="language-eve">
+{("dogs":0),("birds":0)};
+{("dogs":1),("birds":5)};
+</pre>
+
+<h3><a id="scanning-items" ></a>Iteration of Map items</h3>
+<p>Collections have common methods that enable traversal using&nbsp;<em>for</em>&nbsp;loop.</p>
+<p>{List, Map, Set}</p>
+<p><b>built-in:</b></p>
+<ul>
+<li>count - retrieve the number of elements</li>
+<li>capacity - retrieve the maximum capacity</li>
+<li>next - position next element</li>
+<li>first - position to first element</li>
+<li>last - position to last element</li>
+<li>this - reference to current element</li>
+</ul>
+<p><b>set iteration</b>&nbsp;Map and Set are similar. We can visit all elements using&nbsp;<em>for</em>&nbsp;loop:</p>
+
+<h4>Example:</h4>
+<pre><code class="language-eve"># map iteration
+driver map_iteration:
+
+local
+  Map my_map := {("a":1),("b":2),("c":3)};
+  Symbol key;
+  Integer value;
+process
+  cycle: for (key: value) in my_map loop
+    ** print pairs (key:value)
+    print "(#s:#n)" ? (key, value);
+  end cycle;
+return;
+</code></pre>
+
+<p>Will print:</p>
+<pre><code class="language-eve">("a",1)
+("b",2)
+("c",3)
+</code></pre>
+
+<h2><a id="string-concatenation" ></a>String: concatenation</h2>
+<p>Strings can be concatenated using:</p>
+<ul>
+<li>non trim concatenation operator: "+"</li>
+<li>all trim concatenation operator: "-"</li>
+<li>path concatenation operator: "/"</li>
+</ul>
+<h4>Example:</h4>
+<pre><code class="language-eve">** example of string concatenation
+driver string_concat:
+
+local
+  String str = "";  //empty String
+process
+  ** set string value using different operators
+  alter str := "this " + " string"; expect str == "this  string";
+  alter str := "this " - " string"; expect str == "this string";
+  alter str := "this/" / " string"; expect str == "this/string";
+return;
+</code></pre>
+
+<p><b>path concatenation</b></p>
+<p>Two strings can be concatenated using concatenation operator "/" or "\". This operator is used to concatenate "path" strings or URL locations. Notice "\" is also escape character used for string templates.</p>
+
+<pre><code class="language-eve"># path concatenation
+local
+  String s = ""; //empty string
+process
+  s := 'te/' / '/st'; //  "te/st" Linux
+  s := 'te/' \ '/st'; //  "te\st" Windows
+return;
+</code></pre>
+
+
+<h2><a id="text-functions" ></a>Text functions</h2>
+<ul>
+<li>Text: replace(Text: str, String: target, String: arrow );</li>
+<li>Integer find (Text: str, String: pattern);</li>
+<li>Integer count (Text: str, String: pattern);</li>
+<li>Integer length (Text: str);</li>
+</ul>
+<p><b>Note:</b>&nbsp;The text also support escape sequences like a normal string. In a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is "quoted" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like "&laquo;quoted&raquo;"</p>
+
+<!-- work in progress-->
+
+<hr>
+<p><b>Read next:</b>
+<a href="databases.html">Databases</a></p>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Introduction to EVE Database api.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, SQL, database, API">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Website title -->
+  <title>EVE Databases</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- EVE code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Sage-Code custom CSS -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<h1>EVE Database/SQL</h1>
+<div class="alert alert-secondary shadow-sm">
+EVE has basic interaction with relational databases. We design EVE to connect to different third party databases. This is the purpose of EVE to be versatile. It enables query and data transfers using embeded SQL within EVE scripts.</div>
+
+<p><b>Goals:</b></p>
+<ul>
+<li>Resolve impedance mismatch using ORM;</li>
+<li>Read and update tables in a database;</li>
+<li>Provide easy way to map data in ETL;</li>
+<li>Provide data reporting in file format;</li>
+<li>Backup and archive data using compression;</li>
+</ul>
+
+<p><b>Bookmarks:</b></p>
+
+<p><b>definition</b></p>
+<ul>
+<li><a href="#models">Models</a></li>
+<li><a href="#databases">Databases</a></li>
+<li><a href="#transactions">Transactions</a></li>
+<li><a href="#procedures">Procedures</a></li>
+</ul>
+
+<h2><a id="models"></a>Models</h2>
+<p>EVE must read and update a database structure using an internal <em>data model</em>. A model is a map between EVE a relational data model and an object oriented model. This is called&nbsp; ORM = <em>Object Relational Model</em>. An ORM model is connecting to one or multiple databases using vendor specific database library.</p>
+
+<h4>Importing</h4>
+
+<p>The model library must be imported using these statements:</p>
+
+<pre><code class="language-EVE"># using Oracle library
+import
+     $EVE_lib.db.core:(*);
+     Oracle: $EVE_lib.db.oracle;
+</code></pre>
+
+<h4>Connection</h4>
+<p>One application can connect to multiple databases simultaneously. A specific kind of application called&nbsp;<em>pipeline</em>&nbsp;can pull data from multiple sources to update one target database.</p>
+
+<p><b>pattern:</b></p>
+<pre><code class="language-EVE">** create a database session
+class Session(String user,password,name) &lt;: Oracle.Database:
+    String _credentials;
+create
+    self = Oracle.Database(location);
+    ** prepare credentials
+    self._credentials := user + '/' + password + '@'+ dbname;
+    ** connect to database
+    self.connect(self._credentials);
+return;
+
+** create database connection
+global
+    db := Session(user:'test',password:'password',name:'demo');
+</code></pre>
+
+<p><b>Note:</b>&nbsp;Usually a database has a security protocol based on user-name and password. These credentials can not be encoded in the EVE scripts, they need to be received as input parameters by the driver. Once a connection is established it can be used to manipulate data, using EVE statements.</p>
+
+<h2><a id="databases"></a>Database API</h2>
+
+<p>For each database kind we will create a library module. These modules will provide similar functionality for different databases. This basic functionality is created to make available a "Database Connector" in EVE scripts. We need this functions:</p>
+
+<h4>Functionality</h4>
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>connect()</td>
+<td>Connect the database</td>
+</tr>
+<tr>
+<td>disconnect()</td>
+<td>Disconnect from database</td>
+</tr>
+<tr>
+<td>query()</td>
+<td>Direct SQL execution</td>
+</tr>
+<tr>
+<td>execute()</td>
+<td>Execute a stored procedure</td>
+</tr>
+<tr>
+<td>commit()</td>
+<td>Save all pending modifications</td>
+</tr>
+<tr>
+<td>rollback()</td>
+<td>Rollback all pending modifications</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Targeted Databases</h4>
+<p>EVE should provide drivers for main-stream databases:</p>
+<ul>
+<li><a href="http://www.postgresql.org/" rel="nofollow">PostgreSQL</a>,</li>
+<li><a href="http://www.oracle.com/" rel="nofollow">Oracle</a>,</li>
+<li><a href="https://www.mysql.com/" rel="nofollow">MySQL</a></li>
+</ul>
+
+<h2>Concepts</h2>
+
+<h3>Structure</h3>
+
+<p>One database provide a structure for tables. An application can read table structure and map it to internal memory model. Then you can perform operations on data model: {search, append, update, delete}.</p>
+
+<h3>Mapping</h3>
+
+<p>A database table has records. EVE strategy is to define one <em>memory table</em> as a collection of objects for each <em>database table</em>. The <em>memory table</em> is mapped to <em>database table</em>. Mapping is <em>one to one</em>. Field names are case sensitive.</p>
+
+<h3>Tables</h3>
+<p>Internal <em>memory tables</em> are mixed collections of objects having same name as <em>database tables</em>. We can read a database table record by record on demand. A <em>memory table</em> can load one or multiple <em>records</em> in memory.</p>
+
+<pre><code class="language-EVE">
+class Table(String name) &lt: Object;
+</code></pre>
+
+<h3>Records</h3>
+<p>Records are <em>object instances</em> representing in memory table structure. A record has a <em>status</em> property that can be used in conditionals. One record is the current record. Several records are cached in memory for a table. A record id identified by a numeric id.</p>
+
+<pre><code class="language-eve">
+class Record(Integer id) &lt;: Object;
+</code></pre>
+
+<h3>Structure</h3>
+
+<p>Table structure is represented by <em>Records</em> structure. This can be flat or hierarchic. A <em>Table</em>is a collection of records. Tables can be related to each other. A record can contain a table of records. This is called aggregate object.</p>
+
+<p><b>Note:</b></p>
+<ul>
+<li>For Record_Name is singular starting with uppercase like: "Person"</li>
+<li>For Table_Name is good to use plural names like: "Persons"</li>
+</ul>
+
+<h2><a id="transactions"> Transactions</h2>
+<p>Data model can work with transactions. A transaction start automatically when you make first modification. Modifications must be consistent. When all modifications are done you can commit changes. If transaction fail all the modifications are reset. You can not commit a second time.</p>
+
+<p><b>data manipulation</b></p>
+<p>Any of the following operations will start automatically a transaction:</p>
+<ul>
+<li><a href="#Append">Append</a></li>
+<li><a href="#Update">Update</a></li>
+<li><a href="#Delete">Delete</a></li>
+</ul>
+
+<h3><a id="append"></a>Append</h3>
+<p>EVE can add new data records into one table using <em>append()</em> rule.</p>
+
+<pre><code class="language-EVE">** create empty records
+Record record := table_name.append();
+
+** modify record attributes
+update record:
+   field_name := value;
+   ...
+end update;
+
+commit;
+</code></pre>
+
+<h3><a id="update"/>Update</h3>
+<p>EVE can do single or multiple row updates in one transaction.</p>
+
+<h4>Syntax:</h4>
+
+<pre><code class="language-EVE">** use search fields and values
+Record record := table_name.find(field:value, field:value ...);
+
+** prepare record
+update record:
+    field_name := value;
+    ...
+end update;
+
+commit;
+</code></pre>
+
+<h3><a id="delete"/>Delete</h3>
+<p>This statement will remove one or more records from a table.</p>
+
+<p><b>Syntax</b></p>
+<pre><code class="language-EVE">** Find one single record and delete
+Record record := table_name.find(field:value,...);
+
+record.delete();
+
+** check status
+expect record.status == "deleted";
+
+commit;
+
+** Using search fields to delete multiple records
+Integer deleted := table_name.delete(field:value,...);
+
+commit;
+
+** Remove all records from a table in bulk
+db.scrub(table:"table_name");
+commit;
+
+** delete current record using: loop
+cycle: with record in table_name loop
+     record.delete() if condition;
+end cycle;
+commit;
+</code></pre>
+
+
+<p><b>Note:</b></p>
+<ul>
+<li>After delete the record still exist with <em>status</em> = <em>deleted</em>;</li>
+<li>After closing the table all references to records become Null;</li>
+</ul>
+
+<h2><a id="direct-sql"/>Direct SQL</h2>
+<p>Sometimes we need to bypass the ORM and execute native SQL:</p>
+
+<pre><code class="language-EVE"># execute query string and return a list of records
+query_result := db.query(query_template ? source)
+</code></pre>
+
+
+<h2><a id="procedures"/>Procedures</h2>
+
+<p>Some databases have support for stored procedures. It will be a challenge to engage these procedures from EVE. Since not all databases have stored procedures, these are extra features that we can implement in EVE but not necessary for our purpose.</p>
+<pre><code class="language-EVE">** prepare an object (not updatable)
+Result: (
+      Type field_name,
+      ...
+      ) &lt;: Record;
+
+** prepare a list of records
+
+Table(Result) buffer;
+
+** execute stored procedure
+buffer := db.procedure_name(arguments);
+</code></pre>
+
+
+<h2><a id="introspection"/>Introspection</h2>
+<p>For debugging the SQL, EVE will enable introspection.</p>
+<ul>
+<li>Before execution, database related statements are converted into SQL strings;</li>
+<li>We can visualize these strings by using: $trace = On to log query statements;</li>
+<li>We can use @query system variable to print out last SQL statement.</li>
+</ul>
+<!-- work in progress-->
+<hr>
+
+<p><b>Read next:</b>
+<a href="modules.html">Modules</a></p>
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>

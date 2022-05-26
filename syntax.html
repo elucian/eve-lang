@@ -1,0 +1,1401 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Sage-Code EVE language syntax overview.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, language, syntax">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Website title -->
+  <title>EVE Syntax</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- EVE code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Sage-Code custom CSS -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<h1>EVE Syntax</h1>
+
+<div class="alert alert-secondary shadow-sm">EVE is an multi-paradigm language inspired from Ada, Java and Python. EVE is using familiar keywords and symbols inspired from Ada language. More precise, EVE is Ada with classes. EVE is more declarative than imperative. We prefer substantive keywords instead of verbs.</div>
+
+<h4>Bookmarks</h4>
+
+<p>In this article you will learn about:</p>
+
+<ul>
+<li><a href="#elements">elements</a></li>
+<li><a href="#punctuation">punctuation</a></li>
+<li><a href="#comments">comments</a></li>
+<li><a href="#identifiers">identifiers</a></li>
+<li><a href="#global">global</a></li>
+<li><a href="#expressions">expressions</a></li>
+<li><a href="#statements">statements</a></li>
+<li><a href="#keywords">keywords</a></li>
+<li><a href="#delimiters">delimiters</a></li>
+<li><a href="#operators">operators</a></li>
+</ul>
+
+
+<h2>Hello World</h2>
+
+</p>For start let's honor a tradition: We should print "Hello world!" to the console using EVE. Next is a simple program that ca write a message on the console. EVE will be modular so we need to import the console library before we can print anything.</p>
+
+<pre><code class="language-eve">#hello world
+driver hello:
+import
+    con := $lib.console;
+process
+    con.print ("Hello World!");
+return;
+</code></pre>
+
+<h2><a id="elements">Syntax Elements</h2>
+
+<p>Next code fragment represents a very simple program written in EVE language. Let's identify the main syntaxtic elements and pubctuation using this example:</p>
+
+<pre><code class="language-eve"># Program example written in EVE
++-----------------------------------------
+| a driver can receive parameters        |
++----------------------------------------+
+driver syntax_elements(Integer p1, p2):
+
+** start declaration region
+global
+    Integer v1, v2;
+
+** use a system library
+import
+    con := $lib.console;
+
+** define two driver functions
+function
+    Integer add(Integer p1, p2) => (p1+p2);
+    Integer sub(Integer p1, p2) => (p1-p2);
+
+** define executable region
+process
+    con.print ("param1:#p1, #p2");
+    v1 := add(p1, p2);
+    v2 := sub(p1, p2);
+    con.print ("result: $v1");
+    con.print ("result: $v2");
+return;
+</code></pre>
+
+<h2><a id="punctuation"/>Punctuation:</h2>
+<ul>
+<li>EVE is using infix expressions like Java and other popular languages,</li>
+<li>Multiple expressions can be separated with comma and enclosed in parenthesis,</li>
+<li>Each statement start with a keyword and is ending semicolon,</li>
+<li>Type identifiers and classes start with capital letters,</li>
+<li>Public variables and constants start with "." prefix,</li>
+<li>Statement regions and nested blocks use mandatory indentation;</li>
+</ul>
+
+
+<h2><a id="comments"></a>Comments</h2>
+<ul>
+<li>Hash sign "#" is used for single-line title comments,</li>
+<li>Single line comment is using two stars:&nbsp;"**";</li>
+<li>End of line comments are using two slashes :&nbsp;"//"</code></li>
+<li>Block comments are using C like notation:&nbsp;"/* ... */"</code></li>
+</ul>
+
+<h4>Examples:</h4>
+
+<pre><code class="language-eve"># comments in EVE language
+********************************
+**  New style boxed comment   **
+********************************
+driver comment_demo:
+
+global
+    Integer b = 0;
+
+# main process
+local
+    Integer a = 0;
+process
+    ** Next we use expression comments:
+    a := a + 1 /* *(a - 1) */ -1;
+
+    /* expression comments are similar to C++
+       comments. we use expression comments
+       for commenting out code for debug */
+return; // end of line comment
+</code></pre>
+
+<h4>Notes:</h4>
+<ul>
+<li>Outline comments /*...*/ are supported inside expressions;</li>
+<li>A statement can continue after end of line comment;</li>
+<li>After module. you can add comments on many lines;</li>
+</ul>
+
+<h2><a id="identifiers"></a>Identifiers</h2>
+<p>The name of identifiers in EVE can have a length of 30 characters. A name starts with lowercase letters (a..z) or capital letters (A..Z) followed by one or more characters or numbers. No special characters or spaces are permitted in the name except underscore ("_"). An identifier can contain underscore and can start with underscore but it can not end with underscore and can not use two consecutive underscores.</p>
+
+<p><b>These are valid identifiers</b></p>
+
+<pre class="output">
+x, y, z
+a1, a2, a3
+thisIsOK
+this_is_ok
+_this_is_valid
+</pre>
+
+<p><b>These are invalid identifiers</b></p>
+<pre class="output">
+1st
+not_valid_
+_not_valid_
+</pre>
+
+<h3>Identifier Sigil</h3>
+
+<p>A sigil is a special character prefix that is used to define an identifier. We use sigil to improve code readability but also to add extra functionality to specific identifiers that are not regular. EVE is using following sigils to define special kind of variables or identifiers:</p>
+
+<table class="table table-bordered table-sm table-striped">
+<tr><th style = "text-align:center;">&nbsp;</th><td>in scope variable   </td></tr>
+<tr><th style = "text-align:center;">*     </th><td>variable arguments  </td></tr>
+<tr><th style = "text-align:center;">$     </th><td>system  variables    </td></tr>
+<tr><th style = "text-align:center;">.     </th><td>public  variables    </td></tr>
+<tr><th style = "text-align:center;">_     </th><td>private variables    </td></tr>
+</table>
+
+<h3>System Variables</h3>
+<table class="table table-bordered">
+<thead>
+<tr>
+<th>variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$object</td>
+<td>current instance of a class, current object</td>
+</tr>
+<tr>
+<td>$result</td>
+<td>default result of a routine when a name is not specified</td>
+</tr>
+<tr>
+<td>$error</td>
+<td>current exception object of type Exception</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Notes:</h4>
+<ul>
+<li>Prefix is reducing collision between local and global name scope;</li>
+<li>In other languages this kind of prefix is called&nbsp;<em>sigil;</em></li>
+<li>A system constant is usually represented by a basic type not objects;</li>
+<li>A system variables can be an object with attributes or a base type.</li>
+</ul>
+
+<h2><a id="global"></a>Globals</h2>
+<p>In EVE you can define global variables. These are primitive values or references to objects. A global variable is represented by an identifier, and is pair-up with a data type that must pe specified before the identifier name, like in Java.</p>
+
+<p>Global variables can have an initial value that is establish using initial value operator "=" and then can be modified during the program execution using <em>modifiers</em>&nbsp;like: { :=, ::, +=, -= ... } in <em>assignment</em> statements.
+
+<h4>Syntax patterns:</h4>
+
+<p>A syntax pattern is a pseudo-code example, not a valid EVE program.</p>
+
+<pre><code class="language-eve"># design pattern
+** establish several global variables
+global
+    ** use type to define a variable without initialization
+    Type var_name;
+
+    ** declare variable with specific value and type
+    Type var_name = value;
+
+    ** define multiple variables with same initial value
+    Type var_name1 = var_name2 ...= value;
+
+    ** multiple variables with diverse initial values
+    Type var_name1 = value1, var_name2 = value2;
+</code></pre>
+
+<h4>Globals example:</h4>
+
+<p>Usually the examples are complete programs but sometimes just a fragment. Most of the examples that can be executed are stored also in GitHub document. However it is possible the one in GitHub to be a bit different then the one in documentation.</p>
+
+<pre><code class="language-eve">** define global variables
+global
+    ** two integer variables
+    Integer a = 0;
+    Integer b = 0;
+
+    ** one double variable
+    Double d = 0.5;
+
+    ** multiple Double numbers
+    Double x, y, z;
+</code></pre>
+
+<h4>Initial Value</h4>
+
+<p>The initial value can be establish using the initializer that is "=". This symbol can use only literals and no expressions. It is not able to execute the right operator. That is the initial value can be a constant literal. When used in this way the right side literal value must match the type of the declaration.</p>
+
+<h4>Zero Value</h4>
+
+<p>When a variable is specified, and the initializer "=" is missing the variable takes default <em>zero value</em>. This value is different for each data type. For example zero value for Integers = 0 for Double = 0.0 and for String = "" (empty string). Composite data types are initialized to "empty", that is a reserved value equivalent to "∅" used in set theory.</p>
+
+<h4>Cascade Initialization</h4>
+
+<p>Operator "=" is used to create an expression. That means you can initialize multiple variables using a single declaration. This is different than assignment ":=" or clone "::" that create a statement and not an expression.</p>
+
+<pre><code class="language-eve"># define global variables
+global
+    ** two integer numbers
+    Integer a = b = 0;
+    Double  x = y = z = 0.5;
+</code></pre>
+
+<h2><a id="expressions"></a>Expressions</h2>
+<p>An expression is a syntax element that can be evaluated using mathematical rules and principles. Expressions are created using identifiers, operators, functions and constant literals.</p>
+
+<ul>
+<li>can be combined to create more complex expressions;</li>
+<li>have a type that is calculated using type inference;</li>
+<li>can be assigned to variables using ":=" or "?" operators;</li>
+<li>can be printed to console using "print" or "write" methods;</li>
+<li>can use round parenthesis () to establish order of operations;</li>
+</ul>
+
+<h4>Examples</h4>
+
+<pre><code class="language-eve">** simple expressions in print statement
+driver expression_demo:
+
+import console.(*)
+
+process:
+    print 10;
+    write "this is a test";
+    ** complex expressions can use ()
+    print (10 + 10 + 15); // numeric expression
+    print (10 &gt; 5) or (2 &lt; 3); // logical expression
+    ** list of expressions are enclosed in ()
+    print (1, 2, 3); // expect: 1 2 3
+    print (10, 11, 12); // expect: 10 11 12
+    ** using write to: avoid new line and print
+    write (1,2);
+    write (3,4);
+    ** now create a new line and output the text
+    print; // 1234
+return;
+</code></pre>
+
+<h4>Notes:</h4>
+<ul>
+<li>print statement can receive multiple arguments in parenthesis ()</li>
+<li>print statement will add new line by default,</li>
+<li>print statement will separate different values using one space</li>
+<li>write statement will output to console and do not add new line</li>
+<li>write statement also separate values by using one space</li>
+</ul>
+
+<h3>Assign Expression</h3>
+
+<p>To assign result of an expression to a variable you can use assign operator: ":=". This operator has a strange behavior that you must understand to avoid unintended side-effects. When a single variable is used as an expression, the operator transfer a value "by sharing" a reference, so it does not "copy" the value but the reference to that value.</p>
+
+<h4>by reference:</h4>
+
+<pre><code class="language-eve">#pseudo-code fragment
+identifier := variable_name; // share a reference to global
+identifier := function_name; // share a reference to function
+identifier := literal; // mutate value / initialize
+identifier := expression; // mutate value / initialize
+identifier := function_name(); // mutate value / reset value
+</code></pre>
+
+<p><b>by value:</b></p>
+<p>To make a clone/copy of an object value you must use&nbsp;<em>clone</em>&nbsp;operator that is (::) instead of (:=). This will transfer a value not a reference. After cloning, we can modify one value without affecting the other.</p>
+
+<h4>Syntax:</h4p>
+<pre><code class="language-eve">// making a clone
+variable_name :: reference_name;
+</code></pre>
+
+<h3>Ternary expression</h3>
+<p>A ternary operator is the "if" keyword. This keyword has actually two roles in EVE. It can be used to create a conditional statement or an expression. It can be used to return a value or other depending on one or several logical expressions.</p>
+
+<h4>Syntax:</h4>
+
+<pre><code class="language-eve"># ternary expression
+variable_name := value1 if condition else value2;
+variable_name := value1 if condition1 else
+                 value2 if condition2 else value3;
+</code></pre>
+
+<h4>Example:</h4>
+
+<pre><code class="language-eve">
+global test = True;
+...
+expect(True if test else False); // will pass
+...
+</code></pre>
+
+<h2><a id="statements"></a>Statements</h2>
+<p>One statement can be declarative or imperative.</p>
+<ul>
+<li>A statement is usually a single line of code</li>
+<li>A statement can extend on several lines and finalize with ";"</li>
+<li>A group of several statements is called a code block,</li>
+<li>A block is finalized with "end" + <em>starting keyword</em> then ";"</li>
+</ul>
+
+<h3>Single line statement</h3>
+
+<p>The most simple statements are definitely the declaration statements:</p>
+
+<pre><code class="language-eve">driver assign_demo:
+local
+    ** initialization statements
+    Integer a = 2;
+    Double  b:= a + 0.5;
+process
+    ** verification statements
+    expect a == 2;
+    expect b == 2.5;
+return;
+</code></pre>
+
+<h3>Multi-line statements</h3>
+<p>One expression can span multiple lines.</p>
+<ul>
+<li>The expression may be enclosed in parenthesis or quotation marks;</li>
+<li>Arithmetic expressions can use an operator to continue on next line;</li>
+</ul>
+
+<h4>Example:</h4>
+<pre><code class="language-eve"># multiple line demo
+driver multi_line:
+
+local
+    Integer x;
+    Map     a;
+
+process
+    ** multi-row expression
+    x := 1 +
+         2 +
+        (3 + 4)
+       + 5;
+
+    ** multi-row literal
+    a := {
+        (1:2),
+        (3:4),
+        (5:6)
+    };
+return;</code></pre>
+
+<h2><a id="keywords"></a>Reserved keywords</h2>
+
+<p>Computer was invented in England during WW2 so, we prefer English words even though a computer language could be created using keywords from other spoken languages. EVE is using about 50 English reserved words. You can not use these words as identifiers.</p>
+
+<table class="table table-bordered table-dark table-hover table-sm shadow">
+<tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze  </td></tr>
+<tr><td>append   </td><td>apply    </td><td>ascend    </td><td>augment  </td></tr>
+<tr><td>begin    </td><td>type     </td><td>break     </td><td>by       </td></tr>
+<tr><td>case     </td><td>class    </td><td>clone     </td><td>close    </td></tr>
+<tr><td>commit   </td><td>constant </td><td>create    </td><td>cursor   </td></tr>
+<tr><td>begin    </td><td>delete   </td><td>descend   </td><td>discard  </td></tr>
+<tr><td>else     </td><td>end      </td><td>error     </td><td>exit     </td></tr>
+<tr><td>expect   </td><td>fail     </td><td>feature   </td><td>fetch    </td></tr>
+<tr><td>for      </td><td>from     </td><td>function  </td><td>group    </td></tr>
+<tr><td>halt     </td><td>if       </td><td>import    </td><td>inherit  </td></tr>
+<tr><td>insert   </td><td>into     </td><td>item      </td><td>join     </td></tr>
+<tr><td>limit    </td><td>loop     </td><td>method    </td><td>object   </td></tr>
+<tr><td>offset   </td><td>open     </td><td>order     </td><td>orif     </td></tr>
+<tr><td>over     </td><td>package  </td><td>pass      </td><td>print    </td></tr>
+<tr><td>process  </td><td>raise    </td><td>read      </td><td>record   </td></tr>
+<tr><td>recover  </td><td>release  </td><td>remove    </td><td>repeat   </td></tr>
+<tr><td>reset    </td><td>rest     </td><td>result    </td><td>&nbsp;   </td></tr>
+<tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
+<tr><td>solve    </td><td>select   </td><td>resolve   </td><td>skip     </td></tr>
+<tr><td>step     </td><td>store    </td><td>switch    </td><td>task     </td></tr>
+<tr><td>then     </td><td>trial    </td><td>try       </td><td>type     </td></tr>
+<tr><td>update   </td><td>use      </td><td>global    </td><td>view     </td></tr>
+<tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
+<tr><td>&nbsp;   </td><td>&nbsp;   </td><td>&nbsp;    </td><td>&nbsp;   </td></tr>
+</table>
+
+<h3>Definition regions</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>import</td>
+<td>define import region</td>
+</tr>
+<tr>
+<td>type</td>
+<td>define data-type or sub-type</td>
+</tr>
+<tr>
+<td>global</td>
+<td>declare module variables (start with "." if is public)</td>
+</tr>
+<tr>
+<td>function</td>
+<td>start a declaration region for named expression</td>
+</tr>
+<tr>
+<td>local</td>
+<td>start a declaration region for local variables</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Semantic keywords</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>module</td>
+<td>define a program file (module-name = file-name)</td>
+</tr>
+<tr>
+<td>class</td>
+<td>define a composite data type for object oriented programming</td>
+</tr>
+<tr>
+<td>create</td>
+<td>begin constructor region for a classes</td>
+</tr>
+<tr>
+<td>remove</td>
+<td>define object disposal region, executed when object is out of scope</td>
+</tr>
+<tr>
+<td>feature</td>
+<td>define a design pattern that can be&nbsp;<em>enabled</em>&nbsp;by a class</td>
+</tr>
+<tr>
+<td>augment</td>
+<td>define an augment for an existing class</td>
+</tr>
+<tr>
+<td>routine</td>
+<td>define a named block of code belonging to a module</td>
+</tr>
+<tr>
+<td>method</td>
+<td>define a named block of code belonging to a class</td>
+</tr>
+<tr>
+<td>process</td>
+<td>begin executable region for a routine and constructor for a class</td>
+</tr>
+<tr>
+<td>recover</td>
+<td>define a recover region for methods</td>
+</tr>
+<tr>
+<td>release</td>
+<td>define a finalization region for routines</td>
+</tr>
+<tr>
+<td>return</td>
+<td>terminate a routine/function or a class declaration</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Blocks of code/sections</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>local</td>
+<td>create a local block scope for next block of code</td>
+</tr>
+<tr>
+<td>case</td>
+<td>multi-path conditional selector</td>
+</tr>
+<tr>
+<td>when</td>
+<td>define a pathway in conditional selector</td>
+</tr>
+<tr>
+<td>loop</td>
+<td>unconditional repetitive block</td>
+</tr>
+<tr>
+<td>while</td>
+<td>conditional repetition block</td>
+</tr>
+<tr>
+<td>for</td>
+<td>visitor iteration loop</td>
+</tr>
+<tr>
+<td>end</td>
+<td>block finalization keyword</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Operator keywords</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>is</td>
+<td>check data type | reference identity</td>
+</tr>
+<tr>
+<td>in</td>
+<td>check element is belonging to a list/set</td>
+</tr>
+<tr>
+<td>not</td>
+<td>logical NOT operator</td>
+</tr>
+<tr>
+<td>and</td>
+<td>logical AND operator</td>
+</tr>
+<tr>
+<td>or</td>
+<td>logical OR operator</td>
+</tr>
+<tr>
+<td>xor</td>
+<td>logical XOR operator</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Interruption statements</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>exit</td>
+<td>silent stop a routine and return control to the caller</td>
+</tr>
+<tr>
+<td>abort</td>
+<td>stop current process and return control to the caller</td>
+</tr>
+<tr>
+<td>halt</td>
+<td>stop current program and create unrecoverable error (panic)</td>
+</tr>
+<tr>
+<td>over</td>
+<td>stop current process and then execute: release &amp; report</td>
+</tr>
+<tr>
+<td>raise</td>
+<td>create exception with error code > 0 (recoverable)</td>
+</tr>
+<tr>
+<td>break</td>
+<td>early terminate execution of a repetitive block</td>
+</tr>
+<tr>
+<td>repeat</td>
+<td>jump over all other statements to the end of block</td>
+</tr>
+<tr>
+<td>fail</td>
+<td>create standard work-flow error if condition is true</td>
+</tr>
+<tr>
+<td>pass</td>
+<td>create standard unexpected error if condition is true</td>
+</tr>
+<tr>
+<td>retry</td>
+<td>work-flow jump backwards to specified step</td>
+</tr>
+<tr>
+<td>apply</td>
+<td>start subroutine execution in synchronous mode</td>
+</tr>
+<tr>
+<td>begin</td>
+<td>start subroutine execution in asynchronous mode</td>
+</tr>
+<tr>
+<td>solve</td>
+<td>execute one aspect in synchronous mode</td>
+</tr>
+<tr>
+<td>begin</td>
+<td>start execution for one aspect in asynchronous mode</td>
+</tr>
+<tr>
+<td>yield</td>
+<td>interrupt current execution and wait for beginred processes</td>
+</tr>
+</tbody>
+</table>
+
+<h2><a id = "delimiters"/>Delimiters</h2>
+<p>In the syntax description "..." represent content and "_,_,_," represents a sequence of elements. In descriptions vertical bar "|" represents second alternative. Some operators can have multiple purposes depending on the context and data types.</p>
+
+<h3>Comments</h3>
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>**...**</td>
+<td>Single line separator</td>
+</tr>
+<tr>
+<td>/*...*/</td>
+<td>Outline comments | Expression comments</td>
+</tr>
+<tr>
+<td>#(....)</td>
+<td>String interpolation (placeholder) for operator "?"</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Collections</h3>
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<td>(_,_,_)</td>
+<td>Expression | Tuple literal</td>
+</tr>
+<tr>
+<td>[_,_,_]</td>
+<td>Range | Index | List literals</td>
+</tr>
+<tr>
+<td>{_,_,_}</td>
+<td>Ordinal type | Set of values | Hash type | Generic types</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Strings</h3>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<td>'...'</td>
+<td>Limited capacity ASCII string</td>
+</tr>
+<tr>
+<td>"..."</td>
+<td>Variable capacity Unicode: UTF8</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2><a id="operators"></a>Operators</h2>
+<p>EVE us ASCII symbols for operators. One operator can be single character or  two characters with no space between tem. Sometimes we use the same character twice for example "==" or ">>". This technique is known in many other computer languages.</p>
+
+<p><b>Single symbol:</b></p>
+<pre class="language-eve"># , : . ; = ~ ? % ^ * - + / &lt; &gt; ~ &amp; | ^ ! @ $</pre>
+
+<p><b>Two symbols:</b></p>
+<pre class="language-eve">== != =+ &lt;&gt; &lt;&lt; &gt;&gt; =&gt; &gt;= &lt;= &lt;: .. .! !. !! </pre>
+
+<p><b>Modifiers:</b></p>
+
+<pre class="language-eve">++ -- :: := += -= *= /= %= ^= &amp;= |= &lt;+ +&gt;</pre>
+
+<p><b>Delimiters:</b></p>
+<pre class="language-eve">"_" '_' `_` (...) [...] {...} #(...)</code></pre>
+
+<h3>Single symbols</h3>
+
+<p>EVE use al single symbols usually found on your keyboard.</p>
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>!</td>
+<td>Negation symbol</td>
+</tr>
+<tr>
+<td>?</td>
+<td>String template find &amp; replace</td>
+</tr>
+<tr>
+<td>#</td>
+<td>Title at begging of line | Digit in string pattern</td>
+</tr>
+<tr>
+<td>$</td>
+<td>System variable sigil</td>
+</tr>
+<tr>
+<td>@</td>
+<td>Read address of variable</td>
+</tr>
+<tr>
+<td>;</td>
+<td>Statement separator | End of statement</td>
+</tr>
+<tr>
+<td>:</td>
+<td>Define type, routine, class or block | Pair-up/binding operator (a:b)</td>
+</tr>
+<tr>
+<td>=</td>
+<td>Setup initial value for variables or parameters</td>
+</tr>
+<tr>
+<td>~</td>
+<td>Check if two variables have same type</td>
+</tr>
+<tr>
+<td>.</td>
+<td>Decimal separator | Prefix public member | Member qualifier </td>
+</tr>
+<tr>
+<td>,</td>
+<td>Enumeration for elements | complex expression</td>
+</tr>
+<tr>
+<td>*</td>
+<td>Variable arguments | Multiplication</td>
+</tr>
+<tr>
+<td>|</td>
+<td>Used in set builders | Set union "&cup;"</td>
+</tr>
+<tr>
+<td>&amp;</td>
+<td>String concatenation | Set intersection "&cap;"</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Double symbols</h3>
+<p>Eve use two symbols to create supplementary operators.</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>**</td>
+<td>Single line comment</td>
+</tr>
+<tr>
+<td>//</td>
+<td>End of line comment</td>
+</tr>
+<tr>
+<td>..</td>
+<td>Slice [n..m] | Domain [n..m] or Range (n..m) </td>
+</tr>
+<tr>
+<td>.!</td>
+<td>Domain/Range: exclude upper limit</td>
+</tr>
+<tr>
+<td>!.</td>
+<td>Domain/Range: exclude lower limit</td>
+</tr>
+<tr>
+<td>!!</td>
+<td>Domain/Range: exclude both limits</td>
+</tr>
+<tr>
+<td>=+</td>
+<td>Outer join operator used in data "select" statement</td>
+</tr>
+<tr>
+<td>&lt;:</td>
+<td>Define sub-type for a class or super-type</td>
+</tr>
+<tr>
+<td>:&gt;</td>
+<td>Numeric data conversion or convert a subtype into a supertype.</td>
+</tr>
+<tr>
+<td>&lt;+</td>
+<td>Append to the end of a collection</td>
+</tr>
+<tr>
+<td>+&gt;</td>
+<td>Append to the beginning of a collection</td>
+</tr>
+<tr>
+<td>&lt;&lt;</td>
+<td>Shift ordered collection to left with n: X := C &lt;&lt; n</td>
+</tr>
+<tr>
+<td>&gt;&gt;</td>
+<td>Shift ordered collection to right with n: Y := C &gt;&gt; n</td>
+</tr>
+<tr>
+<td>:=</td>
+<td>Assign value of expression to a variable.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>String concatenation</h2>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>+</td>
+<td>Concatenate two strings as they are without trim</td>
+</tr>
+<tr>
+<td>-</td>
+<td>Concatenate two strings after trimming to one space</td>
+</tr>
+<tr>
+<td>/</td>
+<td>Concatenate two strings with "/" separator and de-duplicate "//"</td>
+</tr>
+<tr>
+<td>\</td>
+<td>Concatenate two strings with "\" separator and de-duplicate "\\"</td>
+</tr>
+<tr>
+<td>.</td>
+<td> Concatenate path or URL strings with a symbol and de-duplicate "//"</td>
+</tr>
+
+</table>
+
+<h2>Numeric operators</h2>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>*</td>
+<td>Numeric multiplication | Scalar operator</td>
+</tr>
+<tr>
+<td>/</td>
+<td>Numeric division</td>
+</tr>
+<tr>
+<td>%</td>
+<td>Reminder operator | Scalar operator</td>
+</tr>
+<tr>
+<td>+</td>
+<td>Numeric addition | String concatenation | Set union</td>
+</tr>
+<tr>
+<td>-</td>
+<td>Numeric subtraction | String concatenation | Set difference</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Relation Operators</h2>
+<p>EVE use two symbols to create a additional operators.</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>==</td>
+<td>Equal | deep comparison</td>
+</tr>
+<tr>
+<td>!=</td>
+<td>Different value | (deep comparison)</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>Greater than value</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>Less than value</td>
+</tr>
+<tr>
+<td>&gt;=</td>
+<td>Greater than or equal to values</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td>Less than or equal to values</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Modifiers</h2>
+<p>Each modifier is created with pattern "x=" where x is a single symbol:</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>symbol</th>
+<th>meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>:=</td>
+<td>Assign by reference | shallow assignment</td>
+</tr>
+<tr>
+<td>::</td>
+<td>Assign by copy | clone assignment</td>
+</tr>
+<tr>
+<td>+=</td>
+<td>Increment value</td>
+</tr>
+<tr>
+<td>-=</td>
+<td>Decrement value</td>
+</tr>
+<tr>
+<td>*=</td>
+<td>Multiplication modifier</td>
+</tr>
+<tr>
+<td>/=</td>
+<td>Real division modifier</td>
+</tr>
+<tr>
+<td>%=</td>
+<td>Modulo modifier</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Collection operators</h2>
+<p>In following table:&nbsp;A, B, C&nbsp;are collections and&nbsp;x&nbsp;is a member:</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Operator</th>
+<th>Result</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="fixed">A&nbsp;+&nbsp;B</td>
+<td>list</td>
+<td>Simple concatenation, use like L := A + B</td>
+</tr>
+<tr>
+<td class="fixed">A&nbsp;-&nbsp;B</td>
+<td>set/list</td>
+<td>Simple difference, use like L := A - B</td>
+</tr>
+<tr>
+<td class="fixed">A || B</td>
+<td>set</td>
+<td>Union A with B: "&cup;" use like C : = A | B</td>
+</tr>
+<tr>
+<td class="fixed">A&nbsp;&amp;&amp;&nbsp;B</td>
+<td>set</td>
+<td>Intersect A with B: "&cap;" use like C := A &amp; B</td>
+</tr>
+<tr>
+<td class="fixed">A&nbsp;--&nbsp;B</td>
+<td>list/set</td>
+<td>Symmetric difference, use like C := A -- B</td>
+</tr>
+<tr>
+<td class="fixed">A&nbsp;++&nbsp;B</td>
+<td>list/set</td>
+<td>Concatenate two lists use like L := A ++ B</td>
+</tr>
+<tr>
+<td class="fixed">A&nbsp;&lt;=&nbsp;B</td>
+<td>logic</td>
+<td>verify if A is subset of B: In math: &sub;</td>
+</tr>
+<tr>
+<td class="fixed">A&nbsp;&gt;=&nbsp;B</td>
+<td>logic</td>
+<td>verify if B is subset of A: In math: &sup;</td>
+</tr>
+<tr>
+<td class="fixed">C&nbsp;&lt;+&nbsp;x</td>
+<td>list</td>
+<td>append element x to C at the end</td>
+</tr>
+<tr>
+<td class="fixed">C&nbsp;+&gt;&nbsp;x</td>
+<td>list</td>
+<td>append element x to C at the beginning</td>
+</tr>
+<tr>
+<td class="fixed">S += x</td>
+<td>set</td>
+<td>append element x to S</td>
+</tr>
+<tr>
+<tr>
+<td class="fixed">S -= x</td>
+<td>set</td>
+<td>remove element x from set S</td>
+</tr>
+<tr>
+
+</tbody>
+</table>
+
+<h2>Logical operators</h2>
+<p>These operators are expected logical values T = True, F = False</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>if</td>
+<td>conditional operator</td>
+</tr>
+<tr>
+<td>is</td>
+<td>check element is of Type or same reference (object)</td>
+</tr>
+<tr>
+<td>is not</td>
+<td>check element is not of Type or different references (objects)</td>
+</tr>
+<tr>
+<td>in</td>
+<td>logic belong to: instead of "&isin;"</td>
+</tr>
+<tr>
+<td>not in</td>
+<td>logic not belong to: instead of "!&isin;"</td>
+</tr>
+<tr>
+<td>not</td>
+<td>logic NOT (negation)</td>
+</tr>
+<tr>
+<td>and</td>
+<td>logic AND (intersection)</td>
+</tr>
+<tr>
+<td>or</td>
+<td>logic OR (union)</td>
+</tr>
+<tr>
+<td>xor</td>
+<td>logic Exclusive OR</td>
+</tr>
+</tbody>
+</table>
+
+<p>Table of truth for logical operators:</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>A and B</th>
+<th>A or B</th>
+<th>A xor B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+</tr>
+<tr>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+</tr>
+<tr>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+</tr>
+<tr>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+
+<h4>Unary operator: not</h4>
+<ul>
+<li>not False = True</li>
+<li>not True = False</li>
+</ul>
+
+<h2>Bitwise operators</h2>
+<p>These operators are working for natural numbers &ge; 0</p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>symbol</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~</td>
+<td>bitwise NOT (unary)</td>
+</tr>
+<tr>
+<td>&amp;</td>
+<td>bitwise AND</td>
+</tr>
+<tr>
+<td>|</td>
+<td>bitwise OR</td>
+</tr>
+<tr>
+<td>^</td>
+<td>bitwise XOR</td>
+</tr>
+<tr>
+<td>&lt;&lt;</td>
+<td>shift bits to left</td>
+</tr>
+<tr>
+<td>&gt;&gt;</td>
+<td>shift bits to right</td>
+</tr>
+</tbody>
+</table>
+<p><b>Binary operators</b></p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>A</th>
+<th>B</th>
+<th>A &amp; B</th>
+<th>A | B</th>
+<th>A ^ B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td>00</td>
+<td>00</td>
+<td>00</td>
+<td>00</td>
+</tr>
+<tr>
+<td>01</td>
+<td>00</td>
+<td>00</td>
+<td>01</td>
+<td>01</td>
+</tr>
+<tr>
+<td>11</td>
+<td>01</td>
+<td>01</td>
+<td>11</td>
+<td>10</td>
+</tr>
+<tr>
+<td>10</td>
+<td>11</td>
+<td>10</td>
+<td>11</td>
+<td>01</td>
+</tr>
+<tr>
+<td>11</td>
+<td>11</td>
+<td>11</td>
+<td>11</td>
+<td>00</td>
+</tr>
+</tbody>
+</table>
+
+<p><b>Unary operators</b></p>
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>A</th>
+<th>~A</th>
+<th>A &lt;&lt; 1</th>
+<th>A &gt;&gt; 1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0000</td>
+<td>1111</td>
+<td>0000</td>
+<td>0000</td>
+</tr>
+<tr>
+<td>1111</td>
+<td>0000</td>
+<td>1110</td>
+<td>0111</td>
+</tr>
+<tr>
+<td>0111</td>
+<td>1000</td>
+<td>1110</td>
+<td>0011</td>
+</tr>
+<tr>
+<td>0110</td>
+<td>1001</td>
+<td>1100</td>
+<td>0011</td>
+</tr>
+</tbody>
+</table>
+
+<h2><id = "format">Quick Format</h2>
+
+<p>For printing output using a format we use operator <em>as</em> that is the "quick format" operator. We can use system constant templates that are available for making different formats for different data types. This operator is a bit smarter than the "?" operator that we can use for "string templates".</p>
+
+<h4>Date Format</h4>
+<table class="table table-bordered table-striped">
+
+<tr><th>Constant</th><th>Value</th></tr>
+<tr><td>YDM</td><td>YYYY/DD/MM</td></tr>
+<tr><td>DMY</td><td>DD/MM/YYYY</td></tr>
+<tr><td>MDY</td><td>MM/DD/YYYY</td></tr>
+
+</table>
+
+<h4>Time Format</h4>
+
+<table class="table table-bordered table-striped">
+<tr><th>Constant</th><th>Value</th></tr>
+<tr><td>T24</td><td>HH:MM:SS,MS</td></tr>
+<tr><td>T12</td><td>HH:MM:SSpm,MS | HH:MM:SSam,MS</td></tr>
+
+</table>
+
+<h4>Numeric Format</h4>
+
+<table class="table table-bordered table-striped">
+
+<tr><th>Constant</th><th>Value</th></tr>
+<tr><td>EUR</td><td>,.</td></tr>
+<tr><td>USA</td><td>.,</td></tr>
+
+</table>
+
+<hr>
+<p><b>Read next:</b>
+<a href="structure.html">Structure</a></p>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>

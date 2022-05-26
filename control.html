@@ -1,0 +1,308 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Sage-Code EVE control flow statements.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, language">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Website title -->
+  <title>EVE Control</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- Eve code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Custom css -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<h1>EVE Control Flow</h1>
+
+<div class="alert alert-secondary shadow-sm">
+Most languages have similar flow control statements. These are block statements that can execute or no depending on one or more conditions. A control flow statement can be a decision statement a repetitive statement or a selection statement.</div>
+
+<h2>Bookmarks</h2>
+
+<table class="table table-sm table-bordered">
+<tr><th>1</th><th><a href="#if">if</a></th>
+<td>conditional execution</td></tr>
+<tr><th>2</th><th><a href="#case">case</a></th>
+<td>decision selector</td></tr>
+<tr><th>3</th><th><a href="#loop">loop</a></th>
+<td>unconditional repetition</td></tr>
+<tr><th>4</th><th><a href="#while">while</a></th>
+<td>conditional repetition</td></tr>
+<tr><th>5</th><th><a href="#for">for</a></th>
+<td>range controlled repetition </td></tr>
+</table>
+
+<h2><a id="if"></a>Conditional</h2>
+
+<p>Keyword "if" establish a conditional statement. Also it can be used in expressions. A conditional statement can be a simple statement or a block statement. You can use "if" after a simple statement or before a block statement.</p>
+
+<h4>Pattern:</h4>
+
+<p>This is syntax for a simple statement with conditional execution.</p>
+
+<pre><code class="language-eve"># conditioned statement
+&lt;statement&gt; if boolean_variable;
+&lt;statement&gt; if boolean_expression;
+</code></pre>
+
+<h4>Examples:</h4>
+
+<p>Next examples show how we can use conditional to print something when expression is fulfilled.</p>
+
+<pre><code class="language-eve"># conditional print
+print "a is even" if (a % 2  = 0);
+print "a is odd"  if (a % 2 != 0);
+</code></pre>
+
+<h4>else</h4>
+
+<p>In other languages we use ternary operator "?" but in EVE we can use "if" and "else" keywords to create complex conditional expressions like these below:</p>
+
+<pre><code class="language-eve">#conditional expressions
+v := value1 if condition1 else value2;
+v := value1 if condition1 else
+        value2 if condition2 else
+        value3;
+</code></pre>
+
+<h2><a id="case"></a>case</h2>
+
+We use "case" statement to create decision forks and ladders. This can be used to start one or more blocks of code that are executed or not depending on conditions. The conditions are logical expressions. Eve do not support other types for making decisions.
+
+
+<div align="center">
+  <img src="../images/decision.jpg" alt="decision" srcset="../images/decision.svg"
+  width="520" class="img-fluid protect rounded shadow border" >
+  <p>decision diagram</p>
+</div>
+
+<h4>Pattern 1:</h4>
+
+<p>In next pattern we use "when-other" keywords to create a decision fork.</p>
+
+<pre><code class="language-eve"># dual path decision
+case: when expression then
+  ** true path
+  ...
+other
+  ** false path
+  ...
+end case;
+</code></pre>
+
+<h4>Pattern 2:</h4>
+
+<p>You can use nested selectors. You can have in total 4 possible branches. Imagine if you nest on 3 levels, the logic can become very complex therefore we have a better solution.</p>
+
+
+<pre><code class="language-eve">#nested selector
+case 1: when condition_1 then
+    ** first branch
+    ...
+    case 2: when condition_2 then
+        ** second branch
+        ...
+    other
+        ** third branch
+        ....
+    end case 2;
+other
+    ** forth branch
+    ....
+end case 1;
+</code></pre>
+
+<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having 2 decision statements. Observe that we can have  two labels. In this case the selector have a numeric label but no local variables. Colum ":" is follow by "when" keyword.</p>
+
+<h4>Pattern 3:</h4>
+
+<pre><code class="language-eve">#ladder selector
+case [label]:
+    ** local variables
+    ...
+when condition_1 then
+    ** first branch
+    ...
+when condition_2 then
+    ** second branch
+        ...
+other
+    ** third branch
+        ...
+end case label;
+</code></pre>
+
+<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. EVE compiler is using indentation to close blocks. In this case we do not use two end statement as we should but only one. If is aligned correctly the code must compile.</p>
+
+
+<h2><a id="loop"></a>loop</h2>
+break
+<p>Execute a block of code until a "break" statement is encounter. The breack condition is used with "if" conditional and is usually located before the end of the loop block. You can use "repeat" statement with a "if" conditional to restart the loop.</p>
+
+<div align="center">
+  <img src="img/loop.svg" alt="loop"
+  width="580" class="img-fluid protect rounded shadow border" >
+  <p>infinite loop </p>
+</div>
+
+<h4>Syntax:</h4>
+
+<pre><code class="language-eve">#infinite loop
+cycle [label:]
+    ** declare control variable
+loop
+    ** shortcut iteration
+    repeat [label] if condition ;
+    ...
+    ** early interruption
+    break [label] if condition;
+    ...
+end cycle [label];
+</code></pre>
+
+<h4>Notes:</h4>
+
+<li>Repeat is equivalent to "continue" statement in other languages,</li>
+<li>The label is optional, that's why is in square brackets.</li>
+<li>The label is used, for nested loops otherwise is not necessary.</li>
+
+<h2><a id="while"></a>while loop</h2>
+<p>Execute a block of code as long as one condition is true. When the condition become false the repetitive block stops and block "else" is executed. If the condition is never true only the "else" block is executed.</p>
+
+<div align="center">
+  <img src="../images/while.svg" alt="while-loop"
+  width="520" class="img-fluid protect rounded shadow border" >
+  <p>while loop</p>
+</div>
+
+<h4>Syntax:</h4>
+<pre><code class="language-eve">#conditional loop
+cycle [label]:
+    ** declare control variables
+while condition loop
+    ** shortcut iteration
+    repeat if condition;
+    ...
+    ** early interruption
+    break if condition;
+    ...
+then
+    ** alternative path
+    ...
+end cycle;
+</code></pre>
+
+<h4>Example:</h4>
+
+<pre><code class="language-eve">** example of collection iteration
+driver while_demo:
+/** This driver demonstrate
+    how to visit members of a List */
+local
+    List this := ["a","b","c","d","e"];
+process
+    cycle:
+        Integer i := 0; // private
+        Symbol  e;      // private
+    while i &lt; this.length() loop
+        alter e := this[i];
+        alter i += 1;
+        case: when e  &gt;= "c" then
+            write e;
+            write ',' if e is not this.tail;
+        end case;
+    then
+        write ('i = ' + i);
+    end cycle;
+    print;
+return;
+</code></pre>
+
+<h4>Output:</h4>
+<pre class="output">
+"c","d","e"
+i = 5
+</pre>
+
+
+<h2><a id="for"></a>for loop</h2>
+<p>This statement use one control variables to visit elements in a collection or domain. First use-case of this is to iterate over a range of numbers. In EVE the range is represented as (min..nax).</p>
+
+<div align="center">
+  <img src="img/for-loop.svg" alt="for-loop"
+  width="580" class="img-fluid protect rounded shadow border" >
+  <p>for ... loop</p>
+</div>
+
+<h4>Pattern:</h4>
+
+<pre><code class="language-eve">#for loop syntax
+cycle [label]:
+    Integer var := 0;
+for var in (min..max) loop
+    ** block statements;
+    ...
+    ** next iteration
+    next if condition;
+    ...
+    ** early interruption
+    break if condition;
+    ...
+end cycle [label];
+</code></pre>
+
+<h4>Notes:</h4>
+<ul>
+<li>Control variable is auto-incremented at end of loop;</li>
+<li>Control variable must be declared in local scope;</li>
+<li>Control variable is not available after the loop;</li>
+</ul>
+
+<p>Example of range iteration using step ratio 2:</p>
+<pre><code class="language-eve">#example of range iteration
+cycle: for i in (1..10:2) loop
+    ** write only odd numbers
+    write i;
+    write ',' if (i &lt; 9);
+end cycle;
+print;
+</code></pre>
+
+<h4>Output:</h4>
+
+<pre class="output">
+1,3,5,7,9
+</pre>
+
+<!-- work in progress-->
+
+<hr>
+<p><b>Read next:</b>
+<a href="classes.html">Classes</a></p>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>
