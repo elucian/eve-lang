@@ -54,6 +54,9 @@ function apply_style(str) {
     str = str.replace(/\bend\b/,control("end"))
     str = str.replace(/\btask\b/,control("task"))
     str = str.replace(/\btry\b/,control("try"))
+    str = str.replace(/\btrial\b/,control("trial"))
+    str = str.replace(/\bmiss\b/,control("miss"))
+    str = str.replace(/\bmatch\b/,control("match"))
     str = str.replace(/\bupdate\b/,control("update"))
     // System & built-in variables
     str = str.replace(/\bself\b/g,builtin("self"))
@@ -71,7 +74,6 @@ function apply_style(str) {
     str = str.replace(/\bstart\b/,interrupt("start"))
     str = str.replace(/\bsolve\b/,interrupt("solve"))
     str = str.replace(/\bbegin\b/,interrupt("begin"))
-    str = str.replace(/\brest\b/,interrupt("rest"))
     str = str.replace(/\bwait\b/,interrupt("wait"))
     str = str.replace(/\bexit\b/,interrupt("exit"))
     str = str.replace(/\bprint\b/,interrupt("print"))

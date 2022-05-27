@@ -39,23 +39,20 @@ Most languages have similar flow control statements. These are block statements 
 <h2>Bookmarks</h2>
 
 <table class="table table-sm table-bordered">
-<tr><th>1</th><th><a href="#if">if</a></th>
-<td>conditional execution</td></tr>
-<tr><th>2</th><th><a href="#case">case</a></th>
-<td>decision selector</td></tr>
-<tr><th>3</th><th><a href="#loop">loop</a></th>
-<td>unconditional repetition</td></tr>
-<tr><th>4</th><th><a href="#while">while</a></th>
-<td>conditional repetition</td></tr>
-<tr><th>5</th><th><a href="#for">for</a></th>
-<td>range controlled repetition </td></tr>
+<tr><th>1</th><th><a href="#if"     >if     </a></th> <td>conditional execution       </td></tr>
+<tr><th>2</th><th><a href="#trial"  >trial  </a></th> <td>conditional selector        </td></tr>
+<tr><th>3</th><th><a href="#lader"  >lader  </a></th> <td>selection lader             </td></tr>
+<tr><th>4</th><th><a href="#loop"   >loop   </a></th> <td>unconditional repetition    </td></tr>
+<tr><th>5</th><th><a href="#while"  >while  </a></th> <td>conditional repetition      </td></tr>
+<tr><th>6</th><th><a href="#for"    >for    </a></th> <td>range controlled repetition </td></tr>
+<tr><th>6</th><th><a href="#process">process</a></th> <td>local processing block      </td></tr>
 </table>
 
 <h2><a id="if"></a>Conditional</h2>
 
 <p>Keyword "if" establish a conditional statement. Also it can be used in expressions. A conditional statement can be a simple statement or a block statement. You can use "if" after a simple statement or before a block statement.</p>
 
-<h4>Pattern:</h4>
+<h4>Pattern 1:</h4>
 
 <p>This is syntax for a simple statement with conditional execution.</p>
 
@@ -64,8 +61,6 @@ Most languages have similar flow control statements. These are block statements 
 &lt;statement&gt; if boolean_expression;
 </code></pre>
 
-<h4>Examples:</h4>
-
 <p>Next examples show how we can use conditional to print something when expression is fulfilled.</p>
 
 <pre><code class="language-eve"># conditional print
@@ -73,7 +68,7 @@ print "a is even" if (a % 2  = 0);
 print "a is odd"  if (a % 2 != 0);
 </code></pre>
 
-<h4>else</h4>
+<h4>Pattern 2</h4>
 
 <p>In other languages we use ternary operator "?" but in EVE we can use "if" and "else" keywords to create complex conditional expressions like these below:</p>
 
@@ -84,10 +79,11 @@ v := value1 if condition1 else
         value3;
 </code></pre>
 
-<h2><a id="case"></a>case</h2>
+<h2><a id="trial"></a>Trial</h2>
 
+<p>
 We use "case" statement to create decision forks and ladders. This can be used to start one or more blocks of code that are executed or not depending on conditions. The conditions are logical expressions. Eve do not support other types for making decisions.
-
+</p>
 
 <div align="center">
   <img src="../images/decision.jpg" alt="decision" srcset="../images/decision.svg"
@@ -100,63 +96,86 @@ We use "case" statement to create decision forks and ladders. This can be used t
 <p>In next pattern we use "when-other" keywords to create a decision fork.</p>
 
 <pre><code class="language-eve"># dual path decision
-case: when expression then
-  ** true path
+trial [label]: case expression then
+  ** true branch
   ...
-other
-  ** false path
+miss
+  ** false branch
   ...
-end case;
+end trial [label];
 </code></pre>
 
-<h4>Pattern 2:</h4>
+<h2><a id="ladder"></a>Selection Ladder</h2>
 
-<p>You can use nested selectors. You can have in total 4 possible branches. Imagine if you nest on 3 levels, the logic can become very complex therefore we have a better solution.</p>
+<p>By using keywords "trial" and "case" you can create a cascade of decisions called "Selection Ladder" that has several conditional branches plus one optional branch that is executed when no other condition is fulfilled.</p>
 
+<div align="center">
+  <img src="../images/ladder.jpg" alt="decision" srcset="../images/ladder.svg"
+  width="640" class="img-fluid protect rounded shadow border" >
+  <p>decision ladder</p>
+</div>
 
-<pre><code class="language-eve">#nested selector
-case 1: when condition_1 then
-    ** first branch
-    ...
-    case 2: when condition_2 then
-        ** second branch
-        ...
-    other
-        ** third branch
-        ....
-    end case 2;
-other
-    ** forth branch
-    ....
-end case 1;
-</code></pre>
+<h4>Example:</h4>
 
-<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having 2 decision statements. Observe that we can have  two labels. In this case the selector have a numeric label but no local variables. Colum ":" is follow by "when" keyword.</p>
-
-<h4>Pattern 3:</h4>
-
-<pre><code class="language-eve">#ladder selector
-case [label]:
+<pre><code class="language-eve">#selection ladder
+trial [label]:
     ** local variables
     ...
-when condition_1 then
+case condition_1 then
     ** first branch
     ...
-when condition_2 then
+case condition_2 then
     ** second branch
         ...
-other
+case condition_3 then
+    ** second branch
+        ...
+miss
     ** third branch
         ...
-end case label;
+end trial [label];
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. EVE compiler is using indentation to close blocks. In this case we do not use two end statement as we should but only one. If is aligned correctly the code must compile.</p>
+<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. Cases should be exclusive. Most probable case should be evaluated first. If any of the cases is valid the other cases are not evaluated. Usually the cases are aligned with the trial keyword.</p>
 
+<h2><a id="match"></a>Match Selector</h2>
 
-<h2><a id="loop"></a>loop</h2>
-break
-<p>Execute a block of code until a "break" statement is encounter. The breack condition is used with "if" conditional and is usually located before the end of the loop block. You can use "repeat" statement with a "if" conditional to restart the loop.</p>
+<p>
+This is a multi-path selector similar also named: jump table. A jump table in Bee has two variants: "all" or "one". That is optional keyword. If used, ALL will evaluate all "when" values it may be matching multiple when blocks. If "one" is used (this is the default), only first block that has a matching value will be executed and the rest are ignored even if a second match exist. The second match should not be present though and is probably a mistake!
+</p>
+
+<div align="center">
+    <img src="img/eve-match.svg" alt="match"
+    width="320" class="img-fluid protect rounded shadow border" >
+    <p>Match Diagram</p>
+  </div>
+
+  <h4>Pattern:</h4>
+
+  <pre><code class="language-eve">#enumerable selector
+  type Selector = {v1,v2,v3,v4} <: Ordinal;
+  select = Selector.random();
+  match select:
+  ** declare locals
+  ...
+  when v1 then
+    ** first path
+    ...
+  when v1, v2 then
+    ** second path
+    ...
+  [when other]
+    ** v3 or v4 found
+    ...
+  end match [select];
+  </code></pre>
+
+<h4>Note:</h4>
+<p>Last when other is optional when the selector is not fully cover by all the cases;</p>
+
+<h2><a id="loop"></a>Unconditional Loop</h2>
+
+<p>This is a repetitive block statement. The loop is executed until a "break" statement is encounter. The break can be conditioned by "if". This is called an "interruption". You can use keyword "repeat"with conditional "if" to restart the loop early and skip several statements. This is called a "shortcut".</p>
 
 <div align="center">
   <img src="img/loop.svg" alt="loop"
@@ -181,11 +200,12 @@ end cycle [label];
 
 <h4>Notes:</h4>
 
-<li>Repeat is equivalent to "continue" statement in other languages,</li>
-<li>The label is optional, that's why is in square brackets.</li>
+<li>Unconditional loop is executed at least one time;</li>
+<li>Repeat is equivalent to "continue" statement in other languages;</li>
+<li>The label is optional, that's why is in square brackets;</li>
 <li>The label is used, for nested loops otherwise is not necessary.</li>
 
-<h2><a id="while"></a>while loop</h2>
+<h2><a id="while"></a>While Loop</h2>
 <p>Execute a block of code as long as one condition is true. When the condition become false the repetitive block stops and block "else" is executed. If the condition is never true only the "else" block is executed.</p>
 
 <div align="center">
@@ -244,7 +264,7 @@ i = 5
 </pre>
 
 
-<h2><a id="for"></a>for loop</h2>
+<h2><a id="for"></a>For Loop</h2>
 <p>This statement use one control variables to visit elements in a collection or domain. First use-case of this is to iterate over a range of numbers. In EVE the range is represented as (min..nax).</p>
 
 <div align="center">
@@ -293,7 +313,76 @@ print;
 1,3,5,7,9
 </pre>
 
-<!-- work in progress-->
+<h2><a id="process"/>Process</h2>
+
+<p>A process is a series of tasks. Each task can resolve one small use-case. Tasks are executed in serial mode. Any task can fail. When a task fails the process is interrupted an the recover section is executed. If there is no recover section the error is propagated to parent process or to operating system.</p>
+
+<h4>Pattern:</h4>
+
+<pre><code class="language-eve"># define process with tasks
+local
+    ** local declarations
+    ....
+process
+    ** preconditions
+    exit if condition;
+    ....
+    ** open resources
+    ...
+task c1:"description" try
+    ...
+    skip if condition;
+task c2:"description" try
+    ...
+    over if condition;
+task c3:"description" try
+    ...
+    pass if condition;
+task c4:"description" try
+    ...
+    fail if condition;
+recover
+    ** exception region
+    ...
+    retry if condition;
+    ...
+    raise if condition;
+release
+    ** close resources
+    ...
+report
+    ** report the errors
+    ...
+return;
+</code></pre>
+
+<h3>Process Keywords</h3>
+
+<p>The process is created and controlled by many new keywords. Mastering these keywords is important to handle possible errors and avoid catastrophic defects. Most of keywords are intuitive presented in the design pattern above.</p>
+
+<table class="table table-sm table-bordered">
+<tr><th>process</th><td>create one process (driver/aspect/routine)    </td></tr>
+<tr><th>task   </th><td>create one step in the process                </td></tr>
+<tr><th>try    </th><td>begin task executable region                  </td></tr>
+<tr><th>pass   </th><td>end current task with result "pass"           </td></tr>
+<tr><th>fail   </th><td>end current task with result "fail"           </td></tr>
+<tr><th>skip   </th><td>continue to specified next task               </td></tr>
+<tr><th>retry  </th><td>redo the task that raise a recoverable error  </td></tr>
+<tr><th>abort  </th><td>ignore all next tasks and execute the release </td></tr>
+<tr><th>raise  </th><td>issued from recover, propagate the error      </td></tr>
+</table>
+
+<h4>Execution Notes</h4>
+
+<ul>
+<li>Any driver, aspect or routine can be implement as a process.</li>
+<li>All tasks of a single process are execute sequential from top down.</li>
+<li>When the last task is finished the process is ending.</li>
+</ul>
+
+<h4>Process Interruption</h4>
+
+<p>Interruption keywords (exit, halt, over) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used for processes that are not divided into tasks. Using these keywords, a process is interrupted but the finalization regions are not executed.</p>
 
 <hr>
 <p><b>Read next:</b>
