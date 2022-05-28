@@ -152,11 +152,11 @@ process
   my_list := ['a','b','c','d','e'];
   for e in my_list loop
     write e;
-    case: when e == 'd' then
+    if e == 'd' then
       break; //  early termination;
-    other
+    else
       write(',');
-    end case;
+    end if;
   end loop;
   print; // c,d
 return;

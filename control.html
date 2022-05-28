@@ -39,13 +39,13 @@ Most languages have similar flow control statements. These are block statements 
 <h2>Bookmarks</h2>
 
 <table class="table table-sm table-bordered">
-<tr><th>1</th><th><a href="#if"     >if     </a></th> <td>conditional execution       </td></tr>
-<tr><th>2</th><th><a href="#trial"  >trial  </a></th> <td>conditional selector        </td></tr>
-<tr><th>3</th><th><a href="#lader"  >lader  </a></th> <td>selection lader             </td></tr>
+<tr><th>1</th><th><a href="#if"     >if     </a></th> <td>conditional expression      </td></tr>
+<tr><th>2</th><th><a href="#else"   >else   </a></th> <td>decision block              </td></tr>
+<tr><th>3</th><th><a href="#trial"  >trial  </a></th> <td>conditional selector        </td></tr>
 <tr><th>4</th><th><a href="#loop"   >loop   </a></th> <td>unconditional repetition    </td></tr>
 <tr><th>5</th><th><a href="#while"  >while  </a></th> <td>conditional repetition      </td></tr>
 <tr><th>6</th><th><a href="#for"    >for    </a></th> <td>range controlled repetition </td></tr>
-<tr><th>6</th><th><a href="#process">process</a></th> <td>local processing block      </td></tr>
+<tr><th>7</th><th><a href="#process">process</a></th> <td>local processing block      </td></tr>
 </table>
 
 <h2><a id="if"></a>Conditional</h2>
@@ -54,11 +54,11 @@ Most languages have similar flow control statements. These are block statements 
 
 <h4>Pattern 1:</h4>
 
-<p>This is syntax for a simple statement with conditional execution.</p>
+<p>This is syntax for a simple statement with conditional execution. It enable or prevent a statement to be executed. It can not be used for block statements.</p>
 
 <pre><code class="language-eve"># conditioned statement
-&lt;statement&gt; if boolean_variable;
-&lt;statement&gt; if boolean_expression;
+statement if boolean_variable;
+statement if boolean_expression;
 </code></pre>
 
 <p>Next examples show how we can use conditional to print something when expression is fulfilled.</p>
@@ -75,15 +75,13 @@ print "a is odd"  if (a % 2 != 0);
 <pre><code class="language-eve">#conditional expressions
 v := value1 if condition1 else value2;
 v := value1 if condition1 else
-        value2 if condition2 else
-        value3;
+     value2 if condition2 else
+     value3;
 </code></pre>
 
-<h2><a id="trial"></a>Trial</h2>
+<h2><a id="else"></a>Decision block</h2>
 
-<p>
-We use "case" statement to create decision forks and ladders. This can be used to start one or more blocks of code that are executed or not depending on conditions. The conditions are logical expressions. Eve do not support other types for making decisions.
-</p>
+<p>In next pattern we use "if/else" keywords to create a decision fork.</p>
 
 <div align="center">
   <img src="../images/decision.jpg" alt="decision" srcset="../images/decision.svg"
@@ -91,23 +89,26 @@ We use "case" statement to create decision forks and ladders. This can be used t
   <p>decision diagram</p>
 </div>
 
-<h4>Pattern 1:</h4>
-
-<p>In next pattern we use "when-other" keywords to create a decision fork.</p>
-
 <pre><code class="language-eve"># dual path decision
-trial [label]: case expression then
+if expression then
   ** true branch
   ...
-miss
+else
   ** false branch
   ...
-end trial [label];
+end if;
 </code></pre>
 
-<h2><a id="ladder"></a>Selection Ladder</h2>
+<h4>Notes:<h4>
+<ol>
+    <li>The else branch is optional;</li>
+    <li>This block is do not use label;</li>
+    <li>This block do not have local scope;</li>
+</ol>
 
-<p>By using keywords "trial" and "case" you can create a cascade of decisions called "Selection Ladder" that has several conditional branches plus one optional branch that is executed when no other condition is fulfilled.</p>
+<h2><a id="trial"></a>Trial</h2>
+
+<p>By using keywords "trial" and "case" you can create a cascade of decisions. This is a block statement called <em>Selection Ladder</em>. It has several conditional branches plus one optional branch that is executed when no other condition is fulfilled.</p>
 
 <div align="center">
   <img src="../images/ladder.jpg" alt="decision" srcset="../images/ladder.svg"
@@ -152,23 +153,27 @@ This is a multi-path selector similar also named: jump table. A jump table in Be
 
   <h4>Pattern:</h4>
 
-  <pre><code class="language-eve">#enumerable selector
-  type Selector = {v1,v2,v3,v4} <: Ordinal;
-  select = Selector.random();
-  match select:
-  ** declare locals
-  ...
-  when v1 then
-    ** first path
-    ...
-  when v1, v2 then
-    ** second path
-    ...
-  [when other]
-    ** v3 or v4 found
-    ...
-  end match [select];
-  </code></pre>
+<pre><code class="language-eve"># Using match selector
+type
+    Selector(0) = {v1,v2,v3,v4} <: Ordinal;
+local
+    select := Selector.random();
+process
+    match select:
+        ** declare locals
+        ...
+    when v1 then
+        ** first path
+        ...
+    when v1, v2 then
+        ** second path
+        ...
+    [when other]
+        ** v3 or v4 found
+        ...
+    end match [select];
+return;
+</code></pre>
 
 <h4>Note:</h4>
 <p>Last when other is optional when the selector is not fully cover by all the cases;</p>

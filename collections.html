@@ -39,6 +39,7 @@ Collections are composite types represents groups of multiple elements of the sa
 <h4>Bookmarks:</h4>
 
 <ul>
+<li><a href="#ordinal">Ordinal</a></li>
 <li><a href="#list">List</a></li>
 <li><a href="#set">Set</a></li>
 <li><a href="#map">Map</a></li>
@@ -47,6 +48,35 @@ Collections are composite types represents groups of multiple elements of the sa
 <li><a href="#exception">Exception</a></li>
 </ul>
 
+<h2><a id="ordinal"</a>Ordinal</h2>
+    <p>Ordinal is an generic class representing a set of unique values. It is a group of symbols. Each symbol represents an integer value starting from N to capacity-1. Associated values can start with a different N number. Values can be specified enclosed in {} like a set. Values will be be unsigned integer (i &ge; N) in consecutive ascending order.</p>
+
+<h4>Pattern:</h4>
+<pre><code class="language-eve"># Define a Ordinal subtype
+type
+   TypeName(start:0): {name1, name2, name3} &lt;: Ordinal;
+local
+    TypeName a, b, c;  // a, b, c will have same type
+process
+    a := TypeName.name1; // a=2
+    b := TypeName.name2; // b=3
+    c := TypeName.name3; // c=4
+return;
+</code></pre>
+
+<p><b>Note:</b>&nbsp;When element name start with "." no need to use qualifiers for the individual values. This is because values starting with "." are public by default and known in the scope where ordinal is defined (or loaded).</p>
+
+<pre><code class="language-eve">## Declare public elements in enumeration
+type
+    TypeName: {.name0, .name1} &lt;: Ordinal;
+local
+    TypeName a, b;
+process
+    a := name0; // a = 0
+    b := name1; // b = 1
+return;
+</code></pre>
+
 <h2><a id="list" class="anchor" href="EVE#list"></a>List</h2>
 <p>A list is a consecutive sequence of elements having a dynamic capacity.</p>
 
@@ -54,13 +84,13 @@ Collections are composite types represents groups of multiple elements of the sa
 <pre><code class="language-eve">#declare same list twice
 local
     List[elementType] list_name;   //  new empty list of "elementType"
-    List list_name := [value, ...]; //  new list with type inferrence
+    List list_name := [value, ...]; //  new list with type inference
 </code></pre>
 
 <h4>Notes:</h4>
 <ul>
 <li>The elements of a list have the same type;</li>
-<li>Access to eacg element is sequential not direct;</li>
+<li>Access to each element is sequential not direct;</li>
 </ul>
 
 <h4>Examples:</h4>
@@ -349,7 +379,7 @@ and looks like work.
 <p>See also:&nbsp;<a href="https://en.wikipedia.org/wiki/Universal_Coded_Character_Set" rel="nofollow">wikipedia ucs</a>,&nbsp;<a href="https://en.wikipedia.org/wiki/List_of_Unicode_characters#Character_reference_overview" rel="nofollow">unicode characters</a></p>
 
 <h4>Example:</h4>
-<pre><code class="language-eve"># text typehas unicode support
+<pre><code class="language-eve"># text type has unicode support
 driver unicode_text:
     Text us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
 process

@@ -34,7 +34,7 @@
 <h1>EVE Structure</h1>
 
 <div class="alert alert-secondary shadow-sm">
-EVE is a scripting language designed to quicly build an automation program that can be managed by a job schedule. Usually you do all the job in one script but sometimes you need to divide a project into parts. Therefore EVE has support for secondary scripts. The main script together with secondary scripts and library modules are stored in a folder structure we will explain below. </div>
+EVE is a scripting language designed to quickly build an automation program that can be managed by a job schedule. Usually you do all the job in one script but sometimes you need to divide a project into parts. Therefore EVE has support for secondary scripts. The main script together with secondary scripts and library modules are stored in a folder structure we will explain below. </div>
 
 <h2>Structure</h2>
 
@@ -65,7 +65,7 @@ EVE is a scripting language designed to quicly build an automation program that 
 <li>EVE scripts can ve scheduled to run at specified time.</li>
 </ul>
 
-<h4>Kind of Scirpts</h4>
+<h4>Kind of Scripts</h4>
 
 <p>EVE include several kind of scripts that together makes a "suite" of scripts, called project. Some scripts are reusable to many projects but some are specific to a single project. Here are all the possible scripts:</p>
 
@@ -138,7 +138,7 @@ EVE is a scripting language designed to quicly build an automation program that 
 
 <p>An EVE script start with optional directive: "driver", "aspect", "module". If none is specified, then we consider the file a module. That is a module can not be executed if is not imported in a driver or aspect.</p>
 
-<pre><code class="language-eve"># structure of a driver (pseudocode)
+<pre><code class="language-eve"># structure of a driver (pseudo-code)
 /**
    Header comments: module purpose
    Is using JavaDoc style for comments
@@ -158,7 +158,7 @@ import
     from $path/library_name use (*);
 
 ** qualifier suppression region
-aliase
+alias
     ClassName = library_name.class_name;
     ClassName = class_name{generic_parameters};
     ...
@@ -212,7 +212,7 @@ global
     @identifier := value;
 </pre>
 
-<p>Once you have imported one module that have global, you can access them without qualifiers. If names colide, the import can fail, you have to hide the global members that colide to be able to import.</p>
+<p>Once you have imported one module that have global, you can access them without qualifiers. If names collide, the import can fail, you have to hide the global members that collide to be able to import.</p>
 
 <h3>System constants</h3>
 
@@ -378,7 +378,7 @@ return;
 </code></pre>
 
 <h2><a id="routines"/>Routines</h2>
-<p>A routine is a named block of code that can be executed multiple times. A script can have one or more routines. Driver and aspects, must have one special routine that is called "main". Driver can accept a list of text parameters. Aspect can have other type of parameters inlcuding output parameters.</p>
+<p>A routine is a named block of code that can be executed multiple times. A script can have one or more routines. Driver and aspects, must have one special routine that is called "main". Driver can accept a list of text parameters. Aspect can have other type of parameters including output parameters.</p>
 
 </p>
 <ul>
@@ -476,7 +476,7 @@ return;
 </code></pre>
 
 <h4>Routine context</h4>
-<p>Every routine has a local context. In this context a routine can define variables, functions and objects but not other routines nor clases. These members are private, can not be accessed from outside of the routine.</p>
+<p>Every routine has a local context. In this context a routine can define variables, functions and objects but not other routines nor classes. These members are private, can not be accessed from outside of the routine.</p>
 
 <p><b>Routine call</b>&nbsp;Routines can be used in call statements. A routine call can be done using "apply routine_name" followed by arguments. For one single argument, or no argument the parentheses are not required.</p>
 
@@ -546,7 +546,7 @@ return;
 </code></pre>
 
 <h4>Output Parameters</h4>
-<p>To avoid shared variables you can use input/output parameters. We mark ourput parameters using symbol "." like parameter is public. Output parameters require a variable as argument, otherwise you will not be able to capture the output value.</p>
+<p>To avoid shared variables you can use input/output parameters. We mark output parameters using symbol "." like parameter is public. Output parameters require a variable as argument, otherwise you will not be able to capture the output value.</p>
 
 <pre><code class="language-eve">#demo output parameters
 driver output_params:

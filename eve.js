@@ -4,8 +4,10 @@ function apply_style(str) {
     str = str.replace(/^module\b/,keyword("module"))
     str = str.replace(/^aspect\b/,keyword("aspect"))
     str = str.replace(/^global\b/,keyword("global"))
+    str = str.replace(/^constant\b/,keyword("constant"))
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias"))
+    str = str.replace(/^type\b/,keyword("type"))
     str = str.replace(/^local\b/,keyword("local"))
     str = str.replace(/^process\b/,keyword("process"))
     str = str.replace(/^recover\b/,keyword("recover"))
@@ -18,6 +20,8 @@ function apply_style(str) {
     str = str.replace(/^create\b/,keyword("create"))
     str = str.replace(/^remove\b/,keyword("remove"))
     str = str.replace(/^static\b/,keyword("static"))
+    //keywords with indentation
+
     //colorize data types keywords
     str = str.replace(/\bInteger\b/g,types("Integer"))
     str = str.replace(/\bNatural\b/g,types("Natural"))
@@ -46,7 +50,6 @@ function apply_style(str) {
     str = str.replace(/\bcase\b/,control("case"))
     str = str.replace(/\bwhen\b/,control("when"))
     str = str.replace(/\bother\b/,control("other"))
-    str = str.replace(/\bthen\b/,control("then"))
     str = str.replace(/\bloop\b/,control("loop"))
     str = str.replace(/\bwhile\b/,control("while"))
     str = str.replace(/\bcycle\b/,control("cycle"))
@@ -58,6 +61,9 @@ function apply_style(str) {
     str = str.replace(/\bmiss\b/,control("miss"))
     str = str.replace(/\bmatch\b/,control("match"))
     str = str.replace(/\bupdate\b/,control("update"))
+    str = str.replace(/\bif\b/g,control("if"))
+    str = str.replace(/\bthen\b/,control("then"))
+    str = str.replace(/\belse\b/g,control("else"))
     // System & built-in variables
     str = str.replace(/\bself\b/g,builtin("self"))
     // interruption statements
@@ -86,8 +92,6 @@ function apply_style(str) {
     str = str.replace(/\braise\b/,interrupt("raise"))
     str = str.replace(/\bretry\b/,interrupt("retry"))
     //operators
-    str = str.replace(/\bif\b/g,operator("if"))
-    str = str.replace(/\belse\b/g,operator("else"))
     str = str.replace(/\bin\b/g,operator("in"))
     str = str.replace(/\bis\b/g,operator("is"))
     str = str.replace(/\bor\b/g,operator("or"))
