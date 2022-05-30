@@ -52,7 +52,7 @@ Most languages have similar flow control statements. These are block statements 
 
 <p>Keyword "if" establish a conditional statement. Also it can be used in expressions. A conditional statement can be a simple statement or a block statement. You can use "if" after a simple statement or before a block statement.</p>
 
-<h4>Pattern 1:</h4>
+<h4>Code pattern</h4>
 
 <p>This is syntax for a simple statement with conditional execution. It enable or prevent a statement to be executed. It can not be used for block statements.</p>
 
@@ -61,22 +61,13 @@ statement if boolean_variable;
 statement if boolean_expression;
 </code></pre>
 
+<h4>Example</h4>
+
 <p>Next examples show how we can use conditional to print something when expression is fulfilled.</p>
 
 <pre><code class="language-eve"># conditional print
 print "a is even" if (a % 2  = 0);
 print "a is odd"  if (a % 2 != 0);
-</code></pre>
-
-<h4>Pattern 2</h4>
-
-<p>In other languages we use ternary operator "?" but in EVE we can use "if" and "else" keywords to create complex conditional expressions like these below:</p>
-
-<pre><code class="language-eve">#conditional expressions
-v := value1 if condition1 else value2;
-v := value1 if condition1 else
-     value2 if condition2 else
-     value3;
 </code></pre>
 
 <h2><a id="else"></a>Decision block</h2>

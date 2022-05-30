@@ -46,6 +46,7 @@ function apply_style(str) {
     str = str.replace(/\bFalse\b/g,types("False"))
     str = str.replace(/\bType\b/g,types("Type"))
     str = str.replace(/\bTypeName\b/g,types("TypeName"))
+    
     // control flow keywords
     str = str.replace(/\bcase\b/,control("case"))
     str = str.replace(/\bwhen\b/,control("when"))

@@ -29,6 +29,7 @@
 </div><hr>
 
 <h1>EVE Features</h1>
+
 <div class="alert alert-secondary shadow-sm">
 EVE is a scripting programming language. It is made for ETL applications to handling large data sets. ETL stands for <em>Extract Transform Load</em> but EVE stands for <em>Extract Validate Export</em>. This is a similar paradigm that requires a specialized language having following features:</div>
 
@@ -60,11 +61,11 @@ EVE is a scripting programming language. It is made for ETL applications to hand
 </tr>
 </table>
 
-<div class="alert alert-warning"><b><a href="#classic">Classic:&nbsp;</a></b>EVE has a classic design inspired from Ada language. It uses classic keywords and structures that we are familiar with. Therefore learning EVE is more easy if you know other programming languages like Ada, Pascal, PL/SQL. The code is more readable than C++ and other curly bracket languages.</div>
+<div class="alert alert-warning"><b><a href="#classic">Classic:&nbsp;</a></b>EVE has a classic design inspired from Ada language. It uses classic keywords and structures. Therefore learning EVE is more easy if you know other programming languages like Ada, Pascal, PL/SQL. EVE is not a curly brackets language and is much more different than C++, Java, Rust, Go or Swift.</div>
 
 
 <h2><a id="readable"></a>Readable</h2>
-<p>EVE is designed to be learn fast by reading the code. It is very similar to Java but is multi-paradigm not pure Object Oriented. We believe that next design choices will make EVE code easy to read therefore easier to comprehend and debug:</p>
+<p>EVE is designed to be learn by reading the code. It is has very similar design to Java but is multi-paradigm not pure Object Oriented. We believe that our design choices will make EVE code easier to read and comprehend. These are our design strategy:</p>
 
 <ul>
 <li>Use familiar English keywords, with no abbreviation;</li>
@@ -72,8 +73,8 @@ EVE is a scripting programming language. It is made for ETL applications to hand
 <li>Use "end" keyword to finish a block statement instead of curly brackets;</li>
 <li>Use only ASCII operators and delimiters not Unicode symbols;</li>
 <li>Use comprehensive data literals for constants and collections;</li>
-<li>Use uppercase and lowercase to separate constants from variables;</li>
-<li>Use a sigil/prefix for some declarations to reduce name collisions;</li>
+<li>Use uppercase and lowercase to separate data types from variable identifiers;</li>
+<li>Use a sigil/prefix for system declarations to reduce name collisions;</li>
 </ul>
 
 <p>The result of these choices is demonstrate below with an example. You can observe different comment notations enable different colors. Syntax colorizer is able to identify the keywords and highlighted every statement. This can not be achieved using a language that has curly brackets used as delimiters for blocks.</p>
@@ -85,18 +86,18 @@ import $eve_lib.console.(*);
 
 ** declare Fibonacci routine
 routine fib(Integer n) => (y ∈ N):
-  case: when (n = 1) ∨ (n = 0) then
-    alter y := 1; //first value
-  other
-    alter y := fib(n-1) + fib(n-2);
-  end case;
+  if (n = 1) ∨ (n = 0) then
+    y := 1; //first value
+  else
+    y := fib(n-1) + fib(n-2);
+  end if;
 return;
 
 local
    Integer r; // result
 process:
    ** call fib rule using argument 5
-   alter r := fib(n:5);
+   r := fib(n:5);
 
    ** print the result to console
    print r;
@@ -106,27 +107,27 @@ return;
 
 <h2><a id="effective"/>Effective</h2>
 
-<p>EVE is aiming to be economic feasible. This means EVE is design to improve developer productivity and get the job done as quickly as possible. Effective does not necessarily imply efficiency or higher performance. EVE is designed to perform one task very well one time or a limited number of times by using a time scheduler.</p>
+<p>EVE is aiming to be effective and feasible. This means EVE is design to improve developer productivity and get the job done as quickly as possible. Effective does not necessarily imply efficiency or higher performance. EVE is designed to perform one task very well one time or a limited number of times by using a time scheduler. EVE is not design for high performance computing.</p>
 
 <ul>
 <li>Use gradual typing;</li>
 <li>Use type inference;</li>
 <li>Use separation of concerns;</li>
-<li>Enable parallel processing;</li>
 <li>Enable exclusive database connectivity;</li>
 <li>Enable model first application design;</li>
-<li>Enable generative programming;</li>
+<li>Enable generative (macro) programming;</li>
 </ul>
 
 <h2><a id="safe"/>Safe</h2>
 <p>EVE is designed to be a safe language. For this we avoid using Null pointers. EVE is using boxed values that are actually references but we initialize all the variables with zero value. We avoid having Null references. EVE is and Object Oriented and declarative language. We believe the next principles will help us to design a safe language:</p>
 
 <ol>
-<li>We favor safety over extreme performance,</li>
+<li>We favor safety over performance,</li>
 <li>It is better to be productive than efficient,</li>
-<li>If the system is not ready it should tell you,</li>
-<li>Implicit values are better than wrong values.</li>
+<li>Implicit values are better than wrong values,</li>
 <li>A good error message worth more than gold,</li>
+<li>If the system is not ready it should tell you,</li>
+<li>If a process fail it should report the errors.</li>
 </ol>
 
 <h2><a id="modular"/>Modular</h2>
@@ -151,13 +152,12 @@ return;
 <p>EVE is a domain specific language but it looks and feel like a general purpose language. We do not do graphics but we manipulate data in any form. This can be text data but also row bit data. So we can read and write images and video streams. Next design choices will make EVE a versatile language:</p>
 
 <ol>
-<li>EVE use implicit data types that are static but enable also variant type. The variant type can support a number of other data types that can be specified. So one variant is more like a pointer than regular variables.</li>
-<li>EVE has routines that can support input/output parameters. That enable developers to define multiple results for a routine. However a routine can not be used in expressions.</li>
-<li>EVE has functions. However the functions are like named expressions. A function must be simple and can return a single result and can not have side-effects.
-</li>
-<li>Variables and parameters are automatically initialized with zero value when there is no explicit initialization. Also, if a parameter has explicit initial value it becomes optional.</li>
-<li>EVE has two assignment operators: "::" and ":=". First is called "clone" second is called "assign" value. Developers can control what assignment operator to use depending on the algorithm requirements.</li>
-<li>In a subroutine, primitive type parameters are transferred <em>by reference</em>, but regular parameters are imutable, protected by the compiler. The output parameters on the other hand are mutable but can not have initial values.</li>
+  <li>EVE use implicit data types that are static but enable also variant type. The variant type can support a number of other data types that can be specified. So one variant is more like a pointer than regular variables.</li>
+  <li>EVE has routines that can support input/output parameters. That enable developers to define multiple results for a routine. However a routine can not be used in expressions.</li>
+  <li>EVE has functions. However the functions are like named expressions. A function must be simple and can return a single result and can not have side-effects.</li>
+  <li>Variables and parameters are automatically initialized with zero value when there is no explicit initialization. Also, if a parameter has explicit initial value it becomes optional.</li>
+  <li>EVE has two assignment operators: "::" and ":=". First is called "clone" second is called "assign" value. Developers can control what assignment operator to use depending on the algorithm requirements.</li>
+  <li>In a subroutine, primitive type parameters are transferred <em>by reference</em>, but regular parameters are immutable, protected by the compiler. The output parameters on the other hand are mutable but can not have initial values.</li>
 </ol>
 
 <h2><a id="classic"/>Classic</h2>
@@ -165,10 +165,10 @@ return;
 <p>EVE is using a familiar syntax. We try to avoid being disruptive. If you know Java or C++ you will be able to learn EVE in less then one week. Also if you know Ada or Pascal, you will find EVE most similar.</p>
 
 <ol>
-<li>EVE is using classic control flow keywords: {if, loop, while, for, repeat, break } that you already know from other languages. Also the end of blocks are using "end" that is so common in other languages.</li>
-<li>EVE is using ASCII operators, and keyword based operators but not Unicode. This enable fast code input required to write large business oriented scripts.</li>
-<li>EVE has user defined data types but also classes. In Java you can define classes but no data types while in Ada you can define types but no classes. EVE is a hybrid language that enable both paradigms.</li>
-<li>EVE is using embedded SQL for data query. Instead of inventing a new query language we will try to stick with the standard SQL dialect as much as possible.</li>
+  <li>EVE is using classic control flow statements: {decision, selection, repetition, error handlers} that you already know from other languages. At the end of block statements we are using "end" that is common in other languages derived from Pascal.</li>
+  <li>EVE is using ASCII operators, and keyword based operators but not Unicode. This enable fast code input required to write large business oriented scripts.</li>
+  <li>EVE has user defined data types but also classes. In Java you can define classes but no data types while in Ada you can define types but no classes. EVE is a hybrid language that enable both. </li>
+  <li>EVE is familiar with SQL and JSON. To deal with many SQL dialects, EVE will have specific keywords that will hide database SQL and enable creation of scripts that generate SQL for major databases.</li>
 </ol>
 <!-- work in progress-->
 <hr>
