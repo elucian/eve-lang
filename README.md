@@ -12,6 +12,6 @@
 
 ------------------------------------------------------------------------------------------
 <p align="center">
-Copyright 2018 Elucian Moise
+Copyright (c) 2023 Elucian Moise
 </p>
 
