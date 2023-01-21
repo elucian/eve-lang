@@ -16,5 +16,5 @@ process
 
   ** explicit coercion rounding:  
   a := round(b);
-  print  a; //  will print: 2
+  print  a; --  will print: 2
 return;

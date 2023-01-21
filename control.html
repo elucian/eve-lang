@@ -41,7 +41,7 @@ Most languages have similar flow control statements. These are block statements 
 <table class="table table-sm table-bordered">
 <tr><th>1</th><th><a href="#if"     >if     </a></th> <td>conditional expression      </td></tr>
 <tr><th>2</th><th><a href="#else"   >else   </a></th> <td>decision block              </td></tr>
-<tr><th>3</th><th><a href="#trial"  >trial  </a></th> <td>conditional selector        </td></tr>
+<tr><th>3</th><th><a href="#ladder"  >ladder  </a></th> <td>conditional selector        </td></tr>
 <tr><th>4</th><th><a href="#loop"   >loop   </a></th> <td>unconditional repetition    </td></tr>
 <tr><th>5</th><th><a href="#while"  >while  </a></th> <td>conditional repetition      </td></tr>
 <tr><th>6</th><th><a href="#for"    >for    </a></th> <td>range controlled repetition </td></tr>
@@ -87,19 +87,19 @@ if expression then
 else
   ** false branch
   ...
-end if;
+done;
 </code></pre>
 
-<h4>Notes:<h4>
+<h4>Notes:</h4>
 <ol>
     <li>The else branch is optional;</li>
     <li>This block is do not use label;</li>
     <li>This block do not have local scope;</li>
 </ol>
 
-<h2><a id="trial"></a>Trial</h2>
+<h2><a id="ladder"></a>Ladder</h2>
 
-<p>By using keywords "trial" and "case" you can create a cascade of decisions. This is a block statement called <em>Selection Ladder</em>. It has several conditional branches plus one optional branch that is executed when no other condition is fulfilled.</p>
+<p>A ladder is a conditional multi-path selector based on exclusive conditions. Only one branch is executed. If no condition is satisfied the alternative branch is executed. Alternative branch is optional.</p>
 
 <div align="center">
   <img src="../images/ladder.jpg" alt="decision" srcset="../images/ladder.svg"
@@ -110,30 +110,27 @@ end if;
 <h4>Example:</h4>
 
 <pre><code class="language-eve">#selection ladder
-trial [label]:
-    ** local variables
-    ...
-case condition_1 then
+if condition_1 then
     ** first branch
     ...
-case condition_2 then
+else if condition_2 then
     ** second branch
-        ...
-case condition_3 then
-    ** second branch
-        ...
-miss
+    ...
+else if condition_3 then
     ** third branch
-        ...
-end trial [label];
+    ...
+else
+    ** alternative branch
+    ...
+done;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. Cases should be exclusive. Most probable case should be evaluated first. If any of the cases is valid the other cases are not evaluated. Usually the cases are aligned with the trial keyword.</p>
+<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. Cases should be exclusive and most probable case should be evaluated first.</p>
 
 <h2><a id="match"></a>Match Selector</h2>
 
 <p>
-This is a multi-path selector similar also named: jump table. A jump table in Bee has two variants: "all" or "one". That is optional keyword. If used, ALL will evaluate all "when" values it may be matching multiple when blocks. If "one" is used (this is the default), only first block that has a matching value will be executed and the rest are ignored even if a second match exist. The second match should not be present though and is probably a mistake!
+This is a multi-path selector similar to switch also named: jump table. It two variants: "all" or "one". That is optional keyword. If used, ALL will evaluate all "when" values it may be matching multiple when blocks. If "one" is used (this is the default), only first block that has a matching value will be executed and the rest are ignored even if a second match exist. The second match should not be present though and is probably a mistake!
 </p>
 
 <div align="center">
@@ -144,30 +141,32 @@ This is a multi-path selector similar also named: jump table. A jump table in Be
 
   <h4>Pattern:</h4>
 
-<pre><code class="language-eve"># Using match selector
-type
-    Selector(0) = {v1,v2,v3,v4} <: Ordinal;
-local
-    select := Selector.random();
-process
-    match select:
-        ** declare locals
-        ...
-    when v1 then
-        ** first path
-        ...
-    when v1, v2 then
-        ** second path
-        ...
-    [when other]
-        ** v3 or v4 found
-        ...
-    end match [select];
-return;
+<pre><code class="language-eve">
+# Define a selector variable
+s := {v1,v2,v3,v4};
+
+** create match selector
+match s [all | one]:
+    ** declare locals
+    ...
+when v1 then
+    ** first path
+    ...
+    [break];
+when v1, v2 then
+    ** second path
+    ...
+other
+    ** v3 or v4 found
+    ...
+done;
 </code></pre>
 
 <h4>Note:</h4>
-<p>Last when other is optional when the selector is not fully cover by all the cases;</p>
+<ul>
+<li>Last when other is optional when the selector is not fully cover by all the cases;</li>
+<li>break is optional and is used only with "all" selection. "one" selection is default;</li>
+</ul>
 
 <h2><a id="loop"></a>Unconditional Loop</h2>
 
@@ -185,21 +184,22 @@ return;
 cycle [label:]
     ** declare control variable
 loop
-    ** shortcut iteration
-    repeat [label] if condition ;
+    ** loop shortcut
+    skip [label] if condition ;
     ...
     ** early interruption
-    break [label] if condition;
+    exit [label] if condition;
     ...
-end cycle [label];
+repeat [label] [if condition];
 </code></pre>
 
 <h4>Notes:</h4>
 
+<ul>
 <li>Unconditional loop is executed at least one time;</li>
-<li>Repeat is equivalent to "continue" statement in other languages;</li>
 <li>The label is optional, that's why is in square brackets;</li>
 <li>The label is used, for nested loops otherwise is not necessary.</li>
+</ul>
 
 <h2><a id="while"></a>While Loop</h2>
 <p>Execute a block of code as long as one condition is true. When the condition become false the repetitive block stops and block "else" is executed. If the condition is never true only the "else" block is executed.</p>
@@ -216,39 +216,38 @@ cycle [label]:
     ** declare control variables
 while condition loop
     ** shortcut iteration
-    repeat if condition;
+    skip if condition;
     ...
     ** early interruption
-    break if condition;
+    exit if condition;
     ...
 then
     ** alternative path
     ...
-end cycle;
+repeat [label] if condition;
 </code></pre>
 
 <h4>Example:</h4>
 
-<pre><code class="language-eve">** example of collection iteration
-driver while_demo:
+<pre><code class="language-eve">
 /** This driver demonstrate
     how to visit members of a List */
-local
-    List this := ["a","b","c","d","e"];
-process
+driver while_demo:
+process:
+    new this := ["a","b","c","d","e"];
     cycle:
-        Integer i := 0; // private
-        Symbol  e;      // private
+        new i := 0 : Integer; -- private
+        new e : Symbol;       -- private
     while i &lt; this.length() loop
-        alter e := this[i];
-        alter i += 1;
-        case: when e  &gt;= "c" then
+        let e := this[i];
+        let i += 1;
+        if e  &gt;= "c" then
             write e;
             write ',' if e is not this.tail;
-        end case;
+        done;
     then
-        write ('i = ' + i);
-    end cycle;
+        write 'i = ' + i;
+    repeat;
     print;
 return;
 </code></pre>
@@ -273,7 +272,7 @@ i = 5
 
 <pre><code class="language-eve">#for loop syntax
 cycle [label]:
-    Integer var := 0;
+    new var := 0;
 for var in (min..max) loop
     ** block statements;
     ...
@@ -281,9 +280,9 @@ for var in (min..max) loop
     next if condition;
     ...
     ** early interruption
-    break if condition;
+    exit if condition;
     ...
-end cycle [label];
+repeat [label];
 </code></pre>
 
 <h4>Notes:</h4>
@@ -295,11 +294,14 @@ end cycle [label];
 
 <p>Example of range iteration using step ratio 2:</p>
 <pre><code class="language-eve">#example of range iteration
-cycle: for i in (1..10:2) loop
+cycle: 
+    new i :Integer;
+for i in (1..10:2) loop
     ** write only odd numbers
     write i;
     write ',' if (i &lt; 9);
-end cycle;
+repeat;
+
 print;
 </code></pre>
 
@@ -308,77 +310,6 @@ print;
 <pre class="output">
 1,3,5,7,9
 </pre>
-
-<h2><a id="process"/>Process</h2>
-
-<p>A process is a series of tasks. Each task can resolve one small use-case. Tasks are executed in serial mode. Any task can fail. When a task fails the process is interrupted an the recover section is executed. If there is no recover section the error is propagated to parent process or to operating system.</p>
-
-<h4>Pattern:</h4>
-
-<pre><code class="language-eve"># define process with tasks
-local
-    ** local declarations
-    ....
-process
-    ** preconditions
-    exit if condition;
-    ....
-    ** open resources
-    ...
-task c1:"description" try
-    ...
-    skip if condition;
-task c2:"description" try
-    ...
-    over if condition;
-task c3:"description" try
-    ...
-    pass if condition;
-task c4:"description" try
-    ...
-    fail if condition;
-recover
-    ** exception region
-    ...
-    retry if condition;
-    ...
-    raise if condition;
-release
-    ** close resources
-    ...
-report
-    ** report the errors
-    ...
-return;
-</code></pre>
-
-<h3>Process Keywords</h3>
-
-<p>The process is created and controlled by many new keywords. Mastering these keywords is important to handle possible errors and avoid catastrophic defects. Most of keywords are intuitive presented in the design pattern above.</p>
-
-<table class="table table-sm table-bordered">
-<tr><th>process</th><td>create one process (driver/aspect/routine)    </td></tr>
-<tr><th>task   </th><td>create one step in the process                </td></tr>
-<tr><th>try    </th><td>begin task executable region                  </td></tr>
-<tr><th>pass   </th><td>end current task with result "pass"           </td></tr>
-<tr><th>fail   </th><td>end current task with result "fail"           </td></tr>
-<tr><th>skip   </th><td>continue to specified next task               </td></tr>
-<tr><th>retry  </th><td>redo the task that raise a recoverable error  </td></tr>
-<tr><th>abort  </th><td>ignore all next tasks and execute the release </td></tr>
-<tr><th>raise  </th><td>issued from recover, propagate the error      </td></tr>
-</table>
-
-<h4>Execution Notes</h4>
-
-<ul>
-<li>Any driver, aspect or routine can be implement as a process.</li>
-<li>All tasks of a single process are execute sequential from top down.</li>
-<li>When the last task is finished the process is ending.</li>
-</ul>
-
-<h4>Process Interruption</h4>
-
-<p>Interruption keywords (exit, halt, over) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used for processes that are not divided into tasks. Using these keywords, a process is interrupted but the finalization regions are not executed.</p>
 
 <hr>
 <p><b>Read next:</b>

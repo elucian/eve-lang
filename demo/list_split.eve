@@ -2,9 +2,9 @@
 driver list_split:
 
 locals
-  List[Integer] lst; //  Null List
+  List[Integer] lst; --  Null List
 process
   ** initialize new reference for "lst"
   lst := split("1,2,3",","); 
-  print lst; // (1,2,3)
+  print lst; -- (1,2,3)
 return;

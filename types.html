@@ -242,17 +242,20 @@ Discrete numbers:</h3>
 </tbody>
 </table>
 <h4>Example:</h4>
-<pre><code class="language-eve">#numeric literals
+<pre><code class="language-eve">
+#numeric literals demo
 driver numeric_literals:
 
-local
-    Integer i; // Initial value = 0
-    Natural n; // Initial value = 0
-    Double  r; // Initial value = 0.00
-process
-    i := 9223372036854775807;  //  maximum
-    n := 18446744073709551615; //  maximum
-    r := 1/2; //  0.5
+** define main process
+process main:
+    new i :Integer; -- Initial value = 0
+    new n :Natural; -- Initial value = 0
+    new r :Double ; -- Initial value = 0.00
+
+    ** use modifier := to change value
+    let i := 9223372036854775807;  --  maximum
+    let n := 18446744073709551615; --  maximum
+    let r := 1/2; --  0.5
 return;
 </code></pre>
 <p><b>See also:</b>&nbsp;<a href="https://en.wikipedia.org/wiki/Scientific_notation#Other_bases" rel="nofollow">scientific notation</a></p>
@@ -354,10 +357,10 @@ return;
 <pre><code class="language-eve">#numeric range demo
 driver numeric_range:
 process
-  print (0..5);    // (0,1,2,3,4,5)
-  print (0.!5);    // (0,1,2,3,4)
-  print (0!.5);    // (1,2,3,4,5)
-  print (0..10:2); // (0,2,4,6,8,10)
+  print (0..5);    -- (0,1,2,3,4,5)
+  print (0.!5);    -- (0,1,2,3,4)
+  print (0!.5);    -- (1,2,3,4,5)
+  print (0..10:2); -- (0,2,4,6,8,10)
 
   ** test range
   expect 0 in (0..5);
@@ -375,7 +378,7 @@ return;
 <pre><code class="language-eve"># using symbol ranges
 driver symbol_range:
 process
-  print ('0'..'5') // ('0','1','2','3','4','5')
+  print ('0'..'5') -- ('0','1','2','3','4','5')
 
   ** following statements should pass
   expect '0' in ('0'..'9');  //will pass
@@ -400,8 +403,9 @@ return;
 <h4>Examples:</h4>
 <pre><code class="language-eve"># domain demo
 driver domain_demo:
-process
-    print [0..1]; // [0..1]
+
+process main:
+    print [0..1]; -- [0..1]
 
     ** using domain
     expect 0   in [0..1];
@@ -429,15 +433,16 @@ return;
 <pre><code class="language-eve">#example of implicit conversion
 driver implicit_coercion:
 
-local
-  Integer a = 2;
-  Double  b = 1.5;
 
-process
-  b := a;       //  this implicit cast is possible b = 2.0
-  b := a + 3.5; //  add 3.5 then assign result to b = 5.5
-  a := b;       //  error: can not assign Double to  Integer
-  a := 1.5;     //  error: can not assign Double to  Integer
+process main:
+  new a := 2;
+  new b := 1.5;
+
+  ** alter a, b
+  let b := a;       --  this implicit cast is possible b = 2.0
+  let b := a + 3.5; --  add 3.5 then assign result to b = 5.5
+  let a := b;       --  error: can not assign Double to  Integer
+  let a := 1.5;     --  error: can not assign Double to  Integer
 return;
 </code></pre>
 
@@ -458,11 +463,11 @@ process
 
 **explicit coercion add (0.5)
   a := ceiling(b);
-  print  a; //will print: 2
+  print  a; -- will print: 2
 
 **explicit coercion rounding:
   a := round(b);
-  print  a; //  will print: 2
+  print  a; -- will print: 2
 return;
 </code></pre>
 
@@ -474,7 +479,7 @@ global
   String  s;
   Integer v = 1000;
 process
-  s := format(v); //  explicit coercion s = '1000'
+  s := format(v); --  explicit coercion s = '1000'
   expect s == a'1000'
 return;
 </code></pre>
@@ -490,9 +495,9 @@ local
   String   s = '1000';
   String   r = '200.02';
 process
-  v := parse(s); //  make v = 1000
-  v := parse(r); //  make v = 200 and decimal .02 is lost
-  b := parse(r); //  make b = 200.02 and decimal .02 is preserved
+  v := parse(s); --  make v = 1000
+  v := parse(r); --  make v = 200 and decimal .02 is lost
+  b := parse(r); --  make b = 200.02 and decimal .02 is preserved
 return;
 </code></pre>
 
@@ -507,10 +512,10 @@ return;
 driver type_inference:
 
 ** Define a list of 10 elements using type inference
-global List ls = [0,1,2,3,4,5,6,7,8,9]; //  initialized list of Integer
+global List ls = [0,1,2,3,4,5,6,7,8,9]; --  initialized list of Integer
 
 process
-  print  ls.type(); //  List[Integer]
+  print  ls.type(); --  List[Integer]
   expect ls is List[Integer];
 return;
 </code></pre>
@@ -705,7 +710,7 @@ return;
 
 <h4>Syntax:</h4>
 <pre class="language-eve">
-Logic: name = False; // explicit initialization
+Logic: name = False; -- explicit initialization
 </pre>
 
 <p><b>Internal design</b></p>
@@ -754,7 +759,7 @@ global Variant_Name v = value;
 class Number: &lt;: Variant{Integer | Double | Null};
 
 ** use nullable variant
-global Number: x; // default value is Null
+global Number: x; -- default value is Null
 </code></pre>
 
 <p><b>Usability</b></p>
@@ -772,15 +777,15 @@ local
 
 process
     ** safe conversion
-    t := 1 / 2;   // make t Double
-    t := 12;      // change type
-    print type(t) // Integer
+    t := 1 / 2;   -- make t Double
+    t := 12;      -- change type
+    print type(t) -- Integer
 
     ** unsafe conversion
-    x := 1.5;   //  x is Double
-    v := 1; //  v is  Integer
-    v := x; //  v becomes Double
-    print type(v) // Double
+    x := 1.5;   --  x is Double
+    v := 1; --  v is  Integer
+    v := x; --  v becomes Double
+    print type(v) -- Double
 return;
 </code></pre>
 
@@ -797,14 +802,14 @@ routine swap(Integer | Double x, y):
 process
     expect type(x) = type(y);
 
-    i := x; //  intermediate reference
-    x := y; //  first  swap
-    y := x; //  second swap
+    i := x; --  intermediate reference
+    x := y; --  first  swap
+    y := x; --  second swap
 return;
 
 local
-    Integer y;   // default zero
-    Double a, b; // default zero
+    Integer y;   -- default zero
+    Double a, b; -- default zero
 
 process
     ** invert two  Integer numbers
@@ -840,9 +845,9 @@ return;
 routine main:
     Date: date := "2019/01/30" as YDM
 process
-    print date as YDM; //  2019/01/30
-    print date as DMY; //  30/01/2019
-    print date as MDY; //  01/30/2019
+    print date as YDM; --  2019/01/30
+    print date as DMY; --  30/01/2019
+    print date as MDY; --  01/30/2019
 return;
 </code></pre>
 
@@ -882,7 +887,7 @@ return;
 
 <hr>
 <p><b>Read next:</b>
-<a href="collections.html">Collections</a></p>
+<a href="classes.html">Classes </a></p>
 
 <!-- Footer -->
 <footer class="footer">

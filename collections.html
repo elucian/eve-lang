@@ -56,11 +56,11 @@ Collections are composite types represents groups of multiple elements of the sa
 type
    TypeName(start:0): {name1, name2, name3} &lt;: Ordinal;
 local
-    TypeName a, b, c;  // a, b, c will have same type
+    TypeName a, b, c;  -- a, b, c will have same type
 process
-    a := TypeName.name1; // a=2
-    b := TypeName.name2; // b=3
-    c := TypeName.name3; // c=4
+    a := TypeName.name1; -- a=2
+    b := TypeName.name2; -- b=3
+    c := TypeName.name3; -- c=4
 return;
 </code></pre>
 
@@ -72,8 +72,8 @@ type
 local
     TypeName a, b;
 process
-    a := name0; // a = 0
-    b := name1; // b = 1
+    a := name0; -- a = 0
+    b := name1; -- b = 1
 return;
 </code></pre>
 
@@ -83,8 +83,8 @@ return;
 <h4>Syntax:</h4>
 <pre><code class="language-eve">#declare same list twice
 local
-    List[elementType] list_name;   //  new empty list of "elementType"
-    List list_name := [value, ...]; //  new list with type inference
+    List[elementType] list_name;   --  new empty list of "elementType"
+    List list_name := [value, ...]; --  new list with type inference
 </code></pre>
 
 <h4>Notes:</h4>
@@ -185,10 +185,10 @@ driver set_union_demo:
 
 local
     Set first = {0,1,2,3,4,5,6,7,8,9};
-    Set[Integer] second; // Null set
+    Set[Integer] second; -- Null set
 
 process
-    store  second := first || {0,1,2,10}; // create set
+    store  second := first || {0,1,2,10}; -- create set
     expect second == {0,1,2,3,4,5,6,7,8,9,10};
 return;
 </code></pre>
@@ -200,11 +200,11 @@ return;
 <pre><code class="language-eve"># Create intersection using &amp;&amp;
 driver set_intersection_demo:
 
-global Set test; // Null set
+global Set test; -- Null set
 
 process
     store test := {1,2,3,4} &amp;&amp; {3,4,5};
-    print test; //  {3,4}
+    print test; --  {3,4}
 return;
 </code></pre>
 
@@ -221,8 +221,8 @@ return;
 <h4>Syntax:</h4>
 <pre><code class="language-eve"># define some hash-map variables
 local
-    Map {String:String} mapName; // define map with string:key and value
-    Map m = {(key:value), ...};  // use type inference to create a map
+    Map {String:String} mapName; -- define map with string:key and value
+    Map m = {(key:value), ...};  -- use type inference to create a map
 </code></pre>
 
 <h4>Example:</h4>
@@ -251,9 +251,9 @@ return;
 <h4>Syntax:</h4>
 <pre><code class="language-eve"># define some hash-map variables
 local
-    String strName;             // define Null string with default capacity
-    String(capacity) lmString;  // define a limited capacity string
-    Text text_name;             // define Null text with unrestricted capacity
+    String strName;             -- define Null string with default capacity
+    String(capacity) lmString;  -- define a limited capacity string
+    Text text_name;             -- define Null text with unrestricted capacity
 </code></pre>
 
 <h4>Example:</h4>
@@ -276,29 +276,29 @@ local
     String str = 'First value'; //mutable string
     String ref = 'First value'; //mutable string
 process
-    expect str == ref;     //  same value
-    expect str is not ref; //  different locations
+    expect str == ref;     --  same value
+    expect str is not ref; --  different locations
 
     ** assign := work by reference not by value
-    ref := str;   //  reset ref
-    expect str == ref; //  same value
-    expect str is ref; //  same reference
+    ref := str;   --  reset ref
+    expect str == ref; --  same value
+    expect str is ref; --  same reference
 
     ** if we modify "str" then "ref" will appear modified
-    str &lt;+ ":"; //  mutate string "str"
-    expect str == 'First value:'; //  modified
-    expect ref == "First value:"; //  also modified
-    expect str is ref; // the reference is holding
+    str &lt;+ ":"; --  mutate string "str"
+    expect str == 'First value:'; --  modified
+    expect ref == "First value:"; --  also modified
+    expect str is ref; -- the reference is holding
 
     ** if we recreate str, reference is reset
-    str := 'First value:'; //  new string location
-    expect str == ref;     //  same value
-    expect str is not ref; //  different location
+    str := 'First value:'; --  new string location
+    expect str == ref;     --  same value
+    expect str is not ref; --  different location
 
     ** ref is pointing to a different location
     ref  := 'New value:'
-    print ref;  //  New value: (modified)
-    print str;  //  First value: (initial value)
+    print ref;  --  New value: (modified)
+    print str;  --  First value: (initial value)
 return;
 </code></pre>
 
@@ -319,10 +319,10 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve"># compare strings
 driver compare_strings:
-    expect('this' == 'this');   //  true (same value)
-    expect("this" == 'this');   //  true (same value)
-    expect(' this' != 'this');  //  true (not same value)
-    expect("this " != "this");  //  true (not same value)
+    expect('this' == 'this');   --  true (same value)
+    expect("this" == 'this');   --  true (same value)
+    expect(' this' != 'this');  --  true (not same value)
+    expect("this " != "this");  --  true (not same value)
 return;
 </code></pre>
 

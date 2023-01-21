@@ -2,13 +2,13 @@
 print 10;
 write "this is a test";
 ** complex expressions can use ()
-print (10 + 10 + 15); // numeric expression
-print (10 > 5) or (2 < 3); // logical expression
+print (10 + 10 + 15); -- numeric expression
+print (10 > 5) or (2 < 3); -- logical expression
 ** list of expressions are enclosed in ()
-print (1, 2, 3);    // expect: 1 2 3
-print (10, 11, 12); // expect: 10 11 12
+print (1, 2, 3);    -- expect: 1 2 3
+print (10, 11, 12); -- expect: 10 11 12
 ** using write to: avoid new line and print
 write (1,2);
 write (3,4);
 ** now create a new line and output the text
-print; // 1234
+print; -- 1234

@@ -39,13 +39,160 @@
 <h4>Bookmarks:</h4>
 
 <ul>
-<li><a href="#main-subroutine">Main process</a></li>
+<li><a href="#main-process">Main process</a></li>
 <li><a href="#list-operations">List operations</a></li>
 <li><a href="#collection-iteration">Collection iteration</a></li>
 <li><a href="#scanning-items">Scanning items</a></li>
 <li><a href="#using-map-table">Using map table</a></li>
 <li><a href="#text-functions">Text functions</a></li>
 </ul>
+
+<h2><a id="main-process"/>Main Process</h2>
+
+<p>A process is a series of jobs, executed in serial mode. Any job can pass or fail but the process continue with next job, unless an exception occours.</p>  
+
+<p>In case of exception, control jump to one of error cases. If none of the cases is handling the error, the recover section is executed. After error is handled the finalize region is executed.</p>
+
+<h4>Pattern:</h4>
+
+<pre><code class="language-eve">
+# define process with label
+process name(param <: type, ...):
+    ** local declarations
+    ....
+begin
+    ** preconditions
+    abort if condition;
+    ....
+    ** open resources
+    ...
+job c1:"description" try
+    ...
+    raise "error" if condition;
+    ...
+    over if condition;
+    ...
+    pass if condition;
+    ...
+    fail if condition;
+    ...
+job c2:"description" try
+    ...
+job c3:"description" try
+    ...
+recover
+    ** exception handlers
+    case error1 then
+      ** exception handler
+      ...
+      abort; -- terminate process
+    case error2 then   
+      ...
+      retry;
+      ...
+      raise; -- propagate the error
+finalize
+    ** close resources
+    ...
+    ** report the errors
+    ...
+return;
+</code></pre>
+
+<h3>Process Keywords</h3>
+
+<p>The process is created and controlled by many keywords. Mastering these keywords is important to handle use the process as intended to. We have chosen keyword chareful to be easy to memorize.</p>
+
+<table class="table table-sm table-bordered">
+<tr><th>process</th><td>create a callable process</td></tr>
+<tr><th>job    </th><td>create one step in the process</td></tr>
+<tr><th>try    </th><td>begin job executable region</td></tr>
+<tr><th>pass   </th><td>skip the rest of task and continue next</td></tr>
+<tr><th>fail   </th><td>skip then rest of task and continue next</td></tr>
+<tr><th>retry  </th><td>redo the task that raise a recoverable error  </td></tr>
+<tr><th>resume  </th><td>execute next job, following the one with error</td></tr>
+<tr><th>abort  </th><td>ignore all next jobs and execute the finalize region </td></tr>
+<tr><th>raise  </th><td>create a recoverable error, jump to cases</td></tr>
+<tr><th>panic  </th><td>jump to finalize and stop the application</td></tr>
+</table>
+
+<h4>Notes</h4>
+
+<ul>
+<li>A process create a loocal scope. All variables define in local scope will be removed when process is ending;</li>
+<li>Any driver, aspect or routine can be implement one or several processes;</li>
+<li>All tasks of a single process are execute sequential from top down;</li>
+<li>When the last task is finished the process is ending.</li>
+</ul>
+
+<h4>Process Interruption</h4>
+
+<p>Interruption keywords (exit, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the abort or raise will trigger the finalization region.</p>
+
+<p><b>Routine call</b>&nbsp;Routines can be used in call statements. A routine call can be done using "apply routine_name" followed by arguments. For one single argument, or no argument the parentheses are not required.</p>
+
+<pre><code class="language-eve">#these are all valid routine calls
+routine_name; //call routine without arguments
+routine_name argument_value;     //call with single argument
+routine_name value1, value2,;    //call with multiple arguments
+routine_name (value, value, ...);//call with a list of arguments
+routine_name (param:value,...);  //call with a argument by name
+routine_name (value, value, param:value); //mix position with names
+routine_name (value, *list_args);         //mix position with list
+routine_name (param:value, *map_args);    //mix names with dictionary
+</code></pre>
+
+<p><b>Routine termination</b>&nbsp;A routine end with keyword return; When routine is terminated, program execution will continue with the next statement after the routine call. Keyword <em>exit</em> can terminate a routine early. If the result do not have initial value and routine terminate early the result may be null.</p>
+
+<h4>Example:</h4>
+<pre><code class="language-eve"># driver with parameters
+driver routine_call(List[String]: *args):
+
+  ** number of arguments received:
+  Integer c := args.length();
+
+  routine test(Integer a):
+    ** print is a system routine
+    print 'argument list has # members' ? a;
+  return;
+begin 
+    ** verify condition and exit
+    exit if c == 0;  -- early interruption
+    apply test(c);   -- routine call
+end driver;
+</code></pre>
+
+<h4>Side Effects</h4>
+<p>A routine can have side-effects:</p>
+<ul>
+<li>modify a shared variable;</li>
+<li>open and write into a file;</li>
+<li>print a message or accept input from console;</li>
+</ul>
+<p><b>using side-effects</b></p>
+<p>Next routine: "add_numbers" has 2 side effects:</p>
+<pre><code class="language-eve">#test side-effects
+driver side_effect:
+
+define
+    .test    :Integer;
+    .p1, .p2 :Integer;
+
+** create a sub-process
+process add_numbers():
+    **side effects
+    test := p1 + p2; --  first side-effect
+    print test;      --  second side-effect
+return;
+
+** define main process
+process main:
+    p1 := 10;    --  side effect
+    p2 := 20;    --  side effect
+    add_numbers; --  call routine add_numbers;
+    expect (result == 30);
+return;
+</code></pre>
 
 
 <h2><a id="list-operations"></a>List operations</h2>
@@ -57,12 +204,12 @@
 driver list_concat:
 
 local
-  List[Symbol] a = ['a','b','c']; //  initialized
-  List[Symbol] b = ['1','2','3']; //  initialized
-  List[Symbol] c; //  beginred initialization
+  List[Symbol] a = ['a','b','c']; --  initialized
+  List[Symbol] b = ['1','2','3']; --  initialized
+  List[Symbol] c; --  beginred initialization
 process
   c := a ++ b;
-  print c; //  ['a','b','c','1','2','3'];
+  print c; --  ['a','b','c','1','2','3'];
 return;
 </code></pre>
 
@@ -72,10 +219,10 @@ return;
 driver list_join:
 
 local
-  String str; //  Null String
+  String str; --  Null String
 process
   str := join([1,2,3],",");
-  print str; // "1,2,3"
+  print str; -- "1,2,3"
 return;
 </code></pre>
 
@@ -84,11 +231,11 @@ return;
 driver list_split:
 
 local
-  List[Integer] lst; //  Null List
+  List[Integer] lst; --  Null List
 process
   ** initialize new reference for "lst"
   lst := split("1,2,3",",");
-  print  lst; // (1,2,3)
+  print  lst; -- (1,2,3)
 return;
 </code></pre>
 <p><b>List as queue</b></p>
@@ -113,8 +260,8 @@ return;
 <li>List.length :retrieve the number of elements</li>
 </ul>
 <p><b>Special attributes</b>&nbsp;A list has properties that can be used in logical expressions:</p>
-<pre><code class="language-eve">List.empty();  // true or false
-List.full();   // true or false
+<pre><code class="language-eve">List.empty();  -- true or false
+List.full();   -- true or false
 </code></pre>
 
 
@@ -146,19 +293,19 @@ return;
 driver list_iteration:
 
 local
-  List[Symbol] my_list; //  this list is Null
+  List[Symbol] my_list; --  this list is Null
   String e;
 process
   my_list := ['a','b','c','d','e'];
   for e in my_list loop
     write e;
     if e == 'd' then
-      break; //  early termination;
+      break; --  early termination;
     else
       write(',');
     end if;
   end loop;
-  print; // c,d
+  print; -- c,d
 return;
 </code></pre>
 
@@ -179,7 +326,7 @@ process
   my_map := {(1:'a'),(2:'b'),(3:'c')};
 
   ** check if a key is present in a map collection
-  expect 3 in my_map; // pass
+  expect 3 in my_map; -- pass
 return;
 </code></pre>
 
@@ -292,8 +439,8 @@ return;
 local
   String s = ""; //empty string
 process
-  s := 'te/' / '/st'; //  "te/st" Linux
-  s := 'te/' \ '/st'; //  "te\st" Windows
+  s := 'te/' / '/st'; --  "te/st" Linux
+  s := 'te/' \ '/st'; --  "te\st" Windows
 return;
 </code></pre>
 

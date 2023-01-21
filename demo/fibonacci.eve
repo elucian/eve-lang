@@ -15,7 +15,7 @@ routine fib(Integer n) => (y ∈ N):
 return;
 
 locals
-   Integer r; // result
+   Integer r; -- result
 process:
    ** call fib rule using argument 5
    make r := fib(n:5);

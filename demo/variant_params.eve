@@ -7,14 +7,14 @@ routine swap(Integer | Double x, y):
 process  
     expect type(x) = type(y);
     
-    i := x; //  intermediate reference
-    x := y; //  first  swap
-    y := x; //  second swap
+    i := x; --  intermediate reference
+    x := y; --  first  swap
+    y := x; --  second swap
 return;
 
 locals
-    Integer y;   // default zero
-    Double a, b; // default zero
+    Integer y;   -- default zero
+    Double a, b; -- default zero
     
 process  
     ** invert two  Integer numbers

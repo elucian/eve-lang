@@ -6,7 +6,7 @@ locals
   String   s = '1000';
   String   r = '200.02';
 process
-  v := parse(s); //  make v = 1000
-  v := parse(r); //  make v = 200 and decimal .02 is lost
-  b := parse(r); //  make b = 200.02 and decimal .02 is preserved
+  v := parse(s); --  make v = 1000
+  v := parse(r); --  make v = 200 and decimal .02 is lost
+  b := parse(r); --  make b = 200.02 and decimal .02 is preserved
 return;

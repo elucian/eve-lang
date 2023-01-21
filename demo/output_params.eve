@@ -11,7 +11,7 @@ locals
 process  
     ** reference argument require a variable
     apply add(1,2, result);
-    print result;     //  expected value 3
+    print result;     --  expected value 3
     ** negative test
-    apply add(1,2,4); //  error, "out" parameter require a variable
+    apply add(1,2,4); --  error, "out" parameter require a variable
 return;

@@ -2,7 +2,7 @@
 driver object_compare:
 
 locals
-    Integer o = n = 1; // context variables
+    Integer o = n = 1; -- context variables
 process  
     ** equal values and types
     expect  o  == n; 

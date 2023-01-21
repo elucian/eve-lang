@@ -17,4 +17,4 @@ process
        comments. we use expression comments
        for commenting out code for debug */
        
-return; // end of line comment
+return; -- end of line comment

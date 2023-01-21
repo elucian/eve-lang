@@ -2,10 +2,10 @@
 driver list_concat:
 
 locals
-  List[Symbol] a = ['a','b','c']; //  initialized
-  List[Symbol] b = ['1','2','3']; //  initialized
-  List[Symbol] c; //  deferred initialization
+  List[Symbol] a = ['a','b','c']; --  initialized
+  List[Symbol] b = ['1','2','3']; --  initialized
+  List[Symbol] c; --  deferred initialization
 process
   store c := a ++ b;
-  print c; //  ['a','b','c','1','2','3'];
+  print c; --  ['a','b','c','1','2','3'];
 return;

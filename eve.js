@@ -4,15 +4,9 @@ function apply_style(str) {
     str = str.replace(/^module\b/,keyword("module"))
     str = str.replace(/^aspect\b/,keyword("aspect"))
     str = str.replace(/^global\b/,keyword("global"))
-    str = str.replace(/^constant\b/,keyword("constant"))
+    str = str.replace(/^define\b/,keyword("define"))
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias"))
-    str = str.replace(/^type\b/,keyword("type"))
-    str = str.replace(/^local\b/,keyword("local"))
-    str = str.replace(/^process\b/,keyword("process"))
-    str = str.replace(/^recover\b/,keyword("recover"))
-    str = str.replace(/^release\b/,keyword("release"))
-    str = str.replace(/^report\b/,keyword("report"))
     str = str.replace(/^return\b/,keyword("return"))
     str = str.replace(/^function\b/,keyword("function"))
     str = str.replace(/^routine\b/,keyword("routine"))
@@ -20,7 +14,35 @@ function apply_style(str) {
     str = str.replace(/^create\b/,keyword("create"))
     str = str.replace(/^remove\b/,keyword("remove"))
     str = str.replace(/^static\b/,keyword("static"))
-    //keywords with indentation
+    // process keywords
+    str = str.replace(/^case\b/,keyword("case"))
+    str = str.replace(/^recover\b/,keyword("recover"))
+    str = str.replace(/^release\b/,keyword("release"))
+    str = str.replace(/^finalize\b/,keyword("finalize"))
+    // overwrite exceptions
+    str = str.replace(/\bprocess\b/,keyword("process"))
+    str = str.replace(/\breturn\b/,keyword("return"))
+
+    // creat control flow
+    str = str.replace(/\bcycle\b/,control("cycle"))
+    str = str.replace(/\brepeat\b/,control("repeat"))    
+    str = str.replace(/\bwhen\b/,control("when"))
+    str = str.replace(/\bjob\b/,control("job"))
+    str = str.replace(/\bother\b/,control("other"))
+    str = str.replace(/\bloop\b/,control("loop"))
+    str = str.replace(/\bwhile\b/,control("while"))
+    str = str.replace(/\bfor\b/,control("for"))
+    str = str.replace(/\btask\b/,control("task"))
+    str = str.replace(/\btry\b/,control("try"))
+    str = str.replace(/\bmiss\b/,control("miss"))
+    str = str.replace(/\bmatch\b/,control("match"))
+    str = str.replace(/\ball\b/g,control("all"))
+    str = str.replace(/\bone\b/g,control("one"))
+    str = str.replace(/\bupdate\b/,control("update"))
+    str = str.replace(/\bif\b/g,control("if"))
+    str = str.replace(/\bthen\b/,control("then"))
+    str = str.replace(/\belse\b/g,control("else"))
+    str = str.replace(/\bdone\b/g,control("done"))
 
     //colorize data types keywords
     str = str.replace(/\bInteger\b/g,types("Integer"))
@@ -46,43 +68,27 @@ function apply_style(str) {
     str = str.replace(/\bFalse\b/g,types("False"))
     str = str.replace(/\bType\b/g,types("Type"))
     str = str.replace(/\bTypeName\b/g,types("TypeName"))
-    
-    // control flow keywords
-    str = str.replace(/\bcase\b/,control("case"))
-    str = str.replace(/\bwhen\b/,control("when"))
-    str = str.replace(/\bother\b/,control("other"))
-    str = str.replace(/\bloop\b/,control("loop"))
-    str = str.replace(/\bwhile\b/,control("while"))
-    str = str.replace(/\bcycle\b/,control("cycle"))
-    str = str.replace(/\bfor\b/,control("for"))
-    str = str.replace(/\bend\b/,control("end"))
-    str = str.replace(/\btask\b/,control("task"))
-    str = str.replace(/\btry\b/,control("try"))
-    str = str.replace(/\btrial\b/,control("trial"))
-    str = str.replace(/\bmiss\b/,control("miss"))
-    str = str.replace(/\bmatch\b/,control("match"))
-    str = str.replace(/\bupdate\b/,control("update"))
-    str = str.replace(/\bif\b/g,control("if"))
-    str = str.replace(/\bthen\b/,control("then"))
-    str = str.replace(/\belse\b/g,control("else"))
+
     // System & built-in variables
     str = str.replace(/\bself\b/g,builtin("self"))
+    str = str.replace(/\bsuper\b/g,builtin("super"))  
+      
     // interruption statements
     str = str.replace(/\bexpect\b/,interrupt("expect"))
     str = str.replace(/\bbreak\b/,interrupt("break"))
     str = str.replace(/\bnext\b/,interrupt("next"))
-    str = str.replace(/\brepeat\b/,interrupt("repeat"))
     str = str.replace(/\balter\b/,interrupt("alter"))
+    str = str.replace(/\bmake\b/,interrupt("make"))
     str = str.replace(/\bstore\b/,interrupt("store"))
     str = str.replace(/\bcreate\b/,interrupt("create"))
     str = str.replace(/\binsert\b/,interrupt("insert"))
     str = str.replace(/\bcommit\b/,interrupt("commit"))
     str = str.replace(/\breset\b/,interrupt("reset"))
-    str = str.replace(/\bstart\b/,interrupt("start"))
-    str = str.replace(/\bsolve\b/,interrupt("solve"))
     str = str.replace(/\bbegin\b/,interrupt("begin"))
+    str = str.replace(/\bapply\b/,interrupt("apply"))
     str = str.replace(/\bwait\b/,interrupt("wait"))
     str = str.replace(/\bexit\b/,interrupt("exit"))
+    str = str.replace(/\babort\b/,interrupt("abort"))
     str = str.replace(/\bprint\b/,interrupt("print"))
     str = str.replace(/\bwrite\b/,interrupt("write"))
     str = str.replace(/\bread\b/,interrupt("read"))
@@ -92,12 +98,21 @@ function apply_style(str) {
     str = str.replace(/\bfail\b/,interrupt("fail"))
     str = str.replace(/\braise\b/,interrupt("raise"))
     str = str.replace(/\bretry\b/,interrupt("retry"))
-    //operators
-    str = str.replace(/\bin\b/g,operator("in"))
+    //operators   
+    str = str.replace(/\bin\b/g,operator("in"))     
     str = str.replace(/\bis\b/g,operator("is"))
     str = str.replace(/\bor\b/g,operator("or"))
     str = str.replace(/\band\b/g,operator("and"))
     str = str.replace(/\bnot\b/g,operator("not"))
+    str = str.replace(/\bnew\b/g,operator("new"))
+    str = str.replace(/\blet\b/g,operator("let"))
+    str = str.replace(/\bset\b/g,operator("set"))
+    str = str.replace(/\bput\b/g,operator("put"))
+    str = str.replace(/\bpop\b/g,operator("pop"))    
+    //symbols
+    str = str.replace(/\b=&gt;\b/g,operator("=&gt;"))
+
+    //create the new statement
     return str
 }
 
@@ -119,21 +134,24 @@ function eve_render() {
                         continue
                     }
                     //check if start with comments
-                    if (line.trim().substr(0,2)=="/*" || start_comments) {
+                    if (line.trim().substr(0,2)=="/*" || 
+                        line.trim().substr(0,2)=="+-" ||  
+                        start_comments) {
                         start_comments = true
                         line = comments(line)
                     } else if (line.trim().substr(0,1)=="#") {
                         line = title(line)
-                        start_comments = false
                     } else if (line.trim().substr(0,2)=="**") {
                         line = subtitle(line)
-                        start_comments = false
+                    } else if (line.trim().substr(0,2)=="--") {
+                        line = comments(line) 
                     } else {
                         //split away end comments //
-                        parts = line.split("//")
+
+                        parts = line.split(" --")
                         if (parts.length > 1) {
                             line = parts[0]
-                            comment = "// " + parts[1]
+                            comment = " --" + parts[1]
                         } else {
                             comment = ""
                         }
@@ -164,7 +182,8 @@ function eve_render() {
                        t += line_span(line)
                     }
                     //check if end of comments
-                    if (line.search(/\*\//)>0) {
+                    if (line.search(/\*\//)>0 || line.search(/\-\+/)>0)
+                    {
                         start_comments = false
                     }
                 }

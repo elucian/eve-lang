@@ -7,8 +7,8 @@ process
 return;
 
 ** call routine with variable number of arguments
-apply test ('a','b','c'); // use 3 arguments
-apply test ('a','b');     // use 2 arguments
+apply test ('a','b','c'); -- use 3 arguments
+apply test ('a','b');     -- use 2 arguments
 
 ** you can use operator "*" to _spread_ collection elements
 locals
