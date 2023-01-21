@@ -1,10 +1,9 @@
 function apply_style(str) {
-    //keywords without indentation
+    // keywords without indentation
     str = str.replace(/^driver\b/,keyword("driver"))
     str = str.replace(/^module\b/,keyword("module"))
     str = str.replace(/^aspect\b/,keyword("aspect"))
-    str = str.replace(/^global\b/,keyword("global"))
-    str = str.replace(/^define\b/,keyword("define"))
+    str = str.replace(/^type\b/,keyword("type"))
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias"))
     str = str.replace(/^return\b/,keyword("return"))
@@ -14,16 +13,18 @@ function apply_style(str) {
     str = str.replace(/^create\b/,keyword("create"))
     str = str.replace(/^remove\b/,keyword("remove"))
     str = str.replace(/^static\b/,keyword("static"))
-    // process keywords
+    //  process keywords
     str = str.replace(/^case\b/,keyword("case"))
     str = str.replace(/^recover\b/,keyword("recover"))
     str = str.replace(/^release\b/,keyword("release"))
     str = str.replace(/^finalize\b/,keyword("finalize"))
-    // overwrite exceptions
+    //  overwrite exceptions
     str = str.replace(/\bprocess\b/,keyword("process"))
     str = str.replace(/\breturn\b/,keyword("return"))
+    str = str.replace(/\bfrom\b/,keyword("from"))
+    str = str.replace(/\buse\b/,keyword("use"))
 
-    // creat control flow
+    //  creat control flow
     str = str.replace(/\bcycle\b/,control("cycle"))
     str = str.replace(/\brepeat\b/,control("repeat"))    
     str = str.replace(/\bwhen\b/,control("when"))
@@ -44,36 +45,36 @@ function apply_style(str) {
     str = str.replace(/\belse\b/g,control("else"))
     str = str.replace(/\bdone\b/g,control("done"))
 
-    //colorize data types keywords
+    // colorize data types keywords
     str = str.replace(/\bInteger\b/g,types("Integer"))
     str = str.replace(/\bNatural\b/g,types("Natural"))
     str = str.replace(/\bDouble\b/g,types("Double"))
     str = str.replace(/\bString\b/g,types("String"))
     str = str.replace(/\bLogic\b/g,types("Logic"))
     str = str.replace(/\bTable\b/g,types("Table"))
+    str = str.replace(/\bUnicode\b/g,types("Unicode"))
     str = str.replace(/\bRecord\b/g,types("Record"))
     str = str.replace(/\bOrdinal\b/g,types("Ordinal"))
     str = str.replace(/\bVariant\b/g,types("Variant"))
     str = str.replace(/\bDate\b/g,types("Date"))
     str = str.replace(/\bTime\b/g,types("Time"))
     str = str.replace(/\bVector\b/g,types("Vector"))
+    str = str.replace(/\bMatrix\b/g,types("Matrix"))    
     str = str.replace(/\bList\b/g,types("List"))
     str = str.replace(/\bSymbol\b/g,types("Symbol"))
     str = str.replace(/\bObject\b/g,types("Object"))
-    str = str.replace(/\bSet\b/g,types("Set"))
-    str = str.replace(/\bMap\b/g,types("Map"))
-    str = str.replace(/\bText\b/g,types("Text"))
+    str = str.replace(/\bDataSet\b/g,types("DataSet"))
     str = str.replace(/\bNull\b/g,types("Null"))
     str = str.replace(/\bTrue\b/g,types("True"))
     str = str.replace(/\bFalse\b/g,types("False"))
     str = str.replace(/\bType\b/g,types("Type"))
     str = str.replace(/\bTypeName\b/g,types("TypeName"))
 
-    // System & built-in variables
+    //  System & built-in variables
     str = str.replace(/\bself\b/g,builtin("self"))
     str = str.replace(/\bsuper\b/g,builtin("super"))  
       
-    // interruption statements
+    //  interruption statements
     str = str.replace(/\bexpect\b/,interrupt("expect"))
     str = str.replace(/\bbreak\b/,interrupt("break"))
     str = str.replace(/\bnext\b/,interrupt("next"))
@@ -98,9 +99,10 @@ function apply_style(str) {
     str = str.replace(/\bfail\b/,interrupt("fail"))
     str = str.replace(/\braise\b/,interrupt("raise"))
     str = str.replace(/\bretry\b/,interrupt("retry"))
-    //operators   
+    // operators   
     str = str.replace(/\bin\b/g,operator("in"))     
     str = str.replace(/\bis\b/g,operator("is"))
+    str = str.replace(/\bas\b/g,operator("as"))    
     str = str.replace(/\bor\b/g,operator("or"))
     str = str.replace(/\band\b/g,operator("and"))
     str = str.replace(/\bnot\b/g,operator("not"))
@@ -108,11 +110,50 @@ function apply_style(str) {
     str = str.replace(/\blet\b/g,operator("let"))
     str = str.replace(/\bset\b/g,operator("set"))
     str = str.replace(/\bput\b/g,operator("put"))
-    str = str.replace(/\bpop\b/g,operator("pop"))    
-    //symbols
-    str = str.replace(/\b=&gt;\b/g,operator("=&gt;"))
+    str = str.replace(/\bpop\b/g,operator("pop")) 
 
-    //create the new statement
+    // two symbols
+    str = str.replace(/\s::\s/g,operator(" :: "))
+    str = str.replace(/\s:=\s/g,operator(" := "))
+    str = str.replace(/\s==\s/g,operator(" == ")) 
+    str = str.replace(/\s!=\s/g,operator(" != "))    
+    str = str.replace(/\s=>\s/g,operator(" => "))
+    str = str.replace(/\s<=\s/g,operator(" <= "))
+    str = str.replace(/\s>=\s/g,operator(" >= "))
+    str = str.replace(/\s:>\s/g,operator(" :> "))
+    str = str.replace(/\s<:\s/g,operator(" <: "))
+
+    // modifiers
+    str = str.replace(/\s\*=\s/g,operator(" *= "))
+    str = str.replace(/\s\/=\s/g,operator(" /= "))
+    str = str.replace(/\s\-=\s/g,operator(" -= "))
+    str = str.replace(/\s\+=\s/g,operator(" += "))    
+    str = str.replace(/\s\^=\s/g,operator(" ^= "))  
+    str = str.replace(/\s\%=\s/g,operator(" %= ")) 
+
+    //shift operators 
+    str = str.replace(/\s<<\s/g,operator(" << ")) 
+    str = str.replace(/\s>>\s/g,operator(" >> ")) 
+
+    // supertype & coercion
+    str = str.replace(/\s<\+\s/g,operator(" <+ "))
+    str = str.replace(/\s\+>\s/g,operator(" +> "))
+
+    //fix single simbols
+    str = str.replace(/\s\:/g,operator(" :"))
+    str = str.replace(/\':/g,"'"+operator(":"))
+    str = str.replace(/\":/g,'"'+operator(":"))
+    str = str.replace(/\s\=/g,operator(" ="))
+
+
+    str = str.replace(/\b=\&gt;\b/g,operator("=&gt;"))
+    str = str.replace(/\b\&lt;\:\b/g,operator("&lt;:"))
+    str = str.replace(/\b<:\b/g,operator("&lt;:"))
+    //str = str.replace(/\b:&gt;\b/g,operator(":&gt;"))
+    //str = str.replace(/\b\+&gt;\b/g,operator("+&gt;"))
+    //str = str.replace(/\b&lt;\+\b/g,operator("&lt;+"))
+
+    // create the new statement
     return str
 }
 
@@ -126,14 +167,14 @@ function eve_render() {
         for (e of eve_code ) {
             if (e.tagName =="CODE") {
                 lines = e.innerText.split("\n")
-                // format each line
+                //  format each line
                 for (line of lines) {
-                    //check if line is empty
+                    // check if line is empty
                     if (i == 0 && line =="") {
                         i += 1
                         continue
                     }
-                    //check if start with comments
+                    // check if start with comments
                     if (line.trim().substr(0,2)=="/*" || 
                         line.trim().substr(0,2)=="+-" ||  
                         start_comments) {
@@ -146,8 +187,7 @@ function eve_render() {
                     } else if (line.trim().substr(0,2)=="--") {
                         line = comments(line) 
                     } else {
-                        //split away end comments //
-
+                        // split away end comments 
                         parts = line.split(" --")
                         if (parts.length > 1) {
                             line = parts[0]
@@ -155,7 +195,7 @@ function eve_render() {
                         } else {
                             comment = ""
                         }
-                        //avoid style in strings
+                        // avoid style in strings
                         if (line.search(/\"/) > 0) {
                             parts = line.split('"');
                             line  = ""; j = 0
@@ -171,17 +211,17 @@ function eve_render() {
                         } else {
                             line  = apply_style(line)
                         }
-                        //reattach comments
+                        // reattach comments
                         if (comment!="") {
                             line = line + comments(comment)
                         }
                     }
-                    //add new line if required
+                    // add new line if required
                     i += 1
                     if (i < lines.length || line!="") {
                        t += line_span(line)
                     }
-                    //check if end of comments
+                    // check if end of comments
                     if (line.search(/\*\//)>0 || line.search(/\-\+/)>0)
                     {
                         start_comments = false

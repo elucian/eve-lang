@@ -64,7 +64,7 @@ A class is a composite data type. It implement properties and methods required t
 
 <pre><code class="language-eve"># define an object instance
 global
-    Object object_name1 = (); //empty object
+    Object object_name1 = (); -- empty object
     Object object_name2 = (attribute:value, ...);
 </code></pre>
 
@@ -230,14 +230,14 @@ object_name.class_attribute; -- using the object name
 driver point_demo:
 
 class Point(Double x = 0, y = 0):
-    Double .x, .y; //public attributes
+    Double .x, .y; -- public attributes
 create
     .x := x;
     .y := y;
 return;
 
 local
-    Point: p1, p2; //declare two Null points
+    Point: p1, p2; -- declare two Null points
 process
     ** initialize the points
     p1 := Point(x:1, y:2);

@@ -44,7 +44,7 @@
 <li><a href="#punctuation">punctuation</a></li>
 <li><a href="#comments">comments</a></li>
 <li><a href="#identifiers">identifiers</a></li>
-<li><a href="#global">global</a></li>
+<li><a href="#globals">globals</a></li>
 <li><a href="#expressions">expressions</a></li>
 <li><a href="#statements">statements</a></li>
 <li><a href="#keywords">keywords</a></li>
@@ -208,8 +208,8 @@ _not_valid_
 <li>A system variables can be an object with attributes or a base type.</li>
 </ul>
 
-<h2><a id="global"></a>Globals</h2>
-<p>In EVE you can define global variables. These are primitive values or references to objects. A global variable is represented by an identifier, and is pair-up with a data type that must pe specified before the identifier name, like in Java.</p>
+<h2><a id="globals"></a>Globals</h2>
+<p>In any script you can define global variables. These are primitive values or references to objects. A global variable is represented by an identifier and value. Type is optional hint.</p>
 
 <p>Global variables can have an initial value that is establish using initial value operator "=" and then can be modified during the program execution using <em>modifiers</em>&nbsp;like: { :=, ::, +=, -= ... } in <em>assignment</em> statements.
 
@@ -219,16 +219,18 @@ _not_valid_
 <p>Usually the examples are complete programs but sometimes just a fragment. Most of the examples that can be executed are stored also in GitHub document. However it is possible the one in GitHub to be a bit different then the one in documentation.</p>
 
 <pre><code class="language-eve">
-** define global variables
-global
+** define global system states
     set $s := "test"
+
     ** two integers
     set $a := 0;
     set $b := 0;
 
-    ** one real variable
-    set $d = 0.5: Real;
+    ** one Double variable
+    set $d = 0.5 :Double;
 </code></pre>
+
+<p><b>Global variables </b> are also called "states" because they are staticly defined in module scope.We use "set" keyword to modify or create new states. This can modify system states or can create private states. </p>
 
 <h4>Initial Value</h4>
 
@@ -242,9 +244,10 @@ global
 
 <p>Operator "=" is used to create an expression. That means you can initialize multiple variables using a single declaration. This is different than assignment ":=" or clone "::" that create a statement and not an expression.</p>
 
-<pre><code class="language-eve"># multiple variables
-new a = b = 0 :Integer;
-new x = y = z = 0.5: Real;
+<pre><code class="language-eve">
+# multiple variables
+    new a = b = 0 :Integer;
+    new x = y = z = 0.5 :Double;
 </code></pre>
 
 <h2><a id="expressions"></a>Expressions</h2>
@@ -260,7 +263,7 @@ new x = y = z = 0.5: Real;
 
 <h4>Examples</h4>
 
-<pre><code class="language-eve">\
+<pre><code class="language-eve">
 ## simple expressions
 driver expression_demo:
 
@@ -296,10 +299,11 @@ return;
 
 <h4>assign: by reference</h4>
 
-<pre><code class="language-eve">#expressions pseudo-code
-new identifier1 := literal;         -- constant literal
-new identifier2 := expression;      -- execute expression
-new identifier3 := function_name(); -- function call
+<pre><code class="language-eve">
+#expressions pseudo-code
+    new identifier1 := literal;         -- constant literal
+    new identifier2 := expression;      -- execute expression
+    new identifier3 := function_name(); -- function call
 </code></pre>
 
 <h4>assign: by value:</h4>
@@ -319,10 +323,10 @@ new variable_name :: reference_name;
 <pre><code class="language-eve"># ternary expression
 
 ** regular style using a single line of code:
-new variable1 := (value1 if condition else value2);
+    new variable1 := (value1 if condition else value2);
 
 ** alternative style using multiple lines of code:
-new variable2 := (value1 if condition1 else
+    new variable2 := (value1 if condition1 else
                   value2 if condition2 else
                   value3);
 </code></pre>
@@ -333,10 +337,10 @@ new variable2 := (value1 if condition1 else
 
 <pre><code class="language-eve">
 ** create a logic variable
-new test := True;
-...
-expect (True if test else False); -- will pass
-...
+    new test := True;
+    ...
+    expect (True if test else False); -- will pass
+    ...
 </code></pre>
 
 <h2><a id="statements"></a>Statements</h2>
@@ -356,8 +360,8 @@ expect (True if test else False); -- will pass
 <pre><code class="language-eve">driver assign_demo:
 process main:
     ** initialization statements
-    new a = 2: Integer;
-    new b : Real;
+    new a = 2 :Integer;
+    new b :Double;
 
     ** execute expression
     let b := a + 0.5;
@@ -1051,7 +1055,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>/=</td>
-<td>Real division modifier</td>
+<td>Double division modifier</td>
 </tr>
 <tr>
 <td>%=</td>

@@ -132,7 +132,7 @@ return;
 <p>In mathematics a set is an abstract data structure that can store certain values, in random order, but has no repeated values. Sets are fast collections for search, add update with new values. However, you have to know the element <em>value</em> in order to search for it or to remove it from a set.</p>
 
 <pre><code class="language-eve">
-global Set[type] set_name = {}; //empty Set but not Null
+global Set[type] set_name = {}; -- empty Set but not Null
 </code></pre>
 
 <p><b>Empty set</b></p>
@@ -259,9 +259,9 @@ local
 <h4>Example:</h4>
 <pre><code class="language-eve"># examples of strings
 local
-    String(100) short_string = ''; //this string can hold 100 symbols
-    String string_name       = ''; //default capacity 256 ASCII symbols
-    Text text_name           = ""; //variable capacity Unicode string
+    String(100) short_string = ''; --this string can hold 100 symbols
+    String string_name       = ''; --default capacity 256 ASCII symbols
+    Text text_name           = ""; --variable capacity Unicode string
 </code></pre>
 
 <h3><a id="string-mutability"></a>String mutability</h3>
@@ -273,8 +273,8 @@ local
 driver test_string:
 
 local
-    String str = 'First value'; //mutable string
-    String ref = 'First value'; //mutable string
+    String str = 'First value'; -- mutable string
+    String ref = 'First value'; -- mutable string
 process
     expect str == ref;     --  same value
     expect str is not ref; --  different locations
@@ -332,8 +332,8 @@ return;
 driver null_string:
 
 local
-    String str;      //Null string (not initialized)
-    String btr = ''; //Not Null (default capacity)
+    String str;      -- Null string (not initialized)
+    String btr = ''; -- Not Null (default capacity)
 process
     ** null string
     expect str == Null;

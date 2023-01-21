@@ -8,7 +8,7 @@ import $eve_lib.console.(*);
 ** declare Fibonacci rule
 routine fib(Integer n) => (y ∈ N):
   if (n = 1) ∨ (n = 0) then
-    alter y := 1; //first value
+    alter y := 1; -- first value
   else
     alter y := fib(n-1) + fib(n-2);
   end if;

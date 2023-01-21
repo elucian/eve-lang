@@ -132,14 +132,14 @@ return;
 <p><b>Routine call</b>&nbsp;Routines can be used in call statements. A routine call can be done using "apply routine_name" followed by arguments. For one single argument, or no argument the parentheses are not required.</p>
 
 <pre><code class="language-eve">#these are all valid routine calls
-routine_name; //call routine without arguments
-routine_name argument_value;     //call with single argument
-routine_name value1, value2,;    //call with multiple arguments
+routine_name; -- call routine without arguments
+routine_name argument_value;     -- call with single argument
+routine_name value1, value2,;    -- call with multiple arguments
 routine_name (value, value, ...);//call with a list of arguments
-routine_name (param:value,...);  //call with a argument by name
-routine_name (value, value, param:value); //mix position with names
-routine_name (value, *list_args);         //mix position with list
-routine_name (param:value, *map_args);    //mix names with dictionary
+routine_name (param:value,...);  -- call with a argument by name
+routine_name (value, value, param:value); -- mix position with names
+routine_name (value, *list_args);         -- mix position with list
+routine_name (param:value, *map_args);    -- mix names with dictionary
 </code></pre>
 
 <p><b>Routine termination</b>&nbsp;A routine end with keyword return; When routine is terminated, program execution will continue with the next statement after the routine call. Keyword <em>exit</em> can terminate a routine early. If the result do not have initial value and routine terminate early the result may be null.</p>
@@ -320,7 +320,7 @@ return;
 driver map_init:
 
 local
-  Map my_map; //uninitialized collection
+  Map my_map; -- uninitialized collection
 process
   ** initialize my_map with values
   my_map := {(1:'a'),(2:'b'),(3:'c')};
@@ -334,7 +334,7 @@ return;
 
 <pre><code class="language-eve">** create new elements
 driver map_append:
-  Map(String, String): animals = {}; //empty collection
+  Map(String, String): animals = {}; -- empty collection
 process
   ** create new element pairs
   animals += ('Bear':'dog');
@@ -360,9 +360,9 @@ process
   print  animals;
 
   ** modify the collection
-  animals['dogs']   := 1; //new element
-  animals['birds']  := 2; //new element
-  animals['birds']  += 3; //alter element
+  animals['dogs']   := 1; -- new element
+  animals['birds']  := 2; -- new element
+  animals['birds']  += 3; -- alter element
 
   ** print the new collection
   print  animals;
@@ -423,7 +423,7 @@ return;
 driver string_concat:
 
 local
-  String str = "";  //empty String
+  String str = "";  -- empty String
 process
   ** set string value using different operators
   alter str := "this " + " string"; expect str == "this  string";
@@ -437,7 +437,7 @@ return;
 
 <pre><code class="language-eve"># path concatenation
 local
-  String s = ""; //empty string
+  String s = ""; -- empty string
 process
   s := 'te/' / '/st'; --  "te/st" Linux
   s := 'te/' \ '/st'; --  "te\st" Windows

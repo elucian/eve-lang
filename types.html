@@ -67,6 +67,12 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 
 <tbody>
 <tr>
+<td>Byte</td>
+<td>Is a Numeric type having range: (0x00..0xFF)</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
 <td>Integer</td>
 <td>Signed on 64 bit</td>
 <td>-2⁶³</td>
@@ -78,7 +84,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <td>0</td>
 <td>2⁶⁴-1</td>
 </tr>
-<td>Decimal</td>
+<td>Double</td>
 <td>Float precision number on 8 bytes</td>
 <td>0</td>
 <td>1.8 × 10³⁰⁸</td>
@@ -131,11 +137,11 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <tbody>
 <tr>
 <td>Discrete</td>
-<td>Ordinal,  Integer, Natural, Range</td>
+<td>Char, Ordinal,  Integer, Natural, Range</td>
 </tr>
 <tr>
 <td>Continuous</td>
-<td>Single, Double, Decimal, Domain</td>
+<td>Float, Double, Rational</td>
 </tr>
 </tbody>
 </table>
@@ -199,20 +205,27 @@ Discrete numbers:</h3>
 </thead>
 <tbody>
 <tr>
-<td>Single</td>
+<td>Float</td>
 <td>7</td>
 <td>4</td>
-<td>&le; 3.4 &times; 10&sup3;⁸</td>
+<td>&le; 3.4 &times; 10^38</td>
 </tr>
 <tr>
 <td>Double</td>
 <td>16</td>
 <td>8</td>
-<td>&le; 1.8 &times; 10&sup3;⁰⁸</td>
+<td>&le; 1.8 &times; 10^308</td>
+</tr>
+<tr>
+<td>Rational</td>
+<td>20</td>
+<td>8</td>
+<td>2^64(*)</td>
 </tr>
 </tbody>
 </table>
-<p>Precision is variable depending on the size of the number. The number of digits represents the largest number that can be converted from string format into a Double and back without loosing any digit. Think of it like a digital display from a packet calculator.</p>
+
+<p><b>Note </b>Precision and range for Rational numbers is variable depending on the resolution. Ratiobal numbers are are using fixed precision arithmetics. When precision is 1, Rational numbers are equivalent to int64 that is a very large number using 20 digits.</p>
 
 <h4>Numeric literals</h4>
 <table class="table table-bordered table-striped">
@@ -246,11 +259,16 @@ Discrete numbers:</h3>
 #numeric literals demo
 driver numeric_literals:
 
+** define global states
+set g1 := 0.0: Real;
+set g2 := 0.0: Float;
+
 ** define main process
 process main:
+    ** define local variables
     new i :Integer; -- Initial value = 0
     new n :Natural; -- Initial value = 0
-    new r :Double ; -- Initial value = 0.00
+    new r :Real;    -- Initial value = 0.00
 
     ** use modifier := to change value
     let i := 9223372036854775807;  --  maximum
@@ -262,20 +280,20 @@ return;
 
 <h2><a id="single-char"/>Single Character</h2>
 
-<p>For representing a single character you can use one of two conventions: single quoted strings are ASCII encoded while double quoted strings are Unicode UTF-8. For single character literals we do not use a string prefix.</p>
+<p>For representing a single character you can use one of two conventions: single quoted strings are ASCII encoded while double quoted strings are Unicode.</p>
 
-<h3>ASCII</h3>
+<h3>ASCII String</h3>
 
 <p>These symbols are represented using 172 ASCII not extended ASCII</p>
 
 <ul>
-<li>Single-quoted character like: 'a'</li>
-<li>Single-quoted number like: '5'</li>
+<li>Single-quoted character like: 'a' or 'abc'</li>
+<li>Single-quoted number like: '5' or '12345'</li>
 </ul>
 
 <p>Value NUL = ''. This is also the default value.</p>
 
-<h3>Unicode</h3>
+<h3>Unicode String</h3>
 
 <p>These symbols are unicode UTF32. That is using 32 bit Integer</p>
 <ul>
@@ -285,9 +303,17 @@ return;
 </ul>
 <p>Value NUL = U+0000. This is also the default value.</p>
 
+<ul>
+<li>Single-quoted character like: "&alpha;" 
+<li>Enumeration of characters "&alpha;&beta;&omega;"</li>
+</ul>
 
 <h2><a id="composite-types"/>Composite Types</h2>
+
 <p>Composite data types are unions of data elements. A composite variable that is not initialized can have Null value that is similar to zero but different. Some of these types are going to be explained later. We enumerate them all here to grasp the idea.</p>
+
+<p><b>Note: </b>EVE Try the best to enable the most generous data type for a data literal. When a more restrictive type is required you must forget about data inference and specify the type using a type hint.</p> 
+
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
@@ -306,22 +332,22 @@ return;
 </tr>
 <tr>
 <td>String</td>
-<td>Single quoted string: a'...' or b'...'</td>
+<td>Single quoted string: '...'</td>
 </tr>
 <tr>
-<td>Text</td>
-<td>Variable capacity string: a"..." or u"..."</td>
+<td>Unicode</td>
+<td>Double quoted string: "..."</td>
 </tr>
 <tr>
 <td>List</td>
-<td>Dynamic unsorted enumeration of values or objects of same type</td>
+<td>Dynamic ordered enumeration of values of same type</td>
 </tr>
 <tr>
-<td>Map</td>
+<td>Table</td>
 <td>Enumeration of (key:value) pairs unique sorted by key</td>
 </tr>
 <tr>
-<td>Set</td>
+<td>DataSet</td>
 <td>Enumeration of unique elements of the same type sorted by value</td>
 </tr>
 <tr>
@@ -329,7 +355,15 @@ return;
 <td>Base class for creation of plain simple objects</td>
 </tr>
 <tr>
-<td>Exception</td>
+<td>Vector</td>
+<td>Single-dimensional, fixed size array</td>
+</tr>
+<tr>
+<td>Matrix</td>
+<td>Multi-dimensiona, fixed size array</td>
+</tr>
+<tr>
+<td>Error</td>
 <td>Composite type derived from Object base class</td>
 </tr>
 </tbody>
@@ -339,9 +373,7 @@ return;
 <p>A range is a notation that can create a sub-set of integer numbers.</p>
 
 <h4>Syntax:</h4>
-<pre><code class="language-eve">range ::= (min..max:ratio);
-</code></pre>
-
+<pre class="language-out">range ::= (min..max:ratio);</pre>
 
 <h4>Notes:</h4>
 <ul>
@@ -356,7 +388,8 @@ return;
 
 <pre><code class="language-eve">#numeric range demo
 driver numeric_range:
-process
+
+process main:
   print (0..5);    -- (0,1,2,3,4,5)
   print (0.!5);    -- (0,1,2,3,4)
   print (0!.5);    -- (1,2,3,4,5)
@@ -365,6 +398,7 @@ process
   ** test range
   expect 0 in (0..5);
   expect 5 in (0..5);
+
   ** test limits
   expect 0 not in (0!.5);
   expect 5 not in (0.!5);
@@ -381,8 +415,8 @@ process
   print ('0'..'5') -- ('0','1','2','3','4','5')
 
   ** following statements should pass
-  expect '0' in ('0'..'9');  //will pass
-  expect 'X' in ('A'..'Z');  //will pass
+  expect '0' in ('0'..'9');  -- will pass
+  expect 'X' in ('A'..'Z');  -- will pass
 return;
 </code></pre>
 
@@ -433,8 +467,8 @@ return;
 <pre><code class="language-eve">#example of implicit conversion
 driver implicit_coercion:
 
-
 process main:
+  ** local variables
   new a := 2;
   new b := 1.5;
 
@@ -452,14 +486,13 @@ return;
 <pre><code class="language-eve"># explicit coercion in EVE
 driver explicit_coercion:
 
-local
-  Integer a = 0;
-  Double  b = 1.5;
+set a = 0   :Integer;
+set b = 1.5 :Double;
 
 process
 **explicit coercion lose (0.5)
-  a := floor(b);
-  write  a; //will print: 1
+  let a := floor(b);
+  write  a; -- will print: 1
 
 **explicit coercion add (0.5)
   a := ceiling(b);
@@ -474,13 +507,13 @@ return;
 <p><b>Number to a string</b></p>
 <pre><code class="language-eve">#convert number to string
 driver number_to_string:
+  ** local states
+  set s:  String;
+  set v:= 1000;
 
-global
-  String  s;
-  Integer v = 1000;
-process
-  s := format(v); --  explicit coercion s = '1000'
-  expect s == a'1000'
+process main:
+  let s := format(v); --  explicit coercion s = '1000'
+  expect (s == '1000');
 return;
 </code></pre>
 
@@ -489,15 +522,18 @@ return;
 
 <pre><code class="language-eve">#string to number conversion
 driver string_to_number:
-local
-  Integer  v;
-  Double   b;
-  String   s = '1000';
-  String   r = '200.02';
-process
-  v := parse(s); --  make v = 1000
-  v := parse(r); --  make v = 200 and decimal .02 is lost
-  b := parse(r); --  make b = 200.02 and decimal .02 is preserved
+
+** global states
+  set v :Integer  ;
+  set b :Double   ;
+
+  set s = '1000'  :String;
+  set r = '200.02':String;
+
+process main:
+  let v := parse(s); --  make v = 1000
+  let v := parse(r); --  make v = 200 and decimal .02 is lost
+  let b := parse(r); --  make b = 200.02 and decimal .02 is preserved
 return;
 </code></pre>
 
@@ -512,9 +548,9 @@ return;
 driver type_inference:
 
 ** Define a list of 10 elements using type inference
-global List ls = [0,1,2,3,4,5,6,7,8,9]; --  initialized list of Integer
+set ls := [0,1,2,3,4,5,6,7,8,9];
 
-process
+process main
   print  ls.type(); --  List[Integer]
   expect ls is List[Integer];
 return;
@@ -572,15 +608,15 @@ return;
 <tbody>
 <tr>
 <td>[]</td>
-<td>List</td>
+<td>Vector</td>
 </tr>
 <tr>
 <td>{}</td>
-<td>Set/Map</td>
+<td>Object/DataSet/Table</td>
 </tr>
 <tr>
 <td>()</td>
-<td>List</td>
+<td>List/Range/Pairs</td>
 </tr>
 <tr>
 <td>""</td>
@@ -610,24 +646,40 @@ return;
 </thead>
 <tbody>
 <tr>
+<td>(1, 2, 3)</td>
+<td>List[Integer]</td>
+</tr>
+<tr>
+<td>("1","2","3")</td>
+<td>List[String]</td>
+</tr>
+<tr>
 <td>{a:0, b, c}</td>
 <td>Ordinal</td>
 </tr>
 <tr>
-<td>{x:'b',y:'d'}</td>
+<td>{a:"x",y:2}</td>
 <td>Object</td>
 </tr>
 <tr>
+<td>{3, 4, 6}</td>
+<td>DataSet[Integer]</td>
+</tr>
+<tr>
 <td>[1, 2, 3]</td>
-<td>List[Byte]</td>
+<td>Vector[Byte](3)</td>
 </tr>
 <tr>
 <td>['a','b','c']</td>
-<td>List[Symbol]</td>
+<td>Vector[Symbol](3)</td>
 </tr>
 <tr>
 <td>["a","b","c"]</td>
-<td>List[Text]</td>
+<td>Vector[String](3)</td>
+</tr>
+<tr>
+<td>[[1,2],[2,4]]</td>
+<td>Matrix[Integer](2,2)</td>
 </tr>
 </tbody>
 </table>
@@ -635,27 +687,27 @@ return;
 
 <p>Sometimes the type is partially specified to simplify type declaration:</p>
 <pre><code class="language-eve"># gradual type declaration
-global
-    ** member type is inferred later from first member
-    List a := [];
+  set a := ();  -- empty List
+  set v := [];  -- empty Vector
+  set s := {};  -- empty DataSet
+  set s := {:}; -- empty Table
 </code></pre>
 
 <h3>Type verification</h3>
 <p>We can verify the type using "is" operator:</p>
 <pre><code class="language-eve"># using operator "is" to check type
 driver type_check:
-
-local
     ** define object and initialize
-    Object r = {name:"test", age:"24"};
+    set r = {name:"test", age:24} :Object;
+    
     ** define hash table
-    Map    t = {('key1':"value1"),('ley2':"value2")};
+    set t = {('key1':"value1"),('ley2':"value2")} :Table;
 process
     ** check variable types using introspection
-    expect type(r.name)  is Text;
-    expect type(r.age)   is Text;
+    expect type(r.name)  is Unicode;
+    expect type(r.age)   is Integer
     expect type(t.key)   is String;
-    expect type(t.value) is Text;
+    expect type(t.value) is Unicode;
 return;
 </code></pre>
 
@@ -664,9 +716,7 @@ return;
 <p>For type introspection we can use type() built-in function:</p>
 <pre><code class="language-eve"># introspection demo
 driver print_type:
-
-global  Double i = 1.5;
-
+  set i := 1.5;
 process
   expect i.type() is Double;
   print "type of i is \s" ? i.type();
@@ -675,12 +725,17 @@ return;
 
 
 <h2><a id="polymorphic-operators"</a>Polymorphic operators</h2>
+
 <p>In mathematics there are very few operators: {+, -, / , * } that can operate with any kind of numbers: negative, positive, rational or real. Operators are not bound to specific data types. Therefore these operators are called&nbsp;<em>"polymorphic"</em>.</p>
+
 <p>Some languages define different operators for Integers and Floating decimal numbers. For example in OCaml the operator "/" can divide Integers while "/." can divide Floating point decimal numbers. This is unexpected for a mathematician who is expecting to use one single operator for division.</p>
+
 <p>In EVE, operators are mapped to functions. To design polymorphic operators we overload the function signature using type dispatch. The dispatch is using left side operand first, this is the leading operand. For unary operators there is only right side operand so this becomes the leading operand.</p>
 
 <h2><a id="logical-type" class="anchor" href="#logical-type"></a>Logical type</h2>
-<p>In Latin the "falsus" and "verum" are translated in English to "false" and "true".</p>
+
+<p>In Latin the "falsus" and "verum" are translated in English to "false" and "true". In many languages False and True are two constants. In Fortran we use to have .T. and .F. condtants while in C we use to have {0, 1}. Two values.</p>
+
 <ul>
 <li>falsus := &perp; defined by &perp; := &not; ⊤ and ( P &and; &not;P )</li>
 <li>verum := ⊤ defined by ⊤ := &not; &perp; and ( P &or; &not;P )</li>
@@ -710,14 +765,16 @@ return;
 
 <h4>Syntax:</h4>
 <pre class="language-eve">
-Logic: name = False; -- explicit initialization
+-- explicit initialization
+set False := 0b0 :Byte; 
+set True  := Ob1 :Byte;   
 </pre>
 
 <p><b>Internal design</b></p>
 <p>Probably best to define Logic type is Ordinal:</p>
 
 <pre class="language-eve">
-type Logic = { .False , .True } &lt;: Ordinal;
+type Logic = {False:0 , True} &lt;: Ordinal;
 </pre>
 
 <p><b>Logical expressions</b></p>
@@ -734,10 +791,10 @@ type Logic = { .False , .True } &lt;: Ordinal;
 <h4>Syntax:</h4>
 
 <pre><code class="language-eve">** define variant subtype
-class Variant_Name: &lt;: Variant{Type | Type | ... };
+type {Type1 | Type2 | ... } &lt;: Variant;
 
-**  declare single variable (with initial value)
-global Variant_Name v = value;
+**  declare variable (with initial value)
+set v = value :Variant_Name() ;
 </code></pre>
 
 <h2><a id="variant-properties" class="anchor" href="#variant-properties"></a>Variant Properties</h2>
@@ -756,10 +813,11 @@ global Variant_Name v = value;
 
 <h4>Pattern:</h4>
 <pre><code class="language-eve">** define nullable variant
-class Number: &lt;: Variant{Integer | Double | Null};
+type 
+    Number = { Integer | Double | Null }; &lt;: Variant
 
 ** use nullable variant
-global Number: x; -- default value is Null
+set x: Number;
 </code></pre>
 
 <p><b>Usability</b></p>
@@ -772,20 +830,22 @@ global Number: x; -- default value is Null
 <pre><code class="language-eve">#variant type demo
 driver variant_type:
 
-local
-    Double | Integer v, x ,t;
+** tefine variants
+    set v, x ,t: { Double | Integer };
 
 process
     ** safe conversion
-    t := 1 / 2;   -- make t Double
-    t := 12;      -- change type
-    print type(t) -- Integer
+    let t := 1 / 2;   -- make t Double
+    print type(t)     -- Double
+
+    let t := 12;      -- change type
+    print type(t)     -- Integer
 
     ** unsafe conversion
-    x := 1.5;   --  x is Double
-    v := 1; --  v is  Integer
-    v := x; --  v becomes Double
-    print type(v) -- Double
+    let x := 1.5;  --  x is Double
+    let v := 1;    --  v is Integer
+    let v := x;    --  v becomes Double
+    print type(v)  -- Double
 return;
 </code></pre>
 
@@ -797,29 +857,27 @@ return;
 driver variant_params:
 
 ** define a subroutine that can swap two numbers
-routine swap(Integer | Double x, y):
-    Integer | Double i
-process
+** requires input/output parameters marked with @
+function swap(@x, @y: {Integer | Double} ):
+    ** check type to be the same
     expect type(x) = type(y);
 
-    i := x; --  intermediate reference
-    x := y; --  first  swap
-    y := x; --  second swap
+    ** swap x, y values
+    new i := x; --  intermediate
+    let x := y; --  first  swap
+    let y := i; --  second swap
 return;
-
-local
-    Integer y;   -- default zero
-    Double a, b; -- default zero
 
 process
     ** invert two  Integer numbers
-    x := 10;
-    y := 20;
+    new x := 10;
+    new y := 20;
     swap(x, y);
     expect (x == 20) and (y == 10);
+
     ** invert two Double numbers
-    a := 1.5;
-    b := 2.5;
+    new a := 1.5;
+    new b := 2.5;
     swap(a, b);
     expect (a == 2.5) and (b == 1.5);
 return;
@@ -841,10 +899,13 @@ return;
 <li>ydm() format: "MM/DD/YYYY"</li>
 </ul>
 <p><b>Note:</b>&nbsp;A reversible function is overloaded.</p>
-<pre><code class="language-eve">#overloaded function
-routine main:
-    Date: date := "2019/01/30" as YDM
-process
+
+<pre><code class="language-eve">
+#overloaded function
+process main:
+    date := "2019/01/30" as YDM;
+
+    ** convert string in Date type
     print date as YDM; --  2019/01/30
     print date as DMY; --  30/01/2019
     print date as MDY; --  01/30/2019
@@ -875,12 +936,15 @@ return;
 
 <pre><code class="language-eve"># time demo
 driver time_demo:
-local
-    Time time1 = time2 = time3 = "00:00";
-process
-    time1 := "23:63" as T24;
-    time2 := "23:63:59,99" as T24;
-    time3 := "11:63:59pm,99ms" as T12;
+
+process main:
+    ** define 3 variable of same type
+    new time1 = time2 = time3 = "00:00": Time;
+
+    ** alter variables usi "as" operator
+    let time1 := "23:63" as T24;
+    let time2 := "23:63:59,99" as T24;
+    let time3 := "11:63:59pm,99ms" as T12;
 return;
 </code></pre>
 

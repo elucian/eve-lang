@@ -88,7 +88,7 @@ import $eve_lib.console.(*);
 ** declare Fibonacci routine
 function fib(n:Integer) => (y:Integer):
   if (n == 1) or (n == 0) then
-    let y := 1; //first value
+    let y := 1; -- first value
   else
     let y := fib(n-1) + fib(n-2);
   done;
@@ -154,6 +154,7 @@ return;
 <p>EVE is a domain specific language but it looks and feel like a general purpose language. We do not do graphics but we manipulate data in any form. This can be text data but also row bit data. So we can read and write images and video streams. Next design choices will make EVE a versatile language:</p>
 
 <ol>
+  <li>EVE variables and parameters can be declared using type hint, tupe inference or gradual typing. This improve readability and reduce clutter;</li>
   <li>EVE use implicit data types that are static but enable also variant type. The variant type can support a number of other data types that can be specified. So one variant is more like a pointer than regular variables.</li>
   <li>EVE has processes that can support input/output parameters. A process can run in a separate thread. However a process can not be used in expressions.</li>
   <li>EVE has functions. However the functions are like named expressions. A function must be simple and can return a single result and can not have side-effects.</li>

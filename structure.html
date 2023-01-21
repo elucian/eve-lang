@@ -43,14 +43,23 @@ EVE is designed to quickly build a data processing app that can run several jobs
 <hr>
 
 <ul>
+<li><a href="#configuration">Configuration</a></li>
 <li><a href="#scripts">Scripts</a></li>
 <li><a href="#regions">Regions</a></li>
-<li><a href="#global">Globals</a></li>
+<li><a href="#globals">Globals</a></li>
 <li><a href="#modules">Modules</a></li>
 <li><a href="#drivers">Drivers</a></li>
 <li><a href="#aspects">Aspects</a></li>
 <li><a href="#execution">Execution</a></li>
 </ul>
+
+<h2><a id="configuration"></a>Configuration</h2>
+
+<p>One application can load system environment variables from a configuration file. These are stored as "$name:value" pairs. Some system constants can be derived from environment variables using concatenation operators "&amp;","+", "/" or "\".</p>
+
+<p>A configuration file have extension .cfg. It can be used by the compiler or by the application. One application can run with different configuration files. Application documentation must contain description of configuration constants.</p>
+
+<p>Sometimes a&nbsp;<em>file template</em>&nbsp;is provided for copy and modify. Template file may contain comments using Bee syntax that you will learn later. Bee application will automatically parse configuration file to read values for:&nbsp;<em>system constants</em>.</p>
 
 <h2><a id="scripts">Scripts</h2>
 
@@ -88,7 +97,7 @@ EVE is designed to quickly build a data processing app that can run several jobs
 
 <h2><a id="regions"/>Regions</h2>
 
-<p>A script file is divided into regions using keywords: {import, global, define, alias, process}. Regions are using indentation. A region ends when next region starts.</p>
+<p>A script file is divided into regions using keywords: {import, alias, process, class, function}. Regions are using indentation. A region ends when next region starts.</p>
 
 <h4>Syntax Pattern:</h4>
 
@@ -103,14 +112,13 @@ EVE is designed to quickly build a data processing app that can run several jobs
 ** declare the name and type of a module
 [driver | aspect | module] name(parameters):
 
-** declaration of system variables
-global
-  set $sys_con = value; -- system constant
+** set system variables
+set $sys_con = value;
+...
 
-** shared states
-define
-  set .Name = value; -- constant (Start with uppercase)
-  set .name = value; -- variable (Start with lowercase)
+** public, shared states
+set .name = value; 
+...
 
 ** import region
 import
@@ -118,9 +126,18 @@ import
 
 ** qualifier suppression region
 alias
-    AliasName = library_name.MemberName;
-    AliasName = ClassName[parameters];
+    AliasName1 = library_name.MemberName;
+    AliasName2 = ClassName[parameters];
     ...
+** define user types
+type
+    user_tupe = {} <: Supertype;
+    ...
+
+** private, shared states
+set local = value1: user_tupe;
+set name  = value2: TypeName;
+...
 
 ** main process, (executable region)
 process main:
@@ -129,20 +146,16 @@ process main:
 return;
 </code></pre>
 
-<h3><a id="global"></a>Globals</h3>
-
-<p>Globals are declared in first region. Global members are recognized by "sigil" $. Therefore we do not need any keywords to declare globals.</p>
-
-<p>Once you have imported one module that have globals, you can access them without qualifier. If names collide, the variables that overlap are hidden and can be called with qualifier. You need to create an alias for these cases.</p>
+<p><b>Note: </b>Any scrupt has a static, global scope. You can define here global states, processes, classes and functions. Notice variables defined in this scope are created using keyword "set".</p>
 
 <h3>System variables</h3>
 
-<p>System variables start with prefix "$" like globals. Usually are loaded from a configuration file (*.cfg), but sometimes are defiand explicit usually in EVE modules.</p>
+<p><em>System variables </em>start with prefix "$". Usually are loaded from a configuration file (*.cfg), but sometimes are defiand explicit usually in EVE modules.</p>
 
 <h4>Note:</h4>
 <ul>
-<li>System variables can be defined in a configuration file</li>
-<li>System variables are usually defined in a modules.</li>
+<li>System variables can be defined in a configuration file,</li>
+<li>System variables are usually defined in core modules.</li>
 </ul>
 
 <p>Several system variables are provided by EVE environment:</p>
@@ -153,27 +166,48 @@ return;
 <li>$pro_lib  :project lib folder</li>
 </ul>
 
-<h3>System objects</h3>
-<p>System objects are instantiated at startup and are part of core library. These hold runtime information that you can use for debug.</p>
+<p><em>System objects</em> are instantiated at startup and are part of core library. These hold runtime information that you can use for debug.</p>
 
 <ul>
 <li>$error :contains last error with code & message</li>
 <li>$stack :contains debug information about current call stack</li>
 <li>$trace :contains reporting information about executed statements
 </ul>
+
 <h4>Notes:</h4>
 <ul>
-<li>User can create new system variables specific to one application;</li>
-<li>Prefix "$" is used to avoid scope qualifier and improve code readability;</li>
+<li>User can create new system variables for one application;</li>
+<li>Prefix "$" is used to avoid scope qualifier and improve code readability. These variables are environment variables and can be accessed without qualifier;</li>
 </ul>
+
+<h3>Public states</h3>
+
+<p>Public states are static variable defined in&nbsp;<em>global scope</em>&nbsp;, with "." prefix. You can access these variables using module qualifier.</p>
+
+<h4>Example</h4>
+
+<pre><code class="language-eve">
+** gobal scope
+    set  .PI  := 3.14; -- public constant
+    set .var := 0;    -- piblic variable
+</code></pre>
+
+<h4>Notes:</h4>
+<ul>
+<li>Shared states are using operator ":=" for initialization,</li>
+<li>Constant states are by convention using uppercase letters,</li>
+<li>A driver can't define states. That is a driver is stateles.</li>
+</ul>
+
 
 <h3>Import region</h3>
 
 <p>Is used to include members from several other modules into current module:</p>
+
 <h4>Syntax:</h4>
-<pre><code class="language-eve">** define global constant
-global
-    $user_path := $root_path/relative_path
+<pre><code class="language-eve">
+** define global states
+    set $user_path := $root_path/relative_path;
 
 import
     from $user_path use (member_name,...);  -- specific members
@@ -188,24 +222,34 @@ import
 <li>member alias can created from public members of other module;</li>
 </ul>
 
-<h3>Shared states</h3>
+<h3>User types</h3>
 
-<p>Shared states are variable defined in&nbsp;<em>define</em>&nbsp;region, with "." prefix. You can access these variables using module qualifier.</p>
+<p>In EVE you can define data types, that are very symilar to classes, except the types do not have other methods but the methods of the supertype.</p>
+
+<p>User types are inherited from the supertype or class. When you create this type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type constructor.<p>
+
+<p>User types are defined in a region that start with keyword "type". You can define types on several lunes of code separated by semicolumn. You can define multiple type regions.</p>
+
+<h3>Private states</h3>
+
+<p>Any script can hold private variables or constants. Private states are defined using keyword "set". These members are not visible outside of current module. Some of these may be using custom types.</p>
+
+<div class="alert alert-warning"><b>Warning: </b>Is considered bad practice to modify global variables inside processes. All processes should depend only on parameters. However EVE do not prevent you from doing so.</div>
 
 <h4>Example</h4>
 
 <pre><code class="language-eve">
-define
-  .PI := 3.14; -- share state
+type Person = {name:String, age:Integer} <: Object;
+
+** create states using type inference
+    set  E    := 2.52; -- Euler's number (constant)
+    set  r    := 0.01; -- Real, private state
+
+** create a global object of type Person.
+    set  me   := Person("Elucian", "56"); 
 </code></pre>
 
-<h4>Notes:</h4>
-<ul>
-<li>Shared states are using operator ":=" for initialization,</li>
-<li>Shared states are static, one module can be imported once,</li>
-<li>Constant states are by convention using uppercase letters,</li>
-<li>A driver can't define states. That is a driver is stateles.</li>
-</ul>
+<p><b>Restriction: </b>It is forbitten to use keyword "new" in global scope. All states should be created using keyword "set". This will create static constants or variables on the heap.</p>
 
 <h2><a id="drivers">Drivers</h2>
 
@@ -221,11 +265,6 @@ define
 <li>A driver is independent, can not be imported;</li>
 <li>A driver do not have public/shared states;</li>
 </ul>
-
-<h2><a id="configuration"></a>Configuration</h2>
-<p>One application can load system constants from a configuration file. These are stored as "$name:value" pairs. Some system constants can be derived from environment variables using concatenation operators "&amp;","+", "/" or "\".</p>
-<p>A configuration file have extension .cfg. It can be used by the compiler or by the application. One application can run with different configuration files. Application documentation must contain description of configuration constants.</p>
-<p>Sometimes a&nbsp;<em>file template</em>&nbsp;is provided for copy and modify. Template file may contain comments using Bee syntax that you will learn later. Bee application will automatically parse configuration file to read values for:&nbsp;<em>system constants</em>.</p>
 
 <h2><a id="modules"></a>Modules</h2>
 <p>Modules are source files having extension: *.eve. Module names are using lowercase letters, can contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long.</p>
@@ -331,10 +370,10 @@ process main:
 
     ** inpur/output argument require a variable
     apply add(1,2, @op:result);
-    print result;     //expected value 3
+    print result;     -- expected value 3
 
     ** negative test, will fail
-    apply add(1,2,4); //error, "out" parameter require a variable
+    apply add(1,2,4); -- error, "out" parameter require a variable
 return;
 </code></pre>
  
@@ -453,7 +492,7 @@ process main:
         write ".";
         wait  100;
         over  if i == 10;
-        alter i += 1;
+        let   i += 1;
     repeat;
 return;
 </code></pre>

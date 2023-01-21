@@ -2,8 +2,8 @@
 driver null_string:
 
 locals 
-    String str;      //Null string (not initialized)
-    String btr = ''; //Not Null (default capacity)
+    String str;      -- Null string (not initialized)
+    String btr = ''; -- Not Null (default capacity)
     
 process
     ** null string

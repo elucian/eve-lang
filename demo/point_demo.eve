@@ -2,14 +2,14 @@
 driver point_demo:
 
 class Point(Double x = 0, y = 0):
-    Double .x, .y; //public attributes
+    Double .x, .y; -- public attributes
 create
     .x := x;
     .y := y;
 return;
 
 locals
-    Point: p1, p2; //declare two Null points 
+    Point: p1, p2; -- declare two Null points 
 process
     ** initialize the points
     p1 := Point(x:1, y:2);    

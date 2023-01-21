@@ -5,7 +5,7 @@ functions
     TypeName: function_name(Type : param = value,...) =&gt; (expression);
   
 locals
-    TypeName result; //not initialized (require store);
+    TypeName result; -- not initialized (require store);
     
 process    
     ** call with no arguments:

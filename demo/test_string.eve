@@ -2,8 +2,8 @@
 driver test_string:
 
 locals
-    String str = 'First value'; //mutable string
-    String ref = 'First value'; //mutable string
+    String str = 'First value'; -- mutable string
+    String ref = 'First value'; -- mutable string
 process  
     expect (str == ref);     --  same value
     expect (str is not ref); --  different locations  
