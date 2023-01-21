@@ -708,6 +708,10 @@ return;</code></pre>
 <td>Outline comments | Expression comments</td>
 </tr>
 <tr>
+<td>+-...-+</td>
+<td>Block comments | Boxed comments</td>
+</tr>
+<tr>
 <td>#(....)</td>
 <td>String interpolation (placeholder) for operator "?"</td>
 </tr>
@@ -860,7 +864,7 @@ return;</code></pre>
 <td>Single line comment</td>
 </tr>
 <tr>
-<td>//</td>
+<td>--</td>
 <td>End of line comment</td>
 </tr>
 <tr>
@@ -1078,22 +1082,22 @@ return;</code></pre>
 <td>Simple difference, use like L := A - B</td>
 </tr>
 <tr>
-<td class="fixed">A || B</td>
+<td class="fixed">A | B</td>
 <td>set</td>
 <td>Union A with B: "&cup;" use like C : = A | B</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;&amp;&amp;&nbsp;B</td>
+<td class="fixed">A&nbsp;&amp;&nbsp;B</td>
 <td>set</td>
 <td>Intersect A with B: "&cap;" use like C := A &amp; B</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;&lt;=&nbsp;B</td>
+<td class="fixed">A&nbsp;&lt;&nbsp;B</td>
 <td>logic</td>
 <td>verify if A is subset of B: In math: &sub;</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;&gt;=&nbsp;B</td>
+<td class="fixed">A&nbsp;&gt;&nbsp;B</td>
 <td>logic</td>
 <td>verify if B is subset of A: In math: &sup;</td>
 </tr>

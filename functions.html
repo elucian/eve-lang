@@ -1,0 +1,126 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Sage-Code EVE language specification.">
+  <meta name="author" content="Elucian Moise">
+  <meta name="keywords" content="sage, code, EVE, language">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- Website title -->
+  <title>EVE Specification</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Icon -->
+  <link rel="icon" type="image/png"  href="../images/favicon.ico">
+  <!-- EVE code highlighter -->
+  <script src="eve.js"></script>
+  <!-- Sage-Code custom CSS -->
+  <link rel="stylesheet" href="../sage.css">
+  </head>
+<body onload="eve_render();">
+
+<div class="container">
+
+<!-- header -->
+<div class="row">
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col  bottom-right">
+        <a href="index.html#lang-index">index</a><--
+    </div>
+</div><hr>
+
+<div class="alert alert-secondary shadow-sm">
+A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. In EVE functions are pure and first class values
+</div>
+
+<h1><a id="functions">EVE Functions</h1>
+
+<h4>Pattern:</h4>
+
+<p>Functions are declared in script regions that start with keyword: "function". A function can be public or private, local or global. Let's analyze the syntax: </p>
+
+<pre><code class="language-eve">#declare functions
+function
+    TypeName name(parameters) =&gt; (expression);
+</code></pre>
+
+<h4>Notes:</h4>
+
+<ul>
+<li>Result type is declared before function name,</li>
+<li>You can declare more than one function in same region.</li>
+<li>A function can have only input parameters,</li>
+<li>A function can have a single expression,</li>
+<li>A function can be created by a routine,</li>
+<li>A routine can receive parameters of type function,</li>
+</ul>
+
+<p><b>Function call</b>&nbsp;The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed.</p>
+
+<h4>Pattern:</h4>
+
+<pre><code class="language-eve">#demo function call
+driver function_call:
+
+function
+    TypeName: function_name(Type : param = value,...) =&gt; (expression);
+
+process:
+    TypeName result; //not initialized (require store)
+begin
+    ** call with no arguments:
+    result := function_name();
+
+    ** call with arguments mapped by position
+    result := function_name(value, ...);
+
+    ** call using parameter names and pair-up operator ":"
+    result := function_name(parameter:value ...);
+end process;
+</code></pre>
+
+<p><b>Note:</b>&nbsp;Argument value can be anything that translate to a value of expected type:</p>
+<ul>
+<li>value ::= constant | variable</li>
+<li>value ::= expression | other function call</li>
+</ul>
+<p><b>formal parameters</b></p>
+<ul>
+<li>Parameters are declared in parenthesis () after the function name,</li>
+<li>Each parameter has name and type and can have one default value,</li>
+<li>When a function is called each parameter receive a value that is called argument.</li>
+</ul>
+
+<h4>function call arguments</h4>
+
+<p>There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters with a function call. Arguments can be literals, constants or variables.</p>
+<h4>Example:</h4>
+<pre><code class="language-eve"># demo function with parameters
+driver function_params:
+
+function
+    Integer sum(Integer a, b) =&gt; (a + b);
+begin
+    print sum(1,2);  -- 3
+    print sum(2,4);  -- 6
+return;
+</code></pre>
+
+<!-- work in progress-->
+
+<hr>
+<p><b>Read next:</b>
+<a href="collections.html">Collections</a></p>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-copyright text-center"></div>
+</footer>
+</div>
+</body>
+</html>
