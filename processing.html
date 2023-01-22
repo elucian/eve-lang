@@ -60,13 +60,7 @@
 process name(param <: type, ...):
     ** local declarations
     ....
-begin
-    ** preconditions
-    abort if condition;
-    ....
-    ** open resources
-    ...
-job c1:"description" try
+  job (c1,"description") try
     ...
     raise "error" if condition;
     ...
@@ -76,21 +70,21 @@ job c1:"description" try
     ...
     fail if condition;
     ...
-job c2:"description" try
+  job (c2,"description") try
     ...
-job c3:"description" try
+  job (c3,"description") try
     ...
 recover
-    ** exception handlers
-    case error1 then
-      ** exception handler
-      ...
-      abort; -- terminate process
-    case error2 then   
-      ...
-      retry;
-      ...
-      raise; -- propagate the error
+  ** exception handlers
+  case error1 then
+    ** exception handler
+    ...
+    abort; -- terminate process
+  case error2 then   
+    ...
+    retry;
+  else
+    raise; -- propagate the error
 finalize
     ** close resources
     ...
@@ -106,7 +100,7 @@ return;
 <table class="table table-sm table-bordered">
 <tr><th>process</th><td>create a callable process</td></tr>
 <tr><th>job    </th><td>create one step in the process</td></tr>
-<tr><th>try    </th><td>begin job executable region</td></tr>
+<tr><th>try    </th><td>begin job executable block</td></tr>
 <tr><th>pass   </th><td>skip the rest of task and continue next</td></tr>
 <tr><th>fail   </th><td>skip then rest of task and continue next</td></tr>
 <tr><th>retry  </th><td>redo the task that raise a recoverable error  </td></tr>

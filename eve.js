@@ -14,11 +14,11 @@ function apply_style(str) {
     str = str.replace(/^remove\b/,keyword("remove"))
     str = str.replace(/^static\b/,keyword("static"))
     //  process keywords
-    str = str.replace(/^case\b/,keyword("case"))
     str = str.replace(/^recover\b/,keyword("recover"))
     str = str.replace(/^release\b/,keyword("release"))
     str = str.replace(/^finalize\b/,keyword("finalize"))
     //  overwrite exceptions
+    str = str.replace(/\bfunction\b/,keyword("function"))
     str = str.replace(/\bprocess\b/,keyword("process"))
     str = str.replace(/\breturn\b/,keyword("return"))
     str = str.replace(/\bfrom\b/,keyword("from"))
@@ -29,6 +29,7 @@ function apply_style(str) {
     str = str.replace(/\brepeat\b/,control("repeat"))    
     str = str.replace(/\bwhen\b/,control("when"))
     str = str.replace(/\bjob\b/,control("job"))
+    str = str.replace(/\bcase\b/,control("case"))   
     str = str.replace(/\bother\b/,control("other"))
     str = str.replace(/\bloop\b/,control("loop"))
     str = str.replace(/\bwhile\b/,control("while"))
@@ -104,6 +105,7 @@ function apply_style(str) {
     str = str.replace(/\bis\b/g,operator("is"))
     str = str.replace(/\bas\b/g,operator("as"))    
     str = str.replace(/\bor\b/g,operator("or"))
+    str = str.replace(/\beq\b/g,operator("eq"))    
     str = str.replace(/\band\b/g,operator("and"))
     str = str.replace(/\bnot\b/g,operator("not"))
     str = str.replace(/\bnew\b/g,operator("new"))

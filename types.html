@@ -260,15 +260,20 @@ Discrete numbers:</h3>
 driver numeric_literals:
 
 ** define global states
-set g1 := 0.0: Real;
-set g2 := 0.0: Float;
+set g1 := 0.0 :Double;
+set g2 := 0.0 :Float;
 
 ** define main process
 process main:
+    ** check equality
+    expect g1 == g2;     -- value is equivalent
+    expect g1 is not g2; -- not the same
+    expect g1 not eq g2; -- different types
+
     ** define local variables
     new i :Integer; -- Initial value = 0
     new n :Natural; -- Initial value = 0
-    new r :Real;    -- Initial value = 0.00
+    new r :Double;  -- Initial value = 0.00
 
     ** use modifier := to change value
     let i := 9223372036854775807;  --  maximum
@@ -386,7 +391,7 @@ return;
 
 <p>Numeric ranges:</p>
 
-<pre><code class="language-eve">#numeric range demo
+<pre lass="no-line-numbers"><code class="language-eve">#numeric range demo
 driver numeric_range:
 
 process main:
@@ -408,8 +413,8 @@ return;
 <h4>Example:</h4>
 
 <p>Symbol ranges:</p>
-
-<pre><code class="language-eve"># using symbol ranges
+<div>
+<pre class="line-numbers"><code class="language-eve"># using symbol ranges
 driver symbol_range:
 process
   print ('0'..'5') -- ('0','1','2','3','4','5')
@@ -419,6 +424,7 @@ process
   expect 'X' in ('A'..'Z');  -- will pass
 return;
 </code></pre>
+</div>
 
 <h4>Notes:</h4>
 <ul>
@@ -538,23 +544,6 @@ return;
 </code></pre>
 
 <p><b>Note:</b>&nbsp;Build-in functions that are located in EVE&nbsp;<em>default</em>&nbsp;library: { parse(), format(), ceiling(), floor() round()}.  This module is one of the standard modules that are automatically included in any EVE program.</p>
-
-<h2><a id="type-inference"></a>Type inference</h2>
-
-<p>This is a logical deduction of data type from constant literals.</p>
-
-<h4>Example:</h4>
-<pre><code class="language-eve">#test type inference
-driver type_inference:
-
-** Define a list of 10 elements using type inference
-set ls := [0,1,2,3,4,5,6,7,8,9];
-
-process main
-  print  ls.type(); --  List[Integer]
-  expect ls is List[Integer];
-return;
-</code></pre>
 
 <h2><a id="default-types"></a>Default types</h2>
 <p>Literals are representations of specific particular data type in source code.</p>
@@ -683,14 +672,44 @@ return;
 </tr>
 </tbody>
 </table>
-<h3><a id="type-inference-1"></a>Type Inference</h3>
 
-<p>Sometimes the type is partially specified to simplify type declaration:</p>
+<h2><a id="type-inference"></a>Type Inference</h2>
+
+<p>This is a logical deduction of List data type from constant literals. You do not have to specify the type of elements. The type inference takes over.</p>
+
+<h4>Example 1:</h4>
+
+<p>In next example we use a List data literal to create a shared collection fo type List[Integer]. However the type used is partial. Do not have element type, that is going to be Integer.</p>
+
+<pre><code class="language-eve">#test type inference
+driver type_inference:
+
+** Define a list of 10 elements using type inference
+set ls = (0,1,2,3,4,5,6,7,8,9) :List;
+
+process main
+  print  ls.type(); --  List[Integer]
+  expect ls is List[Integer];
+return;
+</code></pre>
+
+<h4>Example 2</h4>
+
+<p>You can create empty new collections using type inference and determine the type of elements later, using "let" or "put" or any method that can create new elements.</p>
+
 <pre><code class="language-eve"># gradual type declaration
-  set a := ();  -- empty List
-  set v := [];  -- empty Vector
-  set s := {};  -- empty DataSet
-  set s := {:}; -- empty Table
+  new a := ();  -- empty List
+  new v := [];  -- empty Vector
+  new s := {};  -- empty DataSet
+  new s := {:}; -- empty Table
+
+  ** add elements
+  put a <+ (10,11,12) -- establish element type
+  put a <+ "4"        -- error, elements are Integer
+
+  ** create 3 elements
+  let v := (1..3); 
+  expect v == [1,2,3]; -- 3 elements are generated
 </code></pre>
 
 <h3>Type verification</h3>
@@ -712,7 +731,8 @@ return;
 </code></pre>
 
 
-<h2><a id="printing-type"></a>Printing type()</h2>
+<h3><a id="printing-type"></a>Printing type()</h3>
+
 <p>For type introspection we can use type() built-in function:</p>
 <pre><code class="language-eve"># introspection demo
 driver print_type:
@@ -764,18 +784,18 @@ return;
 </table>
 
 <h4>Syntax:</h4>
-<pre class="language-eve">
--- explicit initialization
+<pre><code class="language-eve">
+** explicit initialization
 set False := 0b0 :Byte; 
 set True  := Ob1 :Byte;   
-</pre>
+</code></pre>
 
 <p><b>Internal design</b></p>
 <p>Probably best to define Logic type is Ordinal:</p>
 
-<pre class="language-eve">
+<pre><code class="language-eve">
 type Logic = {False:0 , True} &lt;: Ordinal;
-</pre>
+</code></pre>
 
 <p><b>Logical expressions</b></p>
 <p>A logical expression is a demonstration or logical deduction having result <em>True</em> or <em>False.</em>  Operator precedence is: {not, and, or, xor}. The order of operations can be controlled using operator precedence and round parentheses.</p>
@@ -814,7 +834,7 @@ set v = value :Variant_Name() ;
 <h4>Pattern:</h4>
 <pre><code class="language-eve">** define nullable variant
 type 
-    Number = { Integer | Double | Null }; &lt;: Variant
+    Number = { Integer | Double | Null } &lt;: Variant;
 
 ** use nullable variant
 set x: Number;
@@ -831,9 +851,9 @@ set x: Number;
 driver variant_type:
 
 ** tefine variants
-    set v, x ,t: { Double | Integer };
+set v, x ,t: { Double | Integer };
 
-process
+process main:
     ** safe conversion
     let t := 1 / 2;   -- make t Double
     print type(t)     -- Double
@@ -858,7 +878,7 @@ driver variant_params:
 
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
-function swap(@x, @y: {Integer | Double} ):
+process swap(@x, @y: {Integer | Double} ):
     ** check type to be the same
     expect type(x) = type(y);
 
@@ -868,18 +888,35 @@ function swap(@x, @y: {Integer | Double} ):
     let y := i; --  second swap
 return;
 
-process
+process main:
     ** invert two  Integer numbers
     new x := 10;
     new y := 20;
-    swap(x, y);
+    apply swap(x, y);
     expect (x == 20) and (y == 10);
 
     ** invert two Double numbers
     new a := 1.5;
     new b := 2.5;
-    swap(a, b);
+    apply swap(a, b);
     expect (a == 2.5) and (b == 1.5);
+return;
+</code></pre>
+
+<h4></h4>
+
+<p>This is a logical deduction of data type from constant literals.</p>
+
+<h4>Example:</h4>
+<pre><code class="language-eve">#test type inference
+driver type_inference:
+
+** Define a list of 10 elements using type inference
+set ls := [0,1,2,3,4,5,6,7,8,9];
+
+process main
+  print  ls.type(); --  List[Integer]
+  expect ls is List[Integer];
 return;
 </code></pre>
 
@@ -903,7 +940,7 @@ return;
 <pre><code class="language-eve">
 #overloaded function
 process main:
-    date := "2019/01/30" as YDM;
+    new date := "2019/01/30" as YDM;
 
     ** convert string in Date type
     print date as YDM; --  2019/01/30

@@ -42,10 +42,11 @@ Most languages have similar flow control statements. These are block statements 
 <tr><th>1</th><th><a href="#if"     >if     </a></th> <td>conditional expression      </td></tr>
 <tr><th>2</th><th><a href="#else"   >else   </a></th> <td>decision block              </td></tr>
 <tr><th>3</th><th><a href="#ladder"  >ladder  </a></th> <td>conditional selector        </td></tr>
+<tr><th>3</th><th><a href="#match"  >match  </a></th> <td>value based selector       </td></tr>
 <tr><th>4</th><th><a href="#loop"   >loop   </a></th> <td>unconditional repetition    </td></tr>
 <tr><th>5</th><th><a href="#while"  >while  </a></th> <td>conditional repetition      </td></tr>
 <tr><th>6</th><th><a href="#for"    >for    </a></th> <td>range controlled repetition </td></tr>
-<tr><th>7</th><th><a href="#process">process</a></th> <td>local processing block      </td></tr>
+<tr><th>7</th><th><a href="#try">try</a></th> <td>error protected block</td></tr>
 </table>
 
 <h2><a id="if"></a>Conditional</h2>
@@ -143,7 +144,7 @@ This is a multi-path selector similar to switch also named: jump table. It two v
 
 <pre><code class="language-eve">
 # Define a selector variable
-s := {v1,v2,v3,v4};
+new s := {v1,v2,v3,v4};
 
 ** create match selector
 match s [all | one]:
@@ -233,11 +234,14 @@ repeat [label] if condition;
 /** This driver demonstrate
     how to visit members of a List */
 driver while_demo:
-process:
-    new this := ["a","b","c","d","e"];
-    cycle:
-        new i := 0 : Integer; -- private
-        new e : Symbol;       -- private
+**  create a shared list
+    set this := ("a","b","c","d","e");
+process main:
+    ** start unlabeled cycle
+    cycle: 
+        ** volatile variables
+        new i := 0 : Integer; 
+        new e : Symbol;       
     while i &lt; this.length() loop
         let e := this[i];
         let i += 1;
@@ -247,8 +251,9 @@ process:
         done;
     then
         write 'i = ' + i;
-    repeat;
-    print;
+    repeat; 
+    ** flush the write buffer
+    print; -- "a","b","c","d","e"
 return;
 </code></pre>
 
@@ -310,6 +315,51 @@ print;
 <pre class="output">
 1,3,5,7,9
 </pre>
+
+<h2><a id="try"></a>try</h2>
+
+<p>A try block is useful to handle recoverable errors. You can use try in functions or processes. A try block can improve code readability and avoid catastrofic defects in your final product.</p>
+
+<div align="center">
+  <img src="img/eve-try.svg" alt="try blocks"
+  width="500" class="img-fluid protect rounded shadow border" >
+  <p>job ... try</p>
+</div>
+
+<h4>Syntax Pattern</h4>
+
+<p>A try has several executable blocks, one error handler block and a finalization block. The finalization block is executed even if there is an error.</p>
+
+<pre><code class="language-eve">
+[process | function] name(params):
+  ** declare locals
+  ....
+  [job (code:"description")] try
+      ** protected block
+      ...
+      raise (code,"message");
+      ...
+      expect (condition) [else "message"];
+      ...
+  [job (code:"description")] try
+      ...
+recover
+  case $error.code == 100 then
+    ** handler 1
+    ...
+  case $error.code == 100 then
+    ** handler 2
+    ...
+  else 
+    ** default 
+    ...
+finalize
+   ** close resources
+   ...
+return;
+</code></pre>
+
+<p><b>Note: </b>A process or function can to one or more jobs. Each job is a try block. The recover and finalization regions are colapsed into one. Details about using a try block will be explained later.</p>
 
 <hr>
 <p><b>Read next:</b>
