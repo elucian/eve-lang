@@ -48,9 +48,11 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <li><a href="#type-inference">Type inference</a></li>
 <li><a href="#default-types">Default types</a></li>
 <li><a href="#logical-type">Logical type</a></li>
+<li><a href="#user-type">User type</a></li>
 <li><a href="#gradual-typing">Gradual typing</a></li>
 <li><a href="#calendar-date">Calendar date</a></li>
 <li><a href="#time-duration">Time duration</a></li>
+<li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
 
 <h2><a id="primitive-types"/>Primitive Types</h2>
@@ -358,6 +360,14 @@ return;
 <tr>
 <td>Object</td>
 <td>Base class for creation of plain simple objects</td>
+</tr>
+<tr>
+<td>Lambda</td>
+<td>Lambda expression type. Similar to Function.</td>
+</tr>
+<tr>
+<td>Function</td>
+<td>Function object type. Similar to Lambda.</td>
 </tr>
 <tr>
 <td>Vector</td>
@@ -802,6 +812,14 @@ type Logic = {False:0 , True} &lt;: Ordinal;
 
 <p>Result of logical expressions can be used into a conditional statement to make a decision. Also results of logical expressions can be stored in logical variables to be used later in other conditions.</p>
 
+<h3><a id="user-type">User types</h3>
+
+<p>In Eve you can define data types. Types are derived from system defined types. A type has public attributes and can have a class companion.</p>
+
+<p>User types are inherited from the supertype or Object type. When you create a type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type descriptor.<p>
+
+<p>User types are defined in a region that start with keyword "type". You can define multiple types on several lines separated by semicolumn and end of line.</p>
+
 <h2><a id="gradual-typing"></a>Gradual typing</h2>
 <p>Gradual typing is a type system in which some variables may be given types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called <em>variant</em>.</p>
 
@@ -985,6 +1003,35 @@ process main:
 return;
 </code></pre>
 
+<h3><a id=lambdas"></li>Lambda expressions</h3>
+
+<p>Lambda expressions are like mathematical functions. Can receive arguments and can produce a result. A lambda expression is created with keyword new.</p>
+
+<p>Lambda expressions can be declared in global scope using "lambda" region. You can define a single lambda region for a module. Lambda expressions can be anonymous.</p>
+
+<h4>Example</h4>
+
+<p>In next example we define two lambda expressions.</p>
+
+<pre><code class="language-eve">
+lambda
+  new sum = (p1, p2 :Integer) => (p1 + p2):Integer;
+  new sqr = (p1, p2 :Integer) => (p1 * p2):Integer;
+</code></pre>
+
+<h4>Signature</h4>
+
+<p>Labda expression signature can be declared as data type:<p>
+
+<pre><code class="language-eve">
+# define a lambda signature
+type BinEx = (p1, p2 :Integer):Integer <: Lambda;
+
+** Use lambda signature as parameter type
+process useLambda(test :BinEx):
+   ...
+return;
+</code></pre>
 
 <hr>
 <p><b>Read next:</b>

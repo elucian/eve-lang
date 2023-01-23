@@ -220,14 +220,14 @@ _not_valid_
 
 <pre><code class="language-eve">
 ** define global system states
-    set $s := "test"
+  set $s := "test"
 
-    ** two integers
-    set $a := 0;
-    set $b := 0;
+  ** two integers
+  set $a := 0;
+  set $b := 0;
 
-    ** one Double variable
-    set $d = 0.5 :Double;
+  ** one Double variable
+  set $d = 0.5 :Double;
 </code></pre>
 
 <p><b>Global variables </b> are also called "states" because they are staticly defined in module scope.We use "set" keyword to modify or create new states. This can modify system states or can create private states. </p>
@@ -265,22 +265,20 @@ _not_valid_
 
 <pre><code class="language-eve">
 ## simple expressions
-driver expression_demo:
-
-process:
-    print 10;
-    write "this is a test";
-    ** complex expressions can use ()
-    print (10 + 10 + 15); -- numeric expression
-    print (10 &gt; 5) or (2 &lt; 3); -- logical expression
-    ** list of expressions are enclosed in ()
-    print (1, 2, 3); -- expect: 1 2 3
-    print (10, 11, 12); -- expect: 10 11 12
-    ** using write to: avoid new line and print
-    write (1,2);
-    write (3,4);
-    ** now create a new line and output the text
-    print; -- 1234
+process expression_demo:
+  print 10;
+  write "this is a test";
+  ** complex expressions can use ()
+  print (10 + 10 + 15); -- numeric expression
+  print (10 &gt; 5) or (2 &lt; 3); -- logical expression
+  ** list of expressions are enclosed in ()
+  print (1, 2, 3); -- expect: 1 2 3
+  print (10, 11, 12); -- expect: 10 11 12
+  ** using write to: avoid new line and print
+  write (1,2);
+  write (3,4);
+  ** now create a new line and output the text
+  print; -- 1234
 return;
 </code></pre>
 
@@ -301,9 +299,9 @@ return;
 
 <pre><code class="language-eve">
 #expressions pseudo-code
-    new identifier1 := literal;         -- constant literal
-    new identifier2 := expression;      -- execute expression
-    new identifier3 := function_name(); -- function call
+new identifier1 := literal;         -- constant literal
+new identifier2 := expression;      -- execute expression
+new identifier3 := function_name(); -- function call
 </code></pre>
 
 <h4>assign: by value:</h4>
@@ -337,10 +335,10 @@ new variable_name :: reference_name;
 
 <pre><code class="language-eve">
 ** create a logic variable
-    new test := True;
-    ...
-    expect (True if test else False); -- will pass
-    ...
+new test := True;
+...
+expect (True if test else False); -- will pass
+...
 </code></pre>
 
 <h2><a id="statements"></a>Statements</h2>
@@ -359,16 +357,16 @@ new variable_name :: reference_name;
 
 <pre><code class="language-eve">driver assign_demo:
 process main:
-    ** initialization statements
-    new a = 2 :Integer;
-    new b :Double;
+  ** initialization statements
+  new a = 2 :Integer;
+  new b :Double;
 
-    ** execute expression
-    let b := a + 0.5;
+  ** execute expression
+  let b := a + 0.5;
 
-    ** verification statements
-    expect a == 2;
-    expect b == 2.5;
+  ** verification statements
+  expect a == 2;
+  expect b == 2.5;
 return;
 </code></pre>
 
@@ -380,22 +378,21 @@ return;
 </ul>
 
 <h4>Example:</h4>
-<pre><code class="language-eve"># multiple line demo
-driver multi_line:
+<pre><code class="language-eve">
+# multiple line demo
+process multi_line:
+  ** multi-row expression
+  new var := 1 +
+             2 +
+            +3 + 4
+            +5;
 
-process
-    ** multi-row expression
-    new var := 1 +
-               2 +
-              +3 + 4
-              +5;
-
-    ** multi-row literal
-    new dic := {
-        'two' :2,
-        'four':4,
-        'six' :6
-    };
+  ** multi-row literal
+  new dic := {
+      'two' :2,
+      'four':4,
+      'six' :6
+  };
 return;</code></pre>
 
 <h2><a id="keywords"></a>Reserved keywords</h2>
@@ -405,7 +402,7 @@ return;</code></pre>
 <table class="table table-bordered table-dark table-hover table-sm shadow">
 <tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze  </td></tr>
 <tr><td>append   </td><td>apply    </td><td>ascend    </td><td>augment  </td></tr>
-<tr><td>begin    </td><td>         </td><td>stop      </td><td>by       </td></tr>
+<tr><td>begin    </td><td>method   </td><td>stop      </td><td>by       </td></tr>
 <tr><td>case     </td><td>class    </td><td>clone     </td><td>close    </td></tr>
 <tr><td>commit   </td><td>constant </td><td>create    </td><td>cursor   </td></tr>
 <tr><td>begin    </td><td>delete   </td><td>descend   </td><td>discard  </td></tr>
@@ -418,13 +415,13 @@ return;</code></pre>
 <tr><td>offset   </td><td>open     </td><td>order     </td><td>&nbsp;   </td></tr>
 <tr><td>over     </td><td>package  </td><td>pass      </td><td>print    </td></tr>
 <tr><td>process  </td><td>raise    </td><td>read      </td><td>record   </td></tr>
-<tr><td>recover  </td><td>release  </td><td>remove    </td><td>repeat   </td></tr>
+<tr><td>recover  </td><td>release  </td><td>          </td><td>repeat   </td></tr>
 <tr><td>reset    </td><td>rest     </td><td>result    </td><td>&nbsp;   </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
-<tr><td>       </td><td>select   </td><td>          </td><td>skip     </td></tr>
+<tr><td>       </td><td>select     </td><td>          </td><td>skip     </td></tr>
 <tr><td>step     </td><td>store    </td><td>switch    </td><td>job     </td></tr>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>     </td></tr>
-<tr><td>update   </td><td>use      </td><td>global    </td><td>view     </td></tr>
+<tr><td>update   </td><td>use      </td><td>.         </td><td>view     </td></tr>
 <tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
 <tr><td>resume   </td><td>panic    </td><td>&nbsp;    </td><td>&nbsp;   </td></tr>
 </table>
@@ -441,14 +438,6 @@ return;</code></pre>
 <tr>
 <td>import</td>
 <td>define import region</td>
-</tr>
-<tr>
-<td>global</td>
-<td>declare module variables (start with "." if is public)</td>
-</tr>
-<tr>
-<td>function</td>
-<td>start a declaration region for named expression</td>
 </tr>
 </tbody>
 </table>
@@ -467,16 +456,16 @@ return;</code></pre>
 <td>define a program file (module-name = file-name)</td>
 </tr>
 <tr>
+<td>function</td>
+<td>declare a function signature or lamda expression</td>
+</tr>
+<tr>  
 <td>class</td>
 <td>define a composite data type for object oriented programming</td>
 </tr>
 <tr>
 <td>create</td>
 <td>begin constructor region for a classes</td>
-</tr>
-<tr>
-<td>remove</td>
-<td>define object disposal region, executed when object is out of scope</td>
 </tr>
 <tr>
 <td>feature</td>
@@ -489,7 +478,7 @@ return;</code></pre>
 <tr>
 <tr>
 <td>method</td>
-<td>define a named block of code belonging to a class</td>
+<td>define a named subroutine in a class or module</td>
 </tr>
 <tr>
 <td>process</td>

@@ -110,7 +110,7 @@ Eve is designed to quickly build a data processing app that can run several jobs
 ---------------------------------------------+
 
 ** declare the name and type of a module
-[driver | aspect | module] name(parameters):
+[driver | aspect | module] name:
 
 ** set system variables
 set $sys_con = value;
@@ -133,6 +133,10 @@ alias
 type
     user_tupe = {} <: Supertype;
     ...
+** define lambda expressions
+lambda
+   new ex_name = (params) => (expression);
+   ...
 
 ** private, shared states
 set local = value1: user_tupe;
@@ -140,7 +144,7 @@ set name  = value2: TypeName;
 ...
 
 ** main process, (executable region)
-process main:
+process main(parameters):
     new my_var  = value;  -- private variable
     ...
 return;
@@ -188,8 +192,8 @@ return;
 
 <pre><code class="language-eve">
 ** gobal scope
-    set  .PI  := 3.14; -- public constant
-    set .var := 0;    -- piblic variable
+  set  .PI  := 3.14; -- public constant
+  set .var := 0;    -- piblic variable
 </code></pre>
 
 <h4>Notes:</h4>
@@ -224,11 +228,41 @@ import
 
 <h3>User types</h3>
 
-<p>In Eve you can define data types, that are very symilar to classes, except the types do not have other methods but the methods of the supertype.</p>
+<p>In Eve you can define data types, that are very symilar to classes. Types are derived from system defined types. A type has public attributes and can have a class companion.</p>
 
-<p>User types are inherited from the supertype or class. When you create this type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type constructor.<p>
+<p>User types are inherited from the supertype or Object type. When you create a type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type descriptor.<p>
 
-<p>User types are defined in a region that start with keyword "type". You can define types on several lunes of code separated by semicolumn. You can define multiple type regions.</p>
+<p>User types are defined in a region that start with keyword "type". You can define multiple types on several lines separated by semicolumn and end of line.</p>
+
+<h3>Lambda expressions</h3>
+
+<p>Lambda expressions are like mathematical functions. Can receive arguments and can produce a result. A lambda expression is created with keyword new.</p>
+
+<p>Lambda expressions can be declared in global scope using "lambda" region. You can define a single lambda region for a module. Lambda expressions can be anonymous.</p>
+
+<h4>Example</h4>
+
+<p>In next example we define two lambda expressions.</p>
+
+<pre><code class="language-eve">
+lambda
+  new sum = (p1, p2 :Integer) => (p1 + p2):Integer;
+  new sqr = (p1, p2 :Integer) => (p1 * p2):Integer;
+</code></pre>
+
+<h4>Signature</h4>
+
+<p>Labda expression signature can be declared as data type:<p>
+
+<pre><code class="language-eve">
+# define a lambda signature
+type BinEx = (p1, p2 :Integer):Integer <: Lambda;
+
+** Use lambda signature as parameter type
+process useLambda(test :BinEx):
+   ...
+return;
+</code></pre>
 
 <h3>Private states</h3>
 
@@ -242,11 +276,11 @@ import
 type Person = {name:String, age:Integer} <: Object;
 
 ** create states using type inference
-    set  E    := 2.52; -- Euler's number (constant)
-    set  r    := 0.01; -- Real, private state
+  set  E    := 2.52; -- Euler's number (constant)
+  set  r    := 0.01; -- Real, private state
 
 ** create a global object of type Person.
-    set  me   := Person("Elucian", "56"); 
+  set  me   := Person("Elucian", "56"); 
 </code></pre>
 
 <p><b>Restriction: </b>It is forbitten to use keyword "new" in global scope. All states should be created using keyword "set". This will create static constants or variables on the heap.</p>
@@ -271,6 +305,8 @@ type Person = {name:String, age:Integer} <: Object;
 
 <h4>Members</h4>
 <ul>
+<li>library modules are usually defining types and classes;</p>
+<li>lihrary modules are implementing functions not processes;</li>
 <li>public member identifier start with "." prefix;</li>
 <li>one module can use public members from other modules;</li>
 <li>one module can have public members used by other modules;</li>
@@ -286,19 +322,20 @@ type Person = {name:String, age:Integer} <: Object;
 <li>after import you can call public members of a library using&nbsp;<em>dot notation</em>;</li>
 </ul>
 
+
 <h2><a id="aspects">Aspects</h2>
 
 <p>An <em>"aspect"</em> is a script specific to a particular project. It resolve one aspect of a problem. Aspect files are executable scripts. You can call one aspect from another aspect or from the application driver.</p>
 
-<p>An aspect have parameters and main process. You can resolve an aspect by using keyword: "apply" or "defer". An aspect can raise errors.</p>
+<p>An aspect have parameters and and one or more processes. One single process is the main process. You can resolve an aspect by using keyword: "apply" or "defer". An aspect can raise errors.</p>
 
 <h4>Syntax Pattern:</h4>
 
 <pre><code class="language-eve">
-aspect name(parameter_list):
+aspect name:
     ** declare variables
     ...
-process main:
+process main(parameter_list):
     ** executable region
     ...
 return;
@@ -338,15 +375,15 @@ return;
 
 <h4>Example:</h4>
 <pre><code class="language-eve"># print all arguments
-aspect test(*args <: List[String]):
+aspect test:
 
 ** list all arguments
-process main:
-   cycle:
-      new arg : string
-   for arg in args loop
-      print arg;
-   repeat;
+process main(*args <: List[String])):
+  cycle:
+    new arg : string
+  for arg in args loop
+    print arg;
+  repeat;
 return;
 </code></pre>
 
@@ -362,18 +399,18 @@ driver output_params:
 
 ** sub-process
 process add(p1 = 0, p2 = 1: Integer, @op: Integer):
-   let @op := p1 + p2;
+  let @op := p1 + p2;
 return;
 
 process main:
-    new result: Integer;
+  new result: Integer;
 
-    ** inpur/output argument require a variable
-    apply add(1,2, @op:result);
-    print result;     -- expected value 3
+  ** inpur/output argument require a variable
+  apply add(1,2, @op:result);
+  print result;     -- expected value 3
 
-    ** negative test, will fail
-    apply add(1,2,4); -- error, "out" parameter require a variable
+  ** negative test, will fail
+  apply add(1,2,4); -- error, "out" parameter require a variable
 return;
 </code></pre>
  
@@ -385,7 +422,6 @@ return;
 <li>You can not create nested processes;</li>
 <li>You can not create references to processes;</li>
 </ul>
-
 
 <h2><a id="execution">Script Execution</h2>
 <p>Eve scripts are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console you can&nbsp;<em>start</em>&nbsp;only a one script at a time. In service mode you can&nbsp;<em>start</em>&nbsp;multiple sessions with different startup parameters. Each session is independent and can&nbsp;<em>start</em>&nbsp;one single script.</p>
@@ -415,13 +451,13 @@ return;
 <p>Aspects can be run in serial mode one after another. Let's consider we have 3 aspects: {one.eve, two.eve, three.eve}. We can execute each aspect using keyword: "apply". This will start main process and wait for it to finish before start the next process:</p>
 
 <pre><code class="language-eve">
-** resolve several aspects
+# synchronous call demo
 process sync_demo:
-    ** solve each aspect immediately
-    apply one(arguments);
-    apply two(arguments);
-    apply three(arguments);
-    ...
+  ** apply main process of each aspect
+  apply one(arguments);
+  apply two(arguments);
+  apply three(arguments);
+  ...
 return;
 </code></pre>
 
@@ -430,15 +466,15 @@ return;
 <p>Aspects can be resolved in parallel mode in different processes.</p>
 
 <pre><code class="language-eve">
-** resolve several aspects
+# asynchronous call demo
 process async_demo:
-    ** enqueue aspects to be resolved
-    begin one(arguments);
-    begin two(arguments);
-    begin three(arguments);
+  ** enqueue aspects to be resolved
+  begin one(arguments);
+  begin two(arguments);
+  begin three(arguments);
 
-    ** wait for enqueued aspects to finish
-    wait;
+  ** wait for enqueued aspects to finish
+  wait;
 return;
 </code></pre>
 
@@ -451,13 +487,13 @@ return;
 driver begin_demo:
 
 process main:
-    ** enqueue same aspect 4 times
-    cycle
-        new i: Integer;
-    for i in (1..4) loop
-        begin demo(i);
-    repeat;
-    wait;
+  ** enqueue same aspect 4 times
+  cycle
+    new i: Integer;
+  for i in (1..4) loop
+    begin demo(i);
+  repeat;
+  wait;
 return;
 </code></pre>
 
@@ -482,18 +518,16 @@ return;
 <p>Next code sequence is terminated after 100 iterations:</p>
 
 <pre><code class="language-eve">
-** fast forward demo
-driver over_demo:
-
-process main:
-    cycle:
-        new i = 0 : Integer;
-    loop
-        write ".";
-        wait  100;
-        over  if i == 10;
-        let   i += 1;
-    repeat;
+# terminate a program with: over
+process over_demo:
+  cycle:
+      new i = 0 : Integer;
+  loop
+      write ".";
+      wait  100;
+      over  if i == 10;
+      let   i += 1;
+  repeat;
 return;
 </code></pre>
 

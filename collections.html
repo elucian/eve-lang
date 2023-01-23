@@ -168,8 +168,8 @@ set t_name : {}Integer;
 <p> You never know what the position of the new element is going to be. Also if you add or remove an element the position of several other elements will be shifted.</p>
 
 <ul>
-<li>new, += for append</li>
-<li>del, -= for delete</li>
+<li>let, += for append</li>
+<li>let, -= for delete</li>
 </ul>
 
 <p><b>Note: </b>Any modifier "x=" can be used for altering individual elements. You can rever to all elements using "*" and modify them.</p>
@@ -256,14 +256,21 @@ return;
 <pre><code class="language-eve">
 # how to initialize a table
 driver table_init:
-    set t: Table;
+  set t: Table;
 process main:
-    ** initialize table
-    let t := {'one':1, 'two':2};
+  ** initialize table
+  let t := {'a':1, 'b':2};
 
-    ** accessing elements
-    expect t['one'] == 1;
-    expect t['two'] == 2;
+  ** accessing elements
+  expect t['a'] == 1;
+  expect t['b'] == 2;
+
+  ** create new elements
+  let t += {'c':3};
+  let t += {'d':4};
+
+  ** optput
+  print t -- {'a':1, 'b':2, 'c':3, 'd':4};
 return;
 </code></pre>
 
@@ -369,10 +376,10 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve"># compare strings
 driver compare_strings:
-    expect('this' == 'this');   --  true (same value)
-    expect("this" == 'this');   --  true (same value)
-    expect(' this' != 'this');  --  true (not same value)
-    expect("this " != "this");  --  true (not same value)
+  expect('this' == 'this');   --  true (same value)
+  expect("this" == 'this');   --  true (same value)
+  expect(' this' != 'this');  --  true (not same value)
+  expect("this " != "this");  --  true (not same value)
 return;
 </code></pre>
 
@@ -384,15 +391,15 @@ driver null_string:
   set str :String; 
   set btr := 'x';   
 process
-    ** null string
-    expect str == Null;
-    expect str == '';
-    expect str == "";
+  ** null string
+  expect str == Null;
+  expect str == '';
+  expect str == "";
 
-    ** initialized string
-    expect btr is not Null;
-    expect btr == "x";
-    expect btr == 'x';
+  ** initialized string
+  expect btr is not Null;
+  expect btr == "x";
+  expect btr == 'x';
 return;
 </code></pre>
 
@@ -401,35 +408,28 @@ return;
 
 <h4>Literal</h4>
 
-<p>Unicode literal can be defined on multiple lines and will preserve the end of line but will cut the indentation. Unicode literal is enclosed in double quotes. "..." and it may contain symbol "'" without escape. Double quoted Symbol (") must be escaped using notation (\").</p>
+<p>Unicode literal can be defined on multiple lines and will preserve the end of line but will cut the indentation. This kind of literal is enclosed in triple quotes. """...""" and it may contain symbols {",'} without escape.</p>
 
 <pre><code class="language-eve"># declaration of a text literal
 driver text_literal:
-  set Text my_text;
+
 process main:
-  my_text:="""
-    Opportunity is missed by most people if
-    process
-    because it is dressed in overalls case
-    and process looks like work.
-    """; -- test
-
-  process /* test if end */ else
-  print
-  print (my_text);
-  
-  test:= " unu" == "doi" == "trey \" patru", "cini'ci";
-  test:= " unu" == "doi" == "trey \" patru", "cinici";
-
-  test:= ' unu\" ' == 'doi' = 'trei\"patru'
+  ** triple quoted string
+  new my_text:=""" 
+     "Opportunity is missed by most people
+      because it is dressed in overalls
+      and looks like work."
+  """; 
+  ** double quoted string
+  new test:= "escape \" string is required";
 return;
 </code></pre>
 
 <p><b>Output:</b></p>
 <pre class="output">
-Opportunity is missed by most people
-because it is dressed in overalls
-and looks like work.
+"Opportunity is missed by most people
+ because it is dressed in overalls
+ and looks like work."
 </pre>
 
 <p><b>Unicode</b></p>
@@ -440,7 +440,7 @@ and looks like work.
 <h4>Example:</h4>
 <pre><code class="language-eve"># text type has unicode support
 driver unicode_text:
-    Text us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
+    set us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
 process
     print us;
 return;
@@ -453,46 +453,88 @@ return;
 <p>To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. The preferred font for Eve programming is "DejaVu Sans Mono".</p>
 
 
-<h2><a id="exception" class="anchor" href="EVE#exception"></a>Exception</h2>
-<p>Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In Eve all exceptions are considered errors.</p>
-<p>The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable $error contains several members that are fill-in by the Eve program when exception is created:</p>
+<h2><a id="exception"></a>Exception</h2>
+
+<p>Exception is a module that define several system variables and system objects used to handle errors. In Eve all exceptions are considered errors.</p>
+
+<p>The error is a variable of type Exception.Error that is created when exception is raised. System variable $error contains several members that are fill-in by the Eve program when exception is created.</p>
+
+<h4>Pseudocode</h4>
+
+<p>The Exception module is not yet created. We have the intention to use Eve to create this module. This is a prototype that explain the structure of our future Exception module.</p> 
+
 <pre><code class="language-eve">** system exception type
-Class .Exception <: Object {
-    Integer code
-   ,String  message
-   ,String  routine_name
-   ,String  module_name
-   ,String  line_number
-};
+module Exception:
 
-** system variables for last error is predefined
-global Exception: $error;
+type  .Error: {
+   code: Integer, 
+   message: String, 
+   module: String, 
+   line:Integer
+} <: Object;
+
+class .Error(code: Integer, message: String) => (@self :Error):
+   let self := Object();
+   let self += {'code' :code};
+   let self += {'message' :message};
+return;
+
+class Call(line:String, method:String) => (@self:Call):
+   let self := Object();
+   let self += {'line' :line};
+   let self += {'method' :method};
+return;
+
+** system variables 
+set $error: Error;   -- last error
+
+** system objects;
+set $stack: ()Call;  -- list of code points
+set $trace: ()Error; -- list of errors
+
+** methods for Exceptions
+method .raise(...);
+method .expect(...);
+method .pass(...);
+method .fail(...);
+  
+return;
 </code></pre>
-<h3><a id="run-time-errors"></a>Run-time errors</h3>
 
-<p>Exceptions can be system exceptions or user defined exceptions.</p>
-<p><b>system exception</b>&nbsp;System exceptions are predefined and created during the program execution when there is a&nbsp;<em>"run-time error"</em>&nbsp;and program can not continue.</p>
-<h3><a id="user-defined-exceptions" class="anchor" href="EVE#user-defined-exceptions"></a>User defined exceptions</h3>
-<p>There are two alternative statements to create user defined exceptions.</p>
+<h3><a id="run-time-errors"></a>Runtime Errors</h3>
 
-<pre><code class="language-eve">** create exception
-fail (code,"message") if condition;
+<p>Runtime errors can be system exceptions or user defined exceptions. System exceptions are predefined in the Exception package. Every system module can define system errors. User errors can be defined in project library.</p>
+
+<p>Error instances are created during the program execution when program can not continue. An error can be raised by your modules or by the system modules.</p>
+
+<h3>Raising exception</h3>
+
+<p>There are two alternative statements to create user defined exceptions: "raise", "expect". These methods are static methods defined in module Exception. </p>
+
+<pre><code class="language-eve">
+** system exception
+raise $ExceptionType("message");
+
+** user-defined exception
+raise (code,"message") if condition;
 </code></pre>
 
 <h3><a id="exception-handling"></a>Exception handling</h3>
-<p>Recover: region define an "exception handling region" for a routine.</p>
-<p>In this region developer can use control statements like "switch","case" to analyze the #Error. Developer can decide to stop the program, print a message and resume the program using&nbsp;<em>resume</em>&nbsp;keyword.</p>
+
+<p>Recover: region define an "exception handling region" for a processes, functions or methods. This is a optional region that you define if your sub-program can produce exceptions.</p>
+
+<p>In this region developer can decide to abort the program, print a message, resume the execution or wait and tray again. Maybe a second time will work.</p>
+
+<p>Unhandled exception are automaticly propagated in the stack trace. So the caller must handle the exceptions that are possible raised by a subprogram. If not, the program will crash.</p>
+
 <h4>Example:</h4>
 <pre><code class="language-eve">#using recover
 driver recover_demo:
-
-global
-    Double a = 0.00;
-
-process
-    a := 1/0;
+  set a = 0.00;
+process main:
+  let a := 1/0;
 recover
-    print $error.message;
+  print $error.message;
 return;
 </code></pre>
 
@@ -500,18 +542,15 @@ return;
 
 <pre class="output">error: numeric division by zero.</pre>
 
-<h3>Using expect</h3>
+<h3>Testing expectations</h3>
 
-<p>The expect statement check a condition and raise an error if condition is false. Error message is default: "Unexpected error in line: N".</p>
+<p>The "expect" statement can check a condition and raise an error if condition is false. Error message is default: "Unexpected error in line: N". Optional you can define a custom message.</p>
 
 <h4>Pattern:</h4>
 
-<pre><code class="language-eve">** precondition (short version)
-expect condition;
-
-** equivalent (longer version)
-fail "Unexpected error in line \n"
-      ? $error.line_number if condition;
+<pre><code class="language-eve">** runtime expectations
+expect condition1;
+expect condition2 else "user defined message";
 </code></pre>
 
 <h4>Nots:</h4>
