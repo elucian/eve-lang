@@ -1,8 +1,8 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code Eve lang type system.">
+  <meta name="description" content="Sage-Code Eve type system. Official specification.">
   <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="sage, code, EVE, types, gradual, language, system">
+  <meta name="keywords" content="SageCode, EVE, EveLang, type system, gradual">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Website title -->
@@ -31,7 +31,7 @@
     </div>
 </div><hr>
 
-<h1>Eve Data Types</h1>
+<h1>Data Types</h1>
 
 <div class="alert alert-secondary shadow-sm">
 The purpose of any programming language is to manipulate data. On the lowest level, data is basically 0 and 1 signals. Eve is a high level language so our idea of data type is more complex. Eve has a gradual-typing system that will be explained below.
@@ -41,6 +41,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 
 <h4>Bookmarks</h4>
 <ul>
+<li><a href="#native-types">Native Types</a></li>
 <li><a href="#primitive-types">Primitive Types</a></li>
 <li><a href="#single-char">Single character</a></li>
 <li><a href="#composite-types">Composite</a></li>
@@ -55,7 +56,46 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
 
+<h2><a id="native-types"/>Native Types</h2>
+
+<p>Native types are implemented by microprocesor. We map primitive type to a single letter followed by a number. The range is a power of 2 multiplied with the number of bytes.</p>
+
+
+
+<table class="table table-bordered table-striped">
+<thead>
+<tr>
+<th>Type Name</th>
+<th>Name</th>
+<th>Min</th>
+<th>Maxim</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>i</td>
+<td>Signed</td>
+<td>8</td>
+<td>64</td>
+</tr>  
+<tr>
+<td>u</td>
+<td>Unsigned</td>
+<td>8</td>
+<td>64</td>
+</tr>
+<td>f</td>
+<td>Float</td>
+<td>32</td>
+<td>64</td>
+</tr>
+<tr>
+</tbody>
+</table>
+
 <h2><a id="primitive-types"/>Primitive Types</h2>
+
+<p>Primitive types are system classes. They have an equivalent low level representation that can accomodate the range. Of course primitive types are slower than equivalent native type.</p>
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -66,42 +106,47 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <th>Maxim</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>Byte</td>
 <td>Is a Numeric type having range: (0x00..0xFF)</td>
 <td>0</td>
-<td>1</td>
+<td>2^8-1</td>
+</tr>  
+<tr>
+<td>Short</td>
+<td>Is a Numeric type having range: (0x0000..0xFFFF)</td>
+<td>-2^15</td>
+<td>+2^15-1</td>
 </tr>
 <tr>
 <td>Integer</td>
 <td>Signed on 64 bit</td>
-<td>-2⁶³</td>
-<td>2⁶³-1</td>
+<td>-2^63</td>
+<td>2^63-1</td>
 </tr>
 <tr>
 <td>Natural</td>
 <td>Unsigned on 64 bit</td>
 <td>0</td>
-<td>2⁶⁴-1</td>
+<td>2^64-1</td>
 </tr>
 <td>Double</td>
 <td>Float precision number on 8 bytes</td>
-<td>0</td>
-<td>1.8 × 10³⁰⁸</td>
+<td>-n</td>
+<td>1.8 × 10^308</td>
 </tr>
 <tr>
 <td>Unicode</td>
 <td>Single Unicode symbol UTF-32 4 bytes</td>
 <td>0</td>
-<td>2³²-1</td>
+<td>2^32-1</td>
 </tr>
 <tr>
 <td>Ordinal</td>
-<td>Enumeration of symbols, Short 16 bit</td>
+<td>Enumeration of symbols, Equivalent to Short</td>
 <td>0</td>
-<td>2¹⁶-1</td>
+<td>2^16-1</td>
 </tr>
 <tr>
 <td>Date</td>
@@ -139,23 +184,31 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <tbody>
 <tr>
 <td>Discrete</td>
-<td>Char, Ordinal,  Integer, Natural, Range</td>
+<td>Byte, Short,  Integer, Natural,  Ordinal, Range</td>
 </tr>
 <tr>
 <td>Continuous</td>
-<td>Float, Double, Rational</td>
+<td>Float, Double, Rational, Complex, Domain</td>
 </tr>
 </tbody>
 </table>
 
 <h3><a id="discrete-numbers" class="anchor" href="#discrete-numbers"></a>
 Discrete numbers:</h3>
+
+<p>Discrete numbers van have a range from negative to positive number that can be calculate easly by the number of bytes. We have equivalent native numbers for every number of bytes from 1 to 64.</p>
+
+<ul>
+<li>min  = -2^n/2</li>
+<li>max  = +2^n/2 - 1</li>
+</ul>
+
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
 <th>type</th>
 <th>Chars</th>
-<th>Bytes</th>
+<th>Equivalent</th>
 <th>min</th>
 <th>max</th>
 <th>maximum number</th>
@@ -165,15 +218,15 @@ Discrete numbers:</h3>
 <tr>
 <td>Integer</td>
 <td>20</td>
-<td>8</td>
-<td>-2⁶&sup3;</td>
-<td>2⁶&sup3;-1</td>
+<td>i64</td>
+<td>-2^63</td>
+<td>2^63-1</td>
 <td>&le; 9,223,372,036,854,775,807</td>
 </tr>
 <tr>
 <td>Natural</td>
 <td>20</td>
-<td>8</td>
+<td>u64</td>
 <td>0</td>
 <td>2⁶⁴-1</td>
 <td>&le; 18,446,744,073,709,551,615</td>
@@ -201,7 +254,7 @@ Discrete numbers:</h3>
 <tr>
 <th>type</th>
 <th>Digits</th>
-<th>Bytes</th>
+<th>Equivalent</th>
 <th>maximum number</th>
 </tr>
 </thead>
@@ -209,20 +262,20 @@ Discrete numbers:</h3>
 <tr>
 <td>Float</td>
 <td>7</td>
-<td>4</td>
+<td>f32</td>
 <td>&le; 3.4 &times; 10^38</td>
 </tr>
 <tr>
 <td>Double</td>
 <td>16</td>
-<td>8</td>
+<td>f64</td>
 <td>&le; 1.8 &times; 10^308</td>
 </tr>
 <tr>
 <td>Rational</td>
 <td>20</td>
-<td>8</td>
-<td>2^64(*)</td>
+<td>q64</td>
+<td>&le; 2^64(*)</td>
 </tr>
 </tbody>
 </table>
@@ -355,11 +408,15 @@ return;
 </tr>
 <tr>
 <td>DataSet</td>
-<td>Enumeration of unique elements of the same type sorted by value</td>
+<td>Enumeration of unique elements of the same type</td>
+</tr>
+<tr>
+<td>Class</td>
+<td>Reference to class. Also called "class handler".</td>
 </tr>
 <tr>
 <td>Object</td>
-<td>Base class for creation of plain simple objects</td>
+<td>Root class and data thpe. Also called "object handler".</td>
 </tr>
 <tr>
 <td>Lambda</td>
@@ -863,7 +920,7 @@ set x: Number;
 
 <h4>Example 1:</h4>
 
-<p>In next example variant we use a variant that can be Double or Integer.</p>
+<p>In next example we use a variant that can be Double or Integer.</p>
 
 <pre><code class="language-eve">#variant type demo
 driver variant_type:
@@ -1003,7 +1060,7 @@ process main:
 return;
 </code></pre>
 
-<h3><a id=lambdas"></li>Lambda expressions</h3>
+<h3><a id="lambdas"></li>Lambda expressions</h3>
 
 <p>Lambda expressions are like mathematical functions. Can receive arguments and can produce a result. A lambda expression is created with keyword new.</p>
 

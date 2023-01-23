@@ -6,23 +6,25 @@ function apply_style(str) {
     str = str.replace(/^type\b/,keyword("type"))
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias"))
+    str = str.replace(/^lambda\b/,keyword("lambda"))    
     str = str.replace(/^return\b/,keyword("return"))
     str = str.replace(/^function\b/,keyword("function"))
-    str = str.replace(/^routine\b/,keyword("routine"))
     str = str.replace(/^class\b/,keyword("class"))
+    str = str.replace(/^method\b/,keyword("method"))   
     str = str.replace(/^create\b/,keyword("create"))
-    str = str.replace(/^remove\b/,keyword("remove"))
     str = str.replace(/^static\b/,keyword("static"))
     //  process keywords
     str = str.replace(/^recover\b/,keyword("recover"))
     str = str.replace(/^release\b/,keyword("release"))
     str = str.replace(/^finalize\b/,keyword("finalize"))
     //  overwrite exceptions
+    str = str.replace(/\bmethod\b/,keyword("method"))
     str = str.replace(/\bfunction\b/,keyword("function"))
     str = str.replace(/\bprocess\b/,keyword("process"))
     str = str.replace(/\breturn\b/,keyword("return"))
     str = str.replace(/\bfrom\b/,keyword("from"))
     str = str.replace(/\buse\b/,keyword("use"))
+    str = str.replace(/\btype\b/,keyword("type"))
 
     //  creat control flow
     str = str.replace(/\bcycle\b/,control("cycle"))
@@ -47,6 +49,7 @@ function apply_style(str) {
     str = str.replace(/\bdone\b/g,control("done"))
 
     // colorize data types keywords
+    str = str.replace(/\bByte\b/g,types("Byte"))
     str = str.replace(/\bInteger\b/g,types("Integer"))
     str = str.replace(/\bNatural\b/g,types("Natural"))
     str = str.replace(/\bDouble\b/g,types("Double"))
@@ -64,6 +67,9 @@ function apply_style(str) {
     str = str.replace(/\bList\b/g,types("List"))
     str = str.replace(/\bSymbol\b/g,types("Symbol"))
     str = str.replace(/\bObject\b/g,types("Object"))
+    str = str.replace(/\bClass\b/g,types("Class"))
+    str = str.replace(/\bLambda\b/g,types("Lambda"))
+    str = str.replace(/\bFunction\b/g,types("Function"))   
     str = str.replace(/\bDataSet\b/g,types("DataSet"))
     str = str.replace(/\bNull\b/g,types("Null"))
     str = str.replace(/\bTrue\b/g,types("True"))

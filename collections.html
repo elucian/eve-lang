@@ -63,7 +63,7 @@ process main:
 return;
 </code></pre>
 
-<p><b>Note:</b>&nbsp;When element name start with capital letter no need to use qualifiers for the individual values. This is because values starting with capital letters are public constants by default and known in the scope where ordinal is visible.</p>
+<p><b>Note:</b>&nbsp;When an element name start with capital letter there is no need to use qualifiers for the individual values.This is because the values starting with capital letters are public constants by default and are known in the scope where the ordinal is visible.</p>
 
 <pre><code class="language-eve">## Declare public elements in enumeration
 driver constant_ordinals;
@@ -78,7 +78,7 @@ return;
 </code></pre>
 
 <h2><a id="list" class="anchor" href="EVE#list"></a>List</h2>
-<p>A list is a consecutive sequence of elements having a dynamic capacity. Elements are ordered in the order you create them. The order can change if you sort the list or add/remove elements.</p>
+<p>A list is a consecutive sequence of elements having a dynamic capacity. Elements are stored in the order you have create them. The order can change if you sort the list or add/remove elements. However you can't insert elements in the middle.</p>
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">#declare two lists

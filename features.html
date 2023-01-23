@@ -2,7 +2,7 @@
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve programming language features.">
   <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="sage, code, EVE, programming, language, features">
+  <meta name="keywords" content="SageCode, EVE, EveLang, programming, language, features">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Website title -->
   <title>Eve Features</title>
@@ -31,10 +31,10 @@
 <h1>Eve features</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Eve is a front-end data processiong language. Eve is imperative multi-paradigm, staticly typed with type inference. Eve stands for <em>Extract Validate Export</em>.</div>
+Eve is a front-end data processiong language. Eve is imperative multi-paradigm, statically typed with type inference and gradual typing. EVE stands for <em>Extract Validate Export</em> and is a virtual machine.</div>
 
 
-<p><b>Names: </b>{eve, Eve, EVE) are synonims. Eve is the language name, EVE is the virtual machine, eve is the source extesion for scripts.</p>
+<p><b>Names: </b>{eve, Eve, EVE) are related. Eve is the language name, EVE is the virtual machine, *.eve is the source code extesion for script files.</p>
 
 <h4>Targt Features:</h4>
 
@@ -52,7 +52,7 @@ Eve is a front-end data processiong language. Eve is imperative multi-paradigm, 
 </tr>
 <tr><td>3</td>
 <td><a href="#safe">safe</a></td>
-<td>use static type system</td>
+<td>use static data type system</td>
 </tr>
 <tr><td>4</td>
 <td><a href="#modular">modular</a></td>
@@ -65,7 +65,7 @@ Eve is a front-end data processiong language. Eve is imperative multi-paradigm, 
 </table>
 
 <hr>
-<div class="alert alert-warning"><b>Design:&nbsp;</a></b>Eve has a classic design inspired from Ada & Java. It uses classic keywords and structures. Therefore learning Eve is more easy if you know other programming languages from Ada family. Eve is not a curly bracket language and is much more different than C++, Java, Rust, Go or Swift but has some similarity with Python.</div>
+<div class="alert alert-warning"><b>Design:&nbsp;</a></b>Eve has a classic design inspired from Ada & Java. It uses classic keywords and structures. Therefore learning Eve is more easy if you know other programming languages from Ada family. Eve is not a curly bracket language, and is much different than C, C++, Rust, Go, Java, or Swift, but has some similarity with Ruby.</div>
 
 
 <h2><a id="readable"></a>Readable</h2>
@@ -112,7 +112,7 @@ return;
 
 <h2><a id="effective"/>Effective</h2>
 
-<p>Eve is aiming to be effective and feasible. This means Eve is design to improve developer productivity and get the job done as quickly as possible. Effective does not necessarily imply efficiency or higher performance. Eve is designed to perform one task very well one time or a limited number of times by using a time scheduler. Eve is not design for high performance computing.</p>
+<p>Eve is aiming to be effective and feasible. This means Eve is design to improve developer productivity and get the job done as quickly as possible. Effective does not necessarily imply efficiency or higher performance. Eve is designed to perform one task very well one time, or a limited number of times by using a time scheduler.</p>
 
 <ul>
 <li>Use gradual typing;</li>
@@ -124,7 +124,7 @@ return;
 </ul>
 
 <h2><a id="safe"/>Safe</h2>
-<p>Eve is designed to be a safe language. For this we avoid using Null pointers. Eve is using boxed values that are actually references but we initialize all the variables with zero value. We avoid having Null references. Eve is and Object Oriented and declarative language. We believe the next principles will help us to design a safe language:</p>
+<p>Eve is designed to be a safe language. For this we avoid using Null pointers. Eve is using boxed values that are actually references but we initialize all the variables with zero values. We avoid having Null references. Eve is and Object Oriented and declarative language. We believe the next principles will help us to design a safe language:</p>
 
 <ol>
 <li>We favor safety over performance,</li>
@@ -132,11 +132,12 @@ return;
 <li>Implicit values are better than wrong values,</li>
 <li>A good error message worth more than gold,</li>
 <li>If the system is not ready it should tell you,</li>
-<li>If a process fail it should report the errors.</li>
+<li>If a process fail it should report the errors,</li>
+<li>Sometimes if you try a second time it works!</li>
 </ol>
 
 <h2><a id="modular"/>Modular</h2>
-<p>Eve applications are usually small, based on single source file. However Eve enable usage of multiple files for separation of concerns. There are 3 kind of modules in a large Eve application as you can see in the following diagram:</p>
+<p>Eve applications are usually small, based on single source file that do one job. However Eve enable usage of multiple files for separation of concerns in large applications. There are 3 kind of modules defined for Eve, as follows:</p>
 <ol>
 
 <div align="center">
@@ -145,9 +146,9 @@ return;
 </div>
 <hr>
 
-<li>One <em>main script</em> called "<em>driver</em>"</li>
+<li>One <em>master script</em> called "<em>driver</em>"</li>
 <li>Multiple <em>secondary scripts</em> called "<em>aspects</em>"</li>
-<li>Multiple <em>library modules</em> called simple "<em>modules</em>"</li>
+<li>Multiple reusable <em>modules</em> organized in libraries.</li>
 </ol>
 
 <p>Drivers and aspects are executable while modules are reusable but not executable. Aspects are executed from driver process and are individual process. Once an aspect is resolved it is removed from memory, unlike modules that are persistent until the driver ends.</p>
@@ -157,13 +158,14 @@ return;
 <p>Eve is a domain specific language but it looks and feel like a general purpose language. We do not do graphics but we manipulate data in any form. This can be text data but also row bit data. So we can read and write images and video streams. Next design choices will make Eve a versatile language:</p>
 
 <ol>
-  <li>Eve variables and parameters can be declared using type hint, tupe inference or gradual typing. This improve readability and reduce clutter;</li>
-  <li>Eve use implicit data types that are static but enable also variant type. The variant type can support a number of other data types that can be specified. So one variant is more like a pointer than regular variables.</li>
+  <li>Eve variables and parameters can be declared using: type hint, tupe inference or gradual typing. This improve readability and reduce clutter;</li>
+  <li>Eve use implicit data types that are static but enable also variant type. The variant type can support a number of alternative data types that can be specified.</li>
   <li>Eve has processes that can support input/output parameters. A process can run in a separate thread. However a process can not be used in expressions.</li>
-  <li>Eve has functions. However the functions are like named expressions. A function must be simple and can return a single result and can not have side-effects.</li>
+  <li>Eve has functions. Functions are usually defined in modules. A function can return one or more results. You can define the result name and type explicit.</li>
+  <li>Eve has lambda expressions. These are similar to functions but restricted. A lambda expression can't have side effects and can return a single value.</li>
   <li>Variables and parameters are automatically initialized with zero value when there is no explicit initialization. Also, if a parameter has explicit initial value it becomes optional.</li>
-  <li>Eve has two assignment operators: "::" and ":=". First is called "clone" second is called "assign" value. Developers can control what assignment operator to use depending on the algorithm requirements.</li>
   <li>In a subroutine, primitive type parameters are transferred <em>by reference</em>, but basic type parameters are immutable, protected by the compiler.</li>
+  <li>Eve has two assignment operators: "::" and ":=". First is called "clone" second is called "assign" value. Developers can control what assignment operator to use depending on the algorithm requirements.</li>
 </ol>
 
 <h2><a id="classic"/>Classic</h2>
@@ -171,7 +173,7 @@ return;
 <p>Eve is using a familiar syntax. We try to avoid being disruptive. If you know Java or C++ you will be able to learn Eve in less then one week. Also if you know Ada or Pascal, you will find Eve most similar.</p>
 
 <ol>
-  <li>Eve is using classic control flow statements: {decision, selection, repetition, error handlers} that you already know from other languages.</li>
+  <li>Eve is using classic control flow statements: {decision, selection, repetition, error handlers} that you already know from other languages.</li>  
   <li>Eve is using ASCII operators, and keyword based operators but not Unicode. This enable fast code input required to write large business oriented scripts.</li>
   <li>Eve has user defined data types (classes). Eve is a hybrid language it has suport for object oriented programming OOP. </li>
   <li>Eve is familiar with SQL, HTML and JSON. To deal with many SQL dialects, Eve have specific drivers that enable direct interaction with major databases.</li>

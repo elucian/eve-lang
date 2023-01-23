@@ -415,7 +415,7 @@ return;</code></pre>
 <tr><td>offset   </td><td>open     </td><td>order     </td><td>&nbsp;   </td></tr>
 <tr><td>over     </td><td>package  </td><td>pass      </td><td>print    </td></tr>
 <tr><td>process  </td><td>raise    </td><td>read      </td><td>record   </td></tr>
-<tr><td>recover  </td><td>release  </td><td>          </td><td>repeat   </td></tr>
+<tr><td>recover  </td><td>release  </td><td>lambda    </td><td>repeat   </td></tr>
 <tr><td>reset    </td><td>rest     </td><td>result    </td><td>&nbsp;   </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
 <tr><td>       </td><td>select     </td><td>          </td><td>skip     </td></tr>
@@ -438,6 +438,18 @@ return;</code></pre>
 <tr>
 <td>import</td>
 <td>define import region</td>
+</tr>
+<tr>
+<td>alias</td>
+<td>define identifier for import</td>
+</tr>
+<tr>
+<td>type</td>
+<td>define one or more types</td>
+</tr>
+<tr>
+<td>lambda</td>
+<td>define one or more lambda expressions</td>
 </tr>
 </tbody>
 </table>
@@ -972,6 +984,10 @@ return;</code></pre>
 <td>-</td>
 <td>Numeric subtraction | String concatenation | Set difference</td>
 </tr>
+<tr>
+<td>^</td>
+<td>Power. (We can't use ** that is for comments)</td>
+</tr>
 </tbody>
 </table>
 
@@ -1049,6 +1065,10 @@ return;</code></pre>
 <tr>
 <td>%=</td>
 <td>Modulo modifier</td>
+</tr>
+<tr>
+<td>^=</td>
+<td>Power modifier</td>
 </tr>
 </tbody>
 </table>
@@ -1178,7 +1198,14 @@ return;</code></pre>
 </tbody>
 </table>
 
-<p>Table of truth for logical operators:</p>
+<h4>Unary operator: not</h4>
+<ul>
+<li>not False = True</li>
+<li>not True  = False</li>
+</ul>
+
+<h4>Table of truth</h4>
+
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
@@ -1221,12 +1248,6 @@ return;</code></pre>
 </tbody>
 </table>
 
-<h4>Unary operator: not</h4>
-<ul>
-<li>not False = True</li>
-<li>not True = False</li>
-</ul>
-
 <h2>Bitwise operators</h2>
 <p>These operators are working for natural numbers &ge; 0</p>
 <table class="table table-bordered table-striped">
@@ -1238,19 +1259,19 @@ return;</code></pre>
 </thead>
 <tbody>
 <tr>
-<td>~</td>
+<td>NOT</td>
 <td>bitwise NOT (unary)</td>
 </tr>
 <tr>
-<td>&amp;</td>
+<td>AND</td>
 <td>bitwise AND</td>
 </tr>
 <tr>
-<td>|</td>
+<td>OR</td>
 <td>bitwise OR</td>
 </tr>
 <tr>
-<td>^</td>
+<td>XOR</td>
 <td>bitwise XOR</td>
 </tr>
 <tr>
@@ -1269,9 +1290,9 @@ return;</code></pre>
 <tr>
 <th>A</th>
 <th>B</th>
-<th>A &amp; B</th>
-<th>A | B</th>
-<th>A ^ B</th>
+<th>A AND B</th>
+<th>A OR B</th>
+<th>A XOR B</th>
 </tr>
 </thead>
 <tbody>
@@ -1318,7 +1339,7 @@ return;</code></pre>
 <thead>
 <tr>
 <th>A</th>
-<th>~A</th>
+<th>NOT A</th>
 <th>A &lt;&lt; 1</th>
 <th>A &gt;&gt; 1</th>
 </tr>

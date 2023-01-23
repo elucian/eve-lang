@@ -1,12 +1,12 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code Eve language specification.">
+  <meta name="description" content="Sage-Code Eve object oriented programming. Classes and Objects. ">
   <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="sage, code, EVE, language">
+  <meta name="keywords" content="SageCode, EVE, EveLang, programming, language, specification">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Website title -->
-  <title>Eve Specification</title>
+  <title>Eve OOP</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -34,8 +34,11 @@
 <h1>Eve Classes</h1>
 
 <div class="alert alert-secondary shadow-sm">
-A class is a composite data type. It implement properties and methods required to create objects. Objects are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. Eve is object oriented so we need define classes very similar to Java.
-</div>
+Eve is an object oriented language so we define Classes very similar to Java. A class is a companion for a user-defined data type. It implements behaviour for a user defined data type. Classes are called to instantiate Objects.</div>
+
+<h2>Eve Classes</h2>
+
+<p>Objects are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. You can create global objects using "set" and local objects using "new".</p>
 
 <p>The most important characteristics of objects are:</p>
 
@@ -45,10 +48,12 @@ A class is a composite data type. It implement properties and methods required t
 <li>Polymorphic: an object can play its base class role;</li>
 </ul>
 
+<div class="alert alert-info"><b>Note:</b> Objects can't be abstract but you can define an abstract constructor that can be extended. So Eve implements actually all 4 OOP principles.</div>
+
 <h4>Bookmarks:</h4>
 <ul>
 <li><a href="#object">object instances</a></li>
-<li><a href="#constructor">class constructor</a></li>
+<li><a href="#companion">class companion</a></li>
 <li><a href="#instances">class instances</a></li>
 <li><a href="#attributes">attributes</a></li>
 <li><a href="#inheritance">inheritance</a></li>
@@ -56,19 +61,24 @@ A class is a composite data type. It implement properties and methods required t
 
 <h2><a id="object"></a>Object Instances</h2>
 
-<p>Objects are variables that need to be initialized from a Class. The most simple object is an instance of type Object. The Object is the fundamental class in EVE, that is why it starts with uppercase.</p>
+<p>Objects are variables that need to be initialized using a Class. The most simple object is an instance of type Object. The Object is the fundamental class in EVE, that is why it starts with uppercase.</p>
 
 <h4>Pattern:</h4>
 
 <p>Initialize an object by using an object literal with initialization values:</p>
 
-<pre><code class="language-eve"># define an object instance
-global
-    Object object_name1 = (); -- empty object
-    Object object_name2 = (attribute:value, ...);
+<pre><code class="language-eve">
+# define global object instances
+driver test:
+    ** empty object
+    set object_name1: Onject(); 
+
+    ** object with attributes
+    set object_name2: {attribute:value, ...} <:Object;
+ return;
 </code></pre>
 
-<p><b>Notes:</b>An object is a reference to a data structure that is created by using the default constructor. This receive a list of attribute-value pairs: (attribute:value, ...). The default constructor accept a list of parameters, you do not have to specify the constructor name, just the list of parameters.</p>
+<p><b>Notes:</b>An object is a reference to a data structure that is created by using the default constructor. This receive a list of attribute-value pairs: {attribute:value, ...}. The default constructor accept a list of parameters (attribute:value,.)</p>
 
 
 <h4>Alternative:</h4>
@@ -76,68 +86,71 @@ global
 <p>Initialize an object by using an explicit constructor call.</p>
 
 <pre><code class="language-eve">#define an object instance
-local
-    Object object_name; -- create a Null object
-process
-    ** initialize object using Object() constructor
-    object_name := Object(attribute:value, ...);
-    ...
+process test:
+  ** initialize object using Object() constructor
+  new object_name := Object(attribute1:value1, 
+                            attribute2:value2, ...);
+  ...
 return;
 </code></pre>
 
-<p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatic and set-up an implicit data type using type inference. However after object is created the structure is locked: no other attributes can be added.</p>
+<p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatic and set-up an implicit data type using type inference. This is possible due to gradual typing algorithm.</p>
 
-<h2><a id="constructor"></a>Class constructor</h2>
+<h2><a id="companion"></a>Class companion</h2>
 
-<p>You can create more complex objects by using a class constructor. This start with keyword "class". This makes special subroutine that can create an object. The object name that is going to be created is an implicit output parameter, that is called "self" and that is available without declaring it.</p>
+<p>You can create more complex objects by using a class companion. This start with keyword "class". This is a special subroutine that can create object instances. The object name that is going to be created is an implicit output result, that is called "@self" that must be explicit declared as a result of a class.</p>
 
 <h4>Pattern:</h4>
 
-<p>A class constructor start with keyword: "class" and is a block of code similar to a routine. Unlike the routine it does not have a "process" region but it has "create" region instead and it has "remove" region that is also executable.</p>
+<p>A class constructor start with keyword: "class" and is a named block of code. It has a local context and has a free form. You can define things anywehre but in order top down. Unlike processes it does not have a "recover" region but it has  "remove" region.</p>
 
-<pre><code class="language-eve">#class constructor
-class ClassName(parameters):
-    ** object attributes
-    ...
-    ** object methods
-    ...
-static
-    ** class attributes
-    ...
-    ** class methods
-    ...
-create
-    ** call object default constructor
-    self := Object(object_attribute:argument,...);
-    ...
-remove
-    ** object release region
-    ...
+<pre><code class="language-eve">
+# user defined type  
+type TypeName = {} <: SuperType;
+
+# type companion (same name)
+class TypeName(parameters) => (@self :TypeName):
+  ** class attributes
+  ...
+  ** class methods
+  ...
+  ** call object constructor
+  let self := SuperType(arguments);
+  ...
+  ** create object attributes
+  ...
+  ** create object methods
+  ...
+[remove]
+  ** object release region
+  ...
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>In Eve we consider the class as an object factory. The objects are factory products. They can receive factory support and maintenance. So a class can perform object maintenance after the object was created.</p>
+<p><b>Notes:&nbsp;</b>In Eve we consider the class as an object factory. In fact, a class is a "high order function" that can have closures. The methods are closures. The objects are factory product instances. After creation objects can receive factory support and maintenance.</p>
 
 <h3>Conditional constructor</h3>
 
-<p>A class can have a single constructor. A constructor can use decision statements based on parameter values to create&nbsp;<em>"object"</em>&nbsp;in different ways based on conditions. This help us to create complex constructors.</p>
+<p>A class can have a single companion. The @self object is created explicit. A conditional constructor can use decision statements based on parameter values to create the &nbsp;<em>"object"</em>&nbsp;in different ways based on conditions. This help us to create complex constructors.</p>
 
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve">...
-create
-    ** conditional construction
-    case: when condition then
-        create self := Object(some_arguments);
-    else
-        create self := Object(other_arguments);
-    end case;
+class name(parameters) => (@self: Object):
+  ** conditional construction
+  if condition then
+      let self := SuperType(some_arguments);
+  else
+      let self := SuperType(other_arguments);
+  end case;
+  ...
+
 return;
 </code></pre>
 
 <h3>Constructor parameters</h3>
 
-<p>A class constructor can have parameters that receive arguments. You can define optional parameters with default values. Constructor receive argument values using a "constructor call". This call is similar to a "routine call". Parameters can be also assigned using a JSON literals.</p>
+<p>A companion can have parameters that receive arguments. You can define optional parameters with default values. Constructor receive argument values using a "constructor call". This call is similar to a "routine call". Parameters can be also assigned using a JSON literals.</p>
 
 <h4>Pattern:</h4>
 
@@ -158,30 +171,32 @@ process
 return;
 </code></pre>
 
-<h2><a id="instances"></a>Class Instances</h2>
+<h2><a id="instances"></a>Object Instances</h2>
 
-<p>Class instances are more complex than fundamental objects. Instances can have custom methods and private attributes that a simple object can not have. Any class is by default extending the root class that is the Object class.</p>
+<p>Object instances can be complex. User defined types can have custom methods and attributes that a simple object can not have. An Object is generic and has only standard attributes and very fiew methods. Any class is by default extending the Object class.</p>
 
-<p><b>Objects: </b>can be declared and initialized in a single statement using a class constructor. Complex objects can be initialized only by using a user define constructor and not by using the default object constructor.</p>
+<p><b>Objects: </b>can be declared and initialized in a single statement using a class constructor. Complex objects can be initialized only by using a user define companion and not by using the default object constructor.</p>
 
 <h4>Constructor Call:</h4>
 
 <p>This is how you create a class instance:</p>
 
-<pre class="language-eve">objectName := ClassName(arguments);</pre>
+<pre class="output">
+new objectName := ClassName(arguments);
+</pre>
 
-<p>The <em>object_name</em> from previous example, is the current instance that is created using a <em>class constructor</em>. Under the hood, object are actually created explicit in the <em>create</em> region of the class constructor using this syntax:</p>
+<p>The <em>object_name</em> from previous example, is the current instance that is created using a <em>class companion</em>. Under the hood, object are actually created explicit step by step in the class companion:</p>
 
 <h4>Constructor Detail:</h4>
 
 <p>Next we use object name "self" that is the implicit object name, reserved by EVE.  This is is the result of class constructor. It is similar to the "result" variable used in sub-routines. The self object is created explicit using an assign statement like:</p>
 
-<pre class="language-eve">self := SuperClass(arguments);</pre>
+<pre class="output">self := SuperClass(arguments);</pre>
 
 <h4>Note:</h4>
 <ul>
-<li>In Java you must use "new" to create an object;</li>
-<li>In Eve you can use ":=" and call the class constructor without the "new" keyword.</li>
+<li>In Java you must use "new" or "set" to create an object;</li>
+<li>In Eve you can use ":=" with JSON to create an object.</li>
 </ul>
 
 <h2><a id="attributes"></a>Attributes</h2>
@@ -189,22 +204,22 @@ return;
 <p>A class can have object attributes and class attributes. In other languages, these are called <em>properties</em> or <em>fields</em>. They represent actually states of an object. We stick with the term <em>attributes</em> in Eve documentation.</p>
 
 <ul>
-<li>In Eve we declare object attributes first then class attributes</em>
+<li>In Eve we declare class attributes first the object attributes</em>
 <li>We declare object attributes in default region after symbol ":"</li>
-<li>We declare class attributes after keyword: <em>static</em></li>
+<li>Public class attributes are defined using (.) orefix.</li>
 </ul>
 
 <h3>Object attributes</h3>
 
-<p>To access object attributes we can use dot notation:</p>
+<p>To access attributes we can use dot notation:</p>
 
-<pre class="language-eve">object_name.object_attribute;</pre>
+<pre class="output">object_name.object_attribute;</pre>
 
-<p>We already know how to instantiate a class and create objects using a class constructor. After you have defined a class, this do not know anything about it's objects. You can not ask the class anything about it's instances.</p>
+<p>We already know how to instantiate a class and create objects using a class companion. After you have defined a class, this do not know anything about it's objects. You can not ask the class anything about it's instances.</p>
 
 <h3>Class attributes</h3>
 
-<p>For a class, you can define static attributes and methods. That's the secret: a class is actually a <em>singleton object</em>. The class is holding the <em>class states</em>. Each attributes defined in the <em>static</em> region belong to the class singleton object.</p>
+<p>For a class, you can define static attributes and methods. That's the secret: a class is actually a <em>singleton object</em>. The class is holding the <em>class states</em>. Each attributes defined in class context using keyword "set". Unlike "let" or "new" that create the attributes of object, "set" create properties for the class singleton.</p>
 
 <p>You can access all static members without instantiation of the class. But you can also access class members using the object qualifier. Both will point to the same <em>class states</em> also called </em>class attributes</em>.</p>
 
@@ -215,7 +230,7 @@ object_name.class_attribute; -- using the object name
 
 <h4>Class Tree</h4>
 
-<p>There is a special class that has name <em>"Object"</em>and represents the <em>"root"</em> class. Each classes grows from Object or from other <em>"base class"</em> forming a <em>"class tree"</em>. Like a real tree the class hyerarchy has a single root.</p>
+<p>Using the <em>"Object"</em> as the <em>"root"</em> Class you can create a hierarchy of classes. Each classes grows from Object or from other <em>"super class"</em> forming a <em>"class tree"</em>. Like a real tree the class hyerarchy has a single root.</p>
 
 <div align="center">
   <img src="img/class-tree.svg" alt="Class Tree" width="680" class="img-fluid protect rounded shadow border" >
@@ -229,35 +244,39 @@ object_name.class_attribute; -- using the object name
 <pre><code class="language-eve"># define a "Point" class
 driver point_demo:
 
-class Point(Double x = 0, y = 0):
-    Double .x, .y; -- public attributes
-create
-    .x := x;
-    .y := y;
+** type object
+type Point = {x, y :Double} <: Object;
+
+** type companion
+class Point(x = 0, y = 0 :Double) => (@self: Object):
+  let self := Object();
+
+  ** set attribute values
+  let self += {'x': x};
+  let self += {'y': y};
 return;
 
-local
-    Point: p1, p2; -- declare two Null points
-process
+process main:
     ** initialize the points
-    p1 := Point(x:1, y:2);
-    p2 := Point(x:2, y:2);
+    new p1 := Point(x:1, y:2);
+    new p2 := Point(x:2, y:2);
+
     ** use string patterns to print attributes
-    print ("p1 = (a:#n, b:#n)" ? (p1.a,p1.b));
-    print ("p2 = (a:#n, b:#n)" ? (p2.a,p2.b));
+    print "p1 = (a:#n, b:#n)" ? (p1.a,p1.b);
+    print "p2 = (a:#n, b:#n)" ? (p2.a,p2.b);
 return;
 </code></pre>
 
 <h4>Output:</h4>
 
 <pre class="language-output">
-p1 = (a:1, b:1)
-p2 = (a:2, b:2)
+p1 = {a:1, b:1}
+p2 = {a:2, b:2}
 </pre>
 
 <h2><a id="comparing-objects"></a>Comparing objects</h2>
 
-<p>We can use two comparison operators with objects: "is" and "==". First operator "is" will compare the object location or object type. If the objects have same location they represent the same object. Second operator: "==" compare object class and object attributes. There are complementar operators "is not" and "!=". That can be used to create oposite logical arguments.</p>
+<p>We can use two comparison operators with objects: "is" and "==". First operator "is" will compare the object location. If the objects have same location they represent the same object. Second operator: "==" compare object type and object attributes. There are complementar operators "is not" and "!=". That can be used to create conditionals.</p>
 
 <h4>Example:</h4>
 

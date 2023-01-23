@@ -43,41 +43,10 @@ A function is a relation between some input values and output values. A function
 
 <p>Functions are declared with keyword: "function". A function can be public or private, local or global. You can define functions in different ways depending on your requirements. </p>
 
-<h4>Pattern 1:</h4>
-
-<pre><code class="language-eve">#implicit result type
-function name(parameters) =&gt; (expression);
-</code></pre>
-
-<h4>Pattern 2:</h4>
-
-<pre><code class="language-eve">#explicit result type
-function name(parameters) =&gt; (expression) :TypeName;
-</code></pre>
-
-<h4>Pattern 3:</h4>
-
-<pre><code class="language-eve">#explicit result type
-new name = function(parameters) =&gt; (expression) :TypeName;
-</code></pre>
-
-<h4>Pattern 4:</h4>
+<h4>Pattern:</h4>
 
 <pre><code class="language-eve">#function with block
 function name(parameters) =&gt; (result:TypeName):
-  ** executable block
-  ...
-[recover]
-  ...
-[finalize]
-  ...
-return;
-</code></pre>
-
-<h4>Pattern 5:</h4>
-
-<pre><code class="language-eve">#function with block
-new name = function(parameters) =&gt; (result:TypeName):
   ** executable block
   ...
 [recover]
@@ -97,7 +66,7 @@ return;
 <li>A routine can receive parameters of type function,</li>
 </ul>
 
-<p><b>Function call</b>&nbsp;The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed.</p>
+<p><b>Function call</b>&nbsp;Function call is using the name of the function followed by round brackets (), with argument list. The brackets are mandatory even if there are no arguments, otherwise the function is not executed.</p>
 
 <pre><code class="language-eve">
 #demo function call

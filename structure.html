@@ -192,8 +192,8 @@ return;
 
 <pre><code class="language-eve">
 ** gobal scope
-  set  .PI  := 3.14; -- public constant
-  set .var := 0;    -- piblic variable
+  set .PI = 3.14 :Float;      -- public constant
+  set .var = 0   :Integer;    -- piblic variable
 </code></pre>
 
 <h4>Notes:</h4>
@@ -226,43 +226,6 @@ import
 <li>member alias can created from public members of other module;</li>
 </ul>
 
-<h3>User types</h3>
-
-<p>In Eve you can define data types, that are very symilar to classes. Types are derived from system defined types. A type has public attributes and can have a class companion.</p>
-
-<p>User types are inherited from the supertype or Object type. When you create a type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type descriptor.<p>
-
-<p>User types are defined in a region that start with keyword "type". You can define multiple types on several lines separated by semicolumn and end of line.</p>
-
-<h3>Lambda expressions</h3>
-
-<p>Lambda expressions are like mathematical functions. Can receive arguments and can produce a result. A lambda expression is created with keyword new.</p>
-
-<p>Lambda expressions can be declared in global scope using "lambda" region. You can define a single lambda region for a module. Lambda expressions can be anonymous.</p>
-
-<h4>Example</h4>
-
-<p>In next example we define two lambda expressions.</p>
-
-<pre><code class="language-eve">
-lambda
-  new sum = (p1, p2 :Integer) => (p1 + p2):Integer;
-  new sqr = (p1, p2 :Integer) => (p1 * p2):Integer;
-</code></pre>
-
-<h4>Signature</h4>
-
-<p>Labda expression signature can be declared as data type:<p>
-
-<pre><code class="language-eve">
-# define a lambda signature
-type BinEx = (p1, p2 :Integer):Integer <: Lambda;
-
-** Use lambda signature as parameter type
-process useLambda(test :BinEx):
-   ...
-return;
-</code></pre>
 
 <h3>Private states</h3>
 
