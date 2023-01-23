@@ -16,7 +16,7 @@ globals
     Type_name @var_name1=value1, @var_name2 = value2;
 
 +---------------------------------------------------- 
-In EVE you can have more than one global regions 
+In Eve you can have more than one global regions 
 For each region you can declare several variables
 ----------------------------------------------------+    
 ** local variables

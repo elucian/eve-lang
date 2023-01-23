@@ -159,13 +159,37 @@ function apply_style(str) {
     return str
 }
 
+//style double quoted string
+function style_string(line) {
+    let result = ""
+    let q = 0
+    // split in parts
+    parts = line.split(/(?<!\\)"/g)
+    for (part of parts) {
+        if (part =='') {
+           continue
+        }
+        q +=1  //new quote
+        if ( q%2 == 0 ) {
+            // end the string
+            result  += strings('"'+part+'"') 
+        } else {
+            result  += apply_style(part)
+        }
+    }
+    return result
+}
+
 function eve_render() {
     const eve_code = document.getElementsByClassName("language-eve");
     if (typeof(eve_code) != "undefined") {
-        let i = 0
         let t = ""
+        let i = 0 
+        let q = 0 // how meny qotes
+        let pozition = 0
         let comment = ""
         let start_comments = false
+        let start_string   = false    
         for (e of eve_code ) {
             if (e.tagName =="CODE") {
                 lines = e.innerText.split("\n")
@@ -176,46 +200,45 @@ function eve_render() {
                         i += 1
                         continue
                     }
-                    // check if start with comments
-                    if (line.trim().substr(0,2)=="/*" || 
-                        line.trim().substr(0,2)=="+-" ||  
-                        start_comments) {
-                        start_comments = true
-                        line = comments(line)
-                    } else if (line.trim().substr(0,1)=="#") {
+                    // check first character
+                    if (line.trim().substr(0,1)=="#") {
                         line = title(line)
                     } else if (line.trim().substr(0,2)=="**") {
                         line = subtitle(line)
                     } else if (line.trim().substr(0,2)=="--") {
                         line = comments(line) 
+                    } else if ((line.trim().substr(0,2)=="/*") || 
+                               (line.trim().substr(0,2)=="+-") ||
+                                start_comments)
+                               {
+                        start_comments = true
                     } else {
                         // split away end comments 
-                        parts = line.split(" --")
+                        parts = line.split(/(?<!['"])--/)
                         if (parts.length > 1) {
                             line = parts[0]
                             comment = " --" + parts[1]
                         } else {
                             comment = ""
                         }
-                        // avoid style in strings
-                        if (line.search(/\"/) > 0) {
-                            parts = line.split('"');
-                            line  = ""; j = 0
-                            for (part of parts) {
-                                if (j == 1) {
-                                    line  += strings('"' + part + '"')
-                                    j = 0
-                                } else {
-                                    line  += apply_style(part)
-                                    j = 1
-                                }
-                            }
-                        } else {
-                            line  = apply_style(line)
+                        if (line.search(/^["']/))  {
+                            start_string = true
                         }
-                        // reattach comments
+                        line = style_string(line);
+                    }
+                    // skip block comments from style
+                    if (start_comments) {
+                        if (line.search(/\*\//) > 0 ||
+                            line.search(/\-\+/) > 0) {
+                            start_comments = false
+                        } 
+                        line = comments(line)
+                    } else {
+                        // style first part (before comment)
+                        line  = apply_style(line)
+                        // attach back the comment
                         if (comment!="") {
-                            line = line + comments(comment)
+                            line += comments(comment)
                         }
                     }
                     // add new line if required
@@ -223,17 +246,10 @@ function eve_render() {
                     if (i < lines.length || line!="") {
                        t += line_span(line)
                     }
-                    // check if end of comments
-                    if (line.search(/\*\//)>0 || line.search(/\-\+/)>0)
-                    {
-                        start_comments = false
-                    }
                 }
-                start_comments = false
                 e.innerHTML = t;
                 t = ""; i = 0
             }
-            start_comments = false
         }
     } else {
       console.log("not_found")

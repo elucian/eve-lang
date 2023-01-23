@@ -1,21 +1,21 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code EVE language specification.">
+  <meta name="description" content="Sage-Code Eve programming language specification, by Sage-Code Laboratory.">
   <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="sage, code, EVE, language">
+  <meta name="keywords" content="SageCode,Sage-Code, EVE, Eve, eve, EveLang, programming language, functions">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
   <!-- Website title -->
-  <title>EVE Specification</title>
+  <title>Eve Functions</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <!-- Icon -->
   <link rel="icon" type="image/png"  href="../images/favicon.ico">
-  <!-- EVE code highlighter -->
+  <!-- Eve code highlighter -->
   <script src="eve.js"></script>
   <!-- Sage-Code custom CSS -->
   <link rel="stylesheet" href="../sage.css">
@@ -34,54 +34,87 @@
     </div>
 </div><hr>
 
+<h1><a id="functions">Eve Functions</h1>
+
 <div class="alert alert-secondary shadow-sm">
-A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. In EVE functions are pure and first class values
+A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. In Eve functions are pure and first class values.
 </div>
 
-<h1><a id="functions">EVE Functions</h1>
 
-<h4>Pattern:</h4>
+<p>Functions are declared with keyword: "function". A function can be public or private, local or global. You can define functions in different ways depending on your requirements. </p>
 
-<p>Functions are declared in script regions that start with keyword: "function". A function can be public or private, local or global. Let's analyze the syntax: </p>
+<h4>Pattern 1:</h4>
 
-<pre><code class="language-eve">#declare functions
-function
-    TypeName name(parameters) =&gt; (expression);
+<pre><code class="language-eve">#implicit result type
+function name(parameters) =&gt; (expression);
+</code></pre>
+
+<h4>Pattern 2:</h4>
+
+<pre><code class="language-eve">#explicit result type
+function name(parameters) =&gt; (expression) :TypeName;
+</code></pre>
+
+<h4>Pattern 3:</h4>
+
+<pre><code class="language-eve">#explicit result type
+new name = function(parameters) =&gt; (expression) :TypeName;
+</code></pre>
+
+<h4>Pattern 4:</h4>
+
+<pre><code class="language-eve">#function with block
+function name(parameters) =&gt; (result:TypeName):
+  ** executable block
+  ...
+[recover]
+  ...
+[finalize]
+  ...
+return;
+</code></pre>
+
+<h4>Pattern 5:</h4>
+
+<pre><code class="language-eve">#function with block
+new name = function(parameters) =&gt; (result:TypeName):
+  ** executable block
+  ...
+[recover]
+  ...
+[finalize]
+  ...
+return;
 </code></pre>
 
 <h4>Notes:</h4>
 
 <ul>
-<li>Result type is declared before function name,</li>
-<li>You can declare more than one function in same region.</li>
+<li>Result type can be declared explicit,</li>
 <li>A function can have only input parameters,</li>
 <li>A function can have a single expression,</li>
-<li>A function can be created by a routine,</li>
+<li>A function can be created by in a process (closures),</li>
 <li>A routine can receive parameters of type function,</li>
 </ul>
 
 <p><b>Function call</b>&nbsp;The call for a function is using name of the function and round brackets () for arguments. The brackets are mandatory even if there are no arguments, otherwise the function is not executed.</p>
 
-<h4>Pattern:</h4>
-
-<pre><code class="language-eve">#demo function call
+<pre><code class="language-eve">
+#demo function call
 driver function_call:
 
-function
-    TypeName: function_name(Type : param = value,...) =&gt; (expression);
+** declare functions
+  function name1(param :Type,...) =&gt; (expression);
+  function name1(param := value,...) =&gt; (expression):Type;
+  ...
 
-process:
-    TypeName result; -- not initialized (require store)
-begin
-    ** call with no arguments:
-    result := function_name();
+process main:
+  ** call using argument list
+  new result := name1(arguments);
 
-    ** call with arguments mapped by position
-    result := function_name(value, ...);
-
-    ** call using parameter names and pair-up operator ":"
-    result := function_name(parameter:value ...);
-end process;
+  ** call using parameter names with pair operator (:)
+  new result := name1(param:arg,....);
+return;
 </code></pre>
 
 <p><b>Note:</b>&nbsp;Argument value can be anything that translate to a value of expected type:</p>
@@ -89,25 +122,24 @@ end process;
 <li>value ::= constant | variable</li>
 <li>value ::= expression | other function call</li>
 </ul>
-<p><b>formal parameters</b></p>
+
+<h4>formal parameters</h4>
 <ul>
 <li>Parameters are declared in parenthesis () after the function name,</li>
 <li>Each parameter has name and type and can have one default value,</li>
 <li>When a function is called each parameter receive a value that is called argument.</li>
 </ul>
 
-<h4>function call arguments</h4>
+<h4>function arguments</h4>
 
 <p>There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters with a function call. Arguments can be literals, constants or variables.</p>
 <h4>Example:</h4>
 <pre><code class="language-eve"># demo function with parameters
 driver function_params:
-
-function
-    Integer sum(Integer a, b) =&gt; (a + b);
-begin
-    print sum(1,2);  -- 3
-    print sum(2,4);  -- 6
+  function sum(a, b: Integer) =&gt; (a + b) :Integer;
+process main:
+  print sum(1,2);  -- 3
+  print sum(2,4);  -- 6
 return;
 </code></pre>
 

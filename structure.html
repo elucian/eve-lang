@@ -1,18 +1,18 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code EVE project„ structure.">
+  <meta name="description" content="Sage-Code Eve project„ structure.">
   <meta name="author" content="Elucian Moise">
   <meta name="keywords" content="sage, code, EVE, project, language">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Website title -->
-  <title>EVE Structure</title>
+  <title>Eve Structure</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <!-- Icon -->
   <link rel="icon" type="image/png"  href="../images/favicon.ico">
-  <!-- EVE code highlighter -->
+  <!-- Eve code highlighter -->
   <script src="eve.js"></script>
   <!-- Sage-Code custom CSS -->
   <link rel="stylesheet" href="../sage.css">
@@ -31,14 +31,14 @@
     </div>
 </div><hr>
 
-<h1>EVE Structure</h1>
+<h1>Eve Structure</h1>
 
 <div class="alert alert-secondary shadow-sm">
-EVE is designed to quickly build a data processing app that can run several jobs in order on a precise schedule. You can create one script app but sometimes you need to divide a project into many small scripts that run together.</div>
+Eve is designed to quickly build a data processing app that can run several jobs in order on a precise schedule. You can create one script app but sometimes you need to divide a project into many small scripts that run together.</div>
 
 <h4>Bookmarks:</h4>
 
-<p>Next topics describe overal structure of EVE applications.</p>
+<p>Next topics describe overal structure of Eve applications.</p>
 
 <hr>
 
@@ -84,7 +84,7 @@ EVE is designed to quickly build a data processing app that can run several jobs
 <li>Module script, created with keyword: "module",</li>
 </ul>
 
-<p><b>Notes:&nbsp;</b>One project can contain one or many "driver scripts". Each driver is independend and start a new main process. EVE virtual machine can execute multiple scripts in the same time. A driver script can "import modules". A module is a reusable script that define common elements. </p>
+<p><b>Notes:&nbsp;</b>One project can contain one or many "driver scripts". Each driver is independend and start a new main process. Eve virtual machine can execute multiple scripts in the same time. A driver script can "import modules". A module is a reusable script that define common elements. </p>
 
 <h4>Restrictions</h4>
 
@@ -101,7 +101,7 @@ EVE is designed to quickly build a data processing app that can run several jobs
 
 <h4>Syntax Pattern:</h4>
 
-<p>An EVE script start with one of 3 keywords: {"driver", "aspect", "module"}. Script name is the same as the file name without the extension. A script can have parameters, devined after script name in a list.</p>
+<p>An Eve script start with one of 3 keywords: {"driver", "aspect", "module"}. Script name is the same as the file name without the extension. A script can have parameters, devined after script name in a list.</p>
 
 <pre><code class="language-eve">
 +--------------------------------------------
@@ -150,7 +150,7 @@ return;
 
 <h3>System variables</h3>
 
-<p><em>System variables </em>start with prefix "$". Usually are loaded from a configuration file (*.cfg), but sometimes are defiand explicit usually in EVE modules.</p>
+<p><em>System variables </em>start with prefix "$". Usually are loaded from a configuration file (*.cfg), but sometimes are defiand explicit usually in Eve modules.</p>
 
 <h4>Note:</h4>
 <ul>
@@ -158,7 +158,7 @@ return;
 <li>System variables are usually defined in core modules.</li>
 </ul>
 
-<p>Several system variables are provided by EVE environment:</p>
+<p>Several system variables are provided by Eve environment:</p>
 <ul>
 <li>$eve_home :eve runtime</li>
 <li>$pro_home :project home</li>
@@ -224,7 +224,7 @@ import
 
 <h3>User types</h3>
 
-<p>In EVE you can define data types, that are very symilar to classes, except the types do not have other methods but the methods of the supertype.</p>
+<p>In Eve you can define data types, that are very symilar to classes, except the types do not have other methods but the methods of the supertype.</p>
 
 <p>User types are inherited from the supertype or class. When you create this type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type constructor.<p>
 
@@ -234,7 +234,7 @@ import
 
 <p>Any script can hold private variables or constants. Private states are defined using keyword "set". These members are not visible outside of current module. Some of these may be using custom types.</p>
 
-<div class="alert alert-warning"><b>Warning: </b>Is considered bad practice to modify global variables inside processes. All processes should depend only on parameters. However EVE do not prevent you from doing so.</div>
+<div class="alert alert-warning"><b>Warning: </b>Is considered bad practice to modify global variables inside processes. All processes should depend only on parameters. However Eve do not prevent you from doing so.</div>
 
 <h4>Example</h4>
 
@@ -388,11 +388,11 @@ return;
 
 
 <h2><a id="execution">Script Execution</h2>
-<p>EVE scripts are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console you can&nbsp;<em>start</em>&nbsp;only a one script at a time. In service mode you can&nbsp;<em>start</em>&nbsp;multiple sessions with different startup parameters. Each session is independent and can&nbsp;<em>start</em>&nbsp;one single script.</p>
+<p>Eve scripts are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console you can&nbsp;<em>start</em>&nbsp;only a one script at a time. In service mode you can&nbsp;<em>start</em>&nbsp;multiple sessions with different startup parameters. Each session is independent and can&nbsp;<em>start</em>&nbsp;one single script.</p>
 
-<p><b>Configuration: &nbsp;</b>EVE services using a general configuration file: eve.cfg. This file contains default settings. When the service starts this file is parsed.</p>
+<p><b>Configuration: &nbsp;</b>Eve services using a general configuration file: eve.cfg. This file contains default settings. When the service starts this file is parsed.</p>
 
-<p><b>Memory allocation:&nbsp;</b>EVE service is in charge of allocating memory for one session before the application starts. There is no shared memory between sessions. After application is terminated the memory is released.</p>
+<p><b>Memory allocation:&nbsp;</b>Eve service is in charge of allocating memory for one session before the application starts. There is no shared memory between sessions. After application is terminated the memory is released.</p>
 
 <p>To start a driver there are 2 methods:</p>
 <ol>
@@ -465,7 +465,7 @@ return;
 
 <p>The drivers and aspects can load modules in memory. After loading, all public elements of modules can be used on demand. The driver control the logic of execution.</p>
 
-<p>Modules are "singleton" once a module is loaded in memory, it will not load a second time. Its states are static. EVE is a multi-session system. An aspect can be run asynchronously in parallel but modules are bound the the main process.</p>
+<p>Modules are "singleton" once a module is loaded in memory, it will not load a second time. Its states are static. Eve is a multi-session system. An aspect can be run asynchronously in parallel but modules are bound the the main process.</p>
 
 <h3>Exclusive Mode:</h3>
 

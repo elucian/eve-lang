@@ -1,12 +1,12 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code EVE collections explained.">
+  <meta name="description" content="Sage-Code Eve programming, collections explained.">
   <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="sage, code, EVE, collections, programming">
+  <meta name="keywords" content="sagecode, EVE, EveLang, collections, programming">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Website title -->
-  <title>EVE Collections</title>
+  <title>Eve Collections</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -31,76 +31,86 @@
     </div>
 </div><hr>
 
-<h1>EVE Collections</h1>
+<h1>Eve Collections</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Collections are composite types represents groups of multiple elements of the same type. In EVE collections are actually generics. Usually we declare collections using "gradual typing" technique but it is possible to use full type declaration. </div>
+Collections are composite types represents groups of elements of the same type. In Eve collections are actually generics. Usually we declare collections using "gradual typing" technique but it is possible to use an explicit declaration. </div>
 
 <h4>Bookmarks:</h4>
 
 <ul>
 <li><a href="#ordinal">Ordinal</a></li>
 <li><a href="#list">List</a></li>
-<li><a href="#set">Set</a></li>
-<li><a href="#map">Map</a></li>
+<li><a href="#dataset">DataSet</a></li>
+<li><a href="#table">Table</a></li>
 <li><a href="#string">String</a></li>
 <li><a href="#text">Text</a></li>
 <li><a href="#exception">Exception</a></li>
 </ul>
 
 <h2><a id="ordinal"</a>Ordinal</h2>
-    <p>Ordinal is an generic class representing a set of unique values. It is a group of symbols. Each symbol represents an integer value starting from N to capacity-1. Associated values can start with a different N number. Values can be specified enclosed in {} like a set. Values will be be unsigned integer (i &ge; N) in consecutive ascending order.</p>
+
+<p>Ordinal is an generic class representing a set of unique ordered symbols. Each symbol represents an integer value starting from N to capacity C. Element values start with 1 or a specific number and grow with one for each element.</p>
 
 <h4>Pattern:</h4>
 <pre><code class="language-eve"># Define a Ordinal subtype
-type
-   TypeName(start:0): {name1, name2, name3} &lt;: Ordinal;
-local
-    TypeName a, b, c;  -- a, b, c will have same type
-process
-    a := TypeName.name1; -- a=2
-    b := TypeName.name2; -- b=3
-    c := TypeName.name3; -- c=4
+driver test_ordinal;  
+  type TypeName = {name1:0, name2, name3} &lt;: Ordinal;
+process main:
+  new a := TypeName.name1; -- a=2
+  new b := TypeName.name2; -- b=3
+  new c := TypeName.name3; -- c=4
 return;
 </code></pre>
 
-<p><b>Note:</b>&nbsp;When element name start with "." no need to use qualifiers for the individual values. This is because values starting with "." are public by default and known in the scope where ordinal is defined (or loaded).</p>
+<p><b>Note:</b>&nbsp;When element name start with capital letter no need to use qualifiers for the individual values. This is because values starting with capital letters are public constants by default and known in the scope where ordinal is visible.</p>
 
 <pre><code class="language-eve">## Declare public elements in enumeration
-type
-    TypeName: {.name0, .name1} &lt;: Ordinal;
-local
-    TypeName a, b;
-process
-    a := name0; -- a = 0
-    b := name1; -- b = 1
+driver constant_ordinals;
+  type TypeName = {Name1:10, Name2} &lt;: Ordinal;
+process main:
+  new a := Name1; -- a = 10
+  new b := Name2; -- b = 11
+  ** verify values
+  expect a == 10;
+  expect b == 11;
 return;
 </code></pre>
 
 <h2><a id="list" class="anchor" href="EVE#list"></a>List</h2>
-<p>A list is a consecutive sequence of elements having a dynamic capacity.</p>
+<p>A list is a consecutive sequence of elements having a dynamic capacity. Elements are ordered in the order you create them. The order can change if you sort the list or add/remove elements.</p>
 
 <h4>Syntax:</h4>
-<pre><code class="language-eve">#declare same list twice
-local
-    List[elementType] list_name;   --  new empty list of "elementType"
-    List list_name := [value, ...]; --  new list with type inference
+<pre><code class="language-eve">#declare two lists
+** empty list
+  new list1 := ();  
+
+** type inference
+  new list2 := (value1, value2, ...); 
+
+** using constructor
+  new list3 := List(value1,value2,...)
 </code></pre>
 
 <h4>Notes:</h4>
 <ul>
 <li>The elements of a list have the same type;</li>
-<li>Access to each element is sequential not direct;</li>
+<li>Access to all or each element is sequential;</li>
 </ul>
 
 <h4>Examples:</h4>
 
-<pre><code class="language-eve"># full type declarations
-local
-    List[Integer] n_list;
-    List[Object ] o_list;
-    List[String ] s_list;
+<pre><code class="language-eve">
+# gradual declaration
+  new e_list :List;
+
+# explicit declarations
+  new n_list :()Integer;
+  new o_list :()Object ; 
+  new s_list :()String ; 
+  new u_list :()Unicode; 
 </code></pre>
+
 <p><b>list literals</b></p>
 <ul>
 <li>List literals enclosed in square brackets,</li>
@@ -111,69 +121,81 @@ local
 <h4>Examples:</h4>
 <p>Literals can be used for initialization of variables:</p>
 <pre><code class="language-eve"># initialized list with type inference
-local
-    List c_list = ['a', 'b', 'c'];
-    List n_list = [1, 2, 3];
+    new c_list := ('a', 'b', 'c');
+    new n_list := (1, 2, 3);
 </code></pre>
 
 <p>Literals can be used in assign expressions:</p>
 <pre><code class="language-eve"># Defer initialization
 driver begin_initial:
-    ** define empty list if native types
-    List[Integer] c_list;
-process
-    ** initialize list using  ":=" assign
-    create c_list := [1,2,3];
+    ** define empty list
+    set c_list: List;
+process main:
+    ** initialize the list
+    let c_list := (1,2,3);
 return;
 </code></pre>
 
-<h2><a id="set"/>Set</h2>
+<h2><a id="dataset"/>DataSet</h2>
 
-<p>In mathematics a set is an abstract data structure that can store certain values, in random order, but has no repeated values. Sets are fast collections for search, add update with new values. However, you have to know the element <em>value</em> in order to search for it or to remove it from a set.</p>
+<p>In mathematics a data set is an abstract data structure that can store certain values, in random order, but has no repeated values. Sets are fast collections for search, add update with new values. However, you have to know the element <em>value</em> in order to search for it.</p>
+
+<h4>Empty DataSet</h4>
+
+<p>An empty DataSet is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is Null.</p>
 
 <pre><code class="language-eve">
-global Set[type] set_name = {}; -- empty Set but not Null
+** Define empty DataSet but not Null
+set e_name = {}; 
+
+** Define a Null DataSet
+set n_name :DataSet;
+
+** Define DataSet with element type
+set t_name : {}Integer;
 </code></pre>
 
-<p><b>Empty set</b></p>
-<p>An empty set is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is Null. Empty set allocated but not Null. It is a difference.</p>
 
-<p><b>Set restrictions</b></p>
+<h4>Set restrictions</h4>
 <ul>
 <li>All elements of a set must have the same type</li>
-<li>Set elements can have only comparable types: {Numeric, String, Ordinal}.</li>
+<li>Set elements can have only comparable types: {Numeric, String, Ordinal, Unicode}. You can't create a set of objects.</li>
 </ul>
-<p><b>Mutability</b></p>
-<p>A set can be modified during run-time using operators.</p>
+
+<h4>Mutability</h4>
+<p>A set can be modified during run-time using operators. When you modify a set, keep in mind that set's are automaticly sorted by a hash key.</p>
+
+<p> You never know what the position of the new element is going to be. Also if you add or remove an element the position of several other elements will be shifted.</p>
+
 <ul>
-<li>+= for append</li>
-<li>-= for delete</li>
-<li>:= for replace</li>
+<li>new, += for append</li>
+<li>del, -= for delete</li>
 </ul>
+
+<p><b>Note: </b>Any modifier "x=" can be used for altering individual elements. You can rever to all elements using "*" and modify them.</p>
 
 <h4>Example:</h4>
 <pre><code class="language-eve">#demo for using a set
 driver set_demo:
 
-** initialized set of integers
-global Set[Integer] my_set = {0,2,3};
+** initialized DataSet of integers
+  set my_set = {0,2,3} :DataSet;
+process main:
+  ** append element 1
+  let my_set += 1;
+  expect my_set == {0,1,2,3};
 
-process
-    ** append element 1
-    my_set += 1;
-    expect my_set == {0,1,2,3};
+  ** remove element 2
+  let my_set -= 2;
+  expect my_set == {0,1,3};
 
-    ** remove element 2
-    my_set -= 2;
-    expect my_set == {0,1,3};
+  ** modify all elements
+  let my_set[*] := 0;
+  expect my_set == {0,0,0};
 
-    ** modify all elements
-    my_set[*] := 0;
-    expect my_set == {0,0,0};
-
-    ** remove all elements
-    my_set := {};
-    expect my_set == {};
+  ** remove all elements
+  let my_set := {};
+  expect my_set == {};
 return;
 </code></pre>
 
@@ -182,14 +204,15 @@ return;
 <p>Use union operator to combine two sets.</p>
 <pre><code class="language-eve"># combine two sets using "|" = (or)
 driver set_union_demo:
-
-local
-    Set first = {0,1,2,3,4,5,6,7,8,9};
-    Set[Integer] second; -- Null set
-
+* 10 element set
+  set first = {0,1,2,3};
+  set second: DataSet; -- Null DataSet
 process
-    store  second := first || {0,1,2,10}; -- create set
-    expect second == {0,1,2,3,4,5,6,7,8,9,10};
+  ** asign elements using union
+  let second := first | {2, 4, 8, 10};
+
+  ** element "2" was common 
+  expect second == {0,1,2,3,4,8,10};
 return;
 </code></pre>
 
@@ -197,48 +220,56 @@ return;
 
 <p>Intersect operator &amp; find common elements:</p>
 
-<pre><code class="language-eve"># Create intersection using &amp;&amp;
+<pre><code class="language-eve"># Create intersection using &amp;
 driver set_intersection_demo:
-
-global Set test; -- Null set
-
-process
-    store test := {1,2,3,4} &amp;&amp; {3,4,5};
-    print test; --  {3,4}
+  set test: DataSet; -- Null set
+process main:
+  let test := {1,2,3,4} &amp; {3,4,5};
+  expect test == {3,4};
 return;
 </code></pre>
 
+<h2><a id="table"></a>Table</h2>
 
-<h2><a id="map"></a>Map</h2>
-
-<p>It is also called "hash-map" due to similar letter H representing a connection between two columns: the key column and value column. Collections are ordered by key. This helps to find elements fast using a binary search. That's the idea, so in Python these collections are called Dictionaries.</p>
+<p>It is also called "hash-table" in other language due to similar letter H representing a connection between two columns. Collections are ordered by keys. This helps to find elements faster using a binary search.</p>
 
 <ul>
-<li>Maps are sets of (key:value) pairs;</li>
+<li>Tables are sets of (key:value) pairs;</li>
 <li>The key must be sortable: { Number, String, Ordinal};</li>
+<li>Value can be anything including objects.</li>
 </ul>
 
 <h4>Syntax:</h4>
-<pre><code class="language-eve"># define some hash-map variables
-local
-    Map {String:String} mapName; -- define map with string:key and value
-    Map m = {(key:value), ...};  -- use type inference to create a map
+<pre><code class="language-eve">
+type Dic = {}(String, Object) <: Table;
+driver test:
+# Null map
+  set m :Dic;
+process main:
+  expect type(m) == Table
+  expect m is Null;
+  expect m == {};
+return;
 </code></pre>
 
 <h4>Example:</h4>
-<pre><code class="language-eve">#demo how to initialize a Map
-driver map_init_demo:
-    ** Null table (require initialization)
-    Map{String,Integer} table;
-process
+<pre><code class="language-eve">
+# how to initialize a table
+driver table_init:
+    set t: Table;
+process main:
     ** initialize table
-    table := {('one':1), ('two':2)};
+    let t := {'one':1, 'two':2};
+
+    ** accessing elements
+    expect t['one'] == 1;
+    expect t['two'] == 2;
 return;
 </code></pre>
 
 <h2><a id="string"></a>String</h2>
 
-<p>In EVE There are two types of strings. Single quoted and double quoted strings. They are using different internal representation: Single quoted strings are ASCII strings while double quoted string is called "Text" and has UTF8 internal encoding. Single quoted strings has a limited capacity. Double quoted strings can store multiple lines of text and it has unlimited capacity.</p>
+<p>In Eve, we have two types of strings. Single quoted and double quoted. Single quoted strings are ASCII encoded while double quoted string are Unicode. Single quoted strings has a limited capacity. Double quoted strings can store multiple lines of text and it has variable capacity.</p>
 
 <ul>
 <li>Single quoted string, has default capacity 1024 bytes;</li>
@@ -246,74 +277,93 @@ return;
 </ul>
 
 <h3>String declaration</h3>
-<p>String can be initialized with a constant literal using single quotes or double quotes. It is an error to declare string and initialize with the double quotes and also is wrong to declare Text and initialize with single quotes.</p>
+
+<p>String can be initialized with a constant literal using single quotes or double quotes. It is possible to do a conversion between the wrong literal and the right string type but the encoding change and in the end the two will be distinct objects.</p>
 
 <h4>Syntax:</h4>
-<pre><code class="language-eve"># define some hash-map variables
-local
-    String strName;             -- define Null string with default capacity
-    String(capacity) lmString;  -- define a limited capacity string
-    Text text_name;             -- define Null text with unrestricted capacity
+<pre><code class="language-eve">
+** define Null string with default capacity
+new strName :String;   
+
+** define string with specific capacity
+new lmString:String(capacity);  
+
+** define a unlimite capacity Unicode
+new text :Unicode; 
+
+** define limited capacity Unicode
+new text :Unicode(capacity);
 </code></pre>
 
-<h4>Example:</h4>
-<pre><code class="language-eve"># examples of strings
-local
-    String(100) short_string = ''; --this string can hold 100 symbols
-    String string_name       = ''; --default capacity 256 ASCII symbols
-    Text text_name           = ""; --variable capacity Unicode string
+<h4>Initialization:</h4>
+
+<p>In next examples we use type inference to set strings. ASCII strings can have a large capacity but onlu a part is initialized. All remaining characters are Null.</p>
+
+<pre><code class="language-eve">
+# examples of empty strings
+new short_string := ''*100;  -- this string can hold 100 symbols
+new default_str  := '';      -- default capacity 1024 ASCII Null
+new unicode_str  := "";      -- variable capacity Unicode string
+new unicode_str  := ""*100;  -- a short capacity Unicode string
+
+# examples of initial values
+new long_line := '-'*80      -- a long line of 80 ASCII characters
+new dash_dot  := "-&middot;" -- a long line -&midot;-&midot;-&midot;
 </code></pre>
 
 <h3><a id="string-mutability"></a>String mutability</h3>
 
-<p>In EVE strings are mutable. If you use ":=" the string object is replaced. If you use a modifiers:"&lt;+" the double quoted string resized automatically. For single quoted strings, if the capacity is over the limit you will get an error: "capacity overflow".</p>
+<p>In Eve Strings are mutable. If you use ":=" the string object is replaced. If you use modifiers:"&lt;+" the double quoted string can be resized. For single quoted strings, if the capacity is over the limit you will get an error: "string capacity overflow".</p>
 
 <h4>Example:</h4>
+
 <pre><code class="language-eve"># working with strings
 driver test_string:
-
-local
-    String str = 'First value'; -- mutable string
-    String ref = 'First value'; -- mutable string
+  ** shared mutable strings
+  set str := 'First value';
+  set ref := 'First value';
 process
-    expect str == ref;     --  same value
-    expect str is not ref; --  different locations
+  ** check initial value
+  expect str == ref;     --  same value
+  expect str eq ref;     --  same value and type
+  expect str is not ref; --  different locations
 
-    ** assign := work by reference not by value
-    ref := str;   --  reset ref
-    expect str == ref; --  same value
-    expect str is ref; --  same reference
+  ** operator ":=" works by reference
+  ref := str;        --  reset ref
+  expect str == ref; --  same value
+  expect str is ref; --  same reference
 
-    ** if we modify "str" then "ref" will appear modified
-    str &lt;+ ":"; --  mutate string "str"
-    expect str == 'First value:'; --  modified
-    expect ref == "First value:"; --  also modified
-    expect str is ref; -- the reference is holding
+  ** if we modify "str" then "ref" will appear modified
+  let str &lt;+ ":"; --  mutate string "str"
+  expect str == 'First value:'; --  modified
+  expect ref == "First value:"; --  also modified
+  expect str is ref; -- the reference is holding
 
-    ** if we recreate str, reference is reset
-    str := 'First value:'; --  new string location
-    expect str == ref;     --  same value
-    expect str is not ref; --  different location
+  ** if we recreate str, reference is reset
+  let str := 'First value:'; --  new string
+  expect str == ref;     --  same value
+  expect str is not ref; --  different location
 
-    ** ref is pointing to a different location
-    ref  := 'New value:'
-    print ref;  --  New value: (modified)
-    print str;  --  First value: (initial value)
+  ** ref is pointing to a different location
+  let ref  := 'New value:'
+  print ref;  --  New value: (modified)
+  print str;  --  First value: (initial value)
 return;
 </code></pre>
 
 <p><b>Note:</b></p>
 <ul>
-<li>You can create garbage in EVE if you loose references to strings;</li>
-<li>Provision for large capacity strings is not recommended, use Text instead;</li>
+<li>You can create garbage in Eve if you loose references;</li>
+<li>Provision for large capacity strings is not recommended;</li>
 </ul>
+
 <h3><a id="string-comparison"></a>String comparison</h3>
 <ul>
 <li>Two strings are compared using relation operators: { ==, !=, &lt;, &gt;, &gt;=, &lt;= };</li>
 <li>Two strings that have identical characters are equivalent regardless of quotation;</li>
-<li>The length of the string is the number of represented symbols:</li>
-<li>Empty string '' is has length 0;</li>
-<li>The capacity of a string is always greater or equal to the length.</li>
+<li>The length of the string is the number of symbols:</li>
+<li>Empty string '' has length 0 other strings have length>0;</li>
+<li>String capacity >= string length, at all times.</li>
 </ul>
 
 <h4>Example:</h4>
@@ -330,39 +380,49 @@ return;
 <p>We can test if a string is Null using "is Null" expression.</p>
 <pre><code class="language-eve"># null string demo
 driver null_string:
-
-local
-    String str;      -- Null string (not initialized)
-    String btr = ''; -- Not Null (default capacity)
+  ** Null strings
+  set str :String; 
+  set btr := 'x';   
 process
     ** null string
     expect str == Null;
-    expect str != '';
-    expect str != "";
+    expect str == '';
+    expect str == "";
 
     ** initialized string
     expect btr is not Null;
-    expect btr == "";
-    expect btr == '';
+    expect btr == "x";
+    expect btr == 'x';
 return;
 </code></pre>
 
-<h2><a id="text"></a>Text</h2>
-<p>Text can contain multiple lines separated with end of line character. A text use Unicode symbols and is optimized for faster search of internal words and symbols. Text is iterable collection, each item is a smaller Text. Default separation is the end of line.</p>
+<h2><a id="unicode"></a>Unicode</h2>
+<p>Unicode strings can contain multiple lines separated with end of line character. Unicode strings use Unicode symbols and are optimized for faster search.</p>
 
-<p><b>Literal</b></p>
+<h4>Literal</h4>
 
-<p>A text literal can be defined on multiple lines and will preserve the end of line but will cut the indentation. Text literal is enclosed in double quotes. "..." and it may contain symbol "'" without escape. Double quoted Symbol (") must be escaped using notation (\"). Multiples strings separated by space or end of line are concatenated with one space separator.</p>
+<p>Unicode literal can be defined on multiple lines and will preserve the end of line but will cut the indentation. Unicode literal is enclosed in double quotes. "..." and it may contain symbol "'" without escape. Double quoted Symbol (") must be escaped using notation (\").</p>
 
 <pre><code class="language-eve"># declaration of a text literal
 driver text_literal:
-    global Text my_text;
+  set Text my_text;
 process
-    my_text:=
-    "Opportunity is missed by most people"
-    "because it is dressed in overalls"
-    "and looks like work.";
-    print (my_text);
+/*
+  my_text:=
+    Opportunity is missed by most people if
+    process
+    because it is dressed in overalls case
+    and looks like work.:: +=
+  ; 
+ */
+
+  print (my_text);
+  
+  test:= " unu" == "doi" == "trey \" patru", "cini'ci";
+  test:= " unu" == "doi" == "trey \" patru", "cinici";
+*/
+
+  test:= ' unu\" ' == 'doi' = 'trei\"patru'
 return;
 </code></pre>
 
@@ -391,12 +451,12 @@ return;
 
 <pre class="language-eve">I can write Greek: "&alpha;&beta;&gamma;&delta;".</pre>
 
-<p>To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. The preferred font for EVE programming is "DejaVu Sans Mono".</p>
+<p>To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. The preferred font for Eve programming is "DejaVu Sans Mono".</p>
 
 
 <h2><a id="exception" class="anchor" href="EVE#exception"></a>Exception</h2>
-<p>Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In EVE all exceptions are considered errors.</p>
-<p>The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable $error contains several members that are fill-in by the EVE program when exception is created:</p>
+<p>Exception is interrupting the current logical flow and jump to the recover region in current section or parent section. In Eve all exceptions are considered errors.</p>
+<p>The exception is a variable of type Object that is created when exception is raised and is available in the recover block. System variable $error contains several members that are fill-in by the Eve program when exception is created:</p>
 <pre><code class="language-eve">** system exception type
 Class .Exception <: Object {
     Integer code

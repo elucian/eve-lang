@@ -1,16 +1,16 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code EVE programming language features.">
+  <meta name="description" content="Sage-Code Eve programming language features.">
   <meta name="author" content="Elucian Moise">
   <meta name="keywords" content="sage, code, EVE, programming, language, features">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Website title -->
-  <title>EVE Features</title>
+  <title>Eve Features</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <!-- Icon -->
   <link rel="icon" type="image/png"  href="../images/favicon.ico">
-  <!-- EVE code highlighter -->
+  <!-- Eve code highlighter -->
   <script src="eve.js"></script>
   <!-- Sage-Code custom CSS -->
   <link rel="stylesheet" href="../sage.css">
@@ -28,10 +28,13 @@
     </div>
 </div><hr>
 
-<h1>EVE Features</h1>
+<h1>Eve features</h1>
 
 <div class="alert alert-secondary shadow-sm">
-EVE is a front-end data processiong language. EVE stands for <em>Extract Validate Export</em>. Hoever eve & Eve & EVE are synonim names. Eve is imperative multi-paradigm, staticly typed with type inference.</div>
+Eve is a front-end data processiong language. Eve is imperative multi-paradigm, staticly typed with type inference. Eve stands for <em>Extract Validate Export</em>.</div>
+
+
+<p><b>Names: </b>{eve, Eve, EVE) are synonims. Eve is the language name, EVE is the virtual machine, eve is the source extesion for scripts.</p>
 
 <h4>Targt Features:</h4>
 
@@ -62,11 +65,11 @@ EVE is a front-end data processiong language. EVE stands for <em>Extract Validat
 </table>
 
 <hr>
-<div class="alert alert-warning"><b>Design:&nbsp;</a></b>EVE has a classic design inspired from Ada & Java. It uses classic keywords and structures. Therefore learning EVE is more easy if you know other programming languages from Ada family. EVE is not a curly bracket language and is much more different than C++, Java, Rust, Go or Swift but has some similarity with Python.</div>
+<div class="alert alert-warning"><b>Design:&nbsp;</a></b>Eve has a classic design inspired from Ada & Java. It uses classic keywords and structures. Therefore learning Eve is more easy if you know other programming languages from Ada family. Eve is not a curly bracket language and is much more different than C++, Java, Rust, Go or Swift but has some similarity with Python.</div>
 
 
 <h2><a id="readable"></a>Readable</h2>
-<p>EVE is designed to be learn by reading code examples. Be syntax is verbose and explicit. We believe that our design choices will make EVE code easier to read and comprehend:</p>
+<p>Eve is designed to be learn by reading code examples. Be syntax is verbose and explicit. We believe that our design choices will make Eve code easier to read and comprehend:</p>
 
 <ul>
 <li>Use familiar English keywords, with no abbreviation;</li>
@@ -109,7 +112,7 @@ return;
 
 <h2><a id="effective"/>Effective</h2>
 
-<p>EVE is aiming to be effective and feasible. This means EVE is design to improve developer productivity and get the job done as quickly as possible. Effective does not necessarily imply efficiency or higher performance. EVE is designed to perform one task very well one time or a limited number of times by using a time scheduler. EVE is not design for high performance computing.</p>
+<p>Eve is aiming to be effective and feasible. This means Eve is design to improve developer productivity and get the job done as quickly as possible. Effective does not necessarily imply efficiency or higher performance. Eve is designed to perform one task very well one time or a limited number of times by using a time scheduler. Eve is not design for high performance computing.</p>
 
 <ul>
 <li>Use gradual typing;</li>
@@ -121,7 +124,7 @@ return;
 </ul>
 
 <h2><a id="safe"/>Safe</h2>
-<p>EVE is designed to be a safe language. For this we avoid using Null pointers. EVE is using boxed values that are actually references but we initialize all the variables with zero value. We avoid having Null references. EVE is and Object Oriented and declarative language. We believe the next principles will help us to design a safe language:</p>
+<p>Eve is designed to be a safe language. For this we avoid using Null pointers. Eve is using boxed values that are actually references but we initialize all the variables with zero value. We avoid having Null references. Eve is and Object Oriented and declarative language. We believe the next principles will help us to design a safe language:</p>
 
 <ol>
 <li>We favor safety over performance,</li>
@@ -133,12 +136,12 @@ return;
 </ol>
 
 <h2><a id="modular"/>Modular</h2>
-<p>EVE applications are usually small, based on single source file. However EVE enable usage of multiple files for separation of concerns. There are 3 kind of modules in a large EVE application as you can see in the following diagram:</p>
+<p>Eve applications are usually small, based on single source file. However Eve enable usage of multiple files for separation of concerns. There are 3 kind of modules in a large Eve application as you can see in the following diagram:</p>
 <ol>
 
 <div align="center">
-  <img src="img/eve-design.svg" alt="EVE Modules" width="600" class="img-fluid protect rounded" >
-  <p>EVE modular design</p>
+  <img src="img/eve-design.svg" alt="Eve Modules" width="600" class="img-fluid protect rounded" >
+  <p>Eve modular design</p>
 </div>
 <hr>
 
@@ -151,33 +154,33 @@ return;
 
 <h2><a id="versatile"/>Versatile</h2>
 
-<p>EVE is a domain specific language but it looks and feel like a general purpose language. We do not do graphics but we manipulate data in any form. This can be text data but also row bit data. So we can read and write images and video streams. Next design choices will make EVE a versatile language:</p>
+<p>Eve is a domain specific language but it looks and feel like a general purpose language. We do not do graphics but we manipulate data in any form. This can be text data but also row bit data. So we can read and write images and video streams. Next design choices will make Eve a versatile language:</p>
 
 <ol>
-  <li>EVE variables and parameters can be declared using type hint, tupe inference or gradual typing. This improve readability and reduce clutter;</li>
-  <li>EVE use implicit data types that are static but enable also variant type. The variant type can support a number of other data types that can be specified. So one variant is more like a pointer than regular variables.</li>
-  <li>EVE has processes that can support input/output parameters. A process can run in a separate thread. However a process can not be used in expressions.</li>
-  <li>EVE has functions. However the functions are like named expressions. A function must be simple and can return a single result and can not have side-effects.</li>
+  <li>Eve variables and parameters can be declared using type hint, tupe inference or gradual typing. This improve readability and reduce clutter;</li>
+  <li>Eve use implicit data types that are static but enable also variant type. The variant type can support a number of other data types that can be specified. So one variant is more like a pointer than regular variables.</li>
+  <li>Eve has processes that can support input/output parameters. A process can run in a separate thread. However a process can not be used in expressions.</li>
+  <li>Eve has functions. However the functions are like named expressions. A function must be simple and can return a single result and can not have side-effects.</li>
   <li>Variables and parameters are automatically initialized with zero value when there is no explicit initialization. Also, if a parameter has explicit initial value it becomes optional.</li>
-  <li>EVE has two assignment operators: "::" and ":=". First is called "clone" second is called "assign" value. Developers can control what assignment operator to use depending on the algorithm requirements.</li>
+  <li>Eve has two assignment operators: "::" and ":=". First is called "clone" second is called "assign" value. Developers can control what assignment operator to use depending on the algorithm requirements.</li>
   <li>In a subroutine, primitive type parameters are transferred <em>by reference</em>, but basic type parameters are immutable, protected by the compiler.</li>
 </ol>
 
 <h2><a id="classic"/>Classic</h2>
 
-<p>EVE is using a familiar syntax. We try to avoid being disruptive. If you know Java or C++ you will be able to learn EVE in less then one week. Also if you know Ada or Pascal, you will find EVE most similar.</p>
+<p>Eve is using a familiar syntax. We try to avoid being disruptive. If you know Java or C++ you will be able to learn Eve in less then one week. Also if you know Ada or Pascal, you will find Eve most similar.</p>
 
 <ol>
-  <li>EVE is using classic control flow statements: {decision, selection, repetition, error handlers} that you already know from other languages.</li>
-  <li>EVE is using ASCII operators, and keyword based operators but not Unicode. This enable fast code input required to write large business oriented scripts.</li>
-  <li>EVE has user defined data types (classes). EVE is a hybrid language it has suport for object oriented programming OOP. </li>
-  <li>EVE is familiar with SQL, HTML and JSON. To deal with many SQL dialects, EVE have specific drivers that enable direct interaction with major databases.</li>
+  <li>Eve is using classic control flow statements: {decision, selection, repetition, error handlers} that you already know from other languages.</li>
+  <li>Eve is using ASCII operators, and keyword based operators but not Unicode. This enable fast code input required to write large business oriented scripts.</li>
+  <li>Eve has user defined data types (classes). Eve is a hybrid language it has suport for object oriented programming OOP. </li>
+  <li>Eve is familiar with SQL, HTML and JSON. To deal with many SQL dialects, Eve have specific drivers that enable direct interaction with major databases.</li>
 </ol>
 <!-- work in progress-->
 <hr>
 
 <p><b>Read next:</b>
-<a href="syntax.html">EVE Syntax</a></p>
+<a href="syntax.html">Eve Syntax</a></p>
 <!-- Footer -->
 <footer class="footer">
   <div class="footer-copyright text-center"></div>

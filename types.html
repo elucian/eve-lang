@@ -1,18 +1,18 @@
 <html><head>
   <meta charset="utf-8">
-  <meta name="description" content="Sage-Code EVE lang type system.">
+  <meta name="description" content="Sage-Code Eve lang type system.">
   <meta name="author" content="Elucian Moise">
   <meta name="keywords" content="sage, code, EVE, types, gradual, language, system">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Website title -->
-  <title>EVE Types</title>
+  <title>Eve Types</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <!-- Icon -->
   <link rel="icon" type="image/png"  href="../images/favicon.ico">
-  <!-- EVE code highlighter -->
+  <!-- Eve code highlighter -->
   <script src="eve.js"></script>
   <!-- Sage-Code custom CSS -->
   <link rel="stylesheet" href="../sage.css">
@@ -31,10 +31,10 @@
     </div>
 </div><hr>
 
-<h1>EVE Data Types</h1>
+<h1>Eve Data Types</h1>
 
 <div class="alert alert-secondary shadow-sm">
-The purpose of any programming language is to manipulate data. On the lowest level, data is basically 0 and 1 signals. EVE is a high level language so our idea of data type is more complex. EVE has a gradual-typing system that will be explained below.
+The purpose of any programming language is to manipulate data. On the lowest level, data is basically 0 and 1 signals. Eve is a high level language so our idea of data type is more complex. Eve has a gradual-typing system that will be explained below.
 </div>
 
 <p>Let's describe the basic types:</p>
@@ -126,12 +126,12 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 
 
 <h2><a id="numeric-types"></a>Numeric Types</h2>
-<p>In EVE we can have two categories of numbers:</p>
+<p>In Eve we can have two categories of numbers:</p>
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
 <th>Category</th>
-<th>EVE Types</th>
+<th>Eve Types</th>
 </tr>
 </thead>
 <tbody>
@@ -192,7 +192,7 @@ Discrete numbers:</h3>
 <li>c: a coefficient</li>
 <li>n: an exponent</li>
 </ul>
-<p>The numerical value of a finite number is &minus;1ˢ &times; c &times; 2ⁿ Using this formula EVE define two floating point types.</p>
+<p>The numerical value of a finite number is &minus;1ˢ &times; c &times; 2ⁿ Using this formula Eve define two floating point types.</p>
 <p>Single: is single-precision 32-bit IEEE 754:<br />Double is double-precision 64-bit IEEE 754:</p>
 <table class="table table-bordered table-striped">
 <thead>
@@ -317,7 +317,7 @@ return;
 
 <p>Composite data types are unions of data elements. A composite variable that is not initialized can have Null value that is similar to zero but different. Some of these types are going to be explained later. We enumerate them all here to grasp the idea.</p>
 
-<p><b>Note: </b>EVE Try the best to enable the most generous data type for a data literal. When a more restrictive type is required you must forget about data inference and specify the type using a type hint.</p> 
+<p><b>Note: </b>Eve Try the best to enable the most generous data type for a data literal. When a more restrictive type is required you must forget about data inference and specify the type using a type hint.</p> 
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -460,9 +460,9 @@ return;
 </code></pre>
 
 <h2><a id="data-coercion"></a>Data Coercion</h2>
-<p>In computer science coercion is used to implicitly or explicitly change an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. If not designed properly the coercion can be a fatal mistake. EVE is a safe language so we do only safe coercion.</p>
+<p>In computer science coercion is used to implicitly or explicitly change an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. If not designed properly the coercion can be a fatal mistake. Eve is a safe language so we do only safe coercion.</p>
 
-<p><b>Implicit coercion</b>&nbsp;In EVE the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion to accommodate the data types and return an accurate result. Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a&nbsp;<em>run-time error</em>. To prevent this EVE will implement a safe compile-time check.</p>
+<p><b>Implicit coercion</b>&nbsp;In Eve the arithmetic operators are polymorphic. Numeric operators can do implicit data conversion to accommodate the data types and return an accurate result. Automatic conversion is possible only when there is no risk of loosing data precision. If there is a loss of precision we can end-up with a&nbsp;<em>run-time error</em>. To prevent this Eve will implement a safe compile-time check.</p>
 
 <h4>Notes:</h4>
 <ul>
@@ -543,7 +543,7 @@ process main:
 return;
 </code></pre>
 
-<p><b>Note:</b>&nbsp;Build-in functions that are located in EVE&nbsp;<em>default</em>&nbsp;library: { parse(), format(), ceiling(), floor() round()}.  This module is one of the standard modules that are automatically included in any EVE program.</p>
+<p><b>Note:</b>&nbsp;Build-in functions that are located in EVE&nbsp;<em>default</em>&nbsp;library: { parse(), format(), ceiling(), floor() round()}.  This module is one of the standard modules that are automatically included in any Eve program.</p>
 
 <h2><a id="default-types"></a>Default types</h2>
 <p>Literals are representations of specific particular data type in source code.</p>
@@ -921,7 +921,7 @@ return;
 </code></pre>
 
 <h2><a id="calendar-date" class="anchor" href="#calendar-date"></a>Calendar date</h2>
-<p>In EVE we represent calendar date.</p>
+<p>In Eve we represent calendar date.</p>
 <p><b>Date storage</b></p>
 <ul>
 <li>Date type is internally stored as number on 4 bytes;</li>
@@ -953,8 +953,8 @@ return;
 <h2><a id="time-duration" class="anchor" href="#time-duration"></a>Time Duration</h2>
 <p>Time data type can be used to represent duration.</p>
 <ul>
-<li>EVE duration can represent minimum 1 millisecond.</li>
-<li>EVE duration can represent maximum 4294967296 hours.</li>
+<li>Eve duration can represent minimum 1 millisecond.</li>
+<li>Eve duration can represent maximum 4294967296 hours.</li>
 </ul>
 <p><b>Representation</b>&nbsp;Time is represented as a number on 8 bytes.</p>
 <ul>

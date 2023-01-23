@@ -1,6 +1,6 @@
 # Alt Codes
 
-EVE has support for Extended ASCII and Unicode symbols.
+Eve has support for Extended ASCII and Unicode symbols.
 
 Use Alt + Code to input the symbol
 
