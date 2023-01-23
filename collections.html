@@ -406,21 +406,20 @@ return;
 <pre><code class="language-eve"># declaration of a text literal
 driver text_literal:
   set Text my_text;
-process
-/*
-  my_text:=
+process main:
+  my_text:="""
     Opportunity is missed by most people if
     process
     because it is dressed in overalls case
-    and looks like work.:: +=
-  ; 
- */
+    and process looks like work.
+    """; -- test
 
+  process /* test if end */ else
+  print
   print (my_text);
   
   test:= " unu" == "doi" == "trey \" patru", "cini'ci";
   test:= " unu" == "doi" == "trey \" patru", "cinici";
-*/
 
   test:= ' unu\" ' == 'doi' = 'trei\"patru'
 return;

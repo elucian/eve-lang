@@ -189,7 +189,8 @@ function eve_render() {
         let pozition = 0
         let comment = ""
         let start_comments = false
-        let start_string   = false    
+        let start_string   = false   
+        let my_string = ""
         for (e of eve_code ) {
             if (e.tagName =="CODE") {
                 lines = e.innerText.split("\n")
@@ -212,35 +213,53 @@ function eve_render() {
                                 start_comments)
                                {
                         start_comments = true
+                    } else if (line.search(/=\s*"""/g)>0) {
+                        parts=line.split('"""')
+                        my_string = '"""'+parts[1]
+                        line = apply_style(parts[0])
+                        start_string = true
+                    } else if (line.search(/"""/g)>0) {
+                        parts=line.split('"""')
+                        line = strings(parts[0]+'"""')+parts[1]     
+                        start_string = false  
+                        my_string=""                
+                    } else if (start_string) {
+                        line  = strings(line)              
                     } else {
                         // split away end comments 
                         parts = line.split(/(?<!['"])--/)
+                        line  = parts[0]
                         if (parts.length > 1) {
-                            line = parts[0]
                             comment = " --" + parts[1]
                         } else {
                             comment = ""
                         }
-                        if (line.search(/^["']/))  {
-                            start_string = true
-                        }
+                        // style first part (before comment)
                         line = style_string(line);
+                        // attach back the comment
+                        if (comment!="") {
+                            //line += comments(comment)         
+                        }  
                     }
                     // skip block comments from style
                     if (start_comments) {
-                        if (line.search(/\*\//) > 0 ||
-                            line.search(/\-\+/) > 0) {
+                        if (line.search(/\*\//gm) > 0 ||
+                            line.search(/\-\+/gm) > 0 ||
+                            line.trim().substr(0,2)=="*/"||
+                            line.trim().substr(0,2)=="-+") 
+                        {
                             start_comments = false
                         } 
                         line = comments(line)
-                    } else {
-                        // style first part (before comment)
-                        line  = apply_style(line)
-                        // attach back the comment
-                        if (comment!="") {
-                            line += comments(comment)
+                    } else if (start_string) {
+                        if (my_string) {
+                           line = line + strings(my_string)
+                        } else {
+                           line = strings(line) 
                         }
+                        my_string =""
                     }
+
                     // add new line if required
                     i += 1
                     if (i < lines.length || line!="") {
