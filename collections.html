@@ -45,7 +45,7 @@ Collections are composite types represents groups of elements of the same type. 
 <li><a href="#table">Table</a></li>
 <li><a href="#string">String</a></li>
 <li><a href="#text">Text</a></li>
-<li><a href="#exception">Exception</a></li>
+<li><a href="#exceptions">Exceptions</a></li>
 </ul>
 
 <h2><a id="ordinal"</a>Ordinal</h2>
@@ -159,7 +159,7 @@ set t_name : {}Integer;
 <h4>Set restrictions</h4>
 <ul>
 <li>All elements of a set must have the same type</li>
-<li>Set elements can have only comparable types: {Numeric, String, Ordinal, Unicode}. You can't create a set of objects.</li>
+<li>Set elements can have only comparable types: {Numeric, Symbol, String, Ordinal, String}. You can't create a set of objects.</li>
 </ul>
 
 <h4>Mutability</h4>
@@ -276,59 +276,44 @@ return;
 
 <h2><a id="string"></a>String</h2>
 
-<p>In Eve, we have two types of strings. Single quoted and double quoted. Single quoted strings are ASCII encoded while double quoted string are Unicode. Single quoted strings has a limited capacity. Double quoted strings can store multiple lines of text and it has variable capacity.</p>
+<p>In Eve, strings are collections of UTF8 code points. The capacity of string is virtual unlimited. A string can grow automaticly. Strings are immutable.</p>
 
-<ul>
-<li>Single quoted string, has default capacity 1024 bytes;</li>
-<li>Double quote strings have unrestricted capacity;</li>
-</ul>
 
 <h3>String declaration</h3>
 
-<p>String can be initialized with a constant literal using single quotes or double quotes. It is possible to do a conversion between the wrong literal and the right string type but the encoding change and in the end the two will be distinct objects.</p>
+<p>String can be initialized with a constant literals using double quotes or triple quotes. You can scan a string symbol by symbol using "for" cycle. Each element in a string is on type Symbol.</p>
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
 ** define Null string with default capacity
-new strName :String;   
 
-** define string with specific capacity
-new lmString:String(capacity);  
-
-** define a unlimite capacity Unicode
-new text :Unicode; 
-
-** define limited capacity Unicode
-new text :Unicode(capacity);
+new str1 :String;  -- default Null 
+new str2 = "": String; -- equivalent to Null
+ 
 </code></pre>
 
 <h4>Initialization:</h4>
 
-<p>In next examples we use type inference to set strings. ASCII strings can have a large capacity but onlu a part is initialized. All remaining characters are Null.</p>
+<p>In next examples we use type inference to create strings. The length of the string is the number of symbols. You can use operator "*" to initialize a long string with the same symbol or a pattern of symbols.</p>
 
 <pre><code class="language-eve">
 # examples of empty strings
-new short_string := ''*100;  -- this string can hold 100 symbols
-new default_str  := '';      -- default capacity 1024 ASCII Null
-new unicode_str  := "";      -- variable capacity Unicode string
-new unicode_str  := ""*100;  -- a short capacity Unicode string
-
-# examples of initial values
-new long_line := '-'*80      -- a long line of 80 ASCII characters
-new dash_dot  := "-&middot;" -- a long line -&midot;-&midot;-&midot;
+new short_string := "short string";-- most common form of literal
+new long_line := '-' * 80;         -- a long line of 80 dashes
+new dash_dot  := "-&middot;" * 40; -- a long line -&midot;-&midot;-&midot;
 </code></pre>
 
 <h3><a id="string-mutability"></a>String mutability</h3>
 
-<p>In Eve Strings are mutable. If you use ":=" the string object is replaced. If you use modifiers:"&lt;+" the double quoted string can be resized. For single quoted strings, if the capacity is over the limit you will get an error: "string capacity overflow".</p>
+<p>In Eve Strings are immutable. If you use ":=" the string object is replaced. If you use modifiers: "&lt;+" to append one Symbol to the end of a string but you can't append at the beginning of the string.</p>
 
 <h4>Example:</h4>
 
 <pre><code class="language-eve"># working with strings
 driver test_string:
   ** shared mutable strings
-  set str := 'First value';
-  set ref := 'First value';
+  set str := "First value";
+  set ref := "First value";
 process
   ** check initial value
   expect str == ref;     --  same value
@@ -341,20 +326,20 @@ process
   expect str is ref; --  same reference
 
   ** if we modify "str" then "ref" will appear modified
-  let str &lt;+ ":"; --  mutate string "str"
-  expect str == 'First value:'; --  modified
+  let str &lt;+ ':'; --  mutate string "str"
+  expect str == "First value:"; --  modified
   expect ref == "First value:"; --  also modified
   expect str is ref; -- the reference is holding
 
   ** if we recreate str, reference is reset
-  let str := 'First value:'; --  new string
+  let str := "First value:"; --  new string
   expect str == ref;     --  same value
   expect str is not ref; --  different location
 
   ** ref is pointing to a different location
-  let ref  := 'New value:'
-  print ref;  --  New value: (modified)
-  print str;  --  First value: (initial value)
+  let ref  := "New value:"
+  print ref;  --  New value: (modified, as expected)
+  print str;  --  First value: (unmodified value)
 return;
 </code></pre>
 
@@ -362,24 +347,23 @@ return;
 <ul>
 <li>You can create garbage in Eve if you loose references;</li>
 <li>Provision for large capacity strings is not recommended;</li>
+<li>You can create a collection of Symbols to have a mutable string;</li>
 </ul>
 
 <h3><a id="string-comparison"></a>String comparison</h3>
 <ul>
 <li>Two strings are compared using relation operators: { ==, !=, &lt;, &gt;, &gt;=, &lt;= };</li>
-<li>Two strings that have identical characters are equivalent regardless of quotation;</li>
+<li>Single quoted symbols can be compared to double quoted strings;</li>
 <li>The length of the string is the number of symbols:</li>
-<li>Empty string '' has length 0 other strings have length>0;</li>
-<li>String capacity >= string length, at all times.</li>
+<li>Empty string "" == '' has length 0 and is Null;</li>
 </ul>
 
 <h4>Example:</h4>
 <pre><code class="language-eve"># compare strings
 driver compare_strings:
-  expect('this' == 'this');   --  true (same value)
-  expect("this" == 'this');   --  true (same value)
-  expect(' this' != 'this');  --  true (not same value)
-  expect("this " != "this");  --  true (not same value)
+  expect('a' == 'a');         --  true (same value)
+  expect("this" == "this");   --  true (same value)
+  expect(" this" != 'this '); --  trailing spaces are significant
 return;
 </code></pre>
 
@@ -389,26 +373,30 @@ return;
 driver null_string:
   ** Null strings
   set str :String; 
-  set btr := 'x';   
+  set btr := '&omega;';   
 process
   ** null string
+  expect str is Null;
   expect str == Null;
   expect str == '';
   expect str == "";
 
   ** initialized string
   expect btr is not Null;
-  expect btr == "x";
-  expect btr == 'x';
+  expect btr == "&omega;";
+  expect btr == '&omega;';
+
+  ** somesing unexpected
+  expect btr is not '&omega;'; -- pass, different 
+  expect btr is "&omega;"; -- fail, different objects
 return;
 </code></pre>
 
-<h2><a id="unicode"></a>Unicode</h2>
-<p>Unicode strings can contain multiple lines separated with end of line character. Unicode strings use Unicode symbols and are optimized for faster search.</p>
+<h3><a id="text-literal"></a>Text Literal</h3>
 
-<h4>Literal</h4>
+<p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
 
-<p>Unicode literal can be defined on multiple lines and will preserve the end of line but will cut the indentation. This kind of literal is enclosed in triple quotes. """...""" and it may contain symbols {",'} without escape.</p>
+<p>Triple quoted string support double quoted strings inside and also single quote. On double quoted strings you must use escape "\" to include a double quote inside and not terminate the string.</p>
 
 <pre><code class="language-eve"># declaration of a text literal
 driver text_literal:
@@ -420,8 +408,9 @@ process main:
       because it is dressed in overalls
       and looks like work."
   """; 
-  ** double quoted string
-  new test:= "escape \" string is required";
+  ** double quoted string with escape
+  new test:= "escape quote \" is required";
+  print test
 return;
 </code></pre>
 
@@ -430,10 +419,12 @@ return;
 "Opportunity is missed by most people
  because it is dressed in overalls
  and looks like work."
+ escape quote " is required
 </pre>
 
 <p><b>Unicode</b></p>
-<p>The&nbsp;<em>Unicode</em>&nbsp;is a standard for representation of writing for all human languages. An Unicode string is a set of&nbsp;<em>code points</em>&nbsp;using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII. There are many encoding techniques available. Java uses UTF-16. We will probably use UTF-8 to be more efficient.</p>
+
+<p>The&nbsp;<em>Unicode</em>&nbsp;is a standard for representation of writing for all human languages. An Unicode string is a set of&nbsp;<em>code points</em>&nbsp;using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII. There are many encoding techniques available. Java uses UTF-16. We will use UTF-8 to be more efficient.</p>
 
 <p>See also:&nbsp;<a href="https://en.wikipedia.org/wiki/Universal_Coded_Character_Set" rel="nofollow">wikipedia ucs</a>,&nbsp;<a href="https://en.wikipedia.org/wiki/List_of_Unicode_characters#Character_reference_overview" rel="nofollow">unicode characters</a></p>
 
@@ -452,8 +443,28 @@ return;
 
 <p>To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. The preferred font for Eve programming is "DejaVu Sans Mono".</p>
 
+<h4>Tips & Trics</h4>
 
-<h2><a id="exception"></a>Exception</h2>
+<p>Due to internal representation of Symbol, in Eve we can store 4 ASCII characters. We can also store two UTF16 symbols, and one UTF32. This is a curiosity of Eve.</p>
+
+<pre><code class="language-eve"># Single quoted string 
+process main:
+  ** short ASCII strings
+  new str1 := 'a';
+  new str2 := 'abcd';
+  new str3 := '0xFF';
+  new str4 := 'NULL';
+
+  ** all 4 strings have same type
+  expect type(str4) == Symbol;
+
+  ** somesing surprising
+  expect str4 == "NULL";
+  expect str4 != Null;
+return;
+</code></pre>
+
+<h2><a id="exceptions"></a>Exceptions</h2>
 
 <p>Exception is a module that define several system variables and system objects used to handle errors. In Eve all exceptions are considered errors.</p>
 

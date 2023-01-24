@@ -257,13 +257,13 @@ class Point(x = 0, y = 0 :Double) => (@self: Object):
 return;
 
 process main:
-    ** initialize the points
-    new p1 := Point(x:1, y:2);
-    new p2 := Point(x:2, y:2);
+  ** initialize the points
+  new p1 := Point(x:1, y:2);
+  new p2 := Point(x:2, y:2);
 
-    ** use string patterns to print attributes
-    print "p1 = (a:#n, b:#n)" ? (p1.a,p1.b);
-    print "p2 = (a:#n, b:#n)" ? (p2.a,p2.b);
+  ** use string patterns to print attributes
+  print "p1 = (a:#n, b:#n)" ? (p1.a,p1.b);
+  print "p2 = (a:#n, b:#n)" ? (p2.a,p2.b);
 return;
 </code></pre>
 
@@ -276,33 +276,31 @@ p2 = {a:2, b:2}
 
 <h2><a id="comparing-objects"></a>Comparing objects</h2>
 
-<p>We can use two comparison operators with objects: "is" and "==". First operator "is" will compare the object location. If the objects have same location they represent the same object. Second operator: "==" compare object type and object attributes. There are complementar operators "is not" and "!=". That can be used to create conditionals.</p>
+<p>We can use two comparison operators with objects: "is" and "==". First operator "is" will compare the object location. If the objects have same location they represent the same object. Second operator: "==" compare object type and object attributes or value. There are complementar operators "is not" and "!=". That can be used to create conditionals.</p>
 
 <h4>Example:</h4>
 
-<p>In next examples we use a primitive type: Integer, that is actually a class</p>
+<p>In next examples we use a primitive type: Integer, that is actually a class. So any number of type Integer is an object.</p>
 
 <pre><code class="language-eve">#object comparison demo
 driver object_compare:
-
-local
-    Integer o = n = 1; -- context variables
+** global context variables
+  set o = n = 1: Integer; 
 process
-    ** equal values and types
-    expect  o  == n;
-    expect  not (o != n);
+  ** equal values and types
+  expect  o  == n;
+  expect  not (o != n);
 
-    ** not the same location
-    expect  not (o is n);
-    expect  o is not n;
+  ** not the same location
+  expect  not (o is n);
+  expect  o is not n;
 
-    ** alter one value
-    n := 2;
+  ** alter one value
+  n := 2;
 
-    ** equal values and types
-    expect  o  != n;
-    expect  not (o == n);
-
+  ** equal values and types
+  expect  o  != n;
+  expect  not (o == n);
 return;
 </code></pre>
 
@@ -314,15 +312,14 @@ return;
 
 <pre><code class="language-eve"># define a class with prameters
 class ClassName(parameters) &lt;: base_class:
-    ** class members
-    ...
-create
-    ** call base class constructor
-    self := base_class(object_attribute:argument,...);
-    ...
+  ** class members
+  ...
+  ** call base class constructor
+  self := base_class(object_attribute:argument,...);
+  ...
 remove
-    ** object release region
-    ...
+  ** object release region
+  ...
 return;
 </code></pre>
 

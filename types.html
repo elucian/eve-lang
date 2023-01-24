@@ -43,7 +43,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <ul>
 <li><a href="#native-types">Native Types</a></li>
 <li><a href="#primitive-types">Primitive Types</a></li>
-<li><a href="#single-char">Single character</a></li>
+<li><a href="#symbol">Single symbol</a></li>
 <li><a href="#composite-types">Composite</a></li>
 <li><a href="#data-coercion">Data coercion</a></li>
 <li><a href="#type-inference">Type inference</a></li>
@@ -137,8 +137,8 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <td>1.8 × 10^308</td>
 </tr>
 <tr>
-<td>Unicode</td>
-<td>Single Unicode symbol UTF-32 4 bytes</td>
+<td>Symbol</td>
+<td>Single symbol UTF-8 encoded, 4 bytes</td>
 <td>0</td>
 <td>2^32-1</td>
 </tr>
@@ -184,7 +184,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <tbody>
 <tr>
 <td>Discrete</td>
-<td>Byte, Short,  Integer, Natural,  Ordinal, Range</td>
+<td>Byte, Short,  Integer, Natural,  Ordinal, Range, Symbol</td>
 </tr>
 <tr>
 <td>Continuous</td>
@@ -196,7 +196,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <h3><a id="discrete-numbers" class="anchor" href="#discrete-numbers"></a>
 Discrete numbers:</h3>
 
-<p>Discrete numbers van have a range from negative to positive number that can be calculate easly by the number of bytes. We have equivalent native numbers for every number of bytes from 1 to 64.</p>
+<p>Discrete numbers have a range from negative to positive number that can be calculate easly by the number of bytes. We have equivalent native numbers for every number of bytes from 1 to 64.</p>
 
 <ul>
 <li>min  = -2^n/2</li>
@@ -338,34 +338,27 @@ return;
 </code></pre>
 <p><b>See also:</b>&nbsp;<a href="https://en.wikipedia.org/wiki/Scientific_notation#Other_bases" rel="nofollow">scientific notation</a></p>
 
-<h2><a id="single-char"/>Single Character</h2>
+<h2><a id="symbol"/>Single Symbol</h2>
 
-<p>For representing a single character you can use one of two conventions: single quoted strings are ASCII encoded while double quoted strings are Unicode.</p>
+<p>For representing a single character/symbol you can use single quoted strings. Single quoted strings can store a single UTF8 code point but it has a fixed size of 4 bytes.</p>
 
-<h3>ASCII String</h3>
+<h4>Examples</h4>
 
-<p>These symbols are represented using 172 ASCII not extended ASCII</p>
+<pre><code class="language-eve">
+new letter   := 'a';
+new capital  := 'B';
+new number   := '5';
+new unicode  := '&beta;';
+new operator := '&not;';
+</code></pre>
+
+<h4>Unicode Literal</h4>
+
+<p>Unicode literals start with prefix U+ or U-. Such literals is compatible with single quoted Symbol code point. Unicode literals are case insensitive hexadecimals.</p>
 
 <ul>
-<li>Single-quoted character like: 'a' or 'abc'</li>
-<li>Single-quoted number like: '5' or '12345'</li>
-</ul>
-
-<p>Value NUL = ''. This is also the default value.</p>
-
-<h3>Unicode String</h3>
-
-<p>These symbols are unicode UTF32. That is using 32 bit Integer</p>
-<ul>
-<li>Double-quoted strings like: "&alpha;"</li>
 <li>U+HHHH from: U+0000 to U+FFFF</li>
 <li>U-HHHHHH from: U+000000 to U+FFFFFF</li>
-</ul>
-<p>Value NUL = U+0000. This is also the default value.</p>
-
-<ul>
-<li>Single-quoted character like: "&alpha;" 
-<li>Enumeration of characters "&alpha;&beta;&omega;"</li>
 </ul>
 
 <h2><a id="composite-types"/>Composite Types</h2>
@@ -392,11 +385,7 @@ return;
 </tr>
 <tr>
 <td>String</td>
-<td>Single quoted string: '...'</td>
-</tr>
-<tr>
-<td>Unicode</td>
-<td>Double quoted string: "..."</td>
+<td>Double quote delimited symbol: "..."</td>
 </tr>
 <tr>
 <td>List</td>
@@ -869,19 +858,20 @@ type Logic = {False:0 , True} &lt;: Ordinal;
 
 <p>Result of logical expressions can be used into a conditional statement to make a decision. Also results of logical expressions can be stored in logical variables to be used later in other conditions.</p>
 
-<h3><a id="user-type">User types</h3>
+<h2><a id="user-type">User types</h2>
 
-<p>In Eve you can define data types. Types are derived from system defined types. A type has public attributes and can have a class companion.</p>
-
-<p>User types are inherited from the supertype or Object type. When you create a type you can use { }, [ ] or ( ) to define special parameters that are acceptable by the type descriptor.<p>
+<p>In Eve you can define new data types. Types are derived from system types. When you create a new type you can use { }, [ ] or ( ) to define the type structure.<p>
 
 <p>User types are defined in a region that start with keyword "type". You can define multiple types on several lines separated by semicolumn and end of line.</p>
 
 <h2><a id="gradual-typing"></a>Gradual typing</h2>
-<p>Gradual typing is a type system in which some variables may be given types and the correctness of the typing is checked at compile-time (which is static typing) and some variables may be left un-typed and eventual type errors are reported at run-time (which is dynamic typing). To declare gradual types we use a polymorphic type called <em>variant</em>.</p>
 
-<p><b>Variant Types</b></p>
-<p>A Variant is a polymorphic variable that can have multiple types but only one at a time:</p>
+<p>Gradual typing is a type system in which some variables may be given a type. Some variables or members may be left un-typed. Therefore some type errors are reported at compile-time some other at run-time.</p>
+
+<p>Gradual typing is different than type inference. On type inference the type specification is missing but default type is determined by logic deduction from literals and expressions.</p>
+
+<h3>Variant Types</h3>
+<p>A Variant is a polymorphic variable that can have one of a list of types but only one at a time. When the value is established, one type to hold that value is created.</p>
 
 <h4>Syntax:</h4>
 
@@ -892,14 +882,14 @@ type {Type1 | Type2 | ... } &lt;: Variant;
 set v = value :Variant_Name() ;
 </code></pre>
 
-<h2><a id="variant-properties" class="anchor" href="#variant-properties"></a>Variant Properties</h2>
+<h4>Properties</h4>
 <ul>
 <li>Variant data type is assigned at runtime;</li>
 <li>One variant can have a single value at a time;</li>
 <li>One variant is a "union" of several types</li>
 </ul>
 
-<h3>Making a null-able type</h3>
+<h4>Making a null-able type</h4>
 <p>For this we use a special type Null</p>
 <ul>
 <li>The Null type is a curious type;</li>
@@ -915,7 +905,7 @@ type
 set x: Number;
 </code></pre>
 
-<p><b>Usability</b></p>
+<h3>Usability</h3>
 <p>A variant can establish its data type at runtime:</p>
 
 <h4>Example 1:</h4>
@@ -978,24 +968,8 @@ process main:
 return;
 </code></pre>
 
-<h4></h4>
 
-<p>This is a logical deduction of data type from constant literals.</p>
-
-<h4>Example:</h4>
-<pre><code class="language-eve">#test type inference
-driver type_inference:
-
-** Define a list of 10 elements using type inference
-set ls := [0,1,2,3,4,5,6,7,8,9];
-
-process main
-  print  ls.type(); --  List[Integer]
-  expect ls is List[Integer];
-return;
-</code></pre>
-
-<h2><a id="calendar-date" class="anchor" href="#calendar-date"></a>Calendar date</h2>
+<h2><a id="calendar-date"></a>Calendar date</h2>
 <p>In Eve we represent calendar date.</p>
 <p><b>Date storage</b></p>
 <ul>
@@ -1025,7 +999,7 @@ return;
 </code></pre>
 
 
-<h2><a id="time-duration" class="anchor" href="#time-duration"></a>Time Duration</h2>
+<h2><a id="time-duration"></a>Time Duration</h2>
 <p>Time data type can be used to represent duration.</p>
 <ul>
 <li>Eve duration can represent minimum 1 millisecond.</li>
