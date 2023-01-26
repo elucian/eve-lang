@@ -44,7 +44,7 @@ Collections are composite types represents groups of elements of the same type. 
 <li><a href="#matrix">Matrix</a></li>
 <li><a href="#list">List</a></li>
 <li><a href="#dataset">DataSet</a></li>
-<li><a href="#table">Table</a></li>
+<li><a href="#hash-map">HashMap</a></li>
 <li><a href="#string">String</a></li>
 <li><a href="#text">Text</a></li>
 <li><a href="#exceptions">Exceptions</a></li>
@@ -411,24 +411,24 @@ process main:
 return;
 </code></pre>
 
-<h2><a id="table"></a>Table</h2>
+<h2><a id="hash-map"></a>HashMap</h2>
 
-<p>It is also called "hash-table" in other language due to similar letter H representing a connection between two columns. Collections are ordered by keys. This helps to find elements faster using a binary search.</p>
+<p>It is called Hash due to similarity with letter H, that can be used as analog representation for a structure having two connecte columns. Collections are ordered by unique keys. This helps to find elements faster using a binary search algorithm.</p>
 
 <ul>
-<li>Tables are sets of (key:value) pairs;</li>
+<li>HashMaps are sets of (key:value) pairs;</li>
 <li>The key must be sortable: { Number, String, Ordinal};</li>
 <li>Value can be anything including objects.</li>
 </ul>
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
-type Dic = {}(String,Object) <: Table;
+type Dic = {}(String,Object) <: HashMap;
 driver test:
 # Null map
   set m :Dic;
 process main:
-  expect type(m) == Table
+  expect type(m) == HashMap;
   expect m is Null;
   expect m == {};
 return;
@@ -438,21 +438,21 @@ return;
 <pre><code class="language-eve">
 # how to initialize a table
 driver table_init:
-  set t: Table;
+  set h: HashMap;
 process main:
   ** initialize table
-  let t := {'a':1, 'b':2};
+  let h := {'a':1, 'b':2};
 
   ** accessing elements
-  expect t['a'] == 1;
-  expect t['b'] == 2;
+  expect h['a'] == 1;
+  expect h['b'] == 2;
 
   ** create new elements
-  let t += {'c':3};
-  let t += {'d':4};
+  let h += {'c':3};
+  let h += {'d':4};
 
   ** optput
-  print t -- {'a':1, 'b':2, 'c':3, 'd':4};
+  print h -- {'a':1, 'b':2, 'c':3, 'd':4};
 return;
 </code></pre>
 
