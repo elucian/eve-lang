@@ -34,7 +34,7 @@
 <h1>Eve Classes</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Eve is an object oriented language so we define Classes very similar to Java. A class is a companion for a user-defined data type. It implements behaviour for a user defined data type. Classes are called to instantiate Objects.</div>
+Eve is an object oriented language, so we need Classes. Eve classes are very similar to Java classes. A class is a companion for an user-defined data type. It implements behaviour for data. Classes are called to instantiate Objects and set the Object attributes.</div>
 
 <h2>Eve Classes</h2>
 
@@ -53,7 +53,7 @@ Eve is an object oriented language so we define Classes very similar to Java. A 
 <h4>Bookmarks:</h4>
 <ul>
 <li><a href="#object">object instances</a></li>
-<li><a href="#companion">class companion</a></li>
+<li><a href="#companion">type companion</a></li>
 <li><a href="#instances">class instances</a></li>
 <li><a href="#attributes">attributes</a></li>
 <li><a href="#inheritance">inheritance</a></li>
@@ -96,13 +96,13 @@ return;
 
 <p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatic and set-up an implicit data type using type inference. This is possible due to gradual typing algorithm.</p>
 
-<h2><a id="companion"></a>Class companion</h2>
+<h2><a id="companion"></a>Type companion</h2>
 
-<p>You can create more complex objects by using a class companion. This start with keyword "class". This is a special subroutine that can create object instances. The object name that is going to be created is an implicit output result, that is called "@self" that must be explicit declared as a result of a class.</p>
+<p>You can create more complex objects by using a type companion. This start with keyword "class". This is a special subroutine that can create object instances. The object name that is going to be created is an implicit output result, that is called "@self" that must be explicit declared as a result of a class.</p>
 
 <h4>Pattern:</h4>
 
-<p>A class constructor start with keyword: "class" and is a named block of code. It has a local context and has a free form. You can define things anywehre but in order top down. Unlike processes it does not have a "recover" region but it has  "remove" region.</p>
+<p>First you define a type then a "class" with the same name. That is named a companion. The companion has a local static scope. You can define things anywehre. Unlike processes it does not have a "recover" region but it has a "remove" region.</p>
 
 <pre><code class="language-eve">
 # user defined type  
@@ -110,88 +110,76 @@ type TypeName = {} <: SuperType;
 
 # type companion (same name)
 class TypeName(parameters) => (@self :TypeName):
-  ** class attributes
+  ** properties
   ...
-  ** class methods
-  ...
-  ** call object constructor
-  let self := SuperType(arguments);
-  ...
-  ** create object attributes
-  ...
-  ** create object methods
-  ...
-[remove]
-  ** object release region
+  ** methods
+  ...  
+create
+  ** attributes
+  ...   
+release
+  ** cleanup
   ...
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>In Eve we consider the class as an object factory. In fact, a class is a "high order function" that can have closures. The methods are closures. The objects are factory product instances. After creation objects can receive factory support and maintenance.</p>
+<p><b>Notes:&nbsp;</b>A class can have role of a object constructor or type companion. In fact, a class is a "high order function" with closures: We name closure "methods" in Eve.</p>
 
-<h3>Conditional constructor</h3>
+<h3>Constructor</h3>
 
-<p>A class can have a single companion. The @self object is created explicit. A conditional constructor can use decision statements based on parameter values to create the &nbsp;<em>"object"</em>&nbsp;in different ways based on conditions. This help us to create complex constructors.</p>
+<p>The @self object represents the result of a class. In "create" region we can use decision statements to create the &nbsp;<em>"object"</em>&nbsp; attributes in different ways based on conditions.</p>
 
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve">...
 class name(parameters) => (@self: Object):
+  ** declarations
+  ....
+create
   ** conditional construction
   if condition then
       let self := SuperType(some_arguments);
   else
       let self := SuperType(other_arguments);
-  end case;
+  done;
   ...
-
 return;
 </code></pre>
 
-<h3>Constructor parameters</h3>
+<h3>Parameters</h3>
 
-<p>A companion can have parameters that receive arguments. You can define optional parameters with default values. Constructor receive argument values using a "constructor call". This call is similar to a "routine call". Parameters can be also assigned using a JSON literals.</p>
+<p>A class can have parameters with initial value. If you declare a type, parameters can be the same as for the type, but sometimes they are different.</p>
 
-<h4>Pattern:</h4>
+<h4>Example:</h4>
 
 <pre><code class="language-eve"># define a class with prameters
-class ClassName(parameters):
+class ClassName(parameters) => (@self:ClassName):
     ** class body
+    ....
+create
     ....
 return;
 
-local
-    ** declare null object of type ClassName
-    ClassName object_name;
-
-process
+process main:
     ** macking a constructor call
-    object_name := ClassName(param:value,...);
+    new object := ClassName(param:value,...);
     ...
 return;
 </code></pre>
 
-<h2><a id="instances"></a>Object Instances</h2>
+<p>The <em>object</em> from previous example, is created using a <em>class</em>: ClassName. This do not have a type so is not a companion but a constructor. For this, an implicit type will be created automaticly.</p>
 
-<p>Object instances can be complex. User defined types can have custom methods and attributes that a simple object can not have. An Object is generic and has only standard attributes and very fiew methods. Any class is by default extending the Object class.</p>
+<h4>@self object</h4>
 
-<p><b>Objects: </b>can be declared and initialized in a single statement using a class constructor. Complex objects can be initialized only by using a user define companion and not by using the default object constructor.</p>
+<p>Object named "self" is the current object name, reserved by EVE. This is either the result of a companion or a parameter in a method. It uses prefix @ to show that is a reference.</p>
 
-<h4>Constructor Call:</h4>
-
-<p>This is how you create a class instance:</p>
+<p>@self object must be initialized as quickly as possible inside the constructor. In Java, we call current object "this". Eve is more like Python.</p>
 
 <pre class="output">
-new objectName := ClassName(arguments);
+class ClassName(parameters) => (@self:ClassName):
+   ...
+return;
 </pre>
-
-<p>The <em>object_name</em> from previous example, is the current instance that is created using a <em>class companion</em>. Under the hood, object are actually created explicit step by step in the class companion:</p>
-
-<h4>Constructor Detail:</h4>
-
-<p>Next we use object name "self" that is the implicit object name, reserved by EVE.  This is is the result of class constructor. It is similar to the "result" variable used in sub-routines. The self object is created explicit using an assign statement like:</p>
-
-<pre class="output">self := SuperClass(arguments);</pre>
 
 <h4>Note:</h4>
 <ul>
@@ -201,12 +189,13 @@ new objectName := ClassName(arguments);
 
 <h2><a id="attributes"></a>Attributes</h2>
 
-<p>A class can have object attributes and class attributes. In other languages, these are called <em>properties</em> or <em>fields</em>. They represent actually states of an object. We stick with the term <em>attributes</em> in Eve documentation.</p>
+<p>A class can have object attributes and class properties. Attributes represent states of an object wile properties are class states. Try to remember this convention to understend better Eve design.</p>
 
 <ul>
-<li>In Eve we declare class attributes first the object attributes</em>
-<li>We declare object attributes in default region after symbol ":"</li>
-<li>Public class attributes are defined using (.) orefix.</li>
+<li>We declare properties and attributes after symbol ":"</li>
+<li>Public properties are defined using (.) prefix with "set" keyword.</li>
+<li>Attributes are define using keyword "new" or "let";
+<li>Private attributes start with underscore "_"; 
 </ul>
 
 <h3>Object attributes</h3>
@@ -215,7 +204,7 @@ new objectName := ClassName(arguments);
 
 <pre class="output">object_name.object_attribute;</pre>
 
-<p>We already know how to instantiate a class and create objects using a class companion. After you have defined a class, this do not know anything about it's objects. You can not ask the class anything about it's instances.</p>
+<p>We already know how to instantiate a class and create objects using a type companion. After you have defined a class, this do not know anything about it's objects. You can not ask the class anything about it's instances.</p>
 
 <h3>Class attributes</h3>
 
@@ -310,20 +299,65 @@ return;
 
 <h4>Pattern:</h4>
 
-<pre><code class="language-eve"># define a class with prameters
-class ClassName(parameters) &lt;: base_class:
+<pre><code class="language-eve"># define a class with inheritance
+type BaseType: {attributes} <: Object;
+
+class BaseType(parameters) => (@self:Object):
+   ...
+   * object method
+   method demo(@self:BaseType,...):
+      ....
+   return;
+return;
+
+** create a descendent of BaseType
+class ClassName(parameters) &lt;: BaseType:
   ** class members
   ...
   ** call base class constructor
   self := base_class(object_attribute:argument,...);
   ...
-remove
-  ** object release region
-  ...
+  ** overwriten method
+  method demo(@self:BaseType,...) => (result:Type):
+    ...
+  return;
 return;
 </code></pre>
 
-<!-- work in progress-->
+<h2><a id="methods"></a>Methods</h2>
+
+<p>Methods can be defined inside of a class. The methods can have parameters and can return results. Also if a method receive @self argument, this is an input-output argument representing the object instance.</p>
+
+<h4>Example</h4>
+
+<pre><code class="language-eve"># define a "Point" class
+driver point_demo:
+type 
+  Point = {x, y :Double} <: Object; 
+
+class Point(x = 0, y = 0 :Double) => (@self: Object):
+  let self := {'x': x,'y': y};
+
+  method move(@self, a, b: Double):
+    let self.x += a;
+    let self.y += b;
+  return;
+
+  method string(@self) => (string:String):
+     let string := "# = (#:#)" ? (@self).id, self.a, self.b);
+  return;
+return;
+
+process main:
+  ** initialize the points
+  new p := Point(x:1, y:2);
+
+  ** move the point
+  apply p.move(2,1);
+  print p.string(); -- (3:3)
+
+return;
+</code></pre>
 
 <hr>
 <p><b>Read next:</b>

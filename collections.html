@@ -40,6 +40,8 @@ Collections are composite types represents groups of elements of the same type. 
 
 <ul>
 <li><a href="#ordinal">Ordinal</a></li>
+<li><a href="#array">Array</a></li>
+<li><a href="#matrix">Matrix</a></li>
 <li><a href="#list">List</a></li>
 <li><a href="#dataset">DataSet</a></li>
 <li><a href="#table">Table</a></li>
@@ -78,7 +80,7 @@ return;
 </code></pre>
 
 <h2><a id="list" class="anchor" href="EVE#list"></a>List</h2>
-<p>A list is a consecutive sequence of elements having a dynamic capacity. Elements are stored in the order you have create them. The order can change if you sort the list or add/remove elements. However you can't insert elements in the middle.</p>
+<p>A list is a sequence of elements having a dynamic capacity. Elements are stored in the order you have create them. The order can change if you sort the list or add/remove elements. However you can't insert elements in the middle.</p>
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">#declare two lists
@@ -96,24 +98,25 @@ return;
 <ul>
 <li>The elements of a list have the same type;</li>
 <li>Access to all or each element is sequential;</li>
+
 </ul>
 
 <h4>Examples:</h4>
 
 <pre><code class="language-eve">
-# gradual declaration
+# gradual declaration (no element type)
   new e_list :List;
 
 # explicit declarations
-  new n_list :()Integer;
-  new o_list :()Object ; 
-  new s_list :()String ; 
-  new u_list :()Unicode; 
+  new n_list (1,2,3) :()Integer;
+  new c_list ('a','b','b') :()Symbol;
+  new s_list ("a","b","c") :()String; 
+  new o_list ({a:1},{b:2},{c:3} :()Object; 
 </code></pre>
 
 <p><b>list literals</b></p>
 <ul>
-<li>List literals enclosed in square brackets,</li>
+<li>Lists are enclosed in round brackedts ();
 <li>Elements are separated by comma,</li>
 <li>All elements are having the same type.</li>
 </ul>
@@ -129,12 +132,190 @@ return;
 <pre><code class="language-eve"># Defer initialization
 driver begin_initial:
     ** define empty list
-    set c_list: List;
+    set c_list = ();
 process main:
-    ** initialize the list
+    ** initialize the list with integers
     let c_list := (1,2,3);
 return;
 </code></pre>
+
+<h2><a id="array"></a>Array</h2>
+
+<p>An array is a collection of elements ordered by one or more index numbers. Eve count elements in range (1..n), where n is the number of elements.</p>
+
+<h4>Syntax:</h4>
+
+<p>Eve define Arrays using notation: [c]Type, where [c] is the capacity and Type is the type of elements. Arrays are automatically initialized. However, if the array contains composite types all elements will have default zero value.</p>
+
+<pre><code class="language-eve">** diverse array variables
+set n = 2, m =3   :Natural;
+set x = y = z = 2 :Natural
+
+new array_name1: []Type;      -- empty array
+new array_name3: [n]Type;     -- n = number of elements
+new array_name4: [n,m]Type;   -- 2d matrix, capacity c = n * m
+new array_name4: [x,y,z]Type; -- 3d matrix, capacity c = x * y * z
+
+** define Array sub-types
+type AType = [ ]TypeName <: Array;
+type MType = [,]TypeName <: Array;
+
+** use previous defined sub-type
+new array_name5 := [n]AType;
+new array_name6 := [n,m]AType;
+</code></pre>
+
+
+<h4>Example:</h4>
+
+<p>In next example we declare an array and use index "i" to access each element of the array by position. Later we will learn smarter ways to initialize an arrays and access its elements by using a visitor pattern.</p>
+
+<div align="center">
+  <img src="img/eve-array.svg" alt="eve-array" width="460" class="img-fluid protect rounded shadow border" >
+  <p>Eve Array</p>
+</div>
+
+<hr>
+
+<p>Lets implement previous array: numbers[] and print its elements using a cycle. For initialization we use an explicit array literal that contains all the elements.</p>
+
+<pre><code class="language-eve">
+# define single dimension array
+process demo_numbers:
+  new numbers := [0,1,2,3,4,5,6,7,8,9];
+
+** access .numbers elements one by one
+  write "numbers = [";
+  cycle: for i in (1..10) do
+      write numbers[i];
+      write ',' if i &lt; 10;
+  repeat;
+  write "]";
+  print; -- flush the buffer
+return;
+</code></pre>
+
+<h4>Expected Output</h4>
+
+<pre class="language-output">
+numbers = [0,1,2,3,4,5,6,7,8,9]
+</pre>
+
+<h4>Notes:</h4>
+<ul>
+<li>Array index start from 1 so we use range (1..10);</li>
+<li>Array capacity (10) is fix after array initialization;</li>
+<li>Array element is accessed by the index: numbers[i];</li>
+</ul>
+
+<p><b>initialize elements</b></p>
+<p>Initial value for elements can be set during declaration or later:</p>
+<pre><code class="language-eve">
+# How to initialize all elements
+process main:
+    new zum: [10]Integer; 
+    ** explicit initialization using single value
+    let zum[*]  := 0;
+    expect zoom = [0,0,0,0,0,0,0,0,0,0]
+
+    ** modify two special elements:
+    let zum[0] := 1;
+    let zum[#] := 10;
+    print zum; -- expect [1,0,0,0,0,0,0,0,0,10]
+return;
+</code></pre>
+
+<p><b>Deferred initialization:</b>&nbsp;We can define an empty array and initialize its elements later. Empty arrays have capacity zero until array is initialized.</p>
+
+<pre><code class="language-eve">
+** array without capacity
+process main:
+    new vec :[]Symbol;
+    new nec :[]Integer;
+
+    ** arrays are empty
+    print vec = []; -- True
+    print nec = []; -- True
+
+    ** for loop initializer with operator "<+"
+    cycle
+       new i:Integer;
+    for i in (1..10) loop
+        let vec <+ ''; -- add 10 elements;
+    repeat;
+    print vec; -- expect ['','','','','','','','','','']
+   
+    ** smarter initializer in one statement;
+    let nec ++ 10;
+    print nec; -- expect [0,0,0,0,0,0,0,0,0,0];
+return;
+</code></pre>
+
+<h2><a id="matrix"></a>Matrix</h2>
+
+<p>A matrix is an array with 2 or more dimensions. In next diagram we have a matrix with 4 rows and 4 columns. Total 16 elements. Observe, matrix index start from [1,1] as in Mathematics.</p>
+
+<div align="center">
+  <img src="img/eve-matrix.svg" alt="eve-array" width="460" class="img-fluid protect rounded shadow border" >
+  <p>2D Array</p>
+</div>
+
+<h4>Example:</h4>
+<p>In next example we demonstrate a curious notation for matrix. You have maybe not seen this before in any other language because is ridiculous to parse. But from an esthetic point of view we think this is the way a matrix literal should look like:</p>
+
+<pre><code class="language-eve"># define a subtype of Array
+driver test_matrix;
+
+type Matrix: [4,4]Integer <: Array;
+
+process main:
+    new mat: Matrix; -- define matrix variable
+
+    ** modify matrix using ":=" operator
+    let mat := [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]
+    print mat[1,1]; -- 1  = first element
+    print mat[4,4]; -- 16 = last element
+
+    ** nice output using array print method
+    apply mat.print;
+return;
+</code></pre>
+
+<h4>Expected output:</h4>
+
+<pre class="language-output fixes">
+⎡ 1,  2 , 3,  4 ⎤
+⎢ 5,  6 , 7,  8 ⎥
+⎢ 9, 10 ,11, 12 ⎥
+⎣13, 14 ,15, 16 ⎦
+</pre>
+
+<h4>Internal Order</h4>
+
+<p>Memory is linear, so we fake a matrix. In reality elements are organized in <em>row-major</em> order. That means first row, then second row...last row. We can access the entire matrix like it would be a longer array. So next program can initialize a matrix in a normal cycle, not nested!</p>
+
+<pre><code class="language-eve">** initialize matrix elements
+process main:
+  new mat: [3,3]Integer <: Array;
+  ** initialize matrix elements
+  cycle: 
+    new i   := 1;
+    new x   := mat.length;
+  while (i &lt; x) do
+    let mat[i] := i;
+    let i += 1;
+  repeat;
+  apply mat.print; -- nice output
+return;
+</code></pre>
+
+<h4>Output:</h4>
+<pre class="language-output">
+⎡ 1  2  3 ⎤
+⎢ 4  5  6 ⎥
+⎣ 7  8  9 ⎦
+</code></pre>
+
 
 <h2><a id="dataset"/>DataSet</h2>
 
@@ -145,7 +326,7 @@ return;
 <p>An empty DataSet is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is Null.</p>
 
 <pre><code class="language-eve">
-** Define empty DataSet but not Null
+** empty DataSet
 set e_name = {}; 
 
 ** Define a Null DataSet
@@ -156,10 +337,11 @@ set t_name : {}Integer;
 </code></pre>
 
 
-<h4>Set restrictions</h4>
+<h4>DataSet restrictions</h4>
 <ul>
-<li>All elements of a set must have the same type</li>
-<li>Set elements can have only comparable types: {Numeric, Symbol, String, Ordinal, String}. You can't create a set of objects.</li>
+<li>All elements of a set must have the same type;</li>
+<li>DataSet elements are sorted by a hash function;</li>
+<li>Elements are unique, You can't store duplicates;</li>
 </ul>
 
 <h4>Mutability</h4>
@@ -204,14 +386,14 @@ return;
 <p>Use union operator to combine two sets.</p>
 <pre><code class="language-eve"># combine two sets using "|" = (or)
 driver set_union_demo:
-* 10 element set
+** element set
   set first = {0,1,2,3};
   set second: DataSet; -- Null DataSet
 process
   ** asign elements using union
   let second := first | {2, 4, 8, 10};
 
-  ** element "2" was common 
+  ** common value 2 is not duplicate 
   expect second == {0,1,2,3,4,8,10};
 return;
 </code></pre>
@@ -241,7 +423,7 @@ return;
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
-type Dic = {}(String, Object) <: Table;
+type Dic = {}(String,Object) <: Table;
 driver test:
 # Null map
   set m :Dic;

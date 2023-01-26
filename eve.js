@@ -1,30 +1,26 @@
 function apply_style(str) {
-    // keywords without indentation
+    // global declarations
     str = str.replace(/^driver\b/,keyword("driver"))
     str = str.replace(/^module\b/,keyword("module"))
     str = str.replace(/^aspect\b/,keyword("aspect"))
-    str = str.replace(/^type\b/,keyword("type"))
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias"))
-    str = str.replace(/^lambda\b/,keyword("lambda"))    
-    str = str.replace(/^return\b/,keyword("return"))
-    str = str.replace(/^function\b/,keyword("function"))
-    str = str.replace(/^class\b/,keyword("class"))
-    str = str.replace(/^method\b/,keyword("method"))   
-    str = str.replace(/^create\b/,keyword("create"))
-    str = str.replace(/^static\b/,keyword("static"))
-    //  process keywords
-    str = str.replace(/^recover\b/,keyword("recover"))
-    str = str.replace(/^release\b/,keyword("release"))
-    str = str.replace(/^finalize\b/,keyword("finalize"))
-    //  overwrite exceptions
+    str = str.replace(/^lambda\b/,keyword("lambda"))   
+    str = str.replace(/^type\b/,keyword("type"))    
+    str = str.replace(/^class\b/,keyword("class"))  
+    str = str.replace(/^process\b/,keyword("process"))     
+    // maybe with indentation 
+    str = str.replace(/\bcreate\b/,keyword("create"))
+    str = str.replace(/\brelease\b/,keyword("release"))
     str = str.replace(/\bmethod\b/,keyword("method"))
     str = str.replace(/\bfunction\b/,keyword("function"))
-    str = str.replace(/\bprocess\b/,keyword("process"))
     str = str.replace(/\breturn\b/,keyword("return"))
+    str = str.replace(/\brecover\b/,keyword("recover"))
+    str = str.replace(/\brelease\b/,keyword("release"))
+    str = str.replace(/\bfinalize\b/,keyword("finalize"))
+    // in statement
     str = str.replace(/\bfrom\b/,keyword("from"))
     str = str.replace(/\buse\b/,keyword("use"))
-    str = str.replace(/\btype\b/,keyword("type"))
 
     //  creat control flow
     str = str.replace(/\bcycle\b/,control("cycle"))
@@ -50,13 +46,15 @@ function apply_style(str) {
 
     // colorize data types keywords
     str = str.replace(/\bByte\b/g,types("Byte"))
+    str = str.replace(/\bShort\b/g,types("Short"))
     str = str.replace(/\bInteger\b/g,types("Integer"))
     str = str.replace(/\bNatural\b/g,types("Natural"))
     str = str.replace(/\bDouble\b/g,types("Double"))
+    str = str.replace(/\bRational\b/g,types("Rational"))
     str = str.replace(/\bString\b/g,types("String"))
     str = str.replace(/\bLogic\b/g,types("Logic"))
     str = str.replace(/\bTable\b/g,types("Table"))
-    str = str.replace(/\bUnicode\b/g,types("Unicode"))
+    str = str.replace(/\bSymbol\b/g,types("Symbol"))
     str = str.replace(/\bRecord\b/g,types("Record"))
     str = str.replace(/\bOrdinal\b/g,types("Ordinal"))
     str = str.replace(/\bVariant\b/g,types("Variant"))
@@ -75,7 +73,6 @@ function apply_style(str) {
     str = str.replace(/\bTrue\b/g,types("True"))
     str = str.replace(/\bFalse\b/g,types("False"))
     str = str.replace(/\bType\b/g,types("Type"))
-    str = str.replace(/\bTypeName\b/g,types("TypeName"))
 
     //  System & built-in variables
     str = str.replace(/\bself\b/g,builtin("self"))
@@ -88,7 +85,6 @@ function apply_style(str) {
     str = str.replace(/\balter\b/,interrupt("alter"))
     str = str.replace(/\bmake\b/,interrupt("make"))
     str = str.replace(/\bstore\b/,interrupt("store"))
-    str = str.replace(/\bcreate\b/,interrupt("create"))
     str = str.replace(/\binsert\b/,interrupt("insert"))
     str = str.replace(/\bcommit\b/,interrupt("commit"))
     str = str.replace(/\breset\b/,interrupt("reset"))
@@ -159,6 +155,10 @@ function apply_style(str) {
     //str = str.replace(/\b:&gt;\b/g,operator(":&gt;"))
     //str = str.replace(/\b\+&gt;\b/g,operator("+&gt;"))
     //str = str.replace(/\b&lt;\+\b/g,operator("&lt;+"))
+    str = str.replace(/\b\.\.\.\b/g,operator("..."))
+    str = str.replace(/\b\.&\.\b/g,operator("..."))
+    str = str.replace(/\b\.|\.\b/g,operator("..."))
+    str = str.replace(/\b\.\+\.\b/g,operator("..."))
 
     // create the new statement
     return str
@@ -170,6 +170,7 @@ function style_string(line) {
     let q = 0
     // split in parts
     parts = line.split(/(?<!\\)"/g)
+    //parts = line.split(/"/g)
     for (part of parts) {
         if (part =='') {
            continue
@@ -243,7 +244,7 @@ function eve_render() {
                         line = style_string(line);
                         // attach back the comment
                         if (comment!="") {
-                            //line += comments(comment)         
+                            line += comments(comment)         
                         }  
                     }
                     // skip block comments from style

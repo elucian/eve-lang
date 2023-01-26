@@ -61,7 +61,6 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <p>Native types are implemented by microprocesor. We map primitive type to a single letter followed by a number. The range is a power of 2 multiplied with the number of bytes.</p>
 
 
-
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
@@ -315,25 +314,25 @@ Discrete numbers:</h3>
 driver numeric_literals:
 
 ** define global states
-set g1 := 0.0 :Double;
-set g2 := 0.0 :Float;
+  set g1 := 0.0 :Double;
+  set g2 := 0.0 :Float;
 
 ** define main process
 process main:
-    ** check equality
-    expect g1 == g2;     -- value is equivalent
-    expect g1 is not g2; -- not the same
-    expect g1 not eq g2; -- different types
+  ** check equality
+  expect g1 == g2;     -- value is equivalent
+  expect g1 is not g2; -- not the same
+  expect g1 not eq g2; -- different types
 
-    ** define local variables
-    new i :Integer; -- Initial value = 0
-    new n :Natural; -- Initial value = 0
-    new r :Double;  -- Initial value = 0.00
+  ** define local variables
+  new i :Integer; -- Initial value = 0
+  new n :Natural; -- Initial value = 0
+  new r :Double;  -- Initial value = 0.00
 
-    ** use modifier := to change value
-    let i := 9223372036854775807;  --  maximum
-    let n := 18446744073709551615; --  maximum
-    let r := 1/2; --  0.5
+  ** use modifier := to change value
+  let i := 9223372036854775807;  --  maximum
+  let n := 18446744073709551615; --  maximum
+  let r := 1/2; --  0.5
 return;
 </code></pre>
 <p><b>See also:</b>&nbsp;<a href="https://en.wikipedia.org/wiki/Scientific_notation#Other_bases" rel="nofollow">scientific notation</a></p>
@@ -501,17 +500,17 @@ return;
 driver domain_demo:
 
 process main:
-    print [0..1]; -- [0..1]
+  print [0..1]; -- [0..1]
 
-    ** using domain
-    expect 0   in [0..1];
-    expect 1   in [0..1];
-    expect 0.5 in [0..1];
+  ** using domain
+  expect 0   in [0..1];
+  expect 1   in [0..1];
+  expect 0.5 in [0..1];
 
-    ** exclude limits
-    expect 0 not in [0!.1];
-    expect 1 not in [0.!1];
-    expect 0.5 in [0!!1];
+  ** exclude limits
+  expect 0 not in [0!.1];
+  expect 1 not in [0.!1];
+  expect 0.5 in [0!!1];
 return;
 </code></pre>
 
@@ -548,20 +547,20 @@ return;
 <pre><code class="language-eve"># explicit coercion in EVE
 driver explicit_coercion:
 
-set a = 0   :Integer;
-set b = 1.5 :Double;
+  set a = 0   :Integer;
+  set b = 1.5 :Double;
 
-process
+process main:
 **explicit coercion lose (0.5)
   let a := floor(b);
   write  a; -- will print: 1
 
 **explicit coercion add (0.5)
-  a := ceiling(b);
+  let a := ceiling(b);
   print  a; -- will print: 2
 
 **explicit coercion rounding:
-  a := round(b);
+  let a := round(b);
   print  a; -- will print: 2
 return;
 </code></pre>
@@ -589,8 +588,8 @@ driver string_to_number:
   set v :Integer  ;
   set b :Double   ;
 
-  set s = '1000'  :String;
-  set r = '200.02':String;
+  set s = "1000"  :String;
+  set r = "200.02":String;
 
 process main:
   let v := parse(s); --  make v = 1000
@@ -741,7 +740,7 @@ return;
 driver type_inference:
 
 ** Define a list of 10 elements using type inference
-set ls = (0,1,2,3,4,5,6,7,8,9) :List;
+  set ls = (0,1,2,3,4,5,6,7,8,9) :List; 
 
 process main
   print  ls.type(); --  List[Integer]
@@ -772,17 +771,17 @@ return;
 <p>We can verify the type using "is" operator:</p>
 <pre><code class="language-eve"># using operator "is" to check type
 driver type_check:
-    ** define object and initialize
-    set r = {name:"test", age:24} :Object;
-    
-    ** define hash table
-    set t = {('key1':"value1"),('ley2':"value2")} :Table;
+  ** define object and initialize
+  set r:{name:"test", age:24} <:Object;
+  
+  ** define hash table
+  set t:{'key1':"value1",'ley2':"value2"} <: DataSet;
 process
-    ** check variable types using introspection
-    expect type(r.name)  is Unicode;
-    expect type(r.age)   is Integer
-    expect type(t.key)   is String;
-    expect type(t.value) is Unicode;
+  ** check variable types using introspection
+  expect type(r.name)  is String;
+  expect type(r.age)   is Integer
+  expect type(t.key)   is Symbol;
+  expect type(t.value) is String;
 return;
 </code></pre>
 
@@ -791,10 +790,9 @@ return;
 
 <p>For type introspection we can use type() built-in function:</p>
 <pre><code class="language-eve"># introspection demo
-driver print_type:
-  set i := 1.5;
-process
-  expect i.type() is Double;
+process print_type:
+  new i := 1.5;
+  expect type(i) is Double;
   print "type of i is \s" ? i.type();
 return;
 </code></pre>
@@ -802,7 +800,7 @@ return;
 
 <h2><a id="polymorphic-operators"</a>Polymorphic operators</h2>
 
-<p>In mathematics there are very few operators: {+, -, / , * } that can operate with any kind of numbers: negative, positive, rational or real. Operators are not bound to specific data types. Therefore these operators are called&nbsp;<em>"polymorphic"</em>.</p>
+<p>In mathematics there are very few operators: {+, -, &divide; , * } that can operate with any kind of numbers: negative, positive, rational or real. Operators are not bound to specific data types. Therefore these operators are called&nbsp;<em>"polymorphic"</em>.</p>
 
 <p>Some languages define different operators for Integers and Floating decimal numbers. For example in OCaml the operator "/" can divide Integers while "/." can divide Floating point decimal numbers. This is unexpected for a mathematician who is expecting to use one single operator for division.</p>
 
@@ -919,18 +917,18 @@ driver variant_type:
 set v, x ,t: { Double | Integer };
 
 process main:
-    ** safe conversion
-    let t := 1 / 2;   -- make t Double
-    print type(t)     -- Double
+  ** safe conversion
+  let t := 1 / 2;   -- make t Double
+  print type(t)     -- Double
 
-    let t := 12;      -- change type
-    print type(t)     -- Integer
+  let t := 12;      -- change type
+  print type(t)     -- Integer
 
-    ** unsafe conversion
-    let x := 1.5;  --  x is Double
-    let v := 1;    --  v is Integer
-    let v := x;    --  v becomes Double
-    print type(v)  -- Double
+  ** unsafe conversion
+  let x := 1.5;  --  x is Double
+  let v := 1;    --  v is Integer
+  let v := x;    --  v becomes Double
+  print type(v)  -- Double
 return;
 </code></pre>
 
@@ -944,27 +942,27 @@ driver variant_params:
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
 process swap(@x, @y: {Integer | Double} ):
-    ** check type to be the same
-    expect type(x) = type(y);
+  ** check type to be the same
+  expect type(x) = type(y);
 
-    ** swap x, y values
-    new i := x; --  intermediate
-    let x := y; --  first  swap
-    let y := i; --  second swap
+  ** swap x, y values
+  new i := x; --  intermediate
+  let x := y; --  first  swap
+  let y := i; --  second swap
 return;
 
 process main:
-    ** invert two  Integer numbers
-    new x := 10;
-    new y := 20;
-    apply swap(x, y);
-    expect (x == 20) and (y == 10);
+  ** invert two  Integer numbers
+  new x := 10;
+  new y := 20;
+  apply swap(x, y);
+  expect (x == 20) and (y == 10);
 
-    ** invert two Double numbers
-    new a := 1.5;
-    new b := 2.5;
-    apply swap(a, b);
-    expect (a == 2.5) and (b == 1.5);
+  ** invert two Double numbers
+  new a := 1.5;
+  new b := 2.5;
+  apply swap(a, b);
+  expect (a == 2.5) and (b == 1.5);
 return;
 </code></pre>
 
@@ -989,12 +987,12 @@ return;
 <pre><code class="language-eve">
 #overloaded function
 process main:
-    new date := "2019/01/30" as YDM;
+  new date := "2019/01/30" as YDM;
 
-    ** convert string in Date type
-    print date as YDM; --  2019/01/30
-    print date as DMY; --  30/01/2019
-    print date as MDY; --  01/30/2019
+  ** convert string in Date type
+  print date as YDM; --  2019/01/30
+  print date as DMY; --  30/01/2019
+  print date as MDY; --  01/30/2019
 return;
 </code></pre>
 
@@ -1024,13 +1022,13 @@ return;
 driver time_demo:
 
 process main:
-    ** define 3 variable of same type
-    new time1 = time2 = time3 = "00:00": Time;
+  ** define 3 variable of same type
+  new time1 = time2 = time3 = "00:00": Time;
 
-    ** alter variables usi "as" operator
-    let time1 := "23:63" as T24;
-    let time2 := "23:63:59,99" as T24;
-    let time3 := "11:63:59pm,99ms" as T12;
+  ** alter variables usi "as" operator
+  let time1 := "23:63" as T24;
+  let time2 := "23:63:59,99" as T24;
+  let time3 := "11:63:59pm,99ms" as T12;
 return;
 </code></pre>
 
