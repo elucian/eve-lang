@@ -1,62 +1,65 @@
 <html><head>
-  <meta charset="utf-8">
-  <meta name="description" content="Sage-Code Eve object oriented programming. Classes and Objects. ">
-  <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="SageCode, EVE, EveLang, programming, language, specification">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta charset="utf-8">
+   <meta name="description" content="Sage-Code Eve object oriented programming. Classes and Objects. ">
+   <meta name="author" content="Elucian Moise">
+   <meta name="keywords" content="SageCode, EVE, EveLang, Objects, Classes, OOP, method, consructor, companion">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Website title -->
-  <title>Eve OOP</title>
+   <!-- Website title -->
+   <title>Eve Class</title>
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-  <!-- Icon -->
-  <link rel="icon" type="image/png"  href="../images/favicon.ico">
-  <!-- Eve code highlighter -->
-  <script src="eve.js"></script>
-  <!-- Sage-Code custom CSS -->
-  <link rel="stylesheet" href="../sage.css">
-  </head>
+   <!-- Bootstrap CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+   <!-- Icon -->
+   <link rel="icon" type="image/png"   href="../images/favicon.ico">
+   <!-- Eve code highlighter -->
+   <script src="eve.js"></script>
+   <!-- Sage-Code custom CSS -->
+   <link rel="stylesheet" href="../sage.css">
+   </head>
 <body onload="eve_render();">
 
 <div class="container">
 
 <!-- header -->
 <div class="row">
-    <div class="col">
-        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
-    </div>
-    <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a><--
-    </div>
+      <div class="col">
+            <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+      </div>
+      <div class="col   bottom-right">
+            <a href="index.html#lang-index">index</a><--
+      </div>
 </div><hr>
 
 <h1>Eve Classes</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Eve is an object oriented language, so we need Classes. Eve classes are very similar to Java classes. A class is a companion for an user-defined data type. It implements behaviour for data. Classes are called to instantiate Objects and set the Object attributes.</div>
+Eve is an object oriented language, so we need Classes. A class is a companion for an user-defined data type. It implements behaviour for a data object. Classes are used to augment Objects with private attributes and methods.</div>
 
 <h2>Eve Classes</h2>
 
-<p>Objects are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. You can create global objects using "set" and local objects using "new".</p>
+<p>Objects are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. You can create global objects using "set" or local objects by using a class call.</p>
 
 <p>The most important characteristics of objects are:</p>
 
 <ul>
 <li>Encapsulation: each object has its own states;</li>
 <li>Inheritance: an object inherit its base class;</li>
-<li>Polymorphic: an object can play its base class role;</li>
+<li>Polymorphism: an object can play its base class role;</li>
 </ul>
 
-<div class="alert alert-info"><b>Note:</b> Objects can't be abstract but you can define an abstract constructor that can be extended. So Eve implements actually all 4 OOP principles.</div>
+<div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes. So Eve implements actually all 4 OOP principles.</div>
 
 <h4>Bookmarks:</h4>
 <ul>
-<li><a href="#object">object instances</a></li>
-<li><a href="#companion">type companion</a></li>
-<li><a href="#instances">class instances</a></li>
-<li><a href="#attributes">attributes</a></li>
-<li><a href="#inheritance">inheritance</a></li>
+<li><a href="#object">Object instances</a></li>
+<li><a href="#companion">Type companion</a></li>
+<li><a href="#constructor">Class constructor</a></li>
+<li><a href="#class-members">Class members</a></li>
+<li><a href="#class-tree">Class Tree</a></li>
+<li><a href="#comparing-objects">Comparing objects</a></li>
+<li><a href="#inheritance">Inheritance</a></li>
+<li><a href="#methods">Methods</a></li>
 </ul>
 
 <h2><a id="object"></a>Object Instances</h2>
@@ -70,15 +73,15 @@ Eve is an object oriented language, so we need Classes. Eve classes are very sim
 <pre><code class="language-eve">
 # define global object instances
 driver test:
-    ** empty object
-    set object_name1: Onject(); 
+  ** empty object
+  set object_name1: Object(); 
 
-    ** object with attributes
-    set object_name2: {attribute:value, ...} <:Object;
- return;
+  ** object with attributes
+  set object_name2: {attribute:value, ...} <:Object;
+return;
 </code></pre>
 
-<p><b>Notes:</b>An object is a reference to a data structure that is created by using the default constructor. This receive a list of attribute-value pairs: {attribute:value, ...}. The default constructor accept a list of parameters (attribute:value,.)</p>
+<p><b>Notes:</b>An object is a reference to a data structure that is created by using the default constructor. This receives a list of attribute-value pairs: {attribute:value, ...}. The default constructor accepts a list of parameters (attribute:value,.)</p>
 
 
 <h4>Alternative:</h4>
@@ -87,72 +90,70 @@ driver test:
 
 <pre><code class="language-eve">#define an object instance
 process test:
-  ** initialize object using Object() constructor
-  new object_name := Object(attribute1:value1, 
-                            attribute2:value2, ...);
-  ...
+   ** initialize object using Object() constructor
+   new object_name := Object(attribute1:value1, 
+                                          attribute2:value2, ...);
+   ...
 return;
 </code></pre>
 
-<p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatic and set-up an implicit data type using type inference. This is possible due to gradual typing algorithm.</p>
+<p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatically and set-up an implicit data type using type inference. This is possible due to a gradual typing algorithm.</p>
 
 <h2><a id="companion"></a>Type companion</h2>
 
-<p>You can create more complex objects by using a type companion. This start with keyword "class". This is a special subroutine that can create object instances. The object name that is going to be created is an implicit output result, that is called "@self" that must be explicit declared as a result of a class.</p>
+<p>You can create more complex objects by using a class. This is a special subroutine that can create object instances. The object that is going to be created is an explicit output reference called "@self".</p>
 
-<h4>Pattern:</h4>
+<h4>Design:</h4>
 
-<p>First you define a type then a "class" with the same name. That is named a companion. The companion has a local static scope. You can define things anywehre. Unlike processes it does not have a "recover" region but it has a "remove" region.</p>
+<p>First you define a data type then a "class" with the same name. That is called a "type companion". The companion has a local static scope. You can define things after ":" that belong to the class. A class does not have a "recover" region but it has a "create" and "remove" regions.</p>
 
 <pre><code class="language-eve">
-# user defined type  
+# user defined type   
 type TypeName = {} <: SuperType;
 
 # type companion (same name)
 class TypeName(parameters) => (@self :TypeName):
-  ** properties
-  ...
-  ** methods
-  ...  
+   ** members
+   ... 
 create
-  ** attributes
-  ...   
+   ** constructor
+   ...    
 release
-  ** cleanup
-  ...
+   ** cleanup
+   ...
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>A class can have role of a object constructor or type companion. In fact, a class is a "high order function" with closures: We name closure "methods" in Eve.</p>
+<p><b>Notes:&nbsp;</b>A class  is a "high order function" with closures: We name closure "methods" in Eve. So we use functional programming theory to create classes. Methods are like functions, except the methods are defined inside a class while regular functions can be defined in global scop.</p>
 
-<h3>Constructor</h3>
+<h3><a id="constructor"></a>Conditional constructor</h3>
 
-<p>The @self object represents the result of a class. In "create" region we can use decision statements to create the &nbsp;<em>"object"</em>&nbsp; attributes in different ways based on conditions.</p>
+<p>The @self object represents the result of a class. In the "create" region we can use decision statements to create the object attributes in different ways based on class parameters and conditions.</p>
 
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve">...
 class name(parameters) => (@self: Object):
-  ** declarations
-  ....
+   ** declarations
+   ....
 create
-  ** conditional construction
-  if condition then
-      let self := SuperType(some_arguments);
-  else
-      let self := SuperType(other_arguments);
-  done;
-  ...
+   ** conditional constructor
+   if condition then
+         let self := SuperType(some_arguments);
+   else
+         let self := SuperType(other_arguments);
+   done;
+   ...
 return;
 </code></pre>
 
 <h3>Parameters</h3>
 
-<p>A class can have parameters with initial value. If you declare a type, parameters can be the same as for the type, but sometimes they are different.</p>
+<p>A class can have parameters with initial value. If you declare a type, parameters can be the same as for the type, but sometimes they are different. It is even possible to have a variable number of arguments, received as a HashMap.</p>
 
 <h4>Example:</h4>
 
-<pre><code class="language-eve"># define a class with prameters
+<pre><code class="language-eve"># define a class with parameters
 class ClassName(parameters) => (@self:ClassName):
     ** class body
     ....
@@ -167,68 +168,87 @@ process main:
 return;
 </code></pre>
 
-<p>The <em>object</em> from previous example, is created using a <em>class</em>: ClassName. This do not have a type so is not a companion but a constructor. For this, an implicit type will be created automaticly.</p>
+<p><b>Note:</b> The <em>object</em> in the previous example, has type: ClassName that is not defined explicitly. In this case, an implicit type is created automatically by Eve compiler, so you can use the class name as type. All parameters become public attributes.</p>
 
 <h4>@self object</h4>
 
-<p>Object named "self" is the current object name, reserved by EVE. This is either the result of a companion or a parameter in a method. It uses prefix @ to show that is a reference.</p>
+<p>Object named "self" is the current object name, reserved by EVE. This is either the result of the class or a parameter in a method. It uses prefix @ to show that it is a reference.</p>
 
-<p>@self object must be initialized as quickly as possible inside the constructor. In Java, we call current object "this". Eve is more like Python.</p>
+<p>@self object attributes must be created as quickly as possible inside the constructor. In Java, we call the current object "this". Eve is more like Python that uses "self" for current object.</p>
 
 <pre class="output">
 class ClassName(parameters) => (@self:ClassName):
-   ...
+     ...
 return;
 </pre>
 
 <h4>Note:</h4>
 <ul>
-<li>In Java you must use "new" or "set" to create an object;</li>
-<li>In Eve you can use ":=" with JSON to create an object.</li>
+<li>You must use "new" or "set" to create an object reference;</li>
+<li>You can use "let", "pop", "put" to create an object element;</li>
+<li>You can use ":=" with JSON to create attributes and lambdas;</li>
 </ul>
 
-<h2><a id="attributes"></a>Attributes</h2>
+<h2><a id="class-members"></a>Class members</h2>
 
-<p>A class can have object attributes and class properties. Attributes represent states of an object wile properties are class states. Try to remember this convention to understend better Eve design.</p>
+<p>A class can have attributes, properties and methods. Attributes are dynamic states, wile properties are static states. Try to remember this convention to understand better Eve design.</p>
+
+<h3>Attributes</h3>
+
+<p>A class produce objects. Each object has public or private attributes. The class constructor must set initial values and define these attributes. Private attributes start with underscore (_).</p>
 
 <ul>
-<li>We declare properties and attributes after symbol ":"</li>
-<li>Public properties are defined using (.) prefix with "set" keyword.</li>
-<li>Attributes are define using keyword "new" or "let";
-<li>Private attributes start with underscore "_"; 
+<li>We declare object attributes in "create" region;</li>
+<li>Object attributes are define using keyword {"new", "let", "put"};
 </ul>
-
-<h3>Object attributes</h3>
 
 <p>To access attributes we can use dot notation:</p>
 
 <pre class="output">object_name.object_attribute;</pre>
 
-<p>We already know how to instantiate a class and create objects using a type companion. After you have defined a class, this do not know anything about it's objects. You can not ask the class anything about it's instances.</p>
+<p>We already know how to instantiate a class and create objects using a class. A class does not know anything about its objects. You can not ask the class anything about its instances, except if you create a special logic using class properties.</p>
 
-<h3>Class attributes</h3>
+<h3>Properties</h3>
 
-<p>For a class, you can define static attributes and methods. That's the secret: a class is actually a <em>singleton object</em>. The class is holding the <em>class states</em>. Each attributes defined in class context using keyword "set". Unlike "let" or "new" that create the attributes of object, "set" create properties for the class singleton.</p>
+<p>A class is actually a <em>singleton object</em>. The class has static properties. Each property is defined in class context using the keyword "set". Class properties can be public or private.</p>
 
-<p>You can access all static members without instantiation of the class. But you can also access class members using the object qualifier. Both will point to the same <em>class states</em> also called </em>class attributes</em>.</p>
+<ul>
+<li>We declare class properties after symbol ":"</li>
+<li>By default, class properties are public states;</li>
+<li>Private class properties start with underscore "_"; 
+<li>Properties are defined using keyword "set";
+</ul>
 
-<pre class="language-eve">** accessing static attributes
-ClassName.class_attribute;   -- using the class name
-object_name.class_attribute; -- using the object name
-</pre>
+<p>To access properties we can use dot notation:</p>
 
-<h4>Class Tree</h4>
+<pre class="output">class_name.class_property;</pre>
 
-<p>Using the <em>"Object"</em> as the <em>"root"</em> Class you can create a hierarchy of classes. Each classes grows from Object or from other <em>"super class"</em> forming a <em>"class tree"</em>. Like a real tree the class hyerarchy has a single root.</p>
+<h3>Methods</h2>
+
+<p>You can define private or public methods for a class.  Most of the time you need onlu private members. You can access all class members without instantiation using the class name quialifier:</p>
+
+<pre><code class="language-eve">** accessing class methods
+apply ClassName.method;    -- using the class name
+</code></pre>
+
+<p>Some methods are defined for objects. These methods use an explicit parameter @self that is required to refer the current object context. You can use object name qualifier to call these methods.</p>
+
+<pre><code class="language-eve">** accessing object methods
+apply ObjectName.method;    -- using the object name
+</code></pre>
+
+<h2><a id="class-tree"></a>Class Tree</h2>
+
+<p>Using the <em>"Object"</em> as the <em>"root"</em> Class you can create a hierarchy of classes. Each classes grows from Object or from other <em>"superclass"</em> forming a <em>"class tree"</em>. Like a real tree the class hierarchy has a single root.</p>
 
 <div align="center">
-  <img src="img/class-tree.svg" alt="Class Tree" width="680" class="img-fluid protect rounded shadow border" >
-  <p>Class Tree</p>
+   <img src="img/class-tree.svg" alt="Class Tree" width="680" class="img-fluid protect rounded shadow border" >
+   <p>Class Tree</p>
 </div>
 
 <h4>Example:</h4>
 
-<p>This example define a "Point" class with two parameters. The parameters have default values so they are optional when you create a point. Read the example and the notes to undestend how to use a user defined class constructor.</p>
+<p>This example defines a "Point" class with two parameters. The parameters have default values so they are optional when you create a point. Read the example and the notes to understand how to use a user defined class constructor.</p>
 
 <pre><code class="language-eve"># define a "Point" class
 driver point_demo:
@@ -238,64 +258,64 @@ type Point = {x, y :Double} <: Object;
 
 ** type companion
 class Point(x = 0, y = 0 :Double) => (@self: Object):
-  let self := Object();
+   let self := Object();
 
-  ** set attribute values
-  let self += {'x': x};
-  let self += {'y': y};
+   ** set attribute values
+   put self <+ ('x': x);
+   put self <+ ('y': y);
 return;
 
 process main:
-  ** initialize the points
-  new p1 := Point(x:1, y:2);
-  new p2 := Point(x:2, y:2);
+   ** initialize the points
+   new p1 := Point(x:1, y:2);
+   new p2 := Point(x:2, y:2);
 
-  ** use string patterns to print attributes
-  print "p1 = (a:#n, b:#n)" ? (p1.a,p1.b);
-  print "p2 = (a:#n, b:#n)" ? (p2.a,p2.b);
+   ** use string patterns to print attributes
+   print "p1 = (a:#n, b:#n)" ? (p1.a,p1.b);
+   print "p2 = (a:#n, b:#n)" ? (p2.a,p2.b);
 return;
 </code></pre>
 
 <h4>Output:</h4>
 
-<pre class="language-output">
+<pre class="output">
 p1 = {a:1, b:1}
 p2 = {a:2, b:2}
 </pre>
 
 <h2><a id="comparing-objects"></a>Comparing objects</h2>
 
-<p>We can use two comparison operators with objects: "is" and "==". First operator "is" will compare the object location. If the objects have same location they represent the same object. Second operator: "==" compare object type and object attributes or value. There are complementar operators "is not" and "!=". That can be used to create conditionals.</p>
+<p>We can use two comparison operators with objects: "is" and "==". First operator "is" will compare the object location. If the objects have the same location they represent the same object. Second operator: "==" compare object type and object attributes or value. There are complementar operators "is not" and "!=". That can be used to create conditionals.</p>
 
 <h4>Example:</h4>
 
-<p>In next examples we use a primitive type: Integer, that is actually a class. So any number of type Integer is an object.</p>
+<p>In next examples we use a primitive type: Integer, that is actually a class. So any Integer number   is an Object.</p>
 
 <pre><code class="language-eve">#object comparison demo
 driver object_compare:
 ** global context variables
-  set o = n = 1: Integer; 
+   set o = n = 1: Integer; 
 process
-  ** equal values and types
-  expect  o  == n;
-  expect  not (o != n);
+   ** equal values and types
+   expect   o   == n;
+   expect   not (o != n);
 
-  ** not the same location
-  expect  not (o is n);
-  expect  o is not n;
+   ** not the same location
+   expect   not (o is n);
+   expect   o is not n;
 
-  ** alter one value
-  n := 2;
+   ** alter one value
+   n := 2;
 
-  ** equal values and types
-  expect  o  != n;
-  expect  not (o == n);
+   ** equal values and types
+   expect   o   != n;
+   expect   not (o == n);
 return;
 </code></pre>
 
 <h2><a id="inheritance"/>Inheritance</h2>
 
-<p>Eve has support for inheritance. You can specify a superclass using symbol "&lt;:" that is equivalent of keyword: <em>"extend"</em> used in Java. Using this symbol makes a class that has all attributes and methods of the super-class.</p>
+<p>Eve has support for inheritance. You can specify a superclass using the symbol "&lt;:" that is equivalent to the keyword: <em>"extend"</em> used in Java. Using this symbol makes a class that has all attributes and methods of the super-class.</p>
 
 <h4>Pattern:</h4>
 
@@ -303,58 +323,58 @@ return;
 type BaseType: {attributes} <: Object;
 
 class BaseType(parameters) => (@self:Object):
-   ...
-   * object method
-   method demo(@self:BaseType,...):
-      ....
-   return;
+     ...
+     ** object method
+     method demo(@self:BaseType,...):
+         ....
+     return;
 return;
 
 ** create a descendent of BaseType
 class ClassName(parameters) &lt;: BaseType:
-  ** class members
-  ...
-  ** call base class constructor
-  self := base_class(object_attribute:argument,...);
-  ...
-  ** overwriten method
-  method demo(@self:BaseType,...) => (result:Type):
-    ...
-  return;
+   ** class members
+   ...
+   ** call base class constructor
+   let self := base_class(object_attribute:argument,...);
+   ...
+   ** overwriten method
+   method demo(@self:BaseType,...) => (result:Type):
+      ...
+   return;
 return;
 </code></pre>
 
 <h2><a id="methods"></a>Methods</h2>
 
-<p>Methods can be defined inside of a class. The methods can have parameters and can return results. Also if a method receive @self argument, this is an input-output argument representing the object instance.</p>
+<p>Methods can be defined inside of a class. The methods can have parameters and can return results. Also if a method receives @self argument, this is an input-output argument representing the object instance.</p>
 
 <h4>Example</h4>
 
 <pre><code class="language-eve"># define a "Point" class
 driver point_demo:
 type 
-  Point = {x, y :Double} <: Object; 
+   Point = {x, y :Double} <: Object; 
 
 class Point(x = 0, y = 0 :Double) => (@self: Object):
-  let self := {'x': x,'y': y};
+   method move(@self, a, b: Double):
+      let self.x += a;
+      let self.y += b;
+   return;
 
-  method move(@self, a, b: Double):
-    let self.x += a;
-    let self.y += b;
-  return;
-
-  method string(@self) => (string:String):
-     let string := "# = (#:#)" ? (@self).id, self.a, self.b);
-  return;
+   method string(@self) => (string:String):
+        let string := "# = (#:#)" ? (@self).id, self.a, self.b);
+   return;
+create
+   let self := {'x': x,'y': y};
 return;
 
 process main:
-  ** initialize the points
-  new p := Point(x:1, y:2);
+   ** initialize the points
+   new p := Point(x:1, y:2);
 
-  ** move the point
-  apply p.move(2,1);
-  print p.string(); -- (3:3)
+   ** move the point
+   apply p.move(2,1);
+   print p.string(); -- (3:3)
 
 return;
 </code></pre>
@@ -365,7 +385,7 @@ return;
 
 <!-- Footer -->
 <footer class="footer">
-  <div class="footer-copyright text-center"></div>
+   <div class="footer-copyright text-center"></div>
 </footer>
 </div>
 </body>

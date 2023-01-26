@@ -448,8 +448,8 @@ process main:
   expect h['b'] == 2;
 
   ** create new elements
-  let h += {'c':3};
-  let h += {'d':4};
+  new h('c') := 3;
+  new h('d') := 4;
 
   ** optput
   print h -- {'a':1, 'b':2, 'c':3, 'd':4};
