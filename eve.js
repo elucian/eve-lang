@@ -7,9 +7,9 @@ function apply_style(str) {
     str = str.replace(/^alias\b/,keyword("alias"))
     str = str.replace(/^lambda\b/,keyword("lambda"))   
     str = str.replace(/^type\b/,keyword("type"))    
-    str = str.replace(/^class\b/,keyword("class"))  
-    str = str.replace(/^process\b/,keyword("process"))     
+    str = str.replace(/^class\b/,keyword("class"))    
     // maybe with indentation 
+    str = str.replace(/\bprocess\b/,keyword("process"))   
     str = str.replace(/\bcreate\b/,keyword("create"))
     str = str.replace(/\brelease\b/,keyword("release"))
     str = str.replace(/\bmethod\b/,keyword("method"))

@@ -2,11 +2,11 @@
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve data processing.">
   <meta name="author" content="Elucian Moise">
-  <meta name="keywords" content="sage, code, EVE, data, processing, design, patterns">
+  <meta name="keywords" content="SageCode, EVE, 'data processing', 'collection builder', union, append, enqueue, dequeue>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Website title -->
-  <title>Eve Processing</title>
+  <title>Data Processing</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -24,17 +24,17 @@
 <!-- header -->
 <div class="row">
     <div class="col">
-        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" 
+           alt="Sage-Code Laboratory" height="80"/></a>
     </div>
     <div class="col  bottom-right">
         <a href="index.html#lang-index">index</a><--
     </div>
 </div><hr>
 
-<h1>Eve Data Processing</h1>
+<h1>Data Processing</h1>
 
-<div class="alert alert-secondary shadow-sm">Eve language is all about data processing. By using collections and control structures one can load, validate, modify and store data. In this article we review some of the concepts we already know to create useful design patterns for data processing.
-</div>
+<div class="alert alert-secondary shadow-sm">Eve language is all about data processing. By using collections and control structures one can load, validate, modify and store data. In this article we use some of the features we already with operators and design patterns useful in real applications.</div>
 
 <h4>Bookmarks:</h4>
 
@@ -99,22 +99,25 @@ return;
 
 <table class="table table-sm table-bordered">
 <tr><th>process</th><td>create a callable process</td></tr>
-<tr><th>job    </th><td>create one step in the process</td></tr>
-<tr><th>try    </th><td>begin job executable block</td></tr>
-<tr><th>pass   </th><td>skip the rest of task and continue next</td></tr>
-<tr><th>fail   </th><td>skip then rest of task and continue next</td></tr>
-<tr><th>retry  </th><td>redo the task that raise a recoverable error  </td></tr>
-<tr><th>resume  </th><td>execute next job, following the one with error</td></tr>
-<tr><th>abort  </th><td>ignore all next jobs and execute the finalize region </td></tr>
-<tr><th>raise  </th><td>create a recoverable error, jump to cases</td></tr>
-<tr><th>panic  </th><td>jump to finalize and stop the application</td></tr>
+<tr><th>job</th><td>create one step in the process</td></tr>
+<tr><th>try</th><td>begin job executable block</td></tr>
+<tr><th>pass</th><td>skip the rest of task and continue next</td></tr>
+<tr><th>fail</th><td>skip then rest of task and continue next</td></tr>
+<tr><th>retry</th>
+  <td>redo the task that raise a recoverable error</td></tr>
+<tr><th>resume</th>
+  <td>execute next job, following the one with error</td></tr>
+<tr><th>abort</th>
+  <td>ignore all next jobs and execute the finalize region </td></tr>
+<tr><th>raise</th><td>create a recoverable error, jump to cases</td></tr>
+<tr><th>panic</th><td>jump to finalize and stop the application</td></tr>
 </table>
 
 <h4>Notes</h4>
 
 <ul>
 <li>A process create a loocal scope. All variables define in local scope will be removed when process is ending;</li>
-<li>Any driver, aspect or routine can be implement one or several processes;</li>
+<li>Any driver, aspect or process can be implement one or several processes;</li>
 <li>All tasks of a single process are execute sequential from top down;</li>
 <li>When the last task is finished the process is ending.</li>
 </ul>
@@ -123,116 +126,124 @@ return;
 
 <p>Interruption keywords (exit, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the abort or raise will trigger the finalization region.</p>
 
-<p><b>Routine call</b>&nbsp;Routines can be used in call statements. A routine call can be done using "apply routine_name" followed by arguments. For one single argument, or no argument the parentheses are not required.</p>
+<p><b>Routine call</b>&nbsp;Routines can be used in call statements. A process call can be done using "apply process_name" followed by arguments. For one single argument, or no argument the parentheses are not required.</p>
 
-<pre><code class="language-eve">#these are all valid routine calls
-routine_name; -- call routine without arguments
-routine_name argument_value;     -- call with single argument
-routine_name value1, value2,;    -- call with multiple arguments
-routine_name (value, value, ...);//call with a list of arguments
-routine_name (param:value,...);  -- call with a argument by name
-routine_name (value, value, param:value); -- mix position with names
-routine_name (value, *list_args);         -- mix position with list
-routine_name (param:value, *map_args);    -- mix names with dictionary
+<pre><code class="language-eve">#these are all valid process calls
+apply process_name; -- call process without arguments
+apply process_name argument_value;     -- call with single argument
+apply process_name value1, value2;     -- call with multiple arguments
+apply process_name (value, value, ...); --call with a list of arguments
+apply process_name (param:value,...);   -- call with a argument by name
+apply process_name (value, value, param:value); -- mix position with names
+apply process_name (value, *list_args);         -- mix position with list
+apply process_name (param:value, *map_args);    -- mix names with hashmap
 </code></pre>
 
-<p><b>Routine termination</b>&nbsp;A routine end with keyword return; When routine is terminated, program execution will continue with the next statement after the routine call. Keyword <em>exit</em> can terminate a routine early. If the result do not have initial value and routine terminate early the result may be null.</p>
+<p><b>Routine termination</b>&nbsp;A process end with keyword return; When process is terminated, program execution will continue with the next statement after the process call. Keyword <em>exit</em> can terminate a process early. If the result do not have initial value and process terminate early the result may be null.</p>
 
 <h4>Example:</h4>
 <pre><code class="language-eve"># driver with parameters
-driver routine_call(List[String]: *args):
+driver process_call
 
+process test(Integer a):
+  ** print is a system process
+  print 'argument list has # members' ? a;
+return;
+
+process main((List[String]: *args): 
   ** number of arguments received:
-  Integer c := args.length();
+  new c := args.length();
 
-  routine test(Integer a):
-    ** print is a system routine
-    print 'argument list has # members' ? a;
-  return;
-begin 
-    ** verify condition and exit
-    exit if c == 0;  -- early interruption
-    apply test(c);   -- routine call
-end driver;
+  ** verify condition and exit
+  exit if c == 0;  -- early interruption
+  apply test(c);   -- process call
+return;
 </code></pre>
 
 <h4>Side Effects</h4>
-<p>A routine can have side-effects:</p>
+<p>A process can have side-effects:</p>
+
 <ul>
-<li>modify a shared variable;</li>
-<li>open and write into a file;</li>
-<li>print a message or accept input from console;</li>
+  <li>modify a shared variable;</li>
+  <li>open and write into a file;</li>
+  <li>print a message or accept input from console;</li>
 </ul>
+
 <p><b>using side-effects</b></p>
-<p>Next routine: "add_numbers" has 2 side effects:</p>
-<pre><code class="language-eve">#test side-effects
+<p>Next process: "add_numbers" has 2 side effects:</p>
+<pre><code class="language-eve">
+#test side-effects
 driver side_effect:
 
-define
-    .test    :Integer;
-    .p1, .p2 :Integer;
+set test   :Integer;
+set p1, p2 :Integer;
 
-** create a sub-process
-process add_numbers():
-    **side effects
-    test := p1 + p2; --  first side-effect
-    print test;      --  second side-effect
+** process with side effects
+process add_numbers:
+  ** side effects
+  new test := p1 + p2; --  first side-effect
+  print test;          --  second side-effect
 return;
 
 ** define main process
 process main:
-    p1 := 10;    --  side effect
-    p2 := 20;    --  side effect
-    add_numbers; --  call routine add_numbers;
-    expect (result == 30);
+  let p1 := 10;      
+  let p2 := 20;     
+  apply add_numbers; --  call process add_numbers;
+  expect (result == 30);
 return;
 </code></pre>
 
 
 <h2><a id="list-operations"></a>List operations</h2>
-<p>There are many things you can do with a list. Most important are implemented as built-in functions or special operators:</p>
+<p>There are many things you can do with a list. You can add/remove elements at both ends. You can deconstruct a list and you can concatenate lists together. Most important features are implemented as built-in functions or special operators:</p>
 
 <p><b>List concatenation</b></p>
-<p>List concatenation is ready using operator &ldquo;++&rdquo;. This operator represent union. Therefore List union act very similar to append, except we add multiple elements.</p>
-<pre><code class="language-eve">#list demo
-driver list_concat:
 
-local
-  List[Symbol] a = ['a','b','c']; --  initialized
-  List[Symbol] b = ['1','2','3']; --  initialized
-  List[Symbol] c; --  beginred initialization
-process
-  c := a ++ b;
-  print c; --  ['a','b','c','1','2','3'];
+<p>List concatenation is using operator &ldquo;<+&rdquo;. This operator represent append at the end. Remember Lists can contain duplicates. Every time when you concatenate two lists with length N and M, the final number of elements will be N+M. Duplicates are preserved.</p>
+
+<pre><code class="language-eve">
+#list demo concatenation
+driver list_concat:
+**  empty list declaration
+  set c : ()Symbol;
+
+process main:
+  ** initialized list
+  new a := ('a','b','c'); 
+  new b := ('1','2','3'); 
+  ** append operation
+  let c := a <+ b;
+  expect c ==  ('a','b','c','1','2','3');
 return;
 </code></pre>
 
-<p><b>Join() built-in</b></p>
+<h4>Join() built-in</h4>
+
 <p>The join function receive a list and convert elements into a string separated be specified character.</p>
 <pre><code class="language-eve">#list join() demo
-driver list_join:
-
-local
-  String str; --  Null String
-process
-  str := join([1,2,3],",");
-  print str; -- "1,2,3"
+process list_join:
+  new str := (1,2,3).join(",");
+  expect str == "1,2,3";
 return;
 </code></pre>
 
 <p><b>Split built-in</b>&nbsp;The join function receive a list and convert elements into a string separated be specified character.</p>
-<pre><code class="language-eve">**list split demo
-driver list_split:
 
-local
-  List[Integer] lst; --  Null List
-process
+<pre><code class="language-eve">
+**list split demo
+driver list_split:
+  set list: ()Integer; --  empty List
+
+process main:
   ** initialize new reference for "lst"
-  lst := split("1,2,3",",");
-  print  lst; -- (1,2,3)
+  let lst := split("1,2,3",",");
+  expect lst == (1,2,3);
 return;
 </code></pre>
-<p><b>List as queue</b></p>
+
+<h4>List as queue</h4>
+
 <p>Two operations are possible</p>
 <ul>
 <li>enqueue() append to the end of the List</li>
@@ -245,6 +256,7 @@ return;
 <li>pop() - can extract the last element of the stack</li>
 </ul>
 <p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue.</p>
+
 <p><b>Other built-ins</b></p>
 <p>Following other functions should be available</p>
 <ul>
@@ -260,26 +272,28 @@ List.full();   -- true or false
 
 
 <h2><a id="collection-iteration"></a>Collection iteration</h2>
-<p>A special&nbsp;<em>while loop</em>&nbsp;that is executed for each element belonging to a collection.</p>
+<p>Iterator is a special&nbsp;<em>while loop</em>&nbsp;that is executed for each element belonging to a collection. All collections are iterable. This is a feature implemented in the core library.</p>
 
-<h4>Pattern:</h4>
+<h4>Example:</h4>
 
-<pre><code class="language-eve">#iteration
-local
-    ClassName element := collection.first();
-process
-    cycle: while element is not null loop
-       ** statements
-       ...
-       element := element.next();
-       ...
-       write element;
-    end cycle;
-    print;
+<pre><code class="language-eve">
+#iteration process
+driver test_iteration:
+  set collection := (elements ...);
+process main:
+  cycle: 
+    new element := collection.first;
+  while element is not null loop
+     ** statements
+     print element;
+     let element := element.next();
+     write element;
+  repeat;
+  print;
 return;
 </code></pre>
 
-<p>The "element" is local to iteration and is used as control variable.</p>
+<p><b>Note: </b>The "element" is local in cycle and is used as control variable.</p>
 
 <h4>Example:</h4>
 
@@ -298,13 +312,13 @@ process
     else
       write(',');
     end if;
-  end loop;
+  repeat;
   print; -- c,d
 return;
 </code></pre>
 
 <h2><a id="using-map-table"></a>Using map table</h2>
-<p>Maps are sorted in memory by&nbsp;<em>key</em>&nbsp;for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this routine.</p>
+<p>Maps are sorted in memory by&nbsp;<em>key</em>&nbsp;for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this process.</p>
 
 <h3>Map Initialization</h3>
 
@@ -395,7 +409,7 @@ process
   cycle: for (key: value) in my_map loop
     ** print pairs (key:value)
     print "(#s:#n)" ? (key, value);
-  end cycle;
+  repeat;
 return;
 </code></pre>
 

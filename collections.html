@@ -468,10 +468,8 @@ return;
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
 ** define Null string with default capacity
-
 new str1 :String;  -- default Null 
 new str2 = "": String; -- equivalent to Null
- 
 </code></pre>
 
 <h4>Initialization:</h4>
@@ -612,22 +610,21 @@ return;
 
 <h4>Example:</h4>
 <pre><code class="language-eve"># text type has unicode support
-driver unicode_text:
-    set us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
-process
+process unicode_text:
+    new us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
     print us;
 return;
 </code></pre>
 
 <h4>Output:</h4>
 
-<pre class="language-eve">I can write Greek: "&alpha;&beta;&gamma;&delta;".</pre>
+<pre class="fixed">I can write Greek: "&alpha;&beta;&gamma;&delta;".</pre>
 
 <p>To edit source code containing Unicode literals one must use a specific font and UTF-8 source files. The preferred font for Eve programming is "DejaVu Sans Mono".</p>
 
 <h4>Tips & Trics</h4>
 
-<p>Due to internal representation of Symbol, in Eve we can store 4 ASCII characters. We can also store two UTF16 symbols, and one UTF32. This is a curiosity of Eve.</p>
+<p>Due to internal representation of Symbol, it can store 4 ASCII characters. This is a side-effect, not by intention. Is just a feature that you can use as a tric to store data more compressed. We can also store two UTF16 symbols, and one UTF32. This is a curiosity of Eve.</p>
 
 <pre><code class="language-eve"># Single quoted string 
 process main:
@@ -645,6 +642,8 @@ process main:
   expect str4 != Null;
 return;
 </code></pre>
+
+<p><b>Note: </b>Intresting, all hex number (0x00..0xFF) can be stores as a Symbol. Notice this is 4 times more that necesary. We know these values can be oncoded in a single Byte.</p>
 
 <h2><a id="exceptions"></a>Exceptions</h2>
 
