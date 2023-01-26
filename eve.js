@@ -143,23 +143,21 @@ function apply_style(str) {
     str = str.replace(/\s<\+\s/g,operator(" <+ "))
     str = str.replace(/\s\+>\s/g,operator(" +> "))
 
-    //fix single simbols
-    str = str.replace(/\s\:/g,operator(" :"))
-    str = str.replace(/\':/g,"'"+operator(":"))
-    str = str.replace(/\":/g,'"'+operator(":"))
-    str = str.replace(/\s\=/g,operator(" ="))
-
     str = str.replace(/\b=\&gt;\b/g,operator("=&gt;"))
-    str = str.replace(/\b\&lt;\:\b/g,operator("&lt;:"))
-    str = str.replace(/\b<:\b/g,operator("&lt;:"))
-    //str = str.replace(/\b:&gt;\b/g,operator(":&gt;"))
-    //str = str.replace(/\b\+&gt;\b/g,operator("+&gt;"))
-    //str = str.replace(/\b&lt;\+\b/g,operator("&lt;+"))
+    str = str.replace(/\b\&lt;\:\b/g,operator("&lt;:")) 
+    str = str.replace(/\b\:\&gt;\b/g,operator(":&gt;"))  
     str = str.replace(/\b\.\.\.\b/g,operator("..."))
     str = str.replace(/\b\.&\.\b/g,operator("..."))
     str = str.replace(/\b\.|\.\b/g,operator("..."))
     str = str.replace(/\b\.\+\.\b/g,operator("..."))
+    str = str.replace(/\b-\&gt;\b/g,operator("-&gt;"))
+    str = str.replace(/\b\&lt;-\b/g,operator("&lt;-"))
 
+    //fix single simbol
+    str = str.replace(/\b\:\s\w/g,operator(" :"))
+    str = str.replace(/\b\=\b/g,operator(" ="))
+    str = str.replace(/\s\&gt;\s/g,operator(" > "))
+    str = str.replace(/\s\&lt;\s/g,operator(" < "))
     // create the new statement
     return str
 }

@@ -33,7 +33,7 @@
 
 <h1>Eve Syntax</h1>
 
-<div class="alert alert-secondary shadow-sm">Eve is an multi-paradigm language inspired from Ada, Java and Python. Eve is using familiar keywords and symbols inspired from Ada language. More precise, Eve is Ada with classes. Eve is more declarative than imperative. We prefer substantive keywords instead of verbs.</div>
+<div class="alert alert-secondary shadow-sm">Eve is an multi-paradigm language inspired from Ada, Java and Python. Eve is using familiar keywords and intuitive symbols for a logic learning experience. We design Eve to be practical and comprehensible.</div>
 
 <h4>Bookmarks</h4>
 
@@ -74,66 +74,80 @@ return;
 # main script in Eve is called: "driver"
 driver syntax_elements(p1, p2: Integer):
 
-** define two driver functions
-function add(p1, p2: Integer) => (p1 + p2);
-function sub(p1, p2: Integer) => (p1 - p2);
+** define two global lambda expressions
+lambda
+    set add := (p1, p2: Integer) => (p1 + p2);
+    set sub := (p1, p2: Integer) => (p1 - p2);
 
 ** define local variables
-process main;
+process main:
     new v1, v2 :Integer;
     ** main process has access to parameters
     print "param1: #{p1}, param2: #{p2}";
+
     let v1 := add(4, 5);
     let v2 := sub(5, 3);
-    ** print has variable number of arguments
-    print ("result:",v1); -- 9
-    print ("result:",v2); -- 2
+
+    ** print the result
+    print "result:", v1; -- 9
+    print "result:", v2; -- 2
 return;
 </code></pre>
 
 <h2><a id="punctuation"/>Punctuation:</h2>
 <ul>
 <li>Eve is using infix expressions like Java and other popular languages,</li>
-<li>Multiple expressions can be separated with comma and enclosed in parenthesis,</li>
-<li>Each statement start with a keyword and is ending semicolon,</li>
-<li>Type identifiers and classes start with capital letters,</li>
-<li>Statement regions and nested blocks use mandatory indentation,</li>
+<li>Multiple expressions can be separated with comma,</li>
+<li>Each statement start with a keyword and is ending in semicolon,</li>
+<li>Statement regions and nested blocks use mandatory indentation.</li>
 </ul>
 
 
 <h2><a id="comments"></a>Comments</h2>
 <ul>
-<li>Hash sign "#" is used for single-line title comments,</li>
-<li>Single line comment is using two stars:&nbsp;"**";</li>
-<li>End of line comments are using two dashes :&nbsp;"--"</li>
-<li>Block comments are using Bee like notation:&nbsp;"+-...-/"</li>
+<li>Hash sign "#" is used for title comments,</li>
+<li>Subtitle comments are using two stars:&nbsp;"**";</li>
+<li>Single line comments start with two dashes :&nbsp;"--"</li>
+<li>Boxed comments are using Bee like notation:&nbsp;"+-...-+"</li>
+<li>Block comments are inspired from Java:&nbsp;"/* ... */"</li>
 </ul>
 
 <h4>Examples:</h4>
 
-<pre><code class="language-eve"># comments in Eve language
-**********************************************
-** Eve line comments are inspired from Wiki MD
-** You can start a line comment with two stars
-**********************************************
+<pre><code class="language-eve">
+# boxed comments in Eve language
++--------------------------------------------
+| Eve boxed comments can be used on top     |
+| You can create a box using this new style |
+--------------------------------------------+
 driver comment_demo:
 
+# line comments in Eve language
 ----------------------------------------------
--- Ada style comments are available in Eve  --
--- You can start an  Ada style comment with:--
+-- Single line comments are inspired from Ada 
+-- You can use these comments at end of lines 
 ----------------------------------------------
 process
-    ** single line comment at beginning of line
+    ** this comment style is inspired from "md"
     new a = 0, b = 1 :Integer;
 
     ** next demo use end of line comments:
     let a := a + b * -- end of line comments can
             (a - 1); -- be useful in expressions
 return;
-+-----------------------------------------------
-| block comments can be used also at the end   |
-| of the application. We use this for: notes!  |
------------------------------------------------+
+
+# Final Notes:
+/*
+
+-- Eve also has C style block comments. These are
+used for notes or outline large blocks of code.
+
+-- Eve block comments can be nested over boxed 
+comments. So you can comment out large sections
+of code that aredy have some comments.
+
+*/
+
 </code></pre>
 
 <h4>Notes:</h4>
@@ -211,12 +225,11 @@ _not_valid_
 <h2><a id="globals"></a>Globals</h2>
 <p>In any script you can define global variables. These are primitive values or references to objects. A global variable is represented by an identifier and value. Type is optional hint.</p>
 
-<p>Global variables can have an initial value that is establish using initial value operator "=" and then can be modified during the program execution using <em>modifiers</em>&nbsp;like: { :=, ::, +=, -= ... } in <em>assignment</em> statements.
-
+<p>Global variables can be declared using "set" statement. Initial value is establish with operator "=" follow by a type hint. Globals can be modified during the program execution using "let" statement with <em>modifier operators</em>&nbsp;like: { :=, ::, +=, -= ... }.</p>
 
 <h4>Globals example:</h4>
 
-<p>Usually the examples are complete programs but sometimes just a fragment. Most of the examples that can be executed are stored also in GitHub document. However it is possible the one in GitHub to be a bit different then the one in documentation.</p>
+<p>Most of the examples are also stored on GitHub. However it is possible the one in GitHub to be different from then the one in documentation. This is due to fast evolution of the language and not by intention.</p>
 
 <pre><code class="language-eve">
 ** define global system states
@@ -230,19 +243,19 @@ _not_valid_
   set $d = 0.5 :Double;
 </code></pre>
 
-<p><b>Global variables </b> are also called "states" because they are staticly defined in module scope.We use "set" keyword to modify or create new states. This can modify system states or can create private states. </p>
+<p><b>Globals </b> are also called "state variables" because they are staticly defined in module scope. We use "set" keyword to create new states. If the state alredy exist, it can be modified using "let". Compiler will signal an error if you set a variable two times.</p>
 
 <h4>Initial Value</h4>
 
-<p>The initial value can be establish using the initializer that is "=". This symbol can use only literals and no expressions. It is not able to execute the right operator. That is the initial value can be a constant literal. When used in this way the right side literal value must match the type of the declaration.</p>
+<p>The initial value can be establish using the initializer "=" (single equal). This operator can use only data literals but no expressions. It is not able to execute the right operator. That is, the initial value can be a constant literal.</p>
 
-<h4>Zero Value</h4>
+<h4>Zero Values</h4>
 
-<p>When a variable is specified, and the initializer "=" is missing the variable takes default <em>zero value</em>. This value is different for each data type. For example zero value for Integers = 0 for Double = 0.0 and for String = "" (empty string). Composite data types are initialized to "empty", that is a reserved value equivalent to "∅" used in set theory.</p>
+<p>When a variable is specified, with no initializer, the variables takes default <em>zero values</em>. These values are different for each data type. For example zero value for Integer = 0 for Double = 0.0 and for String = "" (empty string). Composite data types are initialized to "Null", that is (), [], {}, all equivalent to "∅" used in set theory.</p>
 
 <h4>Cascade Initialization</h4>
 
-<p>Operator "=" is used to create an expression. That means you can initialize multiple variables using a single declaration. This is different than assignment ":=" or clone "::" that create a statement and not an expression.</p>
+<p>Operator "=" is used to create an expression. That means you can initialize multiple variables using a single declaration. This is different than assignment ":=" or clone "::" that create a statement and not an expression. Operator "=" has a result. So it can be chained.</p>
 
 <pre><code class="language-eve">
 # multiple variables
@@ -253,12 +266,15 @@ _not_valid_
 <h2><a id="expressions"></a>Expressions</h2>
 <p>An expression is a syntax element that can be evaluated using mathematical rules and principles. Expressions are created using identifiers, operators, functions and constant literals.</p>
 
+<p>expressions...</p>
+
 <ul>
 <li>can be combined to create more complex expressions;</li>
-<li>have a type that is calculated using type inference;</li>
+<li>have a type that is logic determined using type inference;</li>
 <li>can be assigned to variables using ":=" or "?" operators;</li>
 <li>can be printed to console using "print" or "write" methods;</li>
-<li>can use round parenthesis () to establish order of operations;</li>
+<li>can use () to clarify and enforce order of operations;</li>
+<li>can use () to encapsulate different kind of expressions;</li>
 </ul>
 
 <h4>Examples</h4>
@@ -284,11 +300,12 @@ return;
 
 <h4>Notes:</h4>
 <ul>
-<li>print statement can receive multiple arguments in parenthesis ()</li>
+<li>print statement can receive multiple arguments separated by comma,</li>
 <li>print statement will add new line by default,</li>
-<li>print statement will separate different values using one space</li>
-<li>write statement will output to console and do not add new line</li>
-<li>write statement also separate values by using one space</li>
+<li>print statement will separate different values using one space,</li>
+<li>write statement will output to console and do not add new line,</li>
+<li>write statement also separate values by using one space,</li>
+<li>after several write statements you must use print to flush the buffer,</li>
 </ul>
 
 <h3>Assign Expression</h3>
@@ -305,12 +322,17 @@ new identifier3 := function_name(); -- function call
 </code></pre>
 
 <h4>assign: by value:</h4>
-<p>To make a clone/copy of an object value you must use&nbsp;<em>clone</em>&nbsp;operator that is (::) instead of (:=). This will transfer a value not a reference. After cloning, we can modify one value without affecting the other.</p>
+
+<p>To make a clone/copy of an Object attributes you must use&nbsp;<em>clone</em>&nbsp;operator that is (::) instead of (:=). This will transfer values not references. After cloning, we can modify one value without affecting the original.</p>
 
 <h4>Syntax:</h4p>
+
 <pre><code class="language-eve">// making a clone
-new variable_name :: reference_name;
+new object :: original;
+expect object is not original;
 </code></pre>
+
+<p>Note: Native types are exceptions. For native type, the operator "is" do not work at all. Attempting to use "is" or "is not" with a native type will result in error. Actually clone operator works only with Objects.</p> 
 
 <h3>Ternary expression</h3>
 
@@ -344,11 +366,11 @@ expect (True if test else False); -- will pass
 <h2><a id="statements"></a>Statements</h2>
 <p>One statement can be declarative or imperative.</p>
 <ul>
-<li>A statement is usually a single line of code</li>
+<li>A statement is usually a single line of code,</li>
 <li>A statement can extend on several lines and finalize with ";"</li>
 <li>A group of several statements is called a code block,</li>
-<li>A block is finalized with one of thes: {"return", "repeat", "done"}</li>
-<li>A statement end with ";" that is mandatory;</li>
+<li>A block is finalized with one of thes: {"return", "repeat", "done"},</li>
+<li>A statement end with symbol ";", that is mandatory;</li>
 </ul>
 
 <h3>Single line statement</h3>
@@ -388,7 +410,7 @@ process multi_line:
             +5;
 
   ** multi-row literal
-  new dic := {
+  new map := {
       'two' :2,
       'four':4,
       'six' :6
@@ -597,31 +619,23 @@ return;</code></pre>
 <tbody>
 <tr>
 <td>new</td>
-<td>logical XOR operator</td>
+<td>Create new local variable or attribute</td>
 </tr>
 <tr>
 <td>set</td>
-<td>logical XOR operator</td>
+<td>Create new global or static variable or property</td>
 </tr>
 <tr>
 <td>let</td>
-<td>logical XOR operator</td>
+<td>Modify existing variables or attributes</td>
 </tr>
 <tr>
 <td>put</td>
-<td>logical XOR operator</td>
+<td>Append one or more values at end of a collection</td>
 </tr>
 <tr>
 <td>pop</td>
-<td>logical XOR operator</td>
-</tr>
-<tr>
-<td>add</td>
-<td>logical XOR operator</td>
-</tr>
-<tr>
-<td>del</td>
-<td>logical XOR operator</td>
+<td>Extract first or last element from a collection</td>
 </tr>
 </tbody>
 </table>
@@ -717,7 +731,7 @@ return;</code></pre>
 <td>Block comments | Boxed comments</td>
 </tr>
 <tr>
-<td>#(....)</td>
+<td>#(...)</td>
 <td>String interpolation (placeholder) for operator "?"</td>
 </tr>
 </tbody>
@@ -757,11 +771,15 @@ return;</code></pre>
 </thead>
 <tbody>
 <td>'...'</td>
-<td>Limited capacity ASCII string</td>
+<td>Unicode codepoint (4 Bytes).</td>
 </tr>
 <tr>
 <td>"..."</td>
-<td>Variable capacity Unicode: UTF8</td>
+<td>Variable capacity String: UTF8</td>
+</tr>
+<tr>
+<td>"""</td>
+<td>Variable capacity large Text: UTF8</td>
 </tr>
 </tbody>
 </table>
@@ -771,26 +789,24 @@ return;</code></pre>
 <p>Eve us ASCII symbols for operators. One operator can be single character or  two characters with no space between tem. Sometimes we use the same character twice for example "==" or ">>". This technique is known in many other computer languages.</p>
 
 <p><b>Single symbol:</b></p>
-<pre class="fixed"># , : . ; = ~ ? % ^ * - + / &lt; &gt; ~ &amp; | ^ ! @ $</pre>
+<pre class="fixed"># , : . ; = ~ ? % ^ * - + / &lt; &gt; &amp; | ! @ $</pre>
 
 <p><b>Two symbols:</b></p>
-<pre class="fixed">== != =+ &lt;&gt; &lt;&lt; &gt;&gt; =&gt; &gt;= &lt;= &lt;: .. !. </pre>
+<pre class="fixed">== !=  =&gt; &gt;= &lt;= &lt;: :&gt; .. !. </pre>
 
 <p><b>Three symbols:</b></p>
-<pre class="fixed">""" ...  .|. .&. .+. </pre>
-
-
+<pre class="fixed">""" .|. .&. .+. </pre>
 
 <p><b>Modifiers:</b></p>
 
-<pre class="language-eve">:: := += -= *= /= %= ^= &amp;= |= &lt;+ +&gt;</pre>
+<pre class="fixed">:: := += -= *= /= %= ^= &amp;= |= &lt;+ +&gt; &lt;- -&gt; &lt;&lt; &gt;&gt;</pre>
 
 <p><b>Delimiters:</b></p>
-<pre class="language-eve">"_" '_' `_` (...) [...] {...} #(...)</code></pre>
+<pre class="fixed">"_" '_' `_` (...) [...] {...} #(...)</code></pre>
 
 <h3>Single symbols</h3>
 
-<p>Eve use al single symbols usually found on your keyboard.</p>
+<p>Eve use al single symbols found on a standard keyboard.</p>
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -834,7 +850,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>~</td>
-<td>Check if two variables have same type</td>
+<td>Regular expression comparison/check</td>
 </tr>
 <tr>
 <td>.</td>
@@ -907,11 +923,19 @@ return;</code></pre>
 </tr>
 <tr>
 <td>&lt;+</td>
-<td>Append to the end of a collection</td>
+<td>Append element to the end of a collection</td>
 </tr>
 <tr>
 <td>+&gt;</td>
-<td>Append to the beginning of a collection</td>
+<td>Append element to the beginning of a collection</td>
+</tr>
+<tr>
+<td>-&gt;</td>
+<td>Extract one element from end of a collection</td>
+</tr>
+<tr>
+<td>&gt;-</td>
+<td>Extract one element from beginning of a collection</td>
 </tr>
 <tr>
 <td>&lt;&lt;</td>
@@ -1083,6 +1107,7 @@ return;</code></pre>
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
+<th>Keyword</th>
 <th>Operator</th>
 <th>Result</th>
 <th>Description</th>
@@ -1090,54 +1115,75 @@ return;</code></pre>
 </thead>
 <tbody>
 <tr>
-<td class="fixed">A&nbsp;+&nbsp;B</td>
-<td>list</td>
+<td>new</td>
+<td>A&nbsp;+&nbsp;B</td>
+<td>List</td>
 <td>Simple concatenation, use like L := A + B</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;-&nbsp;B</td>
-<td>set/list</td>
+<td>new</td>    
+<td>A&nbsp;-&nbsp;B</td>
+<td>DataSet/List</td>
 <td>Simple difference, use like L := A - B</td>
 </tr>
 <tr>
-<td class="fixed">A | B</td>
-<td>set</td>
+<td>new</td>    
+<td>A | B</td>
+<td>HashMap</td>
 <td>Union A with B: "&cup;" use like C : = A | B</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;&amp;&nbsp;B</td>
-<td>set</td>
+<td>new</td>    
+<td>A&nbsp;&amp;&nbsp;B</td>
+<td>HashMap</td>
 <td>Intersect A with B: "&cap;" use like C := A &amp; B</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;&lt;&nbsp;B</td>
-<td>logic</td>
+<td>if</td>    
+<td>A&nbsp;&lt;&nbsp;B</td>
+<td>Logic</td>
 <td>verify if A is subset of B: In math: &sub;</td>
 </tr>
 <tr>
-<td class="fixed">A&nbsp;&gt;&nbsp;B</td>
-<td>logic</td>
+<td>if</td>    
+<td>A&nbsp;&gt;&nbsp;B</td>
+<td>Logic</td>
 <td>verify if B is subset of A: In math: &sup;</td>
 </tr>
 <tr>
-<td class="fixed">C&nbsp;&lt;+&nbsp;x</td>
-<td>list</td>
-<td>append element x to C at the end</td>
+<td>put</td>    
+<td>x&nbsp;&lt;+&nbsp;L</td>
+<td>List</td>
+<td>append element x to L at the end</td>
 </tr>
 <tr>
-<td class="fixed">C&nbsp;+&gt;&nbsp;x</td>
-<td>list</td>
-<td>append element x to C at the beginning</td>
+<td>put</td>    
+<td>x&nbsp;+&gt;&nbsp;L</td>
+<td>List</td>
+<td>append element x to L at the beginning</td>
 </tr>
 <tr>
-<td class="fixed">S += x</td>
-<td>set</td>
+<td>pop</td>    
+<td>x&nbsp;&lt;-&nbsp;L</td>
+<td>List</td>
+<td>extract firts element x from L list</td>
+</tr>
+<tr>
+<td>pop</td>    
+<td>x&nbsp;-&gt;&nbsp;L</td>
+<td>List</td>
+<td>extract last element x from L list</td>
+</tr>
+<tr>
+<td>let</td>    
+<td>S += x</td>
+<td>HashMap</td>
 <td>append element x to S</td>
 </tr>
 <tr>
-<tr>
-<td class="fixed">S -= x</td>
-<td>set</td>
+<td>let</td>    
+<td>S -= x</td>
+<td>HashMap</td>
 <td>remove element x from set S</td>
 </tr>
 <tr>
