@@ -23,12 +23,13 @@
 
 <!-- header -->
 <div class="row">
-      <div class="col">
-            <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
-      </div>
-      <div class="col   bottom-right">
-            <a href="index.html#lang-index">index</a><--
-      </div>
+    <div class="col">
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" 
+           alt="Sage-Code Laboratory" height="80"/></a>
+    </div>
+    <div class="col   bottom-right">
+          <a href="index.html#lang-index">index</a><--
+    </div>
 </div><hr>
 
 <h1>Eve Classes</h1>
@@ -48,9 +49,11 @@ Eve is an object oriented language, so we need Classes. A class is a companion f
 <li>Polymorphism: an object can play its base class role;</li>
 </ul>
 
-<div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes. So Eve implements actually all 4 OOP principles.</div>
+<div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes. Eve implements all 4 OOP principles. </div>
 
 <h4>Bookmarks:</h4>
+
+<hr>
 <ul>
 <li><a href="#object">Object instances</a></li>
 <li><a href="#companion">Type companion</a></li>
@@ -90,10 +93,10 @@ return;
 
 <pre><code class="language-eve">#define an object instance
 process test:
-   ** initialize object using Object() constructor
-   new object_name := Object(attribute1:value1, 
-                                          attribute2:value2, ...);
-   ...
+  ** initialize object using Object() constructor
+  new object_name := Object(attribute1:value1, 
+                                        attribute2:value2, ...);
+  ...
 return;
 </code></pre>
 
@@ -113,7 +116,7 @@ type TypeName = {} <: SuperType;
 
 # type companion (same name)
 class TypeName(parameters) => (@self :TypeName):
-   ** members
+   ** declaration
    ... 
 create
    ** constructor
@@ -126,9 +129,9 @@ return;
 
 <p><b>Notes:&nbsp;</b>A class  is a "high order function" with closures: We name closure "methods" in Eve. So we use functional programming theory to create classes. Methods are like functions, except the methods are defined inside a class while regular functions can be defined in global scop.</p>
 
-<h3><a id="constructor"></a>Conditional constructor</h3>
+<h3><a id="constructor"></a>Class constructor</h3>
 
-<p>The @self object represents the result of a class. In the "create" region we can use decision statements to create the object attributes in different ways based on class parameters and conditions.</p>
+<p>A class has a single constructor. It can be implemented in the "create" region. Here we can use decision statements to create the object attributes in different ways based on class parameters and conditions.</p>
 
 <h4>Pattern:</h4>
 
@@ -137,13 +140,13 @@ class name(parameters) => (@self: Object):
    ** declarations
    ....
 create
-   ** conditional constructor
-   if condition then
-         let self := SuperType(some_arguments);
-   else
-         let self := SuperType(other_arguments);
-   done;
-   ...
+  ** class constructor
+  if condition then
+    let self := SuperType(some_arguments);
+  else
+    let self := SuperType(other_arguments);
+  done;
+  ...
 return;
 </code></pre>
 
@@ -155,16 +158,16 @@ return;
 
 <pre><code class="language-eve"># define a class with parameters
 class ClassName(parameters) => (@self:ClassName):
-    ** class body
-    ....
+  ** class body
+  ...
 create
-    ....
+  ...
 return;
 
 process main:
-    ** macking a constructor call
-    new object := ClassName(param:value,...);
-    ...
+  ** instantiate a local object
+  new object := ClassName(param:value,...);
+  ...
 return;
 </code></pre>
 
@@ -176,11 +179,11 @@ return;
 
 <p>@self object attributes must be created as quickly as possible inside the constructor. In Java, we call the current object "this". Eve is more like Python that uses "self" for current object.</p>
 
-<pre class="output">
+<pre><code class="language-eve">
 class ClassName(parameters) => (@self:ClassName):
      ...
 return;
-</pre>
+</code></pre>
 
 <h4>Note:</h4>
 <ul>
@@ -258,11 +261,13 @@ type Point = {x, y :Double} <: Object;
 
 ** type companion
 class Point(x = 0, y = 0 :Double) => (@self: Object):
+
+create
    let self := Object();
 
    ** set attribute values
-   put self <+ ('x': x);
-   put self <+ ('y': y);
+   new self.x := x;
+   new self.y := y;
 return;
 
 process main:
@@ -323,11 +328,11 @@ return;
 type BaseType: {attributes} <: Object;
 
 class BaseType(parameters) => (@self:Object):
-     ...
-     ** object method
-     method demo(@self:BaseType,...):
-         ....
-     return;
+  ...
+  ** object method
+  method demo(@self:BaseType,...):
+      ....
+  return;
 return;
 
 ** create a descendent of BaseType
@@ -356,13 +361,13 @@ type
    Point = {x, y :Double} <: Object; 
 
 class Point(x = 0, y = 0 :Double) => (@self: Object):
-   method move(@self, a, b: Double):
+   method move(@self:Point, a, b: Double):
       let self.x += a;
       let self.y += b;
    return;
 
-   method string(@self) => (string:String):
-        let string := "# = (#:#)" ? (@self).id, self.a, self.b);
+   method string(@self:Point) => (string:String):
+        let string := "# = (#:#)" ? (self.id, self.a, self.b);
    return;
 create
    let self := {'x': x,'y': y};

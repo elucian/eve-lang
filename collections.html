@@ -37,7 +37,7 @@
 Collections are composite types represents groups of elements of the same type. In Eve collections are actually generics. Usually we declare collections using "gradual typing" technique but it is possible to use an explicit declaration. </div>
 
 <h4>Bookmarks:</h4>
-
+<hr>
 <ul>
 <li><a href="#ordinal">Ordinal</a></li>
 <li><a href="#array">Array</a></li>
@@ -49,15 +49,17 @@ Collections are composite types represents groups of elements of the same type. 
 <li><a href="#text">Text</a></li>
 <li><a href="#exceptions">Exceptions</a></li>
 </ul>
-
+<hr>
 <h2><a id="ordinal"</a>Ordinal</h2>
 
 <p>Ordinal is an generic class representing a set of unique ordered symbols. Each symbol represents an integer value starting from N to capacity C. Element values start with 1 or a specific number and grow with one for each element.</p>
 
 <h4>Pattern:</h4>
 <pre><code class="language-eve"># Define a Ordinal subtype
-driver test_ordinal;  
-  type TypeName = {name1:0, name2, name3} &lt;: Ordinal;
+driver test_ordinal; 
+
+type TypeName = {name1:0, name2, name3} &lt;: Ordinal;
+
 process main:
   new a := TypeName.name1; -- a=2
   new b := TypeName.name2; -- b=3
@@ -69,7 +71,9 @@ return;
 
 <pre><code class="language-eve">## Declare public elements in enumeration
 driver constant_ordinals;
-  type TypeName = {Name1:10, Name2} &lt;: Ordinal;
+
+type TypeName = {Name1:10, Name2} &lt;: Ordinal;
+
 process main:
   new a := Name1; -- a = 10
   new b := Name2; -- b = 11
@@ -237,16 +241,12 @@ process main:
     print vec = []; -- True
     print nec = []; -- True
 
-    ** for loop initializer with operator "<+"
-    cycle
-       new i:Integer;
-    for i in (1..10) loop
-        let vec <+ ''; -- add 10 elements;
-    repeat;
+    ** extend symbol array;
+    apply vec.extend(10);
     print vec; -- expect ['','','','','','','','','','']
    
-    ** smarter initializer in one statement;
-    let nec ++ 10;
+    ** extend numeric array;
+    apply nec.extend(10);
     print nec; -- expect [0,0,0,0,0,0,0,0,0,0];
 return;
 </code></pre>
@@ -266,18 +266,18 @@ return;
 <pre><code class="language-eve"># define a subtype of Array
 driver test_matrix;
 
-type Matrix: [4,4]Integer <: Array;
+type Matrix: [4,4]Integer &lt;: Array;
 
 process main:
-    new mat: Matrix; -- define matrix variable
+  new mat: Matrix; -- define matrix variable
 
-    ** modify matrix using ":=" operator
-    let mat := [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]
-    print mat[1,1]; -- 1  = first element
-    print mat[4,4]; -- 16 = last element
+  ** modify matrix using ":=" operator
+  let mat := [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]
+  print mat[1,1]; -- 1  = first element
+  print mat[4,4]; -- 16 = last element
 
-    ** nice output using array print method
-    apply mat.print;
+  ** nice output using array print method
+  apply mat.print;
 return;
 </code></pre>
 
@@ -296,7 +296,7 @@ return;
 
 <pre><code class="language-eve">** initialize matrix elements
 process main:
-  new mat: [3,3]Integer <: Array;
+  new mat: [3,3]Integer &lt;: Array;
   ** initialize matrix elements
   cycle: 
     new i   := 1;
@@ -350,8 +350,8 @@ set t_name : {}Integer;
 <p> You never know what the position of the new element is going to be. Also if you add or remove an element the position of several other elements will be shifted.</p>
 
 <ul>
-<li>let, += for append</li>
-<li>let, -= for delete</li>
+<li>let += ... -- append</li>
+<li>let -= ... -- delete</li>
 </ul>
 
 <p><b>Note: </b>Any modifier "x=" can be used for altering individual elements. You can rever to all elements using "*" and modify them.</p>
@@ -423,7 +423,7 @@ return;
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
-type Dic = {}(String,Object) <: HashMap;
+type Dic = {}(String,Object) &lt;: HashMap;
 driver test:
 # Null map
   set m :Dic;
@@ -485,7 +485,7 @@ new dash_dot  := "-&middot;" * 40; -- a long line -&midot;-&midot;-&midot;
 
 <h3><a id="string-mutability"></a>String mutability</h3>
 
-<p>In Eve Strings are immutable. If you use ":=" the string object is replaced. If you use modifiers: "&lt;+" to append one Symbol to the end of a string but you can't append at the beginning of the string.</p>
+<p>In Eve Strings are immutable. If you use ":=" the string object is replaced. You can concatenate strings and you can use string interpolation but every time you do a new string is created.</p>
 
 <h4>Example:</h4>
 
@@ -527,7 +527,7 @@ return;
 <ul>
 <li>You can create garbage in Eve if you loose references;</li>
 <li>Provision for large capacity strings is not recommended;</li>
-<li>You can create a collection of Symbols to have a mutable string;</li>
+<li>You can create a collection of Symbols to split a string;</li>
 </ul>
 
 <h3><a id="string-comparison"></a>String comparison</h3>
@@ -576,7 +576,7 @@ return;
 
 <p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
 
-<p>Triple quoted string support double quoted strings inside and also single quote. On double quoted strings you must use escape "\" to include a double quote inside and not terminate the string.</p>
+<p>Triple quoted string support inside double quotes and also single quote without escape. On double quoted strings you must use escape backslash \" for double quotes.</p>
 
 <pre><code class="language-eve"># declaration of a text literal
 driver text_literal:
@@ -602,7 +602,7 @@ return;
  escape quote " is required
 </pre>
 
-<p><b>Unicode</b></p>
+<h3>Unicode</h3>
 
 <p>The&nbsp;<em>Unicode</em>&nbsp;is a standard for representation of writing for all human languages. An Unicode string is a set of&nbsp;<em>code points</em>&nbsp;using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII. There are many encoding techniques available. Java uses UTF-16. We will use UTF-8 to be more efficient.</p>
 
@@ -663,7 +663,7 @@ type  .Error: {
    message: String, 
    module: String, 
    line:Integer
-} <: Object;
+} &lt;: Object;
 
 class .Error(code: Integer, message: String) => (@self :Error):
    let self := Object();

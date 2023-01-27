@@ -39,6 +39,7 @@
 
 <p>In this article you will learn about:</p>
 
+<hr>
 <ul>
 <li><a href="#elements">elements</a></li>
 <li><a href="#punctuation">punctuation</a></li>
@@ -51,7 +52,7 @@
 <li><a href="#delimiters">delimiters</a></li>
 <li><a href="#operators">operators</a></li>
 </ul>
-
+<hr>
 
 <h2>Hello World</h2>
 
@@ -72,7 +73,7 @@ return;
 
 <pre><code class="language-eve">
 # main script in Eve is called: "driver"
-driver syntax_elements(p1, p2: Integer):
+driver syntax_elements:
 
 ** define two global lambda expressions
 lambda
@@ -80,11 +81,12 @@ lambda
     set sub := (p1, p2: Integer) => (p1 - p2);
 
 ** define local variables
-process main:
-    new v1, v2 :Integer;
+process main(v1, p2: Integer):
     ** main process has access to parameters
     print "param1: #{p1}, param2: #{p2}";
 
+    new v1, v2 :Integer;
+    
     let v1 := add(4, 5);
     let v2 := sub(5, 3);
 
@@ -799,7 +801,7 @@ return;</code></pre>
 
 <p><b>Modifiers:</b></p>
 
-<pre class="fixed">:: := += -= *= /= %= ^= &amp;= |= &lt;+ +&gt; &lt;- -&gt; &lt;&lt; &gt;&gt;</pre>
+<pre class="fixed">:: := += -= *= /= %= ^= &amp;= |= &lt;+ +&gt; &lt;&lt; &gt;&gt;</pre>
 
 <p><b>Delimiters:</b></p>
 <pre class="fixed">"_" '_' `_` (...) [...] {...} #(...)</code></pre>
@@ -834,7 +836,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>@</td>
-<td>Output parameter/result</td>
+<td>Iput/output parameter | result</td>
 </tr>
 <tr>
 <td>;</td>
@@ -846,7 +848,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>=</td>
-<td>Setup initial value for variables or parameters</td>
+<td>Type descriptor, initial value for variables | parameters</td>
 </tr>
 <tr>
 <td>~</td>
@@ -898,22 +900,6 @@ return;</code></pre>
 <td>Slice [n..m] | Domain [n..m] or Range (n..m) </td>
 </tr>
 <tr>
-<td>.!</td>
-<td>Domain/Range: exclude upper limit</td>
-</tr>
-<tr>
-<td>!.</td>
-<td>Domain/Range: exclude lower limit</td>
-</tr>
-<tr>
-<td>!!</td>
-<td>Domain/Range: exclude both limits</td>
-</tr>
-<tr>
-<td>=+</td>
-<td>Outer join operator used in data "select" statement</td>
-</tr>
-<tr>
 <td>&lt;:</td>
 <td>Define super-type in a derived type declaration</td>
 </tr>
@@ -922,21 +908,6 @@ return;</code></pre>
 <td>Numeric data conversion or convert a subtype into a supertype.</td>
 </tr>
 <tr>
-<td>&lt;+</td>
-<td>Append element to the end of a collection</td>
-</tr>
-<tr>
-<td>+&gt;</td>
-<td>Append element to the beginning of a collection</td>
-</tr>
-<tr>
-<td>-&gt;</td>
-<td>Extract one element from end of a collection</td>
-</tr>
-<tr>
-<td>&gt;-</td>
-<td>Extract one element from beginning of a collection</td>
-</tr>
 <tr>
 <td>&lt;&lt;</td>
 <td>Shift ordered collection to left with n: X := C &lt;&lt; n</td>
@@ -1102,93 +1073,6 @@ return;</code></pre>
 </tbody>
 </table>
 
-<h2>Collection operators</h2>
-<p>In following table:&nbsp;A, B, C&nbsp;are collections and&nbsp;x&nbsp;is a member:</p>
-<table class="table table-bordered table-striped">
-<thead>
-<tr>
-<th>Keyword</th>
-<th>Operator</th>
-<th>Result</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>new</td>
-<td>A&nbsp;+&nbsp;B</td>
-<td>List</td>
-<td>Simple concatenation, use like L := A + B</td>
-</tr>
-<tr>
-<td>new</td>    
-<td>A&nbsp;-&nbsp;B</td>
-<td>DataSet/List</td>
-<td>Simple difference, use like L := A - B</td>
-</tr>
-<tr>
-<td>new</td>    
-<td>A | B</td>
-<td>HashMap</td>
-<td>Union A with B: "&cup;" use like C : = A | B</td>
-</tr>
-<tr>
-<td>new</td>    
-<td>A&nbsp;&amp;&nbsp;B</td>
-<td>HashMap</td>
-<td>Intersect A with B: "&cap;" use like C := A &amp; B</td>
-</tr>
-<tr>
-<td>if</td>    
-<td>A&nbsp;&lt;&nbsp;B</td>
-<td>Logic</td>
-<td>verify if A is subset of B: In math: &sub;</td>
-</tr>
-<tr>
-<td>if</td>    
-<td>A&nbsp;&gt;&nbsp;B</td>
-<td>Logic</td>
-<td>verify if B is subset of A: In math: &sup;</td>
-</tr>
-<tr>
-<td>let</td>    
-<td>L &nbsp;&lt;+&nbsp;x</td>
-<td>List</td>
-<td>append element x to L at the end</td>
-</tr>
-<tr>
-<td>let </td>    
-<td>L &nbsp;+&gt;&nbsp;x</td>
-<td>List</td>
-<td>append element x to L at the beginning</td>
-</tr>
-<tr>
-<td>pop</td>    
-<td>x&nbsp;&lt;-&nbsp;L</td>
-<td>element</td>
-<td>extract firts element x from L list</td>
-</tr>
-<tr>
-<td>pop</td>    
-<td>x&nbsp;-&gt;&nbsp;L</td>
-<td>element</td>
-<td>extract last element x from L list</td>
-</tr>
-<tr>
-<td>let</td>    
-<td>S += x</td>
-<td>HashMap</td>
-<td>append element x to S</td>
-</tr>
-<tr>
-<td>let</td>    
-<td>S -= x</td>
-<td>HashMap</td>
-<td>remove element x from set S</td>
-</tr>
-<tr>
-</tbody>
-</table>
 
 <h2>Logical operators</h2>
 <p>These operators are expected logical values T = True, F = False</p>

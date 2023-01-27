@@ -40,6 +40,8 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <p>Let's describe the basic types:</p>
 
 <h4>Bookmarks</h4>
+
+<hr>
 <ul>
 <li><a href="#native-types">Native Types</a></li>
 <li><a href="#primitive-types">Primitive Types</a></li>
@@ -55,6 +57,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <li><a href="#time-duration">Time duration</a></li>
 <li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
+<hr>
 
 <h2><a id="native-types"/>Native Types</h2>
 
@@ -451,17 +454,11 @@ driver numeric_range:
 
 process main:
   print (0..5);    -- (0,1,2,3,4,5)
-  print (0.!5);    -- (0,1,2,3,4)
-  print (0!.5);    -- (1,2,3,4,5)
   print (0..10:2); -- (0,2,4,6,8,10)
 
   ** test range
   expect 0 in (0..5);
   expect 5 in (0..5);
-
-  ** test limits
-  expect 0 not in (0!.5);
-  expect 5 not in (0.!5);
 return;
 </code></pre>
 
@@ -506,11 +503,6 @@ process main:
   expect 0   in [0..1];
   expect 1   in [0..1];
   expect 0.5 in [0..1];
-
-  ** exclude limits
-  expect 0 not in [0!.1];
-  expect 1 not in [0.!1];
-  expect 0.5 in [0!!1];
 return;
 </code></pre>
 

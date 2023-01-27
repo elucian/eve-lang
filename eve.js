@@ -146,10 +146,9 @@ function apply_style(str) {
     str = str.replace(/\b=\&gt;\b/g,operator("=&gt;"))
     str = str.replace(/\b\&lt;\:\b/g,operator("&lt;:")) 
     str = str.replace(/\b\:\&gt;\b/g,operator(":&gt;"))  
-    str = str.replace(/\b\.\.\.\b/g,operator("..."))
-    str = str.replace(/\b\.&\.\b/g,operator("..."))
-    str = str.replace(/\b\.|\.\b/g,operator("..."))
-    str = str.replace(/\b\.\+\.\b/g,operator("..."))
+    str = str.replace(/\b\.&\.\b/g,operator(".&."))
+    str = str.replace(/\b\.\|\.\b/g,operator(".|."))
+    str = str.replace(/\b\.\+\.\b/g,operator(".+."))
     str = str.replace(/\b-\&gt;\b/g,operator("-&gt;"))
     str = str.replace(/\b\&lt;-\b/g,operator("&lt;-"))
 
