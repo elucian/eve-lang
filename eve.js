@@ -183,6 +183,7 @@ function style_string(line) {
     return result
 }
 
+/* it is called in every eve page at on-load event */
 function eve_render() {
     const eve_code = document.getElementsByClassName("language-eve");
     if (typeof(eve_code) != "undefined") {
@@ -268,11 +269,11 @@ function eve_render() {
                     if (i < lines.length || line!="") {
                        t += line_span(line)
                     }
-                }
+                } // end for (line of lines)
                 e.innerHTML = t;
                 t = ""; i = 0
-            }
-        }
+            } // end if (e.tagName =="CODE") 
+        } // end for (e of eve_code )
     } else {
       console.log("not_found")
     }
