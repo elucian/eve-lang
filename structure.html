@@ -46,7 +46,6 @@ Eve is designed to quickly build a data processing app that can run several jobs
 <li><a href="#configuration">Configuration</a></li>
 <li><a href="#scripts">Scripts</a></li>
 <li><a href="#regions">Regions</a></li>
-<li><a href="#globals">Globals</a></li>
 <li><a href="#modules">Modules</a></li>
 <li><a href="#drivers">Drivers</a></li>
 <li><a href="#aspects">Aspects</a></li>
@@ -135,10 +134,10 @@ alias
 type
   user_tupe = {} <: Supertype;
   ...
-** define lambda expressions
-lambda
-  new  ex_public = (params) => (expression);
-  new _ex_private = (params) => (expression);
+** define functions using lambda expressions
+function
+  new  lam_public = (params) => (expression);
+  new _private    = (params) => (expression);
   ...
 
 ** private, shared states
@@ -271,12 +270,12 @@ type Person = {name:String, age:Integer} <: Object;
 
 <h4>Members</h4>
 <ul>
-<li>library modules are usually defining types and classes;</p>
-<li>lihrary modules are implementing functions not processes;</li>
-<li>private member identifier start with "_" prefix;</li>
+<li>modules are usually defining: types, functions, classes and methods;</li>
+<li>modules are implementing functions & methods but not processes;</li>
+<li>private module identifiers start with underscore "_" prefix;</li>
 <li>one module can use public members from other modules;</li>
 <li>one module can have public members used by other modules;</li>
-<li>member identifier names can be 30 characters long;</li>
+<li>member identifier names can be 31 characters long;</li>
 </ul>
 
 <h4>Library</h4>
@@ -346,7 +345,7 @@ aspect test:
 ** list all arguments
 process main(*args <: List[String])):
   cycle:
-    new arg : string
+    new arg :String;
   for arg in args loop
     print arg;
   repeat;

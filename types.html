@@ -55,7 +55,6 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <li><a href="#gradual-typing">Gradual typing</a></li>
 <li><a href="#calendar-date">Calendar date</a></li>
 <li><a href="#time-duration">Time duration</a></li>
-<li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
 <hr>
 
@@ -317,8 +316,8 @@ Discrete numbers:</h3>
 driver numeric_literals:
 
 ** define global states
-  set g1 := 0.0 :Double;
-  set g2 := 0.0 :Float;
+  set g1 = 0.0 :Double;
+  set g2 = 0.0 :Float;
 
 ** define main process
 process main:
@@ -410,12 +409,8 @@ new operator := '&not;';
 <td>Root class and data thpe. Also called "object handler".</td>
 </tr>
 <tr>
-<td>Lambda</td>
-<td>Lambda expression type. Similar to Function.</td>
-</tr>
-<tr>
 <td>Function</td>
-<td>Function object type. Similar to Lambda.</td>
+<td>Function object type/ reference to function.</td>
 </tr>
 <tr>
 <td>Vector</td>
@@ -1024,35 +1019,6 @@ process main:
 return;
 </code></pre>
 
-<h3><a id="lambdas"></li>Lambda expressions</h3>
-
-<p>Lambda expressions are like mathematical functions. Can receive arguments and can produce a result. A lambda expression is created with keyword new.</p>
-
-<p>Lambda expressions can be declared in global scope using "lambda" region. You can define a single lambda region for a module. Lambda expressions can be anonymous.</p>
-
-<h4>Example</h4>
-
-<p>In next example we define two lambda expressions.</p>
-
-<pre><code class="language-eve">
-lambda
-  new sum = (p1, p2 :Integer) => (p1 + p2):Integer;
-  new sqr = (p1, p2 :Integer) => (p1 * p2):Integer;
-</code></pre>
-
-<h4>Signature</h4>
-
-<p>Labda expression signature can be declared as data type:<p>
-
-<pre><code class="language-eve">
-# define a lambda signature
-type BinEx = (p1, p2 :Integer):Integer <: Lambda;
-
-** Use lambda signature as parameter type
-process useLambda(test :BinEx):
-   ...
-return;
-</code></pre>
 
 <hr>
 <p><b>Read next:</b>

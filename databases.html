@@ -48,7 +48,9 @@ Eve has basic interaction with relational databases. We design Eve to connect to
 <li><a href="#models">Models</a></li>
 <li><a href="#databases">Databases</a></li>
 <li><a href="#transactions">Transactions</a></li>
+<li><a href="#direct-sql">Direct SQL</a></li>
 <li><a href="#procedures">Procedures</a></li>
+
 </ul>
 
 <h2><a id="models"></a>Models</h2>
@@ -60,8 +62,8 @@ Eve has basic interaction with relational databases. We design Eve to connect to
 
 <pre><code class="language-EVE"># using Oracle library
 import
-     $EVE_lib.db.core:(*);
-     Oracle: $EVE_lib.db.oracle;
+   $EVE_lib.db.core:(*);
+   Oracle: $EVE_lib.db.oracle;
 </code></pre>
 
 <h4>Connection</h4>
@@ -70,18 +72,18 @@ import
 <p><b>pattern:</b></p>
 <pre><code class="language-EVE">** create a database session
 class Session(String user,password,name) &lt;: Oracle.Database:
-    String _credentials;
+  new _credentials: String;
 create
-    self = Oracle.Database(location);
-    ** prepare credentials
-    self._credentials := user + '/' + password + '@'+ dbname;
-    ** connect to database
-    self.connect(self._credentials);
+  let self = Oracle.Database(location);
+  ** prepare credentials
+  let self._credentials := user + '/' + password + '@'+ dbname;
+  ** connect to database
+  let self.connect(self._credentials);
 return;
 
 ** create database connection
-global
-    db := Session(user:'test',password:'password',name:'demo');
+  set db := Session(user:'test',password:'password',name:'demo');
+
 </code></pre>
 
 <p><b>Note:</b>&nbsp;Usually a database has a security protocol based on user-name and password. These credentials can not be encoded in the Eve scripts, they need to be received as input parameters by the driver. Once a connection is established it can be used to manipulate data, using Eve statements.</p>
@@ -137,29 +139,35 @@ global
 
 <h2>Concepts</h2>
 
-<h3>Structure</h3>
+<p>One database provide a complex framework to organize data in tables and documents. An application can read database structure and map it to internal memory model. Then we can perform operations on this model: {search, append, update, delete}.</p>
 
-<p>One database provide a structure for tables. An application can read table structure and map it to internal memory model. Then you can perform operations on data model: {search, append, update, delete}.</p>
+<ul>
+<li><a href="#mapping">Mapping</a></li>
+<li><a href="#tables">Tables</a></li>
+<li><a href="#records">Records</a></li>
+<li><a href="#structure">Structure</a></li>
+<li><a href="#session">Session</a></li>
+</ul>
 
-<h3>Mapping</h3>
+<h3><id ="mapping"></a>Mapping</h3>
 
 <p>A database table has records. Eve strategy is to define one <em>memory table</em> as a collection of objects for each <em>database table</em>. The <em>memory table</em> is mapped to <em>database table</em>. Mapping is <em>one to one</em>. Field names are case sensitive.</p>
 
-<h3>Tables</h3>
+<h3><a id="tables"></a>Tables</h3>
 <p>Internal <em>memory tables</em> are mixed collections of objects having same name as <em>database tables</em>. We can read a database table record by record on demand. A <em>memory table</em> can load one or multiple <em>records</em> in memory.</p>
 
 <pre><code class="language-EVE">
 class Table(String name) &lt: Object;
 </code></pre>
 
-<h3>Records</h3>
+<h3><id="records"></a>Records</h3>
 <p>Records are <em>object instances</em> representing in memory table structure. A record has a <em>status</em> property that can be used in conditionals. One record is the current record. Several records are cached in memory for a table. A record id identified by a numeric id.</p>
 
 <pre><code class="language-eve">
-class Record(Integer id) &lt;: Object;
+type Record(Integer id) &lt;: Object;
 </code></pre>
 
-<h3>Structure</h3>
+<h3><a id="structure"></a>Structure</h3>
 
 <p>Table structure is represented by <em>Records</em> structure. This can be flat or hierarchic. A <em>Table</em>is a collection of records. Tables can be related to each other. A record can contain a table of records. This is called aggregate object.</p>
 
@@ -169,109 +177,148 @@ class Record(Integer id) &lt;: Object;
 <li>For Table_Name is good to use plural names like: "Persons"</li>
 </ul>
 
-<h2><a id="transactions"> Transactions</h2>
-<p>Data model can work with transactions. A transaction start automatically when you make first modification. Modifications must be consistent. When all modifications are done you can commit changes. If transaction fail all the modifications are reset. You can not commit a second time.</p>
+<h2><a id="sessions"></a>Sessions</h2>
+<p>Data model can work with sessions. A session can be anonymous or can have a name. A session can involve one or more databases. After a set of modifications is done you can commit changes. If transaction fail all the modifications are reset. You can customize the actions in case of error. After session you can create a report.</p>
 
-<p><b>data manipulation</b></p>
-<p>Any of the following operations will start automatically a transaction:</p>
+<p><b>Operations</b></p>
+
+<p>Any of the following operations can be included in a session:</p>
 <ul>
-<li><a href="#Append">Append</a></li>
-<li><a href="#Update">Update</a></li>
-<li><a href="#Delete">Delete</a></li>
+<li><a href="#append">Append</a></li>
+<li><a href="#update">Update</a></li>
+<li><a href="#delete">Delete</a></li>
+<li><a href="#scrub">Scrub</a></li>
 </ul>
 
 <h3><a id="append"></a>Append</h3>
-<p>Eve can add new data records into one table using <em>append()</em> rule.</p>
+<p>Eve can add new data records into one table using <em>append()</em>.</p>
 
-<pre><code class="language-EVE">** create empty records
-Record record := table_name.append();
-
-** modify record attributes
-update record:
-   field_name := value;
+<pre><code class="language-EVE">
+session [label]
+   ** create empty records
+   new record1 := table_name.append();
+   new record2 := table_name.append();
+update record1:
+   let field_name := value;
    ...
-end update;
-
+update record2:
+   let field_name := value;
+   ...
+on error1:
+   ...
+on error2:
+   ...
 commit;
 </code></pre>
 
 <h3><a id="update"/>Update</h3>
-<p>Eve can do single or multiple row updates in one transaction.</p>
+<p>Eve can do single or multiple row updates in one transaction using update.</p>
 
-<h4>Syntax:</h4>
+<h4>Single record:</h4>
 
 <pre><code class="language-EVE">** use search fields and values
-Record record := table_name.find(field:value, field:value ...);
-
-** prepare record
+session [label]:
+    new record1 := table_name.find(field:value1, ...);
+    new record2 := table_name.find(field:value2, ...);
 update record:
-    field_name := value;
+    let field_name := value;
     ...
-end update;
-
-commit;
+update record:
+    let field_name := value;
+    ...
+on error1:
+   ...
+on error2:
+   ...
+commit [label];
 </code></pre>
+
+<p><b>Note </b> A session will start a new isolated transaction if labeled. Otherwise it will start a regular session. In case of error, a rollback is automaticly issued.</b>
 
 <h3><a id="delete"/>Delete</h3>
 <p>This statement will remove one or more records from a table.</p>
 
 <p><b>Syntax</b></p>
-<pre><code class="language-EVE">** Find one single record and delete
-Record record := table_name.find(field:value,...);
+<pre><code class="language-EVE">
+** Find one single record and delete
+session [name]:
+  ** local variables
+  new deleted1 := table_name1.delete(field:value,...);
+  new deleted2 := table_name2.delete(field:value,...);
+on error:
+  ** handle exceptions
+  rollback;
+  print ("failed")
+report
+  ** check status
+  expect deleted1 >  0;
+  expect deleted2 >= 0;
+  ** print status
+  print (deleded1, "records deleted")
+  print (deleded2, "records deleted")
+commit [name];
+</code></pre>
 
-record.delete();
+<h4>Bulk Operations</h4>
 
-** check status
-expect record.status == "deleted";
+<p>For bulk operations there are 2 methods. Using Eve cycle or using row SQL.</p>
 
+<pre><code class="language-eve">
+** using a loop to create a single session  
+session [name]:
+  ** delete current record using: loop
+  cycle: for record in table_name loop
+    ** delete related data
+    db.table_name1.delete(field:value,...);
+    db.table_name2.delete(field:value,...);
+
+    ** delete the record
+    record.delete() if condition;
+  repeat;  
 commit;
+</code></pre>
 
-** Using search fields to delete multiple records
-Integer deleted := table_name.delete(field:value,...);
+<h3><a id="scrub"></a>Scrub</h3>
 
-commit;
+<p>Remove all records from a table in bulk is very fast but there are technical problems. Triggers are deactivated for these kind of operations.</p>
 
-** Remove all records from a table in bulk
-db.scrub(table:"table_name");
-commit;
-
-** delete current record using: loop
-cycle: with record in table_name loop
-     record.delete() if condition;
-end cycle;
+<pre><code class="language-eve">
+session [label]:
+   scrub db1.table1;
+   scrib db2.table1;
+on error
+   ** revert session
+   rollback;
 commit;
 </code></pre>
 
 
-<p><b>Note:</b></p>
-<ul>
-<li>After delete the record still exist with <em>status</em> = <em>deleted</em>;</li>
-<li>After closing the table all references to records become Null;</li>
-</ul>
-
-<h2><a id="direct-sql"/>Direct SQL</h2>
+<h2><a id="direct-sql"></a>Direct SQL</h2>
 <p>Sometimes we need to bypass the ORM and execute native SQL:</p>
 
-<pre><code class="language-EVE"># execute query string and return a list of records
-query_result := db.query(query_template ? source)
+<pre><code class="language-EVE">
+# execute query string and return a list of records
+new query_result := db.query(query_template ? source)
 </code></pre>
 
 
 <h2><a id="procedures"/>Procedures</h2>
 
 <p>Some databases have support for stored procedures. It will be a challenge to engage these procedures from EVE. Since not all databases have stored procedures, these are extra features that we can implement in Eve but not necessary for our purpose.</p>
-<pre><code class="language-EVE">** prepare an object (not updatable)
-Result: (
-      Type field_name,
+
+<pre><code class="language-EVE">
+** prepare an object (not updatable)
+type Result = {
+      field_name1:Type ,
+      field_name2:Type ,
       ...
-      ) &lt;: Record;
+      } &lt;: Record;
 
 ** prepare a list of records
+set buffer: ()Result;
 
-Table(Result) buffer;
-
-** execute stored procedure
-buffer := db.procedure_name(arguments);
+** execute stored procedure and collect
+let buffer <+ db.procedure_name(arguments);
 </code></pre>
 
 

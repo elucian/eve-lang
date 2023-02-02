@@ -379,7 +379,7 @@ process main:
       break; --  early termination;
     else
       write(',');
-    end if;
+    done;
   repeat;
   print; -- a,b,c,d
 return;
@@ -506,14 +506,13 @@ return;
 </code></pre>
 
 <p><b>path concatenation</b></p>
-<p>Two strings can be concatenated using concatenation operator "/" or "\". This operator is used to concatenate "path" strings or URL locations. Notice "\" is also escape character used for string templates.</p>
+<p>Two strings can be concatenated using concatenation operator "/". Notice "/" will remove exra "/" from a path to avoid doubling it.</p>
 
-<pre><code class="language-eve"># path concatenation
+<pre><code class="language-eve">
+# path concatenation
 process path_concat
   new s = ""; -- empty string
-
-  let s := "te/" / "/st"; --  "te/st" Linux
-  let s := "te/" \ "/st"; --  "te\st" Windows
+  let s := "te/" / "/st"; --  "te/st" 
 return;
 </code></pre>
 

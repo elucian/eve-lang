@@ -2,7 +2,7 @@
    <meta charset="utf-8">
    <meta name="description" content="Sage-Code Eve object oriented programming. Classes and Objects. ">
    <meta name="author" content="Elucian Moise">
-   <meta name="keywords" content="SageCode, EVE, EveLang, Objects, Classes, OOP, method, consructor, companion">
+   <meta name="keywords" content="SageCode, EVE, EveLang, Objects, Classes, OOP, method, consructor">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
    <!-- Website title -->
@@ -35,11 +35,11 @@
 <h1>Eve Classes</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Eve is an object oriented language, so we define Classes. A class is a companion for an user-defined data type. It implements behaviour for a data object. Classes are used to set properties and augment related Objects.</div>
+Eve is an object oriented language. We define objects and classes. A class is a user-defined data type. It implements behaviour for a data object. Classes are advanced data types that encapsulate data and behaviour.</div>
 
-<h2>Eve Classes</h2>
+<h2>Eve Objects</h2>
 
-<p>Objects are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. You can create global objects using "set" or local objects by using a class call.</p>
+<p>Objects are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. You can create global objects using "set" or local objects by using "new".</p>
 
 <p>The most important characteristics of objects are:</p>
 
@@ -49,20 +49,21 @@ Eve is an object oriented language, so we define Classes. A class is a companion
 <li>Polymorphism: an object can play its base class role;</li>
 </ul>
 
-<div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes. Eve implements all 4 OOP principles. </div>
+<div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes or user defined data types. Eve implements all 4 OOP principles. </div>
 
 <h4>Bookmarks:</h4>
 
 <hr>
 <ul>
 <li><a href="#object">Object instances</a></li>
-<li><a href="#companion">Type companion</a></li>
+<li><a href="#methods">Object methods</a></li>
+<li><a href="#class">Class template</a></li>
 <li><a href="#constructor">Class constructor</a></li>
 <li><a href="#class-members">Class members</a></li>
 <li><a href="#class-tree">Class Tree</a></li>
 <li><a href="#comparing-objects">Comparing objects</a></li>
-<li><a href="#inheritance">Inheritance</a></li>
 <li><a href="#methods">Methods</a></li>
+<li><a href="#inheritance">Inheritance</a></li>
 </ul>
 
 <h2><a id="object"></a>Object Instances</h2>
@@ -102,23 +103,50 @@ return;
 
 <p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatically and set-up an implicit data type using type inference. This is possible due to a gradual typing algorithm.</p>
 
-<h2><a id="companion"></a>Type companion</h2>
 
-<p>You can create more complex objects by using a class. This is a special subroutine that can create object instances. The object that is going to be created is an explicit output reference called "@self".</p>
+<h2><a id="methods"></a>Object methods</h2>
+
+<p>Methods are related to an object. The methods can have parameters and can return results. You must define all methods for a type in the same module as the type declaration.</p>
+
+<h4>Example</h4>
+
+<pre><code class="language-eve">
+# define a "Point" type:
+type Point = {x, y :Double} <: Object; 
+
+method (@self:Point) move(a, b: Double):
+   let self.x += a;
+   let self.y += b;
+return;
+
+method (@self:Point)  string() => (string:String):
+   let string := "# = (#:#)" ? (self.id, self.a, self.b);
+return;
+
+process main:
+   ** initialize the points
+   new p := Point(x:1, y:2);
+
+   ** move the point
+   apply p.move(2,1);
+   print p.string(); -- (3:3)
+return;
+</code></pre>
+
+<h2><a id="class"></a>Class Template</h2>
+
+<p>You can create more complex objects by using a class template. This is a special object struture that can be used to create objects. A class can have a constructor or can be constructor-less.</p>
 
 <h4>Design:</h4>
 
-<p>First you define a data type then a "class" with the same name. That is called a "type companion". The companion has a local static scope. You can define things after ":" that belong to the class. A class does not have a "recover" region but it has a "create" and "remove" regions.</p>
+<p>A class is a data type. It can be derived from another data type. Usually a class is derived from Object that is the basic data type. Next design pattern explain how to declare a class:</p>
 
 <pre><code class="language-eve">
-# user defined type   
-type TypeName = {} <: SuperType;
-
-# type companion (same name)
-class TypeName(parameters) => (@self :TypeName):
+# user defined class   
+class TypeName <: SuperType;
    ** declaration
    ... 
-create
+create (parameters) => (@self :TypeName):
    ** constructor
    ...    
 release
@@ -127,19 +155,25 @@ release
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>A class  is a "high order function" with closures: We name closure "methods" in Eve. So we use functional programming theory to create classes. Methods are like functions, except the methods are defined inside a class while regular functions can be defined in global scop.</p>
+<p><b>Notes:&nbsp;</b> A class is a container. It has members that can be public or private. A class has a declaration region where these members are defined, and an initialization region called constructor.</p>
 
 <h3><a id="constructor"></a>Class constructor</h3>
 
-<p>A class has a single constructor. It can be implemented in the "create" region. Here we can use decision statements to create the object attributes in different ways based on class parameters and conditions.</p>
+<p>A class has one single constructor. Constructors can have one or more parameters some may be optional. You can use a decision statements to create the object attributes in different ways based on parameters.</p>
 
 <h4>Pattern:</h4>
 
+<p>Class has m
+
 <pre><code class="language-eve">...
-class name(parameters) => (@self: Object):
-   ** declarations
+class name <: Object:
+   ** member declarations
    ....
-create
+   function () => (result:Type):
+      ...
+      result := expression;
+   return;
+create(parameters) => (@self: Object):
   ** class constructor
   if condition then
     let self := SuperType(some_arguments);
@@ -152,57 +186,71 @@ return;
 
 <h3>Parameters</h3>
 
-<p>A class can have parameters with initial value. If you declare a type, parameters can be the same as for the type, but sometimes they are different. It is even possible to have a variable number of arguments, received as a HashMap.</p>
+<p>A class can have parameters with an initial value. If you declare a type and inherit this type, parameters can be the same as for the super-type, but sometimes they are different. It is even possible to have a variable number of arguments, received as a HashMap for a vararg based constructor.</p>
 
 <h4>Example:</h4>
 
-<pre><code class="language-eve"># define a class with parameters
-class ClassName(parameters) => (@self:ClassName):
+<pre><code class="language-eve">
+type BaseClass = {attributes} <: Object;
+
+# define a class with constructor
+class ClassName <: BaseClass;
   ** class body
   ...
-create
+create(parameters) => (@self:ClassName):
   ...
 return;
 
 process main:
-  ** instantiate a local object
+  ** instantiate a local object using constructor
   new object := ClassName(param:value,...);
   ...
 return;
 </code></pre>
 
-<p><b>Note:</b> The <em>object</em> in the previous example, has type: ClassName that is not defined explicitly. In this case, an implicit type is created automatically by Eve compiler, so you can use the class name as type. All parameters become public attributes.</p>
+<p><b>Note:</b>The <em>object</em> in the previous example, has type: ClassName. So you can use the class name as type. The data type defined by the class is dynamicly created by the compiler using type inference.</p>
 
 <h4>@self object</h4>
 
-<p>Object named "self" is the current object name, reserved by EVE. This is either the result of the class or a parameter in a method. It uses prefix @ to show that it is a reference.</p>
-
-<p>@self object attributes must be created as quickly as possible inside the constructor. In Java, we call the current object "this". Eve is more like Python that uses "self" for current object.</p>
-
-<pre><code class="language-eve">
-class ClassName(parameters) => (@self:ClassName):
-     ...
-return;
-</code></pre>
-
-<h4>Note:</h4>
-<ul>
-<li>You must use "new" or "set" to create an object reference;</li>
-<li>You can use "let", "pop", "put" to create an object element;</li>
-<li>You can use ":=" with JSON to create attributes and lambdas;</li>
-</ul>
+<p>Object named "self" is the current object name. This is the result of the class constructor. It uses prefix @ to show that it is a reference. The same name is used for declaring methods.</p>
 
 <h2><a id="class-members"></a>Class members</h2>
 
-<p>A class can have attributes, properties and methods. Attributes are dynamic states, wile properties are static states. Try to remember this convention to understand better Eve design.</p>
+<p>A class can define properties and functions. An object can have attributes and methods. Attributes are defined by the constructor. Properties and functions are defined inside the class declaration region.</p>
+
+<h3>Properties</h3>
+
+<p>A class is actually a <em>singleton object</em>. The class has public or private properties. Each property is defined in class context. Properties are static. We declare class properties after symbol ":"</p>
+
+<ul>
+<li>By default, class properties are public states;</li>
+<li>Private class properties start with underscore "_"; 
+<li>Properties are defined using keyword "set";
+</ul>
+
+<p>To access properties we can use class qualifier and dot notation:</p>
+
+<pre class="output">class_name.class_property;</pre>
+
+<h3><a id="functions">Functions</h2>
+
+<p>You can define private or public functios for a class.  Most of the time you need only private functions. Functions have access to all properties and you do not have to use class qualifier to access them inside functions:</p>
+
+<pre><code class="language-eve">
+** call class functions
+new result = ClassName.function(); 
+
+** ignore function result
+call ClassName.function(); 
+</code></pre>
 
 <h3>Attributes</h3>
 
-<p>A class produce objects. Each object has public or private attributes. The class constructor must set initial values and define these attributes. Private attributes start with underscore (_).</p>
+<p>A class produce objects. Each object has public or private attributes. The class constructor must set initial values and define these attributes. Private attributes start with underscore (_). All other attributes are public and can be accessed using dot notation.</p>
 
 <ul>
 <li>We declare object attributes in "create" region;</li>
-<li>Object attributes are define using keyword {"new", "let", "put"};
+<li>Object attributes are define using keyword {"new", "let"};
 </ul>
 
 <p>To access attributes we can use dot notation:</p>
@@ -211,34 +259,6 @@ return;
 
 <p>We already know how to instantiate a class and create objects using a class. A class does not know anything about its objects. You can not ask the class anything about its instances, except if you create a special logic using class properties.</p>
 
-<h3>Properties</h3>
-
-<p>A class is actually a <em>singleton object</em>. The class has static properties. Each property is defined in class context using the keyword "set". Class properties can be public or private.</p>
-
-<ul>
-<li>We declare class properties after symbol ":"</li>
-<li>By default, class properties are public states;</li>
-<li>Private class properties start with underscore "_"; 
-<li>Properties are defined using keyword "set";
-</ul>
-
-<p>To access properties we can use dot notation:</p>
-
-<pre class="output">class_name.class_property;</pre>
-
-<h3>Methods</h2>
-
-<p>You can define private or public methods for a class.  Most of the time you need onlu private members. You can access all class members without instantiation using the class name quialifier:</p>
-
-<pre><code class="language-eve">** accessing class methods
-apply ClassName.method;    -- using the class name
-</code></pre>
-
-<p>Some methods are defined for objects. These methods use an explicit parameter @self that is required to refer the current object context. You can use object name qualifier to call these methods.</p>
-
-<pre><code class="language-eve">** accessing object methods
-apply ObjectName.method;    -- using the object name
-</code></pre>
 
 <h2><a id="class-tree"></a>Class Tree</h2>
 
@@ -318,73 +338,40 @@ process
 return;
 </code></pre>
 
+
 <h2><a id="inheritance"/>Inheritance</h2>
 
-<p>Eve has support for inheritance. You can specify a superclass using the symbol "&lt;:" that is equivalent to the keyword: <em>"extend"</em> used in Java. Using this symbol makes a class that has all attributes and methods of the super-class.</p>
+<p>Eve has support for inheritance. You can specify a supertype using the symbol "&lt;:" that is equivalent to the keyword: <em>"extend"</em> used in Java. Using this symbol makes a class that has all attributes and methods of the super-class or super-type.</p>
 
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve"># define a class with inheritance
 type BaseType: {attributes} <: Object;
 
-class BaseType(parameters) => (@self:Object):
-  ...
-  ** object method
-  method demo(@self:BaseType,...):
-      ....
-  return;
+** object method
+method (@self:BaseType) demo(param:Type, ...):
+   ....
 return;
 
 ** create a descendent of BaseType
-class ClassName(parameters) &lt;: BaseType:
+class ClassName <: BaseType
    ** class members
    ...
+create(parameters) =>(@self: BaseType):
    ** call base class constructor
-   let self := base_class(object_attribute:argument,...);
+   let self := {attributes};
    ...
-   ** overwriten method
-   method demo(@self:BaseType,...) => (result:Type):
-      ...
-   return;
+return;
+
+** overwriten method
+method (@self:ClassName) demo(parameters) => (result:Type):
+   ...
 return;
 </code></pre>
-
-<h2><a id="methods"></a>Methods</h2>
-
-<p>Methods can be defined inside of a class. The methods can have parameters and can return results. Also if a method receives @self argument, this is an input-output argument representing the object instance.</p>
-
-<h4>Example</h4>
-
-<pre><code class="language-eve"># define a "Point" class
-driver point_demo:
-type 
-   Point = {x, y :Double} <: Object; 
-
-class Point(x = 0, y = 0 :Double) => (@self: Object):
-   method move(@self:Point, a, b: Double):
-      let self.x += a;
-      let self.y += b;
-   return;
-
-   method string(@self:Point) => (string:String):
-      let string := "# = (#:#)" ? (self.id, self.a, self.b);
-   return;
-create
-   let self := {'x': x,'y': y};
-return;
-
-process main:
-   ** initialize the points
-   new p := Point(x:1, y:2);
-
-   ** move the point
-   apply p.move(2,1);
-   print p.string(); -- (3:3)
-
-return;
-</code></pre>
-
 <hr>
+
+
+
 <p><b>Read next:</b>
 <a href="functions.html">Functions</a></p>
 

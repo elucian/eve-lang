@@ -18,6 +18,12 @@ function apply_style(str) {
     str = str.replace(/\brecover\b/,keyword("recover"))
     str = str.replace(/\brelease\b/,keyword("release"))
     str = str.replace(/\bfinalize\b/,keyword("finalize"))
+    str = str.replace(/\breport\b/,keyword("report"))   
+    str = str.replace(/\bsession\b/,keyword("session"))
+    str = str.replace(/\bupdate\b/,keyword("update"))
+    str = str.replace(/\bappend\b/,keyword("append"))
+    str = str.replace(/\bon\b/,keyword("on"))
+    str = str.replace(/\bcommit\b/,keyword("commit"))     
     // in statement
     str = str.replace(/\bfrom\b/,keyword("from"))
     str = str.replace(/\buse\b/,keyword("use"))
@@ -38,7 +44,6 @@ function apply_style(str) {
     str = str.replace(/\bmatch\b/,control("match"))
     str = str.replace(/\ball\b/g,control("all"))
     str = str.replace(/\bone\b/g,control("one"))
-    str = str.replace(/\bupdate\b/,control("update"))
     str = str.replace(/\bif\b/g,control("if"))
     str = str.replace(/\bthen\b/,control("then"))
     str = str.replace(/\belse\b/g,control("else"))
@@ -50,6 +55,7 @@ function apply_style(str) {
     str = str.replace(/\bInteger\b/g,types("Integer"))
     str = str.replace(/\bNatural\b/g,types("Natural"))
     str = str.replace(/\bDouble\b/g,types("Double"))
+    str = str.replace(/\bFloat\b/g,types("Float"))
     str = str.replace(/\bRational\b/g,types("Rational"))
     str = str.replace(/\bString\b/g,types("String"))
     str = str.replace(/\bLogic\b/g,types("Logic"))
@@ -85,11 +91,10 @@ function apply_style(str) {
     str = str.replace(/\balter\b/,interrupt("alter"))
     str = str.replace(/\bmake\b/,interrupt("make"))
     str = str.replace(/\bstore\b/,interrupt("store"))
-    str = str.replace(/\binsert\b/,interrupt("insert"))
-    str = str.replace(/\bcommit\b/,interrupt("commit"))
     str = str.replace(/\breset\b/,interrupt("reset"))
     str = str.replace(/\bbegin\b/,interrupt("begin"))
     str = str.replace(/\bapply\b/,interrupt("apply"))
+    str = str.replace(/\bcall\b/,interrupt("call"))
     str = str.replace(/\bwait\b/,interrupt("wait"))
     str = str.replace(/\bexit\b/,interrupt("exit"))
     str = str.replace(/\babort\b/,interrupt("abort"))
@@ -102,6 +107,7 @@ function apply_style(str) {
     str = str.replace(/\bfail\b/,interrupt("fail"))
     str = str.replace(/\braise\b/,interrupt("raise"))
     str = str.replace(/\bretry\b/,interrupt("retry"))
+    str = str.replace(/\brollback\b/,interrupt("rollback"))
     // operators   
     str = str.replace(/\bin\b/g,operator("in"))     
     str = str.replace(/\bis\b/g,operator("is"))
@@ -113,8 +119,6 @@ function apply_style(str) {
     str = str.replace(/\bnew\b/g,operator("new"))
     str = str.replace(/\blet\b/g,operator("let"))
     str = str.replace(/\bset\b/g,operator("set"))
-    str = str.replace(/\bput\b/g,operator("put"))
-    str = str.replace(/\bpop\b/g,operator("pop")) 
 
     // two symbols
     str = str.replace(/\s::\s/g,operator(" :: "))
@@ -126,6 +130,7 @@ function apply_style(str) {
     str = str.replace(/\s>=\s/g,operator(" >= "))
     str = str.replace(/\s:>\s/g,operator(" :> "))
     str = str.replace(/\s<:\s/g,operator(" <: "))
+    str = str.replace(/\s<:\s/g,operator(" <- "))
 
     // modifiers
     str = str.replace(/\s\*=\s/g,operator(" *= "))
@@ -143,6 +148,7 @@ function apply_style(str) {
     str = str.replace(/\s<\+\s/g,operator(" <+ "))
     str = str.replace(/\s\+>\s/g,operator(" +> "))
 
+    // fix encoded symbols
     str = str.replace(/\b=\&gt;\b/g,operator("=&gt;"))
     str = str.replace(/\b\&lt;\:\b/g,operator("&lt;:")) 
     str = str.replace(/\b\:\&gt;\b/g,operator(":&gt;"))  
@@ -152,11 +158,27 @@ function apply_style(str) {
     str = str.replace(/\b-\&gt;\b/g,operator("-&gt;"))
     str = str.replace(/\b\&lt;-\b/g,operator("&lt;-"))
 
+    //sigil or prefix
+    str = str.replace(/\*(?=\w)/g,operator("*"))
+    str = str.replace(/\@(?=\w)/g,operator("@"))
+    str = str.replace(/\$(?=\w)/g,operator("$"))
+
     //fix single simbol
-    str = str.replace(/\b\:\s\w/g,operator(" :"))
-    str = str.replace(/\b\=\b/g,operator(" ="))
-    str = str.replace(/\s\&gt;\s/g,operator(" > "))
-    str = str.replace(/\s\&lt;\s/g,operator(" < "))
+    str = str.replace(/:(?=\s|\b|$)/,operator(":"))
+    str = str.replace(/:(?=\s|\w|\W|[\{\[\(])/g,operator(":"))
+    str = str.replace(/;(?=\s|\b|$)/,operator(";")) 
+
+    //fix concatenation
+    str = str.replace(/(?<=\w)\/(?=\w|\b|\$)/,operator("/"))
+
+    //fix operators
+    str = str.replace(/\s=\s/g,operator(" = "))
+    str = str.replace(/\s>\s/g,operator(" > "))
+    str = str.replace(/\s<\s/g,operator(" < "))
+    str = str.replace(/\s\+\s/g,operator(" + "))
+    str = str.replace(/\s\-\s/g,operator(" - "))
+    str = str.replace(/\s\/\s/g,operator(" / "))
+
     // create the new statement
     return str
 }

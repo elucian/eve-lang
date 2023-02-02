@@ -37,21 +37,15 @@
 <h1><a id="functions">Eve Functions</h1>
 
 <div class="alert alert-secondary shadow-sm">
-A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. In Eve functions are pure and first class values.
-</div>
+A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. Eve functions are first class values.</div>
 
-
-<p>Functions are declared with keyword: "function". A function can be public or private, local or global. You can define functions in different ways depending on your requirements. </p>
+<p>Functions are declared with keyword: "function". A function can be public or private, local or global. You can define functions in different places depending on your requirements. Functions can be members in modules, classes or processes.</p>
 
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve">#function with block
-function name(parameters) =&gt; (result:TypeName):
+function name(parameters) [=&gt; (@result:TypeName)]:
   ** executable block
-  ...
-[recover]
-  ...
-[finalize]
   ...
 return;
 </code></pre>
@@ -59,30 +53,35 @@ return;
 <h4>Notes:</h4>
 
 <ul>
-<li>Result type can be declared explicit,</li>
-<li>A function can have only input parameters,</li>
-<li>A function can have a single expression,</li>
-<li>A function can be created by in a process (closures),</li>
+<li>Result type can be declared explicit usin @ prefix,</li>
+<li>A function can have input/output parameters,</li>
 <li>A routine can receive parameters of type function,</li>
+<li>A function can return a result but the result is optional,</li>
+<li>A function can create as a result another function called closure,</li>
+<li>A function can raise errors but it can't handle errors,</li>
 </ul>
 
-<p><b>Function call</b>&nbsp;Function call is using the name of the function followed by round brackets (), with argument list. The brackets are mandatory even if there are no arguments, otherwise the function is not executed.</p>
+<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by round brackets (), with argument list. In expressions, the brackets are mandatory even if there are no arguments.</p>
 
 <pre><code class="language-eve">
-#demo function call
-driver function_call:
+#demo function execiton
+driver function_ex:
 
 ** declare functions
-  function name1(param :Type,...) =&gt; (expression);
-  function name1(param := value,...) =&gt; (expression):Type;
-  ...
+function name1(param :Type,...) => (@result:Type):
+   let result := expression;
+return;
+
+function name2(param := value,...) => (@result:Type):
+   let result := expression;
+return;
 
 process main:
-  ** call using argument list
+  ** execute using argument list
   new result := name1(arguments);
 
-  ** call using parameter names with pair operator (:)
-  new result := name1(param:arg,....);
+  ** execute using parameter names with pair operator (:)
+  new result := name2(param:arg,....);
 return;
 </code></pre>
 
@@ -105,10 +104,64 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve"># demo function with parameters
 driver function_params:
-  function sum(a, b: Integer) =&gt; (a + b) :Integer;
+
+function sum(a, b: Integer) => (@result:Integer):
+  let result := (a + b);
+return;
+
 process main:
   print sum(1,2);  -- 3
   print sum(2,4);  -- 6
+return;
+</code></pre>
+
+<p><b>Function call</b>&nbsp; Some functions do not have a result and can have side-effects. You can call this kind of function without round brackets () using keyword: "call". </p>
+
+<pre><code class="language-eve">
+#demo function call
+driver function_call:
+
+** declare functions
+function name1();
+function name2(param = value: Type,...);
+  ...
+
+process main:
+  ** call using argument list
+  call name1(arguments);
+
+  ** call using parameter names with pair operator (:)
+  call name2(param:arg,....);
+return;
+</code></pre>
+
+<h2><a id="lambdas"></li>Lambda expressions</h2>
+
+<p>Lambda expressions are simple functions. Can receive arguments and can produce a result. A lambda expression is created with keywords set or new. Lambda expressions do not have local variables or states and do not have side effects.</p>
+
+<p>Lambda expressions can be declared in global scope using "function" region. You can define a single function region for a module. Lambda expressions can be anonymous or named.</p>
+
+<h4>Example</h4>
+
+<p>In next example we define two lambda expressions.</p>
+
+<pre><code class="language-eve">
+lambda
+  set sum = (p1, p2 :Integer) => (p1 + p2):Integer;
+  set sqr = (p1, p2 :Integer) => (p1 * p2):Integer;
+</code></pre>
+
+<h4>Signature</h4>
+
+<p>Labda expression signature can be declared as data type:<p>
+
+<pre><code class="language-eve">
+# define a lambda signature
+type BinEx = (p1, p2 :Integer):Integer <: Function;
+
+** Use lambda signature as parameter type
+process useLambda(test :BinEx):
+   ...
 return;
 </code></pre>
 

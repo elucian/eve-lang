@@ -442,7 +442,7 @@ return;</code></pre>
 <tr><td>recover  </td><td>release  </td><td>lambda    </td><td>repeat   </td></tr>
 <tr><td>reset    </td><td>rest     </td><td>result    </td><td>&nbsp;   </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
-<tr><td>       </td><td>select     </td><td>          </td><td>skip     </td></tr>
+<tr><td>       </td><td>select     </td><td>call      </td><td>skip     </td></tr>
 <tr><td>step     </td><td>store    </td><td>switch    </td><td>job     </td></tr>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>     </td></tr>
 <tr><td>update   </td><td>use      </td><td>.         </td><td>view     </td></tr>
@@ -473,7 +473,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>lambda</td>
-<td>define one or more lambda expressions</td>
+<td>define a region for one or more lambda expressions</td>
 </tr>
 </tbody>
 </table>
@@ -493,7 +493,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>function</td>
-<td>declare a function signature or lamda expression</td>
+<td>declare a function of type Function</td>
 </tr>
 <tr>  
 <td>class</td>
@@ -514,19 +514,19 @@ return;</code></pre>
 <tr>
 <tr>
 <td>method</td>
-<td>define a named subroutine in a class or module</td>
-</tr>
-<tr>
-<td>process</td>
-<td>define a named block of code that is executable</td>
+<td>define behaviour for user defined data types</td>
 </tr>
 <tr>
 <td>recover</td>
-<td>define a recover region for methods</td>
+<td>define a recover region for a method</td>
 </tr>
 <tr>
 <td>release</td>
 <td>define a object clear region for a class</td>
+</tr>
+<tr>
+<td>process</td>
+<td>define a named block of code that has several steps</td>
 </tr>
 <tr>
 <td>return</td>
@@ -609,7 +609,7 @@ return;</code></pre>
 
 <h3>Assign keywords</h3>
 
-<p>For any kind of assignment or modification you must us a specific keyword. Eve is imperative, so you must say expkicit what is happening.</p>
+<p>For any kind of assignment or modification you must us a specific keyword. Eve is imperative, so you must dictate an action. This is why we use keywords like: {set, new, let} to assign values to variables.</p>
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -632,13 +632,6 @@ return;</code></pre>
 <td>Modify existing variables or attributes</td>
 </tr>
 <tr>
-<td>put</td>
-<td>Append one or more values at end of a collection</td>
-</tr>
-<tr>
-<td>pop</td>
-<td>Extract first or last element from a collection</td>
-</tr>
 </tbody>
 </table>
 
@@ -651,6 +644,10 @@ return;</code></pre>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>call</td>
+<td>execute a function or method that do not return a result.</td>
+</tr>
 <tr>
 <td>exit</td>
 <td>stop current cycle and continue the after end cycle.</td>
@@ -794,14 +791,14 @@ return;</code></pre>
 <pre class="fixed"># , : . ; = ~ ? % ^ * - + / &lt; &gt; &amp; | ! @ $</pre>
 
 <p><b>Two symbols:</b></p>
-<pre class="fixed">== !=  =&gt; &gt;= &lt;= &lt;: :&gt; .. !. </pre>
+<pre class="fixed">==, !=,  =>, <=, >=, :>, <:, .., !. </pre>
 
 <p><b>Three symbols:</b></p>
-<pre class="fixed">""" .|. .&. .+. </pre>
+<pre class="fixed">""", .|., .&., .+. </pre>
 
 <p><b>Modifiers:</b></p>
 
-<pre class="fixed">:: := += -= *= /= %= ^= &amp;= |= &lt;+ +&gt; &lt;&lt; &gt;&gt;</pre>
+<pre class="fixed">::, :=, +=, -=, *=, /=, %=, ^=, &=, |= +>, <+, >>, <<, ->, <- </pre>
 
 <p><b>Delimiters:</b></p>
 <pre class="fixed">"_" '_' `_` (...) [...] {...} #(...)</code></pre>

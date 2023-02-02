@@ -137,7 +137,9 @@ return;
 <p>This is the stream where a program writes its write data. The program request data transfer with the write operation. Not all programs generate write. In this the program is silent.</p>
 <p>Unless redirected, standard write is the text terminal which initiated the program.</p>
 <p>** Function&nbsp;<em>write()</em>&nbsp;** This function send a string to standard write as it is. This will help developers to make dynamic write. Is user responsibility to make a line break using an escape \n or \r inside the string parameter.</p>
-<pre><code class="language-eve">routine write(String * args, Logic:eol=True, String:sep=" "):
+<pre><code class="language-eve">
+** standard method write
+method write(String * args, Logic:eol=True, String:sep=" "):
  ...
 return;
 </code></pre>
@@ -174,7 +176,8 @@ process main
     let e := this[i];
     let i += 1;
     if e  >= "c" then
-      write e & (',' if e is not this.tail)
+      write  e ;
+      write ',' if e is not this.tail;
     done;
   else
     write ('i = ' + i);
