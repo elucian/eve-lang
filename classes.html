@@ -35,7 +35,7 @@
 <h1>Eve Classes</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Eve is an object oriented language. We define objects and classes. A class is a user-defined data type. It implements behaviour for a data object. Classes are advanced data types that encapsulate data and behaviour.</div>
+Eve is an object oriented language. We define objects and classes. A class is and extejsion for user-defined data type. It implements behaviour for a data object. Classes are advanced data types that encapsulate data and behaviour.</div>
 
 <h2>Eve Objects</h2>
 
@@ -78,10 +78,10 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 # define global object instances
 driver test:
   ** empty object
-  set object_name1: Object(); 
+  set object_name1 = {}: Object(); 
 
   ** object with attributes
-  set object_name2: {attribute:value, ...} <:Object;
+  set object_name2 := {attribute:value, ...};
 return;
 </code></pre>
 
@@ -90,23 +90,24 @@ return;
 
 <h4>Alternative:</h4>
 
-<p>Initialize an object by using an explicit constructor call.</p>
+<p>Initialize an object by using an explicit constructor.</p>
 
 <pre><code class="language-eve">#define an object instance
 process test:
   ** initialize object using Object() constructor
   new object_name := Object(attribute1:value1, 
-                                        attribute2:value2, ...);
+                            attribute2:value2, 
+                            ...);
   ...
 return;
 </code></pre>
 
-<p><b>Note:&nbsp;</b>One object instance can receive attribute names that do not exist and bind values to them using column ":" symbol. Default constructor will create new attributes automatically and set-up an implicit data type using type inference. This is possible due to a gradual typing algorithm.</p>
+<p><b>Note:&nbsp;</b>Object constructor can receive attribute names that do not exist and bind values to them using column ":" pair symbol. Object constructor will create new attributes using type inference. This is possible due to a gradual typing system.</p>
 
 
 <h2><a id="methods"></a>Object methods</h2>
 
-<p>Methods are related to an object. The methods can have parameters and can return results. You must define all methods for a type in the same module as the type declaration.</p>
+<p>Methods are related to an object type or class. The methods can have parameters and can return results. You must define all methods for a type in the same module as the type declaration.</p>
 
 <h4>Example</h4>
 
@@ -143,7 +144,7 @@ return;
 
 <pre><code class="language-eve">
 # user defined class   
-class TypeName <: SuperType;
+class ClassName [+= {attributes}] <: SuperClass;
    ** declaration
    ... 
 create (parameters) => (@self :TypeName):
@@ -163,17 +164,15 @@ return;
 
 <h4>Pattern:</h4>
 
-<p>Class has m
-
 <pre><code class="language-eve">...
-class name <: Object:
+class ClassName <: Object:
    ** member declarations
    ....
    function () => (result:Type):
       ...
       result := expression;
    return;
-create(parameters) => (@self: Object):
+create(parameters) => (@self: ClassName):
   ** class constructor
   if condition then
     let self := SuperType(some_arguments);
@@ -186,18 +185,16 @@ return;
 
 <h3>Parameters</h3>
 
-<p>A class can have parameters with an initial value. If you declare a type and inherit this type, parameters can be the same as for the super-type, but sometimes they are different. It is even possible to have a variable number of arguments, received as a HashMap for a vararg based constructor.</p>
+<p>A constructor can have parameters with an initial value that are optional. Parameters with no initial values are mandatory. It is possible to have a variable number of arguments, received as a HashMap for a vararg based constructor.</p>
 
 <h4>Example:</h4>
 
 <pre><code class="language-eve">
-type BaseClass = {attributes} <: Object;
-
-# define a class with constructor
-class ClassName <: BaseClass;
+# define a class derived from root Object
+class ClassName += {attributes} <: Object;
   ** class body
   ...
-create(parameters) => (@self:ClassName):
+create(*parameters: Type) => (@self:ClassName):
   ...
 return;
 
@@ -216,11 +213,11 @@ return;
 
 <h2><a id="class-members"></a>Class members</h2>
 
-<p>A class can define properties and functions. An object can have attributes and methods. Attributes are defined by the constructor. Properties and functions are defined inside the class declaration region.</p>
+<p>A class can define properties and functions. An object can have attributes and methods. Attributes are defined by the constructor. Properties and functions are defined inside the class declaration region. Methods are defined later in the same module.</p>
 
 <h3>Properties</h3>
 
-<p>A class is actually a <em>singleton object</em>. The class has public or private properties. Each property is defined in class context. Properties are static. We declare class properties after symbol ":"</p>
+<p>A class is actually a <em>singleton object</em>. The class has public or private properties. Each property is defined in class context. Properties are static. We declare class properties after symbol ":" before any function.</p>
 
 <ul>
 <li>By default, class properties are public states;</li>
@@ -234,23 +231,47 @@ return;
 
 <h3><a id="functions">Functions</h2>
 
-<p>You can define private or public functios for a class.  Most of the time you need only private functions. Functions have access to all properties and you do not have to use class qualifier to access them inside functions:</p>
+<p>You can define private or public functios for a class.  Most of the time you need only private functions. Functions have direct access to all properties, without class qualifier:</p>
+
 
 <pre><code class="language-eve">
-** call class functions
-new result = ClassName.function(); 
+driver test_function:
 
-** ignore function result
-call ClassName.function(); 
+# define a class with constructor
+class ClassName <: Object;
+  ** class propety
+  set _property: Integer;
+  set last: Integer;
+
+  ** class function
+  function change(param:Type) => (result:Integer):
+     let last := param;
+     let _property += param;
+     let result := _property;
+  return;
+return;
+
+process main:
+   ** call class functions
+   new result1 = ClassName.change(10); 
+   new result2 = ClassName.change(12); 
+
+   ** check function result
+   expect result1 == 10;
+   expect result2 == 22;
+
+   ** inspect last property
+   expect ClassName.last == 12;
+return;
 </code></pre>
 
 <h3>Attributes</h3>
 
-<p>A class produce objects. Each object has public or private attributes. The class constructor must set initial values and define these attributes. Private attributes start with underscore (_). All other attributes are public and can be accessed using dot notation.</p>
+<p>A class produce objects. Each object has public or private attributes. The class constructor must set initial values and define these attributes. Private attributes start with underscore (_). Public attributes must be declared in brackets {}. Public attributes are optional.</p>
 
 <ul>
-<li>We declare object attributes in "create" region;</li>
-<li>Object attributes are define using keyword {"new", "let"};
+<li>We declare object attributes using = {}  or += {};</li>
+<li>Object attributes must be initialized using "let" in constructor;</li>
 </ul>
 
 <p>To access attributes we can use dot notation:</p>
@@ -273,21 +294,16 @@ call ClassName.function();
 
 <p>This example defines a "Point" class with two parameters. The parameters have default values so they are optional when you create a point. Read the example and the notes to understand how to use a user defined class constructor.</p>
 
-<pre><code class="language-eve"># define a "Point" class
+<pre><code class="language-eve"># demonstrate a class
 driver point_demo:
 
-** type object
-type Point = {x, y :Double} <: Object;
+** define class Point, from root Object
+class Point += {x, y :Double} <: Object:
 
-** type companion
-class Point(x = 0, y = 0 :Double) => (@self: Object):
-
-create
-   let self := Object();
-
+create(x = 0, y = 0 :Double) => (@self: Point)
    ** set attribute values
-   new self.x := x;
-   new self.y := y;
+   let self.x := x;
+   let self.y := y;
 return;
 
 process main:
@@ -346,7 +362,7 @@ return;
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve"># define a class with inheritance
-type BaseType: {attributes} <: Object;
+type BaseType = {attributes} <: Object;
 
 ** object method
 method (@self:BaseType) demo(param:Type, ...):
@@ -354,12 +370,16 @@ method (@self:BaseType) demo(param:Type, ...):
 return;
 
 ** create a descendent of BaseType
-class ClassName <: BaseType
+class ClassName += {new_attributes} <: BaseType:
    ** class members
    ...
 create(parameters) =>(@self: BaseType):
    ** call base class constructor
-   let self := {attributes};
+   let self := super(parameters);
+
+   ** create new attributes
+   new self.new_attribute := value;
+
    ...
 return;
 
@@ -369,7 +389,6 @@ method (@self:ClassName) demo(parameters) => (result:Type):
 return;
 </code></pre>
 <hr>
-
 
 
 <p><b>Read next:</b>

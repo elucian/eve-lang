@@ -78,11 +78,7 @@ function apply_style(str) {
     str = str.replace(/\bNull\b/g,types("Null"))
     str = str.replace(/\bTrue\b/g,types("True"))
     str = str.replace(/\bFalse\b/g,types("False"))
-    str = str.replace(/\bType\b/g,types("Type"))
-
-    //  System & built-in variables
-    str = str.replace(/\bself\b/g,builtin("self"))
-    str = str.replace(/\bsuper\b/g,builtin("super"))  
+    str = str.replace(/\bType\b/g,types("Type")) 
       
     //  interruption statements
     str = str.replace(/\bexpect\b/,interrupt("expect"))
@@ -130,7 +126,8 @@ function apply_style(str) {
     str = str.replace(/\s>=\s/g,operator(" >= "))
     str = str.replace(/\s:>\s/g,operator(" :> "))
     str = str.replace(/\s<:\s/g,operator(" <: "))
-    str = str.replace(/\s<:\s/g,operator(" <- "))
+    str = str.replace(/\s<-\s/g,operator(" <- "))
+    str = str.replace(/\s->\s/g,operator(" -> "))
 
     // modifiers
     str = str.replace(/\s\*=\s/g,operator(" *= "))
