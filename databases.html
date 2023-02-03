@@ -47,7 +47,7 @@ Eve has basic interaction with relational databases. We design Eve to connect to
 <ul>
 <li><a href="#models">Models</a></li>
 <li><a href="#databases">Databases</a></li>
-<li><a href="#transactions">Transactions</a></li>
+<li><a href="#sessions">Sessions</a></li>
 <li><a href="#direct-sql">Direct SQL</a></li>
 <li><a href="#procedures">Procedures</a></li>
 
@@ -146,10 +146,9 @@ return;
 <li><a href="#tables">Tables</a></li>
 <li><a href="#records">Records</a></li>
 <li><a href="#structure">Structure</a></li>
-<li><a href="#session">Session</a></li>
 </ul>
 
-<h3><id ="mapping"></a>Mapping</h3>
+<h3><a id ="mapping"></a>Mapping</h3>
 
 <p>A database table has records. Eve strategy is to define one <em>memory table</em> as a collection of objects for each <em>database table</em>. The <em>memory table</em> is mapped to <em>database table</em>. Mapping is <em>one to one</em>. Field names are case sensitive.</p>
 
@@ -160,11 +159,11 @@ return;
 class Table(String name) &lt: Object;
 </code></pre>
 
-<h3><id="records"></a>Records</h3>
+<h3><a id="records"></a>Records</h3>
 <p>Records are <em>object instances</em> representing in memory table structure. A record has a <em>status</em> property that can be used in conditionals. One record is the current record. Several records are cached in memory for a table. A record id identified by a numeric id.</p>
 
 <pre><code class="language-eve">
-type Record(Integer id) &lt;: Object;
+class Record(Integer id) &lt;: Object;
 </code></pre>
 
 <h3><a id="structure"></a>Structure</h3>
