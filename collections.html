@@ -45,12 +45,13 @@ Collections are composite types represents groups of elements of the same type. 
 <li><a href="#list">List</a></li>
 <li><a href="#dataset">DataSet</a></li>
 <li><a href="#hash-map">HashMap</a></li>
+<li><a href="#objects">Objects</a></li>
 <li><a href="#string">String</a></li>
 <li><a href="#text">Text</a></li>
 <li><a href="#exceptions">Exceptions</a></li>
 </ul>
 <hr>
-<h2><a id="ordinal"</a>Ordinal</h2>
+<h2><a id="ordinal"></a>Ordinal</h2>
 
 <p>Ordinal is an generic class representing a set of unique ordered symbols. Each symbol represents an integer value starting from N to capacity C. Element values start with 1 or a specific number and grow with one for each element.</p>
 
@@ -58,7 +59,7 @@ Collections are composite types represents groups of elements of the same type. 
 <pre><code class="language-eve"># Define a Ordinal subtype
 driver test_ordinal; 
 
-type TypeName = {name1:0, name2, name3} &lt;: Ordinal;
+class TypeName = {name1:0, name2, name3} &lt;: Ordinal;
 
 process main:
   new a := TypeName.name1; -- a=2
@@ -72,7 +73,7 @@ return;
 <pre><code class="language-eve">## Declare public elements in enumeration
 driver constant_ordinals;
 
-type TypeName = {Name1:10, Name2} &lt;: Ordinal;
+class TypeName = {Name1:10, Name2} &lt;: Ordinal;
 
 process main:
   new a := Name1; -- a = 10
@@ -112,10 +113,10 @@ return;
   new e_list :List;
 
 # explicit declarations
-  new n_list (1,2,3) :()Integer;
-  new c_list ('a','b','b') :()Symbol;
-  new s_list ("a","b","c") :()String; 
-  new o_list ({a:1},{b:2},{c:3} :()Object; 
+  new n_list = (1,2,3) :()Integer;
+  new c_list = ('a','b','b') :()Symbol;
+  new s_list = ("a","b","c") :()String; 
+  new o_list = ({a:1},{b:2},{c:3}) :()Object; 
 </code></pre>
 
 <p><b>list literals</b></p>
@@ -161,8 +162,8 @@ new array_name4: [n,m]Type;   -- 2d matrix, capacity c = n * m
 new array_name4: [x,y,z]Type; -- 3d matrix, capacity c = x * y * z
 
 ** define Array sub-types
-type AType = [ ]TypeName <: Array;
-type MType = [,]TypeName <: Array;
+class AType = [ ]TypeName <: Array;
+class MType = [,]TypeName <: Array;
 
 ** use previous defined sub-type
 new array_name5 := [n]AType;
@@ -266,7 +267,7 @@ return;
 <pre><code class="language-eve"># define a subtype of Array
 driver test_matrix;
 
-type Matrix: [4,4]Integer &lt;: Array;
+class Matrix: [4,4]Integer &lt;: Array;
 
 process main:
   new mat: Matrix; -- define matrix variable
@@ -423,7 +424,7 @@ return;
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
-type Dic = {}(String,Object) &lt;: HashMap;
+class Dic = {}(String,Object) &lt;: HashMap;
 driver test:
 # Null map
   set m :Dic;
@@ -456,10 +457,69 @@ process main:
 return;
 </code></pre>
 
+<!-- work in progress-->
+
+<h2><a id="objects"></a>Objects</h2>
+
+<p>Objects are collections of attributes of different types. The most simple object is an instance of type Object. The Object is the fundamental class in EVE, that is why it starts with uppercase.</p>
+
+<h4>Pattern:</h4>
+
+<p>Initialize an object by using an object literal with initialization values:</p>
+
+<pre><code class="language-eve">
+# define global object instances
+driver test:
+  ** empty object
+  set object_name = {attribute:value, ...}: Object; 
+
+process main:
+  ** accessing attributes
+  print object_name.attribute;
+  ...
+return;
+</code></pre>
+
+<h4>Example:</h4>
+
+<p>Define a local object that has two attributes:</p>
+
+<pre><code class="language-eve">
+# define global object instances
+process test:
+  ** simple object with two fields
+  new point = {x:1.5, x:1.5}: Object; 
+
+  ** accessing attributes
+  print point.x;
+  print point.y;
+return;
+</code></pre>
+
+<h4>Empty object:</h4>
+
+<p>Define a local Null object == {}</p>
+
+<pre><code class="language-eve">
+# define global object instances
+process test:
+  ** simple object with two fields
+  new object = {} :Object; 
+
+  ** create new attributes
+  new object["x"];
+  new object["y"];
+  ...
+  print object.x;
+  print object.y;
+return;
+</code></pre>
+
+<p><b>Note: </b>Objects and HashMap are very similar. The difference is, object attributes can have diverse types. In a HashMap all elements have the same type. Also in HashMap the key can be numeric, symbol or string. Object attributes are always strings.</p>
+
 <h2><a id="string"></a>String</h2>
 
 <p>In Eve, strings are collections of UTF8 code points. The capacity of string is virtual unlimited. A string can grow automaticly. Strings are immutable.</p>
-
 
 <h3>String declaration</h3>
 
@@ -501,7 +561,7 @@ process
   expect str is not ref; --  different locations
 
   ** operator ":=" works by reference
-  ref := str;        --  reset ref
+  let ref := str;        --  reset ref
   expect str == ref; --  same value
   expect str is ref; --  same reference
 
@@ -541,9 +601,9 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve"># compare strings
 driver compare_strings:
-  expect('a' == 'a');         --  true (same value)
-  expect("this" == "this");   --  true (same value)
-  expect(" this" != 'this '); --  trailing spaces are significant
+  expect ('a' == 'a');         --  true (same value)
+  expect ("this" == "this");   --  true (same value)
+  expect (" this" != 'this '); --  trailing spaces are significant
 return;
 </code></pre>
 
@@ -658,7 +718,7 @@ return;
 <pre><code class="language-eve">** system exception type
 module Exception:
 
-type  .Error: {
+class .Error: {
    code: Integer, 
    message: String, 
    module: String, 
@@ -751,8 +811,6 @@ expect condition2 else "user defined message";
 <li>can be used as post-condition</li>
 <li>unexpected error has code = 0</li>
 </ul>
-
-<!-- work in progress-->
 
 <hr>
 <p><b>Read next:</b>

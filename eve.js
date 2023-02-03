@@ -5,8 +5,7 @@ function apply_style(str) {
     str = str.replace(/^aspect\b/,keyword("aspect"))
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias"))
-    str = str.replace(/^lambda\b/,keyword("lambda"))   
-    str = str.replace(/^type\b/,keyword("type"))    
+    str = str.replace(/^lambda\b/,keyword("lambda"))    
     str = str.replace(/^class\b/,keyword("class"))    
     // maybe with indentation 
     str = str.replace(/\bprocess\b/,keyword("process"))   

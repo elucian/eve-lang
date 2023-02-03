@@ -157,11 +157,18 @@ lambda
 
 <pre><code class="language-eve">
 # define a lambda signature
-type BinEx = (p1, p2 :Integer):Integer <: Function;
+driver lam_sig
+
+class BinEx = (p1, p2 :Integer):Integer <: Function;
 
 ** Use lambda signature as parameter type
 process useLambda(test :BinEx):
-   ...
+   print test();
+return;
+
+** Execute a process with lambda argument
+process main:
+   apply useLambda((x, y) => (x + y));
 return;
 </code></pre>
 

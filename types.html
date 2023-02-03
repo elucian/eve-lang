@@ -341,7 +341,7 @@ return;
 
 <h2><a id="symbol"/>Single Symbol</h2>
 
-<p>For representing a single character/symbol you can use single quoted strings. Single quoted strings can store a single UTF8 code point but it has a fixed size of 4 bytes.</p>
+<p>For representing a single character/symbol you can use single quoted strings. Single quoted strings can store a single UTF8 code point but it has a fixed size of 4 bytes. This type is called "rune" in Go language.</p>
 
 <h4>Examples</h4>
 
@@ -364,9 +364,9 @@ new operator := '&not;';
 
 <h2><a id="composite-types"/>Composite Types</h2>
 
-<p>Composite data types are unions of data elements. A composite variable that is not initialized can have Null value that is similar to zero but different. Some of these types are going to be explained later. We enumerate them all here to grasp the idea.</p>
+<p>Composite data types are unions of data elements. A composite variable that is not initialized can have Null value. These types are going to be explained later in other pages.</p>
 
-<p><b>Note: </b>Eve Try the best to enable the most generous data type for a data literal. When a more restrictive type is required you must forget about data inference and specify the type using a type hint.</p> 
+<p><b>Note: </b>We try the best to enable implicit data types for specific literals. For most cases, impicit data type works. Sometimes you need precise to specify the type using a type hint.</p> 
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -375,6 +375,18 @@ new operator := '&not;';
 <th>Description</th>
 </tr>
 </thead>
+<tr>
+<td>Object</td>
+<td>Root class for all composite data types</td>
+</tr>
+<tr>
+<td>Record</td>
+<td>Flat collection of native data types. (No objects)</td>
+</tr>
+<tr>
+<td>Variant</td>
+<td>A union of possible data types.</td>
+</tr>
 <tbody>
 <tr>
 <td>Range</td>
@@ -401,12 +413,8 @@ new operator := '&not;';
 <td>Enumeration of unique elements of the same type</td>
 </tr>
 <tr>
-<td>Class</td>
-<td>Reference to class. Also called "class handler".</td>
-</tr>
-<tr>
-<td>Object</td>
-<td>Root class and data thpe. Also called "object handler".</td>
+<td>Table</td>
+<td>A collection of records indexed by unique key.</td>
 </tr>
 <tr>
 <td>Function</td>
@@ -436,8 +444,8 @@ new operator := '&not;';
 <h4>Notes:</h4>
 <ul>
 <li>Limits are included by default,</li>
-<li>Upper or lower limits can be excluded using "!" instead of "."</li>
-<li>Range notation can be open at one end or both ends.</li>
+<li>Ratio is integer & optional,</li>
+<li>Ratio can be negative,</li>
 </ul>
 
 <h4>Example:</h4>
@@ -446,14 +454,16 @@ new operator := '&not;';
 
 <pre lass="no-line-numbers"><code class="language-eve">#numeric range demo
 driver numeric_range:
+  class R5 = [0..5] <: Range;
 
 process main:
-  print (0..5);    -- (0,1,2,3,4,5)
-  print (0..10:2); -- (0,2,4,6,8,10)
-
   ** test range
-  expect 0 in (0..5);
-  expect 5 in (0..5);
+  expect 0 in R5;
+  expect 5 in R5;
+
+  ** test limit
+  expect 4 in [1..8:2]
+  expect 5 not in [-10..10:2]
 return;
 </code></pre>
 
@@ -464,40 +474,35 @@ return;
 <pre class="line-numbers"><code class="language-eve"># using symbol ranges
 driver symbol_range:
 process
-  print ('0'..'5') -- ('0','1','2','3','4','5')
+  print ['0'..'5'] -- {'0','1','2','3','4','5'}
 
   ** following statements should pass
-  expect '0' in ('0'..'9');  -- will pass
-  expect 'X' in ('A'..'Z');  -- will pass
+  expect '0' in ['0'..'9'];  -- will pass
+  expect 'X' in ['A'..'Z'];  -- will pass
 return;
 </code></pre>
 </div>
 
-<h4>Notes:</h4>
-<ul>
-<li>The implicit ratio is 1 and is optional</li>
-<li>Ratio cam be integer or decimal number</li>
-</ul>
 
 <h2><a id="domain"/>Domain</h2>
 
-<p>Domains are similar to ranges, except they cover continuous numbers not discrete range. So you can not print an entire domain. If you try, an infitinet loop may trigger so when you print a domain it will be printed as it is defined unlike the range that is expanded.</p>
+<p>Domains are similar to ranges. The numbers in a domain can have a decimal precision. So the domain can be continuous or discrete. The maximum precision is establish by a system variable $precision.</p>
 
 <h4>Syntax:</h4>
-<pre><code class="language-eve">domain ::= [min..max] &lt;: Super_Type
+<pre><code class="language-eve">domain ::= (min..max:ratio)
 </code></pre>
 
 <h4>Examples:</h4>
 <pre><code class="language-eve"># domain demo
 driver domain_demo:
+  class small = (0..1) <: Domain;
 
 process main:
-  print [0..1]; -- [0..1]
-
   ** using domain
-  expect 0   in [0..1];
-  expect 1   in [0..1];
-  expect 0.5 in [0..1];
+  expect 0   in small;
+  expect 1   in small;
+  expect 0.5 in small;
+  expect 0.1 in small;
 return;
 </code></pre>
 
@@ -740,18 +745,15 @@ return;
 <p>You can create empty new collections using type inference and determine the type of elements later, using "let" or "put" or any method that can create new elements.</p>
 
 <pre><code class="language-eve"># gradual type declaration
+process main:
   new a := ();  -- empty List
   new v := [];  -- empty Vector
   new s := {};  -- empty DataSet
-  new s := {:}; -- empty Table
 
   ** add elements
-  put a <+ (10,11,12) -- establish element type
-  put a <+ "4"        -- error, elements are Integer
-
-  ** create 3 elements
-  let v := (1..3); 
-  expect v == [1,2,3]; -- 3 elements are generated
+  let a := (10,11,12) -- establish element type
+  let a += "4"        -- error, elements are Integer
+return;
 </code></pre>
 
 <h3>Type verification</h3>
@@ -759,10 +761,10 @@ return;
 <pre><code class="language-eve"># using operator "is" to check type
 driver type_check:
   ** define object and initialize
-  set r:{name:"test", age:24} <:Object;
+  set r = {name:"test", age:24} :Object;
   
   ** define hash table
-  set t:{'key1':"value1",'ley2':"value2"} <: DataSet;
+  set t = {'key1':"value1",'ley2':"value2"} :DataSet;
 process
   ** check variable types using introspection
   expect type(r.name)  is String;
@@ -835,7 +837,7 @@ set True  := Ob1 :Byte;
 <p>Probably best to define Logic type is Ordinal:</p>
 
 <pre><code class="language-eve">
-type Logic = {False:0 , True} &lt;: Ordinal;
+class Logic = {False:0 , True} &lt;: Ordinal;
 </code></pre>
 
 <p><b>Logical expressions</b></p>
@@ -861,10 +863,10 @@ type Logic = {False:0 , True} &lt;: Ordinal;
 <h4>Syntax:</h4>
 
 <pre><code class="language-eve">** define variant subtype
-type {Type1 | Type2 | ... } &lt;: Variant;
+class VNamme = {Type1 | Type2 | ... } <: Variant;
 
 **  declare variable (with initial value)
-set v = value :Variant_Name() ;
+set v = value :VNamme;
 </code></pre>
 
 <h4>Properties</h4>
@@ -881,13 +883,24 @@ set v = value :Variant_Name() ;
 <li>It can have only one value = Null;</li>
 </ul>
 
-<h4>Pattern:</h4>
-<pre><code class="language-eve">** define nullable variant
-type 
-    Number = { Integer | Double | Null } &lt;: Variant;
+<h4>Example:</h4>
 
-** use nullable variant
-set x: Number;
+<pre><code class="language-eve">
+** define nullable variant
+driver test_nulable:
+
+class Number = { Integer | Double | Null } &lt;: Variant;
+
+process main:
+  ** use nullable variant
+  set x: Number;
+
+  let x = 10;    -- x is Integer
+  let x = 45.5;  -- x is Double
+  let x = Null;  -- x is Null
+
+  expect x is null;
+return;
 </code></pre>
 
 <h3>Usability</h3>

@@ -185,11 +185,17 @@ _not_valid_
 <p>A sigil is a special character prefix that is used to define an identifier. We use sigil to improve code readability but also to add extra functionality to specific identifiers that are not regular. Eve is using following sigils to define special kind of variables or identifiers:</p>
 
 <table class="table table-bordered table-sm table-striped">
-<tr><th style = "text-align:center;">&nbsp;</th><td>in scope variable   </td></tr>
-<tr><th style = "text-align:center;">*     </th><td>variable arguments  </td></tr>
 <tr><th style = "text-align:center;">$     </th><td>system  variables    </td></tr>
-<tr><th style = "text-align:center;">.     </th><td>public  variables    </td></tr>
 <tr><th style = "text-align:center;">_     </th><td>private variables    </td></tr>
+</table>
+
+<h3>Identifier Prefix</h3>
+
+<p>Indetifier prefix is used to declare a variable, but is not required when use the variable. Prefix specify a particular kind of variable that is unusual.</p>
+
+<table class="table table-bordered table-sm table-striped">
+<tr><th style = "text-align:center;">*     </th><td>vararg parameter/ argument spreading  </td></tr>
+<tr><th style = "text-align:center;">@     </th><td>result / input & output parameters </td></tr>
 </table>
 
 <h3>System Variables</h3>
@@ -218,10 +224,10 @@ _not_valid_
 
 <h4>Notes:</h4>
 <ul>
-<li>Prefix is reducing collision between local and global name scope;</li>
-<li>In other languages this kind of prefix is called&nbsp;<em>sigil;</em></li>
-<li>A system constant is usually represented by a basic type not objects;</li>
-<li>A system variables can be an object with attributes or a base type.</li>
+<li>Sigil is reducing collision between local and global name scope;</li>
+<li>In other languages the <em>sigil;</em> is used for all variables;</li>
+<li>A system constant is usually represented by a native or basic type;</li>
+<li>A system variable can be an object with attributes or a base type.</li>
 </ul>
 
 <h2><a id="globals"></a>Globals</h2>
@@ -445,7 +451,7 @@ return;</code></pre>
 <tr><td>       </td><td>select     </td><td>call      </td><td>skip     </td></tr>
 <tr><td>step     </td><td>store    </td><td>switch    </td><td>job     </td></tr>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>     </td></tr>
-<tr><td>update   </td><td>use      </td><td>.         </td><td>view     </td></tr>
+<tr><td>update   </td><td>use      </td><td>         </td><td>view     </td></tr>
 <tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
 <tr><td>resume   </td><td>panic    </td><td>&nbsp;    </td><td>&nbsp;   </td></tr>
 </table>
@@ -468,7 +474,7 @@ return;</code></pre>
 <td>define identifier for import</td>
 </tr>
 <tr>
-<td>type</td>
+<td>class</td>
 <td>define one or more types</td>
 </tr>
 <tr>
