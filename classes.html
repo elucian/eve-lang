@@ -58,8 +58,8 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 <hr>
 <ul>
 <li><a href="#object">Object Class</a></li>
-<li><a href="#methods">Object methods</a></li>
-<li><a href="#class">Class template</a></li>
+<li><a href="#class">Class signature</a></li>
+<li><a href="#methods">Class methods</a></li>
 <li><a href="#constructor">Class constructor</a></li>
 <li><a href="#class-members">Class members</a></li>
 <li><a href="#class-tree">Class Tree</a></li>
@@ -71,7 +71,7 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 
 <h2><a id="object">Object Class:</h2>
 
-<p>Eve is like Java. It has defined a root Object that is actually a class. This can be used to create user defined classes and subtypes. The Object class has a default constructor that accept variable number of arguments.</p>
+<p>Eve is like Java. It has a root Object that is actually a class. This can be used as a base class. The Object class has a default constructor that accept variable number of arguments.</p>
 
 <p>Initialize an object by using an Object constructor.</p>
 
@@ -87,9 +87,24 @@ return;
 
 <p><b>Note:&nbsp;</b>Object constructor can receive argument names that do not exist, and bind values to new attributes using (key:value) pairs. This is possible in Eve due to a gradual typing system.</p>
 
-<h2><a id="methods"></a>Object methods</h2>
+<h2><a id="class"></a>Class signature</h2>
 
-<p>Methods are related to an object type or class. The methods can have parameters and can return results. You must define all methods for a data type or class in the same module as the type declaration.</p>
+<p>Class is a type declaration. You can declare the class publiic attributes before implementing the class. This is called "forward declaration". It is useful when you have 2 classes to be defined that depend on each other.</p>
+
+<pre><code class="language-eve">#define an object instance
+** declare a class with two attributes
+class MyClass = {a, b: Integer} <: Object;
+
+** create several class signatures in a "class region"
+class
+  Foo = {attr:Type, ...} <: Object;
+  Bar = {attr:Type, ...} <: Object;
+  ...
+</code></pre>
+
+<h2><a id="methods"></a>Class methods</h2>
+
+<p>Methods are related to a class or module. The methods can have parameters and can return results. You must define all methods for a data type or class in the same module as the type declaration.</p>
 
 <h4>Example</h4>
 
@@ -111,18 +126,20 @@ process main:
   new p := Point(x:1, y:2);
 
   ** move the point
-  apply p.move(2,1);
+  p.move(2,1);
   print p.string(); -- (3:3)
 return;
 </code></pre>
 
-<h2><a id="class"></a>Class Template</h2>
+<p><b>Note: </b>To call a method, you do not use any keyword. Just specify the method name with arguments. Methods can be created in packages to extend the Eve language with domain specific actions.</p>
 
-<p>You can create more complex objects by using a class template. This is a special struture that can be used to describe class members and object instance. A class can have a constructor or can be constructor-less.</p>
+<h2><a id="constructor"></a>Class Constructor</h2>
+
+<p>You can create more complex objects by using a class constructor. This is a special struture that can be used to describe class members and object instances. A class can have a constructor or can be constructor-less.</p>
 
 <h4>Design:</h4>
 
-<p>A class is a composite data type. It can be derived from another data type or from Object. Next design pattern explain how to declare a class with attributes and constructor:</p>
+<p>A class is a composite data type. It can be derived from another data type or from the root Object. Next design pattern explain how to declare a class with attributes and constructor:</p>
 
 <pre><code class="language-eve">
 # user defined class   
@@ -138,11 +155,9 @@ release
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b> A class is a container template. It has public and private members and can describe attributes for the future object instances. A class has a declaration region where these members are defined, and an initialization region called constructor, for object initialization.</p>
+<p><b>Notes:&nbsp;</b>A class is a singleton. It has public and private members and can describe attributes for the future object instances. A class has a declaration region where these members are defined, and an initialization region called constructor, for object initialization.</p>
 
-<h3><a id="constructor"></a>Class constructor</h3>
-
-<p>A class has one single constructor. Constructors can have one or more parameters, some may be optional. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
+<p><b>Description:&nbsp;</b>A class has one single constructor. Constructors can have one or more parameters, some may be optional. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
 
 <h4>Pattern:</h4>
 
@@ -206,17 +221,18 @@ return;
 
 <h3>Properties</h3>
 
-<p>A class is actually a <em>singleton object</em>. The class has public or private properties. Each property is defined in class context. We declare class properties after symbol ":" before any function.</p>
+<p>As mentioned before, the class has public or private properties. Each property is defined in the class context. We declare class properties after symbol ":" before any function.</p>
 
 <ul>
 <li>By default, class properties are public states;</li>
 <li>Private class properties start with underscore "_"; 
 <li>Properties are defined using keyword "set" ;
+<li>A class is a singleton Object of type Class;</li>  
 </ul>
 
-<p>To access properties we can use class qualifier and dot notation:</p>
+<p>To access the properties we can use class qualifier with dot notation:</p>
 
-<pre class="output">class_name.class_property;</pre>
+<pre class="output">ClassName.property_name;</pre>
 
 <h3><a id="functions">Functions</h2>
 
@@ -259,21 +275,21 @@ return;
 <p>A class can instantiate objects. The class constructor must set initial values for object attributes and can create new private attributes.</p>
 
 <ul>
-<li>We declare object attributes using = {}  or += {} after class name;</li>
+<li>We declare attributes using = {...}  or += {...} after class name;</li>
 <li>Public attributes must be initialized using "let" in constructor;</li>
-<li>Private attributes are created with keyword "new" in constructor.</li>
+<li>Private attributes are created with keyword "new" in constructor;</li>
+<li>If you try to create new attributes witout "_" compiler signal error;</p>
 </ul>
 
 <p>To access attributes we can use dot notation:</p>
 
-<pre class="output">object_name.object_attribute;</pre>
+<pre class="output">object.attribute;</pre>
 
-<p>We already know how to instantiate a class and create objects using a class. A class does not know anything about its objects. You can not ask the class anything about its instances, except if you create a special logic using class properties.</p>
-
+<p><b>Note </b>A class does not know anything about its objects. You can not ask the class anything about its instances, except if you create a special logic using class properties.</p>
 
 <h2><a id="class-tree"></a>Class Tree</h2>
 
-<p>Using the <em>"Object"</em> as the <em>"root"</em> Class you can create a hierarchy of classes. Each classes is derived from the Object or from other <em>"superclass"</em> forming a <em>"class tree"</em>. Like a real tree the class hierarchy has a single root.</p>
+<p>Using the <em>"Object"</em> as the <em>"root class"</em>, you can create a hierarchy of classes. Each classes is derived from the Object or from other <em>"superclass"</em> forming a <em>"class tree"</em>. Like a real tree the class hierarchy has a single root.</p>
 
 <div align="center">
    <img src="img/class-tree.svg" alt="Class Tree" width="680" class="img-fluid protect rounded shadow border" >
@@ -288,9 +304,10 @@ return;
 driver point_demo:
 
 ** define class Point, from root Object
-class Point = {x, y :Double} <: Object;
+class Point = {x, y :Double} <: Object:
 
-create(x = 0, y = 0 :Double) => (@self: Point)
+** constructor reveive 2 parameters
+create(x = 0, y = 0 :Double) => (@self: Point):
   ** set attribute values
   let self.x := x;
   let self.y := y;
