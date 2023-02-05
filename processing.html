@@ -189,7 +189,7 @@ process add_numbers:
 return;
 
 ** define main process
-process main:
+process
   let p1 := 10;      
   let p2 := 20;     
   apply add_numbers; --  call process add_numbers;
@@ -207,7 +207,7 @@ return;
 <pre><code class="language-eve">
 #list demo concatenation
 driver list_concat:
-process main:
+process
   ** initialized list
   new a := ('a','b'); 
   new b := ('1','3'); 
@@ -233,7 +233,7 @@ return;
 <pre><code class="language-eve">
 #list demo concatenation
 driver list_alter:
-process main:
+process
   ** initialized list
   new lst := ('a','b','c','b'); 
 
@@ -266,7 +266,7 @@ return;
 driver list_remove:
   ** initialized queue
   set queue := ()Symbol; 
-process main:
+process
   ** enqueue one element
   let queue += "x";
   expect queue ==  ('x');
@@ -296,7 +296,7 @@ return;
 driver list_remove:
   ** initialized stack
   set stack := ('a','b','c'); 
-process main:
+process
   ** append element at the beginning
   let Symbol += 'x'
   expect stack ==  ('x','a','b','c');
@@ -352,7 +352,7 @@ return;
 #iteration process
 driver test_iteration:
   set collection := ('a','b','c');
-process main:
+process
   cycle: 
     new element: Symbol;
   for element is collection loop
@@ -369,7 +369,7 @@ return;
 <pre><code class="language-eve"># list iteration
 driver list_iteration:
   set my_list: {}(Symbol); --  this list is Null
-process main:
+process
   let my_list := ['a','b','c','d','e'];
   cycle:
     new e: Symbol;
@@ -395,7 +395,7 @@ return;
 <pre><code class="language-eve"># local map initialization
 driver map_init:
   my_map:HashMap; -- uninitialized collection
-process main:
+process
   ** initialize my_map with values
   let my_map := {(1:'a'),(2:'b'),(3:'c')};
 
@@ -409,7 +409,7 @@ return;
 <pre><code class="language-eve">** create new elements
 process map_append:
   set animals: {}(String, String): ; -- empty collection
-process main:
+process
   ** create new element pairs
   let animals += ("Bear":"dog");
   let animals += ("Kiwi":"bird");
@@ -429,7 +429,7 @@ return;
 <pre><code class="language-eve">#update a map
 driver map_update:
   set animals := {("dogs":0),("birds":0)};
-process main:
+process
   ** print the new collection
   print  animals;
 
@@ -468,7 +468,7 @@ return;
 driver map_iteration:
   set my_map := {("a":1),("b":2),("c":3)};
 
-process main:
+process
   cycle: 
     new key: Symbol;
     new value: Integer;
@@ -497,7 +497,7 @@ return;
 <pre><code class="language-eve">** example of string concatenation
 driver string_concat:
   set str = "";  -- empty String
-process main:
+process
   ** set string value using different operators
   let str := "this " + " string"; expect str == "this  string";
   let str := "this " - " string"; expect str == "this string";

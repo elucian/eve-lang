@@ -37,9 +37,9 @@
 <h1><a id="functions">Eve Functions</h1>
 
 <div class="alert alert-secondary shadow-sm">
-A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. Eve functions are first class values.</div>
+A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. Eve functions are actually special objects of type Function.</div>
 
-<p>Functions are declared with keyword: "function". A function can be public or private, local or global. You can define functions in different places depending on your requirements. Functions can be members in modules, classes or processes.</p>
+<p>Functions are declared with keyword: "function". A function can be public or private. You can define functions in different places depending on your requirements. Functions can be members in script, aspects, modules or classes.</p>
 
 <h4>Pattern:</h4>
 
@@ -55,7 +55,7 @@ return;
 <ul>
 <li>Result type can be declared explicit usin @ prefix,</li>
 <li>A function can have input/output parameters,</li>
-<li>A routine can receive parameters of type function,</li>
+<li>A function can receive parameters of type function,</li>
 <li>A function can return a result but the result is optional,</li>
 <li>A function can create as a result another function called closure,</li>
 <li>A function can raise errors but it can't handle errors,</li>
@@ -76,7 +76,7 @@ function name2(param := value,...) => (@result:Type):
    let result := expression;
 return;
 
-process main:
+process
   ** execute using argument list
   new result := name1(arguments);
 
@@ -109,13 +109,13 @@ function sum(a, b: Integer) => (@result:Integer):
   let result := (a + b);
 return;
 
-process main:
+process
   print sum(1,2);  -- 3
   print sum(2,4);  -- 6
 return;
 </code></pre>
 
-<p><b>Function call</b>&nbsp; Some functions do not have a result and can have side-effects. You can call this kind of function without round brackets () using keyword: "call". </p>
+<p><b>Function call</b>&nbsp; Some functions do not have a result and can have side-effects. You can call this kind of function without round brackets () when there is no argument or a single argument. For more argumetns, function caall require brackets and ";". </p>
 
 <pre><code class="language-eve">
 #demo function call
@@ -126,12 +126,12 @@ function name1();
 function name2(param = value: Type,...);
   ...
 
-process main:
-  ** call using argument list
-  call name1(arguments);
+process
+  ** call using single argument
+  name1 arguments;
 
-  ** call using parameter names with pair operator (:)
-  call name2(param:arg,....);
+  ** call using many arguments with values (:)
+  call name2(param:arg_value, ...);
 return;
 </code></pre>
 
@@ -139,7 +139,7 @@ return;
 
 <p>Lambda expressions are simple functions. Can receive arguments and can produce a result. A lambda expression is created with keywords set or new. Lambda expressions do not have local variables or states and do not have side effects.</p>
 
-<p>Lambda expressions can be declared in global scope using "function" region. You can define a single function region for a module. Lambda expressions can be anonymous or named.</p>
+<p>Lambda expressions can be declared in global scope using "lambda" region. You can define more than one lambda regions. Lambda expressions can be anonymous or named.</p>
 
 <h4>Example</h4>
 
@@ -159,16 +159,16 @@ lambda
 # define a lambda signature
 driver lam_sig
 
-class BinEx = (p1, p2 :Integer):Integer <: Function;
+class BinEx = (p1, p2 :Integer):Integer <: Lambda;
 
 ** Use lambda signature as parameter type
-process useLambda(test :BinEx):
+function useLambda(test :BinEx):
    print test();
 return;
 
 ** Execute a process with lambda argument
-process main:
-   apply useLambda((x, y) => (x + y));
+process
+   useLambda((x, y) => (x + y));
 return;
 </code></pre>
 

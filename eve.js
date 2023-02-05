@@ -7,6 +7,7 @@ function apply_style(str) {
     str = str.replace(/^alias\b/,keyword("alias"))
     str = str.replace(/^lambda\b/,keyword("lambda"))    
     str = str.replace(/^class\b/,keyword("class"))    
+    str = str.replace(/^global\b/,keyword("global"))    
     // maybe with indentation 
     str = str.replace(/\bprocess\b/,keyword("process"))   
     str = str.replace(/\bcreate\b/,keyword("create"))
@@ -111,9 +112,11 @@ function apply_style(str) {
     str = str.replace(/\beq\b/g,operator("eq"))    
     str = str.replace(/\band\b/g,operator("and"))
     str = str.replace(/\bnot\b/g,operator("not"))
-    str = str.replace(/\bnew\b/g,operator("new"))
-    str = str.replace(/\blet\b/g,operator("let"))
-    str = str.replace(/\bset\b/g,operator("set"))
+    
+    // mandatory indentation
+    str = str.replace(/\snew\b/g,operator(" new"))
+    str = str.replace(/\slet\b/g,operator(" let"))
+    str = str.replace(/\sset\b/g,operator(" set"))
 
     // two symbols
     str = str.replace(/\s::\s/g,operator(" :: "))

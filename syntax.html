@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve language syntax overview.">
@@ -24,7 +25,7 @@
 <!-- header -->
 <div class="row">
     <div class="col">
-        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
+        <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"></a>
     </div>
     <div class="col  bottom-right">
         <a href="index.html#lang-index">index</a><--
@@ -61,7 +62,7 @@
 <pre><code class="language-eve">#demo: hello world
 driver hello:
 
-process main:
+process
     ** main process
     print "Hello World!";
 return;
@@ -73,7 +74,7 @@ return;
 
 <pre><code class="language-eve">
 # main script in Eve is called: "driver"
-driver syntax_elements:
+driver syntax_elements(a, b: Integer)::
 
 ** define two global lambda expressions
 lambda
@@ -81,9 +82,9 @@ lambda
     set sub := (p1, p2: Integer) => (p1 - p2);
 
 ** define local variables
-process main(v1, p2: Integer):
+process
     ** main process has access to parameters
-    print "param1: #{p1}, param2: #{p2}";
+    print "param1: #{a}, param2: #{b}";
 
     new v1, v2 :Integer;
     
@@ -194,8 +195,9 @@ _not_valid_
 <p>Indetifier prefix is used to declare a variable, but is not required when use the variable. Prefix specify a particular kind of variable that is unusual.</p>
 
 <table class="table table-bordered table-sm table-striped">
-<tr><th style = "text-align:center;">*     </th><td>vararg parameter/ argument spreading  </td></tr>
-<tr><th style = "text-align:center;">@     </th><td>result / input & output parameters </td></tr>
+<tr><th style = "text-align:center;">*     </th><td>vararg parameter | argument spreading  </td></tr>
+<tr><th style = "text-align:center;">@     </th><td>result | input & output parameters </td></tr>
+<tr><th style = "text-align:center;">.     </th><td>public member of a module</td></tr>
 </table>
 
 <h3>System Variables</h3>
@@ -241,6 +243,7 @@ _not_valid_
 
 <pre><code class="language-eve">
 ** define global system states
+global
   set $s := "test"
 
   ** two integers
@@ -267,8 +270,11 @@ _not_valid_
 
 <pre><code class="language-eve">
 # multiple variables
+process
     new a = b = 0 :Integer;
     new x = y = z = 0.5 :Double;
+    ...
+return;
 </code></pre>
 
 <h2><a id="expressions"></a>Expressions</h2>
@@ -308,12 +314,12 @@ return;
 
 <h4>Notes:</h4>
 <ul>
-<li>print statement can receive multiple arguments separated by comma,</li>
-<li>print statement will add new line by default,</li>
-<li>print statement will separate different values using one space,</li>
-<li>write statement will output to console and do not add new line,</li>
-<li>write statement also separate values by using one space,</li>
-<li>after several write statements you must use print to flush the buffer,</li>
+<li>print can receive multiple arguments separated by comma,</li>
+<li>print will add new line by default,</li>
+<li>print will separate different values using one space,</li>
+<li>write will output to console and do not add new line,</li>
+<li>write also separate values by using one space,</li>
+<li>print is used to flush the buffer, after several write,</li>
 </ul>
 
 <h3>Assign Expression</h3>
@@ -386,7 +392,7 @@ expect (True if test else False); -- will pass
 <p>The most simple statements are definitely single line statements:</p>
 
 <pre><code class="language-eve">driver assign_demo:
-process main:
+process
   ** initialization statements
   new a = 2 :Integer;
   new b :Double;
@@ -410,7 +416,7 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve">
 # multiple line demo
-process multi_line:
+process
   ** multi-row expression
   new var := 1 +
              2 +
@@ -448,7 +454,7 @@ return;</code></pre>
 <tr><td>recover  </td><td>release  </td><td>lambda    </td><td>repeat   </td></tr>
 <tr><td>reset    </td><td>rest     </td><td>result    </td><td>&nbsp;   </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
-<tr><td>       </td><td>select     </td><td>call      </td><td>skip     </td></tr>
+<tr><td>globa    </td><td>select     </td><td>call      </td><td>skip     </td></tr>
 <tr><td>step     </td><td>store    </td><td>switch    </td><td>job     </td></tr>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>     </td></tr>
 <tr><td>update   </td><td>use      </td><td>         </td><td>view     </td></tr>
@@ -480,6 +486,10 @@ return;</code></pre>
 <tr>
 <td>lambda</td>
 <td>define a region for one or more lambda expressions</td>
+</tr>
+<tr>
+<td>global</td>
+<td>define a region for state variables and constants</td>
 </tr>
 </tbody>
 </table>

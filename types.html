@@ -320,7 +320,7 @@ driver numeric_literals:
   set g2 = 0.0 :Float;
 
 ** define main process
-process main:
+process
   ** check equality
   expect g1 == g2;     -- value is equivalent
   expect g1 is not g2; -- not the same
@@ -454,9 +454,10 @@ new operator := '&not;';
 
 <pre lass="no-line-numbers"><code class="language-eve">#numeric range demo
 driver numeric_range:
-  class R5 = [0..5] <: Range;
 
-process main:
+class R5 = [0..5] <: Range;
+
+process
   ** test range
   expect 0 in R5;
   expect 5 in R5;
@@ -495,9 +496,9 @@ return;
 <h4>Examples:</h4>
 <pre><code class="language-eve"># domain demo
 driver domain_demo:
-  class small = (0..1) <: Domain;
+class small = (0..1) <: Domain;
 
-process main:
+process
   ** using domain
   expect 0   in small;
   expect 1   in small;
@@ -520,7 +521,7 @@ return;
 <pre><code class="language-eve">#example of implicit conversion
 driver implicit_coercion:
 
-process main:
+process
   ** local variables
   new a := 2;
   new b := 1.5;
@@ -542,7 +543,7 @@ driver explicit_coercion:
   set a = 0   :Integer;
   set b = 1.5 :Double;
 
-process main:
+process
 **explicit coercion lose (0.5)
   let a := floor(b);
   write  a; -- will print: 1
@@ -564,7 +565,7 @@ driver number_to_string:
   set s:  String;
   set v:= 1000;
 
-process main:
+process
   let s := format(v); --  explicit coercion s = '1000'
   expect (s == '1000');
 return;
@@ -583,7 +584,7 @@ driver string_to_number:
   set s = "1000"  :String;
   set r = "200.02":String;
 
-process main:
+process
   let v := parse(s); --  make v = 1000
   let v := parse(r); --  make v = 200 and decimal .02 is lost
   let b := parse(r); --  make b = 200.02 and decimal .02 is preserved
@@ -745,7 +746,7 @@ return;
 <p>You can create empty new collections using type inference and determine the type of elements later, using "let" or "put" or any method that can create new elements.</p>
 
 <pre><code class="language-eve"># gradual type declaration
-process main:
+process
   new a := ();  -- empty List
   new v := [];  -- empty Vector
   new s := {};  -- empty DataSet
@@ -866,7 +867,8 @@ class Logic = {False:0 , True} &lt;: Ordinal;
 class VNamme = {Type1 | Type2 | ... } <: Variant;
 
 **  declare variable (with initial value)
-set v = value :VNamme;
+global
+  set v = value :VNamme;
 </code></pre>
 
 <h4>Properties</h4>
@@ -891,7 +893,7 @@ driver test_nulable:
 
 class Number = { Integer | Double | Null } &lt;: Variant;
 
-process main:
+process
   ** use nullable variant
   set x: Number;
 
@@ -914,9 +916,9 @@ return;
 driver variant_type:
 
 ** tefine variants
-set v, x ,t: { Double | Integer };
+  set v, x ,t: { Double | Integer };
 
-process main:
+process
   ** safe conversion
   let t := 1 / 2;   -- make t Double
   print type(t)     -- Double
@@ -941,7 +943,7 @@ driver variant_params:
 
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
-process swap(@x, @y: {Integer | Double} ):
+method swap(@x, @y: {Integer | Double} ):
   ** check type to be the same
   expect type(x) = type(y);
 
@@ -951,17 +953,17 @@ process swap(@x, @y: {Integer | Double} ):
   let y := i; --  second swap
 return;
 
-process main:
+process
   ** invert two  Integer numbers
   new x := 10;
   new y := 20;
-  apply swap(x, y);
+  swap(x, y);
   expect (x == 20) and (y == 10);
 
   ** invert two Double numbers
   new a := 1.5;
   new b := 2.5;
-  apply swap(a, b);
+  swap(a, b);
   expect (a == 2.5) and (b == 1.5);
 return;
 </code></pre>
@@ -986,7 +988,7 @@ return;
 
 <pre><code class="language-eve">
 #overloaded function
-process main:
+process
   new date := "2019/01/30" as YDM;
 
   ** convert string in Date type
@@ -1021,7 +1023,7 @@ return;
 <pre><code class="language-eve"># time demo
 driver time_demo:
 
-process main:
+process
   ** define 3 variable of same type
   new time1 = time2 = time3 = "00:00": Time;
 

@@ -121,7 +121,7 @@ method (@self:Point)  string() => (string:String):
   let string := "# = (#:#)" ? (self.id, self.a, self.b);
 return;
 
-process main:
+process
   ** initialize the points
   new p := Point(x:1, y:2);
 
@@ -200,7 +200,7 @@ create(*parameters: Type) => (@self:NewName):
   ...
 return;
 
-process main:
+process
   ** instantiate a local object using constructor
   new object := NewName(param:value,...);
   ...
@@ -256,7 +256,7 @@ class ClassName <: Object:
   return;
 return;
 
-process main:
+process
    ** call class functions
    new result1 = ClassName.change(10); 
    new result2 = ClassName.change(12); 
@@ -313,7 +313,7 @@ create(x = 0, y = 0 :Double) => (@self: Point):
   let self.y := y;
 return;
 
-process main:
+process
   ** initialize the points
   new p1 := Point(x:1, y:2);
   new p2 := Point(x:2, y:2);
@@ -342,22 +342,22 @@ p2 = {x:2, y:2}
 <pre><code class="language-eve">#object comparison demo
 driver object_compare:
 ** global context variables
-  set o = n = 1: Integer; 
+  set m = n = 1: Integer; 
 process
   ** equal values and types
-  expect   o   == n;
-  expect   not (o != n);
+  expect   m   == n;
+  expect   not (m != n);
 
   ** not the same location
-  expect   not (o is n);
-  expect   o is not n;
+  expect   not (m is n);
+  expect   m is not n;
 
   ** alter one value
   let n := 2;
 
   ** equal values and types
-  expect   o   != n;
-  expect   not (o == n);
+  expect   m   != n;
+  expect   not (m == n);
 return;
 </code></pre>
 
