@@ -47,7 +47,6 @@ Collections are composite types represents groups of elements of the same type. 
 <li><a href="#hash-map">HashMap</a></li>
 <li><a href="#objects">Objects</a></li>
 <li><a href="#string">String</a></li>
-<li><a href="#text">Text</a></li>
 <li><a href="#exceptions">Exceptions</a></li>
 </ul>
 <hr>
@@ -110,7 +109,7 @@ return;
 
 <pre><code class="language-eve">
 # Null list declaration (no element type)
-  new e_list:= ();
+  new e_list := ();
   new x_list :List;
 
 # explicit declarations
@@ -154,21 +153,24 @@ return;
 <p>Eve define Arrays using notation: [c]Type, where [c] is the capacity and Type is the type of elements. Arrays are automatically initialized. However, if the array contains composite types all elements will have default zero value.</p>
 
 <pre><code class="language-eve">** diverse array variables
-set n = 2, m =3   :Natural;
-set x = y = z = 2 :Natural
-
-new array_name1: []Type;      -- Null array
-new array_name3: [n]Type;     -- n = number of elements
-new array_name4: [n,m]Type;   -- 2d matrix, capacity c = n * m
-new array_name4: [x,y,z]Type; -- 3d matrix, capacity c = x * y * z
+driver test_array:
+  set n = 2, m =3   :Natural;
+  set x = y = z = 2 :Natural
 
 ** define Array sub-types
 class AType = [ ]TypeName <: Array;
 class MType = [,]TypeName <: Array;
 
-** use previous defined sub-type
-new array_name5 := [n]AType;
-new array_name6 := [n,m]AType;
+process
+  new array_name1: []Type;      -- Null array
+  new array_name3: [n]Type;     -- n = number of elements
+  new array_name4: [n,m]Type;   -- 2d matrix, capacity c = n * m
+  new array_name4: [x,y,z]Type; -- 3d matrix, capacity c = x * y * z
+
+  ** use previous defined sub-type
+  new array_name5 := [n]AType;
+  new array_name6 := [n,m]AType;
+return;
 </code></pre>
 
 
@@ -328,14 +330,15 @@ return;
 <p>An empty DataSet is represented like this: {} and can be assigned to a set if you wish to remove all elements of the set. A set that is not initialized is Null.</p>
 
 <pre><code class="language-eve">
-** empty DataSet
-set e_name := {}; 
+global
+  ** empty DataSet
+  set e_name := {}; 
 
-** Define a Null DataSet
-set n_name :DataSet;
+  ** Define a Null DataSet
+  set n_name :DataSet;
 
-** Define DataSet with element type
-set t_name : {}Integer;
+  ** Define DataSet with element type
+  set t_name : {}Integer;
 </code></pre>
 
 
@@ -386,7 +389,7 @@ return;
 <h3>Union</h3>
 
 <p>Use union operator to combine two sets.</p>
-<pre><code class="language-eve"># combine two sets using "|" = (or)
+<pre class="line-numbers" data-start="0"><code class="language-eve"># combine two sets using "|" = (or)
 driver set_union_demo:
 ** element set
   set first := {0,1,2,3};
@@ -528,9 +531,11 @@ return;
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
-** define Null string with default capacity
-new str1 :String;  -- default Null 
-new str2 = "": String; -- equivalent to Null
+process
+  ** define Null string with default capacity
+  new str1 :String;  -- default Null 
+  new str2 = "": String; -- equivalent to Null
+...
 </code></pre>
 
 <h4>Initialization:</h4>
@@ -538,10 +543,11 @@ new str2 = "": String; -- equivalent to Null
 <p>In next examples we use type inference to create strings. The length of the string is the number of symbols. You can use operator "*" to initialize a long string with the same symbol or a pattern of symbols.</p>
 
 <pre><code class="language-eve">
-# examples of empty strings
-new short_string := "short string";-- most common form of literal
-new long_line := '-' * 80;         -- a long line of 80 dashes
-new dash_dot  := "-&middot;" * 40; -- a long line -&midot;-&midot;-&midot;
+process
+  ** examples of empty strings
+  new short_string := "short string";-- most common form of literal
+  new long_line := '-' * 80;         -- a long line of 80 dashes
+  new dash_dot  := "-&middot;" * 40; -- a long line -&midot;-&midot;-&midot;
 </code></pre>
 
 <h3><a id="string-mutability"></a>String mutability</h3>
@@ -633,35 +639,6 @@ process
 return;
 </code></pre>
 
-<h3><a id="text-literal"></a>Text Literal</h3>
-
-<p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
-
-<p>Triple quoted string support inside double quotes and also single quote without escape. On double quoted strings you must use escape backslash \" for double quotes.</p>
-
-<pre><code class="language-eve"># declaration of a text literal
-driver text_literal:
-
-process
-  ** triple quoted string
-  new my_text:=""" 
-     "Opportunity is missed by most people
-      because it is dressed in overalls
-      and looks like work."
-  """; 
-  ** double quoted string with escape
-  new test:= "escape quote \" is required";
-  print test
-return;
-</code></pre>
-
-<p><b>Output:</b></p>
-<pre class="output">
-"Opportunity is missed by most people
- because it is dressed in overalls
- and looks like work."
- escape quote " is required
-</pre>
 
 <h3>Unicode</h3>
 
@@ -672,8 +649,8 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve"># text type has unicode support
 process unicode_text:
-    new us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
-    print us;
+  new us = "I can write Greek: \&alpha;&beta;&gamma;&delta;\.";
+  print us;
 return;
 </code></pre>
 
@@ -720,36 +697,35 @@ return;
 module Exception:
 
 class .Error: {
-   code: Integer, 
-   message: String, 
-   module: String, 
-   line:Integer
+  code: Integer, 
+  message: String, 
+  module: String, 
+  line:Integer
 } &lt;: Object;
 
-class .Error(code: Integer, message: String) => (@self :Error):
-   let self := Object();
-   let self += {'code' :code};
-   let self += {'message' :message};
+class .Error = {code: Integer, message: String} => (@self :Error):
+  let self.code := code;
+  let self.message := message;
 return;
 
-class Call(line:String, method:String) => (@self:Call):
-   let self := Object();
-   let self += {'line' :line};
-   let self += {'method' :method};
+class Call = {line:String, method:String} => (@self:Call):
+  let self.line   := line;
+  let self.method := method;
 return;
 
 ** system variables 
-set $error: Error;   -- last error
+global
+  set $error: Error;   -- last error
 
-** system objects;
-set $stack: ()Call;  -- list of code points
-set $trace: ()Error; -- list of errors
+  ** system objects;
+  set $stack: ()Call;  -- list of calls
+  set $trace: ()Error; -- list of errors
 
 ** methods for Exceptions
-method .raise(...);
-method .expect(...);
-method .pass(...);
-method .fail(...);
+method (@self:Error) .raise(...);
+method (@self:Error) .expect(...);
+method (@self:Error) .pass(...);
+method (@self:Error) .fail(...);
   
 return;
 </code></pre>

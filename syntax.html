@@ -186,8 +186,8 @@ _not_valid_
 <p>A sigil is a special character prefix that is used to define an identifier. We use sigil to improve code readability but also to add extra functionality to specific identifiers that are not regular. Eve is using following sigils to define special kind of variables or identifiers:</p>
 
 <table class="table table-bordered table-sm table-striped">
-<tr><th style = "text-align:center;">$     </th><td>system  variables    </td></tr>
-<tr><th style = "text-align:center;">_     </th><td>private variables    </td></tr>
+<tr><th style = "text-align:center;">$ </th><td>system  variables | constant </td></tr>
+<tr><th style = "text-align:center;">_ </th><td>private state | constant </td></tr>
 </table>
 
 <h3>Identifier Prefix</h3>
@@ -339,14 +339,14 @@ new identifier3 := function_name(); -- function call
 
 <p>To make a clone/copy of an Object attributes you must use&nbsp;<em>clone</em>&nbsp;operator that is (::) instead of (:=). This will transfer values not references. After cloning, we can modify one value without affecting the original.</p>
 
-<h4>Syntax:</h4p>
+<h4>Syntax:</h4>
 
 <pre><code class="language-eve">// making a clone
 new object :: original;
 expect object is not original;
 </code></pre>
 
-<p>Note: Native types are exceptions. For native type, the operator "is" do not work at all. Attempting to use "is" or "is not" with a native type will result in error. Actually clone operator works only with Objects.</p> 
+<p><b>Note: </b>Native types are exceptions. For native type, the operator "is" do not work at all. Attempting to use "is" or "is not" with a native type will result in error. Actually clone operator works only with Objects.</p> 
 
 <h3>Ternary expression</h3>
 
@@ -438,7 +438,7 @@ return;</code></pre>
 <table class="table table-bordered table-dark table-hover table-sm shadow">
 <tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze  </td></tr>
 <tr><td>append   </td><td>apply    </td><td>ascend    </td><td>augment  </td></tr>
-<tr><td>begin    </td><td>method   </td><td>stop      </td><td>by       </td></tr>
+<tr><td>start    </td><td>method   </td><td>stop      </td><td>by       </td></tr>
 <tr><td>case     </td><td>class    </td><td>clone     </td><td>close    </td></tr>
 <tr><td>commit   </td><td>constant </td><td>create    </td><td>cursor   </td></tr>
 <tr><td>begin    </td><td>delete   </td><td>descend   </td><td>discard  </td></tr>
@@ -456,7 +456,7 @@ return;</code></pre>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
 <tr><td>globa    </td><td>select     </td><td>call      </td><td>skip     </td></tr>
 <tr><td>step     </td><td>store    </td><td>switch    </td><td>job     </td></tr>
-<tr><td>then     </td><td>trial    </td><td>try       </td><td>     </td></tr>
+<tr><td>then     </td><td>trial    </td><td>try       </td><td>reset   </td></tr>
 <tr><td>update   </td><td>use      </td><td>         </td><td>view     </td></tr>
 <tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
 <tr><td>resume   </td><td>panic    </td><td>&nbsp;    </td><td>&nbsp;   </td></tr>
@@ -481,7 +481,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>class</td>
-<td>define one or more types</td>
+<td>define region for user defined composite types</td>
 </tr>
 <tr>
 <td>lambda</td>
@@ -547,6 +547,10 @@ return;</code></pre>
 <tr>
 <td>return</td>
 <td>terminate a process/function or a class declaration</td>
+</tr>
+<tr>
+<td>reset</td>
+<td>create the "initialization" region for a module</td>
 </tr>
 </tbody>
 </table>
@@ -710,12 +714,16 @@ return;</code></pre>
 <td>execute a process or aspect in synchronous mode</td>
 </tr>
 <tr>
+<td>start</td>
+<td>execute asynchronously an aspect</td>
+</tr>
+<tr>
 <td>begin</td>
-<td>execute asynchronously an aspect or a process</td>
+<td>used before a block of code to create a local scope</td>
 </tr>
 <tr>
 <td>yield</td>
-<td>interrupt current execution and wait for other processes</td>
+<td>interrupt current process and wait for other processes</td>
 </tr>
 </tbody>
 </table>
@@ -845,7 +853,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>$</td>
-<td>System variable sigil</td>
+<td>Sigil for share variable or system variable | constant</td>
 </tr>
 <tr>
 <td>@</td>

@@ -39,12 +39,12 @@
 <div class="alert alert-secondary shadow-sm">
 A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. Eve functions are actually special objects of type Function.</div>
 
-<p>Functions are declared with keyword: "function". A function can be public or private. You can define functions in different places depending on your requirements. Functions can be members in script, aspects, modules or classes.</p>
+<p>Functions are declared with keyword: "function". A function can be public or private. You can define public functions in modules and private functions in other scripts.</p>
 
 <h4>Pattern:</h4>
 
-<pre><code class="language-eve">#function with block
-function name(parameters) [=&gt; (@result:TypeName)]:
+<pre><code class="language-eve">#function declaration
+function name(parameters) =&gt; (@result:TypeName):
   ** executable block
   ...
 return;
@@ -61,7 +61,7 @@ return;
 <li>A function can raise errors but it can't handle errors,</li>
 </ul>
 
-<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by round brackets (), with argument list. In expressions, the brackets are mandatory even if there are no arguments.</p>
+<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by semicolumn, or one argument, or a list of arguments in round brackets (). In expressions, the brackets are mandatory even if there are no arguments.</p>
 
 <pre><code class="language-eve">
 #demo function execiton
@@ -78,10 +78,10 @@ return;
 
 process
   ** execute using argument list
-  new result := name1(arguments);
+  new result1 := name1(arguments);
 
   ** execute using parameter names with pair operator (:)
-  new result := name2(param:arg,....);
+  new result2 := name2(param:arg,....);
 return;
 </code></pre>
 
@@ -95,12 +95,13 @@ return;
 <ul>
 <li>Parameters are declared in parenthesis () after the function name,</li>
 <li>Each parameter has name and type and can have one default value,</li>
-<li>When a function is called each parameter receive a value that is called argument.</li>
+<li>When a function is called each parameter receive an argument.</li>
 </ul>
 
 <h4>function arguments</h4>
 
-<p>There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters with a function call. Arguments can be literals, constants or variables.</p>
+<p>There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters in a function call. Arguments can be literals, constants or variables.</p>
+
 <h4>Example:</h4>
 <pre><code class="language-eve"># demo function with parameters
 driver function_params:
@@ -115,7 +116,7 @@ process
 return;
 </code></pre>
 
-<p><b>Function call</b>&nbsp; Some functions do not have a result and can have side-effects. You can call this kind of function without round brackets () when there is no argument or a single argument. For more argumetns, function caall require brackets and ";". </p>
+<p><b>Function call</b>&nbsp; Some functions do not have a result and can have side-effects. You can call this kind of function without round brackets () when there is no argument or a single argument. For more argumetns, function call require brackets and ";". </p>
 
 <pre><code class="language-eve">
 #demo function call
@@ -128,18 +129,18 @@ function name2(param = value: Type,...);
 
 process
   ** call using single argument
-  name1 arguments;
+  name1 argument;
 
   ** call using many arguments with values (:)
-  call name2(param:arg_value, ...);
+  call name2 (param:arg_value, ...);
 return;
 </code></pre>
 
 <h2><a id="lambdas"></li>Lambda expressions</h2>
 
-<p>Lambda expressions are simple functions. Can receive arguments and can produce a result. A lambda expression is created with keywords set or new. Lambda expressions do not have local variables or states and do not have side effects.</p>
+<p>Lambda expressions are simple functions that respect arithmetic rules. These can receive several arguments and can produce one result. A lambda expression is created with keywords "set" or "new". Lambda expressions do not have local variables or states and do not have side effects.</p>
 
-<p>Lambda expressions can be declared in global scope using "lambda" region. You can define more than one lambda regions. Lambda expressions can be anonymous or named.</p>
+<p>Lambda expressions can be declared in "lambda" regions. You can define more than one lambda regions. You can also create new lambda expressions in a process at runtime. Sometimes lambda expressions are anonymous.</p>
 
 <h4>Example</h4>
 
@@ -153,7 +154,7 @@ lambda
 
 <h4>Signature</h4>
 
-<p>Labda expression signature can be declared as data type:<p>
+<p>Labda expression signature can be declared as data type using keyword "class". This feature can be used to enforce a specific signature for a <em>call-back</em> argument.<p>
 
 <pre><code class="language-eve">
 # define a lambda signature
@@ -163,7 +164,7 @@ class BinEx = (p1, p2 :Integer):Integer <: Lambda;
 
 ** Use lambda signature as parameter type
 function useLambda(test :BinEx):
-   print test();
+   print test(); -- callback
 return;
 
 ** Execute a process with lambda argument

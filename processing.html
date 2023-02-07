@@ -34,25 +34,26 @@
 
 <h1>Eve Processing</h1>
 
-<div class="alert alert-secondary shadow-sm">Data processing is an important use case of Eve. A process can define collections, add/modify or remove data in these collections, make computations and decision statements to solve problems. Here are some examples:</div>
+<div class="alert alert-secondary shadow-sm">Data processing is an important use case of Eve. A process can modify states, initialize variables, add/modify or remove data in collections, make computations and decision statements to resolve problems. Next we analyse some use cases:</div>
 
 <h4>Bookmarks:</h4>
 <hr>
 <ul>
 <li><a href="#main-process">Main process</a></li>
+<li><a href="#side-effects">Side effects</a></li>
 <li><a href="#list-operations">List operations</a></li>
 <li><a href="#collection-iteration">Collection iteration</a></li>
 <li><a href="#scanning-items">Scanning items</a></li>
 <li><a href="#using-hash-map">Using HashMap</a></li>
-<li><a href="#text-functions">Text functions</a></li>
+<li><a href="#text-literals">Text literals</a></li>
 </ul>
 <hr>
 
 <h2><a id="main-process"/>Main Process</h2>
 
-<p>A process is a series of jobs, executed in serial mode. Any job can pass or fail but the process continue with the next job, unless an exception occours.</p>  
+<p>A process is sequence of jobs, executed in serial mode. Any job can pass or fail but the process continue with the next job, unless an exception occours.</p>  
 
-<p>In case of exception, control jump to one of error cases. If none of the cases is handling the error, the recover section is executed. After error is handled the finalize region is executed.</p>
+<p>In case of exception, the workflow jumps into recover region. If none of the cases is handling the error, the finalization region is executed and the process terminates. Unhandled errors will cause the program to panic and stop working. Errors do not propagate to other processes.</p>
 
 <h4>Pattern:</h4>
 
@@ -85,7 +86,7 @@ recover
     ...
     retry;
   else
-    raise; -- propagate the error
+    panic; -- stop the program
 finalize
     ** close resources
     ...
@@ -96,10 +97,9 @@ return;
 
 <h3>Process Keywords</h3>
 
-<p>The process is created and controlled by many keywords. Mastering these keywords is important to handle use the process as intended to. We have chosen keyword chareful to be easy to memorize.</p>
+<p>The process is created and controlled by many keywords. Mastering these keywords is important to use the process effective. We have chosen keyword chareful to be easy to memorize.</p>
 
 <table class="table table-sm table-bordered">
-<tr><th>process</th><td>create a callable process</td></tr>
 <tr><th>job</th><td>create one step in the process</td></tr>
 <tr><th>try</th><td>begin job executable block</td></tr>
 <tr><th>pass</th><td>skip the rest of task and continue next</td></tr>
@@ -117,75 +117,78 @@ return;
 <h4>Notes</h4>
 
 <ul>
+<li>An aspect or a driver can implement a single process.</li>
 <li>A process create a loocal scope. All variables define in local scope will be removed when process is ending;</li>
 <li>All tasks of a single process are execute sequential from top down;</li>
 <li>When the last task is finished the process is ending.</li>
-<li>Process main() is mandatory for any driver/aspect. A module do not have a processes. </li>
-<li>You can't define classes, functions or processes nested in other processes, but you can create lambda functions.</li>
-<li>An aspect can implement multiple processes. All processes are public except processes starting with "_".</li>
+<li>You can't define classes, or functions in processes, but you can create lambda expressions and objects.</li>
 </ul>
 
-<h4>Process Interruption</h4>
+<h4>Process interruption</h4>
 
 <p>Interruption keywords (exit, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the <em>abort</em> or <em>raise</em> will trigger the finalization region.</p>
 
-<p><b>Routine call</b>&nbsp;Routines can be used in call statements. A process call can be done using "apply process_name" followed by arguments. For one single argument, or no argument the parentheses are not required.</p>
+<p><b>Process execution</b>&nbsp; A process can be executed using "apply process_name" followed by a list of arguments. For one single argument, or no argument the parentheses are not required.</p>
 
 <pre><code class="language-eve">#these are all valid process calls
 apply process_name; -- call process without arguments
-apply process_name argument_value;     -- call with single argument
-apply process_name value1, value2;     -- call with multiple arguments
+apply process_name argument_value;      -- call with single argument
 apply process_name (value, value, ...); --call with a list of arguments
 apply process_name (param:value,...);   -- call with a argument by name
 apply process_name (value, value, param:value); -- mix position with names
-apply process_name (value, *list_args);         -- mix position with list
+apply process_name (value, *list_args);         -- use spreading operator
 apply process_name (param:value, *map_args);    -- mix names with hashmap
 </code></pre>
 
-<p><b>Routine termination</b>&nbsp;A process end with keyword return; When process is terminated, program execution will continue with the next statement after the process call. Keyword <em>exit</em> can terminate a process early. If the result do not have initial value and process terminate early the result may be null.</p>
+<p><b>Routine termination</b>&nbsp;A process end with keyword return; When process is terminated, program execution will continue with the next statement after the process call. It may be the next process. Keyword <em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em> can terminate a process early.</p>
 
 <h4>Example:</h4>
-<pre><code class="language-eve"># driver with parameters
-driver process_call
 
-process test(Integer a):
-  ** print is a system process
-  print 'argument list has # members' ? a;
-return;
-
-process main(*args ()String): 
-  ** number of arguments received:
-  new c := args.length();
-
-  ** verify condition and exit
-  exit if c == 0;  -- early interruption
-  apply test(c);   -- process call
+<pre><code class="language-eve">
+# aspect with one parameter
+aspect print_this(p:String):
+process 
+  print p;
 return;
 </code></pre>
 
-<h4>Side Effects</h4>
-<p>A process can have side-effects:</p>
+<pre><code class="language-eve"># driver with parameters
+driver process_call(*args ()String):
+process 
+  ** number of arguments received:
+  cycle:
+    new arg: String;
+  for arg in args loop;
+    apply print_this String(arg);
+  repeat;
+return;
+</code></pre>
+
+<h2><a id="side-effect"></a>Side Effects</h2>
+
+<p>A process can use states. When a state is changed by a function or method this is called side-effect. This may be good or dangerous. You must be aware of functions, methods or processes with side effects.</p>
+
+<p>these are side effects...</p>
 
 <ul>
-  <li>modify a shared variable;</li>
-  <li>open and write into a file;</li>
+  <li>modify a shared variable or state;</li>
+  <li>open and write into an external file;</li>
   <li>print a message or accept input from console;</li>
+  <li>upload something on internet or network;</li>
 </ul>
 
-<p><b>using side-effects</b></p>
-<p>Next process: "add_numbers" has 2 side effects:</p>
+<h4>Examples</h4>
+
+<p>Next function: "add_numbers" has 2 side effects:</p>
 <pre><code class="language-eve">
-#test side-effects
 driver side_effect:
+  set test   :Integer;
+  set p1, p2 :Integer;
 
-set test   :Integer;
-set p1, p2 :Integer;
-
-** process with side effects
-process add_numbers:
-  ** side effects
-  new test := p1 + p2; --  first side-effect
-  print test;          --  second side-effect
+** function with side effects
+function add_numbers():
+  new test := p1 + p2; -- first side-effect
+  print test;          -- second side-effect
 return;
 
 ** define main process
@@ -198,11 +201,12 @@ return;
 </code></pre>
 
 <h2><a id="list-operations"></a>List operations</h2>
+
 <p>There are many things you can do with a list. You can add/remove elements at both ends. You can deconstruct a list and you can concatenate lists together. Most important features are implemented as built-in functions or special operators:</p>
 
-<p><b>Append to list</b></p>
+<h4>Append to list</h4>
 
-<p>List is using operator &ldquo;+&rdquo; to grow. This operator represent append. You can append an elemnt to a list but you can also append a list to an element./p>
+<p>List is using operator +&gt; or &lt;+ to grow. This operator represent insert or append. You can insert an elemnt or many elements into a list at the beginning or you can add element or list of elements at the end but you can not insert elements in the middle of the list./p>
 
 <pre><code class="language-eve">
 #list demo concatenation
@@ -212,44 +216,49 @@ process
   new a := ('a','b'); 
   new b := ('1','3'); 
 
-  ** append a list
-  new c := a <+ b;
-  expect c ==  ('a','b','1','2');
+  ** concatenate two lists
+  new c := a &lt;+ b;
+  expect c ==  ('a','b','1','3');
 
-  ** append element
-  new d := a + 'z';
-  expect d ==  ('a','b','1','2','z');
-
-  ** insert element
-  new e := "x' + a;
-  expect e ==  ('x','a','b','1','2');
+  ** concatenate two lists
+  new d := b +&gt; b;
+  expect c ==  ('1','3','a','b');
 return;
 </code></pre>
 
-<p><b>Alter list</b></p>
+<h4>Alter a list</h4>
 
-<p>You can use "let" with operators { += -= }, to append or remove elements from a lit. Notice "+=" will add only at the begining of a list. You can remove an element by value using operator "-=". Only first element having specified value will be remove.</p>
+<p>You can use "let" with operators { += -= }, to append or remove elements from beginning of lit. You can remove any element from a list using "-=". All elements having specified value will be remove. To remove one single element you must use operator &lt;-, or -&gt;</p>
 
 <pre><code class="language-eve">
-#list demo concatenation
+#altering a list
 driver list_alter:
+  set lst :()Symbol;
 process
   ** initialized list
-  new lst := ('a','b','c','b'); 
+  let lst := ('a','b','c','b'); 
 
-  ** create a new element at the end
+  ** create a new element at the beginning
   let lst += 'z';
   expect lst ==  ('a','b','c','b','z');
 
   ** remove all "b" from list
   let lst -= 'b';
   expect lst ==  ('a','c','z');
+
+  ** append element to list 
+  let a := a <+ 'x';
+  expect a ==  ('a','c','z','x');
+
+  ** enque element in list
+  let a := 'v' +> a;
+  expect a ==  ('v','a','b','z','x');
 return;
 </code></pre>
 
 <div class="alert alert-info">The list is prepared to support queue and stack. It has all the opperations required. We can implement a class wraper with the sugestive method names.</div>
 
-<p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue. Is developer responsability to append and remove correctly using one of the operators: {+=, -=, <-, ->}. </p>
+<p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue. Is developer responsability to append and remove correctly using one of the operators: {+=, -=} {:=, &lt;-, -&gt;}. </p>
 
 <p><b>Queue (FIFO)</b></p>
 
@@ -274,8 +283,8 @@ process
   let queue += ('z','y')
   expect queue ==  ('z', 'y', 'x')
 
-  ** deque with new element
-  new e: Symbol; let queue -> e; 
+  ** create new element and dequeue
+  new e: Symbol; let queue := queue -&gt; e; 
   expect queue ==  ('z', 'y');
   expect e == 'x';
 return;
@@ -298,17 +307,17 @@ driver list_remove:
   set stack := ('a','b','c'); 
 process
   ** append element at the beginning
-  let Symbol += 'x'
+  let Symbol += 'x';
   expect stack ==  ('x','a','b','c');
 
   ** extract element from the beginning
-  new x <- stack;
+  new x &lt;- stack;
   expect stack ==  ('x','a','b','c');
   expect x == 'x';
 return;
 </code></pre>
 
-<p><b>List methods</b></p>
+<h4>List methods</h4>
 
 <p>A List is a class, so it has all required methods and properties to be used in algorithms and expressions. We do not yet forsee all methods bu maybe these would be useful</p>
 
@@ -323,28 +332,28 @@ List.capacity; -- list with capacity
 <p>The join method receive a list and convert elements into a string separated be specified character.</p>
 
 <pre><code class="language-eve">
-#list join() demo
-process list_join:
-  new str := (1,2,3).join(",");
+#call List.join() demo
+function list_join:
+  new str := (1,2,3).join(',');
   expect str == "1,2,3";
 return;
 </code></pre>
 
-<p><b>Split() method</b>&nbsp;The split method is actually a method of a string, that create a list of strings by splitting a long string into parts.</p>
+<p><b>Split() method</b>&nbsp;The split method is actually a method of a String, that create a List of strings by splitting a long string into parts. Usually you split by comma, but any symbol can be used. The separator is removed and will not be part of the resulting list.</p>
 
 <pre><code class="language-eve">
 ** string split demo
 process list_split:
   new list: ()Integer; --  empty List
   ** initialize new reference for "lst"
-  let lst := "1,2,3".split(",");
+  let lst := "1,2,3".split(',');
   expect lst == (1,2,3);
 return;
 </code></pre>
 
 <h2><a id="collection-iteration"></a>Collection iteration</h2>
 
-<p>We can use a &nbsp;<em>for loop</em>&nbsp; that is executed for each element belonging to a collection. All collections are iterable.</p>
+<p>We can use a &nbsp;<em>for loop</em>&nbsp; that is executed for each element belonging to a collection. All collections are iterable. To be iterable a class need to implement an iterable interface.</p>
 
 <h4>Example:</h4>
 
@@ -368,7 +377,7 @@ return;
 
 <pre><code class="language-eve"># list iteration
 driver list_iteration:
-  set my_list: {}(Symbol); --  this list is Null
+  set my_list: {}Symbol; --  this list is Null
 process
   let my_list := ['a','b','c','d','e'];
   cycle:
@@ -397,7 +406,7 @@ driver map_init:
   my_map:HashMap; -- uninitialized collection
 process
   ** initialize my_map with values
-  let my_map := {(1:'a'),(2:'b'),(3:'c')};
+  let my_map := {1:'a',2:'b',3:'c'};
 
   ** check if a key is present in a map collection
   expect 3 in my_map; -- will pass
@@ -410,11 +419,11 @@ return;
 process map_append:
   set animals: {}(String, String): ; -- empty collection
 process
-  ** create new element pairs
-  let animals += ("Bear":"dog");
-  let animals += ("Kiwi":"bird");
+  ** append several elements
+  let animals += {"Rob":"dog", "Kiwi":"bird"};
 
-  ** verify effect of append
+  ** create single element
+  new animals["Toto":"parot"]
   print  animals;
 return;
 </code></pre>
@@ -422,21 +431,21 @@ return;
 <h4>Output:</h4>
 
 <pre class="output">
-{('Bear':'dog'),('Kiwi':'bird')}
+{"Rob":"dog","Kiwi":"bird","Toto":"parot"}
 </pre>
 
 <h3>Modify Elements</h3>
 <pre><code class="language-eve">#update a map
 driver map_update:
-  set animals := {("dogs":0),("birds":0)};
+  set animals : {}(String, String);
 process
   ** print the new collection
   print  animals;
 
   ** modify the collection
-  new animals['dogs']   := 1; -- new element
-  new animals['birds']  := 2; -- new element
-  let animals['birds']  += 3; -- alter element
+  new animals["dogs"]   := 1; -- new element
+  new animals["birds"]  := 2; -- new element
+  let animals["birds"]  += 3; -- alter element
 
   ** print the new collection
   print  animals;
@@ -445,7 +454,7 @@ return;
 
 <h4>Output:</h4>
 <pre class="output">
-{"dogs":0,"birds":0};
+{}
 {"dogs":1,"birds":5};
 </pre>
 
@@ -466,7 +475,7 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve"># map iteration
 driver map_iteration:
-  set my_map := {("a":1),("b":2),("c":3)};
+  set my_map := {'a':1,'b':2,'c':3};
 
 process
   cycle: 
@@ -479,19 +488,19 @@ process
 return;
 </code></pre>
 
-<p>Will print:</p>
+<h4>Output:</h4>
 <pre class="output">
-("a",1)
-("b",2)
-("c",3)
+('a':1)
+('b':2)
+('c':3)
 </pre>
 
 <h2><a id="string-concatenation" ></a>String: concatenation</h2>
 <p>Strings can be concatenated using:</p>
 <ul>
-<li>non trim concatenation operator: "+"</li>
-<li>all trim concatenation operator: "-"</li>
-<li>path concatenation operator: "/"</li>
+<li>regular concatenation: "+"</li>
+<li>space trim & concatenation: "-"</li>
+<li>path concatenation: "/"</li>
 </ul>
 <h4>Example:</h4>
 <pre><code class="language-eve">** example of string concatenation
@@ -516,15 +525,45 @@ process path_concat
 return;
 </code></pre>
 
+<h3><a id="text-literals"></a>Text Literals</h3>
 
-<h2><a id="text-functions" ></a>Text functions</h2>
+<p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
+
+<p>Triple quoted string support inside double quotes and also single quote without escape. On double quoted strings you must use escape backslash \" for double quotes.</p>
+
+<pre><code class="language-eve"># declaration of a text literal
+driver text_literal:
+
+process
+  ** triple quoted string
+  new my_text:=""" 
+     "Opportunity is missed by most people
+      because it is dressed in overalls
+      and looks like work."
+  """; 
+  ** double quoted string with escape
+  new test:= "escape quote \" is required";
+  print test
+return;
+</code></pre>
+
+<p><b>Output:</b></p>
+<pre class="output">
+"Opportunity is missed by most people
+ because it is dressed in overalls
+ and looks like work."
+ escape quote " is required
+</pre>
+
+<h2><a id="text-functions" ></a>String functions</h2>
 <ul>
-<li>Text: replace(Text: str, String: target, String: arrow );</li>
-<li>Integer find (Text: str, String: pattern);</li>
-<li>Integer count (Text: str, String: pattern);</li>
-<li>Integer length (Text: str);</li>
+<li>replace(target, cargo:String);</li>
+<li>find   (pattern:String);</li>
+<li>count  (pattern:String);</li>
+<li>length ();</li>
 </ul>
-<p><b>Note:</b>&nbsp;The text also support escape sequences like a normal string. In a text literal we do not have to escape the single quote symbols: "'". However we have to escape the double quotes like: "This is "quoted" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like "&laquo;quoted&raquo;"</p>
+
+<p><b>Note:</b>&nbsp;In a text literal we do not have to escape the single quote symbols '&alfa;'. However we have to escape the double quotes like: "This is "quoted" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like this"this &laquo;quoted&raquo; string" by convention.</p>
 
 <!-- work in progress-->
 

@@ -7,9 +7,11 @@ function apply_style(str) {
     str = str.replace(/^alias\b/,keyword("alias"))
     str = str.replace(/^lambda\b/,keyword("lambda"))    
     str = str.replace(/^class\b/,keyword("class"))    
-    str = str.replace(/^global\b/,keyword("global"))    
-    // maybe with indentation 
-    str = str.replace(/\bprocess\b/,keyword("process"))   
+    str = str.replace(/^global\b/,keyword("global"))   
+    str = str.replace(/^process\b/,keyword("process"))  
+    str = str.replace(/^reset\b/,keyword("reset"))  
+
+    // maybe with indentation     
     str = str.replace(/\bcreate\b/,keyword("create"))
     str = str.replace(/\brelease\b/,keyword("release"))
     str = str.replace(/\bmethod\b/,keyword("method"))
@@ -29,6 +31,7 @@ function apply_style(str) {
     str = str.replace(/\buse\b/,keyword("use"))
 
     //  creat control flow
+    str = str.replace(/\bbegin\b/,control("begin"))   
     str = str.replace(/\bcycle\b/,control("cycle"))
     str = str.replace(/\brepeat\b/,control("repeat"))    
     str = str.replace(/\bwhen\b/,control("when"))
@@ -66,8 +69,7 @@ function apply_style(str) {
     str = str.replace(/\bVariant\b/g,types("Variant"))
     str = str.replace(/\bDate\b/g,types("Date"))
     str = str.replace(/\bTime\b/g,types("Time"))
-    str = str.replace(/\bVector\b/g,types("Vector"))
-    str = str.replace(/\bMatrix\b/g,types("Matrix"))    
+    str = str.replace(/\bArray\b/g,types("Array")) 
     str = str.replace(/\bList\b/g,types("List"))
     str = str.replace(/\bSymbol\b/g,types("Symbol"))
     str = str.replace(/\bObject\b/g,types("Object"))
@@ -75,6 +77,7 @@ function apply_style(str) {
     str = str.replace(/\bLambda\b/g,types("Lambda"))
     str = str.replace(/\bFunction\b/g,types("Function"))   
     str = str.replace(/\bDataSet\b/g,types("DataSet"))
+    str = str.replace(/\bHashMap\b/g,types("HashMap"))
     str = str.replace(/\bNull\b/g,types("Null"))
     str = str.replace(/\bTrue\b/g,types("True"))
     str = str.replace(/\bFalse\b/g,types("False"))
@@ -87,8 +90,6 @@ function apply_style(str) {
     str = str.replace(/\balter\b/,interrupt("alter"))
     str = str.replace(/\bmake\b/,interrupt("make"))
     str = str.replace(/\bstore\b/,interrupt("store"))
-    str = str.replace(/\breset\b/,interrupt("reset"))
-    str = str.replace(/\bbegin\b/,interrupt("begin"))
     str = str.replace(/\bapply\b/,interrupt("apply"))
     str = str.replace(/\bcall\b/,interrupt("call"))
     str = str.replace(/\bwait\b/,interrupt("wait"))
@@ -161,8 +162,11 @@ function apply_style(str) {
     str = str.replace(/\*(?=\w)/g,operator("*"))
     str = str.replace(/\@(?=\w)/g,operator("@"))
     str = str.replace(/\$(?=\w)/g,operator("$"))
+    str = str.replace(/\s_(?=\w)/g,operator(" _"))
+    str = str.replace(/\s\.(?=\w)/g,operator(" ."))
 
     //fix single simbol
+    str = str.replace(/\?(?=\s|\b|\w)/,operator("?"))
     str = str.replace(/:(?=\s|\b|$)/,operator(":"))
     str = str.replace(/:(?=\s|\w|\W|[\{\[\(])/g,operator(":"))
     str = str.replace(/;(?=\s|\b|$)/,operator(";")) 
@@ -177,7 +181,12 @@ function apply_style(str) {
     str = str.replace(/\s\+\s/g,operator(" + "))
     str = str.replace(/\s\-\s/g,operator(" - "))
     str = str.replace(/\s\/\s/g,operator(" / "))
+    str = str.replace(/\s\*\s/g,operator(" * "))
+    str = str.replace(/\s\&\s/g,operator(" & "))
+    str = str.replace(/\s\|\s/g,operator(" | "))
 
+    // stile single quoted symbols
+    str = str.replace(/\'.\'/g, squote)
     // create the new statement
     return str
 }
@@ -186,22 +195,42 @@ function apply_style(str) {
 function style_string(line) {
     let result = ""
     let q = 0
-    // split in parts
-    parts = line.split(/(?<!\\)"/g)
-    //parts = line.split(/"/g)
-    for (part of parts) {
-        if (part =='') {
-           continue
-        }
-        q +=1  //new quote
-        if ( q%2 == 0 ) {
-            // end the string
-            result  += strings('"'+part+'"') 
+    let chars = line.split("")
+    let stmt  = [] //statement buffer
+    let strg  = [] //string buffer
+    let pchar = "" //previous character
+    let instr = false;
+    for (char of chars) {   
+        if ((char == '"') && (pchar != "\\")) {
+           if (instr == true) {
+              result  += strings('"'+strg.join("")+'"') 
+              strg     = [] // flush string buffer
+           } else {
+              result  += apply_style(stmt.join(""))
+              stmt     = [] // flush statement buffer
+           }
+           q +=1 // new quote (no escape \")
+           instr = (q % 2 > 0);
+        } else if (instr == true) {
+           strg.push(char) 
         } else {
-            result  += apply_style(part)
+           stmt.push(char)
         }
+        pchar = char // look back
     }
+    //fix the result 
+    if (stmt.length > 0) {
+        result += apply_style(stmt.join("")) 
+    }
+    if (strg.length > 0) {
+        result += strings('"'+strg.join("")+'"')
+    }   
     return result
+}
+
+//stile single goted strings
+function squote(match, offset, string) {
+  return strings(match);
 }
 
 /* it is called in every eve page at on-load event */

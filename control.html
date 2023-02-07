@@ -82,13 +82,16 @@ print "a is odd"  if (a % 2 != 0);
 </div>
 
 <pre><code class="language-eve"># dual path decision
+[begin label:]
+  ** local variables
+  ...
 if expression then
   ** true branch
   ...
 else
   ** false branch
   ...
-done;
+done [label];
 </code></pre>
 
 <h4>Notes:</h4>
@@ -111,6 +114,9 @@ done;
 <h4>Example:</h4>
 
 <pre><code class="language-eve">#selection ladder
+[begin label:]
+    ** local variables
+    ...
 if condition_1 then
     ** first branch
     ...
@@ -123,7 +129,7 @@ else if condition_3 then
 else
     ** alternative branch
     ...
-done;
+done [label];
 </code></pre>
 
 <p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. Cases should be exclusive and most probable case should be evaluated first.</p>
@@ -144,8 +150,8 @@ This is a multi-path selector similar to switch also named: jump table. It two v
 
 <pre><code class="language-eve">
 # Define a selector variable
-new s := {v1,v2,v3,v4};
-
+begin [label]:
+    new s := {v1,v2,v3,v4};
 ** create match selector
 match s [all | one]:
     ** declare locals
@@ -160,7 +166,7 @@ when v1, v2 then
 other
     ** v3 or v4 found
     ...
-done;
+done [label];
 </code></pre>
 
 <h4>Note:</h4>
@@ -331,7 +337,7 @@ print;
 <p>A try has several executable blocks, one error handler block and a finalization block. The finalization block is executed even if there is an error.</p>
 
 <pre><code class="language-eve">
-[process | function] name(params):
+process
   ** declare locals
   ....
   [job (code:"description")] try
@@ -359,7 +365,7 @@ finalize
 return;
 </code></pre>
 
-<p><b>Note: </b>A process or function can to one or more jobs. Each job is a try block. The recover and finalization regions are colapsed into one. Details about using a try block will be explained later.</p>
+<p><b>Note: </b>A process can do one or more jobs. Each job is a try block. Jobs are sequential. The recover and finalization regions are colapsed into one. Details about using a this statement will be explained in next chapter.</p>
 
 <hr>
 <p><b>Read next:</b>
