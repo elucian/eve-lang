@@ -36,7 +36,7 @@
 
 <div class="alert alert-secondary shadow-sm">Data processing is an important use case of Eve. A process can modify states, initialize variables, add/modify or remove data in collections, make computations and decision statements to resolve problems. Next we analyse some use cases:</div>
 
-<h4>Bookmarks:</h4>
+<h4>Page bookmarks:</h4>
 <hr>
 <ul>
 <li><a href="#main-process">Main process</a></li>
@@ -51,7 +51,7 @@
 
 <h2><a id="main-process"/>Main Process</h2>
 
-<p>A process is sequence of jobs, executed in serial mode. Any job can pass or fail but the process continue with the next job, unless an exception occours.</p>  
+<p>A process is sequence of jobs, executed in serial mode. Any job can pass or fail but the process continue with the next job, unless an exception is raised or process is intrerupted early by logic conditions.</p>  
 
 <p>In case of exception, the workflow jumps into recover region. If none of the cases is handling the error, the finalization region is executed and the process terminates. Unhandled errors will cause the program to panic and stop working. Errors do not propagate to other processes.</p>
 
@@ -59,7 +59,7 @@
 
 <pre><code class="language-eve">
 # define process with label
-process name(param <: type, ...):
+process
     ** local declarations
     ....
   job (c1,"description") try
@@ -117,18 +117,21 @@ return;
 <h4>Notes</h4>
 
 <ul>
-<li>An aspect or a driver can implement a single process.</li>
-<li>A process create a loocal scope. All variables define in local scope will be removed when process is ending;</li>
+<li>An driver must implement one process;</li>
+<li>An aspect can implement one process;</li>
+<li>A process create a loocal scope.</li> 
+<li>Process local variables are allocated dynmaicly when process starts;</li>
 <li>All tasks of a single process are execute sequential from top down;</li>
-<li>When the last task is finished the process is ending.</li>
-<li>You can't define classes, or functions in processes, but you can create lambda expressions and objects.</li>
+<li>When the last task is finished the local variables are removed;</li>
+<li>You can create local lambda expressions and objects;</li>
+<li>You can't define classes, or functions in processes;</li>
 </ul>
 
 <h4>Process interruption</h4>
 
 <p>Interruption keywords (exit, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the <em>abort</em> or <em>raise</em> will trigger the finalization region.</p>
 
-<p><b>Process execution</b>&nbsp; A process can be executed using "apply process_name" followed by a list of arguments. For one single argument, or no argument the parentheses are not required.</p>
+<p><b>Process execution</b>&nbsp; A process can be executed using "apply" or "start". For one single argument, or no argument the parentheses are not required. For a list of arguments you specify a list of arguments;</p>
 
 <pre><code class="language-eve">#these are all valid process calls
 apply process_name; -- call process without arguments
@@ -140,7 +143,7 @@ apply process_name (value, *list_args);         -- use spreading operator
 apply process_name (param:value, *map_args);    -- mix names with hashmap
 </code></pre>
 
-<p><b>Routine termination</b>&nbsp;A process end with keyword return; When process is terminated, program execution will continue with the next statement after the process call. It may be the next process. Keyword <em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em> can terminate a process early.</p>
+<p><b>Routine termination</b>&nbsp;A process end with keyword return; When process is terminated, program execution will continue with the next statement after the call. Keyword <em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em> can terminate a process early.</p>
 
 <h4>Example:</h4>
 
@@ -377,9 +380,9 @@ return;
 
 <pre><code class="language-eve"># list iteration
 driver list_iteration:
-  set my_list: {}Symbol; --  this list is Null
+  set my_list: ()Symbol; --  this list is Null
 process
-  let my_list := ['a','b','c','d','e'];
+  let my_list := ('a','b','c','d','e');
   cycle:
     new e: Symbol;
   for e in my_list loop
@@ -403,7 +406,7 @@ return;
 
 <pre><code class="language-eve"># local map initialization
 driver map_init:
-  my_map:HashMap; -- uninitialized collection
+  set my_map :HashMap; -- uninitialized collection
 process
   ** initialize my_map with values
   let my_map := {1:'a',2:'b',3:'c'};
@@ -505,7 +508,7 @@ return;
 <h4>Example:</h4>
 <pre><code class="language-eve">** example of string concatenation
 driver string_concat:
-  set str = "";  -- empty String
+  set str: String;  -- empty String
 process
   ** set string value using different operators
   let str := "this " + " string"; expect str == "this  string";
@@ -519,8 +522,8 @@ return;
 
 <pre><code class="language-eve">
 # path concatenation
-process path_concat
-  new s = ""; -- empty string
+process
+  new s := ""; -- empty string
   let s := "te/" / "/st"; --  "te/st" 
 return;
 </code></pre>
@@ -537,22 +540,19 @@ driver text_literal:
 process
   ** triple quoted string
   new my_text:=""" 
-     "Opportunity is missed by most people
+         "Opportunity is missed by most people
       because it is dressed in overalls
       and looks like work."
   """; 
-  ** double quoted string with escape
-  new test:= "escape quote \" is required";
-  print test
+  print my_text;
 return;
 </code></pre>
 
 <p><b>Output:</b></p>
 <pre class="output">
-"Opportunity is missed by most people
- because it is dressed in overalls
- and looks like work."
- escape quote " is required
+    "Opportunity is missed by most people
+because it is dressed in overalls
+and looks like work."
 </pre>
 
 <h2><a id="text-functions" ></a>String functions</h2>

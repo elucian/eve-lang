@@ -34,12 +34,10 @@
 <h1>Data Types</h1>
 
 <div class="alert alert-secondary shadow-sm">
-The purpose of any programming language is to manipulate data. On the lowest level, data is basically 0 and 1 signals. Eve is a high level language so our idea of data type is more complex. Eve has a gradual-typing system that will be explained below.
+The purpose of any programming language is to manipulate data. On the lowest level, data is basically 0 and 1 signals. Eve is a high level language. It has complex data types. Eve has a gradual-typing system that will be explained below.
 </div>
 
-<p>Let's describe the basic types:</p>
-
-<h4>Bookmarks</h4>
+<h4>Page bookmarks</h4>
 
 <hr>
 <ul>
@@ -60,7 +58,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 
 <h2><a id="native-types"/>Native Types</h2>
 
-<p>Native types are implemented by microprocesor. We map primitive type to a single letter followed by a number. The range is a power of 2 multiplied with the number of bytes.</p>
+<p>Native types are implemented by operating system. We name native types using a single lowercase letter followed by number of bytes. The maximum range is a power of 2 multiplied with the number of bytes specified.</p>
 
 
 <table class="table table-bordered table-striped">
@@ -94,9 +92,11 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 </tbody>
 </table>
 
+<p>Native types are not usually necesary in Eve scripts. However the system library is using these types to create Primitive Types. A native type can be boked using a primitive type as a box.</p>
+
 <h2><a id="primitive-types"/>Primitive Types</h2>
 
-<p>Primitive types are system classes. They have an equivalent low level representation that can accomodate the range. Of course primitive types are slower than equivalent native type.</p>
+<p>Primitive types are predefined in Eve core library. They have an equivalent native type. Primitive types are slower than equivalent native types, but have more features.</p>
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -170,7 +170,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 </tbody>
 </table>
 
-<div class="alert alert-success"><b>Note:</b>&nbsp;Primitive types get zero initial values automatically and can not be Null. This is a major thing in EVE. No null primitive-types! Numeric values have initial value zero.</div>
+<div class="alert alert-success"><b>Note:</b>&nbsp;Primitive types get zero initial values automatically and can not be Null. This is a major thing in EVE. No Null primitive-types! Numeric values have initial value zero. An emty symboll is NIL.</div>
 
 
 <h2><a id="numeric-types"></a>Numeric Types</h2>
@@ -189,7 +189,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 </tr>
 <tr>
 <td>Continuous</td>
-<td>Float, Double, Rational, Complex, Domain</td>
+<td>Float, Double, Rational, Domain, Complex</td>
 </tr>
 </tbody>
 </table>

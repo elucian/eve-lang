@@ -36,7 +36,7 @@
 
 <div class="alert alert-secondary shadow-sm">Eve is an multi-paradigm language inspired from Ada, Java and Python. Eve is using familiar keywords and intuitive symbols for a logic learning experience. We design Eve to be practical and comprehensible.</div>
 
-<h4>Bookmarks</h4>
+<h4>Page bookmarks</h4>
 
 <p>In this article you will learn about:</p>
 
@@ -563,14 +563,27 @@ return;</code></pre>
 <th>Description</th>
 </tr>
 </thead>
+<tr>
+<td>begin</td>
+<td>used before a block of code to create a local scope</td>
+</tr>
+<tr>
 <tbody>
 <tr>
-<td>case</td>
+<td>match</td>
 <td>multi-path conditional selector</td>
 </tr>
 <tr>
 <td>when</td>
-<td>define a pathway in conditional selector</td>
+<td>define a pathway in multi-path selector</td>
+</tr>
+<tr>
+<td>other</td>
+<td>define a default pathway in a selector</td>
+</tr>
+<tr>
+<td>cycle</td>
+<td>start declaration region for a repetitive block</td>
 </tr>
 <tr>
 <td>loop</td>
@@ -585,8 +598,20 @@ return;</code></pre>
 <td>visitor iteration loop</td>
 </tr>
 <tr>
-<td>end</td>
-<td>block finalization keyword</td>
+<td>if</td>
+<td>start a branch or a fork</td>
+</tr>
+<tr>
+<td>else</td>
+<td>start alternative branch</td>
+</tr>
+<tr>
+<td>repeat</td>
+<td>repeat a block of code in a cycle</td>
+</tr>
+<tr>
+<td>done</td>
+<td>close a control statement</td>
 </tr>
 </tbody>
 </table>
@@ -717,11 +742,6 @@ return;</code></pre>
 <td>start</td>
 <td>execute asynchronously an aspect</td>
 </tr>
-<tr>
-<td>begin</td>
-<td>used before a block of code to create a local scope</td>
-</tr>
-<tr>
 <td>yield</td>
 <td>interrupt current process and wait for other processes</td>
 </tr>

@@ -49,14 +49,16 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 
 <div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes or user defined data types. Eve implements all 4 OOP principles. </div>
 
-<h4>Bookmarks:</h4>
+<h4>Page bookmarks:</h4>
 
 <hr>
 <ul>
 <li><a href="#class">Class signature</a></li>
 <li><a href="#object">Object type</a></li>
+<ul>
 <li><a href="#object-methods">Object methods</a></li>
 <li><a href="#object-attributes">Object attribute</a></li>
+</ul>
 <li><a href="#class-members">Class members</a></li>
 <ul>
 <li><a href="#class-properties">Class properties</a></li>
@@ -109,7 +111,7 @@ return;
 
 <p><b>Note:&nbsp;</b>Object constructor can receive argument names that do not exist, and bind values to new attributes using (key:value) pairs. This is possible in Eve due to a gradual typing system.</p>
 
-<h2><a id="object-methods"></a>Object methods</h2>
+<h3><a id="object-methods"></a>Object methods</h3>
 
 <p>Methods are related to an object or a class. The methods can have parameters and can return results. You must define all methods in the same module as the class declaration. Modules can have public or private classes. Drivers and Scripts can have only private classes.</p>
 
@@ -142,7 +144,7 @@ return;
 
 <p><b>Note: </b>To call a method, you do not use any keyword. Just specify the method name with arguments. Methods can be created in packages to extend the Eve language with domain specific actions.</p>
 
-<h2><a id="object-attributes"></a>Object Attributes</h2>
+<h3><a id="object-attributes"></a>Object Attributes</h3>
 
 <p>A class can define attributes for future object instances. The class constructor must set initial values for object attributes and can create new private attributes. Attributes can be public or private.</p>
 
@@ -235,7 +237,8 @@ return;
 
 <p>This example defines a "Point" class with two parameters. The parameters have default values so they are optional when you create a point. Read the example and the notes to understand how to use a user defined class constructor.</p>
 
-<pre><code class="language-eve"># demonstrate a class
+<pre><code class="language-eve">
+# demonstrate a class
 driver point_demo:
 
 ** define class Point, from root Object
@@ -290,9 +293,9 @@ return;
 
 <p><b>Notes:&nbsp;</b>A class is a singleton. It has public and private members and can describe the attributes of the future object instances. A class has a declaration region where you can define static members, and an initialization region called constructor, for object initialization.</p>
 
-<p><b>Description:&nbsp;</b>A class has one single constructor. Constructors can have one or more parameters, some may be optional. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
-
 <h4>Pattern:</h4>
+
+<p>A class has one single constructor. Constructors can have one or more parameters, some may be optional. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
 
 <pre><code class="language-eve">
 # define a private class
@@ -354,7 +357,8 @@ return;
 
 <p>In next examples we use a primitive type: Integer, that is actually a class. So any Integer number is an Object instance. Object instances are references and can be compared.</p>
 
-<pre><code class="language-eve">#object comparison demo
+<pre><code class="language-eve">
+#object comparison demo
 driver object_compare:
   set m = n = 1: Integer; 
 process
@@ -382,7 +386,8 @@ return;
 
 <h4>Pattern:</h4>
 
-<pre><code class="language-eve"># define a class with inheritance
+<pre><code class="language-eve">
+# define a class with inheritance
 class BaseType = {attributes} <: Object;
 
 ** object method
@@ -413,11 +418,11 @@ return;
 
 <h2><a id="generics"></a>Generics</h2>
 
-<p>Sometimes you need to create a collection that has a unknown type. You can specify the type when you create a subclass. That is, a generic class can not be instantiated and is abstract.</p>
+<p>Generics are Eve system lybraries. You can create sub-types using a generic. Next generics are pre-defined: {Array, List, DataSet, HashMap}. We will describe these data types in next chapter.</p>
 
-<p>Generic types are already implemented by Eve system lybraries. You can create sub-types of these generics. Eve has these generics ready for use: {Array, List, DataSet, HashMap}. We have already shown exam</p>
+<h4>Use cases</h4>
 
-<h4>Pattern:</h4>
+<p>Eve enable 4 generic types. If more generic types are required in the future we will modify the language. We will describe these generics as collection types. All these generics are "Iterable" Objects.</p>
 
 <pre><code class="language-eve">
 ** making an array
@@ -433,7 +438,62 @@ class UserSet = {}Type <: DataSet;
 class UserMap = {}(Type:Type) <: HashMap; 
 </code></pre>
 
-<p><b>Note: </b>Due to nature of Eve syntax, user defined generics are not possible. However, user can create classes that receive types as arguments. This enable creation of complex constructors that accept variant data types.</p>
+<h4>List of DataSet</h4>
+
+<p>Girst you define ElementType, then you define a collection UserList. After this you can define many instantes of type UserList. Then you can engueue or append new members.</p>
+
+<pre><code class="language-eve">
+# Using a generic type to create a table
+driver test_generic:
+
+** making an element type
+class ElementType = {a,b,c: Integer} <: DataSet;
+
+** making a list of elements
+class UserList = ()ElementType <: List; 
+
+process
+  ** instantiate UserList object 
+  new myList: UserList; 
+
+  ** enqueue one member
+  let myList += ElementType(1,2,3);
+
+  ** append one member
+  let myList := myList + ElementType(7,8,9);
+
+  print myList -- ({1,2,3},{7,8,9})
+return;
+</code></pre>
+
+<h4>Type Inference</h4>
+
+<p>Using a data literal you can shortcut the design pattern. This is possible due to type inference. Eve create the types for you. After collection is created you can add new elements.</p>
+
+<pre><code class="language-eve">
+** define object using type inference
+   new myList := ({1,2,3},{7,8,9});
+
+** using introspection to find the type
+   print Type(myList);       -- List
+   print Type(myList[1]);    -- DataSet
+   print Type(myList[1][1]); -- Integer
+</code></pre>
+
+<h4>List of Objects</h4>
+
+<p>Using type inference you can create complex data structures. In next example we create a list of objects. Each object can have same structure or different structure. This is possible due to dynamic nature of Objects.</p>
+
+<pre><code class="language-eve">
+** define object using type inference
+   new myCatalog := ({name: "Elucian", age: 56},{name: "Daniel", age: 45});
+
+** using introspection to find the type
+   print Type(myList);          -- List
+   print Type(myList[1]);       -- Object
+   print Type(myList[1].name);  -- String
+   print Type(myList[1].age);   -- Integer
+</code></pre>
 
 <p><b>Read next:</b>
 <a href="functions.html">Functions</a></p>

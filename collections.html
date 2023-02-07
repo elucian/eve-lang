@@ -36,7 +36,7 @@
 <div class="alert alert-secondary shadow-sm">
 Collections are composite types represents groups of elements of the same type. In Eve collections are actually generics. Usually we declare collections using "gradual typing" technique but it is possible to use an explicit declaration. </div>
 
-<h4>Bookmarks:</h4>
+<h4>Page bookmarks:</h4>
 <hr>
 <ul>
 <li><a href="#ordinal">Ordinal</a></li>
@@ -270,7 +270,7 @@ return;
 <pre><code class="language-eve"># define a subtype of Array
 driver test_matrix;
 
-class Matrix: [4,4]Integer &lt;: Array;
+class Matrix = [4,4]Integer &lt;: Array;
 
 process
   new mat: Matrix; -- define matrix variable
@@ -511,11 +511,11 @@ process test:
   new object = {} :Object; 
 
   ** create new attributes
-  new object["x"];
-  new object["y"];
+  let object += (x:1);
+  let object += (y:2);
   ...
-  print object.x;
-  print object.y;
+  print object.x; -- 1
+  print object.y; -- 2
 return;
 </code></pre>
 
