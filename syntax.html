@@ -181,24 +181,18 @@ not_valid_
 _not_valid_
 </pre>
 
-<h3>Identifier Sigil</h3>
-
-<p>A sigil is a special character prefix that is used to define an identifier. We use sigil to improve code readability but also to add extra functionality to specific identifiers that are not regular. Eve is using following sigils to define special kind of variables or identifiers:</p>
-
-<table class="table table-bordered table-sm table-striped">
-<tr><th style = "text-align:center;">$ </th><td>system  variables | constant </td></tr>
-<tr><th style = "text-align:center;">_ </th><td>private state | constant </td></tr>
-</table>
-
 <h3>Identifier Prefix</h3>
 
-<p>Indetifier prefix is used to declare a variable, but is not required when use the variable. Prefix specify a particular kind of variable that is unusual.</p>
+<p>Indetifier prefix is used to declare a variable, but is not required when using the variable. Prefix specify a particular kind of variable.</p>
 
 <table class="table table-bordered table-sm table-striped">
-<tr><th style = "text-align:center;">*     </th><td>vararg parameter | argument spreading  </td></tr>
-<tr><th style = "text-align:center;">@     </th><td>result | input & output parameters </td></tr>
-<tr><th style = "text-align:center;">.     </th><td>public member of a module</td></tr>
+<tr><th style = "text-align:center;">*     </th><td>vararg parameter </td></tr>
+<tr><th style = "text-align:center;">@     </th><td>receiver parameter</td></tr>
+<tr><th style = "text-align:center;">.     </th><td>public member</td></tr>
+<tr><th style = "text-align:center;">_     </th><td>private member</td></tr>
 </table>
+
+<p><b>Note: </b>We also use sigil: "$", that is making a "system state". To use this state, you do not need a qualifier. System states a public states, shared in global scope. A sigil is part of the identifier while a prefix is only part of the declaration.</p>
 
 <h3>System Variables</h3>
 <table class="table table-bordered">
@@ -226,9 +220,8 @@ _not_valid_
 
 <h4>Notes:</h4>
 <ul>
-<li>Sigil is reducing collision between local and global name scope;</li>
-<li>In other languages the <em>sigil;</em> is used for all variables;</li>
-<li>A system constant is usually represented by a native or basic type;</li>
+<li>System sigil "$" is reducing collision with the local scope;</li>
+<li>A system constant is usually represented by a data literal;</li>
 <li>A system variable can be an object with attributes or a base type.</li>
 </ul>
 
@@ -877,7 +870,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>@</td>
-<td>Iput/output parameter | result</td>
+<td>Iput/output parameter | result prefix</td>
 </tr>
 <tr>
 <td>;</td>
@@ -1348,7 +1341,7 @@ return;</code></pre>
 </tbody>
 </table>
 
-<h2><id = "format">Quick Format</h2>
+<h2><a id = "format"></a>Quick Format</h2>
 
 <p>For printing output using a format we use operator <em>as</em> that is the "quick format" operator. We can use system constant templates that are available for making different formats for different data types. This operator is a bit smarter than the "?" operator that we can use for "string templates".</p>
 

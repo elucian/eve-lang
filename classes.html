@@ -152,16 +152,16 @@ return;
 <li>We declare attributes using = {...}  or += {...} after class name;</li>
 <li>Public attributes must be initialized using "let" in constructor;</li>
 <li>Private attributes are created with keyword "new" in constructor;</li>
-<li>Private attributes are starting with sigil "_", by convention;</p>
+<li>Private attributes are starting with prefix "_", by convention;</p>
 </ul>
 
 <p>To access public attributes you must use dot notation like:</p>
 
 <pre class="output">object_instance.public_attribute;</pre>
 
-<p>To access private attributes you must use "self." qualifier. Private attributes are available in constructor and inside of object methods but are not available with object name as qualifier.</p>
+<p>To access private attributes you must use "self." qualifier. Private attributes are available in constructor and inside of object methods but are not available with object name as qualifier. That is, private members are encapsulated.</p>
 
-<pre class="output">self._private_attribute;</pre>
+<pre class="output">self.private_attribute;</pre>
 
 <p><b>Note </b>A class does not know anything about its objects. You can not ask the class anything about its instances, except if you create a special logic using class properties.</p>
 
@@ -178,7 +178,7 @@ return;
 
 <ul>
 <li>Properties are defined using keyword "set" ;</li>
-<li>Private properties start with "_" sigil;</li>
+<li>Private properties start with "_" prefix";</li>
 <li>Public properties start with dot "." prefix; </li>
 <li>A class is a singleton Object of type Class;</li>  
 </ul>
@@ -204,7 +204,7 @@ class ClassName <: Object:
   ** class method
   method .change(param:Type) => (result:Integer):
      let last := param;
-     let _property += param;
+     let property += param;
      let result   := property;
   return;
 return;
