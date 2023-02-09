@@ -63,8 +63,8 @@
 driver hello:
 
 process
-    ** main process
-    print "Hello World!";
+  ** main process
+  print "Hello World!";
 return;
 </code></pre>
 
@@ -78,22 +78,22 @@ driver syntax_elements(a, b: Integer)::
 
 ** define two global lambda expressions
 lambda
-    set add := (p1, p2: Integer) => (p1 + p2);
-    set sub := (p1, p2: Integer) => (p1 - p2);
+  set add := (p1, p2: Integer) => (p1 + p2);
+  set sub := (p1, p2: Integer) => (p1 - p2);
 
 ** define local variables
 process
-    ** main process has access to parameters
-    print "param1: #{a}, param2: #{b}";
+  ** main process has access to parameters
+  print "param1: #{a}, param2: #{b}";
 
-    new v1, v2 :Integer;
-    
-    let v1 := add(4, 5);
-    let v2 := sub(5, 3);
+  new v1, v2 :Integer;
+  
+  let v1 := add(4, 5);
+  let v2 := sub(5, 3);
 
-    ** print the result
-    print "result:", v1; -- 9
-    print "result:", v2; -- 2
+  ** print the result
+  print "result:", v1; -- 9
+  print "result:", v2; -- 2
 return;
 </code></pre>
 
@@ -131,12 +131,12 @@ driver comment_demo:
 -- You can use these comments at end of lines 
 ----------------------------------------------
 process
-    ** this comment style is inspired from "md"
-    new a = 0, b = 1 :Integer;
+  ** this comment style is inspired from "md"
+  new a = 0, b = 1 :Integer;
 
-    ** next demo use end of line comments:
-    let a := a + b * -- end of line comments can
-            (a - 1); -- be useful in expressions
+  ** next demo use end of line comments:
+  let a := a + b * -- end of line comments can
+          (a - 1); -- be useful in expressions
 return;
 
 # Final Notes:
@@ -264,9 +264,9 @@ global
 <pre><code class="language-eve">
 # multiple variables
 process
-    new a = b = 0 :Integer;
-    new x = y = z = 0.5 :Double;
-    ...
+  new a = b = 0 :Integer;
+  new x = y = z = 0.5 :Double;
+  ...
 return;
 </code></pre>
 
@@ -288,7 +288,7 @@ return;
 
 <pre><code class="language-eve">
 ## simple expressions
-process expression_demo:
+process
   print 10;
   write "this is a test";
   ** complex expressions can use ()
@@ -302,6 +302,7 @@ process expression_demo:
   write (3,4);
   ** now create a new line and output the text
   print; -- 1234
+  ...
 return;
 </code></pre>
 
@@ -323,9 +324,12 @@ return;
 
 <pre><code class="language-eve">
 #expressions pseudo-code
-new identifier1 := literal;         -- constant literal
-new identifier2 := expression;      -- execute expression
-new identifier3 := function_name(); -- function call
+process
+  new identifier1 := literal;         -- constant literal
+  new identifier2 := expression;      -- execute expression
+  new identifier3 := function_name(); -- function call
+  ...
+return;
 </code></pre>
 
 <h4>assign: by value:</h4>
@@ -335,8 +339,8 @@ new identifier3 := function_name(); -- function call
 <h4>Syntax:</h4>
 
 <pre><code class="language-eve">// making a clone
-new object :: original;
-expect object is not original;
+  new object :: original;
+  expect object is not original;
 </code></pre>
 
 <p><b>Note: </b>Native types are exceptions. For native type, the operator "is" do not work at all. Attempting to use "is" or "is not" with a native type will result in error. Actually clone operator works only with Objects.</p> 
@@ -348,14 +352,16 @@ expect object is not original;
 <h4>Syntax:</h4>
 
 <pre><code class="language-eve"># ternary expression
-
+process
 ** regular style using a single line of code:
-    new variable1 := (value1 if condition else value2);
+  new variable1 := (value1 if condition else value2);
 
 ** alternative style using multiple lines of code:
-    new variable2 := (value1 if condition1 else
+  new variable2 := (value1 if condition1 else
                   value2 if condition2 else
                   value3);
+  ...
+return;
 </code></pre>
 
 <h4>Example:</h4>
@@ -363,11 +369,13 @@ expect object is not original;
 <p>In next example we use a ternary expression as argument.</p>
 
 <pre><code class="language-eve">
-** create a logic variable
-new test := True;
-...
-expect (True if test else False); -- will pass
-...
+process
+  ** create a logic variable
+  new test := True;
+  ...
+  expect (True if test else False); -- will pass
+  ...
+return;
 </code></pre>
 
 <h2><a id="statements"></a>Statements</h2>

@@ -172,7 +172,7 @@ function apply_style(str) {
     str = str.replace(/;(?=\s|\b|$)/,operator(";")) 
 
     //fix concatenation
-    str = str.replace(/(?<=\w)\/(?=\w|\b|\$)/,operator("/"))
+    str = str.replace(/\"\/\"/,operator("/"))
 
     //fix operators
     str = str.replace(/\s=\s/g,operator(" = "))
@@ -281,7 +281,7 @@ function eve_render() {
                         line  = strings(line)              
                     } else {
                         // split away end comments 
-                        parts = line.split(/(?<!['"])--/)
+                        parts = line.split(/\s--/)
                         line  = parts[0]
                         if (parts.length > 1) {
                             comment = " --" + parts[1]

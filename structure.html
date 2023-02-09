@@ -159,7 +159,7 @@ global
   ...
 ----------------------------------------------------
 ** main process, or initialization region
-process | reset 
+[process | reset]
   new my_var  = value;  -- private variable
   ...
 return;
@@ -252,7 +252,7 @@ global
 
 ** create a global object of type Person.
 process
-  new  me   := Person("Elucian", "56"); 
+  new  me := Person("Elucian", "56"); 
 return;
 </code></pre>
 
@@ -271,7 +271,7 @@ return;
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
-module name:
+driver script_name:
   ** define global states
   set $user_path := root_path/relative_path;
 
@@ -286,6 +286,7 @@ import
 alias
   ** create alias for a member with qualifier
   set new_name := module_name.member_name;
+process
   ...
 return;
 </code></pre>
@@ -333,7 +334,7 @@ return;
 <h4>Syntax Pattern:</h4>
 
 <pre><code class="language-eve">
-aspect name(parameter_list):
+aspect aspect_name(parameter_list):
   ** declare variables
   ...
 process
@@ -401,7 +402,7 @@ return;
 
 <pre><code class="language-eve">
 #demo output parameters
-driver output_params:
+aspect output_params:
 
 ** private method
 function add(p1 = 0, p2 = 1: Integer, @op: Integer):
@@ -446,15 +447,46 @@ return;
 <p>An Eve module begins with "module" keyword. Module name is the same as the last folder in a library path. A module can have an initialization region. This is executed when the module is imported for the first time.</p>
 
 <pre><code class="language-eve">
-+--------------------------------------------
-module syntax is similar to any Eve script     
----------------------------------------------+
-module name:
-** declaration region
++----------------------------------------
+module name is the folder name so that
+one module can have more then one script.    
+----------------------------------------+
+module module_name:
+
+** shared variables
+$system_variable: Type;
 ...
+
+** global variables
+global
+   set _private_state = ...
+   set .public_state  = ...
+
+** lambda expressions
+lambda
+   set _private_expression = ...
+   set .public_expression  = ...
+
+** private functions
+function _private_function
+...
+
+** public functions
+function .public_function
+...
+
+** private classes
+class _Private_Class ...;
+
+** public classes
+class .Public_Class  ...;
+
+...
+
 reset
 ** initialization region
-...
+  $system_variable := value
+
 return;
 </code></pre>
 
@@ -469,7 +501,9 @@ return;
 <li>Synchronous processes do not reset the shared states.</li>
 </ul>
 
-<p><b>Module names </b>are using lowercase letters, can contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long. A module can be a single file but usually represents several files.</p>
+<p><b>Module names </b>are using lowercase letters, can contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long.</p>
+
+<p><b>Module scripts </b>A module can be a single file but usually represents several files. The main script has the same name as the folder name. In the main script you can define public members. In secondary scripts, you can define the private members.</p>
 
 <h2><a id="execution"></a>Script Execution</h2>
 
@@ -490,7 +524,6 @@ return;
 <h3>Driver Execution:</h3>
 
 <p>When a driver is executed, all it's components are compiled in memory, then the <em>process</em> is executed. If a module do not have a "process", it can not be executed. The process is the driver entry point. When the <em>driver main process</em> is finalized the program terminates and is removed from memory.</p>
-
 
 <h4>Running a Driver</h4>
 

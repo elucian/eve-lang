@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">
   <meta name="description" content="Introduction to Eve Database api.">
@@ -60,7 +61,7 @@ Eve has basic interaction with relational databases. We design Eve to connect to
 
 <p>The model library must be imported using these statements:</p>
 
-<pre><code class="language-EVE"># using Oracle library
+<pre><code class="language-eve"># using Oracle library
 import
    $EVE_lib.db.core:(*);
    Oracle: $EVE_lib.db.oracle;
@@ -70,7 +71,7 @@ import
 <p>One application can connect to multiple databases simultaneously. A specific kind of application called&nbsp;<em>pipeline</em>&nbsp;can pull data from multiple sources to update one target database.</p>
 
 <p><b>pattern:</b></p>
-<pre><code class="language-EVE">** create a database session
+<pre><code class="language-eve">** create a database session
 class Session(String user,password,name) &lt;: Oracle.Database:
   new _credentials: String;
 create
@@ -155,7 +156,7 @@ return;
 <h3><a id="tables"></a>Tables</h3>
 <p>Internal <em>memory tables</em> are mixed collections of objects having same name as <em>database tables</em>. We can read a database table record by record on demand. A <em>memory table</em> can load one or multiple <em>records</em> in memory.</p>
 
-<pre><code class="language-EVE">
+<pre><code class="language-eve">
 class Table(String name) &lt: Object;
 </code></pre>
 
@@ -192,7 +193,7 @@ class Record(Integer id) &lt;: Object;
 <h3><a id="append"></a>Append</h3>
 <p>Eve can add new data records into one table using <em>append()</em>.</p>
 
-<pre><code class="language-EVE">
+<pre><code class="language-eve">
 session [label]
    ** create empty records
    new record1 := table_name.append();
@@ -215,20 +216,20 @@ commit;
 
 <h4>Single record:</h4>
 
-<pre><code class="language-EVE">** use search fields and values
+<pre><code class="language-eve">** use search fields and values
 session [label]:
-    new record1 := table_name.find(field:value1, ...);
-    new record2 := table_name.find(field:value2, ...);
+  new record1 := table_name.find(field:value1, ...);
+  new record2 := table_name.find(field:value2, ...);
 update record:
-    let field_name := value;
-    ...
+  let field_name := value;
+  ...
 update record:
-    let field_name := value;
-    ...
+  let field_name := value;
+  ...
 on error1:
-   ...
+  ...
 on error2:
-   ...
+  ...
 commit [label];
 </code></pre>
 
@@ -238,7 +239,7 @@ commit [label];
 <p>This statement will remove one or more records from a table.</p>
 
 <p><b>Syntax</b></p>
-<pre><code class="language-EVE">
+<pre><code class="language-eve">
 ** Find one single record and delete
 session [name]:
   ** local variables
@@ -283,11 +284,11 @@ commit;
 
 <pre><code class="language-eve">
 session [label]:
-   scrub db1.table1;
-   scrib db2.table1;
+ scrub db1.table1;
+ scrib db2.table1;
 on error
-   ** revert session
-   rollback;
+ ** revert session
+ rollback;
 commit;
 </code></pre>
 
@@ -295,9 +296,9 @@ commit;
 <h2><a id="direct-sql"></a>Direct SQL</h2>
 <p>Sometimes we need to bypass the ORM and execute native SQL:</p>
 
-<pre><code class="language-EVE">
+<pre><code class="language-eve">
 # execute query string and return a list of records
-new query_result := db.query(query_template ? source)
+  new query_result := db.query(query_template ? source)
 </code></pre>
 
 
@@ -305,7 +306,7 @@ new query_result := db.query(query_template ? source)
 
 <p>Some databases have support for stored procedures. It will be a challenge to engage these procedures from EVE. Since not all databases have stored procedures, these are extra features that we can implement in Eve but not necessary for our purpose.</p>
 
-<pre><code class="language-EVE">
+<pre><code class="language-eve">
 ** prepare an object (not updatable)
 class Result = {
       field_name1:Type ,
@@ -313,11 +314,13 @@ class Result = {
       ...
       } &lt;: Record;
 
-** prepare a list of records
-set buffer: ()Result;
-
-** execute stored procedure and collect
-let buffer <+ db.procedure_name(arguments);
+global
+  new buffer: ()Result; -- collection
+process
+  ** execute stored procedure and collect
+  let buffer <+ db.procedure_name(arguments);
+  ...
+return;
 </code></pre>
 
 

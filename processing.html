@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve data processing. Feature requirement document">
@@ -51,11 +52,19 @@
 
 <h2><a id="main-process"/>Main Process</h2>
 
-<p>A process is sequence of jobs, executed in serial mode. Any job can pass or fail but the process continue with the next job, unless an exception is raised or process is intrerupted early by logic conditions.</p>  
+<p>A process can do one or more jobs. Each job is a try block. Jobs are sequential. Any job can pass or fail but the process continue with the next job, unless an exception is raised or process is intrerupted early by logic conditions.</p>
 
-<p>In case of exception, the workflow jumps into recover region. If none of the cases is handling the error, the finalization region is executed and the process terminates. Unhandled errors will cause the program to panic and stop working. Errors do not propagate to other processes.</p>
+<p>In case of exception, the workflow jumps into recover region. If none of the cases is handling the error, the finalization region is executed and the process terminates. Errors can propagate to main process if they are not properly handled.</p>
+
+<div align="center">
+  <img src="img/eve-try.svg" alt="try blocks"
+  width="500" class="img-fluid protect rounded shadow border" >
+  <p>job ... try</p>
+</div>
 
 <h4>Pattern:</h4>
+
+<p>Next design pattern show how to create several jobs in a process. Having a process with jobs will enhance your ability to crate robust code that can handle errors and prevent catastrophic defects.</p>
 
 <pre><code class="language-eve">
 # define process with label
@@ -166,6 +175,8 @@ process
   repeat;
 return;
 </code></pre>
+
+
 
 <h2><a id="side-effect"></a>Side Effects</h2>
 

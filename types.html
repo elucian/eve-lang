@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve type system. Official specification.">
@@ -346,11 +347,14 @@ return;
 <h4>Examples</h4>
 
 <pre><code class="language-eve">
-new letter   := 'a';
-new capital  := 'B';
-new number   := '5';
-new unicode  := '&beta;';
-new operator := '&not;';
+process
+  new letter   := 'a';
+  new capital  := 'B';
+  new number   := '5';
+  new unicode  := '&beta;';
+  new operator := '&not;';
+  ...
+return;
 </code></pre>
 
 <h4>Unicode Literal</h4>
@@ -830,8 +834,8 @@ return;
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
 ** explicit initialization
-set False := 0b0 :Byte; 
-set True  := Ob1 :Byte;   
+  set False := 0b0 :Byte; 
+  set True  := Ob1 :Byte;   
 </code></pre>
 
 <p><b>Internal design</b></p>

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve control flow statements.">
@@ -46,7 +47,6 @@ Most languages have similar flow control statements. These are block statements 
 <tr><th>4</th><th><a href="#loop"   >loop   </a></th> <td>unconditional repetition    </td></tr>
 <tr><th>5</th><th><a href="#while"  >while  </a></th> <td>conditional repetition      </td></tr>
 <tr><th>6</th><th><a href="#for"    >for    </a></th> <td>range controlled repetition </td></tr>
-<tr><th>7</th><th><a href="#try">try</a></th> <td>error protected block</td></tr>
 </table>
 
 <h2><a id="if"></a>Conditional</h2>
@@ -322,50 +322,6 @@ print;
 1,3,5,7,9
 </pre>
 
-<h2><a id="try"></a>try</h2>
-
-<p>A try block is useful to handle recoverable errors. You can use try blocks only in processes. Processes can improve code readability and avoid catastrofic defects in your final product.</p>
-
-<div align="center">
-  <img src="img/eve-try.svg" alt="try blocks"
-  width="500" class="img-fluid protect rounded shadow border" >
-  <p>job ... try</p>
-</div>
-
-<h4>Syntax Pattern</h4>
-
-<p>A try has several executable blocks, one error handler block and a finalization block. The finalization block is executed even if there is an error.</p>
-
-<pre><code class="language-eve">
-process
-  ** declare locals
-  ....
-  [job (code:"description")] try
-      ** protected block
-      ...
-      raise (code,"message");
-      ...
-      expect (condition) [else "message"];
-      ...
-  [job (code:"description")] try
-      ...
-recover
-  case $error.code == 100 then
-    ** handler 1
-    ...
-  case $error.code == 100 then
-    ** handler 2
-    ...
-  else 
-    ** default 
-    ...
-finalize
-   ** close resources
-   ...
-return;
-</code></pre>
-
-<p><b>Note: </b>A process can do one or more jobs. Each job is a try block. Jobs are sequential. The recover and finalization regions are colapsed into one. Details about using a this statement will be explained in next chapter.</p>
 
 <hr>
 <p><b>Read next:</b>
