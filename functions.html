@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve programming language specification, by Sage-Code Laboratory.">
   <meta name="author" content="Elucian Moise">
@@ -31,16 +31,28 @@
         <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
     </div>
     <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a><--
+        <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
 <h1><a id="functions">Eve Functions</h1>
 
 <div class="alert alert-secondary shadow-sm">
-A function is a relation between some input values and output values. A function may or may not make a computation to establish the output. Eve functions are actually special objects of type Function.</div>
+A function is a relation between input and output values. A function makes a computation to establish the output. Eve functions are objects of type Function. Eve enable functional programming paradigm (FP).</div>
 
-<p>Functions are declared with keyword: "function". A function can be public or private. You can define public functions in modules and private functions in other scripts.</p>
+<ul>
+<li><a href="declaration"></a>Function declaration</li>
+<li><a href="routines"></a>Routines</li>
+<li><a href="coroutines"></a>Coroutines</li>
+<li><a href="lambdas"></a>Lambda expressions</li>
+<li><a href="recursion"></a>Recursive functions</li>
+<li><a href="callbacks"></a>Callback functions</li>
+<li><a href="closures"></a>Closure functions</li>
+</ul>
+
+<h2><a href="declaration"></a>Function declaration</h2>
+
+<p>Functions are declared with keyword: "function". A function can be public or private. You can define public functions in modules and only private functions in other scripts.</p>
 
 <h4>Pattern:</h4>
 
@@ -54,15 +66,21 @@ return;
 <h4>Notes:</h4>
 
 <ul>
-<li>Result type can be declared explicit usin @ prefix,</li>
+<li>Function result is mandatory and explicit, </li>
+<li>Result type must is declared usin prefix @,</li>
 <li>A function can have input/output parameters,</li>
 <li>A function can receive parameters of type function,</li>
 <li>A function can return a result but the result is optional,</li>
 <li>A function can create as a result another function called closure,</li>
 <li>A function can raise errors but it can't handle errors,</li>
+<li>A function can be suspended and resumed on demand,</li>
 </ul>
 
-<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by semicolumn, or one argument, or a list of arguments in round brackets (). In expressions, the brackets are mandatory even if there are no arguments.</p>
+<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by semicolumn, and list of arguments in round brackets (). Brackets are mandatory even if there are no arguments.</p>
+
+<p><b>Function arguments</b>&nbsp;The arguments can be pass by position or by name. The names of arguments is useful when when a function has optional parameters.</p>
+
+<h4>Pattern:</h4>
 
 <pre><code class="language-eve">
 #demo function execiton
@@ -86,22 +104,23 @@ process
 return;
 </code></pre>
 
-<p><b>Note:</b>&nbsp;Argument value can be anything that translate to a value of expected type:</p>
+<p><b>Note:</b>&nbsp;Argument value can be an expression or a variable that translate to a value of expected type. For clarity of application we encourage creation of local variables for arguments.</p>
+
 <ul>
 <li>value ::= constant | variable</li>
 <li>value ::= expression | other function call</li>
 </ul>
 
-<h4>formal parameters</h4>
+<h3>Formal parameters</h3>
 <ul>
 <li>Parameters are declared in parenthesis () after the function name,</li>
 <li>Each parameter has name and type and can have one default value,</li>
 <li>When a function is called each parameter receive an argument.</li>
 </ul>
 
-<h4>function arguments</h4>
+<h3>Function arguments</h3>
 
-<p>There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters in a function call. Arguments can be literals, constants or variables.</p>
+<p>There is a difference between the parameter and the argument. The parameter is a local variable in the function scope while arguments are values assigned to these parameters in a function call. Arguments can be literals, constants, variables or expressions.</p>
 
 <h4>Example:</h4>
 <pre><code class="language-eve"># demo function with parameters
@@ -117,29 +136,48 @@ process
 return;
 </code></pre>
 
-<p><b>Function call</b>&nbsp; Some functions do not have a result and can have side-effects. You can call this kind of function without round brackets () when there is no argument or a single argument. For more argumetns, function call require brackets and ";". </p>
+<h2><a id="routines"></a>Routines</h2>
+
+<p>Eve do not have void functions. Instead we define "routines". These are programs similar to functions. The difference is a routine can't create a result. A routine is usually doing something. It manipulate a state, execute input/output of some sort. It may be just print to console, write to disk or push data on the network.</p>
+
+<p>Routines can be public, defined by a module or private. Public routines can be accessed using dot operator, or can be used direct without any prefix if local or belong to Eve core modules. Eve use routines to create statements and extend itself. For example print statement is in fact a routine.</p>
+
+<h4>Pattern:</h4>
+
+<p>Next we define two routines, one has two parameters, the other one has 3 optional parameters. Routine call can be done without brackets (). Parameters can be delivered by position or by using a list of pairs, separated by comma. </p>
 
 <pre><code class="language-eve">
-#demo function call
-driver function_call:
+driver routine_demo:
 
-** declare functions
-function name1();
-function name2(param = value: Type,...);
-  ...
+** mandatory arguments
+routine first_routine(param1, param2: Type):
+   ...
+return;
+
+** optional arguments
+routine second_routine(param1:=default1, 
+                       param2:=default2, 
+                       param3:=default3):
+   ...
+return;
 
 process
-  ** call using single argument
-  name1 argument;
-
-  ** call using many arguments with values (:)
-  call name2 (param:arg_value, ...);
+  ** execute routine with arguments
+  first_routine value1, value2;
+  secon_routine;
+  secon_routine(param1:value1, param3:value3);
 return;
 </code></pre>
 
-<h2><a id="lambdas"></li>Lambda expressions</h2>
+<p>Todo</p>
 
-<p>Lambda expressions are simple functions that respect arithmetic rules. These can receive several arguments and can produce one result. A lambda expression is created with keywords "set" or "new". Lambda expressions do not have local variables or states and do not have side effects.</p>
+<h2><a id="coroutines"><a>Coroutines</a>
+
+<p>Todo</p>
+
+<h2><a id="lambdas"></a>Lambda expressions</h2>
+
+<p>Lambda expressions are simpler functions that respect arithmetic rules. These can receive several arguments and can produce one result. A lambda expression is created with keywords "set" or "new". Lambda expressions do not have local variables or states and do not have side effects.</p>
 
 <p>Lambda expressions can be declared in "lambda" regions. You can define more than one lambda regions. You can also create new lambda expressions in a process at runtime. Sometimes lambda expressions are anonymous.</p>
 
@@ -173,6 +211,19 @@ process
    useLambda((x, y) => (x + y));
 return;
 </code></pre>
+
+<h2><a id="recursion"><a>Recursion</a>
+
+<p>Todo</p>
+
+<h2><a id="callbacks"><a>Callbacks</a>
+
+<p>Todo</p>
+
+<h2><a id="closures"><a>Closures</a>
+
+<p>Todo</p>
+
 
 <!-- work in progress-->
 

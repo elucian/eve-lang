@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve control flow statements.">
   <meta name="author" content="Elucian Moise">
@@ -28,7 +28,7 @@
         <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
     </div>
     <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a><--
+        <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
@@ -115,20 +115,20 @@ done [label];
 
 <pre><code class="language-eve">#selection ladder
 [begin label:]
-    ** local variables
-    ...
+  ** local variables
+  ...
 if condition_1 then
-    ** first branch
-    ...
+  ** first branch
+  ...
 else if condition_2 then
-    ** second branch
-    ...
+  ** second branch
+  ...
 else if condition_3 then
-    ** third branch
-    ...
+  ** third branch
+  ...
 else
-    ** alternative branch
-    ...
+  ** alternative branch
+  ...
 done [label];
 </code></pre>
 
@@ -151,21 +151,22 @@ This is a multi-path selector similar to switch also named: jump table. It two v
 <pre><code class="language-eve">
 # Define a selector variable
 begin [label]:
-    new s := {v1,v2,v3,v4};
+  new s := {v1,v2,v3,v4};
+  
 ** create match selector
 match s [all | one]:
-    ** declare locals
-    ...
+  ** declare locals
+  ...
 when v1 then
-    ** first path
-    ...
-    [break];
+  ** first path
+  ...
+  [break];
 when v1, v2 then
-    ** second path
-    ...
-other
-    ** v3 or v4 found
-    ...
+  ** second path
+  ...
+when [any | other] then
+  ** v3 or v4 found
+  ...
 done [label];
 </code></pre>
 
@@ -189,14 +190,15 @@ done [label];
 
 <pre><code class="language-eve">#infinite loop
 cycle [label:]
-    ** declare control variable
+  ** declare control variable
+  ...
 loop
-    ** loop shortcut
-    skip [label] if condition ;
-    ...
-    ** early interruption
-    exit [label] if condition;
-    ...
+  ** loop shortcut
+  skip [label] if condition ;
+  ...
+  ** early interruption
+  exit [label] if condition;
+  ...
 repeat [label] [if condition];
 </code></pre>
 
@@ -220,17 +222,18 @@ repeat [label] [if condition];
 <h4>Syntax:</h4>
 <pre><code class="language-eve">#conditional loop
 cycle [label]:
-    ** declare control variables
+  ** declare control variables
+  ...
 while condition loop
-    ** shortcut iteration
-    skip if condition;
-    ...
-    ** early interruption
-    exit if condition;
-    ...
+  ** shortcut iteration
+  skip if condition;
+  ...
+  ** early interruption
+  exit if condition;
+  ...
 then
-    ** alternative path
-    ...
+  ** alternative path
+  ...
 repeat [label] if condition;
 </code></pre>
 
@@ -243,23 +246,23 @@ driver while_demo:
 **  create a shared list
     set this := ("a","b","c","d","e");
 process
-    ** start unlabeled cycle
-    cycle: 
-        ** volatile variables
-        new i := 0 : Integer; 
-        new e : Symbol;       
-    while i &lt; this.length() loop
-        let e := this[i];
-        let i += 1;
-        if e  &gt;= "c" then
-            write e;
-            write ',' if e is not this.tail;
-        done;
-    then
-        write 'i = ' + i;
-    repeat; 
-    ** flush the write buffer
-    print; -- "a","b","c","d","e"
+  ** start unlabeled cycle
+  cycle: 
+    ** volatile variables
+    new i := 0 : Integer; 
+    new e : Symbol;       
+  while i &lt; this.length() loop
+    let e := this[i];
+    let i += 1;
+    if e  &gt;= "c" then
+        write e;
+        write ',' if e is not this.tail;
+    done;
+  then
+    write "i = " + i;
+  repeat; 
+  ** flush the write buffer
+  print; -- "a","b","c","d","e"
 return;
 </code></pre>
 

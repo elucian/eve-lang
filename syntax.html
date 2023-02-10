@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="description" content="Sage-Code Eve language syntax overview.">
   <meta name="author" content="Elucian Moise">
@@ -28,7 +28,7 @@
         <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"></a>
     </div>
     <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a><--
+        <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
@@ -142,13 +142,12 @@ return;
 # Final Notes:
 /*
 
--- Eve also has C style block comments. These are
+-- Eve also has C legacy style comments. These are
 used for notes or outline large blocks of code.
 
 -- Eve block comments can be nested over boxed 
 comments. So you can comment out large sections
 of code that aredy have some comments.
-
 */
 
 </code></pre>
@@ -159,6 +158,7 @@ of code that aredy have some comments.
 <li>You can use C block comments /*...*/ to exclude code;</li>
 <li>A statement can continue after end of line comment;</li>
 <li>After end of script, you can add notes on many lines;</li>
+<li>Single line comment like "//" is not valid in Eve;</li>
 </ul>
 
 <h2><a id="identifiers"></a>Identifiers</h2>
@@ -183,18 +183,17 @@ _not_valid_
 
 <h3>Identifier Prefix</h3>
 
-<p>Indetifier prefix is used to declare a variable, but is not required when using the variable. Prefix specify a particular kind of variable.</p>
+<p>Indetifier prefix is used to declare a variable, but is not required when using the variable. Prefix specify a particular kind of variable. A prefix is not a sigil.</p>
 
 <table class="table table-bordered table-sm table-striped">
 <tr><th style = "text-align:center;">*     </th><td>vararg parameter </td></tr>
 <tr><th style = "text-align:center;">@     </th><td>receiver parameter</td></tr>
-<tr><th style = "text-align:center;">.     </th><td>public member</td></tr>
-<tr><th style = "text-align:center;">_     </th><td>private member</td></tr>
 </table>
 
-<p><b>Note: </b>We also use sigil: "$", that is making a "system state". To use this state, you do not need a qualifier. System states a public states, shared in global scope. A sigil is part of the identifier while a prefix is only part of the declaration.</p>
-
 <h3>System Variables</h3>
+
+<p>System variables start with sigil: "$", that is making a "system state". System states are public, shared in a process. A sigil is part of the identifier.</p>
+
 <table class="table table-bordered">
 <thead>
 <tr>
@@ -434,11 +433,11 @@ return;</code></pre>
 
 <h2><a id="keywords"></a>Reserved keywords</h2>
 
-<p>Computer was invented in England during WW2 so, we prefer English words even though a computer language could be created using keywords from other spoken languages. Eve is using about 80 keywords.</p>
+<p>Computer was invented in England during WW2 so, we prefer English words even though a computer language could be created using keywords from other spoken languages. Eve is using about 100 reserved keywords.</p>
 
 <table class="table table-bordered table-dark table-hover table-sm shadow">
-<tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze  </td></tr>
-<tr><td>append   </td><td>apply    </td><td>ascend    </td><td>augment  </td></tr>
+<tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze</td></tr>
+<tr><td>append   </td><td>apply    </td><td>ascend    </td><td>augment</td></tr>
 <tr><td>start    </td><td>method   </td><td>stop      </td><td>by       </td></tr>
 <tr><td>case     </td><td>class    </td><td>clone     </td><td>close    </td></tr>
 <tr><td>commit   </td><td>constant </td><td>create    </td><td>cursor   </td></tr>
@@ -449,18 +448,18 @@ return;</code></pre>
 <tr><td>halt     </td><td>if       </td><td>import    </td><td>inherit  </td></tr>
 <tr><td>insert   </td><td>into     </td><td>item      </td><td>join     </td></tr>
 <tr><td>limit    </td><td>loop     </td><td>method    </td><td>object   </td></tr>
-<tr><td>offset   </td><td>open     </td><td>order     </td><td>&nbsp;   </td></tr>
+<tr><td>offset   </td><td>open     </td><td>order     </td><td>one      </td></tr>
 <tr><td>over     </td><td>package  </td><td>pass      </td><td>print    </td></tr>
 <tr><td>process  </td><td>raise    </td><td>read      </td><td>record   </td></tr>
 <tr><td>recover  </td><td>release  </td><td>lambda    </td><td>repeat   </td></tr>
-<tr><td>reset    </td><td>rest     </td><td>result    </td><td>&nbsp;   </td></tr>
+<tr><td>reset    </td><td>rest     </td><td>result    </td><td>on       </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
-<tr><td>globa    </td><td>select     </td><td>call      </td><td>skip     </td></tr>
-<tr><td>step     </td><td>store    </td><td>switch    </td><td>job     </td></tr>
-<tr><td>then     </td><td>trial    </td><td>try       </td><td>reset   </td></tr>
-<tr><td>update   </td><td>use      </td><td>         </td><td>view     </td></tr>
+<tr><td>globa    </td><td>select   </td><td>all       </td><td>skip     </td></tr>
+<tr><td>step     </td><td>store    </td><td>switch    </td><td>job      </td></tr>
+<tr><td>then     </td><td>trial    </td><td>try       </td><td>reset    </td></tr>
+<tr><td>update   </td><td>use      </td><td>labe      </td><td>view     </td></tr>
 <tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
-<tr><td>resume   </td><td>panic    </td><td>&nbsp;    </td><td>&nbsp;   </td></tr>
+<tr><td>resume   </td><td>panic    </td><td>any       </td><td>other    </td></tr>
 </table>
 
 <h3>Definition regions</h3>
@@ -478,7 +477,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>alias</td>
-<td>define identifier for import</td>
+<td>define identifier for some imported module members</td>
 </tr>
 <tr>
 <td>class</td>
@@ -564,12 +563,11 @@ return;</code></pre>
 <th>Description</th>
 </tr>
 </thead>
+<tbody>
 <tr>
 <td>begin</td>
 <td>used before a block of code to create a local scope</td>
 </tr>
-<tr>
-<tbody>
 <tr>
 <td>match</td>
 <td>multi-path conditional selector</td>
@@ -691,49 +689,44 @@ return;</code></pre>
 </thead>
 <tbody>
 <tr>
-<td>call</td>
-<td>execute a function or method that do not return a result.</td>
+<td>panic</td>
+<td>create unrecoverable error and stop application, status > 0 (os error)</td>
 </tr>
 <tr>
 <td>exit</td>
-<td>stop current cycle and continue the after end cycle.</td>
+<td>stop current cycle and continue after the "repeat" keyword.</td>
 </tr>
 <tr>
 <td>abort</td>
-<td>stop current process and execute finalization</td>
-</tr>
-<tr>
-<td>halt</td>
-<td>silent stop current subprogram return to the caller.</td>
+<td>stop current process and execute finalization region.</td>
 </tr>
 <tr>
 <td>over</td>
-<td>stop current process and exit the program silently.</td>
+<td>silently stop current subprogram or process and return.</td>
 </tr>
 <tr>
 <td>raise</td>
-<td>create exception with error code > 0 (recoverable)</td>
+<td>create exception with error code > 0 (recoverable).</td>
 </tr>
 <tr>
-<tr>
 <td>repeat</td>
-<td>end a repetitive block and continue program</td>
+<td>end a repetitive block and continue program.</td>
 </tr>
 <tr>
 <td>fail</td>
-<td>create a fail status and skip the rest of the job</td>
+<td>create a fail status and skip the rest of the job.</td>
 </tr>
 <tr>
 <td>pass</td>
-<td>create a pass status and skip the rest of the job</td>
+<td>create a pass status and skip the rest of the job.</td>
 </tr>
 <tr>
 <td>retry</td>
-<td>work-flow jump backwards to specified job</td>
+<td>work-flow jump backwards to specified job.</td>
 </tr>
 <tr>
 <td>resume</td>
-<td>continue a process with the next job after an error</td>
+<td>continue a process with the next job after an error.</td>
 </tr>
 <tr>
 <td>apply</td>

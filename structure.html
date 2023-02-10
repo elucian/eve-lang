@@ -30,7 +30,7 @@
         </a>
     </div>
     <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a>&lt;--
+        <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
@@ -148,19 +148,19 @@ class
   ...
 ** define functions using lambda expressions
 lambda
-  new .public_lambda   = (params) => (expression);
-  new  private_lambda  = (params) => (expression);
+  set expression_name = (params) => (expression);
   ...
-
 ** global & shared states
 global
   set local = value1: user_tupe;
-  set $name = value2: TypeName;
   ...
 ----------------------------------------------------
 ** main process, or initialization region
-[process | reset]
+[process | initial]
   new my_var  = value;  -- private variable
+  ...
+[finalize | release]
+  ** release locked resources & log reports
   ...
 return;
 -----------------------------------------------------
@@ -172,24 +172,24 @@ return;
 
 <h4>Members</h4>
 <ul>
-<li>a script can define: classes, expressions and functions;</li>
+<li>a script can define members, visible in process;</li>
 <li>a script can import public members from modules;</li>
 <li>a script can "set" shared states using "$" sigil;</li>
-<li>scripts are encapsulated, states are private;</li>
-<li>public members must be declared with dot (.) proefix;</li>
-<li>restriction: only modules can define public members;</li>
 </ul>
 
-<p><b>Note: </b>Any script has one or more <em>global</em> regions. In this regions, you can define private & shared states. In declaration region you can also define: lambdas, classes & functions. All variables defined in global scope are static states. You must use keyword "set" to define them and assign initial value. Static variables are created on the heap and have a permanent nature.</p>
+<p><b>Note: </b>Any script has one or more <em>global</em> regions. In this regions, you can define private & shared states. In declaration region you can also define: lambdas, routines, classes, methods & functions.</p> 
+
+<p>All variables defined in global scope are static. You must use keyword "set" to define them and assign initial value. Static variables are created on the heap and have a permanent nature.</p>
 
 <h3>System variables</h3>
 
-<p><em>Shared variables </em>use prefix "$". Usually are loaded from a configuration file (*.cfg), but sometimes are defiand explicit in Eve modules or in driver. Shared variables can be defined in first region with keyword "set" and indentation. No need to use <em>global</em> keyword for first region global.</p>
+<p><em>Shared states </em>use prefix "$". These are called system variables. Can be loaded from a configuration file (*.cfg). Eve modules and drivers cana define, initialize or reset values for shared states. Shared states can be defined in first region after ":", with keyword indentation. No need to use <em>global</em> keyword for first region of globals.</p>
 
 <h4>Note:</h4>
 <ul>
-<li>System variables can be defined in a configuration file,</li>
-<li>System variables are usually defined in core modules.</li>
+<li>System states can be defined in a configuration file,</li>
+<li>System states are usually defined in core modules,</li>
+<li>System states can't be defined in aspects but overwriten,</li>
 </ul>
 
 <p>Several system variables are provided by Eve environment:</p>
@@ -210,7 +210,7 @@ return;
 <li>$trace :contains reporting information about executed statements
 </ul>
 
-<p>Constants and system states use sigil $. Constants have at least first letter capitalized. The best practice is to use all capital letters. The next symbols in a constant name can be numbers or underscore but no special or Unicode character.</p>
+<p>Constants have at least first letter capitalized. The best practice is to use all capital letters for constants. The next symbols in a constant name can be numbers or underscore but no special or Unicode character.</p>
 
 <h4>Example</h4>
 
@@ -247,8 +247,8 @@ class Person = {name:String, age:Integer} &lt;: Object;
 
 ** create states using type inference
 global
-  set  E = 2.52 : Real;    -- Euler's number
-  set  x = 0    : Integer; -- private state
+  set  E = 2.52 :Real;    -- Euler's number
+  set  x = 0    :Integer; -- private state
 
 ** create a global object of type Person.
 process
@@ -275,16 +275,12 @@ driver script_name:
   ** define global states
   set $user_path := root_path/relative_path;
 
-  ** define public function
-  function .function_name(arguments):
-     ...
-  return
 import
   from $user_path use (module_name,...);  -- specific modules
   from $user_path use (*);                -- find all modules
   ...
 alias
-  ** create alias for a member with qualifier
+  ** create alias for some of the hiden members
   set new_name := module_name.member_name;
 process
   ...
@@ -293,7 +289,7 @@ return;
 
 <h4>Notes:</h4>
 <ul>
-<li>$user_path is a share variable defined by the user;</li>
+<li>$user_path is a shared variable defined by the user;</li>
 <li>spaces in file-names are not supported you must use: "_";</li>
 <li>aliases are created from public members of other module;</li>
 </ul>
@@ -438,7 +434,7 @@ return;
 <li>consist of *.eve scripts,</li>
 <li>can use each other,</li>
 <li>belong to one or more projects,</li>
-<li>can define public members,</li>
+<li>can define public or private members,</li>
 <li>can be initialized when imported first time</li>
 </ul>
 
@@ -453,40 +449,24 @@ one module can have more then one script.
 ----------------------------------------+
 module module_name:
 
-** shared variables
-$system_variable: Type;
-...
+** shared states
+  set $system_variable: Type;
+  ...
 
-** global variables
-global
-   set _private_state = ...
-   set .public_state  = ...
+** import region
+import
+  from $path/library_name use (*);
 
-** lambda expressions
-lambda
-   set _private_expression = ...
-   set .public_expression  = ...
-
-** private functions
-function _private_function
-...
-
-** public functions
-function .public_function
-...
-
-** private classes
-class _Private_Class ...;
-
-** public classes
-class .Public_Class  ...;
-
-...
-
-reset
-** initialization region
-  $system_variable := value
-
+** declare members
+  ...
+initial
+** setup intial states 
+  let $system_variable := value;
+  ...
+release
+** verify states & log
+  $error.log();
+  ... 
 return;
 </code></pre>
 
@@ -494,16 +474,13 @@ return;
 <ul>
 <li>Modules don't have parameters. You can not start a module;</li>
 <li>Modules can define public members and shared states;</li>   
-<li>Modules members and states can be shared with a parent process;</li>
-<li>Modules run in the parent process and do not start a new process;</li>
-<li>A module "reset" region is executed when module is imported;</li>
-<li>Asyncrhonous processes reset the module states for every aspect.</li>
-<li>Synchronous processes do not reset the shared states.</li>
+<li>Modules run in the main process or aspect processes;</li>
+<li>A module "init" region is executed when module is imported;</li>
 </ul>
 
 <p><b>Module names </b>are using lowercase letters, can contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long.</p>
 
-<p><b>Module scripts </b>A module can be a single file but usually represents several files. The main script has the same name as the folder name. In the main script you can define public members. In secondary scripts, you can define the private members.</p>
+<p><b>Module scripts </b>A module can be a single scriot file but usually represents several files. The main script has the same name as the module name. In the main script you can define ony the public members. In secondary scripts, you can define only the private members.</p>
 
 <h2><a id="execution"></a>Script Execution</h2>
 
@@ -511,7 +488,7 @@ return;
 
 <p><b>Configuration: &nbsp;</b>Eve services using a general configuration file: eve.cfg. This file contains default settings for EVE machine. System variables are shared. A copy of EVE system variables is send to every new new driver. A driver can overwrite default settings.</p>
 
-<p><b>Memory allocation:&nbsp;</b>Eve service is in charge of allocating memory for each process. There is no shared memory between processes. When a process is terminated the memory is cleaned up of garbage and the machine continue to run until all processes are finished.</p>
+<p><b>Memory allocation:&nbsp;</b>EVE service is in charge of allocating memory for each process. There is no shared memory between processes. When a process is terminated the memory is cleaned up of garbage and the machine continue to run until all processes are finished.</p>
 
 <p>To execute a driver there are 2 methods:</p>
 <ol>
@@ -590,13 +567,13 @@ return;
 
 <h3>Module import:</h3>
 
-<p>The driver or aspect can import modules. After import, all public elements of modules can be used on demand. The parent process is controling the execution logic. Modules are not directly executable and can not have a process, but its public members can be executed and classes can be instantiated.</p>
+<p>The driver or aspect can import modules. After import, all public elements of modules can be used on demand. The parent process is controling the execution. Modules are not directly executable.</p>
 
-<p>Modules are "singleton" once a module is loaded in memory, it will not load a second time. Eve is a multi-session system. An aspect can be run asynchronously in parallel but module states are bound the the parent process.</p>
+<p>Modules are "singleton" once a module is loaded in memory, it will not load a second time for same process. Eve is a multi-session system. Module states are bound the the current process.</p>
 
 <h3>Exclusive execution:</h3>
 
-<p>When a module is executed, it can be started with parameter: -e or --exclusive. This is a signal that the module can not be started a second time in a separated session by the same VM. In this mode a module can connect to a database in admin mode and can lock a file so that no other process will access the file until is unlocked.</p>
+<p>When a module is executed, it can be started with parameter: -e or --exclusive. This is a signal that a script can not be started a second time in a separated session by the same VM. In this mode a module can connect to a database in admin mode and can lock a file so that no other process will access the file until is unlocked.</p>
 
 <h2>Program Termination:</h2>
 
@@ -613,7 +590,7 @@ return;
 driver test_over:
 process
   cycle:
-    new i = 0 : Integer;
+    new i = 0 :Integer;
   loop
     write "."; wait  10;
     over if i > 10;

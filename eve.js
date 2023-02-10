@@ -9,7 +9,7 @@ function apply_style(str) {
     str = str.replace(/^class\b/,keyword("class"))    
     str = str.replace(/^global\b/,keyword("global"))   
     str = str.replace(/^process\b/,keyword("process"))  
-    str = str.replace(/^reset\b/,keyword("reset"))  
+    str = str.replace(/^initial\b/,keyword("initial"))  
 
     // maybe with indentation     
     str = str.replace(/\bcreate\b/,keyword("create"))
@@ -18,13 +18,11 @@ function apply_style(str) {
     str = str.replace(/\bfunction\b/,keyword("function"))
     str = str.replace(/\breturn\b/,keyword("return"))
     str = str.replace(/\brecover\b/,keyword("recover"))
-    str = str.replace(/\brelease\b/,keyword("release"))
     str = str.replace(/\bfinalize\b/,keyword("finalize"))
     str = str.replace(/\breport\b/,keyword("report"))   
     str = str.replace(/\bsession\b/,keyword("session"))
     str = str.replace(/\bupdate\b/,keyword("update"))
     str = str.replace(/\bappend\b/,keyword("append"))
-    str = str.replace(/\bon\b/,keyword("on"))
     str = str.replace(/\bcommit\b/,keyword("commit"))     
     // in statement
     str = str.replace(/\bfrom\b/,keyword("from"))
@@ -36,8 +34,8 @@ function apply_style(str) {
     str = str.replace(/\brepeat\b/,control("repeat"))    
     str = str.replace(/\bwhen\b/,control("when"))
     str = str.replace(/\bjob\b/,control("job"))
-    str = str.replace(/\bcase\b/,control("case"))   
-    str = str.replace(/\bother\b/,control("other"))
+    str = str.replace(/\bcase\b/,control("case"))  
+    str = str.replace(/\bon\b/,control("on"))    
     str = str.replace(/\bloop\b/,control("loop"))
     str = str.replace(/\bwhile\b/,control("while"))
     str = str.replace(/\bfor\b/,control("for"))
@@ -45,8 +43,6 @@ function apply_style(str) {
     str = str.replace(/\btry\b/,control("try"))
     str = str.replace(/\bmiss\b/,control("miss"))
     str = str.replace(/\bmatch\b/,control("match"))
-    str = str.replace(/\ball\b/g,control("all"))
-    str = str.replace(/\bone\b/g,control("one"))
     str = str.replace(/\bif\b/g,control("if"))
     str = str.replace(/\bthen\b/,control("then"))
     str = str.replace(/\belse\b/g,control("else"))
@@ -78,11 +74,20 @@ function apply_style(str) {
     str = str.replace(/\bFunction\b/g,types("Function"))   
     str = str.replace(/\bDataSet\b/g,types("DataSet"))
     str = str.replace(/\bHashMap\b/g,types("HashMap"))
+
+    // reserved types
     str = str.replace(/\bNull\b/g,types("Null"))
     str = str.replace(/\bTrue\b/g,types("True"))
     str = str.replace(/\bFalse\b/g,types("False"))
     str = str.replace(/\bType\b/g,types("Type")) 
-      
+
+    // reserved constants
+    str = str.replace(/\bany\b/g,constant("any"))
+    str = str.replace(/\bother\b/g,constant("other"))
+    str = str.replace(/\ball\b/g,constant("all"))
+    str = str.replace(/\bone\b/g,constant("one"))
+    str = str.replace(/\blabel\b/g,constant("label"))
+
     //  interruption statements
     str = str.replace(/\bexpect\b/,interrupt("expect"))
     str = str.replace(/\bbreak\b/,interrupt("break"))
@@ -91,7 +96,8 @@ function apply_style(str) {
     str = str.replace(/\bmake\b/,interrupt("make"))
     str = str.replace(/\bstore\b/,interrupt("store"))
     str = str.replace(/\bapply\b/,interrupt("apply"))
-    str = str.replace(/\bcall\b/,interrupt("call"))
+    str = str.replace(/\bstart\b/,interrupt("start"))
+    str = str.replace(/\byield\b/,interrupt("yield"))
     str = str.replace(/\bwait\b/,interrupt("wait"))
     str = str.replace(/\bexit\b/,interrupt("exit"))
     str = str.replace(/\babort\b/,interrupt("abort"))
@@ -99,13 +105,15 @@ function apply_style(str) {
     str = str.replace(/\bwrite\b/,interrupt("write"))
     str = str.replace(/\bread\b/,interrupt("read"))
     str = str.replace(/\bover\b/,interrupt("over"))
+    str = str.replace(/\bpanic\b/,interrupt("panic"))
     str = str.replace(/\bpass\b/,interrupt("pass"))
     str = str.replace(/\bskip\b/,interrupt("skip"))
     str = str.replace(/\bfail\b/,interrupt("fail"))
     str = str.replace(/\braise\b/,interrupt("raise"))
     str = str.replace(/\bretry\b/,interrupt("retry"))
     str = str.replace(/\brollback\b/,interrupt("rollback"))
-    // operators   
+
+    // keyword operators   
     str = str.replace(/\bin\b/g,operator("in"))     
     str = str.replace(/\bis\b/g,operator("is"))
     str = str.replace(/\bas\b/g,operator("as"))    
@@ -113,13 +121,17 @@ function apply_style(str) {
     str = str.replace(/\beq\b/g,operator("eq"))    
     str = str.replace(/\band\b/g,operator("and"))
     str = str.replace(/\bnot\b/g,operator("not"))
-    
-    // mandatory indentation
+
+
+    // mandatory indentation imperative
     str = str.replace(/\snew\b/g,operator(" new"))
     str = str.replace(/\slet\b/g,operator(" let"))
     str = str.replace(/\sset\b/g,operator(" set"))
+    // database singular statements
+    str = str.replace(/\sscrub\b/g,operator(" scrub"))
+    str = str.replace(/\sdelete\b/g,operator(" delete"))
 
-    // two symbols
+    // two symbol operators
     str = str.replace(/\s::\s/g,operator(" :: "))
     str = str.replace(/\s:=\s/g,operator(" := "))
     str = str.replace(/\s==\s/g,operator(" == ")) 
@@ -132,7 +144,7 @@ function apply_style(str) {
     str = str.replace(/\s<-\s/g,operator(" <- "))
     str = str.replace(/\s->\s/g,operator(" -> "))
 
-    // modifiers
+    // two symbol modifiers
     str = str.replace(/\s\*=\s/g,operator(" *= "))
     str = str.replace(/\s\/=\s/g,operator(" /= "))
     str = str.replace(/\s\-=\s/g,operator(" -= "))
@@ -140,7 +152,7 @@ function apply_style(str) {
     str = str.replace(/\s\^=\s/g,operator(" ^= "))  
     str = str.replace(/\s\%=\s/g,operator(" %= ")) 
 
-    //shift operators 
+    //two symbol shift operators 
     str = str.replace(/\s<<\s/g,operator(" << ")) 
     str = str.replace(/\s>>\s/g,operator(" >> ")) 
 
@@ -369,6 +381,10 @@ function operator(str) {
 
 function strings(str) {
     return "<span class=\"string\">"+ str + "</span>"
+}
+
+function constant(str) {
+    return "<span class=\"constant\">"+ str + "</span>"
 }
 
 function builtin(str) {

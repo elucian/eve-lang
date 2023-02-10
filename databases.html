@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="description" content="Introduction to Eve Database api.">
   <meta name="author" content="Elucian Moise">
@@ -25,7 +25,7 @@
         <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
     </div>
     <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a><--
+        <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
@@ -195,19 +195,24 @@ class Record(Integer id) &lt;: Object;
 
 <pre><code class="language-eve">
 session [label]
-   ** create empty records
-   new record1 := table_name.append();
-   new record2 := table_name.append();
+  ** create empty records
+  new record1 := table_name.append();
+  new record2 := table_name.append();
 update record1:
-   let field_name := value;
-   ...
+  let field_name := value;
+  ...
 update record2:
-   let field_name := value;
-   ...
-on error1:
-   ...
-on error2:
-   ...
+  let field_name := value;
+  ...
+recover
+  case $error.code == error1:
+    ...
+    rollback;
+  case $error.code == error2:
+    ... 
+    rollback;
+  else
+    rollback;
 commit;
 </code></pre>
 
@@ -226,10 +231,13 @@ update record:
 update record:
   let field_name := value;
   ...
-on error1:
+recover
+  on error1:
   ...
-on error2:
+  on error2:
   ...
+  on [any | other]
+    rollback;
 commit [label];
 </code></pre>
 
@@ -245,10 +253,13 @@ session [name]:
   ** local variables
   new deleted1 := table_name1.delete(field:value,...);
   new deleted2 := table_name2.delete(field:value,...);
-on error:
-  ** handle exceptions
-  rollback;
-  print ("failed")
+recover
+  on error:
+    ** handle exceptions
+    rollback;
+    print ("failed")
+  on other:
+    rollback;
 report
   ** check status
   expect deleted1 >  0;
@@ -261,7 +272,7 @@ commit [name];
 
 <h4>Bulk Operations</h4>
 
-<p>For bulk operations there are 2 methods. Using Eve cycle or using row SQL.</p>
+<p>For bulk operations there are 2 methods. Using Eve cycle or using direct SQL.</p>
 
 <pre><code class="language-eve">
 ** using a loop to create a single session  
@@ -284,11 +295,11 @@ commit;
 
 <pre><code class="language-eve">
 session [label]:
- scrub db1.table1;
- scrib db2.table1;
-on error
- ** revert session
- rollback;
+  scrub db1.table1;
+  scrub db2.table1;
+recover
+  ** revert session
+  rollback;
 commit;
 </code></pre>
 
@@ -327,9 +338,9 @@ return;
 <h2><a id="introspection"/>Introspection</h2>
 <p>For debugging the SQL, Eve will enable introspection.</p>
 <ul>
-<li>Before execution, database related statements are converted into SQL strings;</li>
-<li>We can visualize these strings by using: $trace = On to log query statements;</li>
-<li>We can use @query system variable to print out last SQL statement.</li>
+<li>Before execution, statements are converted into SQL;</li>
+<li>We can visualize generated SQL by using $trace;</li>
+<li>We can use $query system variable to print last SQL;</li>
 </ul>
 <!-- work in progress-->
 <hr>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <meta name="description" content="Understending Eve standar library. High level design.">
   <meta name="author" content="Elucian Moise">
@@ -28,7 +28,7 @@
         <a href="https://sagecode.net"><img src="../images/sage-logo.svg" alt="Sage-Code Laboratory" height="80"/></a>
     </div>
     <div class="col  bottom-right">
-        <a href="index.html#lang-index">index</a><--
+        <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
@@ -168,7 +168,7 @@ return;
 
 <pre><code class="language-eve">** example of collection iteration
 module test_error:
-  set this = ("a","b","c","d","e") :List;
+  set this = ('a','b','c','d','e') :List;
 process main
   cycle:
     new i = 0 :Integer ;
@@ -176,12 +176,12 @@ process main
   while i &lt; this.length() loop
     let e := this[i];
     let i += 1;
-    if e  >= "c" then
+    if e  >= 'c' then
       write  e ;
       write ',' if e is not this.tail;
     done;
   else
-    write ('i = ' + i);
+    write ("i = ", i);
   repeat;
   print;
 return;

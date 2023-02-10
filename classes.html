@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
    <meta charset="utf-8">
    <meta name="description" content="Sage-Code Eve object oriented programming. Classes and Objects. ">
    <meta name="author" content="Elucian Moise">
@@ -29,7 +29,7 @@
            alt="Sage-Code Laboratory" height="80"/></a>
     </div>
     <div class="col bottom-right">
-          <a href="index.html#lang-index">index</a><--
+          <a href="index.html#lang-index" rel="nofollow">index</a>&lt;--
     </div>
 </div><hr>
 
@@ -74,7 +74,7 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 
 <h2><a id="class"></a>Class signature</h2>
 
-<p>Class is a type declaration. You can declare the class public attributes before implementing the class. This is called "forward declaration". It is useful when you have 2 classes to be defined that depend on each other.</p>
+<p>Class is a type declaration. You can declare the attributes of future objects before implementing the class. This is called "forward declaration". It is useful when you have 2 classes to be defined that depend on each other.</p>
 
 <pre><code class="language-eve">#define an object instance
 ** declare a class with two attributes
@@ -90,10 +90,8 @@ class
 <h4>Notes:</h4>
 
 <ul>
-<li>Usually classes are members of modules;</li>
-<li>Drivers and Aspects can define only private classes;</li>
+<li>Drivers and Aspects can define private classes;</li>
 <li>Only modules can define public classes. </li>
-<li>Public classes start with (.) prefix.</li>
 </ul>
 
 <h2><a id="object">Object type</h2>
@@ -114,7 +112,7 @@ return;
 
 <h3><a id="object-methods"></a>Object methods</h3>
 
-<p>Methods are related to an object or a class. The methods can have parameters and can return results. You must define all methods in the same module as the class declaration. Modules can have public or private classes. Drivers and Scripts can have only private classes.</p>
+<p>Methods are related to an object or a class. The methods can have parameters and can return results. You must define all methods in the same module as the class declaration.</p>
 
 <h4>Example</h4>
 
@@ -147,7 +145,7 @@ return;
 
 <h3><a id="object-attributes"></a>Object Attributes</h3>
 
-<p>A class can define attributes for future object instances. The class constructor must set initial values for object attributes and can create new private attributes. Attributes can be public or private.</p>
+<p>A class can define attributes for future object instances. The class constructor must set initial values for object attributes and can create new private attributes.</p>
 
 <ul>
 <li>We declare attributes using = {...}  or += {...} after class name;</li>
@@ -160,7 +158,7 @@ return;
 
 <pre class="output">object_instance.public_attribute;</pre>
 
-<p>To access private attributes you must use "self." qualifier. Private attributes are available in constructor and inside of object methods but are not available with object name as qualifier. That is, private members are encapsulated.</p>
+<p>To access private attributes you must use "self." qualifier. Private attributes are available in constructor and inside of object methods but are not available with object name as qualifier. That is, private attributes are encapsulated.</p>
 
 <pre class="output">self.private_attribute;</pre>
 
@@ -175,55 +173,55 @@ return;
 
 <h3><a id="class-properties"></a>Class Properties</h3>
 
-<p>As mentioned before, the class has public or private properties. Each property is defined in the class context. We declare class properties after symbol ":" before any class method.</p>
+<p>A class can have only private static properties. Each property is defined in the class context. We declare class properties after symbol ":" before any class method.</p>
 
 <ul>
 <li>Properties are defined using keyword "set" ;</li>
-<li>Private properties start with "_" prefix";</li>
-<li>Public properties start with dot "." prefix; </li>
-<li>A class is a singleton Object of type Class;</li>  
+<li>A class is a singleton Object of type Class;</li> 
+<li>Class properties are visible in class methods;</li> 
 </ul>
-
-<p>To access the public properties you can use class qualifier with dot notation:</p>
-
-<pre class="output">ClassName.property_name;</pre>
 
 <h3><a id="class-methods">Class Methods</h2>
 
-<p>You can define private or public methods inside of a class body. Most of the time you need only private class methods. Public methods start with dot (.) prefix. Private methods do not use a prefix or sigil. Class methods have access to all class members, without using any qualifier:</p>
+<p>You can define methods inside of a class body. Class methods are all public. Class methods have access to all class members, without using any qualifier:</p>
 
+<h4>Example:</h4>
 
 <pre><code class="language-eve">
 driver test_method:
 
-# define a class with constructor
+# define a class that has no constructor
 class ClassName <: Object:
   ** class propety
-  set _property: Integer; -- private
-  set .last: Integer;     -- public
+  set prop: Integer; 
+  set last: Integer;
 
-  ** class method
-  method .change(param:Type) => (result:Integer):
-     let last := param;
-     let property += param;
-     let result   := property;
+  ** class method 
+  method change(param:Type) => (@result:Integer):
+    let last := param;
+    let prop += param;
+    let result := prop;
+  return;
+
+  ** create a getter
+  method last() => (@result:Integer):
+    let result := last;
   return;
 return;
 
 process
-   ** call class method
-   new result1 = ClassName.change(10); 
-   new result2 = ClassName.change(12); 
+  ** call class method
+  new result1 = ClassName.change(10); 
+  new result2 = ClassName.change(12); 
 
-   ** check method result
-   expect result1 == 10;
-   expect result2 == 22;
+  ** check method result
+  expect result1 == 10;
+  expect result2 == 22;
 
-   ** inspect ".last" property
-   expect ClassName.last == 12;
+  ** inspect ".last" property
+  expect ClassName.last() == 12; 
 return;
 </code></pre>
-
 
 <h2><a id="class-tree"></a>Class Tree</h2>
 
@@ -276,11 +274,11 @@ p2 = {x:2, y:2}
 
 <h4>Design:</h4>
 
-<p>A class is a composite data type. It can be derived from another data type or from the root Object. Next design pattern explain how to declare a public class with attributes and constructor:</p>
+<p>A class is a composite data type. It can be derived from another data type or from the root Object. Next design pattern explain how to declare a class with attributes and constructor:</p>
 
 <pre><code class="language-eve">
-# user defined public class   
-class .NewType = {attributes} <: Object:
+# user defined class   
+class NewType = {attributes} <: Object:
   ** declaration
   ... 
 create (parameters) => (@self :NewType):
@@ -292,14 +290,14 @@ release
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>A class is a singleton. It has public and private members and can describe the attributes of the future object instances. A class has a declaration region where you can define static members, and an initialization region called constructor, for object initialization.</p>
+<p><b>Notes:&nbsp;</b>A class is a singleton. It has public methods and private properties and can describe the attributes of the future object instances. A class has a declaration region where you can define static members, and an initialization region called constructor, for dynamic object initialization.</p>
 
 <h4>Pattern:</h4>
 
 <p>A class has one single constructor. Constructors can have one or more parameters, some may be optional. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
 
 <pre><code class="language-eve">
-# define a private class
+# define a class
 class ClassName = {attributes} <: Object:
    ** define class properties
    set property_name = value;
