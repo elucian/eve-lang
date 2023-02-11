@@ -41,17 +41,17 @@
 A function is a relation between input and output values. A function makes a computation to establish the output. Eve functions are objects of type Function. Eve enable functional programming paradigm (FP).</div>
 
 <ul>
-<li><a href="declaration"></a>Function declaration</li>
-<li><a href="closures"></a>Closure functions</li>
-<li><a href="callbacks"></a>Callback arguments</li>
-<li><a href="routines"></a>Routines</li>
-<li><a href="coroutines"></a>Coroutines</li>
-<li><a href="lambdas"></a>Lambda expressions</li>
+<li><a href="#declaration">Function declaration</a></li>
+<li><a href="#closures">Closure functions</a></li>
+<li><a href="#callbacks">Callback arguments</a></li>
+<li><a href="#routines">Routines</a></li>
+<li><a href="#coroutines">Coroutines</a></li>
+<li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
 
 <h2><a href="declaration"></a>Function declaration</h2>
 
-<p>Functions are declared with keyword: "function". A function can be public or private. You can define public functions in modules and only private functions in other scripts.</p>
+<p>Functions are declared with keyword: "function". A function can be public or private. You can define public functions in modules and private functions in other scripts.</p>
 
 <h4>Pattern:</h4>
 
@@ -71,6 +71,7 @@ return;
 <li>A function can receive parameters of type function,</li>
 <li>A function can return a result but the result is optional,</li>
 <li>A function can create as a result another function called closure,</li>
+<li>A function has a name and name. There are no anonymous,</li>
 <li>A function can raise errors but it can't handle errors,</li>
 <li>A function can be suspended and resumed on demand,</li>
 </ul>
@@ -139,19 +140,87 @@ return;
 
 <p>Todo</p>
 
-<h2><a id="callbacks"><a>Callbacks</a>
-
-<p>Todo</p>
-
 <h2><a id="routines"></a>Routines</h2>
 
-<p>Todo</p>
+<p>A routine is a subprogram that has a name. Can be run in a process on demand. Routines are similar to void functions used in other languages. A routine has no result but it can have side-effects.</p>
 
+<pre><code class="language-eve">
+driver routine_demo:
 
-<h2><a id="coroutines"><a>Coroutines</a>
+** mandatory arguments
+routine first_routine(param1, param2: Type):
+  print param1, param2;
+return;
 
+** optional arguments
+routine second_routine(param1:=default1, 
+                       param2:=default2, 
+                       param3:=default3):
+  print param1, param2, param3;
+return;
 
-<p>Todo</p>
+process
+  ** execute routine with arguments
+  first_routine value1, value2;
+
+  ** execure routine with no arguments
+  secon_routine;
+
+  ** use only 2 arguments from a list of 3 possible
+  secon_routine(param1:value1, param3:value3);
+return;
+</code></pre>
+
+<h2><a id="coroutines"><a>Coroutines</a></h2>
+
+<p>A coroutine is a subprogram that has a name can can be run asybchronously in a parallel thread. Coroutines can yield for another coroutine. Parent process can also yield for all the coroutines to finish.</p>
+
+<h4>Example</h4>
+
+<pre><code class="language-eve">
+driver coroutine_demo:
+
+** coroutine producer, make 1000 numbers
+routine producer(@pipeline: ()Integer):
+  cycle:
+    new i: Integer;
+  for i in (1..1000) loop
+    let pipeline += random(100);
+    if (i % 100) == 0 then
+      yield consumer;
+    done;
+  repeat;
+return;
+
+** consume 1000 numbers
+routine consumer(@pipeline: ()Integer):
+    new i:= 0;
+    loop
+      cycle:
+        new element: Integer;
+      for element in pipeline loop
+        let  pipeline := pipeline -> element;
+        print element; 
+        let i += 1;
+      repeat;
+      yield producer;
+    repeat if i < 1000;
+return;
+
+process
+  ** execute routine with arguments
+  new pipeline = (): ()Integer;
+
+  ** execute producer/consumer
+  run producer(pipeline);
+  run consumer(pipeline);
+ 
+  yield all;
+
+  expect pipelie.count() == 0; 
+return;
+</code></pre>
+
 
 <h2><a id="lambdas"></a>Lambda expressions</h2>
 
@@ -177,15 +246,17 @@ lambda
 # define a lambda signature
 driver lam_sig
 
+** Sefine callback signature
 class BinEx = (p1, p2 :Integer):Integer <: Lambda;
 
 ** Use lambda signature as parameter type
 function useLambda(test :BinEx):
-   print test(); -- callback
+   print test(); -- execute callback
 return;
 
 ** Execute a process with lambda argument
 process
+   ** use anonymous lambda argument
    useLambda((x, y) => (x + y));
 return;
 </code></pre>
