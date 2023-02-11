@@ -42,12 +42,11 @@ A function is a relation between input and output values. A function makes a com
 
 <ul>
 <li><a href="declaration"></a>Function declaration</li>
+<li><a href="closures"></a>Closure functions</li>
+<li><a href="callbacks"></a>Callback arguments</li>
 <li><a href="routines"></a>Routines</li>
 <li><a href="coroutines"></a>Coroutines</li>
 <li><a href="lambdas"></a>Lambda expressions</li>
-<li><a href="recursion"></a>Recursive functions</li>
-<li><a href="callbacks"></a>Callback functions</li>
-<li><a href="closures"></a>Closure functions</li>
 </ul>
 
 <h2><a href="declaration"></a>Function declaration</h2>
@@ -136,42 +135,21 @@ process
 return;
 </code></pre>
 
-<h2><a id="routines"></a>Routines</h2>
-
-<p>Eve do not have void functions. Instead we define "routines". These are programs similar to functions. The difference is a routine can't create a result. A routine is usually doing something. It manipulate a state, execute input/output of some sort. It may be just print to console, write to disk or push data on the network.</p>
-
-<p>Routines can be public, defined by a module or private. Public routines can be accessed using dot operator, or can be used direct without any prefix if local or belong to Eve core modules. Eve use routines to create statements and extend itself. For example print statement is in fact a routine.</p>
-
-<h4>Pattern:</h4>
-
-<p>Next we define two routines, one has two parameters, the other one has 3 optional parameters. Routine call can be done without brackets (). Parameters can be delivered by position or by using a list of pairs, separated by comma. </p>
-
-<pre><code class="language-eve">
-driver routine_demo:
-
-** mandatory arguments
-routine first_routine(param1, param2: Type):
-   ...
-return;
-
-** optional arguments
-routine second_routine(param1:=default1, 
-                       param2:=default2, 
-                       param3:=default3):
-   ...
-return;
-
-process
-  ** execute routine with arguments
-  first_routine value1, value2;
-  secon_routine;
-  secon_routine(param1:value1, param3:value3);
-return;
-</code></pre>
+<h2><a id="closures"><a>Closures</a>
 
 <p>Todo</p>
 
+<h2><a id="callbacks"><a>Callbacks</a>
+
+<p>Todo</p>
+
+<h2><a id="routines"></a>Routines</h2>
+
+<p>Todo</p>
+
+
 <h2><a id="coroutines"><a>Coroutines</a>
+
 
 <p>Todo</p>
 
@@ -211,18 +189,6 @@ process
    useLambda((x, y) => (x + y));
 return;
 </code></pre>
-
-<h2><a id="recursion"><a>Recursion</a>
-
-<p>Todo</p>
-
-<h2><a id="callbacks"><a>Callbacks</a>
-
-<p>Todo</p>
-
-<h2><a id="closures"><a>Closures</a>
-
-<p>Todo</p>
 
 
 <!-- work in progress-->
