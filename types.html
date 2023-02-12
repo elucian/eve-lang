@@ -163,6 +163,12 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <td>8.64e+7ms</td>
 </tr>
 <tr>
+<td>Duration</td>
+<td>Period of time</td>
+<td>0</td>
+<td>2^16</td>
+</tr>
+<tr>
 <td>Logic</td>
 <td>Is a Ordinal subtype having values: False = 0, True = 1</td>
 <td>0</td>
@@ -186,7 +192,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <tbody>
 <tr>
 <td>Discrete</td>
-<td>Byte, Short,  Integer, Natural,  Ordinal, Range, Symbol</td>
+<td>Byte, Short,  Integer, Natural,  Ordinal, Range, Symbol, Duration</td>
 </tr>
 <tr>
 <td>Continuous</td>
@@ -1003,25 +1009,20 @@ return;
 </code></pre>
 
 
-<h2><a id="time-duration"></a>Time Duration</h2>
-<p>Time data type can be used to represent duration.</p>
+<h2><a id="time-duration"></a>Time & Duration</h2>
+
+<p>For time you can use Time or Duration data types.</p>
+
+
+<h3>Time</h3>
+
+<p>Time format is created from string literals using two reversible functions: t12() and t24(). These functions are using constants T12 and T24 that represent standard time format.</p>
 <ul>
-<li>Eve duration can represent minimum 1 millisecond.</li>
-<li>Eve duration can represent maximum 4294967296 hours.</li>
-</ul>
-<p><b>Representation</b>&nbsp;Time is represented as a number on 8 bytes.</p>
-<ul>
-<li>First 2 bytes are the milliseconds.</li>
-<li>Next 2 bytes are representing seconds and minutes.</li>
-<li>Last 4 bytes represents hours.</li>
-</ul>
-<p><b>Conversion</b></p>
-<p>Time format is created using two reversible functions: t12() and t24()</p>
-<ul>
-<li>T12 accept format ("hhhh:mm:ss,9999ms")</li>
-<li>T24 accept format ("hhhh:mm:ssxx, 9999ms" )</li>
+<li>Constant: T12 ="hhhh:mm:ss,999ms"</li>
+<li>Constant: T24 ="hhhh:mm:ssxx, 999ms"</li>
 </ul>
 <p>ss: can be 0..60 seconds<br />xx: can be: (am/pm)</p>
+
 <h4>Example:</h4>
 
 <pre><code class="language-eve"># time demo
@@ -1029,15 +1030,51 @@ driver time_demo:
 
 process
   ** define 3 variable of same type
-  new time1 = time2 = time3 = "00:00": Time;
+  new time1, time2, time3: Time;
 
-  ** alter variables usi "as" operator
-  let time1 := "23:63" as T24;
-  let time2 := "23:63:59,99" as T24;
-  let time3 := "11:63:59pm,99ms" as T12;
+  ** alter variables using "as" operator
+  let time1 := "00:23:63"      as T24;
+  let time2 := "23:63:59,999"  as T24;
+  let time3 := "11:63:59pm,10" as T12;
+
+  ** check time 
+  expect time1.h   == 23;
+  expect time1.m   == 63;
+  expect time1.s   == 59;
+  expect time3.ms  == 10;
+  expect time3.t   == pm;
 return;
 </code></pre>
 
+<h3>Duration</h3>
+
+<p>Duration is represented as a number on 32 bits. Internally is stored as milissecond. It can hold almost 20 days. For longer duration, you must use Time object.</p>
+
+<ul>
+<li>Eve Duration can represent (1..2^16) milliseconds.</li>
+<li>Eve Duration is an alias for Short integer i32.</li>
+<li>Eve Duration has data literals: {y, d, m, s, ms}.</li>
+</ul>
+
+<h4>Example</h4>
+
+<pre><code class="language-eve"># duration demo
+driver duration_demo:
+
+process
+  ** define 3 variable of same type
+  new d1 := 10ms;    --    10 millisec
+  new d2 := 1s;      --  1000 millisec
+  new d3 := 1m;      -- 60000 millisec
+
+  ** create duration from string
+  new d4 := Duration("01:01:01"); 
+
+  ** check time 
+  print d3  -- 60000ms
+  print d4  -- 3661000ms
+return;
+</code></pre>
 
 <hr>
 <p><b>Read next:</b>

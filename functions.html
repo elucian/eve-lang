@@ -40,16 +40,17 @@
 <div class="alert alert-secondary shadow-sm">
 A function is a relation between input and output values. A function makes a computation to establish the output. Eve functions are objects of type Function. Eve enable functional programming paradigm (FP).</div>
 
+<h4>Page bookmarks:</h4>
+<hr>
 <ul>
 <li><a href="#declaration">Function declaration</a></li>
 <li><a href="#closures">Closure functions</a></li>
-<li><a href="#callbacks">Callback arguments</a></li>
 <li><a href="#routines">Routines</a></li>
 <li><a href="#coroutines">Coroutines</a></li>
 <li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
-
-<h2><a href="declaration"></a>Function declaration</h2>
+<hr>
+<h2><a id="declaration"></a>Function declaration</h2>
 
 <p>Functions are declared with keyword: "function". A function can be public or private. You can define public functions in modules and private functions in other scripts.</p>
 
@@ -136,7 +137,7 @@ process
 return;
 </code></pre>
 
-<h2><a id="closures"><a>Closures</a>
+<h2><a id="closures"><a>Closures</h2>
 
 <p>A closure is a function created by another function. The closure has read/write access to context variables. The context is the scope of parent function, that is called <em>high order function</em>. The context is replicated and bound to every closure instance.</p>
 
@@ -201,67 +202,124 @@ return;
 
 <h2><a id="coroutines"><a>Coroutines</a></h2>
 
-<p>A coroutine is a subprogram that has a name can can be run asybchronously in a parallel thread. Coroutines can yield for another coroutine. Parent process can also yield for all the coroutines to finish.</p>
+<p>A coroutine is a subprogram that has a name and can start a secondary thread. Coroutines are synchron or asynchron. Coroutines can be suspended using yield. Also the main thread can yield for a coroutine.</p>
+
+<!-- a regular diagram -->
+<div class="text-center">
+  <img src="../images/asynch.svg" alt="Asynchronous Execution"
+       width="640" class="img-fluid protect rounded shadow border" >
+  <p>Synchronous vs Asynchronous</p>
+</div>
+
+<h3>Shoulder Thread</h3>
+
+<p>In next example we try to demonstrate a thread that can generate a a bunch of numbers every time the main thred is yielding for it. When the buffer is full, you can process the batch and then yield for a new.</p>
+
+<pre><code class="language-eve">
+driver shoulder_thread:
+
+** coroutine producer, make 100 numbers
+routine generator(cap:Integer, @result:()Float):
+  new count := 0;
+  loop
+    for i in (1..100) loop
+      let result += random(0..1);
+      yield;
+    repeat;
+    let count += 1;
+  repeat if count < cap;
+return;
+
+process
+  new batch: ()Fload;
+  new total: Double;
+  ** initialize the generator and produce first batch
+  run generator(1000, result:batch):
+  while batch.count() > 0 loop
+    ** process current batch
+    for x in batch loop
+       let total += x; 
+    repeat
+    ** read the next batch
+    yield generator;
+  repeat;
+return;
+</code></pre>
+
+<p><b>Time-out:</b> Is easy to create a wrong shoulder thread runs forever. If a process takes too much time you can have a time-out. If one process time-out, the entire application crash. You can set $timeout system variable to control this time.</p>
+
+<h3>Parallel Threads</h3>
+
+<p>This design pattern enable you do create two coroutines that wait for each other. It is common practice to use this pattern to create a multi-thread applications. The threads communicate using one or more channels.</p>
 
 <h4>Example</h4>
 
 <pre><code class="language-eve">
-driver coroutine_demo:
+driver parallel_threading:
 
 ** coroutine producer, make 1000 numbers
-routine producer(@pipeline: ()Integer):
+routine producer(@pipeline: ()Integer, count = 1000: Integer):
   cycle:
     new i: Integer;
-  for i in (1..1000) loop
+  for i in (1..count) loop
     let pipeline += random(100);
     if (i % 100) == 0 then
+      ** find one free consumer and resume it
       yield consumer;
     done;
   repeat;
 return;
 
-** consume 1000 numbers
-routine consumer(@pipeline: ()Integer):
-    new i:= 0;
+** consume 100 numbers
+routine consumer(@pipeline, @partials: ()Integer):
     loop
       cycle:
         new element: Integer;
       for element in pipeline loop
         let  pipeline := pipeline -> element;
-        print element; 
+        wait 10ms;
+        let partials += element; 
         let i += 1;
       repeat;
+      ** send signal to producer to wake-up
       yield producer;
-    repeat if i < 1000;
+    repeat if pipeline.count() > 0;
 return;
 
 process
   ** execute routine with arguments
-  new pipeline = (): ()Integer;
+  new pipeline: ()Integer;
+  new partials: ()Integer; 
 
   ** execute producer/consumer
-  run producer(pipeline);
-  run consumer(pipeline);
- 
+  run producer(pipeline, 10000);
+  for i in [1..32] loop
+    run consumer(pipeline,partials);
+    wait 3ms;
+  repeat;
+  ** wait fo all threads to finish
   yield all;
 
-  expect pipelie.count() == 0; 
+  ** reduce the partials into one result
+  new result := sum(partials);
+  print result;
 return;
 </code></pre>
 
+<p><b>Notes: </b>a yielding routine is suspended in memory, waiting for a wake-up signal. Another coroutine must signal the wake-up. If the coroutine receivint the signal is not running then it can't wake-up. In this case, after a time-out the coroutine that send the signal exits.</p>
 
 <h2><a id="lambdas"></a>Lambda expressions</h2>
 
 <p>Lambda expressions are simpler functions that respect arithmetic rules. These can receive several arguments and can produce one result. A lambda expression is created with keywords "set" or "new". Lambda expressions do not have local variables or states and do not have side effects.</p>
 
-<p>Lambda expressions can be declared in "lambda" regions. You can define more than one lambda regions in a script. You can also create new lambda expressions at runtime. Sometimes lambda expressions are anonymous.</p>
+<p>Lambda expressions can be declared in global region but alos in the process region. You can define more than one global regions in a script. Lamda expressions are associated to a variable, sometimes can be associated to a member in a collection.</p>
 
 <h4>Example</h4>
 
 <p>In next example we define two lambda expressions.</p>
 
 <pre><code class="language-eve">
-lambda
+global
   set sum = (p1, p2 :Integer) => (p1 + p2):Integer;
   set sqr = (p1, p2 :Integer) => (p1 * p2):Integer;
 </code></pre>
@@ -289,11 +347,11 @@ process
 return;
 </code></pre>
 
-<p><b>Note: </b>Lambda expressions can be created by a function or method but access to external context is read only. A Lambda expression can not modify values of external context.</p>
+<p><b>Note: </b>Lambda expressions can be created by a function or method as a result. Access to external context is read only so a labda expression do not behave exactly like a closure but is restricted. A Lambda expression can not modify values of its parent context.</p>
 
 <h3>Lambda & states</h3>
 
-<p>Lambda expressions can read global and local states, but can not modify any of these states. After expression is defined, the state values can change. The function result is influenced by the new value. So the function was actually not changed but the result is different second time.</li>
+<p>Lambda expressions can read global or context states, but can not modify them. If values change after expression is defined, the result may be influenced by the new value.</li>
 
 <h4>Example:</h4>
 
@@ -304,20 +362,21 @@ driver shared_states:
 ** define global settings
   set decimals = 2: Integer;
 
-lambda
-  set round = (x:Double) => floor(x * 10^decimal)/10^decimal) :Double;
+global
+  set trunc = (x:Double) => floor((x)* 10^decimal)/10^decimal) :Double;
 
 process
+  new x := 10/3;
   ** call the lambda expression
-  print round(10/3) -- expected 3.33
+  print trunc(x) -- expected 3.33
 
   ** overvrite the initial settings 
   let decimals := 4;
-  print round(10/3) -- expected 3.3333
+  print trunc(x) -- expected 3.3333
 return;
 </code></pre>
 
-<div class="alert alert-wardning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alter the settings using "let". The new setting overvrite the previous. The new value is used by the function so you get more decimals after round().</div>
+<div class="alert alert-warning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alter the settings using "let". The new value is used by the function to cut several decimals after round().</div>
 
 <p><b>Disclaim: </b>We know functional programming should not allow this to happen. This is not a secondary effect but is considered a bad practice by functional programming advocates. We aknowledge, Eve is not a pure functional language. This behaviour is present in many other modern languages and is expected. Eve is not different.</p>
 

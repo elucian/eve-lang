@@ -4,8 +4,7 @@ function apply_style(str) {
     str = str.replace(/^module\b/,keyword("module"))
     str = str.replace(/^aspect\b/,keyword("aspect"))
     str = str.replace(/^import\b/,keyword("import"))
-    str = str.replace(/^alias\b/,keyword("alias"))
-    str = str.replace(/^lambda\b/,keyword("lambda"))    
+    str = str.replace(/^alias\b/,keyword("alias")) 
     str = str.replace(/^class\b/,keyword("class"))    
     str = str.replace(/^global\b/,keyword("global"))   
     str = str.replace(/^process\b/,keyword("process"))  
@@ -113,6 +112,8 @@ function apply_style(str) {
     str = str.replace(/\bfail\b/,interrupt("fail"))
     str = str.replace(/\braise\b/,interrupt("raise"))
     str = str.replace(/\bretry\b/,interrupt("retry"))
+    str = str.replace(/\bresume\b/,interrupt("resume"))
+    str = str.replace(/\bsynchronise\b/,interrupt("synchronise"))
     str = str.replace(/\brollback\b/,interrupt("rollback"))
 
     // keyword operators   

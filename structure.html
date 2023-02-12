@@ -115,7 +115,7 @@ project
 
 <h3><a id="regions"></a>Regions</h3>
 
-<p>A script file is divided into regions using keywords: {import, alias, lambda, process}. Regions members are using indentation, like Python. A region ends when next region begins. Eve try to be flat as much as possible. Therefore these regions are right side aligned.</p>
+<p>A script file is divided into regions using keywords: {import, alias, global, process}. Regions members are using indentation, like Python. A region ends when next region begins. Eve try to be flat as much as possible. Therefore these regions are right side aligned.</p>
 
 <h4>Syntax Pattern:</h4>
 
@@ -146,8 +146,8 @@ alias
 class
   NewType  = {} &lt;: Type;
   ...
-** define functions using lambda expressions
-lambda
+** define functions using Lambda expression
+global
   set expression_name = (params) => (expression);
   ...
 ** global & shared states
@@ -177,7 +177,7 @@ return;
 <li>a script can "set" shared states using "$" sigil;</li>
 </ul>
 
-<p><b>Note: </b>Any script has one or more <em>global</em> regions. In this regions, you can define private & shared states. In declaration region you can also define: lambdas, routines, classes, methods & functions.</p> 
+<p><b>Note: </b>Any script has one or more <em>global</em> regions. In this regions, you can set system states and define global states. In declaration region you can also define: classes, methods, functions & routines.</p> 
 
 <p>All variables defined in global scope are static. You must use keyword "set" to define them and assign initial value. Static variables are created on the heap and have a permanent nature.</p>
 
@@ -391,7 +391,7 @@ return;
 
 <h4>Process context</h4>
 
-<p>One script can have one single process. Every process has a local context. In this context you can define local variables, lambda expressions and objects but not classes, methods or functions. Process local members can't be shared but can be send as input/output parameters to other subprograms.</p>
+<p>One script can have one single process. Every process has a local context. In this context you can define variables, and instantiate objects but you can't define routines, classes, methods or functions. Process local members can't be shared but can be send as input/output parameters to other subprograms.</p>
 
 <h4>Output Parameters</h4>
 <p>To avoid overuse of global variables you must use input/output parameters. We prefix output parameters using symbol "@". Output parameters require a variable as argument, otherwise you will not be able to capture the output value.</p>
