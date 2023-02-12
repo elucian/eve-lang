@@ -293,18 +293,33 @@ return;
 
 <h3>Lambda & states</h3>
 
-<p>Lambda functions can have access to external states, but can not modify these states. After a function is defined, the local state values at specific time are bound to the function. You have to recreate the function in order to use the new states.</li>
-
-<p>There are functions that depend on shared states. These states have an influence on function execution. Changin the system shared states will influence future results.</p> 
+<p>Lambda expressions can read global and local states, but can not modify any of these states. After expression is defined, the state values can change. The function result is influenced by the new value. So the function was actually not changed but the result is different second time.</li>
 
 <h4>Example:</h4>
 
 <pre><code class="language-eve">
 # verify shared state influence
-driver lam_states:
+driver shared_states:
 
+** define global settings
+  set decimals = 2: Integer;
+
+lambda
+  set round = (x:Double) => floor(x * 10^decimal)/10^decimal) :Double;
+
+process
+  ** call the lambda expression
+  print round(10/3) -- expected 3.33
+
+  ** overvrite the initial settings 
+  let decimals := 4;
+  print round(10/3) -- expected 3.3333
 return;
 </code></pre>
+
+<div class="alert alert-wardning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alter the settings using "let". The new setting overvrite the previous. The new value is used by the function so you get more decimals after round().</div>
+
+<p><b>Disclaim: </b>We know functional programming should not allow this to happen. This is not a secondary effect but is considered a bad practice by functional programming advocates. We aknowledge, Eve is not a pure functional language. This behaviour is present in many other modern languages and is expected. Eve is not different.</p>
 
 <!-- work in progress-->
 
