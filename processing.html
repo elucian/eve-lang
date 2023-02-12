@@ -190,7 +190,7 @@ return;
 
 <h2><a id="side-effect"></a>Side Effects</h2>
 
-<p>A process can use states. When a state is changed by a function or method this is called side-effect. This may be good or dangerous. You must be aware of functions, methods or processes with side effects.</p>
+<p>A process can use states. When a state is changed by a routine or method this is called side-effect. This may be good but potential unsafe. Some side effects may be harder to debug.</p>
 
 <p>these are side effects...</p>
 
@@ -203,15 +203,15 @@ return;
 
 <h4>Examples</h4>
 
-<p>Next function: "add_numbers" has 2 side effects:</p>
+<p>Next routine: "add_numbers" has side effects:</p>
 <pre><code class="language-eve">
 driver side_effect:
   set test   :Integer;
   set p1, p2 :Integer;
 
-** function with side effects
-function add_numbers():
-  new test := p1 + p2; -- first side-effect
+** subroutine with side effects
+routine add_numbers():
+  let test := p1 + p2; -- first side-effect
   print test;          -- second side-effect
 return;
 
@@ -219,7 +219,7 @@ return;
 process
   let p1 := 10;      
   let p2 := 20;     
-  apply add_numbers; --  call process add_numbers;
+  call add_numbers;   --  simpel subroutine call
   expect (result == 30);
 return;
 </code></pre>

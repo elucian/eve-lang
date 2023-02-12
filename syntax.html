@@ -459,7 +459,7 @@ return;</code></pre>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>reset    </td></tr>
 <tr><td>update   </td><td>use      </td><td>labe      </td><td>view     </td></tr>
 <tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
-<tr><td>#        </td><td>panic    </td><td>any       </td><td>other    </td></tr>
+<tr><td>call       </td><td>panic    </td><td>any       </td><td>other    </td></tr>
 </table>
 
 <h3>Definition regions</h3>
@@ -732,8 +732,17 @@ return;</code></pre>
 <td>start</td>
 <td>execute asynchronously an aspect</td>
 </tr>
+<tr>
 <td>yield</td>
 <td>interrupt current process and wait for other processes</td>
+</tr>
+<tr>
+<td>run</td>
+<td>execute a routine in asynchronous mode</td>
+</tr>
+<tr>
+<td>call</td>
+<td>execute a routine in synchronous mode</td>
 </tr>
 </tbody>
 </table>

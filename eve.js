@@ -99,6 +99,7 @@ function apply_style(str) {
     str = str.replace(/\bstart\b/,interrupt("start"))
     str = str.replace(/\byield\b/,interrupt("yield"))
     str = str.replace(/\brun\b/,interrupt("run"))
+    str = str.replace(/\bcall\b/,interrupt("call"))
     str = str.replace(/\bwait\b/,interrupt("wait"))
     str = str.replace(/\bexit\b/,interrupt("exit"))
     str = str.replace(/\babort\b/,interrupt("abort"))

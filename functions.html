@@ -154,8 +154,11 @@ function generator(start:Integer) => (@closure:Function):
 
   ** define a closure
   let closure := Function() => Integer: 
-      current += 1;
-  return;  
+      let current += 1;
+  return; 
+  
+return;
+
 process
   new index1 := high_order(0);
   new index2 := high_order(10);
@@ -171,7 +174,7 @@ return;
 
 <h2><a id="routines"></a>Routines</h2>
 
-<p>A routine is a subprogram that has a name. Can be run in a process on demand. Routines are similar to void functions used in other languages. A routine has no result but it can have side-effects.</p>
+<p>A routine is a subprogram that has a name and parameters. Unlike a function, a routine do not have a result. Basicly a routine is a void function. A routine is used for its side-effects. Routines can be executed syncrhonously or asynchronously.</p>
 
 <pre><code class="language-eve">
 driver routine_demo:
@@ -189,20 +192,22 @@ routine second_routine(param1:=default1,
 return;
 
 process
-  ** execute routine with arguments
-  first_routine value1, value2;
+  ** execute routine synchronously with arguments
+  call first_routine(value1, value2);
 
-  ** execure routine with no arguments
-  secon_routine;
+  ** execure routine synchronously with no arguments
+  call second_routine;
 
   ** use only 2 arguments from a list of 3 possible
-  secon_routine(param1:value1, param3:value3);
+  call secon_routine(param1:value1, param3:value3);
 return;
 </code></pre>
 
+<p><b>Node: </b>Asynchronous call is executed with keyword "call". But a routine need to yield otherwise this is the only method to execute the routine. The routine is executed in same thread as the main thread and is part of the parent process.</p>
+
 <h2><a id="coroutines"><a>Coroutines</a></h2>
 
-<p>A coroutine is a subprogram that has a name and can start a secondary thread. Coroutines are synchron or asynchron. Coroutines can be suspended using yield. Also the main thread can yield for a coroutine.</p>
+<p>A coroutine is a subprogram that has a name and can start a secondary thread. Coroutines can be suspended using <em>"yield"</em> keyword, and later wake-up with a signal and the thread continue with the next statement. Also the main thread can <em>yield</em> for a coroutine.</p>
 
 <!-- a regular diagram -->
 <div class="text-center">
@@ -306,7 +311,7 @@ process
 return;
 </code></pre>
 
-<p><b>Notes: </b>a yielding routine is suspended in memory, waiting for a wake-up signal. Another coroutine must signal the wake-up. If the coroutine receivint the signal is not running then it can't wake-up. In this case, after a time-out the coroutine that send the signal exits.</p>
+<p><b>Notes: </b>a yielding routine is suspended in memory, waiting for a wake-up signal. Another coroutine must signal the wake-up. If the coroutine receiving the signal is not running then it can't wake-up. In this case, the control is given back to the main thread. If the main thread is yielding it will resume.</p>
 
 <h2><a id="lambdas"></a>Lambda expressions</h2>
 
@@ -376,9 +381,9 @@ process
 return;
 </code></pre>
 
-<div class="alert alert-warning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alter the settings using "let". The new value is used by the function to cut several decimals after round().</div>
+<div class="alert alert-warning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alterit using "let". The new value is used by the function to cut several decimals after round(). This is not exactly a side-effect but is an influence, that is not accepted in functional programming.</div>
 
-<p><b>Disclaim: </b>We know functional programming should not allow this to happen. This is not a secondary effect but is considered a bad practice by functional programming advocates. We aknowledge, Eve is not a pure functional language. This behaviour is present in many other modern languages and is expected. Eve is not different.</p>
+<p><b>Disclaim: </b>We aknowledge, Eve is not a pure functional language. This behaviour is present in many other modern languages. Eve is not different. We seek for a balance between the theory and pragmatism.</p>
 
 <!-- work in progress-->
 
