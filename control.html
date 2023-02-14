@@ -82,8 +82,8 @@ print "a is odd"  if (a % 2 != 0);
 </div>
 
 <pre><code class="language-eve"># dual path decision
-[begin label:]
-  ** local variables
+begin [label]:
+  ** local scope
   ...
 if expression then
   ** true branch
@@ -97,8 +97,8 @@ done [label];
 <h4>Notes:</h4>
 <ol>
     <li>The else branch is optional;</li>
-    <li>This block is do not use label;</li>
-    <li>This block do not have local scope;</li>
+    <li>The label is optional;</li>
+    <li>The local scope is optional;</li>
 </ol>
 
 <h2><a id="ladder"></a>Ladder</h2>
@@ -114,7 +114,7 @@ done [label];
 <h4>Example:</h4>
 
 <pre><code class="language-eve">#selection ladder
-[begin label:]
+begin [label]:
   ** local variables
   ...
 if condition_1 then
@@ -126,13 +126,13 @@ else if condition_2 then
 else if condition_3 then
   ** third branch
   ...
-else
+[else]
   ** alternative branch
   ...
 done [label];
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. Cases should be exclusive and most probable case should be evaluated first.</p>
+<p><b>Notes:&nbsp;</b>Previous pattern show a complex situation having several conditions in cascade. Cases should be exclusive and most probable case should be evaluated first. Last block, after else is optional. Also, the local scope is optional.</p>
 
 <h2><a id="match"></a>Match Selector</h2>
 
@@ -150,31 +150,41 @@ This is a multi-path selector similar to switch also named: jump table. It two v
 
 <pre><code class="language-eve">
 # Define a selector variable
-begin [label]:
-  new s := {v1,v2,v3,v4};
-  
-** create match selector
-match s [all | one]:
-  ** declare locals
-  ...
-when v1 then
-  ** first path
-  ...
-  [break];
-when v1, v2 then
-  ** second path
-  ...
-when [any | other] then
-  ** v3 or v4 found
-  ...
-done [label];
+class Type = {V1, V2, V3, V4} <: Ordinal;
+...
+process
+  new s := V1; 
+
+  ** create match selector
+  match s [all | one] [Type]:
+    ** declare locals
+    ...
+  when V1 then
+    ** first path
+    ...
+    [break];
+  when V1, V2 then
+    ** second path
+    ...
+  when [any | other] then
+    ** V3 or V4 found
+    ...
+  done [Type];
+return;
 </code></pre>
 
-<h4>Note:</h4>
+<h4>Notes:</h4>
 <ul>
-<li>Last when other is optional when the selector is not fully cover by all the cases;</li>
-<li>break is optional and is used only with "all" selection. "one" selection is default;</li>
+<li>options: all or one are exclusive (one) is the default;</li>
+<li>default block (last) is optional: "any" or "other";</li>
+<li>break is necesarry to avoid "fall-trough" with "all" option;
+<li>break is optional with "one" option. First match is executed;</li>
+<li>when you use the Type, the default block becomes mandatory;</li>
 </ul>
+
+<p>The compiler will generate a warning message if not all cases are covered and you do not have use the default block. That is maybe an error but not necesarly. Maybe the type was modified.</p>
+
+<p>Match can be used with any data type not only ordinal. When you use other data type, the Type do not have to be specified. It can be inferred from the variable type.</p>
 
 <h2><a id="loop"></a>Unconditional Loop</h2>
 
@@ -189,15 +199,15 @@ done [label];
 <h4>Syntax:</h4>
 
 <pre><code class="language-eve">#infinite loop
-cycle [label:]
+cycle [label]:
   ** declare control variable
   ...
 loop
   ** loop shortcut
-  skip [label] if condition ;
+  skip [label] [if condition] ;
   ...
   ** early interruption
-  exit [label] if condition;
+  exit [label] [if condition];
   ...
 repeat [label] [if condition];
 </code></pre>
@@ -234,7 +244,7 @@ while condition loop
 then
   ** alternative path
   ...
-repeat [label] if condition;
+repeat [label] [if condition];
 </code></pre>
 
 <h4>Example:</h4>

@@ -59,6 +59,8 @@
 
 </p>For start let's honor a tradition: We should print "Hello world!" to the console using EVE. Next is a simple program that ca write a message on the console. Eve will be modular so we need to import the console library before we can print anything.</p>
 
+<h4>Example:</h4>
+
 <pre><code class="language-eve">#demo: hello world
 driver hello:
 
@@ -71,6 +73,8 @@ return;
 <h2><a id="elements">Syntax Elements</h2>
 
 <p>Next code fragment represents a very simple program written in Eve language. Let's identify the main syntactic elements and punctuation using this example:</p>
+
+<h4>Example:</h4>
 
 <pre><code class="language-eve">
 # main script in Eve is called: "driver"
@@ -98,13 +102,17 @@ return;
 </code></pre>
 
 <h2><a id="punctuation"/>Punctuation:</h2>
+
+<p>I describe the syntax using some conventions. The code snippets you are going to see are not all real executable code. Some are just fragments of code, syntax "design patterns" or "pseudo-code". You will get it after a while.</p>
+
+<p>When the snippets is a "pattern" then we use square brackets like [] for optional parts. Sometimes we use 3 dots "..." for a sequence that is missing. Sometimes [x] represents real code and is mandatory, depending on the context. Read the "example" snippets to understend better the syntax.</p>
+
 <ul>
 <li>Eve is using infix expressions like Java and other popular languages,</li>
 <li>Multiple expressions can be separated with comma,</li>
 <li>Each statement start with a keyword and is ending in semicolon,</li>
 <li>Statement regions and nested blocks use mandatory indentation.</li>
 </ul>
-
 
 <h2><a id="comments"></a>Comments</h2>
 <ul>
@@ -233,6 +241,8 @@ _not_valid_
 
 <p>Most of the examples are also stored on GitHub. However it is possible the one in GitHub to be different from then the one in documentation. This is due to fast evolution of the language and not by intention.</p>
 
+<h4>Fragment</h4>
+
 <pre><code class="language-eve">
 ** define global system states
 global
@@ -260,6 +270,8 @@ global
 
 <p>Operator "=" is used to create an expression. That means you can initialize multiple variables using a single declaration. This is different than assignment ":=" or clone "::" that create a statement and not an expression. Operator "=" has a result. So it can be chained.</p>
 
+<h4>Fragment</h4>
+
 <pre><code class="language-eve">
 # multiple variables
 process
@@ -283,7 +295,7 @@ return;
 <li>can use () to encapsulate different kind of expressions;</li>
 </ul>
 
-<h4>Examples</h4>
+<h4>Fragment</h4>
 
 <pre><code class="language-eve">
 ## simple expressions
@@ -319,7 +331,7 @@ return;
 
 <p>To assign result of an expression to a variable you can use assign operator: ":=". This operator has a strange behavior that you must understand to avoid unintended side-effects. When a single variable is used as an expression, the operator transfer a value "by sharing" a reference, so it does not "copy" the value but the reference to that value.</p>
 
-<h4>assign: by reference</h4>
+<h4>Assign: by reference</h4>
 
 <pre><code class="language-eve">
 #expressions pseudo-code
@@ -331,7 +343,7 @@ process
 return;
 </code></pre>
 
-<h4>assign: by value:</h4>
+<h4>Assign: by value:</h4>
 
 <p>To make a clone/copy of an Object attributes you must use&nbsp;<em>clone</em>&nbsp;operator that is (::) instead of (:=). This will transfer values not references. After cloning, we can modify one value without affecting the original.</p>
 
@@ -391,6 +403,8 @@ return;
 
 <p>The most simple statements are definitely single line statements:</p>
 
+<h4>Fragment:</h4>
+
 <pre><code class="language-eve">driver assign_demo:
 process
   ** initialization statements
@@ -414,6 +428,7 @@ return;
 </ul>
 
 <h4>Example:</h4>
+
 <pre><code class="language-eve">
 # multiple line demo
 process
