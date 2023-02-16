@@ -8,7 +8,7 @@ function apply_style(str) {
     str = str.replace(/^class\b/,keyword("class"))    
     str = str.replace(/^global\b/,keyword("global"))   
     str = str.replace(/^process\b/,keyword("process"))  
-    str = str.replace(/^initial\b/,keyword("initial"))  
+    str = str.replace(/^init\b/,keyword("init"))  
 
     // maybe with indentation     
     str = str.replace(/\bcreate\b/,keyword("create"))
@@ -87,10 +87,14 @@ function apply_style(str) {
     str = str.replace(/\ball\b/g,constant("all"))
     str = str.replace(/\bone\b/g,constant("one"))
     str = str.replace(/\blabel\b/g,constant("label"))
+    str = str.replace(/\bself\b/g,constant("self"))
+    str = str.replace(/\bargs\b/g,constant("args"))
+    str = str.replace(/\bsuper\b/g,constant("super"))
 
     //  interruption statements
     str = str.replace(/\bexpect\b/,interrupt("expect"))
     str = str.replace(/\bbreak\b/,interrupt("break"))
+    str = str.replace(/\bhalt\b/,interrupt("halt"))
     str = str.replace(/\bnext\b/,interrupt("next"))
     str = str.replace(/\balter\b/,interrupt("alter"))
     str = str.replace(/\bmake\b/,interrupt("make"))

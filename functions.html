@@ -72,7 +72,7 @@ return;
 <li>A function can receive parameters of type function,</li>
 <li>A function can return a result but the result is optional,</li>
 <li>A function can create as a result another function called closure,</li>
-<li>A function has a name and name. There are no anonymous,</li>
+<li>A function has a name. There are no anonymous functions,</li>
 <li>A function can raise errors but it can't handle errors,</li>
 <li>A function can be suspended and resumed on demand,</li>
 </ul>
@@ -153,15 +153,16 @@ function generator(start:Integer) => (@closure:Function):
   new current := start; 
 
   ** define a closure
-  let closure := Function() => Integer: 
+  let closure := Function() => (@result:Integer): 
       let current += 1;
+      let result := current;
   return; 
-  
 return;
 
 process
-  new index1 := high_order(0);
-  new index2 := high_order(10);
+  ** instantiate two closures
+  new index1 := generator(0);
+  new index2 := generator(10);
   
   ** interlace the two calls
   print index1(), index1(); -- 1, 2
@@ -228,7 +229,7 @@ routine generator(cap:Integer, @result:()Float):
   new count := 0;
   loop
     for i in (1..100) loop
-      let result += random(0..1);
+      let result += (0..1).random();
       yield;
     repeat;
     let count += 1;

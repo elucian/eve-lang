@@ -156,7 +156,7 @@ global
   ...
 ----------------------------------------------------
 ** main process, or initialization region
-[process | initial]
+[process | init]
   new my_var  = value;  -- private variable
   ...
 [finalize | release]
@@ -300,7 +300,7 @@ return;
 
 <ul>
 <li>libraries contain generic functionality and can be shared between multiple projects;</li>
-<li>using import, several modules can be loaded from a folder at once;</li>
+<li>using import, several modules can be loaded from a library one by one or all using (*);</li>
 <li>circular import is possible, but EVE prevent infinite recursive reference;</li>
 <li>after import you can call public members of a module using&nbsp;<em>dot notation</em>;</li>
 </ul>
@@ -400,8 +400,8 @@ return;
 #demo output parameters
 aspect output_params:
 
-** private method
-function add(p1 = 0, p2 = 1: Integer, @op: Integer):
+** private subroutine
+routine add(p1 = 0, p2 = 1: Integer, @op: Integer):
   let op := p1 + p2;
 return;
 
@@ -409,11 +409,11 @@ process
   new result: Integer;
 
   ** inpur/output argument require a variable
-  add (1,2, op:result);
+  call add(1,2, op:result);
   print result;     -- expected value 3
 
   ** negative test, will fail
-  add (1,2,4); -- error, "out" parameter require a variable
+  call add(1,2,4); -- error, "out" parameter require a variable
 return;
 </code></pre>
  
@@ -421,7 +421,7 @@ return;
 <ul>
 <li>Output parameters are usually the last parameters;</li>
 <li>Output parameters are having "@" prefix;</li>
-<li>Function invocation is a statement, do not need a keyword;</li>
+<li>Routine invocation is done using a "call" statement;</li>
 </ul>
 
 <h2><a id="modules"></a>Modules</h2>
@@ -459,7 +459,7 @@ import
 
 ** declare members
   ...
-initial
+init
 ** setup intial states 
   let $system_variable := value;
   ...
@@ -480,39 +480,106 @@ return;
 
 <p><b>Module names </b>are using lowercase letters, can contain underscore or digits but no special characters and no Unicode strings. Longer names that use several words can be separate with underscore. The module name can be 30 characters long.</p>
 
-<p><b>Module scripts </b>A module can be a single scriot file but usually represents several files. The main script has the same name as the module name. In the main script you can define ony the public members. In secondary scripts, you can define only the private members.</p>
+<p><b>Module scripts </b>A module can be a single script file but usually represents several files. The main script has the same name as the module name. In the main script you can define ony the public members. In secondary scripts, you can define only the private members.</p>
 
 <h2><a id="execution"></a>Script Execution</h2>
 
 <p>Eve scripts are executed using a virtual machine. You can start the virtual machine as a service or as console application. In console you can&nbsp;<em>run</em>&nbsp;only a one driver script at a time. In service mode you can&nbsp;<em>run</em>&nbsp;multiple drivers. Each driver is independent and can't communicate with other drivers.</p>
 
-<p><b>Configuration: &nbsp;</b>Eve services using a general configuration file: eve.cfg. This file contains default settings for EVE machine. System variables are shared. A copy of EVE system variables is send to every new new driver. A driver can overwrite default settings.</p>
+<p><b>Configuration: &nbsp;</b>Eve services using a general configuration file: eve.cfg. This file contains default settings for EVE machine. System variables are shared. A copy of EVE system variables is send to every new driver instance.</p> 
+
+<p>A driver can define default settings using "set". Configuration setings are loaded over the default values and have priority. In a process, you can temporarly change the settings using let. These changes do not propagate back into the condifuration file.</p>
 
 <p><b>Memory allocation:&nbsp;</b>EVE service is in charge of allocating memory for each process. There is no shared memory between processes. When a process is terminated the memory is cleaned up of garbage and the machine continue to run until all processes are finished.</p>
 
 <p>To execute a driver there are 2 methods:</p>
 <ol>
 <li>Using the "eve" system command with parameters,</li>
-<li>Using console REPL commands with "run" command,</li>
+<li>Using console REPL commands with "load" command,</li>
 <li>EVE virtual machine can be run as a daemon,</li>
 <li>You can control EVE virtual machine using command: eve with parameters</li>
 </ol>
 
 <h3>Driver Execution:</h3>
 
-<p>When a driver is executed, all it's components are compiled in memory, then the <em>process</em> is executed. If a module do not have a "process", it can not be executed. The process is the driver entry point. When the <em>driver main process</em> is finalized the program terminates and is removed from memory.</p>
+<p>When a driver is loaded, all it's components are compiled in memory, then the <em>process</em> is executed. If a driver do not have a "process", it can be manually executed from eve console, one routine at a time.</p>
+
+<h4>Start EVE REPL</h4>
+
+<pre class="language-out">~/eve -c file.cfg</pre>
 
 <h4>Running a Driver</h4>
 
-<pre class="language-out">eve:&gt; run ~/path/driver_name.eve -c file.cfg -m 2048GB</pre>
+<pre class="language-out">eve:&gt; load ~/path/driver_name.eve -c file.cfg -m 2048GB</pre>
+
+<h4>Debug a Driver</h4>
+
+<pre class="language-out">eve:&gt; debug ~/path/driver_name.eve -c file.cfg</pre>
+
+<p>Eve REPL can be used to load or debug a driver manually, using special commands. The command options are not yet fully designed. We will implement these basic commands:</p>
+
+<table class="table table-bordered">
+<tr>
+  <th>command</td>
+  <th>description</td>
+</tr>
+<tr>
+  <td>load</td>
+  <td>compile a driver and execute the main process</td>
+</tr>
+<tr>
+  <td>debug</td>
+  <td>compile a driver but does not execute main process</td>
+</tr>
+<tr>
+  <td>begin</td>
+  <td>start the driver main process step by step execution</td>
+</tr>
+<tr>
+  <td>enter</td>
+  <td>this is actually the enter key. execute next step</td>
+</tr>
+<tr>
+  <td>print</td>
+  <td>display value for a global variable, it can't print locals</td>
+</tr>
+<tr>
+  <td>resume</td>
+  <td>continue running until a "halt" statement is enconter</td>
+</tr> 
+<tr>    
+  <td>report</td>
+  <td>create a debugging report about system state</td>
+</tr>
+<tr>    
+  <td>stop</td>
+  <td>stop the driver execution but do not clean memory</td>
+</tr>
+<tr>    
+  <td>clear</td>
+  <td>stop the driver and clean the memory</td>
+</tr>
+<tr> 
+  <td>setup</td>
+  <td>load configuration file and set "$" variables</td>     
+</tr>
+<tr>    
+  <td>quit</td>
+  <td>stop EVE machine and exit from REPL</td>
+</tr>
+</table>
+
+<p>You can use "halt" inside the script to stop a script and debug the script later. "halt" is working only when debug mode is active. Statement "halt" can be conditioned with "if" to create a debugging break-point.</p>
 
 <h3>Aspect Execution:</h3>
 
 <p>One aspect is executed from driver or from another aspect. You can not execute an aspect from itself. Recursive aspects are not supported. The compiler will detect a recursive aspect and will fail at runtime.</p>
 
+<p>You can debug an aspect just like a driver. You can load an aspect, execute the aspect step by step and create a report. Aspects are independent processes. However you can't debug aspects in parallel.</p>
+
 <h4>Synchronously</h4>
 
-<p>Aspects can be run in serial mode one after another. Let's consider we have 3 aspects: {one.eve, two.eve, three.eve}. We can execute each aspect using keyword: "apply". This will intrerupt the driver process and will execute aspec process one by one then return control to driver and continue the main process:</p>
+<p>Aspects can be run in serial mode one after another. Let's consider we have 3 aspects: {one, two, three}. We can execute each aspect using keyword: "apply". This will intrerupt the driver process and will execute aspec process one by one then return control to driver and continue the main process:</p>
 
 <pre><code class="language-eve">
 driver test_apply:
@@ -520,9 +587,9 @@ driver test_apply:
 # synchronous call
 process
   ** apply each aspect
-  apply [folder/]one(arguments);
-  apply [folder/]two(arguments);
-  apply [folder/]three(arguments);
+  apply [folder/]aspect_one(arguments);
+  apply [folder/]aspect_two(arguments);
+  apply [folder/]aspect_three(arguments);
   ...
 return;
 </code></pre>
@@ -538,9 +605,9 @@ return;
 driver async_demo:
 process
   ** enqueue aspects to be resolved
-  start [folder/]one(arguments);
-  start [folder/]two(arguments);
-  start [folder/]three(arguments);
+  start [folder/]aspect_one(arguments);
+  start [folder/]aspect_two(arguments);
+  start [folder/]aspect_three(arguments);
 
   ** wait for all aspects to finish
   yield;
@@ -571,10 +638,10 @@ return;
 
 <p>Modules are "singleton" once a module is loaded in memory, it will not load a second time for same process. Eve is a multi-session system. Module states are bound the the current process.</p>
 
-<h3>Exclusive execution:</h3>
+<h3>Exclusive mode:</h3>
 
-<p>When a module is executed, it can be started with parameter: -e or --exclusive. This is a signal that a script can not be started a second time in a separated session by the same VM. In this mode a module can connect to a database in admin mode and can lock a file so that no other process will access the file until is unlocked.</p>
-
+<p>When a eve is executed, it can be started with parameter: -x or --exclusive. This is a signal that only one process can connect or use resources. In this mode "start" is not starting a new process but works like "apply" in serial mode. In this mode you can alter a database structure.</p>
+ 
 <h2>Program Termination:</h2>
 
 <p>Program can be early terminated be done using: <em>"over"</em> or <em>"panic"</em>. This is a way to release all locked resources and terminate the application. Program can end with an error code using "panic N" statement, otherwise it will automatically return 1 with panic and 0 with "over". Actually "panic 0" is equivalent to "over".</p>
@@ -605,7 +672,9 @@ return;
 
 <p>A configuration file have extension .cfg. One application can run with different configuration file. Application documentation must contain demoduleion of all variables required by the application.</p>
 
-<p>A good practice is to provide a configuration &nbsp;<em>template</em>&nbsp;. The template file may contain comments using Eve syntax that you will learn later. Eve application will automatically parse configuration file to read values for:&nbsp;<em>system variables</em>.</p>
+<p>A good practice is to provide a configuration <em>template</em>&nbsp;. The template file may contain comments and $key = value pairs. Values can be numeric, string, symbol, date, time or data literals: [],(),{}. Eve application will automatically parse configuration file to read values for the <em>system variables</em>.</p>
+
+<p>In debug mode you can modify the configuration and reload using "setup" command. REPL must be in "ready" state when you reload settings otherwise you will get an error.</p>
 <!-- work in progress-->
 
 <hr>

@@ -78,7 +78,7 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 
 <pre><code class="language-eve">#define an object instance
 ** declare a class with two attributes
-class .MyClass = {a, b: Integer} <: Object;
+class MyClass = {a, b: Integer} <: Object;
 
 ** create several class signatures in a "class region"
 class
@@ -151,7 +151,6 @@ return;
 <li>We declare attributes using = {...}  or += {...} after class name;</li>
 <li>Public attributes must be initialized using "let" in constructor;</li>
 <li>Private attributes are created with keyword "new" in constructor;</li>
-<li>Private attributes are starting with prefix "_", by convention;</p>
 </ul>
 
 <p>To access public attributes you must use dot notation like:</p>
@@ -222,6 +221,28 @@ process
   expect ClassName.last() == 12; 
 return;
 </code></pre>
+
+<h3><a id="module-methods">Module Methods</h2>
+
+<p>You can define methods in modules that are usable with any basic type similar to class methods. Also, you can define general methods. These methods are not bound to a particular data type.</p>
+
+<h4>Example:</h4>
+
+<pre><code class="language-eve">
+module console:
+
+** module method 
+method print (*args:Variant):
+  ...
+return;
+
+** module initialization
+init
+  ...
+return;
+</code></pre>
+
+<p><b>Note:</b>Module methods will be useful, when we create the system library. Is enaugh to say we have left the design open, so that we can bootstrap Eve later.</b>
 
 <h2><a id="class-tree"></a>Class Tree</h2>
 

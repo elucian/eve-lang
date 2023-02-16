@@ -474,7 +474,7 @@ return;</code></pre>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>reset    </td></tr>
 <tr><td>update   </td><td>use      </td><td>labe      </td><td>view     </td></tr>
 <tr><td>where    </td><td>while    </td><td>with      </td><td>write    </td></tr>
-<tr><td>call       </td><td>panic    </td><td>any       </td><td>other    </td></tr>
+<tr><td>call     </td><td>panic    </td><td>any       </td><td>other    </td></tr>
 </table>
 
 <h3>Definition regions</h3>
@@ -759,6 +759,10 @@ return;</code></pre>
 <td>call</td>
 <td>execute a routine in synchronous mode</td>
 </tr>
+<tr>
+<td>halt</td>
+<td>temporarly stop the process for debug</td>
+</tr>
 </tbody>
 </table>
 
@@ -805,15 +809,15 @@ return;</code></pre>
 </thead>
 <tbody>
 <td>(_,_,_)</td>
-<td>Enumeration | Tuple</td>
+<td>List literal | parameters | arguments</td>
 </tr>
 <tr>
 <td>[_,_,_]</td>
-<td>List literals</td>
+<td>Array literal for (Vector | Matrix)</td>
 </tr>
 <tr>
 <td>{_,_,_}</td>
-<td>Ordinal type | Set of values | Hash type | Generic types</td>
+<td>Ordinal | DataSet | HashMap | Class / Object</td>
 </tr>
 </tbody>
 </table>
@@ -828,35 +832,35 @@ return;</code></pre>
 </thead>
 <tbody>
 <td>'...'</td>
-<td>Unicode codepoint (4 Bytes).</td>
+<td>Symbol = Unicode UTF8 codepoint (4 Bytes).</td>
 </tr>
 <tr>
 <td>"..."</td>
-<td>Variable capacity String: UTF8</td>
+<td>Variable capacity UTF8 String literal.</td>
 </tr>
 <tr>
-<td>"""</td>
-<td>Variable capacity large Text: UTF8</td>
+<td>"""..."""</td>
+<td>Variable capacity large / multiline UTF8 text literal.</td>
 </tr>
 </tbody>
 </table>
 
 
 <h2><a id="operators"></a>Operators</h2>
-<p>Eve us ASCII symbols for operators. One operator can be single character or  two characters with no space between tem. Sometimes we use the same character twice for example "==" or ">>". This technique is known in many other computer languages.</p>
+<p>Eve us ASCII symbols for operators. One operator can be single character or  two characters with no space between tem. Sometimes we use the same character twice for example "==" or ">>". This convention is well known in many other computer languages.</p>
 
 <p><b>Single symbol:</b></p>
 <pre class="fixed"># , : . ; = ~ ? % ^ * - + / &lt; &gt; &amp; | ! @ $</pre>
 
 <p><b>Two symbols:</b></p>
-<pre class="fixed">==, !=,  =>, <=, >=, :>, <:, .., !. </pre>
+<pre class="fixed">== !=  => <= >= :> <: .. !. </pre>
 
 <p><b>Three symbols:</b></p>
-<pre class="fixed">""", .|., .&., .+. </pre>
+<pre class="fixed">""" .|. .&. .+. </pre>
 
 <p><b>Modifiers:</b></p>
 
-<pre class="fixed">::, :=, +=, -=, *=, /=, %=, ^=, &=, |= +>, <+, >>, <<, ->, <- </pre>
+<pre class="fixed">:: := += -= *= /= %= ^= &= |= +> <+ >> << -> <- </pre>
 
 <p><b>Delimiters:</b></p>
 <pre class="fixed">"_" '_' `_` (...) [...] {...} #(...)</code></pre>
@@ -884,6 +888,10 @@ return;</code></pre>
 <tr>
 <td>#</td>
 <td>Title at begging of line | Digit in string pattern</td>
+</tr>
+<tr>
+<td>#</td>
+<td>Last element index in a collection</td>
 </tr>
 <tr>
 <td>$</td>
@@ -919,7 +927,10 @@ return;</code></pre>
 </tr>
 <tr>
 <td>*</td>
-<td>Variable arguments | Multiplication</td>
+<td>Variable arguments | Multiplication | All elements</td>
+</tr>
+<td>*</td>
+<td>Usable in import to create a file pattern/search</td>
 </tr>
 <tr>
 <td>|</td>
@@ -1005,7 +1016,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>.</td>
-<td> Concatenate path or URL strings with a symbol and de-duplicate "//"</td>
+<td>Concatenate path or URL strings with a symbol and de-duplicate "//"</td>
 </tr>
 
 </table>

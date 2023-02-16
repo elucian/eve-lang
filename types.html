@@ -385,6 +385,7 @@ return;
 <th>Description</th>
 </tr>
 </thead>
+<tbody>
 <tr>
 <td>Object</td>
 <td>Root class for all composite data types</td>
@@ -397,7 +398,6 @@ return;
 <td>Variant</td>
 <td>A union of possible data types.</td>
 </tr>
-<tbody>
 <tr>
 <td>Range</td>
 <td>Discrete range of numbers equaly distanced (x..y:ratio)</td>
@@ -445,8 +445,8 @@ return;
 </tbody>
 </table>
 
-<h2><a id="range" class="anchor" href="#range"></a>Range</h2>
-<p>A range is a notation that can create a sub-set of integer numbers.</p>
+<h3><a id="range"></a>Range</h3>
+<p>A range is a notation that can create a sub-set of integer numbers. Range is not expanded in memory and can be very large. It can be used as a generator of numbers.</p>
 
 <h4>Syntax:</h4>
 <pre class="language-out">range ::= (min..max:ratio);</pre>
@@ -465,7 +465,7 @@ return;
 <pre lass="no-line-numbers"><code class="language-eve">#numeric range demo
 driver numeric_range:
 
-class R5 = [0..5] <: Range;
+class R5 = (0..5) <: Range;
 
 process
   ** test range
@@ -473,8 +473,8 @@ process
   expect 5 in R5;
 
   ** test limit
-  expect 4 in [1..8:2]
-  expect 5 not in [-10..10:2]
+  expect 4 in (1..8:2)
+  expect 5 not in (-10..10:2)
 return;
 </code></pre>
 
@@ -485,37 +485,45 @@ return;
 <pre class="line-numbers"><code class="language-eve"># using symbol ranges
 driver symbol_range:
 process
-  print ['0'..'5'] -- {'0','1','2','3','4','5'}
+  print ('0'..'5') -- {'0','1','2','3','4','5'}
 
   ** following statements should pass
-  expect '0' in ['0'..'9'];  -- will pass
-  expect 'X' in ['A'..'Z'];  -- will pass
+  expect '0' in ('0'..'9');  -- will pass
+  expect 'X' in ('A'..'Z');  -- will pass
 return;
 </code></pre>
 </div>
 
 
-<h2><a id="domain"/>Domain</h2>
+<h3><a id="domain"/>Domain</h3>
 
 <p>Domains are similar to ranges. The numbers in a domain can have a decimal precision. So the domain can be continuous or discrete. The maximum precision is establish by a system variable $precision.</p>
 
 <h4>Syntax:</h4>
-<pre><code class="language-eve">domain ::= (min..max:ratio)
+<pre><code class="language-eve">domain ::= [min..max:ratio]
 </code></pre>
 
 <h4>Examples:</h4>
 <pre><code class="language-eve"># domain demo
 driver domain_demo:
-class small = (0..1) <: Domain;
+class small = [0..1:0.1] <: Domain;
 
 process
-  ** using domain
-  expect 0   in small;
-  expect 1   in small;
-  expect 0.5 in small;
-  expect 0.1 in small;
+  ** all domains include the limits
+  expect 0    in small;
+  expect 1    in small;
+
+  ** this domain include small nubers
+  expect 0.5  in small;
+  expect 0.1  in small;
+
+  ** this domein exclude extra small numbers
+  expect 0.01 not in small;
+  expect 1.25 not in small;  
 return;
 </code></pre>
+
+<p>Domain produce rational numbers. If ratio is not specified, the ration is equal to $precision. You can change the precision in configuration file. A domain is not expanded in memory and can be very large.</p>
 
 <h2><a id="data-coercion"></a>Data Coercion</h2>
 <p>In computer science coercion is used to implicitly or explicitly change an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. If not designed properly the coercion can be a fatal mistake. Eve is a safe language so we do only safe coercion.</p>
@@ -605,7 +613,7 @@ return;
 
 <h2><a id="default-types"></a>Default types</h2>
 <p>Literals are representations of specific particular data type in source code.</p>
-<p><b>Basic types</b>&nbsp;Next notation use "9" to show any digit in range [0..9].</p>
+<p><b>Basic types</b>&nbsp;Next notation use "9" to show any digit in range (0..9).</p>
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
@@ -953,7 +961,7 @@ driver variant_params:
 
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
-method swap(@x, @y: {Integer | Double} ):
+routine swap(@x, @y: {Integer | Double} ):
   ** check type to be the same
   expect type(x) = type(y);
 
@@ -967,13 +975,13 @@ process
   ** invert two  Integer numbers
   new x := 10;
   new y := 20;
-  swap(x, y);
+  call swap(x, y);
   expect (x == 20) and (y == 10);
 
   ** invert two Double numbers
   new a := 1.5;
   new b := 2.5;
-  swap(a, b);
+  call swap(a, b);
   expect (a == 2.5) and (b == 1.5);
 return;
 </code></pre>

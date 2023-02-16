@@ -42,6 +42,7 @@
 <ul>
 <li><a href="#main-process">Main process</a></li>
 <li><a href="#side-effects">Side effects</a></li>
+<li><a href="#random-method">Random method</a></li>
 <li><a href="#list-operations">List operations</a></li>
 <li><a href="#collection-iteration">Collection iteration</a></li>
 <li><a href="#scanning-items">Scanning items</a></li>
@@ -223,6 +224,32 @@ process
   expect (result == 30);
 return;
 </code></pre>
+
+<h2><a id="random-method"></a>Random method</h2>
+
+<p>The range and domain are iterable and have a number of methods that are useful for data processing but these are not collections but generators. One method is very useful and is going to be used in many examples: random(). It is implemented for all collections.</p>
+
+<h4>Examples:</h4>
+<pre><code class="language-eve"># domain demo
+driver random_demo:
+  set small = [0..1:0.1] :Domain;
+  set large = (0..2^64 ) :Range;
+process
+  ** you can call random() like this
+  print small.random(); -- 0.3
+  print large.random(); -- 65535
+
+  ** you can call random() like this
+  print random(small);
+  print random(large);
+
+  ** you can call random() like this
+  print random (1..2^32:2);       -- 143453566436
+  print random [1..2^32:0.25];    -- 43.75
+return;
+</code></pre>
+
+<p><b>Note: </b>If you wander how is this possible, remember methods do not need paranthesis when there is a single parameter. So the argument can be a range. This is a single argument not two or three.</p>
 
 <h2><a id="list-operations"></a>List operations</h2>
 
