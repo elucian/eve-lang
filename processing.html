@@ -69,7 +69,7 @@
 
 <pre><code class="language-eve">
 # define process with label
-process
+process | routine
     ** local declarations
     ....
   job (c1,"description") try
@@ -172,7 +172,7 @@ process
   cycle:
     new arg: String;
   for arg in args loop;
-    apply print_this String(arg);
+    apply print_this(arg);
   repeat;
 return;
 </code></pre>

@@ -237,8 +237,8 @@ routine generator(cap:Integer, @result:()Float):
 return;
 
 process
-  new batch: ()Fload;
-  new total: Double;
+  new batch :()Float;
+  new total :Double;
   ** initialize the generator and produce first batch
   run generator(1000, result:batch):
   while batch.count() > 0 loop
@@ -332,7 +332,7 @@ global
 
 <h3>Lambda signature</h3>
 
-<p>Labda expression signature can be declared as data type using keyword "class". This feature can be used to enforce a specific signature for a <em>call-back</em> argument.<p>
+<p>Labda expression can be declared as data type using keyword "class". Later, this type can be used to enforce a specific signature for a <em>call-back</em> argument, varible or collection element.<p>
 
 <pre><code class="language-eve">
 # define a lambda signature
@@ -353,11 +353,11 @@ process
 return;
 </code></pre>
 
-<p><b>Note: </b>Lambda expressions can be created by a function or method as a result. Access to external context is read only so a labda expression do not behave exactly like a closure but is restricted. A Lambda expression can not modify values of its parent context.</p>
+<p><b>Note: </b>Lambda expressions can be created by a function or method as a result. Lambda expressions can't modify values of variable declared in the parent scope.</p>
 
 <h3>Lambda & states</h3>
 
-<p>Lambda expressions can read global or context states, but can not modify them. If values change after expression is defined, the result may be influenced by the new value.</li>
+<p>Lambda expressions can read global or parent scope states, but can not modify them. However, if external values change after expression is defined, the result may be influenced by the new values.</li>
 
 <h4>Example:</h4>
 
@@ -382,7 +382,7 @@ process
 return;
 </code></pre>
 
-<div class="alert alert-warning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alterit using "let". The new value is used by the function to cut several decimals after round(). This is not exactly a side-effect but is an influence, that is not accepted in functional programming.</div>
+<div class="alert alert-warning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alter it using "let". The new value is used by the function to cut several decimals after round(). This is not exactly a side-effect but is an influence, that is not accepted in functional programming.</div>
 
 <p><b>Disclaim: </b>We aknowledge, Eve is not a pure functional language. This behaviour is present in many other modern languages. Eve is not different. We seek for a balance between the theory and pragmatism.</p>
 

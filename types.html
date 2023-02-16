@@ -580,10 +580,11 @@ return;
 <pre><code class="language-eve">#convert number to string
 driver number_to_string:
   ** local states
-  set s:  String;
-  set v:= 1000;
+  set s :String;
+  set v :Integer;
 
 process
+  let v := 1000;
   let s := format(v); --  explicit coercion s = '1000'
   expect (s == '1000');
 return;
@@ -741,27 +742,30 @@ return;
 
 <h2><a id="type-inference"></a>Type Inference</h2>
 
-<p>This is a logical deduction of List data type from constant literals. You do not have to specify the type of elements. The type inference takes over.</p>
+<p>Type inference is a logical association of data type from a constant literal or expression. Type inference can be used in declarations.</p>
+
+<p>Type inference is enabled by operators {:=, ::}. You can use type inference with keyword "new" or "let". Type inference can improve a type declaration if the declaration is partial.</p>
 
 <h4>Example 1:</h4>
 
 <p>In next example we use a List data literal to create a shared collection fo type List[Integer]. However the type used is partial. Do not have element type, that is going to be Integer.</p>
 
-<pre><code class="language-eve">#test type inference
+<pre><code class="language-eve">#test partial inference
 driver type_inference:
-
-** Define a list of 10 elements using type inference
-  set ls = (0,1,2,3,4,5,6,7,8,9) :List; 
+  ** Define a list without element type
+  set ls :List; 
 
 process main
-  print  ls.type(); --  List[Integer]
-  expect ls is List[Integer];
+  ** establish element data type
+  let ls := (0,1,2,3,4,5,6,7,8,9);
+  print  ls.type();
+  expect type(ls) is ()Integer;
 return;
 </code></pre>
 
 <h4>Example 2</h4>
 
-<p>You can create empty new collections using type inference and determine the type of elements later, using "let" or "put" or any method that can create new elements.</p>
+<p>You can declare empty collections using partial inference and determine the type of elements later, using "let". After type is established, it can't be changed later and start functioning as a contract. That is, you must respect the element types for next expressions.</p>
 
 <pre><code class="language-eve"># gradual type declaration
 process
@@ -848,8 +852,9 @@ return;
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
 ** explicit initialization
-  set False := 0b0 :Byte; 
-  set True  := Ob1 :Byte;   
+global
+  set False = 0b0 :Byte; 
+  set True  = Ob1 :Byte;   
 </code></pre>
 
 <p><b>Internal design</b></p>

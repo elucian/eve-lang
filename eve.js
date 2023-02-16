@@ -1,32 +1,59 @@
 function apply_style(str) {
-    // global declarations
-    str = str.replace(/^driver\b/,keyword("driver"))
-    str = str.replace(/^module\b/,keyword("module"))
-    str = str.replace(/^aspect\b/,keyword("aspect"))
+ 
+    // global declarations, at beginning of line
     str = str.replace(/^import\b/,keyword("import"))
     str = str.replace(/^alias\b/,keyword("alias")) 
     str = str.replace(/^class\b/,keyword("class"))    
     str = str.replace(/^global\b/,keyword("global"))   
-    str = str.replace(/^process\b/,keyword("process"))  
-    str = str.replace(/^init\b/,keyword("init"))  
+    str = str.replace(/^return\b/,keyword("return"))
+    str = str.replace(/^create\b/,keyword("create"))
+    str = str.replace(/^release\b/,keyword("release"))
+    str = str.replace(/^method\b/,keyword("method"))
+    str = str.replace(/^function\b/,keyword("function"))
 
-    // maybe with indentation     
-    str = str.replace(/\bcreate\b/,keyword("create"))
-    str = str.replace(/\brelease\b/,keyword("release"))
-    str = str.replace(/\bmethod\b/,keyword("method"))
-    str = str.replace(/\bfunction\b/,keyword("function"))
+    // optional keywords
     str = str.replace(/\broutine\b/,keyword("routine"))  
-    str = str.replace(/\breturn\b/,keyword("return"))
+    str = str.replace(/\bdriver\b/,keyword("driver"))
+    str = str.replace(/\bmodule\b/,keyword("module"))
+    str = str.replace(/\baspect\b/,keyword("aspect"))
     str = str.replace(/\brecover\b/,keyword("recover"))
     str = str.replace(/\bfinalize\b/,keyword("finalize"))
-    str = str.replace(/\breport\b/,keyword("report"))   
-    str = str.replace(/\bsession\b/,keyword("session"))
-    str = str.replace(/\bupdate\b/,keyword("update"))
-    str = str.replace(/\bappend\b/,keyword("append"))
-    str = str.replace(/\bcommit\b/,keyword("commit"))     
-    // in statement
-    str = str.replace(/\bfrom\b/,keyword("from"))
-    str = str.replace(/\buse\b/,keyword("use"))
+    str = str.replace(/\bprocess\b/,keyword("process"))  
+    str = str.replace(/\binit\b/,keyword("init"))  
+
+    // mandatory 2 space intentation
+    str = str.replace(/\s\sreturn\b/,keytab("  return"))
+    str = str.replace(/\s\smethod\b/,keytab("  method"))
+    str = str.replace(/\s\screate\b/,keytab("  create"))
+    str = str.replace(/\s\srelease\b/,keytab("  release"))
+    str = str.replace(/\s\sfunction\b/,keytab("  function"))
+
+    // keywords in statement     
+    str = str.replace(/\bsession\b/,keytab("session"))
+    str = str.replace(/\bupdate\b/,keytab("update"))
+    str = str.replace(/\bappend\b/,keytab("append"))
+    str = str.replace(/\bcommit\b/,keytab("commit")) 
+    str = str.replace(/\bfrom\b/,keytab("from"))
+    str = str.replace(/\buse\b/,keytab("use"))
+
+    // keyword operators  
+    str = str.replace(/\bin\b/g,keytab("in"))     
+    str = str.replace(/\bis\b/g,keytab("is"))
+    str = str.replace(/\bas\b/g,keytab("as"))    
+    str = str.replace(/\bor\b/g,keytab("or"))
+    str = str.replace(/\beq\b/g,keytab("eq"))    
+    str = str.replace(/\band\b/g,keytab("and"))
+    str = str.replace(/\bnot\b/g,keytab("not"))
+
+
+    // mandatory two space indentation
+    str = str.replace(/\s\snew\b/g,keytab("  new"))
+    str = str.replace(/\s\slet\b/g,keytab("  let"))
+    str = str.replace(/\s\sset\b/g,keytab("  set"))
+    
+    // database singular statements
+    str = str.replace(/\s\sscrub\b/g,keytab("  scrub"))
+    str = str.replace(/\s\sdelete\b/g,keytab("  delete"))
 
     //  creat control flow
     str = str.replace(/\bbegin\b/,control("begin"))   
@@ -92,52 +119,34 @@ function apply_style(str) {
     str = str.replace(/\bsuper\b/g,constant("super"))
 
     //  interruption statements
-    str = str.replace(/\bexpect\b/,interrupt("expect"))
-    str = str.replace(/\bbreak\b/,interrupt("break"))
-    str = str.replace(/\bhalt\b/,interrupt("halt"))
-    str = str.replace(/\bnext\b/,interrupt("next"))
-    str = str.replace(/\balter\b/,interrupt("alter"))
-    str = str.replace(/\bmake\b/,interrupt("make"))
-    str = str.replace(/\bstore\b/,interrupt("store"))
-    str = str.replace(/\bapply\b/,interrupt("apply"))
-    str = str.replace(/\bstart\b/,interrupt("start"))
-    str = str.replace(/\byield\b/,interrupt("yield"))
-    str = str.replace(/\brun\b/,interrupt("run"))
-    str = str.replace(/\bcall\b/,interrupt("call"))
-    str = str.replace(/\bwait\b/,interrupt("wait"))
-    str = str.replace(/\bexit\b/,interrupt("exit"))
-    str = str.replace(/\babort\b/,interrupt("abort"))
-    str = str.replace(/\bprint\b/,interrupt("print"))
-    str = str.replace(/\bwrite\b/,interrupt("write"))
-    str = str.replace(/\bread\b/,interrupt("read"))
-    str = str.replace(/\bover\b/,interrupt("over"))
-    str = str.replace(/\bpanic\b/,interrupt("panic"))
-    str = str.replace(/\bpass\b/,interrupt("pass"))
-    str = str.replace(/\bskip\b/,interrupt("skip"))
-    str = str.replace(/\bfail\b/,interrupt("fail"))
-    str = str.replace(/\braise\b/,interrupt("raise"))
-    str = str.replace(/\bretry\b/,interrupt("retry"))
-    str = str.replace(/\bresume\b/,interrupt("resume"))
-    str = str.replace(/\bsynchronise\b/,interrupt("synchronise"))
-    str = str.replace(/\brollback\b/,interrupt("rollback"))
-
-    // keyword operators   
-    str = str.replace(/\bin\b/g,operator("in"))     
-    str = str.replace(/\bis\b/g,operator("is"))
-    str = str.replace(/\bas\b/g,operator("as"))    
-    str = str.replace(/\bor\b/g,operator("or"))
-    str = str.replace(/\beq\b/g,operator("eq"))    
-    str = str.replace(/\band\b/g,operator("and"))
-    str = str.replace(/\bnot\b/g,operator("not"))
-
-
-    // mandatory indentation imperative
-    str = str.replace(/\snew\b/g,operator(" new"))
-    str = str.replace(/\slet\b/g,operator(" let"))
-    str = str.replace(/\sset\b/g,operator(" set"))
-    // database singular statements
-    str = str.replace(/\sscrub\b/g,operator(" scrub"))
-    str = str.replace(/\sdelete\b/g,operator(" delete"))
+    str = str.replace(/\bexpect\b/,keytab("expect"))
+    str = str.replace(/\bbreak\b/,keytab("break"))
+    str = str.replace(/\bhalt\b/,keytab("halt"))
+    str = str.replace(/\bnext\b/,keytab("next"))
+    str = str.replace(/\balter\b/,keytab("alter"))
+    str = str.replace(/\bmake\b/,keytab("make"))
+    str = str.replace(/\bstore\b/,keytab("store"))
+    str = str.replace(/\bapply\b/,keytab("apply"))
+    str = str.replace(/\bstart\b/,keytab("start"))
+    str = str.replace(/\byield\b/,keytab("yield"))
+    str = str.replace(/\brun\b/,keytab("run"))
+    str = str.replace(/\bcall\b/,keytab("call"))
+    str = str.replace(/\bwait\b/,keytab("wait"))
+    str = str.replace(/\bexit\b/,keytab("exit"))
+    str = str.replace(/\babort\b/,keytab("abort"))
+    str = str.replace(/\bprint\b/,keytab("print"))
+    str = str.replace(/\bwrite\b/,keytab("write"))
+    str = str.replace(/\bread\b/,keytab("read"))
+    str = str.replace(/\bover\b/,keytab("over"))
+    str = str.replace(/\bpanic\b/,keytab("panic"))
+    str = str.replace(/\bpass\b/,keytab("pass"))
+    str = str.replace(/\bskip\b/,keytab("skip"))
+    str = str.replace(/\bfail\b/,keytab("fail"))
+    str = str.replace(/\braise\b/,keytab("raise"))
+    str = str.replace(/\bretry\b/,keytab("retry"))
+    str = str.replace(/\bresume\b/,keytab("resume"))
+    str = str.replace(/\bsynchronise\b/,keytab("synchronise"))
+    str = str.replace(/\brollback\b/,keytab("rollback"))
 
     // two symbol operators
     str = str.replace(/\s::\s/g,operator(" :: "))
@@ -369,6 +378,10 @@ function comments(str) {
 
 function keyword(str) {
     return "<span class=\"keyword\">"+ str + "</span>"
+}
+
+function keytab(str) {
+    return "<span class=\"keytab\">"+ str + "</span>"
 }
 
 function types(str) {

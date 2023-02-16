@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head>
    <meta charset="utf-8">
-   <meta name="description" content="Sage-Code Eve object oriented programming. Classes and Objects. ">
+   <meta name="description" content="Sage-Code Eve OOP programming paradigm implementation. Classes, Objects and Methods. ">
    <meta name="author" content="Elucian Moise">
-   <meta name="keywords" content="SageCode, EVE, OOP, EveLang, Objects, Object Oriented, paradigm, classes, , methods, consructor">
+   <meta name="keywords" content="SageCode, EVE, OOP, EveLang, Objects, Object Oriented, paradigm, classes, methods, consructor">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
    <!-- Website title -->
@@ -36,7 +36,7 @@
 <h1>Eve OOP</h1>
 
 <div class="alert alert-secondary shadow-sm">
-Eve is an object oriented language. We define objects and classes. A class is a <em>user defined data type</em>, that encapsulate data structure and behaviour. An object is an instance of a class. We use classes to create data structures and algorithms.</div>
+Eve is an object oriented language. We define objects and classes. A class is a <em>user defined data type</em>, that encapsulate data structure and methods. An object is an instance of a class. We use classes to create data structures and algorithms.</div>
 
 <p><b>Objects </b>are&nbsp;<em>state machines</em>&nbsp;that are instantiated on demand and released from memory when they are no longer needed. You can create global objects using "set", or local objects using "new" keyword.</p>
 
@@ -192,8 +192,8 @@ driver test_method:
 # define a class that has no constructor
 class ClassName <: Object:
   ** class propety
-  new prop: Integer; 
-  new last: Integer;
+  set prop: Integer; 
+  set last: Integer;
 
   ** class method 
   method change(param:Type) => (@result:Integer):
@@ -321,13 +321,13 @@ return;
 # define a class
 class ClassName = {attributes} <: Object:
    ** define class properties
-   new property_name = value;
+   set property_name := value;
    ....
 
    ** define class method
    method test() => (result:Type):
       ...
-      result := expression;
+      let result := expression;
    return;
 create(parameters) => (@self: ClassName):
   ** conditional initialization
@@ -474,7 +474,7 @@ class UserList = ()ElementType <: List;
 
 process
   ** instantiate UserList object 
-  new myList: UserList; 
+  new myList := UserList(); 
 
   ** enqueue one member
   let myList += ElementType(1,2,3);

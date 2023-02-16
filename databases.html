@@ -71,7 +71,8 @@ import
 <p>One application can connect to multiple databases simultaneously. A specific kind of application called&nbsp;<em>pipeline</em>&nbsp;can pull data from multiple sources to update one target database.</p>
 
 <p><b>pattern:</b></p>
-<pre><code class="language-eve">** create a database session
+<pre><code class="language-eve">
+** create a database session
 class Session(String user,password,name) &lt;: Oracle.Database:
   new _credentials: String;
 create
@@ -83,8 +84,11 @@ create
 return;
 
 ** create database connection
+global
   set db := Session(user:'test',password:'password',name:'demo');
-
+process
+  ...
+return;
 </code></pre>
 
 <p><b>Note:</b>&nbsp;Usually a database has a security protocol based on user-name and password. These credentials can not be encoded in the Eve scripts, they need to be received as input parameters by the driver. Once a connection is established it can be used to manipulate data, using Eve statements.</p>
@@ -194,26 +198,25 @@ class Record(Integer id) &lt;: Object;
 <p>Eve can add new data records into one table using <em>append()</em>.</p>
 
 <pre><code class="language-eve">
-session [label]
+routine update_tables():
   ** create empty records
   new record1 := table_name.append();
   new record2 := table_name.append();
-update record1:
-  let field_name := value;
-  ...
-update record2:
-  let field_name := value;
-  ...
-recover
-  case $error.code == error1:
+  update record1:
+    let field_name := value;
     ...
-    rollback;
-  case $error.code == error2:
+  update record2:
+    let field_name := value;
     ... 
-    rollback;
+  commit; 
+recover
+  case $error.code == error1 then
+    ...
+  case $error.code == error2 then
+    ... 
   else
     rollback;
-commit;
+return;
 </code></pre>
 
 <h3><a id="update"/>Update</h3>
@@ -222,52 +225,54 @@ commit;
 <h4>Single record:</h4>
 
 <pre><code class="language-eve">** use search fields and values
-session [label]:
+process
   new record1 := table_name.find(field:value1, ...);
   new record2 := table_name.find(field:value2, ...);
-update record:
-  let field_name := value;
-  ...
-update record:
-  let field_name := value;
-  ...
+  update record1:
+    let field_name := value;
+    ...
+  update record2:
+    let field_name := value;
+    ...
+  commit;
 recover
-  on error1:
+  case error1 then
   ...
-  on error2:
+  case error2 then
   ...
-  on [any | other]
+  else
     rollback;
-commit [label];
+return;
 </code></pre>
 
-<p><b>Note </b> A session will start a new isolated transaction if labeled. Otherwise it will start a regular session. In case of error, a rollback is automaticly issued.</b>
+<p><b>Note </b> A process or routine will start a new isolated transaction. In case of error, you can issue a rollback. The issue can be in the database, if you issue a rollback the database changes are not commited but the record remain modified in memory. You must refresh the record if you want the see the old values.</b>
 
 <h3><a id="delete"/>Delete</h3>
 <p>This statement will remove one or more records from a table.</p>
 
 <p><b>Syntax</b></p>
 <pre><code class="language-eve">
-** Find one single record and delete
-session [name]:
+** Find one or more records and delete them
+process
   ** local variables
   new deleted1 := table_name1.delete(field:value,...);
   new deleted2 := table_name2.delete(field:value,...);
+  commit;
 recover
-  on error:
+  case $error == code then:
     ** handle exceptions
     rollback;
     print ("failed")
-  on other:
+  else:
     rollback;
-report
+finalize
   ** check status
   expect deleted1 >  0;
   expect deleted2 >= 0;
   ** print status
   print (deleded1, "records deleted")
   print (deleded2, "records deleted")
-commit [name];
+return;
 </code></pre>
 
 <h4>Bulk Operations</h4>
@@ -276,17 +281,15 @@ commit [name];
 
 <pre><code class="language-eve">
 ** using a loop to create a single session  
-session [name]:
+routine name:
   ** delete current record using: loop
   cycle: for record in table_name loop
-    ** delete related data
-    db.table_name1.delete(field:value,...);
-    db.table_name2.delete(field:value,...);
-
-    ** delete the record
-    record.delete() if condition;
+    record.delete() if field_name == value;
   repeat;  
-commit;
+  commit;
+recover
+  rollback;
+return;
 </code></pre>
 
 <h3><a id="scrub"></a>Scrub</h3>
@@ -294,13 +297,14 @@ commit;
 <p>Remove all records from a table in bulk is very fast but there are technical problems. Triggers are deactivated for these kind of operations.</p>
 
 <pre><code class="language-eve">
-session [label]:
+process
   scrub db1.table1;
   scrub db2.table1;
+  commit;
 recover
   ** revert session
   rollback;
-commit;
+return;
 </code></pre>
 
 
@@ -318,6 +322,8 @@ commit;
 <p>Some databases have support for stored procedures. It will be a challenge to engage these procedures from EVE. Since not all databases have stored procedures, these are extra features that we can implement in Eve but not necessary for our purpose.</p>
 
 <pre><code class="language-eve">
+driver main:
+
 ** prepare an object (not updatable)
 class Result = {
       field_name1:Type ,

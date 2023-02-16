@@ -81,9 +81,9 @@ return;
 driver syntax_elements(a, b: Integer)::
 
 ** define two global lambda expressions
-lambda
-  set add := (p1, p2: Integer) => (p1 + p2);
-  set sub := (p1, p2: Integer) => (p1 - p2);
+global
+  set add = (p1, p2: Integer) => (p1 + p2);
+  set sub = (p1, p2: Integer) => (p1 - p2);
 
 ** define local variables
 process
@@ -246,11 +246,11 @@ _not_valid_
 <pre><code class="language-eve">
 ** define global system states
 global
-  set $s := "test"
+  set $s = "test" :String;
 
   ** two integers
-  set $a := 0;
-  set $b := 0;
+  set $a :Integer;
+  set $b :Integer;
 
   ** one Double variable
   set $d = 0.5 :Double;
@@ -275,7 +275,7 @@ global
 <pre><code class="language-eve">
 # multiple variables
 process
-  new a = b = 0 :Integer;
+  new a = b = 1 :Integer;
   new x = y = z = 0.5 :Double;
   ...
 return;
@@ -408,8 +408,8 @@ return;
 <pre><code class="language-eve">driver assign_demo:
 process
   ** initialization statements
-  new a = 2 :Integer;
-  new b :Double;
+  new a :=  2;
+  new b := .0;
 
   ** execute expression
   let b := a + 0.5;
@@ -676,15 +676,15 @@ return;</code></pre>
 <tbody>
 <tr>
 <td>new</td>
-<td>Create new local variable or attribute</td>
+<td>Create local variable or attribute</td>
 </tr>
 <tr>
 <td>set</td>
-<td>Create new global or static variable or property</td>
+<td>Create global variable or property</td>
 </tr>
 <tr>
 <td>let</td>
-<td>Modify existing variables or attributes</td>
+<td>Alter existing variable or attribute</td>
 </tr>
 <tr>
 </tbody>
