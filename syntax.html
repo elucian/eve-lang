@@ -34,7 +34,7 @@
 
 <h1>Eve Syntax</h1>
 
-<div class="alert alert-secondary shadow-sm">Eve is an multi-paradigm language inspired from Ada, Java and Python. Eve is using familiar keywords and intuitive symbols for a logic learning experience. We design Eve to be practical and comprehensible.</div>
+<div class="alert alert-secondary shadow-sm">Eve syntax is inspired from many other languages. We use short English keywords without abbreviation. We get inspired from many other languages: Ada, Ruby, Fortran & Python. Eve is not a curly bracket language. We hope you will enjoy learning it.</div>
 
 <h4>Page bookmarks</h4>
 
@@ -57,7 +57,7 @@
 
 <h2>Hello World</h2>
 
-</p>For start let's honor a tradition: We should print "Hello world!" to the console using EVE. Next is a simple program that ca write a message on the console. Eve will be modular so we need to import the console library before we can print anything.</p>
+</p>For start let's honor a tradition: We should print "Hello world!" to the console using EVE. Next is a simple program that ca write a message on the console.</p>
 
 <h4>Example:</h4>
 
@@ -72,7 +72,7 @@ return;
 
 <h2><a id="elements">Syntax Elements</h2>
 
-<p>Next code fragment represents a very simple program written in Eve language. Let's identify the main syntactic elements and punctuation using this example:</p>
+<p>Next code fragment represents a very simple program written in Eve language. Let's identify the main syntactic elements and punctuation. This is how we will present eve, using examples of code and fragments.</p>
 
 <h4>Example:</h4>
 
@@ -96,8 +96,8 @@ process
   let v2 := sub(5, 3);
 
   ** print the result
-  print "result:", v1; -- 9
-  print "result:", v2; -- 2
+  print ("result:", v1); -- 9
+  print ("result:", v2); -- 2
 return;
 </code></pre>
 
@@ -105,7 +105,7 @@ return;
 
 <p>I describe the syntax using some conventions. The code snippets you are going to see are not all real executable code. Some are just fragments of code, syntax "design patterns" or "pseudo-code". You will get it after a while.</p>
 
-<p>When the snippets is a "pattern" then we use square brackets like [] for optional parts. Sometimes we use 3 dots "..." for a sequence that is missing. Sometimes [x] represents real code and is mandatory, depending on the context. Read the "example" snippets to understend better the syntax.</p>
+<p>When the snippets is a "pattern" then we use square brackets like [...] for optional parts. Sometimes we use 3 dots "..." for a sequence that is missing. Sometimes [x] represents real code and is mandatory, depending on the context. Read the "example" snippets to understend better the syntax.</p>
 
 <ul>
 <li>Eve is using infix expressions like Java and other popular languages,</li>
@@ -200,7 +200,7 @@ _not_valid_
 
 <h3>System Variables</h3>
 
-<p>System variables start with sigil: "$", that is making a "system state". System states are public, shared in a process. A sigil is part of the identifier.</p>
+<p>System variables start with sigil: "$", that is making a "system state". System states are static and public, shared in a process. A sigil is part of the identifier.</p>
 
 <table class="table table-bordered">
 <thead>
@@ -260,7 +260,7 @@ global
 
 <h4>Initial Value</h4>
 
-<p>The initial value can be establish using the initializer "=" (single equal). This operator can use only data literals but no expressions. It is not able to execute the right operator. That is, the initial value can be a constant literal.</p>
+<p>The initial value can be establish using the initializer "=" (single equal). This operator can use only data literals but no expressions. It is not able to execute the right operator. That is, the initial value can be a constant literal or an expression but the expression is not evaluated.</p>
 
 <h4>Zero Values</h4>
 
@@ -323,24 +323,25 @@ return;
 <li>print will add new line by default,</li>
 <li>print will separate different values using one space,</li>
 <li>write will output to console and do not add new line,</li>
-<li>write also separate values by using one space,</li>
-<li>print is used to flush the buffer, after several write,</li>
+<li>write do not separate values by using one space,</li>
+<li>print is used to flush the buffer, after several writes,</li>
 </ul>
 
 <h3>Assign Expression</h3>
 
-<p>To assign result of an expression to a variable you can use assign operator: ":=". This operator has a strange behavior that you must understand to avoid unintended side-effects. When a single variable is used as an expression, the operator transfer a value "by sharing" a reference, so it does not "copy" the value but the reference to that value.</p>
+<p>To assign result of an expression to a variable you can use assign operator: ":=". This operator has a strange behavior that you must understand to avoid unintended side-effects. When a boxed variable is used as an expression, the operator transfer a value "by sharing" a reference, so it does not "copy" the value but the reference to that value. When the type is native, the value is transfered and not the reference.</p>
 
 <h4>Assign: by reference</h4>
 
 <pre><code class="language-eve">
 #expressions pseudo-code
-process
+  ...
   new identifier1 := literal;         -- constant literal
   new identifier2 := expression;      -- execute expression
   new identifier3 := function_name(); -- function call
+  new identifier4 := variable;        -- borrow 
+  new identifier5 := native_var;      -- copy value
   ...
-return;
 </code></pre>
 
 <h4>Assign: by value:</h4>
@@ -354,11 +355,11 @@ return;
   expect object is not original;
 </code></pre>
 
-<p><b>Note: </b>Native types are exceptions. For native type, the operator "is" do not work at all. Attempting to use "is" or "is not" with a native type will result in error. Actually clone operator works only with Objects.</p> 
+<p><b>Note: </b>Native types are exceptions. For native type, the operator "is" do not work at all. Attempting to use "is" or "is not" with a native type will always return false even if the values are equal.</p> 
 
 <h3>Ternary expression</h3>
 
-<p>A ternary operator is the "if" keyword. This keyword has actually two roles in EVE. It can be used to create a conditional statement or an expression. It can be used to return a value or other depending on one or several logical expressions. In other languages we use ternary operator "?" and ":" but in Eve "?" is used for something else.</p>
+<p>The ternary operator in Eve is the "if" keyword. This keyword has actually two roles in EVE. It can be used to create a conditional statement or an expression. It can be used to return a value or other depending on one or several logical expressions. In other languages we use ternary operator "?" and ":" but in Eve these two symbols are used for more important other purposes.</p>
 
 <h4>Syntax:</h4>
 
@@ -369,8 +370,8 @@ process
 
 ** alternative style using multiple lines of code:
   new variable2 := (value1 if condition1 else
-                  value2 if condition2 else
-                  value3);
+                    value2 if condition2 else
+                    value3);
   ...
 return;
 </code></pre>
@@ -390,7 +391,8 @@ return;
 </code></pre>
 
 <h2><a id="statements"></a>Statements</h2>
-<p>One statement can be declarative or imperative.</p>
+<p>One statement can be declarative or imperative. We use both but mostly declarative statements. Thoug many times the statements are imperative. I guess Eve is hybrid then.</p>
+
 <ul>
 <li>A statement is usually a single line of code,</li>
 <li>A statement can extend on several lines and finalize with ";"</li>
@@ -433,10 +435,10 @@ return;
 # multiple line demo
 process
   ** multi-row expression
-  new var := 1 +
-             2 +
-            +3 + 4
-            +5;
+  new var := 1
+            +2
+            +3 + 4 +
+             5 + 6;
 
   ** multi-row literal
   new map := {
@@ -448,7 +450,7 @@ return;</code></pre>
 
 <h2><a id="keywords"></a>Reserved keywords</h2>
 
-<p>Computer was invented in England during WW2 so, we prefer English words even though a computer language could be created using keywords from other spoken languages. Eve is using about 100 reserved keywords.</p>
+<p>Computer was invented in England during WW2, so we prefer English keywords, even though a computer language could be created using keywords from other spoken languages. Eve is using about 100 reserved keywords.</p>
 
 <table class="table table-bordered table-dark table-hover table-sm shadow">
 <tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze</td></tr>
@@ -664,7 +666,7 @@ return;</code></pre>
 
 <h3>Assign keywords</h3>
 
-<p>For any kind of assignment or modification you must us a specific keyword. Eve is imperative, so you must dictate an action. This is why we use keywords like: {set, new, let} to assign values to variables.</p>
+<p>For any kind of assignment or modification you must us a specific keyword. This is why we use keywords like: {set, new, let}. User must read what's going on and will understand much better the code by using keywords.</p>
 
 <table class="table table-bordered table-striped">
 <thead>
@@ -767,7 +769,7 @@ return;</code></pre>
 </table>
 
 <h2><a id = "delimiters"/>Delimiters</h2>
-<p>In the syntax description "..." represent content and "_,_,_," represents a sequence of elements. In descriptions vertical bar "|" represents second alternative. Some operators can have multiple purposes depending on the context and data types.</p>
+<p>In the syntax description "..." represent content and "_,_,_," represents a sequence of elements. "_" represent one of the elements. In descriptions vertical bar "|" represents second alternative. Some operators can have multiple purposes depending on the context and data types.</p>
 
 <h3>Comments</h3>
 

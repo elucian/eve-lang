@@ -183,7 +183,9 @@ return;
 
 <h3>System variables</h3>
 
-<p><em>Shared states </em>use prefix "$". These are called system variables. Can be loaded from a configuration file (*.cfg). Eve modules and drivers cana define, initialize or reset values for shared states. Shared states can be defined in first region after ":", with keyword indentation. No need to use <em>global</em> keyword for first region of globals.</p>
+<p><em>Shared states </em>use prefix "$". These are called system variables. Can be loaded from a configuration file (*.cfg). Eve modules and drivers cana define, initialize or reset values for shared states.</p>
+
+<p><em>Shared states </em> can be defined in the first region after ":", after indentation. No need to use <em>global</em> keyword for this region. You need to use <em>global</em> if you declare some globals later before the process or init region.</p>
 
 <h4>Note:</h4>
 <ul>
@@ -230,11 +232,11 @@ global
 <li>System constants are capitalized and also begin with "$";</li>
 </ul>
 
-<h3>Private states</h3>
+<h3>Global states</h3>
 
-<p>Private states are static variable defined in&nbsp;<em>global scope</em>&nbsp;. You can access private states in functions and methods without qualifier.</p>
+<p>Global states are static variable defined in&nbsp;<em>global scope</em>&nbsp;. You can access clobal states in functions and methods without qualifier.</p>
 
-<p>Private states cam be constant or variables. Constats use capital letters while variables are using lowercase letters. First letter is important, other letters can be numbers, lowercase or uppdercase letters or undrscore.</p>
+<p>Global states can be constant or variables. Constats use capital letters while variables are using lowercase letters. First letter is important, other letters can be numbers, lowercase or uppdercase letters or undrscore.</p>
 
 
 <h4>Example</h4>
@@ -258,11 +260,11 @@ return;
 
 <h4>Notes:</h4>
 <ul>
-<li>All states must be created using keyword "set" </li>
-<li>All global states are bound to the current scope </li>
-<li>Variables/constants are using operator "=" for initialization,</li>
+<li>All global states must be created using keyword "set", </li>
+<li>All global states are bound to the current scope, </li>
+<li>We are using operator "=" for initialization,</li>
 <li>Constants are by convention using uppercase letters,</li>
-<li>In the global regions you can not use type inference,<li>
+<li>In the global regions you can not use type inference,</li>
 </ul>
 
 <h3>Import region</h3>
@@ -443,10 +445,10 @@ return;
 <p>An Eve module begins with "module" keyword. Module name is the same as the last folder in a library path. A module can have an initialization region. This is executed when the module is imported for the first time.</p>
 
 <pre><code class="language-eve">
-+----------------------------------------
-module name is the folder name so that
-one module can have more then one script.    
-----------------------------------------+
++-----------------------------------------
+module name is the folder name, so that
+one module can have more then one scripts.    
+-----------------------------------------+
 module module_name:
 
 ** shared states

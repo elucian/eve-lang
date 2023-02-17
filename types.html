@@ -916,15 +916,14 @@ driver test_nulable:
 
 class Number = { Integer | Double | Null } &lt;: Variant;
 
-process
-  ** use nullable variant
+** use nullable variant
+global
   set x: Number;
-
+process
   let x = 10;    -- x is Integer
   let x = 45.5;  -- x is Double
   let x = Null;  -- x is Null
-
-  expect x is null;
+  expect x is Null;
 return;
 </code></pre>
 
