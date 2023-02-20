@@ -46,7 +46,12 @@ A function is a relation between input and output values. A function makes a com
 <li><a href="#declaration">Function declaration</a></li>
 <li><a href="#closures">Closure functions</a></li>
 <li><a href="#routines">Routines</a></li>
+<li><a href="#side-effects">Side effects</a></li>
 <li><a href="#coroutines">Coroutines</a></li>
+<ul>
+<li><a href="#shoulder-thread">Shoulder-thread</a></li>
+<li><a href="#multi-threading">Multi-threading</a></li>
+</ul>
 <li><a href="#lambdas">Lambda expressions</a></li>
 </ul>
 <hr>
@@ -206,6 +211,42 @@ return;
 
 <p><b>Node: </b>Asynchronous call is executed with keyword "call". But a routine need to yield otherwise this is the only method to execute the routine. The routine is executed in same thread as the main thread and is part of the parent process.</p>
 
+<h2><a id="side-effects"></a>Side Effects</h2>
+
+<p>A process can use states. When a state is changed by a routine or method this is called side-effect. This may be good but potential unsafe. Some side effects may be harder to debug.</p>
+
+<p>these are side effects...</p>
+
+<ul>
+  <li>modify a shared variable or state;</li>
+  <li>open and write into an external file;</li>
+  <li>print a message or accept input from console;</li>
+  <li>upload something on internet or network;</li>
+</ul>
+
+<h4>Examples</h4>
+
+<p>Next routine: "add_numbers" has side effects:</p>
+<pre><code class="language-eve">
+driver side_effect:
+  set test   :Integer;
+  set p1, p2 :Integer;
+
+** subroutine with side effects
+routine add_numbers():
+  let test := p1 + p2; -- first side-effect
+  print test;          -- second side-effect
+return;
+
+** define main process
+process
+  let p1 := 10;      
+  let p2 := 20;     
+  call add_numbers;   --  simpel subroutine call
+  expect (result == 30);
+return;
+</code></pre>
+
 <h2><a id="coroutines"><a>Coroutines</a></h2>
 
 <p>A coroutine is a subprogram that has a name and can start a secondary thread. Coroutines can be suspended using <em>"yield"</em> keyword, and later wake-up with a signal and the thread continue with the next statement. Also the main thread can <em>yield</em> for a coroutine.</p>
@@ -217,7 +258,7 @@ return;
   <p>Synchronous vs Asynchronous</p>
 </div>
 
-<h3>Shoulder Thread</h3>
+<h3><a id="shoulder-thread"></a>Shoulder Thread</h3>
 
 <p>In next example we try to demonstrate a thread that can generate a a bunch of numbers every time the main thred is yielding for it. When the buffer is full, you can process the batch and then yield for a new.</p>
 
@@ -230,8 +271,8 @@ routine generator(cap:Integer, @result:()Float):
   loop
     for i in (1..100) loop
       let result += (0..1).random();
-      yield;
     repeat;
+    yield; -- continue the main thread    
     let count += 1;
   repeat if count < cap;
 return;
@@ -247,14 +288,14 @@ process
        let total += x; 
     repeat
     ** read the next batch
-    yield generator;
+    yield generator; -- resume generator
   repeat;
 return;
 </code></pre>
 
-<p><b>Time-out:</b> Is easy to create a wrong shoulder thread runs forever. If a process takes too much time you can have a time-out. If one process time-out, the entire application crash. You can set $timeout system variable to control this time.</p>
+<p><b>Time-out:</b> Is easy to create a wrong shoulder thread that can runs forever. If a process takes too much time you can have a time-out. If one process time-out, the entire application crash. You can set $timeout system variable to control this time.</p>
 
-<h3>Parallel Threads</h3>
+<h3><a id="multi-threading"></a>Multi Threading</h3>
 
 <p>This design pattern enable you do create two coroutines that wait for each other. It is common practice to use this pattern to create a multi-thread applications. The threads communicate using one or more channels.</p>
 
@@ -342,14 +383,14 @@ driver lam_sig
 class BinEx = (p1, p2 :Integer):Integer <: Lambda;
 
 ** Use lambda signature as parameter type
-function useLambda(test :BinEx):
+routine useLambda(test :BinEx):
    print test(); -- execute callback
 return;
 
 ** Execute a process with lambda argument
 process
    ** use anonymous lambda argument
-   useLambda((x, y) => (x + y));
+   call useLambda((x, y) => (x + y));
 return;
 </code></pre>
 

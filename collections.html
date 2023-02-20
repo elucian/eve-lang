@@ -130,28 +130,28 @@ return;
 <h4>Examples:</h4>
 <p>Literals can be used for initialization of variables:</p>
 <pre><code class="language-eve"># initialized list with type inference
-    new c_list := ('a', 'b', 'c');
-    new n_list := (1, 2, 3);
+  new c_list := ('a', 'b', 'c');
+  new n_list := (1, 2, 3);
 </code></pre>
 
 <p>Literals can be used in assign expressions:</p>
 <pre><code class="language-eve"># Defer initialization
 driver begin_initial:
-    ** define empty list
-    set c_list :List;
+  ** define empty list
+  set c_list :List;
 process
-    ** initialize the list with integers
-    let c_list := (1,2,3);
+  ** initialize the list with integers
+  let c_list := (1,2,3);
 return;
 </code></pre>
 
 <h2><a id="array"></a>Array</h2>
 
-<p>An array is a collection of elements ordered by one or more index numbers. Eve count elements in range (1..n), where n is the number of elements.</p>
+<p>An array is a collection of elements ordered by one or more index numbers. Eve count elements in range (1..n), where n is the number of elements. Forst element is array[1]. We count starting from 1 while other languages start form 0.</p>
 
-<h4>Syntax:</h4>
+<h4>Example:</h4>
 
-<p>Eve define Arrays using notation: [c]Type, where [c] is the capacity and Type is the type of elements. Arrays are automatically initialized. However, if the array contains composite types all elements will have default zero value.</p>
+<p>Eve define Arrays using notation: [c]Type, where [c] is the capacity and Type is the type of elements. Arrays are automatically initialized. However, all elements will have default zero values or Null.</p>
 
 <pre><code class="language-eve">** diverse array variables
 driver test_array:
@@ -159,23 +159,23 @@ driver test_array:
   set x = y = z = 2 :Natural
 
 ** define Array sub-types
-class AType = [ ]TypeName <: Array;
-class MType = [,]TypeName <: Array;
+class AType = []Integer <: Array;
+
+** define a global array with user define type
+global
+  set array = [1,2,3,4,5,6,7,8,9,10]: AType;
 
 process
-  new array_name1: []Type;      -- Null array
-  new array_name3: [n]Type;     -- n = number of elements
-  new array_name4: [n,m]Type;   -- 2d matrix, capacity c = n * m
-  new array_name4: [x,y,z]Type; -- 3d matrix, capacity c = x * y * z
-
-  ** use previous defined sub-type
-  new array_name5 := [n]AType;
-  new array_name6 := [n,m]AType;
+  ** define local arrays of various capacities
+  new array_name1: [10]Double;  -- Array of 10 large numbers
+  new array_name3: [2^8]Symbol; -- Array of 255 Symbols
+  new array_name4: [n,m]Type;   -- 2d matrix, capacity: 6
+  new array_name4: [x,y,z]Type; -- 3d matrix, capacity: 8
 return;
 </code></pre>
 
 
-<h4>Example:</h4>
+<h4>Inference:</h4>
 
 <p>In next example we declare an array and use index "i" to access each element of the array by position. Later we will learn smarter ways to initialize an arrays and access its elements by using a visitor pattern.</p>
 
@@ -186,7 +186,7 @@ return;
 
 <hr>
 
-<p>Lets implement previous array: numbers[] and print its elements using a cycle. For initialization we use an explicit array literal that contains all the elements.</p>
+<p>Lets implement previous array: numbers[] and print its elements using a cycle. For initialization we use type inference with symbol ":=". Array literal contains all the elements.</p>
 
 <pre><code class="language-eve">
 # define single dimension array
@@ -196,8 +196,8 @@ process demo_numbers:
 ** access .numbers elements one by one
   write "numbers = [";
   cycle: for i in (1..10) do
-      write numbers[i];
-      write ',' if i &lt; 10;
+    write numbers[i];
+    write ',' if i &lt; 10;
   repeat;
   write "]";
   print; -- flush the buffer
@@ -222,15 +222,15 @@ numbers = [0,1,2,3,4,5,6,7,8,9]
 <pre><code class="language-eve">
 # How to initialize all elements
 process
-    new zum: [10]Integer; 
-    ** explicit initialization using single value
-    let zum[*]  := 0;
-    expect zoom = [0,0,0,0,0,0,0,0,0,0]
+  new zum: [10]Integer; 
+  ** explicit initialization using single value
+  let zum[*]  := 0;
+  expect zoom = [0,0,0,0,0,0,0,0,0,0]
 
-    ** modify two special elements:
-    let zum[0] := 1;
-    let zum[#] := 10;
-    print zum; -- expect [1,0,0,0,0,0,0,0,0,10]
+  ** modify two special elements:
+  let zum[0] := 1;
+  let zum[#] := 10;
+  print zum; -- expect [1,0,0,0,0,0,0,0,0,10]
 return;
 </code></pre>
 
@@ -239,20 +239,20 @@ return;
 <pre><code class="language-eve">
 ** array without capacity
 process
-    new vec :[]Symbol;
-    new nec :[]Integer;
+  new vec :[?]Symbol;
+  new nec :[?]Integer;
 
-    ** arrays are empty
-    print vec = []; -- True
-    print nec = []; -- True
+  ** arrays are empty
+  print vec == []; -- True
+  print nec == []; -- True
 
-    ** extend symbol array;
-    apply vec.extend(10);
-    print vec; -- expect ['','','','','','','','','','']
-   
-    ** extend numeric array;
-    apply nec.extend(10);
-    print nec; -- expect [0,0,0,0,0,0,0,0,0,0];
+  ** extend symbol array;
+  apply vec.extend(10);
+  print vec; -- expect ['','','','','','','','','','']
+ 
+  ** extend numeric array;
+  apply nec.extend(10);
+  print nec; -- expect [0,0,0,0,0,0,0,0,0,0];
 return;
 </code></pre>
 
@@ -266,7 +266,7 @@ return;
 </div>
 
 <h4>Example:</h4>
-<p>In next example we demonstrate a curious notation for matrix. You have maybe not seen this before in any other language because is ridiculous to parse. But from an esthetic point of view we think this is the way a matrix literal should look like:</p>
+<p>In next example we demonstrate a curious notation for matrix output. You have maybe not seen this before. But from an esthetic point of view we think this is the way a matrix literal should look like.</p>
 
 <pre><code class="language-eve"># define a subtype of Array
 driver test_matrix;
@@ -277,9 +277,18 @@ process
   new mat: Matrix; -- define matrix variable
 
   ** modify matrix using ":=" operator
-  let mat := [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]
-  print mat[1,1]; -- 1  = first element
-  print mat[4,4]; -- 16 = last element
+  let mat :=[
+     [1,  2, 3, 4]
+    ,[5,  6, 7, 8]
+    ,[9, 10,11,12]
+    ,[13,14,15,16]
+  ];
+
+  expect mat[1,1]; -- 1  = first element
+  expect mat[2,1]; -- 5  = first element in second row
+  expect mat[3,#]; -- 12 = last element in third row
+  expect mat[#,1]; -- 13 = first element last row  
+  expect mat[#,#]; -- 16 = last element
 
   ** nice output using array print method
   apply mat.print;
@@ -289,10 +298,10 @@ return;
 <h4>Expected output:</h4>
 
 <pre class="language-output fixes">
-⎡ 1,  2 , 3,  4 ⎤
-⎢ 5,  6 , 7,  8 ⎥
-⎢ 9, 10 ,11, 12 ⎥
-⎣13, 14 ,15, 16 ⎦
+⎡ 1,  2 , 3,  4⎤
+⎢ 5,  6 , 7,  8⎥
+⎢ 9, 10 ,11, 12⎥
+⎣13, 14 ,15, 16⎦
 </pre>
 
 <h4>Internal Order</h4>
@@ -321,6 +330,7 @@ return;
 ⎣ 7  8  9 ⎦
 </code></pre>
 
+<p><b>Note: </b>The capacity of an Array is part of data type. An array of fixed size can not be extended without data movement. When you define an array with variable capacity using [?], you do not reserve any memory for it'a elements. The object is created but elements will be created later.</p>
 
 <h2><a id="dataset"/>DataSet</h2>
 
@@ -341,7 +351,6 @@ global
   ** Define DataSet with element type
   set t_name : {}Integer;
 </code></pre>
-
 
 <h4>DataSet restrictions</h4>
 <ul>
@@ -553,7 +562,7 @@ process
 
 <h3><a id="string-mutability"></a>String mutability</h3>
 
-<p>In Eve Strings are immutable. If you use ":=" the string object is replaced. You can concatenate strings and you can use string interpolation but every time you do a new string is created.</p>
+<p>In Eve Strings are immutable. If you use ":=" the string object is replaced. You can concatenate strings and you can use string interpolation but every time you do, a new string is created.</p>
 
 <h4>Example:</h4>
 
@@ -594,8 +603,8 @@ return;
 <p><b>Note:</b></p>
 <ul>
 <li>You can create garbage in Eve if you loose references;</li>
-<li>Provision for large capacity strings is not recommended;</li>
-<li>You can create a collection of Symbols to split a string;</li>
+<li>You can create a collection of Symbols to split() a string;</li>
+<li>You can join() elements of a collection to create a string;</li>
 </ul>
 
 <h3><a id="string-comparison"></a>String comparison</h3>
@@ -641,11 +650,13 @@ return;
 </code></pre>
 
 
-<h3>Unicode</h3>
+<h3>UCS Font</h3>
 
-<p>The&nbsp;<em>Unicode</em>&nbsp;is a standard for representation of writing for all human languages. An Unicode string is a set of&nbsp;<em>code points</em>&nbsp;using symbols from universal character set (UCS). Unicode is more difficult to represent then ASCII. There are many encoding techniques available. Java uses UTF-16. We will use UTF-8 to be more efficient.</p>
+<p>The string is a collection of&nbsp;<em>code points</em>&nbsp; using symbols from universal character set (UCS). To handle code source that contain Unicode symbols you must select a proper programming font. We recommand: Dejavu Sans Mono.</p>
 
 <p>See also:&nbsp;<a href="https://en.wikipedia.org/wiki/Universal_Coded_Character_Set" rel="nofollow">wikipedia ucs</a>,&nbsp;<a href="https://en.wikipedia.org/wiki/List_of_Unicode_characters#Character_reference_overview" rel="nofollow">unicode characters</a></p>
+
+<p>HTML standard is using special escape codes for each symbol. Is not the scope of this document to explain this codification. In example below we show you some Unicode symbols.</p>
 
 <h4>Example:</h4>
 <pre><code class="language-eve"># text type has unicode support
@@ -682,7 +693,7 @@ process
 return;
 </code></pre>
 
-<p><b>Note: </b>Intresting, all hex number (0x00..0xFF) can be stores as a Symbol. Notice this is 4 times more that necesary. We know these values can be oncoded in a single Byte.</p>
+<p><b>Note: </b>Intresting, all hex number (0x00..0xFF) can be stored as Symbol. Notice this is 4 times more that necesary. We know these values can be encoded in a single Byte.</p>
 
 <h2><a id="exceptions"></a>Exceptions</h2>
 

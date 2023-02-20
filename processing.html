@@ -41,13 +41,16 @@
 <hr>
 <ul>
 <li><a href="#main-process">Main process</a></li>
-<li><a href="#side-effects">Side effects</a></li>
 <li><a href="#random-method">Random method</a></li>
+<li><a href="#array-slicing">Array slicing</a></li>
 <li><a href="#list-operations">List operations</a></li>
 <li><a href="#collection-iteration">Collection iteration</a></li>
 <li><a href="#scanning-items">Scanning items</a></li>
 <li><a href="#using-hash-map">Using HashMap</a></li>
+<li><a href="#concatenation">String concatenation</a></li>
 <li><a href="#text-literals">Text literals</a></li>
+<li><a href="#regex">Regular expressions</a></li>
+<li><a href="#string-functions">String functions</a></li>
 </ul>
 <hr>
 
@@ -137,7 +140,7 @@ return;
 <li>You can't define classes, or functions in processes;</li>
 </ul>
 
-<h4>Process interruption</h4>
+<h3>Process interruption</h3>
 
 <p>Interruption keywords (exit, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the <em>abort</em> or <em>raise</em> will trigger the finalization region.</p>
 
@@ -153,7 +156,9 @@ apply process_name (value, *list_args);         -- use spreading operator
 apply process_name (param:value, *map_args);    -- mix names with hashmap
 </code></pre>
 
-<p><b>Routine termination</b>&nbsp;A process end with keyword return; When process is terminated, program execution will continue with the next statement after the call. Keyword <em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em> can terminate a process early.</p>
+<h3>End of process:</h3>
+
+<p>A process end with keyword return; When process is terminated, program execution will continue with the next statement. Keywords {<em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em>} can terminate a process early.</p>
 
 <h4>Example:</h4>
 
@@ -177,7 +182,7 @@ process
 return;
 </code></pre>
 
-<h2>Multi-Process</h2>
+<h3>Multi-Process</h3>
 
 <p>You can use processes to run in parallel using multiple aspects. Processes ca run on multi-core processors one for each core. Not all processes have same duration. </p>
 
@@ -187,43 +192,6 @@ return;
        width="540" class="img-fluid protect rounded shadow border" >
   <p>Parallel System</p>
 </div>
-
-
-<h2><a id="side-effect"></a>Side Effects</h2>
-
-<p>A process can use states. When a state is changed by a routine or method this is called side-effect. This may be good but potential unsafe. Some side effects may be harder to debug.</p>
-
-<p>these are side effects...</p>
-
-<ul>
-  <li>modify a shared variable or state;</li>
-  <li>open and write into an external file;</li>
-  <li>print a message or accept input from console;</li>
-  <li>upload something on internet or network;</li>
-</ul>
-
-<h4>Examples</h4>
-
-<p>Next routine: "add_numbers" has side effects:</p>
-<pre><code class="language-eve">
-driver side_effect:
-  set test   :Integer;
-  set p1, p2 :Integer;
-
-** subroutine with side effects
-routine add_numbers():
-  let test := p1 + p2; -- first side-effect
-  print test;          -- second side-effect
-return;
-
-** define main process
-process
-  let p1 := 10;      
-  let p2 := 20;     
-  call add_numbers;   --  simpel subroutine call
-  expect (result == 30);
-return;
-</code></pre>
 
 <h2><a id="random-method"></a>Random method</h2>
 
@@ -251,11 +219,143 @@ return;
 
 <p><b>Note: </b>If you wander how is this possible, remember methods do not need paranthesis when there is a single parameter. So the argument can be a range. This is a single argument not two or three.</p>
 
+<h2><a id="array-builder"></a>Array builder</h2>
+
+<p>The array builder is a syntax feature that enable you to populate an array with data in a single statement. An array builder can be based on one or more ranges. Before you can populate the array it must be declared.</p>
+
+<h4>Syntax:</h4>
+
+<p>You can declare and initialize an array in the global area using the array builder. Array total capacity must match the number of elements created by the range. A function can be used to compute the values of all elements.</p>
+
+<pre><code class="language-eve">
+** declare a new vector
+   set array = [ f(x) | x in (min..max:ratio)]: [n]Type;
+
+** declare a new matrix
+   set matrix = [ f(x) | x in (min..max:ration)]: [n,m]Type;
+</code></pre>
+
+<h4>Example:</h4>
+
+<pre><code class="language-eve">
+driver test_matrix:
+  set array  :[4]Integer;
+  set matrix :[4,4]Integer;
+process
+** init a vector
+   let array := [ x | x in (1..10:3)];
+   expect array == [1,4,7,10];
+   print array;
+   print;
+
+** init a matrix
+   let matrix := [ x * y | x in (1..4) and y in (1..4)];
+   print matrix;
+return;
+</code></pre>
+
+<h4>output:</h4>
+
+<pre class="language-output fixes">
+[1, 4, 7, 10]
+
+⎡ 1, 2, 3, 4⎤
+⎢ 2, 4, 6, 8⎥
+⎢ 3, 6, 9,12⎥
+⎣ 4, 8,12,16⎦
+</pre>
+
+
+<h2><a id="array-slicing"></a>Array slicing</h2>
+
+<p>An array can be sliced using slice notation [n:m]. A slice is also an array and can be sliced. Slicing an array create a view over existing elements of an array. Before you can slice an array, it must be already initialized.</p>
+
+<h3>Named slices</h3>
+
+<p>In next example we use slicing notation to create two named slices. One is a <em>dynamic slice</em>, the other is a <em>static slice</em>. When you modify the dynamic slice, also the base array is modified. If you modify the <em>static slice</em>, the base array is unaffected.</p>
+
+<pre><code class="language-eve">
+driver test_slice:
+  set slice :[?]Symbol;
+process
+  new base: [20]Symbol;
+  let base := "this is a test array".split();
+
+  ** create a dynamic slice
+  let slice := base[11:14];
+
+  ** check slice content
+  expect slice[1] == 't';
+  expect slice[#] == 't';
+  expect slice == ['t','e','s','t']
+
+  ** join back an array to a string
+  print slice.join(); -- "test"
+
+  ** making a static slice;
+  new copy :: base[11:14];
+
+  ** alter two characters in slice
+  let slice[1] := 'b';
+  let slice[2] := 'u';
+
+  ** the copy is not modified
+  expect copy.join(); == "test"
+
+  ** base array is now modified;
+  print base.join(); -- "this is a bust array"
+return;
+</code></pre>
+
+<h3>Anonymous slices</h3>
+
+<p>You can use anonymous slice to modify an Array or to print a section of the array. You do not have to assign a variable to the slice. This is a shortcut, and is very useful for handling Array elements in bulk.</p>
+
+<pre><code class="language-eve">
+driver ano_slicing:
+process
+  new base :[10]Integer;
+
+  ** using bulk assignment
+  let base[1:5][*] := 0;
+  let base[6:#][*] := 2;
+
+  ** create a dynamic slice
+  expect base == [1,1,1,1,1,2,2,2,2,2];
+
+  ** print 2 elements from the middle
+  print base[5:6]; -- [1,2]
+return;
+</code></pre>
+
 <h2><a id="list-operations"></a>List operations</h2>
 
 <p>There are many things you can do with a list. You can add/remove elements at both ends. You can deconstruct a list and you can concatenate lists together. Most important features are implemented as built-in functions or special operators:</p>
 
-<h4>Append to list</h4>
+<h3>List builder</h3>
+
+<p>You can populate a list from a range using a function or expression. List builder are similar to Array builders. Also you can append in bulk new elements into an existing list.</p>
+
+<pre><code class="language-eve">
+#list builder demo
+driver list_builder:
+process
+  ** initialize list from range
+  new a := (a   | a in ('A'..'F')); 
+  print a;
+
+  ** initialize list from another list
+  new b := (x^2 | x in (1, 2, 3, 4)); 
+  print b;
+return;
+</code></pre>
+
+<pre class="language-output fixes">
+('A','B','C','D','E','F')
+(1, 4, 9, 16)
+</pre>
+
+<h3>Append to list</h3>
 
 <p>List is using operator +&gt; or &lt;+ to grow. This operator represent insert or append. You can insert an elemnt or many elements into a list at the beginning or you can add element or list of elements at the end but you can not insert elements in the middle of the list./p>
 
@@ -277,9 +377,9 @@ process
 return;
 </code></pre>
 
-<h4>Alter a list</h4>
+<h3>Alter a list</h3>
 
-<p>You can use "let" with operators { += -= }, to append or remove elements from beginning of lit. You can remove any element from a list using "-=". All elements having specified value will be remove. To remove one single element you must use operator &lt;-, or -&gt;</p>
+<p>You can use "let" with operators { += -= }, to append or remove elements from beginning of list. You can remove any element from a list using "-=". All elements having specified value will be remove. To remove one single element you must use operator &lt;-, or -&gt;</p>
 
 <pre><code class="language-eve">
 #altering a list
@@ -311,7 +411,7 @@ return;
 
 <p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue. Is developer responsability to append and remove correctly using one of the operators: {+=, -=} {:=, &lt;-, -&gt;}. </p>
 
-<p><b>Queue (FIFO)</b></p>
+<h3>Queue (FIFO)</h3>
 
 <p>FIFO = First in First Out</p>
 
@@ -341,7 +441,7 @@ process
 return;
 </code></pre>
 
-<p><b>Stack</b></p>
+<h3>Stack</h3>
 
 <p>LIFO = Last in Last Out</p>
 
@@ -368,7 +468,7 @@ process
 return;
 </code></pre>
 
-<h4>List methods</h4>
+<h3>List methods</h3>
 
 <p>A List is a class, so it has all required methods and properties to be used in algorithms and expressions. We do not yet forsee all methods bu maybe these would be useful</p>
 
@@ -446,6 +546,7 @@ return;
 </code></pre>
 
 <h2><a id="using-hash-map"></a>Using HashMap</h2>
+
 <p>Maps are sorted in memory by&nbsp;<em>key</em>&nbsp;for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this process.</p>
 
 <h3>Map Initialization</h3>
@@ -524,11 +625,11 @@ return;
 <p><b>set iteration</b>&nbsp;Map and Set are similar. We can visit all elements using&nbsp;<em>for</em>&nbsp;loop:</p>
 
 <h4>Example:</h4>
-<pre><code class="language-eve"># map iteration
+<pre><code class="language-eve">
+# HashMap iteration
 driver map_iteration:
-  set my_map := {'a':1,'b':2,'c':3};
-
 process
+  new my_map := {'a':1,'b':2,'c':3};
   cycle: 
     new key: Symbol;
     new value: Integer;
@@ -546,13 +647,52 @@ return;
 ('c':3)
 </pre>
 
-<h2><a id="string-concatenation" ></a>String: concatenation</h2>
-<p>Strings can be concatenated using:</p>
+<h3>Generate Elements</h3>
+
+<p>You can generate elements for a HashMap using a collection builder. This is similar to a List builder, except you generate pair of values instead of a single value. You can use a function to caclulate the value, or you can search values from another collection.</p>
+
+<h4>Example:</h4>
+
+<pre><code class="language-eve">
+# HashMap iteration
+driver map_generator:
+  set my_map = { (x + y):2^y | x in ('a'..'c') and y in (1..3)}: HashMap;
+process
+  cycle: 
+    new key  :String;
+    new value:Integer;
+  for (key: value) in my_map loop
+    ** print pairs (key:value)
+    print "(#s:#n)" ? (key, value);
+  repeat;
+return;
+</code></pre>
+
+<h4>Output:</h4>
+<pre class="output">
+('a1':2)
+('b1':2)
+('c1':2)
+('a2':4)
+('b2':4)
+('c2':4)
+('a3':8)
+('b3':8)
+('c3':8)
+</pre>
+
+<h2><a id="concatenation" ></a>String: concatenation</h2>
+<p>Strings can be concatenated using operators and modifiers:</p>
+
 <ul>
-<li>regular concatenation: "+"</li>
-<li>space trim & concatenation: "-"</li>
-<li>path concatenation: "/"</li>
+  <li>regular concatenation: "+"</li>
+  <li>space trim & concatenation: "-"</li>
+  <li>path concatenation: "/"</li>
+  <li>regular concatenation modifier: "+="</li>
+  <li>trim concatenation modifier: "-="</li>
+  <li>path concatenation modifier: "/="</li>
 </ul>
+
 <h4>Example:</h4>
 <pre><code class="language-eve">** example of string concatenation
 driver string_concat:
@@ -576,13 +716,31 @@ process
 return;
 </code></pre>
 
+<p><b>symbols & numbers</b></p>
+
+<p>You can concatenate a Symbol with a number and you get a new String. You must always put the string first in the expression. If you put the number first, it will not work.</p>
+
+<pre><code class="language-eve">
+# path concatenation
+process
+  ** implicit conversion
+  new s := 'a' + 1; 
+  expect s == "a1"; -- is a string
+
+  ** explicit conversion
+  new c := String(1) + 'a'; 
+  expect c == "1a"; -- that works
+return;
+</code></pre>
+
 <h3><a id="text-literals"></a>Text Literals</h3>
 
 <p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
 
 <p>Triple quoted string support inside double quotes and also single quote without escape. On double quoted strings you must use escape backslash \" for double quotes.</p>
 
-<pre><code class="language-eve"># declaration of a text literal
+<pre><code class="language-eve">
+# declaration of a text literal
 driver text_literal:
 
 process
@@ -603,15 +761,48 @@ because it is dressed in overalls
 and looks like work."
 </pre>
 
-<h2><a id="text-functions" ></a>String functions</h2>
+<p><b>Note:</b>&nbsp;In a text literal we do not have to escape the single quote symbols like this '&beta;'. However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like this: "this &laquo;quoted&raquo; string" by convention.</p>
+
+<h2><a id="regex"></a>Regular Expressions</h2>
+
+<p>Regular expressions are special string templates useful to search inside strings. We implement regular expressions a la carte except the delimitor \" must be escaped. Regular expressions are enclosed in double quotes like strings: "/regex/g". A regular expression always start with "/" and ends with "/flags".</p>
+
+<h4>Regex operators</h4>
+
+<p>Eve has support for two operators: "~" and "!~". These are logic operators. Represent "is like" respective "is not like". It require a string for the left operand and a regular expression for the right operand.</p>
+
+<pre><code class="language-eve">
+# compare regular expression
+process
+  ** search " is " in the string
+  new found := "this is like" ~ "/\sis\s/"; 
+  expect found; -- True
+
+  ** check if string start with "not"
+  new not_found := "this is not like" !~ "/^not/";
+  expect not_found; -- True 
+return;
+</code></pre>
+
+<p><b>Note:&nbsp;</b>Regular expressions are powerful but difficult to master. This is a language and like any other language has complex rules. You can create and test regular expressions using a tool. It is not in our scope to teach you regular expressions.</p>
+
+<h4>External Reference</h4>
+<p>You can learn and build regular expressions on this website: 
+<a href="https://regexr.com/" rel="nofollow noreferrer noopener" target="_blank">https://regexr.com/</a></p>
+
+<h2><a id="string-functions" ></a>String functions</h2>
+
+<p>Full inventory of functions will be design in package specification. We enumerate several functions we wish to have but is not our scope yet to enumerate all possible functions.</h4>
+
 <ul>
-<li>replace(target, cargo:String);</li>
-<li>find   (pattern:String);</li>
-<li>count  (pattern:String);</li>
-<li>length ();</li>
+  <li>String.split();</li> 
+  <li>String.length();</li>  
+  <li>String.find(pattern:Regex);</li>
+  <li>String.count(pattern:Regex);</li>
+  <li>String.replace(pattern:Regex, cargo:String);</li>
 </ul>
 
-<p><b>Note:</b>&nbsp;In a text literal we do not have to escape the single quote symbols '&alfa;'. However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like this: "this &laquo;quoted&raquo; string" by convention.</p>
+<p><b>Note. </b>These functions can be used with class qualifier "String" but also with data literals. For example: "test".split() is equivalend to String.split("test"). Just a trick you can use to simplify your code sometimes.</p>
 
 <!-- work in progress-->
 

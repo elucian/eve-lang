@@ -214,8 +214,10 @@ function apply_style(str) {
     str = str.replace(/\s\&\s/g,operator(" & "))
     str = str.replace(/\s\|\s/g,operator(" | "))
 
-    // stile single quoted symbols
+    // stile single quoted symbols 
+    // squote is a callback function
     str = str.replace(/\'.\'/g, squote)
+
     // create the new statement
     return str
 }
@@ -403,6 +405,7 @@ function operator(str) {
 function strings(str) {
     return "<span class=\"string\">"+ str + "</span>"
 }
+
 
 function constant(str) {
     return "<span class=\"constant\">"+ str + "</span>"
