@@ -4,7 +4,7 @@
 </a>
 </p>
 
-<p align="center"><i>Extract Validate Export<i/></p>
+<p align="center"><em>Extract Validate Export</em></p>
 
 <p>Eve is a domain specific scripting language for data processing and test automation. Eve is open source with Apache 2.0 license. We design the language and we create code examples in this repository. This language is a standard. It will have many interpreters and compilers implemented by diverse other organizations.</p>
 
