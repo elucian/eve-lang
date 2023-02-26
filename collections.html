@@ -156,7 +156,7 @@ return;
 <pre><code class="language-eve">** diverse array variables
 driver test_array:
   set n = 2, m = 3  :Natural;
-  set x = y = z = 2 :Natural
+  set x = y = z = 2 :Natural;
 
 ** define Array sub-types
 class AType = []Integer <: Array;
@@ -266,7 +266,7 @@ return;
 </div>
 
 <h4>Example:</h4>
-<p>In next example we demonstrate a curious notation for matrix output. You have maybe not seen this before. But from an esthetic point of view we think this is the way a matrix literal should look like.</p>
+<p>In next example we demonstrate a matrix literal. Eve has a default output for printing a matrix using columns. You can print a matrix on rows or columns using "print" statement.</p>
 
 <pre><code class="language-eve"># define a subtype of Array
 driver test_matrix;
@@ -298,15 +298,26 @@ return;
 <h4>Expected output:</h4>
 
 <pre class="language-output fixes">
-⎡ 1,  2 , 3,  4⎤
-⎢ 5,  6 , 7,  8⎥
-⎢ 9, 10 ,11, 12⎥
-⎣13, 14 ,15, 16⎦
+ 1  2  3  4
+ 5  6  7  8
+ 9 10 11 12
+13 14 15 16
 </pre>
 
-<h4>Internal Order</h4>
+<h3>Memory model</h3>
 
-<p>Memory is linear, so we fake a matrix. In reality elements are organized in <em>row-major</em> order. That means first row, then second row...last row. We can access the entire matrix like it would be a longer array. So next program can initialize a matrix in a normal cycle, not nested!</p>
+<p>In memory elements are organized linear, row by row. We say that Eve matrix are in <em>row major</em> order like C, in contrast to Fortran where <em>column major</em> order is used. It is important to use the right major order when you travers a 2d array.</p>
+
+<!-- a regular diagram -->
+<div class="text-center">
+  <img src="../images/row-major.svg" alt="row major order"
+       width="500" class="img-fluid protect rounded shadow border" >
+  <p>Row Major Order</p>
+</div>
+
+<h4>Example</h4>
+<p>Memory is linear, so we fake a matrix.  We can access the entire matrix with a single loop or nested loops. Next program can initialize a matrix in a flat cycle. The order of elements is automaticly established.</p>
+
 
 <pre><code class="language-eve">** initialize matrix elements
 process
@@ -319,18 +330,54 @@ process
     let mat[i] := i;
     let i += 1;
   repeat;
-  apply mat.print; -- nice output
+  print mat; -- nice output
 return;
 </code></pre>
 
 <h4>Output:</h4>
 <pre class="language-output">
-⎡ 1  2  3 ⎤
-⎢ 4  5  6 ⎥
-⎣ 7  8  9 ⎦
+ 1  2  3 
+ 4  5  6 
+ 7  8  9 
 </code></pre>
 
-<p><b>Note: </b>The capacity of an Array is part of data type. An array of fixed size can not be extended without data movement. When you define an array with variable capacity using [?], you do not reserve any memory for it'a elements. The object is created but elements will be created later.</p>
+<p><b>Note: </b>The capacity of an Array is part of data type. An array of fixed size. When you define an array with variable capacity using [?], you do not reserve any memory for its elements. This kind of Array is dynamic. It can be extended.</p>
+
+<h4>Example"</h4>
+
+<p>Nested loops can be used to access every element in the matrix. When you do this kind of loops, pay atention to order of indexes. In Eve you must use first index for outer loop and second index for inner loop. For large matrix this can improve performance. Dure to better cash management.</p>
+
+<!--two columns pattern-->
+<pre><code class="language-eve line-numbers"
+>driver matrix_demo:
+  set matrx :[?, ?]Integer;
+process
+  ** give value to all elements
+  matrix.extend(3,3);
+  cycle
+    new i, j :Integer;
+  for i in (1..3) loop
+    for j in (1..3) loop
+       matrx(i,j)=i*10+j
+    repeat;
+  repeat;
+  ** output matrix elements
+  print "#(3i4)", matrx -- 3 columns
+  print
+  print "#(9i4)", matrx -- 9 columns
+return;
+</code></pre>
+
+<h4>Output</h4>
+
+<!-- second column -->
+<pre class="output"><code>
+  11  12  13
+  21  22  23
+  31  32  33
+
+  11  21  31  12  22  32  13  23  33
+</code></pre>
 
 <h2><a id="dataset"/>DataSet</h2>
 
@@ -372,7 +419,8 @@ global
 <p><b>Note: </b>Any modifier "x=" can be used for altering individual elements. You can rever to all elements using "*" and modify them.</p>
 
 <h4>Example:</h4>
-<pre><code class="language-eve">#demo for using a set
+<pre><code class="language-eve">
+#demo for using a set
 driver set_demo:
 
 ** initialized DataSet of integers
