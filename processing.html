@@ -46,8 +46,9 @@
 <li><a href="#list-operations">List operations</a></li>
 <li><a href="#collection-iteration">Collection iteration</a></li>
 <li><a href="#scanning-items">Scanning items</a></li>
-<li><a href="#using-hash-map">Using HashMap</a></li>
-<li><a href="#concatenation">String concatenation</a></li>
+<li><a href="#using-dataSet">Using DataSet</a></li>
+<li><a href="#using-hashMap">Using HashMap</a></li>
+<li><a href="#using-strings">Using Strings</a></li>
 <li><a href="#text-literals">Text literals</a></li>
 <li><a href="#regex">Regular expressions</a></li>
 <li><a href="#string-functions">String functions</a></li>
@@ -257,12 +258,12 @@ return;
 <h4>output:</h4>
 
 <pre class="language-output fixes">
-[1, 4, 7, 10]
+ 1 4 7 10
 
-⎡ 1, 2, 3, 4⎤
-⎢ 2, 4, 6, 8⎥
-⎢ 3, 6, 9,12⎥
-⎣ 4, 8,12,16⎦
+ 1 2  3  4
+ 2 4  6  8
+ 3 6  9 12
+ 4 8 12 16
 </pre>
 
 
@@ -351,8 +352,8 @@ return;
 </code></pre>
 
 <pre class="language-output fixes">
-('A','B','C','D','E','F')
-(1, 4, 9, 16)
+'A' 'B' 'C' 'D' 'E' 'F'
+ 1 4 9 16
 </pre>
 
 <h3>Append to list</h3>
@@ -545,7 +546,76 @@ process
 return;
 </code></pre>
 
-<h2><a id="using-hash-map"></a>Using HashMap</h2>
+<h2><a id="using-dataSet"></a>Using DataSet</h2>
+
+<p>A DataSet is very useful for it's property to hold unique elements sorted. This enable deduplication of elements in a list by converting the list to a DataSet.</p>
+
+<pre><code class="language-eve">
+# convert a list to a dataset
+process
+  new list := (1,2,1,2,3,1,2,3,4);
+
+  ** using operator ":&gt;"
+  new set := list :&gt; DataSet;
+
+  ** check the new set
+  expect set == {1,2,3,4};
+  
+  ** using operator "+>"
+  new alt := list +> {};
+  expect alt == {1,2,3,4};
+return;
+</code></pre>
+
+<h3>Builder<h3>
+
+<p>You can create elements of a DataSet from a range using builder.</p>
+
+<pre><code class="language-eve">
+# demonstrate how to create a set from a range
+process
+  new set := {x^2 | x in (2..8:2)};
+
+  ** check the new set
+  expect set == {4,16,36,64};
+return;
+</code></pre>
+
+<h3>Difference</h3>
+
+<p>You can extract elements out of a DataSet using a list.</p>
+
+<pre><code class="language-eve">
+# Extract severa lelements;
+process
+  new test := {1,2,3,4};
+  new rest := test - (3,4);
+
+  ** check remaining elements
+  expect (1,2) in rest;
+  expect (3,4) not in rest;
+
+  ** use modifier -= 
+  let test -= (1,3)
+  expect test == {2,4};
+return;
+</code></pre>
+
+<h3>Intersection</h3>
+
+<p>You can intersect 2 lists but the result will be a DataSet.</p>
+
+<pre><code class="language-eve">
+# Create intersection using &amp;
+driver set_intersection_demo:
+  set test: DataSet; -- Null set
+process
+  let test := (1,2,3,4) &amp; (2,3,4,5);
+  expect test == {2,3,4};
+return;
+</code></pre>
+
+<h2><a id="using-hashMap"></a>Using HashMap</h2>
 
 <p>Maps are sorted in memory by&nbsp;<em>key</em>&nbsp;for faster search. It is more difficult to search by value because is not unique and not sorted. To search by value one must create a loop and verify every element. This is called full scan and is very slow so you should never use this process.</p>
 
@@ -681,7 +751,21 @@ return;
 ('c3':8)
 </pre>
 
-<h2><a id="concatenation" ></a>String: concatenation</h2>
+<h2><a id="using-strings"></a>Using strings:</h4>
+
+<p>In next examples we use type inference to create strings. The length of the string is the number of symbols. You can use operator "*" to initialize a long string with the same symbol or a pattern of symbols.</p>
+
+<pre><code class="language-eve">
+# string generators
+process
+  ** examples of empty strings
+  new short_string := "short string";-- most common form of literal
+  new long_line := '-' * 80;         -- a long line of 80 dashes
+  new dash_dot  := "-&middot;" * 40; -- a long line -&midot;-&midot;-&midot;
+</code></pre>
+
+
+<h3>String: concatenation</h3>
 <p>Strings can be concatenated using operators and modifiers:</p>
 
 <ul>
@@ -732,6 +816,28 @@ process
   expect c == "1a"; -- that works
 return;
 </code></pre>
+
+<h3>String: builders</h3>
+
+<p>You can convert a string to a list of symbols, and a collection into a string by using operator: :&gt; This trick is used to create a string using a builders.</p>
+
+<pre><code class="language-eve">
+# different ways to convert data into string
+process
+  ** Range conversion
+  new str1 := (0..9) :&gt; String; 
+  expect str1 == "0123456789"
+
+  ** DataSet conversion
+  new str2 := { a | a in ("A"..."F") } :&gt; String; 
+  expect str2 == "ABCDEF";
+
+  ** Join a collection
+  new str2 := { ("0x" + a) | a in ("A"..."F") }.join(","); 
+  expect str2 == "0xA,0xB,0xC,0xD,0xE,0xF";
+return;
+</code></pre>
+
 
 <h3><a id="text-literals"></a>Text Literals</h3>
 
