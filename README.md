@@ -8,9 +8,6 @@
 
 <p>Eve is a domain specific scripting language for data processing and test automation. Eve is open source with Apache 2.0 license. We design the language and we create code examples in this repository. This language is a standard. It will have many interpreters and compilers implemented by diverse other organizations.</p>
 
-<h2>Contribution:</h2>
-
-<p>You can contribute in 2 ways: First you can open discussions. Second, you can open and resolve work items. You signal an error and you assign yourself to solve it. Then you solve it and commit your code or make a PR.</p>
   
 <h2>Learning</h2>
 
@@ -20,6 +17,10 @@
 
 <p>Our next priority is to create a "conformity test". This require test automation for future compilers. Our job is to create the standard examples required for testing. We write test first (TDD). In the future will be probablu many interpreters and compilers that can be verified using these tests.</p>
   
+<h2>Contribution:</h2>
+
+<p>You can contribute in 2 ways: First you can open discussions. Second, you can open and resolve work items. You signal an error and you assign yourself to solve it. Then you solve it and commit your code or make a PR. If you have direct access on Eve repository you should create a developement branch. When a feature is ready, merge the code into main branch and signal on Discord. We will publish your changes.</p>
+
 -------------------------------------------------------------------
 <p align="center"> <a href=https://sagecode.net/eve/index.html>Eve User Manual</a>
 </p>
