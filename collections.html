@@ -195,7 +195,7 @@ process demo_numbers:
 
 ** access .numbers elements one by one
   write "numbers = [";
-  cycle: for i in (1..10) do
+  cycle: for i in (1..10) loop
     write numbers[i];
     write ',' if i &lt; 10;
   repeat;
@@ -315,7 +315,7 @@ process
   cycle: 
     new i   := 1;
     new x   := mat.length;
-  while (i &lt; x) do
+  while (i &lt; x) loop
     let mat[i] := i;
     let i += 1;
   repeat;
