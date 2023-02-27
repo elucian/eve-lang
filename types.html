@@ -196,7 +196,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 </tr>
 <tr>
 <td>Continuous</td>
-<td>Float, Double, Rational, Domain, Complex</td>
+<td>Float, Double, Rational, Complex</td>
 </tr>
 </tbody>
 </table>
@@ -403,8 +403,8 @@ return;
 <td>Discrete range of numbers equaly distanced (x..y:ratio)</td>
 </tr>
 <tr>
-<td>Domain</td>
-<td>Continuous domain delimited by loer and upper bound [x..y]</td>
+<td>Pair</td>
+<td>A pair is like a list but it has only two elements (k:v)</td>
 </tr>
 <tr>
 <td>String</td>
@@ -446,33 +446,45 @@ return;
 </table>
 
 <h3><a id="range"></a>Range</h3>
-<p>A range is a notation that can create a sub-set of integer numbers. Range is not expanded in memory and can be very large. It can be used as a generator of numbers.</p>
+
+<p>A range is a notation that can create a class or a collection of discrete elements. Range is not expanded in memory until is assigned to a variable.</p>
+
+<h4>Usecases:</h4>
+
+<p>Rances can be used as generators to populate a new collection or it can be used in logic evaluations or in loops. All these can be optimized by the compiler using leasy evaluation. The elements are generated as needed.</p>
 
 <h4>Syntax:</h4>
-<pre class="language-out">range ::= (min..max:ratio);</pre>
+
+<pre class="language-out">
+(min..max:ratio);
+[min..max:ratio];
+{min..max:ratio};
+</pre>
 
 <h4>Notes:</h4>
 <ul>
 <li>Limits are included by default,</li>
-<li>Ratio is integer & optional,</li>
-<li>Ratio can be negative,</li>
+<li>Ratio is defaul 1 and optional,</li>
+<li>Limiits can be inverted,</li>
 </ul>
 
 <h4>Example:</h4>
 
 <p>Numeric ranges:</p>
 
-<pre lass="no-line-numbers"><code class="language-eve">#numeric range demo
+<pre lass="no-line-numbers"><code class="language-eve">
+#numeric range demo
 driver numeric_range:
 
+** define a validation class
 class R5 = (0..5) <: Range;
 
 process
-  ** test range
+  ** test range limits
   expect 0 in R5;
   expect 5 in R5;
 
-  ** test limit
+  ** test limits with other ranges
   expect 4 in (1..8:2)
   expect 5 not in (-10..10:2)
 return;
@@ -480,50 +492,24 @@ return;
 
 <h4>Example:</h4>
 
-<p>Symbol ranges:</p>
+<p>Symbol range, specify Unicode symbols as limits.</p>
 <div>
-<pre class="line-numbers"><code class="language-eve"># using symbol ranges
+<pre class="line-numbers"><code class="language-eve">
+# using symbol ranges
 driver symbol_range:
 process
-  print ('0'..'5') -- {'0','1','2','3','4','5'}
+  ** elements of these ranges are written one by one
+  print ('0'..'5') -- ('0','1','2','3','4','5')
+  print ['a'..'f'} -- ['a','b','c','d','e','f']
+  print {'A'..'F'} -- {'A','B','C','D','E','F'}
 
-  ** following statements should pass
-  expect '0' in ('0'..'9');  -- will pass
-  expect 'X' in ('A'..'Z');  -- will pass
+  ** use range as validation domains
+  expect '0' in ('0'..'9');  -- range of digits
+  expect 'c' in ['a'..'z'];  -- range of symbols
+  expect 'X' in {'A'..'Z'};  -- range of symbols
 return;
 </code></pre>
 </div>
-
-
-<h3><a id="domain"/>Domain</h3>
-
-<p>Domains are similar to ranges. The numbers in a domain can have a decimal precision. So the domain can be continuous or discrete. The maximum precision is establish by a system variable $precision.</p>
-
-<h4>Syntax:</h4>
-<pre><code class="language-eve">domain ::= [min..max:ratio]
-</code></pre>
-
-<h4>Examples:</h4>
-<pre><code class="language-eve"># domain demo
-driver domain_demo:
-class small = [0..1:0.1] <: Domain;
-
-process
-  ** all domains include the limits
-  expect 0    in small;
-  expect 1    in small;
-
-  ** this domain include small nubers
-  expect 0.5  in small;
-  expect 0.1  in small;
-
-  ** this domein exclude extra small numbers
-  expect 0.01 not in small;
-  expect 1.25 not in small;  
-return;
-</code></pre>
-
-<p>Domain produce rational numbers. If ratio is not specified, the ration is equal to $precision. You can change the precision in configuration file. A domain is not expanded in memory and can be very large.</p>
 
 <h2><a id="data-coercion"></a>Data Coercion</h2>
 <p>In computer science coercion is used to implicitly or explicitly change an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. If not designed properly the coercion can be a fatal mistake. Eve is a safe language so we do only safe coercion.</p>

@@ -175,6 +175,7 @@ of code that aredy have some comments.
 <p><b>These are valid identifiers</b></p>
 
 <pre class="output">
+_
 x, y, z
 a1, a2, a3
 thisIsOK
@@ -946,6 +947,10 @@ return;</code></pre>
 <td>&amp;</td>
 <td>String concatenation | Set intersection "&cap;"</td>
 </tr>
+<tr>
+<td>_</td>
+<td>Void variable that accept any value and clear memory.</td>
+</tr>
 </tbody>
 </table>
 
@@ -1101,7 +1106,9 @@ return;</code></pre>
 </table>
 
 <h2>Modifiers</h2>
-<p>Each modifier is created with pattern "x=" where x is a single symbol:</p>
+
+<p>Each modifier is created with pattern "?=", where "?" is a symbol, haiving one of these values: {:, +, -, *, /, %, ^}. Also the symbol "::" is a modifier.</p>
+
 <table class="table table-bordered table-striped">
 <thead>
 <tr>

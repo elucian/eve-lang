@@ -150,7 +150,7 @@ return;
 <pre><code class="language-eve">#these are all valid process calls
 apply process_name; -- call process without arguments
 apply process_name argument_value;      -- call with single argument
-apply process_name (value, value, ...); --call with a list of arguments
+apply process_name (value, value, ...); -- call with a list of arguments
 apply process_name (param:value,...);   -- call with a argument by name
 apply process_name (value, value, param:value); -- mix position with names
 apply process_name (value, *list_args);         -- use spreading operator
@@ -201,24 +201,22 @@ return;
 <h4>Examples:</h4>
 <pre><code class="language-eve"># domain demo
 driver random_demo:
-  set small = [0..1:0.1] :Domain;
-  set large = (0..2^64 ) :Range;
+
+  class Small = [0..1:0.1] <: Range;
+  class Large = (0..2^64 ) <: Range;
+
 process
   ** you can call random() like this
-  print small.random(); -- 0.3
-  print large.random(); -- 65535
+  print Small.random(); -- 0.3
+  print Large.random(); -- 65535
 
   ** you can call random() like this
-  print random(small);
-  print random(large);
-
-  ** you can call random() like this
-  print random (1..2^32:2);       -- 143453566436
-  print random [1..2^32:0.25];    -- 43.75
+  print random(1..2^32:2);       -- 143453566436
+  print random(1..2^32:0.25);    -- 43.75
 return;
 </code></pre>
 
-<p><b>Note: </b>If you wander how is this possible, remember methods do not need paranthesis when there is a single parameter. So the argument can be a range. This is a single argument not two or three.</p>
+<p><b>Note: </b>If you wander how is this possible, remember methods do not need paranthesis when there is a single parameter. So the argument can be a range. This is a single argument not two or three arguments.</p>
 
 <h2><a id="array-builder"></a>Array builder</h2>
 
@@ -229,10 +227,13 @@ return;
 <p>You can declare and initialize an array in the global area using the array builder. Array total capacity must match the number of elements created by the range. A function can be used to compute the values of all elements.</p>
 
 <pre><code class="language-eve">
-** declare a new vector
+** declare an Array initislized using range
+   set array = [min..max:ratio]: [?]Type;
+
+** declare a new Array using a map function with range
    set array = [ f(x) | x in (min..max:ratio)]: [n]Type;
 
-** declare a new matrix
+** declare a new 2d array that is called matrix
    set matrix = [ f(x) | x in (min..max:ration)]: [n,m]Type;
 </code></pre>
 
@@ -243,13 +244,13 @@ driver test_matrix:
   set array  :[4]Integer;
   set matrix :[4,4]Integer;
 process
-** init a vector
+** init a vector Array
    let array := [ x | x in (1..10:3)];
    expect array == [1,4,7,10];
    print array;
    print;
 
-** init a matrix
+** init a matrix Array
    let matrix := [ x * y | x in (1..4) and y in (1..4)];
    print matrix;
 return;
@@ -265,6 +266,33 @@ return;
  3 6  9 12
  4 8 12 16
 </pre>
+
+<h2><a id="array-deconstructor">Array deconstructor</h2>
+
+<p>The deconsructor is basicly the inverse of a builder. You creste individual variables from an Array. This is useful for copy or borrow specific parts of an Array.</p>
+
+<pre><code class="language-eve">
+#array deconstructor demo
+driver array_deconstruct:
+  set a :[?]Integer;
+process
+  ** initialize array from Range
+  let a := [1..10]; 
+
+  ** create new variables using deconstructor
+  new x, y, *_, z := a;
+
+  ** check new variables
+  expect x == 1;
+  expect y == 2;
+  expect z == 10;
+
+  ** anonymous variable vanish the value
+  expect _ == Null;
+return;
+</code></pre>
+
+<p><b>Note: </b>The spreading statement must specify what is happening with all the elements. Using *_ you can ignore several elements and reach the last element z. You can have only one rest operator "*" in a statement.</p>
 
 
 <h2><a id="array-slicing"></a>Array slicing</h2>
@@ -308,16 +336,16 @@ process
 return;
 </code></pre>
 
-
 <h3>Limited slices</h3>
 
 <p>A limited slice is a slice that starts at a particular position and goes from that position several elements. You can calculate the last element in the slice using an expression that may depend on the last element "#".</p>
 
 <pre><code class="language-eve">
 driver test_slice:
-  set slice :[?]Symbol;
+  set slice, sreve :[?]Symbol;
 process
-  new base  := (1..10) :&gt; Array;
+  ** generate Array elements from a Range
+  new base  := [1..10];
   new x := 5;
 
   ** limited slices
@@ -326,7 +354,7 @@ process
 
   ** check the results
   expect slice == [5,6,7];
-  expect sreve == [5,6,7];
+  expect sreve == [7,6,5];
 return;
 </code></pre>
 
@@ -337,7 +365,7 @@ return;
 <pre><code class="language-eve">
 driver ano_slicing:
 process
-  new base :[10]Integer;
+  new base:[10]Integer;
 
   ** using bulk assignment
   let base[1:5][*] := 0;
@@ -348,6 +376,40 @@ process
 
   ** print 2 elements from the middle
   print base[5:6]; -- [1,2]
+return;
+</code></pre>
+
+<h3>Decontructor with rest</h3>
+
+<p>You can use deconstructor with rest to create a slice in the same time extract several values. By using operator ":=" you will create a slice but using "::" you will create a new Array.</p>
+
+<pre><code class="language-eve">
+# deconstructor with slice
+process
+  ** generate Array elements from a Range
+  new base  := [1..8];
+
+  ** create a rest slice
+  new x,y,z, *rest  := base;
+
+  ** check the rest slice
+  expect rest == [4,5,6,7,8];
+  expect (x,y,z) == (1,2,3);
+return;
+</code></pre>
+
+<pre><code class="language-eve">
+# deconstructor with clone
+process
+  ** generate Array elements from a Range
+  new base  := [1..8];
+
+  ** create a clone from reversed array
+  new a,b,c, *clone :: base.reverse(); 
+
+  ** check the clone elements
+  expect clone == [5,4,3,2,1];
+  expect (a,b,c) == (8,7,6);
 return;
 </code></pre>
 
@@ -377,6 +439,41 @@ return;
 'A' 'B' 'C' 'D' 'E' 'F'
  1 4 9 16
 </pre>
+
+<h3>List deconstructor</h3>
+
+<p>The deconsructor is basicly the inverse of a builder. You creste individual variables from a list. This is useful to clone or borrow specific parts of a list.</p>
+
+<pre><code class="language-eve">
+#list deconstructor demo
+driver list_deconstruct:
+  set a : List;
+process
+  ** initialize list from Range
+  let a := (1..10); 
+
+  ** create new variables using clone deconstructor
+  new x, y, _, *rest, _ :: a;
+
+  ** check new variables
+  expect x == 1;
+  expect y == 2;
+
+  ** anonymous variable vanish the value
+  expect _ == Null;
+
+  ** check the rest 
+  print rest;
+  print list;
+return;
+</code></pre>
+
+<pre class="language-output fixed">
+(4,5,6,7,8,9)
+(1,2,3,4,5,6,7,8,9,10)
+</pre>
+
+<p><b>Note: </b>variable "_" is special. It can consume one single element and is always Null. It can be redeclared several times in the same block. The value received is ignored.</p>
 
 <h3>Append to list</h3>
 
