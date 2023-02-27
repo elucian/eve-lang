@@ -308,6 +308,28 @@ process
 return;
 </code></pre>
 
+
+<h3>Limited slices</h3>
+
+<p>A limited slice is a slice that starts at a particular position and goes from that position several elements. You can calculate the last element in the slice using an expression that may depend on the last element "#".</p>
+
+<pre><code class="language-eve">
+driver test_slice:
+  set slice :[?]Symbol;
+process
+  new base  := (1..10) :&gt; Array;
+  new x := 5;
+
+  ** limited slices
+  let slice := base[x: x+3];
+  let sreve := base[5: #-3].reverse(); 
+
+  ** check the results
+  expect slice == [5,6,7];
+  expect sreve == [5,6,7];
+return;
+</code></pre>
+
 <h3>Anonymous slices</h3>
 
 <p>You can use anonymous slice to modify an Array or to print a section of the array. You do not have to assign a variable to the slice. This is a shortcut, and is very useful for handling Array elements in bulk.</p>
@@ -751,7 +773,7 @@ return;
 ('c3':8)
 </pre>
 
-<h2><a id="using-strings"></a>Using strings:</h4>
+<h2><a id="using-strings"></a>Using strings:</h2>
 
 <p>In next examples we use type inference to create strings. The length of the string is the number of symbols. You can use operator "*" to initialize a long string with the same symbol or a pattern of symbols.</p>
 
@@ -829,15 +851,32 @@ process
   expect str1 == "0123456789"
 
   ** DataSet conversion
-  new str2 := { a | a in ("A"..."F") } :&gt; String; 
+  new str2 := { a | a in ("A".."F") } :&gt; String; 
   expect str2 == "ABCDEF";
 
   ** Join a collection
-  new str2 := { ("0x" + a) | a in ("A"..."F") }.join(","); 
+  new str2 := { ("0x" + a) | a in ("A".."F") }.join(","); 
   expect str2 == "0xA,0xB,0xC,0xD,0xE,0xF";
 return;
 </code></pre>
 
+<h3>String split</h3>
+
+<p>You can split a string in list of words. When you do this, you can specify a symbol or a regular expression. The content of regular expression is removed and not included in the string.<p>
+
+<p>You can split by regular expression and keep the match substring in the result by using "look arrount" regular expression features. It is not our scope to teach regular expressions.</p>
+
+<pre><code class="language-eve">
+process
+  new str   := "Eve is a cool language.";
+  new words := str.split(" ");
+  print words;
+return;
+</code></pre>
+
+<pre class="output">
+("Eve","is","a", "cool", "language",".");
+</pre>
 
 <h3><a id="text-literals"></a>Text Literals</h3>
 
