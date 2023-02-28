@@ -191,14 +191,16 @@ function apply_style(str) {
     str = str.replace(/\*(?=\w)/g,operator("*"))
     str = str.replace(/\@(?=\w)/g,operator("@"))
     str = str.replace(/\$(?=\w)/g,operator("$"))
-    str = str.replace(/\s_(?=\w)/g,operator(" _"))
-    str = str.replace(/\s\.(?=\w)/g,operator(" ."))
+    str = str.replace(/\_(?=\w)/g,operator("_"))
+
+    //anonymous variable
+    str = str.replace(/\b_\b/g,operator("_"))
 
     //fix single simbol
     str = str.replace(/\?(?=\s|\b|\w)/,operator("?"))
-    str = str.replace(/:(?=\s|\b|$)/,operator(":"))
-    str = str.replace(/:(?=\s|\w|\W|[\{\[\(])/g,operator(":"))
-    str = str.replace(/;(?=\s|\b|$)/,operator(";")) 
+    str = str.replace(/\:(?=\s|\b|$)/,operator(":"))
+    str = str.replace(/\:(?=\s|\w|\W|[\{\[\(])/g,operator(":"))
+    str = str.replace(/\;(?=\s|\b|$)/,operator(";")) 
 
     //fix concatenation
     str = str.replace(/\"\/\"/,operator("/"))

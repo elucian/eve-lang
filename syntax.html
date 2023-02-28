@@ -190,13 +190,19 @@ not_valid_
 _not_valid_
 </pre>
 
-<h3>Identifier Prefix</h3>
+<h3>Prefix & Sigil</h3>
 
-<p>Indetifier prefix is used to declare a variable, but is not required when using the variable. Prefix specify a particular kind of variable. A prefix is not a sigil.</p>
+<p>Indetifier prefix is used to declare a variable, but is not required when using the variable. A sigil is part of variable name and it must be used when you use the variable.</p>
 
 <table class="table table-bordered table-sm table-striped">
-<tr><th style = "text-align:center;">*     </th><td>vararg parameter </td></tr>
-<tr><th style = "text-align:center;">@     </th><td>receiver parameter</td></tr>
+<tr><th style = "text-align:center;">*</th>
+  <td>vararg parameter prefix</td></tr>
+<tr><th style = "text-align:center;">@</th>
+  <td>receiver parameter prefix</td></tr>
+<tr><th style = "text-align:center;">_</th>
+  <td>protected member sigil</td></tr>
+<tr><th style = "text-align:center;">$</th>
+  <td>system state/variable sigil</td></tr>  
 </table>
 
 <h3>System Variables</h3>

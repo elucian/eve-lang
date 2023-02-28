@@ -48,7 +48,8 @@ Eve is an object oriented language. We define objects and classes. A class is a 
 <li>Polymorphism: an object can play its base class role;</li>
 </ul>
 
-<div class="alert alert-info"><b>Note: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes or user defined data types. Eve implements all 4 OOP principles. </div>
+
+<div class="alert alert-info"><b>Notes: </b>Objects can't be abstract but you can define an abstract class that can be extended by other classes or user defined data types. Eve implements all 4 OOP principles. </div>
 
 <h4>Page bookmarks:</h4>
 
@@ -172,53 +173,54 @@ return;
 
 <h3><a id="class-properties"></a>Class Properties</h3>
 
-<p>A class can have only private static properties. Each property is defined in the class context. We declare class properties after symbol ":" before any class method.</p>
+<p>A class can have public or private properties. Each property is defined in the class context. We declare class properties after symbol ":" before any class method.</p>
 
 <ul>
 <li>Properties are defined using keyword "set" ;</li>
-<li>A class is a singleton Object of type Class;</li> 
-<li>Class properties are visible in class methods;</li> 
+<li>A class is a singleton Object of type Class;</li>
+<li>A class that have no attributes is abstract;</li>
+<li>A abstract class can't be instantiated;</li>
+<li>Class properties are visible in all class methods;</li> 
+<li>Private class members by start with "_" sigil;</li>
 </ul>
 
 <h3><a id="class-methods">Class Methods</h2>
 
-<p>You can define methods inside of a class body. Class methods are all public. Class methods have access to all class members, without using any qualifier:</p>
+<p>You can define methods inside of a class body. Class methods have access to all class members, without using any qualifier but have no access to object instance. @self object is not available in class methods:</p>
 
 <h4>Example:</h4>
+
+<p>Next example demonstrate a class that has no attributes and no constructor. This kind of class can't be instantiated. Is an abstract class, but it can be inherited by other classes.</p>
 
 <pre><code class="language-eve">
 driver test_method:
 
 # define a class that has no constructor
 class ClassName <: Object:
-  ** class propety
-  set prop: Integer; 
-  set last: Integer;
+  ** class propetyes
+  set _sum: Integer;  -- protected
+  set last: Integer;  -- public
 
-  ** class method 
-  method change(param:Type) => (@result:Integer):
+  ** class method (change state) 
+  method change(param:Type):
     let last := param;
-    let prop += param;
-    let result := prop;
+    let _sum += param;
   return;
 
-  ** create a getter
-  method last() => (@result:Integer):
-    let result := last;
+  ** create a getter for _sum
+  method sum() => (@result:Integer):
+    let result := _sum;
   return;
 return;
 
 process
-  ** call class method
-  new result1 = ClassName.change(10); 
-  new result2 = ClassName.change(12); 
-
-  ** check method result
-  expect result1 == 10;
-  expect result2 == 22;
+  ** access class method
+  ClassName.change(10); 
+  ClassName.change(12); 
 
   ** inspect ".last" property
-  expect ClassName.last() == 12; 
+  expect ClassName.last  == 12; 
+  expect ClassName.sum() == 22; 
 return;
 </code></pre>
 
@@ -253,41 +255,7 @@ return;
    <p>Class Tree</p>
 </div>
 
-<h4>Example:</h4>
 
-<p>This example defines a "Point" class with two parameters. The parameters have default values so they are optional when you create a point. Read the example and the notes to understand how to use a user defined class constructor.</p>
-
-<pre><code class="language-eve">
-# demonstrate a class
-driver point_demo:
-
-** define class Point, from root Object
-class Point = {x, y :Double} <: Object:
-
-** constructor reveive 2 parameters
-create(x = 0, y = 0 :Double) => (@self: Point):
-  ** alter attribute values
-  let self.x := x;
-  let self.y := y;
-return;
-
-process
-  ** initialize the points
-  new p1 := Point(x:1, y:2);
-  new p2 := Point(x:2, y:2);
-
-  ** use string patterns to print attributes
-  print "p1 = (x:#n, y:#n)" ? (p1.x,p1.y);
-  print "p2 = (x:#n, y:#n)" ? (p2.x,p2.y);
-return;
-</code></pre>
-
-<h4>Output:</h4>
-
-<pre class="output">
-p1 = {x:1, y:2}
-p2 = {x:2, y:2}
-</pre>
 
 <h3><a id="constructor"></a>Class Constructor</h3>
 
@@ -311,11 +279,11 @@ release
 return;
 </code></pre>
 
-<p><b>Notes:&nbsp;</b>A class is a singleton. It has public methods and private properties and can describe the attributes of the future object instances. A class has a declaration region where you can define static members, and an initialization region called constructor, for dynamic object initialization.</p>
+<p><b>Notes:&nbsp;</b>A class has a declaration region where you can define static members, and an initialization region "create". This region is called contructor. A class can have one single constructor. The constructor is optional.</p>
 
-<h4>Pattern:</h4>
+<h4>Parameters:</h4>
 
-<p>A class has one single constructor. Constructors can have one or more parameters, some may be optional. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
+<p>Constructors can have one or more parameters, some may be optonal. You can use a decision statements to initialize the object attributes in different ways based on parameter values.</p>
 
 <pre><code class="language-eve">
 # define a class
@@ -341,7 +309,7 @@ create(parameters) => (@self: ClassName):
 return;
 </code></pre>
 
-<h3>Parameters</h3>
+<h3>Variadic constructor</h3>
 
 <p>A constructor can have parameters with an initial value that are optional. Parameters with no initial values are mandatory. It is possible to have a variable number of arguments, received as a HashMap for a vararg based constructor.</p>
 
@@ -368,6 +336,96 @@ return;
 <h4>@self object</h4>
 
 <p>Object named "self" is the current object name. This is the result of the class constructor. It uses prefix "@" to show that it is a reference. The "self" parameter is used for declaring object methods. In Java this is an implicit parameter. In Eve you must declare @self explicitly.</p>
+
+<h4>Example:</h4>
+
+<p>This example defines a "Point" class with two parameters. The parameters have default values so they are optional when you create a point. Read the example and the notes to understand how to use a user defined class constructor.</p>
+
+<pre><code class="language-eve">
+# demonstrate a class
+driver point_demo:
+
+** define class Point, from root Object
+class Point = {x, y :Double} <: Object:
+
+** constructor reveive 2 parameters
+create(x = 0, y = 0 :Double) => (@self: Point):
+  ** alter attribute values
+  let self.x := x;
+  let self.y := y;
+return;
+
+process 
+  ** initialize the points
+  new p1 := Point(x:1, y:2);
+  new p2 := Point(x:2, y:2);
+
+  ** use string patterns to print attributes
+  print "p1 = (x:#n, y:#n)" ? (p1.x,p1.y);
+  print "p2 = (x:#n, y:#n)" ? (p2.x,p2.y);
+return;
+</code></pre>
+
+<h4>Output:</h4>
+
+<pre class="output">
+p1 = {x:1, y:2}
+p2 = {x:2, y:2}
+</pre>
+
+<h4>Example:</h4>
+
+<p>This example defines a class that can track its instances explicit. You can use static properties of a class to record all instances newly created. On release, you can remove the object instance @self from the item list.</p>
+
+<pre><code class="language-eve">
+# demonstrate a self tracking class
+driver self_track:
+
+** define class Point, from root Object
+class Point = {x, y :Double} <: Object:
+
+** tracking information
+  set instances: Integer;
+  set items: ()Point;  -- list of points
+
+** constructor reveive 2 parameters
+create(x = 0, y = 0 :Double) => (@self: Point):
+  ** alter attribute values
+  let self.x := x;
+  let self.y := y;
+  ** add object to list of items
+  let items += @self;
+  let instances += 1;  
+release(@self: Point):
+  ** remove the object from list
+  let items -= @self;
+  let instances -= 1;
+return;
+
+process 
+  ** initialize the points
+  new p1 := Point(x:1, y:2);
+  new p2 := Point(x:2, y:2);
+
+  ** verify how many point
+  expect Point.instances == 2;
+
+  ** use item list to print all points
+  cycle:
+    new i := 0;
+  for p in Point.items loop
+    let i += 1;
+    print "p#n = (x:#n, y:#n)" ? (i, p.x,p.y);
+  repeat;
+return;
+</code></pre>
+
+<h4>Output:</h4>
+
+<pre class="output">
+p1 = {x:1, y:2}
+p2 = {x:2, y:2}
+</pre>
 
 <h2><a id="comparing-objects"></a>Comparing objects</h2>
 
@@ -398,7 +456,6 @@ process
   expect   not (m == n);
 return;
 </code></pre>
-
 
 <h2><a id="inheritance"/>Inheritance</h2>
 
@@ -500,20 +557,34 @@ return;
    print Type(myList[1][1]); -- Integer
 </code></pre>
 
-<h4>List of Objects</h4>
+<h4>JSON literals</h4>
 
-<p>Using type inference you can create complex data structures. In next example we create a list of objects. Each object can have same structure or different structure. This is possible due to dynamic nature of Objects.</p>
+<p>Using JSON you can create complex data structures. In next example we create a list of objects. Each object can have same structure or different structure. This is possible due to dynamic nature of Objects.</p>
 
 <pre><code class="language-eve">
+driver catalog:
+
+class Person = {name:String, age:Integer} <: Object;
+
+global
+   set myList: ()Person; 
+
+process
 ** define object using type inference
-   new myCatalog := ({name: "Elucian", age: 56},{name: "Daniel", age: 45});
+   let myList := (
+      {name: "Elucian", age: 56},
+      {name: "Daniel" , age: 45}
+   );
 
 ** using introspection to find the type
-   print Type(myList);          -- List
-   print Type(myList[1]);       -- Object
-   print Type(myList[1].name);  -- String
-   print Type(myList[1].age);   -- Integer
+   expect Type(myList)          == List;
+   expect Type(myList[1])       == Person;
+   expect Type(myList[1].name)  == String;
+   expect Type(myList[1].age)   == Integer;
+return;
 </code></pre>
+
+<p><b>Note: </b>In a collection you can use objects of the same type or descendents types of the declared element type. In this case if you derive a type Employe from Person, then you can add Emplyes to this list.</p>
 
 <p><b>Read next:</b>
 <a href="functions.html">Functions</a></p>
