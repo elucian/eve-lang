@@ -47,13 +47,13 @@ function apply_style(str) {
 
 
     // mandatory two space indentation
-    str = str.replace(/\s\snew\b/g,keytab("  new"))
-    str = str.replace(/\s\slet\b/g,keytab("  let"))
-    str = str.replace(/\s\sset\b/g,keytab("  set"))
+    str = str.replace(/\bnew\b/g,keytab("new"))
+    str = str.replace(/\blet\b/g,keytab("let"))
+    str = str.replace(/\bset\b/g,keytab("set"))
     
     // database singular statements
-    str = str.replace(/\s\sscrub\b/g,keytab("  scrub"))
-    str = str.replace(/\s\sdelete\b/g,keytab("  delete"))
+    str = str.replace(/\bscrub\b/g,keytab("scrub"))
+    str = str.replace(/\bdelete\b/g,keytab("delete"))
 
     //  creat control flow
     str = str.replace(/\bbegin\b/,control("begin"))   
@@ -149,33 +149,38 @@ function apply_style(str) {
     str = str.replace(/\brollback\b/,keytab("rollback"))
 
     // two symbol operators
-    str = str.replace(/\s::\s/g,operator(" :: "))
-    str = str.replace(/\s:=\s/g,operator(" := "))
-    str = str.replace(/\s==\s/g,operator(" == ")) 
-    str = str.replace(/\s!=\s/g,operator(" != "))    
-    str = str.replace(/\s=>\s/g,operator(" => "))
-    str = str.replace(/\s<=\s/g,operator(" <= "))
-    str = str.replace(/\s>=\s/g,operator(" >= "))
-    str = str.replace(/\s:>\s/g,operator(" :> "))
-    str = str.replace(/\s<:\s/g,operator(" <: "))
-    str = str.replace(/\s<-\s/g,operator(" <- "))
-    str = str.replace(/\s->\s/g,operator(" -> "))
+    str = str.replace(/::/g,operator("::"))
+    str = str.replace(/:=/g,operator(":="))
+    str = str.replace(/==/g,operator("==")) 
+    str = str.replace(/!=/g,operator("!="))    
+    str = str.replace(/=>/g,operator("=>"))
+
+    str = str.replace(/:>/g,operator(":>"))
+    str = str.replace(/<:/g,operator("<:"))
+    str = str.replace(/<-/g,operator("<-"))
+    str = str.replace(/->/g,operator("->"))
+
+    // replace range operator
+    str = str.replace(/\.\.\./g,operator("..."))
+    str = str.replace(/\.\./g,operator(".."))
 
     // two symbol modifiers
-    str = str.replace(/\s\*=\s/g,operator(" *= "))
-    str = str.replace(/\s\/=\s/g,operator(" /= "))
-    str = str.replace(/\s\-=\s/g,operator(" -= "))
-    str = str.replace(/\s\+=\s/g,operator(" += "))    
-    str = str.replace(/\s\^=\s/g,operator(" ^= "))  
-    str = str.replace(/\s\%=\s/g,operator(" %= ")) 
+    str = str.replace(/\*=/g,operator("*="))
+    str = str.replace(/\/=/g,operator("/="))
+    str = str.replace(/\-=/g,operator("-="))
+    str = str.replace(/\+=/g,operator("+="))    
+    str = str.replace(/\^=/g,operator("^="))  
+    str = str.replace(/\%=/g,operator("%=")) 
 
-    //two symbol shift operators 
-    str = str.replace(/\s<<\s/g,operator(" << ")) 
-    str = str.replace(/\s>>\s/g,operator(" >> ")) 
+    //problematic operators
+    str = str.replace(/ <= /g,operator(" <= "))
+    str = str.replace(/ >= /g,operator(" >= "))    
+    str = str.replace(/ << /g,operator(" << ")) 
+    str = str.replace(/ >> /g,operator(" >> ")) 
 
     // supertype & coercion
-    str = str.replace(/\s<\+\s/g,operator(" <+ "))
-    str = str.replace(/\s\+>\s/g,operator(" +> "))
+    str = str.replace(/<\+/g,operator("<+"))
+    str = str.replace(/\+>/g,operator("+>"))
 
     // fix encoded symbols
     str = str.replace(/\b=\&gt;\b/g,operator("=&gt;"))
@@ -187,14 +192,14 @@ function apply_style(str) {
     str = str.replace(/\b-\&gt;\b/g,operator("-&gt;"))
     str = str.replace(/\b\&lt;-\b/g,operator("&lt;-"))
 
-    //sigil or prefix
-    str = str.replace(/\*(?=\w)/g,operator("*"))
-    str = str.replace(/\@(?=\w)/g,operator("@"))
-    str = str.replace(/\$(?=\w)/g,operator("$"))
-    str = str.replace(/\_(?=\w)/g,operator("_"))
 
-    //anonymous variable
-    str = str.replace(/\b_\b/g,operator("_"))
+    //prefix
+    str = str.replace(/\*(?=\w)/g,operator("*"))
+    str = str.replace(/\@(?=\S)/g,operator("@"))  
+
+    //sigils
+    str = str.replace(/\$(?=\w)/g,operator("$"))    
+    str = str.replace(/\_(?=\W)/g,operator("_"))
 
     //fix single simbol
     str = str.replace(/\?(?=\s|\b|\w)/,operator("?"))
@@ -215,6 +220,11 @@ function apply_style(str) {
     str = str.replace(/\s\*\s/g,operator(" * "))
     str = str.replace(/\s\&\s/g,operator(" & "))
     str = str.replace(/\s\|\s/g,operator(" | "))
+
+    // special indexes
+    str = str.replace(/\*(?=\W)/g,operator("*"))
+    str = str.replace(/\#(?=\W)/g,operator("#"))
+    str = str.replace(/\?(?=\W)/g,operator("?"))
 
     // stile single quoted symbols 
     // squote is a callback function

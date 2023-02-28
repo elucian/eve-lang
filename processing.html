@@ -675,10 +675,10 @@ process
   new list := (1,2,1,2,3,1,2,3,4);
 
   ** using operator ":&gt;"
-  new set := list :&gt; DataSet;
+  new dset := list :&gt; DataSet;
 
   ** check the new set
-  expect set == {1,2,3,4};
+  expect dset == {1,2,3,4};
   
   ** using operator "+>"
   new alt := list +> {};
@@ -693,10 +693,10 @@ return;
 <pre><code class="language-eve">
 # demonstrate how to create a set from a range
 process
-  new set := {x^2 | x in (2..8:2)};
+  new dset := {x^2 | x in (2..8:2)};
 
   ** check the new set
-  expect set == {4,16,36,64};
+  expect dset == {4,16,36,64};
 return;
 </code></pre>
 
