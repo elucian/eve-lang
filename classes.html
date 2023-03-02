@@ -347,14 +347,14 @@ driver point_demo:
 
 ** define class Point, from root Object
 class Point = {x, y :Double} <: Object:
-
-** constructor reveive 2 parameters
+   ** no members
 create(x = 0, y = 0 :Double) => (@self: Point):
-  ** alter attribute values
+  ** constructor 
   let self.x := x;
   let self.y := y;
 return;
 
+# using the class
 process 
   ** initialize the points
   new p1 := Point(x:1, y:2);
@@ -388,7 +388,7 @@ class Point = {x, y :Double} <: Object:
   set instances: Integer;
   set items: ()Point;  -- list of points
 
-** constructor reveive 2 parameters
+** constructor receive 2 parameters
 create(x = 0, y = 0 :Double) => (@self: Point):
   ** alter attribute values
   let self.x := x;

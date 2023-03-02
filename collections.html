@@ -611,18 +611,6 @@ process
 ...
 </code></pre>
 
-<h4>Initialization:</h4>
-
-<p>In next examples we use type inference to create strings. The length of the string is the number of symbols. You can use operator "*" to initialize a long string with the same symbol or a pattern of symbols.</p>
-
-<pre><code class="language-eve">
-process
-  ** examples of empty strings
-  new short_string := "short string";-- most common form of literal
-  new long_line := '-' * 80;         -- a long line of 80 dashes
-  new dash_dot  := "-&middot;" * 40; -- a long line -&midot;-&midot;-&midot;
-</code></pre>
-
 <h3><a id="string-mutability"></a>String mutability</h3>
 
 <p>In Eve Strings are immutable. If you use ":=" the string object is replaced. You can concatenate strings and you can use string interpolation but every time you do, a new string is created.</p>
