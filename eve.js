@@ -27,6 +27,7 @@ function apply_style(str) {
     str = str.replace(/\s\screate\b/,keytab("  create"))
     str = str.replace(/\s\srelease\b/,keytab("  release"))
     str = str.replace(/\s\sfunction\b/,keytab("  function"))
+    str = str.replace(/\s\sshell\b/,keytab("  shell"))
 
     // keywords in statement     
     str = str.replace(/\bsession\b/,keytab("session"))
@@ -101,6 +102,8 @@ function apply_style(str) {
     str = str.replace(/\bFunction\b/g,types("Function"))   
     str = str.replace(/\bDataSet\b/g,types("DataSet"))
     str = str.replace(/\bHashMap\b/g,types("HashMap"))
+    str = str.replace(/\bFolder\b/g,types("Folder"))
+    str = str.replace(/\bFile\b/g,types("File"))
 
     // reserved types
     str = str.replace(/\bNull\b/g,types("Null"))
