@@ -207,7 +207,7 @@ loop
   skip [label] [if condition] ;
   ...
   ** early interruption
-  exit [label] [if condition];
+  stop [label] [if condition];
   ...
 repeat [label] [if condition];
 </code></pre>
@@ -239,7 +239,7 @@ while condition loop
   skip if condition;
   ...
   ** early interruption
-  exit if condition;
+  stop if condition;
   ...
 then
   ** alternative path
@@ -304,7 +304,7 @@ for var in (min..max) loop
     next if condition;
     ...
     ** early interruption
-    exit if condition;
+    stop if condition;
     ...
 repeat [label];
 </code></pre>

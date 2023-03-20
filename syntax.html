@@ -713,16 +713,12 @@ return;</code></pre>
 <td>create unrecoverable error and stop application, status > 0 (os error)</td>
 </tr>
 <tr>
-<td>exit</td>
-<td>stop current cycle and continue after the "repeat" keyword.</td>
+<td>stop</td>
+<td>intrerupt current cycle and continue after the "repeat" keyword.</td>
 </tr>
 <tr>
 <td>abort</td>
 <td>stop current process and execute finalization region.</td>
-</tr>
-<tr>
-<td>over</td>
-<td>silently stop current subprogram or process and return.</td>
 </tr>
 <tr>
 <td>raise</td>
@@ -770,7 +766,15 @@ return;</code></pre>
 </tr>
 <tr>
 <td>halt</td>
-<td>temporarly stop the process for debug</td>
+<td>temporarly intrerupt the process for debug</td>
+</tr>
+<tr>
+<td>exit</td>
+<td>intrerupt execution of a process or sub-program</td>
+</tr>
+<tr>
+<td>over</td>
+<td>intrerupt current process and terminate application</td>
 </tr>
 </tbody>
 </table>

@@ -76,11 +76,12 @@
 process | routine
     ** local declarations
     ....
+    abort if condition;
   job (c1,"description") try
     ...
     raise "error" if condition;
     ...
-    over if condition;
+    exit if condition;
     ...
     pass if condition;
     ...
@@ -95,7 +96,7 @@ recover
   case error1 then
     ** exception handler
     ...
-    abort; -- terminate process
+    exit; -- terminate process
   case error2 then   
     ...
     retry;
@@ -123,7 +124,9 @@ return;
 <tr><th>resume</th>
   <td>execute next job, following the one with error</td></tr>
 <tr><th>abort</th>
-  <td>ignore all next jobs and execute the finalize region </td></tr>
+  <td>ignore all next jobs and skip the finalization</td></tr>
+<tr><th>exit</th>
+  <td>ignore all next jobs and execute the finalization</td></tr>
 <tr><th>raise</th><td>create a recoverable error, jump to cases</td></tr>
 <tr><th>panic</th><td>jump to finalize and stop the application</td></tr>
 </table>
@@ -143,7 +146,7 @@ return;
 
 <h3>Process interruption</h3>
 
-<p>Interruption keywords (exit, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the <em>abort</em> or <em>raise</em> will trigger the finalization region.</p>
+<p>Interruption keywords (abort, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the <em>exit</em> or <em>raise</em> will trigger the finalization region.</p>
 
 <p><b>Process execution</b>&nbsp; A process can be executed using "apply" or "start". For one single argument, or no argument the parentheses are not required. For a list of arguments you specify a list of arguments;</p>
 
@@ -159,7 +162,7 @@ apply process_name (param:value, *map_args);    -- mix names with hashmap
 
 <h3>End of process:</h3>
 
-<p>A process end with keyword return; When process is terminated, program execution will continue with the next statement. Keywords {<em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em>} can terminate a process early.</p>
+<p>A process end with keyword return. When process is terminated, program execution will continue with the next statement. Keywords {<em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em>} can terminate a process early.</p>
 
 <h4>Example:</h4>
 
