@@ -451,14 +451,14 @@ return;
 
 <h4>Usecases:</h4>
 
-<p>Rances can be used as generators to populate a new collection or it can be used in logic evaluations or in loops. All these can be optimized by the compiler using leasy evaluation. The elements are generated as needed.</p>
+<p>Ranges can be used as generators to populate collections, make logic evaluations, or generate values for loops. Range operations should be optimized by the compiler using leasy evaluation. Elements are generated as needed not stored in memory.</p>
 
 <h4>Syntax:</h4>
 
 <pre class="language-out">
-(min..max:ratio);
-[min..max:ratio];
-{min..max:ratio};
+new l := (min..max:ratio); // list
+new a := [min..max:ratio]; // array
+new d := {min..max:ratio}; // data set
 </pre>
 
 <h4>Notes:</h4>
@@ -466,6 +466,7 @@ return;
 <li>Limits are included by default,</li>
 <li>Ratio is defaul 1 and optional,</li>
 <li>Limiits can be inverted,</li>
+<li>Ratio can be negative,</li>
 </ul>
 
 <h4>Example:</h4>
@@ -493,7 +494,7 @@ return;
 <h4>Example:</h4>
 
 <p>Symbol range, specify Unicode symbols as limits.</p>
-<div>
+
 <pre class="line-numbers"><code class="language-eve">
 # using symbol ranges
 driver symbol_range:
@@ -509,7 +510,25 @@ process
   expect 'X' in {'A'..'Z'};  -- range of symbols
 return;
 </code></pre>
-</div>
+
+
+<h4>Decimal range</h4>
+
+<p>It is possible to create a decimal range. For this, the limits must be decimal or at least the ratio must be decimaL. If ratio is not specified, it is automaticly created: 0.1 or 0.01 depending on precision of first limit. 0.0 or 0.00. In Eve the number of zeros can establish the precision for numeric ranges.</p>
+
+<pre class="line-numbers"><code class="language-eve">
+# using fractional ranges
+driver fraction_range:
+process
+  ** elements of these ranges are written one by one
+  print (0..0.5:0.1) -- (0.0,0.1,0.2,0.3,0.4,0.5)
+
+  ** use range as validation domain
+  expect 0.01  in (0.0..1.0); 
+  expect 0.001 in (0.00..1.00); 
+  expect 0.001 not in (0.0..1.0);   
+return;
+</code></pre>
 
 <h2><a id="data-coercion"></a>Data Coercion</h2>
 <p>In computer science coercion is used to implicitly or explicitly change an entity of one data type into another of different type. This is ready to take advantage of type hierarchies and type representations. If not designed properly the coercion can be a fatal mistake. Eve is a safe language so we do only safe coercion.</p>
