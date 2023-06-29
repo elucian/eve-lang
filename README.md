@@ -22,7 +22,8 @@
 <p>You can contribute in 2 ways: First you can open discussions. Second, you can open and resolve work items. You signal an error and you assign yourself to solve it. Then you solve it and commit your code or make a PR. If you have direct access on Eve repository you should create a developement branch. When a feature is ready, merge the code into main branch and signal on Discord. We will publish your changes.</p>
 
 -------------------------------------------------------------------
-<p align="center"> <a href=https://sagecode.net/eve/index.html>Eve User Manual</a>
+<p align="center"> 
+   <a href=https://eve.sagecode.net/index.html>Eve User Manual</a>
 </p>
 
 -------------------------------------------------------------------
