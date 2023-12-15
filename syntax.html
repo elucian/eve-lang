@@ -155,7 +155,7 @@ used for notes or outline large blocks of code.
 
 -- Eve block comments can be nested over boxed 
 comments. So you can comment out large sections
-of code that aredy have some comments.
+of code that already have some comments.
 */
 
 </code></pre>
@@ -192,7 +192,7 @@ _not_valid_
 
 <h3>Prefix & Sigil</h3>
 
-<p>Indetifier prefix is used to declare a variable, but is not required when using the variable. A sigil is part of variable name and it must be used when you use the variable.</p>
+<p>Identifier prefix is used to declare a variable, but is not required when using the variable. A sigil is part of variable name and it must be used when you use the variable.</p>
 
 <table class="table table-bordered table-sm table-striped">
 <tr><th style = "text-align:center;">*</th>
@@ -460,7 +460,7 @@ return;</code></pre>
 <p>Computer was invented in England during WW2, so we prefer English keywords, even though a computer language could be created using keywords from other spoken languages. Eve is using about 100 reserved keywords.</p>
 
 <table class="table table-bordered table-dark table-hover table-sm shadow">
-<tr><td>abort    </td><td>alias    </td><td>alter     </td><td>analyze</td></tr>
+<tr><td>catch    </td><td>alias    </td><td>alter     </td><td>analyze</td></tr>
 <tr><td>append   </td><td>apply    </td><td>ascend    </td><td>augment</td></tr>
 <tr><td>start    </td><td>method   </td><td>stop      </td><td>by       </td></tr>
 <tr><td>case     </td><td>class    </td><td>clone     </td><td>close    </td></tr>
@@ -475,10 +475,10 @@ return;</code></pre>
 <tr><td>offset   </td><td>open     </td><td>order     </td><td>one      </td></tr>
 <tr><td>over     </td><td>package  </td><td>pass      </td><td>print    </td></tr>
 <tr><td>process  </td><td>raise    </td><td>read      </td><td>record   </td></tr>
-<tr><td>recover  </td><td>release  </td><td>resume    </td><td>repeat   </td></tr>
+<tr><td>recover  </td><td>release  </td><td>          </td><td>repeat   </td></tr>
 <tr><td>reset    </td><td>rest     </td><td>result    </td><td>on       </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
-<tr><td>globa    </td><td>select   </td><td>all       </td><td>skip     </td></tr>
+<tr><td>global   </td><td>select   </td><td>all       </td><td>skip     </td></tr>
 <tr><td>step     </td><td>store    </td><td>switch    </td><td>job      </td></tr>
 <tr><td>then     </td><td>trial    </td><td>try       </td><td>reset    </td></tr>
 <tr><td>update   </td><td>use      </td><td>labe      </td><td>view     </td></tr>
@@ -714,11 +714,11 @@ return;</code></pre>
 </tr>
 <tr>
 <td>stop</td>
-<td>intrerupt current cycle and continue after the "repeat" keyword.</td>
+<td>interrupt current cycle and continue after the "repeat" keyword.</td>
 </tr>
 <tr>
-<td>abort</td>
-<td>stop current process and skip finalization region.</td>
+<td>catch</td>
+<td>handle an error immediately to avoid logic fragmentation.</td>
 </tr>
 <tr>
 <td>raise</td>
@@ -739,10 +739,6 @@ return;</code></pre>
 <tr>
 <td>retry</td>
 <td>work-flow jump backwards to specified job.</td>
-</tr>
-<tr>
-<td>resume</td>
-<td>continue a process with the next job after an error.</td>
 </tr>
 <tr>
 <td>apply</td>

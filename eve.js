@@ -137,7 +137,7 @@ function apply_style(str) {
     str = str.replace(/\bwait\b/,keytab("wait"))
     str = str.replace(/\bexit\b/,keytab("exit"))
     str = str.replace(/\bstop\b/,keytab("stop"))   
-    str = str.replace(/\babort\b/,keytab("abort"))
+    str = str.replace(/\bcatch\b/,keytab("catch"))
     str = str.replace(/\bprint\b/,keytab("print"))
     str = str.replace(/\bwrite\b/,keytab("write"))
     str = str.replace(/\bread\b/,keytab("read"))

@@ -57,9 +57,15 @@
 
 <h2><a id="main-process"/>Main Process</h2>
 
-<p>A process can do one or more jobs. Each job is a try block. Jobs are sequential. Any job can pass or fail but the process continue with the next job, unless an exception is raised or process is intrerupted early by logic conditions.</p>
+<p>A process can do one or more jobs. Each job is a try block. Jobs are sequential. Any job can pass or fail. User can force a job to pass or fail. Also user can decide if process can continue with next job. When an exception is raised a process is interrupted.</p>
 
 <p>In case of exception, the workflow jumps into recover region. If none of the cases is handling the error, the finalization region is executed and the process terminates. Errors can propagate to main process if they are not properly handled.</p>
+
+<p>If an error is handled in recover section, the process can be resumed with next job, can be interrupted or can restart from the beginning. User has different keywords to handle errors in recover region.</p>
+
+<p>Jobs can be dependent. If first job fail, maybe does not make any sense to continue with next job. In recover region, user can detect what job is the current job that failed. So user can do different error handling for different job or group of jobs.</p>
+
+<p>Early catch. If user use word catch after try, is possible to catch the error immediately. This is a shortcut, that avoid logic fragmentation. A job is ending when next job start. Last job is ending when recover or finalize start or the return keyword is found. </p>
 
 <div align="center">
   <img src="img/eve-try.svg" alt="try blocks"
@@ -76,32 +82,41 @@
 process | routine
     ** local declarations
     ....
-    abort if condition;
+    ** preconditions
+    exit if condition;
   job (c1,"description") try
     ...
     raise "error" if condition;
     ...
-    exit if condition;
+    exit if condition; -- execute finalization
     ...
     pass if condition;
     ...
     fail if condition;
     ...
+    catch error1 then
+      ** exception handler
+    catch error2 then
+      ** exception handler
   job (c2,"description") try
     ...
+    catch error_x then
+    ** exception handler
   job (c3,"description") try
     ...
+    catch error_z then
+    ** exception handler
 recover
   ** exception handlers
   case error1 then
     ** exception handler
     ...
-    exit; -- terminate process
   case error2 then   
     ...
-    retry;
+    retry | panic;
   else
-    panic; -- stop the program
+    ...
+    retry } panic; -- stop the program
 finalize
     ** close resources
     ...
@@ -112,41 +127,40 @@ return;
 
 <h3>Process Keywords</h3>
 
-<p>The process is created and controlled by many keywords. Mastering these keywords is important to use the process effective. We have chosen keyword chareful to be easy to memorize.</p>
+<p>The process is created and controlled by many keywords. Mastering these keywords is important to use the process effective. We have chosen keyword careful to be easy to memorize.</p>
 
 <table class="table table-sm table-bordered">
 <tr><th>job</th><td>create one step in the process</td></tr>
 <tr><th>try</th><td>begin job executable block</td></tr>
-<tr><th>pass</th><td>skip the rest of task and continue next</td></tr>
-<tr><th>fail</th><td>skip then rest of task and continue next</td></tr>
+<tr><th>catch</th><td>handle an error in current job</td></tr>
+<tr><th>pass</th><td>record success, and skip to next job</td></tr>
+<tr><th>fail</th><td>record failure, and execute next job</td></tr>
 <tr><th>retry</th>
   <td>redo the task that raise a recoverable error</td></tr>
 <tr><th>resume</th>
   <td>execute next job, following the one with error</td></tr>
-<tr><th>abort</th>
-  <td>ignore all next jobs and skip the finalization</td></tr>
 <tr><th>exit</th>
-  <td>ignore all next jobs and execute the finalization</td></tr>
-<tr><th>raise</th><td>create a recoverable error, jump to cases</td></tr>
+  <td>ignore next jobs and execute the finalization</td></tr>
+<tr><th>raise</th><td>create a recoverable error, jump to recovery</td></tr>
 <tr><th>panic</th><td>jump to finalize and stop the application</td></tr>
 </table>
 
 <h4>Notes</h4>
 
 <ul>
-<li>An driver must implement one process;</li>
-<li>An aspect can implement one process;</li>
-<li>A process create a loocal scope.</li> 
-<li>Process local variables are allocated dynmaicly when process starts;</li>
+<li>Any driver must implement one process;</li>
+<li>Any aspect must implement one process;</li>
+<li>A process create a local scope.</li>
+<li>Preconditions do not trigger finalization (before jobs)</li>
+<li>You should not call exit from recover, the exit is automatic</li>
+<li>Jobs can't be nested, they are all on same level with process</li>
+<li>Process local variables are allocated dynamic when process starts;</li>
 <li>All tasks of a single process are execute sequential from top down;</li>
 <li>When the last task is finished the local variables are removed;</li>
 <li>You can create local lambda expressions and objects;</li>
 <li>You can't define classes, or functions in processes;</li>
+<li>The new catch statement makes "resume" questionable. (is redundant?)</li>
 </ul>
-
-<h3>Process interruption</h3>
-
-<p>Interruption keywords (abort, over, panic) can be used to interrupt a process but is not the normal way to terminate a process. These keywords are used to terminate without finalization. Only the <em>exit</em> or <em>raise</em> will trigger the finalization region.</p>
 
 <p><b>Process execution</b>&nbsp; A process can be executed using "apply" or "start". For one single argument, or no argument the parentheses are not required. For a list of arguments you specify a list of arguments;</p>
 
@@ -162,9 +176,12 @@ apply process_name (param:value, *map_args);    -- mix names with hashmap
 
 <h3>End of process:</h3>
 
-<p>A process end with keyword return. When process is terminated, program execution will continue with the next statement. Keywords {<em>over</em> / <em>exit</em> / <em>panic</em> / <em>abort</em>} can terminate a process early.</p>
+<h3>Process interruption</h3>
 
-<h4>Example:</h4>
+<p>A process normal ends with keyword return. When process is terminated, program execution will continue with the next statement in the parent process. Interruption keywords (exit, over, panic) can be used to interrupt a process. The <em>exit</em> or <em>raise</em> trigger the finalization region while "over" and "panic" skip the finalization.</p>
+
+
+<h4>Example:</h4> T
 
 <pre><code class="language-eve">
 # aspect with one parameter
