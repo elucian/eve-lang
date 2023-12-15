@@ -100,7 +100,7 @@ project
 <li>Module, created with keyword: "module",</li>
 </ul>
 
-<p><b>Notes:&nbsp;</b>One project can contain one or many drivers. Each driver is an independend script. A driver has a single executable process. Eve virtual machine can run a single driver at a time but several aspects in the same time. A driver can "import" modules and can "start" several aspects in parallel.</p>
+<p><b>Notes:&nbsp;</b>One project can contain one or many drivers. Each driver is an independent script. A driver has a single executable process. Eve virtual machine can run a single driver at a time but several aspects in the same time. A driver can "import" modules and can "start" several aspects in parallel.</p>
 
 <h4>Features:</h4>
 
@@ -108,6 +108,7 @@ project
 <li>A driver can import one or more modules;</li>
 <li>A driver can <em>apply</em> aspects in sequence;</li>
 <li>A driver can <em>start</em> aspects in parallel;</li>
+<li>A driver can have at least one process that is the main process;</li>
 <li>An aspect can be split into multiple other aspects;</li>
 <li>An aspect can import several modules;</li>
 <li>Modules can share states with all other scripts.</li>
@@ -204,7 +205,7 @@ return;
 <li>$OS_PWD   :current working folder</li>
 </ul>
 
-<p><em>System objects</em> are instantiated at startup and are part of core library. These contain runtime information that you can use for debuging. System objects do not need module qualifier. You can access them directly once the module is imported.</p>
+<p><em>System objects</em> are instantiated at startup and are part of core library. These contain runtime information that you can use for debugging. System objects do not need module qualifier. You can access them directly once the module is imported.</p>
 
 <ul>
 <li>$error :contains last error with code & message</li>
@@ -228,15 +229,15 @@ global
 <ul>
 <li>You can create new system constants and variables;</li>
 <li>Prefix "$" is used to avoid scope/module qualifier;</li>
-<li>OS environment variables are transfered to constants;</li>
+<li>OS environment variables are transferred to constants;</li>
 <li>System constants are capitalized and also begin with "$";</li>
 </ul>
 
 <h3>Global states</h3>
 
-<p>Global states are static variable defined in&nbsp;<em>global scope</em>&nbsp;. You can access clobal states in functions and methods without qualifier.</p>
+<p>Global states are static variable defined in&nbsp;<em>global scope</em>&nbsp;. You can access global states in functions and methods without qualifier.</p>
 
-<p>Global states can be constant or variables. Constats use capital letters while variables are using lowercase letters. First letter is important, other letters can be numbers, lowercase or uppdercase letters or undrscore.</p>
+<p>Global states can be constant or variables. Constants use capital letters while variables are using lowercase letters. First letter is important, other letters can be numbers, lowercase or uppercase letters or underscore.</p>
 
 
 <h4>Example</h4>
@@ -282,7 +283,7 @@ import
   from $user_path use (*);                -- find all modules
   ...
 alias
-  ** create alias for some of the hiden members
+  ** create alias for some of the hidden members
   set new_name := module_name.member_name;
 process
   ...
@@ -307,7 +308,7 @@ return;
 <li>after import you can call public members of a module using&nbsp;<em>dot notation</em>;</li>
 </ul>
 
-<p><b>Note: </b>Library name is the name of the subfolder. Module is the name of the last folder in a path. By convention you can create itermediate subfolders but only the last folder is relevant and it must be unique in a library.<p>
+<p><b>Note: </b>Library name is the name of the subfolder. Module is the name of the last folder in a path. By convention you can create intermediate subfolder but only the last folder is relevant and it must be unique in a library.<p>
 
 <h2><a id="drivers"></a>Drivers</h2>
 
@@ -462,7 +463,7 @@ import
 ** declare members
   ...
 init
-** setup intial states 
+** setup initial states 
   let $system_variable := value;
   ...
 release
@@ -490,7 +491,7 @@ return;
 
 <p><b>Configuration: &nbsp;</b>Eve services using a general configuration file: eve.cfg. This file contains default settings for EVE machine. System variables are shared. A copy of EVE system variables is send to every new driver instance.</p> 
 
-<p>A driver can define default settings using "set". Configuration setings are loaded over the default values and have priority. In a process, you can temporarly change the settings using let. These changes do not propagate back into the condifuration file.</p>
+<p>A driver can define default settings using "set". Configuration settings are loaded over the default values and have priority. In a process, you can temporary change the settings using let. These changes do not propagate back into the configuration file.</p>
 
 <p><b>Memory allocation:&nbsp;</b>EVE service is in charge of allocating memory for each process. There is no shared memory between processes. When a process is terminated the memory is cleaned up of garbage and the machine continue to run until all processes are finished.</p>
 
@@ -547,7 +548,7 @@ return;
 </tr>
 <tr>
   <td>resume</td>
-  <td>continue running until a "halt" statement is enconter</td>
+  <td>continue running until a "halt" statement is encounter</td>
 </tr> 
 <tr>    
   <td>report</td>
@@ -581,7 +582,7 @@ return;
 
 <h4>Synchronously</h4>
 
-<p>Aspects can be run in serial mode one after another. Let's consider we have 3 aspects: {one, two, three}. We can execute each aspect using keyword: "apply". This will intrerupt the driver process and will execute aspec process one by one then return control to driver and continue the main process:</p>
+<p>Aspects can be run in serial mode one after another. Let's consider we have 3 aspects: {one, two, three}. We can execute each aspect using keyword: "apply". This will interrupt the driver process and will execute aspect process one by one then return control to driver and continue the main process:</p>
 
 <pre><code class="language-eve">
 driver test_apply:
@@ -636,7 +637,7 @@ return;
 
 <h3>Module import:</h3>
 
-<p>The driver or aspect can import modules. After import, all public elements of modules can be used on demand. The parent process is controling the execution. Modules are not directly executable.</p>
+<p>The driver or aspect can import modules. After import, all public elements of modules can be used on demand. The parent process is controlling the execution. Modules are not directly executable.</p>
 
 <p>Modules are "singleton" once a module is loaded in memory, it will not load a second time for same process. Eve is a multi-session system. Module states are bound the the current process.</p>
 
@@ -648,7 +649,7 @@ return;
 
 <p>Program can be early terminated be done using: <em>"over"</em> or <em>"panic"</em>. This is a way to release all locked resources and terminate the application. Program can end with an error code using "panic N" statement, otherwise it will automatically return 1 with panic and 0 with "over". Actually "panic 0" is equivalent to "over".</p>
 
-<p>When drive is terminated, it depends what is heppening next. When was started from a console in debug mode the module remains in memory, parsed and ready for debugging. The memory can be investigated using commands. When driver is executed in regular mode, the memory is erased and the EVE machine stop running.</p>
+<p>When drive is terminated, it depends what is happening next. When was started from a console in debug mode the module remains in memory, parsed and ready for debugging. The memory can be investigated using commands. When driver is executed in regular mode, the memory is erased and the EVE machine stop running.</p>
 
 <h4>Example:</h4>
 
@@ -672,7 +673,7 @@ return;
 
 <p>EVE virtual machine can load system environment variables from a configuration file. These are stored as "$name:value" pairs. Some system constants can be derived from environment variables using concatenation operators "+", "/" or "\".</p>
 
-<p>A configuration file have extension .cfg. One application can run with different configuration file. Application documentation must contain demoduleion of all variables required by the application.</p>
+<p>A configuration file have extension .cfg. One application can run with different configuration file. Application documentation must contain description of all variables required by the application.</p>
 
 <p>A good practice is to provide a configuration <em>template</em>&nbsp;. The template file may contain comments and $key = value pairs. Values can be numeric, string, symbol, date, time or data literals: [],(),{}. Eve application will automatically parse configuration file to read values for the <em>system variables</em>.</p>
 

@@ -1,3 +1,6 @@
+# demonstrate assign statement
+# is using expect to make a test
+
 driver assign_demo:
 locals 
     ** initialization statements

@@ -1,20 +1,27 @@
-# comments in Eve language
 +-------------------------------
 |  New style boxed comments    |
+|  These comments are banners  |
 +------------------------------+
 driver comment_demo:
 
+#  This comment is a title comment
 global Integer a = 0;
+
+## This comment is a sub-title
 
 *******************************
 ** old style boxed comments  **
 *******************************
 process
-    ** Next we use expression comments:    
+    ** This comment with two stars support indentation
+    ** In next expression we use expression comments    
     a := a + 1 /* *(a - 1) */ -1;
     
     /* expression comments are similar to C++
        comments. we use expression comments
        for commenting out code for debug */
-       
+
+    print(a)
+
 return; -- end of line comment
+

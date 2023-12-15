@@ -1,7 +1,7 @@
-# compare strings
+# demonstrate how to compare strings
 driver compare_strings:
-    expect('this'  == 'this');   --  true (same value)
-    expect("this"  == 'this');   --  true (same value)
+    expect('this'  == 'this');  --  true (same value)
+    expect("this"  == 'this');  --  true (same value)
     expect(' this' != 'this');  --  true (not same value)
     expect("this " != "this");  --  true (not same value)
 return;    
