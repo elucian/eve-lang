@@ -93,7 +93,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 </tbody>
 </table>
 
-<p>Native types are not usually necesary in Eve scripts. However the system library is using these types to create Primitive Types. A native type can be boked using a primitive type as a box.</p>
+<p>Native types are not usually necessary in Eve scripts. However the system library is using these types to create Primitive Types. A native type can be boxed using a primitive type as a box.</p>
 
 <h2><a id="primitive-types"/>Primitive Types</h2>
 
@@ -133,7 +133,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 <td>0</td>
 <td>2^64-1</td>
 </tr>
-<td>Double</td>
+<td>Real</td>
 <td>Float precision number on 8 bytes</td>
 <td>-n</td>
 <td>1.8 × 10^308</td>
@@ -196,7 +196,7 @@ The purpose of any programming language is to manipulate data. On the lowest lev
 </tr>
 <tr>
 <td>Continuous</td>
-<td>Float, Double, Rational, Complex</td>
+<td>Float, Real, Rational, Complex</td>
 </tr>
 </tbody>
 </table>
@@ -244,19 +244,19 @@ Discrete numbers:</h3>
 <p>For conversion into characters:</p>
 <ul>
 <li>The number of characters required for Integer numbers is 20. (19+sign)</li>
-<li>For Double numbers, conversion into characters is controled by #precision directive</li>
+<li>For Real numbers, conversion into characters is controled by #precision directive</li>
 </ul>
 
 
-<h3><a id="double-numbers"></a>Continuous numbers</h3>
-<p>The type&nbsp;<em>Double</em>&nbsp;is represented using floating precision numbers.<br />Floating decimal numbers are most simply described by 3 Integers:</p>
+<h3><a id="Real-numbers"></a>Continuous numbers</h3>
+<p>The type&nbsp;<em>Real</em>&nbsp;is represented using floating precision numbers.<br />Floating decimal numbers are most simply described by 3 Integers:</p>
 <ul>
 <li>s: a sign (0 or 1)</li>
 <li>c: a coefficient</li>
 <li>n: an exponent</li>
 </ul>
 <p>The numerical value of a finite number is &minus;1ˢ &times; c &times; 2ⁿ Using this formula Eve define two floating point types.</p>
-<p>Single: is single-precision 32-bit IEEE 754:<br />Double is double-precision 64-bit IEEE 754:</p>
+<p>Single: is single-precision 32-bit IEEE 754:<br />Real is Real-precision 64-bit IEEE 754:</p>
 <table class="table table-bordered table-striped">
 <thead>
 <tr>
@@ -274,7 +274,7 @@ Discrete numbers:</h3>
 <td>&le; 3.4 &times; 10^38</td>
 </tr>
 <tr>
-<td>Double</td>
+<td>Real</td>
 <td>16</td>
 <td>f64</td>
 <td>&le; 1.8 &times; 10^308</td>
@@ -313,7 +313,7 @@ Discrete numbers:</h3>
 </tr>
 <tr>
 <td>0.5</td>
-<td>Double number use symbols: {.,0,1,2,3,4,5,6,7,8,9}</td>
+<td>Real number use symbols: {.,0,1,2,3,4,5,6,7,8,9}</td>
 </tr>
 </tbody>
 </table>
@@ -323,7 +323,7 @@ Discrete numbers:</h3>
 driver numeric_literals:
 
 ** define global states
-  set g1 = 0.0 :Double;
+  set g1 = 0.0 :Real;
   set g2 = 0.0 :Float;
 
 ** define main process
@@ -336,7 +336,7 @@ process
   ** define local variables
   new i :Integer; -- Initial value = 0
   new n :Natural; -- Initial value = 0
-  new r :Double;  -- Initial value = 0.00
+  new r :Real;  -- Initial value = 0.00
 
   ** use modifier := to change value
   let i := 9223372036854775807;  --  maximum
@@ -408,7 +408,7 @@ return;
 </tr>
 <tr>
 <td>String</td>
-<td>Double quote delimited symbol: "..."</td>
+<td>Real quote delimited symbol: "..."</td>
 </tr>
 <tr>
 <td>List</td>
@@ -552,8 +552,8 @@ process
   ** alter a, b
   let b := a;       --  this implicit cast is possible b = 2.0
   let b := a + 3.5; --  add 3.5 then assign result to b = 5.5
-  let a := b;       --  error: can not assign Double to  Integer
-  let a := 1.5;     --  error: can not assign Double to  Integer
+  let a := b;       --  error: can not assign Real to  Integer
+  let a := 1.5;     --  error: can not assign Real to  Integer
 return;
 </code></pre>
 
@@ -564,7 +564,7 @@ return;
 driver explicit_coercion:
 
   set a = 0   :Integer;
-  set b = 1.5 :Double;
+  set b = 1.5 :Real;
 
 process
 **explicit coercion lose (0.5)
@@ -603,7 +603,7 @@ driver string_to_number:
 
 ** global states
   set v :Integer  ;
-  set b :Double   ;
+  set b :Real   ;
 
   set s = "1000"  :String;
   set r = "200.02":String;
@@ -646,7 +646,7 @@ return;
 </tr>
 <tr>
 <td>9.9</td>
-<td>Double</td>
+<td>Real</td>
 </tr>
 <tr>
 <td>U+0001</td>
@@ -693,7 +693,7 @@ return;
 </tr>
 <tr>
 <td>0.0</td>
-<td>Double</td>
+<td>Real</td>
 </tr>
 </tbody>
 </table>
@@ -809,7 +809,7 @@ return;
 <pre><code class="language-eve"># introspection demo
 process print_type:
   new i := 1.5;
-  expect type(i) is Double;
+  expect type(i) is Real;
   print "type of i is \s" ? i.type();
 return;
 </code></pre>
@@ -919,14 +919,14 @@ global
 ** define nullable variant
 driver test_nulable:
 
-class Number = { Integer | Double | Null } &lt;: Variant;
+class Number = { Integer | Real | Null } &lt;: Variant;
 
 ** use nullable variant
 global
   set x: Number;
 process
   let x = 10;    -- x is Integer
-  let x = 45.5;  -- x is Double
+  let x = 45.5;  -- x is Real
   let x = Null;  -- x is Null
   expect x is Null;
 return;
@@ -937,27 +937,27 @@ return;
 
 <h4>Example 1:</h4>
 
-<p>In next example we use a variant that can be Double or Integer.</p>
+<p>In next example we use a variant that can be Real or Integer.</p>
 
 <pre><code class="language-eve">#variant type demo
 driver variant_type:
 
 ** tefine variants
-  set v, x ,t: { Double | Integer };
+  set v, x ,t: { Real | Integer };
 
 process
   ** safe conversion
-  let t := 1 / 2;   -- make t Double
-  print type(t)     -- Double
+  let t := 1 / 2;   -- make t Real
+  print type(t)     -- Real
 
   let t := 12;      -- change type
   print type(t)     -- Integer
 
   ** unsafe conversion
-  let x := 1.5;  --  x is Double
+  let x := 1.5;  --  x is Real
   let v := 1;    --  v is Integer
-  let v := x;    --  v becomes Double
-  print type(v)  -- Double
+  let v := x;    --  v becomes Real
+  print type(v)  -- Real
 return;
 </code></pre>
 
@@ -970,7 +970,7 @@ driver variant_params:
 
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
-routine swap(@x, @y: {Integer | Double} ):
+routine swap(@x, @y: {Integer | Real} ):
   ** check type to be the same
   expect type(x) = type(y);
 
@@ -987,7 +987,7 @@ process
   call swap(x, y);
   expect (x == 20) and (y == 10);
 
-  ** invert two Double numbers
+  ** invert two Real numbers
   new a := 1.5;
   new b := 2.5;
   call swap(a, b);

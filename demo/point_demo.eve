@@ -1,8 +1,8 @@
 # define a "Point" class
 driver point_demo:
 
-class Point(Double x = 0, y = 0):
-    Double .x, .y; -- public attributes
+class Point(Real x = 0, y = 0):
+    Real .x, .y; -- public attributes
 create
     .x := x;
     .y := y;

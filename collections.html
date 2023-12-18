@@ -167,7 +167,7 @@ global
 
 process
   ** define local arrays of various capacities
-  new array_name1: [10]Double;  -- Array of 10 large numbers
+  new array_name1: [10]Real;  -- Array of 10 large numbers
   new array_name3: [2^8]Symbol; -- Array of 255 Symbols
   new array_name4: [n,m]Type;   -- 2d matrix, capacity: 6
   new array_name4: [x,y,z]Type; -- 3d matrix, capacity: 8
@@ -600,7 +600,7 @@ return;
 
 <h3>String declaration</h3>
 
-<p>String can be initialized with a constant literals using double quotes or triple quotes. You can scan a string symbol by symbol using "for" cycle. Each element in a string is on type Symbol.</p>
+<p>String can be initialized with a constant literals using Real quotes or triple quotes. You can scan a string symbol by symbol using "for" cycle. Each element in a string is on type Symbol.</p>
 
 <h4>Syntax:</h4>
 <pre><code class="language-eve">
@@ -661,7 +661,7 @@ return;
 <h3><a id="string-comparison"></a>String comparison</h3>
 <ul>
 <li>Two strings are compared using relation operators: { ==, !=, &lt;, &gt;, &gt;=, &lt;= };</li>
-<li>Single quoted symbols can be compared to double quoted strings;</li>
+<li>Single quoted symbols can be compared to Real quoted strings;</li>
 <li>The length of the string is the number of symbols:</li>
 <li>Empty string "" == '' has length 0 and is Null;</li>
 </ul>

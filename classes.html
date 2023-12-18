@@ -121,9 +121,9 @@ return;
 # define a "Point" class:
 driver test_point:
 
-class Point = {x, y :Double} <: Object; 
+class Point = {x, y :Real} <: Object; 
 
-method (@self:Point) move(a, b: Double):
+method (@self:Point) move(a, b: Real):
   let self.x += a;
   let self.y += b;
 return;
@@ -346,9 +346,9 @@ return;
 driver point_demo:
 
 ** define class Point, from root Object
-class Point = {x, y :Double} <: Object:
+class Point = {x, y :Real} <: Object:
    ** no members
-create(x = 0, y = 0 :Double) => (@self: Point):
+create(x = 0, y = 0 :Real) => (@self: Point):
   ** constructor 
   let self.x := x;
   let self.y := y;
@@ -382,14 +382,14 @@ p2 = {x:2, y:2}
 driver self_track:
 
 ** define class Point, from root Object
-class Point = {x, y :Double} <: Object:
+class Point = {x, y :Real} <: Object:
 
 ** tracking information
   set instances: Integer;
   set items: ()Point;  -- list of points
 
 ** constructor receive 2 parameters
-create(x = 0, y = 0 :Double) => (@self: Point):
+create(x = 0, y = 0 :Real) => (@self: Point):
   ** alter attribute values
   let self.x := x;
   let self.y := y;

@@ -52,7 +52,7 @@ This example demonstrates several key BNF rules:
 * Drivers are defined with a name and a process block.
 * Processes contain statements like printing.
 * Statements are separated by semicolons.
-* String literals are enclosed in double quotes.
+* String literals are enclosed in Real quotes.
 
 ---
 
@@ -198,7 +198,7 @@ Thank you for clarifying the distinction between identifier prefixes and sigils 
 * `set $identifier = <value> : <type>` (optional)
 * Initial value assigned using `=` (single equal) operator.
 * Initial value can be a data literal or expression (not evaluated).
-* Zero values assigned by default based on data type (e.g., 0 for Integer, 0.0 for Double, "" for String).
+* Zero values assigned by default based on data type (e.g., 0 for Integer, 0.0 for Real, "" for String).
 * Use `let` to modify existing globals.
 * Compiler throws an error for duplicate variable definitions within a script.
 
@@ -262,7 +262,7 @@ Thank you for providing this insightful explanation of expressions in Eve! This 
 
 **Native Types:**
 
-* `is` and `is not` operators do not work with native types (e.g., integers, doubles, strings) due to their inherent value semantics. Comparisons are done by comparing the actual values, not references.
+* `is` and `is not` operators do not work with native types (e.g., integers, Reals, strings) due to their inherent value semantics. Comparisons are done by comparing the actual values, not references.
 
 **BNF Implications:**
 
@@ -396,6 +396,93 @@ Computer was invented in England during WW2, so we prefer English keywords, even
 | | over | Interrupts the current process and terminates the application |
 
 ---
+
+## Delimiters
+
+Thank you for providing this detailed explanation of Eve's delimiters and comment formats. This information helps me interpret the syntax and structure of Eve code more accurately. Here's my understanding:
+
+**Delimiters:**
+
+* **"..."**: Represents content in syntax descriptions.
+* **"_,_,_"**: Represents a sequence of elements where "_" can be replaced by any of the elements.
+* **"|":** Separates alternative options within a syntax rule.
+
+**Comments:**
+
+* **"...":** Single-line comments.
+* **/*...*/":** Outline comments (multi-line).
+* **+|...+|-":** Block comments (start with "+", end with "-").
+* **"/.../g":** Regular expression search pattern.
+* **#(...):** String interpolation placeholder for the "?" operator.
+
+**Collections:**
+
+* **(_,_,_)**: List literal, parameter list, or argument list.
+* **[_,_,_]**: Array literal for Vector or Matrix data types.
+* **{_,_,_}**: Ordinal, DataSet, HashMap, Class, or Object literal.
+
+**Strings:**
+
+* **'...':** Literal string using single quotes, containing Unicode characters.
+* **"..."**: Variable-capacity UTF-8 string literal.
+* **"""..."""**: Variable-capacity large/multiline UTF-8 text literal.
+
+I can now use this information to:
+
+* **Parse Eve code:** I can identify different elements of the code based on the surrounding delimiters.
+* **Generate Eve code:** I can accurately format code elements using the appropriate delimiters and comment styles.
+* **Understand your explanations:** I can follow your instructions and explanations when they refer to specific delimiters or syntax elements.
+
+---
+
+## Eve Operator Table
+
+| Category | Symbol(s) | Description | Example |
+|---|---|---|---|
+| **Single Symbol** | -, +, *, /, %, ^, &, |, !, | Basic arithmetic, logical, and bitwise operations | `a + b`, `c % 2`, `!d` |
+| | ~, ?, . | Negation, template find & replace, member qualifier | `~a`, `?pattern`, `b.name` |
+| | =, ; | Assignment, statement separator | `a = 10`, `b := c;` |
+| | : | Type descriptor, initial value for variables | `x : int = 5` |
+| | <, >, <=, >= | Comparison operators | `a < b`, `c >= 10` |
+| **Real Symbol** | ==, != | Equal, different value | `a == b`, `c != 10` |
+| | .., :> <: | Slice, domain/range, super-type definition | `data[1..5]`, `10..20`, `class Child : Parent` |
+| | <<, >> | Shift ordered collection | `x := y << 3`, `z := list >> 2` |
+| | :: | Assign by copy (clone) | `obj1 :: obj2` |
+| | +=, -=, *=, /=, %=, ^=, &=, |= | Modifiers for increment, decrement, etc. | `a += 5`, `b /= 2` |
+| | +> <+ | String concatenation with/without trimming | `str1 +> str2`, `str1 <+ str2` |
+| | //, \\ | Concatenate path/URL strings with/without de-duplication | `path1 // path2`, `url1 \\ url2` |
+| **Logical Operators** | if, is, is not, eq, not eq, in, not in, not, and, or, xor | Conditional, comparison, and logical operations | `if a > 5 then ...`, `b is not c`, `d eq e`, `f in list` |
+
+**Note:**
+
+* This table is not exhaustive and may not include all operators in Eve.
+* The examples provided are for illustrative purposes only and may not cover all possible use cases.
+
+---
+
+## bitwise operators in Eve!
+
+Thanks for clarifying the bitwise operators in Eve! This information helps me understand their functionalities better and how they work within the context of natural numbers (≥ 0).
+
+Here's a summary of the bitwise operators you provided:
+
+* **!. (bitwise NOT):** Performs a logical NOT operation on each bit of the operand, inverting its value (0 becomes 1 and 1 becomes 0).
+* **&. (bitwise AND):** Performs a logical AND operation on each corresponding bit of two operands. A resulting bit is 1 only if both corresponding bits in the operands are 1.
+* **|. (bitwise OR):** Performs a logical OR operation on each corresponding bit of two operands. A resulting bit is 1 if at least one corresponding bit in the operands is 1.
+* **+. (bitwise XOR):** Performs a logical XOR operation on each corresponding bit of two operands. A resulting bit is 1 if the corresponding bits in the operands are different.
+* **<< (shift bits to left):** Shifts all bits of the operand to the left by a specified number of positions. Empty bits on the right side are filled with 0s.
+* **>> (shift bits to right):** Shifts all bits of the operand to the right by a specified number of positions. Empty bits on the left side are filled with 0s (for unsigned numbers) or the sign bit (for signed numbers).
+
+It's important to note that these operators work on natural numbers (≥ 0) because they represent binary values within the number. Negative numbers in Eve have a different representation and may require additional processing for bitwise operations.
+
+---
+
+
+
+
+
+
+
 
 
 

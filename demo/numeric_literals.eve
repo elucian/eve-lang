@@ -4,7 +4,7 @@ driver numeric_literals:
 locals
     Integer i; -- Initial value = 0
     Natural n; -- Initial value = 0
-    Double  r; -- Initial value = 0.00
+    Real  r; -- Initial value = 0.00
 
 process  
     i := 9223372036854775807;  --  maximum

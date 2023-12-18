@@ -1,9 +1,10 @@
 #traditional hello world demo
 driver hello_world:
 
-** import with qualifier
-import con: $lib.console;
-
 process
-    con.print ("Hello World!");
+    print ("Hello World!");
 return;
+
+/* Note: In Eve, print() add a new line after message, 
+   You can avoid new line if you write() instead of print.
+*/

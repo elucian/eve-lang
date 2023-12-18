@@ -1,7 +1,29 @@
 # demonstrate how to compare strings
 driver compare_strings:
+
+** define single global
+set str = "foo";
+
+/* any driver must have a process 
+   this is replacement for main(),
+   process is anonymous and unique/driver
+*/
+process
+    expect("" == '');  -- null string
+    expect(" " != ''); -- single space
     expect('this'  == 'this');  --  true (same value)
     expect("this"  == 'this');  --  true (same value)
     expect(' this' != 'this');  --  true (not same value)
     expect("this " != "this");  --  true (not same value)
-return;    
+
+    ** create new local strings
+    new str1 = "bar";
+    new str2 = "foo";
+
+    ** string relations 
+    expect(str1 == "bar"); -- check initial value
+    expect(str1 > str2);  
+    expect(str2 < str1);
+    expect(str1 <= str);   -- compare with global
+    expect(str2 != str);   -- string disjunction
+return;     

@@ -2,17 +2,17 @@
 driver variant_type:
 
 locals
-    Double | Integer v, x ,t;
+    Real | Integer v, x ,t;
     
 process   
     ** safe conversion
-    t := 1 / 2;    -- make t Double    
+    t := 1 / 2;    -- make t Real    
     t := 12;       -- change the type
     print type(t); -- Integer
     
     ** unsafe conversion
-    x := 1.5;     --  x is Double    
+    x := 1.5;     --  x is Real    
     v := 1;       --  v is  Integer    
-    v := x;       --  v becomes Double     
-    print type(v) -- Double
+    v := x;       --  v becomes Real     
+    print type(v) -- Real
 return;

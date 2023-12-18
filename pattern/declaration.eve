@@ -24,9 +24,9 @@ locals
     ** two integer numbers
     Integer a = 0;
     Integer b = 1;
-    ** multiple Double numbers
-    Double d = 2.5;
-    Double x,y,z = 0.0;  
+    ** multiple Real numbers
+    Real d = 2.5;
+    Real x,y,z = 0.0;  
 process
     pass;
 return;    

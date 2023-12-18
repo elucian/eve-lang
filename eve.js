@@ -73,6 +73,7 @@ function apply_style(str) {
     str = str.replace(/\bmatch\b/,control("match"))
     str = str.replace(/\bif\b/g,control("if"))
     str = str.replace(/\bthen\b/,control("then"))
+    str = str.replace(/\bcatch\b/,control("catch"))    
     str = str.replace(/\belse\b/g,control("else"))
     str = str.replace(/\bdone\b/g,control("done"))
 
@@ -81,7 +82,7 @@ function apply_style(str) {
     str = str.replace(/\bShort\b/g,types("Short"))
     str = str.replace(/\bInteger\b/g,types("Integer"))
     str = str.replace(/\bNatural\b/g,types("Natural"))
-    str = str.replace(/\bDouble\b/g,types("Double"))
+    str = str.replace(/\bReal\b/g,types("Real"))
     str = str.replace(/\bFloat\b/g,types("Float"))
     str = str.replace(/\bRational\b/g,types("Rational"))
     str = str.replace(/\bString\b/g,types("String"))
@@ -137,7 +138,6 @@ function apply_style(str) {
     str = str.replace(/\bwait\b/,keytab("wait"))
     str = str.replace(/\bexit\b/,keytab("exit"))
     str = str.replace(/\bstop\b/,keytab("stop"))   
-    str = str.replace(/\bcatch\b/,keytab("catch"))
     str = str.replace(/\bprint\b/,keytab("print"))
     str = str.replace(/\bwrite\b/,keytab("write"))
     str = str.replace(/\bread\b/,keytab("read"))
@@ -238,7 +238,7 @@ function apply_style(str) {
     return str
 }
 
-//style double quoted string
+//style Real quoted string
 function style_string(line) {
     let result = ""
     let q = 0

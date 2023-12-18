@@ -1,20 +1,17 @@
 # explicit coercion in EVE
 driver explicit_coercion:
-
-locals
-  Integer a = 0;
-  Double  b = 1.5;
-
+  set a = 0:   Integer;
+  set b = 1.5: Real;
 process
   ** explicit coercion lose (0.5)
-  a := floor(b);
+  let a := floor(b);
   write  a; -- will print: 1
  
   ** explicit coercion add (0.5)
-  a := ceiling(b); 
+  let a := ceiling(b); 
   print  a; -- will print: 2
 
   ** explicit coercion rounding:  
-  a := round(b);
+  let a := round(b);
   print  a; --  will print: 2
 return;

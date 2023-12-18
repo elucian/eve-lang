@@ -15,7 +15,7 @@
 
 <h2>Testing</h2>
 
-<p>Our next priority is to create a "conformity test". This require test automation for future compilers. Our job is to create the standard examples required for testing. We write test first (TDD). In the future will be probablu many interpreters and compilers that can be verified using these tests.</p>
+<p>Our next priority is to create a "conformity test". This require test automation for future compilers. Our job is to create the standard examples required for testing. We write test first (TDD). In the future will be probable many interpreters and compilers that can be verified using these tests.</p>
   
 <h2>Contribution:</h2>
 

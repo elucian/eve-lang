@@ -1,13 +1,19 @@
++-----------------------------------
 # demonstrate assign statement
+# demonstrate set, let and new statements
 # is using expect to make a test
-
+------------------------------------+
 driver assign_demo:
-locals 
-    ** initialization statements
-    Integer a = 2;
-    Double  b:= a + 0.5;
+
+** define a global without global region
+set a = 2;     -- implicit type Integer
+
 process   
-    ** verification statements   
-    expect a == 2;
-    expect b == 2.5;
+    expect a == 0; -- verify initial value
+    let a += 2;    -- alter global variable
+
+    ** create a new local variable   
+    expect a == 2;   -- verify altering
+    new b := a + 0.5 -- evaluate expression
+    expect b == 2.5; -- check expression value
 return; 

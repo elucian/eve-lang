@@ -1,15 +1,41 @@
-** domain demo
+/* domain is delimited by two limits
+   created with literals like [min..max]
+   lower limit can be excluded using "!" like [min!.max]
+   upper limit can be excluded using "!" like [min.!max]
+   open end domain is possible using "?" like [?..?]
+*/
 driver domain_demo:  
+
+** declare a global domain
+set domain = [0..1];
+
 process 
-    print [0..1]; -- [0..1]
+    ** compare domains
+    expect domain == (0..1);
+   
+    print domain; -- (0..1)
     
     ** using domain
-    expect 0   in [0..1]; 
-    expect 1   in [0..1]; 
-    expect 0.5 in [0..1];     
+    expect 0   in domain; 
+    expect 1   in (0..1); 
+    expect 0.5 in (0..1);     
 
     ** exclude limits
-    expect 0 not in [0!.1];
-    expect 1 not in [0.!1];  
-    expect 0.5 in [0!!1];
+    expect 0 not in (0!.1);
+    expect 1 not in (0.!1);  
+    expect 0.5 in (0!!1);
+
+    ** open end limits
+    expect 999 in (0..?);
+    expect -1  in (?..0);
+
+    ** domain unions and keywords "all", "any"
+    expect all {3,4,12,24}  in (0..4) | (12..24); -- true
+    expect any {5,6, 8, 12} in (0..4) | (12..24); -- true
+
+    ** precise numbers domain (using ratio 0.01)
+    new precision := (0..1:0.01);
+    expect 0.25  in precision;     -- a precise number
+    expect 0.253 not in precision; -- not a precise number
+
 return;    

@@ -2,7 +2,7 @@
 driver string_to_number:
 locals
   Integer  v; 
-  Double   b;
+  Real   b;
   String   s = '1000';
   String   r = '200.02';
 process

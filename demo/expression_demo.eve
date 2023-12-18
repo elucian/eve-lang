@@ -1,8 +1,6 @@
 ** simple expressions in print statement
 driver expression_demo:
 
-import console.(*)
-
 process:
     print 10;
     write "this is a test";
@@ -17,4 +15,9 @@ process:
     write (3,4);
     ** now create a new line and output the text
     print; -- 1234
+
+    ** logic expressions
+    print (1 < 2 and 7 > 4); -- true
+    print (1 < 1 or 1 == 1); -- true 
+    print (not true == false); -- true
 return;    

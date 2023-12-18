@@ -1,13 +1,18 @@
-#example of implicit conversion
+# example of implicit conversion
 driver implicit_coercion:
 
-locals
-  Integer a = 2;
-  Double  b = 1.5; 
+** create two global states
+global
+  set a = 2  : Integer ;
+  set b = 1.5: Real; 
   
 process
-  b := a;       --  this implicit cast is possible b = 2.0
-  b := a + 3.5; --  add 3.5 then assign result to b = 5.5
-  a := b;       --  error: can not assign Double to  Integer
-  a := 1.5;     --  error: can not assign Double to  Integer
+  let b := a;       --  this implicit cast is possible b = 2.0
+  let b := a + 3.5; --  add 3.5 then assign result to b = 5.5
+  expect (b == 5.5) --  2.0 + 3.5 
+try
+  let a := b;       --  error: can not assign Real to  Integer
+  let a := 1.5;     --  error: can not assign Real to  Integer
+recover
+  print($error.message);
 return;

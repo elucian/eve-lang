@@ -1,10 +1,13 @@
 # demo function with parameters
 driver function_params:
 
-functions
-    Integer sum(Integer a, b) =&gt; (a + b); 
+global
+    set sum = (a, b = 0: Integer) => (a + b); 
     
 process  
     print sum(1,2);  -- 3
     print sum(2,4);  -- 6
+
+    expect(sum(1) == 1);           -- implicit b = 0
+    expect(sum(a: 5, b: 10) == 15) -- parameters by name
 return;

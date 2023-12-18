@@ -1,0 +1,18 @@
+# verify shared state influence
+driver shared_states:
+
+** define global settings
+  set decimals = 2: Integer;
+
+global
+  set trunc = (x:Real) => floor(x* 10^decimal)/10^decimal;
+
+process
+  new x := 10/3;
+  ** call the lambda expression
+  print trunc(x) -- expected 3.33
+
+  ** overwrite the initial settings 
+  let decimals := 4;
+  print trunc(x) -- expected 3.3333
+return;

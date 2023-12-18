@@ -85,11 +85,11 @@ global
   set add = (p1, p2: Integer) => (p1 + p2);
   set sub = (p1, p2: Integer) => (p1 - p2);
 
-** define local variables
 process
   ** main process has access to parameters
-  print "param1: #{a}, param2: #{b}";
+  print "param1: {a}, param2: {b}";
 
+  ** define local variables
   new v1, v2 :Integer;
   
   let v1 := add(4, 5);
@@ -105,7 +105,7 @@ return;
 
 <p>I describe the syntax using some conventions. The code snippets you are going to see are not all real executable code. Some are just fragments of code, syntax "design patterns" or "pseudo-code". You will get it after a while.</p>
 
-<p>When the snippets is a "pattern" then we use square brackets like [...] for optional parts. Sometimes we use 3 dots "..." for a sequence that is missing. Sometimes [x] represents real code and is mandatory, depending on the context. Read the "example" snippets to understend better the syntax.</p>
+<p>When the snippets is a "pattern" then we use square brackets like [...] for optional parts. Sometimes we use 3 dots "..." for a sequence that is missing. Sometimes [x] represents real code and is mandatory, depending on the context. Read the "example" snippets to understand better the syntax.</p>
 
 <ul>
 <li>Eve is using infix expressions like Java and other popular languages,</li>
@@ -259,8 +259,8 @@ global
   set $a :Integer;
   set $b :Integer;
 
-  ** one Double variable
-  set $d = 0.5 :Double;
+  ** one Real variable
+  set $d = 0.5 :Real;
 </code></pre>
 
 <p><b>Globals </b> are also called "state variables" because they are staticly defined in module scope. We use "set" keyword to create new states. If the state alredy exist, it can be modified using "let". Compiler will signal an error if you set a variable two times.</p>
@@ -271,7 +271,7 @@ global
 
 <h4>Zero Values</h4>
 
-<p>When a variable is specified, with no initializer, the variables takes default <em>zero values</em>. These values are different for each data type. For example zero value for Integer = 0 for Double = 0.0 and for String = "" (empty string). Composite data types are initialized to "Null", that is (), [], {}, all equivalent to "∅" used in set theory.</p>
+<p>When a variable is specified, with no initializer, the variables takes default <em>zero values</em>. These values are different for each data type. For example zero value for Integer = 0 for Real = 0.0 and for String = "" (empty string). Composite data types are initialized to "Null", that is (), [], {}, all equivalent to "∅" used in set theory.</p>
 
 <h4>Cascade Initialization</h4>
 
@@ -283,7 +283,7 @@ global
 # multiple variables
 process
   new a = b = 1 :Integer;
-  new x = y = z = 0.5 :Double;
+  new x = y = z = 0.5 :Real;
   ...
 return;
 </code></pre>
@@ -960,7 +960,7 @@ return;</code></pre>
 </tbody>
 </table>
 
-<h3>Double symbols</h3>
+<h3>Real symbols</h3>
 <p>Eve use two symbols to create supplementary operators.</p>
 <table class="table table-bordered table-striped">
 <thead>
@@ -1145,7 +1145,7 @@ return;</code></pre>
 </tr>
 <tr>
 <td>/=</td>
-<td>Double division modifier</td>
+<td>Real division modifier</td>
 </tr>
 <tr>
 <td>%=</td>
@@ -1154,6 +1154,14 @@ return;</code></pre>
 <tr>
 <td>^=</td>
 <td>Power modifier</td>
+</tr>
+<tr>
+  <td>+&gt;</td>
+  <td>Feed | append before</td>
+</tr>
+<tr>
+  <td>&lt;+</td>
+  <td>Feed | append last</td>
 </tr>
 </tbody>
 </table>

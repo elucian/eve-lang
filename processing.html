@@ -61,7 +61,6 @@
 
 <p>In case of exception, the workflow jumps into recover region. If none of the cases is handling the error, the finalization region is executed and the process terminates. Errors can propagate to main process if they are not properly handled.</p>
 
-<p>If an error is handled in recover section, the process can be resumed with next job, can be interrupted or can restart from the beginning. User has different keywords to handle errors in recover region.</p>
 
 <p>Jobs can be dependent. If first job fail, maybe does not make any sense to continue with next job. In recover region, user can detect what job is the current job that failed. So user can do different error handling for different job or group of jobs.</p>
 
@@ -116,7 +115,7 @@ recover
     retry | panic;
   else
     ...
-    retry } panic; -- stop the program
+    retry } panic; 
 finalize
     ** close resources
     ...
@@ -137,8 +136,6 @@ return;
 <tr><th>fail</th><td>record failure, and execute next job</td></tr>
 <tr><th>retry</th>
   <td>redo the task that raise a recoverable error</td></tr>
-<tr><th>resume</th>
-  <td>execute next job, following the one with error</td></tr>
 <tr><th>exit</th>
   <td>ignore next jobs and execute the finalization</td></tr>
 <tr><th>raise</th><td>create a recoverable error, jump to recovery</td></tr>
@@ -159,7 +156,6 @@ return;
 <li>When the last task is finished the local variables are removed;</li>
 <li>You can create local lambda expressions and objects;</li>
 <li>You can't define classes, or functions in processes;</li>
-<li>The new catch statement makes "resume" questionable. (is redundant?)</li>
 </ul>
 
 <p><b>Process execution</b>&nbsp; A process can be executed using "apply" or "start". For one single argument, or no argument the parentheses are not required. For a list of arguments you specify a list of arguments;</p>
@@ -173,8 +169,6 @@ apply process_name (value, value, param:value); -- mix position with names
 apply process_name (value, *list_args);         -- use spreading operator
 apply process_name (param:value, *map_args);    -- mix names with hashmap
 </code></pre>
-
-<h3>End of process:</h3>
 
 <h3>Process interruption</h3>
 
@@ -999,7 +993,7 @@ return;
 
 <p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
 
-<p>Triple quoted string support inside double quotes and also single quote without escape. On double quoted strings you must use escape backslash \" for double quotes.</p>
+<p>Triple quoted string support inside Real quotes and also single quote without escape. On Real quoted strings you must use escape backslash \" for Real quotes.</p>
 
 <pre><code class="language-eve">
 # declaration of a text literal
@@ -1023,11 +1017,11 @@ because it is dressed in overalls
 and looks like work."
 </pre>
 
-<p><b>Note:</b>&nbsp;In a text literal we do not have to escape the single quote symbols like this '&beta;'. However we have to escape the double quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like this: "this &laquo;quoted&raquo; string" by convention.</p>
+<p><b>Note:</b>&nbsp;In a text literal we do not have to escape the single quote symbols like this '&beta;'. However we have to escape the Real quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like this: "this &laquo;quoted&raquo; string" by convention.</p>
 
 <h2><a id="regex"></a>Regular Expressions</h2>
 
-<p>Regular expressions are special string templates useful to search inside strings. We implement regular expressions a la carte except the delimitor \" must be escaped. Regular expressions are enclosed in double quotes like strings: "/regex/g". A regular expression always start with "/" and ends with "/flags".</p>
+<p>Regular expressions are special string templates useful to search inside strings. We implement regular expressions a la carte except the delimitor \" must be escaped. Regular expressions are enclosed in Real quotes like strings: "/regex/g". A regular expression always start with "/" and ends with "/flags".</p>
 
 <h4>Regex operators</h4>
 

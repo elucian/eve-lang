@@ -5,23 +5,30 @@
 driver comment_demo:
 
 #  This comment is a title comment
-global Integer a = 0;
+global 
+   set a = 0: Integer; -- define a global in region
 
 ## This comment is a sub-title
-
-*******************************
-** old style boxed comments  **
-*******************************
 process
     ** This comment with two stars support indentation
-    ** In next expression we use expression comments    
-    a := a + 1 /* *(a - 1) */ -1;
     
     /* expression comments are similar to C++
        comments. we use expression comments
        for commenting out code for debug */
 
-    print(a)
+    ** In next expression we use expression comments    
+    let a := a + 1 /* *(a - 1) */ -1;
 
-return; -- end of line comment
+    /* end of line comments are useful to  
+       explain a single line it can have a different
+       color from the single line comment */
 
+    print(a); -- end of line comment
+
+return; 
+
+/* Different styles of comments, can be used to generate
+   better documentation for the code using automatic tools.
+   Syntax color helps to colorize the comments in different
+   ways, improving visual aspect of the code.
+*/
