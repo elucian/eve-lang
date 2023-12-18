@@ -7,7 +7,7 @@ process
     print 'argument list has # members' ? a; 
 return;
 
-locals
+global
     ** number of arguments received:
     Integer c := args.length();
 process

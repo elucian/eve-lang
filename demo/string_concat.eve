@@ -1,7 +1,7 @@
 ** example of string concatenation
 driver string_concat:
 
-locals  
+global  
   String str = "";  -- empty String
 process
   ** set string value using different operators

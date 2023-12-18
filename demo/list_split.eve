@@ -1,10 +1,18 @@
 **list split demo
 driver list_split:
 
-locals
-  List[Integer] lst; --  Null List
 process
   ** initialize new reference for "lst"
-  lst := split("1,2,3",","); 
+  new str := "1,2,3"
+  new lst := str.split(","); 
   print lst; -- (1,2,3)
+
+  ** method split is also a public function
+  ** the public function split() is a wrapper of method .split()
+  new lst2 := split(lst) -- call function split with default separator "," 
+  expect lst == lst2;    -- list comparison1 is a deep comparison
+
 return;
+
+/* Note. In Eve, we use == to compare two objects 
+   Unlike Java, == do not compare references but properties */

@@ -1,6 +1,7 @@
-#traditional hello world demo
+# Traditional hello world demo
 driver hello_world:
 
+** every driver must have a process
 process
     print ("Hello World!");
 return;

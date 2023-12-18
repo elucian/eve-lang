@@ -6,7 +6,7 @@ process
     out := p1 + p2;
 return;
 
-locals
+global
     Integer result;
 process  
     ** reference argument require a variable

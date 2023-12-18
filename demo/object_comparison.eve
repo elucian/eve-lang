@@ -1,7 +1,7 @@
 #object comparison demo
 driver object_compare:
 
-locals
+global
     Integer o = n = 1; -- context variables
 process  
     ** equal values and types

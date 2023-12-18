@@ -1,18 +1,24 @@
-# null string demo
+# null string and Null value
 driver null_string:
 
-locals 
-    String str;      -- Null string (not initialized)
-    String btr = ''; -- Not Null (default capacity)
-    
+global 
+    set str: String; -- Null string 
+    set btr = "": String;    -- Empty string     
 process
     ** null string
-    expect (str == Null); 
-    expect (str != '');   
-    expect (str != "");  
+    expect (str  is Null); 
+
+    let str := "";
+    expect (str is String);
+    expect (str is not Null);
+    expect (str == "");
+    expect (str  != " ");   
+    expect (btr  != " ");  
     
     ** initialized string
-    expect (btr is not Null);        
     expect (btr == "");       
-    expect (btr == '');           
+    expect (str == "");           
 return;
+
+/* Note: Strings in Eve are immutable 
+   In Eve, Null and Empty are different things*/

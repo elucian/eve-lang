@@ -1,11 +1,22 @@
-#list demo
+# demo to concatenate lists using +> and <+
 driver list_concat:
 
-locals
-  List[Symbol] a = ['a','b','c']; --  initialized
-  List[Symbol] b = ['1','2','3']; --  initialized
-  List[Symbol] c; --  deferred initialization
+global
+  set a = ('a','b','c'); 
+  set b = ('1','2','3'); 
 process
-  store c := a ++ b;
-  print c; --  ['a','b','c','1','2','3'];
+  new c := a +> b;
+  expect (c[1] == 'a') -- check first element
+  expect (c[?] == '3') -- check last element
+
+  new d := a <+ b;
+  expect (d[1] == 'a') -- check first element
+  expect (d[?] == 'c') -- check last element  
+
+  print c; --  ('a','b','c','1','2','3');
+  print d; --  ('1','2','3','a','b','c');
 return;
+
+/* Note: Lists in EVE are enclosed in round brackets ()
+   We use square brackets [] for array literals and element access
+*/

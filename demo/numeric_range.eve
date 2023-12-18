@@ -10,7 +10,21 @@ process
   ** test range  
   expect 0 in (0..5); 
   expect 5 in (0..5); 
-  ** test limits
+
+  ** exclude limits using "!"
   expect 0 not in (0!.5);     
-  expect 5 not in (0.!5);   
+  expect 5 not in (0.!5);  
+
+  ** the default step is "1"
+  expect 1.5 not in (0..5);
+
+  ** rational number ratio
+  expect 1.5 in (0..10:0.5);
+  expect 99.01 in (0..?:0.01); 
 return;  
+
+**Notes:**
+/* 
+  1. Ranges can be infinite when "?" is used as a maximum or minimum limit. 
+  2. Ranges are not expanded in memory but a lazy evaluation should be used
+*/

@@ -42,18 +42,18 @@ We try to find new ways to improve performance, by using a better logic. Our str
 
 <h2>Precision</h2>
 
-<p>We believe, specific algorithms can be improved if we consider precision sufficient and avoid wasting time by computing high precision when it is not necesary.</p>
+<p>We believe, specific algorithms can be improved if we consider precision sufficient and avoid wasting time by computing high precision when it is not necessary.</p>
 
 <h4>Example:</h4>
 
-<p>Next sqrt() function has a precision parameter. If the precision is specified the number of iteration is considerable reduced. We can also have higher precision than usuall.</p>
+<p>Next sqrt() function has a precision parameter. If the precision is specified the number of iteration is considerable reduced. We can also have higher precision than usual.</p>
 
 <pre><code class="language-eve">
 # function with precision
 driver test_sqrt:
 
 ** overwrite default precision
-  set $precision = 1^-2;
+   set $precision = 1^-2;
 
 ** extract square root with precision
 function sqrt(x: f64, p = $precision :f32) => (z = 1.0 :f64):

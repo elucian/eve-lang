@@ -8,7 +8,7 @@ driver syntax_elements(Integer p1, p2):
 import
     con := $lib.console;
 
-locals
+global
 ** start declaration region
     Integer v1, v2;
     

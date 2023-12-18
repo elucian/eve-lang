@@ -8,7 +8,7 @@ create
     .y := y;
 return;
 
-locals
+global
     Point: p1, p2; -- declare two Null points 
 process
     ** initialize the points

@@ -1,7 +1,7 @@
 #variant type demo
 driver variant_type:
 
-locals
+global
     Real | Integer v, x ,t;
     
 process   

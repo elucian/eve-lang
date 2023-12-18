@@ -1,9 +1,10 @@
-#list join() demo
+# List join() method call demo
 driver list_join:
 
-locals
-  String str; --  Null String
 process
-  store str := join([1,2,3],",");
-  print str; -- "1,2,3"
+  new str := (1,2,3).join(', ');
+  print str; -- "1, 2, 3"
 return;
+
+/* join() is a method of a list.
+   therefore can be call using "." operator */

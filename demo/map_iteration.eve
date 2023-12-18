@@ -1,13 +1,14 @@
 # map iteration
 driver map_iteration:
 
-locals
-  Map my_map := {("a":1),("b":2),("c":3)};
-  Symbol key;
-  Integer value;  
+global
+  set my_map := {("a":1),("b":2),("c":3)};
 process  
-  for (key: value) in my_map loop
-    ** print pairs (key:value)
+  for (key, value) in my_map loop
+    ** print pairs (key, value)
     print('("' + key + '",' + value +')');
-  end loop;
+  repeat;
 return;
+
+/* Note: the keyword cycle is missing because is optional.
+   key value type is automatically inferred from the HashMap */

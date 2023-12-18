@@ -1,8 +1,25 @@
-#demo how to initialize a Map
+#demo how to initialize a HashMap
 driver map_init_demo:
-    ** Null table (require initialization)
-    Map{String,Integer} table; 
+
+global
+    ** Empty HashMap (require initialization)
+    set table1: HashMap; 
 process
-    ** initialize table
-    table := {('one':1), ('two':2)}; 
+    ** initialize table using a literal of pairs
+    expect (table1 is HashMap);
+    let table1 := {('one':1), ('two':2)};
+
+    ** use gradual type inference
+    new table2:= {};
+    let table2['one'] := 1;
+    let table2['two'] := 2;
+    
+    ** verification using "==" operator
+    expect (table1 == table2);
+    expect (table1 is not table2);
+    expect (table2 is HashMap);
 return;
+
+/* The operator == execute a deep comparison
+   operator "is" execute a shallow comparison
+*/

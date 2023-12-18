@@ -20,7 +20,7 @@ In Eve you can have more than one global regions
 For each region you can declare several variables
 ----------------------------------------------------+    
 ** local variables
-locals
+global
     ** two integer numbers
     Integer a = 0;
     Integer b = 1;
