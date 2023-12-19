@@ -475,7 +475,7 @@ return;</code></pre>
 <tr><td>offset   </td><td>open     </td><td>order     </td><td>one      </td></tr>
 <tr><td>over     </td><td>package  </td><td>pass      </td><td>print    </td></tr>
 <tr><td>process  </td><td>raise    </td><td>read      </td><td>record   </td></tr>
-<tr><td>recover  </td><td>release  </td><td>          </td><td>repeat   </td></tr>
+<tr><td>recover  </td><td>release  </td><td>resume    </td><td>repeat   </td></tr>
 <tr><td>reset    </td><td>rest     </td><td>result    </td><td>on       </td></tr>
 <tr><td>retry    </td><td>return   </td><td>rollback  </td><td>routine  </td></tr>
 <tr><td>global   </td><td>select   </td><td>all       </td><td>skip     </td></tr>
@@ -550,7 +550,7 @@ return;</code></pre>
 <tr>
 <tr>
 <td>method</td>
-<td>define behaviour for user defined data types</td>
+<td>define behavior for user defined data types</td>
 </tr>
 <tr>
 <td>recover</td>
@@ -738,8 +738,12 @@ return;</code></pre>
 </tr>
 <tr>
 <td>retry</td>
-<td>work-flow jump backwards to specified job.</td>
+<td>jump back to the same job and try again.</td>
 </tr>
+<tr>
+  <td>resume</td>
+  <td>jump to next job from the recovery block.</td>
+  </tr>
 <tr>
 <td>apply</td>
 <td>execute a process or aspect in synchronous mode</td>
@@ -762,15 +766,15 @@ return;</code></pre>
 </tr>
 <tr>
 <td>halt</td>
-<td>temporarly intrerupt the process for debug</td>
+<td>temporary interrupt the process for debug</td>
 </tr>
 <tr>
 <td>exit</td>
-<td>intrerupt execution of a process or sub-program</td>
+<td>interrupt execution of a process or sub-program</td>
 </tr>
 <tr>
 <td>over</td>
-<td>intrerupt current process and terminate application</td>
+<td>interrupt current process and terminate application</td>
 </tr>
 </tbody>
 </table>

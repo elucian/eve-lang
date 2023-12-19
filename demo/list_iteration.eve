@@ -7,13 +7,13 @@ process
   ** later initialization
   let my_list := ('a','b','c','d','e');
 
-  ** visit first 3 elements and break
+  ** visit first 3 elements and stop
   cycle:
     new e: String; -- control variable
   for e in my_list loop
     write e; --  pur e in buffer for console
     if e == 'd' then
-      break; --  early termination;
+      stop; --  early termination;
     else
       write(', '); -- add separator
     done; -- end if

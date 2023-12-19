@@ -1,8 +1,9 @@
 #object comparison demo
 driver object_compare:
 
+-- todo
 global
-    Integer o = n = 1; -- context variables
+    set o = n = 1: Integer; -- context variable
 process  
     ** equal values and types
     expect  o  == n; 
@@ -13,7 +14,7 @@ process
     expect  o is not n;     
    
     ** alter one value        
-    n := 2; 
+    let n := 2; 
 
     ** equal values and types
     expect  o  != n; 

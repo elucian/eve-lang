@@ -1,17 +1,22 @@
-#demo output parameters
+#demo output parameters and routine call
 driver output_params:
 
-routine add(Integer p1 = 0, p2 = 1,  Integer .out):
-process
-    out := p1 + p2;
+** a routine do not return a value but can have a side-effect
+routine add(p1=0, p2=1 :Integer  @out :Integer):
+    set out := p1 + p2;
 return;
 
 global
-    Integer result;
+    result: Integer;
 process  
     ** reference argument require a variable
-    apply add(1,2, result);
-    print result;     --  expected value 3
-    ** negative test
-    apply add(1,2,4); --  error, "out" parameter require a variable
+    call add(1,2, result);
+    print result;     --  expected value 13
+    ** negative test (will fail)
+    call add(1,2,4); 
+recover
+    print $error.message; -- error, "out" argument is not valid     
 return;
+
+/* Note: @out parameter use a prefix @ 
+   this indicate pass by reference of a variable */

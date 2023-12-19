@@ -78,34 +78,30 @@
 
 <pre><code class="language-eve">
 # define process with label
-process | routine
-    ** local declarations
-    ....
-    ** preconditions
-    exit if condition;
-  job (c1,"description") try
-    ...
-    raise "error" if condition;
-    ...
-    exit if condition; -- execute finalization
-    ...
-    pass if condition;
-    ...
-    fail if condition;
-    ...
-    catch error1 then
-      ** exception handler
-    catch error2 then
-      ** exception handler
-  job (c2,"description") try
-    ...
-    catch error_x then
-    ** exception handler
-  job (c3,"description") try
-    ...
-    catch error_z then
-    ** exception handler
+process: | routine name():
+  ** local declarations
+  ....
+  ** preconditions
+  exit if condition;
+job (c1,"description") try
+  ...
+  raise "error" if condition; -- recoverable
+  ...
+  exit if condition; -- execute finalization
+  ...
+  pass if condition; -- continue next job
+  ...
+  fail if condition; -- continue next job
+  ...
+job (c2,"description") try
+  ...
+job (c3,"description") try
+  ...
 recover
+  ** check if a resume is required
+  resume if condition1; 
+  resume if condition2;
+  ...
   ** exception handlers
   case error1 then
     ** exception handler
@@ -134,10 +130,9 @@ return;
 <tr><th>catch</th><td>handle an error in current job</td></tr>
 <tr><th>pass</th><td>record success, and skip to next job</td></tr>
 <tr><th>fail</th><td>record failure, and execute next job</td></tr>
-<tr><th>retry</th>
-  <td>redo the task that raise a recoverable error</td></tr>
-<tr><th>exit</th>
-  <td>ignore next jobs and execute the finalization</td></tr>
+<tr><th>retry</th><td>redo the task that raise a recoverable error</td></tr>
+<tr><th>exit</th><td>ignore next jobs and execute the finalization</td></tr>
+<tr><th>resume</th><td>return in the process and execute next job</td></tr>
 <tr><th>raise</th><td>create a recoverable error, jump to recovery</td></tr>
 <tr><th>panic</th><td>jump to finalize and stop the application</td></tr>
 </table>
@@ -145,9 +140,9 @@ return;
 <h4>Notes</h4>
 
 <ul>
-<li>Any driver must implement one process;</li>
-<li>Any aspect must implement one process;</li>
-<li>A process create a local scope.</li>
+<li>Any driver or aspect, must implement one process;</li>
+<li>Any routine is also a process (process keyword in not required);</li>
+<li>A process create a local scope, similar to a routine;</li>
 <li>Preconditions do not trigger finalization (before jobs)</li>
 <li>You should not call exit from recover, the exit is automatic</li>
 <li>Jobs can't be nested, they are all on same level with process</li>
@@ -175,7 +170,7 @@ apply process_name (param:value, *map_args);    -- mix names with hashmap
 <p>A process normal ends with keyword return. When process is terminated, program execution will continue with the next statement in the parent process. Interruption keywords (exit, over, panic) can be used to interrupt a process. The <em>exit</em> or <em>raise</em> trigger the finalization region while "over" and "panic" skip the finalization.</p>
 
 
-<h4>Example:</h4> T
+<h4>Example:</h4> 
 
 <pre><code class="language-eve">
 # aspect with one parameter
@@ -204,7 +199,7 @@ return;
 <!-- a regular diagram -->
 <div class="text-center">
   <img src="https://csp.sagecode.net/images/parallel_system.svg" alt="Parallel system"
-       width="540" class="img-fluid protect rounded shadow border" >
+    width="540" class="img-fluid protect rounded shadow border" >
   <p>Parallel System</p>
 </div>
 
@@ -241,7 +236,7 @@ return;
 <p>You can declare and initialize an array in the global area using the array builder. Array total capacity must match the number of elements created by the range. A function can be used to compute the values of all elements.</p>
 
 <pre><code class="language-eve">
-** declare an Array initislized using range
+** declare an Array initialized using range
    set array = [min..max:ratio]: [?]Type;
 
 ** declare a new Array using a map function with range
@@ -281,19 +276,19 @@ return;
  4 8 12 16
 </pre>
 
-<h2><a id="array-deconstructor">Array deconstructor</h2>
+<h2><a id="array-deconstructor">Array deconstruct</h2>
 
-<p>The deconsructor is basicly the inverse of a builder. You creste individual variables from an Array. This is useful for copy or borrow specific parts of an Array.</p>
+<p>The deconstruct is basically the inverse of a builder. You create individual variables from an Array. This is useful for copy or borrow specific parts of an Array.</p>
 
 <pre><code class="language-eve">
-#array deconstructor demo
+#array deconstruct demo
 driver array_deconstruct:
   set a :[?]Integer;
 process
   ** initialize array from Range
   let a := [1..10]; 
 
-  ** create new variables using deconstructor
+  ** create new variables using deconstruct
   new x, y, *_, z := a;
 
   ** check new variables
@@ -395,10 +390,10 @@ return;
 
 <h3>Decontructor with rest</h3>
 
-<p>You can use deconstructor with rest to create a slice in the same time extract several values. By using operator ":=" you will create a slice but using "::" you will create a new Array.</p>
+<p>You can use deconstruct with rest to create a slice in the same time extract several values. By using operator ":=" you will create a slice but using "::" you will create a new Array.</p>
 
 <pre><code class="language-eve">
-# deconstructor with slice
+# deconstruct with slice
 process
   ** generate Array elements from a Range
   new base  := [1..8];
@@ -413,7 +408,7 @@ return;
 </code></pre>
 
 <pre><code class="language-eve">
-# deconstructor with clone
+# deconstruct with clone
 process
   ** generate Array elements from a Range
   new base  := [1..8];
@@ -454,19 +449,19 @@ return;
  1 4 9 16
 </pre>
 
-<h3>List deconstructor</h3>
+<h3>List deconstruct</h3>
 
-<p>The deconsructor is basicly the inverse of a builder. You creste individual variables from a list. This is useful to clone or borrow specific parts of a list.</p>
+<p>The deconstruct is basically the inverse of a builder. You create individual variables from a list. This is useful to clone or borrow specific parts of a list.</p>
 
 <pre><code class="language-eve">
-#list deconstructor demo
+#list deconstruct demo
 driver list_deconstruct:
   set a : List;
 process
   ** initialize list from Range
   let a := (1..10); 
 
-  ** create new variables using clone deconstructor
+  ** create new variables using clone deconstruct
   new x, y, _, *rest, _ :: a;
 
   ** check new variables
@@ -487,11 +482,11 @@ return;
 (1,2,3,4,5,6,7,8,9,10)
 </pre>
 
-<p><b>Note: </b>variable "_" is special. It can consume one single element and is always Null. It can be redeclared several times in the same block. The value received is ignored.</p>
+<p><b>Note: </b>variable "_" is special. It can consume one single element and is always Null. It can be re-declared several times in the same block. The value received is ignored.</p>
 
 <h3>Append to list</h3>
 
-<p>List is using operator +&gt; or &lt;+ to grow. This operator represent insert or append. You can insert an elemnt or many elements into a list at the beginning or you can add element or list of elements at the end but you can not insert elements in the middle of the list./p>
+<p>List is using operator +&gt; or &lt;+ to grow. This operator represent insert or append. You can insert an element or many elements into a list at the beginning or you can add element or list of elements at the end but you can not insert elements in the middle of the list./p>
 
 <pre><code class="language-eve">
 #list demo concatenation
@@ -535,15 +530,15 @@ process
   let a := a <+ 'x';
   expect a ==  ('a','c','z','x');
 
-  ** enque element in list
+  ** enqueue element in list
   let a := 'v' +> a;
   expect a ==  ('v','a','b','z','x');
 return;
 </code></pre>
 
-<div class="alert alert-info">The list is prepared to support queue and stack. It has all the opperations required. We can implement a class wraper with the sugestive method names.</div>
+<div class="alert alert-info">The list is prepared to support queue and stack. It has all the operations required. We can implement a class wrapper with the suggestive method names.</div>
 
-<p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue. Is developer responsability to append and remove correctly using one of the operators: {+=, -=} {:=, &lt;-, -&gt;}. </p>
+<p><b>Note:</b>&nbsp;There is no protection about using a List as stack or queue. Is developer responsibility to append and remove correctly using one of the operators: {+=, -=} {:=, &lt;-, -&gt;}. </p>
 
 <h3>Queue (FIFO)</h3>
 
@@ -564,7 +559,7 @@ process
   ** enqueue one element
   let queue += "x";
   expect queue ==  ('x');
-  ** engueue several elements
+  ** enqueue several elements
   let queue += ('z','y')
   expect queue ==  ('z', 'y', 'x')
 
@@ -719,7 +714,7 @@ return;
 <p>You can extract elements out of a DataSet using a list.</p>
 
 <pre><code class="language-eve">
-# Extract severa lelements;
+# Extract several elements;
 process
   new test := {1,2,3,4};
   new rest := test - (3,4);
@@ -852,7 +847,7 @@ return;
 
 <h3>Generate Elements</h3>
 
-<p>You can generate elements for a HashMap using a collection builder. This is similar to a List builder, except you generate pair of values instead of a single value. You can use a function to caclulate the value, or you can search values from another collection.</p>
+<p>You can generate elements for a HashMap using a collection builder. This is similar to a List builder, except you generate pair of values instead of a single value. You can use a function to calculate the value, or you can search values from another collection.</p>
 
 <h4>Example:</h4>
 
@@ -975,7 +970,7 @@ return;
 
 <p>You can split a string in list of words. When you do this, you can specify a symbol or a regular expression. The content of regular expression is removed and not included in the string.<p>
 
-<p>You can split by regular expression and keep the match substring in the result by using "look arrount" regular expression features. It is not our scope to teach regular expressions.</p>
+<p>You can split by regular expression and keep the match substring in the result by using "look around" regular expression features. It is not our scope to teach regular expressions.</p>
 
 <pre><code class="language-eve">
 process
@@ -1021,7 +1016,7 @@ and looks like work."
 
 <h2><a id="regex"></a>Regular Expressions</h2>
 
-<p>Regular expressions are special string templates useful to search inside strings. We implement regular expressions a la carte except the delimitor \" must be escaped. Regular expressions are enclosed in Real quotes like strings: "/regex/g". A regular expression always start with "/" and ends with "/flags".</p>
+<p>Regular expressions are special string templates useful to search inside strings. We implement regular expressions a la carte except the delimiter \" must be escaped. Regular expressions are enclosed in Real quotes like strings: "/regex/g". A regular expression always start with "/" and ends with "/flags".</p>
 
 <h4>Regex operators</h4>
 
@@ -1058,7 +1053,7 @@ return;
   <li>String.replace(pattern:Regex, cargo:String);</li>
 </ul>
 
-<p><b>Note. </b>These functions can be used with class qualifier "String" but also with data literals. For example: "test".split() is equivalend to String.split("test"). Just a trick you can use to simplify your code sometimes.</p>
+<p><b>Note. </b>These functions can be used with class qualifier "String" but also with data literals. For example: "test".split() is equivalent to String.split("test"). Just a trick you can use to simplify your code sometimes.</p>
 
 <!-- work in progress-->
 
