@@ -1,9 +1,0 @@
-# Create intersection using &&;
-driver set_intersection_demo:
-
-global Set test; -- Null set
-
-process
-    store test := {1,2,3,4} && {3,4,5}; 
-    print test; --  {3,4}
-return;

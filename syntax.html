@@ -809,7 +809,7 @@ return;</code></pre>
 <td>Regular expression search pattern</td>
 </tr>
 <tr>
-<td>#(...)</td>
+<td>#{}...)</td>
 <td>String interpolation (placeholder) for operator "?"</td>
 </tr>
 </tbody>
@@ -954,10 +954,6 @@ return;</code></pre>
 <td>Used in set builders | Set union "&cup;"</td>
 </tr>
 <tr>
-<td>&amp;</td>
-<td>String concatenation | Set intersection "&cap;"</td>
-</tr>
-<tr>
 <td>_</td>
 <td>Void variable that accept any value and clear memory.</td>
 </tr>
@@ -1007,40 +1003,13 @@ return;</code></pre>
 <td>:=</td>
 <td>Assign value of expression to a variable.</td>
 </tr>
+<tr>
+  <td>||</td>
+  <td>String concatenation | Set intersection "&cap;"</td>
+</tr>  
 </tbody>
 </table>
 
-<h2>String concatenation</h2>
-<table class="table table-bordered table-striped">
-<thead>
-<tr>
-<th>Symbol</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>+</td>
-<td>Concatenate two strings as they are without trim</td>
-</tr>
-<tr>
-<td>-</td>
-<td>Concatenate two strings after trimming to one space</td>
-</tr>
-<tr>
-<td>/</td>
-<td>Concatenate two strings with "/" separator and de-duplicate "//"</td>
-</tr>
-<tr>
-<td>\</td>
-<td>Concatenate two strings with "\" separator and de-duplicate "\\"</td>
-</tr>
-<tr>
-<td>.</td>
-<td>Concatenate path or URL strings with a symbol and de-duplicate "//"</td>
-</tr>
-
-</table>
 
 <h2>Numeric operators</h2>
 <table class="table table-bordered table-striped">

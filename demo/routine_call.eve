@@ -1,17 +1,30 @@
 # driver with parameters
-driver routine_call(List[String]: *args):
+driver routine_call(*args):
 
 routine test(Integer a): 
 process
     ** print is a system routine
-    print 'argument list has # members' ? a; 
+    print 'argument list has #n arguments' ? a; 
+
+    ** list the arguments
+    cycle:
+       new arg: String;
+    for arg in args loop
+       print arg;
+    repeat;
 return;
 
-global
-    ** number of arguments received:
-    Integer c := args.length();
 process
+    ** check type
+    expect args is List;
+
+    ** number of arguments received:
+    new c := args.length();
+
     ** verify condition and exit
-    exit if c == 0;  -- early interruption  
-    apply test(c);   -- routine call
+    over 1; if c == 0;  -- early interruption
+
+    ** call local routine and exit  
+    call test(c);       -- routine call
+    over 0; -- return default 
 return;

@@ -53,10 +53,10 @@ We try to find new ways to improve performance, by using a better logic. Our str
 driver test_sqrt:
 
 ** overwrite default precision
-   set $precision = 1^-2;
+   set $epsilon  = 1^-2;
 
 ** extract square root with precision
-function sqrt(x: f64, p = $precision :f32) => (z = 1.0 :f64):
+function sqrt(x: f64, p = $epsilon  :f32) => (z = 1.0 :f64):
   loop
     let z -= (z * z - x) / (2 * z); 
   repeat if (z * z - x) > p;

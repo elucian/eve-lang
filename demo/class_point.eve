@@ -1,0 +1,22 @@
+# demonstrate a class
+driver point_demo:
+** define class Point, from root Object
+class Point = {x, y :Double} <: Object:
+   ** no members
+create(x = 0, y = 0 :Double) => (@self: Point):
+  ** constructor 
+  let self.x := x;
+  let self.y := y;
+return;
+# using the class
+process 
+  ** initialize the points
+  new p1 := Point(x:1, y:2);
+  new p2 := Point(x:2, y:2);
+  ** use string patterns to print attributes
+  print "p1 = (x:#n, y:#n)" ? (p1.x,p1.y);
+  print "p2 = (x:#n, y:#n)" ? (p2.x,p2.y);
+return;
+
+/* A class is basically a dictionary with additional methods,
+   some attributes can be created dynamical. */ 

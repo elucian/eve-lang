@@ -1,6 +1,6 @@
-#using recover
+# using recover
 driver recover_demo:
-    global Real a = 0.00;
+    set a = 0.00;
 process  
     a := 1/0;
 recover

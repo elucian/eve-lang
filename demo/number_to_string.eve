@@ -8,8 +8,8 @@ process
   let s  := String(v);  --  explicit coercion
   expect (s == "1000"); --  check string value  
   
-  print "s = #n" <+ v;  --  use placeholders
-  print "s = {v}";      --  use interpolation    
+  print "s = #n" ? v;   --  use placeholders
+  print "s = #{v}";     --  use interpolation    
 return;
 
 /* we use <+ operator to pipeline a collection int the string  

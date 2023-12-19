@@ -2,17 +2,39 @@
 driver shared_states:
 
 ** define global settings
-  set decimals = 2: Integer;
-
-global
-  set trunc = (x:Real) => floor(x* 10^decimal)/10^decimal;
-
+  set $epsilon = 0.01;
 process
+  -- rational number
   new x := 10/3;
-  ** call the lambda expression
-  print trunc(x) -- expected 3.33
+  print x -- 3.33(3)
+ 
+  ** equality is affected by precision
+  expect 3.33 == x;
+  expect 3.3333 == x;
+  expect 3.339  == x;
+  expect 3.34   != x;
+  
+
+  ** call built-in functions
+  print trunc(x)   -- expected 3.33
+  print round(x)   -- expected 3.34
+  print floor(x)   -- expected 3
+  print ceiling(x) -- expected 4
+
+  ** relation expectations 
+  expect 3.33 <= x <= 3.34; 
 
   ** overwrite the initial settings 
-  let decimals := 4;
+  let $epsilon  := 4;
+  expect 3.33335 == x;
+  expect 3.3333  == x;
+  expect 3.33    != x;
   print trunc(x) -- expected 3.3333
+  print round(x) -- expected 3.3334 
+
+  ** relation expectations 
+  expect 3.3333 <= x <= 3.3334; 
+ 
 return;
+
+/* $epsilon default value ins Eve is 0.001 */

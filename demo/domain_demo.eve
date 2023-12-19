@@ -7,7 +7,7 @@
 driver domain_demo:  
 
 ** declare a global domain
-set domain = [0..1];
+set domain = (0..1);
 
 process 
     ** compare domains
@@ -34,8 +34,8 @@ process
     expect any {5,6, 8, 12} in (0..4) | (12..24); -- true
 
     ** precise numbers domain (using ratio 0.01)
-    new precision := (0..1:0.01);
-    expect 0.25  in precision;     -- a precise number
-    expect 0.253 not in precision; -- not a precise number
+    new grid := (0..1:0.01);
+    expect 0.25  in grid;     -- a precise number
+    expect 0.253 not in grid; -- not a precise number
 
 return;    

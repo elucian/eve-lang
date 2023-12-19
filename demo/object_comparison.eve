@@ -1,9 +1,9 @@
 #object comparison demo
 driver object_compare:
 
--- todo
 global
-    set o = n = 1: Integer; -- context variable
+    set o = 1: Integer; 
+    set n = 1; Integer;
 process  
     ** equal values and types
     expect  o  == n; 

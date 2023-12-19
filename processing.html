@@ -64,7 +64,6 @@
 
 <p>Jobs can be dependent. If first job fail, maybe does not make any sense to continue with next job. In recover region, user can detect what job is the current job that failed. So user can do different error handling for different job or group of jobs.</p>
 
-<p>Early catch. If user use word catch after try, is possible to catch the error immediately. This is a shortcut, that avoid logic fragmentation. A job is ending when next job start. Last job is ending when recover or finalize start or the return keyword is found. </p>
 
 <div align="center">
   <img src="img/eve-try.svg" alt="try blocks"
@@ -150,10 +149,10 @@ return;
 <li>All tasks of a single process are execute sequential from top down;</li>
 <li>When the last task is finished the local variables are removed;</li>
 <li>You can create local lambda expressions and objects;</li>
-<li>You can't define classes, or functions in processes;</li>
+<li>You can't define classes, in processes but you can initialize objects;</li>
 </ul>
 
-<p><b>Process execution</b>&nbsp; A process can be executed using "apply" or "start". For one single argument, or no argument the parentheses are not required. For a list of arguments you specify a list of arguments;</p>
+<p><b>Process execution</b>&nbsp; A process can be executed using "apply" or "start" for the aspect where the process is hosted. For one single argument, or no argument the parentheses are not required in the call. For a list of arguments you use parenthesis;</p>
 
 <pre><code class="language-eve">#these are all valid process calls
 apply process_name; -- call process without arguments
@@ -388,7 +387,7 @@ process
 return;
 </code></pre>
 
-<h3>Decontructor with rest</h3>
+<h3>Deconstruct with rest</h3>
 
 <p>You can use deconstruct with rest to create a slice in the same time extract several values. By using operator ":=" you will create a slice but using "::" you will create a new Array.</p>
 
@@ -897,52 +896,59 @@ process
 <p>Strings can be concatenated using operators and modifiers:</p>
 
 <ul>
-  <li>regular concatenation: "+"</li>
-  <li>space trim & concatenation: "-"</li>
-  <li>path concatenation: "/"</li>
-  <li>regular concatenation modifier: "+="</li>
-  <li>trim concatenation modifier: "-="</li>
-  <li>path concatenation modifier: "/="</li>
+  <li>regular concatenation: "||"</li>
+  <li>string formatting: "#s", "#n" and ?</li>
+  <li>string string pipes "&lt;+":</li>
+  <li>collection join() method</li>
 </ul>
 
 <h4>Example:</h4>
 <pre><code class="language-eve">** example of string concatenation
-driver string_concat:
-  set str: String;  -- empty String
-process
-  ** set string value using different operators
-  let str := "this " + " string"; expect str == "this  string";
-  let str := "this " - " string"; expect str == "this string";
-  let str := "this/" / " string"; expect str == "this/string";
-return;
-</code></pre>
-
-<p><b>path concatenation</b></p>
-<p>Two strings can be concatenated using concatenation operator "/". Notice "/" will remove exra "/" from a path to avoid doubling it.</p>
-
-<pre><code class="language-eve">
-# path concatenation
-process
-  new s := ""; -- empty string
-  let s := "te/" / "/st"; --  "te/st" 
-return;
+  driver string_concat:
+  
+  process
+    ** set string value using different operators
+    new str := " this " ||"string"; 
+    expect str == " this string";
+    
+    ** use string interpolation
+    print "I have insert #{str} here!"
+  
+    ** concatenate string with collection
+    print "digits = " || {1,2,3}.join(",")
+  
+    ** string pipeline
+    print "" <+ {"this ","is ","a "," string"};
+  
+    ** string format operator ?
+    print "these numbers #n, #n, #n are prime" ? (1,3,5);
+  return;
 </code></pre>
 
 <p><b>symbols & numbers</b></p>
 
-<p>You can concatenate a Symbol with a number and you get a new String. You must always put the string first in the expression. If you put the number first, it will not work.</p>
+<p>You can concatenate a Symbol with a numbers and you can put two numbers side by side to create a string. Eve use operator || to concatenate numbers. This may be useful especially for making large binary numbers</p>
 
 <pre><code class="language-eve">
-# path concatenation
+# numeric concatenation
 process
   ** implicit conversion
-  new s := 'a' + 1; 
+  new s := 'a' || 1; 
   expect s == "a1"; -- is a string
 
   ** explicit conversion
-  new c := String(1) + 'a'; 
+  new c := 1 || 'a'; 
   expect c == "1a"; -- that works
+
+  ** concatenate binary numbers
+  new d := 0101 || 0100;
+  expect d == "01010100";
+
+  ** concatenate hexadecimals
+  new x := 010 || 35;
+  expect x == "01035"
 return;
+
 </code></pre>
 
 <h3>String: builders</h3>

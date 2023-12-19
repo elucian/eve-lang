@@ -72,7 +72,7 @@ return;
 
 <ul>
 <li>Function result is mandatory and explicit, </li>
-<li>Result type must is declared usin prefix @,</li>
+<li>Result type must is declared using prefix @,</li>
 <li>A function can have input/output parameters,</li>
 <li>A function can receive parameters of type function,</li>
 <li>A function can return a result but the result is optional,</li>
@@ -82,14 +82,14 @@ return;
 <li>A function can be suspended and resumed on demand,</li>
 </ul>
 
-<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by semicolumn, and list of arguments in round brackets (). Brackets are mandatory even if there are no arguments.</p>
+<p><b>Execute function</b>&nbsp;Function is executed in expressions using the name of the function followed by semicolon, and list of arguments in round brackets (). Brackets are mandatory even if there are no arguments.</p>
 
 <p><b>Function arguments</b>&nbsp;The arguments can be pass by position or by name. The names of arguments is useful when when a function has optional parameters.</p>
 
 <h4>Pattern:</h4>
 
 <pre><code class="language-eve">
-#demo function execiton
+#demo function execution
 driver function_ex:
 
 ** declare functions
@@ -176,11 +176,11 @@ process
 return;
 </code></pre>
 
-<p><b>Note: </b>Closures are stochastic functions, that is oposite to deterministic. The compiler will make no effort to optimize this kind of functions.</p>
+<p><b>Note: </b>Closures are stochastic functions, that is opposite to deterministic. The compiler will make no effort to optimize this kind of functions.</p>
 
 <h2><a id="routines"></a>Routines</h2>
 
-<p>A routine is a subprogram that has a name and parameters. Unlike a function, a routine do not have a result. Basicly a routine is a void function. A routine is used for its side-effects. Routines can be executed syncrhonously or asynchronously.</p>
+<p>A routine is a subprogram that has a name and parameters. Unlike a function, a routine do not have a result. Basically a routine is a void function. A routine is used for its side-effects. Routines can be executed synchronously or asynchronously.</p>
 
 <pre><code class="language-eve">
 driver routine_demo:
@@ -201,11 +201,11 @@ process
   ** execute routine synchronously with arguments
   call first_routine(value1, value2);
 
-  ** execure routine synchronously with no arguments
+  ** execute routine synchronously with no arguments
   call second_routine;
 
   ** use only 2 arguments from a list of 3 possible
-  call secon_routine(param1:value1, param3:value3);
+  call second_routine(param1:value1, param3:value3);
 return;
 </code></pre>
 
@@ -242,7 +242,7 @@ return;
 process
   let p1 := 10;      
   let p2 := 20;     
-  call add_numbers;   --  simpel subroutine call
+  call add_numbers;   --  simple subroutine call
   expect test == 30;
 return;
 </code></pre>
@@ -359,7 +359,7 @@ return;
 
 <p>Lambda expressions are simpler functions that respect arithmetic rules. These can receive several arguments and can produce one result. A lambda expression is created with keywords "set" or "new". Lambda expressions do not have local variables or states and do not have side effects.</p>
 
-<p>Lambda expressions can be declared in global region but alos in the process region. You can define more than one global regions in a script. Lamda expressions are associated to a variable, sometimes can be associated to a member in a collection.</p>
+<p>Lambda expressions can be declared in global region but also in the process region. You can define more than one global regions in a script. Lambda expressions are associated to a variable, sometimes can be associated to a member in a collection.</p>
 
 <h4>Example</h4>
 
@@ -373,7 +373,7 @@ global
 
 <h3>Lambda signature</h3>
 
-<p>Labda expression can be declared as data type using keyword "class". Later, this type can be used to enforce a specific signature for a <em>call-back</em> argument, varible or collection element.<p>
+<p>Lambda expression can be declared as data type using keyword "class". Later, this type can be used to enforce a specific signature for a <em>call-back</em> argument, variable or collection element.<p>
 
 <pre><code class="language-eve">
 # define a lambda signature
@@ -425,7 +425,7 @@ return;
 
 <div class="alert alert-warning"><b>Warning: </b>Observe we have used "set" to create the initial value for a global variable. Then we alter it using "let". The new value is used by the function to cut several decimals after round(). This is not exactly a side-effect but is an influence, that is not accepted in functional programming.</div>
 
-<p><b>Disclaim: </b>We aknowledge, Eve is not a pure functional language. This behaviour is present in many other modern languages. Eve is not different. We seek for a balance between the theory and pragmatism.</p>
+<p><b>Disclaim: </b>We acknowledge, Eve is not a pure functional language. This behavior is present in many other modern languages. Eve is not different. We seek for a balance between the theory and pragmatism.</p>
 
 <!-- work in progress-->
 

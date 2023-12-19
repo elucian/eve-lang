@@ -1,21 +1,23 @@
 #demo for using a set
 driver set_demo:
-
-global Set[Integer] my_set = {0,2,3}; 
-    
+    ** create a DataSet
+    set my_set = {0,2,3} :DataSet;
+    set ex_set = {3,4,5} :DataSet; 
 process
     ** append element 1
-    my_set += 1;  
+    my_set += {1};  
     expect my_set == {0,1,2,3};
 
+    ** check elements in set
+    expect 1 in my_set;
+    expect all {0,1} in my_set;
+    expect any {3,4} in my_set;
+
     ** remove element 2
-    my_set -= 2;  
+    my_set -= {2};  
     expect my_set == {0,1,3};
-    
-    ** modify all elements
-    my_set[*] := 0;  
-    expect my_set == {0,0,0};
-    
+    expect 2 not in my_set;
+
     ** remove all elements  
     my_set := {}; 
     expect my_set == {};

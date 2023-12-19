@@ -1,12 +1,16 @@
 #string to number conversion
 driver string_to_number:
+
+** global states
 global
-  Integer  v; 
-  Real   b;
-  String   s = '1000';
-  String   r = '200.02';
+  set v :Integer  ;
+  set b :Real   ;
+
+  set s = "1000"  :String;
+  set r = "200.02":String;
+
 process
-  v := parse(s); --  make v = 1000
-  v := parse(r); --  make v = 200 and decimal .02 is lost
-  b := parse(r); --  make b = 200.02 and decimal .02 is preserved
+  let v := parse(s); --  make v = 1000
+  let v := parse(r); --  make v = 200 and decimal .02 is lost
+  let b := parse(r); --  make b = 200.02 and decimal .02 is preserved
 return;

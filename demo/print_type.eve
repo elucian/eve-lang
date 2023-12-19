@@ -1,9 +1,25 @@
-# introspection demo
+# introspection and inference demo
 driver print_type:
 
-global  Real i = 1.5;
-  
+global 
+  set i = 1.5: Real;
+  set j: Integer;
+  set k = 0;   -- inference
+  set r = 0.1; -- inference
 process
-  expect i is Real;
-  print "type of i is \s" ? type(i);
+  ** print out type 
+  print "type of i is \s" ? type(i); 
+  
+  ** check somme assumptions
+  expect i == 1.5;  -- initial value
+  expect i is Real; -- as declared
+  expect j == 0;    -- is initialized 
+  expect k is Integer;
+  expect r is Real;   
+
+  ** create locals
+  new x = [];  expect x is Array;
+  new y = ();  expect y is List;
+  new s = {};  expect s is DataSet;
+  new k = {:}; expect k is HashMap;
 return;
