@@ -1,0 +1,9 @@
+# This test prints a string
+driver a03-print:
+process
+    print("Hello World!");
+return;
+
+** Note:
+/* EVE has access to console by default,
+   no library or module must be imported */

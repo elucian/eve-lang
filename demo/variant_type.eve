@@ -2,17 +2,18 @@
 driver variant_type:
 
 global
-    Real | Integer v, x ,t;
+    set v, x ,t : {Real | Integer};
     
 process   
     ** safe conversion
-    t := 1 / 2;    -- make t Real    
-    t := 12;       -- change the type
-    print type(t); -- Integer
+    new t := 1 / 2;    -- make t Real
+    expect t is Real;    
+    let t := 12;       -- change the type
+    expect t is Integer;    
     
     ** unsafe conversion
-    x := 1.5;     --  x is Real    
-    v := 1;       --  v is  Integer    
-    v := x;       --  v becomes Real     
-    print type(v) -- Real
+    new x := 1.5;     --  x is Real    
+    new v := 1;       --  v is  Integer    
+    let v := x;       --  v becomes Real     
+    expect v is Real
 return;

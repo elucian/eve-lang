@@ -1,7 +1,7 @@
 # Test driver structure and single line comments
-driver a01start():
+driver a01-driver():
 process
-   over 1; 
+   over 0; 
 return;
 ****************************************************
 ** this script require parsing two type of comments

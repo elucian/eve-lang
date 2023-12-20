@@ -1,6 +1,6 @@
 ## Acceptance Test
 
-EVE test folder contains examples of EVE code used for testing the interpreter, or the compiler. I have organized the tes on level1,leve2, level3 because EVE use to be called LEVEL and now is just EVE. So I have used the name to test some features.
+EVE test folder contains examples of EVE code used for testing the interpreter, or the compiler. I have organized the tes on level1, level2, level3 because EVE use to be called LEVEL and now is just EVE. So I have used the name to test some features.
 
 ## Level 1
 
