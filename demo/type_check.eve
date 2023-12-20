@@ -3,14 +3,21 @@ driver type_check:
 
 global
     ** define object and initialize
-    Object r = {name:"test", age:"24"};  
+    set r = {name:"test", age:"24"};  
     ** define hash table
-    Map    t = {('key1':"value1"),('ley2':"value2")}; 
+    set t = {('key1':1),('ley2':2)}; 
+    ** define two symbols
+    set x = 'x', y = 'y': Symbol;
 
 process
     ** check variable types using introspection
-    expect type(r.name)  is Text;
-    expect type(r.age)   is Text;
-    expect type(t.key)   is String;
-    expect type(t.value) is Text;
+    expect type(r.name) == String;
+    expect type(r.age)  == String;
+    expect type(t.key)  == String;
+    expect type(t.value)== Integer;
+    
+    ** using operator is with type.
+    expect t.value is Integer;
+    expect x is Symbol;
+    expect type(x) == Symbol;
 return;

@@ -2,29 +2,27 @@
 driver variant_params:
 
 ** define a subroutine that can swap two numbers
-routine swap(Integer | Real x, y):
-    Integer | Real i
-process  
-    expect type(x) = type(y);
-    
-    i := x; --  intermediate reference
-    x := y; --  first  swap
-    y := x; --  second swap
+** requires input/output parameters marked with @
+routine swap(@x, @y: {Integer | Real} ):
+  ** check type to be the same
+  expect type(x) = type(y);
+
+  ** swap x, y values
+  new i := x; --  intermediate
+  let x := y; --  first  swap
+  let y := i; --  second swap
 return;
 
-global
-    Integer y;   -- default zero
-    Real a, b; -- default zero
-    
-process  
-    ** invert two  Integer numbers
-    x := 10;
-    y := 20;  
-    swap(x, y);
-    expect (x == 20) and (y == 10);
-    ** invert two Real numbers
-    a := 1.5;
-    b := 2.5;
-    swap(a, b);
-    expect (a == 2.5) and (b == 1.5);
+process
+  ** invert two  Integer numbers
+  new x := 10;
+  new y := 20;
+  call swap(x, y);
+  expect (x == 20) and (y == 10);
+
+  ** invert two Real numbers
+  new a := 1.5;
+  new b := 2.5;
+  call swap(a, b);
+  expect (a == 2.5) and (b == 1.5);
 return;

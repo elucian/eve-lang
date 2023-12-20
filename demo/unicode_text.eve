@@ -1,6 +1,6 @@
-# text typehas unicode support
+# text unicode support
 driver unicode_text:
-    Text us = "I can write Greek: \"αβγδ\"";
+   set us = "I can write Greek: \"αβγδ\"": Text;
 process
-    print us;
+   print us;
 return;

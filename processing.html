@@ -959,15 +959,15 @@ return;
 # different ways to convert data into string
 process
   ** Range conversion
-  new str1 := (0..9) :&gt; String; 
+  new str1 := (0..9) +> "";
   expect str1 == "0123456789"
 
   ** DataSet conversion
-  new str2 := { a | a in ("A".."F") } :&gt; String; 
+  new str2 := "" &lt;+ ("A".."F"); 
   expect str2 == "ABCDEF";
 
   ** Join a collection
-  new str2 := { ("0x" + a) | a in ("A".."F") }.join(","); 
+  new str2 := { ("0x"||a) | a in ("A".."F") }.join(","); 
   expect str2 == "0xA,0xB,0xC,0xD,0xE,0xF";
 return;
 </code></pre>
@@ -992,33 +992,30 @@ return;
 
 <h3><a id="text-literals"></a>Text Literals</h3>
 
-<p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. This kind of literal is enclosed in triple quotes. """...""".</p>
+<p>Strings can contain multiple lines separated with end of line character. Large text literal can be defined on multiple lines. We do not have triple quoted  strings """...""" but we use a very special trick to parse long strings. You start with "\n and end with ";. This indicate to the compiler this is a Text or template large string. This kind of string is mutable.</p>
 
-<p>Triple quoted string support inside Real quotes and also single quote without escape. On Real quoted strings you must use escape backslash \" for Real quotes.</p>
+<p>A Text has an different internal representation and can be used to represent HTML or XML and other data format like CSV. Double quotes are preserved without escape sequence. Te example below demonstrate our little trick.</p>
 
 <pre><code class="language-eve">
 # declaration of a text literal
 driver text_literal:
 
 process
-  ** triple quoted string
-  new my_text:=""" 
-         "Opportunity is missed by most people
-      because it is dressed in overalls
-      and looks like work."
-  """; 
+  new my_text:="
+    Opportunity is missed by most people
+    because it is dressed in overalls
+    and looks like work.
+  "; 
   print my_text;
 return;
 </code></pre>
 
 <p><b>Output:</b></p>
 <pre class="output">
-    "Opportunity is missed by most people
+Opportunity is missed by most people
 because it is dressed in overalls
-and looks like work."
+and looks like work.
 </pre>
-
-<p><b>Note:</b>&nbsp;In a text literal we do not have to escape the single quote symbols like this '&beta;'. However we have to escape the Real quotes like: "This is \"quoted\" text". This is very rare since quoted text should use symbols: "&laquo; &raquo;" like this: "this &laquo;quoted&raquo; string" by convention.</p>
 
 <h2><a id="regex"></a>Regular Expressions</h2>
 

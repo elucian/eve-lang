@@ -1,20 +1,26 @@
-** example of collection iteration
+/** This driver demonstrate
+    how to visit members of a List */
 driver while_demo:
-    List this := ["a","b","c","d","e"];
-    Integer i := 0;
-    Symbol  e;
+
+global
+    **  create a shared list
+    set this := ('a','b','c','d','e'): List[Symbol];
 process
-    while i < this.length() loop
-        e := this[i];
-        i := i + 1;
-        if e  >= "c" then
-            write e; 
-            if e is not this.tail then
-               write ','; 
-            end if;   
-        end if;
-    else
-        write ('i = ' + i);
-    end loop;
-    print;
+  ** start labeled cycle
+  cycle test: 
+    new i := 0: Integer; 
+    new e : Symbol;       
+  while i < this.length() loop
+    let e := this[i];
+    let i += 1;
+    if e  <= "c" then
+        write e;
+        write ',' if e is not this.tail;
+    done;
+  then
+    write "i = " + i;
+  repeat; -- end test
+
+  ** flush the write buffer
+  print; -- "c","d","e"
 return;

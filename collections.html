@@ -633,21 +633,17 @@ process
   expect str == ref; --  same value
   expect str is ref; --  same reference
 
-  ** if we modify "str" then "ref" will appear modified
-  let str &lt;+ ':'; --  mutate string "str"
+  ** if we modify "str" then "ref" will remain the same
+  ** because the strings are immutable in Eve
+  let str &lt;+ (':'); --  create a new string
   expect str == "First value:"; --  modified
-  expect ref == "First value:"; --  also modified
-  expect str is ref; -- the reference is holding
+  expect ref == "First value";  --  not modified
+  expect str is ref; -- the reference was broken
 
   ** if we recreate str, reference is reset
-  let str := "First value:"; --  new string
+  let str := "First value"; --  new string
   expect str == ref;     --  same value
   expect str is not ref; --  different location
-
-  ** ref is pointing to a different location
-  let ref  := "New value:"
-  print ref;  --  New value: (modified, as expected)
-  print str;  --  First value: (unmodified value)
 return;
 </code></pre>
 
