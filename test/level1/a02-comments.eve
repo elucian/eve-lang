@@ -1,0 +1,12 @@
++-------------------------------------------------
+| Test driver structure and multiple line comments|
+| EVE has support for a variety of comment styles |
+--------------------------------------------------+
+driver a02-comments():
+process
+   over 1; -- negative test 
+return;
+/* 
+   We use /*...*/ to create nested comments that is
+   a special feature, required to comment out code  
+*/

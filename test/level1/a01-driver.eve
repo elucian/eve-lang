@@ -1,0 +1,9 @@
+# Test driver structure and single line comments
+driver a01start():
+process
+   over 1; 
+return;
+****************************************************
+** this script require parsing two type of comments
+** you should not run other tests if this test fail
+****************************************************
