@@ -1,6 +1,6 @@
 <p align="center">
-<a href="https://eve.sagecode.net" target="_blank" align="center">
-<img src="https://eve.sagecode.net/img/eve-logo.svg" alt="Eve Logo" width="140"></img>
+<a href="https://sagecode.pro/eve" target="_blank" align="center">
+<img src="https://sagecode.pro/eve/img/eve-logo.svg" alt="Eve Logo" width="140"></img>
 </a>
 </p>
 
@@ -22,12 +22,11 @@
 <p>You can contribute in 2 ways: First you can open discussions. Second, you can open and resolve work items. You signal an error and you assign yourself to solve it. Then you solve it and commit your code or make a PR. If you have direct access on Eve repository you should create a developement branch. When a feature is ready, merge the code into main branch and signal on Discord. We will publish your changes.</p>
 
 -------------------------------------------------------------------
-<p align="center"> 
-   <a href=https://eve.sagecode.net/index.html>Eve User Manual</a>
+<p align="center">
+   <a href=https://sagecode.pro/maj/index.html>Eve User Manual</a>
 </p>
 
 -------------------------------------------------------------------
 <p align="center">
 Copyright (c) 2023 Sage-Code
 </p>
-
