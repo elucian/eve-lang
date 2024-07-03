@@ -4,16 +4,16 @@
 </a>
 </p>
 
-<p align="center"><em>Extract Validate Export</em></p>
+<p align="center"><em>Effective Virtual Environment</em></p>
 
 <p>Eve is a domain specific scripting language for data processing and test automation. Eve is open source with Apache 2.0 license. We design the language and we create code examples in this repository. This language is a standard. It will have many interpreters and compilers implemented by diverse other organizations.</p>
 
   
 ## Learning
 
-You can learn Eve on our website. After you learn the syntax you can start contributing. We design Eve for learning. We should add examples that demonstrate how we can use Eve for teaching programming concepts, algorithms and data structures.
+You can learn Eve on our website: sagecode.pro/eve/ . After you learn the syntax you can start contributing. We design Eve for learning how to make a compiler. We will add examples that demonstrate how we can use Eve for teaching programming concepts, algorithms and data structures.
 
-Read and learn:[HTML Eve Tutorial](https://sagecode.pro/eve/index.html)</a>
+Sage-Code Tutorial: [Eve Programming Language](https://sagecode.pro/eve/index.html)</a>
 
 ## Testing
 
@@ -31,6 +31,6 @@ Open: [Eve MD Docs](docs/index.md)
 
 You can contribute to this documentation. Connect to Eve User Manual and reverse engineer the original documentation. Then add technical details and expand the concepts. Connect with examples of code and test use-cases.
 
--------------------------------------------------------------------
+---
 
-Copyright (c) 2023 Sage-Code {: .center}
+Copyright (c) 2024 Sage-Code
