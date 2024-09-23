@@ -31,6 +31,8 @@ Open: [Eve MD Docs](docs/index.md)
 
 You can contribute to this documentation. Connect to Eve User Manual and reverse engineer the original documentation. Then add technical details and expand the concepts. Connect with examples of code and test use-cases.
 
+WORK IN PROGRESS, CONTRIBUTORS ARE WELCOME
+
 ---
 
 Copyright (c) 2024 Sage-Code
