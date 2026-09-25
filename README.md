@@ -13,7 +13,7 @@
 
 You can learn Eve on our website: sagecode.pro/eve/ . After you learn the syntax you can start contributing. We design Eve for learning how to make a compiler. We will add examples that demonstrate how we can use Eve for teaching programming concepts, algorithms and data structures.
 
-Sage-Code Tutorial: [Eve Programming Language](https://sagecode.pro/eve/index.html)</a>
+Sage-Code Tutorial: [Eve Programming Language](https://sagecode.org/projectz/eve/index.html)</a>
 
 ## Testing
 
