@@ -1,6 +1,6 @@
 <p align="center">
-<a href="https://sagecode.pro/eve" target="_blank" align="center">
-<img src="https://sagecode.pro/eve/img/eve-logo.svg" alt="Eve Logo" width="140"></img>
+<a href="https://sagecode.org/projects/eve" target="_blank" align="center">
+<img src="https://sagecode.org/projects/eve/img/eve-logo.svg" alt="Eve Logo" width="140"></img>
 </a>
 </p>
 
