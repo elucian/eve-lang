@@ -1,5 +1,5 @@
 # using operator "is" to check type
-driver type_check:
+driver type_check is
 
 global
     ** define object and initialize

@@ -1,8 +1,8 @@
 #demo output parameters and routine call
-driver output_params:
+driver output_params is
 
 ** a routine do not return a value but can have a side-effect
-routine add(p1=0, p2=1 :Integer  @out :Integer):
+routine add(p1=0, p2=1 :Integer  @out :Integer) is
     set out := p1 + p2;
 return;
 
@@ -11,11 +11,11 @@ global
 process  
     ** reference argument require a variable
     call add(1,2, result);
-    print result;     --  expected value 13
+    print result;     **  expected value 13
     ** negative test (will fail)
     call add(1,2,4); 
 recover
-    print $error.message; -- error, "out" argument is not valid     
+    print $error.message; ** error, "out" argument is not valid     
 return;
 
 /* Note: @out parameter use a prefix @ 

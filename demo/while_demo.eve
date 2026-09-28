@@ -1,26 +1,26 @@
 /** This driver demonstrate
     how to visit members of a List */
-driver while_demo:
+driver while_demo is
 
 global
     **  create a shared list
     set this := ('a','b','c','d','e'): List[Symbol];
 process
   ** start labeled cycle
-  cycle test: 
+  test: loop 
     new i := 0: Integer; 
     new e : Symbol;       
-  while i < this.length() loop
+  while i < this.length() cycle
     let e := this[i];
     let i += 1;
-    if e  <= "c" then
+    if e  <= "c" do
         write e;
         write ',' if e is not this.tail;
     done;
   then
     write "i = " + i;
-  repeat; -- end test
+  repeat; ** end test
 
   ** flush the write buffer
-  print; -- "c","d","e"
+  print; ** "c","d","e"
 return;

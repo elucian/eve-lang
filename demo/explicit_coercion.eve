@@ -1,17 +1,17 @@
 # explicit coercion in EVE
-driver explicit_coercion:
+driver explicit_coercion is
   set a = 0:   Integer;
   set b = 1.5: Real;
 process
   ** explicit coercion lose (0.5)
   let a := floor(b);
-  write  a; -- will print: 1
+  write  a; ** will print: 1
  
   ** explicit coercion add (0.5)
   let a := ceiling(b); 
-  print  a; -- will print: 2
+  print  a; ** will print: 2
 
   ** explicit coercion rounding:  
   let a := round(b);
-  print  a; --  will print: 2
+  print  a; **  will print: 2
 return;

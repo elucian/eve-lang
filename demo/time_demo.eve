@@ -1,5 +1,5 @@
 # time demo
-driver time_demo:
+driver time_demo is
 global
     set time1, time2, time3: Time;
 process

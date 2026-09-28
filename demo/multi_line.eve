@@ -1,5 +1,5 @@
 # multiple line demo
-driver multi_line:
+driver multi_line is
 
 global
     set x: Integer;

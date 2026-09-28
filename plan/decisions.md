@@ -140,3 +140,86 @@ Answers Q-010.
 Still open: the codes of `exit`, `panic` and an unhandled error; whether a failed `assert` stops
 the process or only sets the final code; which code wins when several apply. The VM stub uses 70
 for "not implemented", outside this range.
+
+### D-011 Comments (2026-09-28)
+From `issues/syntax.md` SYN-03. Eve comments are `#`, `##`, `**`, `(* ... *)` and `/* ... */`.
+`#` and `##` start only at the beginning of a line, without indentation. `**` runs to the end of
+the line and may follow code or be indented. `(* ... *)` is an expression comment; `/* ... */` is a
+block comment. The `--` end-of-line comment and the `+- -+` box comment are removed; all `--`
+comments in `.eve` files and tutorial examples were converted to `**`. Amended by D-014:
+`(* ... *)` became `(** ... **)`.
+
+### D-012 Identifiers and the driver header (2026-09-28)
+From SYN-01, SYN-02. `-` is not allowed in identifiers, to avoid confusion with the `-` operator.
+The driver header and the `process` keyword need no `:` (`driver a01_driver()`, `process`).
+Amended by D-015: headers end with the keyword `is`.
+
+### D-013 Not-equal is `<>`; `!` marks unsafe operations (2026-09-28)
+From SYN-05. `<>` is the not-equal operator; `!=` is not Eve. `!` is the sigil for unsafe
+operations (its placement: SYN-19). All `!=` in `.eve` files and tutorial examples became `<>`.
+
+### D-014 Comments: nesting, expression comments, file header (2026-09-28)
+From SYN-04, SYN-16, SYN-17, SYN-18.
+- `/* ... */` does not nest: the first `*/` closes the comment.
+- Expression comments are `(** ... **)` (not `(* ... *)`, which clashes with the vararg `*` in
+  `f(*args)`). They may span lines.
+- A file starts with `#!` (shebang: a free script of sequential statements, no `driver` or
+  `process` needed), `#` (title) or `##` (subtitle).
+- Box comments became block comments: `+-` → `/*-` and `-+` → `-*/` in 6 `.eve` files and in the
+  tutorial examples; lines of dashes in examples became `**--…`.
+
+### D-015 Declaration headers end with `is` (2026-09-28)
+From SYN-15. A header ends with the keyword `is` instead of `:`: `driver name is`,
+`driver name(params) is`, and the same for `aspect`, `module`, `function`, `routine`, `method`
+and `constructor`. `()` is optional when there are no parameters. `process` has no colon.
+Applied to every example: 94 + 61 headers in the tutorial, 53 in `.eve` files. Class headers with
+a body still end in `:` (CLS-01 open).
+
+### D-016 Control-flow blocks (2026-09-28)
+From SYN-11: the author rewrote control.html and processing.html. General form:
+`label: <control_type>` declarations, `<transition>` executable region, optional clauses,
+`<terminator>`.
+
+| Block | Syntax |
+|---|---|
+| job | `name: job` … `do` … `error E` / `error (E1, E2)` / `other error` … `check` … `clean` … `done job [name];` |
+| if | `if c do` … `else if c do` … `else` … `done;` |
+| match | `label: match s [one \| all]` … `when v1, v2 do` … `when [any \| other] do` … `then` … `done match [label];` |
+| loop | `[label:] loop` declarations `cycle` … `then` … `repeat [label];` |
+| while | `[label:] loop` declarations `while c cycle` … `else` … `then` … `repeat [label];` |
+| for | `[label:] loop` declarations `for x in r cycle` … `repeat [label];` |
+| aspect, serial | `apply name to (args);` (waits for the aspect) |
+| aspects, parallel | `name: parallel` declarations `fork` … `begin aspect(args);` … `join name;` |
+
+Interruptions: `break` leaves a loop, `next` starts the next iteration, `stop` ends a job without
+error. `then` now means "after the block completed"; branches use `do`. Removed: `try`, `catch`,
+`resolve`, `skip`, `split`, `run`, `cycle label:` as a header. All tutorial pages and `.eve` files
+were converted; syntax.html keyword, block and interruption tables were rebuilt.
+
+### D-017 Assignment, visibility, unsafe calls, shift operators (2026-09-28)
+From SYN-06, SYN-08, SYN-10, SYN-19.
+- `=` is an expression: no type inference, returns its value, chains (`a = b = 5 : Integer`,
+  `let a = b = c = y : Integer;`), copies/borrows a value; also binds typed parameters.
+  `:=` infers the type, is a statement (not an expression), and evaluates the right side fully.
+- In a declaration, a leading `_` marks a protected member and a leading `.` a public member;
+  neither is part of the name. `$` is part of the name (system-wide variable).
+- `name!()`: a function or method that may raise, has side effects, or bypasses safety checks.
+- `<<` and `>>` are shift modifiers (change a value in place). `->` and `<-` are reserved, unused.
+
+### D-018 Test file names use `_` (2026-09-28)
+From SYN-14. Test files follow identifier rules: `a01_driver.eve`, `a02_comments.eve`,
+`a03_print.eve` (+ `.out`); conventions `a01_feature.eve`, `b01_feature.eve`, `c01_feature.eve`.
+
+### D-019 Lexical rules: escapes, identifiers, `**`, precedence (2026-09-28)
+From SYN-20 to SYN-24.
+- Escapes in `"…"` and `'…'`: `\` `\"` `\'` `\{` `\}` `\n` `\r` `\t` `\0` `\xHH` `\u{H…}`
+  (1 to 6 hex digits). Any other `\` sequence is a lexical error. `"""…"""` text is raw (no
+  escapes). The `&code;` and `\LF` / `\CRLF` forms are dropped.
+- Identifiers are case-sensitive, at most 42 characters.
+- `**` may appear anywhere, including column 0 and the first line (a row of `*****`).
+- `option` is a keyword: a method may declare a second parameter set, passed by name after
+  `option`: `method name(*args) option (params)`, called `print (a, b) option (separator = " ");`.
+  `print` is such a method; its `separator` defaults to `","`.
+- Operator precedence, highest first: `.` `()` `[]` · unary `-` `not` · `^` (right) · `*` `/` `%` ·
+  `+` `-` · `..` · `<<` `>>` · `&&` · `||` · `==` `<>` `<` `>` `<=` `>=` `~` `is` `in` `eq` · `and` ·
+  `xor` · `or` · `if … else`. May be revised.

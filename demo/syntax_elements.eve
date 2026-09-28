@@ -1,8 +1,8 @@
 # script example written in EVE
-+-----------------------------------------
+/*-----------------------------------------
 | a driver can receive parameters        |
-+----------------------------------------+
-driver syntax_elements(p1, p2: Integer):
+/*----------------------------------------*/
+driver syntax_elements(p1, p2: Integer) is
 
 global
 ** start declaration region

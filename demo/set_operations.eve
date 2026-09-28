@@ -1,5 +1,5 @@
 # Create intersection and union
-driver set_intersection_demo:
+driver set_intersection_demo is
     set my_set = {0,2,3};
     set ex_set = {2,3,4}; 
 process
@@ -12,6 +12,6 @@ process
     expect intersection == {2,3};
 
     ** print-out setts
-    print intersection; -- {2,3}
-    print union;  -- {0,2,3,4}
+    print intersection; ** {2,3}
+    print union;  ** {0,2,3,4}
 return;

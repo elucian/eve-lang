@@ -1,5 +1,5 @@
 #demo how to initialize a HashMap
-driver map_init_demo:
+driver map_init_demo is
 
 global
     ** Empty HashMap (require initialization)

@@ -1,5 +1,5 @@
 # This test prints a string
-driver a03-print:
+driver a03_print() is
 process
     print("Hello World!");
 return;

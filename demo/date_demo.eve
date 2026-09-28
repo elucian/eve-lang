@@ -1,5 +1,5 @@
 # Using "as" operator with Date type
-driver date_demo:
+driver date_demo is
 
 /* Date type has 3 subtypes: YDM, MDY and DMY
    This approach simplify the syntax and improve readability.
@@ -8,11 +8,11 @@ set date := "2019/01/30": YDM;
 
 process
     ** convert data type and print
-    print date; --  2019/01/30 
+    print date; **  2019/01/30 
 
     ** convert data type and print
-    print date as DMY; --  30/01/2019
-    print date as MDY; --  01/30/2019
+    print date as DMY; **  30/01/2019
+    print date as MDY; **  01/30/2019
 
     ** convert to custom Date format
     print date as "DD.MM.YYYY"

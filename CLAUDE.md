@@ -11,6 +11,8 @@ Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig b
 - `plan/` **permanent step-by-step plan** for the tutorial and the spec. For improvement work,
   start with `plan/README.md`, take the next open step, and update its status mark when done.
   Open questions for the author are in `plan/decisions.md`.
+- `issues/` one file per tutorial page: questions and fixes from the page review (T1.10). The
+  author answers by editing `**Answer:**` lines; answers become decisions in `plan/decisions.md`.
 - `demo/` ~45 small `.eve` examples; `pattern/` syntax patterns; `test/level1-3/` conformity tests
 - `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
@@ -19,8 +21,10 @@ Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig b
 - `tools/`, `files/` Notepad++ syntax (UDL) XML
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
   tutorial (17 HTML pages), owned by the `scl` repo. See "Tutorial" below.
-- Eve file shape: optional `#!` shebang on line 1, then `driver name:` … `process` … `return;`. Comments: `#` line, `**` title,
-  `--` end of line, `/* … */` block, `+---- … ----+` box.
+- Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
+  … `process` … `return;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
+  expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
+  Control flow: D-016 in `plan/decisions.md`.
 - **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.
 
 ## Tutorial (`tutorial/` → scl repo)
@@ -99,14 +103,17 @@ If any OLD is missing or ambiguous, **nothing** is written and every problem is 
   copy in `bee-lang\bin` mangles CRLF and walks `.git`. Check which one runs:
   `bee-ed edit --help` must mention "Line endings are handled".
 - Every command keeps CRLF/LF and the final newline. Multi-line `edit` works on CRLF files.
-- `sed` matches the whole file: use `(?m)` for per-line `^`/`$` (CRLF files are matched as LF).
+- `sed` matches the whole file: use `(?m)` for per-line `^`/`$`. With the old copy on PATH (see
+  above; still the case 2026-09-28), `$` does not match before `\r` in CRLF files: write
+  `([ \t]*\r?)$` and keep `\r` inside the group, or the CR is dropped.
   Replacement `$1`/`${name}`, literal `$` = `$$`. RE2: no lookaround or backreferences.
 - Masks: `*.md` = that base name at any depth; `spec/*.md` = one level only (pass `spec` to recurse);
   a literal file path = exactly that file. `.git` is never entered.
 - `apply` handles multi-file patches and shifted hunks, but `multiedit.py`/`splice.py` are cheaper
   because you don't have to write a diff.
 - Arguments: `@path` reads a file (a missing `@x.txt` is an error), `@@x` is the literal `@x`,
-  Eve names like `@self` stay literal. Text starting with `-` is fine; `--` ends flags.
+  Eve names like `@self` stay literal. With the old copy, an argument starting with `-` is taken as
+  a flag and `--` is rejected: pass such text as `@file` (`printf '%s' '-x' > temp/a.txt`).
 - Git Bash rewrites arguments that start with `/` (e.g. `/*` Eve comments). The project settings
   set `MSYS_NO_PATHCONV=1`, so always use repo-relative or `C:/…` paths, never `/c/…`.
 - Quote patterns in single quotes. For text containing `'`, pipe it via `@-` with `printf '%s'`:

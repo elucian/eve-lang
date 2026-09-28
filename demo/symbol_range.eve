@@ -1,15 +1,15 @@
 # using symbol ranges
-driver symbol_range:
+driver symbol_range is
 process 
-  print ('0'..'5') -- ('0','1','2','3','4','5')
+  print ('0'..'5') ** ('0','1','2','3','4','5')
 
   ** following statements should pass
-  expect '0' in ('0'..'9');  -- will pass   
-  expect 'X' in ('A'..'Z');  -- will pass
+  expect '0' in ('0'..'9');  ** will pass   
+  expect 'X' in ('A'..'Z');  ** will pass
 
   ** iterate over range of symbols
-  for d in ('a'...'c') loop
-    for n in ('1'..'3') loop
+  for d in ('a'...'c') cycle
+    for n in ('1'..'3') cycle
        print d || n || ',';
     repeat;
   repeat;

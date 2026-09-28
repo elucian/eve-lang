@@ -1,5 +1,5 @@
 #object comparison demo
-driver object_compare:
+driver object_compare is
 
 global
     set o = 1: Integer; 
@@ -7,7 +7,7 @@ global
 process  
     ** equal values and types
     expect  o  == n; 
-    expect  not (o != n);     
+    expect  not (o <> n);     
     
     ** not the same location
     expect  not (o is n); 
@@ -17,6 +17,6 @@ process
     let n := 2; 
 
     ** equal values and types
-    expect  o  != n; 
+    expect  o  <> n; 
     expect  not (o == n);         
 return;
