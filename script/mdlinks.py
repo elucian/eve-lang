@@ -1,9 +1,9 @@
 """Check and refactor relative links between Markdown files.
 
 usage:
-  python .claude/scripts/mdlinks.py check [PATH...]
+  python script/mdlinks.py check [PATH...]
       Report broken relative links and #anchors (external URLs are skipped).
-  python .claude/scripts/mdlinks.py rename OLD NEW [--git-mv] [--dry-run]
+  python script/mdlinks.py rename OLD NEW [--git-mv] [--dry-run]
       Move a file and rewrite every Markdown link that points to it, plus the
       relative links inside the moved file itself.
 """

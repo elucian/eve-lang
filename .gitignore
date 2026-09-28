@@ -29,8 +29,15 @@
 # Executables
 *.exe
 *.out
+# ...except expected test output (script/runtest.py)
+!/test/**/*.out
 *.app
 .DS_Store
+
+# Zig build output (evevm/); `zig build -p ..` installs eve.exe + eve.pdb into /bin
+.zig-cache/
+zig-out/
+/bin/
 
 # Claude Code local files
 .claude/settings.local.json
@@ -42,3 +49,5 @@ __pycache__/
 # Scratch space for temporary scripts and output (kept empty in git)
 /temp/*
 !/temp/.gitkeep
+# Test reports from script/runtest.py
+/temp/output/

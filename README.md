@@ -23,11 +23,11 @@ Our next priority is to create a "conformity test". This require test automation
 
 You can contribute in 2 ways: First you can open discussions. Second, you can open and resolve work items. You signal an error and you assign yourself to solve it. Then you solve it and commit your code or make a PR. If you have direct access on Eve repository you should create a developement branch. When a feature is ready, merge the code into main branch and signal on Discord. We will publish your changes.
 
-# MD Docs
+# Compiler Manual
 
-We are working on a new documentation that use MD files. This documentation will be specific to EVE virtual machine hosted in this repository. Every other compiler will need specific documentation with refference to ths original documentation.
+The compiler manual documents an Eve implementation: how to implement it, how to use it, what was implemented, and which features of the specification it supports. The feature tables are generated from the specification. Every other compiler can use the same layout for its own manual, with reference to this one.
 
-Open: [Eve MD Docs](docs/index.md)
+Open: [Eve Compiler Manual](manual/README.md)
 
 You can contribute to this documentation. Connect to Eve User Manual and reverse engineer the original documentation. Then add technical details and expand the concepts. Connect with examples of code and test use-cases.
 

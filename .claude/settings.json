@@ -8,8 +8,8 @@
     "allow": [
       "Bash(bee-ed *)",
       "PowerShell(bee-ed *)",
-      "Bash(python .claude/scripts/*)",
-      "PowerShell(python .claude/scripts/*)",
+      "Bash(python script/*)",
+      "PowerShell(python script/*)",
       "Bash(python temp/*)",
       "PowerShell(python temp/*)",
       "Bash(git status *)",
