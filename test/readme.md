@@ -2,6 +2,44 @@
 
 EVE test folder contains examples of EVE code used for testing the interpreter, or the compiler. I have organized the tes on level1, level2, level3 because EVE use to be called LEVEL and now is just EVE. So I have used the name to test some features.
 
+## Running tests
+
+Tests run on the Eve virtual machine (`bin/eve.exe`, built from `evevm/`) with `script/runtest.py`:
+
+| Command | Runs |
+|---|---|
+| `python script/runtest.py 1` | every test in `test/level1` (likewise `2`, `3`) |
+| `python script/runtest.py all` | every level |
+| `python script/runtest.py a03` | one test, by name or unique name prefix |
+| `python script/runtest.py test/level1/a03-print.eve` | one test, by path |
+| `python script/runtest.py 1 --eve path/to/other-eve` | the same tests on another implementation |
+
+A test is a `.eve` file directly in `test/levelN/`. What it must produce, all optional:
+
+- `<name>.out`: the exact expected stdout.
+- `expect.json` (one per level): `{"<name>": {"exit": 1, "args": [], "skip": "reason"}}`. The default exit code is 0.
+
+Exit codes (D-010): 0 normal (`over`, `over 0;`), 1 forced abnormal exit (`over 1;`: incorrect
+parameters or environment, the job fails), 2 error (failed `expect`), 3 warning (failed `assert`).
+
+Verdicts are PASS, FAIL (wrong exit code or stdout), ERROR (timeout, or `eve` not found) and SKIP.
+Reports are Markdown files in `temp/output/` (not versioned): `level1/<name>.md` per test, with
+source, stdout, stderr and a diff, plus a summary table per run. The exit status is 0 only when
+nothing failed.
+
+## Test-driven workflow
+
+We write the test first, then make the virtual machine pass it: one feature, one test, one step at
+a time.
+
+1. Write the test (`.eve`, plus `.out` or an `expect.json` entry). It states what the spec says.
+2. Run it: `python script/runtest.py <name>`. It must fail first; a new test that already
+   passes does not test anything new.
+3. Read the report in `temp/output/`. When the result is not the expected one, fix whichever is
+   wrong: the **VM** (`evevm/`), the **spec** (`spec/`, through `plan/decisions.md`), or the
+   **test** itself.
+4. Run the whole level again (`python script/runtest.py 1`) so earlier tests stay green.
+
 ## Level 1
 
 Single script tests each test is a driver. We verify basic syntax elements and make examples as dump as possible, We name each file using convention pattern: "a01-feature.eve", each test is a "basic case". 

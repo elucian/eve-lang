@@ -1,7 +1,10 @@
 # Eve language repository
 
 Eve is a domain-specific scripting language (data processing, test automation).
-This repo holds the language **examples and docs**; there is no compiler here.
+This repo holds the language **examples, spec and manual**, and the first implementation: the
+Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (skeleton only).
+Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig build test`.
+`.zig`/`.zon` files are LF (`.gitattributes`), unlike the rest of the repo.
 
 - `spec/` **the Eve specification being written**: Markdown + JSON, normative. Conventions in
   `spec/README.md`.
@@ -9,11 +12,14 @@ This repo holds the language **examples and docs**; there is no compiler here.
   start with `plan/README.md`, take the next open step, and update its status mark when done.
   Open questions for the author are in `plan/decisions.md`.
 - `demo/` ~45 small `.eve` examples; `pattern/` syntax patterns; `test/level1-3/` conformity tests
-- `docs/` Markdown docs (`docs/index.md` + mostly empty stub pages in core/db/net/os/std)
-- `tools/`, `files/` Notepad++ syntax (UDL) XML; `doc.sh` scaffolds the docs tree
+- `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
+  `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
+  Conventions in `manual/README.md`.
+- `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
+- `tools/`, `files/` Notepad++ syntax (UDL) XML
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
   tutorial (17 HTML pages), owned by the `scl` repo. See "Tutorial" below.
-- Eve file shape: `driver name:` … `process` … `return;`. Comments: `#` line, `**` title,
+- Eve file shape: optional `#!` shebang on line 1, then `driver name:` … `process` … `return;`. Comments: `#` line, `**` title,
   `--` end of line, `/* … */` block, `+---- … ----+` box.
 - **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.
 
@@ -45,8 +51,8 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
    A structured or repetitive refactor → write a one-off Python script in `temp/`.
 5. **Temporary files go in `temp/`.** That covers one-off scripts, multiedit specs, splice input,
    and captured output. Its contents are git-ignored (only `temp/.gitkeep` is tracked), and the
-   `.claude/scripts` walkers skip it. Don't use the system temp dir or the session scratchpad.
-   With `bee-ed`, name target dirs (`demo docs`) rather than `*` so `temp/` isn't matched.
+   `script/` walkers skip it. Don't use the system temp dir or the session scratchpad.
+   With `bee-ed`, name target dirs (`demo manual`) rather than `*` so `temp/` isn't matched.
 6. **Verify with summaries, not re-reads:** tool output, `git diff --stat`, `git diff -U1 <file>`.
 7. `--dry-run` output is a short summary on every command. Use it before any tree-wide `sed`.
 
@@ -54,25 +60,26 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
 
 | Task | Command |
 |---|---|
-| What files exist, sizes, titles | `python .claude/scripts/repomap.py [dir] [--ext .eve,.md] [--dirs]` |
-| Headings (md/html) / Eve declarations + line numbers | `python .claude/scripts/outline.py <file-or-dir> [--depth 2]` |
+| What files exist, sizes, titles | `python script/repomap.py [dir] [--ext .eve,.md] [--dirs]` |
+| Headings (md/html) / Eve declarations + line numbers | `python script/outline.py <file-or-dir> [--depth 2]` |
 | One-line or single-span unique edit | `bee-ed edit <file> '<old>' '<new>'` |
-| Multi-line edits, several files, atomic | `python .claude/scripts/multiedit.py <<'EOF' … EOF` |
-| Rewrite / insert / delete lines by number | `python .claude/scripts/splice.py <file> replace A B --expect '<text in line A>' <<'EOF'` |
+| Multi-line edits, several files, atomic | `python script/multiedit.py <<'EOF' … EOF` |
+| Rewrite / insert / delete lines by number | `python script/splice.py <file> replace A B --expect '<text in line A>' <<'EOF'` |
 | Regex replace across files | `bee-ed sed '<re2>' '<repl>' <dir-or-glob> --dry-run`, then without `--dry-run` |
 | Regex search | `bee-ed search '<re2>' '*.eve' [--count]` |
 | Create a new file in chunks | `bee-ed append <file> --new <<'EOF'` then `bee-ed append <file> <<'EOF'` |
-| Move a doc + fix all links to it | `python .claude/scripts/mdlinks.py rename <old> <new> --git-mv` |
-| Broken links / anchors | `python .claude/scripts/mdlinks.py check [docs]` |
+| Move a doc + fix all links to it | `python script/mdlinks.py rename <old> <new> --git-mv` |
+| Broken links / anchors | `python script/mdlinks.py check [manual]` |
 | HTML tag balance in `.md` | `bee-ed balance <file>` |
+| Run tests on the VM (TDD) | `python script/runtest.py 1` / `all` / `a03` → reports in `temp/output/` |
 
-Every script has full usage in its docstring (`python .claude/scripts/<name>.py -h`).
+Every script has full usage in its docstring (`python script/<name>.py -h`).
 All of them preserve CRLF/LF and the final newline, and write atomically.
 
 ### multiedit spec (markers at column 0, no blank separator lines)
 
 ```
-@@@ FILE docs/index.md
+@@@ FILE manual/README.md
 @@@ OLD
 exact text, must occur exactly once
 @@@ NEW
@@ -94,7 +101,7 @@ If any OLD is missing or ambiguous, **nothing** is written and every problem is 
 - Every command keeps CRLF/LF and the final newline. Multi-line `edit` works on CRLF files.
 - `sed` matches the whole file: use `(?m)` for per-line `^`/`$` (CRLF files are matched as LF).
   Replacement `$1`/`${name}`, literal `$` = `$$`. RE2: no lookaround or backreferences.
-- Masks: `*.md` = that base name at any depth; `docs/*.md` = one level only (pass `docs` to recurse);
+- Masks: `*.md` = that base name at any depth; `spec/*.md` = one level only (pass `spec` to recurse);
   a literal file path = exactly that file. `.git` is never entered.
 - `apply` handles multi-file patches and shifted hunks, but `multiedit.py`/`splice.py` are cheaper
   because you don't have to write a diff.

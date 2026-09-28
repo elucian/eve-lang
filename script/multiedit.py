@@ -4,7 +4,7 @@ Replaces a series of Read+Edit round-trips. Every edit is validated first;
 if any OLD block is missing or ambiguous, no file is written.
 Preserves CRLF/LF and the final newline of each file.
 
-usage: python .claude/scripts/multiedit.py [SPEC] [--dry-run] <<'EOF'
+usage: python script/multiedit.py [SPEC] [--dry-run] <<'EOF'
   (spec from SPEC file, or stdin when omitted)
 
 Spec format (markers must start at column 0):

@@ -4,9 +4,9 @@ Saves tokens when rewriting a block: you send only the NEW text, never the
 old text. Preserves CRLF/LF and the final newline (unlike `bee-ed apply`).
 
 usage:
-  python .claude/scripts/splice.py FILE replace A B [--expect TXT] [--from PATH] <<'EOF'
-  python .claude/scripts/splice.py FILE insert N    [--expect TXT] [--from PATH] <<'EOF'
-  python .claude/scripts/splice.py FILE delete A B  [--expect TXT]
+  python script/splice.py FILE replace A B [--expect TXT] [--from PATH] <<'EOF'
+  python script/splice.py FILE insert N    [--expect TXT] [--from PATH] <<'EOF'
+  python script/splice.py FILE delete A B  [--expect TXT]
 
   Lines are 1-based and inclusive. `insert N` inserts AFTER line N (0 = top).
   New text comes from stdin (heredoc) or --from PATH.

@@ -3,19 +3,19 @@
 Goal: the spec skeleton, validated JSON data, and the lexical layer (everything a lexer needs).
 Conventions are in `spec/README.md`.
 
-### S2.1 Spec index and front matter `[!]` → Q-001, Q-006
+### S2.1 Spec index and front matter `[!]` → Q-006
 - Create `spec/index.md`: reading order, version (`0.1-draft`), license, change log.
-- Resolve `docs/` according to Q-001.
+- ~~Resolve `docs/` according to Q-001.~~ Done by M7.1 (D-004).
 
 ### S2.2 JSON schemas and validator `[ ]`
 - `spec/schema/keywords.schema.json`, `operators.schema.json`, `delimiters.schema.json`,
   `types.schema.json`, `builtins.schema.json`.
-- `.claude/scripts/speccheck.py`:
+- `script/speccheck.py`:
   - every JSON validates (a stdlib-only check of required keys and types is enough);
   - ids are unique;
   - every `ref` points to an existing `##`/`###` heading anchor in `spec/`;
   - every `tutorial` URL points to an existing `id` in `tutorial/*.html`.
-- Done when: `python .claude/scripts/speccheck.py` exits 0 on the skeleton.
+- Done when: `python script/speccheck.py` exits 0 on the skeleton.
 
 ### S2.3 `lexical/lexical.md` `[ ]`
 Sources: `syntax.html` (Syntax Elements, Punctuation, Delimiters), `demo/comment_demo.eve`,
@@ -23,6 +23,7 @@ Sources: `syntax.html` (Syntax Elements, Punctuation, Delimiters), `demo/comment
 Sections:
 - Source text: UTF-8, CRLF/LF both valid, tab handling.
 - Comments: `#` line, `**` title line, `--` end-of-line, `/* … */` block, `+--- … ---+` box.
+- Shebang (D-008): `#!` on the first line is an interpreter directive, read as a comment.
   Define exactly where each may start, and how `--` differs from the `-` operator.
 - Identifiers, sigils (`@`, `$`), case rules.
 - Literals: integer, real, rational forms, strings (all quote kinds), symbols, collections.

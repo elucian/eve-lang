@@ -3,7 +3,7 @@
 Read the outline first, then open only the line range you need
 (Read with offset/limit) instead of reading whole files.
 
-usage: python .claude/scripts/outline.py PATH... [--depth N]
+usage: python script/outline.py PATH... [--depth N]
   Markdown: headings (fenced code ignored), up to --depth levels (default 6)
   HTML:     <h1>..<h6> headings with their #id anchors, up to --depth levels
   Eve:      top-level declarations (driver, class, routine, process, ...)

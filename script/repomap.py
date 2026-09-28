@@ -2,7 +2,7 @@
 
 Use this instead of listing + opening files to learn what exists.
 
-usage: python .claude/scripts/repomap.py [PATH...] [--ext .eve,.md] [--dirs]
+usage: python script/repomap.py [PATH...] [--ext .eve,.md] [--dirs]
   --dirs   only print per-directory file/line totals
 """
 import argparse
