@@ -10,12 +10,17 @@
       "PowerShell(bee-ed *)",
       "Bash(python .claude/scripts/*)",
       "PowerShell(python .claude/scripts/*)",
+      "Bash(python temp/*)",
+      "PowerShell(python temp/*)",
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git show *)",
       "Bash(git ls-files *)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(git -C tutorial status *)",
+      "Bash(git -C tutorial diff *)",
+      "Bash(git -C tutorial log *)"
     ]
   }
 }
