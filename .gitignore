@@ -31,3 +31,7 @@
 *.out
 *.app
 .DS_Store
+
+# Claude Code local files
+.claude/settings.local.json
+__pycache__/

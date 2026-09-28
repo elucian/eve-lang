@@ -1,0 +1,21 @@
+{
+  "env": {
+    "MSYS_NO_PATHCONV": "1",
+    "PYTHONUTF8": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bee-ed *)",
+      "PowerShell(bee-ed *)",
+      "Bash(python .claude/scripts/*)",
+      "PowerShell(python .claude/scripts/*)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git ls-files *)",
+      "Bash(git mv *)"
+    ]
+  }
+}
