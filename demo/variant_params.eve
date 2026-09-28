@@ -1,16 +1,16 @@
 # variant parameter in routines
-driver variant_params:
+driver variant_params is
 
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
-routine swap(@x, @y: {Integer | Real} ):
+routine swap(@x, @y: {Integer | Real} ) is
   ** check type to be the same
   expect type(x) = type(y);
 
   ** swap x, y values
-  new i := x; --  intermediate
-  let x := y; --  first  swap
-  let y := i; --  second swap
+  new i := x; **  intermediate
+  let x := y; **  first  swap
+  let y := i; **  second swap
 return;
 
 process

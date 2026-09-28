@@ -1,5 +1,5 @@
 # declaration pattern
-driver declaration:
+driver declaration is
 
 ** alias names have to start with uppercase letters.
 type Type_name: super_type {parameters};
@@ -15,10 +15,10 @@ globals
     ** multiple variables with diverse values
     Type_name @var_name1=value1, @var_name2 = value2;
 
-+---------------------------------------------------- 
+/*---------------------------------------------------- 
 In Eve you can have more than one global regions 
 For each region you can declare several variables
-----------------------------------------------------+    
+----------------------------------------------------*/    
 ** local variables
 global
     ** two integer numbers

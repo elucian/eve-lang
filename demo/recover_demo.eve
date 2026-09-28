@@ -1,5 +1,5 @@
 # using recover
-driver recover_demo:
+driver recover_demo is
     set a = 0.00;
 process  
     a := 1/0;

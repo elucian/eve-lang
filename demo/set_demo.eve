@@ -1,5 +1,5 @@
 #demo for using a set
-driver set_demo:
+driver set_demo is
     ** create a DataSet
     set my_set = {0,2,3} :DataSet;
     set ex_set = {3,4,5} :DataSet; 

@@ -24,7 +24,10 @@ and from `sitemap.xml`. `npm run build` and `npm run check` pass, with no warnin
   versus `grep -o '</tr>' | wc -l`).
 - Done when: every page reports `balance …: OK`.
 
-### T1.4 Fix encoding damage `[ ]`
+### T1.4 Fix encoding damage `[x]`
+2026-09-28: 15 double-encoded sequences reversed (UTF-8 read as cp1252, saved again) by a
+generic script: manifest (2 × —, ☰), syntax (∅, ☰), types (×, 2⁶⁴, ⁿ, ˢ, β, ¬, 3 × ⊤). The
+check below finds nothing; the rest of eve-lang is clean.
 - `manifest.html` has mojibake (`â€”` for an em dash, 2 places). Scan all pages for `â€`,
   `Ã`, `Â` and replace them with the intended character.
 - Done when: `bee-ed search 'â€|Ã.|Â' tutorial` finds nothing.
@@ -60,9 +63,32 @@ and from `sitemap.xml`. `npm run build` and `npm run check` pass, with no warnin
 - Under each `h2` that has a spec counterpart, add a short "Specification:" link to the
   Markdown file on GitHub (`https://github.com/elucian/eve-lang/blob/master/spec/…`).
 
-### T1.10 Content review, one page per session `[ ]`
+### T1.10 Content review, one page per session `[~]`
 Order: syntax, types, topology, control, functions, classes, collections, processing,
 concurrency, library, command, databases, algorithms, manifest, option.
+
+Per page: review → issues in `../issues/<page>.md` (the author answers by editing the file) →
+answers become decisions → fix the page → add the answered rules to the spec.
+
+| Page | Review | Questions | Page fixed | Spec updated | Notes |
+|---|---|---|---|---|---|
+| syntax | 2026-09-28 | 24 answered; 6 spec questions | [x] | [ ] | [issues/syntax.md](../issues/syntax.md) |
+| types | 2026-09-28 | 22 asked | [ ] | [ ] | [issues/types.md](../issues/types.md) |
+| topology | 2026-09-28 | 16 asked | [ ] | [ ] | [issues/topology.md](../issues/topology.md) |
+| control | 2026-09-28 | 11 asked | [ ] | [ ] | [issues/control.md](../issues/control.md) |
+| functions | 2026-09-28 | 10 asked | [ ] | [ ] | [issues/functions.md](../issues/functions.md) |
+| classes | 2026-09-28 | 14 asked | [ ] | [ ] | [issues/classes.md](../issues/classes.md) |
+| collections | 2026-09-28 | 20 asked | [ ] | [ ] | [issues/collections.md](../issues/collections.md) |
+| processing | 2026-09-28 | 11 asked | [ ] | [ ] | [issues/processing.md](../issues/processing.md) |
+| concurrency | 2026-09-28 | 8 asked | [ ] | [ ] | [issues/concurrency.md](../issues/concurrency.md) |
+| library | 2026-09-28 | 6 asked | [ ] | [ ] | [issues/library.md](../issues/library.md) |
+| command | 2026-09-28 | 6 asked | [ ] | [ ] | [issues/command.md](../issues/command.md) |
+| databases | 2026-09-28 | 4 asked | [ ] | [ ] | [issues/databases.md](../issues/databases.md) |
+| algorithms | 2026-09-28 | 2 asked | [ ] | [ ] | [issues/algorithms.md](../issues/algorithms.md) |
+| manifest | 2026-09-28 | 4 asked | [ ] | [ ] | [issues/manifest.md](../issues/manifest.md) |
+| option | 2026-09-28 | 3 asked | [ ] | [ ] | [issues/option.md](../issues/option.md) |
+| compiler | 2026-09-28 | 2 asked | [ ] | [ ] | [issues/compiler.md](../issues/compiler.md) |
+
 For each page:
 - Check every rule it states against the spec; mismatches go to `decisions.md`.
 - Check that every example follows the grammar (from S3.6 on, run it through the parser check).

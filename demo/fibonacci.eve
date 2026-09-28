@@ -1,19 +1,19 @@
-+----------------------------
+/*----------------------------
 |  Demo Fibonacci function  |
-+---------------------------+
-driver fibonacci:
+/*---------------------------*/
+driver fibonacci is
 
 ** declare Fibonacci rule
-function fib(n:Integer) => (@y:Integer):
-  if (n == 1) or (n == 0) then
-    let y := 1; -- first value
+function fib(n:Integer) => (@y:Integer) is
+  if (n == 1) or (n == 0) do
+    let y := 1; ** first value
   else
     let y := fib(n-1) + fib(n-2);
   end if;
 return;
 
 ** main process call fib function
-process:
+process
    ** call fib rule using argument 5
    new r := fib(5);
 

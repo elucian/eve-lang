@@ -1,19 +1,19 @@
 # introspection and inference demo
-driver print_type:
+driver print_type is
 
 global 
   set i = 1.5: Real;
   set j: Integer;
-  set k = 0;   -- inference
-  set r = 0.1; -- inference
+  set k = 0;   ** inference
+  set r = 0.1; ** inference
 process
   ** print out type 
   print "type of i is \s" ? type(i); 
   
   ** check somme assumptions
-  expect i == 1.5;  -- initial value
-  expect i is Real; -- as declared
-  expect j == 0;    -- is initialized 
+  expect i == 1.5;  ** initial value
+  expect i is Real; ** as declared
+  expect j == 0;    ** is initialized 
   expect k is Integer;
   expect r is Real;   
 

@@ -4,7 +4,7 @@
    upper limit can be excluded using "!" like [min.!max]
    open end domain is possible using "?" like [?..?]
 */
-driver domain_demo:  
+driver domain_demo is  
 
 ** declare a global domain
 set domain = (0..1);
@@ -13,7 +13,7 @@ process
     ** compare domains
     expect domain == (0..1);
    
-    print domain; -- (0..1)
+    print domain; ** (0..1)
     
     ** using domain
     expect 0   in domain; 
@@ -30,12 +30,12 @@ process
     expect -1  in (?..0);
 
     ** domain unions and keywords "all", "any"
-    expect all {3,4,12,24}  in (0..4) | (12..24); -- true
-    expect any {5,6, 8, 12} in (0..4) | (12..24); -- true
+    expect all {3,4,12,24}  in (0..4) | (12..24); ** true
+    expect any {5,6, 8, 12} in (0..4) | (12..24); ** true
 
     ** precise numbers domain (using ratio 0.01)
     new grid := (0..1:0.01);
-    expect 0.25  in grid;     -- a precise number
-    expect 0.253 not in grid; -- not a precise number
+    expect 0.25  in grid;     ** a precise number
+    expect 0.253 not in grid; ** not a precise number
 
 return;    

@@ -1,5 +1,5 @@
 # text unicode support
-driver unicode_text:
+driver unicode_text is
    set us = "I can write Greek: \"αβγδ\"": Text;
 process
    print us;

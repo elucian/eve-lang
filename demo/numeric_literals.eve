@@ -1,17 +1,17 @@
 #numeric literals
-driver numeric_literals:
+driver numeric_literals is
 global
-    set i: Integer; -- Initial value = 0
-    set n: Natural; -- Initial value = 0
-    set r: Real;    -- Initial value = 0.00
+    set i: Integer; ** Initial value = 0
+    set n: Natural; ** Initial value = 0
+    set r: Real;    ** Initial value = 0.00
 process  
-    let i := 9223372036854775807;  --  maximum
-    let n := 18446744073709551615; --  maximum
+    let i := 9223372036854775807;  **  maximum
+    let n := 18446744073709551615; **  maximum
     let r := 3.25
     
     ** binary numeric_literals
-    new bn  := OB11111111 -- negative binary
-    new bp  := O101010101 -- positive binary 
+    new bn  := OB11111111 ** negative binary
+    new bp  := O101010101 ** positive binary 
     
     ** hexadecimals 
     new hex := OX123456789ABCDEF;

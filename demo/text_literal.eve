@@ -1,5 +1,5 @@
 # declaration of a text literal
-driver text_literal:
+driver text_literal is
 
 process
   new my_text:="

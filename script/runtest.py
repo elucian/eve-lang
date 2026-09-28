@@ -5,8 +5,8 @@ usage: python script/runtest.py TARGET... [--eve PATH] [--timeout SEC] [--out DI
 TARGET is one of:
   1 | level1          every test in test/level1 (likewise 2, 3)
   all                 every level
-  a03 | a03-print     one test, by name or name prefix, searched in every level
-  test/level1/a03-print.eve
+  a03 | a03_print     one test, by name or name prefix, searched in every level
+  test/level1/a03_print.eve
                       one test, by path
 
 A test is a `*.eve` file directly inside test/levelN/ (subfolders hold level-2

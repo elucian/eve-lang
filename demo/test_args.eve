@@ -1,5 +1,5 @@
 # print all arguments
-driver test_args:
+driver test_args is
 
 routine test(*args:List[String]) 
 process
@@ -17,8 +17,8 @@ process
     test *arguments;
 
     ** call routine with variable number of arguments
-    call test ('a','b','c'); -- use 3 arguments
-    call test ('a','b');     -- use 2 arguments
+    call test ('a','b','c'); ** use 3 arguments
+    call test ('a','b');     ** use 2 arguments
   
 return;  
 

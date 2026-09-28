@@ -1,5 +1,5 @@
 # Traditional hello world demo
-driver hello_world:
+driver hello_world is
 
 ** every driver must have a process
 process

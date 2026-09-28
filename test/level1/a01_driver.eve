@@ -1,5 +1,5 @@
 # Test driver structure and single line comments
-driver a01-driver():
+driver a01_driver() is
 process
    over 0; 
 return;

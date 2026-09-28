@@ -1,12 +1,12 @@
-+-------------------------------
+/*-------------------------------
 |  New style boxed comments    |
 |  These comments are banners  |
-+------------------------------+
-driver comment_demo:
+/*------------------------------*/
+driver comment_demo is
 
 #  This comment is a title comment
 global 
-   set a = 0: Integer; -- define a global in region
+   set a = 0: Integer; ** define a global in region
 
 ## This comment is a sub-title
 process
@@ -23,7 +23,7 @@ process
        explain a single line it can have a different
        color from the single line comment */
 
-    print(a); -- end of line comment
+    print(a); ** end of line comment
 
 return; 
 

@@ -1,19 +1,19 @@
 #variant type demo
-driver variant_type:
+driver variant_type is
 
 global
     set v, x ,t : {Real | Integer};
     
 process   
     ** safe conversion
-    new t := 1 / 2;    -- make t Real
+    new t := 1 / 2;    ** make t Real
     expect t is Real;    
-    let t := 12;       -- change the type
+    let t := 12;       ** change the type
     expect t is Integer;    
     
     ** unsafe conversion
-    new x := 1.5;     --  x is Real    
-    new v := 1;       --  v is  Integer    
-    let v := x;       --  v becomes Real     
+    new x := 1.5;     **  x is Real    
+    new v := 1;       **  v is  Integer    
+    let v := x;       **  v becomes Real     
     expect v is Real
 return;

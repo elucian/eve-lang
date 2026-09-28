@@ -1,5 +1,5 @@
 # demonstrate a class
-driver point_demo:
+driver point_demo is
 ** define class Point, from root Object
 class Point = {x, y :Double} <: Object:
    ** no members

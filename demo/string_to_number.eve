@@ -1,5 +1,5 @@
 #string to number conversion
-driver string_to_number:
+driver string_to_number is
 
 ** global states
 global
@@ -10,7 +10,7 @@ global
   set r = "200.02":String;
 
 process
-  let v := parse(s); --  make v = 1000
-  let v := parse(r); --  make v = 200 and decimal .02 is lost
-  let b := parse(r); --  make b = 200.02 and decimal .02 is preserved
+  let v := parse(s); **  make v = 1000
+  let v := parse(r); **  make v = 200 and decimal .02 is lost
+  let b := parse(r); **  make b = 200.02 and decimal .02 is preserved
 return;

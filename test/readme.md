@@ -11,7 +11,7 @@ Tests run on the Eve virtual machine (`bin/eve.exe`, built from `evevm/`) with `
 | `python script/runtest.py 1` | every test in `test/level1` (likewise `2`, `3`) |
 | `python script/runtest.py all` | every level |
 | `python script/runtest.py a03` | one test, by name or unique name prefix |
-| `python script/runtest.py test/level1/a03-print.eve` | one test, by path |
+| `python script/runtest.py test/level1/a03_print.eve` | one test, by path |
 | `python script/runtest.py 1 --eve path/to/other-eve` | the same tests on another implementation |
 
 A test is a `.eve` file directly in `test/levelN/`. What it must produce, all optional:
@@ -42,18 +42,18 @@ a time.
 
 ## Level 1
 
-Single script tests each test is a driver. We verify basic syntax elements and make examples as dump as possible, We name each file using convention pattern: "a01-feature.eve", each test is a "basic case". 
+Single script tests each test is a driver. We verify basic syntax elements and make examples as dump as possible, We name each file using convention pattern: "a01_feature.eve", each test is a "basic case". 
 
 You can run every script individually by hand using the interpreter command line. For this level we do not have test automation scripts. These tests are developer tests. After you pass level 1, you can start testing Level2. 
 
 ## Level 2
 
-This level is more advanced. It contains automation drivers. Each driver is a series of related tests. Driver has convention: "b01-feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
+This level is more advanced. It contains automation drivers. Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
 
 
 ## Level 3
 
-This level contains advanced features. Working with files, databases and internet. At this level you can work with libraries. There is a long time until we have Level 3 tests in place. I hope your compiler will reach this level and is approved. This level use convention "c01-feature.eve".
+This level contains advanced features. Working with files, databases and internet. At this level you can work with libraries. There is a long time until we have Level 3 tests in place. I hope your compiler will reach this level and is approved. This level use convention "c01_feature.eve".
 
 # Approval
 
