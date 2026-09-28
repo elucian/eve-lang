@@ -14,6 +14,7 @@ from _common import is_binary, read, rel, walk
 
 MD_HEAD = re.compile(r"^#{1,6}\s+(.*\S)")
 EVE_DRIVER = re.compile(r"^(driver|module)\s+([\w.]+)")
+HTML_TITLE = re.compile(r"<title>(.*?)</title>", re.I | re.S)
 
 
 def title_of(path, text):
@@ -22,6 +23,10 @@ def title_of(path, text):
             m = MD_HEAD.match(line)
             if m:
                 return m.group(1)
+    elif path.endswith((".html", ".htm")):
+        m = HTML_TITLE.search(text)
+        if m:
+            return m.group(1).strip()
     elif path.endswith(".eve"):
         for line in text.split("\n"):
             m = EVE_DRIVER.match(line)

@@ -5,10 +5,12 @@ newline, and writes atomically (temp file + os.replace).
 """
 import os
 import shutil
+import stat
 import sys
 import tempfile
 
-SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", ".idea", ".vscode"}
+# temp/ holds throwaway scripts and output; it is never part of the project.
+SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", ".idea", ".vscode", "temp"}
 
 # Windows consoles default to cp1252; force UTF-8 so non-ASCII never crashes output.
 for stream in (sys.stdout, sys.stderr):
@@ -65,14 +67,30 @@ def is_binary(path):
         return True
 
 
+def is_link(path):
+    """True for symlinks and Windows junctions (os.path.islink misses those)."""
+    if os.path.islink(path):
+        return True
+    try:
+        attrs = getattr(os.lstat(path), "st_file_attributes", 0)
+    except OSError:
+        return False
+    return bool(attrs & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
+
+
 def walk(roots, exts=None):
-    """Yield files under roots (files or dirs), skipping VCS/tooling dirs."""
+    """Yield files under roots (files or dirs), skipping VCS/tooling dirs.
+
+    A root that is a link (e.g. the tutorial/ junction) is followed; links met
+    inside the walk are not, so the default "." stays within this repo.
+    """
     for root in roots or ["."]:
         if os.path.isfile(root):
             yield os.path.normpath(root)
             continue
         for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
+            dirnames[:] = sorted(d for d in dirnames
+                                 if d not in SKIP_DIRS and not is_link(os.path.join(dirpath, d)))
             for name in sorted(filenames):
                 if exts and not name.lower().endswith(tuple(exts)):
                     continue

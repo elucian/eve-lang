@@ -35,3 +35,10 @@
 # Claude Code local files
 .claude/settings.local.json
 __pycache__/
+
+# Eve tutorial: junction to ../scl/projects/eve (tracked in the scl repo)
+/tutorial
+
+# Scratch space for temporary scripts and output (kept empty in git)
+/temp/*
+!/temp/.gitkeep
