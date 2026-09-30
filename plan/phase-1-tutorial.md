@@ -63,6 +63,16 @@ check below finds nothing; the rest of eve-lang is clean.
 - Under each `h2` that has a spec counterpart, add a short "Specification:" link to the
   Markdown file on GitHub (`https://github.com/elucian/eve-lang/blob/master/spec/…`).
 
+### T1.11 Split the types page `[ ]`
+- TYP-I2 (agreed): move Date, Time, Duration and Quick Format from `types.html` to a new
+  "Date and time" page, or to `library.html`. Needs: sidebar JSON, `index.html` topic, links,
+  `sitemap.xml`, `npm run check`. Keep `types.html` for native, primitive, composite, literals,
+  ranges, inference and variants.
+
+### T1.12 Move the REPL and daemon text to command.html `[ ]`
+- TOP-I2 (agreed): REPL, service mode and VM options describe the tool, not the language. Move them
+  from `topology.html` to `command.html` (or `manual/usage.md`), marked "planned" (TOP-14).
+
 ### T1.10 Content review, one page per session `[~]`
 Order: syntax, types, topology, control, functions, classes, collections, processing,
 concurrency, library, command, databases, algorithms, manifest, option.
@@ -73,9 +83,9 @@ answers become decisions → fix the page → add the answered rules to the spec
 | Page | Review | Questions | Page fixed | Spec updated | Notes |
 |---|---|---|---|---|---|
 | syntax | 2026-09-28 | 24 answered; 6 spec questions | [x] | [ ] | [issues/syntax.md](../issues/syntax.md) |
-| types | 2026-09-28 | 22 asked | [x] | [ ] | [issues/types.md](../issues/types.md) |
-| topology | 2026-09-28 | 16 asked | [x] | [ ] | [issues/topology.md](../issues/topology.md) |
-| control | 2026-09-28 | 11 asked | [ ] | [ ] | [issues/control.md](../issues/control.md) |
+| types | 2026-09-28 | 22 answered (D-032) | [x] | [ ] | [issues/types.md](../issues/types.md) |
+| topology | 2026-09-28 | 16 answered (D-031); TOP-08, 10 partly | [x] | [ ] | [issues/topology.md](../issues/topology.md) |
+| control | 2026-09-28 | 16 answered (D-030) | [x] | [ ] | [issues/control.md](../issues/control.md) |
 | functions | 2026-09-28 | 10 asked | [ ] | [ ] | [issues/functions.md](../issues/functions.md) |
 | classes | 2026-09-28 | 14 asked | [ ] | [ ] | [issues/classes.md](../issues/classes.md) |
 | collections | 2026-09-28 | 20 asked | [ ] | [ ] | [issues/collections.md](../issues/collections.md) |

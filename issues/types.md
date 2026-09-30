@@ -9,7 +9,7 @@ The page says native types (`i8`…`i64`, `u8`…`u64`, `f32`, `f64`) are "not u
 Eve scripts", but examples declare `:i64`. May a script declare native variables, or only core
 libraries? Is the list complete (no `i128`, no `f16`)?
 **Answer:** make the list complete, ony core libraries use these types.
-Status: open
+Status: closed (D-032)
 
 ### TYP-02 Primitive type sizes
 The primitive table conflicts with itself and the rest of the page:
@@ -21,7 +21,7 @@ The primitive table conflicts with itself and the rest of the page:
 
 What are the size, signedness and unit of `Short`, `Ordinal` and `Duration`?
 **Answer:** Optimize the definitions to make sens. 
-Status: open
+Status: closed (D-032)
 
 ### TYP-03 Which numeric types exist in 0.1
 The categories table lists `Float`, `Rational`, `Complex` and `Range` as numbers, but the
@@ -29,7 +29,7 @@ primitive table has none of them. `Rational` is "q64" with "variable precision" 
 precision arithmetic". Are `Float`, `Rational` and `Complex` part of 0.1? What is a `Rational`
 (fraction of two integers, or fixed-point decimal)?
 **Answer:** Rational is like 3\4 or 7\3 two numbers. The evaluation of rational is postponed until needed and computed with specific precision.
-Status: open
+Status: closed (D-032)
 
 ### TYP-04 Literal → default type
 The "Default Types" tables contradict the rest of the page:
@@ -43,53 +43,53 @@ The "Default Types" tables contradict the rest of the page:
 Please confirm the type of each literal: decimal, negative, hex, binary, real, `1/2`, `U+…`,
 `'a'`, `"a"`, `()`, `[]`, `{}`, `(1,2)`, `[1,2]`, `{1,2}`, `{a:1}`.
 **Answer:** Optimize, resolve conflicts. I will review and fix it later if is wrong. 
-Status: open
+Status: closed (D-032)
 
 ### TYP-05 Unicode literal forms
 `U+HHHH` (4 hex digits) and `U-HHHHHH` (6 digits, up to `U+FFFFFF`), but the literal table shows
 `U-FFFFFFFF` (8 digits). Unicode ends at `U+10FFFF`. Keep two forms, or one form `U+` with 4 to 6
 digits?
 **Answer:** How is correct? 4 digits or 6 digits? Fix the example.
-Status: open
+Status: closed (one form U+ with 4 to 6 hex digits, up to U+10FFFF; U- dropped)
 
 ### TYP-06 Empty symbol `''`
 "Symbols have initial value NIL, equivalent to `''`". Is `''` a valid literal? Is `NIL` a
 keyword, or the same thing as `Null`?
 **Answer:** NIL = '' is an empty ASCII symbol, Null is no value. Represent: does not exist.
-Status: open
+Status: closed (D-032)
 
 ### TYP-07 Declaration order: value and type
 syntax.html writes `new a = 0 :Integer;` (value, then type). This page also writes
 `new x :Integer = 5;` (type, then value) and `new time1, time2, time3: Time;`. Which order is
 canonical? Is the other accepted? Is there a space before `:`?
 **Answer:** new a = 0 :Integer; or new a = 0:Integer; both work,  `new x :Integer = 5 is not correct, must be corrected. `new x = 5 :Integer;
-Status: open
+Status: closed (D-032)
 
 ### TYP-08 `let` with a type
 `let native_value :i64 = x.value();` declares a type in a `let`, although `let` alters an
 existing variable. Error in the example, or can `let` declare?
 **Answer:** error in the example, new can declare, let do not require/allow type declaration, however let is used with ":=" for executing expressions.
-Status: open
+Status: closed (D-032)
 
 ### TYP-09 Named processes
 Examples write `process boxing_demo:`, `process main`, `process print_type:`. Can a process have
 a name? Is that a different construct from the driver's `process`?
 **Answer:** Error in example. Process do not have a name, name of process is the name of aspect or driver.
-Status: open
+Status: closed (D-032)
 
 ### TYP-10 Range and domain brackets
 Ranges are written `(0..5)`, but `class Small = [0..1:0.1] <: Range;` uses brackets, and
 syntax.html distinguishes "Domain `[n..m]`" from "Range `(n..m)`". Is a domain a separate type?
 What does `[..]` mean?
 **Answer:** Notation [x..y] is for slices. The example to define a class derived from Range is wrong, We can define a range type using: Type Small = (0..1)(0.1) <: Range; Because Type is not defined with {} is not a class. We change specification so ratio is a second optional parameter. 
-Status: answered (D-022)
+Status: closed (D-022)
 
 ### TYP-11 Decimal range precision
 "The number of zeros establishes the precision": `0.001 in (0.00..1.00)` is true but
 `0.001 in (0.0..1.0)` is false. Confirm this rule. With no ratio, is membership exact
 (`0.05 in (0.0..1.0)` false)?
 **Answer:** Yes, the range literal is a indication of precision. In this case the .00 is relevant.
-Status: open
+Status: closed (rule added; the page examples are kept as written, see D-032 note)
 
 ### TYP-12 Subtype declaration syntax
 Ranges, ordinals and variants are declared as `class R5 = (0..5) <: Range;`,
@@ -97,83 +97,84 @@ Ranges, ordinals and variants are declared as `class R5 = (0..5) <: Range;`,
 Is `class Name = literal <: Base;` the general form for these? A variant is also written inline:
 `set v, x, t: {Real | Integer};`. Are both allowed?
 **Answer:** No, set is used to assign constants. Constants have a clear type not a variant. Only new can be used to create a variant. new v, x, t: {Real | Integer}; Once a value is assigned whe know if v has become real or integer.
-Status: open
+Status: closed (D-032)
 
 ### TYP-13 Integer division
 `1 / 2` gives a `Real` (0.5). Does `/` always return `Real`, even for `4 / 2`? Is there an
 integer division operator?
 **Answer:** Yes, / return real, the result can be cast to an integer if the type is enforced.
 `new x = a/b : Integer; 
-Status: open
+Status: closed (D-032)
 
 ### TYP-14 `parse` losing precision
 `let v := parse("200.02");` into an `Integer` "makes v = 200, decimal .02 is lost". Elsewhere
 Real → Integer is an error and only safe coercion is done. Should this `parse` fail?
 **Answer:** No, parse will enable data coercion if V type is Integer will loose precision. If v is Real will preserve precision.
-Status: open
+Status: closed (D-032)
 
 ### TYP-15 Template placeholders
 This page formats with `?` and `#`: `"type of i is #s" ? i.type()`, `"Year: #" ? date1.year`.
 syntax.html interpolates with braces: `"param1: {a}"`. Which placeholder syntax is Eve? What do
 `#` and `#s` mean? (See SYN-12.)
 **Answer:** The placeholder is "param1: #{a}" If is not fix it. # is required for any placeholder. #s peans string #n means number. #{n} means variable n.
-Status: open
+Status: closed (D-032)
 
 ### TYP-16 Type checks: `type(x) is T`, `x.type()`, `x is T`
 The page uses `type(x) is Integer`, `ls.type()` and `x is Null`. syntax.html says `is` checks
 "data type | reference identity". Is `x is Integer` valid? Is `type()` both a function and a
 method?
 **Answer:** Yes, the "is" operator can check type, and also type() is a method and a function.
-Status: open
+Status: closed (D-032)
 
 ### TYP-17 `call` for routines
 `call swap(x, y);` calls a routine, but syntax.html defines `call` as "execute a shell command in
 synchronous mode". Which is it, or both?
 **Answer:** `call` is only for shell commands. A method is called as a statement, `swap(x, y);` (D-025).
-Status: answered (D-025)
+Status: closed (D-025)
 
 ### TYP-18 `Logic` versus `Byte` for True/False
 `class Logic = {False:0, True} <: Ordinal;` and also `set False = 0b0 :Byte;`. Which is right?
 Are `True` and `False` keywords or constants of `Logic`?
-**Answer:** _(open)_
-Status: open
+**Answer:** I think True and False ar constants of type Logic and not :Byte.
+Status: closed (D-032)
 
 ### TYP-19 Date literals
 The page gives three forms: functions `ymd()`, `dmy()`, `mdy()`; `"2023/06/15" as YMD`; and a
 constants table with `YDM` = `YYYY/DD/MM`. It mentions an `era_label` (CE/AD) without syntax, and
 `{year: 1066, month: 10, day: 14}` creates an object, not a `Date`. Which form is Eve 0.1?
-**Answer:** _(open)_
-Status: open
+**Answer:** Make an invetion. I will review your proposal. I suggest Date to be ab object, add a new field: era
+Status: proposed (Date object with an era field, written on the page as a proposal)
 
 ### TYP-20 Time and Duration
-- `T12 = "hhhh:mm:ss,999ms"` and `T24 = "hhhh:mm:ssxx, 999ms"` look swapped and use `hhhh`.
+- `T12 = "hhhh:mm:ss, 999ms"` and `T24 = "hhhh:mm:ssxx, 999ms"` look swapped and use `hhhh`.
 - Examples use invalid values (`"00:23:63"`, minute 63) and expect `time1.h == 23` for
   `"00:23:63"`.
 - Duration literals `{y, d, m, s, ms}`: is `m` minutes or months? A year does not fit in the
   stated range.
 
 What are the Time format, the Duration range and unit, and the Duration literal suffixes?
-**Answer:** _(open)_
-Status: open
+**Answer:** T12 = "hh:mm:ssxx, 999ms"  T24 = "hh:mm:ss, 999ms where xx can be am/pm, duration literal can be represented as: "{year:34, days:365, hours:4, min:30, sec:26, ms:444}" The m is for minutes but to avoid confusion Duration is an object with these fields.  
+Status: closed (D-032)
 
-### TYP-21 `as` operator
+### TYP-21 `as` operatorh
 `as` converts a string into a date/time (`"…" as T24`) and also formats values for printing
 ("quick format", `EUR`/`USA` number formats). Is it one operator in both directions?
-**Answer:** _(open)_
-Status: open
+**Answer:** no the as is in one direction the other direction is using a method, String.parse(T24), parse will receive a format that is expected.
+Status: closed (D-032)
 
 ### TYP-22 Operator dispatch
 "Operators are functions … dispatch uses the left operand first." Is this a language rule (the
 spec states it) or an implementation note?
-**Answer:** _(open)_
-Status: open
+**Answer:** Is an implementation note.
+Status: closed (D-032)
 
 ## Fixes (applied unless you write "no")
 
 ### TYP-F1 Native type table
 "number of bytes: {8, 16, 32, 64}" should be bits. "Signed integers: {u8, u16, u32, u64}" should
 be `{i8, i16, i32, i64}`. "Native types are implemented by operating system" → by the hardware.
-**Answer:** _(open)_
+**Answer:**  ok agree.
+Status: done
 
 ### TYP-F2 Broken examples
 - `//` comments in the date example → `**`.
@@ -187,32 +188,37 @@ be `{i8, i16, i32, i64}`. "Native types are implemented by operating system" →
 - "Date object contains four fields: year, month, day" → three.
 - "Composite: String — Real quote delimited" → double quote.
 - "Real is Real-precision 64-bit" → double-precision.
-**Answer:** _(open)_
+**Answer:** agree
+Status: done
 
 ### TYP-F3 Typos
 convetion, Maxim/Minim, ocupy, tey, automaticly, inititialized, easly, controled, Ratiobal,
 "are are", impicit, equaly, Multi-dimensiona, "make sens", decimaL, loosing, heyword, fo,
 gradial, subtipe, VNamme, tefine, variabt, nulable, milissecond, higer, "Eve can constants",
 "can be ready using", rise (raise).
-**Answer:** _(open)_
+**Answer:** agree
+Status: done
 
 ## Improvements (applied only if you write "yes")
 
 ### TYP-I1 One literal table
 Replace the three "Default Types" tables with one table: literal, form, default type, example,
 after TYP-04. The spec's `types.json` generates it.
-**Answer:** _(open)_
+**Answer:** not agree, we postpone this. irrelevant
+Status: declined (postponed)
 
 ### TYP-I2 Split the page
 1,300 lines. Move Date, Time, Duration and Quick Format to a "Date and time" page (or to
 library.html); keep types.html for the type system: native, primitive, composite, literals,
 ranges, inference, variants.
-**Answer:** _(open)_
+**Answer:** agree split
+Status: postponed (plan step)
 
 ### TYP-I3 Pitfalls
 Real → Integer needs `floor`/`round`/`ceiling`; `/` returns Real; `is` does not compare values;
 range precision comes from the number of zeros.
-**Answer:** _(open)_
+**Answer:** agree "is" can introduce a block of code but is overloaded, can also detect a type.
+Status: done
 
 ## Spec additions once answered
 
