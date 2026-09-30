@@ -50,8 +50,8 @@ Status: open
 ### COL-06 Last index: `#` or `$`
 Arrays use `zum[#]` and `base[6:#]`; the matrix example uses `mat[3,$]` and `mat[$,$]`. `$` is the
 system-variable sigil. Is `#` the only "last index" symbol?
-**Answer:** _(open)_
-Status: open
+**Answer:** `$` is the last index; `#` is not an index symbol (it clashes with `#{…}` interpolation). See D-021.
+Status: answered (D-021)
 
 ### COL-07 Array, Vector, Matrix
 types.html: `[1,2,3]` is a `Vector`, `[[1,2],[2,4]]` a `Matrix`. This page: everything is an
@@ -63,8 +63,8 @@ Status: open
 ### COL-08 Slice notation
 This page slices with `[n:m]` (`base[11:14]`, `base[x: x+3]`); syntax.html says slices use
 `[n..m]`. Which one? Confirm: `:=` from a slice gives a view that shares elements, `::` a copy.
-**Answer:** _(open)_
-Status: open
+**Answer:** Slices use `[n..m]`, with `$` for the end (`base[6..$]`). `[n:m]` is dropped. See D-022. View versus copy (`:=` / `::`) is still to confirm.
+Status: partly answered (D-022)
 
 ### COL-09 Bulk assignment with `[*]`
 `let zum[*] := 0;` and `let base[1:5][*] := 0;`. Is `[*]` required, or does `let base[1:5] := 0`

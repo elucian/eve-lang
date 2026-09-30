@@ -82,7 +82,7 @@ Ranges are written `(0..5)`, but `class Small = [0..1:0.1] <: Range;` uses brack
 syntax.html distinguishes "Domain `[n..m]`" from "Range `(n..m)`". Is a domain a separate type?
 What does `[..]` mean?
 **Answer:** Notation [x..y] is for slices. The example to define a class derived from Range is wrong, We can define a range type using: Type Small = (0..1)(0.1) <: Range; Because Type is not defined with {} is not a class. We change specification so ratio is a second optional parameter. 
-Status: open
+Status: answered (D-022)
 
 ### TYP-11 Decimal range precision
 "The number of zeros establishes the precision": `0.001 in (0.00..1.00)` is true but

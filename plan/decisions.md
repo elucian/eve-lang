@@ -245,3 +245,39 @@ Replaces the job handlers of D-016. Answers PRC-01, PRC-04, CTL-14; partly PRC-0
 - `resume` keeps its coroutine meaning (`resume name;`); the bare `resume;` in `recover` is the
   job form. Open: exit code of an aborted driver (D-010).
 Applied to control.html, processing.html, syntax.html (keyword tables).
+
+### D-021 `$` is the last index; indexing is 1-based (2026-09-30)
+From COL-06. Idea from bee-lang (D1). Eve indexes lists, arrays, matrices and strings from 1.
+- In an index, a bare `$` is the index of the last element: `a[$]`, `a[$ - 1]`, `mat[3, $]`.
+  `#` is not an index symbol: it would clash with `#{…}` interpolation (`"#{a[#]}"`).
+- `$` followed by an identifier character is still a system variable (`$error`, D-017); a bare `$`
+  inside `[ ]` is the end anchor. `$` is only valid as an index or inside a range that is an index.
+- Index 0 and negative indexes are errors (`a[0]`, `a[-1]`); use `a[$ - 2]` for relative access.
+
+### D-022 Ranges: exclusive ends, postfix step, slices use `..` (2026-09-30)
+From TYP-10, COL-08. Idea from bee-lang (D13).
+- Range operators: `a..b` is [a, b]; `a..<b` is [a, b); `a>..b` is (a, b]; `a>..<b` is (a, b).
+  Each is one token (longest match). Open ends keep `?`: `(0..?)`, `(?..0)`.
+- The step is a second parenthesised value after the range: `(min..max)(step)`, for example
+  `(0..10)(2)` or `(1..5)(0.1)[3]` (= 1.3). The `(min..max:step)` form is removed. The step also
+  sets the precision (TYP-11). A range type is `Type Small = (0..1)(0.1) <: Range;`.
+- A range is a value, not an array: `new a = (x..y)(n);` makes a range. The only way to put a
+  range in an array is the builder (D-023).
+- Slices use ranges as indexes: `base[6..$]`, `base[x..x + 3]`. The `[n:m]` form is removed, so `:`
+  keeps its pair meaning only. Brackets never define a range or domain by themselves.
+- Applied to demo/domain_demo.eve, demo/numeric_range.eve and the tutorial pages collections, control
+  and types (`[#]` became `[$]`, `(a..b:step)` became `(a..b)(step)`, `[n:m]` became `[n..m]`).
+
+### D-023 Arrays from ranges use the builder only (2026-09-30)
+From a discussion of `[1..10](2)`. The builder `[x | x in (1..10)(2)]` is the only way to fill an
+array from a range. The shorthands `[1..10]` and `[1..10](2)` are not Eve: a bracket after a value
+is indexing or slicing (`a[1..10](2)` stays free for stepped slices), and brackets never define a
+range (D-022). The array type stays `[]Integer` / `[10]Integer`: `new a := [x | x in (1..10)(2)]: []Integer;`.
+
+### D-024 Cartesian product is `><` (2026-09-30)
+From the matrix builder example. `a >< b` is the cartesian product of two collections or ranges: a
+sequence of pairs in row-major order (the left operand is the outer loop), for example
+`(x, y) in (1..4) >< (1..4)`. It is one token (longest match), not `>` then `<`. It is easy to confuse
+with `<>` (not equal), so the compiler reports a hint when `><` has operands that are not
+collections or ranges (`did you mean <>?`), and when `<>` has two collections or ranges. A builder can
+also use several generators (`x in A and y in B`), which gives the same product without `><`.

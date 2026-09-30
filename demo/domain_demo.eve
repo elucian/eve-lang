@@ -1,8 +1,8 @@
 /* domain is delimited by two limits
-   created with literals like [min..max]
-   lower limit can be excluded using "!" like [min!.max]
-   upper limit can be excluded using "!" like [min.!max]
-   open end domain is possible using "?" like [?..?]
+   created with literals like (min..max)
+   lower limit can be excluded using ">" like (min>..max)
+   upper limit can be excluded using "<" like (min..<max)
+   open end domain is possible using "?" like (?..?)
 */
 driver domain_demo is  
 
@@ -34,7 +34,7 @@ process
     expect any {5,6, 8, 12} in (0..4) | (12..24); ** true
 
     ** precise numbers domain (using ratio 0.01)
-    new grid := (0..1:0.01);
+    new grid := (0..1)(0.01);
     expect 0.25  in grid;     ** a precise number
     expect 0.253 not in grid; ** not a precise number
 
