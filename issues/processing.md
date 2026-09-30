@@ -10,7 +10,7 @@ The job pattern starts with `abort if condition;`: "silent stop, do not execute 
 recovery". `abort` is not in the keyword table. Is it a keyword, and how does it differ from `over`
 and `exit`? Which exit code (D-010)?
 **Answer:** _(open)_
-Status: open
+Status: answered → D-020: abort is used only in recover; preconditions use over 1
 
 ### PRC-02 Which interruptions run `finalize`
 "`exit` or `raise` trigger the finalization region while `over` and `panic` skip it"; later
@@ -18,7 +18,7 @@ Status: open
 finalization region". Please fill in: for each of `return`, `exit`, `raise`, failed `expect`,
 `over`, `panic`, `abort`: runs `recover`? runs `finalize`? exit code?
 **Answer:** _(open)_
-Status: open
+Status: partly answered by D-020: errors go to recover; finalize runs after return, exit and abort, not after over and panic; exit codes open
 
 ### PRC-03 `expect` and `assert`
 `expect condition, "message";` raises `AssertError`. D-010 gives a failed `expect` exit code 2
@@ -32,7 +32,7 @@ Jobs catch errors with `catch …` (control.html); processes have a `recover` re
 the user can detect which job failed." How: `$error.job`, the job name as an object? Can `recover`
 resume after the failing job?
 **Answer:** _(open)_
-Status: open
+Status: answered → D-020: jobs have no catch; recover reads $error.job and ends with retry, resume or abort
 
 ### PRC-05 `run`: synchronous or asynchronous
 syntax.html: `run` "executes an aspect in asynchronous mode". This page: `run` blocks the driver

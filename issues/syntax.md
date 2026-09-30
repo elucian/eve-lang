@@ -265,20 +265,20 @@ The table has 123 words. Many belong to database or later features (`alter`, `an
 `keywords.json` gives each word a `status`: `stable` (used in 0.1) or `reserved` (not usable as a
 name, no meaning yet). Proposal: control, declaration, region and operator words are `stable`;
 database and unused words are `reserved`. Agree, or mark words yourself?
-**Answer:** _(open)_
+**Answer:** Agree
 Status: open
 
 ### SPEC-02 Contextual keywords
 `option`, `to`, `one`, `all`, `any`, `other`, `error` have a meaning only inside certain statements.
 Are they reserved everywhere (never a variable name), or contextual (usable as names elsewhere)?
 Contextual words make a lexer simpler for users but a parser harder. (Q-002)
-**Answer:** _(open)_
+**Answer:** everywhere reserved
 Status: open
 
 ### SPEC-03 Free scripts
 A file starting with `#!` holds sequential statements without `driver` or `process`. May it also
 declare globals, functions and classes? Does it end with `return;`, or at the end of the file?
-**Answer:** _(open)_
+**Answer:** this kind of script end at end of file, no return the return belong to process, method, function. This kind of script do not have functions or methids but it can have control statements, like loops and if statements but no jobs. Jobs are only in processes.
 Status: open
 
 ### SPEC-04 String interpolation
@@ -286,19 +286,19 @@ The page now says `"…{name}…"` inserts a value in every double-quoted string
 literal brace. Other pages use `?` with `#` placeholders (`"#s" ? x`). For the lexer: is `{…}` in a
 string always interpolation (so the lexer must split the string), and may `{…}` hold an expression
 or only a name? (TYP-15, COL-16)
-**Answer:** _(open)_
+**Answer:** {} can hold one variable name, no expressions.
 Status: open
 
 ### SPEC-05 Indentation
 TOP-01: is indentation checked (an error when wrong) or a style rule? The lexer needs this now:
 significant indentation adds INDENT/DEDENT tokens.
-**Answer:** _(open)_
+**Answer:** Yes indentation is mandatory and is done with 2 spaces not with tabs.
 Status: open
 
 ### SPEC-06 Spec license
 MAN-01: the manifest sets CC BY-ND 4.0 for the specification, with an implementation grant.
 `spec/index.md` needs it. Confirm (this closes Q-006)?
-**Answer:** _(open)_
+**Answer:** Yes the license is establish in tutorial, each compiler has it's own license but it can't change the specification without contribution to Sage-Code specification.
 Status: open
 
 ## Spec additions once answered

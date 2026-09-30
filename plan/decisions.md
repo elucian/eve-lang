@@ -182,7 +182,7 @@ From SYN-11: the author rewrote control.html and processing.html. General form:
 
 | Block | Syntax |
 |---|---|
-| job | `name: job` … `do` … `error E` / `error (E1, E2)` / `other error` … `check` … `clean` … `done job [name];` |
+| job | `name: job` … `do` … `done job [name];` (simplified by D-020) |
 | if | `if c do` … `else if c do` … `else` … `done;` |
 | match | `label: match s [one \| all]` … `when v1, v2 do` … `when [any \| other] do` … `then` … `done match [label];` |
 | loop | `[label:] loop` declarations `cycle` … `then` … `repeat [label];` |
@@ -223,3 +223,25 @@ From SYN-20 to SYN-24.
 - Operator precedence, highest first: `.` `()` `[]` · unary `-` `not` · `^` (right) · `*` `/` `%` ·
   `+` `-` · `..` · `<<` `>>` · `&&` · `||` · `==` `<>` `<` `>` `<=` `>=` `~` `is` `in` `eq` · `and` ·
   `xor` · `or` · `if … else`. May be revised.
+
+### D-020 Jobs without handlers; `recover` decides (2026-09-28)
+Replaces the job handlers of D-016. Answers PRC-01, PRC-04, CTL-14; partly PRC-02, CTL-03.
+- A job is `label: job` [declarations] `do` … `done job [label];`. The `error`, `other error`,
+  `check` and `clean` clauses are removed; `error`, `check` and `clean` are no longer keywords.
+  Write jobs that do not fail. Jobs are used only in a process (driver or aspect), at the top
+  level, not nested; routines, functions and methods have none. The label is required.
+- A job passes at `done` or `stop` and fails when an error is raised in it (also from a called
+  routine or method). The status is recorded automatically.
+- Any error in a process jumps to its `recover` region. There, normal control statements
+  (`if`, `match`) on `$error` (`$error.job` is the failed job's label) choose one of:
+  - `retry`: run the failed job again, from its declarations;
+  - `resume`: the error is handled, the job stays failed, the process continues after its `done`;
+  - `abort`: end the process, run `finalize`, propagate the error to the calling process.
+- `retry` and `resume` need a failed job; an error outside a job can only be aborted. Raising an
+  error in `recover` aborts with that error. Reaching the end of `recover` handles the error: the
+  process ends normally. A process without `recover` aborts on every error.
+- `finalize` runs once when the process ends (`return`, `exit`, end of `recover`, `abort`), not
+  after `over` or `panic`. Preconditions use `over 1 if condition;` (the old `abort if`).
+- `resume` keeps its coroutine meaning (`resume name;`); the bare `resume;` in `recover` is the
+  job form. Open: exit code of an aborted driver (D-010).
+Applied to control.html, processing.html, syntax.html (keyword tables).

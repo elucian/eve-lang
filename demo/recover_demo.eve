@@ -4,5 +4,5 @@ driver recover_demo is
 process  
     a := 1/0;
 recover
-    print @error.message;
+    print $error.message;
 return;
