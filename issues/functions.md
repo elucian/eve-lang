@@ -23,7 +23,7 @@ Status: open
 but can't handle errors", "can be suspended and resumed". May a function call a routine, print,
 read files? Can it contain a `job` (it "can't handle errors")?
 **Answer:** _(open)_
-Status: open
+Status: partly answered by D-020: no, jobs are used only in a process
 
 ### FUN-04 Default parameter operator
 Defaults are written `name2(param := value, …)`, but declarations elsewhere use `=` for initial

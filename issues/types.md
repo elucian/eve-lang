@@ -8,7 +8,7 @@ Page: `tutorial/types.html` (1,323 lines). Reviewed 2026-09-28. How to answer: [
 The page says native types (`i8`…`i64`, `u8`…`u64`, `f32`, `f64`) are "not usually necessary in
 Eve scripts", but examples declare `:i64`. May a script declare native variables, or only core
 libraries? Is the list complete (no `i128`, no `f16`)?
-**Answer:** _(open)_
+**Answer:** make the list complete, ony core libraries use these types.
 Status: open
 
 ### TYP-02 Primitive type sizes
@@ -20,7 +20,7 @@ The primitive table conflicts with itself and the rest of the page:
 - `Real`: min written `-n`.
 
 What are the size, signedness and unit of `Short`, `Ordinal` and `Duration`?
-**Answer:** _(open)_
+**Answer:** Optimize the definitions to make sens. 
 Status: open
 
 ### TYP-03 Which numeric types exist in 0.1
@@ -28,7 +28,7 @@ The categories table lists `Float`, `Rational`, `Complex` and `Range` as numbers
 primitive table has none of them. `Rational` is "q64" with "variable precision" and "fixed
 precision arithmetic". Are `Float`, `Rational` and `Complex` part of 0.1? What is a `Rational`
 (fraction of two integers, or fixed-point decimal)?
-**Answer:** _(open)_
+**Answer:** Rational is like 3\4 or 7\3 two numbers. The evaluation of rational is postponed until needed and computed with specific precision.
 Status: open
 
 ### TYP-04 Literal → default type
@@ -42,53 +42,53 @@ The "Default Types" tables contradict the rest of the page:
 
 Please confirm the type of each literal: decimal, negative, hex, binary, real, `1/2`, `U+…`,
 `'a'`, `"a"`, `()`, `[]`, `{}`, `(1,2)`, `[1,2]`, `{1,2}`, `{a:1}`.
-**Answer:** _(open)_
+**Answer:** Optimize, resolve conflicts. I will review and fix it later if is wrong. 
 Status: open
 
 ### TYP-05 Unicode literal forms
 `U+HHHH` (4 hex digits) and `U-HHHHHH` (6 digits, up to `U+FFFFFF`), but the literal table shows
 `U-FFFFFFFF` (8 digits). Unicode ends at `U+10FFFF`. Keep two forms, or one form `U+` with 4 to 6
 digits?
-**Answer:** _(open)_
+**Answer:** How is correct? 4 digits or 6 digits? Fix the example.
 Status: open
 
 ### TYP-06 Empty symbol `''`
 "Symbols have initial value NIL, equivalent to `''`". Is `''` a valid literal? Is `NIL` a
 keyword, or the same thing as `Null`?
-**Answer:** _(open)_
+**Answer:** NIL = '' is an empty ASCII symbol, Null is no value. Represent: does not exist.
 Status: open
 
 ### TYP-07 Declaration order: value and type
 syntax.html writes `new a = 0 :Integer;` (value, then type). This page also writes
 `new x :Integer = 5;` (type, then value) and `new time1, time2, time3: Time;`. Which order is
 canonical? Is the other accepted? Is there a space before `:`?
-**Answer:** _(open)_
+**Answer:** new a = 0 :Integer; or new a = 0:Integer; both work,  `new x :Integer = 5 is not correct, must be corrected. `new x = 5 :Integer;
 Status: open
 
 ### TYP-08 `let` with a type
 `let native_value :i64 = x.value();` declares a type in a `let`, although `let` alters an
 existing variable. Error in the example, or can `let` declare?
-**Answer:** _(open)_
+**Answer:** error in the example, new can declare, let do not require/allow type declaration, however let is used with ":=" for executing expressions.
 Status: open
 
 ### TYP-09 Named processes
 Examples write `process boxing_demo:`, `process main`, `process print_type:`. Can a process have
 a name? Is that a different construct from the driver's `process`?
-**Answer:** _(open)_
+**Answer:** Error in example. Process do not have a name, name of process is the name of aspect or driver.
 Status: open
 
 ### TYP-10 Range and domain brackets
 Ranges are written `(0..5)`, but `class Small = [0..1:0.1] <: Range;` uses brackets, and
 syntax.html distinguishes "Domain `[n..m]`" from "Range `(n..m)`". Is a domain a separate type?
 What does `[..]` mean?
-**Answer:** _(open)_
+**Answer:** Notation [x..y] is for slices. The example to define a class derived from Range is wrong, We can define a range type using: Type Small = (0..1)(0.1) <: Range; Because Type is not defined with {} is not a class. We change specification so ratio is a second optional parameter. 
 Status: open
 
 ### TYP-11 Decimal range precision
 "The number of zeros establishes the precision": `0.001 in (0.00..1.00)` is true but
 `0.001 in (0.0..1.0)` is false. Confirm this rule. With no ratio, is membership exact
 (`0.05 in (0.0..1.0)` false)?
-**Answer:** _(open)_
+**Answer:** Yes, the range literal is a indication of precision. In this case the .00 is relevant.
 Status: open
 
 ### TYP-12 Subtype declaration syntax
@@ -96,33 +96,34 @@ Ranges, ordinals and variants are declared as `class R5 = (0..5) <: Range;`,
 `class Logic = {False:0, True} <: Ordinal;`, `class Number = {Integer | Real | Null} <: Variant;`.
 Is `class Name = literal <: Base;` the general form for these? A variant is also written inline:
 `set v, x, t: {Real | Integer};`. Are both allowed?
-**Answer:** _(open)_
+**Answer:** No, set is used to assign constants. Constants have a clear type not a variant. Only new can be used to create a variant. new v, x, t: {Real | Integer}; Once a value is assigned whe know if v has become real or integer.
 Status: open
 
 ### TYP-13 Integer division
 `1 / 2` gives a `Real` (0.5). Does `/` always return `Real`, even for `4 / 2`? Is there an
 integer division operator?
-**Answer:** _(open)_
+**Answer:** Yes, / return real, the result can be cast to an integer if the type is enforced.
+`new x = a/b : Integer; 
 Status: open
 
 ### TYP-14 `parse` losing precision
 `let v := parse("200.02");` into an `Integer` "makes v = 200, decimal .02 is lost". Elsewhere
 Real → Integer is an error and only safe coercion is done. Should this `parse` fail?
-**Answer:** _(open)_
+**Answer:** No, parse will enable data coercion if V type is Integer will loose precision. If v is Real will preserve precision.
 Status: open
 
 ### TYP-15 Template placeholders
 This page formats with `?` and `#`: `"type of i is #s" ? i.type()`, `"Year: #" ? date1.year`.
 syntax.html interpolates with braces: `"param1: {a}"`. Which placeholder syntax is Eve? What do
 `#` and `#s` mean? (See SYN-12.)
-**Answer:** _(open)_
+**Answer:** The placeholder is "param1: #{a}" If is not fix it. # is required for any placeholder. #s peans string #n means number. #{n} means variable n.
 Status: open
 
 ### TYP-16 Type checks: `type(x) is T`, `x.type()`, `x is T`
 The page uses `type(x) is Integer`, `ls.type()` and `x is Null`. syntax.html says `is` checks
 "data type | reference identity". Is `x is Integer` valid? Is `type()` both a function and a
 method?
-**Answer:** _(open)_
+**Answer:** Yes, the "is" operator can check type, and also type() is a method and a function.
 Status: open
 
 ### TYP-17 `call` for routines
