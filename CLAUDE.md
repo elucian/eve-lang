@@ -38,8 +38,8 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
   then read by line range. `repomap.py tutorial --ext .html` lists all the pages with titles.
 - Links are followed only when named: `bee-ed … tutorial` and `outline.py tutorial` enter it;
   a plain `*.html`, or a script run on `.`, stays inside eve-lang.
-- Check markup after edits: `bee-ed balance tutorial/<page>.html`. As of 2026-09-28, option,
-  syntax, topology, collections, functions, databases and concurrency already had imbalances.
+- Check markup after edits: `bee-ed balance tutorial/<page>.html`. As of 2026-09-30, all
+  pages balance; raw `<`/`>` in code blocks must be written `&lt;`/`&gt;`.
 - Anything deleted **inside** `tutorial/` is deleted from the scl repo. To drop just the link,
   use `rm tutorial` (tested: the target stays intact). To recreate it:
   `cmd /c mklink /J tutorial C:\Users\eluci\sage-code\scl\projects\eve`.
