@@ -74,7 +74,7 @@ answers become decisions → fix the page → add the answered rules to the spec
 |---|---|---|---|---|---|
 | syntax | 2026-09-28 | 24 answered; 6 spec questions | [x] | [ ] | [issues/syntax.md](../issues/syntax.md) |
 | types | 2026-09-28 | 22 asked | [x] | [ ] | [issues/types.md](../issues/types.md) |
-| topology | 2026-09-28 | 16 asked | [ ] | [ ] | [issues/topology.md](../issues/topology.md) |
+| topology | 2026-09-28 | 16 asked | [x] | [ ] | [issues/topology.md](../issues/topology.md) |
 | control | 2026-09-28 | 11 asked | [ ] | [ ] | [issues/control.md](../issues/control.md) |
 | functions | 2026-09-28 | 10 asked | [ ] | [ ] | [issues/functions.md](../issues/functions.md) |
 | classes | 2026-09-28 | 14 asked | [ ] | [ ] | [issues/classes.md](../issues/classes.md) |
