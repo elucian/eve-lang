@@ -18,7 +18,7 @@ Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig b
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
   Conventions in `manual/README.md`.
 - `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
-- `tools/`, `files/` Notepad++ syntax (UDL) XML
+- `tools/` typing aids (`alt-codes.md`)
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
   tutorial (17 HTML pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
