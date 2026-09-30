@@ -180,7 +180,7 @@ and optional parameters go in a second parameter set: `print (arguments) option 
 Is `option` a keyword? Are these all valid: `print "x";`, `print ("a", v);`, `print("a");`,
 `print;` (new line only)? Is the second set only for `print` and `write`, or for any method?
 **Answer:** option is a new keyword that assign by name optional parameters defined as a second set of parameters for any method. methid name(*vararc) option (params). 
-Status: answered → D-019
+Status: answered → D-019, changed by D-029: no `option`, one parameter list
 
 ### SYN-23 Identifier length and case
 SYN-08 is answered for `_`, `.`, `$`. Still open: is 30 characters a hard limit? Are names
