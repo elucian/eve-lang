@@ -362,3 +362,110 @@ Replaces the `option` keyword of D-019; answers SYN-22 again.
 - Not related: the step of a range, `(min..max)(step)`, is a value postfix of a range (D-022), not a
   second parameter list.
 - Applied to syntax.html (print section) and the SYN-22 issue.
+
+### D-030 Control page answers (2026-09-30)
+From CTL-01 to CTL-16. Refines D-016 and D-020.
+- **Job (CTL-01, 03, 16).** The label is optional. A job without a label starts with `job` and ends with a
+  naked `done;`; its implicit name is `job<line>` (for example `job24`). A labeled job is
+  `name: job` … `done job [name];` and `job` is required after `done`. Status values: `"none"` (never
+  executed), `"pass"`, `"fail"`. The state is kept in the process map `jobs["name"].status`, `.error`,
+  `.line`; `$error.job` is the failed job's name (a string). Nothing is reported automatically: the
+  process reads the map in its `finalize` region (`finalize` was kept instead of `resolve`).
+- **Interruptions (CTL-02, 15).** `stop` ends a job and nothing else; `break` ends a loop (an outer loop
+  with a label); `exit` ends the process. `stop` inside a loop inside a job ends the job.
+- **Match (CTL-07).** The optional `[Type]` is removed. `any` is removed: `when other do` runs only when
+  no `when` matched; `then` runs after the match for any path. A `when` can test a range:
+  `when (1..5) do`.
+- **Loop scope (CTL-06, 08, 11, 12).** `if` and ladder open no scope. The `loop` header is optional; it
+  holds the declarations, which live in the loop scope, survive all iterations and are visible in
+  `then`. Without a header the `cycle` has no private scope (the parent scope is used). `cycle` starts
+  the executable region; a `new` variable in it is created on the stack at every iteration. `for`
+  creates an implicit scope for its control variable only if the loop has no header; the control
+  variable is visible in `then`, not after `repeat`.
+- **Repeat (CTL-05, 13).** `repeat [label] [while condition];` starts another iteration only while the
+  condition is true. `repeat if` does not exist (fixed in control, algorithms, concurrency). `while` and
+  `for` loops take no condition after `repeat`.
+- **While else (CTL-10).** `else` runs only if the condition is false the first time. `then` runs every
+  time the loop ends, also after `break`.
+- **Removed earlier (CTL-04, 09, 14).** `then`/`loop` optional answer superseded by D-016; `next` starts
+  the next iteration; `check` and `clean` are gone (D-020).
+- Block summary table added to the page (CTL-I1). Images copied to `tutorial/img/` (CTL-F1).
+
+Spec additions: `spec/syntax/statements.md` (blocks, repeat while, match ranges),
+`spec/semantics/control.md` (job names and status map, loop scopes, then/else rules).
+
+### D-031 Topology page answers (2026-09-30)
+From TOP-01 to TOP-16. Applied to topology.html, with one canonical skeleton each for driver, aspect and module (TOP-I1).
+- Indentation is mandatory: 2 spaces, an error otherwise (TOP-01). Region keywords start at column 0.
+- Regions are decided per kind of script (TOP-02). A class is not a region: `class Name = {…} <: Type;` on one line;
+  the `class` region with `NewType = {} <: Type;` is not allowed (TOP-06). Process end regions: `recover`, `finalize`
+  (`release` is gone); a module ends with `finalize`.
+- `set` creates constants of the global scope. It is allowed directly after `#!` or after the header (TOP-03), and in any
+  declaration region. The `constant` region is a visual delimiter for constants only; global variables use `new` in the
+  `global` region (interpretation of TOP-05). Declarations may sit directly under the header at 2 spaces; they belong to
+  the global scope bound to the process scope (TOP-05). Constant names are not enforced (TOP-05).
+- `def Alias = library.Member;` creates an alias; `def` is a new keyword. An alias of a parameterized class is not
+  supported (TOP-04).
+- `:=` executes an expression and is allowed in global regions; the "no inference in global" restriction is removed (TOP-07).
+- OS environment variables are visible as `$NAME` (TOP-08).
+- `over` ends with 0; `panic` ends with 1 (no `panic N`, no `panic 0`); a failed `expect` ends with 2; `raise` ends with a code
+  greater than 0 (TOP-09).
+- An aspect has a mandatory process. A library and a module have none; a module can be imported, not applied (TOP-10).
+- A library is a folder of modules; a module is one script file with header `module name is`, named like the file. The term
+  "crate" is dropped (TOP-11).
+- A path is a string; `/` is a "smart concatenation" that becomes `\` on Windows (TOP-12).
+- `.cfg` files hold `$key = value` with Eve literals and `#` comments (TOP-13).
+- VM parameters, REPL, service and exclusive modes are planned (about 0.9), not in 0.1 (TOP-14). Script operations: `parse`,
+  `debug` (debug mode) and `execute` (production mode); `load` is removed (TOP-15).
+- Only a driver defines globals. Aspects and modules define public (prefix `.`) and private members, reached as
+  `alias.member`, so equal names in two modules do not conflict (TOP-16).
+- Open: the 0.1 list and types of built-in system variables (TOP-08); whether an aspect returns a result or an error code to
+  the driver (TOP-10).
+
+Spec additions:
+- `spec/semantics/topology.md`: projects, libraries, modules, imports and paths (TOP-10 to TOP-12), exit codes (TOP-09),
+  VM operations (TOP-15).
+- `spec/syntax/regions.md`: regions and order per script kind, indentation rule, `def`, `set`/`new`, `:=` in global regions
+  (TOP-01 to TOP-07).
+- `spec/semantics/scopes.md`: system variables (TOP-08), public and private members (TOP-16).
+- `manual/usage.md`: VM modes and options, planned (TOP-14).
+
+### D-032 Types page answers (2026-09-30)
+From TYP-01 to TYP-22, TYP-I3. Applied to `tutorial/types.html`.
+- Native types are `u8 u16 u32 u64`, `i8 i16 i32 i64`, `f32 f64` (no `i128`, no `f16`). Only core
+  libraries use them; scripts use primitive types (TYP-01).
+- Primitive sizes: `Byte` u8, `Short` i16, `Integer` i64, `Natural` u64, `Real` f64, `Float` f32,
+  `Ordinal` named u16 values, `Symbol` one Unicode code point on 32 bits (max U+10FFFF), `Time`
+  milliseconds of the day, `Duration` an object stored as i64 milliseconds (TYP-02).
+- `Rational` is `3\4`: two Integers, evaluation postponed until needed, computed with a precision.
+  `Complex` is reserved, not in 0.1. `Range` is composite, not a number (TYP-03).
+- Literal types: decimal `Integer` (also non-negative); `0x…` and `0b…` `Natural`; `9.9` `Real`; `1/2` is a
+  division, so `Real`; `3\4` `Rational`; `'a'` and `U+…` `Symbol`; `"a"` `String`; `''` the empty
+  Symbol (NIL); `""` the empty String; `[1, 2, 3]` `Vector[Integer]`; `()` List, `{}` DataSet, `[]`
+  Vector when empty. `Binary` and `Word` do not exist (TYP-04).
+- Unicode literal: one form `U+` with 4 to 6 hex digits, up to `U+10FFFF`; `U-` is dropped (TYP-05).
+- NIL is `''`, the empty ASCII symbol; Null is no value and is not a Symbol (TYP-06).
+- Declaration order is `new a = 0 :Integer;` (space before `:` optional); `new x :Integer = 5;` is wrong
+  (TYP-07). `new` declares and takes a type; `let` takes no type; `:=` executes an expression (TYP-08).
+- A process has no name: it takes the name of its driver or aspect (TYP-09).
+- `[x..y]` is slice notation, never a range or domain; a range type is `Type Small = (0..1)(0.1) <: Range;`
+  (TYP-10, D-022). The zeros of a decimal range literal indicate its precision (TYP-11).
+- A variant is created only with `new v :{Real | Integer};` (or a `class … <: Variant` type); `set`
+  makes constants, which have one clear type; the variant takes a type when a value is assigned (TYP-12).
+- `/` always returns `Real`; `new x = a / b :Integer;` converts the result (TYP-13). `parse` coerces to the
+  type of the target: Integer loses the decimals, Real keeps them, no error (TYP-14).
+- Template placeholders start with `#`: `#s` string, `#n` number, `#{a}` variable `a` (TYP-15).
+- `is` can check a type (`x is Integer`) and also introduces a block; `type` is a function and a method
+  (TYP-16, TYP-I3). `call` is for shell commands only (TYP-17, D-025).
+- `True` and `False` are constants of type `Logic`, not `Byte` (TYP-18).
+- Date (proposed, awaiting review): an object with `era` (BCE, CE), `year` (1 or more), `month`, `day`;
+  built with `"…".parse(YMD)` or an object literal with a `:Date` hint (TYP-19).
+- Time formats: `T12 = "hh:mm:ssxx, 999ms"`, `T24 = "hh:mm:ss, 999ms"`, xx is am or pm. Duration is an
+  object with the fields `year, days, hours, min, sec, ms` (TYP-20).
+- `as` formats a value one way; the reverse is `String.parse(format)` (TYP-21).
+- "Operators are functions, dispatch on the left operand" is an implementation note, not a language rule
+  (TYP-22).
+
+Spec additions: `spec/semantics/types.md` and `types.json` (native and primitive types, Rational,
+literal defaults, variants, coercion, division, `parse`); `spec/lexical/lexical.md` (numeric, `U+`,
+Symbol, NIL, String, placeholder, date, time and Duration literals).
