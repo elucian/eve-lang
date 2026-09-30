@@ -217,8 +217,8 @@ From SYN-20 to SYN-24.
   escapes). The `&code;` and `\LF` / `\CRLF` forms are dropped.
 - Identifiers are case-sensitive, at most 42 characters.
 - `**` may appear anywhere, including column 0 and the first line (a row of `*****`).
-- `option` is a keyword: a method may declare a second parameter set, passed by name after
-  `option`: `method name(*args) option (params)`, called `print (a, b) option (separator = " ");`.
+- `option` was a keyword: a method could declare a second parameter set, passed by name after
+  `option`: `method name(*args) option (params)`. Removed by D-029.
   `print` is such a method; its `separator` defaults to `","`.
 - Operator precedence, highest first: `.` `()` `[]` · unary `-` `not` · `^` (right) · `*` `/` `%` ·
   `+` `-` · `..` · `<<` `>>` · `&&` · `||` · `==` `<>` `<` `>` `<=` `>=` `~` `is` `in` `eq` · `and` ·
@@ -351,3 +351,14 @@ From the FUN-01 to FUN-10 answers. Refines D-027.
 - Functions do not handle errors: only a process does. Use preconditions; a runtime error propagates to the
   process (FUN-03).
 - Applied to functions.html (notes, arguments, lambda section, FUN-F1 and FUN-F2 fixes).
+
+### D-029 One parameter list; parameters after a vararg are named (2026-09-30)
+Replaces the `option` keyword of D-019; answers SYN-22 again.
+- A method or function has one parameter list, never two: `f()()` does not exist and `option` is removed.
+- Optional parameters may follow the vararg parameter. In a call they must be named with the pair
+  operator: for `f(*x, y = ",")` the call is `f(x1, x2, x3, y: b)`. Without the name, `y` would be taken as
+  one more element of `x`.
+- `print` is `method print(*args, separator = ",")`: `print (1, 2, 3, separator: " ");` prints `1 2 3`.
+- Not related: the step of a range, `(min..max)(step)`, is a value postfix of a range (D-022), not a
+  second parameter list.
+- Applied to syntax.html (print section) and the SYN-22 issue.
