@@ -37,7 +37,7 @@ spec/
     regions.md         script regions: driver, module, aspect, import, global, process, ...
     statements.md
     expressions.md
-    declarations.md    types, classes, functions, routines
+    declarations.md    types, classes, functions, methods
   semantics/
     types.md, types.json
     scopes.md          names, sigils, globals, system variables

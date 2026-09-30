@@ -11,7 +11,7 @@ The standard library table lists string functions (`length`, `count`, `truncate`
 `format`, `floor`, `ceiling`, `round`, `random`, `sqrt`, `sum`, `type`, `split`, `join`. Which
 built-ins must the VM provide in 0.1? Are the string ones functions (`trim(s)`), methods
 (`s.trim()`), or both (COL-20)?
-**Answer:** _(open)_
+**Answer:** Both. If we can we implement routines.
 Status: open
 
 ### LIB-02 Mutating string functions

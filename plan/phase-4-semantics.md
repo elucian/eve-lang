@@ -28,7 +28,7 @@ Source: `control.html`, `processing.html`.
 
 ### S4.5 `semantics/concurrency.md` `[ ]`
 Source: `concurrency.html`, `processing.html`.
-- Routines, coroutines, parallel processes, side-effect rules, parameter passing modes
+- Methods, asynchronous methods, parallel processes, side-effect rules, parameter passing modes
   (input, output, variant).
 
 ### S4.6 Collections and objects `[ ]`

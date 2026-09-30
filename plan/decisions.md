@@ -281,3 +281,73 @@ sequence of pairs in row-major order (the left operand is the outer loop), for e
 with `<>` (not equal), so the compiler reports a hint when `><` has operands that are not
 collections or ranges (`did you mean <>?`), and when `<>` has two collections or ranges. A builder can
 also use several generators (`x in A and y in B`), which gives the same product without `><`.
+
+### D-025 No routines: a method is any subprogram with side effects (2026-09-30)
+Answers FUN-03, FUN-09, FUN-I1, TYP-17, CON-01, CMD-01. Amends D-015 and D-016.
+- There are two subprogram keywords: `function` and `method`. `routine` (and procedure) is removed.
+- A plain function has no side effects: it does not change globals or arguments and calls only plain
+  functions. A function that has side effects or is not deterministic is marked `!` (D-027).
+- A method may have side effects and may return a result, or none: `method name(params) => (@result: T) is`.
+  Returning a result does not make it something else.
+- A method can be declared in a class (with `@self`) or at module level, outside any class (no `@self`).
+  A module-level method is public with a leading `.` (`method .write(...)`) and private with a leading `_`
+  (D-017). Visibility of an unmarked name: Q-011.
+- A method is called as a statement, `name(args);`, with or without `()` when it has no arguments. There is
+  no `call`. `call` only runs a shell command (command.html). An asynchronous method is a method started with `start` (D-026).
+- Applied to every tutorial page, the demos (`routine_call.eve` became `method_call.eve`), the keyword
+  tables and the Notepad++ UDL files.
+
+### Q-011 Default visibility of a module-level method (2026-09-30)
+D-025 says `.` is public and `_` is private. What is a method with no prefix: private to the module, or
+public? The same question applies to functions and classes at module level.
+**Answer:** _(open)_
+
+### D-026 No coroutines: generators, threads, suspended methods (2026-09-30)
+Follows D-025. The word "coroutine" is not used, because it came with "routine".
+- A method started with `start` is an **asynchronous method**: it runs in a secondary thread and can be
+  suspended with `suspend` and continued with `resume`. A suspended method waits for a signal.
+- A method that produces its values one batch at a time is a **generator**.
+- A function can not be suspended and has no state. Only a method has state and can be suspended.
+- A function declared inside a method is enclosed by it and can use the state of that method. This is the
+  closure system of Eve: the method holds the state, the enclosed function is the closure.
+- Applied to concurrency, syntax and topology pages and the concurrency and topology issues. The closures
+  section of functions.html still describes the old rule (closures created by a function): Q-012.
+
+### Q-012 How does an enclosed function use method state? (answered 2026-09-30 → D-027)
+D-026 makes a function inside a method a closure. Can the enclosed function only read the state of the
+method, or also change it? A function has no side effects (D-025), so a counter like `generator` in
+functions.html (`let current += 1`) would have to be a method, or the method changes `current` itself.
+How is a closure created and returned: `new f := make_counter(0);` where `make_counter` is a method
+that returns a function? This decides the rewrite of the closures section (FUN-06).
+**Answer:** The enclosed function has side effects, so it is a `!` function and may change the state (D-027).
+
+### D-027 Functions with side effects or randomness end with `!` (2026-09-30)
+Answers Q-012. Refines D-017 (`name!()`), D-025 and D-026.
+- A plain function is deterministic and has no side effects. A function that has side effects, or is not
+  deterministic (stochastic, for example `random!()`), ends with `!`: `name!()`. A plain function can not
+  call a `!` function or a method.
+- A method has no `!`: a method is assumed to have side effects all the time. A function that calls a
+  method is unsafe and must use `!`.
+- A method creates a function and encloses it. The enclosed function shares the state of the method and may
+  change it, so its name ends with `!`. It is a closure, and a closure that returns a new value on every
+  call is a generator: `new index! := generator(0); print index!();`.
+- Only methods (and functions enclosed in them) have state. A plain function has none and can not be suspended.
+- Applied to the closures section of functions.html (the `generator` example is now a method).
+- Open: the exact lambda syntax of an enclosed function (`let next! := Function() => …`).
+
+### D-028 Functions: results, defaults, arguments, lambda (2026-09-30)
+From the FUN-01 to FUN-10 answers. Refines D-027.
+- A function must have a result; a subprogram without a result is a method (FUN-01). A function can return
+  a list of results `=> (@r1:T1, @r2:T2)`; `$result` is then the list `(result1, result2)`. `@` makes the result
+  a reference, so `let v := f(x);` is valid and `let 2 := f(x);` is not (FUN-02).
+- In a parameter list `=` defines a default value, `:=` executes an expression (FUN-04).
+- Positional arguments go first; mandatory parameters need no name; optional parameters must be named (FUN-05).
+- A function is an object of type `Function`, restricted if it is pure (FUN-06).
+- There is no `Lambda` type. A lambda is a notation that creates a function in one statement: parentheses are
+  mandatory, a list of expressions gives several results, and the type follows the parentheses: `():Type`,
+  `():(Type, Type)`. A signature type is `Type BinEx = (p1, p2 :Integer):Integer <: Function;` (FUN-07, FUN-08).
+- A lambda can be assigned to a function identifier; if the identifier is not defined, it is only a pointer,
+  passed to a parameter `@param`. The keyword `function` must be followed by an identifier (FUN-10).
+- Functions do not handle errors: only a process does. Use preconditions; a runtime error propagates to the
+  process (FUN-03).
+- Applied to functions.html (notes, arguments, lambda section, FUN-F1 and FUN-F2 fixes).

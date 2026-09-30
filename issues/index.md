@@ -10,15 +10,15 @@ Current order: manifest, syntax, types, topology, concurrency, functions, classe
 control, processing, algorithms, library, command, databases, compiler. Routines are introduced in
 concurrency (5th) but used from types (3rd) on; control flow (9th) comes after classes and
 collections, whose examples use loops. Proposed: manifest, syntax, types, control, functions
-(with routines), collections, classes, topology, processing, concurrency, library, command,
+,routines , collections, classes, topology, processing, concurrency, library, command,
 option, algorithms, databases, compiler. Accept, or give your order?
-**Answer:** _(open)_
+**Answer:** Accepted
 Status: open
 
 ### IDX-02 What EVE stands for
 The page says "Effective Virtual Environment". Is EVE an acronym (then the name is written
 "EVE"), or a name ("Eve")? Pages mix both.
-**Answer:** _(open)_
+**Answer:** EVE is the machine name, "eve" is the language name, "Eve" is for beginning of statement only.
 Status: open
 
 ## Fixes (applied unless you write "no")
@@ -28,4 +28,4 @@ Status: open
 - option.html is not linked.
 - The certification row reuses `data-topic="databases"` (T1.7).
 - "modern, declarative 4th generation" (see MAN-03).
-**Answer:** _(open)_
+**Answer:** fix obvious
