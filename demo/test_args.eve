@@ -1,7 +1,7 @@
 # print all arguments
 driver test_args is
 
-routine test(*args:List[String]) 
+method test(*args:List[String]) 
 process
   print args;
 return;
@@ -16,13 +16,12 @@ process
     ** transfer arguments by position using spreading operator (*)
     test *arguments;
 
-    ** call routine with variable number of arguments
-    call test ('a','b','c'); ** use 3 arguments
-    call test ('a','b');     ** use 2 arguments
+    ** call method with variable number of arguments
+    test ('a','b','c'); ** use 3 arguments
+    test ('a','b');     ** use 2 arguments
   
 return;  
 
-/* observe: "call" keyword is optional 
-   the best practice is to use "call"
-   system routines do not require "call"
+/* observe: a method is called as a statement, "call" is not used
+   "call" is only for shell commands
 */

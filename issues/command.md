@@ -7,8 +7,8 @@ Page: `tutorial/command.html` (163 lines). Reviewed 2026-09-28. How to answer: [
 ### CMD-01 `call` is the shell command
 This page and syntax.html define `call` as running a shell command. types.html and functions.html
 also use `call` for routines (see CON-01). Confirm that `call` is only for shell commands.
-**Answer:** _(open)_
-Status: open
+**Answer:** Yes, `call` is only for shell commands; the `call` before methods was removed (D-025).
+Status: answered (D-025)
 
 ### CMD-02 Exit status of a shell command
 `call "ls -l *.dat" +> files;` captures stdout as a list of lines. How does the script read the

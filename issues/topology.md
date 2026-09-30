@@ -126,7 +126,7 @@ Status: open
 - "these regions are right side aligned" → left-aligned (start at column 0).
 - `set local = value1: user_tupe;` → `user_type`.
 - "In console you can run only a one driver"; "In each session you can have run single driver".
-- Exclusive mode: "`start` is not starting a new driver", but `start` starts a coroutine.
+- Exclusive mode: "`start` is not starting a new driver", but `start` starts an asynchronous method.
 **Answer:** Yes, "bee" is previous language I have design and is now "eve".
 
 ### TOP-F2 Removed comment forms in examples

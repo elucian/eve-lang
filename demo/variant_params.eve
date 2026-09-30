@@ -1,9 +1,9 @@
-# variant parameter in routines
+# variant parameter in methods
 driver variant_params is
 
 ** define a subroutine that can swap two numbers
 ** requires input/output parameters marked with @
-routine swap(@x, @y: {Integer | Real} ) is
+method swap(@x, @y: {Integer | Real} ) is
   ** check type to be the same
   expect type(x) = type(y);
 
@@ -17,12 +17,12 @@ process
   ** invert two  Integer numbers
   new x := 10;
   new y := 20;
-  call swap(x, y);
+  swap(x, y);
   expect (x == 20) and (y == 10);
 
   ** invert two Real numbers
   new a := 1.5;
   new b := 2.5;
-  call swap(a, b);
+  swap(a, b);
   expect (a == 2.5) and (b == 1.5);
 return;

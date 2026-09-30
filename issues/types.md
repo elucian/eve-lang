@@ -129,8 +129,8 @@ Status: open
 ### TYP-17 `call` for routines
 `call swap(x, y);` calls a routine, but syntax.html defines `call` as "execute a shell command in
 synchronous mode". Which is it, or both?
-**Answer:** _(open)_
-Status: open
+**Answer:** `call` is only for shell commands. A method is called as a statement, `swap(x, y);` (D-025).
+Status: answered (D-025)
 
 ### TYP-18 `Logic` versus `Byte` for True/False
 `class Logic = {False:0, True} <: Ordinal;` and also `set False = 0b0 :Byte;`. Which is right?
