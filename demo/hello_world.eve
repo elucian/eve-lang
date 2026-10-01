@@ -1,10 +1,10 @@
 # Traditional hello world demo
 driver hello_world is
 
-** every driver must have a process
-process main is
+  ** every driver must have a process
+  process main is
     print ("Hello World!");
-return;
+  return;
 end hello_world;
 
 /* Note: In Eve, print() add a new line after message, 

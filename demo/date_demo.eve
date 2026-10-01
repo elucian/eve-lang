@@ -1,12 +1,12 @@
 # Using "as" operator with Date type
 driver date_demo is
 
-/* Date type has 3 subtypes: YDM, MDY and DMY
-   This approach simplify the syntax and improve readability.
-*/
-set date := "2019/01/30": YDM;
+  /* Date type has 3 subtypes: YDM, MDY and DMY
+     This approach simplify the syntax and improve readability.
+  */
+  set date := "2019/01/30": YDM;
 
-process main is
+  process main is
     ** convert data type and print
     print date; **  2019/01/30 
 
@@ -19,5 +19,5 @@ process main is
 
     ** verification of conversion
     expect date as DMY == "30/01/2019"
-return;
+  return;
 end date_demo;

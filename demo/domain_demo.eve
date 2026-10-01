@@ -6,37 +6,37 @@
 */
 driver domain_demo is  
 
-** declare a global domain
-set domain = (0..1);
+  ** declare a global domain
+  set domain = (0..1);
 
-process main is
-    ** compare domains
-    expect domain == (0..1);
+  process main is
+      ** compare domains
+      expect domain == (0..1);
    
-    print domain; ** (0..1)
+      print domain; ** (0..1)
     
-    ** using domain
-    expect 0   in domain; 
-    expect 1   in (0..1); 
-    expect 0.5 in (0..1);     
+      ** using domain
+      expect 0   in domain; 
+      expect 1   in (0..1); 
+      expect 0.5 in (0..1);     
 
-    ** exclude limits
-    expect 0 not in (0!.1);
-    expect 1 not in (0.!1);  
-    expect 0.5 in (0!!1);
+      ** exclude limits
+      expect 0 not in (0!.1);
+      expect 1 not in (0.!1);  
+      expect 0.5 in (0!!1);
 
-    ** open end limits
-    expect 999 in (0..?);
-    expect -1  in (?..0);
+      ** open end limits
+      expect 999 in (0..?);
+      expect -1  in (?..0);
 
-    ** domain unions and keywords "all", "any"
-    expect all {3,4,12,24}  in (0..4) | (12..24); ** true
-    expect any {5,6, 8, 12} in (0..4) | (12..24); ** true
+      ** domain unions and keywords "all", "any"
+      expect all {3,4,12,24}  in (0..4) | (12..24); ** true
+      expect any {5,6, 8, 12} in (0..4) | (12..24); ** true
 
-    ** precise numbers domain (using ratio 0.01)
-    let grid := (0..1)(0.01);
-    expect 0.25  in grid;     ** a precise number
-    expect 0.253 not in grid; ** not a precise number
+      ** precise numbers domain (using ratio 0.01)
+      let grid := (0..1)(0.01);
+      expect 0.25  in grid;     ** a precise number
+      expect 0.253 not in grid; ** not a precise number
 
-return;    
+  return;    
 end domain_demo;

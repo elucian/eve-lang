@@ -4,28 +4,27 @@
 /*------------------------------*/
 driver comment_demo is
 
-#  This comment is a title comment
-global 
-   set a = 0: Integer; ** define a global in region
+  #  This comment is a title comment
+  set a = 0: Integer; ** define a global in region
 
-## This comment is a sub-title
-process main is
-    ** This comment with two stars support indentation
+  ## This comment is a sub-title
+  process main is
+      ** This comment with two stars support indentation
     
-    /* expression comments are similar to C++
-       comments. we use expression comments
-       for commenting out code for debug */
+      /* expression comments are similar to C++
+         comments. we use expression comments
+         for commenting out code for debug */
 
-    ** In next expression we use expression comments    
-    a := a + 1 /* *(a - 1) */ -1;
+      ** In next expression we use expression comments    
+      a := a + 1 /* *(a - 1) */ -1;
 
-    /* end of line comments are useful to  
-       explain a single line it can have a different
-       color from the single line comment */
+      /* end of line comments are useful to  
+         explain a single line it can have a different
+         color from the single line comment */
 
-    print(a); ** end of line comment
+      print(a); ** end of line comment
 
-return; 
+  return; 
 end comment_demo;
 
 /* Different styles of comments, can be used to generate

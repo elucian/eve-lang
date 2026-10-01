@@ -1,10 +1,9 @@
 #object comparison demo
 driver object_compare is
 
-global
-    set o = 1: Integer; 
-    set n = 1; Integer;
-process main is
+  set o = 1: Integer; 
+  set n = 1; Integer;
+  process main is
     ** equal values and types
     expect  o  == n; 
     expect  not (o <> n);     
@@ -19,5 +18,5 @@ process main is
     ** equal values and types
     expect  o  <> n; 
     expect  not (o == n);         
-return;
+  return;
 end object_compare;

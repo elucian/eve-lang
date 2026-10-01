@@ -1,16 +1,15 @@
 #convert number to string
 driver number_to_string is
 
-global
   set s: String; 
   set v = 1000 :Integer;
-process main is
-  s  := String(v);  **  explicit coercion
-  expect (s == "1000"); **  check string value  
+  process main is
+    s  := String(v);  **  explicit coercion
+    expect (s == "1000"); **  check string value  
   
-  print "s = #n" ? v;   **  use placeholders
-  print "s = #{v}";     **  use interpolation    
-return;
+    print "s = #n" ? v;   **  use placeholders
+    print "s = #{v}";     **  use interpolation    
+  return;
 end number_to_string;
 
 /* we use <+ operator to pipeline a collection int the string  

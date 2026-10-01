@@ -5,25 +5,17 @@ Page: `tutorial/concurrency.html` (348 lines). Reviewed 2026-09-28. How to answe
 
 ## Questions
 
-### CON-01 Calling a routine
-This page calls routines as bare statements (`foo;`, `bar(1,2,output);`, `add_numbers;`) and says
-"Routine invocation is done using name of routine as a statement". types.html and functions.html
-use `call swap(x, y);`, and syntax.html defines `call` as running a shell command. One answer for
-CON-01, TYP-17 and CLS-10: how is a routine called?
-**Answer:** There are no routines. A method is called as a statement, `name(args);`, without `call` (D-025).
-Status: answered (D-025)
-
 ### CON-02 Output parameters
-`@result = 0: Integer` is an output parameter; the body writes `let result = …` (with `=`). Calls
+`@result = 0: Integer` is an output parameter; the body writes `result = …` (with `=`). Calls
 pass it by position (`bar(1,2,output)`) or by name (`add(1,2, op:result)`). Is an `@` parameter
-in/out (the routine sees the caller's value) or out only? Is a default value (`= 0`) allowed on an
-`@` parameter?
+in/out (the method sees the caller's value) or out only? Is a default value (`= 0`) allowed on an
+`@` parameter? (D-038: a process has `@` outputs and no result.)
 **Answer:** _(open)_
 Status: open
 
 ### CON-03 Parameter defaults
 This page: "optional parameters use `=` with an explicit type, or `:=` with inference":
-`param = value :Type`, `param := expression`. Confirm; this also answers FUN-04.
+`param = value :Type`, `param := expression`. Confirm; this also answers D-029.
 **Answer:** _(open)_
 Status: open
 
@@ -60,15 +52,19 @@ that was called without `start`?
 **Answer:** _(open)_
 Status: open
 
+### CON-09 `start` for methods and for processes
+D-043: `start aspect.process(args);` launches an aspect process in a `parallel … fork … join` group, and
+`start method(args);` launches an asynchronous method, joined by `wait all;`. Keep one keyword for the two
+kinds of concurrent work, or give the method one its own word?
+**Answer:** _(open)_
+Status: open
+
 ## Fixes (applied unless you write "no")
 
 ### CON-F1 Wrong content
-- The shoulder-thread example's main block is `routine:` → `process`; `start generator(…):` ends in
-  `:`.
-- `let result = param1 + param2;` → `:=`; `print ("outout=", output)`.
+- `start generator(…):` ends in `:`.
+- `let result = param1 + param2;` → `result := param1 + param2;`; `print ("outout=", output)`.
 - "The main thread is yielding" while `yield` is unused (syntax.html) → "suspended".
-- A past word replace turned "process" into "routine" in prose: "routine current batch", "you can
-  routine the batch".
 - Image `/images/asynch.svg` does not exist (file is in `/assets/images/`).
 **Answer:** _(open)_
 
@@ -79,13 +75,8 @@ multi-treding, thred, conntrol, inpur, concentions, tread, necesary, "you do cre
 
 ## Improvements (applied only if you write "yes")
 
-### CON-I1 Move routines to functions.html
-Routines are introduced here but used from types.html on. Move "Routines", "Side Effects" and
-"Parameters" to functions.html (or a "Subprograms" page); keep this page for asynchronous methods.
-**Answer:** _(open)_
-
 ## Spec additions once answered
 
-- `spec/syntax/declarations.md`: routine, parameters, varargs, output parameters (CON-01..03).
+- `spec/syntax/declarations.md`: routine, parameters, varargs, output parameters (CON-02, 03).
 - `spec/semantics/concurrency.md`: asynchronous method model, `start` / `suspend` / `resume` / `wait`,
   time-out (CON-04..08).

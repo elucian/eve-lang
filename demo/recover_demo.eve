@@ -1,9 +1,9 @@
 # using recover
 driver recover_demo is
-    set a = 0.00;
-process main is
+  set a = 0.00;
+  process main is
     a := 1/0;
-recover
+  recover
     print $error.message;
-return;
+  return;
 end recover_demo;

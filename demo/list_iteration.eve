@@ -1,25 +1,24 @@
 # list iteration using loop
 driver list_iteration is
 
-global
   set my_list: List[String]; **  empty list
-process main is
-  ** later initialization
-  my_list := ('a','b','c','d','e');
+  process main is
+    ** later initialization
+    my_list := ('a','b','c','d','e');
 
-  ** visit first 3 elements and stop
-  loop
-    let e: String; ** control variable
-  for e in my_list do
-    write e; **  pur e in buffer for console
-    if e == 'd' do
-      break; **  early termination;
-    else
-      write(', '); ** add separator
-    done; ** end if
-  done; ** end loop
-  print; ** a, b, c, d
-return;
+    ** visit first 3 elements and stop
+    loop
+      let e: String; ** control variable
+    for e in my_list do
+      write e; **  pur e in buffer for console
+      if e == 'd' do
+        break; **  early termination;
+      else
+        write(', '); ** add separator
+      done; ** end if
+    done; ** end loop
+    print; ** a, b, c, d
+  return;
 end list_iteration;
 
 /* Note: In Eve noting is printed out when you write(),1

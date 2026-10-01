@@ -1,10 +1,9 @@
 #demo how to initialize a HashMap
 driver map_init_demo is
 
-global
-    ** Empty HashMap (require initialization)
-    set table1: HashMap; 
-process main is
+  ** Empty HashMap (require initialization)
+  set table1: HashMap; 
+  process main is
     ** initialize table using a literal of pairs
     expect (table1 is HashMap);
     table1 := {('one':1), ('two':2)};
@@ -18,7 +17,7 @@ process main is
     expect (table1 == table2);
     expect (table1 is not table2);
     expect (table2 is HashMap);
-return;
+  return;
 end map_init_demo;
 
 /* The operator == execute a deep comparison

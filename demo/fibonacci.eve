@@ -3,21 +3,21 @@
 /*---------------------------*/
 driver fibonacci is
 
-** declare Fibonacci rule
-function fib(n:Integer) => (@y:Integer) is
-  if (n == 1) or (n == 0) do
-    y := 1; ** first value
-  else
-    y := fib(n-1) + fib(n-2);
-  end if;
-return;
+  ** declare Fibonacci rule
+  function fib(n:Integer) => (@y:Integer) is
+    if (n == 1) or (n == 0) do
+      y := 1; ** first value
+    else
+      y := fib(n-1) + fib(n-2);
+    end if;
+  return;
 
-** main process call fib function
-process main is
-   ** call fib rule using argument 5
-   let r := fib(5);
+  ** main process call fib function
+  process main is
+    ** call fib rule using argument 5
+    let r := fib(5);
 
-   ** print the result to console
-   print r;
-return;
+    ** print the result to console
+    print r;
+  return;
 end fibonacci;

@@ -71,7 +71,7 @@ check below finds nothing; the rest of eve-lang is clean.
 
 ### T1.12 Move the REPL and daemon text to command.html `[ ]`
 - TOP-I2 (agreed): REPL, service mode and VM options describe the tool, not the language. Move them
-  from `topology.html` to `command.html` (or `manual/usage.md`), marked "planned" (TOP-14).
+  from `topology.html` to `command.html` (or `manual/usage.md`), marked "planned" (D-031).
 
 ### T1.10 Content review, one page per session `[~]`
 Order: syntax, types, topology, control, functions, classes, collections, processing,

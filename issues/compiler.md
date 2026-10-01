@@ -22,10 +22,10 @@ Status: open
 
 ### CMP-F1 Lexer section is out of date
 It explains `--` end-of-line and `+---- … ----+` box comments, removed by D-011, and does not
-mention `#`, `##`, `(* … *)`. Rewrite once SYN-04, SYN-16 and SYN-17 are answered; mention the
+mention `#`, `##`, `(* … *)`. Rewrite with D-011, D-014 and D-019; mention the
 `(*` / vararg `*` ambiguity as a lexer pitfall.
 **Answer:** _(open)_
 
 ### CMP-F2 Examples
-`driver hello_world:` → no colon (D-012). Test file names follow SYN-14.
+`driver hello_world:` → `driver hello_world is`, `process main is`, `end hello_world;` (D-012, D-015, D-043). Test file names follow D-018.
 **Answer:** _(open)_

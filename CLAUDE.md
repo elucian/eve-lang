@@ -22,7 +22,7 @@ Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig b
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
   tutorial (17 HTML pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
-  … `process` … `return;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
+  … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
   Control flow: D-016 in `plan/decisions.md`.
 - **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.

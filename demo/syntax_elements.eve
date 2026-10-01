@@ -1,24 +1,22 @@
 # script example written in EVE
 /*-----------------------------------------
-| a driver can receive parameters        |
+| the main process can receive parameters|
 /*----------------------------------------*/
-driver syntax_elements(p1, p2: Integer) is
+driver syntax_elements is
 
-global
-** start declaration region
-    set v1, v2: Integer;
+  ** start declaration region
+  set v1, v2: Integer;
     
-** define two local functions
-global
-    set add = (p1, p2:Integer) => (p1+p2);
-    set sub = (p1, p2:Integer) => (p1-p2);
+  ** define two local functions
+  set add = (p1, p2:Integer) => (p1+p2);
+  set sub = (p1, p2:Integer) => (p1-p2);
     
-** define executable region    
-process main is
+  ** define executable region    
+  process main(p1, p2: Integer) is
     print ("param1:#{p1}, #{p2}");
     v1 := add(p1, p2);
     v2 := sub(p1, p2);
     print ("result: #{v1}");
     print ("result: #{v2}");
-return;
+  return;
 end syntax_elements;
