@@ -7,7 +7,7 @@ process
     write "."; wait  10;
     over if i > 10;
     let   i += 1;
-  done loop;
+  done;
 return;
 
 /* is Unusual to finish a program in a loop,

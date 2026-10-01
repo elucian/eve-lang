@@ -7,7 +7,7 @@ process
   for (key, value) in my_map do
     ** print pairs (key, value)
     print('("' + key + '",' + value +')');
-  done loop;
+  done;
 return;
 
 /* Note: the loop header is missing because is optional.

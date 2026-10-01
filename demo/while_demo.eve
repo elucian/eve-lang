@@ -19,7 +19,7 @@ process
     done;
   then
     write "i = " + i;
-  done loop test; ** end test
+  done test; ** end test
 
   ** flush the write buffer
   print; ** "c","d","e"
