@@ -291,13 +291,13 @@ Answers FUN-03, FUN-09, FUN-I1, TYP-17, CON-01, CMD-01. Amends D-015 and D-016.
   Returning a result does not make it something else.
 - A method can be declared in a class (with `@self`) or at module level, outside any class (no `@self`).
   A module-level method is public with a leading `.` (`method .write(...)`) and private with a leading `_`
-  (D-017). Visibility of an unmarked name: Q-011.
+  (D-017). Visibility of an unmarked name: D-035.
 - A method is called as a statement, `name(args);`, with or without `()` when it has no arguments. There is
   no `call`. `call` only runs a shell command (command.html). An asynchronous method is a method started with `start` (D-026).
 - Applied to every tutorial page, the demos (`routine_call.eve` became `method_call.eve`), the keyword
   tables and the Notepad++ UDL files.
 
-### Q-011 Default visibility of a module-level method (2026-09-30)
+### Q-011 Default visibility of a module-level method (answered 2026-09-30 → D-035)
 D-025 says `.` is public and `_` is private. What is a method with no prefix: private to the module, or
 public? The same question applies to functions and classes at module level.
 **Answer:** _(open)_
@@ -495,3 +495,9 @@ Replaces the closers of D-016, D-020, D-030 (CTL-16) and D-033. Author decision.
 - `parallel` follows the same rule, with an optional label: `[name:] parallel … fork … join [name];`. A labeled
   group closes with `join name;`, an unlabeled group with a naked `join;`.
 - Applied to control, syntax, the other tutorial pages and the demos (41 closers converted).
+
+### D-035 Module-level visibility: `.` is public, no prefix is private (2026-09-30)
+Answers Q-011. Author decision.
+- A module-level method, function or class is public only if its name starts with `.` in its declaration
+  (`method .write(...)`). Without the dot it is private to the module.
+- `_` stays the protected prefix of class members (D-017); a module-level name needs no `_`.
