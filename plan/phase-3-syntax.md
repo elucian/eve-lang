@@ -17,7 +17,7 @@ Sources: `topology.html` (Scripts, Regions, Import Region, Process), `syntax.htm
 ### S3.3 `syntax/statements.md` `[ ]`
 Source: `syntax.html#statements`, `control.html`.
 - Single-line and multi-line statements, blocks and `end …` terminators, labels.
-- Control statements: `if`/`else`, `case`/`when`, `cycle`/`while`/`for`/`loop`, `break`,
+- Control statements: `if`/`else`, `case`/`when`, `repeat`/`while`/`for`/`loop`, `break`,
   `skip`, `exit`, `return`, `pass`.
 
 ### S3.4 `syntax/expressions.md` `[ ]`

@@ -28,11 +28,12 @@ run-time failure?
 Status: open
 
 ### PRC-07 Parallel groups
-`name: parallel` … `fork` … `start aspect.process(args);` … `join name;` (D-043). Are group names
+`name: parallel` … `do` … `start method(args);` … `done name;` (D-043, D-046, D-047). Are group names
 required (D-034: optional)? When one process in a group fails, are the others in the same group
 stopped or awaited?
 **Answer:** _(open)_
-Status: partly answered by D-034 and D-043: the label is optional, a naked `join;` closes an unlabeled group; the failure of one process is open
+Status: partly answered by D-034 and D-043: the label is optional, a naked `done;` closes an unlabeled group. D-047:
+a group starts methods, not processes; failure rule proposed (CON-11)
 
 ### PRC-08 `raise` forms
 Three forms: `raise $ExceptionType("message");` (a `$` type?), `raise (code, "message") if c;`,

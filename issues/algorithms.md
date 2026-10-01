@@ -22,7 +22,7 @@ Status: open
 
 ### ALG-F1 Wrong example
 - `1^-2`, `1^-3`, `1^-10`, `1^-14` are all 1; the intent is `10^-2` etc.
-- `repeat if` on a `loop` without `cycle` (see D-033, D-034).
+- `repeat if` on a `loop` without `while` (see D-033, D-034, D-045).
 - The precision loop stops when `z*z - x <= p`, but Newton's method approaches from above, so
   the check is fine only for positive errors; state it or use `abs`.
 - The function is named `sqrt`, which hides a built-in of the same name (LIB-01).

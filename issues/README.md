@@ -34,7 +34,7 @@ depends on another points to it (`see CLS-09`).
 
 ## Pages
 
-In index order (index.html first). Open items on 2026-10-01: 83 questions. An item is removed when its
+In index order (index.html first). Open items on 2026-10-01: 85 questions. An item is removed when its
 answer is applied to the tutorial and recorded in `plan/decisions.md`; the ids of removed items are retired
 (their text is in the git history before 2026-10-01). Spec work still points to the decisions.
 
@@ -50,7 +50,7 @@ answer is applied to the tutorial and recorded in `plan/decisions.md`; the ids o
 | classes.html | [classes.md](classes.md) | 9 | 6 | 8 |
 | collections.html | [collections.md](collections.md) | 19 | 6 | 1 |
 | processing.html | [processing.md](processing.md) | 10 | 4 | 4 |
-| concurrency.html | [concurrency.md](concurrency.md) | 8 | 2 | 2 |
+| concurrency.html | [concurrency.md](concurrency.md) | 10 | 2 | 2 |
 | library.html | [library.md](library.md) | 6 | 2 | 0 |
 | command.html | [command.md](command.md) | 5 | 1 | 1 |
 | databases.html | [databases.md](databases.md) | 4 | 3 | 0 |

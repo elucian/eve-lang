@@ -58,7 +58,7 @@ Status: open
 This page slices with `[n:m]` (`base[11:14]`, `base[x: x+3]`); syntax.html says slices use
 `[n..m]`. Which one? Confirm: `:=` from a slice gives a view that shares elements, `::` a copy.
 **Answer:** Slices use `[n..m]`, with `$` for the end (`base[6..$]`). `[n:m]` is dropped. See D-022. View versus copy (`:=` / `::`) is still to confirm.
-Status: partly answered (D-022)
+Status: answered (D-021, D-022, D-049: `:=` gives a view, `::` a new collection)
 
 ### COL-09 Bulk assignment with `[*]`
 `zum[*] := 0;` and `base[1:5][*] := 0;`. Is `[*]` required, or does `base[1:5] := 0`
