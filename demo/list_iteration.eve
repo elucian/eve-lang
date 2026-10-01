@@ -10,14 +10,14 @@ process
   ** visit first 3 elements and stop
   loop
     new e: String; ** control variable
-  for e in my_list cycle
+  for e in my_list do
     write e; **  pur e in buffer for console
     if e == 'd' do
       break; **  early termination;
     else
       write(', '); ** add separator
     done; ** end if
-  repeat; ** end cycle
+  done loop; ** end loop
   print; ** a, b, c, d
 return;
 

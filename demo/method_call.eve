@@ -9,9 +9,9 @@ process
     ** list the arguments
     loop
        new arg: String;
-    for arg in args cycle
+    for arg in args do
        print arg;
-    repeat;
+    done loop;
 return;
 
 process

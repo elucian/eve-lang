@@ -6,11 +6,11 @@ global
     **  create a shared list
     set this := ('a','b','c','d','e'): List[Symbol];
 process
-  ** start labeled cycle
+  ** start labeled loop
   test: loop 
     new i := 0: Integer; 
     new e : Symbol;       
-  while i < this.length() cycle
+  while i < this.length() do
     let e := this[i];
     let i += 1;
     if e  <= "c" do
@@ -19,7 +19,7 @@ process
     done;
   then
     write "i = " + i;
-  repeat; ** end test
+  done loop test; ** end test
 
   ** flush the write buffer
   print; ** "c","d","e"

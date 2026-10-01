@@ -469,3 +469,16 @@ From TYP-01 to TYP-22, TYP-I3. Applied to `tutorial/types.html`.
 Spec additions: `spec/semantics/types.md` and `types.json` (native and primitive types, Rational,
 literal defaults, variants, coercion, division, `parse`); `spec/lexical/lexical.md` (numeric, `U+`,
 Symbol, NIL, String, placeholder, date, time and Duration literals).
+
+### D-033 Loops close with `done`; `repeat` removed; new `cycle` (2026-09-30)
+Replaces the loop rows of D-016 and the `repeat` rules of D-030 (CTL-05, 08, 13). Author decision.
+- Every block closes with `done`. A loop closes with `done loop [label];` (loop, while and for).
+- `repeat` is removed. `cycle` as a block opener is replaced by `do`: `[label:] loop` declarations `do`,
+  `while c do`, `for x in r do`.
+- `cycle [label] [if condition];` is a new statement inside the body: go to the next iteration of a loop
+  that has no index (plain `loop`, `while`). The compiler turns it into a jump to the start of the loop.
+  As the last statement it does the job of the old `repeat`: `cycle if c;` is the old `repeat while c;`.
+- `next [label] [if c];` is only for `for` loops (advance the index). `break` and `then` are unchanged.
+- Assumed, not answered: a plain `loop` runs its body once unless a `cycle` is executed; `while` and
+  `for` repeat implicitly. Open for the author to confirm.
+- Applied to control, syntax and the other tutorial pages, `js/eve1.js`, `js/eve3.js` and the demos.
