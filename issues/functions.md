@@ -97,6 +97,7 @@ Status: done (D-015, tutorial fixed)
 One table: declared with, has a name, result, side effects allowed, handles errors, can be
 suspended, called with (`f()`, `r();`, `start m`). Functions and methods only, see D-025.
 **Answer:** Good idea. Yes.
+Status: done (table "Subprograms compared")
 
 ## Spec additions once answered
 
