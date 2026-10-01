@@ -8,11 +8,11 @@ process
   expect 'X' in ('A'..'Z');  ** will pass
 
   ** iterate over range of symbols
-  for d in ('a'...'c') cycle
-    for n in ('1'..'3') cycle
+  for d in ('a'...'c') do
+    for n in ('1'..'3') do
        print d || n || ',';
-    repeat;
-  repeat;
+    done loop;
+  done loop;
 return;  
 
 ** expected output 

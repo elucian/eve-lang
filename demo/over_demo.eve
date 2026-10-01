@@ -3,11 +3,12 @@ driver test_over is
 process
   loop
     new i = 0 :Integer;
-  cycle
+  do
     write "."; wait  10;
     over if i > 10;
     let   i += 1;
-  repeat;
+    cycle;
+  done loop;
 return;
 
 /* is Unusual to finish a program in a loop,
