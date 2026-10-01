@@ -470,15 +470,16 @@ Spec additions: `spec/semantics/types.md` and `types.json` (native and primitive
 literal defaults, variants, coercion, division, `parse`); `spec/lexical/lexical.md` (numeric, `U+`,
 Symbol, NIL, String, placeholder, date, time and Duration literals).
 
-### D-033 Loops close with `done`; `repeat` removed; new `cycle` (2026-09-30)
+### D-033 Loops close with `done`; no `repeat`, no plain loop; `cycle` (2026-09-30)
 Replaces the loop rows of D-016 and the `repeat` rules of D-030 (CTL-05, 08, 13). Author decision.
-- Every block closes with `done`. A loop closes with `done loop [label];` (loop, while and for).
-- `repeat` is removed. `cycle` as a block opener is replaced by `do`: `[label:] loop` declarations `do`,
-  `while c do`, `for x in r do`.
-- `cycle [label] [if condition];` is a new statement inside the body: go to the next iteration of a loop
-  that has no index (plain `loop`, `while`). The compiler turns it into a jump to the start of the loop.
-  As the last statement it does the job of the old `repeat`: `cycle if c;` is the old `repeat while c;`.
+- Every block closes with `done`. A loop closes with `done loop [label];` (while and for).
+- `repeat` is removed. The body opener `cycle` is replaced by `do`: `while c do`, `for x in r do`.
+- `[label:] loop` is only the optional header of a `while` or `for` loop: label and declarations. There
+  is no unconditional loop: an infinite loop is `while True do … done loop;`, left with `break`. The
+  compiler accepts a constant `True` condition without a warning; its `else` never runs.
+- `cycle [label] [if condition];` is a statement of a `while` loop: go to the next iteration (back to
+  the condition). The compiler turns it into a jump. Using `cycle` outside a `while` loop is an error.
 - `next [label] [if c];` is only for `for` loops (advance the index). `break` and `then` are unchanged.
-- Assumed, not answered: a plain `loop` runs its body once unless a `cycle` is executed; `while` and
-  `for` repeat implicitly. Open for the author to confirm.
-- Applied to control, syntax and the other tutorial pages, `js/eve1.js`, `js/eve3.js` and the demos.
+- A do-while is `while True do … break if not c; … done loop;`.
+- Applied to control (section "Unconditional Loop" removed, sidebar entry too), syntax and the other
+  tutorial pages, `js/eve1.js`, `js/eve3.js` and the demos.
