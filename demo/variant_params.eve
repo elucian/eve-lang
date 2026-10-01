@@ -17,13 +17,13 @@ driver variant_params is
     ** invert two  Integer numbers
     let x := 10;
     let y := 20;
-    swap(x, y);
+    swap(@x, @y);
     expect (x == 20) and (y == 10);
 
     ** invert two Real numbers
     let a := 1.5;
     let b := 2.5;
-    swap(a, b);
+    swap(@a, @b);
     expect (a == 2.5) and (b == 1.5);
   return;
 end variant_params;

@@ -653,3 +653,84 @@ Maintenance after D-036 to D-043.
 - syntax.html keyword table: removed `import`, `global`, `constant`, `alias`, `begin`, `release`; added `def`, `end`,
   `destructor`. 115 words. The highlighter (eve1.js) follows.
 - collections.html: element creation `h('c') := 3;` is a mutation, not a `let` declaration.
+
+### D-045 `repeat` replaces `cycle`; `repeat N times` (2026-10-01)
+Author decision. Replaces `cycle` of D-033 and reuses the word `repeat` that D-033 removed as a closer.
+- `repeat [label] [N times] [if condition];` is a statement of every loop, `while` and `for`. It jumps to the
+  beginning of the cycle: the loop condition (the range check in a `for`) is verified again and the body runs
+  again. The control variable of a `for` is not incremented; `next` advances it.
+- `cycle` is removed (keyword table 115 words). `repeat` outside a loop is an error.
+- `N times` is an integer expression. It limits the consecutive repeats of the same cycle: after N repeats the
+  statement is ignored and execution continues after it. The count restarts when a cycle ends without a repeat.
+  Without `times` the number is not limited; a condition that stays true is a user error, like `while True`.
+- Variables created by `let` in the `do` region are created again at each repetition; what must survive is
+  declared in the `loop` header.
+- Applied to control.html (patterns, notes, examples), syntax.html (keyword and meaning tables), `js/eve1.js`,
+  `js/eve3.js`. The control summary table lost the columns "Opens scope" and "Condition after closer".
+- Open: whether `N times` counts per cycle (as written) or per loop.
+
+### D-046 `parallel` uses `do` and `done`; `fork` and `join` removed (2026-10-01)
+Author decision, aligns the parallel group with the control statements. Replaces the `fork`/`join` words of D-034 and D-043.
+- `[name:] parallel` declarations `do` … `start aspect.process(args);` … `done [name];`. The declarations (shared
+  data such as `let s: ()Integer;`) come before `do`; `start` is allowed in the `do` region.
+- `done [name];` waits for all the processes started in the group, as `join` did; a labeled group closes with
+  `done name;`, an unlabeled group with `done;`. Output parameters (`@`) are ready after the `done`.
+- `fork` and `join` are no longer keywords (keyword table 113 words).
+- Applied to processing.html (author edit and notes), control.html (summary table), syntax.html (keyword table, meaning
+  table, block terminators), `js/eve1.js`, issues CON-09 and PRC-07.
+
+### D-047 Parallel methods inside a process; aspects run serially; BSP (2026-10-01)
+Author decision (first three bullets); the rules after them are proposed to make it safe and implementable. Replaces
+`start aspect.process(args);` of D-043 and D-046 and refines the answer to CON-04 (methods were single-core only).
+- `apply aspect.process(args);` is the only way to run a process of an aspect: serial, the caller waits. Aspects are
+  never started; `start aspect.process()` is an error.
+- One process can span several cores. Parallel work is done by methods: `start method(args);` in the `do` region of a
+  `[name:] parallel … do … done [name];` block. `done` is a barrier: it waits for every method started in the group.
+- A method called by its bare name runs on the core of its caller; `suspend`, `resume` and `wait` stay cooperative
+  on that core (CON-08 answer unchanged).
+- Proposed, VM: a started method is a task; tasks run on a pool of worker threads, size `$cores` (default: the hardware
+  cores, set in the driver configuration). More tasks than cores are queued.
+- Proposed, data rules (no data race by construction, so no locks): arguments are evaluated at `start`; a collection
+  or object passed as input is shared read only and the process can't modify it until `done`. An `@` argument belongs
+  to one task: two tasks of a group can't receive the same variable, element or overlapping slice as output (compiler
+  where provable, VM check at `start` otherwise). Changed by D-048: inputs are passed by value, so the process may go
+  on changing them; the "read only until `done`" rule is dropped. A started method can't change driver globals, can't `suspend` and
+  can't contain a `parallel` block (no nesting). It may call methods by name (same worker) and print (any order).
+- Proposed, errors (answers the open part of PRC-07 for methods): when a task raises, the tasks not yet begun are
+  cancelled, the running ones finish, `done` raises the first error in the process, and later groups don't begin.
+- Bulk Synchronous Parallel (BSP) is the recommended pattern: one parallel block = one superstep (compute on own data,
+  write own outputs, barrier at `done`); the process combines or redistributes between blocks; an iterative algorithm
+  puts the block in a loop. Tasks never wait for each other, so a group can't deadlock, and combining in index order
+  makes results deterministic.
+- Proposed, channels (CON-05): not in version 1. Streams are read in batches, one batch per superstep. The author's
+  producer-consumer example was replaced; its problems are listed in CON-05.
+- Call site: `@` before an output argument (`start square(i, @s[i]);`), decided in D-048.
+- Applied to concurrency.html (intro, asynchronous methods, new section "Parallel methods" with "Bulk Synchronous
+  Parallel", examples `parallel_sum` and `heat_bar`; "Multi Threading" removed), processing.html (section "Parallel
+  execution", examples with methods), syntax.html (`parallel`, `start`), topology.html (driver, process, aspect).
+
+### D-048 `@` passes by reference, at the declaration and at the call (2026-10-01)
+Author decision. Answers CON-02 and CON-10.
+- `@` marks an input/output parameter and is required on its argument: `bar(1, 2, @output);`, by name
+  `add(1, 2, op: @result);`, also for elements and slices: `@s[i]`, `@nxt[a..b]`. The argument is a reference to a
+  variable, element or slice; `add(1, 2, result)` and `add(1, 2, @4)` are errors.
+- An `@` parameter is in/out (the method sees the caller's value) and has no default value, so it is never optional.
+- Without `@` an argument is passed by value, collections included: the method works on its own copy. This is the
+  low-level idiom; `@` is the higher-level input/output abstraction. The VM may implement it as copy on write. Note
+  the parallel with assignment: a parameter without `@` behaves like `::` (clone), one with `@` like `:=` (shared
+  reference), see syntax.html "Assign Expression". `heat_bar` copies the next state with `cur :: nxt;` (D-049).
+- In a parallel block this replaces the read-only sharing proposed in D-047: a task gets copies of its inputs and
+  references only to the outputs it owns.
+- Applied to concurrency.html (parameter list and text, examples `process_demo`, `output_params`, `shoulder_thread`,
+  rules of parallel methods, `heat_bar` text), types.html and `demo/variant_params.eve` (`swap(@x, @y)`),
+  `demo/output_params.eve` (call, missing comma, `set out :=`, `let result`, expected value 3).
+
+### D-049 `::` is the only clone; no `clone` keyword; slices by `:=` are views (2026-10-01)
+Author decision.
+- The keyword `clone` is removed (keyword table 112 words). The clone operator `::` makes a deep copy of an object or
+  a collection: `let copy :: original;`. `:=` shares the reference of an object or collection, and copies a native value.
+- Slices follow the same rule (closes COL-08; `$` is the last index, D-021): `let v := base[a..b];` is a view over the elements of `base` (writing through it changes
+  `base`); `let c :: base[a..b];` is a new collection with a copy of the elements.
+- Matches the parameter rule of D-048: no `@` behaves like `::`, `@` like `:=`.
+- Applied to syntax.html (keyword table, "Assign Expression"), collections.html ("Array slicing"), concurrency.html
+  (`heat_bar` clones the next state with `cur :: nxt;`).
