@@ -8,6 +8,14 @@ Source: `library.html`, `command.html`, and calls in `demo/*.eve` (`print`, `wri
 `round`, `floor`, `ceiling`, …).
 - Per function: `name`, `params` (name, type, mode), `returns`, `errors`, `ref`.
 
+### S5.1a Library traits `Iterable`, `Comparable`, `Printable` `[!]` → D-039
+Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
+- Define each trait: required methods, provided methods, generic parameter (`Comparable(:T)`).
+- `Iterable`: what the `for` loop calls; which collections adopt it. `Comparable`: which operators (`<`, `>`, `==`)
+  derive from the required method. `Printable`: relation to `string()`, `print`, and the `?` template.
+- Decide first: may a type adopt a trait outside its declaration (`Integer` adopting `Printable`)? Then write
+  `library/traits.md` and `traits.json`, and add the matching Iterable text to `collections.html`.
+
 ### S5.2 `conformance/README.md` `[!]` → Q-005
 - Levels 1–3, file naming, the `driver` per test rule, the expected-output convention.
 - Test metadata header comment: `** spec: syntax/regions.md#driver, level: 1`.

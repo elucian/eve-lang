@@ -560,3 +560,26 @@ Author decision. Answers the open questions of D-037. Replaces the `over N` rows
 - `start` and `begin` pass a parameter list, outputs marked `@`: `start total(10, @sum);`,
   `begin total(10, @sum);` (the output is ready after the `join`).
 - `panic` is global: it is an unhandled exception and ends the whole application, not only the process (D-031).
+
+### D-039 Traits, abstract classes, partial methods (2026-10-01, proposed)
+Proposed by the model after reviewing the partials section of classes.html. Awaiting author confirmation. Touches CLS-07 and CLS-08.
+- Problem: "partial" meant trait, interface, abstract class and prototype constructor at once; a partial constructor
+  carried state, so multiple inheritance had attribute conflicts; an unimplemented method returned `Null` at run time.
+- Vocabulary: a **partial method** is a signature ending in `;`. An **abstract class** is a class with at least one
+  partial method. A **trait** is `trait Name is … end Name;`.
+- Trait: no attributes, properties, constructor or destructor (no state, no instances). It holds required methods
+  (partial) and provided methods (with a body, which may call the required ones through `@self`). `@self` is untyped
+  and means the adopting class. A trait can be generic (`trait Comparable(:T)`) and can be used as a type
+  (`let p: Printable := c;`, `x is Printable`). `trait` is a keyword; it closes with `end` (D-037).
+- Abstract class: has attributes and a constructor, cannot be created with `new`; only a subclass constructor calls
+  it, by its name (`self := new Shape(name);`). The partial constructor is removed.
+- Inheritance list `<: (A, B, …)`: at most one superclass that carries state (default `Object`), any number of traits
+  (CLS-07). A method of the class wins over a trait method; two traits that provide the same method need an explicit
+  implementation in the class, otherwise a compile error.
+- A class with a constructor must implement every inherited partial method: a missing one is a compile error, never
+  `Null` (CLS-08).
+- The `for` loop uses the library trait `Iterable`.
+- Applied to classes.html (partials section rewritten), syntax.html (keyword `trait`), collections.html.
+- Open: adopting a trait for an existing type outside its declaration (an extension, in another module), for example
+  `Integer` adopting `Printable`; and the exact list of library traits (`Iterable`, `Comparable`, `Printable`).
+- Todo: library traits `Iterable`, `Comparable`, `Printable`: step S5.1a in `plan/phase-5-conformance.md`.
