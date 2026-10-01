@@ -8,7 +8,7 @@ set str = "foo";
    this is replacement for main(),
    process is anonymous and unique/driver
 */
-process
+process main is
     expect("" == '');  ** null string
     expect(" " <> ''); ** single space
     expect('this'  == 'this');  **  true (same value)
@@ -17,8 +17,8 @@ process
     expect("this " <> "this");  **  true (not same value)
 
     ** create new local strings
-    new str1 = "bar";
-    new str2 = "foo";
+    let str1 = "bar";
+    let str2 = "foo";
 
     ** string relations 
     expect(str1 == "bar"); ** check initial value
@@ -27,3 +27,4 @@ process
     expect(str1 <= str);   ** compare with global
     expect(str2 <> str);   ** string disjunction
 return;     
+end compare_strings;

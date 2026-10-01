@@ -6,7 +6,7 @@ driver date_demo is
 */
 set date := "2019/01/30": YDM;
 
-process
+process main is
     ** convert data type and print
     print date; **  2019/01/30 
 
@@ -20,3 +20,4 @@ process
     ** verification of conversion
     expect date as DMY == "30/01/2019"
 return;
+end date_demo;

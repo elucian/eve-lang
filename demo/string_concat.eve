@@ -1,9 +1,9 @@
 ** example of string concatenation
 driver string_concat is
 
-process
+process main is
   ** set string value using different operators
-  new str := " this " ||"string"; 
+  let str := " this " ||"string"; 
   expect str == " this string";
   
   ** use string interpolation
@@ -18,6 +18,7 @@ process
   ** string format operator ?
   print "these numbers #n, #n, #n are prime" ? (1,3,5);
 return;
+end string_concat;
 
 /* Note: Eve is concatenation is inspired from Ada,
    PL/SQL, Haskell. We avoid using "+" to avoid,

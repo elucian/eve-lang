@@ -3,7 +3,7 @@ driver set_demo is
     ** create a DataSet
     set my_set = {0,2,3} :DataSet;
     set ex_set = {3,4,5} :DataSet; 
-process
+process main is
     ** append element 1
     my_set += {1};  
     expect my_set == {0,1,2,3};
@@ -22,3 +22,4 @@ process
     my_set := {}; 
     expect my_set == {};
 return;
+end set_demo;

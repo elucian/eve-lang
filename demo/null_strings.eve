@@ -4,11 +4,11 @@ driver null_string is
 global 
     set str: String; ** Null string 
     set btr = "": String;    ** Empty string     
-process
+process main is
     ** null string
     expect (str  is Null); 
 
-    let str := "";
+    str := "";
     expect (str is String);
     expect (str is not Null);
     expect (str == "");
@@ -19,6 +19,7 @@ process
     expect (btr == "");       
     expect (str == "");           
 return;
+end null_string;
 
 /* Note: Strings in Eve are immutable 
    In Eve, Null and Empty are different things*/

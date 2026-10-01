@@ -9,7 +9,7 @@ global
     ** define two symbols
     set x = 'x', y = 'y': Symbol;
 
-process
+process main is
     ** check variable types using introspection
     expect type(r.name) == String;
     expect type(r.age)  == String;
@@ -21,3 +21,4 @@ process
     expect x is Symbol;
     expect type(x) == Symbol;
 return;
+end type_check;

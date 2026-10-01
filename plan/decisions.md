@@ -501,3 +501,62 @@ Answers Q-011. Author decision.
 - A module-level method, function or class is public only if its name starts with `.` in its declaration
   (`method .write(...)`). Without the dot it is private to the module.
 - `_` stays the protected prefix of class members (D-017); a module-level name needs no `_`.
+
+### D-036 `let` declares, `:=` mutates, `new` calls a constructor (2026-10-01)
+Author decision. Replaces the `new`/`let` rows of D-017 and D-032 (TYP-07, TYP-08) and the constructor form of CLS-03 to CLS-06.
+- `let` declares a variable, like `var` in other languages: `let a := 0;`, `let a = 0 :Integer;`. It takes a type.
+  `new` no longer declares variables. `set` is unchanged (constants, D-031).
+- Mutation needs no keyword: `a := a + 1;`, `a += 2;`, `t['one'] := 1;`, `self.x += a;`. `let a := …;` on a name that
+  already exists in the scope is an error (redeclaration).
+- `new` calls a constructor and is an expression: `let p := new Point(1, 2);`. A bare class call `Point(1, 2)` is not a
+  constructor call.
+- A constructor and a destructor are declared inside the class body and have no name (the class is known). The
+  constructor has two lists: `(@self)` first, then the parameters; there is no `=>` list:
+  `constructor(@self)(x = 0, y = 0 :Real) is … return;`. `@self` has no type: it is always an object of the class.
+  `new` passes the second list. The type list of a generic class belongs to the class header:
+  `class Number(:T) <: Object is constructor(@self)(initialValue: T) …`, `new Number(:i32)(42)`.
+  This changes CLS-03: constructors are no longer outside the class body.
+- Inside a class body, an object method takes `@self` without a type. A type is needed only for an extension method,
+  declared outside the class, possibly in another module: `method (@self: Error) .raise(...);`.
+- `self` is declared by `@self`, so the constructor assigns it first: `self := new Object();`, or the superclass
+  constructor, by its own name (`self := new Shape(name);`). `super` is not a keyword (CLS-06). `return` carries no
+  value (CLS-05: `return @self;` was a mistake).
+- A class header ends with `;` when it has no body, otherwise with `is` (CLS-01). `+=` adds attributes to the new type.
+- Attributes: `let self.name := v;` creates a private object attribute (CLS-04); public members are declared with `.`.
+- Applied to `demo/` (`let x …;` mutations became `x …;`, `new` declarations became `let`) and `class_point.eve`.
+- Open: the form of a private hidden attribute created in a partial constructor, and whether `new` may name a class
+  without a constructor (a prototype class has no instances).
+
+Spec additions: `spec/syntax/declarations.md` (variable, class, constructor), `spec/syntax/statements.md` (`let`, `:=`, `new`).
+
+### D-037 `end name;` closes a class and a module (2026-10-01)
+Author decision. Refines D-036 and the closers of D-016.
+- A module returns nothing, so it closes with `end module_name;`, not `return;`.
+- A class is a declaration, not a subprogram: it closes with `end ClassName;` (a class without body ends with `;`
+  on its header line). `return;` stays for the subprograms: method, function, routine, constructor, destructor.
+- Closers now: `done [label];` control blocks (D-034), `join [name];` parallel groups, `return;` subprograms (and
+  today driver and aspect), `end name;` class and module. Regions (`import`, `global`, `constant`, `initialize`,
+  `recover`, `finalize`) have no closer: they end at the next region keyword. `type`, `def`, `set` are one line.
+- Applied to demo, the tutorial examples (23 closers) and `class_point.eve`.
+- Driver and aspect: `process main is … return;` then `end script_name;`. A script may declare other named
+  processes; `main` is the entry point. `over` ends the process it is in (not the driver). Author answers.
+- `start name(args);` runs a named process and waits. `apply name to (args);` stays for aspects (serial).
+  `begin name(args);` inside `parallel … fork … join` starts a process or an aspect asynchronously. Running an
+  aspect creates its `main` process, which can start sub-processes.
+- Applied: every driver and aspect in demo, pattern, test and the tutorial (143 scripts) now has `process main is` and `end name;`.
+- Open: `start` meant "start a method asynchronously" in syntax.html; that use is dropped (async methods need a
+  keyword, probably `begin`). Does a started process share the driver globals, and how are its parameters and result
+  passed back? Is `over N;` in a sub-process an exit code for the caller's `start`?
+
+### D-038 `over;` has no code; process parameters and globals (2026-10-01)
+Author decision. Answers the open questions of D-037. Replaces the `over N` rows of D-010.
+- `over;` takes no value: it ends the process it is in with code 0. The forced abnormal exit with code 1 (`over 1;`)
+  is now `panic;` (D-031). Exit codes: 0 `over;` or end of process, 1 `panic`, 2 failed `expect`, 3 failed `assert`.
+- A process can receive parameters, input and output. It returns no result: outputs are parameters marked `@`.
+  `process name(n: Integer, @total: Integer) is … return;`.
+- A process has access to the globals of its script: module globals if declared in a module, driver globals if
+  declared in a driver.
+- Applied: `over 0;` → `over;`, `over 1;` → `panic;` in demo, tests, test/readme.md and the tutorial.
+- `start` and `begin` pass a parameter list, outputs marked `@`: `start total(10, @sum);`,
+  `begin total(10, @sum);` (the output is ready after the `join`).
+- `panic` is global: it is an unhandled exception and ends the whole application, not only the process (D-031).

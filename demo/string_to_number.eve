@@ -9,8 +9,9 @@ global
   set s = "1000"  :String;
   set r = "200.02":String;
 
-process
-  let v := parse(s); **  make v = 1000
-  let v := parse(r); **  make v = 200 and decimal .02 is lost
-  let b := parse(r); **  make b = 200.02 and decimal .02 is preserved
+process main is
+  v := parse(s); **  make v = 1000
+  v := parse(r); **  make v = 200 and decimal .02 is lost
+  b := parse(r); **  make b = 200.02 and decimal .02 is preserved
 return;
+end string_to_number;

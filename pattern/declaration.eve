@@ -27,6 +27,7 @@ global
     ** multiple Real numbers
     Real d = 2.5;
     Real x,y,z = 0.0;  
-process
+process main is
     pass;
 return;    
+end declaration;

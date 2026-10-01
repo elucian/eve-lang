@@ -4,18 +4,19 @@ driver list_concat is
 global
   set a = ('a','b','c'); 
   set b = ('1','2','3'); 
-process
-  new c := a +> b;
+process main is
+  let c := a +> b;
   expect (c[1] == 'a') ** check first element
   expect (c[?] == '3') ** check last element
 
-  new d := a <+ b;
+  let d := a <+ b;
   expect (d[1] == 'a') ** check first element
   expect (d[?] == 'c') ** check last element  
 
   print c; **  ('a','b','c','1','2','3');
   print d; **  ('1','2','3','a','b','c');
 return;
+end list_concat;
 
 /* Note: Lists in EVE are enclosed in round brackets ()
    We use square brackets [] for array literals and element access

@@ -14,10 +14,11 @@ global
     set sub = (p1, p2:Integer) => (p1-p2);
     
 ** define executable region    
-process
+process main is
     print ("param1:#{p1}, #{p2}");
-    let v1 := add(p1, p2);
-    let v2 := sub(p1, p2);
+    v1 := add(p1, p2);
+    v2 := sub(p1, p2);
     print ("result: #{v1}");
     print ("result: #{v2}");
 return;
+end syntax_elements;

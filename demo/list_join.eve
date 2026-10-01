@@ -1,10 +1,11 @@
 # List join() method call demo
 driver list_join is
 
-process
-  new str := (1,2,3).join(', ');
+process main is
+  let str := (1,2,3).join(', ');
   print str; ** "1, 2, 3"
 return;
+end list_join;
 
 /* join() is a method of a list.
    therefore can be call using "." operator */

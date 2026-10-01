@@ -3,9 +3,9 @@ driver shared_states is
 
 ** define global settings
   set $epsilon = 0.01;
-process
+process main is
   ** rational number
-  new x := 10/3;
+  let x := 10/3;
   print x ** 3.33(3)
  
   ** equality is affected by precision
@@ -25,7 +25,7 @@ process
   expect 3.33 <= x <= 3.34; 
 
   ** overwrite the initial settings 
-  let $epsilon  := 4;
+  $epsilon  := 4;
   expect 3.33335 == x;
   expect 3.3333  == x;
   expect 3.33    <> x;
@@ -36,5 +36,6 @@ process
   expect 3.3333 <= x <= 3.3334; 
  
 return;
+end shared_states;
 
 /* $epsilon default value ins Eve is 0.001 */

@@ -1,7 +1,7 @@
 #numeric range demo
 driver numeric_range is
 
-process
+process main is
   print (0..5);    ** (0,1,2,3,4,5)
   print (0.!5);    ** (0,1,2,3,4)
   print (0!.5);    ** (1,2,3,4,5)
@@ -22,6 +22,7 @@ process
   expect 1.5 in (0..10)(0.5);
   expect 99.01 in (0..?)(0.01); 
 return;  
+end numeric_range;
 
 **Notes:**
 /* 

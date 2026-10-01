@@ -2,16 +2,17 @@
 driver set_intersection_demo is
     set my_set = {0,2,3};
     set ex_set = {2,3,4}; 
-process
+process main is
     ** union demo
-    new union := my_set | ex_set;
+    let union := my_set | ex_set;
     expect union == {0,2,3,4};
 
     ** intersection demo
-    new intersection := my_set & ex_set;
+    let intersection := my_set & ex_set;
     expect intersection == {2,3};
 
     ** print-out setts
     print intersection; ** {2,3}
     print union;  ** {0,2,3,4}
 return;
+end set_intersection_demo;

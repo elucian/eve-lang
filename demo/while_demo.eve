@@ -5,14 +5,14 @@ driver while_demo is
 global
     **  create a shared list
     set this := ('a','b','c','d','e'): List[Symbol];
-process
+process main is
   ** start labeled loop
   test: loop 
-    new i := 0: Integer; 
-    new e : Symbol;       
+    let i := 0: Integer; 
+    let e : Symbol;       
   while i < this.length() do
-    let e := this[i];
-    let i += 1;
+    e := this[i];
+    i += 1;
     if e  <= "c" do
         write e;
         write ',' if e is not this.tail;
@@ -24,3 +24,4 @@ process
   ** flush the write buffer
   print; ** "c","d","e"
 return;
+end while_demo;

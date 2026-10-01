@@ -8,21 +8,22 @@ method swap(@x, @y: {Integer | Real} ) is
   expect type(x) = type(y);
 
   ** swap x, y values
-  new i := x; **  intermediate
-  let x := y; **  first  swap
-  let y := i; **  second swap
+  let i := x; **  intermediate
+  x := y; **  first  swap
+  y := i; **  second swap
 return;
 
-process
+process main is
   ** invert two  Integer numbers
-  new x := 10;
-  new y := 20;
+  let x := 10;
+  let y := 20;
   swap(x, y);
   expect (x == 20) and (y == 10);
 
   ** invert two Real numbers
-  new a := 1.5;
-  new b := 2.5;
+  let a := 1.5;
+  let b := 2.5;
   swap(a, b);
   expect (a == 2.5) and (b == 1.5);
 return;
+end variant_params;

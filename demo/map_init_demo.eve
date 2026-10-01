@@ -4,21 +4,22 @@ driver map_init_demo is
 global
     ** Empty HashMap (require initialization)
     set table1: HashMap; 
-process
+process main is
     ** initialize table using a literal of pairs
     expect (table1 is HashMap);
-    let table1 := {('one':1), ('two':2)};
+    table1 := {('one':1), ('two':2)};
 
     ** use gradual type inference
-    new table2:= {};
-    let table2['one'] := 1;
-    let table2['two'] := 2;
+    let table2:= {};
+    table2['one'] := 1;
+    table2['two'] := 2;
     
     ** verification using "==" operator
     expect (table1 == table2);
     expect (table1 is not table2);
     expect (table2 is HashMap);
 return;
+end map_init_demo;
 
 /* The operator == execute a deep comparison
    operator "is" execute a shallow comparison

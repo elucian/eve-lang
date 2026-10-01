@@ -1,14 +1,15 @@
 # terminate a program with: over
 driver test_over is
-process
+process main is
   loop
-    new i = 0 :Integer;
+    let i = 0 :Integer;
   while True do
     write "."; wait  10;
     over if i > 10;
-    let   i += 1;
+    i += 1;
   done;
 return;
+end test_over;
 
 /* is Unusual to finish a program in a loop,
    but this is a demonstration that is possible */

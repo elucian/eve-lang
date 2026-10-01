@@ -1,6 +1,6 @@
 # using symbol ranges
 driver symbol_range is
-process 
+process main is
   print ('0'..'5') ** ('0','1','2','3','4','5')
 
   ** following statements should pass
@@ -14,6 +14,7 @@ process
     done;
   done;
 return;  
+end symbol_range;
 
 ** expected output 
 /* 
