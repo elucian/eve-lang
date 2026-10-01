@@ -2,17 +2,17 @@
 driver explicit_coercion is
   set a = 0:   Integer;
   set b = 1.5: Real;
-process main is
-  ** explicit coercion lose (0.5)
-  a := floor(b);
-  write  a; ** will print: 1
+  process main is
+    ** explicit coercion lose (0.5)
+    a := floor(b);
+    write  a; ** will print: 1
  
-  ** explicit coercion add (0.5)
-  a := ceiling(b); 
-  print  a; ** will print: 2
+    ** explicit coercion add (0.5)
+    a := ceiling(b); 
+    print  a; ** will print: 2
 
-  ** explicit coercion rounding:  
-  a := round(b);
-  print  a; **  will print: 2
-return;
+    ** explicit coercion rounding:  
+    a := round(b);
+    print  a; **  will print: 2
+  return;
 end explicit_coercion;

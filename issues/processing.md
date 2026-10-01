@@ -5,20 +5,14 @@ Page: `tutorial/processing.html` (414 lines). Reviewed 2026-09-28. How to answer
 
 ## Questions
 
-### PRC-01 `abort`
-The job pattern starts with `abort if condition;`: "silent stop, do not execute finalization or
-recovery". `abort` is not in the keyword table. Is it a keyword, and how does it differ from `over`
-and `exit`? Which exit code (D-010)?
-**Answer:** _(open)_
-Status: answered → D-020: abort is used only in recover; preconditions use over 1
-
 ### PRC-02 Which interruptions run `finalize`
 "`exit` or `raise` trigger the finalization region while `over` and `panic` skip it"; later
 "finalize is executed except for {abort | over}" and "{exit, raise, expect} execute the
 finalization region". Please fill in: for each of `return`, `exit`, `raise`, failed `expect`,
-`over`, `panic`, `abort`: runs `recover`? runs `finalize`? exit code?
+`over`, `panic`, `abort`: runs `recover`? runs `finalize`? D-038 fixed the exit codes (`over;` 0,
+`panic` 1, failed `expect` 2, failed `assert` 3) and made `panic` global.
 **Answer:** _(open)_
-Status: partly answered by D-020: errors go to recover; finalize runs after return, exit and abort, not after over and panic; exit codes open
+Status: partly answered by D-020 and D-038: errors go to recover; finalize runs after return, exit and abort, not after over and panic
 
 ### PRC-03 `expect` and `assert`
 `expect condition, "message";` raises `AssertError`. D-010 gives a failed `expect` exit code 2
@@ -27,20 +21,6 @@ Status: partly answered by D-020: errors go to recover; finalize runs after retu
 **Answer:** _(open)_
 Status: open
 
-### PRC-04 `catch` versus `recover`
-Jobs catch errors with `catch …` (control.html); processes have a `recover` region. "In recover,
-the user can detect which job failed." How: `$error.job`, the job name as an object? Can `recover`
-resume after the failing job?
-**Answer:** _(open)_
-Status: answered → D-020: jobs have no catch; recover reads $error.job and ends with retry, resume or abort
-
-### PRC-05 `run`: synchronous or asynchronous
-syntax.html: `run` "executes an aspect in asynchronous mode". This page: `run` blocks the driver
-("synchronous call") unless it is inside `split … join`. Which is it? Can the argument list omit
-parentheses (`run aspect_name argument_value;`)?
-**Answer:** _(open)_
-Status: answered → D-016: apply name to (args); waits for the aspect; begin inside fork starts it asynchronously
-
 ### PRC-06 Recursive aspects
 "The compiler will detect a recursive aspect and will fail at runtime." Compile-time error or
 run-time failure?
@@ -48,11 +28,11 @@ run-time failure?
 Status: open
 
 ### PRC-07 Parallel groups
-`begin group1: … split: run a; run b; join group1;`. syntax.html: `begin` = local scope, `split` =
-run async, `join` = end of `begin`. Are `begin` names required? When one aspect in a group fails,
-are the others in the same group stopped or awaited?
+`name: parallel` … `fork` … `start aspect.process(args);` … `join name;` (D-043). Are group names
+required (D-034: optional)? When one process in a group fails, are the others in the same group
+stopped or awaited?
 **Answer:** _(open)_
-Status: partly answered → D-016: name: parallel … fork … begin … join name; failure of one aspect still open
+Status: partly answered by D-034 and D-043: the label is optional, a naked `join;` closes an unlabeled group; the failure of one process is open
 
 ### PRC-08 `raise` forms
 Three forms: `raise $ExceptionType("message");` (a `$` type?), `raise (code, "message") if c;`,
@@ -61,36 +41,39 @@ and `raise "error" if c;` (control.html). Which are valid? Is an error code requ
 Status: open
 
 ### PRC-09 The Exception module prototype
-The pseudocode declares methods with a receiver: `method (@self:Error) .raise(…)`, unlike
-classes.html where object methods live in constructors. It also declares `class .Error` twice.
-Keep this as an explicit "prototype, not valid Eve", or rewrite it in the classes.html syntax?
+The pseudocode declares extension methods with a receiver, `method (@self:Error) .raise(…)`. That form is
+valid (D-036: a typed `@self` is for extension methods outside the class). It also declares `class .Error`
+twice. Keep this as an explicit "prototype, not valid Eve", or rewrite it as a module with
+`class Error … end Error;`?
 **Answer:** _(open)_
 Status: open
 
-### PRC-10 Driver arguments from the command line
-`driver process_call(*args ()String)` here and `driver test(*args: ()String)` with
-`eve:>start test.eve 1 2 3` on concurrency.html. For the VM (`bin/eve.exe script.eve 1 2 3`): are
-command-line arguments always strings, bound to the driver's parameters by position? Can a driver
-declare typed parameters (`driver d(n: Integer)`) that the VM converts?
+### PRC-10 Process arguments from the command line
+`process main(*args ()String)` here and `process main(*args: ()String)` with `eve:>start test.eve 1 2 3`
+on concurrency.html (D-040: the parameters belong to the process). For the VM (`bin/eve.exe script.eve 1 2 3`):
+are command-line arguments always strings, bound to the parameters of `main` by position? Can `main` declare
+typed parameters (`process main(n: Integer)`) that the VM converts?
 **Answer:** _(open)_
 Status: open
 
 ### PRC-11 Locating aspects
-"You do not import an aspect, but specify its relative path": `run [folder/]aspect_one(args)`.
+"You do not import an aspect, but specify its relative path": `apply [folder/]aspect_one.run(args);`.
 Relative to the driver file or to the working directory? File extension implied?
 **Answer:** _(open)_
 Status: open
 
-### PRC-12 `apply` forms
-The page had `apply aspect_name to (args);` and `apply [folder/]aspect_one(arguments);`. The second
-form was normalized to `apply [folder/]aspect_one to (arguments);`. Is `to` required, or is
-`apply name(args)` also valid?
+### PRC-13 Local-scope block
+`begin` is gone (D-043). It used to open a local-scope block before it started aspects. Is there still a
+plain local-scope block, and with which keyword?
 **Answer:** _(open)_
 Status: open
 
-### PRC-13 `begin` changed meaning
-`begin` used to open a local-scope block; now it starts an aspect asynchronously inside `fork`.
-Is there still a plain local-scope block, and with which keyword?
+### PRC-14 Aspect scope and members
+D-043: an aspect hosts named processes, each with its own scope; only the driver has globals. Open points:
+(1) what `.` public means in an aspect that has no shared scope (can the caller read a public member after
+`apply`?); (2) can a process call a sibling process by its bare name (assumed yes); (3) are aspect-level
+`let` variables initial values copied into each process (assumed yes); (4) does a process return an exit
+code to its `apply` (TOP-10)?
 **Answer:** _(open)_
 Status: open
 
@@ -98,7 +81,7 @@ Status: open
 
 ### PRC-F1 Wrong content
 - "The compiler … will fail at runtime" (see PRC-06).
-- `driver process_call(*args ()String)` missing `:`; `for arg in args loop;` extra `;`.
+- `process main(*args ()String)` missing `:`; `for arg in args loop;` extra `;`.
 - `set a = 0.00;` has no type; `a := 1/0` is Real division (may give infinity, not an error).
 - Image `/images/parallel_system.svg` does not exist (file is in `/assets/images/`).
 - "When the project finish the local variables are released" → the process.
@@ -124,6 +107,6 @@ The table from PRC-02 on the page, with exit codes from D-010.
 
 ## Spec additions once answered
 
-- `spec/semantics/control.md`: interruptions, recover, finalize, exit codes (PRC-01..04, 08).
-- `spec/semantics/topology.md`: aspects, `run`, groups, recursion (PRC-05..07, 11).
+- `spec/semantics/control.md`: interruptions, recover, finalize, exit codes (PRC-02, 03, 08; D-020, D-038).
+- `spec/semantics/topology.md`: aspects, `apply`, `start`, groups, recursion (PRC-06, 07, 11, 13, 14; D-042, D-043).
 - `manual/usage.md`: command-line arguments (PRC-10).

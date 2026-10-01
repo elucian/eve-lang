@@ -31,7 +31,7 @@ Status: open
 name; `eol` defaults to True, so it adds a new line), and "write supports only strings". syntax.html:
 `write` adds no new line, no separator, and prints numbers (`write (1,2)`). What are the exact rules
 of `print` and `write`: arguments, separator, new line, types accepted? Is `wrp` a parameter?
-(See SYN-07.)
+(See D-029.)
 **Answer:** _(open)_
 Status: open
 
@@ -44,7 +44,7 @@ Status: open
 ### LIB-06 Escapes `\n`, `\LF`, `\CRLF`
 "Make a line break using an escape `\n` or `\r`", and "write string can contain `\LF`, `\CRLF`".
 collections.html uses `&code;` escapes. Which escape syntax does a double-quoted string use?
-(See SYN-12, COL-15.)
+(See D-019, COL-15.)
 **Answer:** _(open)_
 Status: open
 

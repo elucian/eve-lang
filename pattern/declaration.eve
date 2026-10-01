@@ -1,33 +1,31 @@
 # declaration pattern
 driver declaration is
 
-** alias names have to start with uppercase letters.
-type Type_name: super_type {parameters};
+  ** alias names have to start with uppercase letters.
+  type Type_name: super_type {parameters};
 
-** shared variables
-globals
-    ** use type to define a variable
-    Type_name @var_name;
-    ** with specific value and type
-    Type_name @name = value;
-    ** multiple variables in one assignment
-    Type_name @name1, @name2 ...= value;
-    ** multiple variables with diverse values
-    Type_name @var_name1=value1, @var_name2 = value2;
+  ** shared variables
+  ** use type to define a variable
+  Type_name @var_name;
+  ** with specific value and type
+  Type_name @name = value;
+  ** multiple variables in one assignment
+  Type_name @name1, @name2 ...= value;
+  ** multiple variables with diverse values
+  Type_name @var_name1=value1, @var_name2 = value2;
 
-/*---------------------------------------------------- 
-In Eve you can have more than one global regions 
-For each region you can declare several variables
-----------------------------------------------------*/    
-** local variables
-global
-    ** two integer numbers
-    Integer a = 0;
-    Integer b = 1;
-    ** multiple Real numbers
-    Real d = 2.5;
-    Real x,y,z = 0.0;  
-process main is
-    pass;
-return;    
+  /*---------------------------------------------------- 
+  A script has one scope: all declarations
+  sit directly under the header, in any order
+  ----------------------------------------------------*/    
+  ** local variables
+  ** two integer numbers
+  Integer a = 0;
+  Integer b = 1;
+  ** multiple Real numbers
+  Real d = 2.5;
+  Real x,y,z = 0.0;  
+  process main is
+      pass;
+  return;    
 end declaration;

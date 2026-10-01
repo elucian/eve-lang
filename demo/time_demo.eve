@@ -1,10 +1,9 @@
 # time demo
 driver time_demo is
-global
-    set time1, time2, time3: Time;
-process main is
+  set time1, time2, time3: Time;
+  process main is
     time1 := "23:63" as T24;
     time2 := "23:63:59,99" as T24;
     time3 := "11:63:59pm" as T12;
-return;
+  return;
 end time_demo;

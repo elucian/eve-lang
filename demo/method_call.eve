@@ -1,7 +1,7 @@
-# driver with parameters
-driver method_call(*args) is
+# main process with parameters
+driver method_call is
 
-method test(a: Integer) is
+  method test(a: Integer) is
     ** print is a system method
     print 'argument list has #n arguments' ? a; 
 
@@ -11,9 +11,9 @@ method test(a: Integer) is
     for arg in args do
        print arg;
     done;
-return;
+  return;
 
-process main is
+  process main(*args) is
     ** check type
     expect args is List;
 
@@ -26,5 +26,5 @@ process main is
     ** call local method and exit  
     test(c);       ** method call
     over; ** normal end
-return;
+  return;
 end method_call;

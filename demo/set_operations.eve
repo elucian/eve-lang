@@ -1,8 +1,8 @@
 # Create intersection and union
 driver set_intersection_demo is
-    set my_set = {0,2,3};
-    set ex_set = {2,3,4}; 
-process main is
+  set my_set = {0,2,3};
+  set ex_set = {2,3,4}; 
+  process main is
     ** union demo
     let union := my_set | ex_set;
     expect union == {0,2,3,4};
@@ -14,5 +14,5 @@ process main is
     ** print-out setts
     print intersection; ** {2,3}
     print union;  ** {0,2,3,4}
-return;
+  return;
 end set_intersection_demo;

@@ -1,17 +1,17 @@
 # declaration of a text literal
 driver text_literal is
 
-process main is
-  let my_text:="
-      "Opportunity is missed by most people
-  because it is dressed in overalls
-  and looks like work."
-  "; 
-  print my_text;
+  process main is
+    let my_text:="
+        "Opportunity is missed by most people
+    because it is dressed in overalls
+    and looks like work."
+    "; 
+    print my_text;
 
-  ** my_text is a different kind of string
-  expect my_text is Text;
-return;
+    ** my_text is a different kind of string
+    expect my_text is Text;
+  return;
 end text_literal;
 
 /* expected output:

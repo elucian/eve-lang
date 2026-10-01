@@ -1,14 +1,13 @@
 # map iteration
 driver map_iteration is
 
-global
   set my_map := {("a":1),("b":2),("c":3)};
-process main is
-  for (key, value) in my_map do
-    ** print pairs (key, value)
-    print('("' + key + '",' + value +')');
-  done;
-return;
+  process main is
+    for (key, value) in my_map do
+      ** print pairs (key, value)
+      print('("' + key + '",' + value +')');
+    done;
+  return;
 end map_iteration;
 
 /* Note: the loop header is missing because is optional.

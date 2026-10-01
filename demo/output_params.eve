@@ -1,22 +1,21 @@
 #demo output parameters and method call
 driver output_params is
 
-** a method can have side-effects; it may also return a result
-method add(p1=0, p2=1 :Integer  @out :Integer) is
+  ** a method can have side-effects; it may also return a result
+  method add(p1=0, p2=1 :Integer  @out :Integer) is
     set out := p1 + p2;
-return;
+  return;
 
-global
-    result: Integer;
-process main is
+  result: Integer;
+  process main is
     ** reference argument require a variable
     add(1,2, result);
     print result;     **  expected value 13
     ** negative test (will fail)
     add(1,2,4); 
-recover
+  recover
     print $error.message; ** error, "out" argument is not valid     
-return;
+  return;
 end output_params;
 
 /* Note: @out parameter use a prefix @ 

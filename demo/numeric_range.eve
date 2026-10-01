@@ -1,27 +1,27 @@
 #numeric range demo
 driver numeric_range is
 
-process main is
-  print (0..5);    ** (0,1,2,3,4,5)
-  print (0.!5);    ** (0,1,2,3,4)
-  print (0!.5);    ** (1,2,3,4,5)
-  print (0..10)(2); ** (0,2,4,6,8,10)
+  process main is
+    print (0..5);    ** (0,1,2,3,4,5)
+    print (0.!5);    ** (0,1,2,3,4)
+    print (0!.5);    ** (1,2,3,4,5)
+    print (0..10)(2); ** (0,2,4,6,8,10)
 
-  ** test range  
-  expect 0 in (0..5); 
-  expect 5 in (0..5); 
+    ** test range  
+    expect 0 in (0..5); 
+    expect 5 in (0..5); 
 
-  ** exclude limits using "!"
-  expect 0 not in (0!.5);     
-  expect 5 not in (0.!5);  
+    ** exclude limits using "!"
+    expect 0 not in (0!.5);     
+    expect 5 not in (0.!5);  
 
-  ** the default step is "1"
-  expect 1.5 not in (0..5);
+    ** the default step is "1"
+    expect 1.5 not in (0..5);
 
-  ** rational number ratio
-  expect 1.5 in (0..10)(0.5);
-  expect 99.01 in (0..?)(0.01); 
-return;  
+    ** rational number ratio
+    expect 1.5 in (0..10)(0.5);
+    expect 99.01 in (0..?)(0.01); 
+  return;  
 end numeric_range;
 
 **Notes:**

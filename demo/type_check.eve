@@ -1,15 +1,14 @@
 # using operator "is" to check type
 driver type_check is
 
-global
-    ** define object and initialize
-    set r = {name:"test", age:"24"};  
-    ** define hash table
-    set t = {('key1':1),('ley2':2)}; 
-    ** define two symbols
-    set x = 'x', y = 'y': Symbol;
+  ** define object and initialize
+  set r = {name:"test", age:"24"};  
+  ** define hash table
+  set t = {('key1':1),('ley2':2)}; 
+  ** define two symbols
+  set x = 'x', y = 'y': Symbol;
 
-process main is
+  process main is
     ** check variable types using introspection
     expect type(r.name) == String;
     expect type(r.age)  == String;
@@ -20,5 +19,5 @@ process main is
     expect t.value is Integer;
     expect x is Symbol;
     expect type(x) == Symbol;
-return;
+  return;
 end type_check;

@@ -27,7 +27,7 @@ combine generators? Is there a filter (`| x in A if x > 2`)?
 Status: open
 
 ### COL-04 Deconstruct: `_`, `*`, `*rest`
-`new x, y, _, *rest, _ :: a;` and `new x, y, *, z := a;`. `_` "consumes one element and is always
+`let x, y, _, *rest, _ :: a;` and `let x, y, *, z := a;`. `_` "consumes one element and is always
 Null" and then `expect _ == Null`. Is `*` alone (skip many) different from `*rest` (collect)? Can
 `_` be read at all?
 **Answer:** _(open)_
@@ -47,12 +47,6 @@ remove from the end, remove all equal values, concatenate. One syntax each.
 **Answer:** _(open)_
 Status: open
 
-### COL-06 Last index: `#` or `$`
-Arrays use `zum[#]` and `base[6:#]`; the matrix example uses `mat[3,$]` and `mat[$,$]`. `$` is the
-system-variable sigil. Is `#` the only "last index" symbol?
-**Answer:** `$` is the last index; `#` is not an index symbol (it clashes with `#{…}` interpolation). See D-021.
-Status: answered (D-021)
-
 ### COL-07 Array, Vector, Matrix
 types.html: `[1,2,3]` is a `Vector`, `[[1,2],[2,4]]` a `Matrix`. This page: everything is an
 `Array` (`class AType = []Integer <: Array`), and a matrix is an array with 2+ dimensions. Which
@@ -67,7 +61,7 @@ This page slices with `[n:m]` (`base[11:14]`, `base[x: x+3]`); syntax.html says 
 Status: partly answered (D-022)
 
 ### COL-09 Bulk assignment with `[*]`
-`let zum[*] := 0;` and `let base[1:5][*] := 0;`. Is `[*]` required, or does `let base[1:5] := 0`
+`zum[*] := 0;` and `base[1:5][*] := 0;`. Is `[*]` required, or does `base[1:5] := 0`
 also assign all?
 **Answer:** _(open)_
 Status: open
@@ -88,9 +82,9 @@ predictable order?
 Status: open
 
 ### COL-12 HashMap element creation
-`new h('c') := 3;` (parentheses) and `new animals["Toto"] := "parot"` (brackets) create elements;
-`let animals["birds"] += 3` alters one. Is `new` the rule for a new key and `let` for an existing
-key (error otherwise)? Brackets only?
+`h('c') := 3;` (parentheses) and `animals["Toto"] := "parot"` (brackets) create elements;
+`animals["birds"] += 3` alters one. Does an assignment to a missing key create it, and does `+=` on a
+missing key raise an error? Brackets only?
 **Answer:** _(open)_
 Status: open
 
@@ -111,13 +105,13 @@ Status: open
 Double-quoted strings replace HTML-like `&code;` escapes; triple-quoted `"""…"""` literals strip
 the indentation of the closing quotes; "A Text has a different internal representation". Are
 `&code;` escapes the Eve escape mechanism (instead of `\n`)? Is `Text` a separate type from
-`String`? (See SYN-12.)
+`String`? (See D-019.)
 **Answer:** _(open)_
 Status: open
 
 ### COL-16 Placeholders again
 This page uses `"#{str}"` interpolation and `"#n"`, `"#s"` with `?`; syntax.html uses `"{a}"`;
-matrix printing uses Fortran-like `"#(3i4)"`. One answer for SYN-12 / TYP-15 covers this: which
+matrix printing uses Fortran-like `"#(3i4)"`. One answer (D-019, D-032) covers this: which
 forms are Eve?
 **Answer:** _(open)_
 Status: open
@@ -136,8 +130,8 @@ literals are strings `"/…/g"`: is a string starting with `/` always a regex on
 Status: open
 
 ### COL-19 Strings immutable
-"Strings are immutable", but the example is titled "shared mutable strings" and `let str += ':'`
-creates a new string. Confirm: strings are immutable values; `let` rebinds.
+"Strings are immutable", but the example is titled "shared mutable strings" and `str += ':'`
+creates a new string. Confirm: strings are immutable values; the assignment rebinds.
 **Answer:** _(open)_
 Status: open
 
@@ -156,7 +150,7 @@ past replace of "Double" → "Real" hit the word "double quote". → "double quo
 
 ### COL-F2 Wrong examples
 - Ordinal comments `a=2, b=3, c=4` for values starting at 0.
-- `new d := b +> b;` then `expect c == …` (should be `d`, `b +> a`?); `expect a == …` in list_alter.
+- `let d := b +> b;` then `expect c == …` (should be `d`, `b +> a`?); `expect a == …` in list_alter.
 - `add queue +> ('z','y')` and `expect queue == ('z', 'y', 'x')` missing `;`;
   `set queue := ()Symbol` assigns a type.
 - `function list_join:` without parameters or result; `process list_split` fills `lst` but
@@ -165,8 +159,8 @@ past replace of "Double" → "Real" hit the word "double quote". → "double quo
 - `[2^8]Symbol` "Array of 255 Symbols" (256); `array_name4` declared twice.
 - Row-major loop `while (i < x)` skips the last element; `matrix.extend` vs `matrx`;
   `matrx(i,j)=i*10+j` has no `let`, uses `()` and `=`.
-- `new point = {x:1.5, x:1.5}` repeats `x`; `let btr == ''` → `:=`; `new str1 = "test":` ends in `:`.
-- `print ("----------")`, `let test -= {1,3}`, `expect str1 == "0123456789"` missing `;`.
+- `let point = {x:1.5, x:1.5}` repeats `x`; `btr == ''` → `:=`; `let str1 = "test":` ends in `:`.
+- `print ("----------")`, `test -= {1,3}`, `expect str1 == "0123456789"` missing `;`.
 - `expect test == {1,2,2,4,5}` shows a duplicate in a set.
 - String builders text says operators `>+` and `+<`; the code uses `+>` and `<+`.
 - Prose "{ ==, !=, <, … }" → `<>`.

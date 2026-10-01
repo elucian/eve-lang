@@ -1,26 +1,22 @@
 # print all arguments
 driver test_args is
 
-method test(*args:List[String]) 
-process main is
-  print args;
-return;
+  method test(*args: List[String]) is
+    print args;
+  return;
 
-** you can use operator "*" to _spread_ collection elements
-global
-    Set[Integer] argument;
-process
+  process main is
     ** define a new set of arguments
     let arguments := {1, 2, 3};
 
     ** transfer arguments by position using spreading operator (*)
+    ** you can use operator "*" to _spread_ collection elements
     test *arguments;
 
     ** call method with variable number of arguments
     test ('a','b','c'); ** use 3 arguments
     test ('a','b');     ** use 2 arguments
-  
-return;  
+  return;
 end test_args;
 
 /* observe: a method is called as a statement, "call" is not used

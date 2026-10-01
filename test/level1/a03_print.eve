@@ -1,8 +1,8 @@
 # This test prints a string
-driver a03_print() is
-process main is
+driver a03_print is
+  process main is
     print("Hello World!");
-return;
+  return;
 end a03_print;
 
 ** Note:

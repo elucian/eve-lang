@@ -42,7 +42,7 @@ Status: open
   exists for strings, collections and objects.
 - Fibonacci: `fib(0) = fib(1) = 1`, so `fib(5)` is 8, and the text calls it "the 5th Fibonacci
   number"; the comment says "Fibonacci routine" and "call fib rule" for a function; result
-  `(y:Integer)` has no `@` (FUN-02); `driver fibonacci:` colon (D-012).
+  `(y:Integer)` has no `@` (D-028); `driver fibonacci:` colon (D-012).
 - "Our architecture aim to optimizes".
 **Answer:** _(open)_
 

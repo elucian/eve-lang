@@ -2,26 +2,25 @@
     how to visit members of a List */
 driver while_demo is
 
-global
-    **  create a shared list
-    set this := ('a','b','c','d','e'): List[Symbol];
-process main is
-  ** start labeled loop
-  test: loop 
-    let i := 0: Integer; 
-    let e : Symbol;       
-  while i < this.length() do
-    e := this[i];
-    i += 1;
-    if e  <= "c" do
-        write e;
-        write ',' if e is not this.tail;
-    done;
-  then
-    write "i = " + i;
-  done test; ** end test
+  **  create a shared list
+  set this := ('a','b','c','d','e'): List[Symbol];
+  process main is
+    ** start labeled loop
+    test: loop 
+      let i := 0: Integer; 
+      let e : Symbol;       
+    while i < this.length() do
+      e := this[i];
+      i += 1;
+      if e  <= "c" do
+          write e;
+          write ',' if e is not this.tail;
+      done;
+    then
+      write "i = " + i;
+    done test; ** end test
 
-  ** flush the write buffer
-  print; ** "c","d","e"
-return;
+    ** flush the write buffer
+    print; ** "c","d","e"
+  return;
 end while_demo;

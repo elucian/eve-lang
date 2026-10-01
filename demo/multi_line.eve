@@ -1,10 +1,9 @@
 # multiple line demo
 driver multi_line is
 
-global
-    set x: Integer;
-    set a: HashTable;
-process main is
+  set x: Integer;
+  set a: HashTable;
+  process main is
     ** multi-row expression
     x := 1 + 
          2 +
@@ -17,7 +16,7 @@ process main is
         ,(3:4)
         ,(5:6)
     };
-return;
+  return;
 end multi_line;
 
 /* This is why, Eve use semicolon for every statement,

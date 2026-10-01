@@ -540,7 +540,8 @@ Author decision. Refines D-036 and the closers of D-016.
 - Applied to demo, the tutorial examples (23 closers) and `class_point.eve`.
 - Driver and aspect: `process main is … return;` then `end script_name;`. A script may declare other named
   processes; `main` is the entry point. `over` ends the process it is in (not the driver). Author answers.
-- `start name(args);` runs a named process and waits. `apply name to (args);` stays for aspects (serial).
+- `start name(args);` runs a named process and waits. `apply aspect.main(args);` runs the main process of an aspect
+  (serial; D-042 made the process explicit).
   `begin name(args);` inside `parallel … fork … join` starts a process or an aspect asynchronously. Running an
   aspect creates its `main` process, which can start sub-processes.
 - Applied: every driver and aspect in demo, pattern, test and the tutorial (143 scripts) now has `process main is` and `end name;`.
@@ -583,3 +584,72 @@ Proposed by the model after reviewing the partials section of classes.html. Awai
 - Open: adopting a trait for an existing type outside its declaration (an extension, in another module), for example
   `Integer` adopting `Printable`; and the exact list of library traits (`Iterable`, `Comparable`, `Printable`).
 - Todo: library traits `Iterable`, `Comparable`, `Printable`: step S5.1a in `plan/phase-5-conformance.md`.
+
+### D-040 Parameters belong to the main process; the process is indented (2026-10-01)
+Author decision. Refines D-031 (indentation) and D-037/D-038 (process).
+- A driver or aspect header has no parameter list: `driver name is`, `aspect name is`. The parameters move to the
+  process: `process main(*args) is`. A module has no process and no parameters.
+- Inside a driver or aspect the `process` is indented by 2 spaces, with its body, `recover`, `finalize` and `return;`;
+  `end name;` is at column 0. The other regions (`import`, `alias`, `constant`, `global`) stay at column 0.
+  A process in an example that has no driver or aspect (a fragment) stays at column 0.
+- Applied to 133 scripts in demo, pattern, test and the tutorial; prose in topology, concurrency, databases.
+- Open: a method declared before the process cannot read the process parameters (`demo/method_call.eve` still reads
+  `args` inside `test`, which was already wrong).
+
+### D-041 One scope: no import, alias, constant, global or variable regions (2026-10-01)
+Author decision. Replaces the region rules of D-031 (TOP-02, TOP-03, TOP-05) and the layout of D-040.
+- A driver, aspect or module has a single scope. The regions `import`, `alias`, `constant`, `global` and `globals`
+  are removed. Their content is declared directly in the scope, in any order: `from … use …;` (import), `def` (alias),
+  `set` (constant), `let` (variable), classes, functions, methods and processes.
+- Everything between the header and `end name;` is indented by exactly 2 spaces. Only the header, `end name;` and
+  the comments before the header start at column 0. A process keeps its own regions `recover` and `finalize`,
+  aligned with `process`. A module keeps `initialize` and `finalize`, indented 2.
+- A `process` fragment in an example with no driver or aspect is `process main is … return;` at column 0.
+- Applied to demo, pattern, test and the tutorial (topology, syntax, compiler, functions, databases): 53 files.
+  The "Script Regions" table of syntax.html lost four rows. `databases.html` imports with
+  `from $evelib/db use (core as db, oracle as orcl);` (the old `import` block had no valid form).
+- Fixed on the way: `demo/test_args.eve` (the method header lacked `is`; a stray `process` was inside it).
+- Open: the keyword `type` region of the old patterns, the keyword `globals` in `pattern/declaration.eve` (old
+  syntax, kept as is), and whether `from … use` may sit after a declaration (any order is assumed).
+
+### D-042 `apply aspect.main(args);` names the process (2026-10-01)
+Author decision. Replaces the `apply name to (args);` form of D-016 and D-038.
+- `apply` runs a process of an aspect and waits. The process is named: `apply aspect_name.main(args);`. The `to`
+  form and the form without parentheses are removed; `()` is always written.
+- Applied to processing.html (execution section, examples), syntax.html (keyword table).
+- Open: `begin aspect_name(args);` in a parallel group should probably become `begin aspect_name.main(args);` too.
+- Question, not decided: methods at module level (D-017, D-035). Recommendation: keep them. A module is a singleton, so a
+  module-level method is a method of that singleton, without `@self`, like a class method. Scripts need free helper
+  methods without a wrapper class, and extension methods (`method (@self: Error) .raise(...)`) are declared outside
+  classes. Removing them would force a class for every helper.
+
+### D-043 Single main process in a driver; aspects host named processes; `start` replaces `begin` (2026-10-01)
+Author decision. Replaces `begin` and the named-process `start` of D-037/D-038, and the `.main` of D-042.
+- A driver has exactly one process, `main`: a single-thread master. It may define methods (also asynchronous ones) but
+  no other process.
+- An aspect hosts one or more named processes and has no `main`. Parameters belong to each process (D-040).
+- `apply aspect.process(args);` runs a process in serial mode (waits). `start aspect.process(args);` runs it in
+  parallel, inside `parallel … fork … join`; people expect an `end` after `begin`, so `begin` is removed from the
+  language. `join` closes the group. Output parameters (`@`) are ready after `apply`, or after the `join` for `start`.
+- Inside an aspect, a process can call a sibling by its bare name (assumed from the model, not stated).
+- Scopes: only the driver defines a global scope. Each process of an aspect has its own scope, no globals, and
+  data arrives by parameters; parallel runs never share variables. The scope of a module is bound to the scope of the
+  driver or aspect that imports it (before: to the process).
+- Aspect-level `let` variables are initial values copied into each process scope (assumed).
+- `start name(args);` also stays for asynchronous methods (concurrency.html), joined by `wait all;`. The same keyword
+  now launches two kinds of concurrent work; the target tells them apart.
+- Applied to processing.html (apply forms, parallel examples), topology.html (driver, aspect, process, module scope),
+  syntax.html (keywords `apply`, `start`, `fork`; `begin` removed), concurrency.html; the highlighter drops `begin`.
+- Aspect examples use the process names `run` and `show`; the aspect `output_params` in concurrency.html became a driver.
+- Open: aspect member visibility (`.` public) now that aspects have no shared scope, and the demo files that apply
+  aspects, if any are written.
+
+### D-044 Issue files and keyword table cleaned (2026-10-01)
+Maintenance after D-036 to D-043.
+- `issues/`: 116 resolved items (status closed, done or answered) and the answered CLS-01 to CLS-08 were removed. Their answers
+  live in this file; the earlier text is in the git history. Open items that quoted the old syntax were rewritten
+  (collections, concurrency, databases, processing, topology, classes). New open items: CLS-15 to CLS-17, CON-09, PRC-14.
+  Cross-references to removed ids were replaced by decision numbers. `issues/README.md` has new totals.
+- syntax.html keyword table: removed `import`, `global`, `constant`, `alias`, `begin`, `release`; added `def`, `end`,
+  `destructor`. 115 words. The highlighter (eve1.js) follows.
+- collections.html: element creation `h('c') := 3;` is a mutation, not a `let` declaration.

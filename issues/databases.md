@@ -12,8 +12,9 @@ page say clearly that it is a design for a later version, not part of 0.1?
 Status: open
 
 ### DB-02 Import with an alias
-`import` + `db $evelib/db/core;` and `orcl: $evelib/db/oracle;`. topology.html uses
-`from $path use (*);`. Is `name: path` an import alias form? Is `$evelib` the same as `$EVE_LIB`?
+The old page had `import` + `db $evelib/db/core;` and `orcl: $evelib/db/oracle;`. D-041 removed the
+`import` region, so the page now reads `from $evelib/db use (core as db, oracle as orcl);`. Is `as` the
+alias form of `from … use`, and is `$evelib` the same as `$EVE_LIB`?
 **Answer:** _(open)_
 Status: open
 
@@ -32,11 +33,8 @@ Status: open
 ## Fixes (applied unless you write "no")
 
 ### DB-F1 Wrong content
-- `new demoDB =  set db := OracleSession(…);` mixes `new`, `=`, `set` and `:=`.
-- Constructor `=> (@self db.Session)` has no `:` and returns another type than the class.
+- `let demoDB =  set db := new OracleSession(…);` mixes `let`, `=`, `set` and `:=`.
 - `let self.location = location;` (three times) → `:=`; the class has no `location` attribute.
-- `return` without `;` after the class; `global` + `new buffer` (`new` in a global region →
-  `set`).
 - `deleded1`, `deleded2`; `print (…)` without `;`.
 - "ORM = Object Relational Model" → Mapping.
 **Answer:** _(open)_
