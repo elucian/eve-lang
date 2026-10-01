@@ -491,6 +491,7 @@ Replaces the closers of D-016, D-020, D-030 (CTL-16) and D-033. Author decision.
   This holds for job, match, while and for loops (the label is the one of the block or of its `loop`
   header). `if` has no label and closes with `done;`.
 - `done job`, `done match`, `done loop`, `done while` and `done if` do not exist. `if` cannot follow `done`.
-- Assumed, not answered: labels of match and loops stay optional; only job requires one.
-- `parallel` is unchanged: `name: parallel … join name;`.
+- Labels of match, loops and parallel groups stay optional (confirmed for parallel); only job requires one.
+- `parallel` follows the same rule, with an optional label: `[name:] parallel … fork … join [name];`. A labeled
+  group closes with `join name;`, an unlabeled group with a naked `join;`.
 - Applied to control, syntax, the other tutorial pages and the demos (41 closers converted).
