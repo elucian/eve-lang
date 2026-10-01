@@ -30,6 +30,8 @@ Source: `control.html`, `processing.html`.
 Source: `concurrency.html`, `processing.html`.
 - Methods, asynchronous methods, parallel processes, side-effect rules, parameter passing modes
   (input, output, variant).
+- D-050: concurrency is not in 0.1. Methods, side effects and parameter passing (D-048, D-049) are normative for
+  0.1; asynchronous and parallel methods (D-047) go in a section marked "planned, not in 0.1", keywords reserved.
 
 ### S4.6 Collections and objects `[ ]`
 Source: `collections.html`, `classes.html`.

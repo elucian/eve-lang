@@ -734,3 +734,15 @@ Author decision.
 - Matches the parameter rule of D-048: no `@` behaves like `::`, `@` like `:=`.
 - Applied to syntax.html (keyword table, "Assign Expression"), collections.html ("Array slicing"), concurrency.html
   (`heat_bar` clones the next state with `cur :: nxt;`).
+
+### D-050 Concurrency is not implemented in version 1 (2026-10-01)
+Author decision. Same treatment as the VM modes of TOP-14: designed, planned, not in 0.1.
+- Not in 0.1: asynchronous methods (`suspend`, `resume`, `wait all`, `wait name`) and parallel methods (`parallel`, `start`,
+  D-047). Their keywords stay reserved. A method in 0.1 runs to completion on the core of its caller; a process runs on
+  one core; aspects run with `apply` (serial).
+- In 0.1: methods, side effects, parameters, `@` by reference and by-value arguments (D-048), `::` and views (D-049).
+- The Zig VM needs no scheduler, coroutine stack or worker pool for 0.1.
+- Spec: `semantics/concurrency.md` (S4.5) keeps the design in a section marked "planned, not in 0.1".
+- Open: `wait duration;` as a plain pause of the process, outside concurrency, in 0.1 or not.
+- Applied: notes in concurrency.html (asynchronous and parallel methods) and processing.html (parallel execution),
+  plan S4.5, issues/concurrency.md header.

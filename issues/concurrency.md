@@ -3,6 +3,8 @@
 Page: `tutorial/concurrency.html` (348 lines). Reviewed 2026-09-28. How to answer:
 [README](README.md).
 
+D-050: concurrency is not in version 1. CON-05 to CON-08 and CON-11 can wait; they don't block the 0.1 spec or the VM.
+
 ## Questions
 
 ### CON-02 Output parameters
