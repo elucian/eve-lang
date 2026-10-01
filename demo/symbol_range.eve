@@ -11,8 +11,8 @@ process
   for d in ('a'...'c') do
     for n in ('1'..'3') do
        print d || n || ',';
-    done loop;
-  done loop;
+    done;
+  done;
 return;  
 
 ** expected output 

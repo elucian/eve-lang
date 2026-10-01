@@ -17,7 +17,7 @@ process
     else
       write(', '); ** add separator
     done; ** end if
-  done loop; ** end loop
+  done; ** end loop
   print; ** a, b, c, d
 return;
 

@@ -483,3 +483,14 @@ Replaces the loop rows of D-016 and the `repeat` rules of D-030 (CTL-05, 08, 13)
 - A do-while is `while True do … break if not c; … done loop;`.
 - Applied to control (section "Unconditional Loop" removed, sidebar entry too), syntax and the other
   tutorial pages, `js/eve1.js`, `js/eve3.js` and the demos.
+
+### D-034 Closers: `done label;` (2026-09-30)
+Replaces the closers of D-016, D-020, D-030 (CTL-16) and D-033. Author decision.
+- A job always has a label (the implicit name `job<line>` is removed) and closes with `done label;`.
+- A block that has a label closes with `done label;`; a block without a label closes with `done;`.
+  This holds for job, match, while and for loops (the label is the one of the block or of its `loop`
+  header). `if` has no label and closes with `done;`.
+- `done job`, `done match`, `done loop`, `done while` and `done if` do not exist. `if` cannot follow `done`.
+- Assumed, not answered: labels of match and loops stay optional; only job requires one.
+- `parallel` is unchanged: `name: parallel … join name;`.
+- Applied to control, syntax, the other tutorial pages and the demos (41 closers converted).
