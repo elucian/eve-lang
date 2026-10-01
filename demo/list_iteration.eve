@@ -3,13 +3,13 @@ driver list_iteration is
 
 global
   set my_list: List[String]; **  empty list
-process
+process main is
   ** later initialization
-  let my_list := ('a','b','c','d','e');
+  my_list := ('a','b','c','d','e');
 
   ** visit first 3 elements and stop
   loop
-    new e: String; ** control variable
+    let e: String; ** control variable
   for e in my_list do
     write e; **  pur e in buffer for console
     if e == 'd' do
@@ -20,6 +20,7 @@ process
   done; ** end loop
   print; ** a, b, c, d
 return;
+end list_iteration;
 
 /* Note: In Eve noting is printed out when you write(),1
    you must also print() at the end to create a new line */

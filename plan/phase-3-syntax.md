@@ -27,7 +27,7 @@ Source: `syntax.html#statements`, `control.html`.
 
 ### S3.5 `syntax/declarations.md` `[ ]`
 Sources: `types.html`, `classes.html`, `functions.html`, `concurrency.html`.
-- Variable declarations (`new`, typed forms), `type`, `class` (with `<:`), `create`
+- Variable declarations (`let`, typed forms, D-036), `type`, `class` (with `<:`), `constructor`
   constructors, `function`, `routine`, closures, lambdas, generics.
 
 ### S3.6 Grammar check against the examples `[ ]`

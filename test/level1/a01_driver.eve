@@ -1,8 +1,9 @@
 # Test driver structure and single line comments
 driver a01_driver() is
-process
-   over 0; 
+process main is
+   over;
 return;
+end a01_driver;
 ****************************************************
 ** this script require parsing two type of comments
 ** you should not run other tests if this test fail

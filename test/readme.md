@@ -19,7 +19,7 @@ A test is a `.eve` file directly in `test/levelN/`. What it must produce, all op
 - `<name>.out`: the exact expected stdout.
 - `expect.json` (one per level): `{"<name>": {"exit": 1, "args": [], "skip": "reason"}}`. The default exit code is 0.
 
-Exit codes (D-010): 0 normal (`over`, `over 0;`), 1 forced abnormal exit (`over 1;`: incorrect
+Exit codes (D-010): 0 normal (`over;`), 1 forced abnormal exit (`panic;`: incorrect
 parameters or environment, the job fails), 2 error (failed `expect`), 3 warning (failed `assert`).
 
 Verdicts are PASS, FAIL (wrong exit code or stdout), ERROR (timeout, or `eve` not found) and SKIP.

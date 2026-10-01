@@ -1,7 +1,7 @@
 ** simple expressions in print statement
 driver expression_demo is
 
-process
+process main is
     print 10;
     write "this is a test";
     ** complex expressions can use ()
@@ -21,3 +21,4 @@ process
     print (1 < 1 or 1 == 1); ** true 
     print (not true == false); ** true
 return;    
+end expression_demo;

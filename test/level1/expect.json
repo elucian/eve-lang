@@ -1,6 +1,6 @@
 {
   "a02_comments": {
     "exit": 1,
-    "note": "over 1 = forced, abnormal exit (D-010)"
+    "note": "panic = forced, abnormal exit with code 1 (D-038)"
   }
 }

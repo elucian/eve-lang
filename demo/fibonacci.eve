@@ -6,17 +6,18 @@ driver fibonacci is
 ** declare Fibonacci rule
 function fib(n:Integer) => (@y:Integer) is
   if (n == 1) or (n == 0) do
-    let y := 1; ** first value
+    y := 1; ** first value
   else
-    let y := fib(n-1) + fib(n-2);
+    y := fib(n-1) + fib(n-2);
   end if;
 return;
 
 ** main process call fib function
-process
+process main is
    ** call fib rule using argument 5
-   new r := fib(5);
+   let r := fib(5);
 
    ** print the result to console
    print r;
 return;
+end fibonacci;

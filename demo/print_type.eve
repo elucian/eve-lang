@@ -6,7 +6,7 @@ global
   set j: Integer;
   set k = 0;   ** inference
   set r = 0.1; ** inference
-process
+process main is
   ** print out type 
   print "type of i is \s" ? type(i); 
   
@@ -18,8 +18,9 @@ process
   expect r is Real;   
 
   ** create locals
-  new x = [];  expect x is Array;
-  new y = ();  expect y is List;
-  new s = {};  expect s is DataSet;
-  new k = {:}; expect k is HashMap;
+  let x = [];  expect x is Array;
+  let y = ();  expect y is List;
+  let s = {};  expect s is DataSet;
+  let k = {:}; expect k is HashMap;
 return;
+end print_type;

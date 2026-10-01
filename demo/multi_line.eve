@@ -4,20 +4,21 @@ driver multi_line is
 global
     set x: Integer;
     set a: HashTable;
-process
+process main is
     ** multi-row expression
-    let x := 1 + 
+    x := 1 + 
          2 +
         (3 + 4)
        + 5;
        
     ** multi-row literal
-    let a := {
+    a := {
          (1:2)
         ,(3:4)
         ,(5:6)
     };
 return;
+end multi_line;
 
 /* This is why, Eve use semicolon for every statement,
    to be able to write multi-line statements without effort. */

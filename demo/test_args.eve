@@ -2,7 +2,7 @@
 driver test_args is
 
 method test(*args:List[String]) 
-process
+process main is
   print args;
 return;
 
@@ -11,7 +11,7 @@ global
     Set[Integer] argument;
 process
     ** define a new set of arguments
-    new arguments := {1, 2, 3};
+    let arguments := {1, 2, 3};
 
     ** transfer arguments by position using spreading operator (*)
     test *arguments;
@@ -21,6 +21,7 @@ process
     test ('a','b');     ** use 2 arguments
   
 return;  
+end test_args;
 
 /* observe: a method is called as a statement, "call" is not used
    "call" is only for shell commands

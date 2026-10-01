@@ -8,7 +8,7 @@ return;
 
 global
     result: Integer;
-process  
+process main is
     ** reference argument require a variable
     add(1,2, result);
     print result;     **  expected value 13
@@ -17,6 +17,7 @@ process
 recover
     print $error.message; ** error, "out" argument is not valid     
 return;
+end output_params;
 
 /* Note: @out parameter use a prefix @ 
    this indicate pass by reference of a variable */

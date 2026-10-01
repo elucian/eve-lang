@@ -3,26 +3,27 @@ driver test_string is
   ** shared mutable strings
   set str := "First value";
   set ref := "First value";
-process
+process main is
   ** check initial value
   expect str == ref;     **  same value
   expect str eq ref;     **  same value and type
   expect str is not ref; **  different locations
 
   ** operator ":=" works by reference
-  let ref := str;        **  reset ref
+  ref := str;        **  reset ref
   expect str == ref; **  same value
   expect str is ref; **  same reference
 
   ** if we modify "str" then "ref" will remain the same
   ** because the strings are immutable in Eve
-  let str &lt;+ (':'); **  create a new string
+  str &lt;+ (':'); **  create a new string
   expect str == "First value:"; **  modified
   expect ref == "First value";  **  not modified
   expect str is ref; ** the reference was broken
 
   ** if we recreate str, reference is reset
-  let str := "First value"; **  new string
+  str := "First value"; **  new string
   expect str == ref;     **  same value
   expect str is not ref; **  different location
 return;
+end test_string;

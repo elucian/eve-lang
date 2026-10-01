@@ -1,6 +1,7 @@
 # text unicode support
 driver unicode_text is
    set us = "I can write Greek: \"αβγδ\"": Text;
-process
+process main is
    print us;
 return;
+end unicode_text;

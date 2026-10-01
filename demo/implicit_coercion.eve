@@ -6,12 +6,13 @@ global
   set a = 2  : Integer ;
   set b = 1.5: Real; 
   
-process
-  let b := a;       **  this implicit cast is possible b = 2.0
-  let b := a + 3.5; **  add 3.5 then assign result to b = 5.5
+process main is
+  b := a;       **  this implicit cast is possible b = 2.0
+  b := a + 3.5; **  add 3.5 then assign result to b = 5.5
   expect (b == 5.5); **  2.0 + 3.5 
-  let a := b;       **  error: can not assign Real to  Integer
-  let a := 1.5;     **  error: can not assign Real to  Integer
+  a := b;       **  error: can not assign Real to  Integer
+  a := 1.5;     **  error: can not assign Real to  Integer
 recover
   print($error.message);
 return;
+end implicit_coercion;
