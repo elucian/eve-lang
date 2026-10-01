@@ -86,7 +86,7 @@ answers become decisions → fix the page → add the answered rules to the spec
 | types | 2026-09-28 | 22 answered (D-032) | [x] | [ ] | [issues/types.md](../issues/types.md) |
 | topology | 2026-09-28 | 16 answered (D-031); TOP-08, 10 partly | [x] | [ ] | [issues/topology.md](../issues/topology.md) |
 | control | 2026-09-28 | 16 answered (D-030) | [x] | [ ] | [issues/control.md](../issues/control.md) |
-| functions | 2026-09-28 | 10 asked | [ ] | [ ] | [issues/functions.md](../issues/functions.md) |
+| functions | 2026-09-28 | 10 answered (D-025 to D-029) | [x] | [ ] | [issues/functions.md](../issues/functions.md) |
 | classes | 2026-09-28 | 14 asked | [ ] | [ ] | [issues/classes.md](../issues/classes.md) |
 | collections | 2026-09-28 | 20 asked | [ ] | [ ] | [issues/collections.md](../issues/collections.md) |
 | processing | 2026-09-28 | 11 asked | [ ] | [ ] | [issues/processing.md](../issues/processing.md) |
