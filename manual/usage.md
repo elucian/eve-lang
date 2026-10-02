@@ -69,7 +69,7 @@ eve:> execute ~/path/driver_name.eve -s file.cfg -m 2048GB
 ```
 
 The command options are not designed yet. The basic commands are (in the code they are the entries of one
-jump table, `evevm/src/cli.zig`; an entry that is not written yet prints `<name> echo, not yet implemented`):
+jump table, `evevm/src/cli.zig`; an entry that is not written yet prints `<name> command, not yet implemented`):
 
 | Command | Description |
 |---|---|
