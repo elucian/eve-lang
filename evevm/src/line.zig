@@ -1,7 +1,7 @@
 //! Line editor for the REPL prompt with Tab completion of file names (manual/usage.md).
 //!
 //! `check test/level1<Tab>` replaces the last word by the first `.eve` file (or sub-folder) of that
-//! folder; every further Tab shows the next one, and after the last one the first again. Any other
+//! folder (`.cfg` files for `setup` and after `-s`: the caller says which extension); every further Tab shows the next one, and after the last one the first again. Any other
 //! key ends the cycle. The editor is used only when a person types at a terminal (raw mode, see
 //! terminal.zig); a pipe or a test is read line by line without it.
 const std = @import("std");
@@ -54,12 +54,12 @@ pub const Completer = struct {
     // `catch &.{}` turns a failed folder read into an empty list: no completion, no crash.
     /// The candidate for the last word of `line` that this Tab shows, or null when there is none.
     /// The first word (the command name) is not completed.
-    pub fn tab(c: *Completer, io: Io, line: []const u8) !?[]const u8 {
+    pub fn tab(c: *Completer, io: Io, line: []const u8, ext: []const u8) !?[]const u8 {
         if (!c.active) {
             c.word_start = lastWordStart(line);
             if (c.word_start == 0) return null;
             _ = c.arena.reset(.retain_capacity);
-            c.items = matches(c.arena.allocator(), io, line[c.word_start..]) catch &.{};
+            c.items = matches(c.arena.allocator(), io, line[c.word_start..], ext) catch &.{};
             c.next = 0;
             c.active = c.items.len > 0;
             if (!c.active) return null;
@@ -87,9 +87,9 @@ fn lessThan(_: void, a: []const u8, b: []const u8) bool {
 // is the folder iterator: it returns an optional entry, so the `while (...) |entry|` loop ends
 // when the folder is read to the end. A `switch` on an enum (`entry.kind`) needs a branch for
 // each tag or an `else`. `std.mem.sort` sorts a slice in place, given a comparison function.
-/// The `.eve` files and sub-folders that complete `word`, with the folder part as typed. A word
+/// The files ending in `ext` and the sub-folders that complete `word`, with the folder part as typed. A word
 /// that is a folder without a trailing slash (`test/level1`) lists the content of that folder.
-fn matches(arena: std.mem.Allocator, io: Io, word: []const u8) ![]const []const u8 {
+fn matches(arena: std.mem.Allocator, io: Io, word: []const u8, ext: []const u8) ![]const []const u8 {
     var dir_part: []const u8 = "";
     var prefix: []const u8 = word;
     if (std.mem.lastIndexOfAny(u8, word, "/\\")) |i| {
@@ -112,7 +112,7 @@ fn matches(arena: std.mem.Allocator, io: Io, word: []const u8) ![]const []const 
         if (entry.name[0] == '.' and !std.mem.startsWith(u8, prefix, ".")) continue;
         const suffix: []const u8 = switch (entry.kind) {
             .directory => "/",
-            .file => if (std.mem.endsWith(u8, entry.name, ".eve")) "" else continue,
+            .file => if (std.mem.endsWith(u8, entry.name, ext)) "" else continue,
             else => continue,
         };
         try found.append(arena, try std.fmt.allocPrint(arena, "{s}{s}{s}", .{ dir_part, entry.name, suffix }));
@@ -153,6 +153,7 @@ pub fn readLine(
     prompt: []const u8,
     comp: *Completer,
     buf: *[max_line]u8,
+    extOf: *const fn (line: []const u8) ?[]const u8,
 ) !?[]const u8 {
     var len: usize = 0;
     comp.stop();
@@ -163,7 +164,9 @@ pub fn readLine(
         };
         if (b == '\t') {
             const old = len;
-            if (try comp.tab(io, buf[0..len])) |word| {
+            const ext = extOf(buf[0..len]) orelse "";
+            const found = if (ext.len > 0) try comp.tab(io, buf[0..len], ext) else null;
+            if (found) |word| {
                 const new_len = comp.word_start + word.len;
                 if (new_len <= buf.len) {
                     @memcpy(buf[comp.word_start..new_len], word);
@@ -223,6 +226,10 @@ fn skipEscape(in: *Io.Reader) void {
 // Zig tip: a test that touches the real file system uses paths relative to the folder where
 // `zig build test` runs (evevm/). `std.testing.allocator` is a leak-checking allocator for
 // tests. `std.testing.io` is the `Io` value tests pass to code that reads files.
+fn testExt(_: []const u8) ?[]const u8 {
+    return ".eve";
+}
+
 test "last word start" {
     try std.testing.expectEqual(@as(usize, 0), lastWordStart("check"));
     try std.testing.expectEqual(@as(usize, 6), lastWordStart("check a/b"));
@@ -233,11 +240,11 @@ test "tab cycles through the eve files of a folder" {
     var comp: Completer = .init(std.testing.allocator);
     defer comp.deinit();
     const io = std.testing.io;
-    const first = (try comp.tab(io, "check lib")).?; // "lib" is a folder: list its content
+    const first = (try comp.tab(io, "check lib", ".eve")).?; // "lib" is a folder: list its content
     try std.testing.expect(std.mem.startsWith(u8, first, "lib/"));
     var n: usize = 1;
     while (n < 20) : (n += 1) {
-        const w = (try comp.tab(io, "check lib/x")).?; // `active`: the line is not read again
+        const w = (try comp.tab(io, "check lib/x", ".eve")).?; // `active`: the line is not read again
         if (std.mem.eql(u8, w, first)) break;
         try std.testing.expect(std.mem.endsWith(u8, w, ".eve") or std.mem.endsWith(u8, w, "/"));
     }
@@ -247,8 +254,8 @@ test "tab cycles through the eve files of a folder" {
 test "no completion for the command name or an unknown folder" {
     var comp: Completer = .init(std.testing.allocator);
     defer comp.deinit();
-    try std.testing.expect((try comp.tab(std.testing.io, "che")) == null);
-    try std.testing.expect((try comp.tab(std.testing.io, "check nofolder/x")) == null);
+    try std.testing.expect((try comp.tab(std.testing.io, "che", ".eve")) == null);
+    try std.testing.expect((try comp.tab(std.testing.io, "check nofolder/x", ".eve")) == null);
 }
 
 test "the editor edits and completes a line" {
@@ -258,7 +265,7 @@ test "the editor edits and completes a line" {
     var out: Io.Writer = .fixed(&obuf);
     var in: Io.Reader = .fixed("chexx\x08\x08ck lib\t\x08\r");
     var buf: [max_line]u8 = undefined;
-    const got = (try readLine(std.testing.io, &in, &out, "eve:> ", &comp, &buf)).?;
+    const got = (try readLine(std.testing.io, &in, &out, "eve:> ", &comp, &buf, testExt)).?;
     // Tab filled "lib/...", then Backspace removed its last character.
     try std.testing.expect(std.mem.startsWith(u8, got, "check lib/"));
     try std.testing.expect(std.mem.endsWith(u8, out.buffered(), "\r\n"));
@@ -271,5 +278,5 @@ test "Ctrl-D ends the input only on an empty line" {
     var out: Io.Writer = .fixed(&obuf);
     var in: Io.Reader = .fixed("\x04");
     var buf: [max_line]u8 = undefined;
-    try std.testing.expect((try readLine(std.testing.io, &in, &out, "> ", &comp, &buf)) == null);
+    try std.testing.expect((try readLine(std.testing.io, &in, &out, "> ", &comp, &buf, testExt)) == null);
 }

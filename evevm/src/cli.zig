@@ -31,14 +31,14 @@ pub const prompt = "eve:> ";
 // Zig tip: a `struct` is a record. Fields can have default values (`= false`), so
 // `.{ .out = w }` builds a Context and fills the rest. Types are written after the name:
 //   `*Io.Writer`    pointer to one Writer (the struct does not own it, it only borrows it)
-//   `?[]const u8`   optional: either a string or `null` (no -c option given)
+//   `?[]const u8`   optional: either a string or `null` (no -s option given)
 //   `u8`            unsigned 8-bit integer, 0 to 255, exactly what a process exit code is
 /// State shared by the command handlers.
 pub const Context = struct {
     out: *Io.Writer,
     /// `-d`: `halt` statements stop the script; otherwise they are ignored.
     debug: bool = false,
-    /// `-c file.cfg`
+    /// `-s file.cfg` (the same file `setup` loads)
     config: ?[]const u8 = null,
     /// `-m size`
     memory: ?[]const u8 = null,
@@ -59,6 +59,8 @@ pub const Command = struct {
     name: []const u8,
     summary: []const u8,
     run: Handler,
+    /// Extension of the file the command takes (Tab completes such files); "" when it takes none.
+    file: []const u8 = "",
 };
 
 // Zig tip: `comptime` parameters are known while compiling. `stub("check")` is evaluated by the
@@ -96,9 +98,10 @@ fn cmdHelp(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
 // returns one. The whole table is a constant, built by the compiler and stored in the program.
 /// The jump table. Order is the order of the menu.
 pub const commands = [_]Command{
-    .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .run = stub("check") },
-    .{ .name = "debug", .summary = "execute the main process in debug mode", .run = stub("debug") },
-    .{ .name = "execute", .summary = "execute the main process in production mode", .run = stub("execute") },
+    .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = stub("check") },
+    .{ .name = "compile", .summary = "compile a script to bytecode", .file = ".eve", .run = stub("compile") },
+    .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
+    .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = stub("execute") },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },
     .{ .name = "enter", .summary = "execute the next step", .run = stub("enter") },
     .{ .name = "print", .summary = "display the value of a global variable", .run = stub("print") },
@@ -106,7 +109,7 @@ pub const commands = [_]Command{
     .{ .name = "report", .summary = "report the system state", .run = stub("report") },
     .{ .name = "stop", .summary = "stop the driver, keep the memory", .run = stub("stop") },
     .{ .name = "clear", .summary = "stop the driver and clean the memory", .run = stub("clear") },
-    .{ .name = "setup", .summary = "load the configuration file", .run = stub("setup") },
+    .{ .name = "setup", .summary = "load the configuration file", .file = ".cfg", .run = stub("setup") },
     .{ .name = "help", .summary = "display this menu", .run = cmdHelp },
     .{ .name = "quit", .summary = "exit from the REPL", .run = cmdQuit },
     .{ .name = "exit", .summary = "same as quit", .run = cmdQuit },
@@ -133,7 +136,7 @@ pub const quick_help =
     \\       eve [options] --<command> [args]   run one command and exit, no REPL
     \\
     \\Quick help:
-    \\  -c <file.cfg>   configuration file
+    \\  -s <file.cfg>   setup: load the configuration file
     \\  -m <size>       memory for the process
     \\  -d              debug mode: halt statements stop the script (ignored otherwise)
     \\  -v, --version   display the version and exit
@@ -222,7 +225,7 @@ pub const ParseError = error{ MissingValue, UnknownOption, OutOfMemory };
 // `bad.* = a` writes through the pointer (`.*` dereferences). `orelse` gives a fallback when an
 // optional is null, here by leaving the function with `return error.UnknownOption`.
 // `while (cond) : (i += 1)` has a continue-expression that runs after each pass.
-// `a[1] == 'c'` compares a byte of the string with a character literal.
+// `a[1] == 's'` compares a byte of the string with a character literal.
 
 /// Parse the command line (without the program name). On error `bad` names the argument.
 pub fn parseArgs(
@@ -241,13 +244,13 @@ pub fn parseArgs(
             o.version = true;
         } else if (std.mem.eql(u8, a, "-d")) {
             o.debug = true;
-        } else if (std.mem.eql(u8, a, "-c") or std.mem.eql(u8, a, "-m")) {
+        } else if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m")) {
             i += 1;
             if (i >= argv.len) {
                 bad.* = a;
                 return error.MissingValue;
             }
-            if (a[1] == 'c') o.config = argv[i] else o.memory = argv[i];
+            if (a[1] == 's') o.config = argv[i] else o.memory = argv[i];
         } else if (std.mem.startsWith(u8, a, "--") and a.len > 2) {
             const c = find(a[2..]) orelse {
                 bad.* = a;
@@ -297,6 +300,20 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
 // reads up to the newline; the result is null at the end of the input, and `orelse break`
 // leaves the loop then. The slice points into the reader's own buffer and is valid only
 // until the next read, so `dispatch` uses it at once and does not keep it.
+// Zig tip: a function can return an optional slice: `?[]const u8` is a string or null. The line
+// editor does not know the commands (line.zig must not import cli.zig, two files that import each
+// other are hard to follow), so the REPL hands it this function: "which file extension does Tab
+// complete here?". `std.mem.trimEnd` cuts the listed characters from the end of a slice. `orelse`
+// gives a default for the null of `indexOfAny`. `return if (cond) a else null` is an `if` expression.
+/// The extension Tab completes for the last word of `line`: `.cfg` after `-s`, otherwise what the
+/// command takes (`.eve` for check, debug, execute and compile; `.cfg` for setup), else null.
+pub fn completionExt(line: []const u8) ?[]const u8 {
+    const head = std.mem.trimEnd(u8, line[0..editor.lastWordStart(line)], " \t");
+    const c = find(head[0 .. std.mem.indexOfAny(u8, head, " \t") orelse head.len]) orelse return null;
+    if (std.mem.eql(u8, head[editor.lastWordStart(head)..], "-s")) return ".cfg";
+    return if (c.file.len > 0) c.file else null;
+}
+
 /// What the line editor needs: the `Io` for reading folders and an allocator for the candidates.
 pub const Edit = struct {
     io: Io,
@@ -314,7 +331,7 @@ pub fn repl(ctx: *Context, in: *Io.Reader, edit: ?Edit) !void {
         try ctx.out.writeAll(prompt);
         try ctx.out.flush();
         const text = if (edit) |e|
-            (try editor.readLine(e.io, in, ctx.out, prompt, &comp.?, &buf)) orelse break
+            (try editor.readLine(e.io, in, ctx.out, prompt, &comp.?, &buf, completionExt)) orelse break
         else
             (try in.takeDelimiter('\n')) orelse break;
         try dispatch(ctx, text);
@@ -341,7 +358,7 @@ test "a stub echoes its name" {
     var w: Io.Writer = .fixed(&buf);
     var ctx: Context = .{ .out = &w };
     try dispatch(&ctx, "  check  a.eve ");
-    try std.testing.expectEqualStrings("check command, not yet implemented\n", w.buffered());
+    try std.testing.expectEqualStrings("check echo, not yet implemented\n", w.buffered());
     try std.testing.expectEqual(@as(u8, exit_not_implemented), ctx.status);
 }
 
@@ -354,7 +371,7 @@ test "options: flags, command and script" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     var bad: []const u8 = "";
-    const o = try parseArgs(arena.allocator(), &.{ "-d", "-c", "f.cfg", "--check", "a.eve" }, &bad);
+    const o = try parseArgs(arena.allocator(), &.{ "-d", "-s", "f.cfg", "--check", "a.eve" }, &bad);
     try std.testing.expect(o.debug);
     try std.testing.expectEqualStrings("f.cfg", o.config.?);
     try std.testing.expectEqualStrings("check", o.command.?.name);
@@ -365,7 +382,16 @@ test "options: flags, command and script" {
 
     try std.testing.expectError(error.UnknownOption, parseArgs(arena.allocator(), &.{"--bogus"}, &bad));
     try std.testing.expectEqualStrings("--bogus", bad);
-    try std.testing.expectError(error.MissingValue, parseArgs(arena.allocator(), &.{"-c"}, &bad));
+    try std.testing.expectError(error.MissingValue, parseArgs(arena.allocator(), &.{"-s"}, &bad));
+}
+
+test "completion extension follows the command and -s" {
+    try std.testing.expectEqualStrings(".eve", completionExt("check te").?);
+    try std.testing.expectEqualStrings(".eve", completionExt("compile ").?);
+    try std.testing.expectEqualStrings(".cfg", completionExt("setup c").?);
+    try std.testing.expectEqualStrings(".cfg", completionExt("debug a.eve -s c").?);
+    try std.testing.expect(completionExt("print x") == null);
+    try std.testing.expect(completionExt("che") == null);
 }
 
 // Zig tip: `inline for` is unrolled by the compiler: the body is compiled once per element,
