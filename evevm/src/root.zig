@@ -22,6 +22,8 @@ test {
     _ = cli;
     _ = @import("line.zig");
     _ = terminal;
+    _ = @import("lexer.zig");
+    _ = @import("parser.zig");
 }
 
 test "version strings are set" {
