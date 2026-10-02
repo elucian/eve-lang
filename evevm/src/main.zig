@@ -69,6 +69,8 @@ pub fn main(init: std.process.Init) !void {
     // buffer is not written by itself, and `std.process.exit` does not run `defer`s.
     var ctx: cli.Context = .{
         .out = stdout,
+        .io = init.io,
+        .gpa = arena,
         .debug = opts.debug,
         .config = opts.config,
         .memory = opts.memory,

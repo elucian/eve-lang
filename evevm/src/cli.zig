@@ -12,6 +12,7 @@ const version = @import("version.zig");
 // Zig tip: Zig forbids a name that hides another one in an outer scope (shadowing). The file-level
 // import is called `editor`, not `line`, because several functions below have a parameter `line`.
 const editor = @import("line.zig");
+const parser = @import("parser.zig");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
 // Without it the name is private to this file. A `const` number without a type is a
@@ -23,6 +24,8 @@ pub const exit_usage = 64;
 pub const exit_syntax = 65;
 /// Exit status: not implemented, outside the Eve range (EX_SOFTWARE).
 pub const exit_not_implemented = 70;
+/// The input file cannot be read (EX_NOINPUT of sysexits.h).
+pub const exit_no_input = 66;
 
 // Zig tip: a string literal is a pointer to a constant array of bytes; there is no string type.
 // Text is `[]const u8`: a slice (pointer + length) of read-only bytes, in UTF-8.
@@ -36,6 +39,9 @@ pub const prompt = "eve:> ";
 /// State shared by the command handlers.
 pub const Context = struct {
     out: *Io.Writer,
+    /// For reading files, and the allocator the commands use for the file and its tokens.
+    io: Io,
+    gpa: std.mem.Allocator,
     /// `-d`: `halt` statements stop the script; otherwise they are ignored.
     debug: bool = false,
     /// `-s file.cfg` (the same file `setup` loads)
@@ -91,6 +97,44 @@ fn cmdHelp(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
     try writeMenu(ctx.out);
 }
 
+// Zig tip: `Dir.cwd().readFileAlloc(io, path, gpa, limit)` reads a whole file into memory that
+// `gpa` provides, and fails with an error if it is missing or longer than the limit
+// (`.limited(n)` is a size limit in bytes). The caller frees it with `defer gpa.free(src)`.
+// `catch |err| { ... continue; }` handles an error in place and goes on with the next file.
+// `@errorName(err)` is the name of an error value as text. `worst` keeps the highest status.
+// The message format `file:line:col: error: text` is the one editors and CI tools understand.
+/// `check`: parse each file without executing it. Status 65 if any has a syntax error.
+fn cmdCheck(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    if (args.len == 0) {
+        try ctx.out.writeAll("check: file name missing\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    var worst: u8 = 0;
+    for (args) |path| {
+        const src = Io.Dir.cwd().readFileAlloc(ctx.io, path, ctx.gpa, .limited(16 << 20)) catch |err| {
+            try ctx.out.print("{s}: cannot read: {s}\n", .{ path, @errorName(err) });
+            worst = @max(worst, exit_no_input);
+            continue;
+        };
+        defer ctx.gpa.free(src);
+        var diag: parser.Diag = .{};
+        if (parser.check(ctx.gpa, src, &diag)) {
+            try ctx.out.print("{s}: ok\n", .{path});
+        } else |err| switch (err) {
+            error.Syntax => {
+                try ctx.out.print("{s}:{d}:{d}: error: {s}\n", .{ path, diag.line, diag.col, diag.message() });
+                worst = @max(worst, exit_syntax);
+            },
+            error.OutOfMemory => {
+                try ctx.out.print("{s}: out of memory\n", .{path});
+                worst = @max(worst, exit_no_input);
+            },
+        }
+    }
+    ctx.status = worst;
+}
+
 // Zig tip: the jump table is a plain array. `[_]Command{ ... }` lets the compiler count the
 // elements. `.{ .name = "x", ... }` is an anonymous struct literal: the type `Command` is taken
 // from the array, so it need not be repeated. `.run = cmdHelp` stores the function itself (a
@@ -98,7 +142,7 @@ fn cmdHelp(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
 // returns one. The whole table is a constant, built by the compiler and stored in the program.
 /// The jump table. Order is the order of the menu.
 pub const commands = [_]Command{
-    .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = stub("check") },
+    .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = cmdCheck },
     .{ .name = "compile", .summary = "compile a script to bytecode", .file = ".eve", .run = stub("compile") },
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = stub("execute") },
@@ -356,9 +400,9 @@ test "every command is found by name" {
 test "a stub echoes its name" {
     var buf: [128]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
-    var ctx: Context = .{ .out = &w };
-    try dispatch(&ctx, "  check  a.eve ");
-    try std.testing.expectEqualStrings("check command, not yet implemented\n", w.buffered());
+    var ctx: Context = .{ .out = &w, .io = std.testing.io, .gpa = std.testing.allocator };
+    try dispatch(&ctx, "  resume  a.eve ");
+    try std.testing.expectEqualStrings("resume command, not yet implemented\n", w.buffered());
     try std.testing.expectEqual(@as(u8, exit_not_implemented), ctx.status);
 }
 
@@ -401,7 +445,7 @@ test "repl ends on quit and on exit" {
     inline for (.{ "quit", "exit" }) |word| {
         var buf: [256]u8 = undefined;
         var w: Io.Writer = .fixed(&buf);
-        var ctx: Context = .{ .out = &w };
+        var ctx: Context = .{ .out = &w, .io = std.testing.io, .gpa = std.testing.allocator };
         var in: Io.Reader = .fixed("\nresume\n" ++ word ++ "\nprint x\n");
         try repl(&ctx, &in, null);
         try std.testing.expect(ctx.quit);
@@ -415,7 +459,7 @@ test "repl ends on quit and on exit" {
 test "repl ends at end of input and reports unknown commands" {
     var buf: [256]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
-    var ctx: Context = .{ .out = &w };
+    var ctx: Context = .{ .out = &w, .io = std.testing.io, .gpa = std.testing.allocator };
     var in: Io.Reader = .fixed("frob\n");
     try repl(&ctx, &in, null);
     try std.testing.expect(!ctx.quit);
