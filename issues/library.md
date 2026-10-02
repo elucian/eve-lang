@@ -11,20 +11,20 @@ The standard library table lists string functions (`length`, `count`, `truncate`
 `format`, `floor`, `ceiling`, `round`, `random`, `sqrt`, `sum`, `type`, `split`, `join`. Which
 built-ins must the VM provide in 0.1? Are the string ones functions (`trim(s)`), methods
 (`s.trim()`), or both (COL-20)?
-**Answer:** Both. If we can we implement routines.
-Status: open
+**Answer:** Both. If we can we implement public methods in string package and we can implement String class.
+Status: answered (D-053): functions and methods; the String methods live in the string module of `evevm/lib/`, the list is still to write
 
 ### LIB-02 Mutating string functions
 Strings are immutable (collections.html), but `truncate`, `fill` and `erase` "reduce the
 capacity", "replace all characters". Do they return a new string?
-**Answer:** _(open)_
-Status: open
+**Answer:** Yes, they return a new string, the old string is replaced. The old references to the string are preserved. If there is no reference left, the string is mark to be removed by garbage collector.
+Status: answered (D-053): to apply in the tutorial and in `evevm/lib/`
 
 ### LIB-03 `read`
 Declared `read (String: prompt) => String;` (type before name, a result), but used as a statement:
 `read (v, "input v:");` (an output variable). Which form?
-**Answer:** _(open)_
-Status: open
+**Answer:** The signature must be changed to allow statement call.
+Status: answered (D-053): `read(@v, prompt)` drafted in `evevm/lib/io.eve`; tutorial page to update
 
 ### LIB-04 `write` and `print`
 `write` is declared as `routine .write(String * args, Logic:eol=True, String:sep=" ")` (type before
@@ -32,21 +32,21 @@ name; `eol` defaults to True, so it adds a new line), and "write supports only s
 `write` adds no new line, no separator, and prints numbers (`write (1,2)`). What are the exact rules
 of `print` and `write`: arguments, separator, new line, types accepted? Is `wrp` a parameter?
 (See D-029.)
-**Answer:** _(open)_
-Status: open
+**Answer:** routine .write(*args:String, sep:=" ", eol:=False), write at the current position and do not add new line by default. Print add new line by default. Create wite and print specification signatures in library.md these signatures are mentined in syntax also, make them precise.
+Status: answered (D-053): drafted in `evevm/lib/io.eve`; tutorial page to update
 
 ### LIB-05 Standard error
 How does a script write to stderr? No statement or routine is given. The VM and the test runner
 compare stdout and stderr separately.
-**Answer:** _(open)_
-Status: open
+**Answer:** Good question, write and print will output text at stdout by default. log_err() and log_wrn() must be invented for user to apply in recover region of processes. When a driver end with unhandled error, will automaticly spool out to stderr last error and stack call trace in debug mode. Otherwise will just spool out the exception message without line number. 
+Status: answered (D-053): drafted in `evevm/lib/io.eve`; tutorial page to update
 
 ### LIB-06 Escapes `\n`, `\LF`, `\CRLF`
 "Make a line break using an escape `\n` or `\r`", and "write string can contain `\LF`, `\CRLF`".
 collections.html uses `&code;` escapes. Which escape syntax does a double-quoted string use?
 (See D-019, COL-15.)
-**Answer:** _(open)_
-Status: open
+**Answer:** we use "\" to escape and "\\" to escape the single backslash. But also "&code;" will enable sending HTML specific character code into escape sequence. We support all HTML codes.
+Status: answered (D-053): spec pending (`spec/lexical/lexical.md`)
 
 ## Fixes (applied unless you write "no")
 
@@ -58,14 +58,14 @@ Status: open
 - The stderr example is `module test_error:` with `process main`, but modules have no process; it
   is a copy of control.html's while_demo and shows nothing about stderr.
 - "write sting", "will cause write to not sent".
-**Answer:** _(open)_
+**Answer:** Fixed by hand.
 
 ## Improvements (applied only if you write "yes")
 
 ### LIB-I1 Built-in table from the spec
 Generate the built-in table from `spec/library/builtins.json`: name, signature, result, errors,
 since version.
-**Answer:** _(open)_
+**Answer:** Not yet, we have lot to do before this. After version 1.0 until then we synchronize them when we modify the tutorial or the spec.
 
 ## Spec additions once answered
 

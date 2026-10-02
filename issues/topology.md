@@ -10,22 +10,22 @@ The pages name `$EVE_DIR`, `$EVE_LIB`, `$MY_DIR`, `$MY_LIB`, `$MY_LOG`, `$OS_PWD
 capitalized". Which system variables must the VM provide in 0.1, with which types? Are OS
 environment variables visible as `$NAME`?
 **Answer:** Yes, environment variables are visible as $NAME. 
-Status: partly answered → D-031: environment variables are `$NAME`; the 0.1 variable list and their types are open
+Status: partly done → D-031, D-052: environment variables are `$NAME` (applied); the 0.1 variable list and their types are open
 
 ### TOP-10 Aspect result and error code
 An aspect "must handle its own errors, it can't raise errors; unhandled errors make the program panic".
 D-043: an aspect hosts named processes (no `main`); `apply aspect.process(args);` waits, outputs travel in
 `@` parameters. Does a process also return an exit code to the driver, or only the `@` outputs?
-**Answer:** _(open)_
-Status: partly answered by D-031 and D-043: aspects host processes; modules and libraries have none; the exit code is open
+**Answer:** Because processes are now sequential, they can propagate errors. So a process can raise errors. Driver capture the exit code from panic, raise, expect and assert.
+Status: done → D-052: a process can raise errors; the driver captures the exit code of panic, raise, expect and assert
 
 ## Improvements (applied only if you write "yes")
 
 ### TOP-I2 Move the REPL to command.html
 The REPL and daemon sections describe the tool, not the language. Move them to command.html (or
 the manual's `usage.md`), and keep topology.html about projects, scripts, regions and modules.
-**Answer:** agree
-Status: postponed (plan step: move the REPL and daemon sections to command.html); marked "planned, not in 0.1" for now
+**Answer:** agree, move thid to /manual folder in this repository, from the tutorial.
+Status: done → D-052: REPL and daemon text moved to `manual/usage.md`; topology.html keeps a pointer
 
 ## Spec additions once answered
 
