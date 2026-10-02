@@ -1,0 +1,263 @@
+{
+ "tests": {
+  "level1/a01_driver": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a02_comments": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a03_print": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a04_free_script": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a05_print_write": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a06_let_set": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a07_arithmetic": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a08_logic": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a09_literals": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a10_strings": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a11_interpolation": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a12_if": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a13_while": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a14_for": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a15_match": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a16_ordinal": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a17_list": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a18_array": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a19_matrix": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a20_dataset": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a21_hashmap": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a22_object": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a23_clone_view": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a24_function": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a25_method": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a26_class": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a27_text_literal": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a28_regex": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a29_expect_fail": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a30_over": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a31_recover": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a32_finalize": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a33_over_finalize": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a34_jobs": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a35_index_error": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a36_map_key_error": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  },
+  "level1/a37_division_error": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-02 16:28"
+  }
+ }
+}
