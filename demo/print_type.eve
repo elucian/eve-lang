@@ -7,7 +7,7 @@ driver print_type is
   set r = 0.1; ** inference
   process main is
     ** print out type 
-    print "type of i is #{type(i)}";
+    print "type of i is \s{type(i)}";
   
     ** check somme assumptions
     expect i == 1.5;  ** initial value

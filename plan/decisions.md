@@ -873,3 +873,18 @@ Author answers COL-02, 03, 05, 14, 15; COL-16 "apply the proposal". Applied to t
   Literal `#{` is written `\#{`. Proposed by the model, to be refined in the specification.
 - Applied: classes, collections, strings, types, command, syntax pages; demo/class_point, method_call, number_to_string,
   print_type, string_concat.
+
+### D-060 Interpolation escapes `\s{}` `\#{}` `\b{}`; queue direction (2026-10-02)
+Author answers COL-05, COL-16. Replaces the interpolation bullet of D-059 (`#{expr}` is gone) and extends D-019.
+- Escapes with braces, one family: `\u{H…}` code point (D-019), `\s{expr}` any value as a string, `\#{expr}` a number, `\b{expr}`
+  a boolean (True/False). The old `#{…}`, `#s`, `#n`, `{a}` and `?` do not exist. Literal braces stay `\{` and `\}`.
+- Format after a colon, Fortran codes for numbers, Python-like alignment (proposed by the model, to be refined in the spec):
+  `\s{e:[[fill]align][width][.max]}`, `\#{e:[[fill]align][flags][repeat]code[width][.digits]}`, `\b{e:[[fill]align][width][code]}`.
+  align `<` `>` `^` (default left for string and boolean, right for number); fill is one character before the align;
+  number codes `i f e x b`; flags `+` and `,` (thousands); repeat count puts N elements per row (`3i4`); boolean codes `tf` `yn` `01`.
+  The width never truncates (Fortran `*****` overflow is not used); only `.max` cuts a string.
+- Lists: the arrow points to the side the element leaves from. `<- lst` removes the first element, `lst ->` the last;
+  `x <- lst` / `lst -> x` remove the first / last element equal to `x`. A queue enqueues at the end (`q <+ x`) and dequeues the first
+  (`let e <- q`). A stack pushes at the end (`s <+ x`) and pops the last (`s -> let e`). The capture forms `let e <- lst;` and
+  `lst -> let e;` are a proposal (a `let` inside a statement, also `while let x in (range)`): open.
+- Applied: strings, collections, classes, types, command, syntax pages and the demos that used interpolation.
