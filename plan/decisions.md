@@ -939,3 +939,11 @@ of manifest.html.
 - Manual, demo, pattern, test, plan, issues, tools: CC BY 4.0 (assumed by the model, to confirm). Root `LICENSE` is a summary.
 - Applied: LICENSE, README.md (section License), spec/index.md, evevm/README.md, tutorial manifest.html (License section, legal notice).
 - Note: the scl repo, which holds the tutorial pages, has a GPL-3.0 `LICENSE`. Which license covers the tutorial text is open.
+
+### D-062 Trademark policy (2026-10-02)
+Author request. `TRADEMARK.md` at the repository root: "EVE", the logo and the branding are trademarks of Sage-Code Laboratory.
+Free: implementing the language, "Built for EVE", "EVE compatible", "Runs EVE scripts", "Based on the EVE language specification",
+accurate references, unmodified official software. "EVE Compiler / Interpreter / VM" and "EVE Compliant" need a stated spec version,
+a passed conformance level and an unmodified-fork condition. Not allowed without written permission: a modified compiler, VM or
+distribution under the EVE name, an incompatible dialect presented as EVE, a modified specification under the EVE title, registering the
+mark, altering the logo. Applied: TRADEMARK.md, README.md, LICENSE, tutorial manifest.html. Open: confirm the legal entity name.
