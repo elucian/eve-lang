@@ -6,7 +6,7 @@ const std = @import("std");
 
 // Zig tip: an `enum` is a closed list of names. `switch` on an enum must cover every name (or have
 // an `else`), so adding a name later makes the compiler show every `switch` to update.
-pub const Kind = enum { ident, number, string, symbol, eof };
+pub const Kind = enum { ident, number, string, char, symbol, eof };
 
 // Zig tip: `text` is a view into the script's own bytes, not a copy, so a token costs no
 // allocation. `u32` is a 32-bit unsigned integer, plenty for a line number.
@@ -128,8 +128,86 @@ const Lexer = struct {
         return .{ .kind = kind, .text = lx.src[start..lx.pos], .line = line, .col = column };
     }
 
+    fn digits(lx: *Lexer) void {
+        while (std.ascii.isDigit(lx.at(0)) or lx.at(0) == '_') lx.pos += 1;
+    }
+
+    // Zig tip: a number is lexed by looking at the next bytes without consuming them (`at(1)`).
+    // `1..5` must lex as `1`, `..`, `5`, so a `.` belongs to the number only when a digit follows.
+    // `std.ascii.isAlphanumeric` accepts the hex digits of `0xFF` and the `0b101` marker alike.
+    fn number(lx: *Lexer) void {
+        if (lx.at(0) == '0' and (lx.at(1) == 'x' or lx.at(1) == 'b')) {
+            lx.pos += 2;
+            while (std.ascii.isAlphanumeric(lx.at(0)) or lx.at(0) == '_') lx.pos += 1;
+            return;
+        }
+        lx.digits();
+        if (lx.at(0) == '.' and std.ascii.isDigit(lx.at(1))) {
+            lx.pos += 1;
+            lx.digits();
+        }
+    }
+
+    // Zig tip: `"""` opens a text literal: raw, several lines, closed by the next `"""`. The
+    // ordinary string ends at its closing quote, skips the byte after a backslash (so `\"`
+    // does not end it) and may not contain a line break. `interpolation` escapes such as `\#{x}`
+    // need no special care here: the backslash skips the `#`, the rest is plain text.
+    fn string(lx: *Lexer, line: u32, column: u32) Error!void {
+        if (lx.at(1) == '"' and lx.at(2) == '"') {
+            const end = std.mem.indexOf(u8, lx.src[lx.pos + 3 ..], "\"\"\"") orelse {
+                lx.diag.set(line, column, "unterminated text literal, '\"\"\"' not found", .{});
+                return error.Syntax;
+            };
+            const stop = lx.pos + 3 + end + 3;
+            while (lx.pos < stop) : (lx.pos += 1) {
+                if (lx.src[lx.pos] == '\n') {
+                    lx.line += 1;
+                    lx.line_start = lx.pos + 1;
+                }
+            }
+            return;
+        }
+        lx.pos += 1;
+        while (true) {
+            const s = lx.at(0);
+            if (s == 0 or s == '\n') {
+                lx.diag.set(line, column, "unterminated string", .{});
+                return error.Syntax;
+            }
+            lx.pos += 1;
+            if (s == '"') return;
+            if (s == '\\' and lx.at(0) != 0 and lx.at(0) != '\n') lx.pos += 1;
+        }
+    }
+
+    /// A symbol literal: `'a'`, `'β'`, `'\x41'`, `'\u{3B1}'`; one line, closed by the next `'`.
+    fn char(lx: *Lexer, line: u32, column: u32) Error!void {
+        lx.pos += 1;
+        while (true) {
+            const s = lx.at(0);
+            if (s == 0 or s == '\n') {
+                lx.diag.set(line, column, "unterminated symbol literal", .{});
+                return error.Syntax;
+            }
+            lx.pos += 1;
+            if (s == '\'') return;
+            if (s == '\\' and lx.at(0) != 0 and lx.at(0) != '\n') lx.pos += 1;
+        }
+    }
+
+    // Zig tip: a table of constant strings, longest first, is the simplest "longest match" lexer:
+    // `for` tries each entry with `startsWith` and the first hit wins, so `>..<` is tried before
+    // `>..` and `..`. `inline`-free: the table is an ordinary array evaluated at run time.
+    const operators = [_][]const u8{
+        ">..<", "..<", ">..", ":=", "::", "+=", "-=", "*=", "/=", "%=", "^=", "==", "<>", "<=", ">=",
+        "=>",   "<:",  "<+",  "<-", "->", "=~", "!~", "..", "||", "&&", "<<", ">>", "><",
+    };
+
     // Zig tip: `std.ascii.isDigit` and friends test one byte. `'a'` in single quotes is a byte
-    // value (`u8`), so it can be compared and used in ranges, unlike a string.
+    // value (`u8`), so it can be compared and used in ranges, unlike a string. An identifier
+    // may start with `$` (`$error`); a lone `$` is the last-index symbol. `U+0061` is a symbol
+    // literal written with its code point. `return lx.token(...)` ends the function with the
+    // token; `continue`-free style: each `if` returns.
     fn next(lx: *Lexer) Error!Token {
         try lx.skipBlanks();
         const start = lx.pos;
@@ -137,33 +215,35 @@ const Lexer = struct {
         const column = lx.col();
         if (start >= lx.src.len) return lx.token(.eof, start, line, column);
         const c = lx.src[start];
-        if (isIdentStart(c)) {
+        if (c == 'U' and lx.at(1) == '+' and std.ascii.isHex(lx.at(2))) {
+            lx.pos += 2;
+            while (std.ascii.isHex(lx.at(0))) lx.pos += 1;
+            return lx.token(.char, start, line, column);
+        }
+        if (isIdentStart(c) or (c == '$' and isIdentStart(lx.at(1)))) {
+            lx.pos += 1;
             while (isIdentChar(lx.at(0))) lx.pos += 1;
             return lx.token(.ident, start, line, column);
         }
         if (std.ascii.isDigit(c)) {
-            while (std.ascii.isDigit(lx.at(0)) or lx.at(0) == '_') lx.pos += 1;
-            if (lx.at(0) == '.' and std.ascii.isDigit(lx.at(1))) {
-                lx.pos += 1;
-                while (std.ascii.isDigit(lx.at(0)) or lx.at(0) == '_') lx.pos += 1;
-            }
+            lx.number();
             return lx.token(.number, start, line, column);
         }
         if (c == '"') {
-            lx.pos += 1;
-            while (true) {
-                const s = lx.at(0);
-                if (s == 0 or s == '\n') {
-                    lx.diag.set(line, column, "unterminated string", .{});
-                    return error.Syntax;
-                }
-                lx.pos += 1;
-                if (s == '"') break;
-                if (s == '\\' and lx.at(0) != 0 and lx.at(0) != '\n') lx.pos += 1;
-            }
+            try lx.string(line, column);
             return lx.token(.string, start, line, column);
         }
-        if (c < 128 and std.ascii.isPrint(c)) {
+        if (c == '\'') {
+            try lx.char(line, column);
+            return lx.token(.char, start, line, column);
+        }
+        for (operators) |op| {
+            if (std.mem.startsWith(u8, lx.src[start..], op)) {
+                lx.pos += op.len;
+                return lx.token(.symbol, start, line, column);
+            }
+        }
+        if (c < 128 and std.ascii.isPrint(c) and c != '\\') {
             lx.pos += 1;
             return lx.token(.symbol, start, line, column);
         }
