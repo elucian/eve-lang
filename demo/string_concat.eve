@@ -7,7 +7,7 @@ driver string_concat is
     expect str == " this string";
   
     ** use string interpolation
-    print "I have insert #{str} here!"
+    print "I have insert \s{str} here!"
 
     ** concatenate string with collection
     print "digits = " || {1,2,3}.join(",")
@@ -16,7 +16,7 @@ driver string_concat is
     print "" <+ {"this ","is ","a "," string"};
 
     ** string format operator ?
-    print "these numbers #{1:i3},#{3:i3},#{5:i3} are prime";
+    print "these numbers \#{1:i3},\#{3:i3},\#{5:i3} are prime";
   return;
 end string_concat;
 

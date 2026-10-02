@@ -10,15 +10,15 @@ collection) is postponed to the specification, which synthesizes it.
 ## Questions
 
 ### COL-05 Capture a removed element
-`-=` removes by value; `->` and `<-` remove the first or last element (D-059). How do we capture the removed element?
-The author suggests a statement like `lst -> let e;` and a general `let` inside statements (`while let x in (range)`).
-Which side does `<- lst` remove (the queue example dequeues from the end)?
+Applied (D-060): `<-` removes the first element, `->` the last; a queue enqueues with `<+` and dequeues with `let e <- q`.
+The capture forms `let e <- lst;` and `lst -> let e;` are my proposal: is a `let` inside a statement acceptable
+(also `while let x in (range)`)?
 **Answer:** _(open)_
 Status: open
 
 ### COL-16 Interpolation formats
-Applied as proposed (D-059): `#{expr}` and `#{expr:format}` with Fortran-like `iW`, `fW.D`, `sW`, repeat counts. Review the
-format codes and tell me what to change (alignment, padding, thousands separator, booleans).
+Applied (D-060): `\s{}`, `\#{}`, `{}` with formats (strings.html, "String interpolation and format"). Review the codes
+and examples and tell me what to change.
 **Answer:** _(open: review)_
 Status: open
 
