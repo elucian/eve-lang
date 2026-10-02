@@ -36,7 +36,7 @@ answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-
 
 One answer closes several issues in each group.
 
-1. **Strings: placeholders, escapes, text.** COL-15, COL-16, LIB-06 (and COL-17, COL-19, COL-20).
+1. **Strings: placeholders, escapes, text.** COL-15, COL-16, LIB-06 (COL-17, 19, 20 answered, D-058).
    Every test uses `print` with strings, so this comes first.
 2. **Input and output.** LIB-03 `read`, LIB-04 `write` and `print`, LIB-05 standard error.
    These decide the `.out` files of the conformance tests.
@@ -44,8 +44,7 @@ One answer closes several issues in each group.
    rest of it). They define what the VM must contain.
 4. **Errors and exit codes.** PRC-02 (`finalize`), PRC-03 (`expect` and `assert`), PRC-08 (`raise` forms),
    PRC-09 (Exception module). They give the exit codes in `expect.json`.
-5. **Collections core.** COL-01, COL-02, COL-05, COL-07 (ordinals, type notation, list operations, Array and
-   Matrix). Test levels 2 and 3 use them.
+5. **Collections core.** COL-02, COL-05 (map notation, list operation doubts; COL-01, 07 answered, D-058). Test levels 2 and 3 use them.
 6. **Write the spec for the answered items.** SPEC-01 to SPEC-06: no question left, only work. This is the
    cheapest progress in the folder.
 
@@ -54,8 +53,7 @@ One answer closes several issues in each group.
 7. **Functions.** ALG-02 (native types in signatures), CON-03 (parameter defaults), ALG-01. Small, and they
    unblock the function tests.
 8. **Class model.** CLS-09 (generics), CLS-10, CLS-11, CLS-17 (constructor shape), then CLS-12 to CLS-16.
-9. **Collections, the rest.** COL-03 builders, COL-04 deconstruct, COL-09 bulk assignment, COL-10 to COL-14
-   (DataSet, HashMap, object literal), COL-18 regex.
+9. **Collections, the rest.** COL-03 (filter clause), COL-14 (object attributes); the rest answered, D-058.
 10. **Processes and aspects.** PRC-06, PRC-10, PRC-11, PRC-13, PRC-14, PRC-07 (partial).
 11. **Types.** TYP-19 date literals, TYP-I1, TYP-I2.
 

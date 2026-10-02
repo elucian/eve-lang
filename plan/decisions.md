@@ -552,13 +552,12 @@ Author decision. Refines D-036 and the closers of D-016.
 ### D-038 `over;` has no code; process parameters and globals (2026-10-01)
 Author decision. Answers the open questions of D-037. Replaces the `over N` rows of D-010.
 - `over;` takes no value: it ends the process it is in with code 0. The forced abnormal exit with code 1 (`over 1;`)
-  is now `panic;` (D-031). Exit codes: 0 `over;` or end of process, 1 `panic`, 2 failed `expect`, 3 failed `assert`.
+  is now `panic;` (D-031). Exit codes: 0 `over;` or end of process, 1 `panic`, 2 failed `expect`
 - A process can receive parameters, input and output. It returns no result: outputs are parameters marked `@`.
   `process name(n: Integer, @total: Integer) is … return;`.
-- A process has access to the globals of its script: module globals if declared in a module, driver globals if
-  declared in a driver.
+- A process has access to the globals of its script: module globals if declared in a module, driver globals if declared in a driver, accesible with . operator if public.
 - Applied: `over 0;` → `over;`, `over 1;` → `panic;` in demo, tests, test/readme.md and the tutorial.
-- `start` and `begin` pass a parameter list, outputs marked `@`: `start total(10, @sum);`,
+- `start` pass a parameter list, outputs marked `@`: `start total(10, @sum);`,
   `begin total(10, @sum);` (the output is ready after the `join`).
 - `panic` is global: it is an unhandled exception and ends the whole application, not only the process (D-031).
 
@@ -566,11 +565,8 @@ Author decision. Answers the open questions of D-037. Replaces the `over N` rows
 Proposed by the model after reviewing the partials section of classes.html. Awaiting author confirmation. Touches CLS-07 and CLS-08.
 - Problem: "partial" meant trait, interface, abstract class and prototype constructor at once; a partial constructor
   carried state, so multiple inheritance had attribute conflicts; an unimplemented method returned `Null` at run time.
-- Vocabulary: a **partial method** is a signature ending in `;`. An **abstract class** is a class with at least one
-  partial method. A **trait** is `trait Name is … end Name;`.
-- Trait: no attributes, properties, constructor or destructor (no state, no instances). It holds required methods
-  (partial) and provided methods (with a body, which may call the required ones through `@self`). `@self` is untyped
-  and means the adopting class. A trait can be generic (`trait Comparable(:T)`) and can be used as a type
+- Vocabulary: a **partial method** is a signature ending in `;`. An **abstract class** is a class with at least one partial method. A **trait** is `trait Name is … end Name;`.
+- Trait: no attributes, properties, constructor or destructor (no state, no instances). It holds required methods (partial) and provided methods (with a body, which may call the required ones through `@self`). `@self` is untyped and means the adopting class. A trait can be generic (`trait Comparable(:T)`) and can be used as a type
   (`let p: Printable := c;`, `x is Printable`). `trait` is a keyword; it closes with `end` (D-037).
 - Abstract class: has attributes and a constructor, cannot be created with `new`; only a subclass constructor calls
   it, by its name (`self := new Shape(name);`). The partial constructor is removed.
@@ -836,3 +832,28 @@ Author correction of D-053 (LIB-05). `error(message)` and `warning(message)` wri
 `log_err(message)` and `log_wrn(message)` do not print: they create log files in the output folder, `out` by default.
 The system variable `$EVE_OUT` sets the output folder. Open: the names of the log files and their line format.
 Applied: evevm/lib/io.eve, evevm/lib/README.md, topology.html (system variables).
+
+### D-058 Collections answers: ordinals, literals, sets, maps, strings (2026-10-02)
+Author answers COL-01 to COL-20 (issues/collections.md). Closes COL-08 (D-022, D-049) and the list operations of COL-05.
+- Ordinal: the first value is 0 (`{False, True}`: False = 0, True = 1). Capitalized names enter the enclosing scope (language rule).
+- Literals: `(1,2,3)` is a list, never a tuple; `List(...)` is an optional constructor; `(x)` is a list of one element, not an
+  expression (expressions use operators). `{}` is the empty DataSet, `{:}` the empty HashMap. Unquoted keys make an Object, quoted
+  or numeric keys a HashMap (quoted = strings, unquoted = identifiers).
+- Builders: generators combine with `and`; ranges with open ends such as `(2>..n)` are preferred to filters.
+- Deconstruct: `_` is always Null; it can be written but the value is forgotten. `*` alone skips many elements and stays Null; `*rest` collects.
+- Array types: Array (1 dimension), Matrix (2), Tensor (3 or more; a 3D tensor is an array of matrices). Slices are `[n..m]` only.
+  `[*]` selects a whole dimension and is needed only for a matrix or tensor (`m[1..2][*]`, `m[*][1..2]`, never `[*][*]`); a slice
+  takes one value with `:=`. A matrix or tensor also takes one absolute row-major index (`mat[124]`: row and column are computed).
+- DataSet: sorted by value, `print` shows the order; a List is not sorted unless sorted explicitly. Operators `&=` and `|=` are removed
+  (`||` union, `&&` intersection, `+=` / `-=` add and remove elements).
+- HashMap: a sorted map (by key); the name stays HashMap, `Map` is too short. Assigning to a missing key creates it; `+=` on a missing
+  key raises an error. Elements are created with brackets: `h['c'] := 3`.
+- String is immutable; Text is a different, mutable type (a rope or similar). A mutable string is a collection of symbols or a Text.
+  Concatenating a string with another literal gives a String (`"a" + 1`, `'a' + 1`). Class methods can be called with the class name or
+  with an object: same method.
+- Regular expressions: the match operator is `=~`, not-match `!~`; a string starting with `/` on the right is a regex.
+- Applied: collections.html split in two: strings, text and regular expressions moved to the new strings.html (+ data/strings.json,
+  index.html row 09, pages renumbered); new img/row-major.svg; example and typo fixes (COL-F1 to F4).
+- Open: map type notation (`{}(String,Object)` or `{}(Type:Type)`), `&code;` escapes and Fortran-like formats (COL-15, COL-16),
+  how an Object gets new attributes (replaced `&=` by `object.x := 1`), and the exact meaning of `-=` with a position
+  (`lst -= lst[1]`). Spec work pending.
