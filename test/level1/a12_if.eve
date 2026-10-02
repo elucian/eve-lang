@@ -1,0 +1,27 @@
+# if, else if, else and the conditional statement (D-016)
+driver a12_if is
+  process main is
+    let n := 7;
+    if n < 5 do
+      print "small";
+    else if n < 10 do
+      print "medium";
+    else
+      print "large";
+    done;
+
+    ** an if opens no scope and can be nested
+    if n > 0 do
+      if n % 2 == 0 do
+        print "positive even";
+      else
+        print "positive odd";
+      done;
+    done;
+
+    print "n is odd" if (n % 2 <> 0);
+    print "n is even" if (n % 2 == 0);
+    let size := ("big" if n > 5 else "small");
+    print size;
+  return;
+end a12_if;

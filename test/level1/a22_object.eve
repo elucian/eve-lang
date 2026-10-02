@@ -1,0 +1,19 @@
+# Object: unquoted keys make an object, quoted or numeric keys make a HashMap (D-058, D-059)
+driver a22_object is
+  process main is
+    let p := {x: 1.5, y: 2};
+    expect p.x == 1.5;
+    expect p.y == 2;
+    p.x := 3;
+    expect p.x == 3;
+
+    ** an assignment creates a new attribute
+    p.z := 7;
+    expect p.z == 7;
+
+    ** == compares all the attributes
+    let q := {x: 3, y: 2, z: 7};
+    expect p == q;
+    expect p is not q;
+  return;
+end a22_object;

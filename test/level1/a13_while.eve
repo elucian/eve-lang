@@ -1,0 +1,39 @@
+# while loop with a header, break, else and then (D-030, D-033, D-034)
+driver a13_while is
+  process main is
+    ** the header declares i and sum: they live until then
+    loop
+      let i := 1;
+      let sum := 0;
+    while i <= 5 do
+      sum += i;
+      i += 1;
+    then
+      print "sum = \#{sum}";
+    done;
+
+    ** an infinite loop is left with break
+    let n := 0;
+    while True do
+      n += 1;
+      break if n >= 3;
+    done;
+    expect n == 3;
+
+    ** else runs only when the condition is false the first time
+    while False do
+      print "never";
+    else
+      print "empty";
+    done;
+
+    ** then runs every time the loop ends, also after break
+    let k := 0;
+    while k < 10 do
+      k += 1;
+      break if k == 2;
+    then
+      print "k = \#{k}";
+    done;
+  return;
+end a13_while;

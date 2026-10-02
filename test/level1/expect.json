@@ -2,5 +2,9 @@
   "a02_comments": {
     "exit": 1,
     "note": "panic = forced, abnormal exit with code 1 (D-038)"
+  },
+  "a29_expect_fail": {
+    "exit": 2,
+    "note": "a failed expect ends the process with code 2 (D-055)"
   }
 }

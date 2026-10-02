@@ -1,0 +1,39 @@
+# methods: side effects, @ passes by reference, no @ passes a copy (D-025, D-048)
+driver a25_method is
+  method add(p1 = 0, p2 = 1 :Integer, @out :Integer) is
+    out := p1 + p2;
+  return;
+
+  method swap(@x, @y :Integer) is
+    let t := x;
+    x := y;
+    y := t;
+  return;
+
+  method bump(n :Integer) is
+    n += 1;
+  return;
+
+  method hello is
+    print "hello";
+  return;
+
+  process main is
+    let r :Integer;
+    add(1, 2, @r);
+    expect r == 3;
+
+    let a := 1;
+    let b := 2;
+    swap(@a, @b);
+    expect a == 2;
+    expect b == 1;
+
+    let k := 5;
+    bump(k);                     ** works on a copy
+    expect k == 5;
+
+    hello();                     ** a call is a statement
+    hello;                       ** () is optional without arguments
+  return;
+end a25_method;

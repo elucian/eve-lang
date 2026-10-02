@@ -1,0 +1,29 @@
+# := shares a collection or an object, :: makes a deep copy, native values are always copied (D-049)
+driver a23_clone_view is
+  process main is
+    let x := 1;
+    let y := x;
+    y += 1;
+    expect x == 1;               ** a native value is copied
+
+    let a := (1, 2, 3);
+    let b := a;                  ** shares the reference
+    b <+ 4;
+    expect a == (1, 2, 3, 4);
+    expect b is a;
+
+    let c :: a;                  ** a new list
+    c <+ 5;
+    expect a == (1, 2, 3, 4);
+    expect c == (1, 2, 3, 4, 5);
+    expect c is not a;
+
+    let p := {x: 1};
+    let q := p;
+    q.x := 2;
+    expect p.x == 2;
+    let r :: p;
+    r.x := 3;
+    expect p.x == 2;
+  return;
+end a23_clone_view;

@@ -8,6 +8,6 @@ driver a02_comments is
   return;
 end a02_comments;
 /* 
-   We use /*...*/ to create nested comments that is
-   a special feature, required to comment out code  
+   Block comments do not nest, the first closing marker ends them.
+   Use ** lines to comment out code that contains comments.
 */

@@ -1,0 +1,11 @@
+# finalize runs after the process ends normally, and after recover (D-055)
+driver a32_finalize is
+  process main is
+    print "work";
+    raise "boom";
+  recover
+    print "recover";
+  finalize
+    print "finalize";
+  return;
+end a32_finalize;

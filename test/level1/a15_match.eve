@@ -1,0 +1,26 @@
+# match with values, lists of values, ranges and other (D-016, D-030)
+driver a15_match is
+  process main is
+    let n := 7;
+    match n
+      when (1..5) do
+        print "low";
+      when (6..10) do
+        print "high";
+      when other do
+        print "out of range";
+    done;
+
+    let word := "two";
+    match word
+      when "one" do
+        print "1";
+      when ("two", "three") do
+        print "2 or 3";
+      when other do
+        print "many";
+      then
+        print "match done";
+    done;
+  return;
+end a15_match;

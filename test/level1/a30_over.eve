@@ -1,0 +1,8 @@
+# over ends the process it is in with exit code 0
+driver a30_over is
+  process main is
+    print "start";
+    over;
+    print "never";
+  return;
+end a30_over;

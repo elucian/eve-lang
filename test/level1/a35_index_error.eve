@@ -1,0 +1,10 @@
+# index 0 is an error: indexes start at 1 (D-021)
+driver a35_index_error is
+  process main is
+    let a := (1, 2, 3);
+    let x := a[0];
+    print "never";
+  recover
+    print "caught index error";
+  return;
+end a35_index_error;

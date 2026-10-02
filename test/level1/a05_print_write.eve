@@ -1,0 +1,16 @@
+# print adds a new line and separates values with a separator, write adds nothing
+driver a05_print_write is
+  process main is
+    print "one";
+    write "a";
+    write "b";
+    print;                          ** ends the line started by write
+    print 10;
+    print (10 + 10 + 15);           ** numeric expression
+    print (1, 2, 3);                ** the default separator is ","
+    print (1, 2, 3, separator: " ");
+    write (1, 2);
+    write (3, 4);
+    print;
+  return;
+end a05_print_write;
