@@ -3,7 +3,7 @@
 Goal: the spec skeleton, validated JSON data, and the lexical layer (everything a lexer needs).
 Conventions are in `spec/README.md`.
 
-### S2.1 Spec index and front matter `[!]` → Q-006
+### S2.1 Spec index and front matter `[x]` 2026-10-02: spec/index.md; license CC BY 4.0 (D-061)
 - Create `spec/index.md`: reading order, version (`0.1-draft`), license, change log.
 - ~~Resolve `docs/` according to Q-001.~~ Done by M7.1 (D-004).
 

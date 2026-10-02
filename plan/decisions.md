@@ -927,3 +927,15 @@ D-060 gives `q <+ x` (append at the end), `s -> let e;` and `let e <- q;`. For t
 `queue +> "x"` (list on the left) while the arrow suggests the element goes to the start of the list on the right. Proposal:
 `x +> lst` inserts `x` at the start of `lst`; `lst <+ x` appends at the end; `a <+ b` concatenates (b after a). Confirm the side of the list for `+>`.
 Blocks: `operators.json` (`prepend`), `syntax/expressions.md`.
+
+### D-061 Licenses: BUSL-1.1 for code, CC BY 4.0 for the specification (2026-10-02)
+Author decision. Answers Q-006 and the open part of MAN-01; replaces the Apache 2.0 license of the repository and the CC BY-ND 4.0
+of manifest.html.
+- Code (`evevm/`, `script/`): Business Source License 1.1, text and parameters in `evevm/LICENSE`. Licensor Elucian Moise;
+  Change License Apache 2.0; Change Date 2030-10-02. The Additional Use Grant (proposed by the model, to confirm) allows production
+  use except offering the VM or a derivative as a competing commercial VM, interpreter or hosted service for Eve.
+- Specification (`spec/`): CC BY 4.0, full legal code in `spec/LICENSE`. Adaptation is allowed, so the NoDerivatives bullets and
+  the "implementation grant is needed because of ND" reasoning are gone; the grant and the trademark policy stay.
+- Manual, demo, pattern, test, plan, issues, tools: CC BY 4.0 (assumed by the model, to confirm). Root `LICENSE` is a summary.
+- Applied: LICENSE, README.md (section License), spec/index.md, evevm/README.md, tutorial manifest.html (License section, legal notice).
+- Note: the scl repo, which holds the tutorial pages, has a GPL-3.0 `LICENSE`. Which license covers the tutorial text is open.

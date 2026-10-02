@@ -1,6 +1,6 @@
 # Eve Specification
 
-Version **0.1-draft**. License: to be decided (Q-006). Conventions: [README](README.md).
+Version **0.1-draft**. License: [CC BY 4.0](LICENSE) (D-061). Conventions: [README](README.md).
 
 ## Reading order
 

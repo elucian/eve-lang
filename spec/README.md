@@ -6,7 +6,7 @@ interpreter must follow. The tutorial (`tutorial/`, published at
 When the two disagree, the specification wins. Record the conflict in
 [`../plan/decisions.md`](../plan/decisions.md) and fix the tutorial.
 
-Status: **0.1-draft**, being built step by step according to [`../plan/`](../plan/README.md).
+License: [CC BY 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../plan/`](../plan/README.md).
 
 ## Why Markdown + JSON
 
