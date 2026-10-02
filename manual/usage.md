@@ -16,14 +16,16 @@ eve [options] --<command> [args]   run one command and exit, without the REPL
 |---|---|
 | `-h`, `--help` | display the help and exit: page 1 is the quick help (options), then `-- press enter for more --` and page 2 lists the `--<command>` options; both pages start with the title `EVE - Version: <version>`. When the output is piped, both pages are written without waiting |
 | `-v`, `--version` | display the title `EVE - Version: <version>` and exit; the version is hard-coded in `evevm/src/version.zig` |
-| `-c file.cfg` | configuration file |
+| `-s file.cfg` | setup: load the configuration file (the same file the `setup` command loads) |
 | `-m size` | memory for the process |
 | `-d` | debug mode: `halt` statements work (otherwise they are ignored) |
 
 Every REPL command below is also a command-line option, so a command can run without the interface:
-`eve --check script.eve`, `eve -d --execute script.eve -c file.cfg`. A bare `eve` or `eve -c file.cfg`
+`eve --check script.eve`, `eve -d --execute script.eve -s file.cfg`. A bare `eve` or `eve -s file.cfg`
 starts the REPL with the prompt `eve:> `; `quit` or `exit` (or the end of the input) ends it.
-At the prompt the **Tab** key completes the last word of the line with file names: `check test/level1`
+At the prompt the **Tab** key completes the last word of the line with file names. A command that takes a
+file says which kind: `check`, `compile`, `debug` and `execute` complete `.eve` files, `setup` (and any word
+after `-s`) completes `.cfg` files; other commands do not complete. `check test/level1`
 followed by Tab shows the first `.eve` file of that folder (sub-folders too, with a trailing `/`), and
 every further Tab shows the next one; after the last it starts again with the first. Any other key ends the
 cycle, so you can edit the name. The command name itself is not completed. Editing keys: Backspace, Enter,
@@ -57,13 +59,13 @@ Eve 0.1 only runs one driver script. The same program serves all modes, dependin
 
 The REPL (read, execute, print, loop) has a menu and a command line. It checks, debugs and executes a
 script. It is meant to work with the `eve` command on Linux, Windows and macOS. A configuration file is given
-with `-c`, and the memory for the process with `-m`.
+with `-s`, and the memory for the process with `-m`.
 
 ```
-~/eve -c file.cfg
+~/eve -s file.cfg
 eve:> check ~/path/driver_name.eve
-eve:> debug ~/path/driver_name.eve -c file.cfg
-eve:> execute ~/path/driver_name.eve -c file.cfg -m 2048GB
+eve:> debug ~/path/driver_name.eve -s file.cfg
+eve:> execute ~/path/driver_name.eve -s file.cfg -m 2048GB
 ```
 
 The command options are not designed yet. The basic commands are (in the code they are the entries of one
@@ -72,6 +74,7 @@ jump table, `evevm/src/cli.zig`; an entry that is not written yet prints `<name>
 | Command | Description |
 |---|---|
 | `check` | check the syntax and compile a script in memory, do not execute it |
+| `compile` | compile a script to bytecode (not designed yet) |
 | `debug` | execute the main process in debug mode |
 | `execute` | execute the main process in production mode |
 | `begin` | start the driver main process step by step execution |
