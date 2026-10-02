@@ -1,1 +1,4 @@
-Hello World!
+#!$EVE_LANG
+
+** A simple eve script without a process
+print (Hello World)!
