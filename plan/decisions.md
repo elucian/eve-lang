@@ -857,3 +857,19 @@ Author answers COL-01 to COL-20 (issues/collections.md). Closes COL-08 (D-022, D
 - Open: map type notation (`{}(String,Object)` or `{}(Type:Type)`), `&code;` escapes and Fortran-like formats (COL-15, COL-16),
   how an Object gets new attributes (replaced `&=` by `object.x := 1`), and the exact meaning of `-=` with a position
   (`lst -= lst[1]`). Spec work pending.
+
+### D-059 Collections follow-ups; one interpolation form (2026-10-02)
+Author answers COL-02, 03, 05, 14, 15; COL-16 "apply the proposal". Applied to the tutorial and `demo/`.
+- Map type notation: `{:}(Type,Type)`, for example `{:}(String, Object)` (classes.html, collections.html).
+- Builder: the first generator is a range or a collection; an optional condition follows, joined with `and`:
+  `(x | x in (1..10) and x % 2 == 0)`. No `if` filter.
+- `-=` removes by value (all equal elements): `lst -= lst[1]` removes every element equal to the first. Removing the first or the
+  last element is done with `->` and `<-`. Capturing the removed element in the same statement is open (idea: `lst -> let e;`,
+  and a `let` inside statements such as `while let x in (range)`).
+- Objects: `object.x := 1` adds an attribute; an empty Object is the Null `let o :Object;`.
+- Escapes: both `&code;` and `\u{H…}` are valid in strings (D-019 had dropped `&code;`; reinstated).
+- Interpolation: `"#{expr}"` is the only form. `#s`, `#n`, `#`, `{a}`, `#(x)` and the template operator `?` are removed. Format after a
+  colon, adapted from Fortran: `iW` integer, `fW.D` real, `sW` string, repeat count prefix for collections (`#{m:3i4}`: 3 per row).
+  Literal `#{` is written `\#{`. Proposed by the model, to be refined in the specification.
+- Applied: classes, collections, strings, types, command, syntax pages; demo/class_point, method_call, number_to_string,
+  print_type, string_concat.

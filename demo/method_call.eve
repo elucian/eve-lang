@@ -3,7 +3,7 @@ driver method_call is
 
   method test(a: Integer) is
     ** print is a system method
-    print 'argument list has #n arguments' ? a; 
+    print "argument list has #{a} arguments";
 
     ** list the arguments
     loop
