@@ -50,7 +50,7 @@ answer is applied to the tutorial and recorded in `plan/decisions.md`; the ids o
 | control.html | [control.md](control.md) | 0 | 0 | 21 |
 | functions.html | [functions.md](functions.md) | 0 | 0 | 13 |
 | classes.html | [classes.md](classes.md) | 9 | 6 | 8 |
-| collections.html | [collections.md](collections.md) | 19 | 6 | 1 |
+| collections.html | [collections.md](collections.md) | 5 | 0 | 17 |
 | processing.html | [processing.md](processing.md) | 10 | 4 | 4 |
 | concurrency.html | [concurrency.md](concurrency.md) | 11 | 2 | 2 |
 | library.html | [library.md](library.md) | 6 | 2 | 0 |
