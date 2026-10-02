@@ -74,7 +74,7 @@ pub const Command = struct {
 fn stub(comptime name: []const u8) Handler {
     return struct {
         fn run(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
-            try ctx.out.print("{s} echo, not yet implemented\n", .{name});
+            try ctx.out.print("{s} command, not yet implemented\n", .{name});
             ctx.status = exit_not_implemented;
         }
     }.run;
@@ -358,7 +358,7 @@ test "a stub echoes its name" {
     var w: Io.Writer = .fixed(&buf);
     var ctx: Context = .{ .out = &w };
     try dispatch(&ctx, "  check  a.eve ");
-    try std.testing.expectEqualStrings("check echo, not yet implemented\n", w.buffered());
+    try std.testing.expectEqualStrings("check command, not yet implemented\n", w.buffered());
     try std.testing.expectEqual(@as(u8, exit_not_implemented), ctx.status);
 }
 
@@ -406,7 +406,7 @@ test "repl ends on quit and on exit" {
         try repl(&ctx, &in, null);
         try std.testing.expect(ctx.quit);
         try std.testing.expectEqualStrings(
-            prompt ++ prompt ++ "resume echo, not yet implemented\n" ++ prompt,
+            prompt ++ prompt ++ "resume command, not yet implemented\n" ++ prompt,
             w.buffered(),
         );
     }
