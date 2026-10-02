@@ -38,9 +38,26 @@ pub fn build(b: *std.Build) void {
         run_cmd.addArgs(args);
     }
 
+    // `eved`, the Eve documentation tool: `zig build doc` writes doc/ from lib/.
+    const eved = b.addExecutable(.{
+        .name = "eved",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("doc/eved.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    b.installArtifact(eved);
+    const doc_cmd = b.addRunArtifact(eved);
+    doc_cmd.addArgs(&.{ "lib", "doc" });
+    doc_cmd.setCwd(b.path("."));
+    const doc_step = b.step("doc", "Generate doc/ from the Eve sources in lib/");
+    doc_step.dependOn(&doc_cmd.step);
+
     const mod_tests = b.addTest(.{ .root_module = mod });
     const exe_tests = b.addTest(.{ .root_module = exe.root_module });
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&b.addRunArtifact(mod_tests).step);
     test_step.dependOn(&b.addRunArtifact(exe_tests).step);
+    test_step.dependOn(&b.addRunArtifact(b.addTest(.{ .root_module = eved.root_module })).step);
 }

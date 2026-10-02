@@ -11,27 +11,27 @@ grant; trademark and compliance rules for the name EVE; reference code under "MI
 Open question Q-006 (spec license) can be closed with this. Confirm, and pick one license for the
 Zig VM in `evevm/` (the eve-lang repo is Apache 2.0). The text says reference code is "for example,
 written in Go": change to Zig (D-006)?
-**Answer:** _(open)_
-Status: open
+**Answer:** Yes we change to Zig. 
+Status: partly done: Go changed to Zig (applied); the license of the VM code is still open
 
 ### MAN-02 Static or gradual typing
 "Eve utilizes a static type system" here; types.html: "Eve has a gradual-typing system … some type
 errors are reported at compile time, some at run time". Which describes Eve?
-**Answer:** _(open)_
-Status: open
+**Answer:** Eve use gradual typing system. When I say static type system is not accurate. Is gradual.
+Status: done: gradual typing (applied)
 
 ### MAN-03 "Declarative 4th-generation language"
 The page and index.html call Eve declarative (4GL), while most of the tutorial is imperative
 (statements, loops, jobs). Keep "declarative", or describe it as an imperative scripting language
 with declarative parts (ranges, builders)?
-**Answer:** _(open)_
-Status: open
+**Answer:** We have not design the declarative layer. You are right, Eve is a multiparadigm language. 
+Status: done: "declarative 4GL" removed, multi-paradigm (applied)
 
 ### MAN-04 Eve, Bee and Hive
 "EVE environment includes two languages, Eve and Bee." Does Eve 0.1 interact with Bee at all
 (calling Bee modules)? If not, mark the architecture section as a long-term vision.
-**Answer:** _(open)_
-Status: open
+**Answer:** Remove all refferences to Bee and Hive, we will make EVE stand-alone machine, not depending on other languages or libraries. We build from scratch "battery included" approach.
+Status: done: Bee and Hive removed (applied)
 
 ## Fixes (applied unless you write "no")
 
@@ -44,9 +44,11 @@ Status: open
   number"; the comment says "Fibonacci routine" and "call fib rule" for a function; result
   `(y:Integer)` has no `@` (D-028); `driver fibonacci:` colon (D-012).
 - "Our architecture aim to optimizes".
-**Answer:** _(open)_
+**Answer:** Old code, need replacement. Rule belong to Bee language, Eve use methods, functions and processes.
 
 ### MAN-F2 Authoring standard
 "empowers developers", "seamless data movement", "high-signal processing", "Ready to dive deeper",
 "unlock the full potential", "Who knows, maybe one day…".
-**Answer:** _(open)_
+**Answer:** Remove.
+
+Fixes MAN-F1 and MAN-F2: done (applied 2026-10-01).

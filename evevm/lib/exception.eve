@@ -1,0 +1,111 @@
+** Exceptions and warnings: the Error and Warning classes, the system variables, the
+** statements that raise and report, and the predefined constants $err_name and $wrn_name.
+** The same codes and message patterns are listed in tutorial/exceptions.html: keep both in step.
+** A declaration with the keyword external is implemented in Zig by the virtual machine.
+module exception is
+
+  ** An error that interrupts a process. Its code is also the exit code of the application.
+  class .Error = {code: Integer, message: String, module: String, line: Integer, job: String} <: Object is
+    constructor(@self)(code = 4, message = "" :String) is
+      self := new Object();
+      let self.code := code;
+      let self.message := message;
+    return;
+  end Error;
+
+  ** A condition that is reported but does not interrupt the process.
+  class .Warning = {code: Integer, message: String, module: String, line: Integer} <: Object is
+    constructor(@self)(code = 3, message = "" :String) is
+      self := new Object();
+      let self.code := code;
+      let self.message := message;
+    return;
+  end Warning;
+
+  ** One entry of the call stack.
+  class .Call = {line: String, method: String} <: Object is
+    constructor(@self)(line, method :String) is
+      self := new Object();
+      let self.line := line;
+      let self.method := method;
+    return;
+  end Call;
+
+  ** The last error of the process.
+  external set $error: Error;
+
+  ** The calls that led to the error.
+  external set $stack: ()Call;
+
+  ** The errors and the warnings of the process.
+  external set $trace: ()Error;
+
+  ** Raise an exception object.
+  external .raise(e: Error);
+
+  ** Raise an error with a code and a message.
+  external .raise(code: Integer, message: String);
+
+  ** Raise an error with the default code 4.
+  external .raise(message: String);
+
+  ** Raise the error 2 when the condition is false. The message is optional.
+  external .expect(condition: Logic, message := "");
+
+  ** Report the warning 3 when the condition is false and go on. The message is optional.
+  external .assert(condition: Logic, message := "");
+
+  ** Report a warning and go on.
+  external .warn(code: Integer, message: String);
+
+  ** panic: the message given to panic
+  set $err_panic = 1;
+  ** expect: "Unexpected error in line {line}", or the custom message
+  set $err_expect = 2;
+  ** raise without a code: the message given to raise
+  set $err_raise = 4;
+  ** "Index {index} is out of range {first}..{last}"
+  set $err_index = 10;
+  ** "Key {key} not found"
+  set $err_key = 11;
+  ** "Division by zero"
+  set $err_divide = 12;
+  ** "Overflow in {operation}"
+  set $err_overflow = 13;
+  ** "Cannot convert {value} to {type}"
+  set $err_convert = 14;
+  ** "Cannot parse {text} as {type}"
+  set $err_parse = 15;
+  ** "Null value used as {type}"
+  set $err_null = 16;
+  ** "Invalid argument {name}: {reason}"
+  set $err_argument = 17;
+  ** "File not found: {path}"
+  set $err_file = 20;
+  ** "Access denied: {path}"
+  set $err_access = 21;
+  ** "Input/output error on {path}: {reason}"
+  set $err_io = 22;
+  ** "Module {name} not found in {library}"
+  set $err_module = 30;
+  ** "Process {name} not found in aspect {aspect}"
+  set $err_process = 31;
+  ** "Out of memory while allocating {size}"
+  set $err_memory = 40;
+  ** "Time-out after {time}"
+  set $err_timeout = 41;
+  ** "Deadlock: every task of the group waits on a channel"
+  set $err_deadlock = 42;
+  ** "Output {name} is given to two tasks of the group"
+  set $err_output = 43;
+
+  ** assert: "Assertion failed in line {line}", or the custom message
+  set $wrn_assert = 3;
+  ** "{name} is deprecated, use {other}"
+  set $wrn_deprecated = 5;
+  ** "Value {value} truncated to {type}"
+  set $wrn_truncate = 6;
+  ** "{name} is declared but never used"
+  set $wrn_unused = 7;
+
+end exception;

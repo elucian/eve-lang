@@ -4,6 +4,8 @@ Page: `tutorial/concurrency.html` (348 lines). Reviewed 2026-09-28. How to answe
 [README](README.md).
 
 D-050: concurrency is not in version 1. CON-05 to CON-08 and CON-11 can wait; they don't block the 0.1 spec or the VM.
+D-051: asynchronous methods (`suspend`, `resume name`, `wait all`) are removed; concurrency.html now covers parallel
+groups, data rules, BSP and channels in one place.
 
 ## Questions
 
@@ -27,16 +29,18 @@ Status: open
 `resume`, `wait`), or do they run in parallel on several cores? This decides how the Zig VM is
 built.
 **Answer:** Only processes run on parallel cores using "parallel" block. The methods are cooperative methods on a single core. I need design decisions for running methods in parallel on GPU. GPU optimization is out of scope in version 1.
-Status: answered by D-047 (2026-10-01): methods called by name are cooperative on one core; methods started in a
-`parallel` block run on several cores; aspects run only with `apply`. GPU is out of scope.
+Status: answered by D-047 and D-051: a method called by name runs to completion on its caller's core (no cooperative
+switching, `suspend` removed); methods started in a `parallel` group run on several cores; aspects run only with
+`apply`. GPU is out of scope.
 
 ### CON-05 Channels
 "The threads communicate using one or more channels", but no channel syntax exists; the example
 shares a list through `@pipeline`. Are channels part of 0.1? If asynchronous methods are parallel, what
 protects a shared list?
 **Answer:** We need design details invented for creation of channels. Design is open.
-Status: proposed in D-047: no channels in version 1, BSP supersteps instead. The author's producer-consumer example
-(concurrency.html, 2026-10-01) was replaced by `parallel_sum`. Problems found in it, to solve if channels come back:
+Status: answered by D-051: channels are designed (`Channel(:T)`, `send`, `for x in ch`, `receive`, `close`,
+`senders: n`), not in 0.1 (D-050). The pipeline example of concurrency.html solves the problems found in the
+author's first producer-consumer example:
 - `workers: parallel is` … `done workers;` has no `do` (D-046).
 - `in` is a keyword (`for … in`) and can't name a parameter.
 - `out: @Channel(:Integer)`: `@` belongs to the parameter name (`@out: Channel(:Integer)`).
@@ -52,7 +56,8 @@ Status: proposed in D-047: no channels in version 1, BSP supersteps instead. The
 `wait 10ms;`, `wait all;`, `wait [routine_name]`, and syntax.html: `wait` "interrupts the main
 process for a specified time". Confirm the three forms: a duration, `all`, a routine name.
 **Answer:** Correct, must be specified. Is wait a control statement? I think it can be described in processing.html
-Status: open
+Status: partly obsolete (D-051): `wait all` and `wait name` are removed with asynchronous methods. Left: `wait 10ms;`,
+a pause of the process, and whether it belongs to 0.1 (D-050).
 
 ### CON-07 Time-out
 "If one routine times out, the entire application crashes. Set `$timeout`." Which unit is
@@ -64,7 +69,7 @@ Status: open
 Any method becomes asynchronous when called with `start`. What happens at `suspend` in a method
 that was called without `start`?
 **Answer:** Good question. "start" is used to run processes in parallel on multicore processor. It does no longer run methods. Methods are run by name like statements. Just mention them and they execute, no call or keyword will tell you if they run synchronously or asynchronously. When suspended, states are saved and control is given back to caller process. If noone resume them they remain suspended until process ends. If process end and nobody is waiting, the method is terminated/killed. If wait is used, until timeout the method will stay suspended unti some other methood send a signal to unlock it. 
-Status: open
+Status: obsolete (D-051): `suspend` is removed.
 
 ### CON-09 `start` for methods and for processes
 D-043: `start aspect.process(args);` launches an aspect process in a `parallel … do … done` group, and
@@ -81,9 +86,17 @@ element and slice forms: `@s[i]`, `@nxt[a..b]`.
 Status: answered by D-048
 
 ### CON-11 Rules of parallel methods
-D-047 proposes: inputs passed by value (D-048, copy on write); one owner for each `@` argument; no driver globals,
-no `suspend` and no nested `parallel` in a started method; `$cores` worker pool; on error, cancel the tasks not begun
-and raise the first error at `done`. Confirm, or change any rule.
+D-047 and D-051 propose: inputs passed by value (D-048, copy on write); one owner for each `@` argument, except
+channels; no driver globals and no nested `parallel` in a started method; `$cores` worker pool, a task waiting on a
+channel gives its core away; on error, cancel the tasks not begun and raise the first error at `done`; deadlock
+detected at `done`; `$timeout` on channel waits. Confirm, or change any rule.
+**Answer:** _(open)_
+Status: open
+
+### CON-12 Channel details
+D-051 designs channels. Still to decide: is `capacity` required or has a default; is `ch.receive(@x)` needed next
+to `for x in ch`; a `select` over several channels (wait on the first that has a value); typed send-only or
+receive-only parameters.
 **Answer:** _(open)_
 Status: open
 

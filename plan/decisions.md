@@ -746,3 +746,93 @@ Author decision. Same treatment as the VM modes of TOP-14: designed, planned, no
 - Open: `wait duration;` as a plain pause of the process, outside concurrency, in 0.1 or not.
 - Applied: notes in concurrency.html (asynchronous and parallel methods) and processing.html (parallel execution),
   plan S4.5, issues/concurrency.md header.
+
+### D-051 No asynchronous methods; one concurrency tutorial with groups, BSP and channels (2026-10-01)
+Author decision. Replaces the cooperative methods of D-047 (`suspend`, `resume name`, `wait all`, `wait name`) and the
+"no channels" proposal of D-047. Still not in 0.1 (D-050).
+- A method called by its name runs to completion on the core of its caller. `suspend` is removed (keyword table 111
+  words, highlighters); `resume` keeps only its `recover` meaning; `wait 10ms;` stays as a pause (open, D-050).
+- concurrency.html is the single tutorial for parallel work: methods and parameters, Parallel model, Parallel groups
+  (moved from processing.html, with the diagram `img/eve-parallel.svg`), Data rules, Errors and time-out, Workers,
+  Bulk Synchronous Parallel, Channels (with `img/eve-pipeline.svg`), Choosing a model. processing.html keeps a short
+  "Parallel execution" section that points there.
+- Channels: `new Channel(:T)(capacity: n[, senders: m])`; `ch.send(v);` waits while full; `for x in ch do` receives
+  until closed and empty; `ch.receive(@x);`; `ch.close();` (the channel closes after the m-th close); `ch.count()`.
+  A channel is passed with `@` and is the only object several tasks of a group may share. Values are copied on send;
+  order is kept per sender. Collect results inside the group: reading after `done` from a full channel deadlocks.
+- Scheduling: a task waiting on a channel gives its core to another task (M:N), so a pipeline with more stages than
+  `$cores` works. Deadlock (every unfinished task waits on a channel) is detected and raised at `done`; a channel
+  wait longer than `$timeout` raises a time-out error.
+- Models: task group, BSP, pipeline; a comparison table recommends groups or BSP first, channels for streams.
+- Applied also to functions.html (asynchronous method row became "parallel method", column "Can be suspended"
+  removed), syntax.html (`suspend`, `resume`, `yield`, `wait`, `start` rows), topology.html (driver, aspect process),
+  `js/eve1.js`, `js/eve3.js`. Issues: CON-04, CON-05 answered, CON-06 partly, CON-08 obsolete, CON-11 updated, CON-12 new.
+
+### D-052 Processes raise errors; env variables; REPL moved to the manual (2026-10-01)
+Author answers TOP-08, TOP-10, TOP-I2. Refines D-031, D-043.
+- Environment variables of the OS are visible as `$NAME` (TOP-08). The list and the types of the 0.1 system
+  variables are still open.
+- Processes are sequential, so a process, also of an aspect, can raise errors; they propagate to the caller. The
+  driver captures the exit code of `panic`, `raise`, `expect` and `assert` (TOP-10). Replaces "an aspect can't raise".
+- The REPL and daemon text moved from topology.html to `manual/usage.md` (TOP-I2); the tutorial keeps a pointer.
+- index.html: the quiz and certification section is removed (out of date).
+- Applied: topology.html, index.html, manual/usage.md. Issues TOP-10 and TOP-I2 done; TOP-08 stays open for the list.
+
+### D-053 Library in Eve, documented by eved (2026-10-02)
+Author answers LIB-01 to LIB-06.
+- The library is mostly written in Eve, in `evevm/lib/` (README.md documents it). Only primitives that need the
+  machine are native: a routine whose signature ends in `;`.
+- Documentation is generated, not written: `evevm/doc/` holds Markdown made from the comments (`**` blocks above a
+  declaration) and the signatures. The tool is `eved` (Eve doc), written in Zig, in `evevm/doc/eved.zig`, next to its output; `zig build doc`.
+- LIB-01: built-ins are both functions and methods; public methods in a string module, possibly a `String` class.
+  LIB-02: `truncate`, `fill`, `erase` return a new string; old references stay valid; garbage collected.
+- LIB-03/04: `read` is callable as a statement. `routine .write(*args:String, sep:=" ", eol:=False)` writes at the
+  current position; `print` adds a new line by default. Both write to stdout.
+- LIB-05: new `log_err()` and `log_wrn()` for the `recover` region (corrected by D-057: they write log files). An unhandled error at the end of a
+  driver goes to stderr: last error and call stack in debug mode, only the message otherwise.
+- LIB-06: a backslash escapes, a double backslash is one backslash; `&code;` sends any HTML character code. Spec pending.
+- Applied: `evevm/lib/io.eve` (draft), lib and doc READMEs, `eved` with a unit test. Not yet applied:
+  tutorial library.html, the string module, `spec/library/builtins.*`.
+
+### D-054 Exceptions page, `$err_` and `$wrn_` constants (2026-10-02, proposed codes)
+Author request. New tutorial page `exceptions.html` (topic 13, after the standard library; later topics renumbered).
+- Predefined read-only constants: `$err_name` for each standard exception, `$wrn_name` for each warning; the value is
+  the integer code, compared with `$error.code` in the `recover` region. Two tables, one for exceptions, one for
+  warnings, with code, constant and message pattern. A new exception or warning must be added to its table first.
+- The author wrote `@wrn_name`; read as `$wrn_name` (system constants use `$`). Confirm.
+- Proposed (not decided): code ranges 1-9 statements (`panic` 1, `expect` 2, `assert` 3 as a warning), 10-127 system,
+  128-255 project; the exit code of an unhandled error is its code. The list of standard codes and the message
+  patterns are a first draft. `raise`, `warn` and the Exception module signatures stay open (PRC-08, PRC-09).
+
+### D-055 Processing answers: interruptions, raise, aspects, command line (2026-10-02)
+Author answers PRC-02, 03, 06 to 11, 13, 14. Replaces parts of D-010, D-038, D-043.
+- Exit codes: `return` and `over;` 0, `panic` 1, failed `expect` 2, failed `assert` 3 (a warning: the process goes on),
+  `raise` 4 by default or the code of the exception. An exception is an object `{code, message}`; its code is also the
+  exit code. `abort` does not run `finalize` (before, it did). `finalize` runs after `return`, `exit`, and when
+  `recover` ends normally; it is skipped by `over`, `panic`, `abort`.
+- `raise`: every form is valid (constructor `raise Type("m")`, constant `raise ($Type, "m")`, `raise (23, "m")`,
+  `raise {code: 23, message: "m"}`, `raise "m"`); `raise` is an overloaded method; `$Type` is the code constant.
+- Processes can not be recursive, methods can. An aspect is never run: only its processes, with `apply`.
+- One parallel group at a time; a failed method does not stop the others; `done` waits, then raises the error to
+  `recover`, or to `finalize` when there is no `recover`.
+- Aspects are found by name: with a folder if given, else folder `asp`, the project root, then `lib`; `$EVE_ASP`
+  sets the place (also used for libraries). An aspect has one implicit singleton scope (declarations hoisted),
+  created by the first `apply`, kept until `reset aspect_name;` or `reset all;` (new statements).
+- Command line: `-p value` for a short parameter name, `--param value` for a long one; values are Eve literals;
+  `** @param x: "description"` above `main` feeds `eve script.eve -h`.
+- Exception module: rewritten as a valid class on `exceptions.html`; the code constant for the default is
+  `$err_raise` = 4, so warnings moved to 5 to 7 (changes D-054).
+- Applied: processing.html, topology.html, exceptions.html, data/processing.json. Spec work pending.
+
+### D-056 `external` declarations; exception.eve (2026-10-02)
+Author decision. A declaration with the keyword `external` in front (`external .print(...)`) keeps only the signature;
+the body is implemented in Zig by the virtual machine, and the compiler creates the external library. It replaces the
+trailing `;` proposed in D-053. `evevm/lib/exception.eve` (module `exception`: Error, Warning, Call, `raise`,
+`expect`, `assert`, `warn`, constants `$err_name` and `$wrn_name`) and `io.eve` use it; `eved` documents it.
+exceptions.html: tables have plain cells, no `<code>`; the module is `exception` in lower case.
+
+### D-057 io library: error and warning, log files, $EVE_OUT (2026-10-02)
+Author correction of D-053 (LIB-05). `error(message)` and `warning(message)` write to stderr (as the tutorial already says).
+`log_err(message)` and `log_wrn(message)` do not print: they create log files in the output folder, `out` by default.
+The system variable `$EVE_OUT` sets the output folder. Open: the names of the log files and their line format.
+Applied: evevm/lib/io.eve, evevm/lib/README.md, topology.html (system variables).

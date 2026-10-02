@@ -25,3 +25,5 @@ Requires Zig 0.16.0 (`winget install zig.zig`). Run from this folder:
 | `build.zig`, `build.zig.zon` | build script and package manifest |
 | `src/root.zig` | the VM library module (`evevm`): lexer, parser, interpreter as they land |
 | `src/main.zig` | the `eve` command line, a thin front end over the library |
+| `lib/` | the Eve standard library, mostly written in Eve ([README](lib/README.md)) |
+| `doc/` | `eved.zig`, the Eve doc tool in Zig, and the library documentation it generates (`zig build doc`); the `.md` pages are never edited by hand |
