@@ -888,3 +888,42 @@ Author answers COL-05, COL-16. Replaces the interpolation bullet of D-059 (`#{ex
   (`let e <- q`). A stack pushes at the end (`s <+ x`) and pops the last (`s -> let e`). The capture forms `let e <- lst;` and
   `lst -> let e;` are a proposal (a `let` inside a statement, also `while let x in (range)`): open.
 - Applied: strings, collections, classes, types, command, syntax pages and the demos that used interpolation.
+
+### Q-002 evidence (2026-10-02, script temp/kw_usage.py)
+The table of syntax.html has 111 words (the text says 113 in D-046). Found in the examples (demo, pattern, test, code blocks of
+the tutorial): `external` (D-056) is used and is **not** in the table. 30 words of the table are never used: `alter analyze append
+ascend augment close cursor delete descend discard exit fetch group halt into item limit offset open order package pop rollback
+select store switch trial view where xor`. Most belong to databases or to ideas that were dropped. Words that are probably
+library methods now, not keywords: `print`, `read`, `write`, `raise`, `expect`, `add`, `del`, `pop` (D-053, D-055, D-060).
+Question: which of these are reserved in 0.1 (listed as `reserved`, unused), which are removed, and which are methods?
+Blocks: S2.4 (`keywords.json`).
+
+### Q-013 Numbers: scientific notation and digit separators (2026-10-02)
+The tutorial links "scientific notation" but defines no literal. Proposal: `1.5e3` and `2e-3` are Real literals (`e` or `E`, an
+optional sign, digits; a literal with an exponent is always Real); `_` may separate digits (`1_000_000`, `0xFF_FF`), never at the
+start, the end or next to `.`. Accept, change or reject?
+Blocks: `lexical/lexical.md` (Integer, Real).
+
+### Q-014 Strings: `&name;`, text literal (2026-10-02)
+(a) Which forms of `&…;` are valid: only HTML names (`&alpha;`), or also `&#955;` and `&#x3BB;`? How do you write a literal
+`&alpha;`: `\&alpha;`, or `&amp;alpha;`? (b) Is `"""…"""` of type `String` or `Text` (COL-15: Text is mutable)? (c) Proposal for the
+line breaks of `"""`: the break after the opening quotes and the break before the closing quotes are not part of the text.
+Blocks: `lexical/lexical.md` (String, Text literal).
+
+### Q-015 Interpolation: end of the expression (2026-10-02)
+In `\#{expr:format}` the colon is also the pair operator. Proposal: the expression ends at the first `:` or `}` outside brackets
+and nested literals; a pair is written in parentheses. Accept?
+Blocks: `lexical/lexical.md` (Interpolation).
+
+### Q-016 Small lexical rules (2026-10-02)
+Proposals, each yes or no: (a) a UTF-8 BOM at the start of a file is ignored; (b) `name!~x` reads as the suffix `!` then `~`, so the
+operator `!~` needs a space before it; (c) a trailing comma in a list or collection literal is an error; (d) a `#` that is not in
+column 1 is a lexical error (it was also "last index" and "digit in a pattern" in the old table, both removed); (e) identifiers are
+ASCII only.
+Blocks: `lexical/lexical.md`.
+
+### Q-017 Operators `+>` and `<+`: which side is the list (2026-10-02)
+D-060 gives `q <+ x` (append at the end), `s -> let e;` and `let e <- q;`. For the insert at the start, the old examples write
+`queue +> "x"` (list on the left) while the arrow suggests the element goes to the start of the list on the right. Proposal:
+`x +> lst` inserts `x` at the start of `lst`; `lst <+ x` appends at the end; `a <+ b` concatenates (b after a). Confirm the side of the list for `+>`.
+Blocks: `operators.json` (`prepend`), `syntax/expressions.md`.

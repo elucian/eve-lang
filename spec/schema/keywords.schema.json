@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "keywords",
+  "type": "object",
+  "required": [
+    "specVersion",
+    "items"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "specVersion": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "ref",
+          "summary",
+          "category"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "stable",
+              "draft",
+              "proposed",
+              "reserved",
+              "deprecated"
+            ]
+          },
+          "ref": {
+            "type": "string"
+          },
+          "tutorial": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "region",
+              "declaration",
+              "statement",
+              "block",
+              "operator",
+              "modifier",
+              "constant",
+              "reserved"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

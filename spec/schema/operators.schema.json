@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "operators",
+  "type": "object",
+  "required": [
+    "specVersion",
+    "items"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "specVersion": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "ref",
+          "summary",
+          "symbol",
+          "name",
+          "kind",
+          "arity",
+          "precedence",
+          "associativity"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "stable",
+              "draft",
+              "proposed",
+              "reserved",
+              "deprecated"
+            ]
+          },
+          "ref": {
+            "type": "string"
+          },
+          "tutorial": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "prefix",
+              "postfix",
+              "infix",
+              "ternary",
+              "modifier",
+              "syntax"
+            ]
+          },
+          "arity": {
+            "type": "integer"
+          },
+          "precedence": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "associativity": {
+            "enum": [
+              "left",
+              "right",
+              "none"
+            ]
+          },
+          "operandTypes": {
+            "type": "string"
+          },
+          "resultType": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
