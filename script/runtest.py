@@ -38,6 +38,9 @@ removed. The readme lists code, name and the title cut to 50 characters, in
 fixed-width columns, and is rewritten only when that list changes. Use --no-update
 to leave these files alone.
 
+--check is a dry run for syntax errors: `eve --check <test>` must exit 0 (65 when expect.json
+declares "syntax_error": true). Nothing is executed, written or recorded in status.json.
+
 --eve defaults to $EVE, else bin/eve.exe (Windows) or bin/eve.
 """
 import argparse
@@ -133,6 +136,21 @@ def prints_output(test):
     src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
     return any(re.match(r"\s*(?:\w+:\s*)?(print|write)\b", re.sub(r"\*\*.*", "", line))
                for line in src.splitlines())
+
+
+def check_test(eve, test, timeout):
+    """Dry run: `eve --check <test>` only checks the syntax. Exit 0 = parses; a test that
+    declares "syntax_error": true in expect.json must exit 65 (syntax errors found)."""
+    want = 65 if load_expect(test).get("syntax_error") else 0
+    try:
+        p = subprocess.run([eve, "--check", rel(test)], cwd=ROOT, capture_output=True, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return {"test": test, "verdict": "ERROR", "reason": str(e)}
+    if p.returncode == want:
+        return {"test": test, "verdict": "PASS", "reason": ""}
+    out = (p.stdout + p.stderr).decode("utf-8", "replace").strip().splitlines()
+    return {"test": test, "verdict": "FAIL",
+            "reason": f"exit code {p.returncode}, expected {want}" + (f": {out[0]}" if out else "")}
 
 
 def run_test(eve, test, timeout):
@@ -326,6 +344,9 @@ def main():
     ap.add_argument("--timeout", type=float, default=10)
     ap.add_argument("--out", default=os.path.join(ROOT, "temp", "output"))
     ap.add_argument("-q", "--quiet", action="store_true", help="print only the summary line")
+    ap.add_argument("--check", action="store_true",
+                    help="dry run: only check the syntax of the scripts with `eve --check`, do not execute or compare "
+                         "output; no reports, no status update")
     ap.add_argument("--no-update", action="store_true",
                     help="do not update test/status.json and test/readme.md")
     args = ap.parse_args()
@@ -340,6 +361,16 @@ def main():
     label = "-".join(labels)
     if not tests:
         die(f"no tests in {label}")
+
+    if args.check:
+        bad = 0
+        for test in tests:
+            res = check_test(eve, test, args.timeout)
+            bad += res["verdict"] != "PASS"
+            if not args.quiet or res["verdict"] != "PASS":
+                print(f"{res['verdict']:5}  {rel(test)}" + (f"  ({res['reason']})" if res["reason"] else ""))
+        print(f"{label} (syntax only): {len(tests) - bad} ok, {bad} fail")
+        sys.exit(1 if bad else 0)
 
     results = []
     for test in tests:

@@ -1,3 +1,4 @@
 # Zig sources are LF, as zig fmt requires
 *.zig text eol=lf
 *.zon text eol=lf
+*.sh text eol=lf

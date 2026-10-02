@@ -4,7 +4,7 @@ The first Eve implementation (D-006, D-007 in `../plan/decisions.md`): a virtual
 in Zig that runs Eve scripts. It builds `bin/eve.exe` at the repo root, the official `eve`
 command. Manual: [`../manual/README.md`](../manual/README.md).
 
-Status: skeleton. `eve --version` and `eve --help` work; running a script is not implemented yet.
+Version: **0.0.1**. Status: skeleton. `eve --version` and `eve --help` work; running a script is not implemented yet.
 
 ## Build
 
