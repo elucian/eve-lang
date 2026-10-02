@@ -27,3 +27,7 @@ Requires Zig 0.16.0 (`winget install zig.zig`). Run from this folder:
 | `src/main.zig` | the `eve` command line, a thin front end over the library |
 | `lib/` | the Eve standard library, mostly written in Eve ([README](lib/README.md)) |
 | `doc/` | `eved.zig`, the Eve doc tool in Zig, and the library documentation it generates (`zig build doc`); the `.md` pages are never edited by hand |
+
+## License
+
+Business Source License 1.1, see [LICENSE](LICENSE). The code becomes Apache 2.0 on the Change Date.

@@ -12,7 +12,7 @@ Open question Q-006 (spec license) can be closed with this. Confirm, and pick on
 Zig VM in `evevm/` (the eve-lang repo is Apache 2.0). The text says reference code is "for example,
 written in Go": change to Zig (D-006)?
 **Answer:** Yes we change to Zig. 
-Status: partly done: Go changed to Zig (applied); the license of the VM code is still open
+Status: done (D-061): Go changed to Zig; spec CC BY 4.0, VM code BUSL-1.1
 
 ### MAN-02 Static or gradual typing
 "Eve utilizes a static type system" here; types.html: "Eve has a gradual-typing system … some type

@@ -6,7 +6,7 @@
 
 <p align="center"><em>Effective Virtual Environment</em></p>
 
-<p>Eve is a domain specific scripting language for data processing and test automation. Eve is open source with Apache 2.0 license. We design the language and we create code examples in this repository. This language is a standard. It will have many interpreters and compilers implemented by diverse other organizations.</p>
+<p>Eve is a domain specific scripting language for data processing and test automation. Eve is source available: the code is under the Business Source License and the specification under CC BY 4.0 (see License). We design the language and we create code examples in this repository. This language is a standard. It will have many interpreters and compilers implemented by diverse other organizations.</p>
 
   
 ## Learning
@@ -36,3 +36,13 @@ WORK IN PROGRESS, CONTRIBUTORS ARE WELCOME
 ---
 
 Copyright (c) 2024 Sage-Code
+
+## License
+
+| What | Folders | License | Text |
+|---|---|---|---|
+| Code: the Eve virtual machine and tools | `evevm/`, `script/` | Business Source License 1.1; becomes Apache 2.0 on the Change Date | [evevm/LICENSE](evevm/LICENSE) |
+| Specification | `spec/` | Creative Commons Attribution 4.0 (CC BY 4.0) | [spec/LICENSE](spec/LICENSE) |
+| Manual, examples, tests, plans | `manual/`, `demo/`, `pattern/`, `test/`, `plan/`, `issues/` | CC BY 4.0 | [spec/LICENSE](spec/LICENSE) |
+
+Anyone may write an Eve implementation from the specification. The name "EVE" and the logo are not licensed. The summary is also in [LICENSE](LICENSE).
