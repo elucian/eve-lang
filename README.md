@@ -45,4 +45,4 @@ Copyright (c) 2024 Sage-Code
 | Specification | `spec/` | Creative Commons Attribution 4.0 (CC BY 4.0) | [spec/LICENSE](spec/LICENSE) |
 | Manual, examples, tests, plans | `manual/`, `demo/`, `pattern/`, `test/`, `plan/`, `issues/` | CC BY 4.0 | [spec/LICENSE](spec/LICENSE) |
 
-Anyone may write an Eve implementation from the specification. The name "EVE" and the logo are not licensed. The summary is also in [LICENSE](LICENSE).
+Anyone may write an Eve implementation from the specification. The name "EVE" and the logo are trademarks of Sage-Code Laboratory and are not licensed: see [TRADEMARK.md](TRADEMARK.md). The summary is also in [LICENSE](LICENSE).
