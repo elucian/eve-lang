@@ -1,0 +1,25 @@
+# numeric operators and their precedence (D-019)
+driver a07_arithmetic is
+  process main is
+    expect 1 + 2 == 3;
+    expect 7 - 10 == -3;
+    expect 6 * 7 == 42;
+    expect 17 % 5 == 2;
+    expect 2 ^ 10 == 1024;
+
+    ** the division returns a Real
+    expect 7 / 2 == 3.5;
+    expect 9 / 3 == 3;
+    expect type(9 / 3) is Real;
+
+    ** precedence: ^ then * / % then + -
+    expect 2 + 3 * 4 == 14;
+    expect (2 + 3) * 4 == 20;
+    expect 1 + 2 * 3 ^ 2 == 19;
+    expect 10 - 4 - 3 == 3;      ** left to right
+    expect 2 ^ 3 ^ 2 == 512;     ** the power goes right to left
+    expect -3 + 5 == 2;
+    print 7 / 2;
+    print 2 ^ 10;
+  return;
+end a07_arithmetic;

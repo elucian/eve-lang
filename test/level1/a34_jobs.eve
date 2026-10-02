@@ -1,0 +1,29 @@
+# jobs: retry runs a failed job again, resume goes on after it (D-020, D-030)
+driver a34_jobs is
+  process main is
+    let tries := 0;
+
+    c1: job
+    do
+      tries += 1;
+      raise "fail" if tries < 3;
+      print "c1 passed after \#{tries} tries";
+    done c1;
+
+    c2: job
+    do
+      raise "bad";
+    done c2;
+
+    print "after the jobs";
+  recover
+    if $error.job == "c1" and tries < 3 do
+      retry;
+    else if $error.job == "c2" do
+      print "c2 failed: \s{$error.message}";
+      resume;
+    else
+      abort;
+    done;
+  return;
+end a34_jobs;

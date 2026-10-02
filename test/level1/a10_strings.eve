@@ -1,0 +1,36 @@
+# strings are immutable UTF-8 text (D-058)
+driver a10_strings is
+  process main is
+    let s := "Hello";
+    expect s + " World" == "Hello World";
+    expect "ab" * 3 == "ababab";
+    expect s.length() == 5;
+    expect "αβγ".length() == 3;
+    expect "abc" < "abd";
+    expect "a" <> "b";
+
+    ** a string joined with another literal gives a String
+    expect "a" + 1 == "a1";
+    expect 'a' + 1 == "a1";
+    expect 1 + 'a' == "1a";
+
+    ** escape sequences
+    expect "\x41" == "A";
+    expect "\u{3B1}" == "α";
+    expect "a\tb".length() == 3;
+    expect "\\".length() == 1;
+    expect "\"".length() == 1;
+    expect "\n".length() == 1;
+
+    ** split and join
+    expect "a,b,c".split(',') == ("a", "b", "c");
+    expect (1, 2, 3).join('-') == "1-2-3";
+
+    ** the assignment rebinds, the old value does not change
+    let r := s;
+    s += "!";
+    expect s == "Hello!";
+    expect r == "Hello";
+    print s;
+  return;
+end a10_strings;

@@ -1,0 +1,31 @@
+# DataSet: sorted unique values, union, intersection, difference (D-058)
+driver a20_dataset is
+  process main is
+    let a := {3, 1, 2, 3};
+    expect a == {1, 2, 3};       ** no duplicates
+    expect 2 in a;
+    expect 5 not in a;
+
+    expect ({1, 2, 3} || {3, 4}) == {1, 2, 3, 4};
+    expect ({1, 2, 3} && {2, 3, 4}) == {2, 3};
+    expect ({1, 2, 3, 4} - {3, 4, 5}) == {1, 2};
+
+    a += {9};
+    expect a == {1, 2, 3, 9};
+    a -= {1, 9};
+    expect a == {2, 3};
+    a := {};
+    expect a == {};
+
+    ** a list gives a DataSet
+    expect ({} || (1, 2, 1, 2, 3)) == {1, 2, 3};
+    expect ((1, 2, 3, 4) && (2, 3, 4, 5)) == {2, 3, 4};
+
+    ** a builder
+    expect {1 << x | x in (2..6)} == {4, 8, 16, 32, 64};
+
+    ** a DataSet prints in order
+    let s := {3, 1, 2};
+    print s;
+  return;
+end a20_dataset;

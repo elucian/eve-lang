@@ -1,0 +1,35 @@
+# relation and logical operators
+driver a08_logic is
+  process main is
+    expect 1 < 2;
+    expect 2 > 1;
+    expect 2 <= 2;
+    expect 3 >= 3;
+    expect 1 <> 2;
+    expect not (1 == 2);
+    expect 'a' < 'b';
+    expect "abc" < "abd";
+
+    ** logical operators: and binds tighter than xor, xor tighter than or
+    expect True and True;
+    expect not (True and False);
+    expect True or False;
+    expect not (False or False);
+    expect True xor False;
+    expect not (True xor True);
+    expect True or False and False;
+    expect not True or True;       ** not binds tighter than or
+    expect (1 < 2) and (2 < 3);
+
+    ** conditional statement and conditional expression
+    let a := 4;
+    print "a is even" if (a % 2 == 0);
+    print "a is odd" if (a % 2 <> 0);
+    let t := ("yes" if a > 3 else "no");
+    expect t == "yes";
+    let size := ("small" if a < 2 else
+                 "medium" if a < 10 else
+                 "large");
+    print size;
+  return;
+end a08_logic;

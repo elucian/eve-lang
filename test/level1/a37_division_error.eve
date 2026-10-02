@@ -1,0 +1,10 @@
+# a division by zero raises an error
+driver a37_division_error is
+  process main is
+    let z := 0;
+    let q := 1 / z;
+    print "never";
+  recover
+    print "caught division error";
+  return;
+end a37_division_error;

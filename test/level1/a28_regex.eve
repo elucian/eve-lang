@@ -1,0 +1,12 @@
+# regular expressions: =~ matches, !~ does not match; a pattern starts with / and ends with /flags
+driver a28_regex is
+  process main is
+    expect "this is like" =~ "/is/";
+    expect "this is like" =~ "/^this/";
+    expect "this is like" =~ "/l.ke$/";
+    expect "this is not like" !~ "/^not/";
+    expect "ABC" =~ "/abc/i";
+    let found := "abc123" =~ "/c1/";
+    print found;
+  return;
+end a28_regex;

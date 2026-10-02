@@ -947,3 +947,22 @@ accurate references, unmodified official software. "EVE Compiler / Interpreter /
 a passed conformance level and an unmodified-fork condition. Not allowed without written permission: a modified compiler, VM or
 distribution under the EVE name, an incompatible dialect presented as EVE, a modified specification under the EVE title, registering the
 mark, altering the logo. Applied: TRADEMARK.md, README.md, LICENSE, tutorial manifest.html. Open: confirm the legal entity name.
+
+### Q-018 Regular expressions and the backslash (2026-10-02)
+D-019 says any `\` sequence that is not an escape is a lexical error, and D-060 makes `\s{` an interpolation. A pattern such as
+`"/\sis\s/"` (regex.html of the old tutorial, `\d`, `\w`) would then be an error. Options: (a) a pattern writes the backslash twice
+(`"/\sis\s/"`); (b) a string that starts with `/` is a regex literal and keeps its backslashes (no escapes, no interpolation);
+(c) a separate raw form. Recommended: (b), with `\"` still allowed for the quote. The tests a28 use patterns without a backslash until this is decided.
+Blocks: `lexical/lexical.md` (Regular expression), `test/level1/a28_regex.eve`.
+
+### Q-019 Assumptions of the level 1 tests a04 to a37 (2026-10-02)
+Each one is a place where the tests state a rule that no decision gives yet; change the test or the spec when you answer:
+(a) `1 / 0` raises an error (the demo `recover_demo.eve` assumes it; IEEE would give infinity) (a37);
+(b) printing a DataSet is `{1,2,3}` without spaces, a list `(1,2,3)`, `print (1, 2, 3)` prints `1,2,3` (a05, a20);
+(c) the formats of `\#{}`, `\s{}`, `\b{}` of D-060 (a11);
+(d) `a <+ b` as an expression returns a new list and `x <- lst` removes the first element equal to `x` (a17);
+(e) `g[1][*] := 5` assigns a row of a matrix and `m[5]` is the absolute index (a19);
+(f) `let v := [...]; let view := v[1..2];` is a view (D-049) (a18);
+(g) a text literal drops the line break after the opening quotes and before the closing ones (a27, Q-014);
+(h) `for (k: v) in map` visits the keys in order (a21); `p.z := 7` adds an attribute to an Object (a22);
+(i) a function parameter after a defaulted one is named at the call: `greet("Eve", greeting: "Hi")` (a24).

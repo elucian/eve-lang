@@ -1,0 +1,8 @@
+# a failed expect ends the process with exit code 2 (D-055)
+driver a29_expect_fail is
+  process main is
+    print "before";
+    expect 1 == 2;
+    print "after";
+  return;
+end a29_expect_fail;

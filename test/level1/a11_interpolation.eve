@@ -1,0 +1,22 @@
+# interpolation escapes: \s{} string, \#{} number, \b{} boolean, \u{} Unicode (D-060, draft formats)
+driver a11_interpolation is
+  process main is
+    let name := "Eve";
+    let n := 42;
+    let pi := 3.14159;
+    let ok := True;
+    print "name = \s{name}";
+    print "n = \#{n}";
+    print "ok = \b{ok}";
+    print "sum = \#{1 + 2}";
+    print "alpha = \u{3B1}";
+    print "braces = \{x\}";
+
+    ** formats: width, fill, alignment
+    print "n = \#{n:i5}|\#{n:0>i5}|\#{n:<i5}|";
+    print "pi = \#{pi:f8.2}|";
+    print "big = \#{1234567:,i9}";
+    print "name = \s{name:*^9}|\s{name:>6}|\s{name:.2}|";
+    print "ok = \b{ok:yn} \b{ok:01}";
+  return;
+end a11_interpolation;

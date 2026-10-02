@@ -44,7 +44,29 @@ a time.
 
 Single script tests each test is a driver. We verify basic syntax elements and make examples as dump as possible, We name each file using convention pattern: "a01_feature.eve", each test is a "basic case". 
 
-You can run every script individually by hand using the interpreter command line. For this level we do not have test automation scripts. These tests are developer tests. After you pass level 1, you can start testing Level2. 
+You can run every script individually by hand using the interpreter command line. For this level we do not have test automation scripts. These tests are developer tests. After you pass level 1, you can start testing Level2.
+
+Tests written from the specification and the tutorial (2026-10-02), one feature each, most use `expect` so the
+exit code and `.out` stay small:
+
+| Test | Feature |
+|---|---|
+| a01 to a03 | driver, comments, print |
+| a04 | free script (`#!`) |
+| a05 | `print`, `write`, separator |
+| a06 | `let`, `set`, `:=` and the modifiers |
+| a07, a08 | arithmetic, precedence, relations, logic, ternary |
+| a09, a10, a11 | literals, strings, interpolation `\s{}` `\#{}` `{}` |
+| a12 to a16 | `if`, `while`, `for`, `match`, Ordinal |
+| a17 to a22 | List, Array, Matrix, DataSet, HashMap, Object |
+| a23 | `:=` shares, `::` clones |
+| a24 to a26 | function, method, class |
+| a27, a28 | text literal, regular expression |
+| a29, a30 | failed `expect` (exit 2), `over` |
+| a31 to a34 | `recover`, `finalize`, `over`, jobs (`retry`, `resume`) |
+| a35 to a37 | runtime errors caught by `recover` |
+
+Rules the tests assume without a decision are listed in `plan/decisions.md` (Q-019).
 
 ## Level 2
 

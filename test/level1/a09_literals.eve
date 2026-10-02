@@ -1,0 +1,35 @@
+# literals of the primitive types (D-032)
+driver a09_literals is
+  process main is
+    ** numbers
+    expect 255 == 0xFF;
+    expect 5 == 0b101;
+    expect 0.5 == 1 / 2;
+    expect 9223372036854775807 > 0;
+    expect type(5) is Integer;
+    expect type(0x1F) is Natural;
+    expect type(0.5) is Real;
+    expect type(1 / 2) is Real;
+
+    ** symbols are one Unicode code point
+    expect 'a' == 'a';
+    expect U+0061 == 'a';
+    expect U+03B2 == 'β';
+    expect type('a') is Symbol;
+    expect '\x41' == 'A';
+    expect '\u{3B1}' == 'α';
+
+    ** strings
+    expect type("a") is String;
+    expect type(True) is Logic;
+    expect True <> False;
+
+    ** Null is no value, the empty string is a value
+    let n :String;
+    let e := "";
+    expect n is Null;
+    expect e is not Null;
+    expect e == "";
+    expect e.length() == 0;
+  return;
+end a09_literals;

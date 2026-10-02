@@ -1,0 +1,52 @@
+# list: literal, index, append, remove, builder, deconstruct (D-058, D-059, D-060)
+driver a17_list is
+  process main is
+    let a := (1, 2, 3);
+    expect a[1] == 1;            ** the first index is 1
+    expect a[$] == 3;            ** $ is the last index
+    expect a[$ - 1] == 2;
+    expect a.length() == 3;
+    let e := ();
+    expect e.length() == 0;
+
+    ** append at the end
+    a <+ 4;
+    expect a == (1, 2, 3, 4);
+    a += 5;
+    expect a == (1, 2, 3, 4, 5);
+
+    ** -= removes all the elements equal to a value
+    a -= 2;
+    expect a == (1, 3, 4, 5);
+    let l := ('a', 'b', 'c', 'b');
+    l -= 'b';
+    expect l == ('a', 'c');
+
+    ** the arrow points to the side the element leaves from
+    let m := ('a', 'c', 'z', 'a', 'z', 'x');
+    'z' <- m;                    ** remove the first 'z'
+    expect m == ('a', 'c', 'a', 'z', 'x');
+    m -> 'x';                    ** remove the last 'x'
+    expect m == ('a', 'c', 'a', 'z');
+
+    ** concatenation
+    let c := ('a', 'b') <+ ('1', '3');
+    expect c == ('a', 'b', '1', '3');
+
+    ** builders: one range or collection, an optional condition after and
+    expect (x ^ 2 | x in (1, 2, 3, 4)) == (1, 4, 9, 16);
+    expect (x | x in (1..10) and x % 2 == 0) == (2, 4, 6, 8, 10);
+    expect (x | x in (2>..6)) == (3, 4, 5, 6);
+
+    ** deconstruct: _ skips one element, *rest collects the others
+    let n := (1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    let p, q, _, *rest, _ :: n;
+    expect p == 1;
+    expect q == 2;
+    expect rest == (4, 5, 6, 7, 8, 9);
+    expect _ == Null;
+    expect n.length() == 10;     ** the source does not change
+
+    expect (1, 2, 3).join(',') == "1,2,3";
+  return;
+end a17_list;

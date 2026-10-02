@@ -1,0 +1,22 @@
+# functions: result, named arguments, default values, lambda (D-028)
+driver a24_function is
+  function sum(a, b: Integer) => (@result: Integer) is
+    result := a + b;
+  return;
+
+  function greet(name: String, greeting = "Hello") => (@result: String) is
+    result := "\s{greeting}, \s{name}!";
+  return;
+
+  set double = (x :Integer) => (x * 2) :Integer;
+
+  process main is
+    expect sum(1, 2) == 3;
+    expect sum(b: 5, a: 1) == 6;
+    expect greet("Eve") == "Hello, Eve!";
+    expect greet("Eve", greeting: "Hi") == "Hi, Eve!";
+    expect double(4) == 8;
+    print sum(2, 4);
+    print greet("World");
+  return;
+end a24_function;

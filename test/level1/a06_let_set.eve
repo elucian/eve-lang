@@ -1,0 +1,40 @@
+# let declares variables, set declares constants, := changes a value (D-036)
+driver a06_let_set is
+  set limit = 10 :Integer;
+  set name := "eve";
+  let counter := 0;
+  process main is
+    expect limit == 10;
+    expect name == "eve";
+
+    ** a variable changes without a keyword
+    counter := counter + 1;
+    counter += 2;
+    expect counter == 3;
+    let total = 5 :Integer;
+    total -= 1;
+    total *= 3;
+    expect total == 12;
+    total %= 5;
+    expect total == 2;
+    total ^= 3;
+    expect total == 8;
+    let ratio := 1.0;
+    ratio /= 4;
+    expect ratio == 0.25;
+
+    ** a variable without a value has the zero value of its type
+    let a, b :Integer;
+    let r :Real;
+    expect a == 0;
+    expect b == 0;
+    expect r == 0;
+
+    ** one declaration can initialize several variables
+    let x = y = 1 :Integer;
+    expect x == 1;
+    expect y == 1;
+    print "counter = \#{counter}";
+    print "limit = \#{limit}";
+  return;
+end a06_let_set;
