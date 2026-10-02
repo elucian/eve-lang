@@ -4,7 +4,7 @@
 </a>
 </p>
 
-<p align="center"><em>Effective Virtual Environment</em></p>
+<p align="center"><em>Effective Virtual Environment</em> &middot; Version <strong>0.0.1</strong></p>
 
 <p>Eve is a domain specific scripting language for data processing and test automation. Eve is source available: the code is under the Business Source License and the specification under CC BY 4.0 (see License). We design the language and we create code examples in this repository. This language is a standard. It will have many interpreters and compilers implemented by diverse other organizations.</p>
 

@@ -1,18 +1,28 @@
 //! Eve virtual machine library. The `eve` command in main.zig is a thin front end over it.
 const std = @import("std");
 
-/// Implementation version; keep in step with `build.zig.zon`.
-pub const version = "0.0.0";
+// Zig tip: `pub const x = y;` re-exports a declaration under another name. This file is the
+// public face of the library: the program sees `evevm.version` and `evevm.cli`, not the file
+// layout behind them. Declarations are lazy: nothing is compiled until it is used.
+const v = @import("version.zig");
 
-/// Specification version this implementation targets (spec/README.md).
-pub const spec_version = "0.1-draft";
+pub const version = v.version;
+pub const spec_version = v.spec_version;
+pub const title = v.title;
 
-pub const usage =
-    \\Usage: eve <script.eve> [args...]
-    \\       eve --version
-    \\       eve --help
-    \\
-;
+/// Command line, jump table and REPL.
+pub const cli = @import("cli.zig");
+
+/// Raw keyboard mode of the REPL prompt.
+pub const terminal = @import("terminal.zig");
+
+// Zig tip: tests are found only in files that the compiler reaches. `_ = cli;` inside an
+// unnamed `test { }` references the file so its tests also run with `zig build test`.
+test {
+    _ = cli;
+    _ = @import("line.zig");
+    _ = terminal;
+}
 
 test "version strings are set" {
     try std.testing.expect(version.len > 0);
