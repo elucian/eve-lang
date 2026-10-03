@@ -1,25 +1,24 @@
-#demo for using a set
+# demo for using a set
 driver set_demo is
   ** create a DataSet
-  set my_set = {0,2,3} :DataSet;
-  set ex_set = {3,4,5} :DataSet; 
+  let my_set = {0, 2, 3} :DataSet;
   process main is
     ** append element 1
-    my_set += {1};  
-    expect my_set == {0,1,2,3};
+    my_set += {1};
+    expect my_set == {0, 1, 2, 3};
 
     ** check elements in set
     expect 1 in my_set;
-    expect all {0,1} in my_set;
-    expect any {3,4} in my_set;
+    expect ({0, 1} && my_set) == {0, 1};  ** all elements are in the set
+    expect ({3, 4} && my_set) <> {};      ** at least one element is in the set
 
     ** remove element 2
-    my_set -= {2};  
-    expect my_set == {0,1,3};
+    my_set -= {2};
+    expect my_set == {0, 1, 3};
     expect 2 not in my_set;
 
-    ** remove all elements  
-    my_set := {}; 
+    ** remove all elements
+    my_set := {};
     expect my_set == {};
   return;
 end set_demo;

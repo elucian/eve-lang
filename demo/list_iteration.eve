@@ -1,25 +1,25 @@
-# list iteration using loop
+# list iteration using a for loop
 driver list_iteration is
 
-  set my_list: List[String]; **  empty list
+  let my_list :()Symbol; **  empty list
   process main is
     ** later initialization
-    my_list := ('a','b','c','d','e');
+    my_list := ('a', 'b', 'c', 'd', 'e');
 
-    ** visit first 3 elements and stop
+    ** visit the elements until 'd' and stop
     loop
-      let e: String; ** control variable
+      let e :Symbol; ** control variable
     for e in my_list do
-      write e; **  pur e in buffer for console
+      write e; **  put e in the buffer for the console
       if e == 'd' do
-        break; **  early termination;
+        break; **  early termination
       else
-        write(', '); ** add separator
-      done; ** end if
-    done; ** end loop
+        write ", "; ** add separator
+      done;
+    done;
     print; ** a, b, c, d
   return;
 end list_iteration;
 
-/* Note: In Eve noting is printed out when you write(),1
-   you must also print() at the end to create a new line */
+/* Note: In Eve nothing is printed when you write,
+   you must also print at the end to create a new line */

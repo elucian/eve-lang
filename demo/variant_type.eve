@@ -1,19 +1,20 @@
-#variant type demo
+# variant type demo
 driver variant_type is
 
-  set v, x ,t : {Real | Integer};
-    
+  ** a variant takes its type when a value is assigned
+  let v, x, t :{Real | Integer};
+
   process main is
     ** safe conversion
-    let t := 1 / 2;    ** make t Real
-    expect t is Real;    
+    t := 1 / 2;    ** make t Real
+    expect t is Real;
     t := 12;       ** change the type
-    expect t is Integer;    
-    
+    expect t is Integer;
+
     ** unsafe conversion
-    let x := 1.5;     **  x is Real    
-    let v := 1;       **  v is  Integer    
-    v := x;       **  v becomes Real     
-    expect v is Real
+    x := 1.5;      **  x is Real
+    v := 1;        **  v is Integer
+    v := x;        **  v becomes Real
+    expect v is Real;
   return;
 end variant_type;

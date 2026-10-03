@@ -1,12 +1,12 @@
-#string to number conversion
+# string to number conversion
 driver string_to_number is
 
-  ** global states
-  set v :Integer  ;
-  set b :Real   ;
+  ** global variables
+  let v :Integer;
+  let b :Real;
 
-  set s = "1000"  :String;
-  set r = "200.02":String;
+  set s = "1000"   :String;
+  set r = "200.02" :String;
 
   process main is
     v := parse(s); **  make v = 1000

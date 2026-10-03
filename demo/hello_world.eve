@@ -3,10 +3,10 @@ driver hello_world is
 
   ** every driver must have a process
   process main is
-    print ("Hello World!");
+    print "Hello World!";
   return;
 end hello_world;
 
-/* Note: In Eve, print() add a new line after message, 
-   You can avoid new line if you write() instead of print.
+/* Note: In Eve, print adds a new line after the message,
+   use write instead of print to avoid the new line.
 */

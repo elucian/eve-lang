@@ -1,26 +1,23 @@
-/** This driver demonstrate
-    how to visit members of a List */
+# visit the members of a list with a labeled while loop
 driver while_demo is
 
   **  create a shared list
-  set this := ('a','b','c','d','e'): List[Symbol];
+  set letters := ("a", "b", "c", "d", "e");
   process main is
-    ** start labeled loop
-    test: loop 
-      let i := 0: Integer; 
-      let e : Symbol;       
-    while i < this.length() do
-      e := this[i];
+    ** start labeled loop: the header declares i, it lives until then
+    test: loop
+      let i = 1 :Integer;
+    while i <= letters.length() do
+      let e := letters[i];  ** created again at every iteration
       i += 1;
-      if e  <= "c" do
-          write e;
-          write ',' if e is not this.tail;
+      if e >= "c" do
+        write e;
+        write "," if i <= letters.length();
       done;
     then
-      write "i = " + i;
-    done test; ** end test
-
-    ** flush the write buffer
-    print; ** "c","d","e"
+      ** flush the write buffer
+      print;  ** c,d,e
+      print "i = \#{i}";
+    done test;
   return;
 end while_demo;

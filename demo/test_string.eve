@@ -1,8 +1,8 @@
 # working with strings
 driver test_string is
-  ** shared mutable strings
-  set str := "First value";
-  set ref := "First value";
+  ** shared immutable strings
+  let str := "First value";
+  let ref := "First value";
   process main is
     ** check initial value
     expect str == ref;     **  same value
@@ -16,10 +16,10 @@ driver test_string is
 
     ** if we modify "str" then "ref" will remain the same
     ** because the strings are immutable in Eve
-    str &lt;+ (':'); **  create a new string
+    str += ":";        **  create a new string
     expect str == "First value:"; **  modified
     expect ref == "First value";  **  not modified
-    expect str is ref; ** the reference was broken
+    expect str is not ref;        **  the reference was broken
 
     ** if we recreate str, reference is reset
     str := "First value"; **  new string

@@ -1,8 +1,8 @@
 # using recover
 driver recover_demo is
-  set a = 0.00;
+  let a := 0.0;
   process main is
-    a := 1/0;
+    a := 1 / 0;
   recover
     print $error.message;
   return;

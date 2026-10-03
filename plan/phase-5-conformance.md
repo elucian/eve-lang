@@ -22,10 +22,13 @@ Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
 
 ### S5.3 Level 1 suite `[ ]`
 - Move or copy the qualifying `demo/*.eve` files into `test/level1/` with expected output.
+- `demo/` is temporary (D-065): it is deleted when `test/` covers its examples. The 45 demos were checked
+  against the decisions on 2026-10-03; 16 of them still need VM features (listed in D-065).
 - One test per lexical and syntax rule from phases 2–3; list coverage in `conformance/README.md`.
 
-### S5.4 Level 2 suite `[ ]`
+### S5.4 Level 2 suite `[!]` → Q-020
 - Multi-script tests: drivers with aspects and modules, imports, error recovery.
+- Blocked by the open points of Q-020 (aspect scope, import syntax, test layout, naming).
 
 ### S5.5 Level 3 skeleton `[ ]`
 - Files, databases, network: define tests with fake or local resources, so they run offline.

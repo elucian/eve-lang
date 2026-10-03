@@ -2,22 +2,22 @@
 driver type_check is
 
   ** define object and initialize
-  set r = {name:"test", age:"24"};  
-  ** define hash table
-  set t = {('key1':1),('ley2':2)}; 
+  set r := {name: "test", age: 24};
+  ** define hash map
+  set t := {"key1": 1, "key2": 2};
   ** define two symbols
-  set x = 'x', y = 'y': Symbol;
+  set x = 'x' :Symbol;
+  set y = 'y' :Symbol;
 
   process main is
     ** check variable types using introspection
-    expect type(r.name) == String;
-    expect type(r.age)  == String;
-    expect type(t.key)  == String;
-    expect type(t.value)== Integer;
-    
-    ** using operator is with type.
-    expect t.value is Integer;
+    expect type(r.name) is String;
+    expect type(r.age)  is Integer;
+    expect type(t["key1"]) is Integer;
+
+    ** using operator is with type
+    expect t is HashMap;
     expect x is Symbol;
-    expect type(x) == Symbol;
+    expect type(y) is Symbol;
   return;
 end type_check;

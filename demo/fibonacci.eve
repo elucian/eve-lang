@@ -1,21 +1,23 @@
+# Fibonacci function demo
 /*----------------------------
-|  Demo Fibonacci function  |
-/*---------------------------*/
+|  Demo Fibonacci function   |
+----------------------------*/
 driver fibonacci is
 
   ** declare Fibonacci rule
-  function fib(n:Integer) => (@y:Integer) is
-    if (n == 1) or (n == 0) do
-      y := 1; ** first value
+  function fib(n :Integer) => (@y :Integer) is
+    if n < 2 do
+      y := n; ** fib(0) = 0, fib(1) = 1
     else
-      y := fib(n-1) + fib(n-2);
-    end if;
+      y := fib(n - 1) + fib(n - 2);
+    done;
   return;
 
-  ** main process call fib function
+  ** main process calls the fib function
   process main is
-    ** call fib rule using argument 5
+    ** call fib using argument 5
     let r := fib(5);
+    expect r == 5;
 
     ** print the result to console
     print r;
