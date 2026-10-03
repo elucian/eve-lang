@@ -1028,6 +1028,9 @@ aspects and modules. These points block it; answer each one:
     D-055 says an aspect is a singleton whose scope lives from the first `apply` until `reset`. Which one? With the singleton, does a
     second `apply` see the values left by the first one?
 (b) **What `.` means in an aspect.** Can the driver read `aspect.member` after `apply`, or only the `@` outputs (PRC-14 point 1)?
+**answer**
+Cancel this request. Aspect members can't be accessed with ".". One aspect must have one entry point, the main() process. 
+
 (c) **Sibling processes.** Can a process of an aspect call another process of the same aspect by its bare name, and how is that
     different from `apply` (D-043, assumed)?
 (d) **Errors across `apply`.** An error raised in an aspect process without `recover`: does it go to the `recover` of the driver
@@ -1046,3 +1049,47 @@ aspects and modules. These points block it; answer each one:
     `b01`… in level 2 for aspects and modules.
 (i) **Arguments.** `apply a.p(value, *list_args)` and `(param: value, *map_args)` (processing.html): is spreading a map into named
     parameters part of 0.1?
+**Status:** (a), (b), (c) decided by D-066: state per `apply`, no public members, one process `main` per aspect.
+    (d) to (i) are open; in (d) and (i) read `apply a(…)` for `apply a.p(…)`.
+
+
+### D-066 An aspect is an encapsulated machine with one `main`; parallel blocks start aspects (2026-10-03)
+Author decision (plan/design-issues.md). Answers Q-020 (a), (b), (c), PRC-14, CON-09, CON-11 (who is started).
+Replaces D-042 and the aspect part of D-043 (named processes), the parallel methods of D-047, and the singleton
+scope and `reset` of D-055.
+- **Same shape.** A driver and an aspect have the same form: declarations, then one `process main(params) is …
+  return;`, closed by `end name;`. Every aspect has exactly one process, and its name is always `main`: one aspect,
+  one process. Helper work is done by methods and functions.
+- **Encapsulated.** Nothing in an aspect is public and the dot operator is never applied to an aspect. Data goes in
+  by the parameters of `main` and comes out by its `@` outputs.
+- **State per call.** Each `apply` (or `start`) creates the state of the aspect, aspect-level declarations included;
+  it is dropped when `main` returns. A second call sees nothing of the first. `reset` is removed (keyword unused).
+- **Calls.** `apply name(args);` runs the aspect and waits. Only the `main` of the driver may `apply` or `start` an
+  aspect: an aspect can't apply or start another aspect, so recursion between aspects is impossible. Code that
+  several aspects share goes in modules.
+- **Parallel.** `[label:] parallel` declarations `do` … `start name(args);` … `done [label];` is allowed only in the
+  `main` of the driver and is not nested. It starts aspects on several cores. Methods and functions always run
+  serially, on the core of their caller, and can't be started. The data rules of D-047 still hold with aspects in
+  place of methods: inputs by value, one owner for each `@` output, `done` is the barrier; BSP is the recommended
+  pattern (one block = one superstep).
+- **Errors.** A parallel block behaves like a job and may have a label (`$error.job` names it). When an aspect
+  fails, the others go on; `done` waits for all of them, then raises the first error to `recover`. In `recover`,
+  `retry` runs the whole block again and `resume` continues after it, as for a job.
+- Still not in version 1 (D-050). Suspended methods and cooperative multitasking: Q-021.
+- Applied to concurrency.html (parallel model, groups, data rules, errors, BSP, channels: every example has its worker
+  as an aspect file), processing.html (aspect execution, scope, parallel note), topology.html (process, drivers,
+  aspects, skeleton with one `main`), syntax.html (`process`, `parallel`, `apply`, `start`; `reset` marked unused),
+  functions.html ("parallel method" row removed), exceptions.html (`$err_process` message). No `.eve` file applies or
+  starts an aspect, so demos, tests and the VM are unchanged.
+
+### Q-021 Suspended methods, `yield` and cooperative multitasking (2026-10-03)
+The author wants suspended methods back (generators that keep their state, cooperative multitasking); D-051 removed
+`suspend`. Two designs, both on one core, no locks, using the reserved word `yield`:
+(A) **Generators.** A method that contains `yield` is a generator. `yield;` hands its outputs to the caller and
+    freezes its state. `for v in count_to(5) do … done;` iterates; `let g := new count_to(5);` makes a suspended
+    instance, `g.next()` runs it to the next `yield` (False after `return`) and `g.x` reads the output.
+(B) **A plus cooperative tasks.** A block (keyword to choose, for example `concurrent do … done;`) runs several
+    methods on one core and switches at `yield` and at a full or empty channel. `parallel` puts aspects on cores,
+    the new block interleaves methods on one core.
+Recommendation: decide B, specify A for 0.1 (A is a subset of B). Questions: A or B; the keyword of the block;
+are generators in version 1 (they need no threads)?

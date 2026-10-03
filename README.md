@@ -11,7 +11,7 @@
   
 ## Learning
 
-You can learn Eve on our website: [sagecode.org][https://sagecode.org]. After you learn the syntax you can start contributing, or just watch. We design Eve for learning how to make a compiler. We will add examples that demonstrate how we can use Eve for teaching programming concepts, algorithms and data structures.
+You can learn Eve on our website: [sagecode.org](https://sagecode.org). After you learn the syntax you can start contributing, or just watch. We design Eve for learning how to make a compiler. We will add examples that demonstrate how we can use Eve for teaching programming concepts, algorithms and data structures.
 
 Read Sage-Code Tutorial: [Eve Programming Language](https://sagecode.org/projects/eve/index.html)</a>
 
