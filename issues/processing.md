@@ -75,7 +75,8 @@ D-043: an aspect hosts named processes, each with its own scope; only the driver
 `let` variables initial values copied into each process (assumed yes); (4) does a process return an exit
 code to its `apply` (TOP-10)?
 **Answer:** Aspect is a singletone. Once initialized using Apply, a scope exist and is not destroy automaticly. We create a new keyword to free up the aspect from memory; reset aspect_name; and reset all; These are self explanatory. Two ways to clear memory for one or all aspects.
-Status: done (tutorial) → D-055: singleton aspect, `reset name;` and `reset all;`
+Status: done (tutorial) → D-055: singleton aspect, `reset name;` and `reset all;`. Replaced by D-066: no public
+members, one process `main`, state created by each `apply` and dropped at return, `reset` removed.
 
 ## Fixes (applied unless you write "no")
 

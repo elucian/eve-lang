@@ -69,7 +69,7 @@ Status: open
 Any method becomes asynchronous when called with `start`. What happens at `suspend` in a method
 that was called without `start`?
 **Answer:** Good question. "start" is used to run processes in parallel on multicore processor. It does no longer run methods. Methods are run by name like statements. Just mention them and they execute, no call or keyword will tell you if they run synchronously or asynchronously. When suspended, states are saved and control is given back to caller process. If noone resume them they remain suspended until process ends. If process end and nobody is waiting, the method is terminated/killed. If wait is used, until timeout the method will stay suspended unti some other methood send a signal to unlock it. 
-Status: obsolete (D-051): `suspend` is removed.
+Status: obsolete (D-051): `suspend` is removed. Reopened as Q-021 (generators, `yield`, cooperative tasks).
 
 ### CON-09 `start` for methods and for processes
 D-043: `start aspect.process(args);` launches an aspect process in a `parallel … do … done` group, and
@@ -77,6 +77,7 @@ D-043: `start aspect.process(args);` launches an aspect process in a `parallel �
 kinds of concurrent work, or give the method one its own word?
 **Answer:** _(open)_
 Status: answered by D-047: `start` launches only methods, in a parallel block; aspects use `apply`.
+Reversed by D-066: `start` launches only aspects, in a parallel block of the driver; methods run serially.
 
 ### CON-10 `@` at the call site
 Examples write `start square(i, @s[i]);` and `apply reports.total(10, @sum);`, but concurrency.html also calls
