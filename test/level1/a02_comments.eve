@@ -1,13 +1,13 @@
-/*-------------------------------------------------
+/*------------------------------------------------+
 | Test driver structure and multiple line comments|
 | EVE has support for a variety of comment styles |
---------------------------------------------------*/
++-------------------------------------------------*/
 driver a02_comments is
   process main is
     panic; ** negative test
   return;
 end a02_comments;
-/* 
+/*
    Block comments do not nest, the first closing marker ends them.
    Use ** lines to comment out code that contains comments.
 */
