@@ -257,6 +257,11 @@ type hint.
 | `{ … }` | ordinal, DataSet, HashMap or Object: `{}` is the empty DataSet, `{:}` the empty HashMap |
 
 A brace literal with unquoted keys is an Object, with quoted or numeric keys a HashMap, with plain values a DataSet.
+
+After a value, `[ … ]` is an index. A matrix or a tensor takes one index per dimension, either separated by commas in one
+pair of brackets or in one pair of brackets each: `m[x, y]` is `m[x][y]` and `t[x, y, z]` is `t[x][y][z]` (D-064). An index
+is a number, `$` (the last), a range or `*` (the whole dimension), so `m[1..5][3]` is column 3 of the first 5 rows and
+`m[3][1..5]` the first 5 columns of row 3. A single index on a matrix or tensor, `m[k]`, is the absolute row-major index.
 Elements are separated by commas; a trailing comma is not allowed *(proposed)*.
 
 ## Operators and punctuation
