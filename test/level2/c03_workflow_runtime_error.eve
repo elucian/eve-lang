@@ -1,0 +1,6 @@
+# Workflow: a failed expect is reported by errors and logged by status (slot/c03.vmc)
+driver c03_workflow_runtime_error is
+  process main is
+    over;
+  return;
+end c03_workflow_runtime_error;

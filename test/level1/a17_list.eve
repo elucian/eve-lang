@@ -8,6 +8,8 @@ driver a17_list is
     expect a.length() == 3;
     let e := ();
     expect e.length() == 0;
+    expect (5,).length() == 1;     ** a trailing comma makes a list of one element
+    expect (5) == 5;               ** without it the parentheses only group
 
     ** append at the end
     a <+ 4;

@@ -14,6 +14,8 @@ aspects and are not run on their own). Its expectations are in expect.json, one
 file per level: {"<name>": {...}} with these optional keys:
   "exit"       expected exit code (default 0)
   "args"       command-line arguments
+  "serve"      a command file (path from the repo root): the test then runs the VM as
+               `eve -x -t 5 -i <serve>` (a session, no script on the command line)
   "stdout"     the exact expected output: a string, or a list of lines (line
                endings and trailing white space at the end are ignored)
   "contains"   a list of strings that must all appear in the output
@@ -153,16 +155,25 @@ def check_test(eve, test, timeout):
             "reason": f"exit code {p.returncode}, expected {want}" + (f": {out[0]}" if out else "")}
 
 
+def eve_args(test, exp):
+    """The arguments of `eve` for a test: the script and its args, or, with "serve", a session
+    that runs the command file: `eve -x -i <serve> [-t sec]` (the test file is then only the subject
+    that the command file loads)."""
+    if "serve" in exp:
+        return ["-x", "-t", "5", "-i", exp["serve"], *exp["args"]]
+    return [rel(test), *exp["args"]]
+
+
 def run_test(eve, test, timeout):
     exp = load_expect(test)
     res = {"test": test, "expect": exp, "stdout": "", "stderr": "", "exit": None, "ms": 0,
-           "cmd": [rel(eve) if eve.startswith(ROOT) else eve, rel(test), *exp["args"]]}
+           "cmd": [rel(eve) if eve.startswith(ROOT) else eve, *eve_args(test, exp)]}
     if "skip" in exp:
         res.update(verdict="SKIP", reason=exp["skip"])
         return res
     start = time.perf_counter()
     try:
-        p = subprocess.run([eve, rel(test), *exp["args"]], cwd=ROOT, capture_output=True,
+        p = subprocess.run([eve, *eve_args(test, exp)], cwd=ROOT, capture_output=True,
                            timeout=timeout)
     except subprocess.TimeoutExpired as e:
         res.update(verdict="ERROR", reason=f"timeout after {timeout}s",

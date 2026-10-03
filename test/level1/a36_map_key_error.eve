@@ -1,8 +1,8 @@
 # += on a missing key of a map raises an error (D-058)
 driver a36_map_key_error is
   process main is
-    let h := {'a': 1};
-    h['zz'] += 1;
+    let h := {"a": 1};
+    h["zz"] += 1;
     print "never";
   recover
     print "caught key error";

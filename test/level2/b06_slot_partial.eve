@@ -1,0 +1,6 @@
+# Slot: a line without newline is not read yet (slot/b06.vmc)
+driver b06_slot_partial is
+  process main is
+    over;
+  return;
+end b06_slot_partial;

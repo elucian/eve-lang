@@ -19,7 +19,7 @@ driver a19_matrix is
     let g :[2, 2]Integer;
     g[*] := 1;
     expect g == [[1, 1], [1, 1]];
-    g[1][*] := 5;                ** the first row
+    g[1, *] := 5;                ** the first row
     expect g == [[5, 5], [1, 1]];
 
     ** a matrix builder uses two generators
