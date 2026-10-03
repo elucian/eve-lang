@@ -1,374 +1,374 @@
 {
  "tests": {
   "a01_driver": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790859814,
    "title": "Test driver structure and single line comments",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a02_comments": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
-   "mtime": 1790972488,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
+   "mtime": 1790982042,
    "title": "",
-   "reason": "exit code 70, expected 1"
+   "reason": ""
   },
   "a03_print": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790859814,
    "title": "This test prints a string",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a04_free_script": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "a free script: sequential statements, no driver and no process (D-008, D-014)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a05_print_write": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 9,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "print adds a new line and separates values with a separator, write adds nothing",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a06_let_set": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "let declares variables, set declares constants, := changes a value (D-036)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a07_arithmetic": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "numeric operators and their precedence (D-019)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a08_logic": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "relation and logical operators",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a09_literals": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "literals of the primitive types (D-032)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a10_strings": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "strings are immutable UTF-8 text (D-058)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a11_interpolation": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "interpolation escapes: \\s{} string, \\#{} number, \\b{} boolean, \\u{} Unicode (D-060, draft formats)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a12_if": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "if, else if, else and the conditional statement (D-016)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a13_while": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "while loop with a header, break, else and then (D-030, D-033, D-034)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a14_for": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "for loop over ranges and collections (D-022)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a15_match": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "match with values, lists of values, ranges and other (D-016, D-030)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a16_ordinal": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "an Ordinal is a set of named integer values; the first value is 0 (D-058)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a17_list": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
-   "mtime": 1790972480,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
+   "mtime": 1790990924,
    "title": "list: literal, index, append, remove, builder, deconstruct (D-058, D-059, D-060)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a18_array": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "array: literal, index, slice, view and clone, bulk assignment, builder (D-021, D-022, D-049)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a19_matrix": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
-   "mtime": 1790972480,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
+   "mtime": 1790989524,
    "title": "matrix: two indexes, last index, absolute index, all elements [*] (D-058)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a20_dataset": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "DataSet: sorted unique values, union, intersection, difference (D-058)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a21_hashmap": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
-   "mtime": 1790972480,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
+   "mtime": 1790989524,
    "title": "HashMap: a sorted map of key:value pairs (D-058)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a22_object": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "Object: unquoted keys make an object, quoted or numeric keys make a HashMap (D-058, D-059)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a23_clone_view": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 1,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": ":= shares a collection or an object, :: makes a deep copy, native values are always copied (D-049)",
-   "reason": "exit code 70, expected 0"
+   "reason": ""
   },
   "a24_function": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "functions: result, named arguments, default values, lambda (D-028)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a25_method": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "methods: side effects, @ passes by reference, no @ passes a copy (D-025, D-048)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a26_class": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "class with a constructor, methods, new, reference and clone (D-036, D-037)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a27_text_literal": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a28_regex": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "regular expressions: =~ matches, !~ does not match; a pattern starts with / and ends with /flags",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a29_expect_fail": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "a failed expect ends the process with exit code 2 (D-055)",
-   "reason": "exit code 70, expected 2; stdout differs"
+   "reason": ""
   },
   "a30_over": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "over ends the process it is in with exit code 0",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a31_recover": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "an error jumps to recover; reaching the end of recover handles the error (D-020)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a32_finalize": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "finalize runs after the process ends normally, and after recover (D-055)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a33_over_finalize": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "over skips recover and finalize (D-055)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a34_jobs": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "jobs: retry runs a failed job again, resume goes on after it (D-020, D-030)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a35_index_error": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "index 0 is an error: indexes start at 1 (D-021)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a36_map_key_error": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
-   "mtime": 1790972480,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
+   "mtime": 1790989524,
    "title": "+= on a missing key of a map raises an error (D-058)",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   },
   "a37_division_error": {
-   "status": "FAIL",
+   "status": "PASS",
    "failures": 1,
-   "runs": 1,
-   "checks": 2,
-   "last": "2026-10-02 16:32",
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-02 21:28",
    "mtime": 1790972480,
    "title": "a division by zero raises an error",
-   "reason": "exit code 70, expected 0; stdout differs"
+   "reason": ""
   }
  }
 }

@@ -74,6 +74,8 @@ pub fn main(init: std.process.Init) !void {
         .debug = opts.debug,
         .config = opts.config,
         .memory = opts.memory,
+        .slot = opts.slot,
+        .idle_ms = if (opts.idle) |t| (std.fmt.parseInt(u64, t, 10) catch 30) * 1000 else 30_000,
     };
 
     if (opts.command) |command| {

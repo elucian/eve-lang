@@ -1,0 +1,10 @@
+# introspection: the syntax tree (depth 3) and the report of what the script is made of
+outdir temp/output/c04
+capture on
+load test/level1/a34_jobs.eve
+parse
+run
+ast 3
+inspect
+status
+stop

@@ -961,8 +961,37 @@ Each one is a place where the tests state a rule that no decision gives yet; cha
 (b) printing a DataSet is `{1,2,3}` without spaces, a list `(1,2,3)`, `print (1, 2, 3)` prints `1,2,3` (a05, a20);
 (c) the formats of `\#{}`, `\s{}`, `\b{}` of D-060 (a11);
 (d) `a <+ b` as an expression returns a new list and `x <- lst` removes the first element equal to `x` (a17);
-(e) `g[1][*] := 5` assigns a row of a matrix and `m[5]` is the absolute index (a19);
+(e) `m[5]` is the absolute row-major index of a matrix (D-058) and `g[1, *] := 5` assigns a row (a19; the test said `g[1][*]`,
+    which D-058 gives another meaning: changed in D-063);
 (f) `let v := [...]; let view := v[1..2];` is a view (D-049) (a18);
 (g) a text literal drops the line break after the opening quotes and before the closing ones (a27, Q-014);
 (h) `for (k: v) in map` visits the keys in order (a21); `p.z := 7` adds an attribute to an Object (a22);
 (i) a function parameter after a defaulted one is named at the call: `greet("Eve", greeting: "Hi")` (a24).
+
+### D-063 First execution of level 1: what running the tests taught (2026-10-02)
+Model decisions taken while writing the interpreter (`evevm/src/interp.zig`); all of `test/level1/` (37 tests) passes. Each one is
+a rule the tests needed and no decision gave; change the test or the rule when you answer.
+- Author answer: `(x)` is grouping, not a list; `(x,)` is the list of one element (corrects D-058, which said `(x)` is a list).
+  The tests use `(2 + 3) * 4` and `("yes" if c else "no")`; a17 checks `(5,)`.
+- A symbol literal holds exactly one code point: `'one'` and `'zz'` are syntax errors ("use "..." for text"). a21 and a36 wrote
+  strings in single quotes; they now use double quotes.
+- Matrix indexes: `g[1]` is the absolute row-major index (D-058), so a row is `g[1, *]` and a column `g[*, 1]`. a19 said `g[1][*]`.
+- `is` between two types compares them: `type(9 / 3) is Real`; `x is Null` and `a is b` test identity for references.
+- Errors are `{code, message, job}` (D-055): `raise` gives 4, a failed `expect` 2, an error of the VM (index 0, missing key, division
+  by zero, undefined name, bad operand) 4. `recover` can catch all of them; `$error.message`, `$error.code` and `$error.job`
+  are available there. An unhandled error runs `finalize` and ends the process with its code; the message goes to stderr.
+- In `recover`: `retry` runs the failed top-level statement of the process again (the job), `resume` goes on after it, reaching the
+  end of `recover` ends the process (handled, `finalize` runs), `abort` ends it with the code of the error and skips `finalize`.
+- `panic;` ends at once with code 1 (no `finalize`); `over;` ends with 0 (no `recover`, no `finalize`).
+- Real numbers print in the shortest form that reads back (`3.5`, `0.25`; a whole Real prints without a point). Collections print
+  `(1,2,3)` list, `[1,2,3]` array, `{1,2,3}` DataSet, `{'a':1}` map, `{x:1}` object, strings and symbols quoted inside a collection.
+- `write (a, b)` writes the values with no separator; `print (a, b)` joins them with `,` (named argument `separator:`).
+- Formats of the interpolation (D-060): `[fill][<|>|^][,][i|f]width[.precision]`; strings take a width, an alignment and a
+  precision (a cut); a Logic takes `yn` (Yes/No), `01` or `tf`.
+- `new C(args)` without a constructor fills the members in order or by name; with a constructor it runs it, and the object returned
+  is `self` (its class is set to `C`). `new Object()` is an empty Object.
+- Regular expressions: a small subset (literals, `.`, `^`, `$`, `[a-z]`, `\d \w \s`, `* + ?`, `|`), no groups, no back references.
+- Command files (`.vmc`): see `manual/usage.md`. Comments are `#` at the start of a line and `**` to the end of a line; a line counts
+  when it ends with a newline; while a script runs only `report` and `stop` are taken from the slot.
+- Workflow: `eve -x -i file.vmc` without a script is serve mode; commands `load`, `parse`, `run`, `errors`, `ast`, `inspect`, `status`,
+  `outdir`, `capture`, `log`, `clear`; `script/workflow.py` drives a whole level through one session and reads the reports.

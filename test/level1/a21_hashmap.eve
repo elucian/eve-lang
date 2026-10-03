@@ -14,8 +14,8 @@ driver a21_hashmap is
     expect h['a'] == 11;
 
     ** numeric keys
-    let n := {1: 'one', 2: 'two'};
-    expect n[2] == 'two';
+    let n := {1: "one", 2: "two"};
+    expect n[2] == "two";
     expect 1 in n;
 
     ** iteration visits the keys in order

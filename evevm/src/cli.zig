@@ -13,6 +13,7 @@ const version = @import("version.zig");
 // import is called `editor`, not `line`, because several functions below have a parameter `line`.
 const editor = @import("line.zig");
 const parser = @import("parser.zig");
+const vm = @import("vm.zig");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
 // Without it the name is private to this file. A `const` number without a type is a
@@ -48,6 +49,12 @@ pub const Context = struct {
     config: ?[]const u8 = null,
     /// `-m size`
     memory: ?[]const u8 = null,
+    /// `-i file`: the slot, a file where other programs append commands while the VM runs.
+    slot: ?[]const u8 = null,
+    /// `-t seconds`: how long serve mode waits without a command before it stops.
+    idle_ms: u64 = 30_000,
+    /// The VM session, created by the first command that needs it.
+    machine: ?*vm.Session = null,
     /// Set by `quit` and `exit`: the REPL ends.
     quit: bool = false,
     /// Exit status of the last command.
@@ -135,6 +142,80 @@ fn cmdCheck(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     ctx.status = worst;
 }
 
+// Zig tip: the VM session is created the first time a command needs it and kept in the Context, so
+// the next command finds the script the previous one loaded. `gpa.create(T)` allocates one `T` and
+// returns a pointer; `s.* = .{ ... }` fills it. A `?*T` field is null until then, and `orelse`
+// would also do: `if (ctx.machine) |s| return s;` is the early-return form. The slot is created
+// with the session, because the interpreter polls it between statements.
+/// The session of this run of `eve`.
+fn session(ctx: *Context) Io.Writer.Error!*vm.Session {
+    if (ctx.machine) |s| return s;
+    const s = ctx.gpa.create(vm.Session) catch return error.WriteFailed;
+    s.* = .{ .io = ctx.io, .gpa = ctx.gpa, .out = ctx.out, .debug = ctx.debug };
+    if (ctx.slot) |p| {
+        const sl = ctx.gpa.create(vm.Slot) catch return error.WriteFailed;
+        sl.* = .{ .io = ctx.io, .gpa = ctx.gpa, .path = p };
+        s.slot = sl;
+    }
+    ctx.machine = s;
+    return s;
+}
+
+// Zig tip: `viaSession("load")` is a comptime function like `stub`: it returns a handler for one
+// session command. `std.mem.join(gpa, " ", args)` glues the words back into one string (the
+// `log` command takes the rest of the line). `ctx.status = s.status` copies the exit status of the
+// command, and a `stop` from the session ends the REPL too.
+/// A REPL command that is implemented by the session (vm.zig): `load`, `parse`, `ast`, ...
+fn viaSession(comptime name: []const u8) Handler {
+    return struct {
+        fn run(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+            const s = try session(ctx);
+            const rest = std.mem.join(ctx.gpa, " ", args) catch return error.WriteFailed;
+            _ = try s.exec(name, args, rest);
+            ctx.status = s.status;
+            if (s.stopping) ctx.quit = true;
+        }
+    }.run;
+}
+
+// Zig tip: parse first, run second: the session's `run` parses the file when it was not parsed,
+// and returns early on a syntax error, so a script with errors never starts. With no file name
+// and a slot (`eve -x -i file.vmc`) the machine does not run a script: it serves the commands
+// of the slot until `stop` (a workflow). Unhandled errors go to stderr, so the standard
+// output stays what the script printed.
+/// `execute`: parse the script (as `check` does) and, only if it is correct, run its main process.
+fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    const s = try session(ctx);
+    if (args.len == 0) {
+        if (s.slot == null) {
+            try ctx.out.writeAll("execute: file name missing\n");
+            ctx.status = exit_usage;
+            return;
+        }
+        try s.serve(ctx.idle_ms);
+        ctx.status = s.status;
+        return;
+    }
+    s.quiet = true;
+    s.capture = false;
+    try s.load(args[0]);
+    if (s.arena == null) {
+        ctx.status = s.status;
+        return;
+    }
+    try s.run();
+    ctx.status = s.status;
+    if (s.outcome) |o| {
+        if (o.stopped) try ctx.out.print("{s}: stopped by a command from the slot\n", .{args[0]});
+        if (o.code != 0 and s.machine != null) {
+            try ctx.out.flush();
+            for (s.machine.?.reports.items) |r| {
+                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n", .{ args[0], r.line, r.code, r.message });
+            }
+        }
+    }
+}
+
 // Zig tip: the jump table is a plain array. `[_]Command{ ... }` lets the compiler count the
 // elements. `.{ .name = "x", ... }` is an anonymous struct literal: the type `Command` is taken
 // from the array, so it need not be repeated. `.run = cmdHelp` stores the function itself (a
@@ -145,12 +226,22 @@ pub const commands = [_]Command{
     .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = cmdCheck },
     .{ .name = "compile", .summary = "compile a script to bytecode", .file = ".eve", .run = stub("compile") },
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
-    .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = stub("execute") },
+    .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = cmdExecute },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },
     .{ .name = "enter", .summary = "execute the next step", .run = stub("enter") },
+    .{ .name = "run", .summary = "execute the loaded script, or the file given (parsed first)", .file = ".eve", .run = viaSession("run") },
+    .{ .name = "load", .summary = "load a script, forget the previous one", .file = ".eve", .run = viaSession("load") },
+    .{ .name = "parse", .summary = "parse the loaded script, report syntax errors", .file = ".eve", .run = viaSession("parse") },
+    .{ .name = "ast", .summary = "write the syntax tree to <outdir>/<name>.ast", .run = viaSession("ast") },
+    .{ .name = "inspect", .summary = "write the introspection report <outdir>/<name>.inspect", .run = viaSession("inspect") },
+    .{ .name = "errors", .summary = "report the errors of the script (<outdir>/<name>.err)", .run = viaSession("errors") },
+    .{ .name = "status", .summary = "log one line for the script in <outdir>/summary.log", .run = viaSession("status") },
+    .{ .name = "outdir", .summary = "set the folder of the report files", .run = viaSession("outdir") },
+    .{ .name = "capture", .summary = "capture on|off: keep the script output in <outdir>/<name>.out", .run = viaSession("capture") },
+    .{ .name = "log", .summary = "add a line of text to summary.log", .run = viaSession("log") },
     .{ .name = "print", .summary = "display the value of a global variable", .run = stub("print") },
     .{ .name = "resume", .summary = "run until the next halt statement", .run = stub("resume") },
-    .{ .name = "report", .summary = "report the system state", .run = stub("report") },
+    .{ .name = "report", .summary = "report the system state", .run = viaSession("report") },
     .{ .name = "stop", .summary = "stop the driver, keep the memory", .run = stub("stop") },
     .{ .name = "clear", .summary = "stop the driver and clean the memory", .run = stub("clear") },
     .{ .name = "setup", .summary = "load the configuration file", .file = ".cfg", .run = stub("setup") },
@@ -182,6 +273,8 @@ pub const quick_help =
     \\Quick help:
     \\  -s <file.cfg>   setup: load the configuration file
     \\  -m <size>       memory for the process
+    \\  -x              execute the script (parsed first); same as --execute
+    \\  -i <file>       slot: commands (report, stop) that other programs append to the file
     \\  -d              debug mode: halt statements stop the script (ignored otherwise)
     \\  -v, --version   display the version and exit
     \\  -h, --help      display this help and exit
@@ -250,6 +343,10 @@ pub const Options = struct {
     debug: bool = false,
     config: ?[]const u8 = null,
     memory: ?[]const u8 = null,
+    slot: ?[]const u8 = null,
+    idle: ?[]const u8 = null,
+    /// `-x`: execute the script (implies the `execute` command).
+    execute: bool = false,
     /// Command chosen with `--<command>` or implied by a script path.
     command: ?*const Command = null,
     /// Positional arguments after the command.
@@ -288,13 +385,20 @@ pub fn parseArgs(
             o.version = true;
         } else if (std.mem.eql(u8, a, "-d")) {
             o.debug = true;
-        } else if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m")) {
+        } else if (std.mem.eql(u8, a, "-x")) {
+            o.execute = true;
+        } else if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "-i") or std.mem.eql(u8, a, "-t")) {
             i += 1;
             if (i >= argv.len) {
                 bad.* = a;
                 return error.MissingValue;
             }
-            if (a[1] == 's') o.config = argv[i] else o.memory = argv[i];
+            switch (a[1]) {
+                's' => o.config = argv[i],
+                'm' => o.memory = argv[i],
+                't' => o.idle = argv[i],
+                else => o.slot = argv[i],
+            }
         } else if (std.mem.startsWith(u8, a, "--") and a.len > 2) {
             const c = find(a[2..]) orelse {
                 bad.* = a;
@@ -309,6 +413,7 @@ pub fn parseArgs(
             try rest.append(gpa, a);
         }
     }
+    if (o.execute and o.command == null) o.command = find("execute");
     o.args = try rest.toOwnedSlice(gpa);
     return o;
 }
@@ -355,6 +460,7 @@ pub fn completionExt(line: []const u8) ?[]const u8 {
     const head = std.mem.trimEnd(u8, line[0..editor.lastWordStart(line)], " \t");
     const c = find(head[0 .. std.mem.indexOfAny(u8, head, " \t") orelse head.len]) orelse return null;
     if (std.mem.eql(u8, head[editor.lastWordStart(head)..], "-s")) return ".cfg";
+    if (std.mem.eql(u8, head[editor.lastWordStart(head)..], "-i")) return ".vmc";
     return if (c.file.len > 0) c.file else null;
 }
 
@@ -423,6 +529,11 @@ test "options: flags, command and script" {
 
     const s = try parseArgs(arena.allocator(), &.{"a.eve"}, &bad);
     try std.testing.expectEqualStrings("execute", s.command.?.name);
+
+    const x = try parseArgs(arena.allocator(), &.{ "-x", "-i", "cmds.txt", "a.eve" }, &bad);
+    try std.testing.expect(x.execute);
+    try std.testing.expectEqualStrings("execute", x.command.?.name);
+    try std.testing.expectEqualStrings("cmds.txt", x.slot.?);
 
     try std.testing.expectError(error.UnknownOption, parseArgs(arena.allocator(), &.{"--bogus"}, &bad));
     try std.testing.expectEqualStrings("--bogus", bad);

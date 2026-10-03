@@ -1,0 +1,6 @@
+# Slot: stop ends the run early (slot/b03.vmc)
+driver b03_slot_stop is
+  process main is
+    over;
+  return;
+end b03_slot_stop;

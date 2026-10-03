@@ -1,0 +1,9 @@
+# workflow: parse, execute and log one script; reports go to temp/output/c01
+outdir temp/output/c01
+capture on
+load test/level1/a03_print.eve
+parse
+run
+errors
+status
+stop

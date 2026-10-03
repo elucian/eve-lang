@@ -1,0 +1,8 @@
+# run parses first: a syntax error is reported and nothing is executed
+outdir temp/output/c02
+capture on
+load test/level2/slot/bad_syntax.eve
+run
+errors
+status
+stop

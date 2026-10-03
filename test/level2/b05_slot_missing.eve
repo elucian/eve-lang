@@ -1,0 +1,6 @@
+# Slot: a missing file means no commands (slot/b05.vmc)
+driver b05_slot_missing is
+  process main is
+    over;
+  return;
+end b05_slot_missing;

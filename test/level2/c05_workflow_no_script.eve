@@ -1,0 +1,6 @@
+# Workflow: run and ast need a loaded script; unknown commands are reported (slot/c05.vmc)
+driver c05_workflow_no_script is
+  process main is
+    over;
+  return;
+end c05_workflow_no_script;

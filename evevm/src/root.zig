@@ -13,6 +13,9 @@ pub const title = v.title;
 /// Command line, jump table and REPL.
 pub const cli = @import("cli.zig");
 
+/// Execution loop and the slot for external commands.
+pub const vm = @import("vm.zig");
+
 /// Raw keyboard mode of the REPL prompt.
 pub const terminal = @import("terminal.zig");
 
@@ -22,8 +25,11 @@ test {
     _ = cli;
     _ = @import("line.zig");
     _ = terminal;
+    _ = vm;
     _ = @import("lexer.zig");
     _ = @import("parser.zig");
+    _ = @import("ast.zig");
+    _ = @import("interp.zig");
 }
 
 test "version strings are set" {

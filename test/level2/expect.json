@@ -1,0 +1,107 @@
+{
+  "b01_slot_report": {
+    "args": [
+      "-i",
+      "test/level2/slot/b01.vmc"
+    ],
+    "stdout": [
+      "report: pc 0, 0 steps, running"
+    ]
+  },
+  "b02_slot_comments": {
+    "args": [
+      "-i",
+      "test/level2/slot/b02.vmc"
+    ],
+    "stdout": [
+      "report: pc 0, 0 steps, running"
+    ],
+    "note": "only the line 'report ** ...' is a command; the other five lines are comments or blank"
+  },
+  "b03_slot_stop": {
+    "args": [
+      "-i",
+      "test/level2/slot/b03.vmc"
+    ],
+    "stdout": [
+      "test/level2/b03_slot_stop.eve: stopped by a command from the slot"
+    ]
+  },
+  "b04_slot_unknown": {
+    "args": [
+      "-i",
+      "test/level2/slot/b04.vmc"
+    ],
+    "stdout": [
+      "slot: unknown command: frob"
+    ]
+  },
+  "b05_slot_missing": {
+    "args": [
+      "-i",
+      "test/level2/slot/none.vmc"
+    ],
+    "stdout": []
+  },
+  "b06_slot_partial": {
+    "args": [
+      "-i",
+      "test/level2/slot/b06.vmc"
+    ],
+    "stdout": [],
+    "note": "the file does not end with a newline, so the line is still being written"
+  },
+  "c01_workflow_run": {
+    "serve": "test/level2/slot/c01.vmc",
+    "stdout": [
+      "a03_print: loaded",
+      "a03_print: parse ok, 7 nodes",
+      "a03_print: run, exit 0",
+      "a03_print: 0 error(s)",
+      "a03_print: status logged",
+      "serve: stopped"
+    ]
+  },
+  "c02_workflow_syntax_error": {
+    "serve": "test/level2/slot/c02.vmc",
+    "stdout": [
+      "bad_syntax: loaded",
+      "test/level2/slot/bad_syntax.eve:4:3: error: expected ';' but found 'return'",
+      "bad_syntax: 1 error(s)",
+      "test/level2/slot/bad_syntax.eve:4:3: syntax error: expected ';' but found 'return'",
+      "bad_syntax: status logged",
+      "serve: stopped"
+    ],
+    "note": "run parses first; the syntax error stops it before the execution"
+  },
+  "c03_workflow_runtime_error": {
+    "serve": "test/level2/slot/c03.vmc",
+    "stdout": [
+      "a29_expect_fail: loaded",
+      "a29_expect_fail: parse ok, 13 nodes",
+      "a29_expect_fail: run, exit 2",
+      "a29_expect_fail: 1 error(s)",
+      "test/level1/a29_expect_fail.eve:5: error 2: expect failed",
+      "a29_expect_fail: status logged",
+      "serve: stopped"
+    ]
+  },
+  "c04_workflow_introspection": {
+    "serve": "test/level2/slot/c04.vmc",
+    "contains": [
+      "a34_jobs: run, exit 0",
+      "a34_jobs: ast written",
+      "a34_jobs: inspect written (57 nodes, depth 9)",
+      "serve: stopped"
+    ]
+  },
+  "c05_workflow_no_script": {
+    "serve": "test/level2/slot/c05.vmc",
+    "stdout": [
+      "run: no script loaded (use load)",
+      "ast: no script loaded (use load)",
+      "slot: unknown command: frob",
+      "serve: stopped"
+    ]
+  }
+}

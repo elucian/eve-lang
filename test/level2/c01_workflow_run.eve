@@ -1,0 +1,6 @@
+# Workflow: one command file parses, executes and logs a script (slot/c01.vmc)
+driver c01_workflow_run is
+  process main is
+    over;
+  return;
+end c01_workflow_run;

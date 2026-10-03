@@ -1,0 +1,8 @@
+# a failed expect (exit code 2) is an error of the script: errors reports it
+outdir temp/output/c03
+capture on
+load test/level1/a29_expect_fail.eve
+run
+errors
+status
+stop
