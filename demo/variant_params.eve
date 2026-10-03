@@ -1,20 +1,20 @@
 # variant parameter in methods
 driver variant_params is
 
-  ** define a subroutine that can swap two numbers
+  ** define a method that can swap two numbers
   ** requires input/output parameters marked with @
-  method swap(@x, @y: {Integer | Real} ) is
+  method swap(@x, @y :{Integer | Real}) is
     ** check type to be the same
-    expect type(x) = type(y);
+    expect type(x) == type(y);
 
     ** swap x, y values
     let i := x; **  intermediate
-    x := y; **  first  swap
-    y := i; **  second swap
+    x := y;     **  first  swap
+    y := i;     **  second swap
   return;
 
   process main is
-    ** invert two  Integer numbers
+    ** invert two Integer numbers
     let x := 10;
     let y := 20;
     swap(@x, @y);

@@ -1,22 +1,28 @@
-#object comparison demo
+# object comparison demo
 driver object_compare is
 
-  set o = 1: Integer; 
-  set n = 1; Integer;
+  let o := {x: 1, y: 2};
+  let n := {x: 1, y: 2};
   process main is
-    ** equal values and types
-    expect  o  == n; 
-    expect  not (o <> n);     
-    
-    ** not the same location
-    expect  not (o is n); 
-    expect  o is not n;     
-   
-    ** alter one value        
-    n := 2; 
+    ** == compares all the attributes
+    expect o == n;
+    expect not (o <> n);
 
-    ** equal values and types
-    expect  o  <> n; 
-    expect  not (o == n);         
+    ** not the same location
+    expect not (o is n);
+    expect o is not n;
+
+    ** alter one value
+    n.x := 3;
+
+    ** different values
+    expect o <> n;
+    expect not (o == n);
+
+    ** := shares the reference of an object
+    let r := o;
+    expect r is o;
+    r.y := 5;
+    expect o.y == 5;
   return;
 end object_compare;

@@ -1,30 +1,22 @@
-/*-------------------------------
-|  New style boxed comments    |
-|  These comments are banners  |
-/*------------------------------*/
+# comment demo: a title comment starts with # at column 0
+## a subtitle comment starts with ##, also at column 0
+/*--------------------------------
+|  Block comments can be banners  |
+--------------------------------*/
 driver comment_demo is
+  ** two stars: a comment to the end of the line, indented with the code
+  let a = 0 :Integer;
 
-  #  This comment is a title comment
-  set a = 0: Integer; ** define a global in region
-
-  ## This comment is a sub-title
   process main is
-      ** This comment with two stars support indentation
-    
-      /* expression comments are similar to C++
-         comments. we use expression comments
-         for commenting out code for debug */
+    /* a block comment can span many lines;
+       it is useful to comment out code for debug.
+       Block comments do not nest. */
 
-      ** In next expression we use expression comments    
-      a := a + 1 /* *(a - 1) */ -1;
+    ** in the next expression we use an expression comment
+    a := a + 1 (** * (a - 1) **) - 1;
 
-      /* end of line comments are useful to  
-         explain a single line it can have a different
-         color from the single line comment */
-
-      print(a); ** end of line comment
-
-  return; 
+    print a; ** end of line comment
+  return;
 end comment_demo;
 
 /* Different styles of comments, can be used to generate

@@ -1,14 +1,14 @@
 # map iteration
 driver map_iteration is
 
-  set my_map := {("a":1),("b":2),("c":3)};
+  set my_map := {"a": 1, "b": 2, "c": 3};
   process main is
-    for (key, value) in my_map do
-      ** print pairs (key, value)
-      print('("' + key + '",' + value +')');
+    for (key: value) in my_map do
+      ** print pairs (key: value)
+      print "(\s{key}: \#{value})";
     done;
   return;
 end map_iteration;
 
-/* Note: the loop header is missing because is optional.
-   key value type is automatically inferred from the HashMap */
+/* Note: the loop header is missing because it is optional.
+   The types of key and value are inferred from the HashMap */

@@ -1,15 +1,15 @@
-#convert number to string
+# convert number to string
 driver number_to_string is
 
-  set s: String; 
+  let s :String;
   set v = 1000 :Integer;
   process main is
-    s  := String(v);  **  explicit coercion
-    expect (s == "1000"); **  check string value  
-  
-    print "s = \#{v}";     **  use interpolation
+    s := format(v);     **  explicit coercion
+    expect s == "1000"; **  check string value
+
+    print "s = \#{v}";  **  use interpolation
   return;
 end number_to_string;
 
-/* we use <+ operator to pipeline a collection int the string  
-   <+ operator will concatenate if there is no "#" in the string template*/ 
+/* \#{expr} inserts a number into a string,
+   \s{expr} inserts any value as a string */

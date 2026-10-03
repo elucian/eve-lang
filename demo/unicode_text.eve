@@ -1,6 +1,6 @@
 # text unicode support
 driver unicode_text is
-  set us = "I can write Greek: \"αβγδ\"": Text;
+  set us = "I can write Greek: \"αβγδ\"" :String;
   process main is
     print us;
   return;

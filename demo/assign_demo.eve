@@ -1,20 +1,21 @@
+# demonstrate set, let and the assignment
 /*-----------------------------------
-# demonstrate assign statement
-# demonstrate set, let and new statements
-# is using expect to make a test
+  set declares a constant, let a variable,
+  := changes a value, expect makes a test
 ------------------------------------*/
 driver assign_demo is
-
-  ** define a global without global region
-  set a = 2;     ** implicit type Integer
+  ** a constant and a global variable
+  set limit = 10 :Integer;
+  let a := 2;    ** the type Integer is inferred
 
   process main is
-      expect a == 0; ** verify initial value
-      a += 2;    ** alter global variable
+    expect a == 2;   ** verify the initial value
+    a += 2;          ** alter the global variable
+    expect a == 4;   ** verify the change
 
-      ** create a new local variable   
-      expect a == 2;   ** verify altering
-      let b := a + 0.5 ** evaluate expression
-      expect b == 2.5; ** check expression value
-  return; 
+    ** create a new local variable
+    let b := a + 0.5;  ** evaluate an expression
+    expect b == 4.5;   ** check the expression value
+    expect a < limit;
+  return;
 end assign_demo;

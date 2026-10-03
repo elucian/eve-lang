@@ -1,15 +1,13 @@
 # main process with parameters
 driver method_call is
 
-  method test(a: Integer) is
+  method test(args :()String) is
     ** print is a system method
-    print "argument list has \#{a} arguments";
+    print "argument list has \#{args.length()} arguments";
 
     ** list the arguments
-    loop
-       let arg: String;
     for arg in args do
-       print arg;
+      print arg;
     done;
   return;
 
@@ -23,8 +21,8 @@ driver method_call is
     ** verify condition and exit
     panic if c == 0;  ** early interruption
 
-    ** call local method and exit  
-    test(c);       ** method call
-    over; ** normal end
+    ** call local method and exit
+    test(args);    ** method call
+    over;          ** normal end
   return;
 end method_call;

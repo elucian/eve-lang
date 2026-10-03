@@ -1,23 +1,22 @@
-#numeric literals
+# numeric literals
 driver numeric_literals is
-  set i: Integer; ** Initial value = 0
-  set n: Natural; ** Initial value = 0
-  set r: Real;    ** Initial value = 0.00
+  let i :Integer; ** Initial value = 0
+  let n :Natural; ** Initial value = 0
+  let r :Real;    ** Initial value = 0.0
   process main is
     i := 9223372036854775807;  **  maximum
     n := 18446744073709551615; **  maximum
-    r := 3.25
-    
-    ** binary numeric_literals
-    let bn  := OB11111111 ** negative binary
-    let bp  := O101010101 ** positive binary 
-    
-    ** hexadecimals 
-    let hex := OX123456789ABCDEF;
+    r := 3.25;
 
-    ** scientific notation
-    let s := 3.14E-2; 
-    expect s == 0.0314;
+    ** binary literals are Natural
+    let bn := 0b11111111;  ** 255
+    expect bn == 255;
+
+    ** hexadecimal literals are Natural
+    let hex := 0x123456789ABCDEF;
+    expect 0xFF == 255;
+
+    ** a Rational is evaluated when needed
+    let q = 3\4 :Rational;
   return;
 end numeric_literals;
-

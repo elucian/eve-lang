@@ -1007,3 +1007,42 @@ Author request. Corrects the matrix line of D-063 (`g[1][*]` is again a row).
   `h["k"][2]`, `v[2..5][1]` (an element of the slice).
 - Applied: spec/lexical/lexical.md, spec/lexical/delimiters.json, tutorial collections.html (Matrix indexes), evevm/src/interp.zig
   (`indexChain`), test a38_matrix_index.
+
+### D-065 `demo/` is temporary (2026-10-03)
+Author decision. `demo/` disappears when the test suite is complete: each demo either becomes a test in `test/levelN/` or is
+dropped. No new demos are written; new examples go to `test/` as tests.
+- 2026-10-03 review: all 45 demos were rewritten to the decisions up to D-064 (title line, `let` for changed globals, `:=` without a
+  type, strings in `"…"`, `$`, `..<` and `>..`, `||` and `&&`, `{"k": v}` and `{:}`, `"""`, `.parse(F)`, `done;`, no redeclaration).
+  29 run on the VM. 16 need VM work first: `as`, open ranges `(0..?)`, type notations `()T` `{:}(K,V)` `{A | B}`, Rational `3\4`,
+  `wait 10ms`, process parameters, method varargs, `eq`, loop labels, symbol ranges, and the library (`floor`, `ceiling`, `round`,
+  `format`, `parse`, `split()`, `$epsilon`, Time and Date).
+- Not in the spec, removed from the demos: `all`/`any` before a collection, the string pipeline `"" <+ (…)`, chained comparisons
+  `a <= x <= b`, `is` between two Integers, scientific notation (Q-013), `is Text` of a `"""` literal (Q-014).
+- Open: D-028 says optional parameters are named at the call, D-048 calls `add(1, 2, @result)` with optional `p1, p2` by position.
+  The tutorial copies of about 30 demos have the same errors as the demos had; they are not fixed yet.
+
+### Q-020 Level 2 suite: what must be decided first (2026-10-03)
+Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4). Each test is a driver with a folder of
+aspects and modules. These points block it; answer each one:
+(a) **Aspect scope.** D-043 says each process of an aspect has its own scope and aspect-level `let` values are copied into it;
+    D-055 says an aspect is a singleton whose scope lives from the first `apply` until `reset`. Which one? With the singleton, does a
+    second `apply` see the values left by the first one?
+(b) **What `.` means in an aspect.** Can the driver read `aspect.member` after `apply`, or only the `@` outputs (PRC-14 point 1)?
+(c) **Sibling processes.** Can a process of an aspect call another process of the same aspect by its bare name, and how is that
+    different from `apply` (D-043, assumed)?
+(d) **Errors across `apply`.** An error raised in an aspect process without `recover`: does it go to the `recover` of the driver
+    process at the `apply` line, with which `$error.job` and `$error.code`? Does `panic` in an aspect end the driver (D-038 says yes)?
+    Does `over;` in an aspect end only that process?
+(e) **Import syntax.** The pages show `from $path/library_name use (*);` and `from $user_path use (module_name, …);`, while D-031 says
+    a path is a string. Is the path a string (`from "lib/util" use (*);`), an unquoted path, or both? Is `use (m as x)` the alias form?
+    Is a member reached as `m.name` or, with `(*)`, as a bare `name`?
+(f) **Module life cycle.** When does `initialize` run (first import, once per driver?), when does a module `finalize` run, and can a
+    module read the globals of the driver that imports it ("bound to the scope of the driver", D-043)?
+(g) **Where aspects and modules are found in a test.** D-055: a folder given by the caller, else `asp`, the project root, then
+    `lib`. What is the project root of `test/level2/b07_x.eve`: its folder? Proposal: each test has a folder `test/level2/b07_x/`
+    with its aspects and modules, named in the test with `set $EVE_ASP = "b07_x";` or found by default in a folder named like the driver.
+(h) **Names and placement.** Level 2 already holds `b01`–`b06` (VM slot commands) and `c01`–`c05` (VM workflow), which are tests of
+    the VM tools, not of the language, and `c` is the prefix of level 3 (D-018). Proposal: move them to `test/vm/` (`v01`…) and keep
+    `b01`… in level 2 for aspects and modules.
+(i) **Arguments.** `apply a.p(value, *list_args)` and `(param: value, *map_args)` (processing.html): is spreading a map into named
+    parameters part of 0.1?

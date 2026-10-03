@@ -4,7 +4,7 @@ driver test_over is
     loop
       let i = 0 :Integer;
     while True do
-      write "."; wait  10;
+      write "."; wait 10ms;
       over if i > 10;
       i += 1;
     done;

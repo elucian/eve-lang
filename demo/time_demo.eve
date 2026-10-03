@@ -1,9 +1,11 @@
 # time demo
 driver time_demo is
-  set time1, time2, time3: Time;
+  let time1, time2, time3 :Time;
   process main is
-    time1 := "23:63" as T24;
-    time2 := "23:63:59,99" as T24;
-    time3 := "11:63:59pm" as T12;
+    ** a time is read with the format T24 or T12
+    time1 := "23:15:00, 0ms".parse(T24);
+    time2 := "23:59:59, 999ms".parse(T24);
+    time3 := "11:59:59pm, 10ms".parse(T12);
+    expect time1 < time2;
   return;
 end time_demo;

@@ -1,30 +1,27 @@
 # demonstrate how to compare strings
 driver compare_strings is
 
-  ** define single global
-  set str = "foo";
+  ** define a global constant
+  set str := "foo";
 
-  /* any driver must have a process 
-     this is replacement for main(),
-     process is anonymous and unique/driver
+  /* a driver has one process, main:
+     it is the entry point of the script
   */
   process main is
-      expect("" == '');  ** null string
-      expect(" " <> ''); ** single space
-      expect('this'  == 'this');  **  true (same value)
-      expect("this"  == 'this');  **  true (same value)
-      expect(' this' <> 'this');  **  true (not same value)
-      expect("this " <> "this");  **  true (not same value)
+    expect "" <> " ";            ** the empty string is not a space
+    expect "this" == "this";     ** true (same value)
+    expect " this" <> "this";    ** a leading space is significant
+    expect "this " <> "this";    ** a trailing space is significant
 
-      ** create new local strings
-      let str1 = "bar";
-      let str2 = "foo";
+    ** create new local strings
+    let str1 := "bar";
+    let str2 := "foo";
 
-      ** string relations 
-      expect(str1 == "bar"); ** check initial value
-      expect(str1 > str2);  
-      expect(str2 < str1);
-      expect(str1 <= str);   ** compare with global
-      expect(str2 <> str);   ** string disjunction
-  return;     
+    ** string relations
+    expect str1 == "bar";  ** check initial value
+    expect str1 < str2;    ** "bar" comes before "foo"
+    expect str2 > str1;
+    expect str1 <= str;    ** compare with the global
+    expect str2 == str;    ** same value
+  return;
 end compare_strings;

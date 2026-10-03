@@ -1,27 +1,23 @@
-** example of string concatenation
+# example of string concatenation
 driver string_concat is
 
   process main is
-    ** set string value using different operators
-    let str := " this " ||"string"; 
+    ** set string value using the "+" operator
+    let str := " this " + "string";
     expect str == " this string";
-  
+
     ** use string interpolation
-    print "I have insert \s{str} here!"
+    print "I have insert \s{str} here!";
 
     ** concatenate string with collection
-    print "digits = " || {1,2,3}.join(",")
+    print "digits = " + (1, 2, 3).join(",");
 
-    ** string pipeline
-    print "" <+ {"this ","is ","a "," string"};
 
-    ** string format operator ?
+    ** interpolation with a format: i3 is an integer of width 3
     print "these numbers \#{1:i3},\#{3:i3},\#{5:i3} are prime";
   return;
 end string_concat;
 
-/* Note: Eve is concatenation is inspired from Ada,
-   PL/SQL, Haskell. We avoid using "+" to avoid,
-   too much confusion when concatenate literals
-   that looks like numbers.
+/* Note: a string concatenated with a symbol or a number
+   gives a String: "a" + 1 is "a1".
 */
