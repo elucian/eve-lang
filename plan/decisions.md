@@ -995,3 +995,15 @@ a rule the tests needed and no decision gave; change the test or the rule when y
   when it ends with a newline; while a script runs only `report` and `stop` are taken from the slot.
 - Workflow: `eve -x -i file.vmc` without a script is serve mode; commands `load`, `parse`, `run`, `errors`, `ast`, `inspect`, `status`,
   `outdir`, `capture`, `log`, `clear`; `script/workflow.py` drives a whole level through one session and reads the reports.
+
+### D-064 Matrix and tensor indexes: `[x, y]` is `[x][y]` (2026-10-03)
+Author request. Corrects the matrix line of D-063 (`g[1][*]` is again a row).
+- A matrix or a tensor takes its indexes in one pair of brackets separated by commas or in one pair of brackets per dimension:
+  `m[x, y]` is `m[x][y]`, `t[x, y, z]` is `t[x][y][z]`; the forms mix (`t[x, y][z]`). Reading and writing are the same.
+- Each index may be a number, `$`, a range or `*`, so a chain selects a part: `m[1..5][3]` is column 3 of rows 1 to 5 (5 elements),
+  `m[3][1..5]` is row 3, columns 1 to 5. The result is an array; a part takes one value with `:=` (D-058).
+- One pair of brackets with one index keeps D-058: `m[k]` is the absolute row-major index. Only a chain after it is a second dimension.
+- On a value that is not a matrix (a map, a list, a 1-dimension array) each pair of brackets indexes the result of the previous one:
+  `h["k"][2]`, `v[2..5][1]` (an element of the slice).
+- Applied: spec/lexical/lexical.md, spec/lexical/delimiters.json, tutorial collections.html (Matrix indexes), evevm/src/interp.zig
+  (`indexChain`), test a38_matrix_index.

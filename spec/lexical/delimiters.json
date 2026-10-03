@@ -180,7 +180,7 @@
       "kind": "collection",
       "nests": false,
       "multiline": false,
-      "summary": "Array literal (vector, matrix); index and slice after a value.",
+      "summary": "Array literal (vector, matrix); index and slice after a value; `m[x, y]` is `m[x][y]`.",
       "status": "draft",
       "ref": "lexical/lexical.md#literals",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#collections"

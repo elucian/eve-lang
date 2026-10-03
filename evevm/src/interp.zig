@@ -1079,6 +1079,12 @@ pub const Interp = struct {
     // One index of `a[i, j]`: a number, `$` (already a number), `*` (all) or a range.
     const Idx = union(enum) { one: i64, all, rng: struct { lo: i64, hi: i64 } };
 
+    // Zig tip: `isMatrix` relies on the same Zig feature as `realOf` above: see the tip there.
+    /// A matrix or a tensor is an array whose elements are arrays.
+    fn isMatrix(l: *List) bool {
+        return l.elems().len > 0 and l.elems()[0] == .list;
+    }
+
     // Zig tip: `dimLen` relies on the same Zig feature as `realOf` above: see the tip there.
     fn dimLen(root: *List, depth: usize) i64 {
         var l = root;
@@ -1116,8 +1122,7 @@ pub const Interp = struct {
     // Zig tip: `slots` relies on the same Zig feature as `define` above: see the tip there.
     /// The storage cells an index expression selects (one for `a[2]`, several for a slice or `[*]`).
     fn slots(it: *Interp, root: *List, args: []const *const Node, out: *std.ArrayList(*Value)) Signal!void {
-        const matrix = root.elems().len > 0 and root.elems()[0] == .list;
-        if (args.len == 1 and matrix) {
+        if (args.len == 1 and isMatrix(root)) {
             // one absolute row-major index, or all the elements, or a range of them
             var flat: std.ArrayList(*Value) = .empty;
             try it.leaves(root, &flat);
@@ -1160,10 +1165,42 @@ pub const Interp = struct {
         }
     }
 
+    // Zig tip: a function can return a struct type written on the spot, with no name (an anonymous
+    // struct): `Signal!struct { obj: Value, args: ... }`. The caller reads `r.obj` and `r.args`, and
+    // the two results travel together without declaring a type used only here.
+    /// Resolves a chain of brackets `a[i][j]...` to the value indexed last and its indexes. On a
+    /// matrix or a tensor the remaining groups merge into one: `m[x][y]` is `m[x, y]` (D-064). One
+    /// group alone keeps its meaning: `m[k]` is the absolute row-major index.
+    fn indexChain(it: *Interp, n: *const Node) Signal!struct { obj: Value, args: []const *const Node } {
+        // the parser nests `a[i][j]` as index(index(a, i), j): collect the groups outside-in, then reverse
+        var groups: std.ArrayList([]const *const Node) = .empty;
+        var root = n;
+        while (root.tag == .index) : (root = root.kids[0]) {
+            try groups.append(it.a, root.kids[1..]);
+        }
+        std.mem.reverse([]const *const Node, groups.items);
+        var obj = try it.eval(root);
+        var i: usize = 0;
+        while (i + 1 < groups.items.len) : (i += 1) {
+            if (obj == .list and isMatrix(obj.list)) {
+                var merged: std.ArrayList(*const Node) = .empty;
+                for (groups.items[i..]) |g| try merged.appendSlice(it.a, g);
+                return .{ .obj = obj, .args = merged.items };
+            }
+            obj = try it.indexOf(obj, groups.items[i]);
+        }
+        return .{ .obj = obj, .args = groups.items[i] };
+    }
+
     // Zig tip: `index` relies on the same Zig feature as `define` above: see the tip there.
     fn index(it: *Interp, n: *const Node) Signal!Value {
-        const obj = try it.eval(n.kids[0]);
-        const args = n.kids[1..];
+        const r = try it.indexChain(n);
+        return it.indexOf(r.obj, r.args);
+    }
+
+    // Zig tip: `indexOf` relies on the same Zig feature as `define` above: see the tip there.
+    /// One group of brackets applied to a value: `obj[args]`.
+    fn indexOf(it: *Interp, obj: Value, args: []const *const Node) Signal!Value {
         switch (obj) {
             .map => |m| {
                 const key = try it.eval(args[0]);
@@ -1172,7 +1209,7 @@ pub const Interp = struct {
             },
             .list, .set => |l| {
                 // a range on a one-dimensional list is a view: it shares the storage
-                if (args.len == 1 and args[0].tag == .range and !(l.elems().len > 0 and l.elems()[0] == .list)) {
+                if (args.len == 1 and args[0].tag == .range and !isMatrix(l)) {
                     const ix = try it.evalIdx(args[0], @intCast(l.elems().len));
                     const lo = ix.rng.lo;
                     const hi = ix.rng.hi;
@@ -1815,8 +1852,9 @@ pub const Interp = struct {
                 try it.setField(obj.object, target.text, v);
             },
             .index => {
-                const obj = try it.eval(target.kids[0]);
-                const args = target.kids[1..];
+                const r = try it.indexChain(target);
+                const obj = r.obj;
+                const args = r.args;
                 if (obj == .map) return it.mapPut(obj.map, try it.eval(args[0]), v);
                 if (obj != .list) return it.fail("{s} cannot be assigned by index", .{typeName(obj)});
                 var cells: std.ArrayList(*Value) = .empty;
