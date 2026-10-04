@@ -43,16 +43,16 @@ answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the
 | Page | File | Open questions | Open fixes / improvements | Retired |
 |---|---|---|---|---|
 | index.html | [index.md](index.md) | 2 | 1 | 0 |
-| manifest.html | [manifest.md](manifest.md) | 4 | 2 | 0 |
+| manifest.html | [manifest.md](manifest.md) | 0 | 2 | 4 |
 | syntax.html | [syntax.md](syntax.md) | 6 | 0 | 33 |
 | types.html | [types.md](types.md) | 1 | 2 | 25 |
-| topology.html | [topology.md](topology.md) | 2 | 1 | 19 |
+| topology.html | [topology.md](topology.md) | 1 | 0 | 21 |
 | control.html | [control.md](control.md) | 0 | 0 | 21 |
 | functions.html | [functions.md](functions.md) | 0 | 0 | 13 |
 | classes.html | [classes.md](classes.md) | 9 | 6 | 8 |
 | collections.html | [collections.md](collections.md) | 2 | 0 | 21 |
-| processing.html | [processing.md](processing.md) | 10 | 4 | 4 |
-| multitasking.html | [multitasking.md](multitasking.md) | 8 | 2 | 5 |
+| processing.html | [processing.md](processing.md) | 3 | 4 | 11 |
+| multitasking.html | [multitasking.md](multitasking.md) | 4 | 2 | 9 |
 | library.html | [library.md](library.md) | 6 | 2 | 0 |
 | command.html | [command.md](command.md) | 5 | 1 | 1 |
 | databases.html | [databases.md](databases.md) | 4 | 3 | 0 |
@@ -68,9 +68,8 @@ Some questions recur; one answer closes all of them:
 | Topic | Issues |
 |---|---|
 | Placeholders and escapes in strings | COL-15, COL-16, LIB-06 |
-| Exit codes and interruptions | PRC-02, PRC-03, CON-07 |
+| Exit codes and interruptions | PRC-02, CON-07 |
 | Result and output parameters (`@`) | ALG-02 (CON-02 retired, D-048) |
 | System variables | TOP-08, CMD-05 |
-| `start`, `apply` and processes | PRC-07, PRC-14, TOP-10, CON-09 |
 | Class model (constructor, traits) | CLS-14 to CLS-17 |
 | Broken `/images/` links | COL-F2, PRC-F1, CON-F1 |
