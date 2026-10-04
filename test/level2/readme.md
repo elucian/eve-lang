@@ -1,7 +1,8 @@
 # test Level 2
 
-Drivers with aspects and modules, imports and error recovery (Q-020, D-072). A test that needs more files has a folder
-named by its code, for example `b01/`, with the subfolders `asp/` (aspects) and `lib/` (modules).
+Drivers with aspects and modules, imports and error recovery (Q-020, D-072). Each test is a folder, a whole Eve project
+(D-073): `b01_import/b01_import.eve` is the driver, `b01_import/expect.json` its expectations, and `asp/`, `lib/`,
+`data/`, `out/` hold what the project needs. The test runs from its folder; `out/` is emptied before each run.
 
 ## Tests
 

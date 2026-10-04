@@ -10,9 +10,15 @@ TARGET is one of:
   test/level1/a03_print.eve
                       one test, by path
 
-A test is a `*.eve` file directly inside test/levelN/ (subfolders hold level-2
-aspects and are not run on their own). Its expectations are in expect.json, one
-file per level: {"<name>": {...}} with these optional keys:
+A test is either a file or a folder:
+  test/levelN/<name>.eve          a single script; its expectations are in the expect.json
+                                  of the level: {"<name>": {...}}
+  test/levelN/<name>/<name>.eve   a project test (D-073): the folder is a whole Eve project, with
+                                  the driver <name>.eve and any of asp/, lib/, data/, out/. Its
+                                  expectations are in <name>/expect.json: {...} (one object).
+                                  It runs with the folder as working directory, so paths in the
+                                  project are relative to it; out/ is emptied before each run.
+Other folders are not tests. The expectation keys, all optional:
   "exit"       expected exit code (default 0)
   "args"       command-line arguments
   "serve"      a command file (path from the repo root): the test then runs the VM as
@@ -20,6 +26,8 @@ file per level: {"<name>": {...}} with these optional keys:
   "stdout"     the exact expected output: a string, or a list of lines (line
                endings and trailing white space at the end are ignored)
   "contains"   a list of strings that must all appear in the output
+  "files"      project tests: {"out/report.txt": "text" or [lines]}: each file must exist
+               after the run with this content (line endings and trailing white space ignored)
   "skip"       a reason: the test is not run
   "note"       free text
 A test that prints (a `print` or `write` statement) must declare "stdout" or
@@ -27,7 +35,8 @@ A test that prints (a `print` or `write` statement) must declare "stdout" or
 output that is not found in the real output makes the test FAIL. A legacy
 <name>.out file is still read when expect.json has no "stdout" for the test.
 
-Each test runs as `<eve> test/levelN/<name>.eve [args]` from the repo root.
+A file test runs as `<eve> test/levelN/<name>.eve [args]` from the repo root; a project test
+runs as `<eve> <name>.eve [args]` from its folder.
 Verdicts: PASS, FAIL (wrong exit code or stdout), ERROR (timeout, eve missing),
 SKIP. Reports go to temp/output/ (git-ignored): one `<level>/<name>.md` per
 test, plus a summary `<targets>.md` when a run has more than one test.
@@ -77,7 +86,14 @@ def level_tests(level):
     folder = os.path.join(TEST_DIR, level)
     if not os.path.isdir(folder):
         die(f"no such level: test/{level}")
-    return [os.path.join(folder, f) for f in sorted(os.listdir(folder)) if f.endswith(".eve")]
+    tests = []
+    for f in sorted(os.listdir(folder)):
+        path = os.path.join(folder, f)
+        if f.endswith(".eve") and os.path.isfile(path):
+            tests.append(path)
+        elif os.path.isfile(os.path.join(path, f + ".eve")):
+            tests.append(os.path.join(path, f + ".eve"))
+    return tests
 
 
 def find_test(name):
@@ -109,6 +125,22 @@ def resolve(target):
     return os.path.basename(tests[0])[:-4], tests
 
 
+def is_project(test):
+    """True for test/levelN/<name>/<name>.eve, a project test (D-073)."""
+    folder, name = os.path.split(test)
+    return os.path.basename(folder) == name[:-4]
+
+
+def level_of(test):
+    """The level folder name of a test (level1, level2, vm, ...)."""
+    folder = os.path.dirname(test)
+    return os.path.basename(os.path.dirname(folder) if is_project(test) else folder)
+
+
+def test_cwd(test):
+    return os.path.dirname(test) if is_project(test) else ROOT
+
+
 def load_expect(test):
     folder, name = os.path.split(test)
     name = name[:-4]
@@ -116,7 +148,8 @@ def load_expect(test):
     manifest = os.path.join(folder, "expect.json")
     if os.path.isfile(manifest):
         with open(manifest, encoding="utf-8") as f:
-            spec = dict(json.load(f).get(name, {}))
+            data = json.load(f)
+        spec = dict(data if is_project(test) else data.get(name, {}))
     if isinstance(spec.get("stdout"), list):
         spec["stdout"] = "\n".join(spec["stdout"])
     out = os.path.join(folder, name + ".out")
@@ -146,7 +179,8 @@ def check_test(eve, test, timeout):
     declares "syntax_error": true in expect.json must exit 65 (syntax errors found)."""
     want = 65 if load_expect(test).get("syntax_error") else 0
     try:
-        p = subprocess.run([eve, "--check", rel(test)], cwd=ROOT, capture_output=True, timeout=timeout)
+        p = subprocess.run([eve, "--check", script_arg(test)], cwd=test_cwd(test), capture_output=True,
+                           timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as e:
         return {"test": test, "verdict": "ERROR", "reason": str(e)}
     if p.returncode == want:
@@ -162,7 +196,24 @@ def eve_args(test, exp):
     that the command file loads)."""
     if "serve" in exp:
         return ["-x", "-t", "5", "-i", exp["serve"], *exp["args"]]
-    return [rel(test), *exp["args"]]
+    return [script_arg(test), *exp["args"]]
+
+
+def script_arg(test):
+    """The script as `eve` sees it: relative to the working directory of the test."""
+    return os.path.basename(test) if is_project(test) else rel(test)
+
+
+def clear_out(test):
+    """Empty the out/ folder of a project test, so a file found after the run is new."""
+    out = os.path.join(os.path.dirname(test), "out")
+    if not os.path.isdir(out):
+        return
+    for top, dirs, files in os.walk(out, topdown=False):
+        for f in files:
+            os.remove(os.path.join(top, f))
+        for d in dirs:
+            os.rmdir(os.path.join(top, d))
 
 
 def run_test(eve, test, timeout):
@@ -172,9 +223,11 @@ def run_test(eve, test, timeout):
     if "skip" in exp:
         res.update(verdict="SKIP", reason=exp["skip"])
         return res
+    if is_project(test):
+        clear_out(test)
     start = time.perf_counter()
     try:
-        p = subprocess.run([eve, *eve_args(test, exp)], cwd=ROOT, capture_output=True,
+        p = subprocess.run([eve, *eve_args(test, exp)], cwd=test_cwd(test), capture_output=True,
                            timeout=timeout)
     except subprocess.TimeoutExpired as e:
         res.update(verdict="ERROR", reason=f"timeout after {timeout}s",
@@ -195,6 +248,15 @@ def run_test(eve, test, timeout):
     for text in exp.get("contains", []):
         if text not in res["stdout"]:
             problems.append(f"expected output not found: {text!r}")
+    for name, want in exp.get("files", {}).items():
+        path = os.path.join(test_cwd(test), name)
+        if not os.path.isfile(path):
+            problems.append(f"file not created: {name}")
+            continue
+        with open(path, encoding="utf-8", errors="replace") as f:
+            got = f.read()
+        if norm(got) != norm("\n".join(want) if isinstance(want, list) else want):
+            problems.append(f"file differs: {name}")
     if "stdout" not in exp and not exp.get("contains") and prints_output(test):
         problems.append("no expected output declared in expect.json (the test prints)")
     res["verdict"] = "FAIL" if problems else "PASS"
@@ -268,7 +330,7 @@ def update_status(results, now):
     """For every level folder: sync status.json and the test list of readme.md with the files on disk."""
     by_level = {}
     for res in results:
-        by_level.setdefault(os.path.basename(os.path.dirname(res["test"])), []).append(res)
+        by_level.setdefault(level_of(res["test"]), []).append(res)
     for lv in LEVELS:
         folder = os.path.join(TEST_DIR, lv)
         if os.path.isdir(folder):
@@ -388,8 +450,7 @@ def main():
     for test in tests:
         res = run_test(eve, test, args.timeout)
         results.append(res)
-        level = os.path.basename(os.path.dirname(test))
-        report = os.path.join(args.out, level, os.path.basename(test)[:-4] + ".md")
+        report = os.path.join(args.out, level_of(test), os.path.basename(test)[:-4] + ".md")
         write(report, test_report(res))
         res["report"] = report
         if not args.quiet:

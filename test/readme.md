@@ -58,7 +58,7 @@ Tests a04 to a37 were written from the specification and the tutorial (2026-10-0
 
 This level is more advanced. It contains automation drivers. Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
 
-A test that needs more files has a folder named by its code (`test/level2/b01/`), with the subfolders `asp/` for its aspects and `lib/` for its modules (D-072).
+At this level **a test is a folder** (D-073): `test/level2/b01_import/` is a whole Eve project. It holds the driver with the same name, `b01_import.eve`, its own `expect.json` (one object, the keys of the level file), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. A single `.eve` file is still a valid test at every level.
 
 ## VM tools
 
