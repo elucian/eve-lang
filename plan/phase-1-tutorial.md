@@ -101,6 +101,6 @@ answers become decisions → fix the page → add the answered rules to the spec
 | compiler | 2026-09-28 | 2 asked | [ ] | [ ] | [issues/compiler.md](../issues/compiler.md) |
 
 For each page:
-- Check every rule it states against the spec; mismatches go to `decisions.md`.
+- Check every rule it states against the spec; mismatches go to `decision_level1.md` or `decision_level2.md`.
 - Check that every example follows the grammar (from S3.6 on, run it through the parser check).
 - Apply the scl authoring standard: factual headings, no promotional adjectives, pitfalls.

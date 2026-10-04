@@ -307,7 +307,7 @@ a control character; a tab in indentation; `U+` followed by fewer than 4 or more
 ## Open points
 
 These rules were added by the specification writer and wait for confirmation; the numbered questions are in
-[`plan/decisions.md`](../../plan/decisions.md).
+[`plan/decision_level1.md`](../../plan/decision_level1.md).
 
 | Point | Question |
 |---|---|

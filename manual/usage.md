@@ -62,7 +62,7 @@ What the interpreter implements is the whole of `test/level1/`: drivers and free
 operators, interpolation with formats, `if`, `while`, `loop`, `for`, `match`, ordinals, lists, arrays, matrices, slices
 and views, DataSets, HashMaps, Objects, functions, methods, classes with constructors, regular expressions,
 `expect`, `over`, `panic`, `raise`, `recover`, `finalize` and jobs with `retry` and `resume`. Rules chosen while
-writing it, to confirm, are in D-063 (`plan/decisions.md`). Regular expressions are a small subset: literals, `.`,
+writing it, to confirm, are in D-063 (`plan/decision_level1.md`). Regular expressions are a small subset: literals, `.`,
 `^`, `$`, classes `[a-z]`, `\d \w \s`, the quantifiers `* + ?`, and `|` between whole alternatives (no groups).
 
 ## Command files (`.vmc`)

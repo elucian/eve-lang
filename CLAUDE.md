@@ -16,9 +16,10 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
   `spec/README.md`.
 - `plan/` **permanent step-by-step plan** for the tutorial and the spec. For improvement work,
   start with `plan/README.md`, take the next open step, and update its status mark when done.
-  Open questions for the author are in `plan/decisions.md`.
+  Decisions and open questions for the author are in `plan/decision_level1.md` (project, single
+  script) and `plan/decision_level2.md` (processes, aspects, modules, libraries); ids are shared.
 - `issues/` one file per tutorial page: questions and fixes from the page review (T1.10). The
-  author answers by editing `**Answer:**` lines; answers become decisions in `plan/decisions.md`.
+  author answers by editing `**Answer:**` lines; answers become decisions in `plan/decision_levelN.md`.
 - `demo/` ~45 small `.eve` examples; `pattern/` syntax patterns; `test/level1-3/` conformity tests
 - `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
@@ -30,7 +31,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
   … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
-  Control flow: D-016 in `plan/decisions.md`.
+  Control flow: D-016 in `plan/decision_level1.md`.
 - **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.
 
 ## Tutorial (`tutorial/` → scl repo)

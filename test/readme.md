@@ -38,7 +38,7 @@ a time.
 2. Run it: `python script/runtest.py <name>`. It must fail first; a new test that already
    passes does not test anything new.
 3. Read the report in `temp/output/`. When the result is not the expected one, fix whichever is
-   wrong: the **VM** (`evevm/`), the **spec** (`spec/`, through `plan/decisions.md`), or the
+   wrong: the **VM** (`evevm/`), the **spec** (`spec/`, through `plan/decision_levelN.md`), or the
    **test** itself.
 4. Run the whole level again (`python script/runtest.py 1`) so earlier tests stay green.
 
@@ -52,7 +52,7 @@ Single script tests each test is a driver. We verify basic syntax elements and m
 
 You can run every script individually by hand using the interpreter command line. For this level we do not have test automation scripts. These tests are developer tests. After you pass level 1, you can start testing Level2.
 
-Tests a04 to a37 were written from the specification and the tutorial (2026-10-02), one feature each. Rules the tests assume without a decision are listed in `plan/decisions.md` (Q-019).
+Tests a04 to a37 were written from the specification and the tutorial (2026-10-02), one feature each. Rules the tests assume without a decision are listed in `plan/decision_level1.md` (Q-019).
 
 ## Level 2
 
