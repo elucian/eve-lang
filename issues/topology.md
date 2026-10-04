@@ -12,20 +12,9 @@ environment variables visible as `$NAME`?
 **Answer:** Yes, environment variables are visible as $NAME. 
 Status: partly done → D-031, D-052: environment variables are `$NAME` (applied); the 0.1 variable list and their types are open
 
-### TOP-10 Aspect result and error code
-An aspect "must handle its own errors, it can't raise errors; unhandled errors make the program panic".
-D-043: an aspect hosts named processes (no `main`); `apply aspect.process(args);` waits, outputs travel in
-`@` parameters. Does a process also return an exit code to the driver, or only the `@` outputs?
-**Answer:** Because processes are now sequential, they can propagate errors. So a process can raise errors. Driver capture the exit code from panic, raise, expect and assert.
-Status: done → D-052: a process can raise errors; the driver captures the exit code of panic, raise, expect and assert
-
 ## Improvements (applied only if you write "yes")
 
-### TOP-I2 Move the REPL to command.html
-The REPL and daemon sections describe the tool, not the language. Move them to command.html (or
-the manual's `usage.md`), and keep topology.html about projects, scripts, regions and modules.
-**Answer:** agree, move thid to /manual folder in this repository, from the tutorial.
-Status: done → D-052: REPL and daemon text moved to `manual/usage.md`; topology.html keeps a pointer
+None open (TOP-I2 retired 2026-10-03).
 
 ## Spec additions once answered
 

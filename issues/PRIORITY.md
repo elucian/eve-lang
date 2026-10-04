@@ -5,6 +5,9 @@ Answer in the issue files as usual (see [README](README.md)); this page only ord
 
 **Update 2026-10-02:** the six library issues are answered (D-053). Tutorial page and spec still to update.
 
+**Update 2026-10-03:** answered or obsolete items retired from manifest (MAN-01 to 04), topology (TOP-10, TOP-I2),
+processing (PRC-03, 06, 07, 08, 11, 13, 14) and multitasking (CON-02 to 05, 08 to 10). The counts below are older.
+
 **Counts (2026-10-01):** 64 open, 5 partial, 19 closed (done, answered, obsolete or declined). Items answered and applied
 earlier were removed from the files (ids retired), so they are not counted here.
 
@@ -42,7 +45,7 @@ One answer closes several issues in each group.
    These decide the `.out` files of the conformance tests.
 3. **Built-ins for 0.1.** LIB-01 (the list), LIB-02 (mutating string functions), TOP-08 (system variables, the
    rest of it). They define what the VM must contain.
-4. **Errors and exit codes.** PRC-02 (`finalize`), PRC-03 (`expect` and `assert`), PRC-08 (`raise` forms),
+4. **Errors and exit codes.** PRC-02 (`finalize`),
    PRC-09 (Exception module). They give the exit codes in `expect.json`.
 5. **Collections core.** COL-02, COL-05 (map notation, list operation doubts; COL-01, 07 answered, D-058). Test levels 2 and 3 use them.
 6. **Write the spec for the answered items.** SPEC-01 to SPEC-06: no question left, only work. This is the
@@ -54,7 +57,7 @@ One answer closes several issues in each group.
    unblock the function tests.
 8. **Class model.** CLS-09 (generics), CLS-10, CLS-11, CLS-17 (constructor shape), then CLS-12 to CLS-16.
 9. **Collections, the rest.** COL-03 (filter clause), COL-14 (object attributes); the rest answered, D-058.
-10. **Processes and aspects.** PRC-06, PRC-10, PRC-11, PRC-13, PRC-14, PRC-07 (partial).
+10. **Processes and aspects.** PRC-10 (command-line arguments: VM and manual).
 11. **Types.** TYP-19 date literals, TYP-I1, TYP-I2.
 
 ## Priority 3: not in 0.1
@@ -68,7 +71,7 @@ One answer closes several issues in each group.
     part of TOP-08.
 14. **Databases.** DB-01 to DB-04. Needs the library first.
 15. **Compiler page.** CMP-01 and CMP-02: answer in one line each, and the page is finished.
-16. **Manifest.** MAN-01: choose the license of the VM code.
+16. **Manifest.** MAN-F1, MAN-F2 (fixes only; MAN-01 to MAN-04 done, D-061).
 17. **Index and options.** IDX-01, IDX-02, OPT-01 to OPT-03.
 
 ## Suggested next session

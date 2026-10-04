@@ -1,7 +1,7 @@
 # Issues: multitasking.html
 
 Page: `tutorial/multitasking.html`, named `concurrency.html` until D-067 (2026-10-03); the items below quote the old
-name. Reviewed 2026-09-28. CON-02 and CON-10 (D-048) and CON-03 (D-070) are retired: methods and
+name. Reviewed 2026-09-28. Retired: CON-02 and CON-10 (D-048), CON-03 (D-070), CON-04, CON-05, CON-08 and CON-09 (D-047, D-051, D-066); methods and
 their parameters moved to `methods.html` (D-069). How to answer:
 [README](README.md).
 
@@ -10,35 +10,6 @@ D-051: asynchronous methods (`suspend`, `resume name`, `wait all`) are removed; 
 groups, data rules, BSP and channels in one place.
 
 ## Questions
-
-### CON-04 Asynchronous methods: threads or cooperative?
-"An asynchronous method runs in a secondary thread", "light weight multi-threading", and the example starts
-32 consumers sharing one list. Are asynchronous methods cooperative (one OS thread, switching at `suspend`,
-`resume`, `wait`), or do they run in parallel on several cores? This decides how the Zig VM is
-built.
-**Answer:** Only processes run on parallel cores using "parallel" block. The methods are cooperative methods on a single core. I need design decisions for running methods in parallel on GPU. GPU optimization is out of scope in version 1.
-Status: answered by D-047 and D-051: a method called by name runs to completion on its caller's core (no cooperative
-switching, `suspend` removed); methods started in a `parallel` group run on several cores; aspects run only with
-`apply`. GPU is out of scope.
-
-### CON-05 Channels
-"The threads communicate using one or more channels", but no channel syntax exists; the example
-shares a list through `@pipeline`. Are channels part of 0.1? If asynchronous methods are parallel, what
-protects a shared list?
-**Answer:** We need design details invented for creation of channels. Design is open.
-Status: answered by D-051: channels are designed (`Channel(:T)`, `send`, `for x in ch`, `receive`, `close`,
-`senders: n`), not in 0.1 (D-050). The pipeline example of concurrency.html solves the problems found in the
-author's first producer-consumer example:
-- `workers: parallel is` … `done workers;` has no `do` (D-046).
-- `in` is a keyword (`for … in`) and can't name a parameter.
-- `out: @Channel(:Integer)`: `@` belongs to the parameter name (`@out: Channel(:Integer)`).
-- `Channel(:Integer)(capacity: 100)` without `new` is not a constructor call (D-036).
-- `while element := in.receive() do`: `:=` mutates an existing variable, it does not declare one; and an element 0
-  would read as false. End of stream needs its own signal, e.g. `for x in channel do`.
-- Deadlock: 10,000 elements go into `partials` (capacity 1000) and nobody reads it before `done workers`. After 1000
-  elements the consumers block, the producer blocks on the full `pipeline`, and the barrier never opens.
-- Nobody closes `partials`, and 32 consumers can't know who should; `partials.sum()` on a channel would have to drain it.
-- The consumers only copy, so the work is serial; a channel is a shared mutable object, the one thing D-047 forbids.
 
 ### CON-06 `wait` forms
 `wait 10ms;`, `wait all;`, `wait [routine_name]`, and syntax.html: `wait` "interrupts the main
@@ -52,20 +23,6 @@ a pause of the process, and whether it belongs to 0.1 (D-050).
 `$timeout`, what is its default, and which exit code does the crash give (D-010)?
 **Answer:** $timeout is 1 minute (60s), the unit of measure is seconds. It can be provided in configuration file for driver.
 Status: open
-
-### CON-08 `suspend` outside an asynchronous method
-Any method becomes asynchronous when called with `start`. What happens at `suspend` in a method
-that was called without `start`?
-**Answer:** Good question. "start" is used to run processes in parallel on multicore processor. It does no longer run methods. Methods are run by name like statements. Just mention them and they execute, no call or keyword will tell you if they run synchronously or asynchronously. When suspended, states are saved and control is given back to caller process. If noone resume them they remain suspended until process ends. If process end and nobody is waiting, the method is terminated/killed. If wait is used, until timeout the method will stay suspended unti some other methood send a signal to unlock it. 
-Status: obsolete (D-051): `suspend` is removed. Reopened as Q-021 (generators, `yield`, cooperative tasks).
-
-### CON-09 `start` for methods and for processes
-D-043: `start aspect.process(args);` launches an aspect process in a `parallel … do … done` group, and
-`start method(args);` launches an asynchronous method, joined by `wait all;`. Keep one keyword for the two
-kinds of concurrent work, or give the method one its own word?
-**Answer:** _(open)_
-Status: answered by D-047: `start` launches only methods, in a parallel block; aspects use `apply`.
-Reversed by D-066: `start` launches only aspects, in a parallel block of the driver; methods run serially.
 
 ### CON-11 Rules of parallel methods
 D-047 and D-051 propose: inputs passed by value (D-048, copy on write); one owner for each `@` argument, except
