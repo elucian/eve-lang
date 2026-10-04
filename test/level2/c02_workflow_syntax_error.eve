@@ -1,6 +1,0 @@
-# Workflow: run parses first and reports a syntax error with its position (slot/c02.vmc)
-driver c02_workflow_syntax_error is
-  process main is
-    over;
-  return;
-end c02_workflow_syntax_error;

@@ -1,6 +1,0 @@
-# Slot: # and ** comments are ignored (slot/b02.vmc)
-driver b02_slot_comments is
-  process main is
-    over;
-  return;
-end b02_slot_comments;

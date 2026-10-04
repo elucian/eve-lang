@@ -14,9 +14,9 @@ here is in the other file); a new entry goes to the file of its topic:
   modules and imports, libraries, multitasking and parallel aspects. Matches `test/level2`.
 
 ## Q-011 Default visibility of a module-level method (answered 2026-09-30 → D-035)
-D-025 says `.` is public and `_` is private. What is a method with no prefix: private to the module, or
-public? The same question applies to functions and classes at module level.
-**Answer:** _(open)_
+D-025 says `.` is public and `_` is private. What is a method with no prefix: private to the module, or public? The same question applies to functions and classes at module level.
+Status: answered again 2026-10-03 → D-072 (extension methods).
+**Answer:** `_` can be used (new decision) to show that a method belong to a class. Is a class extension method, private for a class. Withowt prefix the method is private to the driver aspect or module.
 
 ## D-026 No coroutines: generators, threads, suspended methods (2026-09-30)
 Follows D-025. The word "coroutine" is not used, because it came with "routine".
@@ -54,9 +54,8 @@ From TOP-01 to TOP-16. Applied to topology.html, with one canonical skeleton eac
   `debug` (debug mode) and `execute` (production mode); `load` is removed (TOP-15).
 - Only a driver defines globals. Aspects and modules define public (prefix `.`) and private members, reached as
   `alias.member`, so equal names in two modules do not conflict (TOP-16).
-- Open: the 0.1 list and types of built-in system variables (TOP-08); whether an aspect returns a result or an error code to
-  the driver (TOP-10).
-
+- Open: the 0.1 list and types of built-in system variables (TOP-08); whether an aspect returns a result or an error code to the driver (TOP-10). **answer** (→ D-072) The aspect will return an Exception object, The exception object can have code 0 (no orror/success) or an error code > 0, message and line number. All Exception object provide.
+- 
 Spec additions:
 - `spec/semantics/topology.md`: projects, libraries, modules, imports and paths (TOP-10 to TOP-12), exit codes (TOP-09),
   VM operations (TOP-15).
@@ -73,8 +72,7 @@ Answers Q-011. Author decision.
 
 ## D-042 `apply aspect.main(args);` names the process (2026-10-01)
 Author decision. Replaces the `apply name to (args);` form of D-016 and D-038.
-- `apply` runs a process of an aspect and waits. The process is named: `apply aspect_name.main(args);`. The `to`
-  form and the form without parentheses are removed; `()` is always written.
+- `apply` runs a process of an aspect and waits. The process is named: `apply aspect_name.main(args);`. The `to` form and the form without parentheses are removed; `()` is always written.
 - Applied to processing.html (execution section, examples), syntax.html (keyword table).
 - Open: `begin aspect_name(args);` in a parallel group should probably become `begin aspect_name.main(args);` too.
 - Question, not decided: methods at module level (D-017, D-035). Recommendation: keep them. A module is a singleton, so a
@@ -178,8 +176,7 @@ Author decision. Replaces the cooperative methods of D-047 (`suspend`, `resume n
 
 ## D-052 Processes raise errors; env variables; REPL moved to the manual (2026-10-01)
 Author answers TOP-08, TOP-10, TOP-I2. Refines D-031, D-043.
-- Environment variables of the OS are visible as `$NAME` (TOP-08). The list and the types of the 0.1 system
-  variables are still open.
+- Environment variables of the OS are visible as `$NAME` (TOP-08). The list and the types of the 0.1 system variables are still open.
 - Processes are sequential, so a process, also of an aspect, can raise errors; they propagate to the caller. The
   driver captures the exit code of `panic`, `raise`, `expect` and `assert` (TOP-10). Replaces "an aspect can't raise".
 - The REPL and daemon text moved from topology.html to `manual/usage.md` (TOP-I2); the tutorial keeps a pointer.
@@ -236,35 +233,40 @@ The system variable `$EVE_OUT` sets the output folder. Open: the names of the lo
 Applied: evevm/lib/io.eve, evevm/lib/README.md, topology.html (system variables).
 
 ## Q-020 Level 2 suite: what must be decided first (2026-10-03)
-Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4). Each test is a driver with a folder of
-aspects and modules. These points block it; answer each one:
+Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4). Each test is a driver with a folder of aspects and modules. These points block it; answer each one:
 (a) **Aspect scope.** D-043 says each process of an aspect has its own scope and aspect-level `let` values are copied into it;
-    D-055 says an aspect is a singleton whose scope lives from the first `apply` until `reset`. Which one? With the singleton, does a
-    second `apply` see the values left by the first one?
-(b) **What `.` means in an aspect.** Can the driver read `aspect.member` after `apply`, or only the `@` outputs (PRC-14 point 1)?
-**answer**
-Cancel this request. Aspect members can't be accessed with ".". One aspect must have one entry point, the main() process. 
+    D-055 says an aspect is a singleton whose scope lives from the first `apply` until `reset`. Which one? With the singleton, does a second `apply` see the values left by the first one?
+**answer** I think I answered before to this. `reset` is obsolete. Aspect variables are private the main() process of the aspect. The declaration zone provide variables that can be shared by all process members. Because inside an aspect everything is sequentioal there are no race conditions. One apply create one scope, second apply create a new scope. (New instance of same aspect) Perfect izolation between executions.
 
-(c) **Sibling processes.** Can a process of an aspect call another process of the same aspect by its bare name, and how is that
-    different from `apply` (D-043, assumed)?
+(b) **What `.` means in an aspect.** Can the driver read `aspect.member` after `apply`, or only the `@` outputs (PRC-14 point 1)?
+**answer** Cancel this feature. Aspect members can't be accessed with ".", and can't be defined with "." because none are public. One aspect must have one entry point, the main() process this is also not public, but implicit called when one aspect is applied. 
+
+(c) **Sibling processes.** Can a process of an aspect call another process of the same aspect by its bare name, and how is that different from `apply` (D-043, assumed)?
+**answer** Retired. One aspect has a single process main(). 
+
 (d) **Errors across `apply`.** An error raised in an aspect process without `recover`: does it go to the `recover` of the driver
     process at the `apply` line, with which `$error.job` and `$error.code`? Does `panic` in an aspect end the driver (D-038 says yes)?
-    Does `over;` in an aspect end only that process?
+    **answer** yes, panic stop the process, and suddenly the application crash. The driver also panic. The driver will trigger a memory cleanup and exit.
+    Does `over;` in an aspect end only that process? Over, end the aspect. If is used in driver, end driver. 
+    
 (e) **Import syntax.** The pages show `from $path/library_name use (*);` and `from $user_path use (module_name, …);`, while D-031 says
-    a path is a string. Is the path a string (`from "lib/util" use (*);`), an unquoted path, or both? Is `use (m as x)` the alias form?
-    Is a member reached as `m.name` or, with `(*)`, as a bare `name`?
-(f) **Module life cycle.** When does `initialize` run (first import, once per driver?), when does a module `finalize` run, and can a
-    module read the globals of the driver that imports it ("bound to the scope of the driver", D-043)?
+    a path is a string. Is the path a string (`from "lib/util" use (*);`), an unquoted path, or both? Is `use (m as x)` the alias form? **answer** yes this is the alias form
+    Is a member reached as `m.name` or, with `(*)`, as a bare `name`? **answer** yes when alias is used  m.name when use (*) is used the public members (methods) are used without alias. This is how system methods enter the language as statements.
+    
+(f) **Module life cycle.** When does `initialize` run (first import, once per driver?), when does a module `finalize` run, and can a module read the globals of the driver that imports it ("bound to the scope of the driver", D-043)?
+**answer** No, module members are agnostic of host, we use parameters to communicate with module.
+
 (g) **Where aspects and modules are found in a test.** D-055: a folder given by the caller, else `asp`, the project root, then
     `lib`. What is the project root of `test/level2/b07_x.eve`: its folder? Proposal: each test has a folder `test/level2/b07_x/`
-    with its aspects and modules, named in the test with `set $EVE_ASP = "b07_x";` or found by default in a folder named like the driver.
+    with its aspects and modules, named in the test with `set $EVE_ASP = "b07_x";` or found by default in a folder named like the driver. Ok, for each test that need additional files create a folder like "b07" with subfolders "lib", "asp"
 (h) **Names and placement.** Level 2 already holds `b01`–`b06` (VM slot commands) and `c01`–`c05` (VM workflow), which are tests of
     the VM tools, not of the language, and `c` is the prefix of level 3 (D-018). Proposal: move them to `test/vm/` (`v01`…) and keep
-    `b01`… in level 2 for aspects and modules.
-(i) **Arguments.** `apply a.p(value, *list_args)` and `(param: value, *map_args)` (processing.html): is spreading a map into named
-    parameters part of 0.1?
+    `b01`… in level 2 for aspects and modules. **answer** agree withi this
+    
+(i) **Arguments.** `apply a.p(value, *list_args)` and `(param: value, *map_args)` (processing.html): is spreading a map into named  parameters part of 0.1? **answer** yes spreading is part of level2.
+
 **Status:** (a), (b), (c) decided by D-066: state per `apply`, no public members, one process `main` per aspect.
-    (d) to (i) are open; in (d) and (i) read `apply a(…)` for `apply a.p(…)`.
+    (d) to (i) decided by D-072 (2026-10-03).
 
 ## D-066 An aspect is an encapsulated machine with one `main`; parallel blocks start aspects (2026-10-03)
 Author decision (plan/design-issues.md). Answers Q-020 (a), (b), (c), PRC-14, CON-09, CON-11 (who is started).
@@ -369,3 +371,32 @@ Author decision. Answers TOP-08 (the list of the 0.1 system variables was open).
 - Proposed for 0.1: `$error`, `$NAME` (environment), `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`, and the `$err_`/`$wrn_`
   constants. Six open points (duplicates `$OS_PWD`/`$CWD`, `$MY_LIB`/`$MY_LOG`, the two meanings of `$trace`,
   `$object` next to `@self`, folder types, which variables a driver may set) are in the register.
+
+## D-072 Level 2 answers: aspect errors, imports, extension methods, test folders (2026-10-03)
+Author decision. Answers Q-020 (d) to (i), TOP-10 and Q-011 again; refines D-035, D-052, D-055, D-066, D-068.
+Follow-up questions were answered in the session the same day.
+- **Aspect errors (d, TOP-10).** An error the aspect does not recover ends it and is raised again in the driver at the
+  `apply` line; the driver's `recover` reads it in `$error`, an exception object with `code`, `message` and `line` (new
+  field). A `main` that returns normally means code 0. `over;` in an aspect ends the aspect and the driver goes on after
+  `apply`; in the driver it ends the program. `panic;` in an aspect ends the application: the driver panics too, frees
+  the memory and exits with code 1.
+- **Aspect scope (a, b, c)** confirmed: one `apply`, one new scope; aspect-level declarations are shared by `main` and the
+  methods of the aspect only; `main` is implicit, not public; no member is public; no sibling processes.
+- **Import path (e).** Both forms: unquoted folder names joined by `/` (`lib/db`, `$EVE_LIB/db`) or a string expression
+  (`"lib"`, `$root_path/"lib"`).
+- **Import list (e).** `use (m)`: members as `m.name`; `use (m as x)`: `x.name`; `use (m(*))`: the public members of `m`
+  without prefix; `use (*)`: every module of the folder, namespaces merged. A name conflict makes the import fail; the
+  modules are then listed one by one. Standard modules enter the language this way (`print`).
+- **Modules and the host (f).** A module can't read the globals of the script that imports it; it communicates through
+  parameters.
+- **Extension methods (Q-011).** A module-level `method _name(@self: ClassName …)` extends the class: called as
+  `obj.name(…)`, private to the declaring module. Inside a class `_` still means protected; no prefix is private (D-035).
+- **Spreading (i).** `apply a(value, *list_args)` and `apply a(param: value, *map_args)` are part of level 2 (0.1).
+- **Test folders (g).** A level 2 test that needs more files has a folder named by its code, `test/level2/b07/`, with
+  `asp/` and `lib/`. Proposed (VM): the project root of a driver is its own folder, and the VM also searches
+  `<folder>/<code>/asp` and `<folder>/<code>/lib`; to confirm when the first test is written.
+- **VM tests moved (h).** `b01`–`b06` and `c01`–`c05` are now `test/vm/v01`–`v11` (`runtest.py vm`); level 2 is empty
+  and keeps `b01…` for aspects and modules.
+- Applied: processing.html (Errors of an aspect), modules.html (Import table and syntax, notes, extension methods),
+  syntax.html (`_` rows, `$error.line`), spec/semantics/variables.md (`$error.line`), test/vm, test/readme.md,
+  manual/usage.md, script/runtest.py. VM: `$error.line`, `apply`, imports and extension methods are not implemented.
