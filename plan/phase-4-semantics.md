@@ -26,12 +26,12 @@ Source: `control.html`, `processing.html`.
 - Evaluation order, loop semantics, `case` fall-through rules.
 - Errors: `try`/`recover`, `panic`, `raise`, `retry`, `resume`; what uncaught errors do.
 
-### S4.5 `semantics/concurrency.md` `[ ]`
-Source: `concurrency.html`, `processing.html`.
-- Methods, asynchronous methods, parallel processes, side-effect rules, parameter passing modes
-  (input, output, variant).
-- D-050: concurrency is not in 0.1. Methods, side effects and parameter passing (D-048, D-049) are normative for
-  0.1; asynchronous and parallel methods (D-047) go in a section marked "planned, not in 0.1", keywords reserved.
+### S4.5 `semantics/multitasking.md` `[ ]`
+Source: `multitasking.html`, `processing.html`.
+- Methods, side-effect rules, parameter passing modes (input, output, variant), generators, parallel aspects.
+- D-050: multitasking is not in 0.1. Methods, side effects and parameter passing (D-048, D-049) are normative for
+  0.1; parallel aspects (D-066) go in a section marked "planned, not in 0.1", keywords reserved. Generators and
+  the module `task` are specified in version 2 (D-067); `yield` is reserved.
 
 ### S4.6 Collections and objects `[ ]`
 Source: `collections.html`, `classes.html`.

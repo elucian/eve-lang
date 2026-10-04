@@ -52,7 +52,7 @@ answer is applied to the tutorial and recorded in `plan/decisions.md`; the ids o
 | classes.html | [classes.md](classes.md) | 9 | 6 | 8 |
 | collections.html | [collections.md](collections.md) | 2 | 0 | 21 |
 | processing.html | [processing.md](processing.md) | 10 | 4 | 4 |
-| concurrency.html | [concurrency.md](concurrency.md) | 11 | 2 | 2 |
+| multitasking.html | [multitasking.md](multitasking.md) | 11 | 2 | 2 |
 | library.html | [library.md](library.md) | 6 | 2 | 0 |
 | command.html | [command.md](command.md) | 5 | 1 | 1 |
 | databases.html | [databases.md](databases.md) | 4 | 3 | 0 |

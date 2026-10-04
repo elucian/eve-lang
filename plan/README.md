@@ -39,7 +39,7 @@ that goal.
 | 1 | [phase-1-tutorial.md](phase-1-tutorial.md) | Fix and complete the tutorial; add the compiler page |
 | 2 | [phase-2-spec-foundation.md](phase-2-spec-foundation.md) | Spec skeleton, schemas, lexical rules, keywords, operators |
 | 3 | [phase-3-syntax.md](phase-3-syntax.md) | Grammar: regions, statements, expressions, declarations |
-| 4 | [phase-4-semantics.md](phase-4-semantics.md) | Types, scopes, topology, control flow, concurrency |
+| 4 | [phase-4-semantics.md](phase-4-semantics.md) | Types, scopes, topology, control flow, multitasking |
 | 5 | [phase-5-conformance.md](phase-5-conformance.md) | Built-ins, conformance tests, test levels 1–3 |
 | 6 | [phase-6-compiler-track.md](phase-6-compiler-track.md) | Test-runner contract, compiler registry, approval |
 | 7 | [phase-7-manual.md](phase-7-manual.md) | Compiler manual: implement, use, generated feature tables |

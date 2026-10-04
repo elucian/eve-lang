@@ -6,11 +6,11 @@ Page: `tutorial/index.html` (191 lines: the topic list). Reviewed 2026-09-28. Ho
 ## Questions
 
 ### IDX-01 Topic order
-Current order: manifest, syntax, types, topology, concurrency, functions, classes, collections,
+Current order: manifest, syntax, types, topology, multitasking, functions, classes, collections,
 control, processing, algorithms, library, command, databases, compiler. Routines are introduced in
-concurrency (5th) but used from types (3rd) on; control flow (9th) comes after classes and
+multitasking (5th, was concurrency) but used from types (3rd) on; control flow (9th) comes after classes and
 collections, whose examples use loops. Proposed: manifest, syntax, types, control, functions
-,routines , collections, classes, topology, processing, concurrency, library, command,
+,routines , collections, classes, topology, processing, multitasking, library, command,
 option, algorithms, databases, compiler. Accept, or give your order?
 **Answer:** Accepted
 Status: open

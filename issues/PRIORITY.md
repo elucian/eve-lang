@@ -20,11 +20,11 @@ answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-
 | 1 | Errors, exit codes, processes | [processing](processing.md), [topology](topology.md) | 8 | 3 | 2 |
 | 1 | Strings and collections | [collections](collections.md) | 18 | 0 | 1 |
 | 1 | Spec to write (already answered) | [syntax](syntax.md) | 0 | 0 | 6 |
-| 2 | Functions and parameters | [algorithms](algorithms.md), CON-02, CON-03 in [concurrency](concurrency.md) | 3 | 0 | 1 |
+| 2 | Functions and parameters | [algorithms](algorithms.md), CON-02, CON-03 in [multitasking](multitasking.md) | 3 | 0 | 1 |
 | 2 | Classes and traits | [classes](classes.md) | 9 | 0 | 0 |
 | 2 | Types | [types](types.md) | 1 | 1 | 1 |
 | 3 | Control flow | [control](control.md) | 0 | 0 | 0 |
-| 3 | Concurrency (not in 0.1) | [concurrency](concurrency.md) | 3 | 1 | 5 |
+| 3 | Multitasking (not in 0.1) | [multitasking](multitasking.md) | 3 | 1 | 5 |
 | 4 | Shell commands | [command](command.md) | 5 | 0 | 0 |
 | 4 | Databases | [databases](databases.md) | 4 | 0 | 0 |
 | 4 | Compiler page, manifest, index | [compiler](compiler.md), [manifest](manifest.md), [index](index.md) | 4 | 1 | 3 |
@@ -59,7 +59,7 @@ One answer closes several issues in each group.
 
 ## Priority 3: not in 0.1
 
-12. **Concurrency.** CON-07 time-out, CON-11 rules of parallel methods, CON-12 channel details, CON-06
+12. **Multitasking.** CON-07 time-out, CON-11 rules of parallel methods, CON-12 channel details, CON-06
     (partial). Defer all of it until the VM runs sequential programs (D-050).
 
 ## Priority 4: cheap or independent

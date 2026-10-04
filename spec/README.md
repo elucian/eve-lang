@@ -43,7 +43,7 @@ spec/
     scopes.md          names, sigils, globals, system variables
     topology.md        projects, scripts, drivers, aspects, modules, execution
     control.md         control flow, errors, recovery
-    concurrency.md
+    multitasking.md      methods, generators (version 2), parallel aspects (planned)
   library/
     builtins.md, builtins.json
   conformance/

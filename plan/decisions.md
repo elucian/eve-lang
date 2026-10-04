@@ -1093,3 +1093,53 @@ The author wants suspended methods back (generators that keep their state, coope
     the new block interleaves methods on one core.
 Recommendation: decide B, specify A for 0.1 (A is a subset of B). Questions: A or B; the keyword of the block;
 are generators in version 1 (they need no threads)?
+**Answer:** The chapter is renamed Multitasking. `yield` is used for generators. No coroutines.
+**Status:** design drafted in [design-multitasking.md](design-multitasking.md): generators one level deep (A), no
+cooperative block (B dropped); cooperative tasks are generators taking turns; a waiting started aspect gives its
+core away. Approved: D-067.
+
+### D-067 Multitasking: generators with `yield`, parallel aspects, no coroutines (2026-10-03)
+Author decision. Answers Q-021; the design is [design-multitasking.md](design-multitasking.md).
+- The topic and the tutorial chapter are named **Multitasking**: `concurrency.html` became `multitasking.html`
+  (data file `data/multitasking.json`, index row), `issues/concurrency.md` became `issues/multitasking.md`
+  (CON ids kept), spec step S4.5 is `semantics/multitasking.md`. Eve has no coroutines, `async`, `await` or `suspend`.
+- **Generators.** A method becomes a generator because its body contains `yield`; it declares one result.
+  `result := expression; yield;` is the explicit form, `yield expression;` the short form; both are valid.
+  A call creates a `Generator(:T)` object without `new` (`let g := count_to(3);`); `new` is for the objects of a
+  class. Use: `for v in g`, comprehensions, `g.next()`, `g.value`, `g.done`, `g.close()`. A generator called as a
+  statement is an error. `yield` only in the generator's own body (one level: not a coroutine), lazy body, inputs
+  by value, errors raised in the caller, never copied, not an argument of `apply` or `start`.
+- **Cooperative tasks** are generators that take turns on one core; the library module `task` (`round_robin`,
+  `until`) is documented now and implemented in version 2.
+- **Parallel aspects** (D-066): a started aspect that waits (input/output, `wait`, channel) gives its worker to
+  another task, so a group can overlap many waits on a few cores. Done by the VM, invisible in the language.
+- **Versions.** Generators are designed and taught in the tutorial now; their specification is postponed to
+  version 2. `yield` is reserved until then.
+- Applied to multitasking.html (head, title, introduction, new section Generators with Declaration, Use, Rules,
+  Cooperative tasks, Generators and channels; "Parallel model" heading became "Parallel aspects", id kept; Workers;
+  two new rows in "Choosing a model"), index.html, processing.html (link), syntax.html (`yield` row), functions.html
+  (closures point to Generators); issues, plan phases 1, 3, 4, plan README and spec README follow the rename.
+
+### D-068 Modules page; modules are singletons without public variables (2026-10-03)
+Author decision. Answers Q-020 (f) for the life cycle; refines D-035 (visibility) and D-043 (module scope).
+- New tutorial chapter `modules.html` (07, after Functions; index rows 07 to 17 became 08 to 18), with
+  `data/modules.json`: declaration, public and private members, singletons, import, modules and parallel aspects,
+  library modules (`external`), and a table that compares drivers, aspects and modules. The Modules section of
+  topology.html is now a summary that links to it.
+- **Singleton.** A module is loaded once, at the first import; every later import (driver, aspect or module) uses the
+  same copy. `initialize` runs once, right after loading; `finalize` runs once, when the driver ends, after its
+  process, in the reverse order of initialization.
+- **No instances.** A module is not a class: `let m := new module_name;` is an error. Several objects with their own
+  state come from a public class of the module.
+- **No public variables**, because a module is shared and a public variable is not safe when tasks run at the same
+  time: `let .name …` is an error. Public members are constants (`set .NAME = v :T;`), classes, functions, methods
+  and channels (`set .name := new Channel(:T)(capacity: n);`: the reference is constant, the channel is safe for
+  several tasks).
+- Proposed (not stated by the author): a started aspect can't change the private variables of a module, like the
+  driver globals (D-047); a module method that changes private state is called by the driver or by an applied
+  aspect. Written in modules.html and in the data rules of multitasking.html.
+- Every example process is named `main` (`process main is`): fixed 7 fragments in classes, collections, library and
+  strings (`process test`, `list_join`, `list_split`, `demo_numbers`, `map_append`, `test_error`, `unicode_text`).
+- Also: syntax.html (`.` prefix row), multitasking.html (data rule "Modules are shared"), functions.html (read next).
+  `data/topology.json` had a trailing comma after the author removed "Running an Aspect"; the comma was removed.
+- Open: the import path, string or `$path/name` (Q-020 e); `from "lib" use (counter);` is used in the examples.

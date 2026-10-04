@@ -26,7 +26,7 @@ Source: `syntax.html#statements`, `control.html`.
   collection literals, string patterns (`"x=#n" ? (x)`).
 
 ### S3.5 `syntax/declarations.md` `[ ]`
-Sources: `types.html`, `classes.html`, `functions.html`, `concurrency.html`.
+Sources: `types.html`, `classes.html`, `functions.html`, `multitasking.html`.
 - Variable declarations (`let`, typed forms, D-036), `type`, `class` (with `<:`), `constructor`
   constructors, `function`, `routine`, closures, lambdas, generics.
 
