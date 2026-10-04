@@ -1,0 +1,6 @@
+# beta: one public function
+module beta is
+  function .two() => (@result: Integer) is
+    result := 2;
+  return;
+end beta;

@@ -1,0 +1,5 @@
+{
+  "exit": 30,
+  "stdout": [],
+  "note": "the import fails with $err_module (30), the exit code (Q-022 a)"
+}

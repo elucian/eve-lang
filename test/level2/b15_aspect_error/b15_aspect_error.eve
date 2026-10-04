@@ -1,0 +1,11 @@
+# an error not recovered in the aspect is raised in the driver at the apply line (D-072 d)
+driver b15_aspect_error is
+  process main is
+    apply fail();
+    print "never";
+  recover
+    print "caught: \s{$error.message}";
+    print "code: \#{$error.code}";
+    print "line: \#{$error.line}";
+  return;
+end b15_aspect_error;

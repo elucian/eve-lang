@@ -1,0 +1,6 @@
+# right: public function name, same as left
+module right is
+  function .name() => (@result: String) is
+    result := "right";
+  return;
+end right;

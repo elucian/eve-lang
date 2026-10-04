@@ -1,0 +1,11 @@
+# initialize runs at the import, finalize after the process of the driver (D-068)
+driver b07_module_lifecycle is
+  from lib use (counter);
+
+  process main is
+    print "main: start";
+    counter.tick();
+    counter.tick();
+    print "main: end";
+  return;
+end b07_module_lifecycle;

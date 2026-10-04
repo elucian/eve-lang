@@ -1,0 +1,6 @@
+# left: public function name
+module left is
+  function .name() => (@result: String) is
+    result := "left";
+  return;
+end left;

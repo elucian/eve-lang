@@ -1,0 +1,6 @@
+# greeting: one public function
+module greeting is
+  function .hello(name: String) => (@result: String) is
+    result := "Hello, \s{name}!";
+  return;
+end greeting;

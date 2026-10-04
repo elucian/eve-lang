@@ -1,0 +1,7 @@
+# panic in an aspect ends the whole application with exit code 1 (D-072 d)
+driver b17_aspect_panic is
+  process main is
+    apply crash();
+    print "never";
+  return;
+end b17_aspect_panic;

@@ -1,0 +1,7 @@
+# crash: panics
+aspect crash is
+  process main is
+    print "crash: start";
+    panic;
+  return;
+end crash;

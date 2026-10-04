@@ -1,0 +1,6 @@
+# sum: two inputs, one output
+aspect sum is
+  process main(a, b :Integer, @total :Integer) is
+    total := a + b;
+  return;
+end sum;

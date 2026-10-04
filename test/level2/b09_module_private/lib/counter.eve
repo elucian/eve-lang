@@ -1,0 +1,18 @@
+# counter: public constant, private state, life cycle (D-068)
+module counter is
+  set .LIMIT = 100 :Integer;
+  let total = 0 :Integer;
+
+  method .tick() is
+    total += 1;
+  return;
+
+  method .count() => (@result: Integer) is
+    result := total;
+  return;
+
+  initialize
+    print "counter: loaded";
+  finalize
+    print "counter: \#{total} ticks";
+end counter;

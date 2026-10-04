@@ -1,0 +1,9 @@
+# tally: aspect-level state, created again by every apply
+aspect tally is
+  let calls = 0 :Integer;
+
+  process main is
+    calls += 1;
+    print "calls: \#{calls}";
+  return;
+end tally;

@@ -413,3 +413,21 @@ Author decision. Replaces the test-folder part of D-072 (g) (a folder named by t
 - Level 2 and level 3 tests are project tests; a single `.eve` file stays valid at every level (level 1, `vm`).
 - Applied: script/runtest.py, .gitignore, test/readme.md, test/level2/readme.md. Checked with a throwaway project test
   (runs from its folder, `out/` emptied, missing file reported).
+
+## Q-022 Assumptions of the level 2 tests b01 to b19 (2026-10-03)
+The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These rules are assumed without a decision;
+confirm or correct each one (the test named after it changes with the answer):
+(a) An import that fails on a name conflict (`use (*)`) raises `$err_module`; it happens before the process, so nothing
+    can recover it and the exit code is 30 (b06).
+(b) Reading a private member of a module (`counter.total`) is a runtime error `$err_access`, exit code 21; it could also be
+    a check-time error (exit 65) (b09).
+(c) The keys of a map spread into named arguments are symbols named like the parameters: `apply add3(a: 10, *m)` with
+    `m := {'b': 20, 'c': 30}` (b14).
+(d) `$error.line` is the line of the `raise` in the aspect file, not the `apply` line of the driver (b15).
+(e) A driver may declare an extension method for a class imported from a module, and `use (m(*))` brings the class
+    in as a bare name (`Point`) (b18).
+(f) `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line, no time stamp (b19; the
+    names and the line format are open since D-057).
+(g) Aspects are found in `asp/` and modules in the folder named by the import path, both relative to the folder of
+    the driver (the project root, D-055, D-073).
+**Answer:** _(open)_

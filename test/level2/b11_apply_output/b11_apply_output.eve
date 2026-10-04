@@ -1,0 +1,9 @@
+# an aspect gives results back through @ output parameters (D-048, D-066)
+driver b11_apply_output is
+  process main is
+    let t :Integer;
+    apply sum(2, 3, @t);
+    expect t == 5;
+    print t;
+  return;
+end b11_apply_output;

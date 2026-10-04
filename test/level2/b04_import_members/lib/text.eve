@@ -1,0 +1,6 @@
+# text: one public function
+module text is
+  function .shout(s: String) => (@result: String) is
+    result := "\s{s}!";
+  return;
+end text;

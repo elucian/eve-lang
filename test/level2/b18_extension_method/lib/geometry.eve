@@ -1,0 +1,10 @@
+# geometry: a public class
+module geometry is
+  class .Point = {x, y :Integer} <: Object is
+    constructor(@self)(x = 0, y = 0 :Integer) is
+      self := new Object();
+      let self.x := x;
+      let self.y := y;
+    return;
+  end Point;
+end geometry;
