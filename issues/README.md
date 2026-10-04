@@ -46,7 +46,7 @@ answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the
 | manifest.html | [manifest.md](manifest.md) | 0 | 2 | 4 |
 | syntax.html | [syntax.md](syntax.md) | 6 | 0 | 33 |
 | types.html | [types.md](types.md) | 1 | 2 | 25 |
-| topology.html | [topology.md](topology.md) | 1 | 0 | 21 |
+| topology.html | [topology.md](topology.md) | 0 | 0 | 22 |
 | control.html | [control.md](control.md) | 0 | 0 | 21 |
 | functions.html | [functions.md](functions.md) | 0 | 0 | 13 |
 | classes.html | [classes.md](classes.md) | 9 | 6 | 8 |

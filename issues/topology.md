@@ -4,13 +4,8 @@ Page: `tutorial/topology.html` (597 lines). Reviewed 2026-09-28. How to answer: 
 
 ## Questions
 
-### TOP-08 Built-in system variables for 0.1
-The pages name `$EVE_DIR`, `$EVE_LIB`, `$MY_DIR`, `$MY_LIB`, `$MY_LOG`, `$OS_PWD`, `$error`,
-`$stack`, `$trace`, `$object`, `$result`, and user ones like `$user_path`. "System constants are
-capitalized". Which system variables must the VM provide in 0.1, with which types? Are OS
-environment variables visible as `$NAME`?
-**Answer:** Yes, environment variables are visible as $NAME. 
-Status: partly done → D-031, D-052: environment variables are `$NAME` (applied); the 0.1 variable list and their types are open
+None open (TOP-08 retired 2026-10-03: the system variables are in
+[spec/semantics/variables.md](../spec/semantics/variables.md), D-071).
 
 ## Improvements (applied only if you write "yes")
 

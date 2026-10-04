@@ -356,3 +356,13 @@ Author decision. Answers Q-020 (f) for the life cycle; refines D-035 (visibility
 - Also: syntax.html (`.` prefix row), multitasking.html (data rule "Modules are shared"), functions.html (read next).
   `data/topology.json` had a trailing comma after the author removed "Running an Aspect"; the comma was removed.
 - Open: the import path, string or `$path/name` (Q-020 e); `from "lib" use (counter);` is used in the examples.
+
+## D-071 Register of system variables (2026-10-03)
+Author decision. Answers TOP-08 (the list of the 0.1 system variables was open).
+- `spec/semantics/variables.md` is the register of the system variables: name, type, meaning, default, status
+  (0.1, draft, later, question), VM support and source. It lists the 19 variables and the 2 constant families found in the
+  tutorial, the decisions and `evevm/lib`, and 13 `$` names that are not system variables (placeholders, examples).
+- A new system variable is added to the register first, then used in a page, a test or the VM.
+- Proposed for 0.1: `$error`, `$NAME` (environment), `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`, and the `$err_`/`$wrn_`
+  constants. Six open points (duplicates `$OS_PWD`/`$CWD`, `$MY_LIB`/`$MY_LOG`, the two meanings of `$trace`,
+  `$object` next to `@self`, folder types, which variables a driver may set) are in the register.

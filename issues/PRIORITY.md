@@ -43,8 +43,8 @@ One answer closes several issues in each group.
    Every test uses `print` with strings, so this comes first.
 2. **Input and output.** LIB-03 `read`, LIB-04 `write` and `print`, LIB-05 standard error.
    These decide the `.out` files of the conformance tests.
-3. **Built-ins for 0.1.** LIB-01 (the list), LIB-02 (mutating string functions), TOP-08 (system variables, the
-   rest of it). They define what the VM must contain.
+3. **Built-ins for 0.1.** LIB-01 (the list), LIB-02 (mutating string functions), the open points of
+   [spec/semantics/variables.md](../spec/semantics/variables.md) (system variables, was TOP-08). They define what the VM must contain.
 4. **Errors and exit codes.** PRC-02 (`finalize`),
    PRC-09 (Exception module). They give the exit codes in `expect.json`.
 5. **Collections core.** COL-02, COL-05 (map notation, list operation doubts; COL-01, 07 answered, D-058). Test levels 2 and 3 use them.

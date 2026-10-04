@@ -40,7 +40,8 @@ spec/
     declarations.md    types, classes, functions, methods
   semantics/
     types.md, types.json
-    scopes.md          names, sigils, globals, system variables
+    scopes.md          names, sigils, globals
+    variables.md       register of the system variables ($name)
     topology.md        projects, scripts, drivers, aspects, modules, execution
     control.md         control flow, errors, recovery
     multitasking.md      methods, generators (version 2), parallel aspects (planned)
