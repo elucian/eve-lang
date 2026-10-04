@@ -20,7 +20,7 @@ that goal.
 - Before starting, mark the step `[~]`. When it is done, mark it `[x]` and add the date and a
   one-line result, for example `[x] 2026-10-02: 41 keywords, 3 conflicts → D-004`.
 - A step needs a decision from the author → mark `[!]`, add a question to
-  [`decisions.md`](decisions.md), and move on to the next unblocked step.
+  [`decision_level1.md`](decision_level1.md) or [`decision_level2.md`](decision_level2.md), and move on to the next unblocked step.
 - Never delete steps. Obsolete steps become `[-]` with a reason.
 - Keep each step small enough for one focused session. Split a step if it grows.
 
@@ -51,7 +51,7 @@ grows with each spec JSON file.
 ## Ground rules
 
 - **The spec is normative, the tutorial is didactic.** When they disagree, the spec wins and
-  the tutorial is fixed, after the author approves the decision in `decisions.md`.
+  the tutorial is fixed, after the author approves the decision in `decision_level1.md` or `decision_level2.md`.
 - **Source of truth for tables is JSON.** When a tutorial table (keywords, operators) duplicates
   spec data, the tutorial table is regenerated from the JSON, not edited by hand. The same holds
   for every table in `manual/features/`.

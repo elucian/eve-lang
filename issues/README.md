@@ -18,7 +18,7 @@ answers are fine ("yes", "use `<>`", "drop it"). To reject a proposed fix, write
 
 When a file is answered, Claude:
 
-1. turns settled answers into decisions in `plan/decisions.md`;
+1. turns settled answers into decisions in `plan/decision_level1.md` or `plan/decision_level2.md`;
 2. fixes the page (the tutorial is edited in the scl repo);
 3. adds the rules to the specification in `spec/`, after asking any follow-up questions;
 4. marks each issue: `Status: open` → `answered` → `done`.
@@ -37,7 +37,7 @@ depends on another points to it (`see CLS-09`).
 ## Pages
 
 In index order (index.html first). Open items on 2026-10-01: 86 questions. An item is removed when its
-answer is applied to the tutorial and recorded in `plan/decisions.md`; the ids of removed items are retired
+answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the ids of removed items are retired
 (their text is in the git history before 2026-10-01). Spec work still points to the decisions.
 
 | Page | File | Open questions | Open fixes / improvements | Retired |

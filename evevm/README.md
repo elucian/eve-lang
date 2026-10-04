@@ -1,6 +1,6 @@
 # evevm — the Eve virtual machine
 
-The first Eve implementation (D-006, D-007 in `../plan/decisions.md`): a virtual machine written
+The first Eve implementation (D-006, D-007 in `../plan/decision_level1.md`): a virtual machine written
 in Zig that runs Eve scripts. It builds `bin/eve.exe` at the repo root, the official `eve`
 command. Manual: [`../manual/README.md`](../manual/README.md).
 

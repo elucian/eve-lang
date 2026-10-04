@@ -4,7 +4,7 @@ This folder holds the **normative specification** of Eve: the reference any Eve 
 interpreter must follow. The tutorial (`tutorial/`, published at
 <https://sagecode.org/projects/eve/>) teaches the language; this specification defines it.
 When the two disagree, the specification wins. Record the conflict in
-[`../plan/decisions.md`](../plan/decisions.md) and fix the tutorial.
+[`../plan/decision_level1.md`](../plan/decision_level1.md) or [`../plan/decision_level2.md`](../plan/decision_level2.md) and fix the tutorial.
 
 License: [CC BY 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../plan/`](../plan/README.md).
 

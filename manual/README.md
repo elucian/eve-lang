@@ -2,7 +2,7 @@
 
 This folder is the **manual of an Eve implementation**: how the compiler is built, how to use
 it, and which parts of the specification it supports. It replaces the old `docs/` skeleton
-(decision D-004 in [`../plan/decisions.md`](../plan/decisions.md)).
+(decision D-004 in [`../plan/decision_level1.md`](../plan/decision_level1.md)).
 
 | Source | Role | Format |
 |---|---|---|

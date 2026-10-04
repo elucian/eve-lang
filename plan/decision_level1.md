@@ -1,57 +1,62 @@
-# Decisions and Open Questions
+# Decisions, level 1: project and single script
 
 Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a question is
 answered, turn it into a decision with the date and keep the question text for history. Plan
 steps reference these ids.
 
-## Decisions
+The log is split in two files. Ids are shared and keep counting across both (an id not found
+here is in the other file); a new entry goes to the file of its topic:
 
-### D-001 Specification formats (2026-09-28)
+- [decision_level1.md](decision_level1.md): the project (formats, repositories, licenses, the VM, tests)
+  and the language of a single script (lexical rules, control flow, types, collections, functions,
+  classes, errors in a driver). Matches `test/level1`.
+- [decision_level2.md](decision_level2.md): programs made of several files: processes, aspects,
+  modules and imports, libraries, multitasking and parallel aspects. Matches `test/level2`.
+
+## D-001 Specification formats (2026-09-28)
 The specification is written in Markdown for prose and JSON for machine-readable tables, with
 the grammar as EBNF in fenced `ebnf` blocks. No HTML in `spec/`. See `spec/README.md`.
 
-### D-004 `docs/` becomes `manual/`, the compiler manual (2026-09-28)
+## D-004 `docs/` becomes `manual/`, the compiler manual (2026-09-28)
 Answers Q-001. `docs/` is renamed `manual/`: the manual of an Eve implementation, covering how
 to implement it, how to use it, what was implemented, and which features it supports. The
 feature tables are generated from the spec (JSON items and `ebnf` rules) joined with a support
 file per implementation, never edited by hand. The empty stubs and `doc.sh` are removed.
 See `manual/README.md` and `plan/phase-7-manual.md`.
 
-### D-005 The manual documents the first Eve compiler, not yet built (2026-09-28)
+## D-005 The manual documents the first Eve compiler, not yet built (2026-09-28)
 Answers Q-007. No Eve implementation exists; the first compiler is being built now, together
 with the spec. `manual/` is written alongside it: `implement.md` and the feature tables come
 first, `usage.md` and `implemented.md` fill in as the compiler runs and ships versions.
 Until then every feature counts as `no`.
 
-### D-006 First implementation: an Eve VM written in Zig (2026-09-28)
+## D-006 First implementation: an Eve VM written in Zig (2026-09-28)
 Answers Q-008 in part. The first Eve implementation is a virtual machine written in Zig that runs
 Eve source as a scripting language. There is no ahead-of-time compiler yet. `manual/` documents
 this VM; the feature tables have one column for it. A compiler can come later as a second
 implementation with its own support file.
 
-### D-007 `evevm/` source, `bin/eve.exe` official implementation (2026-09-28)
+## D-007 `evevm/` source, `bin/eve.exe` official implementation (2026-09-28)
 Answers Q-009. The Zig source of the Eve virtual machine lives in `evevm/` in this repo. The build
 produces `bin/eve.exe` (`bin/eve` on Unix), the official Eve implementation. Its implementation
 id in the manual is `eve` (support file `manual/support/eve.json`). `bin/` holds build output
 only; `*.exe` is already git-ignored.
 
-### D-008 Shebang line (2026-09-28)
+## D-008 Shebang line (2026-09-28)
 Eve files run as scripts, so a file may start with a shebang line, for example
 `#!/usr/bin/env eve`. It is a comment: `#` already starts a line comment, and the VM ignores the
 line. The spec states it in `lexical/lexical.md` (S2.3): only the first line of a file is an
 interpreter directive; `#!` on a later line is an ordinary `#` comment.
 
-### D-002 Tutorial stays in the scl repo (2026-09-28)
+## D-002 Tutorial stays in the scl repo (2026-09-28)
 The tutorial remains HTML, published from `scl/projects/eve`, and is edited here through the
 `tutorial/` junction. It is git-ignored in eve-lang.
 
-### D-003 Many compilers, one specification (2026-09-28)
+## D-003 Many compilers, one specification (2026-09-28)
 Eve has no single reference implementation. Any compiler is valid if it implements a stated spec
 version and passes the conformance level it claims. Students are expected to build their own.
 
-## Open questions
-
-### Q-001 Fate of `docs/` (answered 2026-09-28 → D-004)
+## Q-001 Fate of `docs/` (answered 2026-09-28 → D-004)
 `docs/` holds an older Markdown documentation skeleton: `index.md` plus 20 empty stub pages
 (core, db, net, os, std) created by `doc.sh`. Options:
 (a) delete `docs/` and `doc.sh`, since `spec/` replaces them;
@@ -60,25 +65,25 @@ Recommended: (a) for the empty stubs, and move any real content into `spec/`.
 Blocks: T1.2 cleanup of eve-lang, S2.1.
 Answer: neither; rename to `manual/` as the compiler manual (D-004).
 
-### Q-002 Canonical keyword list
+## Q-002 Canonical keyword list
 The tutorial table (`syntax.html#keywords`) has duplicates (`constant`, `method`, `reset`,
 `add`, `del`, `pop`) and a typo (`labe`). It lacks words the examples use at region level
 (`driver`, `module`, `type`, `globals`). Which words are reserved in 0.1, and which are
 contextual (reserved only in some regions)?
 Blocks: S2.4.
 
-### Q-003 Stray files in the tutorial folder
+## Q-003 Stray files in the tutorial folder
 `tutorial/quiz.txt` (AI chat transcript), `tutorial/output.log` (UTF-16 PowerShell error log)
 and `tutorial/databases.md` (AI review prompts) are not tutorial pages. Delete them, or move
 useful parts (quiz questions) into a proper page?
 Blocks: T1.2.
 
-### Q-004 `global` or `globals`
+## Q-004 `global` or `globals`
 `pattern/declaration.eve` uses both `globals` and `global`. Are they two region keywords with
 different meanings, or one keyword with a legacy spelling?
 Blocks: S3.2.
 
-### Q-005 Expected-output convention for tests
+## Q-005 Expected-output convention for tests
 How does a test state its expected result? Options: (a) `expect` statements inside the script
 (already used in `demo/shared_state.eve`); (b) a sibling `.out` file with the exact stdout;
 (c) both: `expect` for logic, `.out` for print formatting.
@@ -88,31 +93,31 @@ Status 2026-09-28: `script/runtest.py` implements (c): `expect` failures surface
 exit code, `<name>.out` holds the stdout, and a per-level `expect.json` holds exit codes and
 arguments. Confirm, or say what to change.
 
-### Q-006 Specification license
+## Q-006 Specification license
 The eve-lang repo is Apache 2.0. Does the specification use the same license, or a documentation
 license (for example CC BY 4.0) so other compilers can quote it freely?
 Blocks: S2.1.
 
-### Q-007 Which implementation does `manual/` document? (answered 2026-09-28 → D-005)
+## Q-007 Which implementation does `manual/` document? (answered 2026-09-28 → D-005)
 The old README says the MD docs are "specific to EVE virtual machine hosted in this repository",
 but there is no compiler here. What is the implementation's name (the manual uses the
 placeholder `evec`), in which repository does its code live, and in which language is it written?
 Blocks: M7.7; the support file name in M7.3.
 Answer: none yet; Eve is being built now, and its implementation language is undecided (D-005).
 
-### Q-008 Implementation language and name of the first compiler (answered in part 2026-09-28 → D-006)
+## Q-008 Implementation language and name of the first compiler (answered in part 2026-09-28 → D-006)
 Which language is the first Eve compiler written in, what is it called (the manual uses the
 placeholder `evec` for its support file), and does its code live in this repo or its own?
 Doesn't block the generator (M7.3); blocks M7.5 architecture details and M7.6.
 Answer: Zig; the first implementation is a VM, not a compiler (D-006). Name and repository → Q-009.
 
-### Q-009 Name and repository of the Eve VM (answered 2026-09-28 → D-007)
+## Q-009 Name and repository of the Eve VM (answered 2026-09-28 → D-007)
 What are the VM's name and executable name (the manual uses the placeholder `eve-vm`), and does
 its Zig code live in this repo (for example `vm/`) or in its own repository?
 Blocks: M7.6 (command-line examples), the support file name in M7.3.
 Answer: source folder `evevm/`, executable `bin/eve.exe`, the official implementation (D-007).
 
-### Q-010 Exit codes of an Eve process (answered 2026-09-28 → D-010)
+## Q-010 Exit codes of an Eve process (answered 2026-09-28 → D-010)
 The tutorial lists `exit`, `over` and `panic` as ways to interrupt a program, but gives no exit
 codes. Does `over N;` end the process with exit code N? Which codes do `exit`, `panic`, a failed
 `expect` and an unhandled error produce? `test/level1/expect.json` assumes `over 1;` → 1 (a02).
@@ -121,13 +126,13 @@ Blocks: S5.2, the exit codes in `expect.json`.
 Answer: `over` = 0, `over 1` = 1 (abnormal), failed `expect` = 2 (error), failed `assert` = 3
 (warning) (D-010).
 
-### D-009 Test runner and test-driven workflow (2026-09-28)
+## D-009 Test runner and test-driven workflow (2026-09-28)
 Tests are written first, then run on the VM with `python script/runtest.py <level|all|test>`.
 Reports go to `temp/output/*.md` (not versioned). A failing result leads to a fix in the VM, the
 spec or the test, one feature at a time. Utility and test scripts live in `script/`
 (moved from `.claude/scripts/`). Usage and conventions: `test/readme.md`.
 
-### D-010 Process exit codes (2026-09-28)
+## D-010 Process exit codes (2026-09-28)
 Answers Q-010.
 
 | Code | Cause | Meaning |
@@ -141,7 +146,7 @@ Still open: the codes of `exit`, `panic` and an unhandled error; whether a faile
 the process or only sets the final code; which code wins when several apply. The VM stub uses 70
 for "not implemented", outside this range.
 
-### D-011 Comments (2026-09-28)
+## D-011 Comments (2026-09-28)
 From `issues/syntax.md` SYN-03. Eve comments are `#`, `##`, `**`, `(* ... *)` and `/* ... */`.
 `#` and `##` start only at the beginning of a line, without indentation. `**` runs to the end of
 the line and may follow code or be indented. `(* ... *)` is an expression comment; `/* ... */` is a
@@ -149,16 +154,16 @@ block comment. The `--` end-of-line comment and the `+- -+` box comment are remo
 comments in `.eve` files and tutorial examples were converted to `**`. Amended by D-014:
 `(* ... *)` became `(** ... **)`.
 
-### D-012 Identifiers and the driver header (2026-09-28)
+## D-012 Identifiers and the driver header (2026-09-28)
 From SYN-01, SYN-02. `-` is not allowed in identifiers, to avoid confusion with the `-` operator.
 The driver header and the `process` keyword need no `:` (`driver a01_driver()`, `process`).
 Amended by D-015: headers end with the keyword `is`.
 
-### D-013 Not-equal is `<>`; `!` marks unsafe operations (2026-09-28)
+## D-013 Not-equal is `<>`; `!` marks unsafe operations (2026-09-28)
 From SYN-05. `<>` is the not-equal operator; `!=` is not Eve. `!` is the sigil for unsafe
 operations (its placement: SYN-19). All `!=` in `.eve` files and tutorial examples became `<>`.
 
-### D-014 Comments: nesting, expression comments, file header (2026-09-28)
+## D-014 Comments: nesting, expression comments, file header (2026-09-28)
 From SYN-04, SYN-16, SYN-17, SYN-18.
 - `/* ... */` does not nest: the first `*/` closes the comment.
 - Expression comments are `(** ... **)` (not `(* ... *)`, which clashes with the vararg `*` in
@@ -168,14 +173,14 @@ From SYN-04, SYN-16, SYN-17, SYN-18.
 - Box comments became block comments: `+-` → `/*-` and `-+` → `-*/` in 6 `.eve` files and in the
   tutorial examples; lines of dashes in examples became `**--…`.
 
-### D-015 Declaration headers end with `is` (2026-09-28)
+## D-015 Declaration headers end with `is` (2026-09-28)
 From SYN-15. A header ends with the keyword `is` instead of `:`: `driver name is`,
 `driver name(params) is`, and the same for `aspect`, `module`, `function`, `routine`, `method`
 and `constructor`. `()` is optional when there are no parameters. `process` has no colon.
 Applied to every example: 94 + 61 headers in the tutorial, 53 in `.eve` files. Class headers with
 a body still end in `:` (CLS-01 open).
 
-### D-016 Control-flow blocks (2026-09-28)
+## D-016 Control-flow blocks (2026-09-28)
 From SYN-11: the author rewrote control.html and processing.html. General form:
 `label: <control_type>` declarations, `<transition>` executable region, optional clauses,
 `<terminator>`.
@@ -196,7 +201,7 @@ error. `then` now means "after the block completed"; branches use `do`. Removed:
 `resolve`, `skip`, `split`, `run`, `cycle label:` as a header. All tutorial pages and `.eve` files
 were converted; syntax.html keyword, block and interruption tables were rebuilt.
 
-### D-017 Assignment, visibility, unsafe calls, shift operators (2026-09-28)
+## D-017 Assignment, visibility, unsafe calls, shift operators (2026-09-28)
 From SYN-06, SYN-08, SYN-10, SYN-19.
 - `=` is an expression: no type inference, returns its value, chains (`a = b = 5 : Integer`,
   `let a = b = c = y : Integer;`), copies/borrows a value; also binds typed parameters.
@@ -206,11 +211,11 @@ From SYN-06, SYN-08, SYN-10, SYN-19.
 - `name!()`: a function or method that may raise, has side effects, or bypasses safety checks.
 - `<<` and `>>` are shift modifiers (change a value in place). `->` and `<-` are reserved, unused.
 
-### D-018 Test file names use `_` (2026-09-28)
+## D-018 Test file names use `_` (2026-09-28)
 From SYN-14. Test files follow identifier rules: `a01_driver.eve`, `a02_comments.eve`,
 `a03_print.eve` (+ `.out`); conventions `a01_feature.eve`, `b01_feature.eve`, `c01_feature.eve`.
 
-### D-019 Lexical rules: escapes, identifiers, `**`, precedence (2026-09-28)
+## D-019 Lexical rules: escapes, identifiers, `**`, precedence (2026-09-28)
 From SYN-20 to SYN-24.
 - Escapes in `"…"` and `'…'`: `\` `\"` `\'` `\{` `\}` `\n` `\r` `\t` `\0` `\xHH` `\u{H…}`
   (1 to 6 hex digits). Any other `\` sequence is a lexical error. `"""…"""` text is raw (no
@@ -224,7 +229,7 @@ From SYN-20 to SYN-24.
   `+` `-` · `..` · `<<` `>>` · `&&` · `||` · `==` `<>` `<` `>` `<=` `>=` `~` `is` `in` `eq` · `and` ·
   `xor` · `or` · `if … else`. May be revised.
 
-### D-020 Jobs without handlers; `recover` decides (2026-09-28)
+## D-020 Jobs without handlers; `recover` decides (2026-09-28)
 Replaces the job handlers of D-016. Answers PRC-01, PRC-04, CTL-14; partly PRC-02, CTL-03.
 - A job is `label: job` [declarations] `do` … `done job [label];`. The `error`, `other error`,
   `check` and `clean` clauses are removed; `error`, `check` and `clean` are no longer keywords.
@@ -246,7 +251,7 @@ Replaces the job handlers of D-016. Answers PRC-01, PRC-04, CTL-14; partly PRC-0
   job form. Open: exit code of an aborted driver (D-010).
 Applied to control.html, processing.html, syntax.html (keyword tables).
 
-### D-021 `$` is the last index; indexing is 1-based (2026-09-30)
+## D-021 `$` is the last index; indexing is 1-based (2026-09-30)
 From COL-06. Idea from bee-lang (D1). Eve indexes lists, arrays, matrices and strings from 1.
 - In an index, a bare `$` is the index of the last element: `a[$]`, `a[$ - 1]`, `mat[3, $]`.
   `#` is not an index symbol: it would clash with `#{…}` interpolation (`"#{a[#]}"`).
@@ -254,7 +259,7 @@ From COL-06. Idea from bee-lang (D1). Eve indexes lists, arrays, matrices and st
   inside `[ ]` is the end anchor. `$` is only valid as an index or inside a range that is an index.
 - Index 0 and negative indexes are errors (`a[0]`, `a[-1]`); use `a[$ - 2]` for relative access.
 
-### D-022 Ranges: exclusive ends, postfix step, slices use `..` (2026-09-30)
+## D-022 Ranges: exclusive ends, postfix step, slices use `..` (2026-09-30)
 From TYP-10, COL-08. Idea from bee-lang (D13).
 - Range operators: `a..b` is [a, b]; `a..<b` is [a, b); `a>..b` is (a, b]; `a>..<b` is (a, b).
   Each is one token (longest match). Open ends keep `?`: `(0..?)`, `(?..0)`.
@@ -268,13 +273,13 @@ From TYP-10, COL-08. Idea from bee-lang (D13).
 - Applied to demo/domain_demo.eve, demo/numeric_range.eve and the tutorial pages collections, control
   and types (`[#]` became `[$]`, `(a..b:step)` became `(a..b)(step)`, `[n:m]` became `[n..m]`).
 
-### D-023 Arrays from ranges use the builder only (2026-09-30)
+## D-023 Arrays from ranges use the builder only (2026-09-30)
 From a discussion of `[1..10](2)`. The builder `[x | x in (1..10)(2)]` is the only way to fill an
 array from a range. The shorthands `[1..10]` and `[1..10](2)` are not Eve: a bracket after a value
 is indexing or slicing (`a[1..10](2)` stays free for stepped slices), and brackets never define a
 range (D-022). The array type stays `[]Integer` / `[10]Integer`: `new a := [x | x in (1..10)(2)]: []Integer;`.
 
-### D-024 Cartesian product is `><` (2026-09-30)
+## D-024 Cartesian product is `><` (2026-09-30)
 From the matrix builder example. `a >< b` is the cartesian product of two collections or ranges: a
 sequence of pairs in row-major order (the left operand is the outer loop), for example
 `(x, y) in (1..4) >< (1..4)`. It is one token (longest match), not `>` then `<`. It is easy to confuse
@@ -282,7 +287,7 @@ with `<>` (not equal), so the compiler reports a hint when `><` has operands tha
 collections or ranges (`did you mean <>?`), and when `<>` has two collections or ranges. A builder can
 also use several generators (`x in A and y in B`), which gives the same product without `><`.
 
-### D-025 No routines: a method is any subprogram with side effects (2026-09-30)
+## D-025 No routines: a method is any subprogram with side effects (2026-09-30)
 Answers FUN-03, FUN-09, FUN-I1, TYP-17, CON-01, CMD-01. Amends D-015 and D-016.
 - There are two subprogram keywords: `function` and `method`. `routine` (and procedure) is removed.
 - A plain function has no side effects: it does not change globals or arguments and calls only plain
@@ -297,23 +302,7 @@ Answers FUN-03, FUN-09, FUN-I1, TYP-17, CON-01, CMD-01. Amends D-015 and D-016.
 - Applied to every tutorial page, the demos (`routine_call.eve` became `method_call.eve`), the keyword
   tables and the Notepad++ UDL files.
 
-### Q-011 Default visibility of a module-level method (answered 2026-09-30 → D-035)
-D-025 says `.` is public and `_` is private. What is a method with no prefix: private to the module, or
-public? The same question applies to functions and classes at module level.
-**Answer:** _(open)_
-
-### D-026 No coroutines: generators, threads, suspended methods (2026-09-30)
-Follows D-025. The word "coroutine" is not used, because it came with "routine".
-- A method started with `start` is an **asynchronous method**: it runs in a secondary thread and can be
-  suspended with `suspend` and continued with `resume`. A suspended method waits for a signal.
-- A method that produces its values one batch at a time is a **generator**.
-- A function can not be suspended and has no state. Only a method has state and can be suspended.
-- A function declared inside a method is enclosed by it and can use the state of that method. This is the
-  closure system of Eve: the method holds the state, the enclosed function is the closure.
-- Applied to concurrency, syntax and topology pages and the concurrency and topology issues. The closures
-  section of functions.html still describes the old rule (closures created by a function): Q-012.
-
-### Q-012 How does an enclosed function use method state? (answered 2026-09-30 → D-027)
+## Q-012 How does an enclosed function use method state? (answered 2026-09-30 → D-027)
 D-026 makes a function inside a method a closure. Can the enclosed function only read the state of the
 method, or also change it? A function has no side effects (D-025), so a counter like `generator` in
 functions.html (`let current += 1`) would have to be a method, or the method changes `current` itself.
@@ -321,7 +310,7 @@ How is a closure created and returned: `new f := make_counter(0);` where `make_c
 that returns a function? This decides the rewrite of the closures section (FUN-06).
 **Answer:** The enclosed function has side effects, so it is a `!` function and may change the state (D-027).
 
-### D-027 Functions with side effects or randomness end with `!` (2026-09-30)
+## D-027 Functions with side effects or randomness end with `!` (2026-09-30)
 Answers Q-012. Refines D-017 (`name!()`), D-025 and D-026.
 - A plain function is deterministic and has no side effects. A function that has side effects, or is not
   deterministic (stochastic, for example `random!()`), ends with `!`: `name!()`. A plain function can not
@@ -335,7 +324,7 @@ Answers Q-012. Refines D-017 (`name!()`), D-025 and D-026.
 - Applied to the closures section of functions.html (the `generator` example is now a method).
 - Open: the exact lambda syntax of an enclosed function (`let next! := Function() => …`).
 
-### D-028 Functions: results, defaults, arguments, lambda (2026-09-30)
+## D-028 Functions: results, defaults, arguments, lambda (2026-09-30)
 From the FUN-01 to FUN-10 answers. Refines D-027.
 - A function must have a result; a subprogram without a result is a method (FUN-01). A function can return
   a list of results `=> (@r1:T1, @r2:T2)`; `$result` is then the list `(result1, result2)`. `@` makes the result
@@ -352,7 +341,7 @@ From the FUN-01 to FUN-10 answers. Refines D-027.
   process (FUN-03).
 - Applied to functions.html (notes, arguments, lambda section, FUN-F1 and FUN-F2 fixes).
 
-### D-029 One parameter list; parameters after a vararg are named (2026-09-30)
+## D-029 One parameter list; parameters after a vararg are named (2026-09-30)
 Replaces the `option` keyword of D-019; answers SYN-22 again.
 - A method or function has one parameter list, never two: `f()()` does not exist and `option` is removed.
 - Optional parameters may follow the vararg parameter. In a call they must be named with the pair
@@ -363,7 +352,7 @@ Replaces the `option` keyword of D-019; answers SYN-22 again.
   second parameter list.
 - Applied to syntax.html (print section) and the SYN-22 issue.
 
-### D-030 Control page answers (2026-09-30)
+## D-030 Control page answers (2026-09-30)
 From CTL-01 to CTL-16. Refines D-016 and D-020.
 - **Job (CTL-01, 03, 16).** The label is optional. A job without a label starts with `job` and ends with a
   naked `done;`; its implicit name is `job<line>` (for example `job24`). A labeled job is
@@ -394,43 +383,7 @@ From CTL-01 to CTL-16. Refines D-016 and D-020.
 Spec additions: `spec/syntax/statements.md` (blocks, repeat while, match ranges),
 `spec/semantics/control.md` (job names and status map, loop scopes, then/else rules).
 
-### D-031 Topology page answers (2026-09-30)
-From TOP-01 to TOP-16. Applied to topology.html, with one canonical skeleton each for driver, aspect and module (TOP-I1).
-- Indentation is mandatory: 2 spaces, an error otherwise (TOP-01). Region keywords start at column 0.
-- Regions are decided per kind of script (TOP-02). A class is not a region: `class Name = {…} <: Type;` on one line;
-  the `class` region with `NewType = {} <: Type;` is not allowed (TOP-06). Process end regions: `recover`, `finalize`
-  (`release` is gone); a module ends with `finalize`.
-- `set` creates constants of the global scope. It is allowed directly after `#!` or after the header (TOP-03), and in any
-  declaration region. The `constant` region is a visual delimiter for constants only; global variables use `new` in the
-  `global` region (interpretation of TOP-05). Declarations may sit directly under the header at 2 spaces; they belong to
-  the global scope bound to the process scope (TOP-05). Constant names are not enforced (TOP-05).
-- `def Alias = library.Member;` creates an alias; `def` is a new keyword. An alias of a parameterized class is not
-  supported (TOP-04).
-- `:=` executes an expression and is allowed in global regions; the "no inference in global" restriction is removed (TOP-07).
-- OS environment variables are visible as `$NAME` (TOP-08).
-- `over` ends with 0; `panic` ends with 1 (no `panic N`, no `panic 0`); a failed `expect` ends with 2; `raise` ends with a code
-  greater than 0 (TOP-09).
-- An aspect has a mandatory process. A library and a module have none; a module can be imported, not applied (TOP-10).
-- A library is a folder of modules; a module is one script file with header `module name is`, named like the file. The term
-  "crate" is dropped (TOP-11).
-- A path is a string; `/` is a "smart concatenation" that becomes `\` on Windows (TOP-12).
-- `.cfg` files hold `$key = value` with Eve literals and `#` comments (TOP-13).
-- VM parameters, REPL, service and exclusive modes are planned (about 0.9), not in 0.1 (TOP-14). Script operations: `parse`,
-  `debug` (debug mode) and `execute` (production mode); `load` is removed (TOP-15).
-- Only a driver defines globals. Aspects and modules define public (prefix `.`) and private members, reached as
-  `alias.member`, so equal names in two modules do not conflict (TOP-16).
-- Open: the 0.1 list and types of built-in system variables (TOP-08); whether an aspect returns a result or an error code to
-  the driver (TOP-10).
-
-Spec additions:
-- `spec/semantics/topology.md`: projects, libraries, modules, imports and paths (TOP-10 to TOP-12), exit codes (TOP-09),
-  VM operations (TOP-15).
-- `spec/syntax/regions.md`: regions and order per script kind, indentation rule, `def`, `set`/`new`, `:=` in global regions
-  (TOP-01 to TOP-07).
-- `spec/semantics/scopes.md`: system variables (TOP-08), public and private members (TOP-16).
-- `manual/usage.md`: VM modes and options, planned (TOP-14).
-
-### D-032 Types page answers (2026-09-30)
+## D-032 Types page answers (2026-09-30)
 From TYP-01 to TYP-22, TYP-I3. Applied to `tutorial/types.html`.
 - Native types are `u8 u16 u32 u64`, `i8 i16 i32 i64`, `f32 f64` (no `i128`, no `f16`). Only core
   libraries use them; scripts use primitive types (TYP-01).
@@ -470,7 +423,7 @@ Spec additions: `spec/semantics/types.md` and `types.json` (native and primitive
 literal defaults, variants, coercion, division, `parse`); `spec/lexical/lexical.md` (numeric, `U+`,
 Symbol, NIL, String, placeholder, date, time and Duration literals).
 
-### D-033 Loops close with `done`; no `repeat`, no plain loop; `cycle` (2026-09-30)
+## D-033 Loops close with `done`; no `repeat`, no plain loop; `cycle` (2026-09-30)
 Replaces the loop rows of D-016 and the `repeat` rules of D-030 (CTL-05, 08, 13). Author decision.
 - Every block closes with `done`. A loop closes with `done loop [label];` (while and for).
 - `repeat` is removed. The body opener `cycle` is replaced by `do`: `while c do`, `for x in r do`.
@@ -484,7 +437,7 @@ Replaces the loop rows of D-016 and the `repeat` rules of D-030 (CTL-05, 08, 13)
 - Applied to control (section "Unconditional Loop" removed, sidebar entry too), syntax and the other
   tutorial pages, `js/eve1.js`, `js/eve3.js` and the demos.
 
-### D-034 Closers: `done label;` (2026-09-30)
+## D-034 Closers: `done label;` (2026-09-30)
 Replaces the closers of D-016, D-020, D-030 (CTL-16) and D-033. Author decision.
 - A job always has a label (the implicit name `job<line>` is removed) and closes with `done label;`.
 - A block that has a label closes with `done label;`; a block without a label closes with `done;`.
@@ -496,13 +449,7 @@ Replaces the closers of D-016, D-020, D-030 (CTL-16) and D-033. Author decision.
   group closes with `join name;`, an unlabeled group with a naked `join;`.
 - Applied to control, syntax, the other tutorial pages and the demos (41 closers converted).
 
-### D-035 Module-level visibility: `.` is public, no prefix is private (2026-09-30)
-Answers Q-011. Author decision.
-- A module-level method, function or class is public only if its name starts with `.` in its declaration
-  (`method .write(...)`). Without the dot it is private to the module.
-- `_` stays the protected prefix of class members (D-017); a module-level name needs no `_`.
-
-### D-036 `let` declares, `:=` mutates, `new` calls a constructor (2026-10-01)
+## D-036 `let` declares, `:=` mutates, `new` calls a constructor (2026-10-01)
 Author decision. Replaces the `new`/`let` rows of D-017 and D-032 (TYP-07, TYP-08) and the constructor form of CLS-03 to CLS-06.
 - `let` declares a variable, like `var` in other languages: `let a := 0;`, `let a = 0 :Integer;`. It takes a type.
   `new` no longer declares variables. `set` is unchanged (constants, D-031).
@@ -529,7 +476,7 @@ Author decision. Replaces the `new`/`let` rows of D-017 and D-032 (TYP-07, TYP-0
 
 Spec additions: `spec/syntax/declarations.md` (variable, class, constructor), `spec/syntax/statements.md` (`let`, `:=`, `new`).
 
-### D-037 `end name;` closes a class and a module (2026-10-01)
+## D-037 `end name;` closes a class and a module (2026-10-01)
 Author decision. Refines D-036 and the closers of D-016.
 - A module returns nothing, so it closes with `end module_name;`, not `return;`.
 - A class is a declaration, not a subprogram: it closes with `end ClassName;` (a class without body ends with `;`
@@ -549,7 +496,7 @@ Author decision. Refines D-036 and the closers of D-016.
   keyword, probably `begin`). Does a started process share the driver globals, and how are its parameters and result
   passed back? Is `over N;` in a sub-process an exit code for the caller's `start`?
 
-### D-038 `over;` has no code; process parameters and globals (2026-10-01)
+## D-038 `over;` has no code; process parameters and globals (2026-10-01)
 Author decision. Answers the open questions of D-037. Replaces the `over N` rows of D-010.
 - `over;` takes no value: it ends the process it is in with code 0. The forced abnormal exit with code 1 (`over 1;`)
   is now `panic;` (D-031). Exit codes: 0 `over;` or end of process, 1 `panic`, 2 failed `expect`
@@ -561,7 +508,7 @@ Author decision. Answers the open questions of D-037. Replaces the `over N` rows
   `begin total(10, @sum);` (the output is ready after the `join`).
 - `panic` is global: it is an unhandled exception and ends the whole application, not only the process (D-031).
 
-### D-039 Traits, abstract classes, partial methods (2026-10-01, proposed)
+## D-039 Traits, abstract classes, partial methods (2026-10-01, proposed)
 Proposed by the model after reviewing the partials section of classes.html. Awaiting author confirmation. Touches CLS-07 and CLS-08.
 - Problem: "partial" meant trait, interface, abstract class and prototype constructor at once; a partial constructor
   carried state, so multiple inheritance had attribute conflicts; an unimplemented method returned `Null` at run time.
@@ -581,7 +528,7 @@ Proposed by the model after reviewing the partials section of classes.html. Awai
   `Integer` adopting `Printable`; and the exact list of library traits (`Iterable`, `Comparable`, `Printable`).
 - Todo: library traits `Iterable`, `Comparable`, `Printable`: step S5.1a in `plan/phase-5-conformance.md`.
 
-### D-040 Parameters belong to the main process; the process is indented (2026-10-01)
+## D-040 Parameters belong to the main process; the process is indented (2026-10-01)
 Author decision. Refines D-031 (indentation) and D-037/D-038 (process).
 - A driver or aspect header has no parameter list: `driver name is`, `aspect name is`. The parameters move to the
   process: `process main(*args) is`. A module has no process and no parameters.
@@ -592,7 +539,7 @@ Author decision. Refines D-031 (indentation) and D-037/D-038 (process).
 - Open: a method declared before the process cannot read the process parameters (`demo/method_call.eve` still reads
   `args` inside `test`, which was already wrong).
 
-### D-041 One scope: no import, alias, constant, global or variable regions (2026-10-01)
+## D-041 One scope: no import, alias, constant, global or variable regions (2026-10-01)
 Author decision. Replaces the region rules of D-031 (TOP-02, TOP-03, TOP-05) and the layout of D-040.
 - A driver, aspect or module has a single scope. The regions `import`, `alias`, `constant`, `global` and `globals`
   are removed. Their content is declared directly in the scope, in any order: `from … use …;` (import), `def` (alias),
@@ -608,39 +555,7 @@ Author decision. Replaces the region rules of D-031 (TOP-02, TOP-03, TOP-05) and
 - Open: the keyword `type` region of the old patterns, the keyword `globals` in `pattern/declaration.eve` (old
   syntax, kept as is), and whether `from … use` may sit after a declaration (any order is assumed).
 
-### D-042 `apply aspect.main(args);` names the process (2026-10-01)
-Author decision. Replaces the `apply name to (args);` form of D-016 and D-038.
-- `apply` runs a process of an aspect and waits. The process is named: `apply aspect_name.main(args);`. The `to`
-  form and the form without parentheses are removed; `()` is always written.
-- Applied to processing.html (execution section, examples), syntax.html (keyword table).
-- Open: `begin aspect_name(args);` in a parallel group should probably become `begin aspect_name.main(args);` too.
-- Question, not decided: methods at module level (D-017, D-035). Recommendation: keep them. A module is a singleton, so a
-  module-level method is a method of that singleton, without `@self`, like a class method. Scripts need free helper
-  methods without a wrapper class, and extension methods (`method (@self: Error) .raise(...)`) are declared outside
-  classes. Removing them would force a class for every helper.
-
-### D-043 Single main process in a driver; aspects host named processes; `start` replaces `begin` (2026-10-01)
-Author decision. Replaces `begin` and the named-process `start` of D-037/D-038, and the `.main` of D-042.
-- A driver has exactly one process, `main`: a single-thread master. It may define methods (also asynchronous ones) but
-  no other process.
-- An aspect hosts one or more named processes and has no `main`. Parameters belong to each process (D-040).
-- `apply aspect.process(args);` runs a process in serial mode (waits). `start aspect.process(args);` runs it in
-  parallel, inside `parallel … fork … join`; people expect an `end` after `begin`, so `begin` is removed from the
-  language. `join` closes the group. Output parameters (`@`) are ready after `apply`, or after the `join` for `start`.
-- Inside an aspect, a process can call a sibling by its bare name (assumed from the model, not stated).
-- Scopes: only the driver defines a global scope. Each process of an aspect has its own scope, no globals, and
-  data arrives by parameters; parallel runs never share variables. The scope of a module is bound to the scope of the
-  driver or aspect that imports it (before: to the process).
-- Aspect-level `let` variables are initial values copied into each process scope (assumed).
-- `start name(args);` also stays for asynchronous methods (concurrency.html), joined by `wait all;`. The same keyword
-  now launches two kinds of concurrent work; the target tells them apart.
-- Applied to processing.html (apply forms, parallel examples), topology.html (driver, aspect, process, module scope),
-  syntax.html (keywords `apply`, `start`, `fork`; `begin` removed), concurrency.html; the highlighter drops `begin`.
-- Aspect examples use the process names `run` and `show`; the aspect `output_params` in concurrency.html became a driver.
-- Open: aspect member visibility (`.` public) now that aspects have no shared scope, and the demo files that apply
-  aspects, if any are written.
-
-### D-044 Issue files and keyword table cleaned (2026-10-01)
+## D-044 Issue files and keyword table cleaned (2026-10-01)
 Maintenance after D-036 to D-043.
 - `issues/`: 116 resolved items (status closed, done or answered) and the answered CLS-01 to CLS-08 were removed. Their answers
   live in this file; the earlier text is in the git history. Open items that quoted the old syntax were rewritten
@@ -650,7 +565,7 @@ Maintenance after D-036 to D-043.
   `destructor`. 115 words. The highlighter (eve1.js) follows.
 - collections.html: element creation `h('c') := 3;` is a mutation, not a `let` declaration.
 
-### D-045 `repeat` replaces `cycle`; `repeat N times` (2026-10-01)
+## D-045 `repeat` replaces `cycle`; `repeat N times` (2026-10-01)
 Author decision. Replaces `cycle` of D-033 and reuses the word `repeat` that D-033 removed as a closer.
 - `repeat [label] [N times] [if condition];` is a statement of every loop, `while` and `for`. It jumps to the
   beginning of the cycle: the loop condition (the range check in a `for`) is verified again and the body runs
@@ -665,47 +580,7 @@ Author decision. Replaces `cycle` of D-033 and reuses the word `repeat` that D-0
   `js/eve3.js`. The control summary table lost the columns "Opens scope" and "Condition after closer".
 - Open: whether `N times` counts per cycle (as written) or per loop.
 
-### D-046 `parallel` uses `do` and `done`; `fork` and `join` removed (2026-10-01)
-Author decision, aligns the parallel group with the control statements. Replaces the `fork`/`join` words of D-034 and D-043.
-- `[name:] parallel` declarations `do` … `start aspect.process(args);` … `done [name];`. The declarations (shared
-  data such as `let s: ()Integer;`) come before `do`; `start` is allowed in the `do` region.
-- `done [name];` waits for all the processes started in the group, as `join` did; a labeled group closes with
-  `done name;`, an unlabeled group with `done;`. Output parameters (`@`) are ready after the `done`.
-- `fork` and `join` are no longer keywords (keyword table 113 words).
-- Applied to processing.html (author edit and notes), control.html (summary table), syntax.html (keyword table, meaning
-  table, block terminators), `js/eve1.js`, issues CON-09 and PRC-07.
-
-### D-047 Parallel methods inside a process; aspects run serially; BSP (2026-10-01)
-Author decision (first three bullets); the rules after them are proposed to make it safe and implementable. Replaces
-`start aspect.process(args);` of D-043 and D-046 and refines the answer to CON-04 (methods were single-core only).
-- `apply aspect.process(args);` is the only way to run a process of an aspect: serial, the caller waits. Aspects are
-  never started; `start aspect.process()` is an error.
-- One process can span several cores. Parallel work is done by methods: `start method(args);` in the `do` region of a
-  `[name:] parallel … do … done [name];` block. `done` is a barrier: it waits for every method started in the group.
-- A method called by its bare name runs on the core of its caller; `suspend`, `resume` and `wait` stay cooperative
-  on that core (CON-08 answer unchanged).
-- Proposed, VM: a started method is a task; tasks run on a pool of worker threads, size `$cores` (default: the hardware
-  cores, set in the driver configuration). More tasks than cores are queued.
-- Proposed, data rules (no data race by construction, so no locks): arguments are evaluated at `start`; a collection
-  or object passed as input is shared read only and the process can't modify it until `done`. An `@` argument belongs
-  to one task: two tasks of a group can't receive the same variable, element or overlapping slice as output (compiler
-  where provable, VM check at `start` otherwise). Changed by D-048: inputs are passed by value, so the process may go
-  on changing them; the "read only until `done`" rule is dropped. A started method can't change driver globals, can't `suspend` and
-  can't contain a `parallel` block (no nesting). It may call methods by name (same worker) and print (any order).
-- Proposed, errors (answers the open part of PRC-07 for methods): when a task raises, the tasks not yet begun are
-  cancelled, the running ones finish, `done` raises the first error in the process, and later groups don't begin.
-- Bulk Synchronous Parallel (BSP) is the recommended pattern: one parallel block = one superstep (compute on own data,
-  write own outputs, barrier at `done`); the process combines or redistributes between blocks; an iterative algorithm
-  puts the block in a loop. Tasks never wait for each other, so a group can't deadlock, and combining in index order
-  makes results deterministic.
-- Proposed, channels (CON-05): not in version 1. Streams are read in batches, one batch per superstep. The author's
-  producer-consumer example was replaced; its problems are listed in CON-05.
-- Call site: `@` before an output argument (`start square(i, @s[i]);`), decided in D-048.
-- Applied to concurrency.html (intro, asynchronous methods, new section "Parallel methods" with "Bulk Synchronous
-  Parallel", examples `parallel_sum` and `heat_bar`; "Multi Threading" removed), processing.html (section "Parallel
-  execution", examples with methods), syntax.html (`parallel`, `start`), topology.html (driver, process, aspect).
-
-### D-048 `@` passes by reference, at the declaration and at the call (2026-10-01)
+## D-048 `@` passes by reference, at the declaration and at the call (2026-10-01)
 Author decision. Answers CON-02 and CON-10.
 - `@` marks an input/output parameter and is required on its argument: `bar(1, 2, @output);`, by name
   `add(1, 2, op: @result);`, also for elements and slices: `@s[i]`, `@nxt[a..b]`. The argument is a reference to a
@@ -721,7 +596,7 @@ Author decision. Answers CON-02 and CON-10.
   rules of parallel methods, `heat_bar` text), types.html and `demo/variant_params.eve` (`swap(@x, @y)`),
   `demo/output_params.eve` (call, missing comma, `set out :=`, `let result`, expected value 3).
 
-### D-049 `::` is the only clone; no `clone` keyword; slices by `:=` are views (2026-10-01)
+## D-049 `::` is the only clone; no `clone` keyword; slices by `:=` are views (2026-10-01)
 Author decision.
 - The keyword `clone` is removed (keyword table 112 words). The clone operator `::` makes a deep copy of an object or
   a collection: `let copy :: original;`. `:=` shares the reference of an object or collection, and copies a native value.
@@ -731,66 +606,7 @@ Author decision.
 - Applied to syntax.html (keyword table, "Assign Expression"), collections.html ("Array slicing"), concurrency.html
   (`heat_bar` clones the next state with `cur :: nxt;`).
 
-### D-050 Concurrency is not implemented in version 1 (2026-10-01)
-Author decision. Same treatment as the VM modes of TOP-14: designed, planned, not in 0.1.
-- Not in 0.1: asynchronous methods (`suspend`, `resume`, `wait all`, `wait name`) and parallel methods (`parallel`, `start`,
-  D-047). Their keywords stay reserved. A method in 0.1 runs to completion on the core of its caller; a process runs on
-  one core; aspects run with `apply` (serial).
-- In 0.1: methods, side effects, parameters, `@` by reference and by-value arguments (D-048), `::` and views (D-049).
-- The Zig VM needs no scheduler, coroutine stack or worker pool for 0.1.
-- Spec: `semantics/concurrency.md` (S4.5) keeps the design in a section marked "planned, not in 0.1".
-- Open: `wait duration;` as a plain pause of the process, outside concurrency, in 0.1 or not.
-- Applied: notes in concurrency.html (asynchronous and parallel methods) and processing.html (parallel execution),
-  plan S4.5, issues/concurrency.md header.
-
-### D-051 No asynchronous methods; one concurrency tutorial with groups, BSP and channels (2026-10-01)
-Author decision. Replaces the cooperative methods of D-047 (`suspend`, `resume name`, `wait all`, `wait name`) and the
-"no channels" proposal of D-047. Still not in 0.1 (D-050).
-- A method called by its name runs to completion on the core of its caller. `suspend` is removed (keyword table 111
-  words, highlighters); `resume` keeps only its `recover` meaning; `wait 10ms;` stays as a pause (open, D-050).
-- concurrency.html is the single tutorial for parallel work: methods and parameters, Parallel model, Parallel groups
-  (moved from processing.html, with the diagram `img/eve-parallel.svg`), Data rules, Errors and time-out, Workers,
-  Bulk Synchronous Parallel, Channels (with `img/eve-pipeline.svg`), Choosing a model. processing.html keeps a short
-  "Parallel execution" section that points there.
-- Channels: `new Channel(:T)(capacity: n[, senders: m])`; `ch.send(v);` waits while full; `for x in ch do` receives
-  until closed and empty; `ch.receive(@x);`; `ch.close();` (the channel closes after the m-th close); `ch.count()`.
-  A channel is passed with `@` and is the only object several tasks of a group may share. Values are copied on send;
-  order is kept per sender. Collect results inside the group: reading after `done` from a full channel deadlocks.
-- Scheduling: a task waiting on a channel gives its core to another task (M:N), so a pipeline with more stages than
-  `$cores` works. Deadlock (every unfinished task waits on a channel) is detected and raised at `done`; a channel
-  wait longer than `$timeout` raises a time-out error.
-- Models: task group, BSP, pipeline; a comparison table recommends groups or BSP first, channels for streams.
-- Applied also to functions.html (asynchronous method row became "parallel method", column "Can be suspended"
-  removed), syntax.html (`suspend`, `resume`, `yield`, `wait`, `start` rows), topology.html (driver, aspect process),
-  `js/eve1.js`, `js/eve3.js`. Issues: CON-04, CON-05 answered, CON-06 partly, CON-08 obsolete, CON-11 updated, CON-12 new.
-
-### D-052 Processes raise errors; env variables; REPL moved to the manual (2026-10-01)
-Author answers TOP-08, TOP-10, TOP-I2. Refines D-031, D-043.
-- Environment variables of the OS are visible as `$NAME` (TOP-08). The list and the types of the 0.1 system
-  variables are still open.
-- Processes are sequential, so a process, also of an aspect, can raise errors; they propagate to the caller. The
-  driver captures the exit code of `panic`, `raise`, `expect` and `assert` (TOP-10). Replaces "an aspect can't raise".
-- The REPL and daemon text moved from topology.html to `manual/usage.md` (TOP-I2); the tutorial keeps a pointer.
-- index.html: the quiz and certification section is removed (out of date).
-- Applied: topology.html, index.html, manual/usage.md. Issues TOP-10 and TOP-I2 done; TOP-08 stays open for the list.
-
-### D-053 Library in Eve, documented by eved (2026-10-02)
-Author answers LIB-01 to LIB-06.
-- The library is mostly written in Eve, in `evevm/lib/` (README.md documents it). Only primitives that need the
-  machine are native: a routine whose signature ends in `;`.
-- Documentation is generated, not written: `evevm/doc/` holds Markdown made from the comments (`**` blocks above a
-  declaration) and the signatures. The tool is `eved` (Eve doc), written in Zig, in `evevm/doc/eved.zig`, next to its output; `zig build doc`.
-- LIB-01: built-ins are both functions and methods; public methods in a string module, possibly a `String` class.
-  LIB-02: `truncate`, `fill`, `erase` return a new string; old references stay valid; garbage collected.
-- LIB-03/04: `read` is callable as a statement. `routine .write(*args:String, sep:=" ", eol:=False)` writes at the
-  current position; `print` adds a new line by default. Both write to stdout.
-- LIB-05: new `log_err()` and `log_wrn()` for the `recover` region (corrected by D-057: they write log files). An unhandled error at the end of a
-  driver goes to stderr: last error and call stack in debug mode, only the message otherwise.
-- LIB-06: a backslash escapes, a double backslash is one backslash; `&code;` sends any HTML character code. Spec pending.
-- Applied: `evevm/lib/io.eve` (draft), lib and doc READMEs, `eved` with a unit test. Not yet applied:
-  tutorial library.html, the string module, `spec/library/builtins.*`.
-
-### D-054 Exceptions page, `$err_` and `$wrn_` constants (2026-10-02, proposed codes)
+## D-054 Exceptions page, `$err_` and `$wrn_` constants (2026-10-02, proposed codes)
 Author request. New tutorial page `exceptions.html` (topic 13, after the standard library; later topics renumbered).
 - Predefined read-only constants: `$err_name` for each standard exception, `$wrn_name` for each warning; the value is
   the integer code, compared with `$error.code` in the `recover` region. Two tables, one for exceptions, one for
@@ -800,40 +616,7 @@ Author request. New tutorial page `exceptions.html` (topic 13, after the standar
   128-255 project; the exit code of an unhandled error is its code. The list of standard codes and the message
   patterns are a first draft. `raise`, `warn` and the Exception module signatures stay open (PRC-08, PRC-09).
 
-### D-055 Processing answers: interruptions, raise, aspects, command line (2026-10-02)
-Author answers PRC-02, 03, 06 to 11, 13, 14. Replaces parts of D-010, D-038, D-043.
-- Exit codes: `return` and `over;` 0, `panic` 1, failed `expect` 2, failed `assert` 3 (a warning: the process goes on),
-  `raise` 4 by default or the code of the exception. An exception is an object `{code, message}`; its code is also the
-  exit code. `abort` does not run `finalize` (before, it did). `finalize` runs after `return`, `exit`, and when
-  `recover` ends normally; it is skipped by `over`, `panic`, `abort`.
-- `raise`: every form is valid (constructor `raise Type("m")`, constant `raise ($Type, "m")`, `raise (23, "m")`,
-  `raise {code: 23, message: "m"}`, `raise "m"`); `raise` is an overloaded method; `$Type` is the code constant.
-- Processes can not be recursive, methods can. An aspect is never run: only its processes, with `apply`.
-- One parallel group at a time; a failed method does not stop the others; `done` waits, then raises the error to
-  `recover`, or to `finalize` when there is no `recover`.
-- Aspects are found by name: with a folder if given, else folder `asp`, the project root, then `lib`; `$EVE_ASP`
-  sets the place (also used for libraries). An aspect has one implicit singleton scope (declarations hoisted),
-  created by the first `apply`, kept until `reset aspect_name;` or `reset all;` (new statements).
-- Command line: `-p value` for a short parameter name, `--param value` for a long one; values are Eve literals;
-  `** @param x: "description"` above `main` feeds `eve script.eve -h`.
-- Exception module: rewritten as a valid class on `exceptions.html`; the code constant for the default is
-  `$err_raise` = 4, so warnings moved to 5 to 7 (changes D-054).
-- Applied: processing.html, topology.html, exceptions.html, data/processing.json. Spec work pending.
-
-### D-056 `external` declarations; exception.eve (2026-10-02)
-Author decision. A declaration with the keyword `external` in front (`external .print(...)`) keeps only the signature;
-the body is implemented in Zig by the virtual machine, and the compiler creates the external library. It replaces the
-trailing `;` proposed in D-053. `evevm/lib/exception.eve` (module `exception`: Error, Warning, Call, `raise`,
-`expect`, `assert`, `warn`, constants `$err_name` and `$wrn_name`) and `io.eve` use it; `eved` documents it.
-exceptions.html: tables have plain cells, no `<code>`; the module is `exception` in lower case.
-
-### D-057 io library: error and warning, log files, $EVE_OUT (2026-10-02)
-Author correction of D-053 (LIB-05). `error(message)` and `warning(message)` write to stderr (as the tutorial already says).
-`log_err(message)` and `log_wrn(message)` do not print: they create log files in the output folder, `out` by default.
-The system variable `$EVE_OUT` sets the output folder. Open: the names of the log files and their line format.
-Applied: evevm/lib/io.eve, evevm/lib/README.md, topology.html (system variables).
-
-### D-058 Collections answers: ordinals, literals, sets, maps, strings (2026-10-02)
+## D-058 Collections answers: ordinals, literals, sets, maps, strings (2026-10-02)
 Author answers COL-01 to COL-20 (issues/collections.md). Closes COL-08 (D-022, D-049) and the list operations of COL-05.
 - Ordinal: the first value is 0 (`{False, True}`: False = 0, True = 1). Capitalized names enter the enclosing scope (language rule).
 - Literals: `(1,2,3)` is a list, never a tuple; `List(...)` is an optional constructor; `(x)` is a list of one element, not an
@@ -858,7 +641,7 @@ Author answers COL-01 to COL-20 (issues/collections.md). Closes COL-08 (D-022, D
   how an Object gets new attributes (replaced `&=` by `object.x := 1`), and the exact meaning of `-=` with a position
   (`lst -= lst[1]`). Spec work pending.
 
-### D-059 Collections follow-ups; one interpolation form (2026-10-02)
+## D-059 Collections follow-ups; one interpolation form (2026-10-02)
 Author answers COL-02, 03, 05, 14, 15; COL-16 "apply the proposal". Applied to the tutorial and `demo/`.
 - Map type notation: `{:}(Type,Type)`, for example `{:}(String, Object)` (classes.html, collections.html).
 - Builder: the first generator is a range or a collection; an optional condition follows, joined with `and`:
@@ -874,7 +657,7 @@ Author answers COL-02, 03, 05, 14, 15; COL-16 "apply the proposal". Applied to t
 - Applied: classes, collections, strings, types, command, syntax pages; demo/class_point, method_call, number_to_string,
   print_type, string_concat.
 
-### D-060 Interpolation escapes `\s{}` `\#{}` `\b{}`; queue direction (2026-10-02)
+## D-060 Interpolation escapes `\s{}` `\#{}` `\b{}`; queue direction (2026-10-02)
 Author answers COL-05, COL-16. Replaces the interpolation bullet of D-059 (`#{expr}` is gone) and extends D-019.
 - Escapes with braces, one family: `\u{H…}` code point (D-019), `\s{expr}` any value as a string, `\#{expr}` a number, `\b{expr}`
   a boolean (True/False). The old `#{…}`, `#s`, `#n`, `{a}` and `?` do not exist. Literal braces stay `\{` and `\}`.
@@ -889,7 +672,7 @@ Author answers COL-05, COL-16. Replaces the interpolation bullet of D-059 (`#{ex
   `lst -> let e;` are a proposal (a `let` inside a statement, also `while let x in (range)`): open.
 - Applied: strings, collections, classes, types, command, syntax pages and the demos that used interpolation.
 
-### Q-002 evidence (2026-10-02, script temp/kw_usage.py)
+## Q-002 evidence (2026-10-02, script temp/kw_usage.py)
 The table of syntax.html has 111 words (the text says 113 in D-046). Found in the examples (demo, pattern, test, code blocks of
 the tutorial): `external` (D-056) is used and is **not** in the table. 30 words of the table are never used: `alter analyze append
 ascend augment close cursor delete descend discard exit fetch group halt into item limit offset open order package pop rollback
@@ -898,37 +681,37 @@ library methods now, not keywords: `print`, `read`, `write`, `raise`, `expect`, 
 Question: which of these are reserved in 0.1 (listed as `reserved`, unused), which are removed, and which are methods?
 Blocks: S2.4 (`keywords.json`).
 
-### Q-013 Numbers: scientific notation and digit separators (2026-10-02)
+## Q-013 Numbers: scientific notation and digit separators (2026-10-02)
 The tutorial links "scientific notation" but defines no literal. Proposal: `1.5e3` and `2e-3` are Real literals (`e` or `E`, an
 optional sign, digits; a literal with an exponent is always Real); `_` may separate digits (`1_000_000`, `0xFF_FF`), never at the
 start, the end or next to `.`. Accept, change or reject?
 Blocks: `lexical/lexical.md` (Integer, Real).
 
-### Q-014 Strings: `&name;`, text literal (2026-10-02)
+## Q-014 Strings: `&name;`, text literal (2026-10-02)
 (a) Which forms of `&…;` are valid: only HTML names (`&alpha;`), or also `&#955;` and `&#x3BB;`? How do you write a literal
 `&alpha;`: `\&alpha;`, or `&amp;alpha;`? (b) Is `"""…"""` of type `String` or `Text` (COL-15: Text is mutable)? (c) Proposal for the
 line breaks of `"""`: the break after the opening quotes and the break before the closing quotes are not part of the text.
 Blocks: `lexical/lexical.md` (String, Text literal).
 
-### Q-015 Interpolation: end of the expression (2026-10-02)
+## Q-015 Interpolation: end of the expression (2026-10-02)
 In `\#{expr:format}` the colon is also the pair operator. Proposal: the expression ends at the first `:` or `}` outside brackets
 and nested literals; a pair is written in parentheses. Accept?
 Blocks: `lexical/lexical.md` (Interpolation).
 
-### Q-016 Small lexical rules (2026-10-02)
+## Q-016 Small lexical rules (2026-10-02)
 Proposals, each yes or no: (a) a UTF-8 BOM at the start of a file is ignored; (b) `name!~x` reads as the suffix `!` then `~`, so the
 operator `!~` needs a space before it; (c) a trailing comma in a list or collection literal is an error; (d) a `#` that is not in
 column 1 is a lexical error (it was also "last index" and "digit in a pattern" in the old table, both removed); (e) identifiers are
 ASCII only.
 Blocks: `lexical/lexical.md`.
 
-### Q-017 Operators `+>` and `<+`: which side is the list (2026-10-02)
+## Q-017 Operators `+>` and `<+`: which side is the list (2026-10-02)
 D-060 gives `q <+ x` (append at the end), `s -> let e;` and `let e <- q;`. For the insert at the start, the old examples write
 `queue +> "x"` (list on the left) while the arrow suggests the element goes to the start of the list on the right. Proposal:
 `x +> lst` inserts `x` at the start of `lst`; `lst <+ x` appends at the end; `a <+ b` concatenates (b after a). Confirm the side of the list for `+>`.
 Blocks: `operators.json` (`prepend`), `syntax/expressions.md`.
 
-### D-061 Licenses: BUSL-1.1 for code, CC BY 4.0 for the specification (2026-10-02)
+## D-061 Licenses: BUSL-1.1 for code, CC BY 4.0 for the specification (2026-10-02)
 Author decision. Answers Q-006 and the open part of MAN-01; replaces the Apache 2.0 license of the repository and the CC BY-ND 4.0
 of manifest.html.
 - Code (`evevm/`, `script/`): Business Source License 1.1, text and parameters in `evevm/LICENSE`. Licensor Elucian Moise;
@@ -940,7 +723,7 @@ of manifest.html.
 - Applied: LICENSE, README.md (section License), spec/index.md, evevm/README.md, tutorial manifest.html (License section, legal notice).
 - Note: the scl repo, which holds the tutorial pages, has a GPL-3.0 `LICENSE`. Which license covers the tutorial text is open.
 
-### D-062 Trademark policy (2026-10-02)
+## D-062 Trademark policy (2026-10-02)
 Author request. `TRADEMARK.md` at the repository root: "EVE", the logo and the branding are trademarks of Sage-Code Laboratory.
 Free: implementing the language, "Built for EVE", "EVE compatible", "Runs EVE scripts", "Based on the EVE language specification",
 accurate references, unmodified official software. "EVE Compiler / Interpreter / VM" and "EVE Compliant" need a stated spec version,
@@ -948,14 +731,14 @@ a passed conformance level and an unmodified-fork condition. Not allowed without
 distribution under the EVE name, an incompatible dialect presented as EVE, a modified specification under the EVE title, registering the
 mark, altering the logo. Applied: TRADEMARK.md, README.md, LICENSE, tutorial manifest.html. Open: confirm the legal entity name.
 
-### Q-018 Regular expressions and the backslash (2026-10-02)
+## Q-018 Regular expressions and the backslash (2026-10-02)
 D-019 says any `\` sequence that is not an escape is a lexical error, and D-060 makes `\s{` an interpolation. A pattern such as
 `"/\sis\s/"` (regex.html of the old tutorial, `\d`, `\w`) would then be an error. Options: (a) a pattern writes the backslash twice
 (`"/\sis\s/"`); (b) a string that starts with `/` is a regex literal and keeps its backslashes (no escapes, no interpolation);
 (c) a separate raw form. Recommended: (b), with `\"` still allowed for the quote. The tests a28 use patterns without a backslash until this is decided.
 Blocks: `lexical/lexical.md` (Regular expression), `test/level1/a28_regex.eve`.
 
-### Q-019 Assumptions of the level 1 tests a04 to a37 (2026-10-02)
+## Q-019 Assumptions of the level 1 tests a04 to a37 (2026-10-02)
 Each one is a place where the tests state a rule that no decision gives yet; change the test or the spec when you answer:
 (a) `1 / 0` raises an error (the demo `recover_demo.eve` assumes it; IEEE would give infinity) (a37);
 (b) printing a DataSet is `{1,2,3}` without spaces, a list `(1,2,3)`, `print (1, 2, 3)` prints `1,2,3` (a05, a20);
@@ -968,7 +751,7 @@ Each one is a place where the tests state a rule that no decision gives yet; cha
 (h) `for (k: v) in map` visits the keys in order (a21); `p.z := 7` adds an attribute to an Object (a22);
 (i) a function parameter after a defaulted one is named at the call: `greet("Eve", greeting: "Hi")` (a24).
 
-### D-063 First execution of level 1: what running the tests taught (2026-10-02)
+## D-063 First execution of level 1: what running the tests taught (2026-10-02)
 Model decisions taken while writing the interpreter (`evevm/src/interp.zig`); all of `test/level1/` (37 tests) passes. Each one is
 a rule the tests needed and no decision gave; change the test or the rule when you answer.
 - Author answer: `(x)` is grouping, not a list; `(x,)` is the list of one element (corrects D-058, which said `(x)` is a list).
@@ -996,7 +779,7 @@ a rule the tests needed and no decision gave; change the test or the rule when y
 - Workflow: `eve -x -i file.vmc` without a script is serve mode; commands `load`, `parse`, `run`, `errors`, `ast`, `inspect`, `status`,
   `outdir`, `capture`, `log`, `clear`; `script/workflow.py` drives a whole level through one session and reads the reports.
 
-### D-064 Matrix and tensor indexes: `[x, y]` is `[x][y]` (2026-10-03)
+## D-064 Matrix and tensor indexes: `[x, y]` is `[x][y]` (2026-10-03)
 Author request. Corrects the matrix line of D-063 (`g[1][*]` is again a row).
 - A matrix or a tensor takes its indexes in one pair of brackets separated by commas or in one pair of brackets per dimension:
   `m[x, y]` is `m[x][y]`, `t[x, y, z]` is `t[x][y][z]`; the forms mix (`t[x, y][z]`). Reading and writing are the same.
@@ -1008,7 +791,7 @@ Author request. Corrects the matrix line of D-063 (`g[1][*]` is again a row).
 - Applied: spec/lexical/lexical.md, spec/lexical/delimiters.json, tutorial collections.html (Matrix indexes), evevm/src/interp.zig
   (`indexChain`), test a38_matrix_index.
 
-### D-065 `demo/` is temporary (2026-10-03)
+## D-065 `demo/` is temporary (2026-10-03)
 Author decision. `demo/` disappears when the test suite is complete: each demo either becomes a test in `test/levelN/` or is
 dropped. No new demos are written; new examples go to `test/` as tests.
 - 2026-10-03 review: all 45 demos were rewritten to the decisions up to D-064 (title line, `let` for changed globals, `:=` without a
@@ -1020,126 +803,3 @@ dropped. No new demos are written; new examples go to `test/` as tests.
   `a <= x <= b`, `is` between two Integers, scientific notation (Q-013), `is Text` of a `"""` literal (Q-014).
 - Open: D-028 says optional parameters are named at the call, D-048 calls `add(1, 2, @result)` with optional `p1, p2` by position.
   The tutorial copies of about 30 demos have the same errors as the demos had; they are not fixed yet.
-
-### Q-020 Level 2 suite: what must be decided first (2026-10-03)
-Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4). Each test is a driver with a folder of
-aspects and modules. These points block it; answer each one:
-(a) **Aspect scope.** D-043 says each process of an aspect has its own scope and aspect-level `let` values are copied into it;
-    D-055 says an aspect is a singleton whose scope lives from the first `apply` until `reset`. Which one? With the singleton, does a
-    second `apply` see the values left by the first one?
-(b) **What `.` means in an aspect.** Can the driver read `aspect.member` after `apply`, or only the `@` outputs (PRC-14 point 1)?
-**answer**
-Cancel this request. Aspect members can't be accessed with ".". One aspect must have one entry point, the main() process. 
-
-(c) **Sibling processes.** Can a process of an aspect call another process of the same aspect by its bare name, and how is that
-    different from `apply` (D-043, assumed)?
-(d) **Errors across `apply`.** An error raised in an aspect process without `recover`: does it go to the `recover` of the driver
-    process at the `apply` line, with which `$error.job` and `$error.code`? Does `panic` in an aspect end the driver (D-038 says yes)?
-    Does `over;` in an aspect end only that process?
-(e) **Import syntax.** The pages show `from $path/library_name use (*);` and `from $user_path use (module_name, …);`, while D-031 says
-    a path is a string. Is the path a string (`from "lib/util" use (*);`), an unquoted path, or both? Is `use (m as x)` the alias form?
-    Is a member reached as `m.name` or, with `(*)`, as a bare `name`?
-(f) **Module life cycle.** When does `initialize` run (first import, once per driver?), when does a module `finalize` run, and can a
-    module read the globals of the driver that imports it ("bound to the scope of the driver", D-043)?
-(g) **Where aspects and modules are found in a test.** D-055: a folder given by the caller, else `asp`, the project root, then
-    `lib`. What is the project root of `test/level2/b07_x.eve`: its folder? Proposal: each test has a folder `test/level2/b07_x/`
-    with its aspects and modules, named in the test with `set $EVE_ASP = "b07_x";` or found by default in a folder named like the driver.
-(h) **Names and placement.** Level 2 already holds `b01`–`b06` (VM slot commands) and `c01`–`c05` (VM workflow), which are tests of
-    the VM tools, not of the language, and `c` is the prefix of level 3 (D-018). Proposal: move them to `test/vm/` (`v01`…) and keep
-    `b01`… in level 2 for aspects and modules.
-(i) **Arguments.** `apply a.p(value, *list_args)` and `(param: value, *map_args)` (processing.html): is spreading a map into named
-    parameters part of 0.1?
-**Status:** (a), (b), (c) decided by D-066: state per `apply`, no public members, one process `main` per aspect.
-    (d) to (i) are open; in (d) and (i) read `apply a(…)` for `apply a.p(…)`.
-
-
-### D-066 An aspect is an encapsulated machine with one `main`; parallel blocks start aspects (2026-10-03)
-Author decision (plan/design-issues.md). Answers Q-020 (a), (b), (c), PRC-14, CON-09, CON-11 (who is started).
-Replaces D-042 and the aspect part of D-043 (named processes), the parallel methods of D-047, and the singleton
-scope and `reset` of D-055.
-- **Same shape.** A driver and an aspect have the same form: declarations, then one `process main(params) is …
-  return;`, closed by `end name;`. Every aspect has exactly one process, and its name is always `main`: one aspect,
-  one process. Helper work is done by methods and functions.
-- **Encapsulated.** Nothing in an aspect is public and the dot operator is never applied to an aspect. Data goes in
-  by the parameters of `main` and comes out by its `@` outputs.
-- **State per call.** Each `apply` (or `start`) creates the state of the aspect, aspect-level declarations included;
-  it is dropped when `main` returns. A second call sees nothing of the first. `reset` is removed (keyword unused).
-- **Calls.** `apply name(args);` runs the aspect and waits. Only the `main` of the driver may `apply` or `start` an
-  aspect: an aspect can't apply or start another aspect, so recursion between aspects is impossible. Code that
-  several aspects share goes in modules.
-- **Parallel.** `[label:] parallel` declarations `do` … `start name(args);` … `done [label];` is allowed only in the
-  `main` of the driver and is not nested. It starts aspects on several cores. Methods and functions always run
-  serially, on the core of their caller, and can't be started. The data rules of D-047 still hold with aspects in
-  place of methods: inputs by value, one owner for each `@` output, `done` is the barrier; BSP is the recommended
-  pattern (one block = one superstep).
-- **Errors.** A parallel block behaves like a job and may have a label (`$error.job` names it). When an aspect
-  fails, the others go on; `done` waits for all of them, then raises the first error to `recover`. In `recover`,
-  `retry` runs the whole block again and `resume` continues after it, as for a job.
-- Still not in version 1 (D-050). Suspended methods and cooperative multitasking: Q-021.
-- Applied to concurrency.html (parallel model, groups, data rules, errors, BSP, channels: every example has its worker
-  as an aspect file), processing.html (aspect execution, scope, parallel note), topology.html (process, drivers,
-  aspects, skeleton with one `main`), syntax.html (`process`, `parallel`, `apply`, `start`; `reset` marked unused),
-  functions.html ("parallel method" row removed), exceptions.html (`$err_process` message). No `.eve` file applies or
-  starts an aspect, so demos, tests and the VM are unchanged.
-
-### Q-021 Suspended methods, `yield` and cooperative multitasking (2026-10-03)
-The author wants suspended methods back (generators that keep their state, cooperative multitasking); D-051 removed
-`suspend`. Two designs, both on one core, no locks, using the reserved word `yield`:
-(A) **Generators.** A method that contains `yield` is a generator. `yield;` hands its outputs to the caller and
-    freezes its state. `for v in count_to(5) do … done;` iterates; `let g := new count_to(5);` makes a suspended
-    instance, `g.next()` runs it to the next `yield` (False after `return`) and `g.x` reads the output.
-(B) **A plus cooperative tasks.** A block (keyword to choose, for example `concurrent do … done;`) runs several
-    methods on one core and switches at `yield` and at a full or empty channel. `parallel` puts aspects on cores,
-    the new block interleaves methods on one core.
-Recommendation: decide B, specify A for 0.1 (A is a subset of B). Questions: A or B; the keyword of the block;
-are generators in version 1 (they need no threads)?
-**Answer:** The chapter is renamed Multitasking. `yield` is used for generators. No coroutines.
-**Status:** design drafted in [design-multitasking.md](design-multitasking.md): generators one level deep (A), no
-cooperative block (B dropped); cooperative tasks are generators taking turns; a waiting started aspect gives its
-core away. Approved: D-067.
-
-### D-067 Multitasking: generators with `yield`, parallel aspects, no coroutines (2026-10-03)
-Author decision. Answers Q-021; the design is [design-multitasking.md](design-multitasking.md).
-- The topic and the tutorial chapter are named **Multitasking**: `concurrency.html` became `multitasking.html`
-  (data file `data/multitasking.json`, index row), `issues/concurrency.md` became `issues/multitasking.md`
-  (CON ids kept), spec step S4.5 is `semantics/multitasking.md`. Eve has no coroutines, `async`, `await` or `suspend`.
-- **Generators.** A method becomes a generator because its body contains `yield`; it declares one result.
-  `result := expression; yield;` is the explicit form, `yield expression;` the short form; both are valid.
-  A call creates a `Generator(:T)` object without `new` (`let g := count_to(3);`); `new` is for the objects of a
-  class. Use: `for v in g`, comprehensions, `g.next()`, `g.value`, `g.done`, `g.close()`. A generator called as a
-  statement is an error. `yield` only in the generator's own body (one level: not a coroutine), lazy body, inputs
-  by value, errors raised in the caller, never copied, not an argument of `apply` or `start`.
-- **Cooperative tasks** are generators that take turns on one core; the library module `task` (`round_robin`,
-  `until`) is documented now and implemented in version 2.
-- **Parallel aspects** (D-066): a started aspect that waits (input/output, `wait`, channel) gives its worker to
-  another task, so a group can overlap many waits on a few cores. Done by the VM, invisible in the language.
-- **Versions.** Generators are designed and taught in the tutorial now; their specification is postponed to
-  version 2. `yield` is reserved until then.
-- Applied to multitasking.html (head, title, introduction, new section Generators with Declaration, Use, Rules,
-  Cooperative tasks, Generators and channels; "Parallel model" heading became "Parallel aspects", id kept; Workers;
-  two new rows in "Choosing a model"), index.html, processing.html (link), syntax.html (`yield` row), functions.html
-  (closures point to Generators); issues, plan phases 1, 3, 4, plan README and spec README follow the rename.
-
-### D-068 Modules page; modules are singletons without public variables (2026-10-03)
-Author decision. Answers Q-020 (f) for the life cycle; refines D-035 (visibility) and D-043 (module scope).
-- New tutorial chapter `modules.html` (07, after Functions; index rows 07 to 17 became 08 to 18), with
-  `data/modules.json`: declaration, public and private members, singletons, import, modules and parallel aspects,
-  library modules (`external`), and a table that compares drivers, aspects and modules. The Modules section of
-  topology.html is now a summary that links to it.
-- **Singleton.** A module is loaded once, at the first import; every later import (driver, aspect or module) uses the
-  same copy. `initialize` runs once, right after loading; `finalize` runs once, when the driver ends, after its
-  process, in the reverse order of initialization.
-- **No instances.** A module is not a class: `let m := new module_name;` is an error. Several objects with their own
-  state come from a public class of the module.
-- **No public variables**, because a module is shared and a public variable is not safe when tasks run at the same
-  time: `let .name …` is an error. Public members are constants (`set .NAME = v :T;`), classes, functions, methods
-  and channels (`set .name := new Channel(:T)(capacity: n);`: the reference is constant, the channel is safe for
-  several tasks).
-- Proposed (not stated by the author): a started aspect can't change the private variables of a module, like the
-  driver globals (D-047); a module method that changes private state is called by the driver or by an applied
-  aspect. Written in modules.html and in the data rules of multitasking.html.
-- Every example process is named `main` (`process main is`): fixed 7 fragments in classes, collections, library and
-  strings (`process test`, `list_join`, `list_split`, `demo_numbers`, `map_append`, `test_error`, `unicode_text`).
-- Also: syntax.html (`.` prefix row), multitasking.html (data rule "Modules are shared"), functions.html (read next).
-  `data/topology.json` had a trailing comma after the author removed "Running an Aspect"; the comma was removed.
-- Open: the import path, string or `$path/name` (Q-020 e); `from "lib" use (counter);` is used in the examples.

@@ -33,5 +33,5 @@ Sources: `types.html`, `classes.html`, `functions.html`, `multitasking.html`.
 ### S3.6 Grammar check against the examples `[ ]`
 - Build a throwaway parser from the EBNF, for example with `lark` (a Python library), in `temp/`.
 - Parse every file in `demo/`, `pattern/` and `test/`, and list the failures.
-- For each failure, decide whether the grammar or the example is wrong (`decisions.md`), then fix it.
+- For each failure, decide whether the grammar or the example is wrong (`decision_level1.md`, `decision_level2.md`), then fix it.
 - Done when: all examples parse, or each remaining failure has a decision id.

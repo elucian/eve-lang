@@ -60,7 +60,7 @@ from _common import die
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_DIR = os.path.join(ROOT, "test")
 LEVELS = ("level1", "level2", "level3")
-# Process exit codes, plan/decisions.md D-010.
+# Process exit codes, plan/decision_level1.md D-010.
 EXIT_MEANING = {0: "normal", 1: "abnormal exit", 2: "error", 3: "warning", 70: "VM not implemented"}
 
 
