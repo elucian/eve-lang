@@ -87,10 +87,11 @@ answers become decisions → fix the page → add the answered rules to the spec
 | topology | 2026-09-28 | 16 answered (D-031); TOP-08, 10 partly | [x] | [ ] | [issues/topology.md](../issues/topology.md) |
 | control | 2026-09-28 | 16 answered (D-030) | [x] | [ ] | [issues/control.md](../issues/control.md) |
 | functions | 2026-09-28 | 10 answered (D-025 to D-029) | [x] | [ ] | [issues/functions.md](../issues/functions.md) |
+| modules (new page, D-068) | not reviewed | - | [ ] | [ ] | - |
 | classes | 2026-09-28 | 14 asked | [ ] | [ ] | [issues/classes.md](../issues/classes.md) |
 | collections | 2026-09-28 | 20 asked | [ ] | [ ] | [issues/collections.md](../issues/collections.md) |
 | processing | 2026-09-28 | 11 asked | [ ] | [ ] | [issues/processing.md](../issues/processing.md) |
-| concurrency | 2026-09-28 | 8 asked | [ ] | [ ] | [issues/concurrency.md](../issues/concurrency.md) |
+| multitasking (was concurrency) | 2026-09-28 | 8 asked | [ ] | [ ] | [issues/multitasking.md](../issues/multitasking.md) |
 | library | 2026-09-28 | 6 asked | [ ] | [ ] | [issues/library.md](../issues/library.md) |
 | command | 2026-09-28 | 6 asked | [ ] | [ ] | [issues/command.md](../issues/command.md) |
 | databases | 2026-09-28 | 4 asked | [ ] | [ ] | [issues/databases.md](../issues/databases.md) |

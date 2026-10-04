@@ -1,6 +1,7 @@
-# Issues: concurrency.html
+# Issues: multitasking.html
 
-Page: `tutorial/concurrency.html` (348 lines). Reviewed 2026-09-28. How to answer:
+Page: `tutorial/multitasking.html`, named `concurrency.html` until D-067 (2026-10-03); the items below quote the old
+name. Reviewed 2026-09-28. How to answer:
 [README](README.md).
 
 D-050: concurrency is not in version 1. CON-05 to CON-08 and CON-11 can wait; they don't block the 0.1 spec or the VM.
