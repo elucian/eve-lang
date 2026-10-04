@@ -20,7 +20,7 @@ answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-
 | 1 | Errors, exit codes, processes | [processing](processing.md), [topology](topology.md) | 8 | 3 | 2 |
 | 1 | Strings and collections | [collections](collections.md) | 18 | 0 | 1 |
 | 1 | Spec to write (already answered) | [syntax](syntax.md) | 0 | 0 | 6 |
-| 2 | Functions and parameters | [algorithms](algorithms.md), CON-02, CON-03 in [multitasking](multitasking.md) | 3 | 0 | 1 |
+| 2 | Functions and parameters | [algorithms](algorithms.md) | 2 | 0 | 3 |
 | 2 | Classes and traits | [classes](classes.md) | 9 | 0 | 0 |
 | 2 | Types | [types](types.md) | 1 | 1 | 1 |
 | 3 | Control flow | [control](control.md) | 0 | 0 | 0 |
@@ -50,7 +50,7 @@ One answer closes several issues in each group.
 
 ## Priority 2: next, once the core runs
 
-7. **Functions.** ALG-02 (native types in signatures), CON-03 (parameter defaults), ALG-01. Small, and they
+7. **Functions.** ALG-02 (native types in signatures), ALG-01 (CON-03 answered, D-070). Small, and they
    unblock the function tests.
 8. **Class model.** CLS-09 (generics), CLS-10, CLS-11, CLS-17 (constructor shape), then CLS-12 to CLS-16.
 9. **Collections, the rest.** COL-03 (filter clause), COL-14 (object attributes); the rest answered, D-058.

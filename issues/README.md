@@ -52,7 +52,7 @@ answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the
 | classes.html | [classes.md](classes.md) | 9 | 6 | 8 |
 | collections.html | [collections.md](collections.md) | 2 | 0 | 21 |
 | processing.html | [processing.md](processing.md) | 10 | 4 | 4 |
-| multitasking.html | [multitasking.md](multitasking.md) | 11 | 2 | 2 |
+| multitasking.html | [multitasking.md](multitasking.md) | 8 | 2 | 5 |
 | library.html | [library.md](library.md) | 6 | 2 | 0 |
 | command.html | [command.md](command.md) | 5 | 1 | 1 |
 | databases.html | [databases.md](databases.md) | 4 | 3 | 0 |
@@ -69,7 +69,7 @@ Some questions recur; one answer closes all of them:
 |---|---|
 | Placeholders and escapes in strings | COL-15, COL-16, LIB-06 |
 | Exit codes and interruptions | PRC-02, PRC-03, CON-07 |
-| Result and output parameters (`@`) | CON-02, ALG-02 |
+| Result and output parameters (`@`) | ALG-02 (CON-02 retired, D-048) |
 | System variables | TOP-08, CMD-05 |
 | `start`, `apply` and processes | PRC-07, PRC-14, TOP-10, CON-09 |
 | Class model (constructor, traits) | CLS-14 to CLS-17 |
