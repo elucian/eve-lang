@@ -808,7 +808,16 @@ dropped. No new demos are written; new examples go to `test/` as tests.
 Author decision. Methods get their own tutorial chapter, and Multitasking moves lower, after the chapters it builds on.
 - New page `methods.html` (06, after Functions), with `data/methods.json`: the sections Methods (now "Declaration",
   id `declaration`), Side Effects and Parameters, moved unchanged from the top of `multitasking.html`, plus a short introduction.
-- New index order: 05 Functions, 06 Methods, 07 Modules, 08 Classes, 09 Multitasking, 10 Collections; the rows after
-  them are renumbered (Compiler is 19). Read next: Functions → Methods → Modules, Classes → Multitasking → Collections.
-- `multitasking.html` now starts with Generators; its introduction points to Methods. `issues/multitasking.md` keeps
-  CON-02, CON-03 and CON-10 (parameters) under their ids, though the text they discuss is now in `methods.html`.
+- New index order: 05 Functions, 06 Methods, 07 Modules, 08 Classes, 09 Collections, 10 Strings, 11 Control Flow,
+  12 Processing, 13 Multitasking, 14 Algorithms; Compiler is 19. Multitasking comes after Processing because its
+  parallel groups start aspects. Read next: Functions → Methods → Modules, Processing → Multitasking → Algorithms.
+- `multitasking.html` now starts with Generators; its introduction points to Methods. CON-02, CON-03 and CON-10
+  (parameters) are retired from `issues/multitasking.md` (D-048, D-070).
+
+## D-070 Default values of parameters (2026-10-03)
+Author decision. Answers CON-03; refines D-028 ("`=` defines a default value, `:=` executes an expression").
+- An optional parameter has a default value, given in one of two forms: `param = value :Type` (a value and an explicit
+  type) or `param := expression` (any expression; the type is inferred from it). The second form is used mostly for
+  its type inference.
+- A parameter without a default is mandatory; an `@` parameter never has a default (D-048).
+- Already taught this way in methods.html (Parameters); no page change.
