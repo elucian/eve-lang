@@ -51,3 +51,5 @@ __pycache__/
 !/temp/.gitkeep
 # Test reports from script/runtest.py
 /temp/output/
+# Files written by project tests (test/levelN/<name>/out/, emptied before each run)
+/test/**/out/

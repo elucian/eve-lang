@@ -400,3 +400,16 @@ Follow-up questions were answered in the session the same day.
 - Applied: processing.html (Errors of an aspect), modules.html (Import table and syntax, notes, extension methods),
   syntax.html (`_` rows, `$error.line`), spec/semantics/variables.md (`$error.line`), test/vm, test/readme.md,
   manual/usage.md, script/runtest.py. VM: `$error.line`, `apply`, imports and extension methods are not implemented.
+
+## D-073 A test can be a folder: a whole Eve project (2026-10-03)
+Author decision. Replaces the test-folder part of D-072 (g) (a folder named by the code next to the test file).
+- A project test is a folder `test/levelN/<name>/` that contains the driver `<name>.eve`. The folder is the project
+  root: `asp/` (aspects), `lib/` (modules), `data/` (input), `out/` (files written by the test, `$EVE_OUT`), or any
+  other folder the project needs. Aspects and modules are found as D-055 says, from that root.
+- Its expectations are in `<name>/expect.json`, one object with the keys of the level file, plus `"files"`:
+  `{"out/report.txt": "text" or [lines]}`, files that must exist after the run with that content.
+- `script/runtest.py` finds both shapes (`<name>.eve` and `<name>/<name>.eve`), runs a project test as
+  `eve <name>.eve` from its folder, and empties `out/` before each run. `out/` is git-ignored.
+- Level 2 and level 3 tests are project tests; a single `.eve` file stays valid at every level (level 1, `vm`).
+- Applied: script/runtest.py, .gitignore, test/readme.md, test/level2/readme.md. Checked with a throwaway project test
+  (runs from its folder, `out/` emptied, missing file reported).
