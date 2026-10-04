@@ -11,6 +11,7 @@ Version **0.1-draft**. License: [CC BY 4.0](LICENSE) (D-061). Conventions: [READ
 | Delimiters | [lexical/delimiters.json](lexical/delimiters.json) | first draft |
 | Keywords | `lexical/keywords.json` | blocked on Q-002 (evidence collected) |
 | Grammar | `syntax/grammar.md`, `regions.md`, `statements.md`, `expressions.md`, `declarations.md` | not started (phase 3) |
+| System variables | [semantics/variables.md](semantics/variables.md) | register, grows with each new variable (D-071); open points 1 to 6 |
 | Semantics | `semantics/*` | not started (phase 4) |
 | Library | `library/*` | not started (phase 5) |
 
@@ -27,3 +28,4 @@ specification disagree, this specification wins.
 | Date | Change |
 |---|---|
 | 2026-10-02 | Lexical structure, operators and delimiters (S2.2, S2.3, S2.5, S2.6); `speccheck.py` |
+| 2026-10-03 | Register of system variables, `semantics/variables.md` (D-071) |
