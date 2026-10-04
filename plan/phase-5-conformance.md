@@ -26,9 +26,10 @@ Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
   against the decisions on 2026-10-03; 16 of them still need VM features (listed in D-065).
 - One test per lexical and syntax rule from phases 2–3; list coverage in `conformance/README.md`.
 
-### S5.4 Level 2 suite `[!]` → Q-020
+### S5.4 Level 2 suite `[~]` 2026-10-03: 19 project tests b01–b19, all failing first (VM work next); assumptions Q-022
 - Multi-script tests: drivers with aspects and modules, imports, error recovery.
-- Blocked by the open points of Q-020 (aspect scope, import syntax, test layout, naming).
+- Q-020 answered (D-066, D-072); a test is a folder, a whole Eve project (D-073).
+- Next: VM support test by test (imports, `apply`, aspect errors, extension methods, log files).
 
 ### S5.5 Level 3 skeleton `[ ]`
 - Files, databases, network: define tests with fake or local resources, so they run offline.
