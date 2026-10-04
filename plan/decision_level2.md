@@ -363,6 +363,9 @@ Author decision. Answers TOP-08 (the list of the 0.1 system variables was open).
   (0.1, draft, later, question), VM support and source. It lists the 19 variables and the 2 constant families found in the
   tutorial, the decisions and `evevm/lib`, and 13 `$` names that are not system variables (placeholders, examples).
 - A new system variable is added to the register first, then used in a page, a test or the VM.
+- Tutorial: the table "System Variables" of syntax.html is the only list of system variables in the tutorial
+  (status 0.1, draft and later; the question rows wait). topology.html lost its two lists and links to it, like
+  exceptions.html and command.html. `$object` left the table (open point 4); databases.html `$evelib` → `$EVE_LIB`.
 - Proposed for 0.1: `$error`, `$NAME` (environment), `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`, and the `$err_`/`$wrn_`
   constants. Six open points (duplicates `$OS_PWD`/`$CWD`, `$MY_LIB`/`$MY_LOG`, the two meanings of `$trace`,
   `$object` next to `@self`, folder types, which variables a driver may set) are in the register.

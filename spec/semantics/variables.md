@@ -4,6 +4,9 @@ Status: **0.1-draft**. This file is the register of the system variables of Eve:
 the decisions or the library use is listed here, with its type and meaning. **A new system variable is added
 here first**, then used in a page, a test or the VM (D-071). Answers TOP-08.
 
+The tutorial shows the variables with status 0.1, draft and later in one table, syntax.html "System Variables"
+(`#variables`); topology.html, exceptions.html and command.html link to it. Change that table together with this file.
+
 ## Rules
 
 - A system variable starts with the sigil `$`. It is static and public, shared by the whole process, and needs
@@ -68,7 +71,7 @@ Names written with `$` in the pages that are not system variables. They stay out
 | Name | Where | What it is |
 |---|---|---|
 | `$user_path`, `$root_path`, `$path`, `$pro_home`, `$sys_con` | modules.html, topology.html | examples of user-defined system variables or placeholders in syntax lines |
-| `$evelib` | databases.html | old spelling of `$EVE_LIB` (fix the page) |
+| `$evelib` | databases.html (until 2026-10-03) | old spelling of `$EVE_LIB`, fixed on the page |
 | `$user`, `$password`, `$location` | databases.html | example configuration values of a database session |
 | `$key` | topology.html | the notation of a configuration line, `$key = value` |
 | `$Type`, `$ExceptionType` | processing.html, D-055 | placeholder for an `$err_name` constant in `raise ($Type, "m")` |
