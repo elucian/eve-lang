@@ -1,0 +1,6 @@
+# Workflow: a failed expect is reported by errors and logged by status (slot/v09.vmc)
+driver v09_workflow_runtime_error is
+  process main is
+    over;
+  return;
+end v09_workflow_runtime_error;

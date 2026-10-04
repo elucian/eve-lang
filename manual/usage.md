@@ -158,9 +158,9 @@ failing test: `python script/workflow.py 1` (reports in `temp/workflow/`). `pyth
 one process per test instead; both must agree.
 
 A level 2 test can run a session with the key `"serve"` in `expect.json`: the runner then starts
-`eve -x -t 5 -i <command file>` (see `test/level2/c01`..`c05`).
+`eve -x -t 5 -i <command file>` (see `test/vm/v07`..`v11`).
 
-Tests: `test/level2/b01`..`b06` and `c01`..`c05` (the files are in `test/level2/slot/`). Code: `evevm/src/vm.zig`.
+Tests: `test/vm/v01`..`v11` (the command files are in `test/vm/slot/`). Code: `evevm/src/vm.zig`.
 
 ## Modes
 

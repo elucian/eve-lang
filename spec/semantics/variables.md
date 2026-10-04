@@ -27,7 +27,7 @@ Column VM: what `bin/eve.exe` does today.
 
 | Name | Type | Meaning | Status | VM | Source |
 |---|---|---|---|---|---|
-| `$error` | `Error` | The error being handled in `recover`: `.message`, `.code`, `.job` (label of the failed job, D-030) | 0.1 | yes | D-054, exceptions.html, control.html |
+| `$error` | `Error` | The error being handled in `recover`: `.message`, `.code`, `.line`, `.job` (label of the failed job, D-030); also the error of an aspect at the `apply` line (D-072) | 0.1 | yes, no `.line` | D-054, exceptions.html, control.html |
 | `$stack` | `()Call` | The calls that led to the error | draft | no | exceptions.html, `lib/exception.eve` |
 | `$trace` | `()Error` | The errors and warnings of the process | question | no | exceptions.html; databases.html uses it for SQL |
 | `$result` | result type | The result of a function that declares no result name; a list when it has several results | draft | no | D-028, syntax.html, functions.html |

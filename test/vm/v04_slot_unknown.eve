@@ -1,0 +1,6 @@
+# Slot: unknown command is reported (slot/v04.vmc)
+driver v04_slot_unknown is
+  process main is
+    over;
+  return;
+end v04_slot_unknown;

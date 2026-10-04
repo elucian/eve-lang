@@ -58,6 +58,12 @@ Tests a04 to a37 were written from the specification and the tutorial (2026-10-0
 
 This level is more advanced. It contains automation drivers. Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
 
+A test that needs more files has a folder named by its code (`test/level2/b01/`), with the subfolders `asp/` for its aspects and `lib/` for its modules (D-072).
+
+## VM tools
+
+`test/vm/` tests the tools of the Eve virtual machine, not the language: slot commands and the workflow of a command file (`v01_…`). Run them with `python script/runtest.py vm`. They were the `b` and `c` tests of level 2 until D-072.
+
 
 ## Level 3
 

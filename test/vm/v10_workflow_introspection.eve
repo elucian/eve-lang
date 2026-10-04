@@ -1,0 +1,6 @@
+# Workflow: ast and inspect write the syntax tree and the introspection report (slot/v10.vmc)
+driver v10_workflow_introspection is
+  process main is
+    over;
+  return;
+end v10_workflow_introspection;
