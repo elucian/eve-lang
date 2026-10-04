@@ -803,3 +803,12 @@ dropped. No new demos are written; new examples go to `test/` as tests.
   `a <= x <= b`, `is` between two Integers, scientific notation (Q-013), `is Text` of a `"""` literal (Q-014).
 - Open: D-028 says optional parameters are named at the call, D-048 calls `add(1, 2, @result)` with optional `p1, p2` by position.
   The tutorial copies of about 30 demos have the same errors as the demos had; they are not fixed yet.
+
+## D-069 Methods page; Multitasking after Classes (2026-10-03)
+Author decision. Methods get their own tutorial chapter, and Multitasking moves lower, after the chapters it builds on.
+- New page `methods.html` (06, after Functions), with `data/methods.json`: the sections Methods (now "Declaration",
+  id `declaration`), Side Effects and Parameters, moved unchanged from the top of `multitasking.html`, plus a short introduction.
+- New index order: 05 Functions, 06 Methods, 07 Modules, 08 Classes, 09 Multitasking, 10 Collections; the rows after
+  them are renumbered (Compiler is 19). Read next: Functions → Methods → Modules, Classes → Multitasking → Collections.
+- `multitasking.html` now starts with Generators; its introduction points to Methods. `issues/multitasking.md` keeps
+  CON-02, CON-03 and CON-10 (parameters) under their ids, though the text they discuss is now in `methods.html`.
