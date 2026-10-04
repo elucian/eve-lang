@@ -1,0 +1,17 @@
+# an extension method: _name with @self adds a method to a class, in this script (D-072)
+driver b18_extension_method is
+  from lib use (geometry(*));
+
+  method _shift(@self: Point, dx, dy :Integer) is
+    self.x += dx;
+    self.y += dy;
+  return;
+
+  process main is
+    let p := new Point(1, 2);
+    p.shift(2, 3);
+    expect p.x == 3;
+    expect p.y == 5;
+    print "(\#{p.x}, \#{p.y})";
+  return;
+end b18_extension_method;

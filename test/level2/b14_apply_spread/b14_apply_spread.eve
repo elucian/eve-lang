@@ -1,0 +1,9 @@
+# spreading a list into positional arguments and a map into named arguments (D-072 i)
+driver b14_apply_spread is
+  process main is
+    let xs := (2, 3);
+    apply add3(1, *xs);
+    let m := {'b': 20, 'c': 30};
+    apply add3(a: 10, *m);
+  return;
+end b14_apply_spread;

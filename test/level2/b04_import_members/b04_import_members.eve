@@ -1,0 +1,9 @@
+# use (m(*)): the public members of m are used without prefix (D-072)
+driver b04_import_members is
+  from lib use (text(*));
+
+  process main is
+    expect shout("hi") == "hi!";
+    print shout("hello");
+  return;
+end b04_import_members;

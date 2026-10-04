@@ -1,0 +1,6 @@
+# alpha: one public function
+module alpha is
+  function .one() => (@result: Integer) is
+    result := 1;
+  return;
+end alpha;

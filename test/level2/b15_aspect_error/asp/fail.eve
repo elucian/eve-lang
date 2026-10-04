@@ -1,0 +1,8 @@
+# fail: raises an error and has no recover region
+aspect fail is
+  process main is
+    print "fail: start";
+    raise ($err_io, "disk full");
+    print "fail: never";
+  return;
+end fail;

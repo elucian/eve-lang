@@ -1,0 +1,9 @@
+# worker: an aspect that uses the module of the driver
+aspect worker is
+  from lib use (counter);
+
+  process main is
+    counter.tick();
+    counter.tick();
+  return;
+end worker;

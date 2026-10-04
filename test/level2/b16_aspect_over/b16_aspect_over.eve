@@ -1,0 +1,7 @@
+# over in an aspect ends the aspect; the driver goes on after apply (D-072 d)
+driver b16_aspect_over is
+  process main is
+    apply stop();
+    print "back";
+  return;
+end b16_aspect_over;

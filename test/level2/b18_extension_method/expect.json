@@ -1,0 +1,6 @@
+{
+  "stdout": [
+    "(3, 5)"
+  ],
+  "note": "a driver may extend a class imported from a module (Q-022 e)"
+}

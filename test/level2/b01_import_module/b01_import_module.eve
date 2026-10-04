@@ -1,0 +1,12 @@
+# Import a module with an unquoted path; members are reached as module.member (D-072)
+driver b01_import_module is
+  from lib use (counter);
+
+  process main is
+    expect counter.LIMIT == 100;
+    counter.tick();
+    counter.tick();
+    expect counter.count() == 2;
+    print "count: \#{counter.count()}";
+  return;
+end b01_import_module;

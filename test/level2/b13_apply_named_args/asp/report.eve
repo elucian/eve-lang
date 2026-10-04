@@ -1,0 +1,6 @@
+# report: a mandatory and an optional parameter
+aspect report is
+  process main(title :String, width = 10 :Integer) is
+    print "\s{title}: \#{width}";
+  return;
+end report;

@@ -1,0 +1,8 @@
+# a private member of a module can't be used outside it (D-068)
+driver b09_module_private is
+  from lib use (counter);
+
+  process main is
+    print counter.total;
+  return;
+end b09_module_private;
