@@ -1,6 +1,6 @@
 # Eve Specification
 
-Version **0.1-draft**. License: [CC BY 4.0](LICENSE) (D-061). Conventions: [README](README.md).
+Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions: [README](README.md).
 
 ## Reading order
 
@@ -19,9 +19,7 @@ Check the data files with `python script/speccheck.py`.
 
 ## Sources of the rules
 
-Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decision_level1.md) or [`../plan/decision_level2.md`](../plan/decision_level2.md) (`D-nnn`), from the tutorial
-(`tutorial/`), or is marked *(proposed)* and listed as a question (`Q-nnn`). When the tutorial and this
-specification disagree, this specification wins.
+Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decision_level1.md) or [`../plan/decision_level2.md`](../plan/decision_level2.md) (`D-nnn`), from the tutorial (`tutorial/`), or is marked *(proposed)* and listed as a question (`Q-nnn`). When the tutorial and this specification disagree, this specification wins.
 
 ## Change log
 

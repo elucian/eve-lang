@@ -84,7 +84,8 @@ pub const Tag = enum {
     /// `raise x;`: kids = [] or [expr].
     raise_stmt,
     break_stmt,
-    next_stmt,
+    /// `skip;`: go to the continuation point of the loop (next element, condition, or the test of `repeat`).
+    skip_stmt,
     over_stmt,
     panic_stmt,
     retry_stmt,
@@ -98,6 +99,8 @@ pub const Tag = enum {
     while_,
     /// `for p in it do`: kids = [pattern, iterable, body, else block, then block].
     for_,
+    /// `loop … do … repeat [while c];`: kids = [header block, body] or [header block, body, cond].
+    repeat_,
     /// `match x when ...`: kids = [subject, then block, when...].
     match_,
     /// `when p do b`: kids = [pattern, block].
@@ -220,7 +223,7 @@ pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void
             for (n.kids[0].kids) |t| try w.print(" {s}", .{t.text});
             try w.print("  @{d}\n", .{n.line});
         },
-        .block, .if_, .while_, .for_, .match_, .when, .cond_stmt => for (n.kids) |k| try outline(w, k, depth),
+        .block, .if_, .while_, .for_, .repeat_, .match_, .when, .cond_stmt => for (n.kids) |k| try outline(w, k, depth),
         else => {},
     }
 }

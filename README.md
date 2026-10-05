@@ -6,12 +6,12 @@
 
 <p align="center"><em>Effective Virtual Environment</em> &middot; Version <strong>0.0.1</strong></p>
 
-<p>Eve is a domain specific scripting language for data processing and test automation. We design the language and we create code examples in this repository. This language is a standard in design and developement. It will have many interpreters and compilers implemented by diverse other organizations. First compiler is implemented in Zig, and belong to this repository.</p>
+<p>Eve is a data-centric DSL built for internet ETL pipelines. It provides a gradual typing JIT compiler and virtual machine. This new language delivers a unified syntax for data transforming and routing between local client and server backend. This repository holds the specification, the tests and the first implementation, the Eve virtual machine written in Zig.</p>
 
   
 ## Learning
 
-You can learn Eve on our website: [sagecode.org](https://sagecode.org). After you learn the syntax you can start contributing, or just watch. We design Eve for learning how to make a compiler. We will add examples that demonstrate how we can use Eve for teaching programming concepts, algorithms and data structures.
+You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tutorial explains the language with examples. The features and their versions are planned in [plan/features_inventory.md](plan/features_inventory.md) and [plan/version_map.md](plan/version_map.md).
 
 Read Sage-Code Tutorial: [Eve Programming Language](https://sagecode.org/projects/eve/index.html)</a>
 
@@ -43,9 +43,9 @@ We use 2 licenses:
 
 The code in `evevm/` is under the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [evevm/LICENSE](evevm/LICENSE).
 
-### Everything else: CC BY 4.0
+### Everything else: CC BY-NC-SA 4.0
 
-Everything outside `evevm/` (specification, manual, examples, tests, plans, scripts) is under Creative Commons Attribution 4.0 (CC BY 4.0). Anyone may write an Eve implementation using our specification. Full text: [spec/LICENSE](spec/LICENSE).
+Everything outside `evevm/` (specification, tutorial text, manual, examples, tests, plans, scripts) is under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0). The code snippets and examples shown in the tutorial are under the Apache License 2.0, as the Sage-Code Laboratory licensing of the scl repository says. You may use and adapt it for learning, research and non-profit work, with credit and under the same license. A commercial implementation or product based on Eve needs written permission from the author. Full text: [spec/LICENSE](spec/LICENSE).
 
 ### Trademark
 

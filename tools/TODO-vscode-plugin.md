@@ -25,7 +25,7 @@ simulation data), which is fine as long as Linguist has no entry for it; a heuri
 - [ ] `package.json` with `contributes.languages` (id `eve`, extensions `[".eve"]`, first line `^#!.*\beve\b`) and `grammars`.
 - [ ] Test on `demo/*.eve`, `pattern/*.eve` and `test/**/*.eve` (the same files the throwaway parser of S3.6 reads).
 - [ ] Package with `vsce package`; publish to the VS Code Marketplace and to Open VSX (VSCodium).
-- [ ] Later: language server (diagnostics from `eve parse`), run and debug commands, the `eved` documentation.
+- [ ] Later: language server (diagnostics from `eve parse`), run and debug commands, the `eve --doc` documentation.
 
 ## Step 2: GitHub (Linguist)
 

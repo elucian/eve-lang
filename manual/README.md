@@ -1,8 +1,6 @@
 # Eve Compiler Manual
 
-This folder is the **manual of an Eve implementation**: how the compiler is built, how to use
-it, and which parts of the specification it supports. It replaces the old `docs/` skeleton
-(decision D-004 in [`../plan/decision_level1.md`](../plan/decision_level1.md)).
+This folder is the **manual of an Eve implementation**: how the compiler is built, how to use it, and which parts of the specification it supports. It replaces the old `docs/` skeleton (decision D-004 in [`../plan/decision_level1.md`](../plan/decision_level1.md)).
 
 | Source | Role | Format |
 |---|---|---|
@@ -10,15 +8,9 @@ it, and which parts of the specification it supports. It replaces the old `docs/
 | [`spec/`](../spec/README.md) | Defines the language (normative) | Markdown, EBNF, JSON |
 | `manual/` | Documents one implementation of the spec | Markdown, with generated tables |
 
-The manual never restates a language rule. It links to the spec section that defines the rule
-and says how the implementation handles it. Other Eve compilers can copy this folder's layout
-and generator for their own manual (D-003: many compilers, one specification).
+The manual never restates a language rule. It links to the spec section that defines the rule and says how the implementation handles it. Other Eve compilers can copy this folder's layout and generator for their own manual (D-003: many compilers, one specification).
 
-Status: **skeleton**. The first Eve implementation is a **virtual machine written in Zig** that
-runs Eve source as a scripting language (D-006). Its source is in `evevm/`, and the build
-produces `bin/eve.exe`, the official Eve implementation (D-007). It is being built now, and this
-manual is written alongside it (D-005). There is no compiler yet. Steps are in
-[`../plan/phase-7-manual.md`](../plan/phase-7-manual.md).
+Status: **skeleton**. The first Eve implementation is a **virtual machine written in Zig** that runs Eve source as a scripting language (D-006). Its source is in `evevm/`, and the build produces `bin/eve.exe`, the official Eve implementation (D-007). It is being built now, and this manual is written alongside it (D-005). There is no compiler yet. Steps are in [`../plan/phase-7-manual.md`](../plan/phase-7-manual.md).
 
 ## Layout (planned)
 
@@ -50,10 +42,7 @@ Every table in `features/` is generated. The generator reads:
 2. **Spec grammar**: one row per rule defined in a fenced `ebnf` block.
 3. **Support data** (`support/*.json`): the status of each feature in each implementation.
 
-Rows are spec features, columns are implementations, so one table compares every compiler that
-has a support file. A generated file starts with a comment naming its generator and inputs.
-Running the generator with `--check` fails when a table is out of date, or when a support file
-names a feature id that the spec does not define.
+Rows are spec features, columns are implementations, so one table compares every compiler that has a support file. A generated file starts with a comment naming its generator and inputs. Running the generator with `--check` fails when a table is out of date, or when a support file names a feature id that the spec does not define.
 
 ### Feature ids
 

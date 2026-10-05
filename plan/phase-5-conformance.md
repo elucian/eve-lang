@@ -4,17 +4,14 @@ Goal: a conformance suite that decides objectively whether a compiler implements
 `test/readme.md` already defines three levels (a01…, b01…, c01…); this phase formalizes them.
 
 ### S5.1 `library/builtins.md` + `builtins.json` `[ ]`
-Source: `library.html`, `command.html`, and calls in `demo/*.eve` (`print`, `write`, `trunc`,
-`round`, `floor`, `ceiling`, …).
+Source: `library.html`, `command.html`, and calls in `demo/*.eve` (`print`, `write`, `trunc`, `round`, `floor`, `ceiling`, …).
 - Per function: `name`, `params` (name, type, mode), `returns`, `errors`, `ref`.
 
 ### S5.1a Library traits `Iterable`, `Comparable`, `Printable` `[!]` → D-039
 Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
 - Define each trait: required methods, provided methods, generic parameter (`Comparable(:T)`).
-- `Iterable`: what the `for` loop calls; which collections adopt it. `Comparable`: which operators (`<`, `>`, `==`)
-  derive from the required method. `Printable`: relation to `string()`, `print`, and the `?` template.
-- Decide first: may a type adopt a trait outside its declaration (`Integer` adopting `Printable`)? Then write
-  `library/traits.md` and `traits.json`, and add the matching Iterable text to `collections.html`.
+- `Iterable`: what the `for` loop calls; which collections adopt it. `Comparable`: which operators (`<`, `>`, `==`) derive from the required method. `Printable`: relation to `string()`, `print`, and the `?` template.
+- Decide first: may a type adopt a trait outside its declaration (`Integer` adopting `Printable`)? Then write `library/traits.md` and `traits.json`, and add the matching Iterable text to `collections.html`.
 
 ### S5.2 `conformance/README.md` `[!]` → Q-005
 - Levels 1–3, file naming, the `driver` per test rule, the expected-output convention.
@@ -22,8 +19,7 @@ Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
 
 ### S5.3 Level 1 suite `[ ]`
 - Move or copy the qualifying `demo/*.eve` files into `test/level1/` with expected output.
-- `demo/` is temporary (D-065): it is deleted when `test/` covers its examples. The 45 demos were checked
-  against the decisions on 2026-10-03; 16 of them still need VM features (listed in D-065).
+- `demo/` is temporary (D-065): it is deleted when `test/` covers its examples. The 45 demos were checked against the decisions on 2026-10-03; 16 of them still need VM features (listed in D-065).
 - One test per lexical and syntax rule from phases 2–3; list coverage in `conformance/README.md`.
 
 ### S5.4 Level 2 suite `[~]` 2026-10-03: 19 project tests b01–b19, all failing first (VM work next); assumptions Q-022

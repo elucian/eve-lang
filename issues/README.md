@@ -1,14 +1,12 @@
 # Tutorial Issues
 
-One file per tutorial page (`tutorial/<page>.html` → `issues/<page>.md`): questions for the author
-and proposed improvements, found by the page-by-page review (plan step T1.10).
+One file per tutorial page (`tutorial/<page>.html` → `issues/<page>.md`): questions for the author and proposed improvements, found by the page-by-page review (plan step T1.10).
 
 Lost in the list? Start with the [priority list](PRIORITY.md).
 
 ## How to answer
 
-Edit the file. Write your answer under the issue's `Answer:` line, replacing `_(open)_`. Short
-answers are fine ("yes", "use `<>`", "drop it"). To reject a proposed fix, write "no" and why.
+Edit the file. Write your answer under the issue's `Answer:` line, replacing `_(open)_`. Short answers are fine ("yes", "use `<>`", "drop it"). To reject a proposed fix, write "no" and why.
 
 ```
 ### SYN-05 Not-equal operator
@@ -23,8 +21,7 @@ When a file is answered, Claude:
 3. adds the rules to the specification in `spec/`, after asking any follow-up questions;
 4. marks each issue: `Status: open` → `answered` → `done`.
 
-Issue ids are stable: `CLS-09` stays `CLS-09` even when issues are added or closed. An issue that
-depends on another points to it (`see CLS-09`).
+Issue ids are stable: `CLS-09` stays `CLS-09` even when issues are added or closed. An issue that depends on another points to it (`see CLS-09`).
 
 ## Kinds
 
@@ -36,9 +33,7 @@ depends on another points to it (`see CLS-09`).
 
 ## Pages
 
-In index order (index.html first). Open items on 2026-10-01: 86 questions. An item is removed when its
-answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the ids of removed items are retired
-(their text is in the git history before 2026-10-01). Spec work still points to the decisions.
+In index order (index.html first). Open items on 2026-10-01: 86 questions. An item is removed when its answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the ids of removed items are retired (their text is in the git history before 2026-10-01). Spec work still points to the decisions.
 
 | Page | File | Open questions | Open fixes / improvements | Retired |
 |---|---|---|---|---|

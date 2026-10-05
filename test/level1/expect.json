@@ -183,5 +183,10 @@
     "stdout": [
       "caught division error"
     ]
+  },
+  "a39_repeat": {
+    "stdout": [
+      "repeat ok"
+    ]
   }
 }

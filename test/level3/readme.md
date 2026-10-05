@@ -1,6 +1,6 @@
 # test Level 3
 
-This level test the ability to use a library and test the library
+This level tests the data language: types (Decimal, time, records, optional values), generators, files, JSON and CSV, the HTTP client, and libraries (version 0.2, `plan/decision_level3.md`). A test is a project folder (D-073); test names start with `c`.
 
 ## Tests
 

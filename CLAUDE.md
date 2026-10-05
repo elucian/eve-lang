@@ -20,7 +20,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
   script) and `plan/decision_level2.md` (processes, aspects, modules, libraries); ids are shared.
 - `issues/` one file per tutorial page: questions and fixes from the page review (T1.10). The
   author answers by editing `**Answer:**` lines; answers become decisions in `plan/decision_levelN.md`.
-- `demo/` ~45 small `.eve` examples; `pattern/` syntax patterns; `test/level1-3/` conformity tests
+- `demo/` ~45 small `.eve` examples kept as ideas and for comparison with the spec (D-075): never run or parse them with the VM, static analysis only; `pattern/` syntax patterns; `test/level1-3/` conformity tests
 - `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
   Conventions in `manual/README.md`.
@@ -33,6 +33,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
   Control flow: D-016 in `plan/decision_level1.md`.
 - **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.
+- **Markdown prose is not hard-wrapped:** one line per paragraph and per list item (an author answer or a `(a)` item keeps its own line). To reflow a wrapped file: `python temp/unwrap_md.py <files>`.
 
 ## Tutorial (`tutorial/` → scl repo)
 

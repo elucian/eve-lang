@@ -3,9 +3,9 @@
   "a01_driver": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "Test driver structure and single line comments",
    "reason": ""
@@ -13,9 +13,9 @@
   "a02_comments": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "",
    "reason": ""
@@ -23,9 +23,9 @@
   "a03_print": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "This test prints a string",
    "reason": ""
@@ -33,9 +33,9 @@
   "a04_free_script": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1790972480,
    "title": "a free script: sequential statements, no driver and no process (D-008, D-014)",
    "reason": ""
@@ -43,9 +43,9 @@
   "a05_print_write": {
    "status": "PASS",
    "failures": 2,
-   "runs": 11,
+   "runs": 15,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "print adds a new line and separates values with a separator, write adds nothing",
    "reason": ""
@@ -53,9 +53,9 @@
   "a06_let_set": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "let declares variables, set declares constants, := changes a value (D-036)",
    "reason": ""
@@ -63,9 +63,9 @@
   "a07_arithmetic": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "numeric operators and their precedence (D-019)",
    "reason": ""
@@ -73,9 +73,9 @@
   "a08_logic": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "relation and logical operators",
    "reason": ""
@@ -83,9 +83,9 @@
   "a09_literals": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "literals of the primitive types (D-032)",
    "reason": ""
@@ -93,9 +93,9 @@
   "a10_strings": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "strings are immutable UTF-8 text (D-058)",
    "reason": ""
@@ -103,9 +103,9 @@
   "a11_interpolation": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "interpolation escapes: \\s{} string, \\#{} number, \\b{} boolean, \\u{} Unicode (D-060, draft formats)",
    "reason": ""
@@ -113,9 +113,9 @@
   "a12_if": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "if, else if, else and the conditional statement (D-016)",
    "reason": ""
@@ -123,9 +123,9 @@
   "a13_while": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "while loop with a header, break, else and then (D-030, D-033, D-034)",
    "reason": ""
@@ -133,19 +133,19 @@
   "a14_for": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
-   "mtime": 1791064984,
+   "last": "2026-10-05 09:29",
+   "mtime": 1791135577,
    "title": "for loop over ranges and collections (D-022)",
    "reason": ""
   },
   "a15_match": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "match with values, lists of values, ranges and other (D-016, D-030)",
    "reason": ""
@@ -153,9 +153,9 @@
   "a16_ordinal": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "an Ordinal is a set of named integer values; the first value is 0 (D-058)",
    "reason": ""
@@ -163,9 +163,9 @@
   "a17_list": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "list: literal, index, append, remove, builder, deconstruct (D-058, D-059, D-060)",
    "reason": ""
@@ -173,9 +173,9 @@
   "a18_array": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "array: literal, index, slice, view and clone, bulk assignment, builder (D-021, D-022, D-049)",
    "reason": ""
@@ -183,9 +183,9 @@
   "a19_matrix": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "matrix: two indexes, last index, absolute index, all elements [*] (D-058)",
    "reason": ""
@@ -193,9 +193,9 @@
   "a20_dataset": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "DataSet: sorted unique values, union, intersection, difference (D-058)",
    "reason": ""
@@ -203,9 +203,9 @@
   "a21_hashmap": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "HashMap: a sorted map of key:value pairs (D-058)",
    "reason": ""
@@ -213,9 +213,9 @@
   "a22_object": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "Object: unquoted keys make an object, quoted or numeric keys make a HashMap (D-058, D-059)",
    "reason": ""
@@ -223,9 +223,9 @@
   "a23_clone_view": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": ":= shares a collection or an object, :: makes a deep copy, native values are always copied (D-049)",
    "reason": ""
@@ -233,9 +233,9 @@
   "a24_function": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "functions: result, named arguments, default values, lambda (D-028)",
    "reason": ""
@@ -243,9 +243,9 @@
   "a25_method": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "methods: side effects, @ passes by reference, no @ passes a copy (D-025, D-048)",
    "reason": ""
@@ -253,9 +253,9 @@
   "a26_class": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "class with a constructor, methods, new, reference and clone (D-036, D-037)",
    "reason": ""
@@ -263,9 +263,9 @@
   "a27_text_literal": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed",
    "reason": ""
@@ -273,9 +273,9 @@
   "a28_regex": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "regular expressions: =~ matches, !~ does not match; a pattern starts with / and ends with /flags",
    "reason": ""
@@ -283,9 +283,9 @@
   "a29_expect_fail": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "a failed expect ends the process with exit code 2 (D-055)",
    "reason": ""
@@ -293,9 +293,9 @@
   "a30_over": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "over ends the process it is in with exit code 0",
    "reason": ""
@@ -303,9 +303,9 @@
   "a31_recover": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "an error jumps to recover; reaching the end of recover handles the error (D-020)",
    "reason": ""
@@ -313,9 +313,9 @@
   "a32_finalize": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "finalize runs after the process ends normally, and after recover (D-055)",
    "reason": ""
@@ -323,9 +323,9 @@
   "a33_over_finalize": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "over skips recover and finalize (D-055)",
    "reason": ""
@@ -333,9 +333,9 @@
   "a34_jobs": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "jobs: retry runs a failed job again, resume goes on after it (D-020, D-030)",
    "reason": ""
@@ -343,9 +343,9 @@
   "a35_index_error": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "index 0 is an error: indexes start at 1 (D-021)",
    "reason": ""
@@ -353,9 +353,9 @@
   "a36_map_key_error": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "+= on a missing key of a map raises an error (D-058)",
    "reason": ""
@@ -363,9 +363,9 @@
   "a37_division_error": {
    "status": "PASS",
    "failures": 1,
-   "runs": 10,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "a division by zero raises an error",
    "reason": ""
@@ -373,11 +373,21 @@
   "a38_matrix_index": {
    "status": "PASS",
    "failures": 1,
-   "runs": 4,
+   "runs": 8,
    "checks": 0,
-   "last": "2026-10-03 21:51",
+   "last": "2026-10-05 09:29",
    "mtime": 1791064984,
    "title": "matrix and tensor indexes: [x, y] is the same as [x][y]; a range selects a part (D-064)",
+   "reason": ""
+  },
+  "a39_repeat": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 3,
+   "checks": 0,
+   "last": "2026-10-05 09:29",
+   "mtime": 1791135583,
+   "title": "loop tested at the end: loop … do … repeat [while c]; and skip (D-074)",
    "reason": ""
   }
  }

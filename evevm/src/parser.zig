@@ -10,6 +10,7 @@
 //!     function   = "function" name [ params ] [ "=>" params ] "is" block "return" ";"   (method alike)
 //!     class      = "class" name "=" "{" items "}" [ "<:" name ] ( ";" | "is" members "end" name ";" )
 //!     statement  = let | set | if | while | loop | for | match | job | simple
+//!     loop       = "loop" { declaration } ( "while" expr "do" tail | "do" block "repeat" [ "while" expr ] ";" )
 //!     simple     = ( print | write | expect | raise | break | next | over | panic | retry | resume
 //!                  | abort | expression [ assign-op expression ] ) [ "if" expression ] ";"
 //!     expression : see `Parser.orExpr`, from the loosest operator (`or`) to a primary
@@ -33,15 +34,15 @@ pub const Error = lexer.Error;
 const reserved = std.StaticStringMap(void).initComptime(.{
     .{"driver"},      .{"is"},       .{"process"}, .{"return"}, .{"end"},    .{"let"},      .{"set"},
     .{"if"},          .{"else"},     .{"do"},      .{"done"},   .{"while"},  .{"loop"},     .{"for"},
-    .{"in"},          .{"match"},    .{"when"},    .{"then"},   .{"break"},  .{"next"},     .{"raise"},
+    .{"in"},          .{"match"},    .{"when"},    .{"then"},   .{"break"},  .{"skip"},     .{"raise"},
     .{"recover"},     .{"finalize"}, .{"job"},     .{"retry"},  .{"resume"}, .{"abort"},    .{"over"},
     .{"panic"},       .{"print"},    .{"write"},   .{"expect"}, .{"class"},  .{"function"}, .{"method"},
-    .{"constructor"}, .{"and"},      .{"or"},      .{"xor"},    .{"not"},    .{"new"},
+    .{"constructor"}, .{"and"},      .{"or"},      .{"xor"},    .{"not"},    .{"new"},      .{"repeat"},
 });
 
 /// Words that end a block: a statement list stops in front of them.
 const block_end = std.StaticStringMap(void).initComptime(.{
-    .{"return"}, .{"recover"}, .{"finalize"}, .{"done"}, .{"else"}, .{"then"}, .{"when"}, .{"end"},
+    .{"return"}, .{"recover"}, .{"finalize"}, .{"done"}, .{"else"}, .{"then"}, .{"when"}, .{"end"}, .{"repeat"},
 });
 
 // Zig tip: this is a "recursive descent" parser: one function per grammar rule, each one consuming
@@ -952,9 +953,23 @@ const Parser = struct {
             if (std.mem.eql(u8, w, "loop")) {
                 _ = p.advance();
                 var header: std.ArrayList(*const Node) = .empty;
-                while (!p.isWord("while")) {
-                    if (p.peek().kind == .eof) return p.fail("expected 'while' in the loop header", .{});
+                while (!p.isWord("while") and !p.isWord("do")) {
+                    if (p.peek().kind == .eof) return p.fail("expected 'while' or 'do' after the loop header", .{});
                     try header.append(p.a, try p.statement());
+                }
+                // Zig tip: an `if` block that ends in `return` is an early exit: the code after it
+                // runs only for the other form, so no `else` is needed. Here `do` picks the loop
+                // tested at the end, `loop … do … repeat [while c];` (D-074); `while` picks the
+                // loop tested at the start.
+                if (p.acceptWord("do")) {
+                    var kids: std.ArrayList(*const Node) = .empty;
+                    try kids.append(p.a, try p.mk(.block, t, "", header.items));
+                    try kids.append(p.a, try p.block());
+                    if (!p.isWord("repeat")) return p.fail("a 'loop … do' block ends with 'repeat', found '{s}'", .{describe(p.peek())});
+                    _ = p.advance();
+                    if (p.acceptWord("while")) try kids.append(p.a, try p.expr());
+                    try p.expectSym(";");
+                    return p.mk(.repeat_, t, "", kids.items);
                 }
                 _ = p.advance();
                 var kids: std.ArrayList(*const Node) = .empty;
@@ -991,7 +1006,7 @@ const Parser = struct {
             }
             inline for (.{
                 .{ "break", Tag.break_stmt },
-                .{ "next", Tag.next_stmt },
+                .{ "skip", Tag.skip_stmt },
                 .{ "over", Tag.over_stmt },
                 .{ "panic", Tag.panic_stmt },
                 .{ "retry", Tag.retry_stmt },
@@ -1220,6 +1235,8 @@ test "wrong scripts are rejected" {
         "driver a is end b;",
         "for i (1..2) do done;",
         "x := 1 2;",
+        "loop do print 1; done;",
+        "loop do print 1; repeat while;",
     };
     var d: Diag = .{};
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));

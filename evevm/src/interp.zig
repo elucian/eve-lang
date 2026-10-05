@@ -15,7 +15,7 @@ const Node = ast.Node;
 // helpers) must name their error set: Zig cannot infer it for a cycle. The first names are
 // control flow, the last two are the failures of the allocator and of the output writer.
 /// What interrupts the normal flow of a script.
-pub const Signal = error{ Raise, Break, Next, Over, Panic, Retry, Resume, Abort, Stop, OutOfMemory, WriteFailed };
+pub const Signal = error{ Raise, Break, Skip, Over, Panic, Retry, Resume, Abort, Stop, OutOfMemory, WriteFailed };
 
 // Zig tip: a `union(enum)` is a "tagged union": a value that is exactly one of several kinds, and
 // remembers which. `switch (v)` must handle every kind. `.int => |n|` captures the payload. Kinds
@@ -1598,7 +1598,7 @@ pub const Interp = struct {
             },
             .raise_stmt => return it.raise(n),
             .break_stmt => return error.Break,
-            .next_stmt => return error.Next,
+            .skip_stmt => return error.Skip,
             .over_stmt => return error.Over,
             .panic_stmt => return error.Panic,
             .retry_stmt => return error.Retry,
@@ -1608,6 +1608,7 @@ pub const Interp = struct {
             .if_ => try it.ifStmt(n),
             .while_ => try it.whileStmt(n),
             .for_ => try it.forStmt(n),
+            .repeat_ => try it.repeatStmt(n),
             .match_ => try it.matchStmt(n),
             .job => {
                 const saved = it.current_job;
@@ -1886,7 +1887,7 @@ pub const Interp = struct {
             ran = true;
             it.execBlock(n.kids[2]) catch |e| switch (e) {
                 error.Break => break,
-                error.Next => continue,
+                error.Skip => continue,
                 else => return e,
             };
         }
@@ -1905,12 +1906,32 @@ pub const Interp = struct {
             try it.bindPattern(n.kids[0], x);
             it.execBlock(n.kids[2]) catch |e| switch (e) {
                 error.Break => break,
-                error.Next => continue,
+                error.Skip => continue,
                 else => return e,
             };
         }
         if (!ran) try it.execBlock(n.kids[3]);
         try it.execBlock(n.kids[4]);
+    }
+
+    // Zig tip: `while (true)` has no condition of its own: the loop ends only by `break`. The test
+    // sits at the bottom, after the body. In `catch |e| switch (e)`, the branch `error.Skip => {}`
+    // is an empty block: the error is swallowed and execution falls through to the bottom test,
+    // which is exactly what `skip` means in a `repeat` loop. `n.kids.len > 2` checks whether the
+    // optional `while` condition was written; a bare `repeat;` loops until `break`.
+    /// `loop [header] do body repeat [while c];` (D-074): the body runs at least once.
+    fn repeatStmt(it: *Interp, n: *const Node) Signal!void {
+        const saved = try it.pushScope();
+        defer it.scope = saved;
+        try it.execBlock(n.kids[0]);
+        while (true) {
+            it.execBlock(n.kids[1]) catch |e| switch (e) {
+                error.Break => break,
+                error.Skip => {},
+                else => return e,
+            };
+            if (n.kids.len > 2 and !try it.truth(try it.eval(n.kids[2]))) break;
+        }
     }
 
     // Zig tip: `matchStmt` relies on the same Zig feature as `define` above: see the tip there.

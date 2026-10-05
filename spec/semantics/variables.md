@@ -1,27 +1,18 @@
 # System Variables
 
-Status: **0.1-draft**. This file is the register of the system variables of Eve: every `$name` that the tutorial,
-the decisions or the library use is listed here, with its type and meaning. **A new system variable is added
-here first**, then used in a page, a test or the VM (D-071). Answers TOP-08.
+Status: **0.1-draft**. This file is the register of the system variables of Eve: every `$name` that the tutorial, the decisions or the library use is listed here, with its type and meaning. **A new system variable is added here first**, then used in a page, a test or the VM (D-071). Answers TOP-08.
 
-The tutorial shows the variables with status 0.1, draft and later in one table, syntax.html "System Variables"
-(`#variables`); topology.html, exceptions.html and command.html link to it. Change that table together with this file.
+The tutorial shows the variables with status 0.1, draft and later in one table, syntax.html "System Variables" (`#variables`); topology.html, exceptions.html and command.html link to it. Change that table together with this file.
 
 ## Rules
 
-- A system variable starts with the sigil `$`. It is static and public, shared by the whole process, and needs
-  no module qualifier (topology.html, syntax.html).
+- A system variable starts with the sigil `$`. It is static and public, shared by the whole process, and needs no module qualifier (topology.html, syntax.html).
 - **Environment.** Every OS environment variable `NAME` is visible as `$NAME` (D-031, D-052). It is a `String`.
-- **Configuration.** A driver configuration file (`.cfg`) sets system variables as `$key = value` lines with Eve
-  literals and `#` comments (D-031). A driver can also set one with `set $name = value;` (example: `$EVE_ASP`).
-- **Library.** A library module declares the system variables it provides with `external set $name: Type;`
-  (D-056), like `$error` in `evevm/lib/exception.eve`.
-- **Naming.** Capital names (`$EVE_OUT`) are environment and configuration values; lowercase names (`$error`) are
-  objects of the runtime and of the library. Error and warning codes are the constants `$err_name` and `$wrn_name`.
+- **Configuration.** A driver configuration file (`.cfg`) sets system variables as `$key = value` lines with Eve literals and `#` comments (D-031). A driver can also set one with `set $name = value;` (example: `$EVE_ASP`).
+- **Library.** A library module declares the system variables it provides with `external set $name: Type;` (D-056), like `$error` in `evevm/lib/exception.eve`.
+- **Naming.** Capital names (`$EVE_OUT`) are environment and configuration values; lowercase names (`$error`) are objects of the runtime and of the library. Error and warning codes are the constants `$err_name` and `$wrn_name`.
 
-Status values in the tables: **0.1** the VM must provide it in version 0.1; **draft** described, version not
-decided; **later** after 0.1 (D-050 for multitasking); **question** see [Open points](#open-points).
-Column VM: what `bin/eve.exe` does today.
+Status values in the tables: **0.1** the VM must provide it in version 0.1; **draft** described, version not decided; **later** after 0.1 (D-050 for multitasking); **question** see [Open points](#open-points). Column VM: what `bin/eve.exe` does today.
 
 ## Runtime objects
 
@@ -53,8 +44,9 @@ Column VM: what `bin/eve.exe` does today.
 | Name | Type | Meaning | Default | Status | VM | Source |
 |---|---|---|---|---|---|---|
 | `$epsilon` | `Real` | Precision of comparisons between real numbers | | draft | no | algorithms.html, compiler.html, D-065 |
-| `$timeout` | `Integer` | Seconds a task waits on a channel before a time-out error | `60` | later | no | CON-07, multitasking.html |
-| `$cores` | `Integer` | Size of the worker pool of parallel aspects | number of hardware cores | later | no | D-047, multitasking.html |
+| `$timeout` | `Integer` | Seconds a task waits on a channel before a time-out error; an aspect may shadow it | `60` | later | no | CON-07, D-081, multitasking.html |
+| `$cores` | `Integer` | Size of the worker pool of parallel aspects, at most 16 | number of hardware cores | later | no | D-047, D-081, multitasking.html |
+| `$max_parallel` | `Integer` | Aspects one parallel group of the driver may start | `8` | later | no | D-081, multitasking.html |
 | `$query` | `String` | The last SQL statement sent by the database module | | later | no | databases.html |
 
 ## Constants
@@ -81,13 +73,9 @@ Names written with `$` in the pages that are not system variables. They stay out
 
 Questions for the author; answers become decisions and update the tables.
 
-1. **Working folder.** `$OS_PWD` (topology.html) and `$CWD` (command.html) mean the same. Keep one, or use the OS
-   variable `$PWD` (Linux) and drop both?
-2. **Project folders.** `$MY_LIB` and `$MY_LOG` overlap with `$EVE_ASP` (aspects and project libraries) and
-   `$EVE_OUT` (log files). Drop them?
-3. **`$trace`.** exceptions.html: the list of errors and warnings; databases.html: shows the generated SQL. One
-   meaning only? Proposal: the errors list; the SQL goes to `$query`.
+1. **Working folder.** `$OS_PWD` (topology.html) and `$CWD` (command.html) mean the same. Keep one, or use the OS variable `$PWD` (Linux) and drop both?
+2. **Project folders.** `$MY_LIB` and `$MY_LOG` overlap with `$EVE_ASP` (aspects and project libraries) and `$EVE_OUT` (log files). Drop them?
+3. **`$trace`.** exceptions.html: the list of errors and warnings; databases.html: shows the generated SQL. One meaning only? Proposal: the errors list; the SQL goes to `$query`.
 4. **`$object`.** Methods of a class use the parameter `@self` (classes.html). Is `$object` still needed?
 5. **Types of folders.** `String`, or a `Path`/`Folder` type from the library (command.html uses `Folder($HOME/"test")`)?
-6. **Writable or read-only.** Which variables may a driver change with `set` (`$EVE_ASP`, `$EVE_OUT`, `$epsilon`)?
-   Can a driver create its own `$name`, as the examples with `$user_path` suggest?
+6. **Writable or read-only.** Which variables may a driver change with `set` (`$EVE_ASP`, `$EVE_OUT`, `$epsilon`)? Can a driver create its own `$name`, as the examples with `$user_path` suggest?
