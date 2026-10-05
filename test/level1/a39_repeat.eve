@@ -1,0 +1,51 @@
+# loop tested at the end: loop … do … repeat [while c]; and skip (D-074)
+driver a39_repeat is
+  process main is
+    ** the body runs at least once, the condition is tested at the end
+    let n := 10;
+    loop do
+      n += 1;
+    repeat while n < 5;
+    expect n == 11;
+
+    ** the header declares variables that survive all the cycles
+    let s := "";
+    loop
+      let i := 0;
+    do
+      i += 1;
+      s += "\#{i}";
+    repeat while i < 3;
+    expect s == "123";
+
+    ** a bare repeat loops until break
+    let k := 0;
+    loop do
+      k += 1;
+      break if k == 4;
+    repeat;
+    expect k == 4;
+
+    ** skip jumps to the test at the end, which still runs
+    let odd := "";
+    loop
+      let j := 0;
+    do
+      j += 1;
+      skip if j % 2 == 0;
+      odd += "\#{j}";
+    repeat while j < 6;
+    expect odd == "135";
+
+    ** in a while loop skip goes back to the condition
+    let w := "";
+    let m := 0;
+    while m < 5 do
+      m += 1;
+      skip if m == 3;
+      w += "\#{m}";
+    done;
+    expect w == "1245";
+    print "repeat ok";
+  return;
+end a39_repeat;

@@ -5,20 +5,17 @@ Page: `tutorial/command.html` (163 lines). Reviewed 2026-09-28. How to answer: [
 ## Questions
 
 ### CMD-02 Exit status of a shell command
-`call "ls -l *.dat" +> files;` captures stdout as a list of lines. How does the script read the
-command's exit code (`$status`?), and does a non-zero code raise an error?
+`call "ls -l *.dat" +> files;` captures stdout as a list of lines. How does the script read the command's exit code (`$status`?), and does a non-zero code raise an error?
 **Answer:** _(open)_
 Status: open
 
 ### CMD-03 `cd` and the working directory
-`call "cd #($HOME)/test";` then `call "ls …"`. Each `call` normally runs in its own shell, so the
-`cd` would be lost. Does `call "cd …"` change the VM's working directory (`$CWD`)?
+`call "cd #($HOME)/test";` then `call "ls …"`. Each `call` normally runs in its own shell, so the `cd` would be lost. Does `call "cd …"` change the VM's working directory (`$CWD`)?
 **Answer:** _(open)_
 Status: open
 
 ### CMD-04 `export`
-"You can export Eve shared variables to the operating system using `export`." Is `export` a
-keyword (it is not in the keyword table)? Syntax?
+"You can export Eve shared variables to the operating system using `export`." Is `export` a keyword (it is not in the keyword table)? Syntax?
 **Answer:** _(open)_
 Status: open
 

@@ -1,7 +1,6 @@
 # Phase 4 — Semantics
 
-Goal: the meaning of every construct, precise enough that two independent compilers produce the
-same output for the same program.
+Goal: the meaning of every construct, precise enough that two independent compilers produce the same output for the same program.
 
 ### S4.1 `semantics/types.md` + `types.json` `[ ]`
 Source: `types.html`.
@@ -18,8 +17,7 @@ Source: `types.html`.
 ### S4.3 `semantics/topology.md` `[ ]`
 Source: `topology.html`, `manifest.html`.
 - Projects, scripts, drivers, aspects, modules; import resolution; configuration.
-- Execution model: driver start, aspect launch and unload, module persistence, termination,
-  exit codes, exclusive mode.
+- Execution model: driver start, aspect launch and unload, module persistence, termination, exit codes, exclusive mode.
 
 ### S4.4 `semantics/control.md` `[ ]`
 Source: `control.html`, `processing.html`.
@@ -29,9 +27,7 @@ Source: `control.html`, `processing.html`.
 ### S4.5 `semantics/multitasking.md` `[ ]`
 Source: `multitasking.html`, `processing.html`.
 - Methods, side-effect rules, parameter passing modes (input, output, variant), generators, parallel aspects.
-- D-050: multitasking is not in 0.1. Methods, side effects and parameter passing (D-048, D-049) are normative for
-  0.1; parallel aspects (D-066) go in a section marked "planned, not in 0.1", keywords reserved. Generators and
-  the module `task` are specified in version 2 (D-067); `yield` is reserved.
+- D-050: multitasking is not in 0.1. Methods, side effects and parameter passing (D-048, D-049) are normative for 0.1; parallel aspects (D-066) go in a section marked "planned, not in 0.1", keywords reserved. Generators and the module `task` are specified in version 2 (D-067); `yield` is reserved.
 
 ### S4.6 Collections and objects `[ ]`
 Source: `collections.html`, `classes.html`.

@@ -1,17 +1,15 @@
 # Eve Language Specification
 
-This folder holds the **normative specification** of Eve: the reference any Eve compiler or
-interpreter must follow. The tutorial (`tutorial/`, published at
+This folder holds the **normative specification** of Eve: the reference any Eve compiler or interpreter must follow. The tutorial (`tutorial/`, published at
 <https://sagecode.org/projects/eve/>) teaches the language; this specification defines it.
 When the two disagree, the specification wins. Record the conflict in
 [`../plan/decision_level1.md`](../plan/decision_level1.md) or [`../plan/decision_level2.md`](../plan/decision_level2.md) and fix the tutorial.
 
-License: [CC BY 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../plan/`](../plan/README.md).
+License: [CC BY-NC-SA 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../plan/`](../plan/README.md).
 
 ## Why Markdown + JSON
 
-The specification is written for two readers: people (students, compiler authors) and programs
-(compilers, test runners, highlighters, AI agents).
+The specification is written for two readers: people (students, compiler authors) and programs (compilers, test runners, highlighters, AI agents).
 
 | Format | Used for | Rule |
 |---|---|---|
@@ -83,6 +81,4 @@ Example (`lexical/keywords.json`):
 
 ## Versioning
 
-The specification uses `MAJOR.MINOR` plus an optional `-draft` suffix. A compiler states the
-version it implements (for example "Eve 0.1") and the conformance level it passes
-(see `conformance/`). Items keep their `id` across versions; removals go through `deprecated`.
+The specification uses `MAJOR.MINOR` plus an optional `-draft` suffix. A compiler states the version it implements (for example "Eve 0.1") and the conformance level it passes (see `conformance/`). Items keep their `id` across versions; removals go through `deprecated`.

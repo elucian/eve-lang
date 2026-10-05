@@ -3,11 +3,11 @@ driver test_over is
   process main is
     loop
       let i = 0 :Integer;
-    while True do
+    do
       write "."; wait 10ms;
       over if i > 10;
       i += 1;
-    done;
+    repeat;
   return;
 end test_over;
 

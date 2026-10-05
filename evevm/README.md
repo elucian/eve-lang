@@ -1,7 +1,6 @@
 # evevm — the Eve virtual machine
 
-The first Eve implementation (D-006, D-007 in `../plan/decision_level1.md`): a virtual machine written
-in Zig that runs Eve scripts. It builds `bin/eve.exe` at the repo root, the official `eve`
+The first Eve implementation (D-006, D-007 in `../plan/decision_level1.md`): a virtual machine written in Zig that runs Eve scripts. It builds `bin/eve.exe` at the repo root, the official `eve`
 command. Manual: [`../manual/README.md`](../manual/README.md).
 
 Version: **0.0.1**. Status: skeleton. `eve --version` and `eve --help` work; running a script is not implemented yet.
@@ -23,10 +22,11 @@ Requires Zig 0.16.0 (`winget install zig.zig`). Run from this folder:
 | Path | Contents |
 |---|---|
 | `build.zig`, `build.zig.zon` | build script and package manifest |
+| `src/doc.zig` | the `doc` command: Markdown documentation of `.eve` files |
 | `src/root.zig` | the VM library module (`evevm`): lexer, parser, interpreter as they land |
 | `src/main.zig` | the `eve` command line, a thin front end over the library |
 | `lib/` | the Eve standard library, mostly written in Eve ([README](lib/README.md)) |
-| `doc/` | `eved.zig`, the Eve doc tool in Zig, and the library documentation it generates (`zig build doc`); the `.md` pages are never edited by hand |
+| `doc/` | the library documentation, generated from `lib/` by `eve --doc` (`zig build doc`, D-082); the `.md` pages are never edited by hand |
 
 ## License
 

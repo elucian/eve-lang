@@ -38,10 +38,10 @@ driver a14_for is
     done;
     expect u == "abc";
 
-    ** next advances the index, break leaves the loop
+    ** skip advances the index, break leaves the loop
     let v := "";
     for i in (1..5) do
-      next if i % 2 == 0;
+      skip if i % 2 == 0;
       v += "\#{i}";
     done;
     expect v == "135";

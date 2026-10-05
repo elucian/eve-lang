@@ -30,6 +30,7 @@ test {
     _ = @import("parser.zig");
     _ = @import("ast.zig");
     _ = @import("interp.zig");
+    _ = @import("doc.zig");
 }
 
 test "version strings are set" {

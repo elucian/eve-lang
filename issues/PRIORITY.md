@@ -5,15 +5,11 @@ Answer in the issue files as usual (see [README](README.md)); this page only ord
 
 **Update 2026-10-02:** the six library issues are answered (D-053). Tutorial page and spec still to update.
 
-**Update 2026-10-03:** answered or obsolete items retired from manifest (MAN-01 to 04), topology (TOP-10, TOP-I2),
-processing (PRC-03, 06, 07, 08, 11, 13, 14) and multitasking (CON-02 to 05, 08 to 10). The counts below are older.
+**Update 2026-10-03:** answered or obsolete items retired from manifest (MAN-01 to 04), topology (TOP-10, TOP-I2), processing (PRC-03, 06, 07, 08, 11, 13, 14) and multitasking (CON-02 to 05, 08 to 10). The counts below are older.
 
-**Counts (2026-10-01):** 64 open, 5 partial, 19 closed (done, answered, obsolete or declined). Items answered and applied
-earlier were removed from the files (ids retired), so they are not counted here.
+**Counts (2026-10-01):** 64 open, 5 partial, 19 closed (done, answered, obsolete or declined). Items answered and applied earlier were removed from the files (ids retired), so they are not counted here.
 
-**How the order was chosen.** The Zig VM must pass test levels 1 to 3 first (print, strings, control,
-functions, collections, errors). An issue ranks high when the VM or the spec can't be written without the
-answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-050), so it ranks low.
+**How the order was chosen.** The Zig VM must pass test levels 1 to 3 first (print, strings, control, functions, collections, errors). An issue ranks high when the VM or the spec can't be written without the answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-050), so it ranks low.
 
 ## Counts by area
 
@@ -39,22 +35,17 @@ answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-
 
 One answer closes several issues in each group.
 
-1. **Strings: placeholders, escapes, text.** COL-15, COL-16, LIB-06 (COL-17, 19, 20 answered, D-058).
-   Every test uses `print` with strings, so this comes first.
-2. **Input and output.** LIB-03 `read`, LIB-04 `write` and `print`, LIB-05 standard error.
-   These decide the `.out` files of the conformance tests.
-3. **Built-ins for 0.1.** LIB-01 (the list), LIB-02 (mutating string functions), the open points of
-   [spec/semantics/variables.md](../spec/semantics/variables.md) (system variables, was TOP-08). They define what the VM must contain.
+1. **Strings: placeholders, escapes, text.** COL-15, COL-16, LIB-06 (COL-17, 19, 20 answered, D-058). Every test uses `print` with strings, so this comes first.
+2. **Input and output.** LIB-03 `read`, LIB-04 `write` and `print`, LIB-05 standard error. These decide the `.out` files of the conformance tests.
+3. **Built-ins for 0.1.** LIB-01 (the list), LIB-02 (mutating string functions), the open points of [spec/semantics/variables.md](../spec/semantics/variables.md) (system variables, was TOP-08). They define what the VM must contain.
 4. **Errors and exit codes.** PRC-02 (`finalize`),
    PRC-09 (Exception module). They give the exit codes in `expect.json`.
 5. **Collections core.** COL-02, COL-05 (map notation, list operation doubts; COL-01, 07 answered, D-058). Test levels 2 and 3 use them.
-6. **Write the spec for the answered items.** SPEC-01 to SPEC-06: no question left, only work. This is the
-   cheapest progress in the folder.
+6. **Write the spec for the answered items.** SPEC-01 to SPEC-06: no question left, only work. This is the cheapest progress in the folder.
 
 ## Priority 2: next, once the core runs
 
-7. **Functions.** ALG-02 (native types in signatures), ALG-01 (CON-03 answered, D-070). Small, and they
-   unblock the function tests.
+7. **Functions.** ALG-02 (native types in signatures), ALG-01 (CON-03 answered, D-070). Small, and they unblock the function tests.
 8. **Class model.** CLS-09 (generics), CLS-10, CLS-11, CLS-17 (constructor shape), then CLS-12 to CLS-16.
 9. **Collections, the rest.** COL-03 (filter clause), COL-14 (object attributes); the rest answered, D-058.
 10. **Processes and aspects.** PRC-10 (command-line arguments: VM and manual).
@@ -62,13 +53,11 @@ One answer closes several issues in each group.
 
 ## Priority 3: not in 0.1
 
-12. **Multitasking.** CON-07 time-out, CON-11 rules of parallel methods, CON-12 channel details, CON-06
-    (partial). Defer all of it until the VM runs sequential programs (D-050).
+12. **Multitasking.** CON-07 time-out, CON-11 rules of parallel methods, CON-12 channel details, CON-06 (partial). Defer all of it until the VM runs sequential programs (D-050).
 
 ## Priority 4: cheap or independent
 
-13. **Shell commands.** CMD-02 to CMD-06 (exit status, `cd`, `export`, `File` and `Folder`). CMD-05 is
-    part of TOP-08.
+13. **Shell commands.** CMD-02 to CMD-06 (exit status, `cd`, `export`, `File` and `Folder`). CMD-05 is part of TOP-08.
 14. **Databases.** DB-01 to DB-04. Needs the library first.
 15. **Compiler page.** CMP-01 and CMP-02: answer in one line each, and the page is finished.
 16. **Manifest.** MAN-F1, MAN-F2 (fixes only; MAN-01 to MAN-04 done, D-061).
@@ -76,5 +65,4 @@ One answer closes several issues in each group.
 
 ## Suggested next session
 
-Answer the six issues of priority 1, groups 1 and 2 (COL-15, COL-16, LIB-06, LIB-03, LIB-04, LIB-05).
-They unlock the first `print` tests. Then do SPEC-01 to SPEC-06 for the spec work.
+Answer the six issues of priority 1, groups 1 and 2 (COL-15, COL-16, LIB-06, LIB-03, LIB-04, LIB-05). They unlock the first `print` tests. Then do SPEC-01 to SPEC-06 for the spec work.

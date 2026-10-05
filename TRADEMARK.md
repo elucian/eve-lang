@@ -6,7 +6,7 @@ Effective 2026-10-02. Version 1.0.
 
 "EVE", the official EVE logo (the files `eve-logo.svg` and `eve-logo.jpg` of the project) and the associated branding
 are trademarks of **Sage-Code Laboratory** (the "Owner"), the project of Elucian Moise. The licenses of this repository
-([LICENSE](LICENSE): BUSL-1.1 for the code, CC BY 4.0 for the specification and the other documents) cover copyright only.
+([LICENSE](LICENSE): BUSL-1.1 for the code, CC BY-NC-SA 4.0 for the specification and the other documents) cover copyright only.
 They do **not** grant any right in these trademarks.
 
 This policy keeps the name EVE trustworthy: a program that says it is EVE must behave as the specification says,
@@ -49,7 +49,7 @@ is **"EVE Compliant"** only if all these are true:
    features or adds extensions that change the meaning of valid EVE programs is not EVE and must say so.
 3. **Use "EVE Compliant" or the official logo** on a product, a company, a domain name, a package name, a social
    media account or a certification mark in a way that suggests it is official, endorsed or certified by the Owner.
-4. **Publish a modified specification under the EVE name.** You may adapt the specification (CC BY 4.0), but an adapted
+4. **Publish a modified specification under the EVE name.** You may adapt the specification for non-commercial use (CC BY-NC-SA 4.0), but an adapted
    text must carry another title and state that it is not the official EVE specification.
 5. **Register** the name, the logo or a confusingly similar mark as a trademark, a domain name or a company name.
 6. **Alter the logo**: do not change its colors, proportions or shape, and do not combine it with other marks.

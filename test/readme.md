@@ -65,9 +65,17 @@ At this level **a test is a folder** (D-073): `test/level2/b01_import/` is a who
 `test/vm/` tests the tools of the Eve virtual machine, not the language: slot commands and the workflow of a command file (`v01_…`). Run them with `python script/runtest.py vm`. They were the `b` and `c` tests of level 2 until D-072.
 
 
-## Level 3
+## Levels 3 to 7
 
-This level contains advanced features. Working with files, databases and internet. At this level you can work with libraries. There is a long time until we have Level 3 tests in place. I hope your compiler will reach this level and is approved. This level use convention "c01_feature.eve".
+The levels after 2 follow the versions of Eve (`plan/version_map.md`); each has its decision log `plan/decision_levelN.md`. A test is a project folder, as at level 2. No test is written yet: the features are drafts.
+
+| Level | Topic | Version | Prefix |
+|---|---|---|---|
+| 3 | data language: types, records, generators, files, formats, HTTP client | 0.2 | `c01_feature` |
+| 4 | parallel processing and streams | 0.3 | `d01_feature` |
+| 5 | database layer and the Eve database | 0.4 | `e01_feature` |
+| 6 | the Eve machine and the server: a client project and a server project | 0.5 | `f01_feature` |
+| 7 | web: HTML and WebAssembly | 0.6 | `g01_feature` |
 
 # Approval
 

@@ -13,6 +13,7 @@ const version = @import("version.zig");
 // import is called `editor`, not `line`, because several functions below have a parameter `line`.
 const editor = @import("line.zig");
 const parser = @import("parser.zig");
+const doc = @import("doc.zig");
 const vm = @import("vm.zig");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
@@ -142,6 +143,30 @@ fn cmdCheck(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     ctx.status = worst;
 }
 
+// Zig tip: `doc.generate(...) catch |err| switch (err) { ... }` handles the error union in place.
+// `error.WriteFailed => |e| return e` passes on the one error this handler may return (its
+// type is `Io.Writer.Error!void`); `else =>` covers every other error of the inferred set of
+// `generate` (missing folder, unreadable file, out of memory) with one branch.
+/// `doc`: write the Markdown documentation of a `.eve` file, or of the `.eve` files of a folder.
+fn cmdDoc(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    if (args.len == 0 or args.len > 2) {
+        try ctx.out.writeAll("doc: usage: doc <folder | file.eve> [output folder, default doc]\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    const out_path = if (args.len == 2) args[1] else "doc";
+    const pages = doc.generate(ctx.io, ctx.gpa, args[0], out_path, ctx.out) catch |err| switch (err) {
+        error.WriteFailed => |e| return e,
+        else => {
+            try ctx.out.print("doc: {s}: {s}\n", .{ args[0], @errorName(err) });
+            ctx.status = exit_no_input;
+            return;
+        },
+    };
+    if (pages == 0) try ctx.out.print("doc: no .eve file in {s}\n", .{args[0]});
+    ctx.status = 0;
+}
+
 // Zig tip: the VM session is created the first time a command needs it and kept in the Context, so
 // the next command finds the script the previous one loaded. `gpa.create(T)` allocates one `T` and
 // returns a pointer; `s.* = .{ ... }` fills it. A `?*T` field is null until then, and `orelse`
@@ -225,6 +250,7 @@ fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
 pub const commands = [_]Command{
     .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = cmdCheck },
     .{ .name = "compile", .summary = "compile a script to bytecode", .file = ".eve", .run = stub("compile") },
+    .{ .name = "doc", .summary = "write Markdown documentation of a .eve file or folder", .file = ".eve", .run = cmdDoc },
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = cmdExecute },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },
@@ -510,6 +536,15 @@ test "a stub echoes its name" {
     try dispatch(&ctx, "  resume  a.eve ");
     try std.testing.expectEqualStrings("resume command, not yet implemented\n", w.buffered());
     try std.testing.expectEqual(@as(u8, exit_not_implemented), ctx.status);
+}
+
+// Zig tip: this test relies on the same features as the test above: see the tip there.
+test "doc without a path is a usage error" {
+    var buf: [128]u8 = undefined;
+    var w: Io.Writer = .fixed(&buf);
+    var ctx: Context = .{ .out = &w, .io = std.testing.io, .gpa = std.testing.allocator };
+    try dispatch(&ctx, "doc");
+    try std.testing.expectEqual(@as(u8, exit_usage), ctx.status);
 }
 
 // Zig tip: `defer arena.deinit();` runs at the end of the scope, however it ends: the usual way
