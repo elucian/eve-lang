@@ -40,10 +40,12 @@ Eve has no single reference implementation. Any compiler is valid if it implemen
 Recommended: (a) for the empty stubs, and move any real content into `spec/`.
 Blocks: T1.2 cleanup of eve-lang, S2.1.
 Answer: neither; rename to `manual/` as the compiler manual (D-004).
+**todo** Remove old doc folder, we have replace it with /manual folder
 
 ## Q-002 Canonical keyword list
 The tutorial table (`syntax.html#keywords`) has duplicates (`constant`, `method`, `reset`, `add`, `del`, `pop`) and a typo (`labe`). It lacks words the examples use at region level (`driver`, `module`, `type`, `globals`). Which words are reserved in 0.1, and which are contextual (reserved only in some regions)?
 Blocks: S2.4.
+**todo** Remove unused keywords, replace or add the missing keywords. With description! 
 
 ## Q-003 Stray files in the tutorial folder
 `tutorial/quiz.txt` (AI chat transcript), `tutorial/output.log` (UTF-16 PowerShell error log) and `tutorial/databases.md` (AI review prompts) are not tutorial pages. Delete them, or move useful parts (quiz questions) into a proper page?
