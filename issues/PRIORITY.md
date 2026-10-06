@@ -1,68 +1,30 @@
 # Issue priority
 
-Where to spend your answers first. Written 2026-10-01 from the `Status:` lines of the files in this folder.
+Where to spend your answers first. Rewritten 2026-10-06 from the open items in this folder; the earlier list (2026-10-01) was mostly answered and applied. The tutorial comes first (`review/focus.md`); the VM and the test suites are paused, so ranking by "blocks the VM" no longer applies.
 Answer in the issue files as usual (see [README](README.md)); this page only orders the work.
 
-**Update 2026-10-02:** the six library issues are answered (D-053). Tutorial page and spec still to update.
+**Counts (2026-10-06):** 28 open questions, 3 open fixes or improvements, 6 answered SPEC questions waiting for the spec, 2 library answers waiting for `evevm/lib` and the spec.
 
-**Update 2026-10-03:** answered or obsolete items retired from manifest (MAN-01 to 04), topology (TOP-10, TOP-I2), processing (PRC-03, 06, 07, 08, 11, 13, 14) and multitasking (CON-02 to 05, 08 to 10). The counts below are older.
+## 1. Class model (7 questions)
 
-**Counts (2026-10-01):** 64 open, 5 partial, 19 closed (done, answered, obsolete or declined). Items answered and applied earlier were removed from the files (ids retired), so they are not counted here.
+[classes.md](classes.md): CLS-09 generic syntax, CLS-12 dynamic objects, CLS-13 property and method with one name, CLS-14 destructor timing, CLS-15 adopting a trait outside the class, CLS-16 library traits, CLS-17b hidden state in an abstract class; CLS-I1 split the page, CLS-I2 member table. The class pages changed most in D-084 to D-087, so these answers shape the next rewrite of `classes.html` and `methods.html`.
 
-**How the order was chosen.** The Zig VM must pass test levels 1 to 3 first (print, strings, control, functions, collections, errors). An issue ranks high when the VM or the spec can't be written without the answer, and when one answer closes several issues. Concurrency is not in 0.1 (D-050), so it ranks low.
+## 2. Collections and strings (2)
 
-## Counts by area
+COL-05 (capture a removed element with `let` inside a statement), COL-16 (interpolation formats: review the page).
 
-| Priority | Area | Page / file | Open | Partial | Closed |
-|---|---|---|---|---|---|
-| 1 | Library: input, output, built-ins | [library](library.md) | 0 | 0 | 6 |
-| 1 | Errors, exit codes, processes | [processing](processing.md), [topology](topology.md) | 8 | 3 | 2 |
-| 1 | Strings and collections | [collections](collections.md) | 18 | 0 | 1 |
-| 1 | Spec to write (already answered) | [syntax](syntax.md) | 0 | 0 | 6 |
-| 2 | Functions and parameters | [algorithms](algorithms.md) | 2 | 0 | 3 |
-| 2 | Classes and traits | [classes](classes.md) | 9 | 0 | 0 |
-| 2 | Types | [types](types.md) | 1 | 1 | 1 |
-| 3 | Control flow | [control](control.md) | 0 | 0 | 0 |
-| 3 | Multitasking (not in 0.1) | [multitasking](multitasking.md) | 3 | 1 | 5 |
-| 4 | Shell commands | [command](command.md) | 5 | 0 | 0 |
-| 4 | Databases | [databases](databases.md) | 4 | 0 | 0 |
-| 4 | Compiler page, manifest, index | [compiler](compiler.md), [manifest](manifest.md), [index](index.md) | 4 | 1 | 3 |
-| 4 | Options, templates | [option](option.md), [template](template.md) | 3 | 0 | 0 |
+## 3. Shell commands, options, compiler (9)
 
-`control.md`, `functions.md` and `template.md` have no open item: those pages are settled.
+CMD-02 to CMD-06 (exit status, `cd`, `export`, working-folder variable, `File` and `Folder`; CMD-05 is the same question as in [spec/semantics/variables.md](../spec/semantics/variables.md)), OPT-01 to OPT-03 (symbol table, other symbols, where the page belongs in the index), CMP-02 and CMP-F3 (test runner and the out-of-date conformance table).
 
-## Priority 1: blocks the VM and the first tests
+## 4. Algorithms, types, multitasking (6)
 
-One answer closes several issues in each group.
+ALG-01 (purpose of the page), ALG-02 (native types in signatures, result default value), TYP-19 (review the Date proposal), CON-06, CON-11, CON-12 (not in 0.1, D-050).
 
-1. **Strings: placeholders, escapes, text.** COL-15, COL-16, LIB-06 (COL-17, 19, 20 answered, D-058). Every test uses `print` with strings, so this comes first.
-2. **Input and output.** LIB-03 `read`, LIB-04 `write` and `print`, LIB-05 standard error. These decide the `.out` files of the conformance tests.
-3. **Built-ins for 0.1.** LIB-01 (the list), LIB-02 (mutating string functions), the open points of [spec/semantics/variables.md](../spec/semantics/variables.md) (system variables, was TOP-08). They define what the VM must contain.
-4. **Errors and exit codes.** PRC-02 (`finalize`),
-   PRC-09 (Exception module). They give the exit codes in `expect.json`.
-5. **Collections core.** COL-02, COL-05 (map notation, list operation doubts; COL-01, 07 answered, D-058). Test levels 2 and 3 use them.
-6. **Write the spec for the answered items.** SPEC-01 to SPEC-06: no question left, only work. This is the cheapest progress in the folder.
+## 5. Databases (4)
 
-## Priority 2: next, once the core runs
+DB-01 to DB-04: wait for the answers to `plan/design-database.md` and the rewrite of the page (focus F4), then ask again.
 
-7. **Functions.** ALG-02 (native types in signatures), ALG-01 (CON-03 answered, D-070). Small, and they unblock the function tests.
-8. **Class model.** CLS-09 (generics), CLS-10, CLS-11, CLS-17 (constructor shape), then CLS-12 to CLS-16.
-9. **Collections, the rest.** COL-03 (filter clause), COL-14 (object attributes); the rest answered, D-058.
-10. **Processes and aspects.** PRC-10 (command-line arguments: VM and manual).
-11. **Types.** TYP-19 date literals, TYP-I1, TYP-I2.
+## 6. Spec work with no question left
 
-## Priority 3: not in 0.1
-
-12. **Multitasking.** CON-07 time-out, CON-11 rules of parallel methods, CON-12 channel details, CON-06 (partial). Defer all of it until the VM runs sequential programs (D-050).
-
-## Priority 4: cheap or independent
-
-13. **Shell commands.** CMD-02 to CMD-06 (exit status, `cd`, `export`, `File` and `Folder`). CMD-05 is part of TOP-08.
-14. **Databases.** DB-01 to DB-04. Needs the library first.
-15. **Compiler page.** CMP-01 and CMP-02: answer in one line each, and the page is finished.
-16. **Manifest.** MAN-F1, MAN-F2 (fixes only; MAN-01 to MAN-04 done, D-061).
-17. **Index and options.** IDX-01, IDX-02, OPT-01 to OPT-03.
-
-## Suggested next session
-
-Answer the six issues of priority 1, groups 1 and 2 (COL-15, COL-16, LIB-06, LIB-03, LIB-04, LIB-05). They unlock the first `print` tests. Then do SPEC-01 to SPEC-06 for the spec work.
+SPEC-01 to SPEC-06 in [syntax.md](syntax.md), LIB-01 and LIB-02, the spec text for LIB-06 and PRC-10 (`manual/usage.md`).

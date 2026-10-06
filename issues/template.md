@@ -1,10 +1,5 @@
 # Issues: template.html
 
-Page: `tutorial/template.html` (78 lines, `<title>` "Eve Specification"). Not a tutorial topic: the starting point for new pages. Reviewed 2026-09-28. How to answer: [README](README.md).
-**Answer** Title must be changed: "Eve Language Tutorial"
+Page: `tutorial/template.html`. How to answer: [README](README.md).
 
-## Improvements (applied only if you write "yes")
-
-### TPL-I1 Rebuild from a current page
-Plan step T1.8: the template predates the sidebar layout (no `<aside>`, no `<main>`). Rebuild it from functions.html, with one `h1`, `h2`/`h3` placeholders, the sidebar JSON stub, and the "Read next" footer.
-**Answer:** Yes rebuild.
+No open issues (cleaned 2026-10-06). The title is "Eve Language Tutorial" and the page was rebuilt from `functions.html` (sidebar layout, one `h1`, `h2`/`h3` placeholders, `data/template.json`, "Read next" footer): TPL-I1 and plan step T1.8 are done.

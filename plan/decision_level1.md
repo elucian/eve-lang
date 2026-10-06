@@ -640,3 +640,13 @@ Author decision. Refines D-086 and replaces the meaning of `!` on functions of D
 - `!` on a method keeps its meaning of D-081: the method changes shared state and can't run in parallel.
 - Model reading to confirm: a function with a result can't change its `@` parameters (command–query separation); input/output parameters belong to functions without result and to methods.
 - Applied: functions.html (the three kinds, notes, closures, subprogram table), modules.html (members table, module state, `count!`), syntax.html (the `!` rows), multitasking.html (where a generator is declared; why it has no `!`).
+
+## D-088 Issue cleanup: names, split of the types page, library functions (2026-10-06)
+Housekeeping of `issues/` after D-084 to D-087; applies answers that were clear.
+- **Names (IDX-02).** "EVE" is the machine name (the Eve virtual machine, the `eve` command is lower case); "eve" is the language name in file names and commands; "Eve" is written at the beginning of a sentence or a statement. Existing pages are not rewritten wholesale: correct them when a page is revised.
+- **Index (IDX-01).** The accepted order of 2026-09-28 is superseded by the order of D-086; Date and Time is topic 04 (below).
+- **Types page split (TYP-I2, plan T1.11).** Calendar Date, Time & Duration and Quick Format moved from `types.html` to the new `datetime.html` ("Eve Date and Time", `data/datetime.json`); `types.html` keeps a pointer. The Date proposal (TYP-19, with `era`) still waits for the author's review. The index has 21 topics.
+- **Template (TPL-I1, plan T1.8).** `template.html` rebuilt from `functions.html`, title "Eve Language Tutorial".
+- **Library page (LIB-03 to LIB-06, D-053, D-057).** library.html now shows `read(@v, prompt)`, `write(*args, sep, eol := False)`, `print(*args, sep, eol := True)`, `error`, `warning`, `log_err`, `log_wrn`, escapes with `&code;`; sections "Standard input" and "Standard output".
+- **Fixes applied** from the issue files: classes (comments `**`, `type(x)` in lower case, typos, `<> ` in prose, examples), command, databases, algorithms (`root`, `10^-2`, `abs`), processing, compiler (lexer section follows D-011/D-014/D-019).
+- **Conflicts found.** CLS-17 (constructor shape) is settled by D-084; the purity rules of D-027 are replaced by D-087; the conformance table of compiler.html lists three levels while `test/` has seven (CMP-F3); `$CWD` and `$OS_PWD` both still exist (CMD-05).
