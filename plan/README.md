@@ -26,6 +26,10 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 | `[!]` | blocked on a decision |
 | `[-]` | dropped (with reason) |
 
+## Current focus (2026-10-05)
+
+The **tutorial** comes first: it is reviewed and improved until it is good enough and feature complete, because it gives the complete vision of Eve and will shape the architecture of the interpreter. **Parked until the author says go:** the specification (`spec/`, phases 2–4), the test suites (`test/`, phase 5), the virtual machine (`evevm/`) and `demo/`. Design notes in `plan/` continue when they serve the tutorial.
+
 ## Features and versions
 
 - [features_inventory.md](features_inventory.md): every large feature with a code (`F-<area>-<nn>`), a checkbox and its target version. Tick a feature when it is implemented and tested.
