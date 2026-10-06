@@ -1,8 +1,8 @@
 # Issues: syntax.html
 
-Page: `tutorial/syntax.html` (1,329 lines, 33 sections). Reviewed 2026-09-28 against the 49 `.eve` files in `demo/`, `pattern/` and `test/`. How to answer: [README](README.md).
+Page: `tutorial/syntax.html` (about 1,110 lines). Reviewed 2026-09-28 against the 49 `.eve` files in `demo/`, `pattern/` and `test/`. How to answer: [README](README.md).
 
-Applied 2026-09-28 from the answers below: `--` comments → `**` (138 in `.eve` files, 249 in the Eve code blocks of 14 tutorial pages); `!=` → `<>` (10 in `.eve` files, 5 in pages); test drivers renamed `a01_driver()`, `a02_comments()`, `a03_print()`. The page prose still describes the old rules; it is rewritten once all questions here are answered.
+Applied 2026-09-28 from the answers below: `--` comments → `**` (138 in `.eve` files, 249 in the Eve code blocks of 14 tutorial pages); `!=` → `<>` (10 in `.eve` files, 5 in pages); test drivers renamed `a01_driver()`, `a02_comments()`, `a03_print()`.
 
 ## Specification questions (before writing `spec/`)
 

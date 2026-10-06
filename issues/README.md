@@ -33,28 +33,28 @@ Issue ids are stable: `CLS-09` stays `CLS-09` even when issues are added or clos
 
 ## Pages
 
-In index order (index.html first). Open items on 2026-10-01: 86 questions. An item is removed when its answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the ids of removed items are retired (their text is in the git history before 2026-10-01). Spec work still points to the decisions.
+In index order (index.html first). Open items on 2026-10-06: 28 open questions, 3 open fixes or improvements, 6 answered questions waiting for the spec (syntax.md) and 2 for the library. An item is removed when its answer is applied to the tutorial and recorded in `plan/decision_levelN.md`; the ids of removed items are retired (their text is in the git history before 2026-10-06). Spec work still points to the decisions.
 
-| Page | File | Open questions | Open fixes / improvements | Retired |
-|---|---|---|---|---|
-| index.html | [index.md](index.md) | 2 | 1 | 0 |
-| manifest.html | [manifest.md](manifest.md) | 0 | 2 | 4 |
-| syntax.html | [syntax.md](syntax.md) | 6 | 0 | 33 |
-| types.html | [types.md](types.md) | 1 | 2 | 25 |
-| topology.html | [topology.md](topology.md) | 0 | 0 | 22 |
-| control.html | [control.md](control.md) | 0 | 0 | 21 |
-| functions.html | [functions.md](functions.md) | 0 | 0 | 13 |
-| classes.html | [classes.md](classes.md) | 9 | 6 | 8 |
-| collections.html | [collections.md](collections.md) | 2 | 0 | 21 |
-| processing.html | [processing.md](processing.md) | 3 | 4 | 11 |
-| multitasking.html | [multitasking.md](multitasking.md) | 4 | 2 | 9 |
-| library.html | [library.md](library.md) | 6 | 2 | 0 |
-| command.html | [command.md](command.md) | 5 | 1 | 1 |
-| databases.html | [databases.md](databases.md) | 4 | 3 | 0 |
-| algorithms.html | [algorithms.md](algorithms.md) | 2 | 2 | 0 |
-| option.html | [option.md](option.md) | 3 | 0 | 0 |
-| compiler.html | [compiler.md](compiler.md) | 2 | 2 | 0 |
-| template.html | [template.md](template.md) | 0 | 1 | 0 |
+| Page | File | Open questions | Open fixes / improvements |
+|---|---|---|---|
+| index.html | [index.md](index.md) | 0 | 0 |
+| manifest.html | [manifest.md](manifest.md) | 0 | 0 |
+| syntax.html | [syntax.md](syntax.md) | 6 (answered, spec pending) | 0 |
+| types.html, datetime.html | [types.md](types.md) | 1 | 0 |
+| topology.html | [topology.md](topology.md) | 0 | 0 |
+| control.html | [control.md](control.md) | 0 | 0 |
+| functions.html | [functions.md](functions.md) | 0 | 0 |
+| classes.html | [classes.md](classes.md) | 7 | 2 |
+| collections.html | [collections.md](collections.md) | 2 | 0 |
+| processing.html | [processing.md](processing.md) | 0 (PRC-10: VM and manual only) | 0 |
+| multitasking.html | [multitasking.md](multitasking.md) | 3 | 0 |
+| library.html | [library.md](library.md) | 0 (LIB-01, LIB-02: answered, library and spec pending) | 0 |
+| command.html | [command.md](command.md) | 5 | 0 |
+| databases.html | [databases.md](databases.md) | 4 (ask again after the rewrite, F4) | 0 |
+| algorithms.html | [algorithms.md](algorithms.md) | 2 | 0 |
+| option.html | [option.md](option.md) | 3 | 0 |
+| compiler.html | [compiler.md](compiler.md) | 1 | 1 |
+| template.html | [template.md](template.md) | 0 | 0 |
 
 ## Questions that span pages
 
@@ -66,5 +66,5 @@ Some questions recur; one answer closes all of them:
 | Exit codes and interruptions | PRC-02, CON-07 |
 | Result and output parameters (`@`) | ALG-02 (CON-02 retired, D-048) |
 | System variables | TOP-08, CMD-05 |
-| Class model (constructor, traits) | CLS-14 to CLS-17 |
+| Class model (destructor, traits) | CLS-14 to CLS-16, CLS-17b |
 | Broken `/images/` links | COL-F2, PRC-F1, CON-F1 |

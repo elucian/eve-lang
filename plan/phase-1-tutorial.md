@@ -44,14 +44,14 @@ generic script: manifest (2 × —, ☰), syntax (∅, ☰), types (×, 2⁶⁴,
 - `index.html`: the Certification row reuses topic number and `data-topic="databases"`. Give it its own number and topic id; check `sage.js` progress tracking before renaming ids.
 - Chain every page to the next topic in index order; the last one returns to the index.
 
-### T1.8 Refresh `template.html` `[ ]`
+### T1.8 Refresh `template.html` `[x]` 2026-10-06 (D-088)
 - `template.html` predates the sidebar layout (no `<aside>`, no `<main>`). Rebuild it from a current page (`functions.html`) so new pages start correct.
 
 ### T1.9 Link tutorial to spec `[ ]` (as spec sections land)
 - Under each `h2` that has a spec counterpart, add a short "Specification:" link to the
   Markdown file on GitHub (`https://github.com/elucian/eve-lang/blob/master/spec/…`).
 
-### T1.11 Split the types page `[ ]`
+### T1.11 Split the types page `[x]` 2026-10-06: `datetime.html`, sidebar and index updated (D-088)
 - TYP-I2 (agreed): move Date, Time, Duration and Quick Format from `types.html` to a new
   "Date and time" page, or to `library.html`. Needs: sidebar JSON, `index.html` topic, links, `sitemap.xml`, `npm run check`. Keep `types.html` for native, primitive, composite, literals, ranges, inference and variants.
 

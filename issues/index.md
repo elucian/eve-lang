@@ -1,24 +1,9 @@
 # Issues: index.html
 
-Page: `tutorial/index.html` (191 lines: the topic list). Reviewed 2026-09-28. How to answer: [README](README.md).
+Page: `tutorial/index.html`. How to answer: [README](README.md).
 
-## Questions
+No open issues (cleaned 2026-10-06).
 
-### IDX-01 Topic order
-Current order: manifest, syntax, types, topology, multitasking, functions, classes, collections, control, processing, algorithms, library, command, databases, compiler. Routines are introduced in multitasking (5th, was concurrency) but used from types (3rd) on; control flow (9th) comes after classes and collections, whose examples use loops. Proposed: manifest, syntax, types, control, functions ,routines , collections, classes, topology, processing, multitasking, library, command, option, algorithms, databases, compiler. Accept, or give your order?
-**Answer:** Accepted
-Status: open
-
-### IDX-02 What EVE stands for
-The page says "Effective Virtual Environment". Is EVE an acronym (then the name is written "EVE"), or a name ("Eve")? Pages mix both.
-**Answer:** EVE is the machine name, "eve" is the language name, "Eve" is for beginning of statement only.
-Status: open
-
-## Fixes (applied unless you write "no")
-
-### IDX-F1 Topic list
-- "guides you through 14 essential topics": the list has 15, 16 with option.html.
-- option.html is not linked.
-- The certification row reuses `data-topic="databases"` (T1.7).
-- "modern, declarative 4th generation" (see MAN-03).
-**Answer:** fix obvious
+- IDX-01 (topic order): accepted, then superseded: the index follows the order of D-086 (functions, modules, classes, methods, collections, strings, control, …) and now 21 topics, with Date and Time at 04.
+- IDX-02 (name): "EVE" is the machine name, "eve" the language name (file names, commands), "Eve" only at the beginning of a sentence or statement (D-088).
+- IDX-F1: topic count fixed (21); the certification row is gone. `option.html` is still not linked: see OPT-03.
