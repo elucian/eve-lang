@@ -31,7 +31,15 @@ Author decision. Separates determinism from thread safety (refines D-081, D-086,
 - **Atomic variables** (`Atomic(:T)`, operating system guarantees, no lock, no deadlock) and **`Mutex`** are documented with advantages, penalties and examples (multitasking.html, "Thread safety"; demos in `tutorial/demo/`). Proposed API, to review: `Atomic`: `add`, `set`, `get!`, `swap!`, `fetch_add!`, `compare_swap!`; `Mutex`: `acquire`, `release`, used with `defer`. Proposed deadlock rules: a task holds one mutex at a time (the compiler rejects nesting), and a wait is limited by `$timeout`.
 - Applied: multitasking.html (Thread safety, generator rule, data rules), functions.html, modules.html, syntax.html and others (wording "stochastic"); `tutorial/demo/` with 18 demo files.
 
-## Q-023 How is an aspect marked as thread safe or not?
+## D-090 `exclusive aspect` and `concurrent aspect` (2026-10-06)
+Author answer to Q-023, a sixth alternative: "double down", so the author learns by pain, for a greater good. Every aspect declares what it is, with a mandatory keyword; the compiler signals the errors.
+- **`exclusive aspect name is`**: runs alone, in serial mode, with `apply`. It may use any function and any module. `start` of an exclusive aspect is a compile error.
+- **`concurrent aspect name is`**: may be started in a parallel group (and also applied). The compiler checks it at its declaration and fails when it can reach a function or generator that is not thread safe (D-089), naming the chain of calls.
+- **`aspect` alone is an error.** A script begins with `driver`, `exclusive aspect`, `concurrent aspect` or `module`. `exclusive` and `concurrent` are reserved words.
+- Applied: topology.html (kinds of scripts, skeleton), multitasking.html (Thread safety: "Marking an aspect", all started aspects are concurrent), modules.html, processing.html, syntax.html (reserved words), the highlighters `eve1.js` and `eve3.js`, and the demos in `tutorial/demo/`.
+- **Not yet changed (parked):** `spec/`, `test/`, `demo/` and `manual/` still write plain `aspect` (9 files with declarations); the VM is paused. Change them when the spec work resumes.
+
+## Q-023 How is an aspect marked as thread safe or not? (answered: D-090)
 The compiler checks every aspect at `start` (D-089). Do we also mark the aspect in its own header, so that the error is reported where the aspect is written? Alternatives:
 (a) **No mark, inference only.** The error appears at `start`, with the chain of calls. No new word. Risk: a change in a library module makes an aspect unsafe far from where it is written.
 (b) **Default checked, opt-out keyword:** `aspect x is` must be thread safe (checked at the declaration); `serial aspect y is` may use any function and can only be applied, never started. Safe by default, one word for the exception; "serial mode" is already the name of `apply`.
@@ -40,4 +48,4 @@ The compiler checks every aspect at `start` (D-089). Do we also mark the aspect 
 (e) **Attribute in the header:** `aspect x is thread_safe` or `aspect x is serial`. Keeps the word order of the other headers; a long line when combined with other clauses.
 Recommendation: (a) plus the opt-in check of (c): inference by default, and `parallel aspect x is` makes the compiler verify the aspect where it is written. Beginners write nothing; library authors get the early error.
 **Answer:**
-
+Alternative option: I like double down on things because this is how humans learn. With pain! For a greater good. So we mark an aspect woth keywords: We have two kind of aspects: exclusive / concurrent so we create two new keywords: exclusive/ concurent instead of serial/parallel. User declare he wants an exclusive aspect or a concurent aspect, then the compiler will signal errors if situations make the aspect non concurent.
