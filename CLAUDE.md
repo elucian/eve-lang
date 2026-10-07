@@ -86,7 +86,7 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
 | Broken links / anchors | `python script/mdlinks.py check [manual]` |
 | HTML tag balance in `.md` | `bee-ed balance <file>` |
 | Run tests on the VM (TDD) | `python script/runtest.py 1` / `all` / `a03` → reports in `temp/output/` |
-| Performance of the VM (per level) | `python script/perf.py [--save]` → `test/perf/`, notes per version in its README |
+| Performance of the VM (per level) | `python script/bmark.py [--save]` → `test/bmark/`, notes per version in its README |
 
 Every script has full usage in its docstring (`python script/<name>.py -h`).
 All of them preserve CRLF/LF and the final newline, and write atomically.

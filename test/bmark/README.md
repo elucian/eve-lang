@@ -5,11 +5,11 @@ A small benchmark for each level. They are not conformance tests (the runner of 
 ## Run
 
 ```
-python script/perf.py                    # 5 runs of every benchmark, the report compares with the last saved run
-python script/perf.py --save             # also append the run to history.json (do it for every version and optimization)
-python script/perf.py --check            # exit 1 when a benchmark is more than 25% slower than the last saved run
-python script/perf.py --level 1 --runs 9
-python script/perf.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --save
+python script/bmark.py                    # 5 runs of every benchmark, the report compares with the last saved run
+python script/bmark.py --save             # also append the run to history.json (do it for every version and optimization)
+python script/bmark.py --check            # exit 1 when a benchmark is more than 25% slower than the last saved run
+python script/bmark.py --level 1 --runs 9
+python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --save
 ```
 
 A Debug build (`zig build -p ..`) and a ReleaseSafe build (`zig build -Doptimize=ReleaseSafe -p ../temp/rel`) are compared only with runs of the same build. Times depend on the machine and on its load: compare runs made on the same machine, with nothing else running, and trust the median of several runs, not one.
@@ -29,7 +29,7 @@ A Debug build (`zig build -p ..`) and a ReleaseSafe build (`zig build -Doptimize
 | level 6 | 6 | planned: 1,000 requests to a local `service` script |
 | level 7 | 7 | planned: render an HTML template 1,000 times |
 
-A new level adds a file `p<level><letter>_<name>.eve`; `script/perf.py` finds it by its name. Keep a benchmark between 50 ms and 2 s: long enough to measure, short enough to run at every commit.
+A new level adds a file `p<level><letter>_<name>.eve`; `script/bmark.py` finds it by its name. Keep a benchmark between 50 ms and 2 s: long enough to measure, short enough to run at every commit.
 
 ## History
 
