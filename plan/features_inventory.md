@@ -45,10 +45,10 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 
 ## 3. Program structure (`STR`)
 
-- [ ] **F-STR-01 Modules and imports**: `module`, `from … use (…)`, aliases, `(*)`, singletons, `initialize`/`finalize`, private members (D-068, D-072; tests b01–b09). · v0.1
-- [ ] **F-STR-02 Aspects (serial)**: `apply`, state per call, `@` outputs, named and spread arguments, errors and `over`/`panic` across `apply` (D-066, D-072; tests b10–b17). · v0.1
-- [ ] **F-STR-03 Extension methods**: `method _name(@self: Class)` at module level (D-072; test b18). · v0.1
-- [ ] **F-STR-04 Projects and search paths**: project root, `asp/`, `lib/`, `data/`, `out/`, `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT` (D-055, D-073). · v0.1
+- [ ] **F-STR-01 Modules and imports**: `module`, `from … use (…)`, aliases, `(*)`, singletons, `initialize`/`finalize`, private members (D-068, D-072, Q-022; tests c01–c08). · v0.2
+- [ ] **F-STR-02 Aspects (serial)**: `apply`, state per call, `@` outputs, named and spread arguments, errors and `over`/`panic` across `apply`, procedures and functions inside an aspect (D-066, D-072; tests b01–b08). · v0.1
+- [ ] **F-STR-03 Extension methods**: `method _name(@self: Class)` at module level (D-072; test c09). · v0.2
+- [ ] **F-STR-04 Projects and search paths**: project root, `asp/`, `lib/`, `data/`, `out/`, `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`; `asp/` is level 2, `lib/` and the library path are level 3 (D-055, D-073). · v0.1
 - [ ] **F-STR-05 Command-line parameters of a script**: `-p`/`--param` mapped to `main` parameters, `eve script.eve -h` from `** @param` comments (D-055). · v0.1
 - [ ] **F-STR-06 Configuration files**: `.cfg` with `$key = value`, loaded with `-s` (D-031). · v0.1
 - [ ] **F-STR-07 System variables**: the 0.1 register (`$error`, environment, `$EVE_*`, `$err_`/`$wrn_` constants) (D-071). *Partial:* `$error` works. · v0.1

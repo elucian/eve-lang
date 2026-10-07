@@ -7,8 +7,8 @@ One scale for all the versions of Eve. Each version completes one or two **level
 | Level | Topic | Version | Decisions | Tests |
 |---|---|---|---|---|
 | 1 | the language of a single script | 0.1 | [decision_level1.md](decision_level1.md) | `test/level1` (a) |
-| 2 | a project: aspects, modules, imports, libraries | 0.1 | [decision_level2.md](decision_level2.md) | `test/level2` (b) |
-| 3 | data language: types, records, generators, files, formats, HTTP client | 0.2 | [decision_level3.md](decision_level3.md) | `test/level3` (c) |
+| 2 | a project: aspects, and the procedures and functions inside them | 0.1 | [decision_level2.md](decision_level2.md) | `test/level2` (b) |
+| 3 | modules and imports, libraries; data language: types, records, generators, files, formats, HTTP client | 0.2 | [decision_level3.md](decision_level3.md) | `test/level3` (c) |
 | 4 | parallel processing and streams | 0.3 | [decision_level4.md](decision_level4.md) | `test/level4` (d) |
 | 5 | database layer and the Eve database | 0.4 | [decision_level5.md](decision_level5.md) | `test/level5` (e) |
 | 6 | the Eve machine and the server | 0.5 | [decision_level6.md](decision_level6.md) | `test/level6` (f) |
@@ -31,7 +31,7 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 
 | Version | Levels | Name | Goal | Status |
 |---|---|---|---|---|
-| 0.1 | 1, 2 | Core client | Run a whole Eve project: one driver, modules and aspects, error recovery | in progress |
+| 0.1 | 1, 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply` | in progress |
 | 0.2 | 3 | Data language | Real data with the right types: Decimal, time, records, optional values; files, JSON, CSV, HTTP client; generators on a bytecode VM | planned |
 | 0.3 | 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory | planned |
 | 0.4 | 5 | Database | The ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands | planned |
@@ -42,13 +42,13 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 
 ## 0.1 Core client
 
-Levels: 1, 2. Goal: Run a whole Eve project: one driver, modules and aspects, error recovery.
+Levels: 1, 2. Goal: Run a project: one driver and its aspects, error recovery across `apply`.
 
 | Area | Features |
 |---|---|
 | Spec | F-SPEC-01, F-SPEC-02, F-SPEC-03, F-SPEC-07 ✓, F-SPEC-08 (levels 1–2), F-SPEC-10 ✓ |
 | Language | F-LNG-01 ✓, F-LNG-02 ✓, F-LNG-03 ✓, F-LNG-04 ✓, F-LNG-05 ✓, F-LNG-06 ✓, F-LNG-07 ✓, F-LNG-08 ✓, F-LNG-09 ✓, F-LNG-10 ✓ |
-| Structure | F-STR-01, F-STR-02, F-STR-03, F-STR-04, F-STR-05, F-STR-06, F-STR-07 |
+| Structure | F-STR-02, F-STR-04, F-STR-05, F-STR-06, F-STR-07 |
 | VM | F-VM-01 ✓, F-VM-02 ✓, F-VM-03, F-VM-10 |
 | Tools | F-TLS-01 ✓, F-TLS-05 ✓, F-TLS-06 ✓, F-TLS-07 ✓ |
 | Library | F-LIB-01, F-LIB-02, F-LIB-03 |
@@ -58,19 +58,20 @@ Exit: level 1 and level 2 pass; `spec/` has the grammar and the semantics of eve
 
 ## 0.2 Data language
 
-Levels: 3. Goal: Real data with the right types: Decimal, time, records, optional values; files, JSON, CSV, HTTP client; generators on a bytecode VM.
+Levels: 3. Goal: Modules and imports; real data with the right types: Decimal, time, records, optional values; files, JSON, CSV, HTTP client; generators on a bytecode VM.
 
 | Area | Features |
 |---|---|
 | Spec | F-SPEC-04 |
 | Language | F-LNG-11, F-LNG-12, F-LNG-13, F-LNG-14, F-LNG-15, F-LNG-16 |
+| Structure | F-STR-01, F-STR-03 (modules, imports, extension methods; moved from 0.1) |
 | VM | F-VM-04, F-VM-06 |
 | Tools | F-TLS-02, F-TLS-03 |
 | Library | F-LIB-04, F-LIB-05, F-LIB-06, F-LIB-07, F-LIB-08, F-LIB-09 |
 | Network | F-NET-01 |
 | Docs | F-DOC-02, F-DOC-05 |
 
-Exit: level 1 to 3 pass on the bytecode VM; JSON and CSV round-trip tests; an HTTP call against a local test server.
+Exit: level 1 to 3 pass (modules c01–c09 included) on the bytecode VM; JSON and CSV round-trip tests; an HTTP call against a local test server.
 
 ## 0.3 Parallel
 

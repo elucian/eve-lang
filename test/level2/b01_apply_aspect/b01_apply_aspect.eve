@@ -1,0 +1,17 @@
+# apply runs the main process of an aspect from asp/ and waits (D-066)
+driver b01_apply_aspect is
+  process main is
+    apply greet("Eve");
+    apply greet("Bob");
+    print "done";
+  return;
+end b01_apply_aspect;
+/*@expect
+{
+  "stdout": [
+    "Hello, Eve!",
+    "Hello, Bob!",
+    "done"
+  ]
+}
+*/

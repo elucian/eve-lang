@@ -1,5 +1,13 @@
 # Backlog
 
+The log is split in 7 files + This file. Ids are shared and keep counting across both (an id not found here is in the  other file); a new entry goes to the file of its topic:
+
+- [decision_level1.md](decision_level1.md): the project (formats, repositories, licenses, the VM, tests) and the language of a single script (lexical rules, control flow, types, collections, functions, classes, errors in a driver). Matches `test/level1`.
+- [decision_level2.md](decision_level2.md): programs made of several files: processes, aspects, modules and imports, libraries, multitasking and parallel aspects. Matches `test/level2`.
+- Levels 3 to 7 (data, parallel, database, server, web): [decision_level3.md](decision_level3.md), [decision_level4.md](decision_level4.md), [decision_level5.md](decision_level5.md), [decision_level6.md](decision_level6.md), [decision_level7.md](decision_level7.md); the table of all levels is in decision_level3.md and [version_map.md](version_map.md).
+
+## Next Ideas, add here:
+
 Ideas that are not designed yet, kept out of the language until a feature needs them. Answers review point `RPJ-X04` (`review/01-project.md`): Eve is verbose, but it does not reserve words for fun. A word leaves this file only together with a decision (`D-nnn`) that gives it a meaning, an example in the tutorial, and a place in the version map.
 
 ## Reserved words without a design

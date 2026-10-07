@@ -1,0 +1,15 @@
+# over in an aspect ends the aspect; the driver goes on after apply (D-072 d)
+driver b07_aspect_over is
+  process main is
+    apply stop();
+    print "back";
+  return;
+end b07_aspect_over;
+/*@expect
+{
+  "stdout": [
+    "stop: start",
+    "back"
+  ]
+}
+*/

@@ -55,9 +55,9 @@ Tests a04 to a54 were written from the specification and the tutorial, one featu
 
 ## Level 2
 
-This level is more advanced. It contains automation drivers. Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
+This level is more advanced. It tests a project of a driver and its aspects (modules moved to level 3, `test/level3`, c01 to c09). Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
 
-At this level **a test is a folder** (D-073): `test/level2/b01_import/` is a whole Eve project. It holds the driver with the same name, `b01_import.eve`, with its expectations in a `/*@expect*/` block (the `expect.json` of each folder was moved there by D-098), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. A single `.eve` file is still a valid test at every level.
+At this level **a test is a folder** (D-073): `test/level2/b01_apply_aspect/` is a whole Eve project. It holds the driver with the same name, `b01_apply_aspect.eve`, with its expectations in a `/*@expect*/` block (the `expect.json` of each folder was moved there by D-098), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. A single `.eve` file is still a valid test at every level.
 
 ## VM tools
 

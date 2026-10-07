@@ -1,0 +1,21 @@
+# a module is loaded once: the driver and an aspect share the same copy (D-068)
+driver c07_module_singleton is
+  from lib use (counter);
+
+  process main is
+    counter.tick();
+    apply worker();
+    new n := counter.count!();
+    expect n == 3;
+    print "count: {n}";
+  return;
+end c07_module_singleton;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "count: 3",
+    "counter: 3 ticks"
+  ]
+}
+*/
