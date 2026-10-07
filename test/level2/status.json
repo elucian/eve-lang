@@ -1,131 +1,131 @@
 {
  "tests": {
   "b01_apply_aspect": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 6,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "apply runs the main process of an aspect from asp/ and waits (D-066)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b02_apply_output": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 6,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "an aspect gives results back through @ output parameters (D-048, D-066)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b03_apply_state": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 6,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "each apply creates a new state of the aspect: a second call sees nothing of the first (D-066)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b04_apply_named_args": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 6,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "apply with arguments by position, by name and with a default value (D-028, D-066)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b05_apply_spread": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 7,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "spreading a list into positional arguments and a map into named arguments (D-072 i)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b06_aspect_error": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 6,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "an error not recovered in the aspect is raised in the driver at the apply line (D-072 d)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b07_aspect_over": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
-   "mtime": 1791383411,
+   "status": "PASS",
+   "failures": 7,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
+   "mtime": 1791386121,
    "title": "over in an aspect ends the aspect; the driver goes on after apply (D-072 d)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b08_aspect_panic": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 6,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791383411,
    "title": "panic in an aspect ends the whole application with exit code 1 (D-072 d)",
-   "reason": "exit code 65, expected 1; stdout differs"
+   "reason": ""
   },
   "b09_log_files": {
-   "status": "FAIL",
-   "failures": 5,
-   "runs": 5,
-   "checks": 3,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 9,
+   "runs": 13,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385262,
    "title": "log_err and log_wrn write log files in the output folder out/ (D-057, D-114)",
-   "reason": "exit code 65, expected 0; stdout differs; file not created: out/run-log-2026-10-07.json"
+   "reason": ""
   },
   "b10_aspect_function": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "a function declared in an aspect is used by its main (D-066, D-100)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b11_aspect_procedure": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "a procedure of an aspect changes an aspect-level variable; the driver's own variable is not touched (D-066, D-100)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b12_aspect_fresh_state": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "main and the procedures of an aspect share its variables, and every apply starts them again (D-066)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b13_aspect_missing": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "apply of an aspect that has no file is an error before the run (D-112)",
    "reason": ""
@@ -133,9 +133,9 @@
   "b14_aspect_too_many_args": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "more positional arguments than parameters is a check-time error (D-112)",
    "reason": ""
@@ -143,59 +143,59 @@
   "b15_aspect_apply_aspect": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an aspect can't apply another aspect: compile error (D-066)",
    "reason": ""
   },
   "b16_aspect_recover": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an aspect recovers its own error: the driver never sees it (D-020, D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b17_aspect_trace": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 5,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an error nobody recovers: the error first, then the frames in order of call (D-113)",
-   "reason": "exit code 65, expected 4; stdout differs; expected error output not found: 'disk full'; expected error output not found: 'line 4 in function load'; expected error output not found: 'line 7 in aspect fail'"
+   "reason": ""
   },
   "b18_lambda": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 4,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "a lambda is an anonymous function: called at once, passed as an argument, held by a function type (D-109)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b19_closure": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 4,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "a closure keeps the state of the function that made it; every apply makes new closures (D-101, D-109)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b20_aspect_unknown_param": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an argument named like no parameter is a check-time error (D-112)",
    "reason": ""
@@ -203,9 +203,9 @@
   "b21_aspect_missing_arg": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "a missing mandatory argument is a check-time error (D-112)",
    "reason": ""
@@ -213,9 +213,9 @@
   "b22_aspect_wrong_type": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an argument of the wrong type is a check-time error (D-112)",
    "reason": ""
@@ -223,9 +223,9 @@
   "b23_aspect_no_kind": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an aspect without exclusive or concurrent is a compile error (D-090)",
    "reason": ""
@@ -233,9 +233,9 @@
   "b24_aspect_second_process": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an aspect has one process and it is named main (D-066)",
    "reason": ""
@@ -243,52 +243,52 @@
   "b25_aspect_driver_variable": {
    "status": "PASS",
    "failures": 0,
-   "runs": 2,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-07 11:04",
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an aspect can't read a variable of the driver (D-072)",
    "reason": ""
   },
   "b26_aspect_finalize": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
-   "mtime": 1791385433,
+   "status": "PASS",
+   "failures": 4,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
+   "mtime": 1791386125,
    "title": "finalize of an aspect runs when main ends, also by over; then the driver goes on (D-063, D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b27_aspect_concurrent": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "a concurrent aspect can also be applied, one call after the other (D-090)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b28_aspect_folder": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "apply with a folder: the aspect is searched there first, then in asp/ and in the root (D-112)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   },
   "b29_aspect_output_named": {
-   "status": "FAIL",
-   "failures": 2,
-   "runs": 2,
-   "checks": 2,
-   "last": "2026-10-07 11:04",
+   "status": "PASS",
+   "failures": 3,
+   "runs": 10,
+   "checks": 0,
+   "last": "2026-10-07 11:19",
    "mtime": 1791385433,
    "title": "an @ output parameter that follows optional parameters is named at the call (D-106)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
   }
  }
 }

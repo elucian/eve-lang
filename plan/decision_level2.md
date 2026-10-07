@@ -14,7 +14,7 @@ Consequence: with no modules, an aspect is self-contained. It can't apply anothe
 
 ## Where the earlier decisions are
 
-All settled, in the archive (`python script/plan.py show <id>`): D-066 (an aspect is an encapsulated machine with one `main`), D-072 (aspect errors, import forms, extension methods, test folders), D-073 (a test is a project folder), D-068 (modules, now level 3), D-082 (`eve --doc`, implemented), D-090 (`exclusive aspect`, `concurrent aspect`), Q-022 (answered, D-112). D-083 (the Eve machine) moved to [decision_level6.md](decision_level6.md).
+All settled, in the archive (`python script/plan.py show <id>`): D-066 (an aspect is an encapsulated machine with one `main`), D-072 (aspect errors, import forms, extension methods, test folders), D-073 (a test is a project folder), D-068 (modules, now level 3), D-082 (`eve --doc`, implemented), D-113 (trace, extension methods in an aspect) and D-114 (the run log), implemented, D-090 (`exclusive aspect`, `concurrent aspect`), Q-022 (answered, D-112). D-083 (the Eve machine) moved to [decision_level6.md](decision_level6.md).
 
 ## D-112 Level 2 is aspects; modules move to level 3 (2026-10-07)
 Author decisions: the scope of level 2, and the answers to Q-022 (full text in the archive).
@@ -30,25 +30,9 @@ Author decisions: the scope of level 2, and the answers to Q-022 (full text in t
 - **`exclusive aspect`.** The tests write `exclusive aspect name is`, as D-090 requires (the keyword is not an open point).
 - Applied: `test/level2`, `test/level3`, `test/readme.md`, `plan/version_map.md`, `plan/features_inventory.md` (F-STR-01 and F-STR-03 to v0.2), `plan/decision_level3.md`. Not yet applied: the tutorial (modules.html says `$EVE_LIB`, and the `use (*)` conflict), `spec/`, the VM.
 
-## D-113 Aspect error trace, extension methods of an aspect, JSON log files (2026-10-07)
-Author answers to Q-037, Q-038 and Q-039 (full text in the archive). Refines D-112 (d), (e) and (f).
-- **Trace of an error.** An unhandled error prints the error first (message, code), then the stack of calls in order of call, innermost first, one line per frame: `line x in function y`, `line x in procedure y`, `line z in aspect <name>`, then the block that hosts the call: `in job <label>`, `in parallel <label>`, `in loop <label>`. `$error.line` and `$error.unit` describe the first frame; `$error.trace` holds the whole list (names as proposed in D-113, to confirm when the spec of `$error` is written).
-- **Extension methods in an aspect.** A method that an aspect attaches to a class is temporary: it is visible only in that aspect and disappears from the object when `main` returns (state per call). An object given back through an `@` output or a channel keeps only the data it accumulated, not the methods. In a module it is different (level 3): an imported module makes its methods available where it is imported, but only those that it exports.
-- **Log files.** The file name carries only the date of the run, because the time belongs to the operating system: `out/error_<date>.log` and `out/warning_<date>.log` (replaced by D-114). The content is JSON, so that a tool can read it and make an HTML report (that tool does not exist yet). The file is divided into groups, one per run, which show the run number and the time. The names and the shape are in D-114.
-- Test b17 (trace) and b09 (log files) follow these rules; b09 follows D-114.
-
-## D-114 The run log: one JSON file per date, one object per run (2026-10-07)
-Author answer to Q-040 (full text in the archive). Replaces the file names of D-113 and the plain `error.log` and `warning.log` of D-057.
-- **One file per date**, `out/run-log-<date>.json` (`<date>` is `YYYY-MM-DD`), for errors and warnings together. It is a JSON array with **one object per run**; a new run is appended at the end of the file.
-- **A run object** has `run` (the number of the run in that file, from 1), `time` (start time, `HH:MM:SS`), `script` (the name of the driver) and `messages`, a list in the order written.
-- **A message** has `type` (`"error"` or `"warning"`: `log_err` writes the first, `log_wrn` the second), `line` (the line of the call, in its file), `unit` (the unit that holds the line: the driver or aspect name for `main`, otherwise the function or procedure), `level` and `message` (the text). `level` is read as the depth in the stack of calls (0 for `main`): proposed, to confirm.
-- A run that writes no message adds nothing to the file.
-- The test runner understands `{date}` in a file name and JSON file expectations (`script/runtest.py`, "files"); b09 uses both.
-- Applied: `spec/semantics/aspects.md` (Log files), `test/level2/b09_log_files`, `script/runtest.py`.
-
 ## Tests of level 2
 
-29 tests, all written (2026-10-07). Positive tests print and check; negative tests (`n`) are a compile error, exit 65, and nothing runs. All of them fail first on the VM, except that the negative ones pass by accident while `apply` is unknown to the VM (it refuses every aspect script with 65): check them again when the VM runs aspects.
+29 tests (2026-10-07), all pass on the VM (`python script/runtest.py 2`). Positive tests print and check; negative tests (`n`) are a compile error, exit 65, and nothing runs; each was checked to fail with the right message (missing aspect, too many arguments, `apply` in an aspect, unknown parameter, missing argument, wrong type, no kind word, second process, undefined name).
 
 | Code | Test | What it shows |
 |---|---|---|
@@ -82,7 +66,7 @@ Author answer to Q-040 (full text in the archive). Replaces the file names of D-
 | b28 | `aspect_folder` | `apply tools/hello()` before `asp/` |
 | b29 | `aspect_output_named` | a mandatory `@` parameter after an optional one is named (D-106) |
 
-Not tested yet: the trace order of `b17` is checked only as presence of the lines (the runner has no ordered check); a spread that fails at run time (the error code is open, `semantics/aspects.md`); `abort` in the `recover` of an aspect; the search in `$EVE_ASP`.
+Not tested yet: the trace order of `b17` is checked only as presence of the lines (the runner has no ordered check); `$error.trace` and `$error.unit` as variables (not implemented); a spread that fails at run time (the error code is open, `semantics/aspects.md`); `abort` in the `recover` of an aspect; the search in `$EVE_ASP`.
 
 ## Open questions
 

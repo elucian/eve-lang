@@ -96,7 +96,7 @@ The frame of a function or procedure reads `line x in function y` or `line x in 
 
 ## Log files (D-114)
 
-`log_err(text)` and `log_wrn(text)` write the run log, in the output folder `$EVE_OUT` (default `out/`): one file per date, `run-log-<date>.json` (`<date>` is `YYYY-MM-DD`), for errors and warnings together. The file is a JSON array with one object per run; a new run is appended at the end. A run that writes nothing adds nothing.
+`log_err(text)` and `log_wrn(text)` write the run log, in the output folder `$EVE_OUT` (default `out/`): one file per date, `run-log-<date>.json` (`<date>` is `YYYY-MM-DD`, in UTC, as is `time`), for errors and warnings together. The file is a JSON array with one object per run; a new run is appended at the end. A run that writes nothing adds nothing.
 
 ```json
 [

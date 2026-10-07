@@ -13,6 +13,7 @@ const std = @import("std");
 const Io = std.Io;
 const ast = @import("ast.zig");
 const parser = @import("parser.zig");
+const project = @import("project.zig");
 const interp = @import("interp.zig");
 
 // Zig tip: a function with no side effect, like `clean`, is the easiest kind to test. `std.mem.trim(u8,
@@ -126,6 +127,10 @@ pub const Session = struct {
     src: []const u8 = "",
     tree: ?*const ast.Node = null,
     diag: parser.Diag = .{},
+    /// The aspect file that holds the error in `diag`, or "" when it is in the script itself.
+    bad_path: []const u8 = "",
+    /// The aspects the script applies, read and checked by `parse` (project.zig).
+    aspects: ast.Aspects = .empty,
     parse_failed: bool = false,
     machine: ?*interp.Interp = null,
     /// The command-line arguments after the script name (the arguments of `process main`).
@@ -154,6 +159,8 @@ pub const Session = struct {
         self.machine = null;
         self.outcome = null;
         self.diag = .{};
+        self.bad_path = "";
+        self.aspects = .empty;
     }
 
     // ---- loading, parsing, running --------------------------------------------------------
@@ -194,7 +201,22 @@ pub const Session = struct {
         self.machine = null;
         self.outcome = null;
         self.diag = .{};
+        self.bad_path = "";
+        self.aspects = .empty;
         self.status = 0;
+    }
+
+    // Zig tip: `std.mem.lastIndexOfAny` returns the position of the last byte that is in a set, or
+    // null; `if (cut) |i| path[0..i] else "."` takes the folder part of a path, or the current folder
+    // when the path has none. The error set of `build` is the one of `parser.parse` (`Syntax`,
+    // `OutOfMemory`), because `project.link` returns the same errors.
+    /// Parse the script and, for a driver, read the aspects it applies and match every `apply`.
+    fn build(self: *Session) parser.Error!*const ast.Node {
+        const tree = try parser.parse(self.mem(), self.src, &self.diag);
+        const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
+        const dir = if (cut) |i| self.path[0..i] else ".";
+        try project.link(self.mem(), self.io, dir, tree, &self.diag, &self.bad_path, &self.aspects);
+        return tree;
     }
 
     // Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
@@ -208,7 +230,9 @@ pub const Session = struct {
         }
         self.tree = null;
         self.diag = .{};
-        if (parser.parse(self.mem(), self.src, &self.diag)) |tree| {
+        self.bad_path = "";
+        self.aspects = .empty;
+        if (self.build()) |tree| {
             self.tree = tree;
             self.parse_failed = false;
             var stats: ast.Stats = .{};
@@ -219,7 +243,7 @@ pub const Session = struct {
             self.parse_failed = true;
             self.status = exit_syntax;
             switch (err) {
-                error.Syntax => try self.out.print("{s}:{d}:{d}: error: {s}\n", .{ self.path, self.diag.line, self.diag.col, self.diag.message() }),
+                error.Syntax => try self.out.print("{s}:{d}:{d}: error: {s}\n", .{ if (self.bad_path.len > 0) self.bad_path else self.path, self.diag.line, self.diag.col, self.diag.message() }),
                 error.OutOfMemory => try self.out.print("{s}: out of memory\n", .{self.path}),
             }
         }
@@ -259,6 +283,7 @@ pub const Session = struct {
         machine.* = interp.Interp.init(a, cap orelse self.out) catch return error.WriteFailed;
         machine.hook = .{ .ctx = self, .poll = pollHook };
         machine.script_args = self.script_args;
+        machine.aspects = &self.aspects;
         self.machine = machine;
         self.steps = 0;
         self.line = 0;
@@ -268,11 +293,60 @@ pub const Session = struct {
         self.steps = machine.steps;
         self.outcome = o;
         self.status = o.code;
+        self.writeRunLog(machine);
         if (cap) |w| {
             self.ensureDir();
             self.writeReport("out", w.buffered());
             try self.out.print("{s}: run, exit {d}{s}\n", .{ self.name, o.code, if (o.stopped) ", stopped" else "" });
         }
+    }
+
+    // Zig tip: `std.time.epoch` turns seconds since 1970 into a calendar date: `EpochSeconds` gives the
+    // day number and the seconds into the day, `calculateYearDay` and `calculateMonthDay` the year, the
+    // month (an enum, `@intFromEnum` makes it a number) and the day. `{d:0>2}` prints a number in two
+    // places filled with zeros. All of it is UTC: the log file of a day is the same on every machine.
+    // `catch return` gives up quietly: a log that cannot be written must not change the exit code.
+    /// Append the run to `out/run-log-<date>.json` of the project: a JSON array, one object per run (D-114).
+    fn writeRunLog(self: *Session, m: *const interp.Interp) void {
+        if (m.logs.items.len == 0) return;
+        const a = self.mem();
+        const now = Io.Timestamp.now(self.io, .real).toSeconds();
+        const secs: std.time.epoch.EpochSeconds = .{ .secs = @intCast(@max(0, now)) };
+        const year_day = secs.getEpochDay().calculateYearDay();
+        const month_day = year_day.calculateMonthDay();
+        const day = secs.getDaySeconds();
+        const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
+        const root = if (cut) |i| self.path[0..i] else ".";
+        const folder = std.fmt.allocPrint(a, "{s}/out", .{root}) catch return;
+        Io.Dir.cwd().createDirPath(self.io, folder) catch return;
+        const path = std.fmt.allocPrint(a, "{s}/run-log-{d:0>4}-{d:0>2}-{d:0>2}.json", .{ folder, year_day.year, @intFromEnum(month_day.month), month_day.day_index + 1 }) catch return;
+        const old = Io.Dir.cwd().readFileAlloc(self.io, path, a, .limited(64 << 20)) catch "";
+        var runs: usize = 1;
+        var from: usize = 0;
+        while (std.mem.indexOfPos(u8, old, from, "\"run\":")) |i| : (from = i + 1) runs += 1;
+        var buf: std.ArrayList(u8) = .empty;
+        const body = std.mem.trimEnd(u8, old, " \t\r\n");
+        if (body.len > 1 and body[body.len - 1] == ']') {
+            buf.appendSlice(a, body[0 .. body.len - 1]) catch return;
+            buf.appendSlice(a, ",\n") catch return;
+        } else buf.appendSlice(a, "[\n") catch return;
+        const head = std.fmt.allocPrint(a, "  {{\"run\": {d}, \"time\": \"{d:0>2}:{d:0>2}:{d:0>2}\", \"script\": \"{s}\",\n   \"messages\": [", .{ runs, day.getHoursIntoDay(), day.getMinutesIntoHour(), day.getSecondsIntoMinute(), if (self.tree) |t| t.text else self.name }) catch return;
+        buf.appendSlice(a, head) catch return;
+        for (m.logs.items, 0..) |msg, i| {
+            const row = std.fmt.allocPrint(a, "{s}\n     {{\"type\": \"{s}\", \"line\": {d}, \"unit\": \"{s}\", \"level\": {d}, \"message\": \"", .{ if (i > 0) "," else "", if (msg.is_error) "error" else "warning", msg.line, msg.unit, msg.level }) catch return;
+            buf.appendSlice(a, row) catch return;
+            for (msg.text) |ch| switch (ch) {
+                '"' => buf.appendSlice(a, "\\\"") catch return,
+                '\\' => buf.appendSlice(a, "\\\\") catch return,
+                '\n' => buf.appendSlice(a, "\\n") catch return,
+                '\r' => buf.appendSlice(a, "\\r") catch return,
+                '\t' => buf.appendSlice(a, "\\t") catch return,
+                else => buf.append(a, ch) catch return,
+            };
+            buf.appendSlice(a, "\"}") catch return;
+        }
+        buf.appendSlice(a, "\n   ]}\n]\n") catch return;
+        Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = buf.items }) catch {};
     }
 
     // ---- reports --------------------------------------------------------------------------

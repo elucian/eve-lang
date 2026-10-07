@@ -318,3 +318,20 @@ The first field of a group is the number of the run of that day. Alternative: JS
 **Answer:**
 One json per run, name is run-log-<date>.json it hase messages, message type, warning/error, the line, unit, level and the message itself. Organized on run data last runs appended at the end of the file.
 Ok approved.
+
+## D-113 Aspect error trace, extension methods of an aspect, JSON log files (2026-10-07, implemented 2026-10-07)
+Author answers to Q-037, Q-038 and Q-039 (full text in the archive). Refines D-112 (d), (e) and (f).
+- **Trace of an error.** An unhandled error prints the error first (message, code), then the stack of calls in order of call, innermost first, one line per frame: `line x in function y`, `line x in procedure y`, `line z in aspect <name>`, then the block that hosts the call: `in job <label>`, `in parallel <label>`, `in loop <label>`. `$error.line` and `$error.unit` describe the first frame; `$error.trace` holds the whole list (names as proposed in D-113, to confirm when the spec of `$error` is written).
+- **Extension methods in an aspect.** A method that an aspect attaches to a class is temporary: it is visible only in that aspect and disappears from the object when `main` returns (state per call). An object given back through an `@` output or a channel keeps only the data it accumulated, not the methods. In a module it is different (level 3): an imported module makes its methods available where it is imported, but only those that it exports.
+- **Log files.** The file name carries only the date of the run, because the time belongs to the operating system: `out/error_<date>.log` and `out/warning_<date>.log` (replaced by D-114). The content is JSON, so that a tool can read it and make an HTML report (that tool does not exist yet). The file is divided into groups, one per run, which show the run number and the time. The names and the shape are in D-114.
+- Test b17 (trace) and b09 (log files) follow these rules; b09 follows D-114.
+
+## D-114 The run log: one JSON file per date, one object per run (2026-10-07)
+Author answer to Q-040 (full text in the archive). Replaces the file names of D-113 and the plain `error.log` and `warning.log` of D-057.
+- **One file per date**, `out/run-log-<date>.json` (`<date>` is `YYYY-MM-DD`), for errors and warnings together. It is a JSON array with **one object per run**; a new run is appended at the end of the file.
+- **A run object** has `run` (the number of the run in that file, from 1), `time` (start time, `HH:MM:SS`), `script` (the name of the driver) and `messages`, a list in the order written.
+- **A message** has `type` (`"error"` or `"warning"`: `log_err` writes the first, `log_wrn` the second), `line` (the line of the call, in its file), `unit` (the unit that holds the line: the driver or aspect name for `main`, otherwise the function or procedure), `level` and `message` (the text). `level` is read as the depth in the stack of calls (0 for `main`): proposed, to confirm.
+- A run that writes no message adds nothing to the file.
+- The date is UTC, in the file name and in `time`. The test runner understands `{date}` in a file name and JSON file expectations (`script/runtest.py`, "files"); b09 uses both.
+- Applied: `spec/semantics/aspects.md` (Log files), `test/level2/b09_log_files`, `script/runtest.py`.
+- **Implemented** (VM, 2026-10-07): `$error.line`; the trace in `Report.trace` printed after the error on stderr (`line n in function f`, `procedure`, `method`, `aspect`, `driver`, `in job label`); `log_err` and `log_wrn` collect messages and the session appends the run to `out/run-log-<date>.json` (`vm.zig`, `writeRunLog`). `$error.unit` and `$error.trace` as variables are not implemented yet.

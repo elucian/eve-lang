@@ -34,7 +34,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
     .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Ordinal"}, .{"Function"},
-    .{"Range"},   .{"jobs"},    .{"other"},
+    .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"},
 });
 
 const Checker = struct {
@@ -45,6 +45,8 @@ const Checker = struct {
     in_class: ?[]const u8 = null,
     /// Every class of the script by name, for the methods of `obj.method()`.
     classes: std.StringHashMapUnmanaged(*const Node) = .empty,
+    /// The script being checked is an aspect: it can't `apply` another aspect (D-066).
+    in_aspect: bool = false,
 
     // Zig tip: `fail` fills the `Diag` and returns the error, as in the parser, so a caller writes
     // `return c.fail(n, "...", .{})`. `comptime fmt` is checked against `args` by the compiler.
@@ -409,6 +411,14 @@ const Checker = struct {
                 defer c.pop();
                 try c.block(s.kids[0]);
             },
+            // Zig tip: a `switch` prong may list the work in a block `{ ... }` and `return c.fail(...)`
+            // leaves the whole function with the error. Only the arguments are looked at here: the
+            // aspect itself and the match of the arguments to its parameters are checked once the
+            // aspect file is read (project.zig).
+            .apply_stmt => {
+                if (c.in_aspect) return c.fail(s, "an aspect can't apply another aspect (D-066)", .{});
+                for (s.kids) |a| _ = try c.expr(a);
+            },
             else => {},
         }
     }
@@ -500,7 +510,8 @@ const Checker = struct {
 /// Check a parsed script. A driver is checked as a whole; a free script statement by statement.
 pub fn check(arena: std.mem.Allocator, tree: *const Node, diag: *Diag) Error!void {
     var c: Checker = .{ .a = arena, .diag = diag };
-    if (tree.tag == .driver) return c.driver(tree);
+    c.in_aspect = tree.tag == .aspect;
+    if (tree.tag == .driver or tree.tag == .aspect) return c.driver(tree);
     try c.push();
     for (tree.kids) |s| try c.statement(s);
 }

@@ -22,7 +22,7 @@ Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
 - `demo/` is retired (D-099): it is ready to be deleted.
 - One test per lexical and syntax rule from phases 2–3; list coverage in `conformance/README.md`.
 
-### S5.4 Level 2 suite `[~]` 2026-10-03: 19 project tests b01–b19, all failing first (VM work next); assumptions Q-022
+### S5.4 Level 2 suite `[x]` 2026-10-07: 29 project tests b01–b29 (aspects, lambdas, closures, negative tests; D-112, D-113, D-114), all pass on the VM; modules moved to level 3 (c01–c09)
 - Multi-script tests: drivers with aspects and modules, imports, error recovery.
 - Q-020 answered (D-066, D-072); a test is a folder, a whole Eve project (D-073).
 - Next: VM support test by test (imports, `apply`, aspect errors, extension methods, log files).
