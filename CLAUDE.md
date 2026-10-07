@@ -20,14 +20,14 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
   script) and `plan/decision_level2.md` (processes, aspects, modules, libraries); ids are shared.
 - `issues/` one file per tutorial page: questions and fixes from the page review (T1.10). The
   author answers by editing `**Answer:**` lines; answers become decisions in `plan/decision_levelN.md`.
-- `demo/` ~45 small `.eve` examples kept as ideas and for comparison with the spec (D-075): never run or parse them with the VM, static analysis only; `pattern/` syntax patterns; `test/level1-3/` conformity tests
+- `demo/` **retired** (D-099): every demo has a home in `test/level1/` or in the tutorial (`tutorial/demo/`, datetime.html); the folder only waits to be deleted, don't use it as a source. `pattern/` syntax patterns; `test/level1-7/` conformity tests, expectations in `/*@expect*/` blocks
 - `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
   Conventions in `manual/README.md`.
 - `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
 - `tools/` typing aids (`alt-codes.md`)
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
-  tutorial (19 topic pages), owned by the `scl` repo. See "Tutorial" below.
+  tutorial (39 topic pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
   … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
@@ -100,7 +100,7 @@ replacement (empty = delete)
 replaced at every occurrence
 @@@ NEW
 new text
-@@@ FILE demo/hello_world.eve
+@@@ FILE test/level1/a03_print.eve
 ...
 ```
 If any OLD is missing or ambiguous, **nothing** is written and every problem is listed.
