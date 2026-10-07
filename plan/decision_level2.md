@@ -50,9 +50,9 @@ b01 to b09 exist. Planned, to write when the syntax is confirmed (all fail first
 | b14 | `aspect_bad_args` | wrong count or unknown name of an argument: check-time error, exit 65 |
 | b15 | `aspect_apply_aspect` | `apply` inside an aspect is a check-time error (D-066) |
 | b16 | `aspect_recover` | an aspect recovers its own error with `recover`; the driver never sees it |
+| b17 | `aspect_trace` | the error raised again in the driver names the aspect and the line of the `raise` (D-113) |
 | b18 | `lambda` | an anonymous function `(x) => (x * 2)`, called at once and passed as an argument |
 | b19 | `closure` | a function declared in a function keeps the state of its parent (D-101); it is a `!` function |
-| b17 | `aspect_trace` | the error raised again in the driver names the aspect and the line of the `raise` (D-113) |
 
 ## Open questions
 
