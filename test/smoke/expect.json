@@ -2,7 +2,7 @@
   "v01_slot_report": {
     "args": [
       "-i",
-      "test/vm/slot/v01.vmc"
+      "test/smoke/slot/v01.vmc"
     ],
     "stdout": [
       "report: pc 0, 0 steps, running"
@@ -11,7 +11,7 @@
   "v02_slot_comments": {
     "args": [
       "-i",
-      "test/vm/slot/v02.vmc"
+      "test/smoke/slot/v02.vmc"
     ],
     "stdout": [
       "report: pc 0, 0 steps, running"
@@ -21,16 +21,16 @@
   "v03_slot_stop": {
     "args": [
       "-i",
-      "test/vm/slot/v03.vmc"
+      "test/smoke/slot/v03.vmc"
     ],
     "stdout": [
-      "test/vm/v03_slot_stop.eve: stopped by a command from the slot"
+      "test/smoke/v03_slot_stop.eve: stopped by a command from the slot"
     ]
   },
   "v04_slot_unknown": {
     "args": [
       "-i",
-      "test/vm/slot/v04.vmc"
+      "test/smoke/slot/v04.vmc"
     ],
     "stdout": [
       "slot: unknown command: frob"
@@ -39,20 +39,20 @@
   "v05_slot_missing": {
     "args": [
       "-i",
-      "test/vm/slot/none.vmc"
+      "test/smoke/slot/none.vmc"
     ],
     "stdout": []
   },
   "v06_slot_partial": {
     "args": [
       "-i",
-      "test/vm/slot/v06.vmc"
+      "test/smoke/slot/v06.vmc"
     ],
     "stdout": [],
     "note": "the file does not end with a newline, so the line is still being written"
   },
   "v07_workflow_run": {
-    "serve": "test/vm/slot/v07.vmc",
+    "serve": "test/smoke/slot/v07.vmc",
     "stdout": [
       "a03_print: loaded",
       "a03_print: parse ok, 7 nodes",
@@ -63,19 +63,19 @@
     ]
   },
   "v08_workflow_syntax_error": {
-    "serve": "test/vm/slot/v08.vmc",
+    "serve": "test/smoke/slot/v08.vmc",
     "stdout": [
       "bad_syntax: loaded",
-      "test/vm/slot/bad_syntax.eve:4:3: error: expected ';' but found 'return'",
+      "test/smoke/slot/bad_syntax.eve:4:3: error: expected ';' but found 'return'",
       "bad_syntax: 1 error(s)",
-      "test/vm/slot/bad_syntax.eve:4:3: syntax error: expected ';' but found 'return'",
+      "test/smoke/slot/bad_syntax.eve:4:3: syntax error: expected ';' but found 'return'",
       "bad_syntax: status logged",
       "serve: stopped"
     ],
     "note": "run parses first; the syntax error stops it before the execution"
   },
   "v09_workflow_runtime_error": {
-    "serve": "test/vm/slot/v09.vmc",
+    "serve": "test/smoke/slot/v09.vmc",
     "stdout": [
       "a29_expect_fail: loaded",
       "a29_expect_fail: parse ok, 13 nodes",
@@ -87,7 +87,7 @@
     ]
   },
   "v10_workflow_introspection": {
-    "serve": "test/vm/slot/v10.vmc",
+    "serve": "test/smoke/slot/v10.vmc",
     "contains": [
       "a34_jobs: run, exit 0",
       "a34_jobs: ast written",
@@ -96,7 +96,7 @@
     ]
   },
   "v11_workflow_no_script": {
-    "serve": "test/vm/slot/v11.vmc",
+    "serve": "test/smoke/slot/v11.vmc",
     "stdout": [
       "run: no script loaded (use load)",
       "ast: no script loaded (use load)",

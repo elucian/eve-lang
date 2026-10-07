@@ -1,7 +1,7 @@
 # run parses first: a syntax error is reported and nothing is executed
 outdir temp/output/v08
 capture on
-load test/vm/slot/bad_syntax.eve
+load test/smoke/slot/bad_syntax.eve
 run
 errors
 status

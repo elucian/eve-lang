@@ -12,7 +12,7 @@ Decisions: **D-083** (in [decision_level2.md](decision_level2.md), where it was 
 
 ## Draft features
 
-1. **Removal of command files.** `.vmc`, `-i` and the old "serve mode" (D-063) go away once `--listen` and `eve -c` work; `test/vm` and `script/workflow.py` move to `eve -c`.
+1. **Removal of command files.** `.vmc`, `-i` and the old "serve mode" (D-063) go away once `--listen` and `eve -c` work; `test/smoke` and `script/workflow.py` move to `eve -c`.
 2. **Remote scheduler.** `schedule "<driver>" at "02:00" every day` in `eve.cfg` of a listening machine; retries and alerts on failure.
 3. **EWP, the Eve Wire Protocol**, on port 4042 after the line protocol: remote `apply … at <machine> within <time>;`, data streams with credit, parallel streams that restart after a broken connection (review RNW-R04).
 4. **Capabilities.** The resources a project may use on a machine (folders, hosts, databases, shell), listed in its configuration and checked when code is uploaded (review RNW-R08).

@@ -61,7 +61,7 @@ At this level **a test is a folder** (D-073): `test/level2/b01_import/` is a who
 
 ## VM tools
 
-`test/vm/` tests the tools of the Eve virtual machine, not the language: slot commands and the workflow of a command file (`v01_…`). Run them with `python script/runtest.py vm`. They were the `b` and `c` tests of level 2 until D-072.
+`test/smoke/` tests the tools of the Eve virtual machine, not the language: slot commands and the workflow of a command file (`v01_…`). Run them with `python script/runtest.py smoke`. They were the `b` and `c` tests of level 2 until D-072.
 
 
 ## Levels 3 to 7
