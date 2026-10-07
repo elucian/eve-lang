@@ -37,6 +37,13 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 - **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.
 - **Markdown prose is not hard-wrapped:** one line per paragraph and per list item (an author answer or a `(a)` item keeps its own line). To reflow a wrapped file: `python temp/unwrap_md.py <files>`.
 
+## VM workflow: speed and performance watch
+
+- **Test with the ReleaseSafe build** (about 4.6 times faster than Debug). Build it once per change: `cd evevm && zig build -Doptimize=ReleaseSafe -p ../temp/rel`, then run the tests with `python script/runtest.py 1 --eve temp/rel/bin/eve.exe` (also `all`, `smoke`). Use the Debug build (`zig build -p ..`, `bin/eve.exe`) only to debug a failure: it keeps safety checks and stack traces readable.
+- **Watch performance at every feature or optimization of the VM.** Before and after the change run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe` (add `--check` to fail on a slowdown above 25%). When a version is done, run it with `--save` (updates `test/bmark/history.json` and the table of the README) and add a paragraph to "Notes by version" in `test/bmark/README.md`: what changed, appreciation or depreciation, and why a drop of more than 10% happened. Compare only runs of the same build on the same machine.
+- **Every benchmark has a twin in Python** (`test/bmark/ref/<name>.py`); the report shows the ratio Eve / Python. A new level or a new kind of work adds a benchmark `p<level><letter>_<name>.eve` with its twin and a `** perf:` description line.
+- **Do not optimize early** (decision of 2026-10-07): until level 2 passes its tests, change the interpreter for correctness, not for speed (slot-resolved variables wait for the final scope rules). Do fix a benchmark that falls more than 10 times behind Python, it points to an accidental quadratic cost. The first planned optimization is variable lookup by slot, resolved in `check.zig`.
+
 ## Tutorial (`tutorial/` → scl repo)
 
 The tutorial is the reference that the new specification in this repo builds on. It is
