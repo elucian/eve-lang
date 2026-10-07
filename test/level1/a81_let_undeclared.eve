@@ -1,0 +1,13 @@
+# let creates a missing name only in a capture: let y := 5 with no y is an error (D-104)
+** spec: syntax/statements.md#let
+driver a81_let_undeclared is
+  process main is
+    let y := 5;                  ** compile error: y was never declared
+  return;
+end a81_let_undeclared;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

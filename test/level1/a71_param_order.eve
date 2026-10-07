@@ -1,0 +1,25 @@
+# a mandatory parameter may follow optional ones, and the call then names it (D-106)
+** spec: syntax/declarations.md#functions-and-procedures
+driver a71_param_order is
+  procedure add(p1 = 0, p2 = 1: Integer, @op: Integer) is
+    let op := p1 + p2;
+  return;
+
+  process main is
+    new r :Integer;
+    add(op: @r);                 ** both defaults: 0 + 1
+    expect r == 1;
+    add(5, op: @r);              ** p1 positional, p2 default
+    expect r == 6;
+    add(5, 6, op: @r);
+    expect r == 11;
+    add(p2: 10, op: @r);         ** every argument named, in any order
+    expect r == 10;
+    print r;
+  return;
+end a71_param_order;
+/*@expect
+{
+  "stdout": ["10"]
+}
+*/

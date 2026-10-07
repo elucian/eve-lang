@@ -1,0 +1,18 @@
+# integer overflow is an error with its own code, 13 (D-109)
+** spec: semantics/errors.md#errors
+driver a76_overflow is
+  process main is
+    new big := 9223372036854775807;
+    new one := 1;
+    new x := big + one;
+    print "never";
+  recover
+    expect $error.code == $err_overflow;
+    print "caught overflow";
+  return;
+end a76_overflow;
+/*@expect
+{
+  "stdout": ["caught overflow"]
+}
+*/

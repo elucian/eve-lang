@@ -1,0 +1,31 @@
+# defer runs when the subprogram ends, by any path, in reverse order (D-081)
+** spec: syntax/statements.md#interruptions
+driver a74_defer is
+  procedure work(early: Logic) is
+    defer print "first registered, last run";
+    defer print "last registered, first run";
+    print "working";
+    if early do
+      exit;
+    done;
+    print "end of body";
+  return;
+
+  process main is
+    work(False);
+    work(True);
+  return;
+end a74_defer;
+/*@expect
+{
+  "stdout": [
+    "working",
+    "end of body",
+    "last registered, first run",
+    "first registered, last run",
+    "working",
+    "last registered, first run",
+    "first registered, last run"
+  ]
+}
+*/

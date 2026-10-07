@@ -1,0 +1,19 @@
+# a driver can set a system variable and define its own $name (D-109)
+** spec: semantics/variables.md
+driver a77_system_variable is
+  set $epsilon = 0.5;
+  set $mine = 7;
+
+  process main is
+    expect 1.0 =~ 1.3;           ** within $epsilon
+    expect not (1.0 =~ 2.0);
+    expect $mine == 7;
+    expect $epsilon == 0.5;
+    print $mine;
+  return;
+end a77_system_variable;
+/*@expect
+{
+  "stdout": ["7"]
+}
+*/

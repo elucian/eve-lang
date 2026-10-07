@@ -1,0 +1,13 @@
+# the digit separator _ is not accepted in a number: a lexical error (Q-013, D-095)
+** spec: lexical/lexical.md#numbers
+driver a78_digit_separator is
+  process main is
+    new x := 1_000;              ** lexical error
+  return;
+end a78_digit_separator;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/
