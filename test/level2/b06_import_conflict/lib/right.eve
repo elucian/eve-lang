@@ -1,8 +1,0 @@
-# right: exported function name, the same as left
-module right is
-  export (name);
-
-  function name() => (@result: String) is
-    let result := "right";
-  return;
-end right;

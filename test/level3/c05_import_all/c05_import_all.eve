@@ -1,0 +1,16 @@
+# use (*): every module of the folder, names merged into the scope (D-072)
+driver c05_import_all is
+  from lib use (*);
+
+  process main is
+    expect one() + two() == 3;
+    print one() + two();
+  return;
+end c05_import_all;
+/*@expect
+{
+  "stdout": [
+    "3"
+  ]
+}
+*/

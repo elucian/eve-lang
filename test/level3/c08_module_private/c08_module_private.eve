@@ -1,0 +1,15 @@
+# a member that a module does not export can't be used outside it (D-068, D-085, Q-022 b)
+driver c08_module_private is
+  from lib use (counter);
+
+  process main is
+    print counter.total;
+  return;
+end c08_module_private;
+/*@expect
+{
+  "exit": 65,
+  "stdout": [],
+  "note": "reading a private member is a check-time error, nothing runs (Q-022 b)"
+}
+*/

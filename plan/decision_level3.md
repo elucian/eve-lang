@@ -5,8 +5,8 @@ Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids ar
 | File | Level | Topic | Version | Tests |
 |---|---|---|---|---|
 | [decision_level1.md](decision_level1.md) | 1 | the project, and the language of a single script | 0.1 | `test/level1` (a) |
-| [decision_level2.md](decision_level2.md) | 2 | a project: processes, aspects, modules, imports, libraries | 0.1 | `test/level2` (b) |
-| [decision_level3.md](decision_level3.md) | 3 | data language: types, records, generators, files, formats, HTTP client | 0.2 | `test/level3` (c) |
+| [decision_level2.md](decision_level2.md) | 2 | a project: aspects, and the procedures and functions inside them | 0.1 | `test/level2` (b) |
+| [decision_level3.md](decision_level3.md) | 3 | modules and imports, libraries, data language: types, records, generators, files, formats, HTTP client | 0.2 | `test/level3` (c) |
 | [decision_level4.md](decision_level4.md) | 4 | parallel processing and streams | 0.3 | `test/level4` (d) |
 | [decision_level5.md](decision_level5.md) | 5 | database layer and the Eve database | 0.4 | `test/level5` (e) |
 | [decision_level6.md](decision_level6.md) | 6 | the Eve machine and the server | 0.5 | `test/level6` (f) |
@@ -15,6 +15,8 @@ Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids ar
 ## Scope
 
 A driver reads and writes real data with the right types: Decimal, dates and times, records, optional values; it reads files, JSON and CSV, calls web services over HTTP, and produces values lazily with generators. The bytecode VM arrives at this level, because generators need a method that can stop and continue.
+
+Moved from level 2 (D-112, 2026-10-07): modules, imports, libraries, extension methods across files and the library search path (`lib/`, `$EVE_LIB_PATH`, the standard library first). Tests c01 to c09; features F-STR-01 and F-STR-03.
 
 Features (`plan/features_inventory.md`): F-LNG-11 to F-LNG-16, F-LIB-03 to F-LIB-07, F-LIB-08 (secrets, for HTTP tokens), F-LIB-09, F-NET-01, F-VM-04, F-VM-06, F-TLS-02, F-TLS-03, F-SPEC-04, F-DOC-02, F-DOC-05.
 

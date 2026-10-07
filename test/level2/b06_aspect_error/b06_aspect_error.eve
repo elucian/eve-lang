@@ -1,0 +1,22 @@
+# an error not recovered in the aspect is raised in the driver at the apply line (D-072 d)
+driver b06_aspect_error is
+  process main is
+    apply fail();
+    print "never";
+  recover
+    print "caught: {$error.message}";
+    print "code: {$error.code}";
+    print "line: {$error.line}";
+  return;
+end b06_aspect_error;
+/*@expect
+{
+  "stdout": [
+    "fail: start",
+    "caught: disk full",
+    "code: 22",
+    "line: 5"
+  ],
+  "note": "$error.line is the line of the raise in the aspect file (Q-022 d)"
+}
+*/

@@ -1,0 +1,25 @@
+# an extension method: a method with @self of a class, declared outside the class (D-072, D-085)
+driver c09_extension_method is
+  from lib use (geometry(*));
+
+  method shift(@self: Point, dx, dy :Integer) is
+    let self.x += dx;
+    let self.y += dy;
+  return;
+
+  process main is
+    new p := Point(1, 2);
+    p.shift(2, 3);
+    expect p.x == 3;
+    expect p.y == 5;
+    print "({p.x}, {p.y})";
+  return;
+end c09_extension_method;
+/*@expect
+{
+  "stdout": [
+    "(3, 5)"
+  ],
+  "note": "a driver may extend a class imported from a module (Q-022 e)"
+}
+*/

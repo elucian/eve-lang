@@ -1,42 +1,64 @@
-# Decisions, level 2: aspects, modules, libraries
+# Decisions, level 2: a project of a driver and aspects (version 0.1)
 
 Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a question is answered, turn it into a decision with the date and keep the question text for history. Plan steps reference these ids. **Read cheaply:** `python script/plan.py list` prints every id; `python script/plan.py show D-087` prints one entry from here or from `archive/` (settled entries, full text); `python script/plan.py status` lists what is open.
 
-The log is split in two files. Ids are shared and keep counting across both (an id not found here is in the other file); a new entry goes to the file of its topic:
+The log is split by level; ids are shared and keep counting across the files (an id not found here is in another file). A new entry goes to the file of its topic. The levels are in [version_map.md](version_map.md). Settled and implemented entries move to [archive/decision_level2.md](archive/decision_level2.md); this file keeps the scope, the newest decisions and the open questions.
 
-- [decision_level1.md](decision_level1.md): the project (formats, repositories, licenses, the VM, tests) and the language of a single script (lexical rules, control flow, types, collections, functions, classes, errors in a driver). Matches `test/level1`.
-- [decision_level2.md](decision_level2.md): programs made of several files: processes, aspects, modules and imports, libraries, multitasking and parallel aspects. Matches `test/level2`.
-- Levels 3 to 7 (data, parallel, database, server, web): [decision_level3.md](decision_level3.md), [decision_level4.md](decision_level4.md), [decision_level5.md](decision_level5.md), [decision_level6.md](decision_level6.md), [decision_level7.md](decision_level7.md); the table of all levels is in decision_level3.md and [version_map.md](version_map.md).
+## Scope
 
-## Q-022 Assumptions of the level 2 tests b01 to b19 (2026-10-03)
-The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These rules are assumed without a decision; confirm or correct each one (the test named after it changes with the answer):
-(a) An import that fails on a name conflict (`use (*)`) raises `$err_module`; it happens before the process, so nothing can recover it and the exit code is 30 (b06).
-(b) Reading a private member of a module (`counter.total`) is a runtime error `$err_access`, exit code 21; it could also be a check-time error (exit 65) (b09).
-(c) The keys of a map spread into named arguments are symbols named like the parameters: `apply add3(a: 10, *m)` with `m := {'b': 20, 'c': 30}` (b14).
-(d) `$error.line` is the line of the `raise` in the aspect file, not the `apply` line of the driver (b15).
-(e) A driver may declare an extension method for a class imported from a module, and `use (m(*))` brings the class in as a bare name (`Point`) (b18).
-(f) `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line, no time stamp (b19; the names and the line format are open since D-057).
-(g) Aspects are found in `asp/` and modules in the folder named by the import path, both relative to the folder of the driver (the project root, D-055, D-073).
+Level 2 tests a project of **one driver and its aspects** (`test/level2`, prefix `b`). A driver calls an aspect with `apply`, passes arguments by position, by name and by spreading, reads results from its `@` outputs, and recovers the errors that the aspect raises. The aspect is a file in `asp/` with its own state, created at each call, and its own procedures and functions, which level 1 already teaches for a driver (a24, a25, a56, a64 to a73).
+
+Features: F-STR-02 (aspects, serial), F-STR-04 (project folders, `asp/`), F-STR-05 to F-STR-07, F-LIB-01 (`log_err`, `log_wrn`). Not in level 2: modules, imports, libraries, classes and methods across files (**level 3**, D-112); parallel groups and concurrent aspects (level 4, D-090); the machine and the server (level 6).
+
+Consequence: with no modules, an aspect is self-contained. It can't apply another aspect (D-066) and has no module to share code with, so shared code waits for level 3.
+
+## Where the earlier decisions are
+
+All settled, in the archive (`python script/plan.py show <id>`): D-066 (an aspect is an encapsulated machine with one `main`), D-072 (aspect errors, import forms, extension methods, test folders), D-073 (a test is a project folder), D-068 (modules, now level 3), D-082 (`eve --doc`, implemented), D-090 (`exclusive aspect`, `concurrent aspect`), Q-022 (answered, D-112). D-083 (the Eve machine) moved to [decision_level6.md](decision_level6.md).
+
+## D-112 Level 2 is aspects; modules move to level 3 (2026-10-07)
+Author decisions: the scope of level 2, and the answers to Q-022 (full text in the archive).
+- **Scope.** Level 2 is aspects with their procedures and functions (version 0.1). Modules, imports, libraries, classes and methods across files move to level 3 (version 0.2), with the data language. `test/level2` keeps `apply`; the module tests are now `test/level3/c01` to `c09`.
+- **Tests renumbered.** Level 2: b01 `apply_aspect`, b02 `apply_output`, b03 `apply_state`, b04 `apply_named_args`, b05 `apply_spread`, b06 `aspect_error`, b07 `aspect_over`, b08 `aspect_panic`, b09 `log_files`. Level 3: c01 `import_module`, c02 `import_string_path`, c03 `import_alias`, c04 `import_members`, c05 `import_all`, c06 `module_lifecycle`, c07 `module_singleton`, c08 `module_private`, c09 `extension_method`. The conflict test (old b06) is deleted.
+- **(a) Name conflict.** The failure of `use (*)` on a name conflict is discarded. The risk stays; `export` in modules reduces it (level 3).
+- **(b) Private member.** Reading a private member of a module is an error at check time (exit 65); nothing runs. There is no runtime `$err_access` for it, because Eve has no way to build a member name at run time. c08 expects exit 65 and no output.
+- **(c) Spread of a map.** `apply add3(a: 10, *m)`: the keys of the map are symbols named like the parameters. Accepted, part of level 2 (b05).
+- **(d) Error line.** `$error.line` is the line of the original `raise`, in the aspect file. The stack trace includes the name of the aspect that failed. The shape of the trace is settled in D-113.
+- **(e) Extension of an imported class.** A driver may extend a class imported from a module and `use (m(*))` brings the class in as a bare name (c09). In practice classes are extended in modules; a user extends them in aspects (see D-113). Level 3.
+- **(f) Log files.** `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line. The file names carry a run signature (date of the run). The format is D-113 and Q-040. Test b09 changes with it.
+- **(g) Search paths.** Aspects are found in `asp/` of the project (level 2). Modules are searched in the standard library first, then in `lib/` when the import gives no path; `$EVE_LIB_PATH`, a list of folders separated like the PATH of the operating system, adds more folders (level 3). `$EVE_LIB_PATH` replaces `$EVE_LIB` of the register (D-071) when level 3 is specified.
+- **`exclusive aspect`.** The tests write `exclusive aspect name is`, as D-090 requires (the keyword is not an open point).
+- Applied: `test/level2`, `test/level3`, `test/readme.md`, `plan/version_map.md`, `plan/features_inventory.md` (F-STR-01 and F-STR-03 to v0.2), `plan/decision_level3.md`. Not yet applied: the tutorial (modules.html says `$EVE_LIB`, and the `use (*)` conflict), `spec/`, the VM.
+
+## D-113 Aspect error trace, extension methods of an aspect, JSON log files (2026-10-07)
+Author answers to Q-037, Q-038 and Q-039 (full text in the archive). Refines D-112 (d), (e) and (f).
+- **Trace of an error.** An unhandled error prints the error first (message, code), then the stack of calls in order of call, innermost first, one line per frame: `line x in function y`, `line x in procedure y`, `line z in aspect <name>`, then the block that hosts the call: `in job <label>`, `in parallel <label>`, `in loop <label>`. `$error.line` and `$error.unit` describe the first frame; `$error.trace` holds the whole list (names as proposed in D-113, to confirm when the spec of `$error` is written).
+- **Extension methods in an aspect.** A method that an aspect attaches to a class is temporary: it is visible only in that aspect and disappears from the object when `main` returns (state per call). An object given back through an `@` output or a channel keeps only the data it accumulated, not the methods. In a module it is different (level 3): an imported module makes its methods available where it is imported, but only those that it exports.
+- **Log files.** The file name carries only the date of the run, because the time belongs to the operating system: `out/error_<date>.log` and `out/warning_<date>.log`. The content is JSON, so that a tool can read it and make an HTML report (that tool does not exist yet). The file is divided into groups, one per run, which show the run number and the time. The shape of the JSON is open: Q-040.
+- Test b17 (trace) and b09 (log files) follow these rules; b09 waits for Q-040 and for a date placeholder in the expectations of `runtest.py` (file names `out/error_{date}.log`).
+
+## Test plan for level 2
+
+b01 to b09 exist. Planned, to write when the syntax is confirmed (all fail first, D-094):
+
+| Code | Test | What it shows |
+|---|---|---|
+| b10 | `aspect_function` | a function of the aspect, declared at aspect level and called by `main` |
+| b11 | `aspect_procedure` | a procedure of the aspect that changes an aspect-level variable; the driver sees nothing of it |
+| b12 | `aspect_fresh_state` | two `apply` of the same aspect: the aspect-level variable starts again (with b03) |
+| b13 | `aspect_missing` | `apply` of an aspect that is not in `asp/`: check-time error, exit 65 |
+| b14 | `aspect_bad_args` | wrong count or unknown name of an argument: check-time error, exit 65 |
+| b15 | `aspect_apply_aspect` | `apply` inside an aspect is a check-time error (D-066) |
+| b16 | `aspect_recover` | an aspect recovers its own error with `recover`; the driver never sees it |
+| b17 | `aspect_trace` | the error raised again in the driver names the aspect and the line of the `raise` (D-113) |
+
+## Open questions
+
+## Q-040 Shape of the JSON log (2026-10-07)
+D-113: `error_<date>.log` and `warning_<date>.log` are JSON, grouped by run. Proposal: one JSON document per file, updated at each run (a run that starts on the same date appends a group):
+```
+{"runs": [{"run": 1, "time": "14:30:05", "script": "b09_log_files", "messages": [{"line": 6, "unit": "main", "text": "disk full"}]}]}
+```
+The first field of a group is the number of the run of that day. Alternative: JSON Lines (one object per line, appended, never rewritten), which is safer when two runs write at once and keeps the old rule "one message per line". Which one, and which fields does a message carry (`line`, `unit`, `level`)?
 **Answer:** _(open)_
-
-## D-082 `eve --doc` replaces `eved` (2026-10-05)
-Author decision. Replaces the separate tool `eved` of D-053; the rules of the generated documentation do not change.
-- Every function of the Eve tools is a command of `eve`: there is no second program. The documentation generator is the command `doc`: `eve --doc <folder | file.eve> [output folder]` on the command line, `doc …` in the REPL (every REPL command is also a `--<command>` option, `manual/usage.md`).
-- It writes `<name>.md` for the file given, or for each `.eve` file directly in the folder; the output folder is `doc` by default and is created when missing. Exit status 0, 64 (path missing), 66 (can't read).
-- Code: `evevm/src/doc.zig` (moved from `evevm/doc/eved.zig`, with Zig tips), the jump-table entry `doc` and the handler `cmdDoc` in `cli.zig`. `zig build doc` runs `eve --doc lib doc`. The build no longer makes `eved.exe`; `evevm/doc/eved.zig` and `bin/eved.*` are deleted. The declarations recognized now also include `generator` and `service`.
-- Checked: `zig build test` passes; `zig build doc` regenerates `doc/io.md` and `doc/exception.md` unchanged; `eve --doc lib/io.eve <folder>` writes the same page.
-- Applied: evevm README, `evevm/doc/README.md`, `evevm/lib/README.md`, `manual/usage.md` (command table, section "Documentation: doc"), tutorial modules.html, `plan/features_inventory.md` (F-TLS-07, F-DOC-05), `tools/TODO-vscode-plugin.md`.
-
-## D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI (2026-10-05)
-Author decisions, reached in the discussion of `plan/design-service.md` (2026-10-05), which keeps the details and the reasons. Taught in the new tutorial page server.html (topic 19, Compiler becomes 20), marked "planned, version 0.5". Not implemented: VM work waits (D-075).
-- **One machine, one mode.** `eve` starts locally or remotely; what it does depends on its commands and its configuration.
-- **Commands.** `eve -x file.eve` parses and executes a script; `eve -c "<command>"` (`--command`) sends one command to a running machine and prints its answer; `-r <machine>` (`--remote`) names a remote machine by address or by a name of the configuration; `eve -u <file>` (`--upload`) sends a source file that the receiving machine compiles under its own rules; at the prompt, `send <machine> "<command>"`. Command files (`.vmc`, `-i`, the "serve mode" of D-063) are scheduled for removal; scripts drive a machine with `eve -c`.
-- **Setup.** `eve --setup <folder>` (`-s`) chooses the machine of a folder, or creates it (`eve.cfg`, `web/`, `out/`, `data/`, `lib/`, `asp/`, named after the folder, free ports) when it does not exist; `setup` at the prompt or with `-c` reads the configuration again. Without a configuration `eve` uses built-in defaults. A machine folder is a project folder: one machine per project; a client/server application is two projects (client and server) that can live in one repository, README at the root.
-- **Identity.** Domain + port (`$EVE_DOMAIN:$EVE_PORT`); `$EVE_NAME` is the label. Starting on a taken address is an error. The checksum of the configuration is kept outside the file (`out/<name>.sum`); `setup` applies changes that keep the identity.
-- **Ports.** 4042 for commands, uploads and later the data protocol (`$EVE_PORT`); 8042 for HTML (`$EVE_HTTP_PORT`).
-- **Sessions.** One machine, one state; parallel sessions are two machines. Each driver has its own driver memory space (DMS): `load` creates it, `dismiss` frees it (replaces the planned `clear`); `run` of a driver that is not loaded uses a temporary DMS.
-- **Serve.** `serve` starts HTTP on `$EVE_HTTP_PORT` with the pages of the web folder and the routes of `service` scripts; `serve stop` ends it.
-- **Services and routes.** A `service` script (a fourth kind of script, shaped like a module) declares routes with the keyword `route`: one line, `route get "/orders" apply list_orders;`, or a block, `route name(req: Request, @res: Response) on <method> "<path>" is … end name;`, for every HTTP method (get, post, put, patch, delete).
-- **panic.** At the prompt it returns to the prompt; with `eve -x` it ends the process (exit code 1); on a listening machine it ends the request or the job and the machine goes on listening, while `eve -c` ends with exit code 1.
-- **API for AI.** `eve --api` is an MCP server; every command of the machine is a tool; an AI has the rights of a person at the prompt.
-- New system variables to add to the register (D-071) when specified: `$EVE_NAME`, `$EVE_DOMAIN`, `$EVE_PORT`, `$EVE_HTTP_PORT`, `$EVE_WEB`, `$EVE_TOKEN`.
+Ok approved.

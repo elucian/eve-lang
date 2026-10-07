@@ -1,0 +1,21 @@
+# initialize runs at the import, finalize after the process of the driver (D-068)
+driver c06_module_lifecycle is
+  from lib use (counter);
+
+  process main is
+    print "main: start";
+    counter.tick();
+    counter.tick();
+    print "main: end";
+  return;
+end c06_module_lifecycle;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "main: start",
+    "main: end",
+    "counter: 2 ticks"
+  ]
+}
+*/

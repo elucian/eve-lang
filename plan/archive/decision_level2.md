@@ -263,3 +263,48 @@ The command-line errors of the VM (64, 65, 66, 70, `manual/usage.md`) are not ex
 **10. Jobs are observable.** Every run of a driver writes `$EVE_OUT/run_<driver>_<datetime>.log` (author: the file name; datetime `YYYYMMDD_HHMMSS` of the start). Every job, `apply`, `start` and parallel group writes a start line and an end line, one JSON object per line, with the fields `time`, `driver`, `process`, `job`, `kind`, `event`, `status`, `attempt`, `duration`, `line`, `code`, `message` (fields chosen by the model). Applied in processing.html, section Run log.
 
 Applied to the tutorial: processing.html (interruption table and text, recover table, parallel errors, finalize, new section Defer), exceptions.html (Error members, new section Error Classes, class column and codes 44, 45 in Standard Exceptions, new section Exit Codes, code ranges), modules.html (unsafe methods, the counter example, imports and system library), multitasking.html (group syntax, one-level rule, unsafe methods, errors, policies, deadline, time-out, workers and limits), methods.html (new section Unsafe methods), functions.html (subprogram table), syntax.html (keywords `defer`, `cancel`, `within`; meaning of `defer`; `$timeout`, `$cores`, `$max_parallel`), sidebars of processing, exceptions and methods. Also `spec/semantics/variables.md` and `manual/usage.md` (exit codes). The VM and the tests are not changed (D-075).
+
+## Q-022 Assumptions of the level 2 tests b01 to b19 (2026-10-03; answered 2026-10-07 → D-112)
+The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These rules are assumed without a decision; confirm or correct each one (the test named after it changes with the answer):
+(a) An import that fails on a name conflict (`use (*)`) raises `$err_module`; it happens before the process, so nothing can recover it and the exit code is 30 (b06).
+**answer** Discard this feature. However the risk remain. We have improved modules with export, to mitigate this issue.
+(b) Reading a private member of a module (`counter.total`) is a runtime error `$err_access`, exit code 21; it could also be a check-time error (exit 65) (b09).
+**answer** This is a compiler time error. But maybe also a runtime error? Why.
+(c) The keys of a map spread into named arguments are symbols named like the parameters: `apply add3(a: 10, *m)` with `m := {'b': 20, 'c': 30}` (b14).
+**answer** good feature, we keep it/ is in tutorial? accepted.
+(d) `$error.line` is the line of the `raise` in the aspect file, not the `apply` line of the driver (b15).
+**answer** Correct, the originator line of error, with the stack trace that include the aspect name that failed.
+(e) A driver may declare an extension method for a class imported from a module, and `use (m(*))` brings the class in as a bare name (`Point`) (b18).
+**answer** Correct, though in practice we expect classes to be extended in modules. User can extend classes usually in aspects.
+(f) `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line, no time stamp (b19; the names and the line format are open since D-057).
+**answer** the error.log and warning.log can have data signature in filename. Add runtime data signature.
+(g) Aspects are found in `asp/` and modules in the folder named by the import path, both relative to the folder of the driver (the project root, D-055, D-073).
+**answer** modules are searched in lib/ if there is no path specified. We can also create $eve_lib_path, a comma separated list of folders like PATH of the operating system. EVE will search in this path to find a library with name specified. Also can search in standard library actually this is first where search for.
+
+## D-082 `eve --doc` replaces `eved` (2026-10-05)
+Author decision. Replaces the separate tool `eved` of D-053; the rules of the generated documentation do not change.
+- Every function of the Eve tools is a command of `eve`: there is no second program. The documentation generator is the command `doc`: `eve --doc <folder | file.eve> [output folder]` on the command line, `doc …` in the REPL (every REPL command is also a `--<command>` option, `manual/usage.md`).
+- It writes `<name>.md` for the file given, or for each `.eve` file directly in the folder; the output folder is `doc` by default and is created when missing. Exit status 0, 64 (path missing), 66 (can't read).
+- Code: `evevm/src/doc.zig` (moved from `evevm/doc/eved.zig`, with Zig tips), the jump-table entry `doc` and the handler `cmdDoc` in `cli.zig`. `zig build doc` runs `eve --doc lib doc`. The build no longer makes `eved.exe`; `evevm/doc/eved.zig` and `bin/eved.*` are deleted. The declarations recognized now also include `generator` and `service`.
+- Checked: `zig build test` passes; `zig build doc` regenerates `doc/io.md` and `doc/exception.md` unchanged; `eve --doc lib/io.eve <folder>` writes the same page.
+- Applied: evevm README, `evevm/doc/README.md`, `evevm/lib/README.md`, `manual/usage.md` (command table, section "Documentation: doc"), tutorial modules.html, `plan/features_inventory.md` (F-TLS-07, F-DOC-05), `tools/TODO-vscode-plugin.md`.
+
+## Q-037 Shape of the stack trace of an aspect error (2026-10-07; answered 2026-10-07 → D-113)
+D-112 (d): `$error.line` is the line of the original `raise`, and the trace names the aspect. What is the trace? Proposal: `$error.trace` is a list of `(unit, line)` pairs, innermost first, for example `(("fail", 6), ("b17_aspect_trace", 8))`; `$error.unit` is the name of the aspect where it started. What is printed for an unhandled error: one line per pair on the error output, after the message?
+**Answer:**
+Yes, the error first, followed by error stack list in order of call, 
+line x in function y
+line x in procedure y
+line z in aspect (aspect name)
+in job label/ parallel label, loop label...
+(whatever the block that host the aspect)
+
+## Q-038 Where an aspect may extend a class (2026-10-07; answered 2026-10-07 → D-113)
+Answer (e) says users extend classes in aspects. An extension method is private to the file that declares it (D-072). Is an extension method of an aspect visible only inside that aspect, and gone when `main` returns (state per call)? Classes across files are level 3, so this waits there; it is recorded to avoid a surprise.
+**Answer:**
+Yes, the method dissapears from the object. The returning objects will contain only the data they have accumulated if objects are pass back as output parameters or attached to channels. Methods attached are temporarly useful only in the aspect that assign them these features. With modules things are different if module is available (imported) the procedures are available where modules are imported but only if they are part of export.
+
+## Q-039 Signature of the log file names (2026-10-07; answered 2026-10-07 → D-113)
+D-112 (f): `error.log` and `warning.log` get a run signature. Proposal: the date of the run, `out/error_2026-10-07.log`, and several runs on the same day append to the same file. Alternative: date and time, `error_2026-10-07_14-30-05.log`, one file per run. Which one, and what is the signature when the program runs in the REPL?
+**Answer:**
+The date and time is also part of OS so is not required in the file name. Only the date is good enaugh. Because we have groups in log, that show the run number and the time. Make the logs: json so that a tool can use these files and create a html report in a UI. That we do not have yet.
