@@ -223,6 +223,7 @@ fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     }
     s.quiet = true;
     s.capture = false;
+    s.script_args = args[1..];
     try s.load(args[0]);
     if (s.arena == null) {
         ctx.status = s.status;

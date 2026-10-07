@@ -20,6 +20,7 @@
 const std = @import("std");
 const lexer = @import("lexer.zig");
 const ast = @import("ast.zig");
+const checker = @import("check.zig");
 
 const Token = lexer.Token;
 const Node = ast.Node;
@@ -32,12 +33,14 @@ pub const Error = lexer.Error;
 // `.{ key }` entries (with `void` as value, it acts as a set), and `has(text)` is the test. No
 // allocation and no hashing at run time.
 const reserved = std.StaticStringMap(void).initComptime(.{
-    .{"driver"},      .{"is"},       .{"process"}, .{"return"}, .{"end"},    .{"let"},      .{"set"},
-    .{"if"},          .{"else"},     .{"do"},      .{"done"},   .{"while"},  .{"loop"},     .{"for"},
-    .{"in"},          .{"match"},    .{"when"},    .{"then"},   .{"break"},  .{"skip"},     .{"raise"},
-    .{"recover"},     .{"finalize"}, .{"job"},     .{"retry"},  .{"resume"}, .{"abort"},    .{"over"},
-    .{"panic"},       .{"print"},    .{"write"},   .{"expect"}, .{"class"},  .{"function"}, .{"method"},
-    .{"constructor"}, .{"and"},      .{"or"},      .{"xor"},    .{"not"},    .{"new"},      .{"repeat"},
+    .{"driver"},      .{"is"},        .{"process"},   .{"return"},    .{"end"},       .{"new"},     .{"set"},
+    .{"let"},         .{"if"},        .{"else"},      .{"do"},        .{"done"},      .{"while"},   .{"loop"},
+    .{"for"},         .{"in"},        .{"match"},     .{"when"},      .{"then"},      .{"break"},   .{"skip"},
+    .{"raise"},       .{"recover"},   .{"finalize"},  .{"job"},       .{"retry"},     .{"resume"},  .{"abort"},
+    .{"over"},        .{"exit"},      .{"stop"},      .{"pass"},      .{"panic"},     .{"print"},   .{"write"},
+    .{"expect"},      .{"assert"},    .{"defer"},     .{"class"},     .{"function"},  .{"procedure"}, .{"method"},
+    .{"constructor"}, .{"public"},    .{"protected"}, .{"private"},   .{"and"},       .{"or"},      .{"xor"},
+    .{"not"},         .{"repeat"},    .{"eq"},
 });
 
 /// Words that end a block: a statement list stops in front of them.
@@ -246,6 +249,7 @@ const Parser = struct {
             } else try out.appendSlice(p.a, raw);
         }
         const one = std.unicode.utf8CountCodepoints(out.items) catch 0;
+        if (out.items.len == 0 and t.text.len == 2) return p.mk(.chr, t, "", &.{}); // '' is nil, the empty rune
         if (one != 1) return p.failAt(t, "a symbol literal holds exactly one character (use \"...\" for text)", .{});
         return p.mk(.chr, t, try out.toOwnedSlice(p.a), &.{});
     }
@@ -275,49 +279,121 @@ const Parser = struct {
 
     // Zig tip: a string is decoded once, here, not every time the script runs: the tree holds the
     // final text. `std.ArrayList(u8)` is the growable byte buffer that builds it. The `while`
-    // loop walks the raw bytes by index because an escape takes several of them. A labeled
-    // result `.{ .cp = ..., .next = ... }` of an anonymous struct type lets `hexEscape` return two
-    // values at once. `parts` collects the pieces of a string with interpolation.
-    /// A string literal: escapes decoded, interpolations parsed. `str` when plain, `interp` otherwise.
+    // loop walks the raw bytes by index because an escape takes several of them. `parts` collects
+    // the pieces of a string with placeholders. A string that starts with `/` is a regular
+    // expression: raw, no escapes and no placeholders, only `\"` (D-097). In any other string a
+    // `{` opens a placeholder `{name}` or `{name % format}` (D-102); `\{` and `\}` are literal
+    // braces, and a brace that opens no valid placeholder is an error.
+    /// A string literal: escapes decoded, placeholders parsed. `str` when plain, `interp` otherwise.
     fn stringNode(p: *Parser, t: Token) Error!*const Node {
         if (std.mem.startsWith(u8, t.text, "\"\"\"")) return p.textLiteral(t);
         const raw = t.text[1 .. t.text.len - 1];
         var cur: std.ArrayList(u8) = .empty;
+        if (raw.len > 0 and raw[0] == '/') {
+            var k: usize = 0;
+            while (k < raw.len) : (k += 1) {
+                if (raw[k] == '\\' and k + 1 < raw.len and raw[k + 1] == '"') k += 1;
+                try cur.append(p.a, raw[k]);
+            }
+            return p.mk(.str, t, try cur.toOwnedSlice(p.a), &.{});
+        }
         var parts: std.ArrayList(*const Node) = .empty;
         var i: usize = 0;
         while (i < raw.len) {
-            if (raw[i] != '\\' or i + 1 >= raw.len) {
-                try cur.append(p.a, raw[i]);
+            const c = raw[i];
+            if (c == '}') return p.failAt(t, "a lone '}}' in a string: write \\}}", .{});
+            if (c == '{') {
+                const close = matchBrace(raw, i) orelse return p.failAt(t, "unclosed placeholder: write \\{{ for a brace", .{});
+                const inner = raw[i + 1 .. close];
+                const pct = formatPercent(inner);
+                const expr_text = std.mem.trim(u8, if (pct) |k| inner[0..k] else inner, " ");
+                const spec = std.mem.trim(u8, if (pct) |k| inner[k + 1 ..] else "", " ");
+                if (expr_text.len == 0) return p.failAt(t, "empty placeholder: write \\{{\\}} for braces", .{});
+                if (cur.items.len > 0) try parts.append(p.a, try p.mk(.str, t, try cur.toOwnedSlice(p.a), &.{}));
+                cur = .empty;
+                var clean: std.ArrayList(u8) = .empty;
+                var k: usize = 0;
+                while (k < expr_text.len) : (k += 1) {
+                    if (expr_text[k] == '\\' and k + 1 < expr_text.len and expr_text[k + 1] == '"') k += 1;
+                    try clean.append(p.a, expr_text[k]);
+                }
+                const x = try p.subExpr(clean.items, t);
+                try parts.append(p.a, try p.mk(.fmt, t, try std.fmt.allocPrint(p.a, "s{s}", .{spec}), &.{x}));
+                i = close + 1;
+                continue;
+            }
+            if (c == '&') {
+                if (std.mem.indexOfScalarPos(u8, raw, i, ';')) |semi| {
+                    if (try p.reference(&cur, raw[i + 1 .. semi])) {
+                        i = semi + 1;
+                        continue;
+                    }
+                }
+            }
+            if (c != '\\' or i + 1 >= raw.len) {
+                try cur.append(p.a, c);
                 i += 1;
                 continue;
             }
             const e = raw[i + 1];
-            if ((e == 's' or e == '#' or e == 'b') and i + 2 < raw.len and raw[i + 2] == '{') {
-                const close = matchBrace(raw, i + 2) orelse return p.fail("unclosed interpolation", .{});
-                const inner = raw[i + 3 .. close];
-                const colon = formatColon(inner);
-                const expr_text = if (colon) |c| inner[0..c] else inner;
-                const spec = if (colon) |c| inner[c + 1 ..] else "";
-                if (cur.items.len > 0) try parts.append(p.a, try p.mk(.str, t, try cur.toOwnedSlice(p.a), &.{}));
-                cur = .empty;
-                const x = try p.subExpr(expr_text, t);
-                const text = try std.fmt.allocPrint(p.a, "{c}{s}", .{ e, spec });
-                try parts.append(p.a, try p.mk(.fmt, t, text, &.{x}));
-                i = close + 1;
+            if (e == '&') {
+                try cur.append(p.a, '&');
+                i += 2;
             } else if (e == 'u' or e == 'x') {
                 const h = try p.hexEscape(raw, i);
                 try p.appendCodePoint(&cur, h.cp);
                 i = h.next;
-            } else if (simpleEscape(e)) |c| {
-                try cur.append(p.a, c);
+            } else if (simpleEscape(e)) |ch| {
+                try cur.append(p.a, ch);
                 i += 2;
             } else {
-                return p.fail("bad escape sequence \\{c}", .{e});
+                return p.failAt(t, "bad escape sequence \\{c}", .{e});
             }
         }
         if (parts.items.len == 0) return p.mk(.str, t, try cur.toOwnedSlice(p.a), &.{});
         if (cur.items.len > 0) try parts.append(p.a, try p.mk(.str, t, try cur.toOwnedSlice(p.a), &.{}));
         return p.mk(.interp, t, "", parts.items);
+    }
+
+    // Zig tip: a function can answer "did it apply?" with a `bool` and still change what it was
+    // given through a pointer: `out` receives the character. `&#955;` and `&#x3BB;` name a code
+    // point; `&amp;`, `&lt;`, `&gt;`, `&quot;` and `&apos;` name the five marked characters.
+    /// A character reference `&...;` (the text between `&` and `;`): append it and say so, or say no.
+    fn reference(p: *Parser, out: *std.ArrayList(u8), name: []const u8) Error!bool {
+        if (name.len > 1 and name[0] == '#') {
+            const hex = name[1] == 'x' or name[1] == 'X';
+            const digits = if (hex) name[2..] else name[1..];
+            const cp = std.fmt.parseInt(u21, digits, if (hex) 16 else 10) catch return false;
+            try p.appendCodePoint(out, cp);
+            return true;
+        }
+        const names = [_]struct { []const u8, u8 }{ .{ "amp", '&' }, .{ "lt", '<' }, .{ "gt", '>' }, .{ "quot", '"' }, .{ "apos", '\'' } };
+        for (names) |n| {
+            if (std.mem.eql(u8, n[0], name)) {
+                try out.append(p.a, n[1]);
+                return true;
+            }
+        }
+        // the lower case Greek letters: alpha is U+03B1, omega U+03C9 (the final sigma U+03C2 has no name)
+        const greek = [_][]const u8{ "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron", "pi", "rho", "", "sigma", "tau", "upsilon", "phi", "chi", "psi", "omega" };
+        for (greek, 0..) |g, k| {
+            if (g.len > 0 and std.mem.eql(u8, g, name)) {
+                try p.appendCodePoint(out, @intCast(0x3B1 + k));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Zig tip: an argument of `print` is an expression, or `name: expression` (`sep: " "`). A plain
+    // `expr` is used, not `conditional`, so a trailing `if` stays the condition of the statement.
+    fn printArg(p: *Parser) Error!*const Node {
+        const k = try p.expr();
+        if (p.isSym(":")) {
+            const t = p.advance();
+            return p.mk(.pair, t, "", &.{ k, try p.expr() });
+        }
+        return k;
     }
 
     // Zig tip: `?usize` is "an index or nothing". A function that searches returns it, and the
@@ -337,14 +413,14 @@ const Parser = struct {
     }
 
     // Zig tip: `for (xs) |x| ...` walks a slice; `for (xs, 0..) |x, i|` also gives the index.
-    /// Index of the `:` that starts the format of an interpolation: the first one outside brackets.
-    fn formatColon(inner: []const u8) ?usize {
+    /// Index of the `%` that starts the format of a placeholder: the first one outside brackets.
+    fn formatPercent(inner: []const u8) ?usize {
         var depth: usize = 0;
         for (inner, 0..) |c, j| {
             switch (c) {
                 '(', '[', '{' => depth += 1,
                 ')', ']', '}' => depth -|= 1,
-                ':' => if (depth == 0) return j,
+                '%' => if (depth == 0) return j,
                 else => {},
             }
         }
@@ -377,7 +453,7 @@ const Parser = struct {
             const l = std.mem.trimEnd(u8, line, "\r");
             try out.appendSlice(p.a, if (std.mem.startsWith(u8, l, indent)) l[indent.len..] else l);
         }
-        return p.mk(.str, t, try out.toOwnedSlice(p.a), &.{});
+        return p.mk(.text_lit, t, try out.toOwnedSlice(p.a), &.{});
     }
 
     // ---- types, parameters ------------------------------------------------------------------
@@ -385,39 +461,76 @@ const Parser = struct {
     // Zig tip: a `while (true)` loop with `break` is the usual way to write "repeat until a
     // condition found inside". `if (!p.acceptSym(",")) break;` reads: no comma, the list is over.
     // `std.ArrayList(T).empty` starts an empty list; `append(allocator, x)` adds; `.items` is the
-    // slice of what it holds.
-    /// `Integer`, `[5]Integer`, `[2, 2]Integer`.
+    // slice of what it holds. `std.fmt.allocPrint(a, "...", args)` builds a new string in the arena.
+    /// `Integer`, `[5]Integer`, `[]Integer`, `()Integer`, `Integer?`.
     fn typeName(p: *Parser) Error!*const Node {
         var dims: std.ArrayList(*const Node) = .empty;
-        const first = p.peek();
-        if (p.acceptSym("[")) {
+        var prefix: []const u8 = "";
+        if (p.isSym("{")) {
+            // `{:}(String, Integer)` is a DataMap type, `{Integer | Real}` a variant type
+            const open = p.advance();
+            if (p.acceptSym(":")) {
+                try p.expectSym("}");
+                try p.expectSym("(");
+                _ = try p.typeName();
+                try p.expectSym(",");
+                _ = try p.typeName();
+                try p.expectSym(")");
+                return p.mk(.type, open, "DataMap", &.{});
+            }
             while (true) {
-                try dims.append(p.a, try p.expr());
-                if (!p.acceptSym(",")) break;
+                _ = try p.typeName();
+                if (!p.acceptSym("|")) break;
+            }
+            try p.expectSym("}");
+            return p.mk(.type, open, "{variant}", &.{});
+        }
+        if (p.isSym("(") and p.isSymAt(1, ")")) {
+            _ = p.advance();
+            _ = p.advance();
+            prefix = "()";
+        } else if (p.acceptSym("[")) {
+            if (!p.isSym("]")) {
+                while (true) {
+                    try dims.append(p.a, try p.expr());
+                    if (!p.acceptSym(",")) break;
+                }
             }
             try p.expectSym("]");
+            if (dims.items.len == 0) prefix = "[]"; // `[5]Integer` keeps the element type and the size
         }
         const name = try p.expectName("a type name");
-        _ = first;
-        return p.mk(.type, name, name.text, dims.items);
+        const suffix: []const u8 = if (p.acceptSym("?")) "?" else "";
+        const text = if (prefix.len == 0 and suffix.len == 0) name.text else try std.fmt.allocPrint(p.a, "{s}{s}{s}", .{ prefix, name.text, suffix });
+        return p.mk(.type, name, text, dims.items);
     }
 
-    // Zig tip: `std.ArrayList(T)` is a growable array: it starts `.empty`, `append(allocator, x)`
-    // adds, `.items` is the slice of what it holds.
-    /// `( [@]name [= default] [: Type], ... )` of a function, a method, a constructor or a lambda.
+    // Zig tip: `@constCast` removes `const` from a pointer. The nodes are shared as `*const Node`
+    // once the tree is built, but while a parameter list is being read the parser may still give
+    // a type to the parameters that came before it: `a, b: Integer` gives `Integer` to `a` and `b`.
+    /// `( [@|*]name [= value | := value] [: Type], ... )` of a function, procedure, method, constructor,
+    /// process or lambda; also the result list `(@r: Type, ...)`. A type is shared by the names before it
+    /// that have none (D-028). `*name` is the vararg, `@name` the input/output parameter (D-048, D-106).
     fn params(p: *Parser) Error!*const Node {
         const open = p.peek();
         try p.expectSym("(");
         var list: std.ArrayList(*const Node) = .empty;
+        var pending: usize = 0; // index of the first parameter that still waits for a type
         if (!p.isSym(")")) {
             while (true) {
-                const by_ref = p.acceptSym("@");
+                const kind: Tag = if (p.acceptSym("@")) .ref_param else if (p.acceptSym("*")) .vararg_param else .param;
                 const name = try p.expectName("a parameter name");
                 var default: *const Node = p.noneNode();
-                if (p.acceptSym("=")) default = try p.expr();
-                const prm = try p.mk(if (by_ref) .ref_param else .param, name, name.text, &.{default});
-                if (p.acceptSym(":")) prm.ty = try p.typeName();
+                if (p.acceptSym("=") or p.acceptSym(":=")) default = try p.expr();
+                const prm = try p.mk(kind, name, name.text, &.{default});
                 try list.append(p.a, prm);
+                if (p.acceptSym(":")) {
+                    const ty = try p.typeName();
+                    for (list.items[pending..]) |q| {
+                        if (q.ty == null) @constCast(q).ty = ty;
+                    }
+                    pending = list.items.len;
+                }
                 if (!p.acceptSym(",")) break;
             }
         }
@@ -425,21 +538,25 @@ const Parser = struct {
         return p.mk(.params, open, "", list.items);
     }
 
-    // Zig tip: `try f()` calls `f` and, when it returns an error, returns that error from this
-    // function too.
-    /// `[ (params) ] [ (params) ] [ => (results) ] is block return ;` shared by function, method, constructor.
+    // Zig tip: `if (a) b else c` is an expression too. A subprogram has one parameter list (D-029) and
+    // an optional result list after `=>`. A `function` must have results and a `procedure` must not
+    // (D-100); a procedure is never deterministic, so its name does not end with `!` (D-101).
+    /// `function|procedure|method|constructor name [(params)] [=> (results)] is block return ;`.
     fn routine(p: *Parser, tag: Tag) Error!*const Node {
         const kw = p.advance();
         const name = if (tag == .constructor) kw else try p.expectName("a name");
         const empty = try p.mk(.params, kw, "", &.{});
         const first = if (p.isSym("(")) try p.params() else empty;
-        const second = if (p.isSym("(")) try p.params() else empty; // a constructor: (@self)(fields)
+        const has_results = p.isSym("=>");
         const results = if (p.acceptSym("=>")) try p.params() else empty;
+        if (tag == .procedure and has_results) return p.failAt(kw, "a procedure has no result list (use function)", .{});
+        if (tag == .function and !has_results) return p.failAt(kw, "a function must have a result list '=> (@r: Type)' (use procedure)", .{});
+        if (tag == .procedure and name.text[name.text.len - 1] == '!') return p.failAt(name, "a procedure can't end with '!' (D-101)", .{});
         try p.expectWord("is");
         const body = try p.block();
         try p.expectWord("return");
         try p.expectSym(";");
-        return p.mk(tag, kw, if (tag == .constructor) "" else name.text, &.{ first, second, results, body });
+        return p.mk(tag, kw, if (tag == .constructor) "" else name.text, &.{ first, empty, results, body });
     }
 
     // ---- expressions ------------------------------------------------------------------------
@@ -449,7 +566,7 @@ const Parser = struct {
     // rebinds `l` (a `var`) so `a - b - c` becomes `(a - b) - c`: left to right.
     fn expr(p: *Parser) Error!*const Node {
         var l = try p.orExpr();
-        while (p.isSym("<+") or p.isSym("<-") or p.isSym("->")) {
+        while (p.isSym("<+") or p.isSym("+>") or p.isSym("<-") or p.isSym("->")) {
             const t = p.advance();
             const r = try p.orExpr();
             l = try p.mk(.bin, t, t.text, &.{ l, r });
@@ -512,7 +629,7 @@ const Parser = struct {
 
     // Zig tip: `compareOp` relies on the same Zig feature as `formatColon` above: see the tip there.
     fn compareOp(p: *Parser) ?struct { tok: Token, text: []const u8 } {
-        const ops = [_][]const u8{ "==", "<>", "<=", ">=", "<", ">", "=~", "!~" };
+        const ops = [_][]const u8{ "==", "<>", "<=", ">=", "<", ">", "=~" };
         const t = p.peek();
         for (ops) |op| {
             if (p.acceptSym(op)) return .{ .tok = t, .text = op };
@@ -534,7 +651,7 @@ const Parser = struct {
     /// `a..b  a..<b  a>..b  a>..<b`
     fn range(p: *Parser) Error!*const Node {
         const l = try p.additive();
-        const ops = [_][]const u8{ "..", "..<", ">..", ">..<" };
+        const ops = [_][]const u8{ "..", "..<", ">..", ">..<", "+-" };
         const t = p.peek();
         for (ops) |op| {
             if (p.acceptSym(op)) return p.mk(.range, t, op, &.{ l, try p.additive() });
@@ -555,36 +672,33 @@ const Parser = struct {
     // Zig tip: `multiplicative` relies on the same Zig feature as `routine` above: see the tip
     // there.
     fn multiplicative(p: *Parser) Error!*const Node {
-        var l = try p.unary();
+        var l = try p.power();
         while (p.isSym("*") or p.isSym("/") or p.isSym("%") or p.isSym("&&") or p.isSym("><") or
             p.isSym("<<") or p.isSym(">>"))
         {
             const t = p.advance();
-            l = try p.mk(.bin, t, t.text, &.{ l, try p.unary() });
+            l = try p.mk(.bin, t, t.text, &.{ l, try p.power() });
         }
         return l;
     }
 
-    // Zig tip: `unary` relies on the same Zig feature as `routine` above: see the tip there.
+    // Zig tip: the unary minus is read before the power: `-2 ^ 2` is `(-2) ^ 2`, 4 (Q-030, the
+    // grammar of spec/syntax/grammar.md). `unary` calls itself for `- - x` and falls to `postfix`.
     fn unary(p: *Parser) Error!*const Node {
         if (p.isSym("-") or p.isSym("+")) {
             const t = p.advance();
             return p.mk(.un, t, t.text, &.{try p.unary()});
         }
-        if (p.isWord("new")) {
-            const t = p.advance();
-            return p.mk(.new, t, "", &.{try p.postfix()});
-        }
-        return p.power();
+        return p.postfix();
     }
 
-    // Zig tip: `power` relies on the same Zig feature as `routine` above: see the tip there.
-    /// `^` binds tighter than `*` and goes right to left: `2 ^ 3 ^ 2` is `2 ^ (3 ^ 2)`.
+    // Zig tip: `power` relies on the same Zig feature as `unary` above: see the tip there.
+    /// `^` goes right to left: `2 ^ 3 ^ 2` is `2 ^ (3 ^ 2)`.
     fn power(p: *Parser) Error!*const Node {
-        const l = try p.postfix();
+        const l = try p.unary();
         if (p.isSym("^")) {
             const t = p.advance();
-            return p.mk(.bin, t, "^", &.{ l, try p.unary() });
+            return p.mk(.bin, t, "^", &.{ l, try p.power() });
         }
         return l;
     }
@@ -649,6 +763,10 @@ const Parser = struct {
 
     // Zig tip: `conditional` relies on the same Zig feature as `routine` above: see the tip there.
     fn conditional(p: *Parser) Error!*const Node {
+        if (p.isSym("*") and !p.isSymAt(1, ")") and !p.isSymAt(1, ",")) { // `*list` spreads a list into the arguments
+            const star = p.advance();
+            return p.mk(.spread, star, "", &.{try p.expr()});
+        }
         if (p.isSym("@")) { // `@name` passes a variable by reference
             _ = p.advance();
             const name = try p.expectName("a variable name");
@@ -777,6 +895,9 @@ const Parser = struct {
                 } else if (p.isSym("$")) {
                     _ = p.advance();
                     return p.mk(.dollar, t, "", &.{});
+                } else if (p.isSym("?")) {
+                    _ = p.advance();
+                    return p.mk(.open_end, t, "", &.{});
                 } else return p.fail("unexpected '{s}' in an expression", .{t.text});
             },
             .eof => return p.fail("unexpected end of file in an expression", .{}),
@@ -823,13 +944,33 @@ const Parser = struct {
         return null;
     }
 
-    /// `let a, b := value :Type;`, `let x = y = 1 :Integer;`, `let a :Type;`, `let p, *rest :: n;`
+    /// `new a, b := value :Type;`, `new x = y = 1 :Integer;`, `new a :Type;`, `new p, *rest :: n;`,
+    /// `new e <- list;` and the constants `set A = 1;` (D-076).
     // Zig tip: `p.acceptSym(":=") or p.acceptSym("::")` relies on short-circuit evaluation: the
     // second call runs only if the first returned false, and each call moves the cursor only
     // when it matches, so the `or` reads "one of these two symbols".
     fn declaration(p: *Parser) Error!*const Node {
-        const kw = p.advance(); // let or set
+        const kw = p.advance(); // new or set
+        const tag: Tag = if (std.mem.eql(u8, kw.text, "new")) .var_decl else .set;
         var targets: std.ArrayList(*const Node) = .empty;
+        // `new (u, v, w) = 7;`: one value for several names
+        if (p.isSym("(")) {
+            _ = p.advance();
+            while (true) {
+                const name = try p.expectName("a variable name");
+                try targets.append(p.a, try p.mk(.name, name, name.text, &.{}));
+                if (!p.acceptSym(",")) break;
+            }
+            try p.expectSym(")");
+            const op = if (p.acceptSym("=")) "=" else if (p.acceptSym(":=")) ":=" else return p.fail("expected '=' or ':=' but found '{s}'", .{describe(p.peek())});
+            const value = try p.expr();
+            const decl = try p.mk(tag, kw, "=", &.{ try p.mk(.targets, kw, "", targets.items), value });
+            _ = op;
+            if (p.acceptSym(":")) decl.ty = try p.typeName();
+            return p.endSimple(decl);
+        }
+        // a list of items: names to bind (`x = 1, y = 2`) or patterns to deconstruct (`x, y, *rest :: a`)
+        var bindings: std.ArrayList(*const Node) = .empty;
         while (true) {
             if (p.isSym("*")) {
                 const s = p.advance();
@@ -844,43 +985,158 @@ const Parser = struct {
                     const attr = try p.expectName("an attribute name");
                     t = try p.mk(.field, dot, attr.text, &.{t});
                 }
-                try targets.append(p.a, t);
+                if (p.isSym("=") or p.isSym(":=")) {
+                    const op = p.advance();
+                    const value = try p.expr();
+                    try bindings.append(p.a, try p.mk(tag, kw, op.text, &.{ try p.mk(.targets, kw, "", &.{t}), value }));
+                } else try targets.append(p.a, t);
             }
             if (!p.acceptSym(",")) break;
+        }
+        if (bindings.items.len == 1 and targets.items.len > 0) {
+            // `new q, r := f();` the last name carries the operator: a pattern to deconstruct
+            const b = bindings.items[0];
+            try targets.append(p.a, b.kids[0].kids[0]);
+            const decl = try p.mk(tag, kw, b.text, &.{ try p.mk(.targets, kw, "", targets.items), b.kids[1] });
+            if (p.acceptSym(":")) decl.ty = try p.typeName();
+            return p.endSimple(decl);
+        }
+        if (bindings.items.len > 0) {
+            if (targets.items.len > 0) return p.fail("a name without a value in a list of bindings: expected '=' or ':='", .{});
+            const hint: ?*const Node = if (p.acceptSym(":")) try p.typeName() else null;
+            for (bindings.items) |b| @constCast(b).ty = hint;
+            try p.expectSym(";");
+            if (bindings.items.len == 1) return bindings.items[0];
+            return p.mk(.block, kw, "", bindings.items);
         }
         var op: []const u8 = "";
         var value: *const Node = p.noneNode();
         if (p.isSym(":=") or p.isSym("::")) {
             op = p.advance().text;
             value = try p.expr();
-        } else if (p.isSym("=")) {
+        } else if (p.isSym("<-") and targets.items.len == 1) {
+            // capture: the new variable takes the first element, the list loses it
             _ = p.advance();
-            op = "=";
-            value = try p.expr();
-            // `let x = y = 1`: every expression but the last is one more name
-            while (p.acceptSym("=")) {
-                if (value.tag != .name) return p.fail("expected a variable name before '='", .{});
-                try targets.append(p.a, value);
-                value = try p.expr();
-            }
+            const list = try p.expr();
+            return p.endSimple(try p.mk(.capture, kw, "<-", &.{ list, targets.items[0], p.noneNode() }));
         }
-        const tnode = try p.mk(.targets, kw, "", targets.items);
-        const decl = try p.mk(if (std.mem.eql(u8, kw.text, "let")) .let else .set, kw, op, &.{ tnode, value });
+        const decl = try p.mk(tag, kw, op, &.{ try p.mk(.targets, kw, "", targets.items), value });
         if (p.acceptSym(":")) decl.ty = try p.typeName();
         return p.endSimple(decl);
     }
 
-    // Zig tip: `loopTail` relies on the same Zig feature as `routine` above: see the tip there.
-    /// The common end of `while`, `for`: `block [else block] [then block] done ;`. Appends the
+    // Zig tip: a function can return early with `return` as soon as it knows the answer; here each
+    // `if` handles one shape of the `let` statement and leaves. In `let lst -> e;` the list is on
+    // the left and the target on the right; in `let e <- lst;` the target is on the left. For
+    // `let x +> lst;` the target is the list on the right: the node keeps source order, the
+    // interpreter knows which side is which (D-107).
+    /// `let target modifier expression;` changes a variable (D-076); `let lst -> e;` and `let e <- lst;`
+    /// capture an element and create `e` when it does not exist (D-104); `let lst -> new f;` says it.
+    fn letStatement(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        const first = try p.postfix();
+        if (p.isSym("->")) {
+            _ = p.advance();
+            const explicit_new = p.isWord("new");
+            if (explicit_new) _ = p.advance();
+            const target = try p.postfix();
+            return p.endSimple(try p.mk(.capture, kw, "->", &.{ first, target, if (explicit_new) p.noneNode() else first }));
+        }
+        if (p.isSym("<-")) {
+            _ = p.advance();
+            const list = try p.expr();
+            return p.endSimple(try p.mk(.capture, kw, "<-", &.{ list, first, first }));
+        }
+        const ops = [_][]const u8{ ":=", "::", "+=", "-=", "*=", "/=", "%=", "^=", "<+", "+>", "<<", ">>" };
+        for (ops) |op| {
+            if (p.isSym(op)) {
+                const at = p.advance();
+                return p.endSimple(try p.mk(.assign, at, op, &.{ first, try p.expr() }));
+            }
+        }
+        return p.fail("expected an assignment operator after 'let' but found '{s}'", .{describe(p.peek())});
+    }
+
+    // Zig tip: a loop with a label closes with `done label;` and a loop without one with `done;`
+    // (D-034). The label is kept in the text of the node so `break label` and `skip label` can find it.
+    /// The common end of `while`, `for`: `block [else block] [then block] done [label] ;`. Appends the
     /// body, else and then blocks (empty ones when absent) to `kids`.
-    fn loopTail(p: *Parser, kids: *std.ArrayList(*const Node)) Error!void {
+    fn loopTail(p: *Parser, kids: *std.ArrayList(*const Node), label: []const u8) Error!void {
         const at = p.peek();
         try kids.append(p.a, try p.block());
         const empty = try p.mk(.block, at, "", &.{});
         try kids.append(p.a, if (p.acceptWord("else")) try p.block() else empty);
         try kids.append(p.a, if (p.acceptWord("then")) try p.block() else empty);
         try p.expectWord("done");
+        try p.closeLabel(label);
+    }
+
+    // Zig tip: `closeLabel` checks the name after `done`: it must repeat the label of the block.
+    fn closeLabel(p: *Parser, label: []const u8) Error!void {
+        if (label.len > 0) {
+            const name = try p.expectName("the label");
+            if (!std.mem.eql(u8, name.text, label)) {
+                p.i -= 1;
+                return p.fail("'done {s}' does not match the label '{s}'", .{ name.text, label });
+            }
+        }
         try p.expectSym(";");
+    }
+
+    // Zig tip: `whileLoop`, `forLoop` and `loopBlock` are the three loops of D-074. Each one
+    // takes the label that was written before it (empty when there is none).
+    /// `while condition do ... done [label];`
+    fn whileLoop(p: *Parser, label: []const u8, header: []const *const Node) Error!*const Node {
+        const t = p.advance();
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.append(p.a, try p.mk(.block, t, "", header));
+        try kids.append(p.a, try p.expr());
+        try p.expectWord("do");
+        try p.loopTail(&kids, label);
+        return p.mk(.while_, t, label, kids.items);
+    }
+
+    /// `for pattern in expression do ... done [label];`
+    fn forLoop(p: *Parser, label: []const u8, header: []const *const Node) Error!*const Node {
+        const t = p.advance();
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.append(p.a, try p.postfix());
+        try p.expectWord("in");
+        try kids.append(p.a, try p.expr());
+        try p.expectWord("do");
+        try p.loopTail(&kids, label);
+        const loop = try p.mk(.for_, t, label, kids.items);
+        if (header.len == 0) return loop;
+        // the declarations of `loop ... for` run first, then the loop
+        var all: std.ArrayList(*const Node) = .empty;
+        try all.appendSlice(p.a, header);
+        try all.append(p.a, loop);
+        return p.mk(.block, t, "", all.items);
+    }
+
+    /// `[label:] loop declarations (while c do ... done | for p in e do ... done | do ... repeat [while c];)`.
+    fn loopBlock(p: *Parser, label: []const u8) Error!*const Node {
+        const t = p.advance(); // loop
+        var header: std.ArrayList(*const Node) = .empty;
+        while (!p.isWord("while") and !p.isWord("do") and !p.isWord("for")) {
+            if (p.peek().kind == .eof) return p.fail("expected 'while', 'for' or 'do' after the loop header", .{});
+            try header.append(p.a, try p.statement());
+        }
+        if (p.isWord("while")) return p.whileLoop(label, header.items);
+        if (p.isWord("for")) return p.forLoop(label, header.items);
+        _ = p.advance(); // do
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.append(p.a, try p.mk(.block, t, "", header.items));
+        try kids.append(p.a, try p.block());
+        if (!p.isWord("repeat")) return p.fail("a 'loop … do' block ends with 'repeat', found '{s}'", .{describe(p.peek())});
+        _ = p.advance();
+        if (label.len > 0 and p.peek().kind == .ident and !p.isWord("while")) {
+            const name = try p.expectName("the label");
+            if (!std.mem.eql(u8, name.text, label)) return p.failAt(name, "'repeat {s}' does not match the label '{s}'", .{ name.text, label });
+        }
+        if (p.acceptWord("while")) try kids.append(p.a, try p.expr());
+        try p.expectSym(";");
+        return p.mk(.repeat_, t, label, kids.items);
     }
 
     // Zig tip: `ifStatement` relies on the same Zig feature as `routine` above: see the tip there.
@@ -908,26 +1164,32 @@ const Parser = struct {
 
     // Zig tip: `matchStatement` relies on the same Zig feature as `routine` above: see the tip
     // there.
-    fn matchStatement(p: *Parser) Error!*const Node {
+    fn matchStatement(p: *Parser, label: []const u8) Error!*const Node {
         const kw = p.peek();
         try p.expectWord("match");
         const subject = try p.expr();
+        // `one` (the default) stops at the first match, `all` tries every `when`
+        const mode: []const u8 = if (p.acceptWord("one")) "one" else if (p.acceptWord("all")) "all" else "one";
         if (!p.isWord("when")) return p.fail("expected 'when' but found '{s}'", .{describe(p.peek())});
         var whens: std.ArrayList(*const Node) = .empty;
         while (p.isWord("when")) {
             const w = p.advance();
-            const pat = try p.expr();
+            var pats: std.ArrayList(*const Node) = .empty;
+            while (true) {
+                try pats.append(p.a, try p.expr());
+                if (!p.acceptSym(",")) break;
+            }
             try p.expectWord("do");
-            try whens.append(p.a, try p.mk(.when, w, "", &.{ pat, try p.block() }));
+            try whens.append(p.a, try p.mk(.when, w, "", &.{ try p.mk(.list, w, "", pats.items), try p.block() }));
         }
         const then = if (p.acceptWord("then")) try p.block() else try p.mk(.block, kw, "", &.{});
         try p.expectWord("done");
-        try p.expectSym(";");
+        try p.closeLabel(label);
         var kids: std.ArrayList(*const Node) = .empty;
         try kids.append(p.a, subject);
         try kids.append(p.a, then);
         try kids.appendSlice(p.a, whens.items);
-        return p.mk(.match_, kw, "", kids.items);
+        return p.mk(.match_, kw, try std.fmt.allocPrint(p.a, "{s}:{s}", .{ mode, label }), kids.items);
     }
 
     // Zig tip: `std.mem.eql(u8, w, "let")` is how Zig compares text. A chain of `if` with early
@@ -938,56 +1200,24 @@ const Parser = struct {
         const t = p.peek();
         if (t.kind == .ident) {
             const w = t.text;
-            if (std.mem.eql(u8, w, "let") or std.mem.eql(u8, w, "set")) return p.declaration();
+            if (std.mem.eql(u8, w, "new") or std.mem.eql(u8, w, "set")) return p.declaration();
+            if (std.mem.eql(u8, w, "let")) return p.letStatement();
+            if (std.mem.eql(u8, w, "defer")) {
+                _ = p.advance();
+                return p.mk(.defer_stmt, t, "", &.{try p.statement()});
+            }
             if (std.mem.eql(u8, w, "if")) return p.ifStatement();
-            if (std.mem.eql(u8, w, "match")) return p.matchStatement();
-            if (std.mem.eql(u8, w, "while")) {
+            if (std.mem.eql(u8, w, "match")) return p.matchStatement("");
+            if (std.mem.eql(u8, w, "while")) return p.whileLoop("", &.{});
+            if (std.mem.eql(u8, w, "loop")) return p.loopBlock("");
+            if (std.mem.eql(u8, w, "for")) return p.forLoop("", &.{});
+            if (!reserved.has(w) and p.isSymAt(1, ":") and (p.isWordAt(2, "loop") or p.isWordAt(2, "match") or p.isWordAt(2, "while") or p.isWordAt(2, "for"))) {
                 _ = p.advance();
-                var kids: std.ArrayList(*const Node) = .empty;
-                try kids.append(p.a, try p.mk(.block, t, "", &.{}));
-                try kids.append(p.a, try p.expr());
-                try p.expectWord("do");
-                try p.loopTail(&kids);
-                return p.mk(.while_, t, "", kids.items);
-            }
-            if (std.mem.eql(u8, w, "loop")) {
                 _ = p.advance();
-                var header: std.ArrayList(*const Node) = .empty;
-                while (!p.isWord("while") and !p.isWord("do")) {
-                    if (p.peek().kind == .eof) return p.fail("expected 'while' or 'do' after the loop header", .{});
-                    try header.append(p.a, try p.statement());
-                }
-                // Zig tip: an `if` block that ends in `return` is an early exit: the code after it
-                // runs only for the other form, so no `else` is needed. Here `do` picks the loop
-                // tested at the end, `loop … do … repeat [while c];` (D-074); `while` picks the
-                // loop tested at the start.
-                if (p.acceptWord("do")) {
-                    var kids: std.ArrayList(*const Node) = .empty;
-                    try kids.append(p.a, try p.mk(.block, t, "", header.items));
-                    try kids.append(p.a, try p.block());
-                    if (!p.isWord("repeat")) return p.fail("a 'loop … do' block ends with 'repeat', found '{s}'", .{describe(p.peek())});
-                    _ = p.advance();
-                    if (p.acceptWord("while")) try kids.append(p.a, try p.expr());
-                    try p.expectSym(";");
-                    return p.mk(.repeat_, t, "", kids.items);
-                }
-                _ = p.advance();
-                var kids: std.ArrayList(*const Node) = .empty;
-                try kids.append(p.a, try p.mk(.block, t, "", header.items));
-                try kids.append(p.a, try p.expr());
-                try p.expectWord("do");
-                try p.loopTail(&kids);
-                return p.mk(.while_, t, "", kids.items);
-            }
-            if (std.mem.eql(u8, w, "for")) {
-                _ = p.advance();
-                var kids: std.ArrayList(*const Node) = .empty;
-                try kids.append(p.a, try p.postfix());
-                try p.expectWord("in");
-                try kids.append(p.a, try p.expr());
-                try p.expectWord("do");
-                try p.loopTail(&kids);
-                return p.mk(.for_, t, "", kids.items);
+                if (p.isWord("loop")) return p.loopBlock(w);
+                if (p.isWord("match")) return p.matchStatement(w);
+                if (p.isWord("while")) return p.whileLoop(w, &.{});
+                return p.forLoop(w, &.{});
             }
             if (!reserved.has(w) and p.isSymAt(1, ":") and p.isWordAt(2, "job")) {
                 _ = p.advance();
@@ -1004,10 +1234,17 @@ const Parser = struct {
                 try p.expectSym(";");
                 return p.mk(.job, t, w, &.{body});
             }
+            if (std.mem.eql(u8, w, "break") or std.mem.eql(u8, w, "skip")) {
+                _ = p.advance();
+                var label: []const u8 = "";
+                if (p.peek().kind == .ident and !reserved.has(p.peek().text)) label = p.advance().text;
+                return p.endSimple(try p.mk(if (std.mem.eql(u8, w, "break")) .break_stmt else .skip_stmt, t, label, &.{}));
+            }
             inline for (.{
-                .{ "break", Tag.break_stmt },
-                .{ "skip", Tag.skip_stmt },
                 .{ "over", Tag.over_stmt },
+                .{ "exit", Tag.exit_stmt },
+                .{ "stop", Tag.stop_stmt },
+                .{ "pass", Tag.pass_stmt },
                 .{ "panic", Tag.panic_stmt },
                 .{ "retry", Tag.retry_stmt },
                 .{ "resume", Tag.resume_stmt },
@@ -1022,12 +1259,19 @@ const Parser = struct {
                 .{ "print", Tag.print_stmt },
                 .{ "write", Tag.write_stmt },
                 .{ "expect", Tag.expect_stmt },
+                .{ "assert", Tag.assert_stmt },
                 .{ "raise", Tag.raise_stmt },
             }) |pair| {
                 if (std.mem.eql(u8, w, pair[0])) {
                     _ = p.advance();
                     if (!p.isSym(";") and !p.isWord("if")) {
-                        return p.endSimple(try p.mk(pair[1], t, "", &.{try p.expr()}));
+                        // `print a, b;`: the arguments, separated by commas, become one list
+                        const first = try p.printArg();
+                        if (!p.isSym(",")) return p.endSimple(try p.mk(pair[1], t, "", &.{first}));
+                        var args: std.ArrayList(*const Node) = .empty;
+                        try args.append(p.a, first);
+                        while (p.acceptSym(",")) try args.append(p.a, try p.printArg());
+                        return p.endSimple(try p.mk(pair[1], t, "", &.{try p.mk(.list, t, "", args.items)}));
                     }
                     return p.endSimple(try p.mk(pair[1], t, "", &.{}));
                 }
@@ -1037,9 +1281,11 @@ const Parser = struct {
             }
         }
         const e = try p.expr();
-        if (p.assignOp()) |op| {
-            const at = p.advance();
-            return p.endSimple(try p.mk(.assign, at, op, &.{ e, try p.expr() }));
+        if (p.assignOp() != null or p.isSym("=")) {
+            return p.fail("a change of a variable is written with 'let': let x {s} ...", .{p.peek().text});
+        }
+        if (e.tag == .bin and (std.mem.eql(u8, e.text, "<+") or std.mem.eql(u8, e.text, "+>") or std.mem.eql(u8, e.text, "<-") or std.mem.eql(u8, e.text, "->"))) {
+            return p.failAt(t, "a list modifier is a statement with 'let': let a {s} b;", .{e.text});
         }
         return p.endSimple(try p.mk(.expr_stmt, t, "", &.{e}));
     }
@@ -1051,13 +1297,14 @@ const Parser = struct {
         const kw = p.peek();
         try p.expectWord("process");
         const name = try p.expectName("a process name");
+        const prm = if (p.isSym("(")) try p.params() else try p.mk(.params, kw, "", &.{});
         try p.expectWord("is");
         const body = try p.block();
         const recover = if (p.acceptWord("recover")) try p.block() else p.noneNode();
         const finalize = if (p.acceptWord("finalize")) try p.block() else p.noneNode();
         try p.expectWord("return");
         try p.expectSym(";");
-        return p.mk(.process, kw, name.text, &.{ body, recover, finalize });
+        return p.mk(.process, kw, name.text, &.{ body, recover, finalize, prm });
     }
 
     // Zig tip: `class` relies on the same Zig feature as `routine` above: see the tip there.
@@ -1092,13 +1339,19 @@ const Parser = struct {
         if (p.acceptSym(";")) return p.mk(.class, kw, name.text, kids.items);
         try p.expectWord("is");
         while (!p.isWord("end")) {
-            if (p.isWord("constructor")) {
+            const public = p.acceptWord("public");
+            if (!public and (p.isWord("private") or p.isWord("protected"))) _ = p.advance();
+            const first_member = kids.items.len;
+            if (p.isWord("procedure")) {
+                return p.fail("a class hosts functions and methods, not procedures (D-103)", .{});
+            } else if (p.isWord("constructor")) {
                 try kids.append(p.a, try p.routine(.constructor));
             } else if (p.isWord("method")) {
                 try kids.append(p.a, try p.routine(.method));
             } else if (p.isWord("function")) {
                 try kids.append(p.a, try p.routine(.function));
             } else return p.fail("unexpected '{s}' in the class, expected a constructor or a method", .{describe(p.peek())});
+            if (public) @constCast(kids.items[first_member]).public = true;
         }
         try p.expectWord("end");
         const end_name = try p.expectName("the class name");
@@ -1113,9 +1366,10 @@ const Parser = struct {
     // Zig tip: `declarationInDriver` relies on the same Zig feature as `peek` above: see the tip
     // there.
     fn declarationInDriver(p: *Parser) Error!*const Node {
-        if (p.isWord("let") or p.isWord("set")) return p.declaration();
+        if (p.isWord("new") or p.isWord("set")) return p.declaration();
         if (p.isWord("class")) return p.class();
         if (p.isWord("function")) return p.routine(.function);
+        if (p.isWord("procedure")) return p.routine(.procedure);
         if (p.isWord("method")) return p.routine(.method);
         if (p.isWord("process")) return p.process();
         return p.fail("unexpected '{s}' in the driver, expected a declaration or 'end'", .{describe(p.peek())});
@@ -1163,7 +1417,9 @@ const Parser = struct {
 pub fn parse(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error!*const Node {
     const toks = try lexer.tokenize(arena, src, diag);
     var p: Parser = .{ .toks = toks, .diag = diag, .a = arena };
-    return p.script();
+    const tree = try p.script();
+    try checker.check(arena, tree, diag);
+    return tree;
 }
 
 // Zig tip: `std.heap.ArenaAllocator.init(gpa)` makes an arena on top of another allocator;
@@ -1216,8 +1472,8 @@ test "a free script and expressions parse" {
     try check(std.testing.allocator,
         \\#!/usr/bin/env eve
         \\print "Hello";
-        \\let a := 2 ^ 3 ^ 2;
-        \\a += (1, 2, 3)[$ - 1];
+        \\new a := 2 ^ 3 ^ 2;
+        \\let a += (1, 2, 3)[$ - 1];
         \\expect (x | x in (1..5)) == (1, 2, 3, 4, 5);
     , &d);
 }

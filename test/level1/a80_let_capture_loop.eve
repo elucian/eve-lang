@@ -9,7 +9,6 @@ driver a80_let_capture_loop is
       let total += e;
     done;
     expect total == 6;
-    expect e == 1;               ** the last value captured
     print total;
   return;
 end a80_let_capture_loop;

@@ -128,8 +128,11 @@ const Lexer = struct {
         return .{ .kind = kind, .text = lx.src[start..lx.pos], .line = line, .col = column };
     }
 
+    // Zig tip: a `bool` function can be used directly as a loop or `if` condition. The digit
+    // separator `_` is not accepted in a number (Q-013, D-095), so `1_000` lexes as the number
+    // `1` followed by the name `_000`, which the parser then refuses.
     fn digits(lx: *Lexer) void {
-        while (std.ascii.isDigit(lx.at(0)) or lx.at(0) == '_') lx.pos += 1;
+        while (std.ascii.isDigit(lx.at(0))) lx.pos += 1;
     }
 
     // Zig tip: a number is lexed by looking at the next bytes without consuming them (`at(1)`).
@@ -138,13 +141,26 @@ const Lexer = struct {
     fn number(lx: *Lexer) void {
         if (lx.at(0) == '0' and (lx.at(1) == 'x' or lx.at(1) == 'b')) {
             lx.pos += 2;
-            while (std.ascii.isAlphanumeric(lx.at(0)) or lx.at(0) == '_') lx.pos += 1;
+            while (std.ascii.isAlphanumeric(lx.at(0))) lx.pos += 1;
             return;
         }
         lx.digits();
         if (lx.at(0) == '.' and std.ascii.isDigit(lx.at(1))) {
             lx.pos += 1;
             lx.digits();
+        }
+        // a type suffix right after the digits (D-080): `12.50d`, `255b`, `42n`, `1.5f`, `5r`, `11w`, `7z`
+        if (std.mem.indexOfScalar(u8, "drfbwnz", lx.at(0)) != null and !isIdentChar(lx.at(1))) {
+            lx.pos += 1;
+            return;
+        }
+        // exponent (D-095): `e` or `E`, an optional sign, digits: `1.5e3`, `2e-3`
+        if (lx.at(0) == 'e' or lx.at(0) == 'E') {
+            const sign: usize = if (lx.at(1) == '+' or lx.at(1) == '-') 1 else 0;
+            if (std.ascii.isDigit(lx.at(1 + sign))) {
+                lx.pos += 1 + sign;
+                lx.digits();
+            }
         }
     }
 
@@ -200,7 +216,7 @@ const Lexer = struct {
     // `>..` and `..`. `inline`-free: the table is an ordinary array evaluated at run time.
     const operators = [_][]const u8{
         ">..<", "..<", ">..", ":=", "::", "+=", "-=", "*=", "/=", "%=", "^=", "==", "<>", "<=", ">=",
-        "=>",   "<:",  "<+",  "<-", "->", "=~", "!~", "..", "||", "&&", "<<", ">>", "><",
+        "=>",   "<:",  "<+",  "+>", "+-", "<-", "->", "=~", "..", "||", "&&", "<<", ">>", "><",
     };
 
     // Zig tip: `std.ascii.isDigit` and friends test one byte. `'a'` in single quotes is a byte
@@ -223,6 +239,8 @@ const Lexer = struct {
         if (isIdentStart(c) or (c == '$' and isIdentStart(lx.at(1)))) {
             lx.pos += 1;
             while (isIdentChar(lx.at(0))) lx.pos += 1;
+            // a name may end with `!`: a function or method that is not deterministic (D-087)
+            if (lx.at(0) == '!' and lx.at(1) != '=' and lx.at(1) != '~') lx.pos += 1;
             return lx.token(.ident, start, line, column);
         }
         if (std.ascii.isDigit(c)) {
@@ -231,6 +249,11 @@ const Lexer = struct {
         }
         if (c == '"') {
             try lx.string(line, column);
+            // a string followed at once by a type suffix is a number: `"1,000,000"z`, `"12,500.75"d`
+            if ((lx.at(0) == 'z' or lx.at(0) == 'd') and !isIdentChar(lx.at(1))) {
+                lx.pos += 1;
+                return lx.token(.number, start, line, column);
+            }
             return lx.token(.string, start, line, column);
         }
         if (c == '\'') {

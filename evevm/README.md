@@ -3,7 +3,7 @@
 The first Eve implementation (D-006, D-007 in `../plan/decision_level1.md`): a virtual machine written in Zig that runs Eve scripts. It builds `bin/eve.exe` at the repo root, the official `eve`
 command. Manual: [`../manual/README.md`](../manual/README.md).
 
-Version: **0.0.1**. Status: skeleton. `eve --version` and `eve --help` work; running a script is not implemented yet.
+Version: **0.0.1**. Status: level 1 passes (82 of 82 tests of `test/level1/`, 2026-10-07): lexer, parser, a static check (`check.zig`, D-110) and a tree-walking interpreter. Levels 2 to 7 are not implemented.
 
 ## Build
 
@@ -22,6 +22,9 @@ Requires Zig 0.16.0 (`winget install zig.zig`). Run from this folder:
 | Path | Contents |
 |---|---|
 | `build.zig`, `build.zig.zon` | build script and package manifest |
+| `src/lexer.zig`, `src/parser.zig`, `src/ast.zig` | tokens, syntax tree, the grammar of `spec/syntax/grammar.md` |
+| `src/check.zig` | the static check before the run: names, scopes, procedures, parameter order, private methods |
+| `src/interp.zig` | the tree-walking interpreter |
 | `src/doc.zig` | the `doc` command: Markdown documentation of `.eve` files |
 | `src/root.zig` | the VM library module (`evevm`): lexer, parser, interpreter as they land |
 | `src/main.zig` | the `eve` command line, a thin front end over the library |

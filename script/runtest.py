@@ -287,7 +287,7 @@ def run_test(eve, test, timeout):
             got = f.read()
         if norm(got) != norm("\n".join(want) if isinstance(want, list) else want):
             problems.append(f"file differs: {name}")
-    if "stdout" not in exp and not exp.get("contains") and prints_output(test):
+    if "stdout" not in exp and not exp.get("contains") and not exp.get("syntax_error") and prints_output(test):
         problems.append("no expected output declared (/*@expect*/ block or expect.json; the test prints)")
     res["verdict"] = "FAIL" if problems else "PASS"
     res["reason"] = "; ".join(problems)

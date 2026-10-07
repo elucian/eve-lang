@@ -15,7 +15,7 @@ const Node = ast.Node;
 // helpers) must name their error set: Zig cannot infer it for a cycle. The first names are
 // control flow, the last two are the failures of the allocator and of the output writer.
 /// What interrupts the normal flow of a script.
-pub const Signal = error{ Raise, Break, Skip, Over, Panic, Retry, Resume, Abort, Stop, OutOfMemory, WriteFailed };
+pub const Signal = error{ Raise, Break, Skip, Over, Exit, StopJob, Panic, Retry, Resume, Abort, Stop, OutOfMemory, WriteFailed };
 
 // Zig tip: a `union(enum)` is a "tagged union": a value that is exactly one of several kinds, and
 // remembers which. `switch (v)` must handle every kind. `.int => |n|` captures the payload. Kinds
@@ -30,7 +30,12 @@ pub const Value = union(enum) {
     int: i64,
     /// Natural: written in hexadecimal or binary.
     nat: i64,
+    byte: i64,
+    short: i64,
+    huge: i64,
     real: f64,
+    float: f64,
+    dec: f64,
     /// A Symbol: one Unicode code point.
     sym: u21,
     str: []const u8,
@@ -43,6 +48,7 @@ pub const Value = union(enum) {
     class: *Class,
     func: *Func,
     range: *Range,
+    domain: *Domain,
     /// The value of `Integer`, `String`, ... and of `type(x)`.
     typ: []const u8,
 };
@@ -81,6 +87,7 @@ pub const Class = struct {
     name: []const u8,
     node: ?*const Node = null,
     ordinal: bool = false,
+    parent: ?*Class = null,
     ord: std.ArrayList(Field) = .empty,
 };
 
@@ -88,7 +95,13 @@ pub const Class = struct {
 pub const Func = struct { node: *const Node, closure: *Scope };
 
 /// An integer range with both ends included; `(1..<5)` is stored as 1 to 4.
-pub const Range = struct { lo: i64, hi: i64, step: i64 = 1 };
+pub const Range = struct { lo: i64, hi: i64, step: i64 = 1, sym: bool = false };
+
+// Zig tip: a range that is not a plain run of integers is a "domain": real limits, an open end
+// (`null` is no limit), a limit that is excluded, a step that sets the precision (`(0..1)(0.01)`).
+// An optional `?f64` is a float or nothing.
+/// A domain of values (D-022, D-079): `x in domain` asks whether the value is inside.
+pub const Domain = struct { lo: ?f64 = null, hi: ?f64 = null, lo_excl: bool = false, hi_excl: bool = false, step: ?f64 = null };
 
 /// A variable. It is a separate struct so that a by-reference parameter can share it.
 pub const Var = struct { value: Value, constant: bool = false };
@@ -140,6 +153,11 @@ pub const Outcome = struct {
 
 const err_raise = 4;
 const err_expect = 2;
+const err_assert = 3;
+const err_index = 10;
+const err_key = 11;
+const err_divide = 12;
+const err_overflow = 13;
 
 const Arg = struct { name: []const u8 = "", value: Value, ref: ?*Var = null };
 
@@ -156,11 +174,21 @@ pub const Interp = struct {
     /// `$` inside an index: the last index of the dimension being indexed.
     dollar: i64 = 0,
     current_job: []const u8 = "",
+    /// The label named by the `break` or `skip` that is unwinding; empty for the innermost loop.
+    jump_label: []const u8 = "",
     reports: std.ArrayList(Report) = .empty,
     /// The error being handled (`$error`).
     err_code: u8 = err_raise,
     /// The scope of the last process that ran: kept so the introspection can list its variables.
     proc_scope: ?*Scope = null,
+    /// The start addresses of the strings made by text literals: `type(x)` says Text for them.
+    text_ptrs: std.ArrayList([*]const u8) = .empty,
+    /// The command-line arguments after the script name: the arguments of `process main`.
+    script_args: []const []const u8 = &.{},
+    /// The extension methods declared outside a class (D-040).
+    exts: std.ArrayList(*const Node) = .empty,
+    /// The `defer` statements registered and not yet run, oldest first (D-081).
+    defers: std.ArrayList(*const Node) = .empty,
 
     // Zig tip: `init` builds the struct and `boot` fills the global scope. They are two steps
     // because the scope must live at a stable address (`a.create` gives a pointer that stays valid)
@@ -179,9 +207,22 @@ pub const Interp = struct {
         try it.define("True", .{ .bool = true }, true);
         try it.define("False", .{ .bool = false }, true);
         try it.define("Null", .nil, true);
+        try it.define("null", .nil, true);
+        try it.define("nil", .{ .sym = 0 }, true);
+        try it.define("$epsilon", .{ .real = 1e-9 }, false);
         try it.define("_", .nil, false);
-        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "String", "Logic", "List", "Array", "DataSet", "HashMap" };
+        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal" };
         for (types) |t| try it.define(t, .{ .typ = t }, true);
+        const codes = [_]struct { []const u8, i64 }{
+            .{ "$err_panic", 1 },     .{ "$err_expect", 2 },    .{ "$err_assert", 3 },   .{ "$err_raise", 4 },
+            .{ "$err_index", 10 },    .{ "$err_key", 11 },      .{ "$err_divide", 12 }, .{ "$err_overflow", 13 },
+            .{ "$err_convert", 14 },  .{ "$err_parse", 15 },    .{ "$err_null", 16 },   .{ "$err_argument", 17 },
+            .{ "$err_file", 20 },     .{ "$err_access", 21 },   .{ "$err_io", 22 },     .{ "$err_module", 30 },
+            .{ "$err_process", 31 },  .{ "$err_memory", 40 },   .{ "$err_timeout", 41 }, .{ "$err_deadlock", 42 },
+            .{ "$err_output", 43 },   .{ "$err_recursion", 44 }, .{ "$err_parallel", 45 },
+            .{ "$wrn_deprecated", 5 }, .{ "$wrn_truncate", 6 }, .{ "$wrn_unused", 7 },
+        };
+        for (codes) |c| try it.define(c[0], .{ .int = c[1] }, true);
         const object = try it.a.create(Class);
         object.* = .{ .name = "Object" };
         try it.define("Object", .{ .class = object }, true);
@@ -271,8 +312,13 @@ pub const Interp = struct {
             .bool => "Logic",
             .int => "Integer",
             .nat => "Natural",
+            .byte => "Byte",
+            .short => "Short",
+            .huge => "Huge",
             .real => "Real",
-            .sym => "Symbol",
+            .float => "Float",
+            .dec => "Decimal",
+            .sym => "Rune",
             .str => "String",
             .list => |l| if (l.array) "Array" else "List",
             .set => "DataSet",
@@ -280,20 +326,20 @@ pub const Interp = struct {
             .object => |o| if (o.class) |c| c.name else "Object",
             .class => "Class",
             .func => "Function",
-            .range => "Range",
+            .range, .domain => "Range",
             .typ => "Type",
         };
     }
 
     // Zig tip: `isInt` relies on the same Zig feature as `fail` above: see the tip there.
     fn isInt(v: Value) bool {
-        return v == .int or v == .nat;
+        return v == .int or v == .nat or v == .byte or v == .short or v == .huge;
     }
 
     // Zig tip: `intOf` relies on the same Zig feature as `typeName` above: see the tip there.
     fn intOf(v: Value) i64 {
         return switch (v) {
-            .int, .nat => |n| n,
+            .int, .nat, .byte, .short, .huge => |n| n,
             else => 0,
         };
     }
@@ -302,8 +348,8 @@ pub const Interp = struct {
     // (`@intCast`, `@as`) and `@min`/`@max`.
     fn realOf(v: Value) ?f64 {
         return switch (v) {
-            .int, .nat => |n| @floatFromInt(n),
-            .real => |r| r,
+            .int, .nat, .byte, .short, .huge => |n| @floatFromInt(n),
+            .real, .float, .dec => |r| r,
             else => null,
         };
     }
@@ -366,6 +412,7 @@ pub const Interp = struct {
             .class => |x| return b == .class and b.class == x,
             .func => |x| return b == .func and b.func == x,
             .range => |x| return b == .range and x.lo == b.range.lo and x.hi == b.range.hi and x.step == b.range.step,
+            .domain => |x| return b == .domain and std.meta.eql(x.*, b.domain.*),
             .typ => |x| return b == .typ and std.mem.eql(u8, x, b.typ),
             else => return false,
         }
@@ -443,10 +490,12 @@ pub const Interp = struct {
                 return false;
             },
             .range => |r| {
+                if (r.sym) return v == .sym and v.sym >= r.lo and v.sym <= r.hi;
                 if (!isInt(v)) return false;
                 const n = intOf(v);
-                return n >= r.lo and n <= r.hi and @mod(n - r.lo, r.step) == 0;
+                return n >= r.lo and n <= r.hi and @mod(n, r.step) == 0;
             },
+            .domain => |d| return if (realOf(v)) |x| inDomain(d, x) else false,
             .str => |s| return v == .str and std.mem.indexOf(u8, s, v.str) != null,
             else => return it.fail("'in' needs a collection, found {s}", .{typeName(coll)}),
         }
@@ -501,8 +550,8 @@ pub const Interp = struct {
         switch (v) {
             .nil => try buf.appendSlice(it.a, "Null"),
             .bool => |b| try buf.appendSlice(it.a, if (b) "True" else "False"),
-            .int, .nat => |n| try it.appendFmt(buf, "{d}", .{n}),
-            .real => |r| try it.appendFmt(buf, "{d}", .{r}),
+            .int, .nat, .byte, .short, .huge => |n| try it.appendFmt(buf, "{d}", .{n}),
+            .real, .float, .dec => |r| try it.appendFmt(buf, "{d}", .{r}),
             .sym => |c| {
                 if (quoted) try buf.append(it.a, '\'');
                 try it.utf8(buf, c);
@@ -545,6 +594,7 @@ pub const Interp = struct {
             .class => |c| try it.appendFmt(buf, "class {s}", .{c.name}),
             .func => try buf.appendSlice(it.a, "<function>"),
             .range => |r| try it.appendFmt(buf, "({d}..{d})", .{ r.lo, r.hi }),
+            .domain => try buf.appendSlice(it.a, "(domain)"),
             .typ => |t| try buf.appendSlice(it.a, t),
         }
     }
@@ -679,18 +729,47 @@ pub const Interp = struct {
     fn number(it: *Interp, n: *const Node) Signal!Value {
         var buf: [64]u8 = undefined;
         var len: usize = 0;
-        for (n.text) |c| {
-            if (c == '_' or len == buf.len) continue;
+        var digits_text = n.text;
+        var suffix: u8 = 0;
+        if (digits_text.len > 1 and digits_text[0] == '"') {
+            // a number written as a string with a type suffix: `"1,000,000"z`, `"12,500.75"d`
+            suffix = digits_text[digits_text.len - 1];
+            digits_text = digits_text[1 .. digits_text.len - 2];
+        } else if (digits_text.len > 1 and std.ascii.isAlphabetic(digits_text[digits_text.len - 1]) and !(digits_text.len > 2 and digits_text[0] == '0' and digits_text[1] == 'x')) {
+            const last = digits_text[digits_text.len - 1];
+            if (std.mem.indexOfScalar(u8, "drfbwnz", last) != null) {
+                suffix = last;
+                digits_text = digits_text[0 .. digits_text.len - 1];
+            }
+        }
+        for (digits_text) |c| {
+            if (c == ',' or len == buf.len) continue;
             buf[len] = c;
             len += 1;
         }
         const t = buf[0..len];
-        if (std.mem.indexOfScalar(u8, t, '.') != null) {
-            return .{ .real = std.fmt.parseFloat(f64, t) catch return it.fail("bad number {s}", .{n.text}) };
+        const is_float = std.mem.indexOfScalar(u8, t, '.') != null or ((std.mem.indexOfAny(u8, t, "eE") != null) and !(t.len > 1 and t[0] == '0' and t[1] == 'x'));
+        if (is_float) {
+            const x = std.fmt.parseFloat(f64, t) catch return it.fail("bad number {s}", .{n.text});
+            return switch (suffix) {
+                'd' => .{ .dec = x },
+                'f' => .{ .float = x },
+                else => .{ .real = x },
+            };
         }
         const v = std.fmt.parseInt(i64, t, 0) catch {
             return .{ .real = std.fmt.parseFloat(f64, t) catch return it.fail("bad number {s}", .{n.text}) };
         };
+        switch (suffix) {
+            'd' => return .{ .dec = @floatFromInt(v) },
+            'r' => return .{ .real = @floatFromInt(v) },
+            'f' => return .{ .float = @floatFromInt(v) },
+            'b' => return .{ .byte = v },
+            'w' => return .{ .short = v },
+            'n' => return .{ .nat = v },
+            'z' => return .{ .huge = v },
+            else => {},
+        }
         if (t.len > 1 and t[0] == '0' and (t[1] == 'x' or t[1] == 'b')) return .{ .nat = v };
         return .{ .int = v };
     }
@@ -698,6 +777,7 @@ pub const Interp = struct {
     // Zig tip: `symbolOf` relies on the same Zig feature as `utf8` above: see the tip there.
     /// The code point of the UTF-8 text of a symbol node.
     fn symbolOf(t: []const u8) u21 {
+        if (t.len == 0) return 0; // the empty rune, nil
         return std.unicode.utf8Decode(t) catch 0xFFFD;
     }
 
@@ -706,6 +786,10 @@ pub const Interp = struct {
         switch (n.tag) {
             .num => return it.number(n),
             .str => return .{ .str = n.text },
+            .text_lit => {
+                try it.text_ptrs.append(it.a, n.text.ptr);
+                return .{ .str = n.text };
+            },
             .interp => return it.interpolate(n),
             .chr => return .{ .sym = symbolOf(n.text) },
             .name => return it.lookup(n.text),
@@ -729,7 +813,6 @@ pub const Interp = struct {
             .field => return it.field(n),
             .index => return it.index(n),
             .call => return it.call(n),
-            .new => return it.construct(n),
             .lambda => {
                 const f = try it.a.create(Func);
                 f.* = .{ .node = n, .closure = it.scope };
@@ -746,24 +829,57 @@ pub const Interp = struct {
         if (std.mem.eql(u8, op, "not")) return .{ .bool = !(try it.truth(v)) };
         if (std.mem.eql(u8, op, "+")) return v;
         return switch (v) {
-            .int => |x| .{ .int = -x },
-            .nat => |x| .{ .int = -x },
-            .real => |x| .{ .real = -x },
+            .int, .nat, .byte, .short => |x| .{ .int = -x },
+            .huge => |x| .{ .huge = -x },
+            .real, .float, .dec => |x| .{ .real = -x },
             else => it.fail("cannot negate {s}", .{typeName(v)}),
         };
     }
 
     // Zig tip: `makeRange` relies on the same Zig feature as `define` above: see the tip there.
     fn makeRange(it: *Interp, n: *const Node) Signal!Value {
-        const lo = try it.eval(n.kids[0]);
-        const hi = try it.eval(n.kids[1]);
-        if (!isInt(lo) or !isInt(hi)) return it.fail("a range needs integers, found {s} and {s}", .{ typeName(lo), typeName(hi) });
-        const r = try it.a.create(Range);
-        r.* = .{
-            .lo = intOf(lo) + @as(i64, if (n.text[0] == '>') 1 else 0),
-            .hi = intOf(hi) - @as(i64, if (n.text[n.text.len - 1] == '<') 1 else 0),
-        };
-        return .{ .range = r };
+        const open_lo = n.kids[0].tag == .open_end;
+        const open_hi = n.kids[1].tag == .open_end;
+        const lo = if (open_lo) Value.nil else try it.eval(n.kids[0]);
+        const hi = if (open_hi) Value.nil else try it.eval(n.kids[1]);
+        if (std.mem.eql(u8, n.text, "+-")) {
+            const c = realOf(lo) orelse return it.fail("+- needs numbers", .{});
+            const t = realOf(hi) orelse return it.fail("+- needs numbers", .{});
+            const dm = try it.a.create(Domain);
+            dm.* = .{ .lo = c - t, .hi = c + t };
+            return .{ .domain = dm };
+        }
+        const excl_lo = n.text[0] == '>';
+        const excl_hi = n.text[n.text.len - 1] == '<';
+        if (!open_lo and !open_hi and isInt(lo) and isInt(hi)) {
+            const r = try it.a.create(Range);
+            r.* = .{ .lo = intOf(lo) + @as(i64, if (excl_lo) 1 else 0), .hi = intOf(hi) - @as(i64, if (excl_hi) 1 else 0) };
+            return .{ .range = r };
+        }
+        if (lo == .sym and hi == .sym) {
+            const r = try it.a.create(Range);
+            r.* = .{ .lo = lo.sym + @as(i64, if (excl_lo) 1 else 0), .hi = hi.sym - @as(i64, if (excl_hi) 1 else 0), .sym = true };
+            return .{ .range = r };
+        }
+        if ((!open_lo and realOf(lo) == null) or (!open_hi and realOf(hi) == null)) {
+            return it.fail("a range needs numbers or symbols, found {s} and {s}", .{ typeName(lo), typeName(hi) });
+        }
+        const d = try it.a.create(Domain);
+        d.* = .{ .lo = realOf(lo), .hi = realOf(hi), .lo_excl = excl_lo, .hi_excl = excl_hi };
+        return .{ .domain = d };
+    }
+
+    // Zig tip: `x - @round(x)` is the distance to the nearest whole number; a value is on the grid
+    // of a step when `x / step` is whole, with a small tolerance for the rounding of a `f64`.
+    /// Is the real `x` inside the domain `d`? (limits, excluded limits, step)
+    fn inDomain(d: *const Domain, x: f64) bool {
+        if (d.lo) |lo| if (x < lo or (d.lo_excl and x == lo)) return false;
+        if (d.hi) |hi| if (x > hi or (d.hi_excl and x == hi)) return false;
+        if (d.step) |st| {
+            const q = x / st;
+            if (@abs(q - @round(q)) > 1e-9) return false;
+        }
+        return true;
     }
 
     // Zig tip: `brace` relies on the same Zig feature as `define` above: see the tip there.
@@ -820,6 +936,12 @@ pub const Interp = struct {
             if (try it.truth(try it.eval(n.kids[0]))) return .{ .bool = true };
             return .{ .bool = try it.truth(try it.eval(n.kids[1])) };
         }
+        if (std.mem.eql(u8, op, "=~") and n.kids[1].tag == .range and std.mem.eql(u8, n.kids[1].text, "+-")) {
+            const x = realOf(try it.eval(n.kids[0])) orelse return it.fail("=~ with +- needs numbers", .{});
+            const c = realOf(try it.eval(n.kids[1].kids[0])) orelse return it.fail("=~ with +- needs numbers", .{});
+            const t = realOf(try it.eval(n.kids[1].kids[1])) orelse return it.fail("=~ with +- needs numbers", .{});
+            return .{ .bool = @abs(x - c) <= t };
+        }
         const l = try it.eval(n.kids[0]);
         const r = try it.eval(n.kids[1]);
         return it.apply(op, l, r);
@@ -832,7 +954,7 @@ pub const Interp = struct {
 
     // Zig tip: `overflow` relies on the same Zig feature as `fail` above: see the tip there.
     fn overflow(it: *Interp) Signal {
-        return it.fail("integer overflow", .{});
+        return it.failWith(err_overflow, "Overflow in integer arithmetic", .{});
     }
 
     // Zig tip: `@addWithOverflow(a, b)` returns a tuple `.{ result, overflowed }`; Eve raises an
@@ -853,11 +975,29 @@ pub const Interp = struct {
         if (eql(u8, op, "is")) return .{ .bool = it.isOp(l, r) };
         if (eql(u8, op, "is not")) return .{ .bool = !it.isOp(l, r) };
         if (eql(u8, op, "=~") or eql(u8, op, "!~")) {
+            if (realOf(l)) |x| if (realOf(r)) |y| {
+                const eps = realOf((it.scope.find("$epsilon") orelse return it.fail("$epsilon is missing", .{})).value) orelse 1e-9;
+                return .{ .bool = (@abs(x - y) <= eps) == eql(u8, op, "=~") };
+            };
             if (l != .str or r != .str) return it.fail("a regular expression match needs two strings", .{});
             return .{ .bool = regexMatch(r.str, l.str) == eql(u8, op, "=~") };
         }
         if (eql(u8, op, "||") or eql(u8, op, "&&")) return it.setOp(op[0], l, r);
-        if (eql(u8, op, "<+")) return it.concat(l, r);
+        if (eql(u8, op, "<+")) {
+            if (l == .str) return .{ .str = try std.mem.concat(it.a, u8, &.{ l.str, try it.text(r) }) };
+            return it.concat(l, r);
+        }
+        if (eql(u8, op, "+>")) {
+            if (r == .str) return .{ .str = try std.mem.concat(it.a, u8, &.{ try it.text(l), r.str }) };
+            if (r == .list) {
+                const out = try it.a.create(List);
+                out.* = .{};
+                try out.items.append(it.a, l);
+                try out.items.appendSlice(it.a, r.list.elems());
+                return .{ .list = out };
+            }
+            return it.fail("+> needs a list or a string on the right, found {s}", .{typeName(r)});
+        }
         if (eql(u8, op, "+")) {
             if (textual(l) or textual(r)) return .{ .str = try std.mem.concat(it.a, u8, &.{ try it.text(l), try it.text(r) }) };
         }
@@ -875,7 +1015,7 @@ pub const Interp = struct {
         }
         if (eql(u8, op, "/")) {
             const d = realOf(r).?;
-            if (d == 0) return it.fail("division by zero", .{});
+            if (d == 0) return it.failWith(err_divide, "Division by zero", .{});
             return .{ .real = realOf(l).? / d };
         }
         if (isInt(l) and isInt(r)) {
@@ -894,7 +1034,7 @@ pub const Interp = struct {
                 return if (s[1] != 0) it.overflow() else .{ .int = s[0] };
             }
             if (eql(u8, op, "%")) {
-                if (y == 0) return it.fail("division by zero", .{});
+                if (y == 0) return it.failWith(err_divide, "Division by zero", .{});
                 return .{ .int = @mod(x, y) };
             }
             if (eql(u8, op, "^")) {
@@ -927,6 +1067,11 @@ pub const Interp = struct {
         _ = it;
         if (l == .typ and r == .typ) return std.mem.eql(u8, l.typ, r.typ);
         if (r == .typ) return std.mem.eql(u8, typeName(l), r.typ);
+        if (r == .class and l == .object) {
+            var cur: ?*Class = l.object.class;
+            while (cur) |k| : (cur = k.parent) if (k == r.class) return true;
+            return false;
+        }
         return same(l, r);
     }
 
@@ -980,7 +1125,9 @@ pub const Interp = struct {
             .range => |r| {
                 var out: std.ArrayList(Value) = .empty;
                 var k = r.lo;
-                while (k <= r.hi) : (k += r.step) try out.append(it.a, .{ .int = k });
+                while (k <= r.hi) : (k += r.step) {
+                    if (r.sym) try out.append(it.a, .{ .sym = @intCast(k) }) else try out.append(it.a, .{ .int = k });
+                }
                 return out.items;
             },
             .str => |s| {
@@ -1105,11 +1252,14 @@ pub const Interp = struct {
         defer it.dollar = saved;
         if (n.tag == .range) {
             const r = try it.makeRange(n);
-            return .{ .rng = .{ .lo = r.range.lo, .hi = r.range.hi } };
+            const lo = if (r.range.lo < 0) len + 1 + r.range.lo else r.range.lo;
+            const hi = if (r.range.hi < 0) len + 1 + r.range.hi else r.range.hi;
+            return .{ .rng = .{ .lo = lo, .hi = hi } };
         }
         const v = try it.eval(n);
         if (!isInt(v)) return it.fail("an index must be an integer, found {s}", .{typeName(v)});
-        return .{ .one = intOf(v) };
+        const k = intOf(v);
+        return .{ .one = if (k < 0) len + 1 + k else k };
     }
 
     // Zig tip: `leaves` relies on the same Zig feature as `define` above: see the tip there.
@@ -1138,12 +1288,12 @@ pub const Interp = struct {
         switch (ix) {
             .all => for (cells) |c| try out.append(it.a, c),
             .one => |k| {
-                if (k < 1 or k > cells.len) return it.fail("index {d} out of range 1..{d}", .{ k, cells.len });
+                if (k < 1 or k > cells.len) return it.failWith(err_index, "Index {d} is out of range 1..{d}", .{ k, cells.len });
                 try out.append(it.a, cells[@intCast(k - 1)]);
             },
             .rng => |r| {
                 if (r.lo > r.hi) return;
-                if (r.lo < 1 or r.hi > cells.len) return it.fail("range {d}..{d} out of range 1..{d}", .{ r.lo, r.hi, cells.len });
+                if (r.lo < 1 or r.hi > cells.len) return it.failWith(err_index, "Range {d}..{d} is out of range 1..{d}", .{ r.lo, r.hi, cells.len });
                 for (cells[@intCast(r.lo - 1)..@intCast(r.hi)]) |c| try out.append(it.a, c);
             },
         }
@@ -1204,7 +1354,7 @@ pub const Interp = struct {
         switch (obj) {
             .map => |m| {
                 const key = try it.eval(args[0]);
-                const i = mapFind(m, key) orelse return it.fail("key not found", .{});
+                const i = mapFind(m, key) orelse return it.failWith(err_key, "Key not found", .{});
                 return m.entries.items[i].val;
             },
             .list, .set => |l| {
@@ -1213,7 +1363,7 @@ pub const Interp = struct {
                     const ix = try it.evalIdx(args[0], @intCast(l.elems().len));
                     const lo = ix.rng.lo;
                     const hi = ix.rng.hi;
-                    if (lo < 1 or hi > l.elems().len or lo > hi + 1) return it.fail("range {d}..{d} out of range 1..{d}", .{ lo, hi, l.elems().len });
+                    if (lo < 1 or hi > l.elems().len or lo > hi + 1) return it.failWith(err_index, "Range {d}..{d} is out of range 1..{d}", .{ lo, hi, l.elems().len });
                     const v = try it.a.create(List);
                     v.* = .{ .array = l.array, .base = l, .off = @intCast(lo - 1), .len = @intCast(hi - lo + 1) };
                     return .{ .list = v };
@@ -1230,7 +1380,7 @@ pub const Interp = struct {
                 const items = try it.iterate(obj);
                 const ix = try it.evalIdx(args[0], @intCast(items.len));
                 _ = s;
-                if (ix != .one or ix.one < 1 or ix.one > items.len) return it.fail("index out of range", .{});
+                if (ix != .one or ix.one < 1 or ix.one > items.len) return it.failWith(err_index, "Index is out of range 1..{d}", .{items.len});
                 return items[@intCast(ix.one - 1)];
             },
             else => return it.fail("{s} cannot be indexed", .{typeName(obj)}),
@@ -1257,9 +1407,20 @@ pub const Interp = struct {
         const callee = n.kids[0];
         const args = n.kids[1..];
         if (callee.tag == .field) return it.callMethod(try it.eval(callee.kids[0]), callee.text, args);
+        if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
+            (std.mem.eql(u8, callee.text, "floor") or std.mem.eql(u8, callee.text, "ceiling") or std.mem.eql(u8, callee.text, "round")))
+        {
+            const eql = std.mem.eql;
+            const x = realOf(try it.eval(args[0])) orelse return it.fail("{s}() needs a number", .{callee.text});
+            if (eql(u8, callee.text, "floor")) return .{ .int = @intFromFloat(@floor(x)) };
+            if (eql(u8, callee.text, "ceiling")) return .{ .int = @intFromFloat(@ceil(x)) };
+            if (eql(u8, callee.text, "round")) return .{ .int = @intFromFloat(@round(x)) };
+        }
         if (callee.tag == .name and std.mem.eql(u8, callee.text, "type") and it.scope.find("type") == null) {
             if (args.len != 1) return it.fail("type() takes one argument", .{});
-            return .{ .typ = typeName(try it.eval(args[0])) };
+            const arg = try it.eval(args[0]);
+            if (arg == .str) for (it.text_ptrs.items) |ptr| if (ptr == arg.str.ptr) return .{ .typ = "Text" };
+            return .{ .typ = typeName(arg) };
         }
         return it.callValue(try it.eval(callee), null, args);
     }
@@ -1271,20 +1432,51 @@ pub const Interp = struct {
             .range => |r| {
                 if (args.len != 1) return it.fail("a range takes one step", .{});
                 const step = try it.eval(args[0]);
-                if (!isInt(step) or intOf(step) < 1) return it.fail("the step of a range is a positive integer", .{});
-                const c = try it.a.create(Range);
-                c.* = .{ .lo = r.lo, .hi = r.hi, .step = intOf(step) };
-                return .{ .range = c };
+                if (isInt(step) and intOf(step) >= 1) {
+                    const c = try it.a.create(Range);
+                    c.* = .{ .lo = r.lo, .hi = r.hi, .step = intOf(step), .sym = r.sym };
+                    return .{ .range = c };
+                }
+                const d = try it.a.create(Domain);
+                d.* = .{ .lo = @floatFromInt(r.lo), .hi = @floatFromInt(r.hi), .step = realOf(step) orelse return it.fail("the step of a range is a number", .{}) };
+                return .{ .domain = d };
             },
+            .domain => |d0| {
+                if (args.len != 1) return it.fail("a range takes one step", .{});
+                const d = try it.a.create(Domain);
+                d.* = d0.*;
+                d.step = realOf(try it.eval(args[0])) orelse return it.fail("the step of a range is a number", .{});
+                return .{ .domain = d };
+            },
+            .class => |c| return it.constructClass(c, args),
             else => return it.fail("{s} is not callable", .{typeName(v)}),
         }
     }
 
     // Zig tip: `classRoutine` relies on the same Zig feature as `bind` above: see the tip there.
     fn classRoutine(c: *Class, name: []const u8) ?*const Node {
-        const node = c.node orelse return null;
-        for (node.kids[2..]) |r| {
-            if (r.tag != .constructor and std.mem.eql(u8, r.text, name)) return r;
+        var cur: ?*Class = c;
+        while (cur) |k| : (cur = k.parent) {
+            const node = k.node orelse continue;
+            for (node.kids[2..]) |r| {
+                if (r.tag != .constructor and std.mem.eql(u8, r.text, name)) return r;
+            }
+        }
+        return null;
+    }
+
+    // Zig tip: an extension method is declared outside the class; its first parameter is `@self`
+    // with the type of the class (D-040). The call `p.shift(1, 2)` finds it by the name of the
+    // class of `p` or of one of its ancestors.
+    /// The extension method `name` for objects of class `c`.
+    fn extensionFor(it: *Interp, c: *Class, name: []const u8) ?*const Node {
+        for (it.exts.items) |m| {
+            if (!std.mem.eql(u8, m.text, name)) continue;
+            const first = m.kids[0].kids;
+            if (first.len == 0) continue;
+            const ty = first[0].ty orelse continue;
+            var cur: ?*Class = c;
+            while (cur) |k| : (cur = k.parent) if (std.mem.eql(u8, k.name, ty.text)) return m;
         }
         return null;
     }
@@ -1294,7 +1486,7 @@ pub const Interp = struct {
     fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *const Node) Signal!Value {
         if (recv == .object) {
             if (recv.object.class) |c| {
-                if (classRoutine(c, name)) |r| {
+                if (classRoutine(c, name) orelse it.extensionFor(c, name)) |r| {
                     const f = try it.a.create(Func);
                     f.* = .{ .node = r, .closure = it.global };
                     return it.invoke(f, recv, args);
@@ -1302,7 +1494,22 @@ pub const Interp = struct {
             }
         }
         const eql = std.mem.eql;
-        if (eql(u8, name, "length")) {
+        if (recv == .typ and eql(u8, name, "parse") and args.len == 1) {
+            const txt = try it.text(try it.eval(args[0]));
+            const x = std.fmt.parseFloat(f64, std.mem.trim(u8, txt, " ")) catch return it.failWith(15, "Cannot parse {s} as {s}", .{ txt, recv.typ });
+            if (eql(u8, recv.typ, "Integer")) return .{ .int = @intFromFloat(x) };
+            return .{ .real = x };
+        }
+        if (eql(u8, name, "delete") and (recv == .list or recv == .set) and args.len == 1) {
+            const gone = try it.eval(args[0]);
+            const l = recv.list;
+            var k: usize = 0;
+            while (k < l.items.items.len) {
+                if (eq(l.items.items[k], gone)) _ = l.items.orderedRemove(k) else k += 1;
+            }
+            return .nil;
+        }
+        if (eql(u8, name, "length") or eql(u8, name, "count")) {
             return .{ .int = switch (recv) {
                 .str => |s| @intCast(std.unicode.utf8CountCodepoints(s) catch s.len),
                 .list, .set => |l| @intCast(l.elems().len),
@@ -1336,8 +1543,13 @@ pub const Interp = struct {
     fn evalArgs(it: *Interp, nodes: []const *const Node) Signal![]Arg {
         var out: std.ArrayList(Arg) = .empty;
         for (nodes) |a| {
-            if (a.tag == .pair and a.kids[0].tag == .name) {
+            if (a.tag == .pair and a.kids[0].tag == .name and a.kids[1].tag == .ref) {
+                const cell = it.scope.find(a.kids[1].text) orelse return it.fail("undefined name '{s}'", .{a.kids[1].text});
+                try out.append(it.a, .{ .name = a.kids[0].text, .value = cell.value, .ref = cell });
+            } else if (a.tag == .pair and a.kids[0].tag == .name) {
                 try out.append(it.a, .{ .name = a.kids[0].text, .value = try it.eval(a.kids[1]) });
+            } else if (a.tag == .spread) {
+                for (try it.iterate(try it.eval(a.kids[0]))) |x| try out.append(it.a, .{ .value = x });
             } else if (a.tag == .ref) {
                 const cell = it.scope.find(a.text) orelse return it.fail("undefined name '{s}'", .{a.text});
                 try out.append(it.a, .{ .value = cell.value, .ref = cell });
@@ -1358,6 +1570,16 @@ pub const Interp = struct {
         for (params, 0..) |prm, k| {
             if (k == 0 and prm.tag == .ref_param and std.mem.eql(u8, prm.text, "self") and self_var != null) {
                 try it.bind("self", self_var.?);
+                continue;
+            }
+            if (prm.tag == .vararg_param) {
+                const rest = try it.newList(&.{}, false);
+                while (pos < args.len) : (pos += 1) {
+                    if (taken[pos] or args[pos].name.len > 0) continue;
+                    taken[pos] = true;
+                    try rest.items.append(it.a, args[pos].value);
+                }
+                try it.define(prm.text, .{ .list = rest }, false);
                 continue;
             }
             var found: ?usize = null;
@@ -1407,20 +1629,24 @@ pub const Interp = struct {
         }
         try it.bindParams(node.kids[0].kids, args, self_var);
         for (node.kids[2].kids) |res| try it.define(res.text, try it.zero(res.ty), false);
-        try it.execBlock(node.kids[3]);
-        if (node.kids[2].kids.len > 0) return s.find(node.kids[2].kids[0].text).?.value;
+        const mark = it.defers.items.len;
+        const outcome = it.execBlock(node.kids[3]);
+        if (outcome) |_| it.runDefers(mark) else |e| if (e != error.Panic) it.runDefers(mark);
+        outcome catch |e| if (e != error.Exit) return e;
+        const res = node.kids[2].kids;
+        if (res.len > 1) {
+            const l = try it.a.create(List);
+            l.* = .{};
+            for (res) |r| try l.items.append(it.a, s.find(r.text).?.value);
+            return .{ .list = l };
+        }
+        if (res.len == 1) return s.find(res[0].text).?.value;
         return .nil;
     }
 
     // Zig tip: `construct` relies on the same Zig feature as `define` above: see the tip there.
     /// `new Class(args)`.
-    fn construct(it: *Interp, n: *const Node) Signal!Value {
-        const c = n.kids[0];
-        const callee = if (c.tag == .call) c.kids[0] else c;
-        const arg_nodes: []const *const Node = if (c.tag == .call) c.kids[1..] else &.{};
-        const cv = try it.eval(callee);
-        if (cv != .class) return it.fail("'new' needs a class, found {s}", .{typeName(cv)});
-        const cls = cv.class;
+    fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) Signal!Value {
         const obj = try it.newObject();
         if (cls.node == null) return .{ .object = obj };
         const args = try it.evalArgs(arg_nodes);
@@ -1436,8 +1662,8 @@ pub const Interp = struct {
             defer it.scope = saved;
             const self_var = try it.a.create(Var);
             self_var.* = .{ .value = .nil };
-            try it.bindParams(k.kids[0].kids, &.{}, self_var);
-            try it.bindParams(k.kids[1].kids, args, null);
+            try it.bind("self", self_var);
+            try it.bindParams(k.kids[0].kids, args, null);
             try it.execBlock(k.kids[3]);
             if (self_var.value != .object) return it.fail("the constructor of {s} must set self to an object", .{cls.name});
             self_var.value.object.class = cls;
@@ -1474,14 +1700,23 @@ pub const Interp = struct {
             return .{ .list = l };
         }
         const eql = std.mem.eql;
-        if (eql(u8, t.text, "Integer")) return .{ .int = 0 };
+        if (t.text.len > 0 and t.text[t.text.len - 1] == '?') return .nil; // an optional type starts as null
+        if (std.mem.startsWith(u8, t.text, "()")) return .{ .list = try it.newList(&.{}, false) };
+        if (std.mem.startsWith(u8, t.text, "[]")) return .{ .list = try it.newList(&.{}, true) };
+        if (eql(u8, t.text, "Integer") or eql(u8, t.text, "Short") or eql(u8, t.text, "Byte")) return .{ .int = 0 };
         if (eql(u8, t.text, "Natural")) return .{ .nat = 0 };
-        if (eql(u8, t.text, "Real")) return .{ .real = 0 };
+        if (eql(u8, t.text, "Real") or eql(u8, t.text, "Float")) return .{ .real = 0 };
         if (eql(u8, t.text, "Logic")) return .{ .bool = false };
+        if (eql(u8, t.text, "String")) return .{ .str = "" };
+        if (eql(u8, t.text, "Symbol") or eql(u8, t.text, "Rune")) return .{ .sym = 0 };
+        if (eql(u8, t.text, "DataSet")) return .{ .set = try it.newList(&.{}, false) };
+        if (eql(u8, t.text, "DataMap")) {
+            const m = try it.a.create(Map);
+            m.* = .{};
+            return .{ .map = m };
+        }
         return .nil;
     }
-
-    // ---- regular expressions --------------------------------------------------------------
 
     // Zig tip: a tiny matcher, written as three small recursive functions. It supports literals,
     // `.`, `^`, `$`, classes `[a-z]`, `\d \w \s`, the quantifiers `* + ?` and `|` between whole
@@ -1589,7 +1824,9 @@ pub const Interp = struct {
     pub fn exec(it: *Interp, n: *const Node) Signal!void {
         try it.tick(n);
         switch (n.tag) {
-            .let, .set => try it.declare(n),
+            .var_decl, .set => try it.declare(n),
+            .block => try it.execBlock(n),
+            .capture => try it.capture(n),
             .assign => try it.assign(n),
             .expr_stmt => try it.exprStmt(n.kids[0]),
             .print_stmt, .write_stmt => try it.print(n),
@@ -1597,9 +1834,22 @@ pub const Interp = struct {
                 if (!try it.truth(try it.eval(n.kids[0]))) return it.failWith(err_expect, "expect failed", .{});
             },
             .raise_stmt => return it.raise(n),
-            .break_stmt => return error.Break,
-            .skip_stmt => return error.Skip,
+            .break_stmt => {
+                it.jump_label = n.text;
+                return error.Break;
+            },
+            .skip_stmt => {
+                it.jump_label = n.text;
+                return error.Skip;
+            },
             .over_stmt => return error.Over,
+            .exit_stmt => return error.Exit,
+            .stop_stmt => return error.StopJob,
+            .pass_stmt => {},
+            .assert_stmt => {
+                if (!try it.truth(try it.eval(n.kids[0]))) return it.failWith(err_assert, "assertion failed", .{});
+            },
+            .defer_stmt => try it.defers.append(it.a, n.kids[0]),
             .panic_stmt => return error.Panic,
             .retry_stmt => return error.Retry,
             .resume_stmt => return error.Resume,
@@ -1614,12 +1864,30 @@ pub const Interp = struct {
                 const saved = it.current_job;
                 it.current_job = n.text;
                 defer it.current_job = saved;
-                try it.execBlock(n.kids[0]);
+                it.execBlock(n.kids[0]) catch |e| switch (e) {
+                    error.StopJob => {},
+                    else => {
+                        it.setJob(n.text, "fail");
+                        return e;
+                    },
+                };
+                it.setJob(n.text, "pass");
             },
-            .class, .function, .method => try it.declareRoutine(n),
+            .class, .function, .procedure, .method => try it.declareRoutine(n),
             .process => {},
             else => return it.fail("cannot execute a {s}", .{@tagName(n.tag)}),
         }
+    }
+
+    // Zig tip: `catch {}` after a call drops its error on purpose; here a missing `jobs` map
+    // (a free script) is not a failure. The state of a job is one field of an object in the map.
+    /// Record the state of the job `label` in `jobs["label"].status`.
+    fn setJob(it: *Interp, label: []const u8, status: []const u8) void {
+        const cell = it.scope.find("jobs") orelse return;
+        if (cell.value != .map) return;
+        const i = mapFind(cell.value.map, .{ .str = label }) orelse return;
+        const rec = cell.value.map.entries.items[i].val;
+        if (rec == .object) it.setField(rec.object, "status", .{ .str = status }) catch {};
     }
 
     // Zig tip: `exprStmt` relies on the same Zig feature as `define` above: see the tip there.
@@ -1679,7 +1947,7 @@ pub const Interp = struct {
             if (e.tag == .list) {
                 var first = true;
                 for (e.kids) |k| {
-                    if (k.tag == .pair and k.kids[0].tag == .name and std.mem.eql(u8, k.kids[0].text, "separator")) {
+                    if (k.tag == .pair and k.kids[0].tag == .name and std.mem.eql(u8, k.kids[0].text, "sep")) {
                         sep = try it.text(try it.eval(k.kids[1]));
                     }
                 }
@@ -1725,9 +1993,14 @@ pub const Interp = struct {
             const c = try it.a.create(Class);
             c.* = .{ .name = n.text, .node = n };
             const parent = n.kids[1];
+            if (parent.tag == .name) {
+                if (it.scope.find(parent.text)) |pv| if (pv.value == .class) {
+                    c.parent = pv.value.class;
+                };
+            }
             if (parent.tag == .name and std.mem.eql(u8, parent.text, "Ordinal")) {
                 c.ordinal = true;
-                var next: i64 = 0;
+                var next: i64 = 1;
                 for (n.kids[0].kids) |m| {
                     if (m.kids[0].tag != .none) next = intOf(try it.eval(m.kids[0]));
                     try c.ord.append(it.a, .{ .name = m.text, .val = .{ .int = next } });
@@ -1741,6 +2014,10 @@ pub const Interp = struct {
         }
         const f = try it.a.create(Func);
         f.* = .{ .node = n, .closure = it.global };
+        if (n.tag == .method) {
+            try it.exts.append(it.a, n);
+            return;
+        }
         try it.define(n.text, .{ .func = f }, true);
     }
 
@@ -1748,7 +2025,41 @@ pub const Interp = struct {
     fn coerce(v: Value, ty: ?*const Node) Value {
         const t = ty orelse return v;
         if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Real") and isInt(v)) return .{ .real = @floatFromInt(intOf(v)) };
+        // a Real given to an Integer loses its decimals (D-080)
+        if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Integer") and (v == .real or v == .float or v == .dec)) return .{ .int = @intFromFloat(realOf(v).?) };
         return v;
+    }
+
+    // Zig tip: `while (i > mark) { i -= 1; ... }` walks a list backwards: the last `defer`
+    // registered runs first. `pop()` of an `ArrayList` returns an optional (null when empty).
+    // `catch {}` drops an error on purpose: a failing `defer` does not hide the first error.
+    /// Run the `defer` statements registered since `mark`, newest first, and forget them.
+    fn runDefers(it: *Interp, mark: usize) void {
+        while (it.defers.items.len > mark) {
+            const stmt = it.defers.pop().?;
+            it.exec(stmt) catch {};
+        }
+    }
+
+    // Zig tip: `std.mem.eql(u8, a, b)` compares text. `orderedRemove(0)` takes the first element
+    // and moves the others down; `pop()` takes the last one. The third kid of a capture node says
+    // whether the name may already exist: `.none` is the explicit `new` (D-104).
+    /// `let lst -> e;` takes the last element, `let e <- lst;` and `new e <- lst;` the first (D-104).
+    fn capture(it: *Interp, n: *const Node) Signal!void {
+        const lv = try it.eval(n.kids[0]);
+        const l = switch (lv) {
+            .list => |x| x,
+            else => return it.fail("{s} needs a list, found {s}", .{ n.text, typeName(lv) }),
+        };
+        if (l.items.items.len == 0) return it.failWith(err_index, "Index 1 is out of range: the list is empty", .{});
+        const item = if (std.mem.eql(u8, n.text, "->")) l.items.pop().? else l.items.orderedRemove(0);
+        const target = n.kids[1];
+        if (target.tag == .name and std.mem.eql(u8, target.text, "_")) return;
+        if (target.tag == .name) {
+            const exists = it.scope.find(target.text) != null;
+            if (n.kids[2].tag == .none or !exists) return it.define(target.text, item, false);
+        }
+        try it.assignTo(target, item);
     }
 
     // Zig tip: `declare` relies on the same Zig feature as `define` above: see the tip there.
@@ -1768,7 +2079,8 @@ pub const Interp = struct {
         const multi_names = std.mem.eql(u8, n.text, "=");
         if (targets.len == 1 and targets[0].tag != .star) return it.declareOne(targets[0], v, constant);
         if (multi_names) {
-            for (targets) |t| try it.declareOne(t, v, constant);
+            const elementwise = v == .list and v.list.elems().len == targets.len;
+            for (targets, 0..) |t, i| try it.declareOne(t, if (elementwise) v.list.elems()[i] else v, constant);
             return;
         }
         // deconstruct: `_` skips one element, `*` skips many, `*rest` collects them
@@ -1807,6 +2119,7 @@ pub const Interp = struct {
     fn assign(it: *Interp, n: *const Node) Signal!void {
         const target = n.kids[0];
         const op = n.text;
+        if (std.mem.eql(u8, op, "<+") or std.mem.eql(u8, op, "+>")) return it.listModifier(n);
         var v = try it.eval(n.kids[1]);
         if (std.mem.eql(u8, op, "::")) {
             v = try it.clone(v);
@@ -1839,10 +2152,36 @@ pub const Interp = struct {
         try it.assignTo(target, v);
     }
 
+    // Zig tip: `let a <+ x;` has the list on the left, `let x +> a;` on the right: the arrow points
+    // away from the list (D-107). `insert(allocator, 0, x)` puts an element at the front.
+    /// `let lst <+ x;` appends, `let x +> lst;` puts in front. A list given as `x` adds its elements.
+    fn listModifier(it: *Interp, n: *const Node) Signal!void {
+        const front = n.text[0] == '+';
+        const list_node = if (front) n.kids[1] else n.kids[0];
+        const item = try it.eval(if (front) n.kids[0] else n.kids[1]);
+        const lv = try it.eval(list_node);
+        if (lv == .str) {
+            const add = try it.text(item);
+            const joined = if (front) try std.fmt.allocPrint(it.a, "{s}{s}", .{ add, lv.str }) else try std.fmt.allocPrint(it.a, "{s}{s}", .{ lv.str, add });
+            return it.assignTo(list_node, .{ .str = joined });
+        }
+        const l = switch (lv) {
+            .list, .set => |x| x,
+            else => return it.fail("{s} needs a list, found {s}", .{ n.text, typeName(lv) }),
+        };
+        if (lv == .set) return it.setAdd(l, item);
+        if (front) {
+            if (item == .list) try l.items.insertSlice(it.a, 0, item.list.elems()) else try l.items.insert(it.a, 0, item);
+        } else if (item == .list) {
+            try l.items.appendSlice(it.a, item.list.elems());
+        } else try l.items.append(it.a, item);
+    }
+
     // Zig tip: `assignTo` relies on the same Zig feature as `define` above: see the tip there.
     fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
         switch (target.tag) {
             .name => {
+                if (std.mem.eql(u8, target.text, "_")) return; // `_` drops the value
                 const cell = it.scope.find(target.text) orelse return it.fail("undefined name '{s}'", .{target.text});
                 if (cell.constant) return it.fail("'{s}' is a constant", .{target.text});
                 cell.value = v;
@@ -1877,6 +2216,18 @@ pub const Interp = struct {
         if (n.kids.len % 2 == 1) try it.execBlock(n.kids[n.kids.len - 1]);
     }
 
+    // Zig tip: a `break` or `skip` with a label unwinds through the inner loops as a Zig error; each
+    // loop asks `caught` whether the signal is for it. A bare `break` (empty label) belongs to the
+    // innermost loop, a labeled one to the loop with that label (D-034).
+    fn caught(it: *Interp, label: []const u8) bool {
+        if (it.jump_label.len == 0) return true;
+        if (std.mem.eql(u8, it.jump_label, label)) {
+            it.jump_label = "";
+            return true;
+        }
+        return false;
+    }
+
     // Zig tip: `whileStmt` relies on the same Zig feature as `define` above: see the tip there.
     fn whileStmt(it: *Interp, n: *const Node) Signal!void {
         const saved = try it.pushScope();
@@ -1886,8 +2237,8 @@ pub const Interp = struct {
         while (try it.truth(try it.eval(n.kids[1]))) {
             ran = true;
             it.execBlock(n.kids[2]) catch |e| switch (e) {
-                error.Break => break,
-                error.Skip => continue,
+                error.Break => if (it.caught(n.text)) break else return e,
+                error.Skip => if (it.caught(n.text)) continue else return e,
                 else => return e,
             };
         }
@@ -1905,8 +2256,8 @@ pub const Interp = struct {
             ran = true;
             try it.bindPattern(n.kids[0], x);
             it.execBlock(n.kids[2]) catch |e| switch (e) {
-                error.Break => break,
-                error.Skip => continue,
+                error.Break => if (it.caught(n.text)) break else return e,
+                error.Skip => if (it.caught(n.text)) continue else return e,
                 else => return e,
             };
         }
@@ -1926,8 +2277,8 @@ pub const Interp = struct {
         try it.execBlock(n.kids[0]);
         while (true) {
             it.execBlock(n.kids[1]) catch |e| switch (e) {
-                error.Break => break,
-                error.Skip => {},
+                error.Break => if (it.caught(n.text)) break else return e,
+                error.Skip => if (!it.caught(n.text)) return e,
                 else => return e,
             };
             if (n.kids.len > 2 and !try it.truth(try it.eval(n.kids[2]))) break;
@@ -1937,22 +2288,29 @@ pub const Interp = struct {
     // Zig tip: `matchStmt` relies on the same Zig feature as `define` above: see the tip there.
     fn matchStmt(it: *Interp, n: *const Node) Signal!void {
         const subject = try it.eval(n.kids[0]);
+        const all = std.mem.startsWith(u8, n.text, "all");
         for (n.kids[2..]) |w| {
-            const pat = w.kids[0];
             var hit = false;
-            if (pat.tag == .name and std.mem.eql(u8, pat.text, "other") and it.scope.find("other") == null) {
-                hit = true;
-            } else {
+            for (w.kids[0].kids) |pat| {
+                if (pat.tag == .name and std.mem.eql(u8, pat.text, "other") and it.scope.find("other") == null) {
+                    hit = true;
+                    continue;
+                }
+                if (pat.tag == .list) { // `when ("two", "three")`: any of the values
+                    for (pat.kids) |k| if (eq(try it.eval(k), subject)) {
+                        hit = true;
+                    };
+                    continue;
+                }
                 const pv = try it.eval(pat);
-                hit = switch (pv) {
-                    .range => try it.contains(pv, subject),
-                    .list => if (pat.tag == .list) try it.contains(pv, subject) else eq(pv, subject),
+                if (switch (pv) {
+                    .range, .domain => try it.contains(pv, subject),
                     else => eq(pv, subject),
-                };
+                }) hit = true;
             }
             if (hit) {
                 try it.execBlock(w.kids[1]);
-                break;
+                if (!all) break;
             }
         }
         try it.execBlock(n.kids[1]);
@@ -1982,6 +2340,19 @@ pub const Interp = struct {
         const body = p.kids[0].kids;
         const recover = p.kids[1];
         const finalize = p.kids[2];
+        // the arguments of the command line go to the parameters of the process
+        var args: std.ArrayList(Arg) = .empty;
+        for (it.script_args) |a| try args.append(it.a, .{ .value = .{ .str = a } });
+        try it.bindParams(p.kids[3].kids, args.items, null);
+        // the state of the jobs: jobs["j1"].status is "none", "pass" or "fail"
+        const jobs = try it.a.create(Map);
+        jobs.* = .{};
+        for (body) |st| if (st.tag == .job) {
+            const rec = try it.newObject();
+            try it.setField(rec, "status", .{ .str = "none" });
+            try it.mapPut(jobs, .{ .str = st.text }, .{ .object = rec });
+        };
+        try it.define("jobs", .{ .map = jobs }, false);
         var i: usize = 0;
         var failed: ?Signal = null;
         while (i < body.len) {
@@ -2000,12 +2371,21 @@ pub const Interp = struct {
                             i += 1;
                             continue;
                         },
+                        error.Abort => {
+                            failed = error.Raise; // the error goes on to the caller; finalize runs first
+                            break;
+                        },
+                        error.Over, error.Exit => break,
+                        error.Raise => {
+                            failed = re; // an error raised in recover aborts with that error
+                            break;
+                        },
                         else => return re,
                     };
                     it.reports.items[idx].handled = true;
                     break;
                 },
-                error.Over => return,
+                error.Over, error.Exit => break, // a clean way out: finalize still runs (D-081, D-111)
                 else => return e,
             };
             i += 1;
@@ -2032,8 +2412,7 @@ pub const Interp = struct {
                 it.note(1, "panic");
                 return .{ .code = 1 };
             },
-            error.Raise => return .{ .code = it.err_code },
-            error.Abort => return .{ .code = it.err_code },
+            error.Raise, error.Abort => return .{ .code = exitCodeOf(it.err_code) },
             error.Over => return .{},
             error.OutOfMemory => return .{ .code = 70 },
             error.WriteFailed => return .{ .code = 74 },
@@ -2042,6 +2421,16 @@ pub const Interp = struct {
                 return .{ .code = 4 };
             },
         }
+    }
+
+    // Zig tip: an error code is not an exit code (D-081): a failed `expect` ends with 2, a failed
+    // `assert` with 3, any other unhandled error with 4. `switch` on an integer needs an `else`.
+    fn exitCodeOf(code: u8) u8 {
+        return switch (code) {
+            2 => 2,
+            3 => 3,
+            else => 4,
+        };
     }
 
     // Zig tip: `note` relies on the same Zig feature as `newList` above: see the tip there.
@@ -2056,10 +2445,10 @@ pub const Interp = struct {
             return;
         }
         for (root.kids) |d| {
-            if (d.tag == .class or d.tag == .function or d.tag == .method) try it.declareRoutine(d);
+            if (d.tag == .class or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
         }
         for (root.kids) |d| {
-            if (d.tag == .let or d.tag == .set) try it.exec(d);
+            if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
         }
         const main = findProcess(root, "main") orelse return it.fail("the driver has no process main", .{});
         try it.runProcess(main);
@@ -2084,7 +2473,7 @@ fn runSource(src: []const u8, buf: []u8) !struct { out: []const u8, code: u8 } {
 // value is not the expected one.
 test "a free script prints, computes and interpolates" {
     var buf: [256]u8 = undefined;
-    const r = try runSource("let a := 2;\na += 3;\nexpect a == 5;\nprint \"a = \\#{a}\";\n", &buf);
+    const r = try runSource("new a := 2;\nlet a += 3;\nexpect a == 5;\nprint \"a = {a}\";\n", &buf);
     try std.testing.expectEqualStrings("a = 5\n", r.out);
     try std.testing.expectEqual(@as(u8, 0), r.code);
 }
