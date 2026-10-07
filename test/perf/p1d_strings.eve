@@ -1,0 +1,25 @@
+# level 1 performance: strings, placeholders and regular expressions
+** perf: concatenation, placeholders, =~
+driver p1d_strings is
+  process main is
+    new text := "";
+    for i in (1..6000) do
+      let text <+ "line {i};";
+    done;
+    expect text.length() == 58893;
+    new hits := 0;
+    for i in (1..3000) do
+      new word := "item{i}";
+      if word =~ "/^item[0-9]+$/" do
+        let hits += 1;
+      done;
+    done;
+    expect hits == 3000;
+    print text.length(), hits;
+  return;
+end p1d_strings;
+/*@expect
+{
+  "stdout": ["58893,3000"]
+}
+*/
