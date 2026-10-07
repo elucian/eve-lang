@@ -1,5 +1,5 @@
 # level 1 performance: lists, DataMaps and DataSets
-** perf: collections, indexing, iteration
+** perf: list appends and iteration (60,000 elements), DataMap and DataSet
 driver p1c_collections is
   process main is
     new lst := (0,);
