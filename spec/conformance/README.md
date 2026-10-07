@@ -44,7 +44,7 @@ What a test must produce is written **in the test**, in one or more comment bloc
 | `skip` | a reason: the test is not run on this implementation | none |
 | `note` | free text | |
 
-A test that prints must declare `stdout` or `contains`; the output of a program is part of its expectations.
+A test that prints must declare `stdout` or `contains`; the output of a program is part of its expectations. A negative test (`syntax_error`) is exempt: its script never runs.
 
 ## Verdicts
 

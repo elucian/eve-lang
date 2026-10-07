@@ -28,6 +28,7 @@ test {
     _ = vm;
     _ = @import("lexer.zig");
     _ = @import("parser.zig");
+    _ = @import("check.zig");
     _ = @import("ast.zig");
     _ = @import("interp.zig");
     _ = @import("doc.zig");

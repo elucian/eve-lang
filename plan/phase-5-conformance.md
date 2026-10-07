@@ -17,7 +17,7 @@ Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
 - Levels 1–3, file naming, the `driver` per test rule, the expected-output convention.
 - Test metadata header comment: `** spec: syntax/regions.md#driver, level: 1`.
 
-### S5.3 Level 1 suite `[~]` 2026-10-06: 54 tests rewritten to D-093 and awaiting the author's review; 17 pass on the old VM → D-094
+### S5.3 Level 1 suite `[~]` 2026-10-07: 82 tests (a01 to a82), all pass on the VM; awaiting the author's review → D-094
 - Move or copy the qualifying `demo/*.eve` files into `test/level1/` with expected output. **Done 2026-10-06 (D-099):** every demo has a test or a tutorial example; a56 to a63 were written for the eight that had none.
 - `demo/` is retired (D-099): it is ready to be deleted.
 - One test per lexical and syntax rule from phases 2–3; list coverage in `conformance/README.md`.

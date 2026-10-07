@@ -58,8 +58,6 @@ pub const Tag = enum {
     index,
     /// `f(a, b: 1, @c)`: kids = [callee, arg...].
     call,
-    /// `new C(args)`: kids = [call].
-    new,
     /// `(params) => (body)`: kids = [params, body].
     lambda,
     // ---- statements ----
@@ -67,8 +65,16 @@ pub const Tag = enum {
     block,
     /// `let` (a variable) or `set` (a constant): text = `:=`, `::`, `=` or empty; kids = [targets, value or none];
     /// `ty` = the declared type.
-    let,
+    var_decl,
     set,
+    /// `let lst -> e;`, `new x <- lst;`: kids = [list, target], text = `->` or `<-`.
+    capture,
+    /// A `"""` text literal: a String that `type()` reports as Text.
+    text_lit,
+    /// `*list` in a call: the elements become arguments.
+    spread,
+    /// `?` as an end of a range: `(0..?)`.
+    open_end,
     /// The names declared by a `let`: kids = `name`, `field` and `star` nodes (`star`: text = name, may be empty).
     targets,
     star,
@@ -87,6 +93,11 @@ pub const Tag = enum {
     /// `skip;`: go to the continuation point of the loop (next element, condition, or the test of `repeat`).
     skip_stmt,
     over_stmt,
+    exit_stmt,
+    stop_stmt,
+    pass_stmt,
+    assert_stmt,
+    defer_stmt,
     panic_stmt,
     retry_stmt,
     resume_stmt,
@@ -112,12 +123,14 @@ pub const Tag = enum {
     process,
     /// `function`, `method` and `constructor`: text = name; kids = [params, second params, results, body].
     function,
+    procedure,
     method,
     constructor,
     /// `( [@]name [= default] [: Type] )`: kids = `param` and `ref_param` nodes (kids = [default or none]; `ty`).
     params,
     param,
     ref_param,
+    vararg_param,
     /// `Integer`, `[5]Integer`: text = name; kids = the dimensions.
     type,
     /// `class Name = {members} <: Parent is ... end Name;`: kids = [members, parent name or none, routine...].
@@ -139,8 +152,10 @@ pub const Node = struct {
     col: u32 = 0,
     text: []const u8 = "",
     kids: []const *const Node = &.{},
-    /// The declared type of a `let`, `set`, parameter or member.
+    /// The declared type of a `new`, `set`, parameter or member.
     ty: ?*const Node = null,
+    /// A member of a class written with `public` (the default is private, D-085).
+    public: bool = false,
 };
 
 // Zig tip: a `const` of a struct type at file level is a value built while compiling. Parts that
@@ -214,11 +229,11 @@ pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void
             try w.print("{s}{s} {s}\n", .{ indent(depth), @tagName(n.tag), n.text });
             for (n.kids) |k| try outline(w, k, depth + 1);
         },
-        .process, .function, .method, .constructor, .class, .job => {
+        .process, .function, .procedure, .method, .constructor, .class, .job => {
             try w.print("{s}{s} {s}  @{d}\n", .{ indent(depth), @tagName(n.tag), n.text, n.line });
             for (n.kids) |k| try outline(w, k, depth + 1);
         },
-        .let, .set => {
+        .var_decl, .set => {
             try w.print("{s}{s}", .{ indent(depth), @tagName(n.tag) });
             for (n.kids[0].kids) |t| try w.print(" {s}", .{t.text});
             try w.print("  @{d}\n", .{n.line});

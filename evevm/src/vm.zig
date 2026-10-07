@@ -128,6 +128,8 @@ pub const Session = struct {
     diag: parser.Diag = .{},
     parse_failed: bool = false,
     machine: ?*interp.Interp = null,
+    /// The command-line arguments after the script name (the arguments of `process main`).
+    script_args: []const []const u8 = &.{},
     outcome: ?interp.Outcome = null,
 
     /// The text of `summary.log`, one line per `status` or `log`.
@@ -256,6 +258,7 @@ pub const Session = struct {
         const machine = a.create(interp.Interp) catch return error.WriteFailed;
         machine.* = interp.Interp.init(a, cap orelse self.out) catch return error.WriteFailed;
         machine.hook = .{ .ctx = self, .poll = pollHook };
+        machine.script_args = self.script_args;
         self.machine = machine;
         self.steps = 0;
         self.line = 0;
