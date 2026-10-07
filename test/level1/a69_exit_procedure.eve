@@ -1,0 +1,29 @@
+# exit in a procedure leaves only the procedure; the process goes on (D-111)
+** spec: syntax/statements.md#interruptions
+driver a69_exit_procedure is
+  procedure check(n: Integer) is
+    if n < 0 do
+      print "negative";
+      exit;
+    done;
+    print "positive";
+  return;
+
+  process main is
+    check(-1);
+    check(1);
+    print "end";
+  finalize
+    print "finalize";
+  return;
+end a69_exit_procedure;
+/*@expect
+{
+  "stdout": [
+    "negative",
+    "positive",
+    "end",
+    "finalize"
+  ]
+}
+*/

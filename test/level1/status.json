@@ -166,7 +166,7 @@
    "runs": 20,
    "checks": 1,
    "last": "2026-10-06 07:52",
-   "mtime": 1791327779,
+   "mtime": 1791335666,
    "title": "list: literal, index, append, remove, capture, delete, builder, deconstruct (D-058 to D-060, D-077, D-079, D-096)",
    "reason": "exit code 65, expected 0"
   },
@@ -325,8 +325,8 @@
    "runs": 20,
    "checks": 0,
    "last": "2026-10-06 07:52",
-   "mtime": 1791287545,
-   "title": "over skips recover and finalize (D-020)",
+   "mtime": 1791358095,
+   "title": "over skips recover but runs finalize: a clean exit never skips cleanup (D-081)",
    "reason": ""
   },
   "a34_jobs": {
@@ -345,7 +345,7 @@
    "runs": 20,
    "checks": 2,
    "last": "2026-10-06 07:52",
-   "mtime": 1791287545,
+   "mtime": 1791357723,
    "title": "index 0 is an error: indexes start at 1 (D-021)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -355,7 +355,7 @@
    "runs": 20,
    "checks": 2,
    "last": "2026-10-06 07:52",
-   "mtime": 1791287545,
+   "mtime": 1791357723,
    "title": "+= on a missing key of a map raises an error (D-058)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -365,7 +365,7 @@
    "runs": 20,
    "checks": 2,
    "last": "2026-10-06 07:52",
-   "mtime": 1791327779,
+   "mtime": 1791357723,
    "title": "a division by zero raises an error, also for Real: no infinity, no NaN (Q-019a)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -504,8 +504,8 @@
    "runs": 5,
    "checks": 0,
    "last": "2026-10-06 07:52",
-   "mtime": 1791287545,
-   "title": "an error without recover ends the process with the code of the error, after finalize (D-063)",
+   "mtime": 1791358095,
+   "title": "an error without recover ends the process with the exit code 4, after finalize (D-081)",
    "reason": ""
   },
   "a52_assert": {
@@ -654,6 +654,33 @@
    "last": "-",
    "mtime": 1791333961,
    "title": "a class hosts functions, not procedures: the work that changes things is done by methods (D-103)"
+  },
+  "a68_undefined_name": {
+   "status": "NEW",
+   "failures": 0,
+   "runs": 0,
+   "checks": 0,
+   "last": "-",
+   "mtime": 1791358646,
+   "title": "an undefined name is a compile error: the script does not start (D-110)"
+  },
+  "a69_exit_procedure": {
+   "status": "NEW",
+   "failures": 0,
+   "runs": 0,
+   "checks": 0,
+   "last": "-",
+   "mtime": 1791358928,
+   "title": "exit in a procedure leaves only the procedure; the process goes on (D-111)"
+  },
+  "a70_over_procedure": {
+   "status": "NEW",
+   "failures": 0,
+   "runs": 0,
+   "checks": 0,
+   "last": "-",
+   "mtime": 1791358928,
+   "title": "over in a procedure ends the whole process, not only the procedure (D-111)"
   }
  }
 }

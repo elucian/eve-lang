@@ -71,7 +71,7 @@ return;
 - The result is written `=> (@name: Type)`; `@` makes it a reference; the result variable is assigned in the body; `return;` carries no value (D-036). Several results: `=> (@q: Integer, @r: Integer)`.
 - A plain function and a `!` function can not change a global, a module variable or a parameter, and can not call a procedure. A procedure may call any function or procedure.
 - Parameters: one list, never two (D-029). `name: Type` is mandatory; `name = value :Type` or `name := expression` is optional with a default (D-070); `*name` collects the rest (vararg); `@name` is an input/output reference and has no default (D-048). Parameters after a vararg are optional and are named at the call.
-- Order: mandatory parameters come first and optional parameters follow; a mandatory parameter after an optional one is a compile error (D-105).
+- Order: a mandatory parameter may follow an optional one (typically an `@` parameter); the call must then name it (`add(1, 2, op: @result)`, D-106). Every `@` parameter is input/output; there are no pure output parameters.
 - At the call, positional arguments come first; an optional parameter is named with `:` (`greet("Eve", greeting: "Hi")`); an `@` parameter needs `@` on the argument (`swap(@a, @b)`).
 - Without `@` an argument is passed by value, collections included (like `::`).
 - Functions and procedures do not handle errors: an error propagates to the process (D-028).

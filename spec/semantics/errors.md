@@ -1,10 +1,10 @@
 # Errors, Recovery and Exit Codes
 
-Status: **0.1-draft**, level 1. Sources: D-010, D-020, D-038, D-054, D-063, D-096. Rules marked *(proposed)* wait for the author (D-054).
+Status: **0.1-draft**, level 1. Sources: D-010, D-020, D-038, D-054, D-063, D-081, D-096. The codes are settled (D-109).
 
 ## Errors
 
-An **error** is a record `{code, message, job, line}`. It is created by `raise expr;`, by a failed `expect` (code 2), by a failed `assert` (code 3, Q-031h) and by the run-time checks of the language. The checks that raise an error with code 4 (Q-031g): index 0 or out of range, a missing DataMap key, division or remainder by zero, an undefined name, an operand of the wrong type, integer overflow. A compile error is not an error value: the script does not run.
+An **error** is a record `{code, message, job, line}`. It is created by `raise expr;`, by a failed `expect` (code 2), by a failed `assert` (code 3, Q-031h) and by the run-time checks of the language. Every run-time check of the language has its own error class and its own code, so a code always names one precise error (D-109): index 0 or out of range `$err_index` 10, a missing DataMap key `$err_key` 11, division or remainder by zero `$err_divide` 12, integer overflow `$err_overflow` 13. `raise "text";` has the generic code 4 `$err_raise`. The full table of codes is in exceptions.html. An undefined name and an operand of the wrong type are compile errors, never error values: Eve analyzes the whole script before it runs (D-109, D-110). A compile error is not an error value: the script does not run.
 
 `raise "text";` creates an error with code 4 and that message. Functions and procedures do not handle errors; an error propagates out of them to the process that called them (D-028).
 
@@ -27,22 +27,25 @@ An error raised anywhere in a process (also inside a job or a called function or
 
 ### `finalize`
 
-`finalize` runs once when the process ends by `return`, by `exit`, by the end of `recover` or by `abort`. It does not run after `over;` or `panic;`.
+`finalize` runs once when the process ends by `return`, `over;`, `exit` in the process itself, by the end of `recover` or by `abort`: a clean way out never skips the cleanup. It does not run after `panic;` or after an unexpected stop (D-081).
 
 ## Ending the process
 
+The exit code of a process is a small number, 0 to 5. It is not the code of an error: `$error.code` and the `$err_` constants identify the error and are never exit codes (D-081).
+
 | Cause | Exit code | `recover` | `finalize` |
 |---|---|---|---|
-| end of process, `return;`, `exit;` | 0 | no | yes |
-| `over;` | 0 | no | no |
-| `panic;` | 1 | no | no |
-| failed `expect` (no `recover`, or `abort`) | 2 | yes | on abort |
-| failed `assert` (no `recover`, or `abort`) | 3 | yes | on abort |
-| unhandled error | the code of the error | yes | on abort |
+| end of process, `return;`, `exit;` in the process | 0 | no | yes |
+| `over;` | 0 | no | yes |
+| `panic;` | 1 | no, ends the whole application | no |
+| failed `expect`, not recovered (or `abort`) | 2 | yes | yes |
+| failed `assert`, not recovered (or `abort`) | 3 | yes | yes |
+| `raise` or run-time error, not recovered (or `abort`) | 4 | yes | yes |
+| unexpected stop: the user stops the program (Ctrl+C), the program is halted, a `halt` breakpoint ended with Ctrl+C or `stop`, a hard time-out or another outage, recursion too deep, out of memory | 5 | no | no |
 | end of `recover` | 0 | | yes |
 
-`panic` is not an error: it ends the whole application at once. When several codes apply, the first one reached wins. The codes are `$err_` constants in the standard library: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4 (D-054, Q-031h); warnings have `$wrn_` constants. Messages of the VM go to the error output; `print` and `write` go to the standard output.
+`abort` ends with the exit code of the error it passes on (2, 3 or 4). `panic` is not an error: it ends the whole application at once. When several codes apply, the first one reached wins. The error codes are `$err_` constants in the standard library: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4 (D-054, D-109, Q-031h); warnings have `$wrn_` constants. Messages of the VM go to the error output; `print` and `write` go to the standard output. The command-line errors of the VM (64, 65, 66, 70) are not exit codes of a process.
 
 ## Open points
 
-The code of `exit`; the codes above 4 (D-054); `raise` with a code and the Exception module (PRC-08, PRC-09).
+`raise` with a code and the Exception module (PRC-08, PRC-09).

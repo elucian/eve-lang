@@ -53,8 +53,8 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 
 | Name | Type | Meaning | Status | VM | Source |
 |---|---|---|---|---|---|
-| `$err_name` | `Integer` | Error codes: `$err_panic` 1, `$err_expect` 2, `$err_raise` 4, `$err_index` 10 … `$err_output` 43 | 0.1 (codes proposed) | codes only | D-054, exceptions.html, `lib/exception.eve` |
-| `$wrn_name` | `Integer` | Warning codes: `$wrn_deprecated` 5, `$wrn_truncate` 6, `$wrn_unused` 7 | 0.1 (codes proposed) | codes only | D-054, exceptions.html |
+| `$err_name` | `Integer` | Error codes: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4, `$err_index` 10 … `$err_recursion` 44 | 0.1 | codes only | D-054, exceptions.html, `lib/exception.eve` |
+| `$wrn_name` | `Integer` | Warning codes: `$wrn_deprecated` 5, `$wrn_truncate` 6, `$wrn_unused` 7 | 0.1 | codes only | D-054, exceptions.html |
 
 ## Not system variables
 
@@ -78,4 +78,4 @@ Questions for the author; answers become decisions and update the tables.
 3. **`$trace`.** exceptions.html: the list of errors and warnings; databases.html: shows the generated SQL. One meaning only? Proposal: the errors list; the SQL goes to `$query`.
 4. **`$object`.** Methods of a class use the parameter `@self` (classes.html). Is `$object` still needed?
 5. **Types of folders.** `String`, or a `Path`/`Folder` type from the library (command.html uses `Folder($HOME/"test")`)?
-6. **Writable or read-only.** Which variables may a driver change with `set` (`$EVE_ASP`, `$EVE_OUT`, `$epsilon`)? Can a driver create its own `$name`, as the examples with `$user_path` suggest?
+6. ~~Writable or read-only.~~ Answered (D-109): a driver can set `$epsilon` and any other system variable, and can define its own `$name` variables.

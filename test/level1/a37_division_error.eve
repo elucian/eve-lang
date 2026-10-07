@@ -6,6 +6,7 @@ driver a37_division_error is
     new q := 1.0 / z;
     print "never";
   recover
+    expect $error.code == $err_divide;
     print "caught division error";
   return;
 end a37_division_error;

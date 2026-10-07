@@ -65,6 +65,6 @@ PASS, FAIL (wrong exit code, output or state), ERROR (the runner could not run t
 | Classes and methods | a26, a40 to a42, a55, a67 |
 | Errors and exit codes | a29 to a37, a50 to a54 |
 
-Not covered yet, waiting for decisions: lambdas and closures (Q-025, Q-026), formats of interpolation (D-060, a11 is a draft), `Date` and `Time` and the format operator `as` (the examples are in the tutorial, datetime.html), scientific notation (Q-013), writing a system variable such as `$epsilon` (variables.md, open point 6).
+Not covered yet, waiting for decisions: lambdas and closures are level 2 (D-109), formats of interpolation (D-060, a11 is a draft), `Date`, `Time` and the operator `as` are outside level 1 (D-108; level 3, data language; the examples are in the tutorial, datetime.html), scientific notation (Q-013).
 
 Updated by D-098 (2026-10-06, static edits, the VM was not run): the tests follow D-096 and D-097. Placeholders `\n{name % fmt}` hold a name only (a11 and every test that prints a number); a failed `assert` stops the process with code 3 (a52); `m.delete(v)` replaces the removal by value and `let m -> last;` captures (a17); `let` creates a missing name (a43, now `a43_let_creates_name`); an attribute added from outside the class is a compile error (a22, new a55); ordinals start at 1 (a16); `-2 ^ 2` is `4` (a07); a regex literal keeps its backslashes (a28); `sep` (a05); level 2 is in the current syntax and its expectations are `/*@expect*/` blocks.

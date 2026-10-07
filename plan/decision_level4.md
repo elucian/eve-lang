@@ -49,3 +49,10 @@ The compiler checks every aspect at `start` (D-089). Do we also mark the aspect 
 Recommendation: (a) plus the opt-in check of (c): inference by default, and `parallel aspect x is` makes the compiler verify the aspect where it is written. Beginners write nothing; library authors get the early error.
 **Answer:**
 Alternative option: I like double down on things because this is how humans learn. With pain! For a greater good. So we mark an aspect woth keywords: We have two kind of aspects: exclusive / concurrent so we create two new keywords: exclusive/ concurent instead of serial/parallel. User declare he wants an exclusive aspect or a concurent aspect, then the compiler will signal errors if situations make the aspect non concurent.
+
+## Q-035 Asynchronous subprograms: open points (2026-10-07, level 4; moved from level 1)
+Questions left by D-104 (c); also a TODO box in async.html.
+(a) How does a spawned `async function` give its result: `new r := await f(x);` for an awaited one, and for a spawned one a result ready after the `done` of the job?
+(b) Can an `async` subprogram be called without `spawn` or `await`? **Answer:** no; it must be started with `spawn` or `await`.
+(c) Can `spawn` and `await` be used outside a job?
+(d) When one task of a job fails, do the other tasks finish before the process goes to `recover`?
