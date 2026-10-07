@@ -175,7 +175,7 @@
       "id": "export",
       "category": "declaration",
       "status": "stable",
-      "ref": "syntax/declarations.md#imports-and-modules-level-2",
+      "ref": "syntax/declarations.md#imports-and-modules-level-3",
       "summary": "Lists the members a module makes public (level 2)."
     },
     {
@@ -196,7 +196,7 @@
       "id": "from",
       "category": "declaration",
       "status": "stable",
-      "ref": "syntax/declarations.md#imports-and-modules-level-2",
+      "ref": "syntax/declarations.md#imports-and-modules-level-3",
       "summary": "Starts an import: `from lib use (a, b);` (level 2)."
     },
     {
@@ -469,7 +469,7 @@
       "id": "use",
       "category": "declaration",
       "status": "stable",
-      "ref": "syntax/declarations.md#imports-and-modules-level-2",
+      "ref": "syntax/declarations.md#imports-and-modules-level-3",
       "summary": "Lists the imported names in an import (level 2)."
     },
     {

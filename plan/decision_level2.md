@@ -6,7 +6,7 @@ The log is split by level; ids are shared and keep counting across the files (an
 
 ## Scope
 
-Level 2 tests a project of **one driver and its aspects** (`test/level2`, prefix `b`). A driver calls an aspect with `apply`, passes arguments by position, by name and by spreading, reads results from its `@` outputs, and recovers the errors that the aspect raises. The aspect is a file in `asp/` with its own state, created at each call, and its own procedures and functions, which level 1 already teaches for a driver (a24, a25, a56, a64 to a73).
+Level 2 tests a project of **one driver and its aspects** (`test/level2`, prefix `b`). A driver calls an aspect with `apply`, passes arguments by position, by name and by spreading, reads results from its `@` outputs, and recovers the errors that the aspect raises. The aspect is a file in `asp/` with its own state, created at each call, and its own procedures and functions, which level 1 already teaches for a driver (a24, a25, a56, a64 to a73). **Lambdas and closures** are also level 2 (D-109), with `apply` and aspects: they use the subprograms of an aspect.
 
 Features: F-STR-02 (aspects, serial), F-STR-04 (project folders, `asp/`), F-STR-05 to F-STR-07, F-LIB-01 (`log_err`, `log_wrn`). Not in level 2: modules, imports, libraries, classes and methods across files (**level 3**, D-112); parallel groups and concurrent aspects (level 4, D-090); the machine and the server (level 6).
 
@@ -50,6 +50,8 @@ b01 to b09 exist. Planned, to write when the syntax is confirmed (all fail first
 | b14 | `aspect_bad_args` | wrong count or unknown name of an argument: check-time error, exit 65 |
 | b15 | `aspect_apply_aspect` | `apply` inside an aspect is a check-time error (D-066) |
 | b16 | `aspect_recover` | an aspect recovers its own error with `recover`; the driver never sees it |
+| b18 | `lambda` | an anonymous function `(x) => (x * 2)`, called at once and passed as an argument |
+| b19 | `closure` | a function declared in a function keeps the state of its parent (D-101); it is a `!` function |
 | b17 | `aspect_trace` | the error raised again in the driver names the aspect and the line of the `raise` (D-113) |
 
 ## Open questions
