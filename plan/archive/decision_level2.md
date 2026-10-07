@@ -308,3 +308,13 @@ Yes, the method dissapears from the object. The returning objects will contain o
 D-112 (f): `error.log` and `warning.log` get a run signature. Proposal: the date of the run, `out/error_2026-10-07.log`, and several runs on the same day append to the same file. Alternative: date and time, `error_2026-10-07_14-30-05.log`, one file per run. Which one, and what is the signature when the program runs in the REPL?
 **Answer:**
 The date and time is also part of OS so is not required in the file name. Only the date is good enaugh. Because we have groups in log, that show the run number and the time. Make the logs: json so that a tool can use these files and create a html report in a UI. That we do not have yet.
+
+## Q-040 Shape of the JSON log (2026-10-07; answered 2026-10-07 → D-114)
+D-113: `error_<date>.log` and `warning_<date>.log` are JSON, grouped by run. Proposal: one JSON document per file, updated at each run (a run that starts on the same date appends a group):
+```
+{"runs": [{"run": 1, "time": "14:30:05", "script": "b09_log_files", "messages": [{"line": 6, "unit": "main", "text": "disk full"}]}]}
+```
+The first field of a group is the number of the run of that day. Alternative: JSON Lines (one object per line, appended, never rewritten), which is safer when two runs write at once and keeps the old rule "one message per line". Which one, and which fields does a message carry (`line`, `unit`, `level`)?
+**Answer:**
+One json per run, name is run-log-<date>.json it hase messages, message type, warning/error, the line, unit, level and the message itself. Organized on run data last runs appended at the end of the file.
+Ok approved.

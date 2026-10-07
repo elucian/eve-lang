@@ -94,9 +94,21 @@ error 22: disk full
 
 The frame of a function or procedure reads `line x in function y` or `line x in procedure y`; the aspect frame reads `line z in aspect name`; the hosting block (`job`, `parallel`, a labelled loop) reads `in job label`, `in parallel label`, `in loop label`. The exit code is the code of the error (`errors.md`).
 
-## Log files
+## Log files (D-114)
 
-`log_err(text)` appends to the error log and `log_wrn(text)` to the warning log, in the output folder `$EVE_OUT` (default `out/`). The file name carries the date of the run: `error_<date>.log`, `warning_<date>.log`. The content is JSON, grouped by run, each group with the run number and the time. The exact shape is open (Q-040); a run signature in the name replaces the plain `error.log` of D-057 (D-113).
+`log_err(text)` and `log_wrn(text)` write the run log, in the output folder `$EVE_OUT` (default `out/`): one file per date, `run-log-<date>.json` (`<date>` is `YYYY-MM-DD`), for errors and warnings together. The file is a JSON array with one object per run; a new run is appended at the end. A run that writes nothing adds nothing.
+
+```json
+[
+  {"run": 1, "time": "14:30:05", "script": "b09_log_files",
+   "messages": [
+     {"type": "warning", "line": 4, "unit": "b09_log_files", "level": 0, "message": "low memory"},
+     {"type": "error", "line": 7, "unit": "b09_log_files", "level": 0, "message": "disk full"}
+   ]}
+]
+```
+
+`type` is `"error"` for `log_err` and `"warning"` for `log_wrn`. `line` and `unit` are those of the call (as in the trace above); `level` is the depth in the stack of calls, 0 for `main`. The file is meant for a tool that makes an HTML report (not written yet).
 
 ## Not in level 2
 
@@ -104,7 +116,7 @@ Modules, `from … use`, libraries and the library search path (level 3); `paral
 
 ## Open points
 
-1. Q-040: the shape of the JSON log.
+1. The meaning of `level` in a log message (call depth) is proposed, to confirm.
 2. Names `$error.unit` and `$error.trace` are proposed here from D-113 and must be added to `variables.md` when the author confirms them.
 3. The error code of a spread that doesn't fit at run time is not in the register of error codes (D-109): to add.
 4. The search order puts the folder of the call before `asp/`; `processing.html` lists the same order, and D-112 only fixes `asp/` as the default folder.

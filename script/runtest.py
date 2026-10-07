@@ -30,7 +30,10 @@ Other folders are not tests. The expectation keys, all optional:
   "contains"   a list of strings that must all appear in the output
   "stderr"     a list of strings that must all appear in the error output
   "files"      project tests: {"out/report.txt": "text" or [lines]}: each file must exist
-               after the run with this content (line endings and trailing white space ignored)
+               after the run with this content (line endings and trailing white space ignored).
+               A value that is an object, or a list that holds objects, is JSON: the file is
+               parsed and must match it (an object may have more keys; "*" matches any value).
+               "{date}" in a file name is the date of the run, YYYY-MM-DD (D-114)
   "skip"       a reason: the test is not run
   "note"       free text
 A test that prints (a `print` or `write` statement) must declare "stdout" or
@@ -225,6 +228,22 @@ def eve_args(test, exp):
     return [script_arg(test), *exp["args"]]
 
 
+def is_json_expect(want):
+    """A file expectation is JSON when it is an object, or a list with something other than lines."""
+    return isinstance(want, dict) or (isinstance(want, list) and any(not isinstance(x, str) for x in want))
+
+
+def json_match(want, got):
+    """True when got has the shape of want: "*" is any value, an object may have more keys."""
+    if want == "*":
+        return True
+    if isinstance(want, dict):
+        return isinstance(got, dict) and all(k in got and json_match(v, got[k]) for k, v in want.items())
+    if isinstance(want, list):
+        return isinstance(got, list) and len(got) == len(want) and all(json_match(w, g) for w, g in zip(want, got))
+    return want == got
+
+
 def script_arg(test):
     """The script as `eve` sees it: relative to the working directory of the test."""
     return os.path.basename(test) if is_project(test) else rel(test)
@@ -279,13 +298,21 @@ def run_test(eve, test, timeout):
         if text not in res["stderr"]:
             problems.append(f"expected error output not found: {text!r}")
     for name, want in exp.get("files", {}).items():
+        name = name.replace("{date}", datetime.date.today().isoformat())
         path = os.path.join(test_cwd(test), name)
         if not os.path.isfile(path):
             problems.append(f"file not created: {name}")
             continue
         with open(path, encoding="utf-8", errors="replace") as f:
             got = f.read()
-        if norm(got) != norm("\n".join(want) if isinstance(want, list) else want):
+        if is_json_expect(want):
+            try:
+                same = json_match(want, json.loads(got))
+            except ValueError:
+                same = False
+            if not same:
+                problems.append(f"file differs (JSON): {name}")
+        elif norm(got) != norm("\n".join(want) if isinstance(want, list) else want):
             problems.append(f"file differs: {name}")
     if "stdout" not in exp and not exp.get("contains") and not exp.get("syntax_error") and prints_output(test):
         problems.append("no expected output declared (/*@expect*/ block or expect.json; the test prints)")
