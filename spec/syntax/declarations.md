@@ -8,7 +8,7 @@ A script is a file. Its first line decides its kind (lexical.md, File header):
 
 - `#!…` is a **free script**: sequential statements, no `driver`, no `process`, no `return`, no subprograms, no jobs. It ends at the end of the file. A free script has one scope (D-014, D-091).
 - A **driver** is `driver name is` … `end name;`. It can be run. A driver has one process, `main`, the entry point (D-037).
-- An **aspect** and a **module** are scripts of level 2; they use the same header and closer.
+- An **aspect** is `exclusive aspect name is` or `concurrent aspect name is` … `end name;` (D-090). It has one process, `main`, and no public member; a driver runs it with `apply` (level 2, `../semantics/aspects.md`). A **module** is a script of level 3; it uses the same header and closer.
 
 A driver, aspect or module has **one scope** (D-041). The regions `import`, `alias`, `constant`, `global` and `globals` do not exist: everything is declared directly, in any order, indented by 2 spaces. `end name;` repeats the name of the header and is at column 1.
 
@@ -111,6 +111,6 @@ end Point;
 - Extension methods are static: they never change the class, can not hide a method of the class, see only its public members, and are visible only in the scripts that declare or import them (D-086).
 - Traits, abstract classes, generics and generators belong to version 2 (D-039, D-087).
 
-## Imports and modules (level 2)
+## Imports and modules (level 3)
 
-`from lib use (a, b);` imports names; `export (a, b);` lists the public members of a module (D-041, D-085). See `decision_level2.md`.
+`from lib use (a, b);` imports names; `export (a, b);` lists the public members of a module (D-041, D-085). See `decision_level3.md` (moved from level 2, D-112).

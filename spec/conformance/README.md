@@ -7,8 +7,8 @@ Status: **0.1-draft**. An implementation conforms to a level when it passes ever
 | Level | Folder | Content |
 |---|---|---|
 | 1 | `test/level1/` | one script: lexical rules, types, expressions, control flow, functions, classes, errors |
-| 2 | `test/level2/` | projects: imports, modules, aspects, processes |
-| 3 to 7 | `test/level3/` … | data, parallel, database, server, web |
+| 2 | `test/level2/` | projects: aspects, lambdas and closures (D-109, D-112) |
+| 3 to 7 | `test/level3/` … | modules and imports, data, parallel, database, server, web |
 
 ## Test files
 

@@ -1,6 +1,6 @@
 # Grammar
 
-Status: **0.1-draft**, level 1 (a single script). The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 2 to 7 (import, aspect, parallel, database, server) are not in this file.
+Status: **0.1-draft**, levels 1 and 2 (a single script; a driver and its aspects). The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 2 to 7 (import, aspect, parallel, database, server) are not in this file.
 
 Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeats zero or more times, `( )` groups, `"…"` is a keyword or a symbol token, `(* … *)` is a note. Every statement ends with `;`. Layout (2 spaces per level) is checked after parsing, not by the grammar (see lexical.md, Layout).
 
@@ -9,7 +9,7 @@ Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeat
 ```ebnf
 file        = free-script | script ;
 free-script = shebang , { statement } ;                       (* line 1 is "#!…": no driver, no process *)
-script      = driver ;                                         (* aspect and module: level 2 *)
+script      = driver | aspect ;                                (* module: level 3 *)
 driver      = "driver" , name , "is" , { member } , "end" , name , ";" ;
 member      = declaration | process ;
 process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
@@ -18,9 +18,11 @@ process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
               "return" , ";" ;
 recover     = "recover" , { statement } ;
 finalize    = "finalize" , { statement } ;
+aspect      = ( "exclusive" | "concurrent" ) , "aspect" , name , "is" ,
+              { declaration } , process , "end" , name , ";" ;       (* the process is named main *)
 ```
 
-A driver has one process named `main`, which is the entry point. `end name;` repeats the name of the header.
+A driver has one process named `main`, which is the entry point. An aspect has exactly one process, also named `main`, and nothing in it is public (`../semantics/aspects.md`). `end name;` repeats the name of the header.
 
 ## Declarations
 
@@ -81,7 +83,7 @@ type        = name-path , [ "(" , ":" , type , { "," , type } , ")" ]      (* In
 
 ```ebnf
 statement   = ( simple , [ "if" , expression ] , ";" ) | block ;
-simple      = variable-stmt | let-stmt | call-stmt | expect-stmt | raise-stmt | jump | "return" | "pass"
+simple      = variable-stmt | let-stmt | call-stmt | apply-stmt | expect-stmt | raise-stmt | jump | "return" | "pass"
             | "retry" | "resume" | "abort" | "exit" | "over" | "panic" | "stop" ;
 let-stmt    = "let" , target , modifier , expression ;
 modifier    = ":=" | "::" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<+" | "+>" | "<<" | ">>" | "->" | "<-" ;
@@ -90,8 +92,10 @@ call-stmt   = name-path , [ "(" , [ arguments ] , ")" | arguments ] ;     (* pri
 expect-stmt = ( "expect" | "assert" ) , expression ;
 raise-stmt  = "raise" , expression ;
 jump        = ( "break" | "skip" ) , [ label ] ;
+apply-stmt  = "apply" , name-path , "(" , [ arguments ] , ")" ;      (* only in the process of a driver *)
 arguments   = argument , { "," , argument } ;
-argument    = [ name , ":" ] , [ "@" ] , expression ;
+argument    = [ name , ":" ] , [ "@" ] , expression
+            | "*" , expression ;                                        (* spread a list or a map, aspects.md *)
 
 block       = if-block | match-block | job-block | while-block | for-block | repeat-block ;
 if-block    = "if" , expression , "do" , { statement } ,
@@ -137,7 +141,7 @@ postfix     = primary , { "." , name | "(" , [ arguments ] , ")" | "[" , index-l
 index-list  = index , { "," , index } ;
 index       = expression | "*" ;                                               (* a range slices, "*" is a whole dimension *)
 primary     = number | rune | string | text | name-path | sysname | "(" , expression , ")"
-            | "(" , lambda , ")"                            (* called at once: ((x) => (x * 2))(5); lambdas: level 3 *)
+            | "(" , lambda , ")"                            (* called at once: ((x) => (x * 2))(5); lambdas and closures: level 2, D-109 *)
             | list | array | brace | "_" ;
 list        = "(" , ")" | "(" , expression , "," , [ expression , { "," , expression } ] , ")"
             | "(" , expression , "|" , generators , ")" ;          (* list builder *)

@@ -16,7 +16,8 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Types | [semantics/types.md](semantics/types.md) | level 1, first draft |
 | Control flow, errors | [semantics/control.md](semantics/control.md), [semantics/errors.md](semantics/errors.md) | level 1, first draft; open points marked *(proposed)* |
 | Conformance | [conformance/README.md](conformance/README.md) | test format (`/*@expect*/`), levels, coverage of level 1 |
-| Other semantics | `semantics/*` | levels 2 to 7 not started |
+| Aspects | [semantics/aspects.md](semantics/aspects.md) | level 2, first draft (2026-10-07); open points 1 to 4 |
+| Other semantics | `semantics/*` | levels 3 to 7 not started |
 | Library | `library/*` | not started (phase 5) |
 
 Check the data files with `python script/speccheck.py`.
@@ -31,4 +32,5 @@ Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decis
 |---|---|
 | 2026-10-02 | Lexical structure, operators and delimiters (S2.2, S2.3, S2.5, S2.6); `speccheck.py` |
 | 2026-10-03 | Register of system variables, `semantics/variables.md` (D-071) |
+| 2026-10-07 | Level 2: aspects, `apply`, spreading, errors across `apply`, trace, log files (D-112, D-113); modules move to level 3 |
 | 2026-10-06 | Level 1: keywords, grammar, declarations, statements, expressions, types, control, errors, conformance (D-094); lexical rules and operator tables follow D-063 to D-087 |
