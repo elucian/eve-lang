@@ -25,7 +25,7 @@ Author decisions: the scope of level 2, and the answers to Q-022 (full text in t
 - **(c) Spread of a map.** `apply add3(a: 10, *m)`: the keys of the map are symbols named like the parameters. Accepted, part of level 2 (b05).
 - **(d) Error line.** `$error.line` is the line of the original `raise`, in the aspect file. The stack trace includes the name of the aspect that failed. The shape of the trace is settled in D-113.
 - **(e) Extension of an imported class.** A driver may extend a class imported from a module and `use (m(*))` brings the class in as a bare name (c09). In practice classes are extended in modules; a user extends them in aspects (see D-113). Level 3.
-- **(f) Log files.** `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line. The file names carry a run signature (date of the run). The format is D-113 and Q-040. Test b09 changes with it.
+- **(f) Log files.** `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line. The file names carry a run signature (date of the run). The format is D-113 and D-114.
 - **(g) Search paths.** Aspects are found in `asp/` of the project (level 2). Modules are searched in the standard library first, then in `lib/` when the import gives no path; `$EVE_LIB_PATH`, a list of folders separated like the PATH of the operating system, adds more folders (level 3). `$EVE_LIB_PATH` replaces `$EVE_LIB` of the register (D-071) when level 3 is specified.
 - **`exclusive aspect`.** The tests write `exclusive aspect name is`, as D-090 requires (the keyword is not an open point).
 - Applied: `test/level2`, `test/level3`, `test/readme.md`, `plan/version_map.md`, `plan/features_inventory.md` (F-STR-01 and F-STR-03 to v0.2), `plan/decision_level3.md`. Not yet applied: the tutorial (modules.html says `$EVE_LIB`, and the `use (*)` conflict), `spec/`, the VM.
@@ -34,8 +34,17 @@ Author decisions: the scope of level 2, and the answers to Q-022 (full text in t
 Author answers to Q-037, Q-038 and Q-039 (full text in the archive). Refines D-112 (d), (e) and (f).
 - **Trace of an error.** An unhandled error prints the error first (message, code), then the stack of calls in order of call, innermost first, one line per frame: `line x in function y`, `line x in procedure y`, `line z in aspect <name>`, then the block that hosts the call: `in job <label>`, `in parallel <label>`, `in loop <label>`. `$error.line` and `$error.unit` describe the first frame; `$error.trace` holds the whole list (names as proposed in D-113, to confirm when the spec of `$error` is written).
 - **Extension methods in an aspect.** A method that an aspect attaches to a class is temporary: it is visible only in that aspect and disappears from the object when `main` returns (state per call). An object given back through an `@` output or a channel keeps only the data it accumulated, not the methods. In a module it is different (level 3): an imported module makes its methods available where it is imported, but only those that it exports.
-- **Log files.** The file name carries only the date of the run, because the time belongs to the operating system: `out/error_<date>.log` and `out/warning_<date>.log`. The content is JSON, so that a tool can read it and make an HTML report (that tool does not exist yet). The file is divided into groups, one per run, which show the run number and the time. The shape of the JSON is open: Q-040.
-- Test b17 (trace) and b09 (log files) follow these rules; b09 waits for Q-040 and for a date placeholder in the expectations of `runtest.py` (file names `out/error_{date}.log`).
+- **Log files.** The file name carries only the date of the run, because the time belongs to the operating system: `out/error_<date>.log` and `out/warning_<date>.log` (replaced by D-114). The content is JSON, so that a tool can read it and make an HTML report (that tool does not exist yet). The file is divided into groups, one per run, which show the run number and the time. The names and the shape are in D-114.
+- Test b17 (trace) and b09 (log files) follow these rules; b09 follows D-114.
+
+## D-114 The run log: one JSON file per date, one object per run (2026-10-07)
+Author answer to Q-040 (full text in the archive). Replaces the file names of D-113 and the plain `error.log` and `warning.log` of D-057.
+- **One file per date**, `out/run-log-<date>.json` (`<date>` is `YYYY-MM-DD`), for errors and warnings together. It is a JSON array with **one object per run**; a new run is appended at the end of the file.
+- **A run object** has `run` (the number of the run in that file, from 1), `time` (start time, `HH:MM:SS`), `script` (the name of the driver) and `messages`, a list in the order written.
+- **A message** has `type` (`"error"` or `"warning"`: `log_err` writes the first, `log_wrn` the second), `line` (the line of the call, in its file), `unit` (the unit that holds the line: the driver or aspect name for `main`, otherwise the function or procedure), `level` and `message` (the text). `level` is read as the depth in the stack of calls (0 for `main`): proposed, to confirm.
+- A run that writes no message adds nothing to the file.
+- The test runner understands `{date}` in a file name and JSON file expectations (`script/runtest.py`, "files"); b09 uses both.
+- Applied: `spec/semantics/aspects.md` (Log files), `test/level2/b09_log_files`, `script/runtest.py`.
 
 ## Test plan for level 2
 
@@ -56,11 +65,4 @@ b01 to b09 exist. Planned, to write when the syntax is confirmed (all fail first
 
 ## Open questions
 
-## Q-040 Shape of the JSON log (2026-10-07)
-D-113: `error_<date>.log` and `warning_<date>.log` are JSON, grouped by run. Proposal: one JSON document per file, updated at each run (a run that starts on the same date appends a group):
-```
-{"runs": [{"run": 1, "time": "14:30:05", "script": "b09_log_files", "messages": [{"line": 6, "unit": "main", "text": "disk full"}]}]}
-```
-The first field of a group is the number of the run of that day. Alternative: JSON Lines (one object per line, appended, never rewritten), which is safer when two runs write at once and keeps the old rule "one message per line". Which one, and which fields does a message carry (`line`, `unit`, `level`)?
-**Answer:** _(open)_
-Ok approved.
+None for level 2.

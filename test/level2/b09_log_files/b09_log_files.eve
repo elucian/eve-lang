@@ -1,4 +1,4 @@
-# log_err and log_wrn write log files in the output folder out/ (D-057)
+# log_err and log_wrn write log files in the output folder out/ (D-057, D-114)
 driver b09_log_files is
   process main is
     log_wrn("low memory");
@@ -14,13 +14,18 @@ end b09_log_files;
     "logged"
   ],
   "files": {
-    "out/error.log": [
-      "disk full"
-    ],
-    "out/warning.log": [
-      "low memory"
+    "out/run-log-{date}.json": [
+      {
+        "run": 1,
+        "time": "*",
+        "script": "b09_log_files",
+        "messages": [
+          {"type": "warning", "line": 4, "unit": "b09_log_files", "level": 0, "message": "low memory"},
+          {"type": "error", "line": 7, "unit": "b09_log_files", "level": 0, "message": "disk full"}
+        ]
+      }
     ]
   },
-  "note": "file names error.log and warning.log, one message per line (Q-022 f)"
+  "note": "one file per date, one object per run, messages in order (D-114)"
 }
 */
