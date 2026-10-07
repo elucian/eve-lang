@@ -1,22 +1,50 @@
-# interpolation escapes: \s{} string, \#{} number, \b{} boolean, \u{} Unicode (D-060, draft formats)
+# placeholders {name} and {name % format}: a name only, written by its type; \{ \} are literal braces; \u{} Unicode (D-096, D-102, formats are a draft)
+** spec: lexical/lexical.md#string
 driver a11_interpolation is
   process main is
-    let name := "Eve";
-    let n := 42;
-    let pi := 3.14159;
-    let ok := True;
-    print "name = \s{name}";
-    print "n = \#{n}";
-    print "ok = \b{ok}";
-    print "sum = \#{1 + 2}";
+    new name := "Eve";
+    new n := 42;
+    new pi := 3.14159;
+    new ok := True;
+    new sum := 1 + 2;            ** an expression goes in a variable first
+    new big := 1234567;
+    print "name = {name}";
+    print "n = {n}";
+    print "ok = {ok}";
+    print "sum = {sum}";
     print "alpha = \u{3B1}";
     print "braces = \{x\}";
+    print "both = \{{n}\}";             ** an escaped brace next to a placeholder
+    new lst := (10, 20, 30);
+    print "second = {lst[2]}, last = {lst[-1]}, part = {lst[2..3]}";   ** brackets select a member (Q-033a)
+    new m := {"a": 1, "b": 2};
+    print "b = {m[\"b\"]}";             ** a quoted key: its quotes are escaped in the string
 
     ** formats: width, fill, alignment
-    print "n = \#{n:i5}|\#{n:0>i5}|\#{n:<i5}|";
-    print "pi = \#{pi:f8.2}|";
-    print "big = \#{1234567:,i9}";
-    print "name = \s{name:*^9}|\s{name:>6}|\s{name:.2}|";
-    print "ok = \b{ok:yn} \b{ok:01}";
+    print "n = {n % i5}|{n % 0>i5}|{n % <i5}|";
+    print "pi = {pi % f8.2}|";
+    print "big = {big % ,i9}";
+    print "name = {name % *^9}|{name % >6}|{name % .2}|";
+    print "ok = {ok % yn} {ok % 01}";
   return;
 end a11_interpolation;
+/*@expect
+{
+  "stdout": [
+    "name = Eve",
+    "n = 42",
+    "ok = True",
+    "sum = 3",
+    "alpha = α",
+    "braces = {x}",
+    "both = {42}",
+    "second = 20, last = 30, part = (20,30)",
+    "b = 2",
+    "n =    42|00042|42   |",
+    "pi =     3.14|",
+    "big = 1,234,567",
+    "name = ***Eve***|   Eve|Ev|",
+    "ok = Yes 1"
+  ]
+}
+*/

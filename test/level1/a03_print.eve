@@ -1,10 +1,16 @@
-# This test prints a string
+# print writes a string and a new line; no import is needed
+** spec: syntax/statements.md#calls
 driver a03_print is
   process main is
-    print("Hello World!");
+    print "Hello World!";
+    print("Hello again!");
   return;
 end a03_print;
-
-** Note:
-/* EVE has access to console by default,
-   no library or module must be imported */
+/*@expect
+{
+  "stdout": [
+    "Hello World!",
+    "Hello again!"
+  ]
+}
+*/

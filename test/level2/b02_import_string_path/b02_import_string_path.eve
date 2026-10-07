@@ -7,3 +7,10 @@ driver b02_import_string_path is
     print greeting.hello("World");
   return;
 end b02_import_string_path;
+/*@expect
+{
+  "stdout": [
+    "Hello, World!"
+  ]
+}
+*/

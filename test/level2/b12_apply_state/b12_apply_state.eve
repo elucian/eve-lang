@@ -5,3 +5,11 @@ driver b12_apply_state is
     apply tally();
   return;
 end b12_apply_state;
+/*@expect
+{
+  "stdout": [
+    "calls: 1",
+    "calls: 1"
+  ]
+}
+*/

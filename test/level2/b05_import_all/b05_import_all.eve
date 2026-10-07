@@ -7,3 +7,10 @@ driver b05_import_all is
     print one() + two();
   return;
 end b05_import_all;
+/*@expect
+{
+  "stdout": [
+    "3"
+  ]
+}
+*/

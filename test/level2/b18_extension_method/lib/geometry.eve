@@ -1,8 +1,10 @@
-# geometry: a public class
+# geometry: an exported class
 module geometry is
-  class .Point = {x, y :Integer} <: Object is
-    constructor(@self)(x = 0, y = 0 :Integer) is
-      self := new Object();
+  export (Point);
+
+  class Point = {x, y :Integer} <: Object is
+    constructor(x = 0, y = 0 :Integer) => (@self) is
+      let self := Object();
       let self.x := x;
       let self.y := y;
     return;

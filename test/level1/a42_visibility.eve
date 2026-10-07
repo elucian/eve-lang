@@ -1,0 +1,32 @@
+# a private member is seen only inside its class (D-085)
+** spec: syntax/declarations.md#classes-and-objects
+driver a42_visibility is
+  class Counter = {n :Integer} <: Object is
+    constructor() => (@self) is
+      let self := Object();
+      let self.n := 0;
+    return;
+
+    private method inc(@self) is
+      let self.n += 1;
+    return;
+
+    public method tick(@self) => (@result: Integer) is
+      self.inc();
+      let result := self.n;
+    return;
+  end Counter;
+
+  process main is
+    new c := Counter();
+    expect c.tick() == 1;
+    expect c.tick() == 2;
+    c.inc();                     ** compile error: inc is private
+  return;
+end a42_visibility;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

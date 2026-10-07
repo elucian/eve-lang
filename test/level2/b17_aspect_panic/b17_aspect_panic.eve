@@ -5,3 +5,11 @@ driver b17_aspect_panic is
     print "never";
   return;
 end b17_aspect_panic;
+/*@expect
+{
+  "exit": 1,
+  "stdout": [
+    "crash: start"
+  ]
+}
+*/

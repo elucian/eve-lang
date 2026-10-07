@@ -1,21 +1,22 @@
 # while loop with a header, break, else and then (D-030, D-033, D-034)
+** spec: semantics/control.md#loops
 driver a13_while is
   process main is
     ** the header declares i and sum: they live until then
     loop
-      let i := 1;
-      let sum := 0;
+      new i := 1;
+      new sum := 0;
     while i <= 5 do
-      sum += i;
-      i += 1;
+      let sum += i;
+      let i += 1;
     then
-      print "sum = \#{sum}";
+      print "sum = {sum}";
     done;
 
     ** an infinite loop is left with break
-    let n := 0;
+    new n := 0;
     while True do
-      n += 1;
+      let n += 1;
       break if n >= 3;
     done;
     expect n == 3;
@@ -28,12 +29,29 @@ driver a13_while is
     done;
 
     ** then runs every time the loop ends, also after break
-    let k := 0;
+    new k := 0;
     while k < 10 do
-      k += 1;
+      let k += 1;
       break if k == 2;
     then
-      print "k = \#{k}";
+      print "k = {k}";
     done;
+
+    ** a label closes the loop: done label;
+    new j := 0;
+    count: loop
+    while j < 3 do
+      let j += 1;
+    done count;
+    expect j == 3;
   return;
 end a13_while;
+/*@expect
+{
+  "stdout": [
+    "sum = 15",
+    "empty",
+    "k = 2"
+  ]
+}
+*/

@@ -39,3 +39,7 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 
 - Which of the draft features belong to version 0.2, and which move later?
 - The name of the time types (Instant or Timestamp; DateTime or LocalTime).
+
+## Q-024 The system library: names and members (2026-10-06)
+The page `syslib.html` lists the modules that connect a program to the machine: `io`, `exception`, `fs`, `path`, `time`, `secret`, `task`, `database`, `http`, with their level and status; only `io` and `exception` are drafted (`evevm/lib/`). Are these the names and the split you want (for example one `fs` and `path`, or one `file` module)? Is the shell `call` part of the system library or of the language? Which module holds the time types (`time`), given that Date and Time have their own page?
+**Answer:**

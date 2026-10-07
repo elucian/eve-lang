@@ -1,11 +1,22 @@
-# a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed
+# a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed (Q-014)
+** spec: lexical/lexical.md#string
 driver a27_text_literal is
   process main is
-    let text := """
+    new text := """
     "Opportunity is missed by most people
     because it is dressed in overalls
     and looks like work."
     """;
+    expect type(text) is Text;
     print text;
   return;
 end a27_text_literal;
+/*@expect
+{
+  "stdout": [
+    "\"Opportunity is missed by most people",
+    "because it is dressed in overalls",
+    "and looks like work.\""
+  ]
+}
+*/

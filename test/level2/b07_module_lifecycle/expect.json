@@ -1,8 +1,0 @@
-{
-  "stdout": [
-    "counter: loaded",
-    "main: start",
-    "main: end",
-    "counter: 2 ticks"
-  ]
-}

@@ -1,0 +1,35 @@
+# an extension method: declared outside the class, first parameter @self with the class type (D-086)
+** spec: syntax/declarations.md#classes-and-objects
+driver a40_extension_method is
+  class Point = {x, y :Integer} <: Object is
+    constructor(x = 0, y = 0 :Integer) => (@self) is
+      let self := Object();
+      let self.x := x;
+      let self.y := y;
+    return;
+  end Point;
+
+  method shift(@self: Point, dx, dy: Integer) is
+    let self.x += dx;
+    let self.y += dy;
+  return;
+
+  method sum(@self: Point) => (@result: Integer) is
+    let result := self.x + self.y;
+  return;
+
+  process main is
+    new p := Point(1, 2);
+    p.shift(2, 3);
+    expect p.x == 3 and p.y == 5;
+    expect p.sum() == 8;
+    print "extension ok";
+  return;
+end a40_extension_method;
+/*@expect
+{
+  "stdout": [
+    "extension ok"
+  ]
+}
+*/

@@ -1,7 +1,0 @@
-{
-  "stdout": [
-    "6",
-    "60"
-  ],
-  "note": "the keys of a spread map are symbols named like the parameters (Q-022 c)"
-}

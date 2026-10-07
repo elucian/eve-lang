@@ -1,6 +1,6 @@
 # greet: an aspect with one parameter
-aspect greet is
+exclusive aspect greet is
   process main(name: String) is
-    print "Hello, \s{name}!";
+    print "Hello, {name}!";
   return;
 end greet;

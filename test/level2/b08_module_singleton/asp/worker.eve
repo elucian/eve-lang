@@ -1,5 +1,5 @@
-# worker: an aspect that uses the module of the driver
-aspect worker is
+# worker: an aspect that uses the module of the driver; it changes module state, so it is exclusive (D-090)
+exclusive aspect worker is
   from lib use (counter);
 
   process main is

@@ -4,7 +4,23 @@ driver b19_log_files is
     log_wrn("low memory");
     raise "disk full";
   recover
-    log_err("\s{$error.message}");
+    log_err("{$error.message}");
     print "logged";
   return;
 end b19_log_files;
+/*@expect
+{
+  "stdout": [
+    "logged"
+  ],
+  "files": {
+    "out/error.log": [
+      "disk full"
+    ],
+    "out/warning.log": [
+      "low memory"
+    ]
+  },
+  "note": "file names error.log and warning.log, one message per line (Q-022 f)"
+}
+*/

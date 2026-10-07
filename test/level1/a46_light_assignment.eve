@@ -1,0 +1,14 @@
+# = is the light assignment of a declaration; it never changes a variable (D-079)
+** spec: syntax/declarations.md#variables-and-constants
+driver a46_light_assignment is
+  process main is
+    new x = 1 :Integer;
+    let x = 2;                   ** compile error: a change uses :=
+  return;
+end a46_light_assignment;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

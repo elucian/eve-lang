@@ -16,13 +16,12 @@ Tests run on the Eve virtual machine (`bin/eve.exe`, built from `evevm/`) with `
 
 A test is a `.eve` file directly in `test/levelN/`. What it must produce, all optional:
 
-- `expect.json` (one per level): `{"<name>": {"exit": 1, "args": [], "stdout": ["line 1", "line 2"], "contains": ["text"], "skip": "reason"}}`.
-  The default exit code is 0. `stdout` is the exact expected output (a string or a list of lines); `contains` lists
-  strings that must appear in the output. A test that prints must declare one of them, otherwise it fails: the output
-  of a program is part of its expectations. A legacy `<name>.out` file is read only when `stdout` is missing.
+- `/*@expect { json } */` blocks inside the test (D-094): `{"exit": 1, "args": [], "stdout": ["line 1", "line 2"], "contains": ["text"], "stderr": ["text"], "syntax_error": true, "skip": "reason"}`.
+  The default exit code is 0. `stdout` is the exact expected output (a string or a list of lines); `contains` and `stderr` list strings that must appear in the output and in the error output. A test that prints must declare `stdout` or `contains`, otherwise it fails: the output of a program is part of its expectations. The format is defined in `spec/conformance/README.md`.
+- `expect.json` (legacy, no test uses it since D-098; the runner still reads it): `{"<name>": {...}}` with the same keys; a block in the test overrides it. A legacy `<name>.out` file is read only when `stdout` is missing.
 
 Exit codes (D-010): 0 normal (`over;`), 1 forced abnormal exit (`panic;`: incorrect
-parameters or environment, the job fails), 2 error (failed `expect`), 3 warning (failed `assert`).
+parameters or environment, the job fails), 2 error (failed `expect`), 3 failed `assert` (an error since D-096), 4 unhandled error.
 
 Verdicts are PASS, FAIL (wrong exit code or stdout), ERROR (timeout, or `eve` not found) and SKIP.
 Reports are Markdown files in `temp/output/` (not versioned): `level1/<name>.md` per test, with
@@ -34,7 +33,7 @@ nothing failed.
 We write the test first, then make the virtual machine pass it: one feature, one test, one step at
 a time.
 
-1. Write the test (`.eve`, plus `.out` or an `expect.json` entry). It states what the spec says.
+1. Write the test (`.eve`, with its `/*@expect*/` block). It states what the spec says.
 2. Run it: `python script/runtest.py <name>`. It must fail first; a new test that already
    passes does not test anything new.
 3. Read the report in `temp/output/`. When the result is not the expected one, fix whichever is
@@ -52,13 +51,13 @@ Single script tests each test is a driver. We verify basic syntax elements and m
 
 You can run every script individually by hand using the interpreter command line. For this level we do not have test automation scripts. These tests are developer tests. After you pass level 1, you can start testing Level2.
 
-Tests a04 to a37 were written from the specification and the tutorial (2026-10-02), one feature each. Rules the tests assume without a decision are listed in `plan/decision_level1.md` (Q-019).
+Tests a04 to a54 were written from the specification and the tutorial, one feature each. On 2026-10-06 (D-094) all of them were rewritten to the syntax of the decisions up to D-093 (`new` creates, `let` changes, `Rune`, `DataMap`, `a[-1]`, constructors with `=> (@self)`, visibility words, functions instead of free methods, `done label;`, `loop … do … repeat;`), with their expectations in `/*@expect*/` blocks, and a40 to a54 were added (extension methods, inheritance, visibility, negative tests, exit codes). The VM (`evevm/`) still follows the old syntax, so most tests fail first: that is the work list. Rules the tests assume without a decision are listed in `plan/decision_level1.md` (Q-019, D-094). On 2026-10-06 (D-098) the tests were brought to D-096 and D-097 by static analysis, without running the VM: placeholders `\n{name % format}`, `delete` instead of removal by value, ordinals from 1, `assert` stops with code 3, `-2 ^ 2` is 4, regex literals keep their backslashes; a43 became `let_creates_name` and a55 (an attribute added from outside, a compile error) is new.
 
 ## Level 2
 
 This level is more advanced. It contains automation drivers. Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
 
-At this level **a test is a folder** (D-073): `test/level2/b01_import/` is a whole Eve project. It holds the driver with the same name, `b01_import.eve`, its own `expect.json` (one object, the keys of the level file), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. A single `.eve` file is still a valid test at every level.
+At this level **a test is a folder** (D-073): `test/level2/b01_import/` is a whole Eve project. It holds the driver with the same name, `b01_import.eve`, with its expectations in a `/*@expect*/` block (the `expect.json` of each folder was moved there by D-098), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. A single `.eve` file is still a valid test at every level.
 
 ## VM tools
 

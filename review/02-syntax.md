@@ -22,7 +22,7 @@
 
 | Sigil | Meanings today |
 |---|---|
-| `$` | system variable (`$error`), environment variable (`$HOME`), error constants (`$err_io`), exception type code (`$Type`), last index (`a[$]`) |
+| `$` | system variable (`$error`), environment variable (`$HOME`), error constants (`$err_io`), exception type code (`$Type`) |
 | `@` | by-reference parameter, result name (`=> (@y)`), `@self`, reference argument at the call |
 | `:` | type annotation, pair (`k: v`), label (`name: job`), named argument, format separator in `\#{e:f8.2}`, `{:}` empty map |
 | `!` | function with side effects (`f!()`), unsafe call, part of `!~` |
@@ -31,7 +31,7 @@
 
 Q-015 (where an interpolated expression ends) and Q-016 b (`name!~x`) are direct consequences.
 
-**todo** drop !~  use not( x ~ /regex/ ) instead. Instead of $ use [-1] for last element. Index is calculated with formula N+1-x where n is number of elements = a.count() and x is the negative index array[-x] notice array[-N] will be == array[1]. We have 1 based arrays and collections. Also a slice like array[1..-1] = array from first to last. Improve the /tutorial
+**todo** drop !~  use not( x ~ /regex/ ) instead. Improve the /tutorial
 Decision: We use instead of $, sys. assuming we will implement sys that is a system module. env. that is an environment module. @ is fine @self and @y have same minning in your example, represent reference. +> has same meaning, append something to something. "is" is an english word with different meanings in english so we can support different meanings in Eve.
 
 **RSY-D03 Three assignment operators plus four declarators.** *Applied 2026-10-05: D-079.* `=` (expression, no inference, chains), `:=` (statement, inference), `::` (deep clone) and `let`, `set`, `def`, `new` (D-017, D-036, D-049). In parameters `=` means "default with explicit type" and `:=` "default by expression" (D-070). The same symbol has a different meaning in a declaration, a statement and a parameter list. 

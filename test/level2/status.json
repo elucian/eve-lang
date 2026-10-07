@@ -6,7 +6,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791332003,
    "title": "Import a module with an unquoted path; members are reached as module.member (D-072)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -16,7 +16,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "Import with a path written as a string (D-072)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -26,7 +26,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "use (m as x): members are reached through the alias (D-072)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -36,8 +36,8 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
-   "title": "use (m(*)): the public members of m are used without prefix (D-072)",
+   "mtime": 1791327824,
+   "title": "use (m(*)): the exported members of m are used without prefix (D-072)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
   "b05_import_all": {
@@ -46,7 +46,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "use (*): every module of the folder, names merged into the scope (D-072)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -56,7 +56,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "use (*) fails when two modules have a public member with the same name (D-072)",
    "reason": "exit code 65, expected 30; stdout differs"
   },
@@ -66,7 +66,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "initialize runs at the import, finalize after the process of the driver (D-068)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -76,7 +76,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791332004,
    "title": "a module is loaded once: the driver and an aspect share the same copy (D-068)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -86,8 +86,8 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
-   "title": "a private member of a module can't be used outside it (D-068)",
+   "mtime": 1791327824,
+   "title": "a member that a module does not export can't be used outside it (D-068, D-085)",
    "reason": "exit code 65, expected 21; stdout differs"
   },
   "b10_apply_aspect": {
@@ -96,7 +96,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "apply runs the main process of an aspect from asp/ and waits (D-066)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -106,7 +106,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "an aspect gives results back through @ output parameters (D-048, D-066)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -116,7 +116,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "each apply creates a new state of the aspect: a second call sees nothing of the first (D-066)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -126,7 +126,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "apply with arguments by position, by name and with a default value (D-028, D-066)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -136,7 +136,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "spreading a list into positional arguments and a map into named arguments (D-072 i)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -146,7 +146,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791332004,
    "title": "an error not recovered in the aspect is raised in the driver at the apply line (D-072 d)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -156,7 +156,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "over in an aspect ends the aspect; the driver goes on after apply (D-072 d)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
@@ -166,7 +166,7 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791327824,
    "title": "panic in an aspect ends the whole application with exit code 1 (D-072 d)",
    "reason": "exit code 65, expected 1; stdout differs"
   },
@@ -176,8 +176,8 @@
    "runs": 5,
    "checks": 2,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
-   "title": "an extension method: _name with @self adds a method to a class, in this script (D-072)",
+   "mtime": 1791332004,
+   "title": "an extension method: a method with @self of a class, declared outside the class (D-072, D-085)",
    "reason": "exit code 65, expected 0; stdout differs"
   },
   "b19_log_files": {
@@ -186,7 +186,7 @@
    "runs": 5,
    "checks": 4,
    "last": "2026-10-05 15:53",
-   "mtime": 1791080156,
+   "mtime": 1791332004,
    "title": "log_err and log_wrn write log files in the output folder out/ (D-057)",
    "reason": "exit code 4, expected 0; stdout differs; file not created: out/error.log; file not created: out/warning.log"
   }

@@ -1,4 +1,5 @@
-# literals of the primitive types (D-032)
+# literals of the primitive types (D-032, D-080)
+** spec: lexical/lexical.md#literals, semantics/types.md
 driver a09_literals is
   process main is
     ** numbers
@@ -10,26 +11,41 @@ driver a09_literals is
     expect type(0x1F) is Natural;
     expect type(0.5) is Real;
     expect type(1 / 2) is Real;
+    expect type(12.50d) is Decimal;
+    expect type(255b) is Byte;
+    expect type(42n) is Natural;
+    expect type(1.5f) is Float;
+    expect type(5r) is Real;
+    expect 1.5e3 == 1500.0;
+    expect 2e-3 == 0.002;
+    expect type(2e-3) is Real;
+    expect type("1,000,000"z) is Huge;
+    expect "1,000,000"z == 1000000;
 
-    ** symbols are one Unicode code point
+    ** a rune is one Unicode code point
     expect 'a' == 'a';
     expect U+0061 == 'a';
     expect U+03B2 == 'β';
-    expect type('a') is Symbol;
+    expect type('a') is Rune;
     expect '\x41' == 'A';
     expect '\u{3B1}' == 'α';
+    expect '' == nil;
 
-    ** strings
+    ** strings and logic values
     expect type("a") is String;
     expect type(True) is Logic;
     expect True <> False;
 
-    ** Null is no value, the empty string is a value
-    let n :String;
-    let e := "";
+    ** null is no object, an empty string is a value
+    new n :String?;
+    new e := "";
+    expect n == null;
     expect n is Null;
-    expect e is not Null;
+    expect e <> null;
     expect e == "";
     expect e.length() == 0;
+    new z :Integer;
+    expect z == 0;
+    expect z <> null;
   return;
 end a09_literals;

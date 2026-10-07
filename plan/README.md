@@ -26,7 +26,9 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 | `[!]` | blocked on a decision |
 | `[-]` | dropped (with reason) |
 
-## Current focus (2026-10-05)
+## Current focus (2026-10-06)
+
+2026-10-06: the author released the **specification and the tests of level 1** (D-094): the spec of level 1 is drafted in `spec/`, `test/level1/` is rewritten (54 tests, expectations in `/*@expect*/` blocks). Next: the author reviews both, then the VM (`evevm/`) is fixed test by test. The rest of this section is the focus of 2026-10-05.
 
 The **tutorial** comes first: it is reviewed and improved until it is good enough and feature complete, because it gives the complete vision of Eve and will shape the architecture of the interpreter. **Parked until the author says go:** the specification (`spec/`, phases 2–4), the test suites (`test/`, phase 5), the virtual machine (`evevm/`) and `demo/`. Design notes in `plan/` continue when they serve the tutorial.
 
@@ -56,6 +58,6 @@ Phases 1 and 2 can run in parallel. Phase 3 needs lexical rules from phase 2. Ph
 
 - **The spec is normative, the tutorial is didactic.** When they disagree, the spec wins and the tutorial is fixed, after the author approves the decision in `decision_level1.md` or `decision_level2.md`.
 - **Source of truth for tables is JSON.** When a tutorial table (keywords, operators) duplicates spec data, the tutorial table is regenerated from the JSON, not edited by hand. The same holds for every table in `manual/features/`.
-- **Evidence over memory.** Extract facts from `tutorial/`, `demo/`, `pattern/` and `test/` with scripts (`temp/`), and cite the source file in the step result.
+- **Evidence over memory.** Extract facts from `tutorial/`, `pattern/` and `test/` with scripts (`temp/`), and cite the source file in the step result.
 - **Tutorial changes are committed in the scl repo** (`git -C tutorial …`). Everything else is committed in eve-lang.
 - After editing tutorial pages, run `bee-ed balance` on them and `npm run build` in the scl repo (see the scl `GEMINI.md` rules: one `h1`, `h2` sections with `h3` children, hierarchical `data/*.json` sidebars, external links with `target="_blank" rel="noopener noreferrer nofollow"`).

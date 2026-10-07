@@ -1,6 +1,6 @@
 # Issues: classes.html
 
-Page: `tutorial/classes.html` (911 lines, `<title>` "Eve Classses"). Reviewed 2026-09-28, revised 2026-10-01. How to answer: [README](README.md).
+Page: `tutorial/classes.html`, split on 2026-10-06 into objects, classes, inheritance, generics, partials and methods (D-091); CLS-09 is about generics.html, CLS-12 about objects.html, CLS-14 about classes.html, CLS-15 and CLS-16 about partials.html. Reviewed 2026-09-28, revised 2026-10-01. How to answer: [README](README.md).
 
 Retired 2026-10-06: CLS-10 (a bare call is a valid statement, decision_level1 line 540; only mutations need `let`), CLS-11 (`type(x)` in lower case, D-071 TYP-16; the page now uses it), CLS-17 points 1 to 3 (constructor `=> (@self)` and `let self := Object();`, D-084; chainable methods write `=> (@self)`, D-084), CLS-F1 to F4 (comments, wrong examples, typos, authoring text: applied; the title is "Eve Classes").
 Still open of CLS-17 (renamed CLS-17b below).

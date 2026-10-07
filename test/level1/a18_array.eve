@@ -1,32 +1,35 @@
-# array: literal, index, slice, view and clone, bulk assignment, builder (D-021, D-022, D-049)
+# array: literal, index, slice, view and clone, bulk assignment, builder (D-021, D-022, D-049, D-079)
+** spec: syntax/expressions.md#index-slice-member
 driver a18_array is
   process main is
-    let v := [10, 20, 30, 40];
+    new v := [10, 20, 30, 40];
     expect v[1] == 10;
-    expect v[$] == 40;
-    expect v[$ - 1] == 30;
-    v[2] := 25;
+    expect v[-1] == 40;
+    expect v[-2] == 30;
+    let v[2] := 25;
     expect v == [10, 25, 30, 40];
 
-    ** slices use [n..m]
+    ** slices use ranges as indexes
     expect v[2..3] == [25, 30];
-    expect v[3..$] == [30, 40];
+    expect v[3..-1] == [30, 40];
+    expect v[2..-2] == [25, 30];
+    expect v[1..-1] == v;
 
     ** a slice assigned with := is a view, with :: a copy
-    let view := v[1..2];
-    view[1] := 99;
+    new view := v[1..2];
+    let view[1] := 99;
     expect v[1] == 99;
-    let copy :: v[1..2];
-    copy[1] := 0;
+    new copy :: v[1..2];
+    let copy[1] := 0;
     expect v[1] == 99;
     expect copy[1] == 0;
 
     ** bulk assignment of a slice
-    let z :[5]Integer;
+    new z :[5]Integer;
     expect z == [0, 0, 0, 0, 0];
-    z[1..$] := 7;
+    let z[1..-1] := 7;
     expect z == [7, 7, 7, 7, 7];
-    z[2..3] := 1;
+    let z[2..3] := 1;
     expect z == [7, 1, 1, 7, 7];
 
     ** builders
@@ -34,8 +37,8 @@ driver a18_array is
     expect [x | x in (1..10)(3)] == [1, 4, 7, 10];
 
     ** deconstruct: * skips many elements
-    let a := [x | x in (1..10)];
-    let p, q, *, r := a;
+    new a := [x | x in (1..10)];
+    new p, q, *, r := a;
     expect p == 1;
     expect q == 2;
     expect r == 10;

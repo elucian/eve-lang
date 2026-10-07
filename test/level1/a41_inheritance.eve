@@ -1,0 +1,39 @@
+# a subclass builds its object through the constructor of its superclass (D-084)
+** spec: syntax/declarations.md#classes-and-objects
+driver a41_inheritance is
+  class Shape = {name: String} <: Object is
+    constructor(name = "shape" :String) => (@self) is
+      let self := Object();
+      let self.name := name;
+    return;
+
+    public method describe(@self) => (@result: String) is
+      let result := "shape {self.name}";
+    return;
+  end Shape;
+
+  class Circle = {radius: Real} <: Shape is
+    constructor(name :String, radius :Real) => (@self) is
+      let self := Shape(name);
+      let self.radius := radius;
+    return;
+  end Circle;
+
+  process main is
+    new c := Circle("wheel", 2.5);
+    expect c.name == "wheel";
+    expect c.radius == 2.5;
+    print c.describe();
+    expect c is Circle;
+    expect c is Shape;
+    new d := Circle(name: "disc", radius: 1.0);
+    expect d.radius == 1.0;
+  return;
+end a41_inheritance;
+/*@expect
+{
+  "stdout": [
+    "shape wheel"
+  ]
+}
+*/

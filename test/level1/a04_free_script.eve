@@ -1,7 +1,16 @@
 #!/usr/bin/env eve
-** a free script: sequential statements, no driver and no process (D-008, D-014)
+** a free script: sequential statements, no driver and no process
+** spec: syntax/declarations.md#scripts
 print "Hello Free Script!";
-let a := 2;
-a += 3;
+new a := 2;
+let a += 3;
 expect a == 5;
-print "a = \#{a}";
+print "a = {a}";
+/*@expect
+{
+  "stdout": [
+    "Hello Free Script!",
+    "a = 5"
+  ]
+}
+*/

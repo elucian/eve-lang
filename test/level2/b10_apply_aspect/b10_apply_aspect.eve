@@ -6,3 +6,12 @@ driver b10_apply_aspect is
     print "done";
   return;
 end b10_apply_aspect;
+/*@expect
+{
+  "stdout": [
+    "Hello, Eve!",
+    "Hello, Bob!",
+    "done"
+  ]
+}
+*/

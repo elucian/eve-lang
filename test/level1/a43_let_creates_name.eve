@@ -1,0 +1,18 @@
+# let changes names and creates the ones that are missing, by type inference (Q-017, D-096)
+** spec: syntax/statements.md#let
+driver a43_let_creates_name is
+  process main is
+    new lst := (1, 2, 3);
+    let lst -> e;                ** e does not exist: let creates it with the last element
+    expect e == 3;
+    expect lst == (1, 2);
+    let lst -> new f;            ** the explicit form
+    expect f == 2;
+    print e, f;
+  return;
+end a43_let_creates_name;
+/*@expect
+{
+  "stdout": ["3,2"]
+}
+*/

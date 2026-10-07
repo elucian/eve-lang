@@ -1,4 +1,4 @@
-# use (m(*)): the public members of m are used without prefix (D-072)
+# use (m(*)): the exported members of m are used without prefix (D-072)
 driver b04_import_members is
   from lib use (text(*));
 
@@ -7,3 +7,10 @@ driver b04_import_members is
     print shout("hello");
   return;
 end b04_import_members;
+/*@expect
+{
+  "stdout": [
+    "hello!"
+  ]
+}
+*/

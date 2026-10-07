@@ -23,7 +23,7 @@ simulation data), which is fine as long as Linguist has no entry for it; a heuri
       (2 spaces, `is` opens a block, `done`/`return`/`end` close).
 - [ ] `snippets/eve.json`: `driver`, `process`, `method`, `function`, `class`, `if`, `while`, `for`, `match`, `job`, `expect`.
 - [ ] `package.json` with `contributes.languages` (id `eve`, extensions `[".eve"]`, first line `^#!.*\beve\b`) and `grammars`.
-- [ ] Test on `demo/*.eve`, `pattern/*.eve` and `test/**/*.eve` (the same files the throwaway parser of S3.6 reads).
+- [ ] Test on `tutorial/demo/**/*.eve`, `pattern/*.eve` and `test/**/*.eve` (the same files the throwaway parser of S3.6 reads).
 - [ ] Package with `vsce package`; publish to the VS Code Marketplace and to Open VSX (VSCodium).
 - [ ] Later: language server (diagnostics from `eve parse`), run and debug commands, the `eve --doc` documentation.
 
@@ -36,7 +36,7 @@ the grammar.
 
 - [ ] Publish the grammar in its own public repository (example: `sagecode/eve-grammar`) under a permissive license
       (MIT or Apache 2.0, since a grammar is copied into Linguist).
-- [ ] Collect samples from `demo/` and `test/` (real, varied programs; no generated files).
+- [ ] Collect samples from `tutorial/demo/` and `test/` (real, varied programs; no generated files).
 - [ ] Wait for the extension to be used by enough public repositories (the tutorial, the examples and student projects help).
 - [ ] Pull request to github-linguist/linguist: entry in `lib/linguist/languages.yml` (`Eve`, type `programming`, `extensions: [".eve"]`,
       `tm_scope: source.eve`, `ace_mode: text`, `color`), grammar as a vendored submodule (`script/add-grammar`), samples in

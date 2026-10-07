@@ -6,13 +6,17 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 
 | Part | File | State |
 |---|---|---|
-| Lexical structure | [lexical/lexical.md](lexical/lexical.md) | first draft (2026-10-02); open points Q-013 to Q-016 |
-| Operators | [lexical/operators.json](lexical/operators.json) | first draft; open Q-017 |
+| Lexical structure | [lexical/lexical.md](lexical/lexical.md) | first draft (2026-10-02); Q-013 to Q-016 and Q-018 answered (D-095 to D-097) |
+| Operators | [lexical/operators.json](lexical/operators.json) | first draft; Q-017 answered (D-096) |
 | Delimiters | [lexical/delimiters.json](lexical/delimiters.json) | first draft |
-| Keywords | `lexical/keywords.json` | blocked on Q-002 (evidence collected) |
-| Grammar | `syntax/grammar.md`, `regions.md`, `statements.md`, `expressions.md`, `declarations.md` | not started (phase 3) |
+| Keywords | [lexical/keywords.json](lexical/keywords.json) | 70 words, level 1 (D-094) |
+| Grammar | [syntax/grammar.md](syntax/grammar.md) | EBNF of level 1, first draft (2026-10-06) |
+| Declarations, statements, expressions | [declarations.md](syntax/declarations.md), [statements.md](syntax/statements.md), [expressions.md](syntax/expressions.md) | level 1, first draft |
 | System variables | [semantics/variables.md](semantics/variables.md) | register, grows with each new variable (D-071); open points 1 to 6 |
-| Semantics | `semantics/*` | not started (phase 4) |
+| Types | [semantics/types.md](semantics/types.md) | level 1, first draft |
+| Control flow, errors | [semantics/control.md](semantics/control.md), [semantics/errors.md](semantics/errors.md) | level 1, first draft; open points marked *(proposed)* |
+| Conformance | [conformance/README.md](conformance/README.md) | test format (`/*@expect*/`), levels, coverage of level 1 |
+| Other semantics | `semantics/*` | levels 2 to 7 not started |
 | Library | `library/*` | not started (phase 5) |
 
 Check the data files with `python script/speccheck.py`.
@@ -27,3 +31,4 @@ Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decis
 |---|---|
 | 2026-10-02 | Lexical structure, operators and delimiters (S2.2, S2.3, S2.5, S2.6); `speccheck.py` |
 | 2026-10-03 | Register of system variables, `semantics/variables.md` (D-071) |
+| 2026-10-06 | Level 1: keywords, grammar, declarations, statements, expressions, types, control, errors, conformance (D-094); lexical rules and operator tables follow D-063 to D-087 |

@@ -1,0 +1,29 @@
+# explicit conversions do what the developer asked: floor, ceiling, round, parse (D-080; from demo/explicit_coercion.eve and demo/string_to_number.eve, D-099)
+** spec: semantics/types.md#conversions
+driver a57_conversion is
+  process main is
+    new b := 1.5;
+    new a := 0;
+    let a := floor(b);
+    expect a == 1;
+    let a := ceiling(b);
+    expect a == 2;
+    let a := round(b);
+    expect a == 2;
+
+    ** parse converts a string to the type that is asked; the decimals are dropped for an Integer
+    expect Integer.parse("1000") == 1000;
+    expect Integer.parse("200.02") == 200;
+    expect Real.parse("200.02") == 200.02;
+
+    ** a division always gives a Real; the type hint converts it
+    new i = 7 / 2 :Integer;
+    expect i == 3;
+    print a, i;
+  return;
+end a57_conversion;
+/*@expect
+{
+  "stdout": ["2,3"]
+}
+*/

@@ -1,0 +1,22 @@
+# an error without recover ends the process with the code of the error, after finalize (D-063)
+** spec: semantics/errors.md#ending-the-process
+driver a51_unhandled_error is
+  process main is
+    print "work";
+    raise "boom";
+  finalize
+    print "finalize";
+  return;
+end a51_unhandled_error;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [
+    "work",
+    "finalize"
+  ],
+  "stderr": [
+    "boom"
+  ]
+}
+*/

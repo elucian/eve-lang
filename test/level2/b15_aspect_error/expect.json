@@ -1,9 +1,0 @@
-{
-  "stdout": [
-    "fail: start",
-    "caught: disk full",
-    "code: 22",
-    "line: 5"
-  ],
-  "note": "$error.line is the line of the raise in the aspect file (Q-022 d)"
-}

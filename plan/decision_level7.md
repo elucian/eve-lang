@@ -20,3 +20,11 @@ Features: F-WEB-01 to F-WEB-04, F-VM-07, F-VM-09, F-DOC-03 (web part).
 
 - Templates as separate files, as literals in Eve code, or both?
 - Which Eve code may run in a browser: pure functions only, or aspects with limited capabilities?
+
+## Q-027 Templates (2026-10-06)
+The page templates.html teaches string templates (today) and proposes HTML templates: files `.evh` or literals, `{expr}` escaped by context (text, attribute, URL, script), the type `Html`, components as functions that return `Html`, the module `html` with `html.render` and `html.write`. Questions: files, literals or both? The extension and the module name? Loops and conditions inside a template (`{for o in orders}`)? Is `Html` required by the functions that send a page?
+**Answer:**
+
+## Q-028 Networking and protocols (2026-10-06)
+The pages networking.html and protocols.html collect ideas that are not designed: the layers (names, connection, protocol, data), the type `Url`, the module `net` and `http`, capabilities in the project file, `Secret`, the Eve Wire Protocol (frames HELLO, APPLY, RESULT, ERROR, BATCH, CREDIT, CANCEL, PING, CLOSE; CBOR payloads; resume by batch number), HTTP/1.1 and HTTP/2, WebSocket for browsers. Questions: do sockets exist in the language or only protocols? Is EWP wanted, or only HTTP with JSON? Which level takes the HTTP client (3) and which the server (6)? Names of the error classes of the network?
+**Answer:**

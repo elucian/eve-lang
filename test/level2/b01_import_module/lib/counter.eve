@@ -1,18 +1,22 @@
-# counter: public constant, private state, life cycle (D-068)
+# counter: a constant, private state, life cycle (D-068, D-085, D-087)
 module counter is
-  set .LIMIT = 100 :Integer;
-  let total = 0 :Integer;
+  export (LIMIT, tick, count!);
 
-  method .tick() is
-    total += 1;
+  set LIMIT = 100 :Integer;
+  new total = 0 :Integer;
+
+  ** no result: changes the private state
+  procedure tick() is
+    let total += 1;
   return;
 
-  method .count() => (@result: Integer) is
-    result := total;
+  ** stochastic: reads the private state, which can change
+  function count!() => (@result: Integer) is
+    let result := total;
   return;
 
   initialize
     print "counter: loaded";
   finalize
-    print "counter: \#{total} ticks";
+    print "counter: {total} ticks";
 end counter;

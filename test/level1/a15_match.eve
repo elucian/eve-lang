@@ -1,7 +1,8 @@
-# match with values, lists of values, ranges and other (D-016, D-030)
+# match with values, lists of values, ranges, other, then, one and all (D-016, D-030)
+** spec: semantics/control.md#match
 driver a15_match is
   process main is
-    let n := 7;
+    new n := 7;
     match n
       when (1..5) do
         print "low";
@@ -11,7 +12,7 @@ driver a15_match is
         print "out of range";
     done;
 
-    let word := "two";
+    new word := "two";
     match word
       when "one" do
         print "1";
@@ -19,8 +20,35 @@ driver a15_match is
         print "2 or 3";
       when other do
         print "many";
-      then
-        print "match done";
+    then
+      print "match done";
     done;
+
+    ** one (the default) stops at the first match, all tries every when
+    new first := "";
+    pick: match n one
+      when (1..10) do
+        let first <+ "a";
+      when 7 do
+        let first <+ "b";
+    done pick;
+    expect first == "a";
+    new every := "";
+    match n all
+      when (1..10) do
+        let every <+ "a";
+      when 7 do
+        let every <+ "b";
+    done;
+    expect every == "ab";
   return;
 end a15_match;
+/*@expect
+{
+  "stdout": [
+    "high",
+    "2 or 3",
+    "match done"
+  ]
+}
+*/

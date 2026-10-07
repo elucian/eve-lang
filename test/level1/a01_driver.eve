@@ -1,10 +1,11 @@
 # Test driver structure and single line comments
+** spec: syntax/grammar.md#script, lexical/lexical.md#comments
 driver a01_driver is
   process main is
     over;
   return;
 end a01_driver;
 ****************************************************
-** this script require parsing two type of comments
-** you should not run other tests if this test fail
+** this script requires two types of comments
+** do not run the other tests if this one fails
 ****************************************************

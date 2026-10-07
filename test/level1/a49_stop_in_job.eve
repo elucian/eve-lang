@@ -1,0 +1,23 @@
+# stop ends a job without error; the process goes on with the next statement (D-020)
+** spec: semantics/control.md#job
+driver a49_stop_in_job is
+  process main is
+    new early := True;
+    j1: job
+    do
+      print "job start";
+      stop if early;
+      print "never";
+    done j1;
+    print "after job";
+    expect jobs["j1"].status == "pass";
+  return;
+end a49_stop_in_job;
+/*@expect
+{
+  "stdout": [
+    "job start",
+    "after job"
+  ]
+}
+*/

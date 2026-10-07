@@ -1,0 +1,25 @@
+# a function can call itself: Fibonacci (from demo/fibonacci.eve, D-099)
+** spec: syntax/declarations.md#functions-and-procedures
+driver a56_recursion is
+
+  ** fib(0) = 0, fib(1) = 1, fib(n) = fib(n - 1) + fib(n - 2)
+  function fib(n: Integer) => (@y: Integer) is
+    if n < 2 do
+      let y := n;
+    else
+      let y := fib(n - 1) + fib(n - 2);
+    done;
+  return;
+
+  process main is
+    new r := fib(5);
+    expect r == 5;
+    expect fib(10) == 55;
+    print r;
+  return;
+end a56_recursion;
+/*@expect
+{
+  "stdout": ["5"]
+}
+*/

@@ -1,0 +1,36 @@
+# DataMap: a sorted map of key:value pairs; quoted or numeric keys (D-058, D-080)
+** spec: semantics/types.md#composite-types
+driver a21_datamap is
+  process main is
+    new h := {"a": 1, "b": 2};
+    expect h["a"] == 1;
+    expect h["b"] == 2;
+    expect "a" in h;
+    expect "z" not in h;
+
+    ** an assignment to a missing key creates the element
+    let h["c"] := 3;
+    expect h["c"] == 3;
+    let h["a"] += 10;
+    expect h["a"] == 11;
+
+    ** numeric keys
+    new n := {1: "one", 2: "two"};
+    expect n[2] == "two";
+    expect 1 in n;
+
+    ** the empty map has its own literal
+    new e := {:};
+    expect e.count() == 0;
+    new typed :{:}(String, Integer);
+    let typed["k"] := 5;
+    expect typed["k"] == 5;
+
+    ** iteration visits the keys in order
+    new keys := "";
+    for (k: v) in h do
+      let keys <+ k;
+    done;
+    expect keys == "abc";
+  return;
+end a21_datamap;

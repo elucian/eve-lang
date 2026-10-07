@@ -5,3 +5,11 @@ driver b16_aspect_over is
     print "back";
   return;
 end b16_aspect_over;
+/*@expect
+{
+  "stdout": [
+    "stop: start",
+    "back"
+  ]
+}
+*/

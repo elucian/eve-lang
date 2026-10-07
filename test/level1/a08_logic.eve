@@ -1,4 +1,5 @@
-# relation and logical operators
+# relation and logical operators, conditional statement and expression
+** spec: syntax/expressions.md#comparison-and-logic
 driver a08_logic is
   process main is
     expect 1 < 2;
@@ -10,7 +11,7 @@ driver a08_logic is
     expect 'a' < 'b';
     expect "abc" < "abd";
 
-    ** logical operators: and binds tighter than xor, xor tighter than or
+    ** and binds tighter than xor, xor tighter than or
     expect True and True;
     expect not (True and False);
     expect True or False;
@@ -21,15 +22,23 @@ driver a08_logic is
     expect not True or True;       ** not binds tighter than or
     expect (1 < 2) and (2 < 3);
 
-    ** conditional statement and conditional expression
-    let a := 4;
+    ** the conditional statement and the conditional expression
+    new a := 4;
     print "a is even" if (a % 2 == 0);
     print "a is odd" if (a % 2 <> 0);
-    let t := ("yes" if a > 3 else "no");
+    new t := ("yes" if a > 3 else "no");
     expect t == "yes";
-    let size := ("small" if a < 2 else
+    new size := ("small" if a < 2 else
                  "medium" if a < 10 else
                  "large");
     print size;
   return;
 end a08_logic;
+/*@expect
+{
+  "stdout": [
+    "a is even",
+    "medium"
+  ]
+}
+*/

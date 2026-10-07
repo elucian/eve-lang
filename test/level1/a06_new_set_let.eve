@@ -1,0 +1,55 @@
+# new creates variables, set creates constants, let changes a value (D-076, D-079)
+** spec: syntax/statements.md#new, syntax/statements.md#let
+driver a06_new_set_let is
+  set limit = 10 :Integer;
+  set name = "eve";
+  new counter := 0;
+
+  process main is
+    expect limit == 10;
+    expect name == "eve";
+
+    ** a change always starts with let
+    let counter := counter + 1;
+    let counter += 2;
+    expect counter == 3;
+    new total = 5 :Integer;
+    let total -= 1;
+    let total *= 3;
+    expect total == 12;
+    let total %= 5;
+    expect total == 2;
+    let total ^= 3;
+    expect total == 8;
+    new ratio := 1.0;
+    let ratio /= 4;
+    expect ratio == 0.25;
+
+    ** a variable without a value has the zero value of its type
+    new a, b :Integer;
+    new r :Real;
+    new s :String;
+    expect a == 0;
+    expect b == 0;
+    expect r == 0.0;
+    expect s == "";
+
+    ** one declaration can initialize several variables
+    new x = 1, y = 2 :Integer;
+    expect x + y == 3;
+    new (u, v, w) = 7;
+    expect u + v + w == 21;
+    new (p, q) = (1, 2);
+    expect p == 1 and q == 2;
+    print "counter = {counter}";
+    print "limit = {limit}";
+  return;
+end a06_new_set_let;
+/*@expect
+{
+  "stdout": [
+    "counter = 3",
+    "limit = 10"
+  ]
+}
+*/

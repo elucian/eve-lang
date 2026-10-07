@@ -1,0 +1,15 @@
+# a failed assert is an error with code 3: the process stops when it is not recovered (Q-031h, D-096)
+** spec: syntax/statements.md#expect-and-assert
+driver a52_assert is
+  process main is
+    print "before";
+    assert 1 == 2;
+    print "never";
+  return;
+end a52_assert;
+/*@expect
+{
+  "exit": 3,
+  "stdout": ["before"]
+}
+*/

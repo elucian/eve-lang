@@ -1,10 +1,18 @@
-# a division by zero raises an error
+# a division by zero raises an error, also for Real: no infinity, no NaN (Q-019a)
+** spec: syntax/expressions.md#arithmetic
 driver a37_division_error is
   process main is
-    let z := 0;
-    let q := 1 / z;
+    new z := 0.0;
+    new q := 1.0 / z;
     print "never";
   recover
     print "caught division error";
   return;
 end a37_division_error;
+/*@expect
+{
+  "stdout": [
+    "caught division error"
+  ]
+}
+*/

@@ -1,5 +1,5 @@
 # add3: three parameters
-aspect add3 is
+exclusive aspect add3 is
   process main(a, b, c :Integer) is
     print a + b + c;
   return;

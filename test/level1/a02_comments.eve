@@ -1,13 +1,26 @@
+# Every comment form of the language, then a negative end
+** spec: lexical/lexical.md#comments
+## a subtitle is a comment too
 /*------------------------------------------------+
-| Test driver structure and multiple line comments|
-| EVE has support for a variety of comment styles |
+| Block comments span lines and do not nest       |
 +-------------------------------------------------*/
 driver a02_comments is
   process main is
-    panic; ** negative test
+    ** a note on its own line
+    new a = 1 :Integer;      ** a note after code
+    new b := a + (** an expression comment **) 2;
+    expect b == 3;
+    /* a block comment inside a process
+       with a second line */
+    panic;                   ** forced exit with code 1
   return;
 end a02_comments;
 /*
-   Block comments do not nest, the first closing marker ends them.
+   The first closing marker ends a block comment.
    Use ** lines to comment out code that contains comments.
+*/
+/*@expect
+{
+  "exit": 1
+}
 */
