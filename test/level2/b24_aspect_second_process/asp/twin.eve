@@ -1,0 +1,9 @@
+# twin: two processes
+exclusive aspect twin is
+  process main is
+    print "main";
+  return;
+  process helper is
+    print "helper";
+  return;
+end twin;

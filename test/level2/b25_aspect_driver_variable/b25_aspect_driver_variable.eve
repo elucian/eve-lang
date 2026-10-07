@@ -1,0 +1,16 @@
+# an aspect can't read a variable of the driver (D-072)
+** spec: semantics/aspects.md#declarations-of-an-aspect
+driver b25_aspect_driver_variable is
+  new secret := 5;
+  process main is
+    print "never";
+    apply peek();
+  return;
+end b25_aspect_driver_variable;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "note": "secret is not declared in the aspect: undefined name (D-110)"
+}
+*/

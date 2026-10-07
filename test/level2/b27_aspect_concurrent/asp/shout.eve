@@ -1,0 +1,6 @@
+# shout: thread safe, so it is concurrent
+concurrent aspect shout is
+  process main(text: String) is
+    print "{text}!";
+  return;
+end shout;

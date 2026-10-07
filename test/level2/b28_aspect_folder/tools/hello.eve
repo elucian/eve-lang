@@ -1,0 +1,6 @@
+# hello: the aspect in the folder tools
+exclusive aspect hello is
+  process main is
+    print "hello from tools";
+  return;
+end hello;

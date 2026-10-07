@@ -1,0 +1,19 @@
+# an aspect recovers its own error: the driver never sees it (D-020, D-072)
+** spec: semantics/aspects.md#errors-across-apply
+driver b16_aspect_recover is
+  process main is
+    apply safe();
+    print "driver goes on";
+  recover
+    print "driver recover: never";
+  return;
+end b16_aspect_recover;
+/*@expect
+{
+  "stdout": [
+    "safe: start",
+    "safe: caught boom",
+    "driver goes on"
+  ]
+}
+*/

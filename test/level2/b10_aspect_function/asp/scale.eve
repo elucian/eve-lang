@@ -1,0 +1,9 @@
+# scale: a plain function with an optional parameter, private to the aspect
+exclusive aspect scale is
+  function times(x: Integer, factor = 2 :Integer) => (@r: Integer) is
+    let r := x * factor;
+  return;
+  process main(n: Integer, factor = 2 :Integer) is
+    print times(n, factor: factor);
+  return;
+end scale;

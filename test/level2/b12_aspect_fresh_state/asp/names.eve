@@ -1,0 +1,11 @@
+# names: a list at aspect level, filled by a procedure
+exclusive aspect names is
+  new seen := ();
+  procedure remember(who: String) is
+    let seen <+ who;
+  return;
+  process main(who: String) is
+    remember(who);
+    print "{seen.length()}: {seen[1]}";
+  return;
+end names;

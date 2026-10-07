@@ -1,0 +1,23 @@
+# an error nobody recovers: the error first, then the frames in order of call (D-113)
+** spec: semantics/aspects.md#position-and-stack-trace-d-113
+driver b17_aspect_trace is
+  process main is
+    print "before";
+    apply fail();
+    print "never";
+  return;
+end b17_aspect_trace;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [
+    "before"
+  ],
+  "stderr": [
+    "disk full",
+    "line 4 in function load",
+    "line 7 in aspect fail"
+  ],
+  "note": "the lines are those of asp/fail.eve; the order is checked by the runner only as presence"
+}
+*/

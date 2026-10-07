@@ -1,0 +1,16 @@
+# an @ output parameter that follows optional parameters is named at the call (D-106)
+** spec: semantics/aspects.md#results
+driver b29_aspect_output_named is
+  process main is
+    new r :Integer;
+    apply power(2, exp: 5, out: @r);
+    print r;
+  return;
+end b29_aspect_output_named;
+/*@expect
+{
+  "stdout": [
+    "32"
+  ]
+}
+*/

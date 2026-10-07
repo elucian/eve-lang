@@ -1,0 +1,29 @@
+# a lambda is an anonymous function: called at once, passed as an argument, held by a function type (D-109)
+** spec: syntax/expressions.md#index-slice-member
+driver b18_lambda is
+  class BinEx = (p1, p2 :Integer):Integer <: Function;
+  procedure show(f: BinEx) is
+    print f(3, 4);
+  return;
+  procedure each(items: ()Integer, action: Function) is
+    for x in items do
+      print action(x);
+    done;
+  return;
+  process main is
+    print ((x) => (x * 2))(5);
+    show((a, b) => (a + b));
+    each((1, 2, 3), (x) => (x + 100));
+  return;
+end b18_lambda;
+/*@expect
+{
+  "stdout": [
+    "10",
+    "7",
+    "101",
+    "102",
+    "103"
+  ]
+}
+*/

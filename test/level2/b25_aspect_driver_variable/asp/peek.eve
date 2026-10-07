@@ -1,0 +1,6 @@
+# peek: uses a name that only the driver declares
+exclusive aspect peek is
+  process main is
+    print secret;
+  return;
+end peek;

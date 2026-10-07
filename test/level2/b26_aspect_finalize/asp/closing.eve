@@ -1,0 +1,10 @@
+# closing: leaves by return or by over, and finalizes either way
+exclusive aspect closing is
+  process main(early: Logic) is
+    print "closing: work";
+    over if early;
+    print "closing: rest";
+  finalize
+    print "closing: finalize";
+  return;
+end closing;

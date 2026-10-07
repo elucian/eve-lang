@@ -1,0 +1,24 @@
+# a closure keeps the state of the function that made it; every apply makes new closures (D-101, D-109)
+** spec: syntax/declarations.md#functions-and-procedures
+driver b19_closure is
+  process main is
+    apply counting();
+    apply counting();
+  return;
+end b19_closure;
+/*@expect
+{
+  "stdout": [
+    "1",
+    "2",
+    "11",
+    "3",
+    "12",
+    "1",
+    "2",
+    "11",
+    "3",
+    "12"
+  ]
+}
+*/

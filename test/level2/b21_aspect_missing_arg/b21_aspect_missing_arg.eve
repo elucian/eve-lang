@@ -1,0 +1,15 @@
+# a missing mandatory argument is a check-time error (D-112)
+** spec: semantics/aspects.md#arguments
+driver b21_aspect_missing_arg is
+  process main is
+    print "never";
+    apply greet();
+  return;
+end b21_aspect_missing_arg;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "note": "who has no default"
+}
+*/

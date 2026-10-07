@@ -1,0 +1,15 @@
+# more positional arguments than parameters is a check-time error (D-112)
+** spec: semantics/aspects.md#arguments
+driver b14_aspect_too_many_args is
+  process main is
+    print "never";
+    apply greet("Eve", "Hi", "extra");
+  return;
+end b14_aspect_too_many_args;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "note": "greet has two parameters"
+}
+*/

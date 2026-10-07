@@ -46,22 +46,43 @@ Author answer to Q-040 (full text in the archive). Replaces the file names of D-
 - The test runner understands `{date}` in a file name and JSON file expectations (`script/runtest.py`, "files"); b09 uses both.
 - Applied: `spec/semantics/aspects.md` (Log files), `test/level2/b09_log_files`, `script/runtest.py`.
 
-## Test plan for level 2
+## Tests of level 2
 
-b01 to b09 exist. Planned, to write when the syntax is confirmed (all fail first, D-094):
+29 tests, all written (2026-10-07). Positive tests print and check; negative tests (`n`) are a compile error, exit 65, and nothing runs. All of them fail first on the VM, except that the negative ones pass by accident while `apply` is unknown to the VM (it refuses every aspect script with 65): check them again when the VM runs aspects.
 
 | Code | Test | What it shows |
 |---|---|---|
-| b10 | `aspect_function` | a function of the aspect, declared at aspect level and called by `main` |
-| b11 | `aspect_procedure` | a procedure of the aspect that changes an aspect-level variable; the driver sees nothing of it |
-| b12 | `aspect_fresh_state` | two `apply` of the same aspect: the aspect-level variable starts again (with b03) |
-| b13 | `aspect_missing` | `apply` of an aspect that is not in `asp/`: check-time error, exit 65 |
-| b14 | `aspect_bad_args` | wrong count or unknown name of an argument: check-time error, exit 65 |
-| b15 | `aspect_apply_aspect` | `apply` inside an aspect is a check-time error (D-066) |
-| b16 | `aspect_recover` | an aspect recovers its own error with `recover`; the driver never sees it |
-| b17 | `aspect_trace` | the error raised again in the driver names the aspect and the line of the `raise` (D-113) |
-| b18 | `lambda` | an anonymous function `(x) => (x * 2)`, called at once and passed as an argument |
-| b19 | `closure` | a function declared in a function keeps the state of its parent (D-101); it is a `!` function |
+| b01 | `apply_aspect` | `apply` runs `main` of an aspect |
+| b02 | `apply_output` | results come back through `@` |
+| b03 | `apply_state` | a new state at each `apply` |
+| b04 | `apply_named_args` | positional, named, default arguments |
+| b05 | `apply_spread` | `*list` and `*map` |
+| b06 | `aspect_error` | an error raised again at the `apply` line, `$error.line` |
+| b07 | `aspect_over` | `over` in an aspect |
+| b08 | `aspect_panic` | `panic` ends the application, exit 1 |
+| b09 | `log_files` | the run log, JSON (D-114) |
+| b10 | `aspect_function` | a function of the aspect, with an optional parameter |
+| b11 | `aspect_procedure` | a procedure changes an aspect-level variable; the driver's variable stays |
+| b12 | `aspect_fresh_state` | main and a procedure share a list; the next call starts empty |
+| b13 n | `aspect_missing` | `apply` of a missing aspect |
+| b14 n | `aspect_too_many_args` | too many positional arguments |
+| b15 n | `aspect_apply_aspect` | `apply` inside an aspect (D-066) |
+| b16 | `aspect_recover` | an aspect recovers its own error |
+| b17 | `aspect_trace` | error first, then frames: function, aspect (D-113); exit 4 |
+| b18 | `lambda` | called at once, passed, held by a function type (D-109) |
+| b19 | `closure` | two counters made by a function of an aspect (D-101, D-109) |
+| b20 n | `aspect_unknown_param` | an argument named like no parameter |
+| b21 n | `aspect_missing_arg` | a missing mandatory argument |
+| b22 n | `aspect_wrong_type` | an argument of the wrong type |
+| b23 n | `aspect_no_kind` | `aspect` without `exclusive` or `concurrent` (D-090) |
+| b24 n | `aspect_second_process` | a second process in an aspect |
+| b25 n | `aspect_driver_variable` | an aspect reading a driver variable |
+| b26 | `aspect_finalize` | `finalize` runs on return and on `over` |
+| b27 | `aspect_concurrent` | a `concurrent aspect` applied serially |
+| b28 | `aspect_folder` | `apply tools/hello()` before `asp/` |
+| b29 | `aspect_output_named` | a mandatory `@` parameter after an optional one is named (D-106) |
+
+Not tested yet: the trace order of `b17` is checked only as presence of the lines (the runner has no ordered check); a spread that fails at run time (the error code is open, `semantics/aspects.md`); `abort` in the `recover` of an aspect; the search in `$EVE_ASP`.
 
 ## Open questions
 

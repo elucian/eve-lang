@@ -1,0 +1,20 @@
+# finalize of an aspect runs when main ends, also by over; then the driver goes on (D-063, D-072)
+** spec: semantics/aspects.md#errors-across-apply
+driver b26_aspect_finalize is
+  process main is
+    apply closing(False);
+    apply closing(True);
+    print "back";
+  return;
+end b26_aspect_finalize;
+/*@expect
+{
+  "stdout": [
+    "closing: work",
+    "closing: finalize",
+    "closing: work",
+    "closing: finalize",
+    "back"
+  ]
+}
+*/

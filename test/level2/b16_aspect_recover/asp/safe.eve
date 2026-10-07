@@ -1,0 +1,10 @@
+# safe: raises and recovers inside the aspect
+exclusive aspect safe is
+  process main is
+    print "safe: start";
+    raise "boom";
+    print "safe: never";
+  recover
+    print "safe: caught {$error.message}";
+  return;
+end safe;

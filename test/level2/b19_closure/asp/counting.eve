@@ -1,0 +1,19 @@
+# counting: two counters made by one function, interlaced
+exclusive aspect counting is
+  function make_counter!(first: Integer) => (@next!: Function) is
+    new current := first;
+    function next!() => (@result: Integer) is
+      let current += 1;
+      let result := current;
+    return;
+  return;
+  process main is
+    new a! := make_counter!(0);
+    new b! := make_counter!(10);
+    print a!();
+    print a!();
+    print b!();
+    print a!();
+    print b!();
+  return;
+end counting;

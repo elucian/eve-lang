@@ -1,0 +1,19 @@
+# a procedure of an aspect changes an aspect-level variable; the driver's own variable is not touched (D-066, D-100)
+** spec: semantics/aspects.md#declarations-of-an-aspect
+driver b11_aspect_procedure is
+  process main is
+    new total := 100;
+    new got :Integer;
+    apply adder(1, 2, 3, @got);
+    print got;
+    print total;
+  return;
+end b11_aspect_procedure;
+/*@expect
+{
+  "stdout": [
+    "6",
+    "100"
+  ]
+}
+*/
