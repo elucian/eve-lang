@@ -42,28 +42,21 @@ The table is rewritten by `--save` from the last ReleaseSafe run and from the `*
 
 ## History
 
-The measured runs are in `history.json` (date, version, commit, build, median and best time of each benchmark). Whoever saves a run adds a paragraph for the version under "Notes by version" (what changed in the VM, whether the benchmarks got faster, appreciation, or slower, depreciation, and why a drop of more than 10% happened), then a row in the table of its build. The tables stay slim: the change against the previous row of the same level and build is written in the notes, not in a column.
+The measured runs are in `history.json` (date, version, commit, build, median and best time of each benchmark). Whoever saves a run adds a paragraph for the version under "Notes by version" (what changed in the VM, whether the benchmarks got faster, appreciation, or slower, depreciation, and why a drop of more than 10% happened), then a row in the table of runs. The table stays slim: the change against the previous row of the same level and build is written in the notes, not in a column.
 
 ### Notes by version
 
 **0.0.1 (2026-10-07), baseline.** First measure, right after level 1 passed 82 of 82. Tree-walking interpreter: names are found by a linear scan of the scopes, values are copied as tagged unions, the static check runs once before the run. `p1a_arith` (500,000 loop turns) dominates the total. The ReleaseSafe build is about 4.6 times faster than Debug on the same code; compare versions on ReleaseSafe and use Debug only to develop. No earlier version exists, so there is no appreciation or depreciation yet.
 
-### Debug build (`zig build -p ..`)
+### Table of runs
 
-| Level | Version | Date | Total (median) |
+Columns: **Version** is the version of the VM; **Date** the day of the run; **Time (Debug Mode)** the total median time of the benchmarks of the level with the Debug build (`zig build -p ..`), the one used to develop; **Time (Optimized)** the same with the ReleaseSafe build (`zig build -Doptimize=ReleaseSafe`), the one to compare between versions. A run made in only one mode leaves the other cell with a dash. The change against the previous version is written in the notes above, not in a column.
+
+| Version | Date | Time (Debug Mode) | Time (Optimized) |
 |---|---|---|---|
 | **Level 1** | | | |
-| | 0.0.1 | 2026-10-07 | 1843 ms |
+| 0.0.1 | 2026-10-07 | 1843 ms | 400 ms |
 | **Level 2** | | | |
-| | not measured | | |
-
-### Optimized build (`zig build -Doptimize=ReleaseSafe`)
-
-| Level | Version | Date | Total (median) |
-|---|---|---|---|
-| **Level 1** | | | |
-| | 0.0.1 | 2026-10-07 | 400 ms |
-| **Level 2** | | | |
-| | not measured | | |
+| not measured | | - | - |
 
 Ideas to watch, in the order of their likely gain: variable lookup by slot instead of by name (the scan of the scopes shows in `p1a_arith` and `p1b_calls`); no copy of the argument list for each call; the string append that builds a new string each time (`p1d_strings`); the static check should cost almost nothing against the run, so its time is part of every benchmark.
