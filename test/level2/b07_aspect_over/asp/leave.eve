@@ -1,0 +1,8 @@
+# leave: ends early with over
+exclusive aspect leave is
+  process main is
+    print "leave: start";
+    over;
+    print "leave: never";
+  return;
+end leave;

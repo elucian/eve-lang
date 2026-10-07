@@ -11,6 +11,7 @@ end b26_aspect_finalize;
 {
   "stdout": [
     "closing: work",
+    "closing: rest",
     "closing: finalize",
     "closing: work",
     "closing: finalize",

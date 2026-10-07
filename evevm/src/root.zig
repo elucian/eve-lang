@@ -29,6 +29,7 @@ test {
     _ = @import("lexer.zig");
     _ = @import("parser.zig");
     _ = @import("check.zig");
+    _ = @import("project.zig");
     _ = @import("ast.zig");
     _ = @import("interp.zig");
     _ = @import("doc.zig");

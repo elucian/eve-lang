@@ -3,7 +3,9 @@
 //!
 //! Grammar implemented so far (derived from test/level1; it grows test by test):
 //!
-//!     script     = driver | { statement }                      (a script without a driver is "free")
+//!     script     = driver | aspect | { statement }             (a script without a driver is "free")
+//!     aspect     = ("exclusive" | "concurrent") "aspect" name "is" { declaration } "end" name ";"   (one process, main)
+//!     apply      = "apply" name { "/" name } "(" [ arguments ] ")" ";"
 //!     driver     = "driver" name "is" { declaration } "end" name ";"
 //!     declaration= let | set | class | function | method | process
 //!     process    = "process" name "is" block [ "recover" block ] [ "finalize" block ] "return" ";"
@@ -40,7 +42,7 @@ const reserved = std.StaticStringMap(void).initComptime(.{
     .{"over"},        .{"exit"},      .{"stop"},      .{"pass"},      .{"panic"},     .{"print"},   .{"write"},
     .{"expect"},      .{"assert"},    .{"defer"},     .{"class"},     .{"function"},  .{"procedure"}, .{"method"},
     .{"constructor"}, .{"public"},    .{"protected"}, .{"private"},   .{"and"},       .{"or"},      .{"xor"},
-    .{"not"},         .{"repeat"},    .{"eq"},
+    .{"not"},         .{"repeat"},    .{"eq"},        .{"apply"},     .{"aspect"},    .{"exclusive"}, .{"concurrent"},
 });
 
 /// Words that end a block: a statement list stops in front of them.
@@ -1206,6 +1208,9 @@ const Parser = struct {
                 _ = p.advance();
                 return p.mk(.defer_stmt, t, "", &.{try p.statement()});
             }
+            if (std.mem.eql(u8, w, "apply")) return p.applyStatement();
+            // a function declared inside a function or a procedure is a closure (D-101)
+            if (std.mem.eql(u8, w, "function")) return p.routine(.function);
             if (std.mem.eql(u8, w, "if")) return p.ifStatement();
             if (std.mem.eql(u8, w, "match")) return p.matchStatement("");
             if (std.mem.eql(u8, w, "while")) return p.whileLoop("", &.{});
@@ -1307,12 +1312,26 @@ const Parser = struct {
         return p.mk(.process, kw, name.text, &.{ body, recover, finalize, prm });
     }
 
+    // Zig tip: the signature of a callback is a class with no members: `class BinEx = (p1, p2 :Integer):
+    // Integer <: Function;`. `params()` reads the parenthesized list, an optional `: Type` is the
+    // result, and the node is a `class` whose member block is empty and whose parent is `Function`.
+    /// `class Name = (params) [: Type] <: Function;` (callbacks.html).
+    fn functionType(p: *Parser, kw: Token, name: []const u8) Error!*const Node {
+        _ = try p.params();
+        if (p.acceptSym(":")) _ = try p.typeName();
+        try p.expectSym("<:");
+        const parent = try p.expectName("a parent class name");
+        try p.expectSym(";");
+        return p.mk(.class, kw, name, &.{ try p.mk(.block, kw, "", &.{}), try p.mk(.name, parent, parent.text, &.{}) });
+    }
+
     // Zig tip: `class` relies on the same Zig feature as `routine` above: see the tip there.
     fn class(p: *Parser) Error!*const Node {
         const kw = p.peek();
         try p.expectWord("class");
         const name = try p.expectName("a class name");
         try p.expectSym("=");
+        if (p.isSym("(")) return p.functionType(kw, name.text);
         try p.expectSym("{");
         var members: std.ArrayList(*const Node) = .empty;
         if (!p.isSym("}")) {
@@ -1393,12 +1412,68 @@ const Parser = struct {
         return p.mk(.driver, kw, name.text, decls.items);
     }
 
+    // Zig tip: `std.ArrayList(u8)` is a growable text buffer: `appendSlice` adds a piece and `.items`
+    // is the finished slice. The path of an aspect is built here, name by name, from the tokens
+    // `folder`, `/`, `name`, so `apply tools/hello()` keeps its folder in `text`.
+    /// `apply path(args);`: run an aspect. The parentheses are always written (processing.html).
+    fn applyStatement(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        var path: std.ArrayList(u8) = .empty;
+        try path.appendSlice(p.a, (try p.expectName("an aspect name")).text);
+        while (p.acceptSym("/")) {
+            try path.append(p.a, '/');
+            try path.appendSlice(p.a, (try p.expectName("a name after '/'")).text);
+        }
+        if (!p.isSym("(")) return p.fail("expected '(' after 'apply {s}': the parentheses are always written", .{path.items});
+        var args: std.ArrayList(*const Node) = .empty;
+        try p.items(")", &args);
+        return p.endSimple(try p.mk(.apply_stmt, kw, path.items, args.items));
+    }
+
+    // Zig tip: a rule can be checked after it is parsed: the aspect is read like a driver, then the
+    // list of declarations is searched for its process. `return p.fail(...)` reports at the token
+    // under the cursor, so `p.i -= 1` first moves it back onto the name after `end`.
+    /// `exclusive aspect name is … end name;`: a driver-shaped script with exactly one process, `main`.
+    fn aspect(p: *Parser) Error!*const Node {
+        const kw = p.peek();
+        const kind: []const u8 = if (p.isWord("exclusive") or p.isWord("concurrent")) p.advance().text else "";
+        if (!p.isWord("aspect")) return p.fail("expected 'aspect' after '{s}'", .{kind});
+        if (kind.len == 0) return p.fail("an aspect is declared 'exclusive aspect' or 'concurrent aspect' (D-090)", .{});
+        _ = p.advance();
+        const name = try p.expectName("an aspect name");
+        try p.expectWord("is");
+        var decls: std.ArrayList(*const Node) = .empty;
+        while (!p.isWord("end")) try decls.append(p.a, try p.declarationInDriver());
+        try p.expectWord("end");
+        const end_name = try p.expectName("the aspect name");
+        if (!std.mem.eql(u8, name.text, end_name.text)) {
+            p.i -= 1;
+            return p.fail("'end {s}' does not match 'aspect {s}'", .{ end_name.text, name.text });
+        }
+        var processes: usize = 0;
+        for (decls.items) |d| if (d.tag == .process) {
+            processes += 1;
+            if (!std.mem.eql(u8, d.text, "main")) {
+                p.diag.set(d.line, d.col, "the process of an aspect is named main, not '{s}' (D-066)", .{d.text});
+                return error.Syntax;
+            }
+        };
+        if (processes != 1) {
+            p.diag.set(name.line, name.col, "an aspect has exactly one process, named main (D-066)", .{});
+            return error.Syntax;
+        }
+        try p.expectSym(";");
+        return p.mk(.aspect, kw, name.text, decls.items);
+    }
+
     // Zig tip: `script` relies on the same Zig feature as `routine` above: see the tip there.
     fn script(p: *Parser) Error!*const Node {
         const at = p.peek();
         var result: *const Node = undefined;
         if (p.isWord("driver")) {
             result = try p.driver();
+        } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
+            result = try p.aspect();
         } else {
             var list: std.ArrayList(*const Node) = .empty;
             while (p.peek().kind != .eof) try list.append(p.a, try p.statement());
@@ -1495,5 +1570,25 @@ test "wrong scripts are rejected" {
         "loop do print 1; repeat while;",
     };
     var d: Diag = .{};
+    for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
+}
+
+// Zig tip: one test can hold the good and the bad cases of a rule. The first `try check(...)` must
+// succeed (an error would fail the test through `try`); the list of bad scripts must all fail with
+// `error.Syntax`. Here: an aspect needs its kind word and exactly one process named main, and an
+// aspect can't `apply` (D-066, D-090).
+test "an aspect and an apply parse, and the aspect rules hold" {
+    var d: Diag = .{};
+    try check(std.testing.allocator, "exclusive aspect a is process main(x: Integer, @y: Integer) is let y := x; return; end a;", &d);
+    try check(std.testing.allocator, "concurrent aspect a is process main is return; end a;", &d);
+    try check(std.testing.allocator, "driver t is process main is new r :Integer; apply tools/a(1, v: 2, @r, *(3, 4)); return; end t;", &d);
+    const bad = [_][]const u8{
+        "aspect a is process main is return; end a;",
+        "exclusive aspect a is process other is return; end a;",
+        "exclusive aspect a is function f() => (@r: Integer) is return; end a;",
+        "exclusive aspect a is process main is return; process main is return; end a;",
+        "exclusive aspect a is process main is apply b(); return; end a;",
+        "driver t is process main is apply b; return; end t;",
+    };
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
 }

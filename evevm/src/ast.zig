@@ -139,9 +139,19 @@ pub const Tag = enum {
     member,
     /// `driver name is ... end name;`: kids = the declarations.
     driver,
+    /// `exclusive aspect name is ... end name;`: kids = the declarations, with one `process main` (D-066, D-090).
+    aspect,
+    /// `apply folder/name(args);`: text = the aspect path as written; kids = the arguments, as in a `call`.
+    apply_stmt,
     /// A script without a driver: kids = the statements.
     script,
 };
+
+// Zig tip: `std.StringHashMapUnmanaged(V)` is a hash map with text keys that does not remember its
+// allocator (see the tip in check.zig). The aspects an `apply` can reach are found before the run
+// (project.zig) and kept in one of these maps: the key is the path as written in the `apply`.
+/// The parsed aspects of a project, by the path written in `apply`.
+pub const Aspects = std.StringHashMapUnmanaged(*const Node);
 
 // Zig tip: a `struct` groups named fields (and functions); `pub` makes a name visible to other
 // files; a field with `= value` has a default, so `.{ ... }` need not give it.
@@ -225,7 +235,7 @@ pub const Stats = struct {
 /// Write the declarations of the script: drivers, processes, functions, classes, variables.
 pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void {
     switch (n.tag) {
-        .driver, .script => {
+        .driver, .aspect, .script => {
             try w.print("{s}{s} {s}\n", .{ indent(depth), @tagName(n.tag), n.text });
             for (n.kids) |k| try outline(w, k, depth + 1);
         },

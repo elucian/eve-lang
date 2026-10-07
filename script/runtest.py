@@ -33,7 +33,7 @@ Other folders are not tests. The expectation keys, all optional:
                after the run with this content (line endings and trailing white space ignored).
                A value that is an object, or a list that holds objects, is JSON: the file is
                parsed and must match it (an object may have more keys; "*" matches any value).
-               "{date}" in a file name is the date of the run, YYYY-MM-DD (D-114)
+               "{date}" in a file name is the date of the run in UTC, YYYY-MM-DD (D-114)
   "skip"       a reason: the test is not run
   "note"       free text
 A test that prints (a `print` or `write` statement) must declare "stdout" or
@@ -298,7 +298,7 @@ def run_test(eve, test, timeout):
         if text not in res["stderr"]:
             problems.append(f"expected error output not found: {text!r}")
     for name, want in exp.get("files", {}).items():
-        name = name.replace("{date}", datetime.date.today().isoformat())
+        name = name.replace("{date}", datetime.datetime.now(datetime.timezone.utc).date().isoformat())
         path = os.path.join(test_cwd(test), name)
         if not os.path.isfile(path):
             problems.append(f"file not created: {name}")

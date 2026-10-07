@@ -3,9 +3,9 @@
   "v01_slot_report": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Slot: report command (slot/v01.vmc)",
    "reason": ""
@@ -13,9 +13,9 @@
   "v02_slot_comments": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Slot: # and ** comments are ignored (slot/v02.vmc)",
    "reason": ""
@@ -23,9 +23,9 @@
   "v03_slot_stop": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Slot: stop ends the run early (slot/v03.vmc)",
    "reason": ""
@@ -33,9 +33,9 @@
   "v04_slot_unknown": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Slot: unknown command is reported (slot/v04.vmc)",
    "reason": ""
@@ -43,9 +43,9 @@
   "v05_slot_missing": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Slot: a missing file means no commands (slot/v05.vmc)",
    "reason": ""
@@ -53,19 +53,19 @@
   "v06_slot_partial": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Slot: a line without newline is not read yet (slot/v06.vmc)",
    "reason": ""
   },
   "v07_workflow_run": {
    "status": "FAIL",
-   "failures": 2,
-   "runs": 8,
+   "failures": 6,
+   "runs": 12,
    "checks": 1,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Workflow: one command file parses, executes and logs a script (slot/v07.vmc)",
    "reason": "stdout differs"
@@ -73,29 +73,29 @@
   "v08_workflow_syntax_error": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Workflow: run parses first and reports a syntax error with its position (slot/v08.vmc)",
    "reason": ""
   },
   "v09_workflow_runtime_error": {
    "status": "FAIL",
-   "failures": 2,
-   "runs": 8,
+   "failures": 6,
+   "runs": 12,
    "checks": 1,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Workflow: a failed expect is reported by errors and logged by status (slot/v09.vmc)",
    "reason": "stdout differs"
   },
   "v10_workflow_introspection": {
    "status": "FAIL",
-   "failures": 2,
-   "runs": 8,
+   "failures": 6,
+   "runs": 12,
    "checks": 1,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Workflow: ast and inspect write the syntax tree and the introspection report (slot/v10.vmc)",
    "reason": "expected output not found: 'a34_jobs: inspect written (57 nodes, depth 9)'"
@@ -103,9 +103,9 @@
   "v11_workflow_no_script": {
    "status": "PASS",
    "failures": 0,
-   "runs": 8,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-07 04:44",
+   "last": "2026-10-07 11:17",
    "mtime": 1791078698,
    "title": "Workflow: run and ast need a loaded script; unknown commands are reported (slot/v11.vmc)",
    "reason": ""

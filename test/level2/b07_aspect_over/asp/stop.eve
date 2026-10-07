@@ -1,8 +1,0 @@
-# stop: ends early with over
-exclusive aspect stop is
-  process main is
-    print "stop: start";
-    over;
-    print "stop: never";
-  return;
-end stop;

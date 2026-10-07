@@ -236,7 +236,7 @@ fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
         if (o.code != 0 and s.machine != null) {
             try ctx.out.flush();
             for (s.machine.?.reports.items) |r| {
-                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n", .{ args[0], r.line, r.code, r.message });
+                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n{s}", .{ args[0], r.line, r.code, r.message, r.trace });
             }
         }
     }

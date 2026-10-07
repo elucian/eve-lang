@@ -133,7 +133,21 @@ pub const Report = struct {
     message: []const u8,
     job: []const u8,
     handled: bool = false,
+    /// The calls that led to the error, innermost first, one `line n in kind name` per line (D-113).
+    trace: []const u8 = "",
 };
+
+// Zig tip: a small struct for the stack of calls. `kind` is a word that is printed (`function`,
+// `procedure`, `method`, `aspect`, `driver`) and `call_line` is the line, in the caller, where
+// this call was made: with it the trace can tell on which line each unit was running.
+/// One call in progress: what runs and from which line it was called.
+const Frame = struct { kind: []const u8, name: []const u8, call_line: u32 };
+
+// Zig tip: a `bool` field is the cheapest way to say "one of two kinds"; `is_error` false means a
+// warning. The interpreter only collects these messages: it has no file system, so the session
+// (vm.zig) writes them to the run log when the run is over (D-114).
+/// One message of `log_err` or `log_wrn`.
+pub const LogMsg = struct { is_error: bool, line: u32, unit: []const u8, level: usize, text: []const u8 };
 
 // Zig tip: `Hook` relies on the same Zig feature as `List` above: see the tip there.
 /// How the VM asks to look into the slot between two statements.
@@ -189,6 +203,15 @@ pub const Interp = struct {
     exts: std.ArrayList(*const Node) = .empty,
     /// The `defer` statements registered and not yet run, oldest first (D-081).
     defers: std.ArrayList(*const Node) = .empty,
+    /// The scope of the script being run: the driver's globals, or the scope of one aspect call.
+    /// The functions and classes of that script close over it.
+    unit: *Scope,
+    /// The aspects the driver applies, read and checked before the run (project.zig).
+    aspects: ?*const ast.Aspects = null,
+    /// The calls in progress, outermost first (the trace of an error is read from it).
+    frames: std.ArrayList(Frame) = .empty,
+    /// The messages of `log_err` and `log_wrn`, in the order written (the run log, D-114).
+    logs: std.ArrayList(LogMsg) = .empty,
 
     // Zig tip: `init` builds the struct and `boot` fills the global scope. They are two steps
     // because the scope must live at a stable address (`a.create` gives a pointer that stays valid)
@@ -196,7 +219,7 @@ pub const Interp = struct {
     pub fn init(a: std.mem.Allocator, out: *Io.Writer) Signal!Interp {
         const g = try a.create(Scope);
         g.* = .{};
-        var it: Interp = .{ .a = a, .out = out, .global = g, .scope = g };
+        var it: Interp = .{ .a = a, .out = out, .global = g, .scope = g, .unit = g };
         try it.boot();
         return it;
     }
@@ -236,9 +259,27 @@ pub const Interp = struct {
     /// Raise an error with a code and a message.
     fn failWith(it: *Interp, code: u8, comptime fmt: []const u8, args: anytype) Signal {
         const msg = std.fmt.allocPrint(it.a, fmt, args) catch return error.OutOfMemory;
-        it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job }) catch return error.OutOfMemory;
+        const trace = try it.traceText();
+        it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace }) catch return error.OutOfMemory;
         it.err_code = code;
         return error.Raise;
+    }
+
+    // Zig tip: the trace is built from the stack of frames, walking it from the top (`while (i > 0) :
+    // (i -= 1)` counts down, see check.zig). The innermost unit was running on `it.line`; the unit
+    // below it was running on the line where it made the call, which the frame above remembers.
+    /// The stack of calls as text, innermost first (D-113).
+    fn traceText(it: *Interp) Signal![]const u8 {
+        var buf: std.ArrayList(u8) = .empty;
+        var line = it.line;
+        var i = it.frames.items.len;
+        while (i > 0) : (i -= 1) {
+            const f = it.frames.items[i - 1];
+            try it.appendFmt(&buf, "  line {d} in {s} {s}\n", .{ line, f.kind, f.name });
+            line = f.call_line;
+        }
+        if (it.current_job.len > 0) try it.appendFmt(&buf, "  in job {s}\n", .{it.current_job});
+        return buf.items;
     }
 
     // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
@@ -1416,6 +1457,20 @@ pub const Interp = struct {
             if (eql(u8, callee.text, "ceiling")) return .{ .int = @intFromFloat(@ceil(x)) };
             if (eql(u8, callee.text, "round")) return .{ .int = @intFromFloat(@round(x)) };
         }
+        if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
+            (std.mem.eql(u8, callee.text, "log_err") or std.mem.eql(u8, callee.text, "log_wrn")))
+        {
+            const msg = try it.text(try it.eval(args[0]));
+            const top = it.frames.items[it.frames.items.len - 1];
+            try it.logs.append(it.a, .{
+                .is_error = callee.text[4] == 'e',
+                .line = it.line,
+                .unit = top.name,
+                .level = it.frames.items.len - 1,
+                .text = msg,
+            });
+            return .nil;
+        }
         if (callee.tag == .name and std.mem.eql(u8, callee.text, "type") and it.scope.find("type") == null) {
             if (args.len != 1) return it.fail("type() takes one argument", .{});
             const arg = try it.eval(args[0]);
@@ -1488,7 +1543,7 @@ pub const Interp = struct {
             if (recv.object.class) |c| {
                 if (classRoutine(c, name) orelse it.extensionFor(c, name)) |r| {
                     const f = try it.a.create(Func);
-                    f.* = .{ .node = r, .closure = it.global };
+                    f.* = .{ .node = r, .closure = it.unit };
                     return it.invoke(f, recv, args);
                 }
             }
@@ -1549,7 +1604,24 @@ pub const Interp = struct {
             } else if (a.tag == .pair and a.kids[0].tag == .name) {
                 try out.append(it.a, .{ .name = a.kids[0].text, .value = try it.eval(a.kids[1]) });
             } else if (a.tag == .spread) {
-                for (try it.iterate(try it.eval(a.kids[0]))) |x| try out.append(it.a, .{ .value = x });
+                const spread = try it.eval(a.kids[0]);
+                if (spread == .map) {
+                    // `*map`: every key is the name of a parameter, every value its argument
+                    for (spread.map.entries.items) |e| {
+                        // Zig tip: a labeled block `blk: { ... break :blk v; }` is an expression whose value is
+                        // the `break`; here it builds the text of a symbol, while a text key is used as it is.
+                        const key = switch (e.key) {
+                            .str => |s| s,
+                            .sym => |c| blk: {
+                                var buf: std.ArrayList(u8) = .empty;
+                                try it.utf8(&buf, c);
+                                break :blk buf.items;
+                            },
+                            else => return it.fail("a map spread into arguments needs text or symbol keys", .{}),
+                        };
+                        try out.append(it.a, .{ .name = key, .value = e.val });
+                    }
+                } else for (try it.iterate(spread)) |x| try out.append(it.a, .{ .value = x });
             } else if (a.tag == .ref) {
                 const cell = it.scope.find(a.text) orelse return it.fail("undefined name '{s}'", .{a.text});
                 try out.append(it.a, .{ .value = cell.value, .ref = cell });
@@ -1629,6 +1701,8 @@ pub const Interp = struct {
         }
         try it.bindParams(node.kids[0].kids, args, self_var);
         for (node.kids[2].kids) |res| try it.define(res.text, try it.zero(res.ty), false);
+        try it.frames.append(it.a, .{ .kind = @tagName(node.tag), .name = node.text, .call_line = it.line });
+        defer _ = it.frames.pop();
         const mark = it.defers.items.len;
         const outcome = it.execBlock(node.kids[3]);
         if (outcome) |_| it.runDefers(mark) else |e| if (e != error.Panic) it.runDefers(mark);
@@ -1657,7 +1731,7 @@ pub const Interp = struct {
         if (ctor) |k| {
             const saved = it.scope;
             const s = try it.a.create(Scope);
-            s.* = .{ .parent = it.global };
+            s.* = .{ .parent = it.unit };
             it.scope = s;
             defer it.scope = saved;
             const self_var = try it.a.create(Var);
@@ -1874,6 +1948,7 @@ pub const Interp = struct {
                 it.setJob(n.text, "pass");
             },
             .class, .function, .procedure, .method => try it.declareRoutine(n),
+            .apply_stmt => try it.applyAspect(n),
             .process => {},
             else => return it.fail("cannot execute a {s}", .{@tagName(n.tag)}),
         }
@@ -2013,7 +2088,8 @@ pub const Interp = struct {
             return;
         }
         const f = try it.a.create(Func);
-        f.* = .{ .node = n, .closure = it.global };
+        // a function declared inside another one closes over that call's scope (a closure, D-101)
+        f.* = .{ .node = n, .closure = if (it.scope == it.unit) it.unit else it.scope };
         if (n.tag == .method) {
             try it.exts.append(it.a, n);
             return;
@@ -2324,7 +2400,8 @@ pub const Interp = struct {
         const r = it.reports.items[it.reports.items.len - 1];
         try it.setField(o, "message", .{ .str = r.message });
         try it.setField(o, "code", .{ .int = r.code });
-        try it.setField(o, "job" , .{ .str = r.job });
+        try it.setField(o, "job", .{ .str = r.job });
+        try it.setField(o, "line", .{ .int = r.line });
         return .{ .object = o };
     }
 
@@ -2333,17 +2410,17 @@ pub const Interp = struct {
     // `continue` inside the `catch` block restarts the loop without advancing `i`: that is how `retry`
     // runs the same statement again, and `resume` (which adds one to `i`) skips it.
     /// Run a process: its statements, then `recover` after an error, then `finalize`.
-    fn runProcess(it: *Interp, p: *const Node) Signal!void {
+    fn runProcess(it: *Interp, p: *const Node, args: []const Arg, kind: []const u8, unit_name: []const u8) Signal!void {
         const saved = try it.pushScope();
         defer it.scope = saved;
         it.proc_scope = it.scope;
+        try it.frames.append(it.a, .{ .kind = kind, .name = unit_name, .call_line = it.line });
+        defer _ = it.frames.pop();
         const body = p.kids[0].kids;
         const recover = p.kids[1];
         const finalize = p.kids[2];
-        // the arguments of the command line go to the parameters of the process
-        var args: std.ArrayList(Arg) = .empty;
-        for (it.script_args) |a| try args.append(it.a, .{ .value = .{ .str = a } });
-        try it.bindParams(p.kids[3].kids, args.items, null);
+        // the arguments of the call, or of the command line, go to the parameters of the process
+        try it.bindParams(p.kids[3].kids, args, null);
         // the state of the jobs: jobs["j1"].status is "none", "pass" or "fail"
         const jobs = try it.a.create(Map);
         jobs.* = .{};
@@ -2392,6 +2469,39 @@ pub const Interp = struct {
         }
         if (finalize.tag != .none) try it.execBlock(finalize);
         if (failed) |f| return f;
+    }
+
+    // Zig tip: `defer` runs when the function ends however it ends, so the three fields that this
+    // call changes (`scope`, `unit`, `proc_scope`) are restored on success, on `over`, and on an
+    // error that unwinds through (the same idea as in `invoke`). The aspect gets a scope of its own
+    // with no parent but the names every script knows (`boot`): it cannot see the driver's variables,
+    // and the state it builds is dropped with that scope when the call ends (D-066).
+    /// `apply name(args);`: run the `main` of an aspect, read and checked before the run.
+    fn applyAspect(it: *Interp, n: *const Node) Signal!void {
+        const known = it.aspects orelse return it.fail("no aspect is loaded: '{s}'", .{n.text});
+        const aspect = known.get(n.text) orelse return it.fail("aspect '{s}' is not loaded", .{n.text});
+        const args = try it.evalArgs(n.kids);
+        const saved_scope = it.scope;
+        const saved_unit = it.unit;
+        const saved_proc = it.proc_scope;
+        const s = try it.a.create(Scope);
+        s.* = .{};
+        it.scope = s;
+        it.unit = s;
+        defer {
+            it.scope = saved_scope;
+            it.unit = saved_unit;
+            it.proc_scope = saved_proc;
+        }
+        try it.boot();
+        for (aspect.kids) |d| {
+            if (d.tag == .class or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
+        }
+        for (aspect.kids) |d| {
+            if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
+        }
+        const main = findProcess(aspect, "main") orelse return it.fail("the aspect '{s}' has no process main", .{aspect.text});
+        try it.runProcess(main, args, "aspect", aspect.text);
     }
 
     // Zig tip: `findProcess` relies on the same Zig feature as `bind` above: see the tip there.
@@ -2451,7 +2561,10 @@ pub const Interp = struct {
             if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
         }
         const main = findProcess(root, "main") orelse return it.fail("the driver has no process main", .{});
-        try it.runProcess(main);
+        // the arguments of the command line go to the parameters of the process
+        var args: std.ArrayList(Arg) = .empty;
+        for (it.script_args) |a| try args.append(it.a, .{ .value = .{ .str = a } });
+        try it.runProcess(main, args.items, "driver", root.text);
     }
 };
 
