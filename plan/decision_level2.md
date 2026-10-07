@@ -1,15 +1,12 @@
 # Decisions, level 2: aspects, modules, libraries
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a question is answered, turn it into a decision with the date and keep the question text for history. Plan steps reference these ids. **Read cheaply:** the index below lists every id; `python script/plan.py show D-087` prints one entry from here or from `archive/` (settled entries, full text); `python script/plan.py status` lists what is open.
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a question is answered, turn it into a decision with the date and keep the question text for history. Plan steps reference these ids. **Read cheaply:** `python script/plan.py list` prints every id; `python script/plan.py show D-087` prints one entry from here or from `archive/` (settled entries, full text); `python script/plan.py status` lists what is open.
 
 The log is split in two files. Ids are shared and keep counting across both (an id not found here is in the other file); a new entry goes to the file of its topic:
 
 - [decision_level1.md](decision_level1.md): the project (formats, repositories, licenses, the VM, tests) and the language of a single script (lexical rules, control flow, types, collections, functions, classes, errors in a driver). Matches `test/level1`.
 - [decision_level2.md](decision_level2.md): programs made of several files: processes, aspects, modules and imports, libraries, multitasking and parallel aspects. Matches `test/level2`.
 - Levels 3 to 7 (data, parallel, database, server, web): [decision_level3.md](decision_level3.md), [decision_level4.md](decision_level4.md), [decision_level5.md](decision_level5.md), [decision_level6.md](decision_level6.md), [decision_level7.md](decision_level7.md); the table of all levels is in decision_level3.md and [version_map.md](version_map.md).
-
-<!-- index:begin -->
-## Index (every id; full text: `python script/plan.py show ID`)
 
 - Q-011 Default visibility of a module-level method (answered 2026-09-30 → D-035)
 - Q-020 Level 2 suite: what must be decided first
@@ -38,8 +35,6 @@ The log is split in two files. Ids are shared and keep counting across both (an 
 - D-081 Process end, exit codes, error classes, imports, `defer`, unsafe methods, parallel errors and l
 - D-082 `eve --doc` replaces `eved`
 - D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI
-<!-- index:end -->
-
 ## Q-022 Assumptions of the level 2 tests b01 to b19 (2026-10-03)
 The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These rules are assumed without a decision; confirm or correct each one (the test named after it changes with the answer):
 (a) An import that fails on a name conflict (`use (*)`) raises `$err_module`; it happens before the process, so nothing can recover it and the exit code is 30 (b06).

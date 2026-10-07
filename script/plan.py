@@ -3,7 +3,7 @@
 
   python script/plan.py status            open steps, open questions, current focus (about 60 lines)
   python script/plan.py show D-087 [Q-035 ...]   print the full entry (active file or archive)
-  python script/plan.py index [N]         rebuild the index table of decision_level<N>.md (default 1 and 2)
+  python script/plan.py list              every id and title, active and archived (the files hold no index)
   python script/plan.py archive [N] [--keep K]   move settled entries to plan/archive/ (default: keep the last 8)
 
 Decision logs: plan/decision_level<N>.md holds a preamble, an index of EVERY id (one line each),
@@ -16,6 +16,7 @@ import re, sys, glob, os
 PLAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'plan')
 HEAD = re.compile(r'^## ((?:D|Q)-\d+)\b(.*)$')
 MARK_BEGIN, MARK_END = '<!-- index:begin -->', '<!-- index:end -->'
+WITH_INDEX = False  # the active files hold only what is current; `list` prints every id
 
 
 def read(path):
@@ -86,13 +87,13 @@ def rebuild(n, keep=None):
             arch_text = '# Archive of decision_level%s.md: settled entries, full text\n\n' % n
             write(arch, arch_text + '\n'.join(e[2] for e in old_arch + moved), '\r\n' if os.name == 'nt' and False else nl)
             old_arch += moved
-    idx = [MARK_BEGIN, '## Index (every id; full text: `python script/plan.py show ID`)', '']
+    idx = [] if not WITH_INDEX else [MARK_BEGIN, '## Index (every id; full text: `python script/plan.py show ID`)', '']
     where = {id(e): 'A' for e in ents}
     allents = sorted(old_arch + ents, key=lambda e: int(e[0][2:]) * 10 + (e[0][0] == 'Q'))
     for e in allents:
         mark = '*' if (e in ents and is_open(*e)) else ('' if e in ents else '~')
         idx.append('- %s%s' % (one_line(e[0], e[1]), ' [open]' if mark == '*' else ''))
-    idx += [MARK_END, '']
+    idx += [MARK_END, ''] if WITH_INDEX else []
     body = pre.rstrip('\n') + '\n\n' + '\n'.join(idx) + '\n' + '\n'.join(e[2] for e in ents)
     write(active, body, nl)
     print('level %s: %d active, %d archived' % (n, len(ents), len(old_arch)))
@@ -130,6 +131,10 @@ def main(a):
         print(__doc__); return
     c = a[0]
     if c == 'status': status()
+    elif c == 'list':
+        for p in sorted(glob.glob(os.path.join(PLAN, 'decision_level*.md')) + glob.glob(os.path.join(PLAN, 'archive', '*.md'))):
+            for i, t, b in split(read(p)[0])[1]:
+                print(one_line(i, t))
     elif c == 'show':
         for i in a[1:]:
             r = find(i)

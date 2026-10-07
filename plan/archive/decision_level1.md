@@ -921,3 +921,22 @@ Author requests, applied to the tutorial.
 - **No procedural phase.** A separate phase "Procedural Programming" would have one page, so Subprograms is the last page of phase 2, renamed "Eve Code Topology" (index.html, syntax.html). `procedure` is listed in the keyword table of scripts.html. The page ends with an h2 "Procedures" with h3 subsections: the procedure is inherited from the procedural paradigm, but Eve does not use the original design (procedures combine with functions, hold state and can be asynchronous, so pure procedural programming can't be demonstrated). The section Procedures moved out of `functions.html`. Phases keep their numbers 1 to 7; topics 12 to 37 become 13 to 38.
 - Asynchronous procedures and functions stay with async.html; they are not explained on the new pages.
 - **Order rule replaced by D-106** (Q-036): a mandatory parameter may follow an optional one, but the call names it.
+
+## Q-008 Implementation language and name of the first compiler (answered 2026-09-28 → D-006, D-007)
+Which language is the first Eve compiler written in, what is it called (the manual uses the placeholder `evec` for its support file), and does its code live in this repo or its own? Doesn't block the generator (M7.3); blocks M7.5 architecture details and M7.6.
+**Answer:** Zig; the first implementation is a VM, not a compiler (D-006). Name and repository → Q-009.
+
+## D-054 Exceptions page, `$err_` and `$wrn_` constants (2026-10-02; codes settled 2026-10-07 → D-109)
+Author request. New tutorial page `exceptions.html` (topic 13, after the standard library; later topics renumbered).
+- Predefined read-only constants: `$err_name` for each standard exception, `$wrn_name` for each warning; the value is the integer code, compared with `$error.code` in the `recover` region. Two tables, one for exceptions, one for warnings, with code, constant and message pattern. A new exception or warning must be added to its table first.
+- The author wrote `@wrn_name`; read as `$wrn_name` (system constants use `$`). Confirm.
+- Proposed (not decided): code ranges 1-9 statements (`panic` 1, `expect` 2, `assert` 3 as a warning), 10-127 system, 128-255 project; the exit code of an unhandled error is its code. The list of standard codes and the message patterns are a first draft. `raise`, `warn` and the Exception module signatures stay open (PRC-08, PRC-09).
+
+## Q-026 Callbacks and collection operations (answered 2026-10-06 → D-096, D-103)
+Which collection operations take a callback (`map`, `filter`, `sort(by)`, `reduce`, `each`)? Is a named function passed as a value (`each(items, double)`)? Which declaration of a function type stays: `Type BinEx = (p1, p2: Integer): Integer <: Function;` (old) or `Type Reporter = (done: Integer) is Function;` (new)? Can a method of an object be passed as a callback?.
+**Answer:**
+Many questions here. Good questions. Make a design, yes some of collections, need callbacks. We need examples of usecases, be connstructive. We use old design <: We consider Function object. The "is" operator is used only to design a body. In this case I see a signature that force a particular parameter list, left to implement later. If a parameter use predefined type of function, that type is checked on compilation. If function signature do not match, is rejected.
+
+## Q-036 Where does an `@` parameter go? (answered 2026-10-07 → D-106)
+An `@` parameter has no default, so by D-105 it is mandatory and must come before the optional parameters; but D-048 and the older tests put outputs last (`add(p1 = 0, p2 = 1: Integer, @op: Integer)`). Is `@` exempt from the order rule (outputs last, after optionals and varargs), or must every `@` parameter come before the first optional one?
+**Answer:** The output parameters are input/output parameters; Eve has no pure output parameters. A mandatory parameter can be after optional ones, but the call must use a named argument for it, they can't be positional parameters: after optional parameters they must be called with names. Confirmed.
