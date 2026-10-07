@@ -32,6 +32,42 @@ def run_once(eve, path):
     return (time.perf_counter() - t) * 1000, r
 
 
+README = os.path.join(PERF, 'README.md')
+PLANNED = {2: 'import of a module, `apply` of an aspect, a call through an extension method',
+           3: 'read and parse a CSV and a JSON file, decimal arithmetic, optional values',
+           4: 'a parallel group of aspects, a channel with 100,000 messages, a stream',
+           5: 'insert and select 10,000 rows in the Eve database',
+           6: '1,000 requests to a local `service` script',
+           7: 'render an HTML template 1,000 times'}
+
+
+def describe(path):
+    m = re.search(r'\*\* perf: (.*)', open(path, encoding='utf-8').read())
+    return m.group(1).strip() if m else ''
+
+
+def update_readme(hist):
+    """Rewrite the table between the bench markers of the README: description and latest ReleaseSafe time."""
+    rel = [h for h in hist if h.get('build') == 'ReleaseSafe']
+    last = rel[-1]['results'] if rel else {}
+    rows = ['| Benchmark | Latest optimized time | What it measures |', '|---|---|---|']
+    files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
+    for lvl in range(1, 8):
+        rows.append('| **Level %d** | | |' % lvl)
+        mine = [f for f in files if os.path.basename(f).startswith('p%d' % lvl)]
+        for f in mine:
+            n = os.path.basename(f)[:-4]
+            ms = ('%.0f ms' % last[n]['median_ms']) if n in last else 'not measured'
+            rows.append('| `%s.eve` | %s | %s |' % (n, ms, describe(f)))
+        if not mine:
+            rows.append('| planned | | %s |' % PLANNED[lvl])
+    text = open(README, encoding='utf-8', newline='').read()
+    nl = '\r\n' if '\r\n' in text else '\n'
+    b, e = '<!-- bench:begin -->', '<!-- bench:end -->'
+    i, j = text.index(b) + len(b), text.index(e)
+    open(README, 'w', encoding='utf-8', newline='').write(text[:i] + nl + nl.join(rows) + nl + text[j:])
+
+
 def git_short():
     try:
         return subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
@@ -90,7 +126,8 @@ def main():
         hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(),
                      'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results})
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
-        print('saved to test/bmark/history.json')
+        update_readme(hist)
+        print('saved to test/bmark/history.json, table of the README updated')
     if bad or (a.check and slow):
         if slow:
             print('SLOWER than the last run by more than 25%:', ', '.join(slow))

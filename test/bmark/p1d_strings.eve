@@ -1,5 +1,5 @@
 # level 1 performance: strings, placeholders and regular expressions
-** perf: concatenation, placeholders, =~
+** perf: string appends, placeholders, regular expression matches
 driver p1d_strings is
   process main is
     new text := "";

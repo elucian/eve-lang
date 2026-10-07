@@ -1,5 +1,5 @@
 # level 1 performance: function calls and recursion
-** perf: calls, recursion, parameters
+** perf: function calls, recursion (`fib(20)`), parameter binding
 driver p1b_calls is
   function fib(n: Integer) => (@r: Integer) is
     if n < 2 do

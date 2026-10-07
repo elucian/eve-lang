@@ -1,5 +1,5 @@
 # level 1 performance: integer and real arithmetic in loops
-** perf: loops, operators, variables
+** perf: integer and real arithmetic, `for` and `while` loops, variables
 driver p1a_arith is
   process main is
     new sum := 0;
