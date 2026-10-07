@@ -33,13 +33,28 @@ A new level adds a file `p<level><letter>_<name>.eve`; `script/bmark.py` finds i
 
 ## History
 
-The measured runs are in `history.json` (date, version, commit, build, median and best time of each benchmark). Overall appreciation from one version to the next goes in the table below, written by whoever saves a run: say what changed in the VM and whether the benchmarks got faster (appreciation) or slower (depreciation), and explain a drop of more than 10%.
+The measured runs are in `history.json` (date, version, commit, build, median and best time of each benchmark). Whoever saves a run adds a paragraph for the version under "Notes by version" (what changed in the VM, whether the benchmarks got faster, appreciation, or slower, depreciation, and why a drop of more than 10% happened), then a row in the table of its build. The tables stay slim: the change against the previous row of the same level and build is written in the notes, not in a column.
 
-One row for each version, build and level, so a new level adds rows and never a column. Change is against the previous row of the same level and build.
+### Notes by version
 
-| Version | Date | Build | Level | Total (median) | Change | Notes |
-|---|---|---|---|---|---|---|
-| 0.0.1 | 2026-10-07 | Debug | 1 | 1843 ms | baseline | First measure, right after level 1 passed 82 of 82. Tree-walking interpreter, names found by a linear scan of the scopes, values copied as tagged unions. `p1a_arith` (500,000 loop turns) dominates. |
-| 0.0.1 | 2026-10-07 | ReleaseSafe | 1 | 400 ms | baseline | The same code, about 4.6 times faster than Debug. Use this build for comparisons between versions; Debug is the one used to develop. |
+**0.0.1 (2026-10-07), baseline.** First measure, right after level 1 passed 82 of 82. Tree-walking interpreter: names are found by a linear scan of the scopes, values are copied as tagged unions, the static check runs once before the run. `p1a_arith` (500,000 loop turns) dominates the total. The ReleaseSafe build is about 4.6 times faster than Debug on the same code; compare versions on ReleaseSafe and use Debug only to develop. No earlier version exists, so there is no appreciation or depreciation yet.
+
+### Debug build (`zig build -p ..`)
+
+| Level | Version | Date | Total (median) |
+|---|---|---|---|
+| **Level 1** | | | |
+| | 0.0.1 | 2026-10-07 | 1843 ms |
+| **Level 2** | | | |
+| | not measured | | |
+
+### Optimized build (`zig build -Doptimize=ReleaseSafe`)
+
+| Level | Version | Date | Total (median) |
+|---|---|---|---|
+| **Level 1** | | | |
+| | 0.0.1 | 2026-10-07 | 400 ms |
+| **Level 2** | | | |
+| | not measured | | |
 
 Ideas to watch, in the order of their likely gain: variable lookup by slot instead of by name (the scan of the scopes shows in `p1a_arith` and `p1b_calls`); no copy of the argument list for each call; the string append that builds a new string each time (`p1d_strings`); the static check should cost almost nothing against the run, so its time is part of every benchmark.
