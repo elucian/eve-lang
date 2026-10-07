@@ -16,18 +16,25 @@ A Debug build (`zig build -p ..`) and a ReleaseSafe build (`zig build -Doptimize
 
 ## Benchmarks
 
-| File | Level | What it measures |
-|---|---|---|
-| `p1a_arith.eve` | 1 | integer and real arithmetic, `for` and `while` loops, variables |
-| `p1b_calls.eve` | 1 | function calls, recursion (`fib(20)`), parameter binding |
-| `p1c_collections.eve` | 1 | list appends and iteration (60,000 elements), DataMap and DataSet |
-| `p1d_strings.eve` | 1 | string appends, placeholders, regular expression matches |
-| level 2 | 2 | planned: import of a module, `apply` of an aspect, a call through an extension method |
-| level 3 | 3 | planned: read and parse a CSV and a JSON file, decimal arithmetic, optional values |
-| level 4 | 4 | planned: a parallel group of aspects, a channel with 100,000 messages, a stream |
-| level 5 | 5 | planned: insert and select 10,000 rows in the Eve database |
-| level 6 | 6 | planned: 1,000 requests to a local `service` script |
-| level 7 | 7 | planned: render an HTML template 1,000 times |
+| Benchmark | What it measures |
+|---|---|
+| **Level 1** | |
+| `p1a_arith.eve` | integer and real arithmetic, `for` and `while` loops, variables |
+| `p1b_calls.eve` | function calls, recursion (`fib(20)`), parameter binding |
+| `p1c_collections.eve` | list appends and iteration (60,000 elements), DataMap and DataSet |
+| `p1d_strings.eve` | string appends, placeholders, regular expression matches |
+| **Level 2** | |
+| planned | import of a module, `apply` of an aspect, a call through an extension method |
+| **Level 3** | |
+| planned | read and parse a CSV and a JSON file, decimal arithmetic, optional values |
+| **Level 4** | |
+| planned | a parallel group of aspects, a channel with 100,000 messages, a stream |
+| **Level 5** | |
+| planned | insert and select 10,000 rows in the Eve database |
+| **Level 6** | |
+| planned | 1,000 requests to a local `service` script |
+| **Level 7** | |
+| planned | render an HTML template 1,000 times |
 
 A new level adds a file `p<level><letter>_<name>.eve`; `script/bmark.py` finds it by its name. Keep a benchmark between 50 ms and 2 s: long enough to measure, short enough to run at every commit.
 
