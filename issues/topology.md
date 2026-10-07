@@ -1,6 +1,6 @@
 # Issues: topology.html
 
-Page: `tutorial/topology.html` (597 lines). Reviewed 2026-09-28. How to answer: [README](README.md).
+Page: `tutorial/topology.html`, split on 2026-10-06 into scripts, drivers, aspects, modules and vm (D-091); the page no longer exists. Reviewed 2026-09-28. How to answer: [README](README.md).
 
 ## Questions
 

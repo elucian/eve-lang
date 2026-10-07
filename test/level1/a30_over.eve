@@ -1,4 +1,5 @@
 # over ends the process it is in with exit code 0
+** spec: syntax/statements.md#interruptions
 driver a30_over is
   process main is
     print "start";
@@ -6,3 +7,10 @@ driver a30_over is
     print "never";
   return;
 end a30_over;
+/*@expect
+{
+  "stdout": [
+    "start"
+  ]
+}
+*/

@@ -1,29 +1,30 @@
-# class with a constructor, methods, new, reference and clone (D-036, D-037)
+# class with a constructor, methods, visibility, reference and clone (D-076, D-084, D-085)
+** spec: syntax/declarations.md#classes-and-objects
 driver a26_class is
   class Point = {x, y :Integer} <: Object is
-    constructor(@self)(x = 0, y = 0 :Integer) is
-      self := new Object();
+    constructor(x = 0, y = 0 :Integer) => (@self) is
+      let self := Object();
       let self.x := x;
       let self.y := y;
     return;
 
-    method move(@self, dx, dy :Integer) is
-      self.x += dx;
-      self.y += dy;
+    public method move(@self, dx, dy :Integer) is
+      let self.x += dx;
+      let self.y += dy;
     return;
 
-    method string(@self) => (@result :String) is
-      result := "(\#{self.x}, \#{self.y})";
+    public method string(@self) => (@result :String) is
+      let result := "({self.x}, {self.y})";
     return;
   end Point;
 
   process main is
-    let p := new Point(1, 2);
+    new p := Point(1, 2);
     expect p.x == 1;
     expect p.y == 2;
-    let o := new Point();
+    new o := Point();
     expect o.x == 0;
-    let n := new Point(y: 5);
+    new n := Point(y: 5);
     expect n.y == 5;
 
     p.move(2, 3);
@@ -31,13 +32,20 @@ driver a26_class is
     expect p.y == 5;
     print p.string();
 
-    let r := p;                  ** the same object
-    r.x := 50;
+    new r := p;                  ** the same object
+    let r.x := 50;
     expect p.x == 50;
-    let c :: p;                  ** a copy
-    c.x := 100;
+    new c :: p;                  ** a copy
+    let c.x := 100;
     expect p.x == 50;
     expect p is r;
     expect p is not c;
   return;
 end a26_class;
+/*@expect
+{
+  "stdout": [
+    "(3, 5)"
+  ]
+}
+*/

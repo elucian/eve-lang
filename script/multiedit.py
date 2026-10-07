@@ -17,7 +17,7 @@ Spec format (markers must start at column 0):
   text replaced at EVERY occurrence (at least one required)
   @@@ NEW
   replacement
-  @@@ FILE demo/hello_world.eve
+  @@@ FILE test/level1/a03_print.eve
   ...
 Edits within a file apply in order, each seeing the result of the previous one.
 """

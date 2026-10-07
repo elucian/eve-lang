@@ -1,13 +1,14 @@
-# jobs: retry runs a failed job again, resume goes on after it (D-020, D-030)
+# jobs: retry runs a failed job again, resume goes on after it (D-020, D-034)
+** spec: semantics/control.md#job, semantics/errors.md#recover
 driver a34_jobs is
   process main is
-    let tries := 0;
+    new tries := 0;
 
     c1: job
     do
-      tries += 1;
+      let tries += 1;
       raise "fail" if tries < 3;
-      print "c1 passed after \#{tries} tries";
+      print "c1 passed after {tries} tries";
     done c1;
 
     c2: job
@@ -20,10 +21,19 @@ driver a34_jobs is
     if $error.job == "c1" and tries < 3 do
       retry;
     else if $error.job == "c2" do
-      print "c2 failed: \s{$error.message}";
+      print "c2 failed: {$error.message}";
       resume;
     else
       abort;
     done;
   return;
 end a34_jobs;
+/*@expect
+{
+  "stdout": [
+    "c1 passed after 3 tries",
+    "c2 failed: bad",
+    "after the jobs"
+  ]
+}
+*/

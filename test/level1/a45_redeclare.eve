@@ -1,0 +1,14 @@
+# redeclaring a name in the same scope is an error (D-076)
+** spec: syntax/declarations.md#variables-and-constants
+driver a45_redeclare is
+  process main is
+    new x := 1;
+    new x := 2;                  ** compile error: x exists
+  return;
+end a45_redeclare;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

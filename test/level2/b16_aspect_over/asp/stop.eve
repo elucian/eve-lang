@@ -1,5 +1,5 @@
 # stop: ends early with over
-aspect stop is
+exclusive aspect stop is
   process main is
     print "stop: start";
     over;

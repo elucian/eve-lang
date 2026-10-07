@@ -1,12 +1,40 @@
-# regular expressions: =~ matches, !~ does not match; a pattern starts with / and ends with /flags
+# regular expressions: =~ matches, not (...) negates; a string that starts with / is a regex literal and keeps its backslashes (D-079, D-097)
+** spec: lexical/lexical.md#string, syntax/expressions.md#comparison-and-logic
 driver a28_regex is
   process main is
     expect "this is like" =~ "/is/";
     expect "this is like" =~ "/^this/";
     expect "this is like" =~ "/l.ke$/";
-    expect "this is not like" !~ "/^not/";
+    expect not ("this is not like" =~ "/^not/");
     expect "ABC" =~ "/abc/i";
-    let found := "abc123" =~ "/c1/";
+    new found := "abc123" =~ "/c1/";
     print found;
+
+    ** a regex literal keeps its backslashes: \s and \d belong to the pattern
+    expect "this is like" =~ "/\sis\s/";
+    expect "abc123" =~ "/\d\d\d$/";
+    expect "/\d".length() == 3;
+
+    ** a regex literal is a String: it can be built by concatenation;
+    ** only the literal that starts with / is raw, the other parts double the backslash
+    new word := "is";
+    new pattern := "/\s" + word + "\\s/";
+    expect "this is like" =~ pattern;
+
+    ** a path starts with / too: a value is inserted with +, not with a placeholder
+    new name := "orders";
+    expect "/data/" + name + ".csv" == "/data/orders.csv";
+
+    ** the same operator compares numbers within a tolerance
+    expect 3.14159 =~ 3.14 +- 0.01;
+    expect not (3.2 =~ 3.14 +- 0.01);
+    expect 5 in 4 +- 2;
   return;
 end a28_regex;
+/*@expect
+{
+  "stdout": [
+    "True"
+  ]
+}
+*/

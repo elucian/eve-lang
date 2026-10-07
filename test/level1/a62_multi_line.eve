@@ -1,0 +1,24 @@
+# a statement ends with ; so an expression or a literal may span several lines (from demo/multi_line.eve, D-099)
+** spec: syntax/statements.md
+driver a62_multi_line is
+  process main is
+    new x := 1 +
+             2 +
+             (3 + 4)
+             + 5;
+    expect x == 15;
+
+    new a := {
+      1: 2,
+      3: 4,
+      5: 6,
+    };
+    expect a[3] == 4;
+    print x;
+  return;
+end a62_multi_line;
+/*@expect
+{
+  "stdout": ["15"]
+}
+*/

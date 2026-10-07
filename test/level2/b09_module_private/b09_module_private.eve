@@ -1,4 +1,4 @@
-# a private member of a module can't be used outside it (D-068)
+# a member that a module does not export can't be used outside it (D-068, D-085)
 driver b09_module_private is
   from lib use (counter);
 
@@ -6,3 +6,12 @@ driver b09_module_private is
     print counter.total;
   return;
 end b09_module_private;
+/*@expect
+{
+  "exit": 21,
+  "stdout": [
+    "counter: loaded"
+  ],
+  "note": "reading a private member fails with $err_access (21) (Q-022 b)"
+}
+*/

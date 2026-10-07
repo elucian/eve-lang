@@ -6,3 +6,12 @@ driver b13_apply_named_args is
     apply report("C", width: 5);
   return;
 end b13_apply_named_args;
+/*@expect
+{
+  "stdout": [
+    "A: 10",
+    "B: 20",
+    "C: 5"
+  ]
+}
+*/

@@ -1,18 +1,20 @@
-# strings are immutable UTF-8 text (D-058)
+# strings are immutable UTF-8 text (D-058, D-080)
+** spec: semantics/types.md#strings
 driver a10_strings is
   process main is
-    let s := "Hello";
+    new s := "Hello";
     expect s + " World" == "Hello World";
     expect "ab" * 3 == "ababab";
     expect s.length() == 5;
     expect "αβγ".length() == 3;
     expect "abc" < "abd";
     expect "a" <> "b";
+    expect s[1] == 'H';
+    expect s[-1] == 'o';
 
-    ** a string joined with another literal gives a String
-    expect "a" + 1 == "a1";
-    expect 'a' + 1 == "a1";
-    expect 1 + 'a' == "1a";
+    ** a number is appended or prepended as text; + with a number is a type error
+    expect ("a" <+ 1) == "a1";
+    expect (1 +> "a") == "1a";
 
     ** escape sequences
     expect "\x41" == "A";
@@ -21,16 +23,28 @@ driver a10_strings is
     expect "\\".length() == 1;
     expect "\"".length() == 1;
     expect "\n".length() == 1;
+    expect "&alpha;" == "α";
+    expect "&#955;" == "λ";
+    expect "&#x3BB;" == "λ";
+    expect "\&".length() == 1;
+    expect "&amp;" == "\&";
 
     ** split and join
     expect "a,b,c".split(',') == ("a", "b", "c");
     expect (1, 2, 3).join('-') == "1-2-3";
 
-    ** the assignment rebinds, the old value does not change
-    let r := s;
-    s += "!";
+    ** the old value of a string does not change
+    new r := s;
+    let s <+ "!";
     expect s == "Hello!";
     expect r == "Hello";
     print s;
   return;
 end a10_strings;
+/*@expect
+{
+  "stdout": [
+    "Hello!"
+  ]
+}
+*/

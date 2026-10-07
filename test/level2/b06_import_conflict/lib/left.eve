@@ -1,6 +1,8 @@
-# left: public function name
+# left: exported function name
 module left is
-  function .name() => (@result: String) is
-    result := "left";
+  export (name);
+
+  function name() => (@result: String) is
+    let result := "left";
   return;
 end left;

@@ -1,17 +1,25 @@
-# an extension method: _name with @self adds a method to a class, in this script (D-072)
+# an extension method: a method with @self of a class, declared outside the class (D-072, D-085)
 driver b18_extension_method is
   from lib use (geometry(*));
 
-  method _shift(@self: Point, dx, dy :Integer) is
-    self.x += dx;
-    self.y += dy;
+  method shift(@self: Point, dx, dy :Integer) is
+    let self.x += dx;
+    let self.y += dy;
   return;
 
   process main is
-    let p := new Point(1, 2);
+    new p := Point(1, 2);
     p.shift(2, 3);
     expect p.x == 3;
     expect p.y == 5;
-    print "(\#{p.x}, \#{p.y})";
+    print "({p.x}, {p.y})";
   return;
 end b18_extension_method;
+/*@expect
+{
+  "stdout": [
+    "(3, 5)"
+  ],
+  "note": "a driver may extend a class imported from a module (Q-022 e)"
+}
+*/

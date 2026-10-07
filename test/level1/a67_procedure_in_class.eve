@@ -1,0 +1,19 @@
+# a class hosts functions, not procedures: the work that changes things is done by methods (D-103)
+** spec: syntax/declarations.md#classes-and-objects
+driver a67_procedure_in_class is
+  class Counter = {n: Integer} <: Object is
+    procedure reset() is           ** compile error: a class can't host a procedure
+      print "reset";
+    return;
+  end Counter;
+
+  process main is
+    print "never";
+  return;
+end a67_procedure_in_class;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

@@ -1,0 +1,24 @@
+# abort in recover ends the process, runs finalize and passes the error on (D-020)
+** spec: semantics/errors.md#recover
+driver a53_abort is
+  process main is
+    j1: job
+    do
+      raise "bad";
+    done j1;
+  recover
+    print "recover";
+    abort;
+  finalize
+    print "finalize";
+  return;
+end a53_abort;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [
+    "recover",
+    "finalize"
+  ]
+}
+*/

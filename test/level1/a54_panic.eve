@@ -1,0 +1,18 @@
+# panic ends the whole application at once with code 1, without finalize (D-038)
+** spec: syntax/statements.md#interruptions
+driver a54_panic is
+  process main is
+    print "work";
+    panic;
+  finalize
+    print "never";
+  return;
+end a54_panic;
+/*@expect
+{
+  "exit": 1,
+  "stdout": [
+    "work"
+  ]
+}
+*/

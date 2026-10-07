@@ -1,4 +1,5 @@
-# over skips recover and finalize (D-055)
+# over skips recover and finalize (D-020)
+** spec: semantics/errors.md#finalize
 driver a33_over_finalize is
   process main is
     print "work";
@@ -7,3 +8,10 @@ driver a33_over_finalize is
     print "never";
   return;
 end a33_over_finalize;
+/*@expect
+{
+  "stdout": [
+    "work"
+  ]
+}
+*/

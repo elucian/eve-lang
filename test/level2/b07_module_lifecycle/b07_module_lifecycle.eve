@@ -9,3 +9,13 @@ driver b07_module_lifecycle is
     print "main: end";
   return;
 end b07_module_lifecycle;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "main: start",
+    "main: end",
+    "counter: 2 ticks"
+  ]
+}
+*/

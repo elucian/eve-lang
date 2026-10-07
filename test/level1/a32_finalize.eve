@@ -1,4 +1,5 @@
-# finalize runs after the process ends normally, and after recover (D-055)
+# finalize runs after the process ends normally, and after recover (D-020)
+** spec: semantics/errors.md#finalize
 driver a32_finalize is
   process main is
     print "work";
@@ -9,3 +10,12 @@ driver a32_finalize is
     print "finalize";
   return;
 end a32_finalize;
+/*@expect
+{
+  "stdout": [
+    "work",
+    "recover",
+    "finalize"
+  ]
+}
+*/

@@ -1,6 +1,8 @@
-# beta: one public function
+# beta: one exported function
 module beta is
-  function .two() => (@result: Integer) is
-    result := 2;
+  export (two);
+
+  function two() => (@result: Integer) is
+    let result := 2;
   return;
 end beta;

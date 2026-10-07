@@ -1,4 +1,5 @@
-# print adds a new line and separates values with a separator, write adds nothing
+# print adds a new line and separates its arguments with sep, write adds nothing; a list is one argument (Q-019b)
+** spec: syntax/statements.md#calls
 driver a05_print_write is
   process main is
     print "one";
@@ -6,11 +7,27 @@ driver a05_print_write is
     write "b";
     print;                          ** ends the line started by write
     print 10;
-    print (10 + 10 + 15);           ** numeric expression
+    print (10 + 10 + 15);           ** a numeric expression
     print (1, 2, 3);                ** the default separator is ","
-    print (1, 2, 3, separator: " ");
+    print (1, 2, 3, sep: " ");
+    new lst := (1, 2, 3);
+    print lst;                      ** sep does not apply inside a list
     write (1, 2);
     write (3, 4);
     print;
   return;
 end a05_print_write;
+/*@expect
+{
+  "stdout": [
+    "one",
+    "ab",
+    "10",
+    "35",
+    "1,2,3",
+    "1 2 3",
+    "(1,2,3)",
+    "1234"
+  ]
+}
+*/

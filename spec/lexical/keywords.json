@@ -1,0 +1,511 @@
+{
+  "$schema": "../schema/keywords.schema.json",
+  "specVersion": "0.1-draft",
+  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by cancel case close commit create cursor del delete descend discard external feature fetch group halt insert into item label limit object offset on open order package pop record reset rest result rollback select step store switch to trial view where with within add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names.",
+  "items": [
+    {
+      "id": "abort",
+      "category": "statement",
+      "status": "stable",
+      "ref": "semantics/errors.md#recover",
+      "summary": "In `recover`: ends the process, runs `finalize`, passes the error on."
+    },
+    {
+      "id": "all",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#match",
+      "summary": "Option of match: every matching path runs."
+    },
+    {
+      "id": "and",
+      "category": "operator",
+      "status": "stable",
+      "ref": "syntax/expressions.md",
+      "summary": "Logical and."
+    },
+    {
+      "id": "apply",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "summary": "Runs an aspect and waits for it (level 2)."
+    },
+    {
+      "id": "as",
+      "category": "operator",
+      "status": "draft",
+      "ref": "syntax/expressions.md",
+      "summary": "Formats a value: `d as T24`."
+    },
+    {
+      "id": "aspect",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Header of a script that a driver applies or starts (level 2)."
+    },
+    {
+      "id": "assert",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#expect-and-assert",
+      "summary": "Checks a condition; a failed assert is an error with code 3: the process goes to `recover` and ends when it is not recovered (Q-031h)."
+    },
+    {
+      "id": "break",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Leaves a loop: `break [label] [if c];`."
+    },
+    {
+      "id": "call",
+      "category": "statement",
+      "status": "draft",
+      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "summary": "Runs a shell command (level 3)."
+    },
+    {
+      "id": "class",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Declares a class, an ordinal, a range type or a function type; the superclass after `<:` is mandatory; a class body closes with `end Name;` (Q-029)."
+    },
+    {
+      "id": "concurrent",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Marks an aspect that is thread safe: `concurrent aspect name is` (level 2, D-090)."
+    },
+    {
+      "id": "constructor",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Declares the constructor of a class, inside its body."
+    },
+    {
+      "id": "def",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#variables-and-constants",
+      "summary": "Declares an alias of a name."
+    },
+    {
+      "id": "defer",
+      "category": "statement",
+      "status": "draft",
+      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "summary": "Registers a statement that runs when the enclosing subprogram ends."
+    },
+    {
+      "id": "destructor",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Declares the cleanup of an object, inside the class body."
+    },
+    {
+      "id": "do",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md",
+      "summary": "Starts the executable region of a job, loop, branch or path."
+    },
+    {
+      "id": "done",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md",
+      "summary": "Closes an if, match, job, while or for: `done;` or `done label;`."
+    },
+    {
+      "id": "driver",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Header of a script that runs: `driver name is` … `end name;`."
+    },
+    {
+      "id": "else",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#if",
+      "summary": "Alternative branch of an if, of a ternary expression, or of a while loop."
+    },
+    {
+      "id": "end",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Closes a driver, aspect, module, class or trait: `end name;`."
+    },
+    {
+      "id": "eq",
+      "category": "operator",
+      "status": "stable",
+      "ref": "syntax/expressions.md",
+      "summary": "Equivalence: same value and same type."
+    },
+    {
+      "id": "exclusive",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Marks an aspect that is not thread safe: `exclusive aspect name is` (level 2, D-090)."
+    },
+    {
+      "id": "exit",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Ends the process without an error; `finalize` runs."
+    },
+    {
+      "id": "expect",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#expect-and-assert",
+      "summary": "Checks a condition; a failed expect is an error with code 2."
+    },
+    {
+      "id": "export",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#imports-and-modules-level-2",
+      "summary": "Lists the members a module makes public (level 2)."
+    },
+    {
+      "id": "finalize",
+      "category": "region",
+      "status": "stable",
+      "ref": "semantics/errors.md#finalize",
+      "summary": "Final region of a process; runs when the process ends normally, by `exit` or by `abort`."
+    },
+    {
+      "id": "for",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#loops",
+      "summary": "Loop over a range or a collection: `for x in r do`."
+    },
+    {
+      "id": "from",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#imports-and-modules-level-2",
+      "summary": "Starts an import: `from lib use (a, b);` (level 2)."
+    },
+    {
+      "id": "function",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#functions-and-procedures",
+      "summary": "Declares a function: a subprogram outside a class that has a result, `function f(x: T) => (@r: R) is` (D-100)."
+    },
+    {
+      "id": "generator",
+      "category": "declaration",
+      "status": "draft",
+      "ref": "syntax/declarations.md#functions-and-procedures",
+      "summary": "Declares a function that gives its values one at a time with `yield` (version 2)."
+    },
+    {
+      "id": "if",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#if",
+      "summary": "Conditional block `if c do … done;`, conditional statement suffix, and the ternary `a if c else b`."
+    },
+    {
+      "id": "in",
+      "category": "operator",
+      "status": "stable",
+      "ref": "syntax/expressions.md",
+      "summary": "Membership: `x in collection`; also the generator of `for` and of a builder."
+    },
+    {
+      "id": "initialize",
+      "category": "region",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Initialization region of a module (level 2)."
+    },
+    {
+      "id": "is",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#headers",
+      "summary": "Ends a declaration header (`procedure p is`); also the operators `x is T` and `a is b`."
+    },
+    {
+      "id": "job",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#job",
+      "summary": "A labeled block of a process: `name: job` … `do` … `done name;`."
+    },
+    {
+      "id": "let",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#let",
+      "summary": "Executes an assignment or an expression: `let x += 1;`. It may change several names and creates a missing name by type inference (Q-017, D-096)."
+    },
+    {
+      "id": "loop",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#loops",
+      "summary": "Header of a loop (label and declarations), or a loop tested at the end: `loop … do … repeat;`."
+    },
+    {
+      "id": "match",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#match",
+      "summary": "Multi-path selector: `match s [one | all]`."
+    },
+    {
+      "id": "method",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Declares a method of a class, or an extension method outside it."
+    },
+    {
+      "id": "module",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Header of a library script (level 2); `end name;` closes it."
+    },
+    {
+      "id": "new",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#new",
+      "summary": "Creates a variable or an attribute: `new x := 0;`."
+    },
+    {
+      "id": "not",
+      "category": "operator",
+      "status": "stable",
+      "ref": "syntax/expressions.md",
+      "summary": "Logical negation."
+    },
+    {
+      "id": "one",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#match",
+      "summary": "Option of match: only the first matching path runs (the default)."
+    },
+    {
+      "id": "or",
+      "category": "operator",
+      "status": "stable",
+      "ref": "syntax/expressions.md",
+      "summary": "Logical or."
+    },
+    {
+      "id": "other",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#match",
+      "summary": "`when other do`: the path taken when no other `when` matched."
+    },
+    {
+      "id": "over",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Ends the process at once with code 0: `over;`. No `recover`, no `finalize`."
+    },
+    {
+      "id": "panic",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Ends the whole application at once with code 1."
+    },
+    {
+      "id": "parallel",
+      "category": "block",
+      "status": "draft",
+      "ref": "semantics/control.md#parallel",
+      "summary": "Group of aspects that run in parallel (level 4)."
+    },
+    {
+      "id": "pass",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "The empty statement."
+    },
+    {
+      "id": "private",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Visibility of a class member: the class only (the default)."
+    },
+    {
+      "id": "procedure",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#functions-and-procedures",
+      "summary": "Declares a procedure: a subprogram outside a class without a result, called as a statement, `procedure p(x: T) is` (D-100, from Ada)."
+    },
+    {
+      "id": "process",
+      "category": "region",
+      "status": "stable",
+      "ref": "syntax/declarations.md#process",
+      "summary": "The executable part of a driver or aspect: `process main is` … `return;`."
+    },
+    {
+      "id": "protected",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Visibility of a class member: the class and its subclasses."
+    },
+    {
+      "id": "public",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Visibility of a class member: seen everywhere."
+    },
+    {
+      "id": "raise",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Creates an error: `raise \"message\";`; the process jumps to `recover`."
+    },
+    {
+      "id": "recover",
+      "category": "region",
+      "status": "stable",
+      "ref": "semantics/errors.md#recover",
+      "summary": "Error region of a process: decides `retry`, `resume` or `abort`."
+    },
+    {
+      "id": "repeat",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#loops",
+      "summary": "Closes a loop tested at the end: `repeat [label] [while c];`."
+    },
+    {
+      "id": "resume",
+      "category": "statement",
+      "status": "stable",
+      "ref": "semantics/errors.md#recover",
+      "summary": "In `recover`: goes on after the failed job."
+    },
+    {
+      "id": "retry",
+      "category": "statement",
+      "status": "stable",
+      "ref": "semantics/errors.md#recover",
+      "summary": "In `recover`: runs the failed job again."
+    },
+    {
+      "id": "return",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#return",
+      "summary": "Closes a process, function, method, constructor or destructor."
+    },
+    {
+      "id": "set",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#variables-and-constants",
+      "summary": "Declares a constant: `set pi = 3.14 :Real;`."
+    },
+    {
+      "id": "skip",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Goes to the continuation point of a loop: `skip [label] [if c];`."
+    },
+    {
+      "id": "start",
+      "category": "statement",
+      "status": "draft",
+      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "summary": "In a parallel group starts an aspect (level 4); in a plain job starts an asynchronous procedure that shares the core of the job (Q-025c, D-100)."
+    },
+    {
+      "id": "stop",
+      "category": "statement",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
+      "summary": "Ends a job without error."
+    },
+    {
+      "id": "then",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#match",
+      "summary": "Region that runs after a match or a loop completed."
+    },
+    {
+      "id": "trait",
+      "category": "declaration",
+      "status": "draft",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Declares a stateless set of required and provided methods (version 2)."
+    },
+    {
+      "id": "use",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#imports-and-modules-level-2",
+      "summary": "Lists the imported names in an import (level 2)."
+    },
+    {
+      "id": "wait",
+      "category": "statement",
+      "status": "draft",
+      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "summary": "Pauses the process for a time: `wait 10ms;`."
+    },
+    {
+      "id": "when",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#match",
+      "summary": "A path of a match: `when v1, v2 do`."
+    },
+    {
+      "id": "while",
+      "category": "block",
+      "status": "stable",
+      "ref": "semantics/control.md#loops",
+      "summary": "Loop tested at the start `while c do`, or the test of a `repeat while c;`."
+    },
+    {
+      "id": "xor",
+      "category": "operator",
+      "status": "stable",
+      "ref": "syntax/expressions.md",
+      "summary": "Logical exclusive or."
+    },
+    {
+      "id": "yield",
+      "category": "statement",
+      "status": "draft",
+      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "summary": "In a generator: gives a value to the caller (version 2)."
+    }
+  ]
+}

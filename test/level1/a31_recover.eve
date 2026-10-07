@@ -1,10 +1,19 @@
 # an error jumps to recover; reaching the end of recover handles the error (D-020)
+** spec: semantics/errors.md#recover
 driver a31_recover is
   process main is
     print "work";
     raise "boom";
     print "never";
   recover
-    print "caught: \s{$error.message}";
+    print "caught: {$error.message}";
   return;
 end a31_recover;
+/*@expect
+{
+  "stdout": [
+    "work",
+    "caught: boom"
+  ]
+}
+*/

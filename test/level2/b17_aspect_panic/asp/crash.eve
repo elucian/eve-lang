@@ -1,5 +1,5 @@
 # crash: panics
-aspect crash is
+exclusive aspect crash is
   process main is
     print "crash: start";
     panic;

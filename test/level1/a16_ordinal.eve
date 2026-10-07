@@ -1,4 +1,5 @@
-# an Ordinal is a set of named integer values; the first value is 0 (D-058)
+# an Ordinal is a set of named integer values; the first value is 1 unless one is given (Q-029, D-096)
+** spec: semantics/types.md#composite-types
 driver a16_ordinal is
   class Color = {Red, Green, Blue} <: Ordinal;
   class Level = {Low:10, High} <: Ordinal;
@@ -6,17 +7,17 @@ driver a16_ordinal is
 
   process main is
     ** names that start with a capital letter need no qualifier
-    expect Red == 0;
-    expect Green == 1;
-    expect Blue == 2;
+    expect Red == 1;
+    expect Green == 2;
+    expect Blue == 3;
     expect Low == 10;
     expect High == 11;
 
     ** other names need the type name
-    expect Shade.dark == 0;
-    expect Shade.light == 1;
+    expect Shade.dark == 1;
+    expect Shade.light == 2;
 
-    let c := Green;
+    new c := Green;
     match c
       when Red do
         print "red";
@@ -27,3 +28,10 @@ driver a16_ordinal is
     done;
   return;
 end a16_ordinal;
+/*@expect
+{
+  "stdout": [
+    "green or blue"
+  ]
+}
+*/

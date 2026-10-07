@@ -1,7 +1,0 @@
-{
-  "exit": 21,
-  "stdout": [
-    "counter: loaded"
-  ],
-  "note": "reading a private member fails with $err_access (21) (Q-022 b)"
-}

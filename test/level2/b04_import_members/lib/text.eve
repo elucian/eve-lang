@@ -1,6 +1,8 @@
-# text: one public function
+# text: one exported function
 module text is
-  function .shout(s: String) => (@result: String) is
-    result := "\s{s}!";
+  export (shout);
+
+  function shout(s: String) => (@result: String) is
+    let result := "{s}!";
   return;
 end text;

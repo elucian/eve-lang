@@ -1,4 +1,5 @@
 # numeric operators and their precedence (D-019)
+** spec: syntax/expressions.md#precedence, syntax/expressions.md#arithmetic
 driver a07_arithmetic is
   process main is
     expect 1 + 2 == 3;
@@ -11,6 +12,8 @@ driver a07_arithmetic is
     expect 7 / 2 == 3.5;
     expect 9 / 3 == 3;
     expect type(9 / 3) is Real;
+    expect type(2 + 3) is Integer;
+    expect type(2 + 0.5) is Real;
 
     ** precedence: ^ then * / % then + -
     expect 2 + 3 * 4 == 14;
@@ -19,7 +22,21 @@ driver a07_arithmetic is
     expect 10 - 4 - 3 == 3;      ** left to right
     expect 2 ^ 3 ^ 2 == 512;     ** the power goes right to left
     expect -3 + 5 == 2;
+
+    ** the unary minus applies before ^; with a term on its left - is the subtraction (Q-030)
+    expect -2 ^ 2 == 4;
+    expect 4 - 2 ^ 2 == 0;
+    expect 4 - -2 ^ 2 == 0;
+    expect -(2 ^ 2) == -4;
     print 7 / 2;
     print 2 ^ 10;
   return;
 end a07_arithmetic;
+/*@expect
+{
+  "stdout": [
+    "3.5",
+    "1024"
+  ]
+}
+*/

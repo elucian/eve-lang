@@ -54,7 +54,7 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 | Name | Type | Meaning | Status | VM | Source |
 |---|---|---|---|---|---|
 | `$err_name` | `Integer` | Error codes: `$err_panic` 1, `$err_expect` 2, `$err_raise` 4, `$err_index` 10 … `$err_output` 43 | 0.1 (codes proposed) | codes only | D-054, exceptions.html, `lib/exception.eve` |
-| `$wrn_name` | `Integer` | Warning codes: `$wrn_assert` 3, `$wrn_deprecated` 5, `$wrn_truncate` 6, `$wrn_unused` 7 | 0.1 (codes proposed) | codes only | D-054, exceptions.html |
+| `$wrn_name` | `Integer` | Warning codes: `$wrn_deprecated` 5, `$wrn_truncate` 6, `$wrn_unused` 7 | 0.1 (codes proposed) | codes only | D-054, exceptions.html |
 
 ## Not system variables
 

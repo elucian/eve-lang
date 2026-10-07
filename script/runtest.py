@@ -11,8 +11,10 @@ TARGET is one of:
                       one test, by path
 
 A test is either a file or a folder:
-  test/levelN/<name>.eve          a single script; its expectations are in the expect.json
-                                  of the level: {"<name>": {...}}
+  test/levelN/<name>.eve          a single script; its expectations are JSON in comment blocks of
+                                  the script itself, /*@expect { "stdout": [...] } */ (D-094); the
+                                  old expect.json of the level, {"<name>": {...}}, is still read
+                                  and the blocks of the script override it
   test/levelN/<name>/<name>.eve   a project test (D-073): the folder is a whole Eve project, with
                                   the driver <name>.eve and any of asp/, lib/, data/, out/. Its
                                   expectations are in <name>/expect.json: {...} (one object).
@@ -26,6 +28,7 @@ Other folders are not tests. The expectation keys, all optional:
   "stdout"     the exact expected output: a string, or a list of lines (line
                endings and trailing white space at the end are ignored)
   "contains"   a list of strings that must all appear in the output
+  "stderr"     a list of strings that must all appear in the error output
   "files"      project tests: {"out/report.txt": "text" or [lines]}: each file must exist
                after the run with this content (line endings and trailing white space ignored)
   "skip"       a reason: the test is not run
@@ -141,6 +144,28 @@ def test_cwd(test):
     return os.path.dirname(test) if is_project(test) else ROOT
 
 
+EXPECT_BLOCK = re.compile(r"/\*@expect(.*?)\*/", re.S)
+
+
+def source_expect(test):
+    """The expectations written in the test itself: comment blocks /*@expect { json } */ (D-094).
+    Several blocks are merged: a list is extended, any other key is replaced."""
+    with open(test, encoding="utf-8") as f:
+        text = f.read()
+    spec = {}
+    for m in EXPECT_BLOCK.finditer(text):
+        try:
+            block = json.loads(m.group(1))
+        except ValueError as e:
+            die(f"{rel(test)}: bad /*@expect*/ block: {e}")
+        for key, value in block.items():
+            if isinstance(value, list) and isinstance(spec.get(key), list):
+                spec[key] = spec[key] + value
+            else:
+                spec[key] = value
+    return spec
+
+
 def load_expect(test):
     folder, name = os.path.split(test)
     name = name[:-4]
@@ -150,6 +175,7 @@ def load_expect(test):
         with open(manifest, encoding="utf-8") as f:
             data = json.load(f)
         spec = dict(data if is_project(test) else data.get(name, {}))
+    spec.update(source_expect(test))
     if isinstance(spec.get("stdout"), list):
         spec["stdout"] = "\n".join(spec["stdout"])
     out = os.path.join(folder, name + ".out")
@@ -248,6 +274,10 @@ def run_test(eve, test, timeout):
     for text in exp.get("contains", []):
         if text not in res["stdout"]:
             problems.append(f"expected output not found: {text!r}")
+    stderr = exp.get("stderr", [])
+    for text in [stderr] if isinstance(stderr, str) else stderr:
+        if text not in res["stderr"]:
+            problems.append(f"expected error output not found: {text!r}")
     for name, want in exp.get("files", {}).items():
         path = os.path.join(test_cwd(test), name)
         if not os.path.isfile(path):
@@ -258,7 +288,7 @@ def run_test(eve, test, timeout):
         if norm(got) != norm("\n".join(want) if isinstance(want, list) else want):
             problems.append(f"file differs: {name}")
     if "stdout" not in exp and not exp.get("contains") and prints_output(test):
-        problems.append("no expected output declared in expect.json (the test prints)")
+        problems.append("no expected output declared (/*@expect*/ block or expect.json; the test prints)")
     res["verdict"] = "FAIL" if problems else "PASS"
     res["reason"] = "; ".join(problems)
     res["checks"] = len(problems)

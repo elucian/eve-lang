@@ -1,6 +1,8 @@
-# greeting: one public function
+# greeting: one exported function
 module greeting is
-  function .hello(name: String) => (@result: String) is
-    result := "Hello, \s{name}!";
+  export (hello);
+
+  function hello(name: String) => (@result: String) is
+    let result := "Hello, {name}!";
   return;
 end greeting;

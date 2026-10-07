@@ -5,7 +5,17 @@ driver b08_module_singleton is
   process main is
     counter.tick();
     apply worker();
-    expect counter.count() == 3;
-    print "count: \#{counter.count()}";
+    new n := counter.count!();
+    expect n == 3;
+    print "count: {n}";
   return;
 end b08_module_singleton;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "count: 3",
+    "counter: 3 ticks"
+  ]
+}
+*/

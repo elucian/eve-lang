@@ -1,62 +1,84 @@
 # for loop over ranges and collections (D-022)
+** spec: semantics/control.md#loops, syntax/expressions.md#ranges
 driver a14_for is
   process main is
-    let s := "";
+    new s := "";
     for i in (1..5) do
-      s += "\#{i}";
+      let s <+ "{i}";
     done;
     expect s == "12345";
 
     ** the four range forms
-    let a := "";
+    new a := "";
     for i in (1..<5) do
-      a += "\#{i}";
+      let a <+ "{i}";
     done;
     expect a == "1234";
-    let b := "";
+    new b := "";
     for i in (1>..5) do
-      b += "\#{i}";
+      let b <+ "{i}";
     done;
     expect b == "2345";
-    let c := "";
+    new c := "";
     for i in (1>..<5) do
-      c += "\#{i}";
+      let c <+ "{i}";
     done;
     expect c == "234";
 
     ** the step follows the range
-    let d := "";
+    new d := "";
     for i in (1..9)(4) do
-      d += "\#{i}";
+      let d <+ "{i}";
     done;
     expect d == "159";
 
     ** a list is iterable
-    let u := "";
+    new u := "";
     for e in ('a', 'b', 'c') do
-      u += e;
+      let u <+ e;
     done;
     expect u == "abc";
 
-    ** skip advances the index, break leaves the loop
-    let v := "";
+    ** skip goes to the next element, break leaves the loop
+    new v := "";
     for i in (1..5) do
       skip if i % 2 == 0;
-      v += "\#{i}";
+      let v <+ "{i}";
     done;
     expect v == "135";
-    let w := "";
+    new w := "";
     for i in (1..10) do
       break if i > 3;
-      w += "\#{i}";
+      let w <+ "{i}";
     done;
     expect w == "123";
 
     ** the control variable is visible in then
     for i in (1..3) do
-      print "i = \#{i}";
+      print "i = {i}";
     then
-      print "last index \#{i}";
+      print "last index {i}";
     done;
+
+    ** a labeled loop: break and skip may name an outer loop
+    new pairs := 0;
+    outer: loop
+    for i in (1..3) do
+      for j in (1..3) do
+        skip outer if j > i;
+        let pairs += 1;
+      done;
+    done outer;
+    expect pairs == 6;
   return;
 end a14_for;
+/*@expect
+{
+  "stdout": [
+    "i = 1",
+    "i = 2",
+    "i = 3",
+    "last index 3"
+  ]
+}
+*/

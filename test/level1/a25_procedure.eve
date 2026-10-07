@@ -1,0 +1,48 @@
+# procedures: no result, side effects, @ passes by reference, no @ passes a copy (D-048, D-086, D-100)
+** spec: syntax/declarations.md#functions-and-procedures
+driver a25_procedure is
+  procedure add(p1, p2: Integer, @out: Integer) is
+    let out := p1 + p2;
+  return;
+
+  procedure swap(@x, @y: Integer) is
+    new t := x;
+    let x := y;
+    let y := t;
+  return;
+
+  procedure bump(n: Integer) is
+    let n += 1;
+  return;
+
+  procedure hello is
+    print "hello";
+  return;
+
+  process main is
+    new r :Integer;
+    add(1, 2, @r);
+    expect r == 3;
+
+    new a := 1;
+    new b := 2;
+    swap(@a, @b);
+    expect a == 2;
+    expect b == 1;
+
+    new k := 5;
+    bump(k);                     ** works on a copy
+    expect k == 5;
+
+    hello();                     ** a call is a statement
+    hello;                       ** () is optional without arguments
+  return;
+end a25_procedure;
+/*@expect
+{
+  "stdout": [
+    "hello",
+    "hello"
+  ]
+}
+*/

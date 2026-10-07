@@ -8,3 +8,10 @@ driver b03_import_alias is
     print g.square(5);
   return;
 end b03_import_alias;
+/*@expect
+{
+  "stdout": [
+    "25"
+  ]
+}
+*/

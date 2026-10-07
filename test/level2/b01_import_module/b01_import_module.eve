@@ -6,7 +6,17 @@ driver b01_import_module is
     expect counter.LIMIT == 100;
     counter.tick();
     counter.tick();
-    expect counter.count() == 2;
-    print "count: \#{counter.count()}";
+    new n := counter.count!();
+    expect n == 2;
+    print "count: {n}";
   return;
 end b01_import_module;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "count: 2",
+    "counter: 2 ticks"
+  ]
+}
+*/

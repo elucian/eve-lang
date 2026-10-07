@@ -1,7 +1,8 @@
 # if, else if, else and the conditional statement (D-016)
+** spec: semantics/control.md#if
 driver a12_if is
   process main is
-    let n := 7;
+    new n := 7;
     if n < 5 do
       print "small";
     else if n < 10 do
@@ -17,11 +18,23 @@ driver a12_if is
       else
         print "positive odd";
       done;
+      new inside := 1;
     done;
+    expect inside == 1;          ** the branch created it in the parent scope
 
     print "n is odd" if (n % 2 <> 0);
     print "n is even" if (n % 2 == 0);
-    let size := ("big" if n > 5 else "small");
+    new size := ("big" if n > 5 else "small");
     print size;
   return;
 end a12_if;
+/*@expect
+{
+  "stdout": [
+    "medium",
+    "positive odd",
+    "n is odd",
+    "big"
+  ]
+}
+*/

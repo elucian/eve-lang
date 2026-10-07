@@ -1,0 +1,31 @@
+# a range is a domain of values: limits included or excluded, open ends, a step that sets the precision (D-022; from demo/domain_demo.eve and demo/numeric_range.eve, D-099)
+** spec: syntax/expressions.md#ranges
+driver a63_range_domain is
+  set domain = (0..1);
+
+  process main is
+    expect domain == (0..1);
+    expect 0 in domain;
+    expect 0.5 in (0.0..1.0);
+
+    ** excluded limits
+    expect 0 not in (0>..1);
+    expect 1 not in (0..<1);
+    expect 0.5 in (0.0>..<1.0);
+
+    ** open ends
+    expect 999 in (0..?);
+    expect -1 in (?..0);
+
+    ** a value checked against two domains
+    new v := 12;
+    expect (v in (0..4)) or (v in (12..24));
+
+    ** the step gives the precision
+    new grid := (0..1)(0.01);
+    expect 0.25 in grid;
+    expect 0.253 not in grid;
+    expect 4 in (1..8)(2);
+    expect 5 not in (-10..10)(2);
+  return;
+end a63_range_domain;

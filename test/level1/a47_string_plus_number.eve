@@ -1,0 +1,13 @@
+# + between a string and a number is a type error; <+ converts the number (D-080)
+** spec: syntax/expressions.md#arithmetic
+driver a47_string_plus_number is
+  process main is
+    new s := "a" + 1;            ** compile error: use <+
+  return;
+end a47_string_plus_number;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

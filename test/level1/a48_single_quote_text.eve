@@ -1,0 +1,13 @@
+# a rune holds one code point; 'one' is a lexical error (D-063)
+** spec: lexical/lexical.md#rune
+driver a48_single_quote_text is
+  process main is
+    new r := 'one';              ** lexical error: use "one"
+  return;
+end a48_single_quote_text;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

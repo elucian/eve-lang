@@ -1,8 +1,10 @@
 # geometry: a constant and a function
 module geometry is
-  set .SIDES = 4 :Integer;
+  export (SIDES, square);
 
-  function .square(x: Integer) => (@result: Integer) is
-    result := x * x;
+  set SIDES = 4 :Integer;
+
+  function square(x: Integer) => (@result: Integer) is
+    let result := x * x;
   return;
 end geometry;

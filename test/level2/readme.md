@@ -1,7 +1,7 @@
 # test Level 2
 
 Drivers with aspects and modules, imports and error recovery (Q-020, D-072). Each test is a folder, a whole Eve project
-(D-073): `b01_import/b01_import.eve` is the driver, `b01_import/expect.json` its expectations, and `asp/`, `lib/`,
+(D-073): `b01_import/b01_import.eve` is the driver, with its expectations in a `/*@expect*/` block at the end (D-094, D-098), and `asp/`, `lib/`,
 `data/`, `out/` hold what the project needs. The test runs from its folder; `out/` is emptied before each run.
 
 ## Tests
@@ -15,12 +15,12 @@ Drivers with aspects and modules, imports and error recovery (Q-020, D-072). Eac
 | b01  | b01_import_module      | Import a module with an unquoted path; members ... |
 | b02  | b02_import_string_path | Import with a path written as a string (D-072)     |
 | b03  | b03_import_alias       | use (m as x): members are reached through the a... |
-| b04  | b04_import_members     | use (m(*)): the public members of m are used wi... |
+| b04  | b04_import_members     | use (m(*)): the exported members of m are used ... |
 | b05  | b05_import_all         | use (*): every module of the folder, names merg... |
 | b06  | b06_import_conflict    | use (*) fails when two modules have a public me... |
 | b07  | b07_module_lifecycle   | initialize runs at the import, finalize after t... |
 | b08  | b08_module_singleton   | a module is loaded once: the driver and an aspe... |
-| b09  | b09_module_private     | a private member of a module can't be used outs... |
+| b09  | b09_module_private     | a member that a module does not export can't be... |
 | b10  | b10_apply_aspect       | apply runs the main process of an aspect from a... |
 | b11  | b11_apply_output       | an aspect gives results back through @ output p... |
 | b12  | b12_apply_state        | each apply creates a new state of the aspect: a... |
@@ -29,7 +29,7 @@ Drivers with aspects and modules, imports and error recovery (Q-020, D-072). Eac
 | b15  | b15_aspect_error       | an error not recovered in the aspect is raised ... |
 | b16  | b16_aspect_over        | over in an aspect ends the aspect; the driver g... |
 | b17  | b17_aspect_panic       | panic in an aspect ends the whole application w... |
-| b18  | b18_extension_method   | an extension method: _name with @self adds a me... |
+| b18  | b18_extension_method   | an extension method: a method with @self of a c... |
 | b19  | b19_log_files          | log_err and log_wrn write log files in the outp... |
 
 <!-- TESTS:END -->
