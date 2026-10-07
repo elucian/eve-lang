@@ -1,0 +1,13 @@
+# adder: the procedure add changes the variable total of the aspect
+exclusive aspect adder is
+  new total := 0 :Integer;
+  procedure add(n: Integer) is
+    let total += n;
+  return;
+  process main(a, b, c: Integer, @result: Integer) is
+    add(a);
+    add(b);
+    add(c);
+    let result := total;
+  return;
+end adder;

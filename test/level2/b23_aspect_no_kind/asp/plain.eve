@@ -1,0 +1,6 @@
+# plain: the kind word is missing
+aspect plain is
+  process main is
+    print "plain";
+  return;
+end plain;

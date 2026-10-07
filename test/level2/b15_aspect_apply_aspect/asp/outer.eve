@@ -1,0 +1,6 @@
+# outer: applies another aspect, which is not allowed
+exclusive aspect outer is
+  process main is
+    apply inner();
+  return;
+end outer;

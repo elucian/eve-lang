@@ -1,0 +1,16 @@
+# a function declared in an aspect is used by its main (D-066, D-100)
+** spec: semantics/aspects.md#declarations-of-an-aspect
+driver b10_aspect_function is
+  process main is
+    apply scale(4);
+    apply scale(5, factor: 3);
+  return;
+end b10_aspect_function;
+/*@expect
+{
+  "stdout": [
+    "8",
+    "15"
+  ]
+}
+*/

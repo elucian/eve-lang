@@ -1,0 +1,6 @@
+# power: a mandatory @ parameter after an optional one
+exclusive aspect power is
+  process main(base: Integer, exp = 2 :Integer, @out: Integer) is
+    let out := base ^ exp;
+  return;
+end power;

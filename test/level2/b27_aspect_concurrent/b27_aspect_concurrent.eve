@@ -1,0 +1,14 @@
+# a concurrent aspect can also be applied, one call after the other (D-090)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b27_aspect_concurrent is
+  process main is
+    apply shout("hello");
+  return;
+end b27_aspect_concurrent;
+/*@expect
+{
+  "stdout": [
+    "hello!"
+  ]
+}
+*/

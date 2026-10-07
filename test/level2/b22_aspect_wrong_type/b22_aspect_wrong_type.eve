@@ -1,0 +1,15 @@
+# an argument of the wrong type is a check-time error (D-112)
+** spec: semantics/aspects.md#arguments
+driver b22_aspect_wrong_type is
+  process main is
+    print "never";
+    apply greet(42);
+  return;
+end b22_aspect_wrong_type;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "note": "who is a String, 42 is an Integer"
+}
+*/

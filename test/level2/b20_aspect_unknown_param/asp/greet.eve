@@ -1,0 +1,6 @@
+# greet: one mandatory parameter and one optional
+exclusive aspect greet is
+  process main(who: String, greeting = "Hello": String) is
+    print "{greeting}, {who}";
+  return;
+end greet;

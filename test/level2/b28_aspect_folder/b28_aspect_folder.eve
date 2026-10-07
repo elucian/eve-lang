@@ -1,0 +1,16 @@
+# apply with a folder: the aspect is searched there first, then in asp/ and in the root (D-112)
+** spec: semantics/aspects.md#finding-the-aspect
+driver b28_aspect_folder is
+  process main is
+    apply tools/hello();
+    apply hello();
+  return;
+end b28_aspect_folder;
+/*@expect
+{
+  "stdout": [
+    "hello from tools",
+    "hello from asp"
+  ]
+}
+*/

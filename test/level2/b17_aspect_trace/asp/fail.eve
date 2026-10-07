@@ -1,0 +1,9 @@
+# fail: the error starts in a function called by main
+exclusive aspect fail is
+  function load() => (@r: Integer) is
+    raise "disk full";
+  return;
+  process main is
+    new x := load();
+  return;
+end fail;

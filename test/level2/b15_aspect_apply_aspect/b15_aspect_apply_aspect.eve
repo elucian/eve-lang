@@ -1,0 +1,15 @@
+# an aspect can't apply another aspect: compile error (D-066)
+** spec: semantics/aspects.md#apply
+driver b15_aspect_apply_aspect is
+  process main is
+    print "never";
+    apply outer();
+  return;
+end b15_aspect_apply_aspect;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "note": "outer applies inner"
+}
+*/

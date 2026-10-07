@@ -1,0 +1,6 @@
+# inner: a valid aspect
+exclusive aspect inner is
+  process main is
+    print "inner";
+  return;
+end inner;

@@ -1,0 +1,17 @@
+# main and the procedures of an aspect share its variables, and every apply starts them again (D-066)
+** spec: semantics/aspects.md#state-per-call
+driver b12_aspect_fresh_state is
+  process main is
+    apply names("Ana");
+    apply names("Bob");
+  return;
+end b12_aspect_fresh_state;
+/*@expect
+{
+  "stdout": [
+    "1: Ana",
+    "1: Bob"
+  ],
+  "note": "the list of the aspect is empty at the start of the second call"
+}
+*/

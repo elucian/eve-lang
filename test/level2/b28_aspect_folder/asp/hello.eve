@@ -1,0 +1,6 @@
+# hello: the aspect in the default folder asp
+exclusive aspect hello is
+  process main is
+    print "hello from asp";
+  return;
+end hello;
