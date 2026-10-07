@@ -7,6 +7,7 @@ Every file test/bmark/p<level><letter>_<name>.eve is run N times (default 5) wit
 output must match its /*@expect*/ block, otherwise the benchmark is wrong, not slow. The report
 shows the median and the best time of each benchmark and the change against the last saved run.
   --save    append this run to test/bmark/history.json (do it for every version and optimization)
+  Every benchmark has a twin in Python (test/bmark/ref/<name>.py): the run also reports its time and the ratio Eve / Python.
   --check   exit 1 when a benchmark is more than 25% slower than the last saved run
 Times depend on the machine: compare runs made on the same machine. Notes per version: test/bmark/README.md.
 """
@@ -50,22 +51,40 @@ def update_readme(hist):
     """Rewrite the table between the bench markers of the README: description and latest ReleaseSafe time."""
     rel = [h for h in hist if h.get('build') == 'ReleaseSafe']
     last = rel[-1]['results'] if rel else {}
-    rows = ['| Benchmark | Duration | What it measures |', '|---|---|---|']
+    rows = ['| Benchmark | Duration | Python | Eve / Python | What it measures |', '|---|---|---|---|---|']
+    py = rel[-1].get('python', {}) if rel else {}
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
     for lvl in range(1, 8):
-        rows.append('| **Level %d** | | |' % lvl)
+        rows.append('| **Level %d** | | | | |' % lvl)
         mine = [f for f in files if os.path.basename(f).startswith('p%d' % lvl)]
         for f in mine:
             n = os.path.basename(f)[:-4]
             ms = ('%.0f ms' % last[n]['median_ms']) if n in last else 'not measured'
-            rows.append('| `%s.eve` | %s | %s |' % (n, ms, describe(f)))
+            pms = ('%.0f ms' % py[n]) if n in py else '-'
+            ratio = ('%.1fx' % (last[n]['median_ms'] / py[n])) if n in last and n in py else '-'
+            rows.append('| `%s.eve` | %s | %s | %s | %s |' % (n, ms, pms, ratio, describe(f)))
         if not mine:
-            rows.append('| planned | | %s |' % PLANNED[lvl])
+            rows.append('| planned | | | | %s |' % PLANNED[lvl])
     text = open(README, encoding='utf-8', newline='').read()
     nl = '\r\n' if '\r\n' in text else '\n'
     b, e = '<!-- bench:begin -->', '<!-- bench:end -->'
     i, j = text.index(b) + len(b), text.index(e)
     open(README, 'w', encoding='utf-8', newline='').write(text[:i] + nl + nl.join(rows) + nl + text[j:])
+
+
+def run_reference(name, runs):
+    """Median time in ms of the same benchmark written in Python (test/bmark/ref/<name>.py), or None."""
+    path = os.path.join(PERF, 'ref', name + '.py')
+    if not os.path.exists(path):
+        return None
+    times = []
+    for _ in range(runs):
+        t = time.perf_counter()
+        r = subprocess.run([sys.executable, path], capture_output=True, text=True, cwd=ROOT)
+        if r.returncode != 0:
+            return None
+        times.append((time.perf_counter() - t) * 1000)
+    return round(statistics.median(times), 1)
 
 
 def git_short():
@@ -107,7 +126,8 @@ def main():
         if times:
             results[name] = {'median_ms': round(statistics.median(times), 1), 'min_ms': round(min(times), 1)}
     print('Eve %s (%s build), %d runs each, %s' % (ver, a.build, a.runs, platform.platform()))
-    print('%-22s %9s %9s %9s' % ('benchmark', 'median ms', 'best ms', 'vs last'))
+    refs = {n: run_reference(n, a.runs) for n in results}
+    print('%-22s %9s %9s %9s %9s %7s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py'))
     slow = []
     for name, r in results.items():
         prev = last.get(name)
@@ -117,14 +137,15 @@ def main():
             delta = '%+.0f%%' % pct
             if pct > 25:
                 slow.append(name)
-        print('%-22s %9.1f %9.1f %9s' % (name, r['median_ms'], r['min_ms'], delta))
+        py = refs.get(name)
+        print('%-22s %9.1f %9.1f %9s %9s %7s' % (name, r['median_ms'], r['min_ms'], delta, '%.1f' % py if py else '-', '%.1fx' % (r['median_ms'] / py) if py else '-'))
     for lvl in sorted({n[1] for n in results}):
         tot = sum(r['median_ms'] for n, r in results.items() if n[1] == lvl)
         ptot = sum(last[n]['median_ms'] for n in results if n[1] == lvl and n in last)
         print('level %s total %.1f ms%s' % (lvl, tot, (' (%+.0f%%)' % ((tot - ptot) / ptot * 100)) if ptot else ''))
     if a.save and not bad:
         hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(),
-                     'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results})
+                     'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results, 'python': {n: v for n, v in refs.items() if v}})
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
         update_readme(hist)
         print('saved to test/bmark/history.json, table of the README updated')
