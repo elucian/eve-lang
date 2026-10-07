@@ -8,33 +8,6 @@ The log is split in two files. Ids are shared and keep counting across both (an 
 - [decision_level2.md](decision_level2.md): programs made of several files: processes, aspects, modules and imports, libraries, multitasking and parallel aspects. Matches `test/level2`.
 - Levels 3 to 7 (data, parallel, database, server, web): [decision_level3.md](decision_level3.md), [decision_level4.md](decision_level4.md), [decision_level5.md](decision_level5.md), [decision_level6.md](decision_level6.md), [decision_level7.md](decision_level7.md); the table of all levels is in decision_level3.md and [version_map.md](version_map.md).
 
-- Q-011 Default visibility of a module-level method (answered 2026-09-30 → D-035)
-- Q-020 Level 2 suite: what must be decided first
-- Q-021 Suspended methods, `yield` and cooperative multitasking
-- Q-022 Assumptions of the level 2 tests b01 to b19 [open]
-- D-026 No coroutines: generators, threads, suspended methods
-- D-031 Topology page answers
-- D-035 Module-level visibility: `.` is public, no prefix is private
-- D-042 `apply aspect.main(args);` names the process
-- D-043 Single main process in a driver; aspects host named processes; `start` replaces `begin`
-- D-046 `parallel` uses `do` and `done`; `fork` and `join` removed
-- D-047 Parallel methods inside a process; aspects run serially; BSP
-- D-050 Concurrency is not implemented in version 1
-- D-051 No asynchronous methods; one concurrency tutorial with groups, BSP and channels
-- D-052 Processes raise errors; env variables; REPL moved to the manual
-- D-053 Library in Eve, documented by eved
-- D-055 Processing answers: interruptions, raise, aspects, command line
-- D-056 `external` declarations; exception.eve
-- D-057 io library: error and warning, log files, $EVE_OUT
-- D-066 An aspect is an encapsulated machine with one `main`; parallel blocks start aspects
-- D-067 Multitasking: generators with `yield`, parallel aspects, no coroutines
-- D-068 Modules page; modules are singletons without public variables
-- D-071 Register of system variables
-- D-072 Level 2 answers: aspect errors, imports, extension methods, test folders
-- D-073 A test can be a folder: a whole Eve project
-- D-081 Process end, exit codes, error classes, imports, `defer`, unsafe methods, parallel errors and l
-- D-082 `eve --doc` replaces `eved`
-- D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI
 ## Q-022 Assumptions of the level 2 tests b01 to b19 (2026-10-03)
 The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These rules are assumed without a decision; confirm or correct each one (the test named after it changes with the answer):
 (a) An import that fails on a name conflict (`use (*)`) raises `$err_module`; it happens before the process, so nothing can recover it and the exit code is 30 (b06).
