@@ -6,6 +6,7 @@ driver a35_index_error is
     new x := a[0];
     print "never";
   recover
+    expect $error.code == $err_index;
     print "caught index error";
   return;
 end a35_index_error;

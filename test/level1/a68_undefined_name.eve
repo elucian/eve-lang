@@ -1,0 +1,14 @@
+# an undefined name is a compile error: the script does not start (D-110)
+** spec: syntax/declarations.md#variables-and-constants
+driver a68_undefined_name is
+  process main is
+    print "never";
+    print y;                     ** compile error: y was never declared
+  return;
+end a68_undefined_name;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

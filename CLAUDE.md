@@ -15,9 +15,11 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 - `spec/` **the Eve specification being written**: Markdown + JSON, normative. Conventions in
   `spec/README.md`.
 - `plan/` **permanent step-by-step plan** for the tutorial and the spec. For improvement work,
-  start with `plan/README.md`, take the next open step, and update its status mark when done.
+  run `python script/plan.py status` (open steps and questions, ~50 lines; don't read the logs
+  whole), take the next open step, and update its status mark when done (rules: `plan/README.md`).
   Decisions and open questions for the author are in `plan/decision_level1.md` (project, single
   script) and `plan/decision_level2.md` (processes, aspects, modules, libraries); ids are shared.
+  `python script/plan.py show D-087` prints one entry, also from `plan/archive/` (settled, full text).
 - `issues/` one file per tutorial page: questions and fixes from the page review (T1.10). The
   author answers by editing `**Answer:**` lines; answers become decisions in `plan/decision_levelN.md`.
 - `demo/` **retired** (D-099): every demo has a home in `test/level1/` or in the tutorial (`tutorial/demo/`, datetime.html); the folder only waits to be deleted, don't use it as a source. `pattern/` syntax patterns; `test/level1-7/` conformity tests, expectations in `/*@expect*/` blocks
@@ -27,7 +29,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 - `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
 - `tools/` typing aids (`alt-codes.md`)
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
-  tutorial (39 topic pages), owned by the `scl` repo. See "Tutorial" below.
+  tutorial (38 topic pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
   … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).

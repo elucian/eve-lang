@@ -162,7 +162,7 @@
       "category": "statement",
       "status": "stable",
       "ref": "syntax/statements.md#interruptions",
-      "summary": "Ends the process without an error; `finalize` runs."
+      "summary": "Leaves the subprogram or process it is written in, back to the caller; in the main process of a driver the program ends with code 0."
     },
     {
       "id": "expect",
@@ -323,7 +323,7 @@
       "category": "statement",
       "status": "stable",
       "ref": "syntax/statements.md#interruptions",
-      "summary": "Ends the process at once with code 0: `over;`. No `recover`, no `finalize`."
+      "summary": "Ends the whole process it is in at once with code 0, from any depth: `over;`. No `recover`; `finalize` runs."
     },
     {
       "id": "panic",

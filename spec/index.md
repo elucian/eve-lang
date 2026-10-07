@@ -7,7 +7,7 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Part | File | State |
 |---|---|---|
 | Lexical structure | [lexical/lexical.md](lexical/lexical.md) | first draft (2026-10-02); Q-013 to Q-016 and Q-018 answered (D-095 to D-097) |
-| Operators | [lexical/operators.json](lexical/operators.json) | first draft; Q-017 answered (D-096) |
+| Operators | [lexical/operators.json](lexical/operators.json) | first draft; Q-017 answered (D-107) |
 | Delimiters | [lexical/delimiters.json](lexical/delimiters.json) | first draft |
 | Keywords | [lexical/keywords.json](lexical/keywords.json) | 70 words, level 1 (D-094) |
 | Grammar | [syntax/grammar.md](syntax/grammar.md) | EBNF of level 1, first draft (2026-10-06) |

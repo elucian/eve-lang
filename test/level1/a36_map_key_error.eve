@@ -6,6 +6,7 @@ driver a36_map_key_error is
     let h["zz"] += 1;
     print "never";
   recover
+    expect $error.code == $err_key;
     print "caught key error";
   return;
 end a36_map_key_error;

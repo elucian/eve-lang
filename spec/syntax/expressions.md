@@ -81,7 +81,7 @@ A range is a value, not an array; there is no `[1..10]` (D-022, D-023). It is us
 |---|---|---|---|
 | `+` or `<+` | concatenate / append | union | merge |
 | `+=` `-=` | add at the end / remove by value (every equal element) | add / remove | add pair / remove key |
-| `<+` `+>` | append at the end / put in front (`x +> lst`) | | |
+| `<+` `+>` | append at the end (`lst <+ x`) / put in front (`x +> lst`); the list stays after `+>` and before `<+` (D-107) | | |
 | `<-` `->` | remove the first / last element | | |
 | `.delete(v)` | remove every element equal to `v` | remove `v` | remove the key `v` |
 | `in` | membership | membership | key membership |

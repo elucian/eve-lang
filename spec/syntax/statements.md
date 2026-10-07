@@ -63,8 +63,8 @@ A procedure is called as a statement, with or without parentheses when it has no
 | `break [label] [if c];` | leave the innermost loop, or the loop with that label; continue after its `done` (a `repeat` loop: after its `repeat`). `then` still runs |
 | `skip [label] [if c];` | end the cycle and go to the continuation point of the loop (D-074) |
 | `stop [if c];` | end the current job without error; inside a loop inside a job it ends the job |
-| `exit;` | end the process without error; `finalize` runs |
-| `over;` | end the process at once with code 0; no `recover`, no `finalize` |
+| `exit;` | leave the subprogram or the process it is written in and give control back to the caller; in `main` of a driver the program ends with code 0, `finalize` runs; in a function, procedure or method it is an early `return` (a function keeps the results assigned so far; `defer` runs) (D-111) |
+| `over;` | from any depth (also inside functions it called) end the whole process it is in at once with code 0; no `recover`; `finalize` runs; in an aspect the driver goes on after `apply` (D-081, D-111) |
 | `panic;` | end the whole application at once with code 1; no `finalize` |
 | `raise expr;` | create an error; the process jumps to `recover` |
 | `return;` | end the subprogram or the process; carries no value |
@@ -78,4 +78,4 @@ A procedure is called as a statement, with or without parentheses when it has no
 
 ## Other statements of later levels
 
-`apply`, `start` (level 2 and 4), `wait`, `defer`, `yield` (version 2), `call` (level 3). `async function` and `async procedure` declare subprograms that run as tasks (D-104). In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. Open: Q-035.
+`apply`, `start` (level 2 and 4), `wait`, `defer`, `yield` (version 2), `call` (level 3). `async function` and `async procedure` declare subprograms that run as tasks (D-104). In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. Level 4; open points: Q-035 in `decision_level4.md`.

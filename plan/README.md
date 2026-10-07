@@ -26,9 +26,13 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 | `[!]` | blocked on a decision |
 | `[-]` | dropped (with reason) |
 
-## Current focus (2026-10-06)
+## Tracking with few tokens
 
-2026-10-06: the author released the **specification and the tests of level 1** (D-094): the spec of level 1 is drafted in `spec/`, `test/level1/` is rewritten (54 tests, expectations in `/*@expect*/` blocks). Next: the author reviews both, then the VM (`evevm/`) is fixed test by test. The rest of this section is the focus of 2026-10-05.
+Do not read the logs whole. `python script/plan.py status` prints the focus, the open steps and the open questions (about 50 lines). `python script/plan.py show D-087 Q-035` prints single entries. Each `decision_level1.md` and `decision_level2.md` holds an index of every id, the open questions and the newest decisions; settled entries are in `plan/archive/` with the full text (`python script/plan.py archive --keep 4` moves them; it loses nothing). Append a new `D-`/`Q-` entry at the end of the active file. Mark steps in the phase files as before.
+
+## Current focus (2026-10-07)
+
+2026-10-07: tutorial first. Phase 2 ends with the page Subprograms (parameters, procedures; D-105); Q-036 is answered (D-106); Q-035 (async, level 4) is open. Level 1 spec and tests (D-094) wait for the author's review, then the VM.
 
 The **tutorial** comes first: it is reviewed and improved until it is good enough and feature complete, because it gives the complete vision of Eve and will shape the architecture of the interpreter. **Parked until the author says go:** the specification (`spec/`, phases 2–4), the test suites (`test/`, phase 5), the virtual machine (`evevm/`) and `demo/`. Design notes in `plan/` continue when they serve the tutorial.
 
