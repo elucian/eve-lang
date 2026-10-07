@@ -50,7 +50,7 @@ def update_readme(hist):
     """Rewrite the table between the bench markers of the README: description and latest ReleaseSafe time."""
     rel = [h for h in hist if h.get('build') == 'ReleaseSafe']
     last = rel[-1]['results'] if rel else {}
-    rows = ['| Benchmark | Latest optimized time | What it measures |', '|---|---|---|']
+    rows = ['| Benchmark | Duration | What it measures |', '|---|---|---|']
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
     for lvl in range(1, 8):
         rows.append('| **Level %d** | | |' % lvl)

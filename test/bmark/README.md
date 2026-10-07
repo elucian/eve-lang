@@ -17,7 +17,7 @@ A Debug build (`zig build -p ..`) and a ReleaseSafe build (`zig build -Doptimize
 ## Benchmarks
 
 <!-- bench:begin -->
-| Benchmark | Latest optimized time | What it measures |
+| Benchmark | Duration | What it measures |
 |---|---|---|
 | **Level 1** | | |
 | `p1a_arith.eve` | 207 ms | integer and real arithmetic, `for` and `while` loops, variables |
