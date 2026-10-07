@@ -1,0 +1,18 @@
+# raise "text" creates an error with code 4 and that message (D-054, D-109)
+** spec: semantics/errors.md#errors
+driver a75_raise_code is
+  process main is
+    raise "boom";
+    print "never";
+  recover
+    expect $error.code == $err_raise;
+    expect $error.code == 4;
+    expect $error.message == "boom";
+    print "caught {$error.message}";
+  return;
+end a75_raise_code;
+/*@expect
+{
+  "stdout": ["caught boom"]
+}
+*/

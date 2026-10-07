@@ -1,0 +1,18 @@
+# a parameter after optional parameters can't be positional: the call must name it (D-106)
+** spec: syntax/declarations.md#functions-and-procedures
+driver a72_named_required is
+  procedure add(p1 = 0, p2 = 1: Integer, @op: Integer) is
+    let op := p1 + p2;
+  return;
+
+  process main is
+    new r :Integer;
+    add(1, 2, @r);               ** compile error: op follows optional parameters, name it
+  return;
+end a72_named_required;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

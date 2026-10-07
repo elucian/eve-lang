@@ -1,0 +1,19 @@
+# list modifiers: <+ appends at the end, +> puts in front; the list stays after +> and before <+ (D-107)
+** spec: syntax/statements.md#let
+driver a82_list_ends is
+  process main is
+    new lst := (2, 3);
+    new front := 1;
+    new back := 4;
+    let front +> lst;
+    expect lst == (1, 2, 3);
+    let lst <+ back;
+    expect lst == (1, 2, 3, 4);
+    print lst.count();
+  return;
+end a82_list_ends;
+/*@expect
+{
+  "stdout": ["4"]
+}
+*/
