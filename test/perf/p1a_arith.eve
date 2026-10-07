@@ -1,0 +1,24 @@
+# level 1 performance: integer and real arithmetic in loops
+** perf: loops, operators, variables
+driver p1a_arith is
+  process main is
+    new sum := 0;
+    for i in (1..300000) do
+      let sum += i % 7 * 3;
+    done;
+    expect sum == 2699994;
+    new x := 0.0;
+    new n := 0;
+    while n < 200000 do
+      let x := x + 0.5;
+      let n += 1;
+    done;
+    expect x == 100000.0;
+    print sum, x;
+  return;
+end p1a_arith;
+/*@expect
+{
+  "stdout": ["2699994,100000"]
+}
+*/

@@ -1,0 +1,30 @@
+# level 1 performance: function calls and recursion
+** perf: calls, recursion, parameters
+driver p1b_calls is
+  function fib(n: Integer) => (@r: Integer) is
+    if n < 2 do
+      let r := n;
+    else
+      let r := fib(n - 1) + fib(n - 2);
+    done;
+  return;
+
+  function twice(a: Integer) => (@r: Integer) is
+    let r := a * 2;
+  return;
+
+  process main is
+    expect fib(20) == 6765;
+    new total := 0;
+    for i in (1..50000) do
+      let total += twice(i);
+    done;
+    expect total == 2500050000;
+    print fib(20), total;
+  return;
+end p1b_calls;
+/*@expect
+{
+  "stdout": ["6765,2500050000"]
+}
+*/

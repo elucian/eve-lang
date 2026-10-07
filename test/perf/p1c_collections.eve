@@ -1,0 +1,37 @@
+# level 1 performance: lists, DataMaps and DataSets
+** perf: collections, indexing, iteration
+driver p1c_collections is
+  process main is
+    new lst := (0,);
+    for i in (1..60000) do
+      let lst <+ i;
+    done;
+    expect lst.count() == 60001;
+    new total := 0;
+    for v in lst do
+      let total += v;
+    done;
+    expect total == 1800030000;
+    new m := {"zero": 0};
+    for i in (1..300) do
+      let m["k{i}"] := i;
+    done;
+    expect m.count() == 301;
+    new found := 0;
+    for i in (1..300) do
+      let found += m["k{i}"];
+    done;
+    expect found == 45150;
+    new s := {0};
+    for i in (1..2000) do
+      let s <+ i % 100;
+    done;
+    expect s.count() == 100;
+    print total, found;
+  return;
+end p1c_collections;
+/*@expect
+{
+  "stdout": ["1800030000,45150"]
+}
+*/
