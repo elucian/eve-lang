@@ -50,5 +50,37 @@
     "min_ms": 60.2
    }
   }
+ },
+ {
+  "date": "2026-10-07 05:09",
+  "version": "0.0.1",
+  "build": "ReleaseSafe",
+  "commit": "52b4149",
+  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+  "runs": 5,
+  "results": {
+   "p1a_arith": {
+    "median_ms": 208.8,
+    "min_ms": 196.2
+   },
+   "p1b_calls": {
+    "median_ms": 95.7,
+    "min_ms": 92.3
+   },
+   "p1c_collections": {
+    "median_ms": 29.0,
+    "min_ms": 26.5
+   },
+   "p1d_strings": {
+    "median_ms": 65.1,
+    "min_ms": 63.0
+   }
+  },
+  "python": {
+   "p1a_arith": 70.6,
+   "p1b_calls": 47.2,
+   "p1c_collections": 44.8,
+   "p1d_strings": 52.9
+  }
  }
 ]
