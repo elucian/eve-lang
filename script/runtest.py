@@ -4,8 +4,8 @@ usage: python script/runtest.py TARGET... [--eve PATH] [--timeout SEC] [--out DI
 
 TARGET is one of:
   1 | level1          every test in test/level1 (likewise 2 to 7)
-  vm                  every test in test/vm (the tools of the VM: slot, workflow)
-  all                 every level, and vm
+  smoke               every test in test/smoke (the tools of the VM: slot, workflow)
+  all                 every level, and smoke
   a03 | a03_print     one test, by name or name prefix, searched in every level
   test/level1/a03_print.eve
                       one test, by path
@@ -72,7 +72,7 @@ from _common import die
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_DIR = os.path.join(ROOT, "test")
-LEVELS = ("level1", "level2", "level3", "level4", "level5", "level6", "level7", "vm")
+LEVELS = ("level1", "level2", "level3", "level4", "level5", "level6", "level7", "smoke")
 # Process exit codes, plan/decision_level1.md D-010.
 EXIT_MEANING = {0: "normal", 1: "abnormal exit", 2: "error", 3: "warning", 70: "VM not implemented"}
 
@@ -135,7 +135,7 @@ def is_project(test):
 
 
 def level_of(test):
-    """The level folder name of a test (level1, level2, vm, ...)."""
+    """The level folder name of a test (level1, level2, smoke, ...)."""
     folder = os.path.dirname(test)
     return os.path.basename(os.path.dirname(folder) if is_project(test) else folder)
 

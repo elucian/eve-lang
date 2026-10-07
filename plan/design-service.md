@@ -323,7 +323,7 @@ schedule "orders_sync" every 15min
 | Change | Kind |
 |---|---|
 | Commands `listen`, `send`, `serve`, `api`, `deploy`, `dismiss` (replaces `clear`) (and `--listen`, `--serve`, `--api`); `eve -c <command> [-r machine]` | machine (`manual/usage.md`) |
-| Command files `.vmc`, option `-i`, "serve mode" of D-063 | removed; the tests in `test/vm` and `script/workflow.py` move to `eve -x` |
+| Command files `.vmc`, option `-i`, "serve mode" of D-063 | removed; the tests in `test/smoke` and `script/workflow.py` move to `eve -x` |
 | `$EVE_NAME`, `$EVE_DOMAIN`, `$EVE_PORT`, `$EVE_HTTP_PORT`, `$EVE_WEB`, `$EVE_TOKEN`; the checksum file `out/<name>.sum` of the machine folder | configuration, system variables |
 | Command `setup` (`--setup <folder or file>`, `-s`): create, choose or reload a machine | machine |
 | Script kind `service`, keyword `route` | syntax |
@@ -334,7 +334,7 @@ schedule "orders_sync" every 15min
 
 1. `serve` with static files from the web folder: the smallest useful step, it lets drivers publish HTML reports locally.
 2. `--api`: the MCP server over standard input and output, with `eve_check`, `eve_run`, `eve_doc`; it reuses the jump table.
-3. `--listen` with the line protocol and the token, and `eve -x` to send commands; then the `.vmc` slot is removed and `test/vm` and `script/workflow.py` use `eve -x`; `send` between machines, `deploy` and `run`; the remote scheduler.
+3. `--listen` with the line protocol and the token, and `eve -x` to send commands; then the `.vmc` slot is removed and `test/smoke` and `script/workflow.py` use `eve -x`; `send` between machines, `deploy` and `run`; the remote scheduler.
 4. `service` scripts and routes in `serve`.
 5. The HTTP client in scripts (`http`, `json`), remote `apply`, then EWP streams.
 
