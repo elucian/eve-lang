@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Performance watch of the Eve VM: one small benchmark per level in test/perf/.
+"""Performance watch of the Eve VM: one small benchmark per level in test/bmark/.
 
-  python script/perf.py [--runs N] [--save] [--check] [--eve PATH] [--level N] [--build Debug|ReleaseSafe]
+  python script/bmark.py [--runs N] [--save] [--check] [--eve PATH] [--level N] [--build Debug|ReleaseSafe]
 
-Every file test/perf/p<level><letter>_<name>.eve is run N times (default 5) with `eve -x`; the
+Every file test/bmark/p<level><letter>_<name>.eve is run N times (default 5) with `eve -x`; the
 output must match its /*@expect*/ block, otherwise the benchmark is wrong, not slow. The report
 shows the median and the best time of each benchmark and the change against the last saved run.
-  --save    append this run to test/perf/history.json (do it for every version and optimization)
+  --save    append this run to test/bmark/history.json (do it for every version and optimization)
   --check   exit 1 when a benchmark is more than 25% slower than the last saved run
-Times depend on the machine: compare runs made on the same machine. Notes per version: test/perf/README.md.
+Times depend on the machine: compare runs made on the same machine. Notes per version: test/bmark/README.md.
 """
 import argparse, glob, json, os, re, statistics, subprocess, sys, time, datetime, platform
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-PERF = os.path.join(ROOT, 'test', 'perf')
+PERF = os.path.join(ROOT, 'test', 'bmark')
 HIST = os.path.join(PERF, 'history.json')
 
 
@@ -90,7 +90,7 @@ def main():
         hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(),
                      'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results})
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
-        print('saved to test/perf/history.json')
+        print('saved to test/bmark/history.json')
     if bad or (a.check and slow):
         if slow:
             print('SLOWER than the last run by more than 25%:', ', '.join(slow))
