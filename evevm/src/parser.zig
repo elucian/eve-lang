@@ -348,17 +348,9 @@ const Parser = struct {
     }
 
     // Zig tip: a function can answer "did it apply?" with a `bool` and still change what it was
-    // given through a pointer: `out` receives the character. `&#955;` and `&#x3BB;` name a code
-    // point; `&amp;`, `&lt;`, `&gt;`, `&quot;` and `&apos;` name the five marked characters.
+    // given through a pointer: `out` receives the character. `&amp;`, `&lt;`, `&gt;`, `&quot;` and `&apos;` name the five marked characters.
     /// A character reference `&...;` (the text between `&` and `;`): append it and say so, or say no.
     fn reference(p: *Parser, out: *std.ArrayList(u8), name: []const u8) Error!bool {
-        if (name.len > 1 and name[0] == '#') {
-            const hex = name[1] == 'x' or name[1] == 'X';
-            const digits = if (hex) name[2..] else name[1..];
-            const cp = std.fmt.parseInt(u21, digits, if (hex) 16 else 10) catch return false;
-            try p.appendCodePoint(out, cp);
-            return true;
-        }
         const names = [_]struct { []const u8, u8 }{ .{ "amp", '&' }, .{ "lt", '<' }, .{ "gt", '>' }, .{ "quot", '"' }, .{ "apos", '\'' } };
         for (names) |n| {
             if (std.mem.eql(u8, n[0], name)) {

@@ -90,3 +90,4 @@ Author answers, written under each point of Q-037 in D-115. Applied to `grammar.
 - **(g) `defer` belongs to level 1.** `statements.md` documents it (a registered statement runs when the subprogram ends, in reverse order); `keywords.json`: stable.
 - **(h) `syntax_error` stays** the key of a negative test. Eve has a virtual machine that parses and executes, not a separate compiler, so "refused before the run" is a syntax error for the tests.
 - `python script/grammarcheck.py`: 139 of 139 files still behave as expected after the change.
+- **Numeric references removed.** `&#N;` and `&#xH;` no longer exist; `{U+H…}` is the one numeric form. `&name;` stays. Replaces the numeric part of Q-014.
