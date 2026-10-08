@@ -44,7 +44,7 @@ Author question and answers. Since `over` runs `finalize` (D-081), the two state
 - **`exit;`** leaves the subprogram or process it is written in and gives control back to the caller: an early `return` in a function, procedure or method (a function keeps the results assigned so far; `defer` runs); in `main` of a driver the program ends with code 0 and `finalize` runs; in the main process of an aspect it ends the aspect.
 - **`over;`** ends the whole process it is in, from any depth (also from a function that the process called), with code 0; no `recover`, `finalize` runs. In an aspect the driver continues after `apply`; in the driver the program ends.
 - `panic;` stays the abnormal end of the whole application (code 1, no `finalize`).
-- Applied: `statements.md`, `keywords.json`, `errors.md`, syntax.html, processing.html; tests a69 (`exit` in a procedure) and a70 (`over` from a procedure).
+- Applied: `statements.md`, `keywords.json`, `errors.md`, syntax.html, processing.html; tests b35 (`exit` in a procedure) and b36 (`over` from a procedure).
 
 ## D-115 Grammar checked against the examples (S3.6, 2026-10-08)
 The EBNF of `spec/syntax/grammar.md` is now converted to a Lark grammar and run on the examples by `python script/grammarcheck.py` (needs `pip install lark`). Result: **139 of 139 files of `test/level1/` and `test/level2/` behave as the tests expect**: every other file parses, every file whose `/*@expect*/` says `"syntax_error": true` is refused or, when the error is semantic, accepted by the grammar and refused by the later checks (24 files, see Q-037 h). First run: 109 of 139. `pattern/` and `tutorial/demo/` do not parse yet: they use modules, `from … use`, `generator` and `parallel` (levels 3 and 4) and the legacy regions.
@@ -52,7 +52,7 @@ The EBNF of `spec/syntax/grammar.md` is now converted to a Lark grammar and run 
 - **Removed:** `property` (attributes are in the signature of the class) and `variable-stmt` (`new` is a declaration and a statement).
 - **Changed in a test:** `a76_overflow` named a variable `one`, a reserved word; renamed to `unit` (Q-037 c).
 - **Q-037 Syntax points found by the check (answered 2026-10-08 → D-117).** The grammar accepts them as *(proposed)*, or reflects the tests; each needs a yes or a no:
-  - (a) Types of a list and of a DataSet: `()Integer` and `{}Integer` (tests a73, b18), by symmetry with `[]Integer`.
+  - (a) Types of a list and of a DataSet: `()Integer` and `{}Integer` (tests b39, b18), by symmetry with `[]Integer`.
   **answer** Correct assumption. Accepted.
   - (b) `<+` and `+>` as expressions that return a new list (a10, a17); `operators.json` calls them modifiers and leaves their precedence open. The grammar puts them at the level of `+` and `-`. 
   **answer** Perfect assumption. Accepted.
@@ -64,7 +64,7 @@ The EBNF of `spec/syntax/grammar.md` is now converted to a Lark grammar and run 
   **answer** job is not contextual, it is a reserved keyword like "if" and "match" and "parallel".
   - (f) `self` is an ordinary name, not a keyword, but `new self.x` is allowed only with it.
   **answer** `self` is reserved name, when used must represent the current object, and is going to be very confusing if used with other meaning.
-  - (g) `defer` is level 1 in the test a74 and a later level in `statements.md`.
+  - (g) `defer` is level 1 in the test a74 and a later level in `statements.md` (moved to level 2 by D-122).
   **answer** Accepted.
   - (h) 24 tests carry `"syntax_error": true` for errors that the grammar does not see (undefined name, wrong type, redeclaration, missing argument…). The key means "refused by the compile step". Rename it `compile_error`, or keep it?
   **answer** syntax_error is correct. We do not have a compiler we have a virtual machine that parse and execute. So, the term is better as it is.
@@ -91,3 +91,9 @@ Author answers, written under each point of Q-037 in D-115. Applied to `grammar.
 - **(h) `syntax_error` stays** the key of a negative test. Eve has a virtual machine that parses and executes, not a separate compiler, so "refused before the run" is a syntax error for the tests.
 - `python script/grammarcheck.py`: 139 of 139 files still behave as expected after the change.
 - **Numeric references removed.** `&#N;` and `&#xH;` no longer exist; `{U+H…}` is the one numeric form. `&name;` stays. Replaces the numeric part of Q-014.
+
+## D-120 A placeholder holds a name or any literal; its quotes are not escaped (2026-10-08)
+Author decision. `{399}`, `{"test"}`, `{(a,b,c)}`, `{'x'}`, `{True}` and `{U+03B1}` work in a string: a placeholder holds a name (D-102) or a literal, written by its type. Inside the braces a double quote is not escaped (`"{m["b"]}"`); the lexer follows the braces and the quoted text in them, so the string closes at the first `"` outside the braces. A literal brace or a `%` inside a quoted text of a placeholder is not special, but a quoted text is an ordinary string: its own braces are escaped (`{"\}"}`). Operators and calls are still not allowed (Q-015). `{U+03B1}` is no special form: it is the rune literal U+03B1 inserted by its value, which makes the D-119 notation free. The old `\"` in a placeholder is still read. Regex literals (a string starting with `/`) have no placeholders and are not affected.
+
+## D-121 Simple expressions in placeholders (2026-10-08)
+Author decision, extends D-120. A placeholder holds a name, a literal or a **simple expression**: operators, comparisons, logical operators, member selection and calls, such as `{n + 1}`, `{a * 2 - 1}`, `{s.length()}`, `{a > 2}`, `{s + "!"}`. The VM already parsed any expression; this decision makes it the rule. `%` always starts the format: a remainder or any expression that needs `%` is written in parentheses around the whole placeholder content, `{((n + 1) % 3)}`. Statements, assignments and lambdas are not expressions of a placeholder.

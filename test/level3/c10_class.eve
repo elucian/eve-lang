@@ -1,6 +1,6 @@
 # class with a constructor, methods, visibility, reference and clone (D-076, D-084, D-085)
 ** spec: syntax/declarations.md#classes-and-objects
-driver a26_class is
+driver c10_class is
   class Point = {x, y :Integer} <: Object is
     constructor(x = 0, y = 0 :Integer) => (@self) is
       let self := Object();
@@ -41,7 +41,7 @@ driver a26_class is
     expect p is r;
     expect p is not c;
   return;
-end a26_class;
+end c10_class;
 /*@expect
 {
   "stdout": [

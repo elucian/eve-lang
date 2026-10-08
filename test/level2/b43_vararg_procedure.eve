@@ -1,0 +1,19 @@
+# a vararg parameter collects the arguments of a procedure; * spreads a list into it (D-029, D-040)
+** spec: syntax/declarations.md#functions-and-procedures
+driver b43_vararg_procedure is
+  procedure show(*items: String) is
+    print items.count();
+  return;
+
+  process main is
+    ** spread a list into the vararg, or give the arguments one by one
+    new more := ("1", "2", "3");
+    show(*more);
+    show("a", "b");
+  return;
+end b43_vararg_procedure;
+/*@expect
+{
+  "stdout": ["3", "2"]
+}
+*/

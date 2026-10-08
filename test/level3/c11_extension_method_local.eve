@@ -1,6 +1,6 @@
 # an extension method: declared outside the class, first parameter @self with the class type (D-086)
 ** spec: syntax/declarations.md#classes-and-objects
-driver a40_extension_method is
+driver c11_extension_method_local is
   class Point = {x, y :Integer} <: Object is
     constructor(x = 0, y = 0 :Integer) => (@self) is
       let self := Object();
@@ -25,7 +25,7 @@ driver a40_extension_method is
     expect p.sum() == 8;
     print "extension ok";
   return;
-end a40_extension_method;
+end c11_extension_method_local;
 /*@expect
 {
   "stdout": [

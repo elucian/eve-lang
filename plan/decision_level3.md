@@ -45,3 +45,17 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 ## Q-024 The system library: names and members (2026-10-06)
 The page `syslib.html` lists the modules that connect a program to the machine: `io`, `exception`, `fs`, `path`, `time`, `secret`, `task`, `database`, `http`, with their level and status; only `io` and `exception` are drafted (`evevm/lib/`). Are these the names and the split you want (for example one `fs` and `path`, or one `file` module)? Is the shell `call` part of the system library or of the language? Which module holds the time types (`time`), given that Date and Time have their own page?
 **Answer:**
+
+## Q-038 Data file types: Json, Csv, Dat, Xml, Html, Htmlt (2026-10-08)
+Author request: types for the files that a program loads and parses in memory: HTML, XML, HTMLT (HTML template), CSV, DAT (fixed width data) and JSON. The load is buffered and works in loops, a kind of traversal: row by row, or element by element (object by object) for JSON. All of them are derived with `<:` and defined mostly in Eve, at a later time. A first proposal is in `spec/semantics/data-types.md` and in the section "Data File Types" of `types.html`. Open points:
+- (a) The names: `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`. `Html` is also the safe page type of the templates (Q-027): one type, or `Html` for the parsed file and another name for the safe page?
+- (b) The common ancestor of the six classes (`Source`? `Document`?) and the traversal protocol: what a class must define so that `for unit in value do` works (an iterator, a generator?).
+- (c) How a unit is read: `row["name"]`, `row.name`, `row[2]`; the type of a field (String until converted, or declared in a layout).
+- (d) `Dat`: how the layout of the fixed width fields is declared (a class, a list of widths, a file).
+- (e) The modules (`csv`, `json`, ...) or a single `load`; reading a stream from the network as well as a file; writing a file of these types.
+- (f) Encoding and the line ending; the error when a unit is not well formed (raised when the loop reaches it).
+- (g) Levels: `Csv` and `Json` in level 3, `Html` and `Htmlt` with the templates (0.6), `Xml` and `Dat` open.
+**Answer:**
+
+## D-123 A class hosts only methods; only a method has @self (2026-10-08)
+Author decision. Inside a class body only `constructor`, `destructor` and `method` are declared: a `function` or a `procedure` there is a compile error (before, D-103 allowed private functions). A function or a procedure can not be bound to a class with `@self`: `@self` belongs to methods only, in the class body or outside it as an extension method (D-086). A helper of a class is a private method or a function outside the class. Tests: c15 (procedure in a class), c16 (function with `@self`), c17 (function in a class). The parser reports both errors. Applied: `syntax/declarations.md`.

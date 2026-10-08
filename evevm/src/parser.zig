@@ -197,15 +197,6 @@ const Parser = struct {
         try out.appendSlice(p.a, buf[0..n]);
     }
 
-    // Zig tip: `a orelse b` unwraps an optional: it gives `b` when `a` is null, and `b` may leave
-    // the function with `return`. A function that returns `?T` says "maybe nothing" in its type.
-    /// The code point of a placeholder `{U+H...}` (the text between the braces), or null when the
-    /// text is not of that form.
-    fn codePointPlaceholder(inner: []const u8) ?u21 {
-        if (inner.len < 3 or inner[0] != 'U' or inner[1] != '+') return null;
-        return std.fmt.parseInt(u21, inner[2..], 16) catch null;
-    }
-
     // Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
     // compiler checks it.
     /// The character an escape letter stands for, or null when the letter is not a simple escape.
@@ -258,7 +249,10 @@ const Parser = struct {
         };
         var sub: Parser = .{ .toks = toks, .diag = p.diag, .a = p.a };
         const e = sub.expr() catch |err| {
-            if (err == error.Syntax) p.diag.set(at.line, at.col, "in interpolation: {s}", .{p.diag.message()});
+            if (err == error.Syntax) {
+                const why = try p.a.dupe(u8, p.diag.message()); // a copy: `set` writes in the same buffer
+                p.diag.set(at.line, at.col, "in interpolation: {s}", .{why});
+            }
             return err;
         };
         if (sub.peek().kind != .eof) {
@@ -296,11 +290,6 @@ const Parser = struct {
             if (c == '{') {
                 const close = matchBrace(raw, i) orelse return p.failAt(t, "unclosed placeholder: write \\{{ for a brace", .{});
                 const inner = raw[i + 1 .. close];
-                if (codePointPlaceholder(inner)) |cp| {
-                    try p.appendCodePoint(&cur, cp);
-                    i = close + 1;
-                    continue;
-                }
                 const pct = formatPercent(inner);
                 const expr_text = std.mem.trim(u8, if (pct) |k| inner[0..k] else inner, " ");
                 const spec = std.mem.trim(u8, if (pct) |k| inner[k + 1 ..] else "", " ");
@@ -385,10 +374,21 @@ const Parser = struct {
     /// Index of the `}` that closes the `{` at `raw[open]`.
     fn matchBrace(raw: []const u8, open: usize) ?usize {
         var depth: usize = 0;
+        var quote: u8 = 0; // the quote of the string literal being skipped, or 0
         var j = open;
         while (j < raw.len) : (j += 1) {
-            if (raw[j] == '{') depth += 1;
-            if (raw[j] == '}') {
+            const c = raw[j];
+            if (quote != 0) {
+                if (c == '\\') j += 1 else if (c == quote) quote = 0;
+                continue;
+            }
+            if (c == '\\') {
+                j += 1; // an escaped character, such as the old `\"` of a quoted key
+                continue;
+            }
+            if (c == '"' or c == '\'') quote = c;
+            if (c == '{') depth += 1;
+            if (c == '}') {
                 depth -= 1;
                 if (depth == 0) return j;
             }
@@ -400,8 +400,20 @@ const Parser = struct {
     /// Index of the `%` that starts the format of a placeholder: the first one outside brackets.
     fn formatPercent(inner: []const u8) ?usize {
         var depth: usize = 0;
+        var quote: u8 = 0;
+        var skip = false; // the character after a backslash
         for (inner, 0..) |c, j| {
+            if (skip) {
+                skip = false;
+                continue;
+            }
+            if (quote != 0) {
+                if (c == quote) quote = 0;
+                continue;
+            }
             switch (c) {
+                '\\' => skip = true,
+                '"', '\'' => quote = c,
                 '(', '[', '{' => depth += 1,
                 ')', ']', '}' => depth -|= 1,
                 '%' => if (depth == 0) return j,
@@ -531,6 +543,15 @@ const Parser = struct {
         const name = if (tag == .constructor) kw else try p.expectName("a name");
         const empty = try p.mk(.params, kw, "", &.{});
         const first = if (p.isSym("(")) try p.params() else empty;
+        // Zig tip: `return` inside a `for` leaves the whole function, not only the loop. Only a
+        // method binds the object, so `@self` in a function or a procedure is refused (D-123).
+        if (tag == .function or tag == .procedure) {
+            for (first.kids) |q| {
+                if (q.tag == .ref_param and std.mem.eql(u8, q.text, "self")) {
+                    return p.failAt(kw, "only a method can have '@self': declare a method, not a {s} (D-123)", .{kw.text});
+                }
+            }
+        }
         const has_results = p.isSym("=>");
         const results = if (p.acceptSym("=>")) try p.params() else empty;
         if (tag == .procedure and has_results) return p.failAt(kw, "a procedure has no result list (use function)", .{});
@@ -1343,14 +1364,12 @@ const Parser = struct {
             const public = p.acceptWord("public");
             if (!public and (p.isWord("private") or p.isWord("protected"))) _ = p.advance();
             const first_member = kids.items.len;
-            if (p.isWord("procedure")) {
-                return p.fail("a class hosts functions and methods, not procedures (D-103)", .{});
+            if (p.isWord("procedure") or p.isWord("function")) {
+                return p.fail("a class hosts only methods: declare the {s} outside the class (D-123)", .{p.peek().text});
             } else if (p.isWord("constructor")) {
                 try kids.append(p.a, try p.routine(.constructor));
             } else if (p.isWord("method")) {
                 try kids.append(p.a, try p.routine(.method));
-            } else if (p.isWord("function")) {
-                try kids.append(p.a, try p.routine(.function));
             } else return p.fail("unexpected '{s}' in the class, expected a constructor or a method", .{describe(p.peek())});
             if (public) @constCast(kids.items[first_member]).public = true;
         }

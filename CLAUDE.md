@@ -2,7 +2,7 @@
 
 Eve is a domain-specific scripting language (data processing, test automation).
 This repo holds the language **examples, spec and manual**, and the first implementation: the
-Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 82/82 tests, level 2: 29/29 tests).
+Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 43/43 tests; level 3: classes c10 to c17 pass, modules c01 to c09 wait).
 Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig build test`.
 `.zig`/`.zon`/`.sh` files are LF (`.gitattributes`), unlike the rest of the repo.
 **Zig is taught here (didactic project):** the team does not know Zig. Every function, test, type

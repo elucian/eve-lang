@@ -52,7 +52,7 @@ An ordinal type lists its values; the first value is 1 unless a value is given (
 
 ## Functions and procedures
 
-A subprogram outside a class is a **function** when it has a result and a **procedure** when it has none, as in Ada (D-100; it replaces the "function without result" of D-086). A function or a procedure belongs to the driver, aspect or module that declares it and is private to it unless a module exports it.
+A subprogram is a **function** when it has a result and a **procedure** when it has none, as in Ada (D-100; it replaces the "function without result" of D-086). A function or a procedure belongs to the driver, aspect or module that declares it and is private to it unless a module exports it.
 
 ```eve
 function area(w, h: Real) => (@a: Real) is
@@ -106,7 +106,8 @@ end Point;
 - **Visibility** is a word in front of the declaration: `public`, `protected` (the class and its subclasses), `private` (the default). The attributes of the signature are public.
 - `let self.x := v;` sets an attribute of the signature; `new self.extra := v;`, in a constructor or a method, creates another one, which is private. Code outside the class can not add an attribute: `new p.z := 7;` is an error (Q-031k).
 - A destructor is `destructor(@self) is … return;`.
-- **Functions in a class.** A class body may declare functions, and its methods may use lambda expressions. The functions are private to the class, can't be exported and are called by the methods of the class without a qualifier. A class can't host procedures: a `procedure` in a class body is a compile error (D-103).
+- **A class hosts only methods** (D-123, replaces D-103 for functions). A `function` or a `procedure` in a class body is a compile error; a helper of the class is a private method, or a function declared outside the class. The methods may use lambda expressions.
+- **Only a method binds the object.** `@self` is the parameter of a method (in the class body or outside it, as an extension method). A function or a procedure can not have `@self`, and so can not be bound to a class: `function total(@self: Point) => (...)` is a compile error (D-123).
 - **Methods are not values** (D-103). There are no references to methods and no method type: a method can't be passed as an argument, stored or returned, and it is never a callback. A lambda that calls the method is passed instead: `shapes.map((s) => (s.area()))`.
 - Extension methods are static: they never change the class, can not hide a method of the class, see only its public members, and are visible only in the scripts that declare or import them (D-086).
 - Traits, abstract classes, generics and generators belong to version 2 (D-039, D-087).

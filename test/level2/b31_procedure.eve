@@ -1,6 +1,6 @@
 # procedures: no result, side effects, @ passes by reference, no @ passes a copy (D-048, D-086, D-100)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver a25_procedure is
+driver b31_procedure is
   procedure add(p1, p2: Integer, @out: Integer) is
     let out := p1 + p2;
   return;
@@ -37,7 +37,7 @@ driver a25_procedure is
     hello();                     ** a call is a statement
     hello;                       ** () is optional without arguments
   return;
-end a25_procedure;
+end b31_procedure;
 /*@expect
 {
   "stdout": [

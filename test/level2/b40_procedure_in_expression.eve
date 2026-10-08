@@ -1,6 +1,6 @@
 # a procedure has no value: it can't be used in an expression (D-100)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver a79_procedure_in_expression is
+driver b40_procedure_in_expression is
   procedure hello is
     print "hello";
   return;
@@ -8,7 +8,7 @@ driver a79_procedure_in_expression is
   process main is
     new v := hello();            ** compile error: a procedure returns nothing
   return;
-end a79_procedure_in_expression;
+end b40_procedure_in_expression;
 /*@expect
 {
   "syntax_error": true,

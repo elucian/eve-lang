@@ -1,6 +1,6 @@
 # a vararg collects the rest of the arguments; an optional parameter after it is named (D-029)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver a73_vararg_function is
+driver b39_vararg_function is
   function total(first: Integer, *rest: ()Integer, scale = 1: Integer) => (@r: Integer) is
     let r := first;
     for v in rest do
@@ -15,7 +15,7 @@ driver a73_vararg_function is
     expect total(1, 2, 3, scale: 2) == 12;
     print total(10, 20, 30);
   return;
-end a73_vararg_function;
+end b39_vararg_function;
 /*@expect
 {
   "stdout": ["60"]

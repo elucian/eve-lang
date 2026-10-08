@@ -1,6 +1,6 @@
 # a variant type holds one of the listed types and takes the type of the value assigned (from demo/variant_type.eve and demo/variant_params.eve, D-099)
 ** spec: semantics/types.md#composite-types
-driver a61_variant is
+driver b41_variant_params is
 
   ** @ passes by reference; both parameters have the variant type
   procedure swap(@x, @y :{Integer | Real}) is
@@ -27,4 +27,4 @@ driver a61_variant is
     swap(@p, @q);
     expect (p == 2.5) and (q == 1.5);
   return;
-end a61_variant;
+end b41_variant_params;

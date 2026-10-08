@@ -1,11 +1,6 @@
-# the process receives the command-line arguments; a vararg collects them, * spreads a list (D-029, D-040; from demo/method_call.eve and demo/test_args.eve, D-099)
-** spec: syntax/declarations.md#scripts, syntax/declarations.md#functions-and-procedures
+# the process receives the command-line arguments; a vararg collects them (D-029, D-040; from demo/method_call.eve and demo/test_args.eve, D-099)
+** spec: syntax/declarations.md#scripts
 driver a60_process_args is
-
-  ** a procedure with a vararg parameter
-  procedure show(*items: String) is
-    print items.count();
-  return;
 
   process main(*args) is
     expect args is List;
@@ -14,15 +9,11 @@ driver a60_process_args is
       print arg;
     done;
 
-    ** spread a list into the vararg, or give the arguments one by one
-    new more := ("1", "2", "3");
-    show(*more);
-    show("a", "b");
   return;
 end a60_process_args;
 /*@expect
 {
   "args": ["one", "two"],
-  "stdout": ["one", "two", "3", "2"]
+  "stdout": ["one", "two"]
 }
 */

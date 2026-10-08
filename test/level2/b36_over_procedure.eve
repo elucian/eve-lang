@@ -1,6 +1,6 @@
 # over in a procedure ends the whole process, not only the procedure (D-111)
 ** spec: syntax/statements.md#interruptions
-driver a70_over_procedure is
+driver b36_over_procedure is
   procedure stop_all is
     print "stopping";
     over;
@@ -14,7 +14,7 @@ driver a70_over_procedure is
   finalize
     print "finalize";
   return;
-end a70_over_procedure;
+end b36_over_procedure;
 /*@expect
 {
   "stdout": [

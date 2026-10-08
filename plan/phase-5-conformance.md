@@ -18,7 +18,7 @@ Source: D-039, `classes.html` (traits), `collections.html` (the `for` loop).
 - Test metadata header comment: `** spec: syntax/regions.md#driver, level: 1`.
 
 ### S5.3 Level 1 suite `[~]` 2026-10-07: 82 tests (a01 to a82), all pass on the VM; awaiting the author's review → D-094
-- Move or copy the qualifying `demo/*.eve` files into `test/level1/` with expected output. **Done 2026-10-06 (D-099):** every demo has a test or a tutorial example; a56 to a63 were written for the eight that had none.
+- Move or copy the qualifying `demo/*.eve` files into `test/level1/` with expected output. **Done 2026-10-06 (D-099):** every demo has a test or a tutorial example; b32 to a63 were written for the eight that had none.
 - `demo/` was retired (D-099) and deleted (2026-10-08); the tutorial page `examples.html` lists every demo with its test.
 - One test per lexical and syntax rule from phases 2–3; list coverage in `conformance/README.md`.
 
