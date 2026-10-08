@@ -1,0 +1,22 @@
+# variation 2 of c01: the same module under an alias, called in a loop (D-133)
+** spec: semantics/modules.md#import
+driver c01_test2 is
+  from lib use (counter as c);
+
+  process main is
+    for i in (1..5) do
+      c.tick();
+    done;
+    expect c.count!() == 5;
+    print "ticks: {c.count!()}";
+  return;
+end c01_test2;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "ticks: 5",
+    "counter: 5 ticks"
+  ]
+}
+*/

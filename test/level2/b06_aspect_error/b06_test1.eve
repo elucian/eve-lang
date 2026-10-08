@@ -1,0 +1,19 @@
+# variation 1 of b06: the error code of the aspect is the code of the raise (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b06_test1 is
+  process main is
+    apply fail();
+    print "never";
+  recover
+    expect $error.code == $err_io;
+    print "io error: {$error.message}";
+  return;
+end b06_test1;
+/*@expect
+{
+  "stdout": [
+    "fail: start",
+    "io error: disk full"
+  ]
+}
+*/

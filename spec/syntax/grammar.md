@@ -9,7 +9,7 @@ Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeat
 ```ebnf
 file        = free-script | script ;
 free-script = shebang , { statement } ;                       (* line 1 is "#!…": no driver, no process *)
-script      = driver | aspect ;                                (* module: level 3 *)
+script      = driver | aspect | module ;                       (* module: level 3 *)
 driver      = "driver" , name , "is" , { member } , "end" , name , ";" ;
 member      = declaration | process ;
 process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
@@ -18,16 +18,33 @@ process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
               "return" , ";" ;
 recover     = "recover" , { statement } ;
 finalize    = "finalize" , { statement } ;
-aspect      = ( "exclusive" | "concurrent" ) , "aspect" , name , "is" ,
-              { declaration } , process , "end" , name , ";" ;       (* the process is named main *)
+aspect      = [ "exclusive" | "concurrent" ] , "aspect" , name , "is" ,
+              { declaration } , process , "end" , name , ";" ;       (* the process is named main; without a kind word the aspect is exclusive (D-130) *)
 ```
 
 A driver has one process named `main`, which is the entry point. An aspect has exactly one process, also named `main`, and nothing in it is public (`../semantics/aspects.md`). `end name;` repeats the name of the header.
 
+## Modules and imports (level 3)
+
+```ebnf
+module      = [ "safe" | "unsafe" ] , "module" , name , "is" ,
+              { export | declaration } ,
+              [ "initialize" , { statement } ] ,
+              [ "recover" , { statement } ] ,
+              [ "finalize" , { statement } ] ,
+              "end" , name , ";" ;                                (* modules.md; D-068, D-085, D-126; without a safety word the module is unsafe (D-129) *)
+export      = "export" , "(" , exported , { "," , exported } , ")" , ";" ;
+exported    = name , [ "!" ] ;                                    (* a function that ends with ! is exported with the ! *)
+import      = "from" , path , "use" , "(" , import-item , { "," , import-item } , ")" , ";" ;
+path        = string | segment , { "/" , segment } ;              (* from lib use (m); from "lib" use (m); from $EVE_LIB/db use (m); *)
+segment     = name | sysname ;
+import-item = "*" | name , [ "as" , name | "(" , "*" , ")" ] ;    (* a module, an alias, all public names, or every module of the folder *)
+```
+
 ## Declarations
 
 ```ebnf
-declaration = variable | constant | alias | function | procedure | class | method ;   (* a method outside a class is an extension method (D-086) *)
+declaration = variable | constant | alias | function | procedure | class | method | import ;   (* a method outside a class is an extension method (D-086) *)
 
 variable    = "new" , init-list , ";" ;
 init-list   = binding , { "," , binding } , [ type-hint ]
@@ -55,7 +72,8 @@ parameters  = parameter , { "," , parameter } ;
 parameter   = [ "*" | "@" ] , name , [ ( "=" | ":=" ) , expression ] , [ type-hint ] ;
 
 class       = "class" , name , [ "(" , ":" , name , { "," , name } , ")" ] ,
-              "=" , class-shape , "<:" , type , ( ";" | "is" , { class-member } , "end" , name , ";" ) ;
+              [ "=" , class-shape ] , "<:" , type , ( ";" | "is" , { class-member } , "end" , name , ";" ) ;
+                                                                          (* without a shape: class SageInteger <: Atomic(:Integer); (D-132) *)
                                                                           (* the superclass is mandatory (Q-029) *)
 class-shape = "{" , members , "}"                                         (* attributes: {x, y: Real} *)
             | "{" , ordinal-value , { "," , ordinal-value } , "}"        (* ordinal: {Red, Green} <: Ordinal *)
@@ -76,7 +94,7 @@ body        = { declaration | statement } , "return" , ";" ;
 ## Types
 
 ```ebnf
-type        = name-path , [ "(" , ":" , type , { "," , type } , ")" ]      (* Integer, Vector(:Real) *)
+type        = name-path , [ "(" , ":" , type , { "," , type } , ")" ]      (* Integer, Vector(:Real), Atomic(:Integer) (D-132) *)
             | "[" , [ dimension , { "," , dimension } ] , "]" , type          (* array: []Integer, [10]Integer, matrix: [2, 2]Integer *)
             | "(" , ")" , type                                                 (* list: ()Integer (D-117) *)
             | "{" , "}" , type                                                 (* DataSet: {}Integer (D-117) *)

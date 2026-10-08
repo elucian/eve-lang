@@ -1,0 +1,14 @@
+# variation 1 of b21: the mandatory argument by name (D-133)
+** spec: syntax/statements.md#apply
+driver b21_test1 is
+  process main is
+    apply greet(who: "Ann");
+  return;
+end b21_test1;
+/*@expect
+{
+  "stdout": [
+    "Hello, Ann"
+  ]
+}
+*/

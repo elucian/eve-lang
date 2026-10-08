@@ -1,0 +1,22 @@
+# variation 1 of c07: the aspect applied twice shares the same module (D-133)
+** spec: semantics/modules.md#life-cycle
+driver c07_test1 is
+  from lib use (counter);
+
+  process main is
+    apply worker();
+    apply worker();
+    new n := counter.count!();
+    expect n == 4;
+    print "count: {n}";
+  return;
+end c07_test1;
+/*@expect
+{
+  "stdout": [
+    "counter: loaded",
+    "count: 4",
+    "counter: 4 ticks"
+  ]
+}
+*/

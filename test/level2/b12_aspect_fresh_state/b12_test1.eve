@@ -1,0 +1,18 @@
+# variation 1 of b12: the list of the aspect is new in every call, in a loop (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b12_test1 is
+  process main is
+    for who in ("Ann", "Bob", "Cy") do
+      apply names(who);
+    done;
+  return;
+end b12_test1;
+/*@expect
+{
+  "stdout": [
+    "1: Ann",
+    "1: Bob",
+    "1: Cy"
+  ]
+}
+*/

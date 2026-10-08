@@ -1,0 +1,14 @@
+# hits: a safe module may have a variable when it is atomic: Atomic(:Integer) (D-129, D-132)
+safe module hits is
+  export (record, total!);
+
+  new count = 0 :Atomic(:Integer);
+
+  procedure record() is
+    let count += 1;
+  return;
+
+  function total!() => (@result: Integer) is
+    let result := count;
+  return;
+end hits;

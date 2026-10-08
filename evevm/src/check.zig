@@ -34,7 +34,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
     .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Ordinal"}, .{"Function"},
-    .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"},
+    .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"Atomic"},
 });
 
 const Checker = struct {
@@ -47,6 +47,9 @@ const Checker = struct {
     classes: std.StringHashMapUnmanaged(*const Node) = .empty,
     /// The script being checked is an aspect: it can't `apply` another aspect (D-066).
     in_aspect: bool = false,
+    /// An import brings names without a prefix (`m(*)` or `*`): they are known only when the modules
+    /// are read (project.zig), so an unknown name is not an error here (modules.md).
+    open_names: bool = false,
 
     // Zig tip: `fail` fills the `Diag` and returns the error, as in the parser, so a caller writes
     // `return c.fail(n, "...", .{})`. `comptime fmt` is checked against `args` by the compiler.
@@ -87,6 +90,7 @@ const Checker = struct {
         if (name.len > 0 and name[0] == '$') return .{ .kind = .variable };
         if (c.lookup(name)) |info| return info;
         if (builtins.has(name)) return .{ .kind = .builtin };
+        if (c.open_names) return .{ .kind = .variable };
         return c.fail(at, "undefined name '{s}'", .{name});
     }
 
@@ -467,6 +471,15 @@ const Checker = struct {
                 },
                 .function => try c.declare(m, m.text, .{ .kind = .function, .node = m }),
                 .procedure => try c.declare(m, m.text, .{ .kind = .procedure, .node = m }),
+                .import_decl => for (m.kids) |item| {
+                    const alias = item.kids[0];
+                    if (item.public or std.mem.eql(u8, item.text, "*")) {
+                        c.open_names = true;
+                    } else {
+                        const bound = if (alias.tag == .name) alias.text else item.text;
+                        try c.declare(item, bound, .{ .kind = .variable });
+                    }
+                },
                 .var_decl, .set => {
                     const hint: ?[]const u8 = if (m.ty) |t| t.text else null;
                     for (m.kids[0].kids) |t| if (t.tag == .name) {
@@ -487,6 +500,7 @@ const Checker = struct {
                     for (m.kids[2..]) |r| try c.routine(r, m.text);
                 },
                 .function, .procedure, .method => try c.routine(m, null),
+                .region => try c.block(m.kids[0]),
                 .var_decl, .set => if (m.kids[1].tag != .none) {
                     _ = try c.expr(m.kids[1]);
                 },
@@ -511,7 +525,7 @@ const Checker = struct {
 pub fn check(arena: std.mem.Allocator, tree: *const Node, diag: *Diag) Error!void {
     var c: Checker = .{ .a = arena, .diag = diag };
     c.in_aspect = tree.tag == .aspect;
-    if (tree.tag == .driver or tree.tag == .aspect) return c.driver(tree);
+    if (tree.tag == .driver or tree.tag == .aspect or tree.tag == .module) return c.driver(tree);
     try c.push();
     for (tree.kids) |s| try c.statement(s);
 }

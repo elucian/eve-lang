@@ -1,0 +1,18 @@
+# variation 1 of b03: three applies, three fresh states (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b03_test1 is
+  process main is
+    for i in (1..3) do
+      apply tally();
+    done;
+  return;
+end b03_test1;
+/*@expect
+{
+  "stdout": [
+    "calls: 1",
+    "calls: 1",
+    "calls: 1"
+  ]
+}
+*/

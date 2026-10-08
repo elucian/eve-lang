@@ -51,7 +51,16 @@ pub const Value = union(enum) {
     domain: *Domain,
     /// The value of `Integer`, `String`, ... and of `type(x)`.
     typ: []const u8,
+    /// A module that an import brought in: `counter.tick()` reaches its exported members (modules.md).
+    module: *Module,
 };
+
+// Zig tip: a module is loaded once (D-068), so one `Module` exists per module file for the whole run. It
+// owns a `Scope` of its own: the private variables of the module live there and the functions of the
+// module close over it, so only they can change them. `node` is the parsed tree, kept for its
+// `export` list and its regions.
+/// A loaded module: its scope, its tree and its name.
+pub const Module = struct { name: []const u8, node: *const Node, scope: *Scope };
 
 // Zig tip: a `struct` groups named fields (and functions); `pub` makes a name visible to other
 // files; a field with `= value` has a default, so `.{ ... }` need not give it.
@@ -208,6 +217,12 @@ pub const Interp = struct {
     unit: *Scope,
     /// The aspects the driver applies, read and checked before the run (project.zig).
     aspects: ?*const ast.Aspects = null,
+    /// The modules that the imports reach, read and checked before the run (project.zig).
+    modules: ?*const ast.Modules = null,
+    /// The modules loaded so far, by tree: a module is loaded once. `load_order` keeps the order of the
+    /// initialization, so `finalize` can run in the reverse order (D-068).
+    loaded: std.AutoHashMapUnmanaged(*const Node, *Module) = .empty,
+    load_order: std.ArrayList(*Module) = .empty,
     /// The calls in progress, outermost first (the trace of an error is read from it).
     frames: std.ArrayList(Frame) = .empty,
     /// The messages of `log_err` and `log_wrn`, in the order written (the run log, D-114).
@@ -369,6 +384,7 @@ pub const Interp = struct {
             .func => "Function",
             .range, .domain => "Range",
             .typ => "Type",
+            .module => "Module",
         };
     }
 
@@ -634,6 +650,7 @@ pub const Interp = struct {
             },
             .class => |c| try it.appendFmt(buf, "class {s}", .{c.name}),
             .func => try buf.appendSlice(it.a, "<function>"),
+            .module => |m| try it.appendFmt(buf, "module {s}", .{m.name}),
             .range => |r| try it.appendFmt(buf, "({d}..{d})", .{ r.lo, r.hi }),
             .domain => try buf.appendSlice(it.a, "(domain)"),
             .typ => |t| try buf.appendSlice(it.a, t),
@@ -1475,6 +1492,7 @@ pub const Interp = struct {
         const obj = try it.eval(n.kids[0]);
         switch (obj) {
             .object => |o| return fieldOf(o, n.text) orelse it.fail("no attribute '{s}'", .{n.text}),
+            .module => |m| return it.moduleMember(m, n.text),
             .class => |c| {
                 for (c.ord.items) |f| if (std.mem.eql(u8, f.name, n.text)) return f.val;
                 return it.fail("{s} has no member '{s}'", .{ c.name, n.text });
@@ -1489,7 +1507,11 @@ pub const Interp = struct {
     fn call(it: *Interp, n: *const Node) Signal!Value {
         const callee = n.kids[0];
         const args = n.kids[1..];
-        if (callee.tag == .field) return it.callMethod(try it.eval(callee.kids[0]), callee.text, args);
+        if (callee.tag == .field) {
+            const recv = try it.eval(callee.kids[0]);
+            if (recv == .module) return it.callValue(try it.moduleMember(recv.module, callee.text), null, args);
+            return it.callMethod(recv, callee.text, args);
+        }
         if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
             (std.mem.eql(u8, callee.text, "floor") or std.mem.eql(u8, callee.text, "ceiling") or std.mem.eql(u8, callee.text, "round")))
         {
@@ -2521,6 +2543,138 @@ pub const Interp = struct {
         if (failed) |f| return f;
     }
 
+    // ---- modules (spec/semantics/modules.md) ------------------------------------------------------
+
+    // Zig tip: a member of a module is read through the module's own scope: `find` walks the scope and
+    // answers a pointer to the variable, or null. Only the names in an `export` list are public; the link
+    // step already refused a private name written in the source, this check guards the rest.
+    /// The exported member `name` of a module.
+    fn moduleMember(it: *Interp, m: *Module, name: []const u8) Signal!Value {
+        var listed = false;
+        for (m.node.kids) |k| {
+            if (k.tag != .export_decl) continue;
+            for (k.kids) |nm| if (std.mem.eql(u8, nm.text, name)) {
+                listed = true;
+            };
+        }
+        if (!listed) return it.fail("'{s}' is not exported by the module '{s}'", .{ name, m.name });
+        const cell = m.scope.find(name) orelse return it.fail("the module '{s}' has no member '{s}'", .{ m.name, name });
+        return cell.value;
+    }
+
+    // Zig tip: `std.AutoHashMapUnmanaged(*const Node, *Module)` is a map whose key is a pointer: two
+    // imports of the same module give the same tree, so the second finds the first. The module is put in
+    // the map before its code runs, so a module that imports itself, directly or through others, finds
+    // the module that is being loaded and does not load it again. `defer` restores the scope and the
+    // other fields on every way out, as `applyAspect` does.
+    /// Load a module once: its imports first, then its routines and variables, then `initialize`.
+    fn instantiate(it: *Interp, node: *const Node) Signal!*Module {
+        if (it.loaded.get(node)) |known| return known;
+        const m = try it.a.create(Module);
+        const s = try it.a.create(Scope);
+        s.* = .{};
+        m.* = .{ .name = node.text, .node = node, .scope = s };
+        try it.loaded.put(it.a, node, m);
+        const saved_scope = it.scope;
+        const saved_unit = it.unit;
+        const saved_proc = it.proc_scope;
+        it.scope = s;
+        it.unit = s;
+        defer {
+            it.scope = saved_scope;
+            it.unit = saved_unit;
+            it.proc_scope = saved_proc;
+        }
+        try it.boot();
+        for (node.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
+        for (node.kids) |d| {
+            if (d.tag == .class or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
+        }
+        for (node.kids) |d| {
+            if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
+        }
+        var init_block: *const Node = it.noneNode();
+        var recover_block: *const Node = it.noneNode();
+        for (node.kids) |d| if (d.tag == .region) {
+            if (std.mem.eql(u8, d.text, "initialize")) init_block = d.kids[0];
+            if (std.mem.eql(u8, d.text, "recover")) recover_block = d.kids[0];
+        };
+        if (init_block.tag != .none) {
+            // the region runs like a process without parameters: `recover` handles its errors
+            const params = try it.a.create(Node);
+            params.* = .{ .tag = .params };
+            const proc = try it.a.create(Node);
+            const kids = try it.a.dupe(*const Node, &.{ init_block, recover_block, it.noneNode(), params });
+            proc.* = .{ .tag = .process, .line = node.line, .text = "initialize", .kids = kids };
+            try it.runProcess(proc, &.{}, "module", node.text);
+        }
+        try it.load_order.append(it.a, m);
+        return m;
+    }
+
+    // Zig tip: `_ = it;` says that a parameter is deliberately unused, so the compiler does not complain. The
+    // method keeps the same call style as the others: `it.noneNode()`.
+    /// The shared node that stands for an absent part.
+    fn noneNode(it: *Interp) *const Node {
+        _ = it;
+        return &ast.none;
+    }
+
+    // Zig tip: bare names are shared, not copied: `bind` puts the same `Var` cell of the module under the
+    // name in the importing scope, so a constant or a function is one thing seen from two places.
+    /// Bring the exported names of a module into the current scope, without a prefix (`m(*)` and `*`).
+    fn bindBare(it: *Interp, m: *Module) Signal!void {
+        for (m.node.kids) |k| {
+            if (k.tag != .export_decl) continue;
+            for (k.kids) |nm| if (m.scope.find(nm.text)) |cell| try it.bind(nm.text, cell);
+        }
+    }
+
+    // Zig tip: the link step stored every module under `path|name`; the same key finds it here. A module
+    // that was not found is the run-time error `$err_module`, code 30 (D-131): `failWith` raises it with
+    // the message `Module {name} not found in {library}`; nobody can recover it before the process
+    // starts, so the program ends with exit code 4.
+    /// Run an import declaration: load the modules and bind their names in the current scope.
+    fn execImport(it: *Interp, decl: *const Node) Signal!void {
+        const known = it.modules orelse return it.fail("no module is loaded: '{s}'", .{decl.text});
+        for (decl.kids) |item| {
+            if (std.mem.eql(u8, item.text, "*")) {
+                const key = try std.fmt.allocPrint(it.a, "{s}|*", .{decl.text});
+                const set = known.get(key) orelse return it.failWith(30, "Module * not found in {s}", .{decl.text});
+                for (set.kids) |mn| try it.bindBare(try it.instantiate(mn));
+                continue;
+            }
+            const key = try std.fmt.allocPrint(it.a, "{s}|{s}", .{ decl.text, item.text });
+            const node = known.get(key) orelse return it.failWith(30, "Module {s} not found in {s}", .{ item.text, decl.text });
+            const m = try it.instantiate(node);
+            if (item.public) {
+                try it.bindBare(m);
+            } else {
+                const bound = if (item.kids[0].tag == .name) item.kids[0].text else item.text;
+                try it.define(bound, .{ .module = m }, true);
+            }
+        }
+    }
+
+    // Zig tip: `finalize` of the modules runs when the driver has ended, after its process, in the reverse
+    // order of the initialization (D-068): the loop counts down. An error in one `finalize` does not stop
+    // the others: `catch {}` drops it.
+    /// Run the `finalize` region of every loaded module, last loaded first.
+    fn finalizeModules(it: *Interp) void {
+        var i = it.load_order.items.len;
+        while (i > 0) {
+            i -= 1;
+            const m = it.load_order.items[i];
+            for (m.node.kids) |d| {
+                if (d.tag != .region or !std.mem.eql(u8, d.text, "finalize")) continue;
+                const saved = it.scope;
+                it.scope = m.scope;
+                defer it.scope = saved;
+                it.execBlock(d.kids[0]) catch {};
+            }
+        }
+    }
+
     // Zig tip: `defer` runs when the function ends however it ends, so the three fields that this
     // call changes (`scope`, `unit`, `proc_scope`) are restored on success, on `over`, and on an
     // error that unwinds through (the same idea as in `invoke`). The aspect gets a scope of its own
@@ -2544,6 +2698,7 @@ pub const Interp = struct {
             it.proc_scope = saved_proc;
         }
         try it.boot();
+        for (aspect.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
         for (aspect.kids) |d| {
             if (d.tag == .class or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
         }
@@ -2604,6 +2759,8 @@ pub const Interp = struct {
             for (root.kids) |s| try it.exec(s);
             return;
         }
+        defer it.finalizeModules();
+        for (root.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
         for (root.kids) |d| {
             if (d.tag == .class or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
         }

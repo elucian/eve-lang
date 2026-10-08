@@ -8,8 +8,8 @@ driver c08_module_private is
 end c08_module_private;
 /*@expect
 {
+  "syntax_error": true,
   "exit": 65,
-  "stdout": [],
   "note": "reading a private member is a check-time error, nothing runs (Q-022 b)"
 }
 */

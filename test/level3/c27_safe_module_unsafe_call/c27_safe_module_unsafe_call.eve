@@ -1,0 +1,15 @@
+# a safe module that calls an unsafe module is rejected (D-129)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver c27_safe_module_unsafe_call is
+  from lib use (calm);
+
+  process main is
+    print "never";
+  return;
+end c27_safe_module_unsafe_call;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

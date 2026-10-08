@@ -1,0 +1,18 @@
+# a safe module is accepted when every variable is Atomic(:T) (D-129, D-132)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver c29_safe_module_atomic is
+  from lib use (hits);
+
+  process main is
+    hits.record();
+    hits.record();
+    print "hits: {hits.total!()}";
+  return;
+end c29_safe_module_atomic;
+/*@expect
+{
+  "stdout": [
+    "hits: 2"
+  ]
+}
+*/

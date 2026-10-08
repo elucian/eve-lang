@@ -1,0 +1,15 @@
+# a free script can't export anything and can't be imported (D-126)
+** spec: semantics/modules.md#what-a-module-may-contain
+driver c24_import_free_script is
+  from lib use (tool);                ** compile error: tool is a free script, not a module
+
+  process main is
+    print "never";
+  return;
+end c24_import_free_script;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

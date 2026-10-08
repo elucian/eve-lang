@@ -20,6 +20,15 @@ pub fn main(init: std.process.Init) !void {
     const arena: std.mem.Allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(arena);
 
+    // Zig tip: `std.mem.tokenizeScalar(u8, text, ';')` walks the pieces of a text between separators and skips
+    // empty ones. The folders of `EVE_LIB_PATH` are separated like the PATH of the system (D-128).
+    if (init.environ_map.get("EVE_LIB_PATH")) |list| {
+        var folders: std.ArrayList([]const u8) = .empty;
+        var parts = std.mem.tokenizeScalar(u8, list, std.fs.path.delimiter);
+        while (parts.next()) |folder| try folders.append(arena, folder);
+        evevm.project.env_lib_path = folders.items;
+    }
+
     var stdout_buffer: [1024]u8 = undefined;
     var stdout_file_writer: Io.File.Writer = .init(.stdout(), init.io, &stdout_buffer);
     const stdout = &stdout_file_writer.interface;

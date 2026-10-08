@@ -1,0 +1,19 @@
+# variation 1 of c30: a type derived from Atomic, used ten times (D-133)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver c30_test1 is
+  from lib use (tally);
+
+  process main is
+    for i in (1..10) do
+      tally.bump();
+    done;
+    print "seen: {tally.value!()}";
+  return;
+end c30_test1;
+/*@expect
+{
+  "stdout": [
+    "seen: 10"
+  ]
+}
+*/

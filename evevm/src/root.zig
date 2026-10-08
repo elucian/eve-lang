@@ -18,6 +18,7 @@ pub const vm = @import("vm.zig");
 
 /// Raw keyboard mode of the REPL prompt.
 pub const terminal = @import("terminal.zig");
+pub const project = @import("project.zig");
 
 // Zig tip: tests are found only in files that the compiler reaches. `_ = cli;` inside an
 // unnamed `test { }` references the file so its tests also run with `zig build test`.

@@ -25,6 +25,10 @@ const Linker = struct {
     diag: *Diag,
     where: *[]const u8,
     aspects: *ast.Aspects,
+    /// The modules that the imports of the driver, its aspects and its modules reach (modules.md).
+    modules: *ast.Modules,
+    /// The folders of `$EVE_LIB_PATH`, where external modules are installed (D-128).
+    lib_path: []const []const u8 = &.{},
 
     // Zig tip: `fail` fills the `Diag` like the parser does and returns `error.Syntax`, so a caller
     // writes `return l.fail(n, "...", .{})`; see the tip on `Parser.fail`.
@@ -82,13 +86,305 @@ const Linker = struct {
         };
         l.where.* = path;
         const tree = try parser.parse(l.a, src, l.diag);
-        l.where.* = "";
         if (tree.tag != .aspect) return l.fail(at, "'{s}' is not an aspect: apply runs only aspects", .{path});
         if (!std.mem.eql(u8, tree.text, short)) {
             return l.fail(at, "the file '{s}' declares the aspect '{s}': the names must be equal", .{ path, tree.text });
         }
         try l.aspects.put(l.a, key, tree);
+        try l.imports(tree);
+        try l.access(tree);
+        if (tree.public) for (tree.kids) |k| try l.concurrentCalls(tree, k);
+        l.where.* = "";
         return tree;
+    }
+
+
+    // ---- modules (spec/semantics/modules.md) -----------------------------------------------------
+
+    // Zig tip: `?*const Node` is "a node, or nothing": a module that is not found is not a compile error
+    // (it is the run-time error `$err_module`, D-131), so the search answers `null` and the caller
+    // decides. `catch null` turns the error of opening a folder into the same "nothing".
+    /// The names a module exports, from its `export (...)` declarations.
+    fn exportsOf(l: *Linker, m: *const Node) Error![]const []const u8 {
+        var list: std.ArrayList([]const u8) = .empty;
+        for (m.kids) |k| {
+            if (k.tag != .export_decl) continue;
+            for (k.kids) |nm| try list.append(l.a, nm.text);
+        }
+        return list.items;
+    }
+
+    // Zig tip: a function that only reads its arguments and answers yes or no is declared without `pub` and
+    // with a plain `bool`: `for (names) |n| if (...) return true;` stops at the first hit, and the `return
+    // false` after the loop is the answer when there was none.
+    /// Is `name` one of `names`?
+    fn isListed(names: []const []const u8, name: []const u8) bool {
+        for (names) |n| if (std.mem.eql(u8, n, name)) return true;
+        return false;
+    }
+
+    const Member = enum { none, shared, variable };
+
+    // Zig tip: an `enum` names the answers of a question: the member is shared (a function, a procedure,
+    // a class or a constant), a variable (which can not be shared, D-068) or not declared at all.
+    /// What a module declares under `name`.
+    fn memberKind(m: *const Node, name: []const u8) Member {
+        for (m.kids) |k| {
+            switch (k.tag) {
+                .function, .procedure, .class => if (std.mem.eql(u8, k.text, name)) return .shared,
+                .set, .var_decl => {
+                    for (k.kids[0].kids) |t| {
+                        if (t.tag == .name and std.mem.eql(u8, t.text, name)) return if (k.tag == .set) .shared else .variable;
+                    }
+                },
+                else => {},
+            }
+        }
+        return .none;
+    }
+
+    // Zig tip: `std.mem.startsWith(u8, text, prefix)` tests the beginning of a text. The longer
+    // system variable is tried first, because `$EVE_LIB_PATH` also starts with `$EVE_LIB`.
+    /// The folder an import path names: `$EVE_HOME` and `$EVE_LIB` are replaced, a path that starts
+    /// with `/` is absolute, any other path is relative to `$EVE_HOME`, the folder of the driver (D-131).
+    fn folderOf(l: *Linker, path: []const u8) Error![]const u8 {
+        var text = path;
+        if (std.mem.startsWith(u8, text, "$EVE_HOME")) {
+            text = text["$EVE_HOME".len..];
+            if (text.len > 0 and text[0] == '/') text = text[1..];
+            return if (text.len == 0) l.dir else l.join("{s}/{s}", .{ l.dir, text });
+        }
+        if (std.mem.startsWith(u8, text, "$EVE_LIB")) {
+            const rest = text["$EVE_LIB".len..];
+            return l.join("{s}/lib{s}", .{ l.dir, rest });
+        }
+        if (text.len > 0 and text[0] == '/') return text;
+        return l.join("{s}/{s}", .{ l.dir, text });
+    }
+
+    // Zig tip: `[_][]const u8{ a, b }` is an array whose length the compiler counts. The file of a module is
+    // searched in the folder of the import, then in every folder of `$EVE_LIB_PATH`, as `<folder>/<path>/m.eve`,
+    // `<folder>/m.eve` and `<folder>/m/m.eve` (a package installed in its own folder).
+    /// Find, read, parse and check the module `name` of the import path `path`; remember it. `null`: not found.
+    fn loadModule(l: *Linker, at: *const Node, path: []const u8, name: []const u8) Error!?*const Node {
+        const key = try l.join("{s}|{s}", .{ path, name });
+        if (l.modules.get(key)) |known| return known;
+        var cands: std.ArrayList([]const u8) = .empty;
+        const folder = try l.folderOf(path);
+        try cands.append(l.a, try l.join("{s}/{s}.eve", .{ folder, name }));
+        for (l.lib_path) |lp| {
+            try cands.append(l.a, try l.join("{s}/{s}/{s}.eve", .{ lp, path, name }));
+            try cands.append(l.a, try l.join("{s}/{s}.eve", .{ lp, name }));
+            try cands.append(l.a, try l.join("{s}/{s}/{s}.eve", .{ lp, name, name }));
+        }
+        var file: []const u8 = "";
+        const src = l.read(cands.items, &file) orelse return null;
+        const saved = l.where.*;
+        l.where.* = file;
+        const tree = try parser.parse(l.a, src, l.diag);
+        // these three errors are in the importing script, at the import: `where` goes back to it
+        if (tree.tag == .script or tree.tag != .module or !std.mem.eql(u8, tree.text, name)) l.where.* = saved;
+        if (tree.tag == .script) return l.fail(at, "'{s}' is a free script: a free script can't export anything and can't be imported (D-126)", .{file});
+        if (tree.tag != .module) return l.fail(at, "'{s}' is not a module: from … use imports only modules", .{file});
+        if (!std.mem.eql(u8, tree.text, name)) {
+            return l.fail(at, "the file '{s}' declares the module '{s}': the names must be equal", .{ file, tree.text });
+        }
+        for (try l.exportsOf(tree)) |nm| {
+            switch (memberKind(tree, nm)) {
+                .shared => {},
+                .variable => return l.fail(tree, "the module '{s}' exports the variable '{s}': a module has no public variables (D-068)", .{ name, nm }),
+                .none => return l.fail(tree, "the module '{s}' exports '{s}', which it does not declare", .{ name, nm }),
+            }
+        }
+        try l.modules.put(l.a, key, tree);
+        try l.imports(tree);
+        try l.access(tree);
+        if (tree.public) try l.checkSafe(tree);
+        l.where.* = saved;
+        return tree;
+    }
+
+    // Zig tip: `std.mem.endsWith(u8, text, suffix)` tests the end of a text; the stem of a file is what
+    // comes before the last dot. Every module of a folder is read for the import `use (*)`; a file that
+    // is not a module is skipped, so a folder may hold other things.
+    /// Load every module of the folder of `path`, for `use (*)`; the key `path|*` holds them all.
+    fn loadFolder(l: *Linker, at: *const Node, path: []const u8) Error!void {
+        const folder = try l.folderOf(path);
+        var dir = Io.Dir.cwd().openDir(l.io, folder, .{ .iterate = true }) catch return;
+        defer dir.close(l.io);
+        var all: std.ArrayList(*const Node) = .empty;
+        var it = dir.iterate();
+        while (it.next(l.io) catch null) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".eve")) continue;
+            const stem = entry.name[0 .. entry.name.len - 4];
+            if (try l.loadModule(at, path, try l.join("{s}", .{stem}))) |m| try all.append(l.a, m);
+        }
+        const block = try l.a.create(Node);
+        block.* = .{ .tag = .block, .line = at.line, .col = at.col, .kids = all.items };
+        try l.modules.put(l.a, try l.join("{s}|*", .{path}), block);
+    }
+
+    // Zig tip: the names of two lists meet in a double loop. `seen` is the modules that give bare names
+    // so far: a name in two of them is a conflict (D-112 a), and the message lists the two modules.
+    /// Read the modules of every import of `tree` and check the names they merge.
+    fn imports(l: *Linker, tree: *const Node) Error!void {
+        var seen: std.ArrayList(*const Node) = .empty;
+        for (tree.kids) |decl| {
+            if (decl.tag != .import_decl) continue;
+            for (decl.kids) |item| {
+                const star = std.mem.eql(u8, item.text, "*");
+                if (star) {
+                    try l.loadFolder(item, decl.text);
+                    const set = l.modules.get(try l.join("{s}|*", .{decl.text})) orelse continue;
+                    for (set.kids) |m| try l.merge(item, &seen, m);
+                } else if (try l.loadModule(item, decl.text, item.text)) |m| {
+                    if (item.public) try l.merge(item, &seen, m);
+                }
+            }
+        }
+    }
+
+    // Zig tip: `merge` relies on the same Zig feature as `imports` above: see the tip there.
+    /// Check that the names of the module `m` do not collide with those of the modules already merged.
+    fn merge(l: *Linker, at: *const Node, seen: *std.ArrayList(*const Node), m: *const Node) Error!void {
+        const mine = try l.exportsOf(m);
+        for (seen.items) |other| {
+            if (other == m) return;
+            for (try l.exportsOf(other)) |nm| {
+                if (isListed(mine, nm)) {
+                    return l.fail(at, "the name '{s}' comes from the modules '{s}' and '{s}': list the modules one by one (modules.md)", .{ nm, other.text, m.text });
+                }
+            }
+        }
+        try seen.append(l.a, m);
+    }
+
+    // Zig tip: `std.StringHashMapUnmanaged([]const u8)`-free: the aliases of a script are found again by a
+    // walk over its import declarations, so no table is stored. The module of an alias is looked up by the
+    // key of the import. `null` means that the name is not the module of an import.
+    /// The module that the name `name` stands for in the imports of `tree` (a module name or an alias).
+    fn moduleOf(l: *Linker, tree: *const Node, name: []const u8) ?*const Node {
+        for (tree.kids) |decl| {
+            if (decl.tag != .import_decl) continue;
+            for (decl.kids) |item| {
+                if (item.public or std.mem.eql(u8, item.text, "*")) continue;
+                const bound = if (item.kids[0].tag == .name) item.kids[0].text else item.text;
+                if (!std.mem.eql(u8, bound, name)) continue;
+                const key = std.fmt.allocPrint(l.a, "{s}|{s}", .{ decl.text, item.text }) catch return null;
+                return l.modules.get(key);
+            }
+        }
+        return null;
+    }
+
+    // Zig tip: a recursive function over the tree, like `walk`: `anyerror`-free, its errors are those of `Error`.
+    // `m.name` on a module that is not exported is refused at check time, exit 65 (D-112 b, c08).
+    /// Every `module.member` of `n` must name an exported member of the module.
+    fn accessWalk(l: *Linker, tree: *const Node, n: *const Node) Error!void {
+        if (n.tag == .call and n.kids[0].tag == .name) {
+            if (l.moduleOf(tree, n.kids[0].text)) |m| {
+                return l.fail(n, "'{s}' is a module: a module has no instances, it can't be created or called (D-068)", .{m.text});
+            }
+        }
+        if (n.tag == .field and n.kids[0].tag == .name) {
+            if (l.moduleOf(tree, n.kids[0].text)) |m| {
+                if (!isListed(try l.exportsOf(m), n.text)) {
+                    return l.fail(n, "'{s}' is not exported by the module '{s}'", .{ n.text, m.text });
+                }
+            }
+        }
+        for (n.kids) |k| try l.accessWalk(tree, k);
+    }
+
+    // Zig tip: `access` relies on the same Zig feature as `accessWalk` above: see the tip there.
+    /// Check the members used through a module in a whole script.
+    fn access(l: *Linker, tree: *const Node) Error!void {
+        for (tree.kids) |k| try l.accessWalk(tree, k);
+    }
+
+    // Zig tip: `k.ty` is `?*const Node`, an optional: `if (k.ty) |t|` runs only when the variable has a type
+    // hint. `Atomic(:Integer)` was read by the parser as `Integer` with `public` set; a class of the module
+    // that is derived from `Atomic(...)` makes its own name atomic too (`class SageInteger <: Atomic(:Integer);`).
+    /// Is the variable declaration `k` of the module `m` atomic: typed `Atomic(:T)` or by a class derived from it?
+    fn isAtomicVar(m: *const Node, k: *const Node) bool {
+        const t = k.ty orelse return false;
+        if (t.public) return true;
+        for (m.kids) |c| {
+            if (c.tag == .class and std.mem.eql(u8, c.text, t.text) and c.kids[1].tag == .name and std.mem.eql(u8, c.kids[1].text, "Atomic")) return true;
+        }
+        return false;
+    }
+
+    // Zig tip: a safe module is checked with two plain rules (D-129): each variable is atomic (`isAtomicVar`),
+    // and no call goes to a member of an unsafe module.
+    /// Reject a `safe` module that has a plain variable or calls a module that is not safe.
+    fn checkSafe(l: *Linker, m: *const Node) Error!void {
+        for (m.kids) |k| {
+            if (k.tag != .var_decl) continue;
+            if (!isAtomicVar(m, k)) {
+                return l.fail(k, "the safe module '{s}' has a variable that is not atomic: declare it :Atomic(:Type) (D-129, D-132)", .{m.text});
+            }
+        }
+        for (m.kids) |k| try l.unsafeCalls(m, k, "the safe module");
+    }
+
+    // Zig tip: `unsafeCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
+    /// Reject a call of a member of a module that is not safe, in the tree `n` of the module `tree`.
+    fn unsafeCalls(l: *Linker, tree: *const Node, n: *const Node, who: []const u8) Error!void {
+        if (n.tag == .field and n.kids[0].tag == .name) {
+            if (l.moduleOf(tree, n.kids[0].text)) |other| {
+                if (!other.public) return l.fail(n, "{s} '{s}' uses '{s}.{s}', and the module '{s}' is not safe (D-129)", .{ who, tree.text, other.text, n.text, other.text });
+            }
+        }
+        for (n.kids) |k| try l.unsafeCalls(tree, k, who);
+    }
+
+    // Zig tip: `visiting` is the list of the members being examined: a function that calls itself would
+    // loop for ever, so a name already in the list counts as safe for now. This is the check of a
+    // `concurrent` aspect (level 4, D-129): it calls only members that the compiler proves thread safe.
+    /// Is the member `name` of the module `m` thread safe? A safe module: yes. Otherwise it must not touch a
+    /// variable of the module, nor call an unsafe member.
+    fn memberSafe(l: *Linker, m: *const Node, name: []const u8, visiting: *std.ArrayList([]const u8)) Error!bool {
+        if (m.public) return true;
+        if (isListed(visiting.items, name)) return true;
+        try visiting.append(l.a, name);
+        defer _ = visiting.pop();
+        for (m.kids) |k| {
+            if ((k.tag == .function or k.tag == .procedure) and std.mem.eql(u8, k.text, name)) return l.bodySafe(m, k, visiting);
+        }
+        return true;
+    }
+
+    // Zig tip: `bodySafe` relies on the same Zig feature as `memberSafe` above: see the tip there.
+    /// Does the code of `n` leave the module `m` thread safe? No variable of the module, no unsafe call.
+    fn bodySafe(l: *Linker, m: *const Node, n: *const Node, visiting: *std.ArrayList([]const u8)) Error!bool {
+        if (n.tag == .name) {
+            if (memberKind(m, n.text) == .variable) return false;
+            for (m.kids) |k| {
+                if ((k.tag == .function or k.tag == .procedure) and std.mem.eql(u8, k.text, n.text)) {
+                    if (!try l.memberSafe(m, n.text, visiting)) return false;
+                }
+            }
+        }
+        if (n.tag == .field and n.kids[0].tag == .name) {
+            if (l.moduleOf(m, n.kids[0].text)) |other| if (!try l.memberSafe(other, n.text, visiting)) return false;
+        }
+        for (n.kids) |k| if (!try l.bodySafe(m, k, visiting)) return false;
+        return true;
+    }
+
+    // Zig tip: `concurrentCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
+    /// Reject the call of a member that is not thread safe, in the tree of a `concurrent` aspect.
+    fn concurrentCalls(l: *Linker, tree: *const Node, n: *const Node) Error!void {
+        if (n.tag == .field and n.kids[0].tag == .name) {
+            if (l.moduleOf(tree, n.kids[0].text)) |m| {
+                var visiting: std.ArrayList([]const u8) = .empty;
+                if (!try l.memberSafe(m, n.text, &visiting)) {
+                    return l.fail(n, "the concurrent aspect '{s}' calls '{s}.{s}', which is not thread safe (D-129)", .{ tree.text, m.text, n.text });
+                }
+            }
+        }
+        for (n.kids) |k| try l.concurrentCalls(tree, k);
     }
 
     // Zig tip: `unreachable` tells the compiler (and, in a safe build, traps) that a line can never
@@ -209,6 +505,12 @@ const Linker = struct {
     }
 };
 
+// Zig tip: a `pub var` at file level is a global that other files can read and set. `main` fills it once
+// at the start, from the environment variable `EVE_LIB_PATH` (D-128), and the link step reads it. It is
+// the only global of this file: a list of folders, empty when the variable is not set.
+/// The folders of `$EVE_LIB_PATH`, where external modules are installed.
+pub var env_lib_path: []const []const u8 = &.{};
+
 // Zig tip: `*[]const u8` is a pointer to a slice: the function writes the answer through it, here
 // the path of the file in which an error was found. A function returns one value (the error
 // union), so extra answers come back this way, through pointers the caller gave.
@@ -222,10 +524,16 @@ pub fn link(
     diag: *Diag,
     where: *[]const u8,
     aspects: *ast.Aspects,
+    modules: *ast.Modules,
+    lib_path: []const []const u8,
 ) Error!void {
-    var l: Linker = .{ .a = a, .io = io, .dir = dir, .diag = diag, .where = where, .aspects = aspects };
+    var l: Linker = .{ .a = a, .io = io, .dir = dir, .diag = diag, .where = where, .aspects = aspects, .modules = modules, .lib_path = lib_path };
     where.* = "";
-    if (tree.tag == .driver) try l.walk(tree);
+    if (tree.tag == .driver) {
+        try l.imports(tree);
+        try l.access(tree);
+        try l.walk(tree);
+    }
 }
 
 // Zig tip: a test builds a small project in memory instead of on disk: here the matching of
@@ -238,7 +546,8 @@ test "an apply is matched with the parameters of main" {
     const asp = try parser.parse(a, "exclusive aspect g is process main(who: String, greeting = \"Hi\" :String) is return; end g;", &d);
     var aspects: ast.Aspects = .empty;
     var where: []const u8 = "";
-    var l: Linker = .{ .a = a, .io = undefined, .dir = ".", .diag = &d, .where = &where, .aspects = &aspects };
+    var modules: ast.Modules = .empty;
+    var l: Linker = .{ .a = a, .io = undefined, .dir = ".", .diag = &d, .where = &where, .aspects = &aspects, .modules = &modules };
     const ok = try parser.parse(a, "driver t is process main is apply g(\"Eve\", greeting: \"Yo\"); return; end t;", &d);
     try l.match(ok.kids[0].kids[0].kids[0], asp);
     const bad = try parser.parse(a, "driver t is process main is apply g(42); return; end t;", &d);

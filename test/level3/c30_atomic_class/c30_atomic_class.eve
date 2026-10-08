@@ -1,0 +1,20 @@
+# class Name <: Atomic(:T) declares an atomic type (D-132)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver c30_atomic_class is
+  from lib use (tally);
+
+  process main is
+    tally.bump();
+    tally.bump();
+    tally.bump();
+    expect tally.value!() == 3;
+    print "seen: {tally.value!()}";
+  return;
+end c30_atomic_class;
+/*@expect
+{
+  "stdout": [
+    "seen: 3"
+  ]
+}
+*/

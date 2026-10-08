@@ -16,10 +16,17 @@ A test is either a file or a folder:
                                   old expect.json of the level, {"<name>": {...}}, is still read
                                   and the blocks of the script override it
   test/levelN/<name>/<name>.eve   a project test (D-073): the folder is a whole Eve project, with
-                                  the driver <name>.eve and any of asp/, lib/, data/, out/. Its
+                                  the driver <name>.eve and any of asp/, lib/, web/ (templates), data/, out/. Its
                                   expectations are in <name>/expect.json: {...} (one object).
                                   It runs with the folder as working directory, so paths in the
                                   project are relative to it; out/ is emptied before each run.
+  test/levelN/<name>/<code>_test1.eve, <code>_test2.eve, ...
+                                  more drivers of the same project (D-133): each one is a variation
+                                  (another use case) of the same asp/, lib/ and data/. <code> is the
+                                  code of the folder (b05 for b05_apply_spread). Each file is a test
+                                  of its own, with its expectations in its /*@expect*/ block; the
+                                  driver inside is named like the file. `runtest.py b05` runs the
+                                  project driver and its variations, `runtest.py b05_test2` one of them.
 Other folders are not tests. The expectation keys, all optional:
   "exit"       expected exit code (default 0)
   "args"       command-line arguments
@@ -88,6 +95,27 @@ def rel(path):
     return os.path.relpath(path, ROOT).replace(os.sep, "/")
 
 
+VARIATION = re.compile(r"^([a-z]\d+)_test\d+\.eve$")
+
+
+def variations(folder, name):
+    """The variation drivers of a project folder (D-133): <code>_test1.eve, <code>_test2.eve, ..."""
+    code = name.split("_")[0]
+    found = []
+    for f in sorted(os.listdir(folder)):
+        m = VARIATION.match(f)
+        if m and m.group(1) == code and os.path.isfile(os.path.join(folder, f)):
+            found.append(os.path.join(folder, f))
+    return found
+
+
+def is_variation(test):
+    """True for <folder>/<code>_testN.eve inside a project folder."""
+    folder, name = os.path.split(test)
+    m = VARIATION.match(name)
+    return bool(m) and os.path.basename(folder).split("_")[0] == m.group(1)
+
+
 def level_tests(level):
     folder = os.path.join(TEST_DIR, level)
     if not os.path.isdir(folder):
@@ -99,6 +127,7 @@ def level_tests(level):
             tests.append(path)
         elif os.path.isfile(os.path.join(path, f + ".eve")):
             tests.append(os.path.join(path, f + ".eve"))
+            tests.extend(variations(path, f))
     return tests
 
 
@@ -109,10 +138,16 @@ def find_test(name):
             for t in level_tests(lv) if os.path.basename(t)[:-4].startswith(name)]
     exact = [t for t in hits if os.path.basename(t)[:-4] == name]
     if exact:
-        return exact[:1]
+        # a project driver brings its variations along (D-133); a variation runs alone
+        return exact[:1] + (variations(os.path.dirname(exact[0]), os.path.basename(exact[0])[:-4])
+                            if is_project(exact[0]) and not is_variation(exact[0]) else [])
     if not hits:
         die(f"no test matches '{name}'")
-    if len(hits) > 1:
+    mains = [t for t in hits if not is_variation(t)]
+    if len(mains) == 1:
+        hits = [mains[0]] + (variations(os.path.dirname(mains[0]), os.path.basename(mains[0])[:-4])
+                             if is_project(mains[0]) else [])
+    elif len(hits) > 1:
         die(f"'{name}' is ambiguous: " + ", ".join(rel(t) for t in hits))
     return hits
 
@@ -132,9 +167,9 @@ def resolve(target):
 
 
 def is_project(test):
-    """True for test/levelN/<name>/<name>.eve, a project test (D-073)."""
+    """True for test/levelN/<name>/<name>.eve, a project test (D-073), and for its variations (D-133)."""
     folder, name = os.path.split(test)
-    return os.path.basename(folder) == name[:-4]
+    return os.path.basename(folder) == name[:-4] or is_variation(test)
 
 
 def level_of(test):
@@ -178,6 +213,8 @@ def load_expect(test):
         with open(manifest, encoding="utf-8") as f:
             data = json.load(f)
         spec = dict(data if is_project(test) else data.get(name, {}))
+        if is_variation(test):
+            spec = {}          # expect.json is the expectation of the project driver, not of a variation
     spec.update(source_expect(test))
     if isinstance(spec.get("stdout"), list):
         spec["stdout"] = "\n".join(spec["stdout"])

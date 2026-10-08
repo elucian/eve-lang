@@ -1,0 +1,24 @@
+# variation 1 of b26: finalize in a loop, by return and by over (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b26_test1 is
+  process main is
+    for early in (True, False, True) do
+      apply closing(early);
+    done;
+    print "back";
+  return;
+end b26_test1;
+/*@expect
+{
+  "stdout": [
+    "closing: work",
+    "closing: finalize",
+    "closing: work",
+    "closing: rest",
+    "closing: finalize",
+    "closing: work",
+    "closing: finalize",
+    "back"
+  ]
+}
+*/

@@ -1,0 +1,16 @@
+# a module is not a class: it has no instances (D-068)
+** spec: semantics/modules.md#life-cycle
+driver c21_module_instance is
+  from lib use (counter);
+
+  process main is
+    new c := counter();               ** compile error: a module can't be created
+    print "never";
+  return;
+end c21_module_instance;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

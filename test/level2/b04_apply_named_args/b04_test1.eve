@@ -1,0 +1,16 @@
+# variation 1 of b04: every argument by name, in another order (D-133)
+** spec: syntax/statements.md#apply
+driver b04_test1 is
+  process main is
+    apply report(width: 7, title: "Z");
+    apply report(title: "Y");
+  return;
+end b04_test1;
+/*@expect
+{
+  "stdout": [
+    "Z: 7",
+    "Y: 10"
+  ]
+}
+*/

@@ -15,7 +15,7 @@ exclusive aspect sum is
 end sum;
 ```
 
-- **Kind word (D-090).** `exclusive aspect` runs alone, in serial mode, started by `apply`. `concurrent aspect` may also be started in a parallel group (level 4); at level 2 it is applied like the other kind, and the compiler check for thread safety is a level 4 rule. `aspect` alone is a compile error (exit 65).
+- **Kind word (D-090, D-130).** The kind word is optional: an aspect without it is `exclusive`. `exclusive aspect` runs alone, in serial mode, started by `apply`. `concurrent aspect` may also be started in a parallel group (level 4); at level 2 it is applied like the other kind, and the compiler check for thread safety is a level 4 rule. `aspect` alone is a compile error (exit 65).
 - **One process, named `main`.** An aspect has exactly one process and its name is always `main`. A second process, or another name, is a compile error. `main` is implicit: it is not public.
 - **Encapsulated.** Nothing in an aspect is public, and the dot operator is never applied to an aspect. Data goes in by the parameters of `main` and comes out by its `@` parameters.
 - **File name.** The file is `<name>.eve` and the name in the header and in `end name;` is the same (D-018).

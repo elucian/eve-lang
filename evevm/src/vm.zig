@@ -131,6 +131,8 @@ pub const Session = struct {
     bad_path: []const u8 = "",
     /// The aspects the script applies, read and checked by `parse` (project.zig).
     aspects: ast.Aspects = .empty,
+    /// The modules that the imports of the script reach, read and checked by `parse` (project.zig).
+    modules: ast.Modules = .empty,
     parse_failed: bool = false,
     machine: ?*interp.Interp = null,
     /// The command-line arguments after the script name (the arguments of `process main`).
@@ -161,6 +163,7 @@ pub const Session = struct {
         self.diag = .{};
         self.bad_path = "";
         self.aspects = .empty;
+        self.modules = .empty;
     }
 
     // ---- loading, parsing, running --------------------------------------------------------
@@ -203,6 +206,7 @@ pub const Session = struct {
         self.diag = .{};
         self.bad_path = "";
         self.aspects = .empty;
+        self.modules = .empty;
         self.status = 0;
     }
 
@@ -215,7 +219,7 @@ pub const Session = struct {
         const tree = try parser.parse(self.mem(), self.src, &self.diag);
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         const dir = if (cut) |i| self.path[0..i] else ".";
-        try project.link(self.mem(), self.io, dir, tree, &self.diag, &self.bad_path, &self.aspects);
+        try project.link(self.mem(), self.io, dir, tree, &self.diag, &self.bad_path, &self.aspects, &self.modules, project.env_lib_path);
         return tree;
     }
 
@@ -284,6 +288,7 @@ pub const Session = struct {
         machine.hook = .{ .ctx = self, .poll = pollHook };
         machine.script_args = self.script_args;
         machine.aspects = &self.aspects;
+        machine.modules = &self.modules;
         self.machine = machine;
         self.steps = 0;
         self.line = 0;

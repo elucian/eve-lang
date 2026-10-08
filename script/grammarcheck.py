@@ -196,7 +196,7 @@ def main():
         top = os.path.dirname(f)
         if os.path.basename(top) in ("asp", "lib"): top = os.path.dirname(top)
         pat = r'"syntax_error"\s*:\s*true'
-        neg = any(re.search(pat, open(g, encoding="utf-8").read()) for g in glob.glob(top + "/**/*.eve", recursive=True)) if "level2" in f else bool(re.search(pat, src))
+        neg = any(re.search(pat, open(g, encoding="utf-8").read()) for g in glob.glob(top + "/**/*.eve", recursive=True)) if not (os.path.basename(top).startswith("level") or re.search(r"_test\d+\.eve$", f)) else bool(re.search(pat, src))
         try:
             toks = lex(src, lits)
             parser.parse(toks)

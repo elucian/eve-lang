@@ -1,6 +1,6 @@
 # Data file types
 
-Status: **0.1-draft**, level 3 (the data language). Everything on this page is a **proposal** for the author's review (Q-038); no tests and no implementation yet. Sources: the author's request of 2026-10-08.
+Status: **0.1-draft**, level 5 (the data language, D-125). Everything on this page is a **proposal** for the author's review (Q-038); no tests and no implementation yet. Sources: the author's request of 2026-10-08.
 
 ## What they are
 
@@ -47,4 +47,4 @@ done;
 
 ## Open points
 
-All are collected in Q-038 (`plan/decision_level3.md`): the ancestor class and the traversal protocol (the iterator), the names of the modules, `Html` against the `Html` of the templates, the layout of a `Dat` file, the access to a unit (`row["name"]`, `row.name`, `row[2]`), writing and not only reading, streams from the network, encodings and the line ending, and the level (3 or 4) of each type.
+All are collected in Q-038 (`plan/decision_level5.md`): the ancestor class and the traversal protocol (the iterator), the names of the modules, `Html` against the `Html` of the templates, the layout of a `Dat` file, the access to a unit (`row["name"]`, `row.name`, `row[2]`), writing and not only reading, streams from the network, encodings and the line ending, and the level of each type.

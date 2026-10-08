@@ -1,0 +1,21 @@
+# dependencies are initialized first, and finalized last: the reverse order of the initialization (D-068)
+** spec: semantics/modules.md#life-cycle
+driver c22_module_init_order is
+  from lib use (top);
+
+  process main is
+    expect top.two() == 2;
+    print "main";
+  return;
+end c22_module_init_order;
+/*@expect
+{
+  "stdout": [
+    "base: loaded",
+    "top: loaded",
+    "main",
+    "top: done",
+    "base: done"
+  ]
+}
+*/

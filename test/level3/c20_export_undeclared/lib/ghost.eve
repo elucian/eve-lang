@@ -1,0 +1,8 @@
+# ghost: exports a name that is not declared
+module ghost is
+  export (missing);
+
+  function present() => (@result: Integer) is
+    let result := 1;
+  return;
+end ghost;

@@ -1,0 +1,6 @@
+# bad: a module can't export a variable (D-068)
+module bad is
+  export (total);
+
+  new total = 0 :Integer;
+end bad;

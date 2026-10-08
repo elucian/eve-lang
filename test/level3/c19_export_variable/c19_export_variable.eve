@@ -1,0 +1,15 @@
+# a module has no public variables: exporting one is a compile error (D-068)
+** spec: semantics/modules.md#members
+driver c19_export_variable is
+  from lib use (bad);
+
+  process main is
+    print "never";
+  return;
+end c19_export_variable;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

@@ -1,0 +1,10 @@
+# shared: a safe module can't have a plain variable: every variable must be atomic (D-129)
+safe module shared is
+  export (read);
+
+  new total = 0 :Integer;              ** not atomic: the module is rejected
+
+  function read() => (@result: Integer) is
+    let result := total;
+  return;
+end shared;

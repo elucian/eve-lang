@@ -1,4 +1,4 @@
-# plain: the kind word is missing
+# plain: no kind word, so the aspect is exclusive (D-130)
 aspect plain is
   process main is
     print "plain";

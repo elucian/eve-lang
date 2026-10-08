@@ -1,0 +1,9 @@
+# calm: a safe module can't use the functions or the procedures of an unsafe module (D-129)
+safe module calm is
+  from lib use (raw);
+  export (work);
+
+  procedure work() is
+    raw.tick();                        ** thread unsafe: the module is rejected
+  return;
+end calm;

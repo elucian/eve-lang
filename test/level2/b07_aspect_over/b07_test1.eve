@@ -1,0 +1,18 @@
+# variation 1 of b07: over in the aspect twice: the driver goes on each time (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b07_test1 is
+  process main is
+    apply leave();
+    apply leave();
+    print "back";
+  return;
+end b07_test1;
+/*@expect
+{
+  "stdout": [
+    "leave: start",
+    "leave: start",
+    "back"
+  ]
+}
+*/

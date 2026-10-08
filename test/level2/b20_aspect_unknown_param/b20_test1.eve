@@ -1,0 +1,16 @@
+# variation 1 of b20: the right name of the optional parameter (D-133)
+** spec: syntax/statements.md#apply
+driver b20_test1 is
+  process main is
+    apply greet("Eve", greeting: "Hi");
+    apply greet(who: "Bob", greeting: "Yo");
+  return;
+end b20_test1;
+/*@expect
+{
+  "stdout": [
+    "Hi, Eve",
+    "Yo, Bob"
+  ]
+}
+*/

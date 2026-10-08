@@ -4,7 +4,7 @@
 //! Grammar implemented so far (derived from test/level1; it grows test by test):
 //!
 //!     script     = driver | aspect | { statement }             (a script without a driver is "free")
-//!     aspect     = ("exclusive" | "concurrent") "aspect" name "is" { declaration } "end" name ";"   (one process, main)
+//!     aspect     = [ "exclusive" | "concurrent" ] "aspect" name "is" { declaration } "end" name ";"   (one process, main)
 //!     apply      = "apply" name { "/" name } "(" [ arguments ] ")" ";"
 //!     driver     = "driver" name "is" { declaration } "end" name ";"
 //!     declaration= let | set | class | function | method | process
@@ -496,6 +496,18 @@ const Parser = struct {
             if (dims.items.len == 0) prefix = "[]"; // `[5]Integer` keeps the element type and the size
         }
         const name = try p.expectName("a type name");
+        if (std.mem.eql(u8, name.text, "Atomic") and p.isSym("(")) {
+            // `Atomic(:Integer)` (D-132): a library class that wraps a Zig atomic. In this single-threaded
+            // machine it is the type `Integer` with the flag `public` set, so every check and every
+            // default value of `Integer` applies and the link step can ask "is this variable atomic?"
+            _ = p.advance();
+            try p.expectSym(":"); // a type argument starts with ':', the visual signal that a type follows
+            const inner = try p.typeName();
+            try p.expectSym(")");
+            const wrapped = try p.mk(.type, name, inner.text, inner.kids);
+            @constCast(wrapped).public = true;
+            return wrapped;
+        }
         const suffix: []const u8 = if (p.acceptSym("?")) "?" else "";
         const text = if (prefix.len == 0 and suffix.len == 0) name.text else try std.fmt.allocPrint(p.a, "{s}{s}{s}", .{ prefix, name.text, suffix });
         return p.mk(.type, name, text, dims.items);
@@ -1333,11 +1345,13 @@ const Parser = struct {
         const kw = p.peek();
         try p.expectWord("class");
         const name = try p.expectName("a class name");
-        try p.expectSym("=");
-        if (p.isSym("(")) return p.functionType(kw, name.text);
-        try p.expectSym("{");
+        // `class Name = {members} <: Parent` or, with no attribute of its own, `class Name <: Parent` (D-132)
+        const shaped = p.acceptSym("=");
+        if (!shaped and !p.isSym("<:")) return p.fail("expected '=' or '<:' after the class name", .{});
+        if (shaped and p.isSym("(")) return p.functionType(kw, name.text);
+        if (shaped) try p.expectSym("{");
         var members: std.ArrayList(*const Node) = .empty;
-        if (!p.isSym("}")) {
+        if (shaped and !p.isSym("}")) {
             while (true) {
                 const m = try p.expectName("a member name");
                 var value: *const Node = p.noneNode();
@@ -1351,12 +1365,18 @@ const Parser = struct {
                 if (!p.acceptSym(",")) break;
             }
         }
-        try p.expectSym("}");
+        if (shaped) try p.expectSym("}");
         var kids: std.ArrayList(*const Node) = .empty;
         try kids.append(p.a, try p.mk(.block, kw, "", members.items));
         if (p.acceptSym("<:")) {
             const parent = try p.expectName("a parent class name");
-            try kids.append(p.a, try p.mk(.name, parent, parent.text, &.{}));
+            const pn = try p.mk(.name, parent, parent.text, &.{});
+            if (p.acceptSym("(")) { // a class with a type argument: `Atomic(:Integer)`
+                try p.expectSym(":");
+                @constCast(pn).ty = try p.typeName();
+                try p.expectSym(")");
+            }
+            try kids.append(p.a, pn);
         } else try kids.append(p.a, p.noneNode());
         if (p.acceptSym(";")) return p.mk(.class, kw, name.text, kids.items);
         try p.expectWord("is");
@@ -1392,7 +1412,110 @@ const Parser = struct {
         if (p.isWord("procedure")) return p.routine(.procedure);
         if (p.isWord("method")) return p.routine(.method);
         if (p.isWord("process")) return p.process();
-        return p.fail("unexpected '{s}' in the driver, expected a declaration or 'end'", .{describe(p.peek())});
+        if (p.isWord("from")) return p.importDecl();
+        if (p.isWord("export")) return p.exportDecl();
+        return p.fail("unexpected '{s}': a driver, an aspect or a module holds declarations; a statement goes in a process, a function, a procedure or a method (D-126)", .{describe(p.peek())});
+    }
+
+    // Zig tip: a `while (true)` loop with a `break` is the way to read "one or more, separated by": the
+    // first item is read, then the loop continues while the separator `/` is found. `std.ArrayList(u8)`
+    // builds the text of the path piece by piece (see `applyStatement`). A string token carries its
+    // quotes, so `t.text[1 .. t.text.len - 1]` cuts them off.
+    /// `from path use (m, m as x, m(*), *);`: the path is folder names or strings joined by `/` (modules.md).
+    fn importDecl(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        var path: std.ArrayList(u8) = .empty;
+        while (true) {
+            const t = p.peek();
+            if (t.kind == .string) {
+                _ = p.advance();
+                try path.appendSlice(p.a, t.text[1 .. t.text.len - 1]);
+            } else try path.appendSlice(p.a, (try p.expectName("a folder name")).text);
+            if (!p.acceptSym("/")) break;
+            try path.append(p.a, '/');
+        }
+        try p.expectWord("use");
+        try p.expectSym("(");
+        var picks: std.ArrayList(*const Node) = .empty;
+        while (true) {
+            const t = p.peek();
+            if (p.acceptSym("*")) {
+                try picks.append(p.a, try p.mk(.import_item, t, "*", &.{p.noneNode()}));
+            } else {
+                const name = try p.expectName("a module name");
+                var alias = p.noneNode();
+                var members = false;
+                if (p.acceptWord("as")) {
+                    const a = try p.expectName("an alias");
+                    alias = try p.mk(.name, a, a.text, &.{});
+                } else if (p.acceptSym("(")) {
+                    try p.expectSym("*");
+                    try p.expectSym(")");
+                    members = true;
+                }
+                const entry = try p.mk(.import_item, name, name.text, &.{alias});
+                @constCast(entry).public = members;
+                try picks.append(p.a, entry);
+            }
+            if (!p.acceptSym(",")) break;
+        }
+        try p.expectSym(")");
+        try p.expectSym(";");
+        return p.mk(.import_decl, kw, path.items, picks.items);
+    }
+
+    // Zig tip: `exportDecl` relies on the same Zig feature as `importDecl` above: see the tip there.
+    /// `export (a, b!);`: the public members of a module (D-085).
+    fn exportDecl(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        try p.expectSym("(");
+        var names: std.ArrayList(*const Node) = .empty;
+        while (true) {
+            const n = try p.expectName("a member name");
+            try names.append(p.a, try p.mk(.name, n, n.text, &.{}));
+            if (!p.acceptSym(",")) break;
+        }
+        try p.expectSym(")");
+        try p.expectSym(";");
+        return p.mk(.export_decl, kw, "", names.items);
+    }
+
+    // Zig tip: `module` relies on the same Zig feature as `importDecl` above: see the tip there. The
+    // regions `initialize`, `recover` and `finalize` come after the declarations, in that order; a
+    // statement outside a function, a procedure, a method or a region is refused because
+    // `declarationInDriver` accepts declarations only (D-126). `@constCast` sets the safe flag on
+    // the node after it is made, as `class` does for `public`.
+    /// `[safe|unsafe] module name is ... end name;` (modules.md).
+    fn module(p: *Parser) Error!*const Node {
+        const kw = p.peek();
+        const safe = p.isWord("safe");
+        if (safe or p.isWord("unsafe")) _ = p.advance();
+        try p.expectWord("module");
+        const name = try p.expectName("a module name");
+        try p.expectWord("is");
+        var decls: std.ArrayList(*const Node) = .empty;
+        while (!p.isWord("end") and !p.isWord("initialize") and !p.isWord("recover") and !p.isWord("finalize")) {
+            if (p.isWord("process")) return p.fail("a module has no process: it holds declarations and regions (D-126)", .{});
+            try decls.append(p.a, try p.declarationInDriver());
+        }
+        const words = [_][]const u8{ "initialize", "recover", "finalize" };
+        for (words) |w| {
+            if (p.isWord(w)) {
+                const rk = p.advance();
+                try decls.append(p.a, try p.mk(.region, rk, w, &.{try p.block()}));
+            }
+        }
+        if (!p.isWord("end")) return p.fail("unexpected '{s}' in the module: the regions are initialize, recover and finalize, in this order", .{describe(p.peek())});
+        try p.expectWord("end");
+        const end_name = try p.expectName("the module name");
+        if (!std.mem.eql(u8, name.text, end_name.text)) {
+            p.i -= 1;
+            return p.fail("'end {s}' does not match 'module {s}'", .{ end_name.text, name.text });
+        }
+        try p.expectSym(";");
+        const node = try p.mk(.module, kw, name.text, decls.items);
+        @constCast(node).public = safe;
+        return node;
     }
 
     // Zig tip: `driver` relies on the same Zig feature as `routine` above: see the tip there.
@@ -1434,12 +1557,12 @@ const Parser = struct {
     // Zig tip: a rule can be checked after it is parsed: the aspect is read like a driver, then the
     // list of declarations is searched for its process. `return p.fail(...)` reports at the token
     // under the cursor, so `p.i -= 1` first moves it back onto the name after `end`.
-    /// `exclusive aspect name is … end name;`: a driver-shaped script with exactly one process, `main`.
+    /// `[exclusive|concurrent] aspect name is … end name;`: a driver-shaped script with exactly one
+    /// process, `main`. Without a kind word the aspect is exclusive (D-130).
     fn aspect(p: *Parser) Error!*const Node {
         const kw = p.peek();
-        const kind: []const u8 = if (p.isWord("exclusive") or p.isWord("concurrent")) p.advance().text else "";
+        const kind: []const u8 = if (p.isWord("exclusive") or p.isWord("concurrent")) p.advance().text else "exclusive";
         if (!p.isWord("aspect")) return p.fail("expected 'aspect' after '{s}'", .{kind});
-        if (kind.len == 0) return p.fail("an aspect is declared 'exclusive aspect' or 'concurrent aspect' (D-090)", .{});
         _ = p.advance();
         const name = try p.expectName("an aspect name");
         try p.expectWord("is");
@@ -1464,7 +1587,9 @@ const Parser = struct {
             return error.Syntax;
         }
         try p.expectSym(";");
-        return p.mk(.aspect, kw, name.text, decls.items);
+        const node = try p.mk(.aspect, kw, name.text, decls.items);
+        @constCast(node).public = std.mem.eql(u8, kind, "concurrent"); // the kind word, for the thread safety check (D-129)
+        return node;
     }
 
     // Zig tip: `script` relies on the same Zig feature as `routine` above: see the tip there.
@@ -1475,6 +1600,8 @@ const Parser = struct {
             result = try p.driver();
         } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
             result = try p.aspect();
+        } else if (p.isWord("module") or ((p.isWord("safe") or p.isWord("unsafe")) and p.isWordAt(1, "module"))) {
+            result = try p.module();
         } else {
             var list: std.ArrayList(*const Node) = .empty;
             while (p.peek().kind != .eof) try list.append(p.a, try p.statement());
@@ -1576,15 +1703,15 @@ test "wrong scripts are rejected" {
 
 // Zig tip: one test can hold the good and the bad cases of a rule. The first `try check(...)` must
 // succeed (an error would fail the test through `try`); the list of bad scripts must all fail with
-// `error.Syntax`. Here: an aspect needs its kind word and exactly one process named main, and an
-// aspect can't `apply` (D-066, D-090).
+// `error.Syntax`. Here: an aspect has exactly one process named main, and can't `apply`; the kind
+// word is optional and the default is exclusive (D-066, D-090, D-130).
 test "an aspect and an apply parse, and the aspect rules hold" {
     var d: Diag = .{};
     try check(std.testing.allocator, "exclusive aspect a is process main(x: Integer, @y: Integer) is let y := x; return; end a;", &d);
     try check(std.testing.allocator, "concurrent aspect a is process main is return; end a;", &d);
+    try check(std.testing.allocator, "aspect a is process main is return; end a;", &d);
     try check(std.testing.allocator, "driver t is process main is new r :Integer; apply tools/a(1, v: 2, @r, *(3, 4)); return; end t;", &d);
     const bad = [_][]const u8{
-        "aspect a is process main is return; end a;",
         "exclusive aspect a is process other is return; end a;",
         "exclusive aspect a is function f() => (@r: Integer) is return; end a;",
         "exclusive aspect a is process main is return; process main is return; end a;",
@@ -1592,4 +1719,39 @@ test "an aspect and an apply parse, and the aspect rules hold" {
         "driver t is process main is apply b; return; end t;",
     };
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
+}
+
+// Zig tip: a module is parsed like a driver whose body has only declarations and regions: the test
+// feeds one with an import, an export, a private variable and the three regions, then checks that a free
+// statement and a `process` are refused (D-126). `check` is the helper of the tests above: see the tip there.
+test "a module parses: imports, exports and regions; a free statement is refused" {
+    var d: Diag = .{};
+    try check(std.testing.allocator, "safe module m is from lib use (a, b as c, d(*)); export (f, g!); " ++
+        "function f() => (@r: Integer) is let r := 1; return; " ++
+        "initialize print \"up\"; recover print \"oops\"; finalize print \"down\"; end m;", &d);
+    const bad = [_][]const u8{
+        "module m is print \"x\"; end m;",
+        "module m is process main is return; end m;",
+        "module m is finalize print \"a\"; initialize print \"b\"; end m;",
+    };
+    for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
+}
+
+// Zig tip: `Atomic(:Integer)` is read as the type `Integer` with the flag `public` set (the parser's way to
+// say "atomic"), and a class with no shape is `class Name <: Parent(:T);`. The test parses a script that uses
+// both and looks at the node of the declaration: `kids[0].kids[0]` is the first variable of a `new`.
+// `check` is the helper of the tests above: see the tip there.
+test "Atomic(:T) is a type hint and a class may have no shape" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var d: Diag = .{};
+    const tree = try parse(arena.allocator(), "driver t is class S <: Atomic(:Integer); new n = 0 :Atomic(:Integer); new m = 0 :Integer; process main is return; end t;", &d);
+    const cls = tree.kids[0];
+    try std.testing.expectEqualStrings("Atomic", cls.kids[1].text);
+    try std.testing.expectEqualStrings("Integer", cls.kids[1].ty.?.text);
+    try std.testing.expect(tree.kids[1].ty.?.public);
+    try std.testing.expectEqualStrings("Integer", tree.kids[1].ty.?.text);
+    try std.testing.expect(!tree.kids[2].ty.?.public);
+    // a type argument needs its colon
+    try std.testing.expectError(error.Syntax, check(std.testing.allocator, "new n = 0 :Atomic(Integer);", &d));
 }
