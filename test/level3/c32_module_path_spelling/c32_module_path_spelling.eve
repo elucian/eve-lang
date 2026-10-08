@@ -1,0 +1,17 @@
+# the same module reached by two spellings of the path is one module: loaded once, one state (D-068)
+** spec: semantics/modules.md#life-cycle
+driver c32_module_path_spelling is
+  from lib use (tally);
+
+  process main is
+    tally.bump();
+    apply worker();
+    expect tally.hits!() == 2;
+    print "hits: {tally.hits!()}";
+  return;
+end c32_module_path_spelling;
+/*@expect
+{
+  "stdout": ["tally: loaded", "hits: 2", "tally: 2 hits"]
+}
+*/

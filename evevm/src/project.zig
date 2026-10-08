@@ -162,6 +162,26 @@ const Linker = struct {
         return l.join("{s}/{s}", .{ l.dir, text });
     }
 
+    // Zig tip: `std.mem.tokenizeAny(u8, text, "/\\")` walks the pieces of a text between any of the separators
+    // and skips the empty ones. `parts.pop()` removes the last piece, which is how `lib/../lib` goes back to
+    // `lib`. `std.mem.join(allocator, "/", pieces)` glues the pieces again. Two spellings of one file, `./lib/c.eve`
+    // and `lib/c.eve`, give the same text, and so the same module (D-068: a module is loaded once).
+    /// The path of a file in one standard spelling: no `.`, no empty part, no `..` that can be resolved, only `/`.
+    fn canonical(l: *Linker, path: []const u8) Error![]const u8 {
+        var parts: std.ArrayList([]const u8) = .empty;
+        var it = std.mem.tokenizeAny(u8, path, "/\\");
+        while (it.next()) |part| {
+            if (std.mem.eql(u8, part, ".")) continue;
+            if (std.mem.eql(u8, part, "..") and parts.items.len > 0 and !std.mem.eql(u8, parts.items[parts.items.len - 1], "..")) {
+                _ = parts.pop();
+                continue;
+            }
+            try parts.append(l.a, part);
+        }
+        const joined = try std.mem.join(l.a, "/", parts.items);
+        return if (path.len > 0 and path[0] == '/') l.join("/{s}", .{joined}) else joined;
+    }
+
     // Zig tip: `[_][]const u8{ a, b }` is an array whose length the compiler counts. The file of a module is
     // searched in the folder of the import, then in every folder of `$EVE_LIB_PATH`, as `<folder>/<path>/m.eve`,
     // `<folder>/m.eve` and `<folder>/m/m.eve` (a package installed in its own folder).
@@ -179,6 +199,12 @@ const Linker = struct {
         }
         var file: []const u8 = "";
         const src = l.read(cands.items, &file) orelse return null;
+        // the same file reached by another spelling of the path is the same module (singleton)
+        const file_key = try l.join("file:{s}", .{try l.canonical(file)});
+        if (l.modules.get(file_key)) |same| {
+            try l.modules.put(l.a, key, same);
+            return same;
+        }
         const saved = l.where.*;
         l.where.* = file;
         const tree = try parser.parse(l.a, src, l.diag);
@@ -197,6 +223,7 @@ const Linker = struct {
             }
         }
         try l.modules.put(l.a, key, tree);
+        try l.modules.put(l.a, file_key, tree);
         try l.imports(tree);
         try l.access(tree);
         if (tree.public) try l.checkSafe(tree);
@@ -328,9 +355,46 @@ const Linker = struct {
         for (m.kids) |k| try l.unsafeCalls(m, k, "the safe module");
     }
 
+    fn exportsName(m: *const Node, name: []const u8) bool {
+        for (m.kids) |k| {
+            if (k.tag != .export_decl) continue;
+            for (k.kids) |nm| if (std.mem.eql(u8, nm.text, name)) return true;
+        }
+        return false;
+    }
+
+    // Zig tip: `orelse continue` inside a loop skips to the next item when a lookup finds nothing. A bare name
+    // (`poke()` after `use (u(*))`) belongs to the module that exports it; a name that the script declares
+    // itself is not looked up, because the local one wins. The thread safety checks use the owner like they
+    // use the prefix of `u.poke()`, so `m(*)` and `(*)` can not hide an unsafe call (D-129).
+    /// The module that gives the bare name `name` to the script `tree` through `m(*)` or `*`, or null.
+    fn bareOwner(l: *Linker, tree: *const Node, name: []const u8) ?*const Node {
+        if (memberKind(tree, name) != .none) return null;
+        for (tree.kids) |decl| {
+            if (decl.tag != .import_decl) continue;
+            for (decl.kids) |item| {
+                if (std.mem.eql(u8, item.text, "*")) {
+                    const key = std.fmt.allocPrint(l.a, "{s}|*", .{decl.text}) catch return null;
+                    const set = l.modules.get(key) orelse continue;
+                    for (set.kids) |m| if (exportsName(m, name)) return m;
+                } else if (item.public) {
+                    const key = std.fmt.allocPrint(l.a, "{s}|{s}", .{ decl.text, item.text }) catch return null;
+                    const m = l.modules.get(key) orelse continue;
+                    if (exportsName(m, name)) return m;
+                }
+            }
+        }
+        return null;
+    }
+
     // Zig tip: `unsafeCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
     /// Reject a call of a member of a module that is not safe, in the tree `n` of the module `tree`.
     fn unsafeCalls(l: *Linker, tree: *const Node, n: *const Node, who: []const u8) Error!void {
+        if (n.tag == .call and n.kids[0].tag == .name) {
+            if (l.bareOwner(tree, n.kids[0].text)) |other| {
+                if (!other.public) return l.fail(n, "{s} '{s}' calls '{s}' of the module '{s}', and the module is not safe (D-129)", .{ who, tree.text, n.kids[0].text, other.text });
+            }
+        }
         if (n.tag == .field and n.kids[0].tag == .name) {
             if (l.moduleOf(tree, n.kids[0].text)) |other| {
                 if (!other.public) return l.fail(n, "{s} '{s}' uses '{s}.{s}', and the module '{s}' is not safe (D-129)", .{ who, tree.text, other.text, n.text, other.text });
@@ -359,6 +423,7 @@ const Linker = struct {
     /// Does the code of `n` leave the module `m` thread safe? No variable of the module, no unsafe call.
     fn bodySafe(l: *Linker, m: *const Node, n: *const Node, visiting: *std.ArrayList([]const u8)) Error!bool {
         if (n.tag == .name) {
+            if (l.bareOwner(m, n.text)) |other| if (!try l.memberSafe(other, n.text, visiting)) return false;
             if (memberKind(m, n.text) == .variable) return false;
             for (m.kids) |k| {
                 if ((k.tag == .function or k.tag == .procedure) and std.mem.eql(u8, k.text, n.text)) {
@@ -376,6 +441,14 @@ const Linker = struct {
     // Zig tip: `concurrentCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
     /// Reject the call of a member that is not thread safe, in the tree of a `concurrent` aspect.
     fn concurrentCalls(l: *Linker, tree: *const Node, n: *const Node) Error!void {
+        if (n.tag == .call and n.kids[0].tag == .name) {
+            if (l.bareOwner(tree, n.kids[0].text)) |m| {
+                var visiting: std.ArrayList([]const u8) = .empty;
+                if (!try l.memberSafe(m, n.kids[0].text, &visiting)) {
+                    return l.fail(n, "the concurrent aspect '{s}' calls '{s}' of the module '{s}', which is not thread safe (D-129)", .{ tree.text, n.kids[0].text, m.text });
+                }
+            }
+        }
         if (n.tag == .field and n.kids[0].tag == .name) {
             if (l.moduleOf(tree, n.kids[0].text)) |m| {
                 var visiting: std.ArrayList([]const u8) = .empty;

@@ -1,0 +1,19 @@
+# tally: a module with private state and a message at load, to count how many times it is loaded
+module tally is
+  export (bump, hits!);
+
+  new n = 0 :Integer;
+
+  procedure bump() is
+    let n += 1;
+  return;
+
+  function hits!() => (@r: Integer) is
+    let r := n;
+  return;
+
+  initialize
+    print "tally: loaded";
+  finalize
+    print "tally: {n} hits";
+end tally;

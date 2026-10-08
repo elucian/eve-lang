@@ -11,7 +11,7 @@
   
 ## Learning
 
-You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tutorial explains the language with examples. The features and their versions are planned in [plan/features_inventory.md](plan/features_inventory.md) and [plan/version_map.md](plan/version_map.md).
+You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tutorial explains the language with examples. The features and their versions are planned in [plan/version_map.md](plan/version_map.md) and [plan/version_map.md](plan/version_map.md).
 
 Read Sage-Code Tutorial: [Eve Programming Language](https://sagecode.org/projects/eve/index.html)</a>
 

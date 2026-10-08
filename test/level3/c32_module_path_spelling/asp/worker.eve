@@ -1,0 +1,8 @@
+# worker: imports the module with another spelling of the same path
+aspect worker is
+  from "./lib" use (tally);
+
+  process main is
+    tally.bump();
+  return;
+end worker;

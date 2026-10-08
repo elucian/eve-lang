@@ -1,0 +1,8 @@
+# worker: a concurrent aspect that calls an unsafe member by its bare name: rejected
+concurrent aspect worker is
+  from lib use (raw(*));
+
+  process main is
+    poke();
+  return;
+end worker;

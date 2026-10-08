@@ -38,8 +38,7 @@ The **tutorial** comes first: it is reviewed and improved until it is good enoug
 
 ## Features and versions
 
-- [features_inventory.md](features_inventory.md): every large feature with a code (`F-<area>-<nn>`), a checkbox and its target version. Tick a feature when it is implemented and tested.
-- [version_map.md](version_map.md): the levels 1 to 7 and the versions 0.1 to 1.0, the features of each one and its exit criterion.
+- [version_map.md](version_map.md): **one file to track the project** (D-138): the levels 1 to 7, the versions 0.1 to 1.0, and every large feature with a code (`F-<area>-<nn>`), its status and its version, with the exit criterion of each version. Mark a feature `✓ done` when it is implemented and tested.
 - Decision logs by level: [1](decision_level1.md) single script, [2](decision_level2.md) project, [3](decision_level3.md) data, [4](decision_level4.md) parallel, [5](decision_level5.md) database, [6](decision_level6.md) server, [7](decision_level7.md) web.
 - Designs for review: [design-multitasking.md](design-multitasking.md), [design-service.md](design-service.md) (the Eve machine and the server), [design-database.md](design-database.md) (the database layer and the Eve database).
 - [backlog.md](backlog.md): reserved words and ideas without a design.

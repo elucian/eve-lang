@@ -1,0 +1,9 @@
+# calm: a safe module that calls an unsafe member by its bare name: rejected
+safe module calm is
+  from lib use (raw(*));
+  export (work);
+
+  procedure work() is
+    poke();
+  return;
+end calm;
