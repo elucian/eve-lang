@@ -1,7 +1,7 @@
 # Eve Language Specification
 
-This folder holds the **normative specification** of Eve: the reference any Eve compiler or interpreter must follow. The tutorial (`tutorial/`, published at
-<https://sagecode.org/projects/eve/>) teaches the language; this specification defines it.
+This folder holds the **normative specification** of Eve: the reference any Eve compiler or interpreter must follow. This specification is self-contained: it needs nothing outside this repository to be understood or implemented. The tutorial (published at
+<https://sagecode.org/projects/eve/>) is a separate, non-normative teaching text; it teaches the language, this specification defines it.
 When the two disagree, the specification wins. Record the conflict in
 [`../plan/decision_level1.md`](../plan/decision_level1.md) or [`../plan/decision_level2.md`](../plan/decision_level2.md) and fix the tutorial.
 
@@ -58,7 +58,7 @@ Files appear here as the plan steps complete; a missing file means that step is 
 - Top-level object: `{ "$schema": "...", "specVersion": "0.1-draft", "items": [ ... ] }`.
 - Every item has a stable `id` (never reused), a `status` (`stable`, `draft`, `reserved`,
   `deprecated`) and a `ref` to the Markdown section that defines it (`"syntax/regions.md#driver"`).
-- Optional `tutorial` holds the URL of the tutorial section that teaches the item.
+- Optional `tutorial` holds the URL of a tutorial section that teaches the item. It is a courtesy link, not part of the definition: ignore it when you implement the item.
 - Keys are `camelCase`. Arrays are sorted by `id` unless order carries meaning (precedence).
 
 Example (`lexical/keywords.json`):

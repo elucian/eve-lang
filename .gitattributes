@@ -2,3 +2,5 @@
 *.zig text eol=lf
 *.zon text eol=lf
 *.sh text eol=lf
+
+.githooks/* text eol=lf

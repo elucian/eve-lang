@@ -1,0 +1,18 @@
+# a bulk operation never builds strings: a string element or scalar is an error (D-118)
+** spec: syntax/expressions.md#operators-on-collections
+driver a84_bulk_string_error is
+  process main is
+    new w := ("a", "b");
+    let w += "x";
+    print "never";
+  recover
+    print "caught string error";
+  return;
+end a84_bulk_string_error;
+/*@expect
+{
+  "stdout": [
+    "caught string error"
+  ]
+}
+*/

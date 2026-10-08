@@ -4,7 +4,7 @@ Status: **0.1-draft**, level 1. Sources: D-010, D-020, D-038, D-054, D-063, D-08
 
 ## Errors
 
-An **error** is a record `{code, message, job, line}`. It is created by `raise expr;`, by a failed `expect` (code 2), by a failed `assert` (code 3, Q-031h) and by the run-time checks of the language. Every run-time check of the language has its own error class and its own code, so a code always names one precise error (D-109): index 0 or out of range `$err_index` 10, a missing DataMap key `$err_key` 11, division or remainder by zero `$err_divide` 12, integer overflow `$err_overflow` 13. `raise "text";` has the generic code 4 `$err_raise`. The full table of codes is in exceptions.html. An undefined name and an operand of the wrong type are compile errors, never error values: Eve analyzes the whole script before it runs (D-109, D-110). A compile error is not an error value: the script does not run.
+An **error** is a record `{code, message, job, line}`. It is created by `raise expr;`, by a failed `expect` (code 2), by a failed `assert` (code 3, Q-031h) and by the run-time checks of the language. Every run-time check of the language has its own error class and its own code, so a code always names one precise error (D-109): index 0 or out of range `$err_index` 10, a missing DataMap key `$err_key` 11, division or remainder by zero `$err_divide` 12, integer overflow `$err_overflow` 13. `raise "text";` has the generic code 4 `$err_raise`. The full table of codes is in [Error codes](#error-codes). An undefined name and an operand of the wrong type are compile errors, never error values: Eve analyzes the whole script before it runs (D-109, D-110). A compile error is not an error value: the script does not run.
 
 `raise "text";` creates an error with code 4 and that message. Functions and procedures do not handle errors; an error propagates out of them to the process that called them (D-028).
 
@@ -45,6 +45,44 @@ The exit code of a process is a small number, 0 to 5. It is not the code of an e
 | end of `recover` | 0 | | yes |
 
 `abort` ends with the exit code of the error it passes on (2, 3 or 4). `panic` is not an error: it ends the whole application at once. When several codes apply, the first one reached wins. The error codes are `$err_` constants in the standard library: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4 (D-054, D-109, Q-031h); warnings have `$wrn_` constants. Messages of the VM go to the error output; `print` and `write` go to the standard output. The command-line errors of the VM (64, 65, 66, 70) are not exit codes of a process.
+
+## Error codes
+
+The constants are declared by the Exception module of the standard library. The message pattern fills the `{…}` fields with the values of the error. Codes 1 to 4 are also the exit codes of an unrecovered error (see above); the other codes are never exit codes.
+
+| Constant | Code | Message |
+|---|---|---|
+| `$err_panic` | 1 | the message given to `panic` |
+| `$err_expect` | 2 | `Unexpected error in line {line}`, or the custom message |
+| `$err_assert` | 3 | `Assertion failed in line {line}`, or the custom message |
+| `$err_raise` | 4 | `raise` without a code: the message given to `raise` |
+| `$err_index` | 10 | `Index {index} is out of range {first}..{last}` |
+| `$err_key` | 11 | `Key {key} not found` |
+| `$err_divide` | 12 | `Division by zero` |
+| `$err_overflow` | 13 | `Overflow in {operation}` |
+| `$err_convert` | 14 | `Cannot convert {value} to {type}` |
+| `$err_parse` | 15 | `Cannot parse {text} as {type}` |
+| `$err_null` | 16 | `Null value used as {type}` |
+| `$err_argument` | 17 | `Invalid argument {name}: {reason}` |
+| `$err_file` | 20 | `File not found: {path}` |
+| `$err_access` | 21 | `Access denied: {path}` |
+| `$err_io` | 22 | `Input/output error on {path}: {reason}` |
+| `$err_module` | 30 | `Module {name} not found in {library}` |
+| `$err_process` | 31 | `Process {name} not found in aspect {aspect}` |
+| `$err_memory` | 40 | `Out of memory while allocating {size}` |
+| `$err_timeout` | 41 | `Time-out after {time}` |
+| `$err_deadlock` | 42 | `Deadlock: every task of the group waits on a channel` |
+| `$err_output` | 43 | `Output {name} is given to two tasks of the group` |
+| `$err_recursion` | 44 | recursion too deep |
+
+Warnings do not stop the process; `.warn(code, message)` reports them.
+
+| Constant | Code | Message |
+|---|---|---|
+| `$wrn_assert` | 3 | `assert` failed, reported as a warning |
+| `$wrn_deprecated` | 5 | `{name} is deprecated, use {other}` |
+| `$wrn_truncate` | 6 | `Value {value} truncated to {type}` |
+| `$wrn_unused` | 7 | `{name} is declared but never used` |
 
 ## Open points
 

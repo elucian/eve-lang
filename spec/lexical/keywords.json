@@ -1,7 +1,7 @@
 {
   "$schema": "../schema/keywords.schema.json",
   "specVersion": "0.1-draft",
-  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by cancel case close commit create cursor del delete descend discard external feature fetch group halt insert into item label limit object offset on open order package pop record reset rest result rollback select step store switch to trial view where with within add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names.",
+  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by cancel case close commit create cursor del delete descend discard external feature fetch group halt insert into item label limit object offset on open order package pop record reset rest result rollback select step store switch to trial view where with within add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names. Contextual words (D-116) are keywords only where the grammar expects them (marked contextual: true); everywhere else they are ordinary names. The author prefers a contextual keyword to a reserved one whenever the grammar allows it. Reserved on purpose, although they could be contextual: job, parallel and self (D-117).",
   "items": [
     {
       "id": "abort",
@@ -14,6 +14,7 @@
       "id": "all",
       "category": "block",
       "status": "stable",
+      "contextual": true,
       "ref": "semantics/control.md#match",
       "summary": "Option of match: every matching path runs."
     },
@@ -77,6 +78,7 @@
       "id": "concurrent",
       "category": "declaration",
       "status": "stable",
+      "contextual": true,
       "ref": "syntax/declarations.md#scripts",
       "summary": "Marks an aspect that is thread safe: `concurrent aspect name is` (level 2, D-090)."
     },
@@ -97,8 +99,8 @@
     {
       "id": "defer",
       "category": "statement",
-      "status": "draft",
-      "ref": "syntax/statements.md#other-statements-of-later-levels",
+      "status": "stable",
+      "ref": "syntax/statements.md#interruptions",
       "summary": "Registers a statement that runs when the enclosing subprogram ends."
     },
     {
@@ -154,6 +156,7 @@
       "id": "exclusive",
       "category": "declaration",
       "status": "stable",
+      "contextual": true,
       "ref": "syntax/declarations.md#scripts",
       "summary": "Marks an aspect that is not thread safe: `exclusive aspect name is` (level 2, D-090)."
     },
@@ -301,6 +304,7 @@
       "id": "one",
       "category": "block",
       "status": "stable",
+      "contextual": true,
       "ref": "semantics/control.md#match",
       "summary": "Option of match: only the first matching path runs (the default)."
     },
@@ -315,6 +319,7 @@
       "id": "other",
       "category": "block",
       "status": "stable",
+      "contextual": true,
       "ref": "semantics/control.md#match",
       "summary": "`when other do`: the path taken when no other `when` matched."
     },
@@ -350,6 +355,7 @@
       "id": "private",
       "category": "declaration",
       "status": "stable",
+      "contextual": true,
       "ref": "syntax/declarations.md#classes-and-objects",
       "summary": "Visibility of a class member: the class only (the default)."
     },
@@ -371,6 +377,7 @@
       "id": "protected",
       "category": "declaration",
       "status": "stable",
+      "contextual": true,
       "ref": "syntax/declarations.md#classes-and-objects",
       "summary": "Visibility of a class member: the class and its subclasses."
     },
@@ -378,6 +385,7 @@
       "id": "public",
       "category": "declaration",
       "status": "stable",
+      "contextual": true,
       "ref": "syntax/declarations.md#classes-and-objects",
       "summary": "Visibility of a class member: seen everywhere."
     },
@@ -422,6 +430,13 @@
       "status": "stable",
       "ref": "syntax/statements.md#return",
       "summary": "Closes a process, function, method, constructor or destructor."
+    },
+    {
+      "id": "self",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#classes-and-objects",
+      "summary": "Names the current object inside a constructor, a destructor and a method; reserved, it can't name anything else (D-117)."
     },
     {
       "id": "set",

@@ -43,8 +43,13 @@
           "ref": {
             "type": "string"
           },
+          "contextual": {
+            "type": "boolean",
+            "description": "True: a keyword only where the grammar expects it; elsewhere an ordinary name (D-116)."
+          },
           "tutorial": {
-            "type": "string"
+            "type": "string",
+            "description": "Courtesy link to a tutorial section; informative, not part of the definition."
           },
           "summary": {
             "type": "string"

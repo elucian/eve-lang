@@ -196,7 +196,7 @@ const Lexer = struct {
         }
     }
 
-    /// A symbol literal: `'a'`, `'β'`, `'\x41'`, `'\u{3B1}'`; one line, closed by the next `'`.
+    /// A symbol literal: `'a'`, `'β'`, `'\n'`, `U+03B1`; one line, closed by the next `'`.
     fn char(lx: *Lexer, line: u32, column: u32) Error!void {
         lx.pos += 1;
         while (true) {

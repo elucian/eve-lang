@@ -79,13 +79,16 @@ A range is a value, not an array; there is no `[1..10]` (D-022, D-023). It is us
 
 | Operator | List / Array | DataSet | DataMap |
 |---|---|---|---|
-| `+` or `<+` | concatenate / append | union | merge |
-| `+=` `-=` | add at the end / remove by value (every equal element) | add / remove | add pair / remove key |
+| `<+` | concatenate / append (never `+`: with a scalar `+` is arithmetic on every element, D-118) | | |
+| `+` | | union | merge |
+| `+=` `-=` | with a scalar: see below / with a collection: add / remove | add / remove | add pair / remove key |
 | `<+` `+>` | append at the end (`lst <+ x`) / put in front (`x +> lst`); the list stays after `+>` and before `<+` (D-107) | | |
 | `<-` `->` | remove the first / last element | | |
 | `.delete(v)` | remove every element equal to `v` | remove `v` | remove the key `v` |
 | `in` | membership | membership | key membership |
 | `\|\|` `&&` `-` | | union, intersection, difference | |
 | `.count()` | number of elements | | |
+
+**Collection and scalar (D-118).** When the left operand is a List or Array and the right one a scalar (number, boolean, symbol or string), `+ - * / % ^ < > <= >= =~` apply to **every element**: `(1, 2, 3) * 2` is `(2, 4, 6)`, `[1, 2, 3] > 1` is `[False, True, True]`, `("cat", "dog") =~ "/^c/"` is `(True, False)`. The expression returns a new collection of the same kind; the combined assignment `let a += 5;` updates the elements in place, so `(1, 2, 3, 4)` becomes `(6, 7, 8, 9)`: it is a bulk update, not an append (use `<+`) and not a removal (use `.delete(v)`). `==` and `<>` still compare whole collections. Arithmetic never builds strings: `("a", "b") + "x"` is an error, build a new collection or a string with a loop. A collection with a collection keeps its meaning (`<+` appends, `-` on DataSets is the difference). DataSet and DataMap keep `+=` and `-=` as add and remove, because a bulk update could merge elements.
 
 As a statement, `let a <+ b;` appends `b` to `a`; `new a <+ b;` creates a new list `a` that holds `b`, and is an error when `a` exists (Q-019d). As an expression, `a <+ b` returns a new collection *(proposed)*. An arrow never removes by value: `lst.delete(v)` does (Q-031c). The list of methods is in `../library/builtins.md` (pending).

@@ -31,7 +31,7 @@ An aspect declares, directly in its body and in any order (the declarations are 
 ## `apply`
 
 ```ebnf
-apply-stmt  = "apply" , name-path , "(" , [ arguments ] , ")" ;
+apply-stmt  = "apply" , { name , "/" } , name-path , "(" , [ arguments ] , ")" ;
 argument    = [ name , ":" ] , [ "@" ] , expression
             | "*" , expression ;                           (* spread *)
 ```
@@ -119,4 +119,4 @@ Modules, `from … use`, libraries and the library search path (level 3); `paral
 1. The meaning of `level` in a log message (call depth) is proposed, to confirm.
 2. Names `$error.unit` and `$error.trace` are proposed here from D-113 and must be added to `variables.md` when the author confirms them.
 3. The error code of a spread that doesn't fit at run time is not in the register of error codes (D-109): to add.
-4. The search order puts the folder of the call before `asp/`; `processing.html` lists the same order, and D-112 only fixes `asp/` as the default folder.
+4. The search order puts the folder of the call before `asp/`; D-112 only fixes `asp/` as the default folder.

@@ -1,9 +1,0 @@
-# using recover
-driver recover_demo is
-  let a := 0.0;
-  process main is
-    a := 1 / 0;
-  recover
-    print $error.message;
-  return;
-end recover_demo;

@@ -1,0 +1,35 @@
+# collection op scalar: the operator applies to every element (D-118)
+** spec: syntax/expressions.md#operators-on-collections, syntax/statements.md#let
+driver a83_bulk_scalar is
+  process main is
+    new a := (1, 2, 3, 4);
+    let a += 5;                  ** a bulk update of each element, not an append
+    expect a == (6, 7, 8, 9);
+    let a -= 1;
+    expect a == (5, 6, 7, 8);
+    let a *= 2;
+    expect a == (10, 12, 14, 16);
+    let a /= 2;
+    expect a == (5, 6, 7, 8);
+    let a %= 4;
+    expect a == (1, 2, 3, 0);
+    let a ^= 2;
+    expect a == (1, 4, 9, 0);
+
+    ** an expression returns a new collection; the operand does not change
+    new b := [1, 2, 3];
+    new c := b * 10;
+    expect c == [10, 20, 30];
+    expect b == [1, 2, 3];
+    expect (b + 1) == [2, 3, 4];
+    expect (b > 1) == [False, True, True];
+    expect (b <= 2) == [True, True, False];
+
+    ** a regular expression applies to every string of a collection
+    new w := ("cat", "dog", "cow");
+    expect (w =~ "/^c/") == (True, False, True);
+
+    ** a collection with a collection is unchanged: <+ appends
+    expect ((1, 2) <+ 3) == (1, 2, 3);
+  return;
+end a83_bulk_scalar;

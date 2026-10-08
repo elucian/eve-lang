@@ -100,7 +100,7 @@ digit      = "0".."9" ;
 - Names are case-sensitive: `Point` and `point` are two names.
 - `-` is not part of a name: `a-b` is `a - b`.
 - `_` alone is the **void variable**: it accepts any value and discards it (it is always `null`).
-- A keyword (see `keywords.json`) must not be used as an identifier.
+- A reserved keyword (see `keywords.json`) must not be used as an identifier. A **contextual keyword** (`contextual: true`, D-116) is a keyword only at the places where the grammar expects it and is an ordinary name everywhere else: `new one := 1;` is valid, `match x one` is the option. Prefer a contextual keyword to a reserved one whenever the grammar allows it.
 - By convention a type, a class and an ordinal value start with an upper-case letter; the language gives one meaning to this convention: the elements of an Ordinal whose names start with an upper-case letter are known in the scope where the Ordinal is visible, without a qualifier. `Null` (the type) and `null` (its value) are different names (D-080).
 
 Valid: `x`, `a1`, `thisIsOK`, `this_is_ok`, `_`. Invalid: `1st`, `not_valid_`, `two__underscores`, `file-name`.
@@ -176,12 +176,11 @@ A string literal is UTF-8 text between double quotes. It ends on the same line u
 | `\{` `\}` | a literal brace: an unescaped brace in a string always belongs to a placeholder (D-102) |
 | `\n` `\r` `\t` | line feed, carriage return, tab |
 | `\0` | the NUL character |
-| `\xHH` | code point 00 to FF, two hexadecimal digits |
-| `\u{H…}` | Unicode code point, 1 to 6 hexadecimal digits: `\u{3B2}` is β |
+| `{U+H…}` | Unicode code point, 1 to 6 hexadecimal digits: `{U+03B2}` is β (D-119) |
 | `&name;` `&#N;` `&#xH;` | HTML character reference: `&alpha;` is α |
 | `\&` | the ampersand |
 
-Not all Unicode characters have an HTML name, so `\u{…}` and `&name;` are both valid. `&name;`, `&#N;` and `&#xH;` are all valid (Q-014). The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
+Not all Unicode characters have an HTML name, so `{U+H…}` and `&name;` are both valid. `&name;`, `&#N;` and `&#xH;` are all valid (Q-014). The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
 
 **Interpolation (D-102).** A string inserts values with placeholders: a name in braces, with an optional format after the format operator `%`:
 
@@ -198,7 +197,7 @@ bound         = [ "-" ] , integer | name | '\"' , { char } , '\"' ;   (* a quote
 | `{name % format}` | the value with a format; the codes allowed depend on the type of the value |
 | `\{` `\}` | a literal brace |
 
-In a string literal every unescaped `{` opens a placeholder; a `{` that does not open a valid placeholder (`"{1, 2}"`, `"{}"`, `"{a + b}"`) and a lone `}` are lexical errors, so a literal brace is always written `\{` or `\}`. A placeholder holds a **name**, never an expression (Q-015, Q-033a): a variable, a constant, a system variable (`{$HOME}`), an attribute path (`{p.x}`, `{self.value}`), or a member selected with brackets: an element (`{a[1]}`, `{a[-1]}`, `{a[i]}`, `{m[key]}`, `{m[\"key\"]}`) or a part by a range (`{a[2..4]}`). An index is an integer, a name, a quoted key or a range; the quotes of a key are escaped with `\"`, like every double quote inside a string. Operators, calls and any other expression are not allowed inside the braces. Inside a placeholder `%` is the format operator and has no other meaning: `{n % i5}`. The `format` has its own rules, defined in `../library/format.md` (pending). `\u{…}` is an escape, not a placeholder. The text literal and the regex literal are raw: they have no placeholders and their braces need no escape. The older forms `\s{…}`, `\n{…}`, `\b{…}`, `\#{…}`, `#s`, `#n`, `#{…}`, the format after `:` and the template operator `?` do not exist; `#` is used only in comments.
+In a string literal every unescaped `{` opens a placeholder; a `{` that does not open a valid placeholder (`"{1, 2}"`, `"{}"`, `"{a + b}"`) and a lone `}` are lexical errors, so a literal brace is always written `\{` or `\}`. A placeholder holds a **name**, never an expression (Q-015, Q-033a): a variable, a constant, a system variable (`{$HOME}`), an attribute path (`{p.x}`, `{self.value}`), or a member selected with brackets: an element (`{a[1]}`, `{a[-1]}`, `{a[i]}`, `{m[key]}`, `{m[\"key\"]}`) or a part by a range (`{a[2..4]}`). An index is an integer, a name, a quoted key or a range; the quotes of a key are escaped with `\"`, like every double quote inside a string. Operators, calls and any other expression are not allowed inside the braces. Inside a placeholder `%` is the format operator and has no other meaning: `{n % i5}`. The `format` has its own rules, defined in `../library/format.md` (pending). `{U+H…}` is the one placeholder that holds a code point instead of a name (D-119); `\xHH` and `\u{…}` do not exist. The text literal and the regex literal are raw: they have no placeholders and their braces need no escape. The older forms `\s{…}`, `\n{…}`, `\b{…}`, `\#{…}`, `#s`, `#n`, `#{…}`, the format after `:` and the template operator `?` do not exist; `#` is used only in comments.
 
 **Text literal.** `"""…"""` is a text literal on several lines. It is raw: there are no escape sequences and no interpolation; double quotes need no escape. The closing `"""` is alone on its line, and the number of spaces before it is the indentation that the compiler removes from every line of the text. The line break after the opening quotes and the one before the closing quotes are not part of the text (Q-014). A text literal has the type `Text`. The tag forms `<text>`, `<xml>`, `<html>`, `<data>` and `<code>` also create a `Text` literal, with the same rule for the first and the last line break *(their syntax is not specified yet)*.
 
