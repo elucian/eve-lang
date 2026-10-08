@@ -1,0 +1,16 @@
+# variation 1 of c02: a string path and the members without prefix (D-133)
+** spec: semantics/modules.md#import
+driver c02_test1 is
+  from "lib" use (greeting(*));
+
+  process main is
+    print hello("Eve");
+  return;
+end c02_test1;
+/*@expect
+{
+  "stdout": [
+    "Hello, Eve!"
+  ]
+}
+*/

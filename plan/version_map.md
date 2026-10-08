@@ -8,9 +8,9 @@ One scale for all the versions of Eve. Each version completes one or two **level
 |---|---|---|---|---|
 | 1 | the language of a single script (no user subprograms and no classes, D-122) | 0.1 | [decision_level1.md](decision_level1.md) | `test/level1` (a) |
 | 2 | a project: functions, procedures, lambdas and closures (D-122), and aspects | 0.1 | [decision_level2.md](decision_level2.md) | `test/level2` (b) |
-| 3 | modules and imports, local libraries, then classes and methods (D-122); data language: types, records, generators, files, formats, HTTP client | 0.2 | [decision_level3.md](decision_level3.md) | `test/level3` (c) |
+| 3 | modules and imports, local libraries, then classes and methods (D-122) | 0.2 | [decision_level3.md](decision_level3.md) | `test/level3` (c) |
 | 4 | parallel processing and streams | 0.3 | [decision_level4.md](decision_level4.md) | `test/level4` (d) |
-| 5 | database layer and the Eve database | 0.4 | [decision_level5.md](decision_level5.md) | `test/level5` (e) |
+| 5 | data language (types, records, generators, files, formats, HTTP client), database layer and the Eve database (D-125) | 0.4 | [decision_level5.md](decision_level5.md) | `test/level5` (e) |
 | 6 | the Eve machine and the server | 0.5 | [decision_level6.md](decision_level6.md) | `test/level6` (f) |
 | 7 | web: HTML and WebAssembly | 0.6 | [decision_level7.md](decision_level7.md) | `test/level7` (g) |
 
@@ -32,9 +32,9 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version | Levels | Name | Goal | Status |
 |---|---|---|---|---|
 | 0.1 | 1, 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply` | in progress |
-| 0.2 | 3 | Data language | Real data with the right types: Decimal, time, records, optional values; files, JSON, CSV, HTTP client; generators on a bytecode VM | planned |
+| 0.2 | 3 | Modules and classes | Programs in several files: modules, imports, local libraries; classes and methods | planned |
 | 0.3 | 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory | planned |
-| 0.4 | 5 | Database | The ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands | planned |
+| 0.4 | 5 | Data and database | The ETL core: real data with the right types (Decimal, time, records), files, JSON, CSV, HTTP client, generators on a bytecode VM; connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands | planned |
 | 0.5 | 6 | Server | The Eve machine: setup, remote control, `serve`, services and routes, the API for AI | planned |
 | 0.6 | 7 | Web | Safe HTML and Eve in the browser | planned |
 | 0.9 | 1–7 | Release candidate | Package manager, more database drivers, web kit, hardening | planned |
@@ -56,22 +56,19 @@ Levels: 1, 2. Goal: Run a project: one driver and its aspects, error recovery ac
 
 Exit: level 1 and level 2 pass; `spec/` has the grammar and the semantics of every tested feature (no test relies on an unanswered `Q-nnn`); binaries for Windows and Linux.
 
-## 0.2 Data language
+## 0.2 Modules and classes
 
-Levels: 3. Goal: Modules and imports; real data with the right types: Decimal, time, records, optional values; files, JSON, CSV, HTTP client; generators on a bytecode VM.
+Levels: 3. Goal: Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125).
 
 | Area | Features |
 |---|---|
 | Spec | F-SPEC-04 |
-| Language | F-LNG-11, F-LNG-12, F-LNG-13, F-LNG-14, F-LNG-15, F-LNG-16 |
+| Language | F-LNG-11, F-LNG-15, F-LNG-16 |
 | Structure | F-STR-01, F-STR-03 (modules, imports, extension methods; moved from 0.1) |
-| VM | F-VM-04, F-VM-06 |
 | Tools | F-TLS-02, F-TLS-03 |
-| Library | F-LIB-04, F-LIB-05, F-LIB-06, F-LIB-07, F-LIB-08, F-LIB-09 |
-| Network | F-NET-01 |
-| Docs | F-DOC-02, F-DOC-05 |
+| Docs | F-DOC-05 |
 
-Exit: level 1 to 3 pass (modules c01–c09 included) on the bytecode VM; JSON and CSV round-trip tests; an HTTP call against a local test server.
+Exit: levels 1 to 3 pass (modules c01–c09 and classes c10–c17 included).
 
 ## 0.3 Parallel
 
@@ -96,7 +93,9 @@ Levels: 5. Goal: The ETL core: connections, query streams, bulk loads, transacti
 |---|---|
 | Data | F-DAT-01, F-DAT-02 (PostgreSQL, SQLite), F-DAT-03, F-DAT-04, F-DAT-05, F-DAT-06, F-DAT-08, F-DAT-09, F-DAT-10, F-DAT-11 |
 
-Exit: level 5 passes against the Eve database (SQLite) and a PostgreSQL server; a killed load restarts from its checkpoint; `db backup` and `db restore` round-trip.
+The data language moved here from 0.2 (D-125): F-LNG-12, F-LNG-13, F-LNG-14, F-VM-04, F-VM-06, F-LIB-04 to F-LIB-09, F-NET-01, F-DOC-02.
+
+Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; level 5 passes against the Eve database (SQLite) and a PostgreSQL server; a killed load restarts from its checkpoint; `db backup` and `db restore` round-trip.
 
 ## 0.5 Server
 

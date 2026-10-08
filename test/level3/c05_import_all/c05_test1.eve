@@ -1,0 +1,17 @@
+# variation 1 of c05: the two modules one by one, each with its prefix (D-133)
+** spec: semantics/modules.md#import
+driver c05_test1 is
+  from lib use (alpha, beta);
+
+  process main is
+    expect alpha.one() + beta.two() == 3;
+    print alpha.one() + beta.two() * 10;
+  return;
+end c05_test1;
+/*@expect
+{
+  "stdout": [
+    "21"
+  ]
+}
+*/

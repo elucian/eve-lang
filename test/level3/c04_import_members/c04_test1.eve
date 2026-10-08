@@ -1,0 +1,18 @@
+# variation 1 of c04: the same module with its name as prefix (D-133)
+** spec: semantics/modules.md#import
+driver c04_test1 is
+  from lib use (text);
+
+  process main is
+    print text.shout("a");
+    print text.shout("b");
+  return;
+end c04_test1;
+/*@expect
+{
+  "stdout": [
+    "a!",
+    "b!"
+  ]
+}
+*/

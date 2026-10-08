@@ -1,0 +1,18 @@
+# variation 1 of b05: spread of a whole list and of a whole map (D-133)
+** spec: syntax/statements.md#apply
+driver b05_test1 is
+  process main is
+    new xs := (1, 2, 3);
+    apply add3(*xs);
+    new m := {'a': 4, 'b': 5, 'c': 6};
+    apply add3(*m);
+  return;
+end b05_test1;
+/*@expect
+{
+  "stdout": [
+    "6",
+    "15"
+  ]
+}
+*/

@@ -1,0 +1,11 @@
+# base: a module without imports
+module base is
+  export (ONE);
+
+  set ONE = 1 :Integer;
+
+  initialize
+    print "base: loaded";
+  finalize
+    print "base: done";
+end base;

@@ -1,0 +1,20 @@
+# variation 1 of b01: the same aspect, called in a loop with a computed argument (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b01_test1 is
+  process main is
+    for who in ("Ann", "Bob", "Cy") do
+      apply greet(who);
+    done;
+    print "done";
+  return;
+end b01_test1;
+/*@expect
+{
+  "stdout": [
+    "Hello, Ann!",
+    "Hello, Bob!",
+    "Hello, Cy!",
+    "done"
+  ]
+}
+*/

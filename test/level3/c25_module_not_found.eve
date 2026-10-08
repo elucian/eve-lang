@@ -1,0 +1,19 @@
+# a module that is not found is the error $err_module (code 30), raised at the import, before the process starts (D-131)
+** spec: semantics/modules.md#import
+driver c25_module_not_found is
+  from lib use (nowhere);
+
+  process main is
+    print "never";
+  return;
+end c25_module_not_found;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [],
+  "stderr": [
+    "Module nowhere not found in lib"
+  ],
+  "note": "$err_module is 30; the exit code of an error nobody recovers is 4"
+}
+*/

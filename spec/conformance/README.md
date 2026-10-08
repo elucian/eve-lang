@@ -78,6 +78,6 @@ Since D-122 (2026-10-08) the subprograms belong to level 2 and the classes to le
 | 2 | Lambdas and closures (D-109) | b18, b19 |
 | 3 | Classes, methods, inheritance, visibility, extension of a class; only methods in a class, `@self` only in a method (D-123) | c10 to c17 |
 
-Not covered yet, waiting for decisions: formats of interpolation (D-060, a11 is a draft), `Date`, `Time` and the operator `as` are outside level 1 (D-108; level 3, data language).
+Not covered yet, waiting for decisions: formats of interpolation (D-060, a11 is a draft), `Date`, `Time` and the operator `as` are outside level 1 (D-108; level 5, data language).
 
 Updated by D-098 (2026-10-06, static edits, the VM was not run): the tests follow D-096 and D-097. Placeholders `\n{name % fmt}` hold a name only (a11 and every test that prints a number); a failed `assert` stops the process with code 3 (a52); `m.delete(v)` replaces the removal by value and `let m -> last;` captures (a17); `let` creates a missing name (a43, now `a43_let_creates_name`); an attribute added from outside the class is a compile error (a22, new c14); ordinals start at 1 (a16); `-2 ^ 2` is `4` (a07); a regex literal keeps its backslashes (a28); `sep` (a05); level 2 is in the current syntax and its expectations are `/*@expect*/` blocks.

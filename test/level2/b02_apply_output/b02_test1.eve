@@ -1,0 +1,19 @@
+# variation 1 of b02: results used as inputs, in a loop (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b02_test1 is
+  process main is
+    new acc := 0;
+    for i in (1..4) do
+      apply sum(acc, i, @acc);
+    done;
+    expect acc == 10;
+    print acc;
+  return;
+end b02_test1;
+/*@expect
+{
+  "stdout": [
+    "10"
+  ]
+}
+*/

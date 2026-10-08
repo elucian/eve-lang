@@ -1,0 +1,19 @@
+# variation 1 of b11: the state of the aspect is new in every call (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b11_test1 is
+  process main is
+    new got :Integer;
+    apply adder(10, 20, 30, @got);
+    print got;
+    apply adder(1, 1, 1, @got);
+    print got;
+  return;
+end b11_test1;
+/*@expect
+{
+  "stdout": [
+    "60",
+    "3"
+  ]
+}
+*/

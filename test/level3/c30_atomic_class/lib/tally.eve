@@ -1,0 +1,16 @@
+# tally: a class derived from Atomic(:Integer) is an atomic type; a variable of that class is atomic (D-132)
+safe module tally is
+  export (bump, value!);
+
+  class SageInteger <: Atomic(:Integer);
+
+  new seen = 0 :SageInteger;
+
+  procedure bump() is
+    let seen += 1;
+  return;
+
+  function value!() => (@result: Integer) is
+    let result := seen;
+  return;
+end tally;

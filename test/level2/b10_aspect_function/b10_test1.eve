@@ -1,0 +1,18 @@
+# variation 1 of b10: the function of the aspect with its default and by name (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b10_test1 is
+  process main is
+    apply scale(0);
+    apply scale(n: 7);
+    apply scale(2, factor: 10);
+  return;
+end b10_test1;
+/*@expect
+{
+  "stdout": [
+    "0",
+    "14",
+    "20"
+  ]
+}
+*/

@@ -1,0 +1,17 @@
+# variation 1 of c18: the right way: the two modules by name (D-133)
+** spec: semantics/modules.md#import
+driver c18_test1 is
+  from lib use (one, two);
+
+  process main is
+    expect one.value() + two.value() == 3;
+    print "values: {one.value()} and {two.value()}";
+  return;
+end c18_test1;
+/*@expect
+{
+  "stdout": [
+    "values: 1 and 2"
+  ]
+}
+*/

@@ -1,0 +1,20 @@
+# Atomic(:T) is a library class: a variable is declared :Atomic(:Integer) and used like an Integer (D-132)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver c31_atomic_variable is
+  process main is
+    new safe_integer = 0 :Atomic(:Integer);
+    let safe_integer += 5;
+    new ready = False :Atomic(:Logic);
+    new empty :Atomic(:Integer);
+    expect safe_integer == 5;
+    expect empty == 0;
+    print "safe_integer = {safe_integer}, ready = {ready}";
+  return;
+end c31_atomic_variable;
+/*@expect
+{
+  "stdout": [
+    "safe_integer = 5, ready = False"
+  ]
+}
+*/

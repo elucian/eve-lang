@@ -8,7 +8,7 @@ A script is a file. Its first line decides its kind (lexical.md, File header):
 
 - `#!…` is a **free script**: sequential statements, no `driver`, no `process`, no `return`, no subprograms, no jobs. It ends at the end of the file. A free script has one scope (D-014, D-091).
 - A **driver** is `driver name is` … `end name;`. It can be run. A driver has one process, `main`, the entry point (D-037).
-- An **aspect** is `exclusive aspect name is` or `concurrent aspect name is` … `end name;` (D-090). It has one process, `main`, and no public member; a driver runs it with `apply` (level 2, `../semantics/aspects.md`). A **module** is a script of level 3; it uses the same header and closer.
+- An **aspect** is `[exclusive] aspect name is` or `concurrent aspect name is` … `end name;` (D-090); without a kind word it is exclusive (D-130). It has one process, `main`, and no public member; a driver runs it with `apply` (level 2, `../semantics/aspects.md`). A **module** is a script of level 3; it uses the same header and closer.
 
 A driver, aspect or module has **one scope** (D-041). The regions `import`, `alias`, `constant`, `global` and `globals` do not exist: everything is declared directly, in any order, indented by 2 spaces. `end name;` repeats the name of the header and is at column 1.
 
@@ -114,4 +114,4 @@ end Point;
 
 ## Imports and modules (level 3)
 
-`from lib use (a, b);` imports names; `export (a, b);` lists the public members of a module (D-041, D-085). See `decision_level3.md` (moved from level 2, D-112).
+`from lib use (a, b);` imports names; `export (a, b);` lists the public members of a module (D-041, D-085). A module holds declarations and the regions import, export, initialize, recover and finalize; a free statement is an error in a module, and a free script can not export or be imported (D-126). The whole chapter (members, life cycle, import forms, search path, libraries) is in [../semantics/modules.md](../semantics/modules.md); the grammar is in [grammar.md](grammar.md#modules-and-imports-level-3).

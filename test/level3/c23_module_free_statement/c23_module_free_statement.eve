@@ -1,0 +1,15 @@
+# a module holds declarations and regions only: a free statement is a compile error (D-126)
+** spec: semantics/modules.md#what-a-module-may-contain
+driver c23_module_free_statement is
+  from lib use (loose);
+
+  process main is
+    print "never";
+  return;
+end c23_module_free_statement;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

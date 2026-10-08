@@ -1,0 +1,16 @@
+# a concurrent aspect calls a safe module (D-129)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver d02_concurrent_safe_call is
+  process main is
+    new r :Integer;
+    apply worker(5, @r);
+    print "result: {r}";
+  return;
+end d02_concurrent_safe_call;
+/*@expect
+{
+  "stdout": [
+    "result: 10"
+  ]
+}
+*/

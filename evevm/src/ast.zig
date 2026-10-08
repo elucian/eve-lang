@@ -139,12 +139,25 @@ pub const Tag = enum {
     member,
     /// `driver name is ... end name;`: kids = the declarations.
     driver,
-    /// `exclusive aspect name is ... end name;`: kids = the declarations, with one `process main` (D-066, D-090).
+    /// `[exclusive|concurrent] aspect name is ... end name;`: kids = the declarations, with one `process main` (D-066, D-090);
+    /// `public` is true for `concurrent`.
     aspect,
     /// `apply folder/name(args);`: text = the aspect path as written; kids = the arguments, as in a `call`.
     apply_stmt,
     /// A script without a driver: kids = the statements.
     script,
+    /// `[safe|unsafe] module name is ... end name;` (D-129): kids = the declarations, the imports, the exports and
+    /// up to three `region` nodes; `public` is true for `safe`.
+    module,
+    /// `from path use (items);`: text = the path as written (`lib/db`); kids = `import_item` nodes.
+    import_decl,
+    /// One item of an import: text = the module name, or `*` for every module of the folder; kids = [alias name or none];
+    /// `public` is true for `m(*)`, the members without a prefix.
+    import_item,
+    /// `export (a, b!);`: kids = `name` nodes, text = the member name (with its `!`).
+    export_decl,
+    /// `initialize`, `recover` or `finalize` of a module: text = the word; kids = [block].
+    region,
 };
 
 // Zig tip: `std.StringHashMapUnmanaged(V)` is a hash map with text keys that does not remember its
@@ -152,6 +165,13 @@ pub const Tag = enum {
 // (project.zig) and kept in one of these maps: the key is the path as written in the `apply`.
 /// The parsed aspects of a project, by the path written in `apply`.
 pub const Aspects = std.StringHashMapUnmanaged(*const Node);
+
+// Zig tip: a second map, with the same shape, for the modules: the key is the path as written in
+// the import, a `|` and the module name (`lib|counter`), so the interpreter finds the tree that the
+// link step read without searching the disk again. The key `lib|*` holds a `block` node whose kids
+// are the modules of the whole folder.
+/// The parsed modules of a project, by `path|name`.
+pub const Modules = std.StringHashMapUnmanaged(*const Node);
 
 // Zig tip: a `struct` groups named fields (and functions); `pub` makes a name visible to other
 // files; a field with `= value` has a default, so `.{ ... }` need not give it.

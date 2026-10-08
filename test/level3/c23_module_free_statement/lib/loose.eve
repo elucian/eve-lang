@@ -1,0 +1,10 @@
+# loose: a module with a free statement
+module loose is
+  export (one);
+
+  print "free statement";                ** not allowed: only declarations and regions
+
+  function one() => (@result: Integer) is
+    let result := 1;
+  return;
+end loose;

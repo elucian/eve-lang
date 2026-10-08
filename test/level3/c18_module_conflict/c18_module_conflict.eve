@@ -1,0 +1,15 @@
+# use (m(*)) merges the names: two modules that export the same name are a compile error (D-112 a)
+** spec: semantics/modules.md#import
+driver c18_module_conflict is
+  from lib use (one(*), two(*));      ** compile error: 'value' comes from two modules
+
+  process main is
+    print "never";
+  return;
+end c18_module_conflict;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

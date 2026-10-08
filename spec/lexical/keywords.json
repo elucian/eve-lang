@@ -158,7 +158,23 @@
       "status": "stable",
       "contextual": true,
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Marks an aspect that is not thread safe: `exclusive aspect name is` (level 2, D-090)."
+      "summary": "Marks an aspect that is not thread safe: `exclusive aspect name is`; the default of an aspect (level 2, D-090, D-130)."
+    },
+    {
+      "id": "safe",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/modules.md#safe-and-unsafe-modules",
+      "summary": "Marks a module that is thread safe: `safe module name is`; every variable is atomic and it calls only safe members (level 3, D-129)."
+    },
+    {
+      "id": "unsafe",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/modules.md#safe-and-unsafe-modules",
+      "summary": "Marks a module that is not thread safe: `unsafe module name is`; the default of a module (level 3, D-129)."
     },
     {
       "id": "exit",
@@ -179,7 +195,7 @@
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#imports-and-modules-level-3",
-      "summary": "Lists the members a module makes public (level 2)."
+      "summary": "Lists the members a module makes public (level 3)."
     },
     {
       "id": "finalize",
@@ -200,7 +216,7 @@
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#imports-and-modules-level-3",
-      "summary": "Starts an import: `from lib use (a, b);` (level 2)."
+      "summary": "Starts an import: `from lib use (a, b);` (level 3)."
     },
     {
       "id": "function",
@@ -235,7 +251,7 @@
       "category": "region",
       "status": "stable",
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Initialization region of a module (level 2)."
+      "summary": "Initialization region of a module (level 3)."
     },
     {
       "id": "is",
@@ -284,7 +300,7 @@
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Header of a library script (level 2); `end name;` closes it."
+      "summary": "Header of a library script (level 3); `end name;` closes it."
     },
     {
       "id": "new",
@@ -485,7 +501,7 @@
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#imports-and-modules-level-3",
-      "summary": "Lists the imported names in an import (level 2)."
+      "summary": "Lists the imported names in an import (level 3)."
     },
     {
       "id": "wait",

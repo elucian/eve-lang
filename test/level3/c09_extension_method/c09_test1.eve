@@ -1,0 +1,24 @@
+# variation 1 of c09: another extension of the imported class (D-133)
+** spec: semantics/modules.md#extension-methods
+driver c09_test1 is
+  from lib use (geometry(*));
+
+  method sum(@self: Point) => (@result: Integer) is
+    let result := self.x + self.y;
+  return;
+
+  process main is
+    new p := Point(4, 5);
+    new q := Point();
+    expect p.sum() == 9;
+    expect q.sum() == 0;
+    print "sums: {p.sum()} and {q.sum()}";
+  return;
+end c09_test1;
+/*@expect
+{
+  "stdout": [
+    "sums: 9 and 0"
+  ]
+}
+*/

@@ -1,0 +1,15 @@
+# export lists declared members only: an undeclared name is a compile error (proposed)
+** spec: semantics/modules.md#members
+driver c20_export_undeclared is
+  from lib use (ghost);
+
+  process main is
+    print "never";
+  return;
+end c20_export_undeclared;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

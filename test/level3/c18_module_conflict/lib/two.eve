@@ -1,0 +1,8 @@
+# two: exports a function with the same name
+module two is
+  export (value);
+
+  function value() => (@result: Integer) is
+    let result := 2;
+  return;
+end two;

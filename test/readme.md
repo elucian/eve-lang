@@ -57,7 +57,7 @@ Tests a04 to a54 were written from the specification and the tutorial, one featu
 
 This level is more advanced. It tests a project of a driver and its aspects (modules moved to level 3, `test/level3`, c01 to c09). Each driver is a series of related tests. Driver has convention: "b01_feature.eve" and it can have associate a folder that contains aspects of the test. You can run each driver separate. Aspects are using same convention as Level 1.
 
-At this level **a test is a folder only when it needs a project** (D-073, D-124): `test/level2/b01_apply_aspect/` is a whole Eve project. A test of a single script, with no aspect, library or data file, is a plain file in the folder of the level: `test/level2/b30_function.eve`. It holds the driver with the same name, `b01_apply_aspect.eve`, with its expectations in a `/*@expect*/` block (the `expect.json` of each folder was moved there by D-098), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. The name of a test, file or folder, is `code_name`, and the driver inside has the same name.
+At this level **a test is a folder only when it needs a project** (D-073, D-124): `test/level2/b01_apply_aspect/` is a whole Eve project. A test of a single script, with no aspect, library or data file, is a plain file in the folder of the level: `test/level2/b30_function.eve`. It holds the driver with the same name, `b01_apply_aspect.eve`, with its expectations in a `/*@expect*/` block (the `expect.json` of each folder was moved there by D-098), and any folders the project needs: `asp/` for aspects, `lib/` for modules, `web/` for the templates, `data/` for input files, `out/` for the files the test writes. The runner starts the driver from the folder, so every path in the project is relative to it, and empties `out/` before each run; the key `"files": {"out/report.txt": [lines]}` checks what the test wrote. `out/` is not versioned. The name of a test, file or folder, is `code_name`, and the driver inside has the same name. **A project can have several drivers** (D-133): next to the driver `b05_apply_spread.eve`, the folder may hold `b05_test1.eve`, `b05_test2.eve`, ... (the code of the folder, `_test`, a number). Each one is a variation, another use case of the same `asp/`, `lib/` and `data/`; it is a test of its own, with its own `/*@expect*/` block and a driver named like the file. `runtest.py b05` runs the driver and its variations, `runtest.py b05_test2` one of them.
 
 ## VM tools
 
@@ -70,7 +70,7 @@ The levels after 2 follow the versions of Eve (`plan/version_map.md`); each has 
 
 | Level | Topic | Version | Prefix |
 |---|---|---|---|
-| 3 | data language: types, records, generators, files, formats, HTTP client | 0.2 | `c01_feature` |
+| 3 | modules and imports, local libraries, classes and methods | 0.2 | `c01_feature` |
 | 4 | parallel processing and streams | 0.3 | `d01_feature` |
 | 5 | database layer and the Eve database | 0.4 | `e01_feature` |
 | 6 | the Eve machine and the server: a client project and a server project | 0.5 | `f01_feature` |

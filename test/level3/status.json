@@ -1,101 +1,201 @@
 {
  "tests": {
   "c01_import_module": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 41,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "Import a module with an unquoted path; members are reached as module.member (D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c01_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791487704,
+   "title": "variation 1 of c01: the same module, another use case: only the constant, no call (D-133)",
+   "reason": ""
+  },
+  "c01_test2": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 6,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791487704,
+   "title": "variation 2 of c01: the same module under an alias, called in a loop (D-133)",
+   "reason": ""
   },
   "c02_import_string_path": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "Import with a path written as a string (D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c02_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c02: a string path and the members without prefix (D-133)",
+   "reason": ""
   },
   "c03_import_alias": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "use (m as x): members are reached through the alias (D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c03_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c03: the same module without a prefix (D-133)",
+   "reason": ""
   },
   "c04_import_members": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "use (m(*)): the exported members of m are used without prefix (D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c04_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c04: the same module with its name as prefix (D-133)",
+   "reason": ""
   },
   "c05_import_all": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "use (*): every module of the folder, names merged into the scope (D-072)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c05_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c05: the two modules one by one, each with its prefix (D-133)",
+   "reason": ""
   },
   "c06_module_lifecycle": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "initialize runs at the import, finalize after the process of the driver (D-068)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c06_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c06: a module that is imported and never called (D-133)",
+   "reason": ""
   },
   "c07_module_singleton": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383410,
    "title": "a module is loaded once: the driver and an aspect share the same copy (D-068)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c07_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c07: the aspect applied twice shares the same module (D-133)",
+   "reason": ""
   },
   "c08_module_private": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 1,
-   "last": "2026-10-08 13:30",
-   "mtime": 1791383423,
+   "status": "PASS",
+   "failures": 25,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791485479,
    "title": "a member that a module does not export can't be used outside it (D-068, D-085, Q-022 b)",
-   "reason": "stdout differs"
+   "reason": ""
+  },
+  "c08_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c08: the exported members only (D-133)",
+   "reason": ""
   },
   "c09_extension_method": {
-   "status": "FAIL",
-   "failures": 17,
-   "runs": 17,
-   "checks": 2,
-   "last": "2026-10-08 13:30",
+   "status": "PASS",
+   "failures": 26,
+   "runs": 40,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
    "mtime": 1791383411,
    "title": "an extension method: a method with @self of a class, declared outside the class (D-072, D-085)",
-   "reason": "exit code 65, expected 0; stdout differs"
+   "reason": ""
+  },
+  "c09_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c09: another extension of the imported class (D-133)",
+   "reason": ""
   },
   "c10_class": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 30,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791479846,
    "title": "class with a constructor, methods, visibility, reference and clone (D-076, D-084, D-085)",
    "reason": ""
@@ -103,9 +203,9 @@
   "c11_extension_method_local": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 30,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791479847,
    "title": "an extension method: declared outside the class, first parameter @self with the class type (D-086)",
    "reason": ""
@@ -113,9 +213,9 @@
   "c12_inheritance": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 30,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791479847,
    "title": "a subclass builds its object through the constructor of its superclass (D-084)",
    "reason": ""
@@ -123,9 +223,9 @@
   "c13_visibility": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 30,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791479847,
    "title": "a private member is seen only inside its class (D-085)",
    "reason": ""
@@ -133,9 +233,9 @@
   "c14_attribute_outside": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 30,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791479847,
    "title": "code outside a class can't add an attribute to an object (Q-019h, Q-031k, D-096)",
    "reason": ""
@@ -143,31 +243,231 @@
   "c15_procedure_in_class": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 30,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791480199,
    "title": "a class hosts only methods: a procedure in a class body is a compile error (D-103, D-123)",
    "reason": ""
   },
   "c16_function_self": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 5,
+   "failures": 2,
+   "runs": 28,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791480199,
    "title": "a function or a procedure can't be bound to a class with @self: only a method can (D-123)",
    "reason": ""
   },
   "c17_function_in_class": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 5,
+   "failures": 2,
+   "runs": 28,
    "checks": 0,
-   "last": "2026-10-08 13:30",
+   "last": "2026-10-08 15:35",
    "mtime": 1791480199,
    "title": "a class hosts only methods: a function in a class body is a compile error (D-123)",
+   "reason": ""
+  },
+  "c18_module_conflict": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 21,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791481468,
+   "title": "use (m(*)) merges the names: two modules that export the same name are a compile error (D-112 a)",
+   "reason": ""
+  },
+  "c18_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c18: the right way: the two modules by name (D-133)",
+   "reason": ""
+  },
+  "c19_export_variable": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 21,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791481468,
+   "title": "a module has no public variables: exporting one is a compile error (D-068)",
+   "reason": ""
+  },
+  "c20_export_undeclared": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 21,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791481469,
+   "title": "export lists declared members only: an undeclared name is a compile error (proposed)",
+   "reason": ""
+  },
+  "c21_module_instance": {
+   "status": "PASS",
+   "failures": 1,
+   "runs": 21,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791481469,
+   "title": "a module is not a class: it has no instances (D-068)",
+   "reason": ""
+  },
+  "c22_module_init_order": {
+   "status": "PASS",
+   "failures": 7,
+   "runs": 21,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791481469,
+   "title": "dependencies are initialized first, and finalized last: the reverse order of the initialization (D-068)",
+   "reason": ""
+  },
+  "c22_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c22: only the module with no import (D-133)",
+   "reason": ""
+  },
+  "c22_test2": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 2 of c22: both modules, the dependent one first in the list (D-133)",
+   "reason": ""
+  },
+  "c23_module_free_statement": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 19,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791483707,
+   "title": "a module holds declarations and regions only: a free statement is a compile error (D-126)",
+   "reason": ""
+  },
+  "c24_import_free_script": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 19,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791483707,
+   "title": "a free script can't export anything and can't be imported (D-126)",
+   "reason": ""
+  },
+  "c25_module_not_found": {
+   "status": "PASS",
+   "failures": 6,
+   "runs": 19,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791485479,
+   "title": "a module that is not found is the error $err_module (code 30), raised at the import, before the process starts (D-131)",
+   "reason": ""
+  },
+  "c26_safe_module_variable": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 18,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791484783,
+   "title": "a safe module is rejected when it has a variable that is not atomic (D-129)",
+   "reason": ""
+  },
+  "c27_safe_module_unsafe_call": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 18,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791484783,
+   "title": "a safe module that calls an unsafe module is rejected (D-129)",
+   "reason": ""
+  },
+  "c28_safe_module": {
+   "status": "PASS",
+   "failures": 4,
+   "runs": 18,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791484784,
+   "title": "a safe module is accepted: no variable, no unsafe call (D-129)",
+   "reason": ""
+  },
+  "c28_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c28: a safe module under an alias (D-133)",
+   "reason": ""
+  },
+  "c29_safe_module_atomic": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791487286,
+   "title": "a safe module is accepted when every variable is Atomic(:T) (D-129, D-132)",
+   "reason": ""
+  },
+  "c29_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c29: the atomic counter, many times (D-133)",
+   "reason": ""
+  },
+  "c30_atomic_class": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791487286,
+   "title": "class Name <: Atomic(:T) declares an atomic type (D-132)",
+   "reason": ""
+  },
+  "c30_test1": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791488057,
+   "title": "variation 1 of c30: a type derived from Atomic, used ten times (D-133)",
+   "reason": ""
+  },
+  "c31_atomic_variable": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-08 15:35",
+   "mtime": 1791487286,
+   "title": "Atomic(:T) is a library class: a variable is declared :Atomic(:Integer) and used like an Integer (D-132)",
    "reason": ""
   }
  }

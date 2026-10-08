@@ -36,9 +36,9 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 - [x] **F-LNG-09 Functions and methods**: pure functions, `!` functions, methods, `@` parameters, defaults, varargs, named arguments, lambdas, closures (D-025 to D-029, D-048, D-070). · v0.1
 - [x] **F-LNG-10 Classes**: attributes, constructors, `new`, methods with `@self` (D-036). · v0.1
 - [ ] **F-LNG-11 Traits, abstract classes, generics**: `trait`, partial methods, `class Name(:T)`, library traits `Iterable`, `Comparable`, `Printable` (D-039, proposed). · v0.2
-- [ ] **F-LNG-12 Generators**: methods with `yield`, `Generator(:T)`, use in `for` and builders (D-067). · v0.2
-- [ ] **F-LNG-13 Data types for ETL**: Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid (review `RTY-R01`; needs a decision). · v0.2
-- [ ] **F-LNG-14 Record types and optional values**: typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`; needs a decision). · v0.2
+- [ ] **F-LNG-12 Generators**: methods with `yield`, `Generator(:T)`, use in `for` and builders (D-067). · v0.4
+- [ ] **F-LNG-13 Data types for ETL**: Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid (review `RTY-R01`; needs a decision). · v0.4
+- [ ] **F-LNG-14 Record types and optional values**: typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`; needs a decision). · v0.4
 - [ ] **F-LNG-15 Typed exceptions**: error classes with fields, `recover` by type, exit-code mapping (review `RST-R01`; `exception.eve` draft exists). · v0.2
 - [ ] **F-LNG-16 Static checks**: name resolution, arity, visibility and type errors before the run (exit 65). · v0.2
 - [ ] **F-LNG-17 Stream type**: `Stream(:T)` shared by generators, files, queries and channels (review `RMT-R02`). · v0.3
@@ -48,7 +48,7 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 - [ ] **F-STR-01 Modules and imports**: `module`, `from … use (…)`, aliases, `(*)`, singletons, `initialize`/`finalize`, private members (D-068, D-072, Q-022; tests c01–c08). · v0.2
 - [ ] **F-STR-02 Aspects (serial)**: `apply`, state per call, `@` outputs, named and spread arguments, errors and `over`/`panic` across `apply`, procedures and functions inside an aspect (D-066, D-072; tests b01–b08). · v0.1
 - [ ] **F-STR-03 Extension methods**: `method _name(@self: Class)` at module level (D-072; test c09). · v0.2
-- [ ] **F-STR-04 Projects and search paths**: project root, `asp/`, `lib/`, `data/`, `out/`, `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`; `asp/` is level 2, `lib/` and the library path are level 3 (D-055, D-073). · v0.1
+- [ ] **F-STR-04 Projects and search paths**: project root, `asp/`, `lib/`, `data/`, `web/` (templates), `out/`, `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`; `asp/` is level 2, `lib/` and the library path are level 3 (D-055, D-073). · v0.1
 - [ ] **F-STR-05 Command-line parameters of a script**: `-p`/`--param` mapped to `main` parameters, `eve script.eve -h` from `** @param` comments (D-055). · v0.1
 - [ ] **F-STR-06 Configuration files**: `.cfg` with `$key = value`, loaded with `-s` (D-031). · v0.1
 - [ ] **F-STR-07 System variables**: the 0.1 register (`$error`, environment, `$EVE_*`, `$err_`/`$wrn_` constants) (D-071). *Partial:* `$error` works. · v0.1
@@ -67,9 +67,9 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 - [x] **F-VM-01 Lexer and parser**: source to syntax tree, errors with file, line and column (`lexer.zig`, `parser.zig`). · v0.1
 - [x] **F-VM-02 Tree-walking interpreter**: runs all of level 1 (`interp.zig`). · v0.1
 - [ ] **F-VM-03 Library loader and `external` bindings**: load `.eve` library modules and bind `external` declarations to Zig (D-053, D-056). · v0.1
-- [ ] **F-VM-04 Bytecode compiler and VM**: compact bytecode, heap frames (needed by generators and scheduling; review `RVM-R01`). · v0.2
+- [ ] **F-VM-04 Bytecode compiler and VM**: compact bytecode, heap frames (needed by generators and scheduling; review `RVM-R01`). · v0.4
 - [ ] **F-VM-05 Region memory**: arena per aspect call, job and request; long-lived heap for modules and channels (review `RVM-R02`). · v0.3
-- [ ] **F-VM-06 Efficient collections**: hashed and sorted maps, sets, ropes for Text (review `RVM-R04`). · v0.2
+- [ ] **F-VM-06 Efficient collections**: hashed and sorted maps, sets, ropes for Text (review `RVM-R04`). · v0.4
 - [ ] **F-VM-07 Portable bytecode file `.evb`**: versioned, hashed, with debug lines and capabilities (review `RVM-R05`). · v0.6
 - [ ] **F-VM-08 Embedding API**: the VM as a library with a C ABI (review `RVM-R07`). · v0.5
 - [ ] **F-VM-09 WebAssembly build**: the VM compiled to `wasm32` with host imports (review `RVM-R06`). · v0.6
@@ -98,12 +98,12 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 - [ ] **F-LIB-01 Console I/O**: `print`, `write`, `read`, `error`, `warning`, `log_err`, `log_wrn` (D-053, D-057). *Partial:* `print`/`write` in the VM, `io.eve` draft, log files open (b19). · v0.1
 - [ ] **F-LIB-02 Exception module**: `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, code constants (D-054 to D-056). *Partial:* `exception.eve` draft. · v0.1
 - [ ] **F-LIB-03 Strings, math, collections and type conversions**: `split`, `join`, `format`, `parse`, `floor`, `round`, sort, search (S5.1). · v0.1
-- [ ] **F-LIB-04 Files and paths**: `fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). · v0.2
-- [ ] **F-LIB-05 Data formats**: JSON and CSV read/write, decode into records; later XML, Parquet. · v0.2
-- [ ] **F-LIB-06 Time and dates**: `now`, parse, format, zones, durations. · v0.2
-- [ ] **F-LIB-07 Shell commands**: `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`). · v0.2
-- [ ] **F-LIB-08 Secrets**: a `Secret` type and `secret.get` from environment, file or vault (review `RIO-R01`). · v0.2
-- [ ] **F-LIB-09 Compression and archives**: gzip, zip, stream codecs (manifest). · v0.2
+- [ ] **F-LIB-04 Files and paths**: `fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). · v0.4
+- [ ] **F-LIB-05 Data formats**: JSON and CSV read/write, decode into records; later XML, Parquet. · v0.4
+- [ ] **F-LIB-06 Time and dates**: `now`, parse, format, zones, durations. · v0.4
+- [ ] **F-LIB-07 Shell commands**: `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`). · v0.4
+- [ ] **F-LIB-08 Secrets**: a `Secret` type and `secret.get` from environment, file or vault (review `RIO-R01`). · v0.4
+- [ ] **F-LIB-09 Compression and archives**: gzip, zip, stream codecs (manifest). · v0.4
 - [ ] **F-LIB-10 Encryption and hashing**: hashes, HMAC, symmetric encryption (manifest). · v0.5
 - [ ] **F-LIB-11 Logging and observability**: structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`). · v0.3
 
@@ -123,7 +123,7 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 
 ## 9. Network and server (`NET`)
 
-- [ ] **F-NET-01 HTTP client**: requests, headers, JSON bodies, time-outs, TLS (review `RNW-R10`). · v0.2
+- [ ] **F-NET-01 HTTP client**: requests, headers, JSON bodies, time-outs, TLS (review `RNW-R10`). · v0.4
 - [ ] **F-NET-02 HTTP server**: routes, request and response records, static files, one state per request (review `RNW-R02`). · v0.5
 - [ ] **F-NET-03 Eve Wire Protocol (EWP)**: framed binary protocol for Eve-to-Eve calls and data streams, flow control, resumable streams (review `RNW-R04`). · v0.5
 - [ ] **F-NET-04 Remote apply**: run an aspect on another node with a deadline and an idempotency key (review `RNW-R01`). · v0.5
@@ -140,7 +140,7 @@ The list of every large feature of Eve: language, virtual machine, tools, librar
 ## 11. Documentation (`DOC`)
 
 - [ ] **F-DOC-01 Tutorial, language part**: 19 topic pages reviewed and consistent with the decisions (phase 1, T1.10). *Partial:* 5 pages reviewed and answered. · v0.1
-- [ ] **F-DOC-02 Tutorial, data client part**: files, formats, streams, HTTP client, ETL pipelines (review `RTU` phase T1). · v0.2
+- [ ] **F-DOC-02 Tutorial, data client part**: files, formats, streams, HTTP client, ETL pipelines (review `RTU` phase T1). · v0.4
 - [ ] **F-DOC-03 Tutorial, network and web part**: client and server, services, protocol, security, HTML, WebAssembly (review `RTU` phases T2, T3). · v0.5–v0.6
 - [ ] **F-DOC-04 Compiler manual**: implement, usage, generated feature tables, implemented features (phase 7). *Partial:* `manual/usage.md`. · v0.1
 - [ ] **F-DOC-05 Library reference**: generated by `eve --doc` for every standard module. *Partial:* io, exception. · v0.2

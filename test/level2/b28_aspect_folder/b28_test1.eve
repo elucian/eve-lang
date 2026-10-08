@@ -1,0 +1,14 @@
+# variation 1 of b28: only the aspect of the default folder (D-133)
+** spec: semantics/aspects.md#what-an-aspect-is
+driver b28_test1 is
+  process main is
+    apply hello();
+  return;
+end b28_test1;
+/*@expect
+{
+  "stdout": [
+    "hello from asp"
+  ]
+}
+*/

@@ -1,0 +1,8 @@
+# one: exports value
+module one is
+  export (value);
+
+  function value() => (@result: Integer) is
+    let result := 1;
+  return;
+end one;

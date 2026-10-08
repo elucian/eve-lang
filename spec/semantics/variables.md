@@ -28,7 +28,9 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 |---|---|---|---|---|---|---|
 | `$NAME` | `String` | Any OS environment variable, for example `$PATH`, `$HOME` | from the OS | 0.1 | no | D-031, D-052 |
 | `$EVE_DIR` | `String` | Folder of the Eve runtime | the folder of `eve.exe` | draft | no | — |
-| `$EVE_LIB` | `String` | Folder of the installed libraries, searched by `from … use` | `$EVE_DIR/lib` | 0.1 | no | — |
+| `$EVE_HOME` | `String` | The home of a project: the folder that every relative path of an import is relative to (D-131) | the folder of the driver | draft | no | D-131 |
+| `$EVE_LIB` | `String` | The `lib` folder of the project, its local library, searched by `from … use` | `lib`, relative to `$EVE_HOME` | 0.1 | no | D-131 |
+| `$EVE_LIB_PATH` | `String` | The folders where external modules are installed, separated like the `PATH` of the operating system, for example `/eve/modules/<module_name>`; they may be in different folders, installed from GitHub with `npm install` | empty | draft | no | D-131 |
 | `$EVE_ASP` | `String` | Folder of the aspects (and project libraries) of a driver | `asp`, then the project root, then `lib` | 0.1 | no | D-055 |
 | `$EVE_OUT` | `String` | Output folder of the log files (`error`, `warning`) | `"out"` | 0.1 | no | D-057, `lib/io.eve` |
 | `$MY_DIR` | `String` | Folder of the running driver | | draft | no | — |

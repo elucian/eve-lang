@@ -1,0 +1,17 @@
+# variation 1 of d02: the concurrent aspect with another input (D-133)
+** spec: semantics/modules.md#safe-and-unsafe-modules
+driver d02_test1 is
+  process main is
+    new r :Integer;
+    apply worker(7, @r);
+    expect r == 14;
+    print "result: {r}";
+  return;
+end d02_test1;
+/*@expect
+{
+  "stdout": [
+    "result: 14"
+  ]
+}
+*/

@@ -1,0 +1,14 @@
+# top: a module that imports base, so base is loaded first
+module top is
+  from lib use (base);
+  export (two);
+
+  function two() => (@result: Integer) is
+    let result := base.ONE + 1;
+  return;
+
+  initialize
+    print "top: loaded";
+  finalize
+    print "top: done";
+end top;

@@ -1,0 +1,17 @@
+# variation 1 of c03: the same module without a prefix (D-133)
+** spec: semantics/modules.md#import
+driver c03_test1 is
+  from lib use (geometry(*));
+
+  process main is
+    expect SIDES == 4;
+    print square(6);
+  return;
+end c03_test1;
+/*@expect
+{
+  "stdout": [
+    "36"
+  ]
+}
+*/

@@ -1,0 +1,8 @@
+# worker: a concurrent aspect can call the functions of a safe module (D-129)
+concurrent aspect worker is
+  from lib use (pure);
+
+  process main(x: Integer, @y: Integer) is
+    let y := pure.twice(x);
+  return;
+end worker;

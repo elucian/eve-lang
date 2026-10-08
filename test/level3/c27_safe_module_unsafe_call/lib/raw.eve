@@ -1,0 +1,10 @@
+# raw: a module without a safety word is unsafe by default (D-129)
+module raw is
+  export (tick);
+
+  new total = 0 :Integer;
+
+  procedure tick() is
+    let total += 1;
+  return;
+end raw;
