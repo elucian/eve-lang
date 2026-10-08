@@ -149,6 +149,13 @@ def main():
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
         update_readme(hist)
         print('saved to test/bmark/history.json, table of the README updated')
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            import genpages
+            for p in genpages.generate():
+                print('genpages: ' + os.path.relpath(p, ROOT).replace(os.sep, '/'))
+        except Exception as e:
+            print('genpages: not updated (%s)' % e)
     if bad or (a.check and slow):
         if slow:
             print('SLOWER than the last run by more than 25%:', ', '.join(slow))
