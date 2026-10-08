@@ -1,0 +1,43 @@
+# level 2 performance: procedures with output parameters, defaults and varargs
+** perf: 30,000 calls of a procedure with `@` parameters, a function with defaults and a vararg procedure
+driver p2c_procedures is
+  new counter := 0;
+
+  procedure swap(@a, @b :Integer) is
+    new t := a;
+    let a := b;
+    let b := t;
+  return;
+
+  function scale(x: Integer, factor = 2 :Integer, offset = 1 :Integer) => (@r: Integer) is
+    let r := x * factor + offset;
+  return;
+
+  procedure count_all(*items: Integer) is
+    let counter += items.count();
+  return;
+
+  process main is
+    new p := 1;
+    new q := 2;
+    for i in (1..30000) do
+      swap(@p, @q);
+    done;
+    expect p == 1 and q == 2;
+    new sum := 0;
+    for i in (1..30000) do
+      let sum += scale(i, offset: 0);
+    done;
+    expect sum == 900030000;
+    for i in (1..30000) do
+      count_all(i, i, i);
+    done;
+    expect counter == 90000;
+    print p, q, sum, counter;
+  return;
+end p2c_procedures;
+/*@expect
+{
+  "stdout": ["1,2,900030000,90000"]
+}
+*/

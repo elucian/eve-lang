@@ -1,0 +1,29 @@
+# level 3 performance: calls through a module
+** perf: 50,000 calls of module functions (`mathx.square`, `mathx.clamp`) and 50,000 reads of a module constant
+driver p3a_modules is
+  from lib use (mathx);
+
+  process main is
+    new total := 0;
+    for i in (1..50000) do
+      let total += mathx.square(i % 10);
+    done;
+    expect total == 1425000;
+    new clipped := 0;
+    for i in (1..50000) do
+      let clipped += mathx.clamp(i, 100, 200);
+    done;
+    expect clipped == 9985050;
+    new steps := 0;
+    for i in (1..50000) do
+      let steps += mathx.STEP;
+    done;
+    expect steps == 100000;
+    print total, clipped, steps;
+  return;
+end p3a_modules;
+/*@expect
+{
+  "stdout": ["1425000,9985050,100000"]
+}
+*/

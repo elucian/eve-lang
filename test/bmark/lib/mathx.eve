@@ -1,0 +1,29 @@
+# mathx: the module of the benchmarks p3a and p3c: a constant, pure functions and private state
+module mathx is
+  export (STEP, square, clamp, tick, ticks!);
+
+  set STEP = 2 :Integer;
+  new total = 0 :Integer;
+
+  function square(x: Integer) => (@r: Integer) is
+    let r := x * x;
+  return;
+
+  function clamp(x, lo, hi :Integer) => (@r: Integer) is
+    if x < lo do
+      let r := lo;
+    else if x > hi do
+      let r := hi;
+    else
+      let r := x;
+    done;
+  return;
+
+  procedure tick() is
+    let total += STEP;
+  return;
+
+  function ticks!() => (@r: Integer) is
+    let r := total;
+  return;
+end mathx;
