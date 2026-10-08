@@ -80,4 +80,6 @@ The levels after 2 follow the versions of Eve (`plan/version_map.md`); each has 
 
 We do not yet have an approval process. But the idea is, community will test your compiler and will decide if the compiler is high quality and deserve to be approved. We publish news and promote approved compilers on our homepage and offer monetary rewards for best compilers.
 
+## Tutorial pages
 
+The pages `tests.html`, `smoke.html` and `performance.html` of the tutorial are generated from these files by `script/genpages.py` (D-136). The description of a test on the page is the first comment line of its file; running the tests, or saving a benchmark run, updates the pages. Commit them with `git -C tutorial`.

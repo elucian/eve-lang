@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+"""Generate the three test pages of the tutorial from the tests of the repository (D-136).
+
+  python script/genpages.py [--check]
+
+  tutorial/tests.html        the conformity tests of every level: description and a link to each file
+  tutorial/smoke.html        the smoke tests
+  tutorial/performance.html  the benchmarks: what each one measures, the last times, the history
+
+Only the part between <!-- GEN:BEGIN --> and <!-- GEN:END --> of a page is written; the text around it
+is edited by hand. The sidebar of each page is data/<page>.json. A page that does not exist is made
+from the shell of examples.html. `runtest.py` and `bmark.py` call this script after every run that
+updates their files, so the pages follow the tests: add a test, change its first comment line (its
+description) or save a benchmark run, and the pages change. The tutorial is a junction to the scl
+repository: commit the pages there (`git -C tutorial ...`).
+  --check   write nothing, exit 1 when a page is out of date
+"""
+import glob
+import html
+import json
+import os
+import re
+import sys
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+TEST = os.path.join(ROOT, 'test')
+TUT = os.path.join(ROOT, 'tutorial')
+RAW = 'https://raw.githubusercontent.com/elucian/eve-lang/master/'
+TREE = 'https://github.com/elucian/eve-lang/tree/master/'
+VIEW = '/roadmap/code-viewer.html?file=' + RAW
+BEGIN = '<!-- GEN:BEGIN (written by script/genpages.py, do not edit) -->'
+END = '<!-- GEN:END -->'
+VARIATION = re.compile(r'^([a-z]\d+)_test\d+\.eve$')
+
+
+def esc(text):
+    """HTML text; a `word` between backticks becomes <code>word</code>."""
+    return re.sub(r'`([^`]+)`', r'<code>\1</code>', html.escape(text, quote=False))
+
+
+def title_of(path):
+    """The description of a test: its first comment line (# title), or the first ** note. The same rule as runtest.py."""
+    note = ''
+    with open(path, encoding='utf-8', errors='replace') as f:
+        for line in f:
+            if line.startswith('#') and not line.startswith('#!'):
+                return line.lstrip('#').strip()
+            if line.startswith('**') and not note:
+                note = line.lstrip('*').strip()
+            if line.strip() and not line.startswith(('#', '/*', '*')):
+                break
+    return note
+
+
+def rel(path):
+    return os.path.relpath(path, ROOT).replace(os.sep, '/')
+
+
+def level_names():
+    """{1: 'the language of a single script', ...} from the table of plan/version_map.md."""
+    names, versions = {}, {}
+    with open(os.path.join(ROOT, 'plan', 'version_map.md'), encoding='utf-8') as f:
+        for line in f:
+            m = re.match(r'\|\s*(\d)\s*\|\s*([^|]+?)\s*\|\s*([0-9.]+)\s*\|', line)
+            if m:
+                names[int(m.group(1))] = re.sub(r'\s*\([^)]*D-\d+[^)]*\)', '', m.group(2))
+                versions[int(m.group(1))] = m.group(3)
+    return names, versions
+
+
+def tests_of(folder):
+    """The test files of a level folder: flat files, project drivers and their variations."""
+    found = []
+    for f in sorted(os.listdir(folder)):
+        path = os.path.join(folder, f)
+        if f.endswith('.eve') and os.path.isfile(path):
+            found.append(path)
+        elif os.path.isfile(os.path.join(path, f + '.eve')):
+            found.append(os.path.join(path, f + '.eve'))
+            for g in sorted(os.listdir(path)):
+                m = VARIATION.match(g)
+                if m and m.group(1) == f.split('_')[0] and os.path.isfile(os.path.join(path, g)):
+                    found.append(os.path.join(path, g))
+    return found
+
+
+def code_of(path):
+    name = os.path.basename(path)[:-4]
+    head = name.split('_')[0]
+    return head if re.fullmatch(r'[a-z]\d+', head) else '-'
+
+
+def link(path, text=None):
+    return '<a href="%s%s">%s</a>' % (VIEW, rel(path), text or os.path.basename(path))
+
+
+def table(head, rows):
+    out = ['<table class="table table-bordered table-striped">', '<thead><tr>' + ''.join('<th>%s</th>' % h for h in head) + '</tr></thead>', '<tbody>']
+    out += ['<tr>' + ''.join('<td>%s</td>' % c for c in r) + '</tr>' for r in rows]
+    out += ['</tbody>', '</table>']
+    return '\n'.join(out)
+
+
+def test_rows(folder, with_code=True):
+    rows = []
+    for path in tests_of(folder):
+        name = os.path.basename(path)[:-4]
+        kind = ' <span class="text-secondary small">(variation)</span>' if VARIATION.match(os.path.basename(path)) else ''
+        cells = ['<code>%s</code>%s' % (name, kind), esc(title_of(path)), link(path)]
+        if with_code:
+            cells.insert(0, code_of(path))
+        rows.append(cells)
+    return rows
+
+
+# ------------------------------------------------------------------------------------------ pages
+def gen_tests():
+    names, versions = level_names()
+    out, side = [], []
+    total = 0
+    for n in range(1, 8):
+        folder = os.path.join(TEST, 'level%d' % n)
+        tests = tests_of(folder) if os.path.isdir(folder) else []
+        total += len(tests)
+        sid = 'level-%d' % n
+        title = 'Level %d: %s' % (n, names.get(n, ''))
+        side.append((title, sid))
+        out.append('<h2 id="%s">%s</h2>' % (sid, esc(title)))
+        count = '%d tests' % len(tests) if tests else 'no tests yet'
+        out.append('<p>Version %s, %s. <a href="%stest/level%d" target="_blank" rel="noopener noreferrer nofollow">The folder on GitHub</a>.</p>' % (versions.get(n, ''), count, TREE, n))
+        if tests:
+            out.append(table(['Code', 'Test', 'What it checks', 'Source'], test_rows(folder)))
+        out.append('')
+    return '\n'.join(out), side, total
+
+
+def gen_smoke():
+    folder = os.path.join(TEST, 'smoke')
+    rows = test_rows(folder)
+    return table(['Code', 'Test', 'What it checks', 'Source'], rows), [], len(rows)
+
+
+def gen_perf():
+    hist = json.load(open(os.path.join(TEST, 'bmark', 'history.json'), encoding='utf-8'))
+
+    def last(build):
+        runs = [h for h in hist if h.get('build') == build]
+        return runs[-1] if runs else None
+
+    rel_run, dbg_run = last('ReleaseSafe'), last('Debug')
+    rows = []
+    for path in sorted(glob.glob(os.path.join(TEST, 'bmark', 'p[0-9]*.eve'))):
+        name = os.path.basename(path)[:-4]
+        what = ''
+        with open(path, encoding='utf-8') as f:
+            m = re.search(r'\*\* perf: (.*)', f.read())
+            if m:
+                what = m.group(1).strip()
+        r = rel_run['results'].get(name) if rel_run else None
+        d = dbg_run['results'].get(name) if dbg_run else None
+        py = rel_run.get('python', {}).get(name) if rel_run else None
+        rows.append(['%s' % name[1], '<code>%s</code>' % name, esc(what),
+                     '%.0f ms' % r['median_ms'] if r else '-', '%.0f ms' % py if py else '-',
+                     '%.1fx' % (r['median_ms'] / py) if r and py else '-',
+                     '%.0f ms' % d['median_ms'] if d else '-', link(path, 'source')])
+    out = ['<h2 id="benchmarks">Benchmarks</h2>']
+    when = rel_run['date'] if rel_run else '-'
+    out.append('<p>Median of %s runs of the last saved ReleaseSafe measure (%s), the Python twin of each benchmark, and the Debug build.</p>' % (rel_run['runs'] if rel_run else '-', when))
+    out.append(table(['Level', 'Benchmark', 'What it measures', 'Eve', 'Python', 'Eve / Python', 'Debug', 'Source'], rows))
+    out.append('')
+    out.append('<h2 id="history">History</h2>')
+    out.append('<p>The total of the median times of each level, for every saved run.</p>')
+    hrows = []
+    for h in reversed(hist):
+        tot = {}
+        for k, v in h['results'].items():
+            tot[k[1]] = tot.get(k[1], 0) + v['median_ms']
+        hrows.append([h['date'], h['build'], h['version'], h.get('commit', ''),
+                      *['%.0f ms' % tot[l] if l in tot else '-' for l in '123']])
+    out.append(table(['Date', 'Build', 'Version', 'Commit', 'Level 1', 'Level 2', 'Level 3'], hrows))
+    side = [('Benchmarks', 'benchmarks'), ('History', 'history')]
+    return '\n'.join(out), side, len(rows)
+
+
+PAGES = {
+    'tests': ('Eve Tests', 'Eve Tests', gen_tests,
+              'The conformity tests of Eve, by level. Every test is a script (or a project folder) with its expected output in a comment block at the end: a driver passes when the machine prints exactly that and ends with the expected exit code. Each row shows what the test checks, taken from the first comment line of the file, and a link to the file in the code viewer. The tests are the specification that an implementation must pass: <code>python script/runtest.py all</code> runs them, and <a href="/projects/eve/smoke.html">Smoke</a> and <a href="/projects/eve/performance.html">Performance</a> have their own pages.'),
+    'smoke': ('Eve Smoke Test', 'Eve Smoke Test', gen_smoke,
+              'The quick check that the machine and the language are sane. Each script is a driver with small functions and very simple <code>expect</code> lines, one feature each: <code>True</code> is <code>True</code>, <code>0 == 0</code>. It runs in less than a second, does not depend on the tests of the levels and shows that the program compiles, parses and has no contradiction. Run it with <code>python script/runtest.py smoke</code>.'),
+    'performance': ('Eve Performance', 'Eve Performance', gen_perf,
+                    'A small benchmark for each level, with a twin in Python. They are not conformity tests: they check that the machine stays fast while features are added. The report compares each run with the last saved one, and the ratio Eve / Python shows an accidental slowdown. Run them with <code>python script/bmark.py</code> (add <code>--save</code> to record a run). Compare only runs of the same build on the same machine.'),
+}
+
+
+def shell(title, h1, intro, page):
+    """A new page made from the shell of examples.html."""
+    src = open(os.path.join(TUT, 'examples.html'), encoding='utf-8', newline='').read().replace('\r\n', '\n')
+    head = src[:src.index('<h1 id=')]
+    head = re.sub(r'<title>.*?</title>', '<title>%s</title>' % html.escape(title), head)
+    tail = src[src.index('<!-- Footer -->'):]
+    return '%s<h1 id="%s">%s</h1>\n\n<div class="alert alert-secondary shadow-sm">%s</div>\n\n%s\n%s\n%s\n\n%s' % (head, page, html.escape(h1), intro, BEGIN, '', END, tail)
+
+
+def write_if_changed(path, text, check):
+    old = open(path, encoding='utf-8', newline='').read() if os.path.isfile(path) else None
+    nl = '\r\n' if old and '\r\n' in old else '\n'
+    new = text.replace('\r\n', '\n').replace('\n', nl)
+    if old == new:
+        return False
+    if not check:
+        with open(path, 'w', encoding='utf-8', newline='') as f:
+            f.write(new)
+    return True
+
+
+def generate(check=False):
+    """Write the pages. Returns the list of the files that changed (or would change)."""
+    if not os.path.isfile(os.path.join(TUT, 'examples.html')):
+        return []
+    changed = []
+    for page, (title, h1, fn, intro) in PAGES.items():
+        body, side, count = fn()
+        path = os.path.join(TUT, page + '.html')
+        if os.path.isfile(path):
+            text = open(path, encoding='utf-8', newline='').read().replace('\r\n', '\n')
+        else:
+            text = shell(title, h1, intro, page)
+        a, b = text.index(BEGIN), text.index(END) + len(END)
+        text = text[:a] + BEGIN + '\n' + body + '\n' + END + text[b:]
+        if write_if_changed(path, text, check):
+            changed.append(path)
+        children = [{'title': t, 'link': '#' + i} for t, i in side]
+        data = [{'title': h1, 'link': '#' + page, 'children': children}]
+        if write_if_changed(os.path.join(TUT, 'data', page + '.json'), json.dumps(data, indent=2, ensure_ascii=False) + '\n', check):
+            changed.append(os.path.join(TUT, 'data', page + '.json'))
+    return changed
+
+
+def main():
+    check = '--check' in sys.argv
+    changed = generate(check)
+    for p in changed:
+        print(('out of date: ' if check else 'written: ') + rel(p))
+    if check and changed:
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

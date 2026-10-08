@@ -429,6 +429,17 @@ def update_status(results, now):
         folder = os.path.join(TEST_DIR, lv)
         if os.path.isdir(folder):
             update_level(folder, by_level.get(lv, []), now)
+    refresh_pages()
+
+
+def refresh_pages():
+    """The tutorial pages of the tests follow the tests (genpages.py, D-136)."""
+    try:
+        import genpages
+        for p in genpages.generate():
+            print("genpages: " + rel(p))
+    except Exception as e:          # the tutorial may be missing: the run itself is not affected
+        print(f"genpages: not updated ({e})")
 
 
 def update_level(folder, results, now):
