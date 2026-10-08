@@ -1,0 +1,10 @@
+# raw: an unsafe module (the default)
+module raw is
+  export (poke);
+
+  new n = 0 :Integer;
+
+  procedure poke() is
+    let n += 1;
+  return;
+end raw;

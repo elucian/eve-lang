@@ -1,6 +1,6 @@
 # Design: the Eve database layer and the Eve database
 
-Status: **draft for review**, 2026-10-05. Nothing here is decided. Level 5, version 0.4 (`plan/version_map.md`), before the server (level 6). Features F-DAT-01 to F-DAT-11 (`plan/features_inventory.md`). It replaces the ORM sketch of the tutorial page databases.html (review RIO-D02, RIO-X01, RIO-R02). Questions for the author are collected at the end.
+Status: **draft for review**, 2026-10-05. Nothing here is decided. Level 5, version 0.4 (`plan/version_map.md`), before the server (level 6). Features F-DAT-01 to F-DAT-11 (`plan/version_map.md`). It replaces the ORM sketch of the tutorial page databases.html (review RIO-D02, RIO-X01, RIO-R02). Questions for the author are collected at the end.
 
 ## 1. Why the database layer is the core of Eve
 

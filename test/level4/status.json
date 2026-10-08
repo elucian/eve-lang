@@ -3,9 +3,9 @@
   "d01_concurrent_unsafe_call": {
    "status": "PASS",
    "failures": 0,
-   "runs": 28,
+   "runs": 34,
    "checks": 0,
-   "last": "2026-10-08 17:20",
+   "last": "2026-10-08 18:09",
    "mtime": 1791484784,
    "title": "the compiler flags the call of an unsafe module from a concurrent aspect (D-129)",
    "reason": ""
@@ -13,9 +13,9 @@
   "d02_concurrent_safe_call": {
    "status": "PASS",
    "failures": 4,
-   "runs": 28,
+   "runs": 34,
    "checks": 0,
-   "last": "2026-10-08 17:20",
+   "last": "2026-10-08 18:09",
    "mtime": 1791484784,
    "title": "a concurrent aspect calls a safe module (D-129)",
    "reason": ""
@@ -23,11 +23,21 @@
   "d02_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 15,
+   "runs": 21,
    "checks": 0,
-   "last": "2026-10-08 17:20",
+   "last": "2026-10-08 18:09",
    "mtime": 1791488057,
    "title": "variation 1 of d02: the concurrent aspect with another input (D-133)",
+   "reason": ""
+  },
+  "d03_concurrent_bare_call": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 4,
+   "checks": 0,
+   "last": "2026-10-08 18:09",
+   "mtime": 1791496416,
+   "title": "a concurrent aspect can not call an unsafe member, also by a bare name from m(*) (D-129)",
    "reason": ""
   }
  }

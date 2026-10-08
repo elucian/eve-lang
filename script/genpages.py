@@ -60,7 +60,7 @@ def level_names():
     names, versions = {}, {}
     with open(os.path.join(ROOT, 'plan', 'version_map.md'), encoding='utf-8') as f:
         for line in f:
-            m = re.match(r'\|\s*(\d)\s*\|\s*([^|]+?)\s*\|\s*([0-9.]+)\s*\|', line)
+            m = re.match(r'\|\s*(?:Level\s*)?(\d)\s*\|\s*([^|]+?)\s*\|\s*(?:Version\s*)?([0-9.]+)\s*\|', line)
             if m:
                 names[int(m.group(1))] = re.sub(r'\s*\([^)]*D-\d+[^)]*\)', '', m.group(2))
                 versions[int(m.group(1))] = m.group(3)

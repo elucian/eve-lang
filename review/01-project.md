@@ -70,7 +70,7 @@
 **RPJ-R05 License the VM under Apache-2.0 or MPL-2.0 now, protect the brand with the trademark only.** *Rejected 2026-10-05; the documents moved to CC BY-NC-SA 4.0 instead (D-078).* The trademark policy (D-062) already prevents confusing forks; the BUSL adds friction without real protection for a project at version 0.0.1. If commercial protection is needed later, protect the hosted server product, not the client VM.
 **todo** Rejected proposal. License is established already at advice from Gemini. I want to keep ownership of ideas and people can't make compilers and products based on these ideas. Except for learning and non profit with obligation to contribute back to specification and tutorial.
 
-**RPJ-R06 Version map.** *Addressed 2026-10-04: [plan/version_map.md](../plan/version_map.md) and [plan/features_inventory.md](../plan/features_inventory.md).* Publish one table: feature → version (0.1 client core, 0.2 library + generators, 0.3 parallel aspects + channels, 0.4 server, 0.5 WebAssembly). Today "not in 0.1" (D-050), "version 2" (D-067) and "about 0.9" (D-031) use different scales.
+**RPJ-R06 Version map.** *Addressed 2026-10-04: [plan/version_map.md](../plan/version_map.md) and [plan/version_map.md](../plan/version_map.md).* Publish one table: feature → version (0.1 client core, 0.2 library + generators, 0.3 parallel aspects + channels, 0.4 server, 0.5 WebAssembly). Today "not in 0.1" (D-050), "version 2" (D-067) and "about 0.9" (D-031) use different scales.
 
 **todo** good idea, done. 
 
