@@ -82,4 +82,4 @@ We do not yet have an approval process. But the idea is, community will test you
 
 ## Tutorial pages
 
-The pages `features.html`, `smoke.html` and `performance.html` of the tutorial are generated from these files by `script/genpages.py` (D-136). The description of a test on the page is the first comment line of its file; running the tests, or saving a benchmark run, updates the pages. Commit them with `git -C tutorial`.
+The pages `features.html` and `quality.html` (smoke test and performance) of the tutorial are generated from these files by `script/genpages.py` (D-136). The description of a test on the page is the first comment line of its file; running the tests, or saving a benchmark run, updates the pages. Commit them with `git -C tutorial`.

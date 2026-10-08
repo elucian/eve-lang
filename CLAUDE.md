@@ -94,7 +94,7 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
 | HTML tag balance in `.md` | `bee-ed balance <file>` |
 | Check the grammar of `spec/syntax/grammar.md` against the tests | `python script/grammarcheck.py [files]` (needs `pip install lark`) |
 | Refresh the keyword lists of the tutorial highlighter (`tutorial/js/eve1.js`) from `spec/lexical/keywords.json` | `python script/genkeywords.py` (`speccheck.py` reports a stale file; the pre-commit hook in `.githooks/` runs it; `git config core.hooksPath .githooks` once per clone) |
-| Tutorial pages of the tests (`features.html`, `smoke.html`, `performance.html`) | `python script/genpages.py [--check]`; **generated**: `runtest.py` and `bmark.py --save` call it, never edit the part between `GEN:BEGIN` and `GEN:END` by hand (D-136) |
+| Tutorial pages of the tests (`features.html`, `quality.html`) | `python script/genpages.py [--check]`; **generated**: `runtest.py` and `bmark.py --save` call it, never edit the part between `GEN:BEGIN` and `GEN:END` by hand (D-136) |
 | Run tests on the VM (TDD) | `python script/runtest.py 1` / `all` / `a03` → reports in `temp/output/` |
 | Performance of the VM (per level) | `python script/bmark.py [--save]` → `test/bmark/`, notes per version in its README |
 
