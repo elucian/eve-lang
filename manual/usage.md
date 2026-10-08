@@ -105,9 +105,9 @@ stop                              ** the machine ends; the reports stay
 
 After `stop` the machine is gone and the reports can be read: `<name>.out` (what the script printed), `.err` (errors), `.ast`, `.inspect`, and `summary.log` for the whole session. `script/workflow.py` does the whole cycle for a test level: it writes the command file, starts the machine once, waits for it to stop, compares each `.out` and exit code with `expect.json`, and writes `<out>/<level>.report.md` that quotes the errors and the introspection of every failing test: `python script/workflow.py 1` (reports in `temp/workflow/`). `python script/runtest.py` runs one process per test instead; both must agree.
 
-A level 2 test can run a session with the key `"serve"` in `expect.json`: the runner then starts `eve -x -t 5 -i <command file>` (see `test/smoke/v07`..`v11`).
+A level 2 test can run a session with the key `"serve"` in `expect.json`: the runner then starts `eve -x -t 5 -i <command file>` (no test uses it now; the old tests v07 to v11 were removed by D-135).
 
-Tests: `test/smoke/v01`..`v11` (the command files are in `test/smoke/slot/`). Code: `evevm/src/vm.zig`.
+Tests: none since D-135. Code: `evevm/src/vm.zig`.
 
 ## Modes
 

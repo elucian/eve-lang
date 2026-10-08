@@ -1,0 +1,68 @@
+# smoke: objects. A class with a constructor, methods, visibility, inheritance, extension, comparison.
+** spec: syntax/declarations.md#classes-and-objects
+driver objects is
+  class Point = {x, y :Integer} <: Object is
+    constructor(x = 0, y = 0 :Integer) => (@self) is
+      let self := Object();
+      let self.x := x;
+      let self.y := y;
+    return;
+
+    public method move(@self, dx, dy :Integer) is
+      let self.x += dx;
+      let self.y += dy;
+    return;
+
+    public method sum(@self) => (@result: Integer) is
+      let result := self.x + self.y;
+    return;
+  end Point;
+
+  class Point3 = {z :Integer} <: Point is
+    constructor(x = 0, y = 0, z = 0 :Integer) => (@self) is
+      let self := Point(x, y);
+      let self.z := z;
+    return;
+
+    public method total(@self) => (@result: Integer) is
+      let result := self.sum() + self.z;
+    return;
+  end Point3;
+
+  method double(@self: Point) is
+    let self.x *= 2;
+    let self.y *= 2;
+  return;
+
+  process main is
+    new p := Point(1, 2);
+    expect p.x == 1 and p.y == 2;
+    new o := Point();
+    expect o.x == 0 and o.y == 0;
+    new n := Point(y: 5);
+    expect n.x == 0 and n.y == 5;
+    p.move(2, 3);
+    expect p.x == 3 and p.y == 5;
+    expect p.sum() == 8;
+    p.double();
+    expect p.x == 6 and p.y == 10;
+    new q := p;
+    let q.x := 99;
+    expect p.x == 99;
+    new c :: p;
+    let c.x := 1;
+    expect p.x == 99 and c.x == 1;
+    expect p is q and p is not c;
+    new t := Point3(1, 2, 3);
+    expect t.total() == 6;
+    expect t.sum() == 3;
+    t.move(1, 1);
+    expect t.total() == 8;
+    print "objects: ok";
+  return;
+end objects;
+/*@expect
+{
+  "stdout": ["objects: ok"]
+}
+*/

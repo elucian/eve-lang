@@ -1,0 +1,20 @@
+# ledger: a safe module with an atomic counter, a constant and the life cycle
+safe module ledger is
+  export (LIMIT, record, total!);
+
+  set LIMIT = 3 :Integer;
+  new count = 0 :Atomic(:Integer);
+
+  procedure record() is
+    let count += 1;
+  return;
+
+  function total!() => (@result: Integer) is
+    let result := count;
+  return;
+
+  initialize
+    print "ledger: up";
+  finalize
+    print "ledger: down";
+end ledger;

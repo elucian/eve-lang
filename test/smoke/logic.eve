@@ -1,0 +1,49 @@
+# smoke: logic. The truth values and their operators; an error here is absurd and obvious.
+** spec: syntax/expressions.md#operators
+driver logic is
+  function yes() => (@r: Logic) is
+    let r := True;
+  return;
+
+  function no() => (@r: Logic) is
+    let r := False;
+  return;
+
+  function tables() => (@r: Logic) is
+    let r := (True and True) and not (True and False) and not (False and True) and not (False and False);
+    let r := r and (True or True) and (True or False) and (False or True) and not (False or False);
+    let r := r and not (True xor True) and (True xor False) and (False xor True) and not (False xor False);
+  return;
+
+  process main is
+    expect True;
+    expect not False;
+    expect yes();
+    expect not no();
+    expect yes() == True;
+    expect no() == False;
+    expect True == True;
+    expect False == False;
+    expect True <> False;
+    expect not (True == False);
+    expect not (True <> True);
+    expect not not True;
+    expect yes() and yes();
+    expect yes() or no();
+    expect no() or yes();
+    expect not (no() and yes());
+    expect not (no() or no());
+    expect tables();
+    expect type(True) == Logic;
+    new z :Logic;
+    expect z == False;
+    expect (z or True) == True;
+    expect (z and True) == False;
+    print "logic: ok";
+  return;
+end logic;
+/*@expect
+{
+  "stdout": ["logic: ok"]
+}
+*/

@@ -1,0 +1,49 @@
+# smoke: errors. raise and recover, jobs with resume, the error codes, defer, exit, over, finalize.
+** spec: semantics/errors.md#error-codes
+driver errors is
+  new codes := ();
+
+  procedure leave_early(flag: Logic) is
+    defer print "deferred";
+    exit if flag;
+    print "not early";
+  return;
+
+  process main is
+    j1: job
+    do
+      new a := (1, 2, 3);
+      new x := a[0];
+    done j1;
+    j2: job
+    do
+      new zero := 0;
+      new y := 1 / zero;
+    done j2;
+    j3: job
+    do
+      raise "custom";
+    done j3;
+    j4: job
+    do
+      new m := {"a": 1};
+      let m["zz"] += 1;
+    done j4;
+    expect codes == ($err_index, $err_divide, $err_raise, $err_key);
+    leave_early(True);
+    leave_early(False);
+    print "errors: ok";
+    over;
+    print "never";
+  recover
+    let codes <+ $error.code;
+    resume;
+  finalize
+    print "errors: finalize";
+  return;
+end errors;
+/*@expect
+{
+  "stdout": ["deferred", "not early", "deferred", "errors: ok", "errors: finalize"]
+}
+*/

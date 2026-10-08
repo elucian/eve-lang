@@ -1,6 +1,0 @@
-# Workflow: run and ast need a loaded script; unknown commands are reported (slot/v11.vmc)
-driver v11_workflow_no_script is
-  process main is
-    over;
-  return;
-end v11_workflow_no_script;

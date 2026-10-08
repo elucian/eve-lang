@@ -1,0 +1,81 @@
+# smoke: subprograms. Functions, procedures, arguments, results, recursion, lambdas and closures.
+** spec: syntax/declarations.md#functions-and-procedures
+driver subprograms is
+  new total := 0;
+
+  function twice(x: Integer) => (@r: Integer) is
+    let r := x * 2;
+  return;
+
+  function power(base: Integer, exp = 2 :Integer) => (@r: Integer) is
+    let r := base ^ exp;
+  return;
+
+  function fact(n: Integer) => (@r: Integer) is
+    if n <= 1 do
+      let r := 1;
+    else
+      let r := n * fact(n - 1);
+    done;
+  return;
+
+  function pair(a: Integer) => (@x: Integer, @y: Integer) is
+    let x := a;
+    let y := a + 1;
+  return;
+
+  procedure add(n: Integer) is
+    let total += n;
+  return;
+
+  procedure swap(@a, @b: Integer) is
+    new t := a;
+    let a := b;
+    let b := t;
+  return;
+
+  procedure show(*items: Integer) is
+    let total := items.count();
+  return;
+
+  function make_counter!(first: Integer) => (@next!: Function) is
+    new current := first;
+    function next!() => (@result: Integer) is
+      let current += 1;
+      let result := current;
+    return;
+  return;
+
+  process main is
+    expect twice(4) == 8;
+    expect power(3) == 9;
+    expect power(2, 10) == 1024;
+    expect power(exp: 3, base: 2) == 8;
+    expect fact(5) == 120;
+    expect fact(0) == 1;
+    add(2);
+    add(3);
+    expect total == 5;
+    new p := 1;
+    new q := 2;
+    swap(@p, @q);
+    expect p == 2 and q == 1;
+    show(1, 2, 3);
+    expect total == 3;
+    new more := (7, 8);
+    show(*more);
+    expect total == 2;
+    new inc := (x) => (x + 1);
+    expect inc(1) == 2;
+    expect ((x, y) => (x * y))(3, 4) == 12;
+    new a! := make_counter!(0);
+    new b! := make_counter!(10);
+    expect a!() == 1 and a!() == 2 and b!() == 11 and a!() == 3;
+    print "subprograms: ok";
+  return;
+end subprograms;
+/*@expect
+{
+  "stdout": ["subprograms: ok"]
+}
+*/

@@ -1,6 +1,0 @@
-# Slot: report command (slot/v01.vmc)
-driver v01_slot_report is
-  process main is
-    over;
-  return;
-end v01_slot_report;

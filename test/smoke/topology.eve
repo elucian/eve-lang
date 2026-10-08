@@ -1,0 +1,58 @@
+# smoke: topology. The shape of a program: a driver, a process, functions, procedures, the order of the regions.
+** spec: syntax/declarations.md#scripts
+driver topology is
+  new counter := 0;
+  set LIMIT = 3 :Integer;
+
+  function one() => (@r: Integer) is
+    let r := 1;
+  return;
+
+  function flow() => (@r: Integer) is
+    new sum := 0;
+    for i in (1..LIMIT) do
+      let sum += i;
+    done;
+    new k := 0;
+    while k < LIMIT do
+      let k += 1;
+    done;
+    if k == LIMIT do
+      let sum += 100;
+    else
+      let sum := 0;
+    done;
+    match sum
+      when 106 do
+        let r := 1;
+      when other do
+        let r := 0;
+    done;
+  return;
+
+  procedure bump() is
+    let counter += one();
+  return;
+
+  process main is
+    expect one() == 1;
+    expect counter == 0;
+    bump();
+    bump();
+    expect counter == 2;
+    expect flow() == 1;
+    expect LIMIT == 3;
+    print "main";
+    raise "boom";
+    print "never";
+  recover
+    print "recover: {$error.message}";
+  finalize
+    print "finalize";
+  return;
+end topology;
+/*@expect
+{
+  "stdout": ["main", "recover: boom", "finalize"]
+}
+*/

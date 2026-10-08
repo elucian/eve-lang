@@ -1,0 +1,56 @@
+# smoke: operators. Precedence, associativity, compound forms, list operators, ranges, membership.
+** spec: syntax/expressions.md#operators
+driver operators is
+  function precedence() => (@r: Logic) is
+    let r := (1 + 2 * 3 == 7) and (2 * 3 + 1 == 7) and ((1 + 2) * 3 == 9) and (10 - 4 - 3 == 3) and (2 ^ 3 ^ 2 == 512);
+    let r := r and (8 / 2 / 2 == 2) and (-2 ^ 2 == 4 or -2 ^ 2 == -4) and (1 + 1 == 2 and 2 + 2 == 4);
+  return;
+
+  function logic_order() => (@r: Logic) is
+    let r := (not False and False == False) and (True or False and False) and (not (True and False));
+  return;
+
+  process main is
+    expect precedence();
+    expect logic_order();
+    expect 7 % 3 == 1;
+    expect 6 % 3 == 0;
+    expect 1 < 2 and 2 < 3;
+    expect "a" + "b" == "ab";
+    new n := 10;
+    let n += 5;
+    expect n == 15;
+    let n -= 5;
+    let n *= 3;
+    expect n == 30;
+    let n /= 3;
+    expect n == 10;
+    let n ^= 2;
+    expect n == 100;
+    let n %= 7;
+    expect n == 2;
+    new l := (1, 2);
+    let l <+ 3;
+    expect l == (1, 2, 3);
+    let l := 0 +> l;
+    expect l == (0, 1, 2, 3);
+    expect 1 in (1..5) and 5 in (1..5);
+    expect 1 in (1..<5) and not (5 in (1..<5));
+    expect not (1 in (1>..5)) and 5 in (1>..5);
+    expect not (1 in (1>..<5)) and not (5 in (1>..<5)) and 3 in (1>..<5);
+    expect not (0 in (1..5)) and not (6 in (1..5));
+    expect 2 in (1, 2, 3);
+    expect not (9 in (1, 2, 3));
+    expect 5 is Integer;
+    expect "x" is String;
+    expect 5 is not String;
+    expect "abc" =~ "/^a/";
+    expect not ("abc" =~ "/^b/");
+    print "operators: ok";
+  return;
+end operators;
+/*@expect
+{
+  "stdout": ["operators: ok"]
+}
+*/

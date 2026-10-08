@@ -1,0 +1,65 @@
+# smoke: variables. new, set and let; constants; sharing and copying; scopes.
+** spec: syntax/statements.md#let
+driver variables is
+  new top := 1;
+  set LIMIT = 10 :Integer;
+
+  function reads_top() => (@r: Integer) is
+    let r := top;
+  return;
+
+  procedure change_top() is
+    let top := 2;
+  return;
+
+  function scoped() => (@r: Integer) is
+    new inner := 5;
+    let r := inner;
+  return;
+
+  process main is
+    expect top == 1;
+    expect LIMIT == 10;
+    expect reads_top() == 1;
+    change_top();
+    expect top == 2;
+    expect scoped() == 5;
+    new a := 1;
+    new b := a;
+    let b := 2;
+    expect a == 1;
+    expect b == 2;
+    new x := 3;
+    new y := x;
+    expect x == 3 and y == 3;
+    new s :String;
+    new n :Integer;
+    new ok :Logic;
+    expect s == "" and n == 0 and ok == False;
+    let n += 4;
+    let n -= 1;
+    let n *= 2;
+    expect n == 6;
+    new l := (1, 2);
+    new shared := l;
+    let shared <+ 3;
+    expect l.count() == 3;
+    new copied :: l;
+    let copied <+ 4;
+    expect l.count() == 3 and copied.count() == 4;
+    if True do
+      new local := 9;
+      expect local == 9;
+    done;
+    for i in (1..2) do
+      new each := i * 10;
+      expect each == i * 10;
+    done;
+    print "variables: ok";
+  return;
+end variables;
+/*@expect
+{
+  "stdout": ["variables: ok"]
+}
+*/

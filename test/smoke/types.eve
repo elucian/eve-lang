@@ -1,0 +1,42 @@
+# smoke: types. type(), is, conversions, optional values, ordinals, variants.
+** spec: semantics/types.md
+driver types is
+  class Color = {Red, Green, Blue} <: Ordinal;
+
+  process main is
+    expect type(1) == Integer and type(1.5) == Real and type("") == String and type(True) == Logic;
+    expect type(()) == List and type([]) == Array and type({}) == DataSet;
+    expect 1 is Integer and 1.5 is Real and "x" is String and True is Logic and (1, 2) is List;
+    expect not (1 is String) and 1 is not String;
+    expect Integer.parse("1000") == 1000;
+    expect Integer.parse("200.02") == 200;
+    expect Real.parse("200.5") == 200.5;
+    expect floor(1.5) == 1 and ceiling(1.5) == 2 and round(1.5) == 2 and round(1.4) == 1;
+    new i = 7 / 2 :Integer;
+    expect i == 3;
+    new r := 7 / 2;
+    expect r == 3.5;
+    expect 1 + 0.5 == 1.5;
+    expect 0 == 0.0;
+    new none :Integer?;
+    expect none == Null;
+    let none := 5;
+    expect none == 5;
+    new v :{Integer | String};
+    let v := 5;
+    expect v is Integer;
+    let v := "five";
+    expect v is String;
+    expect Color.Red < Color.Blue;
+    expect Color.Green == Color.Green;
+    expect Red <> Blue;
+    new c := Green;
+    expect c == Green;
+    print "types: ok";
+  return;
+end types;
+/*@expect
+{
+  "stdout": ["types: ok"]
+}
+*/

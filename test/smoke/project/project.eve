@@ -1,0 +1,21 @@
+# smoke: a project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.
+** spec: semantics/modules.md
+driver project is
+  from lib use (ledger);
+
+  process main is
+    new s :Integer;
+    apply adder(2, 3, @s);
+    expect s == 5;
+    for i in (1..ledger.LIMIT) do
+      ledger.record();
+    done;
+    expect ledger.total!() == 3;
+    print "project: ok";
+  return;
+end project;
+/*@expect
+{
+  "stdout": ["ledger: up", "project: ok", "ledger: down"]
+}
+*/

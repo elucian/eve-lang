@@ -1,6 +1,0 @@
-# Workflow: one command file parses, executes and logs a script (slot/v07.vmc)
-driver v07_workflow_run is
-  process main is
-    over;
-  return;
-end v07_workflow_run;

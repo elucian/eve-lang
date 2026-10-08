@@ -1,0 +1,49 @@
+# smoke: constants. set declares a value that never changes: typed or not, from an expression, global or local.
+** spec: syntax/declarations.md#variables-and-constants
+driver constants is
+  set A = 1;
+  set B = 2 :Integer;
+  set C = A + B;
+  set PI = 3.14159 :Real;
+  set NAME = "Eve";
+  set YES = True;
+  set ZERO = 0;
+  set EMPTY = "";
+  set LIST = (1, 2, 3);
+
+  function sum() => (@r: Integer) is
+    let r := A + B + C;
+  return;
+
+  function area(r: Real) => (@a: Real) is
+    let a := PI * r * r;
+  return;
+
+  process main is
+    expect A == 1 and B == 2 and C == 3;
+    expect C == A + B;
+    expect sum() == 6;
+    expect PI > 3.14 and PI < 3.15;
+    expect area(1.0) == PI;
+    expect NAME == "Eve" and NAME.length() == 3;
+    expect YES and YES == True;
+    expect ZERO == 0 and EMPTY == "";
+    expect LIST.count() == 3 and LIST[1] == 1;
+    expect type(A) == Integer and type(PI) == Real and type(NAME) == String;
+    set local = A * 10;
+    expect local == 10;
+    for i in (1..3) do
+      set step = i * C;
+      expect step == i * 3;
+    done;
+    new v := A;
+    let v += 1;
+    expect v == 2 and A == 1;
+    print "constants: ok";
+  return;
+end constants;
+/*@expect
+{
+  "stdout": ["constants: ok"]
+}
+*/

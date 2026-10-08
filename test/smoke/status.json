@@ -1,113 +1,163 @@
 {
  "tests": {
-  "v01_slot_report": {
+  "collection": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 8,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Slot: report command (slot/v01.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791489858,
+   "title": "smoke: collections. The empty ones, the zero values, one element, indexes from 1, and the literals.",
    "reason": ""
   },
-  "v02_slot_comments": {
+  "constant_assign": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 1,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Slot: # and ** comments are ignored (slot/v02.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490417,
+   "title": "smoke: a constant can't be changed. Assigning it is a compile error and nothing runs.",
    "reason": ""
   },
-  "v03_slot_stop": {
+  "constants": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 1,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Slot: stop ends the run early (slot/v03.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490417,
+   "title": "smoke: constants. set declares a value that never changes: typed or not, from an expression, global or local.",
    "reason": ""
   },
-  "v04_slot_unknown": {
+  "control": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Slot: unknown command is reported (slot/v04.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490160,
+   "title": "smoke: control flow. if, while, loop, for, match, break, skip, labels, the if suffix.",
    "reason": ""
   },
-  "v05_slot_missing": {
+  "errors": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Slot: a missing file means no commands (slot/v05.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490181,
+   "title": "smoke: errors. raise and recover, jobs with resume, the error codes, defer, exit, over, finalize.",
    "reason": ""
   },
-  "v06_slot_partial": {
+  "logic": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 8,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Slot: a line without newline is not read yet (slot/v06.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791489857,
+   "title": "smoke: logic. The truth values and their operators; an error here is absurd and obvious.",
    "reason": ""
   },
-  "v07_workflow_run": {
-   "status": "FAIL",
-   "failures": 21,
-   "runs": 27,
-   "checks": 1,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Workflow: one command file parses, executes and logs a script (slot/v07.vmc)",
-   "reason": "stdout differs"
-  },
-  "v08_workflow_syntax_error": {
+  "numeric": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 27,
+   "failures": 1,
+   "runs": 9,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Workflow: run parses first and reports a syntax error with its position (slot/v08.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791489868,
+   "title": "smoke: numbers. Zero, one, the extremes of the types, the operators and the literals.",
    "reason": ""
   },
-  "v09_workflow_runtime_error": {
-   "status": "FAIL",
-   "failures": 21,
-   "runs": 27,
-   "checks": 1,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Workflow: a failed expect is reported by errors and logged by status (slot/v09.vmc)",
-   "reason": "stdout differs"
-  },
-  "v10_workflow_introspection": {
-   "status": "FAIL",
-   "failures": 21,
-   "runs": 27,
-   "checks": 1,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Workflow: ast and inspect write the syntax tree and the introspection report (slot/v10.vmc)",
-   "reason": "expected output not found: 'a34_jobs: inspect written (57 nodes, depth 9)'"
-  },
-  "v11_workflow_no_script": {
+  "objects": {
    "status": "PASS",
    "failures": 0,
-   "runs": 27,
+   "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 15:35",
-   "mtime": 1791078698,
-   "title": "Workflow: run and ast need a loaded script; unknown commands are reported (slot/v11.vmc)",
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490181,
+   "title": "smoke: objects. A class with a constructor, methods, visibility, inheritance, extension, comparison.",
+   "reason": ""
+  },
+  "operators": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490181,
+   "title": "smoke: operators. Precedence, associativity, compound forms, list operators, ranges, membership.",
+   "reason": ""
+  },
+  "placeholders": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490193,
+   "title": "smoke: placeholders. Names, literals, simple expressions, formats, code points, entities, escaped braces.",
+   "reason": ""
+  },
+  "project": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490203,
+   "title": "smoke: a project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.",
+   "reason": ""
+  },
+  "string": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 8,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791489858,
+   "title": "smoke: strings. The empty string, one character, concatenation, comparison, escapes and placeholders.",
+   "reason": ""
+  },
+  "subprograms": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490142,
+   "title": "smoke: subprograms. Functions, procedures, arguments, results, recursion, lambdas and closures.",
+   "reason": ""
+  },
+  "topology": {
+   "status": "PASS",
+   "failures": 1,
+   "runs": 9,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791489868,
+   "title": "smoke: topology. The shape of a program: a driver, a process, functions, procedures, the order of the regions.",
+   "reason": ""
+  },
+  "types": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490181,
+   "title": "smoke: types. type(), is, conversions, optional values, ordinals, variants.",
+   "reason": ""
+  },
+  "variables": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 4,
+   "checks": 0,
+   "last": "2026-10-08 16:13",
+   "mtime": 1791490226,
+   "title": "smoke: variables. new, set and let; constants; sharing and copying; scopes.",
    "reason": ""
   }
  }

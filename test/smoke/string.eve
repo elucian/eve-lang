@@ -1,0 +1,52 @@
+# smoke: strings. The empty string, one character, concatenation, comparison, escapes and placeholders.
+** spec: lexical/lexical.md#literals
+driver string is
+  function empty() => (@r: String) is
+    let r := "";
+  return;
+
+  function abc() => (@r: String) is
+    let r := "abc";
+  return;
+
+  process main is
+    expect "" == "";
+    expect "a" == "a";
+    expect "a" <> "b";
+    expect "a" < "b";
+    expect "b" > "a";
+    expect "" < "a";
+    expect not ("a" == "A");
+    expect empty() == "";
+    expect empty().length() == 0;
+    expect abc().length() == 3;
+    expect "abc" == abc();
+    expect "a" + "b" == "ab";
+    expect "" + "" == "";
+    expect "a" + "" == "a";
+    expect empty() + abc() == abc();
+    expect ("x" + "y" + "z").length() == 3;
+    expect "é".length() == 1;
+    expect "\n".length() == 1;
+    expect "\t".length() == 1;
+    expect "\\".length() == 1;
+    expect "\"".length() == 1;
+    expect "{U+0041}" == "A";
+    expect "&alpha;" == "α";
+    expect "\{".length() == 1;
+    expect type("") == String;
+    new s :String;
+    expect s == "";
+    new n := 42;
+    expect "n = {n}" == "n = 42";
+    expect "{n + 1}" == "43";
+    expect "{"x"}" == "x";
+    expect """one""".length() == 3;
+    print "string: ok";
+  return;
+end string;
+/*@expect
+{
+  "stdout": ["string: ok"]
+}
+*/
