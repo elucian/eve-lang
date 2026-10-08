@@ -1,163 +1,163 @@
 {
  "tests": {
-  "collection": {
-   "status": "PASS",
-   "failures": 0,
-   "runs": 8,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791489858,
-   "title": "smoke: collections. The empty ones, the zero values, one element, indexes from 1, and the literals.",
-   "reason": ""
-  },
-  "constant_assign": {
-   "status": "PASS",
-   "failures": 0,
-   "runs": 1,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490417,
-   "title": "smoke: a constant can't be changed. Assigning it is a compile error and nothing runs.",
-   "reason": ""
-  },
-  "constants": {
-   "status": "PASS",
-   "failures": 0,
-   "runs": 1,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490417,
-   "title": "smoke: constants. set declares a value that never changes: typed or not, from an expression, global or local.",
-   "reason": ""
-  },
-  "control": {
+  "s01_topology": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490160,
-   "title": "smoke: control flow. if, while, loop, for, match, break, skip, labels, the if suffix.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491906,
+   "title": "Topology. The shape of a program: driver, process, functions, procedures, regions.",
    "reason": ""
   },
-  "errors": {
+  "s02_logic": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490181,
-   "title": "smoke: errors. raise and recover, jobs with resume, the error codes, defer, exit, over, finalize.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491661,
+   "title": "Logic. The truth values and their operators; an error here is absurd and obvious.",
    "reason": ""
   },
-  "logic": {
-   "status": "PASS",
-   "failures": 0,
-   "runs": 8,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791489857,
-   "title": "smoke: logic. The truth values and their operators; an error here is absurd and obvious.",
-   "reason": ""
-  },
-  "numeric": {
-   "status": "PASS",
-   "failures": 1,
-   "runs": 9,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791489868,
-   "title": "smoke: numbers. Zero, one, the extremes of the types, the operators and the literals.",
-   "reason": ""
-  },
-  "objects": {
+  "s03_numeric": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490181,
-   "title": "smoke: objects. A class with a constructor, methods, visibility, inheritance, extension, comparison.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491661,
+   "title": "Numbers. Zero, one, the extremes of the types, the operators and the literals.",
    "reason": ""
   },
-  "operators": {
+  "s04_string": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490181,
-   "title": "smoke: operators. Precedence, associativity, compound forms, list operators, ranges, membership.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491906,
+   "title": "Strings. The empty string, concatenation, comparison, escapes and placeholders.",
    "reason": ""
   },
-  "placeholders": {
+  "s05_collection": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490193,
-   "title": "smoke: placeholders. Names, literals, simple expressions, formats, code points, entities, escaped braces.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491906,
+   "title": "Collections. The empty ones, zero values, one element, indexes from 1, literals.",
    "reason": ""
   },
-  "project": {
+  "s06_variables": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490203,
-   "title": "smoke: a project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491662,
+   "title": "Variables. new, set and let; constants; sharing and copying; scopes.",
    "reason": ""
   },
-  "string": {
-   "status": "PASS",
-   "failures": 0,
-   "runs": 8,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791489858,
-   "title": "smoke: strings. The empty string, one character, concatenation, comparison, escapes and placeholders.",
-   "reason": ""
-  },
-  "subprograms": {
+  "s07_constants": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490142,
-   "title": "smoke: subprograms. Functions, procedures, arguments, results, recursion, lambdas and closures.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491906,
+   "title": "Constants. set declares a value that never changes: typed or not, global or local.",
    "reason": ""
   },
-  "topology": {
-   "status": "PASS",
-   "failures": 1,
-   "runs": 9,
-   "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791489868,
-   "title": "smoke: topology. The shape of a program: a driver, a process, functions, procedures, the order of the regions.",
-   "reason": ""
-  },
-  "types": {
+  "s08_constant_assign": {
    "status": "PASS",
    "failures": 0,
    "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490181,
-   "title": "smoke: types. type(), is, conversions, optional values, ordinals, variants.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491662,
+   "title": "A constant can't be changed. Assigning it is a compile error and nothing runs.",
    "reason": ""
   },
-  "variables": {
+  "s09_operators": {
    "status": "PASS",
    "failures": 0,
-   "runs": 4,
+   "runs": 5,
    "checks": 0,
-   "last": "2026-10-08 16:13",
-   "mtime": 1791490226,
-   "title": "smoke: variables. new, set and let; constants; sharing and copying; scopes.",
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491914,
+   "title": "Operators. Precedence, compound forms, list operators, ranges, membership.",
+   "reason": ""
+  },
+  "s10_control": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491662,
+   "title": "Control flow. if, while, loop, for, match, break, skip, labels, the if suffix.",
+   "reason": ""
+  },
+  "s11_subprograms": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491914,
+   "title": "Subprograms. Functions, procedures, arguments, recursion, lambdas, closures.",
+   "reason": ""
+  },
+  "s12_errors": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491906,
+   "title": "Errors. raise and recover, jobs with resume, error codes, defer, exit, over, finalize.",
+   "reason": ""
+  },
+  "s13_types": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491663,
+   "title": "Types. type(), is, conversions, optional values, ordinals, variants.",
+   "reason": ""
+  },
+  "s14_objects": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491914,
+   "title": "Objects. Class, methods, visibility, inheritance, extension, comparison.",
+   "reason": ""
+  },
+  "s15_placeholders": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491906,
+   "title": "Placeholders. Names, literals, expressions, formats, code points, entities, braces.",
+   "reason": ""
+  },
+  "s16_project": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-08 16:38",
+   "mtime": 1791491663,
+   "title": "A project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.",
    "reason": ""
   }
  }

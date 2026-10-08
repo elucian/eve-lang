@@ -1,6 +1,6 @@
-# smoke: variables. new, set and let; constants; sharing and copying; scopes.
+# Variables. new, set and let; constants; sharing and copying; scopes.
 ** spec: syntax/statements.md#let
-driver variables is
+driver s06_variables is
   new top := 1;
   set LIMIT = 10 :Integer;
 
@@ -57,7 +57,7 @@ driver variables is
     done;
     print "variables: ok";
   return;
-end variables;
+end s06_variables;
 /*@expect
 {
   "stdout": ["variables: ok"]

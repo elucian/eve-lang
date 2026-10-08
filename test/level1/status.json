@@ -3,9 +3,9 @@
   "a01_driver": {
    "status": "PASS",
    "failures": 1,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "Test driver structure and single line comments",
    "reason": ""
@@ -13,9 +13,9 @@
   "a02_comments": {
    "status": "PASS",
    "failures": 8,
-   "runs": 91,
+   "runs": 98,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "Every comment form of the language, then a negative end",
    "reason": ""
@@ -23,9 +23,9 @@
   "a03_print": {
    "status": "PASS",
    "failures": 2,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "print writes a string and a new line; no import is needed",
    "reason": ""
@@ -33,9 +33,9 @@
   "a04_free_script": {
    "status": "PASS",
    "failures": 7,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "a free script: sequential statements, no driver and no process",
    "reason": ""
@@ -43,9 +43,9 @@
   "a05_print_write": {
    "status": "PASS",
    "failures": 6,
-   "runs": 93,
+   "runs": 100,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327779,
    "title": "print adds a new line and separates its arguments with sep, write adds nothing; a list is one argument (Q-019b)",
    "reason": ""
@@ -53,9 +53,9 @@
   "a06_new_set_let": {
    "status": "PASS",
    "failures": 11,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "new creates variables, set creates constants, let changes a value (D-076, D-079)",
    "reason": ""
@@ -63,9 +63,9 @@
   "a07_arithmetic": {
    "status": "PASS",
    "failures": 4,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327779,
    "title": "numeric operators and their precedence (D-019)",
    "reason": ""
@@ -73,9 +73,9 @@
   "a08_logic": {
    "status": "PASS",
    "failures": 9,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "relation and logical operators, conditional statement and expression",
    "reason": ""
@@ -83,9 +83,9 @@
   "a09_literals": {
    "status": "PASS",
    "failures": 14,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791477575,
    "title": "literals of the primitive types (D-032, D-080)",
    "reason": ""
@@ -93,9 +93,9 @@
   "a10_strings": {
    "status": "PASS",
    "failures": 13,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791478431,
    "title": "strings are immutable UTF-8 text (D-058, D-080)",
    "reason": ""
@@ -103,9 +103,9 @@
   "a11_interpolation": {
    "status": "PASS",
    "failures": 14,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791479495,
    "title": "placeholders {name} and {name % format}: a name, a literal or a simple expression, written by its type; \\{ \\} are literal braces; {U+H} Unicode (D-096, D-102, formats are a draft)",
    "reason": ""
@@ -113,9 +113,9 @@
   "a12_if": {
    "status": "PASS",
    "failures": 9,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "if, else if, else and the conditional statement (D-016)",
    "reason": ""
@@ -123,9 +123,9 @@
   "a13_while": {
    "status": "PASS",
    "failures": 9,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "while loop with a header, break, else and then (D-030, D-033, D-034)",
    "reason": ""
@@ -133,9 +133,9 @@
   "a14_for": {
    "status": "PASS",
    "failures": 10,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "for loop over ranges and collections (D-022)",
    "reason": ""
@@ -143,9 +143,9 @@
   "a15_match": {
    "status": "PASS",
    "failures": 15,
-   "runs": 92,
+   "runs": 99,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "match with values, lists of values, ranges, other, then, one and all (D-016, D-030)",
    "reason": ""
@@ -153,9 +153,9 @@
   "a16_ordinal": {
    "status": "PASS",
    "failures": 14,
-   "runs": 91,
+   "runs": 98,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327779,
    "title": "an Ordinal is a set of named integer values; the first value is 1 unless one is given (Q-029, D-096)",
    "reason": ""
@@ -163,9 +163,9 @@
   "a17_list": {
    "status": "PASS",
    "failures": 14,
-   "runs": 91,
+   "runs": 98,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791473879,
    "title": "list: literal, index, append, remove, capture, delete, builder, deconstruct (D-058 to D-060, D-077, D-079, D-096)",
    "reason": ""
@@ -173,9 +173,9 @@
   "a18_array": {
    "status": "PASS",
    "failures": 15,
-   "runs": 91,
+   "runs": 98,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "array: literal, index, slice, view and clone, bulk assignment, builder (D-021, D-022, D-049, D-079)",
    "reason": ""
@@ -183,9 +183,9 @@
   "a19_matrix": {
    "status": "PASS",
    "failures": 14,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "matrix: two indexes, last index, absolute index, [*] selects a dimension (D-058, D-064, D-079)",
    "reason": ""
@@ -193,9 +193,9 @@
   "a20_dataset": {
    "status": "PASS",
    "failures": 7,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "DataSet: sorted unique values, union, intersection, difference (D-058)",
    "reason": ""
@@ -203,9 +203,9 @@
   "a21_datamap": {
    "status": "PASS",
    "failures": 15,
-   "runs": 76,
+   "runs": 83,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "DataMap: a sorted map of key:value pairs; quoted or numeric keys (D-058, D-080)",
    "reason": ""
@@ -213,9 +213,9 @@
   "a22_object": {
    "status": "PASS",
    "failures": 7,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791479847,
    "title": "Object: unquoted keys make an object, quoted or numeric keys make a DataMap (D-058, D-080)",
    "reason": ""
@@ -223,9 +223,9 @@
   "a23_clone_view": {
    "status": "PASS",
    "failures": 7,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": ":= shares a collection or an object, :: makes a deep copy, native values are always copied (D-049)",
    "reason": ""
@@ -233,9 +233,9 @@
   "a27_text_literal": {
    "status": "PASS",
    "failures": 13,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed (Q-014)",
    "reason": ""
@@ -243,9 +243,9 @@
   "a28_regex": {
    "status": "PASS",
    "failures": 13,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327789,
    "title": "regular expressions: =~ matches, not (...) negates; a string that starts with / is a regex literal and keeps its backslashes (D-079, D-097)",
    "reason": ""
@@ -253,9 +253,9 @@
   "a29_expect_fail": {
    "status": "PASS",
    "failures": 2,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "a failed expect ends the process with exit code 2 (D-010)",
    "reason": ""
@@ -263,9 +263,9 @@
   "a30_over": {
    "status": "PASS",
    "failures": 2,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "over ends the process it is in with exit code 0",
    "reason": ""
@@ -273,9 +273,9 @@
   "a31_recover": {
    "status": "PASS",
    "failures": 3,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "an error jumps to recover; reaching the end of recover handles the error (D-020)",
    "reason": ""
@@ -283,9 +283,9 @@
   "a32_finalize": {
    "status": "PASS",
    "failures": 2,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "finalize runs after the process ends normally, and after recover (D-020)",
    "reason": ""
@@ -293,9 +293,9 @@
   "a33_over_finalize": {
    "status": "PASS",
    "failures": 6,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791358095,
    "title": "over skips recover but runs finalize: a clean exit never skips cleanup (D-081)",
    "reason": ""
@@ -303,9 +303,9 @@
   "a34_jobs": {
    "status": "PASS",
    "failures": 9,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "jobs: retry runs a failed job again, resume goes on after it (D-020, D-034)",
    "reason": ""
@@ -313,9 +313,9 @@
   "a35_index_error": {
    "status": "PASS",
    "failures": 10,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791357723,
    "title": "index 0 is an error: indexes start at 1 (D-021)",
    "reason": ""
@@ -323,9 +323,9 @@
   "a36_map_key_error": {
    "status": "PASS",
    "failures": 10,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791357723,
    "title": "+= on a missing key of a map raises an error (D-058)",
    "reason": ""
@@ -333,9 +333,9 @@
   "a37_division_error": {
    "status": "PASS",
    "failures": 10,
-   "runs": 90,
+   "runs": 97,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791357723,
    "title": "a division by zero raises an error, also for Real: no infinity, no NaN (Q-019a)",
    "reason": ""
@@ -343,9 +343,9 @@
   "a38_matrix_index": {
    "status": "PASS",
    "failures": 10,
-   "runs": 84,
+   "runs": 91,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "matrix and tensor indexes: [x, y] is the same as [x][y]; a range selects a part (D-064)",
    "reason": ""
@@ -353,9 +353,9 @@
   "a39_repeat": {
    "status": "PASS",
    "failures": 9,
-   "runs": 79,
+   "runs": 86,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332003,
    "title": "loop tested at the end: loop … do … repeat [while c]; and skip (D-074)",
    "reason": ""
@@ -363,9 +363,9 @@
   "a43_let_creates_name": {
    "status": "PASS",
    "failures": 4,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327779,
    "title": "let changes names and creates the ones that are missing, by type inference (Q-017, D-096)",
    "reason": ""
@@ -373,9 +373,9 @@
   "a44_bare_assignment": {
    "status": "PASS",
    "failures": 1,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "a change without let is a syntax error (D-076)",
    "reason": ""
@@ -383,9 +383,9 @@
   "a45_redeclare": {
    "status": "PASS",
    "failures": 9,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "redeclaring a name in the same scope is an error (D-076)",
    "reason": ""
@@ -393,9 +393,9 @@
   "a46_light_assignment": {
    "status": "PASS",
    "failures": 1,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "= is the light assignment of a declaration; it never changes a variable (D-079)",
    "reason": ""
@@ -403,9 +403,9 @@
   "a47_string_plus_number": {
    "status": "PASS",
    "failures": 9,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "+ between a string and a number is a type error; <+ converts the number (D-080)",
    "reason": ""
@@ -413,9 +413,9 @@
   "a48_single_quote_text": {
    "status": "PASS",
    "failures": 1,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "a rune holds one code point; 'one' is a lexical error (D-063)",
    "reason": ""
@@ -423,9 +423,9 @@
   "a49_stop_in_job": {
    "status": "PASS",
    "failures": 12,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "stop ends a job without error; the process goes on with the next statement (D-020)",
    "reason": ""
@@ -433,9 +433,9 @@
   "a50_exit": {
    "status": "PASS",
    "failures": 9,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "exit ends the process without error and runs finalize (D-020)",
    "reason": ""
@@ -443,9 +443,9 @@
   "a51_unhandled_error": {
    "status": "PASS",
    "failures": 1,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791358095,
    "title": "an error without recover ends the process with the exit code 4, after finalize (D-081)",
    "reason": ""
@@ -453,9 +453,9 @@
   "a52_assert": {
    "status": "PASS",
    "failures": 6,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327779,
    "title": "a failed assert is an error with code 3: the process stops when it is not recovered (Q-031h, D-096)",
    "reason": ""
@@ -463,9 +463,9 @@
   "a53_abort": {
    "status": "PASS",
    "failures": 9,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "abort in recover ends the process, runs finalize and passes the error on (D-020)",
    "reason": ""
@@ -473,9 +473,9 @@
   "a54_panic": {
    "status": "PASS",
    "failures": 1,
-   "runs": 75,
+   "runs": 82,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791287545,
    "title": "panic ends the whole application at once with code 1, without finalize (D-038)",
    "reason": ""
@@ -483,9 +483,9 @@
   "a57_conversion": {
    "status": "PASS",
    "failures": 6,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327973,
    "title": "explicit conversions do what the developer asked: floor, ceiling, round, parse (D-080; from demo/explicit_coercion.eve and demo/string_to_number.eve, D-099)",
    "reason": ""
@@ -493,9 +493,9 @@
   "a58_rune_range": {
    "status": "PASS",
    "failures": 6,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327973,
    "title": "a range of runes: ('a'..'c') visits the code points in order (from demo/symbol_range.eve, D-099)",
    "reason": ""
@@ -503,9 +503,9 @@
   "a59_optional_null": {
    "status": "PASS",
    "failures": 6,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327973,
    "title": "a variable without a value has the zero value of its type, never null; an optional type T? may hold null (D-080; from demo/null_strings.eve, D-099)",
    "reason": ""
@@ -513,9 +513,9 @@
   "a60_process_args": {
    "status": "PASS",
    "failures": 7,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791479855,
    "title": "the process receives the command-line arguments; a vararg collects them (D-029, D-040; from demo/method_call.eve and demo/test_args.eve, D-099)",
    "reason": ""
@@ -523,9 +523,9 @@
   "a62_multi_line": {
    "status": "PASS",
    "failures": 1,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327973,
    "title": "a statement ends with ; so an expression or a literal may span several lines (from demo/multi_line.eve, D-099)",
    "reason": ""
@@ -533,9 +533,9 @@
   "a63_range_domain": {
    "status": "PASS",
    "failures": 6,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791327973,
    "title": "a range is a domain of values: limits included or excluded, open ends, a step that sets the precision (D-022; from demo/domain_demo.eve and demo/numeric_range.eve, D-099)",
    "reason": ""
@@ -543,9 +543,9 @@
   "a66_bad_placeholder": {
    "status": "PASS",
    "failures": 3,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791332066,
    "title": "in a string every unescaped brace opens a placeholder {name}; a literal brace is \\{ or \\} (D-102)",
    "reason": ""
@@ -553,9 +553,9 @@
   "a68_undefined_name": {
    "status": "PASS",
    "failures": 9,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791358646,
    "title": "an undefined name is a compile error: the script does not start (D-110)",
    "reason": ""
@@ -563,9 +563,9 @@
   "a75_raise_code": {
    "status": "PASS",
    "failures": 4,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791359126,
    "title": "raise \"text\" creates an error with code 4 and that message (D-054, D-109)",
    "reason": ""
@@ -573,9 +573,9 @@
   "a76_overflow": {
    "status": "PASS",
    "failures": 4,
-   "runs": 72,
+   "runs": 79,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791468232,
    "title": "integer overflow is an error with its own code, 13 (D-109)",
    "reason": ""
@@ -583,9 +583,9 @@
   "a77_system_variable": {
    "status": "PASS",
    "failures": 6,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791359126,
    "title": "a driver can set a system variable and define its own $name (D-109)",
    "reason": ""
@@ -593,9 +593,9 @@
   "a78_digit_separator": {
    "status": "PASS",
    "failures": 0,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791359126,
    "title": "the digit separator _ is not accepted in a number: a lexical error (Q-013, D-095)",
    "reason": ""
@@ -603,9 +603,9 @@
   "a80_let_capture_loop": {
    "status": "PASS",
    "failures": 7,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791360197,
    "title": "in a loop a capture creates its name once: the next turns assign it, they do not create it again (D-104)",
    "reason": ""
@@ -613,9 +613,9 @@
   "a81_let_undeclared": {
    "status": "PASS",
    "failures": 9,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791359126,
    "title": "let creates a missing name only in a capture: let y := 5 with no y is an error (D-104)",
    "reason": ""
@@ -623,9 +623,9 @@
   "a82_list_ends": {
    "status": "PASS",
    "failures": 4,
-   "runs": 70,
+   "runs": 77,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791359126,
    "title": "list modifiers: <+ appends at the end, +> puts in front; the list stays after +> and before <+ (D-107)",
    "reason": ""
@@ -633,9 +633,9 @@
   "a83_bulk_scalar": {
    "status": "PASS",
    "failures": 12,
-   "runs": 50,
+   "runs": 57,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791474037,
    "title": "collection op scalar: the operator applies to every element (D-118)",
    "reason": ""
@@ -643,9 +643,9 @@
   "a84_bulk_string_error": {
    "status": "PASS",
    "failures": 6,
-   "runs": 50,
+   "runs": 57,
    "checks": 0,
-   "last": "2026-10-08 16:10",
+   "last": "2026-10-08 16:38",
    "mtime": 1791473965,
    "title": "a bulk operation never builds strings: a string element or scalar is an error (D-118)",
    "reason": ""

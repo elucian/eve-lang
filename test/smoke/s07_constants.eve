@@ -1,6 +1,6 @@
-# smoke: constants. set declares a value that never changes: typed or not, from an expression, global or local.
+# Constants. set declares a value that never changes: typed or not, global or local.
 ** spec: syntax/declarations.md#variables-and-constants
-driver constants is
+driver s07_constants is
   set A = 1;
   set B = 2 :Integer;
   set C = A + B;
@@ -41,7 +41,7 @@ driver constants is
     expect v == 2 and A == 1;
     print "constants: ok";
   return;
-end constants;
+end s07_constants;
 /*@expect
 {
   "stdout": ["constants: ok"]

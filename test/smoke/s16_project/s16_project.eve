@@ -1,6 +1,6 @@
-# smoke: a project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.
+# A project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.
 ** spec: semantics/modules.md
-driver project is
+driver s16_project is
   from lib use (ledger);
 
   process main is
@@ -13,7 +13,7 @@ driver project is
     expect ledger.total!() == 3;
     print "project: ok";
   return;
-end project;
+end s16_project;
 /*@expect
 {
   "stdout": ["ledger: up", "project: ok", "ledger: down"]

@@ -1,6 +1,6 @@
-# smoke: types. type(), is, conversions, optional values, ordinals, variants.
+# Types. type(), is, conversions, optional values, ordinals, variants.
 ** spec: semantics/types.md
-driver types is
+driver s13_types is
   class Color = {Red, Green, Blue} <: Ordinal;
 
   process main is
@@ -34,7 +34,7 @@ driver types is
     expect c == Green;
     print "types: ok";
   return;
-end types;
+end s13_types;
 /*@expect
 {
   "stdout": ["types: ok"]

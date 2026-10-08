@@ -1,6 +1,6 @@
-# smoke: objects. A class with a constructor, methods, visibility, inheritance, extension, comparison.
+# Objects. Class, methods, visibility, inheritance, extension, comparison.
 ** spec: syntax/declarations.md#classes-and-objects
-driver objects is
+driver s14_objects is
   class Point = {x, y :Integer} <: Object is
     constructor(x = 0, y = 0 :Integer) => (@self) is
       let self := Object();
@@ -60,7 +60,7 @@ driver objects is
     expect t.total() == 8;
     print "objects: ok";
   return;
-end objects;
+end s14_objects;
 /*@expect
 {
   "stdout": ["objects: ok"]

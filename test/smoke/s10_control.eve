@@ -1,6 +1,6 @@
-# smoke: control flow. if, while, loop, for, match, break, skip, labels, the if suffix.
+# Control flow. if, while, loop, for, match, break, skip, labels, the if suffix.
 ** spec: semantics/control.md#loops
-driver control is
+driver s10_control is
   function sign(x: Integer) => (@r: Integer) is
     if x > 0 do
       let r := 1;
@@ -71,7 +71,7 @@ driver control is
     expect sum == 0;
     print "control: ok";
   return;
-end control;
+end s10_control;
 /*@expect
 {
   "stdout": ["control: ok"]

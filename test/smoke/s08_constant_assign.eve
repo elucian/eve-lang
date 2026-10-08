@@ -1,13 +1,13 @@
-# smoke: a constant can't be changed. Assigning it is a compile error and nothing runs.
+# A constant can't be changed. Assigning it is a compile error and nothing runs.
 ** spec: syntax/declarations.md#variables-and-constants
-driver constant_assign is
+driver s08_constant_assign is
   set LIMIT = 10;
 
   process main is
     print "never";
     let LIMIT := 11;
   return;
-end constant_assign;
+end s08_constant_assign;
 /*@expect
 {
   "syntax_error": true,

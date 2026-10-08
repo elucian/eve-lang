@@ -1,6 +1,6 @@
-# smoke: errors. raise and recover, jobs with resume, the error codes, defer, exit, over, finalize.
+# Errors. raise and recover, jobs with resume, error codes, defer, exit, over, finalize.
 ** spec: semantics/errors.md#error-codes
-driver errors is
+driver s12_errors is
   new codes := ();
 
   procedure leave_early(flag: Logic) is
@@ -41,7 +41,7 @@ driver errors is
   finalize
     print "errors: finalize";
   return;
-end errors;
+end s12_errors;
 /*@expect
 {
   "stdout": ["deferred", "not early", "deferred", "errors: ok", "errors: finalize"]

@@ -4,7 +4,7 @@
 </a>
 </p>
 
-<p align="center"><em>Effective Virtual Environment</em> &middot; Version <strong>0.0.1</strong></p>
+<p align="center"><em>Effective Virtual Environment</em> &middot; Version <strong>0.0.2</strong></p>
 
 <p>Eve is a data-centric DSL built for internet ETL pipelines. It provides a gradual typing JIT compiler and virtual machine. This new language delivers a unified syntax for data transforming and routing between local client and server backend. This repository holds the specification, the tests and the first implementation, the Eve virtual machine written in Zig.</p>
 

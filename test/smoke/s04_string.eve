@@ -1,6 +1,6 @@
-# smoke: strings. The empty string, one character, concatenation, comparison, escapes and placeholders.
+# Strings. The empty string, concatenation, comparison, escapes and placeholders.
 ** spec: lexical/lexical.md#literals
-driver string is
+driver s04_string is
   function empty() => (@r: String) is
     let r := "";
   return;
@@ -44,7 +44,7 @@ driver string is
     expect """one""".length() == 3;
     print "string: ok";
   return;
-end string;
+end s04_string;
 /*@expect
 {
   "stdout": ["string: ok"]
