@@ -82,5 +82,67 @@
    "p1c_collections": 44.8,
    "p1d_strings": 52.9
   }
+ },
+ {
+  "date": "2026-10-08 16:22",
+  "version": "0.0.1",
+  "build": "ReleaseSafe",
+  "commit": "a2abbe8",
+  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+  "runs": 5,
+  "results": {
+   "p1a_arith": {
+    "median_ms": 222.8,
+    "min_ms": 214.6
+   },
+   "p1b_calls": {
+    "median_ms": 111.4,
+    "min_ms": 103.2
+   },
+   "p1c_collections": {
+    "median_ms": 29.0,
+    "min_ms": 27.8
+   },
+   "p1d_strings": {
+    "median_ms": 71.8,
+    "min_ms": 70.5
+   },
+   "p2a_aspects": {
+    "median_ms": 48.8,
+    "min_ms": 43.7
+   },
+   "p2b_closures": {
+    "median_ms": 66.5,
+    "min_ms": 63.5
+   },
+   "p2c_procedures": {
+    "median_ms": 96.4,
+    "min_ms": 89.9
+   },
+   "p3a_modules": {
+    "median_ms": 147.5,
+    "min_ms": 142.8
+   },
+   "p3b_objects": {
+    "median_ms": 82.0,
+    "min_ms": 76.1
+   },
+   "p3c_module_state": {
+    "median_ms": 89.7,
+    "min_ms": 85.2
+   }
+  },
+  "python": {
+   "p1a_arith": 79.6,
+   "p1b_calls": 54.2,
+   "p1c_collections": 54.5,
+   "p1d_strings": 64.9,
+   "p2a_aspects": 47.7,
+   "p2b_closures": 55.3,
+   "p2c_procedures": 59.6,
+   "p3a_modules": 62.2,
+   "p3b_objects": 57.2,
+   "p3c_module_state": 59.3
+  }
  }
 ]

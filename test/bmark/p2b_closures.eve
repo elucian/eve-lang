@@ -1,0 +1,38 @@
+# level 2 performance: closures and lambdas
+** perf: a closure called 50,000 times, a lambda called 50,000 times, a function that makes closures 2,000 times
+driver p2b_closures is
+  function make_counter!(first: Integer) => (@next!: Function) is
+    new current := first;
+    function next!() => (@result: Integer) is
+      let current += 1;
+      let result := current;
+    return;
+  return;
+
+  process main is
+    new c! := make_counter!(0);
+    new last := 0;
+    for i in (1..50000) do
+      let last := c!();
+    done;
+    expect last == 50000;
+    new add := (x, y) => (x + y);
+    new total := 0;
+    for i in (1..50000) do
+      let total := add(total, i);
+    done;
+    expect total == 1250025000;
+    new made := 0;
+    for i in (1..2000) do
+      new d! := make_counter!(i);
+      let made += d!();
+    done;
+    expect made == 2003000;
+    print last, total, made;
+  return;
+end p2b_closures;
+/*@expect
+{
+  "stdout": ["50000,1250025000,2003000"]
+}
+*/

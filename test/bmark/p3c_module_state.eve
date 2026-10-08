@@ -1,0 +1,22 @@
+# level 3 performance: a module with private state, and an atomic counter
+** perf: 50,000 calls of a module procedure that changes private state and 50,000 reads of it
+driver p3c_module_state is
+  from lib use (mathx);
+
+  process main is
+    for i in (1..50000) do
+      mathx.tick();
+    done;
+    new seen := 0;
+    for i in (1..50000) do
+      let seen := mathx.ticks!();
+    done;
+    expect seen == 100000;
+    print seen;
+  return;
+end p3c_module_state;
+/*@expect
+{
+  "stdout": ["100000"]
+}
+*/

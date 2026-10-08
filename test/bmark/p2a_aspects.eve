@@ -1,0 +1,17 @@
+# level 2 performance: apply of an aspect
+** perf: 5,000 `apply` of an aspect with two inputs and one output (a new scope and a new boot for each call)
+driver p2a_aspects is
+  process main is
+    new acc := 0;
+    for i in (1..5000) do
+      apply adder(acc, i, @acc);
+    done;
+    expect acc == 12502500;
+    print acc;
+  return;
+end p2a_aspects;
+/*@expect
+{
+  "stdout": ["12502500"]
+}
+*/

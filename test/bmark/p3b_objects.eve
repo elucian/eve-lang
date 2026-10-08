@@ -1,0 +1,62 @@
+# level 3 performance: classes and methods
+** perf: 5,000 objects of a class and of its subclass, 50,000 method calls, 20,000 extension method calls
+driver p3b_objects is
+  class Point = {x, y :Integer} <: Object is
+    constructor(x = 0, y = 0 :Integer) => (@self) is
+      let self := Object();
+      let self.x := x;
+      let self.y := y;
+    return;
+
+    public method move(@self, dx, dy :Integer) is
+      let self.x += dx;
+      let self.y += dy;
+    return;
+
+    public method sum(@self) => (@result: Integer) is
+      let result := self.x + self.y;
+    return;
+  end Point;
+
+  class Point3 = {z :Integer} <: Point is
+    constructor(x = 0, y = 0, z = 0 :Integer) => (@self) is
+      let self := Point(x, y);
+      let self.z := z;
+    return;
+
+    public method total(@self) => (@result: Integer) is
+      let result := self.sum() + self.z;
+    return;
+  end Point3;
+
+  method double(@self: Point) is
+    let self.x *= 2;
+  return;
+
+  process main is
+    new made := 0;
+    for i in (1..5000) do
+      new p := Point(i, 1);
+      new q := Point3(i, 1, 1);
+      let made += p.sum() + q.total();
+    done;
+    expect made == 25020000;
+    new walker := Point(0, 0);
+    for i in (1..50000) do
+      walker.move(1, 2);
+    done;
+    expect walker.sum() == 150000;
+    new d := Point(1, 0);
+    for i in (1..20000) do
+      let d.x := 1;
+      d.double();
+    done;
+    expect d.x == 2;
+    print made, walker.sum(), d.x;
+  return;
+end p3b_objects;
+/*@expect
+{
+  "stdout": ["25020000,150000,2"]
+}
+*/

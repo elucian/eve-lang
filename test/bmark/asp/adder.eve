@@ -1,0 +1,6 @@
+# adder: the aspect of the benchmark p2a
+exclusive aspect adder is
+  process main(a, b :Integer, @sum :Integer) is
+    let sum := a + b;
+  return;
+end adder;
