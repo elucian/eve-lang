@@ -177,10 +177,10 @@ A string literal is UTF-8 text between double quotes. It ends on the same line u
 | `\n` `\r` `\t` | line feed, carriage return, tab |
 | `\0` | the NUL character |
 | `{U+H…}` | Unicode code point, 1 to 6 hexadecimal digits: `{U+03B2}` is β (D-119) |
-| `&name;` `&#N;` `&#xH;` | HTML character reference: `&alpha;` is α |
+| `&name;` | HTML character reference: `&alpha;` is α |
 | `\&` | the ampersand |
 
-Not all Unicode characters have an HTML name, so `{U+H…}` and `&name;` are both valid. `&name;`, `&#N;` and `&#xH;` are all valid (Q-014). The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
+Not all Unicode characters have an HTML name, so `{U+H…}` and `&name;` are both valid. The numeric references `&#N;` and `&#xH;` do not exist (D-119): a `&` that does not start a named reference is an ordinary character. The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
 
 **Interpolation (D-102).** A string inserts values with placeholders: a name in braces, with an optional format after the format operator `%`:
 

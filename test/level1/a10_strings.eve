@@ -24,8 +24,8 @@ driver a10_strings is
     expect "\"".length() == 1;
     expect "\n".length() == 1;
     expect "&alpha;" == "α";
-    expect "&#955;" == "λ";
-    expect "&#x3BB;" == "λ";
+    expect "{U+03BB}" == "λ";
+    expect "&#955;" == "&#955;";
     expect "\&".length() == 1;
     expect "&amp;" == "\&";
 
