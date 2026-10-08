@@ -1,0 +1,6 @@
+# adder: an aspect with two inputs and one output; without a kind word it is exclusive
+aspect adder is
+  process main(a, b :Integer, @sum :Integer) is
+    let sum := a + b;
+  return;
+end adder;

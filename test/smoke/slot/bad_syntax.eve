@@ -1,5 +1,0 @@
-driver bad is
-  process main is
-    over
-  return;
-end bad;
