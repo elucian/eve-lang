@@ -1,6 +1,6 @@
 # exit in a procedure leaves only the procedure; the process goes on (D-111)
 ** spec: syntax/statements.md#interruptions
-driver a69_exit_procedure is
+driver b35_exit_procedure is
   procedure check(n: Integer) is
     if n < 0 do
       print "negative";
@@ -16,7 +16,7 @@ driver a69_exit_procedure is
   finalize
     print "finalize";
   return;
-end a69_exit_procedure;
+end b35_exit_procedure;
 /*@expect
 {
   "stdout": [

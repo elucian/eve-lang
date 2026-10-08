@@ -123,10 +123,18 @@ def lex(text, lits):
             add("TEXT", "text", line); line += t.count("\n", i, j); i = j + 3; continue
         if c == '"':
             j, regex = i + 1, t.startswith("/", i + 1)
+            depth, inner = 0, ""   # a placeholder {...} may hold quoted literals (D-120)
             while True:
                 if j >= n or t[j] == "\n": raise LexErr("unterminated string at line %d" % line)
                 if t[j] == "\\": j += 2; continue
-                if t[j] == '"': break
+                if depth == 0:
+                    if t[j] == '"': break
+                    if t[j] == "{" and not regex: depth = 1
+                elif inner:
+                    if t[j] == inner: inner = ""
+                elif t[j] in "\"'": inner = t[j]
+                elif t[j] == "{": depth += 1
+                elif t[j] == "}": depth -= 1
                 j += 1
             add("STRING", t[i:j + 1], line); i = j + 1
             # a string followed at once by a type suffix is a number literal ("1,000"z)

@@ -9,7 +9,7 @@ driver a22_object is
     expect p.x == 3;
 
     ** == compares all the attributes, is compares the object
-    ** (an attribute can't be added from outside: see a55)
+    ** (an attribute can't be added from outside: see c14)
     new q := {x: 3, y: 2};
     expect p == q;
     expect p is not q;

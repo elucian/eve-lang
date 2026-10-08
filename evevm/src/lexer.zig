@@ -184,6 +184,9 @@ const Lexer = struct {
             return;
         }
         lx.pos += 1;
+        const raw = lx.at(0) == '/'; // a regex literal has no placeholders: its braces are plain
+        var depth: usize = 0; // braces open in the placeholder being read
+        var inner: u8 = 0; // the quote of a string inside a placeholder, or 0
         while (true) {
             const s = lx.at(0);
             if (s == 0 or s == '\n') {
@@ -191,8 +194,19 @@ const Lexer = struct {
                 return error.Syntax;
             }
             lx.pos += 1;
-            if (s == '"') return;
-            if (s == '\\' and lx.at(0) != 0 and lx.at(0) != '\n') lx.pos += 1;
+            if (s == '\\' and lx.at(0) != 0 and lx.at(0) != '\n') {
+                lx.pos += 1;
+            } else if (depth == 0) {
+                if (s == '"') return;
+                if (s == '{' and !raw) depth = 1;
+            } else if (inner != 0) {
+                if (s == inner) inner = 0;
+            } else switch (s) {
+                '"', '\'' => inner = s,
+                '{' => depth += 1,
+                '}' => depth -= 1,
+                else => {},
+            }
         }
     }
 

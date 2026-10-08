@@ -1,6 +1,6 @@
 # a subclass builds its object through the constructor of its superclass (D-084)
 ** spec: syntax/declarations.md#classes-and-objects
-driver a41_inheritance is
+driver c12_inheritance is
   class Shape = {name: String} <: Object is
     constructor(name = "shape" :String) => (@self) is
       let self := Object();
@@ -29,7 +29,7 @@ driver a41_inheritance is
     new d := Circle(name: "disc", radius: 1.0);
     expect d.radius == 1.0;
   return;
-end a41_inheritance;
+end c12_inheritance;
 /*@expect
 {
   "stdout": [

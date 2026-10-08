@@ -1,0 +1,25 @@
+# a function or a procedure can't be bound to a class with @self: only a method can (D-123)
+** spec: syntax/declarations.md#classes-and-objects
+driver c16_function_self is
+  class Point = {x, y :Integer} <: Object is
+    constructor(x = 0, y = 0 :Integer) => (@self) is
+      let self := Object();
+      let self.x := x;
+      let self.y := y;
+    return;
+  end Point;
+
+  function total(@self: Point) => (@result :Integer) is   ** compile error: use a method
+    let result := self.x + self.y;
+  return;
+
+  process main is
+    print "never";
+  return;
+end c16_function_self;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

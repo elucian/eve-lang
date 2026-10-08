@@ -1,6 +1,6 @@
-# a class hosts functions, not procedures: the work that changes things is done by methods (D-103)
+# a class hosts only methods: a procedure in a class body is a compile error (D-103, D-123)
 ** spec: syntax/declarations.md#classes-and-objects
-driver a67_procedure_in_class is
+driver c15_procedure_in_class is
   class Counter = {n: Integer} <: Object is
     procedure reset() is           ** compile error: a class can't host a procedure
       print "reset";
@@ -10,7 +10,7 @@ driver a67_procedure_in_class is
   process main is
     print "never";
   return;
-end a67_procedure_in_class;
+end c15_procedure_in_class;
 /*@expect
 {
   "syntax_error": true,

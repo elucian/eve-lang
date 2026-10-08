@@ -1,4 +1,4 @@
-# placeholders {name} and {name % format}: a name only, written by its type; \{ \} are literal braces; {U+H} Unicode (D-096, D-102, formats are a draft)
+# placeholders {name} and {name % format}: a name, a literal or a simple expression, written by its type; \{ \} are literal braces; {U+H} Unicode (D-096, D-102, formats are a draft)
 ** spec: lexical/lexical.md#string
 driver a11_interpolation is
   process main is
@@ -18,7 +18,9 @@ driver a11_interpolation is
     new lst := (10, 20, 30);
     print "second = {lst[2]}, last = {lst[-1]}, part = {lst[2..3]}";   ** brackets select a member (Q-033a)
     new m := {"a": 1, "b": 2};
-    print "b = {m[\"b\"]}";             ** a quoted key: its quotes are escaped in the string
+    print "b = {m["b"]}";                ** a quoted key: no escape inside the braces
+    print "literals: {399} {"test"} {(1,2,3)} {'x'} {True} {"a b"}";   ** any literal; its quotes are not escaped
+    print "expressions: {n + 1} {n * 2 - 1} {name.length()} {n > 40} {name + "!"} {((n + 1) % 5)}";   ** D-121
 
     ** formats: width, fill, alignment
     print "n = {n % i5}|{n % 0>i5}|{n % <i5}|";
@@ -40,6 +42,8 @@ end a11_interpolation;
     "both = {42}",
     "second = 20, last = 30, part = (20,30)",
     "b = 2",
+    "literals: 399 test (1,2,3) x True a b",
+    "expressions: 43 83 3 True Eve! 3",
     "n =    42|00042|42   |",
     "pi =     3.14|",
     "big = 1,234,567",

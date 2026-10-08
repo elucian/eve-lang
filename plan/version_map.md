@@ -6,9 +6,9 @@ One scale for all the versions of Eve. Each version completes one or two **level
 
 | Level | Topic | Version | Decisions | Tests |
 |---|---|---|---|---|
-| 1 | the language of a single script | 0.1 | [decision_level1.md](decision_level1.md) | `test/level1` (a) |
-| 2 | a project: aspects, and the procedures and functions inside them | 0.1 | [decision_level2.md](decision_level2.md) | `test/level2` (b) |
-| 3 | modules and imports, libraries; data language: types, records, generators, files, formats, HTTP client | 0.2 | [decision_level3.md](decision_level3.md) | `test/level3` (c) |
+| 1 | the language of a single script (no user subprograms and no classes, D-122) | 0.1 | [decision_level1.md](decision_level1.md) | `test/level1` (a) |
+| 2 | a project: functions, procedures, lambdas and closures (D-122), and aspects | 0.1 | [decision_level2.md](decision_level2.md) | `test/level2` (b) |
+| 3 | modules and imports, local libraries, then classes and methods (D-122); data language: types, records, generators, files, formats, HTTP client | 0.2 | [decision_level3.md](decision_level3.md) | `test/level3` (c) |
 | 4 | parallel processing and streams | 0.3 | [decision_level4.md](decision_level4.md) | `test/level4` (d) |
 | 5 | database layer and the Eve database | 0.4 | [decision_level5.md](decision_level5.md) | `test/level5` (e) |
 | 6 | the Eve machine and the server | 0.5 | [decision_level6.md](decision_level6.md) | `test/level6` (f) |

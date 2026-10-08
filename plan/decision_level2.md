@@ -6,7 +6,7 @@ The log is split by level; ids are shared and keep counting across the files (an
 
 ## Scope
 
-Level 2 tests a project of **one driver and its aspects** (`test/level2`, prefix `b`). A driver calls an aspect with `apply`, passes arguments by position, by name and by spreading, reads results from its `@` outputs, and recovers the errors that the aspect raises. The aspect is a file in `asp/` with its own state, created at each call, and its own procedures and functions, which level 1 already teaches for a driver (a24, a25, a56, a64 to a73). **Lambdas and closures** are also level 2 (D-109), with `apply` and aspects: they use the subprograms of an aspect.
+Level 2 tests a project of **one driver and its aspects** (`test/level2`, prefix `b`). A driver calls an aspect with `apply`, passes arguments by position, by name and by spreading, reads results from its `@` outputs, and recovers the errors that the aspect raises. The aspect is a file in `asp/` with its own state, created at each call, and its own procedures and functions, which level 1 already teaches for a driver (b30, b31, b32, b33 to b39). **Lambdas and closures** are also level 2 (D-109), with `apply` and aspects: they use the subprograms of an aspect.
 
 Features: F-STR-02 (aspects, serial), F-STR-04 (project folders, `asp/`), F-STR-05 to F-STR-07, F-LIB-01 (`log_err`, `log_wrn`). Not in level 2: modules, imports, libraries, classes and methods across files (**level 3**, D-112); parallel groups and concurrent aspects (level 4, D-090); the machine and the server (level 6).
 
@@ -71,3 +71,15 @@ Not tested yet: the trace order of `b17` is checked only as presence of the line
 ## Open questions
 
 None for level 2.
+
+## D-122 Functions and procedures are level 2, classes and methods are level 3 (2026-10-08)
+Author decision. The scope of D-112 ("level 2 is aspects with their procedures and functions") is applied to the tests, which had kept the subprograms in level 1.
+- **Level 1** is the language of a single script: the process `main`, variables, types, collections, control flow, strings, errors. It has no user `function`, `procedure`, lambda or class (a class that declares an Ordinal or a Variant stays: a16).
+- **Level 2** adds the subprograms: functions, procedures, parameters (by name, default, vararg, `@` output), recursion, `exit`, `over` and `defer` inside a procedure, lambdas and closures (D-109), together with the aspects. Moved from level 1: a24, a25, a56, a64, a65, a69, a70, a71, a72, a73, a79 to b30 to b40 and a61 (variant parameters) to b41. New: b42 `defer_procedure` (the original a74) and b43 `vararg_procedure` (the second half of a60).
+- **Level 3** is where modules come first, then the local libraries, and then classes and methods. Moved from level 1: a26 `class`, a40 `extension_method`, a41 `inheritance`, a42 `visibility`, a55 `attribute_outside`, a67 `procedure_in_class` to c10 to c15. The order of the level: modules and imports (c01 to c09), then classes.
+- **`defer`** (D-117 g) is a statement of a subprogram, so it moves to level 2: a74 is removed from level 1 and the VM does not run a `defer` at the end of `main`. `keywords.json` is unchanged.
+- **Level 1 numbers keep their gaps** (a24, a25, a26, a40 to a42, a55, a56, a61, a64, a65, a67, a69 to a74 and a79 are free); the other tests keep their codes so that the references stay valid. The old codes in D-0xx entries were replaced by the new ones.
+- **To do:** the spec files still describe functions and classes as level 1 (`syntax/declarations.md`, `grammar.md`, `statements.md`): mark the parts with the level; the tutorial order (Subprograms before Classes) is as it was; the VM runs the tests of any level and does not gate the features by level.
+
+## D-124 A single-script test is a file, also in levels 2 and 3 (2026-10-08)
+Author decision. A test is a folder (D-073) only when it needs a project: aspects (`asp/`), libraries (`lib/`), data (`data/`) or an output folder (`out/`). A test of a single script is a plain file `test/levelN/code_name.eve`, as in level 1. The name of a test, file or folder, is `code_name` (`b30_function`), and the driver inside has the same name. Applied: b13, b18, b30 to b43 (level 2) and c10 to c17 (level 3); the folder tests with `asp/` or `lib/` stay folders. The runner already reads both forms.

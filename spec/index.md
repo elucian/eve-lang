@@ -17,6 +17,7 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Control flow, errors | [semantics/control.md](semantics/control.md), [semantics/errors.md](semantics/errors.md) | level 1, first draft; open points marked *(proposed)* |
 | Conformance | [conformance/README.md](conformance/README.md) | test format (`/*@expect*/`), levels, coverage of level 1 |
 | Aspects | [semantics/aspects.md](semantics/aspects.md) | level 2, first draft (2026-10-07); open points 1 to 4 |
+| Data file types | [semantics/data-types.md](semantics/data-types.md) | level 3, proposal (2026-10-08): `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`; Q-038 |
 | Other semantics | `semantics/*` | levels 3 to 7 not started |
 | Library | `library/*` | not started (phase 5) |
 

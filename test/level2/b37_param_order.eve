@@ -1,6 +1,6 @@
 # a mandatory parameter may follow optional ones, and the call then names it (D-106)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver a71_param_order is
+driver b37_param_order is
   procedure add(p1 = 0, p2 = 1: Integer, @op: Integer) is
     let op := p1 + p2;
   return;
@@ -17,7 +17,7 @@ driver a71_param_order is
     expect r == 10;
     print r;
   return;
-end a71_param_order;
+end b37_param_order;
 /*@expect
 {
   "stdout": ["10"]

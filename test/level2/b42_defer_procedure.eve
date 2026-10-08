@@ -1,6 +1,6 @@
-# defer runs when the subprogram ends, by any path, in reverse order (D-081)
+# defer in a procedure runs when the procedure ends, by any path, in reverse order (D-081)
 ** spec: syntax/statements.md#interruptions
-driver a74_defer is
+driver b42_defer_procedure is
   procedure work(early: Logic) is
     defer print "first registered, last run";
     defer print "last registered, first run";
@@ -15,7 +15,7 @@ driver a74_defer is
     work(False);
     work(True);
   return;
-end a74_defer;
+end b42_defer_procedure;
 /*@expect
 {
   "stdout": [

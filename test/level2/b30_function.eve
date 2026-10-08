@@ -1,6 +1,6 @@
 # functions: result, named arguments, default values, several results (D-028, D-070, D-086, D-087)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver a24_function is
+driver b30_function is
   function sum(a, b: Integer) => (@result: Integer) is
     let result := a + b;
   return;
@@ -34,7 +34,7 @@ driver a24_function is
     print sum(2, 4);
     print greet("World");
   return;
-end a24_function;
+end b30_function;
 /*@expect
 {
   "stdout": [

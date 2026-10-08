@@ -180,24 +180,26 @@ A string literal is UTF-8 text between double quotes. It ends on the same line u
 | `&name;` | HTML character reference: `&alpha;` is α |
 | `\&` | the ampersand |
 
-Not all Unicode characters have an HTML name, so `{U+H…}` and `&name;` are both valid. The numeric references `&#N;` and `&#xH;` do not exist (D-119): a `&` that does not start a named reference is an ordinary character. The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
+Not all Unicode characters have an HTML name, so `{U+H…}` (a rune literal in a placeholder, D-120) and `&name;` are both valid. The numeric references `&#N;` and `&#xH;` do not exist (D-119). The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
 
-**Interpolation (D-102).** A string inserts values with placeholders: a name in braces, with an optional format after the format operator `%`:
+**Interpolation (D-102, D-120).** A string inserts values with placeholders: a name or a literal in braces, with an optional format after the format operator `%`:
 
 ```ebnf
-interpolation = "{" , member , [ "%" , format ] , "}" ;          (* spaces are allowed around % *)
+interpolation = "{" , ( member | literal ) , [ "%" , format ] , "}" ;   (* spaces are allowed around % *)
 member        = [ "$" ] , name , { "." , name | "[" , index , "]" } ;
 index         = bound , [ ".." , bound ] ;                      (* an element, or a part by a range *)
-bound         = [ "-" ] , integer | name | '\"' , { char } , '\"' ;   (* a quoted key: the quotes are escaped inside the string *)
+bound         = [ "-" ] , integer | name | string ;             (* a quoted key: its quotes are not escaped *)
+literal       = number | string | symbol | boolean | list | ... ;   (* any literal of the language *)
 ```
 
 | Form | Inserts |
 |---|---|
 | `{name}` | the value of the name, written by its type: a string as it is, a number in digits, a boolean as `True` or `False` |
 | `{name % format}` | the value with a format; the codes allowed depend on the type of the value |
+| `{literal}` | the literal, written by its type: `{399}`, `{"test"}`, `{(1,2,3)}`, `{'x'}`, `{True}`, `{U+03B1}` |
 | `\{` `\}` | a literal brace |
 
-In a string literal every unescaped `{` opens a placeholder; a `{` that does not open a valid placeholder (`"{1, 2}"`, `"{}"`, `"{a + b}"`) and a lone `}` are lexical errors, so a literal brace is always written `\{` or `\}`. A placeholder holds a **name**, never an expression (Q-015, Q-033a): a variable, a constant, a system variable (`{$HOME}`), an attribute path (`{p.x}`, `{self.value}`), or a member selected with brackets: an element (`{a[1]}`, `{a[-1]}`, `{a[i]}`, `{m[key]}`, `{m[\"key\"]}`) or a part by a range (`{a[2..4]}`). An index is an integer, a name, a quoted key or a range; the quotes of a key are escaped with `\"`, like every double quote inside a string. Operators, calls and any other expression are not allowed inside the braces. Inside a placeholder `%` is the format operator and has no other meaning: `{n % i5}`. The `format` has its own rules, defined in `../library/format.md` (pending). `{U+H…}` is the one placeholder that holds a code point instead of a name (D-119); `\xHH` and `\u{…}` do not exist. The text literal and the regex literal are raw: they have no placeholders and their braces need no escape. The older forms `\s{…}`, `\n{…}`, `\b{…}`, `\#{…}`, `#s`, `#n`, `#{…}`, the format after `:` and the template operator `?` do not exist; `#` is used only in comments.
+In a string literal every unescaped `{` opens a placeholder; a `{` that does not open a valid placeholder (`"{1, 2}"`, `"{}"`, `"{a + b}"`) and a lone `}` are lexical errors, so a literal brace is always written `\{` or `\}`. A placeholder holds a **name**, a **literal** or a **simple expression** (Q-015, Q-033a, D-120, D-121): `{n + 1}`, `{a * 2 - 1}`, `{s.length()}`, `{a > 2}`, `{s + "!"}`. A statement, an assignment or a lambda is not allowed. `%` always starts the format, so an expression that needs it is written in parentheses: `{((n + 1) % 3)}`. A literal is any literal of the language: `{399}`, `{"test"}`, `{(a, b, c)}`, `{'x'}`, `{True}`, `{U+03B1}` (the rune of that code point). **The quotes of a literal inside the braces are not escaped**: the string ends at the first `"` outside the braces, and a brace or a `%` inside a quoted text of a placeholder does not count. A name is: a variable, a constant, a system variable (`{$HOME}`), an attribute path (`{p.x}`, `{self.value}`), or a member selected with brackets: an element (`{a[1]}`, `{a[-1]}`, `{a[i]}`, `{m[key]}`, `{m["key"]}`) or a part by a range (`{a[2..4]}`). An index is an integer, a name, a quoted key or a range; the quotes of a key are written as they are.  Inside a placeholder `%` is the format operator and has no other meaning: `{n % i5}`. The `format` has its own rules, defined in `../library/format.md` (pending). `{U+H…}` is a rune literal like any other (D-119); `\xHH` and `\u{…}` do not exist. The text literal and the regex literal are raw: they have no placeholders and their braces need no escape. The older forms `\s{…}`, `\n{…}`, `\b{…}`, `\#{…}`, `#s`, `#n`, `#{…}`, the format after `:` and the template operator `?` do not exist; `#` is used only in comments.
 
 **Text literal.** `"""…"""` is a text literal on several lines. It is raw: there are no escape sequences and no interpolation; double quotes need no escape. The closing `"""` is alone on its line, and the number of spaces before it is the indentation that the compiler removes from every line of the text. The line break after the opening quotes and the one before the closing quotes are not part of the text (Q-014). A text literal has the type `Text`. The tag forms `<text>`, `<xml>`, `<html>`, `<data>` and `<code>` also create a `Text` literal, with the same rule for the first and the last line break *(their syntax is not specified yet)*.
 

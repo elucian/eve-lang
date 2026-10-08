@@ -54,6 +54,8 @@ Eve is gradually typed: a declaration may give a type (`:Integer`) or leave it t
 - A collection printed shows its type: `(1,2,3)` list, `[1,2,3]` array, `{1,2,3}` DataSet, `{"a":1}` DataMap, `{x:1}` object; strings and runes are quoted inside a collection; no spaces (D-063, Q-019b). A Real prints in the shortest form that reads back (`3.5`, `0.25`; a whole Real prints without a point).
 - `Object` is the root class. `type(x)` gives the type of a value; `x is Type` tests it.
 
+The types of the files that a program loads and parses (`Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`) are described in [data-types.md](data-types.md) (proposal, level 3).
+
 ## Strings
 
 - A string is immutable; indexing gives runes; `+` concatenates two strings; `*` replicates; `<+` and `+>` append and prepend, also a number converted to text.

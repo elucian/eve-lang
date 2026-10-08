@@ -1,11 +1,11 @@
 # code outside a class can't add an attribute to an object (Q-019h, Q-031k, D-096)
 ** spec: syntax/declarations.md#classes-and-objects
-driver a55_attribute_outside is
+driver c14_attribute_outside is
   process main is
     new p := {x: 1, y: 2};
     new p.z := 7;                ** compile error: it would break the encapsulation
   return;
-end a55_attribute_outside;
+end c14_attribute_outside;
 /*@expect
 {
   "syntax_error": true,
