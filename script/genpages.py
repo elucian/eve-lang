@@ -3,7 +3,7 @@
 
   python script/genpages.py [--check]
 
-  tutorial/tests.html        the conformity tests of every level: description and a link to each file
+  tutorial/features.html     the feature tests (the conformity tests) of every level: description and a link to each file
   tutorial/smoke.html        the smoke tests
   tutorial/performance.html  the benchmarks: what each one measures, the last times, the history
 
@@ -114,6 +114,10 @@ def test_rows(folder, with_code=True):
 
 
 # ------------------------------------------------------------------------------------------ pages
+# One or two words for the title of a level; the full description is the paragraph under it (plan/version_map.md).
+LEVEL_TITLES = {1: 'Scripts', 2: 'Subprograms', 3: 'Modules', 4: 'Parallel', 5: 'Data', 6: 'Server', 7: 'Web'}
+
+
 def gen_tests():
     names, versions = level_names()
     out, side = [], []
@@ -123,11 +127,13 @@ def gen_tests():
         tests = tests_of(folder) if os.path.isdir(folder) else []
         total += len(tests)
         sid = 'level-%d' % n
-        title = 'Level %d: %s' % (n, names.get(n, ''))
+        title = 'Level %d: %s' % (n, LEVEL_TITLES.get(n, ''))
         side.append((title, sid))
         out.append('<h2 id="%s">%s</h2>' % (sid, esc(title)))
+        topic = names.get(n, '')
+        topic = topic[:1].upper() + topic[1:]
         count = '%d tests' % len(tests) if tests else 'no tests yet'
-        out.append('<p>Version %s, %s. <a href="%stest/level%d" target="_blank" rel="noopener noreferrer nofollow">The folder on GitHub</a>.</p>' % (versions.get(n, ''), count, TREE, n))
+        out.append('<p>%s. Version %s, %s. <a href="%stest/level%d" target="_blank" rel="noopener noreferrer nofollow">The folder on GitHub</a>.</p>' % (esc(topic), versions.get(n, ''), count, TREE, n))
         if tests:
             out.append(table(['Code', 'Test', 'What it checks', 'Source'], test_rows(folder)))
         out.append('')
@@ -183,8 +189,8 @@ def gen_perf():
 
 
 PAGES = {
-    'tests': ('Eve Tests', 'Eve Tests', gen_tests,
-              'The conformity tests of Eve, by level. Every test is a script (or a project folder) with its expected output in a comment block at the end: a driver passes when the machine prints exactly that and ends with the expected exit code. Each row shows what the test checks, taken from the first comment line of the file, and a link to the file in the code viewer. The tests are the specification that an implementation must pass: <code>python script/runtest.py all</code> runs them, and <a href="/projects/eve/smoke.html">Smoke</a> and <a href="/projects/eve/performance.html">Performance</a> have their own pages.'),
+    'features': ('Eve Feature Tests', 'Eve Feature Tests', gen_tests,
+              'The feature tests of Eve (the conformity tests), by level. Every test is a script (or a project folder) with its expected output in a comment block at the end: a driver passes when the machine prints exactly that and ends with the expected exit code. Each row shows what the test checks, taken from the first comment line of the file, and a link to the file in the code viewer. The tests are the specification that an implementation must pass: <code>python script/runtest.py all</code> runs them, and <a href="/projects/eve/smoke.html">Smoke</a> and <a href="/projects/eve/performance.html">Performance</a> have their own pages.'),
     'smoke': ('Eve Smoke Test', 'Eve Smoke Test', gen_smoke,
               'The quick check that the machine and the language are sane. Each script is a driver with small functions and very simple <code>expect</code> lines, one feature each: <code>True</code> is <code>True</code>, <code>0 == 0</code>. It runs in less than a second, does not depend on the tests of the levels and shows that the program compiles, parses and has no contradiction. Run it with <code>python script/runtest.py smoke</code>.'),
     'performance': ('Eve Performance', 'Eve Performance', gen_perf,

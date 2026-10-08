@@ -3,9 +3,9 @@
   "d01_concurrent_unsafe_call": {
    "status": "PASS",
    "failures": 0,
-   "runs": 26,
+   "runs": 27,
    "checks": 0,
-   "last": "2026-10-08 16:50",
+   "last": "2026-10-08 17:11",
    "mtime": 1791484784,
    "title": "the compiler flags the call of an unsafe module from a concurrent aspect (D-129)",
    "reason": ""
@@ -13,9 +13,9 @@
   "d02_concurrent_safe_call": {
    "status": "PASS",
    "failures": 4,
-   "runs": 26,
+   "runs": 27,
    "checks": 0,
-   "last": "2026-10-08 16:50",
+   "last": "2026-10-08 17:11",
    "mtime": 1791484784,
    "title": "a concurrent aspect calls a safe module (D-129)",
    "reason": ""
@@ -23,9 +23,9 @@
   "d02_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 13,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-08 16:50",
+   "last": "2026-10-08 17:11",
    "mtime": 1791488057,
    "title": "variation 1 of d02: the concurrent aspect with another input (D-133)",
    "reason": ""
