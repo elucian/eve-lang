@@ -1004,6 +1004,7 @@ pub const Interp = struct {
     /// Apply a binary operator to two values.
     fn apply(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
         const eql = std.mem.eql;
+        if (l == .list and isScalar(r) and isBulkOp(op)) return it.broadcast(op, l.list, r);
         if (eql(u8, op, "==")) return .{ .bool = eq(l, r) };
         if (eql(u8, op, "<>")) return .{ .bool = !eq(l, r) };
         if (eql(u8, op, "<")) return .{ .bool = (try it.order(l, r)) == .lt };
@@ -1101,6 +1102,47 @@ pub const Interp = struct {
             if (eql(u8, op, "^")) return .{ .real = std.math.pow(f64, x, y) };
         }
         return it.fail("unknown operator {s}", .{op});
+    }
+
+    // Zig tip: a `switch` on a `Value` (a tagged union) with `=> true` arms and an `else` arm is the
+    // short way to ask "is it one of these cases?". A `bool` function like this one can be inlined.
+    /// A scalar is a single value: a number, a boolean, a symbol or a string (never a collection).
+    fn isScalar(v: Value) bool {
+        return switch (v) {
+            .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .sym, .str => true,
+            else => false,
+        };
+    }
+
+    // Zig tip: `inline for` unrolls a loop over a comptime-known array, so each `op` is a constant.
+    // `std.mem.eql(u8, a, b)` compares two byte slices (strings) by content, not by address.
+    /// The operators that apply to every element of a list when the other operand is a scalar (D-118).
+    fn isBulkOp(op: []const u8) bool {
+        inline for (.{ "+", "-", "*", "/", "%", "^", "<", ">", "<=", ">=", "=~" }) |o| {
+            if (std.mem.eql(u8, op, o)) return true;
+        }
+        return false;
+    }
+
+    // Zig tip: `std.mem.indexOfScalar(u8, "+-*/%^", op[0])` finds one byte in a slice and returns an
+    // optional index (`?usize`); `!= null` turns it into a yes/no answer.
+    /// One element with a scalar. Arithmetic never builds a string: that needs a loop (D-118).
+    fn bulkOne(it: *Interp, op: []const u8, e: Value, s: Value) Signal!Value {
+        const arithmetic = std.mem.indexOfScalar(u8, "+-*/%^", op[0]) != null and op.len == 1;
+        if (arithmetic and (textual(e) or textual(s))) {
+            return it.fail("operator {s} on a collection and a string is not possible: build a new collection with a loop", .{op});
+        }
+        return it.apply(op, e, s);
+    }
+
+    // Zig tip: `try` inside a `for` leaves the function at the first error, so a half-built `out`
+    // is simply dropped. The allocator `it.a` is an arena, so nothing leaks.
+    /// `list op scalar`: a new list with `op` applied to each element (D-118).
+    fn broadcast(it: *Interp, op: []const u8, src: *List, s: Value) Signal!Value {
+        const out = try it.a.create(List);
+        out.* = .{ .array = src.array };
+        for (src.elems()) |e| try out.items.append(it.a, try it.bulkOne(op, e, s));
+        return .{ .list = out };
     }
 
     // Zig tip: `isOp` relies on the same Zig feature as `bind` above: see the tip there.
@@ -2201,6 +2243,14 @@ pub const Interp = struct {
             v = try it.clone(v);
         } else if (!std.mem.eql(u8, op, ":=")) {
             const cur = try it.eval(target);
+            // a list and a scalar: every element is updated in place (D-118)
+            if (cur == .list and isScalar(v)) {
+                const src = cur.list.elems();
+                const out = try it.a.alloc(Value, src.len);
+                for (src, 0..) |e, i| out[i] = try it.bulkOne(op[0..1], e, v);
+                @memcpy(src, out);
+                return;
+            }
             // += and -= on a collection change it in place
             if ((cur == .list or cur == .set) and (op[0] == '+' or op[0] == '-')) {
                 const l = if (cur == .list) cur.list else cur.set;

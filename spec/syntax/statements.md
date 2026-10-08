@@ -31,13 +31,13 @@ A `new` statement may change the names it reads from (`new e <- queue;` changes 
 |---|---|
 | `let x := e;` | assign the value of `e`; shares an object or collection, copies a native value |
 | `let x :: e;` | assign a deep copy |
-| `let x += e;` `-=` `*=` `/=` `%=` `^=` | combined assignment; on a collection `+=` adds and `-=` removes by value (all equal elements) |
+| `let x += e;` `-=` `*=` `/=` `%=` `^=` | combined assignment; on a List or Array with a scalar on the right it updates every element in place (`let a += 5;` on `(1, 2)` gives `(6, 7)`, D-118); on a DataSet `+=` and `-=` add and remove |
 | `let a <+ x;` `let x +> a;` | append `x` at the end of `a`; put `x` at the start of `a` |
 | `let x << n;` `let x >> n;` | shift in place |
 | `let x <- lst;` | remove the first element of `lst` into `x` (created when missing, also on the first pass of a loop) |
 | `let lst -> y;` `let lst -> new y;` | remove the last element of `lst` into `y` |
 | `let _ <- lst;` `let lst -> _;` | remove the first / last element and drop it |
-| `lst.delete(v);` | remove every element equal to `v`, like `-=`; an arrow never removes by value (Q-031c, Q-033i) |
+| `lst.delete(v);` | remove every element equal to `v`; neither `-=` nor an arrow removes by value (Q-031c, Q-033i, D-118) |
 | `let f(x);` | run `f` and drop its result |
 
 `=` is not an assignment operator after `let`: `let x = 5;` is an error (D-079).
@@ -68,6 +68,7 @@ A procedure is called as a statement, with or without parentheses when it has no
 | `panic;` | end the whole application at once with code 1; no `finalize` |
 | `raise expr;` | create an error; the process jumps to `recover` |
 | `return;` | end the subprogram or the process; carries no value |
+| `defer stmt;` | register a simple statement that runs when the subprogram ends, by any path (`return`, `exit`, an error), in reverse order of registration: the last registered runs first (D-081, D-117) |
 | `pass;` | do nothing |
 
 `break` and `skip` outside a loop, and `stop` outside a job, are compile errors. `retry`, `resume` and `abort` are valid only in `recover`.
@@ -78,4 +79,4 @@ A procedure is called as a statement, with or without parentheses when it has no
 
 ## Other statements of later levels
 
-`apply` is level 2 (`../semantics/aspects.md`); `start` is level 4; `wait`, `defer`, `yield` (version 2), `call` (level 3). `async function` and `async procedure` declare subprograms that run as tasks (D-104). In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. Level 4; open points: Q-035 in `decision_level4.md`.
+`apply` is level 2 (`../semantics/aspects.md`); `start` is level 4; `wait`, `yield` (version 2), `call` (level 3). `async function` and `async procedure` declare subprograms that run as tasks (D-104). In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. Level 4; open points: Q-035 in `decision_level4.md`.

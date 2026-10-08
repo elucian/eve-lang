@@ -1,0 +1,7 @@
+#!/bin/sh
+# pre-commit: when keywords.json is committed, refresh the keyword lists of the tutorial highlighter (eve1.js).
+# The tutorial is another repository (scl): the hook updates the file but cannot commit it for you.
+if git diff --cached --name-only | grep -q "^spec/lexical/keywords.json$"; then
+  python script/genkeywords.py || exit 1
+  echo "pre-commit: tutorial/js/eve1.js refreshed; commit it with: git -C tutorial add projects/eve/js/eve1.js"
+fi

@@ -16,7 +16,7 @@ simulation data), which is fine as long as Linguist has no entry for it; a heuri
 - [ ] `syntaxes/eve.tmLanguage.json`: TextMate grammar, scope name `source.eve`. Generate the word lists from the specification
       (`spec/lexical/keywords.json`, `operators.json`, `delimiters.json`) so the colors never drift from the language. Keywords
       wait for Q-002 (S2.4). Scopes: comments (`#` title at column 1, `##`, `**`, `(** **)`, `/* */`), strings with the escapes
-      `\n \xHH \u{} &name;` and the interpolation `\s{} \#{} \b{}`, text literal `"""`, symbols `'a'` and `U+03B2`, numbers
+      `\n {U+H} &name;` and the interpolation `\s{} \#{} \b{}`, text literal `"""`, symbols `'a'` and `U+03B2`, numbers
       (`0x`, `0b`, real, rational `3\4`), constants `True False Null`, sigils (`$name`, `@name`, `name!`), types (capitalized
       names), operators (longest match: `..<`, `>..<`, `><`, `=~`, `!~`, `<-`, `->`).
 - [ ] `language-configuration.json`: line comment `**`, block comment `/* */`, brackets `() [] {}`, auto-closing pairs, indentation

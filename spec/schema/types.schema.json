@@ -44,7 +44,8 @@
             "type": "string"
           },
           "tutorial": {
-            "type": "string"
+            "type": "string",
+            "description": "Courtesy link to a tutorial section; informative, not part of the definition."
           },
           "summary": {
             "type": "string"

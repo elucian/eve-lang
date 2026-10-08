@@ -1,4 +1,4 @@
-# placeholders {name} and {name % format}: a name only, written by its type; \{ \} are literal braces; \u{} Unicode (D-096, D-102, formats are a draft)
+# placeholders {name} and {name % format}: a name only, written by its type; \{ \} are literal braces; {U+H} Unicode (D-096, D-102, formats are a draft)
 ** spec: lexical/lexical.md#string
 driver a11_interpolation is
   process main is
@@ -12,7 +12,7 @@ driver a11_interpolation is
     print "n = {n}";
     print "ok = {ok}";
     print "sum = {sum}";
-    print "alpha = \u{3B1}";
+    print "alpha = {U+03B1}";
     print "braces = \{x\}";
     print "both = \{{n}\}";             ** an escaped brace next to a placeholder
     new lst := (10, 20, 30);

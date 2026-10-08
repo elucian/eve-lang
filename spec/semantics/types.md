@@ -1,6 +1,6 @@
 # Types
 
-Status: **0.1-draft**, level 1. Sources: D-021 to D-024, D-032, D-049, D-058 to D-060, D-079, D-080. The Date, Time and Duration types are in the tutorial page `datetime.html` and are not part of level 1.
+Status: **0.1-draft**, level 1. Sources: D-021 to D-024, D-032, D-049, D-058 to D-060, D-079, D-080. The Date, Time and Duration types are not part of level 1 (D-108).
 
 Eve is gradually typed: a declaration may give a type (`:Integer`) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries; scripts use the primitive types.
 

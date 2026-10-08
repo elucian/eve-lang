@@ -22,7 +22,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
   `python script/plan.py show D-087` prints one entry, also from `plan/archive/` (settled, full text).
 - `issues/` one file per tutorial page: questions and fixes from the page review (T1.10). The
   author answers by editing `**Answer:**` lines; answers become decisions in `plan/decision_levelN.md`.
-- `demo/` **retired** (D-099): every demo has a home in `test/level1/` or in the tutorial (`tutorial/demo/`, datetime.html); the folder only waits to be deleted, don't use it as a source. `pattern/` syntax patterns; `test/level1-7/` conformity tests, expectations in `/*@expect*/` blocks
+- `demo/` **deleted** (D-099): every demo has a home in `test/level1/` or in the tutorial (`tutorial/demo/`, datetime.html); the list is the tutorial page `examples.html` (Demos & Examples). `pattern/` syntax patterns; `test/level1-7/` conformity tests, expectations in `/*@expect*/` blocks
 - `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
   Conventions in `manual/README.md`.
@@ -92,6 +92,8 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
 | Move a doc + fix all links to it | `python script/mdlinks.py rename <old> <new> --git-mv` |
 | Broken links / anchors | `python script/mdlinks.py check [manual]` |
 | HTML tag balance in `.md` | `bee-ed balance <file>` |
+| Check the grammar of `spec/syntax/grammar.md` against the tests | `python script/grammarcheck.py [files]` (needs `pip install lark`) |
+| Refresh the keyword lists of the tutorial highlighter (`tutorial/js/eve1.js`) from `spec/lexical/keywords.json` | `python script/genkeywords.py` (`speccheck.py` reports a stale file; the pre-commit hook in `.githooks/` runs it; `git config core.hooksPath .githooks` once per clone) |
 | Run tests on the VM (TDD) | `python script/runtest.py 1` / `all` / `a03` → reports in `temp/output/` |
 | Performance of the VM (per level) | `python script/bmark.py [--save]` → `test/bmark/`, notes per version in its README |
 

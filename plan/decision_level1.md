@@ -45,3 +45,48 @@ Author question and answers. Since `over` runs `finalize` (D-081), the two state
 - **`over;`** ends the whole process it is in, from any depth (also from a function that the process called), with code 0; no `recover`, `finalize` runs. In an aspect the driver continues after `apply`; in the driver the program ends.
 - `panic;` stays the abnormal end of the whole application (code 1, no `finalize`).
 - Applied: `statements.md`, `keywords.json`, `errors.md`, syntax.html, processing.html; tests a69 (`exit` in a procedure) and a70 (`over` from a procedure).
+
+## D-115 Grammar checked against the examples (S3.6, 2026-10-08)
+The EBNF of `spec/syntax/grammar.md` is now converted to a Lark grammar and run on the examples by `python script/grammarcheck.py` (needs `pip install lark`). Result: **139 of 139 files of `test/level1/` and `test/level2/` behave as the tests expect**: every other file parses, every file whose `/*@expect*/` says `"syntax_error": true` is refused or, when the error is semantic, accepted by the grammar and refused by the later checks (24 files, see Q-037 h). First run: 109 of 139. `pattern/` and `tutorial/demo/` do not parse yet: they use modules, `from … use`, `generator` and `parallel` (levels 3 and 4) and the legacy regions.
+- **Gaps of the grammar, fixed** (each one came from an example or from the prose of the spec): the rules `members`, `names`, `lambda`, `property` and `variable-stmt` were used but not defined; `new a, b :Integer;`; array types with several dimensions `[2, 2]Integer`; the open end on the left `(?..0)` and on the right `(0..?)`; `(k: v)` in a `for`; trailing comma in lists, arrays and braces; `*rest` in a deconstruction; a rune as the key of a map; extension methods outside a class; `new self.x`; `set $epsilon = 0.5;`; `let lst -> new f;`; `apply folder/name();`; a lambda as an argument; `@result!` and `new a! := …`.
+- **Removed:** `property` (attributes are in the signature of the class) and `variable-stmt` (`new` is a declaration and a statement).
+- **Changed in a test:** `a76_overflow` named a variable `one`, a reserved word; renamed to `unit` (Q-037 c).
+- **Q-037 Syntax points found by the check (answered 2026-10-08 → D-117).** The grammar accepts them as *(proposed)*, or reflects the tests; each needs a yes or a no:
+  - (a) Types of a list and of a DataSet: `()Integer` and `{}Integer` (tests a73, b18), by symmetry with `[]Integer`.
+  **answer** Correct assumption. Accepted.
+  - (b) `<+` and `+>` as expressions that return a new list (a10, a17); `operators.json` calls them modifiers and leaves their precedence open. The grammar puts them at the level of `+` and `-`. 
+  **answer** Perfect assumption. Accepted.
+  - (c) ~~`one`, `all` and `other` are reserved words, but they are common names.~~ Answered: contextual (D-116).
+  **answer** Correct, whenrever possible additional words of a statement are contextual.
+  - (d) A variable that holds a stochastic function ends with `!` (`new a! := make_counter!(0); a!();`, b19) and so does a result name (`@next!`).
+  **answer** Only is the result is a function.
+  - (e) ~~`$error.job`: `job` is a keyword used as an attribute.~~ Answered with (c): `job` is contextual (D-116).
+  **answer** job is not contextual, it is a reserved keyword like "if" and "match" and "parallel".
+  - (f) `self` is an ordinary name, not a keyword, but `new self.x` is allowed only with it.
+  **answer** `self` is reserved name, when used must represent the current object, and is going to be very confusing if used with other meaning.
+  - (g) `defer` is level 1 in the test a74 and a later level in `statements.md`.
+  **answer** Accepted.
+  - (h) 24 tests carry `"syntax_error": true` for errors that the grammar does not see (undefined name, wrong type, redeclaration, missing argument…). The key means "refused by the compile step". Rename it `compile_error`, or keep it?
+  **answer** syntax_error is correct. We do not have a compiler we have a virtual machine that parse and execute. So, the term is better as it is.
+
+## D-118 A scalar operator applies to every element of a List or Array (2026-10-08)
+Author request. `list op scalar` with `+ - * / % ^ < > <= >= =~` applies the operator to each element: `let a += 5;` on `(1, 2, 3, 4)` gives `(6, 7, 8, 9)` (in place), `a * 2` returns a new collection of the same kind. This **replaces** the old meaning of `+=` (append) and `-=` (remove by value) on a List or Array: append is `<+`, removal is `.delete(v)`. Strings are not bulk: arithmetic with a string element or scalar is an error (build a new collection with a loop); a regular expression `list =~ "/re/"` is the exception, it returns booleans. `==` and `<>` stay whole-collection comparisons. DataSet and DataMap keep `+=`/`-=` as add and remove (a bulk update could merge elements). Consistency (author, same day): appending an element or an object is always `<+`, never `+`. Not done, to be confirmed: scalar on the left (`2 * lst`), bulk on DataMap values, `in`/`is`. Tests a83, a84; a17 changed. VM: `Interp.broadcast`.
+
+## D-116 Prefer contextual keywords to reserved keywords (2026-10-08)
+Author decision, answers Q-037 (c) and (e): **whenever the grammar allows it, a keyword is contextual**, not reserved. A contextual keyword is a keyword only at the places where the grammar expects it; everywhere else it is an ordinary name (`new one := 1;` is valid, `match x one` is the option). **Correction (D-117):** `job` is not contextual, it stays reserved like `if`, `match` and `parallel`; `$error.job` is the one place where the grammar allows it after a dot.
+- A new keyword is first considered as contextual. It stays reserved only when its position cannot tell it from a name: the words that start a statement or a declaration (`new`, `let`, `if`, `match`, `return`, `apply`, `defer`, `class`, `function`…), the words that close a block (`done`, `end`, `repeat`), and the operator words (`and`, `or`, `not`, `is`, `in`…).
+- Applied: `keywords.json` marks eight words `contextual: true`: `all`, `one`, `other` (options of `match` and `when`), `exclusive`, `concurrent` (before `aspect`), `public`, `protected`, `private` (at the start of a class member). The schema has the new optional field; `lexical.md` states the rule; the grammar needs no special case for `.job` any more; `script/grammarcheck.py` reads the flag and accepts these words as names.
+- `a76_overflow` uses `one` as a variable again; the VM already read it as a name, and the grammar check and the VM test pass.
+- To do: the keyword tables of the tutorial (`syntax.html`), when they are regenerated from `keywords.json`, show the column; the words of the levels 3 to 7 (`start`, `wait`, `call`, `yield`, `parallel`, `trait`, `generator`, `export`, `use`, `from`) are reserved today and are candidates to become contextual when their level is specified.
+
+## D-117 Answers to Q-037: syntax points found by the grammar check (2026-10-08)
+Author answers, written under each point of Q-037 in D-115. Applied to `grammar.md`, `keywords.json`, `statements.md`.
+- **(a) Types of a list and of a DataSet** are `()Integer` and `{}Integer`, like `[]Integer`. Accepted.
+- **(b) `<+` and `+>` as expressions** return a new list, at the level of `+` and `-`. Accepted.
+- **(c) Contextual words.** Accepted, with the rule of D-116: whenever possible the additional words of a statement are contextual.
+- **(d) A name ends with `!` only if its value is a function** (`new a! := make_counter!(0);`). The grammar writes `name!` for any variable; the check that the value is a function belongs to the semantic checks (a compile error otherwise).
+- **(e) `job` is reserved**, not contextual, like `if`, `match` and `parallel`. The keyword is allowed after a dot only for `$error.job`.
+- **(f) `self` is a reserved word.** It names the current object only. `keywords.json` lists it (declaration); the grammar takes it as the start of a name path (`self.x`, `let self := Object();`) and not as a declarable name: `new self := …` and a parameter named `self` are refused.
+- **(g) `defer` belongs to level 1.** `statements.md` documents it (a registered statement runs when the subprogram ends, in reverse order); `keywords.json`: stable.
+- **(h) `syntax_error` stays** the key of a negative test. Eve has a virtual machine that parses and executes, not a separate compiler, so "refused before the run" is a syntax error for the tests.
+- `python script/grammarcheck.py`: 139 of 139 files still behave as expected after the change.

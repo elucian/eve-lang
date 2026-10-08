@@ -126,13 +126,13 @@
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#escapes"
     },
     {
-      "id": "unicode-escape",
-      "open": "\\u{",
+      "id": "code-point-placeholder",
+      "open": "{U+",
       "close": "}",
       "kind": "escape",
       "nests": false,
       "multiline": false,
-      "summary": "Unicode code point, 1 to 6 hexadecimal digits.",
+      "summary": "Placeholder with a Unicode code point, 1 to 6 hexadecimal digits: `{U+03B1}` is α (D-119).",
       "status": "draft",
       "ref": "lexical/lexical.md#literals",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#escapes"

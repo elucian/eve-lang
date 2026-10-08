@@ -27,7 +27,7 @@ A driver has one process named `main`, which is the entry point. An aspect has e
 ## Declarations
 
 ```ebnf
-declaration = variable | constant | alias | function | procedure | class ;
+declaration = variable | constant | alias | function | procedure | class | method ;   (* a method outside a class is an extension method (D-086) *)
 
 variable    = "new" , init-list , ";" ;
 init-list   = binding , { "," , binding } , [ type-hint ]
@@ -35,12 +35,14 @@ init-list   = binding , { "," , binding } , [ type-hint ]
             | pattern-list , ( ":=" | "::" ) , expression      (* deconstruct: new x, y, _, *rest, _ :: a; *)
             | name , "::" , expression
             | name , "<-" , expression                          (* capture: the first element, see statements.md *)
-            | name , ":" , type ;                               (* no value: the zero value of the type *)
-binding     = name , ( "=" | ":=" ) , expression ;
+            | names , type-hint ;                               (* no value: the zero value of the type *)
+binding     = var-name , ( "=" | ":=" ) , expression ;
+var-name    = name , [ "!" ] | "self" , "." , name ;                 (* name! only when the value is a function (D-117); self is reserved *)                       (* new self.x := v; creates an attribute inside a class *)
+const-binding = ( name | sysname ) , ( "=" | ":=" ) , expression ;   (* set $epsilon = 0.5; *)
 pattern-list = pattern , { "," , pattern } ;
 type-hint   = ":" , type ;
 
-constant    = "set" , ( binding , { "," , binding } | "(" , names , ")" , "=" , expression ) , [ type-hint ] , ";" ;
+constant    = "set" , ( const-binding , { "," , const-binding } | "(" , names , ")" , "=" , expression ) , [ type-hint ] , ";" ;
 alias       = "def" , name , "=" , name-path , ";" ;
 
 procedure   = "procedure" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
@@ -48,7 +50,7 @@ procedure   = "procedure" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
 function    = "function" , name , [ "!" ] , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
               { declaration | statement } , "return" , ";" ;
 results     = "(" , result , { "," , result } , ")" ;
-result      = [ "@" ] , name , ":" , type ;
+result      = [ "@" ] , name , [ "!" ] , ":" , type ;           (* a result of a non-deterministic kind may be named name! *)
 parameters  = parameter , { "," , parameter } ;
 parameter   = [ "*" | "@" ] , name , [ ( "=" | ":=" ) , expression ] , [ type-hint ] ;
 
@@ -60,9 +62,12 @@ class-shape = "{" , members , "}"                                         (* att
             | "(" , expression , ".." , expression , ")" , [ "(" , expression , ")" ]   (* range: (0..1)(0.1) <: Range *)
             | "(" , [ parameters ] , ")" , [ ":" , type ] ;              (* function type: (p1, p2: Integer): Integer <: Function; there are no procedure types (D-101) *)
 ordinal-value = name , [ ":" , integer ] ;
-class-member = [ visibility ] , ( method | constructor | destructor | property ) ;
+members     = attribute , { "," , attribute } ;
+attribute   = names , type-hint ;
+names       = name , { "," , name } ;
+class-member = [ visibility ] , ( method | constructor | destructor ) ;
 visibility  = "public" | "protected" | "private" ;
-method      = "method" , name , "(" , "@self" , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body ;
+method      = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body ;
 constructor = "constructor" , "(" , [ parameters ] , ")" , "=>" , "(" , "@self" , ")" , "is" , body ;
 destructor  = "destructor" , "(" , "@self" , ")" , "is" , body ;
 body        = { declaration | statement } , "return" , ";" ;
@@ -72,27 +77,31 @@ body        = { declaration | statement } , "return" , ";" ;
 
 ```ebnf
 type        = name-path , [ "(" , ":" , type , { "," , type } , ")" ]      (* Integer, Vector(:Real) *)
-            | "[" , [ integer | "?" ] , "]" , type                            (* array: []Integer, [10]Integer *)
+            | "[" , [ dimension , { "," , dimension } ] , "]" , type          (* array: []Integer, [10]Integer, matrix: [2, 2]Integer *)
+            | "(" , ")" , type                                                 (* list: ()Integer (D-117) *)
+            | "{" , "}" , type                                                 (* DataSet: {}Integer (D-117) *)
             | "{" , ":" , "}" , "(" , type , "," , type , ")"                  (* DataMap: {:}(String, Integer) *)
             | "{" , type , { "|" , type } , "}"                                (* variant: {Real | Integer} *)
             | "(" , expression , ".." , expression , ")" , [ "(" , expression , ")" ]   (* range type *)
             | type , "?" ;                                                       (* optional *)
+dimension   = integer | "?" ;
 ```
 
 ## Statements
 
 ```ebnf
-statement   = ( simple , [ "if" , expression ] , ";" ) | block ;
-simple      = variable-stmt | let-stmt | call-stmt | apply-stmt | expect-stmt | raise-stmt | jump | "return" | "pass"
+statement   = ( simple , [ "if" , expression ] , ";" ) | block | variable ;
+simple      = let-stmt | defer-stmt | call-stmt | apply-stmt | expect-stmt | raise-stmt | jump | "return" | "pass"
             | "retry" | "resume" | "abort" | "exit" | "over" | "panic" | "stop" ;
-let-stmt    = "let" , target , modifier , expression ;
+let-stmt    = "let" , target , modifier , ( expression | "new" , names ) ;      (* let lst -> new f;  the explicit capture *)
+defer-stmt  = "defer" , simple ;                                                (* registers a statement for the end of the subprogram (D-117) *)
 modifier    = ":=" | "::" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<+" | "+>" | "<<" | ">>" | "->" | "<-" ;
 target      = name-path , { "[" , index-list , "]" } | "_" ;
 call-stmt   = name-path , [ "(" , [ arguments ] , ")" | arguments ] ;     (* print x;  save(data);  foo; *)
 expect-stmt = ( "expect" | "assert" ) , expression ;
 raise-stmt  = "raise" , expression ;
 jump        = ( "break" | "skip" ) , [ label ] ;
-apply-stmt  = "apply" , name-path , "(" , [ arguments ] , ")" ;      (* only in the process of a driver *)
+apply-stmt  = "apply" , { name , "/" } , name-path , "(" , [ arguments ] , ")" ;      (* only in the process of a driver; a folder may precede the aspect name *)
 arguments   = argument , { "," , argument } ;
 argument    = [ name , ":" ] , [ "@" ] , expression
             | "*" , expression ;                                        (* spread a list or a map, aspects.md *)
@@ -114,7 +123,7 @@ for-block   = [ loop-head ] , "for" , pattern , "in" , expression , "do" , { sta
               [ "then" , { statement } ] , "done" , [ label ] , ";" ;
 repeat-block = [ label , ":" ] , "loop" , { declaration } , "do" , { statement } ,
               "repeat" , [ label ] , [ "while" , expression ] , ";" ;
-pattern     = name | "(" , pattern , { "," , pattern } , ")" | "*" | "_" ;
+pattern     = name | "(" , pattern , { "," , pattern } , ")" | "(" , name , ":" , name , ")" | "*" , [ name ] | "_" ;   (* (k: v) visits a map *)
 label       = name ;
 ```
 
@@ -123,7 +132,8 @@ label       = name ;
 ## Expressions
 
 ```ebnf
-expression  = conditional ;
+expression  = lambda | conditional ;
+lambda      = "(" , [ parameters ] , ")" , "=>" , expression ;           (* (x) => (x * 2); level 2, D-109 *)
 conditional = or-expr , [ "if" , or-expr , "else" , conditional ] ;
 or-expr     = xor-expr , { "or" , xor-expr } ;
 xor-expr    = and-expr , { "xor" , and-expr } ;
@@ -132,26 +142,26 @@ relation    = union , { ( "==" | "<>" | "<" | ">" | "<=" | ">=" | "=~" | "is" | 
 union       = inter , { "||" , inter } ;
 inter       = shift , { "&&" , shift } ;
 shift       = range , { ( "<<" | ">>" ) , range } ;
-range       = sum , [ ( ".." | "..<" | ">.." | ">..<" | "+-" | "><" ) , sum ] ;
-sum         = product , { ( "+" | "-" ) , product } ;
+range       = sum , [ range-op , ( sum | "?" ) ] | "?" , range-op , sum ;                      (* "?" is the open end: (0..?), (?..0) *)
+range-op    = ".." | "..<" | ">.." | ">..<" | "+-" | "><" ;
+sum         = product , { ( "+" | "-" | "<+" | "+>" ) , product } ;      (* "<+" and "+>" as expressions return a new list (D-117) *)
 product     = power , { ( "*" | "/" | "%" ) , power } ;
 power       = unary , [ "^" , power ] ;                    (* right to left; the unary minus applies first: -2 ^ 2 is 4 (Q-030) *)
 unary       = ( "-" | "not" ) , unary | postfix ;
-postfix     = primary , { "." , name | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;
+postfix     = primary , { "." , ( name | "job" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;
 index-list  = index , { "," , index } ;
 index       = expression | "*" ;                                               (* a range slices, "*" is a whole dimension *)
-primary     = number | rune | string | text | name-path | sysname | "(" , expression , ")"
-            | "(" , lambda , ")"                            (* called at once: ((x) => (x * 2))(5); lambdas and closures: level 2, D-109 *)
+primary     = number | rune | string | text | name-path , [ "!" ] | sysname | "(" , expression , ")"
             | list | array | brace | "_" ;
-list        = "(" , ")" | "(" , expression , "," , [ expression , { "," , expression } ] , ")"
+list        = "(" , ")" | "(" , expression , "," , [ expression , { "," , expression } , [ "," ] ] , ")"
             | "(" , expression , "|" , generators , ")" ;          (* list builder *)
-array       = "[" , [ expression , { "," , expression } ] , "]" | "[" , expression , "|" , generators , "]" ;
-brace       = "{" , "}" | "{" , ":" , "}" | "{" , expression , { "," , expression } , "}"
-            | "{" , pair , { "," , pair } , "}" | "{" , expression , "|" , generators , "}" ;
-pair        = ( name | string | number ) , ":" , expression ;
+array       = "[" , [ expression , { "," , expression } , [ "," ] ] , "]" | "[" , expression , "|" , generators , "]" ;
+brace       = "{" , "}" | "{" , ":" , "}" | "{" , expression , { "," , expression } , [ "," ] , "}"
+            | "{" , pair , { "," , pair } , [ "," ] , "}" | "{" , expression , "|" , generators , "}" ;
+pair        = ( name | string | rune | number ) , ":" , expression ;
 generators  = generator , { "and" , ( generator | expression ) } ;
 generator   = pattern , "in" , expression ;
-name-path   = name , { "." , name } ;
+name-path   = ( name | "self" ) , { "." , name } ;                          (* self is reserved: it names the current object only *)
 ```
 
 The postfix `(…)` after a range is the step of the range: `(0..10)(2)`. `(x)` is a grouping; the list of one element is `(x,)`. A bracket after a value is an index or a slice, never a range (D-022, D-023).

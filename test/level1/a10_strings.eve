@@ -17,8 +17,8 @@ driver a10_strings is
     expect (1 +> "a") == "1a";
 
     ** escape sequences
-    expect "\x41" == "A";
-    expect "\u{3B1}" == "α";
+    expect "{U+0041}" == "A";
+    expect "{U+03B1}" == "α";
     expect "a\tb".length() == 3;
     expect "\\".length() == 1;
     expect "\"".length() == 1;

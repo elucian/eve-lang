@@ -198,19 +198,12 @@ const Parser = struct {
     }
 
     // Zig tip: `a orelse b` unwraps an optional: it gives `b` when `a` is null, and `b` may leave
-    // the function with `return`.
-    /// `\xHH` or `\u{H...}` at `raw[i]` (the backslash). Returns the code point and the index after it.
-    fn hexEscape(p: *Parser, raw: []const u8, i: usize) Error!struct { cp: u21, next: usize } {
-        if (raw[i + 1] == 'x' and i + 4 <= raw.len) {
-            const cp = std.fmt.parseInt(u21, raw[i + 2 .. i + 4], 16) catch return p.fail("bad \\x escape", .{});
-            return .{ .cp = cp, .next = i + 4 };
-        }
-        if (raw[i + 1] == 'u' and i + 2 < raw.len and raw[i + 2] == '{') {
-            const close = std.mem.indexOfScalarPos(u8, raw, i + 3, '}') orelse return p.fail("bad \\u escape", .{});
-            const cp = std.fmt.parseInt(u21, raw[i + 3 .. close], 16) catch return p.fail("bad \\u escape", .{});
-            return .{ .cp = cp, .next = close + 1 };
-        }
-        return p.fail("bad escape sequence", .{});
+    // the function with `return`. A function that returns `?T` says "maybe nothing" in its type.
+    /// The code point of a placeholder `{U+H...}` (the text between the braces), or null when the
+    /// text is not of that form.
+    fn codePointPlaceholder(inner: []const u8) ?u21 {
+        if (inner.len < 3 or inner[0] != 'U' or inner[1] != '+') return null;
+        return std.fmt.parseInt(u21, inner[2..], 16) catch null;
     }
 
     // Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
@@ -233,7 +226,7 @@ const Parser = struct {
 
     // Zig tip: `x catch |e| ...` handles the error of a call on the spot, where `try` would pass it
     // up to the caller.
-    /// `'a'`, `'\x41'`, `'\u{3B1}'` or `U+0061`: the node holds the UTF-8 bytes of the symbol.
+    /// `'a'`, `'\n'` or `U+0061`: the node holds the UTF-8 bytes of the symbol.
     fn charNode(p: *Parser, t: Token) Error!*Node {
         var out: std.ArrayList(u8) = .empty;
         if (t.text[0] == 'U') {
@@ -242,12 +235,8 @@ const Parser = struct {
         } else {
             const raw = t.text[1 .. t.text.len - 1];
             if (raw.len >= 2 and raw[0] == '\\') {
-                if (simpleEscape(raw[1])) |c| {
-                    try out.append(p.a, c);
-                } else {
-                    const h = try p.hexEscape(raw, 0);
-                    try p.appendCodePoint(&out, h.cp);
-                }
+                const c = simpleEscape(raw[1]) orelse return p.failAt(t, "bad escape sequence \\{c}", .{raw[1]});
+                try out.append(p.a, c);
             } else try out.appendSlice(p.a, raw);
         }
         const one = std.unicode.utf8CountCodepoints(out.items) catch 0;
@@ -307,6 +296,11 @@ const Parser = struct {
             if (c == '{') {
                 const close = matchBrace(raw, i) orelse return p.failAt(t, "unclosed placeholder: write \\{{ for a brace", .{});
                 const inner = raw[i + 1 .. close];
+                if (codePointPlaceholder(inner)) |cp| {
+                    try p.appendCodePoint(&cur, cp);
+                    i = close + 1;
+                    continue;
+                }
                 const pct = formatPercent(inner);
                 const expr_text = std.mem.trim(u8, if (pct) |k| inner[0..k] else inner, " ");
                 const spec = std.mem.trim(u8, if (pct) |k| inner[k + 1 ..] else "", " ");
@@ -341,10 +335,6 @@ const Parser = struct {
             if (e == '&') {
                 try cur.append(p.a, '&');
                 i += 2;
-            } else if (e == 'u' or e == 'x') {
-                const h = try p.hexEscape(raw, i);
-                try p.appendCodePoint(&cur, h.cp);
-                i = h.next;
             } else if (simpleEscape(e)) |ch| {
                 try cur.append(p.a, ch);
                 i += 2;

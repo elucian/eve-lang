@@ -26,7 +26,7 @@ Sources: `syntax.html` (Syntax Elements, Punctuation, Delimiters), `demo/comment
 - Literals: integer, real, rational forms, strings (all quote kinds), symbols, collections.
 - Tokens and whitespace, statement terminator `;`, line continuation.
 
-### S2.4 `lexical/keywords.json` `[!]` → Q-002 (evidence written 2026-10-02: 111 words, 30 unused, `external` missing)
+### S2.4 `lexical/keywords.json` `[x]` 2026-10-06 (D-094, Q-002): 72 reserved words with category, status, summary and ref; checked 2026-10-08
 - Extract candidates with a script: the tutorial table, plus words at statement start in
   `demo/`, `pattern/` and `test/`.
 - Classify each: `region`, `declaration`, `statement`, `operator`, `modifier`, `reserved`.

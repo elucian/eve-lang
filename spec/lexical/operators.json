@@ -643,7 +643,7 @@
       "associativity": "right",
       "operandTypes": "variable, value",
       "resultType": "none",
-      "summary": "Changes the variable on its left. On a collection it adds (`+=`) or removes all equal elements (`-=`).",
+      "summary": "Changes the variable on its left. On a List or Array and a scalar it updates every element in place (D-118); on a DataSet or a DataMap `+=` adds and `-=` removes.",
       "status": "draft",
       "ref": "lexical/lexical.md#operators-and-punctuation",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#modifiers"
@@ -658,7 +658,7 @@
       "associativity": "right",
       "operandTypes": "variable, value",
       "resultType": "none",
-      "summary": "Changes the variable on its left. On a collection it adds (`+=`) or removes all equal elements (`-=`).",
+      "summary": "Changes the variable on its left. On a List or Array and a scalar it updates every element in place (D-118); on a DataSet or a DataMap `+=` adds and `-=` removes.",
       "status": "draft",
       "ref": "lexical/lexical.md#operators-and-punctuation",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#modifiers"
@@ -673,7 +673,7 @@
       "associativity": "right",
       "operandTypes": "variable, value",
       "resultType": "none",
-      "summary": "Changes the variable on its left. On a collection it adds (`+=`) or removes all equal elements (`-=`).",
+      "summary": "Changes the variable on its left. On a List or Array and a scalar it updates every element in place (D-118); on a DataSet or a DataMap `+=` adds and `-=` removes.",
       "status": "draft",
       "ref": "lexical/lexical.md#operators-and-punctuation",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#modifiers"
@@ -688,7 +688,7 @@
       "associativity": "right",
       "operandTypes": "variable, value",
       "resultType": "none",
-      "summary": "Changes the variable on its left. On a collection it adds (`+=`) or removes all equal elements (`-=`).",
+      "summary": "Changes the variable on its left. On a List or Array and a scalar it updates every element in place (D-118); on a DataSet or a DataMap `+=` adds and `-=` removes.",
       "status": "draft",
       "ref": "lexical/lexical.md#operators-and-punctuation",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#modifiers"
@@ -703,7 +703,7 @@
       "associativity": "right",
       "operandTypes": "variable, value",
       "resultType": "none",
-      "summary": "Changes the variable on its left. On a collection it adds (`+=`) or removes all equal elements (`-=`).",
+      "summary": "Changes the variable on its left. On a List or Array and a scalar it updates every element in place (D-118); on a DataSet or a DataMap `+=` adds and `-=` removes.",
       "status": "draft",
       "ref": "lexical/lexical.md#operators-and-punctuation",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#modifiers"
@@ -718,7 +718,7 @@
       "associativity": "right",
       "operandTypes": "variable, value",
       "resultType": "none",
-      "summary": "Changes the variable on its left. On a collection it adds (`+=`) or removes all equal elements (`-=`).",
+      "summary": "Changes the variable on its left. On a List or Array and a scalar it updates every element in place (D-118); on a DataSet or a DataMap `+=` adds and `-=` removes.",
       "status": "draft",
       "ref": "lexical/lexical.md#operators-and-punctuation",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#modifiers"

@@ -27,8 +27,7 @@ driver a09_literals is
     expect U+0061 == 'a';
     expect U+03B2 == 'β';
     expect type('a') is Rune;
-    expect '\x41' == 'A';
-    expect '\u{3B1}' == 'α';
+    expect U+03B1 == 'α';
     expect '' == nil;
 
     ** strings and logic values

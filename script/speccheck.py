@@ -144,6 +144,10 @@ def main():
         errors += check_file(f, verbose)
     for e in errors:
         print("!", e)
+    if TUTORIAL.exists():                       # the highlighter of the tutorial follows keywords.json
+        import genkeywords
+        if genkeywords.main_check() != 0:
+            errors.append("tutorial/js/eve1.js is stale: run python script/genkeywords.py")
     print(f"speccheck: {len(files)} file(s), {len(errors)} problem(s)")
     return 1 if errors else 0
 
