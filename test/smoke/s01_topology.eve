@@ -1,6 +1,6 @@
-# smoke: topology. The shape of a program: a driver, a process, functions, procedures, the order of the regions.
+# Topology. The shape of a program: driver, process, functions, procedures, regions.
 ** spec: syntax/declarations.md#scripts
-driver topology is
+driver s01_topology is
   new counter := 0;
   set LIMIT = 3 :Integer;
 
@@ -50,7 +50,7 @@ driver topology is
   finalize
     print "finalize";
   return;
-end topology;
+end s01_topology;
 /*@expect
 {
   "stdout": ["main", "recover: boom", "finalize"]

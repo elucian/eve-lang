@@ -1,6 +1,6 @@
-# smoke: logic. The truth values and their operators; an error here is absurd and obvious.
+# Logic. The truth values and their operators; an error here is absurd and obvious.
 ** spec: syntax/expressions.md#operators
-driver logic is
+driver s02_logic is
   function yes() => (@r: Logic) is
     let r := True;
   return;
@@ -41,7 +41,7 @@ driver logic is
     expect (z and True) == False;
     print "logic: ok";
   return;
-end logic;
+end s02_logic;
 /*@expect
 {
   "stdout": ["logic: ok"]

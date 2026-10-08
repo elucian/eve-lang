@@ -1,6 +1,6 @@
-# smoke: operators. Precedence, associativity, compound forms, list operators, ranges, membership.
+# Operators. Precedence, compound forms, list operators, ranges, membership.
 ** spec: syntax/expressions.md#operators
-driver operators is
+driver s09_operators is
   function precedence() => (@r: Logic) is
     let r := (1 + 2 * 3 == 7) and (2 * 3 + 1 == 7) and ((1 + 2) * 3 == 9) and (10 - 4 - 3 == 3) and (2 ^ 3 ^ 2 == 512);
     let r := r and (8 / 2 / 2 == 2) and (-2 ^ 2 == 4 or -2 ^ 2 == -4) and (1 + 1 == 2 and 2 + 2 == 4);
@@ -48,7 +48,7 @@ driver operators is
     expect not ("abc" =~ "/^b/");
     print "operators: ok";
   return;
-end operators;
+end s09_operators;
 /*@expect
 {
   "stdout": ["operators: ok"]

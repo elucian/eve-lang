@@ -1,6 +1,6 @@
-# smoke: numbers. Zero, one, the extremes of the types, the operators and the literals.
+# Numbers. Zero, one, the extremes of the types, the operators and the literals.
 ** spec: syntax/expressions.md#operators
-driver numeric is
+driver s03_numeric is
   function zero() => (@r: Integer) is
     let r := 0;
   return;
@@ -62,7 +62,7 @@ driver numeric is
     expect i == 0;
     print "numeric: ok";
   return;
-end numeric;
+end s03_numeric;
 /*@expect
 {
   "stdout": ["numeric: ok"]

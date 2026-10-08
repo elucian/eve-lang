@@ -56,7 +56,7 @@ The measured runs are in `history.json` (date, version, commit, build, median an
 
 **0.0.1 (2026-10-07), baseline.** First measure, right after level 1 passed 82 of 82. Tree-walking interpreter: names are found by a linear scan of the scopes, values are copied as tagged unions, the static check runs once before the run. `p1a_arith` (500,000 loop turns) dominates the total. The ReleaseSafe build is about 4.6 times faster than Debug on the same code; compare versions on ReleaseSafe and use Debug only to develop. No earlier version exists, so there is no appreciation or depreciation yet.
 
-**0.0.1 (2026-10-08), levels 2 and 3 measured.** Six benchmarks were added with their Python twins: `p2a_aspects` (5,000 `apply`), `p2b_closures` (closure and lambda calls, closures made in a loop), `p2c_procedures` (`@` parameters, defaults, vararg), `p3a_modules` (calls and constants through a module), `p3b_objects` (objects, inheritance, methods, extension method) and `p3c_module_state` (private state of a module). Their ratios Eve / Python are 1.0 to 2.4, so no benchmark shows an accidental quadratic cost. The slowest is `p3a_modules` (2.4): `module.member` scans the `export` lists of the module on every access, then scans its scope by name; a table of members built when the module is loaded would remove the first scan. `apply` is cheap (1.0): a scope and the boot names per call. Level 1 is 9% above the first measure of 2026-10-07 (435 ms against 400 ms), inside the noise of the machine (the Python twins are 15 to 25% slower than in that run); the modules and classes of levels 2 and 3 do not touch the code that level 1 runs. A first run of this day was made with the laptop in power save mode (level 1 at 607 ms, Python twins 45 to 90% slower) and was discarded: measure with the laptop in normal power mode.
+**0.0.1 (2026-10-08), levels 2 and 3 measured.** Six benchmarks were added with their Python twins: `p2a_aspects` (5,000 `apply`), `p2b_closures` (closure and lambda calls, closures made in a loop), `p2c_procedures` (`@` parameters, defaults, vararg), `p3a_modules` (calls and constants through a module), `p3b_objects` (objects, inheritance, methods, extension method) and `p3c_module_state` (private state of a module). Their ratios Eve / Python are 1.0 to 2.4, so no benchmark shows an accidental quadratic cost. The slowest is `p3a_modules` (2.4): `module.member` scans the `export` lists of the module on every access, then scans its scope by name; a table of members built when the module is loaded would remove the first scan. `apply` is cheap (1.0): a scope and the boot names per call. Level 1 is 9% above the first measure of 2026-10-07 (435 ms against 400 ms), inside the noise of the machine (the Python twins are 15 to 25% slower than in that run); the modules and classes of levels 2 and 3 do not touch the code that level 1 runs. A first run of this day was made with the laptop in power save mode (level 1 at 607 ms, Python twins 45 to 90% slower) and was discarded: measure with the laptop in normal power mode. The Debug build was measured the same day (levels 1, 2, 3: 2073, 955 and 1951 ms; level 1 is 12% above the first Debug measure). In Debug the ratios Eve / Python are higher (4 to 15; `p1a_arith`, `p3a_modules` and `p3c_module_state` are above 10), because the Debug build keeps every safety check; the ReleaseSafe ratios are 0.5 to 2.8, so none of them is an accidental quadratic cost.
 
 ### Table of runs
 
@@ -66,9 +66,10 @@ Columns: **Version** is the version of the VM; **Date** the day of the run; **Ti
 |---|---|---|---|
 | **Level 1** | | | |
 | 0.0.1 | 2026-10-07 | 1843 ms | 400 ms |
+| 0.0.1 | 2026-10-08 | 2073 ms | 435 ms |
 | **Level 2** | | | |
-| 0.0.1 | 2026-10-08 | - | 212 ms |
+| 0.0.1 | 2026-10-08 | 955 ms | 212 ms |
 | **Level 3** | | | |
-| 0.0.1 | 2026-10-08 | - | 319 ms |
+| 0.0.1 | 2026-10-08 | 1951 ms | 319 ms |
 
 Ideas to watch, in the order of their likely gain: variable lookup by slot instead of by name (the scan of the scopes shows in `p1a_arith` and `p1b_calls`); no copy of the argument list for each call; the string append that builds a new string each time (`p1d_strings`); the static check should cost almost nothing against the run, so its time is part of every benchmark.

@@ -1,6 +1,6 @@
-# smoke: placeholders. Names, literals, simple expressions, formats, code points, entities, escaped braces.
+# Placeholders. Names, literals, expressions, formats, code points, entities, braces.
 ** spec: lexical/lexical.md#literals
-driver placeholders is
+driver s15_placeholders is
   process main is
     new n := 42;
     new s := "Eve";
@@ -32,7 +32,7 @@ driver placeholders is
     expect "{m["k"]}" == "7";
     print "placeholders: ok";
   return;
-end placeholders;
+end s15_placeholders;
 /*@expect
 {
   "stdout": ["placeholders: ok"]

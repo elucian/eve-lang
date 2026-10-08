@@ -1,6 +1,6 @@
-# smoke: subprograms. Functions, procedures, arguments, results, recursion, lambdas and closures.
+# Subprograms. Functions, procedures, arguments, recursion, lambdas, closures.
 ** spec: syntax/declarations.md#functions-and-procedures
-driver subprograms is
+driver s11_subprograms is
   new total := 0;
 
   function twice(x: Integer) => (@r: Integer) is
@@ -73,7 +73,7 @@ driver subprograms is
     expect a!() == 1 and a!() == 2 and b!() == 11 and a!() == 3;
     print "subprograms: ok";
   return;
-end subprograms;
+end s11_subprograms;
 /*@expect
 {
   "stdout": ["subprograms: ok"]

@@ -1,6 +1,6 @@
-# smoke: collections. The empty ones, the zero values, one element, indexes from 1, and the literals.
+# Collections. The empty ones, zero values, one element, indexes from 1, literals.
 ** spec: semantics/types.md#composite-types
-driver collection is
+driver s05_collection is
   function nothing() => (@r: Integer) is
     let r := ().count();
   return;
@@ -52,7 +52,7 @@ driver collection is
     expect total == 10;
     print "collection: ok";
   return;
-end collection;
+end s05_collection;
 /*@expect
 {
   "stdout": ["collection: ok"]
