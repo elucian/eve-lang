@@ -1,0 +1,8 @@
+# work: the first task fails at once, the others wait long
+concurrent aspect work is
+  process main(n: Integer) is
+    raise "stop at {n}" if n == 1;
+    wait 2s;
+    print "never {n}";
+  return;
+end work;

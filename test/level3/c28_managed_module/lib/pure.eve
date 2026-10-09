@@ -1,0 +1,10 @@
+# pure: a managed module has constants and functions that read nothing that changes (D-129)
+managed module pure is
+  export (FACTOR, twice);
+
+  set FACTOR = 2 :Integer;
+
+  function twice(x: Integer) => (@result: Integer) is
+    let result := x * FACTOR;
+  return;
+end pure;

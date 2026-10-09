@@ -1,0 +1,14 @@
+# tally: a managed module with an atomic counter (D-129, D-132)
+managed module tally is
+  export (add, total!);
+
+  new count = 0 :Atomic(:Integer);
+
+  procedure add(n: Integer) is
+    let count += n;
+  return;
+
+  function total!() => (@result: Integer) is
+    let result := count;
+  return;
+end tally;

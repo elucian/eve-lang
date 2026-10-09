@@ -1,0 +1,6 @@
+# task: a concurrent aspect that prints its number
+concurrent aspect task is
+  process main(n: Integer) is
+    print "task {n} is running";
+  return;
+end task;

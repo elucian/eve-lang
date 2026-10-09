@@ -52,17 +52,23 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 
 ### Open questions
 
-- Which of the draft features belong to version 0.2, and which move later?
+- Which of the draft features belong to version 0.4, and which move later?
 - The name of the time types (Instant or Timestamp; DateTime or LocalTime).
 
-### Q-038 Data file types: Json, Csv, Dat, Xml, Html, Htmlt (2026-10-08)
+- Q-024 The system library: names and members [open]
+- Q-039 Data file types: Json, Csv, Dat, Xml, Html, Htmlt [open]
+## Q-039 Data file types: Json, Csv, Dat, Xml, Html, Htmlt (2026-10-08; was numbered Q-038, an id taken by level 2)
 Author request: types for the files that a program loads and parses in memory: HTML, XML, HTMLT (HTML template), CSV, DAT (fixed width data) and JSON. The load is buffered and works in loops, a kind of traversal: row by row, or element by element (object by object) for JSON. All of them are derived with `<:` and defined mostly in Eve, at a later time. A first proposal is in `spec/semantics/data-types.md` and in the section "Data File Types" of `types.html`. Open points:
-- (a) The names: `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`. `Html` is also the safe page type of the templates (Q-027): one type, or `Html` for the parsed file and another name for the safe page?
+- (a) The names: `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`. `Html` is also the safe page type of the templates (Q-027, level 7): one type, or `Html` for the parsed file and another name for the safe page?
 - (b) The common ancestor of the six classes (`Source`? `Document`?) and the traversal protocol: what a class must define so that `for unit in value do` works (an iterator, a generator?).
 - (c) How a unit is read: `row["name"]`, `row.name`, `row[2]`; the type of a field (String until converted, or declared in a layout).
 - (d) `Dat`: how the layout of the fixed width fields is declared (a class, a list of widths, a file).
 - (e) The modules (`csv`, `json`, ...) or a single `load`; reading a stream from the network as well as a file; writing a file of these types.
 - (f) Encoding and the line ending; the error when a unit is not well formed (raised when the loop reaches it).
-- (g) Levels: `Csv` and `Json` in level 3, `Html` and `Htmlt` with the templates (0.6), `Xml` and `Dat` open.
+- (g) Levels: `Csv` and `Json` in level 5 (D-125, was level 3), `Html` and `Htmlt` with the templates (level 7, version 0.6), `Xml` and `Dat` open.
 **Answer:**
 
+## Q-024 The system library: names and members (2026-10-06)
+Moved from level 3 on 2026-10-08: the modules it names (`fs`, `path`, `time`, `secret`, `http`, `database`) are the data language and the database layer of level 5 (D-125); `task` goes to version 0.4 too (D-144).
+The page `syslib.html` lists the modules that connect a program to the machine: `io`, `exception`, `fs`, `path`, `time`, `secret`, `task`, `database`, `http`, with their level and status; only `io` and `exception` are drafted (`evevm/lib/`). Are these the names and the split you want (for example one `fs` and `path`, or one `file` module)? Is the shell `call` part of the system library or of the language? Which module holds the time types (`time`), given that Date and Time have their own page?
+**Answer:**

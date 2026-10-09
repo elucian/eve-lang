@@ -1,4 +1,4 @@
-# raw: an unsafe module (the default)
+# raw: a direct module (the default)
 module raw is
   export (poke);
 

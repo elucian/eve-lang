@@ -1,5 +1,5 @@
 # tally: a class derived from Atomic(:Integer) is an atomic type; a variable of that class is atomic (D-132)
-safe module tally is
+managed module tally is
   export (bump, value!);
 
   class SageInteger <: Atomic(:Integer);

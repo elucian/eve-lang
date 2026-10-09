@@ -146,7 +146,7 @@ pub const Tag = enum {
     apply_stmt,
     /// A script without a driver: kids = the statements.
     script,
-    /// `[safe|unsafe] module name is ... end name;` (D-129): kids = the declarations, the imports, the exports and
+    /// `[managed|direct] module name is ... end name;` (D-129): kids = the declarations, the imports, the exports and
     /// up to three `region` nodes; `public` is true for `safe`.
     module,
     /// `from path use (items);`: text = the path as written (`lib/db`); kids = `import_item` nodes.

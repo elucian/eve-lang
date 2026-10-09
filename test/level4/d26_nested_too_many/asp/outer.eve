@@ -1,0 +1,13 @@
+# outer: three starts in the group of an aspect: compile error
+concurrent aspect outer is
+  process main(n: Integer, @result: Integer) is
+    new a, b, c :Integer;
+    parallel
+    do
+      start leaf(1, @a);
+      start leaf(2, @b);
+      start leaf(3, @c);               ** compile error: at most 2 starts
+    done;
+    let result := a + b + c;
+  return;
+end outer;

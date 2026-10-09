@@ -1,0 +1,16 @@
+# start outside the do region of a parallel group is a compile error (D-140)
+** spec: semantics/multitasking.md#where-a-group-is-allowed
+driver d07_start_outside_group is
+  process main is
+    start task(1);                     ** compile error: no parallel group
+  return;
+end d07_start_outside_group;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "stderr": [
+    "start is allowed only in the do region of a parallel group"
+  ]
+}
+*/

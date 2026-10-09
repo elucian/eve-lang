@@ -1,44 +1,274 @@
 {
  "tests": {
-  "d01_concurrent_unsafe_call": {
+  "d01_concurrent_direct_call": {
    "status": "PASS",
    "failures": 0,
-   "runs": 34,
+   "runs": 38,
    "checks": 0,
-   "last": "2026-10-08 18:09",
-   "mtime": 1791484784,
-   "title": "the compiler flags the call of an unsafe module from a concurrent aspect (D-129)",
+   "last": "2026-10-08 21:07",
+   "mtime": 1791503827,
+   "title": "the compiler flags the call of a direct module from a concurrent aspect (D-129)",
    "reason": ""
   },
-  "d02_concurrent_safe_call": {
+  "d02_concurrent_managed_call": {
    "status": "PASS",
    "failures": 4,
-   "runs": 34,
+   "runs": 38,
    "checks": 0,
-   "last": "2026-10-08 18:09",
-   "mtime": 1791484784,
-   "title": "a concurrent aspect calls a safe module (D-129)",
+   "last": "2026-10-08 21:07",
+   "mtime": 1791503827,
+   "title": "a concurrent aspect calls a managed module (D-129)",
    "reason": ""
   },
   "d02_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 21,
+   "runs": 25,
    "checks": 0,
-   "last": "2026-10-08 18:09",
-   "mtime": 1791488057,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791503729,
    "title": "variation 1 of d02: the concurrent aspect with another input (D-133)",
    "reason": ""
   },
   "d03_concurrent_bare_call": {
    "status": "PASS",
    "failures": 0,
-   "runs": 4,
+   "runs": 8,
    "checks": 0,
-   "last": "2026-10-08 18:09",
-   "mtime": 1791496416,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791503729,
    "title": "a concurrent aspect can not call an unsafe member, also by a bare name from m(*) (D-129)",
    "reason": ""
+  },
+  "d04_parallel_group": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "two parallel groups run one after the other; the output of a group is in the order of start (D-140)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d05_parallel_outputs": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "each started aspect writes its own element of an array; the results are ready after done (D-140)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d06_start_exclusive": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "start of an aspect without a kind word is a compile error: it is exclusive (D-130, D-140)",
+   "reason": "expected error output not found: 'report is exclusive'"
+  },
+  "d07_start_outside_group": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "start outside the do region of a parallel group is a compile error (D-140)",
+   "reason": "expected error output not found: 'start is allowed only in the do region of a parallel group'"
+  },
+  "d08_same_output": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "two starts of a group can not receive the same output variable (D-140, $err_output)",
+   "reason": "expected error output not found: 'Output r is given to two tasks of the group'"
+  },
+  "d09_parallel_error": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "failed tasks do not stop the others; done raises ParallelError with the errors in the order of start (D-140)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d10_on_error_cancel": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "on error cancel stops the other tasks after the first failure; they are counted, not listed (D-140)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d11_within_timeout": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "within sets a deadline: a task still running gets a TimeoutError (D-140, D-144)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d12_channel_pipeline": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "a pipeline: one producer, four workers and a collector connected by two channels (D-141)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d13_channel_closed": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "send into a closed channel raises ChannelError, code 46 (D-141)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d14_deadlock": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "a consumer that waits on a channel nobody sends to is a deadlock; the error names it (D-141)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d15_atomic_counter": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "eight tasks add to an Atomic(:Integer) of a managed module: the total is exact (D-132, D-140)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d16_split_batch": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "split(k) and batch(n) cut a list; the parts are summed in parallel and combined by index (D-142)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d17_job_spawn": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "spawn starts async procedures in a job, await waits for an async function; done waits for every task (D-143)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d18_spawn_function": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "spawn of an async function is a compile error: its result would be lost (D-143)",
+   "reason": "expected error output not found: 'double is a function'"
+  },
+  "d19_async_plain_call": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "an async procedure called without spawn or await is a compile error (D-104 b)",
+   "reason": "expected error output not found: 'greet is async'"
+  },
+  "d20_trait": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508060,
+   "title": "a class adopts a trait: it writes the required method and gets the provided one (D-145)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d21_trait_missing_method": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "a class that does not write a required method of its trait is a compile error (D-145)",
+   "reason": "expected error output not found: 'Point does not implement describe'"
+  },
+  "d22_abstract_class": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508060,
+   "title": "an abstract class is built only by the constructor of a subclass that writes its required method (D-145)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d23_abstract_new": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "an abstract class can not be created outside the constructor of a subclass (D-145)",
+   "reason": "expected error output not found: 'Shape is abstract'"
+  },
+  "d24_generic_class": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "a generic class is made with its type argument written; a constraint asks for a trait (D-145)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d25_nested_group": {
+   "status": "FAIL",
+   "failures": 2,
+   "runs": 2,
+   "checks": 2,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508044,
+   "title": "an aspect started by the driver opens a group of two leaf aspects; outputs keep the order of start (D-081, D-140)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "d26_nested_too_many": {
+   "status": "FAIL",
+   "failures": 1,
+   "runs": 2,
+   "checks": 1,
+   "last": "2026-10-08 21:07",
+   "mtime": 1791508073,
+   "title": "an aspect group holds at most two start statements (D-081, D-140)",
+   "reason": "expected error output not found: 'outer starts more than 2 aspects'"
   }
  }
 }

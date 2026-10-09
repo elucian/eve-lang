@@ -1,0 +1,15 @@
+# a managed module that calls a direct module is rejected (D-129)
+** spec: semantics/modules.md#managed-and-direct-modules
+driver c27_managed_module_direct_call is
+  from lib use (calm);
+
+  process main is
+    print "never";
+  return;
+end c27_managed_module_direct_call;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

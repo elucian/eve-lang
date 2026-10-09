@@ -1,0 +1,15 @@
+# a managed module can not call a direct module, also by a bare name from m(*) (D-129)
+** spec: semantics/modules.md#managed-and-direct-modules
+driver c33_managed_bare_call is
+  from lib use (calm);
+
+  process main is
+    print "never";
+  return;
+end c33_managed_bare_call;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

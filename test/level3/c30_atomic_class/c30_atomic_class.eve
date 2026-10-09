@@ -1,5 +1,5 @@
 # class Name <: Atomic(:T) declares an atomic type (D-132)
-** spec: semantics/modules.md#safe-and-unsafe-modules
+** spec: semantics/modules.md#managed-and-direct-modules
 driver c30_atomic_class is
   from lib use (tally);
 

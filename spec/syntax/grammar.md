@@ -1,6 +1,6 @@
 # Grammar
 
-Status: **0.1-draft**, levels 1 and 2 (a single script; a driver and its aspects). The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 2 to 7 (import, aspect, parallel, database, server) are not in this file.
+Status: **0.1-draft**, levels 1 to 4 (a single script; a driver and its aspects; modules; parallel processing, traits and generic classes). The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
 
 Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeats zero or more times, `( )` groups, `"…"` is a keyword or a symbol token, `(* … *)` is a note. Every statement ends with `;`. Layout (2 spaces per level) is checked after parsing, not by the grammar (see lexical.md, Layout).
 
@@ -27,12 +27,12 @@ A driver has one process named `main`, which is the entry point. An aspect has e
 ## Modules and imports (level 3)
 
 ```ebnf
-module      = [ "safe" | "unsafe" ] , "module" , name , "is" ,
+module      = [ "managed" | "direct" ] , "module" , name , "is" ,
               { export | declaration } ,
               [ "initialize" , { statement } ] ,
               [ "recover" , { statement } ] ,
               [ "finalize" , { statement } ] ,
-              "end" , name , ";" ;                                (* modules.md; D-068, D-085, D-126; without a safety word the module is unsafe (D-129) *)
+              "end" , name , ";" ;                                (* modules.md; D-068, D-085, D-126; without a safety word the module is direct (D-129) *)
 export      = "export" , "(" , exported , { "," , exported } , ")" , ";" ;
 exported    = name , [ "!" ] ;                                    (* a function that ends with ! is exported with the ! *)
 import      = "from" , path , "use" , "(" , import-item , { "," , import-item } , ")" , ";" ;
@@ -40,6 +40,40 @@ path        = string | segment , { "/" , segment } ;              (* from lib us
 segment     = name | sysname ;
 import-item = "*" | name , [ "as" , name | "(" , "*" , ")" ] ;    (* a module, an alias, all public names, or every module of the folder *)
 ```
+
+## Parallel processing (level 4)
+
+```ebnf
+block       = parallel-block ;                                    (* adds to block *)
+simple      = start-stmt | spawn-stmt | await-call | wait-stmt ;  (* adds to simple *)
+declaration = async-sub ;                                         (* adds to declaration *)
+unary       = await-call ;                                        (* adds to unary: new n := await measure(p); *)
+primary     = duration | name-path , type-args ;                  (* adds to primary: 30s, Channel(:Integer)(capacity: 10) *)
+
+parallel-block = [ label , ":" ] , "parallel" , [ "on" , "error" , "cancel" ] , [ "within" , expression ] ,
+              { declaration } , "do" , { statement } , "done" , [ label ] , ";" ;   (* multitasking.md, D-140 *)
+start-stmt  = "start" , { name , "/" } , name , "(" , [ arguments ] , ")" ;         (* only in the do region of a group *)
+async-sub   = "async" , ( function | procedure ) ;                (* D-104, D-143 *)
+spawn-stmt  = "spawn" , name-path , "(" , [ arguments ] , ")" ;   (* only in the do region of a job; an async procedure *)
+await-call  = "await" , name-path , "(" , [ arguments ] , ")" ;
+wait-stmt   = "wait" , expression ;                                (* wait 10ms; *)
+type-args   = "(" , ":" , type , { "," , ":" , type } , ")" ;
+```
+
+`duration` is a token: an integer followed at once by `ms`, `s`, `m` or `h` (`../semantics/multitasking.md#durations`). `on`, `error`, `cancel`, `within` and `async` are contextual words; `parallel`, `start`, `spawn`, `await` and `wait` are reserved.
+
+## Traits and generic classes (level 4)
+
+```ebnf
+declaration = trait ;                                             (* adds to declaration *)
+class-member = [ visibility ] , partial-method ;                  (* adds to class-member: an abstract class (D-145) *)
+
+trait       = "trait" , name , [ type-params ] , "is" , { trait-member } , "end" , name , ";" ;
+trait-member = partial-method | method ;                          (* every method of a trait is public *)
+partial-method = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , ";" ;
+```
+
+A class with a partial method is abstract: it is never created, only called by the constructor of a subclass. A generic class is made with its type arguments written: `Box(:Integer)(5)` (`declarations.md#traits-and-generic-classes`).
 
 ## Declarations
 
@@ -71,14 +105,17 @@ result      = [ "@" ] , name , [ "!" ] , ":" , type ;           (* a result of a
 parameters  = parameter , { "," , parameter } ;
 parameter   = [ "*" | "@" ] , name , [ ( "=" | ":=" ) , expression ] , [ type-hint ] ;
 
-class       = "class" , name , [ "(" , ":" , name , { "," , name } , ")" ] ,
-              [ "=" , class-shape ] , "<:" , type , ( ";" | "is" , { class-member } , "end" , name , ";" ) ;
+class       = "class" , name , [ type-params ] ,
+              [ "=" , class-shape ] , "<:" , supers , ( ";" | "is" , { class-member } , "end" , name , ";" ) ;
                                                                           (* without a shape: class SageInteger <: Atomic(:Integer); (D-132) *)
                                                                           (* the superclass is mandatory (Q-029) *)
 class-shape = "{" , members , "}"                                         (* attributes: {x, y: Real} *)
             | "{" , ordinal-value , { "," , ordinal-value } , "}"        (* ordinal: {Red, Green} <: Ordinal *)
             | "(" , expression , ".." , expression , ")" , [ "(" , expression , ")" ]   (* range: (0..1)(0.1) <: Range *)
             | "(" , [ parameters ] , ")" , [ ":" , type ] ;              (* function type: (p1, p2: Integer): Integer <: Function; there are no procedure types (D-101) *)
+type-params = "(" , ":" , type-param , { "," , ":" , type-param } , ")" ;   (* class Box(:T), class Sorted(:T <: Comparable) (D-145) *)
+type-param  = name , [ "<:" , type ] ;
+supers      = type | "(" , type , { "," , type } , ")" ;                  (* one class, then traits: <: (Object, Printable) (D-145) *)
 ordinal-value = name , [ ":" , integer ] ;
 members     = attribute , { "," , attribute } ;
 attribute   = names , type-hint ;

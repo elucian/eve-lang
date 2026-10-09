@@ -1,0 +1,7 @@
+# late: sends after it has closed the channel
+concurrent aspect late is
+  process main(@jobs: Channel(:Integer)) is
+    jobs.close();
+    jobs.send(1);
+  return;
+end late;

@@ -1,6 +1,6 @@
 # Atomic
 
-Status: **0.1-draft**, standard library (D-132). The declaration is level 3 (it makes a variable of a safe module legal, `semantics/modules.md`); the operations that need threads are level 4. Tests: `test/level3` (c29, c30, c31).
+Status: **0.1-draft**, standard library (D-132). The declaration is level 3 (it makes a variable of a managed module legal, `semantics/modules.md`); the operations that need threads are level 4. Tests: `test/level3` (c29, c30, c31).
 
 ## What it is
 

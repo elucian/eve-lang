@@ -1,0 +1,40 @@
+# an abstract class is built only by the constructor of a subclass that writes its required method (D-145)
+** spec: syntax/declarations.md#traits-and-generic-classes
+driver d22_abstract_class is
+  class Shape = {name: String} <: Object is
+    constructor(name :String) => (@self) is
+      let self := Object();
+      let self.name := name;
+    return;
+
+    public method area(@self) => (@result: Real);    ** required: Shape is abstract
+
+    public method report(@self) => (@result: String) is
+      let result := "{self.name}: {self.area()}";
+    return;
+  end Shape;
+
+  class Square = {side: Real} <: Shape is
+    constructor(side :Real) => (@self) is
+      let self := Shape("square");
+      let self.side := side;
+    return;
+
+    public method area(@self) => (@result: Real) is
+      let result := self.side * self.side;
+    return;
+  end Square;
+
+  process main is
+    new q := Square(2.5);
+    print q.report();
+    expect q is Shape;
+  return;
+end d22_abstract_class;
+/*@expect
+{
+  "stdout": [
+    "square: 6.25"
+  ]
+}
+*/

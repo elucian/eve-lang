@@ -8,57 +8,57 @@ This level tests modules and imports, local libraries, classes and methods (vers
 
 50 tests (50 PASS). Failures, runs, last run and the reason of a failure are in `status.json` of this folder.
 
-| Code | Test                        | Status | Description                                                                                   |
-|------|-----------------------------|--------|-----------------------------------------------------------------------------------------------|
-| c01  | c01_import_module           | PASS   | Import a module with an unquoted path;<br>members are reached as module.member (D-072)        |
-| c01  | c01_test1                   | PASS   | variation 1 of c01: the same module, another<br>use case: only the constant, no call (D-133)  |
-| c01  | c01_test2                   | PASS   | variation 2 of c01: the same module under an<br>alias, called in a loop (D-133)               |
-| c02  | c02_import_string_path      | PASS   | Import with a path written as a string<br>(D-072)                                             |
-| c02  | c02_test1                   | PASS   | variation 1 of c02: a string path and the<br>members without prefix (D-133)                   |
-| c03  | c03_import_alias            | PASS   | use (m as x): members are reached through the<br>alias (D-072)                                |
-| c03  | c03_test1                   | PASS   | variation 1 of c03: the same module without a<br>prefix (D-133)                               |
-| c04  | c04_import_members          | PASS   | use (m(*)): the exported members of m are<br>used without prefix (D-072)                      |
-| c04  | c04_test1                   | PASS   | variation 1 of c04: the same module with its<br>name as prefix (D-133)                        |
-| c05  | c05_import_all              | PASS   | use (*): every module of the folder, names<br>merged into the scope (D-072)                   |
-| c05  | c05_test1                   | PASS   | variation 1 of c05: the two modules one by<br>one, each with its prefix (D-133)               |
-| c06  | c06_module_lifecycle        | PASS   | initialize runs at the import, finalize after<br>the process of the driver (D-068)            |
-| c06  | c06_test1                   | PASS   | variation 1 of c06: a module that is imported<br>and never called (D-133)                     |
-| c07  | c07_module_singleton        | PASS   | a module is loaded once: the driver and an<br>aspect share the same copy (D-068)              |
-| c07  | c07_test1                   | PASS   | variation 1 of c07: the aspect applied twice<br>shares the same module (D-133)                |
-| c08  | c08_module_private          | PASS   | a member that a module does not export can't<br>be used outside it (D-068, D-085, Q-022 b)    |
-| c08  | c08_test1                   | PASS   | variation 1 of c08: the exported members only<br>(D-133)                                      |
-| c09  | c09_extension_method        | PASS   | an extension method: a method with @self of a<br>class, declared outside the class (D-072,... |
-| c09  | c09_test1                   | PASS   | variation 1 of c09: another extension of the<br>imported class (D-133)                        |
-| c10  | c10_class                   | PASS   | class with a constructor, methods,<br>visibility, reference and clone (D-076,...              |
-| c11  | c11_extension_method_local  | PASS   | an extension method: declared outside the<br>class, first parameter @self with the clas...    |
-| c12  | c12_inheritance             | PASS   | a subclass builds its object through the<br>constructor of its superclass (D-084)             |
-| c13  | c13_visibility              | PASS   | a private member is seen only inside its<br>class (D-085)                                     |
-| c14  | c14_attribute_outside       | PASS   | code outside a class can't add an attribute<br>to an object (Q-019h, Q-031k, D-096)           |
-| c15  | c15_procedure_in_class      | PASS   | a class hosts only methods: a procedure in a<br>class body is a compile error (D-103, D-123)  |
-| c16  | c16_function_self           | PASS   | a function or a procedure can't be bound to a<br>class with @self: only a method can (D-123)  |
-| c17  | c17_function_in_class       | PASS   | a class hosts only methods: a function in a<br>class body is a compile error (D-123)          |
-| c18  | c18_module_conflict         | PASS   | use (m(*)) merges the names: two modules that<br>export the same name are a compile error...  |
-| c18  | c18_test1                   | PASS   | variation 1 of c18: the right way: the two<br>modules by name (D-133)                         |
-| c19  | c19_export_variable         | PASS   | a module has no public variables: exporting<br>one is a compile error (D-068)                 |
-| c20  | c20_export_undeclared       | PASS   | export lists declared members only: an<br>undeclared name is a compile error (proposed)       |
-| c21  | c21_module_instance         | PASS   | a module is not a class: it has no instances<br>(D-068)                                       |
-| c22  | c22_module_init_order       | PASS   | dependencies are initialized first, and<br>finalized last: the reverse order of the...        |
-| c22  | c22_test1                   | PASS   | variation 1 of c22: only the module with no<br>import (D-133)                                 |
-| c22  | c22_test2                   | PASS   | variation 2 of c22: both modules, the<br>dependent one first in the list (D-133)              |
-| c23  | c23_module_free_statement   | PASS   | a module holds declarations and regions only:<br>a free statement is a compile error (D-126)  |
-| c24  | c24_import_free_script      | PASS   | a free script can't export anything and can't<br>be imported (D-126)                          |
-| c25  | c25_module_not_found        | PASS   | a module that is not found is the error<br>$err_module (code 30), raised at the impor...      |
-| c26  | c26_safe_module_variable    | PASS   | a safe module is rejected when it has a<br>variable that is not atomic (D-129)                |
-| c27  | c27_safe_module_unsafe_call | PASS   | a safe module that calls an unsafe module is<br>rejected (D-129)                              |
-| c28  | c28_safe_module             | PASS   | a safe module is accepted: no variable, no<br>unsafe call (D-129)                             |
-| c28  | c28_test1                   | PASS   | variation 1 of c28: a safe module under an<br>alias (D-133)                                   |
-| c29  | c29_safe_module_atomic      | PASS   | a safe module is accepted when every variable<br>is Atomic(:T) (D-129, D-132)                 |
-| c29  | c29_test1                   | PASS   | variation 1 of c29: the atomic counter, many<br>times (D-133)                                 |
-| c30  | c30_atomic_class            | PASS   | class Name <: Atomic(:T) declares an atomic<br>type (D-132)                                   |
-| c30  | c30_test1                   | PASS   | variation 1 of c30: a type derived from<br>Atomic, used ten times (D-133)                     |
-| c31  | c31_atomic_variable         | PASS   | Atomic(:T) is a library class: a variable is<br>declared :Atomic(:Integer) and used like a... |
-| c32  | c32_module_path_spelling    | PASS   | the same module reached by two spellings of<br>the path is one module: loaded once, one...    |
-| c33  | c33_safe_bare_call          | PASS   | a safe module can not call an unsafe module,<br>also by a bare name from m(*) (D-129)         |
-| c33  | c33_test1                   | PASS   | variation 1 of c33: the bare name of a safe<br>module is accepted (D-133)                     |
+| Code | Test                           | Status | Description                                                                                   |
+|------|--------------------------------|--------|-----------------------------------------------------------------------------------------------|
+| c01  | c01_import_module              | PASS   | Import a module with an unquoted path;<br>members are reached as module.member (D-072)        |
+| c01  | c01_test1                      | PASS   | variation 1 of c01: the same module, another<br>use case: only the constant, no call (D-133)  |
+| c01  | c01_test2                      | PASS   | variation 2 of c01: the same module under an<br>alias, called in a loop (D-133)               |
+| c02  | c02_import_string_path         | PASS   | Import with a path written as a string<br>(D-072)                                             |
+| c02  | c02_test1                      | PASS   | variation 1 of c02: a string path and the<br>members without prefix (D-133)                   |
+| c03  | c03_import_alias               | PASS   | use (m as x): members are reached through the<br>alias (D-072)                                |
+| c03  | c03_test1                      | PASS   | variation 1 of c03: the same module without a<br>prefix (D-133)                               |
+| c04  | c04_import_members             | PASS   | use (m(*)): the exported members of m are<br>used without prefix (D-072)                      |
+| c04  | c04_test1                      | PASS   | variation 1 of c04: the same module with its<br>name as prefix (D-133)                        |
+| c05  | c05_import_all                 | PASS   | use (*): every module of the folder, names<br>merged into the scope (D-072)                   |
+| c05  | c05_test1                      | PASS   | variation 1 of c05: the two modules one by<br>one, each with its prefix (D-133)               |
+| c06  | c06_module_lifecycle           | PASS   | initialize runs at the import, finalize after<br>the process of the driver (D-068)            |
+| c06  | c06_test1                      | PASS   | variation 1 of c06: a module that is imported<br>and never called (D-133)                     |
+| c07  | c07_module_singleton           | PASS   | a module is loaded once: the driver and an<br>aspect share the same copy (D-068)              |
+| c07  | c07_test1                      | PASS   | variation 1 of c07: the aspect applied twice<br>shares the same module (D-133)                |
+| c08  | c08_module_private             | PASS   | a member that a module does not export can't<br>be used outside it (D-068, D-085, Q-022 b)    |
+| c08  | c08_test1                      | PASS   | variation 1 of c08: the exported members only<br>(D-133)                                      |
+| c09  | c09_extension_method           | PASS   | an extension method: a method with @self of a<br>class, declared outside the class (D-072,... |
+| c09  | c09_test1                      | PASS   | variation 1 of c09: another extension of the<br>imported class (D-133)                        |
+| c10  | c10_class                      | PASS   | class with a constructor, methods,<br>visibility, reference and clone (D-076,...              |
+| c11  | c11_extension_method_local     | PASS   | an extension method: declared outside the<br>class, first parameter @self with the clas...    |
+| c12  | c12_inheritance                | PASS   | a subclass builds its object through the<br>constructor of its superclass (D-084)             |
+| c13  | c13_visibility                 | PASS   | a private member is seen only inside its<br>class (D-085)                                     |
+| c14  | c14_attribute_outside          | PASS   | code outside a class can't add an attribute<br>to an object (Q-019h, Q-031k, D-096)           |
+| c15  | c15_procedure_in_class         | PASS   | a class hosts only methods: a procedure in a<br>class body is a compile error (D-103, D-123)  |
+| c16  | c16_function_self              | PASS   | a function or a procedure can't be bound to a<br>class with @self: only a method can (D-123)  |
+| c17  | c17_function_in_class          | PASS   | a class hosts only methods: a function in a<br>class body is a compile error (D-123)          |
+| c18  | c18_module_conflict            | PASS   | use (m(*)) merges the names: two modules that<br>export the same name are a compile error...  |
+| c18  | c18_test1                      | PASS   | variation 1 of c18: the right way: the two<br>modules by name (D-133)                         |
+| c19  | c19_export_variable            | PASS   | a module has no public variables: exporting<br>one is a compile error (D-068)                 |
+| c20  | c20_export_undeclared          | PASS   | export lists declared members only: an<br>undeclared name is a compile error (proposed)       |
+| c21  | c21_module_instance            | PASS   | a module is not a class: it has no instances<br>(D-068)                                       |
+| c22  | c22_module_init_order          | PASS   | dependencies are initialized first, and<br>finalized last: the reverse order of the...        |
+| c22  | c22_test1                      | PASS   | variation 1 of c22: only the module with no<br>import (D-133)                                 |
+| c22  | c22_test2                      | PASS   | variation 2 of c22: both modules, the<br>dependent one first in the list (D-133)              |
+| c23  | c23_module_free_statement      | PASS   | a module holds declarations and regions only:<br>a free statement is a compile error (D-126)  |
+| c24  | c24_import_free_script         | PASS   | a free script can't export anything and can't<br>be imported (D-126)                          |
+| c25  | c25_module_not_found           | PASS   | a module that is not found is the error<br>$err_module (code 30), raised at the impor...      |
+| c26  | c26_managed_module_variable    | PASS   | a managed module is rejected when it has a<br>variable that is not atomic (D-129)             |
+| c27  | c27_managed_module_direct_call | PASS   | a managed module that calls a direct module<br>is rejected (D-129)                            |
+| c28  | c28_managed_module             | PASS   | a managed module is accepted: no variable, no<br>unsafe call (D-129)                          |
+| c28  | c28_test1                      | PASS   | variation 1 of c28: a managed module under an<br>alias (D-133)                                |
+| c29  | c29_managed_module_atomic      | PASS   | a managed module is accepted when every<br>variable is Atomic(:T) (D-129, D-132)              |
+| c29  | c29_test1                      | PASS   | variation 1 of c29: the atomic counter, many<br>times (D-133)                                 |
+| c30  | c30_atomic_class               | PASS   | class Name <: Atomic(:T) declares an atomic<br>type (D-132)                                   |
+| c30  | c30_test1                      | PASS   | variation 1 of c30: a type derived from<br>Atomic, used ten times (D-133)                     |
+| c31  | c31_atomic_variable            | PASS   | Atomic(:T) is a library class: a variable is<br>declared :Atomic(:Integer) and used like a... |
+| c32  | c32_module_path_spelling       | PASS   | the same module reached by two spellings of<br>the path is one module: loaded once, one...    |
+| c33  | c33_managed_bare_call          | PASS   | a managed module can not call a direct<br>module, also by a bare name from m(*) (D-129)       |
+| c33  | c33_test1                      | PASS   | variation 1 of c33: the bare name of a<br>managed module is accepted (D-133)                  |
 
 <!-- TESTS:END -->

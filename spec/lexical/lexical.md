@@ -207,7 +207,7 @@ In a string literal every unescaped `{` opens a placeholder; a `{` that does not
 
 ### Constants
 
-`True` and `False` are the constants of type `Logic`. `null` is the only value of the type `Null` and means that no object exists. `nil` is the empty rune `''`. There is no lexical form for a date, a time or a duration: they are made with `parse()` or with an object literal and a type hint.
+`True` and `False` are the constants of type `Logic`. `null` is the only value of the type `Null` and means that no object exists. `nil` is the empty rune `''`. There is no lexical form for a date or a time: they are made with `parse()` or with an object literal and a type hint. A **duration** (level 4) is an integer followed at once by a unit, `ms`, `s`, `m` or `h`: `10ms`, `30s`, `2m`, `1h`; its type is `Duration` (`../semantics/multitasking.md#durations`, D-144).
 
 ### Collection delimiters
 

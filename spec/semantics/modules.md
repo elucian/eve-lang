@@ -4,7 +4,7 @@ Status: **0.1-draft**, level 3 (version 0.2), first part of the level: modules a
 
 ## What a module is
 
-A module is a script file that holds declarations to be shared. It is not run: it has no `process`. Its header is `module name is`, with an optional safety word in front (`safe module name is`, `unsafe module name is`, see below), and it ends with `end name;`; the file name is the module name (`lib/counter.eve` holds `module counter`). A module has one scope (D-041), like a driver: everything between the header and `end` is indented by 2 spaces.
+A module is a script file that holds declarations to be shared. It is not run: it has no `process`. Its header is `module name is`, with an optional safety word in front (`managed module name is`, `direct module name is`, see below), and it ends with `end name;`; the file name is the module name (`lib/counter.eve` holds `module counter`). A module has one scope (D-041), like a driver: everything between the header and `end` is indented by 2 spaces.
 
 ```eve
 # counter: a constant, private state, life cycle
@@ -80,16 +80,16 @@ from lib use (*);                    ** every module of the folder, the names me
 - **A module not found** is the error `$err_module` (code 30, `Module {name} not found in {library}`), raised at the import, before the process starts. Nobody can recover it, so the program ends with exit code 4 and the message on stderr (c25).
 - **Circular imports** are possible: a module that is being loaded is not loaded again (`tutorial/modules.html`).
 
-## Safe and unsafe modules
+## Managed and direct modules
 
 A module that is shared by tasks must not be changed by two of them at the same time. The compiler checks it, function by function and procedure by procedure: one that reads or writes a variable that is not atomic, or calls something that does, is **thread unsafe** (D-129). The header of a module states the promise:
 
 | Header | Meaning |
 |---|---|
-| `unsafe module m is` | the default, also when the word is missing: the module may hold plain variables; its members are checked one by one |
-| `safe module m is` | the whole module is thread safe: **every variable of the module is atomic**, and it calls only members that are safe. The compiler **rejects** the module when a variable is not atomic (c26) or when it uses an unsafe function or procedure, also of another module (c27) |
+| `direct module m is` | the default, also when the word is missing: the module may hold plain variables; its members are checked one by one |
+| `managed module m is` | the whole module is thread safe: **every variable of the module is atomic**, and it calls only members that are safe. The compiler **rejects** the module when a variable is not atomic (c26) or when it uses an unsafe function or procedure, also of another module (c27) |
 
-- A **concurrent aspect** may call a function or a procedure of a module as long as it is thread safe: a member of a safe module, or a member of an unsafe module that the compiler proves safe. Calling an unsafe member is a compile error (level 4, d01, d02).
+- A **concurrent aspect** may call a function or a procedure of a module as long as it is thread safe: a member of a managed module, or a member of a direct module that the compiler proves safe. Calling an unsafe member is a compile error (level 4, d01, d02).
 - An **exclusive aspect** is the default (`aspect name is`, D-130) and may call anything; it is never started in a parallel group.
 - Constants, classes and plain functions that touch no variable are safe in any module.
 - **Atomic variables (D-132).** A variable is atomic when it is declared `:Atomic(:T)`, with `T` a Logic, a number, a reference or an ordinal (`new total = 0 :Atomic(:Integer);`), or with a class derived from it (`class SageInteger <: Atomic(:Integer);` and `new hits = 0 :SageInteger;`). The class `Atomic` is a wrapper of the atomic of the machine, defined in the standard library ([../library/atomic.md](../library/atomic.md)). Tests: c29, c30, c31.

@@ -1,0 +1,22 @@
+# eight tasks add to an Atomic(:Integer) of a managed module: the total is exact (D-132, D-140)
+** spec: semantics/multitasking.md#data-rules
+driver d15_atomic_counter is
+  from lib use (tally);
+
+  process main is
+    parallel
+    do
+      for i in (1..8) do
+        start adder(1000);
+      done;
+    done;
+    print "total: {tally.total!()}";
+  return;
+end d15_atomic_counter;
+/*@expect
+{
+  "stdout": [
+    "total: 8000"
+  ]
+}
+*/

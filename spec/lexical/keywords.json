@@ -1,7 +1,7 @@
 {
   "$schema": "../schema/keywords.schema.json",
   "specVersion": "0.1-draft",
-  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by cancel case close commit create cursor del delete descend discard external feature fetch group halt insert into item label limit object offset on open order package pop record reset rest result rollback select step store switch to trial view where with within add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names. Contextual words (D-116) are keywords only where the grammar expects them (marked contextual: true); everywhere else they are ordinary names. The author prefers a contextual keyword to a reserved one whenever the grammar allows it. Reserved on purpose, although they could be contextual: job, parallel and self (D-117).",
+  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by case close commit create cursor del delete descend discard external feature fetch group halt insert into item label limit object offset open order package pop record reset rest result rollback select step store switch to trial view where with add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names. Contextual words (D-116) are keywords only where the grammar expects them (marked contextual: true); everywhere else they are ordinary names. The author prefers a contextual keyword to a reserved one whenever the grammar allows it. Reserved on purpose, although they could be contextual: job, parallel and self (D-117).",
   "items": [
     {
       "id": "abort",
@@ -54,6 +54,21 @@
       "summary": "Checks a condition; a failed assert is an error with code 3: the process goes to `recover` and ends when it is not recovered (Q-031h)."
     },
     {
+      "id": "async",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/multitasking.md#tasks-in-a-job",
+      "summary": "Declares a function or procedure that runs as a task of a job: `async procedure name is` (level 4, D-104, D-143)."
+    },
+    {
+      "id": "await",
+      "category": "statement",
+      "status": "draft",
+      "ref": "semantics/multitasking.md#tasks-in-a-job",
+      "summary": "Starts an async subprogram and waits for it at once: `await load(p, @t);`, `new n := await size(p);` (level 4, D-143)."
+    },
+    {
       "id": "break",
       "category": "statement",
       "status": "stable",
@@ -66,6 +81,14 @@
       "status": "draft",
       "ref": "syntax/statements.md#other-statements-of-later-levels",
       "summary": "Runs a shell command (level 3)."
+    },
+    {
+      "id": "cancel",
+      "category": "block",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/multitasking.md#errors",
+      "summary": "In `parallel on error cancel`: stops the other tasks after the first failure (level 4, D-140)."
     },
     {
       "id": "class",
@@ -111,6 +134,14 @@
       "summary": "Declares the cleanup of an object, inside the class body."
     },
     {
+      "id": "direct",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/modules.md#managed-and-direct-modules",
+      "summary": "Marks a module that is not thread safe: `direct module name is`; the default of a module (level 3, D-129)."
+    },
+    {
       "id": "do",
       "category": "block",
       "status": "stable",
@@ -153,28 +184,20 @@
       "summary": "Equivalence: same value and same type."
     },
     {
+      "id": "error",
+      "category": "block",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/multitasking.md#errors",
+      "summary": "In `parallel on error cancel` (level 4, D-140)."
+    },
+    {
       "id": "exclusive",
       "category": "declaration",
       "status": "stable",
       "contextual": true,
       "ref": "syntax/declarations.md#scripts",
       "summary": "Marks an aspect that is not thread safe: `exclusive aspect name is`; the default of an aspect (level 2, D-090, D-130)."
-    },
-    {
-      "id": "safe",
-      "category": "declaration",
-      "status": "draft",
-      "contextual": true,
-      "ref": "semantics/modules.md#safe-and-unsafe-modules",
-      "summary": "Marks a module that is thread safe: `safe module name is`; every variable is atomic and it calls only safe members (level 3, D-129)."
-    },
-    {
-      "id": "unsafe",
-      "category": "declaration",
-      "status": "draft",
-      "contextual": true,
-      "ref": "semantics/modules.md#safe-and-unsafe-modules",
-      "summary": "Marks a module that is not thread safe: `unsafe module name is`; the default of a module (level 3, D-129)."
     },
     {
       "id": "exit",
@@ -282,6 +305,14 @@
       "summary": "Header of a loop (label and declarations), or a loop tested at the end: `loop … do … repeat;`."
     },
     {
+      "id": "managed",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/modules.md#managed-and-direct-modules",
+      "summary": "Marks a module that is thread safe: `managed module name is`; every variable is atomic and it calls only safe members (level 3, D-129)."
+    },
+    {
       "id": "match",
       "category": "block",
       "status": "stable",
@@ -315,6 +346,14 @@
       "status": "stable",
       "ref": "syntax/expressions.md",
       "summary": "Logical negation."
+    },
+    {
+      "id": "on",
+      "category": "block",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/multitasking.md#errors",
+      "summary": "In `parallel on error cancel` (level 4, D-140)."
     },
     {
       "id": "one",
@@ -357,8 +396,8 @@
       "id": "parallel",
       "category": "block",
       "status": "draft",
-      "ref": "semantics/control.md#parallel",
-      "summary": "Group of aspects that run in parallel (level 4)."
+      "ref": "semantics/multitasking.md#parallel-groups",
+      "summary": "Group of concurrent aspects that run on several cores; `done` waits for all (level 4, D-140)."
     },
     {
       "id": "pass",
@@ -469,11 +508,18 @@
       "summary": "Goes to the continuation point of a loop: `skip [label] [if c];`."
     },
     {
+      "id": "spawn",
+      "category": "statement",
+      "status": "draft",
+      "ref": "semantics/multitasking.md#tasks-in-a-job",
+      "summary": "In the do region of a job, starts an async procedure as a task and goes on (level 4, D-143)."
+    },
+    {
       "id": "start",
       "category": "statement",
       "status": "draft",
-      "ref": "syntax/statements.md#other-statements-of-later-levels",
-      "summary": "In a parallel group starts an aspect (level 4); in a plain job starts an asynchronous procedure that shares the core of the job (Q-025c, D-100)."
+      "ref": "semantics/multitasking.md#parallel-groups",
+      "summary": "Starts a concurrent aspect, only in the do region of a parallel group (level 4, D-140)."
     },
     {
       "id": "stop",
@@ -493,8 +539,8 @@
       "id": "trait",
       "category": "declaration",
       "status": "draft",
-      "ref": "syntax/declarations.md#classes-and-objects",
-      "summary": "Declares a stateless set of required and provided methods (version 2)."
+      "ref": "syntax/declarations.md#traits-and-generic-classes",
+      "summary": "Declares a stateless set of required and provided methods (level 4, D-145)."
     },
     {
       "id": "use",
@@ -507,8 +553,8 @@
       "id": "wait",
       "category": "statement",
       "status": "draft",
-      "ref": "syntax/statements.md#other-statements-of-later-levels",
-      "summary": "Pauses the process for a time: `wait 10ms;`."
+      "ref": "semantics/multitasking.md#durations",
+      "summary": "Pauses the task for a duration and gives its core away: `wait 10ms;` (level 4, D-144)."
     },
     {
       "id": "when",
@@ -523,6 +569,14 @@
       "status": "stable",
       "ref": "semantics/control.md#loops",
       "summary": "Loop tested at the start `while c do`, or the test of a `repeat while c;`."
+    },
+    {
+      "id": "within",
+      "category": "block",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/multitasking.md#errors",
+      "summary": "In `parallel within 30s`: a deadline for the tasks of the group (level 4, D-140)."
     },
     {
       "id": "xor",

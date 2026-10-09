@@ -1,0 +1,27 @@
+# a pipeline: one producer, four workers and a collector connected by two channels (D-141)
+** spec: semantics/multitasking.md#channels
+driver d12_channel_pipeline is
+  set workers = 4 :Integer;
+  process main is
+    new total: Integer;
+    new jobs := Channel(:Integer)(capacity: 10);
+    new results := Channel(:Integer)(capacity: 10, senders: workers);
+    flow: parallel
+    do
+      start produce(1000, @jobs);
+      for w in (1..workers) do
+        start square(@jobs, @results);
+      done;
+      start collect(@results, @total);
+    done flow;
+    print "total: {total}";
+  return;
+end d12_channel_pipeline;
+/*@expect
+{
+  "stdout": [
+    "total: 333833500"
+  ],
+  "note": "the sum of the squares of 1 to 1000 does not depend on the order of the values"
+}
+*/

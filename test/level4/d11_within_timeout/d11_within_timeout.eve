@@ -1,0 +1,25 @@
+# within sets a deadline: a task still running gets a TimeoutError (D-140, D-144)
+** spec: semantics/multitasking.md#errors
+driver d11_within_timeout is
+  process main is
+    parallel within 100ms
+    do
+      start fast();
+      start sleeper();
+    done;
+  recover
+    print $error.message;
+    for e in $error.errors do
+      print "{e.index} {e.aspect}: {e.message} ({e.code})";
+    done;
+  return;
+end d11_within_timeout;
+/*@expect
+{
+  "stdout": [
+    "fast is done",
+    "1 of 2 tasks failed",
+    "2 sleeper: Time-out after 100ms (41)"
+  ]
+}
+*/

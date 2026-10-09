@@ -110,7 +110,33 @@ end Point;
 - **Only a method binds the object.** `@self` is the parameter of a method (in the class body or outside it, as an extension method). A function or a procedure can not have `@self`, and so can not be bound to a class: `function total(@self: Point) => (...)` is a compile error (D-123).
 - **Methods are not values** (D-103). There are no references to methods and no method type: a method can't be passed as an argument, stored or returned, and it is never a callback. A lambda that calls the method is passed instead: `shapes.map((s) => (s.area()))`.
 - Extension methods are static: they never change the class, can not hide a method of the class, see only its public members, and are visible only in the scripts that declare or import them (D-086).
-- Traits, abstract classes, generics and generators belong to version 2 (D-039, D-087).
+- Generators belong to version 0.4 (level 5, D-087, D-125). Traits, abstract classes and generic classes are level 4, below.
+
+## Traits and generic classes
+
+Level 4 (version 0.3). Sources: D-039, D-145. Grammar: `grammar.md#traits-and-generic-classes-level-4`. Tests: d20 to d24. Compile errors (exit 65): a missing required method, `{class} does not implement {method}` (d21); an abstract class created outside a subclass constructor, `{class} is abstract` (d23); two traits that provide the same method, `{class} must write {method}: it comes from {trait} and {trait}`.
+
+```eve
+trait Printable is
+  method describe(@self) => (@result: String);   ** required: a signature that ends with ;
+  method show(@self) is                           ** provided: has a body
+    print self.describe();
+  return;
+end Printable;
+
+class Point = {x: Integer, y: Integer} <: (Object, Printable) is
+  public method describe(@self) => (@result: String) is
+    let result := "({self.x}, {self.y})";
+  return;
+end Point;
+```
+
+- **Trait.** `trait Name is … end Name;` holds required methods (a signature that ends with `;`) and provided methods (with a body, which may call the required ones through `self`). A trait has no attributes, no constructor and no instances. Every method of a trait is public. A trait is a type: `new p: Printable := pt;`, `pt is Printable`.
+- **Adopting.** After `<:` comes one class, then the traits, in parentheses: `<: (Object, Printable, Comparable)`. A method of the class wins over a provided method. When two traits provide a method with the same name, the class must write it. A class that can be created must implement every required method: a missing one is a compile error that names the class and the method.
+- **Abstract class.** A class with at least one required method (a `method` signature that ends with `;`) is abstract. Its constructor is called only as the first statement of a subclass constructor (`let self := Shape(name);`); a call anywhere else is a compile error.
+- **Generic class.** `class Box(:T) = {item: T} <: Object is` declares a type parameter `T`, used in the attributes and the methods. The type argument is always written when an object is made: `new b := Box(:Integer)(5);`, like `Channel(:Integer)(capacity: 10)` and `Atomic(:Integer)`. There is no inference in version 0.3. A constraint is written `(:T <: Comparable)`: the type argument must adopt the trait.
+- **Library traits** of version 0.3: `Iterable(:T)` (what `for` reads), `Stream(:T) <: Iterable(:T)` (`../semantics/multitasking.md#streams-and-batches`), `Comparable` (`method compare(@self, other) => (@result: Integer);`, negative, zero or positive) and `Printable` (`method describe(@self) => (@result: String);`, used by `print` and by `{x}` in a string). The basic types adopt `Comparable` and `Printable` in the library.
+- Not in version 0.3: generic functions outside a class, and adopting a trait for an existing type outside its declaration (version 0.4).
 
 ## Imports and modules (level 3)
 

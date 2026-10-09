@@ -1,0 +1,9 @@
+# produce: sends the numbers 1 to count
+concurrent aspect produce is
+  process main(count: Integer, @jobs: Channel(:Integer)) is
+    for i in (1..count) do
+      jobs.send(i);                    ** waits while jobs is full
+    done;
+    jobs.close();
+  return;
+end produce;

@@ -1,0 +1,33 @@
+# a generic class is made with its type argument written; a constraint asks for a trait (D-145)
+** spec: syntax/declarations.md#traits-and-generic-classes
+driver d24_generic_class is
+  class Box(:T) = {item: T} <: Object is
+    public method get(@self) => (@result: T) is
+      let result := self.item;
+    return;
+  end Box;
+
+  class Pair(:T <: Comparable) = {a: T, b: T} <: Object is
+    public method larger(@self) => (@result: T) is
+      let result := self.a if self.a.compare(self.b) > 0 else self.b;
+    return;
+  end Pair;
+
+  process main is
+    new b := Box(:Integer)(item: 5);
+    new s := Box(:String)(item: "five");
+    print b.get() + 1;
+    print s.get();
+    new p := Pair(:Integer)(a: 3, b: 7);
+    print p.larger();
+  return;
+end d24_generic_class;
+/*@expect
+{
+  "stdout": [
+    "6",
+    "five",
+    "7"
+  ]
+}
+*/

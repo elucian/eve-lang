@@ -1,0 +1,7 @@
+# sleeper: waits longer than the deadline of the group
+concurrent aspect sleeper is
+  process main is
+    wait 2s;
+    print "never";
+  return;
+end sleeper;

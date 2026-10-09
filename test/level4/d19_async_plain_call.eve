@@ -1,0 +1,20 @@
+# an async procedure called without spawn or await is a compile error (D-104 b)
+** spec: semantics/multitasking.md#tasks-in-a-job
+driver d19_async_plain_call is
+  async procedure greet(name: String) is
+    print "hello {name}";
+  return;
+
+  process main is
+    greet("Eve");                      ** compile error: spawn or await
+  return;
+end d19_async_plain_call;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "stderr": [
+    "greet is async"
+  ]
+}
+*/

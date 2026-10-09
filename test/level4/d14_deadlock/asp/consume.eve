@@ -1,0 +1,8 @@
+# consume: reads a channel that is never closed
+concurrent aspect consume is
+  process main(@jobs: Channel(:Integer)) is
+    for x in jobs do
+      print x;
+    done;
+  return;
+end consume;

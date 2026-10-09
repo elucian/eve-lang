@@ -1,5 +1,5 @@
 # Atomic(:T) is a library class: a variable is declared :Atomic(:Integer) and used like an Integer (D-132)
-** spec: semantics/modules.md#safe-and-unsafe-modules
+** spec: semantics/modules.md#managed-and-direct-modules
 driver c31_atomic_variable is
   process main is
     new safe_integer = 0 :Atomic(:Integer);

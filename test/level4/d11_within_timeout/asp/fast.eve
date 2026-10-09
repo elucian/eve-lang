@@ -1,0 +1,6 @@
+# fast: ends at once
+concurrent aspect fast is
+  process main is
+    print "fast is done";
+  return;
+end fast;

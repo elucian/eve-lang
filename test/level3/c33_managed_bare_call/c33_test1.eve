@@ -1,0 +1,14 @@
+# variation 1 of c33: the bare name of a managed module is accepted (D-133)
+** spec: semantics/modules.md#managed-and-direct-modules
+driver c33_test1 is
+  from lib use (pure(*));
+
+  process main is
+    print "twice: {twice(4)}";
+  return;
+end c33_test1;
+/*@expect
+{
+  "stdout": ["twice: 8"]
+}
+*/
