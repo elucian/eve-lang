@@ -18,7 +18,8 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Conformance | [conformance/README.md](conformance/README.md) | test format (`/*@expect*/`), levels, coverage of level 1 |
 | Aspects | [semantics/aspects.md](semantics/aspects.md) | level 2, first draft (2026-10-07); open points 1 to 4 |
 | Modules and libraries | [semantics/modules.md](semantics/modules.md) | level 3, first draft (2026-10-08); tests c01 to c28; open points 1 to 4 |
-| Data file types | [semantics/data-types.md](semantics/data-types.md) | level 3, proposal (2026-10-08): `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`; Q-038 |
+| Data file types | [semantics/data-types.md](semantics/data-types.md) | level 5, proposal (2026-10-08): `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`; Q-039 |
+| Multitasking | [semantics/multitasking.md](semantics/multitasking.md) | level 4, first draft (2026-10-08): parallel groups, channels, tasks in a job, durations; D-140 to D-144; tests d01 to d24 |
 | Standard library | [library/atomic.md](library/atomic.md) | `Atomic(:T)`, first draft (2026-10-08); the rest of the library is not started |
 | Other semantics | `semantics/*` | levels 3 to 7 not started |
 | Library | `library/*` | not started (phase 5) |

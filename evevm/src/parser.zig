@@ -1483,13 +1483,13 @@ const Parser = struct {
     // Zig tip: `module` relies on the same Zig feature as `importDecl` above: see the tip there. The
     // regions `initialize`, `recover` and `finalize` come after the declarations, in that order; a
     // statement outside a function, a procedure, a method or a region is refused because
-    // `declarationInDriver` accepts declarations only (D-126). `@constCast` sets the safe flag on
+    // `declarationInDriver` accepts declarations only (D-126). `@constCast` sets the managed flag on
     // the node after it is made, as `class` does for `public`.
-    /// `[safe|unsafe] module name is ... end name;` (modules.md).
+    /// `[managed|direct] module name is ... end name;` (modules.md).
     fn module(p: *Parser) Error!*const Node {
         const kw = p.peek();
-        const safe = p.isWord("safe");
-        if (safe or p.isWord("unsafe")) _ = p.advance();
+        const managed = p.isWord("managed");
+        if (managed or p.isWord("direct")) _ = p.advance();
         try p.expectWord("module");
         const name = try p.expectName("a module name");
         try p.expectWord("is");
@@ -1514,7 +1514,7 @@ const Parser = struct {
         }
         try p.expectSym(";");
         const node = try p.mk(.module, kw, name.text, decls.items);
-        @constCast(node).public = safe;
+        @constCast(node).public = managed;
         return node;
     }
 
@@ -1600,7 +1600,7 @@ const Parser = struct {
             result = try p.driver();
         } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
             result = try p.aspect();
-        } else if (p.isWord("module") or ((p.isWord("safe") or p.isWord("unsafe")) and p.isWordAt(1, "module"))) {
+        } else if (p.isWord("module") or ((p.isWord("managed") or p.isWord("direct")) and p.isWordAt(1, "module"))) {
             result = try p.module();
         } else {
             var list: std.ArrayList(*const Node) = .empty;
@@ -1726,7 +1726,7 @@ test "an aspect and an apply parse, and the aspect rules hold" {
 // statement and a `process` are refused (D-126). `check` is the helper of the tests above: see the tip there.
 test "a module parses: imports, exports and regions; a free statement is refused" {
     var d: Diag = .{};
-    try check(std.testing.allocator, "safe module m is from lib use (a, b as c, d(*)); export (f, g!); " ++
+    try check(std.testing.allocator, "managed module m is from lib use (a, b as c, d(*)); export (f, g!); " ++
         "function f() => (@r: Integer) is let r := 1; return; " ++
         "initialize print \"up\"; recover print \"oops\"; finalize print \"down\"; end m;", &d);
     const bad = [_][]const u8{

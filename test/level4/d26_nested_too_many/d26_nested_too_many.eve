@@ -1,0 +1,20 @@
+# an aspect group holds at most two start statements (D-081, D-140)
+** spec: semantics/multitasking.md#where-a-group-is-allowed
+driver d26_nested_too_many is
+  process main is
+    new r: Integer;
+    parallel
+    do
+      start outer(1, @r);
+    done;
+  return;
+end d26_nested_too_many;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "stderr": [
+    "outer starts more than 2 aspects"
+  ]
+}
+*/

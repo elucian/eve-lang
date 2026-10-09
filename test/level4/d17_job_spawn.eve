@@ -1,0 +1,31 @@
+# spawn starts async procedures in a job, await waits for an async function; done waits for every task (D-143)
+** spec: semantics/multitasking.md#tasks-in-a-job
+driver d17_job_spawn is
+  async procedure square(n: Integer, @r: Integer) is
+    wait 10ms;                         ** the core goes to the next task
+    let r := n * n;
+  return;
+
+  async function double(n: Integer) => (@result: Integer) is
+    wait 5ms;
+    let result := n * 2;
+  return;
+
+  process main is
+    new a, b, c :Integer;
+    work: job
+    do
+      spawn square(3, @a);
+      spawn square(4, @b);
+      let c := await double(5);
+    done work;
+    print "{a} {b} {c}";
+  return;
+end d17_job_spawn;
+/*@expect
+{
+  "stdout": [
+    "9 16 10"
+  ]
+}
+*/

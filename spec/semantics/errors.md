@@ -14,7 +14,7 @@ An error raised anywhere in a process (also inside a job or a called function or
 
 ### `recover`
 
-`recover` sits at the end of the process, aligned with `process`, before `finalize` and `return;`. Its statements are normal statements; `$error` is available: `$error.message`, `$error.code`, `$error.job` (a string; empty outside a job). It ends in one of:
+`recover` sits at the end of the process, aligned with `process`, before `finalize` and `return;`. Its statements are normal statements; `$error` is available: `$error.message`, `$error.code`, `$error.job` (a string; empty outside a job). After a parallel group or a job with tasks (level 4) also `$error.errors`, the list of the errors of the tasks in the order of `start` or `spawn`, and `$error.cancelled` (`multitasking.md#errors`, D-140). It ends in one of:
 
 | Statement | Effect |
 |---|---|
@@ -71,9 +71,11 @@ The constants are declared by the Exception module of the standard library. The 
 | `$err_process` | 31 | `Process {name} not found in aspect {aspect}` |
 | `$err_memory` | 40 | `Out of memory while allocating {size}` |
 | `$err_timeout` | 41 | `Time-out after {time}` |
-| `$err_deadlock` | 42 | `Deadlock: every task of the group waits on a channel` |
+| `$err_deadlock` | 42 | `Deadlock: {task} waits to {send to | receive from} {channel}`, one per waiting task (D-141) |
 | `$err_output` | 43 | `Output {name} is given to two tasks of the group` |
 | `$err_recursion` | 44 | recursion too deep |
+| `$err_parallel` | 45 | `{n} of {m} tasks failed` (level 4: a parallel group or a job with tasks; the items are in `$error.errors`, `multitasking.md#errors`) |
+| `$err_channel` | 46 | `Channel {name} is closed` (level 4, D-141) |
 
 Warnings do not stop the process; `.warn(code, message)` reports them.
 

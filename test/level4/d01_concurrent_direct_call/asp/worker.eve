@@ -1,0 +1,8 @@
+# worker: a concurrent aspect can't call a thread unsafe procedure (D-129)
+concurrent aspect worker is
+  from lib use (raw);
+
+  process main is
+    raw.tick();                        ** compile error: raw is direct
+  return;
+end worker;

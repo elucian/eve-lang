@@ -1,0 +1,30 @@
+# an abstract class can not be created outside the constructor of a subclass (D-145)
+** spec: syntax/declarations.md#traits-and-generic-classes
+driver d23_abstract_new is
+  class Shape = {name: String} <: Object is
+    constructor(name :String) => (@self) is
+      let self := Object();
+      let self.name := name;
+    return;
+
+    public method area(@self) => (@result: Real);    ** required: Shape is abstract
+
+    public method report(@self) => (@result: String) is
+      let result := "{self.name}: {self.area()}";
+    return;
+  end Shape;
+
+  process main is
+    new s := Shape("blob");            ** compile error: Shape is abstract
+    print s.name;
+  return;
+end d23_abstract_new;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "stderr": [
+    "Shape is abstract"
+  ]
+}
+*/

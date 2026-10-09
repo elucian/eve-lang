@@ -1,0 +1,28 @@
+# two parallel groups run one after the other; the output of a group is in the order of start (D-140)
+** spec: semantics/multitasking.md#parallel-groups
+driver d04_parallel_group is
+  process main is
+    group1: parallel
+    do
+      start task(1);
+      start task(2);
+    done group1;
+    group2: parallel
+    do
+      start task(3);
+      start task(4);
+    done group2;
+    print "both groups are done";
+  return;
+end d04_parallel_group;
+/*@expect
+{
+  "stdout": [
+    "task 1 is running",
+    "task 2 is running",
+    "task 3 is running",
+    "task 4 is running",
+    "both groups are done"
+  ]
+}
+*/

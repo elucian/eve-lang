@@ -10,7 +10,7 @@ This file is the one place to track the project: the levels, the versions and **
 - **Status**: `✓ done` means implemented in `bin/eve.exe` (or delivered, for documents and tools) and covered by tests where tests apply; `partial` says in the description what exists; `open` is not started; `dropped` is not wanted any more.
 - A feature belongs to **one version**. Moving it is changed here, in its section, and noted in the description with the decision.
 - A new large feature is added here first, then planned in a phase file, then decided (`D-nnn`), then built.
-- Status checked on 2026-10-08: level 1 65/65, level 2 62/62, level 3 50/50, level 4 4/4, smoke 16/16: 197 tests pass on the VM; the benchmarks are in `test/bmark`.
+- Status checked on 2026-10-08: level 1 65/65, level 2 62/62, level 3 50/50, level 4 4/27 (d04 to d26 written first, TDD), smoke 16/16: 197 tests pass on the VM; the benchmarks are in `test/bmark`.
 
 ## Levels
 
@@ -107,8 +107,8 @@ Level 3. Goal: Programs in several files: modules and imports, local libraries, 
 | F-LIB-03 | Strings, math, collections and type conversions | partial | `split`, `join`, `format`, `parse`, `floor`, `round`, sort, search (S5.1). *Partial:* `split`, `join`, `length`, `count`, `parse`, `floor`, `ceiling`, `round`, `abs`, `min`, `max`, `sqrt` work; sort and search are missing. |
 | F-LNG-10 | Classes | ✓ done | attributes, constructors, `new`, methods with `@self`, inheritance, visibility; a class hosts only methods and only a method has `@self` (D-036, D-123). Conformity level 3 since D-122. |
 | F-LNG-15 | Typed exceptions | partial | error classes with fields, `recover` by type, exit-code mapping (review `RST-R01`). *Partial:* `$error` with code, message, line and job, the codes `$err_*`, exit codes 1 to 4; `exception.eve` is a draft that the VM does not load. |
-| F-LNG-16 | Static checks | partial | name resolution, arity, visibility and type errors before the run (exit 65). *Partial:* undefined names, constants, `apply` arguments, exports, free statements in modules, safe modules and concurrent aspects (`check.zig`, `project.zig`); the type checks are few. |
-| F-LNG-19 | Safe and unsafe modules | ✓ done | `safe module` / `unsafe module` (default), per-member thread safety proved by the compiler, a concurrent aspect calls only safe members (D-129). Tests c26 to c30, c33, d01 to d03; a bare name from `m(*)` or `*` is checked like `m.name`. |
+| F-LNG-16 | Static checks | partial | name resolution, arity, visibility and type errors before the run (exit 65). *Partial:* undefined names, constants, `apply` arguments, exports, free statements in modules, managed modules and concurrent aspects (`check.zig`, `project.zig`); the type checks are few. |
+| F-LNG-19 | Managed and direct modules | ✓ done | `managed module` / `direct module` (default), per-member thread safety proved by the compiler, a concurrent aspect calls only safe members (D-129). Tests c26 to c30, c33, d01 to d03; a bare name from `m(*)` or `*` is checked like `m.name`. |
 | F-SPEC-04 | Library specification | partial | built-ins and standard modules as signatures (`spec/library/`). *Partial:* `library/atomic.md`. |
 | F-STR-01 | Modules and imports | ✓ done | `module`, `from … use (…)`, aliases, `m(*)`, `(*)`, singletons, `initialize`/`recover`/`finalize`, `export`, private members, circular imports, `$err_module` (D-041, D-068, D-072, D-112, D-126, D-131; tests c01 to c31). A module is identified by its file, whatever the spelling of the path (c32). *Open:* the standard library is not searched. |
 | F-STR-03 | Extension methods | ✓ done | `method name(@self: Class)` outside the class (D-072, D-086; tests c09, c11). |
@@ -128,15 +128,15 @@ Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with b
 | Code | Feature | Status | Description |
 |---|---|---|---|
 | F-LIB-11 | Logging and observability | open | structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`). |
-| F-LNG-11 | Traits, abstract classes, generics | open | `trait`, partial methods, `class Name(:T)`, library traits `Iterable`, `Comparable`, `Printable` (D-039, proposed). Moved from Version 0.2 to Level 4 (D-138). |
-| F-LNG-17 | Stream type | open | `Stream(:T)` shared by generators, files, queries and channels (review `RMT-R02`). |
-| F-LNG-18 | `Atomic(:T)` | partial | a class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; `class Name <: Atomic(:T)` (D-132). *Partial:* the declaration and the check of safe modules work, the value is a plain value; the operations (`add`, `get!`, `swap!`) need threads. |
+| F-LNG-11 | Traits, abstract classes, generics | open | `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable` (D-039, D-145, tests d20 to d24). Moved from Version 0.2 to Level 4 (D-138). |
+| F-LNG-17 | Stream type | open | `Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; in Version 0.3 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it in Version 0.4, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`). |
+| F-LNG-18 | `Atomic(:T)` | partial | a class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; `class Name <: Atomic(:T)` (D-132). *Partial:* the declaration and the check of managed modules work, the value is a plain value; the operations (`add`, `get!`, `swap!`) need threads. |
 | F-MTK-01 | Parallel aspects | open | `parallel … do start … done`, barrier, data rules, errors as a job (D-066). |
 | F-MTK-02 | Worker pool and scheduler | open | `$cores`, M:N, a waiting aspect gives its core away (D-067). |
 | F-MTK-03 | Channels | open | `Channel(:T)`, send, receive, close, pipelines, deadlock detection, time-out (D-051). |
-| F-MTK-04 | Cooperative tasks | open | generators taking turns, module `task` (`round_robin`, `until`) (D-067). |
+| F-MTK-04 | Tasks in a job | open | `async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to Version 0.4 with the generators (D-144). |
 | F-MTK-05 | Deadlines and cancellation | open | per-group time limits, cancel or collect errors (review `RMT-R01`). |
-| F-SPEC-05 | Multitasking semantics | open | generators, parallel aspects, channels (`semantics/multitasking.md`). |
+| F-SPEC-05 | Multitasking semantics | partial | `semantics/multitasking.md`: parallel groups, channels, tasks in a job, durations, determinism (D-140 to D-144). *Partial:* generators wait for Version 0.4. |
 | F-TLS-04 | Debugger | open | debug mode, `halt` breakpoints, step, print variables, reports (`manual/usage.md`). |
 | F-TLS-08 | Formatter and linter | open | `eve fmt`, `eve lint` (indentation, style rules; review `RSY-R06`). |
 | F-TLS-09 | Editor support | partial | syntax colors for VS Code and GitHub, then a language server (`tools/TODO-vscode-plugin.md`). *Partial:* tutorial highlighters `eve1.js`, `eve3.js`. |
@@ -267,8 +267,7 @@ Exit: the language is frozen; every level passes; one implementation other than 
 
 Decided on 2026-10-08 and removed from this list: the order of the levels (Level 3 modules and classes, Level 4 parallel, Level 5 data language and database, D-122, D-125), the place of the generators (Level 5, Version 0.4), generics and traits (Level 4, Version 0.3) and the bytecode, `.evb` and the C ABI (Version 0.7), D-138.
 
-- Confirm that the module `task` (F-MTK-04, cooperative tasks) belongs to Level 4, Version 0.3.
 - The data types (F-LNG-13, F-LNG-14), the service kind (F-STR-08) and the network features come from the review; each needs a decision before it is specified.
-- **Generators and the bytecode.** F-LNG-12 (Version 0.4) needs a method that can stop and continue, which the tree walker can not do (`design-multitasking.md` §5), and the bytecode VM (F-VM-04) is now in Version 0.7. Either the generators are built on the tree walker (a separate thread or a continuation), or F-LNG-12 moves to Version 0.7.
+- **Generators and the bytecode.** F-LNG-12 (Version 0.4) needs a method that can stop and continue, which the tree walker can not do (`design-multitasking.md` §5), and the bytecode VM (F-VM-04) is now in Version 0.7. Either the generators are built on the tree walker (a separate thread or a continuation), or F-LNG-12 moves to Version 0.7. *Proposed by D-144:* the baton threads of stage A give the tree walker a task that stops and continues, so a generator can be such a task and F-LNG-12 stays in Version 0.4.
 - **The web and `.evb`.** F-WEB-02 (Version 0.6) runs signed `.evb` code in the browser, and `.evb` (F-VM-07) is now in Version 0.7. Does Version 0.6 run source in the browser, or does F-WEB-02 move to Version 0.7?
 - Features left open in Version 0.2 (Level 3): the REPL (F-TLS-02, F-TLS-03), `sort` and search (F-LIB-03), the standard library as modules (F-VM-03), the variables `$EVE_*` (F-STR-04, F-STR-07): confirm that they stay in Version 0.2 or move them.

@@ -1,0 +1,12 @@
+# outer: starts two leaves and adds their results
+concurrent aspect outer is
+  process main(n: Integer, @result: Integer) is
+    new a, b :Integer;
+    parallel
+    do
+      start leaf(2 * n - 1, @a);
+      start leaf(2 * n, @b);
+    done;
+    let result := a + b;
+  return;
+end outer;

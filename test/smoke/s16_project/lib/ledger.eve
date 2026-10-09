@@ -1,5 +1,5 @@
-# ledger: a safe module with an atomic counter, a constant and the life cycle
-safe module ledger is
+# ledger: a managed module with an atomic counter, a constant and the life cycle
+managed module ledger is
   export (LIMIT, record, total!);
 
   set LIMIT = 3 :Integer;

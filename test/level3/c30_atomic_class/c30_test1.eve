@@ -1,5 +1,5 @@
 # variation 1 of c30: a type derived from Atomic, used ten times (D-133)
-** spec: semantics/modules.md#safe-and-unsafe-modules
+** spec: semantics/modules.md#managed-and-direct-modules
 driver c30_test1 is
   from lib use (tally);
 

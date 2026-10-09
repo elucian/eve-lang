@@ -24,7 +24,8 @@ Source: `control.html`, `processing.html`.
 - Evaluation order, loop semantics, `case` fall-through rules.
 - Errors: `try`/`recover`, `panic`, `raise`, `retry`, `resume`; what uncaught errors do.
 
-### S4.5 `semantics/multitasking.md` `[ ]`
+### S4.5 `semantics/multitasking.md` `[~]`
+2026-10-08: first draft written for level 4 (D-140 to D-144): parallel groups, channels, tasks in a job, durations, determinism, compile errors; tests d04 to d26. Generators wait for Version 0.4.
 Source: `multitasking.html`, `processing.html`.
 - Methods, side-effect rules, parameter passing modes (input, output, variant), generators, parallel aspects.
 - D-050: multitasking is not in 0.1. Methods, side effects and parameter passing (D-048, D-049) are normative for 0.1; parallel aspects (D-066) go in a section marked "planned, not in 0.1", keywords reserved. Generators and the module `task` are specified in version 2 (D-067); `yield` is reserved.

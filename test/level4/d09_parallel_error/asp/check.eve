@@ -1,0 +1,7 @@
+# check: fails for an even number
+concurrent aspect check is
+  process main(n: Integer) is
+    raise "bad {n}" if n % 2 == 0;
+    print "ok {n}";
+  return;
+end check;

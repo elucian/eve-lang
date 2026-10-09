@@ -1,0 +1,10 @@
+# adder: adds 1 to the shared counter, times times
+concurrent aspect adder is
+  from lib use (tally);
+
+  process main(times: Integer) is
+    for i in (1..times) do
+      tally.add(1);
+    done;
+  return;
+end adder;

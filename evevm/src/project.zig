@@ -342,17 +342,17 @@ const Linker = struct {
         return false;
     }
 
-    // Zig tip: a safe module is checked with two plain rules (D-129): each variable is atomic (`isAtomicVar`),
-    // and no call goes to a member of an unsafe module.
-    /// Reject a `safe` module that has a plain variable or calls a module that is not safe.
+    // Zig tip: a managed module is checked with two plain rules (D-129): each variable is atomic (`isAtomicVar`),
+    // and no call goes to a member of a direct module.
+    /// Reject a `managed` module that has a plain variable or calls a module that is not managed.
     fn checkSafe(l: *Linker, m: *const Node) Error!void {
         for (m.kids) |k| {
             if (k.tag != .var_decl) continue;
             if (!isAtomicVar(m, k)) {
-                return l.fail(k, "the safe module '{s}' has a variable that is not atomic: declare it :Atomic(:Type) (D-129, D-132)", .{m.text});
+                return l.fail(k, "the managed module '{s}' has a variable that is not atomic: declare it :Atomic(:Type) (D-129, D-132)", .{m.text});
             }
         }
-        for (m.kids) |k| try l.unsafeCalls(m, k, "the safe module");
+        for (m.kids) |k| try l.unsafeCalls(m, k, "the managed module");
     }
 
     fn exportsName(m: *const Node, name: []const u8) bool {
@@ -388,16 +388,16 @@ const Linker = struct {
     }
 
     // Zig tip: `unsafeCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
-    /// Reject a call of a member of a module that is not safe, in the tree `n` of the module `tree`.
+    /// Reject a call of a member of a module that is not managed, in the tree `n` of the module `tree`.
     fn unsafeCalls(l: *Linker, tree: *const Node, n: *const Node, who: []const u8) Error!void {
         if (n.tag == .call and n.kids[0].tag == .name) {
             if (l.bareOwner(tree, n.kids[0].text)) |other| {
-                if (!other.public) return l.fail(n, "{s} '{s}' calls '{s}' of the module '{s}', and the module is not safe (D-129)", .{ who, tree.text, n.kids[0].text, other.text });
+                if (!other.public) return l.fail(n, "{s} '{s}' calls '{s}' of the module '{s}', and the module is not managed (D-129)", .{ who, tree.text, n.kids[0].text, other.text });
             }
         }
         if (n.tag == .field and n.kids[0].tag == .name) {
             if (l.moduleOf(tree, n.kids[0].text)) |other| {
-                if (!other.public) return l.fail(n, "{s} '{s}' uses '{s}.{s}', and the module '{s}' is not safe (D-129)", .{ who, tree.text, other.text, n.text, other.text });
+                if (!other.public) return l.fail(n, "{s} '{s}' uses '{s}.{s}', and the module '{s}' is not managed (D-129)", .{ who, tree.text, other.text, n.text, other.text });
             }
         }
         for (n.kids) |k| try l.unsafeCalls(tree, k, who);
@@ -406,7 +406,7 @@ const Linker = struct {
     // Zig tip: `visiting` is the list of the members being examined: a function that calls itself would
     // loop for ever, so a name already in the list counts as safe for now. This is the check of a
     // `concurrent` aspect (level 4, D-129): it calls only members that the compiler proves thread safe.
-    /// Is the member `name` of the module `m` thread safe? A safe module: yes. Otherwise it must not touch a
+    /// Is the member `name` of the module `m` thread safe? A managed module: yes. Otherwise it must not touch a
     /// variable of the module, nor call an unsafe member.
     fn memberSafe(l: *Linker, m: *const Node, name: []const u8, visiting: *std.ArrayList([]const u8)) Error!bool {
         if (m.public) return true;

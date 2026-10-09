@@ -24,6 +24,8 @@ Decisions: **D-083** (below): one machine and one mode, `-x`, `-c`, `-r`, `-u`, 
 - Is the remote scheduler part of version 0.5, or later?
 - Does `deploy` exist as a command of its own, or is uploading every file of a project with `-u` enough?
 
+- Q-028 Networking and protocols [open]
+- D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI
 ## D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI (2026-10-05)
 Author decisions, reached in the discussion of `plan/design-service.md` (2026-10-05), which keeps the details and the reasons. Taught in the new tutorial page server.html (topic 19, Compiler becomes 20), marked "planned, version 0.5". Not implemented: VM work waits (D-075).
 - **One machine, one mode.** `eve` starts locally or remotely; what it does depends on its commands and its configuration.
@@ -37,3 +39,8 @@ Author decisions, reached in the discussion of `plan/design-service.md` (2026-10
 - **panic.** At the prompt it returns to the prompt; with `eve -x` it ends the process (exit code 1); on a listening machine it ends the request or the job and the machine goes on listening, while `eve -c` ends with exit code 1.
 - **API for AI.** `eve --api` is an MCP server; every command of the machine is a tool; an AI has the rights of a person at the prompt.
 - New system variables to add to the register (D-071) when specified: `$EVE_NAME`, `$EVE_DOMAIN`, `$EVE_PORT`, `$EVE_HTTP_PORT`, `$EVE_WEB`, `$EVE_TOKEN`.
+
+## Q-028 Networking and protocols (2026-10-06)
+Moved from level 7 on 2026-10-08: the Eve Wire Protocol, sockets and the server are level 6 (F-NET-02 to F-NET-06, draft feature 3); the HTTP client is level 5 (F-NET-01).
+The pages networking.html and protocols.html collect ideas that are not designed: the layers (names, connection, protocol, data), the type `Url`, the module `net` and `http`, capabilities in the project file, `Secret`, the Eve Wire Protocol (frames HELLO, APPLY, RESULT, ERROR, BATCH, CREDIT, CANCEL, PING, CLOSE; CBOR payloads; resume by batch number), HTTP/1.1 and HTTP/2, WebSocket for browsers. Questions: do sockets exist in the language or only protocols? Is EWP wanted, or only HTTP with JSON? Which level takes the HTTP client (3) and which the server (6)? Names of the error classes of the network?
+**Answer:**

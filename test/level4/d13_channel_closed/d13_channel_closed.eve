@@ -1,0 +1,22 @@
+# send into a closed channel raises ChannelError, code 46 (D-141)
+** spec: semantics/multitasking.md#channels
+driver d13_channel_closed is
+  process main is
+    new jobs := Channel(:Integer)(capacity: 5);
+    parallel
+    do
+      start late(@jobs);
+    done;
+  recover
+    print $error.errors[1].message;
+    print "code: {$error.errors[1].code}";
+  return;
+end d13_channel_closed;
+/*@expect
+{
+  "stdout": [
+    "Channel jobs is closed",
+    "code: 46"
+  ]
+}
+*/

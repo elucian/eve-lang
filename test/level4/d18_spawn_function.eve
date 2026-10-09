@@ -1,0 +1,23 @@
+# spawn of an async function is a compile error: its result would be lost (D-143)
+** spec: semantics/multitasking.md#tasks-in-a-job
+driver d18_spawn_function is
+  async function double(n: Integer) => (@result: Integer) is
+    let result := n * 2;
+  return;
+
+  process main is
+    work: job
+    do
+      spawn double(5);                 ** compile error: a function is awaited
+    done work;
+  return;
+end d18_spawn_function;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "stderr": [
+    "double is a function"
+  ]
+}
+*/

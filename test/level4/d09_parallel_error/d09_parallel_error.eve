@@ -1,0 +1,33 @@
+# failed tasks do not stop the others; done raises ParallelError with the errors in the order of start (D-140)
+** spec: semantics/multitasking.md#errors
+driver d09_parallel_error is
+  process main is
+    checks: parallel
+    do
+      for i in (1..4) do
+        start check(i);
+      done;
+    done checks;
+    print "never";
+  recover
+    print $error.message;
+    print "job: {$error.job}";
+    for e in $error.errors do
+      print "{e.index} {e.aspect}: {e.message}";
+    done;
+    print "code: {$error.code}";
+  return;
+end d09_parallel_error;
+/*@expect
+{
+  "stdout": [
+    "ok 1",
+    "ok 3",
+    "2 of 4 tasks failed",
+    "job: checks",
+    "2 check: bad 2",
+    "4 check: bad 4",
+    "code: 45"
+  ]
+}
+*/

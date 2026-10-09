@@ -1,0 +1,7 @@
+# leaf: an aspect started by an aspect; it may not start any
+concurrent aspect leaf is
+  process main(k: Integer, @x: Integer) is
+    print "leaf {k}";
+    let x := k * k;
+  return;
+end leaf;

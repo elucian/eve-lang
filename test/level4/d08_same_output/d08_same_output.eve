@@ -1,0 +1,21 @@
+# two starts of a group can not receive the same output variable (D-140, $err_output)
+** spec: semantics/multitasking.md#data-rules
+driver d08_same_output is
+  process main is
+    new r: Integer;
+    parallel
+    do
+      start square(2, @r);
+      start square(3, @r);             ** compile error: r has two owners
+    done;
+  return;
+end d08_same_output;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "stderr": [
+    "Output r is given to two tasks of the group"
+  ]
+}
+*/

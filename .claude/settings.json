@@ -22,5 +22,28 @@
       "Bash(git -C tutorial diff *)",
       "Bash(git -C tutorial log *)"
     ]
+  },
+  "skillOverrides": {
+    "agents-sdk": "off",
+    "cloudflare": "off",
+    "cloudflare-email-service": "off",
+    "cloudflare-one": "off",
+    "cloudflare-one-migrations": "off",
+    "durable-objects": "off",
+    "sandbox-sdk": "off",
+    "turnstile-spin": "off",
+    "web-perf": "off",
+    "workers-best-practices": "off",
+    "wrangler": "off",
+    "dataviz": "off",
+    "claude-api": "off",
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:xlsx": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:morning": "off",
+    "anthropic-skills:import-memory": "off"
   }
 }

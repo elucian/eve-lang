@@ -1,0 +1,6 @@
+# report: an aspect without a kind word is exclusive (D-130)
+aspect report is
+  process main(n: Integer) is
+    print "report {n}";
+  return;
+end report;

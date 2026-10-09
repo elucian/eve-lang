@@ -1,0 +1,21 @@
+# each started aspect writes its own element of an array; the results are ready after done (D-140)
+** spec: semantics/multitasking.md#data-rules
+driver d05_parallel_outputs is
+  process main is
+    new s: [4]Integer;
+    demo: parallel
+    do
+      for i in (1..4) do
+        start square(i, @s[i]);
+      done;
+    done demo;
+    print "{s[1]} {s[2]} {s[3]} {s[4]}";
+  return;
+end d05_parallel_outputs;
+/*@expect
+{
+  "stdout": [
+    "1 4 9 16"
+  ]
+}
+*/

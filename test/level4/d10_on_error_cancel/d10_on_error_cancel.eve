@@ -1,0 +1,25 @@
+# on error cancel stops the other tasks after the first failure; they are counted, not listed (D-140)
+** spec: semantics/multitasking.md#errors
+driver d10_on_error_cancel is
+  process main is
+    parallel on error cancel
+    do
+      for i in (1..4) do
+        start work(i);
+      done;
+    done;
+  recover
+    print $error.message;
+    print "cancelled: {$error.cancelled}";
+    print $error.errors[1].message;
+  return;
+end d10_on_error_cancel;
+/*@expect
+{
+  "stdout": [
+    "1 of 4 tasks failed",
+    "cancelled: 3",
+    "stop at 1"
+  ]
+}
+*/

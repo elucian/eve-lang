@@ -1,0 +1,6 @@
+# square: one result for one input
+concurrent aspect square is
+  process main(n: Integer, @result: Integer) is
+    let result := n * n;
+  return;
+end square;

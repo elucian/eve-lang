@@ -1,0 +1,9 @@
+# calm: a managed module can't use the functions or the procedures of a direct module (D-129)
+managed module calm is
+  from lib use (raw);
+  export (work);
+
+  procedure work() is
+    raw.tick();                        ** thread unsafe: the module is rejected
+  return;
+end calm;

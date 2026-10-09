@@ -1,0 +1,26 @@
+# split(k) and batch(n) cut a list; the parts are summed in parallel and combined by index (D-142)
+** spec: semantics/multitasking.md#streams-and-batches
+driver d16_split_batch is
+  process main is
+    new rows := (1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    new parts := rows.split(4);
+    new sums: [4]Integer;
+    parallel
+    do
+      for i in (1..4) do
+        start sum_part(parts[i], @sums[i]);
+      done;
+    done;
+    print "{sums[1]} {sums[2]} {sums[3]} {sums[4]}";
+    new batches := rows.batch(4);
+    print "batches: {batches.length()}, last: {batches[-1].length()}";
+  return;
+end d16_split_batch;
+/*@expect
+{
+  "stdout": [
+    "6 15 15 19",
+    "batches: 3, last: 2"
+  ]
+}
+*/

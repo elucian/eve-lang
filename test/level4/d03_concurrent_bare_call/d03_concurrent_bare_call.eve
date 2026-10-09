@@ -1,5 +1,5 @@
 # a concurrent aspect can not call an unsafe member, also by a bare name from m(*) (D-129)
-** spec: semantics/modules.md#safe-and-unsafe-modules
+** spec: semantics/modules.md#managed-and-direct-modules
 driver d03_concurrent_bare_call is
   process main is
     apply worker();

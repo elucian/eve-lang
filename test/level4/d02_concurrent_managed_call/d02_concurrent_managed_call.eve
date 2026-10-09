@@ -1,0 +1,16 @@
+# a concurrent aspect calls a managed module (D-129)
+** spec: semantics/modules.md#managed-and-direct-modules
+driver d02_concurrent_managed_call is
+  process main is
+    new r :Integer;
+    apply worker(5, @r);
+    print "result: {r}";
+  return;
+end d02_concurrent_managed_call;
+/*@expect
+{
+  "stdout": [
+    "result: 10"
+  ]
+}
+*/

@@ -34,7 +34,7 @@ def term_name(lit):
     return "S%d_" % (SYMS.index(lit)) if lit in SYMS else "X_" + re.sub(r"\W", "", lit)
 
 DECL_TERMS = {"sysname": "SYSNAME", "string": "STRING", "text": "TEXT", "rune": "RUNE",
-              "shebang": "SHEBANG", "integer": "INTEGER"}
+              "shebang": "SHEBANG", "integer": "INTEGER", "duration": "DURATION"}
 
 def convert(src):
     src = re.sub(r"\(\*.*?\*\)", "", src, flags=re.S)
@@ -84,6 +84,7 @@ KW = {i["id"] for i in _KW}
 CTX = {i["id"] for i in _KW if i.get("contextual")}     # contextual keywords are also valid names (D-116)
 NUM = re.compile(r"0[xX][0-9a-fA-F]+|0[bB][01]+|\d+\.\d+(?:[eE][+-]?\d+)?[drfbwnz]?|\d+[eE][+-]?\d+|\d+[drfbwnz]?")
 NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
+DUR = re.compile(r"\d+(?:ms|s|m|h)(?![A-Za-z0-9_])")
 
 class LexErr(Exception):
     pass
@@ -148,6 +149,8 @@ def lex(text, lits):
         m = re.match(r"U\+[0-9A-Fa-f]{4,6}", t[i:])
         if m: add("RUNE", m.group(), line); i += len(m.group()); continue
         if c.isdigit():
+            m = DUR.match(t, i)                    # a duration literal: 10ms, 30s, 2m, 1h (D-144)
+            if m: add("DURATION", m.group(), line); i += len(m.group()); continue
             m = NUM.match(t, i)
             v = m.group()
             add("INTEGER" if v.isdigit() else "NUMBER", v, line); i += len(v); continue

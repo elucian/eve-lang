@@ -1,0 +1,32 @@
+# a class adopts a trait: it writes the required method and gets the provided one (D-145)
+** spec: syntax/declarations.md#traits-and-generic-classes
+driver d20_trait is
+  trait Describable is
+    method describe(@self) => (@result: String);
+    method show(@self) is
+      print "<{self.describe()}>";
+    return;
+  end Describable;
+
+  class Point = {x: Integer, y: Integer} <: (Object, Describable) is
+    public method describe(@self) => (@result: String) is
+      let result := "({self.x}, {self.y})";
+    return;
+  end Point;
+
+  process main is
+    new p := Point(x: 1, y: 2);
+    p.show();
+    expect p is Describable;
+    new d := p :Describable;
+    print d.describe();
+  return;
+end d20_trait;
+/*@expect
+{
+  "stdout": [
+    "<(1, 2)>",
+    "(1, 2)"
+  ]
+}
+*/
