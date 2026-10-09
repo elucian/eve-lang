@@ -1,0 +1,9 @@
+# collect: adds every value of a channel
+concurrent aspect collect is
+  process main(@results: Channel(:Integer), @total: Integer) is
+    let total := 0;
+    for y in results do
+      let total += y;
+    done;
+  return;
+end collect;

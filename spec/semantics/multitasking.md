@@ -1,8 +1,8 @@
 # Multitasking: parallel groups, channels and tasks
 
-Status: **0.1-draft**, level 4 (version 0.3). Sources: D-047, D-048, D-051, D-066, D-067, D-081, D-089, D-090, D-104, D-129, D-130, D-132, D-140 to D-145. Tests: `test/level4` (d01 to d26). Grammar: [`../syntax/grammar.md#parallel-processing-level-4`](../syntax/grammar.md#parallel-processing-level-4). Thread safety of modules: [`modules.md#managed-and-direct-modules`](modules.md#managed-and-direct-modules).
+Status: **0.1-draft**, level 4 (version 0.3). Sources: D-047, D-048, D-051, D-066, D-067, D-081, D-089, D-090, D-104, D-129, D-130, D-132, D-140 to D-145. Tests: `test/level4` (d01 to d35). Grammar: [`../syntax/grammar.md#parallel-processing-level-4`](../syntax/grammar.md#parallel-processing-level-4). Thread safety of modules: [`modules.md#managed-and-direct-modules`](modules.md#managed-and-direct-modules).
 
-Eve has two ways to do several things at once. A **parallel group** starts aspects on several cores. A **job with tasks** runs asynchronous subprograms on one core, taking turns while they wait. **Channels** connect tasks that run at the same time. Generators and the module `task` are level 5 (version 0.4).
+Eve has two ways to do several things at once. A **parallel group** starts aspects on several cores. A **job with tasks** runs asynchronous subprograms on one core, taking turns while they wait. **Channels** connect tasks that run at the same time. The tutorial calls the first **concurrency** (`concurrency.html`) and the second **multitasking** (`multitasking.html`), two pages of phase 5 (D-146). Generators and the module `task` are level 5 (version 0.4).
 
 | Word | Meaning |
 |---|---|
@@ -179,7 +179,7 @@ Not normative (D-144). An implementation may reach the rules above in stages.
 
 1. **Stage A, one core.** Each task runs on its own interpreter thread, but only the thread holding the baton runs. The baton passes when the running task waits (channel, `wait`, `await`, inner `done`, end of task), to the next ready task in the order of `start`. Deterministic by construction; a deadlock is "every unfinished task waits and no timer is pending".
 2. **Stage B, many cores.** Up to `$cores` batons. Channels use a mutex and a condition; `Atomic(:T)` uses the atomics of the machine; the module table is read only after the link step.
-3. **Stage C, region memory.** One arena per task, freed when the task ends; outputs and channel values are copied into the arena of the receiver.
+3. **Stage C, memory.** The reference VM frees memory while it runs (D-151): values are reference counted and freed at the safe point of the region that made them (the end of a statement, of a pass of a loop, of a `done`); a tracing collector frees cycles at `done`. While the tasks of a group or a job run, nothing is freed: the zero counts wait until `done`. An arena per task, freed when the task ends, is a later step.
 
 `Mutex` is not part of version 0.3.
 

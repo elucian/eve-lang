@@ -1,0 +1,6 @@
+# add_one: a tiny concurrent aspect, the cost of a start dominates
+concurrent aspect add_one is
+  process main(a: Integer, b: Integer, @r: Integer) is
+    let r := a + b;
+  return;
+end add_one;

@@ -1,0 +1,25 @@
+# two declarations with the same signature are a compile error (D-149)
+** spec: syntax/declarations.md#overloading
+driver e12_same_signature is
+  function half(x: Integer) => (@result: Integer) is
+    new h := x / 2 :Integer;
+    let result := h;
+  return;
+
+  function half(x: Integer) => (@result: Integer) is   ** compile error: same signature
+    let result := x;
+  return;
+
+  process main is
+    print half(4);
+  return;
+end e12_same_signature;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "half is declared twice with the same signature"
+  ]
+}
+*/

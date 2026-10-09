@@ -1,0 +1,22 @@
+# the output of a group is written in the order of start, whatever task ends first (D-140, D-144)
+** spec: semantics/multitasking.md#output
+driver d27_start_order is
+  process main is
+    wait 10ms;                         ** a pause of the driver, before any task
+    parallel
+    do
+      start nap(50, "first");          ** ends last
+      start nap(0, "second");          ** ends first
+    done;
+    print "end";
+  return;
+end d27_start_order;
+/*@expect
+{
+  "stdout": [
+    "first",
+    "second",
+    "end"
+  ]
+}
+*/

@@ -2,7 +2,7 @@
 
 Eve is a domain-specific scripting language (data processing, test automation).
 This repo holds the language **examples, spec and manual**, and the first implementation: the
-Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 62/62 tests, level 3: 50/50 tests, level 4: 4 of 27 tests pass, d04 to d26 written first (TDD), smoke: 16 tests).
+Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42 tests, level 5: 0/15 tests written first, smoke: 16 tests).
 Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig build test`.
 `.zig`/`.zon`/`.sh` files are LF (`.gitattributes`), unlike the rest of the repo.
 **Zig is taught here (didactic project):** the team does not know Zig. Every function, test, type
@@ -42,6 +42,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 
 - **Test with the ReleaseSafe build** (about 4.6 times faster than Debug). Build it once per change: `cd evevm && zig build -Doptimize=ReleaseSafe -p ../temp/rel`, then run the tests with `python script/runtest.py 1 --eve temp/rel/bin/eve.exe` (also `all`, `smoke`). Use the Debug build (`zig build -p ..`, `bin/eve.exe`) only to debug a failure: it keeps safety checks and stack traces readable.
 - **Watch performance at every feature or optimization of the VM.** Before and after the change run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe` (add `--check` to fail on a slowdown above 25%). When a version is done, run it with `--save` (updates `test/bmark/history.json` and the table of the README) and add a paragraph to "Notes by version" in `test/bmark/README.md`: what changed, appreciation or depreciation, and why a drop of more than 10% happened. Compare only runs of the same build on the same machine.
+- **Memory of the VM** (D-151, `evevm/src/heap.zig`): values are reference counted; every place that stores a value in the interpreter counts it (`setVar`, `setCell`, `listAppend`, `setField`, `mapPut`) and lets the old one go. After a change to how the interpreter stores values, run the suite on the Debug build with `EVE_GC_VERIFY=1 python script/runtest.py all`: it checks every free against a trace and stops on a value that a holder forgot to count. `EVE_MEMSTATS=1` prints what the heap made, freed and kept; `bmark.py` reports the peak memory of each benchmark.
 - **Every benchmark has a twin in Python** (`test/bmark/ref/<name>.py`); the report shows the ratio Eve / Python. A new level or a new kind of work adds a benchmark `p<level><letter>_<name>.eve` with its twin and a `** perf:` description line.
 - **Do not optimize early** (decision of 2026-10-07): until level 2 passes its tests, change the interpreter for correctness, not for speed (slot-resolved variables wait for the final scope rules). Do fix a benchmark that falls more than 10 times behind Python, it points to an accidental quadratic cost. The first planned optimization is variable lookup by slot, resolved in `check.zig`.
 

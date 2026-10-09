@@ -66,7 +66,9 @@ A range is a value, not an array; there is no `[1..10]` (D-022, D-023). It is us
 - A matrix or tensor takes one index per dimension, in one pair of brackets or one pair each: `m[x, y]` is `m[x][y]`; an index is a number, a range or `*` (all of the dimension). A single index `m[k]` is the absolute row-major index (D-064).
 - On a DataMap `h["k"]` reads a key; a missing key is an error with code 4. Assigning to a missing key creates it (D-058).
 - `object.name` reads an attribute; `Class.name` a class member; `module.name` an exported member. Code outside a class can not add an attribute to an object: `new p.z := 7;` is a compile error (Q-019h, Q-031k).
-- A call applies to a name or to a lambda in parentheses: `((x) => (x * 2))(5)` creates an anonymous function and calls it. An anonymous function can not call itself (Q-025a). A function has one parameter list (D-029); its optional parameters are named at the call.
+- A call applies to a name, a member or an index: `f(5)`, `m.f(5)`. A lambda is not called where it is written: `((x) => (x * 2))(5)` is a compile error; assign the lambda to a name, then call the name (D-147). An anonymous function can not call itself (Q-025a). Optional parameters are named at the call.
+- A second parenthesized list after a name is a list of types, only with `:`: `Box(:Integer)(5)` (D-145). Generic functions, procedures, methods and processes take a type list too, `largest(:Integer)(xs)`, which may be left out when the types are inferred from the arguments: `largest(xs)`; a lambda has no type list (version 0.4, D-148, `declarations.md#generic-subprograms`).
+- A call of an overloaded name selects one signature at compile time, by the arguments and, for a function, by the type expected for the result (version 0.4, D-149, `declarations.md#overloading`).
 
 ## Literals and builders
 

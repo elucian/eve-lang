@@ -1,0 +1,24 @@
+# variation 1 of d28: receive from a closed, empty channel raises ChannelError 46 (D-141)
+** spec: semantics/multitasking.md#channels
+driver d28_test1 is
+  process main is
+    new jobs := Channel(:Integer)(capacity: 2);
+    new total: Integer;
+    parallel
+    do
+      start give(1, @jobs);            ** one value, then the channel closes
+      start take(@jobs, @total);       ** wants two
+    done;
+  recover
+    print $error.errors[1].message;
+    print "code: {$error.errors[1].code}";
+  return;
+end d28_test1;
+/*@expect
+{
+  "stdout": [
+    "Channel jobs is closed",
+    "code: 46"
+  ]
+}
+*/

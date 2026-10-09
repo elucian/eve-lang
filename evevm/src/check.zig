@@ -35,6 +35,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
     .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Ordinal"}, .{"Function"},
     .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"Atomic"},
+    .{"Channel"}, .{"Duration"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
 });
 
 const Checker = struct {
@@ -50,6 +51,12 @@ const Checker = struct {
     /// An import brings names without a prefix (`m(*)` or `*`): they are known only when the modules
     /// are read (project.zig), so an unknown name is not an error here (modules.md).
     open_names: bool = false,
+    /// The call being checked is the one of `spawn` or `await`: an async subprogram may be called (D-143).
+    task_call: bool = false,
+    /// The value of `let self := Parent(...)` in a constructor: an abstract class may be called (D-145).
+    allow_abstract: bool = false,
+    /// The routine being checked is a constructor.
+    in_ctor: bool = false,
 
     // Zig tip: `fail` fills the `Diag` and returns the error, as in the parser, so a caller writes
     // `return c.fail(n, "...", .{})`. `comptime fmt` is checked against `args` by the compiler.
@@ -123,7 +130,12 @@ const Checker = struct {
                 return "String";
             },
             .chr => return "Rune",
-            .name, .ref => return (try c.resolve(n, n.text)).ty,
+            .name => return (try c.resolve(n, n.text)).ty,
+            .ref => {
+                const info = try c.resolve(n, n.text);
+                if (n.kids.len > 0) _ = try c.expr(n.kids[0]);
+                return info.ty;
+            },
             .bin => return c.binary(n),
             .un => return c.expr(n.kids[0]),
             .range => {
@@ -148,6 +160,15 @@ const Checker = struct {
             },
             .builder => return c.builder(n),
             .call => return c.call(n, false),
+            .await_ => {
+                c.task_call = true;
+                defer c.task_call = false;
+                return c.call(n.kids[0], false);
+            },
+            .generic => {
+                _ = try c.resolve(n, n.text);
+                return n.text;
+            },
             .lambda => {
                 try c.push();
                 defer c.pop();
@@ -215,8 +236,16 @@ const Checker = struct {
         const callee = n.kids[0];
         const args = n.kids[1..];
         var result: ?[]const u8 = null;
-        if (callee.tag == .name) {
+        if (callee.tag == .name or callee.tag == .generic) {
             const info = try c.resolve(callee, callee.text);
+            if (info.node) |target| {
+                if (target.is_async and !c.task_call) return c.fail(n, "{s} is async: use spawn or await (D-104)", .{callee.text});
+                if (target.tag == .class and !c.allow_abstract) {
+                    if (c.missing(target, false)) |_| return c.fail(n, "{s} is abstract: only the constructor of a subclass builds it (D-145)", .{callee.text});
+                }
+            }
+            c.task_call = false;
+            c.allow_abstract = false;
             switch (info.kind) {
                 .procedure => if (!as_statement) {
                     return c.fail(n, "the procedure '{s}' returns nothing: it can't be used in an expression", .{callee.text});
@@ -247,8 +276,70 @@ const Checker = struct {
                 if (c.in_class) |here| if (std.mem.eql(u8, here, cn)) return;
                 return c.fail(n, "'{s}' is private to the class {s}", .{ name, cn });
             }
+            for (cls.extra) |tr| {
+                const tn = c.classes.get(tr.text) orelse continue;
+                for (tn.kids[2..]) |m| if (std.mem.eql(u8, m.text, name)) return;
+            }
             cur = if (cls.kids[1].tag == .name) cls.kids[1].text else null;
         }
+    }
+
+    // Zig tip: two nested loops over the same slice compare every pair once when the inner one starts
+    // after the outer index (`for (cls.extra[i + 1 ..])`). A labeled `continue :outer` is not needed: a
+    // method the class writes itself is simply skipped with `if (...) continue`.
+    /// Two traits that provide a method with the same name force the class to write it (D-145).
+    fn traitConflicts(c: *Checker, cls: *const Node) Error!void {
+        for (cls.extra, 0..) |t1, i| {
+            const n1 = c.classes.get(t1.text) orelse continue;
+            for (cls.extra[i + 1 ..]) |t2| {
+                const n2 = c.classes.get(t2.text) orelse continue;
+                for (n1.kids[2..]) |m1| {
+                    if (m1.kids[3].tag == .none) continue;
+                    for (n2.kids[2..]) |m2| {
+                        if (m2.kids[3].tag == .none or !std.mem.eql(u8, m1.text, m2.text)) continue;
+                        var written = false;
+                        for (cls.kids[2..]) |own| if (own.tag == .method and own.kids[3].tag != .none and std.mem.eql(u8, own.text, m1.text)) {
+                            written = true;
+                        };
+                        if (!written) return c.fail(cls, "{s} must write {s}: it comes from {s} and {s} (D-145)", .{ cls.text, m1.text, t1.text, t2.text });
+                    }
+                }
+            }
+        }
+    }
+
+    // Zig tip: `orelse continue` skips a name that is not
+    // a known class (a library class such as `Object`). A routine whose body is the `none` node is a
+    // required method: a signature that ends with `;` (D-145). `only_traits` limits the search to the
+    // methods required by the traits, which a class must write as soon as it is declared.
+    /// The first method that a class requires (from itself, its ancestors or its traits) and nobody writes.
+    fn missing(c: *Checker, cls: *const Node, only_traits: bool) ?[]const u8 {
+        var required: std.ArrayList([]const u8) = .empty;
+        var written: std.ArrayList([]const u8) = .empty;
+        var cur: ?*const Node = cls;
+        while (cur) |k| {
+            for (k.kids[2..]) |m| {
+                if (m.tag != .method) continue;
+                if (m.kids[3].tag == .none) {
+                    if (!only_traits) required.append(c.a, m.text) catch return null;
+                } else written.append(c.a, m.text) catch return null;
+            }
+            for (k.extra) |tr| {
+                const tn = c.classes.get(tr.text) orelse continue;
+                for (tn.kids[2..]) |m| {
+                    if (m.kids[3].tag == .none) required.append(c.a, m.text) catch return null else written.append(c.a, m.text) catch return null;
+                }
+            }
+            cur = if (k.kids[1].tag == .name) c.classes.get(k.kids[1].text) else null;
+        }
+        for (required.items) |r| {
+            var found = false;
+            for (written.items) |w| if (std.mem.eql(u8, r, w)) {
+                found = true;
+            };
+            if (!found) return r;
+        }
+        return null;
     }
 
     // Zig tip: a position counter that skips the named arguments (`pair` nodes) finds which
@@ -292,6 +383,9 @@ const Checker = struct {
         const saved = c.in_class;
         defer c.in_class = saved;
         if (class_name) |cn| c.in_class = cn;
+        const saved_ctor = c.in_ctor;
+        defer c.in_ctor = saved_ctor;
+        c.in_ctor = r.tag == .constructor;
         try c.params(r.kids[0]);
         for (r.kids[2].kids) |res| {
             if (c.frames.items[c.frames.items.len - 1].names.contains(res.text)) continue; // `(@self)` repeats the parameter
@@ -331,7 +425,10 @@ const Checker = struct {
             .var_decl, .set => try c.declaration(s),
             .assign => {
                 const value = s.kids[1];
+                // `let self := Shape(name);` is how a subclass constructor builds its abstract parent
+                c.allow_abstract = c.in_ctor and s.kids[0].tag == .name and std.mem.eql(u8, s.kids[0].text, "self");
                 _ = try c.expr(value);
+                c.allow_abstract = false;
                 const target = s.kids[0];
                 if (std.mem.eql(u8, s.text, "+>")) {
                     _ = try c.expr(target); // `let x +> lst;`: the left side is the element
@@ -368,7 +465,32 @@ const Checker = struct {
                 const e = s.kids[0];
                 if (e.tag == .call) {
                     _ = try c.call(e, true);
+                } else if (e.tag == .await_) {
+                    c.task_call = true; // `await load(p, @t);`: an async procedure as a statement
+                    _ = try c.call(e.kids[0], true);
                 } else _ = try c.expr(e);
+            },
+            .spawn_stmt => {
+                const call_node = s.kids[0];
+                const callee = call_node.kids[0];
+                if (callee.tag == .name) {
+                    const info = try c.resolve(callee, callee.text);
+                    if (info.kind == .function) return c.fail(s, "{s} is a function: use await, a spawned result would be lost (D-143)", .{callee.text});
+                    if (info.node) |target| if (!target.is_async) return c.fail(s, "{s} is not async: spawn starts an async procedure (D-143)", .{callee.text});
+                }
+                c.task_call = true;
+                _ = try c.call(call_node, true);
+            },
+            .wait_stmt => _ = try c.expr(s.kids[0]),
+            .parallel => {
+                if (s.kids[2].tag != .none) _ = try c.expr(s.kids[2]);
+                try c.push();
+                defer c.pop();
+                try c.block(s.kids[0]);
+                try c.block(s.kids[1]);
+            },
+            .start_stmt => for (s.kids) |a| {
+                _ = try c.expr(a);
             },
             .block => try c.block(s),
             .if_ => {
@@ -459,7 +581,7 @@ const Checker = struct {
     fn declareMembers(c: *Checker, members: []const *const Node) Error!void {
         for (members) |m| {
             switch (m.tag) {
-                .class => {
+                .class, .trait => {
                     try c.declare(m, m.text, .{ .kind = .class, .node = m });
                     try c.classes.put(c.a, m.text, m);
                     if (m.kids[1].tag == .name and std.mem.eql(u8, m.kids[1].text, "Ordinal")) {
@@ -496,7 +618,11 @@ const Checker = struct {
         try c.declareMembers(root_node.kids);
         for (root_node.kids) |m| {
             switch (m.tag) {
-                .class => {
+                .class, .trait => {
+                    if (m.tag == .class) if (c.missing(m, true)) |name| {
+                        return c.fail(m, "{s} does not implement {s}, required by its trait (D-145)", .{ m.text, name });
+                    };
+                    if (m.tag == .class) try c.traitConflicts(m);
                     for (m.kids[2..]) |r| try c.routine(r, m.text);
                 },
                 .function, .procedure, .method => try c.routine(m, null),

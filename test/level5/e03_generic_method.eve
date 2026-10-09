@@ -1,0 +1,34 @@
+# a method has its own list of types, in a generic class or in a plain class (D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e03_generic_method is
+  class Box(:T) = {item: T} <: Object is
+    public method tagged(:U)(@self, tag: U) => (@result: String) is
+      let result := "{tag}: {self.item}";
+    return;
+  end Box;
+
+  class Printer = {prefix: String} <: Object is
+    public method show(:T)(@self, value: T) is
+      print "{self.prefix}{value}";
+    return;
+  end Printer;
+
+  process main is
+    new b := Box(:Integer)(item: 5);
+    print b.tagged(1);                ** U is inferred: Integer
+    print b.tagged(:String)("box");   ** U is written
+    new p := Printer(prefix: "> ");
+    p.show(42);
+    p.show(:String)("hi");
+  return;
+end e03_generic_method;
+/*@expect
+{
+  "stdout": [
+    "1: 5",
+    "box: 5",
+    "> 42",
+    "> hi"
+  ]
+}
+*/

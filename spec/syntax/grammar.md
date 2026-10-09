@@ -1,6 +1,6 @@
 # Grammar
 
-Status: **0.1-draft**, levels 1 to 4 (a single script; a driver and its aspects; modules; parallel processing, traits and generic classes). The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
+Status: **0.1-draft**, levels 1 to 4 (a single script; a driver and its aspects; modules; parallel processing, traits and generic classes), and the generic subprograms of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
 
 Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeats zero or more times, `( )` groups, `"…"` is a keyword or a symbol token, `(* … *)` is a note. Every statement ends with `;`. Layout (2 spaces per level) is checked after parsing, not by the grammar (see lexical.md, Layout).
 
@@ -74,6 +74,22 @@ partial-method = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , para
 ```
 
 A class with a partial method is abstract: it is never created, only called by the constructor of a subclass. A generic class is made with its type arguments written: `Box(:Integer)(5)` (`declarations.md#traits-and-generic-classes`).
+
+## Generic subprograms and overloading (level 5)
+
+```ebnf
+procedure   = "procedure" , name , type-params , "(" , [ parameters ] , ")" , "is" ,
+              { declaration | statement } , "return" , ";" ;       (* adds to procedure: procedure show_all(:T)(items: ()T) *)
+function    = "function" , name , [ "!" ] , type-params , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
+              { declaration | statement } , "return" , ";" ;       (* adds to function: function largest(:T <: Comparable)(items: ()T) *)
+method      = "method" , name , type-params , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body ;
+process     = "process" , name , type-params , "(" , [ parameters ] , ")" , "is" ,
+              { declaration | statement } , [ recover ] , [ finalize ] , "return" , ";" ;   (* only the main process of an aspect *)
+call-stmt   = name-path , type-args , "(" , [ arguments ] , ")" ;  (* adds to call-stmt: show_all(:String)(names); *)
+apply-stmt  = "apply" , { name , "/" } , name-path , type-args , "(" , [ arguments ] , ")" ;   (* adds to apply-stmt: apply sorter(:Row)(rows); *)
+```
+
+`type-params` and `type-args` are the rules of the generic classes (level 4). In an expression, `name-path , type-args` is already a primary (level 4), followed by the call: `largest(:Integer)(xs)`. A lambda has no type list. Several declarations of a subprogram with the same name are allowed when their signatures differ; the grammar does not check it (`declarations.md#overloading`).
 
 ## Declarations
 
@@ -203,7 +219,7 @@ sum         = product , { ( "+" | "-" | "<+" | "+>" ) , product } ;      (* "<+"
 product     = power , { ( "*" | "/" | "%" ) , power } ;
 power       = unary , [ "^" , power ] ;                    (* right to left; the unary minus applies first: -2 ^ 2 is 4 (Q-030) *)
 unary       = ( "-" | "not" ) , unary | postfix ;
-postfix     = primary , { "." , ( name | "job" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;
+postfix     = primary , { "." , ( name | "job" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;   (* no call on a lambda (D-147) *)
 index-list  = index , { "," , index } ;
 index       = expression | "*" ;                                               (* a range slices, "*" is a whole dimension *)
 primary     = number | rune | string | text | name-path , [ "!" ] | sysname | "(" , expression , ")"

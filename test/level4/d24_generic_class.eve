@@ -9,7 +9,7 @@ driver d24_generic_class is
 
   class Pair(:T <: Comparable) = {a: T, b: T} <: Object is
     public method larger(@self) => (@result: T) is
-      let result := self.a if self.a.compare(self.b) > 0 else self.b;
+      let result := (self.a if self.a.compare(self.b) > 0 else self.b);
     return;
   end Pair;
 

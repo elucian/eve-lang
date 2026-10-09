@@ -20,6 +20,9 @@ pub const vm = @import("vm.zig");
 pub const terminal = @import("terminal.zig");
 pub const project = @import("project.zig");
 
+/// The heap of the values: reference counting, regions and the tracing collector.
+pub const heap = @import("heap.zig");
+
 // Zig tip: tests are found only in files that the compiler reaches. `_ = cli;` inside an
 // unnamed `test { }` references the file so its tests also run with `zig build test`.
 test {
@@ -33,6 +36,8 @@ test {
     _ = @import("project.zig");
     _ = @import("ast.zig");
     _ = @import("interp.zig");
+    _ = @import("scratch.zig");
+    _ = heap;
     _ = @import("doc.zig");
 }
 

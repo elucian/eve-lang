@@ -43,6 +43,7 @@ const reserved = std.StaticStringMap(void).initComptime(.{
     .{"expect"},      .{"assert"},    .{"defer"},     .{"class"},     .{"function"},  .{"procedure"}, .{"method"},
     .{"constructor"}, .{"public"},    .{"protected"}, .{"private"},   .{"and"},       .{"or"},      .{"xor"},
     .{"not"},         .{"repeat"},    .{"eq"},        .{"apply"},     .{"aspect"},    .{"exclusive"}, .{"concurrent"},
+    .{"parallel"},    .{"start"},     .{"spawn"},     .{"await"},     .{"wait"},      .{"trait"},
 });
 
 /// Words that end a block: a statement list stops in front of them.
@@ -62,6 +63,12 @@ const Parser = struct {
     i: usize = 0,
     diag: *Diag,
     a: std.mem.Allocator,
+    /// How many `parallel` do regions enclose the cursor: `start` is allowed only inside one (D-140).
+    group_depth: usize = 0,
+    /// How many `job` do regions enclose the cursor: `spawn` is allowed only inside one (D-143).
+    job_depth: usize = 0,
+    /// True in the body of a process: a `parallel` group is allowed only there (D-140).
+    in_process: bool = false,
 
     // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
     // syntax: `p.name(...)`.
@@ -508,9 +515,24 @@ const Parser = struct {
             @constCast(wrapped).public = true;
             return wrapped;
         }
+        var generic_arg: ?*const Node = null;
+        if (p.isSym("(") and p.isSymAt(1, ":")) {
+            // `Channel(:Integer)`, `Box(:T)`: the type arguments of a generic class (D-145). The first one
+            // is kept in `ty`; version 0.3 erases the type arguments at run time.
+            _ = p.advance();
+            while (true) {
+                try p.expectSym(":");
+                const arg = try p.typeName();
+                if (generic_arg == null) generic_arg = arg;
+                if (!p.acceptSym(",")) break;
+            }
+            try p.expectSym(")");
+        }
         const suffix: []const u8 = if (p.acceptSym("?")) "?" else "";
         const text = if (prefix.len == 0 and suffix.len == 0) name.text else try std.fmt.allocPrint(p.a, "{s}{s}{s}", .{ prefix, name.text, suffix });
-        return p.mk(.type, name, text, dims.items);
+        const node = try p.mk(.type, name, text, dims.items);
+        node.ty = generic_arg;
+        return node;
     }
 
     // Zig tip: `@constCast` removes `const` from a pointer. The nodes are shared as `*const Node`
@@ -551,6 +573,26 @@ const Parser = struct {
     // (D-100); a procedure is never deterministic, so its name does not end with `!` (D-101).
     /// `function|procedure|method|constructor name [(params)] [=> (results)] is block return ;`.
     fn routine(p: *Parser, tag: Tag) Error!*const Node {
+        return p.routineOf(tag, false);
+    }
+
+    // Zig tip: a struct field that the parser sets while it reads (`group_depth`, `in_process`) is
+    // saved in a local constant and restored by `defer`, so a nested declaration starts clean and the
+    // outer value comes back on every way out, also on an error. `partial` is true for a method of a
+    // trait or of an abstract class, whose signature ends with `;` and has no body (D-145).
+    /// A function, procedure, method or constructor; with `partial`, a signature that may end with `;`.
+    fn routineOf(p: *Parser, tag: Tag, partial: bool) Error!*const Node {
+        const saved_group = p.group_depth;
+        const saved_job = p.job_depth;
+        const saved_process = p.in_process;
+        p.group_depth = 0;
+        p.job_depth = 0;
+        p.in_process = false;
+        defer {
+            p.group_depth = saved_group;
+            p.job_depth = saved_job;
+            p.in_process = saved_process;
+        }
         const kw = p.advance();
         const name = if (tag == .constructor) kw else try p.expectName("a name");
         const empty = try p.mk(.params, kw, "", &.{});
@@ -569,6 +611,10 @@ const Parser = struct {
         if (tag == .procedure and has_results) return p.failAt(kw, "a procedure has no result list (use function)", .{});
         if (tag == .function and !has_results) return p.failAt(kw, "a function must have a result list '=> (@r: Type)' (use procedure)", .{});
         if (tag == .procedure and name.text[name.text.len - 1] == '!') return p.failAt(name, "a procedure can't end with '!' (D-101)", .{});
+        if (partial and p.acceptSym(";")) {
+            // a required method: no body; the class that adopts it writes it (D-145)
+            return p.mk(tag, kw, name.text, &.{ first, empty, results, p.noneNode() });
+        }
         try p.expectWord("is");
         const body = try p.block();
         try p.expectWord("return");
@@ -702,6 +748,13 @@ const Parser = struct {
     // Zig tip: the unary minus is read before the power: `-2 ^ 2` is `(-2) ^ 2`, 4 (Q-030, the
     // grammar of spec/syntax/grammar.md). `unary` calls itself for `- - x` and falls to `postfix`.
     fn unary(p: *Parser) Error!*const Node {
+        if (p.isWord("await")) {
+            // `await f(x)` starts an async subprogram and waits for it at once (D-143)
+            const t = p.advance();
+            const c = try p.postfix();
+            if (c.tag != .call) return p.failAt(t, "await is followed by a call: await name(arguments)", .{});
+            return p.mk(.await_, t, "", &.{c});
+        }
         if (p.isSym("-") or p.isSym("+")) {
             const t = p.advance();
             return p.mk(.un, t, t.text, &.{try p.unary()});
@@ -740,8 +793,23 @@ const Parser = struct {
                 const open = p.advance();
                 n = try p.mk(.index, open, "", try p.indexList(n));
                 callable = true;
+            } else if (callable and p.isSym("(") and p.isSymAt(1, ":")) {
+                // `Channel(:Integer)`, `Box(:String)`: the type arguments of a generic class (D-145)
+                const open = p.advance();
+                var types: std.ArrayList(*const Node) = .empty;
+                while (true) {
+                    try p.expectSym(":");
+                    try types.append(p.a, try p.typeName());
+                    if (!p.acceptSym(",")) break;
+                }
+                try p.expectSym(")");
+                if (n.tag != .name) return p.failAt(open, "type arguments follow the name of a class", .{});
+                n = try p.mk(.generic, open, n.text, types.items);
             } else if (callable and p.isSym("(")) {
                 const open = p.peek();
+                // `((x) => (x * 2))(5)` is not Eve: a lambda gets a name first, then it is called;
+                // a second `(...)` after a name is kept for the type list of a generic (D-147)
+                if (n.tag == .lambda) return p.failAt(open, "a lambda can not be called where it is written; assign it to a name, then call the name", .{});
                 var kids: std.ArrayList(*const Node) = .empty;
                 try kids.append(p.a, n);
                 try p.items(")", &kids);
@@ -784,9 +852,17 @@ const Parser = struct {
             const star = p.advance();
             return p.mk(.spread, star, "", &.{try p.expr()});
         }
-        if (p.isSym("@")) { // `@name` passes a variable by reference
+        if (p.isSym("@")) { // `@name` passes a variable by reference, `@s[i]` one element of it
             _ = p.advance();
             const name = try p.expectName("a variable name");
+            if (p.isSym("[")) {
+                var target: *const Node = try p.mk(.name, name, name.text, &.{});
+                while (p.isSym("[")) {
+                    const open = p.advance();
+                    target = try p.mk(.index, open, "", try p.indexList(target));
+                }
+                return p.mk(.ref, name, name.text, &.{target});
+            }
             return p.mk(.ref, name, name.text, &.{});
         }
         const x = try p.expr();
@@ -1224,6 +1300,23 @@ const Parser = struct {
                 return p.mk(.defer_stmt, t, "", &.{try p.statement()});
             }
             if (std.mem.eql(u8, w, "apply")) return p.applyStatement();
+            if (std.mem.eql(u8, w, "start")) return p.startStatement();
+            if (std.mem.eql(u8, w, "parallel")) return p.parallelBlock(t, "");
+            if (std.mem.eql(u8, w, "spawn")) {
+                _ = p.advance();
+                if (p.job_depth == 0) return p.failAt(t, "spawn is allowed only in the do region of a job (D-143)", .{});
+                const c = try p.postfix();
+                if (c.tag != .call) return p.failAt(t, "spawn is followed by a call: spawn name(arguments)", .{});
+                return p.endSimple(try p.mk(.spawn_stmt, t, "", &.{c}));
+            }
+            if (std.mem.eql(u8, w, "await")) {
+                // `await load(p, @t);`: an awaited procedure is a statement (D-143)
+                return p.endSimple(try p.mk(.expr_stmt, t, "", &.{try p.expr()}));
+            }
+            if (std.mem.eql(u8, w, "wait")) {
+                _ = p.advance();
+                return p.endSimple(try p.mk(.wait_stmt, t, "", &.{try p.expr()}));
+            }
             // a function declared inside a function or a procedure is a closure (D-101)
             if (std.mem.eql(u8, w, "function")) return p.routine(.function);
             if (std.mem.eql(u8, w, "if")) return p.ifStatement();
@@ -1239,12 +1332,22 @@ const Parser = struct {
                 if (p.isWord("while")) return p.whileLoop(w, &.{});
                 return p.forLoop(w, &.{});
             }
+            if (!reserved.has(w) and p.isSymAt(1, ":") and p.isWordAt(2, "parallel")) {
+                _ = p.advance();
+                _ = p.advance();
+                return p.parallelBlock(t, w);
+            }
             if (!reserved.has(w) and p.isSymAt(1, ":") and p.isWordAt(2, "job")) {
                 _ = p.advance();
                 _ = p.advance();
                 _ = p.advance();
                 try p.expectWord("do");
-                const body = try p.block();
+                p.job_depth += 1;
+                const body = p.block() catch |e| {
+                    p.job_depth -= 1;
+                    return e;
+                };
+                p.job_depth -= 1;
                 try p.expectWord("done");
                 const label = try p.expectName("the job label");
                 if (!std.mem.eql(u8, label.text, w)) {
@@ -1319,6 +1422,8 @@ const Parser = struct {
         const name = try p.expectName("a process name");
         const prm = if (p.isSym("(")) try p.params() else try p.mk(.params, kw, "", &.{});
         try p.expectWord("is");
+        p.in_process = true;
+        defer p.in_process = false;
         const body = try p.block();
         const recover = if (p.acceptWord("recover")) try p.block() else p.noneNode();
         const finalize = if (p.acceptWord("finalize")) try p.block() else p.noneNode();
@@ -1345,6 +1450,7 @@ const Parser = struct {
         const kw = p.peek();
         try p.expectWord("class");
         const name = try p.expectName("a class name");
+        try p.typeParams();
         // `class Name = {members} <: Parent` or, with no attribute of its own, `class Name <: Parent` (D-132)
         const shaped = p.acceptSym("=");
         if (!shaped and !p.isSym("<:")) return p.fail("expected '=' or '<:' after the class name", .{});
@@ -1368,17 +1474,32 @@ const Parser = struct {
         if (shaped) try p.expectSym("}");
         var kids: std.ArrayList(*const Node) = .empty;
         try kids.append(p.a, try p.mk(.block, kw, "", members.items));
+        var traits: std.ArrayList(*const Node) = .empty;
         if (p.acceptSym("<:")) {
+            // `<: Parent` or `<: (Parent, Trait1, Trait2)`: one class first, then the traits (D-145)
+            const listed = p.acceptSym("(");
             const parent = try p.expectName("a parent class name");
             const pn = try p.mk(.name, parent, parent.text, &.{});
-            if (p.acceptSym("(")) { // a class with a type argument: `Atomic(:Integer)`
+            if (p.isSym("(") and p.isSymAt(1, ":")) { // a class with a type argument: `Atomic(:Integer)`
+                _ = p.advance();
                 try p.expectSym(":");
                 @constCast(pn).ty = try p.typeName();
                 try p.expectSym(")");
             }
             try kids.append(p.a, pn);
+            if (listed) {
+                while (p.acceptSym(",")) {
+                    const tr = try p.expectName("a trait name");
+                    try traits.append(p.a, try p.mk(.name, tr, tr.text, &.{}));
+                }
+                try p.expectSym(")");
+            }
         } else try kids.append(p.a, p.noneNode());
-        if (p.acceptSym(";")) return p.mk(.class, kw, name.text, kids.items);
+        if (p.acceptSym(";")) {
+            const bare = try p.mk(.class, kw, name.text, kids.items);
+            bare.extra = traits.items;
+            return bare;
+        }
         try p.expectWord("is");
         while (!p.isWord("end")) {
             const public = p.acceptWord("public");
@@ -1389,7 +1510,7 @@ const Parser = struct {
             } else if (p.isWord("constructor")) {
                 try kids.append(p.a, try p.routine(.constructor));
             } else if (p.isWord("method")) {
-                try kids.append(p.a, try p.routine(.method));
+                try kids.append(p.a, try p.routineOf(.method, true));
             } else return p.fail("unexpected '{s}' in the class, expected a constructor or a method", .{describe(p.peek())});
             if (public) @constCast(kids.items[first_member]).public = true;
         }
@@ -1400,7 +1521,53 @@ const Parser = struct {
             return p.fail("'end {s}' does not match 'class {s}'", .{ end_name.text, name.text });
         }
         try p.expectSym(";");
-        return p.mk(.class, kw, name.text, kids.items);
+        const node = try p.mk(.class, kw, name.text, kids.items);
+        node.extra = traits.items;
+        return node;
+    }
+
+    // Zig tip: `typeParams` relies on the same Zig feature as `importDecl` below: a loop that reads
+    // "one or more, separated by commas". Only the syntax is read: version 0.3 erases the type
+    // parameters at run time, and a constraint `<: Comparable` is documentation for now (D-145).
+    /// `(:T)` or `(:T <: Comparable, :U)` after the name of a generic class or trait.
+    fn typeParams(p: *Parser) Error!void {
+        if (!(p.isSym("(") and p.isSymAt(1, ":"))) return;
+        _ = p.advance();
+        while (true) {
+            try p.expectSym(":");
+            _ = try p.expectName("a type parameter");
+            if (p.acceptSym("<:")) _ = try p.typeName();
+            if (!p.acceptSym(",")) break;
+        }
+        try p.expectSym(")");
+    }
+
+    // Zig tip: a trait is parsed into the same shape as a class (kids = [members, parent, methods...]),
+    // so the checker and the interpreter look up its methods with the code they already have for
+    // classes. Every method of a trait is public: `public` is set on each node after it is made.
+    /// `trait Name is method ...; method ... is ... return; end Name;` (D-145).
+    fn trait(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        const name = try p.expectName("a trait name");
+        try p.typeParams();
+        try p.expectWord("is");
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.append(p.a, try p.mk(.block, kw, "", &.{}));
+        try kids.append(p.a, p.noneNode());
+        while (!p.isWord("end")) {
+            if (!p.isWord("method")) return p.fail("a trait holds only methods, found '{s}'", .{describe(p.peek())});
+            const m = try p.routineOf(.method, true);
+            @constCast(m).public = true;
+            try kids.append(p.a, m);
+        }
+        try p.expectWord("end");
+        const end_name = try p.expectName("the trait name");
+        if (!std.mem.eql(u8, name.text, end_name.text)) {
+            p.i -= 1;
+            return p.fail("'end {s}' does not match 'trait {s}'", .{ end_name.text, name.text });
+        }
+        try p.expectSym(";");
+        return p.mk(.trait, kw, name.text, kids.items);
     }
 
     // Zig tip: `declarationInDriver` relies on the same Zig feature as `peek` above: see the tip
@@ -1408,6 +1575,14 @@ const Parser = struct {
     fn declarationInDriver(p: *Parser) Error!*const Node {
         if (p.isWord("new") or p.isWord("set")) return p.declaration();
         if (p.isWord("class")) return p.class();
+        if (p.isWord("trait")) return p.trait();
+        if (p.isWord("async") and (p.isWordAt(1, "function") or p.isWordAt(1, "procedure"))) {
+            // `async procedure name is`: a subprogram that runs as a task of a job (D-104, D-143)
+            _ = p.advance();
+            const r = try p.routine(if (p.isWord("function")) .function else .procedure);
+            @constCast(r).is_async = true;
+            return r;
+        }
         if (p.isWord("function")) return p.routine(.function);
         if (p.isWord("procedure")) return p.routine(.procedure);
         if (p.isWord("method")) return p.routine(.method);
@@ -1552,6 +1727,58 @@ const Parser = struct {
         var args: std.ArrayList(*const Node) = .empty;
         try p.items(")", &args);
         return p.endSimple(try p.mk(.apply_stmt, kw, path.items, args.items));
+    }
+
+    // Zig tip: `startStatement` reads like `applyStatement` and only changes the tag; the rule
+    // "only in the do region of a parallel group" is a counter kept by the parser (`group_depth`),
+    // so the error points at the `start` itself (D-140).
+    /// `start path(args);`: start a concurrent aspect in a parallel group.
+    fn startStatement(p: *Parser) Error!*const Node {
+        if (p.group_depth == 0) return p.fail("start is allowed only in the do region of a parallel group (D-140)", .{});
+        const n = try p.applyStatement();
+        @constCast(n).tag = .start_stmt;
+        return n;
+    }
+
+    // Zig tip: an optional part of the syntax is read with `acceptWord`, which answers whether the
+    // word was there. `on error cancel` is three words; `within` takes any expression, usually a
+    // duration literal such as `100ms`. The counter `group_depth` goes up for the `do` region only.
+    /// `[label:] parallel [on error cancel] [within d] declarations do statements done [label];` (D-140).
+    fn parallelBlock(p: *Parser, at: Token, label: []const u8) Error!*const Node {
+        if (!p.in_process) return p.fail("parallel is allowed only in the main of a driver or of an aspect it starts (D-140)", .{});
+        if (p.group_depth > 0) return p.fail("parallel groups are not nested in one process (D-140)", .{});
+        try p.expectWord("parallel");
+        var cancel = false;
+        if (p.acceptWord("on")) {
+            try p.expectWord("error");
+            try p.expectWord("cancel");
+            cancel = true;
+        }
+        const deadline = if (p.acceptWord("within")) try p.expr() else p.noneNode();
+        var decls: std.ArrayList(*const Node) = .empty;
+        while (!p.isWord("do")) {
+            if (p.peek().kind == .eof) return p.fail("expected 'do' in the parallel group", .{});
+            try decls.append(p.a, try p.declaration());
+        }
+        const dk = p.advance();
+        p.group_depth += 1;
+        const body = p.block() catch |e| {
+            p.group_depth -= 1;
+            return e;
+        };
+        p.group_depth -= 1;
+        try p.expectWord("done");
+        if (label.len > 0) {
+            const end = try p.expectName("the label of the group");
+            if (!std.mem.eql(u8, end.text, label)) {
+                p.i -= 1;
+                return p.fail("'done {s}' does not match the group '{s}'", .{ end.text, label });
+            }
+        }
+        try p.expectSym(";");
+        const node = try p.mk(.parallel, at, label, &.{ try p.mk(.block, at, "", decls.items), try p.mk(.block, dk, "", body.kids), deadline });
+        node.public = cancel;
+        return node;
     }
 
     // Zig tip: a rule can be checked after it is parsed: the aspect is read like a driver, then the

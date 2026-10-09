@@ -27,10 +27,44 @@ def expected(path):
     return '\n'.join(out) if isinstance(out, list) else out
 
 
+class Done:
+    """The result of a finished process, like subprocess.run gives, plus its peak memory in MB."""
+    def __init__(self, code, out, err, peak):
+        self.returncode, self.stdout, self.stderr, self.peak_mb = code, out, err, peak
+
+
+def peak_memory(proc):
+    """Peak memory of a finished child in MB: the peak working set on Windows, max RSS of children elsewhere."""
+    try:
+        if os.name == 'nt':
+            import ctypes
+            from ctypes import wintypes
+
+            class PMC(ctypes.Structure):
+                _fields_ = [('cb', wintypes.DWORD), ('PageFaultCount', wintypes.DWORD)] + [
+                    (n, ctypes.c_size_t) for n in ('PeakWorkingSetSize', 'WorkingSetSize', 'QuotaPeakPagedPoolUsage',
+                                                   'QuotaPagedPoolUsage', 'QuotaPeakNonPagedPoolUsage', 'QuotaNonPagedPoolUsage',
+                                                   'PagefileUsage', 'PeakPagefileUsage')]
+            c = PMC()
+            c.cb = ctypes.sizeof(c)
+            psapi = ctypes.WinDLL('psapi')
+            psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(PMC), wintypes.DWORD]
+            if psapi.GetProcessMemoryInfo(wintypes.HANDLE(int(proc._handle)), ctypes.byref(c), c.cb):
+                return round(c.PeakWorkingSetSize / 1048576, 1)
+            return None
+        import resource
+        kb = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+        return round(kb / 1024, 1)
+    except Exception:
+        return None
+
+
 def run_once(eve, path):
     t = time.perf_counter()
-    r = subprocess.run([eve, '-x', path], capture_output=True, text=True, cwd=ROOT)
-    return (time.perf_counter() - t) * 1000, r
+    p = subprocess.Popen([eve, '-x', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=ROOT)
+    out, err = p.communicate()
+    ms = (time.perf_counter() - t) * 1000
+    return ms, Done(p.returncode, out, err, peak_memory(p))
 
 
 README = os.path.join(PERF, 'README.md')
@@ -115,9 +149,11 @@ def main():
     for f in files:
         name = os.path.basename(f)[:-4]
         want = expected(f)
-        times = []
+        times, peaks = [], []
         for _ in range(a.runs):
             ms, r = run_once(a.eve, f)
+            if r.peak_mb:
+                peaks.append(r.peak_mb)
             if r.returncode != 0 or (want is not None and r.stdout.strip().replace('\r', '') != want.strip()):
                 print('%s: WRONG OUTPUT (exit %d): %s' % (name, r.returncode, (r.stdout + r.stderr).strip()[:120]))
                 bad.append(name)
@@ -125,9 +161,11 @@ def main():
             times.append(ms)
         if times:
             results[name] = {'median_ms': round(statistics.median(times), 1), 'min_ms': round(min(times), 1)}
+            if peaks:
+                results[name]['peak_mb'] = max(peaks)
     print('Eve %s (%s build), %d runs each, %s' % (ver, a.build, a.runs, platform.platform()))
     refs = {n: run_reference(n, a.runs) for n in results}
-    print('%-22s %9s %9s %9s %9s %7s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py'))
+    print('%-22s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
     slow = []
     for name, r in results.items():
         prev = last.get(name)
@@ -138,7 +176,8 @@ def main():
             if pct > 25:
                 slow.append(name)
         py = refs.get(name)
-        print('%-22s %9.1f %9.1f %9s %9s %7s' % (name, r['median_ms'], r['min_ms'], delta, '%.1f' % py if py else '-', '%.1fx' % (r['median_ms'] / py) if py else '-'))
+        print('%-22s %9.1f %9.1f %9s %9s %7s %9s' % (name, r['median_ms'], r['min_ms'], delta, '%.1f' % py if py else '-',
+                                                    '%.1fx' % (r['median_ms'] / py) if py else '-', r.get('peak_mb', '-')))
     for lvl in sorted({n[1] for n in results}):
         tot = sum(r['median_ms'] for n, r in results.items() if n[1] == lvl)
         ptot = sum(last[n]['median_ms'] for n in results if n[1] == lvl and n in last)

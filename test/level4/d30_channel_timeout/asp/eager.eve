@@ -1,0 +1,10 @@
+# eager: waits at most 100 ms for a value
+concurrent aspect eager is
+  set $timeout = 100ms;               ** shadows the driver value in this aspect
+
+  process main(@jobs: Channel(:Integer)) is
+    new x: Integer;
+    jobs.receive(@x);
+    print "never";
+  return;
+end eager;

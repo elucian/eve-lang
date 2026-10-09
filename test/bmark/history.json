@@ -206,5 +206,107 @@
    "p3b_objects": 60.9,
    "p3c_module_state": 52.9
   }
+ },
+ {
+  "date": "2026-10-09 07:01",
+  "version": "0.0.2",
+  "build": "ReleaseSafe",
+  "commit": "83229cb",
+  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+  "runs": 5,
+  "results": {
+   "p1a_arith": {
+    "median_ms": 197.4,
+    "min_ms": 191.0,
+    "peak_mb": 4.4
+   },
+   "p1b_calls": {
+    "median_ms": 78.9,
+    "min_ms": 73.5,
+    "peak_mb": 4.5
+   },
+   "p1c_collections": {
+    "median_ms": 27.9,
+    "min_ms": 27.1,
+    "peak_mb": 6.6
+   },
+   "p1d_strings": {
+    "median_ms": 22.9,
+    "min_ms": 20.8,
+    "peak_mb": 4.7
+   },
+   "p2a_aspects": {
+    "median_ms": 10.0,
+    "min_ms": 9.7,
+    "peak_mb": 4.5
+   },
+   "p2b_closures": {
+    "median_ms": 46.9,
+    "min_ms": 46.2,
+    "peak_mb": 5.9
+   },
+   "p2c_procedures": {
+    "median_ms": 56.6,
+    "min_ms": 53.2,
+    "peak_mb": 4.5
+   },
+   "p3a_modules": {
+    "median_ms": 107.9,
+    "min_ms": 103.6,
+    "peak_mb": 4.5
+   },
+   "p3b_objects": {
+    "median_ms": 76.5,
+    "min_ms": 74.0,
+    "peak_mb": 4.5
+   },
+   "p3c_module_state": {
+    "median_ms": 43.1,
+    "min_ms": 41.5,
+    "peak_mb": 4.5
+   },
+   "p4a_parallel_sum": {
+    "median_ms": 276.5,
+    "min_ms": 270.4,
+    "peak_mb": 39.0
+   },
+   "p4b_channel": {
+    "median_ms": 96.3,
+    "min_ms": 91.2,
+    "peak_mb": 4.6
+   },
+   "p4c_groups": {
+    "median_ms": 173.9,
+    "min_ms": 173.2,
+    "peak_mb": 6.2
+   },
+   "p4d_tasks": {
+    "median_ms": 165.2,
+    "min_ms": 163.3,
+    "peak_mb": 6.2
+   },
+   "p4e_garbage": {
+    "median_ms": 219.0,
+    "min_ms": 215.0,
+    "peak_mb": 4.5
+   }
+  },
+  "python": {
+   "p1a_arith": 71.9,
+   "p1b_calls": 42.8,
+   "p1c_collections": 39.0,
+   "p1d_strings": 38.3,
+   "p2a_aspects": 24.9,
+   "p2b_closures": 39.5,
+   "p2c_procedures": 44.8,
+   "p3a_modules": 52.0,
+   "p3b_objects": 61.7,
+   "p3c_module_state": 50.3,
+   "p4a_parallel_sum": 104.7,
+   "p4b_channel": 329.8,
+   "p4c_groups": 208.5,
+   "p4d_tasks": 102.3,
+   "p4e_garbage": 98.8
+  }
  }
 ]

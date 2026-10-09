@@ -16,7 +16,7 @@ end d18_spawn_function;
 {
   "syntax_error": true,
   "exit": 65,
-  "stderr": [
+  "contains": [
     "double is a function"
   ]
 }

@@ -1,0 +1,37 @@
+# functions and procedures share a name when the types of their parameters differ (D-149)
+** spec: syntax/declarations.md#overloading
+driver e05_overload_types is
+  function half(x: Integer) => (@result: Integer) is
+    new h := x / 2 :Integer;
+    let result := h;
+  return;
+
+  function half(x: Real) => (@result: Real) is
+    let result := x / 2.0;
+  return;
+
+  procedure show(x: Integer) is
+    print "Integer {x}";
+  return;
+
+  procedure show(x: String) is
+    print "String {x}";
+  return;
+
+  process main is
+    print half(8);
+    print half(9.0);
+    show(3);
+    show("three");
+  return;
+end e05_overload_types;
+/*@expect
+{
+  "stdout": [
+    "4",
+    "4.5",
+    "Integer 3",
+    "String three"
+  ]
+}
+*/

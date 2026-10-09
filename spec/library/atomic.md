@@ -30,7 +30,7 @@ A class derived from `Atomic(:T)` has no attribute of its own (`class Name <: At
 
 ## Using
 
-In this version (a single task) an atomic variable is used like a variable of the type `T`: `let safe_integer += 5;`, `expect safe_integer == 5;`, `print safe_integer`. The operations of level 4 are *(proposed)*: `get!()`, `set(v)`, `add(n)`, `swap!(v)`, `compare_swap!(old, new)`, `fetch_add!(n)`; see `tutorial/multitasking.html#atomic`.
+In this version (a single task) an atomic variable is used like a variable of the type `T`: `let safe_integer += 5;`, `expect safe_integer == 5;`, `print safe_integer`. The operations of level 4 are *(proposed)*: `get!()`, `set(v)`, `add(n)`, `swap!(v)`, `compare_swap!(old, new)`, `fetch_add!(n)`; see `tutorial/concurrency.html#atomic`.
 
 ## Open points
 

@@ -34,7 +34,7 @@ Every declaration starts with a keyword (D-076):
 - The type hint comes **after** the value: `new a = 0 :Integer;`, never `new a :Integer = 0;` (D-032). Without a value a variable gets the zero value of its type (`0`, `0.0`, `""`, an empty collection), never `null` (D-080): `new n :Integer;`. A variable that may hold `null` has an optional type: `new age :Integer?;`.
 - Several variables: `new a = 1, b = 2 :Integer;` is the same as `new (a = 1, b = 2) :Integer;`; one value for all: `new (a, b, c) = 5 :Integer;`; one value each: `new (a, b) = (1, 2);` (D-079).
 - `::` makes a deep copy, `:=` shares the reference of an object or a collection and copies a native value (D-049). A slice by `:=` is a view; by `::` a copy.
-- Redeclaring a name in the same scope is an error. Reading a name that is not declared is an error; a `let` capture creates a missing name (Q-017, Q-033e, see statements.md).
+- Redeclaring a name in the same scope is an error, except overloaded subprograms (version 0.4, `#overloading`). Reading a name that is not declared is an error; a `let` capture creates a missing name (Q-017, Q-033e, see statements.md).
 - `set` is allowed only at script level, not inside a process or a subprogram. A constant is never changed.
 
 ## Types
@@ -70,7 +70,7 @@ return;
 
 - The result is written `=> (@name: Type)`; `@` makes it a reference; the result variable is assigned in the body; `return;` carries no value (D-036). Several results: `=> (@q: Integer, @r: Integer)`.
 - A plain function and a `!` function can not change a global, a module variable or a parameter, and can not call a procedure. A procedure may call any function or procedure.
-- Parameters: one list, never two (D-029). `name: Type` is mandatory; `name = value :Type` or `name := expression` is optional with a default (D-070); `*name` collects the rest (vararg); `@name` is an input/output reference and has no default (D-048). Parameters after a vararg are optional and are named at the call.
+- Parameters: one list of values (D-029). A first list of types in front of it makes a generic function, procedure, method or process, `function largest(:T <: Comparable)(items: ()T) => (@result: T)`; at the call the types are inferred or written, `largest(xs)`, `largest(:Integer)(xs)`; a lambda has no type list (version 0.4, D-147, D-148). `name: Type` is mandatory; `name = value :Type` or `name := expression` is optional with a default (D-070); `*name` collects the rest (vararg); `@name` is an input/output reference and has no default (D-048). Parameters after a vararg are optional and are named at the call.
 - Order: a mandatory parameter may follow an optional one (typically an `@` parameter); the call must then name it (`add(1, 2, op: @result)`, D-106). Every `@` parameter is input/output; there are no pure output parameters.
 - At the call, positional arguments come first; an optional parameter is named with `:` (`greet("Eve", greeting: "Hi")`); an `@` parameter needs `@` on the argument (`swap(@a, @b)`).
 - Without `@` an argument is passed by value, collections included (like `::`).
@@ -136,7 +136,53 @@ end Point;
 - **Abstract class.** A class with at least one required method (a `method` signature that ends with `;`) is abstract. Its constructor is called only as the first statement of a subclass constructor (`let self := Shape(name);`); a call anywhere else is a compile error.
 - **Generic class.** `class Box(:T) = {item: T} <: Object is` declares a type parameter `T`, used in the attributes and the methods. The type argument is always written when an object is made: `new b := Box(:Integer)(5);`, like `Channel(:Integer)(capacity: 10)` and `Atomic(:Integer)`. There is no inference in version 0.3. A constraint is written `(:T <: Comparable)`: the type argument must adopt the trait.
 - **Library traits** of version 0.3: `Iterable(:T)` (what `for` reads), `Stream(:T) <: Iterable(:T)` (`../semantics/multitasking.md#streams-and-batches`), `Comparable` (`method compare(@self, other) => (@result: Integer);`, negative, zero or positive) and `Printable` (`method describe(@self) => (@result: String);`, used by `print` and by `{x}` in a string). The basic types adopt `Comparable` and `Printable` in the library.
-- Not in version 0.3: generic functions outside a class, and adopting a trait for an existing type outside its declaration (version 0.4).
+- Not in version 0.3: generic functions, procedures, methods and processes, overloading (next section), and adopting a trait for an existing type outside its declaration (version 0.4).
+
+## Generic subprograms and overloading
+
+Level 5 (version 0.4). Sources: D-147 to D-150. Grammar: `grammar.md#generic-subprograms-and-overloading-level-5`. Tests: e01 to e15. Compile errors (exit 65) and their messages: `can not infer the type T of make` (e15), `a lambda has no type list` (e14), `ambiguous call of f` (e08, e09), `no signature of half matches` (e10), `report is both a function and a procedure` (e11), `half is declared twice with the same signature` (e12).
+
+```eve
+function largest(:T <: Comparable)(items: ()T) => (@result: T) is
+  let result := items[1];
+  for x in items do
+    let result := x if x.compare(result) > 0;
+  done;
+return;
+
+function half(x: Integer) => (@result: Integer) is    ** overloaded by the type of x
+  new h := x / 2 :Integer;
+  let result := h;
+return;
+function half(x: Real) => (@result: Real) is
+  let result := x / 2.0;
+return;
+
+print largest((3, 9, 2));               ** 9: T is inferred, Integer
+print largest(:String)(("b", "c"));     ** c: T is written
+print half(8), half(9.0);               ** 4,4.5
+```
+
+### Generic subprograms
+
+- **Two parameter lists.** A function, a procedure, a method or a process may have a first list of types before its list of values: `function largest(:T)(items: ()T)`, `procedure show_all(:T)(items: ()T)`, `method tagged(:U)(@self, tag: U)`, `process main(:T)(data: ()T)`. The type list follows the name (and the `!` of a function); the value list follows the type list. A subprogram without a type list has one list, as before (D-029, D-148).
+- **Type parameters.** Each is written `:Name` and may have a constraint `:Name <: Trait`; the type argument must adopt the trait (D-145). Inside the subprogram the name is a type: in the parameters, the results, the declarations and `is` tests.
+- **The call.** The type list at the call is optional (D-148): `largest(numbers)` infers `T` from the types of the arguments; `largest(:Integer)(numbers)` writes it. Written types are all given, in order. A type that can not be inferred from the arguments must be written, otherwise a compile error: `can not infer the type T of make`. The expected type of the result does not infer a type parameter (D-150).
+- **Methods.** A method of a generic class uses the type of its class (`T`) and may have its own type list (`:U`): `b.tagged(1)`, `b.tagged(:String)("box")`. A method of a plain class may have a type list too.
+- **Processes.** The process `main` of an aspect may have a type list; `apply` infers it or writes it: `apply sorter(rows);`, `apply sorter(:Row)(rows);`. The process `main` of a driver has no type list: nothing calls it.
+- **No generic lambda.** A lambda has no type list: `(:T)(x: T) => (x)` is a compile error, `a lambda has no type list`. Work that depends on the type is written as overloaded functions (below).
+- **No self-calling lambda** (D-147). `(…)(…)` after a name is a type list followed by the arguments; after a lambda it is a compile error (`expressions.md#index-slice-member`).
+
+### Overloading
+
+- **Shared names** (D-149). Several functions, several procedures or several methods of a class may have the same name when their signatures differ. Redeclaring a name in the same scope is still an error for every other declaration.
+- **Signature.** The number of parameters and the type of each parameter, and for a function also the type of its result. The names of the parameters, their defaults and the `@` marks are not part of it (D-150). Two declarations with the same signature are a compile error: `half is declared twice with the same signature`.
+- **Compile time.** The signature is selected at compile time, never at run time by the type of a value. The candidates are the declarations whose parameters accept the arguments (number, types, defaults, varargs, named arguments). When candidates differ only by the type of the result, the type expected at the call decides: a type hint (`new n := unit() :Integer;`), the type of the target of `let`, the type of the parameter that receives the value, or the result of the enclosing function.
+- **Unique.** The call must identify exactly one signature. Two candidates are a compile error, `ambiguous call of f`, also when they come from defaults or varargs (`f(x: Integer)` and `f(x: Integer, y := 1)` for `f(5)`), or from a result type that the call does not fix (`print unit();`). No candidate is a compile error: `no signature of half matches`.
+- **Functions and procedures.** A function and a procedure never share a name: `report is both a function and a procedure`.
+- **Methods with and without a result.** A method without a result and a method with a result may share a name and the same parameters: they are different methods. A call as a statement selects the method without a result, `c.step();`; a call in an expression selects the method with a result, `print c.step();` (D-149). An extension method may overload a method of the class with another signature; one with the same signature is a compile error, as it would replace it (D-150).
+- **Overloading and generics.** A generic subprogram and plain ones may share a name; a plain one whose parameters fit the arguments exactly wins over the generic one (D-150).
+- **Not overloaded:** processes (an aspect has one), constructors, lambdas and function variables (one value per name) (D-150).
 
 ## Imports and modules (level 3)
 

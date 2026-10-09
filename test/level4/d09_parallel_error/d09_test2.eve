@@ -1,0 +1,25 @@
+# variation 2 of d09: retry in recover runs the whole group again (D-066, D-140)
+** spec: semantics/multitasking.md#errors
+driver d09_test2 is
+  process main is
+    new tries := 0;
+    checks: parallel
+    do
+      let tries += 1;
+      start check(tries + 1);          ** 2 fails, 3 passes
+    done checks;
+    print "done after {tries} tries";
+  recover
+    print "retry after {$error.errors[1].message}";
+    retry;
+  return;
+end d09_test2;
+/*@expect
+{
+  "stdout": [
+    "retry after bad 2",
+    "ok 3",
+    "done after 2 tries"
+  ]
+}
+*/

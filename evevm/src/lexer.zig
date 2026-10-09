@@ -145,6 +145,15 @@ const Lexer = struct {
             return;
         }
         lx.digits();
+        // a duration (D-144): an integer followed at once by `ms`, `s`, `m` or `h`: `10ms`, `30s`
+        if (lx.at(0) == 'm' and lx.at(1) == 's' and !isIdentChar(lx.at(2))) {
+            lx.pos += 2;
+            return;
+        }
+        if ((lx.at(0) == 's' or lx.at(0) == 'm' or lx.at(0) == 'h') and !isIdentChar(lx.at(1))) {
+            lx.pos += 1;
+            return;
+        }
         if (lx.at(0) == '.' and std.ascii.isDigit(lx.at(1))) {
             lx.pos += 1;
             lx.digits();

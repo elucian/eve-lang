@@ -1,0 +1,13 @@
+# a lambda is not called where it is written: it gets a name, then the name is called (D-147)
+** spec: syntax/expressions.md#index-slice-member
+driver b44_lambda_call is
+  process main is
+    print ((x) => (x * 2))(5);   ** compile error: name the lambda first
+  return;
+end b44_lambda_call;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

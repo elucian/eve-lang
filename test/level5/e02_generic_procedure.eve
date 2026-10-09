@@ -1,0 +1,24 @@
+# a generic procedure takes a list of types; the call infers it or writes it (D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e02_generic_procedure is
+  procedure show_all(:T)(label: String, items: ()T) is
+    for x in items do
+      print "{label}: {x}";
+    done;
+  return;
+
+  process main is
+    show_all("n", (1, 2));
+    show_all(:String)("s", ("a", "b"));
+  return;
+end e02_generic_procedure;
+/*@expect
+{
+  "stdout": [
+    "n: 1",
+    "n: 2",
+    "s: a",
+    "s: b"
+  ]
+}
+*/

@@ -2,20 +2,20 @@
  "tests": {
   "b01_apply_aspect": {
    "status": "PASS",
-   "failures": 9,
-   "runs": 73,
+   "failures": 11,
+   "runs": 94,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791480618,
    "title": "apply runs the main process of an aspect from asp/ and waits (D-066)",
    "reason": ""
   },
   "b01_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 26,
+   "failures": 2,
+   "runs": 47,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791487722,
    "title": "variation 1 of b01: the same aspect, called in a loop with a computed argument (D-133)",
    "reason": ""
@@ -23,79 +23,79 @@
   "b02_apply_output": {
    "status": "PASS",
    "failures": 6,
-   "runs": 71,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791383411,
    "title": "an aspect gives results back through @ output parameters (D-048, D-066)",
    "reason": ""
   },
   "b02_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b02: results used as inputs, in a loop (D-133)",
    "reason": ""
   },
   "b03_apply_state": {
    "status": "PASS",
-   "failures": 6,
-   "runs": 71,
+   "failures": 8,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791383411,
    "title": "each apply creates a new state of the aspect: a second call sees nothing of the first (D-066)",
    "reason": ""
   },
   "b03_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b03: three applies, three fresh states (D-133)",
    "reason": ""
   },
   "b04_apply_named_args": {
    "status": "PASS",
-   "failures": 6,
-   "runs": 71,
+   "failures": 8,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791383411,
    "title": "apply with arguments by position, by name and with a default value (D-028, D-066)",
    "reason": ""
   },
   "b04_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b04: every argument by name, in another order (D-133)",
    "reason": ""
   },
   "b05_apply_spread": {
    "status": "PASS",
-   "failures": 7,
-   "runs": 71,
+   "failures": 9,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791383411,
    "title": "spreading a list into positional arguments and a map into named arguments (D-072 i)",
    "reason": ""
   },
   "b05_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b05: spread of a whole list and of a whole map (D-133)",
    "reason": ""
@@ -103,9 +103,9 @@
   "b06_aspect_error": {
    "status": "PASS",
    "failures": 6,
-   "runs": 71,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791383411,
    "title": "an error not recovered in the aspect is raised in the driver at the apply line (D-072 d)",
    "reason": ""
@@ -113,9 +113,9 @@
   "b06_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b06: the error code of the aspect is the code of the raise (D-133)",
    "reason": ""
@@ -123,19 +123,19 @@
   "b07_aspect_over": {
    "status": "PASS",
    "failures": 7,
-   "runs": 71,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791386121,
    "title": "over in an aspect ends the aspect; the driver goes on after apply (D-072 d)",
    "reason": ""
   },
   "b07_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b07: over in the aspect twice: the driver goes on each time (D-133)",
    "reason": ""
@@ -143,9 +143,9 @@
   "b08_aspect_panic": {
    "status": "PASS",
    "failures": 6,
-   "runs": 71,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791383411,
    "title": "panic in an aspect ends the whole application with exit code 1 (D-072 d)",
    "reason": ""
@@ -153,19 +153,19 @@
   "b08_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b08: panic ends the application: the finalize of the driver does not run (D-133)",
    "reason": ""
   },
   "b09_log_files": {
    "status": "PASS",
-   "failures": 9,
-   "runs": 71,
+   "failures": 10,
+   "runs": 92,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385262,
    "title": "log_err and log_wrn write log files in the output folder out/ (D-057, D-114)",
    "reason": ""
@@ -173,9 +173,9 @@
   "b10_aspect_function": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "a function declared in an aspect is used by its main (D-066, D-100)",
    "reason": ""
@@ -183,9 +183,9 @@
   "b10_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b10: the function of the aspect with its default and by name (D-133)",
    "reason": ""
@@ -193,9 +193,9 @@
   "b11_aspect_procedure": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "a procedure of an aspect changes an aspect-level variable; the driver's own variable is not touched (D-066, D-100)",
    "reason": ""
@@ -203,9 +203,9 @@
   "b11_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b11: the state of the aspect is new in every call (D-133)",
    "reason": ""
@@ -213,9 +213,9 @@
   "b12_aspect_fresh_state": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "main and the procedures of an aspect share its variables, and every apply starts them again (D-066)",
    "reason": ""
@@ -223,9 +223,9 @@
   "b12_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b12: the list of the aspect is new in every call, in a loop (D-133)",
    "reason": ""
@@ -233,9 +233,9 @@
   "b13_aspect_missing": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "apply of an aspect that has no file is an error before the run (D-112)",
    "reason": ""
@@ -243,19 +243,19 @@
   "b14_aspect_too_many_args": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "more positional arguments than parameters is a check-time error (D-112)",
    "reason": ""
   },
   "b14_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b14: the right call: two arguments, then one (D-133)",
    "reason": ""
@@ -263,9 +263,9 @@
   "b15_aspect_apply_aspect": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an aspect can't apply another aspect: compile error (D-066)",
    "reason": ""
@@ -273,19 +273,19 @@
   "b16_aspect_recover": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an aspect recovers its own error: the driver never sees it (D-020, D-072)",
    "reason": ""
   },
   "b16_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b16: the aspect recovers its own error, twice (D-133)",
    "reason": ""
@@ -293,9 +293,9 @@
   "b17_aspect_trace": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an error nobody recovers: the error first, then the frames in order of call (D-113)",
    "reason": ""
@@ -303,19 +303,19 @@
   "b18_lambda": {
    "status": "PASS",
    "failures": 4,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
-   "mtime": 1791385433,
-   "title": "a lambda is an anonymous function: called at once, passed as an argument, held by a function type (D-109)",
+   "last": "2026-10-09 07:03",
+   "mtime": 1791538300,
+   "title": "a lambda is an anonymous function: held by a name, passed as an argument, held by a function type (D-109, D-147)",
    "reason": ""
   },
   "b19_closure": {
    "status": "PASS",
    "failures": 4,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "a closure keeps the state of the function that made it; every apply makes new closures (D-101, D-109)",
    "reason": ""
@@ -323,19 +323,19 @@
   "b20_aspect_unknown_param": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an argument named like no parameter is a check-time error (D-112)",
    "reason": ""
   },
   "b20_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b20: the right name of the optional parameter (D-133)",
    "reason": ""
@@ -343,9 +343,9 @@
   "b21_aspect_missing_arg": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "a missing mandatory argument is a check-time error (D-112)",
    "reason": ""
@@ -353,9 +353,9 @@
   "b21_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b21: the mandatory argument by name (D-133)",
    "reason": ""
@@ -363,9 +363,9 @@
   "b22_aspect_wrong_type": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an argument of the wrong type is a check-time error (D-112)",
    "reason": ""
@@ -373,9 +373,9 @@
   "b23_aspect_default_exclusive": {
    "status": "PASS",
    "failures": 2,
-   "runs": 37,
+   "runs": 58,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791484729,
    "title": "an aspect without a kind word is exclusive (D-130)",
    "reason": ""
@@ -383,9 +383,9 @@
   "b24_aspect_second_process": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an aspect has one process and it is named main (D-066)",
    "reason": ""
@@ -393,29 +393,29 @@
   "b25_aspect_driver_variable": {
    "status": "PASS",
    "failures": 0,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an aspect can't read a variable of the driver (D-072)",
    "reason": ""
   },
   "b26_aspect_finalize": {
    "status": "PASS",
-   "failures": 4,
-   "runs": 68,
+   "failures": 6,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791386125,
    "title": "finalize of an aspect runs when main ends, also by over; then the driver goes on (D-063, D-072)",
    "reason": ""
   },
   "b26_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b26: finalize in a loop, by return and by over (D-133)",
    "reason": ""
@@ -423,29 +423,29 @@
   "b27_aspect_concurrent": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "a concurrent aspect can also be applied, one call after the other (D-090)",
    "reason": ""
   },
   "b27_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b27: a concurrent aspect applied with other texts (D-133)",
    "reason": ""
   },
   "b28_aspect_folder": {
    "status": "PASS",
-   "failures": 3,
-   "runs": 68,
+   "failures": 5,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "apply with a folder: the aspect is searched there first, then in asp/ and in the root (D-112)",
    "reason": ""
@@ -453,9 +453,9 @@
   "b28_test1": {
    "status": "PASS",
    "failures": 0,
-   "runs": 22,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b28: only the aspect of the default folder (D-133)",
    "reason": ""
@@ -463,19 +463,19 @@
   "b29_aspect_output_named": {
    "status": "PASS",
    "failures": 3,
-   "runs": 68,
+   "runs": 89,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791385433,
    "title": "an @ output parameter that follows optional parameters is named at the call (D-106)",
    "reason": ""
   },
   "b29_test1": {
    "status": "PASS",
-   "failures": 0,
-   "runs": 22,
+   "failures": 2,
+   "runs": 43,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791488057,
    "title": "variation 1 of b29: the default exponent, then both by name (D-133)",
    "reason": ""
@@ -483,9 +483,9 @@
   "b30_function": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "functions: result, named arguments, default values, several results (D-028, D-070, D-086, D-087)",
    "reason": ""
@@ -493,9 +493,9 @@
   "b31_procedure": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "procedures: no result, side effects, @ passes by reference, no @ passes a copy (D-048, D-086, D-100)",
    "reason": ""
@@ -503,9 +503,9 @@
   "b32_recursion": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a function can call itself: Fibonacci (from demo/fibonacci.eve, D-099)",
    "reason": ""
@@ -513,9 +513,9 @@
   "b33_function_without_result": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a function must have a result: a subprogram without result is declared with procedure (D-100)",
    "reason": ""
@@ -523,9 +523,9 @@
   "b34_procedure_bang": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a procedure is made for side effects and is never deterministic: it never ends with ! (D-101)",
    "reason": ""
@@ -533,9 +533,9 @@
   "b35_exit_procedure": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "exit in a procedure leaves only the procedure; the process goes on (D-111)",
    "reason": ""
@@ -543,9 +543,9 @@
   "b36_over_procedure": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "over in a procedure ends the whole process, not only the procedure (D-111)",
    "reason": ""
@@ -553,9 +553,9 @@
   "b37_param_order": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a mandatory parameter may follow optional ones, and the call then names it (D-106)",
    "reason": ""
@@ -563,9 +563,9 @@
   "b38_named_required": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a parameter after optional parameters can't be positional: the call must name it (D-106)",
    "reason": ""
@@ -573,9 +573,9 @@
   "b39_vararg_function": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a vararg collects the rest of the arguments; an optional parameter after it is named (D-029)",
    "reason": ""
@@ -583,9 +583,9 @@
   "b40_procedure_in_expression": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a procedure has no value: it can't be used in an expression (D-100)",
    "reason": ""
@@ -593,9 +593,9 @@
   "b41_variant_params": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479846,
    "title": "a variant type holds one of the listed types and takes the type of the value assigned (from demo/variant_type.eve and demo/variant_params.eve, D-099)",
    "reason": ""
@@ -603,9 +603,9 @@
   "b42_defer_procedure": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479855,
    "title": "defer in a procedure runs when the procedure ends, by any path, in reverse order (D-081)",
    "reason": ""
@@ -613,11 +613,21 @@
   "b43_vararg_procedure": {
    "status": "PASS",
    "failures": 0,
-   "runs": 47,
+   "runs": 68,
    "checks": 0,
-   "last": "2026-10-08 19:57",
+   "last": "2026-10-09 07:03",
    "mtime": 1791479855,
    "title": "a vararg parameter collects the arguments of a procedure; * spreads a list into it (D-029, D-040)",
+   "reason": ""
+  },
+  "b44_lambda_call": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 18,
+   "checks": 0,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791538307,
+   "title": "a lambda is not called where it is written: it gets a name, then the name is called (D-147)",
    "reason": ""
   }
  }

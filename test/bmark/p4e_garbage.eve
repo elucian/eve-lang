@@ -1,0 +1,19 @@
+# level 4 performance: a loop that makes short-lived strings and lists (memory churn)
+** perf: 200,000 iterations that each build a string and a list and drop them; watch the peak memory
+driver p4e_garbage is
+  process main is
+    new total := 0;
+    for i in (1..200000) do
+      new s := "item {i}";
+      new parts := (i, i + 1, i + 2);
+      let total += s.length() + parts.length();
+    done;
+    expect total == 2688895;
+    print total;
+  return;
+end p4e_garbage;
+/*@expect
+{
+  "stdout": ["2688895"]
+}
+*/

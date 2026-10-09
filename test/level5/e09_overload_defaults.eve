@@ -1,0 +1,25 @@
+# a default value can make two signatures match the same call: compile error (D-149)
+** spec: syntax/declarations.md#overloading
+driver e09_overload_defaults is
+  function f(x: Integer) => (@result: Integer) is
+    let result := x;
+  return;
+
+  function f(x: Integer, y = 1 :Integer) => (@result: Integer) is
+    let result := x + y;
+  return;
+
+  process main is
+    print f(5, 2);                 ** only the second matches
+    print f(5);                    ** compile error: both match
+  return;
+end e09_overload_defaults;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "ambiguous call of f"
+  ]
+}
+*/

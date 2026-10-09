@@ -1,0 +1,41 @@
+# a method without a result and one with a result share a name: a statement calls the first, an expression the second (D-149)
+** spec: syntax/declarations.md#overloading
+driver e13_method_result_or_not is
+  class Counter = {n: Integer} <: Object is
+    public method step(@self) is
+      let self.n += 1;
+    return;
+
+    public method step(@self) => (@result: Integer) is
+      let self.n += 1;
+      let result := self.n;
+    return;
+
+    public method add(@self, k: Integer) is
+      let self.n += k;
+    return;
+
+    public method add(@self, k: String) is
+      print "can not add {k}";
+    return;
+  end Counter;
+
+  process main is
+    new c := Counter(n: 0);
+    c.step();                      ** a statement: the method without a result
+    c.step();
+    print c.step();                ** an expression: the method with a result
+    c.add(10);
+    c.add("ten");
+    print c.n;
+  return;
+end e13_method_result_or_not;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "can not add ten",
+    "13"
+  ]
+}
+*/

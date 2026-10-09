@@ -1,0 +1,13 @@
+# take: two values with receive, the others with a loop
+concurrent aspect take is
+  process main(@jobs: Channel(:Integer), @total: Integer) is
+    new x: Integer;
+    jobs.receive(@x);
+    let total := x;
+    jobs.receive(@x);
+    let total += x;
+    for y in jobs do
+      let total += y;
+    done;
+  return;
+end take;

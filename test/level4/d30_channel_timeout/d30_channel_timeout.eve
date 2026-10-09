@@ -1,0 +1,23 @@
+# a wait on a channel longer than $timeout raises TimeoutError in that task (D-081, D-141)
+** spec: semantics/multitasking.md#channels
+driver d30_channel_timeout is
+  process main is
+    new jobs := Channel(:Integer)(capacity: 1);
+    parallel
+    do
+      start late(@jobs);
+      start eager(@jobs);
+    done;
+  recover
+    print $error.message;
+    print "{$error.errors[1].index} {$error.errors[1].aspect}: {$error.errors[1].message}";
+  return;
+end d30_channel_timeout;
+/*@expect
+{
+  "stdout": [
+    "1 of 2 tasks failed",
+    "2 eager: Time-out after 100ms"
+  ]
+}
+*/

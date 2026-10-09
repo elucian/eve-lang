@@ -1,0 +1,27 @@
+# variation 1 of d09: nobody recovers the ParallelError: exit 4, one line per failed task (D-140)
+** spec: semantics/multitasking.md#errors
+driver d09_test1 is
+  process main is
+    checks: parallel
+    do
+      for i in (1..4) do
+        start check(i);
+      done;
+    done checks;
+    print "never";
+  return;
+end d09_test1;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [
+    "ok 1",
+    "ok 3"
+  ],
+  "stderr": [
+    "error 45: 2 of 4 tasks failed",
+    "task 2 check: error 4: bad 2",
+    "task 4 check: error 4: bad 4"
+  ]
+}
+*/
