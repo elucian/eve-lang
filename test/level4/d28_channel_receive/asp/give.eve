@@ -1,0 +1,9 @@
+# give: sends the numbers 1 to n, then closes
+concurrent aspect give is
+  process main(n: Integer, @jobs: Channel(:Integer)) is
+    for i in (1..n) do
+      jobs.send(i);
+    done;
+    jobs.close();
+  return;
+end give;

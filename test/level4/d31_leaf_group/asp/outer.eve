@@ -1,0 +1,9 @@
+# outer: starts one leaf
+concurrent aspect outer is
+  process main(@result: Integer) is
+    parallel
+    do
+      start leaf(@result);
+    done;
+  return;
+end outer;

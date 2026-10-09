@@ -1,0 +1,28 @@
+# a Printable object prints its describe; Comparable gives compare to numbers and texts (D-145)
+** spec: syntax/declarations.md#traits-and-generic-classes
+driver d35_library_traits is
+  class Point = {x: Integer, y: Integer} <: (Object, Printable) is
+    public method describe(@self) => (@result: String) is
+      let result := "({self.x}, {self.y})";
+    return;
+  end Point;
+
+  process main is
+    new p := Point(x: 1, y: 2);
+    print p;
+    print "point {p}";
+    expect p is Printable;
+    print 3.compare(5);
+    print "b".compare("a");
+  return;
+end d35_library_traits;
+/*@expect
+{
+  "stdout": [
+    "(1, 2)",
+    "point (1, 2)",
+    "-1",
+    "1"
+  ]
+}
+*/

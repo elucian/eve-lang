@@ -1,0 +1,25 @@
+# a call that matches no signature of an overloaded name is a compile error (D-149)
+** spec: syntax/declarations.md#overloading
+driver e10_overload_no_match is
+  function half(x: Integer) => (@result: Integer) is
+    new h := x / 2 :Integer;
+    let result := h;
+  return;
+
+  function half(x: Real) => (@result: Real) is
+    let result := x / 2.0;
+  return;
+
+  process main is
+    print half("ten");             ** compile error: no String signature
+  return;
+end e10_overload_no_match;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "no signature of half matches"
+  ]
+}
+*/

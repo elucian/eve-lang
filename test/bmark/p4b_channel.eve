@@ -1,0 +1,23 @@
+# level 4 performance: a pipeline of concurrent aspects connected by channels
+** perf: 50,000 messages from a producer through 2 workers to a collector (two channels of capacity 100, back-pressure)
+driver p4b_channel is
+  process main is
+    new total: Integer;
+    new jobs := Channel(:Integer)(capacity: 100);
+    new results := Channel(:Integer)(capacity: 100, senders: 2);
+    flow: parallel
+    do
+      start produce(50000, @jobs);
+      start square(@jobs, @results);
+      start square(@jobs, @results);
+      start collect(@results, @total);
+    done flow;
+    expect total == 41667916675000;
+    print total;
+  return;
+end p4b_channel;
+/*@expect
+{
+  "stdout": ["41667916675000"]
+}
+*/

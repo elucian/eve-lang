@@ -1,0 +1,36 @@
+# functions that differ only by the type of the result: the type expected at the call selects one (D-149)
+** spec: syntax/declarations.md#overloading
+driver e07_overload_result is
+  function unit() => (@result: Integer) is
+    let result := 1;
+  return;
+
+  function unit() => (@result: String) is
+    let result := "one";
+  return;
+
+  procedure show_text(s: String) is
+    print "text {s}";
+  return;
+
+  process main is
+    new n := unit() :Integer;      ** the type hint selects
+    new s := unit() :String;
+    print n + 1;
+    print s;
+    show_text(unit());             ** the type of the parameter selects
+    new m = 0 :Integer;
+    let m := unit();               ** the type of the target selects
+    print m;
+  return;
+end e07_overload_result;
+/*@expect
+{
+  "stdout": [
+    "2",
+    "one",
+    "text one",
+    "1"
+  ]
+}
+*/

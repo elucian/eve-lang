@@ -1,0 +1,21 @@
+# receive(@x) takes one value; a for loop takes the rest until the channel is closed (D-141)
+** spec: semantics/multitasking.md#channels
+driver d28_channel_receive is
+  process main is
+    new jobs := Channel(:Integer)(capacity: 2);
+    new total: Integer;
+    parallel
+    do
+      start give(5, @jobs);
+      start take(@jobs, @total);
+    done;
+    print "total: {total}";
+  return;
+end d28_channel_receive;
+/*@expect
+{
+  "stdout": [
+    "total: 15"
+  ]
+}
+*/

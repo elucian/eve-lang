@@ -1,0 +1,20 @@
+# an aspect started by an aspect is a leaf: a parallel group in it is a compile error (D-081, D-140)
+** spec: semantics/multitasking.md#where-a-group-is-allowed
+driver d31_leaf_group is
+  process main is
+    new r: Integer;
+    parallel
+    do
+      start outer(@r);
+    done;
+  return;
+end d31_leaf_group;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "leaf is a leaf"
+  ]
+}
+*/

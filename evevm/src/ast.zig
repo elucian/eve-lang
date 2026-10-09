@@ -158,6 +158,22 @@ pub const Tag = enum {
     export_decl,
     /// `initialize`, `recover` or `finalize` of a module: text = the word; kids = [block].
     region,
+    // ---- level 4: parallel processing, tasks, traits (spec/semantics/multitasking.md) ----
+    /// `[label:] parallel [on error cancel] [within d] decls do body done [label];`: text = label;
+    /// kids = [declarations block, body block, deadline expression or none]; `public` is true for `on error cancel`.
+    parallel,
+    /// `start folder/name(args);`: like `apply_stmt`, only in the do region of a parallel group.
+    start_stmt,
+    /// `spawn f(args);`: kids = [call]; only in the do region of a job.
+    spawn_stmt,
+    /// `await f(args)`, an expression: kids = [call].
+    await_,
+    /// `wait duration;`: kids = [expression].
+    wait_stmt,
+    /// `Name(:T, :U)`, a generic class with its type arguments: text = the name; kids = the types.
+    generic,
+    /// `trait Name is ... end Name;`: the shape of a `class` (kids = [empty members, none, methods...]).
+    trait,
 };
 
 // Zig tip: `std.StringHashMapUnmanaged(V)` is a hash map with text keys that does not remember its
@@ -186,6 +202,10 @@ pub const Node = struct {
     ty: ?*const Node = null,
     /// A member of a class written with `public` (the default is private, D-085).
     public: bool = false,
+    /// A function or procedure declared `async`: it runs as a task, started by `spawn` or `await` (D-143).
+    is_async: bool = false,
+    /// The traits a class adopts, after its superclass in `<: (Object, Printable)` (D-145).
+    extra: []const *const Node = &.{},
 };
 
 // Zig tip: a `const` of a struct type at file level is a value built while compiling. Parts that

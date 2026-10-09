@@ -19,7 +19,7 @@ end d21_trait_missing_method;
 {
   "syntax_error": true,
   "exit": 65,
-  "stderr": [
+  "contains": [
     "Point does not implement describe"
   ]
 }

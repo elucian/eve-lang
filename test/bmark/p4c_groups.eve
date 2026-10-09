@@ -1,0 +1,24 @@
+# level 4 performance: many small parallel groups
+** perf: 250 parallel groups of 4 started aspects each (a task, a thread and an output buffer per start)
+driver p4c_groups is
+  process main is
+    new total := 0;
+    for r in (1..250) do
+      new outs: [4]Integer;
+      parallel
+      do
+        for k in (1..4) do
+          start add_one(r, k, @outs[k]);
+        done;
+      done;
+      let total += outs[1] + outs[2] + outs[3] + outs[4];
+    done;
+    expect total == 128000;
+    print total;
+  return;
+end p4c_groups;
+/*@expect
+{
+  "stdout": ["128000"]
+}
+*/

@@ -1,0 +1,24 @@
+# variation 2 of d28: a close beyond the number of senders is an error (D-141)
+** spec: semantics/multitasking.md#channels
+driver d28_test2 is
+  process main is
+    new jobs := Channel(:Integer)(capacity: 10);
+    new total: Integer;
+    parallel
+    do
+      start give(1, @jobs);            ** closes: the channel is closed (senders 1)
+      start give(1, @jobs);            ** sends into a closed channel
+    done;
+  recover
+    print $error.message;
+    print "{$error.errors[1].index}: {$error.errors[1].message}";
+  return;
+end d28_test2;
+/*@expect
+{
+  "stdout": [
+    "1 of 2 tasks failed",
+    "2: Channel jobs is closed"
+  ]
+}
+*/

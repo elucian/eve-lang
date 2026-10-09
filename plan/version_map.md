@@ -10,7 +10,7 @@ This file is the one place to track the project: the levels, the versions and **
 - **Status**: `✓ done` means implemented in `bin/eve.exe` (or delivered, for documents and tools) and covered by tests where tests apply; `partial` says in the description what exists; `open` is not started; `dropped` is not wanted any more.
 - A feature belongs to **one version**. Moving it is changed here, in its section, and noted in the description with the decision.
 - A new large feature is added here first, then planned in a phase file, then decided (`D-nnn`), then built.
-- Status checked on 2026-10-08: level 1 65/65, level 2 62/62, level 3 50/50, level 4 4/27 (d04 to d26 written first, TDD), smoke 16/16: 197 tests pass on the VM; the benchmarks are in `test/bmark`.
+- Status checked on 2026-10-09: level 1 65/65, level 2 63/63, level 3 50/50, level 4 42/42 (stage A of D-144: one core, deterministic), smoke 16/16: 235 tests pass on the VM; the benchmarks are in `test/bmark`.
 
 ## Levels
 
@@ -71,7 +71,7 @@ Levels 1 and 2. Goal: Run a project: one driver and its aspects, error recovery 
 | F-LNG-06 | Primitive types | ✓ done | Integer, Natural, Real, Logic, Symbol, String, ordinals, type checks with `is` (D-032). *Rational, Duration, Time, Date not yet.* |
 | F-LNG-07 | Collections | ✓ done | List, Array, Matrix, DataSet, HashMap, Object, slices, builders, deconstruction (D-058, D-064). |
 | F-LNG-08 | Strings and interpolation | ✓ done | escapes, text literal `"""`, placeholders `{name}`, `{literal}`, simple expressions and formats `{n % i5}`, code points `{U+H}`, HTML entities `&name;`, regular expressions (subset) (D-060, D-102, D-119, D-120, D-121). |
-| F-LNG-09 | Functions and methods | ✓ done | pure functions, `!` functions, procedures, `@` parameters, defaults, varargs, named arguments, lambdas, closures, recursion (D-025 to D-029, D-048, D-070, D-100, D-101). Conformity level 2 since D-122. |
+| F-LNG-09 | Functions and methods | ✓ done | pure functions, `!` functions, procedures, `@` parameters, defaults, varargs, named arguments, lambdas, closures, recursion (D-025 to D-029, D-048, D-070, D-100, D-101). A lambda is not called where it is written (D-147). Conformity level 2 since D-122. |
 | F-SPEC-01 | Lexical specification | ✓ done | tokens, comments, literals, escapes, placeholders, keywords, operators, delimiters as Markdown + JSON (`spec/lexical/`, `keywords.json` D-094; code points `{U+H}` D-119; checked by `script/speccheck.py`). |
 | F-SPEC-02 | Grammar (EBNF) | ✓ done | declarations, statements, expressions, modules and imports (`spec/syntax/grammar.md`), checked against every `.eve` test by `script/grammarcheck.py` (199 of 199 files of levels 1 to 4 and the smoke test). |
 | F-SPEC-03 | Core semantics | partial | types, scopes, control flow, jobs and `recover`, topology, collections and objects. *Partial:* `semantics/` has variables, types, control, errors, aspects, modules and data-types (a proposal); scopes, topology and collections are missing. |
@@ -123,24 +123,24 @@ Exit: levels 1 to 3 pass (modules c01–c09 and c18–c31, classes c10–c17 inc
 
 Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138).
 
-0 of 14 features done.
+4 of 14 features done (2026-10-08, stage A of D-144), 5 partial.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
 | F-LIB-11 | Logging and observability | open | structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`). |
-| F-LNG-11 | Traits, abstract classes, generics | open | `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable` (D-039, D-145, tests d20 to d24). Moved from Version 0.2 to Level 4 (D-138). |
-| F-LNG-17 | Stream type | open | `Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; in Version 0.3 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it in Version 0.4, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`). |
+| F-LNG-11 | Traits, abstract classes, generics | partial | `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable` (D-039, D-145, tests d20 to d24). Moved from Version 0.2 to Level 4 (D-138). *Partial:* traits, abstract classes, generic classes with erased type arguments and the library traits work (d20 to d24, d34, d35); a constraint is not checked yet, generic functions wait for Version 0.4. |
+| F-LNG-17 | Stream type | partial | `Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; in Version 0.3 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it in Version 0.4, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`). *Partial:* `for` on a channel, `batch`, `split` (d12, d16). |
 | F-LNG-18 | `Atomic(:T)` | partial | a class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; `class Name <: Atomic(:T)` (D-132). *Partial:* the declaration and the check of managed modules work, the value is a plain value; the operations (`add`, `get!`, `swap!`) need threads. |
-| F-MTK-01 | Parallel aspects | open | `parallel … do start … done`, barrier, data rules, errors as a job (D-066). |
-| F-MTK-02 | Worker pool and scheduler | open | `$cores`, M:N, a waiting aspect gives its core away (D-067). |
-| F-MTK-03 | Channels | open | `Channel(:T)`, send, receive, close, pipelines, deadlock detection, time-out (D-051). |
-| F-MTK-04 | Tasks in a job | open | `async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to Version 0.4 with the generators (D-144). |
-| F-MTK-05 | Deadlines and cancellation | open | per-group time limits, cancel or collect errors (review `RMT-R01`). |
+| F-MTK-01 | Parallel aspects | ✓ done | `parallel … do start … done`, barrier, data rules, errors as a job (D-066). *Done (stage A):* groups, labels, data rules, one owner per output (compile and run time), output in the order of start, ParallelError, nesting of one level; tests d04 to d11, d25 to d27, d31, d32. |
+| F-MTK-02 | Worker pool and scheduler | partial | `$cores`, M:N, a waiting aspect gives its core away (D-067). *Partial:* stage A, one core with a baton (task.zig): a waiting task gives the core away; `$cores` and `$max_parallel` wait for stage B. |
+| F-MTK-03 | Channels | ✓ done | `Channel(:T)`, send, receive, close, pipelines, deadlock detection, time-out (D-051). *Done:* send, receive, close, count, `senders`, automatic close, ChannelError 46, deadlock report, `$timeout`; tests d12 to d14, d28 to d30. |
+| F-MTK-04 | Tasks in a job | ✓ done | `async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to Version 0.4 with the generators (D-144). *Done:* tests d17 to d19, d33. |
+| F-MTK-05 | Deadlines and cancellation | ✓ done | per-group time limits, cancel or collect errors (review `RMT-R01`). *Done:* `on error cancel`, `within`; tests d10, d11. |
 | F-SPEC-05 | Multitasking semantics | partial | `semantics/multitasking.md`: parallel groups, channels, tasks in a job, durations, determinism (D-140 to D-144). *Partial:* generators wait for Version 0.4. |
 | F-TLS-04 | Debugger | open | debug mode, `halt` breakpoints, step, print variables, reports (`manual/usage.md`). |
 | F-TLS-08 | Formatter and linter | open | `eve fmt`, `eve lint` (indentation, style rules; review `RSY-R06`). |
 | F-TLS-09 | Editor support | partial | syntax colors for VS Code and GitHub, then a language server (`tools/TODO-vscode-plugin.md`). *Partial:* tutorial highlighters `eve1.js`, `eve3.js`. |
-| F-VM-05 | Region memory | open | arena per aspect call, job and request; long-lived heap for modules and channels (review `RVM-R02`). |
+| F-VM-05 | Region memory | partial | arena per aspect call, job and request; long-lived heap for modules and channels (review `RVM-R02`). *Partial (D-151):* the values are reference counted and freed at the safe points of their region (statement, pass of a loop, `done`), a tracing collector frees cycles at `done`, scratch memory per statement; nothing is freed while tasks run; benchmarks peak at 4.4 to 6.6 MB (`p4a_parallel_sum` 39 MB). Open: an arena per task. |
 
 Exit: parallel tests are deterministic over 100 runs; a pipeline with more stages than cores completes.
 
@@ -169,6 +169,8 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-LIB-07 | Shell commands | open | `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`). |
 | F-LIB-08 | Secrets | open | a `Secret` type and `secret.get` from environment, file or vault (review `RIO-R01`). |
 | F-LIB-09 | Compression and archives | open | gzip, zip, stream codecs (manifest). |
+| F-LNG-20 | Generic functions and procedures | open | a first parameter list of types, `function largest(:T <: Comparable)(items: ()T)`, called `largest(xs)` (types inferred) or `largest(:Integer)(xs)`; also procedures, methods and processes; no type list on a lambda, overloaded functions instead; possible because self-calling lambdas are removed (D-145, D-147, D-148). Tests e01 to e04, e14, e15 (written first). |
+| F-LNG-21 | Overloading | open | functions, procedures and methods share a name with different signatures: number and types of the parameters, and the result type of a function; resolved at compile time, the call must match one signature; a function and a procedure never share a name, a method with a result and one without may (D-149, D-150). Tests e05 to e13 (written first). |
 | F-LNG-12 | Generators | open | methods with `yield`, `Generator(:T)`, use in `for` and builders (D-067). |
 | F-LNG-13 | Data types for ETL | open | Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid (review `RTY-R01`; needs a decision). |
 | F-LNG-14 | Record types and optional values | open | typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`; needs a decision). |

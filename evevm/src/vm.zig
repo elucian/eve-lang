@@ -142,6 +142,14 @@ pub const Session = struct {
     /// The text of `summary.log`, one line per `status` or `log`.
     summary: std.ArrayList(u8) = .empty,
 
+    // Zig tip: the interpreter holds memory outside the arena (its scratch and its heap), so it is
+    // released explicitly before the arena goes, or before a second run replaces it.
+    /// Free the memory of the last run's interpreter.
+    fn dropMachine(self: *Session) void {
+        if (self.machine) |m| m.deinit();
+        self.machine = null;
+    }
+
     // Zig tip: `mem` relies on the same Zig feature as `deinit` above: see the tip there.
     /// The memory of the current script.
     fn mem(self: *Session) std.mem.Allocator {
@@ -151,6 +159,7 @@ pub const Session = struct {
     // Zig tip: `if (opt) |v| ... else ...` runs the first branch only when the optional has a value,
     // and names it `v`.
     fn forget(self: *Session) void {
+        self.dropMachine();
         if (self.arena) |*a| a.deinit();
         self.arena = null;
         self.path = "";
@@ -283,12 +292,14 @@ pub const Session = struct {
             cap = a.create(Io.Writer) catch return error.WriteFailed;
             cap.?.* = .fixed(buf);
         }
+        self.dropMachine();
         const machine = a.create(interp.Interp) catch return error.WriteFailed;
         machine.* = interp.Interp.init(a, cap orelse self.out) catch return error.WriteFailed;
         machine.hook = .{ .ctx = self, .poll = pollHook };
         machine.script_args = self.script_args;
         machine.aspects = &self.aspects;
         machine.modules = &self.modules;
+        machine.io = self.io; // threads, locks and clocks of the tasks (level 4)
         self.machine = machine;
         self.steps = 0;
         self.line = 0;

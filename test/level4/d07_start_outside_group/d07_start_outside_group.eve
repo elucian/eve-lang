@@ -9,7 +9,7 @@ end d07_start_outside_group;
 {
   "syntax_error": true,
   "exit": 65,
-  "stderr": [
+  "contains": [
     "start is allowed only in the do region of a parallel group"
   ]
 }

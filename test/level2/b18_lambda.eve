@@ -1,4 +1,4 @@
-# a lambda is an anonymous function: called at once, passed as an argument, held by a function type (D-109)
+# a lambda is an anonymous function: held by a name, passed as an argument, held by a function type (D-109, D-147)
 ** spec: syntax/expressions.md#index-slice-member
 driver b18_lambda is
   class BinEx = (p1, p2 :Integer):Integer <: Function;
@@ -11,7 +11,8 @@ driver b18_lambda is
     done;
   return;
   process main is
-    print ((x) => (x * 2))(5);
+    new double := (x) => (x * 2);
+    print double(5);
     show((a, b) => (a + b));
     each((1, 2, 3), (x) => (x + 100));
   return;

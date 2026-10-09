@@ -67,7 +67,8 @@ driver s11_subprograms is
     expect total == 2;
     new inc := (x) => (x + 1);
     expect inc(1) == 2;
-    expect ((x, y) => (x * y))(3, 4) == 12;
+    new mul := (x, y) => (x * y);
+    expect mul(3, 4) == 12;
     new a! := make_counter!(0);
     new b! := make_counter!(10);
     expect a!() == 1 and a!() == 2 and b!() == 11 and a!() == 3;

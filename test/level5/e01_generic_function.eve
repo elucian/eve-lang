@@ -1,0 +1,31 @@
+# a generic function has a list of types before its parameters; the call infers the types or writes them (D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e01_generic_function is
+  function largest(:T <: Comparable)(items: ()T) => (@result: T) is
+    let result := items[1];
+    for x in items do
+      let result := x if x.compare(result) > 0;
+    done;
+  return;
+
+  function first(:T)(items: ()T) => (@result: T) is
+    let result := items[1];
+  return;
+
+  process main is
+    print largest((3, 9, 2));               ** T is inferred: Integer
+    print largest(:String)(("b", "c", "a"));  ** T is written
+    print first((7, 8));
+    print first(:String)(("x", "y"));
+  return;
+end e01_generic_function;
+/*@expect
+{
+  "stdout": [
+    "9",
+    "c",
+    "7",
+    "x"
+  ]
+}
+*/

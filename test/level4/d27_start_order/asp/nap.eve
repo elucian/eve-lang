@@ -1,0 +1,7 @@
+# nap: waits, then prints its name
+concurrent aspect nap is
+  process main(ms: Integer, name: String) is
+    wait ms;
+    print name;
+  return;
+end nap;

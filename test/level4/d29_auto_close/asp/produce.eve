@@ -1,0 +1,9 @@
+# produce: sends 1 and 2, then fails without closing the channel
+concurrent aspect produce is
+  process main(@jobs: Channel(:Integer)) is
+    for i in (1..5) do
+      raise "stop at {i}" if i == 3;
+      jobs.send(i);
+    done;
+  return;
+end produce;

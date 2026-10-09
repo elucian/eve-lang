@@ -1,0 +1,25 @@
+# variation 1 of d08: an output with a computed index is checked at start: $err_output 43 (D-140)
+** spec: semantics/multitasking.md#data-rules
+driver d08_test1 is
+  process main is
+    new s: [2]Integer;
+    new k := 1;
+    parallel
+    do
+      for i in (1..2) do
+        start square(i, @s[k]);        ** the second start reaches the same element
+      done;
+    done;
+  recover
+    print "code: {$error.code}";
+    print $error.message;
+  return;
+end d08_test1;
+/*@expect
+{
+  "stdout": [
+    "code: 43",
+    "Output s is given to two tasks of the group"
+  ]
+}
+*/

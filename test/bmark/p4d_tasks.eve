@@ -1,0 +1,30 @@
+# level 4 performance: async procedures spawned in jobs
+** perf: 50 jobs that spawn 20 async procedures each and wait for them at done (the tasks of a job share one core)
+driver p4d_tasks is
+  async procedure square(n: Integer, @r: Integer) is
+    let r := n * n;
+  return;
+
+  process main is
+    new total := 0;
+    new outs: [20]Integer;
+    for j in (1..50) do
+      work: job
+      do
+        for i in (1..20) do
+          spawn square(i, @outs[i]);
+        done;
+      done work;
+      for i in (1..20) do
+        let total += outs[i];
+      done;
+    done;
+    expect total == 143500;
+    print total;
+  return;
+end p4d_tasks;
+/*@expect
+{
+  "stdout": ["143500"]
+}
+*/

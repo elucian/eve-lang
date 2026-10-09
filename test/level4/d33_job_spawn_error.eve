@@ -1,0 +1,35 @@
+# a failing spawned task does not stop the others; the done of the job raises ParallelError (D-143)
+** spec: semantics/multitasking.md#tasks-in-a-job
+driver d33_job_spawn_error is
+  async procedure check(n: Integer, @r: Integer) is
+    wait 5ms;
+    raise "bad {n}" if n == 2;
+    let r := n;
+  return;
+
+  process main is
+    new a, b, c :Integer;
+    work: job
+    do
+      spawn check(1, @a);
+      spawn check(2, @b);
+      await check(3, @c);              ** an awaited procedure, as a statement
+    done work;
+    print "never";
+  recover
+    print $error.message;
+    print "job: {$error.job}";
+    print "{$error.errors[1].index}: {$error.errors[1].message}";
+    print "{a} {c}";
+  return;
+end d33_job_spawn_error;
+/*@expect
+{
+  "stdout": [
+    "1 of 2 tasks failed",
+    "job: work",
+    "2: bad 2",
+    "1 3"
+  ]
+}
+*/

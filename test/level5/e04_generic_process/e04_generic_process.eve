@@ -1,0 +1,16 @@
+# the process of an aspect takes a list of types; apply infers it or writes it (D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e04_generic_process is
+  process main is
+    apply largest((4, 11, 6));
+    apply largest(:String)(("pear", "apple"));
+  return;
+end e04_generic_process;
+/*@expect
+{
+  "stdout": [
+    "largest: 11",
+    "largest: pear"
+  ]
+}
+*/

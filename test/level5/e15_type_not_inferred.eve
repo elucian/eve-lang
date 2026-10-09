@@ -1,0 +1,22 @@
+# a type that the arguments do not give must be written at the call: compile error (D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e15_type_not_inferred is
+  function make(:T)() => (@result: ()T) is
+    pass;
+  return;
+
+  process main is
+    new a := make(:Integer)();     ** the type is written
+    new b := make();               ** compile error: T can not be inferred
+    print a, b;
+  return;
+end e15_type_not_inferred;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "can not infer the type T of make"
+  ]
+}
+*/

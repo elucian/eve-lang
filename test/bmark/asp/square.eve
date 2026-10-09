@@ -1,0 +1,9 @@
+# square: receives numbers and sends their squares
+concurrent aspect square is
+  process main(@jobs: Channel(:Integer), @results: Channel(:Integer)) is
+    for x in jobs do
+      results.send(x * x);
+    done;
+    results.close();
+  return;
+end square;

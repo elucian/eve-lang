@@ -1,0 +1,24 @@
+# a function and a procedure never share a name: compile error (D-149)
+** spec: syntax/declarations.md#overloading
+driver e11_function_procedure_name is
+  function report(x: Integer) => (@result: String) is
+    let result := "value {x}";
+  return;
+
+  procedure report(x: String) is   ** compile error: report is a function
+    print x;
+  return;
+
+  process main is
+    report("done");
+  return;
+end e11_function_procedure_name;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "report is both a function and a procedure"
+  ]
+}
+*/

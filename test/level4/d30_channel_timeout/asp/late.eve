@@ -1,0 +1,7 @@
+# late: sends one value after a long pause
+concurrent aspect late is
+  process main(@jobs: Channel(:Integer)) is
+    wait 1s;
+    jobs.send(1);
+  return;
+end late;

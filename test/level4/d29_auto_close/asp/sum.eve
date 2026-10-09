@@ -1,0 +1,9 @@
+# sum: adds every value until the channel is closed
+concurrent aspect sum is
+  process main(@jobs: Channel(:Integer), @total: Integer) is
+    let total := 0;
+    for x in jobs do
+      let total += x;
+    done;
+  return;
+end sum;

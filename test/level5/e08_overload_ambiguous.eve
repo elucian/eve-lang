@@ -1,0 +1,24 @@
+# a call that does not fix the type of the result of an overloaded function is ambiguous: compile error (D-149)
+** spec: syntax/declarations.md#overloading
+driver e08_overload_ambiguous is
+  function unit() => (@result: Integer) is
+    let result := 1;
+  return;
+
+  function unit() => (@result: String) is
+    let result := "one";
+  return;
+
+  process main is
+    print unit();                  ** compile error: Integer or String?
+  return;
+end e08_overload_ambiguous;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "ambiguous call of unit"
+  ]
+}
+*/

@@ -1,6 +1,9 @@
 """Run Eve conformance tests on an Eve implementation and write Markdown reports.
 
-usage: python script/runtest.py TARGET... [--eve PATH] [--timeout SEC] [--out DIR] [-q]
+usage: python script/runtest.py TARGET... [--eve PATH] [--timeout SEC] [--out DIR] [-q] [--repeat N]
+
+--repeat N runs every test N times and keeps the first run that fails: a test of parallel work must
+give the same output at every run (spec/semantics/multitasking.md#determinism, D-144).
 
 TARGET is one of:
   1 | level1          every test in test/level1 (likewise 2 to 7)
@@ -563,6 +566,8 @@ def main():
                          "output; no reports, no status update")
     ap.add_argument("--no-update", action="store_true",
                     help="do not update test/status.json and test/readme.md")
+    ap.add_argument("--repeat", type=int, default=1, metavar="N",
+                    help="run every test N times; a test passes only when every run passes (determinism, D-144)")
     args = ap.parse_args()
     eve = os.path.abspath(args.eve) if os.path.exists(args.eve) else args.eve
     version = eve_version(eve)
@@ -589,6 +594,13 @@ def main():
     results = []
     for test in tests:
         res = run_test(eve, test, args.timeout)
+        for k in range(2, max(args.repeat, 1) + 1):
+            if res["verdict"] != "PASS":
+                break
+            again = run_test(eve, test, args.timeout)
+            if again["verdict"] != "PASS":
+                again["reason"] = f"run {k} of {args.repeat}: {again['reason']}"
+                res = again
         results.append(res)
         report = os.path.join(args.out, level_of(test), os.path.basename(test)[:-4] + ".md")
         write(report, test_report(res))

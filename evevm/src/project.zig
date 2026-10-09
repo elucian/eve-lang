@@ -570,11 +570,121 @@ const Linker = struct {
     // own error set (a recursive function needs one written out, see `ast.dump`).
     /// Find every `apply` in the tree, load its aspect and match the arguments.
     fn walk(l: *Linker, n: *const Node) Error!void {
+        return l.walkAt(n, 0);
+    }
+
+    // Zig tip: one walk serves the driver (`level` 0), an aspect that the driver starts (1) and a leaf
+    // that such an aspect starts (2). The level travels as a parameter, so the recursion needs no
+    // field to save and restore. `start` is checked like `apply`, plus the kind of the aspect (D-140).
+    /// Find every `apply` and `start` under `n`; check each parallel group on the way.
+    fn walkAt(l: *Linker, n: *const Node, level: u8) Error!void {
         if (n.tag == .apply_stmt) {
             const aspect = try l.load(n);
             try l.match(n, aspect);
         }
-        for (n.kids) |k| try l.walk(k);
+        if (n.tag == .start_stmt) {
+            const aspect = try l.load(n);
+            if (!aspect.public) {
+                return l.fail(n, "the aspect '{s}' can not be started: {s} is exclusive, start needs a concurrent aspect (D-130, D-140)", .{ n.text, aspect.text });
+            }
+            try l.match(n, aspect);
+            try l.started(aspect, level + 1);
+        }
+        for (n.kids) |k| try l.walkAt(k, level);
+        if (n.tag == .parallel) try l.owners(n); // after the walk: the started aspects are loaded
+    }
+
+    // Zig tip: `?*const Node` again: `firstGroup` answers the first parallel group found under a node,
+    // or null. The walk stops at the first hit with `return`, because one is enough to report.
+    /// The first `parallel` group under `n`, or null.
+    fn firstGroup(n: *const Node) ?*const Node {
+        if (n.tag == .parallel) return n;
+        for (n.kids) |k| if (firstGroup(k)) |g| return g;
+        return null;
+    }
+
+    // Zig tip: a counter passed by pointer (`*usize`) lets a recursive walk add to one total; `in_loop`
+    // is a plain parameter, true below a `for`, `while` or `loop`, so a `start` there is seen as many.
+    /// Count the `start` statements under `n`; `looped` becomes true when one of them sits in a loop.
+    fn countStarts(n: *const Node, in_loop: bool, count: *usize, looped: *bool) void {
+        if (n.tag == .start_stmt) {
+            count.* += 1;
+            if (in_loop) looped.* = true;
+        }
+        const loop = in_loop or n.tag == .for_ or n.tag == .while_ or n.tag == .repeat_;
+        for (n.kids) |k| countStarts(k, loop, count, looped);
+    }
+
+    // Zig tip: `orelse return` ends the function quietly when the optional is null: an aspect without
+    // a group needs no check.
+    /// The rules for a started aspect: one level of groups with at most 2 starts (D-081, D-140).
+    fn started(l: *Linker, aspect: *const Node, level: u8) Error!void {
+        const group = firstGroup(aspect) orelse return;
+        if (level >= 2) {
+            return l.fail(group, "parallel is allowed only in the main of a driver or of an aspect it starts: {s} is a leaf (D-140)", .{aspect.text});
+        }
+        var count: usize = 0;
+        var looped = false;
+        countStarts(group, false, &count, &looped);
+        if (count > 2 or looped) {
+            return l.fail(group, "{s} starts more than 2 aspects: an aspect started by the driver starts at most 2, none in a loop (D-081, D-140)", .{aspect.text});
+        }
+        for (aspect.kids) |k| try l.walkAt(k, level);
+    }
+
+    // Zig tip: the output arguments of a group are collected as text keys in a list: `s` for a whole
+    // variable, `s[2]` for an element with a constant index. `std.fmt.allocPrint` builds the key; a key
+    // seen twice means two tasks would write the same place (D-140). An index computed at run time
+    // (`@s[i]`) can not be compared here.
+    /// Refuse the same output variable, or the same constant element, given to two starts of a group.
+    fn owners(l: *Linker, group: *const Node) Error!void {
+        var seen: std.ArrayList([]const u8) = .empty;
+        try l.ownersIn(group.kids[1], false, &seen);
+    }
+
+    // Zig tip: `[]const *const Node` may be the empty slice `&.{}` when the aspect is not known; the
+    // loops then do nothing. A named argument (`pair`) finds its parameter by name, a positional one by
+    // its place in the call.
+    /// Is the parameter that receives the argument `a` (the `i`-th of the call) a `Channel`?
+    fn sharedParam(params: []const *const Node, a: *const Node, i: usize) bool {
+        var prm: ?*const Node = null;
+        if (a.tag == .pair and a.kids[0].tag == .name) {
+            for (params) |q| if (std.mem.eql(u8, q.text, a.kids[0].text)) {
+                prm = q;
+            };
+        } else if (i < params.len) prm = params[i];
+        const ty = (prm orelse return false).ty orelse return false;
+        return std.mem.eql(u8, ty.text, "Channel");
+    }
+
+    // Zig tip: `ownersIn` relies on the same Zig feature as `countStarts` above: see the tip there.
+    /// The recursive part of `owners`: one `start` at a time, in the order of the source.
+    fn ownersIn(l: *Linker, n: *const Node, in_loop: bool, seen: *std.ArrayList([]const u8)) Error!void {
+        if (n.tag == .parallel) return;
+        if (n.tag == .start_stmt) {
+            const params = if (l.aspects.get(n.text)) |asp| mainOf(asp).kids[3].kids else &.{};
+            for (n.kids, 0..) |a, i| {
+                const r = if (a.tag == .pair) a.kids[1] else a;
+                if (r.tag != .ref) continue;
+                if (sharedParam(params, a, i)) continue; // a channel is the one object tasks share (D-141)
+                var key: ?[]const u8 = null;
+                if (r.kids.len == 0) {
+                    key = r.text;
+                } else if (r.kids[0].tag == .index and r.kids[0].kids.len == 2 and r.kids[0].kids[1].tag == .num) {
+                    key = try l.join("{s}[{s}]", .{ r.text, r.kids[0].kids[1].text });
+                }
+                const k = key orelse continue;
+                var twice = in_loop and r.kids.len == 0;
+                for (seen.items) |s| if (std.mem.eql(u8, s, k)) {
+                    twice = true;
+                };
+                if (twice) return l.fail(r, "Output {s} is given to two tasks of the group (D-140)", .{r.text});
+                try seen.append(l.a, k);
+            }
+            return;
+        }
+        const loop = in_loop or n.tag == .for_ or n.tag == .while_ or n.tag == .repeat_;
+        for (n.kids) |k| try l.ownersIn(k, loop, seen);
     }
 };
 

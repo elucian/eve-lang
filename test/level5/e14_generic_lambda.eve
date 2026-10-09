@@ -1,0 +1,17 @@
+# a lambda has no list of types: compile error (D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e14_generic_lambda is
+  process main is
+    new same := (:T)(x: T) => (x);   ** compile error: write overloaded functions instead
+    print same(1);
+  return;
+end e14_generic_lambda;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a lambda has no type list"
+  ]
+}
+*/

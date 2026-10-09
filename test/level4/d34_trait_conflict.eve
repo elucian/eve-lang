@@ -1,0 +1,31 @@
+# two traits that provide the same method force the class to write it (D-145)
+** spec: syntax/declarations.md#traits-and-generic-classes
+driver d34_trait_conflict is
+  trait Hello is
+    method greet(@self) => (@result: String) is
+      let result := "hello";
+    return;
+  end Hello;
+
+  trait Hi is
+    method greet(@self) => (@result: String) is
+      let result := "hi";
+    return;
+  end Hi;
+
+  class Both = {n: Integer} <: (Object, Hello, Hi);   ** compile error: greet comes from both
+
+  process main is
+    new b := Both(n: 1);
+    print b.greet();
+  return;
+end d34_trait_conflict;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "Both must write greet"
+  ]
+}
+*/

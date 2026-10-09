@@ -1,0 +1,26 @@
+# a failing producer does not close its channel: the machine closes it, so the consumer ends (D-141)
+** spec: semantics/multitasking.md#channels
+driver d29_auto_close is
+  process main is
+    new jobs := Channel(:Integer)(capacity: 10);
+    new total: Integer;
+    parallel
+    do
+      start produce(@jobs);
+      start sum(@jobs, @total);
+    done;
+  recover
+    print $error.message;
+    print "{$error.errors[1].index} {$error.errors[1].aspect}: {$error.errors[1].message}";
+    print "total: {total}";
+  return;
+end d29_auto_close;
+/*@expect
+{
+  "stdout": [
+    "1 of 2 tasks failed",
+    "1 produce: stop at 3",
+    "total: 3"
+  ]
+}
+*/

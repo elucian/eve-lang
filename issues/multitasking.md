@@ -1,6 +1,6 @@
 # Issues: multitasking.html
 
-Page: `tutorial/multitasking.html`, named `concurrency.html` until D-067 (2026-10-03); the items below quote the old name. Reviewed 2026-09-28. Retired 2026-10-06: CON-07 (`$timeout` is 60 seconds, set in the driver configuration file, on the page), CON-F1 and CON-F2 (applied). Retired: CON-02 and CON-10 (D-048), CON-03 (D-070), CON-04, CON-05, CON-08 and CON-09 (D-047, D-051, D-066); methods and their parameters moved to `methods.html` (D-069). How to answer: [README](README.md).
+Page: `tutorial/multitasking.html`, named `concurrency.html` until D-067 (2026-10-03); the items below quote the old name. Since D-146 (2026-10-08) the subject is split again: `multitasking.html` covers the tasks of a job (async, spawn, await) and `concurrency.html` covers parallel groups, channels and thread safety; the items about groups and channels now concern `concurrency.html`. Reviewed 2026-09-28. Retired 2026-10-06: CON-07 (`$timeout` is 60 seconds, set in the driver configuration file, on the page), CON-F1 and CON-F2 (applied). Retired: CON-02 and CON-10 (D-048), CON-03 (D-070), CON-04, CON-05, CON-08 and CON-09 (D-047, D-051, D-066); methods and their parameters moved to `methods.html` (D-069). How to answer: [README](README.md).
 
 D-050: concurrency is not in version 1. CON-05 to CON-08 and CON-11 can wait; they don't block the 0.1 spec or the VM. D-051: asynchronous methods (`suspend`, `resume name`, `wait all`) are removed; concurrency.html now covers parallel groups, data rules, BSP and channels in one place.
 

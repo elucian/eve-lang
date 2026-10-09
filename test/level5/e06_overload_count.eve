@@ -1,0 +1,36 @@
+# functions and procedures share a name when the number of their parameters differs (D-149)
+** spec: syntax/declarations.md#overloading
+driver e06_overload_count is
+  function area(side: Integer) => (@result: Integer) is
+    let result := side * side;
+  return;
+
+  function area(w, h: Integer) => (@result: Integer) is
+    let result := w * h;
+  return;
+
+  procedure greet is
+    print "Hello!";
+  return;
+
+  procedure greet(name: String) is
+    print "Hello, {name}!";
+  return;
+
+  process main is
+    print area(3);
+    print area(2, 3);
+    greet;
+    greet("Eve");
+  return;
+end e06_overload_count;
+/*@expect
+{
+  "stdout": [
+    "9",
+    "6",
+    "Hello!",
+    "Hello, Eve!"
+  ]
+}
+*/

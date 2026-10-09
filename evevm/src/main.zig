@@ -29,6 +29,11 @@ pub fn main(init: std.process.Init) !void {
         evevm.project.env_lib_path = folders.items;
     }
 
+    // Zig tip: `environ_map.get` answers an optional text; `orelse ""` turns a missing variable into an
+    // empty one, so one comparison covers both cases. The heap reads these two switches (heap.zig).
+    evevm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
+    evevm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
+
     var stdout_buffer: [1024]u8 = undefined;
     var stdout_file_writer: Io.File.Writer = .init(.stdout(), init.io, &stdout_buffer);
     const stdout = &stdout_file_writer.interface;

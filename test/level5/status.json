@@ -1,3 +1,154 @@
 {
- "tests": {}
+ "tests": {
+  "e01_generic_function": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a generic function has a list of types before its parameters; the call infers the types or writes them (D-148)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e02_generic_procedure": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a generic procedure takes a list of types; the call infers it or writes it (D-148)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e03_generic_method": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a method has its own list of types, in a generic class or in a plain class (D-148)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e04_generic_process": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "the process of an aspect takes a list of types; apply infers it or writes it (D-148)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e05_overload_types": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "functions and procedures share a name when the types of their parameters differ (D-149)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e06_overload_count": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "functions and procedures share a name when the number of their parameters differs (D-149)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e07_overload_result": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 2,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "functions that differ only by the type of the result: the type expected at the call selects one (D-149)",
+   "reason": "exit code 65, expected 0; stdout differs"
+  },
+  "e08_overload_ambiguous": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a call that does not fix the type of the result of an overloaded function is ambiguous: compile error (D-149)",
+   "reason": "expected output not found: 'ambiguous call of unit'"
+  },
+  "e09_overload_defaults": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a default value can make two signatures match the same call: compile error (D-149)",
+   "reason": "expected output not found: 'ambiguous call of f'"
+  },
+  "e10_overload_no_match": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a call that matches no signature of an overloaded name is a compile error (D-149)",
+   "reason": "expected output not found: 'no signature of half matches'"
+  },
+  "e11_function_procedure_name": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a function and a procedure never share a name: compile error (D-149)",
+   "reason": "expected output not found: 'report is both a function and a procedure'"
+  },
+  "e12_same_signature": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "two declarations with the same signature are a compile error (D-149)",
+   "reason": "expected output not found: 'half is declared twice with the same signature'"
+  },
+  "e13_method_result_or_not": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a method without a result and one with a result share a name: a statement calls the first, an expression the second (D-149)",
+   "reason": "stdout differs"
+  },
+  "e14_generic_lambda": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a lambda has no list of types: compile error (D-148)",
+   "reason": "expected output not found: 'a lambda has no type list'"
+  },
+  "e15_type_not_inferred": {
+   "status": "FAIL",
+   "failures": 16,
+   "runs": 16,
+   "checks": 1,
+   "last": "2026-10-09 07:03",
+   "mtime": 1791539866,
+   "title": "a type that the arguments do not give must be written at the call: compile error (D-148)",
+   "reason": "expected output not found: 'can not infer the type T of make'"
+  }
+ }
 }

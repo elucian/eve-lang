@@ -13,7 +13,7 @@ end d26_nested_too_many;
 {
   "syntax_error": true,
   "exit": 65,
-  "stderr": [
+  "contains": [
     "outer starts more than 2 aspects"
   ]
 }

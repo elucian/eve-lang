@@ -1,0 +1,9 @@
+# leaf: a group in a leaf: compile error
+concurrent aspect leaf is
+  process main(@result: Integer) is
+    parallel
+    do
+      start leaf(@result);
+    done;
+  return;
+end leaf;
