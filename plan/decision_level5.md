@@ -8,7 +8,7 @@ The core of Eve as an ETL tool: a driver connects to databases by name, reads qu
 
 Features: F-DAT-01 to F-DAT-11, F-LIB-08 (secrets of the connections), F-LIB-11 (lineage in the run log).
 
-Design for review: [design-database.md](design-database.md) (2026-10-05).
+Design for review (2026-10-10): [design-database-core.md](design-database-core.md), [design-database-remote.md](design-database-remote.md) and [evedb/README.md](../evedb/README.md) (the test database around DuckDB). First draft, archived with the author's answers: [design-database.md](archive/design-database.md) (2026-10-05).
 
 Decisions already taken in other files: D-020 (jobs and `recover`), D-080 (Decimal, optional types, DataMap), D-081 (error classes, `defer`, unsafe methods, run log), D-083 (machine folder, configuration, remote commands).
 
@@ -29,7 +29,7 @@ The design note holds the details; in short:
 
 ## Open questions
 
-Answered by the author in [design-database.md](design-database.md); the rules that follow are proposed in Q-043 for confirmation. The eight questions were: the engine of the Eve database, transactions bound to jobs, the record syntax, the extent of the mapping, the rights of `db sql`, parallel writes with their own connection, the `db` prefix of the commands, the order of the drivers.
+Answered by the author in [design-database.md](archive/design-database.md); the rules that follow are proposed in Q-043 for confirmation. The eight questions were: the engine of the Eve database, transactions bound to jobs, the record syntax, the extent of the mapping, the rights of `db sql`, parallel writes with their own connection, the `db` prefix of the commands, the order of the drivers.
 
 ## Data language (moved from level 3, D-125)
 
@@ -61,6 +61,7 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 - Q-044 Data language: features and versions [open; proposals]
 - Q-045 Eve macro (hybrid script): aspects and a driver in one file (answered: D-152)
 - D-152 Eve macro: a hybrid script with shared declarations, aspects and one driver
+- Q-046 Database ORM and ACID: the language proposals of the two design files [open; proposals]
 ## Q-039 Data file types: Json, Csv, Dat, Xml, Html, Htmlt (2026-10-08; was numbered Q-038, an id taken by level 2)
 Author request: types for the files that a program loads and parses in memory: HTML, XML, HTMLT (HTML template), CSV, DAT (fixed width data) and JSON. The load is buffered and works in loops, a kind of traversal: row by row, or element by element (object by object) for JSON. All of them are derived with `<:` and defined mostly in Eve, at a later time. A first proposal is in `spec/semantics/data-types.md` and in the section "Data File Types" of `types.html`. Open points:
 - (a) The names: `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`. `Html` is also the safe page type of the templates (Q-027, level 7): one type, or `Html` for the parsed file and another name for the safe page?
@@ -90,7 +91,8 @@ The page `syslib.html` lists the modules that connect a program to the machine: 
 **Answer:**
 
 ## Q-043 Database layer: the answers of design-database.md as rules (2026-10-09)
-The author answered the eight questions at the end of [design-database.md](design-database.md) (answers written in that file). This entry turns each answer into rules for the specification; the parts marked **Proposed** are the model's completions, to be confirmed one by one. After confirmation they become a decision and are applied to `spec/`, the tutorial (`databases.html`, `syslib.html`) and the tests of level 5.
+Note 2026-10-10: (c) and (d) are replaced by Q-046, the robust ORM asked by the author ([design-database-core.md](design-database-core.md)).
+The author answered the eight questions at the end of [design-database.md](archive/design-database.md) (answers written in that file). This entry turns each answer into rules for the specification; the parts marked **Proposed** are the model's completions, to be confirmed one by one. After confirmation they become a decision and are applied to `spec/`, the tutorial (`databases.html`, `syslib.html`) and the tests of level 5.
 (a) **Engine.** Author: only SQLite is embedded; DuckDB is a separate project, an independent Eve driver imported as a dependency; no engine of our own (postponed indefinitely). **Proposed:** the Eve database of a machine is one SQLite file per name in its `db/` folder, opened with `database.connect("eve")`; DuckDB is removed from F-DAT-08 and design-database.md §9 and becomes a library outside the VM (a later version, not 0.4). 
 **Answer:** 
 (b) **Transactions.** Author: a transaction is the hidden purpose of a job. **Proposed:** no new syntax and no `job on`. Inside a job, the first write (a `!` method) on a connection begins a transaction on it; the job commits every open transaction at `done` or `stop` and rolls them back when it fails, before `recover` runs; `retry` runs the job again in a new transaction. Outside a job every write commits by itself. There are no `begin!`, `commit!` or `rollback!` methods in version 0.4: a long load is split into several jobs, and the last job that passed is the checkpoint (`jobs["name"].status`). A transient error (`DatabaseError.transient`: lost connection, deadlock, time-out) is the case for `retry`. 
@@ -103,6 +105,7 @@ The author answered the eight questions at the end of [design-database.md](desig
 **Answer:** 
 (f) **`db sql` rights.** **Proposed:** Eve adds no rights layer: `db sql <name> "<statement>"` and `db script <name> <file>` run with the rights of the database user of the connection in `eve.cfg`; a read-only connection is a read-only database user. 
 **Answer:** 
+Note 2026-10-10 on (g): point (2) below is void. It rests on the old meaning of `!` (D-081, "unsafe"); since D-089 `!` marks a stochastic function and the compiler decides thread safety, so an aspect that writes on its own connection needs no exception (design-database-core.md §6.1).
 (g) **Parallel loads.** Author: no parallel pipelines inside one aspect; an aspect connects and runs its process in serial mode, a second aspect needs a second connection. The driver prepares the database with one aspect, then starts parallel groups that load independent groups of tables in hierarchy order (head tables first, then the tables that depend on them, the leaf tables last), and a closing job of the driver finalizes (reindex, enable constraints and triggers). **Proposed:** (1) a `Connection` is never passed to a started aspect or shared: each aspect connects by name; (2) exception to D-081: a `concurrent aspect` may call the `!` methods of a connection it opened itself, because it shares no state with its siblings; (3) one parallel group per level of the hierarchy, in the order written by the developer (D-140); (4) the methods `prepare!(tables)`, `activate!(tables)` and `reindex!(tables)` of `Connection` do what the commands `db prepare`, `db activate` and `db reindex` do (h). A test of level 5 shows the whole pattern with SQLite. 
 **Answer:** 
 (h) **Commands.** Author: the `db` prefix is welcome; `db alter`, `db create`, `db prepare` (prepare a bulk load), `db activate` (enable the constraints again), `db reindex` (rebuild the indexes). **Proposed:** the list is `db list`, `db add`, `db remove`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db script`, `db create` (a new database, empty or from a script), `db alter` (apply a DDL script), `db prepare` (disable indexes, constraints and triggers of the named tables), `db activate` (enable constraints and triggers), `db reindex`, `db migrate`, `db backup`, `db restore`, `db export`, `db import`, `db compact`, `db runs`. 
@@ -200,3 +203,26 @@ Author answers to Q-045. Version 0.4, feature F-STR-09.
 - **Rules unchanged.** Each aspect keeps its own scope and state (D-066) and sees no variable of the driver or of another aspect; the shared declarations are the only common names. `start` starts only a concurrent aspect; the rules of the parallel groups are those of `multitasking.md` (D-140).
 - **Compile errors (exit 65).** Two drivers in one file; aspects or shared declarations without a driver (in a file without `#!`); a statement outside a declaration; a name declared twice at the top level; a concurrent aspect that uses a shared name that is not thread safe.
 - **Tests.** One macro with an exclusive aspect applied (level 2 rules), the example of Q-045 with `Result` declared at the top (level 4 rules), a concurrent aspect that adds to a shared `Atomic(:Integer)`, and the compile errors above: `test/level5`, e16 to e22 (written first, 2026-10-10); e04 became a macro, so level 5 has no project folder left. Specification: `spec/syntax/declarations.md#eve-macro-level-5`.
+
+## Q-046 Database ORM and ACID: the language proposals of the two design files (2026-10-10)
+Author request (2026-10-10): a robust ORM of Eve's own, aligned with the object model; SQLite as the core database and cache; the layers local app, Eve server (ACID session manager, cache) and remote database; mapping validated against the database in debug mode, a hard stop in production; updates that write only the changed fields; rollback rules; ETL with Unicode, transfer to a remote database, and reports back to files; new control statements where ACID needs them. The design is split in [design-database-core.md](design-database-core.md) (SQLite, mapping, tracked records, transactions, direct SQL) and [design-database-remote.md](design-database-remote.md) (drivers, the Eve server, protocol, ETL); each ends with its own questions. This request replaces Q-043c and Q-043d (no mapping); the other points of Q-043 stay. **Proposed**, one line per point; confirm or correct each:
+(a) **P1 `table` declaration**: `table customers: Customer in "sales" is key (id); generated (id); version version; column name as "cust_name"; reference f to t; read only; temporary; end customers;`, a contextual keyword; `customers` is a `Table(:Customer)` bound to the database table (core §3.2). Replaces the constants `TABLE` and `KEY`, which D-123 forbids in a class body.
+**Answer:**
+(b) **P2 `commit;`** inside a job: flush, commit, new transaction; a job with `commit;` keeps a checkpoint in the same database (core §8.5).
+**Answer:**
+(c) **P3 `rollback;`** inside a job (also `rollback if cond;`): undo to the restore point, memory restored, the job ends with the new status `rolled back` (P8), the process continues after `done` (core §8.2).
+**Answer:**
+(d) **P4 `$isolation`, `$lock_timeout`, `$read_only`**, set in the declarations of a job (core §8.3).
+**Answer:**
+(e) **P5 `retry after <duration>;`** and `$error.attempt` (core §11).
+**Answer:**
+(f) **P6 fatal errors**: `retry` and `resume` are refused for `MappingError` and for a partial `CommitError`; the process aborts, exit code 4 (core §5.3, §8.6).
+**Answer:**
+(g) **P7 record methods**: a class derived from `Record` may declare methods; `validate` runs before every write (core §7.4). Changes Q-043c (records without methods).
+**Answer:**
+(h) **P9 `cached <duration>;`** clause of `table`, served by the SQLite cache of the Eve server (remote §4.2).
+**Answer:**
+(i) **Rules without new syntax**: tracked records with dirty fields and originals, updates of the dirty fields only, statement cache per dirty set, flush order by `reference`, memory restored on rollback, optimistic `version` check, one session per connection and per process (core §6 to §8).
+**Answer:**
+(j) **Names by D-089** (2026-10-10): `!` marks a stochastic result, so every read of a database or a file carries it (`find!`, `where!`, `scan!`, `count!`, `query!`, `query_one!`, `checkpoint.read!`, `csv.read!`), a write without a result has none (`add`, `remove`, `flush`, `script`, `prepare`, `activate`, `reindex`, `checkpoint.write`, `csv.write`), and a write that returns counts keeps it (`execute!`, `load!`, like `Atomic.swap!`). Thread safety is decided by the compiler and does not depend on `!`. This also corrects Q-039e and Q-043d, written with the old meaning. Note: the tutorial page methods.html still teaches "a method whose name ends with `!` is an unsafe method" (D-081), which D-089 replaced.
+**Answer:**

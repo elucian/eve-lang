@@ -37,6 +37,7 @@
 # Zig build output (evevm/); `zig build -p ..` installs eve.exe + eve.pdb into /bin
 .zig-cache/
 zig-out/
+zig-pkg/
 /bin/
 
 # Claude Code local files

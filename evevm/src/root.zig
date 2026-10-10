@@ -23,6 +23,9 @@ pub const project = @import("project.zig");
 /// The heap of the values: reference counting, regions and the tracing collector.
 pub const heap = @import("heap.zig");
 
+/// SQLite, the core database of Eve (level 5).
+pub const sqlite = @import("sqlite.zig");
+
 // Zig tip: tests are found only in files that the compiler reaches. `_ = cli;` inside an
 // unnamed `test { }` references the file so its tests also run with `zig build test`.
 test {
@@ -39,6 +42,7 @@ test {
     _ = @import("scratch.zig");
     _ = heap;
     _ = @import("doc.zig");
+    _ = sqlite;
 }
 
 test "version strings are set" {

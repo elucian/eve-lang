@@ -1,0 +1,29 @@
+.{
+    .name = .evedb,
+    .version = "0.0.1",
+    .fingerprint = 0x3595577cc7d3d75f, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .duckdb_windows_amd64 = .{
+            .url = "https://github.com/duckdb/duckdb/releases/download/v1.5.6/libduckdb-windows-amd64.zip",
+            .hash = "N-V-__8AADdNdgJ9nEwTO5fjYcl833nzIa2P1Xecgn2Pgo9_",
+            .lazy = true,
+        },
+        .duckdb_linux_amd64 = .{
+            .url = "https://github.com/duckdb/duckdb/releases/download/v1.5.6/libduckdb-linux-amd64.zip",
+            .hash = "N-V-__8AACFXKwnX1RoveZhztd4utbUmLx0lfZgDmWQjZaED",
+            .lazy = true,
+        },
+        .duckdb_osx_universal = .{
+            .url = "https://github.com/duckdb/duckdb/releases/download/v1.5.6/libduckdb-osx-universal.zip",
+            .hash = "N-V-__8AAHkYIAernNx2RAjYYr731ohYGtHZj4B0GcQxXni_",
+            .lazy = true,
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "README.md",
+    },
+}
