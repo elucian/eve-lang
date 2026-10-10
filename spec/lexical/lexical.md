@@ -41,12 +41,12 @@ The first line says what kind of file it is.
 
 | First line | Meaning |
 |---|---|
-| `#!` followed by the interpreter path, for example `#!/usr/bin/env eve` | Shebang. The file is a **free script**: sequential statements, no driver, no process. Only a file whose first line starts with `#!` can be a free script. |
-| `# title` | Title of a driver, an aspect or a module. |
+| `#!` followed by the interpreter path, for example `#!/usr/bin/env eve` | Shebang. The file is a **free script**: sequential statements, no driver, no process. Only a file whose first line starts with `#!` can be a free script. A `#!` file that declares a `driver` at the top level is an **Eve macro** instead (D-152, `../syntax/declarations.md#eve-macro-level-5`). |
+| `# title` | Title of a driver, an aspect, a module or an Eve macro. |
 | `## subtitle` | Subtitle. |
 | `**` … | A comment, for example a row of stars above a block comment. |
 
-`#!` is an interpreter directive only in the first two characters of the file. On any other line, `#!` is an ordinary `#` comment. All header lines are comments: a parser may ignore them, except that it needs the first line to decide whether the file is a free script.
+`#!` is an interpreter directive only in the first two characters of the file. On any other line, `#!` is an ordinary `#` comment. All header lines are comments: a parser may ignore them, except that it needs the first line to decide whether the file is a free script (a `#!` file without a top-level `driver`).
 
 ## Comments
 

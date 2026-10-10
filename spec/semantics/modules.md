@@ -31,7 +31,7 @@ end counter;
 
 ## What a module may contain
 
-A module holds **declarations** and the regions around them (D-126): `from … use` (import), `export`, `initialize`, `recover` and `finalize`. A statement that is not inside a function, a procedure, a method, a constructor or a region (`print "x";`, `if … do`, an assignment) is a compile error in a module: the code of a module runs only when a member is called, or in `initialize`. A **free script** (`#!` on line 1) is the opposite: it is executable and may hold control statements, but it can not export anything and can not be imported; `from lib use (tool)` where `tool` is a free script is a compile error (c24). Only an encapsulated declaration can be shared.
+A module holds **declarations** and the regions around them (D-126): `from … use` (import), `export`, `initialize`, `recover` and `finalize`. A statement that is not inside a function, a procedure, a method, a constructor or a region (`print "x";`, `if … do`, an assignment) is a compile error in a module: the code of a module runs only when a member is called, or in `initialize`. A **free script** (`#!` on line 1) is the opposite: it is executable and may hold control statements, but it can not export anything and can not be imported; `from lib use (tool)` where `tool` is a free script is a compile error (c24). Only an encapsulated declaration can be shared. An **Eve macro** (level 5, D-152) is self-contained in the same way: it holds a driver, its aspects and declarations shared inside the file, and it can not be imported.
 
 ## Members
 

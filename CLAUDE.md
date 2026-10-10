@@ -2,9 +2,9 @@
 
 Eve is a domain-specific scripting language (data processing, test automation).
 This repo holds the language **examples, spec and manual**, and the first implementation: the
-Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42 tests, level 5: 0/15 tests written first, smoke: 16 tests).
+Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42 tests, level 5: 0/22 tests written first, smoke: 16 tests).
 Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig build test`.
-`.zig`/`.zon`/`.sh` files are LF (`.gitattributes`), unlike the rest of the repo.
+Every text file is LF, in the index and in the working tree (`.gitattributes`); only `.bat`/`.cmd`/`.ps1` are CRLF.
 **Zig is taught here (didactic project):** the team does not know Zig. Every function, test, type
 and non-obvious declaration you write or change in `evevm/` gets a `// Zig tip:` comment block just
 before it (Zig has no block comments; use consecutive `//` lines, above any `///` doc comment),
@@ -35,7 +35,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
   … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
   Control flow: D-016 in `plan/decision_level1.md`.
-- **Line endings:** working tree is CRLF (`core.autocrlf=true`), index is LF. Keep CRLF.
+- **Line endings:** LF everywhere (`.gitattributes`: `* text=auto eol=lf`, which overrides `core.autocrlf=true`); CRLF only for Windows scripts (`.bat`, `.cmd`, `.ps1`). New files are written LF. A `#!` script must be LF to run on Unix.
 - **Markdown prose is not hard-wrapped:** one line per paragraph and per list item (an author answer or a `(a)` item keeps its own line). To reflow a wrapped file: `python temp/unwrap_md.py <files>`.
 
 ## VM workflow: speed and performance watch

@@ -1,0 +1,25 @@
+# a macro has one driver: a second one is a compile error (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+set greeting = "hello" :String;
+
+driver e21_macro_two_drivers is
+  process main is
+    print greeting;
+  return;
+end e21_macro_two_drivers;
+
+driver second is
+  process main is
+    print greeting;
+  return;
+end second;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a macro has only one driver"
+  ]
+}
+*/

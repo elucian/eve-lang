@@ -19,6 +19,7 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Aspects | [semantics/aspects.md](semantics/aspects.md) | level 2, first draft (2026-10-07); open points 1 to 4 |
 | Modules and libraries | [semantics/modules.md](semantics/modules.md) | level 3, first draft (2026-10-08); tests c01 to c28; open points 1 to 4 |
 | Generic subprograms, overloading | [syntax/declarations.md](syntax/declarations.md#generic-subprograms-and-overloading) | level 5, first draft (2026-10-09): D-147 to D-149; tests e01 to e15 |
+| Eve macro (hybrid script) | [syntax/declarations.md](syntax/declarations.md#eve-macro-level-5) | level 5, first draft (2026-10-10): D-152; tests e04, e16 to e22 |
 | Data file types | [semantics/data-types.md](semantics/data-types.md) | level 5, proposal (2026-10-08): `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`; Q-039 |
 | Multitasking | [semantics/multitasking.md](semantics/multitasking.md) | level 4, first draft (2026-10-08): parallel groups, channels, tasks in a job, durations; D-140 to D-144; tests d01 to d24 |
 | Standard library | [library/atomic.md](library/atomic.md) | `Atomic(:T)`, first draft (2026-10-08); the rest of the library is not started |
@@ -38,5 +39,6 @@ Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decis
 | 2026-10-02 | Lexical structure, operators and delimiters (S2.2, S2.3, S2.5, S2.6); `speccheck.py` |
 | 2026-10-03 | Register of system variables, `semantics/variables.md` (D-071) |
 | 2026-10-07 | Level 2: aspects, `apply`, spreading, errors across `apply`, trace, log files (D-112, D-113); modules move to level 3 |
+| 2026-10-10 | Eve macro: a hybrid script with shared declarations, aspects and one driver (D-152); tests e16 to e22, e04 is now a macro |
 | 2026-10-09 | No self-calling lambdas (D-147); generic functions, procedures, methods and processes (D-148); overloading (D-149); tests e01 to e15 |
 | 2026-10-06 | Level 1: keywords, grammar, declarations, statements, expressions, types, control, errors, conformance (D-094); lexical rules and operator tables follow D-063 to D-087 |

@@ -1,0 +1,50 @@
+#!/usr/bin/env eve
+# an Eve macro starts its concurrent aspects in a parallel group; a shared class carries the results (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+class Result = {name :String, count :Integer} <: Object is
+  constructor(name = "" :String, count = 0 :Integer) => (@self) is
+    let self := Object();
+    let self.name := name;
+    let self.count := count;
+  return;
+end Result;
+
+concurrent aspect job_worker_1 is
+  process main(@res: Result) is
+    ** internal sequential job logic
+    let res := Result("worker 1", 10);
+    print "{res.name} done";
+  return;
+end job_worker_1;
+
+concurrent aspect job_worker_2 is
+  process main(@res: Result) is
+    ** internal sequential job logic
+    let res := Result("worker 2", 20);
+    print "{res.name} done";
+  return;
+end job_worker_2;
+
+# driver executing parallel tasks
+driver e17_macro_parallel is
+  process main is
+    new r1 := Result();
+    new r2 := Result();
+    p_exec: parallel
+    do
+      start job_worker_1(@r1);
+      start job_worker_2(@r2);
+    done p_exec;
+    print "{r1.name}: {r1.count}, {r2.name}: {r2.count}";
+  return;
+end e17_macro_parallel;
+/*@expect
+{
+  "stdout": [
+    "worker 1 done",
+    "worker 2 done",
+    "worker 1: 10, worker 2: 20"
+  ]
+}
+*/

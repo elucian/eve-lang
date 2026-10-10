@@ -1,6 +1,6 @@
 # Grammar
 
-Status: **0.1-draft**, levels 1 to 4 (a single script; a driver and its aspects; modules; parallel processing, traits and generic classes), and the generic subprograms of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
+Status: **0.1-draft**, levels 1 to 4 (a single script; a driver and its aspects; modules; parallel processing, traits and generic classes), and the generic subprograms and the Eve macro of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
 
 Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeats zero or more times, `( )` groups, `"…"` is a keyword or a symbol token, `(* … *)` is a note. Every statement ends with `;`. Layout (2 spaces per level) is checked after parsing, not by the grammar (see lexical.md, Layout).
 
@@ -90,6 +90,16 @@ apply-stmt  = "apply" , { name , "/" } , name-path , type-args , "(" , [ argumen
 ```
 
 `type-params` and `type-args` are the rules of the generic classes (level 4). In an expression, `name-path , type-args` is already a primary (level 4), followed by the call: `largest(:Integer)(xs)`. A lambda has no type list. Several declarations of a subprogram with the same name are allowed when their signatures differ; the grammar does not check it (`declarations.md#overloading`).
+
+## Eve macro (level 5)
+
+```ebnf
+file        = macro ;                                           (* adds to file *)
+macro       = [ shebang ] , { top-level } , driver , { top-level } ;   (* at least one top-level, at most one driver (D-152) *)
+top-level   = declaration | aspect ;
+```
+
+A file of one driver and nothing else is a driver, not a macro. The grammar does not count the drivers: a `#!` file without a top-level driver is a free script, and a statement at the top level of a macro is a compile error (`declarations.md#eve-macro-level-5`).
 
 ## Declarations
 

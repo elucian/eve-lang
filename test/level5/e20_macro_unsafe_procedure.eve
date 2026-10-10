@@ -1,0 +1,30 @@
+# a concurrent aspect of a macro can not call a shared procedure that changes a plain variable: compile error (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+new seen := 0;
+
+procedure bump() is
+  let seen += 1;
+return;
+
+concurrent aspect worker is
+  process main is
+    bump();
+  return;
+end worker;
+
+driver e20_macro_unsafe_procedure is
+  process main is
+    apply worker();
+    print seen;
+  return;
+end e20_macro_unsafe_procedure;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "calls 'bump', which is not thread safe"
+  ]
+}
+*/

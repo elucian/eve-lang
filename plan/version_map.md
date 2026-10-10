@@ -44,7 +44,7 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version 0.1 | Levels 1 and 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply`. | 23 of 33 | in progress |
 | Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 4 of 13 | in progress |
 | Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
-| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 22 | planned |
+| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 23 | planned |
 | Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control, `serve`, services and routes, the API for AI. | 0 of 13 | planned |
 | Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser. | 0 of 4 | planned |
 | Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
@@ -176,6 +176,7 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-LNG-14 | Record types and optional values | open | typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`; needs a decision). |
 | F-NET-01 | HTTP client | open | requests, headers, JSON bodies, time-outs, TLS (review `RNW-R10`). |
 | F-VM-06 | Efficient collections | open | hashed and sorted maps, sets, ropes for Text (review `RVM-R04`). |
+| F-STR-09 | Eve macro (hybrid script) | open | one self-contained file: shared declarations, its aspects and one driver; `apply` (level 2) and `parallel`/`start` (level 4) inside it; a concurrent aspect uses only the thread-safe shared names (D-152; tests e16 to e22, written first). |
 
 Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; level 5 passes against the Eve database (SQLite) and a PostgreSQL server; a killed load restarts from its checkpoint; `db backup` and `db restore` round-trip.
 
