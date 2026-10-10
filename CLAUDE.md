@@ -12,6 +12,8 @@ explaining the language feature it shows: error unions, optionals, comptime, sli
 `defer`, and so on. Explain in plain words, one idea per tip, do not repeat a tip the file already
 has; refer to it instead. Keep the tips correct for Zig 0.16.
 
+- `evedb/` **the Eve test database** (F-DAT-12): a separate Zig program around DuckDB (prebuilt library v1.5.6, a lazy dependency of `evedb/build.zig.zon`), never in the VM. Build and test from `evedb/`: `zig build -p ..` (installs `bin/evedb.exe` and `bin/duckdb.dll`), `zig build test`. Same Zig rules as `evevm/`. Design in `evedb/README.md`; the database layer itself in `plan/design-database-core.md` and `plan/design-database-remote.md`.
+- **SQLite is the core database**, compiled into the VM from the amalgamation (3.54.0, dependency `sqlite` of `evevm/build.zig.zon`; binding `evevm/src/sqlite.zig`). Zig 0.16 keeps fetched packages in `zig-pkg/` (git-ignored); the first build compiles SQLite (about 3 minutes), later builds use the cache.
 - `spec/` **the Eve specification being written**: Markdown + JSON, normative. Conventions in
   `spec/README.md`.
 - `plan/version_map.md` **one file to track the project** (D-138): levels, versions and every feature (`F-<area>-<nn>`) with its status; update it when a feature is done or moved.
@@ -30,7 +32,7 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 - `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
 - `tools/` typing aids (`alt-codes.md`)
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
-  tutorial (42 topic pages), owned by the `scl` repo. See "Tutorial" below.
+  tutorial (43 topic pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
   … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
@@ -57,6 +59,7 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
   then read by line range. `repomap.py tutorial --ext .html` lists all the pages with titles.
 - Links are followed only when named: `bee-ed … tutorial` and `outline.py tutorial` enter it;
   a plain `*.html`, or a script run on `.`, stays inside eve-lang.
+- **Headings and sidebar:** every `<h1>`/`<h2>`/`<h3>` of a page has an `id`; when you change a page, update its navigation bar in `tutorial/data/<page>.json` (h1 = root, h2 = children, h3 = children of their h2, `"link": "#<id>"`).
 - Check markup after edits: `bee-ed balance tutorial/<page>.html`. As of 2026-09-30, all
   pages balance; raw `<`/`>` in code blocks must be written `&lt;`/`&gt;`.
 - Anything deleted **inside** `tutorial/` is deleted from the scl repo. To drop just the link,

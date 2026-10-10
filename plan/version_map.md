@@ -44,7 +44,7 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version 0.1 | Levels 1 and 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply`. | 23 of 33 | in progress |
 | Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 4 of 13 | in progress |
 | Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
-| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 23 | planned |
+| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 24 | planned |
 | Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control, `serve`, services and routes, the API for AI. | 0 of 13 | planned |
 | Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser. | 0 of 4 | planned |
 | Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
@@ -158,10 +158,11 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-DAT-04 | Checkpoints and restart | open | resume a failed pipeline at the last committed batch (review `RIO-R05`). |
 | F-DAT-05 | Columnar tables | open | `Table` type with typed columns, Arrow-compatible (review `RTY-R06`). |
 | F-DAT-06 | Data lineage and run reports | open | inputs, outputs, row counts, durations per job and aspect (review `RIO-R06`). |
-| F-DAT-08 | The Eve database | open | one database per machine in its `db/` folder, SQLite embedded (DuckDB optional), for checkpoints, run history, lineage, staging and small applications (`plan/design-database.md`). |
+| F-DAT-08 | The Eve database | open | one database per machine in its `db/` folder, SQLite embedded (3.54.0, compiled into the VM from the amalgamation, `evevm/src/sqlite.zig`; DuckDB is not in the VM: it is the separate test database `evedb`, F-DAT-12), for checkpoints, run history, lineage, staging and small applications (`plan/design-database.md`). |
 | F-DAT-09 | Database admin commands | open | `db list`, `db add`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db create`, `db backup`, `db restore`, `db export`, `db import`, `db compact`, `db runs`. |
 | F-DAT-10 | Schema migrations | open | numbered SQL scripts in `db/migrations/<name>/`, applied by `db migrate` and recorded in the Eve database. |
-| F-DAT-11 | Record-table mapping | open | record types with `TABLE` and `KEY`; `find`, `save!`, `remove!`, one SQL statement each. |
+| F-DAT-11 | Record-table mapping | open | `table` declarations binding record classes to tables, tracked records with dirty fields, updates of the changed fields only, mapping validated in debug mode and refused in production (`plan/design-database-core.md`, Q-046). |
+| F-DAT-12 | evedb, the Eve test database | partial | a database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log (`evedb/README.md`). *Partial:* DuckDB 1.5.6 linked, `bin/evedb.exe` runs a self-check, 4 unit tests; no server yet. |
 | F-DOC-02 | Tutorial, data client part | open | files, formats, streams, HTTP client, ETL pipelines (review `RTU` phase T1). |
 | F-LIB-04 | Files and paths | open | `fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). |
 | F-LIB-05 | Data formats | open | JSON and CSV read/write, decode into records; later XML, Parquet. |

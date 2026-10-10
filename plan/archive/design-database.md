@@ -1,6 +1,7 @@
 # Design: the Eve database layer and the Eve database
 
-Status: **draft for review**, 2026-10-05. Nothing here is decided. Level 5, version 0.4 (`plan/version_map.md`), before the server (level 6). Features F-DAT-01 to F-DAT-11 (`plan/version_map.md`). It replaces the ORM sketch of the tutorial page databases.html (review RIO-D02, RIO-X01, RIO-R02). Questions for the author are collected at the end.
+Status: **superseded and archived on 2026-10-10.** The main design is now [design-database-core.md](../design-database-core.md) (SQLite, the ORM, transactions, direct SQL), [design-database-remote.md](../design-database-remote.md) (drivers, the Eve server, ETL) and [evedb/README.md](../../evedb/README.md) (DuckDB as the secondary database: the Eve test database). This file stays as the record of the author's answers. Two of its premises are obsolete: DuckDB is not an option of the VM (answer to question 1: it is the separate project `evedb`), and question 6 reads `!` as "unsafe for parallel" (D-081), which D-089 replaced: `!` marks a stochastic function and the compiler decides thread safety.
+First draft: 2026-10-05. Nothing here is decided. Level 5, version 0.4 (`plan/version_map.md`), before the server (level 6). Features F-DAT-01 to F-DAT-11 (`plan/version_map.md`). It replaces the ORM sketch of the tutorial page databases.html (review RIO-D02, RIO-X01, RIO-R02). Questions for the author are collected at the end.
 
 ## 1. Why the database layer is the core of Eve
 
