@@ -1,6 +1,46 @@
-# Zig sources are LF, as zig fmt requires
-*.zig text eol=lf
-*.zon text eol=lf
-*.sh text eol=lf
+# Line endings of the eve-lang repo.
+# The index and the working tree are LF for every text file, whatever core.autocrlf says
+# (eol= overrides it). Nothing in this project needs CRLF: the Eve VM, Python, Zig, bee-ed
+# and the scripts of script/ read LF; a "#!" script (free script or Eve macro) must be LF
+# to run on Unix. CRLF is kept only for the Windows script types below.
 
+# Default: let Git detect text, store and check out LF.
+* text=auto eol=lf
+
+# Sources of the project, declared so detection never guesses wrong.
+*.eve      text eol=lf
+*.md       text eol=lf diff=markdown
+*.json     text eol=lf
+*.py       text eol=lf diff=python
+*.zig      text eol=lf
+*.zon      text eol=lf
+*.sh       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.html     text eol=lf diff=html
+*.css      text eol=lf diff=css
+*.js       text eol=lf
+*.txt      text eol=lf
+*.cfg      text eol=lf
+*.csv      text eol=lf
+LICENSE    text eol=lf
 .githooks/* text eol=lf
+
+# Windows scripts: cmd.exe and PowerShell 5.1 need CRLF.
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# Binary files: no line-ending change, no text diff.
+*.exe      binary
+*.dll      binary
+*.pdb      binary
+*.evb      binary
+*.db       binary
+*.sqlite   binary
+*.png      binary
+*.jpg      binary
+*.gif      binary
+*.ico      binary
+*.pdf      binary
+*.zip      binary
