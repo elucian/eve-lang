@@ -1,0 +1,28 @@
+# the process of an aspect takes a list of types; apply infers it or writes it (D-148); one Eve macro (D-152)
+** spec: syntax/declarations.md#generic-subprograms
+
+# largest: an aspect whose process has a list of types
+exclusive aspect largest is
+  process main(:T <: Comparable)(items: ()T) is
+    new top := items[1];
+    for x in items do
+      let top := x if x.compare(top) > 0;
+    done;
+    print "largest: {top}";
+  return;
+end largest;
+
+driver e04_generic_process is
+  process main is
+    apply largest((4, 11, 6));
+    apply largest(:String)(("pear", "apple"));
+  return;
+end e04_generic_process;
+/*@expect
+{
+  "stdout": [
+    "largest: 11",
+    "largest: pear"
+  ]
+}
+*/

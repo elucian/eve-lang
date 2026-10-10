@@ -1,0 +1,20 @@
+# a statement outside a declaration is a compile error in a macro (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+set greeting = "hello" :String;
+print greeting;
+
+driver e22_macro_statement is
+  process main is
+    print greeting;
+  return;
+end e22_macro_statement;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a statement outside a declaration in a macro"
+  ]
+}
+*/

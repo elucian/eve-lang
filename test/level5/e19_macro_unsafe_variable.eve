@@ -1,0 +1,26 @@
+# a concurrent aspect of a macro can not use a shared variable that is not atomic: compile error (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+new count := 0;
+
+concurrent aspect adder is
+  process main is
+    let count += 1;
+  return;
+end adder;
+
+driver e19_macro_unsafe_variable is
+  process main is
+    apply adder();
+    print count;
+  return;
+end e19_macro_unsafe_variable;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "uses 'count', which is not thread safe"
+  ]
+}
+*/

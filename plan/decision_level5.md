@@ -59,6 +59,8 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 - Q-039 Data file types: Json, Csv, Dat, Xml, Html, Htmlt [open; proposals 2026-10-09]
 - Q-043 Database layer: the answers of design-database.md as rules [open; proposals]
 - Q-044 Data language: features and versions [open; proposals]
+- Q-045 Eve macro (hybrid script): aspects and a driver in one file (answered: D-152)
+- D-152 Eve macro: a hybrid script with shared declarations, aspects and one driver
 ## Q-039 Data file types: Json, Csv, Dat, Xml, Html, Htmlt (2026-10-08; was numbered Q-038, an id taken by level 2)
 Author request: types for the files that a program loads and parses in memory: HTML, XML, HTMLT (HTML template), CSV, DAT (fixed width data) and JSON. The load is buffered and works in loops, a kind of traversal: row by row, or element by element (object by object) for JSON. All of them are derived with `<:` and defined mostly in Eve, at a later time. A first proposal is in `spec/semantics/data-types.md` and in the section "Data File Types" of `types.html`. Open points:
 - (a) The names: `Json`, `Csv`, `Dat`, `Xml`, `Html`, `Htmlt`. `Html` is also the safe page type of the templates (Q-027, level 7): one type, or `Html` for the parsed file and another name for the safe page?
@@ -132,3 +134,69 @@ The draft features of the section "Data language" above and its two open questio
 **Answer:** 
 (k) **Compression** (feature 10). A gzip reader in Version 0.4 (`.csv.gz` files are common input of ETL), the rest (zip, writers) in Version 0.5. 
 **Answer:** 
+
+## Q-045 Eve macro (hybrid script): aspects and a driver in one file (2026-10-10)
+Author proposal (2026-10-10): a **hybrid script** (the author's words: "macro hybrid script") is a self-contained script that holds its aspects and its driver in one file, so a small parallel job needs no project folder and no `asp/`. Today a file holds one declaration (driver, aspect or module) and a `#!` free script holds no driver and no aspect (`spec/syntax/declarations.md`, D-014, D-091). The example of the author, written with the rules of the spec (2-space indentation, `**` comments inside a body, outputs declared before the group):
+
+```eve
+#!/usr/bin/env eve
+# Pipeline: two workers in parallel, one file
+
+concurrent aspect job_worker_1 is
+  process main(@res: Result) is
+    ** internal sequential job logic
+  return;
+end job_worker_1;
+
+concurrent aspect job_worker_2 is
+  process main(@res: Result) is
+    ** internal sequential job logic
+  return;
+end job_worker_2;
+
+# Driver executing parallel tasks
+driver pipeline_driver is
+  process main is
+    new r1: Result;
+    new r2: Result;
+    p_exec: parallel
+    do
+      start job_worker_1(@r1);
+      start job_worker_2(@r2);
+    done p_exec;
+  return;
+end pipeline_driver;
+```
+
+Three things of the original example do not compile under the current rules: (1) `# Internal sequential job logic` is indented, and `#` is a comment only at indentation 0, elsewhere a lexical error (Q-016d, `spec/lexical/lexical.md`), so a body uses `**`; (2) `r1` and `r2` were declared between `parallel` and `do`, so they are dropped at `done` and the results are lost (D-140): an output is declared before the group; (3) `Result` is declared nowhere (point d).
+
+**Proposed description.**
+- **Kind.** A hybrid script is a file of several top-level declarations: any number of aspects (exclusive or concurrent) and exactly one driver. It runs like a driver: `eve pipeline.eve` (or `./pipeline.eve` with the shebang) runs `process main` of its driver, which takes the command-line arguments.
+- **Self-contained.** Its aspects are private to the file: no other driver can `apply` or `start` them, and the file can not be imported or export anything (as a free script, D-126). It may import modules (`from lib use …`) inside its declarations, as a driver does.
+- **Name lookup.** An aspect named in `apply` or `start` is searched first in the file, then in `asp/` and the project root (`spec/semantics/aspects.md`). An aspect of the file with the name of an aspect file of the project is a compile error, so the reader never wonders which one runs.
+- **Rules unchanged.** Each aspect keeps its own scope and state (D-066): it sees no variable of the driver nor of another aspect of the file. `start` still starts only a concurrent aspect, checked for thread safety (D-090, D-130, D-140); nesting, data rules, output order and errors of the groups are those of `multitasking.md`.
+- **Compile errors (exit 65).** Two drivers in one file; aspects without a driver; a statement outside a declaration; a name used twice at the top level.
+- **Level.** With `apply` only, a hybrid script is level 2; with `parallel` and `start`, level 4. Tests: one in `test/level2` (an exclusive aspect applied), one in `test/level4` (this example), and the compile errors above. Feature F-STR-09 in `version_map.md`.
+
+(a) Is "hybrid script" the name, or is "macro" part of it (`macro script`)? Does a keyword mark the file, or is it known from its content (several top-level declarations, one of them a driver)? Proposed: no keyword, the content decides; the name in the documentation is "hybrid script". 
+**Answer:** Use the term **Eve macro**; the description says that an Eve macro is a hybrid script. Proposal accepted: no keyword, the content decides (2026-10-10).
+(b) Line 1: is the shebang `#!` required, allowed or forbidden? Today `#!` means a free script with no driver. Proposed: allowed and optional; a `#!` file with a top-level `driver` is a hybrid script, without one it stays a free script; a file without `#!` may also be hybrid (line 1 a `#` title). 
+**Answer:** Proposal accepted (2026-10-10).
+(c) Order of the declarations: must the driver come last, after the aspects it uses? Proposed: any order (one scope per file, D-041); the style guide puts the aspects first and the driver last, as in the example. 
+**Answer:** Proposal accepted (2026-10-10).
+(d) Shared types and helpers: `Result` must be known to the aspects and to the driver. May a hybrid script hold top-level classes, functions and constants (`set`) shared by all its declarations? Proposed: yes, they form an implicit private module of the file: classes, functions, procedures and constants, no variables (`new`); a concurrent aspect may call them under the thread-safety rules of a managed module (D-089, D-132). 
+**Answer:** Proposal accepted, with a change: declarations outside the aspects and the driver are shared, variables included. A concurrent aspect may use only atomic variables and thread-safe variables, functions and procedures (2026-10-10).
+(e) Version: proposed Version 0.4 (level 5 work), because the VM loads aspects from files today (`project.zig`) and the change is small: the parser accepts several declarations, the project table registers the aspects of the file first. 
+**Answer:** Proposal accepted: Version 0.4 (2026-10-10).
+
+## D-152 Eve macro: a hybrid script with shared declarations, aspects and one driver (2026-10-10)
+Author answers to Q-045. Version 0.4, feature F-STR-09.
+- **Name.** An **Eve macro** is a hybrid script: one self-contained file that holds shared declarations, any number of aspects (exclusive or concurrent) and exactly one driver. No keyword marks it: a file with a top-level `driver` and other top-level declarations is a macro. It runs like a driver: `eve pipeline.eve` runs `process main` of its driver, which takes the command-line arguments.
+- **Line 1.** The shebang `#!` is optional. A `#!` file with a top-level `driver` is a macro; without one it stays a free script (D-014, D-091). A macro may also start with a `#` title.
+- **Order.** The top-level declarations come in any order (one scope per file, D-041). Style: shared declarations first, then the aspects, the driver last.
+- **Shared declarations.** Every declaration outside the aspects and the driver (`class`, `function`, `procedure`, `set` constants and `new` variables) is shared by all the declarations of the file. An exclusive aspect and the driver use them freely. A **concurrent aspect** uses only the thread-safe ones: atomic variables (`Atomic(:T)`, D-132), thread-safe variables, and functions and procedures that the compiler proves thread safe (D-089, D-129, D-137). Using any other shared name from a concurrent aspect is a compile error that names it, as for a member of a module (d01, d03).
+- **Self-contained.** The aspects of a macro are private to it: no other driver can `apply` or `start` them. A macro can not be imported and exports nothing (D-126). Its declarations may import modules (`from lib use …`).
+- **Name lookup.** An aspect named in `apply` or `start` is searched first in the file, then in `asp/` and the project root. An aspect of the file with the name of an aspect file of the project is a compile error.
+- **Rules unchanged.** Each aspect keeps its own scope and state (D-066) and sees no variable of the driver or of another aspect; the shared declarations are the only common names. `start` starts only a concurrent aspect; the rules of the parallel groups are those of `multitasking.md` (D-140).
+- **Compile errors (exit 65).** Two drivers in one file; aspects or shared declarations without a driver (in a file without `#!`); a statement outside a declaration; a name declared twice at the top level; a concurrent aspect that uses a shared name that is not thread safe.
+- **Tests.** One macro with an exclusive aspect applied (level 2 rules), the example of Q-045 with `Result` declared at the top (level 4 rules), a concurrent aspect that adds to a shared `Atomic(:Integer)`, and the compile errors above: `test/level5`, e16 to e22 (written first, 2026-10-10); e04 became a macro, so level 5 has no project folder left. Specification: `spec/syntax/declarations.md#eve-macro-level-5`.

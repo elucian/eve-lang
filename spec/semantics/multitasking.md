@@ -1,6 +1,6 @@
 # Multitasking: parallel groups, channels and tasks
 
-Status: **0.1-draft**, level 4 (version 0.3). Sources: D-047, D-048, D-051, D-066, D-067, D-081, D-089, D-090, D-104, D-129, D-130, D-132, D-140 to D-145. Tests: `test/level4` (d01 to d35). Grammar: [`../syntax/grammar.md#parallel-processing-level-4`](../syntax/grammar.md#parallel-processing-level-4). Thread safety of modules: [`modules.md#managed-and-direct-modules`](modules.md#managed-and-direct-modules).
+Status: **0.1-draft**, level 4 (version 0.3). Sources: D-047, D-048, D-051, D-066, D-067, D-081, D-089, D-090, D-104, D-129, D-130, D-132, D-140 to D-145, D-152 (Eve macro). Tests: `test/level4` (d01 to d35). Grammar: [`../syntax/grammar.md#parallel-processing-level-4`](../syntax/grammar.md#parallel-processing-level-4). Thread safety of modules: [`modules.md#managed-and-direct-modules`](modules.md#managed-and-direct-modules).
 
 Eve has two ways to do several things at once. A **parallel group** starts aspects on several cores. A **job with tasks** runs asynchronous subprograms on one core, taking turns while they wait. **Channels** connect tasks that run at the same time. The tutorial calls the first **concurrency** (`concurrency.html`) and the second **multitasking** (`multitasking.html`), two pages of phase 5 (D-146). Generators and the module `task` are level 5 (version 0.4).
 
@@ -42,6 +42,8 @@ A violation is a compile error (exit 65). `$max_parallel` (default 8) is not a c
 ### What can be started
 
 `start` starts only a `concurrent aspect`. An aspect without a kind word is `exclusive` (D-130), and starting it is a compile error that names the aspect. A concurrent aspect is checked at its declaration: it fails to compile when it can reach a function or procedure that is not thread safe (D-089, D-129, D-137).
+
+In an **Eve macro** (level 5, D-152) the aspects and the driver share the top-level declarations of the file. A concurrent aspect uses only the thread-safe ones: constants, classes, atomic variables, channels, and subprograms that the compiler proves safe (`../syntax/declarations.md#eve-macro-level-5`; tests e17 to e20).
 
 ### Data rules
 
@@ -164,6 +166,7 @@ Each is a compile error (exit 65). The message holds the text of the second colu
 | `spawn` of an async function | `{name} is a function: use await` | d18 |
 | a plain call of an async subprogram | `{name} is async: use spawn or await` | d19 |
 | a concurrent aspect that reaches an unsafe member | `{member}, which is not thread safe` | d01, d03 |
+| a concurrent aspect of a macro that uses an unsafe shared name | `uses '{name}', which is not thread safe`, `calls '{name}', which is not thread safe` | e19, e20 |
 
 ## Durations
 

@@ -1,0 +1,40 @@
+# concurrent aspects of a macro add to a shared atomic variable: the total is exact (D-152, D-132)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+new count = 0 :Atomic(:Integer);
+
+procedure add(n: Integer) is
+  let count += n;
+return;
+
+function total!() => (@result: Integer) is
+  let result := count;
+return;
+
+# adder: calls a thread-safe shared procedure
+concurrent aspect adder is
+  process main(times: Integer) is
+    for i in (1..times) do
+      add(1);
+    done;
+  return;
+end adder;
+
+driver e18_macro_atomic is
+  process main is
+    parallel
+    do
+      for i in (1..8) do
+        start adder(1000);
+      done;
+    done;
+    print "total: {total!()}";
+  return;
+end e18_macro_atomic;
+/*@expect
+{
+  "stdout": [
+    "total: 8000"
+  ]
+}
+*/

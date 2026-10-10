@@ -9,6 +9,7 @@ A script is a file. Its first line decides its kind (lexical.md, File header):
 - `#!…` is a **free script**: sequential statements, no `driver`, no `process`, no `return`, no subprograms, no jobs. It ends at the end of the file. A free script has one scope (D-014, D-091).
 - A **driver** is `driver name is` … `end name;`. It can be run. A driver has one process, `main`, the entry point (D-037).
 - An **aspect** is `[exclusive] aspect name is` or `concurrent aspect name is` … `end name;` (D-090); without a kind word it is exclusive (D-130). It has one process, `main`, and no public member; a driver runs it with `apply` (level 2, `../semantics/aspects.md`). A **module** is a script of level 3; it uses the same header and closer.
+- An **Eve macro** is a hybrid script of level 5: shared declarations, aspects and one driver in one file (D-152, [below](#eve-macro-level-5)).
 
 A driver, aspect or module has **one scope** (D-041). The regions `import`, `alias`, `constant`, `global` and `globals` do not exist: everything is declared directly, in any order, indented by 2 spaces. `end name;` repeats the name of the header and is at column 1.
 
@@ -183,6 +184,59 @@ print half(8), half(9.0);               ** 4,4.5
 - **Methods with and without a result.** A method without a result and a method with a result may share a name and the same parameters: they are different methods. A call as a statement selects the method without a result, `c.step();`; a call in an expression selects the method with a result, `print c.step();` (D-149). An extension method may overload a method of the class with another signature; one with the same signature is a compile error, as it would replace it (D-150).
 - **Overloading and generics.** A generic subprogram and plain ones may share a name; a plain one whose parameters fit the arguments exactly wins over the generic one (D-150).
 - **Not overloaded:** processes (an aspect has one), constructors, lambdas and function variables (one value per name) (D-150).
+
+## Eve macro (level 5)
+
+Level 5 (version 0.4). Source: D-152. Grammar: `grammar.md#eve-macro-level-5`. Tests: e04, e16 to e22. An **Eve macro** is a hybrid script: one self-contained file that holds **shared declarations**, any number of **aspects** and exactly **one driver**. A small job, also a parallel one, needs no project folder and no `asp/`.
+
+```eve
+#!/usr/bin/env eve
+# pipeline: two workers in parallel, one file
+
+class Result = {name :String, count :Integer} <: Object is
+  constructor(name = "" :String, count = 0 :Integer) => (@self) is
+    let self := Object();
+    let self.name := name;
+    let self.count := count;
+  return;
+end Result;
+
+concurrent aspect job_worker_1 is
+  process main(@res: Result) is
+    let res := Result("worker 1", 10);
+  return;
+end job_worker_1;
+
+concurrent aspect job_worker_2 is
+  process main(@res: Result) is
+    let res := Result("worker 2", 20);
+  return;
+end job_worker_2;
+
+# driver executing parallel tasks
+driver pipeline_driver is
+  process main is
+    new r1 := Result();
+    new r2 := Result();
+    p_exec: parallel
+    do
+      start job_worker_1(@r1);
+      start job_worker_2(@r2);
+    done p_exec;
+    print "{r1.name}: {r1.count}, {r2.name}: {r2.count}";
+  return;
+end pipeline_driver;
+```
+
+- **Kind.** No keyword marks a macro: a file with a top-level `driver` and at least one other top-level declaration is a macro (D-152). A file with a driver alone is a driver, a file with an aspect alone is an aspect, as before. It runs like a driver: `eve pipeline.eve` (or `./pipeline.eve`) runs `process main` of its driver, which takes the command-line arguments.
+- **Line 1.** The shebang `#!` is optional. A `#!` file with a top-level `driver` is a macro; a `#!` file without one stays a free script. A macro may also start with a `#` title (`../lexical/lexical.md`, File header).
+- **Top level.** The top-level declarations are written at column 1, in any order (one scope per file, D-041): shared declarations (`class`, `function`, `procedure`, `method`, `set`, `new`, `def`, `from … use`), aspects (`exclusive` or `concurrent`) and the driver. Style: shared declarations first, then the aspects, the driver last. A statement outside a declaration (`print`, `let`, `if`, …) is a compile error: `a statement outside a declaration in a macro`.
+- **Shared declarations.** Every top-level declaration that is not an aspect or the driver is shared by all the declarations of the file. The driver and the exclusive aspects use them freely, also the variables: an exclusive aspect runs alone, so it changes a shared variable safely.
+- **Concurrent aspects.** A concurrent aspect uses only the thread-safe shared names: constants (`set`), classes, atomic variables (`Atomic(:T)`, `../library/atomic.md`, D-132) and channels, and functions, procedures and methods that the compiler proves thread safe, as for a direct module (D-089, D-129, D-137). Using another shared variable, or calling a subprogram that reaches one, is a compile error that names it: `the concurrent aspect 'adder' uses 'count', which is not thread safe`, `… calls 'bump', which is not thread safe`. A shared function that reads an atomic variable is stochastic and is named with `!` (D-089), as in a managed module.
+- **Aspects.** Each aspect keeps its own scope and state (D-066): it sees the shared declarations and no variable of the driver or of another aspect. `apply` and `start` follow the rules of `../semantics/aspects.md` and `../semantics/multitasking.md`.
+- **Name lookup.** An aspect named in `apply` or `start` is searched first among the aspects of the macro, then in `asp/` and the project root. An aspect of the macro with the name of an aspect file of the project is a compile error: `aspect worker is declared in the macro and in asp/worker.eve`.
+- **Self-contained.** The aspects of a macro are private to it: no other driver can `apply` or `start` them. A macro can not be imported and exports nothing (D-126); `export` in a macro is a compile error.
+- **Compile errors (exit 65).** `a macro has only one driver` (two drivers, e21); `a statement outside a declaration in a macro` (e22); `a macro needs a driver` (aspects or shared declarations without a driver, in a file without `#!`); `'x' is already declared in this scope` (a top-level name declared twice); the thread-safety errors above (e19, e20).
 
 ## Imports and modules (level 3)
 

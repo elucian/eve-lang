@@ -42,6 +42,7 @@ argument    = [ name , ":" ] , [ "@" ] , expression
 
 `name` is the file name without the extension. The path may carry a folder: `apply folder/name()`. The search order is:
 
+0. in an Eve macro, the aspects declared in the file itself (level 5, D-152, `../syntax/declarations.md#eve-macro-level-5`);
 1. the folder written in the call, relative to the folder of the driver;
 2. the aspect folder `asp/` of the project (`$EVE_ASP`, which the driver may set);
 3. the project root (the folder of the driver).

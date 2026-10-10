@@ -1,0 +1,35 @@
+# an Eve macro: shared declarations, an exclusive aspect and the driver in one file (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+set step = 5 :Integer;
+new total := 0;
+
+function twice(x: Integer) => (@result: Integer) is
+  let result := x * 2;
+return;
+
+# add_step: an exclusive aspect runs alone, so it changes a shared variable
+exclusive aspect add_step is
+  process main(times: Integer) is
+    for i in (1..times) do
+      let total += step;
+    done;
+  return;
+end add_step;
+
+driver e16_macro_apply is
+  process main is
+    apply add_step(3);
+    apply add_step(1);
+    print "total: {total}";
+    print "twice: {twice(total)}";
+  return;
+end e16_macro_apply;
+/*@expect
+{
+  "stdout": [
+    "total: 20",
+    "twice: 40"
+  ]
+}
+*/
