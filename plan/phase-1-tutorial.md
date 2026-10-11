@@ -60,7 +60,7 @@ generic script: manifest (2 × —, ☰), syntax (∅, ☰), types (×, 2⁶⁴,
 
 ### T1.10 Content review, one page per session `[~]`
 Order: syntax, types, topology, control, functions, classes, collections, processing,
-concurrency, library, command, databases, algorithms, manifest, option.
+concurrency, library, command, databases, manifest, option.
 
 Per page: review → issues in `../issues/<page>.md` (the author answers by editing the file) → answers become decisions → fix the page → add the answered rules to the spec.
 
@@ -79,7 +79,6 @@ Per page: review → issues in `../issues/<page>.md` (the author answers by edit
 | library | 2026-09-28 | 6 asked | [ ] | [ ] | [issues/library.md](../issues/library.md) |
 | command | 2026-09-28 | 6 asked | [ ] | [ ] | [issues/command.md](../issues/command.md) |
 | databases | 2026-09-28 | 4 asked | [ ] | [ ] | [issues/databases.md](../issues/databases.md) |
-| algorithms | 2026-09-28 | 2 asked | [ ] | [ ] | [issues/algorithms.md](../issues/algorithms.md) |
 | manifest | 2026-09-28 | 4 asked | [ ] | [ ] | [issues/manifest.md](../issues/manifest.md) |
 | option | 2026-09-28 | 3 asked | [ ] | [ ] | [issues/option.md](../issues/option.md) |
 | compiler | 2026-09-28 | 2 asked | [ ] | [ ] | [issues/compiler.md](../issues/compiler.md) |

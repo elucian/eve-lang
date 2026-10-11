@@ -17,9 +17,9 @@ COL-05 (capture a removed element with `let` inside a statement), COL-16 (interp
 
 CMD-02 to CMD-06 (exit status, `cd`, `export`, working-folder variable, `File` and `Folder`; CMD-05 is the same question as in [spec/semantics/variables.md](../spec/semantics/variables.md)), OPT-01 to OPT-03 (symbol table, other symbols, where the page belongs in the index), CMP-02 and CMP-F3 (test runner and the out-of-date conformance table).
 
-## 4. Algorithms, types, multitasking (6)
+## 4. Types, multitasking (4)
 
-ALG-01 (purpose of the page), ALG-02 (native types in signatures, result default value), TYP-19 (review the Date proposal), CON-06, CON-11, CON-12 (not in 0.1, D-050).
+TYP-19 (review the Date proposal), CON-06, CON-11, CON-12 (not in 0.1, D-050).
 
 ## 5. Databases (4)
 

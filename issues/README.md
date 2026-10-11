@@ -51,7 +51,6 @@ In index order (index.html first). Open items on 2026-10-06: 28 open questions, 
 | library.html | [library.md](library.md) | 0 (LIB-01, LIB-02: answered, library and spec pending) | 0 |
 | command.html | [command.md](command.md) | 5 | 0 |
 | databases.html | [databases.md](databases.md) | 4 (ask again after the rewrite, F4) | 0 |
-| algorithms.html | [algorithms.md](algorithms.md) | 2 | 0 |
 | option.html | [option.md](option.md) | 3 | 0 |
 | compiler.html | [compiler.md](compiler.md) | 1 | 1 |
 | template.html | [template.md](template.md) | 0 | 0 |
