@@ -82,7 +82,9 @@ do
 done c1;
 ```
 
-A job passes at `done` or `stop` and fails when an error is raised in it, also by a function or a procedure it calls. The process keeps the state in the map `jobs["name"]`: `.status` (`"none"` before it ran, `"pass"`, `"fail"`), `.error`, `.line`. The recover region reads `$error.job`, the label of the failed job. Nothing is reported automatically.
+A job passes at `done` or `stop` and fails when an error is raised in it, also by a function or a procedure it calls. The process keeps the state in the map `jobs["name"]`: `.status` (`"none"` before it ran, `"pass"`, `"fail"`, and at level 5 `"rolled back"`), `.error`, `.line`. The recover region reads `$error.job`, the label of the failed job. Nothing is reported automatically.
+
+At level 5 a job is also a **database transaction** (`../library/database.md#transactions`): the connections it uses are enlisted, flushed and committed at `done` or `stop`, and rolled back when the job fails. Two statements, allowed only in the `do` region of a job: `commit;` writes the pending changes, commits and begins a new transaction (the job goes on), and `rollback;` undoes the transaction and ends the job with the status `"rolled back"`, the process going on after `done`. Both take the conditional suffix, `rollback if dry_run;`. In the declarations of a job, `set $isolation = "serializable";`, `set $lock_timeout = 10s;` and `set $read_only = True;` change the transaction of that job.
 
 ## Scope summary
 

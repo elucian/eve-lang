@@ -1,0 +1,28 @@
+# a job writes to one connection only: writing to two is a compile error (D-158)
+** spec: library/database.md#transactions
+driver e45_job_two_writes is
+  class A = {id: Integer} <: Record;
+  class B = {id: Integer} <: Record;
+
+  table aa: A in "one";
+  table bb: B in "two";
+
+  process main is
+    j: job
+    do
+      new a := {id: 1} :A;
+      new b := {id: 1} :B;
+      let aa <+ a;
+      let bb <+ b;
+    done j;
+  return;
+end e45_job_two_writes;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "one connection per job"
+  ]
+}
+*/

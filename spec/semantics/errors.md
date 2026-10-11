@@ -19,9 +19,12 @@ An error raised anywhere in a process (also inside a job or a called function or
 | Statement | Effect |
 |---|---|
 | `retry;` | run the failed job again, from its declarations |
+| `retry after <duration>;` | wait, then run the failed job again (level 5): `retry after 2s if $error.transient and $error.attempt < 5;` |
 | `resume;` | the error is handled, the job stays failed, the process continues after its `done` |
 | `abort;` | end the process, run `finalize`, pass the error to the caller |
 | end of `recover` | the error is handled and the process ends normally; `finalize` runs |
+
+`$error.attempt` (level 5) is the number of the run of the failed job: 1 for the first run, 2 after one retry. `$error.transient` is `True` for the errors that a new try can cure (a lost connection, a deadlock, a time-out). **Fatal errors:** `retry` and `resume` are refused for a `MappingError` and for a `CommitError`: the process aborts with exit code 4 (`../library/database.md#errors`). When a job fails, the database layer has rolled back its transaction before `recover` runs; the records in memory keep their values and are detached (`../library/database.md#transactions`). `$error.failed` (a `BatchError`) is the collection of the failing records `{key, reason}` of a batch. A job that ends by `rollback;` is not an error: `recover` does not run.
 
 `retry` and `resume` need a failed job: an error outside a job can only be aborted or handled by reaching the end of `recover`. An error raised inside `recover` aborts with that error. A `retry` that always fails is a user error: the compiler does not limit retries.
 
@@ -76,6 +79,15 @@ The constants are declared by the Exception module of the standard library. The 
 | `$err_recursion` | 44 | recursion too deep |
 | `$err_parallel` | 45 | `{n} of {m} tasks failed` (level 4: a parallel group or a job with tasks; the items are in `$error.errors`, `multitasking.md#errors`) |
 | `$err_channel` | 46 | `Channel {name} is closed` (level 4, D-141) |
+| `$err_database` | 50 | `Database error {sqlstate} on {table}: {reason}` (level 5, `DatabaseError`) |
+| `$err_connection` | 51 | `Cannot reach {host}: {reason}` (`ConnectionError`, transient) |
+| `$err_constraint` | 52 | `Constraint {constraint} violated by {key}` (`ConstraintError`) |
+| `$err_conflict` | 53 | `Row {key} was changed by someone else (version {version})` (`ConflictError`) |
+| `$err_mapping` | 54 | `Mapping of {table} does not match the database: {differences}` (`MappingError`, fatal, exit code 4) |
+| `$err_commit` | 55 | `Cannot tell if transaction {transaction} was committed` (`CommitError`, fatal) |
+| `$err_format` | 56 | `Bad {format} at line {line}, column {column}: {reason}` (`FormatError`, data files) |
+| `$err_http` | 57 | `HTTP {status} from {url}` (`HttpError`) |
+| `$err_batch` | 58 | `{count} records of batch {batch} failed` (`BatchError`; the records are in `$error.failed`) |
 
 Warnings do not stop the process; `.warn(code, message)` reports them.
 

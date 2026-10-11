@@ -27,57 +27,82 @@ Eve has no single reference implementation. Any compiler is valid if it implemen
 
 ## Q-001 Fate of `docs/` (answered 2026-09-28 → D-004)
 `docs/` holds an older Markdown documentation skeleton: `index.md` plus 20 empty stub pages (core, db, net, os, std) created by `doc.sh`. Options:
+
 (a) delete `docs/` and `doc.sh`, since `spec/` replaces them;
+
 (b) keep `docs/` for user-level guides (database, network, OS) and link to `spec/`.
+
 Recommended: (a) for the empty stubs, and move any real content into `spec/`.
+
 Blocks: T1.2 cleanup of eve-lang, S2.1.
+
 Answer: neither; rename to `manual/` as the compiler manual (D-004).
+
 **todo** Remove old doc folder, we have replace it with /manual folder
+
 **Done 2026-10-06 (D-096):** `docs/` no longer exists; the empty `doc/` folder was removed.
 
 ## Q-002 Canonical keyword list (answered 2026-10-06 → D-094)
 The tutorial table (`syntax.html#keywords`) has duplicates (`constant`, `method`, `reset`, `add`, `del`, `pop`) and a typo (`labe`). It lacks words the examples use at region level (`driver`, `module`, `type`, `globals`). Which words are reserved in 0.1, and which are contextual (reserved only in some regions)?
+
 Blocks: S2.4.
+
 **todo** Remove unused keywords, replace or add the missing keywords. With description! 
 
 ## Q-003 Stray files in the tutorial folder (answered 2026-10-06 → D-094)
 `tutorial/quiz.txt` (AI chat transcript), `tutorial/output.log` (UTF-16 PowerShell error log) and `tutorial/databases.md` (AI review prompts) are not tutorial pages. Delete them, or move useful parts (quiz questions) into a proper page?
+
 Blocks: T1.2.
+
 **todo** cleanup is required, move useful content in current back-log, plan or issues.
 
 ## Q-004 `global` or `globals` (answered 2026-10-06 → D-094)
 `pattern/declaration.eve` uses both `globals` and `global`. Are they two region keywords with different meanings, or one keyword with a legacy spelling?
+
 Blocks: S3.2.
+
 **todo**
 regions are legacy design. globals and global keywords are not reserved and must be retired.
 
 ## Q-005 Expected-output convention for tests (answered 2026-10-06 → D-094)
 How does a test state its expected result? Options: (a) `expect` statements inside the script (already used in `demo/shared_state.eve`); (b) a sibling `.out` file with the exact stdout;
+
 (c) both: `expect` for logic, `.out` for print formatting.
+
 Recommended: (c).
+
 Blocks: S5.2.
 Status 2026-09-28: `script/runtest.py` implements (c): `expect` failures surface as a non-zero exit code, `<name>.out` holds the stdout, and a per-level `expect.json` holds exit codes and arguments. Confirm, or say what to change.
+
 **answer**
 The expect.json do not scale with many tests we have. A refactory is required. We use comment blocks /*@expect  */ that contain json for expectations. Each different kind of expectations: standard output, standard error, exit code, introspection states, e.t.c.
 
 ## Q-006 Specification license (answered 2026-10-06 → D-061, D-078)
 The eve-lang repo is Apache 2.0. Does the specification use the same license, or a documentation license (for example CC BY 4.0) so other compilers can quote it freely?
+
 Blocks: S2.1.
+
 **answer** Resolved, this question must be retired.
 
 ## Q-007 Which implementation does `manual/` document? (answered 2026-09-28 → D-005)
 The old README says the MD docs are "specific to EVE virtual machine hosted in this repository", but there is no compiler here. What is the implementation's name (the manual uses the placeholder `evec`), in which repository does its code live, and in which language is it written?
+
 Blocks: M7.7; the support file name in M7.3.
+
 **Answer:** Implementation language is Zig, the manual must document features of eve VM, that is a JIT compiler and an interpreter and a server in one single machine. It even has a database and a http server inside.
 
 ## Q-009 Name and repository of the Eve VM (answered 2026-09-28 → D-007)
 What are the VM's name and executable name (the manual uses the placeholder `eve-vm`), and does its Zig code live in this repo (for example `vm/`) or in its own repository?
+
 Blocks: M7.6 (command-line examples), the support file name in M7.3.
+
 **Answer:** source folder `evevm/`, executable `bin/eve.exe`, the official implementation (D-007).
 
 ## Q-010 Exit codes of an Eve process (answered 2026-09-28 → D-010)
 The tutorial lists `exit`, `over` and `panic` as ways to interrupt a program, but gives no exit codes. Does `over N;` end the process with exit code N? Which codes do `exit`, `panic`, a failed `expect` and an unhandled error produce? `test/level1/expect.json` assumes `over 1;` → 1 (a02). The VM stub uses 70 for "not implemented"; the spec could reserve a range for VM failures.
+
 Blocks: S5.2, the exit codes in `expect.json`.
+
 **Answer:** `over` = 0, `over 1` = 1 (abnormal), failed `expect` = 2 (error), failed `assert` = 3 (warning) (D-010).
 
 ## D-009 Test runner and test-driven workflow (2026-09-28)
@@ -202,6 +227,7 @@ Answers FUN-03, FUN-09, FUN-I1, TYP-17, CON-01, CMD-01. Amends D-015 and D-016.
 
 ## Q-012 How does an enclosed function use method state? (answered 2026-09-30 → D-027)
 D-026 makes a function inside a method a closure. Can the enclosed function only read the state of the method, or also change it? A function has no side effects (D-025), so a counter like `generator` in functions.html (`let current += 1`) would have to be a method, or the method changes `current` itself. How is a closure created and returned: `new f := make_counter(0);` where `make_counter` is a method that returns a function? This decides the rewrite of the closures section (FUN-06).
+
 **Answer:** The enclosed function has side effects, so it is a `!` function and may change the state (D-027).
 
 ## D-027 Functions with side effects or randomness end with `!` (2026-09-30)
@@ -409,12 +435,16 @@ Author answers COL-05, COL-16. Replaces the interpolation bullet of D-059 (`#{ex
 
 ## Q-013 Numbers: scientific notation and digit separators (answered 2026-10-06 → D-095)
 The tutorial links "scientific notation" but defines no literal. Proposal: `1.5e3` and `2e-3` are Real literals (`e` or `E`, an optional sign, digits; a literal with an exponent is always Real); `_` may separate digits (`1_000_000`, `0xFF_FF`), never at the start, the end or next to `.`. Accept, change or reject?
+
 Blocks: `lexical/lexical.md` (Integer, Real).
+
 **answer** Partial accept `2e-3`, `1.5e3` are valid and are always by default double float. Underscore _ in numbers is not accepted. We accept string literals in format "1,000,000"z that is how we can represent large numbers this is a nummber because has the "z" or "r" or "d" or whatever data we want.
 
 ## Q-014 Strings: `&name;`, text literal (answered 2026-10-06 → D-095)
 (a) Which forms of `&…;` are valid: only HTML names (`&alpha;`), or also `&#955;` and `&#x3BB;`? How do you write a literal `&alpha;`: `\&alpha;`, or `&amp;alpha;`? (b) Is `"""…"""` of type `String` or `Text` (COL-15: Text is mutable)? (c) Proposal for the line breaks of `"""`: the break after the opening quotes and the break before the closing quotes are not part of the text.
+
 Blocks: `lexical/lexical.md` (String, Text literal). 
+
 **answer**
 a) HTML names are valid also &# codes are valid. We write `&alpha;` the & character itself is "\&" or "&amp;" both forms are supported.
 b) """...""" is type Text and is similar to <text>, <xml> <html> <data> <code> all these tags automaticly create a Text type literal.
@@ -422,13 +452,18 @@ c) I agree, the first breack and the last breack are removed if present by the c
 
 ## Q-015 Interpolation: end of the expression (answered 2026-10-06 → D-095)
 In `\#{expr:format}` the colon is also the pair operator. Proposal: the expression ends at the first `:` or `}` outside brackets and nested literals; a pair is written in parentheses. Accept?
+
 Blocks: `lexical/lexical.md` (Interpolation).
+
 **answer** Another proposal was to replace : with & and I accepted that proposal. `\#{expr % format}`.
 
 ## Q-016 Small lexical rules (answered 2026-10-06 → D-095)
 Proposals, each yes or no: (a) a UTF-8 BOM at the start of a file is ignored; (b) `name!~x` reads as the suffix `!` then `~`, so the operator `!~` needs a space before it; (c) a trailing comma in a list or collection literal is an error; (d) a `#` that is not in column 1 is a lexical error (it was also "last index" and "digit in a pattern" in the old table, both removed); (e) identifiers are ASCII only.
+
 Blocks: `lexical/lexical.md`.
+
 **answer** operator !~ was removed from list of operators. # uses zero indentation and is not an error. Indentation position in EVE is significant. So ## is also allowed. # is a title comment #! is first, in a script (before any comments). 
+
 (c) a trialing comma in alist is not an error (a,b,c,) is a good list (a,) is a good list (a,b,c) is also a good list. Identifiers are ASCII only that is true.
 
 ## D-061 Licenses: BUSL-1.1 for code, CC BY 4.0 for the specification (2026-10-02)
@@ -445,32 +480,53 @@ Author request. `TRADEMARK.md` at the repository root: "EVE", the logo and the b
 
 ## Q-018 Regular expressions and the backslash (answered 2026-10-06 → D-097)
 D-019 says any `\` sequence that is not an escape is a lexical error, and D-060 makes `\s{` an interpolation. A pattern such as `"/\sis\s/"` (regex.html of the old tutorial, `\d`, `\w`) would then be an error. Options: (a) a pattern writes the backslash twice (`"/\sis\s/"`); (b) a string that starts with `/` is a regex literal and keeps its backslashes (no escapes, no interpolation);
+
 **answer** this sounds good.
+
 (c) a separate raw form. Recommended: (b), with `\"` still allowed for the quote. The tests a28 use patterns without a backslash until this is decided.
+
 Blocks: `lexical/lexical.md` (Regular expression), `test/level1/a28_regex.eve`.
 
 ## Q-019 Assumptions of the level 1 tests a04 to a37 (answered 2026-10-06 → D-096)
 Each one is a place where the tests state a rule that no decision gives yet; change the test or the spec when you answer:
+
 (a) `1 / 0` raises an error (the demo `recover_demo.eve` assumes it; IEEE would give infinity) (a37);
+
 **answer** correct, we do not handle infinity, so this is ont possible. Rational number 1\0 is also not supported.
+
 (b) printing a DataSet is `{1,2,3}` without spaces, a list `(1,2,3)`, `print (1, 2, 3)` prints `1,2,3` (a05, a20);
+
 **answer** yes print can have a "sep" parameter but this works only with multiple arguments, not for lists.
+
 (c) the formats of `\#{}`, `\s{}`, `\b{}` of D-060 (a11);
+
 **answer** `\#{}` will be replaced with `\n{}` for number, other will be as specified.
+
 (d) `a <+ b` as an expression returns a new list and `x <- lst` removes the first element equal to `x` (a17);
 
 **answer** this is a mistake. let x <- lst, remove first element and create/assign x while let -> y remove last element of list and create/update y. To remove first element without capture we use _ <- or -> _ for last element. Removing first element = x we do not cover yet.
 Fix the mistake.
+
 **answer** the expression a <+ b, it depends what is a and if used with let or with new. Normal with let, but if user by mistake used new a <+ b; will trigger an error if a exist and will create a new list if a do not exist and append b into it.
+
 (e) `m[5]` is the absolute row-major index of a matrix (D-058) and `g[1, *] := 5` assigns a row (a19; the test said `g[1][*]`, which D-058 gives another meaning: changed in D-063);
+
 **answer** Use logic. How we can get all elements from a row? We specify [1] the row and [*] all the columns on that row, and is equivalent to g[1, *]. If other interpretation is possible clarify.
+
 (f) `let v := [...]; let view := v[1..2];` is a view (D-049) (a18);
+
 **answer** `let v := [...];` is a valid design pattern to create a dynamic array. new view := v[min..max]; Is a new variable tha hold a view (slice) of several elements in the array. new c :: v[min..max] create a clone of the slice (deep copy). So this is just a confirmation.    
+
 (g) a text literal drops the line break after the opening quotes and before the closing ones (a27, Q-014);
+
 **answer** confirmed
+
 (h) `for (k: v) in map` visits the keys in order (a21); `p.z := 7` adds an attribute to an Object (a22);
+
 **no longer true** new self.z := 7; that will add a new attribute to the object. You can't add attribute outside of a method or constructor. That would breack the encapsulation rules.
+
 (i) a function parameter after a defaulted one is named at the call: `greet("Eve", greeting: "Hi")` (a24).
+
 **answer** confirm. We ise pair-up operator ":" to call optional parameters by name. when function/method use only optional parameters, calling by position is possible, but it could mess-up the code runtime, so refactory is preffered method when signature of functions change. 
 
 ## D-063 First execution of level 1: what running the tests taught (2026-10-02)
@@ -676,11 +732,15 @@ Author decision: the phase has the pages Functions, Generators, Closures, Expres
 
 ## Q-025 Anonymous functions, functions inside functions, asynchronous functions (answered 2026-10-06 → D-096, follow-up Q-033)
 (a) Is `(lambda)(arguments)` the form of an anonymous self-calling function? May a lambda call itself, and with which word? 
+
 **answer** no, the function that is anonymous can't call itself recoursively. ()(); is correct call of anonymous lambda function. This is why we can't have two sets of parameters for optional parameters and we must use parameter by name instead.
+
 (b) The closure example uses an old body form (`Function() => (@result: Integer):` and two `return;`): what is the current form of a function made inside a function? 
+
 **answer** this is what we need to establish. we invent things here. a function that create other functions is a higher order function formed method factory. So the function created can be a deterministic lambda expression, but usually is a closure. The closure use same syntax as a regular function, it ends with return; if is the last in the parent functions we end up with two returns, one aligned with parent function keyword one with child function keyword (two spaces). This is why in Eve spaces are mandatory. To improve readability and avoid having two returns on the same row. (though this is possible, is not a good practice).
 
 (c) Keep Eve without `async` and `await`, or add asynchronous functions: (1) none, as today; (2) `start` of a function returns a future-like `Result(:T)` read with `.get()`; (3) `async function`, callable only with `start` in a group.
+
 **Answer:**
 We design asynchronous functions. We can start asynchronous functions in a driver or in an aspect. Asynchronous functions are not executed in parallel blocks, that would span them over many cores. Asynchronous functions work on the same core. one that is lauched do some work and release the core allow the processor to lauch another function and then wait for all to finish. We use job without "parallel" so a simple job can start asynchronous functions using "start" keyword, but these kind of functions do not return a result. They are result-less and rellay on in/out @params. 
 
@@ -712,26 +772,37 @@ Review of this file by the model, at the author's request: every question checke
   **answer** yes correct
 
   (c) `let 'z' <- m;` and `let m -> 'x';` remove by value, with a rune literal as the value (the tutorial has `let 'z' <- lst;`); 
+
 **answer** replace this feature with a function. collection.delete("x") instead; That will remove an element by value if collection has values or by key. when collection has key value pairs. We do not provide a function to delete by value into DataMap yet.
+
 (d) `new q, r := divmod(17, 5);` takes the several results of a function; 
+
 **answer** correct
 
 (e) `skip outer if …;` continues the outer loop, with the label on a `loop` header (`outer: loop for …`); 
+
 **answer** correct
+
 (f) `pick: match n one … done pick;`; **answer** correct
 
 (g) an unhandled error has code 4 and the message goes to the error output (D-063); 
+
 **answer** correct
 
 (h) a failed `assert` gives the final code 3 (whether it stops the process is open, D-010); 
+
 **answer** is a runtime error, It must stop the process because error code is 3 if unhandled. I agree. Change my tutorial here.
+
 (i) numbers of different numeric types compare by value (`9 / 3 == 3`); 
+
 **answer** possible in Eve. Yes. This is a feature not a bug.
 
 (j) `jobs["j1"].status` is readable after the job; 
+
 **answe** Correct, this is a feature of Eve to organize work in batches and be able to near down the error location my job label. That is a good reason to use jobs in first place. Also parallel blocks are jobs. In the same list of jobs. Now I'm thinking most blocks have labels why not all to be present in jobs[] what if a loop fail and is not in a job, can I see if failed? The only thing is I have not thought so deep yet. We stay with "job" and "paralle" for now.
 
 (k) `new p.z := 7;` adds an attribute to an Object; (l) the interpolation formats of a11 are still the draft of D-060.
+
 **answere** recended, I do not want this feature is not safe. We do not create new properties for objects ourside of objects. We can only access properties of object if they are not private. Private properties of objects and classes are defined inside the class: new self.property is automatic private. In class signature we define public properties Class x:{p:Integer},  p is public. 
 
 - **Specification written** (version 0.1-draft, level 1): `spec/syntax/grammar.md` (EBNF), `declarations.md`, `statements.md`, `expressions.md`; `spec/semantics/control.md`, `errors.md`, `types.md`; `spec/conformance/README.md`; `spec/lexical/keywords.json`; `lexical.md` and the JSON tables brought to D-063 to D-087 (Rune, `nil`, `null`, DataMap, suffixes, `=~` and `+-`, no `!~`, no `.`/`_` prefixes, no `$` index).
@@ -751,6 +822,7 @@ Author answers to Q-013 to Q-017, applied by the model to `spec/lexical/lexical.
 **answer** the +> and <+ are well documented in tutorial, why don't you look? These operators can add at beginning or end of a list using let. Also  "let list -> e;" is the correct syntax to create an element e, and also modify the list. Even if in fact I suppose to use "let list -> new e" this riggor is not required. e can become a new handler of an existing object and may or may not be prior defined. This kind of exceptions are allowed. If user by mistake use let instead of new with native variable is permited. I have decide this right here. 
 
 Confirm D-077.
+
 **answer** You make me change my mind. I will allow let to change one or more variables in an expression, because "let" for me means enable or allow. This is a powerful mechanism to "implicit" create variables when there is need it and use type inference when is neaded to make the program work and keep expressive simple syntax comprehensive. See answer on Q-17
 
 - Not answered yet: Q-018, Q-019, Q-025, Q-026, Q-029, Q-030, Q-031. *(Update: all but Q-018 answered, applied in D-096.)*
@@ -779,20 +851,32 @@ Author answers written in this file (Q-001, Q-002, Q-019, Q-025, Q-026, Q-029 to
 
 ## Q-032 Collection methods that take a callback (answered 2026-10-06 → D-103)
 The answer to Q-026 asks for a design. Proposed in callbacks.html ("Collections and callbacks"): `c.each(action)` (a function without result, returns nothing), `c.map(f)`, `c.filter(test)`, `c.reduce(f, start)` and `c.sort(by)` (`by(a, b)` is True when `a` goes first). All but `each` return a new collection or a value and do not change `c`; on a DataMap the element is a pair and `map`/`filter` keep the keys. Accept, rename or change? Should `sort` sort in place instead (a method that changes the list returns nothing, D-087)? And can a method of an object be passed as a callback (`obj.method`)?
+
 Blocks: callbacks.html, `library/builtins.md`.
+
 **answer** Too many questions here. 
 
 ## Q-033 Readings to confirm after D-096 (2026-10-06; a answered → D-103, b moot → D-102)
 Each point is a model reading applied in D-096; say yes or correct it.
+
 (a) A placeholder may hold an attribute path and a system variable (`\n{p.x}`, `\s{$HOME}`), not only a plain variable.
+
 (b) `\n{` always starts a placeholder; a line feed followed by a brace is written `\n\{`.
+
 (c) Asynchronous functions: is any function without result allowed after `start` in a job, or is it marked in its declaration? When one of them fails, do the others finish before the process goes to `recover`?
+
 (d) A closure becomes the result because it has the name of the result parameter (`@next!` and `function next!()`).
+
 (e) `let` creates a missing name in every `let` statement (`let y := 5;` with no `y`), or only on the right side of a capture (`let lst -> e;`)?
+
 (f) The zero value of an ordinal is its first value.
+
 (g) May the shorthand omit the superclass, `class Color = {Red, Green};`, or is `<: Ordinal` required as for every class?
+
 (h) A failed `assert` has the constant `$err_assert` and the class `AssertError` (it was the warning `$wrn_assert`).
+
 (i) `lst.delete(v)` removes the first element equal to `v` (`-=` removes all of them).
+
 (j) The default `sep` of `print` is `","` and of `write` `""` (D-063); library.html said `" "` for both.
 
 ## D-097 Regex literal: a string that starts with `/` keeps its backslashes (2026-10-06)
@@ -861,14 +945,20 @@ Author decision, after Ada: "functions that do not return a result are procedure
 
 ## Q-002 evidence (2026-10-02, script temp/kw_usage.py)
 The table of syntax.html has 111 words (the text says 113 in D-046). Found in the examples (demo, pattern, test, code blocks of the tutorial): `external` (D-056) is used and is **not** in the table. 30 words of the table are never used: `alter analyze append ascend augment close cursor delete descend discard exit fetch group halt into item limit offset open order package pop rollback select store switch trial view where xor`. Most belong to databases or to ideas that were dropped. Words that are probably library methods now, not keywords: `print`, `read`, `write`, `raise`, `expect`, `add`, `del`, `pop` (D-053, D-055, D-060). Question: which of these are reserved in 0.1 (listed as `reserved`, unused), which are removed, and which are methods?
+
 Blocks: S2.4 (`keywords.json`).
 
 ## Q-034 Procedures: points to confirm (answered 2026-10-06 → D-101)
 Model readings applied in D-100; say yes or correct them.
+
 (a) The type of a procedure is `Procedure`, as `Function` is the type of a function; a procedure signature is `class Reporter = (done: Integer) <: Procedure;`, and a callback without result, such as the action of `each`, is a procedure.
+
 (b) Methods keep one keyword, `method`, with or without a result. Or should a class also tell them apart (as Ada does with its primitive operations)?
+
 (c) A procedure never ends with `!` (`!` marks a result that can differ); `procedure p!()` is a compile error.
+
 (d) A closure without result is a procedure declared inside a function (`procedure report(done: Integer) is` inside `every`).
+
 (e) Can a procedure be a closure returned by another procedure, or only by a function (a procedure has no result to return it in)?
 
 ## D-101 Answers to Q-034: no procedure references, closures are functions (2026-10-06)
@@ -900,7 +990,9 @@ Author answers to Q-032 and Q-033 (a).
 
 ## Q-017 Operators `+>` and `<+`: which side is the list (answered 2026-10-07 → D-095, D-107)
 D-060 gives `q <+ x` (append at the end), `s -> let e;` and `let e <- q;`. For the insert at the start, the old examples write `queue +> "x"` (list on the left) while the arrow suggests the element goes to the start of the list on the right. Proposal: `x +> lst` inserts `x` at the start of `lst`; `lst <+ x` appends at the end; `a <+ b` concatenates (b after a). Confirm the side of the list for `+>`.
+
 Blocks: `operators.json` (`prepend`), `syntax/expressions.md`.
+
 **answer** I do not see the problem. `let list -> e;` is equivalent to "let list -> let e";  or alternative `let list -> new e;` is a new syntax that enable me to extract from a collection last element (left element) but right element is very straight forward "new x <- list" has a secondary effect list is loosing an element. 
 
 ## D-104 Answers to Q-033 (c) to (j): async, spawn, await; let in a loop; ordinals (2026-10-07)
@@ -924,6 +1016,7 @@ Author requests, applied to the tutorial.
 
 ## Q-008 Implementation language and name of the first compiler (answered 2026-09-28 → D-006, D-007)
 Which language is the first Eve compiler written in, what is it called (the manual uses the placeholder `evec` for its support file), and does its code live in this repo or its own? Doesn't block the generator (M7.3); blocks M7.5 architecture details and M7.6.
+
 **Answer:** Zig; the first implementation is a VM, not a compiler (D-006). Name and repository → Q-009.
 
 ## D-054 Exceptions page, `$err_` and `$wrn_` constants (2026-10-02; codes settled 2026-10-07 → D-109)
@@ -934,11 +1027,13 @@ Author request. New tutorial page `exceptions.html` (topic 13, after the standar
 
 ## Q-026 Callbacks and collection operations (answered 2026-10-06 → D-096, D-103)
 Which collection operations take a callback (`map`, `filter`, `sort(by)`, `reduce`, `each`)? Is a named function passed as a value (`each(items, double)`)? Which declaration of a function type stays: `Type BinEx = (p1, p2: Integer): Integer <: Function;` (old) or `Type Reporter = (done: Integer) is Function;` (new)? Can a method of an object be passed as a callback?.
+
 **Answer:**
 Many questions here. Good questions. Make a design, yes some of collections, need callbacks. We need examples of usecases, be connstructive. We use old design <: We consider Function object. The "is" operator is used only to design a body. In this case I see a signature that force a particular parameter list, left to implement later. If a parameter use predefined type of function, that type is checked on compilation. If function signature do not match, is rejected.
 
 ## Q-036 Where does an `@` parameter go? (answered 2026-10-07 → D-106)
 An `@` parameter has no default, so by D-105 it is mandatory and must come before the optional parameters; but D-048 and the older tests put outputs last (`add(p1 = 0, p2 = 1: Integer, @op: Integer)`). Is `@` exempt from the order rule (outputs last, after optionals and varargs), or must every `@` parameter come before the first optional one?
+
 **Answer:** The output parameters are input/output parameters; Eve has no pure output parameters. A mandatory parameter can be after optional ones, but the call must use a named argument for it, they can't be positional parameters: after optional parameters they must be called with names. Confirmed.
 
 ## D-106 Order of parameters: a mandatory parameter after optional ones is named at the call (2026-10-07)

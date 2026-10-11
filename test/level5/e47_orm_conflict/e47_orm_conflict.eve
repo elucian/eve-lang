@@ -1,0 +1,40 @@
+# optimistic locking: an update of a row that changed after it was read is a ConflictError
+** spec: library/database.md#transactions
+driver e47_orm_conflict is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new c := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+    done add;
+
+    change: job
+    do
+      new c := customers.find!(1);
+      new n1 := shop.execute!("update customers set city = ?, version = version + 1 where id = ?", "X", 1);
+      let c.city := "Y";
+    done change;
+  recover
+    new code := $error.code;
+    new j := $error.job;
+    print "conflict {code} in {j}";
+  return;
+end e47_orm_conflict;
+/*@expect
+{
+  "stdout": [
+    "conflict 53 in change"
+  ]
+}
+*/

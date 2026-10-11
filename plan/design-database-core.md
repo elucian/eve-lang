@@ -50,8 +50,7 @@ DuckDB is the **secondary** database and never part of the VM: it is the engine 
 
 | Role | File | Content |
 |---|---|---|
-| **Eve database** (system) | `db/eve.db` | run history, checkpoints, lineage, mapping fingerprints, migrations applied, the transaction journal of the server (part 2) |
-| **Cache** | `db/cache.db` | copies of remote reference tables, kept by the Eve server (part 2, §4) |
+| **Core database** (system), one per project (D-156) | `db/eve.db` by default; `$EVE_CORE_DB`, set in `eve.cfg` | run history and ETL logs, checkpoints, lineage, mapping fingerprints, migrations applied, the data of the Eve UX, the transaction journal of the server (part 2), and the **cache** of remote reference tables (part 2, §4); it was `db/eve.db` and `db/cache.db` of the machine |
 | **Staging** | `db/stage.db`, connection `"stage"` | temporary tables of an ETL run: files loaded once, deduplicated and joined in SQL before the transfer (part 2, §6) |
 | **Spill** | a temporary file | a memory table that grows over its capacity (§4.4) |
 | **Application databases** | `db/<name>.db` | the data of small applications and services; `db create <name>` |
@@ -517,17 +516,20 @@ end reprice;
 
 ## Questions for the author
 
+Answered by the author on 2026-10-10 and applied in D-158 (`decision_level5.md`): 1 the `table` declaration is the mapping, 2 trust the file with a schema version, 3 nullable in the database is nullable in the model, 4 memory stays changed after a rollback, 5 an `update … do … done;` block, 6 failing records go to `recover`, 7 one connection per job. Where the text above says otherwise (restoring memory in §8.2, two databases in §8.6, the check at first use in §5.3), D-158 and `spec/library/database.md` win.
+
 1. **The `table` declaration (P1).** Is a separate declaration right, or do you want the mapping in the class header, for example `class Customer = {…} <: sales.Table;` as in the old page? The declaration keeps classes plain (D-123) and lets one class map to a file, a staging table and a remote table.
-**Answer:**
+**Answer:** The table declaration is mapping to the class not the class to the table. Classes are prestine.
 2. **Production check.** Verify the mapping at the first use of each connection (the catalog read costs one query per table), or only compare the fingerprint of `db/mappings.json` (cheaper, but it trusts the file)?
+**Answer:** Yes trust the file. The database has a version signature for the schema, the maping also must have a version if the version do not match, user must revalidate the maping.
+3. **Strictness.** Is a nullable column mapped to a non-optional field an error (proposed), or a warning with a `NullError` at the row that holds a `null`? Is an error, if is nullable in the database must be nullable in model.
 **Answer:**
-3. **Strictness.** Is a nullable column mapped to a non-optional field an error (proposed), or a warning with a `NullError` at the row that holds a `null`?
-**Answer:**
-4. **Restoring memory on rollback** (§8.2): accepted, or keep the rule of the old page (memory stays changed, `refresh` by hand)?
-**Answer:**
+4. **Restoring memory on rollback** (§8.2): accepted, or keep the rule of the old page (memory stays changed, `refresh` by hand)? 
+**Answer:** Memory remain changed, user must re-read the data from database to refresh the record, create another record, compare the records to find out what is wrong, or discard the changes by hand.
 5. **`update record:` block** of the old page. Not proposed, because an assignment to a tracked field is already the update. Do you want the block anyway, for example to validate several fields together at its end?
-**Answer:**
+**Answer:** I do not understand the question. Maybe you can explain it better. update is a keyword, it starts modification of a record using let. It has the role to eliminate the requirement to repeat the record name for all filels. Is like with do done. But maybe we shoul say: with <record> do ... done. How we map two records: with (record1, record2) do. or map (record1, record2). I say the best is to say update table do .... done;
 6. **Savepoints.** A job is a whole transaction; is a savepoint inside a job needed in version 0.4 (for example to skip one bad row without losing the batch), or is the rejects output of the loads (part 2, §6.3) enough?
-**Answer:**
+**Answer:** If a batch has one record failing if possible, return ID for failing records in a collection and pass it to recover block. Recover block can count how manty failures, or log the failing records and decide to resume. If resume next batch will process. If retry, only batch that failed is reprocess.
 7. **Two databases in one job** (§8.6): warn and fail with `CommitError(partial)`, or forbid writing to two connections in one job?
 **Answer:**
+Each job with it's own connection. We do not write to two databases in one job. This feature remain in the backlog as technical debt.

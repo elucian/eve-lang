@@ -112,13 +112,21 @@ Author decision (2026-10-09); reverses the answer to Q-025a (archive of `decisio
 - **Version.** The removal of self-calling lambdas is in effect now (level 2; test b44, VM parser). Generic functions and procedures stay in Version 0.4 (D-145), feature F-LNG-20.
 
 ## Q-041 Generic functions and procedures: open points (2026-10-09)
+
 (a) Is the form of D-147 right: `function name(:T, :U)(parameters) => (@result: T)`, with constraints `(:T <: Comparable)` as for classes? 
+
 **Answer:** The form is right.
+
 (b) Must the type list always be written at the call, `largest(:Integer)(xs)`, or may it be inferred from the arguments, `largest(xs)`? (Generic classes: always written in Version 0.3, D-145.) 
+
 **Answer:** The type list uses type inference; it is not mandatory at the call.
+
 (c) May a method of a class have its own type list, besides the one of a generic class? May a lambda have one? 
+
 **Answer:** A lambda function does not accept a type list. Instead we can use an overloaded function signature; the formula is most probably different for different types anyhow. Methods can take a type list (2026-10-09).
+
 (d) Does a process of an aspect accept a type list? 
+
 **Answer:** A process can take a type list.
 
 ## D-148 Generic functions, procedures and processes: form, inference, no generic lambdas (2026-10-09)
@@ -131,7 +139,9 @@ Author answers to Q-041. Version 0.4, feature F-LNG-20.
 
 ## Roundup of level 4 (2026-10-08): stage A implemented on the VM
 **Implemented.** Level 4 passes 42 of 42 (d01 to d35 with variations), 100 runs in a row with `runtest.py --repeat 100`; all levels pass (235 tests). Stage A of D-144: `evevm/src/task.zig` is the scheduler (one thread per task, one baton); `interp.zig` has the groups, `start`, the channels, `spawn`/`await` in a job, `wait`, the time-outs and the ParallelError with its items; `project.zig` checks `start` (concurrent aspects only, one level, at most 2 starts in an aspect, one owner per output); `check.zig` checks `spawn`, `await`, async calls, traits and abstract classes.
+
 **Fixes found on the way.** (1) The compile errors of the VM go to the standard output, so the compile-error tests check `contains`, not `stderr`. (2) A list of lists was indexed like a matrix; `isMatrix` now asks for an array of arrays, as `types.md` says (D-064). (3) A parameter named `jobs` was hidden by the map of the job states; the parameter wins. (4) `let r := a if c else b;` reads the `if` as the suffix of the statement; d24 writes the conditional in parentheses.
+
 **Open for Version 0.3:** stage B (`$cores` threads, `$max_parallel`), the check of a type constraint `(:T <: Comparable)`, region memory (F-VM-05), the benchmark `p4a_parallel_sum`.
 
 ## D-151 Memory of the VM: reference counting first, a tracing collector as backup, garbage collected at `done` (2026-10-09)

@@ -1,0 +1,36 @@
+# a generator object is driven step by step with next(), value, done and close()
+** spec: syntax/declarations.md#generators-level-5
+driver e24_generator_next is
+  generator count_to(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      yield i;
+    done;
+  return;
+
+  process main is
+    new g := count_to(2);
+    print g.done;
+    expect g.next();
+    print g.value;
+    expect g.next();
+    print g.value;
+    print g.next();
+    print g.done;
+    new h := count_to(5);
+    expect h.next();
+    h.close();
+    print h.done;
+  return;
+end e24_generator_next;
+/*@expect
+{
+  "stdout": [
+    "False",
+    "1",
+    "2",
+    "False",
+    "True",
+    "True"
+  ]
+}
+*/

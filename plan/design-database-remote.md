@@ -83,7 +83,7 @@ A driver is a Zig module that implements one interface (a table of functions), s
 What runs on the machine of the user, or on an edge machine:
 
 - **Memory tables.** Free `Table(:T)` buffers for files and transforms, and bound tables whose session is on the server (path 3). Tracking (dirty fields, states, restore on rollback) happens here, in the local VM: only the changes travel.
-- **Ingestion.** Files and streams in the formats of Q-039 (`Csv`, `Json`, `Xml`, `Dat`), read as Unicode streams (§6.1).
+- **Ingestion.** Files and streams in the formats of Q-039 (`CSV`, `JSON`, `XML`, `TXT`), read as Unicode streams (§6.1).
 - **Its own SQLite.** The local Eve database for checkpoints and run history, and `stage.db` for staging (part 1, §2.1). A local app can work offline against its stage and send the result when the server is reachable.
 
 ## 4. The Eve server
@@ -166,7 +166,7 @@ Every file is read as a stream of bytes, decoded to code points, then parsed int
 | Invalid bytes | `invalid: "error"` (default): `FormatError` with line, column and byte offset; `"replace"`: U+FFFD, counted in the run log; `"reject"`: the whole unit goes to the rejects (§6.3) |
 | Normalization | `normalize: "nfc"` composes the text (é as one code point); recommended for key fields, because two spellings of the same name are different keys. Default: none, the text is kept as read |
 | Line endings | LF, CRLF and CR are read; written as LF unless `eol: "crlf"` (Q-039f) |
-| Fixed width (`Dat`) | widths count code points, not bytes; `width_unit: "byte"` for legacy single-byte files |
+| Fixed width (`TXT`) | widths count code points, not bytes; `width_unit: "byte"` for legacy single-byte files |
 | Size | a file is never read whole: the stream reads blocks and the parser gives one unit at a time, so a 20 GB file needs the memory of one batch |
 
 ### 6.2 Reading into records
@@ -177,10 +177,10 @@ The record class is the layout of the file, as it is the layout of the table (on
 new rows := csv.read!(:Order)("in/orders.csv", encoding: "windows-1252", columns: {"Order No": "id", "Total": "amount"});
 new docs := json.read!(:Order)("in/orders.jsonl");               ** JSON Lines or an array of objects
 new nodes := xml.read!(:Order)("in/orders.xml", unit: "orders/order");
-new lines := dat.read!(:Order)("in/orders.dat", widths: (8, 10, 12, 20, 25));
+new lines := txt.read!(:Order)("in/orders.txt", widths: (8, 10, 12, 20, 25));
 ```
 
-- **Column = value for files.** A CSV header name or a JSON key maps to the field of the same name; `columns:` renames, the same rule as `column … as` for tables. A `Dat` file maps by position, in field order. An XML element maps its child elements and attributes by name.
+- **Column = value for files.** A CSV header name or a JSON key maps to the field of the same name; `columns:` renames, the same rule as `column … as` for tables. A `TXT` file maps by position, in field order. An XML element maps its child elements and attributes by name.
 - Each value is converted from text to the field type with the canonical formats (§6.5): `12.50` to `Decimal`, `2026-10-10T08:00:00Z` to `Instant`. A missing value of a `T?` field is `null`; of a `T` field it is an error of that row.
 - The checks of the header (a missing or unknown column) run at the first unit, like the first row of a query: in debug mode all of them are listed, in production the first one stops the read with a `FormatError`.
 
@@ -210,7 +210,7 @@ A report reads a query stream and writes a file with the same record class and t
 new rows := sales.query!(:Order)("select id, customer_id, amount, status, created from orders where created >= ?", since);
 csv.write("out/orders.csv", rows, encoding: "utf-8", bom: False, eol: "lf");
 json.write("out/orders.jsonl", rows);
-dat.write("out/orders.dat", rows, widths: (8, 10, 12, 20, 25));
+txt.write("out/orders.txt", rows, widths: (8, 10, 12, 20, 25));
 ```
 
 - The writer takes a stream, so a report of millions of rows needs the memory of one batch.
@@ -228,7 +228,7 @@ The same class and the same options give a lossless round trip in both direction
 | `Real` | the shortest text that reads back to the same bits |
 | `Logic` | `true`, `false` (configurable: `logic: ("Y", "N")`) |
 | `Instant` | ISO 8601 UTC with `Z`; `DateTime` with its offset; `Date`, `Time` ISO |
-| `null` | CSV: an empty field without quotes; `""` (quoted) is the empty string, so `null` and `""` stay different. `Dat`: a field of spaces is `null` for a `T?` field (option `null:`). JSON: `null` |
+| `null` | CSV: an empty field without quotes; `""` (quoted) is the empty string, so `null` and `""` stay different. `TXT`: a field of spaces is `null` for a `T?` field (option `null:`). JSON: `null` |
 | field order | the order of the class; CSV header with the column names after `columns:` renames |
 | quotes (CSV) | only when the value holds the separator, a quote or a line break |
 | text | the encoding and the normalization of the options |
@@ -304,22 +304,24 @@ Here `checkpoint` writes into the target database (`db: "erp"`, the table `eve_c
 | driver interface (§2.2); drivers SQLite, PostgreSQL (0.4), MySQL and MariaDB (0.5) | VM |
 | remote sessions, leases, `eve_tx`, `STATUS`; frames `OPEN`, `BEGIN`, `QUERY`, `CHANGES`, `APPLIED`, `COMMIT`, `ROLLBACK`, `STATUS` | server, EWP (level 6) |
 | `cached <duration>;` clause of `table` (P9); `db cache` commands | syntax, server |
-| reader options `encoding`, `invalid`, `normalize`, `columns`, `rejects`, `max_rejects`, `unit`, `widths`, `width_unit`; writer options `bom`, `eol`, `logic`, `null` | modules `csv`, `json`, `xml`, `dat` (Q-039) |
+| reader options `encoding`, `invalid`, `normalize`, `columns`, `rejects`, `max_rejects`, `unit`, `widths`, `width_unit`; writer options `bom`, `eol`, `logic`, `null` | modules `csv`, `json`, `xml`, `txt` (Q-039) |
 | `Reject` record class and the rejects file | standard library |
 | canonical text form of every type (§6.6), with round-trip tests | spec, tests of level 5 |
 | `eve_tx` and `eve_checkpoint` tables installed in a target by `db prepare` | admin commands |
 
 ## Questions for the author
 
+Answered by the author on 2026-10-10 and applied in D-159 (`decision_level5.md`): 1 Oracle to the backlog, 2 path 3 in 0.5, 3 no offline work, SQLite only for logs and metadata, DuckDB for data, 4 no metadata tables in a target (exclusive access for the bulk tricks), 5 rejects in batches, 6 normalization off, NFC explained. Where the text above says otherwise (`eve_tx` and `eve_checkpoint` in the target, the cache of the client, `db:` of the checkpoints, `stage.db`), D-159 and `spec/library/database.md` win.
+
 1. **Oracle.** The diagram names Oracle; your answer to design-database.md §12 leaves it to the community. Keep Oracle out of the core plan, with the driver interface open to a community driver?
-**Answer:**
-2. **Path 3 in version 0.4 or 0.5.** The server path needs the listening machine and EWP (level 6). Proposed: paths 1 and 2 in version 0.4, path 3 with the server in version 0.5. Agree?
-**Answer:**
+**Answer:** Add to backlog for later implementation, we postpone this feature.
+2. **Path 3 in version 0.4 or 0.5.** The server path needs the listening machine and EWP (level 6). Proposed: paths 1 and 2 in version 0.4, path 3 with the server in version 0.5. Agree? 
+**Answer:** Agree
 3. **Cache on the client.** Only the server caches (as in the diagram), or may a local app also cache reference tables in its own SQLite, for offline work?
-**Answer:**
-4. **Tables in the target.** May Eve install `eve_tx` and `eve_checkpoint` in a target database with `db prepare`? Without them, a broken commit is "unknown" and a checkpoint can't commit with its batch.
-**Answer:**
-5. **Rejects.** A rejects output per read (proposed), or one rejects file per run for all reads?
+**Answer:** Offline work is not possible. The local eve session must be connected to remote session. Local work is possible if there is no remote server. In this case, the local EVE does the job and the test is local, the same EVE work as client and as server. It has one database core and another database DuckDB connected. Data is never loaded in SQLLight, SQLLight store logs, and metadata.
+4. **Tables in the target.** May Eve install `eve_tx` and `eve_checkpoint` in a target database with `db prepare`? Without them, a broken commit is "unknown" and a checkpoint can't commit with its batch. 
+**Answer:** No, Eve do not install metadata tables in target database. The target database may be maintained by a DBA not by the Eve machine. One exception, if EVE machine get exclusive access to remote database or is an EVEDB database, then eve can speed up the bulk processes using tricks like disabling triggers deactivate indexes and other magic to improve bulk load performance. Otherwise, if all contraints are on, EVE will work but slower and give more failures on an active database.
+5. **Rejects.** A rejects output per read (proposed), or one rejects file per run for all reads? Output is created in batches. One reject batch per batch read.
 **Answer:**
 6. **Unicode normalization.** Off by default (proposed, the text is kept as read), or NFC by default on every read?
-**Answer:**
+**Answer:** Yes, the source file remain untouched, Explain what is NFC.

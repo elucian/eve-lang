@@ -1,0 +1,42 @@
+# an update writes only the dirty fields: a column changed by direct SQL is not overwritten
+** spec: library/database.md#sql-that-writes-only-what-changed
+driver e46_orm_dirty_fields is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new c := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+    done add;
+
+    change: job
+    do
+      new c := customers.find!(1);
+      print "{c.name} {c.version}";
+      let c.city := "Lyon";
+      new n1 := shop.execute!("update customers set name = ? where id = ?", "Zed", 1);
+      let c.city := "Paris";
+    done change;
+
+    new r := shop.query_one!(:Customer)("select id, name, city, version from customers where id = ?", 1);
+    print "{r.name} {r.city} {r.version}";
+  return;
+end e46_orm_dirty_fields;
+/*@expect
+{
+  "stdout": [
+    "Ann 1",
+    "Zed Paris 3"
+  ]
+}
+*/

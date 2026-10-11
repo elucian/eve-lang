@@ -1,0 +1,34 @@
+# rollback; undoes the job: nothing is written, the status is "rolled back", the process goes on
+** spec: semantics/control.md#job
+driver e48_job_rollback is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new c := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+      rollback;
+    done add;
+
+    print jobs["add"].status;
+    print customers.count!("1 = 1");
+  return;
+end e48_job_rollback;
+/*@expect
+{
+  "stdout": [
+    "rolled back",
+    "0"
+  ]
+}
+*/

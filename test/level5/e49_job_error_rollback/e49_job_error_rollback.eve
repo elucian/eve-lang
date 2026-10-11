@@ -1,0 +1,35 @@
+# an error in a job rolls the transaction back before recover runs
+** spec: library/database.md#transactions
+driver e49_job_error_rollback is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new c := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+      raise "boom";
+    done add;
+  recover
+    new j := $error.job;
+    print "failed: {j}";
+    print customers.count!("1 = 1");
+  return;
+end e49_job_error_rollback;
+/*@expect
+{
+  "stdout": [
+    "failed: add",
+    "0"
+  ]
+}
+*/

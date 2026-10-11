@@ -8,12 +8,16 @@ Retired (answered, applied to the tutorial, recorded in D-058; text in git histo
 
 ### COL-05 Capture a removed element
 Applied (D-060): `<-` removes the first element, `->` the last; a queue enqueues with `<+` and dequeues with `let e <- q`. The capture forms `let e <- lst;` and `lst -> let e;` are my proposal: is a `let` inside a statement acceptable (also `while let x in (range)`)?
+
 **Answer:** _(open)_
+
 Status: open
 
 ### COL-16 Interpolation formats
 Applied (D-060): `\s{}`, `\#{}`, `{}` with formats (strings.html, "String interpolation and format"). Review the codes and examples and tell me what to change.
+
 **Answer:** _(open: review)_
+
 Status: open
 
 ## Spec additions (pending)

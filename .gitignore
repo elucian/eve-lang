@@ -54,3 +54,5 @@ __pycache__/
 /temp/output/
 # Files written by project tests (test/levelN/<name>/out/, emptied before each run)
 /test/**/out/
+test/level5/*/db/*.db
+test/level5/*/db/*.db-*

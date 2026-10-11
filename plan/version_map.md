@@ -22,7 +22,7 @@ This file is the one place to track the project: the levels, the versions and **
 | Level 4 | parallel processing and streams, generics and traits (D-138) | Version 0.3 | [decision_level4.md](decision_level4.md) | `test/level4` (d) |
 | Level 5 | data language (types, records, generators, files, formats, HTTP client), database layer and the Eve database (D-125) | Version 0.4 | [decision_level5.md](decision_level5.md) | `test/level5` (e) |
 | Level 6 | the Eve machine and the server | Version 0.5 | [decision_level6.md](decision_level6.md) | `test/level6` (f) |
-| Level 7 | web: HTML and WebAssembly | Version 0.6 | [decision_level7.md](decision_level7.md) | `test/level7` (g) |
+| Level 7 | web: HTML and WebAssembly; the RAD Workbench eveux, written in Eve, the final test (D-154) | Version 0.6 | [decision_level7.md](decision_level7.md) | `test/level7` (g) |
 
 ## Versions that were named before
 
@@ -45,8 +45,8 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 4 of 13 | in progress |
 | Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
 | Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 24 | planned |
-| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control, `serve`, services and routes, the API for AI. | 0 of 13 | planned |
-| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser. | 0 of 4 | planned |
+| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 14 | planned |
+| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the RAD Workbench eveux, written in Eve, as the final test of the language. | 0 of 8 | planned |
 | Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
 | Version 0.9 | Levels 1 to 7 | Release candidate | Package manager, more database drivers, web kit, hardening. | 0 of 3 | planned |
 | Version 1.0 | Levels 1 to 7 | Stable | Frozen language, every level passes, registry for other implementations. | 0 of 2 | planned |
@@ -152,23 +152,23 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
-| F-DAT-01 | Database layer | open | connect, parameterized query as a stream, execute, transactions, bulk load (databases.html; review `RIO-R02`). |
-| F-DAT-02 | Database drivers | open | PostgreSQL and SQLite first, then MySQL and Oracle. (Version 0.4 (PostgreSQL, SQLite), v0.9 (others)) |
-| F-DAT-03 | ETL pipeline model | open | extract, transform, load with jobs and aspects; dead-letter output; the pattern taught in the tutorial (review `RIO-R04`). |
-| F-DAT-04 | Checkpoints and restart | open | resume a failed pipeline at the last committed batch (review `RIO-R05`). |
+| F-DAT-01 | Database layer | open | connect, parameterized query as a stream, execute, transactions, bulk load (databases.html; review `RIO-R02`). *Specified and taught (2026-10-10):* `spec/library/database.md`, `databases.html`; the VM has none of it yet. |
+| F-DAT-02 | Database drivers | open | PostgreSQL and SQLite first (SQLite for external files; Eve data goes to `evedb`, D-159), then MySQL; Oracle is postponed (`plan/backlog.md`). (Version 0.4 (PostgreSQL, SQLite), v0.9 (others)) |
+| F-DAT-03 | ETL pipeline model | open | extract, transform, load with jobs and aspects; dead-letter output; the pattern taught in the tutorial (review `RIO-R04`). *Specified and taught (2026-10-10):* `spec/semantics/data-types.md`, `etl.html`; the VM has none of it yet. |
+| F-DAT-04 | Checkpoints and restart | open | resume a failed pipeline at the last committed batch (review `RIO-R05`). *Specified (2026-10-10):* checkpoints in the target database, `commit;` in a job (`spec/library/database.md#transactions`). |
 | F-DAT-05 | Columnar tables | open | `Table` type with typed columns, Arrow-compatible (review `RTY-R06`). |
 | F-DAT-06 | Data lineage and run reports | open | inputs, outputs, row counts, durations per job and aspect (review `RIO-R06`). |
-| F-DAT-08 | The Eve database | open | one database per machine in its `db/` folder, SQLite embedded (3.54.0, compiled into the VM from the amalgamation, `evevm/src/sqlite.zig`; DuckDB is not in the VM: it is the separate test database `evedb`, F-DAT-12), for checkpoints, run history, lineage, staging and small applications (`plan/design-database.md`). |
-| F-DAT-09 | Database admin commands | open | `db list`, `db add`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db create`, `db backup`, `db restore`, `db export`, `db import`, `db compact`, `db runs`. |
+| F-DAT-08 | The Eve database | open | the core database: one per project in its `db/` folder (default `eve.db`, name set in `eve.cfg`, system variable `$EVE_CORE_DB`, D-156), SQLite embedded (3.54.0, compiled into the VM from the amalgamation, `evevm/src/sqlite.zig`; DuckDB is not in the VM: it is the separate test database `evedb`, F-DAT-12), for checkpoints, run history, lineage and metadata, never ETL data (staging and the cache are `evedb` databases, D-159) (`plan/design-database.md`). |
+| F-DAT-09 | Database admin commands | open | `db list`, `db add`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db create`, `db backup`, `db restore`, `db export`, `db import`, `db compact`, `db runs`. *Specified (2026-10-10):* the list in `spec/library/database.md#admin-commands`, with `db create-table`, `db prepare`, `db activate`, `db reindex`, `db cache`. |
 | F-DAT-10 | Schema migrations | open | numbered SQL scripts in `db/migrations/<name>/`, applied by `db migrate` and recorded in the Eve database. |
-| F-DAT-11 | Record-table mapping | open | `table` declarations binding record classes to tables, tracked records with dirty fields, updates of the changed fields only, mapping validated in debug mode and refused in production (`plan/design-database-core.md`, Q-046). |
+| F-DAT-11 | Record-table mapping | open | `table` declarations binding record classes to tables, tracked records with dirty fields, updates of the changed fields only, mapping validated in debug mode and refused in production (`plan/design-database-core.md`, Q-046). *Specified and taught (2026-10-10), as proposed in Q-046:* `spec/library/database.md`, `databases.html`; review points in `plan/review_level5.md`. |
 | F-DAT-12 | evedb, the Eve test database | partial | a database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log (`evedb/README.md`). *Partial:* DuckDB 1.5.6 linked, `bin/evedb.exe` runs a self-check, 4 unit tests; no server yet. |
 | F-DOC-02 | Tutorial, data client part | open | files, formats, streams, HTTP client, ETL pipelines (review `RTU` phase T1). |
 | F-LIB-04 | Files and paths | open | `fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). |
 | F-LIB-05 | Data formats | open | JSON and CSV read/write, decode into records; later XML, Parquet. |
 | F-LIB-06 | Time and dates | open | `now`, parse, format, zones, durations. |
 | F-LIB-07 | Shell commands | open | `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`). |
-| F-LIB-08 | Secrets | open | a `Secret` type and `secret.get` from environment, file or vault (review `RIO-R01`). |
+| F-LIB-08 | Secrets | open | a `Secret` type and `secret.get` from environment, file or vault (review `RIO-R01`). *Specified (2026-10-10):* `spec/library/data-language.md#secrets`. |
 | F-LIB-09 | Compression and archives | open | gzip, zip, stream codecs (manifest). |
 | F-LNG-20 | Generic functions and procedures | open | a first parameter list of types, `function largest(:T <: Comparable)(items: ()T)`, called `largest(xs)` (types inferred) or `largest(:Integer)(xs)`; also procedures, methods and processes; no type list on a lambda, overloaded functions instead; possible because self-calling lambdas are removed (D-145, D-147, D-148). Tests e01 to e04, e14, e15 (written first). |
 | F-LNG-21 | Overloading | open | functions, procedures and methods share a name with different signatures: number and types of the parameters, and the result type of a function; resolved at compile time, the call must match one signature; a function and a procedure never share a name, a method with a result and one without may (D-149, D-150). Tests e05 to e13 (written first). |
@@ -183,9 +183,9 @@ Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; l
 
 ## Version 0.5: Server (level 6)
 
-Level 6. Goal: The Eve machine: setup, remote control, `serve`, services and routes, the API for AI.
+Level 6. Goal: The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI.
 
-0 of 13 features done.
+0 of 14 features done.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -196,6 +196,7 @@ Level 6. Goal: The Eve machine: setup, remote control, `serve`, services and rou
 | F-NET-04 | Remote apply | open | run an aspect on another node with a deadline and an idempotency key (review `RNW-R01`). |
 | F-NET-05 | Capabilities and sandbox | open | fs, net, db, shell permissions per project and per aspect (review `RNW-R08`). |
 | F-NET-06 | Authentication | open | tokens, sessions, TLS certificates for services. |
+| F-NET-07 | Machine login: single sign-on and the keyring | open | from one local machine, a login per remote machine: single sign-on (OpenID Connect), an account of the machine, or a machine token; the renewal token kept in the keyring of the operating system (Windows Credential Manager, Linux Secret Service) after the first login; commands `login`, `logout`, `forget`, `whoami`; users, roles and registration of a listening machine in its Eve database (D-155, `plan/design-service.md` §15, Q-048). |
 | F-SPEC-06 | Network semantics and protocol | open | remote `apply`, services, Eve Wire Protocol (`spec/protocol/`). |
 | F-STR-08 | Service script kind | open | long-running entry point with routes handled by aspects (review `RNW-R02`; needs a decision). |
 | F-TLS-12 | Machine setup | open | `--setup <folder>`, the machine folder, `eve.cfg`, built-in defaults, identity domain + port, external checksum, `setup` reload (D-083). |
@@ -203,22 +204,27 @@ Level 6. Goal: The Eve machine: setup, remote control, `serve`, services and rou
 | F-TLS-14 | Local HTTP | open | `serve` on port 8042, pages of the web folder, routes of `service` scripts (D-083). |
 | F-TLS-15 | Eve API for AI | open | `eve --api`, an MCP server whose tools are the commands of the machine (D-083). |
 
-Exit: a client project and a server project talk on `localhost`; a route answers HTTP; `eve --api` answers an MCP client; `.vmc` files are removed.
+Exit: a local machine logs in to two remote machines on `localhost`, one by single sign-on, and connects again from the keyring without a form; a client project and a server project talk on `localhost`; a route answers HTTP; `eve --api` answers an MCP client; `.vmc` files are removed.
 
 ## Version 0.6: Web (level 7)
 
-Level 7. Goal: Safe HTML and Eve in the browser.
+Level 7. Goal: Safe HTML and Eve in the browser; the RAD Workbench eveux, written in Eve, as the final test of the language.
 
-0 of 4 features done.
+0 of 8 features done.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
 | F-VM-09 | WebAssembly build | open | the VM compiled to `wasm32` with host imports (review `RVM-R06`). |
-| F-WEB-01 | HTML templates | open | `Html` type, context-aware escaping, template files, components (review `RNW-R05`). |
+| F-TLS-19 | eveux, the RAD Workbench: shell | open | an Eve project (service script, aspects, modules) run by the local machine, with a browser part in plain JavaScript and CSS: screen and menus, editor with syntax colors for Eve, SQL, JSON, XML and HTML, file dialog and upload, command window, login to remote machines with single sign-on and the keyring, Help and About with the versions; written in Eve as the final test and stress test of the language (D-154, `eveux/README.md`, Q-047). |
+| F-TLS-20 | eveux: direct SQL and database tree | open | SQL mode of the command window and SQL tabs, results in a grid with Eve types, Commit and Rollback, the database object tree of the connections of a machine, import wizard (`eveux/README.md` §7, §9, §12). |
+| F-TLS-21 | eveux: jobs, logs and admin | open | job browser and scheduler forms over the remote scheduler of every connected machine, live run output, stage view of the aspects, resume from checkpoint, log inspector, admin pages of a machine (`eveux/README.md` §6.6, §10). |
+| F-TLS-22 | eveux: debugger | open | breakpoints in the gutter, step into, over and out, variable inspector, watch window, call stack; needs the debugger of the machine (F-TLS-04) and the commands proposed in Q-047 (`eveux/README.md` §11). |
+| F-TLS-23 | New project | open | `new project <folder>`: the folder is empty or absent (created); makes the project folders `asp`, `doc`, `lib`, `db`, `web`, `src`, `log` and a `.gitignore` template that leaves out the `.db` files of `db/` and `log/`; Git is installed first (D-160). |
+| F-WEB-01 | HTML templates | open | `HTML` type, context-aware escaping, template files, components (review `RNW-R05`). |
 | F-WEB-02 | Eve in the browser | open | the WASM VM runs signed `.evb` code with limited capabilities, `dom` module (review `RNW-R06`). |
 | F-WEB-03 | Tutorial playground | open | a "Run" button on tutorial examples using the WASM VM. |
 
-Exit: tutorial examples run in the browser; templates pass an escaping test suite; the browser VM refuses `fs` and `shell`.
+Exit: tutorial examples run in the browser; templates pass an escaping test suite; the browser VM refuses `fs` and `shell`; eveux passes the tests of `test/level7` and meets its stress goals (`eveux/README.md` §2).
 
 ## Version 0.7: Bytecode and embedding (levels 1 to 7)
 

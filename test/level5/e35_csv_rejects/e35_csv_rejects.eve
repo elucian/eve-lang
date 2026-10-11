@@ -1,0 +1,26 @@
+# a read with a rejects output skips the bad lines and writes them in a file, in batches
+** spec: semantics/data-types.md#transform-and-rejects
+driver e35_csv_rejects is
+  class P = {id: Integer, name: String} <: Record;
+
+  process main is
+    fs.write("out/in.csv", "id,name\n1,Ann\nx,Bob\n3,Cid\n");
+    for p in csv.read!(:P)("out/in.csv", rejects: "out/rejects.csv", max_rejects: 5) do
+      print "{p.id} {p.name}";
+    done;
+    new n := 0;
+    for l in fs.lines!("out/rejects.csv") do
+      let n += 1;
+    done;
+    print "reject lines: {n}";
+  return;
+end e35_csv_rejects;
+/*@expect
+{
+  "stdout": [
+    "1 Ann",
+    "3 Cid",
+    "reject lines: 2"
+  ]
+}
+*/

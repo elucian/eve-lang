@@ -1,0 +1,23 @@
+# a CSV line with a wrong number of fields is a FormatError when the loop reaches it
+** spec: semantics/data-types.md#rules
+driver e34_csv_bad_row is
+  class P = {id: Integer, name: String} <: Record;
+
+  process main is
+    fs.write("out/bad.csv", "id,name\n1,Ann\n2\n3,Cid\n");
+    for p in csv.read!(:P)("out/bad.csv") do
+      print "{p.id} {p.name}";
+    done;
+  recover
+    new c := $error.code;
+    print "error {c}";
+  return;
+end e34_csv_bad_row;
+/*@expect
+{
+  "stdout": [
+    "1 Ann",
+    "error 56"
+  ]
+}
+*/

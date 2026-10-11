@@ -1,0 +1,27 @@
+# a record can not be added to a read only table: a compile error
+** spec: library/database.md#the-table-declaration
+driver e44_table_read_only_add is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    read only;
+  end customers;
+
+  process main is
+    j: job
+    do
+      new c := {id: 1, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+    done j;
+  return;
+end e44_table_read_only_add;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "is read only"
+  ]
+}
+*/

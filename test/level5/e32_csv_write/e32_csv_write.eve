@@ -1,0 +1,32 @@
+# the CSV writer: header, quotes only when needed, null is empty and the empty string is ""
+** spec: semantics/data-types.md#the-formats-in-detail
+driver e32_csv_write is
+  class Item = {id: Integer, name: String, note: String?, price: Decimal} <: Record;
+
+  process main is
+    new rows := Table(:Item)();
+    new a := {id: 1, name: "Ann", note: null, price: 12.50d} :Item;
+    new b := {id: 2, name: "Smith, Bob", note: "", price: 3d} :Item;
+    new c := {id: 3, name: "say \"hi\"", note: "two words", price: 0.50d} :Item;
+    let rows <+ a;
+    let rows <+ b;
+    let rows <+ c;
+    csv.write("out/items.csv", rows);
+    print "written";
+  return;
+end e32_csv_write;
+/*@expect
+{
+  "stdout": [
+    "written"
+  ],
+  "files": {
+    "out/items.csv": [
+      "id,name,note,price",
+      "1,Ann,,12.50",
+      "2,\"Smith, Bob\",\"\",3",
+      "3,\"say \"\"hi\"\"\",two words,0.50"
+    ]
+  }
+}
+*/

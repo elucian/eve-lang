@@ -5,6 +5,7 @@ Reminder written 2026-10-02. Goal: make the `.eve` extension recognized and colo
 ## Is `.eve` taken on GitHub?
 
 Checked 2026-10-02 against `lib/linguist/languages.yml` and `heuristics.yml` of github-linguist/linguist (main):
+
 **no language uses `.eve`**, and no heuristic mentions it. So GitHub shows `.eve` files as plain text today. Not checked:
 the real use of the extension in the wild (GitHub code search needs a login). Check it by hand:
 <https://github.com/search?q=path%3A*.eve&type=code>. Several unrelated projects may use `.eve` (an older "Eve" language, game or

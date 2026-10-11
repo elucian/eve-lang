@@ -1,0 +1,51 @@
+# commit; ends a batch, the checkpoint (in the core database) tells the next job where to start
+** spec: library/database.md#transactions
+driver e53_commit_checkpoint is
+  class Order = {id: Integer, amount: Decimal} <: Record;
+
+  table orders: Order in "shop" is
+    key (id);
+  end orders;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+    checkpoint.write("e53", 0);
+
+    first: job
+      new since := checkpoint.read!(:Integer)("e53", default: 0);
+    do
+      print "since {since}";
+      for i in (since + 1 .. since + 2) do
+        new o := {id: i, amount: 1.50d} :Order;
+        let orders <+ o;
+      done;
+      commit;
+      checkpoint.write("e53", since + 2);
+    done first;
+
+    second: job
+      new since := checkpoint.read!(:Integer)("e53", default: 0);
+    do
+      print "since {since}";
+      for i in (since + 1 .. since + 2) do
+        new o := {id: i, amount: 1.50d} :Order;
+        let orders <+ o;
+      done;
+      commit;
+      checkpoint.write("e53", since + 2);
+    done second;
+
+    new n := orders.count!("1 = 1");
+    print "orders: {n}";
+  return;
+end e53_commit_checkpoint;
+/*@expect
+{
+  "stdout": [
+    "since 0",
+    "since 2",
+    "orders: 4"
+  ]
+}
+*/

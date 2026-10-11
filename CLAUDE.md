@@ -2,9 +2,10 @@
 
 Eve is a domain-specific scripting language (data processing, test automation).
 This repo holds the language **examples, spec and manual**, and the first implementation: the
-Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42 tests, level 5: 0/22 tests written first, smoke: 16 tests).
+Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 65/65 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42 tests, level 5: 0/53 tests written first (e01 to e22: generics, overloading, macros; e23 to e53: data language and database layer), smoke: 16 tests).
 Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig build test`.
 Every text file is LF, in the index and in the working tree (`.gitattributes`); only `.bat`/`.cmd`/`.ps1` are CRLF.
+
 **Zig is taught here (didactic project):** the team does not know Zig. Every function, test, type
 and non-obvious declaration you write or change in `evevm/` gets a `// Zig tip:` comment block just
 before it (Zig has no block comments; use consecutive `//` lines, above any `///` doc comment),
@@ -13,6 +14,7 @@ explaining the language feature it shows: error unions, optionals, comptime, sli
 has; refer to it instead. Keep the tips correct for Zig 0.16.
 
 - `evedb/` **the Eve test database** (F-DAT-12): a separate Zig program around DuckDB (prebuilt library v1.5.6, a lazy dependency of `evedb/build.zig.zon`), never in the VM. Build and test from `evedb/`: `zig build -p ..` (installs `bin/evedb.exe` and `bin/duckdb.dll`), `zig build test`. Same Zig rules as `evevm/`. Design in `evedb/README.md`; the database layer itself in `plan/design-database-core.md` and `plan/design-database-remote.md`.
+- `eveux/` **the Eve RAD Workbench** (F-TLS-19 to F-TLS-22, level 7, D-154): a browser workbench (editor, command window and direct SQL, database tree, jobs, logs, debugger, logins) **written in Eve**, as the final test and stress test of the language: an Eve project (service script, aspects, modules) run by the local machine, with a browser part in plain JavaScript and CSS. No Zig in `eveux/`: what it needs from the system (serve, WebSocket, connections to many machines, login with single sign-on and the OS keyring, D-155) is a feature of `evevm`. **Design only** for now: `eveux/README.md`; tutorial page `eveux.html` (phase 6).
 - **SQLite is the core database**, compiled into the VM from the amalgamation (3.54.0, dependency `sqlite` of `evevm/build.zig.zon`; binding `evevm/src/sqlite.zig`). Zig 0.16 keeps fetched packages in `zig-pkg/` (git-ignored); the first build compiles SQLite (about 3 minutes), later builds use the cache.
 - `spec/` **the Eve specification being written**: Markdown + JSON, normative. Conventions in
   `spec/README.md`.
@@ -28,11 +30,11 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 - `demo/` **deleted** (D-099): every demo has a home in `test/level1/` or in the tutorial (`tutorial/demo/`, datetime.html); the list is the tutorial page `examples.html` (Demos & Examples). `pattern/` syntax patterns; `test/level1-7/` conformity tests, expectations in `/*@expect*/` blocks
 - `manual/` **compiler manual** (was `docs/`): how to implement and use an implementation;
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
-  Conventions in `manual/README.md`.
+  Conventions in `manual/README.md`. Release notes and the release policy in `manual/release/` (D-153).
 - `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
 - `tools/` typing aids (`alt-codes.md`)
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
-  tutorial (43 topic pages), owned by the `scl` repo. See "Tutorial" below.
+  tutorial (45 topic pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
   … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`
   expression, `/* … */` block (no nesting). `--` and `+- -+` boxes are gone (D-011, D-014).
@@ -43,10 +45,24 @@ has; refer to it instead. Keep the tips correct for Zig 0.16.
 ## VM workflow: speed and performance watch
 
 - **Test with the ReleaseSafe build** (about 4.6 times faster than Debug). Build it once per change: `cd evevm && zig build -Doptimize=ReleaseSafe -p ../temp/rel`, then run the tests with `python script/runtest.py 1 --eve temp/rel/bin/eve.exe` (also `all`, `smoke`). Use the Debug build (`zig build -p ..`, `bin/eve.exe`) only to debug a failure: it keeps safety checks and stack traces readable.
-- **Watch performance at every feature or optimization of the VM.** Before and after the change run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe` (add `--check` to fail on a slowdown above 25%). When a version is done, run it with `--save` (updates `test/bmark/history.json` and the table of the README) and add a paragraph to "Notes by version" in `test/bmark/README.md`: what changed, appreciation or depreciation, and why a drop of more than 10% happened. Compare only runs of the same build on the same machine.
+- **Watch performance at every feature or optimization of the VM.** Before and after the change run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe` (add `--check` to fail on a slowdown above 25%). When a version is done, run it with `--save` (updates `test/bmark/history.json` and the table of the README) and add a paragraph to "Notes by version" in `test/bmark/README.md`: what changed, appreciation or depreciation, and why a drop of more than 10% happened. `--save` also records the size of `eve.exe` (table "Size of eve.exe"); explain a growth of more than 10%. Compare only runs of the same build on the same machine.
 - **Memory of the VM** (D-151, `evevm/src/heap.zig`): values are reference counted; every place that stores a value in the interpreter counts it (`setVar`, `setCell`, `listAppend`, `setField`, `mapPut`) and lets the old one go. After a change to how the interpreter stores values, run the suite on the Debug build with `EVE_GC_VERIFY=1 python script/runtest.py all`: it checks every free against a trace and stops on a value that a holder forgot to count. `EVE_MEMSTATS=1` prints what the heap made, freed and kept; `bmark.py` reports the peak memory of each benchmark.
 - **Every benchmark has a twin in Python** (`test/bmark/ref/<name>.py`); the report shows the ratio Eve / Python. A new level or a new kind of work adds a benchmark `p<level><letter>_<name>.eve` with its twin and a `** perf:` description line.
 - **Do not optimize early** (decision of 2026-10-07): until level 2 passes its tests, change the interpreter for correctness, not for speed (slot-resolved variables wait for the final scope rules). Do fix a benchmark that falls more than 10 times behind Python, it points to an accidental quadratic cost. The first planned optimization is variable lookup by slot, resolved in `check.zig`.
+
+## Releases (D-153; full policy and steps: `manual/release/README.md`)
+
+A release is made only when the author asks for it ("release", "cut 0.0.3"). Then follow the nine steps of `manual/release/README.md` in order, and stop at the first one that fails: report it, don't work around it.
+
+- **Before:** the tree is committed (`git status` clean); otherwise ask whether to commit the work first or leave it out of the release.
+- **Order matters:** `script/release.py` (bump, build, unit tests) → `runtest.py all` on the ReleaseSafe build → `bmark.py --save` and its paragraph in `test/bmark/README.md` → statuses in `plan/version_map.md` → `script/relnotes.py` → hand-written parts → `relnotes.py --check` and `mdlinks.py check manual` → commit and tag. `relnotes.py` reads what the earlier steps saved (`status.json`, `history.json`, `version_map.md`); run it earlier and the notes show stale numbers.
+- **Generated, never hand-edited:** the `GEN:` blocks of `manual/release/vX.Y.Z.md`, `manual/README.md` and `manual/release/README.md`. A wrong stage is fixed in the row of `version_map.md`, then the notes are generated again.
+- **Written by hand** (every `TODO` of the notes): Highlights in plain words with feature codes; Decisions (the `D-nnn` settled since the previous release: compare `python script/plan.py list` with the Decisions of the previous notes); Breaking changes and migration; Known issues (failing tests with their reason, features that went back a stage); Performance notes (two to four lines from the bmark paragraph). Also update the manual pages that describe what changed (`manual/usage.md` for commands and options).
+- **Facts only:** numbers come from the generated blocks; never round them up, never call a feature validated whose tests fail. A drop in speed above 10% is explained, not hidden.
+- **A tagged release is a record:** never edit `vX.Y.Z.md` after its tag (`relnotes.py` refuses); a correction goes into the next notes.
+- **Commit and tag** only on the author's word: `git commit -am "Release X.Y.Z"`, `git tag vX.Y.Z`; the tutorial pages that `runtest.py`/`bmark.py` regenerated are committed in the scl repo (`git -C tutorial`). Don't push unless asked.
+- **Between releases** `python script/relnotes.py --manual` refreshes the progress paragraph of the manual from the working tree (it says "not a release").
+- **Links in `manual/`:** relative paths with the exact case (`test/level1/readme.md` is lowercase, `spec/README.md` uppercase; Windows hides a wrong case, GitHub does not), and `https://sagecode.org/projects/eve/<page>.html` for the tutorial (git-ignored here, so a `tutorial/…` link is broken in every clone).
 
 ## Tutorial (`tutorial/` → scl repo)
 
@@ -102,6 +118,7 @@ maintained here but **versioned in the scl repo** (branch `main`). It is git-ign
 | Tutorial pages of the tests (`features.html`, `quality.html`) | `python script/genpages.py [--check]`; **generated**: `runtest.py` and `bmark.py --save` call it, never edit the part between `GEN:BEGIN` and `GEN:END` by hand (D-136) |
 | Run tests on the VM (TDD) | `python script/runtest.py 1` / `all` / `a03` → reports in `temp/output/` |
 | Performance of the VM (per level) | `python script/bmark.py [--save]` → `test/bmark/`, notes per version in its README |
+| Release notes, progress and links of the manual | `python script/relnotes.py [X.Y.Z] [--manual] [--check]` → `manual/release/vX.Y.Z.md`, `manual/README.md` (D-153) |
 
 Every script has full usage in its docstring (`python script/<name>.py -h`).
 All of them preserve CRLF/LF and the final newline, and write atomically.

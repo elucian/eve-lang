@@ -9,6 +9,7 @@ shows the median and the best time of each benchmark and the change against the 
   --save    append this run to test/bmark/history.json (do it for every version and optimization)
   Every benchmark has a twin in Python (test/bmark/ref/<name>.py): the run also reports its time and the ratio Eve / Python.
   --check   exit 1 when a benchmark is more than 25% slower than the last saved run
+Every run also reports the size of eve.exe (bytes) and its change against the last saved run of the same build; --save records it in history.json and in the size table of the README.
 Times depend on the machine: compare runs made on the same machine. Notes per version: test/bmark/README.md.
 """
 import argparse, glob, json, os, re, statistics, subprocess, sys, time, datetime, platform
@@ -128,6 +129,27 @@ def git_short():
         return ''
 
 
+def update_size_table(hist):
+    """Rewrite the table between the size markers of the README: size of eve.exe per saved run and its evolution."""
+    rows = ['| Version | Date | Build | Commit | eve.exe | Change |', '|---|---|---|---|---|---|']
+    prev = {}
+    for h in hist:
+        if 'exe_bytes' not in h:
+            continue
+        b = h.get('build', 'Debug')
+        old = prev.get(b)
+        change = '%+.1f%%' % ((h['exe_bytes'] - old) / old * 100) if old else '-'
+        rows.append('| %s | %s | %s | %s | %s KB | %s |' % (h['version'], h['date'][:10], b, h.get('commit', '-'), format(round(h['exe_bytes'] / 1024), ','), change))
+        prev[b] = h['exe_bytes']
+    text = open(README, encoding='utf-8', newline='').read()
+    b, e = '<!-- size:begin -->', '<!-- size:end -->'
+    if b not in text:
+        return
+    nl = '\r\n' if '\r\n' in text else '\n'
+    i, j = text.index(b) + len(b), text.index(e)
+    open(README, 'w', encoding='utf-8', newline='').write(text[:i] + nl + nl.join(rows) + nl + text[j:])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--runs', type=int, default=5)
@@ -164,6 +186,10 @@ def main():
             if peaks:
                 results[name]['peak_mb'] = max(peaks)
     print('Eve %s (%s build), %d runs each, %s' % (ver, a.build, a.runs, platform.platform()))
+    exe_bytes = os.path.getsize(a.eve)
+    old_exe = next((h['exe_bytes'] for h in reversed(same) if 'exe_bytes' in h), None)
+    print('size of eve.exe: %s bytes (%.0f KB)%s' % (format(exe_bytes, ','), exe_bytes / 1024,
+          (', %+.1f%% against the last saved run' % ((exe_bytes - old_exe) / old_exe * 100)) if old_exe else ', no earlier size saved'))
     refs = {n: run_reference(n, a.runs) for n in results}
     print('%-22s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
     slow = []
@@ -183,10 +209,11 @@ def main():
         ptot = sum(last[n]['median_ms'] for n in results if n[1] == lvl and n in last)
         print('level %s total %.1f ms%s' % (lvl, tot, (' (%+.0f%%)' % ((tot - ptot) / ptot * 100)) if ptot else ''))
     if a.save and not bad:
-        hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(),
+        hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(), 'exe_bytes': exe_bytes,
                      'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results, 'python': {n: v for n, v in refs.items() if v}})
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
         update_readme(hist)
+        update_size_table(hist)
         print('saved to test/bmark/history.json, table of the README updated')
         try:
             sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
