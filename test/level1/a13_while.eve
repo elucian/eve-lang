@@ -1,17 +1,16 @@
-# while loop with a header, break, else and then (D-030, D-033, D-034)
+# while loop with a header, break and else (D-030, D-033, D-034); `then` was removed, the code goes after `done;`
 ** spec: semantics/control.md#loops
 driver a13_while is
   process main is
-    ** the header declares i and sum: they live until then
+    ** the header declares i: it lives in the loop; sum is declared in the process
+    new sum := 0;
     loop
       new i := 1;
-      new sum := 0;
     while i <= 5 do
       let sum += i;
       let i += 1;
-    then
-      print "sum = {sum}";
     done;
+    print "sum = {sum}";
 
     ** an infinite loop is left with break
     new n := 0;
@@ -28,14 +27,13 @@ driver a13_while is
       print "empty";
     done;
 
-    ** then runs every time the loop ends, also after break
+    ** the statements after done run every time the loop ends, also after break
     new k := 0;
     while k < 10 do
       let k += 1;
       break if k == 2;
-    then
-      print "k = {k}";
     done;
+    print "k = {k}";
 
     ** a label closes the loop: done label;
     new j := 0;

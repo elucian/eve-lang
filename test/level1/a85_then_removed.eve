@@ -1,0 +1,20 @@
+# `then` no longer exists in match and loops: the code goes after `done;` (negative test)
+** spec: semantics/control.md#loops
+driver a85_then_removed is
+  process main is
+    for i in (1..3) do
+      print "i = {i}";
+    then
+      print "after";
+    done;
+  return;
+end a85_then_removed;
+/*@expect
+{
+  "exit": 65,
+  "syntax_error": true,
+  "contains": [
+    "'then' no longer exists"
+  ]
+}
+*/

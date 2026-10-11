@@ -60,7 +60,7 @@ A procedure is called as a statement, with or without parentheses when it has no
 
 | Statement | Effect |
 |---|---|
-| `break [label] [if c];` | leave the innermost loop, or the loop with that label; continue after its `done` (a `repeat` loop: after its `repeat`). `then` still runs |
+| `break [label] [if c];` | leave the innermost loop, or the loop with that label; continue after its `done` (a `repeat` loop: after its `repeat`) |
 | `skip [label] [if c];` | end the cycle and go to the continuation point of the loop (D-074) |
 | `stop [if c];` | end the current job without error; inside a loop inside a job it ends the job |
 | `exit;` | leave the subprogram or the process it is written in and give control back to the caller; in `main` of a driver the program ends with code 0, `finalize` runs; in a function, procedure or method it is an early `return` (a function keeps the results assigned so far; `defer` runs) (D-111) |

@@ -629,7 +629,7 @@
       "category": "block",
       "status": "stable",
       "ref": "semantics/control.md#match",
-      "summary": "Region that runs after a match or a loop completed."
+      "summary": "Removed (D-161): the statements go after `done;`. The word stays reserved; the parser says so."
     },
     {
       "id": "to",
