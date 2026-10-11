@@ -106,13 +106,13 @@ pub const Tag = enum {
     cond_stmt,
     /// `if c do b else if c2 do b2 else b3 done;`: kids = [c, b, c2, b2, ..., else block (when odd)].
     if_,
-    /// `while`: kids = [header block, cond, body, else block, then block]. `loop` has a header.
+    /// `while`: kids = [header block, cond, body, else block, empty block (was `then`)]. `loop` has a header.
     while_,
-    /// `for p in it do`: kids = [pattern, iterable, body, else block, then block].
+    /// `for p in it do`: kids = [pattern, iterable, body, else block, empty block (was `then`)].
     for_,
     /// `loop … do … repeat [while c];`: kids = [header block, body] or [header block, body, cond].
     repeat_,
-    /// `match x when ...`: kids = [subject, then block, when...].
+    /// `match x when ...`: kids = [subject, empty block (was `then`), when...].
     match_,
     /// `when p do b`: kids = [pattern, block].
     when,

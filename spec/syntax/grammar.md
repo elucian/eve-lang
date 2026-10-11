@@ -227,14 +227,14 @@ if-block    = "if" , expression , "do" , { statement } ,
 match-block = [ label , ":" ] , "match" , expression , [ "one" | "all" ] , { declaration } ,
               { "when" , when-values , "do" , { statement } } ,
               [ "when" , "other" , "do" , { statement } ] ,
-              [ "then" , { statement } ] , "done" , [ label ] , ";" ;
+              "done" , [ label ] , ";" ;
 when-values = expression , { "," , expression } | "(" , expression , { "," , expression } , ")" ;
 job-block   = label , ":" , "job" , { declaration } , "do" , { statement } , "done" , label , ";" ;
 loop-head   = [ label , ":" ] , "loop" , { declaration } ;      (* the label of a while or for loop sits here *)
 while-block = [ loop-head ] , "while" , expression , "do" , { statement } ,
-              [ "else" , { statement } ] , [ "then" , { statement } ] , "done" , [ label ] , ";" ;
+              [ "else" , { statement } ] , "done" , [ label ] , ";" ;
 for-block   = [ loop-head ] , "for" , pattern , "in" , expression , "do" , { statement } ,
-              [ "then" , { statement } ] , "done" , [ label ] , ";" ;
+              "done" , [ label ] , ";" ;
 repeat-block = [ label , ":" ] , "loop" , { declaration } , "do" , { statement } ,
               "repeat" , [ label ] , [ "while" , expression ] , ";" ;
 pattern     = name | "(" , pattern , { "," , pattern } , ")" | "(" , name , ":" , name , ")" | "*" , [ name ] | "_" ;   (* (k: v) visits a map *)

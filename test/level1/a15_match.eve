@@ -1,4 +1,4 @@
-# match with values, lists of values, ranges, other, then, one and all (D-016, D-030)
+# match with values, lists of values, ranges, other, one and all (D-016, D-030)
 ** spec: semantics/control.md#match
 driver a15_match is
   process main is
@@ -20,9 +20,8 @@ driver a15_match is
         print "2 or 3";
       when other do
         print "many";
-    then
-      print "match done";
     done;
+    print "match done";
 
     ** one (the default) stops at the first match, all tries every when
     new first := "";

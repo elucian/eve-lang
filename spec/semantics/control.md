@@ -38,19 +38,18 @@ match n
   when (1..5) do print "low";
   when 6, 7 do print "mid";
   when other do print "out";
-then
-  print "done";
 done;
+print "done";             ** after done: runs for any path
 ```
 
 - `match s one` (the default) runs only the first `when` whose value matches; `match s all` runs every matching `when`.
 - A `when` lists values, or a range, or an ordinal name. Values are compared with `==`; a range with `in`.
-- `when other do` runs only when no other `when` matched. `then` runs after the match for any path, including `other`.
+- `when other do` runs only when no other `when` matched. There is no `then` (D-161): the statements after `done;` run for any path, including `other`.
 - Declarations written before the first `when` live in the scope of the match. A compiler warns when an ordinal selector has no `when other` and not all values are covered.
 
 ## Loops
 
-There are three loops (D-074). The optional header `[label:] loop` followed by declarations belongs to a `while` or `for` loop: its declarations live in the loop scope, survive all iterations and are visible in `then` and `else`.
+There are three loops (D-074). The optional header `[label:] loop` followed by declarations belongs to a `while` or `for` loop: its declarations live in the loop scope, survive all iterations and are visible in the body and in `else`, not after `done` (D-161: `then` was removed; what is read after the loop is declared before it).
 
 ```eve
 while c do … done;                   ** tested at the start
@@ -60,9 +59,9 @@ for x in r do … done;                ** visits a range or a collection
 
 | Loop | Rules |
 |---|---|
-| `while c do` | the condition is checked before every cycle; `else` runs only if the condition was false the first time; `then` runs every time the loop ends, also after `break` |
-| `for x in r do` | `r` is a range or a collection (a trait `Iterable` in version 2); `x` is created for the loop and is visible in `then`, not after `done`; a collection is not changed while it is visited; a pattern `(k, v)` deconstructs a pair; a DataMap is visited in key order |
-| `loop … do … repeat;` | `repeat` closes the loop; `repeat while c;` goes on while `c` is true, tested after the body; a bare `repeat;` loops until `break`; no `else`, no `then` |
+| `while c do` | the condition is checked before every cycle; `else` runs only if the condition was false the first time |
+| `for x in r do` | `r` is a range or a collection (a trait `Iterable` in version 2); `x` is created for the loop and is not visible after `done`; a collection is not changed while it is visited; a pattern `(k, v)` deconstructs a pair; a DataMap is visited in key order |
+| `loop … do … repeat;` | `repeat` closes the loop; `repeat while c;` goes on while `c` is true, tested after the body; a bare `repeat;` loops until `break`; no `else` |
 
 - `break [label] [if c];` leaves the loop (an outer loop with its label).
 - `skip [label] [if c];` goes to the continuation point: in a `for` the next element; in a `while` the test of the condition; in a `repeat` loop the test at the end (a bare `repeat;` starts the next cycle).

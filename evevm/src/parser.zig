@@ -1173,16 +1173,24 @@ const Parser = struct {
 
     // Zig tip: a loop with a label closes with `done label;` and a loop without one with `done;`
     // (D-034). The label is kept in the text of the node so `break label` and `skip label` can find it.
-    /// The common end of `while`, `for`: `block [else block] [then block] done [label] ;`. Appends the
-    /// body, else and then blocks (empty ones when absent) to `kids`.
+    /// The common end of `while`, `for`: `block [else block] done [label] ;`. Appends the body, else and
+    /// then blocks to `kids`; the then block is always empty, the slot stays so the tree keeps its shape.
     fn loopTail(p: *Parser, kids: *std.ArrayList(*const Node), label: []const u8) Error!void {
         const at = p.peek();
         try kids.append(p.a, try p.block());
         const empty = try p.mk(.block, at, "", &.{});
         try kids.append(p.a, if (p.acceptWord("else")) try p.block() else empty);
-        try kids.append(p.a, if (p.acceptWord("then")) try p.block() else empty);
+        try p.refuseThen();
+        try kids.append(p.a, empty);
         try p.expectWord("done");
         try p.closeLabel(label);
+    }
+
+    // Zig tip: a function that only checks returns `Error!void`: nothing on success, an error to stop
+    // the parse. `p.fail` builds the message and returns the error, so `return p.fail(...)` ends the check.
+    /// `then` was removed from `match` and the loops: the code goes after `done;`, in the scope of the process or job.
+    fn refuseThen(p: *Parser) Error!void {
+        if (p.isWord("then")) return p.fail("'then' no longer exists: write the statements after 'done;'", .{});
     }
 
     // Zig tip: `closeLabel` checks the name after `done`: it must repeat the label of the block.
@@ -1296,7 +1304,8 @@ const Parser = struct {
             try p.expectWord("do");
             try whens.append(p.a, try p.mk(.when, w, "", &.{ try p.mk(.list, w, "", pats.items), try p.block() }));
         }
-        const then = if (p.acceptWord("then")) try p.block() else try p.mk(.block, kw, "", &.{});
+        try p.refuseThen();
+        const then = try p.mk(.block, kw, "", &.{});
         try p.expectWord("done");
         try p.closeLabel(label);
         var kids: std.ArrayList(*const Node) = .empty;

@@ -53,11 +53,9 @@ driver a14_for is
     done;
     expect w == "123";
 
-    ** the control variable is visible in then
+    ** the control variable is local to the loop
     for i in (1..3) do
       print "i = {i}";
-    then
-      print "last index {i}";
     done;
 
     ** a labeled loop: break and skip may name an outer loop
@@ -77,8 +75,7 @@ end a14_for;
   "stdout": [
     "i = 1",
     "i = 2",
-    "i = 3",
-    "last index 3"
+    "i = 3"
   ]
 }
 */
