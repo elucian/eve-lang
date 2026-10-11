@@ -1,0 +1,23 @@
+# reading g.value before the first next() is an error (D-067)
+** spec: syntax/declarations.md#generators-level-5
+driver e68_generator_value_early is
+  generator count_to(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      yield i;
+    done;
+  return;
+
+  process main is
+    new g := count_to(3);
+    print g.value;
+  recover
+    print "error: value before next";
+  return;
+end e68_generator_value_early;
+/*@expect
+{
+  "stdout": [
+    "error: value before next"
+  ]
+}
+*/

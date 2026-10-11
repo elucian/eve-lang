@@ -1,0 +1,29 @@
+# max_rejects: the reject after the limit is an error of the read; the rejects file has source, line, column, text and reason (data-types.md)
+** spec: semantics/data-types.md#transform-and-rejects
+driver e85_rejects_limit is
+  class P = {id: Integer, name: String} <: Record;
+
+  process main is
+    fs.write("out/in.csv", "id,name\n1,Ann\nx,Bob\n3\ny,Cid\n5,Eve\n");
+    for p in csv.read!(:P)("out/in.csv", rejects: "out/rejects.csv", max_rejects: 1) do
+      print "{p.id} {p.name}";
+    done;
+    print "not reached";
+  recover
+    print "error {$error.code}";
+  return;
+end e85_rejects_limit;
+/*@expect
+{
+  "stdout": [
+    "1 Ann",
+    "error 56"
+  ],
+  "files": {
+    "out/rejects.csv": [
+      "source,line,column,text,reason",
+      "out/in.csv,3,1,\"x,Bob\",'id' is not an Integer: x"
+    ]
+  }
+}
+*/

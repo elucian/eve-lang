@@ -63,6 +63,12 @@ pub const Db = struct {
         return std.mem.span(c.sqlite3_errmsg(self.handle));
     }
 
+    // Zig tip: `sqlite3_changes` answers with a C `int`; `@intCast` makes it the `i64` that Eve uses.
+    /// The number of rows that the last INSERT, UPDATE or DELETE changed.
+    pub fn changes(self: *Db) i64 {
+        return @intCast(c.sqlite3_changes(self.handle));
+    }
+
     /// Compiles one SQL statement; run it with `step` and release it with `finalize`.
     pub fn prepare(self: *Db, sql: [:0]const u8) Error!Stmt {
         var stmt: ?*c.sqlite3_stmt = null;
@@ -98,6 +104,56 @@ pub const Stmt = struct {
     /// Binds a 64-bit integer to the parameter `index` (the first `?` is 1).
     pub fn bindInt(self: *Stmt, index: u16, value: i64) Error!void {
         if (c.sqlite3_bind_int64(self.handle, index, value) != c.SQLITE_OK) return error.Step;
+    }
+
+    /// Binds a 64-bit float to the parameter `index`.
+    pub fn bindReal(self: *Stmt, index: u16, value: f64) Error!void {
+        if (c.sqlite3_bind_double(self.handle, index, value) != c.SQLITE_OK) return error.Step;
+    }
+
+    /// Binds NULL to the parameter `index`.
+    pub fn bindNull(self: *Stmt, index: u16) Error!void {
+        if (c.sqlite3_bind_null(self.handle, index) != c.SQLITE_OK) return error.Step;
+    }
+
+    // Zig tip: `SQLITE_TRANSIENT` tells SQLite to copy the text at once, so the Zig slice may be freed
+    // right after the call. The C header defines it as the pointer value -1, which Zig cannot translate,
+    // hence `@ptrFromInt(std.math.maxInt(usize))`, the same bits as -1. `@ptrCast` changes the pointer
+    // type; `@alignCast` asserts the alignment. `?*const fn` is how C passes a destructor.
+    /// Binds a text to the parameter `index`; SQLite keeps its own copy.
+    pub fn bindText(self: *Stmt, index: u16, value: []const u8) Error!void {
+        const transient: c.sqlite3_destructor_type = @ptrCast(@alignCast(@as(?*anyopaque, @ptrFromInt(std.math.maxInt(usize)))));
+        if (c.sqlite3_bind_text(self.handle, index, value.ptr, @intCast(value.len), transient) != c.SQLITE_OK) return error.Step;
+    }
+
+    /// The number of columns of the result.
+    pub fn columnCount(self: *Stmt) u16 {
+        return @intCast(c.sqlite3_column_count(self.handle));
+    }
+
+    /// The name of column `col`, as the query names it (`as total`).
+    pub fn columnName(self: *Stmt, col: u16) []const u8 {
+        return std.mem.span(c.sqlite3_column_name(self.handle, col));
+    }
+
+    /// The storage class of the value in column `col` of the current row.
+    pub const Kind = enum { integer, real, text, blob, null };
+
+    // Zig tip: a `switch` on a C constant needs the constants to be known at compile time; they are
+    // (`c.SQLITE_INTEGER` is a translated `#define`), and `else` covers every other value.
+    pub fn columnKind(self: *Stmt, col: u16) Kind {
+        return switch (c.sqlite3_column_type(self.handle, col)) {
+            c.SQLITE_INTEGER => .integer,
+            c.SQLITE_FLOAT => .real,
+            c.SQLITE_TEXT => .text,
+            c.SQLITE_BLOB => .blob,
+            else => .null,
+        };
+    }
+
+    /// The float value of column `col` of the current row.
+    pub fn columnReal(self: *Stmt, col: u16) f64 {
+        return c.sqlite3_column_double(self.handle, col);
     }
 
     /// The integer value of column `col` (the first column is 0) of the current row.
@@ -146,4 +202,26 @@ test "sqlite: the settings of the build are active" {
     try std.testing.expectEqual(@as(i64, 1), stmt.columnInt(0));
     // Double-quoted strings are names, never text (SQLITE_DQS=0): "nope" is an unknown column.
     try std.testing.expectError(error.Prepare, db.prepare("select \"nope\""));
+}
+
+test "sqlite: binds text, null and real, and reads the names and kinds of the columns" {
+    var db = try Db.open(":memory:");
+    defer db.close();
+    try db.exec("create table t (id integer primary key, name text, price real)");
+    var ins = try db.prepare("insert into t (id, name, price) values (?, ?, ?)");
+    try ins.bindInt(1, 7);
+    try ins.bindText(2, "Smith, Bob");
+    try ins.bindNull(3);
+    try std.testing.expect(!try ins.step());
+    ins.finalize();
+    try std.testing.expectEqual(@as(i64, 1), db.changes());
+
+    var q = try db.prepare("select name as who, price from t");
+    defer q.finalize();
+    try std.testing.expectEqual(@as(u16, 2), q.columnCount());
+    try std.testing.expectEqualStrings("who", q.columnName(0));
+    try std.testing.expect(try q.step());
+    try std.testing.expectEqual(Stmt.Kind.text, q.columnKind(0));
+    try std.testing.expectEqual(Stmt.Kind.null, q.columnKind(1));
+    try std.testing.expectEqualStrings("Smith, Bob", q.columnText(0));
 }

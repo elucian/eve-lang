@@ -1,0 +1,32 @@
+# TXT: a value longer than its width is a FormatError, overflow: "cut" cuts it; a field of spaces is null for T? (data-types.md)
+** spec: semantics/data-types.md#the-formats-in-detail
+driver e82_txt_rules is
+  class Line = {name: String, qty: Integer, note: String?} <: Record;
+
+  process main is
+    new rows := Table(:Line)();
+    new a := {name: "Alexander", qty: 7, note: null} :Line;
+    let rows <+ a;
+    txt.write("out/cut.txt", rows, widths: (5, 4, 6), overflow: "cut");
+    for r in txt.read!(:Line)("out/cut.txt", widths: (5, 4, 6)) do
+      print "[{r.name}] {r.qty} {r.note}";
+    done;
+    txt.write("out/long.txt", rows, widths: (5, 4, 6));
+    print "not reached";
+  recover
+    print "error {$error.code}";
+  return;
+end e82_txt_rules;
+/*@expect
+{
+  "stdout": [
+    "[Alexa] 7 Null",
+    "error 56"
+  ],
+  "files": {
+    "out/cut.txt": [
+      "Alexa   7      "
+    ]
+  }
+}
+*/

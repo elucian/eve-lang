@@ -1,0 +1,43 @@
+# a conflict fails the job and rolls it back; retry runs the job again from its declarations and reads the row fresh (database.md)
+** spec: library/database.md#transactions
+driver e94_orm_retry_conflict is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+    new tries := 0;
+
+    add: job
+    do
+      new c := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+    done add;
+
+    change: job
+      new c := customers.find!(1);
+    do
+      let tries += 1;
+      if tries == 1 do
+        new n := shop.execute!("update customers set version = version + 1 where id = ?", 1);
+      done;
+      let c.city := "Y";
+    done change;
+  recover
+    print "failed {$error.code}, try {tries}";
+    retry;
+  return;
+end e94_orm_retry_conflict;
+/*@expect
+{
+  "contains": [
+    "failed 53, try 1"
+  ]
+}
+*/

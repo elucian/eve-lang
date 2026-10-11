@@ -1,0 +1,67 @@
+# status, a field set back to its value, remove, refresh after a direct write, add and flush, detach (database.md)
+** spec: library/database.md#states-of-a-record
+driver e88_orm_write_methods is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new a := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      new b := {id: 0, name: "Bob", city: null, version: 0} :Customer;
+      new c := {id: 0, name: "Cid", city: null, version: 0} :Customer;
+      let customers <+ a;
+      let customers <+ b;
+      let customers <+ c;
+    done add;
+
+    act: job
+    do
+      new a := customers.find!(1);
+      print customers.status(a);
+      let a.city := "Rome";
+      print customers.status(a);
+      let a.city := null;                 ** back to the value that was read: clean again
+      print customers.status(a);
+      new b := customers.find!(2);
+      customers.remove(b);
+      print customers.status(b);
+      new c := customers.find!(3);
+      new n := shop.execute!("update customers set city = 'Oslo' where id = 3");
+      customers.refresh(c);
+      print c.city;
+      new d := {id: 0, name: "Dan", city: null, version: 0} :Customer;
+      customers.add(d);
+      print customers.status(d);
+      customers.flush();
+      print "{d.id} {customers.status(d)}";
+      customers.detach(d);
+      print customers.status(d);
+    done act;
+
+    print customers.count!("1 = 1");
+  return;
+end e88_orm_write_methods;
+/*@expect
+{
+  "stdout": [
+    "clean",
+    "dirty",
+    "clean",
+    "removed",
+    "Oslo",
+    "added",
+    "4 clean",
+    "detached",
+    "3"
+  ]
+}
+*/

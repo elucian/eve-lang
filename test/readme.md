@@ -13,6 +13,7 @@ Tests run on the Eve virtual machine (`bin/eve.exe`, built from `evevm/`) with `
 | `python script/runtest.py a03` | one test, by name or unique name prefix |
 | `python script/runtest.py test/level1/a03_print.eve` | one test, by path |
 | `python script/runtest.py 1 --eve path/to/other-eve` | the same tests on another implementation |
+| `python script/runtest.py project` | the special test of `project init` and `project new` (`test/project/`, a shell script on real folders; run separately, not part of `all`) |
 
 A test is a `.eve` file directly in `test/levelN/`. What it must produce, all optional:
 

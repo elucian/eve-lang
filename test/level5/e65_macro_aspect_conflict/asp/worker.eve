@@ -1,0 +1,6 @@
+# the aspect of the project folder with the same name as the aspect of the macro
+exclusive aspect worker is
+  process main is
+    print "asp/worker";
+  return;
+end worker;

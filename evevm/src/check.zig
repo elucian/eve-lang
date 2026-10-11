@@ -16,6 +16,8 @@ pub const Error = lexer.Error;
 // Zig tip: an `enum` with a few names is the clearest way to say "what kind of thing is this".
 // `?[]const u8` is a text or nothing: the type name that the check could work out, or null when it
 // does not know (then it says nothing: the check never guesses).
+const overload = @import("overload.zig");
+
 const Kind = enum { variable, constant, function, procedure, class, param, builtin };
 
 const Info = struct { kind: Kind, ty: ?[]const u8 = null, node: ?*const Node = null };
@@ -35,7 +37,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
     .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Ordinal"}, .{"Function"},
     .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"Atomic"},
-    .{"Channel"}, .{"Duration"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
+    .{"Channel"}, .{"Duration"}, .{"database"}, .{"csv"}, .{"json"}, .{"Instant"}, .{"Secret"}, .{"Table"}, .{"time"}, .{"txt"}, .{"fs"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
 });
 
 const Checker = struct {
@@ -57,6 +59,13 @@ const Checker = struct {
     allow_abstract: bool = false,
     /// The routine being checked is a constructor.
     in_ctor: bool = false,
+    /// The functions and procedures of the driver by name, in order, when several share one name (D-149).
+    ov: std.StringHashMapUnmanaged(std.ArrayList(*const Node)) = .empty,
+    /// The `table` declarations by name (level 5).
+    tables: std.StringHashMapUnmanaged(*const Node) = .empty,
+    /// The type the context asks for the expression about to be checked: a type hint, the type of the target
+    /// of `let`, the type of a parameter. Only a call reads it, to choose among overloads by the result (D-149).
+    expected: ?[]const u8 = null,
 
     // Zig tip: `fail` fills the `Diag` and returns the error, as in the parser, so a caller writes
     // `return c.fail(n, "...", .{})`. `comptime fmt` is checked against `args` by the compiler.
@@ -101,6 +110,16 @@ const Checker = struct {
         return c.fail(at, "undefined name '{s}'", .{name});
     }
 
+    // Zig tip: `secret` is the name of a library module (`secret.get(name)`), but also a common name for a
+    // variable. It is not in the list of built-in names: only the receiver of a member access is taken for the
+    // module when no variable of that name is in scope, so `print secret;` of an undeclared name is still an error.
+    /// Is `n` the name `secret` used as the library module and not declared as anything else?
+    fn isSecretModule(c: *Checker, n: *const Node) bool {
+        if (n.tag != .name) return false;
+        const library = std.mem.eql(u8, n.text, "secret") or std.mem.eql(u8, n.text, "checkpoint");
+        return library and c.lookup(n.text) == null;
+    }
+
     fn isNumeric(ty: ?[]const u8) bool {
         const t = ty orelse return false;
         return std.mem.eql(u8, t, "Integer") or std.mem.eql(u8, t, "Real");
@@ -117,6 +136,8 @@ const Checker = struct {
     // optional: `try` unwraps the error, the caller still has the optional type name.
     /// Check an expression and return its type when the check knows it.
     fn expr(c: *Checker, n: *const Node) Error!?[]const u8 {
+        const exp = c.expected;
+        c.expected = null; // only the expression that the context names uses it, not what is inside
         switch (n.tag) {
             .num => {
                 for (n.text) |ch| if (ch == '.') return "Real";
@@ -155,11 +176,14 @@ const Checker = struct {
                 return null;
             },
             .list, .array, .brace, .index, .spread, .field => {
-                for (n.kids) |k| _ = try c.expr(k);
+                for (n.kids) |k| {
+                    if (n.tag == .field and c.isSecretModule(k)) continue;
+                    _ = try c.expr(k);
+                }
                 return null;
             },
             .builder => return c.builder(n),
-            .call => return c.call(n, false),
+            .call => return c.callExpecting(n, false, exp),
             .await_ => {
                 c.task_call = true;
                 defer c.task_call = false;
@@ -233,12 +257,24 @@ const Checker = struct {
 
     /// A call. `as_statement` is true for `foo(1);`, the only place where a procedure may be called.
     fn call(c: *Checker, n: *const Node, as_statement: bool) Error!?[]const u8 {
+        return c.callExpecting(n, as_statement, null);
+    }
+
+    // Zig tip: `callExpecting` is `call` with the type the context expects. The arguments are checked once, in
+    // the loop at the end, and their types are kept (`infos`) for the choice among overloaded declarations;
+    // `[_]overload.ArgInfo{.{}} ** 32` would be a fixed array, here an `ArrayList` of the exact size is used.
+    fn callExpecting(c: *Checker, n: *const Node, as_statement: bool, exp: ?[]const u8) Error!?[]const u8 {
         const callee = n.kids[0];
         const args = n.kids[1..];
         var result: ?[]const u8 = null;
+        var overloaded: ?[]const *const Node = null;
+        var single: ?*const Node = null;
         if (callee.tag == .name or callee.tag == .generic) {
             const info = try c.resolve(callee, callee.text);
             if (info.node) |target| {
+                if (target.tag == .generator and as_statement) {
+                    return c.fail(n, "generator {s} is called as a statement: its values would be lost; use it in a for loop or call next() on it", .{callee.text});
+                }
                 if (target.is_async and !c.task_call) return c.fail(n, "{s} is async: use spawn or await (D-104)", .{callee.text});
                 if (target.tag == .class and !c.allow_abstract) {
                     if (c.missing(target, false)) |_| return c.fail(n, "{s} is abstract: only the constructor of a subclass builds it (D-145)", .{callee.text});
@@ -246,6 +282,7 @@ const Checker = struct {
             }
             c.task_call = false;
             c.allow_abstract = false;
+            if (info.kind == .class) try c.nullFields(callee.text, n);
             switch (info.kind) {
                 .procedure => if (!as_statement) {
                     return c.fail(n, "the procedure '{s}' returns nothing: it can't be used in an expression", .{callee.text});
@@ -253,12 +290,53 @@ const Checker = struct {
                 .class => result = callee.text,
                 else => {},
             }
-            if (info.node) |target| try c.order(n, target, args);
+            if (c.ov.get(callee.text)) |list| {
+                if (list.items.len > 1) overloaded = list.items;
+            }
+            if (callee.tag == .generic) {
+                if (overloaded == null) if (info.node) |target| try c.constraints(callee, target);
+            }
+            if (overloaded == null) if (info.node) |target| {
+                try c.order(n, target, args);
+                if (target.tag == .function or target.tag == .procedure) single = target;
+                // a type parameter that no value parameter mentions can only come from the call (D-148)
+                if (callee.tag == .name) try c.inferable(n, target);
+            };
         } else if (callee.tag == .field) {
-            const obj_ty = try c.expr(callee.kids[0]);
+            // `customers.find!(…)` gives a record of the class of the table
+            if (callee.kids[0].tag == .name and std.mem.eql(u8, callee.text, "find!")) {
+                if (c.tables.get(callee.kids[0].text)) |t| result = t.kids[0].text;
+            }
+            const obj_ty = if (c.isSecretModule(callee.kids[0])) null else try c.expr(callee.kids[0]);
             if (obj_ty) |t| try c.method(n, t, callee.text);
         } else _ = try c.expr(callee);
-        for (args) |a| _ = try c.expr(a);
+        var infos: std.ArrayList(overload.ArgInfo) = .empty;
+        var all_known = true;
+        for (args, 0..) |a, i| {
+            if (a.tag == .pair and a.kids[0].tag == .name) {
+                try infos.append(c.a, .{ .name = a.kids[0].text, .ty = try c.expr(a.kids[1]) });
+            } else {
+                if (single) |t| {
+                    const plist = t.kids[0].kids;
+                    if (i < plist.len and plist[i].tag != .vararg_param) c.expected = if (plist[i].ty) |pt| pt.text else null;
+                }
+                try infos.append(c.a, .{ .ty = try c.expr(a) });
+            }
+            if (infos.items[infos.items.len - 1].ty == null) all_known = false;
+        }
+        if (overloaded) |decls| {
+            // a written type list, `describe(:Integer)(5)`, asks for the generic declarations (D-148)
+            var generic_only: std.ArrayList(*const Node) = .empty;
+            if (callee.tag == .generic) {
+                for (decls) |d| if (d.kids[1].kids.len > 0) try generic_only.append(c.a, d);
+            }
+            switch (overload.select(if (generic_only.items.len > 0) generic_only.items else decls, infos.items, exp, null)) {
+                .one => |d| @constCast(n).sel = d,
+                .none => return c.fail(n, "no signature of {s} matches the arguments", .{callee.text}),
+                // with a type that is not known here the choice is made at run time, from the values
+                .ambiguous => if (all_known) return c.fail(n, "ambiguous call of {s}: more than one signature fits", .{callee.text}),
+            }
+        }
         return result;
     }
 
@@ -270,7 +348,7 @@ const Checker = struct {
         while (cur) |cn| {
             const cls = c.classes.get(cn) orelse return;
             for (cls.kids[2..]) |m| {
-                if (m.tag != .method and m.tag != .function) continue;
+                if (m.tag != .method and m.tag != .function and m.tag != .generator) continue;
                 if (!std.mem.eql(u8, m.text, name)) continue;
                 if (m.public) return;
                 if (c.in_class) |here| if (std.mem.eql(u8, here, cn)) return;
@@ -366,6 +444,47 @@ const Checker = struct {
         }
     }
 
+    // Zig tip: `c.classes` maps a class name to its declaration; `kids[1]` is the parent, `extra` the traits it
+    // adopts. The loop climbs the parents. The basic types adopt `Comparable` and `Printable` in the library
+    // (declarations.md, library traits), so a type argument that is not a class passes.
+    /// Does the class `name` adopt the trait `trait`, directly, through a parent or through a trait?
+    fn adopts(c: *Checker, name: []const u8, trait: []const u8) bool {
+        var cur: ?[]const u8 = name;
+        while (cur) |cn| {
+            if (std.mem.eql(u8, cn, trait)) return true;
+            const cls = c.classes.get(cn) orelse return overload.isPrimitive(cn); // a basic type adopts the library traits; `Object` does not
+            for (cls.extra) |tr| if (c.adopts(tr.text, trait)) return true;
+            cur = if (cls.kids[1].tag == .name) cls.kids[1].text else null;
+        }
+        return false;
+    }
+
+    /// The written types of `largest(:Point)(...)` must adopt the constraints of the declaration (D-145, D-148).
+    fn constraints(c: *Checker, callee: *const Node, target: *const Node) Error!void {
+        for (target.kids[1].kids, 0..) |tp, i| {
+            const want = tp.ty orelse continue;
+            if (i >= callee.kids.len) break;
+            const given = callee.kids[i].text;
+            if (!c.adopts(given, want.text)) return c.fail(callee, "{s} does not adopt {s}, the constraint of {s} in {s} (D-148)", .{ given, want.text, tp.text, target.text });
+        }
+    }
+
+    // Zig tip: `overload.mentions` finds a whole word in the text of a type. A type parameter that appears in
+    // no parameter type can not be read from the arguments, so the call must write it: `make(:Integer)()`.
+    /// A call without a type list of a generic subprogram whose type parameters the arguments do not give.
+    fn inferable(c: *Checker, n: *const Node, target: *const Node) Error!void {
+        if (target.tag != .function and target.tag != .procedure) return;
+        for (target.kids[1].kids) |tp| {
+            var found = false;
+            for (target.kids[0].kids) |prm| {
+                if (prm.ty) |t| if (overload.mentions(t.text, tp.text)) {
+                    found = true;
+                };
+            }
+            if (!found) return c.fail(n, "can not infer the type {s} of {s}: write it at the call, {s}(:Type)(...) (D-148)", .{ tp.text, target.text, target.text });
+        }
+    }
+
     // ---- declarations -----------------------------------------------------------------------
 
     /// Declare the parameters of a subprogram, a lambda or a process in the current scope.
@@ -386,6 +505,7 @@ const Checker = struct {
         const saved_ctor = c.in_ctor;
         defer c.in_ctor = saved_ctor;
         c.in_ctor = r.tag == .constructor;
+        for (r.kids[1].kids) |tp| try c.declare(tp, tp.text, .{ .kind = .class });
         try c.params(r.kids[0]);
         for (r.kids[2].kids) |res| {
             if (c.frames.items[c.frames.items.len - 1].names.contains(res.text)) continue; // `(@self)` repeats the parameter
@@ -427,12 +547,25 @@ const Checker = struct {
                 const value = s.kids[1];
                 // `let self := Shape(name);` is how a subclass constructor builds its abstract parent
                 c.allow_abstract = c.in_ctor and s.kids[0].tag == .name and std.mem.eql(u8, s.kids[0].text, "self");
+                if (s.kids[0].tag == .name) if (c.lookup(s.kids[0].text)) |target_info| {
+                    c.expected = target_info.ty;
+                };
                 _ = try c.expr(value);
                 c.allow_abstract = false;
                 const target = s.kids[0];
                 if (std.mem.eql(u8, s.text, "+>")) {
                     _ = try c.expr(target); // `let x +> lst;`: the left side is the element
                     return;
+                }
+                if (std.mem.eql(u8, s.text, "<+") and target.tag == .name) {
+                    if (c.tables.get(target.text)) |t| if (tableHas(t, "read only")) {
+                        return c.fail(s, "table {s} is read only: it has no add, no remove and no change of a field (database.md, the table declaration)", .{t.text});
+                    };
+                }
+                if (target.tag == .field and target.kids[0].tag == .name) {
+                    // `let c.id := 5;` when the type of `c` is a record class of a table: a key or generated field never changes
+                    const info = c.lookup(target.kids[0].text);
+                    if (info) |i| if (i.ty) |ty| try c.fieldChange(s, ty, target.text);
                 }
                 const r = root(target);
                 if (r.tag == .name) {
@@ -453,7 +586,7 @@ const Checker = struct {
                     }
                 } else if (target.tag != .name) _ = try c.expr(target);
             },
-            .print_stmt, .write_stmt, .expect_stmt, .assert_stmt, .raise_stmt => {
+            .print_stmt, .write_stmt, .expect_stmt, .assert_stmt, .raise_stmt, .yield_stmt => {
                 for (s.kids) |k| _ = try c.expr(k);
             },
             .cond_stmt => {
@@ -461,6 +594,8 @@ const Checker = struct {
                 try c.statement(s.kids[1]);
             },
             .defer_stmt => try c.statement(s.kids[0]),
+            .commit_stmt, .rollback_stmt => {},
+            .update_stmt => try c.updateBlock(s),
             .expr_stmt => {
                 const e = s.kids[0];
                 if (e.tag == .call) {
@@ -535,6 +670,7 @@ const Checker = struct {
             .job => {
                 try c.push();
                 defer c.pop();
+                try c.jobWrites(s);
                 try c.block(s.kids[0]);
             },
             // Zig tip: a `switch` prong may list the work in a block `{ ... }` and `return c.fail(...)`
@@ -549,14 +685,42 @@ const Checker = struct {
         }
     }
 
+    // Zig tip: `std.mem.endsWith(u8, text, "?")` tests the end of a type text: `String?` is optional. A member
+    // that is not optional never holds `null` (D-080), so a literal `null` for it is refused when the program is
+    // compiled. `pair` nodes are the `name: value` items of an object literal or of a call.
+    /// `{name: null} :Customer` or `Customer(name: null)`: `null` for a member that is not optional (D-080).
+    fn nullFields(c: *Checker, class_name: []const u8, value: *const Node) Error!void {
+        const cls = c.classes.get(class_name) orelse return;
+        const items: []const *const Node = switch (value.tag) {
+            .brace => value.kids,
+            .call => if (value.kids.len > 1) value.kids[1..] else &.{},
+            else => return,
+        };
+        for (items) |pair| {
+            if (pair.tag != .pair or pair.kids[0].tag != .name) continue;
+            const v = pair.kids[1];
+            if (v.tag != .name or !(std.mem.eql(u8, v.text, "null") or std.mem.eql(u8, v.text, "Null"))) continue;
+            for (cls.kids[0].kids) |m| {
+                if (!std.mem.eql(u8, m.text, pair.kids[0].text)) continue;
+                const ty = m.ty orelse continue;
+                if (!std.mem.endsWith(u8, ty.text, "?")) {
+                    return c.fail(pair, "null for '{s}' of {s}, which is not optional: write {s}? to allow null (D-080)", .{ m.text, class_name, ty.text });
+                }
+            }
+        }
+    }
+
     // Zig tip: the value is checked before the names are declared, so `new x := x + 1;` does not see
     // the new `x`. A declaration with a field target (`new p.z := 7;`) adds an attribute: only a
     // method or a constructor may do it, and only to `self` (Q-019h, D-096).
     fn declaration(c: *Checker, s: *const Node) Error!void {
+        if (s.ty) |hint_node| try c.nullFields(hint_node.text, s.kids[1]);
         var vt: ?[]const u8 = null;
-        if (s.kids[1].tag != .none) vt = try c.expr(s.kids[1]);
-        const targets = s.kids[0].kids;
         const hint: ?[]const u8 = if (s.ty) |t| t.text else null;
+        c.expected = hint;
+        if (s.kids[1].tag != .none) vt = try c.expr(s.kids[1]);
+        c.expected = null;
+        const targets = s.kids[0].kids;
         for (targets) |t| {
             switch (t.tag) {
                 .name => {
@@ -591,8 +755,11 @@ const Checker = struct {
                         }
                     }
                 },
-                .function => try c.declare(m, m.text, .{ .kind = .function, .node = m }),
-                .procedure => try c.declare(m, m.text, .{ .kind = .procedure, .node = m }),
+                .function, .procedure, .generator => try c.declareSubprogram(m),
+                .table_decl => {
+                    try c.declare(m, m.text, .{ .kind = .variable, .ty = "Table", .node = m });
+                    try c.tables.put(c.a, m.text, m);
+                },
                 .import_decl => for (m.kids) |item| {
                     const alias = item.kids[0];
                     if (item.public or std.mem.eql(u8, item.text, "*")) {
@@ -613,19 +780,349 @@ const Checker = struct {
         }
     }
 
+    // Zig tip: `getPtr` gives a pointer into the map, so the list can grow in place (`append`). The first
+    // declaration of a name is declared as before; the next ones with the same name join its list when they
+    // are of the same kind and their signature is new (D-149).
+    /// Declare a function or a procedure; several may share a name if their signatures differ.
+    fn declareSubprogram(c: *Checker, m: *const Node) Error!void {
+        if (c.ov.getPtr(m.text)) |list| {
+            if (list.items[0].tag != m.tag) return c.fail(m, "{s} is both a function and a procedure: they never share a name (D-149)", .{m.text});
+            for (list.items) |d| {
+                if (overload.sameSignature(d, m)) return c.fail(m, "{s} is declared twice with the same signature (D-149)", .{m.text});
+            }
+            try list.append(c.a, m);
+            return;
+        }
+        try c.declare(m, m.text, .{ .kind = if (m.tag == .procedure) .procedure else .function, .node = m });
+        var list: std.ArrayList(*const Node) = .empty;
+        try list.append(c.a, m);
+        try c.ov.put(c.a, m.text, list);
+    }
+
+    // Zig tip: a set of names is a `StringHashMapUnmanaged(void)`: `put(a, name, {})` adds, `contains` asks. A
+    // recursive walk collects every name that a node declares (parameters, variables, loop patterns), so a
+    // use of the same name inside the aspect is its own variable and not the shared one.
+    fn collectNames(c: *Checker, n: *const Node, set: *std.StringHashMapUnmanaged(void)) Error!void {
+        switch (n.tag) {
+            .param, .ref_param, .vararg_param => try set.put(c.a, n.text, {}),
+            .var_decl, .set => for (n.kids[0].kids) |t| if (t.tag == .name) try set.put(c.a, t.text, {}),
+            .for_ => try c.patternNames(n.kids[0], set),
+            else => {},
+        }
+        for (n.kids) |k| try c.collectNames(k, set);
+    }
+
+    fn patternNames(c: *Checker, p: *const Node, set: *std.StringHashMapUnmanaged(void)) Error!void {
+        if (p.tag == .name) try set.put(c.a, p.text, {});
+        for (p.kids) |k| try c.patternNames(k, set);
+    }
+
+    /// Is the shared variable declaration `k` atomic: typed `Atomic(:T)` (the parser marks the type `public`)?
+    fn isAtomic(k: *const Node) bool {
+        const t = k.ty orelse return false;
+        return t.public;
+    }
+
+    // Zig tip: `visiting` is the list of the subprograms being examined: a function that calls itself would loop
+    // for ever, so a name already in the list counts as safe for now (as in project.zig, `memberSafe`).
+    /// Is the shared function or procedure `name` thread safe? No shared plain variable, no unsafe call (D-152).
+    fn subprogramSafe(c: *Checker, macro_root: *const Node, name: []const u8, visiting: *std.ArrayList([]const u8)) Error!bool {
+        for (visiting.items) |v| if (std.mem.eql(u8, v, name)) return true;
+        for (macro_root.kids) |k| {
+            if ((k.tag != .function and k.tag != .procedure) or !std.mem.eql(u8, k.text, name)) continue;
+            try visiting.append(c.a, name);
+            defer _ = visiting.pop();
+            var locals: std.StringHashMapUnmanaged(void) = .empty;
+            try c.collectNames(k, &locals);
+            return c.bodySafe(macro_root, k, &locals, visiting);
+        }
+        return true;
+    }
+
+    fn bodySafe(c: *Checker, macro_root: *const Node, n: *const Node, locals: *std.StringHashMapUnmanaged(void), visiting: *std.ArrayList([]const u8)) Error!bool {
+        if (n.tag == .name and !locals.contains(n.text)) {
+            for (macro_root.kids) |k| {
+                if (k.tag != .var_decl or isAtomic(k)) continue;
+                for (k.kids[0].kids) |t| if (t.tag == .name and std.mem.eql(u8, t.text, n.text)) return false;
+            }
+        }
+        if (n.tag == .call and n.kids[0].tag == .name and !locals.contains(n.kids[0].text)) {
+            if (!try c.subprogramSafe(macro_root, n.kids[0].text, visiting)) return false;
+        }
+        for (n.kids) |k| if (!try c.bodySafe(macro_root, k, locals, visiting)) return false;
+        return true;
+    }
+
+    /// Reject, in a `concurrent` aspect of a macro, a shared variable that is not atomic and a call of a shared
+    /// subprogram that is not thread safe (D-152). The message names the aspect and the name.
+    fn aspectSafe(c: *Checker, macro_root: *const Node, aspect: *const Node, n: *const Node, locals: *std.StringHashMapUnmanaged(void)) Error!void {
+        if (n.tag == .name and !locals.contains(n.text)) {
+            for (macro_root.kids) |k| {
+                if (k.tag != .var_decl or isAtomic(k)) continue;
+                for (k.kids[0].kids) |t| {
+                    if (t.tag == .name and std.mem.eql(u8, t.text, n.text)) {
+                        return c.fail(n, "the concurrent aspect '{s}' uses '{s}', which is not thread safe: declare it :Atomic(:Type) (D-152)", .{ aspect.text, n.text });
+                    }
+                }
+            }
+        }
+        if (n.tag == .call and n.kids[0].tag == .name and !locals.contains(n.kids[0].text)) {
+            var visiting: std.ArrayList([]const u8) = .empty;
+            if (!try c.subprogramSafe(macro_root, n.kids[0].text, &visiting)) {
+                return c.fail(n, "the concurrent aspect '{s}' calls '{s}', which is not thread safe (D-152)", .{ aspect.text, n.kids[0].text });
+            }
+        }
+        for (n.kids) |k| try c.aspectSafe(macro_root, aspect, k, locals);
+    }
+
+    fn concurrentSafety(c: *Checker, macro_root: *const Node) Error!void {
+        for (macro_root.kids) |a| {
+            if (a.tag != .aspect or !a.public) continue;
+            var locals: std.StringHashMapUnmanaged(void) = .empty;
+            try c.collectNames(a, &locals);
+            for (a.kids) |k| try c.aspectSafe(macro_root, a, k, &locals);
+        }
+    }
+
+    // ---- tables (spec/library/database.md#the-table-declaration) -----------------------------------
+
+    /// Does the table declaration have the clause `word` (`read only`, `temporary`, `key`, …)?
+    fn tableHas(t: *const Node, word: []const u8) bool {
+        for (t.kids[3..]) |cl| if (std.mem.eql(u8, cl.text, word)) return true;
+        return false;
+    }
+
+    fn clauseOf(t: *const Node, word: []const u8) ?*const Node {
+        for (t.kids[3..]) |cl| if (std.mem.eql(u8, cl.text, word)) return cl;
+        return null;
+    }
+
+    fn classHasField(cls: *const Node, name: []const u8) bool {
+        for (cls.kids[0].kids) |m| if (std.mem.eql(u8, m.text, name)) return true;
+        return false;
+    }
+
+    /// The clause `word` of the table lists the field `name` (key, generated, version).
+    fn clauseHasField(t: *const Node, word: []const u8, name: []const u8) bool {
+        const cl = clauseOf(t, word) orelse return false;
+        for (cl.kids) |f| if (std.mem.eql(u8, f.text, name)) return true;
+        return false;
+    }
+
+    // Zig tip: the key of a table is the clause `key (…)`, or `(id)` when the class has a field `id` and the clause is
+    // missing. The function returns the names in a slice of the arena; with no key at all the slice is empty and the
+    // caller reports it.
+    /// The names of the key fields of a table.
+    pub fn keyFields(a: std.mem.Allocator, t: *const Node, cls: *const Node) ![]const []const u8 {
+        var out: std.ArrayList([]const u8) = .empty;
+        if (clauseOf(t, "key")) |cl| {
+            for (cl.kids) |f| try out.append(a, f.text);
+        } else if (classHasField(cls, "id")) try out.append(a, "id");
+        return out.items;
+    }
+
+    // Zig tip: all the rules of a declaration are checked together, in the order of the table of compile errors of
+    // the specification. `c.fail(node, fmt, args)` reports at the line of the node. The class of the table was
+    // declared in this scope (`c.classes`); a class that is not found is an error.
+    /// The compile errors of one `table` declaration.
+    fn checkTable(c: *Checker, t: *const Node) Error!void {
+        const class_name = t.kids[0].text;
+        const cls = c.classes.get(class_name) orelse return c.fail(t, "table {s}: the record class {s} is not declared", .{ t.text, class_name });
+        if (cls.kids[1].tag != .name or !std.mem.eql(u8, cls.kids[1].text, "Record")) {
+            return c.fail(t, "table {s}: {s} is not a record class: derive it from Record (class {s} = {{…}} <: Record)", .{ t.text, class_name, class_name });
+        }
+        for (t.kids[3..]) |cl| {
+            const w = cl.text;
+            if (std.mem.eql(u8, w, "key") or std.mem.eql(u8, w, "generated") or std.mem.eql(u8, w, "version") or std.mem.eql(u8, w, "column") or std.mem.eql(u8, w, "reference")) {
+                const f = cl.kids[0];
+                if (!classHasField(cls, f.text)) return c.fail(f, "unknown field {s} in {s} of {s}", .{ f.text, w, t.text });
+                if (std.mem.eql(u8, w, "key") or std.mem.eql(u8, w, "generated")) {
+                    for (cl.kids[1..]) |g| if (!classHasField(cls, g.text)) return c.fail(g, "unknown field {s} in {s} of {s}", .{ g.text, w, t.text });
+                }
+            }
+            if (std.mem.eql(u8, w, "temporary")) {
+                if (!std.mem.eql(u8, t.kids[1].text, "stage")) {
+                    return c.fail(cl, "temporary is allowed only in the staging database, the connection \"stage\": table {s} is in \"{s}\"", .{ t.text, t.kids[1].text });
+                }
+            }
+        }
+        const keys = c.keyFieldsOf(t, cls) catch return error.OutOfMemory;
+        if (keys.len == 0) return c.fail(t, "table {s} needs a key: the class {s} has no field id, write key (field);", .{ t.text, class_name });
+        for (keys) |k| {
+            if (!classHasField(cls, k)) return c.fail(t, "unknown field {s} in key of {s}", .{ k, t.text });
+        }
+        if (clauseOf(t, "version")) |v| {
+            for (keys) |k| if (std.mem.eql(u8, k, v.kids[0].text)) return c.fail(v, "the version field {s} can not be a key field of {s}", .{ k, t.text });
+        }
+        if (clauseOf(t, "reference")) |_| {} // the cycle is looked for when every table is known
+        try c.referenceCycle(t);
+    }
+
+    fn keyFieldsOf(c: *Checker, t: *const Node, cls: *const Node) ![]const []const u8 {
+        return keyFields(c.a, t, cls);
+    }
+
+    // Zig tip: a depth-first walk over the `reference f to t` edges. `path` is the tables on the way; meeting one that
+    // is already on the way is a cycle, and the message lists the tables of the cycle in order.
+    /// A cycle of `reference` clauses is a compile error (database.md): `aa -> bb -> aa`.
+    fn referenceCycle(c: *Checker, start: *const Node) Error!void {
+        var path: std.ArrayList(*const Node) = .empty;
+        try path.append(c.a, start);
+        try c.walkReferences(start, &path);
+    }
+
+    fn walkReferences(c: *Checker, t: *const Node, path: *std.ArrayList(*const Node)) Error!void {
+        for (t.kids[3..]) |cl| {
+            if (!std.mem.eql(u8, cl.text, "reference")) continue;
+            const target = c.tables.get(cl.kids[1].text) orelse return c.fail(cl, "unknown table {s} in reference of {s}", .{ cl.kids[1].text, t.text });
+            for (path.items, 0..) |p, i| {
+                if (p == target) {
+                    var text: std.ArrayList(u8) = .empty;
+                    for (path.items[i..]) |q| {
+                        try text.appendSlice(c.a, q.text);
+                        try text.appendSlice(c.a, " -> ");
+                    }
+                    try text.appendSlice(c.a, target.text);
+                    return c.fail(cl, "reference cycle: {s}", .{text.items});
+                }
+            }
+            try path.append(c.a, target);
+            try c.walkReferences(target, path);
+            _ = path.pop();
+        }
+    }
+
+    // Zig tip: `fieldChange` is called with the type name of a record. Every table of that class says which fields
+    // are its key or generated: the first table declared for the class decides. A record read with `find!` has the
+    // class of its table, so the type is known to the compiler (the checker keeps it in the variable).
+    /// A key or generated field never changes (database.md, dirty fields); the compiler refuses a change it can see.
+    fn fieldChange(c: *Checker, at: *const Node, class_name: []const u8, field: []const u8) Error!void {
+        var it = c.tables.iterator();
+        while (it.next()) |entry| {
+            const t = entry.value_ptr.*;
+            if (!std.mem.eql(u8, t.kids[0].text, class_name)) continue;
+            const cls = c.classes.get(class_name) orelse continue;
+            const keys = c.keyFieldsOf(t, cls) catch continue;
+            for (keys) |k| if (std.mem.eql(u8, k, field)) return c.fail(at, "field {s} can not be changed: it is the key of {s}; a key change is a delete and an insert", .{ field, t.text });
+            if (clauseHasField(t, "generated", field)) return c.fail(at, "field {s} can not be changed: the database generates it in {s}", .{ field, t.text });
+            if (tableHas(t, "read only")) return c.fail(at, "field {s} can not be changed: table {s} is read only", .{ field, t.text });
+            return;
+        }
+    }
+
+    // Zig tip: `update c do … done;` names the fields of the record `c` as variables inside the block, so the block is
+    // checked in a scope where each member of the class is declared. When the class of `c` is not known to the
+    // compiler the names are accepted as they come (`open_names`), as for an import without prefix.
+    /// `update record do … done;` (database.md, the update block).
+    fn updateBlock(c: *Checker, s: *const Node) Error!void {
+        const ty = try c.expr(s.kids[0]);
+        try c.push();
+        defer c.pop();
+        const saved_open = c.open_names;
+        defer c.open_names = saved_open;
+        if (ty) |class_name| {
+            if (c.classes.get(class_name)) |cls| {
+                for (cls.kids[0].kids) |m| try c.declare(m, m.text, .{ .kind = .variable, .ty = if (m.ty) |t| t.text else null });
+                try c.updateTargets(s.kids[1], class_name);
+            } else c.open_names = true;
+        } else c.open_names = true;
+        try c.block(s.kids[1]);
+    }
+
+    /// Inside an update block, a `let` of a key, generated or read only field is refused.
+    fn updateTargets(c: *Checker, n: *const Node, class_name: []const u8) Error!void {
+        if (n.tag == .assign and n.kids[0].tag == .name) try c.fieldChange(n, class_name, n.kids[0].text);
+        for (n.kids) |k| try c.updateTargets(k, class_name);
+    }
+
+    // Zig tip: one walk over the body of a job collects the connection of every table it writes (`let t <+ r;`,
+    // `t.remove(r)`, `t.add(r)`, `t.flush()`, `t.load!(…)`). A second connection name is the error of D-158.
+    /// A job writes to one connection only (database.md, transactions).
+    fn jobWrites(c: *Checker, job: *const Node) Error!void {
+        var first: ?[]const u8 = null;
+        try c.collectWrites(job, job.kids[0], &first);
+    }
+
+    fn collectWrites(c: *Checker, job: *const Node, n: *const Node, first: *?[]const u8) Error!void {
+        var table: ?*const Node = null;
+        if (n.tag == .assign and std.mem.eql(u8, n.text, "<+") and n.kids[0].tag == .name) table = c.tables.get(n.kids[0].text);
+        if (n.tag == .call and n.kids[0].tag == .field and n.kids[0].kids[0].tag == .name) {
+            const m = n.kids[0].text;
+            if (std.mem.eql(u8, m, "add") or std.mem.eql(u8, m, "remove") or std.mem.eql(u8, m, "flush") or std.mem.eql(u8, m, "load!")) {
+                table = c.tables.get(n.kids[0].kids[0].text);
+            }
+        }
+        if (table) |t| {
+            const conn = t.kids[1].text;
+            if (first.*) |f| {
+                if (!std.mem.eql(u8, f, conn)) return c.fail(n, "job {s} writes to {s} and {s}: one connection per job (D-158)", .{ job.text, f, conn });
+            } else first.* = conn;
+        }
+        for (n.kids) |k| try c.collectWrites(job, k, first);
+    }
+
+    /// An extension method (outside the class) with the signature of a method of its class would replace it (D-150).
+    fn extensionClash(c: *Checker, m: *const Node) Error!void {
+        const first = m.kids[0].kids;
+        if (first.len == 0) return;
+        const ty = first[0].ty orelse return;
+        const cls = c.classes.get(ty.text) orelse return;
+        for (cls.kids[2..]) |own| {
+            if (own.tag != .method or !std.mem.eql(u8, own.text, m.text)) continue;
+            if (overload.sameSignature(own, m)) return c.fail(m, "{s} has the same signature as a method of {s}: it would replace it (D-150)", .{ m.text, ty.text });
+        }
+    }
+
+    /// Two methods of a class with the same name and the same signature (D-149).
+    fn duplicateMethods(c: *Checker, cls: *const Node) Error!void {
+        const members = cls.kids[2..];
+        for (members, 0..) |a, i| {
+            if (a.tag != .method and a.tag != .function) continue;
+            for (members[i + 1 ..]) |b| {
+                if (b.tag != a.tag or !std.mem.eql(u8, a.text, b.text)) continue;
+                if (overload.sameSignature(a, b)) return c.fail(b, "{s} is declared twice with the same signature (D-149)", .{b.text});
+            }
+        }
+    }
+
     fn driver(c: *Checker, root_node: *const Node) Error!void {
         try c.push();
         try c.declareMembers(root_node.kids);
-        for (root_node.kids) |m| {
+        try c.declMembers(root_node.kids);
+        if (root_node.macro) try c.concurrentSafety(root_node);
+    }
+
+    // Zig tip: the loop over the declarations is a function of its own, so an aspect of a macro can be checked
+    // with the same code, inside the scope of the shared declarations (D-152). `defer c.pop()` in a `switch`
+    // branch runs when the branch ends. An aspect sees the names declared before it (the shared ones), not the
+    // variables of a process, which are gone when its frame is popped.
+    /// Check the declarations of a driver, an aspect, a module or a macro.
+    fn declMembers(c: *Checker, kids: []const *const Node) Error!void {
+        for (kids) |m| {
             switch (m.tag) {
                 .class, .trait => {
                     if (m.tag == .class) if (c.missing(m, true)) |name| {
                         return c.fail(m, "{s} does not implement {s}, required by its trait (D-145)", .{ m.text, name });
                     };
                     if (m.tag == .class) try c.traitConflicts(m);
+                    try c.duplicateMethods(m);
                     for (m.kids[2..]) |r| try c.routine(r, m.text);
                 },
-                .function, .procedure, .method => try c.routine(m, null),
+                .method => {
+                    try c.extensionClash(m);
+                    try c.routine(m, null);
+                },
+                .function, .procedure, .generator => try c.routine(m, null),
+                .table_decl => try c.checkTable(m),
+                .aspect => {
+                    try c.push();
+                    defer c.pop();
+                    const saved = c.in_aspect;
+                    defer c.in_aspect = saved;
+                    c.in_aspect = true;
+                    try c.declareMembers(m.kids);
+                    try c.declMembers(m.kids);
+                },
                 .region => try c.block(m.kids[0]),
                 .var_decl, .set => if (m.kids[1].tag != .none) {
                     _ = try c.expr(m.kids[1]);
@@ -633,6 +1130,7 @@ const Checker = struct {
                 .process => {
                     try c.push();
                     defer c.pop();
+                    if (m.kids.len > 4) for (m.kids[4].kids) |tp| try c.declare(tp, tp.text, .{ .kind = .class });
                     try c.params(m.kids[3]);
                     try c.block(m.kids[0]);
                     try c.block(m.kids[1]);

@@ -1,0 +1,28 @@
+# an extension method with the signature of a method of the class would replace it: compile error; another signature overloads it (D-150)
+** spec: syntax/declarations.md#overloading
+driver e59_extension_same_signature is
+  class Counter = {n: Integer} <: Object is
+    public method add(@self, k: Integer) is
+      let self.n += k;
+    return;
+  end Counter;
+
+  method add(@self: Counter, k: Integer) is   ** compile error: the same signature as the method of the class
+    let self.n += k * 2;
+  return;
+
+  process main is
+    new c := Counter(n: 0);
+    c.add(1);
+    print c.n;
+  return;
+end e59_extension_same_signature;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "add has the same signature as a method of Counter"
+  ]
+}
+*/

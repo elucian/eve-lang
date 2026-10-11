@@ -30,3 +30,7 @@ From the Q-002 evidence (`plan/decision_level1.md`, 2026-10-02): 30 words of the
 - `then` region for the repeat loop (D-074, open).
 - Data types for ETL beyond Decimal: Instant, DateTime with zone, Bytes, Uuid, Record (`RTY-D01`, version 2).
 - Type conversion libraries (`RTY-D01`, version 2).
+
+**New idea:** Project patterns: Create eve project patterns in json, that will create structure and have template files. Maybe a folder: prj with project patterns easy to see and maintain, packed into the install release package used by new command: eve project init <pattern_name>.
+
+**New idea:** DB Memoization:  can be done using the local database for functions that need memoization to get faster. If memoization require more to cover it will overflow memory. To prevent memory overflow we can use external storage to store precalculated valyes for given parameters. Of course, this is just good when the number of input values in too large.

@@ -1,0 +1,39 @@
+# validate runs before every write: an invalid record fails the job at the flush and nothing is written (database.md, validation)
+** spec: library/database.md#validation
+driver e90_orm_validate_add is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record is
+    method validate(@self) is
+      expect self.name <> "";
+    return;
+  end Customer;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new ok := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      new bad := {id: 0, name: "", city: null, version: 0} :Customer;
+      let customers <+ ok;
+      let customers <+ bad;
+    done add;
+  recover
+    print "invalid: {$error.code}";
+    print customers.count!("1 = 1");
+  return;
+end e90_orm_validate_add;
+/*@expect
+{
+  "stdout": [
+    "invalid: 2",
+    "0"
+  ]
+}
+*/

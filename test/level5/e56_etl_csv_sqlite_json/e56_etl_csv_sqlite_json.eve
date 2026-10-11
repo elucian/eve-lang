@@ -1,0 +1,46 @@
+# a small ETL on local storage: data/in/sales.csv is loaded into the SQLite database cache.db, transformed with SQL and written as JSON in data/out
+** spec: library/database.md#direct-sql
+driver e56_etl_csv_sqlite_json is
+  class Sale = {id: Integer, product: String, qty: Integer, unit_cents: Integer, region: String?} <: Record;
+  class Line = {id: Integer, product: String, total_cents: Integer, region: String?} <: Record;
+  class Total = {total: Integer} <: Record;
+
+  process main is
+    new cache := database.connect("cache");
+    cache.script("sql/schema.sql");
+
+    load: job
+    do
+      new count := 0;
+      for s in csv.read!(:Sale)("data/in/sales.csv") do
+        new n := cache.execute!("insert into sales (id, product, qty, unit_cents, region) values (?, ?, ?, ?, ?)", s.id, s.product, s.qty, s.unit_cents, s.region);
+        let count += n;
+      done;
+      print "loaded {count}";
+    done load;
+
+    new lines := cache.query!(:Line)("select id, product, qty * unit_cents as total_cents, region from sales where qty > 0 order by id");
+    json.write("data/out/lines.json", lines);
+    print "written {lines.count()}";
+
+    new t := cache.query_one!(:Total)("select sum(qty * unit_cents) as total from sales");
+    print "total {t.total}";
+    cache.close();
+  return;
+end e56_etl_csv_sqlite_json;
+/*@expect
+{
+  "stdout": [
+    "loaded 4",
+    "written 3",
+    "total 1025"
+  ],
+  "files": {
+    "data/out/lines.json": [
+      {"id": 1, "product": "Widget", "total_cents": 750, "region": "North"},
+      {"id": 3, "product": "Bolt, steel", "total_cents": 150, "region": "South"},
+      {"id": 4, "product": "Nut", "total_cents": 125, "region": null}
+    ]
+  }
+}
+*/

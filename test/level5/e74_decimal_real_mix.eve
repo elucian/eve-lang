@@ -1,0 +1,17 @@
+# a Decimal and a Real are never mixed without a conversion: run-time error (D-080)
+** spec: library/data-language.md#details-used-by-the-tests
+driver e74_decimal_real_mix is
+  process main is
+    print 1.5d + 2.5;
+    print "not reached";
+  recover
+    print "error: {$error.message}";
+  return;
+end e74_decimal_real_mix;
+/*@expect
+{
+  "contains": [
+    "error: operator + does not apply to Decimal and Real"
+  ]
+}
+*/

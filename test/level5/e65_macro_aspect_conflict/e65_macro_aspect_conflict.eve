@@ -1,0 +1,23 @@
+# an aspect of the macro with the name of an aspect file of the project is a compile error (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+exclusive aspect worker is
+  process main is
+    print "macro worker";
+  return;
+end worker;
+
+driver e65_macro_aspect_conflict is
+  process main is
+    apply worker();
+  return;
+end e65_macro_aspect_conflict;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "aspect worker is declared in the macro and in asp/worker.eve"
+  ]
+}
+*/

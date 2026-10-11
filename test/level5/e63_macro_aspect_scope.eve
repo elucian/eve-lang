@@ -1,0 +1,27 @@
+# an aspect of a macro sees the shared declarations and no variable of the driver's process (D-066, D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+set limit = 3 :Integer;
+
+exclusive aspect show is
+  process main is
+    print limit;
+    print secret;                  ** a variable of the process main of the driver: not visible
+  return;
+end show;
+
+driver e63_macro_aspect_scope is
+  process main is
+    new secret := 42;
+    apply show();
+  return;
+end e63_macro_aspect_scope;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "undefined name 'secret'"
+  ]
+}
+*/

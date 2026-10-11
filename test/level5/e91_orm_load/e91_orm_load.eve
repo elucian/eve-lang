@@ -1,0 +1,50 @@
+# load! writes many rows at once, not tracked: "insert" adds, "upsert" inserts the new keys and updates the others (database.md)
+** spec: library/database.md#methods-of-a-table
+driver e91_orm_load is
+  class Customer = {id: Integer, name: String} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    first: job
+    do
+      new rows := Table(:Customer)();
+      for i in (1..3) do
+        new c := {id: i, name: "n{i}"} :Customer;
+        let rows <+ c;
+      done;
+      new r := customers.load!(rows, mode: "insert");
+      print "{r.inserted} {r.updated}";
+    done first;
+
+    second: job
+    do
+      new rows := Table(:Customer)();
+      for i in (3..4) do
+        new c := {id: i, name: "m{i}"} :Customer;
+        let rows <+ c;
+      done;
+      new r := customers.load!(rows, mode: "upsert");
+      print "{r.inserted} {r.updated}";
+    done second;
+
+    print customers.count!("1 = 1");
+    new c3 := customers.find!(3);
+    print c3.name;
+  return;
+end e91_orm_load;
+/*@expect
+{
+  "stdout": [
+    "3 0",
+    "1 1",
+    "4",
+    "m3"
+  ]
+}
+*/

@@ -1,0 +1,39 @@
+# Decimal arithmetic is exact: subtraction, division, negation, remainder, comparison and a whole number on one side (D-080)
+** spec: library/data-language.md#details-used-by-the-tests
+driver e73_decimal_ops is
+  process main is
+    print 1.00d - 0.01d;
+    print 1d / 3d;
+    print 10.00d / 4d;
+    print -2.50d;
+    print 7.5d % 2d;
+    print 5 + 0.50d;                    ** a whole number is a Decimal of scale 0
+    print 0.1d + 0.2d == 0.3d;
+    print 2.5d > 2.49d;
+    new zero := 0d;
+    print zero;
+    new items := (1.10d, 2.20d, 3.30d);
+    new total := 0d;
+    for x in items do
+      let total := total + x;
+    done;
+    print total;
+    expect total == 6.6d;
+  return;
+end e73_decimal_ops;
+/*@expect
+{
+  "stdout": [
+    "0.99",
+    "0.333333",
+    "2.50000000",
+    "-2.50",
+    "1.5",
+    "5.50",
+    "True",
+    "True",
+    "0",
+    "6.60"
+  ]
+}
+*/

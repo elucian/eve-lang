@@ -50,19 +50,19 @@ DuckDB is the **secondary** database and never part of the VM: it is the engine 
 
 | Role | File | Content |
 |---|---|---|
-| **Core database** (system), one per project (D-156) | `db/eve.db` by default; `$EVE_CORE_DB`, set in `eve.cfg` | run history and ETL logs, checkpoints, lineage, mapping fingerprints, migrations applied, the data of the Eve UX, the transaction journal of the server (part 2), and the **cache** of remote reference tables (part 2, §4); it was `db/eve.db` and `db/cache.db` of the machine |
+| **Core database** (system), one per project (D-156) | `db/local.db` by default; `$EVE_CORE_DB`, set in `eve.cfg` | run history and ETL logs, checkpoints, lineage, mapping fingerprints, migrations applied, the data of the Eve UX, the transaction journal of the server (part 2), and the **cache** of remote reference tables (part 2, §4); it was `db/local.db` and `db/cache.db` of the machine |
 | **Staging** | `db/stage.db`, connection `"stage"` | temporary tables of an ETL run: files loaded once, deduplicated and joined in SQL before the transfer (part 2, §6) |
 | **Spill** | a temporary file | a memory table that grows over its capacity (§4.4) |
 | **Application databases** | `db/<name>.db` | the data of small applications and services; `db create <name>` |
 
-One file per role keeps the locks apart: a long ETL load in `stage.db` never blocks the run history in `eve.db`. A job may still write to several of them in one transaction: SQLite attaches them to one connection (`ATTACH`), and a commit over attached files in WAL mode is atomic per file only, so the rule of §8.6 (one target per transaction) applies to them too.
+One file per role keeps the locks apart: a long ETL load in `stage.db` never blocks the run history in `local.db`. A job may still write to several of them in one transaction: SQLite attaches them to one connection (`ATTACH`), and a commit over attached files in WAL mode is atomic per file only, so the rule of §8.6 (one target per transaction) applies to them too.
 
 ### 2.2 Settings chosen by the VM
 
 | Setting | Value | Why |
 |---|---|---|
 | `journal_mode` | `WAL` | readers never block the writer; a crash leaves a consistent file |
-| `synchronous` | `FULL` for `eve.db` and application databases, `NORMAL` for cache, stage | durability where it matters, speed where the data can be rebuilt |
+| `synchronous` | `FULL` for `local.db` and application databases, `NORMAL` for cache, stage | durability where it matters, speed where the data can be rebuilt |
 | `foreign_keys` | `ON` | SQLite ignores foreign keys unless asked |
 | `busy_timeout` | `$lock_timeout` (default 5s) | a second writer waits, then gets a transient `TimeoutError` |
 | strict tables | `STRICT` for tables that Eve creates | SQLite otherwise stores a string in an integer column without a word |

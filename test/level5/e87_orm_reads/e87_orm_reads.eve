@@ -1,0 +1,60 @@
+# reading through a table: find! gives the record or null, a second find! gives the same record, where! tracks, scan! does not (database.md)
+** spec: library/database.md#methods-of-a-table
+driver e87_orm_reads is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new a := {id: 0, name: "Ann", city: "Lyon", version: 0} :Customer;
+      new b := {id: 0, name: "Bob", city: "Paris", version: 0} :Customer;
+      new c := {id: 0, name: "Cid", city: "Lyon", version: 0} :Customer;
+      let customers <+ a;
+      let customers <+ b;
+      let customers <+ c;
+    done add;
+
+    read: job
+    do
+      new b := customers.find!(2);
+      print b.name;
+      new none := customers.find!(99);
+      print none == null;
+      new b2 := customers.find!(2);
+      let b.city := "Nice";
+      print b2.city;                      ** the same record
+      new lyon := customers.where!("city = ? order by id", "Lyon");
+      print lyon.count();
+      print lyon[1].name;
+      new seen := customers.scan!("id >= ?", 1);
+      for s in seen do
+        let s.city := "Zed";              ** not tracked: nothing is written
+      done;
+    done read;
+
+    print customers.count!("city = 'Zed'");
+    print customers.count!("city = 'Nice'");
+  return;
+end e87_orm_reads;
+/*@expect
+{
+  "stdout": [
+    "Bob",
+    "True",
+    "Nice",
+    "2",
+    "Ann",
+    "0",
+    "1"
+  ]
+}
+*/

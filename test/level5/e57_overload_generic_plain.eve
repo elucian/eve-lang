@@ -1,0 +1,26 @@
+# a plain function whose parameters fit exactly wins over a generic one with the same name (D-150)
+** spec: syntax/declarations.md#overloading
+driver e57_overload_generic_plain is
+  function describe(x: Integer) => (@result: String) is
+    let result := "plain Integer {x}";
+  return;
+
+  function describe(:T)(x: T) => (@result: String) is
+    let result := "generic {x}";
+  return;
+
+  process main is
+    print describe(5);              ** the plain one fits exactly
+    print describe("five");         ** only the generic one fits
+    print describe(:Integer)(5);    ** the written type list asks for the generic one
+  return;
+end e57_overload_generic_plain;
+/*@expect
+{
+  "stdout": [
+    "plain Integer 5",
+    "generic five",
+    "generic 5"
+  ]
+}
+*/

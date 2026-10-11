@@ -109,4 +109,7 @@ The modules of this table are part of the standard library of the machine and ar
 
 ## Open points
 
+
 All in `../../plan/review_level5.md`.
+
+- **Streams.** `csv.read!`, `json.read!` and `query!` give a `Stream(:T)`. The first implementation (e56, `data-types.md#local-etl-files-and-a-local-sqlite-database`) returns a `List` with all the rows, so a `for` loop over the result and `.count()` work, and `Stream` as a lazy source is still to do.

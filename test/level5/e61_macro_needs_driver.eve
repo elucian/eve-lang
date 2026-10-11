@@ -1,0 +1,19 @@
+# a file with an aspect and shared declarations but no driver is not a macro: compile error (D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+set step = 5 :Integer;
+
+exclusive aspect add_step is
+  process main(times: Integer) is
+    print step * times;
+  return;
+end add_step;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a macro needs a driver"
+  ]
+}
+*/

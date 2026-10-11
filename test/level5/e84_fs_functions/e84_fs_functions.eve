@@ -1,0 +1,43 @@
+# fs: read!, size!, list!, move, remove, make_dir, and the path functions and the operator / (data-language.md#files-and-paths)
+** spec: library/data-language.md#files-and-paths
+driver e84_fs_functions is
+  process main is
+    fs.make_dir("out/sub");
+    fs.write("out/sub/b.txt", "bb");
+    fs.write("out/sub/a.txt", "a");
+    print fs.list!("out/sub");
+    print fs.read!("out/sub/b.txt");
+    print fs.size!("out/sub/b.txt");
+    fs.move("out/sub/a.txt", "out/moved/a2.txt");
+    expect fs.exists!("out/moved/a2.txt");
+    expect not fs.exists!("out/sub/a.txt");
+    fs.remove("out/sub/b.txt");
+    print fs.list!("out/sub");
+    new p := "out" / "sub" / "c.csv";
+    print p;
+    print fs.name(p);
+    print fs.parent(p);
+    print fs.extension(p);
+    print fs.join("a/", "b");
+    fs.remove("out/nothing.txt");
+    print "not reached";
+  recover
+    print "error {$error.code}";
+  return;
+end e84_fs_functions;
+/*@expect
+{
+  "stdout": [
+    "(\"a.txt\",\"b.txt\")",
+    "bb",
+    "2",
+    "()",
+    "out/sub/c.csv",
+    "c.csv",
+    "out/sub",
+    ".csv",
+    "a/b",
+    "error 20"
+  ]
+}
+*/

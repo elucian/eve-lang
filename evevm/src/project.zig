@@ -713,6 +713,19 @@ pub fn link(
     var l: Linker = .{ .a = a, .io = io, .dir = dir, .diag = diag, .where = where, .aspects = aspects, .modules = modules, .lib_path = lib_path };
     where.* = "";
     if (tree.tag == .driver) {
+        // the aspects written in the macro are searched before asp/ and the project root (D-152)
+        if (tree.macro) for (tree.kids) |k| if (k.tag == .aspect) {
+            // an aspect of the macro with the name of a file of the project would be ambiguous (D-152)
+            const in_asp = try l.join("{s}/asp/{s}.eve", .{ dir, k.text });
+            const in_root = try l.join("{s}/{s}.eve", .{ dir, k.text });
+            if (Io.Dir.cwd().access(io, in_asp, .{})) |_| {
+                return l.fail(k, "aspect {s} is declared in the macro and in asp/{s}.eve", .{ k.text, k.text });
+            } else |_| {}
+            if (Io.Dir.cwd().access(io, in_root, .{})) |_| {
+                return l.fail(k, "aspect {s} is declared in the macro and in {s}.eve", .{ k.text, k.text });
+            } else |_| {}
+            try aspects.put(a, k.text, k);
+        };
         try l.imports(tree);
         try l.access(tree);
         try l.walk(tree);

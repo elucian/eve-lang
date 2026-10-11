@@ -1,0 +1,48 @@
+# a generator is lazy: its body runs only when the caller asks for a value, and an infinite one is closed by break (D-067)
+** spec: syntax/declarations.md#generators-level-5
+driver e66_generator_lazy is
+  generator naturals() => (@n: Integer) is
+    new k := 0;
+    defer print "naturals closed";
+    while True do
+      let k += 1;
+      print "make {k}";
+      yield k;
+    done;
+  return;
+
+  process main is
+    new g := naturals();
+    print "created";
+    expect g.next();
+    print "got {g.value}";
+    expect g.next();
+    print "got {g.value}";
+    g.close();
+    print "done: {g.done}";
+    for n in naturals() do
+      print "loop {n}";
+      break if n == 2;
+    done;
+    print "end";
+  return;
+end e66_generator_lazy;
+/*@expect
+{
+  "stdout": [
+    "created",
+    "make 1",
+    "got 1",
+    "make 2",
+    "got 2",
+    "naturals closed",
+    "done: True",
+    "make 1",
+    "loop 1",
+    "make 2",
+    "loop 2",
+    "naturals closed",
+    "end"
+  ]
+}
+*/

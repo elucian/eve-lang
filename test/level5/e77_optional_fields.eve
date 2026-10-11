@@ -1,0 +1,25 @@
+# a field with ? holds null; a plain field never does; null is tested before use (D-080)
+** spec: library/data-language.md#decimal-and-optional-types
+driver e77_optional_fields is
+  class Customer = {id: Integer, name: String, city: String?} <: Record;
+
+  process main is
+    new a := {id: 1, name: "Ann", city: null} :Customer;
+    new b := {id: 2, name: "Bob", city: "Lyon"} :Customer;
+    for c in (a, b) do
+      if c.city == null do
+        print "{c.name}: no city";
+      else
+        print "{c.name}: {c.city}";
+      done;
+    done;
+  return;
+end e77_optional_fields;
+/*@expect
+{
+  "stdout": [
+    "Ann: no city",
+    "Bob: Lyon"
+  ]
+}
+*/

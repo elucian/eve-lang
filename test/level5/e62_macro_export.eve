@@ -1,0 +1,23 @@
+# a macro exports nothing: export is a compile error (D-126, D-152)
+** spec: syntax/declarations.md#eve-macro-level-5
+
+function twice(x: Integer) => (@result: Integer) is
+  let result := x * 2;
+return;
+
+export (twice);
+
+driver e62_macro_export is
+  process main is
+    print twice(2);
+  return;
+end e62_macro_export;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a macro exports nothing"
+  ]
+}
+*/

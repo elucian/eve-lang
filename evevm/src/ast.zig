@@ -119,9 +119,26 @@ pub const Tag = enum {
     /// `label: job do ... done label;`: text = label; kids = [body].
     job,
     // ---- declarations ----
-    /// `process name is ... recover ... finalize ... return;`: kids = [body, recover or none, finalize or none].
+    /// `process name is ... recover ... finalize ... return;`: kids = [body, recover or none, finalize or none, params, type list].
     process,
-    /// `function`, `method` and `constructor`: text = name; kids = [params, second params, results, body].
+    /// `generator`: like a function with exactly one result; its body may `yield` (level 5, D-067).
+    generator,
+    /// `yield;` or `yield expr;`: kids = [] or [expr]. Only in the body of a generator.
+    yield_stmt,
+    /// `table name: Class in "connection" [as "schema.table"] [is clauses end name];` (level 5):
+    /// text = the table name; kids = [class name (`name`), connection (`str`), database name (`str` or none), clause...].
+    table_decl,
+    /// One clause of a table: text = `key`, `generated`, `version`, `column`, `reference`, `read only`, `temporary` or `cached`;
+    /// kids = the field names (`name` nodes), then for `column` the column name (`str`), for `reference` the table (`name`),
+    /// for `cached` the duration.
+    clause,
+    /// `commit;` and `rollback;` in the do region of a job (database.md#transactions).
+    commit_stmt,
+    rollback_stmt,
+    /// `update record do … done;`: kids = [record expression, block].
+    update_stmt,
+    /// `function`, `method` and `constructor`: text = name; kids = [params, type list, results, body]. The type list is
+    /// a `params` node with a `param` for each type parameter (`ty` = its constraint), empty when not generic (D-148).
     function,
     procedure,
     method,
@@ -142,7 +159,8 @@ pub const Tag = enum {
     /// `[exclusive|concurrent] aspect name is ... end name;`: kids = the declarations, with one `process main` (D-066, D-090);
     /// `public` is true for `concurrent`.
     aspect,
-    /// `apply folder/name(args);`: text = the aspect path as written; kids = the arguments, as in a `call`.
+    /// `apply folder/name(args);`: text = the aspect path as written; kids = the arguments, as in a `call`;
+    /// `extra` = the written type list `(:T)` of a generic process (D-148).
     apply_stmt,
     /// A script without a driver: kids = the statements.
     script,
@@ -206,6 +224,12 @@ pub const Node = struct {
     is_async: bool = false,
     /// The traits a class adopts, after its superclass in `<: (Object, Printable)` (D-145).
     extra: []const *const Node = &.{},
+    /// A call: the declaration the checker selected among overloaded ones, when it can decide at compile time
+    /// (D-149). Null when the name is not overloaded or the choice waits for the values at run time.
+    sel: ?*const Node = null,
+    /// A driver made from an Eve macro, and each aspect of it: the aspects see the shared declarations of the
+    /// macro, which are the declarations of the driver node (D-152).
+    macro: bool = false,
 };
 
 // Zig tip: a `const` of a struct type at file level is a value built while compiling. Parts that

@@ -1,0 +1,39 @@
+# a temporary table in the staging database is made by the VM from the class at its first use (database.md, the table declaration)
+** spec: library/database.md#the-table-declaration
+driver e92_orm_temporary is
+  class Row = {id: Integer, label: String, amount: Decimal, note: String?} <: Record;
+
+  table staged: Row in "stage" is
+    key (id);
+    temporary;
+  end staged;
+
+  process main is
+    if fs.exists!("db/e92.db") do
+      fs.remove("db/e92.db");
+    done;
+
+    fill: job
+    do
+      for i in (1..3) do
+        new r := {id: i, label: "row {i}", amount: 1.25d, note: null} :Row;
+        let staged <+ r;
+      done;
+    done fill;
+
+    print staged.count!("1 = 1");
+    new r2 := staged.find!(2);
+    print "{r2.label} {r2.amount}";
+    new big := staged.where!("id > ? order by id", 1);
+    print big.count();
+  return;
+end e92_orm_temporary;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "row 2 1.25",
+    "2"
+  ]
+}
+*/

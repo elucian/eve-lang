@@ -1,0 +1,24 @@
+# a type argument must adopt the trait of its constraint: compile error (D-145, D-148)
+** spec: syntax/declarations.md#generic-subprograms
+driver e58_generic_constraint is
+  class Point = {x: Integer, y: Integer} <: Object;
+
+  function largest(:T <: Comparable)(items: ()T) => (@result: T) is
+    let result := items[1];
+  return;
+
+  process main is
+    print largest(:Integer)((3, 9));   ** Integer adopts Comparable
+    new p := Point(x: 1, y: 2);
+    print largest(:Point)((p, p));     ** compile error: Point does not adopt Comparable
+  return;
+end e58_generic_constraint;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "Point does not adopt Comparable"
+  ]
+}
+*/
