@@ -17,7 +17,7 @@ SQLite is the core database (Q-043a), but it **never holds ETL data** (D-159): i
 
 | Role | Where | Content |
 |---|---|---|
-| **Core database** | SQLite, default `db/eve.db`; the name is set in `eve.cfg` and read as `$EVE_CORE_DB` | the logs of the ETL runs (run history, lineage), the **checkpoints**, the metadata (the mappings, the schema versions, the descriptions of the catalogs), the data of the Eve UX (`eveux`) and the journal of transactions of the machine |
+| **Core database** | SQLite, default `db/local.db`; the name is set in `eve.cfg` and read as `$EVE_CORE_DB` | the logs of the ETL runs (run history, lineage), the **checkpoints**, the metadata (the mappings, the schema versions, the descriptions of the catalogs), the data of the Eve UX (`eveux`) and the journal of transactions of the machine |
 | **Staging** | an `evedb` database (DuckDB), connection `"stage"` | the temporary tables of an ETL run: the files loaded once, deduplicated and joined in SQL before the transfer |
 | **Cache** | an `evedb` database, kept by the Eve server | copies of remote reference tables (`cached`) |
 | **Application data** | the databases that the user connects: PostgreSQL, `evedb`, … | the data |
@@ -29,7 +29,7 @@ There is no offline work: a local Eve session is connected to a remote session, 
 The connections are declared in the configuration file `eve.cfg` of the machine and of the project (the project file adds to the machine file and wins on the same name). *(Proposed: the author has given only the system variable `$EVE_CORE_DB`, D-156.)* A line has one setting; a line that starts with `#` or `**` is a comment; a value is a string in double quotes.
 
 ```
-core_db = "db/eve.db"                                    ** the core database, read as $EVE_CORE_DB
+core_db = "db/local.db"                                    ** the core database, read as $EVE_CORE_DB
 database "shop"  = "sqlite://db/shop.db"                 ** a connection name and its URL
 database "sales" = "postgresql://etl@db1:5432/sales" exclusive
 database "sales" schema_version = "select max(version) from flyway_schema_history"
@@ -37,10 +37,12 @@ database "sales" schema_version = "select max(version) from flyway_schema_histor
 
 | Setting | Meaning |
 |---|---|
-| `core_db = "<path>"` | the file of the core database; default `db/eve.db`; its value is `$EVE_CORE_DB` |
+| `core_db = "<path>"` | the file of the core database; default `db/local.db`; its value is `$EVE_CORE_DB` |
 | `database "<name>" = "<url>"` | declares a connection; the URL has the scheme of a driver (`sqlite`, `postgresql`, `evedb`, `eve`) |
 | `exclusive` after the URL | Eve owns the database: `prepare`, `activate` and `reindex` work (an `evedb` database is always exclusive) |
 | `database "<name>" schema_version = "<sql>"` | the query that returns the schema version of the database, for the validation of the mapping in production |
+
+A `sqlite://` connection is also the way to keep an **application database** of a project, for example `database "cache" = "sqlite://db/cache.db"`: a local file, no server, no network, used by the local ETL (`../semantics/data-types.md#local-etl-files-and-a-local-sqlite-database`, test e56). The folder of the file is made when it is missing, and `database.connect("cache")` opens it with foreign keys on. In version 0.4 the VM reads only `sqlite://` URLs; another scheme is an error that names it.
 
 **The mapping file `db/mappings.json`** (written by debug mode, committed with the code, read in production):
 

@@ -1,0 +1,42 @@
+# a stream has all(), count(), next() and close(); leaving the loop with break writes the rejects of what was read (data-types.md)
+** spec: semantics/data-types.md#rules
+driver e86_stream_methods is
+  class P = {id: Integer} <: Record;
+
+  process main is
+    fs.write("out/p.csv", "id\n1\n2\n3\n");
+    print csv.read!(:P)("out/p.csv").count();
+    new all := csv.read!(:P)("out/p.csv").all();
+    print all.count();
+    new s := csv.read!(:P)("out/p.csv");
+    new first := s.next();
+    print first.id;
+    print s.next().id;
+    s.close();
+    fs.write("out/q.csv", "id\nx\n2\ny\n");
+    for p in csv.read!(:P)("out/q.csv", rejects: "out/q_rejects.csv") do
+      print p.id;
+      break;
+    done;
+    new lines := fs.lines!("out/p.csv").all();
+    print lines;
+  return;
+end e86_stream_methods;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "3",
+    "1",
+    "2",
+    "2",
+    "(\"id\",\"1\",\"2\",\"3\")"
+  ],
+  "files": {
+    "out/q_rejects.csv": [
+      "source,line,column,text,reason",
+      "out/q.csv,2,1,x,'id' is not an Integer: x"
+    ]
+  }
+}
+*/

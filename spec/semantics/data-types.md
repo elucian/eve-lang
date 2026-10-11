@@ -129,6 +129,29 @@ These rules fix the text of the files that the writers produce (the canonical fo
 
 **Errors of a reader.** A `FormatError` has `format` (`"CSV"`, …), `line`, `column` and `reason`; `line` counts from 1 and the header is line 1. A CSV line with more or fewer fields than the header, or a value that does not convert to the type of its field, is an error of that line.
 
+## Local ETL: files and a local SQLite database
+
+The smallest ETL needs no server and no network: a project reads files of `data/in/`, loads them into a local application database (a SQLite file of `db/`, for example `db/cache.db`, declared in `eve.cfg` as `database "cache" = "sqlite://db/cache.db"`), transforms the data with SQL, and writes the result as files into `data/out/`. The core database (`db/local.db`) keeps only the logs and the metadata (D-159); the data goes to the application database, which a test may recreate at every run with `script("sql/schema.sql")`.
+
+```eve
+new cache := database.connect("cache");
+cache.script("sql/schema.sql");
+load: job
+do
+  for s in csv.read!(:Sale)("data/in/sales.csv") do
+    new n := cache.execute!("insert into sales (id, product, qty) values (?, ?, ?)", s.id, s.product, s.qty);
+  done;
+done load;                                     ** the job is one transaction: commit at done, rollback on an error
+new lines := cache.query!(:Line)("select id, product, qty * unit_cents as total_cents from sales where qty > 0 order by id");
+json.write("data/out/lines.json", lines);
+```
+
+- `csv.read!(:Sale)(path)` reads the rows into records of the class `Sale`; the columns are matched to the members by name (rule above), a missing column is an error before the first row, and an unquoted empty field is `null` (only for an optional member, otherwise a `ConvertError`).
+- `query!(:Line)(sql, args…)` matches the result columns to the members of `Line` by name; a `NULL` in a member that is not optional is a `ConvertError`. Arguments are bound to the `?` placeholders in order (`Integer`, `Real`, `String`, `Logic` and `null`).
+- `json.write(path, rows)` writes the array (or JSON Lines) of the rules above and makes the folders of the path.
+- The test `test/level5/e56_etl_csv_sqlite_json` does exactly this and compares the file written to `data/out/`.
+- *Version 0.4 reads and writes in memory:* `csv.read!` and `query!` return a `List` of records, not a lazy `Stream`; a file or a result larger than memory waits for the streams (data-language.md, open points).
+
 ## ETL: the cycle
 
 ```

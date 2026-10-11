@@ -1,0 +1,67 @@
+# project init <folder> makes a new project with the standard layout (F-TLS-23)
+** spec: plan/design-project-layout.md
+** The runner calls the command of the VM, not this script: see "command" below.
+driver e54_project_init is
+  process main is
+    print "e54: the command project init is tested, not this script";
+  return;
+end e54_project_init;
+/*@expect
+{
+  "command": ["--project", "init", "out/proj"],
+  "contains": [
+    "create  out/proj/proj.eve",
+    "create  out/proj/eve.cfg",
+    "create  out/proj/meta/project.json",
+    "git     inside a repository, kept",
+    "project init: out/proj: 14 created, 0 kept"
+  ],
+  "files": {
+    "out/proj/proj.eve": [
+      "#! proj",
+      "# The main script of the project proj.",
+      "driver proj is",
+      "  process main is",
+      "    print \"proj: ready\";",
+      "  return;",
+      "end proj;"
+    ],
+    "out/proj/meta/project.json": {"name": "proj", "layout": 1, "eve": "*"},
+    "out/proj/eve.cfg": [
+      "# Configuration of the project proj (spec/library/database.md#configuration-evecfg)",
+      "** The core database: logs and metadata, read as $EVE_CORE_DB.",
+      "core_db = \"db/local.db\"",
+      "",
+      "** The minimal fallback log: fatal crashes, unhandled panics and startup failures only.",
+      "** Plain text, append-only; at the size limit the file is renamed to <file>.1 and a new one starts.",
+      "fallback_log = \"log/eve.log\"",
+      "fallback_log_max = \"5MB\"",
+      "",
+      "** The test database (evedb) lives in the test folder.",
+      "** database \"check\" = \"evedb://test/check.duckdb\""
+    ],
+    "out/proj/.gitignore": [
+      "# Eve project: the files that a run makes",
+      "db/*.db",
+      "db/*.db-*",
+      "log/*.log",
+      "log/*.log.*",
+      "log/*.db",
+      "data/in/*",
+      "data/out/*",
+      "test/*",
+      "!.gitkeep"
+    ],
+    "out/proj/db/.gitkeep": "",
+    "out/proj/log/.gitkeep": "",
+    "out/proj/data/in/.gitkeep": "",
+    "out/proj/data/out/.gitkeep": "",
+    "out/proj/test/.gitkeep": "",
+    "out/proj/asp/.gitkeep": "",
+    "out/proj/lib/.gitkeep": "",
+    "out/proj/src/.gitkeep": "",
+    "out/proj/doc/.gitkeep": "",
+    "out/proj/web/.gitkeep": ""
+  }
+}
+*/

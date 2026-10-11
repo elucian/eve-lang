@@ -1,0 +1,37 @@
+# encodings: windows-1252 and a UTF-16 BOM are decoded to text; invalid UTF-8 is an error with its place, or replaced (data-types.md)
+** spec: semantics/data-types.md#unicode-streams
+driver e83_encodings is
+  class W = {word: String} <: Record;
+
+  process main is
+    ** "café" in Windows-1252: the byte E9 is é
+    fs.write_bytes("out/w.csv", (0x77, 0x6F, 0x72, 0x64, 0x0A, 0x63, 0x61, 0x66, 0xE9, 0x0A));
+    for w in csv.read!(:W)("out/w.csv", encoding: "windows-1252") do
+      print w.word;
+    done;
+    ** the same word in UTF-16 little endian with a BOM
+    fs.write_bytes("out/u16.csv", (0xFF, 0xFE, 0x77, 0x00, 0x6F, 0x00, 0x72, 0x00, 0x64, 0x00, 0x0A, 0x00, 0x63, 0x00, 0x61, 0x00, 0x66, 0x00, 0xE9, 0x00, 0x0A, 0x00));
+    for w in csv.read!(:W)("out/u16.csv") do
+      print w.word;
+    done;
+    ** invalid UTF-8: replaced when asked
+    for w in csv.read!(:W)("out/w.csv", invalid: "replace") do
+      print w.word;
+    done;
+    for w in csv.read!(:W)("out/w.csv") do
+      print "not reached";
+    done;
+  recover
+    print "error {$error.code}";
+  return;
+end e83_encodings;
+/*@expect
+{
+  "stdout": [
+    "café",
+    "café",
+    "caf�",
+    "error 56"
+  ]
+}
+*/

@@ -1,0 +1,38 @@
+# JSON: an array of objects is written one object per line and read back; a missing key is null; a number keeps its scale
+** spec: semantics/data-types.md#the-formats-in-detail
+driver e81_json_array is
+  class Item = {id: Integer, name: String, note: String?, price: Decimal, at: Instant} <: Record;
+
+  process main is
+    new rows := Table(:Item)();
+    new a := {id: 1, name: "Ann", note: null, price: 12.50d, at: Instant.parse("2026-10-10T08:00:00Z")} :Item;
+    new b := {id: 2, name: "Zoë \"Z\"", note: "x\ny", price: 3d, at: Instant.epoch} :Item;
+    let rows <+ a;
+    let rows <+ b;
+    json.write("out/items.json", rows);
+    for i in json.read!(:Item)("out/items.json") do
+      print "{i.id} {i.name} {i.price} {i.at}";
+    done;
+    fs.write("out/loose.json", "  [ \{\"id\": 5, \"name\": \"Eve\", \"price\": 1.5, \"at\": \"1970-01-01T00:00:01Z\"\} ]  ");  ** a brace in a text is written \{ and \}
+    for i in json.read!(:Item)("out/loose.json") do
+      print "{i.id} {i.name} {i.price} {i.note}";
+    done;
+  return;
+end e81_json_array;
+/*@expect
+{
+  "stdout": [
+    "1 Ann 12.50 2026-10-10T08:00:00Z",
+    "2 Zoë \"Z\" 3 1970-01-01T00:00:00Z",
+    "5 Eve 1.5 Null"
+  ],
+  "files": {
+    "out/items.json": [
+      "[",
+      "{\"id\":1,\"name\":\"Ann\",\"note\":null,\"price\":12.50,\"at\":\"2026-10-10T08:00:00Z\"},",
+      "{\"id\":2,\"name\":\"Zoë \\\"Z\\\"\",\"note\":\"x\\ny\",\"price\":3,\"at\":\"1970-01-01T00:00:00Z\"}",
+      "]"
+    ]
+  }
+}
+*/

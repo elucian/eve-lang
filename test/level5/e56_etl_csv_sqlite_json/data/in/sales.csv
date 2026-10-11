@@ -1,0 +1,5 @@
+id,product,qty,unit_cents,region
+1,Widget,3,250,North
+2,Gadget,0,1200,South
+3,"Bolt, steel",10,15,South
+4,Nut,25,5,

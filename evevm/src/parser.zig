@@ -69,6 +69,8 @@ const Parser = struct {
     job_depth: usize = 0,
     /// True in the body of a process: a `parallel` group is allowed only there (D-140).
     in_process: bool = false,
+    /// True in the body of a generator: `yield` is allowed only there (D-067).
+    in_generator: bool = false,
 
     // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
     // syntax: `p.name(...)`.
@@ -585,20 +587,28 @@ const Parser = struct {
         const saved_group = p.group_depth;
         const saved_job = p.job_depth;
         const saved_process = p.in_process;
+        const saved_generator = p.in_generator;
         p.group_depth = 0;
         p.job_depth = 0;
         p.in_process = false;
+        p.in_generator = tag == .generator; // a function inside a generator can not yield (Eve has no coroutines)
         defer {
             p.group_depth = saved_group;
             p.job_depth = saved_job;
             p.in_process = saved_process;
+            p.in_generator = saved_generator;
         }
         const kw = p.advance();
         const name = if (tag == .constructor) kw else try p.expectName("a name");
         const empty = try p.mk(.params, kw, "", &.{});
+        const types = try p.typeList();
         const first = if (p.isSym("(")) try p.params() else empty;
         // Zig tip: `return` inside a `for` leaves the whole function, not only the loop. Only a
         // method binds the object, so `@self` in a function or a procedure is refused (D-123).
+        if (tag == .generator) {
+            // a generator has inputs only, by value (declarations.md#generators-level-5)
+            for (first.kids) |q| if (q.tag == .ref_param and !std.mem.eql(u8, q.text, "self")) return p.failAt(kw, "a generator has inputs only, by value: '@{s}' is not allowed", .{q.text});
+        }
         if (tag == .function or tag == .procedure) {
             for (first.kids) |q| {
                 if (q.tag == .ref_param and std.mem.eql(u8, q.text, "self")) {
@@ -610,16 +620,17 @@ const Parser = struct {
         const results = if (p.acceptSym("=>")) try p.params() else empty;
         if (tag == .procedure and has_results) return p.failAt(kw, "a procedure has no result list (use function)", .{});
         if (tag == .function and !has_results) return p.failAt(kw, "a function must have a result list '=> (@r: Type)' (use procedure)", .{});
+        if (tag == .generator and results.kids.len != 1) return p.failAt(kw, "a generator has exactly one result: '=> (@x: Type)', the value it produces", .{});
         if (tag == .procedure and name.text[name.text.len - 1] == '!') return p.failAt(name, "a procedure can't end with '!' (D-101)", .{});
         if (partial and p.acceptSym(";")) {
             // a required method: no body; the class that adopts it writes it (D-145)
-            return p.mk(tag, kw, name.text, &.{ first, empty, results, p.noneNode() });
+            return p.mk(tag, kw, name.text, &.{ first, types, results, p.noneNode() });
         }
         try p.expectWord("is");
         const body = try p.block();
         try p.expectWord("return");
         try p.expectSym(";");
-        return p.mk(tag, kw, if (tag == .constructor) "" else name.text, &.{ first, empty, results, body });
+        return p.mk(tag, kw, if (tag == .constructor) "" else name.text, &.{ first, types, results, body });
     }
 
     // ---- expressions ------------------------------------------------------------------------
@@ -803,6 +814,15 @@ const Parser = struct {
                     if (!p.acceptSym(",")) break;
                 }
                 try p.expectSym(")");
+                if (n.tag == .field) {
+                    // `csv.read!(:Row)(path)`: the type arguments of a library function or of a method (D-148)
+                    // go after the receiver in the kids of the field node; the call that follows is a plain call.
+                    var kids: std.ArrayList(*const Node) = .empty;
+                    try kids.append(p.a, n.kids[0]);
+                    try kids.appendSlice(p.a, types.items);
+                    n = try p.mk(.field, open, n.text, kids.items);
+                    continue;
+                }
                 if (n.tag != .name) return p.failAt(open, "type arguments follow the name of a class", .{});
                 n = try p.mk(.generic, open, n.text, types.items);
             } else if (callable and p.isSym("(")) {
@@ -971,6 +991,7 @@ const Parser = struct {
                 return p.mk(.name, t, t.text, &.{});
             },
             .symbol => {
+                if (p.isSym("(") and p.isSymAt(1, ":")) return p.fail("a lambda has no type list: write overloaded functions instead (D-148)", .{});
                 if (p.isSym("(")) {
                     if (p.isLambda()) {
                         const prm = try p.params();
@@ -1285,6 +1306,101 @@ const Parser = struct {
         return p.mk(.match_, kw, try std.fmt.allocPrint(p.a, "{s}:{s}", .{ mode, label }), kids.items);
     }
 
+    // Zig tip: `generator` and `yield` are contextual words (D-116): they are keywords only where the grammar
+    // expects them, so a variable may still be called `yield`. `isYieldStatement` looks at the token after the
+    // word: if it starts an assignment, a call or an access, the word is a name.
+    /// Is the word under the cursor a `yield` statement (and not a variable called yield)?
+    fn isYieldStatement(p: *const Parser) bool {
+        const next = p.peekAt(1);
+        if (next.kind != .symbol) return true;
+        const names_it = [_][]const u8{ ":=", "::", "=", "(", ".", "[", "+=", "-=", "*=", "/=", "%=", "^=", "<+", "+>" };
+        for (names_it) |s| if (std.mem.eql(u8, next.text, s)) return false;
+        return true;
+    }
+
+    /// `table name: Class …` as a declaration (`table` is a word only at the start of a declaration, D-116).
+    fn isTableDecl(p: *const Parser) bool {
+        return p.isWord("table") and p.peekAt(1).kind == .ident and p.isSymAt(2, ":");
+    }
+
+    // Zig tip: a declaration with an optional body: the short form ends with `;`, the long form has `is`, a list of
+    // clauses and `end name;`. Each clause is a word and its arguments up to `;`, read by one `if` per word; the
+    // clauses become `clause` nodes, so the checker and the interpreter read the table without parsing text again.
+    /// `table name: Class in "connection" [as "name"] ;` or with `is clauses end name;` (database.md, the table declaration).
+    fn tableDecl(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        const name = try p.expectName("a table name");
+        try p.expectSym(":");
+        const class_tok = try p.expectName("a record class");
+        try p.expectWord("in");
+        const conn = try p.primary();
+        if (conn.tag != .str) return p.fail("the connection of a table is a text: in \"sales\"", .{});
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.append(p.a, try p.mk(.name, class_tok, class_tok.text, &.{}));
+        try kids.append(p.a, conn);
+        if (p.acceptWord("as")) {
+            const alias = try p.primary();
+            if (alias.tag != .str) return p.fail("the database name of a table is a text: as \"schema.table\"", .{});
+            try kids.append(p.a, alias);
+        } else try kids.append(p.a, p.noneNode());
+        if (p.acceptSym(";")) return p.mk(.table_decl, kw, name.text, kids.items);
+        try p.expectWord("is");
+        while (!p.isWord("end")) {
+            const w = p.peek();
+            if (w.kind != .ident) return p.fail("unexpected '{s}' in the table declaration", .{describe(w)});
+            _ = p.advance();
+            var args: std.ArrayList(*const Node) = .empty;
+            var word = w.text;
+            if (std.mem.eql(u8, w.text, "key") or std.mem.eql(u8, w.text, "generated")) {
+                try p.expectSym("(");
+                while (true) {
+                    const f = try p.expectName("a field name");
+                    try args.append(p.a, try p.mk(.name, f, f.text, &.{}));
+                    if (!p.acceptSym(",")) break;
+                }
+                try p.expectSym(")");
+            } else if (std.mem.eql(u8, w.text, "version")) {
+                const f = try p.expectName("a field name");
+                try args.append(p.a, try p.mk(.name, f, f.text, &.{}));
+            } else if (std.mem.eql(u8, w.text, "column")) {
+                const f = try p.expectName("a field name");
+                try args.append(p.a, try p.mk(.name, f, f.text, &.{}));
+                try p.expectWord("as");
+                const col = try p.primary();
+                if (col.tag != .str) return p.fail("the name of a column is a text: column city as \"town\"", .{});
+                try args.append(p.a, col);
+            } else if (std.mem.eql(u8, w.text, "reference")) {
+                const f = try p.expectName("a field name");
+                try args.append(p.a, try p.mk(.name, f, f.text, &.{}));
+                try p.expectWord("to");
+                const t = try p.expectName("a table name");
+                try args.append(p.a, try p.mk(.name, t, t.text, &.{}));
+            } else if (std.mem.eql(u8, w.text, "read")) {
+                try p.expectWord("only");
+                word = "read only";
+            } else if (std.mem.eql(u8, w.text, "temporary")) {
+                // no arguments
+            } else if (std.mem.eql(u8, w.text, "cached")) {
+                try args.append(p.a, try p.expr());
+            } else return p.failAt(w, "unknown clause '{s}' in the table declaration: key, generated, version, column, reference, read only, temporary, cached", .{w.text});
+            try p.expectSym(";");
+            try kids.append(p.a, try p.mk(.clause, w, word, args.items));
+        }
+        try p.expectWord("end");
+        const end_name = try p.expectName("the table name");
+        if (!std.mem.eql(u8, name.text, end_name.text)) {
+            p.i -= 1;
+            return p.fail("'end {s}' does not match 'table {s}'", .{ end_name.text, name.text });
+        }
+        try p.expectSym(";");
+        return p.mk(.table_decl, kw, name.text, kids.items);
+    }
+
+    /// `generator name …` as a declaration (`generator` is a word only before a name, D-116).
+    fn isGeneratorDecl(p: *const Parser) bool {
+        return p.isWord("generator") and p.peekAt(1).kind == .ident;
+    }
+
     // Zig tip: `std.mem.eql(u8, w, "let")` is how Zig compares text. A chain of `if` with early
     // `return` is a plain dispatch on the first word of the statement. `inline for` over a tuple
     // of `.{ word, tag }` pairs is unrolled by the compiler, so `tag` is a comptime-known enum
@@ -1319,6 +1435,26 @@ const Parser = struct {
             }
             // a function declared inside a function or a procedure is a closure (D-101)
             if (std.mem.eql(u8, w, "function")) return p.routine(.function);
+            if ((std.mem.eql(u8, w, "commit") or std.mem.eql(u8, w, "rollback")) and (p.isSymAt(1, ";") or p.isWordAt(1, "if"))) {
+                _ = p.advance();
+                if (p.job_depth == 0) return p.failAt(t, "{s} is allowed only in a job: write it in the do region of a job (D-158)", .{w});
+                return p.endSimple(try p.mk(if (std.mem.eql(u8, w, "commit")) .commit_stmt else .rollback_stmt, t, "", &.{}));
+            }
+            if (std.mem.eql(u8, w, "update") and p.peekAt(1).kind == .ident and !reserved.has(p.peekAt(1).text) and p.isWordAt(2, "do")) {
+                _ = p.advance();
+                const target = try p.postfix();
+                try p.expectWord("do");
+                const body = try p.block();
+                try p.expectWord("done");
+                try p.expectSym(";");
+                return p.mk(.update_stmt, t, "", &.{ target, body });
+            }
+            if (std.mem.eql(u8, w, "yield") and p.isYieldStatement()) {
+                _ = p.advance();
+                if (!p.in_generator) return p.failAt(t, "yield outside a generator: only the body of a generator can yield (D-067)", .{});
+                const value: []const *const Node = if (p.isSym(";") or p.isWord("if")) &.{} else &.{try p.expr()};
+                return p.endSimple(try p.mk(.yield_stmt, t, "", value));
+            }
             if (std.mem.eql(u8, w, "if")) return p.ifStatement();
             if (std.mem.eql(u8, w, "match")) return p.matchStatement("");
             if (std.mem.eql(u8, w, "while")) return p.whileLoop("", &.{});
@@ -1341,13 +1477,24 @@ const Parser = struct {
                 _ = p.advance();
                 _ = p.advance();
                 _ = p.advance();
+                // the declarations of a job come before `do` and run again at every retry: they are the first
+                // statements of the body (database.md#transactions, long loads)
+                var decls: std.ArrayList(*const Node) = .empty;
+                while (!p.isWord("do")) {
+                    if (p.peek().kind == .eof) return p.fail("expected 'do' in the job", .{});
+                    try decls.append(p.a, try p.declaration());
+                }
                 try p.expectWord("do");
                 p.job_depth += 1;
-                const body = p.block() catch |e| {
+                const parsed = p.block() catch |e| {
                     p.job_depth -= 1;
                     return e;
                 };
                 p.job_depth -= 1;
+                const body = if (decls.items.len == 0) parsed else blk: {
+                    try decls.appendSlice(p.a, parsed.kids);
+                    break :blk try p.mk(.block, t, "", decls.items);
+                };
                 try p.expectWord("done");
                 const label = try p.expectName("the job label");
                 if (!std.mem.eql(u8, label.text, w)) {
@@ -1420,6 +1567,7 @@ const Parser = struct {
         const kw = p.peek();
         try p.expectWord("process");
         const name = try p.expectName("a process name");
+        const types = try p.typeList();
         const prm = if (p.isSym("(")) try p.params() else try p.mk(.params, kw, "", &.{});
         try p.expectWord("is");
         p.in_process = true;
@@ -1429,7 +1577,7 @@ const Parser = struct {
         const finalize = if (p.acceptWord("finalize")) try p.block() else p.noneNode();
         try p.expectWord("return");
         try p.expectSym(";");
-        return p.mk(.process, kw, name.text, &.{ body, recover, finalize, prm });
+        return p.mk(.process, kw, name.text, &.{ body, recover, finalize, prm, types });
     }
 
     // Zig tip: the signature of a callback is a class with no members: `class BinEx = (p1, p2 :Integer):
@@ -1511,6 +1659,8 @@ const Parser = struct {
                 try kids.append(p.a, try p.routine(.constructor));
             } else if (p.isWord("method")) {
                 try kids.append(p.a, try p.routineOf(.method, true));
+            } else if (p.isGeneratorDecl()) {
+                try kids.append(p.a, try p.routine(.generator));
             } else return p.fail("unexpected '{s}' in the class, expected a constructor or a method", .{describe(p.peek())});
             if (public) @constCast(kids.items[first_member]).public = true;
         }
@@ -1531,15 +1681,28 @@ const Parser = struct {
     // parameters at run time, and a constraint `<: Comparable` is documentation for now (D-145).
     /// `(:T)` or `(:T <: Comparable, :U)` after the name of a generic class or trait.
     fn typeParams(p: *Parser) Error!void {
-        if (!(p.isSym("(") and p.isSymAt(1, ":"))) return;
+        _ = try p.typeList();
+    }
+
+    // Zig tip: the same text is read for a class and for a subprogram, but a subprogram keeps the result: a
+    // `params` node whose kids are `param` nodes, one for each type parameter (`text` = its name, `ty` = the
+    // constraint after `<:` or null). It goes in the second slot of the routine node, which was empty (D-148).
+    /// The list of types of a generic subprogram or class; an empty `params` node when there is none.
+    fn typeList(p: *Parser) Error!*const Node {
+        const open = p.peek();
+        var list: std.ArrayList(*const Node) = .empty;
+        if (!(p.isSym("(") and p.isSymAt(1, ":"))) return p.mk(.params, open, "", &.{});
         _ = p.advance();
         while (true) {
             try p.expectSym(":");
-            _ = try p.expectName("a type parameter");
-            if (p.acceptSym("<:")) _ = try p.typeName();
+            const name = try p.expectName("a type parameter");
+            const prm = try p.mk(.param, name, name.text, &.{p.noneNode()});
+            if (p.acceptSym("<:")) @constCast(prm).ty = try p.typeName();
+            try list.append(p.a, prm);
             if (!p.acceptSym(",")) break;
         }
         try p.expectSym(")");
+        return p.mk(.params, open, "", list.items);
     }
 
     // Zig tip: a trait is parsed into the same shape as a class (kids = [members, parent, methods...]),
@@ -1586,6 +1749,8 @@ const Parser = struct {
         if (p.isWord("function")) return p.routine(.function);
         if (p.isWord("procedure")) return p.routine(.procedure);
         if (p.isWord("method")) return p.routine(.method);
+        if (p.isGeneratorDecl()) return p.routine(.generator);
+        if (p.isTableDecl()) return p.tableDecl();
         if (p.isWord("process")) return p.process();
         if (p.isWord("from")) return p.importDecl();
         if (p.isWord("export")) return p.exportDecl();
@@ -1723,10 +1888,23 @@ const Parser = struct {
             try path.append(p.a, '/');
             try path.appendSlice(p.a, (try p.expectName("a name after '/'")).text);
         }
+        // `apply largest(:String)(rows)`: the types of a generic process, written before the arguments (D-148)
+        var types: std.ArrayList(*const Node) = .empty;
+        if (p.isSym("(") and p.isSymAt(1, ":")) {
+            _ = p.advance();
+            while (true) {
+                try p.expectSym(":");
+                try types.append(p.a, try p.typeName());
+                if (!p.acceptSym(",")) break;
+            }
+            try p.expectSym(")");
+        }
         if (!p.isSym("(")) return p.fail("expected '(' after 'apply {s}': the parentheses are always written", .{path.items});
         var args: std.ArrayList(*const Node) = .empty;
         try p.items(")", &args);
-        return p.endSimple(try p.mk(.apply_stmt, kw, path.items, args.items));
+        const node = try p.mk(.apply_stmt, kw, path.items, args.items);
+        @constCast(node).extra = types.items;
+        return p.endSimple(node);
     }
 
     // Zig tip: `startStatement` reads like `applyStatement` and only changes the tag; the rule
@@ -1819,16 +1997,77 @@ const Parser = struct {
         return node;
     }
 
+    // Zig tip: a scan over the rest of the tokens: `p.toks[p.i..]` is the slice from the cursor. A top-level
+    // `driver` is a word written at column 1. A free script has no declaration of a driver, so one found
+    // there makes the file an Eve macro (D-152).
+    /// Does the file hold a top-level `driver` or aspect after other declarations?
+    fn looksLikeMacro(p: *Parser) bool {
+        for (p.toks[p.i..]) |t| {
+            if (t.kind != .ident or t.col != 1) continue;
+            if (std.mem.eql(u8, t.text, "driver") or std.mem.eql(u8, t.text, "aspect") or
+                std.mem.eql(u8, t.text, "exclusive") or std.mem.eql(u8, t.text, "concurrent")) return true;
+        }
+        return false;
+    }
+
+    // Zig tip: `first` is the node the caller already read (a driver or an aspect), or null. The declarations are
+    // sorted into three lists, then one `driver` node is built: its kids are the shared declarations, the
+    // declarations of the driver itself and the aspects, so the checker and the interpreter see a driver whose
+    // scope is the scope shared by the whole file. `@constCast` sets the flag after the nodes are made, as the
+    // parser does elsewhere.
+    /// An Eve macro (D-152): shared declarations, aspects and exactly one driver in one file.
+    fn macro(p: *Parser, first: ?*const Node) Error!*const Node {
+        var shared: std.ArrayList(*const Node) = .empty;
+        var aspects: std.ArrayList(*const Node) = .empty;
+        var drv: ?*const Node = null;
+        if (first) |f| {
+            if (f.tag == .driver) drv = f else try aspects.append(p.a, f);
+        }
+        while (p.peek().kind != .eof) {
+            if (p.isWord("driver")) {
+                if (drv != null) return p.fail("a macro has only one driver (D-152)", .{});
+                drv = try p.driver();
+            } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
+                try aspects.append(p.a, try p.aspect());
+            } else if (p.isWord("export")) {
+                return p.fail("a macro exports nothing: export is not allowed in a macro (D-126, D-152)", .{});
+            } else if (p.isWord("module") or p.isWord("managed") or p.isWord("direct")) {
+                return p.fail("a module is its own file: it is not declared inside a macro (D-152)", .{});
+            } else if (p.isWord("new") or p.isWord("set") or p.isWord("class") or p.isWord("trait") or p.isWord("async") or
+                p.isWord("function") or p.isWord("procedure") or p.isWord("method") or p.isWord("from") or p.isGeneratorDecl() or p.isTableDecl())
+            {
+                try shared.append(p.a, try p.declarationInDriver());
+            } else {
+                return p.fail("a statement outside a declaration in a macro: '{s}' goes in a process (D-152)", .{describe(p.peek())});
+            }
+        }
+        const d = drv orelse return p.fail("a macro needs a driver: add 'driver name is … end name;' (D-152)", .{});
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.appendSlice(p.a, shared.items);
+        try kids.appendSlice(p.a, d.kids);
+        for (aspects.items) |a| {
+            @constCast(a).macro = true;
+            try kids.append(p.a, a);
+        }
+        const node = try p.a.create(Node);
+        node.* = .{ .tag = .driver, .line = d.line, .col = d.col, .text = d.text, .kids = kids.items, .macro = true };
+        return node;
+    }
+
     // Zig tip: `script` relies on the same Zig feature as `routine` above: see the tip there.
     fn script(p: *Parser) Error!*const Node {
         const at = p.peek();
         var result: *const Node = undefined;
         if (p.isWord("driver")) {
             result = try p.driver();
+            if (p.peek().kind != .eof) result = try p.macro(result);
         } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
             result = try p.aspect();
+            if (p.peek().kind != .eof) result = try p.macro(result);
         } else if (p.isWord("module") or ((p.isWord("managed") or p.isWord("direct")) and p.isWordAt(1, "module"))) {
             result = try p.module();
+        } else if (p.looksLikeMacro()) {
+            result = try p.macro(null);
         } else {
             var list: std.ArrayList(*const Node) = .empty;
             while (p.peek().kind != .eof) try list.append(p.a, try p.statement());

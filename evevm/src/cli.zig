@@ -14,6 +14,7 @@ const version = @import("version.zig");
 const editor = @import("line.zig");
 const parser = @import("parser.zig");
 const doc = @import("doc.zig");
+const scaffold = @import("scaffold.zig");
 const vm = @import("vm.zig");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
@@ -28,6 +29,8 @@ pub const exit_syntax = 65;
 pub const exit_not_implemented = 70;
 /// The input file cannot be read (EX_NOINPUT of sysexits.h).
 pub const exit_no_input = 66;
+/// A file or folder cannot be created (EX_CANTCREAT of sysexits.h).
+pub const exit_cant_create = 73;
 
 // Zig tip: a string literal is a pointer to a constant array of bytes; there is no string type.
 // Text is `[]const u8`: a slice (pointer + length) of read-only bytes, in UTF-8.
@@ -167,6 +170,40 @@ fn cmdDoc(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     ctx.status = 0;
 }
 
+// Zig tip: a subcommand is read from the first word of `args`. `std.mem.eql` compares the text
+// (see `find`). `scaffold.init` returns an error union; `catch |err| switch (err)` passes on the
+// one error of this handler's type (`WriteFailed`) and reports every other one as a message.
+// `init` and `new` differ in one test only, so `is_new` is a plain bool and not two functions.
+/// `project init <folder>` and `project new <folder>`: make a project with the standard layout
+/// (plan/design-project-layout.md). `init` also works on an existing project and keeps its files;
+/// `new` fails when the folder exists and is not empty.
+fn cmdProject(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    const is_new = args.len == 2 and std.mem.eql(u8, args[0], "new");
+    if (args.len != 2 or !(is_new or std.mem.eql(u8, args[0], "init"))) {
+        try ctx.out.writeAll("project: usage: project init <folder> | project new <folder>\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    if (is_new) {
+        const free = scaffold.isEmptyOrAbsent(ctx.io, Io.Dir.cwd(), args[1]) catch false;
+        if (!free) {
+            try ctx.out.print("project: {s} exists and is not empty (project init keeps its files)\n", .{args[1]});
+            ctx.status = exit_cant_create;
+            return;
+        }
+    }
+    const result = scaffold.init(ctx.io, ctx.gpa, Io.Dir.cwd(), args[1], true, ctx.out) catch |err| switch (err) {
+        error.WriteFailed => |e| return e,
+        else => {
+            try ctx.out.print("project: {s}: {s}\n", .{ args[1], @errorName(err) });
+            ctx.status = exit_cant_create;
+            return;
+        },
+    };
+    try ctx.out.print("project {s}: {s}: {d} created, {d} kept\n", .{ args[0], args[1], result.created, result.kept });
+    ctx.status = 0;
+}
+
 // Zig tip: the VM session is created the first time a command needs it and kept in the Context, so
 // the next command finds the script the previous one loaded. `gpa.create(T)` allocates one `T` and
 // returns a pointer; `s.* = .{ ... }` fills it. A `?*T` field is null until then, and `orelse`
@@ -254,6 +291,7 @@ pub const commands = [_]Command{
     .{ .name = "doc", .summary = "write Markdown documentation of a .eve file or folder", .file = ".eve", .run = cmdDoc },
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = cmdExecute },
+    .{ .name = "project", .summary = "project init|new <folder>: make a project with the standard layout", .run = cmdProject },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },
     .{ .name = "enter", .summary = "execute the next step", .run = stub("enter") },
     .{ .name = "run", .summary = "execute the loaded script, or the file given (parsed first)", .file = ".eve", .run = viaSession("run") },

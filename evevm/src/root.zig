@@ -23,6 +23,9 @@ pub const project = @import("project.zig");
 /// The heap of the values: reference counting, regions and the tracing collector.
 pub const heap = @import("heap.zig");
 
+/// `project init`: the layout of a new project.
+pub const scaffold = @import("scaffold.zig");
+
 /// SQLite, the core database of Eve (level 5).
 pub const sqlite = @import("sqlite.zig");
 
@@ -42,6 +45,14 @@ test {
     _ = @import("scratch.zig");
     _ = heap;
     _ = @import("doc.zig");
+    _ = scaffold;
+    _ = @import("data.zig");
+    _ = @import("dlib.zig");
+    _ = @import("nfc.zig");
+    _ = @import("orm.zig");
+    _ = @import("overload.zig");
+    _ = @import("decimal.zig");
+    _ = @import("instant.zig");
     _ = sqlite;
 }
 

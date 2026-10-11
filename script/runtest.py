@@ -9,6 +9,8 @@ TARGET is one of:
   1 | level1          every test in test/level1 (likewise 2 to 7)
   smoke               every test in test/smoke (the tools of the VM: slot, workflow)
   all                 every level, and smoke
+  project             the special test of `project init` and `project new` (test/project/run.sh,
+                      a shell script on real folders); run on its own, never part of `all`
   a03 | a03_print     one test, by name or name prefix, searched in every level
   test/level1/a03_print.eve
                       one test, by path
@@ -33,6 +35,9 @@ A test is either a file or a folder:
 Other folders are not tests. The expectation keys, all optional:
   "exit"       expected exit code (default 0)
   "args"       command-line arguments
+  "command"    a list of arguments for `eve` alone, with no script: the test runs one command of the
+               VM, `eve <command...>` (for example ["--project", "init", "out/proj"]); the file of
+               the test is only its home and its expectations
   "serve"      a command file (path from the repo root): the test then runs the VM as
                `eve -x -t 5 -i <serve>` (a session, no script on the command line)
   "stdout"     the exact expected output: a string, or a list of lines (line
@@ -263,6 +268,8 @@ def eve_args(test, exp):
     """The arguments of `eve` for a test: the script and its args, or, with "serve", a session
     that runs the command file: `eve -x -i <serve> [-t sec]` (the test file is then only the subject
     that the command file loads)."""
+    if "command" in exp:
+        return list(exp["command"])
     if "serve" in exp:
         return ["-x", "-t", "5", "-i", exp["serve"], *exp["args"]]
     return [script_arg(test), *exp["args"]]
@@ -290,15 +297,18 @@ def script_arg(test):
 
 
 def clear_out(test):
-    """Empty the out/ folder of a project test, so a file found after the run is new."""
-    out = os.path.join(os.path.dirname(test), "out")
-    if not os.path.isdir(out):
-        return
-    for top, dirs, files in os.walk(out, topdown=False):
-        for f in files:
-            os.remove(os.path.join(top, f))
-        for d in dirs:
-            os.rmdir(os.path.join(top, d))
+    """Empty the out/ and data/out/ folders of a project test, so a file found after the run is new.
+    The .gitkeep at the top of a folder (it keeps the empty folder in git) stays."""
+    for sub in ("out", os.path.join("data", "out")):
+        out = os.path.join(os.path.dirname(test), sub)
+        if not os.path.isdir(out):
+            continue
+        for top, dirs, files in os.walk(out, topdown=False):
+            for f in files:
+                if f != ".gitkeep" or top != out:
+                    os.remove(os.path.join(top, f))
+            for d in dirs:
+                os.rmdir(os.path.join(top, d))
 
 
 def run_test(eve, test, timeout):
@@ -572,12 +582,19 @@ def main():
     eve = os.path.abspath(args.eve) if os.path.exists(args.eve) else args.eve
     version = eve_version(eve)
 
+    if args.targets == ["project"]:
+        # The special test (test/project/readme.md): a shell script, with its own verdict and exit status.
+        script = os.path.join(ROOT, "test", "project", "run.sh")
+        sys.exit(subprocess.run(["sh", script, eve]).returncode)
+
     labels, tests = [], []
     for target in args.targets:
         label, found = resolve(target)
         labels.append(label)
         tests += [t for t in found if t not in tests]
     label = "-".join(labels)
+    if len(label) > 60:
+        label = label[:50] + "-etc"   # a long list of tests would be a file name too long for the system
     if not tests:
         die(f"no tests in {label}")
 

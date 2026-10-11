@@ -1,0 +1,49 @@
+# CSV options: another separator, no header, a BOM, CRLF line ends, and columns: renames the columns of the file (data-types.md)
+** spec: semantics/data-types.md#the-formats-in-detail
+driver e80_csv_options is
+  class Row = {id: Integer, name: String} <: Record;
+
+  process main is
+    new rows := Table(:Row)();
+    new a := {id: 1, name: "Ann"} :Row;
+    new b := {id: 2, name: "a;b"} :Row;
+    let rows <+ a;
+    let rows <+ b;
+    csv.write("out/semi.csv", rows, sep: ";");
+    csv.write("out/nohead.csv", rows, header: False, eol: "crlf");
+    csv.write("out/bom.csv", rows, bom: True);
+    fs.write("out/orders.csv", "Order No,Customer\n7,Zed\n8,Yan\n");
+    for r in csv.read!(:Row)("out/orders.csv", columns: {"Order No": "id", "Customer": "name"}) do
+      print "{r.id} {r.name}";
+    done;
+    for r in csv.read!(:Row)("out/semi.csv", sep: ";") do
+      print "{r.id} {r.name}";
+    done;
+    for r in csv.read!(:Row)("out/bom.csv") do
+      print "bom {r.id}";
+    done;
+  return;
+end e80_csv_options;
+/*@expect
+{
+  "stdout": [
+    "7 Zed",
+    "8 Yan",
+    "1 Ann",
+    "2 a;b",
+    "bom 1",
+    "bom 2"
+  ],
+  "files": {
+    "out/semi.csv": [
+      "id;name",
+      "1;Ann",
+      "2;\"a;b\""
+    ],
+    "out/nohead.csv": [
+      "1,Ann",
+      "2,a;b"
+    ]
+  }
+}
+*/

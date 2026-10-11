@@ -1,0 +1,29 @@
+# an Instant keeps a fraction of a second, compares by time, and a date that does not exist is the error parse
+** spec: library/data-language.md#details-used-by-the-tests
+driver e75_instant_forms is
+  process main is
+    new a := Instant.parse("2026-10-10T08:00:00.5Z");
+    new b := Instant.parse("2026-10-10T08:00:00.500Z");
+    print a;
+    expect a == b;
+    new c := Instant.parse("2024-02-29T23:59:59Z");
+    print c;
+    expect c < a;
+    expect a <> c;
+    new now := time.now();
+    expect now > a;
+    print Instant.parse("2026-02-30T00:00:00Z");
+    print "not reached";
+  recover
+    print "code: {$error.code}";
+  return;
+end e75_instant_forms;
+/*@expect
+{
+  "stdout": [
+    "2026-10-10T08:00:00.5Z",
+    "2024-02-29T23:59:59Z",
+    "code: 15"
+  ]
+}
+*/

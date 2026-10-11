@@ -39,6 +39,8 @@ What the interpreter implements is the whole of `test/level1/`: drivers and free
 
 `eve --doc <folder | file.eve> [output folder]` writes one Markdown page, `<name>.md`, for each `.eve` file: the file given, or the files found directly in the folder. The output folder is `doc` by default and is created when it does not exist. A page holds the comment above the header of the script as its summary, then one section for each declaration, with the signature line as the title and the comment block right above it (`#`/`##` at column 0, `**`, `/* … */`). In the REPL the command is `doc lib doc`. The command reports one line per page, `doc: io.eve -> doc/io.md`. Exit status: 0, 64 when the path is missing, 66 when the file or folder can't be read. It replaces the separate tool `eved` (D-082); `zig build doc` in `evevm/` runs `eve --doc lib doc` to regenerate the library reference.
 
+`eve --project init <folder>` makes a project, or completes an existing one (F-TLS-23, `plan/design-project-layout.md`): the folder, if absent, with `db`, `log`, `meta`, `data/in`, `data/out`, `test`, `asp`, `lib`, `src`, `doc` and `web`, the first driver `<name>.eve`, `eve.cfg`, `meta/project.json` and a `.gitignore`. It never overwrites: a file that exists is kept, so it can run on a project that has work in it and adds only what is missing. Outside a Git repository it also runs `git init`. `eve --project new <folder>` does the same but fails when the folder exists and is not empty. One line per file, `create` or `keep`. Exit status: 0, 64 for a bad command line, 73 when the folder can't be made or, for `new`, is not empty. In the REPL the command is `project init shop`.
+
 ## Command files (`.vmc`)
 
 A `.vmc` file (Virtual Machine Command) is a **script for the machine itself**, not for Eve: plain text, one command per line, comments allowed. It is loaded at startup with `-i`:
@@ -137,6 +139,7 @@ The command options are not designed yet. The basic commands are (in the code th
 |---|---|
 | `check` | check the syntax and compile a script in memory, do not execute it |
 | `doc` | write the Markdown documentation of a `.eve` file, or of the `.eve` files of a folder |
+| `project` | `project init <folder>` (keeps existing files) or `project new <folder>` (fails on a non-empty folder): make a project with the standard layout |
 | `compile` | compile a script to bytecode (not designed yet) |
 | `debug` | execute the main process in debug mode |
 | `execute` | execute the main process in production mode |

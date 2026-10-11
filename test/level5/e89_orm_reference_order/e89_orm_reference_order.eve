@@ -1,0 +1,53 @@
+# a flush writes inserts in the order of the references and deletes in the reverse order, whatever the order of the program (database.md)
+** spec: library/database.md#sql-that-writes-only-what-changed
+driver e89_orm_reference_order is
+  class Customer = {id: Integer, name: String} <: Record;
+  class Order = {id: Integer, customer_id: Integer, total: Decimal} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+  end customers;
+
+  table orders: Order in "shop" is
+    key (id);
+    reference customer_id to customers;
+  end orders;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new o := {id: 1, customer_id: 7, total: 10.50d} :Order;
+      new c := {id: 7, name: "Ann"} :Customer;
+      let orders <+ o;                    ** the order first: the flush puts the customer before it
+      let customers <+ c;
+    done add;
+
+    print orders.count!("1 = 1");
+    print customers.count!("1 = 1");
+    new o2 := orders.find!(1);
+    print o2.total;
+
+    drop: job
+    do
+      customers.remove(7);                ** the customer first: the flush deletes the order before it
+      orders.remove(1);
+    done drop;
+
+    print orders.count!("1 = 1");
+    print customers.count!("1 = 1");
+  return;
+end e89_orm_reference_order;
+/*@expect
+{
+  "stdout": [
+    "1",
+    "1",
+    "10.50",
+    "0",
+    "0"
+  ]
+}
+*/

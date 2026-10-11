@@ -1,0 +1,36 @@
+# a generator can be a member of a class; a comprehension collects its values (D-067)
+** spec: syntax/declarations.md#generators-level-5
+driver e69_generator_method is
+  class Bag = {items: ()Integer} <: Object is
+    public generator evens(@self) => (@x: Integer) is
+      for i in self.items do
+        yield i if i % 2 == 0;
+      done;
+    return;
+  end Bag;
+
+  generator count_to(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      yield i;
+    done;
+  return;
+
+  process main is
+    new b := Bag(items: (1, 2, 3, 4, 6));
+    for e in b.evens() do
+      print e;
+    done;
+    new squares := (x * x | x in count_to(4));
+    print squares;
+  return;
+end e69_generator_method;
+/*@expect
+{
+  "stdout": [
+    "2",
+    "4",
+    "6",
+    "(1,4,9,16)"
+  ]
+}
+*/

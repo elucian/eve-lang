@@ -14,7 +14,7 @@ const Io = std.Io;
 // only when something changed since it blocked (the `progress` counter), a sleeper only when its time
 // has come.
 /// What a task waits for.
-pub const Wait = enum { none, send, receive, join, sleep };
+pub const Wait = enum { none, send, receive, join, sleep, gen };
 
 // Zig tip: a second enum for the reason a task must stop: `cancel` comes from `on error cancel`,
 // `timeout` from the `within` deadline of its group (D-140).
@@ -105,6 +105,8 @@ pub const Sched = struct {
             .none => true,
             .send, .receive, .join => t.blocked_at != s.progress,
             .sleep => now_ms >= t.wake_at,
+            // a generator and the task that resumed it hand the baton to each other by name, never by `pick`
+            .gen => false,
         };
     }
 
@@ -187,6 +189,36 @@ pub const Sched = struct {
             }
             return; // nothing can be woken: let `me` look at its own state again
         }
+    }
+
+    // Zig tip: a generator is a coroutine made of a task: the consumer gives the baton to the generator and
+    // sleeps until the generator gives it back, at the next `yield` or at its end. Both sides are marked
+    // `.gen` while they sleep, so the scheduler never picks one of them by itself (`runnable` says false); this is
+    // what keeps the body of a generator from running ahead of the requests of its caller.
+    /// The task `me` asks the generator task `gen` for the next value and waits for it.
+    pub fn resumeGen(s: *Sched, me: *Task, gen: *Task) void {
+        me.wait = .gen;
+        gen.wait = .none;
+        s.handoff(me, gen);
+        me.wait = .none;
+    }
+
+    /// The generator task `me` has a value (or must stop at a close): give the baton back to its caller `back`
+    /// and sleep until the next request.
+    pub fn parkGen(s: *Sched, me: *Task, back: *Task) void {
+        me.wait = .gen;
+        s.handoff(me, back);
+    }
+
+    /// The generator task `me` has ended: mark it and give the baton to its caller. The thread ends right after.
+    pub fn finishGen(s: *Sched, me: *Task, back: *Task) void {
+        me.done = true;
+        me.wait = .none;
+        s.progress += 1;
+        s.mutex.lockUncancelable(s.io);
+        s.current = back;
+        s.cond.broadcast(s.io);
+        s.mutex.unlock(s.io);
     }
 
     // Zig tip: the thread of a finished task gives the baton away and does not wait for it: it ends
