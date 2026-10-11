@@ -1,0 +1,29 @@
+# two tables that reference each other are a compile error
+** spec: library/database.md#the-table-declaration
+driver e40_table_reference_cycle is
+  class A = {id: Integer, b_id: Integer} <: Record;
+  class B = {id: Integer, a_id: Integer} <: Record;
+
+  table aa: A in "shop" is
+    key (id);
+    reference b_id to bb;
+  end aa;
+
+  table bb: B in "shop" is
+    key (id);
+    reference a_id to aa;
+  end bb;
+
+  process main is
+    print "x";
+  return;
+end e40_table_reference_cycle;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "reference cycle"
+  ]
+}
+*/

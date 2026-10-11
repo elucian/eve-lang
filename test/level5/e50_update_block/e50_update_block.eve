@@ -1,0 +1,41 @@
+# an update block changes several fields of one record without repeating its name
+** spec: library/database.md#the-update-block
+driver e50_update_block is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    generated (id);
+    version version;
+  end customers;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+
+    add: job
+    do
+      new c := {id: 0, name: "Ann", city: null, version: 0} :Customer;
+      let customers <+ c;
+    done add;
+
+    change: job
+    do
+      new c := customers.find!(1);
+      update c do
+        let name := "Ann Smith";
+        let city := "Lyon";
+      done;
+    done change;
+
+    new r := shop.query_one!(:Customer)("select id, name, city, version from customers where id = ?", 1);
+    print "{r.name} / {r.city} / {r.version}";
+  return;
+end e50_update_block;
+/*@expect
+{
+  "stdout": [
+    "Ann Smith / Lyon / 2"
+  ]
+}
+*/

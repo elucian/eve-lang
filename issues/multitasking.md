@@ -8,17 +8,23 @@ D-050: concurrency is not in version 1. CON-05 to CON-08 and CON-11 can wait; th
 
 ### CON-06 `wait` forms
 `wait 10ms;`, `wait all;`, `wait [routine_name]`, and syntax.html: `wait` "interrupts the main process for a specified time". Confirm the three forms: a duration, `all`, a routine name.
+
 **Answer:** Correct, must be specified. Is wait a control statement? I think it can be described in processing.html
+
 Status: partly obsolete (D-051); `wait 10ms;` is in the statement table of syntax.html, but processing.html does not describe it yet: `wait all` and `wait name` are removed with asynchronous methods. Left: `wait 10ms;`, a pause of the process, and whether it belongs to 0.1 (D-050).
 
 ### CON-11 Rules of parallel methods
 D-047 and D-051 propose: inputs passed by value (D-048, copy on write); one owner for each `@` argument, except channels; no driver globals and no nested `parallel` in a started method; `$cores` worker pool, a task waiting on a channel gives its core away; on error, cancel the tasks not begun and raise the first error at `done`; deadlock detected at `done`; `$timeout` on channel waits. Confirm, or change any rule.
+
 **Answer:** _(open)_
+
 Status: open
 
 ### CON-12 Channel details
 D-051 designs channels. Still to decide: is `capacity` required or has a default; is `ch.receive(@x)` needed next to `for x in ch`; a `select` over several channels (wait on the first that has a value); typed send-only or receive-only parameters.
+
 **Answer:** _(open)_
+
 Status: open
 
 ## Spec additions once answered

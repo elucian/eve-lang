@@ -1,0 +1,27 @@
+# the CSV reader decodes into a record class: Decimal, Instant, null and the empty string
+** spec: semantics/data-types.md#reading-a-unit
+driver e33_csv_read_typed is
+  class Row = {id: Integer, name: String, note: String?, price: Decimal, created: Instant} <: Record;
+
+  process main is
+    fs.write("out/in.csv", "id,name,note,price,created\n1,Ann,,12.50,2026-10-10T08:00:00Z\n2,\"Smith, Bob\",\"\",3,2026-10-11T09:30:00Z\n");
+    for o in csv.read!(:Row)("out/in.csv") do
+      print "{o.id} {o.name} {o.price} {o.created}";
+      if o.note == null do
+        print "no note";
+      else
+        print "note [{o.note}]";
+      done;
+    done;
+  return;
+end e33_csv_read_typed;
+/*@expect
+{
+  "stdout": [
+    "1 Ann 12.50 2026-10-10T08:00:00Z",
+    "no note",
+    "2 Smith, Bob 3 2026-10-11T09:30:00Z",
+    "note []"
+  ]
+}
+*/

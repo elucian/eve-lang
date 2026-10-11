@@ -48,7 +48,7 @@ block       = parallel-block ;                                    (* adds to blo
 simple      = start-stmt | spawn-stmt | await-call | wait-stmt ;  (* adds to simple *)
 declaration = async-sub ;                                         (* adds to declaration *)
 unary       = await-call ;                                        (* adds to unary: new n := await measure(p); *)
-primary     = duration | name-path , type-args ;                  (* adds to primary: 30s, Channel(:Integer)(capacity: 10) *)
+primary     = duration | name-path , [ "!" ] , type-args ;                  (* adds to primary: 30s, Channel(:Integer)(capacity: 10) *)
 
 parallel-block = [ label , ":" ] , "parallel" , [ "on" , "error" , "cancel" ] , [ "within" , expression ] ,
               { declaration } , "do" , { statement } , "done" , [ label ] , ";" ;   (* multitasking.md, D-140 *)
@@ -85,7 +85,7 @@ function    = "function" , name , [ "!" ] , type-params , "(" , [ parameters ] ,
 method      = "method" , name , type-params , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body ;
 process     = "process" , name , type-params , "(" , [ parameters ] , ")" , "is" ,
               { declaration | statement } , [ recover ] , [ finalize ] , "return" , ";" ;   (* only the main process of an aspect *)
-call-stmt   = name-path , type-args , "(" , [ arguments ] , ")" ;  (* adds to call-stmt: show_all(:String)(names); *)
+call-stmt   = name-path , [ "!" ] , type-args , "(" , [ arguments ] , ")" ;  (* adds to call-stmt: show_all(:String)(names); *)
 apply-stmt  = "apply" , { name , "/" } , name-path , type-args , "(" , [ arguments ] , ")" ;   (* adds to apply-stmt: apply sorter(:Row)(rows); *)
 ```
 
@@ -100,6 +100,39 @@ top-level   = declaration | aspect ;
 ```
 
 A file of one driver and nothing else is a driver, not a macro. The grammar does not count the drivers: a `#!` file without a top-level driver is a free script, and a statement at the top level of a macro is a compile error (`declarations.md#eve-macro-level-5`).
+
+## Generators (level 5)
+
+```ebnf
+declaration    = … | generator-decl ;                                (* adds to declaration *)
+generator-decl = [ visibility ] , "generator" , name , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
+                 { declaration | statement } , "return" , ";" ;       (* exactly one result; no "@" parameter other than it *)
+simple         = … | yield-stmt ;                                    (* adds to simple; only in the body of a generator *)
+yield-stmt     = "yield" , [ expression ] ;
+```
+
+## Database declarations and statements (level 5)
+
+```ebnf
+declaration  = … | table ;                                           (* adds to declaration: in a driver, an aspect, a module or a macro *)
+table        = "table" , name , ":" , name-path , "in" , string , [ "as" , string ] ,
+               ( ";" | "is" , { table-clause } , "end" , name , ";" ) ;
+table-clause = "key" , "(" , names , ")" , ";"
+             | "generated" , "(" , names , ")" , ";"
+             | "version" , name , ";"
+             | "column" , name , "as" , string , ";"
+             | "reference" , name , "to" , name , ";"
+             | "read" , "only" , ";"
+             | "temporary" , ";"
+             | "cached" , duration , ";" ;                           (* version 0.5, the Eve server *)
+simple       = … | commit-stmt | rollback-stmt ;                    (* adds to simple; only in the do region of a job *)
+commit-stmt  = "commit" ;
+rollback-stmt = "rollback" ;                                         (* both take the suffix: rollback if dry_run; *)
+update-block = "update" , name-path , "do" , { statement } , "done" , ";" ;     (* only for a record; the names of its fields are in scope, D-158 *)
+retry-stmt   = "retry" , [ "after" , duration ] ;                    (* replaces "retry" in recover: retry after 2s if $error.attempt < 5; *)
+```
+
+`table`, `commit`, `rollback`, `update`, `after` and the words of the clauses (`key`, `generated`, `version`, `column`, `reference`, `read`, `only`, `temporary`, `cached`) are contextual (D-116): each is a keyword only in the position shown, and stays a free name elsewhere, so a field called `key` or `version` is still allowed. Meaning: `../library/database.md`. A table that has no `end` is the short form `table countries: Country in "sales";`.
 
 ## Declarations
 
@@ -173,12 +206,12 @@ dimension   = integer | "?" ;
 ```ebnf
 statement   = ( simple , [ "if" , expression ] , ";" ) | block | variable ;
 simple      = let-stmt | defer-stmt | call-stmt | apply-stmt | expect-stmt | raise-stmt | jump | "return" | "pass"
-            | "retry" | "resume" | "abort" | "exit" | "over" | "panic" | "stop" ;
+            | retry-stmt | "resume" | "abort" | "exit" | "over" | "panic" | "stop" ;
 let-stmt    = "let" , target , modifier , ( expression | "new" , names ) ;      (* let lst -> new f;  the explicit capture *)
 defer-stmt  = "defer" , simple ;                                                (* registers a statement for the end of the subprogram (D-117) *)
 modifier    = ":=" | "::" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<+" | "+>" | "<<" | ">>" | "->" | "<-" ;
 target      = name-path , { "[" , index-list , "]" } | "_" ;
-call-stmt   = name-path , [ "(" , [ arguments ] , ")" | arguments ] ;     (* print x;  save(data);  foo; *)
+call-stmt   = name-path , [ "!" ] , [ "(" , [ arguments ] , ")" | arguments ] ;     (* print x;  save(data);  foo; *)
 expect-stmt = ( "expect" | "assert" ) , expression ;
 raise-stmt  = "raise" , expression ;
 jump        = ( "break" | "skip" ) , [ label ] ;
@@ -187,7 +220,7 @@ arguments   = argument , { "," , argument } ;
 argument    = [ name , ":" ] , [ "@" ] , expression
             | "*" , expression ;                                        (* spread a list or a map, aspects.md *)
 
-block       = if-block | match-block | job-block | while-block | for-block | repeat-block ;
+block       = if-block | match-block | job-block | update-block | while-block | for-block | repeat-block ;
 if-block    = "if" , expression , "do" , { statement } ,
               { "else" , "if" , expression , "do" , { statement } } ,
               [ "else" , { statement } ] , "done" , ";" ;
@@ -229,7 +262,7 @@ sum         = product , { ( "+" | "-" | "<+" | "+>" ) , product } ;      (* "<+"
 product     = power , { ( "*" | "/" | "%" ) , power } ;
 power       = unary , [ "^" , power ] ;                    (* right to left; the unary minus applies first: -2 ^ 2 is 4 (Q-030) *)
 unary       = ( "-" | "not" ) , unary | postfix ;
-postfix     = primary , { "." , ( name | "job" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;   (* no call on a lambda (D-147) *)
+postfix     = primary , { "." , ( name | "job" | "done" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;   (* no call on a lambda (D-147); .done is the flag of a generator object (level 5) *)
 index-list  = index , { "," , index } ;
 index       = expression | "*" ;                                               (* a range slices, "*" is a whole dimension *)
 primary     = number | rune | string | text | name-path , [ "!" ] | sysname | "(" , expression , ")"

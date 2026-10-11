@@ -1,0 +1,24 @@
+# in production the VM trusts db/mappings.json: a schema version that differs is a MappingError, exit code 4
+** spec: library/database.md#mapping-validation
+driver e52_mapping_version is
+  class Customer = {id: Integer, name: String} <: Record;
+
+  table customers: Customer in "shop";
+
+  process main is
+    print "start";
+    new n := customers.count!("1 = 1");
+    print "not reached {n}";
+  return;
+end e52_mapping_version;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [
+    "start"
+  ],
+  "stderr": [
+    "schema version"
+  ]
+}
+*/

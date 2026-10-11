@@ -1,0 +1,16 @@
+# a null for a field that is not optional is a compile error (D-080)
+** spec: library/database.md#records
+driver e30_null_in_plain_field is
+  class Customer = {id: Integer, name: String, city: String?} <: Record;
+
+  process main is
+    new c := {id: 1, name: null, city: null} :Customer;
+    print c.id;
+  return;
+end e30_null_in_plain_field;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

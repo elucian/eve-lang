@@ -1,0 +1,7 @@
+{
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  },
+  "markdown.preview.breaks": true,
+  "files.eol": "\n"
+}

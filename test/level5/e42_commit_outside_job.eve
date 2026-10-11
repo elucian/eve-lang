@@ -1,0 +1,16 @@
+# commit; is allowed only in the do region of a job: a compile error elsewhere
+** spec: semantics/control.md#job
+driver e42_commit_outside_job is
+  process main is
+    commit;
+  return;
+end e42_commit_outside_job;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "commit is allowed only in a job"
+  ]
+}
+*/

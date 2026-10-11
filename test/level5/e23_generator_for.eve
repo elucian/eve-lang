@@ -1,0 +1,37 @@
+# a generator gives its values one at a time to a for loop (D-067)
+** spec: syntax/declarations.md#generators-level-5
+driver e23_generator_for is
+  generator count_to(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      let x := i;
+      yield;
+    done;
+  return;
+
+  generator squares(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      yield i * i;
+    done;
+  return;
+
+  process main is
+    for v in count_to(3) do
+      print v;
+    done;
+    new total := 0;
+    for s in squares(4) do
+      let total += s;
+    done;
+    print "sum of squares: {total}";
+  return;
+end e23_generator_for;
+/*@expect
+{
+  "stdout": [
+    "1",
+    "2",
+    "3",
+    "sum of squares: 30"
+  ]
+}
+*/

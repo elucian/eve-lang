@@ -1,0 +1,31 @@
+# TXT: fixed-length fields, strings left, numbers right, not trimmed; the reader slices by the widths
+** spec: semantics/data-types.md#the-formats-in-detail
+driver e37_txt_fixed is
+  class Line = {id: Integer, name: String, price: Decimal} <: Record;
+
+  process main is
+    new rows := Table(:Line)();
+    new a := {id: 1, name: "Ann", price: 12.50d} :Line;
+    new b := {id: 22, name: "Bob", price: 3d} :Line;
+    let rows <+ a;
+    let rows <+ b;
+    txt.write("out/lines.txt", rows, widths: (4, 8, 8));
+    for r in txt.read!(:Line)("out/lines.txt", widths: (4, 8, 8)) do
+      print "{r.id}|{r.name}|{r.price}";
+    done;
+  return;
+end e37_txt_fixed;
+/*@expect
+{
+  "stdout": [
+    "1|Ann|12.50",
+    "22|Bob|3"
+  ],
+  "files": {
+    "out/lines.txt": [
+      "   1Ann        12.50",
+      "  22Bob            3"
+    ]
+  }
+}
+*/

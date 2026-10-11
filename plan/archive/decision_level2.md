@@ -2,7 +2,9 @@
 
 ## Q-011 Default visibility of a module-level method (answered 2026-09-30 → D-035)
 D-025 says `.` is public and `_` is private. What is a method with no prefix: private to the module, or public? The same question applies to functions and classes at module level.
+
 Status: answered again 2026-10-03 → D-072 (extension methods).
+
 **Answer:** `_` can be used (new decision) to show that a method belong to a class. Is a class extension method, private for a class. Withowt prefix the method is private to the driver aspect or module.
 
 ## D-026 No coroutines: generators, threads, suspended methods (2026-09-30)
@@ -157,13 +159,17 @@ Author decision. Answers Q-021; the design is [design-multitasking.md](../design
 
 ## Q-020 Level 2 suite: what must be decided first (2026-10-03)
 Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4). Each test is a driver with a folder of aspects and modules. These points block it; answer each one:
+
 (a) **Aspect scope.** D-043 says each process of an aspect has its own scope and aspect-level `let` values are copied into it; D-055 says an aspect is a singleton whose scope lives from the first `apply` until `reset`. Which one? With the singleton, does a second `apply` see the values left by the first one?
+
 **answer** I think I answered before to this. `reset` is obsolete. Aspect variables are private the main() process of the aspect. The declaration zone provide variables that can be shared by all process members. Because inside an aspect everything is sequentioal there are no race conditions. One apply create one scope, second apply create a new scope. (New instance of same aspect) Perfect izolation between executions.
 
 (b) **What `.` means in an aspect.** Can the driver read `aspect.member` after `apply`, or only the `@` outputs (PRC-14 point 1)?
+
 **answer** Cancel this feature. Aspect members can't be accessed with ".", and can't be defined with "." because none are public. One aspect must have one entry point, the main() process this is also not public, but implicit called when one aspect is applied. 
 
 (c) **Sibling processes.** Can a process of an aspect call another process of the same aspect by its bare name, and how is that different from `apply` (D-043, assumed)?
+
 **answer** Retired. One aspect has a single process main(). 
 
 (d) **Errors across `apply`.** An error raised in an aspect process without `recover`: does it go to the `recover` of the driver process at the `apply` line, with which `$error.job` and `$error.code`? Does `panic` in an aspect end the driver (D-038 says yes)?
@@ -174,9 +180,11 @@ Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4
     Is a member reached as `m.name` or, with `(*)`, as a bare `name`? **answer** yes when alias is used  m.name when use (*) is used the public members (methods) are used without alias. This is how system methods enter the language as statements.
     
 (f) **Module life cycle.** When does `initialize` run (first import, once per driver?), when does a module `finalize` run, and can a module read the globals of the driver that imports it ("bound to the scope of the driver", D-043)?
+
 **answer** No, module members are agnostic of host, we use parameters to communicate with module.
 
 (g) **Where aspects and modules are found in a test.** D-055: a folder given by the caller, else `asp`, the project root, then `lib`. What is the project root of `test/level2/b07_x.eve`: its folder? Proposal: each test has a folder `test/level2/b07_x/` with its aspects and modules, named in the test with `set $EVE_ASP = "b07_x";` or found by default in a folder named like the driver. Ok, for each test that need additional files create a folder like "b07" with subfolders "lib", "asp"
+
 (h) **Names and placement.** Level 2 already holds `b01`–`b06` (VM slot commands) and `c01`–`c05` (VM workflow), which are tests of the VM tools, not of the language, and `c` is the prefix of level 3 (D-018). Proposal: move them to `test/vm/` (`v01`…) and keep `b01`… in level 2 for aspects and modules. **answer** agree withi this
     
 (i) **Arguments.** `apply a.p(value, *list_args)` and `(param: value, *map_args)` (processing.html): is spreading a map into named  parameters part of 0.1? **answer** yes spreading is part of level2.
@@ -186,7 +194,9 @@ Level 2 tests drivers with aspects and modules, imports and error recovery (S5.4
 
 ## Q-021 Suspended methods, `yield` and cooperative multitasking (2026-10-03)
 The author wants suspended methods back (generators that keep their state, cooperative multitasking); D-051 removed `suspend`. Two designs, both on one core, no locks, using the reserved word `yield`: (A) **Generators.** A method that contains `yield` is a generator. `yield;` hands its outputs to the caller and freezes its state. `for v in count_to(5) do … done;` iterates; `let g := new count_to(5);` makes a suspended instance, `g.next()` runs it to the next `yield` (False after `return`) and `g.x` reads the output. (B) **A plus cooperative tasks.** A block (keyword to choose, for example `concurrent do … done;`) runs several methods on one core and switches at `yield` and at a full or empty channel. `parallel` puts aspects on cores, the new block interleaves methods on one core. Recommendation: decide B, specify A for 0.1 (A is a subset of B). Questions: A or B; the keyword of the block; are generators in version 1 (they need no threads)?
+
 **Answer:** The chapter is renamed Multitasking. `yield` is used for generators. No coroutines.
+
 **Status:** design drafted in [design-multitasking.md](../design-multitasking.md): generators one level deep (A), no cooperative block (B dropped); cooperative tasks are generators taking turns; a waiting started aspect gives its core away. Approved: D-067.
 
 ## D-068 Modules page; modules are singletons without public variables (2026-10-03)
@@ -266,19 +276,33 @@ Applied to the tutorial: processing.html (interruption table and text, recover t
 
 ## Q-022 Assumptions of the level 2 tests b01 to b19 (2026-10-03; answered 2026-10-07 → D-112)
 The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These rules are assumed without a decision; confirm or correct each one (the test named after it changes with the answer):
+
 (a) An import that fails on a name conflict (`use (*)`) raises `$err_module`; it happens before the process, so nothing can recover it and the exit code is 30 (b06).
+
 **answer** Discard this feature. However the risk remain. We have improved modules with export, to mitigate this issue.
+
 (b) Reading a private member of a module (`counter.total`) is a runtime error `$err_access`, exit code 21; it could also be a check-time error (exit 65) (b09).
+
 **answer** This is a compiler time error. But maybe also a runtime error? Why.
+
 (c) The keys of a map spread into named arguments are symbols named like the parameters: `apply add3(a: 10, *m)` with `m := {'b': 20, 'c': 30}` (b14).
+
 **answer** good feature, we keep it/ is in tutorial? accepted.
+
 (d) `$error.line` is the line of the `raise` in the aspect file, not the `apply` line of the driver (b15).
+
 **answer** Correct, the originator line of error, with the stack trace that include the aspect name that failed.
+
 (e) A driver may declare an extension method for a class imported from a module, and `use (m(*))` brings the class in as a bare name (`Point`) (b18).
+
 **answer** Correct, though in practice we expect classes to be extended in modules. User can extend classes usually in aspects.
+
 (f) `log_err` and `log_wrn` write `out/error.log` and `out/warning.log`, one message per line, no time stamp (b19; the names and the line format are open since D-057).
+
 **answer** the error.log and warning.log can have data signature in filename. Add runtime data signature.
+
 (g) Aspects are found in `asp/` and modules in the folder named by the import path, both relative to the folder of the driver (the project root, D-055, D-073).
+
 **answer** modules are searched in lib/ if there is no path specified. We can also create $eve_lib_path, a comma separated list of folders like PATH of the operating system. EVE will search in this path to find a library with name specified. Also can search in standard library actually this is first where search for.
 
 ## D-082 `eve --doc` replaces `eved` (2026-10-05)
@@ -291,6 +315,7 @@ Author decision. Replaces the separate tool `eved` of D-053; the rules of the ge
 
 ## Q-037 Shape of the stack trace of an aspect error (2026-10-07; answered 2026-10-07 → D-113)
 D-112 (d): `$error.line` is the line of the original `raise`, and the trace names the aspect. What is the trace? Proposal: `$error.trace` is a list of `(unit, line)` pairs, innermost first, for example `(("fail", 6), ("b17_aspect_trace", 8))`; `$error.unit` is the name of the aspect where it started. What is printed for an unhandled error: one line per pair on the error output, after the message?
+
 **Answer:**
 Yes, the error first, followed by error stack list in order of call, 
 line x in function y
@@ -301,11 +326,13 @@ in job label/ parallel label, loop label...
 
 ## Q-038 Where an aspect may extend a class (2026-10-07; answered 2026-10-07 → D-113)
 Answer (e) says users extend classes in aspects. An extension method is private to the file that declares it (D-072). Is an extension method of an aspect visible only inside that aspect, and gone when `main` returns (state per call)? Classes across files are level 3, so this waits there; it is recorded to avoid a surprise.
+
 **Answer:**
 Yes, the method dissapears from the object. The returning objects will contain only the data they have accumulated if objects are pass back as output parameters or attached to channels. Methods attached are temporarly useful only in the aspect that assign them these features. With modules things are different if module is available (imported) the procedures are available where modules are imported but only if they are part of export.
 
 ## Q-039 Signature of the log file names (2026-10-07; answered 2026-10-07 → D-113)
 D-112 (f): `error.log` and `warning.log` get a run signature. Proposal: the date of the run, `out/error_2026-10-07.log`, and several runs on the same day append to the same file. Alternative: date and time, `error_2026-10-07_14-30-05.log`, one file per run. Which one, and what is the signature when the program runs in the REPL?
+
 **Answer:**
 The date and time is also part of OS so is not required in the file name. Only the date is good enaugh. Because we have groups in log, that show the run number and the time. Make the logs: json so that a tool can use these files and create a html report in a UI. That we do not have yet.
 
@@ -315,6 +342,7 @@ D-113: `error_<date>.log` and `warning_<date>.log` are JSON, grouped by run. Pro
 {"runs": [{"run": 1, "time": "14:30:05", "script": "b09_log_files", "messages": [{"line": 6, "unit": "main", "text": "disk full"}]}]}
 ```
 The first field of a group is the number of the run of that day. Alternative: JSON Lines (one object per line, appended, never rewritten), which is safer when two runs write at once and keeps the old rule "one message per line". Which one, and which fields does a message carry (`line`, `unit`, `level`)?
+
 **Answer:**
 One json per run, name is run-log-<date>.json it hase messages, message type, warning/error, the line, unit, level and the message itself. Organized on run data last runs appended at the end of the file.
 Ok approved.

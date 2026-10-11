@@ -11,6 +11,14 @@
       "summary": "In `recover`: ends the process, runs `finalize`, passes the error on."
     },
     {
+      "id": "after",
+      "category": "statement",
+      "status": "draft",
+      "contextual": true,
+      "ref": "semantics/errors.md#recover",
+      "summary": "In `recover`: `retry after 2s;` waits before it runs the failed job again (level 5)."
+    },
+    {
       "id": "all",
       "category": "block",
       "status": "stable",
@@ -76,6 +84,14 @@
       "summary": "Leaves a loop: `break [label] [if c];`."
     },
     {
+      "id": "cached",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: the Eve server keeps the table in its cache, `cached 1h;` (version 0.5)."
+    },
+    {
       "id": "call",
       "category": "statement",
       "status": "draft",
@@ -96,6 +112,22 @@
       "status": "stable",
       "ref": "syntax/declarations.md#classes-and-objects",
       "summary": "Declares a class, an ordinal, a range type or a function type; the superclass after `<:` is mandatory; a class body closes with `end Name;` (Q-029)."
+    },
+    {
+      "id": "column",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: `column name as \"cust_name\";` renames the column of a field."
+    },
+    {
+      "id": "commit",
+      "category": "statement",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#transactions",
+      "summary": "In a job: writes the pending changes, commits and begins a new transaction (level 5)."
     },
     {
       "id": "concurrent",
@@ -249,6 +281,14 @@
       "summary": "Declares a function: a subprogram outside a class that has a result, `function f(x: T) => (@r: R) is` (D-100)."
     },
     {
+      "id": "generated",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: the columns that the database fills."
+    },
+    {
       "id": "generator",
       "category": "declaration",
       "status": "draft",
@@ -289,6 +329,14 @@
       "status": "stable",
       "ref": "semantics/control.md#job",
       "summary": "A labeled block of a process: `name: job` … `do` … `done name;`."
+    },
+    {
+      "id": "key",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: the primary or unique key, `key (id);`."
     },
     {
       "id": "let",
@@ -362,6 +410,14 @@
       "contextual": true,
       "ref": "semantics/control.md#match",
       "summary": "Option of match: only the first matching path runs (the default)."
+    },
+    {
+      "id": "only",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "In the clause `read only;` of `table`."
     },
     {
       "id": "or",
@@ -452,11 +508,27 @@
       "summary": "Creates an error: `raise \"message\";`; the process jumps to `recover`."
     },
     {
+      "id": "read",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "In the clause `read only;` of `table`."
+    },
+    {
       "id": "recover",
       "category": "region",
       "status": "stable",
       "ref": "semantics/errors.md#recover",
       "summary": "Error region of a process: decides `retry`, `resume` or `abort`."
+    },
+    {
+      "id": "reference",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: a foreign key to another table, `reference customer_id to customers;`."
     },
     {
       "id": "repeat",
@@ -485,6 +557,14 @@
       "status": "stable",
       "ref": "syntax/statements.md#return",
       "summary": "Closes a process, function, method, constructor or destructor."
+    },
+    {
+      "id": "rollback",
+      "category": "statement",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#transactions",
+      "summary": "In a job: undoes the transaction and ends the job with the status `rolled back` (level 5)."
     },
     {
       "id": "self",
@@ -529,11 +609,35 @@
       "summary": "Ends a job without error."
     },
     {
+      "id": "table",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Binds a record class to a table of a connection: `table customers: Customer in \"sales\" is … end customers;` (level 5)."
+    },
+    {
+      "id": "temporary",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: the VM creates the table from the class (only in `\"eve\"` and `\"stage\"`)."
+    },
+    {
       "id": "then",
       "category": "block",
       "status": "stable",
       "ref": "semantics/control.md#match",
       "summary": "Region that runs after a match or a loop completed."
+    },
+    {
+      "id": "to",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "In the clause `reference f to t;` of `table`."
     },
     {
       "id": "trait",
@@ -543,11 +647,27 @@
       "summary": "Declares a stateless set of required and provided methods (level 4, D-145)."
     },
     {
+      "id": "update",
+      "category": "block",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-update-block",
+      "summary": "Block that changes the fields of one record without repeating its name: `update c do let city := \"Lyon\"; done;` (level 5, D-158)."
+    },
+    {
       "id": "use",
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#imports-and-modules-level-3",
       "summary": "Lists the imported names in an import (level 3)."
+    },
+    {
+      "id": "version",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#the-table-declaration",
+      "summary": "Clause of `table`: the column for optimistic locking, `version version;`."
     },
     {
       "id": "wait",

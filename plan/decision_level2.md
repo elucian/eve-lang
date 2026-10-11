@@ -71,17 +71,29 @@ Author decision (2026-10-09), follows D-148 (a lambda has no type list; work tha
 
 ## Q-042 Generic subprograms and overloading: rules added by the specification (2026-10-09)
 Model proposals written into `spec/syntax/declarations.md#generic-subprograms-and-overloading` as *(proposed)*, and used by the tests e01 to e15.
+
 (a) The type parameters are inferred from the arguments only, not from the type expected for the result: `function make(:T)() => (@result: ()T)` is always called `make(:Integer)()`.
+
 **Answer:** Confirmed (2026-10-09).
+
 (b) The names of the parameters, their defaults and the `@` marks are not part of the signature: `f(a: Integer)` and `f(b: Integer)` are the same signature (a compile error).
+
 **Answer:** Confirmed (2026-10-09).
+
 (c) Processes, constructors, lambdas and function variables are not overloaded.
+
 **Answer:** Confirmed (2026-10-09).
+
 (d) An extension method may overload a method of the class with another signature; with the same signature it is a compile error (it would replace the method, `methods.html`).
+
 **Answer:** Confirmed (2026-10-09).
+
 (e) When a generic subprogram and a plain one with the same name both accept the arguments, the plain one wins (it fits exactly), instead of a compile error for an ambiguous call.
+
 **Answer:** Confirmed (2026-10-09).
+
 (f) The messages of the compile errors: `can not infer the type T of make`, `a lambda has no type list`, `ambiguous call of f`, `no signature of half matches`, `report is both a function and a procedure`, `half is declared twice with the same signature`.
+
 **Answer:** Confirmed (2026-10-09).
 All correct assumptions. Confirmed by Author.
 

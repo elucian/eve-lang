@@ -83,4 +83,15 @@ Columns: **Version** is the version of the VM; **Date** the day of the run; **Ti
 | **Level 4** | | | |
 | 0.0.2 | 2026-10-09 | - | 931 ms |
 
+### Size of eve.exe
+
+The size of the VM executable is recorded with every saved run (`exe_bytes` in `history.json`), next to the version, and the table below is rewritten by `bmark.py --save`. It follows the size over the versions: a feature that adds SQLite, a driver or the data formats makes the file larger, and a jump that no feature explains is looked at. The change is computed against the previous saved run of the **same build** (a Debug build is much larger than a ReleaseSafe one, so the two are never compared). Every report (with or without `--save`) prints the size and the change against the last saved run. A version that grows the file by more than 10% gets a sentence in "Notes by version": what was added and why the size changed.
+
+Runs saved before 2026-10-10 have no size. For reference, the files on 2026-10-10 were `bin/eve.exe` (Debug) 3,734,528 bytes and `temp/rel/bin/eve.exe` (ReleaseSafe, built 2026-10-09) 1,479,680 bytes; they are not a saved run.
+
+<!-- size:begin -->
+| Version | Date | Build | Commit | eve.exe | Change |
+|---|---|---|---|---|---|
+<!-- size:end -->
+
 Ideas to watch, in the order of their likely gain: variable lookup by slot instead of by name (the scan of the scopes shows in `p1a_arith` and `p1b_calls`); the operators are found by comparing their text one after the other in `apply` (`p1a_arith` is still 2.7 times Python); no copy of the argument list for each call; inputs of a started aspect are copied twice in `p4a_parallel_sum` (by `split` and by `start`); the static check should cost almost nothing against the run, so its time is part of every benchmark. Memory: run a benchmark with `EVE_MEMSTATS=1` to see how many objects were made, freed by the count, freed by the trace, and how many are alive at the end.

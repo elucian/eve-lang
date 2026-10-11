@@ -4,16 +4,19 @@
 </a>
 </p>
 
-<p align="center"><em>Effective Virtual Environment</em> &middot; Version <strong>0.0.2</strong></p>
+<p align="center"><em>Effective Virtual Environment</em> &middot; Version <strong>0.0.3</strong></p>
 
 <p>Eve is a data-centric DSL built for internet ETL pipelines. It provides a gradual typing JIT compiler and virtual machine. This new language delivers a unified syntax for data transforming and routing between local client and server backend. This repository holds the specification, the tests and the first implementation, the Eve virtual machine written in Zig.</p>
 
   
 ## Learning
 
-You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tutorial explains the language with examples. The features and their versions are planned in [plan/version_map.md](plan/version_map.md) and [plan/version_map.md](plan/version_map.md).
+You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tutorial explains the language with examples. Read Sage-Code Tutorial: [Eve Programming Language](https://sagecode.org/projects/eve/index.html)</a>
 
-Read Sage-Code Tutorial: [Eve Programming Language](https://sagecode.org/projects/eve/index.html)</a>
+## Features
+
+The features and their versions are planned in [plan/version_map.md](plan/version_map.md). The implementation manual [Eve Compiler Manual](manual/README.md) tell you more about the implementation.
+
 
 ## Testing
 
@@ -52,4 +55,4 @@ Everything outside `evevm/` (specification, tutorial text, manual, examples, tes
 The name "EVE" and the logo are trademarks of Sage-Code Laboratory. See [TRADEMARK.md](TRADEMARK.md).
 
 ---
-Copyright (c) 2024 - 2026 Sage-Code
+Copyright (c) 2024 - 2027 Sage-Code

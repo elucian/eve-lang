@@ -1,0 +1,25 @@
+# normalize: "nfc" composes e + accent into one code point; by default the text is kept as read
+** spec: semantics/data-types.md#what-nfc-is
+driver e38_nfc is
+  class K = {key: String} <: Record;
+
+  process main is
+    fs.write("out/k.csv", "key\n{U+0065}{U+0301}\n");
+    for k in csv.read!(:K)("out/k.csv") do
+      expect k.key <> "{U+00E9}";
+      print "kept";
+    done;
+    for k in csv.read!(:K)("out/k.csv", normalize: "nfc") do
+      expect k.key == "{U+00E9}";
+      print "composed";
+    done;
+  return;
+end e38_nfc;
+/*@expect
+{
+  "stdout": [
+    "kept",
+    "composed"
+  ]
+}
+*/

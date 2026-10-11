@@ -79,6 +79,7 @@ I let you decide.
 **answer** No, Integer.parse() is what developer whanted. Data may be real, but if user want it integer this is what he has intentionally wanted to happen. Real.parse("3.7") will not give a runtime error. In debug mode, throw a warning message. x + 1 when x is string is replaced by x <+ 1 in expression and will convert 1 to string and add to X, also 1 +> x will add 1 to x and will put "1" in front of x string.  
 
 **RTY-R04 Rename to truthful names.** *Applied 2026-10-05: D-080.* `HashMap` → `Map` (sorted) and keep `HashMap` free for an unordered, faster map later; or `SortedMap`/`Dict`. `Real` may stay but document IEEE-754 binary64.
+
 **answer** No deal: DataMap is invented and is sorted. By default a literlal {"key":"value"} will make a DataMap. If a Record is defined and a literal of this form is parsed {key:"value"} will create a Record. The record structure (fields) must be defined before use.
 
 **RTY-R05 JSON-compatible literals.** Make `{"k": v}` a `Map(String, T)` and `{k: v}` a record literal, as today, but guarantee that every JSON document parses into Eve values and prints back unchanged (`json.parse`, `json.print`). Add a test level for round-trips.

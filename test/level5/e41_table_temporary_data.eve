@@ -1,0 +1,23 @@
+# temporary is allowed only for the staging database: a table of another connection is a compile error
+** spec: library/database.md#the-table-declaration
+driver e41_table_temporary_data is
+  class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+  table customers: Customer in "shop" is
+    key (id);
+    temporary;
+  end customers;
+
+  process main is
+    print "x";
+  return;
+end e41_table_temporary_data;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "temporary is allowed only"
+  ]
+}
+*/

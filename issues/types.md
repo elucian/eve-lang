@@ -6,7 +6,9 @@ Page: `tutorial/types.html` (about 1,320 lines after the split). Reviewed 2026-0
 
 ### TYP-19 Date literals
 The page gives three forms: functions `ymd()`, `dmy()`, `mdy()`; `"2023/06/15" as YMD`; and a constants table with `YDM` = `YYYY/DD/MM`. It mentions an `era_label` (CE/AD) without syntax, and `{year: 1066, month: 10, day: 14}` creates an object, not a `Date`. Which form is Eve 0.1?
+
 **Answer:** Make an invetion. I will review your proposal. I suggest Date to be ab object, add a new field: era
+
 Status: proposed (Date object with an era field, written on the page as a proposal)
 
 ## Spec additions once answered

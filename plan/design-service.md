@@ -313,7 +313,7 @@ schedule "orders_sync" every 15min
 
 ## 12. Security
 
-- **Authentication**: a token from the configuration (`$EVE_TOKEN`) for `--listen` and remote calls, or a TLS client certificate between machines.
+- **Authentication**: people log in to each remote machine by single sign-on or with an account of that machine, and the local machine keeps the credentials in the keyring of the operating system (section 15, D-155); a token from the configuration (`$EVE_TOKEN`) or a TLS client certificate for machines and scripts.
 - **Authorization**: the configuration says who may deploy, run or call which project, and which routes of `serve` are public.
 - **Secrets**: never in scripts; given to a project as `Secret` values (review RIO-R01), which never print and never travel back.
 - **Local first**: `--listen`, `serve` and the API bind to `localhost` unless the configuration opens them to the network.
@@ -337,6 +337,63 @@ schedule "orders_sync" every 15min
 3. `--listen` with the line protocol and the token, and `eve -x` to send commands; then the `.vmc` slot is removed and `test/smoke` and `script/workflow.py` use `eve -x`; `send` between machines, `deploy` and `run`; the remote scheduler.
 4. `service` scripts and routes in `serve`.
 5. The HTTP client in scripts (`http`, `json`), remote `apply`, then EWP streams.
+
+## 15. One local machine, many remote machines: login, single sign-on, keyring
+
+**Decided by the author (2026-10-10, D-155):** the Eve virtual machine (`evevm`, written in Zig) is a full machine that, from one local instance, works with many remote machines at once. Each remote machine is entered with its own connection credentials; a person logs in by **single sign-on**, and the local machine keeps the credentials in the **keyring of the operating system** (Windows, Linux) after the first login. The details below are proposals (Q-048).
+
+### 15.1 Connections
+
+The configuration of a local machine names the remote machines it works with, by address, never with a secret:
+
+```
+# eve.cfg of a local machine (sketch)
+machine prod at "etl1.example.com:4042" login sso
+machine etl2 at "etl2.example.com:4042" login password
+machine test at "localhost:4142"        login token
+```
+
+- The local machine keeps **one connection per remote machine**, opened on first use and kept open (TLS over the network); `send prod "…"`, `eve -c … -r prod`, uploads and the Workbench share it.
+- Each connection has its **own session**: the user, the role and the rights on that machine. Being admin on `dev1` gives nothing on `prod`.
+- A connection that breaks is opened again with the stored credentials, without asking the person, as long as they are valid.
+
+### 15.2 Login
+
+| Method | How | What the remote machine sees |
+|---|---|---|
+| `sso` | the local machine opens the page of the identity provider in the browser (OpenID Connect, authorization code with PKCE; the device code on a computer without a browser); the person signs in there, with the provider's second factor | a signed identity token of the provider, which it checks against the providers it trusts |
+| `password` | user name and password of an account of the remote machine, sent once over TLS | the password, once; it answers with a session token |
+| `token` | a machine token (`$EVE_TOKEN`), for scripts, schedules and machine-to-machine calls | the token |
+
+In every method the remote machine answers with **its own credentials**: a short session token and a longer **renewal token**, bound to this user and this local machine. The password and the identity token of the provider are never stored.
+
+Commands of the machine (also options of `eve`):
+
+```
+eve:> login prod              ** first login: opens the single sign-on page, or asks for the password
+eve:> logout prod             ** ends the session on prod and deletes the stored credentials
+eve:> forget prod             ** deletes the stored credentials only
+eve:> whoami prod             ** user, role and login method on prod
+eve -c "run sales.eve" -r prod --login    ** log in first when no credentials are stored
+```
+
+### 15.3 The keyring
+
+After the first login the local machine stores the **renewal token** (never a password) in the credential store of the operating system, under the identity of the remote machine (domain + port, section 4) and the user:
+
+| System | Store | Interface used by `evevm` |
+|---|---|---|
+| Windows | Credential Manager | `CredWriteW`, `CredReadW`, `CredDeleteW` of `advapi32` (target `eve:etl1.example.com:4042:ana`) |
+| Linux | Secret Service (GNOME Keyring, KWallet) | the D-Bus API `org.freedesktop.secrets` (collection `login`, attributes `eve-machine`, `eve-user`) |
+| macOS (later) | Keychain | `SecItemAdd`, `SecItemCopyMatching` |
+
+- The next connection reads the token from the keyring and renews it in the background; the person sees no form until the token is revoked or expires (30 days without use, by default; the remote machine decides).
+- The keyring is unlocked by the login of the operating system, so the secret is protected by the session of the person, not by a file of Eve.
+- **Without a keyring** (a Linux server without a desktop session), the machine asks at each start, or uses a machine token from the environment; it never writes a token to a plain file (question 3 of Q-048).
+
+### 15.4 Users of a remote machine
+
+A listening machine keeps its **users and roles** in its Eve database (SQLite, F-DAT-08): the accounts, their roles (`viewer`, `operator`, `developer`, `admin`), the identity providers it trusts, the mapping of provider groups to roles, the registration setting (`closed`, `approval`, `open`), the sessions and the audit log. The first admin is created on its own console by `eve --setup`; the other accounts by its admins (`user add`, `user role`, `session end`), from the prompt, from `eve -c … -r`, or from the Workbench (eveux, D-154). The token of the configuration (`$EVE_TOKEN`) stays for machines and scripts; people log in.
 
 ## Questions for the author
 

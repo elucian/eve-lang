@@ -108,6 +108,7 @@ end Point;
 - `let self.x := v;` sets an attribute of the signature; `new self.extra := v;`, in a constructor or a method, creates another one, which is private. Code outside the class can not add an attribute: `new p.z := 7;` is an error (Q-031k).
 - A destructor is `destructor(@self) is … return;`.
 - **A class hosts only methods** (D-123, replaces D-103 for functions). A `function` or a `procedure` in a class body is a compile error; a helper of the class is a private method, or a function declared outside the class. The methods may use lambda expressions.
+- **Class variables** (clarification of D-123). "Only methods" restricts subprograms, not data: a class can hold private variables, the class variables. The constructor and every method of the class reach them as `ClassName.VarName`. Code outside the class, such as a function or a procedure, can not read or write them directly: the class offers accessor methods. A class variable is declared with `set` in the class body (`private set count: Integer;`), as in the tutorial page Classes.
 - **Only a method binds the object.** `@self` is the parameter of a method (in the class body or outside it, as an extension method). A function or a procedure can not have `@self`, and so can not be bound to a class: `function total(@self: Point) => (...)` is a compile error (D-123).
 - **Methods are not values** (D-103). There are no references to methods and no method type: a method can't be passed as an argument, stored or returned, and it is never a callback. A lambda that calls the method is passed instead: `shapes.map((s) => (s.area()))`.
 - Extension methods are static: they never change the class, can not hide a method of the class, see only its public members, and are visible only in the scripts that declare or import them (D-086).
@@ -184,6 +185,48 @@ print half(8), half(9.0);               ** 4,4.5
 - **Methods with and without a result.** A method without a result and a method with a result may share a name and the same parameters: they are different methods. A call as a statement selects the method without a result, `c.step();`; a call in an expression selects the method with a result, `print c.step();` (D-149). An extension method may overload a method of the class with another signature; one with the same signature is a compile error, as it would replace it (D-150).
 - **Overloading and generics.** A generic subprogram and plain ones may share a name; a plain one whose parameters fit the arguments exactly wins over the generic one (D-150).
 - **Not overloaded:** processes (an aspect has one), constructors, lambdas and function variables (one value per name) (D-150).
+
+## Generators (level 5)
+
+Version 0.4, feature F-LNG-12. Sources: D-067, D-144, `tutorial/generators.html`. Grammar: `grammar.md#generators-level-5`.
+
+A **generator** is a subprogram that produces its values one at a time. It is declared with the keyword `generator`, like a function or a method, and has exactly one result, the value it produces:
+
+```eve
+generator count_to(n: Integer) => (@x: Integer) is
+  for i in (1..n) do
+    let x := i;           ** set the result
+    yield;                ** give x to the caller, wait here
+  done;
+return;                   ** no more values
+```
+
+- `yield;` gives the current value of the result to the caller and suspends the generator. `yield expression;` is the short form of `let x := expression; yield;`. `yield` is allowed only in the body of a generator, and **only in the body itself**: in a function, a method, a lambda, a process, or in a subprogram that a generator calls, it is a compile error (Eve has no coroutines). `return;` ends the generator.
+- A call of a generator does not run its body: it creates a **generator object** of the core class `Generator(:T)`, where `T` is the type of the result. The body runs when the caller asks for a value: a `for` loop takes the values one by one, a comprehension collects them, `g.next()` runs to the next `yield` and gives `True` (and a new `g.value`) or `False` when the body has returned; `g.done` is `True` after the return or after `g.close()`. Reading `g.value` before the first `next()` is an error. A generator object is also an `Iterable(:T)`.
+- Calling a generator is deterministic, so its name has no `!`. A generator called as a statement, `count_to(5);`, is a compile error: its values would be lost.
+- **Lazy:** the arguments are evaluated when the object is created; the body begins at the first request. **State:** the parameters and the local variables live in the object between two requests, and are dropped when the body returns, at `close()`, or when nobody refers to the object any more. A `for` loop left with `break` closes its generator.
+- A generator has inputs only, by value: no `@` parameter other than its result. A generator object is never copied and can't be an argument of `apply` or `start`: it belongs to the process that made it.
+- An error raised in the body ends the generator and is raised in the caller, at the `next()` or at the `for` line.
+- A generator can be declared where a function or a method can: in a class (`public generator walk(@self) => (@node: Node) is … return;`), in a module (exported with `export`), or private to a driver or an aspect. A generator exported by a module must be thread safe.
+
+Compile errors (exit code 65): `**yield outside a generator**` (in a function, a method, a lambda or a process); a generator with no result or with more than one; `generator {name} **called as a statement**`. Tests: e23 to e26.
+
+## Table declaration (level 5)
+
+A class that derives from `Record` is a row type; a `table` declaration binds it to a table of a named connection (Q-046, proposed). It keeps classes plain (D-123): the class holds the fields, the declaration says where the rows live, and one class can have several (a CSV file, a staging table, a remote table). Grammar: `grammar.md#database-declarations-and-statements-level-5`; clauses, the mapping rules and the methods of a table: `../library/database.md#the-table-declaration`.
+
+```eve
+class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
+
+table customers: Customer in "sales" is
+  key (id);
+  generated (id);
+  version version;
+  column name as "cust_name";
+end customers;
+```
+
+`table` is declared in a driver, an aspect, a module or an Eve macro, like a class; `customers` is an object of the library class `Table(:Customer)`. A record class may declare methods (D-123); `validate(@self)` runs before every write.
 
 ## Eve macro (level 5)
 

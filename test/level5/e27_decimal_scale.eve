@@ -1,0 +1,23 @@
+# a Decimal keeps its scale, adds exactly and compares by value (D-080)
+** spec: library/data-language.md#details-used-by-the-tests
+driver e27_decimal_scale is
+  process main is
+    print 12.50d;
+    print 0.10d + 0.20d;
+    print 1.5d * 2.00d;
+    expect 1.50d == 1.5d;
+    expect 0.10d + 0.20d == 0.30d;
+    new price := 19.99d;
+    print "price: {price}";
+  return;
+end e27_decimal_scale;
+/*@expect
+{
+  "stdout": [
+    "12.50",
+    "0.30",
+    "3.000",
+    "price: 19.99"
+  ]
+}
+*/

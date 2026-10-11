@@ -23,6 +23,9 @@ From the Q-002 evidence (`plan/decision_level1.md`, 2026-10-02): 30 words of the
 
 ## Ideas waiting for a design
 
+- **Oracle driver (2026-10-10, D-159).** Postponed. The diagram of the database layer names Oracle; the driver interface stays open (`spec/library/database.md#drivers-and-the-server`) so that Oracle can come without a change in the core.
+- **Two databases in one job (2026-10-10, D-158).** Technical debt: version 0.4 writes to one connection per job. A job that writes to two databases needs a rule for the commit of both (no two-phase commit in the open-source databases), a coordinator or an outbox table. Until then: two jobs, stage in one and move in the next.
+- **PRN and PDF, output formats for reports (2026-10-10, D-157).** Todo: specify the **style** (fonts and sizes, margins, headers and footers, page numbers, columns and their alignment, the title) and the **limits** (the width of a line, the lines per page, what happens to a value longer than its field: cut, wrap or error). They are for output only, written from the same record classes and streams as `CSV`, `JSON` and `TXT` (`txt` is the plain fixed-length format, no style). Question to settle: how much of the style is the language (options of the writer, a style record) and how much is the UX (`eveux`, a print dialog, a template). A report in `HTML` or `HTMT` with a style sheet may cover part of it. Level 5 or later, no version yet.
 - Inline `new` in other statements: `let a, new b := f();`, `while new x <- q do` (D-077, open).
 - `then` region for the repeat loop (D-074, open).
 - Data types for ETL beyond Decimal: Instant, DateTime with zone, Bytes, Uuid, Record (`RTY-D01`, version 2).

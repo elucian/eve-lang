@@ -32,6 +32,7 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 | `$EVE_LIB` | `String` | The `lib` folder of the project, its local library, searched by `from … use` | `lib`, relative to `$EVE_HOME` | 0.1 | no | D-131 |
 | `$EVE_LIB_PATH` | `String` | The folders where external modules are installed, separated like the `PATH` of the operating system, for example `/eve/modules/<module_name>`; they may be in different folders, installed from GitHub with `npm install` | empty | draft | no | D-131 |
 | `$EVE_ASP` | `String` | Folder of the aspects (and project libraries) of a driver | `asp`, then the project root, then `lib` | 0.1 | no | D-055 |
+| `$EVE_CORE_DB` | `String` | The core database of the project: a SQLite file in its `db/` folder with the logs of the ETL runs, the checkpoints, the metadata and the data of the Eve UX (never ETL data, D-159); the name is set in `eve.cfg` (key `core_db`) | `db/eve.db`, relative to `$EVE_HOME` | draft | no | D-156 |
 | `$EVE_OUT` | `String` | Output folder of the log files (`error`, `warning`) | `"out"` | 0.1 | no | D-057, `lib/io.eve` |
 | `$MY_DIR` | `String` | Folder of the running driver | | draft | no | — |
 | `$MY_LIB` | `String` | Library folder of the project | | question | no | — |
@@ -48,6 +49,10 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 | `$cores` | `Integer` | Size of the worker pool of parallel aspects, at most 16 | number of hardware cores | later | no | D-047, D-081 |
 | `$max_parallel` | `Integer` | Aspects one parallel group of the driver may start | `8` | later | no | D-081 |
 | `$query` | `String` | The last SQL statement sent by the database module | | later | no | — |
+| `$isolation` | `String` | Isolation of the transactions of a job: `"read committed"`, `"repeatable read"`, `"serializable"`, `"snapshot"`; set in the declarations of a job | the default of the database | draft | no | Q-046d |
+| `$lock_timeout` | `Duration` | How long a statement waits for a lock before a transient `TimeoutError`; set in a job | `5s` | draft | no | Q-046d |
+| `$read_only` | `Logic` | A job opens read-only transactions: one consistent snapshot, no locks where the database allows | `False` | draft | no | Q-046d |
+| `$trace` | `Logic` | In debug mode prints every SQL statement with its parameters (secrets masked) and its duration | `False` | draft | no | — |
 
 ## Constants
 

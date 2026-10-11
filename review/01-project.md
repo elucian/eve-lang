@@ -43,6 +43,7 @@
 **todo** we must cleanup history, to eliminate garbage and confusion. What is at the moment is most important. For now we work in main branch and we can change the hystory in Git. No other user is yet involved in this work.
 
 **RPJ-X03 Model-proposed rules entering the language unreviewed.** Many entries say "proposed by the model", "assumed", "to confirm" (D-039, D-047, D-054, D-061, D-068, D-072). Some are applied to the tutorial before confirmation. An assumption applied to 10 pages becomes a decision by inertia.
+
 **todo** Review. If they are wrong, we reffer them and review the decision. I hope the cost is not too high. Trial and error is a good approach.
 
 **RPJ-X04 Feature design by keyword table.** The keyword table had 111 words, 30 never used (Q-002 evidence), many from database ideas that were dropped (`cursor`, `fetch`, `rollback`, `select`). Reserving words for features that have no design is premature.
@@ -68,6 +69,7 @@
 **todo** nothing, the tutorial already have a license page that specify (CC BY 4.0). Dual license is described in Readme.md 
 
 **RPJ-R05 License the VM under Apache-2.0 or MPL-2.0 now, protect the brand with the trademark only.** *Rejected 2026-10-05; the documents moved to CC BY-NC-SA 4.0 instead (D-078).* The trademark policy (D-062) already prevents confusing forks; the BUSL adds friction without real protection for a project at version 0.0.1. If commercial protection is needed later, protect the hosted server product, not the client VM.
+
 **todo** Rejected proposal. License is established already at advice from Gemini. I want to keep ownership of ideas and people can't make compilers and products based on these ideas. Except for learning and non profit with obligation to contribute back to specification and tutorial.
 
 **RPJ-R06 Version map.** *Addressed 2026-10-04: [plan/version_map.md](../plan/version_map.md) and [plan/version_map.md](../plan/version_map.md).* Publish one table: feature → version (0.1 client core, 0.2 library + generators, 0.3 parallel aspects + channels, 0.4 server, 0.5 WebAssembly). Today "not in 0.1" (D-050), "version 2" (D-067) and "about 0.9" (D-031) use different scales.

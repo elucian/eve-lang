@@ -9,8 +9,9 @@ patch. These labels are rewritten, keeping each file's line endings:
   evevm/build.zig.zon     .version = "X.Y.Z",
   evevm/README.md         Version: **X.Y.Z**
   README.md               Version <strong>X.Y.Z</strong>
-Then it runs `zig build -p ..` and `zig build test` in evevm/. It does not commit or tag:
-review `git diff`, then commit and tag yourself (the command is printed).
+Then it runs `zig build -p ..` and `zig build test` in evevm/. It does not commit or tag.
+This is step 2 of a release; the other steps (tests, benchmarks, version map, release notes with
+script/relnotes.py, the manual, commit and tag) are in manual/release/README.md (D-153).
 """
 import os
 import re
@@ -88,7 +89,9 @@ def main():
                     f.write(text)
             die("build or tests failed, labels restored to " + old + ". On Windows, "
                 "'AccessDenied' on bin/eve.exe means an eve REPL is still running: quit it first.")
-    print(f"done. Review, then:\n  git commit -am 'Release {new}' && git tag v{new}")
+    print(f"done. Next: steps 3 to 9 of manual/release/README.md (tests, benchmarks, version map,\n"
+          f"  python script/relnotes.py, the TODOs of manual/release/v{new}.md, --check), then:\n"
+          f"  git commit -am 'Release {new}' && git tag v{new}")
 
 
 if __name__ == "__main__":
