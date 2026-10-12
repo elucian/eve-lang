@@ -16,6 +16,7 @@ const parser = @import("parser.zig");
 const doc = @import("doc.zig");
 const scaffold = @import("scaffold.zig");
 const vm = @import("vm.zig");
+const server = @import("server.zig");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
 // Without it the name is private to this file. A `const` number without a type is a
@@ -332,17 +333,28 @@ pub fn find(name: []const u8) ?*const Command {
 // line `\\` followed by nothing adds an empty line.
 pub const quick_help =
     \\Usage: eve [options]                      start the REPL
-    \\       eve [options] <script.eve> [args]  execute a script (same as --execute)
+    \\       eve [options] <script.eve> [args]  execute a script (same as -x)
     \\       eve [options] --<command> [args]   run one command and exit, no REPL
     \\
     \\Quick help:
-    \\  -s <file.cfg>   setup: load the configuration file
-    \\  -m <size>       memory for the process
-    \\  -x              execute the script (parsed first); same as --execute
-    \\  -i <file>       slot: commands (report, stop) that other programs append to the file
-    \\  -d              debug mode: halt statements stop the script (ignored otherwise)
-    \\  -v, --version   display the version and exit
-    \\  -h, --help      display this help and exit
+    \\  -x                execute the script now, in this process (parsed first): no IPC or
+    \\                    HTTP lookup, the fast way to run a script; same as --execute
+    \\  -d                debug mode: halt statements stop the script (ignored otherwise)
+    \\  -s <file.cfg>     setup: load the configuration file
+    \\  -m <size>         memory for the process
+    \\  -i <file>         slot: commands (report, stop) that other programs append to the file
+    \\  -t <seconds>      slot without a script: stop after this long without a command
+    \\  -v, --version     display the version and exit
+    \\  -h, --help        display this help and exit
+    \\
+    \\The machine (an eve that stays active and answers requests):
+    \\  -lsn [port]       --listen: start a machine with the IPC door (this computer)
+    \\  --serve           start a machine with the HTTP door; -lsn --serve opens both
+    \\  --serve <word>    stop, status, restart or start the machine
+    \\  -loc [port]       --local: run the command in the machine through IPC, or in
+    \\                    this process when none listens; never the network
+    \\  -rem [host:port]  --remote: run the command in a remote machine through HTTP;
+    \\                    fails when nobody answers (no address: remote of eve.cfg)
     \\
 ;
 
@@ -410,13 +422,32 @@ pub const Options = struct {
     memory: ?[]const u8 = null,
     slot: ?[]const u8 = null,
     idle: ?[]const u8 = null,
-    /// `-x`: execute the script (implies the `execute` command).
+    /// `-x`: execute the script in this process (implies the `execute` command); it never looks for a machine.
     execute: bool = false,
     /// Command chosen with `--<command>` or implied by a script path.
     command: ?*const Command = null,
     /// Positional arguments after the command.
     args: []const []const u8 = &.{},
+    /// The options of the machine (`-lsn`, `--serve`, `-loc`, `-rem`; spec/library/machine.md).
+    machine: server.Cmd = .{},
 };
+
+// Zig tip: a small function with no state can be tested alone. `isPort` is true for a text of digits, which is how
+// `-lsn 4195` tells a port from the next option or a file. `for (text) |c|` visits each byte; `std.ascii.isDigit` is
+// the test for one byte. An empty text is not a port.
+/// True when `text` is a port number (digits only).
+fn isPort(text: []const u8) bool {
+    if (text.len == 0) return false;
+    for (text) |c| if (!std.ascii.isDigit(c)) return false;
+    return true;
+}
+
+// Zig tip: the value of `-rem` is optional, so the parser looks at the next word: an option (starts with `-`) or a
+// script (ends in `.eve`) is not an address. `std.mem.endsWith` is a test on the end of a slice.
+/// True when `text` can be the address after `-rem`.
+fn isAddress(text: []const u8) bool {
+    return text.len > 0 and text[0] != '-' and !std.mem.endsWith(u8, text, ".eve");
+}
 
 // Zig tip: `error{ A, B }` is a set of error names. Errors are values, not exceptions: a
 // function that can fail says so in its return type (`ParseError!Options`) and the caller must
@@ -464,6 +495,34 @@ pub fn parseArgs(
                 't' => o.idle = argv[i],
                 else => o.slot = argv[i],
             }
+        } else if (std.mem.eql(u8, a, "-lsn") or std.mem.eql(u8, a, "--listen")) {
+            o.machine.listen = true;
+            if (i + 1 < argv.len and isPort(argv[i + 1])) {
+                i += 1;
+                o.machine.listen_port = argv[i];
+            }
+        } else if (std.mem.eql(u8, a, "--serve")) {
+            // Zig tip: `break` leaves the `for` at the first match. Without it the loop would go on comparing
+            // `argv[i + 1]` after `i` moved, and read past the end of the slice (a panic in a safe build).
+            o.machine.serve = true;
+            const words = [_][]const u8{ "start", "stop", "restart", "status" };
+            if (i + 1 < argv.len) for (words) |w| if (std.mem.eql(u8, argv[i + 1], w)) {
+                i += 1;
+                o.machine.word = w;
+                break;
+            };
+        } else if (std.mem.eql(u8, a, "-loc") or std.mem.eql(u8, a, "--local")) {
+            o.machine.local = true;
+            if (i + 1 < argv.len and isPort(argv[i + 1])) {
+                i += 1;
+                o.machine.local_port = argv[i];
+            }
+        } else if (std.mem.eql(u8, a, "-rem") or std.mem.eql(u8, a, "--remote")) {
+            o.machine.remote = true;
+            if (i + 1 < argv.len and isAddress(argv[i + 1])) {
+                i += 1;
+                o.machine.remote_addr = argv[i];
+            }
         } else if (std.mem.startsWith(u8, a, "--") and a.len > 2) {
             const c = find(a[2..]) orelse {
                 bad.* = a;
@@ -480,6 +539,11 @@ pub fn parseArgs(
     }
     if (o.execute and o.command == null) o.command = find("execute");
     o.args = try rest.toOwnedSlice(gpa);
+    o.machine.config = o.config;
+    if (o.command == find("execute") and o.args.len > 0) {
+        o.machine.script = o.args[0];
+        o.machine.script_args = o.args[1..];
+    }
     return o;
 }
 
@@ -591,6 +655,46 @@ test "doc without a path is a usage error" {
 // that is never freed as a test failure. An ArenaAllocator frees everything in one `deinit`,
 // so the parser's `append`s need no individual `free`. `&.{ "-d", "a.eve" }` is an inline
 // array of strings, passed as a slice. `expectError(error.X, call)` checks that a call fails.
+// Zig tip: `expectEqualStrings` compares two texts and prints both when they differ. The last word of a command line
+// is the edge case of a parser that looks ahead: `--serve stop` must not read past the end of `argv`.
+test "options of the machine: -lsn, --serve, -loc, -rem" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var bad: []const u8 = "";
+    for ([_][]const u8{ "start", "stop", "restart", "status" }) |w| {
+        const o = try parseArgs(arena.allocator(), &.{ "--serve", w }, &bad);
+        try std.testing.expect(o.machine.serve);
+        try std.testing.expectEqualStrings(w, o.machine.word);
+    }
+    const both = try parseArgs(arena.allocator(), &.{ "-lsn", "4195", "--serve" }, &bad);
+    try std.testing.expect(both.machine.listen and both.machine.serve);
+    try std.testing.expectEqualStrings("4195", both.machine.listen_port.?);
+    const remote = try parseArgs(arena.allocator(), &.{ "-rem", "localhost:8095", "-x", "a.eve", "x" }, &bad);
+    try std.testing.expectEqualStrings("localhost:8095", remote.machine.remote_addr.?);
+    try std.testing.expectEqualStrings("a.eve", remote.machine.script.?);
+    try std.testing.expectEqual(@as(usize, 1), remote.machine.script_args.len);
+    const local = try parseArgs(arena.allocator(), &.{ "-loc", "-x", "a.eve" }, &bad);
+    try std.testing.expect(local.machine.local and local.machine.local_port == null);
+    const long = try parseArgs(arena.allocator(), &.{ "--local", "4043", "--remote", "--listen" }, &bad);
+    try std.testing.expect(long.machine.local and long.machine.remote and long.machine.listen);
+    try std.testing.expectEqualStrings("4043", long.machine.local_port.?);
+}
+
+// Zig tip: a `for` over an array literal checks several inputs with one body. The old two-letter names of the
+// machine options (`-lo`, `-r`, `-ls`) are unknown now, and `bad` names the word that was refused.
+test "-x alone touches no machine; the old names are refused" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var bad: []const u8 = "";
+    const x = try parseArgs(arena.allocator(), &.{ "-x", "a.eve" }, &bad);
+    const m = x.machine;
+    try std.testing.expect(!(m.listen or m.serve or m.local or m.remote));
+    for ([_][]const u8{ "-lo", "-r", "-ls" }) |old| {
+        try std.testing.expectError(error.UnknownOption, parseArgs(arena.allocator(), &.{ old, "-x", "a.eve" }, &bad));
+        try std.testing.expectEqualStrings(old, bad);
+    }
+}
+
 test "options: flags, command and script" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

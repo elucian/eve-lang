@@ -3,8 +3,8 @@
 # It removes the old work folder, makes the projects again, then checks that the folders and the
 # files exist, that a second init keeps the files of the author, that `new` refuses a folder that
 # is not empty, and that no project made under this versioned folder got a .git of its own.
-# usage: sh test/project/run.sh [path-to-eve]      (default: bin/eve.exe of the repository)
-# Exit status: 0 when every check passes, 1 otherwise. The work folder is test/project/work/ (ignored by git).
+# usage: sh test/scaffold/run.sh [path-to-eve]      (default: bin/eve.exe of the repository)
+# Exit status: 0 when every check passes, 1 otherwise. The work folder is test/scaffold/work/ (ignored by git).
 
 here=$(cd "$(dirname "$0")" && pwd)
 eve=${1:-$here/../../bin/eve.exe}

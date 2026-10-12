@@ -1,0 +1,16 @@
+# A driver that publishes a page: it writes web/report.html, and the HTTP door serves it at once
+driver report is
+  process main is
+    new rows := ("north", "south", "east", "west");
+    new html := "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Report</title>";
+    let html <+ "<link rel=\"stylesheet\" href=\"css/style.css\"></head><body><main>";
+    let html <+ "<h1>Report</h1><p>Written by src/report.eve.</p><ul>";
+    for r in rows do
+      let html <+ "<li>{r}</li>";
+    done;
+    let html <+ "</ul><p><a href=\"/\">back</a></p></main></body></html>";
+    fs.write("web/report.html", html);
+    print "report: web/report.html written ({rows.count()} rows)";
+    print "open http://localhost:8042/report.html";
+  return;
+end report;

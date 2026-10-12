@@ -1,0 +1,26 @@
+# a machine that serves HTTP only: pages and scripts over the web port (F-NET-02, spec/library/machine.md)
+** spec: library/machine.md#channels
+** The runner starts the machine with the command below, then runs the client; the client asks the machine
+** through the CLI (`eve -loc`, `eve -rem`) and through HTTP, and stops it with `eve --serve stop`.
+driver e95_test2 is
+  process main is
+    print "e95_test2: the machine is tested, not this script";
+  return;
+end e95_test2;
+/*@expect
+{
+  "command": ["--serve"],
+  "timeout": 40,
+  "client": ["node", "check/modes.test.js", "http"],
+  "contains": [
+    "ok the machine answers",
+    "ok --local runs the script",
+    "ok --remote fails when nobody listens there (69)",
+    "ok --remote without an address is a usage error (64)",
+    "ok a second start fails: already running (75)",
+    "ok --serve stop ends with 0",
+    "ok after stop: not running (69)",
+    "modes http: all checks passed"
+  ]
+}
+*/

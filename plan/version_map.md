@@ -191,7 +191,7 @@ Level 6. Goal: The Eve machine: setup, remote control of many machines with logi
 |---|---|---|---|
 | F-DOC-03 | Tutorial, network and web part | open | client and server, services, protocol, security, HTML, WebAssembly (review `RTU` phases T2, T3). (Version 0.5 –v0.6) |
 | F-LIB-10 | Encryption and hashing | open | hashes, HMAC, symmetric encryption (manifest). |
-| F-NET-02 | HTTP server | open | routes, request and response records, static files, one state per request (review `RNW-R02`). |
+| F-NET-02 | HTTP server | partial | routes, request and response records, static files, one state per request (review `RNW-R02`). *Partial (2026-10-11, D-162):* the machine with its two doors, IPC (`-lsn`) and HTTP (`--serve`: the web folder, `POST /rpc`), JSON-RPC methods `ping`, `status`, `run`, `stop`, the client options `-loc` and `-rem` (`spec/library/machine.md`); tests `e95_web_hello` and `e95_test1` to `e95_test3` pass. Not yet: routes and `service` scripts, HTTPS, login, WebSocket. |
 | F-NET-03 | Eve Wire Protocol (EWP) | open | framed binary protocol for Eve-to-Eve calls and data streams, flow control, resumable streams (review `RNW-R04`). |
 | F-NET-04 | Remote apply | open | run an aspect on another node with a deadline and an idempotency key (review `RNW-R01`). |
 | F-NET-05 | Capabilities and sandbox | open | fs, net, db, shell permissions per project and per aspect (review `RNW-R08`). |
@@ -200,7 +200,7 @@ Level 6. Goal: The Eve machine: setup, remote control of many machines with logi
 | F-SPEC-06 | Network semantics and protocol | open | remote `apply`, services, Eve Wire Protocol (`spec/protocol/`). |
 | F-STR-08 | Service script kind | open | long-running entry point with routes handled by aspects (review `RNW-R02`; needs a decision). |
 | F-TLS-12 | Machine setup | open | `--setup <folder>`, the machine folder, `eve.cfg`, built-in defaults, identity domain + port, external checksum, `setup` reload (D-083). |
-| F-TLS-13 | Remote control | open | `--listen`, `eve -c`, `-r`, `-u` upload, `send` between machines, sessions and driver memory spaces (`load`, `dismiss`); then the removal of `.vmc` command files (D-083). |
+| F-TLS-13 | Remote control | open | `--listen`, `eve -c`, `-rem`, `-u` upload, `send` between machines, sessions and driver memory spaces (`load`, `dismiss`); then the removal of `.vmc` command files (D-083). |
 | F-TLS-14 | Local HTTP | open | `serve` on port 8042, pages of the web folder, routes of `service` scripts (D-083). |
 | F-TLS-15 | Eve API for AI | open | `eve --api`, an MCP server whose tools are the commands of the machine (D-083). |
 

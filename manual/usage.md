@@ -6,7 +6,7 @@ How to run Eve scripts with the Eve virtual machine (`bin/eve.exe`, source in `e
 
 ```
 eve [options]                      start the REPL
-eve [options] <script.eve> [args]  execute a script (same as --execute)
+eve [options] <script.eve> [args]  execute a script (same as -x)
 eve [options] --<command> [args]   run one command and exit, without the REPL
 ```
 
@@ -17,7 +17,7 @@ eve [options] --<command> [args]   run one command and exit, without the REPL
 | `-s file.cfg` | setup: load the configuration file (the same file the `setup` command loads) |
 | `-m size` | memory for the process |
 | `-d` | debug mode: `halt` statements work (otherwise they are ignored) |
-| `-x` | execute the script: same as `--execute` (the script is parsed first, see below) |
+| `-x` | execute the script now, in this process: same as `--execute` (the script is parsed first, see below). It never looks for a machine (no IPC or HTTP lookup): the fast way to run a script |
 | `-i file.vmc` | load a command file at startup: the machine interprets it from the first line and runs its commands in order (see [Command files](#command-files-vmc)) |
 | `-t seconds` | serve mode only (`-x -i file.vmc` without a script): stop after this long without a command (default 30) |
 
@@ -160,6 +160,30 @@ Debugging ideas, not decided yet: `halt "label"` so the prompt shows which break
 
 In debug mode the configuration can be modified and reloaded with `setup`. The REPL must be in the "ready" state when the settings are reloaded, otherwise it reports an error.
 
+## The machine: `-lsn`, `--serve`, `-loc`, `-rem`
+
+An `eve` that stays active and answers requests is a **machine** (rules: [`spec/library/machine.md`](../spec/library/machine.md), D-162). It reads `domain`, `ipc_port` (4042), `http_port` (8042), `http_host`, `web` and `remote` from `eve.cfg` of the working folder, or from the file of `-s`.
+
+| Option | Meaning |
+|---|---|
+| `-lsn [port]`, `--listen` | start a machine with the IPC door (a Unix socket `<runtime>/eve-<domain>-<ipc_port>.sock`) |
+| `--serve` | start a machine with the HTTP door: the files of the web folder and JSON-RPC in `POST /rpc`; `-lsn --serve` opens both doors |
+| `--serve stop`, `status`, `restart`, `start` | stop the machine, print its doors and the count of the scripts it ran, stop and start again, start |
+| `-loc [port]`, `--local` | local command, never the network: through IPC when a machine listens, otherwise run by this process |
+| `-rem [host:port]`, `--remote` | run the command on the HTTP door of that machine (`remote` of `eve.cfg` without an address); fails when nobody answers |
+
+The three short options have three letters (`-lsn` listen, `-loc` local, `-rem` remote; until 2026-10-11 they were `-ls`, `-lo`, `-r`, which are now unknown options). Without `-loc` or `-rem`, `eve -x file.eve` never looks for a machine: it executes the script at once in its own process, even when a machine listens.
+
+```
+eve -lsn --serve                        ** start: prints "eve: ipc localhost:4042" and "eve: http http://localhost:8042"
+eve -loc -x report.eve                  ** run report.eve in the local machine (or by itself without one)
+eve -rem 127.0.0.1:8042 -x report.eve   ** send report.eve as text to the HTTP door and run it there
+eve --serve status
+eve --serve stop
+```
+
+A script run in a machine prints into the answer: `eve` writes it on its standard output, the errors that nobody recovered on its error output, and ends with the exit code of the script. Tests: `test/level5/e95_web_hello` (four use cases: the page, IPC only, HTTP only, both).
+
 ## Daemon (planned)
 
 The machine can run as a service. In service mode several drivers run in parallel; each driver is independent, with its own scope, and can't communicate with the others.
@@ -179,4 +203,6 @@ The driver captures the exit code of a process that ends with an error (D-010, D
 | 64 | bad command line (unknown option, missing value) |
 | 65 | `--check` found syntax errors, or `execute`/`run` refused a script that does not parse |
 | 66 | the script file cannot be read |
+| 69 | the machine: nobody answers (`-rem` with no machine at that address, `--serve status` or `stop` with no machine) |
+| 75 | the machine: a running machine already holds a door of the new one (`already running`) |
 | 70 | not implemented (the stub VM, outside the Eve range) |

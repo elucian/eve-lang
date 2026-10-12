@@ -1,0 +1,7 @@
+# A syntax error: the machine refuses the script before it runs anything
+driver broken is
+  process main is
+    print "this line is fine";
+    let x := ;
+  return;
+end broken;

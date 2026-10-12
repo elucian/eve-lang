@@ -1,0 +1,6 @@
+# script with an error that nobody recovers: the machine returns the error and the exit code 4
+driver fail is
+  process main is
+    raise "boom";
+  return;
+end fail;

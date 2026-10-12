@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Eve machine</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main id="app">
+    <h1>Hello World</h1>
+    <p id="message">This is Eve</p>
+
+    <section>
+      <h2>The machine</h2>
+      <pre id="status">asking the machine…</pre>
+      <button id="refresh">Refresh</button>
+      <span class="hint">updated every 2 seconds; the page asks <code>POST /rpc</code> with the method <code>status</code></span>
+    </section>
+
+    <section>
+      <h2>Run Eve code in the machine</h2>
+      <p class="hint">The text is sent as the method <code>run</code>, like <code>eve -rem -x file.eve</code>. The machine runs one script at a time.</p>
+      <textarea id="source" rows="9" spellcheck="false"># a script sent from the browser
+driver browser is
+  process main is
+    print "Hello from the browser";
+    print "6 * 7 = {6 * 7}";
+  return;
+end browser;</textarea>
+      <div>
+        <button id="run">Run</button>
+        <span id="exit" class="hint"></span>
+      </div>
+      <pre id="output"></pre>
+      <pre id="errors" class="errors"></pre>
+    </section>
+
+    <section>
+      <h2>Pages</h2>
+      <ul>
+        <li><a href="report.html">report.html</a>: written by <code>src/report.eve</code> (404 until you run it)</li>
+        <li><a href="eve.cfg">eve.cfg</a>: outside the web folder, always 404</li>
+      </ul>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,1 +1,13 @@
-work/
+# Eve project: the files that a run makes
+db/*.db
+db/*.db-*
+log/*.log
+log/*.log.*
+log/*.db
+data/in/*
+data/out/*
+test/*
+!.gitkeep
+
+# written by src/report.eve (eve -x src/report.eve)
+web/report.html

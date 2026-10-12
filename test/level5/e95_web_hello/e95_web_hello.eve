@@ -1,0 +1,32 @@
+# the Eve web server answers with a page: Hello World, This is Eve (F-NET-02, first step)
+** spec: plan/design-service.md#5-serve-local-http
+** The runner calls the command of the VM, not this script: see "command" and "client" below.
+** The project has the layout of a single page application: the browser part is plain HTML, CSS and
+** JavaScript in the folders of web/, the backend will be written in Eve. Step one serves files only.
+driver e95_web_hello is
+  process main is
+    print "e95: the command --serve is tested, not this script";
+  return;
+end e95_web_hello;
+/*@expect
+{
+  "command": ["--serve"],
+  "timeout": 40,
+  "client": ["node", "check/hello.test.js"],
+  "contains": [
+    "ok GET / answers 200",
+    "ok the page says: Hello World",
+    "ok the page says: This is Eve",
+    "ok GET /css/style.css is text/css",
+    "ok GET /js/app.js is JavaScript",
+    "ok GET /eve.cfg (not in web) answers 404",
+    "ok HEAD / answers 200 without a body",
+    "ok a second --serve fails with 75",
+    "ok the second --serve says: already running",
+    "ok --serve stop ends with 0",
+    "ok the port is free after --serve stop",
+    "web: all checks passed"
+  ],
+  "note": "command = the server, started in the folder of the test; client = a program run in the same folder with the variable EVE set to the VM, its output and exit code are the result of the test. The server must end by itself after `eve --serve stop` (exit 0); the runner kills it only after a time-out and then fails the test"
+}
+*/

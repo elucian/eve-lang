@@ -184,7 +184,7 @@ Roles are kept by each machine, so a person can be developer on `dev1` and viewe
 
 ### 6.6 Admin pages
 
-For the active machine, to its admins: users (list, create, disable, reset password, role), registration setting, sessions (who is logged in, end a session), audit log (logins, failed logins, role changes, runs, SQL that changed data, uploads). Each page is a set of machine commands (`user add`, `user role`, `session end`, ...), so an admin can do the same with `eve -c … -r prod`.
+For the active machine, to its admins: users (list, create, disable, reset password, role), registration setting, sessions (who is logged in, end a session), audit log (logins, failed logins, role changes, runs, SQL that changed data, uploads). Each page is a set of machine commands (`user add`, `user role`, `session end`, ...), so an admin can do the same with `eve -c … -rem prod`.
 
 ## 7. Explorer: machines, files and the database object tree
 

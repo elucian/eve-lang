@@ -1,0 +1,14 @@
+/* style of the live machine page: plain CSS, no framework */
+body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; background: #fafafa; }
+main { max-width: 52rem; }
+h1 { margin-bottom: 0.2rem; }
+#message { font-size: 1.3rem; color: #555; margin-top: 0; }
+section { margin-top: 1.5rem; padding: 1rem; background: #fff; border: 1px solid #ddd; border-radius: 6px; }
+h2 { margin-top: 0; font-size: 1.1rem; }
+pre { background: #f2f2f2; padding: 0.6rem; border-radius: 4px; min-height: 1.2rem; white-space: pre-wrap; }
+pre.errors { color: #a00; background: #fff4f4; }
+pre:empty { display: none; }
+textarea { width: 100%; font-family: ui-monospace, Consolas, monospace; font-size: 0.9rem; box-sizing: border-box; }
+button { margin: 0.4rem 0.4rem 0.4rem 0; padding: 0.3rem 1rem; }
+.hint { color: #777; font-size: 0.85rem; }
+.down { color: #a00; }
