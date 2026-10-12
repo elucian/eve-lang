@@ -25,6 +25,7 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Database layer | [library/database.md](library/database.md) | level 5, first draft (2026-10-10), as proposed in Q-043 and Q-046: records, `table`, mapping and its validation, tracked records, `commit;`, `rollback;`, isolation, direct SQL, errors, drivers, the Eve server |
 | Multitasking | [semantics/multitasking.md](semantics/multitasking.md) | level 4, first draft (2026-10-08): parallel groups, channels, tasks in a job, durations; D-140 to D-144; tests d01 to d24 |
 | Standard library | [library/atomic.md](library/atomic.md) | `Atomic(:T)`, first draft (2026-10-08); the rest of the library is not started |
+| Machine | [library/machine.md](library/machine.md) | the doors IPC and HTTP, `-lsn`, `--serve`, `-loc`, `-rem`, JSON-RPC, the web folder (D-162, 2026-10-11) |
 | Other semantics | `semantics/*` | levels 3 to 7 not started |
 | Library | `library/*` | not started (phase 5) |
 

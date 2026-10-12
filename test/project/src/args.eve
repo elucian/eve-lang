@@ -1,0 +1,9 @@
+# The arguments after the script travel with it, also to a remote machine
+driver args is
+  process main(*args) is
+    print "{args.count()} argument(s)";
+    for a in args do
+      print "- {a}";
+    done;
+  return;
+end args;

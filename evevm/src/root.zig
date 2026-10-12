@@ -13,6 +13,9 @@ pub const title = v.title;
 /// Command line, jump table and REPL.
 pub const cli = @import("cli.zig");
 
+// The machine as a server and its client (F-NET-02, spec/library/machine.md).
+pub const server = @import("server.zig");
+
 /// Execution loop and the slot for external commands.
 pub const vm = @import("vm.zig");
 
@@ -54,6 +57,7 @@ test {
     _ = @import("decimal.zig");
     _ = @import("instant.zig");
     _ = sqlite;
+    _ = server;
 }
 
 test "version strings are set" {

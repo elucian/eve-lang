@@ -9,7 +9,7 @@ TARGET is one of:
   1 | level1          every test in test/level1 (likewise 2 to 7)
   smoke               every test in test/smoke (the tools of the VM: slot, workflow)
   all                 every level, and smoke
-  project             the special test of `project init` and `project new` (test/project/run.sh,
+  scaffold            the special test of `project init` and `project new` (test/scaffold/run.sh,
                       a shell script on real folders); run on its own, never part of `all`
   a03 | a03_print     one test, by name or name prefix, searched in every level
   test/level1/a03_print.eve
@@ -35,6 +35,9 @@ A test is either a file or a folder:
 Other folders are not tests. The expectation keys, all optional:
   "exit"       expected exit code (default 0)
   "args"       command-line arguments
+  "client"     with "command": the command starts a machine that keeps running; the client (a list: a program and its
+               arguments) runs in the same folder with the variable EVE set to the VM; stdout = the output of the
+               client, exit = the exit code of the machine, which must end by itself (F-NET-02)
   "command"    a list of arguments for `eve` alone, with no script: the test runs one command of the
                VM, `eve <command...>` (for example ["--project", "init", "out/proj"]); the file of
                the test is only its home and its expectations
@@ -49,6 +52,7 @@ Other folders are not tests. The expectation keys, all optional:
                A value that is an object, or a list that holds objects, is JSON: the file is
                parsed and must match it (an object may have more keys; "*" matches any value).
                "{date}" in a file name is the date of the run in UTC, YYYY-MM-DD (D-114)
+  "timeout"    seconds before the run is cancelled (default: the option --timeout)
   "skip"       a reason: the test is not run
   "note"       free text
 A test that prints (a `print` or `write` statement) must declare "stdout" or
@@ -84,6 +88,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 from _common import die
@@ -311,8 +316,38 @@ def clear_out(test):
                 os.rmdir(os.path.join(top, d))
 
 
+def run_with_client(eve, test, exp, timeout):
+    """A test with a "client" (F-NET-02): "command" starts a machine that keeps running, the client (a program
+    such as `node check/x.js`) runs in the same folder with the variable EVE set to the VM and talks to the machine.
+    The result looks like a run of one process: stdout is the output of the client, the exit code is the one of the
+    machine (it must end by itself, for example after `eve --serve stop`); a client that fails makes the exit code
+    99, and a machine still running after the client ended is killed and makes the exit code 98."""
+    cwd = test_cwd(test)
+    env = dict(os.environ, EVE=eve)
+    with tempfile.TemporaryFile() as sout, tempfile.TemporaryFile() as serr:
+        server = subprocess.Popen([eve, *eve_args(test, exp)], cwd=cwd, stdout=sout, stderr=serr, env=env)
+        try:
+            client = subprocess.run(exp["client"], cwd=cwd, capture_output=True, timeout=timeout, env=env)
+            try:
+                code = server.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                server.kill()
+                server.wait()
+                code = 98
+            if client.returncode != 0:
+                code = 99
+        finally:
+            if server.poll() is None:
+                server.kill()
+                server.wait()
+        serr.seek(0)
+        err = client.stderr + serr.read()
+    return subprocess.CompletedProcess(exp["client"], code, client.stdout, err)
+
+
 def run_test(eve, test, timeout):
     exp = load_expect(test)
+    timeout = exp.get("timeout", timeout)
     res = {"test": test, "expect": exp, "stdout": "", "stderr": "", "exit": None, "ms": 0,
            "cmd": [rel(eve) if eve.startswith(ROOT) else eve, *eve_args(test, exp)]}
     if "skip" in exp:
@@ -322,8 +357,11 @@ def run_test(eve, test, timeout):
         clear_out(test)
     start = time.perf_counter()
     try:
-        p = subprocess.run([eve, *eve_args(test, exp)], cwd=test_cwd(test), capture_output=True,
-                           timeout=timeout)
+        if "client" in exp:
+            p = run_with_client(eve, test, exp, timeout)
+        else:
+            p = subprocess.run([eve, *eve_args(test, exp)], cwd=test_cwd(test), capture_output=True,
+                               timeout=timeout)
     except subprocess.TimeoutExpired as e:
         res.update(verdict="ERROR", reason=f"timeout after {timeout}s",
                    stdout=(e.stdout or b"").decode("utf-8", "replace"))
@@ -582,9 +620,9 @@ def main():
     eve = os.path.abspath(args.eve) if os.path.exists(args.eve) else args.eve
     version = eve_version(eve)
 
-    if args.targets == ["project"]:
-        # The special test (test/project/readme.md): a shell script, with its own verdict and exit status.
-        script = os.path.join(ROOT, "test", "project", "run.sh")
+    if args.targets == ["scaffold"]:
+        # The special test (test/scaffold/readme.md): a shell script, with its own verdict and exit status.
+        script = os.path.join(ROOT, "test", "scaffold", "run.sh")
         sys.exit(subprocess.run(["sh", script, eve]).returncode)
 
     labels, tests = [], []

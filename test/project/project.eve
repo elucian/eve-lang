@@ -1,0 +1,8 @@
+#! project
+# The main script of the project: a live Eve machine to try by hand (test/project/readme.md).
+driver project is
+  process main is
+    print "project: ready";
+    print "start a machine with: eve -lsn --serve";
+  return;
+end project;

@@ -2,7 +2,7 @@
 
 Status: the decided points are recorded as **D-083** (`plan/decision_level6.md`) and taught in the tutorial page server.html (2026-10-05). The rest of this note is background and proposals.
 
-**Decided by the author (2026-10-05):** `eve -c <command>` (`--command`) sends a command to a running machine and `eve -x file.eve` parses and executes a script, as today; `-r <machine>` names a remote machine; the default ports are 4042 for commands and data and 8042 for HTML; a running machine keeps one driver memory space (DMS) per loaded driver; `eve -u file -r <machine>` uploads a file; an AI may call all the commands; `panic` returns a listening machine or the prompt to waiting; `route` is a keyword; the tutorial gets one page, server.html; `route` has a one-line form (`apply <aspect>`) and a block form (`route name(req, @res) on <method> "<path>" is … end name;`) for every HTTP method. Also: the machine has one mode and starts locally or remotely; a machine is its configuration file, its identity is domain + port and its label is `$EVE_NAME`; starting on a taken address is an error; the checksum of the configuration is kept outside the file; a running machine applies a changed configuration on the command `setup` when its identity stays the same; `eve` runs without a configuration file, with built-in defaults; `eve --setup <folder>` reads the machine in that folder or creates it (configuration file and folders) when it does not exist; there is no separate `make` command; the machine folder holds `eve.cfg`, `web/`, `out/`, `data/`, `lib/`, `asp/`, and the machine is named after the folder; a machine folder is a project folder: one machine per project; a client/server application is two projects, one client and one server, which can live in the same repository with the README files at its root; it receives commands on a port (`--listen`); `eve` itself is the program that sends a command to a running machine (`eve -c <command>`), from a shell or Python script or from another Eve machine; a machine can talk to many machines on different ports and domain names; `serve` gives local HTTP on a configurable port with pages from a configured folder; there is an Eve API usable as an MCP server for AI; the command files (`.vmc`) are scheduled for removal. It answers review points RST-R03 (a `service` script), RMT-D01 (a remote machine has its own rules), RMT-D03 (data over the network, explained), RMT-R03 (a local and a remote scheduler) and RST-D01. Target versions in `plan/version_map.md`: F-TLS-11 (daemon, now `--listen`), F-STR-08, F-NET-02 to F-NET-06. Questions for the author are collected at the end.
+**Decided by the author (2026-10-05):** `eve -c <command>` (`--command`) sends a command to a running machine and `eve -x file.eve` parses and executes a script, as today; `-rem <machine>` names a remote machine; the default ports are 4042 for commands and data and 8042 for HTML; a running machine keeps one driver memory space (DMS) per loaded driver; `eve -u file -rem <machine>` uploads a file; an AI may call all the commands; `panic` returns a listening machine or the prompt to waiting; `route` is a keyword; the tutorial gets one page, server.html; `route` has a one-line form (`apply <aspect>`) and a block form (`route name(req, @res) on <method> "<path>" is … end name;`) for every HTTP method. Also: the machine has one mode and starts locally or remotely; a machine is its configuration file, its identity is domain + port and its label is `$EVE_NAME`; starting on a taken address is an error; the checksum of the configuration is kept outside the file; a running machine applies a changed configuration on the command `setup` when its identity stays the same; `eve` runs without a configuration file, with built-in defaults; `eve --setup <folder>` reads the machine in that folder or creates it (configuration file and folders) when it does not exist; there is no separate `make` command; the machine folder holds `eve.cfg`, `web/`, `out/`, `data/`, `lib/`, `asp/`, and the machine is named after the folder; a machine folder is a project folder: one machine per project; a client/server application is two projects, one client and one server, which can live in the same repository with the README files at its root; it receives commands on a port (`--listen`); `eve` itself is the program that sends a command to a running machine (`eve -c <command>`), from a shell or Python script or from another Eve machine; a machine can talk to many machines on different ports and domain names; `serve` gives local HTTP on a configurable port with pages from a configured folder; there is an Eve API usable as an MCP server for AI; the command files (`.vmc`) are scheduled for removal. It answers review points RST-R03 (a `service` script), RMT-D01 (a remote machine has its own rules), RMT-D03 (data over the network, explained), RMT-R03 (a local and a remote scheduler) and RST-D01. Target versions in `plan/version_map.md`: F-TLS-11 (daemon, now `--listen`), F-STR-08, F-NET-02 to F-NET-06. Questions for the author are collected at the end.
 
 ## 1. One machine, one mode
 
@@ -47,8 +47,8 @@ The program that sends the commands is a shell script or a Python script (`subpr
 **Which machine.** Without more options `-c` goes to the machine of the configuration file (`-s file.cfg`, section 4): its `$EVE_DOMAIN` and `$EVE_PORT`. A remote machine is given by host and port, or by a name from the configuration:
 
 ```
-eve -c "run sales_load" -r etl1.example.com:4042
-eve -c "run sales_load" -r prod          ** "prod" is defined in eve.cfg
+eve -c "run sales_load" -rem etl1.example.com:4042
+eve -c "run sales_load" -rem prod        ** "prod" is defined in eve.cfg
 ```
 
 **Machine to machine.** A running machine can do the same: send many commands to other machines and receive their answers, on different ports and domain names. At the prompt or in a command, `send prod "run sales_load"`; in a script, a library call such as `eve.send("prod", "run sales_load")` returns the answer and the status. A machine keeps one connection per partner, so a long conversation does not reconnect for each command.
@@ -65,6 +65,33 @@ A DMS is also the natural unit of memory for the VM: everything a driver allocat
 
 **Safe by default.** The listener binds to `localhost` unless the configuration names another address; a connection must present the token of the configuration (`$EVE_TOKEN`); over a network it uses TLS.
 
+## 3a. Local, remote and listener: `-loc`, `-rem`, `-lsn` (author, 2026-10-11)
+
+A command of the CLI goes to a machine. Three options choose which one; the short names have three letters, one per option, so they read as words and never clash with the one-letter options `-h -v -d -x -s -m -i -t -c` (options are not bundled, so `-lsn` is one option, not `-l -s -n`). They were `-lo`, `-r` and `-ls` until the revision of the same day (D-162). `-x` alone never looks for a machine: it is the fast way to run a script.
+
+| Option | Long | Meaning |
+|---|---|---|
+| (none) | | **local**, like `-loc` |
+| `-loc [port]` | `--local [port]` | force the command to be local: never uses the network. `--local <port>` addresses the local machine on that port |
+| `-rem [domain[:port]]` | `--remote` | find a remote machine and run there. **Fails** if no remote machine is found (exit code, message: to choose). `--remote <domain>` addresses another domain |
+| `-lsn [port]` | `--listen` | start a machine that **listens on the IPC channel only**; no HTTP, no UX |
+| `--serve` | | start the HTTP/HTTPS server (the files of `web/`, the Eve UX). `-lsn --serve` opens both channels |
+
+**Local command when no machine listens.** `-loc` does not fail: it starts a new machine inside the process, runs the command and exits; when the command is not a complete one (no script, no command) the machine stays in RPC mode, and takes commands. When a machine listens on the IPC channel of that domain and port, the CLI sends the command there and the IPC channel has priority over everything else: it answers at once, with no web overhead.
+
+**Channels.**
+
+1. **IPC**: a Unix domain socket (also on Windows 10 and later; no named pipe), named from the domain and the port: `<runtime dir>/eve-<domain>-<port>.sock`. The messages are JSON-RPC 2.0, one per frame (length first). The file permissions of the socket are the security (owner only). Binding the socket is the singleton lock (section 5): a second machine on the same domain and port fails with `already running`; a socket left by a crash is found by a failed connect and removed. A **remote machine does not listen on IPC by default**; `--ipc` turns it on.
+2. **HTTP/HTTPS**: the same JSON-RPC 2.0 messages in `POST /rpc` on the API address, and the pages and the WebSocket of the UX on the web address. Needs a login (D-155) and TLS outside `localhost`.
+
+The two addresses may be split: the API on `api.<domain>:<api port>` and the UX on `<domain>:<web port>` (defaults 4042 and 8042). A reply always travels on the connection of its request; a job that lasts returns a run id and the client reads the result by polling or a WebSocket on the API address (a reply on another address is a callback, not part of this design).
+
+**How the CLI finds the machine.** No port scan. Local: the address is `--local <port>`, else the `eve.cfg` of the project, else the default 4042; the name of the socket follows. Remote: `--remote <domain>` is looked up in the `remote` entries of `eve.cfg` (URL, ports, login), else `https://api.<domain>:<port>`; a bare `--remote` takes the `remote` named in `eve.cfg`, and without one it fails. Login and the keyring: D-155.
+
+A machine never blocks itself: it listens while it runs a script. What several clients may do to the shared state of one machine at the same time is a rule of level 6 (to decide).
+
+Open: the exit code and message of `-rem` without a machine; the exact socket directory per system; the form of `--local <port>` when `eve.cfg` names another domain; whether `-lsn` and `--serve` can be started apart on a machine that already runs (`eve --serve start`).
+
 ## 4. Machine identity: configuration, ports, singleton
 
 A machine **is its configuration file**. The file says what the machine is called, where it is, and which ports it uses. Two configuration files make two machines, also on the same computer: this is how a client and a server are tested on one workstation, with different ports.
@@ -80,7 +107,7 @@ $EVE_OUT       = "out/client"         $EVE_OUT       = "out/server"
 $EVE_TOKEN     = "…"                  $EVE_TOKEN     = "…"
 ```
 
-**Identity.** The identity of a machine is its address: **domain + port**, `$EVE_DOMAIN:$EVE_PORT` (for example `localhost:4142`, `etl1.example.com:4042`). `$EVE_DOMAIN` is `localhost`, a domain name or an IP address. Two programs can't bind the same port on one host, so the address is unique without any checksum. `$EVE_NAME` is the label of the machine: what people, logs, `send` and `-r` use (`etl-server`); the machine checks at connection time that the name and the address agree. `$EVE_HTTP_PORT` is the port of `serve`.
+**Identity.** The identity of a machine is its address: **domain + port**, `$EVE_DOMAIN:$EVE_PORT` (for example `localhost:4142`, `etl1.example.com:4042`). `$EVE_DOMAIN` is `localhost`, a domain name or an IP address. Two programs can't bind the same port on one host, so the address is unique without any checksum. `$EVE_NAME` is the label of the machine: what people, logs, `send` and `-rem` use (`etl-server`); the machine checks at connection time that the name and the address agree. `$EVE_HTTP_PORT` is the port of `serve`.
 
 **Start.** `eve -s server.cfg --listen` (or `--serve`) first checks that the domain and the ports of the configuration are free. If one is already taken, by a running Eve machine or by another program, `eve` ends with an error and does not start. Otherwise it starts the machine, reserves its ports and listens. From then on, any request or command that reaches it, from a browser, a script, another machine or a route, gets an answer.
 
@@ -133,6 +160,22 @@ To test on one workstation, both configurations use `localhost` with different p
 
 ## 5. `serve`: local HTTP
 
+**Dual mode and singleton (author, 2026-10-11).** A machine is a **singleton identified by its domain and port**. When the configuration names `localhost`, another machine can be started on `localhost` with a different port; on one port there is only one machine. The one machine has two doors to the same VM core and the same shared state: a command channel for the CLI clients (`eve -x file.eve`, `eve -c …`) through IPC, a Unix socket or TCP, and an HTTP/WebSocket server for the browser (the files of the web folder, and the Eve UX, `eveux/`).
+
+```
+                  ┌────────────────────────────────────────┐
+                  │              eve --serve               │
+  eve -x file.eve ├───────► IPC / Unix socket / TCP        │
+  (CLI client)    │                   │                    │
+                  │             EVE VM core                │
+                  │           (shared state)               │
+                  │                   │                    │
+  http://localhost├───────► HTTP / WebSocket server        │
+  (browser)       └────────────────────────────────────────┘
+```
+
+The command is `eve --serve` (the name stays). If a machine already runs on that domain and port, `eve --serve` **fails** (message `already running`) and does not start a second one. The machine is controlled with `eve --serve stop`, `eve --serve start` and `eve --serve restart`. Open details: the protocol of the command channel (IPC, Unix socket or TCP: to choose), the exit code of a refused start, the keys of `eve.cfg` (`http_port`, `http_host`, `web` are used by the test `e95_web_hello`), how a CLI client finds the running machine, and what `start` means for a machine that is already running (nothing, exit 0?). First test: `test/level5/e95_web_hello`.
+
 `eve:> serve` (or `eve --serve`) starts an HTTP server inside the machine. By default it listens on **http://localhost:8042**; the port is set in the configuration file. It serves:
 
 1. **Static files** from the web folder named in the configuration: HTML pages, CSS, scripts, images, WebAssembly. A request for `/reports/today.html` returns `<web folder>/reports/today.html`.
@@ -178,8 +221,8 @@ The API follows the rules of section 10: it works inside the project folder, it 
 | Use | What happens | Example |
 |---|---|---|
 | **Deploy** | The local machine sends a project (drivers, aspects, modules, services) to the remote one, which checks and compiles it under its own rules and keeps it, with a version. | `eve:> deploy sales_etl to prod` |
-| **Upload** | A file is sent to a remote machine, like a `load` there: it is compiled by the remote machine, under its rules, and kept for the next commands. | `eve -u sales_load.eve -r prod` |
-| **Run** | The remote machine runs a driver now, or on its schedule. The caller gets the exit code and the run log. | `eve -c "run sales_load.eve" -r prod` |
+| **Upload** | A file is sent to a remote machine, like a `load` there: it is compiled by the remote machine, under its rules, and kept for the next commands. | `eve -u sales_load.eve -rem prod` |
+| **Run** | The remote machine runs a driver now, or on its schedule. The caller gets the exit code and the run log. | `eve -c "run sales_load.eve" -rem prod` |
 | **Call** | A driver applies an aspect that runs on the remote machine, with its parameters and `@` outputs, as a local `apply` would. | `apply load_orders(batch, @count) at prod within 30s;` |
 | **Stream** | A driver sends or receives a large amount of data as a stream of batches, possibly on several connections. | read 10 million rows in batches of 10 000 |
 | **Serve** | The remote machine answers HTTP from browsers and other systems: JSON, files, HTML pages. | `GET /orders/42` |
@@ -322,7 +365,7 @@ schedule "orders_sync" every 15min
 
 | Change | Kind |
 |---|---|
-| Commands `listen`, `send`, `serve`, `api`, `deploy`, `dismiss` (replaces `clear`) (and `--listen`, `--serve`, `--api`); `eve -c <command> [-r machine]` | machine (`manual/usage.md`) |
+| Commands `listen`, `send`, `serve`, `api`, `deploy`, `dismiss` (replaces `clear`) (and `--listen`, `--serve`, `--api`); `eve -c <command> [-rem machine]` | machine (`manual/usage.md`) |
 | Command files `.vmc`, option `-i`, "serve mode" of D-063 | removed; the tests in `test/smoke` and `script/workflow.py` move to `eve -x` |
 | `$EVE_NAME`, `$EVE_DOMAIN`, `$EVE_PORT`, `$EVE_HTTP_PORT`, `$EVE_WEB`, `$EVE_TOKEN`; the checksum file `out/<name>.sum` of the machine folder | configuration, system variables |
 | Command `setup` (`--setup <folder or file>`, `-s`): create, choose or reload a machine | machine |
@@ -353,7 +396,7 @@ machine etl2 at "etl2.example.com:4042" login password
 machine test at "localhost:4142"        login token
 ```
 
-- The local machine keeps **one connection per remote machine**, opened on first use and kept open (TLS over the network); `send prod "…"`, `eve -c … -r prod`, uploads and the Workbench share it.
+- The local machine keeps **one connection per remote machine**, opened on first use and kept open (TLS over the network); `send prod "…"`, `eve -c … -rem prod`, uploads and the Workbench share it.
 - Each connection has its **own session**: the user, the role and the rights on that machine. Being admin on `dev1` gives nothing on `prod`.
 - A connection that breaks is opened again with the stored credentials, without asking the person, as long as they are valid.
 
@@ -374,7 +417,7 @@ eve:> login prod              ** first login: opens the single sign-on page, or 
 eve:> logout prod             ** ends the session on prod and deletes the stored credentials
 eve:> forget prod             ** deletes the stored credentials only
 eve:> whoami prod             ** user, role and login method on prod
-eve -c "run sales.eve" -r prod --login    ** log in first when no credentials are stored
+eve -c "run sales.eve" -rem prod --login  ** log in first when no credentials are stored
 ```
 
 ### 15.3 The keyring
@@ -393,9 +436,9 @@ After the first login the local machine stores the **renewal token** (never a pa
 
 ### 15.4 Users of a remote machine
 
-A listening machine keeps its **users and roles** in its Eve database (SQLite, F-DAT-08): the accounts, their roles (`viewer`, `operator`, `developer`, `admin`), the identity providers it trusts, the mapping of provider groups to roles, the registration setting (`closed`, `approval`, `open`), the sessions and the audit log. The first admin is created on its own console by `eve --setup`; the other accounts by its admins (`user add`, `user role`, `session end`), from the prompt, from `eve -c … -r`, or from the Workbench (eveux, D-154). The token of the configuration (`$EVE_TOKEN`) stays for machines and scripts; people log in.
+A listening machine keeps its **users and roles** in its Eve database (SQLite, F-DAT-08): the accounts, their roles (`viewer`, `operator`, `developer`, `admin`), the identity providers it trusts, the mapping of provider groups to roles, the registration setting (`closed`, `approval`, `open`), the sessions and the audit log. The first admin is created on its own console by `eve --setup`; the other accounts by its admins (`user add`, `user role`, `session end`), from the prompt, from `eve -c … -rem`, or from the Workbench (eveux, D-154). The token of the configuration (`$EVE_TOKEN`) stays for machines and scripts; people log in.
 
 ## Questions for the author
 
-Answered on 2026-10-05 (recorded above): `panic` (a listening machine or the prompt goes on; the `eve -c` process ends with exit code 1 so the calling script sees the failure), the words `service`, `route`, `at`, `-c` sends a command and `-x` executes a file, `-r` (`--remote`) names a remote machine, ports 4042 (commands, uploads and later the data protocol EWP, all on one port) and 8042 (HTML), the web folder, sessions and driver memory spaces, the AI may call all the commands, the deploy unit, source is uploaded with `-u` and compiled remotely, routes in two forms (one line or a block) for every HTTP method, the command `dismiss` frees the DMS of a loaded driver (it replaces the planned `clear`), one tutorial page, server.html.
+Answered on 2026-10-05 (recorded above): `panic` (a listening machine or the prompt goes on; the `eve -c` process ends with exit code 1 so the calling script sees the failure), the words `service`, `route`, `at`, `-c` sends a command and `-x` executes a file, `-rem` (`--remote`) names a remote machine, ports 4042 (commands, uploads and later the data protocol EWP, all on one port) and 8042 (HTML), the web folder, sessions and driver memory spaces, the AI may call all the commands, the deploy unit, source is uploaded with `-u` and compiled remotely, routes in two forms (one line or a block) for every HTTP method, the command `dismiss` frees the DMS of a loaded driver (it replaces the planned `clear`), one tutorial page, server.html.
 

@@ -1,0 +1,8 @@
+# An error that nobody recovers: the message comes back on the error output and eve ends with 4
+driver fail is
+  process main is
+    print "before the error";
+    raise "something went wrong";
+    print "never printed";
+  return;
+end fail;

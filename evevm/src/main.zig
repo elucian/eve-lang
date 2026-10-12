@@ -9,6 +9,13 @@ const evevm = @import("evevm");
 const cli = evevm.cli;
 const Terminal = evevm.terminal.Terminal;
 
+// Zig tip: a root file can declare `pub const std_options: std.Options`, and the standard library reads it at compile
+// time to tune itself. `unexpected_error_tracing` prints a stack trace in Debug builds each time the system returns a
+// code the library does not map. On Windows, Zig 0.16 does not map CONNECTION_REFUSED, so asking for a machine that
+// is not running (`eve --serve status`) printed two traces before the right answer, `eve: not running`. The VM
+// handles that error itself (server.zig), so the trace is turned off.
+pub const std_options: std.Options = .{ .unexpected_error_tracing = false };
+
 // Zig tip: in Zig 0.16 `main` may take a `std.process.Init` that the runtime fills: `init.io`
 // (the handle for input/output), `init.arena` (an allocator freed when the program ends) and
 // `init.minimal.args` (the command line). `!void` means main may return an error; the runtime
@@ -34,8 +41,11 @@ pub fn main(init: std.process.Init) !void {
     evevm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
     evevm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
 
+    // Zig tip: `File.Writer.init` writes at its own position from 0 when the file can seek, which is right for a
+    // file the program opened, but wrong for the standard output: `eve -x a.eve >> log.txt` overwrote the start of
+    // the log. `initStreaming` writes where the system says (the end, with `>>`), like a pipe or a terminal.
     var stdout_buffer: [1024]u8 = undefined;
-    var stdout_file_writer: Io.File.Writer = .init(.stdout(), init.io, &stdout_buffer);
+    var stdout_file_writer: Io.File.Writer = .initStreaming(.stdout(), init.io, &stdout_buffer);
     const stdout = &stdout_file_writer.interface;
 
     // Zig tip: `args[@min(1, args.len)..]` is a slice from index 1 (skip the program name);
@@ -91,6 +101,18 @@ pub fn main(init: std.process.Init) !void {
         .slot = opts.slot,
         .idle_ms = if (opts.idle) |t| (std.fmt.parseInt(u64, t, 10) catch 30) * 1000 else 30_000,
     };
+
+    // Zig tip: the runtime directory for the IPC sockets comes from the environment, once, before any thread starts.
+    // `orelse` chains try the variables in order; `get` answers an optional text.
+    evevm.server.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
+    // The machine options (`-lsn`, `--serve`, `-loc`, `-rem`): a result means they handled the command. Without them
+    // nothing here runs: `eve -x file.eve` reads no `eve.cfg` and asks no door, it executes the script at once.
+    if (opts.machine.listen or opts.machine.serve or opts.machine.local or opts.machine.remote) {
+        if (try evevm.server.handle(init.io, arena, stdout, opts.machine)) |code| {
+            try stdout.flush();
+            std.process.exit(code);
+        }
+    }
 
     if (opts.command) |command| {
         // One command from the command line, no REPL.

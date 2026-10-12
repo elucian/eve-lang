@@ -1,0 +1,10 @@
+# A script that takes 5 seconds: the machine runs one script at a time, so a second one waits
+driver slow is
+  process main is
+    for i in (1..5) do
+      wait 1s;
+      print "second {i}";
+    done;
+    print "slow: done";
+  return;
+end slow;
