@@ -1,5 +1,5 @@
 // The frontend of the live machine page: plain JavaScript, no package. It talks to the machine through its HTTP door
-// with JSON-RPC 2.0 in POST /rpc (spec/library/machine.md): the method status for the panel, run for the editor.
+// with JSON-RPC 2.0 in POST /rpc (spec/library/machine.md): the method vm.stat for the panel, vm.run for the editor (D-165).
 
 let nextId = 1;
 
@@ -19,7 +19,7 @@ const $ = (id) => document.getElementById(id);
 
 async function refresh() {
   try {
-    const s = await rpc("status");
+    const s = await rpc("vm.stat");
     $("status").className = "";
     $("status").textContent =
       `machine: ${s.domain} ipc=${s.ipc_port} http=${s.http_port}\n` +
@@ -38,7 +38,7 @@ async function run() {
   $("output").textContent = "";
   $("errors").textContent = "";
   try {
-    const r = await rpc("run", { name: "browser.eve", source: $("source").value, args: [] });
+    const r = await rpc("vm.run", { name: "browser.eve", source: $("source").value, args: [] });
     $("output").textContent = r.output;
     $("errors").textContent = r.errors;
     $("exit").textContent = "exit code " + r.status;

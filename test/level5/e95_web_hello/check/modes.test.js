@@ -1,7 +1,7 @@
 // Client of the tests e95_test1 to e95_test3: Node.js 18 or later, no package. Usage: node check/modes.test.js <mode>
-//   ipc  : the machine was started with `eve -lsn`      (IPC only)
-//   http : the machine was started with `eve --serve`  (HTTP only)
-//   both : the machine was started with `eve -lsn --serve`
+//   ipc  : the machine was started with `eve --listen`          (IPC only)
+//   http : the machine was started with `eve --serve`           (HTTP only)
+//   both : the machine was started with `eve --listen --serve`
 // Every check prints "ok <what>"; the first one that fails prints "FAIL <what>" and ends the script with 1.
 // The runner gives the path of the VM in the variable EVE. The client of the CLI is `eve` itself.
 const { spawnSync } = require("node:child_process");
@@ -70,6 +70,12 @@ async function main() {
   check(runs() === before + (hasIpc ? 1 : 0), hasIpc ? "--local ran it in the machine (IPC)" : "--local ran it by itself, no machine");
   const lstat = run(["-loc", "--serve", "status"]);
   check(hasIpc ? lstat.code === 0 : lstat.code === 69, "--local status " + (hasIpc ? "answers" : "finds no machine (69)"));
+  // --listen <word> speaks through the IPC door only, like --local (D-169)
+  const istat = run(["--listen", "status"]);
+  check(hasIpc ? istat.code === 0 && istat.out.includes("ipc: listening") : istat.code === 69,
+    "--listen status " + (hasIpc ? "answers through IPC" : "finds no IPC door (69)"));
+  const old = run(["-lsn"]);
+  check(old.code === 64 && /unknown option -lsn/.test(old.all), "-lsn is an unknown option now (64)");
 
   // --remote uses HTTP only
   const remote = run(["-rem", "localhost:8095", "-x", "check/hello.eve"]);
@@ -87,11 +93,13 @@ async function main() {
   check(bare.code === 64 && /needs an address/.test(bare.all), "--remote without an address is a usage error (64)");
 
   // a machine is a singleton: a second start on the same address fails
-  const again = run(hasIpc ? ["-lsn"] : ["--serve"]);
+  const again = run(hasIpc ? ["--listen"] : ["--serve"]);
   check(again.code === 75 && /already running/.test(again.all), "a second start fails: already running (75)");
 
   // stop: the machine ends, the doors close
-  check(run(["--serve", "stop"]).code === 0, "--serve stop ends with 0");
+  // with an IPC door the machine is stopped through it; with HTTP only, through the web door
+  const stopWith = hasIpc ? "--listen" : "--serve";
+  check(run([stopWith, "stop"]).code === 0, stopWith + " stop ends with 0");
   check(await waitFor(async () => run(["--serve", "status"]).code === 69), "after stop: not running (69)");
   check(!(await httpUp()), "after stop: the http port is closed");
 

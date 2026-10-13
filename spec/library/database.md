@@ -1,6 +1,6 @@
 # Database layer
 
-Status: **0.1-draft**, level 5 (version 0.4). Sources: the author's request of 2026-10-10 (Q-046), Q-043, D-020, D-080, D-089, D-116, D-123, D-151. Design notes: `../../plan/design-database-core.md` and `../../plan/design-database-remote.md`. Every rule on this page was written from the design **as proposed**: the author has not confirmed it yet, and the points that needed a choice are listed in `../../plan/review_level5.md`. Tests: `test/level5` (prefix `e`, the database tests follow the generic ones). Grammar: `../syntax/grammar.md#database-declarations-and-statements-level-5`.
+Status: **0.1-draft**, level 5 (version 0.4). Sources: the author's request of 2026-10-10 (Q-046), Q-043, D-020, D-080, D-089, D-116, D-123, D-151; stored procedures, SQL functions and the database part of `eve`: D-163, D-166 (2026-10-12). Design notes: `../../plan/design-database-core.md` and `../../plan/design-database-remote.md`. Every rule on this page was written from the design **as proposed**: the author has not confirmed it yet, and the points that needed a choice are listed in `../../plan/review_level5.md`. Tests: `test/level5` (prefix `e`, the database tests follow the generic ones). Grammar: `../syntax/grammar.md#database-declarations-and-statements-level-5`.
 
 ## Layers
 
@@ -12,6 +12,8 @@ A program reaches a database by a **connection name**. The name is declared in `
 | 2. direct | `postgresql://etl@db1:5432/sales` | the machine of the program | 0.4 |
 | 3. through an Eve server | `eve://prod/erp` | the Eve server, which holds the credentials, the sessions and a cache (an `evedb` database) | 0.5 (level 6) |
 | test | `evedb://localhost/eve_test` | `evedb`, the Eve test database (DuckDB), a remote database for the tests | 0.4 |
+
+**The database part of `eve`** (D-163, D-166). The database layer is a part of the one program `eve`, reached by `eve db …` (section "Admin commands"); `evedb` is no longer a separate program. SQLite is embedded in `eve`. The DuckDB library, the engine of `evedb` databases, is loaded only when the first DuckDB connection of a run opens: a program that uses no DuckDB database starts without it, and when the library is missing, that first connection fails with a `ConnectionError` that names it.
 
 SQLite is the core database (Q-043a), but it **never holds ETL data** (D-159): it stores the logs and the metadata. Data is never loaded in SQLite. The roles of the files, in the `db/` folder of the **project** (D-156):
 
@@ -267,7 +269,7 @@ When a record class declares `method validate(@self)`, the flush calls it for ev
 
 **Isolation and locks** are the defaults of the database (read committed for PostgreSQL and MySQL, serializable for SQLite). A job changes them in its declarations with the system variables `$isolation` (`"read committed"`, `"repeatable read"`, `"serializable"`, `"snapshot"`), `$lock_timeout` (a duration) and `$read_only` (a `Logic`: a read-only transaction, a consistent snapshot, no locks on PostgreSQL), shadowed in the job as `$timeout` is shadowed by an aspect (D-081). A serialization failure or a deadlock is a `DeadlockError`, transient.
 
-**Optimistic locking.** With `version v`, every update and delete has `and "v" = ?` with the version that was read, and every update increases it. When the statement changes no row, someone else changed the row: the record becomes `stale` and the job fails with a `ConflictError` (not transient). A rollback detaches the records of the job (see above), so a `retry` reads them fresh. Without `version` the last writer wins; debug mode warns once per table written by more than one job of the project.
+**Optimistic locking.** With `version v`, a new row is written with the version 1, every update and delete has `and "v" = ?` with the version that was read, and every update increases it by 1. When the statement changes no row, someone else changed the row: the record becomes `stale` and the job fails with a `ConflictError` (not transient). A rollback detaches the records of the job (see above), so a `retry` reads them fresh. Without `version` the last writer wins; debug mode warns once per table written by more than one job of the project.
 
 **Long loads.** A job that loads millions of rows commits each batch with `commit;`. A `retry` would run the job again from its declarations and load the committed batches twice, so a job with `commit;` keeps a **checkpoint** in the core database, written after the commit of the batch, and starts from it. The checkpoint and the batch are in two databases, so a crash between the two commits loads the last batch a second time: the writes of a batch must be **idempotent** (`mode: "upsert"` or `"merge"` by key; at least once, effectively once):
 
@@ -304,7 +306,68 @@ Everything that is not rows is SQL. These methods of `Connection` run in the tra
 | `load!(table, rows, mode: …, key: (…))` | counts of inserted, updated and deleted rows |
 | `script(path)` | runs a SQL file of the project (folder `sql/`), statement by statement |
 
-A direct write on a table with pending tracked changes flushes that table first. It does not update the records in the buffer: the program calls `refresh`; debug mode warns when a direct write names a table that has tracked records. Stored procedures are declared with `external … in "sales"` and run in the transaction of the job. `$query` holds the text of the last SQL statement of the process, and in debug mode `$trace` prints every statement with its parameters (secrets masked) and its duration.
+A direct write on a table with pending tracked changes flushes that table first. It does not update the records in the buffer: the program calls `refresh`; debug mode warns when a direct write names a table that has tracked records. Native stored procedures are declared with `external` and run in the transaction of the job (section "Stored procedures"). `$query` holds the text of the last SQL statement of the process, and in debug mode `$trace` prints every statement with its parameters (secrets masked) and its duration.
+
+## Stored procedures
+
+There are two kinds of stored procedures (D-166):
+
+| Kind | Written in | Folder of the project | Runs in | Called from Eve |
+|---|---|---|---|---|
+| **native** | the language of the database: PL/pgSQL, PL/SQL, T-SQL, … | `sql/` | the database | through an `external` declaration |
+| **Eve procedure** | Eve | `proc/` | the database part of `eve`, next to a SQLite or DuckDB database | as a module; over IPC with `db.call` |
+
+**Native procedures.** The files of `sql/` are sent to the database by `script(path)`, `eve db script` or `eve db migrate`; Eve does not read their language. A program calls a native procedure through an `external` declaration, which brings only its signature into Eve (Q-043e):
+
+```eve
+external procedure archive_orders(before: Date) in "sales";
+external function total_sales!(region: String) => (@total: Decimal) in "sales" as "etl.total_sales";
+```
+
+- A procedure without a result is an `external procedure`. One with a result is an `external function` whose name ends with `!`, because its result depends on the database (D-087).
+- The name in the database is the Eve name, or the string after `as`.
+- The call runs in the transaction of the job, like `execute!`. The arguments and the results are converted by the column = value mapping; a database error is a `DatabaseError`.
+- This works for every database that has stored procedures. For the databases other than SQLite and DuckDB, this is the only kind: the database part of `eve` is a wrapper that sends the call.
+
+**Eve procedures.** A module in the folder `proc/` of a project is a module of Eve stored procedures: its exported procedures and functions are the procedures. The forms of the call below were proposed with D-166 and chosen as the most convenient (author, 2026-10-12).
+
+```eve
+module orders is
+  export (archive, total!);
+
+  procedure archive(before: Date) is
+    ...
+  return;
+  ...
+end orders;
+```
+
+- The database part checks the modules of `proc/` with the compiler, keeps them compiled and runs them next to a SQLite or DuckDB database: in the process of a direct run (`eve -x`), and in the database part of the machine with `-loc` and on a serving machine (`machine.md`). On an Eve server (path 3, level 6) they run on the server, near its databases.
+- A program calls them as a module, `from proc use (orders);` and then `orders.archive(cutoff);`. The call runs in the transaction of the job that makes it.
+- Over IPC, `db.call` runs one: `{"name": "orders.archive", "args": ["2026-01-01"]}` (`machine.md`).
+- `eve db proc list` prints the modules of `proc/`, their exported procedures with their signatures, and the hash of each module. `eve db proc reload` reads `proc/` again on a serving machine; a call that is running finishes with the code it started with.
+- An exported function of `proc/` that is a `sql function` can also be called from SQL (next section).
+
+## SQL functions
+
+A `sql function` is an Eve function that SQLite and DuckDB can call from SQL (D-166). `sql` is a contextual keyword (D-116): a keyword only before `function`, a free name elsewhere.
+
+```eve
+sql function tax(amount: Decimal, country: String) => (@result: Decimal) is
+  let result := amount * rate(country);
+return;
+```
+
+```eve
+class Taxed = {id: Integer, tax: Decimal} <: Record;
+new rows := shop.query!(:Taxed)("select id, tax(amount, country) as tax from orders");
+```
+
+- **Registration.** When the database part opens a SQLite or DuckDB connection, it registers **every** `sql function` of the program (the driver, its aspects, the modules it imports, and the modules of `proc/`), through the C API of the engine: `sqlite3_create_function_v2` for SQLite, the scalar functions of DuckDB. The name in SQL is the Eve name; a connection opened before a module is loaded gets its functions when the module is loaded.
+- **Rules checked by the compiler.** A `sql function` has no `!`: it is deterministic (D-087), and it does no input or output and opens no connection. It is not generic and not overloaded: SQL finds a function by its name. It has exactly one result. Its parameters and its result have the types of the column = value mapping (section "Column = value mapping"). **SQL `NULL` maps only to a nullable type:** a parameter of type `T?` receives `NULL` as `null`, and a result of type `T?` that is `null` is returned as `NULL`. When SQL gives `NULL` to a parameter of type `T`, the mapping fails: the function is not called and the statement stops with `$err_sql` (below).
+- **Errors.** An error in a `sql function` is an exception that stops the query: the engine abandons the statement, and the method that ran it (`query!`, `query_one!`, `execute!`, `load!`) raises the error **`$err_sql`** (code 59, class `SqlError` <: `DatabaseError`). Its message names the function and gives the message of the Eve error, or the reason the mapping failed: `SQL function tax failed: Division by zero`. Like any database error it can be recovered, retried or resumed.
+- **Threads.** An engine may call a `sql function` from several threads at once: DuckDB runs a query on worker threads. The VM protects the session: it runs one call at a time with a session mutex, or hands the calls to a pool of interpreters that each own their heap (D-166). The order and the number of the calls are not specified; this is why a `sql function` has no `!`.
+- **Other databases.** PostgreSQL, MySQL and the other drivers get no Eve functions. For them a `sql function` is an ordinary Eve function: the program reads the data into the process, changes it in Eve and writes it back with `load!` (in bulk) or one row at a time.
 
 ## Errors
 
@@ -330,7 +393,7 @@ Path 3 (version 0.5, level 6): the **Eve server** holds the sessions, the driver
 
 ## Admin commands
 
-`db list`, `db add`, `db remove`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db script`, `db create`, `db create-table`, `db migrate`, `db backup`, `db prepare`, `db activate`, `db reindex` (these three only on an exclusive connection), `db validate`, `db cache` (Q-043h). `db sql` and `db script` run with the rights of the database user of the connection (Q-043f). Schema changes go through scripts and `db migrate` (`db/migrations/<name>/`); the ORM never changes a schema at run time.
+The commands are words of the database part: `eve db <command>` (D-163). `db list`, `db add`, `db remove`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db script`, `db create`, `db create-table`, `db migrate`, `db backup`, `db prepare`, `db activate`, `db reindex` (these three only on an exclusive connection), `db validate`, `db cache` (Q-043h), `db proc list`, `db proc reload` (D-166), `db serve` (the test database of the remote path, the former `evedb serve`). `db sql` and `db script` run with the rights of the database user of the connection (Q-043f). Schema changes go through scripts and `db migrate` (`db/migrations/<name>/`); the ORM never changes a schema at run time.
 
 ## Open points
 

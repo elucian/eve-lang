@@ -1,0 +1,49 @@
+# sql function: an Eve function that SQLite calls from SQL, registered on every connection (D-166)
+** spec: library/database.md#sql-functions
+driver e96_sql_function is
+  class Taxed = {id: Integer, tax: Decimal} <: Record;
+  class Flag = {id: Integer, big: Logic, label: String} <: Record;
+
+  sql function tax(amount: Decimal, country: String) => (@result: Decimal) is
+    let result := (amount * 0.20d if country == "FR" else amount * 0.10d);
+  return;
+
+  sql function big(amount: Decimal) => (@result: Logic) is
+    let result := amount > 100d;
+  return;
+
+  ** a NULL reaches only a nullable parameter
+  sql function label(note: String?) => (@result: String) is
+    let result := ("none" if note == null else note);
+  return;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+    for t in shop.query!(:Taxed)("select id, tax(amount, country) as tax from orders order by id") do
+      print "{t.id}: {t.tax}";
+    done;
+    for f in shop.query!(:Flag)("select id, big(amount) as big, label(note) as label from orders order by id") do
+      print "{f.id} {f.big} {f.label}";
+    done;
+    print shop.execute!("update orders set note = label(note) where big(amount)");
+    new n := shop.query_one!(:Flag)("select id, big(amount) as big, note as label from orders where id = 3");
+    print n.label;
+    print tax(50d, "DE");                 ** still an ordinary Eve function
+  return;
+end e96_sql_function;
+/*@expect
+{
+  "stdout": [
+    "1: 10.0000",
+    "2: 20.0000",
+    "3: 24.0000",
+    "1 False none",
+    "2 True rush",
+    "3 True none",
+    "2",
+    "none",
+    "5.00"
+  ]
+}
+*/

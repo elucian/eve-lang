@@ -130,9 +130,15 @@ commit-stmt  = "commit" ;
 rollback-stmt = "rollback" ;                                         (* both take the suffix: rollback if dry_run; *)
 update-block = "update" , name-path , "do" , { statement } , "done" , ";" ;     (* only for a record; the names of its fields are in scope, D-158 *)
 retry-stmt   = "retry" , [ "after" , duration ] ;                    (* replaces "retry" in recover: retry after 2s if $error.attempt < 5; *)
+function     = "sql" , "function" , name , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
+               { declaration | statement } , "return" , ";" ;       (* adds to function: a SQL function in Eve, no "!", no type list (D-166) *)
+declaration  = … | external ;                                        (* adds to declaration *)
+external     = "external" , ( "procedure" , name , [ "(" , [ parameters ] , ")" ]
+                            | "function" , name , "!" , "(" , [ parameters ] , ")" , "=>" , results ) ,
+               "in" , string , [ "as" , string ] , ";" ;             (* a native stored procedure of a connection (D-166, Q-043e) *)
 ```
 
-`table`, `commit`, `rollback`, `update`, `after` and the words of the clauses (`key`, `generated`, `version`, `column`, `reference`, `read`, `only`, `temporary`, `cached`) are contextual (D-116): each is a keyword only in the position shown, and stays a free name elsewhere, so a field called `key` or `version` is still allowed. Meaning: `../library/database.md`. A table that has no `end` is the short form `table countries: Country in "sales";`.
+`table`, `commit`, `rollback`, `update`, `after`, `sql` (only before `function`), `external` and the words of the clauses (`key`, `generated`, `version`, `column`, `reference`, `read`, `only`, `temporary`, `cached`) are contextual (D-116): each is a keyword only in the position shown, and stays a free name elsewhere, so a field called `key` or `version` is still allowed. Meaning: `../library/database.md`. A table that has no `end` is the short form `table countries: Country in "sales";`.
 
 ## Declarations
 

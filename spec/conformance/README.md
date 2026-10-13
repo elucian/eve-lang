@@ -39,7 +39,11 @@ What a test must produce is written **in the test**, in one or more comment bloc
 | `contains` | strings that must all appear in the standard output | none |
 | `stderr` | strings that must all appear in the error output (an implementation may word its messages differently, so only the parts that matter are given) | none |
 | `syntax_error` | the test must be refused by the compile step (`--check`, exit 65) | `false` |
-| `files` | project tests: files that must exist after the run, with their content | none |
+| `files` | project tests: files that must exist after the run, with their content (line endings and trailing white space ignored) | none |
+| `bytes` | files that must hold exactly these bytes, the UTF-8 of the text: line endings (`
+`), a BOM (`﻿`) and trailing spaces count (data-types.md: "the tests of level 5 compare these bytes") | none |
+| `command` | the arguments of `eve` alone, with no script: the test runs one command of the machine (`["db", "proc", "list"]`) | none |
+| `client` | with `command`: the command starts a machine that keeps running, and this program (`["node", "check/api.test.js"]`) is the test; its output is checked | none |
 | `state` | introspection states after the run: the map `jobs` of the process (`{"j1": "pass"}`) *(planned)* | none |
 | `skip` | a reason: the test is not run on this implementation | none |
 | `note` | free text | |

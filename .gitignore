@@ -56,3 +56,6 @@ __pycache__/
 /test/**/out/
 test/level5/*/db/*.db
 test/level5/*/db/*.db-*
+
+# databases of the benchmarks (test/bmark/eve.cfg)
+test/bmark/db/

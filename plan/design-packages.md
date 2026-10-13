@@ -108,7 +108,7 @@ Each arrow is an `addImport` in the root `build.zig`, so a wrong import is a bui
 
 | Part | Command | Examples | Today |
 |---|---|---|---|
-| runtime | `eve vm …`, or `eve` with a script or the options of today | `eve file.eve`, `eve -x f.eve`, `eve -lsn`, `eve vm --api` | the same |
+| runtime | `eve vm …`, or `eve` with a script or the options of today | `eve file.eve`, `eve -x f.eve`, `eve --listen`, `eve vm --api` | the same |
 | compiler | `eve cp …` | `eve cp --check f.eve`, `eve cp --doc lib lib/doc`, `eve cp --compile f.eve` (0.0.6), `eve cp project new …` | `eve --check`, `eve --doc` and `eve project` stay as synonyms |
 | database | `eve db …` | `eve db serve --test`, `eve db sql <name> "…"`, `eve db describe …`, `eve db proc list`, `eve db proc reload` | the commands of `evedb.exe` |
 | UI | `eve ux …` | `eve ux start`, `eve ux stop`, `eve ux status` | `eve --serve start`, … (synonyms) |
@@ -128,13 +128,13 @@ Each arrow is an `addImport` in the root `build.zig`, so a wrong import is a bui
 - The shortcuts do **not** change the working folder (the `build` and test words of `run.sh` still do), so a relative path in the arguments means the folder the user is in: `../../run.sh evevm main.eve` works from inside a test project.
 - The words come before the default of `run.sh` (a test name or a level for `runtest.py`); no test is named `eve…`, so nothing clashes.
 - On Windows `run.sh` runs in Git Bash, as today.
-- **Users write their own start scripts**: a project keeps, for example, `start.sh` with `eve db serve --port 8044 &` and `eve -lsn --serve`, with the options its machine needs. `eve project new` can write such a script in the new project (a template, decided in A8).
+- **Users write their own start scripts**: a project keeps, for example, `start.sh` with `eve db serve --port 8044 &` and `eve --listen --serve`, with the options its machine needs. `eve project new` can write such a script in the new project (a template, decided in A8).
 
 ## 5. The serving machine: one process, parts as tasks
 
 A **direct command** (`eve file.eve`, `eve -x`, `evecp --check`, `evedb sql …`) runs in the process of the command. It uses only the parts it needs, called as functions. Same speed as today.
 
-**A serving machine** (`eve -lsn`, `eve --serve`, `evedb serve`, or several of them on one line) is one process per domain and port (D-162: the singleton; a second start fails with exit 75).
+**A serving machine** (`eve --listen`, `eve --serve`, `evedb serve`, or several of them on one line) is one process per domain and port (D-162: the singleton; a second start fails with exit 75).
 
 - **Active parts.** A part is active when its door is open or when another active part needs it: a run that opens a database activates evedb.
 - **Concurrency.** Parts and doors run as concurrent tasks of `std.Io`, the I/O interface of Zig 0.16 that `server.zig` already uses.

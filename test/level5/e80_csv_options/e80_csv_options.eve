@@ -44,6 +44,10 @@ end e80_csv_options;
       "1,Ann",
       "2,a;b"
     ]
+  },
+  "bytes": {
+    "out/nohead.csv": "1,Ann\r\n2,a;b\r\n",
+    "out/bom.csv": "\ufeffid,name\n1,Ann\n2,a;b\n"
   }
 }
 */

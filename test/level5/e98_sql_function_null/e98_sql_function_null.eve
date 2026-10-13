@@ -1,0 +1,29 @@
+# SQL NULL maps only to a nullable type: a NULL for a parameter of type String stops the query with $err_sql (D-166)
+** spec: library/database.md#sql-functions
+driver e98_sql_function_null is
+  class Person = {id: Integer, name: String} <: Record;
+
+  sql function shout(s: String) => (@result: String) is
+    let result := "hello {s}";
+  return;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+    print shop.query_one!(:Person)("select id, shout(name) as name from people where id = 1").name;
+    new all := shop.query!(:Person)("select id, shout(name) as name from people order by id");
+    print "not reached";
+  recover
+    print $error.code == $err_sql;
+    print $error.message;
+  return;
+end e98_sql_function_null;
+/*@expect
+{
+  "stdout": [
+    "hello ann",
+    "True",
+    "SQL function shout failed: NULL for the parameter s: String; declare it String?"
+  ]
+}
+*/

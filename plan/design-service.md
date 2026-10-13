@@ -67,6 +67,8 @@ A DMS is also the natural unit of memory for the VM: everything a driver allocat
 
 ## 3a. Local, remote and listener: `-loc`, `-rem`, `-lsn` (author, 2026-10-11)
 
+**Revised by D-169 (2026-10-13):** `-lsn [port]` is now `--listen [start|stop|restart|status]`, the same form as `--serve`; the ports come from `eve.cfg` only. The text below keeps the first form as it was decided.
+
 A command of the CLI goes to a machine. Three options choose which one; the short names have three letters, one per option, so they read as words and never clash with the one-letter options `-h -v -d -x -s -m -i -t -c` (options are not bundled, so `-lsn` is one option, not `-l -s -n`). They were `-lo`, `-r` and `-ls` until the revision of the same day (D-162). `-x` alone never looks for a machine: it is the fast way to run a script.
 
 | Option | Long | Meaning |

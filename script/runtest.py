@@ -52,6 +52,8 @@ Other folders are not tests. The expectation keys, all optional:
                A value that is an object, or a list that holds objects, is JSON: the file is
                parsed and must match it (an object may have more keys; "*" matches any value).
                "{date}" in a file name is the date of the run in UTC, YYYY-MM-DD (D-114)
+  "bytes"      {"out/x.csv": "text"}: each file must hold exactly these bytes, the UTF-8 of the
+               text: line endings (\r\n), a BOM (\ufeff) and trailing spaces count
   "timeout"    seconds before the run is cancelled (default: the option --timeout)
   "skip"       a reason: the test is not run
   "note"       free text
@@ -111,6 +113,12 @@ def rel(path):
 VARIATION = re.compile(r"^([a-z]\d+)_test\d+\.eve$")
 
 
+def natural(name):
+    """Sort key of a test or a folder: e9 before e10 before e100 (letters, then the number, then the rest)."""
+    m = re.match(r"([a-z]+)(\d+)(.*)", os.path.basename(name))
+    return (m.group(1), int(m.group(2)), m.group(3)) if m else (name, 0, "")
+
+
 def variations(folder, name):
     """The variation drivers of a project folder (D-133): <code>_test1.eve, <code>_test2.eve, ..."""
     code = name.split("_")[0]
@@ -134,7 +142,7 @@ def level_tests(level):
     if not os.path.isdir(folder):
         die(f"no such level: test/{level}")
     tests = []
-    for f in sorted(os.listdir(folder)):
+    for f in sorted(os.listdir(folder), key=natural):
         path = os.path.join(folder, f)
         if f.endswith(".eve") and os.path.isfile(path):
             tests.append(path)
@@ -402,6 +410,14 @@ def run_test(eve, test, timeout):
                 problems.append(f"file differs (JSON): {name}")
         elif norm(got) != norm("\n".join(want) if isinstance(want, list) else want):
             problems.append(f"file differs: {name}")
+    for name, want in exp.get("bytes", {}).items():
+        path = os.path.join(test_cwd(test), name)
+        if not os.path.isfile(path):
+            problems.append(f"file not created: {name}")
+            continue
+        with open(path, "rb") as f:
+            if f.read() != want.encode("utf-8"):
+                problems.append(f"file bytes differ: {name}")
     if "stdout" not in exp and not exp.get("contains") and not exp.get("syntax_error") and prints_output(test):
         problems.append("no expected output declared (/*@expect*/ block or expect.json; the test prints)")
     res["verdict"] = "FAIL" if problems else "PASS"
@@ -563,7 +579,7 @@ def wrap_desc(text, width=DESC, rows=2):
 def readme_block(state):
     """Fixed-width list of the tests of one level, with the status of the last run. The details
     (failures, runs, last run, reason) are in status.json of the folder."""
-    names = sorted(state)
+    names = sorted(state, key=natural)
 
     def code_of(name):
         head = name.split("_")[0]

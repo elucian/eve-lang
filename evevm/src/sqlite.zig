@@ -69,6 +69,17 @@ pub const Db = struct {
         return @intCast(c.sqlite3_changes(self.handle));
     }
 
+    // Zig tip: `user` is a `*anyopaque`, a pointer to "something": C knows no Zig types, so the pointer
+    // travels through SQLite untyped and the callback gets it back with `Call.userData`, then turns it into
+    // the right type with `@ptrCast(@alignCast(...))`. The last three arguments of the C function are the
+    // step and final functions of an aggregate and a destructor: none here, so `null`.
+    /// Adds a scalar function `name` with `nargs` arguments to SQL on this connection (a `sql function`, D-166).
+    /// It is deterministic, so SQLite may use it in indexes and may call it fewer times.
+    pub fn createFunction(self: *Db, name: [:0]const u8, nargs: u8, user: *anyopaque, func: FnCallback) Error!void {
+        const flags = c.SQLITE_UTF8 | c.SQLITE_DETERMINISTIC;
+        if (c.sqlite3_create_function_v2(self.handle, name.ptr, nargs, flags, user, func, null, null, null) != c.SQLITE_OK) return error.Exec;
+    }
+
     /// Compiles one SQL statement; run it with `step` and release it with `finalize`.
     pub fn prepare(self: *Db, sql: [:0]const u8) Error!Stmt {
         var stmt: ?*c.sqlite3_stmt = null;
@@ -173,6 +184,107 @@ pub const Stmt = struct {
     }
 };
 
+// Zig tip: `callconv(.c)` gives a Zig function the calling convention of C, so a C library can call it
+// through a pointer. Its parameter types must be C types: `c_int`, and `[*c]` pointers, which may be null
+// and may be indexed like an array. SQLite calls such a function for each row where SQL calls it.
+/// The C signature of a SQL function written in Zig: the call, the number of arguments, the arguments.
+pub const FnCallback = *const fn (ctx: ?*CallHandle, argc: c_int, argv: [*c]?*ArgHandle) callconv(.c) void;
+
+// Zig tip: `pub const X = c.y;` gives a C type a Zig name. A file that writes a callback can then spell its
+// parameter types (`?*sqlite.CallHandle`) without importing the C header itself.
+/// The C handle of one call of a SQL function, and of one of its arguments.
+pub const CallHandle = c.sqlite3_context;
+pub const ArgHandle = c.sqlite3_value;
+
+// Zig tip: a struct with one field wraps a C pointer, so the rest of the VM uses methods (`arg.int()`)
+// and never imports the C header itself: only this file knows SQLite's C API.
+/// One argument of a call of a SQL function.
+pub const Arg = struct {
+    handle: ?*c.sqlite3_value,
+
+    // Zig tip: `kind` relies on the same Zig feature as `Stmt.columnKind`: see the tip there.
+    /// The storage class of the argument: the same kinds as a column.
+    pub fn kind(self: Arg) Stmt.Kind {
+        return switch (c.sqlite3_value_type(self.handle)) {
+            c.SQLITE_INTEGER => .integer,
+            c.SQLITE_FLOAT => .real,
+            c.SQLITE_TEXT => .text,
+            c.SQLITE_BLOB => .blob,
+            else => .null,
+        };
+    }
+
+    // Zig tip: a method may take the struct by value (`self: Arg`) when it changes nothing: the struct is one pointer,
+    // so the copy costs nothing. `real` and `text` below do the same.
+    /// The integer value of the argument.
+    pub fn int(self: Arg) i64 {
+        return c.sqlite3_value_int64(self.handle);
+    }
+
+    // Zig tip: `real` relies on the same Zig feature as `int` above: see the tip there.
+    /// The float value of the argument.
+    pub fn real(self: Arg) f64 {
+        return c.sqlite3_value_double(self.handle);
+    }
+
+    // Zig tip: `text` relies on the same Zig feature as `Stmt.columnText`: see the tip there. The slice
+    // borrows SQLite's memory, valid until the function returns: copy it to keep it.
+    /// The text of the argument; "" for NULL.
+    pub fn text(self: Arg) []const u8 {
+        const ptr = c.sqlite3_value_text(self.handle);
+        if (ptr == null) return "";
+        const len: usize = @intCast(c.sqlite3_value_bytes(self.handle));
+        return ptr[0..len];
+    }
+};
+
+// Zig tip: `Call` relies on the same Zig feature as `Arg` above: a struct around one C pointer, so no other file needs
+// the C header. Its methods take `self` by value, as `Arg.int` does.
+/// One call of a SQL function: it gives back the user pointer of `createFunction` and takes the result.
+pub const Call = struct {
+    handle: ?*c.sqlite3_context,
+
+    // Zig tip: `?*anyopaque` is an optional untyped pointer: the caller checks it (`.?`) and gives it a type with
+    // `@ptrCast(@alignCast(...))`, see `createFunction`.
+    /// The pointer given to `createFunction`.
+    pub fn userData(self: Call) ?*anyopaque {
+        return c.sqlite3_user_data(self.handle);
+    }
+
+    // Zig tip: a function that returns `void` and can not fail needs no `!`: the C call gives no status to check.
+    /// The result is an integer.
+    pub fn resultInt(self: Call, v: i64) void {
+        c.sqlite3_result_int64(self.handle, v);
+    }
+
+    // Zig tip: `resultReal` relies on the same Zig feature as `resultInt` above: see the tip there.
+    /// The result is a float.
+    pub fn resultReal(self: Call, v: f64) void {
+        c.sqlite3_result_double(self.handle, v);
+    }
+
+    // Zig tip: `resultNull` relies on the same Zig feature as `resultInt` above: see the tip there.
+    /// The result is NULL.
+    pub fn resultNull(self: Call) void {
+        c.sqlite3_result_null(self.handle);
+    }
+
+    // Zig tip: `resultText` uses the "transient" destructor of `Stmt.bindText` (see the tip there): SQLite
+    // copies the text at once, so the Zig memory may be freed right after the call.
+    /// The result is a text; SQLite keeps its own copy.
+    pub fn resultText(self: Call, v: []const u8) void {
+        const transient: c.sqlite3_destructor_type = @ptrCast(@alignCast(@as(?*anyopaque, @ptrFromInt(std.math.maxInt(usize)))));
+        c.sqlite3_result_text(self.handle, v.ptr, @intCast(v.len), transient);
+    }
+
+    // Zig tip: a slice carries its length, so the message goes to C as a pointer and a length (`msg.ptr`,
+    // `msg.len`) and needs no zero byte at its end.
+    /// The call failed: the statement that made it stops with this message.
+    pub fn resultError(self: Call, msg: []const u8) void {
+        c.sqlite3_result_error(self.handle, msg.ptr, @intCast(msg.len));
+    }
+};
+
 // Zig tip: `defer` runs its statement when the scope ends, by any path, also when `try`
 // returns an error: the database is closed even if an expectation fails. (Eve has the same
 // statement, D-081.)
@@ -224,4 +336,31 @@ test "sqlite: binds text, null and real, and reads the names and kinds of the co
     try std.testing.expectEqual(Stmt.Kind.text, q.columnKind(0));
     try std.testing.expectEqual(Stmt.Kind.null, q.columnKind(1));
     try std.testing.expectEqualStrings("Smith, Bob", q.columnText(0));
+}
+
+// Zig tip: a test may declare a function inside a struct and take its address: `twice.call` has the C
+// calling convention, so it can be given to SQLite. `std.testing.expectError` checks that a call fails
+// with that exact error.
+test "sqlite: a function written in Zig is called from SQL, and its error stops the statement" {
+    var db = try Db.open(":memory:");
+    defer db.close();
+    const twice = struct {
+        fn call(ctx: ?*c.sqlite3_context, argc: c_int, argv: [*c]?*c.sqlite3_value) callconv(.c) void {
+            const k = Call{ .handle = ctx };
+            if (argc != 1) return k.resultError("one argument");
+            const a = Arg{ .handle = argv[0] };
+            if (a.kind() == .null) return k.resultError("NULL is refused");
+            k.resultInt(a.int() * 2);
+        }
+    };
+    var marker: u8 = 0;
+    try db.createFunction("twice", 1, &marker, twice.call);
+    var q = try db.prepare("select twice(21)");
+    try std.testing.expect(try q.step());
+    try std.testing.expectEqual(@as(i64, 42), q.columnInt(0));
+    q.finalize();
+    var bad = try db.prepare("select twice(null)");
+    defer bad.finalize();
+    try std.testing.expectError(error.Step, bad.step());
+    try std.testing.expectEqualStrings("NULL is refused", db.errorMessage());
 }

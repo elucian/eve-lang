@@ -222,6 +222,8 @@ pub const Node = struct {
     public: bool = false,
     /// A function or procedure declared `async`: it runs as a task, started by `spawn` or `await` (D-143).
     is_async: bool = false,
+    /// A function declared `sql function`: SQLite (and later DuckDB) can call it from SQL (D-166).
+    is_sql: bool = false,
     /// The traits a class adopts, after its superclass in `<: (Object, Printable)` (D-145).
     extra: []const *const Node = &.{},
     /// A call: the declaration the checker selected among overloaded ones, when it can decide at compile time

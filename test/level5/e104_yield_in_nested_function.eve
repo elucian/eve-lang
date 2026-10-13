@@ -1,0 +1,23 @@
+# yield in a function declared inside a generator is a compile error: only the body of the generator itself yields (D-067)
+** spec: syntax/declarations.md#generators-level-5
+driver e104_yield_in_nested_function is
+  generator outer() => (@x: Integer) is
+    function inner() => (@r: Integer) is
+      yield 1;
+    return;
+    yield 2;
+  return;
+
+  process main is
+    print "x";
+  return;
+end e104_yield_in_nested_function;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "yield outside a generator"
+  ]
+}
+*/

@@ -11,6 +11,9 @@ end e30_null_in_plain_field;
 /*@expect
 {
   "syntax_error": true,
-  "exit": 65
+  "exit": 65,
+  "contains": [
+    "name is not optional"
+  ]
 }
 */

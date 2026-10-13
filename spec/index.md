@@ -22,10 +22,10 @@ Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions:
 | Eve macro (hybrid script) | [syntax/declarations.md](syntax/declarations.md#eve-macro-level-5) | level 5, first draft (2026-10-10): D-152; tests e04, e16 to e22 |
 | Data file types, ETL | [semantics/data-types.md](semantics/data-types.md) | level 5, first draft (2026-10-10), as proposed in Q-039 and the remote design: `CSV`, `JSON`, `TXT` (0.4), `XML` (0.5), `HTML`, `HTMT` (0.6), Unicode streams, rejects, canonical form, the ETL cycle |
 | Data language | [library/data-language.md](library/data-language.md) | level 5, first draft (2026-10-10), as proposed in Q-044 and Q-024: generators, time types, `Decimal`, `T?`, `Bytes`, `fs`, HTTP client, secrets, `os.run`, gzip |
-| Database layer | [library/database.md](library/database.md) | level 5, first draft (2026-10-10), as proposed in Q-043 and Q-046: records, `table`, mapping and its validation, tracked records, `commit;`, `rollback;`, isolation, direct SQL, errors, drivers, the Eve server |
+| Database layer | [library/database.md](library/database.md) | level 5, first draft (2026-10-10), as proposed in Q-043 and Q-046: records, `table`, mapping and its validation, tracked records, `commit;`, `rollback;`, isolation, direct SQL, errors, drivers, the Eve server; stored procedures (`sql/`, `proc/`, `external`) and `sql function` (D-166, 2026-10-12) |
 | Multitasking | [semantics/multitasking.md](semantics/multitasking.md) | level 4, first draft (2026-10-08): parallel groups, channels, tasks in a job, durations; D-140 to D-144; tests d01 to d24 |
 | Standard library | [library/atomic.md](library/atomic.md) | `Atomic(:T)`, first draft (2026-10-08); the rest of the library is not started |
-| Machine | [library/machine.md](library/machine.md) | the doors IPC and HTTP, `-lsn`, `--serve`, `-loc`, `-rem`, JSON-RPC, the web folder (D-162, 2026-10-11) |
+| Machine | [library/machine.md](library/machine.md) | the doors IPC and HTTP, `--listen`, `--serve`, `-loc`, `-rem`, JSON-RPC, the web folder (D-162, 2026-10-11); the parts of `eve` (`vm`, `cp`, `db`, `ux`), the serving machine, the machine API `vm.*` and `db.*`, the reverse proxy, ACP (D-163 to D-165, 2026-10-12) |
 | Other semantics | `semantics/*` | levels 3 to 7 not started |
 | Library | `library/*` | not started (phase 5) |
 
@@ -45,4 +45,5 @@ Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decis
 | 2026-10-10 | Level 5 data and database: `library/database.md`, `library/data-language.md`, `semantics/data-types.md` rewritten; `table`, `commit`, `rollback`, `retry after`, `$isolation`, `$lock_timeout`, `$read_only`, error codes 50 to 57; listed in `plan/review_level5.md` |
 | 2026-10-10 | Eve macro: a hybrid script with shared declarations, aspects and one driver (D-152); tests e16 to e22, e04 is now a macro |
 | 2026-10-09 | No self-calling lambdas (D-147); generic functions, procedures, methods and processes (D-148); overloading (D-149); tests e01 to e15 |
+| 2026-10-12 | The parts of `eve` and the serving machine, the machine API `vm.*` and `db.*`, remote access through a reverse proxy, ACP (`library/machine.md`, D-163 to D-165); stored procedures in `sql/` and `proc/`, `external`, `sql function` (`library/database.md`, D-166); keywords `sql` and `external` (contextual) |
 | 2026-10-06 | Level 1: keywords, grammar, declarations, statements, expressions, types, control, errors, conformance (D-094); lexical rules and operator tables follow D-063 to D-087 |

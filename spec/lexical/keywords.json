@@ -1,7 +1,7 @@
 {
   "$schema": "../schema/keywords.schema.json",
   "specVersion": "0.1-draft",
-  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by case close commit create cursor del delete descend discard external feature fetch group halt insert into item label limit object offset open order package pop record reset rest result rollback select step store switch to trial view where with add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names. Contextual words (D-116) are keywords only where the grammar expects them (marked contextual: true); everywhere else they are ordinary names. The author prefers a contextual keyword to a reserved one whenever the grammar allows it. Reserved on purpose, although they could be contextual: job, parallel and self (D-117).",
+  "note": "Reserved words (D-094, answers Q-002). Words of the old table that no construct uses are not reserved: alter analyze append ascend augment by case close commit create cursor del delete descend discard feature fetch group halt insert into item label limit object offset open order package pop record reset rest result rollback select step store switch to trial view where with add any. print, read and write are library functions (D-086), not keywords. type is not a keyword: user types are declared with class, and type(x) is a library function (Q-029, D-096). A word returns when a decision gives it a construct. True and False are constants of type Logic; null is a value; none of them is a keyword. Words of the levels 2 to 7 are reserved from level 1, so a script never uses them as names. Contextual words (D-116) are keywords only where the grammar expects them (marked contextual: true); everywhere else they are ordinary names. The author prefers a contextual keyword to a reserved one whenever the grammar allows it. Reserved on purpose, although they could be contextual: job, parallel and self (D-117).",
   "items": [
     {
       "id": "abort",
@@ -251,6 +251,14 @@
       "status": "stable",
       "ref": "syntax/declarations.md#imports-and-modules-level-3",
       "summary": "Lists the members a module makes public (level 3)."
+    },
+    {
+      "id": "external",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#stored-procedures",
+      "summary": "Declares a native stored procedure of a connection by its signature: `external procedure archive_orders(before: Date) in \"sales\";` (level 5, D-166)."
     },
     {
       "id": "finalize",
@@ -593,6 +601,14 @@
       "status": "draft",
       "ref": "semantics/multitasking.md#tasks-in-a-job",
       "summary": "In the do region of a job, starts an async procedure as a task and goes on (level 4, D-143)."
+    },
+    {
+      "id": "sql",
+      "category": "declaration",
+      "status": "draft",
+      "contextual": true,
+      "ref": "library/database.md#sql-functions",
+      "summary": "Only before `function`: `sql function tax(…)` is an Eve function that SQLite and DuckDB can call from SQL (level 5, D-166)."
     },
     {
       "id": "start",

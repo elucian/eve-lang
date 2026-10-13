@@ -1,32 +1,32 @@
 # test Level 5
 
-This level tests version 0.4: the generic functions, procedures, methods and processes and the overloading of subprograms (D-147 to D-149, `spec/syntax/declarations.md#generic-subprograms-and-overloading`), then the data language and the database layer: connections, query streams, bulk loads, transactions, checkpoints, admin commands (plan/decision_level5.md). Database tests run against the Eve database (SQLite), so they need no database server.
+This level tests level 5, version 0.0.5 (D-167; the version map still calls it "Version 0.4" until its headings are renumbered): the generic subprograms and the overloading (D-147 to D-149), the Eve macro (D-152), the generators, then the data language and the database layer: data files, `Decimal`, `Instant`, `Secret`, connections, the ORM, transactions, checkpoints, the stored procedures and the SQL functions written in Eve (D-166), the commands `project init` and `project new`, and the first step of the machine (its IPC and HTTP doors and the machine API, D-162, D-165). The database tests run against **application SQLite files** of each test (`eve.cfg` declares the connection, `db/` holds the file); the core database of the project (`db/local.db`, D-156) is used only by the checkpoints. The staging database is a DuckDB database (D-159); until the VM loads DuckDB on demand (D-166), e92 uses a SQLite file in its place.
 
-A test is a single file. A test that needs aspects is an **Eve macro** (D-152): the shared declarations, the aspects and the driver are in one file, so no project folder is needed; a folder (D-073) is kept only for a test of the project itself (`asp/`, `lib/`, search paths). The expectations are in the `/*@expect*/` block at the end of the file. Test names start with `e`. Tests e01 to e15 are written first (2026-10-09): they fail until the VM has the generic subprograms and overloading. Tests e16 to e22 (2026-10-10) check the Eve macro, and e04 is a macro too; they fail until the VM reads a macro. The compile-error tests check the message with `contains`, so a VM that does not know the syntax yet does not pass them.
+**Single files and folders.** A test of the language alone is a single file; a test that needs aspects is an **Eve macro** (D-152), so it stays one file. A test is a folder (D-073) when it needs files next to it: a project (`asp/`, `lib/`, `proc/`, search paths), data files (`out/`, `data/`), a database (`eve.cfg`, `db/`, `sql/`) or the client of a machine (`check/`, `web/`). About half of the tests are folders. The expectations are in the `/*@expect*/` block at the end of the main file; a folder may hold variations `eNN_testK.eve` with their own block (e95, e102). Test names start with `e`.
 
-## The tests e23 to e53 (written first, for review)
+**Keys of the expectations used here** (`spec/conformance/README.md`): `stdout`, `contains`, `syntax_error` for the compile errors; `files` (content, line endings ignored) and `bytes` (exact bytes: CRLF, a BOM, trailing spaces; e37, e80, e82); `command` to run a command of `eve` with no script (e54, e55, e102_test1, e95); `client` for a program that drives a running machine (e95_test1 to e95_test4, Node.js 18 or later).
 
-Written on 2026-10-10 from the specification (`spec/library/database.md`, `spec/library/data-language.md`, `spec/semantics/data-types.md`, `spec/syntax/declarations.md#generators-level-5`), before any code of the VM, for the author to review (TDD). Each one checks one rule, and the whole group fails today. **Every expected output is derived from the specification; if a test and the spec disagree, the spec is checked first, then the test.** The decisions behind them are D-156 to D-159 and `plan/review_level5.md`.
+| Tests | Part |
+|---|---|
+| e01 to e15, e57 to e60 | generic functions, procedures, methods and processes; overloading; extension methods |
+| e16 to e22, e61 to e65 | the Eve macro |
+| e23 to e26, e66 to e72, e104 | generators: `for`, `next()`/`value`/`done`/`close()`, laziness, errors, `yield` outside a generator |
+| e27 to e30, e73 to e79, e103, e105 to e107 | `Decimal` (exact, never mixed with `Real` by an operator: a compile error; converted by `d.real()`, `r.decimal()` and `:=`), `Instant` and `time.now!()`, `Secret` (prints `***`, never joined to a text), optional fields and `null` |
+| e31 to e38, e80 to e86 | data files: `fs`, CSV, JSON Lines and arrays, TXT, NFC, encodings, rejects, the methods of a stream (the protocol of a generator) |
+| e39 to e45 | compile errors of the database declarations |
+| e46 to e53, e87 to e94 | the ORM on SQLite: dirty fields, optimistic locking and `retry`, `rollback;`, `update` blocks, `validate`, the mapping version, `commit;` and checkpoints, reads, writes, reference order, `load!`, temporary tables, work outside a job |
+| e54, e55 | the commands `project init` and `project new` (F-TLS-23) |
+| e56 | a local ETL: CSV to SQLite to JSON (its own `readme.md`) |
+| e95 | the machine: IPC and HTTP doors, `--listen`, `--serve` and their words, `-loc`, `-rem`, the machine API `vm.*` with the first names, `eve ux start`/`stop` (D-162, D-163, D-165) |
+| e96 to e102 | `sql function` (registration, errors and `$err_sql`, NULL only for nullable types, compile rules), Eve stored procedures in `proc/`, `eve db proc list` (D-166) |
 
-| Tests | Part | Kind |
-|---|---|---|
-| e23 to e26 | generators: `for`, `next()`/`value`/`done`/`close()`, `yield` outside a generator, a generator called as a statement | single files |
-| e27 to e30 | `Decimal`, `Instant`, `Secret`, a `null` for a field that is not optional | single files |
-| e31 to e38 | files: `fs`, the CSV writer and reader, a bad row, rejects, JSON Lines, `TXT`, NFC | project folders (the files are checked in `out/`) |
-| e39 to e45 | database compile errors: unknown key field, reference cycle, `temporary`, `commit;` outside a job, `update` of a key, `read only`, two connections in a job | single files, with the words of the message |
-| e46 to e53 | the ORM on a SQLite file of the test (`eve.cfg`, `db/mappings.json`, `sql/schema.sql` in the folder): dirty fields, optimistic lock, `rollback;`, error in a job, `update` block, `validate`, mapping version (exit code 4), `commit;` and checkpoint | project folders |
-
-Not written yet, because they need a running server or more of the design: the HTTP client, `os.run`, gzip, `evedb` staging and `prepare`/`activate`, the Eve server (level 6), the encodings other than UTF-8, `retry after`, `BatchError`, `TXT` with `overflow`, XML, PRN and PDF. The negative tests e25, e26 and e39 to e45 fail today for the right reason only when the message of the compile error contains the words that the test expects (`contains`).
-
-**e54 and e55 (2026-10-11)** test the commands `project init <folder>` and `project new <folder>` (F-TLS-23, `plan/design-project-layout.md`). They are the first tests that run a command of the VM and not a script: the key `"command"` of the expectations gives the arguments of `eve`; e54 checks the files of the new project in `out/`, e55 that `new` fails on a non-empty folder (exit 73). Both pass.
-
-**e56 (2026-10-11)** is the first test of the data language that runs: a local ETL, a CSV file of `data/in/` is loaded into a SQLite database (`db/cache.db`), transformed with SQL and written as JSON in `data/out/`. No server, no network. It is a project folder with its own `readme.md` (`e56_etl_csv_sqlite_json/readme.md`) that explains the data flow, the files and what the VM needed. It passes.
+Not written yet, because they need a running server, DuckDB in the VM or more of the design: the HTTP client, `os.run`, gzip, DuckDB staging and `prepare`/`activate`, `external` procedures (they need a database with stored procedures), the Eve server (level 6), `retry after`, `BatchError`, `$isolation`, XML, PRN and PDF.
 
 ## Tests
 
 <!-- TESTS:BEGIN (generated by script/runtest.py, do not edit) -->
 
-98 tests (98 PASS). Failures, runs, last run and the reason of a failure are in `status.json` of this folder.
+112 tests (112 PASS). Failures, runs, last run and the reason of a failure are in `status.json` of this folder.
 
 | Code | Test                          | Status | Description                                                                                    |
 |------|-------------------------------|--------|------------------------------------------------------------------------------------------------|
@@ -101,11 +101,11 @@ Not written yet, because they need a running server or more of the design: the H
 | e69  | e69_generator_method          | PASS   | a generator can be a member of a class; a<br>comprehension collects its values (D-067)         |
 | e70  | e70_generator_two_results     | PASS   | a generator has exactly one result: compile<br>error (D-067)                                   |
 | e71  | e71_generator_ref_param       | PASS   | a generator has inputs only, by value: an @<br>parameter is a compile error (D-067)            |
-| e72  | e72_yield_in_process          | PASS   | yield in a process, or in a function a<br>generator calls, is a compile error: only...         |
+| e72  | e72_yield_in_process          | PASS   | yield in a process is a compile error: only<br>the body of a generator yields (D-067); in...   |
 | e73  | e73_decimal_ops               | PASS   | Decimal arithmetic is exact: subtraction,<br>division, negation, remainder, comparison...      |
-| e74  | e74_decimal_real_mix          | PASS   | a Decimal and a Real are never mixed without<br>a conversion: run-time error (D-080)           |
+| e74  | e74_decimal_real_mix          | PASS   | a Decimal and a Real are never mixed without<br>a conversion: an operand of the wrong type...  |
 | e75  | e75_instant_forms             | PASS   | an Instant keeps a fraction of a second,<br>compares by time, and a date that does not...      |
-| e76  | e76_secret_rules              | PASS   | a Secret is not turned into a String: joining<br>it to a text is an error...                   |
+| e76  | e76_secret_rules              | PASS   | a Secret prints as *** alone, in<br>interpolation and in a collection...                       |
 | e77  | e77_optional_fields           | PASS   | a field with ? holds null; a plain field<br>never does; null is tested before use (D-080)      |
 | e78  | e78_null_constructor_argument | PASS   | null as an argument for a member that is not<br>optional is a compile error, in a call of...   |
 | e79  | e79_secret_missing            | PASS   | a secret that the machine does not have is<br>the error key, code 11...                        |
@@ -115,7 +115,7 @@ Not written yet, because they need a running server or more of the design: the H
 | e83  | e83_encodings                 | PASS   | encodings: windows-1252 and a UTF-16 BOM are<br>decoded to text; invalid UTF-8 is an error...  |
 | e84  | e84_fs_functions              | PASS   | fs: read!, size!, list!, move, remove,<br>make_dir, and the path functions and the...          |
 | e85  | e85_rejects_limit             | PASS   | max_rejects: the reject after the limit is an<br>error of the read; the rejects file has...    |
-| e86  | e86_stream_methods            | PASS   | a stream has all(), count(), next() and<br>close(); leaving the loop with break write...       |
+| e86  | e86_stream_methods            | PASS   | a stream has all(), count(), close() and<br>next() with the protocol of a generator...         |
 | e87  | e87_orm_reads                 | PASS   | reading through a table: find! gives the<br>record or null, a second find! gives the s...      |
 | e88  | e88_orm_write_methods         | PASS   | status, a field set back to its value,<br>remove, refresh after a direct write, add...         |
 | e89  | e89_orm_reference_order       | PASS   | a flush writes inserts in the order of the<br>references and deletes in the reverse orde...    |
@@ -127,6 +127,20 @@ Not written yet, because they need a running server or more of the design: the H
 | e95  | e95_test1                     | PASS   | a machine that listens on IPC only: no web,<br>commands run through the socket (F-NET-02,...   |
 | e95  | e95_test2                     | PASS   | a machine that serves HTTP only: pages and<br>scripts over the web port (F-NET-02,...          |
 | e95  | e95_test3                     | PASS   | a machine that listens on IPC and serves<br>HTTP: the CLI uses IPC, a remote uses HTTP...      |
+| e95  | e95_test4                     | PASS   | the machine API over HTTP: vm.* and the first<br>names, -32601, the web door; started and...   |
 | e95  | e95_web_hello                 | PASS   | the Eve web server answers with a page: Hello<br>World, This is Eve (F-NET-02, first step)     |
+| e96  | e96_sql_function              | PASS   | sql function: an Eve function that SQLite<br>calls from SQL, registered on every...            |
+| e97  | e97_sql_function_error        | PASS   | an error in a sql function stops the query:<br>the statement raises $err_sql with the...       |
+| e98  | e98_sql_function_null         | PASS   | SQL NULL maps only to a nullable type: a NULL<br>for a parameter of type String stops the...   |
+| e99  | e99_sql_function_bang         | PASS   | a sql function is deterministic: its name can<br>not end with ! (D-166)                        |
+| e100 | e100_sql_function_type        | PASS   | the parameters and the result of a sql<br>function have SQL types: a List is refused...        |
+| e101 | e101_sql_function_overload    | PASS   | a sql function can not be overloaded: SQL<br>finds a function by its name (D-166)              |
+| e102 | e102_proc_module              | PASS   | Eve stored procedures: a module of proc/ is<br>imported like any module; its sql function...   |
+| e102 | e102_test1                    | PASS   | eve db proc list: the modules of proc/ with<br>the hash of their source, and their export...   |
+| e103 | e103_secret_join              | PASS   | a Secret is not a String: joining it to a<br>text with + is a compile error...                 |
+| e104 | e104_yield_in_nested_function | PASS   | yield in a function declared inside a<br>generator is a compile error: only the bod...         |
+| e105 | e105_decimal_real_convert     | PASS   | Decimal and Real are converted explicitly:<br>d.real(), r.decimal(), or by := to a varia...    |
+| e106 | e106_print_null               | PASS   | null is the value and Null its type: print<br>writes null, type() gives Null (D-080, D-168)    |
+| e107 | e107_time_now_bang            | PASS   | the clock is not deterministic: its name ends<br>with !, time.now!(); time.now() is refused... |
 
 <!-- TESTS:END -->

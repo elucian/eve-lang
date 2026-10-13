@@ -13,7 +13,7 @@ end e78_null_constructor_argument;
   "syntax_error": true,
   "exit": 65,
   "contains": [
-    "which is not optional"
+    "name is not optional"
   ]
 }
 */

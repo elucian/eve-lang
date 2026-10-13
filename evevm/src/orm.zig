@@ -513,6 +513,10 @@ fn writeStatement(it: *Interp, db: *sqlite.Db, sql: []const u8, params: []const 
             const v = try dlib.columnValue(it, &st, @intCast(col), t.members[m], t.cls.name);
             try it.setField(obj, t.members[m].text, v);
         }
+        // with `returning` the statement is not finished after its first row: SQLite counts the changed rows only
+        // when it is done, and until then `changes()` still gives the count of the previous write (which made a
+        // conflict look like a success, or a success like a conflict, in a retried job)
+        while (st.step() catch return it.failWith(interp.err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), sql })) {}
     }
     return db.changes();
 }

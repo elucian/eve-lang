@@ -1,0 +1,21 @@
+# the clock is not deterministic: its name ends with !, time.now!(); time.now() is refused (D-087, D-168)
+** spec: library/data-language.md#time-types
+driver e107_time_now_bang is
+  process main is
+    new t := time.now!();
+    print t > Instant.epoch;
+    new u := time.now();
+    print "not reached";
+  return;
+end e107_time_now_bang;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [
+    "True"
+  ],
+  "stderr": [
+    "time.now is not deterministic: write time.now!()"
+  ]
+}
+*/

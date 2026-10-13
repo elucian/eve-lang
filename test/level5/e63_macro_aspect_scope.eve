@@ -6,13 +6,13 @@ set limit = 3 :Integer;
 exclusive aspect show is
   process main is
     print limit;
-    print secret;                  ** a variable of the process main of the driver: not visible
+    print hidden;                  ** a variable of the process main of the driver: not visible
   return;
 end show;
 
 driver e63_macro_aspect_scope is
   process main is
-    new secret := 42;
+    new hidden := 42;
     apply show();
   return;
 end e63_macro_aspect_scope;
@@ -21,7 +21,7 @@ end e63_macro_aspect_scope;
   "syntax_error": true,
   "exit": 65,
   "contains": [
-    "undefined name 'secret'"
+    "undefined name 'hidden'"
   ]
 }
 */

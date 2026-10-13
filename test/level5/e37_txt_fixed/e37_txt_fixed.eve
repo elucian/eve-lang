@@ -26,6 +26,9 @@ end e37_txt_fixed;
       "   1Ann        12.50",
       "  22Bob            3"
     ]
+  },
+  "bytes": {
+    "out/lines.txt": "   1Ann        12.50\n  22Bob            3\n"
   }
 }
 */

@@ -1,0 +1,31 @@
+# Decimal and Real are converted explicitly: d.real(), r.decimal(), or by := to a variable or a type hint of the other kind (D-168)
+** spec: library/data-language.md#details-used-by-the-tests
+driver e105_decimal_real_convert is
+  process main is
+    new price := 12.50d;
+    print price.real() + 0.25;            ** a Real now: Real arithmetic
+    print 0.1.decimal() + 0.20d;          ** the shortest text of 0.1 is 0.1d: Decimal arithmetic
+    new r := 0.0;
+    let r := price;                       ** r holds a Real: := converts
+    print r * 2.0;
+    new d := 0d;
+    let d := 2.5;                         ** d holds a Decimal: := converts
+    print d + 1d;
+    new x := 3.75d :Real;                 ** the type hint converts too
+    print x / 2.0;
+    new y := 1.5 :Decimal;
+    print y * 2.00d;
+  return;
+end e105_decimal_real_convert;
+/*@expect
+{
+  "stdout": [
+    "12.75",
+    "0.30",
+    "25",
+    "3.5",
+    "1.875",
+    "3.000"
+  ]
+}
+*/

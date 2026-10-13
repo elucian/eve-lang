@@ -29,14 +29,14 @@ A generator is declared with the keyword `generator`: `generator count_to(n: Int
 
 | Type | Meaning |
 |---|---|
-| `Instant` | a point in time in UTC (not `Timestamp`); `Instant.epoch`, `time.now()` |
+| `Instant` | a point in time in UTC (not `Timestamp`); `Instant.epoch`, `time.now!()` (the clock gives another value at each call, so its name ends with `!`, D-087, D-168) |
 | `DateTime` | a date and a time with a zone (not `LocalTime`) |
 
 Parsing and formats use the format codes of strings. The canonical text forms are in `../semantics/data-types.md#canonical-form-and-round-trip`. The module `time` also holds the clock and `sleep`.
 
 ## Decimal and optional types
 
-`Decimal` (`12.50d`) is exact base 10; it keeps its scale (`12.50d` is written `12.50`) and compares by value (`1.50d == 1.5d`). It maps to SQL `NUMERIC`. `T?` is a type that may hold `null`; a plain `T` never does (D-080). A record field `city: String?` maps to a nullable column; a `T?` value used where a `T` is needed is tested first (`if c.city != null do … done;`); the rules of optional types are in `../semantics/types.md`.
+`Decimal` (`12.50d`) is exact base 10; it keeps its scale (`12.50d` is written `12.50`) and compares by value (`1.50d == 1.5d`). It maps to SQL `NUMERIC`. `T?` is a type that may hold `null`; a plain `T` never does (D-080). `null` is the value and `Null` its type: `print` writes `null` (alone, in a text and in a collection) and `type(x)` of it gives `Null` (D-168). A record field `city: String?` maps to a nullable column; a `T?` value used where a `T` is needed is tested first (`if c.city <> null do … done;`); the rules of optional types are in `../semantics/types.md`.
 
 ## Bytes
 
@@ -51,7 +51,7 @@ One module `fs` holds files, folders and paths (not two modules `fs` and `path`)
 | `fs.read!(path)`, `fs.read_bytes!(path)` | the whole text (`String`) or content (`Bytes`) of a file; a read carries `!` |
 | `fs.lines!(path, encoding: …)` | the lines as a `Stream(:String)`, read by blocks |
 | `fs.write(path, text)`, `fs.append(path, text)`, `fs.write_bytes(path, bytes)` | write; no result, no `!` |
-| `fs.list!(dir)`, `fs.glob!(pattern)` | the names in a folder, a pattern like `in/*.csv` |
+| `fs.list!(dir)`, `fs.glob!(pattern)` | the names in a folder, a pattern like `in/*.csv`; sorted by name in the byte order of UTF-8, so a run gives the same order on every system (`fs.list!` today, test e84; `fs.glob!` when it is written) |
 | `fs.exists!(path)`, `fs.size!(path)`, `fs.remove(path)`, `fs.move(from, to)`, `fs.make_dir(path)` | the usual operations |
 | `fs.join(a, b)`, `a / b`, `fs.name(p)`, `fs.parent(p)`, `fs.extension(p)` | path functions, pure, no I/O |
 
@@ -80,8 +80,8 @@ A `Secret` is a value that never appears in a log, a trace or an error message (
 
 ## Details used by the tests
 
-- **`Decimal`.** `+` and `-` keep the larger scale (`0.10d + 0.20d` is `0.30d`), `*` adds the scales (`1.5d * 2.00d` is `3.000d`), a comparison compares the values (`1.50d == 1.5d` is `True`), and printing shows the scale of the value (`print 12.50d;` writes `12.50`). A `Decimal` and a `Real` are never mixed without a conversion (`Decimal` ⇄ `Real` is explicit, and converting to `Real` can lose digits).
-- **`Instant`.** `Instant.epoch` is 1970-01-01T00:00:00Z. Printing an `Instant` writes the canonical form, `2026-10-10T08:00:00Z` (ISO 8601, UTC, `Z`, no fraction when the fraction is zero). `Instant.parse(text)` reads it; a text that is not an instant is the error `$err_parse`.
+- **`Decimal`.** `+` and `-` keep the larger scale (`0.10d + 0.20d` is `0.30d`), `*` adds the scales (`1.5d * 2.00d` is `3.000d`), a comparison compares the values (`1.50d == 1.5d` is `True`), and printing shows the scale of the value (`print 12.50d;` writes `12.50`). `/` gives the larger scale of the two plus 6 digits, at most 18, rounded half away from zero (`1d / 3d` is `0.333333d`, `10.00d / 4d` is `2.50000000d`); `%` gives the remainder with the sign of the divisor, at the larger scale; an `Integer` with a `Decimal` is a `Decimal` of scale 0 (`5 + 0.50d` is `5.50d`); a division by zero is `$err_divide`. A `Decimal` and a `Real` are never mixed without a conversion: an operator between them is a compile error (D-110). The conversion is explicit (D-168): `d.real()` gives the `Real` (it can lose digits), `r.decimal()` gives the `Decimal` of the shortest text of the `Real` (`0.1.decimal()` is `0.1d`, not the 55 digits of its binary value); and `:=` converts, to a variable that holds the other kind (`new r := 0.0; let r := price;`) or with a type hint (`new x := 3.75d :Real;`).
+- **`Instant`.** `Instant.epoch` is 1970-01-01T00:00:00Z. Printing an `Instant` writes the canonical form, `2026-10-10T08:00:00Z` (ISO 8601, UTC, `Z`, no fraction when the fraction is zero; a fraction is written to the microsecond with its trailing zeros cut: `2026-10-10T08:00:00.5Z`, `…:00.123456Z`). `Instant.parse(text)` reads it; a text that is not an instant is the error `$err_parse`.
 - **`Secret`.** `Secret(text)` makes a secret from a string (for a value read from an input; the text is not shown again). `print` and interpolation of a `Secret` write `***`. The text is read only by a sink that accepts a `Secret`. `secret.get(name)` returns the secret of the machine; a name that does not exist is the error `$err_key`.
 - **`fs`.** A path is relative to the working folder (the project). `fs.write(path, text)` creates the folders of the path; `fs.read!(path)` of a missing file is `$err_file`; `fs.lines!(path)` gives the lines without their line ending.
 
@@ -103,6 +103,7 @@ The modules of this table are part of the standard library of the machine and ar
 | `os` | `run`, the environment | 0.4 |
 | `csv`, `json`, `txt` | the data files | 0.4 |
 | `database` | connections, tables, transactions | 0.4 |
+| `checkpoint` | `checkpoint.write(name, value)`, `checkpoint.read!(:T)(name, default: v)`: checkpoints in the core database (`database.md#transactions`) | 0.4 |
 | `http` | the client | 0.4 |
 | `task` | channels and the worker pool | 0.3 |
 | `xml`, `html` | `XML`, `HTML` | 0.5, 0.6 |

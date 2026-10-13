@@ -16,6 +16,18 @@ const Terminal = evevm.terminal.Terminal;
 // handles that error itself (server.zig), so the trace is turned off.
 pub const std_options: std.Options = .{ .unexpected_error_tracing = false };
 
+// Zig tip: `std.ascii.lowerString(buf, text)` copies the text in lower case letters into `buf` and answers the part it
+// used; a name that does not fit in the buffer cannot be `evevm`, so it is answered as it is. `lastIndexOfAny` finds
+// the last `/` or `\`, which is where the file name starts on either system.
+/// The name of the program without its folder and extension, in lower case: `C:\bin\EVEVM.exe` is `evevm`.
+fn programName(buf: []u8, path: []const u8) []const u8 {
+    const cut = std.mem.lastIndexOfAny(u8, path, "/\\");
+    const file = if (cut) |i| path[i + 1 ..] else path;
+    const name = file[0 .. std.mem.lastIndexOfScalar(u8, file, '.') orelse file.len];
+    if (name.len > buf.len) return name;
+    return std.ascii.lowerString(buf, name);
+}
+
 // Zig tip: in Zig 0.16 `main` may take a `std.process.Init` that the runtime fills: `init.io`
 // (the handle for input/output), `init.arena` (an allocator freed when the program ends) and
 // `init.minimal.args` (the command line). `!void` means main may return an error; the runtime
@@ -53,6 +65,23 @@ pub fn main(init: std.process.Init) !void {
     var argv: std.ArrayList([]const u8) = .empty;
     for (args[@min(1, args.len)..]) |a| try argv.append(arena, a);
 
+    // Zig tip: the same program file is installed twice, as `eve` and as `evevm`, and it looks at its own name to know
+    // which one it is. `evevm` starts the machine in a new process and gives the prompt of the system back, so it
+    // needs the runtime folder for the sockets before anything else, and it never reads the options of `eve`.
+    // The machine that `evevm` starts is this same file started with `--listen --serve`: with one of these options
+    // `evevm` behaves as `eve` and runs the machine in the foreground of its own (hidden) process.
+    var name_buffer: [64]u8 = undefined;
+    var foreground = false;
+    for (argv.items) |a| {
+        if (std.mem.eql(u8, a, "--listen") or std.mem.eql(u8, a, "--serve")) foreground = true;
+    }
+    if (!foreground and args.len > 0 and std.mem.eql(u8, programName(&name_buffer, args[0]), "evevm")) {
+        evevm.server.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
+        const code = try evevm.server.daemonMain(init.io, arena, stdout, argv.items);
+        try stdout.flush();
+        std.process.exit(code);
+    }
+
     var bad: []const u8 = "";
     // Zig tip: `call() catch |err| { ... }` handles an error in place. The block must end by
     // leaving (return, exit) or produce the success type. `switch (err)` over an error set must
@@ -63,6 +92,7 @@ pub fn main(init: std.process.Init) !void {
         switch (err) {
             error.MissingValue => std.debug.print("eve: option {s} needs a value\n", .{bad}),
             error.UnknownOption => std.debug.print("eve: unknown option {s}\n", .{bad}),
+            error.BadWord => std.debug.print("eve: {s}: expected start, stop, restart or status after --listen or --serve\n", .{bad}),
             error.OutOfMemory => return err,
         }
         std.debug.print("Try 'eve --help'.\n", .{});
@@ -105,16 +135,37 @@ pub fn main(init: std.process.Init) !void {
     // Zig tip: the runtime directory for the IPC sockets comes from the environment, once, before any thread starts.
     // `orelse` chains try the variables in order; `get` answers an optional text.
     evevm.server.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
-    // The machine options (`-lsn`, `--serve`, `-loc`, `-rem`): a result means they handled the command. Without them
+    // The machine options (`--listen`, `--serve`, `-loc`, `-rem`): a result means they handled the command. Without them
     // nothing here runs: `eve -x file.eve` reads no `eve.cfg` and asks no door, it executes the script at once.
+    // Zig tip: at a terminal `eve --serve` opens the doors in threads and the prompt comes back (`embed`), so the same
+    // window can send commands to its own machine; with a pipe, a file or a service manager nobody types, and the
+    // start waits for the doors as before. `server.embedded` tells that the doors are open in this process.
+    // `-u`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system
+    // prompt comes back; with a command (`eve -u check a.eve`) the command runs after it, as it would without `-u`.
+    if (opts.ui) {
+        const code = try evevm.server.openUi(init.io, arena, stdout, opts.config);
+        try stdout.flush();
+        if (code != 0 or opts.command == null) std.process.exit(code);
+    }
+    const interactive = (try Io.File.stdin().isTty(init.io)) and (try Io.File.stdout().isTty(init.io));
+    // Zig tip: `Io.Writer.Allocating` is a writer that keeps what it is given in memory. At a terminal the machine
+    // options write into it first, because the full-screen REPL (which may follow) starts only afterwards and has to
+    // show these lines in its own upper part; a command that ends the program prints them on the plain screen.
+    var held: Io.Writer.Allocating = .init(arena);
+    const early_out: *Io.Writer = if (interactive) &held.writer else stdout;
     if (opts.machine.listen or opts.machine.serve or opts.machine.local or opts.machine.remote) {
-        if (try evevm.server.handle(init.io, arena, stdout, opts.machine)) |code| {
-            try stdout.flush();
-            std.process.exit(code);
+        if (try evevm.server.handle(init.io, arena, early_out, opts.machine, interactive and opts.command == null and opts.machine.script == null)) |code| {
+            if (!evevm.server.embedded) {
+                try stdout.writeAll(held.written());
+                try stdout.flush();
+                std.process.exit(code);
+            }
         }
     }
+    const early = held.written();
 
     if (opts.command) |command| {
+        try stdout.writeAll(early);
         // One command from the command line, no REPL.
         try command.run(&ctx, opts.args);
         try stdout.flush();
@@ -126,9 +177,45 @@ pub fn main(init: std.process.Init) !void {
     // `main` ends, which restores the keyboard mode on every normal way out (`quit`, end of
     // input, an error); `if (term) |t|` unwraps the optional. Raw mode is used only when a
     // person is at both ends, so pipes behave as before.
-    const interactive = (try Io.File.stdin().isTty(init.io)) and (try Io.File.stdout().isTty(init.io));
     const term: ?Terminal = if (interactive) Terminal.enter() catch null else null;
     defer if (term) |t| t.leave();
+    // Zig tip: the width of the help table and texts: the variable EVE_WIDTH wins, then `eve_width` of the configuration
+    // file, then 100. `parseInt(...) catch width` keeps the earlier value when the text is not a number, and
+    // `std.math.clamp` keeps the result between the least width worth drawing and a generous maximum.
+    var width: usize = evevm.screen.default_width;
+    if (evevm.server.readConfig(init.io, arena, opts.config orelse "eve.cfg")) |c| width = c.eve_width;
+    if (init.environ_map.get("EVE_WIDTH")) |text| width = std.fmt.parseInt(usize, std.mem.trim(u8, text, " "), 10) catch width;
+    ctx.width = std.math.clamp(width, evevm.screen.min_width, 400);
+
+    // Zig tip: the full-screen REPL (tui.zig) needs the size of the window; without it the prompt keeps the plainer
+    // look of a banner and a line editor. `defer t.leave()` is declared after the terminal's, so it runs first: the
+    // screen is given back, then the keyboard mode.
+    var screen_ui: ?*evevm.tui.Tui = null;
+    if (term != null and Terminal.size() != null) {
+        const raw_buffer = try arena.alloc(u8, 16384);
+        const raw = try arena.create(Io.File.Writer);
+        raw.* = .initStreaming(.stdout(), init.io, raw_buffer);
+        screen_ui = try evevm.tui.Tui.create(init.io, arena, &raw.interface);
+    }
+    defer if (screen_ui) |t| t.leave();
+    if (screen_ui) |t| {
+        t.enter();
+        ctx.out = &t.out;
+        ctx.tui = t;
+        ctx.fancy = true;
+        evevm.server.embed_log = &t.out;
+        try evevm.screen.writeBanner(ctx.out, .{ .fancy = true });
+        try ctx.out.writeAll(early);
+        try ctx.out.flush();
+    } else if (term != null) {
+        // the banner and the colored table are for a person at a terminal; a pipe gets the plain text
+        ctx.fancy = true;
+        try evevm.screen.writeBanner(stdout, .{ .fancy = true });
+        try stdout.writeAll(early);
+        try stdout.flush();
+    } else {
+        try stdout.writeAll(early);
+    }
     const edit: ?cli.Edit = if (term != null) .{ .io = init.io, .gpa = arena } else null;
     try cli.repl(&ctx, &stdin_file_reader.interface, edit);
 }
