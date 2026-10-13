@@ -18,17 +18,17 @@ Status: **in progress**. Usage of the machine: [usage.md](usage.md). Releases: [
 Updated at every release by `script/relnotes.py` from the tests, the [version map](../plan/version_map.md) and the saved benchmark runs; never edited by hand. The stages of a feature (design, drafted, validated) are defined in the [release policy](release/README.md#stages-of-a-feature).
 
 <!-- GEN:progress (script/relnotes.py) -->
-State of the working tree on 2026-10-10, version 0.0.2, not a release; last release: no release notes yet.
+Progress at release 0.0.3 (2026-10-13); full record: [release notes 0.0.3](release/v0.0.3.md).
 
-**Tests.** 236 of 258 conformance and smoke tests pass (the status that `script/runtest.py` saved):
+**Tests.** 349 of 349 conformance and smoke tests pass (the status that `script/runtest.py` saved):
 
 | Tests | Total | Pass | % |
 |---|---|---|---|
-| [Level 1](../test/level1/readme.md) | 65 | 65 | 100% |
+| [Level 1](../test/level1/readme.md) | 66 | 66 | 100% |
 | [Level 2](../test/level2/readme.md) | 63 | 63 | 100% |
 | [Level 3](../test/level3/readme.md) | 50 | 50 | 100% |
 | [Level 4](../test/level4/readme.md) | 42 | 42 | 100% |
-| [Level 5](../test/level5/readme.md) | 22 | 0 | 0% |
+| [Level 5](../test/level5/readme.md) | 112 | 112 | 100% |
 | [Level 6](../test/level6/readme.md) | 0 | 0 | - |
 | [Level 7](../test/level7/readme.md) | 0 | 0 | - |
 | [Smoke](../test/smoke/readme.md) | 16 | 16 | 100% |
@@ -40,22 +40,23 @@ State of the working tree on 2026-10-10, version 0.0.2, not a release; last rele
 | Version 0.1 | 23 | 10 | 0 | 0 | 33 |
 | Version 0.2 | 4 | 8 | 0 | 1 | 13 |
 | Version 0.3 | 4 | 7 | 1 | 2 | 14 |
-| Version 0.4 | 0 | 4 | 3 | 19 | 26 |
-| Version 0.5 | 0 | 0 | 5 | 9 | 14 |
-| Version 0.6 | 0 | 0 | 4 | 4 | 8 |
+| Version 0.4 | 0 | 8 | 8 | 13 | 29 |
+| Version 0.5 | 0 | 2 | 5 | 8 | 15 |
+| Version 0.6 | 0 | 1 | 4 | 4 | 9 |
 | Version 0.7 | 0 | 0 | 3 | 0 | 3 |
 | Version 0.9 | 0 | 0 | 0 | 3 | 3 |
 | Version 1.0 | 0 | 0 | 0 | 2 | 2 |
-| **All** | **31** | **29** | **16** | **40** | **116** |
+| **All** | **31** | **36** | **21** | **33** | **121** |
 
-**Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-09 07:01 (commit `83229cb`), against the twins in Python and against version 0.0.1 (2026-10-08). Notes by version and history: [test/bmark/README.md](../test/bmark/README.md).
+**Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-13 11:44 (commit `505c7dc`), against the twins in Python and against version 0.0.2 (2026-10-09). Notes by version and history: [test/bmark/README.md](../test/bmark/README.md).
 
 | Benchmarks | Eve | Python | Eve / Python | Change |
 |---|---|---|---|---|
-| Level 1 | 327 ms | 192 ms | 1.7x | -25% (faster) |
-| Level 2 | 114 ms | 109 ms | 1.0x | -46% (faster) |
-| Level 3 | 228 ms | 164 ms | 1.4x | -29% (faster) |
-| Level 4 | 931 ms | 844 ms | 1.1x | - |
+| Level 1 | 308 ms | 165 ms | 1.9x | -6% (faster) |
+| Level 2 | 118 ms | 101 ms | 1.2x | +4% |
+| Level 3 | 228 ms | 117 ms | 1.9x | +0% |
+| Level 4 | 751 ms | 618 ms | 1.2x | -19% (faster) |
+| Level 5 | 91 ms | 112 ms | 0.8x | - |
 <!-- /GEN:progress -->
 
 ## Links
@@ -74,6 +75,8 @@ The specification, the tutorial and the readme file of every test folder. Genera
 - [Tests: level 5](../test/level5/readme.md)
 - [Tests: level 6](../test/level6/readme.md)
 - [Tests: level 7](../test/level7/readme.md)
+- [Tests: project](../test/project/readme.md)
+- [Tests: scaffold](../test/scaffold/readme.md)
 - [Tests: smoke](../test/smoke/readme.md)
 - [Tutorial: topics](https://sagecode.org/projects/eve/index.html)
 - [Tutorial: feature tests](https://sagecode.org/projects/eve/features.html)

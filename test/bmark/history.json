@@ -308,5 +308,114 @@
    "p4d_tasks": 102.3,
    "p4e_garbage": 98.8
   }
+ },
+ {
+  "date": "2026-10-13 11:44",
+  "version": "0.0.3",
+  "build": "ReleaseSafe",
+  "commit": "505c7dc",
+  "exe_bytes": 3657216,
+  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+  "runs": 5,
+  "results": {
+   "p1a_arith": {
+    "median_ms": 202.2,
+    "min_ms": 194.5,
+    "peak_mb": 5.4
+   },
+   "p1b_calls": {
+    "median_ms": 65.0,
+    "min_ms": 63.4,
+    "peak_mb": 5.4
+   },
+   "p1c_collections": {
+    "median_ms": 22.9,
+    "min_ms": 22.2,
+    "peak_mb": 7.2
+   },
+   "p1d_strings": {
+    "median_ms": 18.1,
+    "min_ms": 18.0,
+    "peak_mb": 5.7
+   },
+   "p2a_aspects": {
+    "median_ms": 10.6,
+    "min_ms": 9.0,
+    "peak_mb": 5.4
+   },
+   "p2b_closures": {
+    "median_ms": 50.6,
+    "min_ms": 49.5,
+    "peak_mb": 6.8
+   },
+   "p2c_procedures": {
+    "median_ms": 56.8,
+    "min_ms": 55.6,
+    "peak_mb": 5.4
+   },
+   "p3a_modules": {
+    "median_ms": 101.7,
+    "min_ms": 100.1,
+    "peak_mb": 5.5
+   },
+   "p3b_objects": {
+    "median_ms": 89.2,
+    "min_ms": 79.4,
+    "peak_mb": 5.5
+   },
+   "p3c_module_state": {
+    "median_ms": 37.3,
+    "min_ms": 36.2,
+    "peak_mb": 5.4
+   },
+   "p4a_parallel_sum": {
+    "median_ms": 235.2,
+    "min_ms": 234.0,
+    "peak_mb": 39.5
+   },
+   "p4b_channel": {
+    "median_ms": 68.7,
+    "min_ms": 67.0,
+    "peak_mb": 5.5
+   },
+   "p4c_groups": {
+    "median_ms": 130.4,
+    "min_ms": 122.1,
+    "peak_mb": 7.6
+   },
+   "p4d_tasks": {
+    "median_ms": 124.5,
+    "min_ms": 121.0,
+    "peak_mb": 7.4
+   },
+   "p4e_garbage": {
+    "median_ms": 192.0,
+    "min_ms": 188.5,
+    "peak_mb": 5.4
+   },
+   "p5a_sql_function": {
+    "median_ms": 90.7,
+    "min_ms": 81.9,
+    "peak_mb": 8.6
+   }
+  },
+  "python": {
+   "p1a_arith": 57.0,
+   "p1b_calls": 34.6,
+   "p1c_collections": 33.0,
+   "p1d_strings": 40.8,
+   "p2a_aspects": 26.9,
+   "p2b_closures": 36.7,
+   "p2c_procedures": 37.1,
+   "p3a_modules": 41.3,
+   "p3b_objects": 39.6,
+   "p3c_module_state": 36.5,
+   "p4a_parallel_sum": 80.1,
+   "p4b_channel": 222.6,
+   "p4c_groups": 121.8,
+   "p4d_tasks": 108.8,
+   "p4e_garbage": 85.1,
+   "p5a_sql_function": 112.2
+  }
  }
 ]

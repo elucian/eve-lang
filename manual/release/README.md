@@ -48,5 +48,5 @@ The manual is read on GitHub and in a local clone, so every link must work in bo
 ## Releases
 
 <!-- GEN:releases (script/relnotes.py) -->
-No release notes yet.
+- [0.0.3](v0.0.3.md)
 <!-- /GEN:releases -->
