@@ -45,7 +45,7 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 4 of 13 | in progress |
 | Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
 | Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 29 | planned |
-| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 15 | planned |
+| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 17 | planned |
 | Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the RAD Workbench eveux, written in Eve, as the final test of the language. | 0 of 8 | planned |
 | Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
 | Version 0.9 | Levels 1 to 7 | Release candidate | Package manager, more database drivers, web kit, hardening. | 0 of 3 | planned |
@@ -188,7 +188,7 @@ Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; l
 
 Level 6. Goal: The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI.
 
-0 of 15 features done.
+0 of 17 features done.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -206,6 +206,8 @@ Level 6. Goal: The Eve machine: setup, remote control of many machines with logi
 | F-TLS-12 | Machine setup | open | `--setup <folder>`, the machine folder, `eve.cfg`, built-in defaults, identity domain + port, external checksum, `setup` reload (D-083). |
 | F-TLS-13 | Remote control | open | `--listen`, `eve -c`, `-rem`, `-u` upload (*2026-10-13: `-u` opens the user interface now; the upload of D-083 needs another letter, to decide*), `send` between machines, sessions and driver memory spaces (`load`, `dismiss`); then the removal of `.vmc` command files (D-083). |
 | F-TLS-14 | Local HTTP | open | `serve` on port 8042, pages of the web folder, routes of `service` scripts (D-083). |
+| F-TLS-24 | evetx, the terminal UI: machines and projects | open | `eve tx`: a full-screen TUI on libvaxis (Zig package, no binding); the machines list with state and login from the keyring, the projects of a machine, run, stop, suspend, resume, cancel, run history and live logs, a console line; imports `evecm` only (Q-050, `evetx/README.md`, `plan/design-packages.md` step B6). |
+| F-TLS-25 | evetx: schedules | open | the Schedules view over the schedule methods of the machine API (`sched.*`): list, add, change, pause, resume, run now, delete; needs the remote scheduler of F-TLS-13 (Q-050 point 1). |
 | F-TLS-15 | Eve API for AI | open | `eve --api`, an MCP server whose tools are the commands of the machine (D-083). |
 
 Exit: a local machine logs in to two remote machines on `localhost`, one by single sign-on, and connects again from the keyring without a form; a client project and a server project talk on `localhost`; a route answers HTTP; `eve --api` answers an MCP client; `.vmc` files are removed.
