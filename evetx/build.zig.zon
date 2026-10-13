@@ -1,0 +1,18 @@
+.{
+    .name = .evetx,
+    .fingerprint = 0x8235bc577973cdd5, // Changing this has security and trust implications.
+    .version = "0.0.1",
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .vaxis = .{
+            .url = "git+https://github.com/rockorager/libvaxis#5b0c724e6434de3a259e790e94954d110688ce5f",
+            .hash = "vaxis-0.6.0-BWNV_FcJDQAY-hi2JHq9u7MWVRxQOg0S7V0YBnvfHtmf",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "README.md",
+    },
+}

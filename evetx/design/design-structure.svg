@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="790" viewBox="0 0 1240 790" font-family="Consolas, 'Courier New', monospace" font-size="13">
+<title>evetx: the structure of a table — a grid with headers and bordered cells; the type is chosen from a list</title>
+<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8fa3b8"/></marker><filter id="sh" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="3" dy="4" stdDeviation="3" flood-opacity="0.5"/></filter></defs>
+<rect width="1240" height="790" fill="#0f141a"/>
+<text x="20" y="26" fill="#e6edf3" font-size="18" font-weight="bold" xml:space="preserve">evetx: the structure of a table — a grid with headers and bordered cells; the type is chosen from a list</text>
+<text x="20" y="44" fill="#8fa3b8" xml:space="preserve">One row per field, one column per attribute. The button in the Type cell opens the list of types; the Default cell of a date or time has a calendar button.</text>
+<rect x="20" y="56" width="1200" height="714" fill="#161c24" stroke="#3b4756" stroke-width="2" rx="6"/>
+<rect x="21" y="57" width="1198" height="26" fill="#243447"/>
+<text x="32" y="75" fill="#e6edf3" font-weight="bold" xml:space="preserve">evetx ▾</text>
+<text x="120" y="75" fill="#a9b7c6" xml:space="preserve">project: sales_etl</text>
+<rect x="880" y="61" width="104" height="18" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="932" y="74" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">F1 local</text>
+<rect x="992" y="61" width="104" height="18" fill="#2f6f4f" stroke="#58c08a" stroke-width="1" rx="3"/>
+<text x="1044" y="74" fill="#ffffff" font-weight="bold" text-anchor="middle" xml:space="preserve">F2 prod</text>
+<rect x="1104" y="61" width="104" height="18" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="1156" y="74" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">F3 test</text>
+<rect x="21" y="84" width="1198" height="32" fill="#1a2531"/>
+<line x1="21" y1="116" x2="1219" y2="116" stroke="#3b4756"/>
+<line x1="305" y1="86" x2="305" y2="114" stroke="#3b4756"/>
+<text x="34" y="105" fill="#8fa3b8" xml:space="preserve">Files</text>
+<rect x="76" y="90" width="218" height="22" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<text x="84" y="106.0" fill="#4b5866" xml:space="preserve">file names</text>
+<text x="318" y="105" fill="#8fa3b8" xml:space="preserve">Find</text>
+<rect x="358" y="90" width="270" height="22" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<text x="366" y="106.0" fill="#4b5866" xml:space="preserve">find in code</text>
+<rect x="572" y="93" width="52" height="16" fill="#243447" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="598" y="105" fill="#8fa3b8" font-size="10" text-anchor="middle" xml:space="preserve">code</text>
+<text x="642" y="105" fill="#8fa3b8" xml:space="preserve">Replace</text>
+<rect x="710" y="90" width="190" height="22" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<text x="718" y="106.0" fill="#4b5866" xml:space="preserve">replace with</text>
+<rect x="910" y="89" width="80" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="950.0" y="106.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">Replace</text>
+<rect x="998" y="89" width="100" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="1048.0" y="106.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">Replace all</text>
+<rect x="1170" y="89" width="32" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="1186.0" y="106.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">#</text>
+<rect x="30" y="122" width="270" height="596" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<text x="40" y="140" fill="#e6edf3" font-weight="bold" xml:space="preserve">Project files</text>
+<line x1="30" y1="148" x2="300" y2="148" stroke="#3b4756"/>
+<text x="40" y="168" fill="#6c7a89" xml:space="preserve">▾</text>
+<text x="56" y="168" fill="#e6edf3" xml:space="preserve">sales_etl</text>
+<text x="56" y="188" fill="#6c7a89" xml:space="preserve">▸</text>
+<text x="72" y="188" fill="#a9b7c6" xml:space="preserve">asp/</text>
+<text x="56" y="208" fill="#6c7a89" xml:space="preserve">▾</text>
+<text x="72" y="208" fill="#a9b7c6" xml:space="preserve">db/</text>
+<rect x="31" y="214" width="268" height="19" fill="#2b4a6b"/>
+<text x="72" y="228" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="228" fill="#ffffff" xml:space="preserve">local.db</text>
+<text x="72" y="248" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="248" fill="#e0b341" xml:space="preserve">staging.duckdb</text>
+<text x="56" y="268" fill="#6c7a89" xml:space="preserve">▾</text>
+<text x="72" y="268" fill="#a9b7c6" xml:space="preserve">doc/</text>
+<text x="72" y="288" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="288" fill="#a9b7c6" xml:space="preserve">README.md</text>
+<text x="72" y="308" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="308" fill="#a9b7c6" xml:space="preserve">flow.svg</text>
+<text x="72" y="328" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="328" fill="#a9b7c6" xml:space="preserve">logo.png</text>
+<text x="72" y="348" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="348" fill="#a9b7c6" xml:space="preserve">intro.mp4</text>
+<text x="56" y="368" fill="#6c7a89" xml:space="preserve">▸</text>
+<text x="72" y="368" fill="#a9b7c6" xml:space="preserve">lib/</text>
+<text x="56" y="388" fill="#6c7a89" xml:space="preserve">▾</text>
+<text x="72" y="388" fill="#a9b7c6" xml:space="preserve">proc/</text>
+<circle cx="282" cy="384" r="4" fill="#5aa9e6"/>
+<text x="72" y="408" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="408" fill="#a9b7c6" xml:space="preserve">load_orders.eve</text>
+<text x="72" y="428" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="428" fill="#a9b7c6" xml:space="preserve">clean_names.eve</text>
+<text x="56" y="448" fill="#6c7a89" xml:space="preserve">▾</text>
+<text x="72" y="448" fill="#a9b7c6" xml:space="preserve">server/</text>
+<circle cx="282" cy="444" r="4" fill="#5aa9e6"/>
+<text x="72" y="468" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="88" y="468" fill="#a9b7c6" xml:space="preserve">sales_load.eve</text>
+<text x="56" y="488" fill="#6c7a89" xml:space="preserve">▸</text>
+<text x="72" y="488" fill="#a9b7c6" xml:space="preserve">sql/</text>
+<circle cx="282" cy="484" r="4" fill="#5aa9e6"/>
+<text x="56" y="508" fill="#6c7a89" xml:space="preserve">▸</text>
+<text x="72" y="508" fill="#a9b7c6" xml:space="preserve">web/</text>
+<circle cx="282" cy="504" r="4" fill="#5aa9e6"/>
+<text x="56" y="528" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="72" y="528" fill="#a9b7c6" xml:space="preserve">eve.cfg</text>
+<text x="56" y="548" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="72" y="548" fill="#6c7a89" xml:space="preserve">eve.env</text>
+<text x="246" y="548" fill="#6c7a89" xml:space="preserve">ignored</text>
+<text x="56" y="568" fill="#6c7a89" xml:space="preserve"> </text>
+<text x="72" y="568" fill="#a9b7c6" xml:space="preserve">sales_etl.eve</text>
+<text x="40" y="688" fill="#5aa9e6" xml:space="preserve">●</text>
+<text x="54" y="688" fill="#6c7a89" xml:space="preserve">server side: sent by upload</text>
+<text x="40" y="706" fill="#6c7a89" xml:space="preserve">▸ ▾ Enter or click: open / close</text>
+<rect x="310" y="122" width="900" height="24" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<rect x="312" y="124" width="136" height="20" fill="#161c24"/>
+<text x="322" y="139" fill="#a9b7c6" xml:space="preserve">sales_load.eve</text>
+<text x="434" y="139" fill="#6c7a89" xml:space="preserve">×</text>
+<rect x="452" y="124" width="160" height="20" fill="#243447"/>
+<text x="462" y="139" fill="#ffffff" font-weight="bold" xml:space="preserve">local.db ▪ tables</text>
+<text x="598" y="139" fill="#6c7a89" xml:space="preserve">×</text>
+<rect x="616" y="124" width="128" height="20" fill="#161c24"/>
+<text x="626" y="139" fill="#a9b7c6" xml:space="preserve">orders ▪ data</text>
+<text x="730" y="139" fill="#6c7a89" xml:space="preserve">×</text>
+<rect x="310" y="146" width="900" height="282" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<rect x="310" y="434" width="112" height="28" fill="#2f6f4f" stroke="#58c08a" stroke-width="1" rx="3"/>
+<text x="366.0" y="453.0" fill="#ffffff" font-weight="bold" text-anchor="middle" xml:space="preserve">▶ Run</text>
+<text x="426" y="452" fill="#4b5866" font-size="10" xml:space="preserve">F5</text>
+<rect x="462" y="434" width="124" height="28" fill="#161c24" stroke="#2a3441" stroke-width="1" rx="3"/>
+<text x="524.0" y="453.0" fill="#4b5866" text-anchor="middle" xml:space="preserve">↓ Step into</text>
+<text x="590" y="452" fill="#4b5866" font-size="10" xml:space="preserve">F11</text>
+<rect x="626" y="434" width="124" height="28" fill="#161c24" stroke="#2a3441" stroke-width="1" rx="3"/>
+<text x="688.0" y="453.0" fill="#4b5866" text-anchor="middle" xml:space="preserve">↑ Step out</text>
+<text x="754" y="452" fill="#4b5866" font-size="10" xml:space="preserve">S-F11</text>
+<rect x="790" y="434" width="124" height="28" fill="#161c24" stroke="#2a3441" stroke-width="1" rx="3"/>
+<text x="852.0" y="453.0" fill="#4b5866" text-anchor="middle" xml:space="preserve">▶▶ Continue</text>
+<text x="918" y="452" fill="#4b5866" font-size="10" xml:space="preserve">F8</text>
+<rect x="954" y="434" width="96" height="28" fill="#161c24" stroke="#2a3441" stroke-width="1" rx="3"/>
+<text x="1002.0" y="453.0" fill="#4b5866" text-anchor="middle" xml:space="preserve">■ Stop</text>
+<text x="1054" y="452" fill="#4b5866" font-size="10" xml:space="preserve">S-F5</text>
+<text x="1210" y="452" fill="#6c7a89" font-size="11" text-anchor="end" xml:space="preserve">F9 breakpoint</text>
+<rect x="310" y="468" width="900" height="24" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<rect x="312" y="470" width="80" height="20" fill="#243447"/>
+<text x="324" y="485" fill="#ffffff" font-weight="bold" xml:space="preserve">Console</text>
+<rect x="396" y="470" width="64" height="20" fill="#161c24"/>
+<text x="408" y="485" fill="#a9b7c6" xml:space="preserve">Watch</text>
+<rect x="464" y="470" width="72" height="20" fill="#161c24"/>
+<text x="476" y="485" fill="#a9b7c6" xml:space="preserve">Stderr</text>
+<rect x="540" y="470" width="72" height="20" fill="#161c24"/>
+<text x="552" y="485" fill="#a9b7c6" xml:space="preserve">Stdout</text>
+<rect x="616" y="470" width="72" height="20" fill="#161c24"/>
+<text x="628" y="485" fill="#a9b7c6" xml:space="preserve">Breaks</text>
+<rect x="310" y="492" width="900" height="226" fill="#0c1015" stroke="#3b4756" stroke-width="1"/>
+<rect x="30" y="726" width="1180" height="34" fill="#0e141b"/>
+<line x1="30" y1="726.5" x2="1210" y2="726.5" stroke="#04070a"/>
+<line x1="30.5" y1="726" x2="30.5" y2="760" stroke="#04070a"/>
+<line x1="30" y1="759.5" x2="1210" y2="759.5" stroke="#566577"/>
+<line x1="1209.5" y1="726" x2="1209.5" y2="760" stroke="#566577"/>
+<text x="42" y="748" fill="#58c08a" font-weight="bold" xml:space="preserve">Ready: connection: prod</text>
+<text x="342" y="748" fill="#e6edf3" xml:space="preserve">db/local.db · orders · structure</text>
+<text x="762" y="748" fill="#a9b7c6" xml:space="preserve">Field 5 of 9: amount · Type</text>
+<line x1="330" y1="731" x2="330" y2="755" stroke="#04070a"/>
+<line x1="331" y1="731" x2="331" y2="755" stroke="#566577"/>
+<line x1="750" y1="731" x2="750" y2="755" stroke="#04070a"/>
+<line x1="751" y1="731" x2="751" y2="755" stroke="#566577"/>
+<line x1="1080" y1="731" x2="1080" y2="755" stroke="#04070a"/>
+<line x1="1081" y1="731" x2="1081" y2="755" stroke="#566577"/>
+<rect x="1092" y="730" width="52" height="26" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="1118.0" y="748.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">?</text>
+<rect x="1152" y="730" width="52" height="26" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="1178.0" y="748.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">⚙</text>
+<text x="1086" y="722" fill="#4b5866" font-size="10" text-anchor="middle" xml:space="preserve">Ctrl+/ help</text>
+<text x="322" y="168" fill="#e6edf3" font-weight="bold" xml:space="preserve">local.db   4 tables</text>
+<g filter="url(#sh)">
+<rect x="330" y="140" width="820" height="560" fill="#1b2330" stroke="#5aa9e6" stroke-width="2" rx="4"/>
+<rect x="331" y="141" width="818" height="26" fill="#2b4a6b"/>
+<text x="342" y="159" fill="#ffffff" font-weight="bold" xml:space="preserve">Structure of orders   (db/local.db, SQLite)</text>
+<text x="1138" y="159" fill="#cfe3f5" text-anchor="end" xml:space="preserve">Esc cancels</text>
+</g>
+<text x="346" y="190" fill="#e6edf3" font-weight="bold" xml:space="preserve">Fields 1–6 of 9 · page 1 of 2</text>
+<text x="1134" y="190" fill="#6c7a89" font-size="11" text-anchor="end" xml:space="preserve">arrows move · Enter edits · Space switches a box</text>
+<rect x="350" y="196" width="40" height="30" fill="#243447" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="216" fill="#ffffff" font-weight="bold" xml:space="preserve">#</text>
+<rect x="390" y="196" width="190" height="30" fill="#243447" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="216" fill="#ffffff" font-weight="bold" xml:space="preserve">Name</text>
+<rect x="580" y="196" width="190" height="30" fill="#243447" stroke="#3b4756" stroke-width="1"/>
+<text x="588" y="216" fill="#ffffff" font-weight="bold" xml:space="preserve">Type</text>
+<rect x="770" y="196" width="80" height="30" fill="#243447" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="216" fill="#ffffff" font-weight="bold" xml:space="preserve">Not null</text>
+<rect x="850" y="196" width="70" height="30" fill="#243447" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="216" fill="#ffffff" font-weight="bold" xml:space="preserve">Key</text>
+<rect x="920" y="196" width="210" height="30" fill="#243447" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="216" fill="#ffffff" font-weight="bold" xml:space="preserve">Default</text>
+<rect x="350" y="226" width="40" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="246" fill="#6c7a89" xml:space="preserve">1</text>
+<rect x="390" y="226" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="246" fill="#a9b7c6" xml:space="preserve">id</text>
+<rect x="580" y="226" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="588" y="246" fill="#a9b7c6" xml:space="preserve">INTEGER</text>
+<rect x="742" y="229" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="754" y="246" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">▾</text>
+<rect x="770" y="226" width="80" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="246" fill="#a9b7c6" xml:space="preserve">[x]</text>
+<rect x="850" y="226" width="70" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="246" fill="#a9b7c6" xml:space="preserve">PK</text>
+<rect x="920" y="226" width="210" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="246" fill="#a9b7c6" xml:space="preserve"></text>
+<rect x="350" y="256" width="40" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="276" fill="#6c7a89" xml:space="preserve">2</text>
+<rect x="390" y="256" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="276" fill="#a9b7c6" xml:space="preserve">customer_id</text>
+<rect x="580" y="256" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="588" y="276" fill="#a9b7c6" xml:space="preserve">INTEGER</text>
+<rect x="742" y="259" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="754" y="276" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">▾</text>
+<rect x="770" y="256" width="80" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="276" fill="#a9b7c6" xml:space="preserve">[x]</text>
+<rect x="850" y="256" width="70" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="276" fill="#a9b7c6" xml:space="preserve">FK</text>
+<rect x="920" y="256" width="210" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="276" fill="#a9b7c6" xml:space="preserve"></text>
+<rect x="350" y="286" width="40" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="306" fill="#6c7a89" xml:space="preserve">3</text>
+<rect x="390" y="286" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="306" fill="#a9b7c6" xml:space="preserve">product</text>
+<rect x="580" y="286" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="588" y="306" fill="#a9b7c6" xml:space="preserve">TEXT</text>
+<rect x="742" y="289" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="754" y="306" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">▾</text>
+<rect x="770" y="286" width="80" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="306" fill="#a9b7c6" xml:space="preserve">[x]</text>
+<rect x="850" y="286" width="70" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="306" fill="#a9b7c6" xml:space="preserve">—</text>
+<rect x="920" y="286" width="210" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="306" fill="#a9b7c6" xml:space="preserve"></text>
+<rect x="350" y="316" width="40" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="336" fill="#6c7a89" xml:space="preserve">4</text>
+<rect x="390" y="316" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="336" fill="#a9b7c6" xml:space="preserve">quantity</text>
+<rect x="580" y="316" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="588" y="336" fill="#a9b7c6" xml:space="preserve">INTEGER</text>
+<rect x="742" y="319" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="754" y="336" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">▾</text>
+<rect x="770" y="316" width="80" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="336" fill="#a9b7c6" xml:space="preserve">[x]</text>
+<rect x="850" y="316" width="70" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="336" fill="#a9b7c6" xml:space="preserve">—</text>
+<rect x="920" y="316" width="210" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="336" fill="#a9b7c6" xml:space="preserve">1</text>
+<rect x="350" y="346" width="40" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="366" fill="#6c7a89" xml:space="preserve">5</text>
+<rect x="390" y="346" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="366" fill="#a9b7c6" xml:space="preserve">amount</text>
+<rect x="580" y="346" width="190" height="30" fill="#243b57" stroke="#5aa9e6" stroke-width="2"/>
+<text x="588" y="366" fill="#ffffff" xml:space="preserve">DECIMAL(12,2)</text>
+<rect x="742" y="349" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="754" y="366" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">▾</text>
+<rect x="770" y="346" width="80" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="366" fill="#a9b7c6" xml:space="preserve">[x]</text>
+<rect x="850" y="346" width="70" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="366" fill="#a9b7c6" xml:space="preserve">—</text>
+<rect x="920" y="346" width="210" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="366" fill="#a9b7c6" xml:space="preserve"></text>
+<rect x="350" y="376" width="40" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="358" y="396" fill="#6c7a89" xml:space="preserve">6</text>
+<rect x="390" y="376" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="398" y="396" fill="#a9b7c6" xml:space="preserve">created</text>
+<rect x="580" y="376" width="190" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="588" y="396" fill="#a9b7c6" xml:space="preserve">TIMESTAMP</text>
+<rect x="742" y="379" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="754" y="396" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">▾</text>
+<rect x="770" y="376" width="80" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="778" y="396" fill="#a9b7c6" xml:space="preserve">[x]</text>
+<rect x="850" y="376" width="70" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="858" y="396" fill="#a9b7c6" xml:space="preserve">—</text>
+<rect x="920" y="376" width="210" height="30" fill="#10161d" stroke="#3b4756" stroke-width="1"/>
+<text x="928" y="396" fill="#a9b7c6" xml:space="preserve">now</text>
+<rect x="1102" y="379" width="24" height="24" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="2"/>
+<text x="1114" y="396" fill="#e0b341" text-anchor="middle" xml:space="preserve">▦</text>
+<text x="346" y="430" fill="#e0b341" font-size="12" xml:space="preserve">1 change pending: amount → total_amount</text>
+<text x="1134" y="430" fill="#e0b341" font-size="12" text-anchor="end" xml:space="preserve">[S] show SQL</text>
+<rect x="344" y="656" width="150" height="26" fill="#161c24" stroke="#2a3441" stroke-width="1" rx="3"/>
+<text x="419.0" y="674.0" fill="#4b5866" text-anchor="middle" xml:space="preserve">◄ Previous page</text>
+<rect x="506" y="656" width="130" height="26" fill="#2b4a6b" stroke="#5aa9e6" stroke-width="1" rx="3"/>
+<text x="571.0" y="674.0" fill="#ffffff" font-weight="bold" text-anchor="middle" xml:space="preserve">Next page ►</text>
+<rect x="648" y="656" width="130" height="26" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="713.0" y="674.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">+ Add field</text>
+<rect x="790" y="656" width="130" height="26" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="855.0" y="674.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">− Remove field</text>
+<rect x="926" y="656" width="100" height="26" fill="#2f6f4f" stroke="#58c08a" stroke-width="1" rx="3"/>
+<text x="976.0" y="674.0" fill="#ffffff" font-weight="bold" text-anchor="middle" xml:space="preserve">Apply</text>
+<rect x="1036" y="656" width="100" height="26" fill="#1d2733" stroke="#3b4756" stroke-width="1" rx="3"/>
+<text x="1086.0" y="674.0" fill="#a9b7c6" text-anchor="middle" xml:space="preserve">Cancel</text>
+<g filter="url(#sh)">
+<rect x="580" y="376" width="190" height="228" fill="#1b2330" stroke="#5aa9e6" stroke-width="1" rx="3"/>
+</g>
+<text x="590" y="398" fill="#a9b7c6" xml:space="preserve">INTEGER</text>
+<text x="590" y="420" fill="#a9b7c6" xml:space="preserve">BIGINT</text>
+<rect x="582" y="426" width="186" height="22" fill="#2b4a6b"/>
+<text x="590" y="442" fill="#ffffff" xml:space="preserve">DECIMAL(p,s)</text>
+<text x="590" y="464" fill="#a9b7c6" xml:space="preserve">REAL</text>
+<text x="590" y="486" fill="#a9b7c6" xml:space="preserve">TEXT</text>
+<text x="590" y="508" fill="#a9b7c6" xml:space="preserve">BOOLEAN</text>
+<text x="590" y="530" fill="#a9b7c6" xml:space="preserve">DATE</text>
+<text x="590" y="552" fill="#a9b7c6" xml:space="preserve">TIME</text>
+<text x="590" y="574" fill="#a9b7c6" xml:space="preserve">TIMESTAMP</text>
+<text x="590" y="596" fill="#a9b7c6" xml:space="preserve">BLOB</text>
+<text x="784" y="486" fill="#6c7a89" font-size="11" xml:space="preserve">The list is the types of the engine of this file</text>
+<text x="784" y="500" fill="#6c7a89" font-size="11" xml:space="preserve">(SQLite or DuckDB); ↑↓ Enter chooses, Esc closes.</text>
+</svg>
