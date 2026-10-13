@@ -1,0 +1,75 @@
+//! `evetx`: the Eve text user interface, a project IDE in the terminal (README.md, design/).
+//!
+//!   evetx [project-folder]
+const std = @import("std");
+const vaxis = @import("vaxis");
+
+const app_mod = @import("app.zig");
+const view = @import("view.zig");
+
+// Zig tip: a `union(enum)` is a tagged union: a value that is exactly one of its fields, with the
+// name of the field stored beside it. libvaxis looks at the field names of this type and sends
+// the events that have a field here (`key_press`, `mouse`, `winsize`, ...) and no others.
+const Event = union(enum) {
+    key_press: vaxis.Key,
+    mouse: vaxis.Mouse,
+    winsize: vaxis.Winsize,
+    focus_in,
+    focus_out,
+};
+
+// Zig tip: a file-level `pub const panic` replaces the handler that runs when the program panics
+// (an index out of range, an overflow in a safe build). libvaxis gives one that first puts the
+// terminal back in its normal mode, so a crash does not leave the shell in raw mode.
+pub const panic = vaxis.panic_handler;
+
+// Zig tip: in Zig 0.16 `main` may take a `std.process.Init`, filled by the runtime: `init.io` is
+// the handle for input and output, `init.gpa` a general purpose allocator, and `init.minimal.args`
+// the command line. `!void` means `main` may return an error, which ends the program with its name.
+pub fn main(init: std.process.Init) !void {
+    const gpa = init.gpa;
+    const io = init.io;
+
+    const args = try init.minimal.args.toSlice(init.arena.allocator());
+    const root: []const u8 = if (args.len > 1) args[1] else ".";
+
+    const app = app_mod.App.create(gpa, io, root) catch |err| {
+        std.debug.print("evetx: cannot open the project folder '{s}': {s}\n", .{ root, @errorName(err) });
+        return err;
+    };
+    defer app.destroy();
+
+    var tty_buffer: [4096]u8 = undefined;
+    var tty = try vaxis.Tty.init(io, &tty_buffer);
+    defer tty.deinit();
+    const writer = tty.writer();
+
+    var vx = try vaxis.init(io, gpa, init.environ_map, .{});
+    defer vx.deinit(gpa, tty.writer());
+
+    var loop: vaxis.Loop(Event) = .init(io, &tty, &vx);
+    try loop.start();
+    defer loop.stop();
+
+    // Zig tip: `defer` runs when the scope ends, in the opposite order of the `defer` lines. So the
+    // terminal is given back (loop.stop, tty.deinit) even when the program ends with an error.
+    try vx.enterAltScreen(writer);
+    try vx.setMouseMode(writer, true);
+    try writer.flush();
+    try vx.queryTerminal(tty.writer(), .fromSeconds(1));
+
+    while (!app.quit) {
+        const event = try loop.nextEvent();
+        switch (event) {
+            .key_press => |key| app.onKey(key) catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
+            .mouse => |m| app.onMouse(vx.translateMouse(m)) catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
+            .winsize => |ws| try vx.resize(gpa, tty.writer(), ws),
+            else => {},
+        }
+        const win = vx.window();
+        win.clear();
+        try view.draw(app, win);
+        try vx.render(writer);
+        try writer.flush();
+    }
+}

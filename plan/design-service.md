@@ -440,6 +440,50 @@ After the first login the local machine stores the **renewal token** (never a pa
 
 A listening machine keeps its **users and roles** in its Eve database (SQLite, F-DAT-08): the accounts, their roles (`viewer`, `operator`, `developer`, `admin`), the identity providers it trusts, the mapping of provider groups to roles, the registration setting (`closed`, `approval`, `open`), the sessions and the audit log. The first admin is created on its own console by `eve --setup`; the other accounts by its admins (`user add`, `user role`, `session end`), from the prompt, from `eve -c … -rem`, or from the Workbench (eveux, D-154). The token of the configuration (`$EVE_TOKEN`) stays for machines and scripts; people log in.
 
+## 16. Credentials, connect, upload, and the selected machine (D-171)
+
+**Decided by the author (2026-10-13, D-171, details in Q-051).** This section completes §15 for the first version: two ways to give credentials, the commands `--connect` and `--upload`, and the machine chosen in the REPL.
+
+### 16.1 Credentials: two methods
+
+| Method | Where the secret is | When |
+|---|---|---|
+| **`eve.env`** | a JSON file of the project with one entry per machine; not versioned (in `.gitignore`); one file per project | the file has an entry for the machine |
+| **dialog** | two prompts: the user name in clear, the password hidden with stars; never on a command line | there is no entry |
+
+Single sign-on is level 7 (D-172). The shape of `eve.env` (Q-052 d): `{ "prod": { "user": "ana", "password": "…" } }`. The secret never goes into a script nor into `eve.cfg` (§12).
+
+### 16.2 From a command line
+
+```
+eve --connect prod                      ** open the connection: eve.env, or the dialog; a session token is kept, not the password
+eve --upload                            ** send web/, proc/, sql/, server/ and the modules they import to prod (Q-052 a)
+eve -rem prod db install                ** install the database on prod
+eve -rem prod db migrate                ** migrate it
+eve -rem prod run sales_load.eve        ** run a program that is already on prod
+```
+
+- `--upload` without a connection is an error that says to `--connect` first.
+- A command reaches a remote machine **only with `-rem`**. Without it the command is local.
+- A remote machine runs only a program that exists on it. `run x.eve -rem prod` where `x.eve` was never uploaded is refused (Q-051 k); the local file is not sent as a side effect.
+
+### 16.3 In the REPL
+
+The REPL has a **selected machine**, `local` at the start.
+
+```
+eve:> select prod        ** the commands now go to prod
+eve:> select local
+```
+
+- **Status bar:** `Ready: connection: local` or `Ready: connection: prod`; while a command runs, `Running…` and the machine too, so it is always clear where a command runs.
+- **Ctrl+Left, Ctrl+Right** change the selected machine in turn: local, remote1, remote2, … (Q-051 h). **F1** selects the local machine, **F2** a remote machine, **F3** another machine (D-172).
+- **Ctrl+Up, Ctrl+Down** show the previous and the next command issued, to edit and send again.
+- **`help`** shows the commands that make sense for the selected machine: on a remote one, not the local file and check commands.
+- **Tab** on a remote machine completes the stored procedures and the code on the server (D-172 point 7), not the local files.
+- The REPL is started by `eve`; the terminal UI by `eve -tx` (screen: `evetx/design/design.svg`), the web UI by `eve -ux` (D-172).
+- A program that was not uploaded cannot be run on a remote machine.
+
 ## Questions for the author
 
 Answered on 2026-10-05 (recorded above): `panic` (a listening machine or the prompt goes on; the `eve -c` process ends with exit code 1 so the calling script sees the failure), the words `service`, `route`, `at`, `-c` sends a command and `-x` executes a file, `-rem` (`--remote`) names a remote machine, ports 4042 (commands, uploads and later the data protocol EWP, all on one port) and 8042 (HTML), the web folder, sessions and driver memory spaces, the AI may call all the commands, the deploy unit, source is uploaded with `-u` and compiled remotely, routes in two forms (one line or a block) for every HTTP method, the command `dismiss` frees the DMS of a loaded driver (it replaces the planned `clear`), one tutorial page, server.html.
