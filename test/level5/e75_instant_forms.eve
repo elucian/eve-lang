@@ -10,7 +10,7 @@ driver e75_instant_forms is
     print c;
     expect c < a;
     expect a <> c;
-    new now := time.now();
+    new now := time.now!();
     expect now > a;
     print Instant.parse("2026-02-30T00:00:00Z");
     print "not reached";

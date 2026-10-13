@@ -85,6 +85,19 @@ pub const Slot = struct {
     }
 };
 
+// Zig tip: one number shared by every thread tells all the scripts to stop without a list of them. A script remembers
+// the number when it starts (`cancel_seen`) and looks at it between two statements (`pollHook`): when the number has
+// moved, the script ends as if a `stop` came from its slot. `std.atomic.Value` is read and written safely by several
+// threads at once, and `fetchAdd` adds one and answers the old value. Scripts that start later see the new number
+// as their own and run normally, so a `stop` does not poison the next run.
+/// How many times `cancelAll` was called.
+pub var cancel_generation: std.atomic.Value(usize) = .init(0);
+
+/// Tell every script that runs now (in any thread) to stop at its next statement.
+pub fn cancelAll() void {
+    _ = cancel_generation.fetchAdd(1, .release);
+}
+
 /// Exit status when a file cannot be read (EX_NOINPUT) and when it has syntax errors (EX_DATAERR).
 pub const exit_no_input = 66;
 pub const exit_syntax = 65;
@@ -116,6 +129,8 @@ pub const Session = struct {
     /// Set by `stop`: the loop that reads commands ends.
     stopping: bool = false,
     running: bool = false,
+    /// The value of `cancel_generation` when the script started: a different value later means "stop now".
+    cancel_seen: usize = 0,
     /// Statements executed and the line of the last one, as the hook of the interpreter reports.
     steps: usize = 0,
     line: u32 = 0,
@@ -150,9 +165,13 @@ pub const Session = struct {
         self.machine = null;
     }
 
-    // Zig tip: `mem` relies on the same Zig feature as `deinit` above: see the tip there.
-    /// The memory of the current script.
+    // Zig tip: `opt.?` unwraps an optional and panics ("attempt to use null value") when it is
+    // null, so it is only safe when null is impossible. Here a fresh session has no script yet
+    // (`status` before `load`), so `mem` makes the arena on first use. `&self.arena.?` takes a
+    // pointer into the optional: `allocator()` needs a pointer, not a copy, to the arena.
+    /// The memory of the current script (created when the session has none yet).
     fn mem(self: *Session) std.mem.Allocator {
+        if (self.arena == null) self.arena = .init(std.heap.page_allocator);
         return self.arena.?.allocator();
     }
 
@@ -269,7 +288,7 @@ pub const Session = struct {
         self.steps = steps;
         self.line = line;
         self.drainRunning();
-        return self.stopping;
+        return self.stopping or cancel_generation.load(.monotonic) != self.cancel_seen;
     }
 
     // Zig tip: `@ptrCast(@alignCast(ctx))` turns the `*anyopaque` the hook carries back into a
@@ -303,6 +322,7 @@ pub const Session = struct {
         self.machine = machine;
         self.steps = 0;
         self.line = 0;
+        self.cancel_seen = cancel_generation.load(.acquire);
         self.running = true;
         const o = machine.run(tree);
         self.running = false;
@@ -501,6 +521,18 @@ pub const Session = struct {
     // Zig tip: `cmdStatus` relies on the same Zig feature as `cmdAst` above: see the tip there.
     /// `status`: one line in `<outdir>/summary.log` for the current script.
     fn cmdStatus(self: *Session) Io.Writer.Error!void {
+        if (try self.logStatus()) {
+            try self.out.print("{s}: status logged\n", .{self.name});
+        } else {
+            try self.out.writeAll("status: no script loaded, nothing to log\n");
+        }
+    }
+
+    // Zig tip: a `pub` method can be called from another file (the REPL command in cli.zig). The result `bool` says
+    // if a line was written: with no script there is no line to log, and an empty name would pollute `summary.log`.
+    /// Add the line of the script to `summary.log` (the work of the `status` command). False when no script is loaded.
+    pub fn logStatus(self: *Session) Io.Writer.Error!bool {
+        if (self.name.len == 0) return false;
         const parse_word = if (self.tree != null) "ok" else if (self.parse_failed) "FAIL" else "-";
         const a = self.mem();
         const line = if (self.outcome) |o|
@@ -509,7 +541,32 @@ pub const Session = struct {
             std.fmt.allocPrint(a, "{s}\tparse={s}\trun=-\tsteps=0\terrors={d}\n", .{ self.name, parse_word, self.errorCount() });
         self.summary.appendSlice(self.gpa, line catch return error.WriteFailed) catch return error.WriteFailed;
         self.writeSummary();
-        try self.out.print("{s}: status logged\n", .{self.name});
+        return true;
+    }
+
+    // Zig tip: `*const Session` promises that the method only reads the session, so it can be called from anywhere
+    // without risk. An `if` expression picks a text for each state; `{s}` prints it.
+    /// The lines of `status` about this session: the script, its state, and the report folder.
+    pub fn writeState(self: *const Session, w: *Io.Writer) Io.Writer.Error!void {
+        if (self.name.len == 0) {
+            try w.writeAll("script: none loaded (use: load <file.eve>)\n");
+        } else {
+            const parsed = if (self.tree != null) "parse ok" else if (self.parse_failed) "parse FAILED" else "not parsed";
+            try w.print("script: {s}, {s}, ", .{ self.path, parsed });
+            if (self.running) {
+                try w.print("running (line {d}, {d} steps)", .{ self.line, self.steps });
+            } else if (self.outcome) |o| {
+                try w.print("finished with exit {d} ({d} steps)", .{ o.code, self.steps });
+            } else {
+                try w.writeAll("not run");
+            }
+            try w.print(", {d} error(s)\n", .{self.errorCount()});
+        }
+        try w.print("reports: folder {s}, capture {s}, slot {s}\n", .{
+            self.outdir,
+            if (self.capture) "on" else "off",
+            if (self.slot) |sl| sl.path else "none",
+        });
     }
 
     // Zig tip: `cmdReport` relies on the same Zig feature as `cmdAst` above: see the tip there.

@@ -63,13 +63,13 @@ const config_fmt =
     \\fallback_log = "log/eve.log"
     \\fallback_log_max = "5MB"
     \\
-    \\** The test database (evedb) lives in the test folder.
-    \\** database "check" = "evedb://test/check.duckdb"
+    \\** The test database (DuckDB), served by `eve db serve --test` (database.md, layers).
+    \\** database "check" = "evedb://localhost/check"
     \\
 ;
 
+// a driver starts with its title, `# …`: a `#!` line would make it a free script or a macro (lexical.md, file header)
 const driver_fmt =
-    \\#! {s}
     \\# The main script of the project {s}.
     \\driver {s} is
     \\  process main is
@@ -215,7 +215,7 @@ pub fn init(io: Io, gpa: std.mem.Allocator, base: Io.Dir, folder: []const u8, us
     }
 
     const driver_file = try std.fmt.allocPrint(arena, "{s}.eve", .{name});
-    try putFile(io, arena, base, root, driver_file, try std.fmt.allocPrint(arena, driver_fmt, .{ name, name, name, name, name }), out, &result);
+    try putFile(io, arena, base, root, driver_file, try std.fmt.allocPrint(arena, driver_fmt, .{ name, name, name, name }), out, &result);
     try putFile(io, arena, base, root, "eve.cfg", try std.fmt.allocPrint(arena, config_fmt, .{name}), out, &result);
     try putFile(io, arena, base, root, "meta/project.json", try std.fmt.allocPrint(arena, project_json_fmt, .{ name, layout_version, version.version }), out, &result);
     try putFile(io, arena, base, root, ".gitignore", gitignore, out, &result);

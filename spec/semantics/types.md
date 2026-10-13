@@ -59,7 +59,7 @@ The types of the files that a program loads and parses (`JSON`, `CSV`, `TXT`, `X
 ## Strings
 
 - A string is immutable; indexing gives runes; `+` concatenates two strings; `*` replicates; `<+` and `+>` append and prepend, also a number converted to text.
-- Interpolation: `{name}` inserts the value of a name, written by its type; a placeholder holds a name, never an expression; an optional format follows `%`: `{n % i5}`; a literal brace is `\{` or `\}` (lexical.md, D-102; the format rules are a draft, D-060).
+- Interpolation: `{name}` inserts the value of a name, written by its type; a placeholder holds a name, a literal or a simple expression (D-120, D-121); an optional format follows `%`: `{n % i5}`; a literal brace is `\{` or `\}` (lexical.md, D-102; the format rules are a draft, D-060).
 - `s =~ "/regex/flags"` matches a regular expression; level 1 requires a subset: literals, `.`, `^`, `$`, classes `[a-z]`, `\d \w \s`, `* + ?`, `|`. The pattern is a regex literal, a string that starts with `/` and keeps its backslashes (Q-018, lexical.md); it is a `String`, and a concatenation that starts with `/` is a pattern too.
 
 ## Zero values and optional types

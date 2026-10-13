@@ -1,4 +1,5 @@
 # a temporary table in the staging database is made by the VM from the class at its first use (database.md, the table declaration)
+** The staging database is a DuckDB database (D-159); until the VM loads DuckDB on demand (D-166) a SQLite file stands in for it.
 ** spec: library/database.md#the-table-declaration
 driver e92_orm_temporary is
   class Row = {id: Integer, label: String, amount: Decimal, note: String?} <: Record;

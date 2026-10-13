@@ -23,6 +23,7 @@ driver e83_encodings is
     done;
   recover
     print "error {$error.code}";
+    print $error.message;
   return;
 end e83_encodings;
 /*@expect
@@ -31,7 +32,8 @@ end e83_encodings;
     "café",
     "café",
     "caf�",
-    "error 56"
+    "error 56",
+    "Bad CSV at line 2, column 4: out/w.csv: invalid UTF-8 at byte 8"
   ]
 }
 */

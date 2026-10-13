@@ -1,0 +1,31 @@
+# the machine API over HTTP: vm.* and the first names, -32601, the web door; started and stopped as the UI part (D-163, D-165)
+** spec: library/machine.md#the-machine-api
+** The runner starts the machine with the command below (`eve ux start` is `eve --serve start`), then runs the client,
+** which calls POST /rpc directly and stops the machine with `eve ux stop`.
+driver e95_test4 is
+  process main is
+    print "e95_test4: the machine is tested, not this script";
+  return;
+end e95_test4;
+/*@expect
+{
+  "command": ["ux", "start"],
+  "timeout": 40,
+  "client": ["node", "check/api.test.js"],
+  "contains": [
+    "ok the machine answers",
+    "ok vm.ping answers pong",
+    "ok ping, the first name, still answers",
+    "ok vm.stat lists the active parts",
+    "ok status keeps its first shape",
+    "ok an unknown method is -32601",
+    "ok vm.run runs a script",
+    "ok a body sent in chunks is read",
+    "ok a path that leaves the web folder is 404",
+    "ok another method is 405",
+    "ok POST to a path other than /rpc is 404",
+    "ok eve ux stop ends the machine with 0",
+    "api: all checks passed"
+  ]
+}
+*/

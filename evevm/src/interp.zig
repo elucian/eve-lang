@@ -320,6 +320,8 @@ pub const err_file = 20;
 pub const err_io = 22;
 pub const err_access = 21;
 pub const err_overflow = 13;
+/// An error in a `sql function`, or a NULL for one of its non-nullable parameters: the query stops (D-166).
+pub const err_sql = 59;
 
 
 // Zig tip: `Interp` relies on the same Zig feature as `List` above: see the tip there.
@@ -365,6 +367,13 @@ pub const Interp = struct {
     table_nodes: std.ArrayList(*const Node) = .empty,
     table_class: ?*Class = null,
     conn_names: std.StringHashMapUnmanaged(usize) = .empty,
+    /// The `sql function`s of the program, registered on every SQLite connection (D-166); the interpreter that runs
+    /// the statement now (a `sql function` runs there); and why the last call of one failed: the message of
+    /// `$err_sql`, or a signal such as `Panic` that must go on once the statement has stopped.
+    sql_funcs: std.ArrayList(*dlib.SqlFn) = .empty,
+    sql_caller: ?*Interp = null,
+    sql_fail: ?[]const u8 = null,
+    sql_signal: ?Signal = null,
     tracks: std.AutoHashMapUnmanaged(*Object, *orm.Track) = .empty,
     track_list: std.ArrayList(*orm.Track) = .empty,
     pending: std.ArrayList(*orm.Track) = .empty,
@@ -525,6 +534,9 @@ pub const Interp = struct {
             .{ "$err_file", 20 },     .{ "$err_access", 21 },   .{ "$err_io", 22 },     .{ "$err_module", 30 },
             .{ "$err_process", 31 },  .{ "$err_memory", 40 },   .{ "$err_timeout", 41 }, .{ "$err_deadlock", 42 },
             .{ "$err_output", 43 },   .{ "$err_recursion", 44 }, .{ "$err_parallel", 45 }, .{ "$err_channel", 46 },
+            .{ "$err_database", 50 }, .{ "$err_connection", 51 }, .{ "$err_constraint", 52 }, .{ "$err_conflict", 53 },
+            .{ "$err_mapping", 54 },  .{ "$err_commit", 55 },   .{ "$err_format", 56 },  .{ "$err_http", 57 },
+            .{ "$err_batch", 58 },    .{ "$err_sql", 59 },
             .{ "$wrn_deprecated", 5 }, .{ "$wrn_truncate", 6 }, .{ "$wrn_unused", 7 },
         };
         for (codes) |c| try it.define(c[0], .{ .int = c[1] }, true);
@@ -1075,7 +1087,8 @@ pub const Interp = struct {
     /// Append the text `print` gives for `v`.
     pub fn show(it: *Interp, buf: *std.ArrayList(u8), v: Value, quoted: bool) Signal!void {
         switch (v) {
-            .nil => try buf.appendSlice(it.t, "Null"),
+            // `null` is the value, `Null` its type (D-080, D-168): print writes the value
+            .nil => try buf.appendSlice(it.t, "null"),
             .bool => |b| try buf.appendSlice(it.t, if (b) "True" else "False"),
             .int, .nat, .byte, .short, .huge => |n| try appendFmt(buf, it.t, "{d}", .{n}),
             .real, .float => |r| try appendFmt(buf, it.t, "{d}", .{r}),
@@ -2262,6 +2275,9 @@ pub const Interp = struct {
         if ((eql(u8, name, "batch") or eql(u8, name, "split")) and recv == .list and args.len == 1) {
             return it.cut(recv.list, eql(u8, name, "split"), try it.eval(args[0]));
         }
+        // the explicit conversions between Decimal and Real (data-language.md, D-168)
+        if (eql(u8, name, "real") and args.len == 0 and recv == .dec) return .{ .real = decimal.toF64(recv.dec) };
+        if (eql(u8, name, "decimal") and args.len == 0 and (recv == .real or recv == .float)) return .{ .dec = try it.decFromReal(realOf(recv).?) };
         if (eql(u8, name, "compare") and args.len == 1 and recv != .object) {
             return .{ .int = switch (try it.order(recv, try it.eval(args[0]))) {
                 .lt => -1,
@@ -2908,6 +2924,7 @@ pub const Interp = struct {
             for (it.scope.binds.items) |b| {
                 if (!std.mem.eql(u8, b.name, n.text) or b.v.value != .func) continue;
                 const first = b.v.value.func.node;
+                if (first.is_sql or n.is_sql) return it.fail("the sql function {s} can not be overloaded: SQL finds a function by its name (D-166)", .{n.text});
                 const set = try it.base().overloads.getOrPut(it.a, first);
                 if (!set.found_existing) {
                     set.value_ptr.* = .empty;
@@ -2920,6 +2937,7 @@ pub const Interp = struct {
         // a function declared inside another one closes over that call's scope (a closure, D-101)
         const f = try it.newFunc(n, if (it.scope == it.unit) it.unit else it.scope);
         try it.define(n.text, .{ .func = f }, true);
+        if (n.is_sql) try dlib.registerSqlFunction(it, f);
     }
 
     // Zig tip: `coerce` relies on the same Zig feature as `bind` above: see the tip there.
@@ -2931,6 +2949,9 @@ pub const Interp = struct {
         }
         // a Real given to an Integer loses its decimals (D-080)
         if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Integer") and (v == .real or v == .float)) return .{ .int = @intFromFloat(realOf(v).?) };
+        // a Decimal given to a Real, a Real given to a Decimal: `:=` converts (data-language.md, D-168)
+        if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Real")) return coerceLike(.{ .real = 0 }, v);
+        if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Decimal")) return coerceLike(.{ .dec = .{ .m = 0, .scale = 0 } }, v);
         return v;
     }
 
@@ -3074,6 +3095,10 @@ pub const Interp = struct {
             }
             v = try it.apply(op[0..1], cur, v);
         }
+        // `let r := d;` converts a Decimal for a variable that holds a Real, and the other way (D-168)
+        if (std.mem.eql(u8, op, ":=") and target.tag == .name) {
+            if (it.scope.find(target.text)) |cell| v = coerceLike(cell.value, v);
+        }
         try it.assignTo(target, v);
     }
 
@@ -3101,6 +3126,19 @@ pub const Interp = struct {
         } else if (item == .list) {
             try it.listAppendSlice(l, item.list.elems());
         } else try it.listAppend(l, item);
+    }
+
+    // Zig tip: `Value{ .real = 0 }` names the union type before the braces when Zig can not infer it from the
+    // context. A `switch` is not needed for two cases: two `if`s on the tags (`cur == .real`) read as plainly.
+    /// `v` converted to the number kind that `cur` holds, Decimal or Real; any other value is kept (D-168). A Real
+    /// becomes the Decimal of its shortest text (`0.1` is `0.1d`); a Real too large for a Decimal is kept, and the
+    /// operator that uses it will say so.
+    pub fn coerceLike(cur: Value, v: Value) Value {
+        if (cur == .real and v == .dec) return .{ .real = decimal.toF64(v.dec) };
+        if (cur == .dec and (v == .real or v == .float)) {
+            if (decimal.fromF64(realOf(v).?)) |d| return .{ .dec = d };
+        }
+        return v;
     }
 
     // Zig tip: `assignTo` relies on the same Zig feature as `define` above: see the tip there.
@@ -4408,9 +4446,7 @@ pub const Interp = struct {
 
     /// A Decimal from a Real read in a column: the shortest text that gives the same number.
     pub fn decFromReal(it: *Interp, x: f64) Signal!decimal.Dec {
-        var buf: [64]u8 = undefined;
-        const shown = std.fmt.bufPrint(&buf, "{d}", .{x}) catch return it.overflow();
-        return decimal.parse(shown) orelse it.overflow();
+        return decimal.fromF64(x) orelse it.overflow();
     }
 
     /// A text column read into the member `m`: a Decimal or an Instant is parsed, anything else is a String.

@@ -1327,6 +1327,43 @@ const Parser = struct {
         return true;
     }
 
+    // Zig tip: `isSqlFunction` relies on the same Zig feature as `isTableDecl` below: a contextual keyword is a word
+    // checked with the token after it, so `sql` stays a free name everywhere else.
+    /// `sql function …` as a declaration (`sql` is a keyword only before `function`, D-116, D-166).
+    fn isSqlFunction(p: *const Parser) bool {
+        return p.isWord("sql") and p.isWordAt(1, "function");
+    }
+
+    // Zig tip: `for (list) |q|` with an early `return` checks every element and stops at the first bad one;
+    // the error names the element. The rules of a `sql function` are about its shape, so the parser checks them
+    // where the source position is at hand, as it does for a generator.
+    /// `sql function name(params) => (@r: T) is … return;`: a function that SQL can call (database.md, SQL functions).
+    fn sqlFunction(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        const r = try p.routine(.function);
+        if (r.text[r.text.len - 1] == '!') return p.failAt(kw, "a sql function is deterministic: '{s}' can not end with '!' (D-166)", .{r.text});
+        if (r.kids[1].kids.len > 0) return p.failAt(kw, "a sql function is not generic: SQL gives it no type list (D-166)", .{});
+        if (r.kids[2].kids.len != 1) return p.failAt(kw, "a sql function has exactly one result (D-166)", .{});
+        for (r.kids[0].kids) |q| {
+            if (q.tag != .param) return p.failAt(kw, "a sql function takes its arguments by value: '{s}' (D-166)", .{q.text});
+            try p.sqlType(kw, q, "parameter");
+        }
+        try p.sqlType(kw, r.kids[2].kids[0], "result");
+        @constCast(r).is_sql = true;
+        return r;
+    }
+
+    // Zig tip: an array of string literals, `[_][]const u8{ ... }`, has its length counted by the compiler
+    // (`_`). `std.mem.trimEnd` removes the `?` of an optional type, so `Decimal?` checks as `Decimal`.
+    /// A parameter or the result of a `sql function` has a type that maps to a SQL value (database.md, mapping).
+    fn sqlType(p: *Parser, kw: Token, q: *const Node, what: []const u8) Error!void {
+        const ty = q.ty orelse return p.failAt(kw, "the {s} '{s}' of a sql function needs a type (D-166)", .{ what, q.text });
+        const base = std.mem.trimEnd(u8, ty.text, "?");
+        const sql_types = [_][]const u8{ "Integer", "Natural", "Real", "Float", "Decimal", "String", "Logic", "Instant" };
+        for (sql_types) |t| if (std.mem.eql(u8, base, t)) return;
+        return p.failAt(kw, "the {s} '{s}' of a sql function has the type {s}, which SQL does not have (D-166)", .{ what, q.text, ty.text });
+    }
+
     /// `table name: Class …` as a declaration (`table` is a word only at the start of a declaration, D-116).
     fn isTableDecl(p: *const Parser) bool {
         return p.isWord("table") and p.peekAt(1).kind == .ident and p.isSymAt(2, ":");
@@ -1756,6 +1793,7 @@ const Parser = struct {
             return r;
         }
         if (p.isWord("function")) return p.routine(.function);
+        if (p.isSqlFunction()) return p.sqlFunction();
         if (p.isWord("procedure")) return p.routine(.procedure);
         if (p.isWord("method")) return p.routine(.method);
         if (p.isGeneratorDecl()) return p.routine(.generator);
@@ -2043,7 +2081,8 @@ const Parser = struct {
             } else if (p.isWord("module") or p.isWord("managed") or p.isWord("direct")) {
                 return p.fail("a module is its own file: it is not declared inside a macro (D-152)", .{});
             } else if (p.isWord("new") or p.isWord("set") or p.isWord("class") or p.isWord("trait") or p.isWord("async") or
-                p.isWord("function") or p.isWord("procedure") or p.isWord("method") or p.isWord("from") or p.isGeneratorDecl() or p.isTableDecl())
+                p.isWord("function") or p.isWord("procedure") or p.isWord("method") or p.isWord("from") or p.isGeneratorDecl() or p.isTableDecl() or
+                p.isSqlFunction())
             {
                 try shared.append(p.a, try p.declarationInDriver());
             } else {

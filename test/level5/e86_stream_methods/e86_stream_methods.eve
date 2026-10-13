@@ -1,5 +1,6 @@
-# a stream has all(), count(), next() and close(); leaving the loop with break writes the rejects of what was read (data-types.md)
+# a stream has all(), count(), close() and next() with the protocol of a generator (next() gives True and s.value); leaving the loop with break writes the rejects of what was read (data-types.md)
 ** spec: semantics/data-types.md#rules
+** spec: syntax/declarations.md#generators-level-5 (Stream adopts the protocol, data-language.md)
 driver e86_stream_methods is
   class P = {id: Integer} <: Record;
 
@@ -9,10 +10,12 @@ driver e86_stream_methods is
     new all := csv.read!(:P)("out/p.csv").all();
     print all.count();
     new s := csv.read!(:P)("out/p.csv");
-    new first := s.next();
-    print first.id;
-    print s.next().id;
+    print s.next();                     ** the protocol of a generator: True and a new s.value
+    print s.value.id;
+    expect s.next();
+    print s.value.id;
     s.close();
+    print s.done;
     fs.write("out/q.csv", "id\nx\n2\ny\n");
     for p in csv.read!(:P)("out/q.csv", rejects: "out/q_rejects.csv") do
       print p.id;
@@ -27,8 +30,10 @@ end e86_stream_methods;
   "stdout": [
     "3",
     "3",
+    "True",
     "1",
     "2",
+    "True",
     "2",
     "(\"id\",\"1\",\"2\",\"3\")"
   ],

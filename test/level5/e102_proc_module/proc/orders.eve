@@ -1,0 +1,16 @@
+## Eve stored procedures of the shop: archive old orders, and a SQL function for the totals (D-166)
+module orders is
+  export (archive, cents);
+
+  ** move the orders created before a date to the archive table; gives the number of rows moved
+  procedure archive(before: String, @moved: Integer) is
+    new shop := database.connect("shop");
+    shop.execute!("insert into archive select * from orders where created < ?", before);
+    let moved := shop.execute!("delete from orders where created < ?", before);
+  return;
+
+  ** an amount in cents, for SQL
+  sql function cents(amount: Decimal) => (@result: Decimal) is
+    let result := amount * 100d;
+  return;
+end orders;

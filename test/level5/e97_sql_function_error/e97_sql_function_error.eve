@@ -1,0 +1,29 @@
+# an error in a sql function stops the query: the statement raises $err_sql with the message of the error (D-166)
+** spec: library/database.md#sql-functions
+driver e97_sql_function_error is
+  class Ratio = {id: Integer, r: Decimal} <: Record;
+
+  sql function ratio(a: Decimal, b: Decimal) => (@result: Decimal) is
+    let result := a / b;                ** row 2 divides by zero
+  return;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+    new rows := shop.query!(:Ratio)("select id, ratio(a, b) as r from pairs order by id");
+    print "not reached";
+  recover
+    print $error.code == $err_sql;
+    print $error.code;
+    print $error.message;
+  return;
+end e97_sql_function_error;
+/*@expect
+{
+  "stdout": [
+    "True",
+    "59",
+    "SQL function ratio failed: Division by zero"
+  ]
+}
+*/

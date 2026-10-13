@@ -13,10 +13,14 @@ const version = @import("version.zig");
 // import is called `editor`, not `line`, because several functions below have a parameter `line`.
 const editor = @import("line.zig");
 const parser = @import("parser.zig");
+const ast = @import("ast.zig");
 const doc = @import("doc.zig");
 const scaffold = @import("scaffold.zig");
 const vm = @import("vm.zig");
 const server = @import("server.zig");
+const screen = @import("screen.zig");
+const tui = @import("tui.zig");
+const helptext = @import("helptext.zig");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
 // Without it the name is private to this file. A `const` number without a type is a
@@ -64,6 +68,12 @@ pub const Context = struct {
     quit: bool = false,
     /// Exit status of the last command.
     status: u8 = 0,
+    /// A person is at the terminal: boxes in UTF-8 and colors (set by `main`), else plain ASCII.
+    fancy: bool = false,
+    /// The full-screen REPL, when there is one: `out` writes into its upper part.
+    tui: ?*tui.Tui = null,
+    /// The width of the help table and texts: EVE_WIDTH, or `eve_width` of eve.cfg, or 100.
+    width: usize = screen.default_width,
 };
 
 // Zig tip: types are ordinary values, so `const Handler = ...` names a type. This one is a
@@ -105,8 +115,56 @@ fn cmdQuit(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
     ctx.quit = true;
 }
 
-fn cmdHelp(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
-    try writeMenu(ctx.out);
+// Zig tip: `catch return error.WriteFailed` turns the errors of the stop (out of memory, a failed write) into the one
+// error that a handler of this table may return. The text is written before the call is made, and flushed, so that the
+// screen shows it even if the stop takes a moment.
+/// `stop`: close the doors this process opened (ipc and http together), tell the running scripts to stop, and stay at
+/// the prompt. With no door open here, it stops the machine of another process (the one `evevm` started).
+fn cmdStop(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
+    try ctx.out.flush();
+    ctx.status = server.stopMachines(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
+}
+
+// Zig tip: the same command does the right thing in each of the three kinds of screen: the scrollback of the
+// full-screen REPL is emptied, a plain terminal gets the escape codes that erase the window and move the cursor home,
+// and a pipe gets nothing (an escape code in a file is noise).
+/// `clear`: clear the upper part of the screen.
+fn cmdClear(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
+    if (ctx.tui) |t| {
+        t.clear();
+    } else if (ctx.fancy) {
+        try ctx.out.writeAll("\x1b[2J\x1b[H");
+    }
+}
+
+// Zig tip: the same function serves the full-screen REPL and the plain prompt. With a screen, the text is added as a
+// *block* (`addBlock`), which the screen draws again when the window changes size; without one the text is written at
+// once, at the width of `eve_width`. `orelse { ... return; }` leaves the function with a message when the optional
+// is null: here, a command that has no help.
+/// `help` and `?`: the table of the commands; `help <command>`: the page of one command.
+fn cmdHelp(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    const style: screen.Style = .{ .fancy = ctx.fancy };
+    if (args.len == 0) {
+        if (ctx.tui) |t| t.addBlock(.help_table, 0) else try screen.writeHelpTable(ctx.out, style, ctx.width);
+        return;
+    }
+    const index = helptext.indexOf(args[0]) orelse {
+        try ctx.out.print("help: no help for {s} (type help for the list)\n", .{args[0]});
+        ctx.status = exit_usage;
+        return;
+    };
+    if (ctx.tui) |t| t.addBlock(.help_command, index) else try screen.writeDetail(ctx.out, style, helptext.entries[index], ctx.width);
+}
+
+// Zig tip: a `switch` on an enum must cover every tag; `catch {}` drops the write error because the writer here is a
+// block in memory that cannot fail in a way the screen could use.
+/// The function that the full-screen REPL calls to draw a block again for a new width.
+fn renderBlock(kind: tui.BlockKind, arg: usize, width: usize, w: *Io.Writer) void {
+    const style: screen.Style = .{ .fancy = true };
+    switch (kind) {
+        .help_table => screen.writeHelpTable(w, style, width) catch {},
+        .help_command => screen.writeDetail(w, style, helptext.entries[arg], width) catch {},
+    }
 }
 
 // Zig tip: `Dir.cwd().readFileAlloc(io, path, gpa, limit)` reads a whole file into memory that
@@ -206,6 +264,98 @@ fn cmdProject(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
 }
 
 // Zig tip: the VM session is created the first time a command needs it and kept in the Context, so
+// Zig tip: `cmdDb` relies on the same Zig feature as `cmdDoc`: the work is done by a function with an inferred error
+// set, and the handler passes on `WriteFailed` and turns every other error into a message.
+/// `db`: the commands of the database part (`eve db ...`, D-163). Today `db proc list`.
+fn cmdDb(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    if (!(args.len == 2 and std.mem.eql(u8, args[0], "proc") and std.mem.eql(u8, args[1], "list"))) {
+        try ctx.out.writeAll("db: usage: db proc list\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    procList(ctx) catch |err| switch (err) {
+        error.WriteFailed => |e| return e,
+        else => {
+            try ctx.out.print("db proc list: {s}\n", .{@errorName(err)});
+            ctx.status = exit_no_input;
+        },
+    };
+}
+
+// Zig tip: `std.mem.sort` sorts a slice in place with a comparison function; `{}` is the empty context the function
+// receives. `std.crypto.hash.sha2.Sha256.hash` fills a 32-byte array with the hash of the source, and
+// `std.fmt.bytesToHex` writes bytes as hexadecimal text: the first 4 bytes are the short hash printed.
+/// `db proc list`: each module of the folder `proc/`, sorted, with the hash of its source, and its exported procedures
+/// and functions with their signatures (database.md#stored-procedures, D-166).
+fn procList(ctx: *Context) !void {
+    const io = ctx.io;
+    var dir = Io.Dir.cwd().openDir(io, "proc", .{ .iterate = true }) catch {
+        try ctx.out.writeAll("db proc list: there is no folder proc/ here\n");
+        ctx.status = exit_no_input;
+        return;
+    };
+    defer dir.close(io);
+    var names: std.ArrayList([]const u8) = .empty;
+    var entries = dir.iterate();
+    while (try entries.next(io)) |e| {
+        if (e.kind == .file and std.mem.endsWith(u8, e.name, ".eve")) try names.append(ctx.gpa, try ctx.gpa.dupe(u8, e.name));
+    }
+    std.mem.sort([]const u8, names.items, {}, lessName);
+    ctx.status = 0;
+    for (names.items) |name| {
+        const src = try dir.readFileAlloc(io, name, ctx.gpa, .limited(16 << 20));
+        var hash: [32]u8 = undefined;
+        std.crypto.hash.sha2.Sha256.hash(src, &hash, .{});
+        var diag: parser.Diag = .{};
+        const tree = parser.parse(ctx.gpa, src, &diag) catch {
+            try ctx.out.print("proc/{s}:{d}:{d}: error: {s}\n", .{ name, diag.line, diag.col, diag.message() });
+            ctx.status = exit_syntax;
+            continue;
+        };
+        if (tree.tag != .module) {
+            try ctx.out.print("proc/{s}: not a module: a stored procedure lives in a module\n", .{name});
+            ctx.status = exit_syntax;
+            continue;
+        }
+        try ctx.out.print("{s} {s}\n", .{ tree.text, &std.fmt.bytesToHex(hash[0..4], .lower) });
+        for (tree.kids) |ex| if (ex.tag == .export_decl) for (ex.kids) |n| {
+            for (tree.kids) |d| if ((d.tag == .procedure or d.tag == .function) and std.mem.eql(u8, d.text, n.text)) {
+                try writeSignature(ctx.out, d);
+            };
+        };
+    }
+}
+
+// Zig tip: the first parameter of a comparison for `std.mem.sort` is the context (`void` here: none); `_` names a
+// parameter that is not used, which Zig would otherwise report as an error. `std.mem.lessThan` orders bytes.
+fn lessName(_: void, a: []const u8, b: []const u8) bool {
+    return std.mem.lessThan(u8, a, b);
+}
+
+// Zig tip: `for (list, 0..) |q, i|` counts while it walks, so the separator `, ` goes before every item but the first.
+/// One line: `  procedure archive(before: String, @moved: Integer)` or `  sql function f(x: T) => (@r: T)`.
+fn writeSignature(w: *Io.Writer, d: *const ast.Node) Io.Writer.Error!void {
+    try w.print("  {s}{s} {s}(", .{ if (d.is_sql) "sql " else "", @tagName(d.tag), d.text });
+    try writeParams(w, d.kids[0].kids);
+    try w.writeAll(")");
+    if (d.tag == .function) {
+        try w.writeAll(" => (");
+        try writeParams(w, d.kids[2].kids);
+        try w.writeAll(")");
+    }
+    try w.writeAll("\n");
+}
+
+// Zig tip: `writeParams` relies on the same Zig feature as `writeSignature` above: see the tip there. `if (q.ty) |t|`
+// unwraps the optional type of a parameter: a parameter without a type prints its name alone.
+fn writeParams(w: *Io.Writer, params: []const *const ast.Node) Io.Writer.Error!void {
+    for (params, 0..) |q, i| {
+        if (i > 0) try w.writeAll(", ");
+        try w.print("{s}{s}", .{ if (q.tag == .ref_param) "@" else "", q.text });
+        if (q.ty) |t| try w.print(": {s}", .{t.text});
+    }
+}
+
 // the next command finds the script the previous one loaded. `gpa.create(T)` allocates one `T` and
 // returns a pointer; `s.* = .{ ... }` fills it. A `?*T` field is null until then, and `orelse`
 // would also do: `if (ctx.machine) |s| return s;` is the early-return form. The slot is created
@@ -241,6 +391,55 @@ fn viaSession(comptime name: []const u8) Handler {
     }.run;
 }
 
+// Zig tip: `comptime listen: bool` makes two handlers from one function, `door(true)` for `listen` and `door(false)`
+// for `serve`, as `viaSession` does for the session commands. The words are read in any order: `start`, `stop`,
+// `restart` or `status` is the action, and the other door's name adds that door (`listen serve` opens both).
+/// `listen [word]` and `serve [word]` in the REPL: the same as `--listen` and `--serve`, but the doors open in this
+/// process and the prompt stays.
+fn door(comptime listen: bool) Handler {
+    return struct {
+        fn run(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+            var cmd: server.Cmd = .{ .listen = listen, .serve = !listen, .config = ctx.config };
+            for (args) |w| {
+                if (std.mem.eql(u8, w, "listen")) {
+                    cmd.listen = true;
+                } else if (std.mem.eql(u8, w, "serve")) {
+                    cmd.serve = true;
+                } else if (cmd.word.len == 0) {
+                    cmd.word = w;
+                } else {
+                    try ctx.out.print("{s}: unexpected word: {s}\n", .{ if (listen) "listen" else "serve", w });
+                    ctx.status = exit_usage;
+                    return;
+                }
+            }
+            const known = [_][]const u8{ "", "start", "stop", "restart", "status" };
+            for (known) |k| if (std.mem.eql(u8, k, cmd.word)) break else {} else {
+                try ctx.out.print("{s}: expected start, stop, restart or status, not {s}\n", .{ if (listen) "listen" else "serve", cmd.word });
+                ctx.status = exit_usage;
+                return;
+            }
+            try ctx.out.flush();
+            const code = server.handle(ctx.io, ctx.gpa, ctx.out, cmd, true) catch return error.WriteFailed;
+            ctx.status = code orelse 0;
+        }
+    }.run;
+}
+
+// Zig tip: a handler ignores the arguments it does not need with `_ = args;`: Zig reports an unused parameter as an
+// error, so this line says "not used, on purpose". The report is only text written to `ctx.out`; it opens no door.
+/// `status`: the machine in one page. The process (version, script, folder of the reports), then the configuration,
+/// the doors and what a machine on them is doing. The line of the script in `summary.log` is still added.
+fn cmdStatus(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    _ = args;
+    const s = try session(ctx);
+    _ = try s.logStatus();
+    try ctx.out.print("{s}\nthis process: command line, it opens no door itself\n", .{version.title});
+    try s.writeState(ctx.out);
+    try ctx.out.flush();
+    server.machineStatus(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
+}
+
 // Zig tip: parse first, run second: the session's `run` parses the file when it was not parsed,
 // and returns early on a syntax error, so a script with errors never starts. With no file name
 // and a slot (`eve -x -i file.vmc`) the machine does not run a script: it serves the commands
@@ -274,7 +473,12 @@ fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
         if (o.code != 0 and s.machine != null) {
             try ctx.out.flush();
             for (s.machine.?.reports.items) |r| {
-                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ args[0], r.line, r.code, r.message, r.trace, r.details });
+                if (!r.handled) {
+                    const fmt = "{s}:{d}: error {d}: {s}\n{s}{s}";
+                    const parts = .{ args[0], r.line, r.code, r.message, r.trace, r.details };
+                    // on the full-screen REPL the error goes to the upper part, not under the bars (stderr)
+                    if (ctx.tui != null) try ctx.out.print(fmt, parts) else std.debug.print(fmt, parts);
+                }
             }
         }
     }
@@ -293,6 +497,7 @@ pub const commands = [_]Command{
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = cmdExecute },
     .{ .name = "project", .summary = "project init|new <folder>: make a project with the standard layout", .run = cmdProject },
+    .{ .name = "db", .summary = "db proc list: the database part (eve db ...)", .run = cmdDb },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },
     .{ .name = "enter", .summary = "execute the next step", .run = stub("enter") },
     .{ .name = "run", .summary = "execute the loaded script, or the file given (parsed first)", .file = ".eve", .run = viaSession("run") },
@@ -301,15 +506,17 @@ pub const commands = [_]Command{
     .{ .name = "ast", .summary = "write the syntax tree to <outdir>/<name>.ast", .run = viaSession("ast") },
     .{ .name = "inspect", .summary = "write the introspection report <outdir>/<name>.inspect", .run = viaSession("inspect") },
     .{ .name = "errors", .summary = "report the errors of the script (<outdir>/<name>.err)", .run = viaSession("errors") },
-    .{ .name = "status", .summary = "log one line for the script in <outdir>/summary.log", .run = viaSession("status") },
+    .{ .name = "status", .summary = "the state of the machine: script, configuration, doors, what it is doing", .run = cmdStatus },
+    .{ .name = "listen", .summary = "listen [start|stop|restart|status]: the IPC door, the prompt stays", .run = door(true) },
+    .{ .name = "serve", .summary = "serve [start|stop|restart|status]: the HTTP door, the prompt stays", .run = door(false) },
     .{ .name = "outdir", .summary = "set the folder of the report files", .run = viaSession("outdir") },
     .{ .name = "capture", .summary = "capture on|off: keep the script output in <outdir>/<name>.out", .run = viaSession("capture") },
     .{ .name = "log", .summary = "add a line of text to summary.log", .run = viaSession("log") },
     .{ .name = "print", .summary = "display the value of a global variable", .run = stub("print") },
     .{ .name = "resume", .summary = "run until the next halt statement", .run = stub("resume") },
     .{ .name = "report", .summary = "report the system state", .run = viaSession("report") },
-    .{ .name = "stop", .summary = "stop the driver, keep the memory", .run = stub("stop") },
-    .{ .name = "clear", .summary = "stop the driver and clean the memory", .run = stub("clear") },
+    .{ .name = "stop", .summary = "stop the doors (ipc and http) and the scripts; the prompt stays", .run = cmdStop },
+    .{ .name = "clear", .summary = "clear the upper part of the screen (the output); the command line stays", .run = cmdClear },
     .{ .name = "setup", .summary = "load the configuration file", .file = ".cfg", .run = stub("setup") },
     .{ .name = "help", .summary = "display this menu", .run = cmdHelp },
     .{ .name = "quit", .summary = "exit from the REPL", .run = cmdQuit },
@@ -334,11 +541,14 @@ pub fn find(name: []const u8) ?*const Command {
 pub const quick_help =
     \\Usage: eve [options]                      start the REPL
     \\       eve [options] <script.eve> [args]  execute a script (same as -x)
-    \\       eve [options] --<command> [args]   run one command and exit, no REPL
+    \\       eve [options] <command> [args]     run one command and exit, no REPL (same as --<command>)
+    \\       evevm [start|stop|restart|status]  the machine in a new process (listen and serve), the prompt returns
     \\
     \\Quick help:
     \\  -x                execute the script now, in this process (parsed first): no IPC or
     \\                    HTTP lookup, the fast way to run a script; same as --execute
+    \\  -u                open the user interface (the web page of the machine) if it is not open; with a
+    \\                    command, open it and then run the command
     \\  -d                debug mode: halt statements stop the script (ignored otherwise)
     \\  -s <file.cfg>     setup: load the configuration file
     \\  -m <size>         memory for the process
@@ -348,9 +558,9 @@ pub const quick_help =
     \\  -h, --help        display this help and exit
     \\
     \\The machine (an eve that stays active and answers requests):
-    \\  -lsn [port]       --listen: start a machine with the IPC door (this computer)
-    \\  --serve           start a machine with the HTTP door; -lsn --serve opens both
-    \\  --serve <word>    stop, status, restart or start the machine
+    \\  --listen [word]   the IPC door (this computer): start (the default), stop, restart or status
+    \\  --serve [word]    the HTTP door: start (the default), stop, restart or status
+    \\                    --listen --serve opens both doors; the ports are ipc_port and http_port of eve.cfg
     \\  -loc [port]       --local: run the command in the machine through IPC, or in
     \\                    this process when none listens; never the network
     \\  -rem [host:port]  --remote: run the command in a remote machine through HTTP;
@@ -428,12 +638,14 @@ pub const Options = struct {
     command: ?*const Command = null,
     /// Positional arguments after the command.
     args: []const []const u8 = &.{},
-    /// The options of the machine (`-lsn`, `--serve`, `-loc`, `-rem`; spec/library/machine.md).
+    /// The options of the machine (`--listen`, `--serve`, `-loc`, `-rem`; spec/library/machine.md).
     machine: server.Cmd = .{},
+    /// `-u`: open the user interface (the web page of the machine) when it is not open.
+    ui: bool = false,
 };
 
 // Zig tip: a small function with no state can be tested alone. `isPort` is true for a text of digits, which is how
-// `-lsn 4195` tells a port from the next option or a file. `for (text) |c|` visits each byte; `std.ascii.isDigit` is
+// `-loc 4195` tells a port from the next option or a file. `for (text) |c|` visits each byte; `std.ascii.isDigit` is
 // the test for one byte. An empty text is not a port.
 /// True when `text` is a port number (digits only).
 fn isPort(text: []const u8) bool {
@@ -453,7 +665,7 @@ fn isAddress(text: []const u8) bool {
 // function that can fail says so in its return type (`ParseError!Options`) and the caller must
 // deal with it. Errors cannot carry data, so the bad argument is returned through the pointer
 // parameter `bad` of parseArgs.
-pub const ParseError = error{ MissingValue, UnknownOption, OutOfMemory };
+pub const ParseError = error{ MissingValue, UnknownOption, BadWord, OutOfMemory };
 
 // Zig tip: memory is never allocated behind your back. A function that needs memory receives
 // an `std.mem.Allocator` (`gpa`) from the caller, who decides where it comes from (here an
@@ -464,6 +676,62 @@ pub const ParseError = error{ MissingValue, UnknownOption, OutOfMemory };
 // `while (cond) : (i += 1)` has a continue-expression that runs after each pass.
 // `a[1] == 's'` compares a byte of the string with a character literal.
 
+// Zig tip: `gpa.dupe(T, slice)` copies a slice into new memory, so one element can be changed without touching
+// the caller's array (`argv` is `[]const`, read only). Returning a sub-slice, `argv[1..]`, copies nothing.
+/// The first word of the command line may name a part of `eve` (D-163): `vm` (the runtime) and `cp` (the compiler)
+/// select what the options already do, `cp project` is `--project`, `ux` (the UI) is `--serve`, `db` (the database
+/// part) is the command `--db`. Gives the line the rest of `parseArgs` reads.
+fn partWords(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]const []const u8 {
+    if (argv.len == 0) return argv;
+    const first = argv[0];
+    const eql = std.mem.eql;
+    if (eql(u8, first, "vm")) return argv[1..];
+    if (eql(u8, first, "cp")) {
+        if (argv.len > 1 and eql(u8, argv[1], "project")) {
+            const copy = try gpa.dupe([]const u8, argv[1..]);
+            copy[0] = "--project";
+            return copy;
+        }
+        return argv[1..];
+    }
+    if (eql(u8, first, "ux") or eql(u8, first, "db")) {
+        const copy = try gpa.dupe([]const u8, argv);
+        copy[0] = if (eql(u8, first, "ux")) "--serve" else "--db";
+        return copy;
+    }
+    return try commandWord(gpa, argv);
+}
+
+// Zig tip: the loop skips the options in front of the first word: the ones that take a value (`-s file`) are skipped
+// together with it, the others alone. The first word left is a command if it names one, and then `check f.eve` is
+// read as `--check f.eve`: the same command, one-shot, with no prompt. A word that ends in `.eve` is a script and a
+// word that is no command is left alone (it is a script name or a mistake, as before).
+/// `eve check file.eve` is `eve --check file.eve`: the first word that is a command is the command.
+fn commandWord(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]const []const u8 {
+    var i: usize = 0;
+    while (i < argv.len) : (i += 1) {
+        const a = argv[i];
+        if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "-i") or std.mem.eql(u8, a, "-t")) {
+            i += 1;
+        } else if (std.mem.eql(u8, a, "-loc") and i + 1 < argv.len and isPort(argv[i + 1])) {
+            i += 1;
+        } else if (std.mem.eql(u8, a, "-rem") and i + 1 < argv.len and std.mem.indexOfScalar(u8, argv[i + 1], ':') != null) {
+            i += 1;
+        } else if (std.mem.eql(u8, a, "--listen") or std.mem.eql(u8, a, "--serve")) {
+            // the word after a door (`--serve status`) belongs to the door, even though `status` is also a command
+            for ([_][]const u8{ "start", "stop", "restart", "status" }) |w| {
+                if (i + 1 < argv.len and std.mem.eql(u8, argv[i + 1], w)) i += 1;
+            }
+        } else if (a.len > 0 and a[0] != '-') {
+            if (std.mem.endsWith(u8, a, ".eve") or find(a) == null) return argv;
+            const copy = try gpa.dupe([]const u8, argv);
+            copy[i] = try std.fmt.allocPrint(gpa, "--{s}", .{a});
+            return copy;
+        }
+    }
+    return argv;
+}
+
 /// Parse the command line (without the program name). On error `bad` names the argument.
 pub fn parseArgs(
     gpa: std.mem.Allocator,
@@ -472,9 +740,10 @@ pub fn parseArgs(
 ) ParseError!Options {
     var o: Options = .{};
     var rest: std.ArrayList([]const u8) = .empty;
+    const line = try partWords(gpa, argv);
     var i: usize = 0;
-    while (i < argv.len) : (i += 1) {
-        const a = argv[i];
+    while (i < line.len) : (i += 1) {
+        const a = line[i];
         if (std.mem.eql(u8, a, "-h") or std.mem.eql(u8, a, "--help")) {
             o.help = true;
         } else if (std.mem.eql(u8, a, "-v") or std.mem.eql(u8, a, "--version")) {
@@ -483,45 +752,47 @@ pub fn parseArgs(
             o.debug = true;
         } else if (std.mem.eql(u8, a, "-x")) {
             o.execute = true;
+        } else if (std.mem.eql(u8, a, "-u")) {
+            o.ui = true;
         } else if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "-i") or std.mem.eql(u8, a, "-t")) {
             i += 1;
-            if (i >= argv.len) {
+            if (i >= line.len) {
                 bad.* = a;
                 return error.MissingValue;
             }
             switch (a[1]) {
-                's' => o.config = argv[i],
-                'm' => o.memory = argv[i],
-                't' => o.idle = argv[i],
-                else => o.slot = argv[i],
+                's' => o.config = line[i],
+                'm' => o.memory = line[i],
+                't' => o.idle = line[i],
+                else => o.slot = line[i],
             }
-        } else if (std.mem.eql(u8, a, "-lsn") or std.mem.eql(u8, a, "--listen")) {
-            o.machine.listen = true;
-            if (i + 1 < argv.len and isPort(argv[i + 1])) {
-                i += 1;
-                o.machine.listen_port = argv[i];
-            }
-        } else if (std.mem.eql(u8, a, "--serve")) {
+        } else if (std.mem.eql(u8, a, "--listen") or std.mem.eql(u8, a, "--serve")) {
             // Zig tip: `break` leaves the `for` at the first match. Without it the loop would go on comparing
             // `argv[i + 1]` after `i` moved, and read past the end of the slice (a panic in a safe build).
-            o.machine.serve = true;
+            // `--listen` (the IPC door) and `--serve` (the HTTP door) take the same words (D-169).
+            if (std.mem.eql(u8, a, "--listen")) o.machine.listen = true else o.machine.serve = true;
             const words = [_][]const u8{ "start", "stop", "restart", "status" };
-            if (i + 1 < argv.len) for (words) |w| if (std.mem.eql(u8, argv[i + 1], w)) {
+            if (i + 1 < line.len) for (words) |w| if (std.mem.eql(u8, line[i + 1], w)) {
                 i += 1;
                 o.machine.word = w;
                 break;
             };
+            // a plain word after the door that is none of the four is a mistake, not a script (D-169)
+            if (o.machine.word.len == 0 and i + 1 < line.len and line[i + 1].len > 0 and line[i + 1][0] != '-') {
+                bad.* = line[i + 1];
+                return error.BadWord;
+            }
         } else if (std.mem.eql(u8, a, "-loc") or std.mem.eql(u8, a, "--local")) {
             o.machine.local = true;
-            if (i + 1 < argv.len and isPort(argv[i + 1])) {
+            if (i + 1 < line.len and isPort(line[i + 1])) {
                 i += 1;
-                o.machine.local_port = argv[i];
+                o.machine.local_port = line[i];
             }
         } else if (std.mem.eql(u8, a, "-rem") or std.mem.eql(u8, a, "--remote")) {
             o.machine.remote = true;
-            if (i + 1 < argv.len and isAddress(argv[i + 1])) {
+            if (i + 1 < line.len and isAddress(line[i + 1])) {
                 i += 1;
-                o.machine.remote_addr = argv[i];
+                o.machine.remote_addr = line[i];
             }
         } else if (std.mem.startsWith(u8, a, "--") and a.len > 2) {
             const c = find(a[2..]) orelse {
@@ -565,10 +836,13 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
         n += 1;
     }
     if (n == 0) return;
+    // `?` is `help`, `? <command>` is `help <command>`, and `<command> ?` is the page of that command
+    if (std.mem.eql(u8, words[0], "?")) return cmdHelp(ctx, words[1..n]);
+    if (n >= 2 and std.mem.eql(u8, words[n - 1], "?") and find(words[0]) != null) return cmdHelp(ctx, words[0..1]);
     if (find(words[0])) |c| {
         try c.run(ctx, words[1..n]);
     } else {
-        try ctx.out.print("unknown command: {s} (type help)\n", .{words[0]});
+        try ctx.out.print("unknown command: {s} (type help or ?)\n", .{words[0]});
     }
 }
 
@@ -606,7 +880,25 @@ pub fn repl(ctx: *Context, in: *Io.Reader, edit: ?Edit) !void {
     var comp: ?editor.Completer = if (edit) |e| editor.Completer.init(e.gpa) else null;
     defer if (comp) |*c| c.deinit();
     var buf: [editor.max_line]u8 = undefined;
+    if (ctx.tui) |t| {
+        t.eve_width = ctx.width;
+        t.renderer = renderBlock;
+    }
     while (!ctx.quit) {
+        // Zig tip: `if (ctx.tui) |t| { ... continue; }` runs the full-screen branch when there is a screen and goes
+        // back to the top of the loop; the code after it is the older line-by-line prompt, still used for pipes and
+        // for a terminal whose size is unknown. The clock is read before and after the command for the status bar.
+        if (ctx.tui) |t| {
+            const text = (try t.readLine(in, &comp.?, &buf, completionExt)) orelse break;
+            var words = std.mem.tokenizeAny(u8, text, " \t");
+            const word = words.next() orelse continue;
+            const started = Io.Timestamp.now(ctx.io, .awake).toMilliseconds();
+            t.setRunning(if (std.mem.eql(u8, word, "?")) "help" else word);
+            try dispatch(ctx, text);
+            try ctx.out.flush();
+            if (!ctx.quit) t.setReady(Io.Timestamp.now(ctx.io, .awake).toMilliseconds() - started);
+            continue;
+        }
         try ctx.out.writeAll(prompt);
         try ctx.out.flush();
         const text = if (edit) |e|
@@ -622,6 +914,48 @@ pub fn repl(ctx: *Context, in: *Io.Reader, edit: ?Edit) !void {
 // live next to the code they check. `std.testing.expect(cond)` and `expectEqual(expected,
 // actual)` fail the test with an error. `.?` unwraps an optional and stops with an error if it
 // is null. `expectEqual(c, find(c.name).?)` compares two pointers: the same table element.
+// Zig tip: a test can keep two tables in step: the jump table and the help texts must name the same commands in the
+// same order, or `help` would miss one or show one that does not exist. `inline for` is not needed: the arrays are
+// walked at run time and `try` fails the test with the position of the first difference.
+test "the help texts cover the commands of the jump table, in the same order" {
+    try std.testing.expectEqual(commands.len, helptext.entries.len);
+    for (&commands, &helptext.entries) |c, e| try std.testing.expectEqualStrings(c.name, e.name);
+}
+
+// Zig tip: an arena allocator frees everything at once with `deinit`, which suits a test that parses a few lines and
+// looks at the result. `&.{ "a", "b" }` is a slice of texts written in place. The three cases are the ones that were
+// confused once: a word after a door belongs to the door, a command word is the command, and `-u` is an option.
+test "a command word is the command, a door word stays with its door, -u is an option" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var bad: []const u8 = "";
+
+    const served = try parseArgs(arena.allocator(), &.{ "--serve", "status" }, &bad);
+    try std.testing.expect(served.command == null and served.machine.serve);
+    try std.testing.expectEqualStrings("status", served.machine.word);
+
+    const check = try parseArgs(arena.allocator(), &.{ "check", "a.eve" }, &bad);
+    try std.testing.expectEqualStrings("check", check.command.?.name);
+    try std.testing.expectEqualStrings("a.eve", check.args[0]);
+
+    const stop = try parseArgs(arena.allocator(), &.{"stop"}, &bad);
+    try std.testing.expectEqualStrings("stop", stop.command.?.name);
+
+    const ui = try parseArgs(arena.allocator(), &.{ "-u", "status" }, &bad);
+    try std.testing.expect(ui.ui);
+    try std.testing.expectEqualStrings("status", ui.command.?.name);
+
+    const only_ui = try parseArgs(arena.allocator(), &.{"-u"}, &bad);
+    try std.testing.expect(only_ui.ui and only_ui.command == null);
+
+    const script = try parseArgs(arena.allocator(), &.{"status.eve"}, &bad);
+    try std.testing.expectEqualStrings("execute", script.command.?.name);
+
+    const listen = try parseArgs(arena.allocator(), &.{ "listen", "status" }, &bad);
+    try std.testing.expect(listen.machine.listen and listen.command == null);
+    try std.testing.expectEqualStrings("status", listen.machine.word);
+}
+
 test "every command is found by name" {
     for (&commands) |*c| try std.testing.expectEqual(c, find(c.name).?);
     try std.testing.expect(find("nope") == null);
@@ -657,7 +991,7 @@ test "doc without a path is a usage error" {
 // array of strings, passed as a slice. `expectError(error.X, call)` checks that a call fails.
 // Zig tip: `expectEqualStrings` compares two texts and prints both when they differ. The last word of a command line
 // is the edge case of a parser that looks ahead: `--serve stop` must not read past the end of `argv`.
-test "options of the machine: -lsn, --serve, -loc, -rem" {
+test "options of the machine: --listen, --serve, -loc, -rem" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     var bad: []const u8 = "";
@@ -665,10 +999,15 @@ test "options of the machine: -lsn, --serve, -loc, -rem" {
         const o = try parseArgs(arena.allocator(), &.{ "--serve", w }, &bad);
         try std.testing.expect(o.machine.serve);
         try std.testing.expectEqualStrings(w, o.machine.word);
+        const l = try parseArgs(arena.allocator(), &.{ "--listen", w }, &bad);
+        try std.testing.expect(l.machine.listen and !l.machine.serve);
+        try std.testing.expectEqualStrings(w, l.machine.word);
     }
-    const both = try parseArgs(arena.allocator(), &.{ "-lsn", "4195", "--serve" }, &bad);
+    try std.testing.expectError(error.BadWord, parseArgs(arena.allocator(), &.{ "--listen", "nope" }, &bad));
+    try std.testing.expectEqualStrings("nope", bad);
+    const both = try parseArgs(arena.allocator(), &.{ "--listen", "--serve" }, &bad);
     try std.testing.expect(both.machine.listen and both.machine.serve);
-    try std.testing.expectEqualStrings("4195", both.machine.listen_port.?);
+    try std.testing.expectEqualStrings("", both.machine.word);
     const remote = try parseArgs(arena.allocator(), &.{ "-rem", "localhost:8095", "-x", "a.eve", "x" }, &bad);
     try std.testing.expectEqualStrings("localhost:8095", remote.machine.remote_addr.?);
     try std.testing.expectEqualStrings("a.eve", remote.machine.script.?);
@@ -681,7 +1020,8 @@ test "options of the machine: -lsn, --serve, -loc, -rem" {
 }
 
 // Zig tip: a `for` over an array literal checks several inputs with one body. The old two-letter names of the
-// machine options (`-lo`, `-r`, `-ls`) are unknown now, and `bad` names the word that was refused.
+// machine options (`-lo`, `-r`, `-ls`) and `-lsn` (replaced by `--listen`, D-169) are unknown now, and `bad` names the
+// word that was refused.
 test "-x alone touches no machine; the old names are refused" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -689,7 +1029,7 @@ test "-x alone touches no machine; the old names are refused" {
     const x = try parseArgs(arena.allocator(), &.{ "-x", "a.eve" }, &bad);
     const m = x.machine;
     try std.testing.expect(!(m.listen or m.serve or m.local or m.remote));
-    for ([_][]const u8{ "-lo", "-r", "-ls" }) |old| {
+    for ([_][]const u8{ "-lo", "-r", "-ls", "-lsn" }) |old| {
         try std.testing.expectError(error.UnknownOption, parseArgs(arena.allocator(), &.{ old, "-x", "a.eve" }, &bad));
         try std.testing.expectEqualStrings(old, bad);
     }

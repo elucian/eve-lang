@@ -1,0 +1,24 @@
+# null is the value and Null its type: print writes null, type() gives Null (D-080, D-168)
+** spec: library/data-language.md#details-used-by-the-tests
+driver e106_print_null is
+  class Row = {name: String, note: String?} <: Record;
+
+  process main is
+    new r := {name: "Ann", note: null} :Row;
+    print r.note;
+    print "note: {r.note}";
+    print type(r.note);
+    new pair := (1, null);
+    print pair;
+  return;
+end e106_print_null;
+/*@expect
+{
+  "stdout": [
+    "null",
+    "note: null",
+    "Null",
+    "(1,null)"
+  ]
+}
+*/

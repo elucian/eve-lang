@@ -1,0 +1,18 @@
+# eve db proc list: the modules of proc/ with the hash of their source, and their exported procedures with signatures (D-163, D-166)
+** spec: library/database.md#stored-procedures
+** The runner calls the command of the VM, not this script: see "command" below.
+driver e102_test1 is
+  process main is
+    print "e102_test1: the command db proc list is tested, not this script";
+  return;
+end e102_test1;
+/*@expect
+{
+  "command": ["db", "proc", "list"],
+  "contains": [
+    "orders ",
+    "  procedure archive(before: String, @moved: Integer)",
+    "  sql function cents(amount: Decimal) => (@result: Decimal)"
+  ]
+}
+*/

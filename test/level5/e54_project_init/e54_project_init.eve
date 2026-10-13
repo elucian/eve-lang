@@ -18,7 +18,6 @@ end e54_project_init;
   ],
   "files": {
     "out/proj/proj.eve": [
-      "#! proj",
       "# The main script of the project proj.",
       "driver proj is",
       "  process main is",
@@ -37,8 +36,8 @@ end e54_project_init;
       "fallback_log = \"log/eve.log\"",
       "fallback_log_max = \"5MB\"",
       "",
-      "** The test database (evedb) lives in the test folder.",
-      "** database \"check\" = \"evedb://test/check.duckdb\""
+      "** The test database (DuckDB), served by `eve db serve --test` (database.md, layers).",
+      "** database \"check\" = \"evedb://localhost/check\""
     ],
     "out/proj/.gitignore": [
       "# Eve project: the files that a run makes",

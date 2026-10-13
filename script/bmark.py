@@ -62,7 +62,8 @@ def peak_memory(proc):
 
 def run_once(eve, path):
     t = time.perf_counter()
-    p = subprocess.Popen([eve, '-x', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=ROOT)
+    # the folder of the benchmarks is the working folder: its eve.cfg names the database of the level 5 benchmarks
+    p = subprocess.Popen([eve, '-x', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=PERF)
     out, err = p.communicate()
     ms = (time.perf_counter() - t) * 1000
     return ms, Done(p.returncode, out, err, peak_memory(p))

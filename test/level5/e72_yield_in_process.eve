@@ -1,15 +1,8 @@
-# yield in a process, or in a function a generator calls, is a compile error: only the body of a generator yields (D-067)
+# yield in a process is a compile error: only the body of a generator yields (D-067); in a function inside a generator: e104
 ** spec: syntax/declarations.md#generators-level-5
 driver e72_yield_in_process is
-  generator outer() => (@x: Integer) is
-    function inner() => (@r: Integer) is
-      yield 1;
-    return;
-    yield 2;
-  return;
-
   process main is
-    print "x";
+    yield 1;
   return;
 end e72_yield_in_process;
 /*@expect

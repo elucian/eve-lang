@@ -36,6 +36,7 @@ Decisions: **D-083** (below): one machine and one mode, `-x`, `-c`, `-rem`, `-u`
 - D-165 The machine API `vm.*`, `db.*`; ACP outward; no TLS in `eve`
 - D-166 Stored procedures, `sql function`, SQLite embedded and DuckDB on demand
 - D-167 One version; version N is level N; the split in 0.0.5 and 0.0.6, the bytecode in 0.0.6
+- D-169 `--listen [word]` replaces `-lsn [port]`: the two doors take the same words
 ## D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI (2026-10-05)
 Author decisions, reached in the discussion of `plan/design-service.md` (2026-10-05), which keeps the details and the reasons. Taught in the new tutorial page server.html (topic 19, Compiler becomes 20), marked "planned, version 0.5". Not implemented: VM work waits (D-075).
 - **One machine, one mode.** `eve` starts locally or remotely; what it does depends on its commands and its configuration.
@@ -92,3 +93,6 @@ Author decisions (Q-049, answers 7, 10, 14, 15, review of revision 4). (1) **Two
 
 ## D-167 One version; version N is level N; the split in 0.0.5 and 0.0.6, the bytecode in 0.0.6 (2026-10-12)
 Author decisions (Q-049, answers 8, 9, 13). (1) One version for everything, written once in the root `build.zig.zon`; the release notes stay in `manual/release/` (D-153). (2) **Version N is level N**: the release 0.0.3 holds levels 1 to 3; 0.0.4 is level 4, 0.0.5 level 5, 0.0.6 level 6. (3) The split is part of 0.0.5 (phase A) and 0.0.6 (phase B); the bytecode compiler and VM and the `.evb` file (F-VM-04, F-VM-07) move to 0.0.6. The headings of `version_map.md` ("Version 0.4 = Level 5") are renumbered to match (step A11); revises D-138.
+
+## D-169 `--listen [word]` replaces `-lsn [port]`: the two doors take the same words (2026-10-13)
+Author decision: "I want to bring symmetry in eve parameters. `-lsn [port]` is not symmetric with `--serve`. Let's replace `-lsn` with `--listen` and `[port]` with `<command>`: `--listen status | stop`." Revises point 10 of D-162. (1) The IPC door is `--listen [word]`, the HTTP door `--serve [word]`; the words are the same: `start` (the default), `stop`, `restart`, `status`; `--listen --serve` starts a machine with both doors. (2) `--listen stop|restart|status` speaks to the machine through the IPC door only, as `-loc` does (no IPC door: `eve: no local machine`, exit 69); `--serve stop|restart|status` tries the IPC door, then the HTTP door of `localhost`, as before. (3) The ports come from the configuration only: `-lsn <port>` is gone; a machine on another port has its own file (`eve -s second.cfg --listen`), and `-loc <port>` still addresses it. (4) `-lsn` is an unknown option (exit 64), like `-ls`, `-lo` and `-r` before it; a word after a door that is not one of the four is a usage error (exit 64). Spec: `spec/library/machine.md`; manual: `manual/usage.md`; tests: e95_test1 to e95_test3 (`--listen status`, `--listen stop`, `-lsn` refused), `test/project` (`second.cfg`).

@@ -62,7 +62,8 @@ eve -x script.eve -i control.vmc   ** run an Eve script; the file controls it
 | `errors` | report the errors of the script: syntax error, raised errors, failed `expect` (also the ones `recover` handled) |
 | `ast [depth]` | write the syntax tree, one node per line, to `<outdir>/<name>.ast` (default depth 64; deeper nodes show as `... n more`) |
 | `inspect` | write the introspection report `<outdir>/<name>.inspect`: node counts by kind, depth, the declarations, the result of the run, the global variables and the variables of the last process with their type and value |
-| `status` | add one line for the script to `<outdir>/summary.log`: `name`, `parse=ok/FAIL`, `run=<exit code>`, `steps=`, `errors=` separated by tabs |
+| `listen [word]`, `serve [word]` | open (`start`, the default), `stop`, `restart` or show (`status`) the IPC door and the HTTP door from the prompt, which stays: the doors run in threads of the REPL, so the next command can already talk to them (`listen serve` opens both in one machine). `quit` ends the doors with the REPL |
+| `status` | show the state of the machine in one page: the version, the script (loaded, parsed, running or finished, errors), the folder of the reports, the configuration (`eve.cfg` loaded or the defaults), the ports of the two doors and, when a machine answers on them, what it is doing (idle, or the script it runs and for how long), its requests, its uptime and its parts. It also adds one line for the script to `<outdir>/summary.log` (`name`, `parse=ok/FAIL`, `run=<exit code>`, `steps=`, `errors=` separated by tabs), when a script is loaded. The probe of a door that nobody listens on can take about 2 seconds on Windows |
 | `outdir <dir>` | set the folder of the report files (default `temp/output`); created when missing |
 | `capture on` / `capture off` | keep what a script prints in `<outdir>/<name>.out` (the session) or write it to the standard output |
 | `log <text>` | add a line of text to `summary.log` (a marker between scripts) |
@@ -99,7 +100,7 @@ run                               ** execute the syntax tree
 errors                            ** report what went wrong
 ast 6                             ** introspection: the tree ...
 inspect                           ** ... and what the script is made of, variables included
-status                            ** one line in summary.log
+status                            ** the state of the machine; one line in summary.log
 load test/level1/a04_free_script.eve
 ...
 stop                              ** the machine ends; the reports stay
@@ -123,6 +124,14 @@ Tests: none since D-135. Code: `evevm/src/vm.zig`.
 Eve 0.1 only runs one driver script. The same program serves all modes, depending on how it is called.
 
 ## Console REPL (scaffold)
+
+**The look of the prompt.** At a terminal `eve` starts with a banner (the logo, the version, the specification version) and the line `Ready. Type help (or ?) and Enter for commands.` The `help` command draws a table of two columns, the command and a short description, with a line between the commands; the description fits one row at the default width. `help <command>` (also `? <command>` and `<command> ?`) shows the page of one command: its syntax, a text, its options or sub-commands with their explanation, and examples. `?` is an ordinary key: type it and press Enter for the table, or type `? listen` or `listen ?` and Enter for one command. Tab completes file names. With a pipe or a file the banner, the colors and the box characters are left out (the table is drawn with `+`, `-` and `|`), so scripts that read the output see plain text.
+
+**The width of the table and the texts** is 100 characters. Another width is set by the variable `EVE_WIDTH` of the environment (`EVE_WIDTH=80 eve`) or by `eve_width = 80` in `eve.cfg` (30 to 400); the environment wins. The table and the texts never go beyond the window: in a narrower window the descriptions wrap inside their column and the free text wraps at the window. When the window is resized, the table and the help pages already on the screen are drawn again for the new width; the output of scripts and commands is kept as it was written.
+
+**The screen.** At a terminal the REPL uses the whole window (the alternate screen: when `eve` ends, the terminal shows what it showed before). The **upper part** holds the output of the commands and the scripts, and the log of the machine when `listen` or `serve` is open; it keeps its own scrollback of 50,000 lines. Under it, four rows never leave the window: a rule, the **command line**, a rule, and the **status bar**. Page Up and Page Down scroll the upper part by a page, the Up and Down arrows by a line (the wheel of the mouse sends the arrows in most terminals), Home goes to the top and End back to the end; typing or Enter also returns to the end, and while the view is back the right of the status bar says how many lines up it is. A line is never wrapped below 120 characters: a longer line is split at 120, a shorter one is shown whole, and a window narrower than the line cuts its end on the screen (the scrollback keeps all of it, so widen the window to at least 120 columns). The status bar says `Ready`; while a command runs it says `Running…` (blinking, drawn by the terminal) and the name of the command; when the command ends it says `Ready` and `last run: <command> <time>`. The `clear` command empties the upper part and keeps the bars. A pipe or a file gets none of this: plain lines, no colors.
+
+**The font** belongs to the terminal, not to the program: `eve` writes UTF-8 text with box-drawing and block characters and cannot choose how the window draws them. Use a fixed-width font that has these characters, such as **DejaVu Sans Mono** (the monospaced DejaVu; the old bitmap font called `fixed` has no box or block characters). In Windows Terminal: Settings, Profiles, Appearance, Font face. In the classic Windows console: Properties, Font (only fonts that the console lists). On Linux and macOS: the profile of the terminal. On Windows `eve` switches the console output to UTF-8 and turns colors on while the prompt runs, and restores both when it ends.
 
 The REPL (read, execute, print, loop) has a menu and a command line. It checks, debugs and executes a script. It is meant to work with the `eve` command on Linux, Windows and macOS. A configuration file is given with `-s`, and the memory for the process with `-m`.
 
@@ -160,22 +169,30 @@ Debugging ideas, not decided yet: `halt "label"` so the prompt shows which break
 
 In debug mode the configuration can be modified and reloaded with `setup`. The REPL must be in the "ready" state when the settings are reloaded, otherwise it reports an error.
 
-## The machine: `-lsn`, `--serve`, `-loc`, `-rem`
+## The machine: `--listen`, `--serve`, `-loc`, `-rem`
+
+**One command, no prompt.** `eve <command> [args]` is the same as `eve --<command> [args]`: the command runs once and `eve` ends with its exit status, it does not start the prompt (`eve check a.eve`, `eve status`, `eve stop`, `eve project new sales`). A word that ends in `.eve` is a script and runs as before (`eve a.eve`). Only `eve` alone starts the prompt.
+
+**The machine in its own process: `evevm`.** `evevm` starts the machine with both doors (the same as `eve --listen --serve`) in a **new process** and returns to the prompt of the system at once; the machine goes on without a window. It waits until the IPC door answers and prints where the machine listens and where its log is (`<runtime>/eve-<domain>-<ipc_port>.log`; when the start fails, the last lines of the log are shown). `evevm stop`, `evevm restart` and `evevm status` work on that machine, `-s file.cfg` names another configuration, and a second `evevm` says `already running` (exit status 75). `evevm` is the same file as `eve`, installed under a second name by `zig build`.
+
+**Stop: `stop` and `eve stop`.** `stop` closes the IPC door and the HTTP door **together** and tells every script that runs in the machine to stop at its next statement; the program does **not** exit, so at the prompt you can open the doors again with `listen` or `serve`. When this process has no door open, `stop` stops the machine of another process (the one `evevm` started), and that machine ends. `eve stop` from the system prompt does the same. With nothing to stop it says so (exit status 69).
+
+**The user interface: `-u`.** `eve -u` opens the user interface, the web page of the machine (`http://<http_host>:<http_port>/`, the files of the web folder of `eve.cfg`): if the HTTP door already answers, the interface is open and `eve` only says where; otherwise it starts the machine in its own process, as `evevm` does, and opens the page in the browser. `eve -u <command>` opens the interface first and then runs the command (`eve -u check a.eve`), and ends without the prompt.
 
 An `eve` that stays active and answers requests is a **machine** (rules: [`spec/library/machine.md`](../spec/library/machine.md), D-162). It reads `domain`, `ipc_port` (4042), `http_port` (8042), `http_host`, `web` and `remote` from `eve.cfg` of the working folder, or from the file of `-s`.
 
 | Option | Meaning |
 |---|---|
-| `-lsn [port]`, `--listen` | start a machine with the IPC door (a Unix socket `<runtime>/eve-<domain>-<ipc_port>.sock`) |
-| `--serve` | start a machine with the HTTP door: the files of the web folder and JSON-RPC in `POST /rpc`; `-lsn --serve` opens both doors |
-| `--serve stop`, `status`, `restart`, `start` | stop the machine, print its doors and the count of the scripts it ran, stop and start again, start |
+| `--listen [start\|stop\|restart\|status]` | the IPC door (a Unix socket `<runtime>/eve-<domain>-<ipc_port>.sock`): start a machine with it (the default), or stop, restart or ask the machine through it only |
+| `--serve [start\|stop\|restart\|status]` | the HTTP door: the files of the web folder and JSON-RPC in `POST /rpc`; `--listen --serve` opens both doors |
+| `--serve stop`, `status`, `restart`, `start` | stop the machine, print its doors, the count of the scripts it ran, its requests, uptime and what it is doing now, stop and start again, start |
 | `-loc [port]`, `--local` | local command, never the network: through IPC when a machine listens, otherwise run by this process |
 | `-rem [host:port]`, `--remote` | run the command on the HTTP door of that machine (`remote` of `eve.cfg` without an address); fails when nobody answers |
 
-The three short options have three letters (`-lsn` listen, `-loc` local, `-rem` remote; until 2026-10-11 they were `-ls`, `-lo`, `-r`, which are now unknown options). Without `-loc` or `-rem`, `eve -x file.eve` never looks for a machine: it executes the script at once in its own process, even when a machine listens.
+The two doors have the same form, `--listen [word]` and `--serve [word]` (D-169); the ports come from `eve.cfg`. The client options have three letters (`-loc` local, `-rem` remote; `-ls`, `-lo`, `-r` until 2026-10-11 and `-lsn` until 2026-10-13 are unknown options now). Without `-loc` or `-rem`, `eve -x file.eve` never looks for a machine: it executes the script at once in its own process, even when a machine listens.
 
 ```
-eve -lsn --serve                        ** start: prints "eve: ipc localhost:4042" and "eve: http http://localhost:8042"
+eve --listen --serve                    ** start: prints "eve: ipc localhost:4042" and "eve: http http://localhost:8042"
 eve -loc -x report.eve                  ** run report.eve in the local machine (or by itself without one)
 eve -rem 127.0.0.1:8042 -x report.eve   ** send report.eve as text to the HTTP door and run it there
 eve --serve status

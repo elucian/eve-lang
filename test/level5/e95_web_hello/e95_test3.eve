@@ -1,7 +1,7 @@
 # a machine that listens on IPC and serves HTTP: the CLI uses IPC, a remote uses HTTP (F-NET-02, spec/library/machine.md)
 ** spec: library/machine.md#channels
 ** The runner starts the machine with the command below, then runs the client; the client asks the machine
-** through the CLI (`eve -loc`, `eve -rem`) and through HTTP, and stops it with `eve --serve stop`.
+** through the CLI (`eve -loc`, `eve -rem`) and through HTTP, and stops it with `eve --listen stop`.
 driver e95_test3 is
   process main is
     print "e95_test3: the machine is tested, not this script";
@@ -9,7 +9,7 @@ driver e95_test3 is
 end e95_test3;
 /*@expect
 {
-  "command": ["-lsn", "--serve"],
+  "command": ["--listen", "--serve"],
   "timeout": 40,
   "client": ["node", "check/modes.test.js", "both"],
   "contains": [
@@ -18,7 +18,9 @@ end e95_test3;
     "ok --remote fails when nobody listens there (69)",
     "ok --remote without an address is a usage error (64)",
     "ok a second start fails: already running (75)",
-    "ok --serve stop ends with 0",
+    "ok --listen status answers through IPC",
+    "ok -lsn is an unknown option now (64)",
+    "ok --listen stop ends with 0",
     "ok after stop: not running (69)",
     "modes both: all checks passed"
   ]

@@ -11,13 +11,13 @@ driver e68_generator_value_early is
     new g := count_to(3);
     print g.value;
   recover
-    print "error: value before next";
+    print $error.message;
   return;
 end e68_generator_value_early;
 /*@expect
 {
   "stdout": [
-    "error: value before next"
+    "g.value is read before the first next(): ask for a value first (declarations.md#generators-level-5)"
   ]
 }
 */

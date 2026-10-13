@@ -1,15 +1,15 @@
 # e95_web_hello: the Eve machine, its two doors and its first page
 
-The rules are in `spec/library/machine.md` (D-162). The machine is a singleton: a second start on a door that a running machine holds fails with `already running` and the exit code 75, and `eve --serve stop` stops it. It has two doors: IPC (`-lsn`, a Unix socket) and HTTP (`--serve`, the files of `web/` and `POST /rpc`). The CLI reaches it with `-loc` (local, never the network) or `-rem host:port` (remote, HTTP only).
+The rules are in `spec/library/machine.md` (D-162). The machine is a singleton: a second start on a door that a running machine holds fails with `already running` and the exit code 75, and `eve --serve stop` stops it. It has two doors: IPC (`--listen`, a Unix socket) and HTTP (`--serve`, the files of `web/` and `POST /rpc`). The CLI reaches it with `-loc` (local, never the network) or `-rem host:port` (remote, HTTP only).
 
 One project, four use cases, each an automatic test with its own expectations:
 
 | Test | The machine | What the client checks |
 |---|---|---|
 | `e95_web_hello.eve` | `eve --serve` | the page says "Hello World" and "This is Eve"; CSS and JavaScript types; `HEAD`; 404 for a missing file and for `eve.cfg`; a second start fails with 75; `--serve stop` frees the port |
-| `e95_test1.eve` | `eve -lsn` | IPC listening, HTTP off; `-loc -x` runs the script in the machine; `-rem` fails (69) because HTTP is off |
+| `e95_test1.eve` | `eve --listen` | IPC listening, HTTP off; `-loc -x` runs the script in the machine; `--listen status` answers through IPC; `-rem` fails (69) because HTTP is off; `--listen stop` ends it |
 | `e95_test2.eve` | `eve --serve` | IPC off, HTTP listening; `-loc -x` runs the script by itself; `-rem -x` runs it in the machine; a remote error comes back with exit code 4 |
-| `e95_test3.eve` | `eve -lsn --serve` | both doors; `-loc` goes through IPC, `-rem` through HTTP, the counter `runs` counts both |
+| `e95_test3.eve` | `eve --listen --serve` | both doors; `-loc` goes through IPC, `-rem` through HTTP, the counter `runs` counts both |
 
 All of them also check: `-rem` to a port where nobody listens fails with 69, `-rem` without an address is a usage error (64), a second start fails with 75, `--serve stop` ends the machine with 0, and after it `--serve status` says not running (69).
 

@@ -88,6 +88,7 @@ The constants are declared by the Exception module of the standard library. The 
 | `$err_format` | 56 | `Bad {format} at line {line}, column {column}: {reason}` (`FormatError`, data files) |
 | `$err_http` | 57 | `HTTP {status} from {url}` (`HttpError`) |
 | `$err_batch` | 58 | `{count} records of batch {batch} failed` (`BatchError`; the records are in `$error.failed`) |
+| `$err_sql` | 59 | `SQL function {name} failed: {reason}` (`SqlError` <: `DatabaseError`: an error or a `NULL` for a non-nullable parameter in a `sql function`; the query stops, `../library/database.md#sql-functions`, D-166, D-168) |
 
 Warnings do not stop the process; `.warn(code, message)` reports them.
 

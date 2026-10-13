@@ -19,6 +19,12 @@ pub const server = @import("server.zig");
 /// Execution loop and the slot for external commands.
 pub const vm = @import("vm.zig");
 
+/// The look of the REPL: banner and help table.
+pub const screen = @import("screen.zig");
+
+/// The full-screen REPL: scrollback, command line and status bar.
+pub const tui = @import("tui.zig");
+
 /// Raw keyboard mode of the REPL prompt.
 pub const terminal = @import("terminal.zig");
 pub const project = @import("project.zig");
@@ -38,6 +44,8 @@ test {
     _ = cli;
     _ = @import("line.zig");
     _ = terminal;
+    _ = screen;
+    _ = tui;
     _ = vm;
     _ = @import("lexer.zig");
     _ = @import("parser.zig");

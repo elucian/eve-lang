@@ -20,13 +20,16 @@ end e82_txt_rules;
 /*@expect
 {
   "stdout": [
-    "[Alexa] 7 Null",
+    "[Alexa] 7 null",
     "error 56"
   ],
   "files": {
     "out/cut.txt": [
       "Alexa   7      "
     ]
+  },
+  "bytes": {
+    "out/cut.txt": "Alexa   7      \n"
   }
 }
 */

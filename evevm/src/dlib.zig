@@ -12,6 +12,7 @@ const decimal = @import("decimal.zig");
 const instant = @import("instant.zig");
 const nfc = @import("nfc.zig");
 const orm = @import("orm.zig");
+const Heap = @import("heap.zig").Heap;
 
 const Node = ast.Node;
 const Interp = interp.Interp;
@@ -112,8 +113,10 @@ pub fn libraryCall(it: *Interp, module: []const u8, name: []const u8, args: []co
     }
     if (eql(u8, module, "fs")) return try fsCall(it, name, args);
     if (eql(u8, module, "checkpoint")) return try orm.checkpointCall(it, name, targs, args);
-    if (eql(u8, module, "time") and eql(u8, name, "now")) {
-        const io = it.io orelse return it.fail("time.now: no input/output handle", .{});
+    // the clock gives another value at each call: its name ends with `!` (D-087, D-168)
+    if (eql(u8, module, "time") and eql(u8, name, "now")) return it.fail("time.now is not deterministic: write time.now!() (D-087)", .{});
+    if (eql(u8, module, "time") and eql(u8, name, "now!")) {
+        const io = it.io orelse return it.fail("time.now!: no input/output handle", .{});
         return .{ .instant = @intCast(@divFloor(Io.Timestamp.now(io, .real).toNanoseconds(), 1000)) };
     }
     if (eql(u8, module, "secret") and eql(u8, name, "get")) return try it.secretGet(args);
@@ -717,9 +720,19 @@ pub fn drain(it: *Interp, o: *Object) Signal![]const Value {
 pub fn streamCall(it: *Interp, o: *Object, name: []const u8, args: []const *const Node) Signal!Value {
     const st = streamOf(it, o);
     if (args.len != 0) return it.fail("{s}() takes no argument", .{name});
-    if (std.mem.eql(u8, name, "next")) return (try streamNext(it, st)) orelse .nil;
+    // a Stream adopts the protocol of a generator (data-language.md, generators): `next()` gives True and a new
+    // `s.value`, or False at the end, when `s.done` becomes True (declarations.md#generators-level-5)
+    if (std.mem.eql(u8, name, "next")) {
+        if (try streamNext(it, st)) |rec| {
+            try it.setField(o, "value", rec);
+            return .{ .bool = true };
+        }
+        try it.setField(o, "done", .{ .bool = true });
+        return .{ .bool = false };
+    }
     if (std.mem.eql(u8, name, "close")) {
         try finishStream(it, st);
+        try it.setField(o, "done", .{ .bool = true });
         return .nil;
     }
     if (std.mem.eql(u8, name, "all") or std.mem.eql(u8, name, "count")) {
@@ -1081,6 +1094,7 @@ pub fn openConnection(it: *Interp, name: []const u8) Signal!usize {
         return it.failWith(err_io, "DatabaseError: cannot open {s}", .{path});
     _ = db.exec("pragma foreign_keys = on") catch {};
     try checkMapping(it, name, db);
+    for (b.sql_funcs.items) |sf| try addSqlFunction(it, db, sf);
     try b.dbs.append(it.a, db);
     try b.tx.append(it.a, false);
     const idx = b.dbs.items.len - 1;
@@ -1213,7 +1227,14 @@ pub fn runStatement(it: *Interp, db: *sqlite.Db, sql: []const u8, params: []cons
             } else return it.failWith(err_convert, "DatabaseError: the query has no column '{s}' for {s}", .{ m.text, c.name });
         }
     }
-    while (st.step() catch return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), sql })) {
+    // a `sql function` called by this statement runs in this interpreter (D-166)
+    const b = it.base();
+    const saved_caller = b.sql_caller;
+    b.sql_caller = it;
+    defer b.sql_caller = saved_caller;
+    b.sql_fail = null;
+    b.sql_signal = null;
+    while (st.step() catch return stepFailed(it, db, sql)) {
         const c = cls orelse return it.fail("a statement that returns rows needs a record class: query!(:Row)(...)", .{});
         const obj = try it.newObject();
         for (members, colmap) |m, j| {
@@ -1226,6 +1247,145 @@ pub fn runStatement(it: *Interp, db: *sqlite.Db, sql: []const u8, params: []cons
     }
     changed.* = db.changes();
     return out;
+}
+
+// Zig tip: an error set value can be returned like any value: `stepFailed` gives back the `Signal` that the
+// caller returns (`return stepFailed(...)`), so the three ways a statement can fail are decided in one place.
+/// A statement stopped: by a `sql function` (the signal it ended with, or `$err_sql`), or by the database.
+fn stepFailed(it: *Interp, db: *sqlite.Db, sql: []const u8) Signal {
+    const b = it.base();
+    if (b.sql_signal) |e| {
+        b.sql_signal = null;
+        return e;
+    }
+    if (b.sql_fail) |msg| {
+        b.sql_fail = null;
+        return it.failWith(interp.err_sql, "{s}", .{msg});
+    }
+    return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), sql });
+}
+
+// ---- sql function: Eve functions that SQL calls (database.md#sql-functions, D-166) -----------------------
+
+// Zig tip: SQLite keeps the pointer to a `SqlFn` for as long as the connection lives, so the struct is made with
+// the long-lived allocator `it.a` and never moves: a pointer into an `ArrayList` of structs would move when the
+// list grows, which is why the list holds pointers (`*SqlFn`).
+/// A `sql function` of the program: the function value, the interpreter that declared it and its name in SQL.
+pub const SqlFn = struct {
+    it: *Interp,
+    func: *interp.Func,
+    name: [:0]const u8,
+};
+
+// Zig tip: `Heap.retain` counts one more holder of the function, so it outlives the scope that declared it (an
+// aspect that ends): SQLite may still call it from a later statement.
+/// Keep a `sql function` and register it on every open connection; `openConnection` registers it on the next ones.
+pub fn registerSqlFunction(it: *Interp, f: *interp.Func) Signal!void {
+    const b = it.base();
+    const sf = try it.a.create(SqlFn);
+    sf.* = .{ .it = it, .func = f, .name = try it.a.dupeZ(u8, f.node.text) };
+    Heap.retain(.{ .func = f });
+    try b.sql_funcs.append(it.a, sf);
+    for (b.dbs.items) |db| if (db.handle != null) try addSqlFunction(it, db, sf);
+}
+
+// Zig tip: `@intCast` converts an integer to the type the result needs (`u8` here) and checks in a safe build that the
+// value fits; a function has far fewer than 256 parameters. `catch return ...` turns the error of the binding into a
+// `DatabaseError` of Eve.
+/// Register one `sql function` on one connection.
+fn addSqlFunction(it: *Interp, db: *sqlite.Db, sf: *SqlFn) Signal!void {
+    const n: u8 = @intCast(sf.func.node.kids[0].kids.len);
+    db.createFunction(sf.name, n, sf, sqlCallback) catch
+        return it.failWith(err_io, "DatabaseError: cannot add the sql function {s}: {s}", .{ sf.name, db.errorMessage() });
+}
+
+// Zig tip: a function with `callconv(.c)` can not return a Zig error: C knows none. So the work is done by
+// `sqlRun`, which may fail, and the callback turns a failure into `resultError` and remembers it in the
+// interpreter, where `stepFailed` finds it when SQLite gives the statement back.
+/// SQLite calls this for each call of a `sql function` in a statement.
+fn sqlCallback(ctx: ?*sqlite.CallHandle, argc: c_int, argv: [*c]?*sqlite.ArgHandle) callconv(.c) void {
+    const call = sqlite.Call{ .handle = ctx };
+    const sf: *SqlFn = @ptrCast(@alignCast(call.userData().?));
+    const b = sf.it.base();
+    const it = b.sql_caller orelse sf.it;
+    sqlRun(it, sf, call, argv[0..@intCast(argc)]) catch |e| {
+        if (e == error.Raise) {
+            // an error raised by the function: keep its message for `$err_sql`; the error itself is handled
+            if (b.sql_fail == null and it.reports.items.len > 0) {
+                const r = &it.reports.items[it.reports.items.len - 1];
+                r.handled = true;
+                b.sql_fail = std.fmt.allocPrint(it.a, "SQL function {s} failed: {s}", .{ sf.name, r.message }) catch null;
+            }
+        } else b.sql_signal = e;
+        call.resultError(b.sql_fail orelse "the sql function stopped");
+    };
+}
+
+// Zig tip: `for (prms, argv, 0..) |q, raw, i|` walks two slices of the same length and a counter at once; Zig
+// checks that the lengths match (SQLite passes exactly the number of arguments the function was registered with).
+/// Convert the arguments by the types of the parameters, run the function, and give its result to SQL.
+fn sqlRun(it: *Interp, sf: *SqlFn, call: sqlite.Call, argv: []const ?*sqlite.ArgHandle) Signal!void {
+    const eql = std.mem.eql;
+    const b = it.base();
+    const prms = sf.func.node.kids[0].kids;
+    const args = try it.t.alloc(interp.Arg, prms.len);
+    for (prms, argv, 0..) |q, raw, i| {
+        const a = sqlite.Arg{ .handle = raw };
+        const ty = baseType(q.ty);
+        const is_int = eql(u8, ty, "Integer") or eql(u8, ty, "Natural");
+        const is_real = eql(u8, ty, "Real") or eql(u8, ty, "Float");
+        const v: Value = switch (a.kind()) {
+            .null => if (isOptional(q.ty)) .nil else {
+                b.sql_fail = try std.fmt.allocPrint(it.a, "SQL function {s} failed: NULL for the parameter {s}: {s}; declare it {s}?", .{ sf.name, q.text, ty, ty });
+                return error.Raise;
+            },
+            .integer => if (eql(u8, ty, "Logic"))
+                .{ .bool = a.int() != 0 }
+            else if (eql(u8, ty, "Decimal"))
+                .{ .dec = decimal.fromInt(a.int()) orelse return it.overflow() }
+            else if (eql(u8, ty, "Real"))
+                .{ .real = @floatFromInt(a.int()) }
+            else if (eql(u8, ty, "Float"))
+                .{ .float = @floatFromInt(a.int()) }
+            else if (is_int)
+                .{ .int = a.int() }
+            else
+                return sqlMismatch(it, sf, q, "an INTEGER"),
+            .real => if (eql(u8, ty, "Decimal"))
+                .{ .dec = try it.decFromReal(a.real()) }
+            else if (eql(u8, ty, "Float"))
+                .{ .float = a.real() }
+            else if (is_real)
+                .{ .real = a.real() }
+            else
+                return sqlMismatch(it, sf, q, "a REAL"),
+            .text => if (is_int or is_real or eql(u8, ty, "Logic")) return sqlMismatch(it, sf, q, "a TEXT") else try it.fromSqlText(a.text(), q),
+            .blob => return sqlMismatch(it, sf, q, "a BLOB"),
+        };
+        args[i] = .{ .value = v };
+    }
+    const res = try it.invokeWith(sf.func, null, args);
+    switch (res) {
+        .nil => call.resultNull(),
+        .bool => |x| call.resultInt(@intFromBool(x)),
+        .int, .nat, .byte, .short, .huge => |n| call.resultInt(n),
+        .real, .float => |x| call.resultReal(x),
+        .dec, .instant => call.resultText(try it.text(res)),
+        .str => |s| call.resultText(s),
+        else => {
+            b.sql_fail = try std.fmt.allocPrint(it.a, "SQL function {s} failed: its result is a {s}, which SQL does not have", .{ sf.name, Interp.typeName(res) });
+            return error.Raise;
+        },
+    }
+}
+
+// Zig tip: `sqlMismatch` relies on the same Zig feature as `stepFailed`: it returns the `Signal` that its caller
+// returns. `catch return error.OutOfMemory` keeps the one error that `allocPrint` can give.
+/// A SQL value that does not fit the type of a parameter: the call fails with `$err_sql`.
+fn sqlMismatch(it: *Interp, sf: *SqlFn, q: *const Node, kind: []const u8) Signal {
+    const ty = if (q.ty) |t| t.text else "String";
+    it.base().sql_fail = std.fmt.allocPrint(it.a, "SQL function {s} failed: {s} for the parameter {s}: {s}", .{ sf.name, kind, q.text, ty }) catch return error.OutOfMemory;
+    return error.Raise;
 }
 
 /// The methods of a `Connection`: `script`, `execute!`, `query!`, `query_one!` and `close`.

@@ -29,6 +29,9 @@ driver e94_orm_retry_conflict is
       done;
       let c.city := "Y";
     done change;
+    print "tries {tries}";
+    new back := shop.query_one!(:Customer)("select id, name, city, version from customers where id = 1");
+    print "{back.city} {back.version}";   ** the rollback undid the update of try 1 too: the retry read version 1 and wrote 2
   recover
     print "failed {$error.code}, try {tries}";
     retry;
@@ -36,8 +39,10 @@ driver e94_orm_retry_conflict is
 end e94_orm_retry_conflict;
 /*@expect
 {
-  "contains": [
-    "failed 53, try 1"
+  "stdout": [
+    "failed 53, try 1",
+    "tries 2",
+    "Y 2"
   ]
 }
 */

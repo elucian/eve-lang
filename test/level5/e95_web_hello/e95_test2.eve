@@ -18,6 +18,8 @@ end e95_test2;
     "ok --remote fails when nobody listens there (69)",
     "ok --remote without an address is a usage error (64)",
     "ok a second start fails: already running (75)",
+    "ok --listen status finds no IPC door (69)",
+    "ok -lsn is an unknown option now (64)",
     "ok --serve stop ends with 0",
     "ok after stop: not running (69)",
     "modes http: all checks passed"

@@ -80,6 +80,17 @@ pub fn parse(text: []const u8) ?Dec {
 }
 
 /// The value as a `Real` (it can lose digits).
+// Zig tip: `std.fmt.bufPrint` writes into a buffer on the stack and gives the slice it filled; `{d}` writes a
+// float as the shortest text that reads back as the same float, so `0.1` stays `0.1` and not `0.1000000000000000055`.
+// `catch return null` turns a buffer that is too small into "no Decimal".
+/// The Decimal of the shortest text of a Real: `0.1` is `0.1d`, `2.5e3` is `2500d`. Null when it does not fit.
+pub fn fromF64(x: f64) ?Dec {
+    if (std.math.isNan(x) or std.math.isInf(x)) return null;
+    var buf: [64]u8 = undefined;
+    const shown = std.fmt.bufPrint(&buf, "{d}", .{x}) catch return null;
+    return parse(shown);
+}
+
 pub fn toF64(d: Dec) f64 {
     return @as(f64, @floatFromInt(d.m)) / std.math.pow(f64, 10, @floatFromInt(d.scale));
 }

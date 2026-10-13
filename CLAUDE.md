@@ -2,7 +2,7 @@
 
 Eve is a domain-specific scripting language (data processing, test automation).
 This repo holds the language **examples, spec and manual**, and the first implementation: the
-Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 66/66 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42/42 tests, level 5: 98/98 tests (e01 to e22: generics, overloading, macros; e23 to e53 and e57 to e94: data language and database layer; e54 and e55: `project init` and `project new`; e56: local ETL CSV to SQLite to JSON; e95: the machine, IPC and HTTP doors, a project with four use cases run by a Node.js client), smoke: 16 tests).
+Eve virtual machine, written in Zig 0.16 in `evevm/`, built to `bin/eve.exe` (runs level 1: 66/66 tests, level 2: 63/63 tests, level 3: 50/50 tests, level 4: 42/42 tests, level 5: 112/112 tests (e01 to e22: generics, overloading, macros; e23 to e53 and e57 to e94, e103 to e107: data language and database layer; e54 and e55: `project init` and `project new`; e56: local ETL CSV to SQLite to JSON; e95: the machine, IPC and HTTP doors, the machine API `vm.*`, a project with four use cases run by a Node.js client; e96 to e102: `sql function`, `$err_sql`, Eve stored procedures in `proc/`, `eve db proc list`), smoke: 16 tests). `eve vm|cp|db|ux` choose a part (D-163); `./run.sh evevm|evecp|evedb|eveux <args>` are shortcuts.
 Build and test from `evevm/`: `zig build -p ..` (installs `bin/eve.exe`), `zig build test`.
 Every text file is LF, in the index and in the working tree (`.gitattributes`); only `.bat`/`.cmd`/`.ps1` are CRLF.
 

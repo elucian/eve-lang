@@ -44,8 +44,8 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version 0.1 | Levels 1 and 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply`. | 23 of 33 | in progress |
 | Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 4 of 13 | in progress |
 | Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
-| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 24 | planned |
-| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 14 | planned |
+| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 29 | planned |
+| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 15 | planned |
 | Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the RAD Workbench eveux, written in Eve, as the final test of the language. | 0 of 8 | planned |
 | Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
 | Version 0.9 | Levels 1 to 7 | Release candidate | Package manager, more database drivers, web kit, hardening. | 0 of 3 | planned |
@@ -148,7 +148,7 @@ Exit: parallel tests are deterministic over 100 runs; a pipeline with more stage
 
 Level 5. Goal: The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands.
 
-0 of 22 features done.
+0 of 29 features done.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -163,6 +163,9 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-DAT-10 | Schema migrations | open | numbered SQL scripts in `db/migrations/<name>/`, applied by `db migrate` and recorded in the Eve database. |
 | F-DAT-11 | Record-table mapping | open | `table` declarations binding record classes to tables, tracked records with dirty fields, updates of the changed fields only, mapping validated in debug mode and refused in production (`plan/design-database-core.md`, Q-046). *Specified and taught (2026-10-10), as proposed in Q-046:* `spec/library/database.md`, `databases.html`; review points in `plan/review_level5.md`. |
 | F-DAT-12 | evedb, the Eve test database | partial | a database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log (`evedb/README.md`). *Partial:* DuckDB 1.5.6 linked, `bin/evedb.exe` runs a self-check, 4 unit tests; no server yet. |
+| F-DAT-13 | `sql function` | partial | an Eve function marked `sql function` is registered on every SQLite and DuckDB connection and called from SQL; deterministic, one result, SQL types, not overloaded; SQL `NULL` only for nullable types; an error stops the query with `$err_sql` (code 59) (D-166, `spec/library/database.md#sql-functions`). *Partial (2026-10-12):* SQLite done, tests e96 to e101; DuckDB waits for the VM to load it (D-166). |
+| F-DAT-14 | Stored procedures | partial | native procedures in `sql/` called through `external` signatures; Eve procedures in `proc/`, run by the database part, listed by `eve db proc list`, reloaded by `eve db proc reload`, called by `db.call` (D-166, `spec/library/database.md#stored-procedures`). *Partial (2026-10-12):* a module of `proc/` is imported and its `sql function`s registered, `eve db proc list`; tests e102, e102_test1. Not yet: `external` at run time (no database with stored procedures in the tests), `proc reload`, `db.call`. |
+| F-VM-11 | One `eve`, its source in modules | partial | the modules `evecm`, `evecp`, `evevm`, `evedb`, `eveux` and `cmd` with one build; one binary whose first word chooses the part, `eve vm`, `cp`, `db`, `ux`; the serving machine as one process (D-163, D-164, `plan/design-packages.md`; phases A and B). *Partial (2026-10-12):* the part words and the shortcuts of `run.sh`; the split itself is not started. |
 | F-DOC-02 | Tutorial, data client part | open | files, formats, streams, HTTP client, ETL pipelines (review `RTU` phase T1). |
 | F-LIB-04 | Files and paths | open | `fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). |
 | F-LIB-05 | Data formats | open | JSON and CSV read/write, decode into records; later XML, Parquet. |
@@ -185,18 +188,19 @@ Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; l
 
 Level 6. Goal: The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI.
 
-0 of 14 features done.
+0 of 15 features done.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
 | F-DOC-03 | Tutorial, network and web part | open | client and server, services, protocol, security, HTML, WebAssembly (review `RTU` phases T2, T3). (Version 0.5 –v0.6) |
 | F-LIB-10 | Encryption and hashing | open | hashes, HMAC, symmetric encryption (manifest). |
-| F-NET-02 | HTTP server | partial | routes, request and response records, static files, one state per request (review `RNW-R02`). *Partial (2026-10-11, D-162):* the machine with its two doors, IPC (`-lsn`) and HTTP (`--serve`: the web folder, `POST /rpc`), JSON-RPC methods `ping`, `status`, `run`, `stop`, the client options `-loc` and `-rem` (`spec/library/machine.md`); tests `e95_web_hello` and `e95_test1` to `e95_test3` pass. Not yet: routes and `service` scripts, HTTPS, login, WebSocket. |
+| F-NET-02 | HTTP server | partial | routes, request and response records, static files, one state per request (review `RNW-R02`). *Partial (2026-10-11, D-162):* the machine with its two doors, IPC (`--listen`, was `-lsn` until D-169) and HTTP (`--serve`: the web folder, `POST /rpc`), JSON-RPC methods `ping`, `status`, `run`, `stop`, the client options `-loc` and `-rem` (`spec/library/machine.md`); tests `e95_web_hello` and `e95_test1` to `e95_test3` pass. Not yet: routes and `service` scripts, HTTPS, login, WebSocket. |
 | F-NET-03 | Eve Wire Protocol (EWP) | open | framed binary protocol for Eve-to-Eve calls and data streams, flow control, resumable streams (review `RNW-R04`). |
 | F-NET-04 | Remote apply | open | run an aspect on another node with a deadline and an idempotency key (review `RNW-R01`). |
 | F-NET-05 | Capabilities and sandbox | open | fs, net, db, shell permissions per project and per aspect (review `RNW-R08`). |
 | F-NET-06 | Authentication | open | tokens, sessions, TLS certificates for services. |
 | F-NET-07 | Machine login: single sign-on and the keyring | open | from one local machine, a login per remote machine: single sign-on (OpenID Connect), an account of the machine, or a machine token; the renewal token kept in the keyring of the operating system (Windows Credential Manager, Linux Secret Service) after the first login; commands `login`, `logout`, `forget`, `whoami`; users, roles and registration of a listening machine in its Eve database (D-155, `plan/design-service.md` §15, Q-048). |
+| F-NET-08 | The machine API | partial | JSON-RPC 2.0 methods named by part: `vm.ping`, `vm.stat`, `vm.run`, `vm.eval`, `vm.suspend`, `vm.resume`, `vm.inspect`, `vm.cancel`, `vm.stop`; `db.*`; the first names of D-162 answered until level 6; no TLS in the machine, a reverse proxy for remote HTTPS; ACP outward (D-165, `spec/library/machine.md#the-machine-api`). *Partial (2026-10-12):* `vm.ping`, `vm.stat` (with the active parts), `vm.run`, `vm.stop` and the first names, `-32601` for another method; test e95_test4. |
 | F-SPEC-06 | Network semantics and protocol | open | remote `apply`, services, Eve Wire Protocol (`spec/protocol/`). |
 | F-STR-08 | Service script kind | open | long-running entry point with routes handled by aspects (review `RNW-R02`; needs a decision). |
 | F-TLS-12 | Machine setup | open | `--setup <folder>`, the machine folder, `eve.cfg`, built-in defaults, identity domain + port, external checksum, `setup` reload (D-083). |

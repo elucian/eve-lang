@@ -125,6 +125,22 @@ const Checker = struct {
         return std.mem.eql(u8, t, "Integer") or std.mem.eql(u8, t, "Real");
     }
 
+    // Zig tip: `ty orelse return false` unwraps an optional or leaves the function: a missing type is never a match.
+    fn isType(ty: ?[]const u8, name: []const u8) bool {
+        const t = ty orelse return false;
+        return std.mem.eql(u8, t, name);
+    }
+
+    // Zig tip: a slice of bytes can be read from both ends: `text[0]` is the first byte, `text[text.len - 1]` the last.
+    // A Decimal literal is digits, perhaps a point and more digits, then `d` (`12.50d`); `0xAD` is a hexadecimal
+    // Integer that also ends with `d`, so a literal that starts with `0x` or `0b` is never a Decimal.
+    fn isDecimalLiteral(text: []const u8) bool {
+        if (text.len < 2 or text[text.len - 1] != 'd' or !std.ascii.isDigit(text[0])) return false;
+        if (text.len > 2 and text[0] == '0' and (text[1] == 'x' or text[1] == 'b')) return false;
+        for (text[0 .. text.len - 1]) |ch| if (!std.ascii.isDigit(ch) and ch != '.' and ch != '_') return false;
+        return true;
+    }
+
     fn isString(ty: ?[]const u8) bool {
         const t = ty orelse return false;
         return std.mem.eql(u8, t, "String");
@@ -140,6 +156,7 @@ const Checker = struct {
         c.expected = null; // only the expression that the context names uses it, not what is inside
         switch (n.tag) {
             .num => {
+                if (isDecimalLiteral(n.text)) return "Decimal";
                 for (n.text) |ch| if (ch == '.') return "Real";
                 for (n.text) |ch| if (std.ascii.isAlphabetic(ch)) return null;
                 return "Integer";
@@ -183,7 +200,12 @@ const Checker = struct {
                 return null;
             },
             .builder => return c.builder(n),
-            .call => return c.callExpecting(n, false, exp),
+            .call => {
+                const ty = try c.callExpecting(n, false, exp);
+                // `Secret(text)` makes a Secret: the checker knows its type (data-language.md#secrets)
+                if (n.kids[0].tag == .name and std.mem.eql(u8, n.kids[0].text, "Secret")) return "Secret";
+                return ty;
+            },
             .await_ => {
                 c.task_call = true;
                 defer c.task_call = false;
@@ -213,9 +235,18 @@ const Checker = struct {
         if (std.mem.eql(u8, op, "+") and ((isString(lt) and isNumeric(rt)) or (isNumeric(lt) and isString(rt)))) {
             return c.fail(n, "'+' does not add a string and a number: use '<+' to append a number as text", .{});
         }
+        if (std.mem.eql(u8, op, "+") and (isType(lt, "Secret") or isType(rt, "Secret"))) {
+            return c.fail(n, "a Secret is not a String: '+' can not join it to a text; give it to a sink that accepts a Secret (data-language.md#secrets)", .{});
+        }
         if (std.mem.eql(u8, op, "+") and isString(lt) and isString(rt)) return "String";
+        // a Decimal and a Real are never mixed without a conversion (data-language.md, D-080): a compile error (D-110)
+        if ((isType(lt, "Decimal") and isType(rt, "Real")) or (isType(lt, "Real") and isType(rt, "Decimal"))) {
+            return c.fail(n, "operator {s} does not apply to {s} and {s}: a Decimal and a Real are never mixed, convert one explicitly (D-080)", .{ op, lt.?, rt.? });
+        }
         const cmp = [_][]const u8{ "==", "<>", "<", ">", "<=", ">=", "=~", "and", "or", "xor", "in", "not in", "is", "is not" };
         for (cmp) |o| if (std.mem.eql(u8, op, o)) return "Logic";
+        // a Decimal with a Decimal or an Integer stays a Decimal
+        if ((isType(lt, "Decimal") and (isType(rt, "Decimal") or isType(rt, "Integer"))) or (isType(lt, "Integer") and isType(rt, "Decimal"))) return "Decimal";
         if (isNumeric(lt) and isNumeric(rt)) {
             if (std.mem.eql(u8, op, "/")) return "Real";
             return if (std.mem.eql(u8, lt.?, "Real") or std.mem.eql(u8, rt.?, "Real")) "Real" else "Integer";
@@ -704,7 +735,7 @@ const Checker = struct {
                 if (!std.mem.eql(u8, m.text, pair.kids[0].text)) continue;
                 const ty = m.ty orelse continue;
                 if (!std.mem.endsWith(u8, ty.text, "?")) {
-                    return c.fail(pair, "null for '{s}' of {s}, which is not optional: write {s}? to allow null (D-080)", .{ m.text, class_name, ty.text });
+                    return c.fail(pair, "null in {s}: {s} is not optional; write {s}? to allow null (D-080)", .{ class_name, m.text, ty.text });
                 }
             }
         }
@@ -787,6 +818,7 @@ const Checker = struct {
     fn declareSubprogram(c: *Checker, m: *const Node) Error!void {
         if (c.ov.getPtr(m.text)) |list| {
             if (list.items[0].tag != m.tag) return c.fail(m, "{s} is both a function and a procedure: they never share a name (D-149)", .{m.text});
+            if (list.items[0].is_sql or m.is_sql) return c.fail(m, "the sql function {s} can not be overloaded: SQL finds a function by its name (D-166)", .{m.text});
             for (list.items) |d| {
                 if (overload.sameSignature(d, m)) return c.fail(m, "{s} is declared twice with the same signature (D-149)", .{m.text});
             }

@@ -1,0 +1,27 @@
+# Eve stored procedures: a module of proc/ is imported like any module; its sql function is registered on the connection (D-166)
+** spec: library/database.md#stored-procedures
+driver e102_proc_module is
+  from proc use (orders);
+  class Row = {id: Integer, cents: Decimal} <: Record;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.script("sql/schema.sql");
+    new moved := 0;
+    orders.archive("2026-01-01", @moved);
+    print "moved {moved}";
+    for r in shop.query!(:Row)("select id, cents(amount) as cents from orders order by id") do
+      print "{r.id}: {r.cents}";
+    done;
+    print shop.query_one!(:Row)("select count(*) as id, sum(cents(amount)) as cents from archive").cents;
+  return;
+end e102_proc_module;
+/*@expect
+{
+  "stdout": [
+    "moved 2",
+    "2: 25000.00",
+    "8550"
+  ]
+}
+*/

@@ -68,12 +68,12 @@ eve: no remote machine at 127.0.0.1:9999    (exit 69)
 
 `-rem` without an address uses `remote` of `eve.cfg`. On Windows an answer "nobody there" through HTTP takes about 2 seconds (the system retries a refused connection to `localhost`); through IPC it takes about 50 ms.
 
-## 2. IPC only: `eve -lsn`
+## 2. IPC only: `eve --listen`
 
 The machine opens the IPC door (a Unix socket) and no web door.
 
 ```
-terminal 1> eve -lsn
+terminal 1> eve --listen
 eve: ipc localhost:4042
 ```
 
@@ -100,7 +100,7 @@ runs: 2
 > eve -rem -x src/hello.eve          # HTTP is off: remote fails
 eve: no remote machine at 127.0.0.1:8042    (exit 69)
 
-> eve -lsn                           # a second machine on the same port
+> eve --listen                       # a second machine on the same port
 eve: already running (ipc localhost:4042)   (exit 75)
 
 > eve -loc --serve stop
@@ -152,12 +152,12 @@ Hello from Eve
 eve: already running (http localhost:8042)  (exit 75)
 ```
 
-Terminal 1 also logs the pages: `eve: http GET /: 200`, `eve: http GET /css/style.css: 200`, `eve: http GET /eve.cfg: 404`, and every call of the page: `eve: http status`.
+Terminal 1 also logs the pages: `eve: http GET /: 200`, `eve: http GET /css/style.css: 200`, `eve: http GET /eve.cfg: 404`, and every call of the page: `eve: http vm.stat`.
 
-## 4. Both doors: `eve -lsn --serve`
+## 4. Both doors: `eve --listen --serve`
 
 ```
-terminal 1> eve -lsn --serve
+terminal 1> eve --listen --serve
 eve: ipc localhost:4042
 eve: http http://localhost:8042
 ```
@@ -170,7 +170,7 @@ terminal 2> eve -loc -x src/hello.eve     →  terminal 1: eve: ipc run hello.ev
             eve -x src/hello.eve          →  no line: without -loc or -rem, -x runs in this process
 ```
 
-`eve --serve status` shows `ipc: listening`, `http: listening`, and `eve -lsn` and `eve --serve` both answer `already running` (exit 75).
+`eve --serve status` shows `ipc: listening`, `http: listening`, and `eve --listen` and `eve --serve` both answer `already running` (exit 75). `eve --listen status` and `eve --listen stop` speak through the IPC door only; `eve --serve status` and `stop` try IPC, then HTTP.
 
 ## 5. Local and remote execution, what comes back
 
@@ -236,10 +236,10 @@ eve: http http://localhost:8042
 
 `restart` makes the terminal where you typed it the new machine: it does not return. With no machine running, it starts like `--serve`.
 
-A second machine runs next to the first on another IPC port; `-loc <port>` addresses it:
+A second machine runs next to the first on another IPC port, named in another configuration file (`second.cfg` of this folder: `ipc_port = 4043`); `-loc <port>` addresses it:
 
 ```
-terminal 3> eve -lsn 4043
+terminal 3> eve -s second.cfg --listen
 eve: ipc localhost:4043
 
 terminal 2> eve -loc 4043 --serve status
@@ -269,15 +269,16 @@ Both doors speak JSON-RPC 2.0; on HTTP it is `POST /rpc`. With `curl` (on Window
 HTTP/1.1 405 Method Not Allowed
 ```
 
-The methods are `ping`, `status`, `run` and `stop`.
+The methods are those of the machine API (D-165): `vm.ping`, `vm.stat` (the doors, the runs and the active parts), `vm.run` and `vm.stop`. Their first names `ping`, `status`, `run` and `stop` (D-162) are still answered until level 6 ends; an unknown method is the JSON-RPC error `-32601`. The page of `web/` uses the new names.
 
 ## All the commands
 
 | Command | Does |
 |---|---|
-| `eve -lsn [port]` | start a machine with the IPC door |
+| `eve --listen` | start a machine with the IPC door (`eve -s other.cfg --listen` for the ports of another file) |
 | `eve --serve` | start a machine with the HTTP door (the web server) |
-| `eve -lsn --serve` | start a machine with both doors |
+| `eve --listen --serve` | start a machine with both doors |
+| `eve --listen status`, `stop`, `restart` | the same words as `--serve`, through the IPC door only |
 | `eve --serve status` | the doors and the number of scripts the machine ran |
 | `eve --serve stop` | end the machine |
 | `eve --serve restart` | end it and start it again in this terminal, with the same doors |
@@ -296,7 +297,8 @@ The methods are `ping`, `status`, `run` and `stop`.
 
 ## What to look at, and what is not there yet
 
-- **Not yet:** HTTPS and login (anyone on this computer who reaches the port can run code in the machine: keep `http_host = "localhost"`), host names for `-rem` (an IP address or `localhost` only), services and routes, WebSocket, sending a whole project with `-rem` (only the text of one script travels; its `import` and `apply` find the files of the machine).
+- **HTTPS:** never in the machine (D-165). Remote clients reach it through a reverse proxy (Nginx, Caddy, Cloudflare Tunnel) that ends HTTPS and forwards to the loopback port.
+- **Not yet:** login (anyone on this computer who reaches the port can run code in the machine: keep `http_host = "localhost"`), host names for `-rem` (an IP address or `localhost` only), services and routes, WebSocket, sending a whole project with `-rem` (only the text of one script travels; its `import` and `apply` find the files of the machine).
 - **Windows:** a refused HTTP connection takes about 2 s, so `eve --serve status` with no machine, and every start of `--serve` (it first asks the port whether someone is there), take 2 s. The IPC door answers in about 50 ms.
 - **Ideas to try:** stop the machine while the page is open (the status turns red), run `slow.eve` from the page and `hello.eve` from the CLI at the same time, run two machines on two ports, kill the machine with Ctrl+C and start it again.
 

@@ -24,7 +24,7 @@ end e81_json_array;
   "stdout": [
     "1 Ann 12.50 2026-10-10T08:00:00Z",
     "2 Zoë \"Z\" 3 1970-01-01T00:00:00Z",
-    "5 Eve 1.5 Null"
+    "5 Eve 1.5 null"
   ],
   "files": {
     "out/items.json": [
