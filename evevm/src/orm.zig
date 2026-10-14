@@ -18,7 +18,7 @@ const Value = interp.Value;
 const Class = interp.Class;
 const Object = interp.Object;
 const Signal = interp.Signal;
-const Heap = @import("heap.zig").Heap;
+const Heap = @import("evecm").heap.Heap;
 
 /// The error code of a `ConflictError`: someone else changed the row (errors.md).
 pub const err_conflict = 53;

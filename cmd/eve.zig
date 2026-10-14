@@ -53,8 +53,8 @@ pub fn main(init: std.process.Init) !void {
 
     // Zig tip: `environ_map.get` answers an optional text; `orelse ""` turns a missing variable into an
     // empty one, so one comparison covers both cases. The heap reads these two switches (heap.zig).
-    evevm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
-    evevm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
+    evecm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
+    evecm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
 
     // Zig tip: `File.Writer.init` writes at its own position from 0 when the file can seek, which is right for a
     // file the program opened, but wrong for the standard output: `eve -x a.eve >> log.txt` overwrote the start of

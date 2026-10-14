@@ -18,210 +18,47 @@ const orm = @import("orm.zig");
 const instant = @import("evecm").instant;
 const sqlite = @import("sqlite.zig");
 const Scratch = @import("scratch.zig").Scratch;
-const heap = @import("heap.zig");
+const heap = @import("evecm").heap;
 const Heap = heap.Heap;
 const Obj = heap.Obj;
 const Node = ast.Node;
 
-// Zig tip: an error set is a list of names; `||` merges sets. Every function that can fail while
-// running a script returns `Signal!T`. Recursive functions (`eval` calls itself through its
-// helpers) must name their error set: Zig cannot infer it for a cycle. The first names are
-// control flow, the last two are the failures of the allocator and of the output writer.
-/// What interrupts the normal flow of a script.
-pub const Signal = error{ JobRollback, Raise, Break, Skip, Over, Exit, StopJob, Panic, Retry, Resume, Abort, Stop, Cancel, OutOfMemory, WriteFailed };
-
-// Zig tip: a `union(enum)` is a "tagged union": a value that is exactly one of several kinds, and
-// remembers which. `switch (v)` must handle every kind. `.int => |n|` captures the payload. Kinds
-// that point to a struct (`*List`) are shared: copying the `Value` copies the pointer, so two
-// variables see the same list. Kinds such as `int` and `real` are copied. This is Eve's rule:
-// "`:=` shares a collection, native values are always copied" (D-049). A field cannot be called
-// `null` in Zig (a keyword), hence `nil`.
-/// Any value of an Eve script.
-pub const Value = union(enum) {
-    nil,
-    bool: bool,
-    int: i64,
-    /// Natural: written in hexadecimal or binary.
-    nat: i64,
-    byte: i64,
-    short: i64,
-    huge: i64,
-    real: f64,
-    float: f64,
-    /// A Decimal: an integer and a scale, exact (decimal.zig).
-    dec: decimal.Dec,
-    /// An Instant: microseconds since 1970-01-01T00:00:00Z (instant.zig).
-    instant: i64,
-    /// A Symbol: one Unicode code point.
-    sym: u21,
-    str: []const u8,
-    /// A List `( )` or an Array `[ ]` (see `List.array`).
-    list: *List,
-    /// A DataSet `{ }`: a List kept sorted, without duplicates.
-    set: *List,
-    map: *Map,
-    object: *Object,
-    class: *Class,
-    func: *Func,
-    range: *Range,
-    domain: *Domain,
-    /// The value of `Integer`, `String`, ... and of `type(x)`.
-    typ: []const u8,
-    /// A module that an import brought in: `counter.tick()` reaches its exported members (modules.md).
-    module: *Module,
-    /// A channel that connects the tasks of a parallel group (D-141).
-    chan: *Channel,
-};
-
-// Zig tip: a channel is a queue with a fixed capacity, shared by pointer: every task that receives it
-// with `@` sees the same one. It needs no lock, because only the task holding the baton runs (task.zig);
-// a full or empty channel makes the task give the baton away and try again later.
-/// `Channel(:T)(capacity: n, senders: m)`: values in order, closed after `senders` closes (D-141).
-pub const Channel = struct {
-    hdr: Obj = .{ .kind = .chan },
-    /// The name of the variable that created it: the error messages name it.
-    name: []const u8 = "",
-    buf: std.ArrayList(Value) = .empty,
-    capacity: usize,
-    senders: usize = 1,
-    closes: usize = 0,
-    closed: bool = false,
-};
-
-// Zig tip: a module is loaded once (D-068), so one `Module` exists per module file for the whole run. It
-// owns a `Scope` of its own: the private variables of the module live there and the functions of the
-// module close over it, so only they can change them. `node` is the parsed tree, kept for its
-// `export` list and its regions.
-/// A loaded module: its scope, its tree and its name.
-pub const Module = struct { name: []const u8, node: *const Node, scope: *Scope };
-
-// Zig tip: a `struct` groups named fields (and functions); `pub` makes a name visible to other
-// files; a field with `= value` has a default, so `.{ ... }` need not give it.
-/// A list, an array, a set, or a view of a part of another list (a slice `v[2..3]`).
-pub const List = struct {
-    hdr: Obj = .{ .kind = .list },
-    items: std.ArrayList(Value) = .empty,
-    array: bool = false,
-    /// A view shares the storage of `base`: `off` and `len` say which part.
-    base: ?*List = null,
-    off: usize = 0,
-    len: usize = 0,
-
-    // Zig tip: a method that returns a slice into another struct's memory is a "view": no copy.
-    // `b.elems()[a..b]` slices the slice. Writing through it changes the base list.
-    /// The elements, whether the list owns them or is a view.
-    pub fn elems(l: *List) []Value {
-        if (l.base) |b| return b.elems()[l.off .. l.off + l.len];
-        return l.items.items;
-    }
-};
-
-pub const Entry = struct { key: Value, val: Value };
-// Zig tip: `hdr: Obj = .{ .kind = .map }` is the header every heap object starts with (heap.zig, `Obj`):
-// a field with a default value, so the heap can build the map with `.{}` and then fill the header in.
-/// A sorted map: the entries are kept in key order.
-pub const Map = struct { hdr: Obj = .{ .kind = .map }, entries: std.ArrayList(Entry) = .empty };
-
-pub const Field = struct { name: []const u8, val: Value };
-// Zig tip: `Object` relies on the same Zig feature as `Map` above: see the tip there.
-/// An object: named attributes in the order they were created; `class` is set for `new C(...)`.
-pub const Object = struct { hdr: Obj = .{ .kind = .object }, class: ?*Class = null, fields: std.ArrayList(Field) = .empty };
-
-// Zig tip: `Class` relies on the same Zig feature as `List` above: see the tip there.
-/// A class. `node` is null for the built-in `Object`. An ordinal class keeps its named values in `ord`.
-pub const Class = struct {
-    name: []const u8,
-    node: ?*const Node = null,
-    ordinal: bool = false,
-    parent: ?*Class = null,
-    ord: std.ArrayList(Field) = .empty,
-    /// The traits the class adopts (D-145); a trait itself is a `Class` with `trait` set.
-    traits: std.ArrayList(*Class) = .empty,
-    trait: bool = false,
-};
-
-// Zig tip: a `var` at file level is a global with a fixed address for the whole program; `&library_traits[0]`
-// is a pointer that stays valid, so every scope can point to the same trait. They hold no allocated memory
-// (no node, empty lists), so sharing them between runs is safe.
-/// The traits of the library: `Printable`, `Comparable`, `Iterable`, `Stream` (D-145).
-var library_traits = [_]Class{
-    .{ .name = "Printable", .trait = true },
-    .{ .name = "Comparable", .trait = true },
-    .{ .name = "Iterable", .trait = true },
-    .{ .name = "Stream", .trait = true },
-};
-
-// Zig tip: `?*Class` may be null (an object made without a class); `orelse return false` answers for it.
-/// Does the class, or one of its ancestors, adopt the trait called `name`?
-fn adopts(cls: ?*Class, name: []const u8) bool {
-    var cur: ?*Class = cls orelse return false;
-    while (cur) |k| : (cur = k.parent) {
-        for (k.traits.items) |tr| if (std.mem.eql(u8, tr.name, name)) return true;
-    }
-    return false;
-}
-
-// Zig tip: `Func` relies on the same Zig feature as `Map` above: see the tip there.
-/// A function, method or lambda together with the scope it was created in.
-pub const Func = struct { hdr: Obj = .{ .kind = .func }, node: *const Node, closure: *Scope };
-
-// Zig tip: `Range` relies on the same Zig feature as `Map` above: see the tip there.
-/// An integer range with both ends included; `(1..<5)` is stored as 1 to 4.
-pub const Range = struct { hdr: Obj = .{ .kind = .range }, lo: i64, hi: i64, step: i64 = 1, sym: bool = false };
-
-// Zig tip: a range that is not a plain run of integers is a "domain": real limits, an open end
-// (`null` is no limit), a limit that is excluded, a step that sets the precision (`(0..1)(0.01)`).
-// An optional `?f64` is a float or nothing.
-/// A domain of values (D-022, D-079): `x in domain` asks whether the value is inside.
-pub const Domain = struct { hdr: Obj = .{ .kind = .domain }, lo: ?f64 = null, hi: ?f64 = null, lo_excl: bool = false, hi_excl: bool = false, step: ?f64 = null };
-
-// Zig tip: `Var` relies on the same Zig feature as `Map` above: see the tip there.
-/// A variable. It is a separate struct so that a by-reference parameter can share it.
-pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false };
-pub const Binding = struct { name: []const u8, v: *Var };
-// Zig tip: `Scope` relies on the same Zig feature as `List` above: see the tip there.
-pub const Scope = struct {
-    hdr: Obj = .{ .kind = .scope },
-    binds: std.ArrayList(Binding) = .empty,
-    parent: ?*Scope = null,
-
-    // Zig tip: `?*Var` is a pointer that may be null. A `while (cur) |s|` loop walks the chain of
-    // parent scopes: `cur = s.parent` moves one level up and the loop ends at the null.
-    /// The variable called `name` in this scope or the enclosing ones.
-    pub fn find(sc: *Scope, name: []const u8) ?*Var {
-        var cur: ?*Scope = sc;
-        while (cur) |s| : (cur = s.parent) {
-            for (s.binds.items) |b| {
-                if (std.mem.eql(u8, b.name, name)) return b.v;
-            }
-        }
-        return null;
-    }
-};
-
-// Zig tip: `Report` relies on the same Zig feature as `List` above: see the tip there.
-/// One error met while running: kept for the reports (`errors` command) even when `recover` handles it.
-pub const Report = struct {
-    line: u32,
-    code: u8,
-    message: []const u8,
-    job: []const u8,
-    handled: bool = false,
-    /// The calls that led to the error, innermost first, one `line n in kind name` per line (D-113).
-    trace: []const u8 = "",
-    /// A ParallelError: the errors of the failed tasks, in the order of `start` (D-140).
-    errors: ?*List = null,
-    /// A ParallelError: how many tasks `on error cancel` stopped.
-    cancelled: i64 = 0,
-    /// A ParallelError: one line per failed task, printed under the error when nobody recovers it.
-    details: []const u8 = "",
-};
-
-// Zig tip: an argument passed as `@s[i]` is one element of a list. A parameter binds to a `*Var`, so
-// the element is copied into a fresh `Var`, and `cell` remembers where it came from: when the call or
-// the task ends, the value is written back there (`writeBack`).
-/// One argument of a call, `apply`, `start` or `spawn`.
-pub const Arg = struct { name: []const u8 = "", value: Value, ref: ?*Var = null, cell: ?*Value = null };
+// The values live in evecm (value.zig); they are named here too, so that the code of the interpreter and of the
+// libraries keeps writing `interp.Value`.
+const value = @import("evecm").value;
+pub const Signal = value.Signal;
+pub const Value = value.Value;
+pub const Channel = value.Channel;
+pub const Module = value.Module;
+pub const List = value.List;
+pub const Entry = value.Entry;
+pub const Map = value.Map;
+pub const Field = value.Field;
+pub const Object = value.Object;
+pub const Class = value.Class;
+pub const Func = value.Func;
+pub const Range = value.Range;
+pub const Domain = value.Domain;
+pub const Var = value.Var;
+pub const Binding = value.Binding;
+pub const Scope = value.Scope;
+pub const Report = value.Report;
+pub const Arg = value.Arg;
+pub const err_raise = value.err_raise;
+pub const err_expect = value.err_expect;
+pub const err_assert = value.err_assert;
+pub const err_index = value.err_index;
+pub const err_key = value.err_key;
+pub const err_divide = value.err_divide;
+pub const err_convert = value.err_convert;
+pub const err_parse = value.err_parse;
+pub const err_null = value.err_null;
+pub const err_argument = value.err_argument;
+pub const err_file = value.err_file;
+pub const err_io = value.err_io;
+pub const err_access = value.err_access;
+pub const err_overflow = value.err_overflow;
+pub const err_sql = value.err_sql;
 
 // Zig tip: a task needs its own interpreter (`child`): its scope, its call stack, its output buffer.
 // `Started` keeps everything the parent needs after the task ended: the outcome, the arguments to
@@ -306,22 +143,6 @@ pub const Outcome = struct {
     stopped: bool = false,
 };
 
-pub const err_raise = 4;
-pub const err_expect = 2;
-pub const err_assert = 3;
-pub const err_index = 10;
-pub const err_key = 11;
-pub const err_divide = 12;
-pub const err_convert = 14;
-pub const err_parse = 15;
-pub const err_null = 16;
-pub const err_argument = 17;
-pub const err_file = 20;
-pub const err_io = 22;
-pub const err_access = 21;
-pub const err_overflow = 13;
-/// An error in a `sql function`, or a NULL for one of its non-nullable parameters: the query stops (D-166).
-pub const err_sql = 59;
 
 
 // Zig tip: `Interp` relies on the same Zig feature as `List` above: see the tip there.
@@ -526,7 +347,7 @@ pub const Interp = struct {
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the
         // same in the driver, its aspects and its modules
-        for (&library_traits) |*tr| try it.define(tr.name, .{ .class = tr }, true);
+        for (&value.library_traits) |*tr| try it.define(tr.name, .{ .class = tr }, true);
         const codes = [_]struct { []const u8, i64 }{
             .{ "$err_panic", 1 },     .{ "$err_expect", 2 },    .{ "$err_assert", 3 },   .{ "$err_raise", 4 },
             .{ "$err_index", 10 },    .{ "$err_key", 11 },      .{ "$err_divide", 12 }, .{ "$err_overflow", 13 },
@@ -1138,7 +959,7 @@ pub const Interp = struct {
                     try buf.appendSlice(it.t, "***");
                     return;
                 }
-                if (adopts(o.class, "Printable")) {
+                if (value.adopts(o.class, "Printable")) {
                     // a Printable object prints the text of its own `describe` method (D-145)
                     try it.show(buf, try it.callMethod(v, "describe", &.{}), false);
                     return;

@@ -16,7 +16,7 @@
 //! While tasks run in parallel, nothing is freed: the zero counts wait in a list until the group or
 //! the job reaches `done` (the tasks of stage A share one heap, D-144).
 const std = @import("std");
-const I = @import("interp.zig");
+const I = @import("value.zig");
 const Value = I.Value;
 
 // Zig tip: an `enum(u8)` is a set of names stored in one byte. `switch` on it must cover every name,
@@ -836,7 +836,7 @@ test "a temporary is freed at the safe point of its region, a stored value survi
 // Zig tip: `&ast.none` is the address of a constant node that the interpreter shares for "nothing"; a
 // function object only needs some node to point to.
 test "the tracing collector frees a cycle that reference counting keeps" {
-    const ast = @import("evecm").ast;
+    const ast = @import("ast.zig");
     var h = Heap.init(std.testing.allocator);
     defer h.deinit();
     h.pushRegion();

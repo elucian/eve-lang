@@ -12,7 +12,7 @@ const decimal = @import("evecm").decimal;
 const instant = @import("evecm").instant;
 const nfc = @import("evecm").nfc;
 const orm = @import("orm.zig");
-const Heap = @import("heap.zig").Heap;
+const Heap = @import("evecm").heap.Heap;
 
 const Node = ast.Node;
 const Interp = interp.Interp;
