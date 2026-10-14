@@ -1,4 +1,4 @@
-# peek: uses a name that only the driver declares
+# peek: uses a name that only the primary aspect declares
 exclusive aspect peek is
   process main is
     print secret;

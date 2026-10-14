@@ -1,5 +1,5 @@
-# a module is loaded once: the driver and an aspect share the same copy (D-068)
-driver c07_module_singleton is
+# a module is loaded once: the primary aspect and an aspect share the same copy (D-068)
+primary aspect c07_module_singleton is
   from lib use (counter);
 
   process main is

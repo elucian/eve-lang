@@ -1,5 +1,5 @@
 # declaration pattern
-driver declaration is
+primary aspect declaration is
 
   ** alias names have to start with uppercase letters.
   type Type_name: super_type {parameters};

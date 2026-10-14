@@ -1,6 +1,6 @@
 # an async procedure called without spawn or await is a compile error (D-104 b)
 ** spec: semantics/multitasking.md#tasks-in-a-job
-driver d19_async_plain_call is
+primary aspect d19_async_plain_call is
   async procedure greet(name: String) is
     print "hello {name}";
   return;

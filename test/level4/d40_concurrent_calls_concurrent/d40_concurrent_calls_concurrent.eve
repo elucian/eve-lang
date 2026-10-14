@@ -1,0 +1,16 @@
+# a concurrent aspect does not call another concurrent aspect (D-183)
+** spec: syntax/declarations.md#scripts
+primary aspect d40_concurrent_calls_concurrent is
+  process main is
+    apply outer();
+  return;
+end d40_concurrent_calls_concurrent;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a concurrent aspect is called from a primary or an exclusive aspect"
+  ]
+}
+*/

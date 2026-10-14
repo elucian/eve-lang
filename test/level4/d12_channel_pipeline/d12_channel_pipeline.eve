@@ -1,6 +1,6 @@
 # a pipeline: one producer, four workers and a collector connected by two channels (D-141)
 ** spec: semantics/multitasking.md#channels
-driver d12_channel_pipeline is
+primary aspect d12_channel_pipeline is
   set workers = 4 :Integer;
   process main is
     new total: Integer;

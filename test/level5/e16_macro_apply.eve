@@ -1,4 +1,4 @@
-# an Eve macro: shared declarations, an exclusive aspect and the driver in one file (D-152)
+# an Eve macro: shared declarations, an exclusive aspect and the primary aspect in one file (D-152)
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set step = 5 :Integer;
@@ -17,7 +17,7 @@ exclusive aspect add_step is
   return;
 end add_step;
 
-driver e16_macro_apply is
+primary aspect e16_macro_apply is
   process main is
     apply add_step(3);
     apply add_step(1);

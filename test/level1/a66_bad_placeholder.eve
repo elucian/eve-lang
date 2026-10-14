@@ -1,6 +1,6 @@
 # in a string every unescaped brace opens a placeholder {name}; a literal brace is \{ or \} (D-102)
 ** spec: lexical/lexical.md#string
-driver a66_bad_placeholder is
+primary aspect a66_bad_placeholder is
   process main is
     print "pair {1, 2}";         ** lexical error: not a placeholder, write \{1, 2\}
   return;

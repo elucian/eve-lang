@@ -1,5 +1,5 @@
 # apply runs the main process of an aspect from asp/ and waits (D-066)
-driver b01_apply_aspect is
+primary aspect b01_apply_aspect is
   process main is
     apply greet("Eve");
     apply greet("Bob");

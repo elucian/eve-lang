@@ -1,6 +1,6 @@
 # an Instant keeps a fraction of a second, compares by time, and a date that does not exist is the error parse
 ** spec: library/data-language.md#details-used-by-the-tests
-driver e75_instant_forms is
+primary aspect e75_instant_forms is
   process main is
     new a := Instant.parse("2026-10-10T08:00:00.5Z");
     new b := Instant.parse("2026-10-10T08:00:00.500Z");

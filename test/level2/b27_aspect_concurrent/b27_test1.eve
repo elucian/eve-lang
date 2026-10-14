@@ -1,6 +1,6 @@
 # variation 1 of b27: a concurrent aspect applied with other texts (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b27_test1 is
+primary aspect b27_test1 is
   process main is
     apply shout("one");
     apply shout("two");

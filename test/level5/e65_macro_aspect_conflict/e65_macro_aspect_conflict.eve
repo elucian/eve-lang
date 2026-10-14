@@ -7,7 +7,7 @@ exclusive aspect worker is
   return;
 end worker;
 
-driver e65_macro_aspect_conflict is
+primary aspect e65_macro_aspect_conflict is
   process main is
     apply worker();
   return;

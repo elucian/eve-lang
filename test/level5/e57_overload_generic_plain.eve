@@ -1,6 +1,6 @@
 # a plain function whose parameters fit exactly wins over a generic one with the same name (D-150)
 ** spec: syntax/declarations.md#overloading
-driver e57_overload_generic_plain is
+primary aspect e57_overload_generic_plain is
   function describe(x: Integer) => (@result: String) is
     let result := "plain Integer {x}";
   return;

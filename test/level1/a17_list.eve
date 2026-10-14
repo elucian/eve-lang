@@ -1,6 +1,6 @@
 # list: literal, index, append, remove, capture, delete, builder, deconstruct (D-058 to D-060, D-077, D-079, D-096)
 ** spec: syntax/expressions.md#literals-and-builders, syntax/statements.md#let
-driver a17_list is
+primary aspect a17_list is
   process main is
     new a := (1, 2, 3);
     expect a[1] == 1;            ** the first index is 1

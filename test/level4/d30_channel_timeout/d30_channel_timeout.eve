@@ -1,6 +1,6 @@
 # a wait on a channel longer than $timeout raises TimeoutError in that task (D-081, D-141)
 ** spec: semantics/multitasking.md#channels
-driver d30_channel_timeout is
+primary aspect d30_channel_timeout is
   process main is
     new jobs := Channel(:Integer)(capacity: 1);
     parallel

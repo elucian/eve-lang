@@ -1,6 +1,6 @@
 # level 3 performance: calls through a module
 ** perf: 50,000 calls of module functions (`mathx.square`, `mathx.clamp`) and 50,000 reads of a module constant
-driver p3a_modules is
+primary aspect p3a_modules is
   from lib use (mathx);
 
   process main is

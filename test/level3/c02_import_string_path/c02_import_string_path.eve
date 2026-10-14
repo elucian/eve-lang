@@ -1,5 +1,5 @@
 # Import with a path written as a string (D-072)
-driver c02_import_string_path is
+primary aspect c02_import_string_path is
   from "lib" use (greeting);
 
   process main is

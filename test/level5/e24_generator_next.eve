@@ -1,6 +1,6 @@
 # a generator object is driven step by step with next(), value, done and close()
 ** spec: syntax/declarations.md#generators-level-5
-driver e24_generator_next is
+primary aspect e24_generator_next is
   generator count_to(n: Integer) => (@x: Integer) is
     for i in (1..n) do
       yield i;

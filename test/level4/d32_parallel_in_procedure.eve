@@ -1,6 +1,6 @@
-# a parallel group in a procedure is a compile error: only in the main of a driver or of an aspect (D-140)
+# a parallel group in a procedure is a compile error: only in the main of a primary aspect or of an aspect (D-140)
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
-driver d32_parallel_in_procedure is
+primary aspect d32_parallel_in_procedure is
   procedure fan is
     parallel                           ** compile error: not in a process
     do
@@ -17,7 +17,7 @@ end d32_parallel_in_procedure;
   "syntax_error": true,
   "exit": 65,
   "contains": [
-    "parallel is allowed only in the main of a driver or of an aspect it starts"
+    "parallel is allowed only in a process"
   ]
 }
 */

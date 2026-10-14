@@ -1,5 +1,5 @@
-# A driver that publishes a page: it writes web/report.html, and the HTTP door serves it at once
-driver report is
+# A primary aspect that publishes a page: it writes web/report.html, and the HTTP door serves it at once
+primary aspect report is
   process main is
     new rows := ("north", "south", "east", "west");
     new html := "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Report</title>";

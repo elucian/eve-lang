@@ -1,6 +1,6 @@
 # the compiler flags the call of a direct module from a concurrent aspect (D-129)
 ** spec: semantics/modules.md#managed-and-direct-modules
-driver d01_concurrent_direct_call is
+primary aspect d01_concurrent_direct_call is
   process main is
     apply worker();
   return;

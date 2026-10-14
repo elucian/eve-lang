@@ -1,6 +1,6 @@
 # a missing mandatory argument is a check-time error (D-112)
 ** spec: semantics/aspects.md#arguments
-driver b21_aspect_missing_arg is
+primary aspect b21_aspect_missing_arg is
   process main is
     print "never";
     apply greet();

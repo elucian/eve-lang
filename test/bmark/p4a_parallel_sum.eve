@@ -1,6 +1,6 @@
 # level 4 performance: a list split in four parts, summed by four concurrent aspects
 ** perf: 5 rounds of a parallel group that sums 200,000 integers in 4 parts (`split`, `start`, inputs copied by value)
-driver p4a_parallel_sum is
+primary aspect p4a_parallel_sum is
   process main is
     new rows := (x | x in (1..200000));
     new total := 0;

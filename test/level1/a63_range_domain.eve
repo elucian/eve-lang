@@ -1,6 +1,6 @@
 # a range is a domain of values: limits included or excluded, open ends, a step that sets the precision (D-022; from demo/domain_demo.eve and demo/numeric_range.eve, D-099)
 ** spec: syntax/expressions.md#ranges
-driver a63_range_domain is
+primary aspect a63_range_domain is
   set domain = (0..1);
 
   process main is

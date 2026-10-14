@@ -1,6 +1,6 @@
 # abort in recover ends the process, runs finalize and passes the error on (D-020)
 ** spec: semantics/errors.md#recover
-driver a53_abort is
+primary aspect a53_abort is
   process main is
     j1: job
     do

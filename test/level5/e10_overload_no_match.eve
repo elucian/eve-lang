@@ -1,6 +1,6 @@
 # a call that matches no signature of an overloaded name is a compile error (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e10_overload_no_match is
+primary aspect e10_overload_no_match is
   function half(x: Integer) => (@result: Integer) is
     new h := x / 2 :Integer;
     let result := h;

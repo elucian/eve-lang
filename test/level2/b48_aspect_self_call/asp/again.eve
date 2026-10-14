@@ -1,0 +1,6 @@
+# again: applies itself
+exclusive aspect again is
+  process main is
+    apply again();
+  return;
+end again;

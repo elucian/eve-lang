@@ -20,7 +20,7 @@ concurrent aspect adder is
   return;
 end adder;
 
-driver e18_macro_atomic is
+primary aspect e18_macro_atomic is
   process main is
     parallel
     do

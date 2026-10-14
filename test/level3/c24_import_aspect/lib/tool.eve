@@ -1,0 +1,6 @@
+# tool: an aspect is executable, so it can't be imported
+exclusive aspect tool is
+  process main is
+    print "tool";
+  return;
+end tool;

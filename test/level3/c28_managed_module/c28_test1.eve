@@ -1,6 +1,6 @@
 # variation 1 of c28: a managed module under an alias (D-133)
 ** spec: semantics/modules.md#managed-and-direct-modules
-driver c28_test1 is
+primary aspect c28_test1 is
   from lib use (pure as p);
 
   process main is

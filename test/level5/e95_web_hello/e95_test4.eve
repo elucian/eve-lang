@@ -2,7 +2,7 @@
 ** spec: library/machine.md#the-machine-api
 ** The runner starts the machine with the command below (`eve ux start` is `eve --serve start`), then runs the client,
 ** which calls POST /rpc directly and stops the machine with `eve ux stop`.
-driver e95_test4 is
+primary aspect e95_test4 is
   process main is
     print "e95_test4: the machine is tested, not this script";
   return;

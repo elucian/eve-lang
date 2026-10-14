@@ -1,6 +1,6 @@
 # level 1 performance: strings, placeholders and regular expressions
 ** perf: string appends, placeholders, regular expression matches
-driver p1d_strings is
+primary aspect p1d_strings is
   process main is
     new text := "";
     for i in (1..6000) do

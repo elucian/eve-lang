@@ -1,6 +1,6 @@
 # a vararg collects the rest of the arguments; an optional parameter after it is named (D-029)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver b39_vararg_function is
+primary aspect b39_vararg_function is
   function total(first: Integer, *rest: ()Integer, scale = 1: Integer) => (@r: Integer) is
     let r := first;
     for v in rest do

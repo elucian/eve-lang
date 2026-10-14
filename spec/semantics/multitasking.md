@@ -164,7 +164,12 @@ Each is a compile error (exit 65). The message holds the text of the second colu
 | `start` outside a group | `start is allowed only in the do region of a parallel group` | d07 |
 | the same output given to two starts | `Output {name} is given to two tasks of the group` | d08 |
 | more than 2 starts, or a start in a loop, in the group of an aspect | `{aspect} starts more than 2 aspects` | d26 |
-| a group in a leaf aspect, a function, a procedure or a method | `parallel is allowed only in an aspect of the first two levels` | |
+| a group in a function, a procedure or a method | `parallel is allowed only in a process` | d32 |
+| a group in an aspect of the third level (a leaf) | `{aspect} is a leaf` | d31 |
+| `start` or `apply` of a primary aspect | `a primary aspect is run by a command: it can't be applied or started` | b45, e109 |
+| `start` of a private process in a primary or an exclusive aspect | `a primary aspect is serial: apply {name}` | d38 |
+| a started private process uses a plain aspect-level name | `the concurrent aspect '{aspect}' uses '{name}', which is not thread safe` | d37 |
+| a concurrent aspect run by a command, or called from a concurrent aspect | `a concurrent aspect is called from a primary or an exclusive aspect` | d39, d40 |
 | `spawn` of an async function | `{name} is a function: use await` | d18 |
 | a plain call of an async subprogram | `{name} is async: use spawn or await` | d19 |
 | a concurrent aspect that reaches an unsafe member | `{member}, which is not thread safe` | d01, d03 |

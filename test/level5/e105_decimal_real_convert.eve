@@ -1,6 +1,6 @@
 # Decimal and Real are converted explicitly: d.real(), r.decimal(), or by := to a variable or a type hint of the other kind (D-168)
 ** spec: library/data-language.md#details-used-by-the-tests
-driver e105_decimal_real_convert is
+primary aspect e105_decimal_real_convert is
   process main is
     new price := 12.50d;
     print price.real() + 0.25;            ** a Real now: Real arithmetic

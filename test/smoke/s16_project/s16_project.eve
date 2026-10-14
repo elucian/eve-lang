@@ -1,6 +1,6 @@
 # A project. One module, one aspect, one apply: import, life cycle order, safe and Atomic.
 ** spec: semantics/modules.md
-driver s16_project is
+primary aspect s16_project is
   from lib use (ledger);
 
   process main is

@@ -1,6 +1,6 @@
 # + between a string and a number is a type error; <+ converts the number (D-080)
 ** spec: syntax/expressions.md#arithmetic
-driver a47_string_plus_number is
+primary aspect a47_string_plus_number is
   process main is
     new s := "a" + 1;            ** compile error: use <+
   return;

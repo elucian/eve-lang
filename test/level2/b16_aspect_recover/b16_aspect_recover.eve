@@ -1,6 +1,6 @@
-# an aspect recovers its own error: the driver never sees it (D-020, D-072)
+# an aspect recovers its own error: the primary aspect never sees it (D-020, D-072)
 ** spec: semantics/aspects.md#errors-across-apply
-driver b16_aspect_recover is
+primary aspect b16_aspect_recover is
   process main is
     apply safe();
     print "driver goes on";

@@ -1,6 +1,6 @@
 # export lists declared members only: an undeclared name is a compile error (proposed)
 ** spec: semantics/modules.md#members
-driver c20_export_undeclared is
+primary aspect c20_export_undeclared is
   from lib use (ghost);
 
   process main is

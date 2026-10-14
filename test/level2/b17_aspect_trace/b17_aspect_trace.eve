@@ -1,6 +1,6 @@
 # an error nobody recovers: the error first, then the frames in order of call (D-113)
 ** spec: semantics/aspects.md#position-and-stack-trace-d-113
-driver b17_aspect_trace is
+primary aspect b17_aspect_trace is
   process main is
     print "before";
     apply fail();

@@ -1,6 +1,6 @@
 # explicit conversions do what the developer asked: floor, ceiling, round, parse (D-080; from demo/explicit_coercion.eve and demo/string_to_number.eve, D-099)
 ** spec: semantics/types.md#conversions
-driver a57_conversion is
+primary aspect a57_conversion is
   process main is
     new b := 1.5;
     new a := 0;

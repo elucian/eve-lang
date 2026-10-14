@@ -1,6 +1,6 @@
 # start of an aspect without a kind word is a compile error: it is exclusive (D-130, D-140)
 ** spec: semantics/multitasking.md#what-can-be-started
-driver d06_start_exclusive is
+primary aspect d06_start_exclusive is
   process main is
     parallel
     do

@@ -1,6 +1,6 @@
 # a consumer that waits on a channel nobody sends to is a deadlock; the error names it (D-141)
 ** spec: semantics/multitasking.md#channels
-driver d14_deadlock is
+primary aspect d14_deadlock is
   process main is
     new jobs := Channel(:Integer)(capacity: 5);
     parallel

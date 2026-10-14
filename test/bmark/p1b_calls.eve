@@ -1,6 +1,6 @@
 # level 1 performance: function calls and recursion
 ** perf: function calls, recursion (`fib(20)`), parameter binding
-driver p1b_calls is
+primary aspect p1b_calls is
   function fib(n: Integer) => (@r: Integer) is
     if n < 2 do
       let r := n;

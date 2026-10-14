@@ -1,6 +1,6 @@
 # an aspect has one process and it is named main (D-066)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b24_aspect_second_process is
+primary aspect b24_aspect_second_process is
   process main is
     print "never";
     apply twin();

@@ -1,5 +1,5 @@
 # An error that nobody recovers: the message comes back on the error output and eve ends with 4
-driver fail is
+primary aspect fail is
   process main is
     print "before the error";
     raise "something went wrong";

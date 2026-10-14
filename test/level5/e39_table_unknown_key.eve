@@ -1,6 +1,6 @@
 # a key that names a field the class does not have is a compile error
 ** spec: library/database.md#the-table-declaration
-driver e39_table_unknown_key is
+primary aspect e39_table_unknown_key is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

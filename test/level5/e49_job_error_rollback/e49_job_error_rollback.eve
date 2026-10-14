@@ -1,6 +1,6 @@
 # an error in a job rolls the transaction back before recover runs
 ** spec: library/database.md#transactions
-driver e49_job_error_rollback is
+primary aspect e49_job_error_rollback is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

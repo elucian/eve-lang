@@ -1,6 +1,6 @@
 # Object: unquoted keys make an object, quoted or numeric keys make a DataMap (D-058, D-080)
 ** spec: semantics/types.md#composite-types
-driver a22_object is
+primary aspect a22_object is
   process main is
     new p := {x: 1.5, y: 2};
     expect p.x == 1.5;

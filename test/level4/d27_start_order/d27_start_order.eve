@@ -1,6 +1,6 @@
 # the output of a group is written in the order of start, whatever task ends first (D-140, D-144)
 ** spec: semantics/multitasking.md#output
-driver d27_start_order is
+primary aspect d27_start_order is
   process main is
     wait 10ms;                         ** a pause of the driver, before any task
     parallel

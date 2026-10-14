@@ -1,6 +1,6 @@
 # reading through a table: find! gives the record or null, a second find! gives the same record, where! tracks, scan! does not (database.md)
 ** spec: library/database.md#methods-of-a-table
-driver e87_orm_reads is
+primary aspect e87_orm_reads is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

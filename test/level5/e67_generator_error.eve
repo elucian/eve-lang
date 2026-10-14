@@ -1,6 +1,6 @@
 # an error raised in the body ends the generator and is raised in the caller, at the for line (D-067)
 ** spec: syntax/declarations.md#generators-level-5
-driver e67_generator_error is
+primary aspect e67_generator_error is
   generator risky(n: Integer) => (@x: Integer) is
     for i in (1..n) do
       raise "bad value" if i == 3;

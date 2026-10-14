@@ -1,4 +1,4 @@
-# a file with an aspect and shared declarations but no driver is not a macro: compile error (D-152)
+# a file with an aspect and shared declarations but no primary aspect is not a macro: compile error (D-152)
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set step = 5 :Integer;
@@ -13,7 +13,7 @@ end add_step;
   "syntax_error": true,
   "exit": 65,
   "contains": [
-    "a macro needs a driver"
+    "a macro needs a primary aspect"
   ]
 }
 */

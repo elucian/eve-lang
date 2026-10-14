@@ -1,6 +1,6 @@
 # Types. type(), is, conversions, optional values, ordinals, variants.
 ** spec: semantics/types.md
-driver s13_types is
+primary aspect s13_types is
   class Color = {Red, Green, Blue} <: Ordinal;
 
   process main is

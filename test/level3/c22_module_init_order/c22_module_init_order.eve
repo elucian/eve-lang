@@ -1,6 +1,6 @@
 # dependencies are initialized first, and finalized last: the reverse order of the initialization (D-068)
 ** spec: semantics/modules.md#life-cycle
-driver c22_module_init_order is
+primary aspect c22_module_init_order is
   from lib use (top);
 
   process main is

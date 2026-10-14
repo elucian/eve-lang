@@ -13,7 +13,7 @@ concurrent aspect worker is
   return;
 end worker;
 
-driver e20_macro_unsafe_procedure is
+primary aspect e20_macro_unsafe_procedure is
   process main is
     apply worker();
     print seen;

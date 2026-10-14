@@ -1,6 +1,6 @@
 # functions and procedures share a name when the number of their parameters differs (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e06_overload_count is
+primary aspect e06_overload_count is
   function area(side: Integer) => (@result: Integer) is
     let result := side * side;
   return;

@@ -1,6 +1,6 @@
 # defer in a procedure runs when the procedure ends, by any path, in reverse order (D-081)
 ** spec: syntax/statements.md#interruptions
-driver b42_defer_procedure is
+primary aspect b42_defer_procedure is
   procedure work(early: Logic) is
     defer print "first registered, last run";
     defer print "last registered, first run";

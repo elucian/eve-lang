@@ -1,0 +1,6 @@
+# ping: calls pong
+exclusive aspect ping is
+  process main is
+    apply pong();
+  return;
+end ping;

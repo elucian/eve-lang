@@ -1,6 +1,6 @@
 # status, a field set back to its value, remove, refresh after a direct write, add and flush, detach (database.md)
 ** spec: library/database.md#states-of-a-record
-driver e88_orm_write_methods is
+primary aspect e88_orm_write_methods is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

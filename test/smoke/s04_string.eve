@@ -1,6 +1,6 @@
 # Strings. The empty string, concatenation, comparison, escapes and placeholders.
 ** spec: lexical/lexical.md#literals
-driver s04_string is
+primary aspect s04_string is
   function empty() => (@r: String) is
     let r := "";
   return;

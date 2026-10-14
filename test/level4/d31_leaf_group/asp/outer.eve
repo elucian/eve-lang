@@ -1,5 +1,5 @@
-# outer: starts one leaf
-concurrent aspect outer is
+# outer: an exclusive aspect that starts one leaf
+exclusive aspect outer is
   process main(@result: Integer) is
     parallel
     do

@@ -1,6 +1,6 @@
 # a small ETL on local storage: data/in/sales.csv is loaded into the SQLite database cache.db, transformed with SQL and written as JSON in data/out
 ** spec: library/database.md#direct-sql
-driver e56_etl_csv_sqlite_json is
+primary aspect e56_etl_csv_sqlite_json is
   class Sale = {id: Integer, product: String, qty: Integer, unit_cents: Integer, region: String?} <: Record;
   class Line = {id: Integer, product: String, total_cents: Integer, region: String?} <: Record;
   class Total = {total: Integer} <: Record;

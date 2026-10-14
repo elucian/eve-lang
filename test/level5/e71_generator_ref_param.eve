@@ -1,6 +1,6 @@
 # a generator has inputs only, by value: an @ parameter is a compile error (D-067)
 ** spec: syntax/declarations.md#generators-level-5
-driver e71_generator_ref_param is
+primary aspect e71_generator_ref_param is
   generator fill(@total: Integer) => (@x: Integer) is
     yield 1;
   return;

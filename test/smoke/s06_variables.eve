@@ -1,6 +1,6 @@
 # Variables. new, set and let; constants; sharing and copying; scopes.
 ** spec: syntax/statements.md#let
-driver s06_variables is
+primary aspect s06_variables is
   new top := 1;
   set LIMIT = 10 :Integer;
 

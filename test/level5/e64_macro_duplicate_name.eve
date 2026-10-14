@@ -7,7 +7,7 @@ procedure limit() is
   print "limit";
 return;
 
-driver e64_macro_duplicate_name is
+primary aspect e64_macro_duplicate_name is
   process main is
     print limit;
   return;

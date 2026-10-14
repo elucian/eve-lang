@@ -1,6 +1,6 @@
 # variation 1 of b10: the function of the aspect with its default and by name (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b10_test1 is
+primary aspect b10_test1 is
   process main is
     apply scale(0);
     apply scale(n: 7);

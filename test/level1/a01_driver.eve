@@ -1,6 +1,6 @@
-# Test driver structure and single line comments
+# Test primary aspect structure and single line comments
 ** spec: syntax/grammar.md#script, lexical/lexical.md#comments
-driver a01_driver is
+primary aspect a01_driver is
   process main is
     over;
   return;

@@ -1,6 +1,6 @@
 # the CSV reader decodes into a record class: Decimal, Instant, null and the empty string
 ** spec: semantics/data-types.md#reading-a-unit
-driver e33_csv_read_typed is
+primary aspect e33_csv_read_typed is
   class Row = {id: Integer, name: String, note: String?, price: Decimal, created: Instant} <: Record;
 
   process main is

@@ -1,0 +1,6 @@
+# boss: a primary aspect, designed to be run first
+primary aspect boss is
+  process main is
+    print "boss";
+  return;
+end boss;

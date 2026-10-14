@@ -1,0 +1,35 @@
+# a macro: the primary aspect applies a concurrent aspect that starts its own private processes (D-179, D-180)
+** spec: syntax/declarations.md#eve-macro-level-5
+concurrent aspect pipeline is
+  process ingest(source: String) is
+    print "Ingesting {source}";
+  return;
+
+  process extract(target: String) is
+    print "Extracting {target}";
+  return;
+
+  process main is
+    parallel
+    do
+      start ingest("db_01");
+      start extract("s3_out");
+    done;
+  return;
+end pipeline;
+
+primary aspect e108_macro_primary_pipeline is
+  process main is
+    apply pipeline();
+    print "done";
+  return;
+end e108_macro_primary_pipeline;
+/*@expect
+{
+  "stdout": [
+    "Ingesting db_01",
+    "Extracting s3_out",
+    "done"
+  ]
+}
+*/

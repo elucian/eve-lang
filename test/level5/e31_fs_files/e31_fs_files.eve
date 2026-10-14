@@ -1,6 +1,6 @@
 # fs writes, appends, reads lines and reports a missing file with the error code 20
 ** spec: library/data-language.md#files-and-paths
-driver e31_fs_files is
+primary aspect e31_fs_files is
   process main is
     fs.write("out/note.txt", "one\ntwo\n");
     expect fs.exists!("out/note.txt");

@@ -1,6 +1,6 @@
-# variation 1 of b08: panic ends the application: the finalize of the driver does not run (D-133)
+# variation 1 of b08: panic ends the application: the finalize of the primary aspect does not run (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b08_test1 is
+primary aspect b08_test1 is
   process main is
     apply crash();
     print "never";

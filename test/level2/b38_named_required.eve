@@ -1,6 +1,6 @@
 # a parameter after optional parameters can't be positional: the call must name it (D-106)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver b38_named_required is
+primary aspect b38_named_required is
   procedure add(p1 = 0, p2 = 1: Integer, @op: Integer) is
     let op := p1 + p2;
   return;

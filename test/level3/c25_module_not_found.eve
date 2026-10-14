@@ -1,6 +1,6 @@
 # a module that is not found is the error $err_module (code 30), raised at the import, before the process starts (D-131)
 ** spec: semantics/modules.md#import
-driver c25_module_not_found is
+primary aspect c25_module_not_found is
   from lib use (nowhere);
 
   process main is

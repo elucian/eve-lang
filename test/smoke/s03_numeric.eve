@@ -1,6 +1,6 @@
 # Numbers. Zero, one, the extremes of the types, the operators and the literals.
 ** spec: syntax/expressions.md#operators
-driver s03_numeric is
+primary aspect s03_numeric is
   function zero() => (@r: Integer) is
     let r := 0;
   return;

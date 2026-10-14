@@ -1,6 +1,6 @@
 # commit; is allowed only in the do region of a job: a compile error elsewhere
 ** spec: semantics/control.md#job
-driver e42_commit_outside_job is
+primary aspect e42_commit_outside_job is
   process main is
     commit;
   return;

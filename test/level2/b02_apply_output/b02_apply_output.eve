@@ -1,5 +1,5 @@
 # an aspect gives results back through @ output parameters (D-048, D-066)
-driver b02_apply_output is
+primary aspect b02_apply_output is
   process main is
     new t :Integer;
     apply sum(2, 3, @t);

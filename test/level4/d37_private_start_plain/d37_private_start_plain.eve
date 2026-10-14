@@ -1,0 +1,16 @@
+# a started private process uses only the thread-safe names of its aspect (D-179)
+** spec: semantics/multitasking.md#what-can-be-started
+primary aspect d37_private_start_plain is
+  process main is
+    apply counter();
+  return;
+end d37_private_start_plain;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "uses 'count', which is not thread safe"
+  ]
+}
+*/

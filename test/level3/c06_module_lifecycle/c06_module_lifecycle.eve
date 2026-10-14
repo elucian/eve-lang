@@ -1,5 +1,5 @@
-# initialize runs at the import, finalize after the process of the driver (D-068)
-driver c06_module_lifecycle is
+# initialize runs at the import, finalize after the process of the primary aspect (D-068)
+primary aspect c06_module_lifecycle is
   from lib use (counter);
 
   process main is

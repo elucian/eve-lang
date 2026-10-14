@@ -1,5 +1,5 @@
 # each apply creates a new state of the aspect: a second call sees nothing of the first (D-066)
-driver b03_apply_state is
+primary aspect b03_apply_state is
   process main is
     apply tally();
     apply tally();

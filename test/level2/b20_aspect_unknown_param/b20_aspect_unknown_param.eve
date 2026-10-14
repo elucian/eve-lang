@@ -1,6 +1,6 @@
 # an argument named like no parameter is a check-time error (D-112)
 ** spec: semantics/aspects.md#arguments
-driver b20_aspect_unknown_param is
+primary aspect b20_aspect_unknown_param is
   process main is
     print "never";
     apply greet("Eve", greetin: "Hi");

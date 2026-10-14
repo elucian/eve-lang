@@ -1,6 +1,6 @@
 # literals of the primitive types (D-032, D-080)
 ** spec: lexical/lexical.md#literals, semantics/types.md
-driver a09_literals is
+primary aspect a09_literals is
   process main is
     ** numbers
     expect 255 == 0xFF;

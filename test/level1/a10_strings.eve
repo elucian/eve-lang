@@ -1,6 +1,6 @@
 # strings are immutable UTF-8 text (D-058, D-080)
 ** spec: semantics/types.md#strings
-driver a10_strings is
+primary aspect a10_strings is
   process main is
     new s := "Hello";
     expect s + " World" == "Hello World";

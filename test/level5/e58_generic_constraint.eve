@@ -1,6 +1,6 @@
 # a type argument must adopt the trait of its constraint: compile error (D-145, D-148)
 ** spec: syntax/declarations.md#generic-subprograms
-driver e58_generic_constraint is
+primary aspect e58_generic_constraint is
   class Point = {x: Integer, y: Integer} <: Object;
 
   function largest(:T <: Comparable)(items: ()T) => (@result: T) is

@@ -1,6 +1,6 @@
 # Subprograms. Functions, procedures, arguments, recursion, lambdas, closures.
 ** spec: syntax/declarations.md#functions-and-procedures
-driver s11_subprograms is
+primary aspect s11_subprograms is
   new total := 0;
 
   function twice(x: Integer) => (@r: Integer) is

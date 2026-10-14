@@ -1,6 +1,6 @@
 # variation 1 of d09: nobody recovers the ParallelError: exit 4, one line per failed task (D-140)
 ** spec: semantics/multitasking.md#errors
-driver d09_test1 is
+primary aspect d09_test1 is
   process main is
     checks: parallel
     do

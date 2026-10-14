@@ -1,5 +1,5 @@
 # Import a module with an unquoted path; members are reached as module.member (D-072)
-driver c01_import_module is
+primary aspect c01_import_module is
   from lib use (counter);
 
   process main is

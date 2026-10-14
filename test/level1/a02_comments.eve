@@ -4,7 +4,7 @@
 /*------------------------------------------------+
 | Block comments span lines and do not nest       |
 +-------------------------------------------------*/
-driver a02_comments is
+primary aspect a02_comments is
   process main is
     ** a note on its own line
     new a = 1 :Integer;      ** a note after code

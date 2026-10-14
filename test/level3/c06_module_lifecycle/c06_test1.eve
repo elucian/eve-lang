@@ -1,6 +1,6 @@
 # variation 1 of c06: a module that is imported and never called (D-133)
 ** spec: semantics/modules.md#life-cycle
-driver c06_test1 is
+primary aspect c06_test1 is
   from lib use (counter);
 
   process main is

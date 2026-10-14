@@ -1,6 +1,6 @@
 # functions and procedures share a name when the types of their parameters differ (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e05_overload_types is
+primary aspect e05_overload_types is
   function half(x: Integer) => (@result: Integer) is
     new h := x / 2 :Integer;
     let result := h;

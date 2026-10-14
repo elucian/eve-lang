@@ -1,6 +1,6 @@
 # while loop with a header, break and else (D-030, D-033, D-034); `then` was removed, the code goes after `done;`
 ** spec: semantics/control.md#loops
-driver a13_while is
+primary aspect a13_while is
   process main is
     ** the header declares i: it lives in the loop; sum is declared in the process
     new sum := 0;

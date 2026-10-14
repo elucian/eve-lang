@@ -1,6 +1,6 @@
 # a default value can make two signatures match the same call: compile error (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e09_overload_defaults is
+primary aspect e09_overload_defaults is
   function f(x: Integer) => (@result: Integer) is
     let result := x;
   return;

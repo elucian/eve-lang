@@ -1,0 +1,6 @@
+# four: the level that is one too deep
+exclusive aspect four is
+  process main is
+    print "four";
+  return;
+end four;

@@ -1,6 +1,6 @@
 # a generator has exactly one result: compile error (D-067)
 ** spec: syntax/declarations.md#generators-level-5
-driver e70_generator_two_results is
+primary aspect e70_generator_two_results is
   generator pairs(n: Integer) => (@a: Integer, @b: Integer) is
     yield;
   return;

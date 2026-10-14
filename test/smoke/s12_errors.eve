@@ -1,6 +1,6 @@
 # Errors. raise and recover, jobs with resume, error codes, defer, exit, over, finalize.
 ** spec: semantics/errors.md#error-codes
-driver s12_errors is
+primary aspect s12_errors is
   new codes := ();
 
   procedure leave_early(flag: Logic) is

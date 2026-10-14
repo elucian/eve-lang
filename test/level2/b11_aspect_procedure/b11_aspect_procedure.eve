@@ -1,6 +1,6 @@
-# a procedure of an aspect changes an aspect-level variable; the driver's own variable is not touched (D-066, D-100)
+# a procedure of an aspect changes an aspect-level variable; the primary aspect's own variable is not touched (D-066, D-100)
 ** spec: semantics/aspects.md#declarations-of-an-aspect
-driver b11_aspect_procedure is
+primary aspect b11_aspect_procedure is
   process main is
     new total := 100;
     new got :Integer;

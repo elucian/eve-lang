@@ -1,7 +1,7 @@
 # a stream has all(), count(), close() and next() with the protocol of a generator (next() gives True and s.value); leaving the loop with break writes the rejects of what was read (data-types.md)
 ** spec: semantics/data-types.md#rules
 ** spec: syntax/declarations.md#generators-level-5 (Stream adopts the protocol, data-language.md)
-driver e86_stream_methods is
+primary aspect e86_stream_methods is
   class P = {id: Integer} <: Record;
 
   process main is

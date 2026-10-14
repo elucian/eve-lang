@@ -1,6 +1,6 @@
 # variation 1 of b14: the right call: two arguments, then one (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b14_test1 is
+primary aspect b14_test1 is
   process main is
     apply greet("Eve", "Hi");
     apply greet("Bob");

@@ -1,5 +1,5 @@
 # The first script to send to a machine: it only prints
-driver hello is
+primary aspect hello is
   process main is
     print "Hello from Eve";
     print "2 + 3 = {2 + 3}";

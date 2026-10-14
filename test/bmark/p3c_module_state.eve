@@ -1,6 +1,6 @@
 # level 3 performance: a module with private state, and an atomic counter
 ** perf: 50,000 calls of a module procedure that changes private state and 50,000 reads of it
-driver p3c_module_state is
+primary aspect p3c_module_state is
   from lib use (mathx);
 
   process main is

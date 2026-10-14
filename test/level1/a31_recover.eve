@@ -1,6 +1,6 @@
 # an error jumps to recover; reaching the end of recover handles the error (D-020)
 ** spec: semantics/errors.md#recover
-driver a31_recover is
+primary aspect a31_recover is
   process main is
     print "work";
     raise "boom";

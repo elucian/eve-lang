@@ -1,6 +1,6 @@
 # variation 1 of b29: the default exponent, then both by name (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b29_test1 is
+primary aspect b29_test1 is
   process main is
     new r :Integer;
     apply power(3, out: @r);

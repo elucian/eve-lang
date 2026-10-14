@@ -1,6 +1,6 @@
 # a class hosts only methods: a procedure in a class body is a compile error (D-103, D-123)
 ** spec: syntax/declarations.md#classes-and-objects
-driver c15_procedure_in_class is
+primary aspect c15_procedure_in_class is
   class Counter = {n: Integer} <: Object is
     procedure reset() is           ** compile error: a class can't host a procedure
       print "reset";

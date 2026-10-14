@@ -1,0 +1,6 @@
+# two: calls three
+exclusive aspect two is
+  process main is
+    apply three();
+  return;
+end two;

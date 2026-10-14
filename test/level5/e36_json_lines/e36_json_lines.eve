@@ -1,6 +1,6 @@
 # JSON Lines: the writer text is exact, the reader gives the records back
 ** spec: semantics/data-types.md#the-formats-in-detail
-driver e36_json_lines is
+primary aspect e36_json_lines is
   class Item = {id: Integer, name: String, note: String?, price: Decimal} <: Record;
 
   process main is

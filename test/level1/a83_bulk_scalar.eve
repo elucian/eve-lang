@@ -1,6 +1,6 @@
 # collection op scalar: the operator applies to every element (D-118)
 ** spec: syntax/expressions.md#operators-on-collections, syntax/statements.md#let
-driver a83_bulk_scalar is
+primary aspect a83_bulk_scalar is
   process main is
     new a := (1, 2, 3, 4);
     let a += 5;                  ** a bulk update of each element, not an append

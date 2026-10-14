@@ -1,6 +1,6 @@
 # a CSV line with a wrong number of fields is a FormatError when the loop reaches it
 ** spec: semantics/data-types.md#rules
-driver e34_csv_bad_row is
+primary aspect e34_csv_bad_row is
   class P = {id: Integer, name: String} <: Record;
 
   process main is

@@ -1,0 +1,22 @@
+# in a macro, no aspect applies the primary aspect (D-180, D-181)
+** spec: syntax/declarations.md#eve-macro-level-5
+exclusive aspect helper is
+  process main is
+    apply e109_macro_primary_applied();   ** compile error
+  return;
+end helper;
+
+primary aspect e109_macro_primary_applied is
+  process main is
+    apply helper();
+  return;
+end e109_macro_primary_applied;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a primary aspect is run by a command"
+  ]
+}
+*/

@@ -1,6 +1,6 @@
 # optimistic locking: an update of a row that changed after it was read is a ConflictError
 ** spec: library/database.md#transactions
-driver e47_orm_conflict is
+primary aspect e47_orm_conflict is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

@@ -1,6 +1,6 @@
 # an extension method with another signature overloads the method of the class (D-150)
 ** spec: syntax/declarations.md#overloading
-driver e60_extension_overload is
+primary aspect e60_extension_overload is
   class Counter = {n: Integer} <: Object is
     public method add(@self, k: Integer) is
       let self.n += k;

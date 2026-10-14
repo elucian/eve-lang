@@ -9,7 +9,7 @@ concurrent aspect adder is
   return;
 end adder;
 
-driver e19_macro_unsafe_variable is
+primary aspect e19_macro_unsafe_variable is
   process main is
     apply adder();
     print count;

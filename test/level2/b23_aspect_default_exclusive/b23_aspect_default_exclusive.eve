@@ -1,6 +1,6 @@
 # an aspect without a kind word is exclusive (D-130)
 ** spec: syntax/declarations.md#scripts
-driver b23_aspect_default_exclusive is
+primary aspect b23_aspect_default_exclusive is
   process main is
     apply plain();
     print "done";

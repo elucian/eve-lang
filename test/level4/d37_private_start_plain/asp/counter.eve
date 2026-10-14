@@ -1,0 +1,16 @@
+# counter: a plain variable shared by two started tasks
+concurrent aspect counter is
+  new count = 0 :Integer;
+
+  process add is
+    let count += 1;
+  return;
+
+  process main is
+    parallel
+    do
+      start add();
+      start add();
+    done;
+  return;
+end counter;

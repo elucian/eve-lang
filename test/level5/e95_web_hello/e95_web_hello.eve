@@ -3,7 +3,7 @@
 ** The runner calls the command of the VM, not this script: see "command" and "client" below.
 ** The project has the layout of a single page application: the browser part is plain HTML, CSS and
 ** JavaScript in the folders of web/, the backend will be written in Eve. Step one serves files only.
-driver e95_web_hello is
+primary aspect e95_web_hello is
   process main is
     print "e95: the command --serve is tested, not this script";
   return;

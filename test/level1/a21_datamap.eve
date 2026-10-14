@@ -1,6 +1,6 @@
 # DataMap: a sorted map of key:value pairs; quoted or numeric keys (D-058, D-080)
 ** spec: semantics/types.md#composite-types
-driver a21_datamap is
+primary aspect a21_datamap is
   process main is
     new h := {"a": 1, "b": 2};
     expect h["a"] == 1;

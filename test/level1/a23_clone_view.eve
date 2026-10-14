@@ -1,6 +1,6 @@
 # := shares a collection or an object, :: makes a deep copy, native values are always copied (D-049)
 ** spec: syntax/declarations.md#variables-and-constants
-driver a23_clone_view is
+primary aspect a23_clone_view is
   process main is
     new x := 1;
     new y := x;

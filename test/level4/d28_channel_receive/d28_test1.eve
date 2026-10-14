@@ -1,6 +1,6 @@
 # variation 1 of d28: receive from a closed, empty channel raises ChannelError 46 (D-141)
 ** spec: semantics/multitasking.md#channels
-driver d28_test1 is
+primary aspect d28_test1 is
   process main is
     new jobs := Channel(:Integer)(capacity: 2);
     new total: Integer;

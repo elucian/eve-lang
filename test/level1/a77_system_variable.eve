@@ -1,6 +1,6 @@
-# a driver can set a system variable and define its own $name (D-109)
+# a primary aspect can set a system variable and define its own $name (D-109)
 ** spec: semantics/variables.md
-driver a77_system_variable is
+primary aspect a77_system_variable is
   set $epsilon = 0.5;
   set $mine = 7;
 

@@ -1,6 +1,6 @@
 # an error without recover ends the process with the exit code 4, after finalize (D-081)
 ** spec: semantics/errors.md#ending-the-process
-driver a51_unhandled_error is
+primary aspect a51_unhandled_error is
   process main is
     print "work";
     raise "boom";

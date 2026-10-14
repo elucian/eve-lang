@@ -1,6 +1,6 @@
 # finalize runs after the process ends normally, and after recover (D-020)
 ** spec: semantics/errors.md#finalize
-driver a32_finalize is
+primary aspect a32_finalize is
   process main is
     print "work";
     raise "boom";

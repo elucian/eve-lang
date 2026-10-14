@@ -1,6 +1,6 @@
 # on error cancel stops the other tasks after the first failure; they are counted, not listed (D-140)
 ** spec: semantics/multitasking.md#errors
-driver d10_on_error_cancel is
+primary aspect d10_on_error_cancel is
   process main is
     parallel on error cancel
     do

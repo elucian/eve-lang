@@ -1,6 +1,6 @@
 # CSV options: another separator, no header, a BOM, CRLF line ends, and columns: renames the columns of the file (data-types.md)
 ** spec: semantics/data-types.md#the-formats-in-detail
-driver e80_csv_options is
+primary aspect e80_csv_options is
   class Row = {id: Integer, name: String} <: Record;
 
   process main is

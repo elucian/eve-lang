@@ -1,6 +1,6 @@
 # spawn starts async procedures in a job, await waits for an async function; done waits for every task (D-143)
 ** spec: semantics/multitasking.md#tasks-in-a-job
-driver d17_job_spawn is
+primary aspect d17_job_spawn is
   async procedure square(n: Integer, @r: Integer) is
     wait 10ms;                         ** the core goes to the next task
     let r := n * n;

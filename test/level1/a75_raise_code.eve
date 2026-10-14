@@ -1,6 +1,6 @@
 # raise "text" creates an error with code 4 and that message (D-054, D-109)
 ** spec: semantics/errors.md#errors
-driver a75_raise_code is
+primary aspect a75_raise_code is
   process main is
     raise "boom";
     print "never";

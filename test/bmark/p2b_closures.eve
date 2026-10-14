@@ -1,6 +1,6 @@
 # level 2 performance: closures and lambdas
 ** perf: a closure called 50,000 times, a lambda called 50,000 times, a function that makes closures 2,000 times
-driver p2b_closures is
+primary aspect p2b_closures is
   function make_counter!(first: Integer) => (@next!: Function) is
     new current := first;
     function next!() => (@result: Integer) is

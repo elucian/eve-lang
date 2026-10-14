@@ -1,6 +1,6 @@
 # variation 1 of b16: the aspect recovers its own error, twice (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b16_test1 is
+primary aspect b16_test1 is
   process main is
     apply safe();
     apply safe();

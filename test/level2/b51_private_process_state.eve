@@ -1,0 +1,24 @@
+# the private processes of a call share the state of the aspect (D-179, D-066)
+** spec: semantics/aspects.md#state-per-call
+primary aspect b51_private_process_state is
+  new calls = 0 :Integer;
+
+  process tick is
+    let calls += 1;
+  return;
+
+  process main is
+    apply tick();
+    apply tick();
+    apply tick();
+    expect calls == 3;
+    print "calls: {calls}";
+  return;
+end b51_private_process_state;
+/*@expect
+{
+  "stdout": [
+    "calls: 3"
+  ]
+}
+*/

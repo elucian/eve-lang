@@ -1,6 +1,6 @@
 # a procedure has no value: it can't be used in an expression (D-100)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver b40_procedure_in_expression is
+primary aspect b40_procedure_in_expression is
   procedure hello is
     print "hello";
   return;

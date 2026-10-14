@@ -1,6 +1,6 @@
 # Collections. The empty ones, zero values, one element, indexes from 1, literals.
 ** spec: semantics/types.md#composite-types
-driver s05_collection is
+primary aspect s05_collection is
   function nothing() => (@r: Integer) is
     let r := ().count();
   return;

@@ -1,6 +1,6 @@
 # variation 2 of c22: both modules, the dependent one first in the list (D-133)
 ** spec: semantics/modules.md#life-cycle
-driver c22_test2 is
+primary aspect c22_test2 is
   from lib use (top, base);
 
   process main is

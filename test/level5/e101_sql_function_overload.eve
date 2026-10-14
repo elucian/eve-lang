@@ -1,6 +1,6 @@
 # a sql function can not be overloaded: SQL finds a function by its name (D-166)
 ** spec: library/database.md#sql-functions
-driver e101_sql_function_overload is
+primary aspect e101_sql_function_overload is
   sql function twice(x: Integer) => (@result: Integer) is
     let result := x * 2;
   return;

@@ -1,4 +1,3 @@
-#!/usr/bin/env eve
 # an Eve macro starts its concurrent aspects in a parallel group; a shared class carries the results (D-152)
 ** spec: syntax/declarations.md#eve-macro-level-5
 
@@ -26,8 +25,8 @@ concurrent aspect job_worker_2 is
   return;
 end job_worker_2;
 
-# driver executing parallel tasks
-driver e17_macro_parallel is
+# primary aspect executing parallel tasks
+primary aspect e17_macro_parallel is
   process main is
     new r1 := Result();
     new r2 := Result();

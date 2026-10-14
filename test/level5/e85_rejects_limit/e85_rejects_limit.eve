@@ -1,6 +1,6 @@
 # max_rejects: the reject after the limit is an error of the read; the rejects file has source, line, column, text and reason (data-types.md)
 ** spec: semantics/data-types.md#transform-and-rejects
-driver e85_rejects_limit is
+primary aspect e85_rejects_limit is
   class P = {id: Integer, name: String} <: Record;
 
   process main is

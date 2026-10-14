@@ -1,6 +1,6 @@
 # variation 1 of d05: start inside if, inputs by value, a declaration local to the group (D-140)
 ** spec: semantics/multitasking.md#data-rules
-driver d05_test1 is
+primary aspect d05_test1 is
   process main is
     new n := 3;
     new s: [3]Integer;
