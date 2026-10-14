@@ -783,62 +783,51 @@ fn breaksPanel(app: *App, body: Window) !void {
     _ = put(body, 1, body.height -| 1, "Enter or a second click jumps · Del removes", theme.on(theme.dim, theme.deep));
 }
 
-// Zig tip: `{d:>4}` in a format string prints a number right aligned in 4 cells, so "Ln" and "Col"
-// keep the same width whatever the number is and the panel does not move while the user types.
-/// The quick information about the current window: a text file, a card, a read-only window, or the project.
-fn quickInfo(app: *App) []const u8 {
-    const t = app.activeTab() orelse {
-        return if (app.project_name.len > 0)
-            app.fmt("project {s} · {d} entries", .{ app.project_name, app.tree.entries.items.len })
-        else
-            "no project";
-    };
+/// What the status bar says about the current window after its name: kind, size, line ends. The
+/// project name is not repeated here: it is in the title bar of the Tree Panel.
+fn fileFacts(app: *App) []const u8 {
+    const t = app.activeTab() orelse return "";
     if (t.buf) |*b| {
-        if (t.virtual) return app.fmt("{s} · read only · {d} lines", .{ t.title(), b.lineCount() });
+        if (t.virtual) return app.fmt(" · read only · {d} lines", .{b.lineCount()});
         const kind: []const u8 = if (t.eve) "Eve source" else "text";
-        const ends: []const u8 = if (b.crlf) "CRLF" else "LF";
-        return app.fmt("{s} · {s} · {d} lines · {s}{s}", .{ if (t.path.len == 0) "untitled" else t.path, kind, b.lineCount(), ends, if (b.dirty) " · modified" else "" });
+        return app.fmt(" · {s} · {d} lines · {s}{s}", .{ kind, b.lineCount(), if (b.crlf) "CRLF" else "LF", if (b.dirty) " · modified" else "" });
     }
-    return app.fmt("{s} · {s} · {s}", .{ t.path, t.card.kind, sizeText(app, t.card.size) });
+    return app.fmt(" · {s} · {s}", .{ t.card.kind, sizeText(app, t.card.size) });
 }
 
-// Zig tip: The inside of the bar is split in three by fixed widths computed from the room: the state
-// at the left takes what is left over, then a panel of 18 cells with the line and the column (wide
-// enough for 9999 lines and 999 columns), then the quick information, aligned to the right edge.
+// Zig tip: The bar has two parts. At the left the name of the current file with its path from the
+// project folder (or a message or the running state, which take its place for a moment); at the
+// right a fixed panel of 16 cells with the line and the column. `{d:>4}` prints a number right
+// aligned in 4 cells, so the panel is wide enough for 9999 lines and 999 columns and does not move.
 fn statusBar(app: *App, win: Window) !void {
     const W = win.width;
     const H = win.height;
     const box = boxed(win, 0, H - 3, W, 3, theme.line);
     fillWith(box, theme.deep);
     const w = box.width;
-    const line_style = theme.on(theme.line, theme.deep);
-    const info_w: u16 = std.math.clamp(w / 2, 20, 60);
-    const info_x: u16 = w -| info_w;
-    const pos_w: u16 = 18;
-    const pos_x: u16 = info_x -| (pos_w + 1);
+    const pos_w: u16 = 16;
+    const pos_x: u16 = w -| (pos_w + 1);
+    const left_w = pos_x -| 3;
+    _ = put(box, pos_x -| 2, 0, "│", theme.on(theme.line, theme.deep));
 
-    // the state
-    const state_w = pos_x -| 3;
     if (app.message) |m| {
-        _ = put(box, 1, 0, clipText(m, state_w), theme.onBold(theme.amber, theme.deep));
+        _ = put(box, 1, 0, clipText(m, left_w), theme.onBold(theme.amber, theme.deep));
     } else if (app.running) {
         _ = put(box, 1, 0, "Running…", theme.onBold(theme.amber, theme.deep));
+    } else if (app.activeTab()) |t| {
+        const name = if (t.path.len == 0) "untitled" else t.path;
+        const shown = clipText(name, left_w);
+        const c = put(box, 1, 0, shown, theme.onBold(theme.bright, theme.deep));
+        if (c + 2 < left_w + 1) _ = put(box, c, 0, clipText(fileFacts(app), left_w + 1 -| c), theme.on(theme.dim, theme.deep));
     } else {
-        const s = app.fmt("Ready: connection: {s}", .{if (app.machine == 1) "local" else "remote"});
-        _ = put(box, 1, 0, clipText(s, state_w), theme.onBold(theme.green, theme.deep));
+        _ = put(box, 1, 0, clipText(app.fmt("Ready: connection: {s}", .{if (app.machine == 1) "local" else "remote"}), left_w), theme.on(theme.green, theme.deep));
     }
-    _ = put(box, pos_x -| 1, 0, "│", line_style);
-    _ = put(box, info_x -| 1, 0, "│", line_style);
 
-    // the line and the column
     if (app.activeBuffer()) |b| {
-        _ = put(box, pos_x + 1, 0, app.fmt("Ln {d:>4}, Col {d:>3}", .{ b.row + 1, b.displayCol() + 1 }), theme.on(theme.text, theme.deep));
+        putRight(box, w -| 2, 0, app.fmt("Ln {d:>4}, Col {d:>3}", .{ b.row + 1, b.displayCol() + 1 }), theme.on(theme.text, theme.deep));
     } else {
-        _ = put(box, pos_x + 1, 0, "Ln    -, Col   -", theme.on(theme.faint, theme.deep));
+        putRight(box, w -| 2, 0, "Ln    -, Col   -", theme.on(theme.faint, theme.deep));
     }
-
-    // the quick information, aligned to the right
-    putRight(box, w -| 1, 0, clipText(quickInfo(app), info_w -| 2), theme.on(theme.bright, theme.deep));
 }
 
 // ------------------------------------------------------------------ overlays

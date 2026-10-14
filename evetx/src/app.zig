@@ -1839,6 +1839,14 @@ pub const App = struct {
         try b.insertText(c);
     }
 
+    // Zig tip: `std.fmt.bufPrint` formats into a buffer the caller owns and returns the part it
+    // wrote; it fails when the buffer is too small, and `catch` then falls back to the plain name.
+    /// The title of the terminal window: the program and the project.
+    pub fn windowTitle(self: *const App, buf: []u8) []const u8 {
+        if (self.project_name.len == 0) return "EVE-TX";
+        return std.fmt.bufPrint(buf, "EVE-TX · {s}", .{self.project_name}) catch "EVE-TX";
+    }
+
     /// The main loop takes the text for the system clipboard (the caller frees it).
     pub fn takeSystemClip(self: *App) ?[]u8 {
         const c = self.sys_clip;
