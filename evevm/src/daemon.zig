@@ -1,4 +1,4 @@
-//! The machine as a process: `stop`, the machine that `evevm` starts in its own process, and the user interface (`-u`).
+//! The machine as a process: `stop`, the machine that `evevm` starts in its own process, and the user interface (`-ux`, D-172).
 const std = @import("std");
 const builtin = @import("builtin");
 const Io = std.Io;
@@ -21,7 +21,7 @@ const httpCall = wire.httpCall;
 const machine = @import("machine.zig");
 const client = @import("client.zig");
 
-// ---- stop, the machine as its own process (evevm) and the user interface (-u) ---------------------------------------
+// ---- stop, the machine as its own process (evevm) and the user interface (-ux) ---------------------------------------
 
 
 // Zig tip: `for (&machines) |*slot|` walks the array by pointer; `slot.* orelse continue` reads the optional behind the
@@ -166,7 +166,7 @@ pub fn runQuiet(io: Io, argv: []const []const u8) bool {
     return true;
 }
 
-/// `-u`: open the user interface, the web page of the HTTP door. If the HTTP door already answers, the interface is
+/// `-ux` (was `-u`): open the user interface, the web page of the HTTP door. If the HTTP door already answers, the interface is
 /// open and nothing more happens; otherwise the machine is started in its own process and the browser is opened.
 pub fn openUi(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_path: ?[]const u8) !u8 {
     const cfg = loadConfig(io, gpa, config_path orelse "eve.cfg");

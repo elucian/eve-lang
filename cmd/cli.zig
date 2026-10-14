@@ -225,12 +225,20 @@ test "a command word is the command, a vm_cmds.door word stays with its vm_cmds.
     const stop = try cmdline.parseArgs(arena.allocator(), &.{"stop"}, &bad);
     try std.testing.expectEqualStrings("stop", stop.command.?.name);
 
-    const ui = try cmdline.parseArgs(arena.allocator(), &.{ "-u", "status" }, &bad);
+    const ui = try cmdline.parseArgs(arena.allocator(), &.{ "-ux", "status" }, &bad);
     try std.testing.expect(ui.ui);
     try std.testing.expectEqualStrings("status", ui.command.?.name);
 
-    const only_ui = try cmdline.parseArgs(arena.allocator(), &.{"-u"}, &bad);
+    const only_ui = try cmdline.parseArgs(arena.allocator(), &.{"-ux"}, &bad);
     try std.testing.expect(only_ui.ui and only_ui.command == null);
+
+    // `-tx` and the word `tx` start the terminal IDE with the rest of the line (D-172)
+    const tx = try cmdline.parseArgs(arena.allocator(), &.{ "-tx", "test/project" }, &bad);
+    try std.testing.expect(tx.tx and tx.command == null);
+    try std.testing.expectEqualStrings("test/project", tx.tx_args[0]);
+    const tx_word = try cmdline.parseArgs(arena.allocator(), &.{"tx"}, &bad);
+    try std.testing.expect(tx_word.tx and tx_word.tx_args.len == 0);
+    try std.testing.expectError(error.UnknownOption, cmdline.parseArgs(arena.allocator(), &.{"-u"}, &bad));
 
     const script = try cmdline.parseArgs(arena.allocator(), &.{"status.eve"}, &bad);
     try std.testing.expectEqualStrings("execute", script.command.?.name);
