@@ -17,8 +17,14 @@ pub const vm = @import("vm.zig");
 /// The natives of the standard library: streams, files, connections.
 pub const dlib = @import("dlib.zig");
 
-/// The machine as a server and its client (F-NET-02, spec/library/machine.md).
-pub const server = @import("server.zig");
+/// The machine, server side: the IPC and HTTP doors and the methods of the machine (F-NET-02, spec/library/machine.md).
+pub const machine = @import("machine.zig");
+
+/// The machine, client side: `-loc`, `-rem`, the words `status` and `stop` of the doors.
+pub const client = @import("client.zig");
+
+/// The machine as a process: `stop`, `evevm`, `-u`.
+pub const daemon = @import("daemon.zig");
 
 /// The look of the REPL: banner and help table.
 pub const screen = @import("screen.zig");
@@ -35,7 +41,9 @@ test {
     _ = scratch;
     _ = vm;
     _ = dlib;
-    _ = server;
+    _ = machine;
+    _ = client;
+    _ = daemon;
     _ = screen;
     _ = tui;
 }

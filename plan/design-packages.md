@@ -443,7 +443,7 @@ Multi-Call Binaries: Filesystem symlinks or hard links (evecp, evedb, evevm, eve
 | A3 native calling convention | not started: the libraries still receive the syntax nodes of their arguments |
 | A4 database behind `Data` | **done**: the module `evedb` (`sqlite`, `conn`, `orm`, `state`), the interfaces `Host` and `Data` in `evecm/iface.zig`, `evevm/host.zig`; the fourteen database fields of `Interp` became `evedb`'s `State` |
 | A5 compiler entry point | not started (`evecp` exposes its parts) |
-| A6 wire and commands | **half**: `evecm/config.zig` and `evecm/wire.zig` are cut from `server.zig`; the machine stays in `evevm/server.zig`; `cli.zig` is whole in `cmd/` |
+| A6 wire and commands | **done for the machine** (2026-10-14): `evecm/config.zig` and `evecm/wire.zig` are cut from `server.zig`, and the rest became `evevm/machine.zig` (server side: the doors, the methods), `client.zig` (`-loc`, `-rem`, `status`, `stop`) and `daemon.zig` (the machine in its own process, `-u`); `cli.zig` is in `cmd/` (see below) |
 | A7 flat move | **done**: root `build.zig` and `build.zig.zon`, the modules `evecm`, `evecp`, `evevm`, `evedb`, `cmd`; the version is written once; `lib/` moved; the arrows are enforced by the `.imports` of the build. The standalone `evedb.exe` (DuckDB) and `evetx` still have their own builds |
 | A8 parts and `run.sh` | not started (the words `vm`, `cp`, `db`, `ux`, `-tx` are in `cmd/cli.zig` or to do) |
 
