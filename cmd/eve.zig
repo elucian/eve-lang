@@ -82,7 +82,7 @@ pub fn main(init: std.process.Init) !void {
         if (std.mem.eql(u8, a, "--listen") or std.mem.eql(u8, a, "--serve")) foreground = true;
     }
     if (!foreground and args.len > 0 and std.mem.eql(u8, programName(&name_buffer, args[0]), "evevm")) {
-        evevm.server.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
+        evecm.config.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
         const code = try evevm.server.daemonMain(init.io, arena, stdout, argv.items);
         try stdout.flush();
         std.process.exit(code);
@@ -140,7 +140,7 @@ pub fn main(init: std.process.Init) !void {
 
     // Zig tip: the runtime directory for the IPC sockets comes from the environment, once, before any thread starts.
     // `orelse` chains try the variables in order; `get` answers an optional text.
-    evevm.server.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
+    evecm.config.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
     // The machine options (`--listen`, `--serve`, `-loc`, `-rem`): a result means they handled the command. Without them
     // nothing here runs: `eve -x file.eve` reads no `eve.cfg` and asks no door, it executes the script at once.
     // Zig tip: at a terminal `eve --serve` opens the doors in threads and the prompt comes back (`embed`), so the same

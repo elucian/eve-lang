@@ -30,6 +30,12 @@ pub const heap = @import("heap.zig");
 /// The interfaces between the runtime and the database layer: `Host` and `Data`.
 pub const iface = @import("iface.zig");
 
+/// The configuration of a machine: `eve.cfg`, the socket folder, the exit codes.
+pub const config = @import("config.zig");
+
+/// JSON-RPC, the HTTP answers of the web door, and the client calls to a machine.
+pub const wire = @import("wire.zig");
+
 /// CSV and JSON text, and connection URLs.
 pub const data = @import("data.zig");
 
@@ -52,6 +58,8 @@ test {
     _ = value;
     _ = heap;
     _ = iface;
+    _ = config;
+    _ = wire;
     _ = data;
     _ = line;
     _ = terminal;
