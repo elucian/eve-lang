@@ -6,7 +6,7 @@ Status: **0.1-draft**. This file is the register of the system variables of Eve:
 
 - A system variable starts with the sigil `$`. It is static and public, shared by the whole process, and needs no module qualifier.
 - **Environment.** Every OS environment variable `NAME` is visible as `$NAME` (D-031, D-052). It is a `String`.
-- **Configuration.** A driver configuration file (`.cfg`) sets system variables as `$key = value` lines with Eve literals and `#` comments (D-031). A driver can also set one with `set $name = value;` (example: `$EVE_ASP`).
+- **Configuration.** A configuration file (`.cfg`) of the aspect run by a command sets system variables as `$key = value` lines with Eve literals and `#` comments (D-031). That aspect can also set one with `set $name = value;` (example: `$EVE_ASP`).
 - **Library.** A library module declares the system variables it provides with `external set $name: Type;` (D-056), like `$error` in `evevm/lib/exception.eve`.
 - **Naming.** Capital names (`$EVE_OUT`) are environment and configuration values; lowercase names (`$error`) are objects of the runtime and of the library. Error and warning codes are the constants `$err_name` and `$wrn_name`.
 
@@ -28,13 +28,13 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 |---|---|---|---|---|---|---|
 | `$NAME` | `String` | Any OS environment variable, for example `$PATH`, `$HOME` | from the OS | 0.1 | no | D-031, D-052 |
 | `$EVE_DIR` | `String` | Folder of the Eve runtime | the folder of `eve.exe` | draft | no | — |
-| `$EVE_HOME` | `String` | The home of a project: the folder that every relative path of an import is relative to (D-131) | the folder of the driver | draft | no | D-131 |
+| `$EVE_HOME` | `String` | The home of a project: the folder that every relative path of an import is relative to (D-131) | the folder of the aspect run by the command | draft | no | D-131 |
 | `$EVE_LIB` | `String` | The `lib` folder of the project, its local library, searched by `from … use` | `lib`, relative to `$EVE_HOME` | 0.1 | no | D-131 |
 | `$EVE_LIB_PATH` | `String` | The folders where external modules are installed, separated like the `PATH` of the operating system, for example `/eve/modules/<module_name>`; they may be in different folders, installed from GitHub with `npm install` | empty | draft | no | D-131 |
-| `$EVE_ASP` | `String` | Folder of the aspects (and project libraries) of a driver | `asp`, then the project root, then `lib` | 0.1 | no | D-055 |
+| `$EVE_ASP` | `String` | Folder of the aspects (and project libraries) of a project | `asp`, then the project root, then `lib` | 0.1 | no | D-055 |
 | `$EVE_CORE_DB` | `String` | The core database of the project: a SQLite file in its `db/` folder with the logs of the ETL runs, the checkpoints, the metadata and the data of the Eve UX (never ETL data, D-159); the name is set in `eve.cfg` (key `core_db`) | `db/local.db`, relative to `$EVE_HOME` | draft | no | D-156 |
 | `$EVE_OUT` | `String` | Output folder of the log files (`error`, `warning`) | `"out"` | 0.1 | no | D-057, `lib/io.eve` |
-| `$MY_DIR` | `String` | Folder of the running driver | | draft | no | — |
+| `$MY_DIR` | `String` | Folder of the running aspect | | draft | no | — |
 | `$MY_LIB` | `String` | Library folder of the project | | question | no | — |
 | `$MY_LOG` | `String` | Log folder of the project | | question | no | — |
 | `$OS_PWD` | `String` | Current working folder | | question | no | — |
@@ -47,7 +47,7 @@ Status values in the tables: **0.1** the VM must provide it in version 0.1; **dr
 | `$epsilon` | `Real` | Precision of comparisons between real numbers | | draft | no | D-065 |
 | `$timeout` | `Integer` | Seconds a task waits on a channel before a time-out error; an aspect may shadow it | `60` | later | no | CON-07, D-081 |
 | `$cores` | `Integer` | Size of the worker pool of parallel aspects, at most 16 | number of hardware cores | later | no | D-047, D-081 |
-| `$max_parallel` | `Integer` | Aspects one parallel group of the driver may start | `8` | later | no | D-081 |
+| `$max_parallel` | `Integer` | Aspects one parallel group of a primary aspect may start | `8` | later | no | D-081 |
 | `$query` | `String` | The last SQL statement sent by the database module | | later | no | — |
 | `$isolation` | `String` | Isolation of the transactions of a job: `"read committed"`, `"repeatable read"`, `"serializable"`, `"snapshot"`; set in the declarations of a job | the default of the database | draft | no | Q-046d |
 | `$lock_timeout` | `Duration` | How long a statement waits for a lock before a transient `TimeoutError`; set in a job | `5s` | draft | no | Q-046d |
@@ -83,4 +83,4 @@ Questions for the author; answers become decisions and update the tables.
 3. **`$trace`.** One use is the list of errors and warnings; another is the generated SQL. One meaning only? Proposal: the errors list; the SQL goes to `$query`.
 4. **`$object`.** Methods of a class use the parameter `@self`. Is `$object` still needed?
 5. **Types of folders.** `String`, or a `Path`/`Folder` type from the library (an example uses `Folder($HOME/"test")`)?
-6. ~~Writable or read-only.~~ Answered (D-109): a driver can set `$epsilon` and any other system variable, and can define its own `$name` variables.
+6. ~~Writable or read-only.~~ Answered (D-109): a primary aspect can set `$epsilon` and any other system variable, and can define its own `$name` variables.

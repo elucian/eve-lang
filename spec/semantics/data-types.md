@@ -173,7 +173,7 @@ Upserts make every step safe to run twice: a failed run starts again from its la
 
 ```eve
 # load the orders of a shop file into the ERP
-driver orders_upload is
+primary aspect orders_upload is
   class Order = {id: Integer, customer_id: Integer, amount: Decimal, created: Instant} <: Record is
     method validate(@self) is
       expect self.amount >= 0d;

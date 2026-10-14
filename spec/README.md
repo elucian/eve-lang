@@ -32,7 +32,7 @@ spec/
     delimiters.json    comment, string and collection delimiters
   syntax/
     grammar.md         complete EBNF grammar
-    regions.md         script regions: driver, module, aspect, import, global, process, ...
+    regions.md         script regions: aspect, module, import, global, process, ...
     statements.md
     expressions.md
     declarations.md    types, classes, functions, methods
@@ -40,7 +40,7 @@ spec/
     types.md, types.json
     scopes.md          names, sigils, globals
     variables.md       register of the system variables ($name)
-    topology.md        projects, scripts, drivers, aspects, modules, execution
+    topology.md        projects, scripts, aspects, modules, execution
     control.md         control flow, errors, recovery
     multitasking.md      methods, generators (version 2), parallel aspects (planned)
   library/

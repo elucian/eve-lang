@@ -4,7 +4,7 @@ Status: **0.1-draft**, level 3 (version 0.2), first part of the level: modules a
 
 ## What a module is
 
-A module is a script file that holds declarations to be shared. It is not run: it has no `process`. Its header is `module name is`, with an optional safety word in front (`managed module name is`, `direct module name is`, see below), and it ends with `end name;`; the file name is the module name (`lib/counter.eve` holds `module counter`). A module has one scope (D-041), like a driver: everything between the header and `end` is indented by 2 spaces.
+A module is a script file that holds declarations to be shared. It is not run: it has no `process`. Its header is `module name is`, with an optional safety word in front (`managed module name is`, `direct module name is`, see below), and it ends with `end name;`; the file name is the module name (`lib/counter.eve` holds `module counter`). A module has one scope (D-041), like an aspect: everything between the header and `end` is indented by 2 spaces.
 
 ```eve
 # counter: a constant, private state, life cycle
@@ -31,7 +31,7 @@ end counter;
 
 ## What a module may contain
 
-A module holds **declarations** and the regions around them (D-126): `from … use` (import), `export`, `initialize`, `recover` and `finalize`. A statement that is not inside a function, a procedure, a method, a constructor or a region (`print "x";`, `if … do`, an assignment) is a compile error in a module: the code of a module runs only when a member is called, or in `initialize`. A **free script** (`#!` on line 1) is the opposite: it is executable and may hold control statements, but it can not export anything and can not be imported; `from lib use (tool)` where `tool` is a free script is a compile error (c24). Only an encapsulated declaration can be shared. An **Eve macro** (level 5, D-152) is self-contained in the same way: it holds a driver, its aspects and declarations shared inside the file, and it can not be imported.
+A module holds **declarations** and the regions around them (D-126): `from … use` (import), `export`, `initialize`, `recover` and `finalize`. A statement that is not inside a function, a procedure, a method, a constructor or a region (`print "x";`, `if … do`, an assignment) is a compile error in a module: the code of a module runs only when a member is called, or in `initialize`. An **aspect** is executable and can not be imported: `from lib use (tool)` where `tool` is an aspect is a compile error (c24; it was a free script before D-179, which removed the free script). Only an encapsulated declaration can be shared. An **Eve macro** (level 5, D-152) is self-contained in the same way: it holds its aspects and declarations shared inside the file, and it can not be imported.
 
 ## Members
 
@@ -49,9 +49,9 @@ A member is **private** unless `export (…)` lists it. `export` may stand anywh
 
 ## Life cycle
 
-- **Singleton.** A module is loaded once, at the first import, whoever imports it: the driver, an aspect or another module. Every import gets the same copy and the same state (c07).
+- **Singleton.** A module is loaded once, at the first import, whoever imports it: an aspect or another module. Every import gets the same copy and the same state (c07).
 - **No instances.** A module is not a class: `new m := module_name();` is an error. Objects with their own state come from an exported class.
-- **`initialize`** runs once, right after loading, before the importing script goes on. **`finalize`** runs once, when the driver has ended, after its process, in the reverse order of the initialization (c06, c22). A module that imports another is initialized after it: the dependencies come first. **`recover`** handles an error raised in `initialize`, as the `recover` of a process does *(proposed)*. The three regions are optional, indented like the declarations, and end at the next region or at `end name;`.
+- **`initialize`** runs once, right after loading, before the importing script goes on. **`finalize`** runs once, when the aspect run by the command has ended, after its process, in the reverse order of the initialization (c06, c22). A module that imports another is initialized after it: the dependencies come first. **`recover`** handles an error raised in `initialize`, as the `recover` of a process does *(proposed)*. The three regions are optional, indented like the declarations, and end at the next region or at `end name;`.
 - A module can't read the variables of the script that imports it; it communicates through parameters (D-072 f).
 - An aspect that imports a module may call its procedures; since they change the shared state, the aspect is `exclusive` *(proposed: a `concurrent` aspect may call only functions of a module, D-068)*.
 
@@ -72,9 +72,9 @@ from lib use (*);                    ** every module of the folder, the names me
 | `use (*)` | every module of the folder, namespaces merged (c05) |
 
 - **The path** is written in two ways: folder names joined by `/` (`lib`, `lib/db`, `$EVE_LIB/db`) or a string expression (`"lib"`, `$root_path/"lib"`). Both are the same import (c01, c02).
-- **Relative and absolute (D-131).** A path that does **not** start with `/` is relative to `$EVE_HOME`, the home of the project (by default the folder of the driver), also in an import written inside a module or an aspect: `lib` is `$EVE_HOME/lib`. A path that starts with `/` is absolute: `/test/eve1/lib`. The same rule holds for each folder of `$EVE_LIB_PATH`.
+- **Relative and absolute (D-131).** A path that does **not** start with `/` is relative to `$EVE_HOME`, the home of the project (by default the folder of the aspect run by the command), also in an import written inside a module or an aspect: `lib` is `$EVE_HOME/lib`. A path that starts with `/` is absolute: `/test/eve1/lib`. The same rule holds for each folder of `$EVE_LIB_PATH`.
 - **Where a module is searched.** When the import gives no path, in this order: the standard library (`io`, `exception`; `print` comes from `io`); the folder `$EVE_LIB`, the `lib` folder of the project (its local library); then each folder of `$EVE_LIB_PATH`, the external modules installed outside the project, for example `/eve/modules/<module_name>`, placed there from GitHub with `npm install`. These folders can be several and in different places.
-- **Position.** An import is a declaration: it may stand anywhere in the scope of a driver, an aspect or a module, before or after the code that uses it (D-041).
+- **Position.** An import is a declaration: it may stand anywhere in the scope of an aspect or a module, before or after the code that uses it (D-041).
 - **Conflicts.** `use (*)` and `use (m(*))` merge names. If two modules give the same name, the import fails with a compile error that lists the modules one by one; no name is chosen silently (D-112 a).
 - **Private members.** Reading a member that is not exported is a compile error at check time, exit 65: nothing runs (D-112 b, c08).
 - **A module not found** is the error `$err_module` (code 30, `Module {name} not found in {library}`), raised at the import, before the process starts. Nobody can recover it, so the program ends with exit code 4 and the message on stderr (c25).
@@ -100,7 +100,7 @@ A **library** is a folder of modules. The folder `lib/` of a project (`$EVE_LIB`
 
 ## Extension methods
 
-A `method` declared outside a class, with `@self` of the class, extends the class (D-086): it is called as `obj.name(…)`, never changes the class, can't hide a method of the class, sees only its public members, and is visible only in the scripts that declare it or import the class. Only a method can have `@self` (D-123). Tests: c09 (class from a module, extended in the driver) and c11 (class and extension in one script).
+A `method` declared outside a class, with `@self` of the class, extends the class (D-086): it is called as `obj.name(…)`, never changes the class, can't hide a method of the class, sees only its public members, and is visible only in the scripts that declare it or import the class. Only a method can have `@self` (D-123). Tests: c09 (class from a module, extended in the primary aspect) and c11 (class and extension in one script).
 
 ## Open points
 

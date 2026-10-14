@@ -4,22 +4,26 @@ Status: **0.1-draft**, level 1. Grammar: [`grammar.md`](grammar.md). Each rule n
 
 ## Scripts
 
-A script is a file. Its first line decides its kind (lexical.md, File header):
+A script is a file. It holds an aspect, or a module, or (level 5) an Eve macro. A file has no `#!` line (D-179).
 
-- `#!…` is a **free script**: sequential statements, no `driver`, no `process`, no `return`, no subprograms, no jobs. It ends at the end of the file. A free script has one scope (D-014, D-091).
-- A **driver** is `driver name is` … `end name;`. It can be run. A driver has one process, `main`, the entry point (D-037).
-- An **aspect** is `[exclusive] aspect name is` or `concurrent aspect name is` … `end name;` (D-090); without a kind word it is exclusive (D-130). It has one process, `main`, and no public member; a driver runs it with `apply` (level 2, `../semantics/aspects.md`). A **module** is a script of level 3; it uses the same header and closer.
-- An **Eve macro** is a hybrid script of level 5: shared declarations, aspects and one driver in one file (D-152, [below](#eve-macro-level-5)).
+- An **aspect** is `[kind] aspect name is` … `end name;` where `kind` is `exclusive`, `concurrent` or `primary` (D-090, D-181). Without a kind word it is exclusive (D-130). The three kind words are reserved words of the same design. An aspect has a process `main`, its entry point and its only public member, and may have other processes, which are private: only the processes of the same aspect call them, by their bare names (D-179). A **module** is a script of level 3; it uses the same header and closer.
+  - An **exclusive** aspect is called with `apply`, never with `start`. A command may run it alone, for testing (D-182).
+  - A **concurrent** aspect is called with `apply` or `start`. It is checked for thread safety (D-089, D-129, D-137). A command does not run it (D-182, proposed).
+  - A **primary** aspect is designed to be executed first, by a command (`eve file.eve`), and it can run alone. **No aspect applies or starts it**: `apply` or `start` of a primary aspect is a compile error, `a primary aspect is run by a command: it can't be applied or started`. It is serial: its processes are exclusive, applied and never started, but its parallel groups start aspects. A project may hold one or several primary aspects (D-181, D-182).
+- Any aspect may `apply` or `start` another aspect, by its name, with these checks (compile errors, exit 65): no aspect calls itself and no chain of calls comes back to an aspect already in it (`aspect a calls itself`, `a calls b calls a`); the chain of aspects is at most three levels deep, the first being the aspect run by a command; a call of a private process of another aspect, or `a.p` with a dot on an aspect, is not allowed. Only the call of an aspect makes a level, never a call of a private process (D-179, D-180).
+- An **Eve macro** is a file of level 5 that holds shared declarations and several aspects, exactly one of them primary (D-152, D-180, [below](#eve-macro-level-5)).
 
-A driver, aspect or module has **one scope** (D-041). The regions `import`, `alias`, `constant`, `global` and `globals` do not exist: everything is declared directly, in any order, indented by 2 spaces. `end name;` repeats the name of the header and is at column 1.
+An aspect or a module has **one scope** (D-041). The regions `import`, `alias`, `constant`, `global` and `globals` do not exist: everything is declared directly, in any order, indented by 2 spaces. `end name;` repeats the name of the header and is at column 1.
+
+The aspect run by a command is the root of the run: its state is the scope of the run, its `main` takes the command-line arguments, and the modules it imports are bound to it. Every other aspect has its own state, created at each call and dropped when its `main` returns (D-066). The private processes of an aspect work on the state of that call. A private process that is **started** (in a concurrent aspect) uses only the thread-safe names of its aspect: atomic variables, channels, constants and the functions that the compiler proves thread safe; any other name is a compile error that names it.
 
 ### Headers
 
-A declaration header ends with the keyword `is` (D-015): `driver name is`, `process main is`, `function f(x: Integer) => (@r: Integer) is`. The `()` after a name is optional when there are no parameters. The body is indented by 2 spaces more than its header.
+A declaration header ends with the keyword `is` (D-015): `aspect name is`, `process main is`, `function f(x: Integer) => (@r: Integer) is`. The `()` after a name is optional when there are no parameters. The body is indented by 2 spaces more than its header.
 
 ### Process
 
-`process main is` … `return;` is the executable part of a driver. A process takes parameters (`process main(*args) is`); the parameters belong to the process, not to the driver (D-040). A process has no result: its outputs are `@` parameters (D-038). It can end with a `recover` region and a `finalize` region, aligned with `process`, before `return;` (see `../semantics/errors.md`). A process has access to the variables of its script.
+`process main is` … `return;` is the executable part of an aspect. A process takes parameters (`process main(*args) is`); the parameters belong to the process, not to the aspect (D-040). A process has no result: its outputs are `@` parameters (D-038). It can end with a `recover` region and a `finalize` region, aligned with `process`, before `return;` (see `../semantics/errors.md`). A process has access to the variables of its script.
 
 ## Variables and constants
 
@@ -53,7 +57,7 @@ An ordinal type lists its values; the first value is 1 unless a value is given (
 
 ## Functions and procedures
 
-A subprogram is a **function** when it has a result and a **procedure** when it has none, as in Ada (D-100; it replaces the "function without result" of D-086). A function or a procedure belongs to the driver, aspect or module that declares it and is private to it unless a module exports it.
+A subprogram is a **function** when it has a result and a **procedure** when it has none, as in Ada (D-100; it replaces the "function without result" of D-086). A function or a procedure belongs to the aspect or module that declares it and is private to it unless a module exports it.
 
 ```eve
 function area(w, h: Real) => (@a: Real) is
@@ -207,7 +211,7 @@ return;                   ** no more values
 - **Lazy:** the arguments are evaluated when the object is created; the body begins at the first request. **State:** the parameters and the local variables live in the object between two requests, and are dropped when the body returns, at `close()`, or when nobody refers to the object any more. A `for` loop left with `break` closes its generator.
 - A generator has inputs only, by value: no `@` parameter other than its result. A generator object is never copied and can't be an argument of `apply` or `start`: it belongs to the process that made it.
 - An error raised in the body ends the generator and is raised in the caller, at the `next()` or at the `for` line.
-- A generator can be declared where a function or a method can: in a class (`public generator walk(@self) => (@node: Node) is … return;`), in a module (exported with `export`), or private to a driver or an aspect. A generator exported by a module must be thread safe.
+- A generator can be declared where a function or a method can: in a class (`public generator walk(@self) => (@node: Node) is … return;`), in a module (exported with `export`), or private to an aspect. A generator exported by a module must be thread safe.
 
 Compile errors (exit code 65): `**yield outside a generator**` (in a function, a method, a lambda or a process); a generator with no result or with more than one; `generator {name} **called as a statement**`. Tests: e23 to e26.
 
@@ -226,14 +230,13 @@ table customers: Customer in "sales" is
 end customers;
 ```
 
-`table` is declared in a driver, an aspect, a module or an Eve macro, like a class; `customers` is an object of the library class `Table(:Customer)`. A record class may declare methods (D-123); `validate(@self)` runs before every write.
+`table` is declared in an aspect, a module or an Eve macro, like a class; `customers` is an object of the library class `Table(:Customer)`. A record class may declare methods (D-123); `validate(@self)` runs before every write.
 
 ## Eve macro (level 5)
 
-Level 5 (version 0.4). Source: D-152. Grammar: `grammar.md#eve-macro-level-5`. Tests: e04, e16 to e22. An **Eve macro** is a hybrid script: one self-contained file that holds **shared declarations**, any number of **aspects** and exactly **one driver**. A small job, also a parallel one, needs no project folder and no `asp/`.
+Level 5 (version 0.4). Sources: D-152, D-180, D-181. Grammar: `grammar.md#eve-macro-level-5`. Tests: e04, e16 to e22. An **Eve macro** is one self-contained file that holds **shared declarations** and any number of **aspects**, exactly one of them a **primary aspect**. A small job, also a parallel one, needs no project folder and no `asp/`.
 
 ```eve
-#!/usr/bin/env eve
 # pipeline: two workers in parallel, one file
 
 class Result = {name :String, count :Integer} <: Object is
@@ -256,8 +259,8 @@ concurrent aspect job_worker_2 is
   return;
 end job_worker_2;
 
-# driver executing parallel tasks
-driver pipeline_driver is
+# the primary aspect: run by a command, it starts the parallel tasks
+primary aspect pipeline is
   process main is
     new r1 := Result();
     new r2 := Result();
@@ -268,19 +271,20 @@ driver pipeline_driver is
     done p_exec;
     print "{r1.name}: {r1.count}, {r2.name}: {r2.count}";
   return;
-end pipeline_driver;
+end pipeline;
 ```
 
-- **Kind.** No keyword marks a macro: a file with a top-level `driver` and at least one other top-level declaration is a macro (D-152). A file with a driver alone is a driver, a file with an aspect alone is an aspect, as before. It runs like a driver: `eve pipeline.eve` (or `./pipeline.eve`) runs `process main` of its driver, which takes the command-line arguments.
-- **Line 1.** The shebang `#!` is optional. A `#!` file with a top-level `driver` is a macro; a `#!` file without one stays a free script. A macro may also start with a `#` title (`../lexical/lexical.md`, File header).
-- **Top level.** The top-level declarations are written at column 1, in any order (one scope per file, D-041): shared declarations (`class`, `function`, `procedure`, `method`, `set`, `new`, `def`, `from … use`), aspects (`exclusive` or `concurrent`) and the driver. Style: shared declarations first, then the aspects, the driver last. A statement outside a declaration (`print`, `let`, `if`, …) is a compile error: `a statement outside a declaration in a macro`.
-- **Shared declarations.** Every top-level declaration that is not an aspect or the driver is shared by all the declarations of the file. The driver and the exclusive aspects use them freely, also the variables: an exclusive aspect runs alone, so it changes a shared variable safely.
+- **Kind.** No keyword marks a macro: a file with several top-level aspects, or with an aspect and other top-level declarations, is a macro (D-152). A file with a single aspect is an aspect, as before. `eve pipeline.eve` runs `process main` of its primary aspect, which takes the command-line arguments.
+- **Primary aspect.** A macro has exactly one `primary aspect` (D-180). It is the entry point and the root of the run; no aspect of the file applies or starts it.
+- **Line 1.** There is no `#!` line (D-179). A macro may start with a `#` title (`../lexical/lexical.md`, File header).
+- **Top level.** The top-level declarations are written at column 1, in any order (one scope per file, D-041): shared declarations (`class`, `function`, `procedure`, `method`, `set`, `new`, `def`, `from … use`) and aspects (`exclusive`, `concurrent` or `primary`). Style: shared declarations first, then the other aspects, the primary aspect last. A statement outside a declaration (`print`, `let`, `if`, …) is a compile error: `a statement outside a declaration in a macro`.
+- **Shared declarations.** Every top-level declaration that is not an aspect is shared by all the declarations of the file. The primary aspect and the exclusive aspects use them freely, also the variables: they run alone, so they change a shared variable safely.
 - **Concurrent aspects.** A concurrent aspect uses only the thread-safe shared names: constants (`set`), classes, atomic variables (`Atomic(:T)`, `../library/atomic.md`, D-132) and channels, and functions, procedures and methods that the compiler proves thread safe, as for a direct module (D-089, D-129, D-137). Using another shared variable, or calling a subprogram that reaches one, is a compile error that names it: `the concurrent aspect 'adder' uses 'count', which is not thread safe`, `… calls 'bump', which is not thread safe`. A shared function that reads an atomic variable is stochastic and is named with `!` (D-089), as in a managed module.
-- **Aspects.** Each aspect keeps its own scope and state (D-066): it sees the shared declarations and no variable of the driver or of another aspect. `apply` and `start` follow the rules of `../semantics/aspects.md` and `../semantics/multitasking.md`.
+- **Aspects.** Each aspect keeps its own scope and state (D-066): it sees the shared declarations and no variable of another aspect. `apply` and `start` follow the rules of `../semantics/aspects.md` and `../semantics/multitasking.md`; the calls between the aspects of a macro count as levels like any other.
 - **Name lookup.** An aspect named in `apply` or `start` is searched first among the aspects of the macro, then in `asp/` and the project root. An aspect of the macro with the name of an aspect file of the project is a compile error: `aspect worker is declared in the macro and in asp/worker.eve`.
-- **Self-contained.** The aspects of a macro are private to it: no other driver can `apply` or `start` them. A macro can not be imported and exports nothing (D-126); `export` in a macro is a compile error.
-- **Compile errors (exit 65).** `a macro has only one driver` (two drivers, e21); `a statement outside a declaration in a macro` (e22); `a macro needs a driver` (aspects or shared declarations without a driver, in a file without `#!`); `'x' is already declared in this scope` (a top-level name declared twice); the thread-safety errors above (e19, e20).
+- **Self-contained.** The aspects of a macro are private to it: no other script can `apply` or `start` them. A macro can not be imported and exports nothing (D-126); `export` in a macro is a compile error.
+- **Compile errors (exit 65).** `a macro has only one primary aspect` (two); `a macro needs a primary aspect` (none); `a primary aspect is run by a command: it can't be applied or started`; `a statement outside a declaration in a macro` (e22); `'x' is already declared in this scope` (a top-level name declared twice); the thread-safety errors above (e19, e20).
 
 ## Imports and modules (level 3)
 
-`from lib use (a, b);` imports names; `export (a, b);` lists the public members of a module (D-041, D-085). A module holds declarations and the regions import, export, initialize, recover and finalize; a free statement is an error in a module, and a free script can not export or be imported (D-126). The whole chapter (members, life cycle, import forms, search path, libraries) is in [../semantics/modules.md](../semantics/modules.md); the grammar is in [grammar.md](grammar.md#modules-and-imports-level-3).
+`from lib use (a, b);` imports names; `export (a, b);` lists the public members of a module (D-041, D-085). A module holds declarations and the regions import, export, initialize, recover and finalize; a free statement is an error in a module, and an aspect can not be imported (D-126, D-179). The whole chapter (members, life cycle, import forms, search path, libraries) is in [../semantics/modules.md](../semantics/modules.md); the grammar is in [grammar.md](grammar.md#modules-and-imports-level-3).

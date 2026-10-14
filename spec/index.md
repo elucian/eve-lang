@@ -44,6 +44,7 @@ Every rule comes from a decision in [`../plan/decision_level1.md`](../plan/decis
 | 2026-10-07 | Level 2: aspects, `apply`, spreading, errors across `apply`, trace, log files (D-112, D-113); modules move to level 3 |
 | 2026-10-10 | Level 5 data and database: `library/database.md`, `library/data-language.md`, `semantics/data-types.md` rewritten; `table`, `commit`, `rollback`, `retry after`, `$isolation`, `$lock_timeout`, `$read_only`, error codes 50 to 57; listed in `plan/review_level5.md` |
 | 2026-10-10 | Eve macro: a hybrid script with shared declarations, aspects and one driver (D-152); tests e16 to e22, e04 is now a macro |
+| 2026-10-14 | The unified aspect: no `driver` keyword, no free script, no `#!`; kinds `exclusive`, `concurrent` and `primary`; private processes; calls between aspects, three levels, no cycle (D-179 to D-182); the macro has one primary aspect |
 | 2026-10-09 | No self-calling lambdas (D-147); generic functions, procedures, methods and processes (D-148); overloading (D-149); tests e01 to e15 |
 | 2026-10-12 | The parts of `eve` and the serving machine, the machine API `vm.*` and `db.*`, remote access through a reverse proxy, ACP (`library/machine.md`, D-163 to D-165); stored procedures in `sql/` and `proc/`, `external`, `sql function` (`library/database.md`, D-166); keywords `sql` and `external` (contextual) |
 | 2026-10-06 | Level 1: keywords, grammar, declarations, statements, expressions, types, control, errors, conformance (D-094); lexical rules and operator tables follow D-063 to D-087 |

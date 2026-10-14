@@ -21,7 +21,7 @@ The lexer reads the longest sequence of characters that forms a token. Tokens ar
 | Class | Examples |
 |---|---|
 | identifier | `x`, `Point`, `this_is_ok`, `$error` |
-| keyword | `driver`, `let`, `done` |
+| keyword | `aspect`, `let`, `done` |
 | number literal | `0`, `123`, `0x1F`, `0b101`, `0.5`, `12.50d`, `255b` |
 | rune literal | `'a'`, `''`, `U+03B2` |
 | string literal | `"text"`, `"""text"""` |
@@ -41,18 +41,16 @@ The first line says what kind of file it is.
 
 | First line | Meaning |
 |---|---|
-| `#!` followed by the interpreter path, for example `#!/usr/bin/env eve` | Shebang. The file is a **free script**: sequential statements, no driver, no process. Only a file whose first line starts with `#!` can be a free script. A `#!` file that declares a `driver` at the top level is an **Eve macro** instead (D-152, `../syntax/declarations.md#eve-macro-level-5`). |
-| `# title` | Title of a driver, an aspect, a module or an Eve macro. |
+| `# title` | Title of an aspect, a module or an Eve macro. |
 | `## subtitle` | Subtitle. |
 | `**` … | A comment, for example a row of stars above a block comment. |
 
-`#!` is an interpreter directive only in the first two characters of the file. On any other line, `#!` is an ordinary `#` comment. All header lines are comments: a parser may ignore them, except that it needs the first line to decide whether the file is a free script (a `#!` file without a top-level `driver`).
+A file has no `#!` line (D-179): Eve is a language for projects, not a shell language. A `#!` at the start of a file is a compile error (exit 65); a `#` comment starts at indentation 0 only. All header lines are comments: a parser may ignore them.
 
 ## Comments
 
 | Form | Starts | Ends | Spans lines | Nests | Use |
 |---|---|---|---|---|---|
-| `#!` | line 1, indentation 0 | end of line | no | no | shebang |
 | `#` | indentation 0 only | end of line | no | no | title |
 | `##` | indentation 0 only | end of line | no | no | subtitle |
 | `**` | anywhere outside a literal | end of line | no | no | line and end-of-line notes |
@@ -76,7 +74,7 @@ Example:
 /*-----------------------------------------------
   A block comment can describe the whole script.
 -----------------------------------------------*/
-driver comment_demo is
+primary aspect comment_demo is
 
   process main is
     ** a note on its own line

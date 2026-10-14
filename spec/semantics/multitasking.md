@@ -6,9 +6,9 @@ Eve has two ways to do several things at once. A **parallel group** starts aspec
 
 | Word | Meaning |
 |---|---|
-| task | one started aspect, or one spawned asynchronous subprogram |
+| task | one started aspect, one started private process of a concurrent aspect, or one spawned asynchronous subprogram |
 | group | a block `parallel … do … done` that starts tasks and waits for all of them |
-| barrier | the closing `done` of a group or a job: the driver waits there until every task has ended |
+| barrier | the closing `done` of a group or a job: the process that opened it waits there until every task has ended |
 | channel | a queue of fixed capacity that tasks of a group share |
 
 ## Parallel groups
@@ -25,37 +25,39 @@ done [label];
 - The options come in this order: label, `parallel`, `on error cancel`, `within`. A labelled group closes with `done label;`, an unlabelled one with `done;`.
 - The declarations between `parallel` and `do` belong to the group and are dropped at `done`. A value needed after `done` is declared before the group.
 - The `do` region holds ordinary statements and `start` statements. `start` may sit at any depth of `if`, `for`, `while` and `match` inside the `do` region, but not inside a function or procedure called from there.
-- The driver runs its groups one after the other: a group begins when the statement before it has ended.
+- A process runs its groups one after the other: a group begins when the statement before it has ended.
 
 ### Where a group is allowed
 
 | Place | Group | `start` |
 |---|---|---|
-| `process main` of the driver | yes | any number (`$max_parallel` at a time) |
-| `main` of an aspect started by the driver | yes, one level | at most 2 `start` statements, none in a loop |
-| an aspect started by an aspect (a leaf) | no | no |
-| an applied aspect, a function, a procedure, a method | no | no |
+| a process of the aspect run by a command (level 1, a primary aspect) | yes | any number (`$max_parallel` at a time) |
+| a process of an aspect it calls (level 2) | yes, one group | at most 2 `start` statements, none in a loop |
+| a process of an aspect called from there (level 3, a leaf) | no | no |
+| an applied aspect that is not in the first two levels, a function, a procedure, a method | no | no |
 | outside the `do` region of a group | | no |
+
+The levels are those of the calls between aspects (D-179: at most three, no cycle). Only the call of an aspect makes a level; a private process started in a group is a task of that group and counts in its limit of 2 at level 2, but it is not a level. A primary aspect is serial: its processes are applied and a `start` of one of them is a compile error; its groups start aspects.
 
 A violation is a compile error (exit 65). `$max_parallel` (default 8) is not a compile rule: a start beyond it waits until a task of the group has ended.
 
 ### What can be started
 
-`start` starts only a `concurrent aspect`. An aspect without a kind word is `exclusive` (D-130), and starting it is a compile error that names the aspect. A concurrent aspect is checked at its declaration: it fails to compile when it can reach a function or procedure that is not thread safe (D-089, D-129, D-137).
+`start` starts a `concurrent aspect`, or a private process of the concurrent aspect in which it is written (D-179). An aspect without a kind word is `exclusive` (D-130), a `primary` aspect is run by a command (D-181), and starting either is a compile error that names the aspect. A private process of an exclusive or primary aspect is applied, and a `start` of it is a compile error. A concurrent aspect is checked at its declaration: it fails to compile when it can reach a function or procedure that is not thread safe (D-089, D-129, D-137). A private process that is started uses only the thread-safe names of its aspect: constants, atomic variables, channels and thread-safe subprograms; any other aspect-level name is a compile error that names it and the chain of calls. A private process that is only applied uses every name of its aspect.
 
-In an **Eve macro** (level 5, D-152) the aspects and the driver share the top-level declarations of the file. A concurrent aspect uses only the thread-safe ones: constants, classes, atomic variables, channels, and subprograms that the compiler proves safe (`../syntax/declarations.md#eve-macro-level-5`; tests e17 to e20).
+In an **Eve macro** (level 5, D-152) the aspects share the top-level declarations of the file. A concurrent aspect uses only the thread-safe ones: constants, classes, atomic variables, channels, and subprograms that the compiler proves safe (`../syntax/declarations.md#eve-macro-level-5`; tests e17 to e20).
 
 ### Data rules
 
-- **Inputs by value.** The arguments are evaluated at `start` and copied: the task works on its own copy and the driver may go on changing its variables.
+- **Inputs by value.** The arguments are evaluated at `start` and copied: the task works on its own copy and the process that started it may go on changing its variables.
 - **One owner for each output.** An `@` argument is a reference that belongs to one task. The compiler rejects the same variable, or the same element with a constant index, given to two starts of a group. The VM checks elements with a computed index at `start`. Both report `$err_output` 43: `Output {name} is given to two tasks of the group`.
 - **Channels** are the only objects that several tasks may share (see below).
 - **Modules are shared**: every task sees the same copy of a module. A concurrent aspect calls only thread-safe members (`modules.md`). The variables of a managed module are `Atomic(:T)` (D-132), so `let count += 1;` from several tasks gives the exact total.
-- An aspect sees no global of the driver, and its state belongs to one task (D-066).
+- An aspect sees no variable of the aspect that calls it, and its state belongs to one task (D-066).
 
 ### Output
 
-A task writes `print` and `write` into its own buffer. At `done`, the buffers are written to the standard output in the **order of `start`**, task after task; then the driver goes on. The output of a group is the same at every run and on any number of cores. `log_err` and `log_wrn` write to the error output at once, with the aspect name in front.
+A task writes `print` and `write` into its own buffer. At `done`, the buffers are written to the standard output in the **order of `start`**, task after task; then the process that opened the group goes on. The output of a group is the same at every run and on any number of cores. `log_err` and `log_wrn` write to the error output at once, with the aspect name in front.
 
 ### Errors
 
@@ -103,8 +105,8 @@ new results := Channel(:Integer)(capacity: 100, senders: 4);
 - **Errors.** `send` into a closed channel, `receive` from a closed and empty channel, and a close beyond `senders` raise `ChannelError`, `$err_channel` 46: `Channel {name} is closed`. The name is the name of the variable that created the channel.
 - **Order.** The values of one sender keep their order. The values of several senders are interleaved in any order: combine them with an operation that does not depend on the order, or send the index with the value.
 - **Deadlock.** When every unfinished task waits on a channel and no timer is pending, the VM stops the waiting tasks. Each gets a `DeadlockError` (`$err_deadlock` 42) that names it: `Deadlock: consume waits to receive from jobs`. They appear in the `ParallelError` of the group, in the order of `start`.
-- **Time-out.** A wait on a channel longer than `$timeout` (default `60s`) raises `TimeoutError` in that task. An aspect may write `set $timeout = 5s;`, which shadows the driver value inside that aspect.
-- After `done`, the driver may still read what is left in a closed channel with `for`.
+- **Time-out.** A wait on a channel longer than `$timeout` (default `60s`) raises `TimeoutError` in that task. An aspect may write `set $timeout = 5s;`, which shadows the value of the primary aspect inside that aspect.
+- After `done`, the process may still read what is left in a closed channel with `for`.
 
 ## Streams and batches
 
@@ -162,7 +164,7 @@ Each is a compile error (exit 65). The message holds the text of the second colu
 | `start` outside a group | `start is allowed only in the do region of a parallel group` | d07 |
 | the same output given to two starts | `Output {name} is given to two tasks of the group` | d08 |
 | more than 2 starts, or a start in a loop, in the group of an aspect | `{aspect} starts more than 2 aspects` | d26 |
-| a group in a leaf aspect, a function, a procedure or a method | `parallel is allowed only in the main of a driver or of an aspect it starts` | |
+| a group in a leaf aspect, a function, a procedure or a method | `parallel is allowed only in an aspect of the first two levels` | |
 | `spawn` of an async function | `{name} is a function: use await` | d18 |
 | a plain call of an async subprogram | `{name} is async: use spawn or await` | d19 |
 | a concurrent aspect that reaches an unsafe member | `{member}, which is not thread safe` | d01, d03 |
