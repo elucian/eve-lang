@@ -146,8 +146,9 @@ pub fn main(init: std.process.Init) !void {
     // Zig tip: at a terminal `eve --serve` opens the doors in threads and the prompt comes back (`embed`), so the same
     // window can send commands to its own machine; with a pipe, a file or a service manager nobody types, and the
     // start waits for the doors as before. `machine.embedded` tells that the doors are open in this process.
-    // `-u`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system
-    // prompt comes back; with a command (`eve -u check a.eve`) the command runs after it, as it would without `-u`.
+    if (opts.tx) std.process.exit(try startTx(init.io, arena, stdout, opts.tx_args));
+    // `-ux`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system
+    // prompt comes back; with a command (`eve -ux check a.eve`) the command runs after it, as it would without `-ux`.
     if (opts.ui) {
         const code = try evevm.daemon.openUi(init.io, arena, stdout, opts.config);
         try stdout.flush();
@@ -224,4 +225,26 @@ pub fn main(init: std.process.Init) !void {
     }
     const edit: ?cli.Edit = if (term != null) .{ .io = init.io, .gpa = arena } else null;
     try cli.repl(&ctx, &stdin_file_reader.interface, edit);
+}
+
+// Zig tip: `std.process.executableDirPathAlloc` gives the folder of the running program, so `eve` finds `evetx` beside
+// it in `bin/` whatever the current folder is. `.inherit` lets the child use this terminal directly: evetx takes the
+// screen, and `wait` returns when it ends with a `Term`, whose `.exited` case carries the exit code of the child.
+/// `eve -tx [folder]`: start the terminal IDE (evetx, a separate program until it joins the root build) and wait for it.
+fn startTx(io: Io, arena: std.mem.Allocator, out: *Io.Writer, args: []const []const u8) !u8 {
+    const dir = try std.process.executableDirPathAlloc(io, arena);
+    const exe = try std.fmt.allocPrint(arena, "{s}{c}evetx{s}", .{ dir, std.fs.path.sep, @import("builtin").target.exeFileExt() });
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.append(arena, exe);
+    try argv.appendSlice(arena, args);
+    var child = std.process.spawn(io, .{ .argv = argv.items, .stdin = .inherit, .stdout = .inherit, .stderr = .inherit }) catch |err| {
+        try out.print("eve: cannot start {s}: {s} (build it: cd evetx && zig build -p ..)\n", .{ exe, @errorName(err) });
+        try out.flush();
+        return 69;
+    };
+    const term = try child.wait(io);
+    return switch (term) {
+        .exited => |code| code,
+        else => 1,
+    };
 }

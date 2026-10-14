@@ -22,8 +22,9 @@ pub const quick_help =
     \\Quick help:
     \\  -x                execute the script now, in this process (parsed first): no IPC or
     \\                    HTTP lookup, the fast way to run a script; same as --execute
-    \\  -u                open the user interface (the web page of the machine) if it is not open; with a
+    \\  -ux               open the web user interface (the page of the machine) if it is not open; with a
     \\                    command, open it and then run the command
+    \\  -tx [folder]      start the terminal IDE, evetx, on a project folder (also: eve tx)
     \\  -d                debug mode: halt statements stop the script (ignored otherwise)
     \\  -s <file.cfg>     setup: load the configuration file
     \\  -m <size>         memory for the process

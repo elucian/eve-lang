@@ -31,8 +31,11 @@ pub const Options = struct {
     args: []const []const u8 = &.{},
     /// The options of the machine (`--listen`, `--serve`, `-loc`, `-rem`; spec/library/machine.md).
     machine: client.Cmd = .{},
-    /// `-u`: open the user interface (the web page of the machine) when it is not open.
+    /// `-ux`: open the web user interface (the page of the machine) when it is not open (D-172; was `-u`).
     ui: bool = false,
+    /// `-tx`: start the terminal IDE, evetx, with the rest of the line (D-172).
+    tx: bool = false,
+    tx_args: []const []const u8 = &.{},
 };
 
 // Zig tip: a small function with no state can be tested alone. `isPort` is true for a text of digits, which is how
@@ -62,7 +65,7 @@ pub const ParseError = error{ MissingValue, UnknownOption, BadWord, OutOfMemory 
 // the caller's array (`argv` is `[]const`, read only). Returning a sub-slice, `argv[1..]`, copies nothing.
 /// The first word of the command line may name a part of `eve` (D-163): `vm` (the runtime) and `cp` (the compiler)
 /// select what the options already do, `cp project` is `--project`, `ux` (the UI) is `--serve`, `db` (the database
-/// part) is the command `--db`. Gives the line the rest of `parseArgs` reads.
+/// part) is the command `--db`, `tx` (the terminal IDE) is `-tx`. Gives the line the rest of `parseArgs` reads.
 pub fn partWords(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]const []const u8 {
     if (argv.len == 0) return argv;
     const first = argv[0];
@@ -75,6 +78,11 @@ pub fn partWords(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]
             return copy;
         }
         return argv[1..];
+    }
+    if (eql(u8, first, "tx")) {
+        const copy = try gpa.dupe([]const u8, argv);
+        copy[0] = "-tx";
+        return copy;
     }
     if (eql(u8, first, "ux") or eql(u8, first, "db")) {
         const copy = try gpa.dupe([]const u8, argv);
@@ -134,8 +142,13 @@ pub fn parseArgs(
             o.debug = true;
         } else if (std.mem.eql(u8, a, "-x")) {
             o.execute = true;
-        } else if (std.mem.eql(u8, a, "-u")) {
+        } else if (std.mem.eql(u8, a, "-ux")) {
             o.ui = true;
+        } else if (std.mem.eql(u8, a, "-tx")) {
+            // everything after `-tx` belongs to evetx (a project folder), so the parse stops here
+            o.tx = true;
+            o.tx_args = line[i + 1 ..];
+            break;
         } else if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "-i") or std.mem.eql(u8, a, "-t")) {
             i += 1;
             if (i >= line.len) {
