@@ -31,6 +31,13 @@ Selecting and copying
   Ctrl+V              paste (a paste made by the terminal works as well)
   Mouse               click puts the cursor, drag selects, Shift+click extends
 
+Editor view
+  Edit > Wrap       wrap long lines (no horizontal bar; the vertical bar gets ^ and v
+                    buttons: half a page). Without wrap the horizontal bar has
+                    < and > buttons: ten columns each
+  Click on a line number (or the space next to it)   set a breakpoint;
+                    click on the red circle to remove it. F9: on the cursor line
+
 Run and debug
   F5                  run the .eve file: `run <file>` is typed in the Console prompt
                       and starts after 3 seconds (Enter: now, Esc: cancel,

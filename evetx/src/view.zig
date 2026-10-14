@@ -427,93 +427,155 @@ fn editorArea(app: *App, ed: Window) !void {
     }
 }
 
+// Zig tip: With wrapping, the cursor is kept in view by counting rows, not lines: the rows of the
+// lines from the first one shown up to the cursor, plus the piece of the cursor line it is in. When
+// the cursor is far below, the first line jumps near it at once so the count stays short.
+fn followWrap(b: *text.Buffer, rows: usize, cols: usize) void {
+    if (rows == 0 or cols == 0) return;
+    b.left = 0;
+    if (b.row < b.top) b.top = b.row;
+    if (b.row - b.top >= rows) b.top = b.row + 1 - rows;
+    const cur = b.lineAt(b.row);
+    const seg = @min(b.displayCol() / cols, text.Buffer.segRows(cur, cols) - 1);
+    while (b.top < b.row) {
+        var used: usize = 0;
+        var ln = b.top;
+        while (ln < b.row) : (ln += 1) used += text.Buffer.segRows(b.lineAt(ln), cols);
+        if (used + seg < rows) break;
+        b.top += 1;
+    }
+}
+
 // Zig tip: `b.follow(rows, cols)` scrolls the buffer so the cursor is inside the window.
 // `code.showCursor(col, row)` tells the terminal where the cursor is; the view hides the cursor at
-// the start of every frame.
+// the start of every frame. In the wrap mode a line is drawn in several rows, one piece of `cols`
+// cells each, and `left` is the first cell of the piece; the line number and the breakpoint are
+// drawn on the first piece only. The variable `r` counts the rows of the screen, `ln` the lines.
 fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
     var digits: u16 = 1;
     var n = b.lineCount();
     while (n >= 10) : (n /= 10) digits += 1;
     const gutter: u16 = digits + 3;
-    const rows = ed.height -| 1;
+    const wrap = app.wrap;
+    const rows = if (wrap) ed.height else ed.height -| 1;
     const cols = ed.width -| gutter -| 1;
     if (app.follow) {
-        b.follow(rows, cols);
+        if (wrap) followWrap(b, rows, cols) else b.follow(rows, cols);
         app.follow = false;
     }
+    if (wrap) b.left = 0;
     const code = sub(ed, gutter, 0, cols, rows);
     app.editor_rect = absRect(ed, gutter, 0, cols, rows);
+    app.gutter_rect = absRect(ed, 0, 0, gutter, rows);
     const focused = app.focus == .editor and app.overlay == .none;
 
     var r: u16 = 0;
-    while (r < rows and b.top + r < b.lineCount()) : (r += 1) {
-        const ln = b.top + r + 1;
-        const is_cur = (b.top + r) == b.row;
+    var ln: usize = b.top;
+    var lines_shown: usize = 0;
+    while (r < rows and ln < b.lineCount()) : (ln += 1) {
+        const line = b.lineAt(ln);
+        const pieces: usize = if (wrap) text.Buffer.segRows(line, cols) else 1;
+        const is_cur = ln == b.row;
         const row_bg = if (is_cur and focused) theme.bar2 else theme.deep;
-        const line_win = sub(ed, 0, r, ed.width, 1);
-        fillWith(line_win, row_bg);
-        if (app.hasBreakpoint(tab.path, ln)) _ = put(line_win, 0, 0, "●", theme.on(theme.red, row_bg));
-        const num = app.fmt("{d}", .{ln});
-        _ = put(line_win, gutter - 2 - @as(u16, @intCast(num.len)), 0, num, theme.on(if (is_cur) theme.bright else theme.dim, row_bg));
-        const line = b.lineAt(b.top + r);
-        const start = text.Buffer.byteAtDisplay(line, b.left);
-        const cw = sub(code, 0, r, cols, 1);
-        drawCode(cw, line, start, tab.eve, row_bg);
-        if (b.selection()) |sel| drawSelection(cw, line, b.top + r, sel, b.left);
-        if (b.match) |m| {
-            if (m.row == b.top + r) {
-                const mc = text.Buffer.displayWidth(line[0..m.col]);
-                if (mc >= b.left) {
-                    const end = @min(line.len, m.col + m.len);
-                    _ = put(cw, @intCast(mc - b.left), 0, line[m.col..end], theme.on(theme.deep, theme.amber));
+        var seg: usize = 0;
+        while (seg < pieces and r < rows) : ({
+            seg += 1;
+            r += 1;
+        }) {
+            const left: usize = if (wrap) seg * cols else b.left;
+            const line_win = sub(ed, 0, r, ed.width, 1);
+            fillWith(line_win, row_bg);
+            if (seg == 0) {
+                if (app.hasBreakpoint(tab.path, ln + 1)) _ = put(line_win, 0, 0, "●", theme.on(theme.red, row_bg));
+                const num = app.fmt("{d}", .{ln + 1});
+                _ = put(line_win, gutter - 2 - @as(u16, @intCast(num.len)), 0, num, theme.on(if (is_cur) theme.bright else theme.dim, row_bg));
+            }
+            const start = text.Buffer.byteAtDisplay(line, left);
+            const cw = sub(code, 0, r, cols, 1);
+            drawCode(cw, line, start, tab.eve, row_bg);
+            if (b.selection()) |sel| drawSelection(cw, line, ln, sel, left);
+            if (b.match) |m| {
+                if (m.row == ln) {
+                    const mc = text.Buffer.displayWidth(line[0..m.col]);
+                    if (mc >= left) {
+                        const end = @min(line.len, m.col + m.len);
+                        _ = put(cw, @intCast(mc - left), 0, line[m.col..end], theme.on(theme.deep, theme.amber));
+                    }
+                }
+            }
+            if (focused and is_cur) {
+                const dc = b.displayCol();
+                const here: usize = if (wrap) @min(dc / cols, pieces - 1) else 0;
+                if (!wrap or here == seg) {
+                    const cc = if (wrap) @min(dc - seg * cols, cols - 1) else if (dc >= left) dc - left else cols;
+                    if (cc < cols) code.showCursor(@intCast(cc), r);
                 }
             }
         }
+        lines_shown += 1;
     }
-    scrollBars(app, ed, b, gutter, rows, cols);
-    if (focused and b.displayCol() >= b.left and b.row >= b.top and b.row - b.top < rows) {
-        code.showCursor(@intCast(b.displayCol() - b.left), @intCast(b.row - b.top));
-    }
+    scrollBars(app, ed, b, gutter, rows, cols, lines_shown);
 }
 
-// Zig tip: A proportion in integers: the thumb is as long as the share of the text that is on the
-// screen (`rows * rows / total`), and its place is the share that is above the screen. The
-// multiplication comes before the division, otherwise the integer division would round to 0.
-/// The vertical bar at the right of the text and the horizontal bar under it. The rectangles are
-/// saved in the app for the mouse; the longest line is looked for in the lines that are on the screen.
-fn scrollBars(app: *App, ed: Window, b: *text.Buffer, gutter: u16, rows: u16, cols: u16) void {
-    if (rows < 2 or cols < 2) {
-        app.vbar_rect = .{};
-        app.hbar_rect = .{};
-        return;
-    }
+// Zig tip: The bars are thin lines, one cell wide or tall: `│` and `─` for the track, `┃` and `━` for
+// the thumb. A proportion in integers gives the thumb: as long as the share of the text that is
+// on the screen (`visible * span / total`), and placed by the share that is above the screen. The
+// multiplication comes before the division, otherwise the integer division would round to 0. At the
+// ends of the horizontal bar are the buttons < and > (ten columns each); when wrapping hides that
+// bar, the vertical one gets the buttons ^ and v (half a page each). Every button is a hit with the
+// action `scroll`.
+/// The vertical bar at the right of the text and, unless the text wraps, the horizontal bar under it.
+/// The rectangles of the tracks are saved in the app for the mouse.
+fn scrollBars(app: *App, ed: Window, b: *text.Buffer, gutter: u16, rows: u16, cols: u16, lines_shown: usize) void {
+    app.vbar_rect = .{};
+    app.hbar_rect = .{};
+    if (rows < 4 or cols < 6) return;
     const track = theme.on(theme.faint, theme.deep);
     const thumb = theme.on(theme.dim, theme.deep);
+    const btn = theme.onBold(theme.text, theme.bar2);
+
+    // the vertical bar
     const vx = ed.width - 1;
     const total = b.lineCount();
-    app.vbar_rect = absRect(ed, vx, 0, 1, rows);
-    var y: u16 = 0;
-    while (y < rows) : (y += 1) _ = put(ed, vx, y, "░", track);
-    {
-        const th: usize = if (total > rows) @max(1, @as(usize, rows) * rows / total) else rows;
-        const above = @min(b.top, total -| rows);
-        const ty: usize = if (total > rows) (rows - th) * above / (total - rows) else 0;
-        var k: usize = 0;
-        while (k < th) : (k += 1) _ = put(ed, vx, @intCast(ty + k), "█", thumb);
+    const y0: u16 = if (app.wrap) 1 else 0;
+    const span: u16 = if (app.wrap) rows - 2 else rows;
+    if (app.wrap) {
+        _ = put(ed, vx, 0, "^", btn);
+        addHit(app, ed, vx, 0, 1, 1, .{ .scroll = .up }) catch {};
+        _ = put(ed, vx, rows - 1, "v", btn);
+        addHit(app, ed, vx, rows - 1, 1, 1, .{ .scroll = .down }) catch {};
     }
+    app.vbar_rect = absRect(ed, vx, y0, 1, span);
+    var y: u16 = 0;
+    while (y < span) : (y += 1) _ = put(ed, vx, y0 + y, "│", track);
+    {
+        const visible: usize = if (app.wrap) @max(1, lines_shown) else rows;
+        const th: usize = if (total > visible) @max(1, @as(usize, span) * visible / total) else span;
+        const above = @min(b.top, total -| visible);
+        const ty: usize = if (total > visible) (span - th) * above / (total - visible) else 0;
+        var k: usize = 0;
+        while (k < th) : (k += 1) _ = put(ed, vx, y0 + @as(u16, @intCast(ty + k)), "┃", thumb);
+    }
+    if (app.wrap) return;
 
+    // the horizontal bar
     const hy = ed.height - 1;
     var content: usize = b.left + cols;
     var r: usize = b.top;
     while (r < total and r < b.top + rows) : (r += 1) content = @max(content, text.Buffer.displayWidth(b.lineAt(r)) + 1);
     app.hbar_content = content;
-    app.hbar_rect = absRect(ed, gutter, hy, cols, 1);
+    _ = put(ed, gutter, hy, "<", btn);
+    addHit(app, ed, gutter, hy, 1, 1, .{ .scroll = .left }) catch {};
+    _ = put(ed, gutter + cols - 1, hy, ">", btn);
+    addHit(app, ed, gutter + cols - 1, hy, 1, 1, .{ .scroll = .right }) catch {};
+    const hw = cols - 2;
+    app.hbar_rect = absRect(ed, gutter + 1, hy, hw, 1);
     var x: u16 = 0;
-    while (x < cols) : (x += 1) _ = put(ed, gutter + x, hy, "░", track);
-    const tw: usize = if (content > cols) @max(1, @as(usize, cols) * cols / content) else cols;
-    const tx: usize = if (content > cols) (cols - tw) * @min(b.left, content - cols) / (content - cols) else 0;
+    while (x < hw) : (x += 1) _ = put(ed, gutter + 1 + x, hy, "─", track);
+    const tw: usize = if (content > cols) @max(1, @as(usize, hw) * cols / content) else hw;
+    const tx: usize = if (content > cols) (hw - tw) * @min(b.left, content - cols) / (content - cols) else 0;
     var k: usize = 0;
-    while (k < tw) : (k += 1) _ = put(ed, gutter + @as(u16, @intCast(tx + k)), hy, "█", thumb);
+    while (k < tw) : (k += 1) _ = put(ed, gutter + 1 + @as(u16, @intCast(tx + k)), hy, "━", thumb);
 }
 
 // Zig tip: The selected part of a line is drawn again over the code with the selection colors. Its
@@ -547,7 +609,7 @@ fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Colo
         _ = put(w, 0, 0, s, plain);
         return;
     }
-    if (start == 0 and line.len > 0 and line[0] == '#') {
+    if (line.len > 0 and line[0] == '#') {
         _ = put(w, 0, 0, s, theme.on(theme.comment, bg));
         return;
     }
@@ -914,6 +976,7 @@ fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
         .toggle_tree => app.fmt("[{s}] {s}", .{ if (app.show_tree) "x" else " ", row.label }),
         .toggle_main => app.fmt("[{s}] {s}", .{ if (app.show_main) "x" else " ", row.label }),
         .toggle_tools => app.fmt("[{s}] {s}", .{ if (app.show_tools) "x" else " ", row.label }),
+        .toggle_wrap => app.fmt("[{s}] {s}", .{ if (app.wrap) "x" else " ", row.label }),
         .window_pick => app.fmt("{s} {s}", .{ if (row.arg == app.active) "●" else " ", row.label }),
         .machine_pick => app.fmt("{s} {s}", .{ if (row.arg == app.machine) "●" else " ", row.label }),
         else => row.label,

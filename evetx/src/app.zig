@@ -62,6 +62,7 @@ pub const Action = union(enum) {
     panel_focus: Panel,
     panel_hide: Panel,
     panel_max: Panel,
+    scroll: ScrollBtn,
     dlg: DlgAction,
     proj_row: usize,
     fb_row: usize,
@@ -170,7 +171,7 @@ pub const Breakpoint = struct { path: []u8, line: usize };
 /// Every command of the main menu.
 pub const MenuCmd = enum {
     open_project, open_folder, new_file, save, save_as, close_tab, quit,
-    undo, redo, replace,
+    undo, redo, replace, toggle_wrap,
     find_text, find_file, goto_line, query,
     run, check_file, step_into, step_out, cont, stop, breakpoint,
     machine_pick, connect, upload,
@@ -220,6 +221,8 @@ pub const menus = [_]Menu{
         .{ .label = "Redo", .key = "Ctrl+Y", .cmd = .redo },
         sep,
         .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
+        sep,
+        .{ .label = "Wrap", .cmd = .toggle_wrap },
     } },
     .{ .label = "SEARCH", .items = &.{
         .{ .label = "Find Text…", .key = "Ctrl+F", .cmd = .find_text },
@@ -273,6 +276,9 @@ const help_tutorial = @embedFile("help_tutorial");
 // that is hidden has a rectangle of width 0.
 /// The places of the panels on the screen (absolute cells).
 pub const Layout = struct { tree: Rect = .{}, main: Rect = .{}, debug: Rect = .{}, tools: Rect = .{} };
+
+/// The small buttons at the ends of the scroll bars: ten columns left or right, half a page up or down.
+pub const ScrollBtn = enum { left, right, up, down };
 
 /// What the mouse is dragging: a border between panels, or a scroll bar thumb.
 pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select };
@@ -374,6 +380,10 @@ pub const App = struct {
     /// milliseconds of the `awake` clock) unless the user presses a key. Owned text of the command.
     pending_at: ?i64 = null,
     pending_text: ?[]u8 = null,
+    /// Edit > Wrap: long lines are cut at the right edge of the editor and the horizontal bar goes away.
+    wrap: bool = false,
+    /// The line numbers of the editor: a click there sets or removes a breakpoint.
+    gutter_rect: Rect = .{},
     clip: ?[]u8 = null,
     sys_clip: ?[]u8 = null,
     /// True between the start and the end of a paste made by the terminal: the keys are collected.
@@ -675,14 +685,19 @@ pub const App = struct {
     // Zig tip: `const b = t.buf orelse return;` unwraps an optional or leaves the function. Removing
     // from the list while looping is safe here because the loop returns right after `orderedRemove`.
     pub fn toggleBreakpoint(self: *App) !void {
+        const b = self.activeBuffer() orelse return;
+        try self.toggleBreakpointAt(b.row + 1);
+    }
+
+    /// Set a breakpoint on line `line` (1 based) of the current file, or remove it when there is one.
+    pub fn toggleBreakpointAt(self: *App, line: usize) !void {
         const t = self.activeTab() orelse return;
-        const b = t.buf orelse return;
+        if (t.buf == null) return;
         if (t.virtual) return;
         if (t.path.len == 0) {
             self.setMessage("save the file first: a breakpoint needs a file", .{});
             return;
         }
-        const line = b.row + 1;
         for (self.breakpoints.items, 0..) |bp, i| {
             if (bp.line == line and std.mem.eql(u8, bp.path, t.path)) {
                 self.gpa.free(bp.path);
@@ -1116,6 +1131,10 @@ pub const App = struct {
             .find_text => self.openOverlay(.find_text),
             .find_file => self.openOverlay(.find_file),
             .replace => self.openOverlay(.replace),
+            .toggle_wrap => {
+                self.wrap = !self.wrap;
+                self.follow = true;
+            },
             .goto_line => self.openOverlay(.goto),
             .query => self.notYet("Query", "T7"),
             .run => try self.runActive(),
@@ -1424,6 +1443,28 @@ pub const App = struct {
         }
     }
 
+    // Zig tip: With wrapping, one line takes several rows, so a row of the screen is found by
+    // walking the lines from the first one shown and taking away the rows each one uses
+    // (`Buffer.segRows`). The function returns the line and which piece of it (0 for the first row).
+    /// The line and the piece of it that are drawn at row `rel` of the editor (null below the last line).
+    fn rowToLine(self: *const App, b: *const text.Buffer, rel: usize) ?struct { line: usize, seg: usize } {
+        if (!self.wrap) return if (b.top + rel < b.lineCount()) .{ .line = b.top + rel, .seg = 0 } else null;
+        var r = rel;
+        var ln = b.top;
+        while (ln < b.lineCount()) : (ln += 1) {
+            const n = text.Buffer.segRows(b.lineAt(ln), self.editor_rect.w);
+            if (r < n) return .{ .line = ln, .seg = r };
+            r -= n;
+        }
+        return null;
+    }
+
+    /// The line drawn at row `rel` of the editor, if any.
+    fn lineAtRow(self: *const App, b: *const text.Buffer, rel: usize) ?usize {
+        const at = self.rowToLine(b, rel) orelse return null;
+        return at.line;
+    }
+
     // Zig tip: The place under the pointer is found from the rectangle of the text: the row is the
     // first row shown plus the distance from the top of the rectangle, the column goes through
     // `byteAtDisplay` so that it lands at the start of a character. A pointer above or below the
@@ -1433,16 +1474,19 @@ pub const App = struct {
         const r = self.editor_rect;
         const rel: i32 = @as(i32, m.row) - r.y;
         const last = b.lineCount() - 1;
-        var row: usize = undefined;
+        const dcol: usize = @intCast(@max(@as(i32, m.col) - r.x, 0));
         if (rel < 0) {
             b.top -|= 1;
-            row = b.top;
-        } else if (rel >= r.h) {
-            if (b.top + r.h <= last) b.top += 1;
-            row = @min(b.top + r.h -| 1, last);
-        } else row = @min(b.top + @as(usize, @intCast(rel)), last);
-        const dc: usize = b.left + @as(usize, @intCast(@max(@as(i32, m.col) - r.x, 0)));
-        return .{ .row = row, .col = text.Buffer.byteAtDisplay(b.lineAt(row), dc) };
+            return .{ .row = b.top, .col = text.Buffer.byteAtDisplay(b.lineAt(b.top), dcol + b.left) };
+        }
+        if (rel >= r.h) {
+            if (b.top < last) b.top += 1;
+            const row = @min(b.top + r.h -| 1, last);
+            return .{ .row = row, .col = text.Buffer.byteAtDisplay(b.lineAt(row), dcol + b.left) };
+        }
+        const at = self.rowToLine(b, @intCast(rel)) orelse return .{ .row = last, .col = b.lineAt(last).len };
+        const base: usize = if (self.wrap) at.seg * r.w else b.left;
+        return .{ .row = at.line, .col = text.Buffer.byteAtDisplay(b.lineAt(at.line), base + dcol) };
     }
 
     /// The pointer moves with the button down in the text: the cursor follows, the anchor is where the click was.
@@ -2130,6 +2174,13 @@ pub const App = struct {
         if (self.overlay == .none) {
             if (self.modify and self.grabSplit(m)) return;
             if (self.grabBar(m)) return;
+            if (self.gutter_rect.contains(m.col, m.row)) {
+                if (self.activeBuffer()) |b| {
+                    const rel: usize = @intCast(@as(i32, m.row) - self.gutter_rect.y);
+                    if (self.lineAtRow(b, rel)) |ln| try self.toggleBreakpointAt(ln + 1);
+                    return;
+                }
+            }
             if (self.editor_rect.contains(m.col, m.row)) {
                 if (self.activeBuffer()) |b| {
                     const before: text.Pos = .{ .row = b.row, .col = b.col };
@@ -2211,6 +2262,17 @@ pub const App = struct {
             },
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
+            .scroll => |d| {
+                const b = self.activeBuffer() orelse return;
+                self.follow = false;
+                const half = @max(1, self.editor_rect.h / 2);
+                switch (d) {
+                    .left => b.left -|= 10,
+                    .right => b.left = @min(b.left + 10, self.hbar_content -| self.editor_rect.w),
+                    .up => b.top -|= half,
+                    .down => b.top = @min(b.top + half, b.lineCount() - 1),
+                }
+            },
             .dlg => |d| switch (d) {
                 .ok => try self.overlayKey(.{ .codepoint = Key.enter }),
                 .forget => try self.forgetProject(),
