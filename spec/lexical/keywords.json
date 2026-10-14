@@ -52,7 +52,7 @@
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Header of a script that a driver applies or starts (level 2)."
+      "summary": "Header of a script that runs: `[exclusive|concurrent|primary] aspect name is` … `end name;` (D-179, D-181)."
     },
     {
       "id": "assert",
@@ -133,9 +133,8 @@
       "id": "concurrent",
       "category": "declaration",
       "status": "stable",
-      "contextual": true,
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Marks an aspect that is thread safe: `concurrent aspect name is` (level 2, D-090)."
+      "summary": "Kind of an aspect that is thread safe: called with `apply` or started in a parallel group with `start` (D-090)."
     },
     {
       "id": "constructor",
@@ -188,13 +187,6 @@
       "summary": "Closes an if, match, job, while or for: `done;` or `done label;`."
     },
     {
-      "id": "driver",
-      "category": "declaration",
-      "status": "stable",
-      "ref": "syntax/declarations.md#scripts",
-      "summary": "Header of a script that runs: `driver name is` … `end name;`."
-    },
-    {
       "id": "else",
       "category": "block",
       "status": "stable",
@@ -206,7 +198,7 @@
       "category": "declaration",
       "status": "stable",
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Closes a driver, aspect, module, class or trait: `end name;`."
+      "summary": "Closes an aspect, module, class or trait: `end name;`."
     },
     {
       "id": "eq",
@@ -227,16 +219,15 @@
       "id": "exclusive",
       "category": "declaration",
       "status": "stable",
-      "contextual": true,
       "ref": "syntax/declarations.md#scripts",
-      "summary": "Marks an aspect that is not thread safe: `exclusive aspect name is`; the default of an aspect (level 2, D-090, D-130)."
+      "summary": "Kind of an aspect that is called with `apply` and never with `start`; the default of an aspect; a command may run it alone, for testing (D-090, D-130, D-182)."
     },
     {
       "id": "exit",
       "category": "statement",
       "status": "stable",
       "ref": "syntax/statements.md#interruptions",
-      "summary": "Leaves the subprogram or process it is written in, back to the caller; in the main process of a driver the program ends with code 0."
+      "summary": "Leaves the subprogram or process it is written in, back to the caller; in the main process of an aspect run by a command the program ends with code 0."
     },
     {
       "id": "expect",
@@ -479,6 +470,13 @@
       "summary": "Visibility of a class member: the class only (the default)."
     },
     {
+      "id": "primary",
+      "category": "declaration",
+      "status": "stable",
+      "ref": "syntax/declarations.md#scripts",
+      "summary": "Kind of an aspect that is designed to be run first, by a command; no aspect applies or starts it; it is serial and its parallel groups start aspects: `primary aspect name is` (D-180, D-181)."
+    },
+    {
       "id": "procedure",
       "category": "declaration",
       "status": "stable",
@@ -490,7 +488,7 @@
       "category": "region",
       "status": "stable",
       "ref": "syntax/declarations.md#process",
-      "summary": "The executable part of a driver or aspect: `process main is` … `return;`."
+      "summary": "The executable part of an aspect: `process main is` … `return;`; `main` is the entry point, the other processes are private (D-179)."
     },
     {
       "id": "protected",

@@ -1,10 +1,10 @@
 # Aspects
 
-Status: **0.1-draft**, level 2 (a project of a driver and its aspects). Sources: D-066, D-072, D-090, D-112, D-113. Tests: `test/level2` (b01 to b09, b10 to b17 planned). Modules, imports and libraries are level 3; `parallel` and `start` are level 4.
+Status: **0.1-draft**, level 2 (a project of a primary aspect and the aspects it calls). Sources: D-066, D-072, D-090, D-112, D-113, D-179 to D-182. Tests: `test/level2` (b01 to b09, b10 to b17 planned). Modules, imports and libraries are level 3; `parallel` and `start` are level 4.
 
 ## What an aspect is
 
-An aspect is a script file that holds one process, `main`, and the declarations that `main` needs. A driver runs it with `apply` and waits. An aspect has the same shape as a driver (see `../syntax/declarations.md`, Scripts), with a mandatory kind word before `aspect`:
+An aspect is a script file that holds a process `main`, its entry point, the other processes it needs (private), and the declarations of them all. An aspect is the one kind of script that runs; the word `driver` is not a keyword (D-179). The header has a kind word before `aspect` (see `../syntax/declarations.md`, Scripts):
 
 ```eve
 # sum: two inputs, one output
@@ -15,18 +15,20 @@ exclusive aspect sum is
 end sum;
 ```
 
-- **Kind word (D-090, D-130).** The kind word is optional: an aspect without it is `exclusive`. `exclusive aspect` runs alone, in serial mode, started by `apply`. `concurrent aspect` may also be started in a parallel group (level 4); at level 2 it is applied like the other kind, and the compiler check for thread safety is a level 4 rule. `aspect` alone is a compile error (exit 65).
-- **One process, named `main`.** An aspect has exactly one process and its name is always `main`. A second process, or another name, is a compile error. `main` is implicit: it is not public.
-- **Encapsulated.** Nothing in an aspect is public, and the dot operator is never applied to an aspect. Data goes in by the parameters of `main` and comes out by its `@` parameters.
+- **Kind word (D-090, D-130, D-181).** `exclusive`, `concurrent` and `primary` are reserved words of the same design. The kind word is optional: an aspect without it is `exclusive`. An `exclusive aspect` runs alone, in serial mode, called with `apply`; `start` of it is a compile error. A `concurrent aspect` is called with `apply` or with `start` in a parallel group (level 4); at level 2 it is applied like the other kind, and the thread-safety check is a level 4 rule. A `primary aspect` is designed to be executed first, by a command; **no aspect applies or starts it** (compile error `a primary aspect is run by a command: it can't be applied or started`); it is serial.
+- **The entry point (D-179).** Every aspect has a process `main`; an aspect without one is a compile error that lists its processes. `main` is the only public process: it is the process that `apply name(args)` and `start name(args)` run, and the process that a command runs.
+- **Private processes.** Every other process of an aspect is private. Only the processes of the same aspect call it, by its bare name: `apply prepare(10);` inside the aspect. A private process works on the state of the call of its aspect. It is applied in an exclusive or primary aspect, and applied or started in a concurrent aspect; a started private process uses only the thread-safe names of its aspect (`../syntax/declarations.md#scripts`, `multitasking.md`). A call of a private process is not a call of an aspect and never makes a level.
+- **Encapsulated.** The dot operator is never applied to an aspect: `worker.ingest(…)` is a compile error. Data goes in by the parameters of `main` and comes out by its `@` parameters.
+- **Run by a command (D-182).** `eve file.eve` runs the `main` of a primary aspect, or of an exclusive aspect for testing; the arguments after the file go to the parameters of `main`. A command does not run a concurrent aspect (proposed). The aspect run by a command is the root of the run.
 - **File name.** The file is `<name>.eve` and the name in the header and in `end name;` is the same (D-018).
 
 ## Declarations of an aspect
 
 An aspect declares, directly in its body and in any order (the declarations are hoisted): constants, variables, functions, procedures, then the process. Class declarations across files are level 3.
 
-- **Aspect-level variables** are shared by `main` and by the functions and procedures of the same aspect, and by nobody else. They are not visible to the driver.
+- **Aspect-level variables** are shared by the processes and by the functions and procedures of the same aspect, and by nobody else. They are not visible to the aspect that calls it.
 - **Functions and procedures** follow the rules of level 1 (`declarations.md`, Functions and procedures). They run serially on the core of their caller. A plain function is deterministic and changes nothing; a `!` function may differ for the same arguments; a procedure does work and may read and change the aspect-level variables (D-087).
-- The aspect can't read a variable of the driver. The driver's variables reach the aspect only through arguments.
+- The aspect can't read a variable of the aspect that calls it. The variables of the caller reach the aspect only through arguments.
 
 ## `apply`
 
@@ -36,16 +38,16 @@ argument    = [ name , ":" ] , [ "@" ] , expression
             | "*" , expression ;                           (* spread *)
 ```
 
-`apply name(args);` runs `main` of the aspect `name` and the caller waits. The parentheses are written even when there is no argument. Only the `main` process of a driver may `apply`. An aspect that contains `apply` is a compile error, so aspects can't call one another, and recursion between aspects is impossible (D-066).
+`apply name(args);` runs `main` of the aspect `name` and the caller waits. The parentheses are written even when there is no argument. Any aspect may `apply` another aspect (D-179, D-180), with three limits, compile errors with exit 65: an aspect does not call itself and no chain of calls comes back to an aspect already in it, so recursion between aspects is impossible (the message prints the chain: `a calls b calls a`); the chain is at most three levels deep (the aspect run by a command, an aspect it calls, an aspect called from there, which calls no other aspect); a primary aspect is never the target. Only the call of an aspect makes a level; `apply prepare(…)` of a private process does not.
 
 ### Finding the aspect
 
 `name` is the file name without the extension. The path may carry a folder: `apply folder/name()`. The search order is:
 
 0. in an Eve macro, the aspects declared in the file itself (level 5, D-152, `../syntax/declarations.md#eve-macro-level-5`);
-1. the folder written in the call, relative to the folder of the driver;
-2. the aspect folder `asp/` of the project (`$EVE_ASP`, which the driver may set);
-3. the project root (the folder of the driver).
+1. the folder written in the call, relative to the folder of the project;
+2. the aspect folder `asp/` of the project (`$EVE_ASP`, which the primary aspect may set);
+3. the project root (the folder of the primary aspect).
 
 An aspect that is not found is a compile error, exit 65, naming the folders that were searched. (Searching `lib/` is a level 3 rule.)
 
@@ -61,24 +63,24 @@ The arguments follow the rules of subprograms (D-028, D-105, D-106): by position
 
 ### Results
 
-The only way to get data back is an `@` parameter of `main`. `apply sum(2, 3, @t);` passes the variable `t` by reference: it is both input and output (D-106). The variable must exist; the aspect changes it with `let`. When `main` ends normally the driver sees the final value, also when `main` ended with `over;`.
+The only way to get data back is an `@` parameter of `main`. `apply sum(2, 3, @t);` passes the variable `t` by reference: it is both input and output (D-106). The variable must exist; the aspect changes it with `let`. When `main` ends normally the caller sees the final value, also when `main` ended with `over;`.
 
 ## State per call
 
-Each `apply` creates the state of the aspect, with its aspect-level declarations, and drops it when `main` returns or the call ends by an error. A second `apply` sees nothing of the first: `new calls = 0 :Integer;` at aspect level starts at 0 at every call. There is no `reset`, and no memory of the aspect between calls. Methods that an aspect attaches to a class (level 3) are part of this state and disappear with it (D-113).
+Each `apply` of an aspect creates the state of the aspect, with its aspect-level declarations, and drops it when `main` returns or the call ends by an error. A second `apply` sees nothing of the first: `new calls = 0 :Integer;` at aspect level starts at 0 at every call. There is no `reset`, and no memory of the aspect between calls. The private processes called during one call share that state. Methods that an aspect attaches to a class (level 3) are part of this state and disappear with it (D-113).
 
 ## Errors across `apply`
 
-| In the aspect | In the driver |
+| In the aspect | In the caller |
 |---|---|
-| an error with no `recover` in `main` | the aspect ends, `finalize` of the aspect runs, and the error is raised again at the `apply` line of the driver; the driver's `recover` reads it in `$error` |
-| an error recovered in the aspect | the driver never sees it |
-| `main` returns | code 0, the driver goes on after `apply` |
-| `over;` | the aspect ends (its `finalize` runs); the driver goes on after `apply` |
-| `panic;` | the whole application ends with exit code 1, memory is freed (no `recover`, no `finalize` of the driver) |
+| an error with no `recover` in `main` | the aspect ends, `finalize` of the aspect runs, and the error is raised again at the `apply` line of the caller; the `recover` of the caller reads it in `$error` |
+| an error recovered in the aspect | the caller never sees it |
+| `main` returns | code 0, the caller goes on after `apply` |
+| `over;` | the aspect ends (its `finalize` runs); the caller goes on after `apply` |
+| `panic;` | the whole application ends with exit code 1, memory is freed (no `recover`, no `finalize` of the caller) |
 | `abort` in the `recover` of the aspect | passes the error on, as in the first row |
 
-`over;` in the **driver** ends the program. `$error.code` and `$error.message` are those of the original error.
+`over;` in the aspect run by a command ends the program. `$error.code` and `$error.message` are those of the original error.
 
 ### Position and stack trace (D-113)
 

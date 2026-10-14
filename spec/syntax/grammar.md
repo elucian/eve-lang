@@ -1,16 +1,16 @@
 # Grammar
 
-Status: **0.1-draft**, levels 1 to 4 (a single script; a driver and its aspects; modules; parallel processing, traits and generic classes), and the generic subprograms and the Eve macro of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
+Status: **0.1-draft**, levels 1 to 4 (a primary aspect; the aspects it calls; modules; parallel processing, traits and generic classes), and the generic subprograms and the Eve macro of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
 
 Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeats zero or more times, `( )` groups, `"…"` is a keyword or a symbol token, `(* … *)` is a note. Every statement ends with `;`. Layout (2 spaces per level) is checked after parsing, not by the grammar (see lexical.md, Layout).
 
 ## Script
 
 ```ebnf
-file        = free-script | script ;
-free-script = shebang , { statement } ;                       (* line 1 is "#!…": no driver, no process *)
-script      = driver | aspect | module ;                       (* module: level 3 *)
-driver      = "driver" , name , "is" , { member } , "end" , name , ";" ;
+file        = script ;
+script      = aspect | module ;                                (* module: level 3 *)
+aspect      = [ kind ] , "aspect" , name , "is" , { member } , "end" , name , ";" ;
+kind        = "exclusive" | "concurrent" | "primary" ;         (* without a kind word the aspect is exclusive (D-130) *)
 member      = declaration | process ;
 process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
               { declaration | statement } ,
@@ -18,11 +18,9 @@ process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
               "return" , ";" ;
 recover     = "recover" , { statement } ;
 finalize    = "finalize" , { statement } ;
-aspect      = [ "exclusive" | "concurrent" ] , "aspect" , name , "is" ,
-              { declaration } , process , "end" , name , ";" ;       (* the process is named main; without a kind word the aspect is exclusive (D-130) *)
 ```
 
-A driver has one process named `main`, which is the entry point. An aspect has exactly one process, also named `main`, and nothing in it is public (`../semantics/aspects.md`). `end name;` repeats the name of the header.
+An aspect has a process named `main`, the entry point, and may have other processes, which are private (`../semantics/aspects.md`, D-179). The grammar does not check that `main` exists, nor that a primary aspect is never applied or started: the checker does (`declarations.md#scripts`). A file has no `#!` line and no statement outside a process, a function, a procedure or a method (D-179). `end name;` repeats the name of the header.
 
 ## Modules and imports (level 3)
 
@@ -95,11 +93,12 @@ apply-stmt  = "apply" , { name , "/" } , name-path , type-args , "(" , [ argumen
 
 ```ebnf
 file        = macro ;                                           (* adds to file *)
-macro       = [ shebang ] , { top-level } , driver , { top-level } ;   (* at least one top-level, at most one driver (D-152) *)
+macro       = { top-level } , primary-aspect , { top-level } ;   (* at least one other top-level; exactly one primary aspect (D-152, D-180) *)
+primary-aspect = "primary" , "aspect" , name , "is" , { member } , "end" , name , ";" ;
 top-level   = declaration | aspect ;
 ```
 
-A file of one driver and nothing else is a driver, not a macro. The grammar does not count the drivers: a `#!` file without a top-level driver is a free script, and a statement at the top level of a macro is a compile error (`declarations.md#eve-macro-level-5`).
+A file with a single aspect is an aspect, not a macro, whatever its kind word. The grammar does not count the primary aspects: a macro with none or with two is a compile error, and so is a statement at the top level of a macro (`declarations.md#eve-macro-level-5`).
 
 ## Generators (level 5)
 
@@ -114,7 +113,7 @@ yield-stmt     = "yield" , [ expression ] ;
 ## Database declarations and statements (level 5)
 
 ```ebnf
-declaration  = … | table ;                                           (* adds to declaration: in a driver, an aspect, a module or a macro *)
+declaration  = … | table ;                                           (* adds to declaration: in an aspect, a module or a macro *)
 table        = "table" , name , ":" , name-path , "in" , string , [ "as" , string ] ,
                ( ";" | "is" , { table-clause } , "end" , name , ";" ) ;
 table-clause = "key" , "(" , names , ")" , ";"
@@ -221,7 +220,7 @@ call-stmt   = name-path , [ "!" ] , [ "(" , [ arguments ] , ")" | arguments ] ; 
 expect-stmt = ( "expect" | "assert" ) , expression ;
 raise-stmt  = "raise" , expression ;
 jump        = ( "break" | "skip" ) , [ label ] ;
-apply-stmt  = "apply" , { name , "/" } , name-path , "(" , [ arguments ] , ")" ;      (* only in the process of a driver; a folder may precede the aspect name *)
+apply-stmt  = "apply" , { name , "/" } , name-path , "(" , [ arguments ] , ")" ;      (* in any process; a folder may precede the aspect name; a private process is applied by its bare name *)
 arguments   = argument , { "," , argument } ;
 argument    = [ name , ":" ] , [ "@" ] , expression
             | "*" , expression ;                                        (* spread a list or a map, aspects.md *)

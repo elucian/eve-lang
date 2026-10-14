@@ -3,18 +3,6 @@
   "specVersion": "0.1-draft",
   "items": [
     {
-      "id": "shebang",
-      "open": "#!",
-      "close": "end of line",
-      "kind": "comment",
-      "nests": false,
-      "multiline": false,
-      "summary": "Shebang on line 1: a free script.",
-      "status": "draft",
-      "ref": "lexical/lexical.md#file-header",
-      "tutorial": "https://sagecode.org/projects/eve/syntax.html#file-header"
-    },
-    {
       "id": "title",
       "open": "#",
       "close": "end of line",
