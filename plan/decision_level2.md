@@ -145,3 +145,13 @@ Author answers to Q-060. Refines D-181.
 - **Projects.** A project is based on one primary aspect or on several (one for each use case, D-133); aspects called by them are exclusive or concurrent.
 - **Migration.** Every old `driver` becomes a `primary aspect`, as a rule; a test that only exercises one aspect may become an exclusive aspect.
 - Not yet applied to the spec, tests, compiler and VM: `plan/design-unified-aspect.md` steps U2 to U8.
+
+## D-183 A concurrent aspect is called from a primary or an exclusive aspect (2026-10-14)
+Author answer, confirms the proposal of D-182. Refines D-182.
+- A **concurrent aspect** is called (`apply` or `start`) only from a **primary** aspect or from an **exclusive** aspect. A command does not run it, and another concurrent aspect does not call it: either is a compile error, `a concurrent aspect is called from a primary or an exclusive aspect`.
+- So the chain of levels (D-179) reads: a primary or exclusive aspect at the top, exclusive aspects below it, concurrent aspects as the leaves of the work.
+- Open consequences, asked in Q-061: where a parallel group may be written, and whether a concurrent aspect can start its own private processes in a group (the example of `plan/design-unified-aspect.md`).
+
+## Q-061 The details of D-183: parallel groups and the levels (2026-10-14)
+Because a concurrent aspect is called only from a primary or an exclusive aspect, the three levels of D-179 are: level 1 the aspect run by a command (primary, or exclusive for a test); level 2 an exclusive aspect; level 3 a concurrent aspect. (a) Where may a parallel group be written? Recommended: in a primary aspect and in an exclusive aspect (they start concurrent aspects); in a concurrent aspect only to start its own private processes (rule 1, thread-safe names). Other: only in a primary aspect. (b) The limit of D-140 (a group of level 2 starts at most 2 aspects, none in a loop): keep it for a group in an exclusive aspect of level 2; a group in the primary aspect has no limit but `$max_parallel`. (c) May a concurrent aspect apply an exclusive aspect? Recommended: no, a concurrent aspect calls no aspect: it is a leaf of the work.
+**Answer:**
