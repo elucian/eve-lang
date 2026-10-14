@@ -1,6 +1,6 @@
 # over skips recover but runs finalize: a clean exit never skips cleanup (D-081)
 ** spec: semantics/errors.md#finalize
-driver a33_over_finalize is
+primary aspect a33_over_finalize is
   process main is
     print "work";
     over;

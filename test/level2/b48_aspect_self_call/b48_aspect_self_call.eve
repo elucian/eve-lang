@@ -1,0 +1,16 @@
+# an aspect can't call itself (D-179)
+** spec: semantics/aspects.md#apply
+primary aspect b48_aspect_self_call is
+  process main is
+    apply again();
+  return;
+end b48_aspect_self_call;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "again calls itself"
+  ]
+}
+*/

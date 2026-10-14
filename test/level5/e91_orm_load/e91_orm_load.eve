@@ -1,6 +1,6 @@
 # load! writes many rows at once, not tracked: "insert" adds, "upsert" inserts the new keys and updates the others (database.md)
 ** spec: library/database.md#methods-of-a-table
-driver e91_orm_load is
+primary aspect e91_orm_load is
   class Customer = {id: Integer, name: String} <: Record;
 
   table customers: Customer in "shop" is

@@ -1,6 +1,6 @@
 # apply of an aspect that has no file is an error before the run (D-112)
 ** spec: semantics/aspects.md#finding-the-aspect
-driver b13_aspect_missing is
+primary aspect b13_aspect_missing is
   process main is
     print "never";
     apply nothing();

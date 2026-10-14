@@ -1,0 +1,6 @@
+# inner: a concurrent aspect
+concurrent aspect inner is
+  process main is
+    print "inner";
+  return;
+end inner;

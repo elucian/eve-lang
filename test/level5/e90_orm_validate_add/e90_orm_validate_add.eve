@@ -1,6 +1,6 @@
 # validate runs before every write: an invalid record fails the job at the flush and nothing is written (database.md, validation)
 ** spec: library/database.md#validation
-driver e90_orm_validate_add is
+primary aspect e90_orm_validate_add is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record is
     method validate(@self) is
       expect self.name <> "";

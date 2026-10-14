@@ -1,6 +1,6 @@
 # a flush writes inserts in the order of the references and deletes in the reverse order, whatever the order of the program (database.md)
 ** spec: library/database.md#sql-that-writes-only-what-changed
-driver e89_orm_reference_order is
+primary aspect e89_orm_reference_order is
   class Customer = {id: Integer, name: String} <: Record;
   class Order = {id: Integer, customer_id: Integer, total: Decimal} <: Record;
 

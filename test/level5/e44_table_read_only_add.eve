@@ -1,6 +1,6 @@
 # a record can not be added to a read only table: a compile error
 ** spec: library/database.md#the-table-declaration
-driver e44_table_read_only_add is
+primary aspect e44_table_read_only_add is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

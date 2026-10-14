@@ -1,6 +1,6 @@
 # new creates variables, set creates constants, let changes a value (D-076, D-079)
 ** spec: syntax/statements.md#new, syntax/statements.md#let
-driver a06_new_set_let is
+primary aspect a06_new_set_let is
   set limit = 10 :Integer;
   set name = "eve";
   new counter := 0;

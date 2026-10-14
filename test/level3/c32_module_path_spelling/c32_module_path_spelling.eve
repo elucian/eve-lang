@@ -1,6 +1,6 @@
 # the same module reached by two spellings of the path is one module: loaded once, one state (D-068)
 ** spec: semantics/modules.md#life-cycle
-driver c32_module_path_spelling is
+primary aspect c32_module_path_spelling is
   from lib use (tally);
 
   process main is

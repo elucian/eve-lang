@@ -1,6 +1,6 @@
 # over in a procedure ends the whole process, not only the procedure (D-111)
 ** spec: syntax/statements.md#interruptions
-driver b36_over_procedure is
+primary aspect b36_over_procedure is
   procedure stop_all is
     print "stopping";
     over;

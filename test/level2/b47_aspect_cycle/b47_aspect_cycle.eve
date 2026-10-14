@@ -1,0 +1,16 @@
+# a chain of calls that comes back to an aspect is a compile error (D-179)
+** spec: semantics/aspects.md#apply
+primary aspect b47_aspect_cycle is
+  process main is
+    apply ping();
+  return;
+end b47_aspect_cycle;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "ping calls pong calls ping"
+  ]
+}
+*/

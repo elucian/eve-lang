@@ -1,6 +1,6 @@
 # encodings: windows-1252 and a UTF-16 BOM are decoded to text; invalid UTF-8 is an error with its place, or replaced (data-types.md)
 ** spec: semantics/data-types.md#unicode-streams
-driver e83_encodings is
+primary aspect e83_encodings is
   class W = {word: String} <: Record;
 
   process main is

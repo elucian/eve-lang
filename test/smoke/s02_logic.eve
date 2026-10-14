@@ -1,6 +1,6 @@
 # Logic. The truth values and their operators; an error here is absurd and obvious.
 ** spec: syntax/expressions.md#operators
-driver s02_logic is
+primary aspect s02_logic is
   function yes() => (@r: Logic) is
     let r := True;
   return;

@@ -1,6 +1,6 @@
 # += on a missing key of a map raises an error (D-058)
 ** spec: syntax/expressions.md#index-slice-member
-driver a36_map_key_error is
+primary aspect a36_map_key_error is
   process main is
     new h := {"a": 1};
     let h["zz"] += 1;

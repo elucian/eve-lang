@@ -1,0 +1,6 @@
+# helper: only a private process
+exclusive aspect helper is
+  process prepare is
+    print "prepare";
+  return;
+end helper;

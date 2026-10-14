@@ -1,6 +1,6 @@
 # a variable without a value has the zero value of its type, never null; an optional type T? may hold null (D-080; from demo/null_strings.eve, D-099)
 ** spec: semantics/types.md#zero-values-and-optional-types
-driver a59_optional_null is
+primary aspect a59_optional_null is
   process main is
     new s :String;
     expect s == "";              ** the zero value, not null

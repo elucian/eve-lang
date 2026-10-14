@@ -1,6 +1,6 @@
 # JSON: an array of objects is written one object per line and read back; a missing key is null; a number keeps its scale
 ** spec: semantics/data-types.md#the-formats-in-detail
-driver e81_json_array is
+primary aspect e81_json_array is
   class Item = {id: Integer, name: String, note: String?, price: Decimal, at: Instant} <: Record;
 
   process main is

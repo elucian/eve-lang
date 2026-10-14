@@ -1,6 +1,6 @@
 # a generator called as a statement is a compile error: its values would be lost
 ** spec: syntax/declarations.md#generators-level-5
-driver e26_generator_statement is
+primary aspect e26_generator_statement is
   generator count_to(n: Integer) => (@x: Integer) is
     for i in (1..n) do
       yield i;

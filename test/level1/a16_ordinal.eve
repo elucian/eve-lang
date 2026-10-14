@@ -1,6 +1,6 @@
 # an Ordinal is a set of named integer values; the first value is 1 unless one is given (Q-029, D-096)
 ** spec: semantics/types.md#composite-types
-driver a16_ordinal is
+primary aspect a16_ordinal is
   class Color = {Red, Green, Blue} <: Ordinal;
   class Level = {Low:10, High} <: Ordinal;
   class Shade = {dark, light} <: Ordinal;

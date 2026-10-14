@@ -1,6 +1,6 @@
 # panic ends the whole application at once with code 1, without finalize (D-038)
 ** spec: syntax/statements.md#interruptions
-driver a54_panic is
+primary aspect a54_panic is
   process main is
     print "work";
     panic;

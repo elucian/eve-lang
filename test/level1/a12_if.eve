@@ -1,6 +1,6 @@
 # if, else if, else and the conditional statement (D-016)
 ** spec: semantics/control.md#if
-driver a12_if is
+primary aspect a12_if is
   process main is
     new n := 7;
     if n < 5 do

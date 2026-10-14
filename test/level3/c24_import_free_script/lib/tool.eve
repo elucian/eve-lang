@@ -1,3 +1,0 @@
-#! free script
-** a free script is executable, but it can't be imported
-print "tool";

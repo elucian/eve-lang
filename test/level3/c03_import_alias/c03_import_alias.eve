@@ -1,5 +1,5 @@
 # use (m as x): members are reached through the alias (D-072)
-driver c03_import_alias is
+primary aspect c03_import_alias is
   from lib use (geometry as g);
 
   process main is

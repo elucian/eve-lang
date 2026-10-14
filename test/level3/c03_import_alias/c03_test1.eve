@@ -1,6 +1,6 @@
 # variation 1 of c03: the same module without a prefix (D-133)
 ** spec: semantics/modules.md#import
-driver c03_test1 is
+primary aspect c03_test1 is
   from lib use (geometry(*));
 
   process main is

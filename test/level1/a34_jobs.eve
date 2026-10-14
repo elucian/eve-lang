@@ -1,6 +1,6 @@
 # jobs: retry runs a failed job again, resume goes on after it (D-020, D-034)
 ** spec: semantics/control.md#job, semantics/errors.md#recover
-driver a34_jobs is
+primary aspect a34_jobs is
   process main is
     new tries := 0;
 

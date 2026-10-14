@@ -1,6 +1,6 @@
 # a managed module that calls a direct module is rejected (D-129)
 ** spec: semantics/modules.md#managed-and-direct-modules
-driver c27_managed_module_direct_call is
+primary aspect c27_managed_module_direct_call is
   from lib use (calm);
 
   process main is

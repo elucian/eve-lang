@@ -1,5 +1,5 @@
 # a member that a module does not export can't be used outside it (D-068, D-085, Q-022 b)
-driver c08_module_private is
+primary aspect c08_module_private is
   from lib use (counter);
 
   process main is

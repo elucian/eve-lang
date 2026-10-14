@@ -1,6 +1,6 @@
 # Constants. set declares a value that never changes: typed or not, global or local.
 ** spec: syntax/declarations.md#variables-and-constants
-driver s07_constants is
+primary aspect s07_constants is
   set A = 1;
   set B = 2 :Integer;
   set C = A + B;

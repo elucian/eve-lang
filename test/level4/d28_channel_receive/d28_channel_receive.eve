@@ -1,6 +1,6 @@
 # receive(@x) takes one value; a for loop takes the rest until the channel is closed (D-141)
 ** spec: semantics/multitasking.md#channels
-driver d28_channel_receive is
+primary aspect d28_channel_receive is
   process main is
     new jobs := Channel(:Integer)(capacity: 2);
     new total: Integer;

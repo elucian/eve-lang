@@ -1,0 +1,19 @@
+# an aspect calls an aspect that calls a third one: three levels (D-179)
+** spec: semantics/aspects.md#apply
+primary aspect b46_three_levels is
+  process main is
+    print "level 1";
+    apply middle();
+    print "back in level 1";
+  return;
+end b46_three_levels;
+/*@expect
+{
+  "stdout": [
+    "level 1",
+    "level 2",
+    "level 3",
+    "back in level 1"
+  ]
+}
+*/

@@ -1,6 +1,6 @@
 # commit; ends a batch, the checkpoint (in the core database) tells the next job where to start
 ** spec: library/database.md#transactions
-driver e53_commit_checkpoint is
+primary aspect e53_commit_checkpoint is
   class Order = {id: Integer, amount: Decimal} <: Record;
 
   table orders: Order in "shop" is

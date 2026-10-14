@@ -1,0 +1,20 @@
+# a private process is applied by its bare name, in the aspect that declares it (D-179)
+** spec: semantics/aspects.md#what-an-aspect-is
+primary aspect b50_private_process is
+  process show(label: String, n: Integer) is
+    print "{label}: {n}";
+  return;
+
+  process main is
+    apply show("first", 1);
+    apply show("second", 2);
+  return;
+end b50_private_process;
+/*@expect
+{
+  "stdout": [
+    "first: 1",
+    "second: 2"
+  ]
+}
+*/

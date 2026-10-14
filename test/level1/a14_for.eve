@@ -1,6 +1,6 @@
 # for loop over ranges and collections (D-022)
 ** spec: semantics/control.md#loops, syntax/expressions.md#ranges
-driver a14_for is
+primary aspect a14_for is
   process main is
     new s := "";
     for i in (1..5) do

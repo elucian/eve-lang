@@ -1,0 +1,16 @@
+# no aspect applies a primary aspect: it is run by a command (D-181)
+** spec: syntax/declarations.md#scripts
+primary aspect b45_primary_not_applied is
+  process main is
+    apply boss();                      ** compile error
+  return;
+end b45_primary_not_applied;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a primary aspect is run by a command"
+  ]
+}
+*/

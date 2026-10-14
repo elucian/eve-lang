@@ -1,4 +1,4 @@
-# an aspect of a macro sees the shared declarations and no variable of the driver's process (D-066, D-152)
+# an aspect of a macro sees the shared declarations and no variable of the primary aspect's process (D-066, D-152)
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set limit = 3 :Integer;
@@ -10,7 +10,7 @@ exclusive aspect show is
   return;
 end show;
 
-driver e63_macro_aspect_scope is
+primary aspect e63_macro_aspect_scope is
   process main is
     new hidden := 42;
     apply show();

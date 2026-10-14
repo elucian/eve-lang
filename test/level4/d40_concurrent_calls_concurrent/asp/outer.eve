@@ -1,0 +1,6 @@
+# outer: a concurrent aspect that applies another one
+concurrent aspect outer is
+  process main is
+    apply inner();
+  return;
+end outer;

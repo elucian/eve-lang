@@ -1,6 +1,6 @@
 # a procedure is made for side effects and is never deterministic: it never ends with ! (D-101)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver b34_procedure_bang is
+primary aspect b34_procedure_bang is
   procedure tick!() is              ** compile error: a procedure has no !
     print "tick";
   return;

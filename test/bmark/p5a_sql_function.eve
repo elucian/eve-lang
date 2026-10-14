@@ -1,6 +1,6 @@
 # level 5 performance: an Eve function called by SQLite on every row of a query (D-166)
 ** perf: 20,000 rows made in SQL, then a query that calls a sql function on each row, three times (60,000 calls)
-driver p5a_sql_function is
+primary aspect p5a_sql_function is
   class Row = {n: Integer, total: Integer} <: Record;
 
   sql function weight(x: Integer) => (@r: Integer) is

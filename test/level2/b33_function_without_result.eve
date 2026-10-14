@@ -1,6 +1,6 @@
 # a function must have a result: a subprogram without result is declared with procedure (D-100)
 ** spec: syntax/declarations.md#functions-and-procedures
-driver b33_function_without_result is
+primary aspect b33_function_without_result is
   function log(message: String) is   ** compile error: no result list, write procedure
     print message;
   return;

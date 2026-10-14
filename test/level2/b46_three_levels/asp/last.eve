@@ -1,0 +1,6 @@
+# last: the third level
+exclusive aspect last is
+  process main is
+    print "level 3";
+  return;
+end last;

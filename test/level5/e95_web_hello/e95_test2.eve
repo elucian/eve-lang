@@ -2,7 +2,7 @@
 ** spec: library/machine.md#channels
 ** The runner starts the machine with the command below, then runs the client; the client asks the machine
 ** through the CLI (`eve -loc`, `eve -rem`) and through HTTP, and stops it with `eve --serve stop`.
-driver e95_test2 is
+primary aspect e95_test2 is
   process main is
     print "e95_test2: the machine is tested, not this script";
   return;

@@ -1,6 +1,6 @@
 # an argument of the wrong type is a check-time error (D-112)
 ** spec: semantics/aspects.md#arguments
-driver b22_aspect_wrong_type is
+primary aspect b22_aspect_wrong_type is
   process main is
     print "never";
     apply greet(42);

@@ -1,6 +1,6 @@
 # matrix and tensor indexes: [x, y] is the same as [x][y]; a range selects a part (D-064)
 ** spec: syntax/expressions.md#index-slice-member
-driver a38_matrix_index is
+primary aspect a38_matrix_index is
   process main is
     new m := [[1,  2,  3,  4],
               [5,  6,  7,  8],

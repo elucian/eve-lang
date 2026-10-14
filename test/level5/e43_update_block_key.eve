@@ -1,6 +1,6 @@
 # a key field can not be changed in an update block: a compile error (D-158)
 ** spec: library/database.md#the-update-block
-driver e43_update_block_key is
+primary aspect e43_update_block_key is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

@@ -1,6 +1,6 @@
 # DataSet: sorted unique values, union, intersection, difference (D-058)
 ** spec: semantics/types.md#composite-types
-driver a20_dataset is
+primary aspect a20_dataset is
   process main is
     new a := {3, 1, 2, 3};
     expect a == {1, 2, 3};       ** no duplicates

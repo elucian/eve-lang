@@ -1,6 +1,6 @@
 # match with values, lists of values, ranges, other, one and all (D-016, D-030)
 ** spec: semantics/control.md#match
-driver a15_match is
+primary aspect a15_match is
   process main is
     new n := 7;
     match n

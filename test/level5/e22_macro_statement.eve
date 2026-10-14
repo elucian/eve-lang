@@ -4,7 +4,7 @@
 set greeting = "hello" :String;
 print greeting;
 
-driver e22_macro_statement is
+primary aspect e22_macro_statement is
   process main is
     print greeting;
   return;

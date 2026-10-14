@@ -97,6 +97,22 @@ error 22: disk full
 
 The frame of a function or procedure reads `line x in function y` or `line x in procedure y`; the aspect frame reads `line z in aspect name`; the hosting block (`job`, `parallel`, a labelled loop) reads `in job label`, `in parallel label`, `in loop label`. The exit code is the code of the error (`errors.md`).
 
+## Compile errors of the calls (D-179 to D-183)
+
+All are reported before the run, exit 65.
+
+| Mistake | Message | Test |
+|---|---|---|
+| a file starts with `#!` | `a file has no #! line: Eve has no free scripts` | a04 |
+| `apply` or `start` of a primary aspect | `a primary aspect is run by a command: it can't be applied or started` | b45, e109 |
+| a chain of calls comes back to an aspect | `ping calls pong calls ping` | b47 |
+| an aspect applies itself | `again calls itself` | b48 |
+| a fourth level of aspects | `{chain} is more than three levels deep` | b49 |
+| the dot on an aspect | `the dot is never applied to an aspect` | b52 |
+| an aspect without `main` is called | `{name} has no process main` | b53 |
+| `from lib use (x)` where `x` is an aspect | `'x' is an aspect: an aspect can't be imported` | c24 |
+| a concurrent aspect run by a command or called from a concurrent aspect | `a concurrent aspect is called from a primary or an exclusive aspect` | d39, d40 |
+
 ## Log files (D-114)
 
 `log_err(text)` and `log_wrn(text)` write the run log, in the output folder `$EVE_OUT` (default `out/`): one file per date, `run-log-<date>.json` (`<date>` is `YYYY-MM-DD`, in UTC, as is `time`), for errors and warnings together. The file is a JSON array with one object per run; a new run is appended at the end. A run that writes nothing adds nothing.

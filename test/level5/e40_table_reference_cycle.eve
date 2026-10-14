@@ -1,6 +1,6 @@
 # two tables that reference each other are a compile error
 ** spec: library/database.md#the-table-declaration
-driver e40_table_reference_cycle is
+primary aspect e40_table_reference_cycle is
   class A = {id: Integer, b_id: Integer} <: Record;
   class B = {id: Integer, a_id: Integer} <: Record;
 

@@ -1,6 +1,6 @@
 # a private member is seen only inside its class (D-085)
 ** spec: syntax/declarations.md#classes-and-objects
-driver c13_visibility is
+primary aspect c13_visibility is
   class Counter = {n :Integer} <: Object is
     constructor() => (@self) is
       let self := Object();

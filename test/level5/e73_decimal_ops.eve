@@ -1,6 +1,6 @@
 # Decimal arithmetic is exact: subtraction, division, negation, remainder, comparison and a whole number on one side (D-080)
 ** spec: library/data-language.md#details-used-by-the-tests
-driver e73_decimal_ops is
+primary aspect e73_decimal_ops is
   process main is
     print 1.00d - 0.01d;
     print 1d / 3d;

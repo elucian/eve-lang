@@ -1,5 +1,5 @@
 # use (m(*)): the exported members of m are used without prefix (D-072)
-driver c04_import_members is
+primary aspect c04_import_members is
   from lib use (text(*));
 
   process main is

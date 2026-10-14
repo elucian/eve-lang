@@ -1,0 +1,14 @@
+# a command runs an exclusive aspect alone, for testing (D-182)
+** spec: semantics/aspects.md#what-an-aspect-is
+exclusive aspect b54_run_exclusive is
+  process main is
+    print "an exclusive aspect, run alone";
+  return;
+end b54_run_exclusive;
+/*@expect
+{
+  "stdout": [
+    "an exclusive aspect, run alone"
+  ]
+}
+*/

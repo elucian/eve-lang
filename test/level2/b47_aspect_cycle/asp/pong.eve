@@ -1,0 +1,6 @@
+# pong: calls ping, which closes the cycle
+exclusive aspect pong is
+  process main is
+    apply ping();
+  return;
+end pong;

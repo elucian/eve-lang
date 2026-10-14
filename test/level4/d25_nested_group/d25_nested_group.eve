@@ -1,13 +1,10 @@
-# an aspect started by the driver opens a group of two leaf aspects; outputs keep the order of start (D-081, D-140)
+# an exclusive aspect applied by the primary aspect opens a group of two concurrent leaf aspects; outputs keep the order of start (D-140, D-183)
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
-driver d25_nested_group is
+primary aspect d25_nested_group is
   process main is
     new r: [2]Integer;
-    parallel
-    do
-      start outer(1, @r[1]);
-      start outer(2, @r[2]);
-    done;
+    apply outer(1, @r[1]);
+    apply outer(2, @r[2]);
     print "{r[1]} {r[2]}";
   return;
 end d25_nested_group;

@@ -1,5 +1,5 @@
 # an extension method: a method with @self of a class, declared outside the class (D-072, D-085)
-driver c09_extension_method is
+primary aspect c09_extension_method is
   from lib use (geometry(*));
 
   method shift(@self: Point, dx, dy :Integer) is

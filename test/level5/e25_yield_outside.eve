@@ -1,6 +1,6 @@
 # yield in a function is a compile error: only the body of a generator can yield (D-067)
 ** spec: syntax/declarations.md#generators-level-5
-driver e25_yield_outside is
+primary aspect e25_yield_outside is
   function f() => (@r: Integer) is
     yield 1;
   return;

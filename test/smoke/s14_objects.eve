@@ -1,6 +1,6 @@
 # Objects. Class, methods, visibility, inheritance, extension, comparison.
 ** spec: syntax/declarations.md#classes-and-objects
-driver s14_objects is
+primary aspect s14_objects is
   class Point = {x, y :Integer} <: Object is
     constructor(x = 0, y = 0 :Integer) => (@self) is
       let self := Object();

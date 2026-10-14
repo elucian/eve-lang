@@ -1,6 +1,6 @@
 # a conflict fails the job and rolls it back; retry runs the job again from its declarations and reads the row fresh (database.md)
 ** spec: library/database.md#transactions
-driver e94_orm_retry_conflict is
+primary aspect e94_orm_retry_conflict is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

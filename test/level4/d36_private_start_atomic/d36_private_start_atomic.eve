@@ -1,0 +1,14 @@
+# a concurrent aspect starts its own private processes; they add to an atomic variable (D-179)
+** spec: semantics/multitasking.md#what-can-be-started
+primary aspect d36_private_start_atomic is
+  process main is
+    apply counter();
+  return;
+end d36_private_start_atomic;
+/*@expect
+{
+  "stdout": [
+    "total: 2000"
+  ]
+}
+*/

@@ -1,6 +1,6 @@
-# Topology. The shape of a program: driver, process, functions, procedures, regions.
+# Topology. The shape of a program: primary aspect, process, functions, procedures, regions.
 ** spec: syntax/declarations.md#scripts
-driver s01_topology is
+primary aspect s01_topology is
   new counter := 0;
   set LIMIT = 3 :Integer;
 

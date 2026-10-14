@@ -1,6 +1,7 @@
-# outer: applies another aspect, which is not allowed
+# outer: applies another aspect
 exclusive aspect outer is
   process main is
+    print "outer";
     apply inner();
   return;
 end outer;

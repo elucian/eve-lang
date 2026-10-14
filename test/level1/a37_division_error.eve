@@ -1,6 +1,6 @@
 # a division by zero raises an error, also for Real: no infinity, no NaN (Q-019a)
 ** spec: syntax/expressions.md#arithmetic
-driver a37_division_error is
+primary aspect a37_division_error is
   process main is
     new z := 0.0;
     new q := 1.0 / z;

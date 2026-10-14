@@ -1,6 +1,6 @@
 # functions that differ only by the type of the result: the type expected at the call selects one (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e07_overload_result is
+primary aspect e07_overload_result is
   function unit() => (@result: Integer) is
     let result := 1;
   return;

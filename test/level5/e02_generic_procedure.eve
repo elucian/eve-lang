@@ -1,6 +1,6 @@
 # a generic procedure takes a list of types; the call infers it or writes it (D-148)
 ** spec: syntax/declarations.md#generic-subprograms
-driver e02_generic_procedure is
+primary aspect e02_generic_procedure is
   procedure show_all(:T)(label: String, items: ()T) is
     for x in items do
       print "{label}: {x}";

@@ -1,6 +1,6 @@
 # level 2 performance: procedures with output parameters, defaults and varargs
 ** perf: 30,000 calls of a procedure with `@` parameters, a function with defaults and a vararg procedure
-driver p2c_procedures is
+primary aspect p2c_procedures is
   new counter := 0;
 
   procedure swap(@a, @b :Integer) is

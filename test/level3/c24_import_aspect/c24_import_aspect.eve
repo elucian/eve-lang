@@ -1,0 +1,18 @@
+# an aspect can't be imported: only a module can (D-126, D-179)
+** spec: semantics/modules.md#what-a-module-may-contain
+primary aspect c24_import_aspect is
+  from lib use (tool);                ** compile error: tool is an aspect, not a module
+
+  process main is
+    print "never";
+  return;
+end c24_import_aspect;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "is an aspect"
+  ]
+}
+*/

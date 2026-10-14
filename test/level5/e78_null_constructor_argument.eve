@@ -1,6 +1,6 @@
 # null as an argument for a member that is not optional is a compile error, in a call of the class too (D-080)
 ** spec: library/database.md#records
-driver e78_null_constructor_argument is
+primary aspect e78_null_constructor_argument is
   class Customer = {id: Integer, name: String, city: String?} <: Object;
 
   process main is

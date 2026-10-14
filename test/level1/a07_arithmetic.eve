@@ -1,6 +1,6 @@
 # numeric operators and their precedence (D-019)
 ** spec: syntax/expressions.md#precedence, syntax/expressions.md#arithmetic
-driver a07_arithmetic is
+primary aspect a07_arithmetic is
   process main is
     expect 1 + 2 == 3;
     expect 7 - 10 == -3;

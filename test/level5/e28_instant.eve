@@ -1,6 +1,6 @@
 # an Instant prints in the canonical form; a bad text is the error parse
 ** spec: library/data-language.md#details-used-by-the-tests
-driver e28_instant is
+primary aspect e28_instant is
   process main is
     print Instant.epoch;
     new t := Instant.parse("2026-10-10T08:00:00Z");

@@ -1,6 +1,6 @@
 # list modifiers: <+ appends at the end, +> puts in front; the list stays after +> and before <+ (D-107)
 ** spec: syntax/statements.md#let
-driver a82_list_ends is
+primary aspect a82_list_ends is
   process main is
     new lst := (2, 3);
     new front := 1;

@@ -1,6 +1,6 @@
 # variation 2 of d28: a close beyond the number of senders is an error (D-141)
 ** spec: semantics/multitasking.md#channels
-driver d28_test2 is
+primary aspect d28_test2 is
   process main is
     new jobs := Channel(:Integer)(capacity: 10);
     new total: Integer;

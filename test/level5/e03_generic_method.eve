@@ -1,6 +1,6 @@
 # a method has its own list of types, in a generic class or in a plain class (D-148)
 ** spec: syntax/declarations.md#generic-subprograms
-driver e03_generic_method is
+primary aspect e03_generic_method is
   class Box(:T) = {item: T} <: Object is
     public method tagged(:U)(@self, tag: U) => (@result: String) is
       let result := "{tag}: {self.item}";

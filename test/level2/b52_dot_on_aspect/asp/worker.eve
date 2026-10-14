@@ -1,0 +1,10 @@
+# worker: prepare is a private process
+exclusive aspect worker is
+  process prepare is
+    print "prepare";
+  return;
+
+  process main is
+    apply prepare();
+  return;
+end worker;

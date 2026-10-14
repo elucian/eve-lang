@@ -1,6 +1,6 @@
 # relation and logical operators, conditional statement and expression
 ** spec: syntax/expressions.md#comparison-and-logic
-driver a08_logic is
+primary aspect a08_logic is
   process main is
     expect 1 < 2;
     expect 2 > 1;

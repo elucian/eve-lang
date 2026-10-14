@@ -1,6 +1,6 @@
 # loop tested at the end: loop … do … repeat [while c]; and skip (D-074)
 ** spec: semantics/control.md#loops
-driver a39_repeat is
+primary aspect a39_repeat is
   process main is
     ** the body runs at least once, the condition is tested at the end
     new n := 10;

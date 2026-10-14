@@ -1,6 +1,6 @@
 # temporary is allowed only for the staging database: a table of another connection is a compile error
 ** spec: library/database.md#the-table-declaration
-driver e41_table_temporary_data is
+primary aspect e41_table_temporary_data is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

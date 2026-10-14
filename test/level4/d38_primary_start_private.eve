@@ -1,0 +1,23 @@
+# a primary aspect is serial: it applies its private processes, it does not start them (D-181)
+** spec: syntax/declarations.md#scripts
+primary aspect d38_primary_start_private is
+  process work is
+    print "work";
+  return;
+
+  process main is
+    parallel
+    do
+      start work();                    ** compile error
+    done;
+  return;
+end d38_primary_start_private;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a primary aspect is serial"
+  ]
+}
+*/

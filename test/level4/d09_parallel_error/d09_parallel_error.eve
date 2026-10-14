@@ -1,6 +1,6 @@
 # failed tasks do not stop the others; done raises ParallelError with the errors in the order of start (D-140)
 ** spec: semantics/multitasking.md#errors
-driver d09_parallel_error is
+primary aspect d09_parallel_error is
   process main is
     checks: parallel
     do

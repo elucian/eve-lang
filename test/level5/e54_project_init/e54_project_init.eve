@@ -1,7 +1,7 @@
 # project init <folder> makes a new project with the standard layout (F-TLS-23)
 ** spec: plan/design-project-layout.md
 ** The runner calls the command of the VM, not this script: see "command" below.
-driver e54_project_init is
+primary aspect e54_project_init is
   process main is
     print "e54: the command project init is tested, not this script";
   return;

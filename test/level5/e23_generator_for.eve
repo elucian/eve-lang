@@ -1,6 +1,6 @@
 # a generator gives its values one at a time to a for loop (D-067)
 ** spec: syntax/declarations.md#generators-level-5
-driver e23_generator_for is
+primary aspect e23_generator_for is
   generator count_to(n: Integer) => (@x: Integer) is
     for i in (1..n) do
       let x := i;

@@ -1,6 +1,6 @@
 # fs: read!, size!, list!, move, remove, make_dir, and the path functions and the operator / (data-language.md#files-and-paths)
 ** spec: library/data-language.md#files-and-paths
-driver e84_fs_functions is
+primary aspect e84_fs_functions is
   process main is
     fs.make_dir("out/sub");
     fs.write("out/sub/b.txt", "bb");

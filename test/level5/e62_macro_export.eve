@@ -7,7 +7,7 @@ return;
 
 export (twice);
 
-driver e62_macro_export is
+primary aspect e62_macro_export is
   process main is
     print twice(2);
   return;

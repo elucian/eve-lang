@@ -1,7 +1,7 @@
 # a Decimal and a Real are never mixed without a conversion: an operand of the wrong type is a compile error (D-080, D-110)
 ** spec: library/data-language.md#details-used-by-the-tests
 ** spec: semantics/errors.md (an operand of the wrong type is a compile error, never an error value)
-driver e74_decimal_real_mix is
+primary aspect e74_decimal_real_mix is
   process main is
     print 1.5d + 2.5;
     print "not reached";

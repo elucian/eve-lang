@@ -1,6 +1,6 @@
 # rollback; undoes the job: nothing is written, the status is "rolled back", the process goes on
 ** spec: semantics/control.md#job
-driver e48_job_rollback is
+primary aspect e48_job_rollback is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

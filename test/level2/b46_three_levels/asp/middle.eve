@@ -1,0 +1,7 @@
+# middle: an exclusive aspect that calls another one
+exclusive aspect middle is
+  process main is
+    print "level 2";
+    apply last();
+  return;
+end middle;

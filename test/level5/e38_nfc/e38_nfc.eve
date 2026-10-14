@@ -1,6 +1,6 @@
 # normalize: "nfc" composes e + accent into one code point; by default the text is kept as read
 ** spec: semantics/data-types.md#what-nfc-is
-driver e38_nfc is
+primary aspect e38_nfc is
   class K = {key: String} <: Record;
 
   process main is

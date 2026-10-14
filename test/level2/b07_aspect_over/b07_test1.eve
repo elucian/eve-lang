@@ -1,6 +1,6 @@
-# variation 1 of b07: over in the aspect twice: the driver goes on each time (D-133)
+# variation 1 of b07: over in the aspect twice: the primary aspect goes on each time (D-133)
 ** spec: semantics/aspects.md#what-an-aspect-is
-driver b07_test1 is
+primary aspect b07_test1 is
   process main is
     apply leave();
     apply leave();

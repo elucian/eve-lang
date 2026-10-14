@@ -1,6 +1,6 @@
 # a class hosts only methods: a function in a class body is a compile error (D-123)
 ** spec: syntax/declarations.md#classes-and-objects
-driver c17_function_in_class is
+primary aspect c17_function_in_class is
   class Counter = {n: Integer} <: Object is
     function double(v :Integer) => (@r :Integer) is   ** compile error: declare it outside the class
       let r := v * 2;

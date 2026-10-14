@@ -1,6 +1,6 @@
 # a managed module is accepted: no variable, no unsafe call (D-129)
 ** spec: semantics/modules.md#managed-and-direct-modules
-driver c28_managed_module is
+primary aspect c28_managed_module is
   from lib use (pure);
 
   process main is

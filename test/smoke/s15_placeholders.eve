@@ -1,6 +1,6 @@
 # Placeholders. Names, literals, expressions, formats, code points, entities, braces.
 ** spec: lexical/lexical.md#literals
-driver s15_placeholders is
+primary aspect s15_placeholders is
   process main is
     new n := 42;
     new s := "Eve";

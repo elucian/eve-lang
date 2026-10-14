@@ -1,6 +1,6 @@
 # send into a closed channel raises ChannelError, code 46 (D-141)
 ** spec: semantics/multitasking.md#channels
-driver d13_channel_closed is
+primary aspect d13_channel_closed is
   process main is
     new jobs := Channel(:Integer)(capacity: 5);
     parallel

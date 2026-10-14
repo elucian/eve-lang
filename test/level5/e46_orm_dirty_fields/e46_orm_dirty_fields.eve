@@ -1,6 +1,6 @@
 # an update writes only the dirty fields: a column changed by direct SQL is not overwritten
 ** spec: library/database.md#sql-that-writes-only-what-changed
-driver e46_orm_dirty_fields is
+primary aspect e46_orm_dirty_fields is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

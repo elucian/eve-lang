@@ -1,6 +1,6 @@
 # in a loop a capture creates its name once: the next turns assign it, they do not create it again (D-104)
 ** spec: syntax/statements.md#let
-driver a80_let_capture_loop is
+primary aspect a80_let_capture_loop is
   process main is
     new lst := (1, 2, 3);
     new total := 0;

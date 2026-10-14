@@ -1,6 +1,6 @@
 # the process receives the command-line arguments; a vararg collects them (D-029, D-040; from demo/method_call.eve and demo/test_args.eve, D-099)
 ** spec: syntax/declarations.md#scripts
-driver a60_process_args is
+primary aspect a60_process_args is
 
   process main(*args) is
     expect args is List;

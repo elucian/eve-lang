@@ -1,6 +1,6 @@
 # a subclass builds its object through the constructor of its superclass (D-084)
 ** spec: syntax/declarations.md#classes-and-objects
-driver c12_inheritance is
+primary aspect c12_inheritance is
   class Shape = {name: String} <: Object is
     constructor(name = "shape" :String) => (@self) is
       let self := Object();

@@ -1,6 +1,6 @@
 # a range of runes: ('a'..'c') visits the code points in order (from demo/symbol_range.eve, D-099)
 ** spec: syntax/expressions.md#ranges
-driver a58_rune_range is
+primary aspect a58_rune_range is
   process main is
     expect '0' in ('0'..'9');
     expect 'X' in ('A'..'Z');

@@ -1,0 +1,17 @@
+#!/usr/bin/env eve
+** a file has no #! line: Eve has no free scripts, every program is an aspect (D-179)
+** spec: lexical/lexical.md#file-header
+primary aspect a04_shebang_error is
+  process main is
+    print "never";
+  return;
+end a04_shebang_error;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "no free scripts"
+  ]
+}
+*/

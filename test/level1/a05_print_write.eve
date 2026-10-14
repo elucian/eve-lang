@@ -1,6 +1,6 @@
 # print adds a new line and separates its arguments with sep, write adds nothing; a list is one argument (Q-019b)
 ** spec: syntax/statements.md#calls
-driver a05_print_write is
+primary aspect a05_print_write is
   process main is
     print "one";
     write "a";

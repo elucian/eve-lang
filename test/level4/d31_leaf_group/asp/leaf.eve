@@ -1,9 +1,13 @@
-# leaf: a group in a leaf: compile error
+# leaf: a concurrent aspect of the third level; a group in it is a compile error
 concurrent aspect leaf is
+  process work is
+    pass;
+  return;
+
   process main(@result: Integer) is
     parallel
     do
-      start leaf(@result);
+      start work();
     done;
   return;
 end leaf;

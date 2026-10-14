@@ -1,6 +1,6 @@
 # placeholders {name} and {name % format}: a name, a literal or a simple expression, written by its type; \{ \} are literal braces; {U+H} Unicode (D-096, D-102, formats are a draft)
 ** spec: lexical/lexical.md#string
-driver a11_interpolation is
+primary aspect a11_interpolation is
   process main is
     new name := "Eve";
     new n := 42;

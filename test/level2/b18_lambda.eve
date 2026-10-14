@@ -1,6 +1,6 @@
 # a lambda is an anonymous function: held by a name, passed as an argument, held by a function type (D-109, D-147)
 ** spec: syntax/expressions.md#index-slice-member
-driver b18_lambda is
+primary aspect b18_lambda is
   class BinEx = (p1, p2 :Integer):Integer <: Function;
   procedure show(f: BinEx) is
     print f(3, 4);

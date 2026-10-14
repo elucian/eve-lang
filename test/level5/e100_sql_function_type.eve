@@ -1,6 +1,6 @@
 # the parameters and the result of a sql function have SQL types: a List is refused (D-166)
 ** spec: library/database.md#sql-functions
-driver e100_sql_function_type is
+primary aspect e100_sql_function_type is
   sql function total(items: List) => (@result: Integer) is
     let result := 0;
   return;

@@ -1,6 +1,6 @@
 # a read with a rejects output skips the bad lines and writes them in a file, in batches
 ** spec: semantics/data-types.md#transform-and-rejects
-driver e35_csv_rejects is
+primary aspect e35_csv_rejects is
   class P = {id: Integer, name: String} <: Record;
 
   process main is

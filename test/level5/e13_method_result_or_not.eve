@@ -1,6 +1,6 @@
 # a method without a result and one with a result share a name: a statement calls the first, an expression the second (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e13_method_result_or_not is
+primary aspect e13_method_result_or_not is
   class Counter = {n: Integer} <: Object is
     public method step(@self) is
       let self.n += 1;

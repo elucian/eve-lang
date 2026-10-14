@@ -1,6 +1,6 @@
 # exit ends the process without error and runs finalize (D-020)
 ** spec: syntax/statements.md#interruptions
-driver a50_exit is
+primary aspect a50_exit is
   process main is
     print "work";
     exit;

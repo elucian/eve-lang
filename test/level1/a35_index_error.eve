@@ -1,6 +1,6 @@
 # index 0 is an error: indexes start at 1 (D-021)
 ** spec: syntax/expressions.md#index-slice-member
-driver a35_index_error is
+primary aspect a35_index_error is
   process main is
     new a := (1, 2, 3);
     new x := a[0];

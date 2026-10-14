@@ -1,6 +1,6 @@
 # an update block changes several fields of one record without repeating its name
 ** spec: library/database.md#the-update-block
-driver e50_update_block is
+primary aspect e50_update_block is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 
   table customers: Customer in "shop" is

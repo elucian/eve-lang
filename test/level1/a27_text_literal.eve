@@ -1,6 +1,6 @@
 # a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed (Q-014)
 ** spec: lexical/lexical.md#string
-driver a27_text_literal is
+primary aspect a27_text_literal is
   process main is
     new text := """
     "Opportunity is missed by most people

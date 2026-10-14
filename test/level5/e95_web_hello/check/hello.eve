@@ -1,5 +1,5 @@
 # script that the tests send to a machine, through IPC and through HTTP
-driver hello is
+primary aspect hello is
   process main is
     print "Hello from the machine";
   return;

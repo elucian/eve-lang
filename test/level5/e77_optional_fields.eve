@@ -1,6 +1,6 @@
 # a field with ? holds null; a plain field never does; null is tested before use (D-080)
 ** spec: library/data-language.md#decimal-and-optional-types
-driver e77_optional_fields is
+primary aspect e77_optional_fields is
   class Customer = {id: Integer, name: String, city: String?} <: Record;
 
   process main is

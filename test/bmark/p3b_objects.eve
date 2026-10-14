@@ -1,6 +1,6 @@
 # level 3 performance: classes and methods
 ** perf: 5,000 objects of a class and of its subclass, 50,000 method calls, 20,000 extension method calls
-driver p3b_objects is
+primary aspect p3b_objects is
   class Point = {x, y :Integer} <: Object is
     constructor(x = 0, y = 0 :Integer) => (@self) is
       let self := Object();

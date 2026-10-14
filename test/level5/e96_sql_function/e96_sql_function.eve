@@ -1,6 +1,6 @@
 # sql function: an Eve function that SQLite calls from SQL, registered on every connection (D-166)
 ** spec: library/database.md#sql-functions
-driver e96_sql_function is
+primary aspect e96_sql_function is
   class Taxed = {id: Integer, tax: Decimal} <: Record;
   class Flag = {id: Integer, big: Logic, label: String} <: Record;
 

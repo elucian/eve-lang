@@ -1,6 +1,6 @@
 # each started aspect writes its own element of an array; the results are ready after done (D-140)
 ** spec: semantics/multitasking.md#data-rules
-driver d05_parallel_outputs is
+primary aspect d05_parallel_outputs is
   process main is
     new s: [4]Integer;
     demo: parallel

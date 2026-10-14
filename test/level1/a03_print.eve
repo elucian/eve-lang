@@ -1,6 +1,6 @@
 # print writes a string and a new line; no import is needed
 ** spec: syntax/statements.md#calls
-driver a03_print is
+primary aspect a03_print is
   process main is
     print "Hello World!";
     print("Hello again!");

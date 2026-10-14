@@ -1,6 +1,6 @@
 # a change without let is a syntax error (D-076)
 ** spec: syntax/statements.md#let
-driver a44_bare_assignment is
+primary aspect a44_bare_assignment is
   process main is
     new x := 1;
     x := 2;                      ** syntax error: use let

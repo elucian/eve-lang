@@ -1,0 +1,23 @@
+# counter: two private tasks add to one atomic total
+concurrent aspect counter is
+  new count = 0 :Atomic(:Integer);
+
+  function total!() => (@result: Integer) is
+    let result := count;
+  return;
+
+  process add(times: Integer) is
+    for i in (1..times) do
+      let count += 1;
+    done;
+  return;
+
+  process main is
+    parallel
+    do
+      start add(1000);
+      start add(1000);
+    done;
+    print "total: {total!()}";
+  return;
+end counter;

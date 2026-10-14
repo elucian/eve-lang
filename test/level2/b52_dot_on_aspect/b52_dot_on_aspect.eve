@@ -1,0 +1,16 @@
+# the dot is never applied to an aspect: only main is public (D-179, D-066)
+** spec: semantics/aspects.md#what-an-aspect-is
+primary aspect b52_dot_on_aspect is
+  process main is
+    apply worker.prepare();            ** compile error
+  return;
+end b52_dot_on_aspect;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "the dot is never applied to an aspect"
+  ]
+}
+*/

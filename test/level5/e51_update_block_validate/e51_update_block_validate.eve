@@ -1,6 +1,6 @@
 # validate runs at the end of an update block, with all the fields changed together
 ** spec: library/database.md#the-update-block
-driver e51_update_block_validate is
+primary aspect e51_update_block_validate is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record is
     method validate(@self) is
       expect self.name <> "";

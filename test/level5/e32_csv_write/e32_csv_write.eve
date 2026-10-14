@@ -1,6 +1,6 @@
 # the CSV writer: header, quotes only when needed, null is empty and the empty string is ""
 ** spec: semantics/data-types.md#the-formats-in-detail
-driver e32_csv_write is
+primary aspect e32_csv_write is
   class Item = {id: Integer, name: String, note: String?, price: Decimal} <: Record;
 
   process main is

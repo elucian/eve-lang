@@ -1,6 +1,6 @@
 # a failed expect ends the process with exit code 2 (D-010)
 ** spec: semantics/errors.md#ending-the-process
-driver a29_expect_fail is
+primary aspect a29_expect_fail is
   process main is
     print "before";
     expect 1 == 2;

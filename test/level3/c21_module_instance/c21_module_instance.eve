@@ -1,6 +1,6 @@
 # a module is not a class: it has no instances (D-068)
 ** spec: semantics/modules.md#life-cycle
-driver c21_module_instance is
+primary aspect c21_module_instance is
   from lib use (counter);
 
   process main is

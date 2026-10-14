@@ -1,6 +1,6 @@
 # null is the value and Null its type: print writes null, type() gives Null (D-080, D-168)
 ** spec: library/data-language.md#details-used-by-the-tests
-driver e106_print_null is
+primary aspect e106_print_null is
   class Row = {name: String, note: String?} <: Record;
 
   process main is

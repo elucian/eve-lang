@@ -1,6 +1,6 @@
 # two parallel groups run one after the other; the output of a group is in the order of start (D-140)
 ** spec: semantics/multitasking.md#parallel-groups
-driver d04_parallel_group is
+primary aspect d04_parallel_group is
   process main is
     group1: parallel
     do

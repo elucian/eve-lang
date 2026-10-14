@@ -1,6 +1,6 @@
 # within sets a deadline: a task still running gets a TimeoutError (D-140, D-144)
 ** spec: semantics/multitasking.md#errors
-driver d11_within_timeout is
+primary aspect d11_within_timeout is
   process main is
     parallel within 100ms
     do

@@ -1,6 +1,6 @@
 # variation 2 of d09: retry in recover runs the whole group again (D-066, D-140)
 ** spec: semantics/multitasking.md#errors
-driver d09_test2 is
+primary aspect d09_test2 is
   process main is
     new tries := 0;
     checks: parallel

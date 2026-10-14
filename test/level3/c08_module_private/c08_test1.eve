@@ -1,6 +1,6 @@
 # variation 1 of c08: the exported members only (D-133)
 ** spec: semantics/modules.md#members
-driver c08_test1 is
+primary aspect c08_test1 is
   from lib use (counter);
 
   process main is

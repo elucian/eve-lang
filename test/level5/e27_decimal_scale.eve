@@ -1,6 +1,6 @@
 # a Decimal keeps its scale, adds exactly and compares by value (D-080)
 ** spec: library/data-language.md#details-used-by-the-tests
-driver e27_decimal_scale is
+primary aspect e27_decimal_scale is
   process main is
     print 12.50d;
     print 0.10d + 0.20d;

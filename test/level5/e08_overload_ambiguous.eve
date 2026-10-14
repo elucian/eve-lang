@@ -1,6 +1,6 @@
 # a call that does not fix the type of the result of an overloaded function is ambiguous: compile error (D-149)
 ** spec: syntax/declarations.md#overloading
-driver e08_overload_ambiguous is
+primary aspect e08_overload_ambiguous is
   function unit() => (@result: Integer) is
     let result := 1;
   return;
