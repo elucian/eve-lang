@@ -9,6 +9,7 @@ const Key = vaxis.Key;
 
 const project = @import("project.zig");
 const text = @import("text.zig");
+const cache_mod = @import("cache.zig");
 
 // ------------------------------------------------------------------ small types
 
@@ -31,7 +32,7 @@ pub const Panel = enum { tree, main, tools };
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project };
+pub const Overlay = enum { none, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
@@ -41,6 +42,9 @@ pub const Button = enum { run, step_into, step_out, cont, stop, replace, replace
 // Zig tip: A tagged union with payloads, like `Event` in main.zig. `.tree_row = 5` builds a value;
 // `switch (a) { .tree_row => |i| ... }` reads its payload. A field without a payload
 // (`menu_title`) has type `void`.
+/// The buttons of the dialogs that are not a plain "close": `ok` does what Enter does in that dialog.
+pub const DlgAction = enum { ok, forget, browse, open_here };
+
 /// What a click on a clickable place does (see `Hit`).
 pub const Action = union(enum) {
     tree_row: u32,
@@ -58,6 +62,9 @@ pub const Action = union(enum) {
     panel_focus: Panel,
     panel_hide: Panel,
     panel_max: Panel,
+    dlg: DlgAction,
+    proj_row: usize,
+    fb_row: usize,
 };
 
 // Zig tip: a struct with methods is how Zig does what other languages call a class. `contains` is
@@ -162,7 +169,7 @@ pub const Breakpoint = struct { path: []u8, line: usize };
 // machine) gets it in the `arg` of its row.
 /// Every command of the main menu.
 pub const MenuCmd = enum {
-    open_project, new_file, save, save_as, close_tab, quit,
+    open_project, open_folder, new_file, save, save_as, close_tab, quit,
     undo, redo, replace,
     find_text, find_file, goto_line, query,
     run, step_into, step_out, cont, stop, breakpoint,
@@ -195,6 +202,7 @@ pub const menu_window: usize = 5;
 pub const menus = [_]Menu{
     .{ .label = "FILE", .items = &.{
         .{ .label = "Open project…", .key = "Ctrl+O", .cmd = .open_project },
+        .{ .label = "Open Folder…", .key = "Ctrl+Shift+O", .cmd = .open_folder },
         .{ .label = "New file", .key = "Ctrl+N", .cmd = .new_file },
         .{ .label = "Save", .key = "Ctrl+S", .cmd = .save },
         .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
@@ -232,7 +240,7 @@ pub const menus = [_]Menu{
         .{ .label = "Upload…", .key = "Ctrl+U", .cmd = .upload },
     } },
     .{ .label = "WINDOW", .items = &.{
-        .{ .label = "Select", .key = "Alt+Tab", .cmd = .select_window },
+        .{ .label = "Select", .key = "Ctrl+Tab", .cmd = .select_window },
         .{ .label = "Close", .key = "Ctrl+W", .cmd = .close_tab },
         .{ .label = "Modify", .cmd = .modify },
         .{ .label = "Freeze", .key = "Esc", .cmd = .freeze },
@@ -369,6 +377,16 @@ pub const App = struct {
     saveas_in: TextInput,
     project_in: TextInput,
 
+    /// The projects the user knows (File > Open project), kept in a file of the user data folder.
+    cache: cache_mod.Cache,
+    proj_sel: usize = 0,
+    proj_top: usize = 0,
+    /// The folder browser (File > Open Folder): the folder shown (owned), its sub folders, the selected row.
+    fb_path: ?[]u8 = null,
+    fb_entries: std.ArrayList([]u8) = .empty,
+    fb_sel: usize = 0,
+    fb_top: usize = 0,
+
     console: Log = .{},
     stdout_log: Log = .{},
     stderr_log: Log = .{},
@@ -396,13 +414,16 @@ pub const App = struct {
     // Zig tip: `create` allocates the App on the heap and returns a pointer to it. The arena inside
     // `tree` must stay where it is (project.zig), and a heap object never moves, unlike a local
     // variable that is copied when it is returned. `errdefer` runs only if the function fails later.
-    pub fn create(gpa: std.mem.Allocator, io: Io, root: []const u8) !*App {
+    pub fn create(gpa: std.mem.Allocator, io: Io, env: *const std.process.Environ.Map, root: []const u8) !*App {
         const self = try gpa.create(App);
         errdefer gpa.destroy(self);
         const name = if (root.len == 0) try gpa.dupe(u8, "") else try projectName(gpa, io, root);
         errdefer gpa.free(name);
         const own_root = try gpa.dupe(u8, root);
         errdefer gpa.free(own_root);
+        var cache = try cache_mod.Cache.init(gpa, io, env);
+        errdefer cache.deinit();
+        cache.load();
         self.* = .{
             .gpa = gpa,
             .io = io,
@@ -416,6 +437,7 @@ pub const App = struct {
             .goto_in = TextInput.init(gpa),
             .saveas_in = TextInput.init(gpa),
             .project_in = TextInput.init(gpa),
+            .cache = cache,
             .frame = .init(gpa),
         };
         if (root.len > 0) try self.tree.scan(io, root, name);
@@ -448,6 +470,10 @@ pub const App = struct {
         self.frame.deinit();
         gpa.free(self.project_name);
         gpa.free(self.root);
+        self.cache.deinit();
+        self.fbClear();
+        self.fb_entries.deinit(gpa);
+        if (self.fb_path) |fp| gpa.free(fp);
         gpa.destroy(self);
     }
 
@@ -972,7 +998,8 @@ pub const App = struct {
     pub fn runMenu(self: *App, cmd: MenuCmd, arg: usize) !void {
         self.overlay = .none;
         switch (cmd) {
-            .open_project => self.openOverlay(.open_project),
+            .open_project => self.openProjectDialog(),
+            .open_folder => self.openFolderDialog(),
             .new_file => try self.newFile(),
             .save => try self.save(),
             .save_as => self.openOverlay(.save_as),
@@ -1057,7 +1084,7 @@ pub const App = struct {
 
     // Zig tip: The drawing asks for the places of the panels once per frame, and the mouse code
     // reads the saved answer (`self.layout`). Rows: 0 is the menu bar, the last three are the
-    // status bar. In the Main column the Run buttons take one row under the Main Panel.
+    // status bar. The row with the Run buttons belongs to the Tools Panel: it is above it, and goes with it.
     /// Work out where each panel is for a screen of `W` x `H` cells, and keep the answer.
     pub fn computeLayout(self: *App, W: u16, H: u16) Layout {
         self.cols = W;
@@ -1078,10 +1105,10 @@ pub const App = struct {
             l.debug = .{ .x = rx, .y = 1 + eh, .w = rw, .h = 1 };
             l.tools = .{ .x = rx, .y = 2 + eh, .w = rw, .h = bb };
         } else if (self.isShown(.main)) {
-            l.main = .{ .x = rx, .y = 1, .w = rw, .h = mh - 1 };
-            l.debug = .{ .x = rx, .y = mh, .w = rw, .h = 1 };
+            l.main = .{ .x = rx, .y = 1, .w = rw, .h = mh };
         } else if (self.isShown(.tools)) {
-            l.tools = .{ .x = rx, .y = 1, .w = rw, .h = mh };
+            l.debug = .{ .x = rx, .y = 1, .w = rw, .h = 1 };
+            l.tools = .{ .x = rx, .y = 2, .w = rw, .h = mh - 1 };
         }
         self.layout = l;
         return l;
@@ -1121,7 +1148,7 @@ pub const App = struct {
             self.focusPanel(p);
         } else {
             if (self.maximized == p) self.maximized = null;
-            if (self.activePanel() == p) self.rotatePanel();
+            if (self.activePanel() == p) self.rotatePanel(1);
         }
     }
 
@@ -1134,11 +1161,11 @@ pub const App = struct {
     // Zig tip: `for (0..3) |k|` counts from 0 to 2 without a variable. `@enumFromInt` turns a number
     // back into the enum value, and `@intFromEnum` turns a value into its number: the panels are
     // numbered 0, 1, 2 in the order of the declaration.
-    /// Shift+Tab: the keyboard goes to the next panel that is on the screen (Tree, Main, Tools).
-    pub fn rotatePanel(self: *App) void {
-        const here = @intFromEnum(self.activePanel());
+    /// Shift+Tab and Alt+Right: the keyboard goes to the next panel that is on the screen (Tree, Main, Tools); Alt+Left goes back.
+    pub fn rotatePanel(self: *App, delta: isize) void {
+        const here: isize = @intFromEnum(self.activePanel());
         for (1..4) |k| {
-            const p: Panel = @enumFromInt((here + k) % 3);
+            const p: Panel = @enumFromInt(@mod(here + delta * @as(isize, @intCast(k)), 3));
             if (self.isShown(p)) {
                 self.focusPanel(p);
                 return;
@@ -1319,6 +1346,191 @@ pub const App = struct {
         return true;
     }
 
+    // ------------------------------------------------------------ dialogs: projects and folders
+
+    // Zig tip: One function is the single way to close a dialog (Esc, the x button, a click outside),
+    // so the work that some dialogs need when they close is written once.
+    /// Close the dialog that is open. The Find File dialog puts the tree back as it was.
+    pub fn closeOverlay(self: *App) void {
+        if (self.overlay == .find_file) self.filesCancel();
+        self.overlay = .none;
+    }
+
+    /// File > Open project: the list of the known projects.
+    pub fn openProjectDialog(self: *App) void {
+        self.proj_sel = 0;
+        self.proj_top = 0;
+        self.openOverlay(.open_project);
+    }
+
+    /// File > Open Folder: the folder browser, which starts in the project folder, or in the current folder.
+    pub fn openFolderDialog(self: *App) void {
+        if (self.fb_path == null) self.fbLoad(if (self.root.len > 0) self.root else ".");
+        self.openOverlay(.open_folder);
+        self.dlg_field = 1;
+    }
+
+    // Zig tip: `orelse return` leaves the function when the optional is null. The path is copied
+    // first because `openProject` and the cache change the lists that the original lives in.
+    /// Open project `i` of the list and move it to the top of the list.
+    fn openCached(self: *App, i: usize) !void {
+        if (i >= self.cache.projects.items.len) return;
+        const path = try self.gpa.dupe(u8, self.cache.projects.items[i]);
+        defer self.gpa.free(path);
+        self.overlay = .none;
+        self.cache.add(path) catch {};
+        try self.openProject(path);
+    }
+
+    /// Take the selected project out of the list (its folder and files stay).
+    fn forgetProject(self: *App) !void {
+        const n = self.cache.projects.items.len;
+        if (self.proj_sel >= n) return;
+        const name = try self.gpa.dupe(u8, baseName(self.cache.projects.items[self.proj_sel]));
+        defer self.gpa.free(name);
+        try self.cache.forget(self.proj_sel);
+        self.proj_sel = @min(self.proj_sel, self.cache.projects.items.len -| 1);
+        self.setMessage("forgotten: {s} (the folder stays on the disk)", .{name});
+    }
+
+    /// The button Open as project of the folder browser: the folder joins the list and opens.
+    fn openHere(self: *App) !void {
+        const shown = self.fb_path orelse return;
+        const path = try self.gpa.dupe(u8, shown);
+        defer self.gpa.free(path);
+        self.overlay = .none;
+        self.cache.add(path) catch |err| self.setMessage("project cache: {s}", .{@errorName(err)});
+        try self.openProject(path);
+    }
+
+    /// The last part of a path.
+    pub fn baseName(path: []const u8) []const u8 {
+        const cut = std.mem.lastIndexOfAny(u8, path, "/\\");
+        return if (cut) |i| path[i + 1 ..] else path;
+    }
+
+    // Zig tip: `std.mem.sort` with an anonymous struct that holds the comparison, as in project.zig.
+    // `catch null` inside the `while` condition turns an error of `next` into the end of the loop.
+    /// Show folder `path` in the browser: read its sub folders, and put its real path in the field.
+    /// A folder that cannot be read leaves the browser as it was.
+    pub fn fbLoad(self: *App, path: []const u8) void {
+        var dir = Io.Dir.cwd().openDir(self.io, path, .{ .iterate = true }) catch |err| {
+            self.setMessage("cannot open '{s}': {s}", .{ path, @errorName(err) });
+            return;
+        };
+        defer dir.close(self.io);
+        var buf: [std.fs.max_path_bytes]u8 = undefined;
+        const n = dir.realPath(self.io, &buf) catch |err| {
+            self.setMessage("cannot read '{s}': {s}", .{ path, @errorName(err) });
+            return;
+        };
+        const abs = self.gpa.dupe(u8, buf[0..n]) catch return;
+        self.fbClear();
+        var it = dir.iterate();
+        while (it.next(self.io) catch null) |e| {
+            if (e.kind != .directory or self.fb_entries.items.len >= 2000) continue;
+            const name = self.gpa.dupe(u8, e.name) catch break;
+            self.fb_entries.append(self.gpa, name) catch {
+                self.gpa.free(name);
+                break;
+            };
+        }
+        std.mem.sort([]u8, self.fb_entries.items, {}, struct {
+            fn less(_: void, a: []u8, b: []u8) bool {
+                return std.ascii.lessThanIgnoreCase(a, b);
+            }
+        }.less);
+        if (self.fb_path) |old| self.gpa.free(old);
+        self.fb_path = abs;
+        self.fb_sel = 0;
+        self.fb_top = 0;
+        self.project_in.clearRetainingCapacity();
+        self.project_in.insertSliceAtCursor(abs) catch {};
+    }
+
+    fn fbClear(self: *App) void {
+        for (self.fb_entries.items) |e| self.gpa.free(e);
+        self.fb_entries.clearRetainingCapacity();
+    }
+
+    /// Is there a folder above the one shown? (Not at the root of a drive.)
+    pub fn fbHasParent(self: *const App) bool {
+        const p = self.fb_path orelse return false;
+        return std.fs.path.dirname(p) != null;
+    }
+
+    /// The rows of the browser: `..` first when there is a parent, then the sub folders.
+    pub fn fbRowCount(self: *const App) usize {
+        return self.fb_entries.items.len + @intFromBool(self.fbHasParent());
+    }
+
+    /// The name shown in row `i`.
+    pub fn fbRowName(self: *const App, i: usize) []const u8 {
+        if (self.fbHasParent()) {
+            if (i == 0) return "..";
+            return self.fb_entries.items[i - 1];
+        }
+        return self.fb_entries.items[i];
+    }
+
+    // Zig tip: `std.fs.path.dirname` returns a slice of the path itself, and `fbLoad` frees the old
+    // path, so the parent is copied before the call and freed after it.
+    fn fbUp(self: *App) void {
+        const p = self.fb_path orelse return;
+        const parent = std.fs.path.dirname(p) orelse return;
+        const copy = self.gpa.dupe(u8, parent) catch return;
+        defer self.gpa.free(copy);
+        self.fbLoad(copy);
+    }
+
+    /// Go into the folder of row `i` (or up, for `..`).
+    fn fbEnterRow(self: *App, i: usize) void {
+        if (i >= self.fbRowCount()) return;
+        const name = self.fbRowName(i);
+        if (std.mem.eql(u8, name, "..")) return self.fbUp();
+        const p = self.fb_path orelse return;
+        const joined = std.fs.path.join(self.gpa, &.{ p, name }) catch return;
+        defer self.gpa.free(joined);
+        self.fbLoad(joined);
+    }
+
+    // Zig tip: Keys are tried in order and each `return` ends the function, so the order is the
+    // priority. `Key.f2` opens the shown folder as a project without going into a sub folder.
+    /// The keys of the project list.
+    fn projectKey(self: *App, key: Key) !void {
+        const n = self.cache.projects.items.len;
+        if (key.matches(Key.enter, .{})) return self.openCached(self.proj_sel);
+        if (key.matches(Key.delete, .{}) or key.matches('f', .{})) return self.forgetProject();
+        if (key.matches('i', .{}) or key.matches(Key.insert, .{})) return self.openFolderDialog();
+        if (n == 0) return;
+        if (key.matches(Key.up, .{})) self.proj_sel = self.proj_sel -| 1 else if (key.matches(Key.down, .{})) self.proj_sel = @min(self.proj_sel + 1, n - 1) else if (key.matches(Key.page_up, .{})) self.proj_sel = self.proj_sel -| 8 else if (key.matches(Key.page_down, .{})) self.proj_sel = @min(self.proj_sel + 8, n - 1) else if (key.matches(Key.home, .{})) self.proj_sel = 0 else if (key.matches(Key.end, .{})) self.proj_sel = n - 1;
+    }
+
+    /// The keys of the folder browser: Tab switches between the path field and the list.
+    fn folderKey(self: *App, key: Key) !void {
+        if (key.matches(Key.tab, .{})) {
+            self.dlg_field = 1 - self.dlg_field;
+            return;
+        }
+        if (key.matches(Key.f2, .{})) return self.openHere();
+        if (self.dlg_field == 0) {
+            if (key.matches(Key.enter, .{})) {
+                const typed = try self.project_in.toOwnedContents(self.gpa);
+                defer self.gpa.free(typed);
+                self.fbLoad(std.mem.trim(u8, typed, " \""));
+                self.dlg_field = 1;
+            } else if (key.matches(Key.down, .{})) {
+                self.dlg_field = 1;
+            } else try self.project_in.update(.{ .key_press = key });
+            return;
+        }
+        const n = self.fbRowCount();
+        if (key.matches(Key.enter, .{}) or key.matches(Key.right, .{})) return self.fbEnterRow(self.fb_sel);
+        if (key.matches(Key.left, .{}) or key.matches(Key.backspace, .{})) return self.fbUp();
+        if (n == 0) return;
+        if (key.matches(Key.up, .{})) self.fb_sel = self.fb_sel -| 1 else if (key.matches(Key.down, .{})) self.fb_sel = @min(self.fb_sel + 1, n - 1) else if (key.matches(Key.page_up, .{})) self.fb_sel = self.fb_sel -| 8 else if (key.matches(Key.page_down, .{})) self.fb_sel = @min(self.fb_sel + 8, n - 1) else if (key.matches(Key.home, .{})) self.fb_sel = 0 else if (key.matches(Key.end, .{})) self.fb_sel = n - 1;
+    }
+
     // ------------------------------------------------------------ keys
 
     // Zig tip: `key.matches(codepoint, mods)` compares a key with a letter and the modifier keys,
@@ -1343,18 +1555,23 @@ pub const App = struct {
         if (self.modify and try self.modifyKey(key)) return;
         if (key.matches(Key.enter, .{ .ctrl = true }) or key.matches(Key.f10, .{})) return self.openMenu(0);
         if (key.mods.alt and !key.mods.ctrl) {
+            if (key.codepoint == Key.left) return self.rotatePanel(-1);
+            if (key.codepoint == Key.right) return self.rotatePanel(1);
             if (key.codepoint == Key.tab) return self.nextTab(if (key.mods.shift) -1 else 1);
             if (key.codepoint >= '1' and key.codepoint <= '3') return self.pickMachine(@intCast(key.codepoint - '0'));
             if (menuByLetter(key.codepoint)) |m| return self.openMenu(m);
         }
-        if (key.matches(Key.tab, .{ .shift = true })) return self.rotatePanel();
+        if (key.matches(Key.tab, .{ .shift = true })) return self.rotatePanel(1);
+        if (key.matches(Key.page_up, .{ .ctrl = true })) return self.nextTab(-1);
+        if (key.matches(Key.page_down, .{ .ctrl = true })) return self.nextTab(1);
         if (key.matches(Key.tab, .{ .ctrl = true })) return self.nextTab(1);
         if (key.mods.ctrl and !key.mods.alt and key.codepoint >= '1' and key.codepoint <= '9') {
             return self.pickWindow(key.codepoint - '1');
         }
         if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.runMenu(.shortcuts, 0);
         if (key.matches(',', .{ .ctrl = true })) return self.openOverlay(.settings);
-        if (key.matches('o', .{ .ctrl = true })) return self.openOverlay(.open_project);
+        if (key.matches('o', .{ .ctrl = true, .shift = true })) return self.openFolderDialog();
+        if (key.matches('o', .{ .ctrl = true })) return self.openProjectDialog();
         if (key.matches('q', .{ .ctrl = true })) {
             self.quit = true;
             return;
@@ -1400,26 +1617,15 @@ pub const App = struct {
     // Zig tip: `switch (self.overlay)` on an enum, with `.none => {}` for the value that needs
     // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
-        if (key.matches(Key.escape, .{})) {
-            if (self.overlay == .find_file) self.filesCancel();
-            self.overlay = .none;
-            return;
-        }
+        if (key.matches(Key.escape, .{})) return self.closeOverlay();
         if (self.overlay != .menu and self.searchShortcut(key)) return;
         switch (self.overlay) {
             .menu => try self.menuKey(key),
             .settings, .about => {
                 if (key.matches(Key.enter, .{})) self.overlay = .none;
             },
-            .open_project => {
-                if (key.matches(Key.enter, .{})) {
-                    const p = try self.project_in.toOwnedContents(self.gpa);
-                    defer self.gpa.free(p);
-                    self.project_in.clearRetainingCapacity();
-                    self.overlay = .none;
-                    try self.openProject(std.mem.trim(u8, p, " \""));
-                } else try self.project_in.update(.{ .key_press = key });
-            },
+            .open_project => try self.projectKey(key),
+            .open_folder => try self.folderKey(key),
             .goto => {
                 if (key.matches(Key.enter, .{})) try self.gotoEnter() else try self.goto_in.update(.{ .key_press = key });
             },
@@ -1636,10 +1842,7 @@ pub const App = struct {
             const h = self.hits.items[i];
             if (h.rect.contains(m.col, m.row)) return self.activate(h.action);
         }
-        if (self.overlay != .none) {
-            self.overlay = .none;
-            return;
-        }
+        if (self.overlay != .none) return self.closeOverlay();
         if (self.editor_rect.contains(m.col, m.row)) {
             if (self.activeBuffer()) |b| {
                 const row = b.top + @as(usize, @intCast(@as(i32, m.row) - self.editor_rect.y));
@@ -1702,6 +1905,19 @@ pub const App = struct {
             },
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
+            .dlg => |d| switch (d) {
+                .ok => try self.overlayKey(.{ .codepoint = Key.enter }),
+                .forget => try self.forgetProject(),
+                .browse => self.openFolderDialog(),
+                .open_here => try self.openHere(),
+            },
+            .proj_row => |i| {
+                if (self.proj_sel == i) try self.openCached(i) else self.proj_sel = i;
+            },
+            .fb_row => |i| {
+                self.dlg_field = 1;
+                if (self.fb_sel == i) self.fbEnterRow(i) else self.fb_sel = i;
+            },
             .panel_focus => |p| self.focusPanel(p),
             .panel_hide => |p| self.togglePanel(p),
             .panel_max => |p| self.toggleMaximize(p),
@@ -1709,7 +1925,7 @@ pub const App = struct {
                 if (self.break_sel == i) try self.jumpToBreakpoint(i) else self.break_sel = i;
                 self.focus = .breaks;
             },
-            .close_overlay => self.overlay = .none,
+            .close_overlay => self.closeOverlay(),
             .button => |b| switch (b) {
                 .run => try self.runActive(),
                 .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
