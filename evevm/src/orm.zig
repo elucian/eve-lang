@@ -4,13 +4,13 @@
 //! The functions take the interpreter, like those of dlib.zig; `interp.zig` calls the few entry points.
 const std = @import("std");
 const Io = std.Io;
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 const interp = @import("interp.zig");
 const dlib = @import("dlib.zig");
-const data = @import("data.zig");
+const data = @import("evecm").data;
 const sqlite = @import("sqlite.zig");
-const decimal = @import("decimal.zig");
-const instant = @import("instant.zig");
+const decimal = @import("evecm").decimal;
+const instant = @import("evecm").instant;
 
 const Node = ast.Node;
 const Interp = interp.Interp;

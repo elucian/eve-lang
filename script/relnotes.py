@@ -6,7 +6,7 @@
                                         the working tree (between releases; no notes are written)
   python script/relnotes.py --check     write nothing; exit 1 on a problem (see below)
 
-X.Y.Z defaults to the version of evevm/src/version.zig, the one `script/release.py` just set.
+X.Y.Z defaults to the version of the root build.zig.zon, the one `script/release.py` just set.
 Files written:
   manual/release/vX.Y.Z.md    made from manual/release/template.md when missing. Afterwards only the
                               blocks between <!-- GEN:<name> --> and <!-- /GEN:<name> --> are written
@@ -65,8 +65,8 @@ def git(*args):
 
 
 def current_version():
-    m = re.search(r'pub const version = "(' + V + ')"', read(path('evevm', 'src', 'version.zig'))[0])
-    return m.group(1) if m else sys.exit('relnotes: no version in evevm/src/version.zig')
+    m = re.search(r'\.version = "(' + V + ')"', read(path('build.zig.zon'))[0])
+    return m.group(1) if m else sys.exit('relnotes: no version in build.zig.zon')
 
 
 # ---------------------------------------------------------------- sources

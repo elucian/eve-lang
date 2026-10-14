@@ -5,7 +5,7 @@
 //! The interpreter then finds the parsed aspect in the map built here and only runs it.
 const std = @import("std");
 const Io = std.Io;
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 

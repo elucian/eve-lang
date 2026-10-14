@@ -7,7 +7,7 @@
 //! block characters, such as DejaVu Sans Mono: the font belongs to the terminal, not to the program (manual/usage.md).
 const std = @import("std");
 const Io = std.Io;
-const version = @import("version.zig");
+const version = @import("evecm").version;
 const helptext = @import("helptext.zig");
 
 // Zig tip: a struct with a default field is a small "settings" value: `.{}` is plain, `.{ .fancy = true }` is the

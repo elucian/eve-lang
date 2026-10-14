@@ -6,7 +6,7 @@
 //! (Q-019h), and a string added to a number (D-080). The first problem stops the check, like the
 //! parser, and the script does not start (exit 65).
 const std = @import("std");
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 const lexer = @import("lexer.zig");
 
 const Node = ast.Node;

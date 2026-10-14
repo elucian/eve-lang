@@ -4,13 +4,13 @@
 //! `libraryCall` for a method of a module and `connectionCall` for a method of a connection.
 const std = @import("std");
 const Io = std.Io;
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 const interp = @import("interp.zig");
-const data = @import("data.zig");
+const data = @import("evecm").data;
 const sqlite = @import("sqlite.zig");
-const decimal = @import("decimal.zig");
-const instant = @import("instant.zig");
-const nfc = @import("nfc.zig");
+const decimal = @import("evecm").decimal;
+const instant = @import("evecm").instant;
+const nfc = @import("evecm").nfc;
 const orm = @import("orm.zig");
 const Heap = @import("heap.zig").Heap;
 

@@ -11,9 +11,9 @@
 //! level1.vmc`), works through the file, and leaves its reports in a folder for later reading.
 const std = @import("std");
 const Io = std.Io;
-const ast = @import("ast.zig");
-const parser = @import("parser.zig");
-const project = @import("project.zig");
+const ast = @import("evecm").ast;
+const parser = @import("evecp").parser;
+const project = @import("evecp").project;
 const interp = @import("interp.zig");
 
 // Zig tip: a function with no side effect, like `clean`, is the easiest kind to test. `std.mem.trim(u8,

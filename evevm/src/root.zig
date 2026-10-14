@@ -1,23 +1,33 @@
-//! Eve virtual machine library. The `eve` command in main.zig is a thin front end over it.
-const std = @import("std");
+//! evevm: the runtime of Eve (design-packages.md §3): the interpreter, the heap of the values, the
+//! tasks, the natives of the standard library, the machine with its doors, the REPL and the core
+//! database (SQLite, for now; it moves to `evedb`). It imports `evecp` and `evecm`.
 
-// Zig tip: `pub const x = y;` re-exports a declaration under another name. This file is the
-// public face of the library: the program sees `evevm.version` and `evevm.cli`, not the file
-// layout behind them. Declarations are lazy: nothing is compiled until it is used.
-const v = @import("version.zig");
+/// The interpreter: values, scopes and the walk over the syntax tree.
+pub const interp = @import("interp.zig");
 
-pub const version = v.version;
-pub const spec_version = v.spec_version;
-pub const title = v.title;
+/// The heap of the values: reference counting, regions and the tracing collector.
+pub const heap = @import("heap.zig");
 
-/// Command line, jump table and REPL.
-pub const cli = @import("cli.zig");
+/// The cooperative tasks of a job (D-144).
+pub const task = @import("task.zig");
 
-// The machine as a server and its client (F-NET-02, spec/library/machine.md).
-pub const server = @import("server.zig");
+/// Scratch memory for the work of one statement.
+pub const scratch = @import("scratch.zig");
 
 /// Execution loop and the slot for external commands.
 pub const vm = @import("vm.zig");
+
+/// The natives of the standard library: streams, files, connections.
+pub const dlib = @import("dlib.zig");
+
+/// Records and tables: the object-relational layer.
+pub const orm = @import("orm.zig");
+
+/// SQLite, the core database of Eve (level 5).
+pub const sqlite = @import("sqlite.zig");
+
+/// The machine as a server and its client (F-NET-02, spec/library/machine.md).
+pub const server = @import("server.zig");
 
 /// The look of the REPL: banner and help table.
 pub const screen = @import("screen.zig");
@@ -25,50 +35,19 @@ pub const screen = @import("screen.zig");
 /// The full-screen REPL: scrollback, command line and status bar.
 pub const tui = @import("tui.zig");
 
-/// Raw keyboard mode of the REPL prompt.
-pub const terminal = @import("terminal.zig");
-pub const project = @import("project.zig");
+/// The texts of the help pages.
+pub const helptext = @import("helptext.zig");
 
-/// The heap of the values: reference counting, regions and the tracing collector.
-pub const heap = @import("heap.zig");
-
-/// `project init`: the layout of a new project.
-pub const scaffold = @import("scaffold.zig");
-
-/// SQLite, the core database of Eve (level 5).
-pub const sqlite = @import("sqlite.zig");
-
-// Zig tip: tests are found only in files that the compiler reaches. `_ = cli;` inside an
-// unnamed `test { }` references the file so its tests also run with `zig build test`.
 test {
-    _ = cli;
-    _ = @import("line.zig");
-    _ = terminal;
-    _ = screen;
-    _ = tui;
-    _ = vm;
-    _ = @import("lexer.zig");
-    _ = @import("parser.zig");
-    _ = @import("check.zig");
-    _ = @import("project.zig");
-    _ = @import("ast.zig");
-    _ = @import("interp.zig");
-    _ = @import("scratch.zig");
+    _ = interp;
     _ = heap;
-    _ = @import("doc.zig");
-    _ = scaffold;
-    _ = @import("data.zig");
-    _ = @import("dlib.zig");
-    _ = @import("nfc.zig");
-    _ = @import("orm.zig");
-    _ = @import("overload.zig");
-    _ = @import("decimal.zig");
-    _ = @import("instant.zig");
+    _ = task;
+    _ = scratch;
+    _ = vm;
+    _ = dlib;
+    _ = orm;
     _ = sqlite;
     _ = server;
-}
-
-test "version strings are set" {
-    try std.testing.expect(version.len > 0);
-    try std.testing.expect(spec_version.len > 0);
+    _ = screen;
+    _ = tui;
 }

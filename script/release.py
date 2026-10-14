@@ -3,13 +3,12 @@
 
 Usage: python script/release.py [patch|minor|major|X.Y.Z] [--dry-run]
 
-The current version is read from evevm/src/version.zig (`pub const version`). The default bump is
+The current version is read from the root build.zig.zon (`.version`), the one place of the version (D-167). The default bump is
 patch. These labels are rewritten, keeping each file's line endings:
-  evevm/src/version.zig   pub const version = "X.Y.Z";   (shown by `eve -v`)
-  evevm/build.zig.zon     .version = "X.Y.Z",
+  build.zig.zon           .version = "X.Y.Z",   (shown by `eve -v`)
   evevm/README.md         Version: **X.Y.Z**
   README.md               Version <strong>X.Y.Z</strong>
-Then it runs `zig build -p ..` and `zig build test` in evevm/. It does not commit or tag.
+Then it runs `zig build -p .` and `zig build test` in the root. It does not commit or tag.
 This is step 2 of a release; the other steps (tests, benchmarks, version map, release notes with
 script/relnotes.py, the manual, commit and tag) are in manual/release/README.md (D-153).
 """
@@ -22,8 +21,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 V = r"\d+\.\d+\.\d+"
 # (file, regex with the version in group 2, replacement template with {} for the version)
 LABELS = [
-    ("evevm/src/version.zig", rf'(pub const version = ")({V})(")'),
-    ("evevm/build.zig.zon", rf'(\.version = ")({V})(")'),
+    ("build.zig.zon", rf'(\.version = ")({V})(")'),
     ("evevm/README.md", rf"(Version: \*\*)({V})(\*\*)"),
     ("README.md", rf"(Version <strong>)({V})(</strong>)"),
 ]
@@ -59,7 +57,7 @@ def main():
         return
     m = re.search(LABELS[0][1], read(LABELS[0][0]))
     if not m:
-        die("no version found in evevm/src/version.zig")
+        die("no version found in build.zig.zon")
     old = m.group(2)
     new = bump(old, args[0] if args else "patch")
 
@@ -69,7 +67,7 @@ def main():
         if len(found) != 1:
             die(f"{rel}: expected one version label, found {len(found)}")
         if found[0][1] != old:
-            die(f"{rel}: label is {found[0][1]}, version.zig says {old}; fix it by hand first")
+            die(f"{rel}: label is {found[0][1]}, build.zig.zon says {old}; fix it by hand first")
     print(f"release: {old} -> {new}" + ("  (dry run)" if dry else ""))
     if dry:
         return
@@ -80,10 +78,9 @@ def main():
             f.write(text)
         print(f"  {rel}")
 
-    evevm = os.path.join(ROOT, "evevm")
-    for cmd in (["zig", "build", "-p", ".."], ["zig", "build", "test"]):
+    for cmd in (["zig", "build", "-p", "."], ["zig", "build", "test"]):
         print("  " + " ".join(cmd))
-        if subprocess.run(cmd, cwd=evevm).returncode:
+        if subprocess.run(cmd, cwd=ROOT).returncode:
             for rel, text in saved.items():      # roll back: a failed release leaves nothing changed
                 with open(os.path.join(ROOT, rel), "w", encoding="utf-8", newline="") as f:
                     f.write(text)

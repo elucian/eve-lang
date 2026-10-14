@@ -3,24 +3,24 @@
 //! Every REPL command is one entry of the jump table `commands`. The same table serves the command
 //! line: `eve --check script.eve` runs the `check` entry once and exits, without the REPL.
 // Zig tip: `@import` returns a whole file as a struct (a namespace). Nothing is global: a file
-// sees only what it imports. `@import("std")` is the standard library; `@import("version.zig")`
+// sees only what it imports. `@import("std")` is the standard library; `@import("evecm").version`
 // is a file next to this one. `const` binds a name once; `var` would allow reassignment.
 // `std.Io` is the input/output part of the library (Zig 0.16): readers, writers, files.
 const std = @import("std");
 const Io = std.Io;
-const version = @import("version.zig");
+const version = @import("evecm").version;
 // Zig tip: Zig forbids a name that hides another one in an outer scope (shadowing). The file-level
 // import is called `editor`, not `line`, because several functions below have a parameter `line`.
-const editor = @import("line.zig");
-const parser = @import("parser.zig");
-const ast = @import("ast.zig");
-const doc = @import("doc.zig");
-const scaffold = @import("scaffold.zig");
-const vm = @import("vm.zig");
-const server = @import("server.zig");
-const screen = @import("screen.zig");
-const tui = @import("tui.zig");
-const helptext = @import("helptext.zig");
+const editor = @import("evecm").line;
+const parser = @import("evecp").parser;
+const ast = @import("evecm").ast;
+const doc = @import("evecp").doc;
+const scaffold = @import("evecp").scaffold;
+const vm = @import("evevm").vm;
+const server = @import("evevm").server;
+const screen = @import("evevm").screen;
+const tui = @import("evevm").tui;
+const helptext = @import("evevm").helptext;
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
 // Without it the name is private to this file. A `const` number without a type is a

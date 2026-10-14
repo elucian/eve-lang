@@ -21,7 +21,7 @@
 //! list of one element; `(a,)` is a list of one (D-058 said `(x)` is a list: the tests use it as grouping).
 const std = @import("std");
 const lexer = @import("lexer.zig");
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 const checker = @import("check.zig");
 
 const Token = lexer.Token;

@@ -1,13 +1,16 @@
 //! `eve` command line: help, REPL and one-shot commands (the commands are not implemented yet).
 // Zig tip: `@import("evevm")` is not a file but a module named in build.zig (`.imports`). That
-// is how the thin `eve` program uses the library in src/root.zig; the library never imports
-// the program. Only the module root file is named, and it re-exports what others may use.
+// is how the thin `eve` program uses the parts of Eve; the parts never import the program, and the
+// build refuses an import that the arrows of design-packages.md §3 do not allow. Only the module
+// root file is named, and it re-exports what others may use.
 const std = @import("std");
 const Io = std.Io;
 
+const evecm = @import("evecm");
+const evecp = @import("evecp");
 const evevm = @import("evevm");
-const cli = evevm.cli;
-const Terminal = evevm.terminal.Terminal;
+const cli = @import("cli.zig");
+const Terminal = evecm.terminal.Terminal;
 
 // Zig tip: a root file can declare `pub const std_options: std.Options`, and the standard library reads it at compile
 // time to tune itself. `unexpected_error_tracing` prints a stack trace in Debug builds each time the system returns a
@@ -45,7 +48,7 @@ pub fn main(init: std.process.Init) !void {
         var folders: std.ArrayList([]const u8) = .empty;
         var parts = std.mem.tokenizeScalar(u8, list, std.fs.path.delimiter);
         while (parts.next()) |folder| try folders.append(arena, folder);
-        evevm.project.env_lib_path = folders.items;
+        evecp.project.env_lib_path = folders.items;
     }
 
     // Zig tip: `environ_map.get` answers an optional text; `orelse ""` turns a missing variable into an
@@ -113,7 +116,7 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
     if (opts.version) {
-        try stdout.print("{s}\n", .{evevm.title});
+        try stdout.print("{s}\n", .{evecm.version.title});
         try stdout.flush();
         return;
     }

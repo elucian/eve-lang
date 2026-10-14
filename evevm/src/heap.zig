@@ -836,7 +836,7 @@ test "a temporary is freed at the safe point of its region, a stored value survi
 // Zig tip: `&ast.none` is the address of a constant node that the interpreter shares for "nothing"; a
 // function object only needs some node to point to.
 test "the tracing collector frees a cycle that reference counting keeps" {
-    const ast = @import("ast.zig");
+    const ast = @import("evecm").ast;
     var h = Heap.init(std.testing.allocator);
     defer h.deinit();
     h.pushRegion();
