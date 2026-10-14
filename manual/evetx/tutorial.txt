@@ -1,0 +1,14 @@
+EVE-TX  Tutorial
+================
+
+The Eve tutorial is published at
+
+  https://sagecode.org/projects/eve/
+
+A first session
+  1. Start evetx on a project:  evetx test/project
+  2. Click project.eve in the Tree Panel: it opens in the Main Panel.
+  3. Press F5: the program runs and its output shows in the Tools Panel.
+  4. Press Ctrl+F to find text, Ctrl+H to replace it, Ctrl+G to go to a line.
+  5. Press F10 and look at the menus; Alt + the first letter opens one.
+  6. Window > Modify lets you drag the borders to change the panel sizes.

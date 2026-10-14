@@ -1,6 +1,6 @@
 //! `evetx`: the Eve text user interface, a project IDE in the terminal (README.md, design/).
 //!
-//!   evetx [project-folder]
+//!   evetx [project-folder]     (without a folder no project is open)
 const std = @import("std");
 const vaxis = @import("vaxis");
 
@@ -31,7 +31,8 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
 
     const args = try init.minimal.args.toSlice(init.arena.allocator());
-    const root: []const u8 = if (args.len > 1) args[1] else ".";
+    // no folder on the command line: no project is open and the tree is empty (File > Open project)
+    const root: []const u8 = if (args.len > 1) args[1] else "";
 
     const app = app_mod.App.create(gpa, io, root) catch |err| {
         std.debug.print("evetx: cannot open the project folder '{s}': {s}\n", .{ root, @errorName(err) });

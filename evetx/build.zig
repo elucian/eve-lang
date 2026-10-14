@@ -33,6 +33,14 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
+    // Zig tip: `addAnonymousImport` gives a file a name that `@embedFile("name")` understands, even
+    // when the file is outside the source folder of the program. The text of the help windows is
+    // therefore a plain file in `manual/evetx/`, and it is copied into the program at build time.
+    for ([_][]const u8{ "shortcuts", "manual", "tutorial" }) |name| {
+        exe.root_module.addAnonymousImport(b.fmt("help_{s}", .{name}), .{
+            .root_source_file = b.path(b.fmt("../manual/evetx/{s}.txt", .{name})),
+        });
+    }
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
