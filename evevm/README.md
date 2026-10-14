@@ -7,29 +7,36 @@ Version: **0.0.4**. Status: level 1 passes (82 of 82 tests of `test/level1/`) an
 
 ## Build
 
-Requires Zig 0.16.0 (`winget install zig.zig`). Run from this folder:
+Requires Zig 0.16.0 (`winget install zig.zig`). The build is at the **root of the repository** (one `build.zig` for all the modules, D-163); run it from there:
 
 | Command | Result |
 |---|---|
-| `zig build -p ..` | builds and installs `../bin/eve.exe` |
+| `zig build -p .` | builds and installs `bin/eve.exe` (and its copy `evevm.exe`) |
 | `zig build` | builds `zig-out/bin/eve.exe` (local, git-ignored) |
 | `zig build run -- --version` | builds and runs `eve` with arguments |
-| `zig build test` | runs the unit tests |
-| `zig build -p .. -Doptimize=ReleaseSafe` | release build |
+| `zig build test` | runs the unit tests of every module |
+| `zig build -Doptimize=ReleaseSafe -p temp/rel` | the build the tests and benchmarks use |
+| `zig build doc` | writes `lib/doc` from the Eve sources of `lib/` |
 
-## Layout
+## The modules
 
-| Path | Contents |
-|---|---|
-| `build.zig`, `build.zig.zon` | build script and package manifest |
-| `src/lexer.zig`, `src/parser.zig`, `src/ast.zig` | tokens, syntax tree, the grammar of `spec/syntax/grammar.md` |
-| `src/check.zig` | the static check before the run: names, scopes, procedures, parameter order, private methods |
-| `src/interp.zig` | the tree-walking interpreter |
-| `src/doc.zig` | the `doc` command: Markdown documentation of `.eve` files |
-| `src/root.zig` | the VM library module (`evevm`): lexer, parser, interpreter as they land |
-| `src/main.zig` | the `eve` command line, a thin front end over the library |
-| `lib/` | the Eve standard library, mostly written in Eve ([README](lib/README.md)) |
-| `doc/` | the library documentation, generated from `lib/` by `eve --doc` (`zig build doc`, D-082); the `.md` pages are never edited by hand |
+The source is split into modules (plan/design-packages.md). The arrows are the `.imports` of the root `build.zig`: a module that is not listed cannot be imported, so a wrong import does not compile.
+
+```
+cmd ──► evevm ──► evecp ──► evecm
+ ├────► evedb ─────────────►
+ └─────────────────────────►
+```
+
+| Module | Holds | Imports |
+|---|---|---|
+| [`evecm/`](../evecm) | the common part: the syntax tree (`ast`), the values and the heap (`value`, `heap`), the interfaces `Host` and `Data` (`iface`), Decimal, Instant, NFC, the codecs of data (`data`), the configuration of a machine (`config`), the wire (`wire`: JSON-RPC, HTTP, client calls), the line editor and the terminal, the version | `std` |
+| [`evecp/`](../evecp) | the compiler: `lexer`, `parser`, `check`, `overload`, the project link (`project`), `doc`, `scaffold` | `evecm` |
+| `evevm/` (here) | the runtime: `interp` (the tree walker), `task`, `scratch`, `vm` (session and slot), `dlib` (the natives of the library: streams, files), `host` (the `Host` of an interpreter), `server` (the machine and its two doors), the REPL (`tui`, `screen`, `helptext`) | `evecp`, `evecm` |
+| [`evedb/`](../evedb) | the database layer: `sqlite`, `conn` (connections, statements, `sql function`), `orm` (tables, records, the transaction of a job), `state` | `evecm` |
+| [`cmd/`](../cmd) | the `eve` command: `eve.zig` (the entry point), `cli.zig` (options, commands, REPL commands); it connects the parts (`interp.data_api = &evedb.data`) | all |
+
+`evevm` and `evedb` never import each other. They meet through two interfaces defined in `evecm/src/iface.zig`: `Host` (what the interpreter offers to the database layer: memory, the heap, evaluating an argument, errors, building values) and `Data` (what the database layer offers to the interpreter: `database.connect`, the methods of a connection and a table, the transaction of a job). `lib/` holds the Eve standard library, mostly written in Eve ([README](../lib/README.md)); `lib/doc/` is generated from it by `eve --doc` and never edited by hand.
 
 ## License
 

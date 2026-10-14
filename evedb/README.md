@@ -2,6 +2,8 @@
 
 Status: **design for review**, 2026-10-10. The author decided that evedb stays in this repository (question 1). The build exists: DuckDB 1.5.6 is a dependency, `zig build -p ..` installs `bin/evedb.exe` and `bin/duckdb.dll`, and `evedb` runs a self-check (`zig build test`: 4 tests); the server is not written yet. The Eve database layer is designed in [design-database-core.md](../plan/design-database-core.md) and [design-database-remote.md](../plan/design-database-remote.md); this file uses their terms. Feature F-DAT-12 of [version_map.md](../plan/version_map.md).
 
+**The module of the database layer (2026-10-13).** `evedb/src/` now also holds the module `evedb` of the root build: `root.zig`, `sqlite.zig`, `conn.zig`, `orm.zig` and `state.zig` (SQLite, connections, tables and records, `sql function`), which the interpreter reaches through the `Data` interface of `evecm/src/iface.zig`. The standalone DuckDB program of this README (`build.zig`, `main.zig`, `duckdb.zig`) is still separate and joins the module when `eve db` is made (plan/design-packages.md, step A8).
+
 ## 1. What evedb is
 
 `evedb` is a small database server written in Zig around **DuckDB**, tuned for Eve. It is a separate program (`bin/evedb.exe`), never linked into the Eve virtual machine.

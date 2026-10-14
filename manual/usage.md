@@ -13,7 +13,7 @@ eve [options] --<command> [args]   run one command and exit, without the REPL
 | Option | Description |
 |---|---|
 | `-h`, `--help` | display the help and exit: page 1 is the quick help (options), then `-- press enter for more --` and page 2 lists the `--<command>` options; both pages start with the title `EVE - Version: <version>`. When the output is piped, both pages are written without waiting |
-| `-v`, `--version` | display the title `EVE - Version: <version>` and exit; the version is hard-coded in `evevm/src/version.zig` |
+| `-v`, `--version` | display the title `EVE - Version: <version>` and exit; the version is written once, in the root `build.zig.zon` |
 | `-s file.cfg` | setup: load the configuration file (the same file the `setup` command loads) |
 | `-m size` | memory for the process |
 | `-d` | debug mode: `halt` statements work (otherwise they are ignored) |
