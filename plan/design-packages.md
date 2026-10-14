@@ -430,3 +430,21 @@ Multi-Call Binaries: Filesystem symlinks or hard links (evecp, evedb, evevm, eve
 **TLS.** 2. Native TLS Server LimitationsRisk: Zig’s standard library provides a TLS client (primarily for package fetching) but lacks a fully baked built-in TLS server implementation.   Mitigation: Avoid compiling heavy external C-TLS libraries directly into the core binary. Instead, implement a clean local plaintext JSON-RPC/HTTP socket for loopback operations (-lsn), and mandate a lightweight reverse proxy (such as Nginx, Caddy, or Cloudflare Tunnel) in front of the machine for remote HTTPS (-rem) exposure.
 
 **DuckDB.** 3. DuckDB Worker Thread ReentrancyRisk: DuckDB executes worker threads that can invoke registered evesql callback functions concurrently, threatening thread safety within the Zig runtime.Mitigation: Protect state mutations with an explicit session-level mutex or thread-safe execution pool. Benchmark the locking overhead in milestone A9 to verify if it satisfies throughput requirements before scaling query concurrency.
+
+## 13. Progress
+
+**2026-10-13, refactoring in the modules of §3 (commits `Split the VM into modules` to `evecm gets the configuration reader`):**
+
+| Step | State |
+|---|---|
+| A0 baseline | done: 349 of 349 tests, benchmarks of the ReleaseSafe build |
+| A1 values out of the interpreter | **done**: `evecm/value.zig` and `heap.zig`, with the pure helpers on values; `interp.zig` names them again |
+| A2 codecs | `data.zig` is in `evecm` whole; the cut into `csv`, `json`, `url` is not made |
+| A3 native calling convention | not started: the libraries still receive the syntax nodes of their arguments |
+| A4 database behind `Data` | **done**: the module `evedb` (`sqlite`, `conn`, `orm`, `state`), the interfaces `Host` and `Data` in `evecm/iface.zig`, `evevm/host.zig`; the fourteen database fields of `Interp` became `evedb`'s `State` |
+| A5 compiler entry point | not started (`evecp` exposes its parts) |
+| A6 wire and commands | **half**: `evecm/config.zig` and `evecm/wire.zig` are cut from `server.zig`; the machine stays in `evevm/server.zig`; `cli.zig` is whole in `cmd/` |
+| A7 flat move | **done**: root `build.zig` and `build.zig.zon`, the modules `evecm`, `evecp`, `evevm`, `evedb`, `cmd`; the version is written once; `lib/` moved; the arrows are enforced by the `.imports` of the build. The standalone `evedb.exe` (DuckDB) and `evetx` still have their own builds |
+| A8 parts and `run.sh` | not started (the words `vm`, `cp`, `db`, `ux`, `-tx` are in `cmd/cli.zig` or to do) |
+
+The speed is unchanged (an alternating A/B timing of the builds before and after the cuts); the unit tests of every module pass with `zig build test`.
