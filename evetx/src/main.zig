@@ -69,15 +69,24 @@ pub fn main(init: std.process.Init) !void {
     var last_title: []const u8 = "";
 
     while (!app.quit) {
-        const event = try loop.nextEvent();
-        switch (event) {
+        // Zig tip: while a command waits in the prompt the loop must wake up by itself, so it asks for an
+        // event without blocking (`tryEvent`), sleeps a tenth of a second when there is none, and
+        // lets `app.tick` start the command when its time is over. Without a waiting command the
+        // loop blocks in `nextEvent` and uses no time.
+        const maybe: ?Event = if (app.pending_at != null) blk: {
+            const ev = try loop.tryEvent();
+            if (ev == null) try io.sleep(.fromMilliseconds(100), .awake);
+            break :blk ev;
+        } else try loop.nextEvent();
+        if (maybe) |event| switch (event) {
             .key_press => |key| app.onKey(key) catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
             .mouse => |m| app.onMouse(vx.translateMouse(m)) catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
             .winsize => |ws| try vx.resize(gpa, tty.writer(), ws),
             .paste_start => app.pasteStart(),
             .paste_end => app.pasteEnd() catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
             else => {},
-        }
+        };
+        app.tick() catch |err| app.setMessage("error: {s}", .{@errorName(err)});
         // Zig tip: `takeSystemClip` hands over the text of the last copy; the terminal puts it in the
         // clipboard of the system (OSC 52), and the copy is freed here.
         if (app.takeSystemClip()) |clip| {

@@ -172,7 +172,7 @@ pub const MenuCmd = enum {
     open_project, open_folder, new_file, save, save_as, close_tab, quit,
     undo, redo, replace,
     find_text, find_file, goto_line, query,
-    run, step_into, step_out, cont, stop, breakpoint,
+    run, check_file, step_into, step_out, cont, stop, breakpoint,
     machine_pick, connect, upload,
     select_window, modify, freeze, toggle_tree, toggle_main, toggle_tools, window_pick,
     shortcuts, manual, tutorial, about, options,
@@ -229,6 +229,7 @@ pub const menus = [_]Menu{
     } },
     .{ .label = "RUN", .items = &.{
         .{ .label = "Run", .key = "F5", .cmd = .run },
+        .{ .label = "Check syntax", .key = "F6", .cmd = .check_file },
         .{ .label = "Step into", .key = "F11", .cmd = .step_into },
         .{ .label = "Step out", .key = "Shift+F11", .cmd = .step_out },
         .{ .label = "Continue", .key = "F8", .cmd = .cont },
@@ -369,6 +370,10 @@ pub const App = struct {
     /// True when the editor must scroll to show the cursor (after a key); false after the wheel or a scroll bar.
     follow: bool = true,
     /// The text copied with Ctrl+C or Ctrl+X (owned), and a copy waiting to be sent to the system clipboard.
+    /// A command waiting in the prompt of the console: it starts by itself at `pending_at` (a time in
+    /// milliseconds of the `awake` clock) unless the user presses a key. Owned text of the command.
+    pending_at: ?i64 = null,
+    pending_text: ?[]u8 = null,
     clip: ?[]u8 = null,
     sys_clip: ?[]u8 = null,
     /// True between the start and the end of a paste made by the terminal: the keys are collected.
@@ -484,6 +489,7 @@ pub const App = struct {
         gpa.free(self.root);
         self.cache.deinit();
         if (self.clip) |c| gpa.free(c);
+        if (self.pending_text) |c| gpa.free(c);
         if (self.sys_clip) |c| gpa.free(c);
         self.paste_buf.deinit(gpa);
         self.fbClear();
@@ -763,8 +769,76 @@ pub const App = struct {
         if (t.path.len == 0) return;
         const line = try std.fmt.allocPrint(self.gpa, "run {s}", .{t.path});
         defer self.gpa.free(line);
-        try self.console.add(self.gpa, line, .input);
-        try self.runEve(&.{t.path});
+        try self.issueCommand(line);
+    }
+
+    /// F6: the syntax check of the current `.eve` file (`eve --check <file>`), through the prompt like Run.
+    pub fn checkActive(self: *App) !void {
+        const t = self.activeTab() orelse {
+            self.setMessage("nothing to check: open an .eve file", .{});
+            return;
+        };
+        if (t.buf == null or !t.eve) {
+            self.setMessage("Check needs an .eve file", .{});
+            return;
+        }
+        if (t.path.len == 0 or t.buf.?.dirty) try self.save();
+        if (t.path.len == 0) return;
+        const line = try std.fmt.allocPrint(self.gpa, "--check {s}", .{t.path});
+        defer self.gpa.free(line);
+        try self.issueCommand(line);
+    }
+
+    // Zig tip: `Io.Timestamp.now(io, .awake).toMilliseconds()` reads a clock that only goes forward
+    // (it does not jump when the user changes the time of the computer), the right one to measure a
+    // delay. The delay is a constant at file level so that it is written once.
+    const command_delay_ms: i64 = 3000;
+
+    fn nowMs(self: *const App) i64 {
+        return Io.Timestamp.now(self.io, .awake).toMilliseconds();
+    }
+
+    /// A run command (Run, Check) does not start at once: it is typed in the prompt of the console, where
+    /// the user can read it, and it starts after three seconds. Enter starts it now, Esc cancels it, and
+    /// typing in the prompt keeps the text but cancels the countdown. The line goes into the history of
+    /// the console at once, so Ctrl+Up finds it again even if it was cancelled.
+    pub fn issueCommand(self: *App, line: []const u8) !void {
+        if (!self.show_tools) self.togglePanel(.tools);
+        if (self.maximized == .main) self.maximized = null;
+        self.bottom = .console;
+        self.focus = .console;
+        self.console_in.clearRetainingCapacity();
+        try self.console_in.insertSliceAtCursor(line);
+        self.history_pos = null;
+        try self.remember(line);
+        if (self.pending_text) |old| self.gpa.free(old);
+        self.pending_text = try self.gpa.dupe(u8, line);
+        self.pending_at = self.nowMs() + command_delay_ms;
+    }
+
+    /// Add a command to the history of the console, unless it is the same as the last one.
+    fn remember(self: *App, cmd: []const u8) !void {
+        if (self.history.items.len > 0 and std.mem.eql(u8, self.history.items[self.history.items.len - 1], cmd)) return;
+        try self.history.append(self.gpa, try self.gpa.dupe(u8, cmd));
+    }
+
+    /// Stop the countdown of a waiting command (the text stays in the prompt).
+    pub fn cancelPending(self: *App) void {
+        self.pending_at = null;
+    }
+
+    /// Milliseconds before the waiting command starts, or null when none waits.
+    pub fn pendingLeft(self: *const App) ?i64 {
+        const at = self.pending_at orelse return null;
+        return @max(0, at - self.nowMs());
+    }
+
+    /// Called by the main loop all the time while a command waits: starts it when its time is over.
+    pub fn tick(self: *App) !void {
+        const left = self.pendingLeft() orelse return;
+        if (left > 0) return;
+        self.pending_at = null;
+        try self.consoleEnter();
     }
 
     // Zig tip: `std.mem.tokenizeScalar` skips empty pieces, so two spaces count as one.
@@ -777,7 +851,7 @@ pub const App = struct {
         self.history_pos = null;
         const cmd = std.mem.trim(u8, line, " ");
         if (cmd.len == 0) return;
-        try self.history.append(self.gpa, try self.gpa.dupe(u8, cmd));
+        try self.remember(cmd);
         try self.console.add(self.gpa, cmd, .input);
 
         if (std.mem.eql(u8, cmd, "clear")) {
@@ -1045,6 +1119,7 @@ pub const App = struct {
             .goto_line => self.openOverlay(.goto),
             .query => self.notYet("Query", "T7"),
             .run => try self.runActive(),
+            .check_file => try self.checkActive(),
             .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
             .breakpoint => try self.toggleBreakpoint(),
             .machine_pick => self.pickMachine(@intCast(arg)),
@@ -1656,6 +1731,7 @@ pub const App = struct {
         if (key.matches('n', .{ .ctrl = true })) return self.newFile();
         if (self.searchShortcut(key)) return;
         if (key.matches(Key.f5, .{})) return self.runActive();
+        if (key.matches(Key.f6, .{})) return self.checkActive();
         if (key.matches(Key.f9, .{})) return self.toggleBreakpoint();
         if (key.matches(Key.f11, .{}) or key.matches(Key.f8, .{}) or key.matches(Key.f5, .{ .shift = true })) {
             self.notYet("The debugger", "T6");
@@ -1779,7 +1855,7 @@ pub const App = struct {
         const here: text.Pos = .{ .row = b.row, .col = b.col };
         const page: isize = @max(1, @as(isize, self.editor_rect.h));
         const moved = blk: {
-            if (k.matches(Key.left, .{})) b.moveLeft() else if (k.matches(Key.right, .{})) b.moveRight() else if (k.matches(Key.up, .{})) b.moveRows(-1) else if (k.matches(Key.down, .{})) b.moveRows(1) else if (k.matches(Key.page_up, .{})) b.moveRows(-page) else if (k.matches(Key.page_down, .{})) b.moveRows(page) else if (k.matches(Key.home, .{})) b.home() else if (k.matches(Key.end, .{})) b.toEnd() else break :blk false;
+            if (k.matches(Key.left, .{ .ctrl = true })) b.wordLeft() else if (k.matches(Key.right, .{ .ctrl = true })) b.wordRight() else if (k.matches(Key.left, .{})) b.moveLeft() else if (k.matches(Key.right, .{})) b.moveRight() else if (k.matches(Key.up, .{})) b.moveRows(-1) else if (k.matches(Key.down, .{})) b.moveRows(1) else if (k.matches(Key.page_up, .{})) b.moveRows(-page) else if (k.matches(Key.page_down, .{})) b.moveRows(page) else if (k.matches(Key.home, .{})) b.home() else if (k.matches(Key.end, .{})) b.toEnd() else break :blk false;
             break :blk true;
         };
         if (moved) {
@@ -1965,10 +2041,20 @@ pub const App = struct {
     // largest number instead of failing on overflow. `-|=` stops at zero.
     fn consoleKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) {
+            // Esc cancels a waiting command, and clears the prompt
+            if (self.pending_at != null) {
+                self.cancelPending();
+                self.console_in.clearRetainingCapacity();
+                self.setMessage("command cancelled", .{});
+            }
             self.focus = .editor;
             return;
         }
-        if (key.matches(Key.enter, .{})) return self.consoleEnter();
+        if (key.matches(Key.enter, .{})) {
+            self.cancelPending();
+            return self.consoleEnter();
+        }
+        if (self.pending_at != null) self.cancelPending();
         if (key.matches(Key.up, .{ .ctrl = true })) return self.historyStep(-1);
         if (key.matches(Key.down, .{ .ctrl = true })) return self.historyStep(1);
         if (key.matches(Key.page_up, .{})) {
