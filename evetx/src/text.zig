@@ -336,6 +336,16 @@ pub const Buffer = struct {
         self.match = null;
     }
 
+    // Zig tip: `(w + cols - 1) / cols` is the integer division that rounds up: the number of rows
+    // that a line of `w` cells needs when it is cut every `cols` cells. An empty line still takes
+    // one row. The function has no `self`: it is a plain helper that lives in the struct.
+    /// How many rows the line takes when the text is wrapped at `cols` cells.
+    pub fn segRows(line: []const u8, cols: usize) usize {
+        const w = displayWidth(line);
+        if (w == 0 or cols == 0) return 1;
+        return (w + cols - 1) / cols;
+    }
+
     // Zig tip: An `enum` with three values names the kind of a character; a `switch` or an `==`
     // compares kinds. Letters, digits, `_` and every non ASCII byte are "word"; a run of the same
     // kind is skipped as one step, like in every code editor.
