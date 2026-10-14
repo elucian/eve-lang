@@ -225,3 +225,177 @@ pub const err_access = 21;
 pub const err_overflow = 13;
 /// An error in a `sql function`, or a NULL for one of its non-nullable parameters: the query stops (D-166).
 pub const err_sql = 59;
+
+// ------------------------------------------------------------------ helpers on values
+// Plain functions of the values, moved here from the interpreter: nothing in them needs it.
+
+// Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
+// compiler checks it.
+/// The name of the type of a value (what `type(x)` gives and `x is Integer` tests).
+pub fn typeName(v: Value) []const u8 {
+    return switch (v) {
+        .nil => "Null",
+        .bool => "Logic",
+        .int => "Integer",
+        .nat => "Natural",
+        .byte => "Byte",
+        .short => "Short",
+        .huge => "Huge",
+        .real => "Real",
+        .float => "Float",
+        .dec => "Decimal",
+        .instant => "Instant",
+        .sym => "Rune",
+        .str => "String",
+        .list => |l| if (l.array) "Array" else "List",
+        .set => "DataSet",
+        .map => "HashMap",
+        .object => |o| if (o.class) |c| c.name else "Object",
+        .class => "Class",
+        .func => "Function",
+        .range, .domain => "Range",
+        .typ => "Type",
+        .module => "Module",
+        .chan => "Channel",
+    };
+}
+
+// Zig tip: `isInt` relies on the same Zig feature as `fail` above: see the tip there.
+pub fn isInt(v: Value) bool {
+    return v == .int or v == .nat or v == .byte or v == .short or v == .huge;
+}
+
+// Zig tip: `intOf` relies on the same Zig feature as `typeName` above: see the tip there.
+pub fn intOf(v: Value) i64 {
+    return switch (v) {
+        .int, .nat, .byte, .short, .huge => |n| n,
+        else => 0,
+    };
+}
+
+// Zig tip: builtin functions start with `@`: they are the compiler's own, such as conversions
+// (`@intCast`, `@as`) and `@min`/`@max`.
+pub fn realOf(v: Value) ?f64 {
+    return switch (v) {
+        .int, .nat, .byte, .short, .huge => |n| @floatFromInt(n),
+        .real, .float => |r| r,
+        .dec => |d| decimal.toF64(d),
+        else => null,
+    };
+}
+
+// Zig tip: an optional result lets one function say "this value is not a Decimal-compatible number". A whole
+// number is a Decimal of scale 0, so `5 + 0.50d` is exact; a Real is not converted (spec: never mixed).
+/// The value as a Decimal: a Decimal itself, or an integer.
+pub fn decOf(v: Value) ?decimal.Dec {
+    return switch (v) {
+        .dec => |d| d,
+        .int, .nat, .byte, .short, .huge => |n| decimal.fromInt(n),
+        else => null,
+    };
+}
+
+// Zig tip: `a orelse b` unwraps an optional: it gives `b` when `a` is null, and `b` may leave
+// the function with `return`.
+/// `==`: same value. Collections and objects compare their contents.
+pub fn eq(a: Value, b: Value) bool {
+    if (isInt(a) and isInt(b)) return intOf(a) == intOf(b);
+    if (a == .dec or b == .dec) if (decOf(a)) |x| if (decOf(b)) |y| return decimal.order(x, y) == .eq;
+    if (a == .instant) return b == .instant and a.instant == b.instant;
+    if (realOf(a)) |x| if (realOf(b)) |y| return x == y;
+    switch (a) {
+        .nil => return b == .nil,
+        .bool => |x| return b == .bool and b.bool == x,
+        .sym => |x| return b == .sym and b.sym == x,
+        .str => |x| return b == .str and std.mem.eql(u8, x, b.str),
+        .list, .set => |x| {
+            const y = switch (b) {
+                .list, .set => |l| l,
+                else => return false,
+            };
+            if ((a == .set) != (b == .set)) return false;
+            const xs = x.elems();
+            const ys = y.elems();
+            if (xs.len != ys.len) return false;
+            for (xs, ys) |p, q| if (!eq(p, q)) return false;
+            return true;
+        },
+        .map => |x| {
+            if (b != .map or x.entries.items.len != b.map.entries.items.len) return false;
+            for (x.entries.items, b.map.entries.items) |p, q| if (!eq(p.key, q.key) or !eq(p.val, q.val)) return false;
+            return true;
+        },
+        .object => |x| {
+            if (b != .object or x.fields.items.len != b.object.fields.items.len) return false;
+            for (x.fields.items) |f| {
+                const other = fieldOf(b.object, f.name) orelse return false;
+                if (!eq(f.val, other)) return false;
+            }
+            return true;
+        },
+        .class => |x| return b == .class and b.class == x,
+        .func => |x| return b == .func and b.func == x,
+        .range => |x| return b == .range and x.lo == b.range.lo and x.hi == b.range.hi and x.step == b.range.step,
+        .domain => |x| {
+            if (b != .domain) return false;
+            const y = b.domain;
+            return std.meta.eql(x.lo, y.lo) and std.meta.eql(x.hi, y.hi) and x.lo_excl == y.lo_excl and x.hi_excl == y.hi_excl and std.meta.eql(x.step, y.step);
+        },
+        .typ => |x| return b == .typ and std.mem.eql(u8, x, b.typ),
+        else => return false,
+    }
+}
+
+// Zig tip: `same` relies on the same Zig feature as `typeName` above: see the tip there.
+/// `is`: the same thing (identity for references, equality for values).
+pub fn same(a: Value, b: Value) bool {
+    return switch (a) {
+        .list, .set => |x| switch (b) {
+            .list, .set => |y| x == y,
+            else => false,
+        },
+        .map => |x| b == .map and b.map == x,
+        .object => |x| b == .object and b.object == x,
+        else => eq(a, b),
+    };
+}
+
+// Zig tip: `fieldOf` relies on the same Zig feature as `newList` above: see the tip there.
+pub fn fieldOf(o: *Object, name: []const u8) ?Value {
+    for (o.fields.items) |f| {
+        if (std.mem.eql(u8, f.name, name)) return f.val;
+    }
+    return null;
+}
+
+// Zig tip: `textual` relies on the same Zig feature as `fail` above: see the tip there.
+pub fn textual(v: Value) bool {
+    return v == .str or v == .sym;
+}
+
+// Zig tip: a `switch` on a `Value` (a tagged union) with `=> true` arms and an `else` arm is the
+// short way to ask "is it one of these cases?". A `bool` function like this one can be inlined.
+/// A scalar is a single value: a number, a boolean, a symbol or a string (never a collection).
+pub fn isScalar(v: Value) bool {
+    return switch (v) {
+        .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .sym, .str => true,
+        else => false,
+    };
+}
+
+// Zig tip: `classRoutine` relies on the same Zig feature as `bind` above: see the tip there.
+pub fn classRoutine(c: *Class, name: []const u8) ?*const Node {
+    var cur: ?*Class = c;
+    while (cur) |k| : (cur = k.parent) {
+        const node = k.node orelse continue;
+        for (node.kids[2..]) |r| {
+            if (r.tag != .constructor and r.kids[3].tag != .none and std.mem.eql(u8, r.text, name)) return r;
+        }
+    }
+    // a method provided by a trait, when the class and its ancestors do not write it (D-145)
+    cur = c;
+    while (cur) |k| : (cur = k.parent) {
+        for (k.traits.items) |tr| if (classRoutine(tr, name)) |r| return r;
+    }
+    return null;
+}

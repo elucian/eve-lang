@@ -10,7 +10,8 @@
 //! imported, so a wrong import is a compile error, not a habit that creeps in:
 //!
 //!     cmd ──► evevm ──► evecp ──► evecm
-//!      └──────────────────────────►
+//!      ├────► evedb ─────────────────►
+//!      └──────────────────────────────►
 const std = @import("std");
 // Zig tip: a `.zon` file is data in Zig syntax, and `@import` reads it into a struct at compile
 // time. The version is written once, in build.zig.zon, and the build hands it to the code.
@@ -47,10 +48,19 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("evevm/src/root.zig"),
         .target = target,
         .optimize = optimize,
+        // the secrets of a script are read from the environment with the C library
+        .link_libc = true,
         .imports = &.{
             .{ .name = "evecm", .module = evecm },
             .{ .name = "evecp", .module = evecp },
         },
+    });
+    // The database layer: imports evecm only, and reaches the interpreter through the `Host` interface.
+    const evedb = b.createModule(.{
+        .root_source_file = b.path("evedb/src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "evecm", .module = evecm }},
     });
 
     // Zig tip: `b.dependency("sqlite", .{})` finds the package named in build.zig.zon (fetched
@@ -87,8 +97,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    evevm.addImport("sqlite_c", sqlite_c.createModule());
-    evevm.linkLibrary(sqlite_lib);
+    evedb.addImport("sqlite_c", sqlite_c.createModule());
+    evedb.linkLibrary(sqlite_lib);
 
     // The `eve` command line.
     const exe = b.addExecutable(.{
@@ -101,6 +111,7 @@ pub fn build(b: *std.Build) void {
                 .{ .name = "evecm", .module = evecm },
                 .{ .name = "evecp", .module = evecp },
                 .{ .name = "evevm", .module = evevm },
+                .{ .name = "evedb", .module = evedb },
             },
         }),
     });
@@ -130,7 +141,7 @@ pub fn build(b: *std.Build) void {
 
     // One test program per module: each runs the tests of its own files.
     const test_step = b.step("test", "Run unit tests");
-    for ([_]*std.Build.Module{ evecm, evecp, evevm, exe.root_module }) |m| {
+    for ([_]*std.Build.Module{ evecm, evecp, evevm, evedb, exe.root_module }) |m| {
         const t = b.addTest(.{ .root_module = m });
         test_step.dependOn(&b.addRunArtifact(t).step);
     }

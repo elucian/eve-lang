@@ -341,3 +341,17 @@ test "dump writes one line per node" {
     try std.testing.expectEqual(@as(usize, 2), s.nodes);
     try std.testing.expectEqual(@as(usize, 1), s.depth);
 }
+
+// Zig tip: a type is written `String?` for an optional one; the parser keeps the `?` at the end of
+// the text of the type node. `ty` is itself optional (`?*const Node`): a member without a type.
+/// Does the type end with `?`: may the value be `null`?
+pub fn isOptional(ty: ?*const Node) bool {
+    const t = ty orelse return false;
+    return t.text.len > 0 and t.text[t.text.len - 1] == '?';
+}
+
+/// The name of a type without its `?`; `String` for a member that has no type.
+pub fn baseType(ty: ?*const Node) []const u8 {
+    const t = ty orelse return "String";
+    return std.mem.trimEnd(u8, t.text, "?");
+}

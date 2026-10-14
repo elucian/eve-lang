@@ -9,6 +9,7 @@ const Io = std.Io;
 const evecm = @import("evecm");
 const evecp = @import("evecp");
 const evevm = @import("evevm");
+const evedb = @import("evedb");
 const cli = @import("cli.zig");
 const Terminal = evecm.terminal.Terminal;
 
@@ -39,6 +40,8 @@ fn programName(buf: []u8, path: []const u8) []const u8 {
 // `.init(.stdout(), ...)` uses the declared type on the left to find `init`; `&x.interface`
 // is the generic Writer inside the file writer, which is what other code asks for.
 pub fn main(init: std.process.Init) !void {
+    // The runtime does not import the database layer; the program connects the two (design-packages.md §3).
+    evevm.interp.data_api = &evedb.data;
     const arena: std.mem.Allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(arena);
 
