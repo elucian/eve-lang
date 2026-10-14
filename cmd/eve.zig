@@ -17,7 +17,7 @@ const Terminal = evecm.terminal.Terminal;
 // time to tune itself. `unexpected_error_tracing` prints a stack trace in Debug builds each time the system returns a
 // code the library does not map. On Windows, Zig 0.16 does not map CONNECTION_REFUSED, so asking for a machine that
 // is not running (`eve --serve status`) printed two traces before the right answer, `eve: not running`. The VM
-// handles that error itself (server.zig), so the trace is turned off.
+// handles that error itself (evevm/src/client.zig), so the trace is turned off.
 pub const std_options: std.Options = .{ .unexpected_error_tracing = false };
 
 // Zig tip: `std.ascii.lowerString(buf, text)` copies the text in lower case letters into `buf` and answers the part it
@@ -83,7 +83,7 @@ pub fn main(init: std.process.Init) !void {
     }
     if (!foreground and args.len > 0 and std.mem.eql(u8, programName(&name_buffer, args[0]), "evevm")) {
         evecm.config.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
-        const code = try evevm.server.daemonMain(init.io, arena, stdout, argv.items);
+        const code = try evevm.daemon.daemonMain(init.io, arena, stdout, argv.items);
         try stdout.flush();
         std.process.exit(code);
     }
@@ -145,11 +145,11 @@ pub fn main(init: std.process.Init) !void {
     // nothing here runs: `eve -x file.eve` reads no `eve.cfg` and asks no door, it executes the script at once.
     // Zig tip: at a terminal `eve --serve` opens the doors in threads and the prompt comes back (`embed`), so the same
     // window can send commands to its own machine; with a pipe, a file or a service manager nobody types, and the
-    // start waits for the doors as before. `server.embedded` tells that the doors are open in this process.
+    // start waits for the doors as before. `machine.embedded` tells that the doors are open in this process.
     // `-u`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system
     // prompt comes back; with a command (`eve -u check a.eve`) the command runs after it, as it would without `-u`.
     if (opts.ui) {
-        const code = try evevm.server.openUi(init.io, arena, stdout, opts.config);
+        const code = try evevm.daemon.openUi(init.io, arena, stdout, opts.config);
         try stdout.flush();
         if (code != 0 or opts.command == null) std.process.exit(code);
     }
@@ -160,8 +160,8 @@ pub fn main(init: std.process.Init) !void {
     var held: Io.Writer.Allocating = .init(arena);
     const early_out: *Io.Writer = if (interactive) &held.writer else stdout;
     if (opts.machine.listen or opts.machine.serve or opts.machine.local or opts.machine.remote) {
-        if (try evevm.server.handle(init.io, arena, early_out, opts.machine, interactive and opts.command == null and opts.machine.script == null)) |code| {
-            if (!evevm.server.embedded) {
+        if (try evevm.client.handle(init.io, arena, early_out, opts.machine, interactive and opts.command == null and opts.machine.script == null)) |code| {
+            if (!evevm.machine.embedded) {
                 try stdout.writeAll(held.written());
                 try stdout.flush();
                 std.process.exit(code);
@@ -189,7 +189,7 @@ pub fn main(init: std.process.Init) !void {
     // file, then 100. `parseInt(...) catch width` keeps the earlier value when the text is not a number, and
     // `std.math.clamp` keeps the result between the least width worth drawing and a generous maximum.
     var width: usize = evevm.screen.default_width;
-    if (evevm.server.readConfig(init.io, arena, opts.config orelse "eve.cfg")) |c| width = c.eve_width;
+    if (evecm.config.readConfig(init.io, arena, opts.config orelse "eve.cfg")) |c| width = c.eve_width;
     if (init.environ_map.get("EVE_WIDTH")) |text| width = std.fmt.parseInt(usize, std.mem.trim(u8, text, " "), 10) catch width;
     ctx.width = std.math.clamp(width, evevm.screen.min_width, 400);
 
@@ -209,7 +209,7 @@ pub fn main(init: std.process.Init) !void {
         ctx.out = &t.out;
         ctx.tui = t;
         ctx.fancy = true;
-        evevm.server.embed_log = &t.out;
+        evevm.machine.embed_log = &t.out;
         try evevm.screen.writeBanner(ctx.out, .{ .fancy = true });
         try ctx.out.writeAll(early);
         try ctx.out.flush();

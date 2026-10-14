@@ -17,7 +17,8 @@ const ast = @import("evecm").ast;
 const doc = @import("evecp").doc;
 const scaffold = @import("evecp").scaffold;
 const vm = @import("evevm").vm;
-const server = @import("evevm").server;
+const client = @import("evevm").client;
+const daemon = @import("evevm").daemon;
 const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
 const helptext = @import("evevm").helptext;
@@ -122,7 +123,7 @@ fn cmdQuit(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
 /// the prompt. With no door open here, it stops the machine of another process (the one `evevm` started).
 fn cmdStop(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
     try ctx.out.flush();
-    ctx.status = server.stopMachines(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
+    ctx.status = daemon.stopMachines(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
 }
 
 // Zig tip: the same command does the right thing in each of the three kinds of screen: the scrollback of the
@@ -399,7 +400,7 @@ fn viaSession(comptime name: []const u8) Handler {
 fn door(comptime listen: bool) Handler {
     return struct {
         fn run(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
-            var cmd: server.Cmd = .{ .listen = listen, .serve = !listen, .config = ctx.config };
+            var cmd: client.Cmd = .{ .listen = listen, .serve = !listen, .config = ctx.config };
             for (args) |w| {
                 if (std.mem.eql(u8, w, "listen")) {
                     cmd.listen = true;
@@ -420,7 +421,7 @@ fn door(comptime listen: bool) Handler {
                 return;
             }
             try ctx.out.flush();
-            const code = server.handle(ctx.io, ctx.gpa, ctx.out, cmd, true) catch return error.WriteFailed;
+            const code = client.handle(ctx.io, ctx.gpa, ctx.out, cmd, true) catch return error.WriteFailed;
             ctx.status = code orelse 0;
         }
     }.run;
@@ -437,7 +438,7 @@ fn cmdStatus(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     try ctx.out.print("{s}\nthis process: command line, it opens no door itself\n", .{version.title});
     try s.writeState(ctx.out);
     try ctx.out.flush();
-    server.machineStatus(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
+    client.machineStatus(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
 }
 
 // Zig tip: parse first, run second: the session's `run` parses the file when it was not parsed,
@@ -639,7 +640,7 @@ pub const Options = struct {
     /// Positional arguments after the command.
     args: []const []const u8 = &.{},
     /// The options of the machine (`--listen`, `--serve`, `-loc`, `-rem`; spec/library/machine.md).
-    machine: server.Cmd = .{},
+    machine: client.Cmd = .{},
     /// `-u`: open the user interface (the web page of the machine) when it is not open.
     ui: bool = false,
 };
