@@ -32,6 +32,7 @@ pub const red = rgb(0xd9534f);
 pub const amber = rgb(0xe0b341);
 pub const selected = rgb(0x2b4a6b);
 pub const current_line = rgb(0x4a3f12);
+pub const sel_bg = rgb(0x264f78);
 pub const keyword = rgb(0xc792ea);
 pub const string = rgb(0x98c379);
 pub const number = rgb(0xd19a66);

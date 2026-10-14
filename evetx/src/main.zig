@@ -14,6 +14,8 @@ const Event = union(enum) {
     key_press: vaxis.Key,
     mouse: vaxis.Mouse,
     winsize: vaxis.Winsize,
+    paste_start,
+    paste_end,
     focus_in,
     focus_out,
 };
@@ -56,6 +58,8 @@ pub fn main(init: std.process.Init) !void {
     // terminal is given back (loop.stop, tty.deinit) even when the program ends with an error.
     try vx.enterAltScreen(writer);
     try vx.setMouseMode(writer, true);
+    // a paste made by the terminal arrives between two markers, so it can be inserted as one piece
+    try vx.setBracketedPaste(writer, true);
     try writer.flush();
     try vx.queryTerminal(tty.writer(), .fromSeconds(1));
 
@@ -65,7 +69,15 @@ pub fn main(init: std.process.Init) !void {
             .key_press => |key| app.onKey(key) catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
             .mouse => |m| app.onMouse(vx.translateMouse(m)) catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
             .winsize => |ws| try vx.resize(gpa, tty.writer(), ws),
+            .paste_start => app.pasteStart(),
+            .paste_end => app.pasteEnd() catch |err| app.setMessage("error: {s}", .{@errorName(err)}),
             else => {},
+        }
+        // Zig tip: `takeSystemClip` hands over the text of the last copy; the terminal puts it in the
+        // clipboard of the system (OSC 52), and the copy is freed here.
+        if (app.takeSystemClip()) |clip| {
+            defer gpa.free(clip);
+            vx.copyToSystemClipboard(writer, clip, gpa) catch {};
         }
         const win = vx.window();
         win.clear();

@@ -41,6 +41,8 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path(b.fmt("../manual/evetx/{s}.txt", .{name})),
         });
     }
+    // the version of Eve is written once, in the root build.zig.zon; the About dialog shows it
+    exe.root_module.addAnonymousImport("eve_zon", .{ .root_source_file = b.path("../build.zig.zon") });
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
