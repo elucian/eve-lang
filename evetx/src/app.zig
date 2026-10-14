@@ -16,7 +16,7 @@ const text = @import("text.zig");
 // or have an `else`, so adding a choice later makes the compiler point at every place that needs a
 // new case.
 /// Where the keyboard goes.
-pub const Focus = enum { tree, editor, files, find, replace, console, breaks };
+pub const Focus = enum { tree, editor, console, breaks };
 
 // Zig tip: An enum like `Focus`: one name for every tab. `@tagName(tab)` would give its name as
 // text.
@@ -26,12 +26,12 @@ pub const BottomTab = enum { console, watch, stderr, stdout, breaks };
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, menu, help, settings, goto, save_as };
+pub const Overlay = enum { none, menu, help, settings, about, goto, save_as, find_text, find_file, replace };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
 /// The buttons of the tool bars.
-pub const Button = enum { run, step_into, step_out, cont, stop, replace, replace_all, goto, help, settings };
+pub const Button = enum { run, step_into, step_out, cont, stop, replace, replace_all, help, settings };
 
 // Zig tip: A tagged union with payloads, like `Event` in main.zig. `.tree_row = 5` builds a value;
 // `switch (a) { .tree_row => |i| ... }` reads its payload. A field without a payload
@@ -44,11 +44,12 @@ pub const Action = union(enum) {
     bottom: BottomTab,
     button: Button,
     machine: u8,
-    menu_title,
+    menu_top: usize,
     menu_item: usize,
-    field: Focus,
+    dlg_field: u8,
     break_row: usize,
     close_overlay,
+    nop,
 };
 
 // Zig tip: a struct with methods is how Zig does what other languages call a class. `contains` is
@@ -151,48 +152,84 @@ pub const Breakpoint = struct { path: []u8, line: usize };
 /// Every command of the main menu.
 pub const MenuCmd = enum {
     open_project, new_file, save, save_as, close_tab, quit,
-    undo, redo, find, replace,
+    undo, redo,
+    find_text, find_file, replace, goto_line, query,
     run, step_into, step_out, cont, stop, breakpoint,
     connect, upload, next_machine,
-    help, settings,
+    shortcuts, manual, tutorial, about, options,
 };
 
 // Zig tip: `cmd: ?MenuCmd = null` is an optional enum with a default: a row without a command is a
-// section title. One struct serves both kinds of row.
-/// A row of the menu: a section title (`cmd` null) or a command with its shortcut.
+// separator line. One struct serves both kinds of row.
+/// A row of a menu: a command with its shortcut, or a separator (`cmd` null).
 pub const MenuRow = struct { label: []const u8, key: []const u8 = "", cmd: ?MenuCmd = null };
 
+/// A separator row.
+const sep: MenuRow = .{ .label = "-" };
+
+// Zig tip: `items: []const MenuRow` is a slice, so every menu can have its own number of rows. The
+// literal `&.{ ... }` below makes a constant array and takes its address, which coerces to the
+// slice; all of it is built by the compiler.
+/// One menu of the bar: its name (upper case; the first letter is the Alt key) and its rows.
+pub const Menu = struct { label: []const u8, items: []const MenuRow };
+
 // Zig tip: A `const` array of struct literals is built at compile time and stored in the program.
-// `[_]MenuRow{...}` lets the compiler count the rows; `menu_rows.len` is then a compile-time
-// number.
-pub const menu_rows = [_]MenuRow{
-    .{ .label = "File" },
-    .{ .label = "Open project…", .key = "Ctrl+O", .cmd = .open_project },
-    .{ .label = "New file", .key = "Ctrl+N", .cmd = .new_file },
-    .{ .label = "Save", .key = "Ctrl+S", .cmd = .save },
-    .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
-    .{ .label = "Close tab", .key = "Ctrl+W", .cmd = .close_tab },
-    .{ .label = "Quit", .key = "Ctrl+Q", .cmd = .quit },
-    .{ .label = "Edit" },
-    .{ .label = "Undo", .key = "Ctrl+Z", .cmd = .undo },
-    .{ .label = "Redo", .key = "Ctrl+Y", .cmd = .redo },
-    .{ .label = "Find", .key = "Ctrl+F", .cmd = .find },
-    .{ .label = "Replace", .key = "Ctrl+H", .cmd = .replace },
-    .{ .label = "Run" },
-    .{ .label = "Run", .key = "F5", .cmd = .run },
-    .{ .label = "Step into", .key = "F11", .cmd = .step_into },
-    .{ .label = "Step out", .key = "Shift+F11", .cmd = .step_out },
-    .{ .label = "Continue", .key = "F8", .cmd = .cont },
-    .{ .label = "Stop", .key = "Shift+F5", .cmd = .stop },
-    .{ .label = "Breakpoint", .key = "F9", .cmd = .breakpoint },
-    .{ .label = "Machine" },
-    .{ .label = "Connect…", .key = "Ctrl+K", .cmd = .connect },
-    .{ .label = "Upload…", .key = "Ctrl+U", .cmd = .upload },
-    .{ .label = "Next machine", .key = "Ctrl+→", .cmd = .next_machine },
-    .{ .label = "Help" },
-    .{ .label = "Help", .key = "Ctrl+/", .cmd = .help },
-    .{ .label = "Settings…", .key = "Ctrl+,", .cmd = .settings },
+// `[_]Menu{...}` lets the compiler count the menus; `menus.len` is then a compile-time number.
+/// The menus of the bar, left to right. The last one (HELP) is drawn at the right side.
+pub const menus = [_]Menu{
+    .{ .label = "FILE", .items = &.{
+        .{ .label = "Open project…", .key = "Ctrl+O", .cmd = .open_project },
+        .{ .label = "New file", .key = "Ctrl+N", .cmd = .new_file },
+        .{ .label = "Save", .key = "Ctrl+S", .cmd = .save },
+        .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
+        .{ .label = "Close tab", .key = "Ctrl+W", .cmd = .close_tab },
+        sep,
+        .{ .label = "Quit", .key = "Ctrl+Q", .cmd = .quit },
+    } },
+    .{ .label = "EDIT", .items = &.{
+        .{ .label = "Undo", .key = "Ctrl+Z", .cmd = .undo },
+        .{ .label = "Redo", .key = "Ctrl+Y", .cmd = .redo },
+    } },
+    .{ .label = "SEARCH", .items = &.{
+        .{ .label = "Find Text…", .key = "Ctrl+F", .cmd = .find_text },
+        .{ .label = "Find File…", .key = "Ctrl+P", .cmd = .find_file },
+        .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
+        .{ .label = "GoTo…", .key = "Ctrl+G", .cmd = .goto_line },
+        .{ .label = "Query…", .key = "Ctrl+L", .cmd = .query },
+    } },
+    .{ .label = "RUN", .items = &.{
+        .{ .label = "Run", .key = "F5", .cmd = .run },
+        .{ .label = "Step into", .key = "F11", .cmd = .step_into },
+        .{ .label = "Step out", .key = "Shift+F11", .cmd = .step_out },
+        .{ .label = "Continue", .key = "F8", .cmd = .cont },
+        .{ .label = "Stop", .key = "Shift+F5", .cmd = .stop },
+        sep,
+        .{ .label = "Breakpoint", .key = "F9", .cmd = .breakpoint },
+    } },
+    .{ .label = "MACHINE", .items = &.{
+        .{ .label = "Connect…", .key = "Ctrl+K", .cmd = .connect },
+        .{ .label = "Upload…", .key = "Ctrl+U", .cmd = .upload },
+        .{ .label = "Next machine", .key = "Ctrl+→", .cmd = .next_machine },
+    } },
+    .{ .label = "HELP", .items = &.{
+        .{ .label = "Shortcuts", .key = "Ctrl+/", .cmd = .shortcuts },
+        .{ .label = "Manual", .cmd = .manual },
+        .{ .label = "Tutorial", .cmd = .tutorial },
+        .{ .label = "About", .cmd = .about },
+        sep,
+        .{ .label = "Options…", .key = "Ctrl+,", .cmd = .options },
+    } },
 };
+
+// Zig tip: A `while` loop with a condition and an early `return` is a search. The result is an
+// optional-free `usize` because every menu has at least one command row, so the loop always finds one.
+/// The first row of a menu that is a command (not a separator).
+pub fn firstItem(menu: usize) usize {
+    for (menus[menu].items, 0..) |row, i| {
+        if (row.cmd != null) return i;
+    }
+    return 0;
+}
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
@@ -256,7 +293,13 @@ pub const App = struct {
     focus: Focus = .tree,
     overlay: Overlay = .none,
     bottom: BottomTab = .console,
-    menu_sel: usize = 1,
+    /// The menu of the bar that is open (while `overlay` is `.menu`) and its selected row.
+    menu_top: usize = 0,
+    menu_sel: usize = 0,
+    /// In the Replace dialog: 0 is the Find field, 1 the Replace field.
+    dlg_field: u8 = 0,
+    /// The Alt key was pressed alone: the bar shows its letters underlined until the next key or click.
+    alt_hint: bool = false,
     machine: u8 = 1,
     running: bool = false,
     quit: bool = false,
@@ -792,7 +835,28 @@ pub const App = struct {
     // the parameter type, so no `Overlay.` prefix is needed.
     pub fn openOverlay(self: *App, which: Overlay) void {
         self.overlay = which;
-        if (which == .menu and self.menu_sel >= menu_rows.len) self.menu_sel = 1;
+        self.dlg_field = 0;
+    }
+
+    // Zig tip: `menus[i]` is checked against the array length in a safe build, so a wrong `i` stops
+    // the program with a message instead of reading other memory.
+    /// Open menu `i` of the bar (a click, F10 or Alt and its letter) with its first command selected.
+    pub fn openMenu(self: *App, i: usize) void {
+        self.overlay = .menu;
+        self.menu_top = i;
+        self.menu_sel = firstItem(i);
+    }
+
+    // Zig tip: `menus[i].label[0]` is the first byte of a string literal, a `u8`. `std.ascii.toLower`
+    // turns it into the lower case letter that the comparison needs.
+    /// The menu whose letter is `c` (upper or lower case), if there is one.
+    fn menuByLetter(c: u21) ?usize {
+        if (c > 127) return null;
+        const lower = std.ascii.toLower(@intCast(c));
+        for (menus, 0..) |m, i| {
+            if (std.ascii.toLower(m.label[0]) == lower) return i;
+        }
+        return null;
     }
 
     // Zig tip: A helper for the features that are planned but not built, so the message is the same
@@ -813,27 +877,42 @@ pub const App = struct {
             .close_tab => self.closeTab(self.active),
             .quit => self.quit = true,
             .undo, .redo => self.notYet("Undo and redo", "T3"),
-            .find => self.focus = .find,
-            .replace => self.focus = .replace,
+            .find_text => self.openOverlay(.find_text),
+            .find_file => self.openOverlay(.find_file),
+            .replace => self.openOverlay(.replace),
+            .goto_line => self.openOverlay(.goto),
+            .query => self.notYet("Query", "T7"),
             .run => try self.runActive(),
             .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
             .breakpoint => try self.toggleBreakpoint(),
             .connect, .upload, .next_machine => self.notYet("Remote machines", "T5"),
-            .help => self.openOverlay(.help),
-            .settings => self.openOverlay(.settings),
+            .shortcuts => self.openOverlay(.help),
+            .manual => self.setMessage("Manual: manual/README.md in the Eve repository (a viewer comes later)", .{}),
+            .tutorial => self.setMessage("Tutorial: https://sagecode.org/projects/eve/", .{}),
+            .about => self.openOverlay(.about),
+            .options => self.openOverlay(.settings),
         }
     }
 
     // Zig tip: `while (true) {... break;}` loops until a `break`. `@mod` wraps the index; the loop
-    // skips the rows that have no command (section titles).
+    // skips the rows that have no command (separators).
     fn menuMove(self: *App, delta: isize) void {
+        const items = menus[self.menu_top].items;
         var i: isize = @intCast(self.menu_sel);
-        const n: isize = menu_rows.len;
+        const n: isize = @intCast(items.len);
         while (true) {
             i = @mod(i + delta, n);
-            if (menu_rows[@intCast(i)].cmd != null) break;
+            if (items[@intCast(i)].cmd != null) break;
         }
         self.menu_sel = @intCast(i);
+    }
+
+    // Zig tip: `@intCast(self.menu_top)` widens to `isize` so that `-1` can be added without the
+    // unsigned wrap-around; `@mod` brings the result back in `0..n`.
+    fn menuSide(self: *App, delta: isize) void {
+        const n: isize = menus.len;
+        const to: usize = @intCast(@mod(@as(isize, @intCast(self.menu_top)) + delta, n));
+        self.openMenu(to);
     }
 
     // ------------------------------------------------------------ keys
@@ -842,13 +921,24 @@ pub const App = struct {
     // written as a struct with defaults: `.{ .ctrl = true }`. The order of the `if`s matters: the
     // first that matches wins.
     pub fn onKey(self: *App, key: Key) !void {
+        // Zig tip: the Windows console reports the Alt key on its own as a key press whose code is
+        // `Key.left_alt` or `Key.right_alt`; there is no event when it is released, so the hint
+        // stays until the next key or click.
+        if (key.codepoint == Key.left_alt or key.codepoint == Key.right_alt) {
+            self.alt_hint = true;
+            return;
+        }
+        self.alt_hint = false;
         if (self.message) |m| {
             self.gpa.free(m);
             self.message = null;
         }
         if (self.overlay != .none) return self.overlayKey(key);
 
-        if (key.matches(Key.enter, .{ .ctrl = true }) or key.matches(Key.f10, .{})) return self.openOverlay(.menu);
+        if (key.matches(Key.enter, .{ .ctrl = true }) or key.matches(Key.f10, .{})) return self.openMenu(0);
+        if (key.mods.alt and !key.mods.ctrl) {
+            if (menuByLetter(key.codepoint)) |m| return self.openMenu(m);
+        }
         if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.openOverlay(.help);
         if (key.matches(',', .{ .ctrl = true })) return self.openOverlay(.settings);
         if (key.matches('q', .{ .ctrl = true })) {
@@ -859,19 +949,7 @@ pub const App = struct {
         if (key.matches('s', .{ .ctrl = true })) return self.save();
         if (key.matches('w', .{ .ctrl = true })) return self.closeTab(self.active);
         if (key.matches('n', .{ .ctrl = true })) return self.newFile();
-        if (key.matches('p', .{ .ctrl = true })) {
-            self.focus = .files;
-            return;
-        }
-        if (key.matches('f', .{ .ctrl = true })) {
-            self.focus = .find;
-            return;
-        }
-        if (key.matches('h', .{ .ctrl = true })) {
-            self.focus = .replace;
-            return;
-        }
-        if (key.matches('g', .{ .ctrl = true })) return self.openOverlay(.goto);
+        if (self.searchShortcut(key)) return;
         if (key.matches(Key.f5, .{})) return self.runActive();
         if (key.matches(Key.f9, .{})) return self.toggleBreakpoint();
         if (key.matches(Key.f1, .{})) return self.pickMachine(1);
@@ -885,12 +963,18 @@ pub const App = struct {
         switch (self.focus) {
             .editor => try self.editorKey(key),
             .tree => try self.treeKey(key),
-            .files => try self.filesKey(key),
-            .find => try self.findKey(key),
-            .replace => try self.replaceKey(key),
             .console => try self.consoleKey(key),
             .breaks => try self.breaksKey(key),
         }
+    }
+
+    // Zig tip: A function that returns `bool` can say "I used this key" to its caller, which then
+    // stops looking. The same shortcuts work on the screen and inside a dialog, so the dialogs
+    // can replace each other.
+    /// Ctrl+F, Ctrl+P, Ctrl+H, Ctrl+G, Ctrl+L: open a search dialog. True when the key was one of them.
+    fn searchShortcut(self: *App, key: Key) bool {
+        if (key.matches('f', .{ .ctrl = true })) self.openOverlay(.find_text) else if (key.matches('p', .{ .ctrl = true })) self.openOverlay(.find_file) else if (key.matches('h', .{ .ctrl = true })) self.openOverlay(.replace) else if (key.matches('g', .{ .ctrl = true })) self.openOverlay(.goto) else if (key.matches('l', .{ .ctrl = true })) self.notYet("Query", "T7") else return false;
+        return true;
     }
 
     // Zig tip: `n == 1` and `else`: the value `u8` is a small integer type of one byte; here 1, 2 and
@@ -906,16 +990,14 @@ pub const App = struct {
     // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) {
+            if (self.overlay == .find_file) self.filesCancel();
             self.overlay = .none;
             return;
         }
+        if (self.overlay != .menu and self.searchShortcut(key)) return;
         switch (self.overlay) {
-            .menu => {
-                if (key.matches(Key.up, .{})) self.menuMove(-1) else if (key.matches(Key.down, .{})) self.menuMove(1) else if (key.matches(Key.enter, .{})) {
-                    if (menu_rows[self.menu_sel].cmd) |c| try self.runMenu(c);
-                }
-            },
-            .help, .settings => {
+            .menu => try self.menuKey(key),
+            .help, .settings, .about => {
                 if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{}) or key.matches(Key.enter, .{})) self.overlay = .none;
             },
             .goto => {
@@ -930,7 +1012,33 @@ pub const App = struct {
                     try self.saveAs(std.mem.trim(u8, s, " "));
                 } else try self.saveas_in.update(.{ .key_press = key });
             },
+            .find_text => {
+                if (key.matches(Key.enter, .{})) try self.findNext() else try self.find_in.update(.{ .key_press = key });
+            },
+            .find_file => try self.filesKey(key),
+            .replace => try self.replaceKey(key),
             .none => {},
+        }
+    }
+
+    // Zig tip: A plain `if` chain with early `return`s reads like a table of keys. A letter without
+    // Ctrl goes to the menu bar and opens the menu of that letter.
+    /// The keys while a menu is open: arrows move, Enter runs, a letter opens another menu.
+    fn menuKey(self: *App, key: Key) !void {
+        if (key.matches(Key.up, .{})) return self.menuMove(-1);
+        if (key.matches(Key.down, .{})) return self.menuMove(1);
+        if (key.matches(Key.left, .{})) return self.menuSide(-1);
+        if (key.matches(Key.right, .{})) return self.menuSide(1);
+        if (key.matches(Key.home, .{})) {
+            self.menu_sel = firstItem(self.menu_top);
+            return;
+        }
+        if (key.matches(Key.enter, .{})) {
+            if (menus[self.menu_top].items[self.menu_sel].cmd) |c| try self.runMenu(c);
+            return;
+        }
+        if (!key.mods.ctrl) {
+            if (menuByLetter(key.codepoint)) |m| self.openMenu(m);
         }
     }
 
@@ -984,7 +1092,6 @@ pub const App = struct {
     // key goes to the text field widget with `update`. The `had` flag shows `if` used as a plain
     // statement.
     fn filesKey(self: *App, key: Key) !void {
-        if (key.matches(Key.escape, .{})) return self.filesCancel();
         if (key.matches(Key.enter, .{})) {
             const had = self.saved_open != null;
             if (had) {
@@ -993,6 +1100,7 @@ pub const App = struct {
             }
             self.files_in.clearRetainingCapacity();
             self.focus = .tree;
+            self.overlay = .none;
             return self.openEntry(self.selected);
         }
         if (key.matches(Key.down, .{})) return self.filesStep(1);
@@ -1001,26 +1109,16 @@ pub const App = struct {
         try self.filesChanged();
     }
 
-    // Zig tip: `try self.find_in.update(.{ .key_press = key })` hands the key to the text field of
-    // libvaxis. The `.{ .key_press = key }` literal takes its type from the parameter.
-    fn findKey(self: *App, key: Key) !void {
-        if (key.matches(Key.escape, .{})) {
-            self.focus = .editor;
-            return;
-        }
-        if (key.matches(Key.enter, .{})) return self.findNext();
-        try self.find_in.update(.{ .key_press = key });
-    }
-
-    // Zig tip: The same shape as `findKey`: Esc leaves, Enter does the action, other keys edit the
-    // text.
+    // Zig tip: `const ti = if (a) &x else &y;` picks which field gets the key, and the one call
+    // `ti.update` serves both. Tab moves between the two fields.
     fn replaceKey(self: *App, key: Key) !void {
-        if (key.matches(Key.escape, .{})) {
-            self.focus = .editor;
+        if (key.matches(Key.tab, .{}) or key.matches(Key.down, .{}) or key.matches(Key.up, .{})) {
+            self.dlg_field = 1 - self.dlg_field;
             return;
         }
-        if (key.matches(Key.enter, .{})) return self.replaceOne();
-        try self.replace_in.update(.{ .key_press = key });
+        if (key.matches(Key.enter, .{})) return if (self.dlg_field == 0) self.findNext() else self.replaceOne();
+        const ti = if (self.dlg_field == 0) &self.find_in else &self.replace_in;
+        try ti.update(.{ .key_press = key });
     }
 
     // Zig tip: `self.console.scroll +|= n` is saturating addition with assignment: it stops at the
@@ -1061,6 +1159,8 @@ pub const App = struct {
     // Zig tip: `m.type != .press` compares an enum value. The `while (i > 0) { i -= 1; ... }` loop
     // walks the hits from the last to the first, so what was drawn last (an open menu) is hit first.
     pub fn onMouse(self: *App, m: vaxis.Mouse) !void {
+        if (m.type == .motion) return self.hover(m);
+        self.alt_hint = false;
         if (m.type != .press) return;
         if (m.button == .wheel_up or m.button == .wheel_down) {
             const up = m.button == .wheel_up;
@@ -1075,6 +1175,22 @@ pub const App = struct {
                     else => &self.console,
                 };
                 log.scroll = if (up) log.scroll +| 3 else log.scroll -| 3;
+            }
+            return;
+        }
+        if (m.button == .middle) {
+            // a middle click on a tab closes it
+            var k = self.hits.items.len;
+            while (k > 0) {
+                k -= 1;
+                const h = self.hits.items[k];
+                if (h.rect.contains(m.col, m.row)) {
+                    switch (h.action) {
+                        .tab, .tab_close => |t| self.closeTab(t),
+                        else => {},
+                    }
+                    return;
+                }
             }
             return;
         }
@@ -1103,6 +1219,24 @@ pub const App = struct {
         }
     }
 
+    // Zig tip: A `motion` event arrives when the mouse moves. Only an open menu cares: the row or
+    // the menu title under the pointer becomes the selected one, as in a classic menu.
+    fn hover(self: *App, m: vaxis.Mouse) void {
+        if (self.overlay != .menu) return;
+        var i = self.hits.items.len;
+        while (i > 0) {
+            i -= 1;
+            const h = self.hits.items[i];
+            if (!h.rect.contains(m.col, m.row)) continue;
+            switch (h.action) {
+                .menu_top => |t| if (t != self.menu_top) self.openMenu(t),
+                .menu_item => |r| self.menu_sel = r,
+                else => {},
+            }
+            return;
+        }
+    }
+
     // Zig tip: `switch` on the `Action` union with a payload capture in each branch: `.tree_row => |i|
     // ...` gives the index that the click carried. The inner `switch (b)` handles the buttons.
     fn activate(self: *App, action: Action) !void {
@@ -1125,11 +1259,14 @@ pub const App = struct {
                 };
             },
             .machine => |n| self.pickMachine(n),
-            .menu_title => self.openOverlay(.menu),
-            .menu_item => |i| {
-                if (menu_rows[i].cmd) |c| try self.runMenu(c);
+            .menu_top => |t| {
+                if (self.overlay == .menu and self.menu_top == t) self.overlay = .none else self.openMenu(t);
             },
-            .field => |f| self.focus = f,
+            .menu_item => |i| {
+                if (menus[self.menu_top].items[i].cmd) |c| try self.runMenu(c);
+            },
+            .dlg_field => |f| self.dlg_field = f,
+            .nop => {},
             .break_row => |i| {
                 if (self.break_sel == i) try self.jumpToBreakpoint(i) else self.break_sel = i;
                 self.focus = .breaks;
@@ -1140,7 +1277,6 @@ pub const App = struct {
                 .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
                 .replace => try self.replaceOne(),
                 .replace_all => try self.replaceEvery(),
-                .goto => self.openOverlay(.goto),
                 .help => self.openOverlay(.help),
                 .settings => self.openOverlay(.settings),
             },

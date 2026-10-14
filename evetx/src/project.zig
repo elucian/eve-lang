@@ -123,6 +123,21 @@ pub const Tree = struct {
         return true;
     }
 
+    // Zig tip: `var i = index + 1; while (i < n) : (i += 1)` is a counting loop written with `while`.
+    // Because the entries are in depth-first order, the entries after `index` with a bigger depth
+    // are its content; the first entry that is not deeper decides if `index` has a younger sibling.
+    /// True when no entry after `index` has the same parent: the tree draws `└─` for it and not `├─`.
+    pub fn isLast(self: *const Tree, index: u32) bool {
+        const depth = self.entries.items[index].depth;
+        var i: usize = index + 1;
+        while (i < self.entries.items.len) : (i += 1) {
+            const d = self.entries.items[i].depth;
+            if (d == depth) return false;
+            if (d < depth) return true;
+        }
+        return true;
+    }
+
     // Zig tip: A function that takes `self: *Tree` (not `*const`) may change the tree. Writing
     // `self.entries.items[p].expanded = true` changes the element in place.
     /// Open every folder above entry `index`, so that the entry is shown.
