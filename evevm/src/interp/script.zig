@@ -1,4 +1,4 @@
-//! Running a script and its modules: `run`, the driver and its aspects, imports.
+//! Running a script and its modules: `run`, the root aspect and its aspects, imports.
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
@@ -220,7 +220,7 @@ pub fn execImport(it: *Interp, decl: *const Node) Signal!void {
     }
 }
 
-// Zig tip: `finalize` of the modules runs when the driver has ended, after its process, in the reverse
+// Zig tip: `finalize` of the modules runs when the root aspect has ended, after its process, in the reverse
 // order of the initialization (D-068): the loop counts down. An error in one `finalize` does not stop
 // the others: `catch {}` drops it.
 /// Run the `finalize` region of every loaded module, last loaded first.
@@ -241,16 +241,41 @@ pub fn finalizeModules(it: *Interp) void {
 // Zig tip: `defer` runs when the function ends however it ends, so the three fields that this
 // call changes (`scope`, `unit`, `proc_scope`) are restored on success, on `over`, and on an
 // error that unwinds through (the same idea as in `invoke`). The aspect gets a scope of its own
-// with no parent but the names every script knows (`boot`): it cannot see the driver's variables,
+// with no parent but the names every script knows (`boot`): it cannot see the root aspect's variables,
 // and the state it builds is dropped with that scope when the call ends (D-066).
 /// `apply name(args);`: run the `main` of an aspect, read and checked before the run.
 pub fn applyAspect(it: *Interp, n: *const Node) Signal!void {
+    if (n.sel) |prc| return it.applyPrivate(n, prc);
     const known = it.aspects orelse return it.fail("no aspect is loaded: '{s}'", .{n.text});
     const aspect = known.get(n.text) orelse return it.fail("aspect '{s}' is not loaded", .{n.text});
     const args = try it.evalArgs(n.kids);
     defer it.dropArgs(args);
     defer it.writeBack(args);
     try it.runAspect(aspect, args);
+}
+
+// Zig tip: a private process is not an aspect: it runs on the state of the aspect that declares it (D-179). That state
+// is the scope `it.unit`, the one `runAspect` made for the call (or the global scope of the aspect that is run), so
+// `enterScope(it.unit)` makes it the parent of the new process scope, and the process sees the aspect-level
+// variables and not the locals of the process that called it. The link step stored the process in `n.sel`.
+/// `apply name(args);` where `name` is a private process of the aspect that contains the call.
+pub fn applyPrivate(it: *Interp, n: *const Node, prc: *const Node) Signal!void {
+    const args = try it.evalArgs(n.kids);
+    defer it.dropArgs(args);
+    defer it.writeBack(args);
+    try it.runPrivate(prc, args, it.unit);
+}
+
+// Zig tip: `runPrivate` is also the body of a started private process: the task's interpreter calls it with the scope of
+// the aspect state it was started from, and with its own arguments (copied at `start`, D-048).
+/// Run the private process `prc` in the state `unit` of its aspect.
+pub fn runPrivate(it: *Interp, prc: *const Node, args: []const Arg, unit: *interp.Scope) Signal!void {
+    const saved_unit = it.unit;
+    it.unit = unit;
+    defer it.unit = saved_unit;
+    const saved = try it.enterScope(unit);
+    defer it.leaveScope(saved);
+    try it.runProcess(prc, args, "aspect", prc.text);
 }
 
 // Zig tip: `runAspect` relies on the same Zig feature as `applyAspect` above: see the tip there.
@@ -260,7 +285,7 @@ pub fn runAspect(it: *Interp, aspect: *const Node, args: []const Arg) Signal!voi
     const saved_proc = it.proc_scope;
     if (saved_proc) |p| Heap.retainScope(p);
     try it.scope_stack.append(it.g, saved_unit);
-    // an aspect of a macro sees the shared declarations, which are those of the driver (D-152)
+    // an aspect of a macro sees the shared declarations, which are those of the root aspect (D-152)
     const parent = if (aspect.macro) it.base().global else try it.preludeScope();
     const saved_scope = try it.enterScope(try it.newScope(parent));
     it.unit = it.scope;

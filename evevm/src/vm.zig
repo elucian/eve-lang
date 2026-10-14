@@ -232,7 +232,7 @@ pub const Session = struct {
     // null; `if (cut) |i| path[0..i] else "."` takes the folder part of a path, or the current folder
     // when the path has none. The error set of `build` is the one of `parser.parse` (`Syntax`,
     // `OutOfMemory`), because `project.link` returns the same errors.
-    /// Parse the script and, for a driver, read the aspects it applies and match every `apply`.
+    /// Parse the script and, for a root aspect, read the aspects it applies and match every `apply`.
     fn build(self: *Session) parser.Error!*const ast.Node {
         const tree = try parser.parse(self.mem(), self.src, &self.diag);
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
@@ -767,9 +767,9 @@ test "a session parses and runs a script from text" {
     var s: Session = .{ .io = std.testing.io, .gpa = std.testing.allocator, .out = &w };
     defer s.deinit();
     defer s.summary.deinit(std.testing.allocator);
-    try s.loadSource("t/a.eve", "print \"hi\";\n");
+    try s.loadSource("t/a.eve", "primary aspect a is process main is print \"hi\"; return; end a;\n");
     try s.handleLine("run  ** parses first");
-    try std.testing.expectEqualStrings("a: parse ok, 3 nodes\nhi\n", w.buffered());
+    try std.testing.expectEqualStrings("a: parse ok, 9 nodes\nhi\n", w.buffered());
     try std.testing.expectEqual(@as(u8, 0), s.status);
 }
 

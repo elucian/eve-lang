@@ -154,16 +154,14 @@ pub const Tag = enum {
     class,
     /// A class member: text = name; kids = [explicit value or none]; `ty`.
     member,
-    /// `driver name is ... end name;`: kids = the declarations.
-    driver,
-    /// `[exclusive|concurrent] aspect name is ... end name;`: kids = the declarations, with one `process main` (D-066, D-090);
-    /// `public` is true for `concurrent`.
+    /// `[exclusive|concurrent|primary] aspect name is ... end name;`: kids = the declarations and the processes, with
+    /// a `process main` and perhaps private processes (D-179, D-181); `public` is true for `concurrent`, `primary` for
+    /// `primary`. The root of an Eve macro is the node of its primary aspect, with the shared declarations and the other
+    /// aspects among its kids (D-152, D-180).
     aspect,
     /// `apply folder/name(args);`: text = the aspect path as written; kids = the arguments, as in a `call`;
     /// `extra` = the written type list `(:T)` of a generic process (D-148).
     apply_stmt,
-    /// A script without a driver: kids = the statements.
-    script,
     /// `[managed|direct] module name is ... end name;` (D-129): kids = the declarations, the imports, the exports and
     /// up to three `region` nodes; `public` is true for `safe`.
     module,
@@ -229,9 +227,11 @@ pub const Node = struct {
     /// A call: the declaration the checker selected among overloaded ones, when it can decide at compile time
     /// (D-149). Null when the name is not overloaded or the choice waits for the values at run time.
     sel: ?*const Node = null,
-    /// A driver made from an Eve macro, and each aspect of it: the aspects see the shared declarations of the
-    /// macro, which are the declarations of the driver node (D-152).
+    /// The root made from an Eve macro, and each aspect of it: the aspects see the shared declarations of the
+    /// macro, which are the declarations of the root node (D-152).
     macro: bool = false,
+    /// An aspect declared `primary`: it is run by a command and no aspect applies or starts it (D-181).
+    primary: bool = false,
 };
 
 // Zig tip: a `const` of a struct type at file level is a value built while compiling. Parts that
@@ -298,10 +298,10 @@ pub const Stats = struct {
 // Zig tip: a walk that collects names is another recursive function. `inline` is not needed: it
 // is an ordinary run-time recursion. The `switch` on the tag has an `else => {}` branch for every
 // tag it does not care about.
-/// Write the declarations of the script: drivers, processes, functions, classes, variables.
+/// Write the declarations of the script: aspects, processes, functions, classes, variables.
 pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void {
     switch (n.tag) {
-        .driver, .aspect, .script => {
+        .aspect => {
             try w.print("{s}{s} {s}\n", .{ indent(depth), @tagName(n.tag), n.text });
             for (n.kids) |k| try outline(w, k, depth + 1);
         },

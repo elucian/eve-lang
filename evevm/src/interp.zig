@@ -69,6 +69,9 @@ pub const Started = struct {
     /// The aspect name, or the subprogram name of a spawned task.
     label: []const u8,
     aspect: ?*const Node = null,
+    /// A started private process of an aspect (D-179), and the scope of that aspect's state, in which it runs.
+    proc: ?*const Node = null,
+    unit: ?*Scope = null,
     func: ?*Func = null,
     args: []Arg,
     child: *Interp,
@@ -115,7 +118,7 @@ pub const Group = struct {
 };
 
 // Zig tip: a small struct for the stack of calls. `kind` is a word that is printed (`function`,
-// `procedure`, `method`, `aspect`, `driver`) and `call_line` is the line, in the caller, where
+// `procedure`, `method`, `aspect`) and `call_line` is the line, in the caller, where
 // this call was made: with it the trace can tell on which line each unit was running.
 /// One call in progress: what runs and from which line it was called.
 pub const Frame = struct { kind: []const u8, name: []const u8, call_line: u32 };
@@ -176,10 +179,10 @@ pub const Interp = struct {
     scope_stack: std.ArrayList(*Scope) = .empty,
     /// The class `Object`, made once per run.
     object_class: ?*Class = null,
-    /// Where the database layer (evedb) keeps its state: one `State` for the run, in the driver's interpreter.
+    /// Where the database layer (evedb) keeps its state: one `State` for the run, in the root aspect's interpreter.
     data_slot: ?*anyopaque = null,
     /// The functions and procedures that share a name (D-149): the key is the first declaration, the list holds
-    /// all of them in order. A name that is not overloaded has no entry. Only the driver's interpreter keeps it.
+    /// all of them in order. A name that is not overloaded has no entry. Only the root aspect's interpreter keeps it.
     overloads: std.AutoHashMapUnmanaged(*const Node, std.ArrayList(*const Node)) = .empty,
     /// The call being made stands alone as a statement (so a method without a result is meant), D-149.
     call_is_stmt: bool = false,
@@ -204,7 +207,7 @@ pub const Interp = struct {
     /// The type arguments of the library call being made: `(:Row)` in `csv.read!(:Row)(path)`.
     type_args: []const *const Node = &.{},
     /// The scope of the built-in names (`True`, the type names, the error codes): made once per run by
-    /// the driver's interpreter and the parent of every unit (the driver, each aspect call, each module).
+    /// the root aspect's interpreter and the parent of every unit (the root aspect, each aspect call, each module).
     prelude: ?*Scope = null,
     out: *Io.Writer,
     global: *Scope,
@@ -224,7 +227,7 @@ pub const Interp = struct {
     /// The scope of the last process that ran: kept so the introspection can list its variables.
     proc_scope: ?*Scope = null,
     /// The start addresses of the strings made by text literals: `type(x)` says Text for them. Only the
-    /// driver's interpreter keeps the set (`base()`), so the tasks share it.
+    /// root interpreter keeps the set (`base()`), so the tasks share it.
     text_ptrs: std.AutoHashMapUnmanaged(usize, void) = .empty,
     /// The command-line arguments after the script name: the arguments of `process main`.
     script_args: []const []const u8 = &.{},
@@ -232,10 +235,10 @@ pub const Interp = struct {
     exts: std.ArrayList(*const Node) = .empty,
     /// The `defer` statements registered and not yet run, oldest first (D-081).
     defers: std.ArrayList(*const Node) = .empty,
-    /// The scope of the script being run: the driver's globals, or the scope of one aspect call.
+    /// The scope of the script being run: the root aspect's globals, or the scope of one aspect call.
     /// The functions and classes of that script close over it.
     unit: *Scope,
-    /// The aspects the driver applies, read and checked before the run (project.zig).
+    /// The aspects the root aspect applies, read and checked before the run (project.zig).
     aspects: ?*const ast.Aspects = null,
     /// The modules that the imports reach, read and checked before the run (project.zig).
     modules: ?*const ast.Modules = null,
@@ -251,12 +254,12 @@ pub const Interp = struct {
     io: ?Io = null,
     /// The scheduler of the tasks, made at the first `parallel` or `spawn` (task.zig).
     sched: ?*task.Sched = null,
-    /// The task this interpreter runs: the root for the driver.
+    /// The task this interpreter runs: the root for the root aspect.
     me: ?*task.Task = null,
-    /// For the interpreter of a task: the driver's interpreter, which owns the modules.
+    /// For the interpreter of a task: the root aspect's interpreter, which owns the modules.
     root: ?*Interp = null,
     /// The name of the task, for the messages of a deadlock: the aspect or the subprogram.
-    task_name: []const u8 = "driver",
+    task_name: []const u8 = "aspect",
     /// The group whose do region runs, and the tasks spawned by the job that runs.
     group: ?Group = null,
     job_tasks: ?*std.ArrayList(*Started) = null,
@@ -341,7 +344,7 @@ pub const Interp = struct {
         for (types) |t| try it.define(t, .{ .typ = t }, true);
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the
-        // same in the driver, its aspects and its modules
+        // same in the root aspect, its aspects and its modules
         for (&value.library_traits) |*tr| try it.define(tr.name, .{ .class = tr }, true);
         const codes = [_]struct { []const u8, i64 }{
             .{ "$err_panic", 1 },     .{ "$err_expect", 2 },    .{ "$err_assert", 3 },   .{ "$err_raise", 4 },
@@ -510,7 +513,7 @@ pub const Interp = struct {
 
     // ---- regions and safe points (heap.zig) -------------------------------------------------------
 
-    // Zig tip: only the driver's interpreter keeps regions: tasks share the heap, and while they run
+    // Zig tip: only the root aspect's interpreter keeps regions: tasks share the heap, and while they run
     // nothing is freed (see `Heap.pause`), so their blocks need no bookkeeping.
     /// Start a region (a block, a loop, a process).
     pub fn regionIn(it: *Interp) void {
@@ -887,6 +890,8 @@ pub const Interp = struct {
     pub const finalizeModules = part_script.finalizeModules;
     pub const applyAspect = part_script.applyAspect;
     pub const runAspect = part_script.runAspect;
+    pub const applyPrivate = part_script.applyPrivate;
+    pub const runPrivate = part_script.runPrivate;
     // ---- level 4: parallel groups, channels, tasks (spec/semantics/multitasking.md) -----------------
     // (in interp/parallel.zig)
     pub const host = part_parallel.host;
@@ -914,6 +919,7 @@ pub const Interp = struct {
     pub const ownInputs = part_parallel.ownInputs;
     pub const ownOutputs = part_parallel.ownOutputs;
     pub const startAspect = part_parallel.startAspect;
+    pub const startPrivate = part_parallel.startPrivate;
     pub const spawnTask = part_parallel.spawnTask;
     pub const taskMain = part_parallel.taskMain;
     pub const parallelGroup = part_parallel.parallelGroup;
@@ -972,7 +978,7 @@ fn runSource(src: []const u8, buf: []u8) !struct { out: []const u8, code: u8 } {
 // value is not the expected one.
 test "a free script prints, computes and interpolates" {
     var buf: [256]u8 = undefined;
-    const r = try runSource("new a := 2;\nlet a += 3;\nexpect a == 5;\nprint \"a = {a}\";\n", &buf);
+    const r = try runSource("primary aspect t is\n  process main is\n    new a := 2;\n    let a += 3;\n    expect a == 5;\n    print \"a = {a}\";\n  return;\nend t;\n", &buf);
     try std.testing.expectEqualStrings("a = 5\n", r.out);
     try std.testing.expectEqual(@as(u8, 0), r.code);
 }
@@ -981,10 +987,10 @@ test "a free script prints, computes and interpolates" {
 // as `a free script prints, computes and interpolates` above: see the tip there.
 test "a failed expect exits with 2 and recover catches a raise" {
     var buf: [256]u8 = undefined;
-    const r = try runSource("driver d is process main is print \"x\"; expect 1 == 2; return; end d;", &buf);
+    const r = try runSource("primary aspect d is process main is print \"x\"; expect 1 == 2; return; end d;", &buf);
     try std.testing.expectEqualStrings("x\n", r.out);
     try std.testing.expectEqual(@as(u8, 2), r.code);
-    const s = try runSource("driver d is process main is raise \"boom\"; recover print $error.message; return; end d;", &buf);
+    const s = try runSource("primary aspect d is process main is raise \"boom\"; recover print $error.message; return; end d;", &buf);
     try std.testing.expectEqualStrings("boom\n", s.out);
     try std.testing.expectEqual(@as(u8, 0), s.code);
 }
@@ -1007,7 +1013,7 @@ test "durations are milliseconds, split and batch cut a list" {
     try std.testing.expectEqual(@as(?i64, 10), Interp.durationMs("10ms"));
     try std.testing.expectEqual(@as(?i64, null), Interp.durationMs("42"));
     var buf: [256]u8 = undefined;
-    const r = try runSource("new l := (1, 2, 3, 4, 5);\nprint l.split(2);\nprint l.batch(2);\n", &buf);
+    const r = try runSource("primary aspect t is\n  process main is\n    new l := (1, 2, 3, 4, 5);\n    print l.split(2);\n    print l.batch(2);\n  return;\nend t;\n", &buf);
     try std.testing.expectEqualStrings("((1,2,3),(4,5))\n((1,2),(3,4),(5))\n", r.out);
 }
 
@@ -1018,7 +1024,7 @@ test "a loop frees what each pass makes" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     var diag: @import("evecp").lexer.Diag = .{};
-    const src = "new total := 0;\nfor i in (1..10000) do\n  new s := \"item {i}\";\n  new parts := (i, i + 1);\n  let total += parts.length();\ndone;\nprint total;\n";
+    const src = "primary aspect t is\n  process main is\n    new total := 0;\n    for i in (1..10000) do\n      new s := \"item {i}\";\n      new parts := (i, i + 1);\n      let total += parts.length();\n    done;\n    print total;\n  return;\nend t;\n";
     const root = try @import("evecp").parser.parse(arena.allocator(), src, &diag);
     var buf: [64]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);

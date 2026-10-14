@@ -16,7 +16,7 @@ const Io = std.Io;
 // (`_`). A `const` at file level is built once, at compile time, and stored in the program.
 /// Words that start a declaration worth documenting.
 const declarations = [_][]const u8{
-    "driver", "aspect",  "module", "class", "trait", "function",
+    "primary", "exclusive", "concurrent", "aspect", "module", "class", "trait", "function",
     "method", "process", "routine", "set",  "def",  "service",
     "generator",
 };

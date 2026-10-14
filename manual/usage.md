@@ -33,7 +33,7 @@ Every REPL command below is also a command-line option, so a command can run wit
 
 `eve -x script.eve` (or `eve script.eve`, or `--execute`) always parses the script first, exactly as `--check` does. A syntax error is reported as `file:line:col: error: text`, the exit status is 65 and nothing runs. Only a correct script is executed: the parser builds the syntax tree and the interpreter walks it (`evevm/src/parser.zig`, `ast.zig`, `interp.zig`). The execution loop is the statement loop: before every statement the machine looks into the slot (see below). What the script prints goes to the standard output; errors that no `recover` handled go to the standard error as `file:line: error <code>: message`, and the exit status is the code of the error (see [Exit codes](#exit-codes)).
 
-What the interpreter implements is the whole of `test/level1/`: drivers and free scripts, `let` and `set`, the operators, interpolation with formats, `if`, `while`, `loop`, `for`, `match`, ordinals, lists, arrays, matrices, slices and views, DataSets, HashMaps, Objects, functions, methods, classes with constructors, regular expressions, `expect`, `over`, `panic`, `raise`, `recover`, `finalize` and jobs with `retry` and `resume`. Rules chosen while writing it, to confirm, are in D-063 (`plan/decision_level1.md`). Regular expressions are a small subset: literals, `.`, `^`, `$`, classes `[a-z]`, `\d \w \s`, the quantifiers `* + ?`, and `|` between whole alternatives (no groups).
+What the interpreter implements is the whole of `test/level1/`: aspects (every program is a `primary aspect`, there is no free script), `let` and `set`, the operators, interpolation with formats, `if`, `while`, `loop`, `for`, `match`, ordinals, lists, arrays, matrices, slices and views, DataSets, HashMaps, Objects, functions, methods, classes with constructors, regular expressions, `expect`, `over`, `panic`, `raise`, `recover`, `finalize` and jobs with `retry` and `resume`. Rules chosen while writing it, to confirm, are in D-063 (`plan/decision_level1.md`). Regular expressions are a small subset: literals, `.`, `^`, `$`, classes `[a-z]`, `\d \w \s`, the quantifiers `* + ?`, and `|` between whole alternatives (no groups).
 
 ### Documentation: doc
 
@@ -121,7 +121,7 @@ Tests: none since D-135. Code: `evevm/src/vm.zig`.
 | Dry run | `eve --check script.eve` | scaffold |
 | Daemon (service) | `eve` with parameters | planned, about 0.9 |
 
-Eve 0.1 only runs one driver script. The same program serves all modes, depending on how it is called.
+Eve 0.1 only runs one primary aspect at a time (or an exclusive aspect, for testing it alone: D-182). The same program serves all modes, depending on how it is called.
 
 ## Console REPL (scaffold)
 
@@ -137,9 +137,9 @@ The REPL (read, execute, print, loop) has a menu and a command line. It checks, 
 
 ```
 ~/eve -s file.cfg
-eve:> check ~/path/driver_name.eve
-eve:> debug ~/path/driver_name.eve -s file.cfg
-eve:> execute ~/path/driver_name.eve -s file.cfg -m 2048GB
+eve:> check ~/path/aspect_name.eve
+eve:> debug ~/path/aspect_name.eve -s file.cfg
+eve:> execute ~/path/aspect_name.eve -s file.cfg -m 2048GB
 ```
 
 The command options are not designed yet. The basic commands are (in the code they are the entries of one jump table, `evevm/src/cli.zig`; an entry that is not written yet prints `<name> command, not yet implemented`):
@@ -152,13 +152,13 @@ The command options are not designed yet. The basic commands are (in the code th
 | `compile` | compile a script to bytecode (not designed yet) |
 | `debug` | execute the main process in debug mode |
 | `execute` | execute the main process in production mode |
-| `begin` | start the driver main process step by step execution |
+| `begin` | start the `main` process of the aspect that is run, step by step |
 | `enter` | the enter key: execute the next step |
 | `print` | display the value of a global variable, it can't print locals |
 | `resume` | continue running until a `halt` statement is encountered |
 | `report` | create a debugging report about the system state |
-| `stop` | stop the driver execution but do not clean the memory |
-| `clear` | stop the driver and clean the memory |
+| `stop` | stop the run but do not clean the memory |
+| `clear` | stop the run and clean the memory |
 | `setup` | load the configuration file and set the `$` variables |
 | `help` | display the menu |
 | `quit`, `exit` | stop the machine and exit from the REPL |
@@ -203,11 +203,11 @@ A script run in a machine prints into the answer: `eve` writes it on its standar
 
 ## Daemon (planned)
 
-The machine can run as a service. In service mode several drivers run in parallel; each driver is independent, with its own scope, and can't communicate with the others.
+The machine can run as a service. In service mode several primary aspects run in parallel; each one is independent, with its own scope, and can't communicate with the others.
 
 ## Exit codes
 
-The driver captures the exit code of a process that ends with an error (D-010, D-038, D-052):
+The aspect that is run captures the exit code of a process that ends with an error (D-010, D-038, D-052):
 
 | Code | Cause |
 |---|---|

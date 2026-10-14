@@ -301,9 +301,14 @@ const Lexer = struct {
 // Zig tip: the caller owns what an allocating function returns: `toOwnedSlice` hands the list's
 // memory over as a plain slice, and the caller frees it with `gpa.free(tokens)`. `errdefer` is
 // like `defer` but runs only when the function returns an error, so a failure half way does not
-// leak the list.
+// leak the list. `std.mem.startsWith(u8, text, prefix)` tests the first bytes: a file that starts
+// with `#!` is refused before any token is read (D-179).
 /// All the tokens of `src`, ending with one `.eof`. On a syntax error `diag` tells where.
 pub fn tokenize(gpa: std.mem.Allocator, src: []const u8, diag: *Diag) Error![]Token {
+    if (std.mem.startsWith(u8, src, "#!")) {
+        diag.set(1, 1, "a file has no #! line: Eve has no free scripts, every program is an aspect (D-179)", .{});
+        return error.Syntax;
+    }
     var lx: Lexer = .{ .src = src, .diag = diag };
     var list: std.ArrayList(Token) = .empty;
     errdefer list.deinit(gpa);
@@ -323,19 +328,26 @@ test "comments are skipped and positions are kept" {
     var d: Diag = .{};
     const toks = try tokenize(gpa,
         \\# title
-        \\driver x is ** trailing
+        \\aspect x is ** trailing
         \\/* a
         \\   b */ over;
     , &d);
     defer gpa.free(toks);
-    // driver, x, is, over, ;, eof
+    // aspect, x, is, over, ;, eof
     try std.testing.expectEqual(@as(usize, 6), toks.len);
-    try std.testing.expectEqualStrings("driver", toks[0].text);
+    try std.testing.expectEqualStrings("aspect", toks[0].text);
     try std.testing.expectEqual(@as(u32, 2), toks[0].line);
     try std.testing.expectEqualStrings("over", toks[3].text);
     try std.testing.expectEqual(@as(u32, 4), toks[3].line);
     try std.testing.expectEqual(@as(u32, 9), toks[3].col);
     try std.testing.expectEqual(Kind.eof, toks[5].kind);
+}
+
+// Zig tip: `expectError` proves that a call fails with the named error; `d.message()` is the text the compiler prints.
+test "a #! line is refused" {
+    var d: Diag = .{};
+    try std.testing.expectError(error.Syntax, tokenize(std.testing.allocator, "#!/usr/bin/env eve\nprint 1;", &d));
+    try std.testing.expect(std.mem.indexOf(u8, d.message(), "no free scripts") != null);
 }
 
 test "unterminated block comment and string are reported" {

@@ -3,10 +3,10 @@
 //!
 //! Grammar implemented so far (derived from test/level1; it grows test by test):
 //!
-//!     script     = driver | aspect | { statement }             (a script without a driver is "free")
-//!     aspect     = [ "exclusive" | "concurrent" ] "aspect" name "is" { declaration } "end" name ";"   (one process, main)
+//!     script     = aspect | module | macro                      (no free script, no `#!`: D-179)
+//!     aspect     = [ "exclusive" | "concurrent" | "primary" ] "aspect" name "is" { declaration } "end" name ";"
+//!                  (a process main, perhaps private processes)
 //!     apply      = "apply" name { "/" name } "(" [ arguments ] ")" ";"
-//!     driver     = "driver" name "is" { declaration } "end" name ";"
 //!     declaration= let | set | class | function | method | process
 //!     process    = "process" name "is" block [ "recover" block ] [ "finalize" block ] "return" ";"
 //!     function   = "function" name [ params ] [ "=>" params ] "is" block "return" ";"   (method alike)
@@ -35,7 +35,7 @@ pub const Error = lexer.Error;
 // `.{ key }` entries (with `void` as value, it acts as a set), and `has(text)` is the test. No
 // allocation and no hashing at run time.
 const reserved = std.StaticStringMap(void).initComptime(.{
-    .{"driver"},      .{"is"},        .{"process"},   .{"return"},    .{"end"},       .{"new"},     .{"set"},
+    .{"primary"},     .{"is"},        .{"process"},   .{"return"},    .{"end"},       .{"new"},     .{"set"},
     .{"let"},         .{"if"},        .{"else"},      .{"do"},        .{"done"},      .{"while"},   .{"loop"},
     .{"for"},         .{"in"},        .{"match"},     .{"when"},      .{"then"},      .{"break"},   .{"skip"},
     .{"raise"},       .{"recover"},   .{"finalize"},  .{"job"},       .{"retry"},     .{"resume"},  .{"abort"},
@@ -1801,7 +1801,7 @@ const Parser = struct {
         if (p.isWord("process")) return p.process();
         if (p.isWord("from")) return p.importDecl();
         if (p.isWord("export")) return p.exportDecl();
-        return p.fail("unexpected '{s}': a driver, an aspect or a module holds declarations; a statement goes in a process, a function, a procedure or a method (D-126)", .{describe(p.peek())});
+        return p.fail("unexpected '{s}': an aspect or a module holds declarations; a statement goes in a process, a function, a procedure or a method (D-126)", .{describe(p.peek())});
     }
 
     // Zig tip: a `while (true)` loop with a `break` is the way to read "one or more, separated by": the
@@ -1905,24 +1905,6 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: `driver` relies on the same Zig feature as `routine` above: see the tip there.
-    fn driver(p: *Parser) Error!*const Node {
-        const kw = p.peek();
-        try p.expectWord("driver");
-        const name = try p.expectName("a driver name");
-        try p.expectWord("is");
-        var decls: std.ArrayList(*const Node) = .empty;
-        while (!p.isWord("end")) try decls.append(p.a, try p.declarationInDriver());
-        try p.expectWord("end");
-        const end_name = try p.expectName("the driver name");
-        if (!std.mem.eql(u8, name.text, end_name.text)) {
-            p.i -= 1; // report at the name after `end`
-            return p.fail("'end {s}' does not match 'driver {s}'", .{ end_name.text, name.text });
-        }
-        try p.expectSym(";");
-        return p.mk(.driver, kw, name.text, decls.items);
-    }
-
     // Zig tip: `std.ArrayList(u8)` is a growable text buffer: `appendSlice` adds a piece and `.items`
     // is the finished slice. The path of an aspect is built here, name by name, from the tokens
     // `folder`, `/`, `name`, so `apply tools/hello()` keeps its folder in `text`.
@@ -1931,6 +1913,7 @@ const Parser = struct {
         const kw = p.advance();
         var path: std.ArrayList(u8) = .empty;
         try path.appendSlice(p.a, (try p.expectName("an aspect name")).text);
+        if (p.isSym(".")) return p.fail("the dot is never applied to an aspect: write 'apply {s}(...)', main is its only entry point (D-179)", .{path.items});
         while (p.acceptSym("/")) {
             try path.append(p.a, '/');
             try path.appendSlice(p.a, (try p.expectName("a name after '/'")).text);
@@ -1970,7 +1953,7 @@ const Parser = struct {
     // duration literal such as `100ms`. The counter `group_depth` goes up for the `do` region only.
     /// `[label:] parallel [on error cancel] [within d] declarations do statements done [label];` (D-140).
     fn parallelBlock(p: *Parser, at: Token, label: []const u8) Error!*const Node {
-        if (!p.in_process) return p.fail("parallel is allowed only in the main of a driver or of an aspect it starts (D-140)", .{});
+        if (!p.in_process) return p.fail("parallel is allowed only in a process (D-140)", .{});
         if (p.group_depth > 0) return p.fail("parallel groups are not nested in one process (D-140)", .{});
         try p.expectWord("parallel");
         var cancel = false;
@@ -2006,14 +1989,22 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: a rule can be checked after it is parsed: the aspect is read like a driver, then the
-    // list of declarations is searched for its process. `return p.fail(...)` reports at the token
-    // under the cursor, so `p.i -= 1` first moves it back onto the name after `end`.
-    /// `[exclusive|concurrent] aspect name is … end name;`: a driver-shaped script with exactly one
-    /// process, `main`. Without a kind word the aspect is exclusive (D-130).
+    // Zig tip: `isWord("a") or isWord("b")` is the way to test a small set of words at the cursor. The kind word of an
+    // aspect is one of three reserved words (D-181); `aspect` alone is an exclusive aspect (D-130).
+    /// Is the cursor on the start of an aspect: a kind word or `aspect`?
+    fn isAspectStart(p: *Parser) bool {
+        return p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("primary") or p.isWord("aspect");
+    }
+
+    // Zig tip: a rule can be checked after it is parsed: the aspect is read like any script with declarations, then
+    // the list of declarations is searched for its processes. `return p.fail(...)` reports at the token under the
+    // cursor, so `p.i -= 1` first moves it back onto the name after `end`. A `for` with an index (`decls.items, 0..`)
+    // walks the list and counts at once; `decls.items[i + 1 ..]` is the rest of the list after the item.
+    /// `[exclusive|concurrent|primary] aspect name is … end name;`: a process `main`, the entry point, and perhaps
+    /// private processes (D-179). Without a kind word the aspect is exclusive (D-130).
     fn aspect(p: *Parser) Error!*const Node {
         const kw = p.peek();
-        const kind: []const u8 = if (p.isWord("exclusive") or p.isWord("concurrent")) p.advance().text else "exclusive";
+        const kind: []const u8 = if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("primary")) p.advance().text else "exclusive";
         if (!p.isWord("aspect")) return p.fail("expected 'aspect' after '{s}'", .{kind});
         _ = p.advance();
         const name = try p.expectName("an aspect name");
@@ -2026,56 +2017,57 @@ const Parser = struct {
             p.i -= 1;
             return p.fail("'end {s}' does not match 'aspect {s}'", .{ end_name.text, name.text });
         }
-        var processes: usize = 0;
-        for (decls.items) |d| if (d.tag == .process) {
-            processes += 1;
-            if (!std.mem.eql(u8, d.text, "main")) {
-                p.diag.set(d.line, d.col, "the process of an aspect is named main, not '{s}' (D-066)", .{d.text});
+        var has_main = false;
+        for (decls.items, 0..) |d, i| if (d.tag == .process) {
+            if (std.mem.eql(u8, d.text, "main")) has_main = true;
+            for (decls.items[i + 1 ..]) |e| if (e.tag == .process and std.mem.eql(u8, e.text, d.text)) {
+                p.diag.set(e.line, e.col, "the process '{s}' is declared twice", .{e.text});
                 return error.Syntax;
-            }
+            };
         };
-        if (processes != 1) {
-            p.diag.set(name.line, name.col, "an aspect has exactly one process, named main (D-066)", .{});
+        if (!has_main) {
+            p.diag.set(name.line, name.col, "{s} has no process main: the entry point of an aspect (D-179)", .{name.text});
             return error.Syntax;
         }
         try p.expectSym(";");
         const node = try p.mk(.aspect, kw, name.text, decls.items);
         @constCast(node).public = std.mem.eql(u8, kind, "concurrent"); // the kind word, for the thread safety check (D-129)
+        @constCast(node).primary = std.mem.eql(u8, kind, "primary");
         return node;
     }
 
-    // Zig tip: a scan over the rest of the tokens: `p.toks[p.i..]` is the slice from the cursor. A top-level
-    // `driver` is a word written at column 1. A free script has no declaration of a driver, so one found
-    // there makes the file an Eve macro (D-152).
-    /// Does the file hold a top-level `driver` or aspect after other declarations?
+    // Zig tip: a scan over the rest of the tokens: `p.toks[p.i..]` is the slice from the cursor. An aspect is a word
+    // written at column 1, so one found after other declarations makes the file an Eve macro (D-152).
+    /// Does the file hold a top-level aspect after other declarations?
     fn looksLikeMacro(p: *Parser) bool {
         for (p.toks[p.i..]) |t| {
             if (t.kind != .ident or t.col != 1) continue;
-            if (std.mem.eql(u8, t.text, "driver") or std.mem.eql(u8, t.text, "aspect") or
-                std.mem.eql(u8, t.text, "exclusive") or std.mem.eql(u8, t.text, "concurrent")) return true;
+            if (std.mem.eql(u8, t.text, "aspect") or std.mem.eql(u8, t.text, "exclusive") or
+                std.mem.eql(u8, t.text, "concurrent") or std.mem.eql(u8, t.text, "primary")) return true;
         }
         return false;
     }
 
-    // Zig tip: `first` is the node the caller already read (a driver or an aspect), or null. The declarations are
-    // sorted into three lists, then one `driver` node is built: its kids are the shared declarations, the
-    // declarations of the driver itself and the aspects, so the checker and the interpreter see a driver whose
-    // scope is the scope shared by the whole file. `@constCast` sets the flag after the nodes are made, as the
-    // parser does elsewhere.
-    /// An Eve macro (D-152): shared declarations, aspects and exactly one driver in one file.
+    // Zig tip: `first` is the node the caller already read (an aspect), or null. The declarations are sorted into
+    // three lists, then one node is built from the primary aspect: its kids are the shared declarations, the
+    // declarations of the primary aspect itself and the other aspects, so the checker and the interpreter see an
+    // aspect whose scope is the scope shared by the whole file. `@constCast` sets the flag after the nodes are made,
+    // as the parser does elsewhere.
+    /// An Eve macro (D-152): shared declarations and aspects in one file, exactly one of them primary (D-180).
     fn macro(p: *Parser, first: ?*const Node) Error!*const Node {
         var shared: std.ArrayList(*const Node) = .empty;
         var aspects: std.ArrayList(*const Node) = .empty;
-        var drv: ?*const Node = null;
+        var prim: ?*const Node = null;
         if (first) |f| {
-            if (f.tag == .driver) drv = f else try aspects.append(p.a, f);
+            if (f.primary) prim = f else try aspects.append(p.a, f);
         }
         while (p.peek().kind != .eof) {
-            if (p.isWord("driver")) {
-                if (drv != null) return p.fail("a macro has only one driver (D-152)", .{});
-                drv = try p.driver();
-            } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
-                try aspects.append(p.a, try p.aspect());
+            if (p.isAspectStart()) {
+                const a = try p.aspect();
+                if (a.primary) {
+                    if (prim != null) return p.fail("a macro has only one primary aspect (D-180)", .{});
+                    prim = a;
+                } else try aspects.append(p.a, a);
             } else if (p.isWord("export")) {
                 return p.fail("a macro exports nothing: export is not allowed in a macro (D-126, D-152)", .{});
             } else if (p.isWord("module") or p.isWord("managed") or p.isWord("direct")) {
@@ -2089,7 +2081,7 @@ const Parser = struct {
                 return p.fail("a statement outside a declaration in a macro: '{s}' goes in a process (D-152)", .{describe(p.peek())});
             }
         }
-        const d = drv orelse return p.fail("a macro needs a driver: add 'driver name is … end name;' (D-152)", .{});
+        const d = prim orelse return p.fail("a macro needs a primary aspect: write 'primary aspect name is … end name;' (D-180)", .{});
         var kids: std.ArrayList(*const Node) = .empty;
         try kids.appendSlice(p.a, shared.items);
         try kids.appendSlice(p.a, d.kids);
@@ -2098,18 +2090,16 @@ const Parser = struct {
             try kids.append(p.a, a);
         }
         const node = try p.a.create(Node);
-        node.* = .{ .tag = .driver, .line = d.line, .col = d.col, .text = d.text, .kids = kids.items, .macro = true };
+        node.* = .{ .tag = .aspect, .line = d.line, .col = d.col, .text = d.text, .kids = kids.items, .macro = true, .primary = true };
         return node;
     }
 
-    // Zig tip: `script` relies on the same Zig feature as `routine` above: see the tip there.
+    // Zig tip: `script` relies on the same Zig feature as `routine` above: see the tip there. A file is an aspect, a
+    // module or a macro; anything else, such as a statement at the top, is refused with a message that says what a file
+    // holds (D-179).
     fn script(p: *Parser) Error!*const Node {
-        const at = p.peek();
         var result: *const Node = undefined;
-        if (p.isWord("driver")) {
-            result = try p.driver();
-            if (p.peek().kind != .eof) result = try p.macro(result);
-        } else if (p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("aspect")) {
+        if (p.isAspectStart()) {
             result = try p.aspect();
             if (p.peek().kind != .eof) result = try p.macro(result);
         } else if (p.isWord("module") or ((p.isWord("managed") or p.isWord("direct")) and p.isWordAt(1, "module"))) {
@@ -2117,11 +2107,9 @@ const Parser = struct {
         } else if (p.looksLikeMacro()) {
             result = try p.macro(null);
         } else {
-            var list: std.ArrayList(*const Node) = .empty;
-            while (p.peek().kind != .eof) try list.append(p.a, try p.statement());
-            result = try p.mk(.script, at, "", list.items);
+            return p.fail("a file holds an aspect or a module: '{s}' cannot start it; a statement goes in a process (D-179)", .{describe(p.peek())});
         }
-        if (p.peek().kind != .eof) return p.fail("unexpected '{s}' after the end of the driver", .{describe(p.peek())});
+        if (p.peek().kind != .eof) return p.fail("unexpected '{s}' after the end of the aspect", .{describe(p.peek())});
         return result;
     }
 };
@@ -2151,11 +2139,11 @@ pub fn check(gpa: std.mem.Allocator, src: []const u8, diag: *Diag) Error!void {
 
 // Zig tip: `expectError` checks that a call fails with that exact error; after it the test reads
 // the `Diag` to check the message and the position.
-test "a minimal driver parses" {
+test "a minimal primary aspect parses" {
     var d: Diag = .{};
     try check(std.testing.allocator,
         \\# test
-        \\driver a01_driver is
+        \\primary aspect a01_driver is
         \\  process main is
         \\    over;
         \\  return;
@@ -2169,7 +2157,7 @@ test "a minimal driver parses" {
 test "errors are reported with a position" {
     var d: Diag = .{};
     try std.testing.expectError(error.Syntax, check(std.testing.allocator,
-        \\driver a is
+        \\primary aspect a is
         \\  process main is
         \\    over
         \\  return;
@@ -2178,21 +2166,26 @@ test "errors are reported with a position" {
     try std.testing.expectEqual(@as(u32, 4), d.line);
     try std.testing.expectEqualStrings("expected ';' but found 'return'", d.message());
 
-    try std.testing.expectError(error.Syntax, check(std.testing.allocator, "driver a is process m is return; end b;", &d));
-    try std.testing.expectEqualStrings("'end b' does not match 'driver a'", d.message());
+    try std.testing.expectError(error.Syntax, check(std.testing.allocator, "primary aspect a is process m is return; end b;", &d));
+    try std.testing.expectEqualStrings("'end b' does not match 'aspect a'", d.message());
 }
 
-// Zig tip: `a free script and expressions parse` relies on the same Zig feature as `errors are
-// reported with a position` above: see the tip there.
-test "a free script and expressions parse" {
+// Zig tip: `a primary aspect with expressions parses` relies on the same Zig feature as `errors are
+// reported with a position` above: see the tip there. A script that starts with `#!` or with a statement is no
+// longer a script (D-179): the second `expectError` shows it.
+test "a primary aspect with expressions parses, and a free statement does not" {
     var d: Diag = .{};
     try check(std.testing.allocator,
-        \\#!/usr/bin/env eve
-        \\print "Hello";
-        \\new a := 2 ^ 3 ^ 2;
-        \\let a += (1, 2, 3)[$ - 1];
-        \\expect (x | x in (1..5)) == (1, 2, 3, 4, 5);
+        \\primary aspect t is
+        \\  process main is
+        \\    print "Hello";
+        \\    new a := 2 ^ 3 ^ 2;
+        \\    let a += (1, 2, 3)[$ - 1];
+        \\    expect (x | x in (1..5)) == (1, 2, 3, 4, 5);
+        \\  return;
+        \\end t;
     , &d);
+    try std.testing.expectError(error.Syntax, check(std.testing.allocator, "print \"Hello\";", &d));
 }
 
 // Zig tip: a table of scripts that must be rejected, checked in a loop: `for (bad) |src| { ... }`.
@@ -2204,8 +2197,8 @@ test "wrong scripts are rejected" {
         "print 1 +;",
         "if x do print 1;",
         "while True do print 1; done",
-        "driver a is process m is let x := (1, 2; return; end a;",
-        "driver a is end b;",
+        "primary aspect a is process m is let x := (1, 2; return; end a;",
+        "primary aspect a is end b;",
         "for i (1..2) do done;",
         "x := 1 2;",
         "loop do print 1; done;",
@@ -2217,25 +2210,26 @@ test "wrong scripts are rejected" {
 
 // Zig tip: one test can hold the good and the bad cases of a rule. The first `try check(...)` must
 // succeed (an error would fail the test through `try`); the list of bad scripts must all fail with
-// `error.Syntax`. Here: an aspect has exactly one process named main, and can't `apply`; the kind
-// word is optional and the default is exclusive (D-066, D-090, D-130).
+// `error.Syntax`. Here: an aspect has a process named main and may have private ones, the three kind words
+// are accepted and the default is exclusive (D-090, D-130, D-179, D-181).
 test "an aspect and an apply parse, and the aspect rules hold" {
     var d: Diag = .{};
     try check(std.testing.allocator, "exclusive aspect a is process main(x: Integer, @y: Integer) is let y := x; return; end a;", &d);
     try check(std.testing.allocator, "concurrent aspect a is process main is return; end a;", &d);
     try check(std.testing.allocator, "aspect a is process main is return; end a;", &d);
-    try check(std.testing.allocator, "driver t is process main is new r :Integer; apply tools/a(1, v: 2, @r, *(3, 4)); return; end t;", &d);
+    try check(std.testing.allocator, "primary aspect a is process main is apply prepare(); return; process prepare is return; end a;", &d);
+    try check(std.testing.allocator, "primary aspect t is process main is new r :Integer; apply tools/a(1, v: 2, @r, *(3, 4)); return; end t;", &d);
     const bad = [_][]const u8{
         "exclusive aspect a is process other is return; end a;",
         "exclusive aspect a is function f() => (@r: Integer) is return; end a;",
         "exclusive aspect a is process main is return; process main is return; end a;",
-        "exclusive aspect a is process main is apply b(); return; end a;",
-        "driver t is process main is apply b; return; end t;",
+        "exclusive aspect a is process main is apply b.p(); return; end a;",
+        "primary aspect t is process main is apply b; return; end t;",
     };
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
 }
 
-// Zig tip: a module is parsed like a driver whose body has only declarations and regions: the test
+// Zig tip: a module is parsed like an aspect whose body has only declarations and regions: the test
 // feeds one with an import, an export, a private variable and the three regions, then checks that a free
 // statement and a `process` are refused (D-126). `check` is the helper of the tests above: see the tip there.
 test "a module parses: imports, exports and regions; a free statement is refused" {
@@ -2259,7 +2253,7 @@ test "Atomic(:T) is a type hint and a class may have no shape" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     var d: Diag = .{};
-    const tree = try parse(arena.allocator(), "driver t is class S <: Atomic(:Integer); new n = 0 :Atomic(:Integer); new m = 0 :Integer; process main is return; end t;", &d);
+    const tree = try parse(arena.allocator(), "primary aspect t is class S <: Atomic(:Integer); new n = 0 :Atomic(:Integer); new m = 0 :Integer; process main is return; end t;", &d);
     const cls = tree.kids[0];
     try std.testing.expectEqualStrings("Atomic", cls.kids[1].text);
     try std.testing.expectEqualStrings("Integer", cls.kids[1].ty.?.text);

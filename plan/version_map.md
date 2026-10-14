@@ -63,7 +63,7 @@ Levels 1 and 2. Goal: Run a project: one driver and its aspects, error recovery 
 | F-DOC-04 | Compiler manual | partial | implement, usage, generated feature tables, implemented features (phase 7). *Partial:* `manual/usage.md`. |
 | F-LIB-01 | Console I/O | partial | `print`, `write`, `read`, `error`, `warning`, `log_err`, `log_wrn` (D-053, D-057). *Partial:* `print`, `write`, `log_err` and `log_wrn` (run log, D-114) work; `read`, `error` and `warning` are missing; `io.eve` is a draft. |
 | F-LIB-02 | Exception module | partial | `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, code constants (D-054 to D-056). *Partial:* `raise`, `expect`, `assert` and the `$err_` constants are in the interpreter; `exception.eve` is a draft that is not loaded. |
-| F-LNG-01 | Script shapes | ✓ done | driver with `process main`, free script `#!`, title/subtitle header, comments (D-014, D-037, D-040). |
+| F-LNG-01 | Script shapes | ✓ done | aspect with `process main`, title/subtitle header, comments; no free script and no `#!` since D-179 (earlier D-014, D-037, D-040). |
 | F-LNG-02 | Declarations and assignment | ✓ done | `let`, `set`, `:=`, `=`, `::` clone, views (D-036, D-049). |
 | F-LNG-03 | Expressions and operators | ✓ done | arithmetic, logic, comparison, ranges, membership, precedence (D-019, D-022). |
 | F-LNG-04 | Control flow | ✓ done | `if`, `match`, `while`, `for`, `loop … repeat [while c]`, labels, `break`, `skip` (D-034, D-074). |
@@ -180,7 +180,8 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-LNG-14 | Record types and optional values | open | typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`; needs a decision). |
 | F-NET-01 | HTTP client | open | requests, headers, JSON bodies, time-outs, TLS (review `RNW-R10`). |
 | F-VM-06 | Efficient collections | open | hashed and sorted maps, sets, ropes for Text (review `RVM-R04`). |
-| F-STR-09 | Eve macro (hybrid script) | open | one self-contained file: shared declarations, its aspects and one driver; `apply` (level 2) and `parallel`/`start` (level 4) inside it; a concurrent aspect uses only the thread-safe shared names (D-152; tests e16 to e22, written first). |
+| F-STR-09 | Eve macro (hybrid script) | open | one self-contained file: shared declarations and several aspects, exactly one of them `primary`; `apply` (level 2) and `parallel`/`start` (level 4) inside it; a concurrent aspect uses only the thread-safe shared names (D-152, D-180; tests e16 to e22, e108, e109). |
+| F-STR-10 | Unified aspect | ✓ done | no `driver` keyword, no free script, no `#!`; the kinds `exclusive`, `concurrent` and `primary`; `main` and private processes; calls between aspects at most three levels deep and without a cycle; a concurrent aspect is called from a primary or an exclusive aspect; a primary aspect is run by a command (D-179 to D-183; tests a04, b15, b24, b45 to b54, c24, d36 to d40, e21, e61, e108, e109). |
 
 Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; level 5 passes against the Eve database (SQLite) and a PostgreSQL server; a killed load restarts from its checkpoint; `db backup` and `db restore` round-trip.
 

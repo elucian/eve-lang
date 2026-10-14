@@ -19,7 +19,7 @@ end e54_project_init;
   "files": {
     "out/proj/proj.eve": [
       "# The main script of the project proj.",
-      "driver proj is",
+      "primary aspect proj is",
       "  process main is",
       "    print \"proj: ready\";",
       "  return;",

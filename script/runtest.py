@@ -21,17 +21,17 @@ A test is either a file or a folder:
                                   old expect.json of the level, {"<name>": {...}}, is still read
                                   and the blocks of the script override it
   test/levelN/<name>/<name>.eve   a project test (D-073): the folder is a whole Eve project, with
-                                  the driver <name>.eve and any of asp/, lib/, web/ (templates), data/, out/. Its
+                                  the primary aspect <name>.eve and any of asp/, lib/, web/ (templates), data/, out/. Its
                                   expectations are in <name>/expect.json: {...} (one object).
                                   It runs with the folder as working directory, so paths in the
                                   project are relative to it; out/ is emptied before each run.
   test/levelN/<name>/<code>_test1.eve, <code>_test2.eve, ...
-                                  more drivers of the same project (D-133): each one is a variation
+                                  more primary aspects of the same project (D-133): each one is a variation
                                   (another use case) of the same asp/, lib/ and data/. <code> is the
                                   code of the folder (b05 for b05_apply_spread). Each file is a test
                                   of its own, with its expectations in its /*@expect*/ block; the
-                                  driver inside is named like the file. `runtest.py b05` runs the
-                                  project driver and its variations, `runtest.py b05_test2` one of them.
+                                  aspect inside is named like the file. `runtest.py b05` runs the
+                                  main file of the project and its variations, `runtest.py b05_test2` one of them.
 Other folders are not tests. The expectation keys, all optional:
   "exit"       expected exit code (default 0)
   "args"       command-line arguments
@@ -120,7 +120,7 @@ def natural(name):
 
 
 def variations(folder, name):
-    """The variation drivers of a project folder (D-133): <code>_test1.eve, <code>_test2.eve, ..."""
+    """The variation files of a project folder (D-133): <code>_test1.eve, <code>_test2.eve, ..."""
     code = name.split("_")[0]
     found = []
     for f in sorted(os.listdir(folder)):
@@ -159,7 +159,7 @@ def find_test(name):
             for t in level_tests(lv) if os.path.basename(t)[:-4].startswith(name)]
     exact = [t for t in hits if os.path.basename(t)[:-4] == name]
     if exact:
-        # a project driver brings its variations along (D-133); a variation runs alone
+        # the main file of a project brings its variations along (D-133); a variation runs alone
         return exact[:1] + (variations(os.path.dirname(exact[0]), os.path.basename(exact[0])[:-4])
                             if is_project(exact[0]) and not is_variation(exact[0]) else [])
     if not hits:
@@ -235,7 +235,7 @@ def load_expect(test):
             data = json.load(f)
         spec = dict(data if is_project(test) else data.get(name, {}))
         if is_variation(test):
-            spec = {}          # expect.json is the expectation of the project driver, not of a variation
+            spec = {}          # expect.json is the expectation of the main file of the project, not of a variation
     spec.update(source_expect(test))
     if isinstance(spec.get("stdout"), list):
         spec["stdout"] = "\n".join(spec["stdout"])

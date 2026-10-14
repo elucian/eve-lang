@@ -28,8 +28,8 @@ const Outcome = interp.Outcome;
 // ---- level 4: parallel groups, channels, tasks (spec/semantics/multitasking.md) -----------------
 
 // Zig tip: `orelse` gives the value of an optional or, when it is null, the expression after it:
-// the driver's interpreter has no `root`, so it is its own base.
-/// The interpreter that owns the modules of the run: the driver's.
+// the root aspect's interpreter has no `root`, so it is its own base.
+/// The interpreter that owns the modules of the run: the root aspect's.
 /// The interface that lets the database layer use this interpreter (host.zig).
 pub fn host(it: *Interp) iface.Host {
     return @import("../host.zig").of(it);
@@ -47,7 +47,7 @@ pub fn base(it: *Interp) *Interp {
 // Zig tip: the scheduler is made only when the first task starts, so a program without parallel
 // work never pays for it. `catch return error.OutOfMemory` maps the one error `init` may return
 // onto the `Signal` set of the interpreter.
-/// The scheduler of the run, made on first use; the driver's thread becomes the root task.
+/// The scheduler of the run, made on first use; the root aspect's thread becomes the root task.
 pub fn ensureSched(it: *Interp) Signal!*task.Sched {
     if (it.sched) |s| return s;
     const io = it.io orelse return it.fail("parallel work needs the machine: no input/output handle", .{});
@@ -130,7 +130,7 @@ pub fn blockOn(it: *Interp, wait: task.Wait, ch: *Channel, since: *?i64) Signal!
     if (s.now() >= since.*.? + limit) return it.failWith(41, "Time-out after {s}", .{try it.durText(limit)});
 }
 
-// Zig tip: `$timeout` is an ordinary variable: an aspect shadows the driver value with its own
+// Zig tip: `$timeout` is an ordinary variable: an aspect shadows the root aspect value with its own
 // `set $timeout = 5s;` (D-081 rule 8), so the scope chain gives the right one. The default is 60 seconds.
 /// The longest wait on a channel, in milliseconds.
 pub fn timeoutMs(it: *Interp) i64 {
@@ -360,6 +360,7 @@ pub fn ownOutputs(it: *Interp, g: Group, nodes: []const *const Node, args: []con
 pub fn startAspect(it: *Interp, n: *const Node) Signal!void {
     const g = it.group orelse return it.fail("start is allowed only in the do region of a parallel group", .{});
     const s = try it.ensureSched();
+    if (n.sel) |prc| return it.startPrivate(n, prc, g, s);
     const known = it.aspects orelse return it.fail("no aspect is loaded: '{s}'", .{n.text});
     const aspect = known.get(n.text) orelse return it.fail("aspect '{s}' is not loaded", .{n.text});
     const args = try it.a.dupe(Arg, try it.evalArgs(n.kids));
@@ -374,6 +375,35 @@ pub fn startAspect(it: *Interp, n: *const Node) Signal!void {
         .aspect = aspect,
         .args = args,
         .child = try it.newChild(&buf.writer, aspect.text),
+        .out = buf,
+        .siblings = g.list,
+        .cancel_policy = g.cancel,
+    };
+    st.child.me = st.t;
+    try g.list.append(it.a, st);
+    it.h.pause(); // nothing is freed while the task may run (heap.zig)
+    try it.launch(st);
+}
+
+// Zig tip: a started private process (D-179) is a task like a started aspect, but it runs in the state of the aspect
+// that started it: the record keeps `unit`, the scope of that state, and the task calls `runPrivate` in it. The
+// link step proved that it uses only thread-safe names, so tasks may share that scope; only one task runs at a time
+// (the baton, task.zig). The type of `s` is the scheduler returned by `ensureSched`.
+/// `start name(args);` where `name` is a private process of the concurrent aspect that contains the call.
+pub fn startPrivate(it: *Interp, n: *const Node, prc: *const Node, g: Group, s: anytype) Signal!void {
+    const args = try it.a.dupe(Arg, try it.evalArgs(n.kids));
+    try it.ownOutputs(g, n.kids, args);
+    try it.ownInputs(args);
+    const buf = try it.a.create(Io.Writer.Allocating);
+    buf.* = .init(it.a);
+    const st = try it.a.create(Started);
+    st.* = .{
+        .t = try s.add(),
+        .label = prc.text,
+        .proc = prc,
+        .unit = it.unit,
+        .args = args,
+        .child = try it.newChild(&buf.writer, prc.text),
         .out = buf,
         .siblings = g.list,
         .cancel_policy = g.cancel,
@@ -422,7 +452,7 @@ pub fn taskMain(st: *Started) void {
     if (st.t.cancel != .none) {
         st.cancelled = true; // cancelled before it began: it never runs
     } else {
-        const outcome = if (st.aspect) |asp| c.runAspect(asp, st.args) else blk: {
+        const outcome = if (st.proc) |prc| c.runPrivate(prc, st.args, st.unit.?) else if (st.aspect) |asp| c.runAspect(asp, st.args) else blk: {
             _ = c.invokeWith(st.func.?, null, st.args) catch |e| break :blk e;
             break :blk {};
         };
@@ -597,7 +627,7 @@ pub fn findProcess(root: *const Node, name: []const u8) ?*const Node {
 }
 
 // Zig tip: `run` relies on the same Zig feature as `callMethod` above: see the tip there.
-/// Run a script: a driver (declarations, then `process main`) or a free script (the statements).
+/// Run a script: a root aspect (declarations, then `process main`) or a free script (the statements).
 pub fn run(it: *Interp, root: *const Node) Outcome {
     it.h.root_fn = Interp.roots;
     it.h.root_ctx = it;

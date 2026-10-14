@@ -1,6 +1,6 @@
 //! `project init <folder>`: the setup of a new Eve project (plan/design-project-layout.md). It makes
 //! the folders of the standard layout, the configuration file, the project description and a first
-//! driver, and starts a Git repository when the folder is not in one. It never overwrites: a file
+//! primary aspect, and starts a Git repository when the folder is not in one. It never overwrites: a file
 //! that exists is kept, so the command can run again on a project to add what is missing.
 const std = @import("std");
 const Io = std.Io;
@@ -68,10 +68,10 @@ const config_fmt =
     \\
 ;
 
-// a driver starts with its title, `# …`: a `#!` line would make it a free script or a macro (lexical.md, file header)
-const driver_fmt =
+// the first aspect starts with its title, `# …`: a `#!` line is refused (lexical.md, file header)
+const aspect_fmt =
     \\# The main script of the project {s}.
-    \\driver {s} is
+    \\primary aspect {s} is
     \\  process main is
     \\    print "{s}: ready";
     \\  return;
@@ -102,13 +102,13 @@ pub const Git = enum {
     missing,
 };
 
-// Zig tip: the name of a driver must be an identifier, but a folder can be called anything. This
+// Zig tip: the name of a root aspect must be an identifier, but a folder can be called anything. This
 // function builds a new text in memory the caller owns (`gpa.alloc`), so it returns an error union
 // with `Allocator.Error` (only out of memory can fail). `for (name, 0..) |c, i|` walks the bytes
 // together with their index; `std.ascii.isAlphanumeric` tests one byte.
-/// The driver name for a folder: its last component with every character that an identifier cannot
+/// The root aspect name for a folder: its last component with every character that an identifier cannot
 /// have turned into `_`, and `p_` in front of a name that starts with a digit. `project` when empty.
-pub fn driverName(gpa: std.mem.Allocator, folder: []const u8) std.mem.Allocator.Error![]u8 {
+pub fn aspectName(gpa: std.mem.Allocator, folder: []const u8) std.mem.Allocator.Error![]u8 {
     const trimmed = std.mem.trimEnd(u8, folder, "/\\");
     const last = if (std.mem.lastIndexOfAny(u8, trimmed, "/\\")) |i| trimmed[i + 1 ..] else trimmed;
     var out: std.ArrayList(u8) = .empty;
@@ -198,7 +198,7 @@ pub fn init(io: Io, gpa: std.mem.Allocator, base: Io.Dir, folder: []const u8, us
     const arena = arena_state.allocator();
 
     const root = std.mem.trimEnd(u8, folder, "/\\");
-    const name = try driverName(arena, root);
+    const name = try aspectName(arena, root);
     var result: Result = .{};
 
     try base.createDirPath(io, root);
@@ -214,8 +214,8 @@ pub fn init(io: Io, gpa: std.mem.Allocator, base: Io.Dir, folder: []const u8, us
         try putFile(io, arena, base, root, keep, "", out, &result);
     }
 
-    const driver_file = try std.fmt.allocPrint(arena, "{s}.eve", .{name});
-    try putFile(io, arena, base, root, driver_file, try std.fmt.allocPrint(arena, driver_fmt, .{ name, name, name, name }), out, &result);
+    const aspect_file = try std.fmt.allocPrint(arena, "{s}.eve", .{name});
+    try putFile(io, arena, base, root, aspect_file, try std.fmt.allocPrint(arena, aspect_fmt, .{ name, name, name, name }), out, &result);
     try putFile(io, arena, base, root, "eve.cfg", try std.fmt.allocPrint(arena, config_fmt, .{name}), out, &result);
     try putFile(io, arena, base, root, "meta/project.json", try std.fmt.allocPrint(arena, project_json_fmt, .{ name, layout_version, version.version }), out, &result);
     try putFile(io, arena, base, root, ".gitignore", gitignore, out, &result);
@@ -245,7 +245,7 @@ pub fn init(io: Io, gpa: std.mem.Allocator, base: Io.Dir, folder: []const u8, us
 // escapes (`try`) fails it. `std.testing.tmpDir(.{})` makes a fresh directory and `defer
 // tmp.cleanup()` removes it, so tests leave nothing behind. `std.testing.allocator` reports a leak
 // as a failure, and `std.testing.io` is the `Io` that tests pass to code that touches files.
-test "the driver name is an identifier made from the folder" {
+test "the aspect name is an identifier made from the folder" {
     const a = std.testing.allocator;
     const cases = [_][2][]const u8{
         .{ "shop", "shop" },
@@ -255,7 +255,7 @@ test "the driver name is an identifier made from the folder" {
         .{ "", "project" },
     };
     for (cases) |c| {
-        const got = try driverName(a, c[0]);
+        const got = try aspectName(a, c[0]);
         defer a.free(got);
         try std.testing.expectEqualStrings(c[1], got);
     }
@@ -277,7 +277,7 @@ test "init makes the layout, the files parse, and a second run keeps everything"
         try tmp.dir.access(std.testing.io, p, .{});
     }
 
-    // The first driver must be a correct Eve script.
+    // The first aspect must be a correct Eve script.
     const src = try tmp.dir.readFileAlloc(std.testing.io, "shop/shop.eve", a, .limited(1 << 16));
     defer a.free(src);
     var diag: parser.Diag = .{};

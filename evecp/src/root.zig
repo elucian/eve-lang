@@ -1,5 +1,5 @@
 //! evecp: the compiler of Eve (design-packages.md §3). It reads source text and gives a checked
-//! syntax tree: the lexer, the parser, the checker, the overload rules and the link of a driver
+//! syntax tree: the lexer, the parser, the checker, the overload rules and the link of a root aspect
 //! with its aspects and modules. It also writes documentation and the layout of new projects.
 //! It imports `evecm` only; it knows nothing of the interpreter or the databases.
 
@@ -15,7 +15,7 @@ pub const check = @import("check.zig");
 /// The rules for choosing among overloaded subprograms.
 pub const overload = @import("overload.zig");
 
-/// A driver with its aspects and modules: the project link.
+/// A root aspect with its aspects and modules: the project link.
 pub const project = @import("project.zig");
 
 /// `eve --doc`: Markdown from the comments of a source file.
