@@ -23,7 +23,7 @@ pub const Cancel = enum { none, cancel, timeout };
 
 // Zig tip: fields with a default (`= .none`) need not be given when the struct is made: `.{ .index = 3 }`
 // fills the rest. `?std.Thread` is "a thread, or nothing": the root task is the thread that runs the
-// driver, it was not spawned and is never joined.
+// root aspect, it was not spawned and is never joined.
 /// One task: its place in the order of creation and what it is doing.
 pub const Task = struct {
     index: usize,
@@ -72,7 +72,7 @@ pub const Sched = struct {
         return s;
     }
 
-    /// The root task: the thread of the driver.
+    /// The root task: the thread of the root aspect.
     pub fn root(s: *Sched) *Task {
         return s.tasks.items[0];
     }

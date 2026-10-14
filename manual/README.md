@@ -127,7 +127,7 @@ A feature id is `<source>:<id>`, so ids stay unique across files:
 
 | Source | Example | Taken from |
 |---|---|---|
-| `keyword` | `keyword:driver` | `spec/lexical/keywords.json` |
+| `keyword` | `keyword:aspect` | `spec/lexical/keywords.json` |
 | `operator` | `operator:assign` | `spec/lexical/operators.json` |
 | `delimiter` | `delimiter:block-comment` | `spec/lexical/delimiters.json` |
 | `rule` | `rule:statement` | `ebnf` blocks in `spec/syntax/` |
@@ -143,7 +143,7 @@ A feature id is `<source>:<id>`, so ids stay unique across files:
   "version": "0.1.0",
   "specVersion": "0.1-draft",
   "features": {
-    "keyword:driver": { "status": "yes" },
+    "keyword:aspect": { "status": "yes" },
     "rule:statement": { "status": "partial", "note": "no line continuation yet" }
   }
 }

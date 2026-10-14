@@ -16,7 +16,7 @@ Run it with `python script/runtest.py smoke`.
 
 | Code | Test                | Status | Description                                                                                 |
 |------|---------------------|--------|---------------------------------------------------------------------------------------------|
-| s01  | s01_topology        | PASS   | Topology. The shape of a program: driver,<br>process, functions, procedures, regions.       |
+| s01  | s01_topology        | PASS   | Topology. The shape of a program: primary<br>aspect, process, functions, procedures,...     |
 | s02  | s02_logic           | PASS   | Logic. The truth values and their operators;<br>an error here is absurd and obvious.        |
 | s03  | s03_numeric         | PASS   | Numbers. Zero, one, the extremes of the<br>types, the operators and the literals.           |
 | s04  | s04_string          | PASS   | Strings. The empty string, concatenation,<br>comparison, escapes and placeholders.          |

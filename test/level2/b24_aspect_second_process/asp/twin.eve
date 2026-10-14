@@ -1,9 +1,11 @@
-# twin: two processes
+# twin: main and a private process that main applies
 exclusive aspect twin is
-  process main is
-    print "main";
-  return;
   process helper is
     print "helper";
+  return;
+
+  process main is
+    print "main";
+    apply helper();
   return;
 end twin;

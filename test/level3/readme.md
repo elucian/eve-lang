@@ -21,9 +21,9 @@ This level tests modules and imports, local libraries, classes and methods (vers
 | c04  | c04_test1                      | PASS   | variation 1 of c04: the same module with its<br>name as prefix (D-133)                        |
 | c05  | c05_import_all                 | PASS   | use (*): every module of the folder, names<br>merged into the scope (D-072)                   |
 | c05  | c05_test1                      | PASS   | variation 1 of c05: the two modules one by<br>one, each with its prefix (D-133)               |
-| c06  | c06_module_lifecycle           | PASS   | initialize runs at the import, finalize after<br>the process of the driver (D-068)            |
+| c06  | c06_module_lifecycle           | PASS   | initialize runs at the import, finalize after<br>the process of the primary aspect (D-068)    |
 | c06  | c06_test1                      | PASS   | variation 1 of c06: a module that is imported<br>and never called (D-133)                     |
-| c07  | c07_module_singleton           | PASS   | a module is loaded once: the driver and an<br>aspect share the same copy (D-068)              |
+| c07  | c07_module_singleton           | PASS   | a module is loaded once: the primary aspect<br>and an aspect share the same copy (D-068)      |
 | c07  | c07_test1                      | PASS   | variation 1 of c07: the aspect applied twice<br>shares the same module (D-133)                |
 | c08  | c08_module_private             | PASS   | a member that a module does not export can't<br>be used outside it (D-068, D-085, Q-022 b)    |
 | c08  | c08_test1                      | PASS   | variation 1 of c08: the exported members only<br>(D-133)                                      |
@@ -46,7 +46,7 @@ This level tests modules and imports, local libraries, classes and methods (vers
 | c22  | c22_test1                      | PASS   | variation 1 of c22: only the module with no<br>import (D-133)                                 |
 | c22  | c22_test2                      | PASS   | variation 2 of c22: both modules, the<br>dependent one first in the list (D-133)              |
 | c23  | c23_module_free_statement      | PASS   | a module holds declarations and regions only:<br>a free statement is a compile error (D-126)  |
-| c24  | c24_import_free_script         | PASS   | a free script can't export anything and can't<br>be imported (D-126)                          |
+| c24  | c24_import_aspect              | PASS   | an aspect can't be imported: only a module<br>can (D-126, D-179)                              |
 | c25  | c25_module_not_found           | PASS   | a module that is not found is the error<br>$err_module (code 30), raised at the impor...      |
 | c26  | c26_managed_module_variable    | PASS   | a managed module is rejected when it has a<br>variable that is not atomic (D-129)             |
 | c27  | c27_managed_module_direct_call | PASS   | a managed module that calls a direct module<br>is rejected (D-129)                            |

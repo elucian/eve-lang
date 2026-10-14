@@ -69,7 +69,7 @@ async function main() {
   check(old && old.http === true && old.parts === undefined, "status keeps its first shape");
   const nope = await rpc("vm.nope");
   check(nope.error && nope.error.code === -32601, "an unknown method is -32601");
-  const run = (await rpc("vm.run", { name: "two.eve", source: "#!\nprint 1 + 1;\n", args: [] })).result;
+  const run = (await rpc("vm.run", { name: "two.eve", source: "primary aspect two is\n  process main is\n    print 1 + 1;\n  return;\nend two;\n", args: [] })).result;
   check(run && run.status === 0 && run.output.trim() === "2", "vm.run runs a script");
 
   const ch = await postChunked("/rpc", ['{"jsonrpc":"2.0","id":99,', '"method":"vm.ping"}']);

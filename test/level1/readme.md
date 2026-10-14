@@ -10,10 +10,10 @@ This folder contains drivers for testing fundamentals features.
 
 | Code | Test                   | Status | Description                                                                                    |
 |------|------------------------|--------|------------------------------------------------------------------------------------------------|
-| a01  | a01_driver             | PASS   | Test driver structure and single line<br>comments                                              |
+| a01  | a01_driver             | PASS   | Test primary aspect structure and single line<br>comments                                      |
 | a02  | a02_comments           | PASS   | Every comment form of the language, then a<br>negative end                                     |
 | a03  | a03_print              | PASS   | print writes a string and a new line; no<br>import is needed                                   |
-| a04  | a04_free_script        | PASS   | a free script: sequential statements, no<br>driver and no process                              |
+| a04  | a04_shebang_error      | PASS   | a file has no #! line: Eve has no free<br>scripts, every program is an aspect (D-179)          |
 | a05  | a05_print_write        | PASS   | print adds a new line and separates its<br>arguments with sep, write adds nothing; a...        |
 | a06  | a06_new_set_let        | PASS   | new creates variables, set creates constants,<br>let changes a value (D-076, D-079)            |
 | a07  | a07_arithmetic         | PASS   | numeric operators and their precedence<br>(D-019)                                              |
@@ -68,7 +68,7 @@ This folder contains drivers for testing fundamentals features.
 | a68  | a68_undefined_name     | PASS   | an undefined name is a compile error: the<br>script does not start (D-110)                     |
 | a75  | a75_raise_code         | PASS   | raise "text" creates an error with code 4 and<br>that message (D-054, D-109)                   |
 | a76  | a76_overflow           | PASS   | integer overflow is an error with its own<br>code, 13 (D-109)                                  |
-| a77  | a77_system_variable    | PASS   | a driver can set a system variable and define<br>its own $name (D-109)                         |
+| a77  | a77_system_variable    | PASS   | a primary aspect can set a system variable<br>and define its own $name (D-109)                 |
 | a78  | a78_digit_separator    | PASS   | the digit separator _ is not accepted in a<br>number: a lexical error (Q-013, D-095)           |
 | a80  | a80_let_capture_loop   | PASS   | in a loop a capture creates its name once:<br>the next turns assign it, they do not crea...    |
 | a81  | a81_let_undeclared     | PASS   | let creates a missing name only in a capture:<br>let y := 5 with no y is an error (D-104)      |

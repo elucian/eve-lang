@@ -1,5 +1,5 @@
-//! The project of a driver: the aspects its `apply` statements run (D-066, D-112). Eve is a
-//! compiler first (D-110): before the driver starts, every aspect it applies is found, read,
+//! The project of a run: the aspects its `apply` and `start` statements call (D-066, D-112, D-179). Eve is a
+//! compiler first (D-110): before the run starts, every aspect it calls is found, read,
 //! parsed and checked, and every `apply` is matched with the parameters of the `main` of that
 //! aspect. A missing aspect, a wrong argument, a bad aspect file: all exit 65, and nothing runs.
 //! The interpreter then finds the parsed aspect in the map built here and only runs it.
@@ -14,21 +14,24 @@ pub const Diag = lexer.Diag;
 pub const Error = lexer.Error;
 
 // Zig tip: a struct can carry the state of a whole pass, so its functions take one `*Linker`
-// instead of five parameters. `where` is the file the error is in ("" for the driver itself):
+// instead of five parameters. `where` is the file the error is in ("" for the root aspect itself):
 // the caller prints it in front of the position. `[]const u8` slices are views, never copies;
 // every text here lives in the arena `a`, which the caller frees when the run is over.
 const Linker = struct {
     a: std.mem.Allocator,
     io: Io,
-    /// The folder of the driver: the project root.
+    /// The folder of the aspect that is run: the project root.
     dir: []const u8,
     diag: *Diag,
     where: *[]const u8,
     aspects: *ast.Aspects,
-    /// The modules that the imports of the driver, its aspects and its modules reach (modules.md).
+    /// The modules that the imports of the root aspect, its aspects and its modules reach (modules.md).
     modules: *ast.Modules,
     /// The folders of `$EVE_LIB_PATH`, where external modules are installed (D-128).
     lib_path: []const []const u8 = &.{},
+    /// The file of each aspect that was read, by the name written in the call: an error found while walking the calls
+    /// of that aspect is reported in its file.
+    paths: std.StringHashMapUnmanaged([]const u8) = .empty,
 
     // Zig tip: `fail` fills the `Diag` like the parser does and returns `error.Syntax`, so a caller
     // writes `return l.fail(n, "...", .{})`; see the tip on `Parser.fail`.
@@ -86,6 +89,7 @@ const Linker = struct {
         };
         l.where.* = path;
         const tree = try parser.parse(l.a, src, l.diag);
+        try l.paths.put(l.a, key, path);
         if (tree.tag != .aspect) return l.fail(at, "'{s}' is not an aspect: apply runs only aspects", .{path});
         if (!std.mem.eql(u8, tree.text, short)) {
             return l.fail(at, "the file '{s}' declares the aspect '{s}': the names must be equal", .{ path, tree.text });
@@ -146,7 +150,7 @@ const Linker = struct {
     // Zig tip: `std.mem.startsWith(u8, text, prefix)` tests the beginning of a text. The longer
     // system variable is tried first, because `$EVE_LIB_PATH` also starts with `$EVE_LIB`.
     /// The folder an import path names: `$EVE_HOME` and `$EVE_LIB` are replaced, a path that starts
-    /// with `/` is absolute, any other path is relative to `$EVE_HOME`, the folder of the driver (D-131).
+    /// with `/` is absolute, any other path is relative to `$EVE_HOME`, the folder of the root aspect (D-131).
     fn folderOf(l: *Linker, path: []const u8) Error![]const u8 {
         var text = path;
         if (std.mem.startsWith(u8, text, "$EVE_HOME")) {
@@ -209,8 +213,8 @@ const Linker = struct {
         l.where.* = file;
         const tree = try parser.parse(l.a, src, l.diag);
         // these three errors are in the importing script, at the import: `where` goes back to it
-        if (tree.tag == .script or tree.tag != .module or !std.mem.eql(u8, tree.text, name)) l.where.* = saved;
-        if (tree.tag == .script) return l.fail(at, "'{s}' is a free script: a free script can't export anything and can't be imported (D-126)", .{file});
+        if (tree.tag != .module or !std.mem.eql(u8, tree.text, name)) l.where.* = saved;
+        if (tree.tag == .aspect) return l.fail(at, "'{s}' is an aspect: an aspect can't be imported, only a module can (D-126, D-179)", .{file});
         if (tree.tag != .module) return l.fail(at, "'{s}' is not a module: from … use imports only modules", .{file});
         if (!std.mem.eql(u8, tree.text, name)) {
             return l.fail(at, "the file '{s}' declares the module '{s}': the names must be equal", .{ file, tree.text });
@@ -464,8 +468,17 @@ const Linker = struct {
     // run. It is for facts another part of the program has already proved, like the parser here.
     /// The `process main` of a parsed aspect.
     fn mainOf(aspect: *const Node) *const Node {
-        for (aspect.kids) |k| if (k.tag == .process) return k;
-        unreachable; // the parser guarantees one process (Parser.aspect)
+        for (aspect.kids) |k| if (k.tag == .process and std.mem.eql(u8, k.text, "main")) return k;
+        unreachable; // the parser guarantees a process main (Parser.aspect)
+    }
+
+    // Zig tip: `?*const Node` again: the answer is the process, or null when the aspect declares no process of that name.
+    // A bare name in `apply` or `start` is first looked for here, among the private processes of the aspect that
+    // contains the call (D-179); only when it is not one, it names another aspect.
+    /// The process `name` of the aspect `cur`, or null.
+    fn processOf(cur: *const Node, name: []const u8) ?*const Node {
+        for (cur.kids) |k| if (k.tag == .process and std.mem.eql(u8, k.text, name)) return k;
+        return null;
     }
 
     /// The kind of a literal argument: the only types the link can know without running.
@@ -508,7 +521,14 @@ const Linker = struct {
     // counts are not checked, only the names that are written.
     /// Match the arguments of one `apply` with the parameters of `main`.
     fn match(l: *Linker, apply: *const Node, aspect: *const Node) Error!void {
-        const params = mainOf(aspect).kids[3].kids;
+        return l.matchParams(apply, aspect.text, mainOf(aspect).kids[3].kids);
+    }
+
+    // Zig tip: the matching works on a list of parameters and a name for the messages, so the same code serves the
+    // `main` of another aspect and a private process of the same aspect (D-179).
+    /// Match the arguments of one `apply` or `start` with the parameters `params` of the unit called `name`.
+    fn matchParams(l: *Linker, apply: *const Node, name: []const u8, params: []const *const Node) Error!void {
+        const aspect = .{ .text = name };
         const args = apply.kids;
         var spread = false;
         var positional: usize = 0;
@@ -565,42 +585,91 @@ const Linker = struct {
         }
     }
 
-    // Zig tip: a recursive walk over the tree: every node is looked at, then its type and its
-    // kids. `anyerror`-free: the only errors are the ones of `Error`, so the recursion can name its
-    // own error set (a recursive function needs one written out, see `ast.dump`).
-    /// Find every `apply` in the tree, load its aspect and match the arguments.
-    fn walk(l: *Linker, n: *const Node) Error!void {
-        return l.walkAt(n, 0);
+    // Zig tip: a recursive walk over the tree: every node is looked at, then its kids. The `chain` is the list of the
+    // aspects whose calls led here, the aspect that is run first at index 0: its length is the level of `cur` (D-179).
+    // `defer _ = chain.pop();` takes the aspect off the chain when the walk of its calls is over, however it ends.
+    /// Walk the calls of the aspect `cur`, which is level `chain.len + 1` of the chain of calls (the first is level 1).
+    fn walkAspect(l: *Linker, cur: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
+        try chain.append(l.a, cur);
+        defer _ = chain.pop();
+        for (cur.kids) |k| try l.walkNode(cur, k, chain);
     }
 
-    // Zig tip: one walk serves the driver (`level` 0), an aspect that the driver starts (1) and a leaf
-    // that such an aspect starts (2). The level travels as a parameter, so the recursion needs no
-    // field to save and restore. `start` is checked like `apply`, plus the kind of the aspect (D-140).
+    // Zig tip: `walkNode` finds every `apply` and `start` under a node of the aspect `cur`. The aspects written inside a
+    // macro are skipped here: they are walked when a call reaches them, with the right chain. After the kids of a
+    // parallel group are walked, the group itself is checked: the started aspects are loaded by then (D-140).
     /// Find every `apply` and `start` under `n`; check each parallel group on the way.
-    fn walkAt(l: *Linker, n: *const Node, level: u8) Error!void {
-        if (n.tag == .apply_stmt) {
-            const aspect = try l.load(n);
-            try l.match(n, aspect);
+    fn walkNode(l: *Linker, cur: *const Node, n: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
+        if (n.tag == .aspect) return;
+        if (n.tag == .apply_stmt or n.tag == .start_stmt) try l.callOf(cur, n, chain);
+        for (n.kids) |k| try l.walkNode(cur, k, chain);
+        if (n.tag == .parallel) {
+            try l.groupRules(cur, n, chain.items.len);
+            try l.owners(n);
         }
-        if (n.tag == .start_stmt) {
-            const aspect = try l.load(n);
-            if (!aspect.public) {
-                return l.fail(n, "the aspect '{s}' can not be started: {s} is exclusive, start needs a concurrent aspect (D-130, D-140)", .{ n.text, aspect.text });
-            }
-            try l.match(n, aspect);
-            try l.started(aspect, level + 1);
-        }
-        for (n.kids) |k| try l.walkAt(k, level);
-        if (n.tag == .parallel) try l.owners(n); // after the walk: the started aspects are loaded
     }
 
-    // Zig tip: `?*const Node` again: `firstGroup` answers the first parallel group found under a node,
-    // or null. The walk stops at the first hit with `return`, because one is enough to report.
-    /// The first `parallel` group under `n`, or null.
-    fn firstGroup(n: *const Node) ?*const Node {
-        if (n.tag == .parallel) return n;
-        for (n.kids) |k| if (firstGroup(k)) |g| return g;
-        return null;
+    // Zig tip: `std.mem.indexOfScalar(u8, text, '/')` is null when the text has no folder part. A bare name that the
+    // aspect declares as a process is a call of a private process: it runs on the state of the same aspect, so no
+    // aspect is loaded and no level is added. The node keeps the process in `sel`, which the interpreter reads.
+    /// One `apply` or `start`: a private process of `cur`, or another aspect to load, check and walk (D-179 to D-183).
+    fn callOf(l: *Linker, cur: *const Node, n: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
+        const is_start = n.tag == .start_stmt;
+        if (std.mem.indexOfScalar(u8, n.text, '/') == null) {
+            if (processOf(cur, n.text)) |prc| {
+                if (is_start and !cur.public) {
+                    return l.fail(n, "{s} is serial: apply '{s}' instead of starting it, only a concurrent aspect starts its private processes (D-181)", .{ if (cur.primary) "a primary aspect" else "an exclusive aspect", n.text });
+                }
+                try l.matchParams(n, n.text, prc.kids[3].kids);
+                @constCast(n).sel = prc;
+                return;
+            }
+        }
+        const aspect = try l.load(n);
+        if (aspect.primary) {
+            return l.fail(n, "a primary aspect is run by a command: it can't be applied or started ('{s}', D-181)", .{n.text});
+        }
+        if (is_start and !aspect.public) {
+            return l.fail(n, "the aspect '{s}' can not be started: {s} is exclusive, start needs a concurrent aspect (D-130, D-140)", .{ n.text, aspect.text });
+        }
+        if (aspect.public and cur.public) {
+            return l.fail(n, "a concurrent aspect is called from a primary or an exclusive aspect: '{s}' is called from the concurrent aspect '{s}' (D-183)", .{ aspect.text, cur.text });
+        }
+        // no cycle: an aspect already in the chain would be called again (D-179)
+        for (chain.items, 0..) |c, i| {
+            if (!std.mem.eql(u8, c.text, aspect.text)) continue;
+            if (i == chain.items.len - 1) return l.fail(n, "{s} calls itself: an aspect can't call itself (D-179)", .{aspect.text});
+            var text: std.ArrayList(u8) = .empty;
+            for (chain.items[i..]) |m| try text.print(l.a, "{s} calls ", .{m.text});
+            try text.appendSlice(l.a, aspect.text);
+            return l.fail(n, "{s}: no chain of calls may come back to an aspect (D-179)", .{text.items});
+        }
+        if (chain.items.len >= 3) {
+            return l.fail(n, "'{s}' is more than three levels deep: the chain of aspects is at most three levels (D-179)", .{aspect.text});
+        }
+        try l.match(n, aspect);
+        const saved = l.where.*;
+        l.where.* = l.paths.get(n.text) orelse saved;
+        try l.walkAspect(aspect, chain);
+        l.where.* = saved;
+    }
+
+    // Zig tip: the level of the aspect that holds the group is the length of the chain. The aspect that is run is level
+    // 1 and has no limit but `$max_parallel`; an aspect it calls is level 2 and starts at most 2 tasks, none in a loop;
+    // level 3 is a leaf and has no group (D-140, D-179).
+    /// The rules of one parallel group, by the level of its aspect.
+    fn groupRules(l: *Linker, cur: *const Node, group: *const Node, level: usize) Error!void {
+        if (level >= 3) {
+            return l.fail(group, "parallel is allowed only in an aspect of the first two levels: {s} is a leaf (D-140, D-179)", .{cur.text});
+        }
+        if (level == 2) {
+            var count: usize = 0;
+            var looped = false;
+            countStarts(group, false, &count, &looped);
+            if (count > 2 or looped) {
+                return l.fail(group, "{s} starts more than 2 aspects: an aspect of the second level starts at most 2, none in a loop (D-081, D-140)", .{cur.text});
+            }
+        }
     }
 
     // Zig tip: a counter passed by pointer (`*usize`) lets a recursive walk add to one total; `in_loop`
@@ -613,23 +682,6 @@ const Linker = struct {
         }
         const loop = in_loop or n.tag == .for_ or n.tag == .while_ or n.tag == .repeat_;
         for (n.kids) |k| countStarts(k, loop, count, looped);
-    }
-
-    // Zig tip: `orelse return` ends the function quietly when the optional is null: an aspect without
-    // a group needs no check.
-    /// The rules for a started aspect: one level of groups with at most 2 starts (D-081, D-140).
-    fn started(l: *Linker, aspect: *const Node, level: u8) Error!void {
-        const group = firstGroup(aspect) orelse return;
-        if (level >= 2) {
-            return l.fail(group, "parallel is allowed only in the main of a driver or of an aspect it starts: {s} is a leaf (D-140)", .{aspect.text});
-        }
-        var count: usize = 0;
-        var looped = false;
-        countStarts(group, false, &count, &looped);
-        if (count > 2 or looped) {
-            return l.fail(group, "{s} starts more than 2 aspects: an aspect started by the driver starts at most 2, none in a loop (D-081, D-140)", .{aspect.text});
-        }
-        for (aspect.kids) |k| try l.walkAt(k, level);
     }
 
     // Zig tip: the output arguments of a group are collected as text keys in a list: `s` for a whole
@@ -662,7 +714,7 @@ const Linker = struct {
     fn ownersIn(l: *Linker, n: *const Node, in_loop: bool, seen: *std.ArrayList([]const u8)) Error!void {
         if (n.tag == .parallel) return;
         if (n.tag == .start_stmt) {
-            const params = if (l.aspects.get(n.text)) |asp| mainOf(asp).kids[3].kids else &.{};
+            const params = if (n.sel) |prc| prc.kids[3].kids else if (l.aspects.get(n.text)) |asp| mainOf(asp).kids[3].kids else &.{};
             for (n.kids, 0..) |a, i| {
                 const r = if (a.tag == .pair) a.kids[1] else a;
                 if (r.tag != .ref) continue;
@@ -697,7 +749,7 @@ pub var env_lib_path: []const []const u8 = &.{};
 // Zig tip: `*[]const u8` is a pointer to a slice: the function writes the answer through it, here
 // the path of the file in which an error was found. A function returns one value (the error
 // union), so extra answers come back this way, through pointers the caller gave.
-/// Link a driver: read every aspect it applies into `aspects`. On an error returns `error.Syntax`,
+/// Link the aspect that is run: read every aspect it calls into `aspects`. On an error returns `error.Syntax`,
 /// fills `diag`, and sets `where` to the aspect file when the problem is inside it (else "").
 pub fn link(
     a: std.mem.Allocator,
@@ -712,7 +764,10 @@ pub fn link(
 ) Error!void {
     var l: Linker = .{ .a = a, .io = io, .dir = dir, .diag = diag, .where = where, .aspects = aspects, .modules = modules, .lib_path = lib_path };
     where.* = "";
-    if (tree.tag == .driver) {
+    if (tree.tag == .aspect) {
+        if (tree.public) {
+            return l.fail(tree, "a concurrent aspect is called from a primary or an exclusive aspect: a command does not run '{s}' (D-183)", .{tree.text});
+        }
         // the aspects written in the macro are searched before asp/ and the project root (D-152)
         if (tree.macro) for (tree.kids) |k| if (k.tag == .aspect) {
             // an aspect of the macro with the name of a file of the project would be ambiguous (D-152)
@@ -728,12 +783,13 @@ pub fn link(
         };
         try l.imports(tree);
         try l.access(tree);
-        try l.walk(tree);
+        var chain: std.ArrayList(*const Node) = .empty;
+        try l.walkAspect(tree, &chain);
     }
 }
 
 // Zig tip: a test builds a small project in memory instead of on disk: here the matching of
-// arguments is tried on a parsed driver and a parsed aspect, with no file read.
+// arguments is tried on a parsed primary aspect and a parsed aspect, with no file read.
 test "an apply is matched with the parameters of main" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -744,9 +800,83 @@ test "an apply is matched with the parameters of main" {
     var where: []const u8 = "";
     var modules: ast.Modules = .empty;
     var l: Linker = .{ .a = a, .io = undefined, .dir = ".", .diag = &d, .where = &where, .aspects = &aspects, .modules = &modules };
-    const ok = try parser.parse(a, "driver t is process main is apply g(\"Eve\", greeting: \"Yo\"); return; end t;", &d);
+    const ok = try parser.parse(a, "primary aspect t is process main is apply g(\"Eve\", greeting: \"Yo\"); return; end t;", &d);
     try l.match(ok.kids[0].kids[0].kids[0], asp);
-    const bad = try parser.parse(a, "driver t is process main is apply g(42); return; end t;", &d);
+    const bad = try parser.parse(a, "primary aspect t is process main is apply g(42); return; end t;", &d);
     try std.testing.expectError(error.Syntax, l.match(bad.kids[0].kids[0].kids[0], asp));
     try std.testing.expectEqualStrings("the parameter 'who' is String, the argument is Integer", d.message());
+}
+
+// Zig tip: the aspects can be put in the map by hand (`aspects.put(a, name, node)`), as the link step does for the
+// aspects of a macro; `load` then finds them without reading a file. `walkAspect` is the whole check of the calls: the
+// test gives it the root and an empty chain, and reads the message of each refusal (D-179, D-181, D-183).
+test "the calls between aspects: a primary aspect, a cycle, itself, a fourth level and a concurrent caller are refused" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var d: Diag = .{};
+    var aspects: ast.Aspects = .empty;
+    var where: []const u8 = "";
+    var modules: ast.Modules = .empty;
+    var l: Linker = .{ .a = a, .io = undefined, .dir = ".", .diag = &d, .where = &where, .aspects = &aspects, .modules = &modules };
+    const sources = [_][2][]const u8{
+        .{ "boss", "primary aspect boss is process main is return; end boss;" },
+        .{ "ping", "exclusive aspect ping is process main is apply pong(); return; end ping;" },
+        .{ "pong", "exclusive aspect pong is process main is apply ping(); return; end pong;" },
+        .{ "again", "exclusive aspect again is process main is apply again(); return; end again;" },
+        .{ "one", "exclusive aspect one is process main is apply two(); return; end one;" },
+        .{ "two", "exclusive aspect two is process main is apply three(); return; end two;" },
+        .{ "three", "exclusive aspect three is process main is apply four(); return; end three;" },
+        .{ "four", "exclusive aspect four is process main is return; end four;" },
+        .{ "work", "concurrent aspect work is process main is apply four(); return; end work;" },
+        .{ "fine", "exclusive aspect fine is process main is apply four(); return; end fine;" },
+    };
+    for (sources) |s| try aspects.put(a, s[0], try parser.parse(a, s[1], &d));
+    const cases = [_][2][]const u8{
+        .{ "apply boss();", "a primary aspect is run by a command" },
+        .{ "apply ping();", "ping calls pong calls ping" },
+        .{ "apply again();", "again calls itself" },
+        .{ "apply one();", "more than three levels" },
+        .{ "apply work();", "" },
+        .{ "apply fine();", "" },
+    };
+    for (cases) |c| {
+        const src = try std.fmt.allocPrint(a, "primary aspect t is process main is {s} return; end t;", .{c[0]});
+        const root = try parser.parse(a, src, &d);
+        var chain: std.ArrayList(*const Node) = .empty;
+        if (c[1].len == 0) {
+            try l.walkAspect(root, &chain);
+        } else {
+            try std.testing.expectError(error.Syntax, l.walkAspect(root, &chain));
+            try std.testing.expect(std.mem.indexOf(u8, d.message(), c[1]) != null);
+        }
+    }
+    // a concurrent aspect that applies another concurrent aspect
+    try aspects.put(a, "inner", try parser.parse(a, "concurrent aspect inner is process main is return; end inner;", &d));
+    try aspects.put(a, "outer", try parser.parse(a, "concurrent aspect outer is process main is apply inner(); return; end outer;", &d));
+    const root = try parser.parse(a, "primary aspect t is process main is apply outer(); return; end t;", &d);
+    var chain: std.ArrayList(*const Node) = .empty;
+    try std.testing.expectError(error.Syntax, l.walkAspect(root, &chain));
+    try std.testing.expect(std.mem.indexOf(u8, d.message(), "a concurrent aspect is called from a primary or an exclusive aspect") != null);
+}
+
+// Zig tip: a call of a private process is not looked up as an aspect: the walk stores the process in `sel`, and a
+// `start` of it is allowed only in a concurrent aspect (D-179, D-181).
+test "a private process is called by its bare name, and only a concurrent aspect starts one" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var d: Diag = .{};
+    var aspects: ast.Aspects = .empty;
+    var where: []const u8 = "";
+    var modules: ast.Modules = .empty;
+    var l: Linker = .{ .a = a, .io = undefined, .dir = ".", .diag = &d, .where = &where, .aspects = &aspects, .modules = &modules };
+    const ok = try parser.parse(a, "primary aspect t is process work(n: Integer) is return; process main is apply work(1); return; end t;", &d);
+    var chain: std.ArrayList(*const Node) = .empty;
+    try l.walkAspect(ok, &chain);
+    const bad = try parser.parse(a, "primary aspect t is process work is return; process main is parallel do start work(); done; return; end t;", &d);
+    try std.testing.expectError(error.Syntax, l.walkAspect(bad, &chain));
+    try std.testing.expect(std.mem.indexOf(u8, d.message(), "a primary aspect is serial") != null);
+    const wrong = try parser.parse(a, "primary aspect t is process work(n: Integer) is return; process main is apply work(\"x\"); return; end t;", &d);
+    try std.testing.expectError(error.Syntax, l.walkAspect(wrong, &chain));
 }

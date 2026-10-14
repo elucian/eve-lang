@@ -111,15 +111,6 @@ pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
 
 // Zig tip: `runRoot` relies on the same Zig feature as `define` above: see the tip there.
 pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
-    if (root.tag == .script) {
-        it.regionIn();
-        defer it.regionOut();
-        for (root.kids) |s| {
-            try it.exec(s);
-            it.safe();
-        }
-        return;
-    }
     defer it.finalizeModules();
     defer if (interp.data_api) |d| d.close_databases(it.host());
     defer dlib.closeStreams(it);
@@ -136,9 +127,9 @@ pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
     for (root.kids) |d| {
         if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
     }
-    const main = Interp.findProcess(root, "main") orelse return it.fail("the driver has no process main", .{});
+    const main = Interp.findProcess(root, "main") orelse return it.fail("the aspect has no process main", .{});
     // the arguments of the command line go to the parameters of the process
     var args: std.ArrayList(Arg) = .empty;
     for (it.script_args) |a| try args.append(it.a, .{ .value = try it.staticStr(a) });
-    try it.runProcess(main, args.items, "driver", root.text);
+    try it.runProcess(main, args.items, "aspect", root.text);
 }

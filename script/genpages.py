@@ -68,7 +68,7 @@ def level_names():
 
 
 def tests_of(folder):
-    """The test files of a level folder: flat files, project drivers and their variations."""
+    """The test files of a level folder: flat files, project main files and their variations."""
     found = []
     for f in sorted(os.listdir(folder)):
         path = os.path.join(folder, f)
@@ -200,9 +200,9 @@ def gen_quality():
 
 PAGES = {
     'features': ('Eve Feature Tests', 'Eve Feature Tests', gen_tests,
-              'The feature tests of Eve (the conformity tests), by level. Every test is a script (or a project folder) with its expected output in a comment block at the end: a driver passes when the machine prints exactly that and ends with the expected exit code. Each row shows what the test checks, taken from the first comment line of the file, and a link to the file in the code viewer. The tests are the specification that an implementation must pass: <code>python script/runtest.py all</code> runs them, and <a href="/projects/eve/quality.html">Smoke Test and Performance</a> have their own page.'),
+              'The feature tests of Eve (the conformity tests), by level. Every test is a script (or a project folder) with its expected output in a comment block at the end: a test passes when the machine prints exactly that and ends with the expected exit code. Each row shows what the test checks, taken from the first comment line of the file, and a link to the file in the code viewer. The tests are the specification that an implementation must pass: <code>python script/runtest.py all</code> runs them, and <a href="/projects/eve/quality.html">Smoke Test and Performance</a> have their own page.'),
     'quality': ('Eve Smoke Test and Performance', 'Eve Smoke Test & Performance', gen_quality,
-                'The checks of the machine that are not feature tests. The <b>smoke test</b> is the quick check that the machine and the language are sane: each script is a driver with small functions and very simple <code>expect</code> lines, <code>True</code> is <code>True</code>, <code>0 == 0</code>. It does not depend on the feature tests, and it shows that the program compiles, parses and has no contradiction. The <b>performance</b> benchmarks check that the machine stays fast while features are added: each has a twin in Python, and the history of the runs shows every change.'),
+                'The checks of the machine that are not feature tests. The <b>smoke test</b> is the quick check that the machine and the language are sane: each script is a primary aspect with small functions and very simple <code>expect</code> lines, <code>True</code> is <code>True</code>, <code>0 == 0</code>. It does not depend on the feature tests, and it shows that the program compiles, parses and has no contradiction. The <b>performance</b> benchmarks check that the machine stays fast while features are added: each has a twin in Python, and the history of the runs shows every change.'),
 }
 
 

@@ -52,7 +52,7 @@ pub fn updateStmt(it: *Interp, n: *const Node) Signal!void {
 
 // Zig tip: a call of a generator makes an object of the core class `Generator`; the object has two fields
 // that the program reads, `done` and `value`, and one hidden, `handle`, the place of its `GenState` in the
-// list of the driver's interpreter. Nothing runs yet: the thread starts at the first `next()`. The arguments
+// list of the root aspect's interpreter. Nothing runs yet: the thread starts at the first `next()`. The arguments
 // are copied (inputs are by value) and the heap stops freeing while tasks live, as for `spawn`.
 /// `count_to(5)`: the generator object. The body begins at the first request for a value.
 pub fn makeGenerator(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {

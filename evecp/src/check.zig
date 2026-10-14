@@ -49,7 +49,6 @@ const Checker = struct {
     /// Every class of the script by name, for the methods of `obj.method()`.
     classes: std.StringHashMapUnmanaged(*const Node) = .empty,
     /// The script being checked is an aspect: it can't `apply` another aspect (D-066).
-    in_aspect: bool = false,
     /// An import brings names without a prefix (`m(*)` or `*`): they are known only when the modules
     /// are read (project.zig), so an unknown name is not an error here (modules.md).
     open_names: bool = false,
@@ -59,7 +58,7 @@ const Checker = struct {
     allow_abstract: bool = false,
     /// The routine being checked is a constructor.
     in_ctor: bool = false,
-    /// The functions and procedures of the driver by name, in order, when several share one name (D-149).
+    /// The functions and procedures of the root aspect by name, in order, when several share one name (D-149).
     ov: std.StringHashMapUnmanaged(std.ArrayList(*const Node)) = .empty,
     /// The `table` declarations by name (level 5).
     tables: std.StringHashMapUnmanaged(*const Node) = .empty,
@@ -101,7 +100,7 @@ const Checker = struct {
     }
 
     // Zig tip: `name[0] == '$'` looks at the first byte. A system variable such as `$epsilon` or
-    // `$error` always exists and a driver may create its own (D-109), so it is never undefined.
+    // `$error` always exists and a root aspect may create its own (D-109), so it is never undefined.
     fn resolve(c: *Checker, at: *const Node, name: []const u8) Error!Info {
         if (name.len > 0 and name[0] == '$') return .{ .kind = .variable };
         if (c.lookup(name)) |info| return info;
@@ -709,7 +708,6 @@ const Checker = struct {
             // aspect itself and the match of the arguments to its parameters are checked once the
             // aspect file is read (project.zig).
             .apply_stmt => {
-                if (c.in_aspect) return c.fail(s, "an aspect can't apply another aspect (D-066)", .{});
                 for (s.kids) |a| _ = try c.expr(a);
             },
             else => {},
@@ -772,7 +770,7 @@ const Checker = struct {
 
     // ---- the script -------------------------------------------------------------------------
 
-    /// Declare, before anything is checked, what a driver declares: they may come in any order (D-041).
+    /// Declare, before anything is checked, what a root aspect declares: they may come in any order (D-041).
     fn declareMembers(c: *Checker, members: []const *const Node) Error!void {
         for (members) |m| {
             switch (m.tag) {
@@ -1117,18 +1115,45 @@ const Checker = struct {
         }
     }
 
-    fn driver(c: *Checker, root_node: *const Node) Error!void {
+    // Zig tip: a function that only reads a tree can be written as a short recursion: `startsProcess` answers whether
+    // any `start name(...)` below `n` names the process `name`. `for (n.kids) |k| if (...) return true;` leaves at the
+    // first hit; the final `return false` is the answer when none was found.
+    /// Does a `start` below `n` start the private process `name` (D-179)?
+    fn startsProcess(n: *const Node, name: []const u8) bool {
+        if (n.tag == .start_stmt and std.mem.eql(u8, n.text, name)) return true;
+        for (n.kids) |k| if (startsProcess(k, name)) return true;
+        return false;
+    }
+
+    // Zig tip: `aspectSafe` and `collectNames` are the checks of a concurrent aspect of a macro; here they are used on the
+    // aspect itself, with the aspect as the "root" whose plain variables and subprograms are the shared ones. A private
+    // process that the aspect starts runs as a task, so it may use only the names that are thread safe (D-179, D-152).
+    /// A concurrent aspect: each private process it starts uses only atomic variables and thread-safe subprograms.
+    fn startedSafety(c: *Checker, aspect: *const Node) Error!void {
+        for (aspect.kids) |prc| {
+            if (prc.tag != .process or std.mem.eql(u8, prc.text, "main")) continue;
+            if (!startsProcess(aspect, prc.text)) continue;
+            var locals: std.StringHashMapUnmanaged(void) = .empty;
+            try c.collectNames(prc, &locals);
+            for (prc.kids) |k| try c.aspectSafe(aspect, aspect, k, &locals);
+        }
+    }
+
+    // Zig tip: the root of a run is an aspect (D-179). Its declarations are declared first, in any order (D-041), then
+    // checked; a concurrent aspect also has its started private processes checked for thread safety.
+    fn checkRoot(c: *Checker, root_node: *const Node) Error!void {
         try c.push();
         try c.declareMembers(root_node.kids);
         try c.declMembers(root_node.kids);
         if (root_node.macro) try c.concurrentSafety(root_node);
+        if (root_node.public) try c.startedSafety(root_node);
     }
 
     // Zig tip: the loop over the declarations is a function of its own, so an aspect of a macro can be checked
     // with the same code, inside the scope of the shared declarations (D-152). `defer c.pop()` in a `switch`
     // branch runs when the branch ends. An aspect sees the names declared before it (the shared ones), not the
     // variables of a process, which are gone when its frame is popped.
-    /// Check the declarations of a driver, an aspect, a module or a macro.
+    /// Check the declarations of a root aspect, an aspect, a module or a macro.
     fn declMembers(c: *Checker, kids: []const *const Node) Error!void {
         for (kids) |m| {
             switch (m.tag) {
@@ -1149,11 +1174,9 @@ const Checker = struct {
                 .aspect => {
                     try c.push();
                     defer c.pop();
-                    const saved = c.in_aspect;
-                    defer c.in_aspect = saved;
-                    c.in_aspect = true;
                     try c.declareMembers(m.kids);
                     try c.declMembers(m.kids);
+                    if (m.public) try c.startedSafety(m);
                 },
                 .region => try c.block(m.kids[0]),
                 .var_decl, .set => if (m.kids[1].tag != .none) {
@@ -1177,13 +1200,10 @@ const Checker = struct {
 // Zig tip: `check` is the one public function: it makes the checker, runs it on the tree and
 // returns `error.Syntax` with the `Diag` filled when something is wrong. The checker allocates
 // from the arena of the parse (frames, maps), freed together with the tree.
-/// Check a parsed script. A driver is checked as a whole; a free script statement by statement.
+/// Check a parsed script: an aspect (or the root of a macro) or a module, as a whole.
 pub fn check(arena: std.mem.Allocator, tree: *const Node, diag: *Diag) Error!void {
     var c: Checker = .{ .a = arena, .diag = diag };
-    c.in_aspect = tree.tag == .aspect;
-    if (tree.tag == .driver or tree.tag == .aspect or tree.tag == .module) return c.driver(tree);
-    try c.push();
-    for (tree.kids) |s| try c.statement(s);
+    return c.checkRoot(tree);
 }
 
 // Zig tip: a test of a pass that is part of `parse` goes through `parse`: the script is parsed and
@@ -1193,9 +1213,9 @@ pub fn check(arena: std.mem.Allocator, tree: *const Node, diag: *Diag) Error!voi
 test "an undefined name and a redeclared name are refused" {
     const parser = @import("parser.zig");
     var d: Diag = .{};
-    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "driver a is process main is print y; return; end a;", &d));
+    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "primary aspect a is process main is print y; return; end a;", &d));
     try std.testing.expectEqualStrings("undefined name 'y'", d.message());
-    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "driver a is process main is new x := 1; new x := 2; return; end a;", &d));
+    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "primary aspect a is process main is new x := 1; new x := 2; return; end a;", &d));
     try std.testing.expectEqualStrings("'x' is already declared in this scope", d.message());
 }
 
@@ -1204,15 +1224,15 @@ test "an undefined name and a redeclared name are refused" {
 test "a correct script passes, a let of a missing name does not" {
     const parser = @import("parser.zig");
     var d: Diag = .{};
-    try parser.check(std.testing.allocator, "driver a is process main is new x := 1; let x += 2; new l := (1, 2); let l -> e; print e; return; end a;", &d);
-    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "driver a is process main is let y := 5; return; end a;", &d));
+    try parser.check(std.testing.allocator, "primary aspect a is process main is new x := 1; let x += 2; new l := (1, 2); let l -> e; print e; return; end a;", &d);
+    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "primary aspect a is process main is let y := 5; return; end a;", &d));
 }
 
 // Zig tip: a procedure has no value, so using it in an expression is refused before the run.
 test "a procedure is a statement, and a late mandatory parameter is named" {
     const parser = @import("parser.zig");
     var d: Diag = .{};
-    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "driver a is procedure hi is return; process main is new v := hi(); return; end a;", &d));
-    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "driver a is procedure add(p = 0: Integer, @o: Integer) is return; process main is new r: Integer; add(1, @r); return; end a;", &d));
-    try parser.check(std.testing.allocator, "driver a is procedure add(p = 0: Integer, @o: Integer) is return; process main is new r: Integer; add(1, o: @r); return; end a;", &d);
+    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "primary aspect a is procedure hi is return; process main is new v := hi(); return; end a;", &d));
+    try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "primary aspect a is procedure add(p = 0: Integer, @o: Integer) is return; process main is new r: Integer; add(1, @r); return; end a;", &d));
+    try parser.check(std.testing.allocator, "primary aspect a is procedure add(p = 0: Integer, @o: Integer) is return; process main is new r: Integer; add(1, o: @r); return; end a;", &d);
 }
