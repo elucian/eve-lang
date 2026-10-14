@@ -37,7 +37,7 @@ pub const Overlay = enum { none, menu, settings, about, goto, save_as, find_text
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
 /// The buttons of the tool bars.
-pub const Button = enum { run, step_into, step_out, cont, stop, replace, replace_all, help, settings };
+pub const Button = enum { run, step_into, step_out, cont, stop, replace, replace_all };
 
 // Zig tip: A tagged union with payloads, like `Event` in main.zig. `.tree_row = 5` builds a value;
 // `switch (a) { .tree_row => |i| ... }` reads its payload. A field without a payload
@@ -195,6 +195,11 @@ pub const Menu = struct { label: []const u8, items: []const MenuRow };
 
 /// The place of the WINDOW menu in `menus`.
 pub const menu_window: usize = 5;
+/// The place of the MACHINE menu: its first rows are the machines that are connected (see `App.rowAt`).
+pub const menu_machine: usize = 4;
+
+const machine_names = [_][]const u8{ "Local", "Machine 2", "Machine 3" };
+const machine_keys = [_][]const u8{ "Alt+1", "Alt+2", "Alt+3" };
 
 // Zig tip: A `const` array of struct literals is built at compile time and stored in the program.
 // `[_]Menu{...}` lets the compiler count the menus; `menus.len` is then a compile-time number.
@@ -232,9 +237,6 @@ pub const menus = [_]Menu{
         .{ .label = "Breakpoint", .key = "F9", .cmd = .breakpoint },
     } },
     .{ .label = "MACHINE", .items = &.{
-        .{ .label = "Local", .key = "Alt+1", .cmd = .machine_pick, .arg = 1 },
-        .{ .label = "Machine 2", .key = "Alt+2", .cmd = .machine_pick, .arg = 2 },
-        .{ .label = "Machine 3", .key = "Alt+3", .cmd = .machine_pick, .arg = 3 },
         sep,
         .{ .label = "Connect…", .key = "Ctrl+K", .cmd = .connect },
         .{ .label = "Upload…", .key = "Ctrl+U", .cmd = .upload },
@@ -272,7 +274,7 @@ const help_tutorial = @embedFile("help_tutorial");
 pub const Layout = struct { tree: Rect = .{}, main: Rect = .{}, debug: Rect = .{}, tools: Rect = .{} };
 
 /// What the mouse is dragging: a border between panels, or a scroll bar thumb.
-pub const Drag = enum { none, tree_split, tools_split, vbar, hbar };
+pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select };
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
@@ -344,6 +346,8 @@ pub const App = struct {
     /// The Alt key was pressed alone: the bar shows its letters underlined until the next key or click.
     alt_hint: bool = false,
     machine: u8 = 1,
+    /// Which machines are connected. The local machine always is; the others join with step T5.
+    connected: [3]bool = .{ true, false, false },
     running: bool = false,
     quit: bool = false,
 
@@ -364,6 +368,14 @@ pub const App = struct {
     layout: Layout = .{},
     /// True when the editor must scroll to show the cursor (after a key); false after the wheel or a scroll bar.
     follow: bool = true,
+    /// The text copied with Ctrl+C or Ctrl+X (owned), and a copy waiting to be sent to the system clipboard.
+    clip: ?[]u8 = null,
+    sys_clip: ?[]u8 = null,
+    /// True between the start and the end of a paste made by the terminal: the keys are collected.
+    pasting: bool = false,
+    paste_buf: std.ArrayList(u8) = .empty,
+    /// Where a drag with the mouse started in the text.
+    sel_from: text.Pos = .{ .row = 0, .col = 0 },
     vbar_rect: Rect = .{},
     hbar_rect: Rect = .{},
     /// The longest line that the horizontal scroll bar knows, in cells.
@@ -471,6 +483,9 @@ pub const App = struct {
         gpa.free(self.project_name);
         gpa.free(self.root);
         self.cache.deinit();
+        if (self.clip) |c| gpa.free(c);
+        if (self.sys_clip) |c| gpa.free(c);
+        self.paste_buf.deinit(gpa);
         self.fbClear();
         self.fb_entries.deinit(gpa);
         if (self.fb_path) |fp| gpa.free(fp);
@@ -941,16 +956,34 @@ pub const App = struct {
     // code can call it too. A row that is not in the fixed list of the menu is made on the spot: the
     // WINDOW menu ends with a separator and one row for each open window (at most nine, the ones
     // that Ctrl+1 to Ctrl+9 reach).
+    /// How many machines are connected.
+    pub fn connectedCount(self: *const App) usize {
+        var n: usize = 0;
+        for (self.connected) |on| n += @intFromBool(on);
+        return n;
+    }
+
     /// How many rows menu `m` has now.
     pub fn rowCount(self: *const App, m: usize) usize {
         const base = menus[m].items.len;
         if (m == menu_window and self.tabs.items.len > 0) return base + 1 + @min(self.tabs.items.len, 9);
+        if (m == menu_machine) return base + self.connectedCount();
         return base;
     }
 
     /// Row `k` of menu `m`. The title of a window is a slice of the tab, valid while the tab is open.
     pub fn rowAt(self: *const App, m: usize, k: usize) MenuRow {
         const items = menus[m].items;
+        if (m == menu_machine) {
+            // the machines that are connected come first, then the fixed rows
+            var seen: usize = 0;
+            for (self.connected, 0..) |on, n| {
+                if (!on) continue;
+                if (seen == k) return .{ .label = machine_names[n], .key = machine_keys[n], .cmd = .machine_pick, .arg = n + 1 };
+                seen += 1;
+            }
+            return items[k - seen];
+        }
         if (k < items.len) return items[k];
         if (k == items.len) return sep;
         const t = k - items.len - 1;
@@ -1316,6 +1349,37 @@ pub const App = struct {
         }
     }
 
+    // Zig tip: The place under the pointer is found from the rectangle of the text: the row is the
+    // first row shown plus the distance from the top of the rectangle, the column goes through
+    // `byteAtDisplay` so that it lands at the start of a character. A pointer above or below the
+    // text scrolls it one line, so a drag can select more than the screen shows.
+    /// The place in the text under the mouse pointer.
+    fn editorPos(self: *App, b: *text.Buffer, m: vaxis.Mouse) text.Pos {
+        const r = self.editor_rect;
+        const rel: i32 = @as(i32, m.row) - r.y;
+        const last = b.lineCount() - 1;
+        var row: usize = undefined;
+        if (rel < 0) {
+            b.top -|= 1;
+            row = b.top;
+        } else if (rel >= r.h) {
+            if (b.top + r.h <= last) b.top += 1;
+            row = @min(b.top + r.h -| 1, last);
+        } else row = @min(b.top + @as(usize, @intCast(rel)), last);
+        const dc: usize = b.left + @as(usize, @intCast(@max(@as(i32, m.col) - r.x, 0)));
+        return .{ .row = row, .col = text.Buffer.byteAtDisplay(b.lineAt(row), dc) };
+    }
+
+    /// The pointer moves with the button down in the text: the cursor follows, the anchor is where the click was.
+    fn selectTo(self: *App, m: vaxis.Mouse) void {
+        const b = self.activeBuffer() orelse return;
+        self.follow = false;
+        const pos = self.editorPos(b, m);
+        if (b.anchor == null) b.anchor = self.sel_from;
+        b.row = pos.row;
+        b.col = pos.col;
+    }
+
     /// The mouse moves with a button down.
     fn dragTo(self: *App, m: vaxis.Mouse) void {
         switch (self.drag) {
@@ -1323,6 +1387,7 @@ pub const App = struct {
             .tree_split => self.tree_w = @intCast(@max(@as(i32, m.col) + 1, 0)),
             .tools_split => self.tools_h = @intCast(@max(@as(i32, self.rows) - 3 - m.row, 0)),
             .vbar, .hbar => self.scrollTo(m),
+            .select => self.selectTo(m),
         }
     }
 
@@ -1546,6 +1611,11 @@ pub const App = struct {
         }
         self.alt_hint = false;
         self.follow = true;
+        if (self.pasting) {
+            // a paste made by the terminal arrives as keys: collect them until the paste ends
+            if (key.text) |t| try self.paste_buf.appendSlice(self.gpa, t) else if (key.matches(Key.enter, .{})) try self.paste_buf.append(self.gpa, '\n') else if (key.matches(Key.tab, .{})) try self.paste_buf.append(self.gpa, '\t');
+            return;
+        }
         if (self.message) |m| {
             self.gpa.free(m);
             self.message = null;
@@ -1565,8 +1635,12 @@ pub const App = struct {
         if (key.matches(Key.page_up, .{ .ctrl = true })) return self.nextTab(-1);
         if (key.matches(Key.page_down, .{ .ctrl = true })) return self.nextTab(1);
         if (key.matches(Key.tab, .{ .ctrl = true })) return self.nextTab(1);
-        if (key.mods.ctrl and !key.mods.alt and key.codepoint >= '1' and key.codepoint <= '9') {
-            return self.pickWindow(key.codepoint - '1');
+        if (ctrlDigit(key)) |d| {
+            if (d >= self.tabs.items.len) {
+                self.setMessage("no window {d}", .{d + 1});
+                return;
+            }
+            return self.pickWindow(d);
         }
         if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.runMenu(.shortcuts, 0);
         if (key.matches(',', .{ .ctrl = true })) return self.openOverlay(.settings);
@@ -1596,6 +1670,19 @@ pub const App = struct {
         }
     }
 
+    // Zig tip: `?u8` is an optional byte: a number from 0 to 8, or null when the key is not Ctrl and a
+    // digit. The digit is looked for in the code of the key and in the code of the key on the
+    // standard layout (`base_layout_codepoint`), which terminals fill in differently.
+    /// Ctrl+1 to Ctrl+9 give 0 to 8.
+    fn ctrlDigit(key: Key) ?usize {
+        if (!key.mods.ctrl or key.mods.alt) return null;
+        if (key.codepoint >= '1' and key.codepoint <= '9') return key.codepoint - '1';
+        if (key.base_layout_codepoint) |c| {
+            if (c >= '1' and c <= '9') return c - '1';
+        }
+        return null;
+    }
+
     // Zig tip: A function that returns `bool` can say "I used this key" to its caller, which then
     // stops looking. The same shortcuts work on the screen and inside a dialog, so the dialogs
     // can replace each other.
@@ -1608,10 +1695,13 @@ pub const App = struct {
     // Zig tip: `n == 1` and `else`: the value `u8` is a small integer type of one byte; here 1, 2 and
     // 3 are the F-keys. Real machines come with step T5.
     fn pickMachine(self: *App, n: u8) void {
-        if (n == 1) {
-            self.machine = 1;
-            self.setMessage("connection: local", .{});
-        } else self.notYet("A remote machine (Alt+2, Alt+3)", "T5");
+        if (n < 1 or n > 3) return;
+        if (!self.connected[n - 1]) {
+            self.setMessage("machine {d} is not connected (MACHINE > Connect)", .{n});
+            return;
+        }
+        self.machine = n;
+        self.setMessage("connection: {s}", .{if (n == 1) "local" else machine_names[n - 1]});
     }
 
     // Zig tip: `switch (self.overlay)` on an enum, with `.none => {}` for the value that needs
@@ -1669,16 +1759,128 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: A long chain of `else if` ends in `else if (key.text) |t| ...`: the text of a printable
-    // key is an optional slice, and it is typed only when no control key was held.
+    // Zig tip: `var k = key; k.mods.shift = false;` copies the key and clears one flag of the copy, so
+    // the same `matches` calls recognize an arrow whether Shift is held or not. Shift then only
+    // says "extend the selection". The `blk:` label gives the block a name so `break :blk value`
+    // can leave it with a result.
+    /// The keys of the editor: moving (Shift extends the selection), typing, copy and paste.
     fn editorKey(self: *App, key: Key) !void {
         const b = self.activeBuffer() orelse return;
         const ro = self.activeTab().?.virtual;
-        if (key.matches(Key.left, .{})) b.moveLeft() else if (key.matches(Key.right, .{})) b.moveRight() else if (key.matches(Key.up, .{})) b.moveRows(-1) else if (key.matches(Key.down, .{})) b.moveRows(1) else if (key.matches(Key.page_up, .{})) b.moveRows(-@as(isize, self.editor_rect.h)) else if (key.matches(Key.page_down, .{})) b.moveRows(@as(isize, self.editor_rect.h)) else if (key.matches(Key.home, .{})) b.home() else if (key.matches(Key.end, .{})) b.toEnd() else if (ro) {
-            // a read-only window: only the keys above (moving) work
-        } else if (key.matches(Key.enter, .{})) try b.newline() else if (key.matches(Key.backspace, .{})) try b.backspace() else if (key.matches(Key.delete, .{})) try b.delete() else if (key.matches(Key.tab, .{})) try b.insert("  ") else if (key.mods.ctrl or key.mods.alt) {
+        if (key.matches('c', .{ .ctrl = true })) return self.copySelection(false);
+        if (key.matches('x', .{ .ctrl = true })) return self.copySelection(true);
+        if (key.matches('v', .{ .ctrl = true })) return self.pasteClip();
+        if (key.matches('a', .{ .ctrl = true })) {
+            b.selectAll();
+            return;
+        }
+        var k = key;
+        k.mods.shift = false;
+        const here: text.Pos = .{ .row = b.row, .col = b.col };
+        const page: isize = @max(1, @as(isize, self.editor_rect.h));
+        const moved = blk: {
+            if (k.matches(Key.left, .{})) b.moveLeft() else if (k.matches(Key.right, .{})) b.moveRight() else if (k.matches(Key.up, .{})) b.moveRows(-1) else if (k.matches(Key.down, .{})) b.moveRows(1) else if (k.matches(Key.page_up, .{})) b.moveRows(-page) else if (k.matches(Key.page_down, .{})) b.moveRows(page) else if (k.matches(Key.home, .{})) b.home() else if (k.matches(Key.end, .{})) b.toEnd() else break :blk false;
+            break :blk true;
+        };
+        if (moved) {
+            if (!key.mods.shift) b.anchor = null else if (b.anchor == null) b.anchor = here;
+            return;
+        }
+        if (key.matches(Key.escape, .{})) {
+            b.anchor = null;
+            return;
+        }
+        if (ro) return;
+        if (key.matches(Key.enter, .{})) {
+            _ = try b.deleteSelection();
+            try b.newline();
+        } else if (key.matches(Key.backspace, .{})) {
+            if (!try b.deleteSelection()) try b.backspace();
+        } else if (key.matches(Key.delete, .{})) {
+            if (!try b.deleteSelection()) try b.delete();
+        } else if (key.matches(Key.tab, .{})) {
+            _ = try b.deleteSelection();
+            try b.insert("  ");
+        } else if (key.mods.ctrl or key.mods.alt) {
             // a shortcut that is not ours: do not type its letter
-        } else if (key.text) |t| try b.insert(t);
+        } else if (key.text) |t| {
+            _ = try b.deleteSelection();
+            try b.insert(t);
+        }
+    }
+
+    // Zig tip: The copy is kept twice: `clip` for Ctrl+V inside evetx, and `sys_clip`, which the main
+    // loop sends to the clipboard of the system with the terminal (OSC 52) after the event. Each
+    // is replaced by freeing the old one first, so the app owns at most one of each.
+    /// Ctrl+C, and Ctrl+X when `cut` is true.
+    fn copySelection(self: *App, cut: bool) !void {
+        const b = self.activeBuffer() orelse return;
+        const t = (try b.selectedText(self.gpa)) orelse {
+            self.setMessage("nothing is selected", .{});
+            return;
+        };
+        errdefer self.gpa.free(t);
+        const sys = try self.gpa.dupe(u8, t);
+        if (self.clip) |c| self.gpa.free(c);
+        self.clip = t;
+        if (self.sys_clip) |c| self.gpa.free(c);
+        self.sys_clip = sys;
+        if (cut and !self.activeTab().?.virtual) _ = try b.deleteSelection();
+    }
+
+    /// Ctrl+V: insert the copied text. (A paste made by the terminal comes as keys: see `pasteEnd`.)
+    fn pasteClip(self: *App) !void {
+        const b = self.activeBuffer() orelse return;
+        if (self.activeTab().?.virtual) return;
+        const c = self.clip orelse {
+            self.setMessage("nothing copied yet", .{});
+            return;
+        };
+        try b.insertText(c);
+    }
+
+    /// The main loop takes the text for the system clipboard (the caller frees it).
+    pub fn takeSystemClip(self: *App) ?[]u8 {
+        const c = self.sys_clip;
+        self.sys_clip = null;
+        return c;
+    }
+
+    pub fn pasteStart(self: *App) void {
+        self.pasting = true;
+        self.paste_buf.clearRetainingCapacity();
+    }
+
+    // Zig tip: A switch on the overlay picks which text field gets the pasted text; `?*TextInput` is
+    // an optional pointer, null when the dialog has no field. Only the first line of a paste goes to
+    // a one-line field.
+    /// The terminal ended a paste: the collected text goes to the dialog field, the console or the editor.
+    pub fn pasteEnd(self: *App) !void {
+        self.pasting = false;
+        const t = self.paste_buf.items;
+        if (t.len == 0) return;
+        if (self.overlay != .none or self.focus == .console) {
+            const ti: ?*TextInput = switch (self.overlay) {
+                .none => &self.console_in,
+                .goto => &self.goto_in,
+                .save_as => &self.saveas_in,
+                .find_text => &self.find_in,
+                .find_file => &self.files_in,
+                .replace => if (self.dlg_field == 0) &self.find_in else &self.replace_in,
+                .open_folder => if (self.dlg_field == 0) &self.project_in else null,
+                else => null,
+            };
+            const field = ti orelse return;
+            const line = t[0 .. std.mem.indexOfScalar(u8, t, '\n') orelse t.len];
+            try field.insertSliceAtCursor(line);
+            if (self.overlay == .find_file) try self.filesChanged();
+            return;
+        }
+        if (self.focus == .editor) {
+            const b = self.activeBuffer() orelse return;
+            if (self.activeTab().?.virtual) return;
+            try b.insertText(t);
+        }
     }
 
     // Zig tip: `self.selected = rows[pos -| 10]` uses `-|`, the subtraction that stops at zero instead
@@ -1834,6 +2036,24 @@ pub const App = struct {
         if (self.overlay == .none) {
             if (self.modify and self.grabSplit(m)) return;
             if (self.grabBar(m)) return;
+            if (self.editor_rect.contains(m.col, m.row)) {
+                if (self.activeBuffer()) |b| {
+                    const before: text.Pos = .{ .row = b.row, .col = b.col };
+                    const pos = self.editorPos(b, m);
+                    b.row = pos.row;
+                    b.col = pos.col;
+                    // a click starts a selection; with Shift it extends the one that exists
+                    if (m.mods.shift) {
+                        if (b.anchor == null) b.anchor = before;
+                    } else {
+                        b.anchor = null;
+                        self.sel_from = pos;
+                    }
+                    self.drag = .select;
+                    self.focus = .editor;
+                    return;
+                }
+            }
         }
 
         var i = self.hits.items.len;
@@ -1843,15 +2063,7 @@ pub const App = struct {
             if (h.rect.contains(m.col, m.row)) return self.activate(h.action);
         }
         if (self.overlay != .none) return self.closeOverlay();
-        if (self.editor_rect.contains(m.col, m.row)) {
-            if (self.activeBuffer()) |b| {
-                const row = b.top + @as(usize, @intCast(@as(i32, m.row) - self.editor_rect.y));
-                b.row = @min(row, b.lineCount() - 1);
-                const dc = b.left + @as(usize, @intCast(@as(i32, m.col) - self.editor_rect.x));
-                b.col = text.Buffer.byteAtDisplay(b.lineAt(b.row), dc);
-                self.focus = .editor;
-            }
-        } else if (self.console_rect.contains(m.col, m.row) and self.bottom == .console) {
+        if (self.console_rect.contains(m.col, m.row) and self.bottom == .console) {
             self.focus = .console;
         }
     }
@@ -1931,8 +2143,6 @@ pub const App = struct {
                 .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
                 .replace => try self.replaceOne(),
                 .replace_all => try self.replaceEvery(),
-                .help => try self.runMenu(.shortcuts, 0),
-                .settings => self.openOverlay(.settings),
             },
         }
     }

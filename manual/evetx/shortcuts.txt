@@ -23,6 +23,13 @@ Edit and search
   Ctrl+G              go to line (42 or 42:7)
   Ctrl+L              query (later)
 
+Selecting and copying
+  Shift + arrows, Home, End, PgUp, PgDn   select text
+  Ctrl+A              select all
+  Ctrl+C, Ctrl+X      copy, cut (the system clipboard gets the text too)
+  Ctrl+V              paste (a paste made by the terminal works as well)
+  Mouse               click puts the cursor, drag selects, Shift+click extends
+
 Run and debug
   F5                  run the .eve file
   F9                  breakpoint

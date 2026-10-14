@@ -7,6 +7,13 @@ const Allocator = std.mem.Allocator;
 /// A place in the text that Find found and the editor shows highlighted.
 pub const Match = struct { row: usize, col: usize, len: usize };
 
+// Zig tip: Two small structs name a place in the text and a span between two places. The selection
+// of the editor is a span from the anchor to the cursor, whichever comes first in the text.
+/// A place in the text: a line and a byte offset in it.
+pub const Pos = struct { row: usize, col: usize };
+/// A selected span: `start` is before `end`; `end` is not included.
+pub const Range = struct { start: Pos, end: Pos };
+
 // Zig tip: a struct groups data and the functions that work on it. A function whose first
 // parameter is `self: *Buffer` is called like a method: `buffer.insert(...)`. `*Buffer` means
 // "a pointer to a Buffer": the function can change it. `self: Buffer` or `*const Buffer` can only read.
@@ -28,6 +35,8 @@ pub const Buffer = struct {
     /// The file had tabs; they were replaced by spaces when it was read.
     tabs_replaced: bool = false,
     match: ?Match = null,
+    /// Where the selection started; the cursor is its other end. Null when nothing is selected.
+    anchor: ?Pos = null,
 
     // Zig tip: `!Buffer` is an error union: the result is a `Buffer` or an error. `try x` unwraps the
     // value, or returns the error to the caller at once. Here the only error is running out of memory.
@@ -162,6 +171,110 @@ pub const Buffer = struct {
         if (s.len == 0) return;
         try self.lines.items[self.row].insertSlice(self.gpa, self.col, s);
         self.col += s.len;
+        self.dirty = true;
+        self.match = null;
+    }
+
+    // Zig tip: The anchor could be left behind by an edit made somewhere else (a replace, for
+    // example), so the function checks that it still points into the text before it is used:
+    // `orelse return null` and the two `if`s turn a stale anchor into "no selection".
+    /// The selected span, or null when nothing is selected.
+    pub fn selection(self: *const Buffer) ?Range {
+        const a = self.anchor orelse return null;
+        if (a.row >= self.lines.items.len or a.col > self.lines.items[a.row].items.len) return null;
+        if (a.row == self.row and a.col == self.col) return null;
+        const a_first = a.row < self.row or (a.row == self.row and a.col < self.col);
+        const c: Pos = .{ .row = self.row, .col = self.col };
+        return if (a_first) Range{ .start = a, .end = c } else Range{ .start = c, .end = a };
+    }
+
+    /// Select the whole text: the cursor goes to the end.
+    pub fn selectAll(self: *Buffer) void {
+        self.anchor = .{ .row = 0, .col = 0 };
+        self.row = self.lines.items.len - 1;
+        self.col = self.lineAt(self.row).len;
+    }
+
+    // Zig tip: `?[]u8` is an optional slice: null means "nothing selected". The text is built in a
+    // growable list of bytes and handed to the caller with `toOwnedSlice`, who frees it.
+    /// A copy of the selected text, lines joined with `\n`; the caller frees it. Null when nothing is selected.
+    pub fn selectedText(self: *const Buffer, gpa: Allocator) !?[]u8 {
+        const sel = self.selection() orelse return null;
+        var out: std.ArrayList(u8) = .empty;
+        errdefer out.deinit(gpa);
+        var r = sel.start.row;
+        while (r <= sel.end.row) : (r += 1) {
+            const line = self.lineAt(r);
+            const from = if (r == sel.start.row) sel.start.col else 0;
+            const to = if (r == sel.end.row) sel.end.col else line.len;
+            try out.appendSlice(gpa, line[from..to]);
+            if (r < sel.end.row) try out.append(gpa, '\n');
+        }
+        return try out.toOwnedSlice(gpa);
+    }
+
+    // Zig tip: When the span covers several lines, the end of the last line is added to the first
+    // line (a slice into the line that is about to be removed, so it is appended before the removal),
+    // then the lines in between and the last one are taken out of the list one by one.
+    /// Delete the selected text and put the cursor where it was. False when nothing was selected.
+    pub fn deleteSelection(self: *Buffer) !bool {
+        const sel = self.selection() orelse {
+            self.anchor = null;
+            return false;
+        };
+        if (sel.start.row == sel.end.row) {
+            self.lines.items[sel.start.row].replaceRangeAssumeCapacity(sel.start.col, sel.end.col - sel.start.col, &.{});
+        } else {
+            const first = &self.lines.items[sel.start.row];
+            const tail = self.lines.items[sel.end.row].items[sel.end.col..];
+            first.shrinkRetainingCapacity(sel.start.col);
+            try first.appendSlice(self.gpa, tail);
+            var n = sel.end.row - sel.start.row;
+            while (n > 0) : (n -= 1) {
+                var gone = self.lines.orderedRemove(sel.start.row + 1);
+                gone.deinit(self.gpa);
+            }
+        }
+        self.row = sel.start.row;
+        self.col = sel.start.col;
+        self.anchor = null;
+        self.dirty = true;
+        self.match = null;
+        return true;
+    }
+
+    // Zig tip: A text with line ends is inserted piece by piece: `std.mem.splitScalar` walks the
+    // lines, a line end splits the current line at the cursor (no automatic indent, unlike Enter),
+    // and tabs become two spaces as when a file is read. The selected text, if any, is replaced.
+    /// Insert a text that may have line ends (a paste) at the cursor, replacing the selection.
+    pub fn insertText(self: *Buffer, s: []const u8) !void {
+        _ = try self.deleteSelection();
+        var lines = std.mem.splitScalar(u8, s, '\n');
+        var first = true;
+        while (lines.next()) |raw| {
+            const piece = std.mem.trimEnd(u8, raw, "\r");
+            if (!first) try self.splitLine();
+            first = false;
+            var parts = std.mem.splitScalar(u8, piece, '\t');
+            var first_part = true;
+            while (parts.next()) |part| {
+                if (!first_part) try self.insert("  ");
+                first_part = false;
+                try self.insert(part);
+            }
+        }
+    }
+
+    /// Break the line at the cursor, without an indent.
+    fn splitLine(self: *Buffer) !void {
+        const cur = &self.lines.items[self.row];
+        var tail: std.ArrayList(u8) = .empty;
+        errdefer tail.deinit(self.gpa);
+        try tail.appendSlice(self.gpa, cur.items[self.col..]);
+        cur.shrinkRetainingCapacity(self.col);
+        try self.lines.insert(self.gpa, self.row + 1, tail);
+        self.row += 1;
+        self.col = 0;
         self.dirty = true;
         self.match = null;
     }

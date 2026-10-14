@@ -232,11 +232,22 @@ const blank = "   ";
 const tee = "├─ ";
 const corner = "└─ ";
 
+// Zig tip: `&.{ ".db", ".sqlite" }` is a list of strings written in the call; the function receives
+// it as a slice. Comparing the end of the name with each ending ignores upper and lower case.
+/// Does `name` end with one of the endings?
+fn hasExt(name: []const u8, endings: []const []const u8) bool {
+    for (endings) |end| {
+        if (name.len > end.len and std.ascii.eqlIgnoreCase(name[name.len - end.len ..], end)) return true;
+    }
+    return false;
+}
+
 // Zig tip: a function may take a struct by value (`e: Entry`) when it only reads a few fields. The
 // result is a string literal, which lives for the whole program, so nothing is allocated.
 /// The picture of an entry: a folder (open or closed) or a file, by its kind.
 fn iconOf(e: @import("project.zig").Entry) []const u8 {
     if (e.is_dir) return if (e.expanded) "📂" else "📁";
+    if (hasExt(e.name, &.{ ".db", ".duckdb", ".sqlite", ".sqlite3" })) return "💾";
     if (e.name.len > 4 and std.ascii.eqlIgnoreCase(e.name[e.name.len - 4 ..], ".eve")) return "📜";
     return "📄";
 }
@@ -346,7 +357,7 @@ fn tabStrip(app: *App, box: Window) !void {
     var x: u16 = 0;
     for (app.tabs.items, 0..) |t, i| {
         const active = i == app.active;
-        const style = if (active) theme.onBold(theme.bright, theme.bar) else theme.on(theme.text, theme.bar2);
+        const style = if (active) theme.onBold(theme.deep, theme.blue) else theme.on(theme.text, theme.bar2);
         const dirty: []const u8 = if (t.buf != null and t.buf.?.dirty) "● " else "";
         const label = app.fmt(" {s}{s} ", .{ dirty, t.title() });
         const w = strip.gwidth(label);
@@ -448,6 +459,7 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
         const start = text.Buffer.byteAtDisplay(line, b.left);
         const cw = sub(code, 0, r, cols, 1);
         drawCode(cw, line, start, tab.eve, row_bg);
+        if (b.selection()) |sel| drawSelection(cw, line, b.top + r, sel, b.left);
         if (b.match) |m| {
             if (m.row == b.top + r) {
                 const mc = text.Buffer.displayWidth(line[0..m.col]);
@@ -502,6 +514,26 @@ fn scrollBars(app: *App, ed: Window, b: *text.Buffer, gutter: u16, rows: u16, co
     const tx: usize = if (content > cols) (cols - tw) * @min(b.left, content - cols) / (content - cols) else 0;
     var k: usize = 0;
     while (k < tw) : (k += 1) _ = put(ed, gutter + @as(u16, @intCast(tx + k)), hy, "█", thumb);
+}
+
+// Zig tip: The selected part of a line is drawn again over the code with the selection colors. Its
+// first byte is never before the first column shown (`byteAtDisplay(line, left)`), and a line whose
+// end is selected gets one more colored cell, so the user sees that the line break is selected.
+/// Paint the selected part of one line.
+fn drawSelection(cw: Window, line: []const u8, row: usize, sel: text.Range, left: usize) void {
+    if (row < sel.start.row or row > sel.end.row) return;
+    const from = if (row == sel.start.row) sel.start.col else 0;
+    const to = if (row == sel.end.row) sel.end.col else line.len;
+    const style = theme.on(theme.bright, theme.sel_bg);
+    const shown = @max(from, text.Buffer.byteAtDisplay(line, left));
+    if (shown < to) {
+        const col = text.Buffer.displayWidth(line[0..shown]) - left;
+        _ = put(cw, @intCast(col), 0, line[shown..to], style);
+    }
+    if (row < sel.end.row) {
+        const end_col = text.Buffer.displayWidth(line);
+        if (end_col >= left) _ = put(cw, @intCast(end_col - left), 0, " ", style);
+    }
 }
 
 // Zig tip: A hand-written scanner: `while (i < s.len)` looks at the byte at `i`, finds the end `j`
@@ -631,7 +663,7 @@ fn toolsPanel(app: *App, win: Window, r: Rect) !void {
         else
             app.fmt(" {s} ", .{n});
         const on = app.bottom == t;
-        _ = put(strip, x, 0, label, if (on) theme.onBold(theme.bright, theme.bar) else theme.on(theme.text, theme.bar2));
+        _ = put(strip, x, 0, label, if (on) theme.onBold(theme.deep, theme.blue) else theme.on(theme.text, theme.bar2));
         const w = strip.gwidth(label);
         try addHit(app, strip, x, 0, w, 1, .{ .bottom = t });
         x += w + 1;
@@ -751,49 +783,62 @@ fn breaksPanel(app: *App, body: Window) !void {
     _ = put(body, 1, body.height -| 1, "Enter or a second click jumps · Del removes", theme.on(theme.dim, theme.deep));
 }
 
-// Zig tip: The bar is a box with a border (`boxed`), and its inside is one row split by `│`
-// characters. The message of the last action, `Running…` or `Ready` takes the first cell.
+// Zig tip: `{d:>4}` in a format string prints a number right aligned in 4 cells, so "Ln" and "Col"
+// keep the same width whatever the number is and the panel does not move while the user types.
+/// The quick information about the current window: a text file, a card, a read-only window, or the project.
+fn quickInfo(app: *App) []const u8 {
+    const t = app.activeTab() orelse {
+        return if (app.project_name.len > 0)
+            app.fmt("project {s} · {d} entries", .{ app.project_name, app.tree.entries.items.len })
+        else
+            "no project";
+    };
+    if (t.buf) |*b| {
+        if (t.virtual) return app.fmt("{s} · read only · {d} lines", .{ t.title(), b.lineCount() });
+        const kind: []const u8 = if (t.eve) "Eve source" else "text";
+        const ends: []const u8 = if (b.crlf) "CRLF" else "LF";
+        return app.fmt("{s} · {s} · {d} lines · {s}{s}", .{ if (t.path.len == 0) "untitled" else t.path, kind, b.lineCount(), ends, if (b.dirty) " · modified" else "" });
+    }
+    return app.fmt("{s} · {s} · {s}", .{ t.path, t.card.kind, sizeText(app, t.card.size) });
+}
+
+// Zig tip: The inside of the bar is split in three by fixed widths computed from the room: the state
+// at the left takes what is left over, then a panel of 18 cells with the line and the column (wide
+// enough for 9999 lines and 999 columns), then the quick information, aligned to the right edge.
 fn statusBar(app: *App, win: Window) !void {
     const W = win.width;
     const H = win.height;
     const box = boxed(win, 0, H - 3, W, 3, theme.line);
     fillWith(box, theme.deep);
     const w = box.width;
-    const dark = theme.on(theme.text, theme.deep);
-    const name_x: u16 = @min(34, w / 3);
-    const place_x: u16 = @min(name_x + 38, w * 2 / 3);
-    const btn_x: u16 = w -| 9;
+    const line_style = theme.on(theme.line, theme.deep);
+    const info_w: u16 = std.math.clamp(w / 2, 20, 60);
+    const info_x: u16 = w -| info_w;
+    const pos_w: u16 = 18;
+    const pos_x: u16 = info_x -| (pos_w + 1);
 
     // the state
+    const state_w = pos_x -| 3;
     if (app.message) |m| {
-        _ = put(box, 1, 0, m, theme.onBold(theme.amber, theme.deep));
+        _ = put(box, 1, 0, clipText(m, state_w), theme.onBold(theme.amber, theme.deep));
     } else if (app.running) {
         _ = put(box, 1, 0, "Running…", theme.onBold(theme.amber, theme.deep));
     } else {
         const s = app.fmt("Ready: connection: {s}", .{if (app.machine == 1) "local" else "remote"});
-        _ = put(box, 1, 0, s, theme.onBold(theme.green, theme.deep));
+        _ = put(box, 1, 0, clipText(s, state_w), theme.onBold(theme.green, theme.deep));
     }
-    _ = put(box, name_x - 1, 0, "│", theme.on(theme.line, theme.deep));
-    _ = put(box, place_x - 1, 0, "│", theme.on(theme.line, theme.deep));
-    _ = put(box, btn_x - 1, 0, "│", theme.on(theme.line, theme.deep));
+    _ = put(box, pos_x -| 1, 0, "│", line_style);
+    _ = put(box, info_x -| 1, 0, "│", line_style);
 
-    // the name of the selected file, and the place in it
-    if (app.activeTab()) |t| {
-        _ = put(box, name_x + 1, 0, if (t.path.len == 0) "untitled" else t.path, theme.on(theme.bright, theme.deep));
-        if (t.buf) |*b| {
-            const s = app.fmt("Ln {d}, Col {d}", .{ b.row + 1, b.displayCol() + 1 });
-            _ = put(box, place_x + 1, 0, s, dark);
-        } else {
-            const s = app.fmt("{s} · {s}", .{ t.card.kind, sizeText(app, t.card.size) });
-            _ = put(box, place_x + 1, 0, s, dark);
-        }
+    // the line and the column
+    if (app.activeBuffer()) |b| {
+        _ = put(box, pos_x + 1, 0, app.fmt("Ln {d:>4}, Col {d:>3}", .{ b.row + 1, b.displayCol() + 1 }), theme.on(theme.text, theme.deep));
+    } else {
+        _ = put(box, pos_x + 1, 0, "Ln    -, Col   -", theme.on(theme.faint, theme.deep));
     }
-    // the help and settings buttons
-    const bs = theme.on(theme.text, theme.bar);
-    _ = put(box, btn_x, 0, " ? ", bs);
-    try addHit(app, box, btn_x, 0, 3, 1, .{ .button = .help });
-    _ = put(box, btn_x + 4, 0, " ⚙ ", bs);
-    try addHit(app, box, btn_x + 4, 0, 3, 1, .{ .button = .settings });
+
+    // the quick information, aligned to the right
+    putRight(box, w -| 1, 0, clipText(quickInfo(app), info_w -| 2), theme.on(theme.bright, theme.deep));
 }
 
 // ------------------------------------------------------------------ overlays
@@ -934,11 +979,27 @@ fn settings(app: *App, win: Window) !void {
     try buttonRow(app, box, box.height -| 2, &.{.{ .label = "Close", .action = .close_overlay, .primary = true }});
 }
 
+// Zig tip: `@embedFile("eve_zon")` is the text of the root `build.zig.zon` of the repository, copied
+// into the program when it is built. The block below runs at compile time (`comptime`): it looks
+// for `.version = "` and cuts the text up to the next quote, so the version is written once, in
+// that file (D-167), and the About dialog shows it. `@setEvalBranchQuota` allows the compiler to
+// run the search over a text of a few thousand bytes.
+const eve_version = blk: {
+    @setEvalBranchQuota(200_000);
+    const zon = @embedFile("eve_zon");
+    const key = ".version = \"";
+    const at = std.mem.indexOf(u8, zon, key) orelse break :blk "?";
+    const rest = zon[at + key.len ..];
+    const len = std.mem.indexOfScalar(u8, rest, '"') orelse break :blk "?";
+    break :blk rest[0..len];
+};
+
 fn about(app: *App, win: Window) !void {
-    const box = dialog(app, win, 56, 10, "About");
+    const box = dialog(app, win, 56, 11, "About");
     _ = put(box, 2, 2, "evetx: the Eve terminal IDE", theme.onBold(theme.bright, theme.panel));
-    _ = put(box, 2, 3, "A text user interface for Eve projects (level 6).", theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 5, "Built on libvaxis. (c) Sage-Code Laboratory", theme.on(theme.dim, theme.panel));
+    _ = put(box, 2, 3, app.fmt("Version {s}", .{eve_version}), theme.onBold(theme.green, theme.panel));
+    _ = put(box, 2, 5, "A text user interface for Eve projects (level 6).", theme.on(theme.text, theme.panel));
+    _ = put(box, 2, 6, "Built on libvaxis. (c) Sage-Code Laboratory", theme.on(theme.dim, theme.panel));
     try buttonRow(app, box, box.height -| 2, &.{.{ .label = "Close", .action = .close_overlay, .primary = true }});
 }
 
