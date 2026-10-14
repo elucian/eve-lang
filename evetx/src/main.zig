@@ -63,6 +63,9 @@ pub fn main(init: std.process.Init) !void {
     try writer.flush();
     try vx.queryTerminal(tty.writer(), .fromSeconds(1));
 
+    // where the user is (project, files, cursors) goes to the cache when the program ends
+    defer app.saveSession() catch {};
+
     // the title of the terminal window follows the project; it is sent again only when it changes
     var title_buf: [256]u8 = undefined;
     var last_buf: [256]u8 = undefined;

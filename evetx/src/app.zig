@@ -382,6 +382,8 @@ pub const App = struct {
     pending_text: ?[]u8 = null,
     /// Edit > Wrap: long lines are cut at the right edge of the editor and the horizontal bar goes away.
     wrap: bool = false,
+    /// True while the session is being read: nothing is written then.
+    restoring: bool = false,
     /// The line numbers of the editor: a click there sets or removes a breakpoint.
     gutter_rect: Rect = .{},
     clip: ?[]u8 = null,
@@ -444,13 +446,17 @@ pub const App = struct {
     pub fn create(gpa: std.mem.Allocator, io: Io, env: *const std.process.Environ.Map, root: []const u8) !*App {
         const self = try gpa.create(App);
         errdefer gpa.destroy(self);
-        const name = if (root.len == 0) try gpa.dupe(u8, "") else try projectName(gpa, io, root);
-        errdefer gpa.free(name);
-        const own_root = try gpa.dupe(u8, root);
-        errdefer gpa.free(own_root);
         var cache = try cache_mod.Cache.init(gpa, io, env);
         errdefer cache.deinit();
         cache.load();
+        // no folder on the command line: reopen the project where the last session ended
+        const last: ?[]u8 = if (root.len == 0) cache.lastProject() else null;
+        defer if (last) |l| gpa.free(l);
+        const chosen: []const u8 = last orelse root;
+        const name = if (chosen.len == 0) try gpa.dupe(u8, "") else try projectName(gpa, io, chosen);
+        errdefer gpa.free(name);
+        const own_root = try gpa.dupe(u8, chosen);
+        errdefer gpa.free(own_root);
         self.* = .{
             .gpa = gpa,
             .io = io,
@@ -467,7 +473,10 @@ pub const App = struct {
             .cache = cache,
             .frame = .init(gpa),
         };
-        if (root.len > 0) try self.tree.scan(io, root, name);
+        if (chosen.len > 0) {
+            try self.tree.scan(io, chosen, name);
+            self.restoreSession();
+        }
         try self.console.add(gpa, "evetx: the console runs `eve` with what you type (run <file>, --check <file>, clear).", .info);
         return self;
     }
@@ -520,6 +529,16 @@ pub const App = struct {
         const full = buf[0..n];
         const cut = std.mem.lastIndexOfAny(u8, full, "/\\");
         return gpa.dupe(u8, if (cut) |i| full[i + 1 ..] else full);
+    }
+
+    // Zig tip: The real path of a folder (no `..`, the true letters of every name) is the key of the
+    // session: two ways of writing the same folder give the same text.
+    fn realPathOf(gpa: std.mem.Allocator, io: Io, path: []const u8) ![]u8 {
+        var buf: [std.fs.max_path_bytes]u8 = undefined;
+        var dir = try Io.Dir.cwd().openDir(io, path, .{});
+        defer dir.close(io);
+        const n = try dir.realPath(io, &buf);
+        return gpa.dupe(u8, buf[0..n]);
     }
 
     // ------------------------------------------------------------ messages and paths
@@ -609,6 +628,7 @@ pub const App = struct {
         try self.tabs.append(self.gpa, tab);
         self.active = self.tabs.items.len - 1;
         self.focus = if (tab.buf != null) .editor else .tree;
+        self.saveSession() catch {};
     }
 
     // Zig tip: `orderedRemove(i)` takes element `i` out of the list, keeps the order of the others and
@@ -621,6 +641,7 @@ pub const App = struct {
         self.gpa.free(t.path);
         if (self.active >= self.tabs.items.len and self.tabs.items.len > 0) self.active = self.tabs.items.len - 1;
         if (self.tabs.items.len == 0) self.active = 0;
+        self.saveSession() catch {};
     }
 
     // Zig tip: `.{ .path = ..., .buf = b, .eve = true }` is a struct literal; the fields that are not
@@ -829,6 +850,141 @@ pub const App = struct {
         if (self.pending_text) |old| self.gpa.free(old);
         self.pending_text = try self.gpa.dupe(u8, line);
         self.pending_at = self.nowMs() + command_delay_ms;
+    }
+
+    // ------------------------------------------------------------ the session
+
+    // Zig tip: `comptime f: []const u8` and `f ++ "\n"` build the format string at compile time, so
+    // every call writes one line of the session file. `anytype` takes the tuple of arguments.
+    fn sline(self: *App, out: *std.ArrayList(u8), comptime f: []const u8, args: anytype) !void {
+        const s = try std.fmt.allocPrint(self.gpa, f ++ "\n", args);
+        defer self.gpa.free(s);
+        try out.appendSlice(self.gpa, s);
+    }
+
+    // Zig tip: `@intFromBool(b)` is 1 or 0; `@tagName(e)` is the name of an enum value as text, which
+    // `std.meta.stringToEnum` turns back into the value when the session is read.
+    /// Write where the user is: the project, the panel sizes and visibility, the open files with their
+    /// cursors, the open folders of the tree and the breakpoints. It goes to `evetx-session.txt` in the
+    /// cache folder; evetx reads it at the next start. Called when the program ends and when the files change.
+    pub fn saveSession(self: *App) !void {
+        if (self.root.len == 0 or self.restoring) return;
+        const abs = try realPathOf(self.gpa, self.io, self.root);
+        defer self.gpa.free(abs);
+        var out: std.ArrayList(u8) = .empty;
+        defer out.deinit(self.gpa);
+        try self.sline(&out, "project={s}", .{abs});
+        try self.sline(&out, "tree_w={d}", .{self.tree_w});
+        try self.sline(&out, "tools_h={d}", .{self.tools_h});
+        try self.sline(&out, "show_tree={d}", .{@intFromBool(self.show_tree)});
+        try self.sline(&out, "show_main={d}", .{@intFromBool(self.show_main)});
+        try self.sline(&out, "show_tools={d}", .{@intFromBool(self.show_tools)});
+        try self.sline(&out, "wrap={d}", .{@intFromBool(self.wrap)});
+        try self.sline(&out, "bottom={s}", .{@tagName(self.bottom)});
+        try self.sline(&out, "focus={s}", .{@tagName(self.focus)});
+        var saved: usize = 0;
+        var active: usize = 0;
+        for (self.tabs.items, 0..) |t, i| {
+            if (t.virtual or t.path.len == 0) continue;
+            if (i == self.active) active = saved;
+            saved += 1;
+            if (t.buf) |b| {
+                try self.sline(&out, "tab={s}\t{d}\t{d}\t{d}", .{ t.path, b.row, b.col, b.top });
+            } else try self.sline(&out, "tab={s}\t0\t0\t0", .{t.path});
+        }
+        try self.sline(&out, "active={d}", .{active});
+        for (self.tree.entries.items) |e| {
+            if (e.is_dir and e.expanded and e.parent != null) try self.sline(&out, "expand={s}", .{e.path});
+        }
+        if (self.selected < self.tree.entries.items.len) try self.sline(&out, "selected={s}", .{self.tree.entries.items[self.selected].path});
+        for (self.breakpoints.items) |bp| try self.sline(&out, "break={s}\t{d}", .{ bp.path, bp.line });
+        try self.cache.writeFile("evetx-session.txt", out.items);
+    }
+
+    // Zig tip: A `switch` cannot take strings, so the keys are tried with a chain of `std.mem.eql`.
+    // `std.fmt.parseInt(...) catch 0` reads a number and uses 0 when the text is not one. Errors are
+    // never passed up from here: a damaged session file must not stop the program from starting.
+    /// Read `evetx-session.txt` and put the screen back as it was, when it is the session of this project.
+    fn restoreSession(self: *App) void {
+        const bytes = self.cache.readFile("evetx-session.txt") orelse return;
+        defer self.gpa.free(bytes);
+        const abs = realPathOf(self.gpa, self.io, self.root) catch return;
+        defer self.gpa.free(abs);
+        var same = false;
+        var first = std.mem.splitScalar(u8, bytes, '\n');
+        while (first.next()) |raw| {
+            const l = std.mem.trimEnd(u8, raw, "\r");
+            if (std.mem.startsWith(u8, l, "project=")) {
+                same = std.ascii.eqlIgnoreCase(l["project=".len..], abs);
+                break;
+            }
+        }
+        if (!same) return;
+
+        self.restoring = true;
+        defer self.restoring = false;
+        var active: usize = 0;
+        var it = std.mem.splitScalar(u8, bytes, '\n');
+        while (it.next()) |raw| {
+            const l = std.mem.trimEnd(u8, raw, "\r");
+            const eq = std.mem.indexOfScalar(u8, l, '=') orelse continue;
+            const key = l[0..eq];
+            const val = l[eq + 1 ..];
+            const num = std.fmt.parseInt(usize, val, 10) catch 0;
+            if (std.mem.eql(u8, key, "tree_w")) {
+                self.tree_w = @intCast(@min(num, 500));
+            } else if (std.mem.eql(u8, key, "tools_h")) {
+                self.tools_h = @intCast(@min(num, 500));
+            } else if (std.mem.eql(u8, key, "show_tree")) {
+                self.show_tree = num != 0;
+            } else if (std.mem.eql(u8, key, "show_main")) {
+                self.show_main = num != 0;
+            } else if (std.mem.eql(u8, key, "show_tools")) {
+                self.show_tools = num != 0;
+            } else if (std.mem.eql(u8, key, "wrap")) {
+                self.wrap = num != 0;
+            } else if (std.mem.eql(u8, key, "bottom")) {
+                self.bottom = std.meta.stringToEnum(BottomTab, val) orelse .console;
+            } else if (std.mem.eql(u8, key, "focus")) {
+                self.focus = std.meta.stringToEnum(Focus, val) orelse .tree;
+            } else if (std.mem.eql(u8, key, "active")) {
+                active = num;
+            } else if (std.mem.eql(u8, key, "expand")) {
+                for (self.tree.entries.items) |*e| {
+                    if (e.is_dir and std.mem.eql(u8, e.path, val)) e.expanded = true;
+                }
+            } else if (std.mem.eql(u8, key, "selected")) {
+                for (self.tree.entries.items, 0..) |e, i| {
+                    if (std.mem.eql(u8, e.path, val)) self.selected = @intCast(i);
+                }
+            } else if (std.mem.eql(u8, key, "break")) {
+                const tab = std.mem.indexOfScalar(u8, val, '\t') orelse continue;
+                const path = self.gpa.dupe(u8, val[0..tab]) catch continue;
+                const line = std.fmt.parseInt(usize, val[tab + 1 ..], 10) catch 0;
+                self.breakpoints.append(self.gpa, .{ .path = path, .line = line }) catch self.gpa.free(path);
+            } else if (std.mem.eql(u8, key, "tab")) {
+                var f = std.mem.splitScalar(u8, val, '\t');
+                const path = f.next() orelse continue;
+                const row = std.fmt.parseInt(usize, f.next() orelse "0", 10) catch 0;
+                const col = std.fmt.parseInt(usize, f.next() orelse "0", 10) catch 0;
+                const top = std.fmt.parseInt(usize, f.next() orelse "0", 10) catch 0;
+                self.openFile(path) catch continue;
+                if (self.activeBuffer()) |b| {
+                    b.row = @min(row, b.lineCount() - 1);
+                    const line = b.lineAt(b.row);
+                    var c = @min(col, line.len);
+                    while (c > 0 and c < line.len and (line[c] & 0xC0) == 0x80) c -= 1;
+                    b.col = c;
+                    b.top = @min(top, b.lineCount() - 1);
+                }
+            }
+        }
+        if (active < self.tabs.items.len) self.active = active;
+        self.follow = false;
+        if (self.message) |m| {
+            self.gpa.free(m);
+            self.message = null;
+        }
     }
 
     /// Add a command to the history of the console, unless it is the same as the last one.
@@ -1392,6 +1548,7 @@ pub const App = struct {
         self.maximized = null;
         self.focus = .tree;
         self.setMessage("project: {s}", .{name});
+        self.saveSession() catch {};
     }
 
     // Zig tip: A `switch` on the enum `Drag` decides what the moving mouse changes. The raw column
