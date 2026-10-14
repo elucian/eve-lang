@@ -8,7 +8,8 @@ Menu
   Up, Down, Enter     choose a command, Esc closes
 
 File
-  Ctrl+O              open project
+  Ctrl+O              open project (the list of known projects)
+  Ctrl+Shift+O        open folder (browse and import a folder as a project)
   Ctrl+N              new file
   Ctrl+S              save
   Ctrl+Shift+S        save as
@@ -32,8 +33,9 @@ Machines
   Alt+2, Alt+3        remote machines (later)
 
 Windows and panels
-  Shift+Tab           next panel: Tree, Main, Tools
-  Alt+Tab, Ctrl+Tab   next window of the Main panel, or next tab of the Tools panel
+  Alt+Left, Alt+Right previous / next panel: Tree, Main, Tools (Shift+Tab: next)
+  Ctrl+Tab            next window of the Main panel, or next tab of the Tools panel
+  Ctrl+PgUp, Ctrl+PgDn  previous / next window or tab
   Ctrl+1 .. Ctrl+9    window number 1 to 9
   Window > Modify     change the size of the panels: drag the borders
                       with the mouse, or use the arrow keys;

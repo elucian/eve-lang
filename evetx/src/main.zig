@@ -34,7 +34,7 @@ pub fn main(init: std.process.Init) !void {
     // no folder on the command line: no project is open and the tree is empty (File > Open project)
     const root: []const u8 = if (args.len > 1) args[1] else "";
 
-    const app = app_mod.App.create(gpa, io, root) catch |err| {
+    const app = app_mod.App.create(gpa, io, init.environ_map, root) catch |err| {
         std.debug.print("evetx: cannot open the project folder '{s}': {s}\n", .{ root, @errorName(err) });
         return err;
     };

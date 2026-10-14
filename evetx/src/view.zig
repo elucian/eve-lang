@@ -126,6 +126,7 @@ pub fn draw(app: *App, win: Window) !void {
     try sidebar(app, win, l.tree);
     try mainPanel(app, win, l);
     try toolsPanel(app, win, l.tools);
+    if (l.debug.w > 0) try debugBar(app, win, l.debug.x, l.debug.y, l.debug.w);
     try statusBar(app, win);
 
     if (app.overlay == .none) return;
@@ -136,11 +137,12 @@ pub fn draw(app: *App, win: Window) !void {
             try menuBar(app, win);
             try menuDrop(app, win);
         },
-        .settings => settings(app, win),
-        .about => about(app, win),
-        .open_project => openProjectBox(app, win),
+        .settings => try settings(app, win),
+        .about => try about(app, win),
+        .open_project => try projectBox(app, win),
+        .open_folder => try folderBox(app, win),
         .goto => try gotoBox(app, win),
-        .save_as => saveAsBox(app, win),
+        .save_as => try saveAsBox(app, win),
         .find_text => try findTextBox(app, win),
         .find_file => try findFileBox(app, win),
         .replace => try replaceBox(app, win),
@@ -319,8 +321,8 @@ fn isServerSide(name: []const u8) bool {
 }
 
 // Zig tip: A struct passed by value (`l: app_mod.Layout`) is a bundle of rectangles; the function
-// reads the ones it needs. The Run buttons live under the Main Panel and belong to it.
-/// The Main Panel: the windows as tabs, the editor, and the Run buttons under it.
+// reads the ones it needs. The Run buttons are drawn by `debugBar`.
+/// The Main Panel: the windows as tabs and the editor.
 fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
     const r = l.main;
     if (r.w == 0) return;
@@ -329,7 +331,6 @@ fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
     try tabStrip(app, box);
     try titleButtons(app, box, .main);
     try editorArea(app, sub(box, 0, 1, box.width, box.height -| 1));
-    try debugBar(app, win, l.debug.x, l.debug.y, l.debug.w);
 }
 
 // Zig tip: `break` leaves the loop when the next tab would not fit. A tab and its `×` are two hits
@@ -593,7 +594,8 @@ fn sizeText(app: *App, size: u64) []const u8 {
     return app.fmt("{d} bytes", .{size});
 }
 
-// Zig tip: The debugger buttons are drawn dimmed: they exist so that the screen is as designed,
+// Zig tip: The bar belongs to the Tools Panel: it is drawn above it and is not on the screen when that panel is hidden.
+// The debugger buttons are drawn dimmed: they exist so that the screen is as designed,
 // and a click says "not yet". Only Run works (F5).
 fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     const bar = sub(win, x0, y, rw, 1);
@@ -610,7 +612,6 @@ fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     x = try button(app, bar, x, 0, "▶▶ Continue", off, .{ .button = .cont });
     x += 1;
     _ = try button(app, bar, x, 0, "■ Stop", off, .{ .button = .stop });
-    if (rw > x + 26) putRight(bar, rw, 0, "F5 run · F9 breakpoint ", theme.on(theme.dim, theme.panel));
 }
 
 // Zig tip: `for (tabs, names) |t, n|` walks two arrays of the same length together. The label is a
@@ -805,9 +806,17 @@ fn solid(app: *App, win: Window, x: u16, y: u16, w: u16, h: u16) void {
     addHit(app, win, x, y, w, h, .nop) catch {};
 }
 
+// Zig tip: The close button of every dialog is the same: ` × ` drawn at a place, and a hit with the
+// action `close_overlay`. Making it a function keeps all dialogs alike.
+/// The × button that closes a dialog.
+fn closeButton(app: *App, win: Window, x: u16, y: u16, style: Style) void {
+    _ = put(win, x, y, " × ", style);
+    addHit(app, win, x, y, 3, 1, .close_overlay) catch {};
+}
+
 // Zig tip: Returns the window inside the dialog so that the caller draws its lines at fixed rows.
 // `@min(w, win.width -| 2)` keeps it inside a small window.
-/// A dialog in the middle of the screen: returns the inside, the first row holds the title.
+/// A dialog in the middle of the screen: returns the inside, the first row holds the title and the × button.
 fn dialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     const ww = @min(w, win.width -| 2);
     const hh = @min(h, win.height -| 2);
@@ -819,13 +828,13 @@ fn dialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     const head = sub(box, 0, 0, box.width, 1);
     fillWith(head, theme.selected);
     _ = put(head, 1, 0, title, theme.onBold(theme.bright, theme.selected));
-    putRight(head, head.width -| 1, 0, "Esc closes", theme.on(theme.text, theme.selected));
+    closeButton(app, head, head.width -| 3, 0, theme.on(theme.bright, theme.selected));
     return box;
 }
 
 // Zig tip: The search dialogs sit at the top right, under the menu bar, so the code stays visible
-// while the user searches. The title is written over the top border of the box, in the parent
-// window, one cell after the corner.
+// while the user searches. The title and the × button are written over the top border of the box,
+// in the parent window.
 /// A small dialog at the top right of the screen: returns the inside.
 fn topDialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     const ww = @min(w, win.width -| 2);
@@ -834,8 +843,26 @@ fn topDialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     const box = boxed(win, x, 1, ww, h, theme.blue);
     fillWith(box, theme.panel);
     _ = put(win, x + 2, 1, app.fmt(" {s} ", .{title}), theme.onBold(theme.bright, theme.deep));
+    closeButton(app, win, x + ww -| 5, 1, theme.onBold(theme.bright, theme.deep));
     return box;
 }
+
+// Zig tip: A struct for a button lets a dialog list its buttons as data: `buttonRow` lays them out
+// from the right edge, the usual place of OK and Cancel. `primary` marks the one that Enter does.
+const Btn = struct { label: []const u8, action: Action, primary: bool = false };
+
+/// A row of buttons at the right end of row `y` of a dialog.
+fn buttonRow(app: *App, box: Window, y: u16, specs: []const Btn) !void {
+    var total: u16 = 0;
+    for (specs) |b| total += box.gwidth(b.label) + 3;
+    var x: u16 = box.width -| (total + 1);
+    for (specs) |b| {
+        const style = if (b.primary) theme.onBold(theme.bright, theme.green_bg) else theme.on(theme.text, theme.bar);
+        x = try button(app, box, x, y, b.label, style, b.action) + 1;
+    }
+}
+
+const ok_btn: Action = .{ .dlg = .ok };
 
 // Zig tip: A `switch` on the optional command: `row.cmd orelse` is not needed because the labels
 // that change with the state have a command, and a separator is handled before this function is
@@ -899,39 +926,48 @@ fn menuDrop(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: A placeholder dialog (Q-054 b): the same `dialog` helper, two lines of text, no
-// controls.
-fn settings(app: *App, win: Window) void {
-    const box = dialog(app, win, 56, 9, "Options");
+// Zig tip: A placeholder dialog (Q-054 b): the same `dialog` helper, two lines of text and one button.
+fn settings(app: *App, win: Window) !void {
+    const box = dialog(app, win, 56, 10, "Options");
     _ = put(box, 2, 2, "Not yet: colors, tab size, keys and the machines list", theme.on(theme.text, theme.panel));
     _ = put(box, 2, 3, "come with the Options dialog (Q-054 b).", theme.on(theme.text, theme.panel));
+    try buttonRow(app, box, box.height -| 2, &.{.{ .label = "Close", .action = .close_overlay, .primary = true }});
 }
 
-fn about(app: *App, win: Window) void {
-    const box = dialog(app, win, 56, 9, "About");
+fn about(app: *App, win: Window) !void {
+    const box = dialog(app, win, 56, 10, "About");
     _ = put(box, 2, 2, "evetx: the Eve terminal IDE", theme.onBold(theme.bright, theme.panel));
     _ = put(box, 2, 3, "A text user interface for Eve projects (level 6).", theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 5, "Built on libvaxis. Esc or Enter closes.", theme.on(theme.dim, theme.panel));
+    _ = put(box, 2, 5, "Built on libvaxis. (c) Sage-Code Laboratory", theme.on(theme.dim, theme.panel));
+    try buttonRow(app, box, box.height -| 2, &.{.{ .label = "Close", .action = .close_overlay, .primary = true }});
 }
 
 // Zig tip: The text field is the one of the `App` (`goto_in`), drawn with `drawWithStyle`; the
 // dialog never needs the keyboard focus, because an overlay takes the keys first.
 fn gotoBox(app: *App, win: Window) !void {
-    const box = topDialog(app, win, 36, 4, "GoTo");
+    const box = topDialog(app, win, 40, 5, "GoTo");
     try field(app, box, 1, 0, box.width -| 2, &app.goto_in, 0, true);
     _ = put(box, 1, 1, "Line, or line:column (42 or 42:7)", theme.on(theme.dim, theme.panel));
+    try buttonRow(app, box, 2, &.{
+        .{ .label = "Go", .action = ok_btn, .primary = true },
+        .{ .label = "Close", .action = .close_overlay },
+    });
 }
 
 fn findTextBox(app: *App, win: Window) !void {
-    const box = topDialog(app, win, 46, 4, "Find Text");
+    const box = topDialog(app, win, 46, 5, "Find Text");
     try field(app, box, 1, 0, box.width -| 2, &app.find_in, 0, true);
-    _ = put(box, 1, 1, "Enter finds the next match · Esc closes", theme.on(theme.dim, theme.panel));
+    _ = put(box, 1, 1, "Enter finds the next match", theme.on(theme.dim, theme.panel));
+    try buttonRow(app, box, 2, &.{
+        .{ .label = "Next", .action = ok_btn, .primary = true },
+        .{ .label = "Close", .action = .close_overlay },
+    });
 }
 
 // Zig tip: `app.tree.entries.items[app.selected]` is the entry that the search moved to; the dialog
 // shows its path so that the user sees the answer before pressing Enter.
 fn findFileBox(app: *App, win: Window) !void {
-    const box = topDialog(app, win, 52, 5, "Find File");
+    const box = topDialog(app, win, 52, 6, "Find File");
     try field(app, box, 1, 0, box.width -| 2, &app.files_in, 0, true);
     const typed = app.files_in.buf.firstHalf().len + app.files_in.buf.secondHalf().len;
     if (typed > 0 and app.selected < app.tree.entries.items.len) {
@@ -940,38 +976,117 @@ fn findFileBox(app: *App, win: Window) !void {
     } else {
         _ = put(box, 1, 1, "Type the first letters of a file name", theme.on(theme.dim, theme.panel));
     }
-    _ = put(box, 1, 2, "Up, Down next match · Enter opens", theme.on(theme.dim, theme.panel));
+    _ = put(box, 1, 2, "Up, Down next match", theme.on(theme.dim, theme.panel));
+    try buttonRow(app, box, 3, &.{
+        .{ .label = "Open", .action = ok_btn, .primary = true },
+        .{ .label = "Close", .action = .close_overlay },
+    });
 }
 
 fn replaceBox(app: *App, win: Window) !void {
-    const box = topDialog(app, win, 50, 6, "Replace");
+    const box = topDialog(app, win, 52, 6, "Replace");
     _ = put(box, 1, 0, "Find", theme.on(theme.dim, theme.panel));
     try field(app, box, 10, 0, box.width -| 11, &app.find_in, 0, app.dlg_field == 0);
     _ = put(box, 1, 1, "Replace", theme.on(theme.dim, theme.panel));
     try field(app, box, 10, 1, box.width -| 11, &app.replace_in, 1, app.dlg_field == 1);
-    const btn = theme.on(theme.text, theme.bar);
-    var x: u16 = 1;
-    x = try button(app, box, x, 2, "Replace", btn, .{ .button = .replace });
-    _ = try button(app, box, x + 1, 2, "Replace all", btn, .{ .button = .replace_all });
-    _ = put(box, 1, 3, "Tab switches the field · Esc closes", theme.on(theme.dim, theme.panel));
-}
-
-// Zig tip: The same shape as `saveAsBox`: a centered dialog and one field. The key handling is in
-// `App.overlayKey`: Enter opens the folder that was typed.
-fn openProjectBox(app: *App, win: Window) void {
-    const box = dialog(app, win, 64, 7, "Open project");
-    _ = put(box, 2, 2, "Project folder (a path from the current folder):", theme.on(theme.text, theme.panel));
-    const f = sub(box, 2, 3, box.width -| 4, 1);
-    fillWith(f, theme.bar);
-    app.project_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+    try buttonRow(app, box, 2, &.{
+        .{ .label = "Replace", .action = .{ .button = .replace }, .primary = true },
+        .{ .label = "Replace all", .action = .{ .button = .replace_all } },
+        .{ .label = "Close", .action = .close_overlay },
+    });
+    _ = put(box, 1, 3, "Tab switches the field", theme.on(theme.dim, theme.panel));
 }
 
 // Zig tip: A dialog with one field. The key handling is in `App.overlayKey`: Enter saves under the
 // typed path, Esc closes.
-fn saveAsBox(app: *App, win: Window) void {
-    const box = dialog(app, win, 64, 7, "Save As");
+fn saveAsBox(app: *App, win: Window) !void {
+    const box = dialog(app, win, 64, 9, "Save As");
     _ = put(box, 2, 2, "File path, relative to the project folder:", theme.on(theme.text, theme.panel));
     const f = sub(box, 2, 3, box.width -| 4, 1);
     fillWith(f, theme.bar);
     app.saveas_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "Save", .action = ok_btn, .primary = true },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
+}
+
+// Zig tip: A list with a selected row that must stay on the screen: `top` is the first row shown and
+// is moved only as far as needed, the same rule as the file tree. The rows are child windows of one
+// line; each is a hit with the number of the project.
+/// File > Open project: the projects of the cache, one row each.
+fn projectBox(app: *App, win: Window) !void {
+    const box = dialog(app, win, 76, 19, "Open project");
+    const dim = theme.on(theme.dim, theme.panel);
+    _ = put(box, 2, 2, "Known projects. Import a folder to add one; Forget takes it off the list.", dim);
+    const n = app.cache.projects.items.len;
+    const list_h: u16 = box.height -| 9;
+    if (app.proj_sel < app.proj_top) app.proj_top = app.proj_sel;
+    if (app.proj_sel >= app.proj_top + list_h) app.proj_top = app.proj_sel + 1 - list_h;
+    if (n <= list_h) app.proj_top = 0;
+    const frame = sub(box, 1, 4, box.width -| 2, list_h);
+    fillWith(frame, theme.deep);
+    if (n == 0) {
+        _ = put(frame, 2, 1, "No projects yet.", theme.on(theme.text, theme.deep));
+        _ = put(frame, 2, 2, "Press I, or the button Import folder…, to choose a folder.", theme.on(theme.dim, theme.deep));
+    }
+    var r: u16 = 0;
+    while (r < list_h and app.proj_top + r < n) : (r += 1) {
+        const i = app.proj_top + r;
+        const path = app.cache.projects.items[i];
+        const sel = i == app.proj_sel;
+        const bg = if (sel) theme.selected else theme.deep;
+        const row = sub(frame, 0, r, frame.width, 1);
+        fillWith(row, bg);
+        const c = put(row, 1, 0, "📁 ", theme.on(theme.amber, bg));
+        _ = put(row, c, 0, clipText(App.baseName(path), 20), theme.onBold(if (sel) theme.bright else theme.text, bg));
+        _ = put(row, c + 22, 0, clipText(path, frame.width -| (c + 24)), theme.on(if (sel) theme.text else theme.dim, bg));
+        try addHit(app, frame, 0, r, frame.width, 1, .{ .proj_row = i });
+    }
+    if (n > list_h) _ = put(box, box.width -| 12, 3, app.fmt("{d} projects", .{n}), dim);
+    _ = put(box, 2, box.height -| 4, "Enter opens · Del forgets · I imports a folder · a second click opens", dim);
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "Open", .action = ok_btn, .primary = true },
+        .{ .label = "Import folder…", .action = .{ .dlg = .browse } },
+        .{ .label = "Forget", .action = .{ .dlg = .forget } },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
+}
+
+/// File > Open Folder: a browser of folders. The field shows the path; the list shows the sub
+/// folders; Open as project adds the folder to the cache and opens it.
+fn folderBox(app: *App, win: Window) !void {
+    const box = dialog(app, win, 78, 22, "Open Folder");
+    const dim = theme.on(theme.dim, theme.panel);
+    _ = put(box, 2, 2, "Folder", dim);
+    try field(app, box, 10, 2, box.width -| 12, &app.project_in, 0, app.dlg_field == 0);
+    const n = app.fbRowCount();
+    const list_h: u16 = box.height -| 9;
+    if (app.fb_sel < app.fb_top) app.fb_top = app.fb_sel;
+    if (app.fb_sel >= app.fb_top + list_h) app.fb_top = app.fb_sel + 1 - list_h;
+    if (n <= list_h) app.fb_top = 0;
+    const frame = sub(box, 1, 4, box.width -| 2, list_h);
+    fillWith(frame, theme.deep);
+    var r: u16 = 0;
+    while (r < list_h and app.fb_top + r < n) : (r += 1) {
+        const i = app.fb_top + r;
+        const sel = i == app.fb_sel;
+        const bg = if (sel) (if (app.dlg_field == 1) theme.selected else theme.bar) else theme.deep;
+        const row = sub(frame, 0, r, frame.width, 1);
+        fillWith(row, bg);
+        const name = app.fbRowName(i);
+        if (std.mem.eql(u8, name, "..")) {
+            _ = put(row, 1, 0, "↑  ..", theme.on(theme.dim, bg));
+        } else {
+            const c = put(row, 1, 0, "📁 ", theme.on(theme.amber, bg));
+            _ = put(row, c, 0, clipText(name, frame.width -| 6), theme.on(if (sel) theme.bright else theme.text, bg));
+        }
+        try addHit(app, frame, 0, r, frame.width, 1, .{ .fb_row = i });
+    }
+    const count = app.fb_entries.items.len;
+    _ = put(box, 2, box.height -| 4, app.fmt("{d} folders · Enter in · Backspace up · Tab field/list · F2 open as project", .{count}), dim);
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "Open as project", .action = .{ .dlg = .open_here }, .primary = true },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
 }
