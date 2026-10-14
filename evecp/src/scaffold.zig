@@ -5,7 +5,7 @@
 const std = @import("std");
 const Io = std.Io;
 const parser = @import("parser.zig");
-const version = @import("version.zig");
+const version = @import("evecm").version;
 
 /// The layout version written in `meta/project.json`.
 pub const layout_version = 1;

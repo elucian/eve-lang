@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the Eve VM, run the conformity tests, and start the parts of eve.
-#   ./run.sh build            compile evevm/ and install bin/eve.exe
+#   ./run.sh build            compile the modules and install bin/eve.exe
 #   ./run.sh unit             zig unit tests of the VM
 #   ./run.sh 1                all tests of level1 (also: level1, 2, 3, all)
 #   ./run.sh a01              one test (b01 is in level2, and so on); a prefix runs all matches
@@ -23,8 +23,8 @@ esac
 cd "$root" || exit 1
 case "$1" in
   "" | -h | --help) sed -n "2,12p" "$0" | sed 's/^# \{0,1\}//' ;;
-  build) (cd evevm && zig build -p ..) ;;
-  unit)  (cd evevm && zig build test) ;;
+  build) zig build -p . ;;
+  unit)  zig build test ;;
   release) shift; python script/release.py "$@" ;;
   check) shift; python script/runtest.py --check "$@" ;;
   *)     python script/runtest.py "$@" ;;

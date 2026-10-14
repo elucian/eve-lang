@@ -8,14 +8,14 @@
 //! one go with `release`. The syntax tree, the classes and the messages stay in the arena of the run.
 const std = @import("std");
 const Io = std.Io;
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 const task = @import("task.zig");
-const data = @import("data.zig");
-const overload = @import("overload.zig");
-const decimal = @import("decimal.zig");
+const data = @import("evecm").data;
+const overload = @import("evecp").overload;
+const decimal = @import("evecm").decimal;
 const dlib = @import("dlib.zig");
 const orm = @import("orm.zig");
-const instant = @import("instant.zig");
+const instant = @import("evecm").instant;
 const sqlite = @import("sqlite.zig");
 const Scratch = @import("scratch.zig").Scratch;
 const heap = @import("heap.zig");
@@ -4551,8 +4551,8 @@ pub const Interp = struct {
 fn runSource(src: []const u8, buf: []u8) !struct { out: []const u8, code: u8 } {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
-    var diag: @import("lexer.zig").Diag = .{};
-    const root = try @import("parser.zig").parse(arena.allocator(), src, &diag);
+    var diag: @import("evecp").lexer.Diag = .{};
+    const root = try @import("evecp").parser.parse(arena.allocator(), src, &diag);
     var w: Io.Writer = .fixed(buf);
     var it = try Interp.init(arena.allocator(), &w);
     defer it.deinit();
@@ -4609,9 +4609,9 @@ test "durations are milliseconds, split and batch cut a list" {
 test "a loop frees what each pass makes" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
-    var diag: @import("lexer.zig").Diag = .{};
+    var diag: @import("evecp").lexer.Diag = .{};
     const src = "new total := 0;\nfor i in (1..10000) do\n  new s := \"item {i}\";\n  new parts := (i, i + 1);\n  let total += parts.length();\ndone;\nprint total;\n";
-    const root = try @import("parser.zig").parse(arena.allocator(), src, &diag);
+    const root = try @import("evecp").parser.parse(arena.allocator(), src, &diag);
     var buf: [64]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
     var it = try Interp.init(arena.allocator(), &w);

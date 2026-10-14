@@ -13,9 +13,9 @@
 const std = @import("std");
 const Io = std.Io;
 const screen = @import("screen.zig");
-const terminal = @import("terminal.zig");
-const line_editor = @import("line.zig");
-const version = @import("version.zig");
+const terminal = @import("evecm").terminal;
+const line_editor = @import("evecm").line;
+const version = @import("evecm").version;
 
 /// Longest line of the upper part: a longer line is split here. A shorter one is never wrapped; if the window is
 /// narrower than the line, the end of the line is cut off on the screen (the scrollback keeps all of it).

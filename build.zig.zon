@@ -1,0 +1,23 @@
+.{
+    // The one package of Eve: the modules evecm, evecp, evevm and cmd (design-packages.md) are built
+    // from here, and the one version of everything is written once, below (D-167).
+    .name = .eve,
+    .version = "0.0.4",
+    .fingerprint = 0xf5e09b7eca5ed987, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .sqlite = .{
+            .url = "https://www.sqlite.org/2026/sqlite-amalgamation-3540000.zip",
+            .hash = "N-V-__8AAIbIsACiE8KD1p1yFmEmwfDyxM6oeFpCwhUhBARB",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "evecm",
+        "evecp",
+        "evevm",
+        "cmd",
+        "lib",
+    },
+}

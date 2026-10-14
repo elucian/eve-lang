@@ -3,7 +3,7 @@
 //! with the types it knows) and the interpreter (at run time, with the types of the values) apply the same ones.
 //! Spec: spec/syntax/declarations.md#overloading.
 const std = @import("std");
-const ast = @import("ast.zig");
+const ast = @import("evecm").ast;
 
 const Node = ast.Node;
 
