@@ -810,7 +810,11 @@ fn statusBar(app: *App, win: Window) !void {
     const left_w = pos_x -| 3;
     _ = put(box, pos_x -| 2, 0, "│", theme.on(theme.line, theme.deep));
 
-    if (app.message) |m| {
+    if (app.pendingLeft()) |ms| {
+        const secs: i64 = @divFloor(ms + 999, 1000);
+        const cmd_text = app.pending_text orelse "";
+        _ = put(box, 1, 0, clipText(app.fmt("▶ {s} starts in {d}s · Enter runs now · Esc cancels · typing keeps it", .{ cmd_text, secs }), left_w), theme.onBold(theme.amber, theme.deep));
+    } else if (app.message) |m| {
         _ = put(box, 1, 0, clipText(m, left_w), theme.onBold(theme.amber, theme.deep));
     } else if (app.running) {
         _ = put(box, 1, 0, "Running…", theme.onBold(theme.amber, theme.deep));

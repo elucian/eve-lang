@@ -336,6 +336,56 @@ pub const Buffer = struct {
         self.match = null;
     }
 
+    // Zig tip: An `enum` with three values names the kind of a character; a `switch` or an `==`
+    // compares kinds. Letters, digits, `_` and every non ASCII byte are "word"; a run of the same
+    // kind is skipped as one step, like in every code editor.
+    const CharClass = enum { space, word, other };
+
+    fn classAt(line: []const u8, i: usize) CharClass {
+        const c = line[i];
+        if (c == ' ') return .space;
+        if (std.ascii.isAlphanumeric(c) or c == '_' or c >= 0x80) return .word;
+        return .other;
+    }
+
+    /// Ctrl+Left: to the start of the word on the left (the end of the previous line at column 0).
+    pub fn wordLeft(self: *Buffer) void {
+        if (self.col == 0) {
+            if (self.row > 0) {
+                self.row -= 1;
+                self.col = self.lineAt(self.row).len;
+            }
+            return;
+        }
+        const line = self.lineAt(self.row);
+        var c = self.col;
+        while (c > 0 and classAt(line, prevStart(line, c)) == .space) c = prevStart(line, c);
+        if (c > 0) {
+            const cls = classAt(line, prevStart(line, c));
+            while (c > 0 and classAt(line, prevStart(line, c)) == cls) c = prevStart(line, c);
+        }
+        self.col = c;
+    }
+
+    /// Ctrl+Right: to the start of the next word (the start of the next line at the end of a line).
+    pub fn wordRight(self: *Buffer) void {
+        const line = self.lineAt(self.row);
+        if (self.col >= line.len) {
+            if (self.row + 1 < self.lines.items.len) {
+                self.row += 1;
+                self.col = 0;
+            }
+            return;
+        }
+        var c = self.col;
+        const cls = classAt(line, c);
+        if (cls != .space) {
+            while (c < line.len and classAt(line, c) == cls) c = nextEnd(line, c);
+        }
+        while (c < line.len and classAt(line, c) == .space) c = nextEnd(line, c);
+        self.col = c;
+    }
+
     // Zig tip: A function that returns `void` and cannot fail has no `!`, so the caller does not use
     // `try`. Plain cursor moves cannot run out of memory.
     pub fn moveLeft(self: *Buffer) void {

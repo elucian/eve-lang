@@ -25,13 +25,17 @@ Edit and search
 
 Selecting and copying
   Shift + arrows, Home, End, PgUp, PgDn   select text
+  Ctrl+Left, Ctrl+Right   move one word; with Shift they select it
   Ctrl+A              select all
   Ctrl+C, Ctrl+X      copy, cut (the system clipboard gets the text too)
   Ctrl+V              paste (a paste made by the terminal works as well)
   Mouse               click puts the cursor, drag selects, Shift+click extends
 
 Run and debug
-  F5                  run the .eve file
+  F5                  run the .eve file: `run <file>` is typed in the Console prompt
+                      and starts after 3 seconds (Enter: now, Esc: cancel,
+                      typing keeps the text and stops the countdown)
+  F6                  check the syntax: `--check <file>`, the same way
   F9                  breakpoint
   F8, F11, Shift+F11, Shift+F5   debugger (later)
 
