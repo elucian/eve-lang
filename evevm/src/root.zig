@@ -5,9 +5,6 @@
 /// The interpreter: values, scopes and the walk over the syntax tree.
 pub const interp = @import("interp.zig");
 
-/// The heap of the values: reference counting, regions and the tracing collector.
-pub const heap = @import("heap.zig");
-
 /// The cooperative tasks of a job (D-144).
 pub const task = @import("task.zig");
 
@@ -40,7 +37,6 @@ pub const helptext = @import("helptext.zig");
 
 test {
     _ = interp;
-    _ = heap;
     _ = task;
     _ = scratch;
     _ = vm;

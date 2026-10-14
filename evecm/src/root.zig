@@ -21,6 +21,12 @@ pub const instant = @import("instant.zig");
 /// Unicode normalization form C.
 pub const nfc = @import("nfc.zig");
 
+/// The values of a script and the objects they point to.
+pub const value = @import("value.zig");
+
+/// The heap of the values: reference counting, regions and the tracing collector.
+pub const heap = @import("heap.zig");
+
 /// CSV and JSON text, and connection URLs.
 pub const data = @import("data.zig");
 
@@ -40,6 +46,8 @@ test {
     _ = decimal;
     _ = instant;
     _ = nfc;
+    _ = value;
+    _ = heap;
     _ = data;
     _ = line;
     _ = terminal;
