@@ -124,3 +124,24 @@ Author answers to Q-059. Refines D-152 and D-179.
 - **Serial.** A primary aspect exists only in a macro and is serial: its processes are exclusive (applied, never started), but its parallel groups start aspects (author, 2026-10-14).
 - **Reserved.** `primary`, `exclusive` and `concurrent` are reserved keywords, all three of the same design (D-090); `primary` goes into `spec/lexical/keywords.json` with them.
 - Details: `plan/design-unified-aspect.md` rules 2, 7 and 8. Not yet applied.
+
+## D-181 `primary aspect` is a kind of aspect for any file; it is run by a command only (2026-10-14)
+Author decision, a correction of D-180. Replaces "only in a macro" of D-180.
+- **Three kinds, one design.** `exclusive aspect` (the default), `concurrent aspect` and `primary aspect` are reserved words that go in front of `aspect`, in any file, not only in a macro. A file with one `primary aspect` is the shortest program.
+- **Who calls what.** An exclusive aspect is called with `apply`. A concurrent aspect is called with `apply` or `start`. A primary aspect is designed to be executed first and can run alone: **no aspect applies or starts it**, it is run by a command (`eve file.eve`, the machine API, a schedule). `apply` or `start` of a primary aspect is a compile error.
+- **Serial.** A primary aspect is serial: its processes are exclusive (applied, never started), and its parallel groups start aspects.
+- **In a macro** there is exactly one primary aspect (D-180); it is the aspect that `eve file.eve` runs.
+- **The word driver** is not used as a role in the tutorial any more (page drivers.html dissolved, 2026-10-14); a `driver` of the old tests and demos becomes a `primary aspect`.
+- Details and consequences: `plan/design-unified-aspect.md` rules 7 and 8. Q-060 asks whether the machine may also run an exclusive or a concurrent aspect by a command.
+
+## Q-060 The details of D-181: running an aspect that is not primary (2026-10-14) (answered 2026-10-14 → D-182)
+(a) May `eve file.eve` run an exclusive or a concurrent aspect, for example to test one aspect alone? Recommended: yes, the machine runs any aspect and takes it as the root of the run; `primary` only forbids being called by an aspect (it removes nothing from the command line). Other: the command line runs only a primary aspect, and a test of one aspect needs a small primary aspect that applies it. (b) May a project hold several primary aspects (several use cases, D-133)? Recommended: yes, one for each file. (c) The old `driver` of the tests: 376 files, `driver x is` becomes `primary aspect x is`; 2 recommended exceptions: none.
+**Answer:** (a) yes, an exclusive aspect can be run by a command, for testing. (b) yes, a project can be based on one or several primary aspects. (c) the old drivers become primary aspects in general; some may become exclusive aspects. Recorded as D-182.
+
+## D-182 What a command can run: primary and exclusive aspects (2026-10-14)
+Author answers to Q-060. Refines D-181.
+- **Command.** `eve file.eve` runs the `main` of a primary aspect, or of an exclusive aspect: running an exclusive aspect alone is for testing it. An aspect run by a command is the root of the run; its state is the scope of the run and its `main` takes the command-line arguments.
+- **Concurrent.** The author did not name the concurrent aspect. Proposed by the model, to confirm: a command does not run a concurrent aspect (compile error that says to apply it from a primary aspect), because it is written for `start` and checked for thread safety.
+- **Projects.** A project is based on one primary aspect or on several (one for each use case, D-133); aspects called by them are exclusive or concurrent.
+- **Migration.** Every old `driver` becomes a `primary aspect`, as a rule; a test that only exercises one aspect may become an exclusive aspect.
+- Not yet applied to the spec, tests, compiler and VM: `plan/design-unified-aspect.md` steps U2 to U8.

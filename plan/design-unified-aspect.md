@@ -4,7 +4,7 @@ Status: **decided by the author (2026-10-14): D-179**, answers to Q-058 (`plan/d
 
 ## 1. The idea
 
-The **aspect** is the one kind of script that runs. A file holds aspects (one, or several in a macro) or a module. The word `driver` is no longer a keyword: any aspect can be a driver. "The driver" stays in the text as a role: the aspect that the machine runs first, which calls the other aspects. The free script and the shebang `#!` are removed. The Eve macro stays (demos, tests).
+The **aspect** is the one kind of script that runs. A file holds aspects (one, or several in a macro) or a module. The word `driver` is no longer a keyword; the aspect that is run first by a command is a `primary aspect` (D-181), a kind of aspect like `exclusive` and `concurrent`. The free script and the shebang `#!` are removed. The Eve macro stays (demos, tests).
 
 An aspect stays **encapsulated** (D-066): it is called by its name only, and `process main` is its one public entry point. An aspect may also have **private processes** that only its own processes call, by their bare names:
 
@@ -29,7 +29,16 @@ concurrent aspect pipeline is
     done;
   return;
 end pipeline;
+
+** run by a command: eve etl.eve
+primary aspect etl is
+  process main is
+    apply pipeline();
+  return;
+end etl;
 ```
+
+A private process is started only inside a concurrent aspect, so the parallel work of `pipeline` is one level below the primary aspect `etl`, which is serial and cannot call itself or be called.
 
 From another aspect: `apply pipeline();` or `start pipeline();` runs `pipeline.main`. Writing `pipeline.ingest` is a compile error: the dot is never applied to an aspect. From the command line: `eve pipeline.eve` runs `main`, and the arguments after the file go to the parameters of `main`, as for a driver today.
 
@@ -41,7 +50,7 @@ From another aspect: `apply pipeline();` or `start pipeline();` runs `pipeline.m
 | D-043 (scopes) | only the driver has a global scope | the state of the root aspect is the scope of the run; modules bind to it |
 | D-066 | one process `main`; only the driver applies or starts aspects | `main` plus private processes; any aspect may call another, 3 levels at most, no cycle. Kept: called by name only, nothing public but `main`, the dot never applied to an aspect, a new state per call |
 | D-014, D-091, D-126 (free script part) | a `#!` file of free statements runs | removed; line 1 is a `#` title or a `##` subtitle, or the code itself; `#!` is a compile error |
-| D-152 (Eve macro) | shared declarations + aspects + one driver, `#!` optional | kept: shared declarations and several aspects; the entry point is the one `primary aspect` of the file (D-180); `#!` removed |
+| D-152 (Eve macro) | shared declarations + aspects + one driver, `#!` optional | kept: shared declarations and several aspects; the entry point is the one `primary aspect` of the file (D-180, D-181); `#!` removed |
 | D-140 (where, nesting) | a group in the driver `main` or in the `main` of an aspect it starts | a group in any process; the levels count from the root aspect (rule 2) |
 | D-133 | variations are several drivers of one project | several root aspects of one project, the same rule |
 
@@ -55,15 +64,15 @@ Kept as they are: `exclusive` / `concurrent` per aspect and the default exclusiv
 4. **No cycle.** An aspect does not call itself, and no chain of calls comes back to an aspect already in it. The linker (`evecp/src/project.zig`) reads every aspect reached and reports the chain (exit 65).
 5. **Private processes.** Every process except `main` is private: it is called only by a process of the same aspect, by its bare name (`apply ingest(…)`, `start ingest(…)`). Every aspect has a `main`; an aspect without one is a compile error.
 6. **Instances.** A call from another aspect makes a new state of the aspect (its declarations are evaluated), runs `main` and drops the state when `main` returns (D-066). The private processes called by `main` work on the **same** state: that is the shared state of the picture.
-7. **The kind word.** A private process can be started only in a `concurrent aspect`; in an `exclusive aspect` it is applied, and a `start` of it is a compile error. A `primary aspect` (macro only, D-180) is serial: its processes are exclusive, applied and never started, but its parallel groups start aspects.
-8. **The primary aspect** (D-180). In a macro the entry point is written `primary aspect name is`: `primary` takes the place of `exclusive` or `concurrent`, and the aspect is neither. A macro has exactly one; none or two is a compile error, and `primary` in a file with one aspect is a compile error. `eve file.eve` runs its `main`. No aspect applies or starts the primary aspect: it is the root of the run.
+7. **The kind word.** `exclusive` (the default), `concurrent` and `primary` are reserved words of the same design, written before `aspect` in any file (D-181). An exclusive aspect is called with `apply`; a concurrent aspect with `apply` or `start`; a primary aspect is run by a command and **no aspect applies or starts it** (compile error). A private process can be started only in a `concurrent aspect`; in an `exclusive` or `primary` aspect it is applied, and a `start` of it is a compile error. A primary aspect is serial: its processes are exclusive, but its parallel groups start aspects.
+8. **The primary aspect** (D-180, D-181, D-182). A command (`eve file.eve`) also runs an exclusive aspect, for testing; it does not run a concurrent aspect (proposed, D-182). It is designed to be executed first and can run alone: `eve file.eve` runs its `main`, which takes the command-line arguments, and its state is the scope of the run. A project may hold several (one for each use case). In a macro there is exactly one; none or two is a compile error. It is the root of the run, so a call of it by an aspect is a compile error.
 9. **Errors and exit.** `exit` leaves the current process, `over` ends the whole run (D-111), and the exit code of the run is that of the root `main` (D-010). An error that a started process does not recover goes to its group (D-140); in an applied process it goes to the caller.
 
 ## 4. Settled by D-180 (answers to Q-059)
 
 - **(a) The driver of a macro.** **answer** A macro has a "primary" aspect that is not exclusive not concurent. primary aspect is the entry point of a macro and primary is used instead of concurent or exclusive only for the macro type of script. Rule 8.
 - **(b) Private processes and levels.** **answer** no, apply for private processes do not count as levels. Only apply/start an aspect is a level not sibling processes. In a macro, calling aspects also count as levels. Rule 2.
-- **Confirmed by the author:** a primary aspect can exist only in a macro; it is serial, its processes are exclusive, but it can start aspects in parallel blocks (rule 7). `primary`, `exclusive` and `concurrent` are reserved keywords, of the same design.
+- **Corrected by D-181:** `primary` is a kind of aspect for any file, not only for a macro; it is serial, its processes are exclusive, but it can start aspects in parallel blocks (rule 7); no aspect applies or starts it. `primary`, `exclusive` and `concurrent` are reserved keywords, of the same design.
 
 ## 5. What it touches (counted 2026-10-14)
 
@@ -84,9 +93,10 @@ One step per session, in the order of the project: tutorial first, tests before 
 
 - **U0 Decision.** D-179 and D-180 written (2026-10-14). Nothing blocks the work.
 - **U1 Tutorial.** topology.html (two kinds of scripts: aspect and module; the driver as a role), processing.html (the root aspect, calls by name, 3 levels, no cycle), multitasking/concurrency (private processes started from `main`, rules 1 and 7), syntax.html (`driver` out of the keywords, no `#!`), the macro section (no `driver`, no `#!`), every other page: `driver name is` → `aspect name is` by a script in `temp/`, checked with `git -C tutorial diff --stat`; `genkeywords.py`; `bee-ed balance` on every changed page; sidebars in `tutorial/data/`.
+  **[x] 2026-10-14 done:** 80 files in the scl repo (not committed yet). `driver name is` became `aspect name is` in the code blocks of 31 pages and in `tutorial/demo/*.eve`; the 8 macro demos use `primary aspect` and no `#!`; `free_script.eve` became `word_count.eve`. Rewritten by hand: drivers.html (the driver as a role), aspects.html (private processes, 3 levels, kinds), scripts.html (section "Running an aspect" replaces "Free scripts", anchor `#run-aspect`), macro.html (primary aspect, no free script), syntax.html (no `#!`, keyword rows), concurrency.html (levels, private processes), processing.html, and short edits in 9 other pages. *Author, same day:* the page drivers.html is dissolved (its text is in aspects.html, "Run an aspect", and in macro.html); the tutorial no longer insists on the word driver: the first wording (a primary role for any aspect) was corrected the same day by D-181: `primary` is a kind of aspect; chapters 10 to 44 moved up by one (index, examples, demo comments); `driver_args.eve` became `aspect_args.eve`. The run log still has the field `driver` (U7). *Left for later steps:* the highlighter `js/eve1.js` (U2, `genkeywords.py` after `keywords.json` has `primary` and no `driver`), `features.html` (generated from the tests, U3), the sidebar JSON of drivers/aspects (headings unchanged), the demos with a `primary aspect` do not run until U4.
 - **U2 Spec.** lexical.md (no `#!`), declarations.md, grammar.md (`script = { aspect } | module`; `process` repeated in an aspect), keywords.json (`driver` removed, `primary` added as a reserved word beside `exclusive` and `concurrent`), aspects.md (private processes, instances, levels, cycles), multitasking.md (levels from the root, rule 1 for a process); `speccheck.py`, `grammarcheck.py`.
-- **U3 Tests first.** A one-off script `temp/migrate_driver.py` rewrites the headers of the 376 files and lists every expectation that names a driver; a04, c24, e04, e16 to e22 by hand. New tests at the next free numbers. L2 `b45`+: a private process applied by `main`; `a.p` from outside (error); an aspect without `main` (error); an aspect that calls itself and a cycle of two (errors); a fourth level (error); an aspect run directly by `eve` that calls others. L4 `d36`+: private processes started from `main` sharing an `Atomic`; a started private process that touches a plain variable (error); a start in an exclusive aspect (error). L5 `e108`+: the pipeline of section 1 in a macro with a `primary aspect`; a macro without a primary aspect, with two, and `primary` in a file of one aspect, a `start` of a private process of the primary aspect (errors); calls between the aspects of a macro that reach a fourth level (error).
-- **U4 Parser.** `evecp/src/parser.zig`: one `aspect` node with `main` and private processes; `driver` is no longer a keyword (a name like any other); `#!` on line 1 fails; the free-script branch removed; the macro keeps its aspects and runs its `primary aspect` (rule 8); `lexer.zig`, `doc.zig`. Unit tests.
+- **U3 Tests first.** A one-off script `temp/migrate_driver.py` rewrites the headers of the 376 files and lists every expectation that names a driver; a04, c24, e04, e16 to e22 by hand. New tests at the next free numbers. L2 `b45`+: a private process applied by `main`; `a.p` from outside (error); an aspect without `main` (error); an aspect that calls itself and a cycle of two (errors); a fourth level (error); an aspect run directly by `eve` that calls others. L4 `d36`+: private processes started from `main` sharing an `Atomic`; a started private process that touches a plain variable (error); a start in an exclusive aspect (error). L5 `e108`+: the pipeline of section 1 in a macro with a `primary aspect`; a macro without a primary aspect, with two, an `apply` and a `start` of a primary aspect (errors), a `start` of a private process of a primary aspect (error), a file with one primary aspect (runs); calls between the aspects of a macro that reach a fourth level (error).
+- **U4 Parser.** `evecp/src/parser.zig`: one `aspect` node with `main` and private processes; `driver` is no longer a keyword and `primary` is one (a name like any other); `#!` on line 1 fails; the free-script branch removed; the macro keeps its aspects and runs its `primary aspect` (rule 8); `lexer.zig`, `doc.zig`. Unit tests.
 - **U5 Checker and linker.** `check.zig`: bare calls of private processes, `a.p` rejected, rule 1 for a started process (the D-152 check moved from the macro aspect to the process), rule 7; `project.zig`: the root aspect, calls from any aspect, levels (rule 2), cycles (rule 4).
 - **U6 Interpreter.** `interp/script.zig`, `interp.zig`: the root aspect; a private process works on the state of its aspect; `interp/parallel.zig`, `task.zig`: a started private process gets that state but reaches only its thread-safe names (rule 1 makes this safe: the reference counts of D-151 are not atomic, so a plain value is never shared between tasks). `EVE_GC_VERIFY=1 python script/runtest.py all` on the Debug build.
 - **U7 Tools.** `cmd/` (help texts), `scaffold.zig` (`project init`, `project new` write an aspect), `runtest.py`, `grammarcheck.py`, `pattern/declaration.eve`, `evetx/gen_keywords.py`, `manual/usage.md`.
