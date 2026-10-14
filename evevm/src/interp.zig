@@ -14,9 +14,7 @@ const data = @import("evecm").data;
 const overload = @import("evecp").overload;
 const decimal = @import("evecm").decimal;
 const dlib = @import("dlib.zig");
-const orm = @import("orm.zig");
 const instant = @import("evecm").instant;
-const sqlite = @import("sqlite.zig");
 const Scratch = @import("scratch.zig").Scratch;
 const heap = @import("evecm").heap;
 const Heap = heap.Heap;
@@ -26,6 +24,7 @@ const Node = ast.Node;
 // The values live in evecm (value.zig); they are named here too, so that the code of the interpreter and of the
 // libraries keeps writing `interp.Value`.
 const value = @import("evecm").value;
+const iface = @import("evecm").iface;
 pub const Signal = value.Signal;
 pub const Value = value.Value;
 pub const Channel = value.Channel;
@@ -146,6 +145,9 @@ pub const Outcome = struct {
 
 
 // Zig tip: `Interp` relies on the same Zig feature as `List` above: see the tip there.
+/// The database layer (evedb), given by the program at its start (`evedb.data`); null when there is none.
+pub var data_api: ?*const iface.Data = null;
+
 pub const Interp = struct {
     /// The arena of the run: the syntax tree, the classes, the messages; freed when the script is unloaded.
     a: std.mem.Allocator,
@@ -160,10 +162,8 @@ pub const Interp = struct {
     scope_stack: std.ArrayList(*Scope) = .empty,
     /// The class `Object`, made once per run.
     object_class: ?*Class = null,
-    /// The databases the script opened, by the handle number kept in its `Connection` objects, and whether a
-    /// transaction of a job is open on each (database.md#transactions). Only the driver's interpreter keeps them.
-    dbs: std.ArrayList(*sqlite.Db) = .empty,
-    tx: std.ArrayList(bool) = .empty,
+    /// Where the database layer (evedb) keeps its state: one `State` for the run, in the driver's interpreter.
+    data_slot: ?*anyopaque = null,
     /// The functions and procedures that share a name (D-149): the key is the first declaration, the list holds
     /// all of them in order. A name that is not overloaded has no entry. Only the driver's interpreter keeps it.
     overloads: std.AutoHashMapUnmanaged(*const Node, std.ArrayList(*const Node)) = .empty,
@@ -182,30 +182,11 @@ pub const Interp = struct {
     /// field `handle`) and the class of those objects (dlib.zig).
     streams: std.ArrayList(*dlib.Stream) = .empty,
     stream_class: ?*Class = null,
-    /// The database layer (orm.zig): the declared tables and their objects, the connections by name, the records the
-    /// session tracks and the changes that wait for a flush, the core database of the checkpoints.
-    tables: std.ArrayList(*orm.Table) = .empty,
-    table_nodes: std.ArrayList(*const Node) = .empty,
-    table_class: ?*Class = null,
-    conn_names: std.StringHashMapUnmanaged(usize) = .empty,
-    /// The `sql function`s of the program, registered on every SQLite connection (D-166); the interpreter that runs
-    /// the statement now (a `sql function` runs there); and why the last call of one failed: the message of
-    /// `$err_sql`, or a signal such as `Panic` that must go on once the statement has stopped.
-    sql_funcs: std.ArrayList(*dlib.SqlFn) = .empty,
-    sql_caller: ?*Interp = null,
-    sql_fail: ?[]const u8 = null,
-    sql_signal: ?Signal = null,
-    tracks: std.AutoHashMapUnmanaged(*Object, *orm.Track) = .empty,
-    track_list: std.ArrayList(*orm.Track) = .empty,
-    pending: std.ArrayList(*orm.Track) = .empty,
-    core_db: ?*sqlite.Db = null,
     /// The object of the `update` block that runs, and the scope that holds its field names.
     update_obj: ?*Object = null,
     update_scope: ?*Scope = null,
     /// The class of the objects that `Secret(text)` makes: they print as `***`.
     secret_class: ?*Class = null,
-    /// The class of the objects that `database.connect` makes.
-    conn_class: ?*Class = null,
     /// The type arguments of the library call being made: `(:Row)` in `csv.read!(:Row)(path)`.
     type_args: []const *const Node = &.{},
     /// The scope of the built-in names (`True`, the type names, the error codes): made once per run by
@@ -378,6 +359,11 @@ pub const Interp = struct {
     /// Raise an error with a code and a message.
     pub fn failWith(it: *Interp, code: u8, comptime fmt: []const u8, args: anytype) Signal {
         const msg = std.fmt.allocPrint(it.a, fmt, args) catch return error.OutOfMemory;
+        return it.failMsg(code, msg);
+    }
+
+    /// Raise an error whose message is already made (the database layer formats its own).
+    pub fn failMsg(it: *Interp, code: u8, msg: []const u8) Signal {
         const trace = try it.traceText();
         it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace }) catch return error.OutOfMemory;
         it.err_code = code;
@@ -629,71 +615,15 @@ pub const Interp = struct {
         return it.h.make(Object, .{});
     }
 
-    // Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
-    // compiler checks it.
-    /// The name of the type of a value (what `type(x)` gives and `x is Integer` tests).
-    pub fn typeName(v: Value) []const u8 {
-        return switch (v) {
-            .nil => "Null",
-            .bool => "Logic",
-            .int => "Integer",
-            .nat => "Natural",
-            .byte => "Byte",
-            .short => "Short",
-            .huge => "Huge",
-            .real => "Real",
-            .float => "Float",
-            .dec => "Decimal",
-            .instant => "Instant",
-            .sym => "Rune",
-            .str => "String",
-            .list => |l| if (l.array) "Array" else "List",
-            .set => "DataSet",
-            .map => "HashMap",
-            .object => |o| if (o.class) |c| c.name else "Object",
-            .class => "Class",
-            .func => "Function",
-            .range, .domain => "Range",
-            .typ => "Type",
-            .module => "Module",
-            .chan => "Channel",
-        };
-    }
+    pub const typeName = value.typeName;
 
-    // Zig tip: `isInt` relies on the same Zig feature as `fail` above: see the tip there.
-    pub fn isInt(v: Value) bool {
-        return v == .int or v == .nat or v == .byte or v == .short or v == .huge;
-    }
+    pub const isInt = value.isInt;
 
-    // Zig tip: `intOf` relies on the same Zig feature as `typeName` above: see the tip there.
-    pub fn intOf(v: Value) i64 {
-        return switch (v) {
-            .int, .nat, .byte, .short, .huge => |n| n,
-            else => 0,
-        };
-    }
+    pub const intOf = value.intOf;
 
-    // Zig tip: builtin functions start with `@`: they are the compiler's own, such as conversions
-    // (`@intCast`, `@as`) and `@min`/`@max`.
-    pub fn realOf(v: Value) ?f64 {
-        return switch (v) {
-            .int, .nat, .byte, .short, .huge => |n| @floatFromInt(n),
-            .real, .float => |r| r,
-            .dec => |d| decimal.toF64(d),
-            else => null,
-        };
-    }
+    pub const realOf = value.realOf;
 
-    // Zig tip: an optional result lets one function say "this value is not a Decimal-compatible number". A whole
-    // number is a Decimal of scale 0, so `5 + 0.50d` is exact; a Real is not converted (spec: never mixed).
-    /// The value as a Decimal: a Decimal itself, or an integer.
-    pub fn decOf(v: Value) ?decimal.Dec {
-        return switch (v) {
-            .dec => |d| d,
-            .int, .nat, .byte, .short, .huge => |n| decimal.fromInt(n),
-            else => null,
-        };
-    }
+    pub const decOf = value.decOf;
 
     // Zig tip: `truth` relies on the same Zig feature as `typeName` above: see the tip there.
     pub fn truth(it: *Interp, v: Value) Signal!bool {
@@ -716,78 +646,11 @@ pub const Interp = struct {
         return it.fail("cannot compare {s} with {s}", .{ typeName(a), typeName(b) });
     }
 
-    // Zig tip: `a orelse b` unwraps an optional: it gives `b` when `a` is null, and `b` may leave
-    // the function with `return`.
-    /// `==`: same value. Collections and objects compare their contents.
-    pub fn eq(a: Value, b: Value) bool {
-        if (isInt(a) and isInt(b)) return intOf(a) == intOf(b);
-        if (a == .dec or b == .dec) if (decOf(a)) |x| if (decOf(b)) |y| return decimal.order(x, y) == .eq;
-        if (a == .instant) return b == .instant and a.instant == b.instant;
-        if (realOf(a)) |x| if (realOf(b)) |y| return x == y;
-        switch (a) {
-            .nil => return b == .nil,
-            .bool => |x| return b == .bool and b.bool == x,
-            .sym => |x| return b == .sym and b.sym == x,
-            .str => |x| return b == .str and std.mem.eql(u8, x, b.str),
-            .list, .set => |x| {
-                const y = switch (b) {
-                    .list, .set => |l| l,
-                    else => return false,
-                };
-                if ((a == .set) != (b == .set)) return false;
-                const xs = x.elems();
-                const ys = y.elems();
-                if (xs.len != ys.len) return false;
-                for (xs, ys) |p, q| if (!eq(p, q)) return false;
-                return true;
-            },
-            .map => |x| {
-                if (b != .map or x.entries.items.len != b.map.entries.items.len) return false;
-                for (x.entries.items, b.map.entries.items) |p, q| if (!eq(p.key, q.key) or !eq(p.val, q.val)) return false;
-                return true;
-            },
-            .object => |x| {
-                if (b != .object or x.fields.items.len != b.object.fields.items.len) return false;
-                for (x.fields.items) |f| {
-                    const other = fieldOf(b.object, f.name) orelse return false;
-                    if (!eq(f.val, other)) return false;
-                }
-                return true;
-            },
-            .class => |x| return b == .class and b.class == x,
-            .func => |x| return b == .func and b.func == x,
-            .range => |x| return b == .range and x.lo == b.range.lo and x.hi == b.range.hi and x.step == b.range.step,
-            .domain => |x| {
-                if (b != .domain) return false;
-                const y = b.domain;
-                return std.meta.eql(x.lo, y.lo) and std.meta.eql(x.hi, y.hi) and x.lo_excl == y.lo_excl and x.hi_excl == y.hi_excl and std.meta.eql(x.step, y.step);
-            },
-            .typ => |x| return b == .typ and std.mem.eql(u8, x, b.typ),
-            else => return false,
-        }
-    }
+    pub const eq = value.eq;
 
-    // Zig tip: `same` relies on the same Zig feature as `typeName` above: see the tip there.
-    /// `is`: the same thing (identity for references, equality for values).
-    pub fn same(a: Value, b: Value) bool {
-        return switch (a) {
-            .list, .set => |x| switch (b) {
-                .list, .set => |y| x == y,
-                else => false,
-            },
-            .map => |x| b == .map and b.map == x,
-            .object => |x| b == .object and b.object == x,
-            else => eq(a, b),
-        };
-    }
+    pub const same = value.same;
 
-    // Zig tip: `fieldOf` relies on the same Zig feature as `newList` above: see the tip there.
-    pub fn fieldOf(o: *Object, name: []const u8) ?Value {
-        for (o.fields.items) |f| {
-            if (std.mem.eql(u8, f.name, name)) return f.val;
-        }
-        return null;
-    }
+    pub const fieldOf = value.fieldOf;
 
     // Zig tip: `setField` relies on the same Zig feature as `define` above: see the tip there.
     pub fn setField(it: *Interp, o: *Object, name: []const u8, v: Value) Signal!void {
@@ -1356,10 +1219,7 @@ pub const Interp = struct {
         return it.apply(op, l, r);
     }
 
-    // Zig tip: `textual` relies on the same Zig feature as `fail` above: see the tip there.
-    pub fn textual(v: Value) bool {
-        return v == .str or v == .sym;
-    }
+    pub const textual = value.textual;
 
     // Zig tip: `overflow` relies on the same Zig feature as `fail` above: see the tip there.
     pub fn overflow(it: *Interp) Signal {
@@ -1476,15 +1336,7 @@ pub const Interp = struct {
         return it.fail("unknown operator {s}", .{op});
     }
 
-    // Zig tip: a `switch` on a `Value` (a tagged union) with `=> true` arms and an `else` arm is the
-    // short way to ask "is it one of these cases?". A `bool` function like this one can be inlined.
-    /// A scalar is a single value: a number, a boolean, a symbol or a string (never a collection).
-    pub fn isScalar(v: Value) bool {
-        return switch (v) {
-            .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .sym, .str => true,
-            else => false,
-        };
-    }
+    pub const isScalar = value.isScalar;
 
     // Zig tip: `inline for` unrolls a loop over a comptime-known array, so each `op` is a constant.
     // `std.mem.eql(u8, a, b)` compares two byte slices (strings) by content, not by address.
@@ -1991,22 +1843,7 @@ pub const Interp = struct {
         }
     }
 
-    // Zig tip: `classRoutine` relies on the same Zig feature as `bind` above: see the tip there.
-    pub fn classRoutine(c: *Class, name: []const u8) ?*const Node {
-        var cur: ?*Class = c;
-        while (cur) |k| : (cur = k.parent) {
-            const node = k.node orelse continue;
-            for (node.kids[2..]) |r| {
-                if (r.tag != .constructor and r.kids[3].tag != .none and std.mem.eql(u8, r.text, name)) return r;
-            }
-        }
-        // a method provided by a trait, when the class and its ancestors do not write it (D-145)
-        cur = c;
-        while (cur) |k| : (cur = k.parent) {
-            for (k.traits.items) |tr| if (classRoutine(tr, name)) |r| return r;
-        }
-        return null;
-    }
+    pub const classRoutine = value.classRoutine;
 
     // Zig tip: a method of a subclass hides the method of its parent that has the same signature, so a
     // candidate is added only if no nearer one has the same signature (`overload.sameSignature`). The list
@@ -2088,9 +1925,9 @@ pub const Interp = struct {
             return it.generatorCall(recv.object, name, args);
         }
         if (dlib.isStream(it, recv)) return dlib.streamCall(it, recv.object, name, args);
-        if (orm.isTable(it, recv)) return orm.tableCall(it, recv.object, name, args);
-        if (recv == .object and recv.object.class != null and recv.object.class == it.base().conn_class) {
-            return dlib.connectionCall(it, recv.object, name, args);
+        if (data_api) |d| {
+            if (d.is_table(it.host(), recv)) return d.table_call(it.host(), recv.object, name, args);
+            if (d.is_connection(it.host(), recv)) return d.connection_call(it.host(), recv.object, name, args);
         }
         if (recv == .chan) return it.channelMethod(recv.chan, name, args);
         if ((eql(u8, name, "batch") or eql(u8, name, "split")) and recv == .list and args.len == 1) {
@@ -2515,7 +2352,7 @@ pub const Interp = struct {
             .exit_stmt => return error.Exit,
             .stop_stmt => return error.StopJob,
             .yield_stmt => try it.yieldStmt(n),
-            .commit_stmt => try orm.commitJob(it),
+            .commit_stmt => if (data_api) |d| try d.commit_job(it.host()),
             .rollback_stmt => return error.JobRollback,
             .update_stmt => try it.updateStmt(n),
             .pass_stmt => {},
@@ -2553,7 +2390,7 @@ pub const Interp = struct {
                 // the end of the job: flush and commit when it went well, roll back otherwise (database.md, transactions)
                 const rolled_back = if (outcome) |_| false else |e| e == error.JobRollback;
                 const went_well = if (outcome) |_| true else |e| e == error.StopJob;
-                const closed = orm.endJob(it, went_well);
+                const closed: Signal!void = if (data_api) |d| d.end_job(it.host(), went_well) else {};
                 if (rolled_back) {
                     it.setJob(n.text, "rolled back");
                     return;
@@ -2758,7 +2595,7 @@ pub const Interp = struct {
         // a function declared inside another one closes over that call's scope (a closure, D-101)
         const f = try it.newFunc(n, if (it.scope == it.unit) it.unit else it.scope);
         try it.define(n.text, .{ .func = f }, true);
-        if (n.is_sql) try dlib.registerSqlFunction(it, f);
+        if (n.is_sql) try it.dataApi().register_sql_function(it.host(), f);
     }
 
     // Zig tip: `coerce` relies on the same Zig feature as `bind` above: see the tip there.
@@ -2931,7 +2768,7 @@ pub const Interp = struct {
         const list_node = if (front) n.kids[1] else n.kids[0];
         const item = try it.eval(if (front) n.kids[0] else n.kids[1]);
         const lv = try it.eval(list_node);
-        if (orm.isTable(it, lv)) return orm.tableAdd(it, lv.object, item);
+        if (data_api) |d| if (d.is_table(it.host(), lv)) return d.table_add(it.host(), lv.object, item);
         if (lv == .str) {
             const add = try it.text(item);
             const joined = if (front) try it.persist2(add, lv.str) else try it.persist2(lv.str, add);
@@ -2971,19 +2808,19 @@ pub const Interp = struct {
                 if (cell.constant) return it.fail("'{s}' is a constant", .{target.text});
                 if (it.update_obj) |rec| if (it.update_scope) |us| if (hasLocal(us, target.text)) {
                     // a field name inside `update record do … done;` is the field of that record
-                    try orm.beforeChange(it, rec, target.text, v);
+                    try it.dataApi().before_change(it.host(), rec, target.text, v);
                     try it.setField(rec, target.text, v);
-                    try orm.afterChange(it, rec);
+                    try it.dataApi().after_change(it.host(), rec);
                 };
                 it.setVar(cell, v);
             },
             .field => {
                 const obj = try it.eval(target.kids[0]);
                 if (obj != .object) return it.fail("{s} has no attributes", .{typeName(obj)});
-                const watched = orm.active(it);
-                if (watched) try orm.beforeChange(it, obj.object, target.text, v);
+                const watched = if (data_api) |d| d.active(it.host()) else false;
+                if (watched) try it.dataApi().before_change(it.host(), obj.object, target.text, v);
                 try it.setField(obj.object, target.text, v);
-                if (watched) try orm.afterChange(it, obj.object);
+                if (watched) try it.dataApi().after_change(it.host(), obj.object);
             },
             .index => {
                 const r = try it.indexChain(target);
@@ -3440,9 +3277,9 @@ pub const Interp = struct {
             if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
         }
         for (aspect.kids) |d| if (d.tag == .table_decl) {
-            try it.base().table_nodes.append(it.a, d);
+            try it.dataApi().declare_tables(it.host(), aspect.kids);
+            break;
         };
-        for (aspect.kids) |d| if (d.tag == .table_decl) try orm.declareTable(it, d);
         for (aspect.kids) |d| {
             if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
         }
@@ -3456,6 +3293,16 @@ pub const Interp = struct {
     // Zig tip: `orelse` gives the value of an optional or, when it is null, the expression after it:
     // the driver's interpreter has no `root`, so it is its own base.
     /// The interpreter that owns the modules of the run: the driver's.
+    /// The interface that lets the database layer use this interpreter (host.zig).
+    pub fn host(it: *Interp) iface.Host {
+        return @import("host.zig").of(it);
+    }
+
+    /// The database layer: a script that uses a database needs one (the program sets `data_api`).
+    pub fn dataApi(_: *Interp) *const iface.Data {
+        return data_api orelse @panic("no database layer: the program must set interp.data_api");
+    }
+
     pub fn base(it: *Interp) *Interp {
         return it.root orelse it;
     }
@@ -4075,7 +3922,9 @@ pub const Interp = struct {
         it.update_obj = rec.object;
         it.update_scope = it.scope;
         try it.execBlock(n.kids[1]);
-        try orm.validate(it, rec.object);
+        if (rec.object.class) |c| {
+            if (value.classRoutine(c, "validate") != null) _ = try it.callMethod(.{ .object = rec.object }, "validate", &.{});
+        }
     }
 
     // ---- generators (spec/syntax/declarations.md#generators-level-5) ---------------------------------
@@ -4343,18 +4192,18 @@ pub const Interp = struct {
             return;
         }
         defer it.finalizeModules();
-        defer dlib.closeDatabases(it);
+        defer if (data_api) |d| d.close_databases(it.host());
         defer dlib.closeStreams(it);
-        defer orm.closeCore(it);
+        defer if (data_api) |d| d.close_core(it.host());
         defer it.closeGenerators();
         for (root.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
         for (root.kids) |d| {
             if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
         }
         for (root.kids) |d| if (d.tag == .table_decl) {
-            try it.base().table_nodes.append(it.a, d);
+            try it.dataApi().declare_tables(it.host(), root.kids);
+            break;
         };
-        for (root.kids) |d| if (d.tag == .table_decl) try orm.declareTable(it, d);
         for (root.kids) |d| {
             if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
         }

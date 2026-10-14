@@ -27,6 +27,9 @@ pub const value = @import("value.zig");
 /// The heap of the values: reference counting, regions and the tracing collector.
 pub const heap = @import("heap.zig");
 
+/// The interfaces between the runtime and the database layer: `Host` and `Data`.
+pub const iface = @import("iface.zig");
+
 /// CSV and JSON text, and connection URLs.
 pub const data = @import("data.zig");
 
@@ -48,6 +51,7 @@ test {
     _ = nfc;
     _ = value;
     _ = heap;
+    _ = iface;
     _ = data;
     _ = line;
     _ = terminal;
