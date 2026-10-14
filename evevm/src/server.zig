@@ -6,76 +6,29 @@ const builtin = @import("builtin");
 const Io = std.Io;
 const net = Io.net;
 const vm = @import("vm.zig");
+const config = @import("evecm").config;
+const wire = @import("evecm").wire;
 
-/// Exit codes of the machine (spec/library/machine.md): nobody answers / a machine already runs.
-pub const exit_unavailable = 69;
-pub const exit_running = 75;
-const exit_usage = 64;
-
-// Zig tip: a `var` at file level is a global. The program sets it once at start (main.zig) from the environment, before
-// any thread exists, so no lock is needed. `[]const u8` is a read-only text: the global does not own the memory.
-/// The folder of the IPC sockets: `$XDG_RUNTIME_DIR`, else `$TMPDIR`, else `%TEMP%`, else `/tmp`.
-pub var runtime_dir: []const u8 = "/tmp";
-
-// Zig tip: a struct with default values for all its fields: `.{}` is a complete configuration, and
-// `.{ .ipc_port = 4195 }` changes one field. The defaults are the ones of the specification.
-/// The keys of `eve.cfg` that the machine reads.
-pub const Config = struct {
-    domain: []const u8 = "localhost",
-    ipc_port: u16 = 4042,
-    http_port: u16 = 8042,
-    http_host: []const u8 = "localhost",
-    web: []const u8 = "web",
-    remote: ?[]const u8 = null,
-    /// Width of the help table and texts in characters (`eve_width`; 100 when it is not set).
-    eve_width: usize = 100,
-};
-
-// Zig tip: `catch return .{}` on a read means "no file, no keys": the answer is the default configuration. The values
-// are slices of `bytes`, which stays alive (it is allocated with `gpa` and never freed: the configuration lives as
-// long as the program).
-/// Read the configuration file; a missing file gives the defaults.
-pub fn loadConfig(io: Io, gpa: std.mem.Allocator, path: []const u8) Config {
-    return readConfig(io, gpa, path) orelse .{};
-}
-
-// Zig tip: the optional `?Config` tells "no file" (null) from "a file with no keys" (a default `Config`), which
-// `loadConfig` above cannot: the status report needs the difference to say if the configuration was loaded.
-/// Read the configuration file; null when it is missing.
-pub fn readConfig(io: Io, gpa: std.mem.Allocator, path: []const u8) ?Config {
-    const bytes = Io.Dir.cwd().readFileAlloc(io, path, gpa, .limited(1 << 20)) catch return null;
-    return parseConfig(bytes);
-}
-
-// Zig tip: a text is cut into lines with `tokenizeScalar`; `indexOfScalar` returns an optional, and `orelse continue`
-// skips a line that has no `=`. `vm.clean` is the comment rule of the slot files, reused: a line that starts with `#`
-// and the text from `**` to the end of a line are comments, as in Eve and in the `eve.cfg` that `project init` writes.
-/// Read `key = value` lines; unknown keys (such as `database "x" = …` or `core_db`) are ignored.
-pub fn parseConfig(bytes: []const u8) Config {
-    var cfg: Config = .{};
-    var lines = std.mem.tokenizeScalar(u8, bytes, '\n');
-    while (lines.next()) |raw| {
-        const line = vm.clean(raw);
-        const eq = std.mem.indexOfScalar(u8, line, '=') orelse continue;
-        const key = std.mem.trim(u8, line[0..eq], " \t");
-        const value = std.mem.trim(u8, std.mem.trim(u8, line[eq + 1 ..], " \t"), "\"");
-        if (std.mem.eql(u8, key, "domain")) cfg.domain = value;
-        if (std.mem.eql(u8, key, "ipc_port")) cfg.ipc_port = std.fmt.parseInt(u16, value, 10) catch cfg.ipc_port;
-        if (std.mem.eql(u8, key, "http_port")) cfg.http_port = std.fmt.parseInt(u16, value, 10) catch cfg.http_port;
-        if (std.mem.eql(u8, key, "http_host")) cfg.http_host = value;
-        if (std.mem.eql(u8, key, "web")) cfg.web = value;
-        if (std.mem.eql(u8, key, "remote")) cfg.remote = value;
-        if (std.mem.eql(u8, key, "eve_width")) cfg.eve_width = std.fmt.parseInt(usize, value, 10) catch cfg.eve_width;
-    }
-    return cfg;
-}
-
-// Zig tip: `![]u8` is an error union with an inferred error set: the function returns a new text or the error of
-// `allocPrint` (out of memory), and the caller writes `try`. `{d}` prints a number, `{s}` a text.
-/// The path of the socket that identifies the machine: `<runtime>/eve-<domain>-<ipc_port>.sock`.
-fn socketPath(gpa: std.mem.Allocator, cfg: Config) ![]u8 {
-    return std.fmt.allocPrint(gpa, "{s}/eve-{s}-{d}.sock", .{ runtime_dir, cfg.domain, cfg.ipc_port });
-}
+// The pieces that moved to evecm keep their names here, so that the machine and its callers read as before.
+pub const exit_unavailable = config.exit_unavailable;
+pub const exit_running = config.exit_running;
+const exit_usage = config.exit_usage;
+pub const Config = config.Config;
+pub const loadConfig = config.loadConfig;
+pub const readConfig = config.readConfig;
+pub const parseConfig = config.parseConfig;
+const socketPath = config.socketPath;
+const ok = wire.ok;
+const fail = wire.fail;
+const message = wire.message;
+const contentType = wire.contentType;
+const safePath = wire.safePath;
+const respond = wire.respond;
+const readChunked = wire.readChunked;
+const respondText = wire.respondText;
+const ipcAlive = wire.ipcAlive;
+const ipcCall = wire.ipcCall;
+const httpCall = wire.httpCall;
 
 // ---- the machine (server side) -------------------------------------------------------------------------------
 
@@ -221,18 +174,6 @@ fn methodName(method: []const u8) ?Method {
     return null;
 }
 
-// Zig tip: `anytype` takes a value of any type, here a string or an anonymous struct, and `std.json.Stringify`
-// turns it into JSON by looking at the fields (at compile time). A field called `error` is a keyword, so it is
-// written `@"error"`.
-fn ok(a: std.mem.Allocator, id: std.json.Value, result: anytype) []const u8 {
-    return std.json.Stringify.valueAlloc(a, .{ .jsonrpc = "2.0", .id = id, .result = result }, .{}) catch "";
-}
-
-// Zig tip: `fail` relies on the same features as `ok` above: see the tip there.
-fn fail(a: std.mem.Allocator, id: std.json.Value, code: i32, reason: []const u8) []const u8 {
-    return std.json.Stringify.valueAlloc(a, .{ .jsonrpc = "2.0", .id = id, .@"error" = .{ .code = code, .message = reason } }, .{}) catch "";
-}
-
 // Zig tip: the session (`vm.Session`) is the same object the REPL uses; here its output is an `Io.Writer.Allocating`,
 // a writer that grows in memory, so the text of the script comes back in the answer instead of the terminal. `defer`
 // runs at the end of the function on every path, which releases the lock even when something fails.
@@ -287,42 +228,6 @@ fn setCurrent(m: *Machine, name: ?[]const u8, since: i64) void {
     defer m.log_lock.unlock(m.io);
     m.current = name;
     m.current_since = since;
-}
-
-// Zig tip: `[_][2][]const u8{ ... }` is an array of pairs of texts whose length the compiler counts (`_`). A table in
-// the code is a constant, built at compile time; the loop returns at the first extension that matches.
-/// The type of a file for the `Content-Type` header, from its extension.
-fn contentType(path: []const u8) []const u8 {
-    const table = [_][2][]const u8{
-        .{ ".html", "text/html; charset=utf-8" },  .{ ".css", "text/css; charset=utf-8" },
-        .{ ".js", "text/javascript; charset=utf-8" }, .{ ".json", "application/json" },
-        .{ ".svg", "image/svg+xml" },              .{ ".png", "image/png" },
-        .{ ".jpg", "image/jpeg" },                 .{ ".ico", "image/x-icon" },
-        .{ ".txt", "text/plain; charset=utf-8" },  .{ ".wasm", "application/wasm" },
-    };
-    for (table) |e| if (std.mem.endsWith(u8, path, e[0])) return e[1];
-    return "application/octet-stream";
-}
-
-// Zig tip: a path from the network is never trusted. The path is refused when it has `..`, a backslash or a colon
-// (a drive on Windows), so it can only name a file below the web folder. `std.mem.splitScalar` walks the pieces
-// between `/`.
-/// True when the request path may be joined to the web folder.
-fn safePath(path: []const u8) bool {
-    if (path.len == 0 or path[0] != '/') return false;
-    if (std.mem.indexOfAny(u8, path, "\\:\x00") != null) return false;
-    var parts = std.mem.splitScalar(u8, path, '/');
-    while (parts.next()) |p| if (std.mem.eql(u8, p, "..")) return false;
-    return true;
-}
-
-// Zig tip: `catch return` in a function that returns `void` gives up quietly: a browser that closed the connection
-// is not an error of the machine. CR LF is the line end that HTTP requires.
-/// Write one HTTP/1.1 answer and let the caller close the connection.
-fn respond(w: *Io.Writer, status: []const u8, kind: []const u8, body: []const u8) void {
-    w.print("HTTP/1.1 {s}\r\nContent-Type: {s}\r\nContent-Length: {d}\r\nConnection: close\r\n\r\n", .{ status, kind, body.len }) catch return;
-    w.writeAll(body) catch return;
-    w.flush() catch {};
 }
 
 // Zig tip: `takeDelimiterInclusive('\n')` reads one line with its newline from a `Reader`; the bytes live in the
@@ -382,34 +287,6 @@ fn serveHttp(m: *Machine, stream: net.Stream) bool {
         return false;
     }
     respond(w, "200 OK", contentType(path), bytes);
-    return false;
-}
-
-// Zig tip: an error set can be declared by hand (`error{TooLarge}`) and merged with another one with `||`: the
-// function may fail with the errors of the reader or with its own. `std.fmt.parseInt(usize, text, 16)` reads the
-// hexadecimal size of a chunk; what follows a `;` on that line is an extension that a server may ignore.
-/// The body of a request sent with `Transfer-Encoding: chunked`: chunks `<size in hex>\r\n<bytes>\r\n`, ended by a
-/// chunk of size 0 and the empty line after the trailer headers (RFC 9112, section 7.1). At most `limit` bytes.
-fn readChunked(r: *Io.Reader, a: std.mem.Allocator, limit: usize) (error{ TooLarge, BadChunk } || Io.Reader.Error || Io.Reader.DelimiterError || std.mem.Allocator.Error)![]u8 {
-    var body: std.ArrayList(u8) = .empty;
-    while (true) {
-        const line = std.mem.trim(u8, try r.takeDelimiterInclusive('\n'), " \r\n");
-        const hex = line[0 .. std.mem.indexOfScalar(u8, line, ';') orelse line.len];
-        const size = std.fmt.parseInt(usize, hex, 16) catch return error.BadChunk;
-        if (size == 0) break;
-        if (body.items.len + size > limit) return error.TooLarge;
-        try body.appendSlice(a, try r.take(size));
-        _ = try r.takeDelimiterInclusive('\n'); // the CRLF after the bytes of the chunk
-    }
-    // the trailer: header lines up to an empty line
-    while (std.mem.trim(u8, try r.takeDelimiterInclusive('\n'), "\r\n").len > 0) {}
-    return body.items;
-}
-
-// Zig tip: `respondText` returns `false` so a caller can write `return respondText(...)` in a function that answers
-// "was it a stop?": one line answers the request and gives the result.
-fn respondText(w: *Io.Writer, status: []const u8, body: []const u8) bool {
-    respond(w, status, "text/plain; charset=utf-8", body);
     return false;
 }
 
@@ -497,16 +374,6 @@ fn shutdown(m: *Machine) void {
     note(m, "stopped, the prompt keeps running", .{});
 }
 
-// Zig tip: a connection that is opened only to test the door is closed at once; `catch return false` turns every
-// error of `connect` (no file, nobody listening) into the answer "no".
-/// True when something answers on the IPC socket of this configuration.
-fn ipcAlive(io: Io, socket: []const u8) bool {
-    const ua = net.UnixAddress.init(socket) catch return false;
-    const s = ua.connect(io) catch return false;
-    s.close(io);
-    return true;
-}
-
 // Zig tip: the start is a list of steps that can each fail; a failure prints one line and returns the exit code,
 // so `main` only has to exit with it. `catch |e| switch (e) { error.AddressInUse => …, else => … }` picks the message
 // by the kind of error.
@@ -570,46 +437,6 @@ fn serve(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, ipc: bool
 }
 
 // ---- the client side -----------------------------------------------------------------------------------------
-
-// Zig tip: a client connects, sends one message and reads until the server closes the connection: `allocRemaining`
-// reads to the end of the stream into memory, with a limit. The answer is `null` when nobody listens: the caller
-// decides what that means (`-loc` falls back to a local run, `-rem` fails).
-/// Send one JSON-RPC message on the IPC socket; the answer, or null when no machine listens.
-fn ipcCall(io: Io, gpa: std.mem.Allocator, socket: []const u8, request: []const u8) ?[]const u8 {
-    const ua = net.UnixAddress.init(socket) catch return null;
-    const stream = ua.connect(io) catch return null;
-    defer stream.close(io);
-    var wbuf: [4096]u8 = undefined;
-    var writer = stream.writer(io, &wbuf);
-    writer.interface.writeAll(request) catch return null;
-    writer.interface.writeAll("\n") catch return null;
-    writer.interface.flush() catch return null;
-    var rbuf: [4096]u8 = undefined;
-    var reader = stream.reader(io, &rbuf);
-    const all = reader.interface.allocRemaining(gpa, .limited(64 << 20)) catch return null;
-    return std.mem.trim(u8, all, "\r\n");
-}
-
-// Zig tip: `httpCall` relies on the same features as `ipcCall` above: see the tip there. HTTP adds a head: the request
-// line, the headers and an empty line; the answer is cut at the first empty line to keep only its body.
-/// Send one JSON-RPC message to the HTTP door `host:port` (`POST /rpc`); the body of the answer, or null.
-fn httpCall(io: Io, gpa: std.mem.Allocator, host: []const u8, port: u16, request: []const u8) ?[]const u8 {
-    const ip = if (std.mem.eql(u8, host, "localhost")) "127.0.0.1" else host;
-    const addr = net.IpAddress.parse(ip, port) catch return null;
-    const stream = addr.connect(io, .{ .mode = .stream }) catch return null;
-    defer stream.close(io);
-    var wbuf: [4096]u8 = undefined;
-    var writer = stream.writer(io, &wbuf);
-    writer.interface.print("POST /rpc HTTP/1.1\r\nHost: {s}:{d}\r\nContent-Type: application/json\r\nContent-Length: {d}\r\nConnection: close\r\n\r\n", .{ host, port, request.len }) catch return null;
-    writer.interface.writeAll(request) catch return null;
-    writer.interface.flush() catch return null;
-    var rbuf: [4096]u8 = undefined;
-    var reader = stream.reader(io, &rbuf);
-    const all = reader.interface.allocRemaining(gpa, .limited(64 << 20)) catch return null;
-    const cut = std.mem.indexOf(u8, all, "\r\n\r\n") orelse return null;
-    if (!std.mem.startsWith(u8, all, "HTTP/1.1 200")) return null;
-    return all[cut + 4 ..];
-}
 
 // Zig tip: `?[]const u8 = null` is an optional text that is absent by default: `-loc` with no port leaves
 // `local_port` null, and the configuration keeps its own port.
@@ -744,12 +571,6 @@ pub fn machineStatus(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_pat
     };
     try out.writeAll("machine: running\n");
     try printMachine(out, answer.result);
-}
-
-// Zig tip: `message` relies on the same features as `ok` above (`anytype` and `std.json.Stringify`): see the tip there.
-/// A message `{"jsonrpc":"2.0","id":1,"method":…,"params":…}` (allocated in `gpa`).
-fn message(gpa: std.mem.Allocator, method: []const u8, params: anytype) []const u8 {
-    return std.json.Stringify.valueAlloc(gpa, .{ .jsonrpc = "2.0", .id = 1, .method = method, .params = params }, .{}) catch "";
 }
 
 // Zig tip: `!u8` returns an exit code or a write error; `try out.print` passes the error up. One function chooses
@@ -903,7 +724,7 @@ pub fn stopMachines(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_path
 
 /// Where the machine started by `evevm` writes its log: `<runtime>/eve-<domain>-<ipc_port>.log`.
 fn logPath(gpa: std.mem.Allocator, cfg: Config) ![]u8 {
-    return std.fmt.allocPrint(gpa, "{s}/eve-{s}-{d}.log", .{ runtime_dir, cfg.domain, cfg.ipc_port });
+    return std.fmt.allocPrint(gpa, "{s}/eve-{s}-{d}.log", .{ config.runtime_dir, cfg.domain, cfg.ipc_port });
 }
 
 // Zig tip: `std.process.spawn` starts another program. `.stdin = .ignore` connects it to the null device, and a

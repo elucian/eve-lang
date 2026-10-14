@@ -10,24 +10,14 @@
 //! `status`, repeated for each script and ended by `stop`. The VM is started once (`eve -x -i
 //! level1.vmc`), works through the file, and leaves its reports in a folder for later reading.
 const std = @import("std");
+
+/// The comment rule of a command line (it moved to evecm with the configuration reader).
+pub const clean = @import("evecm").config.clean;
 const Io = std.Io;
 const ast = @import("evecm").ast;
 const parser = @import("evecp").parser;
 const project = @import("evecp").project;
 const interp = @import("interp.zig");
-
-// Zig tip: a function with no side effect, like `clean`, is the easiest kind to test. `std.mem.trim(u8,
-// s, " \t\r")` cuts the listed characters at both ends of a slice (a view, nothing is copied).
-// `std.mem.indexOf(u8, hay, needle)` returns `?usize`; `orelse line.len` keeps the whole line
-// when there is no comment. The function returns a slice of its input (or the literal `""`), so
-// nothing is allocated and nothing needs freeing.
-/// The command of one slot line: comments and blanks removed. A line whose first character is
-/// `#`, and everything from `**` to the end of a line, is a comment (the same marks as Eve).
-pub fn clean(line: []const u8) []const u8 {
-    const code = line[0 .. std.mem.indexOf(u8, line, "**") orelse line.len];
-    const t = std.mem.trim(u8, code, " \t\r");
-    return if (t.len > 0 and t[0] == '#') "" else t;
-}
 
 // Zig tip: a struct can own memory. `data` is a slice that this struct allocated, so the struct
 // must free it: that is what `deinit` is for, and the caller pairs `init` with
