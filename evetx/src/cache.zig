@@ -87,6 +87,42 @@ pub const Cache = struct {
         try Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = out.items });
     }
 
+    // Zig tip: `?[]u8` is an optional owned slice: null when the file does not exist. The caller
+    // frees the bytes. `catch return null` turns any read error into "no file".
+    /// The content of a file of the cache folder, or null.
+    pub fn readFile(self: *Cache, name: []const u8) ?[]u8 {
+        if (self.dir.len == 0) return null;
+        const path = std.fmt.allocPrint(self.gpa, "{s}/{s}", .{ self.dir, name }) catch return null;
+        defer self.gpa.free(path);
+        return Io.Dir.cwd().readFileAlloc(self.io, path, self.gpa, .limited(1 << 20)) catch null;
+    }
+
+    /// Write a file of the cache folder (the folder is created the first time).
+    pub fn writeFile(self: *Cache, name: []const u8, data: []const u8) !void {
+        if (self.dir.len == 0) return;
+        try Io.Dir.cwd().createDirPath(self.io, self.dir);
+        const path = try std.fmt.allocPrint(self.gpa, "{s}/{s}", .{ self.dir, name });
+        defer self.gpa.free(path);
+        try Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = data });
+    }
+
+    /// The project of the last session (`project=` in `evetx-session.txt`) when its folder still
+    /// exists; the caller frees the path.
+    pub fn lastProject(self: *Cache) ?[]u8 {
+        const bytes = self.readFile("evetx-session.txt") orelse return null;
+        defer self.gpa.free(bytes);
+        var it = std.mem.splitScalar(u8, bytes, '\n');
+        while (it.next()) |raw| {
+            const l = std.mem.trimEnd(u8, raw, "\r");
+            if (!std.mem.startsWith(u8, l, "project=")) continue;
+            const path = l["project=".len..];
+            var d = Io.Dir.cwd().openDir(self.io, path, .{}) catch return null;
+            d.close(self.io);
+            return self.gpa.dupe(u8, path) catch null;
+        }
+        return null;
+    }
+
     /// The index of `path` in the list, if it is there (letters of different case count as the same on every system: a project folder is the same folder).
     pub fn find(self: *const Cache, path: []const u8) ?usize {
         for (self.projects.items, 0..) |p, i| {
