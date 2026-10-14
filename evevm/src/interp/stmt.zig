@@ -1,0 +1,753 @@
+//! Statements: `exec`, declarations, assignment, and the control statements.
+//! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
+//! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
+const std = @import("std");
+// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
+// between files of one module: declarations are resolved lazily, when they are used, not in the order
+// of the imports. `../` names the parent folder; a module may import any file below its root folder.
+const interp = @import("../interp.zig");
+const Interp = interp.Interp;
+const data = interp.data;
+const overload = interp.overload;
+const decimal = interp.decimal;
+const dlib = interp.dlib;
+const heap = interp.heap;
+const Node = interp.Node;
+const value = interp.value;
+const Signal = interp.Signal;
+const Value = interp.Value;
+const Channel = interp.Channel;
+const Class = interp.Class;
+const err_raise = interp.err_raise;
+const err_expect = interp.err_expect;
+const err_assert = interp.err_assert;
+const err_index = interp.err_index;
+const Started = interp.Started;
+
+// ---- statements -----------------------------------------------------------------------
+
+// Zig tip: `execBlock` relies on the same Zig feature as `define` above: see the tip there.
+// Zig tip: a block is a region of the heap: after each statement, the values it made and dropped are
+// freed (a safe point); `defer` leaves the region however the block ends.
+pub fn execBlock(it: *Interp, b: *const Node) Signal!void {
+    it.regionIn();
+    defer it.regionOut();
+    try it.execBody(b);
+}
+
+// Zig tip: the body of a loop needs no region of its own: the loop has one, and the statements of the
+// body end at safe points of that region. Entering a region at each pass would cost a little for
+// nothing.
+/// The statements of a loop body, each followed by a safe point.
+pub fn execBody(it: *Interp, b: *const Node) Signal!void {
+    for (b.kids) |s| {
+        try it.exec(s);
+        it.safe();
+    }
+}
+
+// Zig tip: `tick` is the "step" of the execution loop: it counts the statement, remembers its
+// line, and lets the VM look into the slot for external commands. A hook is a function pointer
+// plus an opaque context pointer (`*anyopaque`): the interpreter calls "something" without
+// knowing the VM, so this file does not import vm.zig.
+pub fn tick(it: *Interp, n: *const Node) Signal!void {
+    if (it.hook) |h| {
+        if (h.poll(h.ctx, it.steps, it.line)) return error.Stop;
+    }
+    if (it.root != null) try it.checkCancel();
+    it.steps += 1;
+    if (n.line > 0) it.line = n.line;
+}
+
+// Zig tip: `exec` relies on the same Zig feature as `define` above: see the tip there.
+pub fn exec(it: *Interp, n: *const Node) Signal!void {
+    // what the statement puts in the scratch memory is freed when it ends, however it ends
+    const m = it.scratch.mark();
+    defer it.scratch.release(m);
+    try it.tick(n);
+    switch (n.tag) {
+        .var_decl, .set => try it.declare(n),
+        .block => try it.execBlock(n),
+        .capture => try it.capture(n),
+        .assign => try it.assign(n),
+        .expr_stmt => try it.exprStmt(n.kids[0]),
+        .print_stmt, .write_stmt => try it.print(n),
+        .expect_stmt => {
+            if (!try it.truth(try it.eval(n.kids[0]))) return it.failWith(err_expect, "expect failed", .{});
+        },
+        .raise_stmt => return it.raise(n),
+        .break_stmt => {
+            it.jump_label = n.text;
+            return error.Break;
+        },
+        .skip_stmt => {
+            it.jump_label = n.text;
+            return error.Skip;
+        },
+        .over_stmt => return error.Over,
+        .exit_stmt => return error.Exit,
+        .stop_stmt => return error.StopJob,
+        .yield_stmt => try it.yieldStmt(n),
+        .commit_stmt => if (interp.data_api) |d| try d.commit_job(it.host()),
+        .rollback_stmt => return error.JobRollback,
+        .update_stmt => try it.updateStmt(n),
+        .pass_stmt => {},
+        .assert_stmt => {
+            if (!try it.truth(try it.eval(n.kids[0]))) return it.failWith(err_assert, "assertion failed", .{});
+        },
+        .defer_stmt => try it.defers.append(it.a, n.kids[0]),
+        .panic_stmt => return error.Panic,
+        .retry_stmt => return error.Retry,
+        .resume_stmt => return error.Resume,
+        .abort_stmt => return error.Abort,
+        .cond_stmt => if (try it.truth(try it.eval(n.kids[0]))) try it.exec(n.kids[1]),
+        .if_ => try it.ifStmt(n),
+        .while_ => try it.whileStmt(n),
+        .for_ => try it.forStmt(n),
+        .repeat_ => try it.repeatStmt(n),
+        .match_ => try it.matchStmt(n),
+        .job => {
+            const saved = it.current_job;
+            it.current_job = n.text;
+            defer it.current_job = saved;
+            // the tasks spawned in this job (D-143); `done` waits for them however the job ends
+            const spawned = try it.a.create(std.ArrayList(*Started));
+            spawned.* = .empty;
+            const saved_tasks = it.job_tasks;
+            it.job_tasks = spawned;
+            defer it.job_tasks = saved_tasks;
+            const outcome = it.execBlock(n.kids[0]);
+            if (spawned.items.len > 0) {
+                try it.joinTasks(spawned, null, 0);
+                try it.endTasks(spawned);
+                it.h.resume_(@intCast(spawned.items.len));
+            }
+            it.collectAtDone();
+            // the end of the job: flush and commit when it went well, roll back otherwise (database.md, transactions)
+            const rolled_back = if (outcome) |_| false else |e| e == error.JobRollback;
+            const went_well = if (outcome) |_| true else |e| e == error.StopJob;
+            const closed: Signal!void = if (interp.data_api) |d| d.end_job(it.host(), went_well) else {};
+            if (rolled_back) {
+                it.setJob(n.text, "rolled back");
+                return;
+            }
+            closed catch |e| {
+                it.setJob(n.text, "fail");
+                return e;
+            };
+            outcome catch |e| switch (e) {
+                error.StopJob => {},
+                else => {
+                    it.setJob(n.text, "fail");
+                    return e;
+                },
+            };
+            it.raiseFailed(spawned, n.text) catch |e| {
+                it.setJob(n.text, "fail");
+                return e;
+            };
+            it.setJob(n.text, "pass");
+        },
+        .class, .trait, .function, .procedure, .method, .generator => try it.declareRoutine(n),
+        .apply_stmt => try it.applyAspect(n),
+        .parallel => try it.parallelGroup(n),
+        .start_stmt => try it.startAspect(n),
+        .spawn_stmt => try it.spawnTask(n),
+        .wait_stmt => {
+            const v = try it.eval(n.kids[0]);
+            if (!Interp.isInt(v)) return it.fail("wait takes a duration: wait 10ms;", .{});
+            try it.waitFor(Interp.intOf(v));
+        },
+        .process => {},
+        else => return it.fail("cannot execute a {s}", .{@tagName(n.tag)}),
+    }
+}
+
+// Zig tip: `catch {}` after a call drops its error on purpose; here a missing `jobs` map
+// (a free script) is not a failure. The state of a job is one field of an object in the map.
+/// Record the state of the job `label` in `jobs["label"].status`.
+pub fn setJob(it: *Interp, label: []const u8, status: []const u8) void {
+    const cell = it.scope.find("jobs") orelse return;
+    if (cell.value != .map) return;
+    const i = Interp.mapFind(cell.value.map, .{ .str = label }) orelse return;
+    const rec = cell.value.map.entries.items[i].val;
+    if (rec == .object) it.setField(rec.object, "status", it.staticStr(status) catch return) catch {};
+}
+
+// Zig tip: `exprStmt` relies on the same Zig feature as `define` above: see the tip there.
+pub fn exprStmt(it: *Interp, e: *const Node) Signal!void {
+    if (e.tag == .bin and (std.mem.eql(u8, e.text, "<+") or std.mem.eql(u8, e.text, "<-") or std.mem.eql(u8, e.text, "->"))) {
+        return it.listOp(e);
+    }
+    it.stmt_call = e.tag == .call;
+    const v = try it.eval(e);
+    it.stmt_call = false;
+    // a bare name that is a function or method is a call without arguments: `hello;`
+    if (e.tag == .name and v == .func) _ = try it.callValue(v, null, &.{});
+}
+
+// Zig tip: `listOp` relies on the same Zig feature as `define` above: see the tip there.
+/// `a <+ x;` appends in place, `x <- a;` removes the first `x`, `a -> x;` removes the last.
+pub fn listOp(it: *Interp, e: *const Node) Signal!void {
+    const op = e.text;
+    const list_node = if (std.mem.eql(u8, op, "<-")) e.kids[1] else e.kids[0];
+    const item_node = if (std.mem.eql(u8, op, "<-")) e.kids[0] else e.kids[1];
+    const lv = try it.eval(list_node);
+    const l = switch (lv) {
+        .list, .set => |x| x,
+        else => return it.fail("{s} needs a list, found {s}", .{ op, Interp.typeName(lv) }),
+    };
+    const item = try it.eval(item_node);
+    if (std.mem.eql(u8, op, "<+")) {
+        if (lv == .set) return it.setAdd(l, item);
+        if (item == .list) try it.listAppendSlice(l, item.list.elems()) else try it.listAppend(l, item);
+        return;
+    }
+    const items = l.items.items;
+    var found: ?usize = null;
+    if (std.mem.eql(u8, op, "<-")) {
+        for (items, 0..) |x, i| if (Interp.eq(x, item)) {
+            found = i;
+            break;
+        };
+    } else {
+        var i = items.len;
+        while (i > 0) {
+            i -= 1;
+            if (Interp.eq(items[i], item)) {
+                found = i;
+                break;
+            }
+        }
+    }
+    if (found) |i| _ = it.listRemove(l, i);
+}
+
+// Zig tip: `print` relies on the same Zig feature as `define` above: see the tip there.
+pub fn print(it: *Interp, n: *const Node) Signal!void {
+    const is_print = n.tag == .print_stmt;
+    var buf: std.ArrayList(u8) = .empty;
+    var sep: []const u8 = if (is_print) "," else "";
+    if (n.kids.len > 0) {
+        const e = n.kids[0];
+        if (e.tag == .list) {
+            var first = true;
+            for (e.kids) |k| {
+                if (k.tag == .pair and k.kids[0].tag == .name and std.mem.eql(u8, k.kids[0].text, "sep")) {
+                    sep = try it.text(try it.eval(k.kids[1]));
+                }
+            }
+            for (e.kids) |k| {
+                if (k.tag == .pair) continue;
+                if (!first) try buf.appendSlice(it.t, sep);
+                first = false;
+                try it.show(&buf, try it.eval(k), false);
+            }
+        } else try it.show(&buf, try it.eval(e), false);
+    }
+    if (is_print) try buf.append(it.t, '\n');
+    try it.out.writeAll(buf.items);
+}
+
+// Zig tip: `raise` relies on the same Zig feature as `realOf` above: see the tip there.
+pub fn raise(it: *Interp, n: *const Node) Signal {
+    if (n.kids.len == 0) return it.fail("raise", .{});
+    const v = it.eval(n.kids[0]) catch |e| return e;
+    switch (v) {
+        .str => |s| return it.fail("{s}", .{s}),
+        .list => |l| {
+            const items = l.elems();
+            if (items.len == 2 and Interp.isInt(items[0])) {
+                return it.failWith(@intCast(@max(1, @min(255, Interp.intOf(items[0])))), "{s}", .{it.text(items[1]) catch ""});
+            }
+        },
+        .object => |o| {
+            const code: u8 = if (Interp.fieldOf(o, "code")) |c| @intCast(@max(1, @min(255, Interp.intOf(c)))) else err_raise;
+            const msg = if (Interp.fieldOf(o, "message")) |m| (it.text(m) catch "") else "";
+            return it.failWith(code, "{s}", .{msg});
+        },
+        else => {},
+    }
+    return it.fail("{s}", .{it.text(v) catch ""});
+}
+
+// ---- declarations and assignment ------------------------------------------------------
+
+// Zig tip: `declareRoutine` relies on the same Zig feature as `define` above: see the tip there.
+pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
+    if (n.tag == .trait) {
+        const c = try it.a.create(Class);
+        c.* = .{ .name = n.text, .node = n, .trait = true };
+        try it.define(n.text, .{ .class = c }, true);
+        return;
+    }
+    if (n.tag == .class) {
+        const c = try it.a.create(Class);
+        c.* = .{ .name = n.text, .node = n };
+        for (n.extra) |tr| {
+            const tv = it.scope.find(tr.text) orelse return it.fail("undefined trait '{s}'", .{tr.text});
+            if (tv.value != .class or !tv.value.class.trait) return it.fail("'{s}' is not a trait", .{tr.text});
+            try c.traits.append(it.a, tv.value.class);
+        }
+        const parent = n.kids[1];
+        if (parent.tag == .name) {
+            if (it.scope.find(parent.text)) |pv| if (pv.value == .class) {
+                c.parent = pv.value.class;
+            };
+        }
+        if (parent.tag == .name and std.mem.eql(u8, parent.text, "Ordinal")) {
+            c.ordinal = true;
+            var next: i64 = 1;
+            for (n.kids[0].kids) |m| {
+                if (m.kids[0].tag != .none) next = Interp.intOf(try it.eval(m.kids[0]));
+                try c.ord.append(it.a, .{ .name = m.text, .val = .{ .int = next } });
+                // names that start with a capital letter need no qualifier
+                if (std.ascii.isUpper(m.text[0])) try it.define(m.text, .{ .int = next }, true);
+                next += 1;
+            }
+        }
+        try it.define(n.text, .{ .class = c }, true);
+        return;
+    }
+    if (n.tag == .method) {
+        try it.exts.append(it.a, n);
+        return;
+    }
+    // a function or procedure with the name of one declared before in this scope is an overload (D-149)
+    if (n.tag == .function or n.tag == .procedure) {
+        for (it.scope.binds.items) |b| {
+            if (!std.mem.eql(u8, b.name, n.text) or b.v.value != .func) continue;
+            const first = b.v.value.func.node;
+            if (first.is_sql or n.is_sql) return it.fail("the sql function {s} can not be overloaded: SQL finds a function by its name (D-166)", .{n.text});
+            const set = try it.base().overloads.getOrPut(it.a, first);
+            if (!set.found_existing) {
+                set.value_ptr.* = .empty;
+                try set.value_ptr.append(it.a, first);
+            }
+            try set.value_ptr.append(it.a, n);
+            return;
+        }
+    }
+    // a function declared inside another one closes over that call's scope (a closure, D-101)
+    const f = try it.newFunc(n, if (it.scope == it.unit) it.unit else it.scope);
+    try it.define(n.text, .{ .func = f }, true);
+    if (n.is_sql) try it.dataApi().register_sql_function(it.host(), f);
+}
+
+// Zig tip: `coerce` relies on the same Zig feature as `bind` above: see the tip there.
+pub fn coerce(v: Value, ty: ?*const Node) Value {
+    const t = ty orelse return v;
+    if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Real") and Interp.isInt(v)) return .{ .real = @floatFromInt(Interp.intOf(v)) };
+    if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Decimal") and Interp.isInt(v)) {
+        if (decimal.fromInt(Interp.intOf(v))) |d| return .{ .dec = d };
+    }
+    // a Real given to an Integer loses its decimals (D-080)
+    if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Integer") and (v == .real or v == .float)) return .{ .int = @intFromFloat(Interp.realOf(v).?) };
+    // a Decimal given to a Real, a Real given to a Decimal: `:=` converts (data-language.md, D-168)
+    if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Real")) return Interp.coerceLike(.{ .real = 0 }, v);
+    if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Decimal")) return Interp.coerceLike(.{ .dec = .{ .m = 0, .scale = 0 } }, v);
+    return v;
+}
+
+// Zig tip: `while (i > mark) { i -= 1; ... }` walks a list backwards: the last `defer`
+// registered runs first. `pop()` of an `ArrayList` returns an optional (null when empty).
+// `catch {}` drops an error on purpose: a failing `defer` does not hide the first error.
+/// Run the `defer` statements registered since `mark`, newest first, and forget them.
+pub fn runDefers(it: *Interp, mark: usize) void {
+    while (it.defers.items.len > mark) {
+        const stmt = it.defers.pop().?;
+        it.exec(stmt) catch {};
+    }
+}
+
+// Zig tip: `std.mem.eql(u8, a, b)` compares text. `orderedRemove(0)` takes the first element
+// and moves the others down; `pop()` takes the last one. The third kid of a capture node says
+// whether the name may already exist: `.none` is the explicit `new` (D-104).
+/// `let lst -> e;` takes the last element, `let e <- lst;` and `new e <- lst;` the first (D-104).
+pub fn capture(it: *Interp, n: *const Node) Signal!void {
+    const lv = try it.eval(n.kids[0]);
+    const l = switch (lv) {
+        .list => |x| x,
+        else => return it.fail("{s} needs a list, found {s}", .{ n.text, Interp.typeName(lv) }),
+    };
+    if (l.items.items.len == 0) return it.failWith(err_index, "Index 1 is out of range: the list is empty", .{});
+    const item = if (std.mem.eql(u8, n.text, "->")) it.listPop(l) else it.listRemove(l, 0);
+    const target = n.kids[1];
+    if (target.tag == .name and std.mem.eql(u8, target.text, "_")) return;
+    if (target.tag == .name) {
+        const exists = it.scope.find(target.text) != null;
+        if (n.kids[2].tag == .none or !exists) return it.define(target.text, item, false);
+    }
+    try it.assignTo(target, item);
+}
+
+// Zig tip: `declare` relies on the same Zig feature as `define` above: see the tip there.
+pub fn declare(it: *Interp, n: *const Node) Signal!void {
+    const targets = n.kids[0].kids;
+    const constant = n.tag == .set;
+    const vnode = n.kids[1];
+    if (vnode.tag == .none) {
+        for (targets) |t| {
+            if (t.tag == .name) try it.define(t.text, try it.zero(n.ty), constant);
+        }
+        return;
+    }
+    var v = try it.eval(vnode);
+    if (std.mem.eql(u8, n.text, "::")) v = try it.clone(v);
+    v = Interp.coerce(v, n.ty);
+    it.typeLiteral(v, n.ty);
+    const multi_names = std.mem.eql(u8, n.text, "=");
+    if (targets.len == 1 and targets[0].tag != .star) return it.declareOne(targets[0], v, constant);
+    if (multi_names) {
+        const elementwise = v == .list and v.list.elems().len == targets.len;
+        for (targets, 0..) |t, i| try it.declareOne(t, if (elementwise) v.list.elems()[i] else v, constant);
+        return;
+    }
+    // deconstruct: `_` skips one element, `*` skips many, `*rest` collects them
+    const items = try it.iterate(v);
+    var star: ?usize = null;
+    for (targets, 0..) |t, i| if (t.tag == .star) {
+        star = i;
+    };
+    const after = if (star) |s| targets.len - s - 1 else 0;
+    if (items.len < targets.len - @intFromBool(star != null)) return it.fail("not enough elements to deconstruct", .{});
+    for (targets, 0..) |t, i| {
+        if (t.tag == .star) {
+            if (t.text.len > 0) {
+                const rest = try it.newList(items[i .. items.len - after], false);
+                try it.define(t.text, .{ .list = rest }, constant);
+            }
+        } else if (star != null and i > star.?) {
+            try it.declareOne(t, items[items.len - (targets.len - i)], constant);
+        } else try it.declareOne(t, items[i], constant);
+    }
+}
+
+// Zig tip: `new c := {id: 1} :Customer;` gives a literal the class named by the type hint: the object is then a
+// `Customer` for the methods, the checks and the database layer. A class that is not in scope is left alone.
+/// Make an object literal an object of the class that the type hint of a declaration names.
+pub fn typeLiteral(it: *Interp, v: Value, ty: ?*const Node) void {
+    const t = ty orelse return;
+    if (v != .object or v.object.class != null or t.kids.len > 0) return;
+    const name = std.mem.trimEnd(u8, t.text, "?");
+    const cell = it.scope.find(name) orelse return;
+    if (cell.value == .class and cell.value.class.node != null) v.object.class = cell.value.class;
+}
+
+// Zig tip: `declareOne` relies on the same Zig feature as `define` above: see the tip there.
+pub fn declareOne(it: *Interp, t: *const Node, v: Value, constant: bool) Signal!void {
+    switch (t.tag) {
+        .name => {
+            if (std.mem.eql(u8, t.text, "_")) return;
+            if (v == .chan and v.chan.name.len == 0) v.chan.name = t.text; // `new jobs := Channel(...)`
+            try it.define(t.text, v, constant);
+        },
+        .field => try it.assignTo(t, v),
+        else => return it.fail("cannot declare a {s}", .{@tagName(t.tag)}),
+    }
+}
+
+// Zig tip: `assign` relies on the same Zig feature as `define` above: see the tip there.
+pub fn assign(it: *Interp, n: *const Node) Signal!void {
+    const target = n.kids[0];
+    const op = n.text;
+    if (std.mem.eql(u8, op, "<+") or std.mem.eql(u8, op, "+>")) return it.listModifier(n);
+    var v = try it.eval(n.kids[1]);
+    if (std.mem.eql(u8, op, "::")) {
+        v = try it.clone(v);
+    } else if (!std.mem.eql(u8, op, ":=")) {
+        const cur = try it.eval(target);
+        // a list and a scalar: every element is updated in place (D-118)
+        if (cur == .list and Interp.isScalar(v)) {
+            const src = cur.list.elems();
+            const out = try it.t.alloc(Value, src.len);
+            for (src, 0..) |e, i| out[i] = try it.bulkOne(op[0..1], e, v);
+            for (src, out) |*cell, x| it.setCell(cell, x);
+            return;
+        }
+        // += and -= on a collection change it in place
+        if ((cur == .list or cur == .set) and (op[0] == '+' or op[0] == '-')) {
+            const l = if (cur == .list) cur.list else cur.set;
+            if (op[0] == '+') {
+                if (cur == .set) {
+                    for ((try it.setOf(v)).items.items) |e| try it.setAdd(l, e);
+                } else if (v == .list) {
+                    try it.listAppendSlice(l, v.list.elems());
+                } else try it.listAppend(l, v);
+            } else {
+                const gone: []const Value = if (v == .set or (cur == .set and v == .list)) (try it.setOf(v)).items.items else &.{v};
+                var k: usize = 0;
+                while (k < l.items.items.len) {
+                    var drop = false;
+                    for (gone) |g| if (Interp.eq(l.items.items[k], g)) {
+                        drop = true;
+                    };
+                    if (drop) _ = it.listRemove(l, k) else k += 1;
+                }
+            }
+            return;
+        }
+        v = try it.apply(op[0..1], cur, v);
+    }
+    // `let r := d;` converts a Decimal for a variable that holds a Real, and the other way (D-168)
+    if (std.mem.eql(u8, op, ":=") and target.tag == .name) {
+        if (it.scope.find(target.text)) |cell| v = Interp.coerceLike(cell.value, v);
+    }
+    try it.assignTo(target, v);
+}
+
+// Zig tip: `let a <+ x;` has the list on the left, `let x +> a;` on the right: the arrow points
+// away from the list (D-107). `insert(allocator, 0, x)` puts an element at the front.
+/// `let lst <+ x;` appends, `let x +> lst;` puts in front. A list given as `x` adds its elements.
+pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
+    const front = n.text[0] == '+';
+    const list_node = if (front) n.kids[1] else n.kids[0];
+    const item = try it.eval(if (front) n.kids[0] else n.kids[1]);
+    const lv = try it.eval(list_node);
+    if (interp.data_api) |d| if (d.is_table(it.host(), lv)) return d.table_add(it.host(), lv.object, item);
+    if (lv == .str) {
+        const add = try it.text(item);
+        const joined = if (front) try it.persist2(add, lv.str) else try it.persist2(lv.str, add);
+        return it.assignTo(list_node, .{ .str = joined });
+    }
+    const l = switch (lv) {
+        .list, .set => |x| x,
+        else => return it.fail("{s} needs a list, found {s}", .{ n.text, Interp.typeName(lv) }),
+    };
+    if (lv == .set) return it.setAdd(l, item);
+    if (front) {
+        if (item == .list) try it.listInsertSlice(l, 0, item.list.elems()) else try it.listInsert(l, 0, item);
+    } else if (item == .list) {
+        try it.listAppendSlice(l, item.list.elems());
+    } else try it.listAppend(l, item);
+}
+
+// Zig tip: `Value{ .real = 0 }` names the union type before the braces when Zig can not infer it from the
+// context. A `switch` is not needed for two cases: two `if`s on the tags (`cur == .real`) read as plainly.
+/// `v` converted to the number kind that `cur` holds, Decimal or Real; any other value is kept (D-168). A Real
+/// becomes the Decimal of its shortest text (`0.1` is `0.1d`); a Real too large for a Decimal is kept, and the
+/// operator that uses it will say so.
+pub fn coerceLike(cur: Value, v: Value) Value {
+    if (cur == .real and v == .dec) return .{ .real = decimal.toF64(v.dec) };
+    if (cur == .dec and (v == .real or v == .float)) {
+        if (decimal.fromF64(Interp.realOf(v).?)) |d| return .{ .dec = d };
+    }
+    return v;
+}
+
+// Zig tip: `assignTo` relies on the same Zig feature as `define` above: see the tip there.
+pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
+    switch (target.tag) {
+        .name => {
+            if (std.mem.eql(u8, target.text, "_")) return; // `_` drops the value
+            const cell = it.scope.find(target.text) orelse return it.fail("undefined name '{s}'", .{target.text});
+            if (cell.constant) return it.fail("'{s}' is a constant", .{target.text});
+            if (it.update_obj) |rec| if (it.update_scope) |us| if (Interp.hasLocal(us, target.text)) {
+                // a field name inside `update record do … done;` is the field of that record
+                try it.dataApi().before_change(it.host(), rec, target.text, v);
+                try it.setField(rec, target.text, v);
+                try it.dataApi().after_change(it.host(), rec);
+            };
+            it.setVar(cell, v);
+        },
+        .field => {
+            const obj = try it.eval(target.kids[0]);
+            if (obj != .object) return it.fail("{s} has no attributes", .{Interp.typeName(obj)});
+            const watched = if (interp.data_api) |d| d.active(it.host()) else false;
+            if (watched) try it.dataApi().before_change(it.host(), obj.object, target.text, v);
+            try it.setField(obj.object, target.text, v);
+            if (watched) try it.dataApi().after_change(it.host(), obj.object);
+        },
+        .index => {
+            const r = try it.indexChain(target);
+            const obj = r.obj;
+            const args = r.args;
+            if (obj == .map) return it.mapPut(obj.map, try it.eval(args[0]), v);
+            if (obj != .list) return it.fail("{s} cannot be assigned by index", .{Interp.typeName(obj)});
+            if (args.len == 1 and args[0].tag != .all and args[0].tag != .range and !Interp.isMatrix(obj.list)) {
+                // one index on a list: write the element directly
+                const l = obj.list;
+                const ix = try it.evalIdx(args[0], @intCast(l.elems().len));
+                const k = ix.one;
+                if (k < 1 or k > l.elems().len) return it.failWith(err_index, "Index {d} is out of range 1..{d}", .{ k, l.elems().len });
+                it.setCell(&l.elems()[@intCast(k - 1)], v);
+                return;
+            }
+            var cells: std.ArrayList(*Value) = .empty;
+            try it.slots(obj.list, args, &cells);
+            for (cells.items) |c| it.setCell(c, v);
+        },
+        else => return it.fail("cannot assign to a {s}", .{@tagName(target.tag)}),
+    }
+}
+
+// ---- control statements ---------------------------------------------------------------
+
+// Zig tip: `ifStmt` relies on the same Zig feature as `define` above: see the tip there.
+pub fn ifStmt(it: *Interp, n: *const Node) Signal!void {
+    var i: usize = 0;
+    while (i + 1 < n.kids.len) : (i += 2) {
+        if (try it.truth(try it.eval(n.kids[i]))) return it.execBlock(n.kids[i + 1]);
+    }
+    if (n.kids.len % 2 == 1) try it.execBlock(n.kids[n.kids.len - 1]);
+}
+
+// Zig tip: a `break` or `skip` with a label unwinds through the inner loops as a Zig error; each
+// loop asks `caught` whether the signal is for it. A bare `break` (empty label) belongs to the
+// innermost loop, a labeled one to the loop with that label (D-034).
+pub fn caught(it: *Interp, label: []const u8) bool {
+    if (it.jump_label.len == 0) return true;
+    if (std.mem.eql(u8, it.jump_label, label)) {
+        it.jump_label = "";
+        return true;
+    }
+    return false;
+}
+
+// Zig tip: `whileStmt` relies on the same Zig feature as `define` above: see the tip there.
+pub fn whileStmt(it: *Interp, n: *const Node) Signal!void {
+    const saved = try it.pushScope();
+    defer it.leaveScope(saved);
+    try it.execBlock(n.kids[0]);
+    var ran = false;
+    it.regionIn();
+    defer it.regionOut();
+    while (true) {
+        defer it.safe();
+        // the condition and the body of one pass free their scratch memory before the next pass
+        const im = it.scratch.mark();
+        defer it.scratch.release(im);
+        if (!try it.truth(try it.eval(n.kids[1]))) break;
+        ran = true;
+        it.execBody(n.kids[2]) catch |e| switch (e) {
+            error.Break => if (it.caught(n.text)) break else return e,
+            error.Skip => if (it.caught(n.text)) continue else return e,
+            else => return e,
+        };
+    }
+    if (!ran) try it.execBlock(n.kids[3]);
+    try it.execBlock(n.kids[4]);
+}
+
+// Zig tip: `forStmt` relies on the same Zig feature as `define` above: see the tip there.
+pub fn forStmt(it: *Interp, n: *const Node) Signal!void {
+    const saved = try it.pushScope();
+    defer it.leaveScope(saved);
+    const source = try it.eval(n.kids[1]);
+    if (source == .object and source.object.class != null and source.object.class == it.base().gen_class) {
+        return it.forGenerator(n, source.object);
+    }
+    if (dlib.isStream(it, source)) return dlib.forStream(it, n, source.object);
+    // the elements are listed before the loop's region starts: the pairs of a map are made here and
+    // must live through every pass
+    const counted = source == .range and n.kids[0].tag == .name;
+    const items: []const Value = if (source == .chan or counted) &.{} else try it.iterate(source);
+    // the loop is a region: at the end of each pass, what the pass dropped is freed
+    it.regionIn();
+    defer it.regionOut();
+    if (source == .chan) {
+        // receive until the channel is closed and empty (D-141)
+        while (try it.receive(source.chan)) |x| {
+            const im = it.scratch.mark();
+            defer it.scratch.release(im);
+            defer it.safe();
+            try it.bindPattern(n.kids[0], x);
+            it.execBody(n.kids[2]) catch |e| switch (e) {
+                error.Break => if (it.caught(n.text)) break else return e,
+                error.Skip => if (it.caught(n.text)) continue else return e,
+                else => return e,
+            };
+        }
+        try it.execBlock(n.kids[4]);
+        return;
+    }
+    var ran = false;
+    if (counted) {
+        // a range is counted, not turned into a list first: `for i in (1..1000000)` needs no memory
+        const r = source.range;
+        var k = r.lo;
+        while (k <= r.hi) : (k += r.step) {
+            ran = true;
+            const im = it.scratch.mark();
+            defer it.scratch.release(im);
+            defer it.safe();
+            try it.define(n.kids[0].text, if (r.sym) .{ .sym = @intCast(k) } else .{ .int = k }, false);
+            it.execBody(n.kids[2]) catch |e| switch (e) {
+                error.Break => if (it.caught(n.text)) break else return e,
+                error.Skip => if (it.caught(n.text)) continue else return e,
+                else => return e,
+            };
+        }
+    } else {
+        for (items) |x| {
+            ran = true;
+            const im = it.scratch.mark();
+            defer it.scratch.release(im);
+            defer it.safe();
+            try it.bindPattern(n.kids[0], x);
+            it.execBody(n.kids[2]) catch |e| switch (e) {
+                error.Break => if (it.caught(n.text)) break else return e,
+                error.Skip => if (it.caught(n.text)) continue else return e,
+                else => return e,
+            };
+        }
+    }
+    if (!ran) try it.execBlock(n.kids[3]);
+    try it.execBlock(n.kids[4]);
+}
+
+// Zig tip: `while (true)` has no condition of its own: the loop ends only by `break`. The test
+// sits at the bottom, after the body. In `catch |e| switch (e)`, the branch `error.Skip => {}`
+// is an empty block: the error is swallowed and execution falls through to the bottom test,
+// which is exactly what `skip` means in a `repeat` loop. `n.kids.len > 2` checks whether the
+// optional `while` condition was written; a bare `repeat;` loops until `break`.
+/// `loop [header] do body repeat [while c];` (D-074): the body runs at least once.
+pub fn repeatStmt(it: *Interp, n: *const Node) Signal!void {
+    const saved = try it.pushScope();
+    defer it.leaveScope(saved);
+    try it.execBlock(n.kids[0]);
+    it.regionIn();
+    defer it.regionOut();
+    while (true) {
+        const im = it.scratch.mark();
+        defer it.scratch.release(im);
+        defer it.safe();
+        it.execBody(n.kids[1]) catch |e| switch (e) {
+            error.Break => if (it.caught(n.text)) break else return e,
+            error.Skip => if (!it.caught(n.text)) return e,
+            else => return e,
+        };
+        if (n.kids.len > 2 and !try it.truth(try it.eval(n.kids[2]))) break;
+    }
+}
+
+// Zig tip: `matchStmt` relies on the same Zig feature as `define` above: see the tip there.
+pub fn matchStmt(it: *Interp, n: *const Node) Signal!void {
+    const subject = try it.eval(n.kids[0]);
+    const all = std.mem.startsWith(u8, n.text, "all");
+    for (n.kids[2..]) |w| {
+        var hit = false;
+        for (w.kids[0].kids) |pat| {
+            if (pat.tag == .name and std.mem.eql(u8, pat.text, "other") and it.scope.find("other") == null) {
+                hit = true;
+                continue;
+            }
+            if (pat.tag == .list) { // `when ("two", "three")`: any of the values
+                for (pat.kids) |k| if (Interp.eq(try it.eval(k), subject)) {
+                    hit = true;
+                };
+                continue;
+            }
+            const pv = try it.eval(pat);
+            if (switch (pv) {
+                .range, .domain => try it.contains(pv, subject),
+                else => Interp.eq(pv, subject),
+            }) hit = true;
+        }
+        if (hit) {
+            try it.execBlock(w.kids[1]);
+            if (!all) break;
+        }
+    }
+    try it.execBlock(n.kids[1]);
+}

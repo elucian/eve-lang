@@ -447,4 +447,6 @@ Multi-Call Binaries: Filesystem symlinks or hard links (evecp, evedb, evevm, eve
 | A7 flat move | **done**: root `build.zig` and `build.zig.zon`, the modules `evecm`, `evecp`, `evevm`, `evedb`, `cmd`; the version is written once; `lib/` moved; the arrows are enforced by the `.imports` of the build. The standalone `evedb.exe` (DuckDB) and `evetx` still have their own builds |
 | A8 parts and `run.sh` | not started (the words `vm`, `cp`, `db`, `ux`, `-tx` are in `cmd/cli.zig` or to do) |
 
+**2026-10-14:** `interp.zig` (4,293 lines) is split by concern: the struct, its fields, init, errors, scopes, regions, counted containers and the construction of values stay in `interp.zig` (about 1,000 lines); the methods of each section are plain functions `fn (it: *Interp, ...)` in `evevm/src/interp/` (`show`, `expr`, `collections`, `calls`, `stmt`, `script`, `parallel`, `generators`, `datatypes`), named again in the struct (`pub const eval = part_expr.eval;`), so every call `it.eval(n)` is unchanged.
+
 The speed is unchanged (an alternating A/B timing of the builds before and after the cuts); the unit tests of every module pass with `zig build test`.
