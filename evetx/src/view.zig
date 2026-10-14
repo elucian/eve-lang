@@ -107,8 +107,7 @@ fn field(app: *App, win: Window, x: u16, y: u16, w: u16, ti: *TextInput, which: 
 
 // Zig tip: `switch (app.overlay)` ends the drawing with whatever is open over the screen. An
 // overlay is modal: the hits of the screen under it are forgotten, so a click cannot reach them.
-// `std.math.clamp(W / 4, 26, 40)` keeps the sidebar between 26 and 40 cells; integer division drops
-// the remainder.
+// The places of the panels come from `App.computeLayout`, so the mouse code sees the same ones.
 pub fn draw(app: *App, win: Window) !void {
     app.beginFrame();
     app.hits.clearRetainingCapacity();
@@ -120,13 +119,13 @@ pub fn draw(app: *App, win: Window) !void {
         _ = put(win, 1, 1, "evetx needs a window of at least 70 x 18 cells.", theme.on(theme.amber, theme.panel));
         return;
     }
-    const sw: u16 = std.math.clamp(W / 4, 26, 40);
 
     // row 0 is the menu bar, the last three rows are the status bar, the panels are between
-    const mh = H - 1 - 3;
+    const l = app.computeLayout(W, H);
     try menuBar(app, win);
-    try sidebar(app, win, sw, mh);
-    try rightPanel(app, win, sw, mh);
+    try sidebar(app, win, l.tree);
+    try mainPanel(app, win, l);
+    try toolsPanel(app, win, l.tools);
     try statusBar(app, win);
 
     if (app.overlay == .none) return;
@@ -137,9 +136,9 @@ pub fn draw(app: *App, win: Window) !void {
             try menuBar(app, win);
             try menuDrop(app, win);
         },
-        .help => help(app, win),
         .settings => settings(app, win),
         .about => about(app, win),
+        .open_project => openProjectBox(app, win),
         .goto => try gotoBox(app, win),
         .save_as => saveAsBox(app, win),
         .find_text => try findTextBox(app, win),
@@ -169,7 +168,7 @@ fn menuBar(app: *App, win: Window) !void {
     const bar = sub(win, 0, 0, W, 1);
     fillWith(bar, theme.bar);
     const in_use = app.overlay == .menu or app.alt_hint;
-    var left_end: u16 = 0;
+    // the machines are chosen in the MACHINE menu (Alt+1 to Alt+3)
     for (app_mod.menus, 0..) |m, i| {
         const x = menuX(W, i);
         const w: u16 = @intCast(m.label.len + 2);
@@ -183,31 +182,7 @@ fn menuBar(app: *App, win: Window) !void {
         _ = put(bar, x + 2, 0, m.label[1..], plain);
         _ = put(bar, x + w - 1, 0, " ", plain);
         try addHit(app, win, x, 0, w, 1, .{ .menu_top = i });
-        if (i + 1 < app_mod.menus.len) left_end = x + w;
     }
-    // the machines: F1 local, F2 and F3 for remote machines (they come with step T5)
-    const names = [_][]const u8{ "F1 local", "F2 —", "F3 —" };
-    const help_x = menuX(W, app_mod.menus.len - 1);
-    const wide = help_x >= left_end + 33;
-    if (wide) {
-        var x: u16 = help_x - 31;
-        for (names, 0..) |n, i| {
-            try machineButton(app, win, bar, x, n, i);
-            x += 10;
-        }
-    } else {
-        const i: usize = app.machine - 1;
-        try machineButton(app, win, bar, help_x -| 11, names[i], i);
-    }
-}
-
-// Zig tip: A helper that draws one thing and records its hit keeps the loop above short. The
-// machine number of the click is `i + 1`, narrowed to the `u8` of the action.
-fn machineButton(app: *App, win: Window, bar: Window, x: u16, name: []const u8, i: usize) !void {
-    const on = app.machine == i + 1;
-    const s = app.fmt(" {s} ", .{name});
-    _ = put(bar, x, 0, s, if (on) theme.onBold(theme.bright, theme.green_bg) else theme.on(theme.dim, theme.bar));
-    try addHit(app, win, x, 0, 10, 1, .{ .machine = @intCast(i + 1) });
 }
 
 // Zig tip: A slice can be cut at a byte that is inside a UTF-8 character; the continuation bytes
@@ -219,6 +194,33 @@ fn clipText(s: []const u8, max: usize) []const u8 {
     var n = max;
     while (n > 0 and (s[n] & 0xC0) == 0x80) n -= 1;
     return s[0..n];
+}
+
+// Zig tip: The border color tells the state of a panel: amber while Window > Modify is on, blue when
+// the panel has the keyboard, grey otherwise. The panel also records a hit over its whole
+// rectangle, drawn first, so a click on an empty place of the panel gives it the keyboard; the
+// buttons and rows drawn later are on top of it.
+/// Draw the border of a panel and return its inside.
+fn panelBox(app: *App, win: Window, r: Rect, p: app_mod.Panel) !Window {
+    const live = app.overlay == .none and app.activePanel() == p;
+    const color = if (app.modify) theme.amber else if (live) theme.blue else theme.line;
+    try addHit(app, win, r.x, r.y, r.w, r.h, .{ .panel_focus = p });
+    return boxed(win, r.x, r.y, r.w, r.h, color);
+}
+
+// Zig tip: `if (cond) a else b` as an argument picks the text of the "maximize" button. The buttons
+// are three cells wide (` + `, ` × `) and sit at the right end of the title bar; the Tree Panel has
+// only the hide button.
+/// The + (maximize) and × (hide) buttons at the right of the title bar of a panel.
+fn titleButtons(app: *App, box: Window, p: app_mod.Panel) !void {
+    const w = box.width;
+    if (w < 8) return;
+    const style = theme.on(theme.text, theme.bar2);
+    _ = put(box, w - 3, 0, " × ", style);
+    try addHit(app, box, w - 3, 0, 3, 1, .{ .panel_hide = p });
+    if (p == .tree) return;
+    _ = put(box, w - 6, 0, if (app.maximized == p) " – " else " + ", style);
+    try addHit(app, box, w - 6, 0, 3, 1, .{ .panel_max = p });
 }
 
 // Zig tip: A string literal is an array of bytes; the compiler joins neighbours at compile time
@@ -240,19 +242,24 @@ fn iconOf(e: @import("project.zig").Entry) []const u8 {
 // Zig tip: `try app.tree.visibleRows(...)` fills a list kept in the app, so no list is made in
 // every frame. The ancestors of a row are collected in a small array on the stack, from the parent
 // up to the root; `chain[k - 1]` then walks them from the outside in, as the lines are drawn.
-fn sidebar(app: *App, win: Window, sw: u16, mh: u16) !void {
+fn sidebar(app: *App, win: Window, place: Rect) !void {
+    if (place.w == 0) return;
     const focused = app.overlay == .none and app.focus == .tree;
-    const box = boxed(win, 0, 1, sw, mh, if (focused) theme.blue else theme.line);
+    const box = try panelBox(app, win, place, .tree);
     fillWith(box, theme.deep);
-    _ = put(win, 2, 1, " Files ", theme.onBold(if (focused) theme.bright else theme.dim, theme.deep));
-    const rows_h = box.height;
-    const list = box;
+    const bar = sub(box, 0, 0, box.width, 1);
+    fillWith(bar, theme.bar2);
+    const title = if (app.project_name.len > 0) app.fmt(" Files · {s}", .{app.project_name}) else " Files";
+    _ = put(bar, 0, 0, clipText(title, box.width -| 5), theme.onBold(if (focused) theme.bright else theme.dim, theme.bar2));
+    try titleButtons(app, box, .tree);
+    const list = sub(box, 0, 1, box.width, box.height -| 1);
+    const rows_h = list.height;
     app.tree_rect = absRect(list, 0, 0, list.width, list.height);
 
     try app.tree.visibleRows(app.gpa, &app.visible);
     var sel_pos: usize = 0;
-    for (app.visible.items, 0..) |r, i| {
-        if (r == app.selected) sel_pos = i;
+    for (app.visible.items, 0..) |v, i| {
+        if (v == app.selected) sel_pos = i;
     }
     if (sel_pos < app.tree_top) app.tree_top = sel_pos;
     if (sel_pos >= app.tree_top + rows_h) app.tree_top = sel_pos + 1 - rows_h;
@@ -311,29 +318,25 @@ fn isServerSide(name: []const u8) bool {
     return false;
 }
 
-// Zig tip: The heights are computed from the room that is left: `mh -| (1 + bb)` cannot go below
-// zero. Each part is a bordered box (`boxed`) and its inside is drawn by its own function. A box
-// is blue when it has the keyboard, so the user sees where the keys go.
-fn rightPanel(app: *App, win: Window, sw: u16, mh: u16) !void {
-    const W = win.width;
-    const rw = W - sw;
-    const bb: u16 = @max(7, mh / 3);
-    const eh: u16 = mh -| (1 + bb);
-
-    const live = app.overlay == .none;
-    const box = boxed(win, sw, 1, rw, eh, if (live and app.focus == .editor) theme.blue else theme.line);
+// Zig tip: A struct passed by value (`l: app_mod.Layout`) is a bundle of rectangles; the function
+// reads the ones it needs. The Run buttons live under the Main Panel and belong to it.
+/// The Main Panel: the windows as tabs, the editor, and the Run buttons under it.
+fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
+    const r = l.main;
+    if (r.w == 0) return;
+    const box = try panelBox(app, win, r, .main);
     fillWith(box, theme.deep);
     try tabStrip(app, box);
+    try titleButtons(app, box, .main);
     try editorArea(app, sub(box, 0, 1, box.width, box.height -| 1));
-    try debugBar(app, win, sw, 1 + eh, rw);
-    try bottomPanel(app, win, sw, 2 + eh, rw, bb);
+    try debugBar(app, win, l.debug.x, l.debug.y, l.debug.w);
 }
 
 // Zig tip: `break` leaves the loop when the next tab would not fit. A tab and its `×` are two hits
 // on neighbouring cells, so a click on either does its own action (and a middle click closes).
 fn tabStrip(app: *App, box: Window) !void {
-    const rw = box.width;
-    const strip = sub(box, 0, 0, rw, 1);
+    const rw = box.width -| 7;
+    const strip = sub(box, 0, 0, box.width, 1);
     fillWith(strip, theme.bar2);
     if (app.tabs.items.len == 0) {
         _ = put(strip, 1, 0, "no file open", theme.on(theme.faint, theme.bar2));
@@ -355,13 +358,52 @@ fn tabStrip(app: *App, box: Window) !void {
     }
 }
 
+// Zig tip: A `const` array of string literals at file level is stored once in the program. All five
+// rows have the same width (41 cells), so the logo is centered by its first row.
+const logo_rows = [_][]const u8{
+    "██████ ██  ██ ██████        ██████ ██  ██",
+    "██     ██  ██ ██              ██    ████ ",
+    "█████  ██  ██ █████  █████    ██     ██  ",
+    "██      ████  ██              ██    ████ ",
+    "██████   ██   ██████          ██   ██  ██",
+};
+
+// Zig tip: `(win.width -| w) / 2` centers: the saturating subtraction gives 0 when the text is wider
+// than the window, so the text starts at the left edge instead of failing.
+/// Print `s` in the middle of `row`.
+fn center(win: Window, row: u16, s: []const u8, style: Style) void {
+    _ = put(win, (win.width -| win.gwidth(s)) / 2, row, s, style);
+}
+
+/// The picture of the Main Panel when no window is open: the logo, and two lines under it. In a
+/// small panel the logo is replaced by plain text.
+fn logo(ed: Window) void {
+    const dim = theme.on(theme.dim, theme.deep);
+    if (ed.width < 43 or ed.height < 9) {
+        if (ed.height < 3) return;
+        const y: u16 = (ed.height - 3) / 2;
+        center(ed, y, "EVE-TX", theme.onBold(theme.blue, theme.deep));
+        center(ed, y + 1, "Text User Interface", theme.on(theme.text, theme.deep));
+        center(ed, y + 2, "(c) Sage-Code Laboratory", dim);
+        return;
+    }
+    const y0: u16 = (ed.height - 9) / 2;
+    const x0: u16 = (ed.width - 41) / 2;
+    for (logo_rows, 0..) |row, i| {
+        _ = put(ed, x0, y0 + @as(u16, @intCast(i)), row, theme.onBold(theme.blue, theme.deep));
+    }
+    center(ed, y0 + 6, "Text User Interface", theme.on(theme.text, theme.deep));
+    center(ed, y0 + 8, "(c) Sage-Code Laboratory", dim);
+}
+
 // Zig tip: `const tab = app.activeTab() orelse { ...; return; };` unwraps the optional, or draws
-// the welcome text and returns. After this line `tab` is a plain pointer.
+// the logo and returns. After this line `tab` is a plain pointer.
 fn editorArea(app: *App, ed: Window) !void {
     fillWith(ed, theme.deep);
+    app.vbar_rect = .{};
+    app.hbar_rect = .{};
     const tab = app.activeTab() orelse {
-        _ = put(ed, 2, 0, "Click a file in the tree, or press Ctrl+N for a new file.", theme.on(theme.dim, theme.deep));
-        _ = put(ed, 2, 2, "F10 menu · Alt+letter · Ctrl+F find · Ctrl+P find file · F5 run", theme.on(theme.faint, theme.deep));
+        logo(ed);
         app.editor_rect = .{};
         return;
     };
@@ -381,9 +423,12 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
     var n = b.lineCount();
     while (n >= 10) : (n /= 10) digits += 1;
     const gutter: u16 = digits + 3;
-    const rows = ed.height;
-    const cols = ed.width -| gutter;
-    b.follow(rows, cols);
+    const rows = ed.height -| 1;
+    const cols = ed.width -| gutter -| 1;
+    if (app.follow) {
+        b.follow(rows, cols);
+        app.follow = false;
+    }
     const code = sub(ed, gutter, 0, cols, rows);
     app.editor_rect = absRect(ed, gutter, 0, cols, rows);
     const focused = app.focus == .editor and app.overlay == .none;
@@ -412,7 +457,50 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
             }
         }
     }
-    if (focused) code.showCursor(@intCast(b.displayCol() - b.left), @intCast(b.row - b.top));
+    scrollBars(app, ed, b, gutter, rows, cols);
+    if (focused and b.displayCol() >= b.left and b.row >= b.top and b.row - b.top < rows) {
+        code.showCursor(@intCast(b.displayCol() - b.left), @intCast(b.row - b.top));
+    }
+}
+
+// Zig tip: A proportion in integers: the thumb is as long as the share of the text that is on the
+// screen (`rows * rows / total`), and its place is the share that is above the screen. The
+// multiplication comes before the division, otherwise the integer division would round to 0.
+/// The vertical bar at the right of the text and the horizontal bar under it. The rectangles are
+/// saved in the app for the mouse; the longest line is looked for in the lines that are on the screen.
+fn scrollBars(app: *App, ed: Window, b: *text.Buffer, gutter: u16, rows: u16, cols: u16) void {
+    if (rows < 2 or cols < 2) {
+        app.vbar_rect = .{};
+        app.hbar_rect = .{};
+        return;
+    }
+    const track = theme.on(theme.faint, theme.deep);
+    const thumb = theme.on(theme.dim, theme.deep);
+    const vx = ed.width - 1;
+    const total = b.lineCount();
+    app.vbar_rect = absRect(ed, vx, 0, 1, rows);
+    var y: u16 = 0;
+    while (y < rows) : (y += 1) _ = put(ed, vx, y, "░", track);
+    {
+        const th: usize = if (total > rows) @max(1, @as(usize, rows) * rows / total) else rows;
+        const above = @min(b.top, total -| rows);
+        const ty: usize = if (total > rows) (rows - th) * above / (total - rows) else 0;
+        var k: usize = 0;
+        while (k < th) : (k += 1) _ = put(ed, vx, @intCast(ty + k), "█", thumb);
+    }
+
+    const hy = ed.height - 1;
+    var content: usize = b.left + cols;
+    var r: usize = b.top;
+    while (r < total and r < b.top + rows) : (r += 1) content = @max(content, text.Buffer.displayWidth(b.lineAt(r)) + 1);
+    app.hbar_content = content;
+    app.hbar_rect = absRect(ed, gutter, hy, cols, 1);
+    var x: u16 = 0;
+    while (x < cols) : (x += 1) _ = put(ed, gutter + x, hy, "░", track);
+    const tw: usize = if (content > cols) @max(1, @as(usize, cols) * cols / content) else cols;
+    const tx: usize = if (content > cols) (cols - tw) * @min(b.left, content - cols) / (content - cols) else 0;
+    var k: usize = 0;
+    while (k < tw) : (k += 1) _ = put(ed, gutter + @as(u16, @intCast(tx + k)), hy, "█", thumb);
 }
 
 // Zig tip: A hand-written scanner: `while (i < s.len)` looks at the byte at `i`, finds the end `j`
@@ -522,14 +610,14 @@ fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     x = try button(app, bar, x, 0, "▶▶ Continue", off, .{ .button = .cont });
     x += 1;
     _ = try button(app, bar, x, 0, "■ Stop", off, .{ .button = .stop });
-    putRight(bar, rw, 0, "F5 run · F9 breakpoint ", theme.on(theme.dim, theme.panel));
+    if (rw > x + 26) putRight(bar, rw, 0, "F5 run · F9 breakpoint ", theme.on(theme.dim, theme.panel));
 }
 
 // Zig tip: `for (tabs, names) |t, n|` walks two arrays of the same length together. The label is a
 // different string for the Breaks tab when there are breakpoints.
-fn bottomPanel(app: *App, win: Window, x0: u16, y: u16, rw: u16, bb: u16) !void {
-    const live = app.overlay == .none and (app.focus == .console or app.focus == .breaks);
-    const box = boxed(win, x0, y, rw, bb, if (live) theme.blue else theme.line);
+fn toolsPanel(app: *App, win: Window, r: Rect) !void {
+    if (r.w == 0) return;
+    const box = try panelBox(app, win, r, .tools);
     fillWith(box, theme.deep);
     const strip = sub(box, 0, 0, box.width, 1);
     fillWith(strip, theme.bar2);
@@ -547,6 +635,7 @@ fn bottomPanel(app: *App, win: Window, x0: u16, y: u16, rw: u16, bb: u16) !void 
         try addHit(app, strip, x, 0, w, 1, .{ .bottom = t });
         x += w + 1;
     }
+    try titleButtons(app, box, .tools);
     const body = sub(box, 0, 1, box.width, box.height -| 1);
     fillWith(body, theme.deep);
     switch (app.bottom) {
@@ -748,67 +837,65 @@ fn topDialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     return box;
 }
 
+// Zig tip: A `switch` on the optional command: `row.cmd orelse` is not needed because the labels
+// that change with the state have a command, and a separator is handled before this function is
+// called. The marks `[x]`, `[ ]` and `●` are drawn from the state of the app on every frame, so
+// the menu is never out of date.
+/// The text of a menu row: its label, with a check box (panels), a dot (the current window or
+/// machine) in front when the row has one.
+fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
+    const cmd = row.cmd orelse return row.label;
+    return switch (cmd) {
+        .toggle_tree => app.fmt("[{s}] {s}", .{ if (app.show_tree) "x" else " ", row.label }),
+        .toggle_main => app.fmt("[{s}] {s}", .{ if (app.show_main) "x" else " ", row.label }),
+        .toggle_tools => app.fmt("[{s}] {s}", .{ if (app.show_tools) "x" else " ", row.label }),
+        .window_pick => app.fmt("{s} {s}", .{ if (row.arg == app.active) "●" else " ", row.label }),
+        .machine_pick => app.fmt("{s} {s}", .{ if (row.arg == app.machine) "●" else " ", row.label }),
+        else => row.label,
+    };
+}
+
+/// The shortcut shown at the right of a row. A window has Ctrl and its number.
+fn rowKey(app: *App, row: app_mod.MenuRow) []const u8 {
+    if (row.cmd == .window_pick) return app.fmt("Ctrl+{d}", .{row.arg + 1});
+    return row.key;
+}
+
 // Zig tip: `@max(a, b)` takes the larger of two numbers; a `for`
 // over the rows finds the widest label and shortcut, so the box fits its content.
 /// The drop-down of the open menu, under its name in the bar.
 fn menuDrop(app: *App, win: Window) !void {
-    const m = app_mod.menus[app.menu_top];
+    const m = app.menu_top;
+    const n = app.rowCount(m);
     var lw: u16 = 0;
     var kw: u16 = 0;
-    for (m.items) |row| {
-        lw = @max(lw, win.gwidth(row.label));
-        kw = @max(kw, win.gwidth(row.key));
+    var k: usize = 0;
+    while (k < n) : (k += 1) {
+        const row = app.rowAt(m, k);
+        lw = @max(lw, win.gwidth(rowLabel(app, row)));
+        kw = @max(kw, win.gwidth(rowKey(app, row)));
     }
     const w: u16 = @max(22, lw + kw + 6);
-    const x = @min(menuX(win.width, app.menu_top), win.width -| w);
-    const h: u16 = @intCast(m.items.len + 2);
+    const x = @min(menuX(win.width, m), win.width -| w);
+    const h: u16 = @intCast(@min(n + 2, win.height -| 2));
     solid(app, win, x, 1, w, h);
     const box = boxed(win, x, 1, w, h, theme.blue);
     fillWith(box, theme.panel);
-    for (m.items, 0..) |row, i| {
-        const r: u16 = @intCast(i);
+    k = 0;
+    while (k < n and k < box.height) : (k += 1) {
+        const row = app.rowAt(m, k);
+        const r: u16 = @intCast(k);
         if (row.cmd == null) {
             _ = put(box, 0, r, "─" ** 100, theme.on(theme.line, theme.panel));
             continue;
         }
-        const sel = app.menu_sel == i;
+        const sel = app.menu_sel == k;
         const bg = if (sel) theme.selected else theme.panel;
         const line = sub(box, 0, r, box.width, 1);
         fillWith(line, bg);
-        _ = put(line, 1, 0, row.label, theme.on(if (sel) theme.bright else theme.text, bg));
-        putRight(line, line.width -| 1, 0, row.key, theme.on(if (sel) theme.bright else theme.dim, bg));
-        try addHit(app, box, 0, r, box.width, 1, .{ .menu_item = i });
-    }
-}
-
-// Zig tip: A `const` array of string literals in the function: each line is a `[]const u8` in the
-// program, so nothing is allocated. `l[0] != ' '` tells a heading from an indented line.
-fn help(app: *App, win: Window) void {
-    const box = dialog(app, win, 96, 26, "Shortcuts");
-    const lines = [_][]const u8{
-        "Menu",
-        "  F10, Ctrl+Enter   open the menu bar          Alt + letter   open a menu: F E S R M H",
-        "  Left, Right       next menu                  Up, Down, Enter   choose; Esc closes",
-        "Files and editing",
-        "  Ctrl+S save   Ctrl+Shift+S save as   Ctrl+N new file   Ctrl+W close tab   Ctrl+Q quit",
-        "Search (menu SEARCH)",
-        "  Ctrl+F find text (Enter next)   Ctrl+P find file (Up/Down next match, Enter opens)",
-        "  Ctrl+H replace (Tab between the fields, Enter finds or replaces one)",
-        "  Ctrl+G go to line (42 or 42:7)   Ctrl+L query (later)",
-        "Run and debug",
-        "  F5 run the .eve file   F9 breakpoint   F8, F11, Shift+F11, Shift+F5: debugger (later)",
-        "Machines",
-        "  F1 local   F2, F3 remote machines (later)   Ctrl+Left, Ctrl+Right next machine (later)",
-        "Console",
-        "  Enter runs `eve <line>`   Ctrl+Up, Ctrl+Down history   PgUp, PgDn scroll   clear",
-        "Tree",
-        "  Up, Down, Left, Right move   Enter or Space opens or closes   a click does the same",
-        "Mouse",
-        "  click, wheel in the tree, the editor and the console; middle click closes a tab",
-    };
-    for (lines, 0..) |l, i| {
-        const head = l[0] != ' ';
-        _ = put(box, 1, @intCast(2 + i), l, if (head) theme.onBold(theme.blue, theme.panel) else theme.on(theme.text, theme.panel));
+        _ = put(line, 1, 0, rowLabel(app, row), theme.on(if (sel) theme.bright else theme.text, bg));
+        putRight(line, line.width -| 1, 0, rowKey(app, row), theme.on(if (sel) theme.bright else theme.dim, bg));
+        try addHit(app, box, 0, r, box.width, 1, .{ .menu_item = k });
     }
 }
 
@@ -867,6 +954,16 @@ fn replaceBox(app: *App, win: Window) !void {
     x = try button(app, box, x, 2, "Replace", btn, .{ .button = .replace });
     _ = try button(app, box, x + 1, 2, "Replace all", btn, .{ .button = .replace_all });
     _ = put(box, 1, 3, "Tab switches the field · Esc closes", theme.on(theme.dim, theme.panel));
+}
+
+// Zig tip: The same shape as `saveAsBox`: a centered dialog and one field. The key handling is in
+// `App.overlayKey`: Enter opens the folder that was typed.
+fn openProjectBox(app: *App, win: Window) void {
+    const box = dialog(app, win, 64, 7, "Open project");
+    _ = put(box, 2, 2, "Project folder (a path from the current folder):", theme.on(theme.text, theme.panel));
+    const f = sub(box, 2, 3, box.width -| 4, 1);
+    fillWith(f, theme.bar);
+    app.project_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
 }
 
 // Zig tip: A dialog with one field. The key handling is in `App.overlayKey`: Enter saves under the

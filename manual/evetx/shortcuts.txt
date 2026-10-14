@@ -1,0 +1,55 @@
+EVE-TX  Shortcuts
+=================
+
+Menu
+  F10, Ctrl+Enter     open the menu bar
+  Alt + letter        open a menu: F E S R M W H
+  Left, Right         next menu
+  Up, Down, Enter     choose a command, Esc closes
+
+File
+  Ctrl+O              open project
+  Ctrl+N              new file
+  Ctrl+S              save
+  Ctrl+Shift+S        save as
+  Ctrl+W              close the window (tab)
+  Ctrl+Q              quit
+
+Edit and search
+  Ctrl+H              replace (Tab between the fields)
+  Ctrl+F              find text (Enter next match)
+  Ctrl+P              find file (Up, Down, Enter opens)
+  Ctrl+G              go to line (42 or 42:7)
+  Ctrl+L              query (later)
+
+Run and debug
+  F5                  run the .eve file
+  F9                  breakpoint
+  F8, F11, Shift+F11, Shift+F5   debugger (later)
+
+Machines
+  Alt+1               local machine
+  Alt+2, Alt+3        remote machines (later)
+
+Windows and panels
+  Shift+Tab           next panel: Tree, Main, Tools
+  Alt+Tab, Ctrl+Tab   next window of the Main panel, or next tab of the Tools panel
+  Ctrl+1 .. Ctrl+9    window number 1 to 9
+  Window > Modify     change the size of the panels: drag the borders
+                      with the mouse, or use the arrow keys;
+                      Esc or Window > Freeze keeps the sizes
+  The buttons + and x of a panel maximize and hide it;
+  Window > Tree Panel, Main Panel, Tools Panel show it again
+
+Console
+  Enter               run `eve <line>`
+  Ctrl+Up, Ctrl+Down  history
+  PgUp, PgDn          scroll
+
+Tree
+  Up, Down, Left, Right   move
+  Enter, Space            open or close
+
+Mouse
+  click, wheel and scroll bars in the tree, the editor and the console;
+  a middle click on a window title closes it

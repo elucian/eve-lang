@@ -20,13 +20,18 @@ pub const Focus = enum { tree, editor, console, breaks };
 
 // Zig tip: An enum like `Focus`: one name for every tab. `@tagName(tab)` would give its name as
 // text.
-/// The five tabs of the bottom panel.
+/// The five tabs of the Tools Panel.
 pub const BottomTab = enum { console, watch, stderr, stdout, breaks };
+
+// Zig tip: The three panels of the screen are an enum too. The keyboard focus (`Focus`) is finer
+// than this: the Main Panel is the `editor` focus, the Tools Panel is `console` or `breaks`.
+/// The three panels: the files tree, the windows with their editor, the console and the other tools.
+pub const Panel = enum { tree, main, tools };
 
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, menu, help, settings, about, goto, save_as, find_text, find_file, replace };
+pub const Overlay = enum { none, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
@@ -50,6 +55,9 @@ pub const Action = union(enum) {
     break_row: usize,
     close_overlay,
     nop,
+    panel_focus: Panel,
+    panel_hide: Panel,
+    panel_max: Panel,
 };
 
 // Zig tip: a struct with methods is how Zig does what other languages call a class. `contains` is
@@ -132,6 +140,8 @@ pub const Tab = struct {
     buf: ?text.Buffer = null,
     card: Card = .{},
     eve: bool = false,
+    /// A window that is not a file (Shortcuts, Manual, Tutorial): read only, never saved.
+    virtual: bool = false,
 
     // Zig tip: `self: Tab` takes a copy of the struct. The result is a slice into `self.path`, not a
     // new string, so it costs nothing. `if (cut) |i| a else b` unwraps the optional from
@@ -148,21 +158,23 @@ pub const Tab = struct {
 pub const Breakpoint = struct { path: []u8, line: usize };
 
 // Zig tip: An enum with many values can be written over several lines. Each value is a command
-// that the menu, a key or a click can ask for.
+// that the menu, a key or a click can ask for. A command that needs a number (which window, which
+// machine) gets it in the `arg` of its row.
 /// Every command of the main menu.
 pub const MenuCmd = enum {
     open_project, new_file, save, save_as, close_tab, quit,
-    undo, redo,
-    find_text, find_file, replace, goto_line, query,
+    undo, redo, replace,
+    find_text, find_file, goto_line, query,
     run, step_into, step_out, cont, stop, breakpoint,
-    connect, upload, next_machine,
+    machine_pick, connect, upload,
+    select_window, modify, freeze, toggle_tree, toggle_main, toggle_tools, window_pick,
     shortcuts, manual, tutorial, about, options,
 };
 
 // Zig tip: `cmd: ?MenuCmd = null` is an optional enum with a default: a row without a command is a
 // separator line. One struct serves both kinds of row.
 /// A row of a menu: a command with its shortcut, or a separator (`cmd` null).
-pub const MenuRow = struct { label: []const u8, key: []const u8 = "", cmd: ?MenuCmd = null };
+pub const MenuRow = struct { label: []const u8, key: []const u8 = "", cmd: ?MenuCmd = null, arg: usize = 0 };
 
 /// A separator row.
 const sep: MenuRow = .{ .label = "-" };
@@ -170,8 +182,12 @@ const sep: MenuRow = .{ .label = "-" };
 // Zig tip: `items: []const MenuRow` is a slice, so every menu can have its own number of rows. The
 // literal `&.{ ... }` below makes a constant array and takes its address, which coerces to the
 // slice; all of it is built by the compiler.
-/// One menu of the bar: its name (upper case; the first letter is the Alt key) and its rows.
+/// One menu of the bar: its name (upper case; the first letter is the Alt key) and its fixed rows.
+/// The WINDOW menu has more rows after these: one for each open window (see `App.rowAt`).
 pub const Menu = struct { label: []const u8, items: []const MenuRow };
+
+/// The place of the WINDOW menu in `menus`.
+pub const menu_window: usize = 5;
 
 // Zig tip: A `const` array of struct literals is built at compile time and stored in the program.
 // `[_]Menu{...}` lets the compiler count the menus; `menus.len` is then a compile-time number.
@@ -182,18 +198,19 @@ pub const menus = [_]Menu{
         .{ .label = "New file", .key = "Ctrl+N", .cmd = .new_file },
         .{ .label = "Save", .key = "Ctrl+S", .cmd = .save },
         .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
-        .{ .label = "Close tab", .key = "Ctrl+W", .cmd = .close_tab },
+        .{ .label = "Close window", .key = "Ctrl+W", .cmd = .close_tab },
         sep,
         .{ .label = "Quit", .key = "Ctrl+Q", .cmd = .quit },
     } },
     .{ .label = "EDIT", .items = &.{
         .{ .label = "Undo", .key = "Ctrl+Z", .cmd = .undo },
         .{ .label = "Redo", .key = "Ctrl+Y", .cmd = .redo },
+        sep,
+        .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
     } },
     .{ .label = "SEARCH", .items = &.{
         .{ .label = "Find Text…", .key = "Ctrl+F", .cmd = .find_text },
         .{ .label = "Find File…", .key = "Ctrl+P", .cmd = .find_file },
-        .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
         .{ .label = "GoTo…", .key = "Ctrl+G", .cmd = .goto_line },
         .{ .label = "Query…", .key = "Ctrl+L", .cmd = .query },
     } },
@@ -207,9 +224,22 @@ pub const menus = [_]Menu{
         .{ .label = "Breakpoint", .key = "F9", .cmd = .breakpoint },
     } },
     .{ .label = "MACHINE", .items = &.{
+        .{ .label = "Local", .key = "Alt+1", .cmd = .machine_pick, .arg = 1 },
+        .{ .label = "Machine 2", .key = "Alt+2", .cmd = .machine_pick, .arg = 2 },
+        .{ .label = "Machine 3", .key = "Alt+3", .cmd = .machine_pick, .arg = 3 },
+        sep,
         .{ .label = "Connect…", .key = "Ctrl+K", .cmd = .connect },
         .{ .label = "Upload…", .key = "Ctrl+U", .cmd = .upload },
-        .{ .label = "Next machine", .key = "Ctrl+→", .cmd = .next_machine },
+    } },
+    .{ .label = "WINDOW", .items = &.{
+        .{ .label = "Select", .key = "Alt+Tab", .cmd = .select_window },
+        .{ .label = "Close", .key = "Ctrl+W", .cmd = .close_tab },
+        .{ .label = "Modify", .cmd = .modify },
+        .{ .label = "Freeze", .key = "Esc", .cmd = .freeze },
+        sep,
+        .{ .label = "Tree Panel", .cmd = .toggle_tree },
+        .{ .label = "Main Panel", .cmd = .toggle_main },
+        .{ .label = "Tools Panel", .cmd = .toggle_tools },
     } },
     .{ .label = "HELP", .items = &.{
         .{ .label = "Shortcuts", .key = "Ctrl+/", .cmd = .shortcuts },
@@ -221,15 +251,20 @@ pub const menus = [_]Menu{
     } },
 };
 
-// Zig tip: A `while` loop with a condition and an early `return` is a search. The result is an
-// optional-free `usize` because every menu has at least one command row, so the loop always finds one.
-/// The first row of a menu that is a command (not a separator).
-pub fn firstItem(menu: usize) usize {
-    for (menus[menu].items, 0..) |row, i| {
-        if (row.cmd != null) return i;
-    }
-    return 0;
-}
+// Zig tip: `@embedFile("help_shortcuts")` copies a file into the program at build time and gives
+// it as a string: no file is read when evetx runs. The name is the one `build.zig` gave to the file.
+const help_shortcuts = @embedFile("help_shortcuts");
+const help_manual = @embedFile("help_manual");
+const help_tutorial = @embedFile("help_tutorial");
+
+// Zig tip: A struct without fields is a namespace for a constant; with fields it is a record. This
+// one is the answer of `computeLayout`: where each panel is, as rectangles of the screen. A panel
+// that is hidden has a rectangle of width 0.
+/// The places of the panels on the screen (absolute cells).
+pub const Layout = struct { tree: Rect = .{}, main: Rect = .{}, debug: Rect = .{}, tools: Rect = .{} };
+
+/// What the mouse is dragging: a border between panels, or a scroll bar thumb.
+pub const Drag = enum { none, tree_split, tools_split, vbar, hbar };
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
@@ -278,8 +313,8 @@ fn cardLabel(path: []const u8) ?[]const u8 {
 pub const App = struct {
     gpa: std.mem.Allocator,
     io: Io,
-    /// The project folder as given on the command line (a path from the current folder).
-    root: []const u8,
+    /// The project folder (a path from the current folder); empty when no project is open. Owned.
+    root: []u8,
     project_name: []const u8,
     tree: project.Tree,
     /// Rows of the tree that the last drawing showed (indices into `tree.entries`).
@@ -304,12 +339,35 @@ pub const App = struct {
     running: bool = false,
     quit: bool = false,
 
+    show_tree: bool = true,
+    show_main: bool = true,
+    show_tools: bool = true,
+    /// The panel that fills the screen (the "+" button), if one does.
+    maximized: ?Panel = null,
+    /// Window > Modify: the borders between the panels follow the mouse and the arrow keys.
+    modify: bool = false,
+    drag: Drag = .none,
+    /// Width of the Tree Panel and height of the Tools Panel in cells; 0 means "automatic".
+    tree_w: u16 = 0,
+    tools_h: u16 = 0,
+    /// The size of the screen at the last drawing, and the places of the panels.
+    cols: u16 = 80,
+    rows: u16 = 24,
+    layout: Layout = .{},
+    /// True when the editor must scroll to show the cursor (after a key); false after the wheel or a scroll bar.
+    follow: bool = true,
+    vbar_rect: Rect = .{},
+    hbar_rect: Rect = .{},
+    /// The longest line that the horizontal scroll bar knows, in cells.
+    hbar_content: usize = 0,
+
     files_in: TextInput,
     find_in: TextInput,
     replace_in: TextInput,
     console_in: TextInput,
     goto_in: TextInput,
     saveas_in: TextInput,
+    project_in: TextInput,
 
     console: Log = .{},
     stdout_log: Log = .{},
@@ -341,12 +399,14 @@ pub const App = struct {
     pub fn create(gpa: std.mem.Allocator, io: Io, root: []const u8) !*App {
         const self = try gpa.create(App);
         errdefer gpa.destroy(self);
-        const name = try projectName(gpa, io, root);
+        const name = if (root.len == 0) try gpa.dupe(u8, "") else try projectName(gpa, io, root);
         errdefer gpa.free(name);
+        const own_root = try gpa.dupe(u8, root);
+        errdefer gpa.free(own_root);
         self.* = .{
             .gpa = gpa,
             .io = io,
-            .root = root,
+            .root = own_root,
             .project_name = name,
             .tree = project.Tree.init(gpa),
             .files_in = TextInput.init(gpa),
@@ -355,9 +415,10 @@ pub const App = struct {
             .console_in = TextInput.init(gpa),
             .goto_in = TextInput.init(gpa),
             .saveas_in = TextInput.init(gpa),
+            .project_in = TextInput.init(gpa),
             .frame = .init(gpa),
         };
-        try self.tree.scan(io, root, name);
+        if (root.len > 0) try self.tree.scan(io, root, name);
         try self.console.add(gpa, "evetx: the console runs `eve` with what you type (run <file>, --check <file>, clear).", .info);
         return self;
     }
@@ -373,7 +434,7 @@ pub const App = struct {
         self.tabs.deinit(gpa);
         self.tree.deinit();
         self.visible.deinit(gpa);
-        for ([_]*TextInput{ &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in }) |ti| ti.deinit();
+        for ([_]*TextInput{ &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in, &self.project_in }) |ti| ti.deinit();
         self.console.deinit(gpa);
         self.stdout_log.deinit(gpa);
         self.stderr_log.deinit(gpa);
@@ -386,6 +447,7 @@ pub const App = struct {
         self.hits.deinit(gpa);
         self.frame.deinit();
         gpa.free(self.project_name);
+        gpa.free(self.root);
         gpa.destroy(self);
     }
 
@@ -431,7 +493,7 @@ pub const App = struct {
     // caller, with `self.gpa`. `std.fmt.allocPrint` builds the text in memory it allocates.
     /// The path of a file of the project, as the operating system wants it. The caller frees it.
     pub fn fullPath(self: *App, rel: []const u8) ![]u8 {
-        if (std.mem.eql(u8, self.root, ".")) return self.gpa.dupe(u8, rel);
+        if (self.root.len == 0 or std.mem.eql(u8, self.root, ".")) return self.gpa.dupe(u8, rel);
         return std.fmt.allocPrint(self.gpa, "{s}/{s}", .{ self.root, rel });
     }
 
@@ -519,6 +581,10 @@ pub const App = struct {
     pub fn save(self: *App) !void {
         const t = self.activeTab() orelse return;
         if (t.buf == null) return;
+        if (t.virtual) {
+            self.setMessage("{s} is a read-only window", .{t.path});
+            return;
+        }
         if (t.path.len == 0) {
             self.openOverlay(.save_as);
             return;
@@ -544,6 +610,10 @@ pub const App = struct {
     pub fn saveAs(self: *App, rel: []const u8) !void {
         const t = self.activeTab() orelse return;
         if (t.buf == null or rel.len == 0) return;
+        if (t.virtual) {
+            self.setMessage("{s} is a read-only window", .{t.path});
+            return;
+        }
         try self.writeTab(t, rel);
         if (!std.mem.eql(u8, t.path, rel)) {
             self.gpa.free(t.path);
@@ -560,6 +630,7 @@ pub const App = struct {
     pub fn toggleBreakpoint(self: *App) !void {
         const t = self.activeTab() orelse return;
         const b = t.buf orelse return;
+        if (t.virtual) return;
         if (t.path.len == 0) {
             self.setMessage("save the file first: a breakpoint needs a file", .{});
             return;
@@ -614,7 +685,7 @@ pub const App = struct {
 
         self.stdout_log.clear(gpa);
         self.stderr_log.clear(gpa);
-        const cwd: std.process.Child.Cwd = if (std.mem.eql(u8, self.root, ".")) .inherit else .{ .path = self.root };
+        const cwd: std.process.Child.Cwd = if (self.root.len == 0 or std.mem.eql(u8, self.root, ".")) .inherit else .{ .path = self.root };
         const result = std.process.run(gpa, self.io, .{ .argv = argv.items, .cwd = cwd }) catch |err| {
             const msg = try std.fmt.allocPrint(gpa, "cannot start {s}: {s} (is bin/ in the PATH?)", .{ eve_exe, @errorName(err) });
             defer gpa.free(msg);
@@ -749,7 +820,7 @@ pub const App = struct {
     fn filesStep(self: *App, step: isize) !void {
         const q = try self.files_in.toOwnedContents(self.gpa);
         defer self.gpa.free(q);
-        if (q.len == 0) return;
+        if (q.len == 0 or self.tree.entries.items.len == 0) return;
         const from: isize = @as(isize, @intCast(self.selected)) + step;
         if (self.nextMatch(q, @intCast(@mod(from, @as(isize, @intCast(self.tree.entries.items.len)))), step)) |i| self.selectEntry(i);
     }
@@ -787,6 +858,7 @@ pub const App = struct {
     // The function says to the user what happened through `setMessage`.
     fn replaceOne(self: *App) !void {
         const b = self.activeBuffer() orelse return;
+        if (self.activeTab().?.virtual) return self.setMessage("a read-only window cannot be changed", .{});
         const q = try self.find_in.toOwnedContents(self.gpa);
         defer self.gpa.free(q);
         const w = try self.replace_in.toOwnedContents(self.gpa);
@@ -798,6 +870,7 @@ pub const App = struct {
     // which returns a `usize`.
     fn replaceEvery(self: *App) !void {
         const b = self.activeBuffer() orelse return;
+        if (self.activeTab().?.virtual) return self.setMessage("a read-only window cannot be changed", .{});
         const q = try self.find_in.toOwnedContents(self.gpa);
         defer self.gpa.free(q);
         const w = try self.replace_in.toOwnedContents(self.gpa);
@@ -838,13 +911,42 @@ pub const App = struct {
         self.dlg_field = 0;
     }
 
+    // Zig tip: `self: *const App` promises that the function only reads the app, so the drawing
+    // code can call it too. A row that is not in the fixed list of the menu is made on the spot: the
+    // WINDOW menu ends with a separator and one row for each open window (at most nine, the ones
+    // that Ctrl+1 to Ctrl+9 reach).
+    /// How many rows menu `m` has now.
+    pub fn rowCount(self: *const App, m: usize) usize {
+        const base = menus[m].items.len;
+        if (m == menu_window and self.tabs.items.len > 0) return base + 1 + @min(self.tabs.items.len, 9);
+        return base;
+    }
+
+    /// Row `k` of menu `m`. The title of a window is a slice of the tab, valid while the tab is open.
+    pub fn rowAt(self: *const App, m: usize, k: usize) MenuRow {
+        const items = menus[m].items;
+        if (k < items.len) return items[k];
+        if (k == items.len) return sep;
+        const t = k - items.len - 1;
+        return .{ .label = self.tabs.items[t].title(), .cmd = .window_pick, .arg = t };
+    }
+
+    /// The first row of menu `m` that is a command (not a separator).
+    fn firstItem(self: *const App, m: usize) usize {
+        var k: usize = 0;
+        while (k < self.rowCount(m)) : (k += 1) {
+            if (self.rowAt(m, k).cmd != null) return k;
+        }
+        return 0;
+    }
+
     // Zig tip: `menus[i]` is checked against the array length in a safe build, so a wrong `i` stops
     // the program with a message instead of reading other memory.
     /// Open menu `i` of the bar (a click, F10 or Alt and its letter) with its first command selected.
     pub fn openMenu(self: *App, i: usize) void {
         self.overlay = .menu;
         self.menu_top = i;
-        self.menu_sel = firstItem(i);
+        self.menu_sel = self.firstItem(i);
     }
 
     // Zig tip: `menus[i].label[0]` is the first byte of a string literal, a `u8`. `std.ascii.toLower`
@@ -867,10 +969,10 @@ pub const App = struct {
 
     // Zig tip: A `switch` over an enum with one branch for each value. The compiler checks that every
     // command has a branch. A branch may be a block, a call, or `try` on a call.
-    pub fn runMenu(self: *App, cmd: MenuCmd) !void {
+    pub fn runMenu(self: *App, cmd: MenuCmd, arg: usize) !void {
         self.overlay = .none;
         switch (cmd) {
-            .open_project => self.notYet("Open project", "T5"),
+            .open_project => self.openOverlay(.open_project),
             .new_file => try self.newFile(),
             .save => try self.save(),
             .save_as => self.openOverlay(.save_as),
@@ -885,10 +987,21 @@ pub const App = struct {
             .run => try self.runActive(),
             .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
             .breakpoint => try self.toggleBreakpoint(),
-            .connect, .upload, .next_machine => self.notYet("Remote machines", "T5"),
-            .shortcuts => self.openOverlay(.help),
-            .manual => self.setMessage("Manual: manual/README.md in the Eve repository (a viewer comes later)", .{}),
-            .tutorial => self.setMessage("Tutorial: https://sagecode.org/projects/eve/", .{}),
+            .machine_pick => self.pickMachine(@intCast(arg)),
+            .connect, .upload => self.notYet("Remote machines", "T5"),
+            .select_window => self.nextTab(1),
+            .modify => {
+                self.modify = true;
+                self.setMessage("Modify: drag the borders or use the arrow keys; Esc freezes the sizes", .{});
+            },
+            .freeze => self.modify = false,
+            .toggle_tree => self.togglePanel(.tree),
+            .toggle_main => self.togglePanel(.main),
+            .toggle_tools => self.togglePanel(.tools),
+            .window_pick => self.pickWindow(arg),
+            .shortcuts => try self.openVirtual("Shortcuts", help_shortcuts),
+            .manual => try self.openVirtual("Manual", help_manual),
+            .tutorial => try self.openVirtual("Tutorial", help_tutorial),
             .about => self.openOverlay(.about),
             .options => self.openOverlay(.settings),
         }
@@ -897,12 +1010,11 @@ pub const App = struct {
     // Zig tip: `while (true) {... break;}` loops until a `break`. `@mod` wraps the index; the loop
     // skips the rows that have no command (separators).
     fn menuMove(self: *App, delta: isize) void {
-        const items = menus[self.menu_top].items;
         var i: isize = @intCast(self.menu_sel);
-        const n: isize = @intCast(items.len);
+        const n: isize = @intCast(self.rowCount(self.menu_top));
         while (true) {
             i = @mod(i + delta, n);
-            if (items[@intCast(i)].cmd != null) break;
+            if (self.rowAt(self.menu_top, @intCast(i)).cmd != null) break;
         }
         self.menu_sel = @intCast(i);
     }
@@ -913,6 +1025,298 @@ pub const App = struct {
         const n: isize = menus.len;
         const to: usize = @intCast(@mod(@as(isize, @intCast(self.menu_top)) + delta, n));
         self.openMenu(to);
+    }
+
+    // ------------------------------------------------------------ panels and windows
+
+    // Zig tip: `std.math.clamp(v, lo, hi)` needs `lo <= hi`; the window is at least 70 x 18 cells
+    // (view.zig), so the ranges below are never empty. `@as(u16, ...)` makes the type of the
+    // literal explicit.
+    /// The width of the Tree Panel: the chosen one (Window > Modify) or a quarter of the screen.
+    pub fn treeWidth(self: *const App) u16 {
+        const w: u16 = if (self.tree_w == 0) std.math.clamp(self.cols / 4, 26, 40) else self.tree_w;
+        return std.math.clamp(w, 14, self.cols -| 24);
+    }
+
+    /// The height of the Tools Panel: the chosen one or a third of the work area.
+    pub fn toolsHeight(self: *const App) u16 {
+        const mh = self.rows -| 4;
+        const h: u16 = if (self.tools_h == 0) @max(7, mh / 3) else self.tools_h;
+        return std.math.clamp(h, 5, mh -| 6);
+    }
+
+    // Zig tip: A `switch` that returns a value is an expression; each branch is one `bool`.
+    /// Is panel `p` on the screen? A maximized panel hides the others.
+    pub fn isShown(self: *const App, p: Panel) bool {
+        return switch (p) {
+            .tree => self.show_tree and self.maximized != .main,
+            .main => self.show_main and self.maximized != .tools,
+            .tools => self.show_tools and self.maximized != .main,
+        };
+    }
+
+    // Zig tip: The drawing asks for the places of the panels once per frame, and the mouse code
+    // reads the saved answer (`self.layout`). Rows: 0 is the menu bar, the last three are the
+    // status bar. In the Main column the Run buttons take one row under the Main Panel.
+    /// Work out where each panel is for a screen of `W` x `H` cells, and keep the answer.
+    pub fn computeLayout(self: *App, W: u16, H: u16) Layout {
+        self.cols = W;
+        self.rows = H;
+        const mh = H - 4;
+        var l: Layout = .{};
+        var rx: u16 = 0;
+        if (self.isShown(.tree)) {
+            const tw = self.treeWidth();
+            l.tree = .{ .x = 0, .y = 1, .w = tw, .h = mh };
+            rx = tw;
+        }
+        const rw = W - rx;
+        if (self.isShown(.main) and self.isShown(.tools)) {
+            const bb = self.toolsHeight();
+            const eh = mh - 1 - bb;
+            l.main = .{ .x = rx, .y = 1, .w = rw, .h = eh };
+            l.debug = .{ .x = rx, .y = 1 + eh, .w = rw, .h = 1 };
+            l.tools = .{ .x = rx, .y = 2 + eh, .w = rw, .h = bb };
+        } else if (self.isShown(.main)) {
+            l.main = .{ .x = rx, .y = 1, .w = rw, .h = mh - 1 };
+            l.debug = .{ .x = rx, .y = mh, .w = rw, .h = 1 };
+        } else if (self.isShown(.tools)) {
+            l.tools = .{ .x = rx, .y = 1, .w = rw, .h = mh };
+        }
+        self.layout = l;
+        return l;
+    }
+
+    /// The panel that has the keyboard.
+    pub fn activePanel(self: *const App) Panel {
+        return switch (self.focus) {
+            .tree => .tree,
+            .editor => .main,
+            .console, .breaks => .tools,
+        };
+    }
+
+    /// Give the keyboard to panel `p`.
+    pub fn focusPanel(self: *App, p: Panel) void {
+        self.focus = switch (p) {
+            .tree => .tree,
+            .main => .editor,
+            .tools => if (self.bottom == .breaks) .breaks else .console,
+        };
+    }
+
+    // Zig tip: `inline else` is not needed here: the `switch` lists the three panels. Taking the
+    // address of a field of a struct chosen by a switch (`&self.show_tree`) gives a pointer to the
+    // one `bool`, so the three panels share the same code after the `switch`.
+    /// Hide panel `p`, or show it again (Window > Tree Panel, Main Panel, Tools Panel; the x buttons).
+    pub fn togglePanel(self: *App, p: Panel) void {
+        const flag = switch (p) {
+            .tree => &self.show_tree,
+            .main => &self.show_main,
+            .tools => &self.show_tools,
+        };
+        flag.* = !flag.*;
+        if (flag.*) {
+            self.maximized = null;
+            self.focusPanel(p);
+        } else {
+            if (self.maximized == p) self.maximized = null;
+            if (self.activePanel() == p) self.rotatePanel();
+        }
+    }
+
+    /// The + button: a panel fills the screen, or goes back to its place.
+    pub fn toggleMaximize(self: *App, p: Panel) void {
+        self.maximized = if (self.maximized == p) null else p;
+        self.focusPanel(p);
+    }
+
+    // Zig tip: `for (0..3) |k|` counts from 0 to 2 without a variable. `@enumFromInt` turns a number
+    // back into the enum value, and `@intFromEnum` turns a value into its number: the panels are
+    // numbered 0, 1, 2 in the order of the declaration.
+    /// Shift+Tab: the keyboard goes to the next panel that is on the screen (Tree, Main, Tools).
+    pub fn rotatePanel(self: *App) void {
+        const here = @intFromEnum(self.activePanel());
+        for (1..4) |k| {
+            const p: Panel = @enumFromInt((here + k) % 3);
+            if (self.isShown(p)) {
+                self.focusPanel(p);
+                return;
+            }
+        }
+    }
+
+    // Zig tip: `(a + n + delta) % n` wraps around the end of a list in both directions when `delta`
+    // is 1 or `n - 1`; here the signed `@mod` is simpler. The tabs of the Tools Panel are the enum
+    // `BottomTab`, so the same arithmetic walks them with `@intFromEnum`.
+    /// Alt+Tab: the next window of the Main Panel, or the next tab of the Tools Panel when that panel has the keyboard.
+    pub fn nextTab(self: *App, delta: isize) void {
+        if (self.activePanel() == .tools) {
+            const n: isize = 5;
+            const cur: isize = @intFromEnum(self.bottom);
+            self.bottom = @enumFromInt(@mod(cur + delta, n));
+            self.focusPanel(.tools);
+            return;
+        }
+        const n: isize = @intCast(self.tabs.items.len);
+        if (n == 0) return;
+        const to: usize = @intCast(@mod(@as(isize, @intCast(self.active)) + delta, n));
+        self.pickWindow(to);
+    }
+
+    /// Make window `t` (a tab of the Main Panel) the current one.
+    pub fn pickWindow(self: *App, t: usize) void {
+        if (t >= self.tabs.items.len) return;
+        self.active = t;
+        if (!self.show_main) self.togglePanel(.main);
+        self.focus = if (self.tabs.items[t].buf != null) .editor else self.focus;
+    }
+
+    // Zig tip: `errdefer` frees the copy only if a later `try` fails. After `append` succeeds the tab
+    // owns `path`, and `closeTab` frees it.
+    /// Open a window that is not a file: the text is read only, the title is its name.
+    pub fn openVirtual(self: *App, title: []const u8, content: []const u8) !void {
+        for (self.tabs.items, 0..) |t, i| {
+            if (t.virtual and std.mem.eql(u8, t.path, title)) {
+                self.pickWindow(i);
+                return;
+            }
+        }
+        var b = try text.Buffer.init(self.gpa);
+        errdefer b.deinit();
+        try b.load(content);
+        b.dirty = false;
+        const path = try self.gpa.dupe(u8, title);
+        errdefer self.gpa.free(path);
+        try self.tabs.append(self.gpa, .{ .path = path, .buf = b, .virtual = true });
+        if (!self.show_main) self.togglePanel(.main);
+        self.maximized = if (self.maximized == .tools) null else self.maximized;
+        self.active = self.tabs.items.len - 1;
+        self.focus = .editor;
+    }
+
+    // Zig tip: The folder is checked first (`projectName` opens it), and only then the old project is
+    // let go, so a wrong path leaves the screen as it was. `self.tree.deinit()` followed by
+    // `self.tree = Tree.init(...)` reuses the same place of the struct: the tree is never copied
+    // after it gave out memory.
+    /// Open a project folder: the tree shows its files and the windows of the old project close.
+    pub fn openProject(self: *App, path: []const u8) !void {
+        if (path.len == 0) return;
+        for (self.tabs.items) |t| {
+            if (t.buf != null and t.buf.?.dirty) {
+                self.setMessage("save or close the changed files first", .{});
+                return;
+            }
+        }
+        const name = projectName(self.gpa, self.io, path) catch |err| {
+            self.setMessage("cannot open the folder '{s}': {s}", .{ path, @errorName(err) });
+            return;
+        };
+        errdefer self.gpa.free(name);
+        const root = try self.gpa.dupe(u8, path);
+        errdefer self.gpa.free(root);
+
+        // from here on nothing can fail with `try`: the new name and root belong to the app
+        while (self.tabs.items.len > 0) self.closeTab(0);
+        for (self.breakpoints.items) |b| self.gpa.free(b.path);
+        self.breakpoints.clearRetainingCapacity();
+        if (self.saved_open) |snap| self.gpa.free(snap);
+        self.saved_open = null;
+        self.tree.deinit();
+        self.tree = project.Tree.init(self.gpa);
+        self.gpa.free(self.project_name);
+        self.gpa.free(self.root);
+        self.project_name = name;
+        self.root = root;
+        self.selected = 0;
+        self.tree_top = 0;
+        self.tree.scan(self.io, root, name) catch |err| {
+            self.setMessage("cannot read the folder '{s}': {s}", .{ path, @errorName(err) });
+            return;
+        };
+        self.show_tree = true;
+        self.maximized = null;
+        self.focus = .tree;
+        self.setMessage("project: {s}", .{name});
+    }
+
+    // Zig tip: A `switch` on the enum `Drag` decides what the moving mouse changes. The raw column
+    // of the pointer is stored; `treeWidth` and `toolsHeight` clamp it, so a wild drag cannot break
+    // the screen.
+    /// A press on a border between panels while Window > Modify is on: start dragging it.
+    fn grabSplit(self: *App, m: vaxis.Mouse) bool {
+        const l = self.layout;
+        if (l.tree.w > 0 and (m.col == l.tree.w - 1 or m.col == l.tree.w) and m.row >= 1) {
+            self.drag = .tree_split;
+            return true;
+        }
+        if (l.tools.w > 0 and l.main.w > 0 and m.col >= l.tools.x and (m.row == l.tools.y or m.row == l.tools.y - 1)) {
+            self.drag = .tools_split;
+            return true;
+        }
+        return false;
+    }
+
+    /// A press on a scroll bar of the editor: start dragging its thumb.
+    fn grabBar(self: *App, m: vaxis.Mouse) bool {
+        if (self.vbar_rect.contains(m.col, m.row)) {
+            self.drag = .vbar;
+        } else if (self.hbar_rect.contains(m.col, m.row)) {
+            self.drag = .hbar;
+        } else return false;
+        self.follow = false;
+        self.scrollTo(m);
+        return true;
+    }
+
+    // Zig tip: The position of the pointer on the bar, from 0 to `len - 1`, is turned into a line (or
+    // column) by a proportion: `rel * (total - shown) / (len - 1)`. `@max(..., 0)` first, because the
+    // pointer may be outside the bar during a drag and `m.row` is signed.
+    /// Scroll the editor to the place of the pointer on the bar that is being dragged.
+    fn scrollTo(self: *App, m: vaxis.Mouse) void {
+        const b = self.activeBuffer() orelse return;
+        if (self.drag == .vbar) {
+            const r = self.vbar_rect;
+            const total = b.lineCount();
+            if (r.h < 2 or total <= r.h) return;
+            const rel: usize = @intCast(@min(@max(@as(i32, m.row) - r.y, 0), r.h - 1));
+            b.top = rel * (total - r.h) / (r.h - 1);
+        } else if (self.drag == .hbar) {
+            const r = self.hbar_rect;
+            if (r.w < 2 or self.hbar_content <= r.w) return;
+            const rel: usize = @intCast(@min(@max(@as(i32, m.col) - r.x, 0), r.w - 1));
+            b.left = rel * (self.hbar_content - r.w) / (r.w - 1);
+        }
+    }
+
+    /// The mouse moves with a button down.
+    fn dragTo(self: *App, m: vaxis.Mouse) void {
+        switch (self.drag) {
+            .none => {},
+            .tree_split => self.tree_w = @intCast(@max(@as(i32, m.col) + 1, 0)),
+            .tools_split => self.tools_h = @intCast(@max(@as(i32, self.rows) - 3 - m.row, 0)),
+            .vbar, .hbar => self.scrollTo(m),
+        }
+    }
+
+    // Zig tip: The function returns `!bool`: an error union around a plain `bool`. The caller writes
+    // `try self.modifyKey(key)` to get the `bool` or pass the error up. Here nothing can fail, but
+    // the shape is the same as the other key functions.
+    /// While Window > Modify is on: the arrows change the sizes, Esc and Enter freeze them. True when the key was used.
+    fn modifyKey(self: *App, key: Key) !bool {
+        if (key.matches(Key.escape, .{}) or key.matches(Key.enter, .{})) {
+            self.modify = false;
+            self.setMessage("sizes frozen", .{});
+        } else if (key.matches(Key.left, .{})) {
+            self.tree_w = self.treeWidth() -| 2;
+        } else if (key.matches(Key.right, .{})) {
+            self.tree_w = self.treeWidth() + 2;
+        } else if (key.matches(Key.up, .{})) {
+            self.tools_h = self.toolsHeight() + 1;
+        } else if (key.matches(Key.down, .{})) {
+            self.tools_h = self.toolsHeight() -| 1;
+        } else return false;
+        return true;
     }
 
     // ------------------------------------------------------------ keys
@@ -929,18 +1333,28 @@ pub const App = struct {
             return;
         }
         self.alt_hint = false;
+        self.follow = true;
         if (self.message) |m| {
             self.gpa.free(m);
             self.message = null;
         }
         if (self.overlay != .none) return self.overlayKey(key);
 
+        if (self.modify and try self.modifyKey(key)) return;
         if (key.matches(Key.enter, .{ .ctrl = true }) or key.matches(Key.f10, .{})) return self.openMenu(0);
         if (key.mods.alt and !key.mods.ctrl) {
+            if (key.codepoint == Key.tab) return self.nextTab(if (key.mods.shift) -1 else 1);
+            if (key.codepoint >= '1' and key.codepoint <= '3') return self.pickMachine(@intCast(key.codepoint - '0'));
             if (menuByLetter(key.codepoint)) |m| return self.openMenu(m);
         }
-        if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.openOverlay(.help);
+        if (key.matches(Key.tab, .{ .shift = true })) return self.rotatePanel();
+        if (key.matches(Key.tab, .{ .ctrl = true })) return self.nextTab(1);
+        if (key.mods.ctrl and !key.mods.alt and key.codepoint >= '1' and key.codepoint <= '9') {
+            return self.pickWindow(key.codepoint - '1');
+        }
+        if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.runMenu(.shortcuts, 0);
         if (key.matches(',', .{ .ctrl = true })) return self.openOverlay(.settings);
+        if (key.matches('o', .{ .ctrl = true })) return self.openOverlay(.open_project);
         if (key.matches('q', .{ .ctrl = true })) {
             self.quit = true;
             return;
@@ -952,9 +1366,6 @@ pub const App = struct {
         if (self.searchShortcut(key)) return;
         if (key.matches(Key.f5, .{})) return self.runActive();
         if (key.matches(Key.f9, .{})) return self.toggleBreakpoint();
-        if (key.matches(Key.f1, .{})) return self.pickMachine(1);
-        if (key.matches(Key.f2, .{})) return self.pickMachine(2);
-        if (key.matches(Key.f3, .{})) return self.pickMachine(3);
         if (key.matches(Key.f11, .{}) or key.matches(Key.f8, .{}) or key.matches(Key.f5, .{ .shift = true })) {
             self.notYet("The debugger", "T6");
             return;
@@ -983,7 +1394,7 @@ pub const App = struct {
         if (n == 1) {
             self.machine = 1;
             self.setMessage("connection: local", .{});
-        } else self.notYet("A remote machine", "T5");
+        } else self.notYet("A remote machine (Alt+2, Alt+3)", "T5");
     }
 
     // Zig tip: `switch (self.overlay)` on an enum, with `.none => {}` for the value that needs
@@ -997,8 +1408,17 @@ pub const App = struct {
         if (self.overlay != .menu and self.searchShortcut(key)) return;
         switch (self.overlay) {
             .menu => try self.menuKey(key),
-            .help, .settings, .about => {
-                if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{}) or key.matches(Key.enter, .{})) self.overlay = .none;
+            .settings, .about => {
+                if (key.matches(Key.enter, .{})) self.overlay = .none;
+            },
+            .open_project => {
+                if (key.matches(Key.enter, .{})) {
+                    const p = try self.project_in.toOwnedContents(self.gpa);
+                    defer self.gpa.free(p);
+                    self.project_in.clearRetainingCapacity();
+                    self.overlay = .none;
+                    try self.openProject(std.mem.trim(u8, p, " \""));
+                } else try self.project_in.update(.{ .key_press = key });
             },
             .goto => {
                 if (key.matches(Key.enter, .{})) try self.gotoEnter() else try self.goto_in.update(.{ .key_press = key });
@@ -1030,11 +1450,12 @@ pub const App = struct {
         if (key.matches(Key.left, .{})) return self.menuSide(-1);
         if (key.matches(Key.right, .{})) return self.menuSide(1);
         if (key.matches(Key.home, .{})) {
-            self.menu_sel = firstItem(self.menu_top);
+            self.menu_sel = self.firstItem(self.menu_top);
             return;
         }
         if (key.matches(Key.enter, .{})) {
-            if (menus[self.menu_top].items[self.menu_sel].cmd) |c| try self.runMenu(c);
+            const row = self.rowAt(self.menu_top, self.menu_sel);
+            if (row.cmd) |c| try self.runMenu(c, row.arg);
             return;
         }
         if (!key.mods.ctrl) {
@@ -1046,7 +1467,10 @@ pub const App = struct {
     // key is an optional slice, and it is typed only when no control key was held.
     fn editorKey(self: *App, key: Key) !void {
         const b = self.activeBuffer() orelse return;
-        if (key.matches(Key.left, .{})) b.moveLeft() else if (key.matches(Key.right, .{})) b.moveRight() else if (key.matches(Key.up, .{})) b.moveRows(-1) else if (key.matches(Key.down, .{})) b.moveRows(1) else if (key.matches(Key.page_up, .{})) b.moveRows(-@as(isize, self.editor_rect.h)) else if (key.matches(Key.page_down, .{})) b.moveRows(@as(isize, self.editor_rect.h)) else if (key.matches(Key.home, .{})) b.home() else if (key.matches(Key.end, .{})) b.toEnd() else if (key.matches(Key.enter, .{})) try b.newline() else if (key.matches(Key.backspace, .{})) try b.backspace() else if (key.matches(Key.delete, .{})) try b.delete() else if (key.matches(Key.tab, .{})) try b.insert("  ") else if (key.mods.ctrl or key.mods.alt) {
+        const ro = self.activeTab().?.virtual;
+        if (key.matches(Key.left, .{})) b.moveLeft() else if (key.matches(Key.right, .{})) b.moveRight() else if (key.matches(Key.up, .{})) b.moveRows(-1) else if (key.matches(Key.down, .{})) b.moveRows(1) else if (key.matches(Key.page_up, .{})) b.moveRows(-@as(isize, self.editor_rect.h)) else if (key.matches(Key.page_down, .{})) b.moveRows(@as(isize, self.editor_rect.h)) else if (key.matches(Key.home, .{})) b.home() else if (key.matches(Key.end, .{})) b.toEnd() else if (ro) {
+            // a read-only window: only the keys above (moving) work
+        } else if (key.matches(Key.enter, .{})) try b.newline() else if (key.matches(Key.backspace, .{})) try b.backspace() else if (key.matches(Key.delete, .{})) try b.delete() else if (key.matches(Key.tab, .{})) try b.insert("  ") else if (key.mods.ctrl or key.mods.alt) {
             // a shortcut that is not ours: do not type its letter
         } else if (key.text) |t| try b.insert(t);
     }
@@ -1160,10 +1584,15 @@ pub const App = struct {
     // walks the hits from the last to the first, so what was drawn last (an open menu) is hit first.
     pub fn onMouse(self: *App, m: vaxis.Mouse) !void {
         if (m.type == .motion) return self.hover(m);
+        if (m.type == .release) {
+            self.drag = .none;
+            return;
+        }
+        if (m.type == .drag) return self.dragTo(m);
         self.alt_hint = false;
-        if (m.type != .press) return;
         if (m.button == .wheel_up or m.button == .wheel_down) {
             const up = m.button == .wheel_up;
+            self.follow = false;
             if (self.tree_rect.contains(m.col, m.row)) {
                 self.tree_top = if (up) self.tree_top -| 3 else self.tree_top + 3;
             } else if (self.editor_rect.contains(m.col, m.row)) {
@@ -1195,6 +1624,11 @@ pub const App = struct {
             return;
         }
         if (m.button != .left) return;
+        self.follow = true;
+        if (self.overlay == .none) {
+            if (self.modify and self.grabSplit(m)) return;
+            if (self.grabBar(m)) return;
+        }
 
         var i = self.hits.items.len;
         while (i > 0) {
@@ -1263,10 +1697,14 @@ pub const App = struct {
                 if (self.overlay == .menu and self.menu_top == t) self.overlay = .none else self.openMenu(t);
             },
             .menu_item => |i| {
-                if (menus[self.menu_top].items[i].cmd) |c| try self.runMenu(c);
+                const row = self.rowAt(self.menu_top, i);
+                if (row.cmd) |c| try self.runMenu(c, row.arg);
             },
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
+            .panel_focus => |p| self.focusPanel(p),
+            .panel_hide => |p| self.togglePanel(p),
+            .panel_max => |p| self.toggleMaximize(p),
             .break_row => |i| {
                 if (self.break_sel == i) try self.jumpToBreakpoint(i) else self.break_sel = i;
                 self.focus = .breaks;
@@ -1277,7 +1715,7 @@ pub const App = struct {
                 .step_into, .step_out, .cont, .stop => self.notYet("The debugger", "T6"),
                 .replace => try self.replaceOne(),
                 .replace_all => try self.replaceEvery(),
-                .help => self.openOverlay(.help),
+                .help => try self.runMenu(.shortcuts, 0),
                 .settings => self.openOverlay(.settings),
             },
         }
