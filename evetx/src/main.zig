@@ -63,6 +63,11 @@ pub fn main(init: std.process.Init) !void {
     try writer.flush();
     try vx.queryTerminal(tty.writer(), .fromSeconds(1));
 
+    // the title of the terminal window follows the project; it is sent again only when it changes
+    var title_buf: [256]u8 = undefined;
+    var last_buf: [256]u8 = undefined;
+    var last_title: []const u8 = "";
+
     while (!app.quit) {
         const event = try loop.nextEvent();
         switch (event) {
@@ -78,6 +83,12 @@ pub fn main(init: std.process.Init) !void {
         if (app.takeSystemClip()) |clip| {
             defer gpa.free(clip);
             vx.copyToSystemClipboard(writer, clip, gpa) catch {};
+        }
+        const title = app.windowTitle(&title_buf);
+        if (!std.mem.eql(u8, title, last_title)) {
+            vx.setTitle(writer, title) catch {};
+            @memcpy(last_buf[0..title.len], title);
+            last_title = last_buf[0..title.len];
         }
         const win = vx.window();
         win.clear();
