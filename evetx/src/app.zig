@@ -32,7 +32,7 @@ pub const Panel = enum { tree, main, tools };
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
+pub const Overlay = enum { none, tab_menu, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
@@ -62,6 +62,8 @@ pub const Action = union(enum) {
     panel_focus: Panel,
     panel_hide: Panel,
     panel_max: Panel,
+    split_handle,
+    tabmenu_item: usize,
     scroll: ScrollBtn,
     tree_scroll: ScrollBtn,
     dlg: DlgAction,
@@ -169,10 +171,25 @@ pub const Breakpoint = struct { path: []u8, line: usize };
 // Zig tip: An enum with many values can be written over several lines. Each value is a command
 // that the menu, a key or a click can ask for. A command that needs a number (which window, which
 // machine) gets it in the `arg` of its row.
+/// The commands of the popup menu of a tab (a right click on its title).
+pub const TabCmd = enum { save, save_as, close_this, close_right, close_left, close_clean };
+
+/// A row of the popup menu of a tab.
+pub const TabMenuRow = struct { label: []const u8, cmd: TabCmd };
+
+pub const tab_menu_rows = [_]TabMenuRow{
+    .{ .label = "Save", .cmd = .save },
+    .{ .label = "Save As…", .cmd = .save_as },
+    .{ .label = "Close this", .cmd = .close_this },
+    .{ .label = "Close right", .cmd = .close_right },
+    .{ .label = "Close left", .cmd = .close_left },
+    .{ .label = "Close clean", .cmd = .close_clean },
+};
+
 /// Every command of the main menu.
 pub const MenuCmd = enum {
     open_project, open_folder, new_file, save, save_as, close_tab, quit,
-    undo, redo, replace, toggle_wrap, toggle_hidden,
+    undo, redo, replace, toggle_wrap, toggle_hidden, close_all, close_clean,
     find_text, find_file, goto_line, query,
     run, check_file, step_into, step_out, cont, stop, breakpoint,
     machine_pick, connect, upload,
@@ -218,7 +235,7 @@ pub const menus = [_]Menu{
         .{ .label = "Quit", .key = "Ctrl+Q", .cmd = .quit },
     } },
     .{ .label = "EDIT", .items = &.{
-        .{ .label = "Undo", .key = "Ctrl+Z", .cmd = .undo },
+        .{ .label = "Undo", .key = "Ctrl+U", .cmd = .undo },
         .{ .label = "Redo", .key = "Ctrl+Y", .cmd = .redo },
         sep,
         .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
@@ -245,13 +262,16 @@ pub const menus = [_]Menu{
     .{ .label = "MACHINE", .items = &.{
         sep,
         .{ .label = "Connect…", .key = "Ctrl+K", .cmd = .connect },
-        .{ .label = "Upload…", .key = "Ctrl+U", .cmd = .upload },
+        .{ .label = "Upload…", .cmd = .upload },
     } },
     .{ .label = "WINDOW", .items = &.{
         .{ .label = "Select", .key = "Ctrl+Tab", .cmd = .select_window },
         .{ .label = "Close", .key = "Ctrl+W", .cmd = .close_tab },
+        .{ .label = "Close All", .cmd = .close_all },
+        .{ .label = "Close Clean", .cmd = .close_clean },
+        sep,
         .{ .label = "Layout modify", .key = "Ctrl+L", .cmd = .modify },
-        .{ .label = "Layout freeze", .key = "Ctrl+F", .cmd = .freeze },
+        .{ .label = "Layout freeze", .key = "Ctrl+Z", .cmd = .freeze },
         sep,
         .{ .label = "Tree Panel", .cmd = .toggle_tree },
         .{ .label = "Main Panel", .cmd = .toggle_main },
@@ -371,6 +391,11 @@ pub const App = struct {
     /// The layout was put in modify mode with the mouse: it freezes by itself three seconds after the
     /// mouse button is released (`freeze_at`, a time of the `awake` clock in milliseconds).
     mouse_modify: bool = false,
+    /// The popup menu of a tab: where it is, which tab it is for, and the selected row.
+    tab_menu_x: u16 = 0,
+    tab_menu_y: u16 = 0,
+    tab_menu_tab: usize = 0,
+    tab_menu_sel: usize = 0,
     freeze_at: ?i64 = null,
     /// The shape of the mouse pointer: a double arrow over a border between panels.
     pointer: vaxis.Mouse.Shape = .default,
@@ -1171,6 +1196,7 @@ pub const App = struct {
         defer self.gpa.free(q);
         const w = try self.replace_in.toOwnedContents(self.gpa);
         defer self.gpa.free(w);
+        try b.checkpoint(.other);
         if (!try b.replaceMatch(q, w)) self.setMessage("no more matches", .{});
     }
 
@@ -1183,6 +1209,7 @@ pub const App = struct {
         defer self.gpa.free(q);
         const w = try self.replace_in.toOwnedContents(self.gpa);
         defer self.gpa.free(w);
+        try b.checkpoint(.other);
         const n = try b.replaceAll(q, w);
         self.setMessage("{d} replaced", .{n});
     }
@@ -1305,7 +1332,10 @@ pub const App = struct {
             .save_as => self.openOverlay(.save_as),
             .close_tab => self.closeTab(self.active),
             .quit => self.quit = true,
-            .undo, .redo => self.notYet("Undo and redo", "T3"),
+            .undo => try self.undoRedo(true),
+            .redo => try self.undoRedo(false),
+            .close_all => self.closeAll(),
+            .close_clean => self.closeClean(0, self.tabs.items.len),
             .find_text => self.openOverlay(.find_text),
             .find_file => self.openOverlay(.find_file),
             .replace => self.openOverlay(.replace),
@@ -1742,7 +1772,7 @@ pub const App = struct {
     fn modifyKey(self: *App, key: Key) !bool {
         // the keyboard takes over: a countdown that the mouse started is cancelled
         self.freeze_at = null;
-        if (key.matches(Key.escape, .{}) or key.matches(Key.enter, .{}) or key.matches('f', .{ .ctrl = true })) {
+        if (key.matches(Key.escape, .{}) or key.matches(Key.enter, .{}) or key.matches('z', .{ .ctrl = true })) {
             self.freezeLayout();
         } else if (key.matches(Key.left, .{})) {
             self.tree_w = self.treeWidth() -| 2;
@@ -1754,6 +1784,77 @@ pub const App = struct {
             self.tools_h = self.toolsHeight() -| 1;
         } else return false;
         return true;
+    }
+
+    // ------------------------------------------------------------ undo and closing many windows
+
+    // Zig tip: One function for both directions, with a `bool`: `undo` or `redo` of the buffer return
+    // false when there is nothing to do, and the message tells the user.
+    /// Ctrl+U (undo) and Ctrl+Y (redo) on the current window.
+    pub fn undoRedo(self: *App, undo: bool) !void {
+        const b = self.activeBuffer() orelse return;
+        if (self.activeTab().?.virtual) return;
+        const done = if (undo) try b.undo() else try b.redo();
+        if (!done) self.setMessage("nothing to {s}", .{if (undo) "undo" else "redo"});
+        self.follow = true;
+    }
+
+    // Zig tip: The loop counts down (`while (i > lo) { i -= 1; ... }`) because closing a tab moves the
+    // ones after it one place to the left: going from the end keeps the numbers that are still to be
+    // visited correct. A window with changes is kept, and the message says how many.
+    /// Close the windows `lo` to `hi - 1` that have no unsaved changes.
+    pub fn closeClean(self: *App, lo: usize, hi: usize) void {
+        var kept: usize = 0;
+        var i = @min(hi, self.tabs.items.len);
+        while (i > lo) {
+            i -= 1;
+            const t = self.tabs.items[i];
+            if (t.buf != null and t.buf.?.dirty) kept += 1 else self.closeTab(i);
+        }
+        if (kept > 0) self.setMessage("{d} window(s) with unsaved changes were kept", .{kept});
+    }
+
+    /// Window > Close All: closes every window, unless one has unsaved changes.
+    pub fn closeAll(self: *App) void {
+        var dirty: usize = 0;
+        for (self.tabs.items) |t| {
+            if (t.buf != null and t.buf.?.dirty) dirty += 1;
+        }
+        if (dirty > 0) {
+            self.setMessage("{d} window(s) have unsaved changes: save them, or use Close Clean", .{dirty});
+            return;
+        }
+        while (self.tabs.items.len > 0) self.closeTab(0);
+    }
+
+    /// A right click on a tab: open its popup menu there.
+    fn openTabMenu(self: *App, tab: usize, m: vaxis.Mouse) void {
+        self.tab_menu_tab = tab;
+        self.tab_menu_sel = 0;
+        self.tab_menu_x = @intCast(@max(m.col, 0));
+        self.tab_menu_y = @intCast(@max(m.row + 1, 0));
+        self.overlay = .tab_menu;
+    }
+
+    /// Run row `i` of the popup menu of a tab.
+    fn runTabMenu(self: *App, i: usize) !void {
+        const tab = self.tab_menu_tab;
+        self.overlay = .none;
+        if (tab >= self.tabs.items.len or i >= tab_menu_rows.len) return;
+        switch (tab_menu_rows[i].cmd) {
+            .save => {
+                self.active = tab;
+                try self.save();
+            },
+            .save_as => {
+                self.active = tab;
+                self.openOverlay(.save_as);
+            },
+            .close_this => self.closeTab(tab),
+            .close_right => self.closeClean(tab + 1, self.tabs.items.len),
+            .close_left => self.closeClean(0, tab),
+            .close_clean => self.closeClean(0, self.tabs.items.len),
+        }
     }
 
     // ------------------------------------------------------------ dialogs: projects and folders
@@ -1989,6 +2090,8 @@ pub const App = struct {
         }
         if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.runMenu(.shortcuts, 0);
         if (key.matches(',', .{ .ctrl = true })) return self.openOverlay(.settings);
+        if (key.matches('u', .{ .ctrl = true })) return self.undoRedo(true);
+        if (key.matches('y', .{ .ctrl = true })) return self.undoRedo(false);
         if (key.matches('o', .{ .ctrl = true, .shift = true })) return self.openFolderDialog();
         if (key.matches('o', .{ .ctrl = true })) return self.openProjectDialog();
         if (key.matches('q', .{ .ctrl = true })) {
@@ -2055,9 +2158,17 @@ pub const App = struct {
     // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) return self.closeOverlay();
-        if (self.overlay != .menu and self.searchShortcut(key)) return;
+        if (self.overlay != .menu and self.overlay != .tab_menu and self.searchShortcut(key)) return;
         switch (self.overlay) {
             .menu => try self.menuKey(key),
+            .tab_menu => {
+                const n = tab_menu_rows.len;
+                if (key.matches(Key.up, .{})) {
+                    self.tab_menu_sel = (self.tab_menu_sel + n - 1) % n;
+                } else if (key.matches(Key.down, .{})) {
+                    self.tab_menu_sel = (self.tab_menu_sel + 1) % n;
+                } else if (key.matches(Key.enter, .{})) try self.runTabMenu(self.tab_menu_sel);
+            },
             .settings, .about => {
                 if (key.matches(Key.enter, .{})) self.overlay = .none;
             },
@@ -2131,6 +2242,7 @@ pub const App = struct {
         };
         if (moved) {
             if (!key.mods.shift) b.anchor = null else if (b.anchor == null) b.anchor = here;
+            b.last_edit = .none;
             return;
         }
         if (key.matches(Key.escape, .{})) {
@@ -2138,19 +2250,25 @@ pub const App = struct {
             return;
         }
         if (ro) return;
+        const selected = b.selection() != null;
         if (key.matches(Key.enter, .{})) {
+            try b.checkpoint(.other);
             _ = try b.deleteSelection();
             try b.newline();
         } else if (key.matches(Key.backspace, .{})) {
+            try b.checkpoint(if (selected) .other else .erasing);
             if (!try b.deleteSelection()) try b.backspace();
         } else if (key.matches(Key.delete, .{})) {
+            try b.checkpoint(if (selected) .other else .erasing);
             if (!try b.deleteSelection()) try b.delete();
         } else if (key.matches(Key.tab, .{})) {
+            try b.checkpoint(if (selected) .other else .typing);
             _ = try b.deleteSelection();
             try b.insert("  ");
         } else if (key.mods.ctrl or key.mods.alt) {
             // a shortcut that is not ours: do not type its letter
         } else if (key.text) |t| {
+            try b.checkpoint(if (selected) .other else .typing);
             _ = try b.deleteSelection();
             try b.insert(t);
         }
@@ -2172,7 +2290,10 @@ pub const App = struct {
         self.clip = t;
         if (self.sys_clip) |c| self.gpa.free(c);
         self.sys_clip = sys;
-        if (cut and !self.activeTab().?.virtual) _ = try b.deleteSelection();
+        if (cut and !self.activeTab().?.virtual) {
+            try b.checkpoint(.other);
+            _ = try b.deleteSelection();
+        }
     }
 
     /// Ctrl+V: insert the copied text. (A paste made by the terminal comes as keys: see `pasteEnd`.)
@@ -2183,6 +2304,7 @@ pub const App = struct {
             self.setMessage("nothing copied yet", .{});
             return;
         };
+        try b.checkpoint(.other);
         try b.insertText(c);
     }
 
@@ -2234,6 +2356,7 @@ pub const App = struct {
         if (self.focus == .editor) {
             const b = self.activeBuffer() orelse return;
             if (self.activeTab().?.virtual) return;
+            try b.checkpoint(.other);
             try b.insertText(t);
         }
     }
@@ -2386,6 +2509,22 @@ pub const App = struct {
             }
             return;
         }
+        if (m.button == .right and self.overlay == .none) {
+            // a right click on a tab opens its popup menu
+            var k = self.hits.items.len;
+            while (k > 0) {
+                k -= 1;
+                const h = self.hits.items[k];
+                if (h.rect.contains(m.col, m.row)) {
+                    switch (h.action) {
+                        .tab, .tab_close => |t| self.openTabMenu(t, m),
+                        else => {},
+                    }
+                    return;
+                }
+            }
+            return;
+        }
         if (m.button == .middle) {
             // a middle click on a tab closes it
             var k = self.hits.items.len;
@@ -2431,6 +2570,7 @@ pub const App = struct {
                         b.anchor = null;
                         self.sel_from = pos;
                     }
+                    b.last_edit = .none;
                     self.drag = .select;
                     self.focus = .editor;
                     return;
@@ -2461,7 +2601,7 @@ pub const App = struct {
         }
         self.hover_split = null;
         self.pointer = .default;
-        if (self.overlay != .menu) return;
+        if (self.overlay != .menu and self.overlay != .tab_menu) return;
         var i = self.hits.items.len;
         while (i > 0) {
             i -= 1;
@@ -2470,6 +2610,7 @@ pub const App = struct {
             switch (h.action) {
                 .menu_top => |t| if (t != self.menu_top) self.openMenu(t),
                 .menu_item => |r| self.menu_sel = r,
+                .tabmenu_item => |r| self.tab_menu_sel = r,
                 else => {},
             }
             return;
@@ -2507,6 +2648,12 @@ pub const App = struct {
             },
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
+            .split_handle => {
+                // the handle on the toolbar: drag it up or down to change the height of the Tools Panel
+                if (!self.modify) self.startModify(true);
+                self.drag = .tools_split;
+            },
+            .tabmenu_item => |i| try self.runTabMenu(i),
             .tree_scroll => |d| {
                 const half = @max(1, self.tree_rect.h / 2);
                 switch (d) {

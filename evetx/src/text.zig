@@ -7,6 +7,20 @@ const Allocator = std.mem.Allocator;
 /// A place in the text that Find found and the editor shows highlighted.
 pub const Match = struct { row: usize, col: usize, len: usize };
 
+// Zig tip: The undo of this editor keeps whole copies of the text ("snapshots") taken just before a
+// change. That is simple and cannot get out of step with the text, at the price of memory, so the
+// stack is limited. A run of typing, or a run of erasing, is one change for the user: `EditKind`
+// tells the kind of the change, and a second change of the same kind (typing after typing) does not
+// take a new snapshot until the cursor has moved or another kind of change came in between.
+/// What kind of change is about to be made (see `Buffer.checkpoint`).
+pub const EditKind = enum { none, typing, erasing, other };
+
+/// The text and the cursor at one moment, for undo and redo.
+pub const Snapshot = struct { bytes: []u8, row: usize, col: usize };
+
+/// The most snapshots that undo keeps.
+const max_undo = 100;
+
 // Zig tip: Two small structs name a place in the text and a span between two places. The selection
 // of the editor is a span from the anchor to the cursor, whichever comes first in the text.
 /// A place in the text: a line and a byte offset in it.
@@ -37,6 +51,9 @@ pub const Buffer = struct {
     match: ?Match = null,
     /// Where the selection started; the cursor is its other end. Null when nothing is selected.
     anchor: ?Pos = null,
+    undo_stack: std.ArrayList(Snapshot) = .empty,
+    redo_stack: std.ArrayList(Snapshot) = .empty,
+    last_edit: EditKind = .none,
 
     // Zig tip: `!Buffer` is an error union: the result is a `Buffer` or an error. `try x` unwraps the
     // value, or returns the error to the caller at once. Here the only error is running out of memory.
@@ -51,6 +68,70 @@ pub const Buffer = struct {
     pub fn deinit(self: *Buffer) void {
         for (self.lines.items) |*l| l.deinit(self.gpa);
         self.lines.deinit(self.gpa);
+        self.clearStack(&self.undo_stack);
+        self.undo_stack.deinit(self.gpa);
+        self.clearStack(&self.redo_stack);
+        self.redo_stack.deinit(self.gpa);
+    }
+
+    fn clearStack(self: *Buffer, stack: *std.ArrayList(Snapshot)) void {
+        for (stack.items) |s| self.gpa.free(s.bytes);
+        stack.clearRetainingCapacity();
+    }
+
+    fn snapshot(self: *const Buffer) !Snapshot {
+        return .{ .bytes = try self.toBytes(self.gpa), .row = self.row, .col = self.col };
+    }
+
+    // Zig tip: `orderedRemove(0)` takes the oldest snapshot out so that the stack stays at its limit;
+    // the bytes it owned are freed. The redo stack is emptied by a new change: the future that was
+    // undone cannot be reached any more.
+    /// Call before a change of the text: takes a snapshot, unless this change continues a run of the
+    /// same kind (typing, erasing).
+    pub fn checkpoint(self: *Buffer, kind: EditKind) !void {
+        if ((kind == .typing or kind == .erasing) and self.last_edit == kind) return;
+        self.last_edit = kind;
+        self.clearStack(&self.redo_stack);
+        const snap = try self.snapshot();
+        errdefer self.gpa.free(snap.bytes);
+        try self.undo_stack.append(self.gpa, snap);
+        if (self.undo_stack.items.len > max_undo) self.gpa.free(self.undo_stack.orderedRemove(0).bytes);
+    }
+
+    // Zig tip: Undo and redo are the same move in two directions: take a snapshot from one stack, put
+    // the current text on the other, and show the snapshot. `from` and `to` are pointers to the two
+    // stacks, so one function serves both. `load` replaces the text; the view and the kind of line end
+    // are put back afterwards.
+    fn travel(self: *Buffer, from: *std.ArrayList(Snapshot), to: *std.ArrayList(Snapshot)) !bool {
+        if (from.items.len == 0) return false;
+        const now = try self.snapshot();
+        errdefer self.gpa.free(now.bytes);
+        try to.append(self.gpa, now);
+        const snap = from.pop().?;
+        defer self.gpa.free(snap.bytes);
+        const crlf = self.crlf;
+        const top = self.top;
+        const left = self.left;
+        try self.load(snap.bytes);
+        self.crlf = crlf;
+        self.top = top;
+        self.left = left;
+        self.row = @min(snap.row, self.lines.items.len - 1);
+        self.col = @min(snap.col, self.lines.items[self.row].items.len);
+        self.dirty = true;
+        self.anchor = null;
+        self.last_edit = .none;
+        return true;
+    }
+
+    /// Undo the last change. False when there is nothing to undo.
+    pub fn undo(self: *Buffer) !bool {
+        return self.travel(&self.undo_stack, &self.redo_stack);
+    }
+
+    /// Redo what was undone. False when there is nothing to redo.
+    pub fn redo(self: *Buffer) !bool {
+        return self.travel(&self.redo_stack, &self.undo_stack);
     }
 
     // Zig tip: `errdefer` runs only if the function returns an error after that line: it frees `line`

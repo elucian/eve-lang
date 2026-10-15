@@ -17,6 +17,7 @@ File
   Ctrl+Q              quit
 
 Edit and search
+  Ctrl+U, Ctrl+Y      undo, redo (typing and erasing are undone in runs)
   Ctrl+H              replace (Tab between the fields)
   Ctrl+F              find text (Enter next match)
   Ctrl+P              find file (Up, Down, Enter opens)
@@ -62,7 +63,9 @@ Windows and panels
   Ctrl+L              layout modify (WINDOW > Layout modify): drag the borders or
                       use the arrow keys (Left, Right: Tree Panel width; Up, Down:
                       Tools Panel height)
-  Ctrl+F              layout freeze (in layout modify; Esc and Enter too)
+  Ctrl+Z              layout freeze (in layout modify; Esc and Enter too)
+  The handle on the toolbar above the Tools Panel (a double arrow, up/down):
+                      press it and drag up or down to change the Tools Panel height
   The buttons + and x of a panel maximize and hide it;
   Window > Tree Panel, Main Panel, Tools Panel show it again
 
@@ -77,4 +80,6 @@ Tree
 
 Mouse
   click, wheel and scroll bars in the tree, the editor and the console;
-  a middle click on a window title closes it
+  a middle click on a window title closes it; a right click on it opens the
+  popup menu: Save, Save As, Close this, Close right, Close left, Close clean
+  WINDOW > Close All (when nothing is modified), Close Clean (the unmodified ones)
