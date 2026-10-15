@@ -32,6 +32,7 @@ Selecting and copying
   Mouse               click puts the cursor, drag selects, Shift+click extends
 
 Editor view
+  Edit > Show hidden characters   middle dot = space, arrow = tab, return sign = line end
   Edit > Wrap       wrap long lines (no horizontal bar; the vertical bar gets ^ and v
                     buttons: half a page). Without wrap the horizontal bar has
                     < and > buttons: ten columns each
