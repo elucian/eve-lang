@@ -159,6 +159,7 @@ pub fn draw(app: *App, win: Window) !void {
         .structure => try structureBox(app, win),
         .sq_structure => try sqStructureBox(app, win),
         .new_table => try newTableBox(app, win),
+        .rename => try renameBox(app, win),
         .new_file => try newBox(app, win),
         .wizard => try wizardBox(app, win),
         .append_n => try appendNBox(app, win),
@@ -1802,9 +1803,30 @@ fn tabMenuBox(app: *App, win: Window) !void {
         const bg = if (sel) theme.selected else theme.panel;
         const line = sub(box, 0, r, box.width, 1);
         fillWith(line, bg);
+        if (row.cmd == .sep) {
+            _ = put(box, 0, r, "─" ** 60, theme.on(theme.line, theme.panel));
+            continue;
+        }
         _ = put(line, 1, 0, row.label, theme.on(if (sel) theme.bright else theme.text, bg));
         try addHit(app, box, 0, r, box.width, 1, .{ .tabmenu_item = i });
     }
+}
+
+// Zig tip: the Rename dialog is a field filled with the path of the file in the project; the person edits it and presses
+// Enter. Changing only the name part renames the file; changing the folder part moves it (to a folder that exists).
+/// File > Rename…: the new name of a file.
+fn renameBox(app: *App, win: Window) !void {
+    const box = dialog(app, win, 70, 9, "Rename");
+    const dim = theme.on(theme.dim, theme.panel);
+    _ = put(box, 2, 1, app.fmt("File: {s}", .{app.rename_from orelse ""}), theme.on(theme.text, theme.panel));
+    _ = put(box, 2, 2, "New name (a path in the project):", dim);
+    const f = sub(box, 2, 3, box.width -| 4, 1);
+    fillWith(f, theme.bar);
+    app.saveas_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "Rename", .action = ok_btn, .primary = true },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
 }
 
 // Zig tip: the dialog says where the table will go before the name is typed: the selected database (a SQLite table) or the
