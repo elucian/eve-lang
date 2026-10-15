@@ -5,6 +5,12 @@ const Io = std.Io;
 // Zig tip: `?u32` is an optional: it holds a `u32` or `null`. `parent` is null for the root. To
 // use an optional you unwrap it: `if (e.parent) |p| ...` runs only when it holds a value, and `p`
 // is the number inside.
+// Zig tip: an enum with a default in the struct below (`kind: Kind = .normal`) lets all the old code that makes an entry stay as
+// it is. A SQLite file is `.db`: it is a file for the disk, but the tree opens it like a folder and shows its tables, which
+// are entries of kind `.table` with a path like `data/x.db#orders`.
+/// What an entry is besides a file or a folder.
+pub const Kind = enum { normal, db, table };
+
 /// One file or folder. The entries are kept in depth-first order (a folder, then its content),
 /// so the entries below a folder are the ones that follow it with a bigger `depth`.
 pub const Entry = struct {
@@ -16,7 +22,16 @@ pub const Entry = struct {
     /// Index of the folder that holds this entry; null for the root.
     parent: ?u32,
     expanded: bool,
+    kind: Kind = .normal,
 };
+
+/// Does the name end like a SQLite database file?
+pub fn isSqliteName(name: []const u8) bool {
+    for ([_][]const u8{ ".db", ".sqlite", ".sqlite3" }) |ext| {
+        if (name.len > ext.len and std.ascii.eqlIgnoreCase(name[name.len - ext.len ..], ext)) return true;
+    }
+    return false;
+}
 
 // Zig tip: a `const` array of slices written at file level is checked and sized by the compiler.
 // A folder with one of these names is not shown: they are generated files or other people's code.
@@ -89,7 +104,8 @@ pub const Tree = struct {
             if (self.entries.items.len >= max_entries) return;
             const path = if (rel.len == 0) item.name else try std.fmt.allocPrint(a, "{s}/{s}", .{ rel, item.name });
             const index: u32 = @intCast(self.entries.items.len);
-            try self.entries.append(a, .{ .name = item.name, .path = path, .depth = depth, .is_dir = item.is_dir, .parent = parent, .expanded = false });
+            const kind: Kind = if (!item.is_dir and isSqliteName(item.name)) .db else .normal;
+            try self.entries.append(a, .{ .name = item.name, .path = path, .depth = depth, .is_dir = item.is_dir, .parent = parent, .expanded = false, .kind = kind });
             if (item.is_dir) {
                 var sub = dir.openDir(io, item.name, .{ .iterate = true }) catch continue;
                 defer sub.close(io);
@@ -140,6 +156,38 @@ pub const Tree = struct {
 
     // Zig tip: A function that takes `self: *Tree` (not `*const`) may change the tree. Writing
     // `self.entries.items[p].expanded = true` changes the element in place.
+    // Zig tip: the tables of a database are put into the list right after its entry, as children (one level deeper), and the
+    // old tables, if any, are taken out first (`replaceRange` does both at once). Every entry after them that has a parent
+    // placed after the database entry has moved in the list, so its `parent` number is corrected by the difference. The
+    // answer is that difference, so the app can correct the selected row. The names are copied into the arena of the tree.
+    /// Put the tables of the database entry `index` in the tree. Returns how many entries the list grew by (it may be negative).
+    pub fn setTables(self: *Tree, index: u32, names: []const []const u8) !isize {
+        const a = self.arena.allocator();
+        const db = self.entries.items[index];
+        var old: usize = 0;
+        while (index + 1 + old < self.entries.items.len and self.entries.items[index + 1 + old].kind == .table and self.entries.items[index + 1 + old].parent == index) old += 1;
+        const fresh = try a.alloc(Entry, names.len);
+        for (names, 0..) |n, i| {
+            fresh[i] = .{
+                .name = try a.dupe(u8, n),
+                .path = try std.fmt.allocPrint(a, "{s}#{s}", .{ db.path, n }),
+                .depth = db.depth + 1,
+                .is_dir = false,
+                .parent = index,
+                .expanded = false,
+                .kind = .table,
+            };
+        }
+        try self.entries.replaceRange(a, index + 1, old, fresh);
+        const delta: isize = @as(isize, @intCast(names.len)) - @as(isize, @intCast(old));
+        for (self.entries.items[index + 1 + names.len ..]) |*e| {
+            if (e.parent) |p| {
+                if (p > index) e.parent = @intCast(@as(isize, @intCast(p)) + delta);
+            }
+        }
+        return delta;
+    }
+
     /// Open every folder above entry `index`, so that the entry is shown.
     pub fn expandTo(self: *Tree, index: u32) void {
         var cur = self.entries.items[index].parent;

@@ -43,7 +43,15 @@ pub fn build(b: *std.Build) void {
     }
     // the version of Eve is written once, in the root build.zig.zon; the About dialog shows it
     exe.root_module.addAnonymousImport("eve_zon", .{ .root_source_file = b.path("../build.zig.zon") });
-    b.installArtifact(exe);
+    // Zig tip: a running program locks its .exe on Windows, so the copy into `bin/` fails with AccessDenied. The
+    // step below runs a command (`addSystemCommand`) that stops the eve programs of that folder, and `dependOn` makes
+    // the copy wait for it. Compiling goes on in parallel; only the install waits. The same script is `eve --kill`.
+    // `builtin.os.tag` is the system the build runs on (not the target), so other systems skip the step.
+    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", b.pathFromRoot("../script/stop_eve.ps1"), "-Bin", b.getInstallPath(.bin, "") });
+    stop.has_side_effects = true;
+    const install_exe = b.addInstallArtifact(exe, .{});
+    if (@import("builtin").os.tag == .windows) install_exe.step.dependOn(&stop.step);
+    b.getInstallStep().dependOn(&install_exe.step);
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());

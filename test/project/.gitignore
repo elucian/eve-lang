@@ -1,6 +1,9 @@
 # Eve project: the files that a run makes
 db/*.db
 db/*.db-*
+# the sample databases for trying evetx (script/mk_project_fixtures.py)
+!db/shop.db
+!db/empty.db
 log/*.log
 log/*.log.*
 log/*.db

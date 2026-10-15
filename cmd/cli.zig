@@ -52,7 +52,7 @@ pub const commands = [_]Command{
     .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = cp_cmds.cmdCheck },
     .{ .name = "compile", .summary = "compile a script to bytecode", .file = ".eve", .run = stub("compile") },
     .{ .name = "doc", .summary = "write Markdown documentation of a .eve file or folder", .file = ".eve", .run = cp_cmds.cmdDoc },
-    .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = stub("debug") },
+    .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = vm_cmds.cmdDebug },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = vm_cmds.cmdExecute },
     .{ .name = "project", .summary = "project init|new <folder>: make a project with the standard layout", .run = cp_cmds.cmdProject },
     .{ .name = "db", .summary = "db proc list: the database part (eve db ...)", .run = db_cmds.cmdDb },

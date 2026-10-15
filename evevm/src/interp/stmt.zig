@@ -51,6 +51,9 @@ pub fn execBody(it: *Interp, b: *const Node) Signal!void {
 // plus an opaque context pointer (`*anyopaque`): the interpreter calls "something" without
 // knowing the VM, so this file does not import vm.zig.
 pub fn tick(it: *Interp, n: *const Node) Signal!void {
+    if (it.dbg) |d| {
+        if (it.root == null) try d.before(d.ctx, it, n);
+    }
     if (it.hook) |h| {
         if (h.poll(h.ctx, it.steps, it.line)) return error.Stop;
     }

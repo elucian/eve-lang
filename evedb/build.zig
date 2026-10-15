@@ -49,13 +49,22 @@ pub fn build(b: *std.Build) void {
     // The prebuilt library: the import library duckdb.lib on Windows, libduckdb.so / .dylib elsewhere.
     exe.root_module.addLibraryPath(duckdb_dep.path(""));
     exe.root_module.linkSystemLibrary("duckdb", .{});
-    b.installArtifact(exe);
+    // Zig tip: a running program locks its .exe on Windows, so the copy into `bin/` fails with AccessDenied. The
+    // step below runs a command (`addSystemCommand`) that stops the eve programs of that folder, and `dependOn` makes
+    // the copy wait for it. Compiling goes on in parallel; only the install waits. The same script is `eve --kill`.
+    // `builtin.os.tag` is the system the build runs on (not the target), so other systems skip the step.
+    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", b.pathFromRoot("../script/stop_eve.ps1"), "-Bin", b.getInstallPath(.bin, "") });
+    stop.has_side_effects = true;
+    const install_exe = b.addInstallArtifact(exe, .{});
+    if (@import("builtin").os.tag == .windows) install_exe.step.dependOn(&stop.step);
+    b.getInstallStep().dependOn(&install_exe.step);
 
     // Zig tip: `addInstallFileWithDir` makes a step that copies a file (here a `LazyPath` inside
     // a dependency) into a folder of the install prefix; `dependOn` adds it to `zig build`.
     // On Windows a program finds its DLLs in its own folder, so duckdb.dll goes next to evedb.exe.
     if (os == .windows) {
         const dll = b.addInstallFileWithDir(duckdb_dep.path("duckdb.dll"), .bin, "duckdb.dll");
+        dll.step.dependOn(&stop.step);
         b.getInstallStep().dependOn(&dll.step);
     }
 

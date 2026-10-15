@@ -137,7 +137,7 @@ Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with b
 | F-MTK-04 | Tasks in a job | ✓ done | `async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to Version 0.4 with the generators (D-144). *Done:* tests d17 to d19, d33. |
 | F-MTK-05 | Deadlines and cancellation | ✓ done | per-group time limits, cancel or collect errors (review `RMT-R01`). *Done:* `on error cancel`, `within`; tests d10, d11. |
 | F-SPEC-05 | Multitasking semantics | partial | `semantics/multitasking.md`: parallel groups, channels, tasks in a job, durations, determinism (D-140 to D-144). *Partial:* generators wait for Version 0.4. |
-| F-TLS-04 | Debugger | open | debug mode, `halt` breakpoints, step, print variables, reports (`manual/usage.md`). |
+| F-TLS-04 | Debugger | partial | debug mode, `halt` breakpoints, step, print variables, reports (`manual/usage.md`). |
 | F-TLS-08 | Formatter and linter | open | `eve fmt`, `eve lint` (indentation, style rules; review `RSY-R06`). |
 | F-TLS-09 | Editor support | partial | syntax colors for VS Code and GitHub, then a language server (`tools/TODO-vscode-plugin.md`). *Partial:* tutorial highlighters `eve1.js`, `eve3.js`. |
 | F-VM-05 | Region memory | partial | arena per aspect call, job and request; long-lived heap for modules and channels (review `RVM-R02`). *Partial (D-151):* the values are reference counted and freed at the safe points of their region (statement, pass of a loop, `done`), a tracing collector frees cycles at `done`, scratch memory per statement; nothing is freed while tasks run; benchmarks peak at 4.4 to 6.6 MB (`p4a_parallel_sum` 39 MB). Open: an arena per task. |

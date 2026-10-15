@@ -5,6 +5,9 @@
 /// The interpreter: values, scopes and the walk over the syntax tree.
 pub const interp = @import("interp.zig");
 
+/// The debugger: `eve debug`, the commands run, halt, next, step, exit and trace (F-TLS-04).
+pub const debugger = @import("debugger.zig");
+
 /// The cooperative tasks of a job (D-144).
 pub const task = @import("task.zig");
 
