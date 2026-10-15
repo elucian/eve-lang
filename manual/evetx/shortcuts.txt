@@ -21,7 +21,7 @@ Edit and search
   Ctrl+F              find text (Enter next match)
   Ctrl+P              find file (Up, Down, Enter opens)
   Ctrl+G              go to line (42 or 42:7)
-  Ctrl+L              query (later)
+  F7                  query (later)
 
 Selecting and copying
   Shift + arrows, Home, End, PgUp, PgDn   select text
@@ -56,9 +56,13 @@ Windows and panels
   Ctrl+Tab            next window of the Main panel, or next tab of the Tools panel
   Ctrl+PgUp, Ctrl+PgDn  previous / next window or tab
   Ctrl+1 .. Ctrl+9    window number 1 to 9
-  Window > Modify     change the size of the panels: drag the borders
-                      with the mouse, or use the arrow keys;
-                      Esc or Window > Freeze keeps the sizes
+  Layout: over a border between panels the pointer is a double arrow and the
+                      border turns amber; press and drag it. Three seconds after
+                      the mouse is released the layout freezes by itself
+  Ctrl+L              layout modify (WINDOW > Layout modify): drag the borders or
+                      use the arrow keys (Left, Right: Tree Panel width; Up, Down:
+                      Tools Panel height)
+  Ctrl+F              layout freeze (in layout modify; Esc and Enter too)
   The buttons + and x of a panel maximize and hide it;
   Window > Tree Panel, Main Panel, Tools Panel show it again
 

@@ -129,6 +129,7 @@ pub fn draw(app: *App, win: Window) !void {
     if (l.debug.w > 0) try debugBar(app, win, l.debug.x, l.debug.y, l.debug.w);
     try statusBar(app, win);
 
+    drawSplitHint(app, win, l);
     if (app.overlay == .none) return;
     app.hits.clearRetainingCapacity();
     switch (app.overlay) {
@@ -146,6 +147,30 @@ pub fn draw(app: *App, win: Window) !void {
         .find_text => try findTextBox(app, win),
         .find_file => try findFileBox(app, win),
         .replace => try replaceBox(app, win),
+    }
+}
+
+// Zig tip: A terminal may not change the shape of the mouse pointer (the shape is asked for with an
+// escape code that not every terminal knows), so the border under the pointer, or being dragged, is
+// also painted in amber: the user sees what a click would take.
+/// Paint the border between panels that is under the pointer.
+fn drawSplitHint(app: *App, win: Window, l: app_mod.Layout) void {
+    const which = (if (app.drag == .tree_split or app.drag == .tools_split) app.drag else null) orelse app.hover_split orelse return;
+    if (app.overlay != .none) return;
+    const style = theme.on(theme.amber, theme.deep);
+    switch (which) {
+        .tree_split => {
+            var y: u16 = 2;
+            while (y + 4 < win.height) : (y += 1) {
+                _ = put(win, l.tree.w -| 1, y, "┃", style);
+                _ = put(win, l.tree.w, y, "┃", style);
+            }
+        },
+        .tools_split => {
+            var x: u16 = l.tools.x + 1;
+            while (x + 1 < l.tools.x + l.tools.w) : (x += 1) _ = put(win, x, l.tools.y, "━", style);
+        },
+        else => {},
     }
 }
 
@@ -1038,7 +1063,15 @@ fn statusBar(app: *App, win: Window) !void {
     const left_w = pos_x -| 3;
     _ = put(box, pos_x -| 2, 0, "│", theme.on(theme.line, theme.deep));
 
-    if (app.pendingLeft()) |ms| {
+    if (app.modify) {
+        const hint = if (app.freeze_at != null)
+            "Layout modify · it freezes in a moment · drag again to go on"
+        else if (app.mouse_modify)
+            "Layout modify · drag the border · Ctrl+F freezes at once"
+        else
+            "Layout modify · drag the borders or use the arrow keys · Ctrl+F or Esc freezes";
+        _ = put(box, 1, 0, clipText(hint, left_w), theme.onBold(theme.amber, theme.deep));
+    } else if (app.pendingLeft()) |ms| {
         const secs: i64 = @divFloor(ms + 999, 1000);
         const cmd_text = app.pending_text orelse "";
         _ = put(box, 1, 0, clipText(app.fmt("▶ {s} starts in {d}s · Enter runs now · Esc cancels · typing keeps it", .{ cmd_text, secs }), left_w), theme.onBold(theme.amber, theme.deep));
