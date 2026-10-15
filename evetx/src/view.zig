@@ -140,6 +140,7 @@ pub fn draw(app: *App, win: Window) !void {
         },
         .settings => try settings(app, win),
         .about => try about(app, win),
+        .tab_menu => try tabMenuBox(app, win),
         .open_project => try projectBox(app, win),
         .open_folder => try folderBox(app, win),
         .goto => try gotoBox(app, win),
@@ -897,6 +898,12 @@ fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     x = try button(app, bar, x, 0, "▶▶ Continue", off, .{ .button = .cont });
     x += 1;
     _ = try button(app, bar, x, 0, "■ Stop", off, .{ .button = .stop });
+    // The terminal cannot change the pointer into a double arrow everywhere, so the toolbar has a
+    // handle: press it and drag up or down to change the height of the Tools Panel.
+    if (rw > 70) {
+        _ = put(bar, rw - 5, 0, " ⇕ ", theme.onBold(theme.amber, theme.bar));
+        try addHit(app, bar, rw - 5, 0, 3, 1, .split_handle);
+    }
 }
 
 // Zig tip: `for (tabs, names) |t, n|` walks two arrays of the same length together. The label is a
@@ -1162,6 +1169,31 @@ fn buttonRow(app: *App, box: Window, y: u16, specs: []const Btn) !void {
 }
 
 const ok_btn: Action = .{ .dlg = .ok };
+
+// Zig tip: The popup menu of a tab opens at the place of the click. `@min(x, win.width -| w)` keeps it
+// inside the screen when the click is near the right edge. The rows are hits like the rows of the
+// main menu, and the mouse hover moves the selection.
+/// The popup menu of a tab (right click on its title).
+fn tabMenuBox(app: *App, win: Window) !void {
+    var lw: u16 = 0;
+    for (app_mod.tab_menu_rows) |row| lw = @max(lw, win.gwidth(row.label));
+    const w: u16 = lw + 4;
+    const h: u16 = @intCast(app_mod.tab_menu_rows.len + 2);
+    const x = @min(app.tab_menu_x, win.width -| w);
+    const y = @min(app.tab_menu_y, win.height -| h);
+    solid(app, win, x, y, w, h);
+    const box = boxed(win, x, y, w, h, theme.blue);
+    fillWith(box, theme.panel);
+    for (app_mod.tab_menu_rows, 0..) |row, i| {
+        const r: u16 = @intCast(i);
+        const sel = app.tab_menu_sel == i;
+        const bg = if (sel) theme.selected else theme.panel;
+        const line = sub(box, 0, r, box.width, 1);
+        fillWith(line, bg);
+        _ = put(line, 1, 0, row.label, theme.on(if (sel) theme.bright else theme.text, bg));
+        try addHit(app, box, 0, r, box.width, 1, .{ .tabmenu_item = i });
+    }
+}
 
 // Zig tip: A `switch` on the optional command: `row.cmd orelse` is not needed because the labels
 // that change with the state have a command, and a separator is handled before this function is
