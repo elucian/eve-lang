@@ -1259,12 +1259,201 @@ fn menuDrop(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: A placeholder dialog (Q-054 b): the same `dialog` helper, two lines of text and one button.
+// Zig tip: A color from hue, saturation and value (each 0 to 1), for the palette of the Colors tab.
+// `@floor` and `@mod` split the hue circle in six parts; `@intFromFloat` makes the final byte. The
+// function is pure: the same numbers always give the same color.
+/// The color `0xRRGGBB` of a hue (0 to 1), a saturation and a value.
+fn hsvHex(h: f32, s: f32, v: f32) u24 {
+    const hh = h * 6.0;
+    const i: u32 = @intFromFloat(@floor(hh));
+    const f = hh - @floor(hh);
+    const p = v * (1 - s);
+    const q = v * (1 - s * f);
+    const t = v * (1 - s * (1 - f));
+    const rgb: [3]f32 = switch (i % 6) {
+        0 => .{ v, t, p },
+        1 => .{ q, v, p },
+        2 => .{ p, v, t },
+        3 => .{ p, q, v },
+        4 => .{ t, p, v },
+        else => .{ v, p, q },
+    };
+    const r: u24 = @intFromFloat(rgb[0] * 255);
+    const g: u24 = @intFromFloat(rgb[1] * 255);
+    const b: u24 = @intFromFloat(rgb[2] * 255);
+    return (r << 16) | (g << 8) | b;
+}
+
+// Zig tip: The dialog has three tabs drawn by three functions; the tab number lives in the app
+// (`opt_tab`), so a click and the Tab key change the same thing. The tabs of the dialog are drawn
+// like the tabs of the editor: the open one in inverted colors.
+/// The Options dialog: Theme, Colors, Timers. The options belong to the user and to the tool; the
+/// settings of Eve are in the configuration files of the project.
 fn settings(app: *App, win: Window) !void {
-    const box = dialog(app, win, 56, 10, "Options");
-    _ = put(box, 2, 2, "Not yet: colors, tab size, keys and the machines list", theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 3, "come with the Options dialog (Q-054 b).", theme.on(theme.text, theme.panel));
-    try buttonRow(app, box, box.height -| 2, &.{.{ .label = "Close", .action = .close_overlay, .primary = true }});
+    const box = dialog(app, win, 82, 27, "Options");
+    const names = [_][]const u8{ "Theme", "Colors", "Timers" };
+    var x: u16 = 2;
+    for (names, 0..) |n, i| {
+        const label = app.fmt(" {s} ", .{n});
+        const w = box.gwidth(label);
+        const open = app.opt_tab == i;
+        _ = put(box, x, 2, label, if (open) theme.onBold(theme.deep, theme.blue) else theme.on(theme.text, theme.bar));
+        try addHit(app, box, x, 2, w, 1, .{ .opt = .{ .tab = @intCast(i) } });
+        x += w + 1;
+    }
+    _ = put(box, 0, 3, "─" ** 200, theme.on(theme.line, theme.panel));
+    const body = sub(box, 1, 4, box.width -| 2, box.height -| 8);
+    switch (app.opt_tab) {
+        0 => try themeTab(app, body),
+        1 => try colorsTab(app, body),
+        else => try timersTab(app, body),
+    }
+    _ = put(box, 2, box.height -| 4, "Tab: next tab · arrows change the value · Enter saves · Esc cancels", theme.on(theme.dim, theme.panel));
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "Save", .action = .{ .opt = .ok }, .primary = true },
+        .{ .label = "Defaults", .action = .{ .opt = .defaults } },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
+}
+
+/// The list of themes and a sample of the one in use.
+fn themeTab(app: *App, body: Window) !void {
+    const dim = theme.on(theme.dim, theme.panel);
+    var i: u8 = 0;
+    while (i <= theme.custom_id) : (i += 1) {
+        const sel = app.options.theme_id == i;
+        const bg = if (sel) theme.selected else theme.panel;
+        const row = sub(body, 0, i, 26, 1);
+        fillWith(row, bg);
+        const name = if (i < theme.themes.len) theme.themes[i].name else "Custom";
+        _ = put(row, 1, 0, if (sel) "●" else "○", theme.on(theme.blue, bg));
+        _ = put(row, 3, 0, name, theme.on(if (sel) theme.bright else theme.text, bg));
+        try addHit(app, body, 0, i, 26, 1, .{ .opt = .{ .theme = i } });
+    }
+    // a sample, drawn with the colors in use
+    const sx: u16 = 30;
+    const sw: u16 = body.width -| (sx + 1);
+    const sample = sub(body, sx, 0, sw, 8);
+    fillWith(sample, theme.deep);
+    const d = theme.deep;
+    _ = put(sample, 1, 0, "1  # a comment", theme.on(theme.comment, d));
+    var c = put(sample, 1, 1, "2  ", theme.on(theme.dim, d));
+    c = put(sample, c, 1, "process", theme.on(theme.keyword, d));
+    c = put(sample, c, 1, " main ", theme.on(theme.text, d));
+    _ = put(sample, c, 1, "is", theme.on(theme.keyword, d));
+    c = put(sample, 1, 2, "3    print(", theme.on(theme.text, d));
+    c = put(sample, c, 2, "\"hello\"", theme.on(theme.string, d));
+    c = put(sample, c, 2, ", ", theme.on(theme.text, d));
+    c = put(sample, c, 2, "42", theme.on(theme.number, d));
+    _ = put(sample, c, 2, ");", theme.on(theme.text, d));
+    _ = put(sample, 1, 3, " selected text ", theme.on(theme.bright, theme.sel_bg));
+    c = put(sample, 1, 5, " Tab ", theme.onBold(theme.deep, theme.blue));
+    c = put(sample, c + 1, 5, " other tab ", theme.on(theme.text, theme.bar2));
+    c = put(sample, c + 1, 5, " Run ", theme.onBold(theme.bright, theme.green_bg));
+    _ = put(sample, c + 1, 5, " error ", theme.on(theme.red, d));
+    _ = put(sample, 1, 6, "warning", theme.on(theme.amber, d));
+    _ = put(sample, 10, 6, "ok", theme.on(theme.green, d));
+    _ = put(sample, 14, 6, "info", theme.on(theme.blue, d));
+    _ = put(body, sx, 9, "Editing a color on the Colors tab", dim);
+    _ = put(body, sx, 10, "copies this theme to Custom.", dim);
+    _ = put(body, 1, 12, "Font: the font belongs to the terminal. A program that runs in a", dim);
+    _ = put(body, 1, 13, "terminal cannot change it: use the font setting of the terminal.", dim);
+}
+
+/// The colors one by one, with a selector for the one that is selected.
+fn colorsTab(app: *App, body: Window) !void {
+    const dim = theme.on(theme.dim, theme.panel);
+    const visible: usize = body.height;
+    const first: usize = if (app.opt_slot + 1 > visible) app.opt_slot + 1 - visible else 0;
+    var r: u16 = 0;
+    while (r < visible and first + r < theme.slot_count) : (r += 1) {
+        const i = first + r;
+        const sel = app.opt_slot == i;
+        const bg = if (sel) theme.selected else theme.panel;
+        const row = sub(body, 0, r, 30, 1);
+        fillWith(row, bg);
+        _ = put(row, 1, 0, "██", theme.on(theme.colorOf(i), bg));
+        _ = put(row, 4, 0, theme.slot_labels[i], theme.on(if (sel) theme.bright else theme.text, bg));
+        try addHit(app, body, 0, r, 30, 1, .{ .opt = .{ .slot = @intCast(i) } });
+    }
+    const slot: usize = app.opt_slot;
+    const hex: u24 = app.options.palette()[slot];
+    const x0: u16 = 34;
+    _ = put(body, x0, 0, theme.slot_labels[slot], theme.onBold(theme.bright, theme.panel));
+    const swatch = sub(body, x0, 1, 14, 2);
+    fillWith(swatch, theme.colorOf(slot));
+    _ = put(body, x0 + 16, 1, app.fmt("#{x:0>6}", .{hex}), theme.onBold(theme.text, theme.panel));
+    _ = put(body, x0 + 16, 2, if (app.options.theme_id == theme.custom_id) "Custom theme" else theme.themes[app.options.theme_id].name, dim);
+    // the three sliders: a click on a cell sets the value that the cell stands for
+    const chan_names = [_][]const u8{ "R", "G", "B" };
+    const chan_colors = [_]u24{ 0xd9534f, 0x58c08a, 0x5aa9e6 };
+    var ch: u8 = 0;
+    while (ch < 3) : (ch += 1) {
+        const y: u16 = 4 + ch;
+        const shift: u5 = @intCast(8 * (2 - @as(u5, @intCast(ch))));
+        const value: u24 = (hex >> shift) & 0xff;
+        const picked = app.opt_channel == ch;
+        _ = put(body, x0, y, chan_names[ch], theme.onBold(if (picked) theme.amber else theme.dim, theme.panel));
+        try addHit(app, body, x0, y, 2, 1, .{ .opt = .{ .channel = ch } });
+        var k: u16 = 0;
+        while (k < 32) : (k += 1) {
+            const v: u8 = @intCast(@as(u32, k) * 255 / 31);
+            const filled = v <= value;
+            _ = put(body, x0 + 3 + k, y, if (filled) "█" else "░", theme.on(if (filled) theme.fromHex(chan_colors[ch]) else theme.faint, theme.panel));
+            try addHit(app, body, x0 + 3 + k, y, 1, 1, .{ .opt = .{ .slider = .{ .ch = ch, .v = v } } });
+        }
+        _ = put(body, x0 + 36, y, app.fmt("{d:>3}", .{value}), theme.on(theme.text, theme.panel));
+    }
+    _ = put(body, x0, 8, "r, g, b choose a channel · Left, Right ±8 (Shift ±1)", dim);
+    // the palette: 16 hues in three brightnesses, then 16 grays; a click sets the color
+    _ = put(body, x0, 10, "Palette", dim);
+    const levels = [_]f32{ 1.0, 0.78, 0.5 };
+    var row: u16 = 0;
+    while (row < 4) : (row += 1) {
+        var col: u16 = 0;
+        while (col < 16) : (col += 1) {
+            const cell: u24 = if (row < 3)
+                hsvHex(@as(f32, @floatFromInt(col)) / 16.0, 0.6, levels[row])
+            else blk: {
+                const g: u24 = @as(u24, col) * 255 / 15;
+                break :blk (g << 16) | (g << 8) | g;
+            };
+            _ = put(body, x0 + col * 2, 11 + row, "██", theme.on(theme.fromHex(cell), theme.panel));
+            try addHit(app, body, x0 + col * 2, 11 + row, 2, 1, .{ .opt = .{ .swatch = cell } });
+        }
+    }
+}
+
+/// Auto Save and Run Delay.
+fn timersTab(app: *App, body: Window) !void {
+    const dim = theme.on(theme.dim, theme.panel);
+    const labels = [_][]const u8{ "Auto save", "Run delay" };
+    var row: u8 = 0;
+    while (row < 2) : (row += 1) {
+        const y: u16 = 1 + @as(u16, row) * 4;
+        const sel = app.opt_row == row;
+        _ = put(body, 2, y, labels[row], theme.onBold(if (sel) theme.bright else theme.text, theme.panel));
+        const value: []const u8 = if (row == 0)
+            (if (app.options.autosave_s == 0) "off" else app.fmt("every {d} s", .{app.options.autosave_s}))
+        else if (app.options.run_delay_s == 0) "at once" else app.fmt("{d} s", .{app.options.run_delay_s});
+        _ = put(body, 16, y, value, theme.onBold(theme.amber, theme.panel));
+        const btn = theme.on(theme.text, theme.bar);
+        var x: u16 = 34;
+        if (row == 0) {
+            x = try button(app, body, x, y, "-10", btn, .{ .opt = .{ .auto = -10 } }) + 1;
+            x = try button(app, body, x, y, "-1", btn, .{ .opt = .{ .auto = -1 } }) + 1;
+            x = try button(app, body, x, y, "+1", btn, .{ .opt = .{ .auto = 1 } }) + 1;
+            _ = try button(app, body, x, y, "+10", btn, .{ .opt = .{ .auto = 10 } });
+            _ = put(body, 2, y + 1, "Save the files that have changes every so many seconds (off = never).", dim);
+        } else {
+            x = try button(app, body, x, y, "-1", btn, .{ .opt = .{ .delay = -1 } }) + 1;
+            _ = try button(app, body, x, y, "+1", btn, .{ .opt = .{ .delay = 1 } });
+            _ = put(body, 2, y + 1, "Seconds between typing a Run command in the Console and running it.", dim);
+        }
+    }
+    _ = put(body, 2, 10, "Up, Down choose the line · Left, Right change it (Auto save: 10 s steps).", dim);
+    _ = put(body, 2, 12, "These options are for the tool and for you, not for a project. They are saved in", dim);
+    _ = put(body, 2, 13, "your user cache. The settings of Eve are in the configuration files.", dim);
 }
 
 // Zig tip: `@embedFile("eve_zon")` is the text of the root `build.zig.zon` of the repository, copied

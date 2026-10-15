@@ -10,6 +10,8 @@ const Key = vaxis.Key;
 const project = @import("project.zig");
 const text = @import("text.zig");
 const cache_mod = @import("cache.zig");
+const options_mod = @import("options.zig");
+const theme = @import("theme.zig");
 
 // ------------------------------------------------------------------ small types
 
@@ -63,6 +65,7 @@ pub const Action = union(enum) {
     panel_hide: Panel,
     panel_max: Panel,
     split_handle,
+    opt: OptAction,
     tabmenu_item: usize,
     scroll: ScrollBtn,
     tree_scroll: ScrollBtn,
@@ -171,6 +174,23 @@ pub const Breakpoint = struct { path: []u8, line: usize };
 // Zig tip: An enum with many values can be written over several lines. Each value is a command
 // that the menu, a key or a click can ask for. A command that needs a number (which window, which
 // machine) gets it in the `arg` of its row.
+// Zig tip: A union of the things a click in the Options dialog can do. `slider` holds a small
+// struct written in place (`struct { ch: u8, v: u8 }`): the channel (0 red, 1 green, 2 blue) and
+// the value 0 to 255 that the clicked cell stands for. `i16` is signed so a button can add or take.
+/// What a click in the Options dialog does.
+pub const OptAction = union(enum) {
+    tab: u8,
+    theme: u8,
+    slot: u8,
+    channel: u8,
+    slider: struct { ch: u8, v: u8 },
+    swatch: u24,
+    auto: i16,
+    delay: i16,
+    ok,
+    defaults,
+};
+
 /// The commands of the popup menu of a tab (a right click on its title).
 pub const TabCmd = enum { save, save_as, close_this, close_right, close_left, close_clean };
 
@@ -391,6 +411,16 @@ pub const App = struct {
     /// The layout was put in modify mode with the mouse: it freezes by itself three seconds after the
     /// mouse button is released (`freeze_at`, a time of the `awake` clock in milliseconds).
     mouse_modify: bool = false,
+    /// The options of the tool (theme, timers), saved for the user; `opt_backup` is what they were when
+    /// the Options dialog opened, to put back on Cancel. The rest is the state of that dialog.
+    options: options_mod.Options = .{},
+    opt_backup: options_mod.Options = .{},
+    opt_tab: u8 = 0,
+    opt_slot: u8 = 0,
+    opt_channel: u8 = 0,
+    opt_row: u8 = 0,
+    /// When the changed files are saved by themselves (a time of the `awake` clock in milliseconds).
+    autosave_at: ?i64 = null,
     /// The popup menu of a tab: where it is, which tab it is for, and the selected row.
     tab_menu_x: u16 = 0,
     tab_menu_y: u16 = 0,
@@ -514,6 +544,11 @@ pub const App = struct {
             .cache = cache,
             .frame = .init(gpa),
         };
+        if (self.cache.readFile("evetx-options.txt")) |bytes| {
+            defer gpa.free(bytes);
+            self.options = options_mod.Options.parse(bytes);
+        }
+        self.applyOptions();
         if (chosen.len > 0) {
             try self.tree.scan(io, chosen, name);
             self.restoreSession();
@@ -869,14 +904,12 @@ pub const App = struct {
     // Zig tip: `Io.Timestamp.now(io, .awake).toMilliseconds()` reads a clock that only goes forward
     // (it does not jump when the user changes the time of the computer), the right one to measure a
     // delay. The delay is a constant at file level so that it is written once.
-    const command_delay_ms: i64 = 3000;
-
     fn nowMs(self: *const App) i64 {
         return Io.Timestamp.now(self.io, .awake).toMilliseconds();
     }
 
     /// A run command (Run, Check) does not start at once: it is typed in the prompt of the console, where
-    /// the user can read it, and it starts after three seconds. Enter starts it now, Esc cancels it, and
+    /// the user can read it, and it starts after the run delay of the options (three seconds at first). Enter starts it now, Esc cancels it, and
     /// typing in the prompt keeps the text but cancels the countdown. The line goes into the history of
     /// the console at once, so Ctrl+Up finds it again even if it was cancelled.
     pub fn issueCommand(self: *App, line: []const u8) !void {
@@ -890,7 +923,7 @@ pub const App = struct {
         try self.remember(line);
         if (self.pending_text) |old| self.gpa.free(old);
         self.pending_text = try self.gpa.dupe(u8, line);
-        self.pending_at = self.nowMs() + command_delay_ms;
+        self.pending_at = self.nowMs() + @as(i64, self.options.run_delay_s) * 1000;
     }
 
     // ------------------------------------------------------------ the session
@@ -1050,6 +1083,7 @@ pub const App = struct {
 
     /// Called by the main loop all the time while a command waits: starts it when its time is over.
     pub fn tick(self: *App) !void {
+        self.autoSaveTick();
         if (self.freeze_at) |at| {
             if (self.nowMs() >= at) self.freezeLayout();
         }
@@ -1363,7 +1397,7 @@ pub const App = struct {
             .manual => try self.openVirtual("Manual", help_manual),
             .tutorial => try self.openVirtual("Tutorial", help_tutorial),
             .about => self.openOverlay(.about),
-            .options => self.openOverlay(.settings),
+            .options => self.openOptions(),
         }
     }
 
@@ -1762,7 +1796,7 @@ pub const App = struct {
 
     /// Does the main loop have to wake up by itself? (A command waits, or the layout is about to freeze.)
     pub fn needsTick(self: *const App) bool {
-        return self.pending_at != null or self.freeze_at != null;
+        return self.pending_at != null or self.freeze_at != null or (self.options.autosave_s > 0 and self.anyDirtyFile());
     }
 
     // Zig tip: The function returns `!bool`: an error union around a plain `bool`. The caller writes
@@ -1784,6 +1818,177 @@ pub const App = struct {
             self.tools_h = self.toolsHeight() -| 1;
         } else return false;
         return true;
+    }
+
+    // ------------------------------------------------------------ options
+
+    /// Put the colors of the options in use (the drawing reads them in the next frame).
+    pub fn applyOptions(self: *App) void {
+        theme.apply(self.options.palette());
+    }
+
+    /// Write the options to the user cache.
+    pub fn saveOptions(self: *App) void {
+        const text_out = self.options.format(self.gpa) catch return;
+        defer self.gpa.free(text_out);
+        self.cache.writeFile("evetx-options.txt", text_out) catch |err| self.setMessage("options not saved: {s}", .{@errorName(err)});
+    }
+
+    /// File: Options (Ctrl+,): the dialog opens on the Theme tab.
+    pub fn openOptions(self: *App) void {
+        self.opt_backup = self.options;
+        self.opt_tab = 0;
+        self.openOverlay(.settings);
+    }
+
+    /// The OK button of the Options dialog: keep the changes and write them.
+    fn optOk(self: *App) void {
+        self.saveOptions();
+        self.overlay = .none;
+        self.setMessage("options saved", .{});
+    }
+
+    // Zig tip: A color is edited by changing one of its three bytes. `hex >> shift & 0xff` reads the
+    // byte, and `(hex & ~mask) | (v << shift)` writes it: `~` flips all the bits, so the mask keeps the
+    // other two bytes. The first change of a ready-made theme copies it to the Custom theme and
+    // switches to it, so the ready-made themes are never changed.
+    /// Set a color of the Custom theme (the theme in use becomes Custom).
+    fn setSlotColor(self: *App, slot: usize, hex: u24) void {
+        if (self.options.theme_id != theme.custom_id) {
+            self.options.custom = self.options.palette();
+            self.options.theme_id = theme.custom_id;
+        }
+        self.options.custom[slot] = hex;
+        self.applyOptions();
+    }
+
+    fn setChannel(self: *App, ch: u8, v: u8) void {
+        const slot: usize = self.opt_slot;
+        const hex: u24 = self.options.palette()[slot];
+        const shift: u5 = @intCast(8 * (2 - @as(u5, @intCast(ch))));
+        const cleared: u24 = hex & ~(@as(u24, 0xff) << shift);
+        self.setSlotColor(slot, cleared | (@as(u24, v) << shift));
+    }
+
+    /// Add `delta` to the channel that is selected in the Colors tab.
+    fn adjustChannel(self: *App, delta: i32) void {
+        const hex: u24 = self.options.palette()[self.opt_slot];
+        const shift: u5 = @intCast(8 * (2 - @as(u5, @intCast(self.opt_channel))));
+        const now: i32 = @intCast((hex >> shift) & 0xff);
+        self.setChannel(self.opt_channel, @intCast(std.math.clamp(now + delta, 0, 255)));
+    }
+
+    fn adjustTimer(self: *App, row: u8, delta: i32) void {
+        if (row == 0) {
+            self.options.autosave_s = @intCast(std.math.clamp(@as(i32, self.options.autosave_s) + delta, 0, 3600));
+        } else {
+            self.options.run_delay_s = @intCast(std.math.clamp(@as(i32, self.options.run_delay_s) + delta, 0, 60));
+        }
+    }
+
+    fn themeStep(self: *App, delta: i32) void {
+        const id: i32 = @intCast(self.options.theme_id);
+        self.options.theme_id = @intCast(std.math.clamp(id + delta, 0, @as(i32, theme.custom_id)));
+        self.applyOptions();
+    }
+
+    // Zig tip: `var k = key; k.mods.shift = false;` copies the key without Shift so the same
+    // `matches` calls work with and without it; Shift then means "a small step". One `switch` on the
+    // tab number sends the arrows to the tab that is open.
+    /// The keys of the Options dialog: Tab changes the tab, the arrows change the values, Enter saves.
+    fn optionsKey(self: *App, key: Key) !void {
+        if (key.matches(Key.tab, .{})) {
+            self.opt_tab = (self.opt_tab + 1) % 3;
+            return;
+        }
+        if (key.matches(Key.tab, .{ .shift = true })) {
+            self.opt_tab = (self.opt_tab + 2) % 3;
+            return;
+        }
+        if (key.matches(Key.enter, .{})) return self.optOk();
+        var k = key;
+        k.mods.shift = false;
+        const small = key.mods.shift;
+        const up = k.matches(Key.up, .{});
+        const down = k.matches(Key.down, .{});
+        const left = k.matches(Key.left, .{});
+        const right = k.matches(Key.right, .{});
+        switch (self.opt_tab) {
+            0 => {
+                if (up) self.themeStep(-1) else if (down) self.themeStep(1);
+            },
+            1 => {
+                if (up) self.opt_slot = self.opt_slot -| 1 else if (down) self.opt_slot = @intCast(@min(self.opt_slot + 1, theme.slot_count - 1)) else if (left) self.adjustChannel(if (small) -1 else -8) else if (right) self.adjustChannel(if (small) 1 else 8) else if (k.matches('r', .{})) self.opt_channel = 0 else if (k.matches('g', .{})) self.opt_channel = 1 else if (k.matches('b', .{})) self.opt_channel = 2;
+            },
+            else => {
+                if (up or down) self.opt_row = 1 - self.opt_row else if (left) self.adjustTimer(self.opt_row, if (small or self.opt_row == 1) -1 else -10) else if (right) self.adjustTimer(self.opt_row, if (small or self.opt_row == 1) 1 else 10);
+            },
+        }
+    }
+
+    /// A click in the Options dialog.
+    fn optAction(self: *App, o: OptAction) void {
+        switch (o) {
+            .tab => |t| self.opt_tab = t,
+            .theme => |t| {
+                self.options.theme_id = t;
+                self.applyOptions();
+            },
+            .slot => |i| self.opt_slot = i,
+            .channel => |c| self.opt_channel = c,
+            .slider => |s| {
+                self.opt_channel = s.ch;
+                self.setChannel(s.ch, s.v);
+            },
+            .swatch => |hex| self.setSlotColor(self.opt_slot, hex),
+            .auto => |d| {
+                self.opt_row = 0;
+                self.adjustTimer(0, d);
+            },
+            .delay => |d| {
+                self.opt_row = 1;
+                self.adjustTimer(1, d);
+            },
+            .ok => self.optOk(),
+            .defaults => {
+                self.options = .{};
+                self.applyOptions();
+            },
+        }
+    }
+
+    // ------------------------------------------------------------ auto save
+
+    fn anyDirtyFile(self: *const App) bool {
+        for (self.tabs.items) |t| {
+            if (!t.virtual and t.path.len > 0 and t.buf != null and t.buf.?.dirty) return true;
+        }
+        return false;
+    }
+
+    // Zig tip: The countdown starts when the first change is seen and runs even if the user goes on
+    // typing: the file is saved at most `autosave_s` seconds after the oldest unsaved change. Setting
+    // the time to null when nothing is changed makes the next change start a new countdown.
+    /// Called all the time by `tick`: saves the files that have changes when the auto save time is over.
+    fn autoSaveTick(self: *App) void {
+        if (self.options.autosave_s == 0 or !self.anyDirtyFile()) {
+            self.autosave_at = null;
+            return;
+        }
+        const now = self.nowMs();
+        const at = self.autosave_at orelse {
+            self.autosave_at = now + @as(i64, self.options.autosave_s) * 1000;
+            return;
+        };
+        if (now < at) return;
+        self.autosave_at = null;
+        var n: usize = 0;
+        for (self.tabs.items) |*t| {
+            if (t.virtual or t.path.len == 0 or t.buf == null or !t.buf.?.dirty) continue;
+            self.writeTab(t, t.path) catch continue;
+            n += 1;
+        }
+        if (n > 0) self.setMessage("auto saved {d} file(s)", .{n});
     }
 
     // ------------------------------------------------------------ undo and closing many windows
@@ -1864,6 +2069,11 @@ pub const App = struct {
     /// Close the dialog that is open. The Find File dialog puts the tree back as it was.
     pub fn closeOverlay(self: *App) void {
         if (self.overlay == .find_file) self.filesCancel();
+        if (self.overlay == .settings) {
+            // Cancel: the options go back to what they were when the dialog opened
+            self.options = self.opt_backup;
+            self.applyOptions();
+        }
         self.overlay = .none;
     }
 
@@ -2089,7 +2299,7 @@ pub const App = struct {
             return self.pickWindow(d);
         }
         if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.runMenu(.shortcuts, 0);
-        if (key.matches(',', .{ .ctrl = true })) return self.openOverlay(.settings);
+        if (key.matches(',', .{ .ctrl = true })) return self.openOptions();
         if (key.matches('u', .{ .ctrl = true })) return self.undoRedo(true);
         if (key.matches('y', .{ .ctrl = true })) return self.undoRedo(false);
         if (key.matches('o', .{ .ctrl = true, .shift = true })) return self.openFolderDialog();
@@ -2169,7 +2379,8 @@ pub const App = struct {
                     self.tab_menu_sel = (self.tab_menu_sel + 1) % n;
                 } else if (key.matches(Key.enter, .{})) try self.runTabMenu(self.tab_menu_sel);
             },
-            .settings, .about => {
+            .settings => try self.optionsKey(key),
+            .about => {
                 if (key.matches(Key.enter, .{})) self.overlay = .none;
             },
             .open_project => try self.projectKey(key),
@@ -2648,6 +2859,7 @@ pub const App = struct {
             },
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
+            .opt => |o| self.optAction(o),
             .split_handle => {
                 // the handle on the toolbar: drag it up or down to change the height of the Tools Panel
                 if (!self.modify) self.startModify(true);

@@ -1,6 +1,10 @@
 EVE-TX  Shortcuts
 =================
 
+Options
+  Ctrl+,              the Options dialog (HELP > Options): Theme, Colors, Timers.
+                      Tab: next tab; arrows change the value; Enter saves; Esc cancels
+
 Menu
   F10, Ctrl+Enter     open the menu bar
   Alt + letter        open a menu: F E S R M W H
