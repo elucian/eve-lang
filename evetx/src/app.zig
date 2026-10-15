@@ -36,7 +36,7 @@ pub const Panel = enum { tree, main, tools };
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, new_table, sq_structure, new_file, wizard, append_n, structure, confirm, tab_menu, machine_menu, register, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
+pub const Overlay = enum { none, rename, new_table, sq_structure, new_file, wizard, append_n, structure, confirm, tab_menu, machine_menu, register, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
@@ -282,7 +282,7 @@ pub const Tab = struct {
 // Zig tip: `path` is owned (`[]u8`): every breakpoint has its own copy, freed when the breakpoint
 // goes.
 /// What a Yes of the confirmation dialog does.
-pub const Confirm = enum { none, delete_breakpoint, clear_breakpoints, apply_structure, move_files, apply_sqlite, drop_table };
+pub const Confirm = enum { none, delete_breakpoint, clear_breakpoints, apply_structure, move_files, apply_sqlite, drop_table, delete_file };
 
 /// A breakpoint of the editor. A breakpoint that is not enabled stays in the list but the debugger does not stop at it.
 pub const Breakpoint = struct { path: []u8, line: usize, enabled: bool = true };
@@ -319,7 +319,7 @@ pub const OptAction = union(enum) {
 };
 
 /// The commands of the popup menu of a tab (a right click on its title).
-pub const TabCmd = enum { save, save_as, upload, close_this, close_right, close_left, close_clean };
+pub const TabCmd = enum { save, save_as, rename, upload, sep, close_this, close_right, close_left, close_clean };
 
 /// A row of the popup menu of a tab.
 pub const TabMenuRow = struct { label: []const u8, cmd: TabCmd };
@@ -327,7 +327,9 @@ pub const TabMenuRow = struct { label: []const u8, cmd: TabCmd };
 pub const tab_menu_rows = [_]TabMenuRow{
     .{ .label = "Save", .cmd = .save },
     .{ .label = "Save As…", .cmd = .save_as },
+    .{ .label = "Rename…", .cmd = .rename },
     .{ .label = "Upload…", .cmd = .upload },
+    .{ .label = "-", .cmd = .sep },
     .{ .label = "Close this", .cmd = .close_this },
     .{ .label = "Close right", .cmd = .close_right },
     .{ .label = "Close left", .cmd = .close_left },
@@ -336,7 +338,7 @@ pub const tab_menu_rows = [_]TabMenuRow{
 
 /// Every command of the main menu.
 pub const MenuCmd = enum {
-    open_project, open_folder, new_file, new_dbf, create_table, drop_table, preview, data_structure, data_append, data_append_n, data_delete, data_edit, save, save_as, close_tab, quit,
+    open_project, open_folder, new_file, new_dbf, rename_file, delete_file, create_table, drop_table, preview, data_structure, data_append, data_append_n, data_delete, data_edit, save, save_as, close_tab, quit,
     undo, redo, replace, toggle_wrap, toggle_hidden, close_all, close_clean,
     find_text, find_file, goto_line, query,
     run, check_file, clear_panel, dbg_next, dbg_step, dbg_exit, dbg_trace, stop, breakpoint,
@@ -389,9 +391,13 @@ pub const menus = [_]Menu{
         .{ .label = "Open project…", .key = "Ctrl+O", .cmd = .open_project },
         .{ .label = "Open Folder…", .key = "Ctrl+Shift+O", .cmd = .open_folder },
         .{ .label = "New…", .key = "Ctrl+N", .cmd = .new_file },
+        sep,
         .{ .label = "Save", .key = "Ctrl+S", .cmd = .save },
         .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
+        .{ .label = "Rename…", .cmd = .rename_file },
+        .{ .label = "Delete…", .cmd = .delete_file },
         .{ .label = "Upload…", .cmd = .upload },
+        sep,
         .{ .label = "Close window", .key = "Ctrl+W", .cmd = .close_tab },
         sep,
         .{ .label = "Quit", .key = "Ctrl+Q", .cmd = .quit },
@@ -402,8 +408,8 @@ pub const menus = [_]Menu{
         sep,
         .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
         sep,
-        .{ .label = "Wrap", .cmd = .toggle_wrap },
-        .{ .label = "Show hidden characters", .cmd = .toggle_hidden },
+        .{ .label = "Wrap text", .cmd = .toggle_wrap },
+        .{ .label = "Show hidden", .cmd = .toggle_hidden },
         sep,
         .{ .label = "Edit structure…", .cmd = .data_structure },
         .{ .label = "Create table…", .cmd = .create_table },
@@ -866,6 +872,8 @@ pub const App = struct {
     drop_a: ?[]u8 = null,
     drop_b: ?[]u8 = null,
     drop_is_dbf: bool = false,
+    /// The file that the Rename dialog is changing (a path in the project, owned).
+    rename_from: ?[]u8 = null,
     /// The Tab of the SQL panel: a cycle in progress, the letters typed when it began, the place in the matches, and how many
     /// letters of the word on the line it has put.
     sql_tab_active: bool = false,
@@ -1061,6 +1069,7 @@ pub const App = struct {
         if (self.wiz_path) |p| gpa.free(p);
         if (self.sq_db) |p| gpa.free(p);
         if (self.drop_a) |p| gpa.free(p);
+        if (self.rename_from) |p| gpa.free(p);
         if (self.drop_b) |p| gpa.free(p);
         if (self.sql_tab_prefix) |p| gpa.free(p);
         if (self.sq_table) |p| gpa.free(p);
@@ -2120,6 +2129,102 @@ pub const App = struct {
         self.setMessage("{s}", .{msg});
     }
 
+    // ------------------------------------------------------------ rename and delete a file
+
+    // Zig tip: the file that Rename and Delete act on is the one the person is pointing at: the selected row of the tree when
+    // the tree has the keyboard (not the project folder, not a table of a database), else the file of the tab (a file chosen in
+    // a folder list counts). The answer is a copy of the path in the project; the caller frees it.
+    /// The file (or folder) that File > Rename and File > Delete work on, or null.
+    fn fileTarget(self: *App) ?[]u8 {
+        if (self.focus == .tree and self.selected < self.tree.entries.items.len) {
+            const e = self.tree.entries.items[self.selected];
+            if (e.parent != null and e.kind == .normal) return self.gpa.dupe(u8, e.path) catch null;
+        }
+        if (self.folderSelectedFile()) |rel| return rel;
+        const t = self.activeTab() orelse return null;
+        if (t.virtual or t.folder != null or t.path.len == 0 or std.mem.indexOfScalar(u8, t.path, '#') != null) return null;
+        return self.gpa.dupe(u8, t.path) catch null;
+    }
+
+    /// File > Rename…: the name of the file in a field, to change; Enter renames.
+    pub fn openRename(self: *App) void {
+        const rel = self.fileTarget() orelse {
+            self.setMessage("Rename: select a file in the tree, or open one (a new file must be saved first)", .{});
+            return;
+        };
+        if (self.rename_from) |old| self.gpa.free(old);
+        self.rename_from = rel;
+        self.saveas_in.clearRetainingCapacity();
+        self.saveas_in.insertSliceAtCursor(rel) catch {};
+        self.openOverlay(.rename);
+    }
+
+    // Zig tip: the new name is a path in the project, so it can also move the file to another folder that exists. A name that
+    // exists is never overwritten. After the rename the open tabs and the breakpoints follow the file (`retarget`), the tree is
+    // scanned again, and the tree selection is not lost because the scan keeps the open folders.
+    /// Enter in the Rename dialog: rename the file on the disk.
+    fn doRename(self: *App) !void {
+        const gpa = self.gpa;
+        const old = self.rename_from orelse return;
+        const raw = try self.saveas_in.toOwnedContents(gpa);
+        defer gpa.free(raw);
+        const new = std.mem.trim(u8, raw, " /\\");
+        self.overlay = .none;
+        if (new.len == 0 or std.mem.eql(u8, new, old)) return;
+        const old_full = try self.fullPath(old);
+        defer gpa.free(old_full);
+        const new_full = try self.fullPath(new);
+        defer gpa.free(new_full);
+        if (Io.Dir.cwd().statFile(self.io, new_full, .{})) |_| {
+            self.setMessage("{s} exists already", .{new});
+            return;
+        } else |_| {}
+        Io.Dir.rename(Io.Dir.cwd(), old_full, Io.Dir.cwd(), new_full, self.io) catch |err| {
+            self.setMessage("cannot rename {s}: {s}", .{ old, @errorName(err) });
+            return;
+        };
+        self.retarget(old, new);
+        self.refreshTree();
+        self.saveSession() catch {};
+        self.setMessage("renamed {s} to {s}", .{ old, new });
+    }
+
+    /// File > Delete…: ask first; Yes deletes the file.
+    pub fn openDelete(self: *App) void {
+        const rel = self.fileTarget() orelse {
+            self.setMessage("Delete: select a file in the tree, or open one", .{});
+            return;
+        };
+        defer self.gpa.free(rel);
+        const full = self.fullPath(rel) catch return;
+        defer self.gpa.free(full);
+        const st = Io.Dir.cwd().statFile(self.io, full, .{}) catch {
+            self.setMessage("{s} is not on the disk", .{rel});
+            return;
+        };
+        if (st.kind == .directory) {
+            self.setMessage("Delete works on files: {s} is a folder", .{rel});
+            return;
+        }
+        if (self.drop_a) |old| self.gpa.free(old);
+        self.drop_a = self.gpa.dupe(u8, rel) catch return;
+        self.askConfirm(.delete_file, 0, "Delete the file {s}? It cannot be recovered.", .{rel});
+    }
+
+    /// The Yes of the delete dialog: delete the file, close its tab, scan the tree again.
+    fn performDeleteFile(self: *App) void {
+        const rel = self.drop_a orelse return;
+        const full = self.fullPath(rel) catch return;
+        defer self.gpa.free(full);
+        Io.Dir.cwd().deleteFile(self.io, full) catch |err| {
+            self.setMessage("cannot delete {s}: {s}", .{ rel, @errorName(err) });
+            return;
+        };
+        self.closeTabByPath(rel);
+        self.refreshTree();
+        self.setMessage("deleted {s}", .{rel});
+    }
+
     // ------------------------------------------------------------ create table and drop table
 
     // Zig tip: the tree is the place to read "what is selected": a database (or one of its tables) means SQLite, a folder (or a
@@ -2900,6 +3005,7 @@ pub const App = struct {
             .move_files => self.performMove(),
             .apply_sqlite => self.sqApplyNow() catch {},
             .drop_table => self.performDrop(),
+            .delete_file => self.performDeleteFile(),
             .clear_breakpoints => {
                 while (self.breakpoints.items.len > 0) self.deleteBreakpoint(self.breakpoints.items.len - 1);
             },
@@ -4052,6 +4158,8 @@ pub const App = struct {
             .new_dbf, .new_file => self.openNewDialog(),
             .preview => self.toggleView(),
             .create_table => self.openCreateTable(),
+            .rename_file => self.openRename(),
+            .delete_file => self.openDelete(),
             .drop_table => try self.dropTable(""),
             .data_structure => try self.dataStructure(),
             .data_append => try self.dataAppend(1),
@@ -4828,6 +4936,11 @@ pub const App = struct {
                 self.active = tab;
                 self.openOverlay(.save_as);
             },
+            .rename => {
+                self.active = tab;
+                self.openRename();
+            },
+            .sep => {},
             .upload => self.notYet("Remote machines", "T5"),
             .close_this => self.closeTab(tab),
             .close_right => self.closeClean(tab + 1, self.tabs.items.len),
@@ -5282,15 +5395,18 @@ pub const App = struct {
     // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) return self.closeOverlay();
-        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .machine_menu and self.overlay != .register and self.overlay != .confirm and self.overlay != .structure and self.overlay != .sq_structure and self.overlay != .new_table and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
+        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .machine_menu and self.overlay != .register and self.overlay != .confirm and self.overlay != .structure and self.overlay != .sq_structure and self.overlay != .rename and self.overlay != .new_table and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
         switch (self.overlay) {
             .menu => try self.menuKey(key),
             .tab_menu => {
                 const n = tab_menu_rows.len;
+                // the rule is not a row to stop on: the arrows step over it
                 if (key.matches(Key.up, .{})) {
                     self.tab_menu_sel = (self.tab_menu_sel + n - 1) % n;
+                    if (tab_menu_rows[self.tab_menu_sel].cmd == .sep) self.tab_menu_sel = (self.tab_menu_sel + n - 1) % n;
                 } else if (key.matches(Key.down, .{})) {
                     self.tab_menu_sel = (self.tab_menu_sel + 1) % n;
+                    if (tab_menu_rows[self.tab_menu_sel].cmd == .sep) self.tab_menu_sel = (self.tab_menu_sel + 1) % n;
                 } else if (key.matches(Key.enter, .{})) try self.runTabMenu(self.tab_menu_sel);
             },
             .machine_menu => {
@@ -5314,6 +5430,9 @@ pub const App = struct {
             },
             .structure => try self.structureKey(key),
             .sq_structure => try self.sqKey(key),
+            .rename => {
+                if (key.matches(Key.enter, .{})) try self.doRename() else try self.saveas_in.update(.{ .key_press = key });
+            },
             .new_table => {
                 if (key.matches(Key.enter, .{})) {
                     const raw = try self.saveas_in.toOwnedContents(self.gpa);
@@ -5527,7 +5646,7 @@ pub const App = struct {
             const ti: ?*TextInput = switch (self.overlay) {
                 .none => if (self.focus == .sql) &self.sql_in else &self.console_in,
                 .goto => &self.goto_in,
-                .save_as, .new_file, .new_table => &self.saveas_in,
+                .save_as, .new_file, .new_table, .rename => &self.saveas_in,
                 .wizard => &self.wiz_name,
                 .append_n => &self.goto_in,
                 .find_text => &self.find_in,
@@ -6068,6 +6187,8 @@ pub const App = struct {
             const np = self.movedPath(t.path, old, new) orelse continue;
             self.gpa.free(t.path);
             t.path = np;
+            t.eve = std.ascii.eqlIgnoreCase(extensionOf(np), "eve");
+            t.sql = std.ascii.eqlIgnoreCase(extensionOf(np), "sql");
         }
         for (self.breakpoints.items) |*b| {
             const np = self.movedPath(b.path, old, new) orelse continue;
