@@ -252,9 +252,69 @@ fn iconOf(e: @import("project.zig").Entry) []const u8 {
     return "📄";
 }
 
-// Zig tip: `try app.tree.visibleRows(...)` fills a list kept in the app, so no list is made in
-// every frame. The ancestors of a row are collected in a small array on the stack, from the parent
-// up to the root; `chain[k - 1]` then walks them from the outside in, as the lines are drawn.
+// Zig tip: A part of a row of the tree is drawn character by character at a virtual column `vc` that
+// does not depend on the scrolling; the cells left of `left` (the horizontal scroll) are skipped, and
+// so are the cells that would pass the width. `std.unicode.Utf8View` walks the text one character at
+// a time, and `gwidth` tells if a character takes one cell or two (the pictures take two).
+/// Draw `s` in one style at virtual column `vc` of a tree row, scrolled by `left`; `vc` moves to the end of `s`.
+fn putScrolled(row: Window, vc: *usize, left: usize, width: usize, s: []const u8, style: Style) void {
+    var it = (std.unicode.Utf8View.init(s) catch return).iterator();
+    while (it.nextCodepointSlice()) |ch| {
+        const w: usize = row.gwidth(ch);
+        if (vc.* >= left and vc.* - left + w <= width) _ = put(row, @intCast(vc.* - left), 0, ch, style);
+        vc.* += w;
+    }
+}
+
+// Zig tip: A bar is drawn from numbers only: how much there is (`total`), where the view starts
+// (`top`) and how much it shows (`visible`). The vertical one has ▲ and ▼ with a free row above, and
+// returns the rectangle of its track for the mouse; with fewer than six rows it is only a track.
+/// A vertical bar in column `x` of `win`, `h` rows tall.
+fn vBar(app: *App, win: Window, x: u16, h: u16, total: usize, top: usize, visible: usize, up: Action, down: Action) Rect {
+    const track = theme.on(theme.faint, theme.deep);
+    const btn = theme.onBold(theme.text, theme.bar2);
+    const buttons = h >= 6;
+    const y0: u16 = if (buttons) 2 else 0;
+    const span: u16 = if (buttons) h - 3 else h;
+    if (buttons) {
+        _ = put(win, x, 1, glyph_up, btn);
+        addHit(app, win, x, 1, 1, 1, up) catch {};
+        _ = put(win, x, h - 1, glyph_down, btn);
+        addHit(app, win, x, h - 1, 1, 1, down) catch {};
+    }
+    var y: u16 = 0;
+    while (y < span) : (y += 1) _ = put(win, x, y0 + y, glyph_v_track, track);
+    const th: usize = if (total > visible) @max(1, @as(usize, span) * visible / total) else span;
+    const above = @min(top, total -| visible);
+    const ty: usize = if (total > visible) (span - th) * above / (total - visible) else 0;
+    var k: usize = 0;
+    while (k < th) : (k += 1) _ = put(win, x, y0 + @as(u16, @intCast(ty + k)), glyph_v_thumb, theme.on(theme.dim, theme.deep));
+    return absRect(win, x, y0, 1, span);
+}
+
+/// A horizontal bar in row `y` of `win`, `w` cells wide, with ◀ and ▶ at the ends.
+fn hBar(app: *App, win: Window, y: u16, w: u16, total: usize, left: usize, visible: usize, lft: Action, rgt: Action) Rect {
+    const track = theme.on(theme.faint, theme.deep);
+    const btn = theme.onBold(theme.text, theme.bar2);
+    if (w < 6) return .{};
+    _ = put(win, 0, y, glyph_left, btn);
+    addHit(app, win, 0, y, 1, 1, lft) catch {};
+    _ = put(win, w - 1, y, glyph_right, btn);
+    addHit(app, win, w - 1, y, 1, 1, rgt) catch {};
+    const hw = w - 2;
+    var x: u16 = 0;
+    while (x < hw) : (x += 1) _ = put(win, 1 + x, y, glyph_h_track, track);
+    const tw: usize = if (total > visible) @max(1, @as(usize, hw) * visible / total) else hw;
+    const tx: usize = if (total > visible) (hw - tw) * @min(left, total - visible) / (total - visible) else 0;
+    var k: usize = 0;
+    while (k < tw) : (k += 1) _ = put(win, 1 + @as(u16, @intCast(tx + k)), y, glyph_h_thumb, theme.on(theme.dim, theme.deep));
+    return absRect(win, 1, y, hw, 1);
+}
+
+// Zig tip: The tree is scrolled in both directions when it does not fit. The two bars depend on each
+// other (a bar takes a row or a column that the other one then lacks), so the need for the vertical
+// bar is decided twice. `tree_left` is the first column shown; the rows are drawn with `putScrolled`
+// so that the connection lines, the picture and the name all move together.
 fn sidebar(app: *App, win: Window, place: Rect) !void {
     if (place.w == 0) return;
     const focused = app.overlay == .none and app.focus == .tree;
@@ -266,31 +326,45 @@ fn sidebar(app: *App, win: Window, place: Rect) !void {
     _ = put(bar, 0, 0, clipText(title, box.width -| 5), theme.onBold(if (focused) theme.bright else theme.dim, theme.bar2));
     try titleButtons(app, box, .tree);
     const list = sub(box, 0, 1, box.width, box.height -| 1);
-    const rows_h = list.height;
-    app.tree_rect = absRect(list, 0, 0, list.width, list.height);
 
     try app.tree.visibleRows(app.gpa, &app.visible);
+    const total = app.visible.items.len;
+    var content: usize = 0;
+    for (app.visible.items) |vi| {
+        const e = app.tree.entries.items[vi];
+        content = @max(content, 1 + 3 * @as(usize, e.depth) + 3 + list.gwidth(e.name));
+    }
+    app.tree_content = content;
+    var need_v = total > list.height;
+    const need_h = content > list.width -| @intFromBool(need_v);
+    if (need_h and !need_v) need_v = total > list.height -| 1;
+    const rows_h: u16 = list.height -| @intFromBool(need_h);
+    const text_w: u16 = list.width -| @intFromBool(need_v);
+    app.tree_rect = absRect(list, 0, 0, text_w, rows_h);
+
     var sel_pos: usize = 0;
     for (app.visible.items, 0..) |v, i| {
         if (v == app.selected) sel_pos = i;
     }
     if (sel_pos < app.tree_top) app.tree_top = sel_pos;
     if (sel_pos >= app.tree_top + rows_h) app.tree_top = sel_pos + 1 - rows_h;
-    if (app.visible.items.len > rows_h) app.tree_top = @min(app.tree_top, app.visible.items.len - rows_h) else app.tree_top = 0;
+    if (total > rows_h) app.tree_top = @min(app.tree_top, total - rows_h) else app.tree_top = 0;
+    app.tree_left = if (content > text_w) @min(app.tree_left, content - text_w) else 0;
+    const left = app.tree_left;
 
     const q: []const u8 = if (app.overlay == .find_file) try app.files_in.toOwnedContents(app.frame.allocator()) else "";
     const lines = theme.on(theme.faint, theme.deep);
 
     var r: u16 = 0;
-    while (r < rows_h and app.tree_top + r < app.visible.items.len) : (r += 1) {
+    while (r < rows_h and app.tree_top + r < total) : (r += 1) {
         const idx = app.visible.items[app.tree_top + r];
         const e = app.tree.entries.items[idx];
         const is_sel = idx == app.selected;
         const bg = if (is_sel) (if (focused or app.overlay == .find_file) theme.selected else theme.bar) else theme.deep;
-        const row = sub(list, 0, r, list.width, 1);
+        const row = sub(list, 0, r, text_w, 1);
         fillWith(row, bg);
         const line_style = if (is_sel) theme.on(theme.dim, bg) else lines;
-        var x: u16 = 1;
+        var vc: usize = 1;
         if (e.parent) |parent| {
             var chain: [16]u32 = undefined;
             var n: usize = 0;
@@ -303,23 +377,28 @@ fn sidebar(app: *App, win: Window, place: Rect) !void {
             }
             var k = n;
             while (k > 1) : (k -= 1) {
-                x = put(row, x, 0, if (app.tree.isLast(chain[k - 2])) blank else vbar, line_style);
+                putScrolled(row, &vc, left, text_w, if (app.tree.isLast(chain[k - 2])) blank else vbar, line_style);
             }
-            x = put(row, x, 0, if (app.tree.isLast(idx)) corner else tee, line_style);
+            putScrolled(row, &vc, left, text_w, if (app.tree.isLast(idx)) corner else tee, line_style);
         }
         const folder_color = if (is_sel) theme.bright else theme.amber;
-        x = put(row, x, 0, iconOf(e), theme.on(folder_color, bg));
-        x += 1;
+        putScrolled(row, &vc, left, text_w, iconOf(e), theme.on(folder_color, bg));
+        vc += 1;
         const color = if (is_sel) theme.bright else if (std.mem.eql(u8, e.name, "eve.env")) theme.dim else if (e.is_dir) theme.bright else theme.text;
         if (q.len > 0 and e.parent != null and e.name.len >= q.len and std.ascii.eqlIgnoreCase(e.name[0..q.len], q)) {
-            const c = put(row, x, 0, e.name[0..q.len], theme.onBold(theme.amber, bg));
-            _ = put(row, c, 0, e.name[q.len..], theme.on(color, bg));
+            putScrolled(row, &vc, left, text_w, e.name[0..q.len], theme.onBold(theme.amber, bg));
+            putScrolled(row, &vc, left, text_w, e.name[q.len..], theme.on(color, bg));
         } else {
-            _ = put(row, x, 0, e.name, if (e.is_dir) theme.onBold(color, bg) else theme.on(color, bg));
+            putScrolled(row, &vc, left, text_w, e.name, if (e.is_dir) theme.onBold(color, bg) else theme.on(color, bg));
         }
-        if (e.is_dir and e.depth == 1 and isServerSide(e.name)) _ = put(row, list.width -| 3, 0, "●", theme.on(theme.blue, bg));
-        try addHit(app, list, 0, r, list.width, 1, .{ .tree_row = idx });
+        if (e.is_dir and e.depth == 1 and isServerSide(e.name)) _ = put(row, text_w -| 3, 0, "●", theme.on(theme.blue, bg));
+        try addHit(app, list, 0, r, text_w, 1, .{ .tree_row = idx });
     }
+
+    app.tvbar_rect = .{};
+    app.thbar_rect = .{};
+    if (need_v) app.tvbar_rect = vBar(app, list, list.width - 1, rows_h, total, app.tree_top, rows_h, .{ .tree_scroll = .up }, .{ .tree_scroll = .down });
+    if (need_h) app.thbar_rect = hBar(app, list, list.height - 1, text_w, content, left, text_w, .{ .tree_scroll = .left }, .{ .tree_scroll = .right });
 }
 
 // Zig tip: `for ([_][]const u8{ ... }) |s|` loops over an array written in place. The four names
@@ -427,6 +506,68 @@ fn editorArea(app: *App, ed: Window) !void {
     }
 }
 
+// Zig tip: A tab is one character in the text but several cells on the screen. For drawing, the line is
+// copied with every tab replaced by the spaces up to the next tab stop, so that the rest of the code
+// can count one cell for each character. The copy is made in the arena of the frame (no free), and
+// a line without tabs is returned as it is.
+/// The line with its tabs spread into spaces.
+fn expandTabs(app: *App, line: []const u8) []const u8 {
+    if (std.mem.indexOfScalar(u8, line, '\t') == null) return line;
+    const a = app.frame.allocator();
+    var out: std.ArrayList(u8) = .empty;
+    var col: usize = 0;
+    for (line) |c| {
+        if (c == '\t') {
+            const w = text.Buffer.tab_width - col % text.Buffer.tab_width;
+            out.appendNTimes(a, ' ', w) catch return line;
+            col += w;
+        } else {
+            out.append(a, c) catch return line;
+            if ((c & 0xC0) != 0x80) col += 1;
+        }
+    }
+    return out.items;
+}
+
+// Zig tip: The hidden characters are drawn over the line after the text: a middle dot for a space, a
+// thin arrow at the start of a tab, and the line end sign right after the last character. The walk
+// counts the cells like `displayWidth` does; only the cells inside the window (`left` to
+// `left + cols`) are drawn.
+/// Show the spaces, tabs and the line end of one line.
+fn drawHidden(cw: Window, line: []const u8, left: usize, cols: usize, eol: []const u8, style: Style) void {
+    var col: usize = 0;
+    var i: usize = 0;
+    while (i < line.len) {
+        const c = line[i];
+        const w: usize = if (c == '\t') text.Buffer.tab_width - col % text.Buffer.tab_width else 1;
+        if (col >= left and col < left + cols) {
+            if (c == ' ') _ = put(cw, @intCast(col - left), 0, "·", style);
+            if (c == '\t') _ = put(cw, @intCast(col - left), 0, "→", style);
+        }
+        i += std.unicode.utf8ByteSequenceLength(c) catch 1;
+        col += w;
+    }
+    if (col >= left and col < left + cols) _ = put(cw, @intCast(col - left), 0, eol, style);
+}
+
+// Zig tip: The last line the view can start from: the end of the text may go up the screen until only
+// three empty rows are left under the last line, never more. Without wrapping that is a sum; with
+// wrapping the rows of the lines are counted from the end of the text until they fill the window
+// less those three rows.
+/// The largest first line that the editor can show.
+fn maxTop(b: *const text.Buffer, rows: usize, cols: usize, wrap: bool) usize {
+    if (!wrap) return (b.lineCount() + 3) -| rows;
+    if (rows <= 3) return b.lineCount() - 1;
+    var used: usize = 0;
+    var ln = b.lineCount();
+    while (ln > 0) {
+        ln -= 1;
+        used += text.Buffer.segRows(b.lineAt(ln), cols);
+        if (used >= rows - 3) return ln;
+    }
+    return 0;
+}
+
 // Zig tip: With wrapping, the cursor is kept in view by counting rows, not lines: the rows of the
 // lines from the first one shown up to the cursor, plus the piece of the cursor line it is in. When
 // the cursor is far below, the first line jumps near it at once so the count stays short.
@@ -464,6 +605,7 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
         app.follow = false;
     }
     if (wrap) b.left = 0;
+    b.top = @min(b.top, maxTop(b, rows, cols, wrap));
     const code = sub(ed, gutter, 0, cols, rows);
     app.editor_rect = absRect(ed, gutter, 0, cols, rows);
     app.gutter_rect = absRect(ed, 0, 0, gutter, rows);
@@ -490,19 +632,24 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
                 const num = app.fmt("{d}", .{ln + 1});
                 _ = put(line_win, gutter - 2 - @as(u16, @intCast(num.len)), 0, num, theme.on(if (is_cur) theme.bright else theme.dim, row_bg));
             }
-            const start = text.Buffer.byteAtDisplay(line, left);
+            // `shown` is the line with its tabs spread into spaces: one cell for every character
+            const shown = expandTabs(app, line);
+            const start = text.Buffer.byteAtDisplay(shown, left);
             const cw = sub(code, 0, r, cols, 1);
-            drawCode(cw, line, start, tab.eve, row_bg);
-            if (b.selection()) |sel| drawSelection(cw, line, ln, sel, left);
+            drawCode(cw, shown, start, tab.eve, row_bg);
+            if (b.selection()) |sel| drawSelection(cw, line, shown, ln, sel, left);
             if (b.match) |m| {
                 if (m.row == ln) {
                     const mc = text.Buffer.displayWidth(line[0..m.col]);
                     if (mc >= left) {
-                        const end = @min(line.len, m.col + m.len);
-                        _ = put(cw, @intCast(mc - left), 0, line[m.col..end], theme.on(theme.deep, theme.amber));
+                        const ec = text.Buffer.displayWidth(line[0..@min(line.len, m.col + m.len)]);
+                        const sb = text.Buffer.byteAtDisplay(shown, mc);
+                        const eb = text.Buffer.byteAtDisplay(shown, ec);
+                        _ = put(cw, @intCast(mc - left), 0, shown[sb..eb], theme.on(theme.deep, theme.amber));
                     }
                 }
             }
+            if (app.show_hidden) drawHidden(cw, line, left, cols, if (b.crlf) "␍↵" else "↵", theme.on(theme.faint, row_bg));
             if (focused and is_cur) {
                 const dc = b.displayCol();
                 const here: usize = if (wrap) @min(dc / cols, pieces - 1) else 0;
@@ -552,7 +699,7 @@ fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, line
 
     // the vertical bar: a free row, ▲, the track, ▼
     const vx = ed.width - 1;
-    const total = b.lineCount();
+    const total = b.lineCount() + 3; // the text may scroll up until three empty rows are left
     const y0: u16 = 2;
     const span: u16 = rows - 3;
     _ = put(ed, vx, 1, glyph_up, btn);
@@ -576,7 +723,7 @@ fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, line
     const hy = ed.height - 1;
     var content: usize = b.left + cols;
     var r: usize = b.top;
-    while (r < total and r < b.top + rows) : (r += 1) content = @max(content, text.Buffer.displayWidth(b.lineAt(r)) + 1);
+    while (r < b.lineCount() and r < b.top + rows) : (r += 1) content = @max(content, text.Buffer.displayWidth(b.lineAt(r)) + 1);
     app.hbar_content = content;
     _ = put(ed, 0, hy, glyph_left, btn);
     addHit(app, ed, 0, hy, 1, 1, .{ .scroll = .left }) catch {};
@@ -592,19 +739,24 @@ fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, line
     while (k < tw) : (k += 1) _ = put(ed, 1 + @as(u16, @intCast(tx + k)), hy, glyph_h_thumb, thumb);
 }
 
-// Zig tip: The selected part of a line is drawn again over the code with the selection colors. Its
-// first byte is never before the first column shown (`byteAtDisplay(line, left)`), and a line whose
-// end is selected gets one more colored cell, so the user sees that the line break is selected.
+// Zig tip: The selected part of a line is drawn again over the code with the selection colors. The
+// selection is made of byte offsets in the real line; the columns they fall on (tabs count several
+// cells) are found with `displayWidth` of the text before them, and the text to draw is cut from the
+// copy with the tabs spread (`shown`), where a column is a character. A line whose end is selected
+// gets one more colored cell, so the user sees that the line break is selected.
 /// Paint the selected part of one line.
-fn drawSelection(cw: Window, line: []const u8, row: usize, sel: text.Range, left: usize) void {
+fn drawSelection(cw: Window, line: []const u8, shown: []const u8, row: usize, sel: text.Range, left: usize) void {
     if (row < sel.start.row or row > sel.end.row) return;
     const from = if (row == sel.start.row) sel.start.col else 0;
     const to = if (row == sel.end.row) sel.end.col else line.len;
     const style = theme.on(theme.bright, theme.sel_bg);
-    const shown = @max(from, text.Buffer.byteAtDisplay(line, left));
-    if (shown < to) {
-        const col = text.Buffer.displayWidth(line[0..shown]) - left;
-        _ = put(cw, @intCast(col), 0, line[shown..to], style);
+    const fc = text.Buffer.displayWidth(line[0..from]);
+    const tc = text.Buffer.displayWidth(line[0..to]);
+    const sc = @max(fc, left);
+    if (sc < tc) {
+        const sb = text.Buffer.byteAtDisplay(shown, sc);
+        const eb = text.Buffer.byteAtDisplay(shown, tc);
+        _ = put(cw, @intCast(sc - left), 0, shown[sb..eb], style);
     }
     if (row < sel.end.row) {
         const end_col = text.Buffer.displayWidth(line);
@@ -990,6 +1142,7 @@ fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
         .toggle_tree => app.fmt("[{s}] {s}", .{ if (app.show_tree) "x" else " ", row.label }),
         .toggle_main => app.fmt("[{s}] {s}", .{ if (app.show_main) "x" else " ", row.label }),
         .toggle_tools => app.fmt("[{s}] {s}", .{ if (app.show_tools) "x" else " ", row.label }),
+        .toggle_hidden => app.fmt("[{s}] {s}", .{ if (app.show_hidden) "x" else " ", row.label }),
         .toggle_wrap => app.fmt("[{s}] {s}", .{ if (app.wrap) "x" else " ", row.label }),
         .window_pick => app.fmt("{s} {s}", .{ if (row.arg == app.active) "●" else " ", row.label }),
         .machine_pick => app.fmt("{s} {s}", .{ if (row.arg == app.machine) "●" else " ", row.label }),

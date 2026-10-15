@@ -68,12 +68,8 @@ pub const Buffer = struct {
             if (chunk.len > 0 and chunk[chunk.len - 1] == '\r') chunk = chunk[0 .. chunk.len - 1];
             var line: std.ArrayList(u8) = .empty;
             errdefer line.deinit(self.gpa);
-            for (chunk) |c| {
-                if (c == '\t') {
-                    self.tabs_replaced = true;
-                    try line.appendSlice(self.gpa, "    ");
-                } else try line.append(self.gpa, c);
-            }
+            // tabs stay tabs: they are drawn up to the next tab stop and written back as they are
+            try line.appendSlice(self.gpa, chunk);
             try self.lines.append(self.gpa, line);
             if (nl) |i| rest = rest[i + 1 ..] else break;
         }
@@ -137,13 +133,20 @@ pub const Buffer = struct {
         return displayWidth(self.lineAt(self.row)[0..self.col]);
     }
 
-    // Zig tip: `for (s) |c|` visits the bytes of a slice. `c & 0xC0` is a bitwise and: a byte of the
-    // form `10xxxxxx` continues a character, so every other byte starts one.
-    /// The number of characters of `s` (every character is drawn in one cell).
+    /// The width of a tab stop, in cells.
+    pub const tab_width: usize = 4;
+
+    // Zig tip: `tab_width - n % tab_width` is how far the next tab stop is from column `n`: `%` is the
+    // remainder, so a tab at column 5 moves 3 cells to column 8. Every other character is one cell,
+    // and the continuation bytes of a UTF-8 character (`10xxxxxx`) are not counted. The text must
+    // start at the beginning of a line, because the tab stops are counted from there.
+    /// The number of cells that the start of a line `s` takes (a tab goes to the next tab stop).
     pub fn displayWidth(s: []const u8) usize {
         var n: usize = 0;
         for (s) |c| {
-            if ((c & 0xC0) != 0x80) n += 1;
+            if (c == '\t') {
+                n += tab_width - n % tab_width;
+            } else if ((c & 0xC0) != 0x80) n += 1;
         }
         return n;
     }
@@ -151,14 +154,16 @@ pub const Buffer = struct {
     // Zig tip: A `while` loop with an early `return` is the plain way to search. `nextEnd` is called
     // as a function of the file, without a `self`, because it is declared inside the struct but takes
     // no instance.
-    /// The byte offset of display column `dc` in `line` (the end of the line when it is shorter).
+    /// The byte offset of display column `dc` in `line` (the end of the line when it is shorter). A
+    /// column inside a tab gives the place of the tab.
     pub fn byteAtDisplay(line: []const u8, dc: usize) usize {
         var n: usize = 0;
         var i: usize = 0;
         while (i < line.len) {
-            if (n == dc) return i;
+            const w: usize = if (line[i] == '\t') tab_width - n % tab_width else 1;
+            if (dc < n + w) return i;
             i = nextEnd(line, i);
-            n += 1;
+            n += w;
         }
         return line.len;
     }
@@ -353,7 +358,7 @@ pub const Buffer = struct {
 
     fn classAt(line: []const u8, i: usize) CharClass {
         const c = line[i];
-        if (c == ' ') return .space;
+        if (c == ' ' or c == '\t') return .space;
         if (std.ascii.isAlphanumeric(c) or c == '_' or c >= 0x80) return .word;
         return .other;
     }

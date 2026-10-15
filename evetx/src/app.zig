@@ -63,6 +63,7 @@ pub const Action = union(enum) {
     panel_hide: Panel,
     panel_max: Panel,
     scroll: ScrollBtn,
+    tree_scroll: ScrollBtn,
     dlg: DlgAction,
     proj_row: usize,
     fb_row: usize,
@@ -171,7 +172,7 @@ pub const Breakpoint = struct { path: []u8, line: usize };
 /// Every command of the main menu.
 pub const MenuCmd = enum {
     open_project, open_folder, new_file, save, save_as, close_tab, quit,
-    undo, redo, replace, toggle_wrap,
+    undo, redo, replace, toggle_wrap, toggle_hidden,
     find_text, find_file, goto_line, query,
     run, check_file, step_into, step_out, cont, stop, breakpoint,
     machine_pick, connect, upload,
@@ -223,6 +224,7 @@ pub const menus = [_]Menu{
         .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
         sep,
         .{ .label = "Wrap", .cmd = .toggle_wrap },
+        .{ .label = "Show hidden characters", .cmd = .toggle_hidden },
     } },
     .{ .label = "SEARCH", .items = &.{
         .{ .label = "Find Text…", .key = "Ctrl+F", .cmd = .find_text },
@@ -281,7 +283,7 @@ pub const Layout = struct { tree: Rect = .{}, main: Rect = .{}, debug: Rect = .{
 pub const ScrollBtn = enum { left, right, up, down };
 
 /// What the mouse is dragging: a border between panels, or a scroll bar thumb.
-pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select };
+pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select, tree_v, tree_h };
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
@@ -382,6 +384,13 @@ pub const App = struct {
     pending_text: ?[]u8 = null,
     /// Edit > Wrap: long lines are cut at the right edge of the editor and the horizontal bar goes away.
     wrap: bool = false,
+    /// Edit > Show hidden characters: spaces, tabs and line ends are drawn.
+    show_hidden: bool = false,
+    /// The tree: first column shown, longest row, and the places of its bars.
+    tree_left: usize = 0,
+    tree_content: usize = 0,
+    tvbar_rect: Rect = .{},
+    thbar_rect: Rect = .{},
     /// True while the session is being read: nothing is written then.
     restoring: bool = false,
     /// The line numbers of the editor: a click there sets or removes a breakpoint.
@@ -880,6 +889,7 @@ pub const App = struct {
         try self.sline(&out, "show_main={d}", .{@intFromBool(self.show_main)});
         try self.sline(&out, "show_tools={d}", .{@intFromBool(self.show_tools)});
         try self.sline(&out, "wrap={d}", .{@intFromBool(self.wrap)});
+        try self.sline(&out, "hidden={d}", .{@intFromBool(self.show_hidden)});
         try self.sline(&out, "bottom={s}", .{@tagName(self.bottom)});
         try self.sline(&out, "focus={s}", .{@tagName(self.focus)});
         var saved: usize = 0;
@@ -943,6 +953,8 @@ pub const App = struct {
                 self.show_tools = num != 0;
             } else if (std.mem.eql(u8, key, "wrap")) {
                 self.wrap = num != 0;
+            } else if (std.mem.eql(u8, key, "hidden")) {
+                self.show_hidden = num != 0;
             } else if (std.mem.eql(u8, key, "bottom")) {
                 self.bottom = std.meta.stringToEnum(BottomTab, val) orelse .console;
             } else if (std.mem.eql(u8, key, "focus")) {
@@ -1287,6 +1299,7 @@ pub const App = struct {
             .find_text => self.openOverlay(.find_text),
             .find_file => self.openOverlay(.find_file),
             .replace => self.openOverlay(.replace),
+            .toggle_hidden => self.show_hidden = !self.show_hidden,
             .toggle_wrap => {
                 self.wrap = !self.wrap;
                 self.follow = true;
@@ -1574,6 +1587,10 @@ pub const App = struct {
             self.drag = .vbar;
         } else if (self.hbar_rect.contains(m.col, m.row)) {
             self.drag = .hbar;
+        } else if (self.tvbar_rect.contains(m.col, m.row)) {
+            self.drag = .tree_v;
+        } else if (self.thbar_rect.contains(m.col, m.row)) {
+            self.drag = .tree_h;
         } else return false;
         self.follow = false;
         self.scrollTo(m);
@@ -1585,10 +1602,25 @@ pub const App = struct {
     // pointer may be outside the bar during a drag and `m.row` is signed.
     /// Scroll the editor to the place of the pointer on the bar that is being dragged.
     fn scrollTo(self: *App, m: vaxis.Mouse) void {
+        if (self.drag == .tree_v) {
+            const r = self.tvbar_rect;
+            const total = self.visible.items.len;
+            if (r.h < 2 or total <= self.tree_rect.h) return;
+            const rel: usize = @intCast(@min(@max(@as(i32, m.row) - r.y, 0), r.h - 1));
+            self.tree_top = rel * (total - self.tree_rect.h) / (r.h - 1);
+            return;
+        }
+        if (self.drag == .tree_h) {
+            const r = self.thbar_rect;
+            if (r.w < 2 or self.tree_content <= self.tree_rect.w) return;
+            const rel: usize = @intCast(@min(@max(@as(i32, m.col) - r.x, 0), r.w - 1));
+            self.tree_left = rel * (self.tree_content - self.tree_rect.w) / (r.w - 1);
+            return;
+        }
         const b = self.activeBuffer() orelse return;
         if (self.drag == .vbar) {
             const r = self.vbar_rect;
-            const total = b.lineCount();
+            const total = b.lineCount() + 3;
             if (r.h < 2 or total <= r.h) return;
             const rel: usize = @intCast(@min(@max(@as(i32, m.row) - r.y, 0), r.h - 1));
             b.top = rel * (total - r.h) / (r.h - 1);
@@ -1662,7 +1694,7 @@ pub const App = struct {
             .none => {},
             .tree_split => self.tree_w = @intCast(@max(@as(i32, m.col) + 1, 0)),
             .tools_split => self.tools_h = @intCast(@max(@as(i32, self.rows) - 3 - m.row, 0)),
-            .vbar, .hbar => self.scrollTo(m),
+            .vbar, .hbar, .tree_v, .tree_h => self.scrollTo(m),
             .select => self.selectTo(m),
         }
     }
@@ -2419,6 +2451,15 @@ pub const App = struct {
             },
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
+            .tree_scroll => |d| {
+                const half = @max(1, self.tree_rect.h / 2);
+                switch (d) {
+                    .left => self.tree_left -|= 10,
+                    .right => self.tree_left += 10,
+                    .up => self.tree_top -|= half,
+                    .down => self.tree_top += half,
+                }
+            },
             .scroll => |d| {
                 const b = self.activeBuffer() orelse return;
                 self.follow = false;
