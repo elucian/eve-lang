@@ -18,6 +18,7 @@ const ast = @import("evecm").ast;
 const parser = @import("evecp").parser;
 const project = @import("evecp").project;
 const interp = @import("interp.zig");
+const debugger = @import("debugger.zig");
 
 // Zig tip: a struct can own memory. `data` is a slice that this struct allocated, so the struct
 // must free it: that is what `deinit` is for, and the caller pairs `init` with
@@ -114,6 +115,8 @@ pub const Session = struct {
     capture: bool = false,
     /// The `halt` flag of the command line (not used yet).
     debug: bool = false,
+    /// The debugger that drives the run (`eve debug`), or null.
+    dbg: ?*debugger.Debugger = null,
     /// Exit status of the last command.
     status: u8 = 0,
     /// Set by `stop`: the loop that reads commands ends.
@@ -305,6 +308,10 @@ pub const Session = struct {
         const machine = a.create(interp.Interp) catch return error.WriteFailed;
         machine.* = interp.Interp.init(a, cap orelse self.out) catch return error.WriteFailed;
         machine.hook = .{ .ctx = self, .poll = pollHook };
+        if (self.dbg) |d| {
+            d.src = self.src;
+            machine.dbg = d.hook();
+        }
         machine.script_args = self.script_args;
         machine.aspects = &self.aspects;
         machine.modules = &self.modules;
@@ -316,6 +323,11 @@ pub const Session = struct {
         self.running = true;
         const o = machine.run(tree);
         self.running = false;
+        if (self.dbg) |d| {
+            self.out.print("@debug end {d}{s}\n", .{ o.code, if (o.stopped) " stopped" else "" }) catch {};
+            self.out.flush() catch {};
+            d.breaks.deinit(d.gpa);
+        }
         self.steps = machine.steps;
         self.outcome = o;
         self.status = o.code;

@@ -115,14 +115,24 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
-    b.installArtifact(exe);
+    // Zig tip: a running program locks its .exe on Windows, so the copy into `bin/` fails with AccessDenied. The
+    // step below runs a command (`addSystemCommand`) that stops the eve programs of that folder, and `dependOn` makes
+    // the copy wait for it. Compiling goes on in parallel; only the install waits. The same script is `eve --kill`.
+    // `builtin.os.tag` is the system the build runs on (not the target), so other systems skip the step.
+    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", b.pathFromRoot("script/stop_eve.ps1"), "-Bin", b.getInstallPath(.bin, "") });
+    stop.has_side_effects = true;
+    const install_exe = b.addInstallArtifact(exe, .{});
+    if (@import("builtin").os.tag == .windows) install_exe.step.dependOn(&stop.step);
+    b.getInstallStep().dependOn(&install_exe.step);
 
     // Zig tip: `addInstallBinFile` copies a file into `bin/` under another name. The program `evevm` is the very same
     // file as `eve`: at start it reads its own name (cmd/eve.zig), and as `evevm` it starts the machine in a new process.
     // `getEmittedBin()` is the file the compiler makes, so the copy waits for the build of `eve`. The extension of the
     // copy follows the target (`.exe` on Windows, none elsewhere).
     const evevm_name = b.fmt("evevm{s}", .{target.result.exeFileExt()});
-    b.getInstallStep().dependOn(&b.addInstallBinFile(exe.getEmittedBin(), evevm_name).step);
+    const install_evevm = b.addInstallBinFile(exe.getEmittedBin(), evevm_name);
+    install_evevm.step.dependOn(&install_exe.step);
+    b.getInstallStep().dependOn(&install_evevm.step);
 
     const run_step = b.step("run", "Run eve");
     const run_cmd = b.addRunArtifact(exe);

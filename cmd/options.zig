@@ -35,6 +35,8 @@ pub const Options = struct {
     ui: bool = false,
     /// `-tx`: start the terminal IDE, evetx, with the rest of the line (D-172).
     tx: bool = false,
+    /// `--kill`: stop every other eve program that runs from the same `bin/` folder (eve, evetx, evedb), so a build can replace the files.
+    kill: bool = false,
     tx_args: []const []const u8 = &.{},
 };
 
@@ -79,9 +81,9 @@ pub fn partWords(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]
         }
         return argv[1..];
     }
-    if (eql(u8, first, "tx")) {
+    if (eql(u8, first, "tx") or eql(u8, first, "kill")) {
         const copy = try gpa.dupe([]const u8, argv);
-        copy[0] = "-tx";
+        copy[0] = if (eql(u8, first, "tx")) "-tx" else "--kill";
         return copy;
     }
     if (eql(u8, first, "ux") or eql(u8, first, "db")) {
@@ -134,6 +136,11 @@ pub fn parseArgs(
     var i: usize = 0;
     while (i < line.len) : (i += 1) {
         const a = line[i];
+        // everything after the command `db` belongs to it (`eve db sql -t file "select ..."`), options included
+        if (o.command != null and o.command == cli.find("db")) {
+            try rest.append(gpa, a);
+            continue;
+        }
         if (std.mem.eql(u8, a, "-h") or std.mem.eql(u8, a, "--help")) {
             o.help = true;
         } else if (std.mem.eql(u8, a, "-v") or std.mem.eql(u8, a, "--version")) {
@@ -144,6 +151,8 @@ pub fn parseArgs(
             o.execute = true;
         } else if (std.mem.eql(u8, a, "-ux")) {
             o.ui = true;
+        } else if (std.mem.eql(u8, a, "--kill")) {
+            o.kill = true;
         } else if (std.mem.eql(u8, a, "-tx")) {
             // everything after `-tx` belongs to evetx (a project folder), so the parse stops here
             o.tx = true;

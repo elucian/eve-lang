@@ -113,6 +113,45 @@ pub fn cmdStatus(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     client.machineStatus(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
 }
 
+// Zig tip: a stack buffer for the reader of the standard input lives as long as the function; the debugger keeps a
+// pointer to the reader (`&reader.interface`), which is fine because `s.run()` ends before the function does. The
+// debugger itself is allocated with `gpa.create` because the session keeps a pointer to it in `s.dbg`.
+/// `debug <file>`: run the script under the debugger. It stops before the first statement and reads commands (run,
+/// halt, next, step, exit, trace, break, clear) from the standard input; see evevm/src/debugger.zig.
+pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    if (args.len == 0) {
+        try ctx.out.writeAll("debug: file name missing\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    const s = try session(ctx);
+    s.quiet = true;
+    s.capture = false;
+    s.script_args = args[1..];
+    try s.load(args[0]);
+    if (s.arena == null) {
+        ctx.status = s.status;
+        return;
+    }
+    var buf: [4096]u8 = undefined;
+    var reader: Io.File.Reader = .init(.stdin(), ctx.io, &buf);
+    const d = ctx.gpa.create(@import("evevm").debugger.Debugger) catch return error.WriteFailed;
+    defer ctx.gpa.destroy(d);
+    d.* = .{ .out = ctx.out, .in = &reader.interface, .io = ctx.io, .gpa = ctx.gpa };
+    s.dbg = d;
+    defer s.dbg = null;
+    try s.run();
+    ctx.status = s.status;
+    if (s.outcome) |o| {
+        if (o.code != 0 and s.machine != null) {
+            try ctx.out.flush();
+            for (s.machine.?.reports.items) |r| {
+                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ args[0], r.line, r.code, r.message, r.trace, r.details });
+            }
+        }
+    }
+}
+
 // Zig tip: parse first, run second: the session's `run` parses the file when it was not parsed,
 // and returns early on a syntax error, so a script with errors never starts. With no file name
 // and a slot (`eve -x -i file.vmc`) the machine does not run a script: it serves the commands

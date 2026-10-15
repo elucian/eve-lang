@@ -15,9 +15,13 @@ pub const Options = struct {
     autosave_s: u16 = 0,
     /// Seconds between typing a run command in the prompt and running it; 0 runs it at once.
     run_delay_s: u16 = 3,
+    /// Seconds the pointer must rest on a border between panels before the border can be dragged; 0 means at once.
+    hover_delay_s: u16 = 5,
+    /// Milliseconds between two statements while Trace runs.
+    trace_ms: u16 = 400,
 
     // Zig tip: `self: *const Options` promises not to change the options; the result is an array
-    // returned by value (20 numbers), which is cheap.
+    // returned by value (28 numbers), which is cheap.
     /// The colors of the theme in use.
     pub fn palette(self: *const Options) theme.Palette {
         return if (self.theme_id < theme.themes.len) theme.themes[self.theme_id].colors else self.custom;
@@ -41,6 +45,10 @@ pub const Options = struct {
                 o.autosave_s = @intCast(@min(std.fmt.parseInt(usize, val, 10) catch 0, 3600));
             } else if (std.mem.eql(u8, key, "rundelay")) {
                 o.run_delay_s = @intCast(@min(std.fmt.parseInt(usize, val, 10) catch 3, 60));
+            } else if (std.mem.eql(u8, key, "tracems")) {
+                o.trace_ms = @intCast(@min(std.fmt.parseInt(usize, val, 10) catch 400, 5000));
+            } else if (std.mem.eql(u8, key, "hoverdelay")) {
+                o.hover_delay_s = @intCast(@min(std.fmt.parseInt(usize, val, 10) catch 5, 60));
             } else if (std.mem.startsWith(u8, key, "color.")) {
                 const slot = std.meta.stringToEnum(theme.Slot, key["color.".len..]) orelse continue;
                 const hex = std.fmt.parseInt(u24, val, 16) catch continue;
@@ -56,7 +64,7 @@ pub const Options = struct {
     pub fn format(self: *const Options, gpa: std.mem.Allocator) ![]u8 {
         var out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(gpa);
-        const head = try std.fmt.allocPrint(gpa, "theme={d}\nautosave={d}\nrundelay={d}\n", .{ self.theme_id, self.autosave_s, self.run_delay_s });
+        const head = try std.fmt.allocPrint(gpa, "theme={d}\nautosave={d}\nrundelay={d}\nhoverdelay={d}\ntracems={d}\n", .{ self.theme_id, self.autosave_s, self.run_delay_s, self.hover_delay_s, self.trace_ms });
         defer gpa.free(head);
         try out.appendSlice(gpa, head);
         inline for (@typeInfo(theme.Slot).@"enum".fields, 0..) |f, i| {

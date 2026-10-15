@@ -25,6 +25,7 @@ pub const quick_help =
     \\  -ux               open the web user interface (the page of the machine) if it is not open; with a
     \\                    command, open it and then run the command
     \\  -tx [folder]      start the terminal IDE, evetx, on a project folder (also: eve tx)
+    \\  --kill            stop all the other eve programs of this bin/ folder (eve, evetx, evedb); the build runs it (also: eve kill)
     \\  -d                debug mode: halt statements stop the script (ignored otherwise)
     \\  -s <file.cfg>     setup: load the configuration file
     \\  -m <size>         memory for the process

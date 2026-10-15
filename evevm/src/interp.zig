@@ -137,6 +137,15 @@ pub const Hook = struct {
     poll: *const fn (ctx: *anyopaque, steps: usize, line: u32) bool,
 };
 
+// Zig tip: `Hook` above sees only numbers; the debugger must see the node about to run and the interpreter (for the
+// depth of the calls), so its hook gets both. `*const fn (...) Signal!void` can fail: an error from the hook (the
+// `halt` command is `error.Stop`) unwinds the run exactly as an error of the script would.
+/// How the debugger (debugger.zig) is called before each statement of the main task.
+pub const DebugHook = struct {
+    ctx: *anyopaque,
+    before: *const fn (ctx: *anyopaque, it: *Interp, n: *const Node) Signal!void,
+};
+
 // Zig tip: `Outcome` relies on the same Zig feature as `List` above: see the tip there.
 /// The end of a run.
 pub const Outcome = struct {
@@ -213,6 +222,8 @@ pub const Interp = struct {
     global: *Scope,
     scope: *Scope,
     hook: ?Hook = null,
+    /// The debugger, when `eve debug` runs the script (only the interpreter of the main task has it).
+    dbg: ?DebugHook = null,
     /// Statements executed and the line of the last one: what `report` shows.
     steps: usize = 0,
     line: u32 = 0,

@@ -147,6 +147,7 @@ pub fn main(init: std.process.Init) !void {
     // window can send commands to its own machine; with a pipe, a file or a service manager nobody types, and the
     // start waits for the doors as before. `machine.embedded` tells that the doors are open in this process.
     if (opts.tx) std.process.exit(try startTx(init.io, arena, stdout, opts.tx_args));
+    if (opts.kill) std.process.exit(try killOthers(init.io, arena, stdout));
     // `-ux`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system
     // prompt comes back; with a command (`eve -ux check a.eve`) the command runs after it, as it would without `-ux`.
     if (opts.ui) {
@@ -225,6 +226,30 @@ pub fn main(init: std.process.Init) !void {
     }
     const edit: ?cli.Edit = if (term != null) .{ .io = init.io, .gpa = arena } else null;
     try cli.repl(&ctx, &stdin_file_reader.interface, edit);
+}
+
+// Zig tip: a program cannot replace its own file, or the file of a program that runs, on Windows: the build fails with
+// AccessDenied. `eve --kill` asks the system to end the other programs of its own `bin/` folder. On Windows the work is
+// the PowerShell script `script/stop_eve.ps1` (the same one `run.sh` and the build use); `-SkipParent` keeps this eve
+// alive, since it is the parent of the PowerShell it started. Elsewhere `pkill -f` matches the full path of the program.
+/// `eve --kill`: stop every other eve program that runs from the folder of this one.
+fn killOthers(io: Io, arena: std.mem.Allocator, out: *Io.Writer) !u8 {
+    const dir = try std.process.executableDirPathAlloc(io, arena);
+    var argv: std.ArrayList([]const u8) = .empty;
+    if (@import("builtin").os.tag == .windows) {
+        const script = try std.fmt.allocPrint(arena, "{s}/../script/stop_eve.ps1", .{dir});
+        try argv.appendSlice(arena, &.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-Bin", dir, "-SkipParent" });
+    } else {
+        const pattern = try std.fmt.allocPrint(arena, "{s}/evetx|{s}/evedb|{s}/evevm", .{ dir, dir, dir });
+        try argv.appendSlice(arena, &.{ "pkill", "-f", pattern });
+    }
+    var child = std.process.spawn(io, .{ .argv = argv.items, .stdin = .inherit, .stdout = .inherit, .stderr = .inherit }) catch |err| {
+        try out.print("eve: cannot run {s}: {s}\n", .{ argv.items[0], @errorName(err) });
+        try out.flush();
+        return 69;
+    };
+    _ = try child.wait(io);
+    return 0;
 }
 
 // Zig tip: `std.process.executableDirPathAlloc` gives the folder of the running program, so `eve` finds `evetx` beside

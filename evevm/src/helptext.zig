@@ -46,9 +46,10 @@ pub const entries = [_]Entry{
     },
     .{
         .name = "debug",
-        .short = "execute the main process in debug mode (not implemented yet)",
+        .short = "execute the main process under the debugger",
         .syntax = &.{"debug <file.eve>"},
-        .text = "Reserved for the debugger. Today it only prints that the command is not yet implemented (exit status 70).",
+        .text = "Runs the script and stops before its first statement. The commands are read from the standard input, one per line: run (go on to the next breakpoint, or start), halt (stop the program at once), next (execute the statement without going into the calls), step (go into the call of the line), exit (finish the subprogram and stop in its caller), trace (go on, writing each statement, until the next breakpoint), break <line> and clear <line|all>.\n" ++
+            "The debugger writes lines that begin with @debug: @debug paused <line> <depth> <text>, @debug trace, @debug break, @debug end <status>. Only the main task is debugged.",
     },
     .{
         .name = "execute",
