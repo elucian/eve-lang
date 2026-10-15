@@ -514,79 +514,82 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
         }
         lines_shown += 1;
     }
-    scrollBars(app, ed, b, gutter, rows, cols, lines_shown);
+    scrollBars(app, ed, b, rows, cols, lines_shown);
 }
 
-// Zig tip: The glyphs of the bars are constants in one place, so changing the look of every bar is
-// a change of these lines. The track is a light shade, the thumb a full block, the buttons are
-// triangles. Block Elements has half blocks (`▀ ▄ ▌ ▐`) at the edges of a cell but no centered
-// thin bar; `▬` and `▮` (Geometric Shapes) are centered, but fonts draw them differently.
-const glyph_track = "░";
-const glyph_thumb = "█";
+// Zig tip: The glyphs of the bars are constants in one place, one set for each bar, so the look of
+// the vertical and of the horizontal bar can be changed apart. The track is a light shade, the thumb
+// a full block, the buttons are triangles. Block Elements has half blocks (`▀ ▄ ▌ ▐`) at the edges
+// of a cell but no centered thin bar; `▬` (horizontal) and `▮` (vertical) of Geometric Shapes are
+// centered, but fonts draw them differently: put them in `glyph_h_thumb` and `glyph_v_thumb` to try.
+const glyph_v_track = "░";
+const glyph_v_thumb = "█";
+const glyph_h_track = "░";
+const glyph_h_thumb = "█";
 const glyph_up = "▲";
 const glyph_down = "▼";
-const glyph_left = "◄";
-const glyph_right = "►";
+const glyph_left = "◀";
+const glyph_right = "▶";
 
-// Zig tip: The bars are one cell wide or tall: `│` and `─` for the track, `┃` and `━` for
-// the thumb. A proportion in integers gives the thumb: as long as the share of the text that is
-// on the screen (`visible * span / total`), and placed by the share that is above the screen. The
-// multiplication comes before the division, otherwise the integer division would round to 0. At the
-// ends of the horizontal bar are the buttons < and > (ten columns each); when wrapping hides that
-// bar, the vertical one gets the buttons ^ and v (half a page each). Every button is a hit with the
+// Zig tip: The bars are one cell wide or tall. A proportion in integers gives the thumb: as long as
+// the share of the text that is on the screen (`visible * span / total`), and placed by the share
+// that is above the screen. The multiplication comes before the division, otherwise the integer
+// division would round to 0. The vertical bar always has its buttons ▲ and ▼ (half a page each),
+// with a free row above the first one so that it does not touch the title bar of the panel. The
+// horizontal bar has ◀ and ▶ (ten columns each) and runs under the line numbers too, so it covers
+// the whole width of the editor; with wrapping it is not drawn. Every button is a hit with the
 // action `scroll`.
 /// The vertical bar at the right of the text and, unless the text wraps, the horizontal bar under it.
 /// The rectangles of the tracks are saved in the app for the mouse.
-fn scrollBars(app: *App, ed: Window, b: *text.Buffer, gutter: u16, rows: u16, cols: u16, lines_shown: usize) void {
+fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, lines_shown: usize) void {
     app.vbar_rect = .{};
     app.hbar_rect = .{};
-    if (rows < 4 or cols < 6) return;
-    const track = theme.on(theme.faint, theme.deep);
+    if (rows < 6 or cols < 6) return;
+    const v_track = theme.on(theme.faint, theme.deep);
+    const h_track = theme.on(theme.faint, theme.deep);
     const thumb = theme.on(theme.dim, theme.deep);
     const btn = theme.onBold(theme.text, theme.bar2);
 
-    // the vertical bar
+    // the vertical bar: a free row, ▲, the track, ▼
     const vx = ed.width - 1;
     const total = b.lineCount();
-    const y0: u16 = if (app.wrap) 1 else 0;
-    const span: u16 = if (app.wrap) rows - 2 else rows;
-    if (app.wrap) {
-        _ = put(ed, vx, 0, glyph_up, btn);
-        addHit(app, ed, vx, 0, 1, 1, .{ .scroll = .up }) catch {};
-        _ = put(ed, vx, rows - 1, glyph_down, btn);
-        addHit(app, ed, vx, rows - 1, 1, 1, .{ .scroll = .down }) catch {};
-    }
+    const y0: u16 = 2;
+    const span: u16 = rows - 3;
+    _ = put(ed, vx, 1, glyph_up, btn);
+    addHit(app, ed, vx, 1, 1, 1, .{ .scroll = .up }) catch {};
+    _ = put(ed, vx, rows - 1, glyph_down, btn);
+    addHit(app, ed, vx, rows - 1, 1, 1, .{ .scroll = .down }) catch {};
     app.vbar_rect = absRect(ed, vx, y0, 1, span);
     var y: u16 = 0;
-    while (y < span) : (y += 1) _ = put(ed, vx, y0 + y, glyph_track, track);
+    while (y < span) : (y += 1) _ = put(ed, vx, y0 + y, glyph_v_track, v_track);
     {
         const visible: usize = if (app.wrap) @max(1, lines_shown) else rows;
         const th: usize = if (total > visible) @max(1, @as(usize, span) * visible / total) else span;
         const above = @min(b.top, total -| visible);
         const ty: usize = if (total > visible) (span - th) * above / (total - visible) else 0;
         var k: usize = 0;
-        while (k < th) : (k += 1) _ = put(ed, vx, y0 + @as(u16, @intCast(ty + k)), glyph_thumb, thumb);
+        while (k < th) : (k += 1) _ = put(ed, vx, y0 + @as(u16, @intCast(ty + k)), glyph_v_thumb, thumb);
     }
     if (app.wrap) return;
 
-    // the horizontal bar
+    // the horizontal bar: ◀, the track, ▶, from the left edge of the editor to the vertical bar
     const hy = ed.height - 1;
     var content: usize = b.left + cols;
     var r: usize = b.top;
     while (r < total and r < b.top + rows) : (r += 1) content = @max(content, text.Buffer.displayWidth(b.lineAt(r)) + 1);
     app.hbar_content = content;
-    _ = put(ed, gutter, hy, glyph_left, btn);
-    addHit(app, ed, gutter, hy, 1, 1, .{ .scroll = .left }) catch {};
-    _ = put(ed, gutter + cols - 1, hy, glyph_right, btn);
-    addHit(app, ed, gutter + cols - 1, hy, 1, 1, .{ .scroll = .right }) catch {};
-    const hw = cols - 2;
-    app.hbar_rect = absRect(ed, gutter + 1, hy, hw, 1);
+    _ = put(ed, 0, hy, glyph_left, btn);
+    addHit(app, ed, 0, hy, 1, 1, .{ .scroll = .left }) catch {};
+    _ = put(ed, vx - 1, hy, glyph_right, btn);
+    addHit(app, ed, vx - 1, hy, 1, 1, .{ .scroll = .right }) catch {};
+    const hw = vx - 2;
+    app.hbar_rect = absRect(ed, 1, hy, hw, 1);
     var x: u16 = 0;
-    while (x < hw) : (x += 1) _ = put(ed, gutter + 1 + x, hy, glyph_track, track);
+    while (x < hw) : (x += 1) _ = put(ed, 1 + x, hy, glyph_h_track, h_track);
     const tw: usize = if (content > cols) @max(1, @as(usize, hw) * cols / content) else hw;
     const tx: usize = if (content > cols) (hw - tw) * @min(b.left, content - cols) / (content - cols) else 0;
     var k: usize = 0;
-    while (k < tw) : (k += 1) _ = put(ed, gutter + 1 + @as(u16, @intCast(tx + k)), hy, glyph_thumb, thumb);
+    while (k < tw) : (k += 1) _ = put(ed, 1 + @as(u16, @intCast(tx + k)), hy, glyph_h_thumb, thumb);
 }
 
 // Zig tip: The selected part of a line is drawn again over the code with the selection colors. Its
@@ -794,7 +797,7 @@ fn drawLog(app: *App, w: Window, log: *app_mod.Log) void {
         const thumb_h = @max(1, h * rows / total);
         const thumb_y = (h - thumb_h) * end / total;
         var k: usize = 0;
-        while (k < thumb_h) : (k += 1) _ = put(w, w.width - 1, @intCast(thumb_y + k), glyph_thumb, theme.on(theme.dim, theme.deep));
+        while (k < thumb_h) : (k += 1) _ = put(w, w.width - 1, @intCast(thumb_y + k), glyph_v_thumb, theme.on(theme.dim, theme.deep));
     }
 }
 
