@@ -76,7 +76,7 @@ pub fn main(init: std.process.Init) !void {
         // event without blocking (`tryEvent`), sleeps a tenth of a second when there is none, and
         // lets `app.tick` start the command when its time is over. Without a waiting command the
         // loop blocks in `nextEvent` and uses no time.
-        const maybe: ?Event = if (app.pending_at != null) blk: {
+        const maybe: ?Event = if (app.needsTick()) blk: {
             const ev = try loop.tryEvent();
             if (ev == null) try io.sleep(.fromMilliseconds(100), .awake);
             break :blk ev;
@@ -102,6 +102,7 @@ pub fn main(init: std.process.Init) !void {
             @memcpy(last_buf[0..title.len], title);
             last_title = last_buf[0..title.len];
         }
+        vx.setMouseShape(app.pointer);
         const win = vx.window();
         win.clear();
         try view.draw(app, win);

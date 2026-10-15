@@ -230,7 +230,7 @@ pub const menus = [_]Menu{
         .{ .label = "Find Text…", .key = "Ctrl+F", .cmd = .find_text },
         .{ .label = "Find File…", .key = "Ctrl+P", .cmd = .find_file },
         .{ .label = "GoTo…", .key = "Ctrl+G", .cmd = .goto_line },
-        .{ .label = "Query…", .key = "Ctrl+L", .cmd = .query },
+        .{ .label = "Query…", .key = "F7", .cmd = .query },
     } },
     .{ .label = "RUN", .items = &.{
         .{ .label = "Run", .key = "F5", .cmd = .run },
@@ -250,8 +250,8 @@ pub const menus = [_]Menu{
     .{ .label = "WINDOW", .items = &.{
         .{ .label = "Select", .key = "Ctrl+Tab", .cmd = .select_window },
         .{ .label = "Close", .key = "Ctrl+W", .cmd = .close_tab },
-        .{ .label = "Modify", .cmd = .modify },
-        .{ .label = "Freeze", .key = "Esc", .cmd = .freeze },
+        .{ .label = "Layout modify", .key = "Ctrl+L", .cmd = .modify },
+        .{ .label = "Layout freeze", .key = "Ctrl+F", .cmd = .freeze },
         sep,
         .{ .label = "Tree Panel", .cmd = .toggle_tree },
         .{ .label = "Main Panel", .cmd = .toggle_main },
@@ -368,6 +368,13 @@ pub const App = struct {
     /// Window > Modify: the borders between the panels follow the mouse and the arrow keys.
     modify: bool = false,
     drag: Drag = .none,
+    /// The layout was put in modify mode with the mouse: it freezes by itself three seconds after the
+    /// mouse button is released (`freeze_at`, a time of the `awake` clock in milliseconds).
+    mouse_modify: bool = false,
+    freeze_at: ?i64 = null,
+    /// The shape of the mouse pointer: a double arrow over a border between panels.
+    pointer: vaxis.Mouse.Shape = .default,
+    hover_split: ?Drag = null,
     /// Width of the Tree Panel and height of the Tools Panel in cells; 0 means "automatic".
     tree_w: u16 = 0,
     tools_h: u16 = 0,
@@ -1018,6 +1025,9 @@ pub const App = struct {
 
     /// Called by the main loop all the time while a command waits: starts it when its time is over.
     pub fn tick(self: *App) !void {
+        if (self.freeze_at) |at| {
+            if (self.nowMs() >= at) self.freezeLayout();
+        }
         const left = self.pendingLeft() orelse return;
         if (left > 0) return;
         self.pending_at = null;
@@ -1313,11 +1323,8 @@ pub const App = struct {
             .machine_pick => self.pickMachine(@intCast(arg)),
             .connect, .upload => self.notYet("Remote machines", "T5"),
             .select_window => self.nextTab(1),
-            .modify => {
-                self.modify = true;
-                self.setMessage("Modify: drag the borders or use the arrow keys; Esc freezes the sizes", .{});
-            },
-            .freeze => self.modify = false,
+            .modify => self.startModify(false),
+            .freeze => self.freezeLayout(),
             .toggle_tree => self.togglePanel(.tree),
             .toggle_main => self.togglePanel(.main),
             .toggle_tools => self.togglePanel(.tools),
@@ -1567,18 +1574,23 @@ pub const App = struct {
     // Zig tip: A `switch` on the enum `Drag` decides what the moving mouse changes. The raw column
     // of the pointer is stored; `treeWidth` and `toolsHeight` clamp it, so a wild drag cannot break
     // the screen.
-    /// A press on a border between panels while Window > Modify is on: start dragging it.
+    /// A press on a border between panels: start dragging it. (Layout modify starts by itself, see `onMouse`.)
     fn grabSplit(self: *App, m: vaxis.Mouse) bool {
+        const which = self.splitAt(m) orelse return false;
+        self.drag = which;
+        return true;
+    }
+
+    // Zig tip: `?Drag` is an optional enum: the answer is a kind of border, or null when the pointer is
+    // not over one. The borders are the two columns where the Tree Panel and the Main Panel touch, and
+    // the top border row of the Tools Panel (the row of the Run buttons above it is not part of it).
+    /// Which border between panels is under the pointer?
+    fn splitAt(self: *const App, m: vaxis.Mouse) ?Drag {
         const l = self.layout;
-        if (l.tree.w > 0 and (m.col == l.tree.w - 1 or m.col == l.tree.w) and m.row >= 1) {
-            self.drag = .tree_split;
-            return true;
-        }
-        if (l.tools.w > 0 and l.main.w > 0 and m.col >= l.tools.x and (m.row == l.tools.y or m.row == l.tools.y - 1)) {
-            self.drag = .tools_split;
-            return true;
-        }
-        return false;
+        const touching = l.main.w > 0 or l.tools.w > 0;
+        if (l.tree.w > 0 and touching and (m.col == l.tree.w - 1 or m.col == l.tree.w) and m.row >= 1 and m.row < self.rows -| 3) return .tree_split;
+        if (l.tools.w > 0 and l.main.w > 0 and m.col >= l.tools.x and m.row == l.tools.y) return .tools_split;
+        return null;
     }
 
     /// A press on a scroll bar of the editor: start dragging its thumb.
@@ -1699,14 +1711,39 @@ pub const App = struct {
         }
     }
 
+    // Zig tip: `fn startModify(self: *App, by_mouse: bool)` takes a plain `bool`; the two ways in (the
+    // menu or Ctrl+L, and a click on a border) differ only in this flag: with the mouse the layout
+    // freezes by itself after the release, with the keyboard it stays until Ctrl+F or Esc.
+    /// Layout modify: the borders between the panels can be dragged, and the arrow keys change the sizes.
+    pub fn startModify(self: *App, by_mouse: bool) void {
+        self.modify = true;
+        self.mouse_modify = by_mouse;
+        self.freeze_at = null;
+    }
+
+    /// Layout freeze: the sizes stay as they are.
+    pub fn freezeLayout(self: *App) void {
+        self.modify = false;
+        self.mouse_modify = false;
+        self.freeze_at = null;
+        self.drag = .none;
+        self.setMessage("layout frozen", .{});
+    }
+
+    /// Does the main loop have to wake up by itself? (A command waits, or the layout is about to freeze.)
+    pub fn needsTick(self: *const App) bool {
+        return self.pending_at != null or self.freeze_at != null;
+    }
+
     // Zig tip: The function returns `!bool`: an error union around a plain `bool`. The caller writes
     // `try self.modifyKey(key)` to get the `bool` or pass the error up. Here nothing can fail, but
     // the shape is the same as the other key functions.
     /// While Window > Modify is on: the arrows change the sizes, Esc and Enter freeze them. True when the key was used.
     fn modifyKey(self: *App, key: Key) !bool {
-        if (key.matches(Key.escape, .{}) or key.matches(Key.enter, .{})) {
-            self.modify = false;
-            self.setMessage("sizes frozen", .{});
+        // the keyboard takes over: a countdown that the mouse started is cancelled
+        self.freeze_at = null;
+        if (key.matches(Key.escape, .{}) or key.matches(Key.enter, .{}) or key.matches('f', .{ .ctrl = true })) {
+            self.freezeLayout();
         } else if (key.matches(Key.left, .{})) {
             self.tree_w = self.treeWidth() -| 2;
         } else if (key.matches(Key.right, .{})) {
@@ -1965,6 +2002,7 @@ pub const App = struct {
         if (self.searchShortcut(key)) return;
         if (key.matches(Key.f5, .{})) return self.runActive();
         if (key.matches(Key.f6, .{})) return self.checkActive();
+        if (key.matches(Key.f7, .{})) return self.notYet("Query", "T7");
         if (key.matches(Key.f9, .{})) return self.toggleBreakpoint();
         if (key.matches(Key.f11, .{}) or key.matches(Key.f8, .{}) or key.matches(Key.f5, .{ .shift = true })) {
             self.notYet("The debugger", "T6");
@@ -1997,7 +2035,7 @@ pub const App = struct {
     // can replace each other.
     /// Ctrl+F, Ctrl+P, Ctrl+H, Ctrl+G, Ctrl+L: open a search dialog. True when the key was one of them.
     fn searchShortcut(self: *App, key: Key) bool {
-        if (key.matches('f', .{ .ctrl = true })) self.openOverlay(.find_text) else if (key.matches('p', .{ .ctrl = true })) self.openOverlay(.find_file) else if (key.matches('h', .{ .ctrl = true })) self.openOverlay(.replace) else if (key.matches('g', .{ .ctrl = true })) self.openOverlay(.goto) else if (key.matches('l', .{ .ctrl = true })) self.notYet("Query", "T7") else return false;
+        if (key.matches('f', .{ .ctrl = true })) self.openOverlay(.find_text) else if (key.matches('p', .{ .ctrl = true })) self.openOverlay(.find_file) else if (key.matches('h', .{ .ctrl = true })) self.openOverlay(.replace) else if (key.matches('g', .{ .ctrl = true })) self.openOverlay(.goto) else if (key.matches('l', .{ .ctrl = true })) self.startModify(false) else return false;
         return true;
     }
 
@@ -2321,10 +2359,16 @@ pub const App = struct {
         if (m.type == .motion) return self.hover(m);
         if (m.type == .release) {
             self.drag = .none;
+            // three seconds after the release the layout freezes by itself
+            if (self.modify and self.mouse_modify) self.freeze_at = self.nowMs() + 3000;
             return;
         }
-        if (m.type == .drag) return self.dragTo(m);
+        if (m.type == .drag) {
+            self.freeze_at = null;
+            return self.dragTo(m);
+        }
         self.alt_hint = false;
+        self.freeze_at = null;
         if (m.button == .wheel_up or m.button == .wheel_down) {
             const up = m.button == .wheel_up;
             self.follow = false;
@@ -2361,7 +2405,11 @@ pub const App = struct {
         if (m.button != .left) return;
         self.follow = true;
         if (self.overlay == .none) {
-            if (self.modify and self.grabSplit(m)) return;
+            if (self.grabSplit(m)) {
+                // a press on a border starts Layout modify; a layout already in modify keeps how it was started
+                if (!self.modify) self.startModify(true);
+                return;
+            }
             if (self.grabBar(m)) return;
             if (self.gutter_rect.contains(m.col, m.row)) {
                 if (self.activeBuffer()) |b| {
@@ -2405,6 +2453,14 @@ pub const App = struct {
     // Zig tip: A `motion` event arrives when the mouse moves. Only an open menu cares: the row or
     // the menu title under the pointer becomes the selected one, as in a classic menu.
     fn hover(self: *App, m: vaxis.Mouse) void {
+        if (self.overlay == .none) {
+            // over a border between panels the pointer is a double arrow
+            self.hover_split = self.splitAt(m);
+            self.pointer = if (self.hover_split) |w| (if (w == .tree_split) .@"ew-resize" else .@"ns-resize") else .default;
+            return;
+        }
+        self.hover_split = null;
+        self.pointer = .default;
         if (self.overlay != .menu) return;
         var i = self.hits.items.len;
         while (i > 0) {
