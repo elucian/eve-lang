@@ -4,10 +4,14 @@ EVE-TX  Shortcuts
 Options
   Ctrl+,              the Options dialog (HELP > Options): Theme, Colors, Timers.
                       Tab: next tab; arrows change the value; Enter saves; Esc cancels
+  Theme tab           Up, Down choose a theme; n rename, Del remove (custom themes only),
+                      e export, i import a JSON theme file (a folder selector with a
+                      file name field; F2 or Enter in the name field does it). A change of a color of a
+                      built-in theme (Dark, Gray, Light) makes a copy: Dark Custom1, ...
 
 Menu
   F10, Ctrl+Enter     open the menu bar
-  Alt + letter        open a menu: F E S R M W H
+  Alt + letter        open a menu: F E S R W H
   Left, Right         next menu
   Up, Down, Enter     choose a command, Esc closes
 
@@ -50,26 +54,23 @@ Run and debug
                       typing keeps the text and stops the countdown)
   F6                  check the syntax: `--check <file>`, the same way
   F9                  breakpoint
-  F8, F11, Shift+F11, Shift+F5   debugger (later)
-
-Machines
-  Alt+1               local machine
-  Alt+2, Alt+3        remote machines (later)
+  F8, F11, Shift+F11  debugger: Next, Step, Exit; Shift+F8 Trace; Shift+F5 Halt
 
 Windows and panels
   Alt+Left, Alt+Right previous / next panel: Tree, Main, Tools (Shift+Tab: next)
   Ctrl+Tab            next window of the Main panel, or next tab of the Tools panel
   Ctrl+PgUp, Ctrl+PgDn  previous / next window or tab
   Ctrl+1 .. Ctrl+9    window number 1 to 9
-  Layout: over a border between panels the pointer is a double arrow and the
-                      border turns amber; press and drag it. Three seconds after
-                      the mouse is released the layout freezes by itself
+  Layout: the lock at the right of the toolbar; open it (or Ctrl+L) and a border
+                      between panels turns amber under the pointer: press and drag it.
+                      A locked layout does not move.
   Ctrl+L              layout modify (WINDOW > Layout modify): drag the borders or
                       use the arrow keys (Left, Right: Tree Panel width; Up, Down:
                       Tools Panel height)
   Ctrl+Z              layout freeze (in layout modify; Esc and Enter too)
-  The handle on the toolbar above the Tools Panel (a double arrow, up/down):
-                      press it and drag up or down to change the Tools Panel height
+  < and > on the tab row of the Main Panel: show the tabs further left or right
+  Info… (right click on a tab): the facts of the file; r renames it in place,
+                      m moves it to another folder (folder selector, F2 moves here)
   The buttons + and x of a panel maximize and hide it;
   Window > Tree Panel, Main Panel, Tools Panel show it again
 

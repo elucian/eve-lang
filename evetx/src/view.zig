@@ -6,13 +6,13 @@ const Window = vaxis.Window;
 const TextInput = vaxis.widgets.TextInput;
 
 const app_mod = @import("app.zig");
+const options_mod = @import("options.zig");
 const App = app_mod.App;
 const Action = app_mod.Action;
 const Rect = app_mod.Rect;
 const theme = @import("theme.zig");
 const dbf = @import("dbf.zig");
 const sqlstruct = @import("sqlstruct.zig");
-const md = @import("md.zig");
 const text = @import("text.zig");
 const keywords = @import("keywords.zig");
 
@@ -146,8 +146,21 @@ pub fn draw(app: *App, win: Window) !void {
     drawSplitHint(app, win, l);
     if (app.overlay == .none) return;
     app.hits.clearRetainingCapacity();
-    switch (app.overlay) {
-        .none => {},
+    if (app.overlay == .alert) {
+        // the pop-up of a failed operation is drawn over the dialog it goes back to; only its own button can be clicked
+        try overlayBox(app, win, app.alert_back);
+        app.hits.clearRetainingCapacity();
+        return alertBox(app, win);
+    }
+    try overlayBox(app, win, app.overlay);
+}
+
+// Zig tip: the `switch` names every dialog; `.none` and `.alert` draw nothing here (`draw` handles the pop-up), so the
+// function never calls itself, and its error set can be inferred by the compiler.
+/// Draw the dialog `which`.
+fn overlayBox(app: *App, win: Window, which: app_mod.Overlay) !void {
+    switch (which) {
+        .none, .alert => {},
         .menu => {
             try menuBar(app, win);
             try menuDrop(app, win);
@@ -159,12 +172,10 @@ pub fn draw(app: *App, win: Window) !void {
         .structure => try structureBox(app, win),
         .sq_structure => try sqStructureBox(app, win),
         .new_table => try newTableBox(app, win),
-        .rename => try renameBox(app, win),
+        .properties => try propertiesBox(app, win),
         .new_file => try newBox(app, win),
         .wizard => try wizardBox(app, win),
         .append_n => try appendNBox(app, win),
-        .machine_menu => try machineMenuBox(app, win),
-        .register => try registerBox(app, win),
         .open_project => try projectBox(app, win),
         .open_folder => try folderBox(app, win),
         .goto => try gotoBox(app, win),
@@ -173,6 +184,37 @@ pub fn draw(app: *App, win: Window) !void {
         .find_file => try findFileBox(app, win),
         .replace => try replaceBox(app, win),
     }
+}
+
+// Zig tip: the message is cut into lines at the spaces, as many words as fit in `w` cells; `std.mem.tokenizeScalar` gives
+// the words and skips runs of spaces. The lines live in a small array on the stack (at most 6), and the dialog is as tall
+// as they need.
+/// The pop-up of a failed operation: its title, the message, and OK, which closes it (and goes back to the dialog under it).
+fn alertBox(app: *App, win: Window) !void {
+    const msg = app.alert_msg orelse "The operation failed.";
+    const w: usize = 56;
+    var lines: [6][]const u8 = undefined;
+    var n: usize = 0;
+    var start: usize = 0;
+    var end: usize = 0;
+    var it = std.mem.tokenizeScalar(u8, msg, ' ');
+    while (it.next()) |word| {
+        const at = it.index - word.len;
+        if (end > start and at + word.len - start > w) {
+            if (n == lines.len) break;
+            lines[n] = msg[start..end];
+            n += 1;
+            start = at;
+        } else if (end == start) start = at;
+        end = at + word.len;
+    }
+    if (end > start and n < lines.len) {
+        lines[n] = msg[start..end];
+        n += 1;
+    }
+    const box = dialog(app, win, @intCast(w + 6), @intCast(6 + n), "Operation failed");
+    for (lines[0..n], 0..) |l, i| _ = put(box, 2, @intCast(1 + i), clipText(l, w + 2), theme.on(theme.bright, theme.panel));
+    try buttonRow(app, box, box.height -| 2, &.{.{ .label = "OK", .action = ok_btn, .primary = true }});
 }
 
 // Zig tip: A terminal may not change the shape of the mouse pointer (the shape is asked for with an
@@ -225,7 +267,6 @@ fn menuBar(app: *App, win: Window) !void {
     const bar = sub(win, 0, 0, W, 1);
     fillWith(bar, theme.bar);
     const in_use = app.overlay == .menu or app.alt_hint;
-    // the machines are chosen in the MACHINE menu (Alt+1 to Alt+3)
     for (app_mod.menus, 0..) |m, i| {
         const x = menuX(W, i);
         const w: u16 = @intCast(m.label.len + 2);
@@ -278,13 +319,13 @@ fn titleButtons(app: *App, box: Window, p: app_mod.Panel) !void {
     if (p == .tree) return;
     _ = put(box, w - 6, 0, if (app.maximized == p) " – " else " + ", style);
     try addHit(app, box, w - 6, 0, 3, 1, .{ .panel_max = p });
-    // the third button, at the same distance: the View of the Main Panel (Markdown files only), the Clear of the Tools Panel
+    // the third button, at the same distance: the `>` of the tab row of the Main Panel (on when tabs are hidden at the
+    // right, see `tabStrip`), the Clear of the Tools Panel
     if (w < 16) return;
     if (p == .main) {
-        const can = app.canRender();
-        const on = if (app.mdFull()) theme.onBold(theme.deep, theme.blue) else style;
-        _ = put(box, w - 9, 0, " ◉ ", if (can) on else theme.on(theme.faint, theme.bar2));
-        if (can) try addHit(app, box, w - 9, 0, 3, 1, .view_toggle);
+        const can = app.tab_more_right;
+        _ = put(box, w - 9, 0, " > ", if (can) theme.onBold(theme.bright, theme.bar2) else theme.on(theme.faint, theme.bar2));
+        if (can) try addHit(app, box, w - 9, 0, 3, 1, .{ .tab_shift = 1 });
     } else {
         _ = put(box, w - 9, 0, " ↺ ", style);
         try addHit(app, box, w - 9, 0, 3, 1, .clear_panel);
@@ -512,30 +553,64 @@ fn tabIcon(t: app_mod.Tab) []const u8 {
     return "📄";
 }
 
-// Zig tip: `break` leaves the loop when the next tab would not fit. A tab and its `×` are two hits
-// on neighbouring cells, so a click on either does its own action (and a middle click closes).
+// Zig tip: the text is made in the frame arena (`app.fmt`), because libvaxis keeps a pointer to it until the frame is shown.
+/// The text of a tab: its icon, a dot when it has unsaved changes, and its title (in the frame arena).
+fn tabLabel(app: *App, t: app_mod.Tab) []const u8 {
+    const dirty: []const u8 = if (t.buf != null and t.buf.?.dirty) "● " else "";
+    return app.fmt(" {s} {s}{s} ", .{ tabIcon(t), dirty, t.title() });
+}
+
+// Zig tip: a tab takes its label and three more cells (`× ` and a space); the sum over the tabs `first` to `last` says
+// whether they fit in `room` cells together.
+/// Do the tabs `first` to `last` fit in `room` cells?
+fn tabsFit(app: *App, strip: Window, first: usize, last: usize, room: u16) bool {
+    var used: usize = 0;
+    for (app.tabs.items[first .. last + 1]) |t| used += strip.gwidth(tabLabel(app, t)) + 3;
+    return used <= room;
+}
+
+// Zig tip: `break` leaves the loop when the next tab would not fit. A tab and its `×` are two hits on neighbouring cells,
+// so a click on either does its own action (and a middle click closes). The row starts at `tab_first`; when the active
+// tab changes (`tab_seen`), the row moves just enough to show it, and the `<` and `>` buttons move it freely.
+/// The tab row of the Main Panel: `<` at the left, the tabs, and (in `titleButtons`) `>` at the right.
 fn tabStrip(app: *App, box: Window) !void {
-    const rw = box.width -| 10;
     const strip = sub(box, 0, 0, box.width, 1);
     fillWith(strip, theme.bar2);
-    if (app.tabs.items.len == 0) {
+    const n = app.tabs.items.len;
+    if (n == 0) {
+        app.tab_first = 0;
+        app.tab_more_right = false;
         _ = put(strip, 1, 0, "no file open", theme.on(theme.faint, theme.bar2));
         return;
     }
-    var x: u16 = 0;
-    for (app.tabs.items, 0..) |t, i| {
-        const active = i == app.active;
-        const style = if (active) theme.onBold(theme.deep, theme.blue) else theme.on(theme.text, theme.bar2);
-        const dirty: []const u8 = if (t.buf != null and t.buf.?.dirty) "● " else "";
-        const label = app.fmt(" {s} {s}{s} ", .{ tabIcon(t), dirty, t.title() });
+    // the tabs go between the `<` button (3 cells) and the buttons of the title (`>`, `+`, `×`: 10 cells from the right)
+    const x0: u16 = 3;
+    const room: u16 = box.width -| 10 -| x0;
+    if (app.tab_first >= n) app.tab_first = n - 1;
+    const active = @min(app.active, n - 1);
+    if (app.tab_seen != active) {
+        app.tab_seen = active;
+        if (active < app.tab_first) app.tab_first = active;
+        while (app.tab_first < active and !tabsFit(app, strip, app.tab_first, active, room)) app.tab_first += 1;
+    }
+    var x: u16 = x0;
+    var i = app.tab_first;
+    while (i < n) : (i += 1) {
+        const t = app.tabs.items[i];
+        const style = if (i == app.active) theme.onBold(theme.deep, theme.blue) else theme.on(theme.text, theme.bar2);
+        const label = tabLabel(app, t);
         const w = strip.gwidth(label);
-        if (x + w + 3 > rw) break;
+        if (x - x0 + w + 3 > room) break;
         _ = put(strip, x, 0, label, style);
         try addHit(app, strip, x, 0, w, 1, .{ .tab = i });
         _ = put(strip, x + w, 0, "× ", style);
         try addHit(app, strip, x + w, 0, 2, 1, .{ .tab_close = i });
         x += w + 3;
     }
+    app.tab_more_right = i < n;
+    const can_left = app.tab_first > 0;
+    _ = put(strip, 0, 0, " < ", if (can_left) theme.onBold(theme.bright, theme.bar2) else theme.on(theme.faint, theme.bar2));
+    if (can_left) try addHit(app, strip, 0, 0, 3, 1, .{ .tab_shift = -1 });
 }
 
 // Zig tip: A `const` array of string literals at file level is stored once in the program. All five
@@ -582,7 +657,6 @@ fn editorArea(app: *App, ed: Window) !void {
     fillWith(ed, theme.deep);
     app.vbar_rect = .{};
     app.hbar_rect = .{};
-    app.mdbar_rect = .{};
     app.tblv_rect = .{};
     app.tblh_rect = .{};
     const tab = app.activeTab() orelse {
@@ -590,9 +664,7 @@ fn editorArea(app: *App, ed: Window) !void {
         app.editor_rect = .{};
         return;
     };
-    if (tab.render and tab.buf != null) {
-        mdArea(app, ed, tab, &tab.buf.?);
-    } else if (tab.buf) |*b| {
+    if (tab.buf) |*b| {
         try editor(app, ed, tab, b);
     } else if (tab.folder) |fv| {
         app.editor_rect = absRect(ed, 0, 0, ed.width, ed.height);
@@ -675,67 +747,54 @@ fn tabIconOfName(name: []const u8) []const u8 {
     return "📄";
 }
 
-// Zig tip: the page is rendered by `md.render` into lines of pieces, from the lines of the text buffer; the pieces get their
-// colors here. The lines are made in the arena of the frame (`app.frame`), so they are dropped at the end of the frame. The
-// first line shown (`render_top`) is kept inside the page, and a scroll bar with arrows shows where we are.
-/// The Main Panel shows a Markdown file rendered.
-fn mdArea(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) void {
-    app.editor_rect = absRect(ed, 0, 0, ed.width, ed.height);
-    const a = app.frame.allocator();
-    const n = b.lineCount();
-    const src = a.alloc([]const u8, n) catch return;
-    for (0..n) |i| src[i] = b.lineAt(i);
-    const width: usize = ed.width -| 4;
-    const lines = md.render(a, src, width) catch return;
-    const rows: usize = ed.height;
-    tab.render_top = @min(tab.render_top, lines.len -| rows);
-    var r: u16 = 0;
-    while (r < rows and tab.render_top + r < lines.len) : (r += 1) {
-        const line = lines[tab.render_top + r];
-        var x: u16 = 2;
-        for (line.spans) |s| {
-            // a rule or a heading underline is as wide as the page
-            if (s.kind == .rule) {
-                var k: usize = 0;
-                while (k < width) : (k += 1) _ = put(ed, @intCast(2 + k), r, s.text, theme.on(theme.line, theme.deep));
-                x = @intCast(2 + width);
-                continue;
-            }
-            const bg = if (s.kind == .code_block) theme.bar2 else theme.deep;
-            if (s.kind == .code_block) fillWith(sub(ed, 0, r, ed.width -| 1, 1), bg);
-            var style: Style = switch (s.kind) {
-                .text, .table => theme.on(theme.text, bg),
-                .bold => theme.onBold(theme.bright, bg),
-                .italic => theme.on(theme.text, bg),
-                .code => theme.on(theme.amber, theme.bar2),
-                .link => theme.on(theme.blue, bg),
-                .h1 => theme.onBold(theme.title, bg),
-                .h2 => theme.onBold(theme.control, bg),
-                .h3 => theme.onBold(theme.subtitle, bg),
-                .quote => theme.on(theme.dim, bg),
-                .bullet => theme.onBold(theme.blue, bg),
-                .code_block => theme.on(theme.string, bg),
-                .table_head => theme.onBold(theme.bright, bg),
-                .table_line => theme.on(theme.line, bg),
-                .rule => theme.on(theme.line, bg),
-            };
-            if (s.kind == .italic) style.italic = true;
-            if (s.kind == .link) style.ul_style = .single;
-            x = put(ed, x, r, s.text, style);
-        }
-    }
-    app.md_total = lines.len;
-    app.md_visible = rows;
-    if (lines.len > rows) app.mdbar_rect = vBar(app, ed, ed.width - 1, ed.height, lines.len, tab.render_top, rows, .{ .md_scroll = .up }, .{ .md_scroll = .down });
+// Zig tip: a field is as wide as its data needs (the length of the field, 10 for a date) or its name, whichever is longer;
+// the result is a `u16`, the type of a width on the screen.
+/// The width a field asks for in the grid of a table.
+fn naturalWidth(f: *const dbf.Field) u16 {
+    const data: usize = switch (f.kind) {
+        'D' => 10,
+        'M' => 6,
+        else => f.length,
+    };
+    return @intCast(std.math.clamp(@max(f.nameSlice().len, data), 4, 254));
 }
 
-// Zig tip: the table is drawn column by column from `left`, each as wide as its field (`dbf.displayWidth`), with one cell
-// between. The window keeps the selected cell in sight by moving `top` and `left` here, before drawing, the same way the
-// editor follows its cursor. A number is right aligned, text left aligned. `clipText` cuts a text to a width.
-/// The Main Panel shows a DBF table: a header with the names and the types, then the records, with scroll bars.
+// Zig tip: the widths are worked out once per frame into an array of the frame arena, which the click code reads too
+// (`app.tbl_widths`): when the fields do not fit, the ones wider than 12 cells give up width in proportion to what they
+// have above 12 (rounded up, so the sum fits), and none goes under 12; if they still do not fit, the grid scrolls
+// sideways from `left`.
+/// The widths of the columns of a table for `room` cells; also says whether all of them fit.
+fn columnWidths(app: *App, t: *const dbf.Table, room: usize) struct { widths: []u16, fit: bool } {
+    const widths = app.frame.allocator().alloc(u16, t.fields.len) catch return .{ .widths = &.{}, .fit = true };
+    var total: usize = 0;
+    for (t.fields, widths) |*f, *w| {
+        w.* = naturalWidth(f);
+        total += w.* + 1;
+    }
+    if (total > room) {
+        var spare: usize = 0;
+        for (widths) |w| spare += w -| 12;
+        const cut_by = @min(total - room, spare);
+        if (spare > 0) {
+            total = 0;
+            for (widths) |*w| {
+                const above: usize = w.* -| 12;
+                w.* -= @intCast((above * cut_by + spare - 1) / spare);
+                total += w.* + 1;
+            }
+        }
+    }
+    return .{ .widths = widths, .fit = total <= room };
+}
+
+// Zig tip: the grid is drawn column by column from `left`, with a `│` after each column and a `┼` where the rule under the
+// header crosses it. The rows take turns between two backgrounds (`idx % 2`), the selected row a third one. The cell text
+// is copied into the frame arena before `put`, because `put` keeps a pointer until the frame is shown.
+/// The Main Panel shows a table: `#`, the names of the fields, then the records, with scroll bars.
 fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
     const t = &tv.t;
     app.tbl_rect = .{};
+    app.tbl_widths = &.{};
     const dim = theme.on(theme.dim, theme.deep);
     if (t.fields.len == 0) {
         _ = put(ed, 2, 1, "This table has no fields yet.", theme.on(theme.text, theme.deep));
@@ -743,57 +802,75 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
         return;
     }
     const num_w = app_mod.dbf_rownum_w;
-    var total: usize = num_w;
-    for (t.fields) |*f| total += dbf.displayWidth(f) + 1;
-    const need_h = total > ed.width -| 1;
-    const body_h: u16 = ed.height -| 3 -| @as(u16, if (need_h) 1 else 0);
+    // the room for the fields: the width less the record numbers and the vertical scroll bar
+    const room: usize = (ed.width -| 1) -| num_w;
+    const cw = columnWidths(app, t, room);
+    const widths = cw.widths;
+    if (widths.len != t.fields.len) return;
+    app.tbl_widths = widths;
+    const need_h = !cw.fit;
+    const body_h: u16 = ed.height -| 2 -| @as(u16, if (need_h) 1 else 0);
     if (body_h == 0) return;
     // keep the selected cell on the screen
     if (tv.row < tv.top) tv.top = tv.row;
     if (tv.row >= tv.top + body_h) tv.top = tv.row + 1 - body_h;
     if (tv.col < tv.left) tv.left = tv.col;
     while (tv.left < tv.col) {
-        var used: usize = num_w;
-        for (t.fields[tv.left .. tv.col + 1]) |*f| used += dbf.displayWidth(f) + 1;
-        if (used <= ed.width -| 1) break;
+        var used: usize = 0;
+        for (widths[tv.left .. tv.col + 1]) |w| used += w + 1;
+        if (used <= room) break;
         tv.left += 1;
     }
-    // the header
+    const line = theme.on(theme.line, theme.deep);
+    // the header: `#`, then the names of the fields; the rule under it crosses the separators
     const head = theme.onBold(theme.bright, theme.bar2);
-    const head2 = theme.on(theme.dim, theme.bar2);
-    fillWith(sub(ed, 0, 0, ed.width, 2), theme.bar2);
-    _ = put(ed, 1, 0, "Record", head);
-    _ = put(ed, 0, 2, "─" ** 400, theme.on(theme.line, theme.deep));
+    const head_line = theme.on(theme.line, theme.bar2);
+    fillWith(sub(ed, 0, 0, ed.width, 1), theme.bar2);
+    _ = put(ed, num_w - 3, 0, "#", head);
+    _ = put(ed, num_w - 1, 0, "│", head_line);
+    _ = put(ed, 0, 1, "─" ** 400, line);
+    _ = put(ed, num_w - 1, 1, "┼", line);
     var x: u16 = num_w;
     var shown: usize = 0;
     var c = tv.left;
     while (c < t.fields.len) : (c += 1) {
-        const f = &t.fields[c];
-        const w = dbf.displayWidth(f);
+        const w = widths[c];
         if (x + w > ed.width -| 1) break;
         const sel = c == tv.col;
-        _ = put(ed, x, 0, clipText(f.nameSlice(), w), if (sel) theme.onBold(theme.deep, theme.blue) else head);
-        const info = if (f.kind == 'N' or f.kind == 'F') app.fmt("{c}({d},{d})", .{ f.kind, f.length, f.decimals }) else app.fmt("{c}({d})", .{ f.kind, f.length });
-        _ = put(ed, x, 1, clipText(info, w), head2);
+        _ = put(ed, x, 0, app.fmt("{s}", .{clipText(t.fields[c].nameSlice(), w)}), if (sel) theme.onBold(theme.deep, theme.blue) else head);
+        _ = put(ed, x + w, 0, "│", head_line);
+        _ = put(ed, x + w, 1, "┼", line);
         x += w + 1;
         shown += 1;
     }
     // the records
-    const body = sub(ed, 0, 3, ed.width, body_h);
-    app.tbl_rect = absRect(ed, 0, 3, ed.width -| 1, body_h);
+    const body = sub(ed, 0, 2, ed.width, body_h);
+    app.tbl_rect = absRect(ed, 0, 2, ed.width -| 1, body_h);
     var r: u16 = 0;
-    while (r < body_h and tv.top + r < t.records) : (r += 1) {
+    while (r < body_h) : (r += 1) {
         const idx = tv.top + r;
-        const gone = t.deleted(idx);
-        const cur = idx == tv.row;
-        const row_bg = if (cur) theme.bar2 else theme.deep;
+        const odd = idx % 2 == 1;
+        const cur = idx == tv.row and idx < t.records;
+        const row_bg = if (cur) theme.bar2 else if (odd) theme.panel else theme.deep;
         fillWith(sub(body, 0, r, body.width, 1), row_bg);
+        const sep = theme.on(theme.line, row_bg);
+        // the separators go down to the bottom of the grid, so the columns stay drawn under the last record
+        _ = put(body, num_w - 1, r, "│", sep);
+        var sx: u16 = num_w;
+        var k0 = tv.left;
+        while (k0 < tv.left + shown) : (k0 += 1) {
+            sx += widths[k0];
+            _ = put(body, sx, r, "│", sep);
+            sx += 1;
+        }
+        if (idx >= t.records) continue;
+        const gone = t.deleted(idx);
         _ = put(body, 0, r, app.fmt("{d:>6}{s}", .{ idx + 1, if (gone) "*" else " " }), theme.on(theme.faint, row_bg));
         var cx: u16 = num_w;
         var k = tv.left;
         while (k < tv.left + shown) : (k += 1) {
             const f = &t.fields[k];
-            const w = dbf.displayWidth(f);
+            const w = widths[k];
             var buf: [16]u8 = undefined;
             const shown_text = clipText(t.display(idx, k, &buf), w);
             // `buf` is on this frame's stack: the text is copied before `put` keeps a pointer to it
@@ -817,7 +894,7 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
     app.tbl_cols = shown;
     if (t.records > body_h) app.tblv_rect = vBar(app, body, body.width - 1, body.height, t.records, tv.top, body_h, .{ .table_scroll = .up }, .{ .table_scroll = .down });
     if (need_h) app.tblh_rect = hBar(app, ed, ed.height - 1, ed.width -| 1, t.fields.len, tv.left, shown, .{ .table_scroll = .left }, .{ .table_scroll = .right });
-    if (t.records == 0) _ = put(ed, 2, 4, if (tv.readonly) "No rows." else "No records. The structure is changed with  SQL:> alter table <name>", dim);
+    if (t.records == 0) _ = put(ed, num_w + 1, 2, if (tv.readonly) "No rows." else "No records. The structure is changed with  SQL:> alter table <name>", dim);
 }
 
 // Zig tip: A tab is one character in the text but several cells on the screen. For drawing, the line is
@@ -1230,7 +1307,8 @@ fn drawSql(w: Window, line: []const u8, start: usize, bg: theme.Color) void {
 // Zig tip: `[_][]const u8{ ... }` is an array of string slices whose length the compiler counts. These
 // lists are hand-written (the interruptions and the types of SCL, see `eve1.js` of the tutorial); the
 // generated `keywords.words` holds all the keywords, and what is not in a list here is a plain keyword.
-const interrupt_words = [_][]const u8{ "abort", "break", "exit", "panic", "raise", "resume", "retry", "return", "skip", "stop", "yield" };
+// `return` is not here: it closes a block, like the keywords that open one (`procedure`), and has their color.
+const interrupt_words = [_][]const u8{ "abort", "break", "exit", "panic", "raise", "resume", "retry", "skip", "stop", "yield" };
 const control_words = [_][]const u8{ "do", "done", "else", "for", "if", "job", "loop", "match", "parallel", "repeat", "then", "when", "while" };
 const operator_words = [_][]const u8{ "and", "as", "eq", "in", "is", "not", "or", "xor" };
 const type_words = [_][]const u8{
@@ -1279,7 +1357,7 @@ fn card(app: *App, tab: *app_mod.Tab, ed: Window) void {
     _ = put(box, 2, 4, "Size", theme.on(theme.dim, theme.deep));
     _ = put(box, 10, 4, sizeText(app, tab.card.size), theme.on(theme.text, theme.deep));
     _ = put(box, 2, 5, "Side", theme.on(theme.dim, theme.deep));
-    _ = put(box, 10, 5, if (isServerPath(tab.path)) "server (sent by upload)" else "local (not sent by upload)", theme.on(theme.text, theme.deep));
+    _ = put(box, 10, 5, if (isServerPath(tab.path)) "server (a folder of the server side)" else "client", theme.on(theme.text, theme.deep));
     _ = put(box, 2, box.height -| 1, tab.card.note, theme.on(theme.dim, theme.deep));
 }
 
@@ -1299,8 +1377,7 @@ fn sizeText(app: *App, size: u64) []const u8 {
 }
 
 // Zig tip: The bar belongs to the Tools Panel: it is drawn above it and is not on the screen when that panel is hidden.
-// The debugger buttons are drawn dimmed: they exist so that the screen is as designed,
-// and a click says "not yet". Only Run works (F5).
+// A button that cannot act now is drawn dimmed and its hit is `.nop`, so a click on it does nothing.
 fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     const bar = sub(win, x0, y, rw, 1);
     fillWith(bar, theme.panel);
@@ -1335,21 +1412,11 @@ fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     x = try fixedButton(app, bar, x, labels[5], bw, dbg_style, if (free_run or !can_start) .nop else .{ .button = .exit });
     x += 1;
     _ = try fixedButton(app, bar, x, labels[6], bw, dbg_style, if (free_run or !can_start) .nop else .{ .button = .trace });
-    // At the right end: the name of the machine in use (a dropdown of the registered machines, and Register) and the lock.
-    // The name is green when the machine is connected and red when it is not.
+    // At the right end: the lock of the layout (locked: the borders between the panels stay; open: they can be dragged).
     if (rw > 60) {
         const locked = !app.modify;
         _ = put(bar, rw - 4, 0, if (locked) " 🔒 " else " 🔓 ", theme.onBold(if (locked) theme.text else theme.amber, theme.panel));
         try addHit(app, bar, rw - 4, 0, 4, 1, .lock_toggle);
-        const m = app.machines.items[@min(app.machine, app.machines.items.len - 1)];
-        const color = if (app.isConnected(app.machine)) theme.green else theme.red;
-        const name = app.fmt(" {s} ▾ ", .{m.label});
-        const nw = bar.gwidth(name);
-        const nx = rw -| (4 + nw);
-        if (nx > 40) {
-            _ = put(bar, nx, 0, name, theme.onBold(color, theme.panel));
-            try addHit(app, bar, nx, 0, nw, 1, .{ .machine_open = .{ .x = x0 + nx, .y = y + 1 } });
-        }
     }
 }
 
@@ -1670,7 +1737,7 @@ fn statusBar(app: *App, win: Window) !void {
         const c = put(box, 1, 0, shown, theme.onBold(theme.bright, theme.deep));
         if (c + 2 < left_w + 1) _ = put(box, c, 0, clipText(fileFacts(app), left_w + 1 -| c), theme.on(theme.dim, theme.deep));
     } else {
-        _ = put(box, 1, 0, clipText(app.fmt("Ready: connection: {s}", .{if (app.machine == 0) "local" else "remote"}), left_w), theme.on(theme.green, theme.deep));
+        _ = put(box, 1, 0, "Ready", theme.on(theme.green, theme.deep));
     }
 
     if (app.activeBuffer()) |b| {
@@ -1812,20 +1879,69 @@ fn tabMenuBox(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: the Rename dialog is a field filled with the path of the file in the project; the person edits it and presses
-// Enter. Changing only the name part renames the file; changing the folder part moves it (to a folder that exists).
-/// File > Rename…: the new name of a file.
-fn renameBox(app: *App, win: Window) !void {
-    const box = dialog(app, win, 70, 9, "Rename");
+// Zig tip: the facts are a fixed array of label and value pairs; `n` counts the ones that apply (an optional fact with no
+// value is left out), and the height of the dialog follows. The name is the first row: Rename turns it into a field in
+// the same place; the folder is a fact of its own, changed with Move (the folder selector).
+/// The Info dialog (Info… of a tab, File > Rename…): `File: name` (or `Table:`, `View:`, `Folder:`), a rule, the facts.
+fn propertiesBox(app: *App, win: Window) !void {
+    const p = app.props;
+    const is_table = if (app.rename_from) |r| std.mem.indexOfScalar(u8, r, '#') != null else false;
+    const is_folder = std.mem.eql(u8, p.kind, "Folder");
+    var facts: [8][2][]const u8 = undefined;
+    var n: usize = 0;
+    facts[n] = .{ "Kind", p.kind };
+    n += 1;
+    facts[n] = .{ if (is_table) "Database" else "Folder", if (p.place.len == 0) "(project folder)" else p.place };
+    n += 1;
+    if (p.size) |s| {
+        facts[n] = .{ "Size", sizeText(app, s) };
+        n += 1;
+    }
+    if (p.modified > 0) {
+        facts[n] = .{ "Modified", app.fmt("{s} UTC", .{dateText(app, p.modified)}) };
+        n += 1;
+    }
+    if (p.lines) |l| {
+        facts[n] = .{ "Lines", app.fmt("{d}{s}", .{ l, if (p.unsaved) " (unsaved changes)" else "" }) };
+        n += 1;
+        facts[n] = .{ "Line ends", p.line_ends };
+        n += 1;
+    }
+    if (p.records) |r| {
+        facts[n] = .{ if (is_table) "Rows" else "Records", app.fmt("{d}", .{r}) };
+        n += 1;
+    }
+    if (p.fields) |f| {
+        facts[n] = .{ "Fields", app.fmt("{d}", .{f}) };
+        n += 1;
+    }
+    const what: []const u8 = if (p.is_view) "View" else if (is_table) "Table" else if (is_folder) "Folder" else "File";
+    const h: u16 = @intCast(9 + n);
+    const box = dialog(app, win, 70, h, app.fmt("{s}: {s}", .{ what, app.infoName() }));
     const dim = theme.on(theme.dim, theme.panel);
-    _ = put(box, 2, 1, app.fmt("File: {s}", .{app.rename_from orelse ""}), theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 2, "New name (a path in the project):", dim);
-    const f = sub(box, 2, 3, box.width -| 4, 1);
-    fillWith(f, theme.bar);
-    app.saveas_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+    _ = put(box, 0, 1, "─" ** 200, theme.on(theme.line, theme.panel));
+    _ = put(box, 2, 2, "Name", dim);
+    if (app.prop_editing) {
+        const f = sub(box, 13, 2, box.width -| 15, 1);
+        fillWith(f, theme.bar);
+        app.saveas_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+    } else {
+        _ = put(box, 13, 2, clipText(app.infoName(), box.width -| 15), theme.onBold(theme.bright, theme.panel));
+    }
+    for (facts[0..n], 0..) |fact, i| {
+        const y: u16 = @intCast(3 + i);
+        _ = put(box, 2, y, fact[0], dim);
+        _ = put(box, 13, y, clipText(fact[1], box.width -| 15), theme.on(theme.text, theme.panel));
+    }
+    const hint = if (app.prop_editing) "Enter renames · Esc leaves the name" else if (is_table) "r rename · Esc closes · a table moves with its database" else "r rename · m move to another folder · Esc closes";
+    // the buttons are on the row `box.height - 2`; the hint goes on the row above them
+    if (app.message) |m| {
+        _ = put(box, 2, box.height -| 3, clipText(m, box.width -| 4), theme.on(theme.amber, theme.panel));
+    } else _ = put(box, 2, box.height -| 3, hint, dim);
     try buttonRow(app, box, box.height -| 2, &.{
-        .{ .label = "Rename", .action = ok_btn, .primary = true },
-        .{ .label = "Cancel", .action = .close_overlay },
+        .{ .label = "Rename", .action = .{ .prop_btn = .rename }, .primary = app.prop_editing, .enabled = !p.is_view },
+        .{ .label = "Move", .action = .{ .prop_btn = .move }, .enabled = !is_table and !app.prop_editing },
+        .{ .label = "Close", .action = .close_overlay },
     });
 }
 
@@ -2041,39 +2157,6 @@ fn appendNBox(app: *App, win: Window) !void {
     });
 }
 
-/// The dropdown under the machine name of the toolbar: the registered machines, the one in use marked.
-fn machineMenuBox(app: *App, win: Window) !void {
-    var lw: u16 = win.gwidth("Register…");
-    for (app.machines.items) |m| lw = @max(lw, win.gwidth(m.label));
-    const w: u16 = lw + 6;
-    const n = app.machines.items.len;
-    const h: u16 = @intCast(n + 4);
-    const x = @min(app.mm_x, win.width -| w);
-    const y = @min(app.mm_y, win.height -| h);
-    solid(app, win, x, y, w, h);
-    shadow(win, x, y, w, h);
-    const box = boxed(win, x, y, w, h, theme.blue);
-    fillWith(box, theme.panel);
-    for (app.machines.items, 0..) |m, i| {
-        const r: u16 = @intCast(i);
-        const sel = app.mm_sel == i;
-        const bg = if (sel) theme.selected else theme.panel;
-        const line = sub(box, 0, r, box.width, 1);
-        fillWith(line, bg);
-        _ = put(line, 1, 0, if (i == app.machine) "●" else " ", theme.on(theme.blue, bg));
-        _ = put(line, 3, 0, m.label, theme.on(if (sel) theme.bright else theme.text, bg));
-        try addHit(app, box, 0, r, box.width, 1, .{ .machinemenu_item = i });
-    }
-    // a rule, then the way to add or change a machine
-    _ = put(box, 0, @intCast(n), "─" ** 60, theme.on(theme.line, theme.panel));
-    const reg_sel = app.mm_sel == n;
-    const reg_bg = if (reg_sel) theme.selected else theme.panel;
-    const reg = sub(box, 0, @intCast(n + 1), box.width, 1);
-    fillWith(reg, reg_bg);
-    _ = put(reg, 3, 0, "Register…", theme.on(if (reg_sel) theme.bright else theme.text, reg_bg));
-    try addHit(app, box, 0, @intCast(n + 1), box.width, 1, .{ .machinemenu_item = n });
-}
-
 // Zig tip: the same design as the structure of a DBF table (a bordered grid, one row for each field), with the columns of a
 // SQLite table: Name, Type (from a list), Not null and Key (check boxes, Space or a click switches them) and Default. The
 // rule lines are cut from one long string, as in `structureBox`.
@@ -2187,70 +2270,21 @@ fn sqStructureBox(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: The table has one row more than the list: the last row is the machine that is being added. The rows that
-// are shown start at `top`, moved only as far as the selected row needs, like the file tree. The two fields under the
-// table show the selected row; for the Local machine they are only shown, because Local cannot be changed.
-/// The registration form: the machines in order of registration, a row for a new one, and its address and port.
-fn registerBox(app: *App, win: Window) !void {
-    const box = dialog(app, win, 72, 22, "Register machines");
-    const dim = theme.on(theme.dim, theme.panel);
-    _ = put(box, 2, 1, "Pick a machine, or fill the last row to add a new one.", dim);
-    _ = put(box, 2, 3, "  #  Address                                 Port   State", theme.on(theme.faint, theme.panel));
-    const n = app.machines.items.len;
-    const list_h: u16 = box.height -| 12;
-    const top: usize = if (app.reg_sel + 1 > list_h) app.reg_sel + 1 - list_h else 0;
-    var r: u16 = 0;
-    while (r < list_h and top + r <= n) : (r += 1) {
-        const i = top + r;
-        const sel = app.reg_sel == i;
-        const bg = if (sel) theme.selected else theme.panel;
-        const row = sub(box, 1, 4 + r, box.width -| 2, 1);
-        fillWith(row, bg);
-        const fg = theme.on(if (sel) theme.bright else theme.text, bg);
-        if (i < n) {
-            const m = app.machines.items[i];
-            _ = put(row, 1, 0, app.fmt("{d:>3}", .{i + 1}), fg);
-            _ = put(row, 6, 0, clipText(m.address, 38), fg);
-            if (i > 0) _ = put(row, 46, 0, app.fmt("{d}", .{m.port}), fg);
-            const state: []const u8 = if (i == app.machine) "● in use" else if (i == 0) "local" else "registered";
-            _ = put(row, 53, 0, state, theme.on(if (i == app.machine) theme.green else theme.dim, bg));
-        } else {
-            _ = put(row, 1, 0, app.fmt("{d:>3}", .{i + 1}), fg);
-            _ = put(row, 6, 0, "+ new machine", theme.on(theme.faint, bg));
-        }
-        try addHit(app, box, 1, 4 + r, box.width -| 2, 1, .{ .reg_row = i });
-    }
-    const fy = box.height -| 7;
-    _ = put(box, 2, fy, "Address", dim);
-    try field(app, box, 11, fy, box.width -| 13, &app.reg_addr, 0, app.dlg_field == 0 and app.reg_sel > 0);
-    _ = put(box, 2, fy + 1, "Port", dim);
-    try field(app, box, 11, fy + 1, 9, &app.reg_port, 1, app.dlg_field == 1 and app.reg_sel > 0);
-    if (app.reg_sel == 0) _ = put(box, 22, fy + 1, "Local is this computer: it cannot be changed.", dim);
-    if (app.message) |m| _ = put(box, 2, fy + 3, clipText(m, box.width -| 4), theme.on(theme.amber, theme.panel));
-    try buttonRow(app, box, box.height -| 2, &.{
-        .{ .label = "Save", .action = .{ .reg_btn = .save }, .primary = true, .enabled = app.regDirty() },
-        .{ .label = "Select", .action = .{ .reg_btn = .select }, .enabled = app.regCanSelect() },
-        .{ .label = "Close", .action = .close_overlay },
-    });
-}
-
 // Zig tip: A `switch` on the optional command: `row.cmd orelse` is not needed because the labels
 // that change with the state have a command, and a separator is handled before this function is
 // called. The marks `[x]`, `[ ]` and `●` are drawn from the state of the app on every frame, so
 // the menu is never out of date.
-/// The text of a menu row: its label, with a check box (panels), a dot (the current window or
-/// machine) in front when the row has one.
+/// The text of a menu row: its label, with a check box (panels) or a dot (the current window)
+/// in front when the row has one.
 fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
     const cmd = row.cmd orelse return row.label;
     return switch (cmd) {
-        .preview => app.fmt("[{s}] {s}", .{ if (app.mdFull()) "x" else " ", row.label }),
         .toggle_tree => app.fmt("[{s}] {s}", .{ if (app.show_tree) "x" else " ", row.label }),
         .toggle_main => app.fmt("[{s}] {s}", .{ if (app.show_main) "x" else " ", row.label }),
         .toggle_tools => app.fmt("[{s}] {s}", .{ if (app.show_tools) "x" else " ", row.label }),
         .toggle_hidden => app.fmt("[{s}] {s}", .{ if (app.show_hidden) "x" else " ", row.label }),
         .toggle_wrap => app.fmt("[{s}] {s}", .{ if (app.wrap) "x" else " ", row.label }),
         .window_pick => app.fmt("{s} {s}", .{ if (row.arg == app.active) "●" else " ", row.label }),
-        .machine_pick => app.fmt("{s} {s}", .{ if (row.arg == app.machine) "●" else " ", row.label }),
         else => row.label,
     };
 }
@@ -2348,7 +2382,8 @@ fn settings(app: *App, win: Window) !void {
         1 => try colorsTab(app, body),
         else => try timersTab(app, body),
     }
-    _ = put(box, 2, box.height -| 4, "Tab: next tab · arrows change the value · Enter saves · Esc cancels", theme.on(theme.dim, theme.panel));
+    const help = if (app.opt_edit != .none) "Enter applies the field · Esc closes it" else "Tab: next tab · arrows change the value · Enter saves · Esc cancels";
+    _ = put(box, 2, box.height -| 4, help, theme.on(theme.dim, theme.panel));
     try buttonRow(app, box, box.height -| 2, &.{
         .{ .label = "Save", .action = .{ .opt = .ok }, .primary = true },
         .{ .label = "Defaults", .action = .{ .opt = .defaults } },
@@ -2356,19 +2391,55 @@ fn settings(app: *App, win: Window) !void {
     });
 }
 
-/// The list of themes and a sample of the one in use.
+// Zig tip: the list has two groups, the built-in themes and then the custom ones, with a rule between them. The rows that
+// are shown start at `first`, moved only as far as the selected theme needs, like the file tree. `opt.count()` is the
+// number of themes; the id of a theme is its place in the list, so a click sends that number.
+/// The list of themes, the buttons under it (and the field of Rename, Export, Import), and a sample of the theme in use.
 fn themeTab(app: *App, body: Window) !void {
     const dim = theme.on(theme.dim, theme.panel);
-    var i: u8 = 0;
-    while (i <= theme.custom_id) : (i += 1) {
-        const sel = app.options.theme_id == i;
+    const opt = &app.options;
+    const builtins = theme.themes.len;
+    const list_h: usize = 13;
+    const rows_total = opt.count() + 1; // the rule between the two groups is a row
+    const sel_row = opt.theme_id + @as(usize, if (opt.theme_id >= builtins) 1 else 0);
+    const first: usize = if (sel_row + 1 > list_h) sel_row + 1 - list_h else 0;
+    var r: usize = 0;
+    while (r < list_h and first + r < rows_total) : (r += 1) {
+        const row_i = first + r;
+        const y: u16 = @intCast(r);
+        if (row_i == builtins) {
+            _ = put(body, 1, y, if (opt.n_custom == 0) "── no custom theme yet ──" else "── custom ──────────────", theme.on(theme.faint, theme.panel));
+            continue;
+        }
+        const id: usize = if (row_i > builtins) row_i - 1 else row_i;
+        const sel = opt.theme_id == id;
         const bg = if (sel) theme.selected else theme.panel;
-        const row = sub(body, 0, i, 26, 1);
+        const row = sub(body, 0, y, 28, 1);
         fillWith(row, bg);
-        const name = if (i < theme.themes.len) theme.themes[i].name else "Custom";
         _ = put(row, 1, 0, if (sel) "●" else "○", theme.on(theme.blue, bg));
-        _ = put(row, 3, 0, name, theme.on(if (sel) theme.bright else theme.text, bg));
-        try addHit(app, body, 0, i, 26, 1, .{ .opt = .{ .theme = i } });
+        _ = put(row, 3, 0, clipText(opt.nameOf(id), 24), theme.on(if (sel) theme.bright else theme.text, bg));
+        try addHit(app, body, 0, y, 28, 1, .{ .opt = .{ .theme = @intCast(id) } });
+    }
+    // the buttons: Rename and Remove only for a custom theme; Export and Import always
+    const custom = !options_mod.Options.isBuiltin(opt.theme_id);
+    const on = theme.on(theme.text, theme.bar);
+    const off = theme.on(theme.faint, theme.panel);
+    const by: u16 = @intCast(list_h + 1);
+    var bx: u16 = 0;
+    bx = try button(app, body, bx, by, "Rename", if (custom) on else off, if (custom) .{ .opt = .{ .theme_btn = .rename } } else .nop) + 1;
+    bx = try button(app, body, bx, by, "Remove", if (custom) on else off, if (custom) .{ .opt = .{ .theme_btn = .remove } } else .nop) + 1;
+    bx = try button(app, body, bx, by, "Export", on, .{ .opt = .{ .theme_btn = .export_file } }) + 1;
+    _ = try button(app, body, bx, by, "Import", on, .{ .opt = .{ .theme_btn = .import_file } });
+    if (app.opt_edit != .none) {
+        _ = put(body, 1, by + 2, "New name", theme.onBold(theme.text, theme.panel));
+        const f = sub(body, 13, by + 2, body.width -| 24, 1);
+        fillWith(f, theme.bar);
+        app.opt_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+        _ = try button(app, body, body.width -| 9, by + 2, "OK", theme.onBold(theme.bright, theme.green_bg), .{ .opt = .{ .theme_btn = .apply } });
+    } else if (app.message) |m| {
+        _ = put(body, 1, by + 2, clipText(m, body.width -| 2), theme.on(theme.amber, theme.panel));
+    } else {
+        _ = put(body, 1, by + 2, "n rename · Del remove · e export · i import (a JSON theme file)", dim);
     }
     // a sample, drawn with the colors in use
     const sx: u16 = 30;
@@ -2406,10 +2477,13 @@ fn themeTab(app: *App, body: Window) !void {
     _ = put(sample, 1, 8, "warning", theme.on(theme.amber, d));
     _ = put(sample, 10, 8, "ok", theme.on(theme.green, d));
     _ = put(sample, 14, 8, "info", theme.on(theme.blue, d));
-    _ = put(body, sx, 11, "Editing a color on the Colors tab", dim);
-    _ = put(body, sx, 12, "copies this theme to Custom.", dim);
-    _ = put(body, 1, 15, "Font: the font belongs to the terminal. A program that runs in a", dm);
-    _ = put(body, 1, 16, "terminal cannot change it: use the font setting of the terminal.", dm);
+    if (custom) {
+        _ = put(body, sx, 11, "A custom theme: the Colors tab changes it.", dim);
+    } else {
+        _ = put(body, sx, 11, "A built-in theme: a change on the Colors", dim);
+        _ = put(body, sx, 12, "tab makes a copy (Dark Custom1, …).", dim);
+    }
+    _ = put(body, sx, 13, "The font belongs to the terminal.", dm);
 }
 
 /// The colors one by one, with a selector for the one that is selected.
@@ -2435,7 +2509,9 @@ fn colorsTab(app: *App, body: Window) !void {
     const swatch = sub(body, x0, 1, 14, 2);
     fillWith(swatch, theme.colorOf(slot));
     _ = put(body, x0 + 16, 1, app.fmt("#{x:0>6}", .{hex}), theme.onBold(theme.text, theme.panel));
-    _ = put(body, x0 + 16, 2, if (app.options.theme_id == theme.custom_id) "Custom theme" else theme.themes[app.options.theme_id].name, dim);
+    const builtin_theme = options_mod.Options.isBuiltin(app.options.theme_id);
+    _ = put(body, x0 + 16, 2, clipText(app.options.nameOf(app.options.theme_id), body.width -| (x0 + 17)), theme.onBold(theme.text, theme.panel));
+    if (builtin_theme) _ = put(body, x0, 9, "Built-in theme: a change makes a custom copy.", theme.on(theme.amber, theme.panel));
     // the three sliders: a click on a cell sets the value that the cell stands for
     const chan_names = [_][]const u8{ "R", "G", "B" };
     const chan_colors = [_]u24{ 0xd9534f, 0x58c08a, 0x5aa9e6 };
@@ -2476,7 +2552,7 @@ fn colorsTab(app: *App, body: Window) !void {
     }
 }
 
-/// Auto Save and Run Delay.
+/// Auto Save, Run Delay and Trace Delay.
 fn timersTab(app: *App, body: Window) !void {
     const dim = theme.on(theme.dim, theme.panel);
     const head = theme.on(theme.faint, theme.panel);
@@ -2485,22 +2561,20 @@ fn timersTab(app: *App, body: Window) !void {
     _ = put(body, 15, 0, "Value", head);
     _ = put(body, 26, 0, "Change", head);
     _ = put(body, 50, 0, "Description", head);
-    const labels = [_][]const u8{ "Auto save", "Run delay", "Border delay", "Trace delay" };
+    const labels = [_][]const u8{ "Auto save", "Run delay", "Trace delay" };
     const notes = [_][2][]const u8{
         .{ "Save changed files every so", "many seconds (off = never)." },
         .{ "Seconds between typing Run in", "the Console and running it." },
-        .{ "Seconds the pointer rests on a", "border before you can drag it." },
         .{ "Milliseconds between two", "statements while Trace runs." },
     };
     var row: u8 = 0;
-    while (row < 4) : (row += 1) {
+    while (row < labels.len) : (row += 1) {
         const y: u16 = 2 + @as(u16, row) * 3;
         const sel = app.opt_row == row;
         _ = put(body, 2, y, labels[row], theme.onBold(if (sel) theme.bright else theme.text, theme.panel));
         const value: []const u8 = switch (row) {
             0 => if (app.options.autosave_s == 0) "off" else app.fmt("every {d} s", .{app.options.autosave_s}),
             1 => if (app.options.run_delay_s == 0) "at once" else app.fmt("{d} s", .{app.options.run_delay_s}),
-            2 => if (app.options.hover_delay_s == 0) "at once" else app.fmt("{d} s", .{app.options.hover_delay_s}),
             else => app.fmt("{d} ms", .{app.options.trace_ms}),
         };
         _ = put(body, 15, y, value, theme.onBold(theme.amber, theme.panel));
@@ -2517,10 +2591,6 @@ fn timersTab(app: *App, body: Window) !void {
                 x = try button(app, body, x, y, "-1", btn, .{ .opt = .{ .delay = -1 } }) + 1;
                 _ = try button(app, body, x, y, "+1", btn, .{ .opt = .{ .delay = 1 } });
             },
-            2 => {
-                x = try button(app, body, x, y, "-1", btn, .{ .opt = .{ .hover = -1 } }) + 1;
-                _ = try button(app, body, x, y, "+1", btn, .{ .opt = .{ .hover = 1 } });
-            },
             else => {
                 x = try button(app, body, x, y, "-50", btn, .{ .opt = .{ .trace = -50 } }) + 1;
                 x = try button(app, body, x, y, "-10", btn, .{ .opt = .{ .trace = -10 } }) + 1;
@@ -2531,9 +2601,9 @@ fn timersTab(app: *App, body: Window) !void {
         _ = put(body, 50, y, notes[row][0], dim);
         _ = put(body, 50, y + 1, notes[row][1], dim);
     }
-    _ = put(body, 2, 15, "Up, Down choose the line · Left, Right change it (Auto save: 10 s steps, Trace: 50 ms).", dim);
-    _ = put(body, 2, 17, "These options are for the tool and for you, not for a project. They are saved in your user", dim);
-    _ = put(body, 2, 18, "cache. The settings of Eve are in the configuration files.", dim);
+    _ = put(body, 2, 12, "Up, Down choose the line · Left, Right change it (Auto save: 10 s steps, Trace: 50 ms).", dim);
+    _ = put(body, 2, 14, "These options are for the tool and for you, not for a project. They are saved in your user", dim);
+    _ = put(body, 2, 15, "cache. The settings of Eve are in the configuration files.", dim);
 }
 
 // Zig tip: `@embedFile("eve_zon")` is the text of the root `build.zig.zon` of the repository, copied
@@ -2673,38 +2743,66 @@ fn projectBox(app: *App, win: Window) !void {
 
 /// File > Open Folder: a browser of folders. The field shows the path; the list shows the sub
 /// folders; Open as project adds the folder to the cache and opens it.
+// Zig tip: one dialog for four uses (`app.fb_mode`): a `switch` picks the title and the main button; Export and Import
+// also list the theme files (`.json`) after the folders and have a name field under the list, so the list is two rows
+// shorter for them.
+/// The folder selector: Open Folder, Move (a file of the Info dialog), Export and Import of a theme.
 fn folderBox(app: *App, win: Window) !void {
-    const box = dialog(app, win, 78, 22, "Open Folder");
+    const with_name = app.fbHasName();
+    const title: []const u8, const ok_label: []const u8 = switch (app.fb_mode) {
+        .project => .{ "Open Folder", "Open as project" },
+        .move_to => .{ app.fmt("Move {s} to a folder", .{app.infoName()}), "Move here" },
+        .theme_export => .{ "Export theme", "Export" },
+        .theme_import => .{ "Import theme", "Import" },
+    };
+    const box = dialog(app, win, 78, 22, title);
     const dim = theme.on(theme.dim, theme.panel);
+    _ = put(box, 0, 1, "─" ** 200, theme.on(theme.line, theme.panel));
     _ = put(box, 2, 2, "Folder", dim);
     try field(app, box, 10, 2, box.width -| 12, &app.project_in, 0, app.dlg_field == 0);
     const n = app.fbRowCount();
-    const list_h: u16 = box.height -| 9;
+    const list_h: u16 = box.height -| @as(u16, if (with_name) 11 else 9);
     if (app.fb_sel < app.fb_top) app.fb_top = app.fb_sel;
     if (app.fb_sel >= app.fb_top + list_h) app.fb_top = app.fb_sel + 1 - list_h;
     if (n <= list_h) app.fb_top = 0;
     const frame = sub(box, 1, 4, box.width -| 2, list_h);
     fillWith(frame, theme.deep);
+    // the last column of the list is the scroll bar when the rows do not fit
+    const need_bar = n > list_h;
+    const row_w: u16 = if (need_bar) frame.width -| 1 else frame.width;
     var r: u16 = 0;
     while (r < list_h and app.fb_top + r < n) : (r += 1) {
         const i = app.fb_top + r;
         const sel = i == app.fb_sel;
         const bg = if (sel) (if (app.dlg_field == 1) theme.selected else theme.bar) else theme.deep;
-        const row = sub(frame, 0, r, frame.width, 1);
+        const row = sub(frame, 0, r, row_w, 1);
         fillWith(row, bg);
         const name = app.fbRowName(i);
         if (std.mem.eql(u8, name, "..")) {
             _ = put(row, 1, 0, "↑  ..", theme.on(theme.dim, bg));
+        } else if (app.fbRowIsFile(i)) {
+            const c = put(row, 1, 0, "📄 ", theme.on(theme.text, bg));
+            _ = put(row, c, 0, clipText(name, frame.width -| 6), theme.on(if (sel) theme.bright else theme.text, bg));
         } else {
             const c = put(row, 1, 0, "📁 ", theme.on(theme.amber, bg));
             _ = put(row, c, 0, clipText(name, frame.width -| 6), theme.on(if (sel) theme.bright else theme.text, bg));
         }
-        try addHit(app, frame, 0, r, frame.width, 1, .{ .fb_row = i });
+        try addHit(app, frame, 0, r, row_w, 1, .{ .fb_row = i });
+    }
+    if (need_bar) _ = vBar(app, frame, frame.width - 1, list_h, n, app.fb_top, list_h, .{ .fb_scroll = .up }, .{ .fb_scroll = .down });
+    if (with_name) {
+        _ = put(box, 2, box.height -| 6, "File name", dim);
+        try field(app, box, 13, box.height -| 6, box.width -| 15, &app.fb_name, 2, app.dlg_field == 2);
     }
     const count = app.fb_entries.items.len;
-    _ = put(box, 2, box.height -| 4, app.fmt("{d} folders · Enter in · Backspace up · Tab field/list · F2 open as project", .{count}), dim);
+    const info = switch (app.fb_mode) {
+        .project => app.fmt("{d} folders · Enter in · Backspace up · Tab field/list · F2 open as project", .{count}),
+        .move_to => app.fmt("{d} folders · Enter in · Backspace up · F2 moves here", .{count}),
+        else => app.fmt("{d} folders · {d} theme files · Tab next field · F2 {s}", .{ count, app.fb_files.items.len, ok_label }),
+    };
+    _ = put(box, 2, box.height -| 4, clipText(info, box.width -| 4), dim);
     try buttonRow(app, box, box.height -| 2, &.{
-        .{ .label = "Open as project", .action = .{ .dlg = .open_here }, .primary = true },
+        .{ .label = ok_label, .action = .{ .dlg = .open_here }, .primary = true },
         .{ .label = "Cancel", .action = .close_overlay },
     });
 }

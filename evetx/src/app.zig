@@ -36,7 +36,7 @@ pub const Panel = enum { tree, main, tools };
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, rename, new_table, sq_structure, new_file, wizard, append_n, structure, confirm, tab_menu, machine_menu, register, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
+pub const Overlay = enum { none, properties, alert, new_table, sq_structure, new_file, wizard, append_n, structure, confirm, tab_menu, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
@@ -49,6 +49,15 @@ pub const Button = enum { run, halt, next, step, exit, trace, replace, replace_a
 /// The buttons of the dialogs that are not a plain "close": `ok` does what Enter does in that dialog.
 pub const DlgAction = enum { ok, forget, browse, open_here };
 
+// Zig tip: two small enums with one value per button; the click carries the value and `activate` switches on it.
+/// The buttons of the Info dialog that are not Close.
+pub const PropBtn = enum { rename, move };
+
+// Zig tip: the folder selector is one dialog with four uses. The use is an enum stored in the app (`fb_mode`): the
+// drawing reads it for the title, the button and the name field, and `fbOk` reads it to know what the main button does.
+/// Why the folder selector is open: Open Folder (a project), Move (a file of the Info dialog), Export or Import a theme.
+pub const FbMode = enum { project, move_to, theme_export, theme_import };
+
 /// What a click on a clickable place does (see `Hit`).
 pub const Action = union(enum) {
     tree_row: u32,
@@ -56,11 +65,6 @@ pub const Action = union(enum) {
     tab_close: usize,
     bottom: BottomTab,
     button: Button,
-    /// The machine name on the toolbar: open the list of the registered machines under it (absolute cell).
-    machine_open: struct { x: u16, y: u16 },
-    /// The gear on the toolbar: open the registration form.
-    register_open,
-    machinemenu_item: usize,
     /// The arrows of the scroll bar of a log (Console, Stdout, Stderr, Watch, SQL): half a page up or down.
     log_scroll: ScrollBtn,
     /// The arrows of the scroll bar of the list of breakpoints.
@@ -81,20 +85,21 @@ pub const Action = union(enum) {
     /// A row of the list of a folder, and the arrows of its scroll bar.
     folder_row: usize,
     folder_scroll: ScrollBtn,
+    /// The arrows of the scroll bar of the folder selector.
+    fb_scroll: ScrollBtn,
     /// The same for the structure dialog of a SQLite table.
     sq_cell: struct { row: u16, col: u8 },
     sq_btn: StBtn,
     sq_pick: u8,
     sq_drop_open,
-    /// The View button of the Main Panel, and the arrows of the scroll bar of a rendered page.
-    view_toggle,
-    md_scroll: ScrollBtn,
+    /// The `<` and `>` buttons of the tab row of the Main Panel: show the tabs one place further left (-1) or right (+1).
+    tab_shift: i8,
+    /// The Rename and Move buttons of the Info dialog.
+    prop_btn: PropBtn,
     /// A choice in the list of a wizard.
     wiz_choice: usize,
     /// The buttons of the confirmation dialog.
     confirm: bool,
-    reg_row: usize,
-    reg_btn: RegBtn,
     menu_top: usize,
     menu_item: usize,
     dlg_field: u8,
@@ -187,6 +192,25 @@ pub const Log = struct {
 /// What the card of a file that is not text shows.
 pub const Card = struct { kind: []const u8 = "", size: u64 = 0, note: []const u8 = "" };
 
+// Zig tip: `?u64 = null` is an optional number with a default: null means "this fact does not apply" (a table has no size
+// on the disk, a binary file has no lines), so the dialog shows only the facts that have a value.
+/// What the Properties dialog shows about a file or a table of a SQLite file (see `App.openPropertiesOf`).
+pub const Props = struct {
+    kind: []const u8 = "",
+    /// The folder of the file in the project, or the database file of a table (a slice of `App.rename_from`).
+    place: []const u8 = "",
+    size: ?u64 = null,
+    /// Seconds since 1970 (UTC); 0 when unknown.
+    modified: i64 = 0,
+    lines: ?usize = null,
+    line_ends: []const u8 = "",
+    unsaved: bool = false,
+    records: ?u64 = null,
+    fields: ?usize = null,
+    /// A view of a SQLite file cannot be renamed with `alter table`.
+    is_view: bool = false,
+};
+
 /// A DBF table opened in a tab: the table, the cell that is selected, and the first row and column shown.
 /// The width of the column of record numbers of a DBF grid.
 pub const dbf_rownum_w: u16 = 8;
@@ -258,9 +282,6 @@ pub const Tab = struct {
     sql: bool = false,
     /// A DBF table (`.dbf`): the Main Panel shows its records in a grid.
     table: ?*TableView = null,
-    /// A Markdown file that is shown rendered (View button), and the first rendered line shown.
-    render: bool = false,
-    render_top: usize = 0,
     /// A folder shown as a list (a click on a folder of the tree): there is only one such tab, and it follows the clicks.
     folder: ?*FolderView = null,
     /// The name shown on the tab when it is not the name of the file (a table of a database: `shop.orders`).
@@ -299,27 +320,34 @@ pub const WizKind = enum { eve, sql };
 
 pub const StBtn = enum { prev, next, add, remove, up, down, apply };
 
-/// The buttons of the registration form.
-pub const RegBtn = enum { save, select };
+// Zig tip: `export` and `import` are not keywords of Zig, but names that say what they do in full (`export_file`) read
+// better in a `switch` and cannot be mistaken for the `export` keyword of declarations.
+/// The buttons under the list of themes, and the button that applies the field of Rename, Export or Import.
+pub const ThemeBtn = enum { rename, remove, export_file, import_file, apply };
+
+// Zig tip: one enum value per use of the field, with `none` for "no field": the dialog draws and routes the keys by a
+// `switch` on it, instead of three separate flags that could be on together by mistake.
+/// What the field under the list of themes is for (none: there is no field). Export and Import use the folder selector.
+pub const OptEdit = enum { none, rename };
 
 /// What a click in the Options dialog does.
 pub const OptAction = union(enum) {
     tab: u8,
     theme: u8,
+    theme_btn: ThemeBtn,
     slot: u8,
     channel: u8,
     slider: struct { ch: u8, v: u8 },
     swatch: u24,
     auto: i16,
     delay: i16,
-    hover: i16,
     trace: i16,
     ok,
     defaults,
 };
 
 /// The commands of the popup menu of a tab (a right click on its title).
-pub const TabCmd = enum { save, save_as, rename, upload, sep, close_this, close_right, close_left, close_clean };
+pub const TabCmd = enum { save, save_as, info, rename, sep, close_this, close_right, close_left, close_clean };
 
 /// A row of the popup menu of a tab.
 pub const TabMenuRow = struct { label: []const u8, cmd: TabCmd };
@@ -327,8 +355,8 @@ pub const TabMenuRow = struct { label: []const u8, cmd: TabCmd };
 pub const tab_menu_rows = [_]TabMenuRow{
     .{ .label = "Save", .cmd = .save },
     .{ .label = "Save As…", .cmd = .save_as },
+    .{ .label = "Info…", .cmd = .info },
     .{ .label = "Rename…", .cmd = .rename },
-    .{ .label = "Upload…", .cmd = .upload },
     .{ .label = "-", .cmd = .sep },
     .{ .label = "Close this", .cmd = .close_this },
     .{ .label = "Close right", .cmd = .close_right },
@@ -338,11 +366,10 @@ pub const tab_menu_rows = [_]TabMenuRow{
 
 /// Every command of the main menu.
 pub const MenuCmd = enum {
-    open_project, open_folder, new_file, new_dbf, rename_file, delete_file, create_table, drop_table, preview, data_structure, data_append, data_append_n, data_delete, data_edit, save, save_as, close_tab, quit,
+    open_project, open_folder, new_file, new_dbf, rename_file, delete_file, create_table, drop_table, data_structure, data_append, data_append_n, data_delete, data_edit, save, save_as, close_tab, quit,
     undo, redo, replace, toggle_wrap, toggle_hidden, close_all, close_clean,
     find_text, find_file, goto_line, query,
     run, check_file, clear_panel, dbg_next, dbg_step, dbg_exit, dbg_trace, stop, breakpoint,
-    machine_pick, register, upload,
     select_window, modify, freeze, toggle_tree, toggle_main, toggle_tools, window_pick,
     shortcuts, manual, tutorial, about, options,
 };
@@ -363,25 +390,7 @@ const sep: MenuRow = .{ .label = "-" };
 pub const Menu = struct { label: []const u8, items: []const MenuRow };
 
 /// The place of the WINDOW menu in `menus`.
-pub const menu_window: usize = 6;
-/// The place of the MACHINE menu: its first rows are the machines that are connected (see `App.rowAt`).
-pub const menu_machine: usize = 4;
-
-// Zig tip: a struct with slices that it owns (`[]u8`, not `[]const u8`) must be freed by whoever owns the struct: see
-// `Machine.free`. Three texts, because `label` is computed once from the other two and drawn on every frame.
-/// A registered machine: where it is (address and port) and the text that names it. The first one, Local, is always there.
-pub const Machine = struct {
-    label: []u8,
-    address: []u8,
-    port: u16,
-
-    fn free(self: Machine, gpa: std.mem.Allocator) void {
-        gpa.free(self.label);
-        gpa.free(self.address);
-    }
-};
-
-const machine_keys = [_][]const u8{ "Alt+1", "Alt+2", "Alt+3" };
+pub const menu_window: usize = 4;
 
 // Zig tip: A `const` array of struct literals is built at compile time and stored in the program.
 // `[_]Menu{...}` lets the compiler count the menus; `menus.len` is then a compile-time number.
@@ -396,7 +405,6 @@ pub const menus = [_]Menu{
         .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
         .{ .label = "Rename…", .cmd = .rename_file },
         .{ .label = "Delete…", .cmd = .delete_file },
-        .{ .label = "Upload…", .cmd = .upload },
         sep,
         .{ .label = "Close window", .key = "Ctrl+W", .cmd = .close_tab },
         sep,
@@ -438,10 +446,6 @@ pub const menus = [_]Menu{
         sep,
         .{ .label = "Breakpoint", .key = "F9", .cmd = .breakpoint },
     } },
-    .{ .label = "MACHINE", .items = &.{
-        sep,
-        .{ .label = "Register…", .key = "Ctrl+K", .cmd = .register },
-    } },
     .{ .label = "WINDOW", .items = &.{
         .{ .label = "Select", .key = "Ctrl+Tab", .cmd = .select_window },
         .{ .label = "Close", .key = "Ctrl+W", .cmd = .close_tab },
@@ -450,8 +454,6 @@ pub const menus = [_]Menu{
         sep,
         .{ .label = "Layout modify", .key = "Ctrl+L", .cmd = .modify },
         .{ .label = "Layout freeze", .key = "Ctrl+Z", .cmd = .freeze },
-        sep,
-        .{ .label = "Preview", .cmd = .preview },
         sep,
         .{ .label = "Tree Panel", .cmd = .toggle_tree },
         .{ .label = "Main Panel", .cmd = .toggle_main },
@@ -682,7 +684,7 @@ pub const RunJob = struct {
 };
 
 /// What the mouse is dragging: a border between panels, or a scroll bar thumb.
-pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select, tree_v, tree_h, md_v, tbl_v, tbl_h };
+pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select, tree_v, tree_h, tbl_v, tbl_h };
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
@@ -753,17 +755,6 @@ pub const App = struct {
     dlg_field: u8 = 0,
     /// The Alt key was pressed alone: the bar shows its letters underlined until the next key or click.
     alt_hint: bool = false,
-    /// The machines in order of registration (the first is Local, always), and the one in use (a place in the list).
-    machines: std.ArrayList(Machine) = .empty,
-    machine: usize = 0,
-    /// The registration form: the selected row (the last row is the new machine), and its two fields.
-    reg_sel: usize = 0,
-    reg_addr: TextInput,
-    reg_port: TextInput,
-    /// The dropdown under the machine name of the toolbar: its place and the selected row.
-    mm_x: u16 = 0,
-    mm_y: u16 = 0,
-    mm_sel: usize = 0,
     running: bool = false,
     quit: bool = false,
 
@@ -786,6 +777,9 @@ pub const App = struct {
     opt_slot: u8 = 0,
     opt_channel: u8 = 0,
     opt_row: u8 = 0,
+    /// The field under the list of themes (Rename, Export, Import) and what it is for.
+    opt_edit: OptEdit = .none,
+    opt_in: TextInput,
     /// When the changed files are saved by themselves (a time of the `awake` clock in milliseconds).
     autosave_at: ?i64 = null,
     /// The popup menu of a tab: where it is, which tab it is for, and the selected row.
@@ -796,11 +790,7 @@ pub const App = struct {
     freeze_at: ?i64 = null,
     /// The shape of the mouse pointer: a double arrow over a border between panels.
     pointer: vaxis.Mouse.Shape = .default,
-    /// The border under the pointer, whether or not it is active yet, and when the pointer came to it (clock `awake`, ms).
-    hover_cand: ?Drag = null,
-    hover_since: i64 = 0,
-    /// The border that the pointer rests on long enough (the hover delay of the options) or that is free because the
-    /// layout is unlocked: it is painted and can be dragged.
+    /// The border under the pointer while the layout is unlocked: it is painted and can be dragged.
     hover_split: ?Drag = null,
     /// The eve process that Run started (see `RunJob`); the interface stays alive while it runs.
     job: ?*RunJob = null,
@@ -843,10 +833,9 @@ pub const App = struct {
     pending_sql: bool = false,
     /// Where the grid of a DBF table is drawn, for the mouse.
     tbl_rect: Rect = .{},
-    /// The tracks of the scroll bars of the rendered page and of a table, and how much they show (for the mouse).
-    mdbar_rect: Rect = .{},
-    md_total: usize = 0,
-    md_visible: usize = 0,
+    /// The widths of the columns of the table shown, as the last drawing made them (in the frame arena; the clicks read them).
+    tbl_widths: []const u16 = &.{},
+    /// The tracks of the scroll bars of a table (for the mouse).
     tblv_rect: Rect = .{},
     tblh_rect: Rect = .{},
     tbl_rows: usize = 0,
@@ -872,8 +861,20 @@ pub const App = struct {
     drop_a: ?[]u8 = null,
     drop_b: ?[]u8 = null,
     drop_is_dbf: bool = false,
-    /// The file that the Rename dialog is changing (a path in the project, owned).
+    /// The Properties dialog: the file it shows (a path in the project, or `db#table` for a table of a SQLite file; owned)
+    /// and its facts.
     rename_from: ?[]u8 = null,
+    props: Props = .{},
+    /// The name of the Info dialog is a field (Rename was pressed).
+    prop_editing: bool = false,
+    /// The pop-up of an operation that failed: its message (owned) and the dialog that its OK goes back to.
+    alert_msg: ?[]u8 = null,
+    alert_back: Overlay = .none,
+    /// The tab row of the Main Panel: the first tab shown, the active tab at the last drawing (a change makes the row follow
+    /// the active tab), and whether tabs are hidden at the right (the `>` button is on).
+    tab_first: usize = 0,
+    tab_seen: usize = std.math.maxInt(usize),
+    tab_more_right: bool = false,
     /// The Tab of the SQL panel: a cycle in progress, the letters typed when it began, the place in the matches, and how many
     /// letters of the word on the line it has put.
     sql_tab_active: bool = false,
@@ -957,6 +958,12 @@ pub const App = struct {
     fb_entries: std.ArrayList([]u8) = .empty,
     fb_sel: usize = 0,
     fb_top: usize = 0,
+    /// Why the folder selector is open, the dialog it goes back to, the theme files of the folder shown (Export and Import
+    /// list the `.json` files after the folders), and the field of the file name.
+    fb_mode: FbMode = .project,
+    fb_back: Overlay = .none,
+    fb_files: std.ArrayList([]u8) = .empty,
+    fb_name: TextInput,
 
     console: Log = .{},
     stdout_log: Log = .{},
@@ -1012,26 +1019,29 @@ pub const App = struct {
             .goto_in = TextInput.init(gpa),
             .saveas_in = TextInput.init(gpa),
             .project_in = TextInput.init(gpa),
-            .reg_addr = TextInput.init(gpa),
             .sql_in = TextInput.init(gpa),
             .st_edit = TextInput.init(gpa),
             .tbl_edit = TextInput.init(gpa),
             .sq_edit = TextInput.init(gpa),
             .wiz_name = TextInput.init(gpa),
-            .reg_port = TextInput.init(gpa),
+            .opt_in = TextInput.init(gpa),
+            .fb_name = TextInput.init(gpa),
             .cache = cache,
             .frame = .init(gpa),
         };
+        // the custom themes first: the options name the theme in use
+        if (self.cache.readFile("evetx-themes.json")) |bytes| {
+            defer gpa.free(bytes);
+            self.options.loadThemes(gpa, bytes);
+        }
         if (self.cache.readFile("evetx-options.txt")) |bytes| {
             defer gpa.free(bytes);
-            self.options = options_mod.Options.parse(bytes);
+            self.options.parse(bytes);
         }
         self.applyOptions();
         // the shell that started evetx: $SHELL when there is one (Git Bash, a Linux shell), else the Windows command shell
         const sh = env.get("SHELL") orelse (if (builtin.os.tag == .windows) env.get("COMSPEC") orelse "cmd.exe" else "sh");
         self.shell_exe = try gpa.dupe(u8, std.fs.path.basename(sh));
-        try self.machineAdd("localhost", 0, "Local");
-        self.loadMachines();
         if (chosen.len > 0) {
             try self.tree.scan(io, chosen, name);
             self.restoreSession();
@@ -1062,8 +1072,6 @@ pub const App = struct {
         self.tabs.deinit(gpa);
         self.tree.deinit();
         self.visible.deinit(gpa);
-        for (self.machines.items) |m| m.free(gpa);
-        self.machines.deinit(gpa);
         self.watch_log.deinit(gpa);
         if (self.st_path) |p| gpa.free(p);
         if (self.wiz_path) |p| gpa.free(p);
@@ -1086,7 +1094,7 @@ pub const App = struct {
         if (self.shell_exe.len > 0) gpa.free(self.shell_exe);
         self.sql_log.deinit(gpa);
         if (self.sql_db) |d| gpa.free(d);
-        for ([_]*TextInput{ &self.sq_edit, &self.tbl_edit, &self.wiz_name, &self.st_edit, &self.sql_in, &self.reg_addr, &self.reg_port, &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in, &self.project_in }) |ti| ti.deinit();
+        for ([_]*TextInput{ &self.sq_edit, &self.tbl_edit, &self.wiz_name, &self.opt_in, &self.fb_name, &self.st_edit, &self.sql_in, &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in, &self.project_in }) |ti| ti.deinit();
         self.console.deinit(gpa);
         self.stdout_log.deinit(gpa);
         self.stderr_log.deinit(gpa);
@@ -1105,11 +1113,12 @@ pub const App = struct {
         if (self.pending_text) |c| gpa.free(c);
         if (self.work_dir) |c| gpa.free(c);
         if (self.dbg_path) |c| gpa.free(c);
-        if (self.dbg_path) |c| gpa.free(c);
         if (self.sys_clip) |c| gpa.free(c);
         self.paste_buf.deinit(gpa);
         self.fbClear();
         self.fb_entries.deinit(gpa);
+        self.fb_files.deinit(gpa);
+        if (self.alert_msg) |m| gpa.free(m);
         if (self.fb_path) |fp| gpa.free(fp);
         gpa.destroy(self);
     }
@@ -1713,65 +1722,6 @@ pub const App = struct {
         try self.writeNew(path, full, body);
     }
 
-    // ------------------------------------------------------------ the rendered Markdown page
-
-    fn isMarkdown(path: []const u8) bool {
-        const ext = extensionOf(path);
-        return std.ascii.eqlIgnoreCase(ext, "md") or std.ascii.eqlIgnoreCase(ext, "markdown");
-    }
-
-    /// Can the active tab be shown rendered? (A Markdown file with a text buffer.)
-    pub fn canRender(self: *App) bool {
-        if (self.folderSelectedFile()) |rel| {
-            defer self.gpa.free(rel);
-            return isMarkdown(rel);
-        }
-        const t = self.activeTab() orelse return false;
-        return t.buf != null and isMarkdown(t.path);
-    }
-
-    /// Is the active tab shown rendered, so the page goes full screen?
-    pub fn mdFull(self: *App) bool {
-        const t = self.activeTab() orelse return false;
-        return t.render and t.buf != null;
-    }
-
-    // Zig tip: the View button switches the tab between the editor and the page; the page is drawn from the same text
-    // buffer on every frame, so a change made in the editor shows at once. The layout follows (`computeLayout`): while the
-    // page is shown the Tools Panel is out of the way and the Main Panel reaches the bottom bar.
-    /// The View button: show the Markdown file rendered, or go back to the editor.
-    pub fn toggleView(self: *App) void {
-        if (self.canRender()) self.adoptFolderSelection() catch {};
-        const t = self.activeTab() orelse return;
-        if (!self.canRender()) {
-            self.setMessage("View works on a Markdown file (.md)", .{});
-            return;
-        }
-        t.render = !t.render;
-        t.render_top = 0;
-        self.focus = .editor;
-    }
-
-    /// The keys of a rendered page: arrows and pages scroll, Esc or V go back to the editor.
-    fn mdKey(self: *App, t: *Tab, key: Key) void {
-        const page: usize = @max(1, self.editor_rect.h -| 1);
-        if (key.matches(Key.escape, .{}) or key.matches('v', .{})) {
-            t.render = false;
-        } else if (key.matches(Key.up, .{})) {
-            t.render_top -|= 1;
-        } else if (key.matches(Key.down, .{})) {
-            t.render_top += 1;
-        } else if (key.matches(Key.page_up, .{})) {
-            t.render_top -|= page;
-        } else if (key.matches(Key.page_down, .{}) or key.matches(Key.space, .{})) {
-            t.render_top += page;
-        } else if (key.matches(Key.home, .{})) {
-            t.render_top = 0;
-        } else if (key.matches(Key.end, .{})) {
-            t.render_top = std.math.maxInt(u32);
-        }
-    }
-
     fn readonlyMessage(self: *App) void {
         self.setMessage("this table is read only here: change it with SQL or its structure", .{});
     }
@@ -1819,7 +1769,7 @@ pub const App = struct {
             return self.dataAppend(1);
         }
         if (t.buf) |*b| {
-            if (t.virtual or t.render) {
+            if (t.virtual) {
                 self.setMessage("this window is read only", .{});
                 return;
             }
@@ -2129,64 +2079,295 @@ pub const App = struct {
         self.setMessage("{s}", .{msg});
     }
 
-    // ------------------------------------------------------------ rename and delete a file
+    // ------------------------------------------------------------ properties, rename and delete
 
     // Zig tip: the file that Rename and Delete act on is the one the person is pointing at: the selected row of the tree when
-    // the tree has the keyboard (not the project folder, not a table of a database), else the file of the tab (a file chosen in
-    // a folder list counts). The answer is a copy of the path in the project; the caller frees it.
-    /// The file (or folder) that File > Rename and File > Delete work on, or null.
+    // the tree has the keyboard (not the project folder; a database and a table of a database count), else the file of the
+    // tab (a file chosen in a folder list counts). The answer is a copy of the path in the project; the caller frees it.
+    /// The file, folder or table that File > Rename and File > Delete work on, or null.
     fn fileTarget(self: *App) ?[]u8 {
         if (self.focus == .tree and self.selected < self.tree.entries.items.len) {
             const e = self.tree.entries.items[self.selected];
-            if (e.parent != null and e.kind == .normal) return self.gpa.dupe(u8, e.path) catch null;
+            if (e.parent != null) return self.gpa.dupe(u8, e.path) catch null;
         }
+        return self.propsTarget();
+    }
+
+    // Zig tip: `if (opt) |v| return v;` returns the payload of an optional at once when there is one; the code after it
+    // runs only for null. The tab path is copied (`dupe`) because the caller keeps it after the tab may be gone.
+    /// The file of the Info dialog of the active tab: the file selected in a folder list (else the folder of the list), or
+    /// the file (or table) of the tab.
+    fn propsTarget(self: *App) ?[]u8 {
         if (self.folderSelectedFile()) |rel| return rel;
         const t = self.activeTab() orelse return null;
-        if (t.virtual or t.folder != null or t.path.len == 0 or std.mem.indexOfScalar(u8, t.path, '#') != null) return null;
+        if (t.folder) |fv| return if (fv.dir.len == 0) null else self.gpa.dupe(u8, fv.dir) catch null;
+        if (t.virtual or t.path.len == 0) return null;
         return self.gpa.dupe(u8, t.path) catch null;
     }
 
-    /// File > Rename…: the name of the file in a field, to change; Enter renames.
+    // Zig tip: `orelse { ...; return; }` runs a block when the optional is null; the block must leave the function (or
+    // the loop), because after it the value is used as a plain slice.
+    /// File > Rename…: the Info dialog of the file or table that is pointed at, with its name ready to edit.
     pub fn openRename(self: *App) void {
         const rel = self.fileTarget() orelse {
             self.setMessage("Rename: select a file in the tree, or open one (a new file must be saved first)", .{});
             return;
         };
-        if (self.rename_from) |old| self.gpa.free(old);
-        self.rename_from = rel;
-        self.saveas_in.clearRetainingCapacity();
-        self.saveas_in.insertSliceAtCursor(rel) catch {};
-        self.openOverlay(.rename);
+        self.openPropertiesOf(rel, true);
     }
 
-    // Zig tip: the new name is a path in the project, so it can also move the file to another folder that exists. A name that
-    // exists is never overwritten. After the rename the open tabs and the breakpoints follow the file (`retarget`), the tree is
-    // scanned again, and the tree selection is not lost because the scan keeps the open folders.
-    /// Enter in the Rename dialog: rename the file on the disk.
+    // Zig tip: the same shape as `openRename`, with another way to find the file: two small functions that end in the same
+    // `openPropertiesOf` keep each way easy to read.
+    /// Info… of the popup menu of a tab: the Info dialog of the file of the active tab.
+    pub fn openInfo(self: *App) void {
+        const rel = self.propsTarget() orelse {
+            self.setMessage("Info: this window is not a file on the disk (a new file must be saved first)", .{});
+            return;
+        };
+        self.openPropertiesOf(rel, false);
+    }
+
+    // Zig tip: `rel` is owned and given to the app (`rename_from`), which frees the old one first; `self.props = .{}` sets
+    // every fact back to its default before the new ones are found.
+    /// Open the Info dialog of `rel` (a path in the project, or `db#table`); takes `rel`. `edit` opens the name for editing.
+    fn openPropertiesOf(self: *App, rel: []u8, edit: bool) void {
+        if (self.rename_from) |old| self.gpa.free(old);
+        self.rename_from = rel;
+        self.props = .{};
+        if (std.mem.indexOfScalar(u8, rel, '#')) |h| self.tableFacts(rel[0..h], rel[h + 1 ..]) else self.fileFacts(rel);
+        self.prop_editing = false;
+        self.openOverlay(.properties);
+        if (edit) self.startRename();
+    }
+
+    // Zig tip: the answer is a slice of `rename_from`; `std.fs.path.basename` cuts at the last `/` (and `\` on Windows).
+    /// The name of the Info dialog: the last part of the path, or the name of the table.
+    pub fn infoName(self: *const App) []const u8 {
+        const rel = self.rename_from orelse return "";
+        if (std.mem.indexOfScalar(u8, rel, '#')) |h| return rel[h + 1 ..];
+        return std.fs.path.basename(rel);
+    }
+
+    // Zig tip: `insertSliceAtCursor` copies the text into the field, so the field does not depend on `rename_from` later.
+    /// The Rename button: the name of the Info dialog becomes a field in its place; Enter renames, Esc leaves it.
+    pub fn startRename(self: *App) void {
+        if (self.props.is_view) {
+            self.setMessage("{s} is a view: a view cannot be renamed, drop it and create it again", .{self.infoName()});
+            return;
+        }
+        self.saveas_in.clearRetainingCapacity();
+        self.saveas_in.insertSliceAtCursor(self.infoName()) catch {};
+        self.prop_editing = true;
+    }
+
+    // Zig tip: `statFile` answers with the kind, the size and the times of a file without opening it; `mtime.toSeconds()`
+    // turns the time of the last change into seconds since 1970. A file that is open in a tab adds what its tab knows.
+    /// The facts of a file of the project.
+    fn fileFacts(self: *App, rel: []const u8) void {
+        const p = &self.props;
+        p.place = std.fs.path.dirname(rel) orelse "";
+        const full = self.fullPath(rel) catch return;
+        defer self.gpa.free(full);
+        const st = Io.Dir.cwd().statFile(self.io, full, .{}) catch {
+            p.kind = "not on the disk";
+            return;
+        };
+        p.kind = describeName(std.fs.path.basename(rel), st.kind == .directory);
+        if (st.kind != .directory) p.size = st.size;
+        p.modified = st.mtime.toSeconds();
+        for (self.tabs.items) |t| {
+            if (!std.mem.eql(u8, t.path, rel)) continue;
+            if (t.buf) |b| {
+                p.lines = b.lineCount();
+                p.line_ends = if (b.crlf) "CRLF (Windows)" else "LF";
+                p.unsaved = b.dirty;
+            }
+            if (t.table) |tv| {
+                p.records = tv.t.records;
+                p.fields = tv.t.fields.len;
+            }
+        }
+    }
+
+    // Zig tip: `eve db sql -t` prints a header line and then the rows, so the answer of a one-value query is its second line.
+    // A quote in the name is doubled for SQL (`'` in a string, `"` in a name), the way SQL escapes them.
+    /// The facts of the table (or view) `table` of the SQLite file `db`.
+    fn tableFacts(self: *App, db: []const u8, table: []const u8) void {
+        const gpa = self.gpa;
+        const p = &self.props;
+        p.place = db;
+        p.kind = "SQLite table";
+        const lit = std.mem.replaceOwned(u8, gpa, table, "'", "''") catch return;
+        defer gpa.free(lit);
+        const q1 = std.fmt.allocPrint(gpa, "select type from sqlite_master where name = '{s}';", .{lit}) catch return;
+        defer gpa.free(q1);
+        if (self.eveText(&.{ "db", "sql", "-t", db, q1 })) |out| {
+            defer gpa.free(out);
+            if (std.mem.eql(u8, secondLine(out), "view")) {
+                p.kind = "SQLite view";
+                p.is_view = true;
+            }
+        } else |_| {}
+        const ident = std.mem.replaceOwned(u8, gpa, table, "\"", "\"\"") catch return;
+        defer gpa.free(ident);
+        const q2 = std.fmt.allocPrint(gpa, "select count(*) from \"{s}\";", .{ident}) catch return;
+        defer gpa.free(q2);
+        if (self.eveText(&.{ "db", "sql", "-t", db, q2 })) |out| {
+            defer gpa.free(out);
+            p.records = std.fmt.parseInt(u64, secondLine(out), 10) catch null;
+        } else |_| {}
+    }
+
+    // Zig tip: a function in the struct without `self` is called by its name inside the struct (`secondLine(out)`); the
+    // answer is a slice of `out`, so it lives as long as `out` does.
+    /// The second line of a text, trimmed ("" when there is none): the value under the header of `eve db sql -t`.
+    fn secondLine(out: []const u8) []const u8 {
+        var it = std.mem.splitScalar(u8, out, '\n');
+        _ = it.next();
+        return std.mem.trim(u8, it.next() orelse "", " \r\t");
+    }
+
+    // Zig tip: the field holds a name only: the folder is a fact of the dialog, changed with Move. The new path is the folder
+    // of the old one and the new name; after the rename the dialog shows the file under its new name.
+    /// Enter in the name field of the Info dialog: rename the file on the disk, or the table in its database.
     fn doRename(self: *App) !void {
         const gpa = self.gpa;
         const old = self.rename_from orelse return;
         const raw = try self.saveas_in.toOwnedContents(gpa);
         defer gpa.free(raw);
-        const new = std.mem.trim(u8, raw, " /\\");
-        self.overlay = .none;
-        if (new.len == 0 or std.mem.eql(u8, new, old)) return;
+        const name = std.mem.trim(u8, raw, " ");
+        self.prop_editing = false;
+        if (std.mem.indexOfScalar(u8, old, '#')) |h| return self.renameTable(old[0..h], old[h + 1 ..], name);
+        if (std.mem.indexOfAny(u8, name, "/\\") != null) {
+            self.setMessage("a name has no folder in it: use Move to change the folder", .{});
+            return;
+        }
+        if (name.len == 0 or std.mem.eql(u8, name, std.fs.path.basename(old))) return;
+        const new_rel = if (std.fs.path.dirname(old)) |d| try std.fmt.allocPrint(gpa, "{s}/{s}", .{ d, name }) else try gpa.dupe(u8, name);
+        defer gpa.free(new_rel);
+        if (try self.moveFile(old, new_rel)) self.openPropertiesOf(try gpa.dupe(u8, new_rel), false);
+    }
+
+    // Zig tip: a name that exists is never overwritten. After the move the open tabs and the breakpoints follow the file
+    // (`retarget`), the tree is scanned again (it keeps the open folders), and the session is written. The `bool` says
+    // whether it happened; the bar says why not.
+    /// Rename or move the file (or folder) `old` to `new`, two paths in the project.
+    fn moveFile(self: *App, old: []const u8, new: []const u8) !bool {
+        const gpa = self.gpa;
         const old_full = try self.fullPath(old);
         defer gpa.free(old_full);
         const new_full = try self.fullPath(new);
         defer gpa.free(new_full);
         if (Io.Dir.cwd().statFile(self.io, new_full, .{})) |_| {
             self.setMessage("{s} exists already", .{new});
-            return;
+            return false;
         } else |_| {}
         Io.Dir.rename(Io.Dir.cwd(), old_full, Io.Dir.cwd(), new_full, self.io) catch |err| {
-            self.setMessage("cannot rename {s}: {s}", .{ old, @errorName(err) });
-            return;
+            self.setMessage("cannot move {s} to {s}: {s}", .{ old, new, @errorName(err) });
+            return false;
         };
         self.retarget(old, new);
         self.refreshTree();
         self.saveSession() catch {};
-        self.setMessage("renamed {s} to {s}", .{ old, new });
+        self.setMessage("{s} is now {s}", .{ old, new });
+        return true;
+    }
+
+    // Zig tip: the folder selector starts in the folder of the file (`fbLoad` of its full path); the file is not moved until
+    // the person presses Move here, see `moveHere`.
+    /// The Move button of the Info dialog: the folder selector, to choose where the file goes.
+    pub fn openMove(self: *App) !void {
+        const rel = self.rename_from orelse return;
+        if (std.mem.indexOfScalar(u8, rel, '#') != null) {
+            self.setMessage("a table moves with its database file", .{});
+            return;
+        }
+        const dir_rel = std.fs.path.dirname(rel) orelse "";
+        const start = if (dir_rel.len == 0) try self.gpa.dupe(u8, if (self.root.len > 0) self.root else ".") else try self.fullPath(dir_rel);
+        defer self.gpa.free(start);
+        self.openChooser(.move_to, .properties, start);
+    }
+
+    // Zig tip: `realPath` gives the folder of the project as the system writes it, so it can be compared with the path of the
+    // folder selector. On Windows the case of the letters does not matter (`eqlIgnoreCase`) and `\` is turned into `/`.
+    /// The path in the project of the folder `abs` ("" for the project folder), or null when it is outside the project.
+    fn projectRel(self: *App, abs: []const u8) !?[]u8 {
+        var dir = Io.Dir.cwd().openDir(self.io, if (self.root.len > 0) self.root else ".", .{}) catch return null;
+        defer dir.close(self.io);
+        var buf: [std.fs.max_path_bytes]u8 = undefined;
+        const n = dir.realPath(self.io, &buf) catch return null;
+        const root = buf[0..n];
+        if (abs.len < root.len) return null;
+        const same = if (builtin.os.tag == .windows) std.ascii.eqlIgnoreCase(abs[0..root.len], root) else std.mem.eql(u8, abs[0..root.len], root);
+        if (!same) return null;
+        if (abs.len == root.len) return try self.gpa.dupe(u8, "");
+        if (abs[root.len] != '/' and abs[root.len] != '\\') return null;
+        const rel = try self.gpa.dupe(u8, abs[root.len + 1 ..]);
+        std.mem.replaceScalar(u8, rel, '\\', '/');
+        return rel;
+    }
+
+    // Zig tip: `(try self.projectRel(dest)) orelse {...}` first passes up an error (`try`), then handles the null of the
+    // optional (`orelse`): the parentheses make the order clear.
+    /// Move here (the folder selector opened by Move): the file goes to the folder shown, then the Info dialog comes back.
+    fn moveHere(self: *App) !void {
+        const gpa = self.gpa;
+        const old = self.rename_from orelse return;
+        const dest = self.fb_path orelse return;
+        const dir_rel = (try self.projectRel(dest)) orelse {
+            self.setMessage("{s} is outside the project: choose a folder of the project", .{dest});
+            return;
+        };
+        defer gpa.free(dir_rel);
+        const base = std.fs.path.basename(old);
+        const new_rel = if (dir_rel.len == 0) try gpa.dupe(u8, base) else try std.fmt.allocPrint(gpa, "{s}/{s}", .{ dir_rel, base });
+        defer gpa.free(new_rel);
+        self.chooserDone();
+        if (std.mem.eql(u8, new_rel, old)) return;
+        if (std.mem.startsWith(u8, new_rel, old) and new_rel.len > old.len and new_rel[old.len] == '/') {
+            self.setMessage("a folder cannot go into itself", .{});
+            return;
+        }
+        if (try self.moveFile(old, new_rel)) self.openPropertiesOf(try gpa.dupe(u8, new_rel), false);
+    }
+
+    // Zig tip: `alter table … rename to …` is run by `eve db sql`; an answer that holds `error:` is the refusal of SQLite. The
+    // tab of the table is a copy of its rows under the old name, so it is closed and opened again under the new one.
+    /// Rename the table `old` of the SQLite file `db` to `new`.
+    fn renameTable(self: *App, db: []const u8, old: []const u8, new: []const u8) !void {
+        const gpa = self.gpa;
+        if (new.len == 0 or std.mem.eql(u8, new, old)) return;
+        if (self.props.is_view) {
+            self.setMessage("{s} is a view: a view cannot be renamed, drop it and create it again", .{old});
+            return;
+        }
+        if (std.mem.indexOfAny(u8, new, "\"#/\\") != null) {
+            self.setMessage("a table name cannot hold \" # / or \\", .{});
+            return;
+        }
+        const sql = try std.fmt.allocPrint(gpa, "alter table \"{s}\" rename to \"{s}\";", .{ old, new });
+        defer gpa.free(sql);
+        const out = try self.eveText(&.{ "db", "sql", db, sql });
+        defer gpa.free(out);
+        if (std.mem.indexOf(u8, out, "error:") != null) {
+            self.setMessage("{s}", .{std.mem.trim(u8, out, " \r\n")});
+            return;
+        }
+        const old_key = try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, old });
+        defer gpa.free(old_key);
+        var was_open = false;
+        for (self.tabs.items, 0..) |t, i| {
+            if (std.mem.eql(u8, t.path, old_key)) {
+                self.closeTab(i);
+                was_open = true;
+                break;
+            }
+        }
+        // `db` and `old` are slices of `rename_from`, which stays until the dialog shows the table under its new name
+        try self.refreshDbTables(db);
+        if (was_open) try self.openSqliteTable(db, new);
+        self.setMessage("renamed table {s} to {s}", .{ old, new });
+        self.openPropertiesOf(try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, new }), false);
     }
 
     /// File > Delete…: ask first; Yes deletes the file.
@@ -2196,6 +2377,10 @@ pub const App = struct {
             return;
         };
         defer self.gpa.free(rel);
+        if (std.mem.indexOfScalar(u8, rel, '#') != null) {
+            self.setMessage("Delete works on files: use EDIT > Drop table… for a table", .{});
+            return;
+        }
         const full = self.fullPath(rel) catch return;
         defer self.gpa.free(full);
         const st = Io.Dir.cwd().statFile(self.io, full, .{}) catch {
@@ -3777,7 +3962,6 @@ pub const App = struct {
         self.autoSaveTick();
         try self.pollDebug();
         try self.finishRun();
-        self.refreshHover();
         if (self.freeze_at) |at| {
             if (self.nowMs() >= at) self.freezeLayout();
         }
@@ -4047,65 +4231,16 @@ pub const App = struct {
     // code can call it too. A row that is not in the fixed list of the menu is made on the spot: the
     // WINDOW menu ends with a separator and one row for each open window (at most nine, the ones
     // that Ctrl+1 to Ctrl+9 reach).
-    // Zig tip: `std.ArrayList(Machine)` is a growing array that owns its memory: `append(gpa, x)` may allocate, so it
-    // can fail, and `deinit(gpa)` gives the memory back. The registration order is the order of the items.
-    /// Add a machine to the list. `name` null makes the label `address:port`.
-    fn machineAdd(self: *App, address: []const u8, port: u16, name: ?[]const u8) !void {
-        const addr = try self.gpa.dupe(u8, address);
-        errdefer self.gpa.free(addr);
-        const label = if (name) |n| try self.gpa.dupe(u8, n) else try std.fmt.allocPrint(self.gpa, "{s}:{d}", .{ address, port });
-        errdefer self.gpa.free(label);
-        try self.machines.append(self.gpa, .{ .label = label, .address = addr, .port = port });
-    }
-
-    /// Is machine `i` connected? Only the local machine for now; the others join with step T5.
-    pub fn isConnected(self: *const App, i: usize) bool {
-        _ = self;
-        return i == 0;
-    }
-
-    /// The machines of the user, one `address<TAB>port` line each, in the file `evetx-machines.txt` of the user cache.
-    fn loadMachines(self: *App) void {
-        const bytes = self.cache.readFile("evetx-machines.txt") orelse return;
-        defer self.gpa.free(bytes);
-        var it = std.mem.splitScalar(u8, bytes, '\n');
-        while (it.next()) |raw| {
-            const l = std.mem.trim(u8, raw, " \r");
-            const tab = std.mem.indexOfScalar(u8, l, '\t') orelse continue;
-            const port = std.fmt.parseInt(u16, l[tab + 1 ..], 10) catch continue;
-            if (tab == 0) continue;
-            self.machineAdd(l[0..tab], port, null) catch return;
-        }
-    }
-
-    fn saveMachines(self: *App) void {
-        var out: std.ArrayList(u8) = .empty;
-        defer out.deinit(self.gpa);
-        for (self.machines.items[1..]) |m| {
-            const line = std.fmt.allocPrint(self.gpa, "{s}\t{d}\n", .{ m.address, m.port }) catch return;
-            defer self.gpa.free(line);
-            out.appendSlice(self.gpa, line) catch return;
-        }
-        self.cache.writeFile("evetx-machines.txt", out.items) catch |err| self.setMessage("machines not saved: {s}", .{@errorName(err)});
-    }
-
     /// How many rows menu `m` has now.
     pub fn rowCount(self: *const App, m: usize) usize {
         const base = menus[m].items.len;
         if (m == menu_window and self.tabs.items.len > 0) return base + 1 + @min(self.tabs.items.len, 9);
-        if (m == menu_machine) return base + self.machines.items.len;
         return base;
     }
 
     /// Row `k` of menu `m`. The title of a window is a slice of the tab, valid while the tab is open.
     pub fn rowAt(self: *const App, m: usize, k: usize) MenuRow {
         const items = menus[m].items;
-        if (m == menu_machine) {
-            // the registered machines come first, in order of registration, then the fixed rows
-            const n = self.machines.items.len;
-            if (k < n) return .{ .label = self.machines.items[k].label, .key = if (k < machine_keys.len) machine_keys[k] else "", .cmd = .machine_pick, .arg = k };
-            return items[k - n];
-        }
         if (k < items.len) return items[k];
         if (k == items.len) return sep;
         const t = k - items.len - 1;
@@ -4156,7 +4291,6 @@ pub const App = struct {
             .open_project => self.openProjectDialog(),
             .open_folder => self.openFolderDialog(),
             .new_dbf, .new_file => self.openNewDialog(),
-            .preview => self.toggleView(),
             .create_table => self.openCreateTable(),
             .rename_file => self.openRename(),
             .delete_file => self.openDelete(),
@@ -4193,9 +4327,6 @@ pub const App = struct {
             .stop => try self.haltRun(),
             .clear_panel => try self.clearPanel(),
             .breakpoint => try self.toggleBreakpoint(),
-            .machine_pick => self.pickMachine(arg),
-            .register => self.openRegister(),
-            .upload => self.notYet("Remote machines", "T5"),
             .select_window => self.nextTab(1),
             .modify => self.startModify(false),
             .freeze => self.freezeLayout(),
@@ -4264,8 +4395,7 @@ pub const App = struct {
     // status bar. The row with the Run buttons belongs to the Tools Panel: it is above it, and goes with it.
     /// Work out where each panel is for a screen of `W` x `H` cells, and keep the answer.
     pub fn computeLayout(self: *App, W: u16, H: u16) Layout {
-        // a rendered Markdown page runs full screen: the Tools Panel steps aside and the Main Panel goes down to the bottom bar
-        const tools_on = self.isShown(.tools) and !self.mdFull();
+        const tools_on = self.isShown(.tools);
         self.cols = W;
         self.rows = H;
         const mh = H - 4;
@@ -4455,8 +4585,8 @@ pub const App = struct {
     /// A press on a border between panels: start dragging it. (Layout modify starts by itself, see `onMouse`.)
     fn grabSplit(self: *App, m: vaxis.Mouse) bool {
         const which = self.splitAt(m) orelse return false;
-        // a locked layout lets a border be grabbed only after the hover delay (the border is then painted)
-        if (!self.modify and self.hover_split != which) return false;
+        // a locked layout has no border to grab: unlock it first (the lock of the toolbar, or Ctrl+L)
+        if (!self.modify) return false;
         self.drag = which;
         return true;
     }
@@ -4499,8 +4629,6 @@ pub const App = struct {
             self.drag = .vbar;
         } else if (self.hbar_rect.contains(m.col, m.row)) {
             self.drag = .hbar;
-        } else if (self.mdbar_rect.contains(m.col, m.row)) {
-            self.drag = .md_v;
         } else if (self.tblv_rect.contains(m.col, m.row)) {
             self.drag = .tbl_v;
         } else if (self.tblh_rect.contains(m.col, m.row)) {
@@ -4520,14 +4648,6 @@ pub const App = struct {
     // pointer may be outside the bar during a drag and `m.row` is signed.
     /// Scroll the editor to the place of the pointer on the bar that is being dragged.
     fn scrollTo(self: *App, m: vaxis.Mouse) void {
-        if (self.drag == .md_v) {
-            const r = self.mdbar_rect;
-            const t = self.activeTab() orelse return;
-            if (r.h < 2) return;
-            const rel: usize = @intCast(@min(@max(@as(i32, m.row) - r.y, 0), r.h - 1));
-            t.render_top = thumbToTop(rel, r.h, self.md_total, self.md_visible);
-            return;
-        }
         if (self.drag == .tbl_v or self.drag == .tbl_h) {
             const t = self.activeTab() orelse return;
             const tv = t.table orelse return;
@@ -4638,7 +4758,7 @@ pub const App = struct {
             .none => {},
             .tree_split => self.tree_w = @intCast(@max(@as(i32, m.col) + 1, 0)),
             .tools_split => self.tools_h = @intCast(@max(@as(i32, self.rows) - 3 - m.row, 0)),
-            .vbar, .hbar, .tree_v, .tree_h, .md_v, .tbl_v, .tbl_h => self.scrollTo(m),
+            .vbar, .hbar, .tree_v, .tree_h, .tbl_v, .tbl_h => self.scrollTo(m),
             .select => self.selectTo(m),
         }
     }
@@ -4664,7 +4784,7 @@ pub const App = struct {
 
     /// Does the main loop have to wake up by itself? (A command waits, or the layout is about to freeze.)
     pub fn needsTick(self: *const App) bool {
-        return self.pending_at != null or self.freeze_at != null or self.job != null or (self.hover_cand != null and self.hover_split == null) or (self.options.autosave_s > 0 and self.anyDirtyFile());
+        return self.pending_at != null or self.freeze_at != null or self.job != null or (self.options.autosave_s > 0 and self.anyDirtyFile());
     }
 
     // Zig tip: The function returns `!bool`: an error union around a plain `bool`. The caller writes
@@ -4695,38 +4815,61 @@ pub const App = struct {
         theme.apply(self.options.palette());
     }
 
-    /// Write the options to the user cache.
+    // Zig tip: two files are written; a failure of one is said in the bar and does not stop the other.
+    /// Write the options and the custom themes to the user cache.
     pub fn saveOptions(self: *App) void {
-        const text_out = self.options.format(self.gpa) catch return;
-        defer self.gpa.free(text_out);
-        self.cache.writeFile("evetx-options.txt", text_out) catch |err| self.setMessage("options not saved: {s}", .{@errorName(err)});
+        if (self.options.format(self.gpa)) |text_out| {
+            defer self.gpa.free(text_out);
+            self.cache.writeFile("evetx-options.txt", text_out) catch |err| self.setMessage("options not saved: {s}", .{@errorName(err)});
+        } else |_| {}
+        if (self.options.themesJson(self.gpa)) |json| {
+            defer self.gpa.free(json);
+            self.cache.writeFile("evetx-themes.json", json) catch |err| self.setMessage("themes not saved: {s}", .{@errorName(err)});
+        } else |_| {}
     }
 
-    /// File: Options (Ctrl+,): the dialog opens on the Theme tab.
+    /// HELP > Options (Ctrl+,): the dialog opens on the Theme tab.
     pub fn openOptions(self: *App) void {
         self.opt_backup = self.options;
         self.opt_tab = 0;
+        self.opt_edit = .none;
         self.openOverlay(.settings);
     }
 
-    /// The OK button of the Options dialog: keep the changes and write them.
+    /// The Save button of the Options dialog: keep the changes and write them.
     fn optOk(self: *App) void {
+        self.opt_edit = .none;
         self.saveOptions();
         self.overlay = .none;
         self.setMessage("options saved", .{});
     }
 
+    // Zig tip: The first change of a color of a built-in theme makes a custom copy (`Dark Custom1`, the first free number of
+    // its kind) and switches to it, so the built-in themes never change; a custom theme is changed in place. `orelse` handles
+    // the full list: the change is refused and the bar says why.
+    /// The custom theme to change: the one in use, or a new copy of the built-in one in use. Null when the list is full.
+    fn editableTheme(self: *App) ?*options_mod.UserTheme {
+        const o = &self.options;
+        if (!options_mod.Options.isBuiltin(o.theme_id)) return o.custom(o.theme_id);
+        var buf: [40]u8 = undefined;
+        const base = o.baseOf(o.theme_id);
+        const name = o.customName(base, &buf);
+        const id = o.addCustom(name, base, o.palette()) orelse {
+            self.setMessage("{d} custom themes is the most: remove one first", .{options_mod.max_custom});
+            return null;
+        };
+        o.theme_id = id;
+        self.setMessage("the colors go to a new theme: {s}", .{o.nameOf(id)});
+        return o.custom(id);
+    }
+
     // Zig tip: A color is edited by changing one of its three bytes. `hex >> shift & 0xff` reads the
     // byte, and `(hex & ~mask) | (v << shift)` writes it: `~` flips all the bits, so the mask keeps the
-    // other two bytes. The first change of a ready-made theme copies it to the Custom theme and
-    // switches to it, so the ready-made themes are never changed.
-    /// Set a color of the Custom theme (the theme in use becomes Custom).
+    // other two bytes.
+    /// Set a color of the theme in use (a built-in theme is copied first, see `editableTheme`).
     fn setSlotColor(self: *App, slot: usize, hex: u24) void {
-        if (self.options.theme_id != theme.custom_id) {
-            self.options.custom = self.options.palette();
-            self.options.theme_id = theme.custom_id;
-        }
-        self.options.custom[slot] = hex;
+        const t = self.editableTheme() orelse return;
+        t.colors[slot] = hex;
         self.applyOptions();
     }
 
@@ -4746,22 +4889,129 @@ pub const App = struct {
         self.setChannel(self.opt_channel, @intCast(std.math.clamp(now + delta, 0, 255)));
     }
 
+    // Zig tip: `std.math.clamp(v, lo, hi)` keeps a number in a range; the sum is made in `i32` (`@as(i32, ...)`) so a step
+    // below zero does not wrap around, and `@intCast` brings the clamped result back to the `u16` of the option.
+    /// Change timer `row` of the Timers tab (0 Auto save, 1 Run delay, 2 Trace delay) by `delta`.
     fn adjustTimer(self: *App, row: u8, delta: i32) void {
         if (row == 0) {
             self.options.autosave_s = @intCast(std.math.clamp(@as(i32, self.options.autosave_s) + delta, 0, 3600));
-        } else if (row == 3) {
-            self.options.trace_ms = @intCast(std.math.clamp(@as(i32, self.options.trace_ms) + delta, 0, 5000));
         } else if (row == 2) {
-            self.options.hover_delay_s = @intCast(std.math.clamp(@as(i32, self.options.hover_delay_s) + delta, 0, 60));
+            self.options.trace_ms = @intCast(std.math.clamp(@as(i32, self.options.trace_ms) + delta, 0, 5000));
         } else {
             self.options.run_delay_s = @intCast(std.math.clamp(@as(i32, self.options.run_delay_s) + delta, 0, 60));
         }
     }
 
+    // Zig tip: the last id comes from the number of themes, which grows with the custom ones, so it is computed each time.
+    /// Select the theme `delta` places up or down the list (Up and Down on the Theme tab).
     fn themeStep(self: *App, delta: i32) void {
         const id: i32 = @intCast(self.options.theme_id);
-        self.options.theme_id = @intCast(std.math.clamp(id + delta, 0, @as(i32, theme.custom_id)));
+        const last: i32 = @intCast(self.options.count() - 1);
+        self.options.theme_id = @intCast(std.math.clamp(id + delta, 0, last));
         self.applyOptions();
+    }
+
+    // Zig tip: the folder of the user's theme files is a sister of the cache folder (`…/eve/meta` → `…/eve/themes`);
+    // `std.fs.path.dirname` cuts the last part of a path. The caller frees the answer.
+    /// The folder where Export writes and Import looks first: `<user data folder>/eve/themes`.
+    fn themesDir(self: *App) ![]u8 {
+        const up = std.fs.path.dirname(self.cache.dir) orelse ".";
+        return std.fmt.allocPrint(self.gpa, "{s}/themes", .{up});
+    }
+
+    // Zig tip: a file name made from a theme name: letters and digits in lower case, every other run of characters one `-`
+    // (`Dark Custom1` → `dark-custom1.json`). The bytes are written into a buffer of the caller.
+    /// The file name of a theme.
+    fn themeSlug(name: []const u8, buf: []u8) []const u8 {
+        var n: usize = 0;
+        var dash = false;
+        for (name) |c| {
+            if (n + 6 >= buf.len) break;
+            if (std.ascii.isAlphanumeric(c)) {
+                if (dash and n > 0) {
+                    buf[n] = '-';
+                    n += 1;
+                }
+                dash = false;
+                buf[n] = std.ascii.toLower(c);
+                n += 1;
+            } else dash = true;
+        }
+        if (n == 0) {
+            @memcpy(buf[0..5], "theme");
+            n = 5;
+        }
+        @memcpy(buf[n .. n + 5], ".json");
+        return buf[0 .. n + 5];
+    }
+
+    // Zig tip: a `switch` on the enum does what the button needs: Rename opens the field with the name of the theme, Export
+    // and Import open the folder selector in the folder of the theme files (made the first time with `createDirPath`).
+    /// A button under the list of themes.
+    fn themeButton(self: *App, b: ThemeBtn) !void {
+        const o = &self.options;
+        const builtin_theme = options_mod.Options.isBuiltin(o.theme_id);
+        switch (b) {
+            .rename, .remove => if (builtin_theme) {
+                self.setMessage("{s} is a built-in theme: it cannot be renamed or removed (change a color to make a copy)", .{o.nameOf(o.theme_id)});
+                return;
+            },
+            else => {},
+        }
+        self.opt_in.clearRetainingCapacity();
+        switch (b) {
+            .rename => {
+                try self.opt_in.insertSliceAtCursor(o.nameOf(o.theme_id));
+                self.opt_edit = .rename;
+            },
+            .remove => {
+                const name = try self.gpa.dupe(u8, o.nameOf(o.theme_id));
+                defer self.gpa.free(name);
+                o.removeCustom(o.theme_id);
+                self.applyOptions();
+                self.setMessage("removed {s} (Cancel brings it back)", .{name});
+            },
+            .export_file, .import_file => {
+                self.opt_edit = .none;
+                const dir = try self.themesDir();
+                defer self.gpa.free(dir);
+                Io.Dir.cwd().createDirPath(self.io, dir) catch {};
+                self.openChooser(if (b == .export_file) .theme_export else .theme_import, .settings, dir);
+                self.fb_name.clearRetainingCapacity();
+                if (b == .export_file) {
+                    var buf: [64]u8 = undefined;
+                    try self.fb_name.insertSliceAtCursor(themeSlug(o.nameOf(o.theme_id), &buf));
+                }
+            },
+            .apply => try self.themeFieldEnter(),
+        }
+    }
+
+    // Zig tip: `defer self.opt_edit = .none;` runs when the function returns, by any path, so the field always closes.
+    /// Enter in the field under the list of themes: rename the theme.
+    fn themeFieldEnter(self: *App) !void {
+        const gpa = self.gpa;
+        const o = &self.options;
+        const raw = try self.opt_in.toOwnedContents(gpa);
+        defer gpa.free(raw);
+        const value = std.mem.trim(u8, raw, " ");
+        const what = self.opt_edit;
+        defer self.opt_edit = .none;
+        if (value.len == 0) return;
+        switch (what) {
+            .none => {},
+            .rename => {
+                if (options_mod.Options.isBuiltin(o.theme_id)) return;
+                if (o.findName(value)) |other| {
+                    if (other != o.theme_id) {
+                        self.setMessage("a theme called {s} exists already", .{value});
+                        return;
+                    }
+                }
+                o.custom(o.theme_id).setName(value);
+                self.setMessage("theme renamed to {s}", .{o.nameOf(o.theme_id)});
+            },
+        }
     }
 
     // Zig tip: `var k = key; k.mods.shift = false;` copies the key without Shift so the same
@@ -4769,6 +5019,11 @@ pub const App = struct {
     // tab number sends the arrows to the tab that is open.
     /// The keys of the Options dialog: Tab changes the tab, the arrows change the values, Enter saves.
     fn optionsKey(self: *App, key: Key) !void {
+        // while the field under the list of themes is open, the keys go to it; Enter applies it (Esc: `closeOverlay`)
+        if (self.opt_edit != .none) {
+            if (key.matches(Key.enter, .{})) return self.themeFieldEnter();
+            return self.opt_in.update(.{ .key_press = key });
+        }
         if (key.matches(Key.tab, .{})) {
             self.opt_tab = (self.opt_tab + 1) % 3;
             return;
@@ -4787,26 +5042,33 @@ pub const App = struct {
         const right = k.matches(Key.right, .{});
         switch (self.opt_tab) {
             0 => {
-                if (up) self.themeStep(-1) else if (down) self.themeStep(1);
+                if (up) self.themeStep(-1) else if (down) self.themeStep(1) else if (k.matches('n', .{})) try self.themeButton(.rename) else if (k.matches(Key.delete, .{})) try self.themeButton(.remove) else if (k.matches('e', .{})) try self.themeButton(.export_file) else if (k.matches('i', .{})) try self.themeButton(.import_file);
             },
             1 => {
                 if (up) self.opt_slot = self.opt_slot -| 1 else if (down) self.opt_slot = @intCast(@min(self.opt_slot + 1, theme.slot_count - 1)) else if (left) self.adjustChannel(if (small) -1 else -8) else if (right) self.adjustChannel(if (small) 1 else 8) else if (k.matches('r', .{})) self.opt_channel = 0 else if (k.matches('g', .{})) self.opt_channel = 1 else if (k.matches('b', .{})) self.opt_channel = 2;
             },
             else => {
-                const step: i32 = if (self.opt_row == 3) 50 else if (small or self.opt_row != 0) 1 else 10;
-                if (up) self.opt_row = (self.opt_row + 3) % 4 else if (down) self.opt_row = (self.opt_row + 1) % 4 else if (left) self.adjustTimer(self.opt_row, -step) else if (right) self.adjustTimer(self.opt_row, step);
+                const step: i32 = if (self.opt_row == 2) 50 else if (small or self.opt_row != 0) 1 else 10;
+                if (up) self.opt_row = (self.opt_row + 2) % 3 else if (down) self.opt_row = (self.opt_row + 1) % 3 else if (left) self.adjustTimer(self.opt_row, -step) else if (right) self.adjustTimer(self.opt_row, step);
             },
         }
     }
 
+    // Zig tip: the function returns `!void` because a theme button may allocate (the text of the field); `activate` calls
+    // it with `try`, so an "out of memory" goes up to the event loop like every other error.
     /// A click in the Options dialog.
-    fn optAction(self: *App, o: OptAction) void {
+    fn optAction(self: *App, o: OptAction) !void {
         switch (o) {
-            .tab => |t| self.opt_tab = t,
+            .tab => |t| {
+                self.opt_tab = t;
+                self.opt_edit = .none;
+            },
             .theme => |t| {
                 self.options.theme_id = t;
+                self.opt_edit = .none;
                 self.applyOptions();
             },
+            .theme_btn => |b| try self.themeButton(b),
             .slot => |i| self.opt_slot = i,
             .channel => |c| self.opt_channel = c,
             .slider => |s| {
@@ -4823,19 +5085,89 @@ pub const App = struct {
                 self.adjustTimer(1, d);
             },
             .trace => |d| {
-                self.opt_row = 3;
-                self.adjustTimer(3, d);
-            },
-            .hover => |d| {
                 self.opt_row = 2;
                 self.adjustTimer(2, d);
             },
             .ok => self.optOk(),
+            // the built-in Dark Theme and the first timers; the custom themes stay
             .defaults => {
-                self.options = .{};
+                const keep = self.options;
+                self.options = .{ .customs = keep.customs, .n_custom = keep.n_custom };
                 self.applyOptions();
             },
         }
+    }
+
+    // Zig tip: the name field and the folder shown make the path (`std.fs.path.join` puts the separator between them). The
+    // caller frees it; null when the field is empty.
+    /// The file that the folder selector names: the folder shown and the name field.
+    fn chooserFile(self: *App) !?[]u8 {
+        const raw = try self.fb_name.toOwnedContents(self.gpa);
+        defer self.gpa.free(raw);
+        const name = std.mem.trim(u8, raw, " \"");
+        if (name.len == 0) return null;
+        const dir = self.fb_path orelse return null;
+        return try std.fs.path.join(self.gpa, &.{ dir, name });
+    }
+
+    // Zig tip: `std.ascii.endsWithIgnoreCase` checks the ending without regard to case, so `x.JSON` is not given a second one.
+    /// Export (the folder selector opened by Export): write the theme in use to the file named.
+    fn exportTheme(self: *App) !void {
+        const gpa = self.gpa;
+        const o = &self.options;
+        const named = (try self.chooserFile()) orelse {
+            self.setMessage("type the name of the file", .{});
+            return;
+        };
+        defer gpa.free(named);
+        const path = if (std.ascii.endsWithIgnoreCase(named, ".json")) try gpa.dupe(u8, named) else try std.fmt.allocPrint(gpa, "{s}.json", .{named});
+        defer gpa.free(path);
+        const bytes = try options_mod.themeFile(gpa, o.nameOf(o.theme_id), o.baseOf(o.theme_id), o.palette());
+        defer gpa.free(bytes);
+        self.chooserDone();
+        Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = bytes }) catch |err| {
+            return self.fail("Cannot write {s}: {s}.", .{ path, @errorName(err) });
+        };
+        self.setMessage("exported {s} to {s}", .{ o.nameOf(o.theme_id), path });
+    }
+
+    // Zig tip: `return self.fail(...)` in a function that returns `!void`: `fail` returns `void`, which is a valid value of
+    // `!void`, so one line opens the pop-up and leaves.
+    /// Import (the folder selector opened by Import): read the theme file named and add it as a custom theme.
+    fn importTheme(self: *App) !void {
+        const gpa = self.gpa;
+        const o = &self.options;
+        const path = (try self.chooserFile()) orelse {
+            self.setMessage("choose a theme file (.json)", .{});
+            return;
+        };
+        defer gpa.free(path);
+        self.chooserDone();
+        const bytes = Io.Dir.cwd().readFileAlloc(self.io, path, gpa, .limited(1 << 20)) catch |err| {
+            return self.fail("Cannot read {s}: {s}.", .{ path, @errorName(err) });
+        };
+        defer gpa.free(bytes);
+        const t = options_mod.parseThemeFile(gpa, bytes) orelse {
+            return self.fail("{s} is not a theme. A theme file is a JSON object with a name and colors.", .{std.fs.path.basename(path)});
+        };
+        var buf: [options_mod.name_max + 8]u8 = undefined;
+        const name = o.uniqueName(t.name(), &buf);
+        const id = o.addCustom(name, t.base, t.colors) orelse {
+            return self.fail("{d} custom themes is the most: remove one first.", .{options_mod.max_custom});
+        };
+        o.theme_id = id;
+        self.applyOptions();
+        self.setMessage("imported {s}: rename it if you like", .{o.nameOf(id)});
+    }
+
+    // Zig tip: the message is made with `allocPrint` and owned by the app until the next pop-up; the pop-up goes back to the
+    // dialog that was open (`overlay` at the call), so OK closes only the pop-up.
+    /// An operation failed: a pop-up says why (title "Operation failed"); OK goes back to the dialog that was open.
+    fn fail(self: *App, comptime f: []const u8, args: anytype) void {
+        if (self.alert_msg) |m| self.gpa.free(m);
+        self.alert_msg = std.fmt.allocPrint(self.gpa, f, args) catch null;
+        self.alert_back = self.overlay;
+        self.overlay = .alert;
     }
 
     // ------------------------------------------------------------ auto save
@@ -4936,12 +5268,16 @@ pub const App = struct {
                 self.active = tab;
                 self.openOverlay(.save_as);
             },
+            .info => {
+                self.active = tab;
+                self.openInfo();
+            },
             .rename => {
                 self.active = tab;
+                self.focus = .editor;
                 self.openRename();
             },
             .sep => {},
-            .upload => self.notYet("Remote machines", "T5"),
             .close_this => self.closeTab(tab),
             .close_right => self.closeClean(tab + 1, self.tabs.items.len),
             .close_left => self.closeClean(0, tab),
@@ -4955,6 +5291,16 @@ pub const App = struct {
     // so the work that some dialogs need when they close is written once.
     /// Close the dialog that is open. The Find File dialog puts the tree back as it was.
     pub fn closeOverlay(self: *App) void {
+        // Esc in the Info dialog first leaves the name field; the folder selector and the pop-up go back to their dialog
+        if (self.overlay == .properties and self.prop_editing) {
+            self.prop_editing = false;
+            return;
+        }
+        if (self.overlay == .open_folder and self.fb_mode != .project) return self.chooserDone();
+        if (self.overlay == .alert) {
+            self.overlay = self.alert_back;
+            return;
+        }
         // Esc in the structure dialog first leaves the cell or the type list that is open
         if (self.overlay == .structure and (self.st_editing or self.st_drop)) {
             self.st_editing = false;
@@ -4968,7 +5314,12 @@ pub const App = struct {
         }
         if (self.overlay == .find_file) self.filesCancel();
         if (self.overlay == .settings) {
-            // Cancel: the options go back to what they were when the dialog opened
+            // Esc in the field under the list of themes closes the field only
+            if (self.opt_edit != .none) {
+                self.opt_edit = .none;
+                return;
+            }
+            // Cancel: the options (the themes too) go back to what they were when the dialog opened
             self.options = self.opt_backup;
             self.applyOptions();
         }
@@ -4984,6 +5335,7 @@ pub const App = struct {
 
     /// File > Open Folder: the folder browser, which starts in the project folder, or in the current folder.
     pub fn openFolderDialog(self: *App) void {
+        self.fb_mode = .project;
         if (self.fb_path == null) self.fbLoad(if (self.root.len > 0) self.root else ".");
         self.openOverlay(.open_folder);
         self.dlg_field = 1;
@@ -5022,6 +5374,42 @@ pub const App = struct {
         try self.openProject(path);
     }
 
+    // Zig tip: the mode is set before `fbLoad`, because the mode decides whether the theme files are listed too.
+    /// Open the folder selector for `mode` in the folder `start`; Cancel and Esc go back to the dialog `back`.
+    fn openChooser(self: *App, mode: FbMode, back: Overlay, start: []const u8) void {
+        self.fb_mode = mode;
+        self.fb_back = back;
+        self.fbLoad(start);
+        self.overlay = .open_folder;
+        self.dlg_field = if (mode == .theme_export) 2 else 1;
+    }
+
+    // Zig tip: the names in `fb_files` are owned by the app, so each one is freed before the list is emptied.
+    /// The folder selector is done: back to the dialog that opened it; the next Open Folder lists folders only.
+    fn chooserDone(self: *App) void {
+        self.overlay = self.fb_back;
+        self.fb_mode = .project;
+        for (self.fb_files.items) |e| self.gpa.free(e);
+        self.fb_files.clearRetainingCapacity();
+    }
+
+    // Zig tip: `self: *const App`: the drawing calls it too, and it only reads.
+    /// Does the folder selector have a file name field (and list the theme files)?
+    pub fn fbHasName(self: *const App) bool {
+        return self.fb_mode == .theme_export or self.fb_mode == .theme_import;
+    }
+
+    // Zig tip: one button, four meanings: the `switch` on the mode is the whole dispatch.
+    /// The main button of the folder selector (and F2).
+    fn fbOk(self: *App) !void {
+        switch (self.fb_mode) {
+            .project => try self.openHere(),
+            .move_to => try self.moveHere(),
+            .theme_export => try self.exportTheme(),
+            .theme_import => try self.importTheme(),
+        }
+    }
+
     /// The last part of a path.
     pub fn baseName(path: []const u8) []const u8 {
         const cut = std.mem.lastIndexOfAny(u8, path, "/\\");
@@ -5045,20 +5433,24 @@ pub const App = struct {
         };
         const abs = self.gpa.dupe(u8, buf[0..n]) catch return;
         self.fbClear();
+        const with_files = self.fbHasName();
         var it = dir.iterate();
         while (it.next(self.io) catch null) |e| {
-            if (e.kind != .directory or self.fb_entries.items.len >= 2000) continue;
+            if (self.fb_entries.items.len + self.fb_files.items.len >= 2000) break;
+            const list = if (e.kind == .directory) &self.fb_entries else if (with_files and e.kind == .file and std.ascii.endsWithIgnoreCase(e.name, ".json")) &self.fb_files else continue;
             const name = self.gpa.dupe(u8, e.name) catch break;
-            self.fb_entries.append(self.gpa, name) catch {
+            list.append(self.gpa, name) catch {
                 self.gpa.free(name);
                 break;
             };
         }
-        std.mem.sort([]u8, self.fb_entries.items, {}, struct {
+        const by_name = struct {
             fn less(_: void, a: []u8, b: []u8) bool {
                 return std.ascii.lessThanIgnoreCase(a, b);
             }
-        }.less);
+        }.less;
+        std.mem.sort([]u8, self.fb_entries.items, {}, by_name);
+        std.mem.sort([]u8, self.fb_files.items, {}, by_name);
         if (self.fb_path) |old| self.gpa.free(old);
         self.fb_path = abs;
         self.fb_sel = 0;
@@ -5070,6 +5462,8 @@ pub const App = struct {
     fn fbClear(self: *App) void {
         for (self.fb_entries.items) |e| self.gpa.free(e);
         self.fb_entries.clearRetainingCapacity();
+        for (self.fb_files.items) |e| self.gpa.free(e);
+        self.fb_files.clearRetainingCapacity();
     }
 
     /// Is there a folder above the one shown? (Not at the root of a drive.)
@@ -5078,18 +5472,37 @@ pub const App = struct {
         return std.fs.path.dirname(p) != null;
     }
 
-    /// The rows of the browser: `..` first when there is a parent, then the sub folders.
+    /// The rows of the browser: `..` first when there is a parent, then the sub folders, then the theme files.
     pub fn fbRowCount(self: *const App) usize {
-        return self.fb_entries.items.len + @intFromBool(self.fbHasParent());
+        return self.fb_entries.items.len + self.fb_files.items.len + @intFromBool(self.fbHasParent());
     }
 
+    // Zig tip: the rows are three lists one after the other; taking away the length of each list in turn finds the list
+    // that holds row `i` and the place in it.
     /// The name shown in row `i`.
     pub fn fbRowName(self: *const App, i: usize) []const u8 {
+        var k = i;
         if (self.fbHasParent()) {
-            if (i == 0) return "..";
-            return self.fb_entries.items[i - 1];
+            if (k == 0) return "..";
+            k -= 1;
         }
-        return self.fb_entries.items[i];
+        if (k < self.fb_entries.items.len) return self.fb_entries.items[k];
+        return self.fb_files.items[k - self.fb_entries.items.len];
+    }
+
+    // Zig tip: `@intFromBool(b)` is 1 for true and 0 for false, so the `..` row counts only when there is one.
+    /// Is row `i` a file (not `..`, not a folder)?
+    pub fn fbRowIsFile(self: *const App, i: usize) bool {
+        return i >= @intFromBool(self.fbHasParent()) + self.fb_entries.items.len;
+    }
+
+    // Zig tip: `insertSliceAtCursor(...) catch {}` ignores the only possible error (out of memory): the field then simply
+    // keeps the old name.
+    /// A file row that is selected puts its name in the name field.
+    fn fbPickName(self: *App) void {
+        if (!self.fbHasName() or self.fb_sel >= self.fbRowCount() or !self.fbRowIsFile(self.fb_sel)) return;
+        self.fb_name.clearRetainingCapacity();
+        self.fb_name.insertSliceAtCursor(self.fbRowName(self.fb_sel)) catch {};
     }
 
     // Zig tip: `std.fs.path.dirname` returns a slice of the path itself, and `fbLoad` frees the old
@@ -5102,9 +5515,17 @@ pub const App = struct {
         self.fbLoad(copy);
     }
 
-    /// Go into the folder of row `i` (or up, for `..`).
-    fn fbEnterRow(self: *App, i: usize) void {
+    // Zig tip: the function returns `!void` because a file row can end in `fbOk`, which may fail; the callers write `try`.
+    /// Go into the folder of row `i` (or up, for `..`); a file row is chosen: Import reads it, Export takes its name.
+    fn fbEnterRow(self: *App, i: usize) !void {
         if (i >= self.fbRowCount()) return;
+        if (self.fbRowIsFile(i)) {
+            self.fb_sel = i;
+            self.fbPickName();
+            if (self.fb_mode == .theme_import) return self.fbOk();
+            self.dlg_field = 2;
+            return;
+        }
         const name = self.fbRowName(i);
         if (std.mem.eql(u8, name, "..")) return self.fbUp();
         const p = self.fb_path orelse return;
@@ -5125,13 +5546,18 @@ pub const App = struct {
         if (key.matches(Key.up, .{})) self.proj_sel = self.proj_sel -| 1 else if (key.matches(Key.down, .{})) self.proj_sel = @min(self.proj_sel + 1, n - 1) else if (key.matches(Key.page_up, .{})) self.proj_sel = self.proj_sel -| 8 else if (key.matches(Key.page_down, .{})) self.proj_sel = @min(self.proj_sel + 8, n - 1) else if (key.matches(Key.home, .{})) self.proj_sel = 0 else if (key.matches(Key.end, .{})) self.proj_sel = n - 1;
     }
 
-    /// The keys of the folder browser: Tab switches between the path field and the list.
+    /// The keys of the folder browser: Tab goes from the path field to the list (and to the name field), F2 is the main button.
     fn folderKey(self: *App, key: Key) !void {
+        const fields: u8 = if (self.fbHasName()) 3 else 2;
         if (key.matches(Key.tab, .{})) {
-            self.dlg_field = 1 - self.dlg_field;
+            self.dlg_field = (self.dlg_field + 1) % fields;
             return;
         }
-        if (key.matches(Key.f2, .{})) return self.openHere();
+        if (key.matches(Key.f2, .{})) return self.fbOk();
+        if (self.dlg_field == 2) {
+            if (key.matches(Key.enter, .{})) return self.fbOk();
+            return self.fb_name.update(.{ .key_press = key });
+        }
         if (self.dlg_field == 0) {
             if (key.matches(Key.enter, .{})) {
                 const typed = try self.project_in.toOwnedContents(self.gpa);
@@ -5148,6 +5574,7 @@ pub const App = struct {
         if (key.matches(Key.left, .{}) or key.matches(Key.backspace, .{})) return self.fbUp();
         if (n == 0) return;
         if (key.matches(Key.up, .{})) self.fb_sel = self.fb_sel -| 1 else if (key.matches(Key.down, .{})) self.fb_sel = @min(self.fb_sel + 1, n - 1) else if (key.matches(Key.page_up, .{})) self.fb_sel = self.fb_sel -| 8 else if (key.matches(Key.page_down, .{})) self.fb_sel = @min(self.fb_sel + 8, n - 1) else if (key.matches(Key.home, .{})) self.fb_sel = 0 else if (key.matches(Key.end, .{})) self.fb_sel = n - 1;
+        self.fbPickName();
     }
 
     // ------------------------------------------------------------ keys
@@ -5182,7 +5609,6 @@ pub const App = struct {
             if (key.codepoint == Key.left) return self.rotatePanel(-1);
             if (key.codepoint == Key.right) return self.rotatePanel(1);
             if (key.codepoint == Key.tab) return self.nextTab(if (key.mods.shift) -1 else 1);
-            if (key.codepoint >= '1' and key.codepoint <= '3') return self.pickMachine(@intCast(key.codepoint - '1'));
             if (menuByLetter(key.codepoint)) |m| return self.openMenu(m);
         }
         if (key.matches(Key.tab, .{ .shift = true })) return self.rotatePanel(1);
@@ -5253,149 +5679,17 @@ pub const App = struct {
         return true;
     }
 
-    // Zig tip: an index from outside (a key, a click) is checked against the length of the list before it is used:
-    // `i >= self.machines.items.len` is false for every valid place, so a wrong value does nothing.
-    /// Use machine `i` of the list. A machine that is not connected is chosen all the same; the toolbar shows it in red.
-    fn pickMachine(self: *App, i: usize) void {
-        if (i >= self.machines.items.len) return;
-        self.machine = i;
-        if (self.isConnected(i)) self.setMessage("connection: {s}", .{self.machines.items[i].label}) else self.setMessage("{s} is chosen but not connected (remote machines come with step T5)", .{self.machines.items[i].label});
-    }
-
-    /// The dropdown of the registered machines under the name on the toolbar.
-    fn openMachineMenu(self: *App, x: u16, y: u16) void {
-        self.mm_x = x;
-        self.mm_y = y;
-        self.mm_sel = self.machine;
-        self.overlay = .machine_menu;
-    }
-
-    // ------------------------------------------------------------ the registration form
-
-    // Zig tip: a `TextInput` keeps its text in a gap buffer; `toOwnedContents(gpa)` copies it to a new slice that the
-    // caller frees. `clearRetainingCapacity` empties it but keeps the memory for the next use.
-    /// Fill the two fields from the selected row (empty for the new machine at the end of the table).
-    fn regLoad(self: *App) void {
-        self.reg_addr.clearRetainingCapacity();
-        self.reg_port.clearRetainingCapacity();
-        if (self.reg_sel >= self.machines.items.len) return;
-        const m = self.machines.items[self.reg_sel];
-        self.reg_addr.insertSliceAtCursor(m.address) catch {};
-        if (self.reg_sel > 0) {
-            const p = std.fmt.allocPrint(self.gpa, "{d}", .{m.port}) catch return;
-            defer self.gpa.free(p);
-            self.reg_port.insertSliceAtCursor(p) catch {};
-        }
-    }
-
-    /// File > Register: the form opens on the machine in use.
-    pub fn openRegister(self: *App) void {
-        self.reg_sel = self.machine;
-        self.regLoad();
-        self.openOverlay(.register);
-    }
-
     /// The text of a field, valid until the end of the frame.
     fn fieldText(self: *App, ti: *TextInput) []const u8 {
         const s = ti.toOwnedContents(self.frame.allocator()) catch return "";
         return std.mem.trim(u8, s, " ");
     }
 
-    // Zig tip: `and`/`or` stop at the first answer (short circuit): `sel > 0 and ...` does not look at the row of the
-    // local machine, which cannot be modified. The save button is on when the new row has anything in it, or when a
-    // registered row differs from what the fields say.
-    /// Can the registration form save? (A new machine is present, or the selected one is modified.)
-    pub fn regDirty(self: *App) bool {
-        const addr = self.fieldText(&self.reg_addr);
-        const port = self.fieldText(&self.reg_port);
-        const n = self.machines.items.len;
-        if (self.reg_sel >= n) return addr.len > 0 or port.len > 0;
-        if (self.reg_sel == 0) return false;
-        const m = self.machines.items[self.reg_sel];
-        const same_port = std.fmt.parseInt(u16, port, 10) catch null;
-        return !std.mem.eql(u8, addr, m.address) or same_port == null or same_port.? != m.port;
-    }
-
-    /// The Select button is on when the row selected is a registered machine other than the one in use.
-    pub fn regCanSelect(self: *const App) bool {
-        return self.reg_sel < self.machines.items.len and self.reg_sel != self.machine;
-    }
-
-    /// Save button: add the new machine at the end of the list, or change the selected one.
-    fn regSave(self: *App) void {
-        if (!self.regDirty()) return;
-        const addr = self.fieldText(&self.reg_addr);
-        const port_text = self.fieldText(&self.reg_port);
-        if (addr.len == 0 or std.mem.indexOfAny(u8, addr, " \t") != null) {
-            self.setMessage("address: a name or an IP number, without spaces", .{});
-            return;
-        }
-        const port = std.fmt.parseInt(u16, port_text, 10) catch 0;
-        if (port == 0) {
-            self.setMessage("port: a number from 1 to 65535", .{});
-            return;
-        }
-        for (self.machines.items[1..], 1..) |m, i| {
-            if (i != self.reg_sel and m.port == port and std.mem.eql(u8, m.address, addr)) {
-                self.setMessage("{s}:{d} is already registered", .{ addr, port });
-                return;
-            }
-        }
-        if (self.reg_sel >= self.machines.items.len) {
-            self.machineAdd(addr, port, null) catch {
-                self.setMessage("out of memory", .{});
-                return;
-            };
-            self.reg_sel = self.machines.items.len - 1;
-        } else {
-            const old = self.machines.items[self.reg_sel];
-            const new_addr = self.gpa.dupe(u8, addr) catch return;
-            const new_label = std.fmt.allocPrint(self.gpa, "{s}:{d}", .{ addr, port }) catch {
-                self.gpa.free(new_addr);
-                return;
-            };
-            old.free(self.gpa);
-            self.machines.items[self.reg_sel] = .{ .label = new_label, .address = new_addr, .port = port };
-        }
-        self.saveMachines();
-        self.regLoad();
-        self.setMessage("registered {s}", .{self.machines.items[self.reg_sel].label});
-    }
-
-    /// Select button: use the machine of the selected row, and close the form (nothing is saved).
-    fn regSelect(self: *App) void {
-        if (!self.regCanSelect()) return;
-        self.pickMachine(self.reg_sel);
-        self.overlay = .none;
-    }
-
-    /// Move the selected row of the table by `delta` (the last row is the new machine).
-    fn regMove(self: *App, delta: isize) void {
-        const rows: isize = @intCast(self.machines.items.len + 1);
-        const now: isize = @intCast(self.reg_sel);
-        self.reg_sel = @intCast(std.math.clamp(now + delta, 0, rows - 1));
-        self.regLoad();
-    }
-
-    /// The keys of the registration form: Up and Down choose the row, Tab the field, Enter saves, text goes to the field.
-    fn regKey(self: *App, key: Key) !void {
-        if (key.matches(Key.up, .{})) return self.regMove(-1);
-        if (key.matches(Key.down, .{})) return self.regMove(1);
-        if (key.matches(Key.tab, .{})) {
-            self.dlg_field = 1 - self.dlg_field;
-            return;
-        }
-        if (key.matches(Key.enter, .{})) return if (self.regDirty()) self.regSave() else self.regSelect();
-        if (self.reg_sel == 0) return;
-        const ti = if (self.dlg_field == 0) &self.reg_addr else &self.reg_port;
-        try ti.update(.{ .key_press = key });
-    }
-
     // Zig tip: `switch (self.overlay)` on an enum, with `.none => {}` for the value that needs
     // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) return self.closeOverlay();
-        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .machine_menu and self.overlay != .register and self.overlay != .confirm and self.overlay != .structure and self.overlay != .sq_structure and self.overlay != .rename and self.overlay != .new_table and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
+        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .confirm and self.overlay != .structure and self.overlay != .sq_structure and self.overlay != .properties and self.overlay != .alert and self.overlay != .settings and self.overlay != .new_table and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
         switch (self.overlay) {
             .menu => try self.menuKey(key),
             .tab_menu => {
@@ -5409,18 +5703,6 @@ pub const App = struct {
                     if (tab_menu_rows[self.tab_menu_sel].cmd == .sep) self.tab_menu_sel = (self.tab_menu_sel + 1) % n;
                 } else if (key.matches(Key.enter, .{})) try self.runTabMenu(self.tab_menu_sel);
             },
-            .machine_menu => {
-                const n = self.machines.items.len + 1; // the machines, then Register…
-                if (key.matches(Key.up, .{})) {
-                    self.mm_sel = (self.mm_sel + n - 1) % n;
-                } else if (key.matches(Key.down, .{})) {
-                    self.mm_sel = (self.mm_sel + 1) % n;
-                } else if (key.matches(Key.enter, .{})) {
-                    self.overlay = .none;
-                    if (self.mm_sel >= self.machines.items.len) self.openRegister() else self.pickMachine(self.mm_sel);
-                }
-            },
-            .register => try self.regKey(key),
             .new_file => {
                 if (key.matches(Key.enter, .{})) try self.newFromName() else try self.saveas_in.update(.{ .key_press = key });
             },
@@ -5430,9 +5712,16 @@ pub const App = struct {
             },
             .structure => try self.structureKey(key),
             .sq_structure => try self.sqKey(key),
-            .rename => {
-                if (key.matches(Key.enter, .{})) try self.doRename() else try self.saveas_in.update(.{ .key_press = key });
+            .properties => {
+                if (self.prop_editing) {
+                    if (key.matches(Key.enter, .{})) try self.doRename() else try self.saveas_in.update(.{ .key_press = key });
+                } else if (key.matches(Key.f2, .{}) or key.matches('r', .{})) {
+                    self.startRename();
+                } else if (key.matches('m', .{})) {
+                    try self.openMove();
+                } else if (key.matches(Key.enter, .{})) self.overlay = .none;
             },
+            .alert => if (key.matches(Key.enter, .{})) self.closeOverlay(),
             .new_table => {
                 if (key.matches(Key.enter, .{})) {
                     const raw = try self.saveas_in.toOwnedContents(self.gpa);
@@ -5526,7 +5815,6 @@ pub const App = struct {
         if (self.activeTab()) |t| {
             if (t.table) |tv| return self.tableKey(tv, key);
             if (t.folder) |fv| return self.folderListKey(fv, key);
-            if (t.render) return self.mdKey(t, key);
         }
         const b = self.activeBuffer() orelse return;
         const ro = self.activeTab().?.virtual;
@@ -5646,14 +5934,14 @@ pub const App = struct {
             const ti: ?*TextInput = switch (self.overlay) {
                 .none => if (self.focus == .sql) &self.sql_in else &self.console_in,
                 .goto => &self.goto_in,
-                .save_as, .new_file, .new_table, .rename => &self.saveas_in,
+                .save_as, .new_file, .new_table, .properties => &self.saveas_in,
                 .wizard => &self.wiz_name,
                 .append_n => &self.goto_in,
                 .find_text => &self.find_in,
                 .find_file => &self.files_in,
                 .replace => if (self.dlg_field == 0) &self.find_in else &self.replace_in,
-                .register => if (self.reg_sel == 0) null else if (self.dlg_field == 0) &self.reg_addr else &self.reg_port,
-                .open_folder => if (self.dlg_field == 0) &self.project_in else null,
+                .open_folder => if (self.dlg_field == 0) &self.project_in else if (self.dlg_field == 2) &self.fb_name else null,
+                .settings => if (self.opt_edit != .none) &self.opt_in else null,
                 else => null,
             };
             const field = ti orelse return;
@@ -5915,10 +6203,6 @@ pub const App = struct {
                         fv.top = if (up) fv.top -| 3 else @min(fv.top + 3, fv.items.items.len -| 1);
                         return;
                     }
-                    if (t.render) {
-                        t.render_top = if (up) t.render_top -| 3 else t.render_top + 3;
-                        return;
-                    }
                 }
                 if (self.activeBuffer()) |b| b.top = if (up) b.top -| 3 else @min(b.top + 3, b.lineCount() - 1);
             } else if (self.console_rect.contains(m.col, m.row)) {
@@ -6023,7 +6307,7 @@ pub const App = struct {
     }
 
     // Zig tip: the column under the mouse is found by adding up the widths of the columns from the first one shown, the
-    // way the view draws them: a row number column, then each field with one cell between.
+    // way the view draws them (`tbl_widths`, fitted to the room): a row number column, then each field and its `│`.
     /// A click on the grid of a DBF table: select the record and the field under the pointer.
     fn clickTable(self: *App, tv: *TableView, m: vaxis.Mouse) void {
         const r = self.tbl_rect;
@@ -6032,7 +6316,7 @@ pub const App = struct {
         var x: i32 = @as(i32, r.x) + dbf_rownum_w;
         var c = tv.left;
         while (c < tv.t.fields.len) : (c += 1) {
-            const w: i32 = dbf.displayWidth(&tv.t.fields[c]) + 1;
+            const w: i32 = @as(i32, if (c < self.tbl_widths.len) self.tbl_widths[c] else dbf.displayWidth(&tv.t.fields[c])) + 1;
             if (m.col >= x and m.col < x + w) {
                 tv.col = c;
                 return;
@@ -6205,20 +6489,16 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: `a != b` works on optionals too: two `?Drag` are equal when both are null or both hold the same value.
-    // The border under the pointer is a candidate; it becomes active (`hover_split`) when the layout is unlocked, or when
-    // the pointer has rested on it for `hover_delay_s` seconds. `tick` calls this again, so no mouse move is needed.
-    /// Decide whether the border under the pointer is active, and set the shape of the pointer.
-    fn refreshHover(self: *App) void {
-        const cand = self.hover_cand orelse {
-            self.hover_split = null;
+    // Zig tip: `if (self.modify) self.splitAt(m) else null` is an `if` used as a value: both branches give a `?Drag`. A locked
+    // layout has no active border, so a press there is an ordinary click; unlock it (the lock, Ctrl+L) to drag a border.
+    /// The border under the pointer is active when the layout is unlocked; set the shape of the pointer.
+    fn refreshHover(self: *App, m: vaxis.Mouse) void {
+        self.hover_split = if (self.modify) self.splitAt(m) else null;
+        const cand = self.hover_split orelse {
             self.pointer = .default;
             return;
         };
-        const waited = self.nowMs() - self.hover_since;
-        const ready = self.modify or waited >= @as(i64, self.options.hover_delay_s) * 1000;
-        self.hover_split = if (ready) cand else null;
-        self.pointer = if (!ready) .default else if (cand == .tree_split) .@"ew-resize" else .@"ns-resize";
+        self.pointer = if (cand == .tree_split) .@"ew-resize" else .@"ns-resize";
     }
 
     /// The lock of the toolbar: locked means the layout is frozen; unlocked it can be modified (Window > Layout modify).
@@ -6230,19 +6510,13 @@ pub const App = struct {
     // the menu title under the pointer becomes the selected one, as in a classic menu.
     fn hover(self: *App, m: vaxis.Mouse) void {
         if (self.overlay == .none) {
-            // over a border between panels the pointer is a double arrow, once it has rested there for the hover delay
-            const cand = self.splitAt(m);
-            if (cand != self.hover_cand) {
-                self.hover_cand = cand;
-                self.hover_since = self.nowMs();
-            }
-            self.refreshHover();
+            // over a border between panels the pointer is a double arrow while the layout is unlocked
+            self.refreshHover(m);
             return;
         }
-        self.hover_cand = null;
         self.hover_split = null;
         self.pointer = .default;
-        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .machine_menu) return;
+        if (self.overlay != .menu and self.overlay != .tab_menu) return;
         var i = self.hits.items.len;
         while (i > 0) {
             i -= 1;
@@ -6252,7 +6526,6 @@ pub const App = struct {
                 .menu_top => |t| if (t != self.menu_top) self.openMenu(t),
                 .menu_item => |r| self.menu_sel = r,
                 .tabmenu_item => |r| self.tab_menu_sel = r,
-                .machinemenu_item => |r| self.mm_sel = r,
                 else => {},
             }
             return;
@@ -6281,9 +6554,13 @@ pub const App = struct {
                     else => self.focus,
                 };
             },
-            .machine_open => |p| self.openMachineMenu(p.x, p.y),
-            .register_open => self.openRegister(),
-            .view_toggle => self.toggleView(),
+            .tab_shift => |d| {
+                if (d < 0) self.tab_first -|= 1 else if (self.tab_more_right) self.tab_first += 1;
+            },
+            .prop_btn => |b| switch (b) {
+                .rename => if (self.prop_editing) try self.doRename() else self.startRename(),
+                .move => try self.openMove(),
+            },
             .folder_row => |i| {
                 self.focus = .editor;
                 const t = self.activeTab() orelse return;
@@ -6299,13 +6576,6 @@ pub const App = struct {
                     else => {},
                 }
             },
-            .md_scroll => |d| {
-                if (self.activeTab()) |t| switch (d) {
-                    .up => t.render_top -|= 8,
-                    .down => t.render_top += 8,
-                    else => {},
-                };
-            },
             .log_scroll => |d| {
                 const log = self.shownLog();
                 const half = @max(1, self.console_rect.h / 2);
@@ -6320,18 +6590,6 @@ pub const App = struct {
                 .down => self.break_top += 3,
                 else => {},
             },
-            .machinemenu_item => |i| {
-                self.overlay = .none;
-                if (i >= self.machines.items.len) self.openRegister() else self.pickMachine(i);
-            },
-            .reg_row => |i| {
-                self.reg_sel = i;
-                self.regLoad();
-            },
-            .reg_btn => |b| switch (b) {
-                .save => self.regSave(),
-                .select => self.regSelect(),
-            },
             .menu_top => |t| {
                 if (self.overlay == .menu and self.menu_top == t) self.overlay = .none else self.openMenu(t);
             },
@@ -6342,7 +6600,7 @@ pub const App = struct {
             .dlg_field => |f| self.dlg_field = f,
             .nop => {},
             .lock_toggle => self.toggleLock(),
-            .opt => |o| self.optAction(o),
+            .opt => |o| try self.optAction(o),
             .tabmenu_item => |i| try self.runTabMenu(i),
             .tree_scroll => |d| {
                 const half = @max(1, self.tree_rect.h / 2);
@@ -6378,14 +6636,26 @@ pub const App = struct {
                 .ok => try self.overlayKey(.{ .codepoint = Key.enter }),
                 .forget => try self.forgetProject(),
                 .browse => self.openFolderDialog(),
-                .open_here => try self.openHere(),
+                .open_here => try self.fbOk(),
             },
             .proj_row => |i| {
                 if (self.proj_sel == i) try self.openCached(i) else self.proj_sel = i;
             },
+            // the arrows of the folder selector move the selection half a list, and the list follows it
+            .fb_scroll => |d| {
+                const n = self.fbRowCount();
+                if (n > 0) switch (d) {
+                    .up => self.fb_sel -|= 8,
+                    .down => self.fb_sel = @min(self.fb_sel + 8, n - 1),
+                    else => {},
+                };
+            },
             .fb_row => |i| {
                 self.dlg_field = 1;
-                if (self.fb_sel == i) self.fbEnterRow(i) else self.fb_sel = i;
+                if (self.fb_sel == i) try self.fbEnterRow(i) else {
+                    self.fb_sel = i;
+                    self.fbPickName();
+                }
             },
             .panel_focus => |p| self.focusPanel(p),
             .panel_hide => |p| self.togglePanel(p),
