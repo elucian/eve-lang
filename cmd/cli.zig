@@ -77,6 +77,7 @@ pub const commands = [_]Command{
     .{ .name = "clear", .summary = "clear the upper part of the screen (the output); the command line stays", .run = ui_cmds.cmdClear },
     .{ .name = "setup", .summary = "load the configuration file", .file = ".cfg", .run = stub("setup") },
     .{ .name = "help", .summary = "display this menu", .run = ui_cmds.cmdHelp },
+    .{ .name = "shell", .summary = "shell <command> (or !<command>): run a command of the system here; the prompt stays in eve", .run = vm_cmds.cmdShell },
     .{ .name = "quit", .summary = "exit from the REPL", .run = ui_cmds.cmdQuit },
     .{ .name = "exit", .summary = "same as quit", .run = ui_cmds.cmdQuit },
 };
@@ -120,6 +121,10 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
         n += 1;
     }
     if (n == 0) return;
+    // `!<command>` and `shell <command>` give the rest of the line to the system shell as it was typed (quotes, pipes)
+    const raw = std.mem.trimStart(u8, line, " \t");
+    if (raw[0] == '!') return vm_cmds.shellLine(ctx, raw[1..]);
+    if (std.mem.eql(u8, words[0], "shell")) return vm_cmds.shellLine(ctx, raw["shell".len..]);
     // `?` is `help`, `? <command>` is `help <command>`, and `<command> ?` is the page of that command
     if (std.mem.eql(u8, words[0], "?")) return ui_cmds.cmdHelp(ctx, words[1..n]);
     if (n >= 2 and std.mem.eql(u8, words[n - 1], "?") and find(words[0]) != null) return ui_cmds.cmdHelp(ctx, words[0..1]);

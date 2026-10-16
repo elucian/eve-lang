@@ -161,7 +161,8 @@ The command options are not designed yet. The basic commands are (in the code th
 | `clear` | stop the run and clean the memory |
 | `setup` | load the configuration file and set the `$` variables |
 | `help` | display the menu |
-| `quit`, `exit` | stop the machine and exit from the REPL |
+| `shell <command>`, `!<command>` | run a command of the system in the current folder; the prompt stays in eve |
+| `quit`, `exit` | stop the machine and exit from the REPL (back to the shell) |
 
 `halt` inside a script stops it so it can be debugged later. It works only in debug mode (`-d` or the `debug` command), where it returns to the prompt and `resume` or `enter` continue; outside debug mode it is ignored, so a forgotten `halt` never blocks a production run. It can be conditioned with `if` to make a breakpoint. Remove `halt` statements from mature software.
 
@@ -188,6 +189,7 @@ An `eve` that stays active and answers requests is a **machine** (rules: [`spec/
 | `--serve stop`, `status`, `restart`, `start` | stop the machine, print its doors, the count of the scripts it ran, its requests, uptime and what it is doing now, stop and start again, start |
 | `-loc [port]`, `--local` | local command, never the network: through IPC when a machine listens, otherwise run by this process |
 | `-rem [host:port]`, `--remote` | run the command on the HTTP door of that machine (`remote` of `eve.cfg` without an address); fails when nobody answers |
+| `--stdio` | a machine for the program that starts it: JSON-RPC on the standard input and output, one message per line; it ends at the end of its input or on `vm.stop`. evetx starts one; over SSH: `ssh host eve --stdio`. Its log goes to the error output when `EVE_LOG` is set |
 
 The two doors have the same form, `--listen [word]` and `--serve [word]` (D-169); the ports come from `eve.cfg`. The client options have three letters (`-loc` local, `-rem` remote; `-ls`, `-lo`, `-r` until 2026-10-11 and `-lsn` until 2026-10-13 are unknown options now). Without `-loc` or `-rem`, `eve -x file.eve` never looks for a machine: it executes the script at once in its own process, even when a machine listens.
 
@@ -199,7 +201,9 @@ eve --serve status
 eve --serve stop
 ```
 
-A script run in a machine prints into the answer: `eve` writes it on its standard output, the errors that nobody recovered on its error output, and ends with the exit code of the script. Tests: `test/level5/e95_web_hello` (four use cases: the page, IPC only, HTTP only, both).
+A script run in a machine prints into the answer: `eve` writes it on its standard output, the errors that nobody recovered on its error output, and ends with the exit code of the script. Tests: `test/level5/e95_web_hello` (the page, IPC only, HTTP only, both, the machine API, and the stdio door).
+
+**Commands of the system at the prompt.** `shell <command>` and `!<command>` run a command line in the shell of the system (`SHELL`, else `cmd.exe` on Windows), in the current folder, show its output while it comes, and come back to the prompt of eve: `!git status`, `!zig build -p .`. The command gets no input. `exit` (and `quit`) leave eve for the shell. The machine offers the same to IDEs: `vm.shell`, and `!<command>` in a session (`spec/library/machine.md#lasting-doors`).
 
 ## Daemon (planned)
 

@@ -98,9 +98,11 @@ pub fn ipcAlive(io: Io, socket: []const u8) bool {
     return true;
 }
 
-// Zig tip: a client connects, sends one message and reads until the server closes the connection: `allocRemaining`
-// reads to the end of the stream into memory, with a limit. The answer is `null` when nobody listens: the caller
-// decides what that means (`-loc` falls back to a local run, `-rem` fails).
+// Zig tip: a client connects, sends one message and reads lines until the answer comes: the IPC connection stays open
+// (the machine may answer many messages on it), so the client does not wait for the end of the stream. A line that is a
+// notification (it has a `method`) is skipped. The buffer holds the longest answer (16 MiB, the limit of the machine).
+// The answer is `null` when nobody listens: the caller decides what that means (`-loc` falls back to a local run,
+// `-rem` fails).
 /// Send one JSON-RPC message on the IPC socket; the answer, or null when no machine listens.
 pub fn ipcCall(io: Io, gpa: std.mem.Allocator, socket: []const u8, request: []const u8) ?[]const u8 {
     const ua = net.UnixAddress.init(socket) catch return null;
@@ -111,10 +113,14 @@ pub fn ipcCall(io: Io, gpa: std.mem.Allocator, socket: []const u8, request: []co
     writer.interface.writeAll(request) catch return null;
     writer.interface.writeAll("\n") catch return null;
     writer.interface.flush() catch return null;
-    var rbuf: [4096]u8 = undefined;
-    var reader = stream.reader(io, &rbuf);
-    const all = reader.interface.allocRemaining(gpa, .limited(64 << 20)) catch return null;
-    return std.mem.trim(u8, all, "\r\n");
+    const rbuf = gpa.alloc(u8, 16 << 20) catch return null;
+    var reader = stream.reader(io, rbuf);
+    while (true) {
+        const line = (reader.interface.takeDelimiter('\n') catch return null) orelse return null;
+        const text = std.mem.trim(u8, line, "\r\n ");
+        if (text.len == 0 or std.mem.startsWith(u8, text, "{\"jsonrpc\":\"2.0\",\"method\"")) continue;
+        return gpa.dupe(u8, text) catch null;
+    }
 }
 
 // Zig tip: `httpCall` relies on the same features as `ipcCall` above: see the tip there. HTTP adds a head: the request

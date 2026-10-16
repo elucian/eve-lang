@@ -239,6 +239,14 @@ pub const entries = [_]Entry{
         .examples = &.{ "help", "help listen", "check ?" },
     },
     .{
+        .name = "shell",
+        .short = "run a command of the system; the prompt stays in eve",
+        .syntax = &.{ "shell <command>", "!<command>" },
+        .text = "Gives the rest of the line, as it was typed, to the shell of the system (the one that started eve: SHELL, else cmd.exe on Windows), in the current folder. Its output and its errors are shown as they come, and the prompt of eve comes back when the command ends: there is no need to leave eve and start it again. The command gets no input: a program that asks a question gets the end of its input. To leave eve for the shell, type exit.\n" ++
+            "Over the machine API the same is vm.shell, and a session of vm.eval takes shell <command> and !<command> too (the IPC and stdio doors only).",
+        .examples = &.{ "shell dir", "!git status", "!zig build -p ." },
+    },
+    .{
         .name = "quit",
         .short = "leave the prompt; the doors close with it",
         .syntax = &.{"quit"},

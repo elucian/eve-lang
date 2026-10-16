@@ -42,6 +42,8 @@ pub const quick_help =
     \\                    this process when none listens; never the network
     \\  -rem [host:port]  --remote: run the command in a remote machine through HTTP;
     \\                    fails when nobody answers (no address: remote of eve.cfg)
+    \\  --stdio           a machine for the program that starts it (an IDE, ssh host eve --stdio):
+    \\                    JSON-RPC on the standard input and output; ends at the end of the input
     \\
 ;
 

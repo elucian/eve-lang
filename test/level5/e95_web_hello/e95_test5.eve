@@ -1,0 +1,41 @@
+# the stdio door: a machine of one client on its standard input and output (evetx, ssh host eve --stdio)
+** spec: library/machine.md#lasting-doors
+** The client starts the machine itself (`eve --stdio`) and talks to it on the pipes; the command of the runner only
+** prints the version and ends, because this machine belongs to its client and has no door to share.
+primary aspect e95_test5 is
+  process main is
+    print "e95_test5: the machine is tested, not this script";
+  return;
+end e95_test5;
+/*@expect
+{
+  "command": ["--version"],
+  "timeout": 40,
+  "client": ["node", "check/stdio.test.js"],
+  "contains": [
+    "ok vm.ping answers pong on the stdio door",
+    "ok a second message on the same channel is answered",
+    "ok vm.stat says the door is stdio",
+    "ok vm.open makes a session in the folder check",
+    "ok vm.eval loads a file from the folder of the session",
+    "ok a streamed eval answers with its status",
+    "ok the output of the run came as vm.output notifications",
+    "ok !<command> in a session runs the system shell and stays in eve",
+    "ok vm.shell streams the output of a command",
+    "ok vm.run runs a file of the machine by its path",
+    "ok vm.run of a missing file answers 66",
+    "ok an unknown word in a session is 64",
+    "ok the evals of a channel run in the order they came",
+    "ok vm.cancel answers",
+    "ok an eval without a session uses the default session of the channel",
+    "ok vm.stat counts the open sessions",
+    "ok vm.close ends the session",
+    "ok an eval in a closed session is -32602",
+    "ok an unknown method is -32601",
+    "ok vm.stop answers stopping",
+    "ok the machine ends with 0 after vm.stop",
+    "ok the end of the input ends the machine with 0",
+    "stdio: all checks passed"
+  ]
+}
+*/

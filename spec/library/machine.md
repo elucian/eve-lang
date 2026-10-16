@@ -23,10 +23,11 @@ A **machine** is a process of `eve` that stays active and answers requests. It i
 
 | Door | Started by | Used by | Protocol |
 |---|---|---|---|
-| **IPC** | `--listen` | the CLI of the same computer | JSON-RPC 2.0 on a Unix domain socket, one message per line |
+| **IPC** | `--listen` | the CLI and the IDEs of the same computer | JSON-RPC 2.0 on a Unix domain socket, one message per line, on a connection that stays open (section "Lasting doors") |
 | **HTTP** | `--serve` | browsers, remote machines, the CLI with `-rem` | files of the web folder, and JSON-RPC 2.0 in `POST /rpc` |
+| **stdio** | `--stdio` | the IDE that started the machine (evetx), here or over SSH | JSON-RPC 2.0 on the standard input and output, one message per line (section "Lasting doors") |
 
-`--listen --serve` opens both doors. `--listen` alone opens no web door. A remote machine opens HTTP and not IPC, unless `--ipc` says so; HTTPS is given by a reverse proxy in front of it (section "Remote access").
+`--listen --serve` opens both doors. `--stdio` is not a shared door: the machine belongs to the program that started it, needs no socket and no port, and ends at the end of its input. `--listen` alone opens no web door. A remote machine opens HTTP and not IPC, unless `--ipc` says so; HTTPS is given by a reverse proxy in front of it (section "Remote access").
 
 ## The serving machine (level 6)
 
@@ -116,6 +117,27 @@ The REPL command `status` (and `eve --status`) prints the same lines under a hea
 
 A script runs in its own session; the machine runs one script at a time (the others wait). A CLI that sent a `run` prints `output` on the standard output and `errors` on the error output and ends with `status`. An error that nobody recovers has the exit code 4 (`../semantics/errors.md`).
 
+## Lasting doors (level 6)
+
+The IPC door and the stdio door keep their connection: a client sends many messages, one per line, and reads the answers on the same connection; a client that sends one message and closes (the CLI) still works. On these doors the machine also sends **notifications** (messages with a `method` and no `id`) and offers the methods of an IDE: sessions, commands of the system, cancel. The HTTP door has none of them until the login of the machine (F-NET-06): they answer `-32001`.
+
+- **The stdio door, local first and over SSH.** `eve --stdio` reads JSON-RPC messages on its standard input and writes the answers on its standard output; its log goes to the error output, and only when the variable `EVE_LOG` is set. It ends at the end of its input or on `vm.stop`. An IDE starts it as its child (evetx does): no port to choose, no socket to find, no second machine to stop. On another computer the same machine is `ssh host eve --stdio`: SSH carries the bytes and does the login, and the messages are the same.
+- **Order and speed.** The quick methods (`vm.ping`, `vm.stat`, `vm.cancel`, `vm.stop`, `vm.open`, `vm.close`) are answered at once, in order. The others (`vm.run`, `vm.eval`, `vm.shell`) run in the order they came, one after the other, while the quick ones are still answered: `vm.cancel` reaches a run that is busy. The scripts of all the connections still run one at a time.
+- **Streamed output.** `vm.run`, `vm.eval` and `vm.shell` take `"stream": true`: the output then comes while it is made, as notifications `{"method": "vm.output", "params": {"id": <the id of the request>, "text": "…"}}`, one batch of whole lines each, and the answer that ends the request has an empty `output`.
+- **Sessions.** A session keeps the state of the prompt between requests (the loaded script, its reports) and a folder, where its file names and commands of the system start. Every lasting connection has a **default session**, made by its first `vm.eval` without `session` and closed with the connection, so a simple client needs no `vm.open`.
+- **Commands of the system.** `vm.shell`, and `shell <command>` or `!<command>` in a session, give a command line to the shell of the system (the one that started the machine: `SHELL`, else `cmd.exe` on Windows) in the folder of the request, with no input. At the prompt of eve the same `shell <command>` and `!<command>` run a command and come back to the prompt; `exit` leaves eve for the shell.
+
+| Method | Params | Result |
+|---|---|---|
+| `vm.open` | `{"cwd": "folder"}` (optional) | `{"session": id, "cwd": "…"}` |
+| `vm.eval` | `{"line": "…", "session": id, "cwd": "folder", "stream": bool}` (only `line` is needed) | `{"status": n, "output": "…", "closed": bool, "session": id}`: a line of the prompt in the session: `load`, `parse`, `run`, `ast`, `inspect`, `errors`, `status`, `report`, `help`, `outdir`, `capture`, `log`, `clear`, and `cd <folder>`, `shell <command>`, `!<command>`; `exit` closes the session (`closed`); another word is status 64 |
+| `vm.close` | `{"session": id}` | `"closed"`; `-32602` for a session that does not exist |
+| `vm.shell` | `{"command": "…", "cwd": "folder", "session": id, "stream": bool}` | `{"status": n, "output": "…"}`: the exit code of the command (127: the shell cannot start, 130: cancelled), its output and error output |
+| `vm.run` | as in "Channels", or `{"path": "file.eve", "stream": bool}` | as in "Channels"; `path` is a file of the machine (not on the HTTP door), 66 when it cannot be read |
+| `vm.cancel` | none | `"cancelled"`: the scripts that run stop at their next statement, a command of the system is ended |
+
+`vm.stat` adds `door` (`ipc`, `http` or `stdio`: the door of the request) and `sessions` (how many are open). Tests: `test/level5/e95_web_hello/e95_test5.eve` (the stdio door, the sessions, the streamed output, the order of the answers).
+
 ## The machine API (level 6)
 
 The methods of the machine are named by their part (D-165): `vm.` for the runtime, `db.` for the database. The four methods of the section "Channels" are the first names of `vm.ping`, `vm.stat`, `vm.run` and `vm.stop`; a machine answers both names until level 6 ends, then only the new ones. The params and the results of the four are those of "Channels".
@@ -125,10 +147,10 @@ The methods of the machine are named by their part (D-165): `vm.` for the runtim
 | `vm.ping` | none | `"pong"` (was `ping`) |
 | `vm.stat` | none | the object of `status`, and `parts`, the active parts (`["vm"]`, or `["vm", "ux"]` with the web door); `sessions` comes when a machine runs several (was `status`, which keeps its first shape) |
 | `vm.run` | `{"name", "source", "args"}` | `{"status", "output", "errors"}` (was `run`) |
-| `vm.eval` | `{"session": id, "source": "…"}` | the value of an expression, or what a statement printed, in a session that stays open: the prompt over the wire |
+| `vm.eval` | `{"session": id, "line": "…"}` | a line of the prompt in a session that stays open: the prompt over the wire (section "Lasting doors"); the value of an expression comes when the prompt evaluates expressions |
 | `vm.suspend`, `vm.resume` | `{"session": id}` | the session stops at its next statement / goes on (the debugger, F-TLS-04) |
 | `vm.inspect` | `{"session": id, "what": "locals" \| "stack" \| "globals"}` | the names and the values, in JSON |
-| `vm.cancel` | `{"session": id}` | the run of the session ends with `Abort` (`../semantics/errors.md`) |
+| `vm.cancel` | none (later `{"session": id}`) | the runs end at their next statement, a command of the system is ended (section "Lasting doors"); later with `Abort` (`../semantics/errors.md`) |
 | `vm.stop` | none | `"stopping"`; the machine ends (was `stop`) |
 | `db.query`, `db.execute` | `{"connection", "sql", "args"}` | the rows / the number of rows changed (`database.md#direct-sql`) |
 | `db.call` | `{"name": "module.procedure", "args": […]}` | the results of an Eve procedure of `proc/` (`database.md#stored-procedures`) |
@@ -160,4 +182,4 @@ The UI part speaks the **Agent Client Protocol** (ACP) toward AI agents and IDEs
 
 ## Not yet
 
-A connect time-out for the HTTP door (Zig 0.16 has none on Windows, where a refused connection to `localhost` takes about 2 s; the IPC door answers "nobody there" in about 50 ms), login (F-NET-06, F-NET-07), socket permissions set by the machine (today they are the defaults of the system), host names for `-rem` (today an IP address or `localhost`), WebSocket, the services and routes of the `service` script (level 6), `--ipc` on a remote machine, upload of a project (not a single file), shared state between scripts. Everything marked "level 6" above; the commands of `eve db` other than `proc list`.
+A connect time-out for the HTTP door (Zig 0.16 has none on Windows, where a refused connection to `localhost` takes about 2 s; the IPC door answers "nobody there" in about 50 ms), login (F-NET-06, F-NET-07), socket permissions set by the machine (today they are the defaults of the system), host names for `-rem` (today an IP address or `localhost`), WebSocket (the same messages as the lasting doors, for eveux), a working folder of the session for the files that a script opens (today they start in the folder of the machine), the debugger as methods (`dbg.*`; evetx still runs `eve debug` as a process), the services and routes of the `service` script (level 6), `--ipc` on a remote machine, upload of a project (not a single file), shared state between scripts. Everything marked "level 6" above; the commands of `eve db` other than `proc list`.

@@ -73,15 +73,19 @@ A failure of eveux is first a question about Eve: a missing feature, a slow path
 
 ### 4.1 What eveux needs from the virtual machine
 
+**The machine API for both IDEs (2026-10-16).** evetx and eveux speak the same messages to the machine; only the transport differs. evetx starts its own machine on the **stdio door** (`eve --stdio`: no port, no socket, and over SSH `ssh host eve --stdio`, where SSH does the login); eveux will use the **WebSocket** of the HTTP door once the machine has its login. On both, a connection lasts, carries many requests, gets the output of a run while it runs (`vm.output`), keeps a session per tab, and can cancel what runs (`vm.cancel`). The rules are in `spec/library/machine.md#lasting-doors`; the test is `test/level5/e95_web_hello/e95_test5.eve`. So the Command window, the run output and the jobs of eveux are built on calls that evetx already uses every day.
+
 Everything that is not Eve code is a feature of `evevm`, so that every Eve program gets it, not only eveux:
 
 | Need | Where |
 |---|---|
 | `serve`, `service` and routes, static files of the web folder | F-TLS-14, F-NET-02 (level 6) |
-| WebSocket in `serve`, so a route can push lines to the browser | new, with F-NET-02 (question 3) |
+| WebSocket in `serve`, so a route can push lines to the browser | new, with F-NET-02 (question 3); it will carry the messages of the **lasting doors** unchanged (below) |
 | connections to many machines from one local machine, `send`, upload | F-TLS-13 (level 6) |
 | login to a machine: credentials, single sign-on, keyring | F-NET-07 (level 6, D-155) |
-| a *watched run*: the output, the log and the debugger events of a run stream back on the connection | F-TLS-13, then EWP F-NET-03 (question 4) |
+| a *watched run*: the output, the log and the debugger events of a run stream back on the connection | **started 2026-10-16**: `"stream": true` on `vm.run`, `vm.eval`, `vm.shell` sends `vm.output` notifications on the IPC and stdio doors (`spec/library/machine.md#lasting-doors`); the log and the debugger events come next |
+| a prompt per tab: the state of the Command window kept between commands | **started 2026-10-16**: sessions (`vm.open`, `vm.eval`, `vm.close`; a default session per connection) |
+| commands of the system from the Command window | **started 2026-10-16**: `vm.shell` (the IPC and stdio doors only until login; through the HTTP door after F-NET-06) |
 | debugger commands: `break`, `step into`, `step out`, `locals`, `stack` | F-TLS-04 (Q-047) |
 | file commands on a machine: `files`, `read`, `save`, `delete` | F-TLS-13 (question 6) |
 | HTML templates and `HTML` | F-WEB-01 (level 7) |
@@ -439,7 +443,7 @@ Answered on 2026-10-10 (D-154, D-155): eveux is written in Eve, as the final tes
 **Answer:**
 2. **JavaScript or TypeScript.** Plain JavaScript modules with JSDoc types and no build step (proposed), or TypeScript compiled by `tsc` (a build step and Node.js on the developer's computer)?
 **Answer:**
-3. **WebSocket.** Live output needs a push channel to the browser: WebSocket in `serve` (proposed), or Server-Sent Events (simpler, one direction)?
+3. **WebSocket.** Live output needs a push channel to the browser: WebSocket in `serve` (proposed), or Server-Sent Events (simpler, one direction)? *(2026-10-16: the machine already pushes `vm.output` notifications on its lasting doors; WebSocket would carry the same messages both ways, which SSE cannot: `vm.cancel` while a run streams.)*
 **Answer:**
 4. **Watched runs.** A run started from the Workbench streams its output, log and debugger events: on the line protocol of the command port first (proposed), or only with EWP (F-NET-03)?
 **Answer:**

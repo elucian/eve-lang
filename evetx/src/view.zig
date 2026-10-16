@@ -1392,7 +1392,8 @@ fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     var bw: u16 = 0;
     for (labels) |l| bw = @max(bw, bar.gwidth(l));
     const paused = app.debugPaused();
-    const alive = app.job != null;
+    // a program of evetx (`job`) or a request of the machine (`!dir`, an eval) is running: Halt is on
+    const alive = app.job != null or app.linkBusy();
     const free_run = alive and !paused;
     const blink = @mod(@divFloor(app.nowMs(), 500), 2) == 0;
     // Run (and the debugger buttons that start a program) work on an Eve file only, for now; a program that is already
@@ -1606,7 +1607,7 @@ fn consolePanel(app: *App, body: Window) !void {
     const out = sub(body, 0, 0, body.width, h - 2);
     drawLog(app, out, &app.console);
     _ = put(body, 0, h - 2, "─" ** 400, theme.on(theme.line, theme.deep));
-    const prompt = if (app.running) "Running… " else if (app.shell_mode) "$ " else "eve:> ";
+    const prompt = if (app.running) "Running… " else "eve:> ";
     _ = put(body, 1, h - 1, prompt, theme.onBold(if (app.running) theme.amber else theme.green, theme.deep));
     const pw: u16 = @intCast(body.gwidth(prompt));
     const line = sub(body, 1 + pw, h - 1, body.width -| (2 + pw), 1);

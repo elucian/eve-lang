@@ -7,6 +7,7 @@ const ast = @import("evecm").ast;
 const vm = @import("evevm").vm;
 const client = @import("evevm").client;
 const daemon = @import("evevm").daemon;
+const channel = @import("evevm").channel;
 const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
 const context = @import("context.zig");
@@ -24,6 +25,28 @@ const stub = context.stub;
 // screen shows it even if the stop takes a moment.
 /// `stop`: close the doors this process opened (ipc and http together), tell the running scripts to stop, and stay at
 /// the prompt. With no door open here, it stops the machine of another process (the one `evevm` started).
+// Zig tip: the words of the line were split at the spaces; `std.mem.join` puts them back with one space, which is right
+// for the table of commands (the prompt itself calls `shellLine` with the line as it was typed).
+/// `shell <command>`: run a command of the system; the prompt stays in eve.
+pub fn cmdShell(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    const line = std.mem.join(ctx.gpa, " ", args) catch return error.WriteFailed;
+    return shellLine(ctx, line);
+}
+
+// Zig tip: `channel.runShell` writes the output of the command to `ctx.out` while it comes (the upper part of the
+// full-screen prompt, or the plain screen) and answers its exit code, which becomes the status of the prompt.
+/// Run `text` in the system shell, in the current folder; `exit` is not needed: eve stays.
+pub fn shellLine(ctx: *Context, text: []const u8) Io.Writer.Error!void {
+    const command = std.mem.trim(u8, text, " \t\r");
+    if (command.len == 0) {
+        try ctx.out.writeAll("shell: give the command, for example: shell dir   (or !dir)\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    ctx.status = channel.runShell(ctx.io, ctx.gpa, command, "", ctx.out);
+    if (ctx.status != 0) try ctx.out.print("shell: exit {d}\n", .{ctx.status});
+}
+
 pub fn cmdStop(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
     try ctx.out.flush();
     ctx.status = daemon.stopMachines(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
