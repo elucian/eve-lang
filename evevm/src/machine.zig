@@ -1,10 +1,13 @@
 //! The Eve machine, server side (F-NET-02, D-162, `spec/library/machine.md`): a singleton that listens on two doors,
-//! the IPC door (`--listen`, a Unix domain socket) and the HTTP door (`--serve`, the web folder and `POST /rpc`). Both
-//! doors speak JSON-RPC 2.0 (evecm/wire.zig) and run the methods of the machine (`ping`, `stat`, `run`, `stop`).
+//! the IPC door (`--listen`, a Unix domain socket) and the HTTP door (`--serve`, the web folder and `POST /rpc`), or a
+//! machine of one client on the stdio door (`--stdio`, channel.zig). The doors speak JSON-RPC 2.0 (evecm/wire.zig) and
+//! run the methods of the machine API (`vm.ping`, `vm.stat`, `vm.run`, `vm.stop`, and on the lasting doors the
+//! sessions, `vm.shell` and `vm.cancel`).
 const std = @import("std");
 const Io = std.Io;
 const net = Io.net;
 const vm = @import("vm.zig");
+const channel = @import("channel.zig");
 // Zig tip: `const ok = wire.ok;` gives a function of another file a short local name. It copies nothing: the
 // name points to the same function, and calls read as they did before the code was split into files.
 const config = @import("evecm").config;
@@ -57,6 +60,10 @@ pub const Machine = struct {
     embedded: bool = false,
     /// Set by `shutdown`, read by the accept loops: an error after the close is the end, not a failure to retry.
     stopping: std.atomic.Value(bool) = .init(false),
+    /// No log lines (the stdio door: its standard output is the channel, and an IDE does not read a log).
+    quiet: bool = false,
+    /// The sessions that `vm.open` made (the lasting doors).
+    sessions: channel.Sessions = .{},
 };
 
 // Zig tip: a `pub var` at file level is a global that other files may read. This one is written once, by `serve`, on
@@ -76,6 +83,7 @@ pub var embed_log: ?*Io.Writer = null;
 // doors log through the same terminal, so the lock makes each line whole.
 /// Write one line of the log of the machine on its terminal.
 pub fn note(m: *Machine, comptime fmt: []const u8, args: anytype) void {
+    if (m.quiet) return;
     m.log_lock.lockUncancelable(m.io);
     defer m.log_lock.unlock(m.io);
     const out = if (m.embedded) embed_log orelse m.out else m.out;
@@ -92,9 +100,11 @@ pub fn millis(io: Io) i64 {
 // Zig tip: the per-request memory is an arena over `page_allocator`: everything the request allocates (the parsed
 // JSON, the answer, the session of the script) is freed with one `deinit`, so a machine that runs for days does not
 // grow. The process arena of `main` is never freed, so it must not be used for a server.
+// Zig tip: `ch: ?*channel.Channel` is null on the HTTP door, where a reply is the whole answer; on a lasting door it is
+// the connection, through which the machine also sends notifications. The methods that need it check it first.
 /// One JSON-RPC message in, one message out (allocated in `a`). Sets `stop` when the method is `stop`. `door` is
-/// `ipc` or `http`, for the log.
-pub fn rpc(m: *Machine, a: std.mem.Allocator, door: []const u8, body: []const u8, stop: *bool) []const u8 {
+/// `ipc`, `http` or `stdio`, for the log and `vm.stat`.
+pub fn rpc(m: *Machine, a: std.mem.Allocator, door: []const u8, body: []const u8, stop: *bool, ch: ?*channel.Channel) []const u8 {
     const parsed = std.json.parseFromSliceLeaky(std.json.Value, a, body, .{}) catch return fail(a, .null, -32700, "parse error");
     if (parsed != .object) return fail(a, .null, -32600, "invalid request");
     const id = parsed.object.get("id") orelse .null;
@@ -108,7 +118,7 @@ pub fn rpc(m: *Machine, a: std.mem.Allocator, door: []const u8, body: []const u8
         return fail(a, id, -32601, "method not found");
     };
     _ = m.requests.fetchAdd(1, .monotonic);
-    if (name != .run) note(m, "{s} {s}", .{ door, method });
+    if (name != .run and name != .eval) note(m, "{s} {s}", .{ door, method });
     switch (name) {
         .ping => return ok(a, id, "pong"),
         .stat => {
@@ -141,30 +151,44 @@ pub fn rpc(m: *Machine, a: std.mem.Allocator, door: []const u8, body: []const u8
                 .uptime_ms = now - m.started,
                 .running = m.current,
                 .running_ms = if (m.current != null) now - m.current_since else 0,
+                .door = door,
+                .sessions = m.sessions.count(m.io),
             });
         },
         .stop => {
             stop.* = true;
             return ok(a, id, "stopping");
         },
-        .run => return runScript(m, a, door, id, params),
+        .run => return runScript(m, a, door, id, params, ch),
+        .cancel => {
+            vm.cancelAll();
+            return ok(a, id, "cancelled");
+        },
+        .open => return if (ch == null) channel.localOnly(a, id) else channel.openRequest(m, a, id, params),
+        .close => return if (ch == null) channel.localOnly(a, id) else channel.closeRequest(m, a, id, params),
+        .eval => return if (ch) |c| channel.evalRequest(m, a, id, params, c) else channel.localOnly(a, id),
+        .shell => return if (ch) |c| channel.shellRequest(m, a, id, params, c) else channel.localOnly(a, id),
     }
 }
 
 // Zig tip: an `enum` names a closed set of choices, and `switch` on it must cover every one: adding a method to
 // the enum makes the compiler point at the `switch` of `rpc` until the new method is handled.
 /// The methods a machine answers today (D-165): the names of the machine API and their first names (D-162).
-pub const Method = enum { ping, stat, run, stop };
+pub const Method = enum { ping, stat, run, stop, cancel, open, eval, close, shell };
 
 // Zig tip: a table of pairs `.{ name, value }` walked by `for` is the simplest map for a handful of names; the
 // result is an optional (`?Method`), null for a name that is not in the table.
-/// `vm.ping` and `ping`, `vm.stat` and `status`, `vm.run` and `run`, `vm.stop` and `stop`; null for another name.
+/// `vm.ping` and `ping`, `vm.stat` and `status`, `vm.run` and `run`, `vm.stop` and `stop`, and the methods of the
+/// lasting doors (`vm.cancel`, `vm.open`, `vm.eval`, `vm.close`, `vm.shell`); null for another name.
 pub fn methodName(method: []const u8) ?Method {
     const names = [_]struct { []const u8, Method }{
         .{ "vm.ping", .ping }, .{ "ping", .ping },
         .{ "vm.stat", .stat }, .{ "status", .stat },
         .{ "vm.run", .run },   .{ "run", .run },
         .{ "vm.stop", .stop }, .{ "stop", .stop },
+        .{ "vm.cancel", .cancel }, .{ "vm.open", .open },
+        .{ "vm.eval", .eval },     .{ "vm.close", .close },
+        .{ "vm.shell", .shell },
     };
     for (names) |n| if (std.mem.eql(u8, method, n[0])) return n[1];
     return null;
@@ -173,16 +197,26 @@ pub fn methodName(method: []const u8) ?Method {
 // Zig tip: the session (`vm.Session`) is the same object the REPL uses; here its output is an `Io.Writer.Allocating`,
 // a writer that grows in memory, so the text of the script comes back in the answer instead of the terminal. `defer`
 // runs at the end of the function on every path, which releases the lock even when something fails.
+// Zig tip: a script comes as text (`source`, what a remote client sends) or as a file of the machine (`path`, what an IDE
+// on the same computer sends: nothing to copy). With `"stream": true` on a lasting door the output goes out as
+// `vm.output` notifications while the script runs, and `output` in the answer is empty.
 /// `run`: execute the script of the params in a session of its own, one at a time.
-pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.json.Value, params: std.json.Value) []const u8 {
-    if (params != .object) return fail(a, id, -32602, "run needs the params name and source");
-    const source = switch (params.object.get("source") orelse .null) {
+pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.json.Value, params: std.json.Value, ch: ?*channel.Channel) []const u8 {
+    if (params != .object) return fail(a, id, -32602, "run needs the params name and source, or path");
+    const path: ?[]const u8 = switch (params.object.get("path") orelse .null) {
         .string => |s| s,
-        else => return fail(a, id, -32602, "run needs the param source"),
+        else => null,
     };
+    const source: ?[]const u8 = switch (params.object.get("source") orelse .null) {
+        .string => |s| s,
+        else => null,
+    };
+    if (source == null and path == null) return fail(a, id, -32602, "run needs the param source or path");
+    // a path is a file of the machine: the HTTP door has no login yet, so it sends the text of the script
+    if (source == null and ch == null) return channel.localOnly(a, id);
     const name = switch (params.object.get("name") orelse .null) {
         .string => |s| s,
-        else => "script.eve",
+        else => path orelse "script.eve",
     };
     var args: std.ArrayList([]const u8) = .empty;
     if (params.object.get("args")) |list| if (list == .array) for (list.array.items) |item| {
@@ -196,11 +230,24 @@ pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.js
     setCurrent(m, name, started);
     defer setCurrent(m, null, 0);
     var out: Io.Writer.Allocating = .init(a);
-    var s: vm.Session = .{ .io = m.io, .gpa = a, .out = &out.writer };
+    const stream = ch != null and params.object.get("stream") != null and params.object.get("stream").? == .bool and params.object.get("stream").?.bool;
+    var os: channel.OutStream = if (ch) |c| .init(c, a, id) else undefined;
+    const w = if (stream) &os.interface else &out.writer;
+    var s: vm.Session = .{ .io = m.io, .gpa = a, .out = w };
     s.quiet = true;
     s.script_args = args.items;
-    s.loadSource(name, source) catch return fail(a, id, -32000, "out of memory");
+    if (source) |src| {
+        s.loadSource(name, src) catch return fail(a, id, -32000, "out of memory");
+    } else {
+        s.load(path.?) catch return fail(a, id, -32000, "out of memory");
+        if (s.arena == null) {
+            if (stream) os.finish();
+            return ok(a, id, .{ .status = s.status, .output = out.written(), .errors = "" });
+        }
+    }
     s.run() catch return fail(a, id, -32000, "the script could not run");
+    w.flush() catch {};
+    if (stream) os.finish();
     var errors: Io.Writer.Allocating = .init(a);
     if (s.outcome) |o| if (o.code != 0) if (s.machine) |machine| for (machine.reports.items) |r| {
         if (!r.handled) errors.writer.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ name, r.line, r.code, r.message, r.trace, r.details }) catch {};
@@ -262,7 +309,7 @@ pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
             else => return false,
         };
         var stop = false;
-        respond(w, "200 OK", "application/json", rpc(m, a, "http", body, &stop));
+        respond(w, "200 OK", "application/json", rpc(m, a, "http", body, &stop, null));
         return stop;
     }
     if (!std.mem.eql(u8, method, "GET") and !std.mem.eql(u8, method, "HEAD")) {
@@ -286,24 +333,18 @@ pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
     return false;
 }
 
-// Zig tip: `takeDelimiter` (with the newline byte) answers an optional slice: a line, or null at the end of the stream; `orelse return
-// false` leaves when the client sent nothing. The buffer of the reader (16 MiB here) is the longest message accepted.
-/// Serve one IPC connection: one JSON-RPC message on a line, one answer on a line. Returns true on `stop`.
+// Zig tip: the connection stays open while the client keeps it (channel.zig): one message per line, the answers and the
+// notifications back on the same connection. A client that sends one line and closes (the CLI) still works: the next
+// read finds the end of the stream. The buffer of the reader (16 MiB here) is the longest message accepted.
+/// Serve one IPC connection: JSON-RPC messages on lines, until the client closes it. Returns true on `stop`.
 pub fn serveIpc(m: *Machine, stream: net.Stream) bool {
-    var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
-    defer arena.deinit();
-    const a = arena.allocator();
-    const rbuf = a.alloc(u8, 16 << 20) catch return false;
+    const rbuf = std.heap.page_allocator.alloc(u8, 16 << 20) catch return false;
+    defer std.heap.page_allocator.free(rbuf);
     var reader = stream.reader(m.io, rbuf);
     var wbuf: [4096]u8 = undefined;
     var writer = stream.writer(m.io, &wbuf);
-    const line = (reader.interface.takeDelimiter('\n') catch return false) orelse return false;
-    var stop = false;
-    const answer = rpc(m, a, "ipc", line, &stop);
-    writer.interface.writeAll(answer) catch return false;
-    writer.interface.writeAll("\n") catch return false;
-    writer.interface.flush() catch {};
-    return stop;
+    var ch: channel.Channel = .{ .io = m.io, .w = &writer.interface };
+    return channel.serveLines(m, &reader.interface, &ch, "ipc");
 }
 
 // Zig tip: a thread function takes its arguments as a tuple: `std.Thread.spawn(.{}, loop, .{ m, kind })`. It cannot

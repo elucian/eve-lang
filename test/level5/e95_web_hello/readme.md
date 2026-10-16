@@ -10,6 +10,8 @@ One project, four use cases, each an automatic test with its own expectations:
 | `e95_test1.eve` | `eve --listen` | IPC listening, HTTP off; `-loc -x` runs the script in the machine; `--listen status` answers through IPC; `-rem` fails (69) because HTTP is off; `--listen stop` ends it |
 | `e95_test2.eve` | `eve --serve` | IPC off, HTTP listening; `-loc -x` runs the script by itself; `-rem -x` runs it in the machine; a remote error comes back with exit code 4 |
 | `e95_test3.eve` | `eve --listen --serve` | both doors; `-loc` goes through IPC, `-rem` through HTTP, the counter `runs` counts both |
+| `e95_test4.eve` | `eve ux start` | the machine API over HTTP: `vm.*`, the first names, -32601, the rules of the web door |
+| `e95_test5.eve` | the client starts `eve --stdio` | the stdio door (a lasting door): sessions (`vm.open`, `vm.eval`, `vm.close`, the default session), output streamed as `vm.output`, `!<command>` and `vm.shell`, `vm.run` by path, the order of the answers, `vm.cancel`, `vm.stop` and the end of the input |
 
 All of them also check: `-rem` to a port where nobody listens fails with 69, `-rem` without an address is a usage error (64), a second start fails with 75, `--serve stop` ends the machine with 0, and after it `--serve status` says not running (69).
 
@@ -25,6 +27,8 @@ e95_web_hello/
   check/
     hello.test.js          client of the page test
     modes.test.js          client of the door tests
+    api.test.js            client of the machine API test (e95_test4)
+    stdio.test.js          client of the stdio door test (e95_test5)
     hello.eve              the script sent to the machine
     fail.eve               a script whose error nobody recovers
 ```

@@ -23,6 +23,8 @@ pub const dlib = @import("dlib.zig");
 /// The machine, server side: the IPC and HTTP doors and the methods of the machine (F-NET-02, spec/library/machine.md).
 pub const machine = @import("machine.zig");
 
+pub const channel = @import("channel.zig");
+
 /// The machine, client side: `-loc`, `-rem`, the words `status` and `stop` of the doors.
 pub const client = @import("client.zig");
 
@@ -45,6 +47,7 @@ test {
     _ = vm;
     _ = dlib;
     _ = machine;
+    _ = channel;
     _ = client;
     _ = daemon;
     _ = screen;

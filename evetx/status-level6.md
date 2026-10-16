@@ -49,6 +49,21 @@ The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29
 - [x] Info dialog: the hint is on the row above the buttons (it was under them)
 - [x] Table grid: `│` between the columns, `#` instead of Record, no types in the header, widths fitted to the data (trimmed in proportion when there is no room, never under 12), every other row on a discreet background
 
+## The machine API for evetx and eveux (2026-10-16)
+
+- [x] The stdio door: `eve --stdio`, a machine of one client on its standard input and output (local first; over SSH `ssh host eve --stdio`)
+- [x] The IPC door keeps its connection: many messages per connection (the CLI that sends one and closes still works)
+- [x] Notifications `vm.output`: the output of `vm.run`, `vm.eval`, `vm.shell` streams with `"stream": true`
+- [x] Sessions: `vm.open`, `vm.eval`, `vm.close`, a default session per connection, a folder per session (`cd`)
+- [x] `vm.shell`, and `shell <command>` / `!<command>` at the prompt of eve and in a session: the command runs, eve stays
+- [x] `vm.run` by path, `vm.cancel`, `vm.stat` with `door` and `sessions`; the quick methods answered at once, the others in order
+- [x] evetx: the console through its machine (`src/link.zig`); no `$` mode; `exit` closes evetx; Halt sends `vm.cancel`
+- [x] Test `e95_test5` (the stdio door, 23 checks); spec `library/machine.md#lasting-doors`; `manual/usage.md`; eveux README
+- [ ] Runs through the machine: a working folder of the session for the files a script opens (today the folder of the machine)
+- [ ] The debugger as methods (`dbg.*`, `dbg.paused` notifications) instead of `eve debug` as a process
+- [ ] `db.tables`, `db.rows`, `db.describe` in JSON, so evetx stops reading the text of `eve db sql -t`
+- [ ] WebSocket on the HTTP door with the same messages (eveux), after login (F-NET-06)
+
 ## TODO
 
 - [ ] Export over an existing file replaces it without asking (ask first?)
@@ -67,8 +82,8 @@ The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29
 
 Today the machine answers one JSON-RPC message per connection and closes it: right for `status`, `run`, `stop`, not enough for an IDE, which needs the output of a run as it comes and the place where the debugger stopped. That is why evetx runs `eve` and `eve debug` as child processes.
 
-- [ ] Keep the connection open and let the machine send notifications (`run.output`, `dbg.paused`, `dbg.end`)
-- [ ] The same messages over the IPC socket and over a WebSocket of the HTTP door (eveux needs it too, D-155)
+- [x] Keep the connection open and let the machine send notifications (`vm.output`; `dbg.paused`, `dbg.end` with the debugger methods)
+- [ ] The same messages over a WebSocket of the HTTP door (eveux needs it, D-155); the IPC and stdio doors have them
 - [ ] The `@debug` lines of `eve debug` become `dbg.*` methods, one for one
 - [ ] `db.tables`, `db.rows`, `db.describe` answer in JSON, so evetx stops reading the text of `eve db sql -t`
 - [ ] Login (Q-048) before any remote run or upload; then T5

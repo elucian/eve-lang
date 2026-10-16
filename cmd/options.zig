@@ -35,6 +35,8 @@ pub const Options = struct {
     ui: bool = false,
     /// `-tx`: start the terminal IDE, evetx, with the rest of the line (D-172).
     tx: bool = false,
+    /// `--stdio`: a machine whose door is the standard input and output, for an IDE that starts it (evetx, `ssh host eve --stdio`).
+    stdio: bool = false,
     /// `--kill`: stop every other eve program that runs from the same `bin/` folder (eve, evetx, evedb), so a build can replace the files.
     kill: bool = false,
     tx_args: []const []const u8 = &.{},
@@ -153,6 +155,8 @@ pub fn parseArgs(
             o.ui = true;
         } else if (std.mem.eql(u8, a, "--kill")) {
             o.kill = true;
+        } else if (std.mem.eql(u8, a, "--stdio")) {
+            o.stdio = true;
         } else if (std.mem.eql(u8, a, "-tx")) {
             // everything after `-tx` belongs to evetx (a project folder), so the parse stops here
             o.tx = true;

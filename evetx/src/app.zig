@@ -13,6 +13,7 @@ const dbf = @import("dbf.zig");
 const sqlstruct = @import("sqlstruct.zig");
 const cache_mod = @import("cache.zig");
 const options_mod = @import("options.zig");
+const link_mod = @import("link.zig");
 const theme = @import("theme.zig");
 
 // ------------------------------------------------------------------ small types
@@ -806,9 +807,12 @@ pub const App = struct {
     confirm_msg: ?[]u8 = null,
     confirm_what: Confirm = .none,
     confirm_arg: usize = 0,
-    /// The console is a shell prompt (`$`) after `exit`: lines go to the shell that started evetx; `eve` comes back.
-    shell_mode: bool = false,
+    /// The shell that started evetx: it runs `!<command>` only when the machine cannot start (the machine runs it otherwise).
     shell_exe: []u8 = &.{},
+    /// The machine of the console (`eve --stdio`, link.zig), started the first time a command needs it, and the ids of
+    /// its requests that are not answered yet (the toolbar shows them as running; Halt sends `vm.cancel`).
+    link: ?*link_mod.Link = null,
+    link_pending: std.ArrayList(u32) = .empty,
     /// The variables of the stopped program (Watch tab), the SQL panel (its input, its output, its database file),
     /// and the first breakpoint shown in the Breaks tab.
     watch_log: Log = .{},
@@ -1046,7 +1050,7 @@ pub const App = struct {
             try self.tree.scan(io, chosen, name);
             self.restoreSession();
         }
-        try self.console.add(gpa, "evetx: the console runs `eve` with what you type (run <file>, --check <file>, cd <folder>, clear, quit).", .info);
+        try self.console.add(gpa, "evetx: load, parse, errors, status and help go to the machine; !<command> runs a command of the system; run <file>, --check <file>, cd <folder>, clear, exit.", .info);
         return self;
     }
 
@@ -1092,6 +1096,8 @@ pub const App = struct {
         self.st_orig.deinit(gpa);
         if (self.confirm_msg) |c| gpa.free(c);
         if (self.shell_exe.len > 0) gpa.free(self.shell_exe);
+        if (self.link) |l| l.destroy();
+        self.link_pending.deinit(gpa);
         self.sql_log.deinit(gpa);
         if (self.sql_db) |d| gpa.free(d);
         for ([_]*TextInput{ &self.sq_edit, &self.tbl_edit, &self.wiz_name, &self.opt_in, &self.fb_name, &self.st_edit, &self.sql_in, &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in, &self.project_in }) |ti| ti.deinit();
@@ -3435,6 +3441,12 @@ pub const App = struct {
 
     /// The Halt button: `halt` for a stopped program (it ends as stopped), the process is ended for one that runs.
     pub fn haltRun(self: *App) !void {
+        // a request of the machine (a command of the system, an eval) is cancelled by the machine
+        if (self.job == null and self.linkBusy()) {
+            if (self.link) |l| _ = l.call("vm.cancel", .{});
+            self.setMessage("Halt: the machine cancels what it runs", .{});
+            return;
+        }
         if (self.job) |job| {
             if (job.debug and job.paused.load(.acquire)) {
                 job.sendCommand("halt");
@@ -3447,7 +3459,6 @@ pub const App = struct {
     /// Start `eve debug <file>` on the file of the active tab: it stops before the first statement, and then does
     /// `auto` (`run`, `trace`) when there is one.
     fn startDebug(self: *App, auto: ?[]const u8) !void {
-        try self.leaveShell();
         if (self.canRun()) try self.adoptFolderSelection();
         const t = self.activeTab() orelse {
             self.setMessage("nothing to debug: open an .eve file", .{});
@@ -3688,8 +3699,7 @@ pub const App = struct {
     }
 
     // Zig tip: the folder is a path from the project folder ("" is the project folder itself). The `cd` line is written in
-    // the console in the style of the mode: `$ cd ...` at the shell prompt, `eve:> cd ...` otherwise, so the console tells
-    // what happened. A folder that is already the working folder says nothing.
+    // the console, so the console tells what happened. A folder that is already the working folder says nothing.
     /// Make a folder of the project the working folder of the console, and say so in the console.
     pub fn enterFolder(self: *App, dir_rel: []const u8) !void {
         const full = if (dir_rel.len == 0) try self.gpa.dupe(u8, if (self.root.len == 0) "." else self.root) else try self.fullPath(dir_rel);
@@ -3699,22 +3709,14 @@ pub const App = struct {
         }
         const shown = try std.fmt.allocPrint(self.gpa, "cd {s}", .{full});
         defer self.gpa.free(shown);
-        try self.console.add(self.gpa, shown, if (self.shell_mode) .shell else .input);
+        try self.console.add(self.gpa, shown, .input);
         try self.changeDir(full);
-    }
-
-    /// Run, Check and Debug are eve's: at the shell prompt they bring eve back first.
-    fn leaveShell(self: *App) !void {
-        if (!self.shell_mode) return;
-        self.shell_mode = false;
-        try self.console.add(self.gpa, "eve is back", .info);
     }
 
     // Zig tip: `orelse { ...; return; }` can hold a block: unwrap the optional, or run the block and
     // leave. After that line `t` is a plain pointer, not an optional.
     /// F5, the Run button: save the file and run it.
     pub fn runActive(self: *App) !void {
-        try self.leaveShell();
         if (self.canRun()) try self.adoptFolderSelection();
         if (self.debugPaused()) {
             self.job.?.sendCommand("run");
@@ -3739,7 +3741,6 @@ pub const App = struct {
 
     /// F6: the syntax check of the current `.eve` file (`eve --check <file>`), through the prompt like Run.
     pub fn checkActive(self: *App) !void {
-        try self.leaveShell();
         if (self.canRun()) try self.adoptFolderSelection();
         const t = self.activeTab() orelse {
             self.setMessage("nothing to check: open an .eve file", .{});
@@ -3962,6 +3963,7 @@ pub const App = struct {
         self.autoSaveTick();
         try self.pollDebug();
         try self.finishRun();
+        try self.pollLink();
         if (self.freeze_at) |at| {
             if (self.nowMs() >= at) self.freezeLayout();
         }
@@ -3976,9 +3978,10 @@ pub const App = struct {
         try self.consoleEnter();
     }
 
-    // Zig tip: `std.mem.tokenizeScalar` skips empty pieces, so two spaces count as one.
-    // `words.items[1..]` is the slice from the second word on. Slices make "the rest of the list"
-    // free.
+    // Zig tip: `std.mem.tokenizeScalar` skips empty pieces, so two spaces count as one. `words.items[1..]` is the slice from
+    // the second word on. The line goes where it belongs: evetx itself (`clear`, `cd`, `exit`), the machine (a command of
+    // its session, or of the system with `!`), or eve as a process of its own (`run`, `--check`, and any other line), so
+    // a run keeps the folder of its script and Halt can end it.
     fn consoleEnter(self: *App) !void {
         const line = try self.console_in.toOwnedContents(self.gpa);
         defer self.gpa.free(line);
@@ -3987,28 +3990,26 @@ pub const App = struct {
         const cmd = std.mem.trim(u8, line, " ");
         if (cmd.len == 0) return;
         try self.remember(cmd);
-        try self.console.add(self.gpa, cmd, if (self.shell_mode) .shell else .input);
+        const system = cmd[0] == '!' or std.mem.startsWith(u8, cmd, "shell ") or std.mem.eql(u8, cmd, "shell");
+        try self.console.add(self.gpa, cmd, if (system) .shell else .input);
 
         if (std.mem.eql(u8, cmd, "clear")) {
             self.console.clear(self.gpa);
             return;
         }
-        // `quit` closes evetx, as Ctrl+Q does. `exit` stops eve and shows the prompt `$` of the shell that started evetx
-        // (the mode `shell_mode`): its commands run there, and `eve` brings the prompt of eve back. (`eve quit` as a
-        // one-shot process would end only that process.)
-        if (std.mem.eql(u8, cmd, "quit")) {
+        // `exit` and `quit` close evetx: back to the command shell that started it (Ctrl+Q does the same)
+        if (std.mem.eql(u8, cmd, "quit") or std.mem.eql(u8, cmd, "exit")) {
             self.quit = true;
             return;
         }
-        if (std.mem.eql(u8, cmd, "exit")) {
-            if (self.shell_mode) {
-                try self.console.add(self.gpa, "evetx stays open: type quit to close it, eve to go back to eve", .info);
+        // `!<command>` and `shell <command>`: a command of the system, run by the machine in the working folder; eve stays
+        if (system) {
+            const command = std.mem.trim(u8, if (cmd[0] == '!') cmd[1..] else cmd["shell".len..], " ");
+            if (command.len == 0) {
+                try self.console.add(self.gpa, "shell: give the command, for example: !dir or shell git status", .info);
                 return;
             }
-            if (self.job != null) self.stopRun();
-            self.shell_mode = true;
-            try self.console.add(self.gpa, "eve stopped. The commands go to the shell now; eve starts it again, quit closes evetx.", .info);
-            return;
+            return self.machineShell(command);
         }
         var words: std.ArrayList([]const u8) = .empty;
         defer words.deinit(self.gpa);
@@ -4029,34 +4030,116 @@ pub const App = struct {
             try self.changeDir(target);
             return;
         }
-        // the shell prompt: `eve` alone goes back to eve, `eve <arguments>` runs eve once, any other line is the shell's
-        if (self.shell_mode) {
-            if (std.mem.eql(u8, words.items[0], "eve")) {
-                if (words.items.len == 1) {
-                    self.shell_mode = false;
-                    try self.console.add(self.gpa, "eve is back", .info);
-                    return;
-                }
-                try self.runEve(words.items[1..]);
-                return;
-            }
-            try self.runShellLine(cmd);
-            return;
-        }
-        // `shell <command>` at the eve prompt: leave eve for one command of the shell, then be in eve again
-        if (std.mem.eql(u8, words.items[0], "shell")) {
-            if (words.items.len == 1) {
-                if (self.job != null) self.stopRun();
-                self.shell_mode = true;
-                try self.console.add(self.gpa, "eve stopped. The commands go to the shell now; eve starts it again, quit closes evetx.", .info);
-                return;
-            }
-            try self.runShellLine(std.mem.trim(u8, cmd["shell".len..], " "));
-            return;
+        // the commands of a session go to the machine, which keeps the loaded script between them
+        for (session_words) |w| {
+            if (std.mem.eql(u8, w, words.items[0])) return self.machineEval(cmd);
         }
         // `run x.eve` is `eve x.eve`; any other line is given to eve as its arguments.
         const args = if (std.mem.eql(u8, words.items[0], "run")) words.items[1..] else words.items;
         try self.runEve(args);
+    }
+
+    // Zig tip: a `const` array inside the struct, made at compile time and shared by every `App`.
+    /// The words of the console that are commands of a session of the machine (`vm.eval`).
+    const session_words = [_][]const u8{ "load", "parse", "ast", "inspect", "errors", "status", "report", "help", "outdir", "capture", "log" };
+
+    // ------------------------------------------------------------ the machine of the console
+
+    // Zig tip: the machine starts the first time it is needed and is started again when it ended (a crash, or `vm.stop`
+    // from somewhere else): `alive` reads the flag of its thread. A failure to start is said in the console, and the
+    // caller falls back to what evetx can do alone.
+    /// The machine of the console, started if needed; null when it cannot start.
+    fn machineLink(self: *App) ?*link_mod.Link {
+        if (self.link) |l| {
+            if (l.alive()) return l;
+            l.destroy();
+            self.link = null;
+            self.link_pending.clearRetainingCapacity();
+        }
+        self.link = link_mod.Link.start(self.gpa, self.io, eve_exe) catch |err| {
+            self.console.add(self.gpa, "the machine cannot start (eve --stdio); is eve in the PATH?", .err) catch {};
+            self.setMessage("machine: {s}", .{@errorName(err)});
+            return null;
+        };
+        return self.link;
+    }
+
+    // Zig tip: `if (opt) |w| return w;` returns the payload of an optional at once; the rest runs only for null.
+    /// The working folder of the console, as evetx and its machine see it (both start in the same folder).
+    fn consoleDir(self: *const App) []const u8 {
+        if (self.work_dir) |w| return w;
+        return if (self.root.len == 0) "." else self.root;
+    }
+
+    // Zig tip: `*const App`: the drawing (view.zig) and `needsTick` call it, and it only reads.
+    /// Is a request of the machine not answered yet? (The toolbar shows it as running.)
+    pub fn linkBusy(self: *const App) bool {
+        return self.link_pending.items.len > 0;
+    }
+
+    // Zig tip: `.{ .command = text, .cwd = ..., .stream = true }` becomes the params object of the message; with `stream`
+    // the output comes line by line while the command runs. Without a machine the shell of evetx runs it.
+    /// `!<command>`: a command of the system, run by the machine in the working folder of the console.
+    fn machineShell(self: *App, command: []const u8) !void {
+        const l = self.machineLink() orelse return self.runShellLine(command);
+        const id = l.call("vm.shell", .{ .command = command, .cwd = self.consoleDir(), .stream = true });
+        if (id != 0) try self.link_pending.append(self.gpa, id);
+    }
+
+    // Zig tip: the same shape as `machineShell` above: see the tip there; `orelse return` gives up when there is no machine.
+    /// A command of the session of the machine (`load`, `parse`, `errors`, `status`, …), in the working folder.
+    fn machineEval(self: *App, line_text: []const u8) !void {
+        const l = self.machineLink() orelse return;
+        const id = l.call("vm.eval", .{ .line = line_text, .cwd = self.consoleDir(), .stream = true });
+        if (id != 0) try self.link_pending.append(self.gpa, id);
+    }
+
+    // Zig tip: `std.mem.indexOfScalar` finds the id in the list of pending requests; `swapRemove` takes it out by moving the
+    // last one into its place (the order of the list does not matter).
+    fn forgetPending(self: *App, id: u32) void {
+        if (std.mem.indexOfScalar(u32, self.link_pending.items, id)) |i| _ = self.link_pending.swapRemove(i);
+    }
+
+    // Zig tip: the events are owned by this function once taken: `defer` frees each text and the list on every way out.
+    // Output goes to the Console and the Stdout tab as it comes; the log of the machine goes to the Stderr tab.
+    /// Called by `tick`: show what the machine sent since the last frame.
+    fn pollLink(self: *App) !void {
+        const l = self.link orelse return;
+        const gpa = self.gpa;
+        if (l.take()) |events| {
+            defer {
+                for (events) |e| e.free(gpa);
+                gpa.free(events);
+            }
+            for (events) |e| switch (e.kind) {
+                .output => {
+                    try self.console.addBlock(gpa, e.text, .out);
+                    try self.stdout_log.addBlock(gpa, e.text, .out);
+                },
+                .log => try self.stderr_log.add(gpa, e.text, .err),
+                .failed => {
+                    self.forgetPending(e.id);
+                    const msg = try std.fmt.allocPrint(gpa, "machine: {s}", .{e.text});
+                    defer gpa.free(msg);
+                    try self.console.add(gpa, msg, .err);
+                },
+                .done => {
+                    self.forgetPending(e.id);
+                    if (e.text.len > 0) try self.console.addBlock(gpa, e.text, if (e.status == 0) .out else .err);
+                    if (e.status != 0) {
+                        const msg = try std.fmt.allocPrint(gpa, "exit {d}", .{e.status});
+                        defer gpa.free(msg);
+                        try self.console.add(gpa, msg, .info);
+                    }
+                },
+            };
+        }
+        if (!l.alive() and self.link_pending.items.len > 0) {
+            self.link_pending.clearRetainingCapacity();
+            const msg = try std.fmt.allocPrint(gpa, "the machine ended ({s}); the next command starts a new one", .{l.err_name orelse "done"});
+            defer gpa.free(msg);
+            try self.console.add(gpa, msg, .err);
+        }
     }
 
     // Zig tip: `isize` is the signed integer of pointer width, used because the position can go below
@@ -4784,7 +4867,7 @@ pub const App = struct {
 
     /// Does the main loop have to wake up by itself? (A command waits, or the layout is about to freeze.)
     pub fn needsTick(self: *const App) bool {
-        return self.pending_at != null or self.freeze_at != null or self.job != null or (self.options.autosave_s > 0 and self.anyDirtyFile());
+        return self.pending_at != null or self.freeze_at != null or self.job != null or self.linkBusy() or (self.options.autosave_s > 0 and self.anyDirtyFile());
     }
 
     // Zig tip: The function returns `!bool`: an error union around a plain `bool`. The caller writes
