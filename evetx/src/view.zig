@@ -1043,8 +1043,15 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
     var r: u16 = 0;
     var ln: usize = b.top;
     var lines_shown: usize = 0;
-    while (r < rows and ln < b.lineCount()) : (ln += 1) {
+    var line_prev: []const u8 = "";
+    // the state of comments at the first visible line, then line by line (a `/* ... */` may span lines)
+    var carry: Carry = if (tab.eve and !tab.sql) carryAt(b, ln) else .none;
+    while (r < rows and ln < b.lineCount()) : ({
+        ln += 1;
+        carry = carryAfter(line_prev, carry);
+    }) {
         const line = b.lineAt(ln);
+        line_prev = line;
         const pieces: usize = if (wrap) text.Buffer.segRows(line, cols) else 1;
         const is_cur = ln == b.row;
         // the line where the debugger stopped the program has its own background and an arrow in the gutter
@@ -1068,7 +1075,7 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
             const shown = expandTabs(app, line);
             const start = text.Buffer.byteAtDisplay(shown, left);
             const cw = sub(code, 0, r, cols, 1);
-            if (tab.sql) drawSql(cw, shown, start, row_bg) else drawCode(cw, shown, start, tab.eve, row_bg);
+            if (tab.sql) drawSql(cw, shown, start, row_bg) else drawCode(cw, shown, start, tab.eve, row_bg, carry);
             if (b.selection()) |sel| drawSelection(cw, line, shown, ln, sel, left);
             if (b.match) |m| {
                 if (m.row == ln) {
@@ -1196,54 +1203,125 @@ fn drawSelection(cw: Window, line: []const u8, shown: []const u8, row: usize, se
     }
 }
 
-// Zig tip: A hand-written scanner: `while (i < s.len)` looks at the byte at `i`, finds the end `j`
-// of the token, picks a style, prints `s[i..j]` and moves on. No allocation: the tokens are slices
-// of the line.
+// @eve-impl syntax colors of an Eve line for the editor; the scan always starts at byte 0 of the line (and in the state
+// `carry` left by the lines above), then the part from `start` on is drawn. So a wrapped piece or a line scrolled to the
+// right keeps the color of the string or comment it is inside, and `/* ... */` and `(** ... **)` may span lines.
+// @feature F-TLS-24
+// @invariant the same scanner (`Scan`) gives the colors and the state at the end of a line; they can not disagree
+// @see evetx/src/view.zig:editor (computes `carry` for the first visible line and passes it on line by line)
+
+/// Where a line begins: in no comment, inside `/* ... */`, or inside `(** ... **)` opened on an earlier line.
+const Carry = enum { none, block, expr };
+
+const TokenKind = enum { plain, string, comment, comment_expr, comment_block, number, word };
+
+const Token = struct { start: usize, end: usize, kind: TokenKind };
+
+/// One scan of an Eve line: `next` gives the tokens in order and keeps the carry for the next line in `carry`.
+const Scan = struct {
+    line: []const u8,
+    i: usize = 0,
+    carry: Carry,
+
+    fn next(self: *Scan) ?Token {
+        const s = self.line;
+        const i = self.i;
+        if (i >= s.len) return null;
+        var j = i + 1;
+        var kind: TokenKind = .plain;
+        if (self.carry != .none) {
+            // inside a comment of an earlier line: it goes on to its closing mark, or to the end of this line
+            const was = self.carry;
+            const close = if (was == .block) "*/" else "**)";
+            if (std.mem.indexOf(u8, s[i..], close)) |e| {
+                j = i + e + close.len;
+                self.carry = .none;
+            } else j = s.len;
+            kind = if (was == .block) .comment_block else .comment_expr;
+        } else if (i == 0 and s[0] == '#') {
+            j = s.len;
+            kind = .comment; // the caller colors a `#` line as a title
+        } else if (s[i] == '"') {
+            while (j < s.len and s[j] != '"') j += 1;
+            if (j < s.len) j += 1;
+            kind = .string;
+        } else if (s[i] == '*' and i + 1 < s.len and s[i + 1] == '*') {
+            j = s.len;
+            kind = .comment;
+        } else if (std.mem.startsWith(u8, s[i..], "(**")) {
+            if (std.mem.indexOf(u8, s[i + 3 ..], "**)")) |e| {
+                j = i + 3 + e + 3;
+            } else {
+                j = s.len;
+                self.carry = .expr;
+            }
+            kind = .comment_expr;
+        } else if (std.mem.startsWith(u8, s[i..], "/*")) {
+            if (std.mem.indexOf(u8, s[i + 2 ..], "*/")) |e| {
+                j = i + 2 + e + 2;
+            } else {
+                j = s.len;
+                self.carry = .block;
+            }
+            kind = .comment_block;
+        } else if (std.ascii.isDigit(s[i])) {
+            while (j < s.len and (std.ascii.isDigit(s[j]) or s[j] == '.' or s[j] == '_')) j += 1;
+            kind = .number;
+        } else if (std.ascii.isAlphabetic(s[i]) or s[i] == '_') {
+            while (j < s.len and (std.ascii.isAlphanumeric(s[j]) or s[j] == '_')) j += 1;
+            kind = .word;
+        } else {
+            // a character that is not a word: one UTF-8 character at a time
+            const n = std.unicode.utf8ByteSequenceLength(s[i]) catch 1;
+            j = @min(s.len, i + n);
+        }
+        self.i = j;
+        return .{ .start = i, .end = j, .kind = kind };
+    }
+};
+
+/// The state at the end of an Eve line that begins in `carry`.
+fn carryAfter(line: []const u8, carry: Carry) Carry {
+    var sc: Scan = .{ .line = line, .carry = carry };
+    while (sc.next()) |_| {}
+    return sc.carry;
+}
+
+/// The state at the start of line `row`: the lines above it are scanned (a comment may begin far above).
+fn carryAt(b: *text.Buffer, row: usize) Carry {
+    var carry: Carry = .none;
+    var r: usize = 0;
+    while (r < row) : (r += 1) carry = carryAfter(b.lineAt(r), carry);
+    return carry;
+}
+
 /// Draw one line of text from byte `start`. Eve files get colors for comments, strings, numbers and keywords.
-fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Color) void {
-    const s = line[start..];
+fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Color, carry: Carry) void {
+    const s = line;
     const plain = theme.on(theme.text, bg);
     if (!eve) {
-        _ = put(w, 0, 0, s, plain);
-        return;
-    }
-    if (line.len > 0 and line[0] == '#') {
-        const title = if (line.len > 1 and line[1] == '#') theme.subtitle else theme.title;
-        _ = put(w, 0, 0, s, theme.on(title, bg));
+        _ = put(w, 0, 0, s[start..], plain);
         return;
     }
     var col: u16 = 0;
-    var i: usize = 0;
-    while (i < s.len) {
-        const c = s[i];
-        var j = i + 1;
-        var style = plain;
-        if (c == '"') {
-            while (j < s.len and s[j] != '"') j += 1;
-            if (j < s.len) j += 1;
-            style = theme.on(theme.string, bg);
-        } else if (c == '*' and i + 1 < s.len and s[i + 1] == '*') {
-            j = s.len;
-            style = theme.on(theme.comment, bg);
-        } else if (std.mem.startsWith(u8, s[i..], "(**")) {
-            j = if (std.mem.indexOf(u8, s[i + 3 ..], "**)")) |e| i + 3 + e + 3 else s.len;
-            style = theme.on(theme.comment_expr, bg);
-        } else if (std.mem.startsWith(u8, s[i..], "/*")) {
-            j = if (std.mem.indexOf(u8, s[i + 2 ..], "*/")) |e| i + 2 + e + 2 else s.len;
-            style = theme.on(theme.comment_block, bg);
-        } else if (std.ascii.isDigit(c)) {
-            while (j < s.len and (std.ascii.isDigit(s[j]) or s[j] == '.' or s[j] == '_')) j += 1;
-            style = theme.on(theme.number, bg);
-        } else if (std.ascii.isAlphabetic(c) or c == '_') {
-            while (j < s.len and (std.ascii.isAlphanumeric(s[j]) or s[j] == '_')) j += 1;
-            if (wordColor(s[i..j])) |color| style = theme.on(color, bg);
-        } else {
-            // a character that is not a word: one UTF-8 character at a time
-            const n = std.unicode.utf8ByteSequenceLength(c) catch 1;
-            j = @min(s.len, i + n);
-        }
-        col = put(w, col, 0, s[i..j], style);
-        i = j;
+    var sc: Scan = .{ .line = s, .carry = carry };
+    while (sc.next()) |t| {
+        if (t.end <= start) continue;
+        const from = @max(t.start, start);
+        const piece = s[from..t.end];
+        const style = switch (t.kind) {
+            .plain => plain,
+            .string => theme.on(theme.string, bg),
+            .comment => if (carry == .none and s[0] == '#')
+                theme.on(if (s.len > 1 and s[1] == '#') theme.subtitle else theme.title, bg)
+            else
+                theme.on(theme.comment, bg),
+            .comment_expr => theme.on(theme.comment_expr, bg),
+            .comment_block => theme.on(theme.comment_block, bg),
+            .number => theme.on(theme.number, bg),
+            .word => if (wordColor(piece)) |color| theme.on(color, bg) else plain,
+        };
+        col = put(w, col, 0, piece, style);
     }
 }
 
@@ -2893,4 +2971,32 @@ fn folderBox(app: *App, win: Window) !void {
         .{ .label = ok_label, .action = .{ .dlg = .open_here }, .primary = true },
         .{ .label = "Cancel", .action = .close_overlay },
     });
+}
+
+// @test syntax colors of Eve comments: state across lines, and a piece that starts inside a comment
+test "carry of block and expression comments across lines" {
+    try std.testing.expectEqual(Carry.block, carryAfter("x /* start", .none));
+    try std.testing.expectEqual(Carry.block, carryAfter("still inside", .block));
+    try std.testing.expectEqual(Carry.none, carryAfter("end */ code", .block));
+    try std.testing.expectEqual(Carry.expr, carryAfter("a (** note", .none));
+    try std.testing.expectEqual(Carry.none, carryAfter("done **) b", .expr));
+    try std.testing.expectEqual(Carry.none, carryAfter("a ** comment /* not a block", .none));
+    try std.testing.expectEqual(Carry.none, carryAfter("print \"/* in a string\";", .none));
+    try std.testing.expectEqual(Carry.none, carryAfter("# title /* not a block", .none));
+}
+
+test "a line inside a block comment is one comment token" {
+    var sc: Scan = .{ .line = "# not a title, new x := 1;", .carry = .block };
+    const t = sc.next().?;
+    try std.testing.expectEqual(TokenKind.comment_block, t.kind);
+    try std.testing.expectEqual(@as(usize, 26), t.end);
+    try std.testing.expect(sc.next() == null);
+    try std.testing.expectEqual(Carry.block, sc.carry);
+}
+
+test "tokens of a line after a closed comment" {
+    var sc: Scan = .{ .line = "*/ new x", .carry = .block };
+    try std.testing.expectEqual(TokenKind.comment_block, sc.next().?.kind);
+    try std.testing.expectEqual(TokenKind.plain, sc.next().?.kind);
+    try std.testing.expectEqual(TokenKind.word, sc.next().?.kind);
 }

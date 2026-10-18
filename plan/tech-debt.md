@@ -18,3 +18,4 @@ Recorded as the work goes (author's word, 2026-10-18): when a shortcut, a gap or
 | TD-12 | `bmark.py --check` compares with the history saved on 2026-10-13, so every run reads +30% to +50% on this machine | the history was made on another load | `test/bmark/history.json` | next `bmark.py --save` at a release |
 | TD-13 (paid by D-192, remove at the next review) | `rpc.dispatch` does not turn a handler error into a `-32603` answer (G-4) | no way to catch an error in Eve code; waits for Q-065 | `lib/rpc.eve` | when Q-065 is answered |
 | TD-14 | `rpc` builds and reads lines only; no connection yet (needs `net`) | M3 goes in steps | `lib/rpc.eve` | M3 step 2 |
+| TD-15 | The SQL highlighter of evetx still colors a `/* ... */` comment on its own line only (no state across lines or wrapped pieces); Eve code was fixed on 2026-10-18 | not asked yet | `evetx/src/view.zig` `drawSql` | reuse `Scan`/`Carry` for SQL when a SQL tab needs it |

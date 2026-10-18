@@ -59,4 +59,9 @@ pub fn build(b: *std.Build) void {
     // `zig build run -- ..\test` passes `..\test` to evetx.
     if (b.args) |args| run_cmd.addArgs(args);
     b.step("run", "Run evetx").dependOn(&run_cmd.step);
+
+    // @eve-impl `zig build test` in evetx/: the unit tests of the pure parts (the comment scanner of view.zig, grid, options)
+    // @see evetx/src/view.zig (`carryAfter`, `Scan`)
+    const unit = b.addTest(.{ .root_module = exe.root_module });
+    b.step("test", "Run the unit tests of evetx").dependOn(&b.addRunArtifact(unit).step);
 }
