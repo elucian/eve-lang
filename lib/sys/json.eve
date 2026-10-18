@@ -1,7 +1,7 @@
 ** Read and write json files as streams of records typed by a record class (D-189). Signature file: the body is native, in evevm/src/dlib.zig (jsonModule, recordModule).
 ** @spec spec/library/data-language.md  @feature F-LIB-05  @tests test/level5
 module json is
-  export (read!, write);
+  export (read!, write, parse, text, valid);
 
 
   ** A stream of records of the class given as type argument: json.read!(:Row)(path).
@@ -9,5 +9,14 @@ module json is
 
   ** Write records to a file: json.write(path, rows).
   external procedure write(path: String, rows: Iterable);
+
+  ** The JSON text as one value: null, Logic, Integer, Real, String, List or DataMap; a bad text is $err_format.
+  external function parse(text: String) => (@result: Any);
+
+  ** The compact JSON text of a value.
+  external function text(value: Any) => (@result: String);
+
+  ** True when json.parse accepts the text.
+  external function valid(text: String) => (@result: Logic);
 
 end json;

@@ -137,7 +137,78 @@ fn csvModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []
 // @eve-fn json.read!, json.write
 // @spec spec/library/data-language.md
 fn jsonModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    if (std.mem.eql(u8, name, "parse")) return try jsonParse(it, args);
+    if (std.mem.eql(u8, name, "text")) return try jsonText(it, args);
+    if (std.mem.eql(u8, name, "valid")) return try jsonValid(it, args);
     return try recordModule(it, .json, name, targs, args);
+}
+
+// @eve-fn json.parse
+// @spec spec/library/data-language.md#json-text-in-memory-jsonparse-and-jsontext
+// @feature F-LIB-05
+// @test test/level6/f06_json_text
+fn jsonParse(it: *Interp, args: []const *const Node) Signal!Value {
+    if (args.len != 1) return it.failWith(err_argument, "json.parse takes a text", .{});
+    const v = try it.eval(args[0]);
+    if (v != .str) return it.failWith(err_argument, "json.parse: the argument is a String", .{});
+    var diag: data.JsonDiag = .{};
+    const j = data.parseJson(it.t, v.str, &diag) catch |e| switch (e) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.BadJson => return it.failWith(err_format, "json.parse: {s} (line {d}, column {d})", .{ diag.reason, diag.line, diag.column }),
+    };
+    return try jsonToValue(it, j);
+}
+
+// @eve-fn json.valid
+// @spec spec/library/data-language.md#json-text-in-memory-jsonparse-and-jsontext
+// @feature F-LIB-05
+// @test test/level6/f06_json_text
+// @invariant a function of Eve code can not catch an error (G-4), so a library asks `json.valid` before `json.parse`
+fn jsonValid(it: *Interp, args: []const *const Node) Signal!Value {
+    if (args.len != 1) return it.failWith(err_argument, "json.valid takes a text", .{});
+    const v = try it.eval(args[0]);
+    if (v != .str) return .{ .bool = false };
+    var diag: data.JsonDiag = .{};
+    _ = data.parseJson(it.t, v.str, &diag) catch |e| switch (e) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.BadJson => return .{ .bool = false },
+    };
+    return .{ .bool = true };
+}
+
+// @eve-impl a parsed JSON value as an Eve value: null, Logic, Integer or Real, String, List, DataMap
+fn jsonToValue(it: *Interp, j: data.Json) Signal!Value {
+    switch (j) {
+        .null => return .nil,
+        .boolean => |b| return .{ .bool = b },
+        .number => |n| {
+            if (std.fmt.parseInt(i64, n, 10)) |i| return .{ .int = i } else |_| {}
+            return .{ .real = std.fmt.parseFloat(f64, n) catch return it.failWith(err_format, "json.parse: bad number {s}", .{n}) };
+        },
+        .string => |s| return try it.newStr(s),
+        .array => |items| {
+            const list = try it.newList(&.{}, false);
+            for (items) |e| try it.listAppend(list, try jsonToValue(it, e));
+            return .{ .list = list };
+        },
+        .object => |members| {
+            const m = try it.newMap();
+            for (members) |mem| try it.mapPut(m, try it.newStr(mem.key), try jsonToValue(it, mem.value));
+            return .{ .map = m };
+        },
+    }
+}
+
+// @eve-fn json.text
+// @spec spec/library/data-language.md#json-text-in-memory-jsonparse-and-jsontext
+// @feature F-LIB-05
+// @test test/level6/f06_json_text
+fn jsonText(it: *Interp, args: []const *const Node) Signal!Value {
+    if (args.len != 1) return it.failWith(err_argument, "json.text takes a value", .{});
+    const v = try it.eval(args[0]);
+    var w: Io.Writer.Allocating = .init(it.t);
+    try jsonValue(it, &w.writer, v);
+    return try it.newStr(w.written());
 }
 
 // @eve-fn txt.read!, txt.write

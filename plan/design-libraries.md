@@ -159,3 +159,9 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 - **System modules done:** `crypto` (S1: sha256, sha512, sha256_file!, hmac_sha256, hex and base64 codecs, random_hex!, same) and `os` (S6: run!, env!, hostname!, pid!, platform) in `evevm/src/syslib.zig`; tests `f04_crypto`, `f05_os`. Not yet in `crypto`: AEAD encryption and password hashing (scrypt/pbkdf2).
 - **Left in M2:** S10 `gz` (the readers already inflate `.gz`), E6 `config`, E14 `traits` (`Iterable`, `Comparable`, `Printable` already exist in the interpreter; the task is their signature and spec page). The test numbers f06 to f07 are free for them.
 - **Gaps found:** `plan/library-gaps.md` (G-1 to G-3).
+
+## 12. State of M3 (2026-10-18), step 1
+
+- Done: `json.parse`, `json.text`, `json.valid` (native, `spec/library/data-language.md`, test `f06_json_text`); the Eve module `rpc` (`request`, `notify`, `reply`, `failure`, `dispatch`, `result_of`; `spec/library/rpc.md`, test `f07_rpc`).
+- Found: G-4 (an error can not be caught in Eve code; Q-065), G-5 (thin collection methods), G-6 (`method` reserved). Debt: TD-13, TD-14.
+- Next steps of M3: `net` (TCP client and server, Zig; spec first), the HTTP primitives (S8), then `route` and `service` in Eve, whose handler design waits for Q-065.

@@ -114,3 +114,18 @@ The modules of this table are part of the standard library of the machine and ar
 All in `../../plan/review_level5.md`.
 
 - **Streams.** `csv.read!`, `json.read!` and `query!` give a `Stream(:T)`. The first implementation (e56, `data-types.md#local-etl-files-and-a-local-sqlite-database`) returns a `List` with all the rows, so a `for` loop over the result and `.count()` work, and `Stream` as a lazy source is still to do.
+
+## JSON text in memory: `json.parse` and `json.text`
+
+Status: **0.1-draft**, level 6 (D-189), needed by `rpc` and the services. Tests: `test/level6/f06_json_text`.
+
+`json.read!` and `json.write` work on files and records. Two functions work on a **text in memory** and on plain values, with no record class:
+
+| Function | Result | Meaning |
+|---|---|---|
+| `json.parse(text: String)` | a value | the JSON text as one value: `null` is `null`, `true` and `false` are `Logic`, a number without a point or exponent is an `Integer` (a `Real` when it does not fit), any other number is a `Real`, a string is a `String`, an array is a `List`, an object is a `DataMap` with `String` keys; a text that is not well formed is `$err_format` with the line and the column |
+| `json.text(value)` | `String` | the compact JSON text of a value: a `List` or a set is an array, a `DataMap` or an object with fields is an object, `Instant` and `Decimal` are written as in `json.write`; a `Secret`, a function or a channel is `$err_argument` |
+
+| `json.valid(text: String)` | `Logic` | `True` when `json.parse` would accept the text; a function of Eve code can not catch an error (`plan/library-gaps.md` G-4), so a library asks first |
+
+A top-level array is **one** value here (`json.read!` takes its items as records). `json.text(json.parse(t))` gives back the same value, with the keys of an object in sorted order.

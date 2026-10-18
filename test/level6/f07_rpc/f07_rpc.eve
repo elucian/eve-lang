@@ -1,0 +1,45 @@
+# the standard module rpc, in Eve: build JSON-RPC 2.0 lines (F-NET-08, D-189)
+** spec: library/rpc.md
+primary aspect f07_rpc is
+  from lib use (rpc);
+
+  process main is
+    print rpc.request(1, "vm.ping", ());
+    print rpc.notify("vm.output", {"text": "hi"});
+    print rpc.reply(1, "pong");
+    print rpc.failure(2, -32601, "method not found: x");
+
+    new add := (p) => (p[1] + p[2]);
+    new ping := (p) => ("pong");
+    new handlers := {"add": add, "vm.ping": ping};
+    print rpc.dispatch(rpc.request(5, "add", (2, 3)), handlers);
+    print rpc.dispatch(rpc.request(6, "vm.ping", ()), handlers);
+    print rpc.dispatch(rpc.request(7, "nope", ()), handlers);
+    print rpc.dispatch(rpc.notify("vm.ping", ()), handlers).length();
+    print rpc.dispatch("not json", handlers);
+    print rpc.dispatch("[1]", handlers);
+    print rpc.result_of(rpc.reply(9, 42));
+    print rpc.result_of(rpc.failure(9, -32601, "gone"));
+    print "never";
+  recover
+    print "caught: {$error.message}";
+  return;
+end f07_rpc;
+/*@expect
+{
+  "stdout": [
+    "{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"vm.ping\",\"params\":[]}",
+    "{\"jsonrpc\":\"2.0\",\"method\":\"vm.output\",\"params\":{\"text\":\"hi\"}}",
+    "{\"id\":1,\"jsonrpc\":\"2.0\",\"result\":\"pong\"}",
+    "{\"error\":{\"code\":-32601,\"message\":\"method not found: x\"},\"id\":2,\"jsonrpc\":\"2.0\"}",
+    "{\"id\":5,\"jsonrpc\":\"2.0\",\"result\":5}",
+    "{\"id\":6,\"jsonrpc\":\"2.0\",\"result\":\"pong\"}",
+    "{\"error\":{\"code\":-32601,\"message\":\"method not found: nope\"},\"id\":7,\"jsonrpc\":\"2.0\"}",
+    "0",
+    "{\"error\":{\"code\":-32700,\"message\":\"parse error\"},\"id\":null,\"jsonrpc\":\"2.0\"}",
+    "{\"error\":{\"code\":-32600,\"message\":\"invalid request\"},\"id\":null,\"jsonrpc\":\"2.0\"}",
+    "42",
+    "caught: rpc: -32601 gone"
+  ]
+}
+*/

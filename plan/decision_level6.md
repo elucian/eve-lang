@@ -829,3 +829,16 @@ Read as rules:
 - (2) **Legacy to retire** (flag `@legacy retire` in the code, `grep -rn "@legacy"`): the `.` prefix accepted by `eve --doc` (`evecp/src/doc.zig`, `startsDeclaration`). Retire when no file in `lib/`, `test/`, `manual/` or `spec/` starts a declaration with `.`; the tutorial migrates last (D-190). `lib/io.eve` and `lib/exception.eve` still have draft forms (`*args`, `@v`, `external set $error`) that the parser does not read; they are documentation of statements of the language and migrate with the `io` and `exception` spec pages.
 - (3) **`external function` and `external procedure` in a module** (grammar `module-external`, parser `declarationInDriver`, node flag `is_external`): a signature ending with `;`, no body. A native that returns nothing is a **procedure** (`fs.write`, `fs.append`, `fs.write_bytes`, `fs.make_dir`, `fs.move`, `fs.remove`, `csv.write`, `json.write`, `txt.write`, `checkpoint.write`); a native with a result is a function. A reserved word may be the name of an external and stand in `export (…)`.
 - (4) **Not yet:** a user module that declares `external` has no native bound (a call is a run-time error, c31). Binding the externals of `lib/<module>.eve` to the `natives` table of `evevm/src/dlib.zig` (they take the argument nodes, not evaluated values) is the next step of M1; until then the standard modules are prelude values and their `lib/*.eve` files are read by `eve --doc`, `script/libcheck.py` and as a check that they parse (tests c29 to c31).
+
+## Q-065 Catching an error inside Eve code (2026-10-18)
+
+The standard library found that `recover` exists only at the end of a process (and aspect), so a function can not catch an error (`plan/library-gaps.md` G-4). A server must turn the error of a handler into an error answer and go on. Options, for the author to choose (the syntax is the author's):
+
+- (a) `recover` allowed at the end of a function and a procedure, like a process: `function f() => (@r: T) is … recover … return;`.
+- (b) a `try` form for a block or an expression: `try … recover … done;`.
+- (c) no change in the language: every handler is an **aspect** (an aspect recovers its own error, D-072), run with `apply`; `rpc.dispatch` and the routes then take aspects, not lambdas.
+- (d) a native `call_safe(f, args)` in the library that gives a result record with the error (no syntax).
+
+**Model's lean:** (c) for level 6, because it needs nothing new and matches how a service script is designed (one aspect per group of routes); (a) later if functions need it.
+
+**Answer:**

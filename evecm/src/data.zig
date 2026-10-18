@@ -333,6 +333,18 @@ const JsonParser = struct {
     }
 };
 
+// @eve-impl one JSON value of a text in memory (json.parse): unlike parseJsonDocuments a top-level array stays one value
+// @spec spec/library/data-language.md#json-text-in-memory-jsonparse-and-jsontext
+// @feature F-LIB-05
+/// The JSON value of `text`; text after the value is an error.
+pub fn parseJson(a: std.mem.Allocator, text: []const u8, diag: *JsonDiag) JsonError!Json {
+    var p: JsonParser = .{ .a = a, .text = text, .diag = diag };
+    const v = try p.value();
+    p.skip();
+    if (p.i < text.len) return p.fail("text after the end of the value");
+    return v;
+}
+
 /// The documents of a JSON file: the items of one top-level array, or every value of a JSON Lines text.
 pub fn parseJsonDocuments(a: std.mem.Allocator, text: []const u8, diag: *JsonDiag) JsonError![]const Json {
     var p: JsonParser = .{ .a = a, .text = text, .diag = diag };

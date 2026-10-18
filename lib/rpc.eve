@@ -1,0 +1,60 @@
+** JSON-RPC 2.0 messages as lines of text: build a request, an answer or an error, and dispatch a request to a table of handlers.
+** @spec spec/library/rpc.md  @feature F-NET-08  @decision D-189  @tests test/level6/f07_rpc
+module rpc is
+  export (request, notify, reply, failure, dispatch, result_of);
+
+  ** The text of a request; params is a List or a DataMap.
+  function request(:T)(id: Integer, name: String, params: T) => (@result: String) is
+    let result := json.text({"jsonrpc": "2.0", "id": id, "method": name, "params": params});
+  return;
+
+  ** The text of a notification: a request with no id.
+  function notify(:T)(name: String, params: T) => (@result: String) is
+    let result := json.text({"jsonrpc": "2.0", "method": name, "params": params});
+  return;
+
+  ** The text of a successful answer.
+  function reply(:T)(id: Integer, value: T) => (@result: String) is
+    let result := json.text({"jsonrpc": "2.0", "id": id, "result": value});
+  return;
+
+  ** The text of an error answer; id is the id of the request, or null when it is unknown.
+  function failure(:T)(id: T, code: Integer, message: String) => (@result: String) is
+    let result := json.text({"jsonrpc": "2.0", "id": id, "error": {"code": code, "message": message}});
+  return;
+
+  ** Read one request line, call handlers[method](params) and give the text of the answer; "" for a notification.
+  ** An error raised by a handler is not caught here: a function of Eve code can not catch an error (plan/library-gaps.md G-4).
+  function dispatch(:H)(line: String, handlers: H) => (@result: String) is
+    let result := failure(json.parse("null"), -32700, "parse error");
+    if json.valid(line) do
+      new msg := json.parse(line);
+      if "method" in msg do
+        new name := msg["method"];
+        new id := json.parse("null");
+        let id := msg["id"] if ("id" in msg);
+        new params := ();
+        let params := msg["params"] if ("params" in msg);
+        if name in handlers do
+          new handler := handlers[name];
+          new value := handler(params);
+          let result := reply(id, value);
+          let result := "" if not ("id" in msg);
+        else
+          let result := failure(id, -32601, "method not found: {name}");
+        done;
+      else
+        let result := failure(json.parse("null"), -32600, "invalid request");
+      done;
+    done;
+  return;
+
+  ** The result of an answer line; an error answer raises the error "rpc: code message".
+  function result_of(line: String) => (@result: Any) is
+    new msg := json.parse(line);
+    if "error" in msg do
+      raise "rpc: {msg["error"]["code"]} {msg["error"]["message"]}";
+    done;
+    let result := msg["result"];
+  return;
+end rpc;
