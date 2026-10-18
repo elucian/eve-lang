@@ -44,12 +44,9 @@ fn logToApp(
     if (level == .debug or level == .info) return;
     var tmp: [512]u8 = undefined;
     const line = std.fmt.bufPrint(&tmp, "{s}({s}): " ++ format, .{ level.asText(), @tagName(scope) } ++ args) catch return;
-    // the Windows console gives Ctrl+Space as a key code the keyboard library does not know (0x40): it is the shortcut
-    // Ctrl+Space, so it is posted as that key, and not reported as a warning
-    if (std.mem.indexOf(u8, line, "unknown wVirtualKeyCode: 0x40") != null) {
-        if (g_loop) |l| l.postEvent(.{ .key_press = .{ .codepoint = ' ', .mods = .{ .ctrl = true } } }) catch {};
-        return;
-    }
+    // the Windows console gives Ctrl+Space as a key code the keyboard library does not know (0x40): it has no shortcut, so it
+    // is dropped and not reported as a warning
+    if (std.mem.indexOf(u8, line, "unknown wVirtualKeyCode: 0x40") != null) return;
     while (log_lock.cmpxchgWeak(false, true, .acquire, .monotonic) != null) std.atomic.spinLoopHint();
     defer log_lock.store(false, .release);
     if (log_len + line.len + 1 > log_buf.len) return;
@@ -113,6 +110,12 @@ pub fn main(init: std.process.Init) !void {
     var tty = try vaxis.Tty.init(io, &tty_buffer);
     defer tty.deinit();
     const writer = tty.writer();
+    // Zig tip: `defer` blocks run in the opposite order, so this one runs after `vx.deinit` (which leaves the alternate screen)
+    // and before `tty.deinit`: the screen of the shell is cleared and the cursor goes to the top, so the prompt comes back there.
+    defer {
+        writer.writeAll("\x1b[2J\x1b[3J\x1b[H") catch {};
+        writer.flush() catch {};
+    }
 
     var vx = try vaxis.init(io, gpa, init.environ_map, .{});
     defer vx.deinit(gpa, tty.writer());

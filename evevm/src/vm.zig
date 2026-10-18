@@ -1,14 +1,9 @@
-//! The virtual machine session: it holds one script at a time (loaded, parsed, executed) and the
-//! slot that receives external commands while it works.
+//! The virtual machine session: it holds one script at a time (loaded, parsed, executed).
 //!
-//! The slot is a text file (`eve -i commands.vmc`). Anything can append lines to it while the VM
-//! runs: a batch (`echo report >> commands.vmc`), a Python script, an editor. One command per line.
-//! A file was chosen over a pipe or a socket because every language and every shell can write one.
-//! The manual describes the commands and the comments (manual/usage.md, "Command files").
-//!
-//! A workflow is a command file such as `load a.eve`, `parse`, `run`, `errors`, `ast`, `inspect`,
-//! `status`, repeated for each script and ended by `stop`. The VM is started once (`eve -x -i
-//! level1.vmc`), works through the file, and leaves its reports in a folder for later reading.
+//! Its commands (`load a.eve`, `parse`, `run`, `errors`, `ast`, `inspect`, `status`, ...) come from the
+//! prompt of the REPL or, one line per message, from `vm.eval` on a lasting door of the machine (IPC or
+//! `eve --stdio`). A workflow drives one machine with many such lines (`script/workflow.py`) and reads
+//! the reports the session leaves in its folder. The command files (`.vmc`, `eve -i`) are gone (D-188).
 const std = @import("std");
 
 /// The comment rule of a command line (it moved to evecm with the configuration reader).
@@ -20,65 +15,9 @@ const project = @import("evecp").project;
 const interp = @import("interp.zig");
 const debugger = @import("debugger.zig");
 
-// Zig tip: a struct can own memory. `data` is a slice that this struct allocated, so the struct
-// must free it: that is what `deinit` is for, and the caller pairs `init` with
-// `defer slot.deinit()`. Zig has no destructors that run by themselves.
-/// Reads new lines appended to a file. The file may not exist yet; that means "no commands".
-/// A line is delivered only once it is complete (ends with a newline), so a writer that is in
-/// the middle of a line is never read half way.
-pub const Slot = struct {
-    io: Io,
-    gpa: std.mem.Allocator,
-    path: []const u8,
-    /// The last copy of the file, owned by the slot.
-    data: []u8 = &.{},
-    /// Bytes already delivered; the next line starts here.
-    cursor: usize = 0,
-    /// End of the last complete line in `data`.
-    end: usize = 0,
-
-    // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
-    // syntax: `p.name(...)`.
-    pub fn deinit(self: *Slot) void {
-        self.gpa.free(self.data);
-    }
-
-    // Zig tip: `catch return` in a function that returns nothing means "on any error, give up
-    // quietly": a missing file or a failed read is not a failure here, it is just no news.
-    // `std.mem.lastIndexOfScalar` finds the last byte equal to a value, or returns null; `if (x)
-    // |i| ... else ...` unwraps that optional. Freeing the old copy before the new one is
-    // assigned keeps exactly one copy alive.
-    fn refill(self: *Slot) void {
-        const bytes = Io.Dir.cwd().readFileAlloc(self.io, self.path, self.gpa, .limited(1 << 20)) catch return;
-        self.gpa.free(self.data);
-        self.data = bytes;
-        self.end = if (std.mem.lastIndexOfScalar(u8, bytes, '\n')) |i| i + 1 else 0;
-        if (self.cursor > self.end) self.cursor = self.end; // the file was truncated
-    }
-
-    // Zig tip: the result `?[]const u8` is a line or null (nothing new). The slice points into
-    // `data`, so it is valid only until the next call that refills: use it at once.
-    /// The next complete line, not consumed: `peek` again gives the same line until `next` is called.
-    pub fn peek(self: *Slot) ?[]const u8 {
-        if (self.cursor >= self.end) self.refill();
-        if (self.cursor >= self.end) return null;
-        const stop = std.mem.indexOfScalarPos(u8, self.data, self.cursor, '\n').?;
-        return self.data[self.cursor..stop];
-    }
-
-    // Zig tip: `a orelse b` unwraps an optional: it gives `b` when `a` is null, and `b` may leave
-    // the function with `return`.
-    /// The next complete line, consumed, or null when there is nothing new.
-    pub fn next(self: *Slot) ?[]const u8 {
-        const line = self.peek() orelse return null;
-        self.cursor += line.len + 1;
-        return line;
-    }
-};
-
 // Zig tip: one number shared by every thread tells all the scripts to stop without a list of them. A script remembers
 // the number when it starts (`cancel_seen`) and looks at it between two statements (`pollHook`): when the number has
-// moved, the script ends as if a `stop` came from its slot. `std.atomic.Value` is read and written safely by several
+// moved, the script ends as if `stop` had been typed. `std.atomic.Value` is read and written safely by several
 // threads at once, and `fetchAdd` adds one and answers the old value. Scripts that start later see the new number
 // as their own and run normally, so a `stop` does not poison the next run.
 /// How many times `cancelAll` was called.
@@ -101,12 +40,11 @@ const max_words = 16;
 // per-script memory is an arena: `load` drops the previous one with `deinit`, so a session of
 // hundreds of scripts does not grow. `std.heap.page_allocator` is the allocator that asks the
 // operating system for memory directly; the arena is built on top of it.
-/// One VM session. Commands are the `exec` methods below; the REPL and the slot both call them.
+/// One VM session. Commands are the `exec` methods below; the REPL and `vm.eval` both call them.
 pub const Session = struct {
     io: Io,
     gpa: std.mem.Allocator,
     out: *Io.Writer,
-    slot: ?*Slot = null,
     /// Folder of the report files (`outdir`).
     outdir: []const u8 = "temp/output",
     /// Print only errors (the command line `eve script.eve`): the output is the script's own.
@@ -280,7 +218,6 @@ pub const Session = struct {
         const self: *Session = @ptrCast(@alignCast(ctx));
         self.steps = steps;
         self.line = line;
-        self.drainRunning();
         return self.stopping or cancel_generation.load(.monotonic) != self.cancel_seen;
     }
 
@@ -564,11 +501,7 @@ pub const Session = struct {
             }
             try w.print(", {d} error(s)\n", .{self.errorCount()});
         }
-        try w.print("reports: folder {s}, capture {s}, slot {s}\n", .{
-            self.outdir,
-            if (self.capture) "on" else "off",
-            if (self.slot) |sl| sl.path else "none",
-        });
+        try w.print("reports: folder {s}, capture {s}\n", .{ self.outdir, if (self.capture) "on" else "off" });
     }
 
     // Zig tip: `cmdReport` relies on the same Zig feature as `cmdAst` above: see the tip there.
@@ -653,7 +586,7 @@ pub const Session = struct {
     // not yet consumed, used here to give `log` the whole remainder of the line. While a script runs
     // only a few commands are allowed: Zig's single thread cannot load another script in the middle
     // of the first one.
-    /// Run one line of the slot (or of the REPL). While a script runs, only `report` and `stop` work.
+    /// Run one command line (of the REPL or of `vm.eval`). While a script runs, only `report` and `stop` work.
     pub fn handleLine(self: *Session, line: []const u8) Io.Writer.Error!void {
         const t = clean(line);
         if (t.len == 0) return;
@@ -670,90 +603,20 @@ pub const Session = struct {
         var known = false;
         for (command_names) |c| known = known or std.mem.eql(u8, c, cmd);
         if (!known) {
-            try self.out.print("slot: unknown command: {s}\n", .{t});
+            try self.out.print("unknown command: {s}\n", .{t});
             return;
         }
         if (self.running and !(std.mem.eql(u8, cmd, "report") or std.mem.eql(u8, cmd, "stop") or
             std.mem.eql(u8, cmd, "quit") or std.mem.eql(u8, cmd, "exit")))
         {
-            try self.out.print("slot: busy, '{s}' ignored while a script runs\n", .{cmd});
+            try self.out.print("busy, '{s}' ignored while a script runs\n", .{cmd});
             return;
         }
-        if (!try self.exec(cmd, words[1..n], rest)) try self.out.print("slot: unknown command: {s}\n", .{t});
+        if (!try self.exec(cmd, words[1..n], rest)) try self.out.print("unknown command: {s}\n", .{t});
     }
 
-    // Zig tip: a hook that runs in the middle of a script must not eat the commands meant for after
-    // it. `peek` looks at the next line without consuming it; the loop stops in front of a command
-    // that needs an idle machine (`load`, `parse`, `run`, ...), which stays in the slot, in order,
-    // for the serve loop. Blank lines, comments, `report`, `stop` and unknown words are consumed.
-    /// Run the new lines of the slot, while a script runs: only the ones allowed then.
-    fn drainRunning(self: *Session) void {
-        const s = self.slot orelse return;
-        while (s.peek()) |line| {
-            const t = clean(line);
-            if (t.len > 0) {
-                var it = std.mem.tokenizeAny(u8, t, " \t");
-                const cmd = it.next().?;
-                if (isCommand(cmd) and !isControl(cmd)) return;
-            }
-            _ = s.next();
-            self.handleLine(line) catch {};
-        }
-    }
-
-    // Zig tip: `std.mem.eql(u8, a, b)` compares two slices by content; `==` on slices would compare
-    // their addresses.
-    fn isCommand(cmd: []const u8) bool {
-        for (command_names) |c| if (std.mem.eql(u8, c, cmd)) return true;
-        return false;
-    }
-
-    // Zig tip: `isControl` relies on the same Zig feature as `isCommand` above: see the tip there.
-    /// The commands that are allowed while a script runs.
-    fn isControl(cmd: []const u8) bool {
-        const eql = std.mem.eql;
-        return eql(u8, cmd, "report") or eql(u8, cmd, "stop") or eql(u8, cmd, "quit") or eql(u8, cmd, "exit");
-    }
-
-    // Zig tip: `while (cond) { ... }` repeats; `while (opt) |v|` repeats as long as an optional has
-    // a value.
-    /// Run every new line of the slot (the machine is idle).
-    pub fn drain(self: *Session) void {
-        if (self.slot) |s| {
-            while (s.next()) |line| self.handleLine(line) catch {};
-        }
-    }
-
-    // Zig tip: `self.io.sleep(duration, clock)` pauses the program without using the processor; the
-    // `Io` value is how Zig 0.16 reaches the operating system. `.fromMilliseconds(25)` builds the
-    // duration; `.awake` is the clock that counts time while the machine runs. `catch {}` ignores
-    // the "cancelled" error: nobody cancels this program. The loop ends on `stop` or after
-    // `idle_ms` milliseconds without a command (so a forgotten `stop` does not hang a batch).
-    /// Serve mode: with no script, wait for commands in the slot until `stop`.
-    pub fn serve(self: *Session, idle_ms: u64) Io.Writer.Error!void {
-        var idle: u64 = 0;
-        while (!self.stopping) {
-            const before = if (self.slot) |s| s.cursor else 0;
-            self.drain();
-            try self.out.flush();
-            if (self.stopping) break;
-            const after = if (self.slot) |s| s.cursor else 0;
-            if (after != before) {
-                idle = 0;
-                continue;
-            }
-            if (idle >= idle_ms) {
-                try self.out.writeAll("serve: idle timeout, stopping\n");
-                self.status = 75;
-                break;
-            }
-            self.io.sleep(.fromMilliseconds(25), .awake) catch {};
-            idle += 25;
-        }
-        if (self.stopping) try self.out.writeAll("serve: stopped\n");
-    }
-
-    // Zig tip: `deinit` relies on the same Zig feature as `deinit` above: see the tip there.
+    // Zig tip: a struct can own memory, so it has a `deinit` that frees it, and the caller pairs the struct with
+    // `defer s.deinit()`. Zig has no destructors that run by themselves.
     pub fn deinit(self: *Session) void {
         self.forget();
     }
@@ -761,7 +624,7 @@ pub const Session = struct {
 
 // Zig tip: a `test` block runs under `zig build test`; `try std.testing.expect...` fails it when the
 // value is not the expected one.
-test "comments are removed from slot lines" {
+test "comments are removed from command lines" {
     try std.testing.expectEqualStrings("report", clean(" report\r"));
     try std.testing.expectEqualStrings("report", clean("report ** show the state"));
     try std.testing.expectEqualStrings("", clean("** stop"));
@@ -786,7 +649,7 @@ test "a session parses and runs a script from text" {
 }
 
 // Zig tip: `a syntax error is reported with its position and the run does not start` relies on the
-// same Zig feature as `comments are removed from slot lines` above: see the tip there.
+// same Zig feature as `comments are removed from command lines` above: see the tip there.
 test "a syntax error is reported with its position and the run does not start" {
     var buf: [512]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -799,7 +662,7 @@ test "a syntax error is reported with its position and the run does not start" {
 }
 
 // Zig tip: `report and stop commands, unknown words` relies on the same Zig feature as `comments are
-// removed from slot lines` above: see the tip there.
+// removed from command lines` above: see the tip there.
 test "report and stop commands, unknown words" {
     var buf: [512]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -807,7 +670,7 @@ test "report and stop commands, unknown words" {
     defer s.deinit();
     try s.handleLine("report");
     try s.handleLine("frob ** not a command");
-    try std.testing.expectEqualStrings("report: pc 0, 0 steps, idle\nslot: unknown command: frob\n", w.buffered());
+    try std.testing.expectEqualStrings("report: pc 0, 0 steps, idle\nunknown command: frob\n", w.buffered());
     try std.testing.expect(!s.stopping);
     try s.handleLine("stop");
     try std.testing.expect(s.stopping);

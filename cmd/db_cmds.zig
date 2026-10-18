@@ -12,6 +12,7 @@ const Context = context.Context;
 const exit_usage = context.exit_usage;
 const exit_syntax = context.exit_syntax;
 const exit_no_input = context.exit_no_input;
+const exit_cant_create = context.exit_cant_create;
 
 // Zig tip: the VM session is created the first time a command needs it and kept in the Context, so
 // Zig tip: a splitter is a small state machine: it walks the bytes once and remembers whether it is inside a quoted
@@ -176,7 +177,171 @@ fn sqlCommand(ctx: *Context, args: []const []const u8) !void {
 // Zig tip: `cmdDb` relies on the same Zig feature as `cmdDoc`: the work is done by a function with an inferred error
 // set, and the handler passes on `WriteFailed` and turns every other error into a message.
 /// `db`: the commands of the database part (`eve db ...`, D-163). Today `db proc list`.
+// Zig tip: a database object is made or dropped with a statement that the command builds from its words: the name is put
+// between double quotes (a name with a quote in it is refused), and the select is what the person typed after the name. The
+// statement then goes through `sqlCommand`, like any `db sql`, so the answer and the exit status are the same.
+/// `db create view|table <file> <name> <select…>` and `db drop view <file> <name>`.
+fn objectCommand(ctx: *Context, args: []const []const u8) !void {
+    const create = std.mem.eql(u8, args[0], "create");
+    const kind = args[1];
+    const is_view = std.mem.eql(u8, kind, "view");
+    const is_table = std.mem.eql(u8, kind, "table");
+    const ok_shape = if (create) (is_view or is_table) and args.len >= 5 else is_view and args.len == 4;
+    if (!ok_shape or std.mem.indexOfScalar(u8, args[3], '"') != null) {
+        try ctx.out.writeAll("db: usage: db create view|table <file> <name> <select…> | db drop view <file> <name>\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    var arena = std.heap.ArenaAllocator.init(ctx.gpa);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const stmt = if (create)
+        try std.fmt.allocPrint(a, "create {s} \"{s}\" as {s}", .{ kind, args[3], try std.mem.join(a, " ", args[4..]) })
+    else
+        try std.fmt.allocPrint(a, "drop view \"{s}\"", .{args[3]});
+    const words = [_][]const u8{ args[2], stmt };
+    sqlCommand(ctx, &words) catch |err| switch (err) {
+        error.WriteFailed => |e| return e,
+        else => {
+            try ctx.out.print("db {s}: {s}\n", .{ args[0], @errorName(err) });
+            ctx.status = exit_no_input;
+        },
+    };
+}
+
+// Zig tip: `db import` reads the whole file, decodes it into a columnar table (the types are found by looking at the values)
+// and loads it into the database as a new table, in one transaction: nothing is left half done when a row is bad. `db export`
+// does the opposite. The name of the table defaults to the name of the file without its extension, with every character that
+// is not a letter or a digit turned into `_`. The answer is one line, so a program (evetx) can show it.
+/// `db import <db> <file> [table]` and `db export <db> <table> <file>`.
+fn transferCommand(ctx: *Context, args: []const []const u8) !void {
+    const evedb = @import("evedb");
+    const import_mod = evedb.importer;
+    var arena = std.heap.ArenaAllocator.init(ctx.gpa);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const is_import = std.mem.eql(u8, args[0], "import");
+    if (args.len < 3 or args.len > 4 or (!is_import and args.len != 4)) {
+        try ctx.out.writeAll("db: usage: db import <file.db> <file> [table] | db export <file.db> <table> <file>\n");
+        ctx.status = exit_usage;
+        return;
+    }
+    const db_path = try a.dupeZ(u8, args[1]);
+    const file = if (is_import) args[2] else args[3];
+    const format = import_mod.formatOf(file) orelse {
+        try ctx.out.print("error: {s}: the formats are .csv .txt .tsv .json .dbf (save a spreadsheet as CSV)\n", .{file});
+        ctx.status = exit_usage;
+        return;
+    };
+    var db = evedb.sqlite.Db.open(db_path) catch {
+        try ctx.out.print("error: cannot open {s}\n", .{args[1]});
+        ctx.status = exit_no_input;
+        return;
+    };
+    defer db.close();
+    ctx.status = 0;
+    if (is_import) {
+        const bytes = Io.Dir.cwd().readFileAlloc(ctx.io, file, a, .limited(1 << 30)) catch {
+            try ctx.out.print("error: cannot read {s}\n", .{file});
+            ctx.status = exit_no_input;
+            return;
+        };
+        var name: []u8 = undefined;
+        if (args.len == 4) {
+            name = try a.dupe(u8, args[3]);
+        } else {
+            name = try a.dupe(u8, std.fs.path.stem(file));
+            for (name) |*ch| {
+                if (!std.ascii.isAlphanumeric(ch.*)) ch.* = '_';
+            }
+        }
+        const res = import_mod.importInto(ctx.gpa, &db, bytes, format, name) catch |err| {
+            if (err == error.Exec) {
+                try ctx.out.print("error: {s}\n", .{db.errorMessage()});
+            } else try ctx.out.print("error: {s}: {s}\n", .{ file, @errorName(err) });
+            ctx.status = exit_syntax;
+            return;
+        };
+        try ctx.out.print("imported {d} rows, {d} columns into {s}\n", .{ res.rows, res.cols, name });
+        return;
+    }
+    const now = Io.Timestamp.now(ctx.io, .real).toSeconds();
+    const es = std.time.epoch.EpochSeconds{ .secs = @intCast(@max(now, 0)) };
+    const yd = es.getEpochDay().calculateYearDay();
+    const md = yd.calculateMonthDay();
+    const date = [3]u8{ @intCast(@mod(yd.year, 100)), @intFromEnum(md.month), md.day_index + 1 };
+    const bytes = import_mod.exportBytes(ctx.gpa, &db, args[2], format, date) catch |err| {
+        if (err == error.Prepare) {
+            try ctx.out.print("error: {s}\n", .{db.errorMessage()});
+        } else try ctx.out.print("error: {s}: {s}\n", .{ args[2], @errorName(err) });
+        ctx.status = exit_syntax;
+        return;
+    };
+    defer ctx.gpa.free(bytes);
+    Io.Dir.cwd().writeFile(ctx.io, .{ .sub_path = file, .data = bytes }) catch {
+        try ctx.out.print("error: cannot write {s}\n", .{file});
+        ctx.status = exit_cant_create;
+        return;
+    };
+    try ctx.out.print("exported {s} to {s}\n", .{ args[2], file });
+}
+
+// Zig tip: `eve db serve` does not link DuckDB: it starts `evedb` from the folder of `eve` and waits for it, with this terminal as
+// its terminal (`.inherit`), so the ready lines and the stop appear here. `Child.Term` is a tagged union: `.exited` carries the exit
+// code; any other end (a signal) is reported as 1.
+/// `db serve [evedb.cfg]`: run evedb, the database server (README.md of evedb), in the foreground.
+fn serveCommand(ctx: *Context, args: []const []const u8) !void {
+    const exe = try @import("evevm").service.evedbPath(ctx.io, ctx.gpa);
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(ctx.gpa, &.{ exe, "serve" });
+    if (args.len >= 1 and std.mem.endsWith(u8, args[0], ".cfg")) {
+        try argv.appendSlice(ctx.gpa, &.{ "--config", args[0] });
+        try argv.appendSlice(ctx.gpa, args[1..]);
+    } else try argv.appendSlice(ctx.gpa, args);
+    try ctx.out.flush();
+    var child = std.process.spawn(ctx.io, .{ .argv = argv.items, .stdin = .inherit, .stdout = .inherit, .stderr = .inherit }) catch |err| {
+        try ctx.out.print("eve: cannot start {s}: {s} (build it: cd evedb && zig build -p ..)\n", .{ exe, @errorName(err) });
+        ctx.status = 69;
+        return;
+    };
+    const term = try child.wait(ctx.io);
+    ctx.status = switch (term) {
+        .exited => |code| code,
+        else => 1,
+    };
+}
+
 pub fn cmdDb(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    if (args.len >= 1 and std.mem.eql(u8, args[0], "serve")) {
+        serveCommand(ctx, args[1..]) catch |err| switch (err) {
+            error.WriteFailed => |e| return e,
+            else => {
+                try ctx.out.print("db serve: {s}\n", .{@errorName(err)});
+                ctx.status = 69;
+            },
+        };
+        return;
+    }
+    if (args.len >= 4 and (std.mem.eql(u8, args[0], "create") or std.mem.eql(u8, args[0], "drop"))) {
+        objectCommand(ctx, args) catch |err| switch (err) {
+            error.WriteFailed => |e| return e,
+            else => {
+                try ctx.out.print("db {s}: {s}\n", .{ args[0], @errorName(err) });
+                ctx.status = exit_no_input;
+            },
+        };
+        return;
+    }
+    if (args.len >= 3 and (std.mem.eql(u8, args[0], "import") or std.mem.eql(u8, args[0], "export"))) {
+        transferCommand(ctx, args) catch |err| switch (err) {
+            error.WriteFailed => |e| return e,
+            else => {
+                try ctx.out.print("db {s}: {s}\n", .{ args[0], @errorName(err) });
+                ctx.status = exit_no_input;
+            },
+        };
+        return;
+    }
     if (args.len >= 3 and std.mem.eql(u8, args[0], "sql")) {
         sqlCommand(ctx, args[1..]) catch |err| switch (err) {
             error.WriteFailed => |e| return e,
@@ -188,7 +353,7 @@ pub fn cmdDb(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
         return;
     }
     if (!(args.len == 2 and std.mem.eql(u8, args[0], "proc") and std.mem.eql(u8, args[1], "list"))) {
-        try ctx.out.writeAll("db: usage: db proc list | db sql [-t] [--last] [-f script] <file|:memory:> <statement>\n");
+        try ctx.out.writeAll("db: usage: db proc list | db sql [-t] [--last] [-f script] <file|:memory:> <statement> | db create view|table <file> <name> <select…> | db drop view <file> <name> | db import <file.db> <file> [table] | db export <file.db> <table> <file>\n");
         ctx.status = exit_usage;
         return;
     }

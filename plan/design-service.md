@@ -24,7 +24,7 @@ The machine is driven by **commands**: the entries of its jump table (`check`, `
 | Another machine | a machine sends commands to other machines and reads their answers (section 3) | new |
 | API for AI | `eve --api`: the commands as tools of an MCP server, for AI assistants | new, section 6 |
 
-The command files (`eve -i file.vmc`, the slot of D-063) are **scheduled for removal**: a script that wants to drive a machine sends commands to its port instead (section 3).
+The command files (`eve -i file.vmc`, the slot of D-063) are **removed** (D-188, 2026-10-18): a program that wants to drive a machine with a series of commands talks to it over the stdio door (`eve --stdio`, `vm.open` and `vm.eval`) or the IPC door instead (section 3); `script/workflow.py` does so.
 
 Whatever the channel, a command does the same thing and gives the same answer; only the transport differs.
 
@@ -44,7 +44,7 @@ eve -c "stop"                       ** the machine ends
 
 The program that sends the commands is a shell script or a Python script (`subprocess.run(["eve", "-c", "run"])`), which reads the answer and the exit status of each call. This is how the test runner and the workflow scripts will drive the machine once `.vmc` files are removed.
 
-**Which machine.** Without more options `-c` goes to the machine of the configuration file (`-s file.cfg`, section 4): its `$EVE_DOMAIN` and `$EVE_PORT`. A remote machine is given by host and port, or by a name from the configuration:
+**Which machine.** Without more options `-c` goes to the machine of the configuration file (`-e file.cfg`, section 4): its `$EVE_DOMAIN` and `$EVE_PORT`. A remote machine is given by host and port, or by a name from the configuration:
 
 ```
 eve -c "run sales_load" -rem etl1.example.com:4042
@@ -111,29 +111,29 @@ $EVE_TOKEN     = "…"                  $EVE_TOKEN     = "…"
 
 **Identity.** The identity of a machine is its address: **domain + port**, `$EVE_DOMAIN:$EVE_PORT` (for example `localhost:4142`, `etl1.example.com:4042`). `$EVE_DOMAIN` is `localhost`, a domain name or an IP address. Two programs can't bind the same port on one host, so the address is unique without any checksum. `$EVE_NAME` is the label of the machine: what people, logs, `send` and `-rem` use (`etl-server`); the machine checks at connection time that the name and the address agree. `$EVE_HTTP_PORT` is the port of `serve`.
 
-**Start.** `eve -s server.cfg --listen` (or `--serve`) first checks that the domain and the ports of the configuration are free. If one is already taken, by a running Eve machine or by another program, `eve` ends with an error and does not start. Otherwise it starts the machine, reserves its ports and listens. From then on, any request or command that reaches it, from a browser, a script, another machine or a route, gets an answer.
+**Start.** `eve -e server.cfg --listen` (or `--serve`) first checks that the domain and the ports of the configuration are free. If one is already taken, by a running Eve machine or by another program, `eve` ends with an error and does not start. Otherwise it starts the machine, reserves its ports and listens. From then on, any request or command that reaches it, from a browser, a script, another machine or a route, gets an answer.
 
-**Send.** `eve -s server.cfg -c <command>` does not start anything: it connects to the machine at the address of the configuration and sends the command. The running machine keeps its state (loaded scripts, sessions, services) between commands.
+**Send.** `eve -e server.cfg -c <command>` does not start anything: it connects to the machine at the address of the configuration and sends the command. The running machine keeps its state (loaded scripts, sessions, services) between commands.
 
 ```
-eve -s server.cfg --listen              ** starts etl-server on localhost:4142 (and 8142 for serve)
-eve -s server.cfg --listen              ** error: localhost:4142 is already taken
-eve -s server.cfg -c load sales.eve"   ** the command goes to etl-server
-eve -s server.cfg -c run"              ** same machine, same state
-eve -s client.cfg -c send etl-server \"report\""   ** the client machine talks to the server machine
+eve -e server.cfg --listen              ** starts etl-server on localhost:4142 (and 8142 for serve)
+eve -e server.cfg --listen              ** error: localhost:4142 is already taken
+eve -e server.cfg -c load sales.eve"   ** the command goes to etl-server
+eve -e server.cfg -c run"              ** same machine, same state
+eve -e client.cfg -c send etl-server \"report\""   ** the client machine talks to the server machine
 ```
 
 **Checksum.** When a machine reads its configuration file, it computes a checksum of the file and keeps it **outside** the file, in `$EVE_OUT/<name>.sum` (the `out/` folder of the machine). Writing the checksum into the file would change the file, and so the checksum, without end. When the file has no stored checksum, or a different one, `eve` writes the new value into the `.sum` file. The configuration file itself is never written by the machine, so it can be kept under version control.
 
-**Configuration changes while running.** A running machine reads its configuration again only on the command `setup` (`eve -s server.cfg -c "setup"`): it compares the checksum, applies the changes (folders, limits, token, `serve` port, schedules) without a restart, and stores the new checksum. The identity can't change this way: if the domain or the port in the file is now different, the file describes another machine; `setup` reports it and changes nothing, and that new machine is started with `--listen` on its own address.
+**Configuration changes while running.** A running machine reads its configuration again only on the command `setup` (`eve -e server.cfg -c "setup"`): it compares the checksum, applies the changes (folders, limits, token, `serve` port, schedules) without a restart, and stores the new checksum. The identity can't change this way: if the domain or the port in the file is now different, the file describes another machine; `setup` reports it and changes nothing, and that new machine is started with `--listen` on its own address.
 
 **Without a configuration file.** `eve` can run with no configuration at all: the default values are built into the machine (name `eve`, domain `localhost`, `--listen` port 4042, `serve` port 8042, folders `web` and `out` in the current folder). Without `-s`, `eve` does its best to execute the command with these values.
 
-**Set up a machine.** `eve --setup <folder>` (short `-s`) gives the machine its folder. The folder holds everything the machine needs: its configuration file `eve.cfg` and its folders (`web/`, `out/`, `data/`, `lib/`, `asp/`).
+**Set up a machine.** `eve --setup <folder>` (short `-e`, D-188) gives the machine its folder. The folder holds everything the machine needs: its configuration file `eve.cfg` and its folders (`web/`, `out/`, `data/`, `lib/`, `asp/`).
 
 - If the folder already holds a configuration, `--setup` reads it: this is how an existing machine is chosen.
 - If it does not, `--setup` creates the folder, the configuration file and the folders: a new machine, named after the last folder of the path, with the default values and ports that are free on this computer, so it does not collide with the machines already set up here. The user edits `eve.cfg` if needed.
-- `--setup` also accepts the configuration file itself (`-s server/eve.cfg`), as `-s file.cfg` does today.
+- `--setup` also accepts the configuration file itself (`-e server/eve.cfg`), as `-e file.cfg` does today.
 
 ```
 eve --setup ./evemachine/local                  ** creates the machine "local" (or reads it)
@@ -368,9 +368,9 @@ schedule "orders_sync" every 15min
 | Change | Kind |
 |---|---|
 | Commands `listen`, `send`, `serve`, `api`, `deploy`, `dismiss` (replaces `clear`) (and `--listen`, `--serve`, `--api`); `eve -c <command> [-rem machine]` | machine (`manual/usage.md`) |
-| Command files `.vmc`, option `-i`, "serve mode" of D-063 | removed; the tests in `test/smoke` and `script/workflow.py` move to `eve -x` |
+| Command files `.vmc`, option `-i`, "serve mode" of D-063 | removed (D-188); `script/workflow.py` uses `eve --stdio` |
 | `$EVE_NAME`, `$EVE_DOMAIN`, `$EVE_PORT`, `$EVE_HTTP_PORT`, `$EVE_WEB`, `$EVE_TOKEN`; the checksum file `out/<name>.sum` of the machine folder | configuration, system variables |
-| Command `setup` (`--setup <folder or file>`, `-s`): create, choose or reload a machine | machine |
+| Command `setup` (`--setup <folder or file>`, `-e`): create, choose or reload a machine | machine |
 | Script kind `service`, keyword `route` | syntax |
 | `apply … at <node> [within <time>];` | syntax, remote apply |
 | Classes `Request`, `Response`; `net.stream` | library (`http`, `net`) |
@@ -483,6 +483,75 @@ eve:> select local
 - **Tab** on a remote machine completes the stored procedures and the code on the server (D-172 point 7), not the local files.
 - The REPL is started by `eve`; the terminal UI by `eve -tx` (screen: `evetx/design/design.svg`), the web UI by `eve -ux` (D-172).
 - A program that was not uploaded cannot be run on a remote machine.
+
+## 17. Service mode: `eve -s` (D-185, 2026-10-17)
+
+Until level 5 `eve` was a command line, a REPL, or a graphic interface (`-ux`, `-tx`). A server needs a fourth way: **no interface at all**. `eve -s` starts the machine as a **service**: no prompt, nothing written on the standard output, the log in a file, the doors of `eve.cfg` open (IPC and HTTP). On Windows it is a **service** of the Service Control Manager; on Linux and macOS it is a **daemon** that a shell or an init system starts.
+
+**The option.** `-s` used to mean `-s file.cfg`, the configuration file (F-STR-06). The author decided (2026-10-17) that bare `-s` is the service, and then (2026-10-18, D-188) that `-s` is **only** the service: the configuration file is `-e file.cfg` (`--setup file.cfg`). The reading:
+
+| Command line | Meaning |
+|---|---|
+| `eve -s` | the service, configuration `eve.cfg` of the working folder |
+| `eve -s file.cfg` | the service, configuration `file.cfg` (a file name that ends in `.cfg`) |
+| `eve -s file.cfg script.eve`, `eve -s file.cfg --check a.eve`, `eve --listen -s file.cfg` | a usage error (exit 64): `-s` takes nothing else (D-188) |
+| `eve -e file.cfg script.eve`, `eve -e file.cfg --check a.eve`, `eve --listen -e file.cfg` | the configuration only |
+| `eve -s -db --serve evedb.cfg` | evedb as a service (D-186) |
+
+A consequence to know: `eve -s file.cfg` used to open the REPL with that configuration; it now starts the service. The REPL with a configuration file is `eve -e file.cfg` (D-188).
+
+**Three ways to start, one machine.**
+
+| Start | What happens |
+|---|---|
+| from a console or a shell: `eve -s` | the machine is started in a **process of its own**, detached from the terminal (no console window on Windows; a new process group on POSIX systems, `SIGHUP` ignored), with its output in the log file; `eve -s` waits until the IPC door answers, prints **nothing** and ends with status 0. If a machine runs already: `already running` on the error output, status 75. If it does not start in ten seconds: the last lines of the log on the error output, status 69 |
+| by the Service Control Manager | `eve.exe -s [file.cfg]` is registered as the service; the process calls `StartServiceCtrlDispatcher`, reports `START_PENDING` and then `RUNNING`, runs the machine in the process, and reports `STOPPED` when Windows asks it to stop (`STOP` and `SHUTDOWN` controls) |
+| in the foreground: `EVE_SERVICE=foreground eve -s` | the process **is** the machine (for a container, or `Type=simple` of systemd); it ends with status 0 on `SIGTERM`, `SIGINT` or `vm.stop`, and stays in the foreground of its parent |
+
+How the process knows it was started by the Service Control Manager: it asks for the dispatcher first; outside the Service Control Manager Windows answers error 1063 and the second form is used.
+
+**What the service does.**
+
+- **Silent.** Nothing on the standard output or the standard error once the machine runs; the only place for messages is the log. The starter (`eve -s` from a console) writes to the error output only when it fails.
+- **Log.** `<runtime>/eve-<domain>-<ipc_port>.log` (the same file as `evevm start`): the doors, one line per request, the stop. The file is made new at each start.
+- **Pid file.** `<runtime>/eve-<domain>-<ipc_port>.pid` with the pid and a line break, written when the machine is up and removed when it stops. On POSIX systems the starter writes it too (so `Type=forking` with `PIDFile=` works). Windows does not need it.
+- **Doors.** Both, as `--listen --serve`: the IPC door for the local CLI and the IDEs, the HTTP door for browsers and remote machines (`http_host` of the configuration, `localhost` by default: a service on a server sets it).
+- **Stop.** Any of: `eve --serve stop` (or `--listen stop`, `evevm stop`, the method `vm.stop`), `sc stop eve` on Windows, `SIGTERM` or `SIGINT` in the foreground form, `systemctl stop`. The scripts that run are told to stop at their next statement (`vm.cancel`), the doors close, the socket file and the pid file are removed.
+- **One machine.** A second `eve -s` on the same `domain:ipc_port` finds the first and ends with `already running`.
+
+**Install recipes.**
+
+```
+:: Windows (an elevated prompt); the name is the one the Service Control Manager shows
+sc create eve binPath= "C:\eve\bin\eve.exe -s C:\eve\eve.cfg" start= auto DisplayName= "Eve machine"
+sc description eve "The Eve machine: scripts, the IPC door and the HTTP door"
+sc failure eve reset= 86400 actions= restart/5000/restart/30000//
+sc start eve        :: and: sc stop eve, sc delete eve
+```
+
+```
+# Linux: /etc/systemd/system/eve.service (the daemon form)
+[Unit]
+Description=The Eve machine
+After=network.target
+[Service]
+Type=forking
+ExecStart=/opt/eve/bin/eve -s /etc/eve/eve.cfg
+PIDFile=/run/eve-localhost-4042.pid
+Environment=XDG_RUNTIME_DIR=/run
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+# the foreground form instead: Type=simple, Environment=EVE_SERVICE=foreground, no PIDFile
+```
+
+A service has no user: it runs as `LocalSystem` on Windows unless `sc config eve obj= …` says otherwise, and as the user of the unit file on Linux. The machine does not drop privileges itself (question C).
+
+**evedb.** The database server (`evedb/README.md`) will take the same option, `evedb serve -s`, with the same three forms, in version 0.2: the code is `evevm/src/service.zig`, to move into the shared folder `modules/` (question D).
+
+**Tests.** `python script/service_check.py`: start from a console (silent, status 0, both doors), the second start, the stop, the log, the foreground form (silent, pid file, clean stop), `SIGTERM` on POSIX systems, and the Service Control Manager (create, start, query, stop, delete) when the script runs elevated. Unit tests of the option: `cmd/cli.zig`, "options: -s is the service or the configuration file". *State of 2026-10-17:* the console form, the foreground form and the log and pid file are tested on Windows; the Service Control Manager form compiles and is not yet run (the test machine had no administrator rights); the POSIX code compiles for `x86_64-linux-gnu` and is not yet run.
+
+**Questions for the author (service mode).** **(A)** The REPL with a configuration file. Bare `eve -s file.cfg` is now the service. Should the REPL with a file get an option (for example `--repl`, or `-s file.cfg -i`... the letters are taken), or is `setup file.cfg` at the prompt enough? **(B)** The foreground form is selected by the variable `EVE_SERVICE=foreground`, because an option would be new syntax. Keep the variable, or choose an option (`--foreground`)? **(C)** Run as another user, drop privileges, and the Windows Event Log (start, stop, errors) instead of only the file: wanted in version 0.5? **(D)** `evedb serve -s` in 0.2 and `modules/service` as the shared code: agreed? **(E)** Rotation of the log (size or day) and a restart policy of the machine itself (the init system restarts it today): needed now?
 
 ## Questions for the author
 

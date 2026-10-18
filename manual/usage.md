@@ -14,14 +14,13 @@ eve [options] --<command> [args]   run one command and exit, without the REPL
 |---|---|
 | `-h`, `--help` | display the help and exit: page 1 is the quick help (options), then `-- press enter for more --` and page 2 lists the `--<command>` options; both pages start with the title `EVE - Version: <version>`. When the output is piped, both pages are written without waiting |
 | `-v`, `--version` | display the title `EVE - Version: <version>` and exit; the version is written once, in the root `build.zig.zon` |
-| `-s file.cfg` | setup: load the configuration file (the same file the `setup` command loads) |
+| `-e file.cfg`, `--setup file.cfg` | setup: load the configuration file (the same file the `setup` command loads), for a script, a command or a door (D-188) |
+| `-s [file.cfg]` | the **service**, and only that: the machine with no user interface, silent, both doors, log in `<runtime>/eve-<domain>-<ipc_port>.log` (Windows service, Linux daemon; see "The service" below). The file after it is the configuration of the service; with a script, a command or a door `-s` is a usage error (exit 64) |
 | `-m size` | memory for the process |
 | `-d` | debug mode: `halt` statements work (otherwise they are ignored) |
 | `-x` | execute the script now, in this process: same as `--execute` (the script is parsed first, see below). It never looks for a machine (no IPC or HTTP lookup): the fast way to run a script |
-| `-i file.vmc` | load a command file at startup: the machine interprets it from the first line and runs its commands in order (see [Command files](#command-files-vmc)) |
-| `-t seconds` | serve mode only (`-x -i file.vmc` without a script): stop after this long without a command (default 30) |
 
-Every REPL command below is also a command-line option, so a command can run without the interface: `eve --check script.eve`, `eve -d --execute script.eve -s file.cfg`. A bare `eve` or `eve -s file.cfg` starts the REPL with the prompt `eve:> `; `quit` or `exit` (or the end of the input) ends it. At the prompt the **Tab** key completes the last word of the line with file names. A command that takes a file says which kind: `check`, `compile`, `debug` and `execute` complete `.eve` files, `setup` (and any word after `-s`) completes `.cfg` files; other commands do not complete. `check test/level1` followed by Tab shows the first `.eve` file of that folder (sub-folders too, with a trailing `/`), and every further Tab shows the next one; after the last it starts again with the first. Any other key ends the cycle, so you can edit the name. The command name itself is not completed. Editing keys: Backspace, Enter, Ctrl-C (drops the line), Ctrl-D or Ctrl-Z on an empty line (ends the REPL). This works when `eve` runs in a real terminal (Windows Terminal, PowerShell, cmd, Linux, macOS); when the input is a pipe or a file, or in a Git Bash window (mintty, which hides the console from Windows programs), the line is read plainly and Tab is not available (use `winpty eve` there).
+Every REPL command below is also a command-line option, so a command can run without the interface: `eve --check script.eve`, `eve -d --execute script.eve -e file.cfg`. A bare `eve` starts the REPL with the prompt `eve:> ` (with a configuration file: `eve -e file.cfg`; `eve -s file.cfg` is the service); `quit` or `exit` (or the end of the input) ends it. At the prompt the **Tab** key completes the last word of the line with file names. A command that takes a file says which kind: `check`, `compile`, `debug` and `execute` complete `.eve` files, `setup` (and any word after `-e`, `--setup` or `-s`) completes `.cfg` files; other commands do not complete. `check test/level1` followed by Tab shows the first `.eve` file of that folder (sub-folders too, with a trailing `/`), and every further Tab shows the next one; after the last it starts again with the first. Any other key ends the cycle, so you can edit the name. The command name itself is not completed. Editing keys: Backspace, Enter, Ctrl-C (drops the line), Ctrl-D or Ctrl-Z on an empty line (ends the REPL). This works when `eve` runs in a real terminal (Windows Terminal, PowerShell, cmd, Linux, macOS); when the input is a pipe or a file, or in a Git Bash window (mintty, which hides the console from Windows programs), the line is read plainly and Tab is not available (use `winpty eve` there).
 
 `--debug` is the command that runs a script in debug mode; `-d` is the flag that turns debug mode on for any command.
 
@@ -41,21 +40,14 @@ What the interpreter implements is the whole of `test/level1/`: aspects (every p
 
 `eve --project init <folder>` makes a project, or completes an existing one (F-TLS-23, `plan/design-project-layout.md`): the folder, if absent, with `db`, `log`, `meta`, `data/in`, `data/out`, `test`, `asp`, `lib`, `src`, `doc` and `web`, the first driver `<name>.eve`, `eve.cfg`, `meta/project.json` and a `.gitignore`. It never overwrites: a file that exists is kept, so it can run on a project that has work in it and adds only what is missing. Outside a Git repository it also runs `git init`. `eve --project new <folder>` does the same but fails when the folder exists and is not empty. One line per file, `create` or `keep`. Exit status: 0, 64 for a bad command line, 73 when the folder can't be made or, for `new`, is not empty. In the REPL the command is `project init shop`.
 
-## Command files (`.vmc`)
+## Session commands and the workflow
 
-A `.vmc` file (Virtual Machine Command) is a **script for the machine itself**, not for Eve: plain text, one command per line, comments allowed. It is loaded at startup with `-i`:
-
-```
-eve -x -i level1.vmc               ** serve mode: no Eve script, the file is the program
-eve -x script.eve -i control.vmc   ** run an Eve script; the file controls it
-```
-
-**Startup behavior.** `-i` names the file before anything else happens. As soon as the machine is ready it starts interpreting the file: it runs the commands **in order, from the first line**, each one finishing before the next begins (`load` before `parse` before `run`). Without an Eve script (serve mode) the file is the whole program and the machine ends with its `stop`; if the file has no `stop`, the machine keeps waiting for more lines until `-t` seconds (default 30) pass without a command, then it stops by itself with status 75. With an Eve script on the command line, the script runs and the file is read between its statements (see the rules below). The file is a **slot** as well: a batch file, a shell or a Python script can keep appending lines while the machine works, and each new line is run when the machine reaches it. The file may not exist yet when the machine starts (that means "no commands"). The machine remembers how far it has read, so a line is run once. Any program can write it: `echo report >> commands.vmc`, `Add-Content`, a Python `open(..., "a")`. Only the end of the file may change: lines already read are not read again.
+The machine has a few commands of its own, besides running a script. They work at the REPL prompt and, one line per message, through `vm.eval` on a lasting door of the machine (the IPC door or `eve --stdio`, see "The machine" below). The command files of earlier versions (`.vmc`, `eve -i file.vmc`, `-t`, "serve mode") are gone (D-188): a program that wants to drive the machine with a series of commands talks to it over the stdio door, in one process, with no file to poll.
 
 | Command | Effect |
 |---|---|
 | `report` | print the state: `report: pc <line of the last statement>, <n> statements, running` (or `idle`) |
-| `stop`, `quit`, `exit` | stop the machine: leave the running script before its end (the machine prints `<script>: stopped by a command from the slot`) or end serve mode (`serve: stopped`) |
+| `stop`, `quit`, `exit` | stop the machine: leave the running script before its end (the machine prints `<script>: stopped`) |
 | `load <file>` | load a script, forgetting the previous one (reports `<name>: loaded`) |
 | `parse [file]` | parse the loaded script (or load and parse `file`): `<name>: parse ok, <n> nodes`, or `file:line:col: error: text` |
 | `run [file]` | execute the script; a script that was not parsed is parsed first, and a syntax error stops the run. With `capture on` it reports `<name>: run, exit <code>` and keeps the output in a file |
@@ -69,48 +61,17 @@ eve -x script.eve -i control.vmc   ** run an Eve script; the file controls it
 | `log <text>` | add a line of text to `summary.log` (a marker between scripts) |
 | `clear` | forget the current script |
 | `help` | list the commands |
-| anything else | printed as `slot: unknown command: <text>` and ignored |
+| anything else | printed as `unknown command: <text>` and ignored |
 
-Commands are lowercase. The same commands work at the REPL prompt (`load a.eve`, `parse`, `run`, `ast`, ...). `print`, `resume`, `enter` and the other debugger commands of the REPL will join this table when the machine has state to debug. While a script runs only `report`, `stop`, `quit` and `exit` (and comments, blank lines and unknown words) are taken from the slot; any other command waits in the file, in order, until the script ends. A command is never lost and never run in the middle of a script.
-
-**Comments.** The marks are those of Eve itself:
-
-```
-# a line whose first character is # is a comment (leading blanks are allowed)
-report ** from ** to the end of the line is a comment
-** a whole line comment
-                      (a blank line is ignored too)
-```
-
-A line that holds only a comment, or nothing, is ignored. `#` is a comment only at the start of a line (`report # now` is an unknown command), because `**` is Eve's end-of-line comment. Windows line endings (CRLF) are accepted.
-
-**Writing safely.** A line counts only once it ends with a newline, so a program that is half way through a line is never read half way: write the whole line with its newline in one operation. The file is read whole at each look (limit 1 MB); keep it short, or start a new file for a new run. The extension `.vmc` belongs to no operating system program: the file is read only by `eve -i`. At the REPL prompt Tab completes `.vmc` files after `-i`.
+Commands are lowercase. While a script runs, only `report`, `stop`, `quit` and `exit` are taken; another command answers `busy`. A line may end with an Eve comment (`report ** why`); a line that holds only a comment, or nothing, is ignored.
 
 ### Workflow: one machine, many scripts, then the reports
 
-`eve -x -i level1.vmc` (execute with a slot and **no script**) is **serve mode**: the machine does not run a script, it waits for commands and works through the file until `stop` (or until `-t` seconds pass without a command). A command file can therefore drive the whole cycle for any number of files, one at a time:
+`script/workflow.py` runs a whole test level in **one machine**: it starts `eve --stdio`, opens a session (`vm.open`) and sends, for each test, the lines `load <test>`, `parse`, `run`, `errors`, `ast 6`, `inspect`, `status`, each as one `vm.eval`; then `vm.stop`. The reports stay in the folder: `<name>.out` (what the script printed), `.err` (errors), `.ast`, `.inspect`, and `summary.log` for the whole session. The script then compares each `.out` and exit code with `expect.json` and writes `<out>/<level>.report.md`, which quotes the errors and the introspection of every failing test: `python script/workflow.py 1` (reports in `temp/workflow/`). `python script/runtest.py` runs one process per test instead; both must agree.
 
-```
-# level1.vmc
-outdir temp/workflow/level1       ** where the reports go
-capture on                        ** keep the output of each script in a file
-load test/level1/a03_print.eve
-parse                             ** syntax errors are reported here
-run                               ** execute the syntax tree
-errors                            ** report what went wrong
-ast 6                             ** introspection: the tree ...
-inspect                           ** ... and what the script is made of, variables included
-status                            ** the state of the machine; one line in summary.log
-load test/level1/a04_free_script.eve
-...
-stop                              ** the machine ends; the reports stay
-```
+The same is open to any program: start `eve --stdio` (or connect to the IPC door of a running machine), send `{"jsonrpc": "2.0", "id": 1, "method": "vm.open", "params": {"cwd": "…"}}`, then one `vm.eval` per line with the `session` it answered. One process serves the whole series, so a series of commands costs no start of `eve` per command.
 
-After `stop` the machine is gone and the reports can be read: `<name>.out` (what the script printed), `.err` (errors), `.ast`, `.inspect`, and `summary.log` for the whole session. `script/workflow.py` does the whole cycle for a test level: it writes the command file, starts the machine once, waits for it to stop, compares each `.out` and exit code with `expect.json`, and writes `<out>/<level>.report.md` that quotes the errors and the introspection of every failing test: `python script/workflow.py 1` (reports in `temp/workflow/`). `python script/runtest.py` runs one process per test instead; both must agree.
-
-A level 2 test can run a session with the key `"serve"` in `expect.json`: the runner then starts `eve -x -t 5 -i <command file>` (no test uses it now; the old tests v07 to v11 were removed by D-135).
-
-Tests: none since D-135. Code: `evevm/src/vm.zig`.
+Code: `evevm/src/vm.zig` (the session), `evevm/src/channel.zig` (`vm.eval`).
 
 ## Modes
 
@@ -136,10 +97,11 @@ Eve 0.1 only runs one primary aspect at a time (or an exclusive aspect, for test
 The REPL (read, execute, print, loop) has a menu and a command line. It checks, debugs and executes a script. It is meant to work with the `eve` command on Linux, Windows and macOS. A configuration file is given with `-s`, and the memory for the process with `-m`.
 
 ```
-~/eve -s file.cfg
+~/eve
+eve:> setup file.cfg
 eve:> check ~/path/aspect_name.eve
-eve:> debug ~/path/aspect_name.eve -s file.cfg
-eve:> execute ~/path/aspect_name.eve -s file.cfg -m 2048GB
+eve:> debug ~/path/aspect_name.eve -e file.cfg
+eve:> execute ~/path/aspect_name.eve -e file.cfg -m 2048GB
 ```
 
 The command options are not designed yet. The basic commands are (in the code they are the entries of one jump table, `evevm/src/cli.zig`; an entry that is not written yet prints `<name> command, not yet implemented`):
@@ -174,7 +136,9 @@ In debug mode the configuration can be modified and reloaded with `setup`. The R
 
 **One command, no prompt.** `eve <command> [args]` is the same as `eve --<command> [args]`: the command runs once and `eve` ends with its exit status, it does not start the prompt (`eve check a.eve`, `eve status`, `eve stop`, `eve project new sales`). A word that ends in `.eve` is a script and runs as before (`eve a.eve`). Only `eve` alone starts the prompt.
 
-**The machine in its own process: `evevm`.** `evevm` starts the machine with both doors (the same as `eve --listen --serve`) in a **new process** and returns to the prompt of the system at once; the machine goes on without a window. It waits until the IPC door answers and prints where the machine listens and where its log is (`<runtime>/eve-<domain>-<ipc_port>.log`; when the start fails, the last lines of the log are shown). `evevm stop`, `evevm restart` and `evevm status` work on that machine, `-s file.cfg` names another configuration, and a second `evevm` says `already running` (exit status 75). `evevm` is the same file as `eve`, installed under a second name by `zig build`.
+**The service: `eve -s`.** `eve -s [file.cfg]` starts the machine as a **service**: no prompt, nothing on the standard output, both doors open, the log in `<runtime>/eve-<domain>-<ipc_port>.log` and the pid in `<runtime>/eve-<domain>-<ipc_port>.pid`. From a console it starts the machine in a process of its own and ends silent with status 0 (`already running` and status 75 when one runs). Under the Windows Service Control Manager it is the service (`sc create eve binPath= "C:\eve\bin\eve.exe -s C:\eve\eve.cfg" start= auto`, then `sc start eve`). With `EVE_SERVICE=foreground` the process itself is the machine, for a container or a systemd unit of `Type=simple`; on Linux a unit of `Type=forking` with `PIDFile=` works with the plain form. To stop: `eve --serve stop`, `sc stop eve`, `SIGTERM`, `systemctl stop eve`. A word after `-s` that ends in `.cfg` is the configuration of the service; `-s` takes nothing else (a script, a command, `-x` or a door with `-s` is a usage error, exit 64), and a configuration for them is `-e file.cfg` (D-188). Rules: [`spec/library/machine.md`](../spec/library/machine.md), design: `plan/design-service.md` section 17, tests: `script/service_check.py`.
+
+**The machine in its own process: `evevm`.** `evevm` starts the machine with both doors (the same as `eve --listen --serve`) in a **new process** and returns to the prompt of the system at once; the machine goes on without a window. It waits until the IPC door answers and prints where the machine listens and where its log is (`<runtime>/eve-<domain>-<ipc_port>.log`; when the start fails, the last lines of the log are shown). `evevm stop`, `evevm restart` and `evevm status` work on that machine, `-e file.cfg` names another configuration, and a second `evevm` says `already running` (exit status 75). `evevm` is the same file as `eve`, installed under a second name by `zig build`.
 
 **Stop: `stop` and `eve stop`.** `stop` closes the IPC door and the HTTP door **together** and tells every script that runs in the machine to stop at its next statement; the program does **not** exit, so at the prompt you can open the doors again with `listen` or `serve`. When this process has no door open, `stop` stops the machine of another process (the one `evevm` started), and that machine ends. `eve stop` from the system prompt does the same. With nothing to stop it says so (exit status 69).
 

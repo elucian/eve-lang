@@ -40,7 +40,18 @@ pub const Db = struct {
             _ = c.sqlite3_close(handle);
             return error.Open;
         }
-        return .{ .handle = handle };
+        var db: Db = .{ .handle = handle };
+        if (std.mem.eql(u8, path, ":memory:")) db.tuneMemory();
+        return db;
+    }
+
+    // Zig tip: the PRAGMAs of D-184 for a database that lives only in memory and disappears with the process: the rollback journal stays in memory (`off` would make `rollback` unsafe), nothing is
+    // waited for on a disk, temporary tables stay in memory, the page cache is large (a negative
+    // number is kibibytes, and the memory is taken only when pages are used) and one connection owns the database. A failed
+    // PRAGMA is ignored on purpose: it only makes the database a little slower.
+    /// Set the PRAGMAs of the query engine on a `:memory:` database (`open` does it).
+    pub fn tuneMemory(self: *Db) void {
+        _ = self.exec("pragma journal_mode = memory; pragma synchronous = off; pragma temp_store = memory; pragma cache_size = -131072; pragma locking_mode = exclusive;") catch {};
     }
 
     // Zig tip: a method that takes `self: *Db` (a pointer) may change the struct; here it
@@ -135,6 +146,13 @@ pub const Stmt = struct {
     pub fn bindText(self: *Stmt, index: u16, value: []const u8) Error!void {
         const transient: c.sqlite3_destructor_type = @ptrCast(@alignCast(@as(?*anyopaque, @ptrFromInt(std.math.maxInt(usize)))));
         if (c.sqlite3_bind_text(self.handle, index, value.ptr, @intCast(value.len), transient) != c.SQLITE_OK) return error.Step;
+    }
+
+    // Zig tip: after `step` has returned false (or an error) a statement must be reset before it runs again; the bindings
+    // stay, and the next `bind*` calls replace them. A loop that inserts many rows binds, steps and resets once per row.
+    /// Make the statement ready to run again.
+    pub fn reset(self: *Stmt) Error!void {
+        if (c.sqlite3_reset(self.handle) != c.SQLITE_OK) return error.Step;
     }
 
     /// The number of columns of the result.
@@ -363,4 +381,17 @@ test "sqlite: a function written in Zig is called from SQL, and its error stops 
     defer bad.finalize();
     try std.testing.expectError(error.Step, bad.step());
     try std.testing.expectEqualStrings("NULL is refused", db.errorMessage());
+}
+
+test "a :memory: database is tuned" {
+    var db = try Db.open(":memory:");
+    defer db.close();
+    var st = try db.prepare("pragma synchronous");
+    defer st.finalize();
+    try std.testing.expect(try st.step());
+    try std.testing.expectEqual(@as(i64, 0), st.columnInt(0));
+    var st2 = try db.prepare("pragma temp_store");
+    defer st2.finalize();
+    try std.testing.expect(try st2.step());
+    try std.testing.expectEqual(@as(i64, 2), st2.columnInt(0));
 }

@@ -43,14 +43,10 @@ pub const Context = struct {
     gpa: std.mem.Allocator,
     /// `-d`: `halt` statements stop the script; otherwise they are ignored.
     debug: bool = false,
-    /// `-s file.cfg` (the same file `setup` loads)
+    /// `-e file.cfg` or `--setup file.cfg` (the same file `setup` loads), or the file after `-s`
     config: ?[]const u8 = null,
     /// `-m size`
     memory: ?[]const u8 = null,
-    /// `-i file`: the slot, a file where other programs append commands while the VM runs.
-    slot: ?[]const u8 = null,
-    /// `-t seconds`: how long serve mode waits without a command before it stops.
-    idle_ms: u64 = 30_000,
     /// The VM session, created by the first command that needs it.
     machine: ?*vm.Session = null,
     /// Set by `quit` and `exit`: the REPL ends.

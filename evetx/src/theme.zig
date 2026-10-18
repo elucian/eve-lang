@@ -157,6 +157,13 @@ pub fn onBold(fg: Color, bg: Color) Style {
 // Zig tip: the brightness of a color is a weighted sum of its three bytes (green counts most, as the eye sees it); a theme is
 // light when the background of the editor is brighter than the middle. A color that is not `.rgb` counts as dark.
 /// Is the theme in use a light one? (Dialogs then get a shadow, so they stand out like a raised card.)
+// Zig tip: the colour of the border of the panel that has the keyboard. The palette blue of the light theme is a dark indigo
+// that hardly shows against the green background, so a light theme gets a clear blue of its own; the others keep their blue.
+/// The colour of the border of the active panel.
+pub fn accent() Color {
+    return if (isLight()) fromHex(0x0064ff) else blue;
+}
+
 pub fn isLight() bool {
     return switch (deep) {
         .rgb => |c| (@as(u32, c[0]) * 299 + @as(u32, c[1]) * 587 + @as(u32, c[2]) * 114) / 1000 > 140,

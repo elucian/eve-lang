@@ -1,0 +1,29 @@
+# Data files. Records in a Table, written as CSV and as JSON Lines, read back typed; Decimal keeps its scale.
+** spec: semantics/data-types.md#the-formats-in-detail
+primary aspect s19_data is
+  class Item = {id: Integer, name: String, note: String?, price: Decimal} <: Record;
+
+  process main is
+    new rows := Table(:Item)();
+    new a := {id: 1, name: "Ann", note: null, price: 12.50d} :Item;
+    new b := {id: 2, name: "Smith, Bob", note: "", price: 3d} :Item;
+    let rows <+ a;
+    let rows <+ b;
+    csv.write("out/items.csv", rows);
+    json.write("out/items.jsonl", rows);
+    new total := 0.00d;
+    for i in csv.read!(:Item)("out/items.csv") do
+      let total += i.price;
+      print "csv {i.id} {i.name} [{i.note}]";
+    done;
+    for i in json.read!(:Item)("out/items.jsonl") do
+      print "json {i.id} {i.price}";
+    done;
+    print total;
+  return;
+end s19_data;
+/*@expect
+{
+  "stdout": ["csv 1 Ann [null]", "csv 2 Smith, Bob []", "json 1 12.50", "json 2 3", "15.50"]
+}
+*/

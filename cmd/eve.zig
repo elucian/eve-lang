@@ -100,6 +100,7 @@ pub fn main(init: std.process.Init) !void {
             error.MissingValue => std.debug.print("eve: option {s} needs a value\n", .{bad}),
             error.UnknownOption => std.debug.print("eve: unknown option {s}\n", .{bad}),
             error.BadWord => std.debug.print("eve: {s}: expected start, stop, restart or status after --listen or --serve\n", .{bad}),
+            error.ServiceAlone => std.debug.print("eve: -s starts the service and takes only a configuration file; to load a configuration for a script or a command use -e file.cfg\n", .{}),
             error.OutOfMemory => return err,
         }
         std.debug.print("Try 'eve --help'.\n", .{});
@@ -135,8 +136,6 @@ pub fn main(init: std.process.Init) !void {
         .debug = opts.debug,
         .config = opts.config,
         .memory = opts.memory,
-        .slot = opts.slot,
-        .idle_ms = if (opts.idle) |t| (std.fmt.parseInt(u64, t, 10) catch 30) * 1000 else 30_000,
     };
 
     // Zig tip: the runtime directory for the IPC sockets comes from the environment, once, before any thread starts.
@@ -157,6 +156,21 @@ pub fn main(init: std.process.Init) !void {
     // Zig tip: at a terminal `eve --serve` opens the doors in threads and the prompt comes back (`embed`), so the same
     // window can send commands to its own machine; with a pipe, a file or a service manager nobody types, and the
     // start waits for the doors as before. `machine.embedded` tells that the doors are open in this process.
+    // `-s`: the service (D-185). Nothing is printed on success; a failure goes to the error output. With EVE_SERVICE=foreground
+    // this process is the machine itself (a container, systemd `Type=simple`); otherwise it starts one in a process of its own.
+    if (opts.service) {
+        var errbuf: [512]u8 = undefined;
+        var errw: Io.File.Writer = .initStreaming(.stderr(), init.io, &errbuf);
+        const stay = std.mem.eql(u8, init.environ_map.get("EVE_SERVICE") orelse "", "foreground");
+        // `eve -s -db --serve evedb.cfg`: the service is evedb, the database server (D-186)
+        const db_serve = opts.command != null and std.mem.eql(u8, opts.command.?.name, "db") and opts.args.len >= 1 and std.mem.eql(u8, opts.args[0], "serve");
+        const code = if (db_serve) blk: {
+            const cfg_path = if (opts.args.len >= 2) opts.args[1] else "evedb.cfg";
+            break :blk try evevm.service.runEvedb(init.io, arena, cfg_path, stay, &errw.interface);
+        } else try evevm.service.run(init.io, arena, opts.config, stay, &errw.interface);
+        try errw.interface.flush();
+        std.process.exit(code);
+    }
     if (opts.tx) std.process.exit(try startTx(init.io, arena, stdout, opts.tx_args));
     if (opts.kill) std.process.exit(try killOthers(init.io, arena, stdout));
     // `-ux`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system

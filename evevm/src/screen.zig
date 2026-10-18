@@ -212,7 +212,7 @@ pub fn writeTable(w: *Io.Writer, style: Style, rows: []const Row, width: usize) 
 /// The hint under the table.
 fn writeHint(w: *Io.Writer, style: Style, width: usize) Io.Writer.Error!void {
     if (style.fancy) try w.writeAll(dim);
-    try writeWrapped(w, "help <command> (or <command> ?) shows the syntax and the options of one command. ? or help shows this table. Tab completes file names. quit leaves.", width, 0, 0);
+    try writeWrapped(w, "help <command> (or <command> ?) shows the syntax and the options of one command. ? or help shows this table. Right (at the end of the line) completes file names. quit leaves.", width, 0, 0);
     if (style.fancy) try w.writeAll(reset);
 }
 

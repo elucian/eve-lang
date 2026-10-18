@@ -1,4 +1,4 @@
-# a closure keeps the state of the function that made it; every apply makes new closures (D-101, D-109)
+37# a closure keeps the state of the function that made it; every apply makes new closures (D-101, D-109)
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b19_closure is
   process main is

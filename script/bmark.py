@@ -11,8 +11,10 @@ shows the median and the best time of each benchmark and the change against the 
   --check   exit 1 when a benchmark is more than 25% slower than the last saved run
 Every run also reports the size of eve.exe (bytes) and its change against the last saved run of the same build; --save records it in history.json and in the size table of the README.
 Times depend on the machine: compare runs made on the same machine. Notes per version: test/bmark/README.md.
+Level 6 needs the database server: when a p6 benchmark is selected, bmark starts evedb (evedb.exe beside eve.exe) with
+test/bmark/evedb.cfg, in test/bmark/, and stops it at the end; the Python twins of level 6 need psycopg2.
 """
-import argparse, glob, json, os, re, statistics, subprocess, sys, time, datetime, platform
+import argparse, contextlib, glob, json, os, re, statistics, subprocess, sys, time, datetime, platform
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 PERF = os.path.join(ROOT, 'test', 'bmark')
@@ -69,12 +71,39 @@ def run_once(eve, path):
     return ms, Done(p.returncode, out, err, peak_memory(p))
 
 
+EVEDB_NATIVE = 55462  # control_port of test/bmark/evedb.cfg
+
+
+@contextlib.contextmanager
+def evedb_server(eve, needed):
+    """Run evedb (beside eve) with test/bmark/evedb.cfg while the level 6 benchmarks and their twins run."""
+    if not needed:
+        yield
+        return
+    exe = os.path.join(os.path.dirname(eve), 'evedb.exe' if os.name == 'nt' else 'evedb')
+    if not os.path.exists(exe):
+        sys.exit('level 6 needs %s: build it in evedb/ with zig build -p ..' % exe)
+    srv = subprocess.Popen([exe, 'serve', '--config', 'evedb.cfg'], cwd=PERF, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    for _ in range(2):  # evedb prints one ready line per port
+        line = srv.stdout.readline()
+        if not line:
+            sys.exit('evedb did not start (is a port of test/bmark/evedb.cfg taken?)')
+    try:
+        yield
+    finally:
+        subprocess.run([exe, 'stop', '--connect', '127.0.0.1:%d' % EVEDB_NATIVE], capture_output=True)
+        try:
+            srv.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            srv.kill()
+
+
 README = os.path.join(PERF, 'README.md')
 PLANNED = {2: 'import of a module, `apply` of an aspect, a call through an extension method',
            3: 'read and parse a CSV and a JSON file, decimal arithmetic, optional values',
            4: 'a parallel group of aspects, a channel with 100,000 messages, a stream',
            5: 'insert and select 10,000 rows in the Eve database',
-           6: '1,000 requests to a local `service` script',
+           6: 'evedb: column batches, bulk load, records over PostgreSQL, OLAP group-by',
            7: 'render an HTML template 1,000 times'}
 
 
@@ -169,6 +198,8 @@ def main():
     same = [h for h in hist if h.get('build', 'Debug') == a.build]
     last = same[-1]['results'] if same else {}
     results, bad = {}, []
+    server = evedb_server(a.eve, any(os.path.basename(f).startswith('p6') for f in files))
+    server.__enter__()
     for f in files:
         name = os.path.basename(f)[:-4]
         want = expected(f)
@@ -192,6 +223,7 @@ def main():
     print('size of eve.exe: %s bytes (%.0f KB)%s' % (format(exe_bytes, ','), exe_bytes / 1024,
           (', %+.1f%% against the last saved run' % ((exe_bytes - old_exe) / old_exe * 100)) if old_exe else ', no earlier size saved'))
     refs = {n: run_reference(n, a.runs) for n in results}
+    server.__exit__(None, None, None)
     print('%-22s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
     slow = []
     for name, r in results.items():

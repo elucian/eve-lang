@@ -220,6 +220,8 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     if (interp.data_api) |d| {
         if (d.is_table(it.host(), recv)) return d.table_call(it.host(), recv.object, name, args);
         if (d.is_connection(it.host(), recv)) return d.connection_call(it.host(), recv.object, name, args);
+        if (d.is_memory(it.host(), recv)) return d.memory_call(it.host(), recv.object, name, args);
+        if (d.is_column(it.host(), recv)) return d.column_call(it.host(), recv.object, name, args);
     }
     if (recv == .chan) return it.channelMethod(recv.chan, name, args);
     if ((eql(u8, name, "batch") or eql(u8, name, "split")) and recv == .list and args.len == 1) {
@@ -432,6 +434,8 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
 // Zig tip: `construct` relies on the same Zig feature as `define` above: see the tip there.
 /// `new Class(args)`.
 pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) Signal!Value {
+    // a class derived from `Memory` is a columnar table (D-184)
+    if (cls.node != null) if (interp.data_api) |d| if (try d.memory_new(it.host(), cls)) |v| return v;
     const obj = try it.newObject();
     if (cls.node == null) return .{ .object = obj };
     const args = try it.evalArgs(arg_nodes);

@@ -7,7 +7,12 @@ const Host = evecm.iface.Host;
 const sqlite = @import("sqlite.zig");
 const orm = @import("orm.zig");
 const conn = @import("conn.zig");
+const pgclient = @import("pgclient.zig");
+const ewpdriver = @import("ewpdriver.zig");
+const columnar = @import("columnar.zig");
 
+// Zig tip: a `struct` groups fields; a field with a default value (`= …`) may be left out when a value is made with `.{ …
+// }`.
 pub const State = struct {
     /// The databases the script opened, by the handle number kept in its `Connection` objects, and whether a
     /// transaction of a job is open on each (database.md#transactions).
@@ -19,6 +24,19 @@ pub const State = struct {
     table_class: ?*value.Class = null,
     conn_names: std.StringHashMapUnmanaged(usize) = .empty,
     conn_class: ?*value.Class = null,
+    /// The PostgreSQL connections of the program (`postgres://` in `eve.cfg`, README.md of evedb section 5B), by the handle
+    /// number of their objects, their names, and the class of their objects.
+    pgs: std.ArrayList(*pgclient.Client) = .empty,
+    pg_names: std.StringHashMapUnmanaged(usize) = .empty,
+    pg_class: ?*value.Class = null,
+    /// The connections of evedb's native protocol (`evedb://`, README.md of evedb section 5.5), their names and their class.
+    evs: std.ArrayList(*ewpdriver.Ev) = .empty,
+    ev_names: std.StringHashMapUnmanaged(usize) = .empty,
+    ev_class: ?*value.Class = null,
+    /// The `Memory` tables of the program (columnar, D-184) by the handle number kept in their objects, and the class of their
+    /// column objects.
+    mems: std.ArrayList(*columnar.Table) = .empty,
+    column_class: ?*value.Class = null,
     /// The `sql function`s of the program, registered on every SQLite connection (D-166); the interpreter that runs
     /// the statement now (a `sql function` runs there); and why the last call of one failed: the message of
     /// `$err_sql`, or a signal such as `Panic` that must go on once the statement has stopped.

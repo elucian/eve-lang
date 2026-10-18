@@ -27,10 +27,12 @@ pub const quick_help =
     \\  -tx [folder]      start the terminal IDE, evetx, on a project folder (also: eve tx)
     \\  --kill            stop all the other eve programs of this bin/ folder (eve, evetx, evedb); the build runs it (also: eve kill)
     \\  -d                debug mode: halt statements stop the script (ignored otherwise)
-    \\  -s <file.cfg>     setup: load the configuration file
+    \\  -s [file.cfg]     the service: start the machine silent, no prompt, in a process of its own (a Windows service
+    \\                    under the Service Control Manager, a daemon on Linux); the log is <runtime>/eve-<domain>-<ipc_port>.log.
+    \\                    -s takes nothing else; a configuration for a script, a command or a door is -e file.cfg.
+    \\                    -s -db --serve evedb.cfg: evedb, the database server (PostgreSQL protocol), as a service
+    \\  -e <file.cfg>     setup: load the configuration file (also --setup <file.cfg>)
     \\  -m <size>         memory for the process
-    \\  -i <file>         slot: cli.commands (report, stop) that other programs append to the file
-    \\  -t <seconds>      slot without a script: stop after this long without a command
     \\  -v, --version     display the version and exit
     \\  -h, --help        display this help and exit
     \\

@@ -1,0 +1,19 @@
+# level 6 performance: a query of evedb (DuckDB) read as column batches into a Memory table (D-187)
+** perf: 1,000,000 rows made by DuckDB, read through evedb:// into a Memory table of four columns, then one sum
+primary aspect p6a_evedb_store is
+  class Big = {id: Integer, region: String, amount: Real, paid: Logic} <: Memory;
+
+  process main is
+    new wh := database.connect("wh");
+    wh.execute!("create or replace table big as select i::bigint as id, case when i % 4 = 0 then 'north' when i % 4 = 1 then 'south' when i % 4 = 2 then 'east' else 'west' end as region, i * 1.5 as amount, i % 2 = 1 as paid from range(1000000) t(i)");
+    new b := Big();
+    print b.store(wh, "select id, region, amount, paid from big");
+    print b.id.sum();
+    wh.close();
+  return;
+end p6a_evedb_store;
+/*@expect
+{
+  "stdout": ["1000000", "499999500000"]
+}
+*/

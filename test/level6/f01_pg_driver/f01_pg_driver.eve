@@ -1,0 +1,41 @@
+# the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (evedb/README.md 5A, 5B)
+** spec: library/database.md#drivers-and-the-server
+** The runner starts `eve db serve evedb.cfg` (evedb in the foreground); the client (check/run.py) runs this script with the
+** VM of the test, prints its output, and stops evedb.
+primary aspect f01_pg_driver is
+  class Item = {id: Integer, name: String, price: Decimal?, ok: Logic} <: Record;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.execute!("drop table if exists items");
+    shop.execute!("create table items (id bigint primary key, name varchar not null, price decimal(10,2), ok boolean not null)");
+    print shop.execute!("insert into items values (?, ?, ?, ?), (?, ?, ?, ?)", 1, "bolt's", 2.50d, True, 2, "nut", null, False);
+    for i in shop.query!(:Item)("select id, name, price, ok from items order by id") do
+      print "{i.id} {i.name} {i.price} {i.ok}";
+    done;
+    print shop.query_one!(:Item)("select * from items where name = ?", "nut").id;
+    add: job
+    do
+      shop.execute!("insert into items values (3, 'gone', 1, true)");
+      rollback;
+    done add;
+    print jobs["add"].status;
+    print shop.execute!("delete from items where id = 3");
+    shop.close();
+  return;
+end f01_pg_driver;
+/*@expect
+{
+  "command": ["db", "serve", "evedb.cfg"],
+  "timeout": 60,
+  "client": ["python", "check/run.py"],
+  "stdout": [
+    "2",
+    "1 bolt's 2.50 True",
+    "2 nut null False",
+    "2",
+    "rolled back",
+    "0"
+  ]
+}
+*/

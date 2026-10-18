@@ -1,0 +1,58 @@
+# Memory: a class derived from Memory is a columnar table; a column is named by its field; load and store move data
+# between it and SQLite, always on request (D-184)
+** spec: library/data-engines.md
+primary aspect e111_memory_table is
+  class Sales = {id: Integer, region: String, price: Real, paid: Logic, note: String?} <: Memory;
+
+  process main is
+    new s := Sales();
+    s.add(1, "north", 2.5, True, null);
+    s.add(2, "south", 10.0, False, "late");
+    s.add(3, "north", 7.25, True, null);
+    s.add(4, "east", 1, True, "x");
+    print s.count();
+    print s.price.sum();
+    print s.id.sum();
+    print s.price.min();
+    print s.price.max();
+    print s.note.count();
+    print s.region.at(1);
+    print s.note.at(0);
+    new big := s.take(s.price.filter(">", 2.0));
+    print big.count();
+    print big.id.sum();
+    print s.region.filter("=", "north");
+    print s.paid.filter("=", False);
+
+    ** the explicit move into SQLite and back
+    new shop := database.connect("shop");
+    shop.execute!("drop table if exists sales");
+    print s.load(shop, "sales");
+    new back := Sales();
+    print back.store(shop, "select id, region, price, paid, note from sales where price > ?", 2.0);
+    print back.price.sum();
+    print back.note.at(0);
+  return;
+end e111_memory_table;
+/*@expect
+{
+  "stdout": [
+    "4",
+    "20.75",
+    "10",
+    "1",
+    "10",
+    "2",
+    "south",
+    "null",
+    "3",
+    "6",
+    "(0,2)",
+    "(1)",
+    "4",
+    "3",
+    "19.75",
+    "null"
+  ]
+}
+*/

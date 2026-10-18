@@ -1,0 +1,26 @@
+# import: a method of the connection that loads a file (CSV, TXT, JSON or DBF) as a new table (D-184)
+** spec: library/data-engines.md
+primary aspect e110_connection_import is
+  class Item = {id: Integer, name: String, price: Decimal?, day: String} <: Record;
+
+  process main is
+    new shop := database.connect("shop");
+    shop.execute!("drop table if exists items");
+    print shop.import("data/items.csv", "items");
+    for i in shop.query!(:Item)("select id, name, price, day from items order by id") do
+      print "{i.id} {i.name} {i.day}";
+    done;
+    print shop.query_one!(:Item)("select id, name, price, day from items where id = 3").price;
+  return;
+end e110_connection_import;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "1 Smith, J 2026-10-01",
+    "2 Ann 2026-10-02",
+    "3 Bob 2026-10-03",
+    "7"
+  ]
+}
+*/

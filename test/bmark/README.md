@@ -41,7 +41,10 @@ A Debug build (`zig build -p ..`) and a ReleaseSafe build (`zig build -Doptimize
 | **Level 5** | | | | |
 | `p5a_sql_function.eve` | 91 ms | 112 ms | 0.8x | 20,000 rows made in SQL, then a query that calls a sql function on each row, three times (60,000 calls) |
 | **Level 6** | | | | |
-| planned | | | | 1,000 requests to a local `service` script |
+| `p6a_evedb_store.eve` | not measured | - | - | 1,000,000 rows made by DuckDB, read through evedb:// into a Memory table of four columns, then one sum |
+| `p6b_evedb_load.eve` | not measured | - | - | 200,000 rows read into a Memory table, then loaded into a new evedb table as column batches, and counted |
+| `p6c_pg_records.eve` | not measured | - | - | 100,000 rows read from evedb as records through postgres://, and a loop that adds one field of each |
+| `p6d_olap_groupby.eve` | not measured | - | - | 1,000,000 rows in evedb, then ten group-by queries over all of them (sum and count by region) |
 | **Level 7** | | | | |
 | planned | | | | render an HTML template 1,000 times |
 <!-- bench:end -->

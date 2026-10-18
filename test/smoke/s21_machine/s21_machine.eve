@@ -1,0 +1,27 @@
+# The machine. A listening machine runs a script sent with -loc, the stdio door runs session commands, --listen stop ends it.
+** spec: library/machine.md
+** The runner starts `eve --listen` here; check/client.py talks to it and to `eve --stdio`, then stops it.
+primary aspect s21_machine is
+  process main is
+    new n := 0;
+    for k in (1..10) do
+      let n += k;
+    done;
+    print "sum {n}";
+  return;
+end s21_machine;
+/*@expect
+{
+  "command": ["--listen"],
+  "timeout": 30,
+  "client": ["python", "check/client.py"],
+  "stdout": [
+    "ok the machine answers",
+    "ok -loc runs the script on the machine: sum 55",
+    "ok the stdio door: pong",
+    "ok vm.eval runs session commands: sum 55",
+    "ok --listen stop ends with 0",
+    "machine: all checks passed"
+  ]
+}
+*/

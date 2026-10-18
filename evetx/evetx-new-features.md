@@ -1,0 +1,17 @@
+1. File selection, folder selection will be shown in status bar when I press enter in the tree, but I must press ctrl+enter or double click to open the folder in main pannel.
+2. When tables are listed form a database, If I press enter in the pannel the table is selected and display into status bar but I must press ctrl+enter or double click to open the table data.
+3. The scroll bar do now work with mouse on main pannel and is wrong sized. It must start in first line of the file not second.
+4. The toolbar must change when file type change. For MD files it will change to allow edit, bold, italic, title, link insert, table insert (dialog for rows and columns). For eve the current run/debug tools will show. For folder is selected the toolbar will show tools appropriate to folders, when database is selected the toolbar show tools appropriate for database (New Table, Alter Table), When table is selected (New Record, Delete Record, e.t.c)
+5. When main pannel is closed, toolbar pannel will be surrounded and contained in a new border. THe border dissapear when the main pannel is activated again.
+6. The background color for selected rows must be discrete not the same as the active cell.
+7. Delete/ recall row becomes just Delete, It works as recall on DBF but is a hidden feature.  
+8. Add option Compact that will compact the data file (dbf) or perform similar action on table files (optimize), if available on selected database.
+9. Combine SQL pannel and EVE pannel. We support SQL in evevm machine, so we do not need a SQL pannel. When SQL is issued and the result is a table (data) in evetx, the result is display SQL Resunt, and can be saved as table with a tool button or Save ass...
+10. Use "tab" to switch pannels and Shift+Tab will switch the active pannel on main pannel or current tool pannel if tool pannel is active. 
+11. During run, If I select a tool pannel, it will not change during run. I may want to watch the output or the watch window.
+12. When I issue commands that are available in Eve, and current Eve process is the one bound to command issued, echo the command first before execution (for users to learn the commands).
+13. Edit structure menu option must be "Alter table" instead.
+14. Move Replace to search, split search in two parts Find ..., Replace..., negt group Find in files, Replace in files ..., Next group Got to #, Query SQL. When Query SQL is selected a dialog appears where a large text area allow me to type query against the current table. If no table is selected this option is disabled. Find and replace are available only in text files that are editable.
+15. Create option file/locate that open a file search dialog where I can type a text, under it there is a filter result that show instant the matches to my search. Support * and ? that will allow me to locate files. I then click one of the match files and press ok to select or cancel.
+16. Add a line separator under the tool pannels to be similar to the main pannel.
+17. At the base low below the tree, draw a discrete line and unde ti create a "local" to show local machine is connected. I can click it an a popup menu Directed Upwords will show me a new option "connect", if I have connected some remote machine, it will appear in this list. So I can change the eve machine, connect to another machine and work remote if machine is connected. For now this is left to do, we do not yet connect machines. Next level 7 will do it.

@@ -1,0 +1,31 @@
+# Tasks. async procedures spawned in a job, an async function awaited, a job that waits for all of them.
+** spec: semantics/multitasking.md#tasks-in-a-job
+primary aspect s17_tasks is
+  async procedure square(n: Integer, @r: Integer) is
+    wait 5ms;
+    let r := n * n;
+  return;
+
+  async function double(n: Integer) => (@result: Integer) is
+    wait 1ms;
+    let result := n * 2;
+  return;
+
+  process main is
+    new a, b, c :Integer;
+    work: job
+    do
+      spawn square(3, @a);
+      spawn square(4, @b);
+      let c := await double(5);
+    done work;
+    expect a + b == 25;
+    print "{a} {b} {c}";
+    print jobs["work"].status;
+  return;
+end s17_tasks;
+/*@expect
+{
+  "stdout": ["9 16 10", "pass"]
+}
+*/

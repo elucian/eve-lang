@@ -428,6 +428,10 @@ pub fn evalLine(io: Io, sess: *Sess, a: std.mem.Allocator, line: []const u8, w: 
     if (eql(u8, cmd, "cd")) return changeDir(io, sess, a, rest, w);
     var known = false;
     for (vm.Session.command_names) |c| known = known or eql(u8, c, cmd);
+    // a word that is not a command of Eve but a command of the shell (md, dir, ls, rm ...) goes to the shell, as if typed there
+    if (!known) {
+        if (shellLine(a, t)) |sh| return runShell(io, a, sh, sess.cwd, w);
+    }
     if (!known) {
         w.print("eve: unknown command: {s} (help lists the commands)\n", .{cmd}) catch {};
         return 64;
@@ -441,8 +445,42 @@ pub fn evalLine(io: Io, sess: *Sess, a: std.mem.Allocator, line: []const u8, w: 
     sess.s.out = w;
     defer sess.s.out = &discard.writer;
     sess.s.handleLine(text) catch {};
-    if (eql(u8, cmd, "help")) w.writeAll("  cd <folder>\n  shell <command>   (or !<command>)\n") catch {};
+    if (eql(u8, cmd, "help")) w.writeAll("  cd <folder>\n  shell <command>   (or !<command>)\n  md, dir, ls, cp, mv, rm ...  commands of the shell run as they are\n") catch {};
     return sess.s.status;
+}
+
+// Zig tip: the shell of the machine is `cmd.exe` or a Unix shell, and each calls the same job by another name (`md` and
+// `mkdir`, `dir` and `ls`). A table of pairs turns the name that was typed into the one the shell knows, so `md x` works in
+// both. A plain array of structs, searched with a loop; `null` means the word is not a shell command.
+const ShellPair = struct { unix: []const u8, win: []const u8 };
+const shell_pairs = [_]ShellPair{
+    .{ .unix = "ls", .win = "dir" },
+    .{ .unix = "cp", .win = "copy" },
+    .{ .unix = "mv", .win = "move" },
+    .{ .unix = "rm", .win = "del" },
+    .{ .unix = "cat", .win = "type" },
+    .{ .unix = "mkdir", .win = "md" },
+    .{ .unix = "rmdir", .win = "rd" },
+    .{ .unix = "pwd", .win = "cd" },
+    .{ .unix = "mv", .win = "ren" },
+    .{ .unix = "mv", .win = "rename" },
+    .{ .unix = "echo", .win = "echo" },
+};
+
+/// The line to give to the shell when its first word is a command of the shell (in the spelling of this shell), else null.
+pub fn shellLine(a: std.mem.Allocator, t: []const u8) ?[]const u8 {
+    var it = std.mem.tokenizeAny(u8, t, " \t");
+    const word = it.next() orelse return null;
+    const rest = std.mem.trim(u8, t[word.len..], " \t");
+    const windows_cmd = std.ascii.eqlIgnoreCase(std.fs.path.stem(shell_path), "cmd");
+    for (shell_pairs) |p| {
+        const is_unix = std.ascii.eqlIgnoreCase(word, p.unix);
+        const is_win = std.ascii.eqlIgnoreCase(word, p.win);
+        if (!is_unix and !is_win) continue;
+        const name = if (windows_cmd) p.win else p.unix;
+        return std.fmt.allocPrint(a, "{s} {s}", .{ name, rest }) catch null;
+    }
+    return null;
 }
 
 // Zig tip: opening a folder is the test that it exists; `dir.close(io)` gives it back at once. A relative folder starts
@@ -453,13 +491,18 @@ fn changeDir(io: Io, sess: *Sess, a: std.mem.Allocator, arg: []const u8, w: *Io.
         w.print("folder: {s}\n", .{if (sess.cwd.len == 0) "(the folder of the machine)" else sess.cwd}) catch {};
         return 0;
     }
-    const target = if (std.fs.path.isAbsolute(arg) or sess.cwd.len == 0) arg else std.fmt.allocPrint(a, "{s}/{s}", .{ sess.cwd, arg }) catch return 1;
+    // `cd /d <folder>` of the Windows shell: the switch is not part of the name
+    const named = if (arg.len > 3 and std.ascii.eqlIgnoreCase(arg[0..3], "/d ")) std.mem.trim(u8, arg[3..], " \t\"") else std.mem.trim(u8, arg, "\"");
+    const target = if (std.fs.path.isAbsolute(named) or sess.cwd.len == 0) named else std.fmt.allocPrint(a, "{s}/{s}", .{ sess.cwd, named }) catch return 1;
     var dir = Io.Dir.cwd().openDir(io, target, .{}) catch |err| {
         w.print("cd: {s}: {s}\n", .{ target, @errorName(err) }) catch {};
         return 1;
     };
+    // the folder is written the way the system spells it (`..` and `.` are resolved), as `cd` of a shell does
+    var real_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const real_len = dir.realPath(io, &real_buf) catch 0;
     dir.close(io);
-    const copy = long_gpa.dupe(u8, target) catch return 1;
+    const copy = long_gpa.dupe(u8, if (real_len > 0) real_buf[0..real_len] else target) catch return 1;
     long_gpa.free(sess.cwd);
     sess.cwd = copy;
     w.print("folder: {s}\n", .{copy}) catch {};
@@ -542,10 +585,12 @@ test "a session answers its commands, cd and unknown words" {
     try std.testing.expect(std.mem.indexOf(u8, w.buffered(), "unknown command: frob") != null);
     w = .fixed(&buf);
     try std.testing.expectEqual(@as(u8, 0), evalLine(io, sess, a, "cd .", &w));
-    try std.testing.expectEqualStrings(".", sess.cwd);
+    // `cd` writes the folder as the system spells it, not as it was typed
+    try std.testing.expect(sess.cwd.len > 1 and !std.mem.eql(u8, sess.cwd, "."));
+    const here = try a.dupe(u8, sess.cwd);
     w = .fixed(&buf);
     try std.testing.expectEqual(@as(u8, 1), evalLine(io, sess, a, "cd no-such-folder-here", &w));
-    try std.testing.expectEqualStrings(".", sess.cwd);
+    try std.testing.expectEqualStrings(here, sess.cwd);
     w = .fixed(&buf);
     _ = evalLine(io, sess, a, "help", &w);
     try std.testing.expect(std.mem.indexOf(u8, w.buffered(), "shell <command>") != null);

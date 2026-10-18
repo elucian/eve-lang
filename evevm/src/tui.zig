@@ -31,7 +31,7 @@ const dim = "\x1b[2m";
 const bar_style = "\x1b[48;5;236m\x1b[97m";
 
 /// A key that is not a plain character.
-const Key = enum { up, down, page_up, page_down, home, end, other };
+const Key = enum { up, down, page_up, page_down, home, end, right, other };
 
 /// What a re-drawable block of the upper part shows; `arg` is the number of the command for `help_command`.
 pub const BlockKind = enum { help_table, help_command };
@@ -160,12 +160,15 @@ pub const Tui = struct {
         }
     }
 
-    /// Give the screen back to the terminal as it was.
+    // Zig tip: the escape codes are plain text in a string: the first byte (code 27) is Esc, and `[2J` clears the screen, `[3J` its
+    // scrollback, `[H` puts the cursor at the top left. A terminal does the work; the program only writes the bytes.
+    /// Give the screen back to the terminal, cleared.
     pub fn leave(t: *Tui) void {
         t.closing.store(true, .release);
         t.lock.lockUncancelable(t.io);
         defer t.lock.unlock(t.io);
-        t.raw.writeAll("\x1b[0m\x1b[?1007l\x1b[?1049l\x1b[?25h") catch {};
+        // the shell screen is cleared and the cursor goes to the top, so the prompt does not creep down at every exit
+        t.raw.writeAll("\x1b[0m\x1b[?1007l\x1b[?1049l\x1b[?25h\x1b[2J\x1b[3J\x1b[H") catch {};
         t.raw.flush() catch {};
     }
 
@@ -611,7 +614,7 @@ pub const Tui = struct {
             .page_down => t.scrollBy(false, t.height() -| 1),
             .home => t.scrollTo(true),
             .end => t.scrollTo(false),
-            .other => {},
+            .right, .other => {},
         }
     }
 
@@ -668,6 +671,7 @@ pub const Tui = struct {
                 'B' => .down,
                 'H' => .home,
                 'F' => .end,
+                'C' => .right,
                 '~' => switch (param) {
                     5 => .page_up,
                     6 => .page_down,
@@ -680,7 +684,7 @@ pub const Tui = struct {
         } else |_| return .other;
     }
 
-    /// Read one command line: editing, Tab for file names, Page Up/Down and the arrows
+    /// Read one command line: editing, Right for file names, Page Up/Down and the arrows
     /// to scroll the upper part. Null at the end of the input (Ctrl-D on an empty line).
     pub fn readLine(
         t: *Tui,
@@ -697,7 +701,20 @@ pub const Tui = struct {
                 error.EndOfStream => return if (len == 0) null else buf[0..len],
                 else => return e,
             };
-            if (b == '\t') {
+            // Tab is not the completion key; Right at the end of the line completes (the line is edited at its end only)
+            if (b == '\t') continue;
+            var complete = false;
+            var key: Key = .other;
+            if (b == 27) {
+                key = readKey(in);
+                complete = key == .right;
+                if (!complete) {
+                    comp.stop();
+                    t.press(key);
+                    continue;
+                }
+            }
+            if (complete) {
                 const ext = extOf(buf[0..len]) orelse "";
                 const found = if (ext.len > 0) try comp.tab(t.io, buf[0..len], ext) else null;
                 if (found) |word| {
@@ -726,7 +743,6 @@ pub const Tui = struct {
                     while (len > 0 and buf[len] & 0xC0 == 0x80) len -= 1; // drop a whole UTF-8 character
                     t.showInput(buf[0..len]);
                 },
-                27 => t.press(readKey(in)),
                 32...126, 128...255 => if (len < buf.len) {
                     buf[len] = b;
                     len += 1;

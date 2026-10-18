@@ -9,7 +9,8 @@ const Key = vaxis.Key;
 
 const project = @import("project.zig");
 const text = @import("text.zig");
-const dbf = @import("dbf.zig");
+const grid = @import("grid.zig");
+const regex = @import("regex.zig");
 const sqlstruct = @import("sqlstruct.zig");
 const cache_mod = @import("cache.zig");
 const options_mod = @import("options.zig");
@@ -37,7 +38,7 @@ pub const Panel = enum { tree, main, tools };
 // Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
 // together.
 /// What is open over the screen, if anything.
-pub const Overlay = enum { none, properties, alert, new_table, sq_structure, new_file, wizard, append_n, structure, confirm, tab_menu, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder };
+pub const Overlay = enum { none, properties, alert, sq_structure, new_file, wizard, append_n, confirm, tab_menu, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder, filter };
 
 // Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
 // instead of `continue` because `continue` is a keyword of Zig.
@@ -48,7 +49,7 @@ pub const Button = enum { run, halt, next, step, exit, trace, replace, replace_a
 // `switch (a) { .tree_row => |i| ... }` reads its payload. A field without a payload
 // (`menu_title`) has type `void`.
 /// The buttons of the dialogs that are not a plain "close": `ok` does what Enter does in that dialog.
-pub const DlgAction = enum { ok, forget, browse, open_here };
+pub const DlgAction = enum { ok, forget, browse, open_here, filter_add, filter_remove };
 
 // Zig tip: two small enums with one value per button; the click carries the value and `activate` switches on it.
 /// The buttons of the Info dialog that are not Close.
@@ -57,7 +58,7 @@ pub const PropBtn = enum { rename, move };
 // Zig tip: the folder selector is one dialog with four uses. The use is an enum stored in the app (`fb_mode`): the
 // drawing reads it for the title, the button and the name field, and `fbOk` reads it to know what the main button does.
 /// Why the folder selector is open: Open Folder (a project), Move (a file of the Info dialog), Export or Import a theme.
-pub const FbMode = enum { project, move_to, theme_export, theme_import };
+pub const FbMode = enum { project, move_to, move_many, save_as, theme_export, theme_import };
 
 /// What a click on a clickable place does (see `Hit`).
 pub const Action = union(enum) {
@@ -76,13 +77,9 @@ pub const Action = union(enum) {
     break_trash: usize,
     /// The tool Clear of the Tools Panel.
     clear_panel,
-    /// The arrows of the scroll bars of a DBF table.
+    /// The arrows of the scroll bars of a table.
     table_scroll: ScrollBtn,
     /// A cell of the structure grid, the buttons under it, a type of the drop-down list, and the arrow of the Type cell.
-    st_cell: struct { row: u16, col: u8 },
-    st_btn: StBtn,
-    st_pick: u8,
-    st_drop_open,
     /// A row of the list of a folder, and the arrows of its scroll bar.
     folder_row: usize,
     folder_scroll: ScrollBtn,
@@ -92,6 +89,12 @@ pub const Action = union(enum) {
     sq_cell: struct { row: u16, col: u8 },
     sq_btn: StBtn,
     sq_pick: u8,
+    /// The page of the dialog of a new table (0 name, 1 fields, 2 indexes) and the parts of the index page.
+    sq_ix_field: u16,
+    sq_ix_row: u16,
+    sq_ix_unique,
+    sq_ix_add,
+    sq_ix_remove,
     sq_drop_open,
     /// The `<` and `>` buttons of the tab row of the Main Panel: show the tabs one place further left (-1) or right (+1).
     tab_shift: i8,
@@ -118,6 +121,11 @@ pub const Action = union(enum) {
     dlg: DlgAction,
     proj_row: usize,
     fb_row: usize,
+    /// A row of the filter dialog, and the column name of a row (a click changes the column).
+    filter_row: usize,
+    filter_col: usize,
+    /// A field of the list of Add field.
+    filter_pick: usize,
 };
 
 // Zig tip: a struct with methods is how Zig does what other languages call a class. `contains` is
@@ -212,18 +220,62 @@ pub const Props = struct {
     is_view: bool = false,
 };
 
-/// A DBF table opened in a tab: the table, the cell that is selected, and the first row and column shown.
-/// The width of the column of record numbers of a DBF grid.
-pub const dbf_rownum_w: u16 = 8;
+/// A table opened in a tab: the table, the cell that is selected, and the first row and column shown.
+// Zig tip: a plain function can compute a size from a number: the digits of the biggest record number (at least four, so
+// 9999 always fits). The cells of the left part are one for the selection mark (`+` or blank), the digits, and the `│`.
+/// The number of digits of the record numbers of a grid of `records` rows.
+pub fn rownumDigits(records: usize) u16 {
+    var n: u16 = 4;
+    var v = records / 10000;
+    while (v > 0) : (v /= 10) n += 1;
+    return n;
+}
+
+/// The width of the left part of a grid: the selection column, the record numbers and the separator.
+pub fn rownumW(records: usize) u16 {
+    return 1 + rownumDigits(records) + 1;
+}
 
 pub const TableView = struct {
-    t: dbf.Table,
+    t: grid.Table,
     row: usize = 0,
     col: usize = 0,
     top: usize = 0,
     left: usize = 0,
-    /// A table read from a SQLite database (a result of SQL): it is shown, not edited.
+    /// A table that cannot be changed here: a view of a SQLite database, or a table the rows of which cannot be told apart.
     readonly: bool = false,
+    /// The rows selected with `+`, `*` and Ctrl+click.
+    sel: std.AutoArrayHashMapUnmanaged(usize, void) = .empty,
+    /// A SQLite table: the real names of the columns and the `rowid` of each record.
+    colnames: [][]u8 = &.{},
+    rowids: []i64 = &.{},
+    /// A filter window: the table it was made from, the filters (a column and a pattern each), and the records that matched
+    /// (their numbers in that table, and their rowids when it is a SQLite table).
+    filter_src: []u8 = &.{},
+    filter_rows: []FilterRow = &.{},
+    kept: []usize = &.{},
+    kept_ids: []i64 = &.{},
+
+    // Zig tip: a table owns more than its cells, so one `release` frees all of it; the empty defaults (`&.{}`) are
+    // never freed because their length is zero.
+    /// Free what the view holds besides the table itself.
+    pub fn freeExtras(self: *TableView) void {
+        const g = self.t.gpa;
+        self.sel.deinit(g);
+        for (self.colnames) |n| g.free(n);
+        if (self.colnames.len > 0) g.free(self.colnames);
+        if (self.rowids.len > 0) g.free(self.rowids);
+        if (self.filter_src.len > 0) g.free(self.filter_src);
+        for (self.filter_rows) |r| g.free(r.pat);
+        if (self.filter_rows.len > 0) g.free(self.filter_rows);
+        if (self.kept.len > 0) g.free(self.kept);
+        if (self.kept_ids.len > 0) g.free(self.kept_ids);
+    }
+
+    pub fn release(self: *TableView) void {
+        self.freeExtras();
+        self.t.deinit();
+    }
 };
 
 /// One line of the list of a folder.
@@ -270,7 +322,6 @@ pub fn describeName(name: []const u8, is_dir: bool) []const u8 {
 }
 
 /// A field in the structure dialog, and the place of the field it comes from in the file (null for a new one).
-pub const StField = struct { f: dbf.Field, src: ?usize = null };
 
 pub const Tab = struct {
     /// Relative to the project folder; empty for a new file that was never saved.
@@ -281,7 +332,7 @@ pub const Tab = struct {
     eve: bool = false,
     /// An SQL file (`.sql`): the editor colors it as SQL.
     sql: bool = false,
-    /// A DBF table (`.dbf`): the Main Panel shows its records in a grid.
+    /// A table of a database: the Main Panel shows its records in a grid.
     table: ?*TableView = null,
     /// A folder shown as a list (a click on a folder of the tree): there is only one such tab, and it follows the clicks.
     folder: ?*FolderView = null,
@@ -289,6 +340,9 @@ pub const Tab = struct {
     label: []u8 = &.{},
     /// A window that is not a file (Shortcuts, Manual, Tutorial): read only, never saved.
     virtual: bool = false,
+    /// The window is in editing mode: Enter starts it, Esc and Save stop it. A text file cannot be typed in, and a table cannot
+    /// have its cells changed, until then.
+    editing: bool = false,
 
     // Zig tip: `self: Tab` takes a copy of the struct. The result is a slice into `self.path`, not a
     // new string, so it costs nothing. `if (cut) |i| a else b` unwraps the optional from
@@ -304,7 +358,13 @@ pub const Tab = struct {
 // Zig tip: `path` is owned (`[]u8`): every breakpoint has its own copy, freed when the breakpoint
 // goes.
 /// What a Yes of the confirmation dialog does.
-pub const Confirm = enum { none, delete_breakpoint, clear_breakpoints, apply_structure, move_files, apply_sqlite, drop_table, delete_file };
+/// One row of the filter dialog: a column of the table and the value or pattern its cells must match.
+pub const FilterRow = struct { col: usize, pat: []u8 };
+
+/// What the New dialog makes.
+pub const NewKind = enum { file, folder, database, table_copy, import_data };
+
+pub const Confirm = enum { none, delete_breakpoint, clear_breakpoints, move_files, apply_sqlite, drop_table, delete_file, replace_file, delete_rows };
 
 /// A breakpoint of the editor. A breakpoint that is not enabled stays in the list but the debugger does not stop at it.
 pub const Breakpoint = struct { path: []u8, line: usize, enabled: bool = true };
@@ -320,6 +380,24 @@ pub const Breakpoint = struct { path: []u8, line: usize, enabled: bool = true };
 pub const WizKind = enum { eve, sql };
 
 pub const StBtn = enum { prev, next, add, remove, up, down, apply };
+
+// Zig tip: an index of the new table is kept as plain text in fixed arrays (`[N]u8` plus a length), so the list needs no
+// allocation and no freeing: the struct is copied by value. `[48]u8 = undefined` is a buffer whose bytes are not set yet.
+/// An index that the dialog of a new table will create: its name, its fields (a list separated by commas) and unique or not.
+pub const IndexDef = struct {
+    name: [112]u8 = undefined,
+    name_len: u8 = 0,
+    cols: [160]u8 = undefined,
+    cols_len: u8 = 0,
+    unique: bool = false,
+
+    pub fn nameS(self: *const IndexDef) []const u8 {
+        return self.name[0..self.name_len];
+    }
+    pub fn colsS(self: *const IndexDef) []const u8 {
+        return self.cols[0..self.cols_len];
+    }
+};
 
 // Zig tip: `export` and `import` are not keywords of Zig, but names that say what they do in full (`export_file`) read
 // better in a `switch` and cannot be mistaken for the `export` keyword of declarations.
@@ -367,7 +445,7 @@ pub const tab_menu_rows = [_]TabMenuRow{
 
 /// Every command of the main menu.
 pub const MenuCmd = enum {
-    open_project, open_folder, new_file, new_dbf, rename_file, delete_file, create_table, drop_table, data_structure, data_append, data_append_n, data_delete, data_edit, save, save_as, close_tab, quit,
+    close_window, close_project, filter_table, new_folder, new_database, find_files, replace_files, compact, open_project, open_folder, new_file, import_data, rename_file, delete_file, move_marked, select_all, select_row, unselect_row, unselect_all, create_table, drop_table, data_structure, data_append, data_append_n, data_delete, data_edit, save, save_all, next_panel, save_as, close_tab, quit,
     undo, redo, replace, toggle_wrap, toggle_hidden, close_all, close_clean,
     find_text, find_file, goto_line, query,
     run, check_file, clear_panel, dbg_next, dbg_step, dbg_exit, dbg_trace, stop, breakpoint,
@@ -398,16 +476,29 @@ pub const menu_window: usize = 4;
 /// The menus of the bar, left to right. The last one (HELP) is drawn at the right side.
 pub const menus = [_]Menu{
     .{ .label = "FILE", .items = &.{
+        .{ .label = "New file…", .key = "Ctrl+N", .cmd = .new_file },
+        .{ .label = "New folder…", .cmd = .new_folder },
+        .{ .label = "New database…", .cmd = .new_database },
+        sep,
         .{ .label = "Open project…", .key = "Ctrl+O", .cmd = .open_project },
         .{ .label = "Open Folder…", .key = "Ctrl+Shift+O", .cmd = .open_folder },
-        .{ .label = "New…", .key = "Ctrl+N", .cmd = .new_file },
+        .{ .label = "Locate file…", .key = "Ctrl+P", .cmd = .find_file },
         sep,
         .{ .label = "Save", .key = "Ctrl+S", .cmd = .save },
         .{ .label = "Save As…", .key = "Ctrl+Shift+S", .cmd = .save_as },
+        .{ .label = "Save All", .key = "Ctrl+A", .cmd = .save_all },
+        sep,
+        .{ .label = "Select all", .key = "*", .cmd = .select_all },
+        .{ .label = "Select", .key = "+", .cmd = .select_row },
+        .{ .label = "Unselect", .key = "-", .cmd = .unselect_row },
+        .{ .label = "Unselect all", .key = "/", .cmd = .unselect_all },
+        sep,
         .{ .label = "Rename…", .cmd = .rename_file },
         .{ .label = "Delete…", .cmd = .delete_file },
+        .{ .label = "Move…", .cmd = .move_marked },
         sep,
-        .{ .label = "Close window", .key = "Ctrl+W", .cmd = .close_tab },
+        .{ .label = "Close", .cmd = .close_tab },
+        .{ .label = "Close project", .cmd = .close_project },
         sep,
         .{ .label = "Quit", .key = "Ctrl+Q", .cmd = .quit },
     } },
@@ -415,25 +506,30 @@ pub const menus = [_]Menu{
         .{ .label = "Undo", .key = "Ctrl+U", .cmd = .undo },
         .{ .label = "Redo", .key = "Ctrl+Y", .cmd = .redo },
         sep,
-        .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
-        sep,
         .{ .label = "Wrap text", .cmd = .toggle_wrap },
         .{ .label = "Show hidden", .cmd = .toggle_hidden },
         sep,
-        .{ .label = "Edit structure…", .cmd = .data_structure },
+        .{ .label = "Alter table…", .cmd = .data_structure },
         .{ .label = "Create table…", .cmd = .create_table },
         .{ .label = "Drop table…", .cmd = .drop_table },
+        .{ .label = "Compact", .cmd = .compact },
+        .{ .label = "Import…", .cmd = .import_data },
         sep,
         .{ .label = "Append row", .key = "Ins", .cmd = .data_append },
-        .{ .label = "Append rows…", .cmd = .data_append_n },
-        .{ .label = "Edit cell", .key = "Enter", .cmd = .data_edit },
-        .{ .label = "Delete / recall row", .key = "Del", .cmd = .data_delete },
+        .{ .label = "Append rows…", .key = "Ctrl+Ins", .cmd = .data_append_n },
+        .{ .label = "Start Editing", .key = "Enter", .cmd = .data_edit },
+        .{ .label = "Delete", .key = "Del", .cmd = .data_delete },
     } },
     .{ .label = "SEARCH", .items = &.{
-        .{ .label = "Find Text…", .key = "Ctrl+F", .cmd = .find_text },
-        .{ .label = "Find File…", .key = "Ctrl+P", .cmd = .find_file },
-        .{ .label = "GoTo…", .key = "Ctrl+G", .cmd = .goto_line },
-        .{ .label = "Query…", .key = "F7", .cmd = .query },
+        .{ .label = "Find…", .key = "Ctrl+F", .cmd = .find_text },
+        .{ .label = "Replace…", .key = "Ctrl+H", .cmd = .replace },
+        sep,
+        .{ .label = "Find in files…", .cmd = .find_files },
+        .{ .label = "Replace in files…", .cmd = .replace_files },
+        sep,
+        .{ .label = "Go to #…", .key = "Ctrl+G", .cmd = .goto_line },
+        .{ .label = "Filter…", .cmd = .filter_table },
+        .{ .label = "Query SQL…", .key = "F7", .cmd = .query },
     } },
     .{ .label = "RUN", .items = &.{
         .{ .label = "Run", .key = "F5", .cmd = .run },
@@ -448,25 +544,27 @@ pub const menus = [_]Menu{
         .{ .label = "Breakpoint", .key = "F9", .cmd = .breakpoint },
     } },
     .{ .label = "WINDOW", .items = &.{
-        .{ .label = "Select", .key = "Ctrl+Tab", .cmd = .select_window },
-        .{ .label = "Close", .key = "Ctrl+W", .cmd = .close_tab },
+        .{ .label = "Next Window", .key = "Shift+Tab", .cmd = .select_window },
+        .{ .label = "Next Panel", .key = "Tab", .cmd = .next_panel },
+        sep,
+        .{ .label = "Close Window", .key = "Ctrl+W", .cmd = .close_window },
         .{ .label = "Close All", .cmd = .close_all },
         .{ .label = "Close Clean", .cmd = .close_clean },
         sep,
         .{ .label = "Layout modify", .key = "Ctrl+L", .cmd = .modify },
         .{ .label = "Layout freeze", .key = "Ctrl+Z", .cmd = .freeze },
         sep,
-        .{ .label = "Tree Panel", .cmd = .toggle_tree },
-        .{ .label = "Main Panel", .cmd = .toggle_main },
-        .{ .label = "Tools Panel", .cmd = .toggle_tools },
+        .{ .label = "Tree Panel", .key = "Alt+T", .cmd = .toggle_tree },
+        .{ .label = "Main Panel", .key = "Alt+M", .cmd = .toggle_main },
+        .{ .label = "Tools Panel", .key = "Alt+O", .cmd = .toggle_tools },
     } },
     .{ .label = "HELP", .items = &.{
-        .{ .label = "Shortcuts", .key = "Ctrl+/", .cmd = .shortcuts },
+        .{ .label = "Shortcuts", .key = "F12", .cmd = .shortcuts },
         .{ .label = "Manual", .cmd = .manual },
         .{ .label = "Tutorial", .cmd = .tutorial },
         .{ .label = "About", .cmd = .about },
         sep,
-        .{ .label = "Options…", .key = "Ctrl+,", .cmd = .options },
+        .{ .label = "Options…", .key = "F2", .cmd = .options },
     } },
 };
 
@@ -685,7 +783,10 @@ pub const RunJob = struct {
 };
 
 /// What the mouse is dragging: a border between panels, or a scroll bar thumb.
-pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select, tree_v, tree_h, tbl_v, tbl_h };
+pub const Drag = enum { none, tree_split, tools_split, vbar, hbar, select, tree_v, tree_h, tbl_v, tbl_h, panel_v };
+
+/// Which panel owns the scroll bar saved in `App.pbar_rect`.
+pub const PbarKind = enum { none, log, folder, breaks, fbox };
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
@@ -822,20 +923,9 @@ pub const App = struct {
     break_top: usize = 0,
     /// The structure dialog (SQL:> alter table <name>): the file, the fields being edited and as they were, the records
     /// in the file, the selected cell, the cell being edited, the type list, and the last complaint.
-    st_path: ?[]u8 = null,
-    st_fields: std.ArrayList(StField) = .empty,
-    st_orig: std.ArrayList(StField) = .empty,
-    st_records: u32 = 0,
-    st_row: usize = 0,
-    st_col: u8 = 0,
-    st_edit: TextInput,
-    st_editing: bool = false,
-    st_drop: bool = false,
-    st_drop_sel: usize = 0,
-    st_error: ?[]const u8 = null,
     /// The command waiting in the prompt belongs to the SQL panel (not the Console).
     pending_sql: bool = false,
-    /// Where the grid of a DBF table is drawn, for the mouse.
+    /// Where the grid of a table is drawn, for the mouse.
     tbl_rect: Rect = .{},
     /// The widths of the columns of the table shown, as the last drawing made them (in the frame arena; the clicks read them).
     tbl_widths: []const u16 = &.{},
@@ -844,8 +934,12 @@ pub const App = struct {
     tblh_rect: Rect = .{},
     tbl_rows: usize = 0,
     tbl_cols: usize = 0,
-    /// The cell of a DBF table that is being edited, and its text.
+    /// The cell of a table that is being edited, and its text.
     tbl_editing: bool = false,
+    /// The last click on a cell of a table (a second click on the same cell within 400 ms starts the editing).
+    tbl_click_ms: i64 = 0,
+    tbl_click_row: usize = 0,
+    tbl_click_col: usize = 0,
     /// The structure dialog of a SQLite table: the file and the table, the columns being edited and as they were, the
     /// selected cell, the cell being edited, the type list, and the last complaint.
     sq_db: ?[]u8 = null,
@@ -861,10 +955,21 @@ pub const App = struct {
     sq_error: ?[]const u8 = null,
     /// The structure dialog makes a new table (not the rebuild of an old one).
     sq_new: bool = false,
-    /// The table that the confirmation dialog will drop: a DBF file (its path) or a table of a SQLite file (file and name).
+    /// The dialog of a new table has three pages: 0 name and description, 1 the fields, 2 the indexes.
+    sq_page: u8 = 0,
+    sq_name_in: TextInput,
+    sq_desc_in: TextInput,
+    sq_idx: std.ArrayList(IndexDef) = .empty,
+    /// The index page: the field under the cursor, the fields ticked (a bit for each, the first 64), unique, the index selected
+    /// in the list, and which of the two lists has the keys (0 the fields of the new index, 1 the indexes made).
+    sq_ix_cur: usize = 0,
+    sq_ix_mask: u64 = 0,
+    sq_ix_uniq: bool = false,
+    sq_ix_sel: usize = 0,
+    sq_ix_focus: u8 = 0,
+    /// The table that the confirmation dialog will drop: a table of a SQLite file (file and name).
     drop_a: ?[]u8 = null,
     drop_b: ?[]u8 = null,
-    drop_is_dbf: bool = false,
     /// The Properties dialog: the file it shows (a path in the project, or `db#table` for a table of a SQLite file; owned)
     /// and its facts.
     rename_from: ?[]u8 = null,
@@ -898,6 +1003,8 @@ pub const App = struct {
     /// The wizard of a new file: which one, the path of the file, the choice made in its list and the name field.
     wiz_kind: WizKind = .eve,
     wiz_path: ?[]u8 = null,
+    /// The file that Save As is about to replace (a path in the project), while the question is open.
+    save_rel: ?[]u8 = null,
     wiz_choice: usize = 0,
     wiz_name: TextInput,
     /// Width of the Tree Panel and height of the Tools Panel in cells; 0 means "automatic".
@@ -925,6 +1032,18 @@ pub const App = struct {
     tree_left: usize = 0,
     tree_content: usize = 0,
     tvbar_rect: Rect = .{},
+    /// The scroll bar of the panel that shows a log, a folder or the breakpoints, with what it scrolls (for the mouse).
+    pbar_rect: Rect = .{},
+    pbar_kind: PbarKind = .none,
+    pbar_total: usize = 0,
+    pbar_visible: usize = 0,
+    /// A press on a row of the tree: did it land on the icon, and the row and time of the click before it (double click).
+    tdrag_icon: bool = false,
+    /// A press on a row of a folder tab (it may become a drag to the tree), and whether the row was already selected.
+    fdrag: ?usize = null,
+    fdrag_was_sel: bool = false,
+    last_click_row: ?u32 = null,
+    last_click_ms: i64 = 0,
     /// The tree must show the selected row (after a key, a search or a click); a scroll bar or the wheel turns it off, so
     /// the view can go where the person pulls it.
     tree_follow: bool = true,
@@ -951,6 +1070,20 @@ pub const App = struct {
     console_in: TextInput,
     goto_in: TextInput,
     saveas_in: TextInput,
+    new_kind: NewKind = .file,
+    /// The filter dialog: the rows (a column and a pattern), the one selected, its pattern being typed, and the table.
+    flt_rows: std.ArrayList(FilterRow) = .empty,
+    flt_sel: usize = 0,
+    flt_in: TextInput,
+    flt_src: ?[]u8 = null,
+    /// The filter window that the dialog is changing (Alter filter): the new rows replace its rows.
+    flt_replace: ?[]u8 = null,
+    /// Alter table on a view: the name of the view that the dialog remakes.
+    flt_view: ?[]u8 = null,
+    /// The list of the fields that are not in the filter is open (Add field), and the one chosen in it.
+    flt_pick: bool = false,
+    flt_pick_sel: usize = 0,
+    flt_count: u32 = 0,
     project_in: TextInput,
 
     /// The projects the user knows (File > Open project), kept in a file of the user data folder.
@@ -1022,11 +1155,13 @@ pub const App = struct {
             .console_in = TextInput.init(gpa),
             .goto_in = TextInput.init(gpa),
             .saveas_in = TextInput.init(gpa),
+            .flt_in = TextInput.init(gpa),
             .project_in = TextInput.init(gpa),
             .sql_in = TextInput.init(gpa),
-            .st_edit = TextInput.init(gpa),
             .tbl_edit = TextInput.init(gpa),
             .sq_edit = TextInput.init(gpa),
+            .sq_name_in = TextInput.init(gpa),
+            .sq_desc_in = TextInput.init(gpa),
             .wiz_name = TextInput.init(gpa),
             .opt_in = TextInput.init(gpa),
             .fb_name = TextInput.init(gpa),
@@ -1066,7 +1201,7 @@ pub const App = struct {
         for (self.tabs.items) |*t| {
             if (t.buf) |*b| b.deinit();
             if (t.table) |tv| {
-                tv.t.deinit();
+                tv.release();
                 gpa.destroy(tv);
             }
             if (t.folder) |fv| self.freeFolder(fv);
@@ -1077,8 +1212,8 @@ pub const App = struct {
         self.tree.deinit();
         self.visible.deinit(gpa);
         self.watch_log.deinit(gpa);
-        if (self.st_path) |p| gpa.free(p);
         if (self.wiz_path) |p| gpa.free(p);
+        if (self.save_rel) |p| gpa.free(p);
         if (self.sq_db) |p| gpa.free(p);
         if (self.drop_a) |p| gpa.free(p);
         if (self.rename_from) |p| gpa.free(p);
@@ -1092,15 +1227,19 @@ pub const App = struct {
         for (self.move_srcs.items) |p| gpa.free(p);
         self.move_srcs.deinit(gpa);
         if (self.move_dest) |p| gpa.free(p);
-        self.st_fields.deinit(gpa);
-        self.st_orig.deinit(gpa);
         if (self.confirm_msg) |c| gpa.free(c);
         if (self.shell_exe.len > 0) gpa.free(self.shell_exe);
         if (self.link) |l| l.destroy();
         self.link_pending.deinit(gpa);
         self.sql_log.deinit(gpa);
         if (self.sql_db) |d| gpa.free(d);
-        for ([_]*TextInput{ &self.sq_edit, &self.tbl_edit, &self.wiz_name, &self.opt_in, &self.fb_name, &self.st_edit, &self.sql_in, &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in, &self.project_in }) |ti| ti.deinit();
+        for ([_]*TextInput{ &self.sq_edit, &self.sq_name_in, &self.sq_desc_in, &self.tbl_edit, &self.wiz_name, &self.opt_in, &self.fb_name, &self.sql_in, &self.files_in, &self.find_in, &self.replace_in, &self.console_in, &self.goto_in, &self.saveas_in, &self.project_in, &self.flt_in }) |ti| ti.deinit();
+        self.sq_idx.deinit(gpa);
+        for (self.flt_rows.items) |r| gpa.free(r.pat);
+        self.flt_rows.deinit(gpa);
+        if (self.flt_src) |sp| gpa.free(sp);
+        if (self.flt_replace) |sp| gpa.free(sp);
+        if (self.flt_view) |sp| gpa.free(sp);
         self.console.deinit(gpa);
         self.stdout_log.deinit(gpa);
         self.stderr_log.deinit(gpa);
@@ -1260,19 +1399,8 @@ pub const App = struct {
 
         const size: u64 = if (Io.Dir.cwd().statFile(self.io, full, .{})) |st| st.size else |_| 0;
         if (std.ascii.eqlIgnoreCase(extensionOf(rel), "dbf")) {
-            // a DBF table is read whole and shown as a grid
-            if (Io.Dir.cwd().readFileAlloc(self.io, full, self.gpa, .limited(256 << 20))) |bytes| {
-                if (dbf.Table.load(self.gpa, bytes)) |table| {
-                    const tv = try self.gpa.create(TableView);
-                    tv.* = .{ .t = table };
-                    tab.table = tv;
-                } else |err| {
-                    self.gpa.free(bytes);
-                    tab.card = .{ .kind = "DBF file", .size = size, .note = @errorName(err) };
-                }
-            } else |err| {
-                tab.card = .{ .kind = "DBF file", .size = size, .note = @errorName(err) };
-            }
+            // a DBF file is a legacy format: it is not shown, it is imported into a database (D-184)
+            tab.card = .{ .kind = "DBF file", .size = size, .note = "A legacy file. Select a database and use EDIT > Import… to read it." };
         } else if (cardLabel(rel)) |label| {
             tab.card = .{ .kind = label, .size = size, .note = if (std.ascii.eqlIgnoreCase(extensionOf(rel), "db") or std.ascii.eqlIgnoreCase(extensionOf(rel), "duckdb") or std.ascii.eqlIgnoreCase(extensionOf(rel), "sqlite")) "The list of tables comes with step T7 (README.md §8)." else "No preview in evetx. The rendered file is shown by eveux (eve -ux)." };
         } else if (Io.Dir.cwd().readFileAlloc(self.io, full, self.gpa, .limited(8 << 20))) |bytes| {
@@ -1289,8 +1417,9 @@ pub const App = struct {
         } else |err| {
             tab.card = .{ .kind = "file", .size = size, .note = @errorName(err) };
         }
-        try self.tabs.append(self.gpa, tab);
-        self.active = self.tabs.items.len - 1;
+        try self.tabs.insert(self.gpa, 0, tab);
+        self.active = 0;
+        self.tab_first = 0;
         self.focus = if (tab.buf != null or tab.table != null) .editor else .tree;
         self.saveSession() catch {};
     }
@@ -1303,7 +1432,7 @@ pub const App = struct {
         var t = self.tabs.orderedRemove(index);
         if (t.buf) |*b| b.deinit();
         if (t.table) |tv| {
-            tv.t.deinit();
+            tv.release();
             self.gpa.destroy(tv);
         }
         if (t.folder) |fv| self.freeFolder(fv);
@@ -1319,8 +1448,9 @@ pub const App = struct {
     pub fn newFile(self: *App) !void {
         var b = try text.Buffer.init(self.gpa);
         errdefer b.deinit();
-        try self.tabs.append(self.gpa, .{ .path = try self.gpa.dupe(u8, ""), .buf = b, .eve = true });
-        self.active = self.tabs.items.len - 1;
+        try self.tabs.insert(self.gpa, 0, .{ .path = try self.gpa.dupe(u8, ""), .buf = b, .eve = true, .editing = true });
+        self.active = 0;
+        self.tab_first = 0;
         self.focus = .editor;
     }
 
@@ -1328,6 +1458,12 @@ pub const App = struct {
     // and it ends the function. Errors from `writeTab` go up through `try`.
     pub fn save(self: *App) !void {
         const t = self.activeTab() orelse return;
+        // saving ends the editing of the window
+        defer t.editing = false;
+        if (t.table != null) {
+            self.setMessage("a table of a database is saved at once, with each change", .{});
+            return;
+        }
         if (t.buf == null) return;
         if (t.virtual) {
             self.setMessage("{s} is a read-only window", .{t.path});
@@ -1356,7 +1492,10 @@ pub const App = struct {
     // Zig tip: After `free` the old slice must not be used. The code stores the new one in `t.path` at
     // once, so the tab is never left pointing at freed memory.
     pub fn saveAs(self: *App, rel: []const u8) !void {
-        if (rel.len > 0 and std.ascii.eqlIgnoreCase(extensionOf(rel), "dbf")) return self.createDbf(rel);
+        if (rel.len > 0 and std.ascii.eqlIgnoreCase(extensionOf(rel), "dbf")) {
+            self.setMessage("DBF files are not made here: import them into a database (EDIT > Import)", .{});
+            return;
+        }
         const t = self.activeTab() orelse return;
         if (t.buf == null or rel.len == 0) return;
         if (t.virtual) {
@@ -1364,6 +1503,7 @@ pub const App = struct {
             return;
         }
         try self.writeTab(t, rel);
+        t.editing = false;
         if (!std.mem.eql(u8, t.path, rel)) {
             self.gpa.free(t.path);
             t.path = try self.gpa.dupe(u8, rel);
@@ -1421,7 +1561,7 @@ pub const App = struct {
         self.gpa.free(fv.dir);
     }
 
-    /// A folder was clicked in the tree: the Main Panel shows its content (in the one tab that holds a folder).
+    /// A folder was clicked in the tree: the Main Panel shows its content (a tab for each folder).
     pub fn showFolder(self: *App, dir_rel: []const u8) !void {
         const gpa = self.gpa;
         const fv = try self.loadFolder(dir_rel);
@@ -1429,20 +1569,21 @@ pub const App = struct {
         const shown: []const u8 = if (dir_rel.len == 0) (if (self.project_name.len > 0) self.project_name else "project") else std.fs.path.basename(dir_rel);
         const label = try gpa.dupe(u8, shown);
         errdefer gpa.free(label);
+        // a folder that is already open in a tab is shown again there (refreshed); another folder gets a new tab
         for (self.tabs.items, 0..) |*t, i| {
             if (t.folder) |old| {
+                if (!std.mem.eql(u8, t.path, dir_rel)) continue;
                 self.freeFolder(old);
                 t.folder = fv;
                 if (t.label.len > 0) gpa.free(t.label);
                 t.label = label;
-                gpa.free(t.path);
-                t.path = try gpa.dupe(u8, dir_rel);
                 self.active = i;
                 return;
             }
         }
-        try self.tabs.append(gpa, .{ .path = try gpa.dupe(u8, dir_rel), .folder = fv, .label = label });
-        self.active = self.tabs.items.len - 1;
+        try self.tabs.insert(gpa, 0, .{ .path = try gpa.dupe(u8, dir_rel), .folder = fv, .label = label });
+        self.active = 0;
+        self.tab_first = 0;
     }
 
     /// The path in the project of an item of a folder list.
@@ -1469,8 +1610,9 @@ pub const App = struct {
 
     fn folderListKey(self: *App, fv: *FolderView, key: Key) !void {
         const n = fv.items.items.len;
+        if (try self.markKey(key)) return;
         if (n == 0) return;
-        if (key.matches(Key.up, .{})) fv.sel = fv.sel -| 1 else if (key.matches(Key.down, .{})) fv.sel = @min(fv.sel + 1, n - 1) else if (key.matches(Key.page_up, .{})) fv.sel = fv.sel -| 10 else if (key.matches(Key.page_down, .{})) fv.sel = @min(fv.sel + 10, n - 1) else if (key.matches(Key.home, .{})) fv.sel = 0 else if (key.matches(Key.end, .{})) fv.sel = n - 1 else if (key.matches(Key.enter, .{})) try self.openFolderItem(fv, fv.sel) else if (key.matches(Key.backspace, .{}) and fv.dir.len > 0) {
+        if (key.matches(Key.up, .{})) fv.sel = fv.sel -| 1 else if (key.matches(Key.down, .{})) fv.sel = @min(fv.sel + 1, n - 1) else if (key.matches(Key.page_up, .{})) fv.sel = fv.sel -| 10 else if (key.matches(Key.page_down, .{})) fv.sel = @min(fv.sel + 10, n - 1) else if (key.matches(Key.home, .{})) fv.sel = 0 else if (key.matches(Key.end, .{})) fv.sel = n - 1 else if (key.matches(Key.enter, .{}) or key.matches(Key.space, .{})) try self.openFolderItem(fv, fv.sel) else if (key.matches(Key.backspace, .{}) and fv.dir.len > 0) {
             const up = try self.gpa.dupe(u8, std.fs.path.dirname(fv.dir) orelse "");
             defer self.gpa.free(up);
             try self.showFolder(up);
@@ -1527,7 +1669,7 @@ pub const App = struct {
         const gpa = self.gpa;
         const db_rel = try gpa.dupe(u8, self.tree.entries.items[index].path);
         defer gpa.free(db_rel);
-        const out = self.eveText(&.{ "db", "sql", "-t", db_rel, "select name from sqlite_master where type in ('table','view') and name not like 'sqlite_%' order by name;" }) catch |err| {
+        const out = self.eveText(&.{ "db", "sql", "-t", db_rel, "select name from sqlite_master where type in ('table','view') and name not like 'sqlite_%' and name not like 'eve\\_%' escape '\\' order by name;" }) catch |err| {
             self.setMessage("cannot read {s}: {s}", .{ db_rel, @errorName(err) });
             return;
         };
@@ -1550,8 +1692,289 @@ pub const App = struct {
     }
 
     // Zig tip: a table of a database is a tab like a file, whose path is `db#table`. Its rows come from one `select`, as text
-    // with tabs, and become a `dbf.Table` in memory (every column a Character field), so the grid of the Main Panel
+    // with tabs, and become a `grid.Table` in memory (columns of text), so the grid of the Main Panel
     // draws them. `readonly` keeps the DATA commands from changing it. At most 5000 rows are read.
+    // Zig tip: the rows come in the order of `rowid`, and a second `select rowid` gives the number of every row, so an edit can
+    // say `where rowid = N`. A view has no `rowid` (the first select fails) and is shown read only; so is a table whose
+    // second answer does not match the rows. `blk: { ... break :blk value; }` is a block that gives a value.
+    // Zig tip: the list of the tables of a database is built with three `select`s, and handed to `fromTsv` as text, so the
+    // same grid that shows a table shows the list. The first select gives the name, the kind and the counts of columns and
+    // indexes (`pragma_table_info(name)` and `pragma_index_list(name)` are functions that SQLite offers as tables). The
+    // rows need one `count(*)` for each table: one `union all` statement gives them in the order of the tables. The table
+    // `_eve_meta`, when the database has it, gives the description and the dates, which SQLite itself does not keep.
+    /// The overview of a SQLite database as a read only grid: one row for each table or view.
+    fn buildDbOverview(self: *App, db_rel: []const u8) !TableView {
+        const gpa = self.gpa;
+        const sql1 = "select m.name, m.type, (select count(*) from pragma_table_info(m.name)), (select count(*) from pragma_index_list(m.name)) from sqlite_master m where m.type in ('table','view') and m.name not like 'sqlite_%' and m.name not like 'eve\\_%' escape '\\' order by m.name;";
+        const list = try self.eveText(&.{ "db", "sql", "-t", db_rel, sql1 });
+        defer gpa.free(list);
+        if (std.mem.startsWith(u8, list, "error:")) {
+            self.setMessage("{s}: {s}", .{ db_rel, std.mem.trim(u8, list, " \r\n") });
+            return error.SqlFailed;
+        }
+        const Row = struct { name: []const u8, kind: []const u8, cols: []const u8, idx: []const u8 };
+        var rows: std.ArrayList(Row) = .empty;
+        defer rows.deinit(gpa);
+        var lines = std.mem.splitScalar(u8, list, '\n');
+        _ = lines.next();
+        while (lines.next()) |raw| {
+            const l = std.mem.trimEnd(u8, raw, "\r");
+            if (l.len == 0) continue;
+            var f = std.mem.splitScalar(u8, l, '\t');
+            try rows.append(gpa, .{ .name = f.next() orelse "", .kind = f.next() orelse "", .cols = f.next() orelse "", .idx = f.next() orelse "" });
+        }
+        // the number of records of every table, in the order of the tables
+        var csql: std.ArrayList(u8) = .empty;
+        defer csql.deinit(gpa);
+        for (rows.items) |r| {
+            if (!std.mem.eql(u8, r.kind, "table")) continue;
+            const lit = try sqlQuoted(gpa, r.name, '\'');
+            defer gpa.free(lit);
+            const ident = try sqlQuoted(gpa, r.name, '"');
+            defer gpa.free(ident);
+            const part = try std.fmt.allocPrint(gpa, "{s}select {s}, count(*) from {s}", .{ if (csql.items.len > 0) " union all " else "", lit, ident });
+            defer gpa.free(part);
+            try csql.appendSlice(gpa, part);
+        }
+        var counts: []u8 = try gpa.dupe(u8, "");
+        defer gpa.free(counts);
+        if (csql.items.len > 0) {
+            try csql.append(gpa, ';');
+            gpa.free(counts);
+            counts = try self.eveText(&.{ "db", "sql", "-t", db_rel, csql.items });
+        }
+        const counts_ok = !std.mem.startsWith(u8, counts, "error:");
+        const meta = try self.eveText(&.{ "db", "sql", "-t", db_rel, "select table_name, coalesce(description,''), coalesce(created,''), coalesce(changed,'') from eve_meta;" });
+        defer gpa.free(meta);
+        const meta_ok = !std.mem.startsWith(u8, meta, "error:");
+
+        var tsv: std.ArrayList(u8) = .empty;
+        defer tsv.deinit(gpa);
+        try tsv.appendSlice(gpa, "NAME\tTYPE\tCOLS\tROWS\tINDEXES\tCREATED\tCHANGED\tDESCRIPT\n");
+        var cl = std.mem.splitScalar(u8, if (counts_ok) counts else "", '\n');
+        _ = cl.next();
+        for (rows.items) |r| {
+            var count: []const u8 = "-";
+            if (std.mem.eql(u8, r.kind, "table") and counts_ok) {
+                while (cl.next()) |raw| {
+                    const l = std.mem.trimEnd(u8, raw, "\r");
+                    if (l.len == 0) continue;
+                    count = if (std.mem.indexOfScalar(u8, l, '\t')) |tab| l[tab + 1 ..] else "-";
+                    break;
+                }
+            }
+            var desc: []const u8 = "";
+            var created: []const u8 = "-";
+            var changed: []const u8 = "-";
+            if (meta_ok) {
+                var ml = std.mem.splitScalar(u8, meta, '\n');
+                _ = ml.next();
+                while (ml.next()) |raw| {
+                    var f = std.mem.splitScalar(u8, std.mem.trimEnd(u8, raw, "\r"), '\t');
+                    const nm = f.next() orelse continue;
+                    if (!std.mem.eql(u8, nm, r.name)) continue;
+                    desc = f.next() orelse "";
+                    const c1 = f.next() orelse "";
+                    const c2 = f.next() orelse "";
+                    if (c1.len > 0) created = c1;
+                    if (c2.len > 0) changed = c2;
+                    break;
+                }
+            }
+            const line = try std.fmt.allocPrint(gpa, "{s}\t{s}\t{s}\t{s}\t{s}\t{s}\t{s}\t{s}\n", .{ r.name, r.kind, r.cols, count, if (std.mem.eql(u8, r.kind, "table")) r.idx else "-", created, changed, desc });
+            defer gpa.free(line);
+            try tsv.appendSlice(gpa, line);
+        }
+        const t = try grid.fromTsv(gpa, tsv.items);
+        return .{ .t = t, .readonly = true };
+    }
+
+    /// Show the tables of the SQLite database `db_rel` in the Main Panel (a window whose path is `db#`).
+    fn showDatabase(self: *App, db_rel: []const u8) !void {
+        const gpa = self.gpa;
+        var view = self.buildDbOverview(db_rel) catch |err| {
+            if (err != error.SqlFailed) self.setMessage("{s}: {s}", .{ db_rel, @errorName(err) });
+            return;
+        };
+        errdefer view.release();
+        const key = try std.fmt.allocPrint(gpa, "{s}#", .{db_rel});
+        errdefer gpa.free(key);
+        for (self.tabs.items, 0..) |t, i| {
+            if (!std.mem.eql(u8, t.path, key)) continue;
+            const tv = t.table.?;
+            view.row = @min(tv.row, view.t.records -| 1);
+            tv.release();
+            tv.* = view;
+            self.active = i;
+            self.focus = .editor;
+            gpa.free(key);
+            return;
+        }
+        const tv = try gpa.create(TableView);
+        errdefer gpa.destroy(tv);
+        tv.* = view;
+        const label = try std.fmt.allocPrint(gpa, "{s} tables", .{std.fs.path.stem(db_rel)});
+        errdefer gpa.free(label);
+        try self.tabs.insert(gpa, 0, .{ .path = key, .table = tv, .label = label });
+        self.active = 0;
+        self.tab_first = 0;
+        self.focus = .editor;
+    }
+
+    /// Read the table `table` of the SQLite file `db_rel` into a view (at most 5000 rows).
+    fn readSqliteTable(self: *App, db_rel: []const u8, table: []const u8) !TableView {
+        const gpa = self.gpa;
+        var editable = true;
+        const sql1 = try std.fmt.allocPrint(gpa, "select * from \"{s}\" order by rowid limit 5000;", .{table});
+        defer gpa.free(sql1);
+        const first = try self.eveText(&.{ "db", "sql", "-t", db_rel, sql1 });
+        defer gpa.free(first);
+        var plain: ?[]u8 = null;
+        defer if (plain) |pl| gpa.free(pl);
+        const out: []const u8 = blk: {
+            if (!std.mem.startsWith(u8, first, "error:")) break :blk first;
+            editable = false;
+            const sql2 = try std.fmt.allocPrint(gpa, "select * from \"{s}\" limit 5000;", .{table});
+            defer gpa.free(sql2);
+            plain = try self.eveText(&.{ "db", "sql", "-t", db_rel, sql2 });
+            break :blk plain.?;
+        };
+        if (std.mem.startsWith(u8, out, "error:")) {
+            self.setMessage("{s}#{s}: {s}", .{ db_rel, table, std.mem.trim(u8, out, " \r\n") });
+            return error.SqlFailed;
+        }
+        var t = try grid.fromTsv(gpa, out);
+        errdefer t.deinit();
+        var names: std.ArrayList([]u8) = .empty;
+        errdefer {
+            for (names.items) |n| gpa.free(n);
+            names.deinit(gpa);
+        }
+        const head = std.mem.trimEnd(u8, out[0 .. std.mem.indexOfScalar(u8, out, '\n') orelse out.len], "\r");
+        var hp = std.mem.splitScalar(u8, head, '\t');
+        while (hp.next()) |n| {
+            if (names.items.len >= t.fields.len) break;
+            try names.append(gpa, try gpa.dupe(u8, n));
+        }
+        var ids: std.ArrayList(i64) = .empty;
+        errdefer ids.deinit(gpa);
+        if (editable) {
+            const sql3 = try std.fmt.allocPrint(gpa, "select rowid from \"{s}\" order by rowid limit 5000;", .{table});
+            defer gpa.free(sql3);
+            const idout = try self.eveText(&.{ "db", "sql", "-t", db_rel, sql3 });
+            defer gpa.free(idout);
+            if (!std.mem.startsWith(u8, idout, "error:")) {
+                var lines = std.mem.splitScalar(u8, idout, '\n');
+                _ = lines.next();
+                while (lines.next()) |raw| {
+                    const l = std.mem.trim(u8, raw, " \r");
+                    if (l.len == 0) continue;
+                    const v = std.fmt.parseInt(i64, l, 10) catch {
+                        ids.clearRetainingCapacity();
+                        break;
+                    };
+                    try ids.append(gpa, v);
+                }
+            }
+            if (ids.items.len != t.records or names.items.len != t.fields.len) {
+                editable = false;
+                ids.clearRetainingCapacity();
+            }
+        }
+        return .{ .t = t, .readonly = !editable, .colnames = try names.toOwnedSlice(gpa), .rowids = try ids.toOwnedSlice(gpa) };
+    }
+
+    /// Read the table again after a change of the database; the cursor stays where it was.
+    fn reloadSqlite(self: *App, tv: *TableView, db: []const u8, table: []const u8) void {
+        var nv = self.readSqliteTable(db, table) catch return;
+        nv.row = @min(tv.row, nv.t.records -| 1);
+        nv.col = @min(tv.col, nv.t.fields.len -| 1);
+        nv.top = tv.top;
+        nv.left = tv.left;
+        tv.release();
+        tv.* = nv;
+    }
+
+    /// The database, the table and the view of the active tab, when it is a table of a SQLite database.
+    fn sqlView(self: *App) ?struct { db: []const u8, table: []const u8, tv: *TableView } {
+        const t = self.activeTab() orelse return null;
+        const tv = t.table orelse return null;
+        if (std.mem.startsWith(u8, t.path, "filter:")) return null;
+        const h = std.mem.indexOfScalar(u8, t.path, '#') orelse return null;
+        return .{ .db = t.path[0..h], .table = t.path[h + 1 ..], .tv = tv };
+    }
+
+    // Zig tip: `eve_meta` is kept up to date without a word to the person: no echo and no pop-up, so these two helpers call
+    // `eveText` and drop the answer. A table that is new gets its row (and the table `eve_meta` itself if the database
+    // has none); a change only moves the `changed` date, and does nothing when there is no `eve_meta` or no row.
+    /// A table was made in a SQLite database: write its row in `eve_meta`.
+    fn metaCreated(self: *App, db: []const u8, table: []const u8, desc: []const u8) void {
+        const lit = sqlQuoted(self.gpa, table, '\'') catch return;
+        defer self.gpa.free(lit);
+        const dlit = sqlQuoted(self.gpa, desc, '\'') catch return;
+        defer self.gpa.free(dlit);
+        const sql = std.fmt.allocPrint(self.gpa, "create table if not exists eve_meta (table_name text primary key, description text, created text, changed text); insert into eve_meta (table_name, description, created, changed) values ({s}, {s}, datetime('now'), datetime('now')) on conflict(table_name) do update set description = excluded.description, changed = datetime('now');", .{ lit, dlit }) catch return;
+        defer self.gpa.free(sql);
+        if (self.eveText(&.{ "db", "sql", db, sql })) |out| self.gpa.free(out) else |_| {}
+    }
+
+    /// The data or the structure of a table of a SQLite database changed: move its `changed` date.
+    fn metaTouch(self: *App, db: []const u8, table: []const u8) void {
+        const lit = sqlQuoted(self.gpa, table, '\'') catch return;
+        defer self.gpa.free(lit);
+        const sql = std.fmt.allocPrint(self.gpa, "update eve_meta set changed = datetime('now') where table_name = {s};", .{lit}) catch return;
+        defer self.gpa.free(sql);
+        if (self.eveText(&.{ "db", "sql", db, sql })) |out| self.gpa.free(out) else |_| {}
+    }
+
+    // Zig tip: the Console shows the command as it is typed at the prompt `eve:>` (no `eve` before it, no quotes around the
+    // statement): the words after `db` are joined with spaces, and that line works there as it is. The same words are the
+    // arguments of the process. `argv` is a list that starts with `db` and takes the rest.
+    /// Run a `db` command of the machine (`db sql …`, `db create view …`); a refusal opens the pop-up.
+    fn runDb(self: *App, args: []const []const u8) bool {
+        var echo: std.ArrayList(u8) = .empty;
+        defer echo.deinit(self.gpa);
+        echo.appendSlice(self.gpa, "db") catch return false;
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(self.gpa);
+        argv.append(self.gpa, "db") catch return false;
+        for (args) |w| {
+            echo.append(self.gpa, ' ') catch return false;
+            echo.appendSlice(self.gpa, w) catch return false;
+            argv.append(self.gpa, w) catch return false;
+        }
+        self.console.add(self.gpa, echo.items, .input) catch {};
+        const out = self.eveText(argv.items) catch |err| {
+            self.fail("Cannot run the command: {s}.", .{@errorName(err)});
+            return false;
+        };
+        defer self.gpa.free(out);
+        if (std.mem.indexOf(u8, out, "error:") != null) {
+            self.fail("{s}", .{std.mem.trim(u8, out, " \r\n")});
+            return false;
+        }
+        return true;
+    }
+
+    /// Run one SQL statement on a database (`db sql <file> <statement>`).
+    fn runSql(self: *App, db: []const u8, sql: []const u8) bool {
+        return self.runDb(&.{ "sql", db, sql });
+    }
+
+    // Zig tip: a name goes into SQL between double quotes with every `"` doubled, a text between single quotes with every `'`
+    // doubled; that is all SQL asks, and nothing the person types can end the quote early. An empty cell is NULL.
+    fn sqlQuoted(a: std.mem.Allocator, s_: []const u8, q: u8) ![]u8 {
+        var out: std.ArrayList(u8) = .empty;
+        errdefer out.deinit(a);
+        try out.append(a, q);
+        for (s_) |c| {
+            if (c == q) try out.append(a, q);
+            try out.append(a, c);
+        }
+        try out.append(a, q);
+        return out.toOwnedSlice(a);
+    }
+
     /// Open the table `table` of the SQLite file `db_rel` in the Main Panel.
     fn openSqliteTable(self: *App, db_rel: []const u8, table: []const u8) !void {
         const gpa = self.gpa;
@@ -1565,24 +1988,19 @@ pub const App = struct {
                 return;
             }
         }
-        const sql = try std.fmt.allocPrint(gpa, "select * from \"{s}\" limit 5000;", .{table});
-        defer gpa.free(sql);
-        const out = try self.eveText(&.{ "db", "sql", "-t", db_rel, sql });
-        defer gpa.free(out);
-        if (std.mem.startsWith(u8, out, "error:")) {
-            self.setMessage("{s}: {s}", .{ key, std.mem.trim(u8, out, " \r\n") });
+        const view = self.readSqliteTable(db_rel, table) catch |err| {
+            if (err != error.SqlFailed) self.setMessage("{s}: {s}", .{ key, @errorName(err) });
             gpa.free(key);
             return;
-        }
-        var t = try dbf.fromTsv(gpa, out, self.dbfDate());
-        errdefer t.deinit();
+        };
         const tv = try gpa.create(TableView);
         errdefer gpa.destroy(tv);
-        tv.* = .{ .t = t, .readonly = true };
+        tv.* = view;
         const label = try std.fmt.allocPrint(gpa, "{s}.{s}", .{ std.fs.path.stem(db_rel), table });
         errdefer gpa.free(label);
-        try self.tabs.append(gpa, .{ .path = key, .table = tv, .label = label });
-        self.active = self.tabs.items.len - 1;
+        try self.tabs.insert(gpa, 0, .{ .path = key, .table = tv, .label = label });
+        self.active = 0;
+        self.tab_first = 0;
         self.focus = .editor;
     }
 
@@ -1601,6 +2019,291 @@ pub const App = struct {
 
     /// File > New…: ask for the name of the file; the type is read from its extension.
     pub fn openNewDialog(self: *App) void {
+        self.openNewKind(.file);
+    }
+
+    // Zig tip: Save As of a table asks for a name in the same small dialog as New. The default name says what it is: a filter
+    // is saved as a view, a table as a copy.
+    /// Save As… of a table window: ask for the name of the new table or view.
+    fn openTableSaveAs(self: *App) void {
+        const t = self.activeTab() orelse return;
+        const tv = t.table orelse return;
+        self.new_kind = .table_copy;
+        self.saveas_in.clearRetainingCapacity();
+        const base = if (std.mem.startsWith(u8, t.path, "filter:") and tv.filter_src.len > 0) tv.filter_src else t.path;
+        const stem = if (std.mem.indexOfScalar(u8, base, '#')) |h| base[h + 1 ..] else std.fs.path.stem(base);
+        const suffix: []const u8 = if (std.mem.startsWith(u8, t.path, "filter:")) "_view" else "_copy";
+        const dflt = std.fmt.allocPrint(self.gpa, "{s}{s}", .{ stem, suffix }) catch return;
+        defer self.gpa.free(dflt);
+        self.saveas_in.insertSliceAtCursor(dflt) catch {};
+        self.overlay = .new_file;
+        self.dlg_field = 0;
+    }
+
+    /// The SQL condition of a pattern that is plain text, optionally anchored with ^ and $, as a LIKE; null for any other pattern.
+    fn likeCondition(gpa: std.mem.Allocator, col: []const u8, pat: []const u8) !?[]u8 {
+        var body = pat;
+        var start = false;
+        var end = false;
+        if (body.len > 0 and body[0] == '^') {
+            start = true;
+            body = body[1..];
+        }
+        if (body.len > 0 and body[body.len - 1] == '$' and (body.len < 2 or body[body.len - 2] != '\\')) {
+            end = true;
+            body = body[0 .. body.len - 1];
+        }
+        if (std.mem.indexOfAny(u8, body, ".*+?[](){}|\\^$") != null) return null;
+        var lit: std.ArrayList(u8) = .empty;
+        defer lit.deinit(gpa);
+        try lit.append(gpa, '\'');
+        if (!start) try lit.append(gpa, '%');
+        for (body) |c| {
+            if (c == '%' or c == '_') try lit.append(gpa, '\\');
+            if (c == '\'') try lit.append(gpa, '\'');
+            try lit.append(gpa, c);
+        }
+        if (!end) try lit.append(gpa, '%');
+        try lit.append(gpa, '\'');
+        const id = try sqlQuoted(gpa, col, '"');
+        defer gpa.free(id);
+        return try std.fmt.allocPrint(gpa, "{s} like {s} escape '\\'", .{ id, lit.items });
+    }
+
+    // Zig tip: a filter window knows its table, its filters and the rowids of the rows that matched. A SQLite filter becomes a
+    // view with a `where` made of LIKEs when every pattern is plain text (a view that follows the table); with a real regular
+    // expression, which SQLite cannot run, the view lists the rowids of the rows that matched (a snapshot). A DBF filter becomes
+    // a new table with those records, because DBF has no views. A table without a filter is copied whole.
+    // Zig tip: `snapshot` is a pointer to the caller's `bool`: the function says through it that the select lists rowids because a
+    // pattern could not be written as a LIKE. The select names the fields that are in the filter, each between double quotes.
+    /// The select of the filter window `tv` from the table `tid` (a quoted name): its fields, and a where for the patterns.
+    fn selectSqlFor(self: *App, tid: []const u8, tv: *const TableView, snapshot: *bool) ![]u8 {
+        const gpa = self.gpa;
+        var cols: std.ArrayList(u8) = .empty;
+        defer cols.deinit(gpa);
+        var conds: std.ArrayList(u8) = .empty;
+        defer conds.deinit(gpa);
+        for (tv.filter_rows) |fr| {
+            const colname = if (fr.col < tv.colnames.len) tv.colnames[fr.col] else "";
+            const id = try sqlQuoted(gpa, colname, '"');
+            defer gpa.free(id);
+            if (cols.items.len > 0) try cols.appendSlice(gpa, ", ");
+            try cols.appendSlice(gpa, id);
+            if (fr.pat.len == 0 or snapshot.*) continue;
+            const cond = (try likeCondition(gpa, colname, fr.pat)) orelse {
+                snapshot.* = true;
+                continue;
+            };
+            defer gpa.free(cond);
+            if (conds.items.len > 0) try conds.appendSlice(gpa, " and ");
+            try conds.appendSlice(gpa, cond);
+        }
+        if (snapshot.*) {
+            var ids: std.ArrayList(u8) = .empty;
+            defer ids.deinit(gpa);
+            for (tv.kept_ids, 0..) |rid, k| {
+                var nb: [24]u8 = undefined;
+                try ids.appendSlice(gpa, try std.fmt.bufPrint(&nb, "{s}{d}", .{ if (k > 0) "," else "", rid }));
+            }
+            return std.fmt.allocPrint(gpa, "select {s} from {s} where rowid in ({s})", .{ cols.items, tid, if (ids.items.len == 0) "0" else ids.items });
+        }
+        if (conds.items.len == 0) return std.fmt.allocPrint(gpa, "select {s} from {s}", .{ cols.items, tid });
+        return std.fmt.allocPrint(gpa, "select {s} from {s} where {s}", .{ cols.items, tid, conds.items });
+    }
+
+    // Zig tip: the view that evetx makes has a known shape: `create view "v" as select * from "t" where <cond> and <cond>`, each
+    // condition `"col" like 'text' escape '\'`. This reads that shape back into filters: the `%` at the ends say there is no
+    // anchor, a backslash escapes `%` and `_`, a doubled quote is one quote. A view of any other shape gives no rows: the dialog
+    // starts empty and what is applied replaces the view.
+    /// Alter table on a view: the filter dialog opens with the conditions of the view; Enter makes the view again.
+    fn alterView(self: *App, db: []const u8, view: []const u8, sql_text: []const u8) !void {
+        const gpa = self.gpa;
+        // the lower case copy is only for finding the keywords; the pieces are cut from the text itself
+        const lower = try std.ascii.allocLowerString(gpa, sql_text);
+        defer gpa.free(lower);
+        const from_at = std.mem.lastIndexOf(u8, lower, " from ") orelse {
+            self.setMessage("{s} is not a view that a filter can alter", .{view});
+            return;
+        };
+        const where_at = std.mem.indexOf(u8, lower, " where ");
+        var base_text = std.mem.trim(u8, sql_text[from_at + 6 .. where_at orelse sql_text.len], " ;\r\n");
+        if (base_text.len > 1 and base_text[0] == '"') {
+            const close = std.mem.indexOfScalarPos(u8, base_text, 1, '"') orelse base_text.len;
+            base_text = base_text[1..close];
+        }
+        // the table the view reads has to be open: its window gives the names of the columns
+        try self.openSqliteTable(db, base_text);
+        const key = try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, base_text });
+        defer gpa.free(key);
+        var base_tv: ?*TableView = null;
+        for (self.tabs.items) |t| {
+            if (t.table != null and std.mem.eql(u8, t.path, key)) base_tv = t.table;
+        }
+        const btv = base_tv orelse return;
+        for (self.flt_rows.items) |r| gpa.free(r.pat);
+        self.flt_rows.clearRetainingCapacity();
+        if (self.flt_src) |old| gpa.free(old);
+        self.flt_src = try gpa.dupe(u8, key);
+        if (self.flt_replace) |old| gpa.free(old);
+        self.flt_replace = null;
+        if (self.flt_view) |old| gpa.free(old);
+        self.flt_view = try gpa.dupe(u8, view);
+        // the fields of the select are the rows of the dialog (all of them for `*`); the conditions give the patterns
+        const sel_at = std.mem.indexOf(u8, lower, "select ");
+        if (sel_at) |sa| {
+            const list = std.mem.trim(u8, sql_text[sa + 7 .. from_at], " ");
+            if (!std.mem.eql(u8, list, "*")) {
+                var names = std.mem.splitScalar(u8, list, ',');
+                while (names.next()) |raw| {
+                    const nm = std.mem.trim(u8, raw, " \"");
+                    for (btv.colnames, 0..) |bn, i| {
+                        if (std.mem.eql(u8, bn, nm)) self.filterPush(i, "");
+                    }
+                }
+            }
+        }
+        if (self.flt_rows.items.len == 0) {
+            for (0..btv.t.fields.len) |c| self.filterPush(c, "");
+        }
+        if (where_at) |wa| {
+            var parts = std.mem.splitSequence(u8, sql_text[wa + 7 ..], " and ");
+            while (parts.next()) |raw| {
+                const cond = std.mem.trim(u8, raw, " ;\r\n");
+                if (cond.len < 3 or cond[0] != '"') continue;
+                const col_end = std.mem.indexOfScalarPos(u8, cond, 1, '"') orelse continue;
+                const col_name = cond[1..col_end];
+                const like_at = std.mem.indexOf(u8, cond, " like '") orelse continue;
+                const lit_start = like_at + 7;
+                const lit_end = std.mem.lastIndexOf(u8, cond, "' escape") orelse continue;
+                if (lit_end < lit_start) continue;
+                var col: usize = 0;
+                var found = false;
+                for (btv.colnames, 0..) |n, i| {
+                    if (std.mem.eql(u8, n, col_name)) {
+                        col = i;
+                        found = true;
+                    }
+                }
+                if (!found) continue;
+                var lit = cond[lit_start..lit_end];
+                var pat: std.ArrayList(u8) = .empty;
+                defer pat.deinit(gpa);
+                if (lit.len == 0 or lit[0] != '%') try pat.append(gpa, '^') else lit = lit[1..];
+                var anchored_end = true;
+                if (lit.len > 0 and lit[lit.len - 1] == '%' and (lit.len < 2 or lit[lit.len - 2] != '\\')) {
+                    anchored_end = false;
+                    lit = lit[0 .. lit.len - 1];
+                }
+                var i: usize = 0;
+                while (i < lit.len) : (i += 1) {
+                    if (lit[i] == '\\' and i + 1 < lit.len) i += 1;
+                    if (lit[i] == '\'' and i + 1 < lit.len and lit[i + 1] == '\'') i += 1;
+                    try pat.append(gpa, lit[i]);
+                }
+                if (anchored_end) try pat.append(gpa, '$');
+                self.filterSetPat(col, pat.items);
+            }
+        }
+        self.flt_sel = 0;
+        self.flt_in.clearRetainingCapacity();
+        if (self.flt_rows.items.len > 0) self.flt_in.insertSliceAtCursor(self.flt_rows.items[0].pat) catch {};
+        self.openOverlay(.filter);
+    }
+
+    /// Make the table, view or copy that Save As asked for, named `name`.
+    fn tableSaveAs(self: *App, name: []const u8) !void {
+        const gpa = self.gpa;
+        const t = self.activeTab() orelse return;
+        const tv = t.table orelse return;
+        const is_filter = std.mem.startsWith(u8, t.path, "filter:");
+        const src: []const u8 = if (is_filter) tv.filter_src else t.path;
+        if (src.len == 0) return;
+        if (std.mem.indexOfScalar(u8, src, '#')) |h| {
+            const db = src[0..h];
+            const table = src[h + 1 ..];
+            if (name.len == 0 or !(std.ascii.isAlphabetic(name[0]) or name[0] == '_')) {
+                self.setMessage("a name begins with a letter", .{});
+                return;
+            }
+            for (name) |c| {
+                if (!(std.ascii.isAlphanumeric(c) or c == '_')) {
+                    self.setMessage("a name has letters, digits and _ only", .{});
+                    return;
+                }
+            }
+            const tid = try sqlQuoted(gpa, table, '"');
+            defer gpa.free(tid);
+            var snapshot = false;
+            const sel = if (!is_filter) try std.fmt.allocPrint(gpa, "select * from {s}", .{tid}) else try self.selectSqlFor(tid, tv, &snapshot);
+            defer gpa.free(sel);
+            if (!self.runDb(&.{ "create", if (is_filter) "view" else "table", db, name, sel })) return;
+            self.metaCreated(db, name, "");
+            self.refreshDbTables(db) catch {};
+            self.setMessage("{s} {s} made in {s}{s}", .{ if (is_filter) "view" else "table", name, db, if (snapshot) " (the pattern is a regular expression: it lists the rows found now)" else "" });
+            return;
+        }
+        self.setMessage("Save As works on a table of a database: {s} is not one", .{src});
+    }
+
+    // Zig tip: the importable formats are the ones `eve db import` reads, found by the extension. The dialog starts with the
+    // file that is selected in the tree when it is one of them, so a click and EDIT > Import… is enough.
+    /// EDIT > Import…: ask for the file (CSV, TXT, JSON, DBF) to load into the selected database as a new table.
+    pub fn openImport(self: *App) void {
+        const db = self.selectedDb() orelse {
+            self.setMessage("select a database in the tree first: files are imported into a SQLite database", .{});
+            return;
+        };
+        _ = db;
+        self.new_kind = .import_data;
+        self.saveas_in.clearRetainingCapacity();
+        if (self.selected < self.tree.entries.items.len) {
+            const e = self.tree.entries.items[self.selected];
+            if (e.kind == .normal and !e.is_dir and isImportable(e.path)) self.saveas_in.insertSliceAtCursor(e.path) catch {};
+        }
+        self.overlay = .new_file;
+        self.dlg_field = 0;
+    }
+
+    fn isImportable(path: []const u8) bool {
+        const ext = extensionOf(path);
+        for ([_][]const u8{ "csv", "txt", "tsv", "json", "dbf" }) |x| {
+            if (std.ascii.eqlIgnoreCase(ext, x)) return true;
+        }
+        return false;
+    }
+
+    // Zig tip: the work is done by the machine (`db import <db> <file>`), the same command that can be typed at the prompt, so
+    // the Console shows it. The table is named after the file (`eve db import` turns every character that is not a letter or
+    // a digit into `_`); its description says where it came from. XLS and XLSX are refused with the reason.
+    /// Import the file `rel` into the database selected in the tree.
+    fn importFile(self: *App, rel: []const u8) void {
+        const db_sel = self.selectedDb() orelse {
+            self.setMessage("select a database in the tree first", .{});
+            return;
+        };
+        const gpa = self.gpa;
+        const db = gpa.dupe(u8, db_sel) catch return;
+        defer gpa.free(db);
+        if (!isImportable(rel)) {
+            self.fail("{s}: the formats are CSV, TXT, JSON and DBF. Save a spreadsheet (XLS) as CSV first.", .{rel});
+            return;
+        }
+        if (!self.runDb(&.{ "import", db, rel })) return;
+        const stem = gpa.dupe(u8, std.fs.path.stem(rel)) catch return;
+        defer gpa.free(stem);
+        for (stem) |*ch| {
+            if (!std.ascii.isAlphanumeric(ch.*)) ch.* = '_';
+        }
+        const note = std.fmt.allocPrint(gpa, "imported from {s}", .{rel}) catch return;
+        defer gpa.free(note);
+        self.metaCreated(db, stem, note);
+        self.refreshDbTables(db) catch {};
+        self.setMessage("{s} imported into {s} as the table {s}", .{ rel, db, stem });
+    }
+
+    /// File > New file…, New folder…, New database…: ask for the name; `kind` says what is made.
+    pub fn openNewKind(self: *App, kind: NewKind) void {
+        self.new_kind = kind;
         self.saveas_in.clearRetainingCapacity();
         self.openOverlay(.new_file);
     }
@@ -1621,18 +2324,54 @@ pub const App = struct {
         defer self.gpa.free(raw);
         const name = std.mem.trim(u8, raw, " /\\");
         if (name.len == 0) return;
+        if (self.new_kind == .table_copy) {
+            self.overlay = .none;
+            return self.tableSaveAs(name);
+        }
+        if (self.new_kind == .import_data) {
+            self.overlay = .none;
+            return self.importFile(name);
+        }
         self.overlay = .none;
         const rel = try self.pathInTarget(name);
         defer self.gpa.free(rel);
         const full = try self.fullPath(rel);
         defer self.gpa.free(full);
+        if (self.new_kind == .folder) {
+            if (Io.Dir.cwd().statFile(self.io, full, .{})) |_| {
+                self.setMessage("{s} exists already", .{rel});
+                return;
+            } else |_| {}
+            Io.Dir.cwd().createDirPath(self.io, full) catch |err| {
+                self.setMessage("cannot make the folder {s}: {s}", .{ rel, @errorName(err) });
+                return;
+            };
+            self.refreshTree();
+            self.setMessage("made the folder {s}", .{rel});
+            return;
+        }
+        if (self.new_kind == .database) {
+            // a name without an extension gets .db
+            const db_rel = if (extensionOf(rel).len > 0) try self.gpa.dupe(u8, rel) else try std.fmt.allocPrint(self.gpa, "{s}.db", .{rel});
+            defer self.gpa.free(db_rel);
+            const db_full = try self.fullPath(db_rel);
+            defer self.gpa.free(db_full);
+            if (Io.Dir.cwd().statFile(self.io, db_full, .{})) |_| {
+                self.setMessage("{s} exists already", .{db_rel});
+                return;
+            } else |_| {}
+            return self.createSqlite(db_rel, db_full);
+        }
         if (Io.Dir.cwd().statFile(self.io, full, .{})) |_| {
             self.setMessage("{s} exists already", .{rel});
             return;
         } else |_| {}
         var ext_buf: [16]u8 = undefined;
         const ext = std.ascii.lowerString(&ext_buf, extensionOf(rel)[0..@min(extensionOf(rel).len, ext_buf.len)]);
-        if (std.mem.eql(u8, ext, "dbf")) return self.createDbf(rel);
+        if (std.mem.eql(u8, ext, "dbf")) {
+            self.setMessage("DBF files are not made here: import them into a database (EDIT > Import)", .{});
+            return;
+        }
         if (std.mem.eql(u8, ext, "eve")) return self.openWizard(.eve, rel);
         if (std.mem.eql(u8, ext, "sql")) return self.openWizard(.sql, rel);
         if (std.mem.eql(u8, ext, "db") or std.mem.eql(u8, ext, "sqlite") or std.mem.eql(u8, ext, "sqlite3")) return self.createSqlite(rel, full);
@@ -1655,7 +2394,9 @@ pub const App = struct {
 
     /// A new SQLite database: `eve db sql` opens the file and writes its header.
     fn createSqlite(self: *App, rel: []const u8, full: []const u8) !void {
-        const argv = [_][]const u8{ eve_exe, "db", "sql", full, "pragma user_version = 1;" };
+        // eve_meta keeps what SQLite does not: the description, the creation and the last change of every table. Its name
+        // starts with eve_, and evetx does not list the tables with that start.
+        const argv = [_][]const u8{ eve_exe, "db", "sql", full, "pragma user_version = 1; create table if not exists eve_meta (table_name text primary key, description text, created text, changed text);" };
         const result = std.process.run(self.gpa, self.io, .{ .argv = &argv }) catch |err| {
             self.setMessage("cannot make {s}: {s}", .{ rel, @errorName(err) });
             return;
@@ -1736,64 +2477,45 @@ pub const App = struct {
     pub fn dataStructure(self: *App) !void {
         const t = self.activeTab() orelse return;
         if (t.table == null) {
-            self.setMessage("Structure works on a DBF table: open one", .{});
+            self.setMessage("Structure works on a table of a database: open one", .{});
             return;
         }
-        if (std.mem.indexOfScalar(u8, t.path, '#')) |h| return self.openSqStructure(t.path[0..h], t.path[h + 1 ..]);
-        try self.openStructure(t.path);
+        // a filter window is altered with the filter dialog; so is a view of a database
+        if (std.mem.startsWith(u8, t.path, "filter:")) return self.openFilter();
+        const path = t.path;
+        if (std.mem.indexOfScalar(u8, path, '#')) |h| {
+            if (h + 1 >= path.len) {
+                self.setMessage("open a table of the list (Enter), then its structure", .{});
+                return;
+            }
+            const db = try self.gpa.dupe(u8, path[0..h]);
+            defer self.gpa.free(db);
+            const name = try self.gpa.dupe(u8, path[h + 1 ..]);
+            defer self.gpa.free(name);
+            const lit = try sqlQuoted(self.gpa, name, '\'');
+            defer self.gpa.free(lit);
+            const ask = try std.fmt.allocPrint(self.gpa, "select type, sql from sqlite_master where name = {s};", .{lit});
+            defer self.gpa.free(ask);
+            const out = try self.eveText(&.{ "db", "sql", "-t", db, ask });
+            defer self.gpa.free(out);
+            const body = if (std.mem.indexOfScalar(u8, out, '\n')) |nl| out[nl + 1 ..] else "";
+            if (std.mem.startsWith(u8, body, "view\t")) return self.alterView(db, name, std.mem.trim(u8, body[5..], " \r\n"));
+            return self.openSqStructure(db, name);
+        }
     }
 
     // ------------------------------------------------------------ the DATA menu
 
-    /// The table of the active tab, when it is a DBF table.
+    /// The table of the active tab.
     fn activeTable(self: *App) ?*TableView {
         const t = self.activeTab() orelse return null;
         return t.table;
     }
 
-    /// Write the table of the active tab to its file (every change of the data is saved at once).
-    fn saveTable(self: *App) void {
-        const t = self.activeTab() orelse return;
-        const tv = t.table orelse return;
-        const full = self.fullPath(t.path) catch return;
-        defer self.gpa.free(full);
-        Io.Dir.cwd().writeFile(self.io, .{ .sub_path = full, .data = tv.t.fileBytes() }) catch |err| {
-            self.setMessage("cannot save {s}: {s}", .{ t.path, @errorName(err) });
-        };
-    }
-
-    // Zig tip: Ctrl+Space is one shortcut with two meanings, chosen by what is open: a table gets a blank record at its end,
-    // a text file gets a new empty line at its end and the cursor there. A file that is not text says why nothing happened.
-    /// Ctrl+Space: append a new row at the end of the table, or a new empty line at the end of the file.
-    pub fn appendAtEnd(self: *App) !void {
-        const t = self.activeTab() orelse {
-            self.setMessage("Ctrl+Space appends a row: open a table or a file first", .{});
-            return;
-        };
-        if (t.table) |tv| {
-            if (tv.readonly) return self.readonlyMessage();
-            return self.dataAppend(1);
-        }
-        if (t.buf) |*b| {
-            if (t.virtual) {
-                self.setMessage("this window is read only", .{});
-                return;
-            }
-            try b.checkpoint(.other);
-            b.gotoLine(b.lineCount(), 0);
-            b.toEnd();
-            if (b.lineAt(b.row).len > 0) try b.insertText("\n");
-            self.focus = .editor;
-            self.follow = true;
-            return;
-        }
-        self.setMessage("nothing to append to in this window", .{});
-    }
-
     /// DATA > Append row(s): blank records at the end of the table; the last one is selected.
     pub fn dataAppend(self: *App, n: u32) !void {
         const tv = self.activeTable() orelse {
-            self.setMessage("DATA works on a DBF table: open one", .{});
+            self.setMessage("DATA works on a table of a database: open one", .{});
             return;
         };
         if (tv.readonly) return self.readonlyMessage();
@@ -1801,16 +2523,27 @@ pub const App = struct {
             self.setMessage("the table has no fields yet: SQL:> alter table <name>", .{});
             return;
         }
-        try tv.t.appendRecords(n);
-        tv.row = tv.t.records - 1;
-        self.saveTable();
-        self.setMessage("{d} row(s) appended: {d} records", .{ n, tv.t.records });
+        if (self.activeTab()) |t| t.editing = true;
+        if (self.sqlView()) |st| {
+            const sql = try std.fmt.allocPrint(self.gpa, "insert into \"{s}\" default values;", .{st.table});
+            defer self.gpa.free(sql);
+            var k: u32 = 0;
+            while (k < n) : (k += 1) {
+                if (!self.runSql(st.db, sql)) break;
+            }
+            self.metaTouch(st.db, st.table);
+            self.reloadSqlite(tv, st.db, st.table);
+            tv.row = tv.t.records -| 1;
+            self.setMessage("{d} row(s) added to {s}", .{ k, st.table });
+            return;
+        }
+        self.readonlyMessage();
     }
 
     /// DATA > Append rows…: ask how many.
     pub fn openAppendN(self: *App) void {
         if (self.activeTable() == null) {
-            self.setMessage("DATA works on a DBF table: open one", .{});
+            self.setMessage("DATA works on a table of a database: open one", .{});
             return;
         }
         self.goto_in.clearRetainingCapacity();
@@ -1832,37 +2565,178 @@ pub const App = struct {
     /// DATA > Delete / recall row: mark the selected record deleted, or take the mark away.
     pub fn dataDelete(self: *App) !void {
         const tv = self.activeTable() orelse {
-            self.setMessage("DATA works on a DBF table: open one", .{});
+            self.setMessage("DATA works on a table of a database: open one", .{});
             return;
         };
         if (tv.readonly) return self.readonlyMessage();
         if (tv.row >= tv.t.records) return;
-        tv.t.toggleDeleted(tv.row);
-        self.saveTable();
-        self.setMessage("record {d} {s}", .{ tv.row + 1, if (tv.t.deleted(tv.row)) "marked deleted" else "recalled" });
+        if (self.activeTab()) |t| t.editing = true;
+        const n_sel = tv.sel.count();
+        if (self.sqlView()) |st| {
+            const n_del: usize = if (n_sel > 0) n_sel else 1;
+            self.askConfirm(.delete_rows, 0, "Delete {d} row(s) from {s}? It cannot be recovered.", .{ n_del, st.table });
+            return;
+        }
+        self.readonlyMessage();
+    }
+
+    // Zig tip: the rows to delete go into one `delete ... where rowid in (...)`, 400 at a time, so a long selection does not
+    // make a statement too long. The numbers are written with `bufPrint` into a small buffer and appended to the text.
+    /// The Yes of "Delete rows": delete the selected rows (or the current one) from the SQLite table.
+    fn performDeleteRows(self: *App) void {
+        const st = self.sqlView() orelse return;
+        const tv = st.tv;
+        var ids: std.ArrayList(i64) = .empty;
+        defer ids.deinit(self.gpa);
+        if (tv.sel.count() > 0) {
+            for (tv.sel.keys()) |r| {
+                if (r < tv.rowids.len) ids.append(self.gpa, tv.rowids[r]) catch return;
+            }
+        } else if (tv.row < tv.rowids.len) ids.append(self.gpa, tv.rowids[tv.row]) catch return;
+        var at: usize = 0;
+        while (at < ids.items.len) {
+            const end = @min(at + 400, ids.items.len);
+            var sql: std.ArrayList(u8) = .empty;
+            defer sql.deinit(self.gpa);
+            const head = std.fmt.allocPrint(self.gpa, "delete from \"{s}\" where rowid in (", .{st.table}) catch return;
+            defer self.gpa.free(head);
+            sql.appendSlice(self.gpa, head) catch return;
+            for (ids.items[at..end], 0..) |id, k| {
+                var nb: [24]u8 = undefined;
+                const num = std.fmt.bufPrint(&nb, "{s}{d}", .{ if (k > 0) "," else "", id }) catch return;
+                sql.appendSlice(self.gpa, num) catch return;
+            }
+            sql.appendSlice(self.gpa, ");") catch return;
+            if (!self.runSql(st.db, sql.items)) break;
+            at = end;
+        }
+        self.metaTouch(st.db, st.table);
+        self.reloadSqlite(tv, st.db, st.table);
+        self.setMessage("{d} row(s) deleted from {s}", .{ at, st.table });
     }
 
     /// DATA > Edit cell: the selected cell becomes a text field with its value.
     pub fn dataEdit(self: *App) void {
         const tv = self.activeTable() orelse {
-            self.setMessage("DATA works on a DBF table: open one", .{});
+            self.setMessage("DATA works on a table of a database: open one", .{});
             return;
         };
+        // the list of the tables of a database: the table of the row is opened
+        if (self.sqlView()) |st| {
+            if (st.table.len == 0) {
+                if (tv.row >= tv.t.records) return;
+                var nb: [16]u8 = undefined;
+                const name = self.gpa.dupe(u8, std.mem.trim(u8, tv.t.display(tv.row, 0, &nb), " ")) catch return;
+                defer self.gpa.free(name);
+                const db = self.gpa.dupe(u8, st.db) catch return;
+                defer self.gpa.free(db);
+                self.openSqliteTable(db, name) catch |err| self.setMessage("error: {s}", .{@errorName(err)});
+                return;
+            }
+        }
         if (tv.readonly) return self.readonlyMessage();
         if (tv.row >= tv.t.records or tv.col >= tv.t.fields.len) return;
+        if (tv.sel.contains(tv.row)) {
+            self.setMessage("a selected row is not edited: unselect it first (Ctrl+click or -)", .{});
+            return;
+        }
         var buf: [16]u8 = undefined;
         self.tbl_edit.clearRetainingCapacity();
         self.tbl_edit.insertSliceAtCursor(tv.t.display(tv.row, tv.col, &buf)) catch return;
+        if (self.activeTab()) |t| t.editing = true;
         self.tbl_editing = true;
         self.focus = .editor;
     }
 
+    // Zig tip: `writeTab` can fail (a folder that is gone, a locked file); `catch` turns the error into a count of failures so
+    // one bad file does not stop the others from being saved.
+    /// File > Save All (Ctrl+A): save every window of a file that has unsaved changes.
+    pub fn saveAll(self: *App) void {
+        var saved: usize = 0;
+        var failed: usize = 0;
+        var untitled: usize = 0;
+        for (self.tabs.items) |*t| {
+            if (t.table != null) continue;
+            if (t.virtual or t.buf == null or !t.buf.?.dirty) continue;
+            if (t.path.len == 0) {
+                untitled += 1;
+                continue;
+            }
+            self.writeTab(t, t.path) catch {
+                failed += 1;
+                continue;
+            };
+            saved += 1;
+        }
+        if (failed > 0) self.setMessage("saved {d}, {d} failed", .{ saved, failed }) else if (untitled > 0) self.setMessage("saved {d}; {d} new file(s) need Save As first", .{ saved, untitled }) else if (saved == 0) self.setMessage("nothing to save", .{}) else self.setMessage("saved {d} file(s)", .{saved});
+    }
+
+    // Zig tip: Edit is one command with the meaning of what is selected: a cell of a table, a file or a table of the tree
+    // (opened in the Main Panel), a file of a folder tab. A folder is never edited this way: it is renamed (File > Rename).
+    /// Edit > Edit cell, file or table (Enter): open the file or table that is selected, or edit the cell.
+    pub fn dataEditOrOpen(self: *App) void {
+        if (self.focus == .tree) {
+            if (self.selected >= self.tree.entries.items.len) return;
+            const e = self.tree.entries.items[self.selected];
+            if (e.is_dir and e.kind != .db) {
+                self.setMessage("a folder is not edited: File > Rename changes its name", .{});
+                return;
+            }
+            self.openEntry(self.selected) catch |err| self.setMessage("error: {s}", .{@errorName(err)});
+            return;
+        }
+        if (self.activeTab()) |t| {
+            if (t.folder) |fv| {
+                if (fv.sel >= fv.items.items.len) return;
+                if (fv.items.items[fv.sel].is_dir) {
+                    self.setMessage("a folder is not edited: File > Rename changes its name", .{});
+                    return;
+                }
+                self.openFolderItem(fv, fv.sel) catch |err| self.setMessage("error: {s}", .{@errorName(err)});
+                return;
+            }
+        }
+        // Start Editing / Stop Editing of the window: a text file switches its mode, a table in editing mode stops
+        if (self.activeTab()) |t| {
+            if (t.buf != null and !t.virtual) {
+                t.editing = !t.editing;
+                self.setMessage("{s}", .{if (t.editing) "editing: Esc or Save stops it" else "editing stopped"});
+                return;
+            }
+            if (t.table != null and t.editing) {
+                t.editing = false;
+                self.tbl_editing = false;
+                self.setMessage("editing stopped", .{});
+                return;
+            }
+        }
+        self.dataEdit();
+    }
+
+    // Zig tip: a SQLite cell is changed in the database at once (`update ... where rowid = N`) and the table is read again,
+    // so the grid shows what the database holds.
     fn commitCell(self: *App, tv: *TableView) !void {
         const raw = try self.tbl_edit.toOwnedContents(self.gpa);
         defer self.gpa.free(raw);
-        tv.t.setCell(tv.row, tv.col, std.mem.trim(u8, raw, " "));
+        const val = std.mem.trim(u8, raw, " ");
         self.tbl_editing = false;
-        self.saveTable();
+        if (self.sqlView()) |st| {
+            if (tv.readonly or tv.row >= tv.rowids.len or tv.col >= tv.colnames.len) return self.readonlyMessage();
+            var buf: [16]u8 = undefined;
+            if (std.mem.eql(u8, std.mem.trim(u8, tv.t.display(tv.row, tv.col, &buf), " "), val)) return;
+            const col = try sqlQuoted(self.gpa, tv.colnames[tv.col], '"');
+            defer self.gpa.free(col);
+            const lit = if (val.len == 0 or std.mem.eql(u8, val, "NULL")) try self.gpa.dupe(u8, "NULL") else try sqlQuoted(self.gpa, val, '\'');
+            defer self.gpa.free(lit);
+            const sql = try std.fmt.allocPrint(self.gpa, "update \"{s}\" set {s} = {s} where rowid = {d};", .{ st.table, col, lit, tv.rowids[tv.row] });
+            defer self.gpa.free(sql);
+            if (self.runSql(st.db, sql)) {
+                self.metaTouch(st.db, st.table);
+                self.reloadSqlite(tv, st.db, st.table);
+            }
+            return;
+        }
+        self.readonlyMessage();
     }
 
     // ------------------------------------------------------------ the structure of a SQLite table
@@ -1901,11 +2775,14 @@ pub const App = struct {
 
     // Zig tip: a new table starts with one column, `id INTEGER` as the key, so the dialog is not empty; the rest of the
     // dialog is the same as for an old table. With nothing to compare with (`sq_orig` empty), every column counts as a change.
-    /// The dialog of a new SQLite table `name` in the file `db_rel`.
+    // The dialog has three pages (name and description, fields, indexes); the name is in a text field, not in `sq_table`,
+    // until the table is made.
+    /// The dialog of a new SQLite table in the file `db_rel`; `name` may be empty.
     fn openSqStructureNew(self: *App, db_rel: []const u8, name: []const u8) !void {
         const gpa = self.gpa;
         self.sq_cols.clearRetainingCapacity();
         self.sq_orig.clearRetainingCapacity();
+        self.sq_idx.clearRetainingCapacity();
         var c: sqlstruct.Col = .{ .pk = true, .notnull = true };
         c.setName("id");
         c.setType("INTEGER");
@@ -1914,13 +2791,174 @@ pub const App = struct {
         if (self.sq_table) |old| gpa.free(old);
         self.sq_db = try gpa.dupe(u8, db_rel);
         self.sq_table = try gpa.dupe(u8, name);
+        self.sq_name_in.clearRetainingCapacity();
+        self.sq_desc_in.clearRetainingCapacity();
+        try self.sq_name_in.insertSliceAtCursor(name);
         self.sq_row = 0;
         self.sq_col = 0;
         self.sq_editing = false;
         self.sq_drop = false;
         self.sq_error = null;
         self.sq_new = true;
+        self.sq_page = 0;
+        self.sq_ix_cur = 0;
+        self.sq_ix_mask = 0;
+        self.sq_ix_uniq = false;
+        self.sq_ix_sel = 0;
+        self.sq_ix_focus = 0;
+        self.dlg_field = 0;
         self.openOverlay(.sq_structure);
+    }
+
+    /// The name typed in the first page of the dialog of a new table (a copy that the caller frees).
+    fn sqTypedName(self: *App) ![]u8 {
+        const raw = try self.sq_name_in.toOwnedContents(self.gpa);
+        defer self.gpa.free(raw);
+        return self.gpa.dupe(u8, std.mem.trim(u8, raw, " "));
+    }
+
+    /// Is the name of the new table good? (for the Next and Create buttons)
+    pub fn sqNameOk(self: *App) bool {
+        const name = self.sqTypedName() catch return false;
+        defer self.gpa.free(name);
+        return tableNameError(name) == null;
+    }
+
+    // Zig tip: Previous and Next move between the three pages. Leaving the first page forward needs a good name, so the later
+    // pages (and the Create button) always have a table name to work with.
+    /// Go to the page before (-1) or after (+1) in the dialog of a new table.
+    fn sqGoPage(self: *App, delta: i8) void {
+        self.sq_error = null;
+        self.sq_editing = false;
+        self.sq_drop = false;
+        const to: i16 = @as(i16, self.sq_page) + delta;
+        if (to < 0 or to > 2) return;
+        if (to > 0) {
+            const name = self.sqTypedName() catch return;
+            defer self.gpa.free(name);
+            if (tableNameError(name)) |msg| {
+                self.sq_error = msg;
+                self.sq_page = 0;
+                return;
+            }
+        }
+        self.sq_page = @intCast(to);
+        if (self.sq_page == 2) {
+            self.sq_ix_cur = @min(self.sq_ix_cur, self.sq_cols.items.len -| 1);
+            if (self.sq_cols.items.len < 64) self.sq_ix_mask &= (@as(u64, 1) << @intCast(self.sq_cols.items.len)) - 1;
+        }
+    }
+
+    // Zig tip: the keys of the first page. Tab (or Up and Down) moves between the name and the description; Enter goes to the
+    // next page when the name is good. The keys that are not for the dialog go to the text field that has the focus.
+    /// The keys of the page "name and description" of a new table.
+    fn sqInfoKey(self: *App, key: Key) !void {
+        if (key.matches('s', .{ .ctrl = true })) return self.sqApply();
+        if (key.matches(Key.tab, .{}) or key.matches(Key.down, .{}) or key.matches(Key.up, .{})) {
+            self.dlg_field = 1 - self.dlg_field;
+            return;
+        }
+        if (key.matches(Key.enter, .{})) {
+            if (self.dlg_field == 0) {
+                self.dlg_field = 1;
+            } else self.sqGoPage(1);
+            return;
+        }
+        self.sq_error = null;
+        const ti = if (self.dlg_field == 0) &self.sq_name_in else &self.sq_desc_in;
+        try ti.update(.{ .key_press = key });
+    }
+
+    /// The text of a column list for an index: the names of the ticked fields, separated by commas.
+    pub fn sqIndexColsText(self: *App, buf: []u8) []const u8 {
+        var len: usize = 0;
+        for (self.sq_cols.items, 0..) |col, i| {
+            if (i >= 64 or self.sq_ix_mask & (@as(u64, 1) << @intCast(i)) == 0) continue;
+            const nm = col.nameS();
+            const gap: usize = if (len > 0) 1 else 0;
+            if (len + gap + nm.len > buf.len) break;
+            if (gap == 1) {
+                buf[len] = ',';
+                len += 1;
+            }
+            @memcpy(buf[len..][0..nm.len], nm);
+            len += nm.len;
+        }
+        return buf[0..len];
+    }
+
+    // Zig tip: the name of the index is made from the table and its fields (`ix_<table>_<field>_<field>`), and `u` is added for
+    // a unique index, so two indexes on the same fields do not clash. `bufPrint` writes into a fixed buffer and fails when the
+    // text is too long, which here is answered with a message.
+    /// Add the index made of the ticked fields to the list.
+    fn sqIdxAdd(self: *App) !void {
+        self.sq_error = null;
+        var cols_buf: [160]u8 = undefined;
+        const cols = self.sqIndexColsText(&cols_buf);
+        if (cols.len == 0) {
+            self.sq_error = "tick at least one field for the index (Space)";
+            return;
+        }
+        const table = try self.sqTypedName();
+        defer self.gpa.free(table);
+        var ix: IndexDef = .{ .unique = self.sq_ix_uniq };
+        @memcpy(ix.cols[0..cols.len], cols);
+        ix.cols_len = @intCast(cols.len);
+        var nb: [112]u8 = undefined;
+        var w: usize = 0;
+        const head = std.fmt.bufPrint(&nb, "ix_{s}{s}", .{ table, if (self.sq_ix_uniq) "_u" else "" }) catch {
+            self.sq_error = "the name of the table is too long for an index";
+            return;
+        };
+        w = head.len;
+        for (cols) |ch| {
+            if (w >= nb.len) break;
+            nb[w] = if (ch == ',') '_' else ch;
+            w += 1;
+        }
+        @memcpy(ix.name[0..w], nb[0..w]);
+        ix.name_len = @intCast(w);
+        for (self.sq_idx.items) |o| {
+            if (std.ascii.eqlIgnoreCase(o.nameS(), ix.nameS())) {
+                self.sq_error = "this index is in the list already";
+                return;
+            }
+        }
+        try self.sq_idx.append(self.gpa, ix);
+        self.sq_ix_sel = self.sq_idx.items.len - 1;
+        self.sq_ix_mask = 0;
+        self.sq_ix_uniq = false;
+        self.setMessage("index {s} added to the list", .{ix.nameS()});
+    }
+
+    /// Take the index selected in the list out of it.
+    fn sqIdxRemove(self: *App) void {
+        if (self.sq_idx.items.len == 0) return;
+        _ = self.sq_idx.orderedRemove(@min(self.sq_ix_sel, self.sq_idx.items.len - 1));
+        self.sq_ix_sel = @min(self.sq_ix_sel, self.sq_idx.items.len -| 1);
+    }
+
+    fn sqIdxToggle(self: *App, i: usize) void {
+        if (i >= self.sq_cols.items.len or i >= 64) return;
+        self.sq_ix_mask ^= @as(u64, 1) << @intCast(i);
+    }
+
+    // Zig tip: two lists share the page: the fields of the index being made, and the indexes already made. Tab changes the
+    // list that has the keys. In the first, Space ticks a field, U switches unique, Enter adds the index to the list.
+    /// The keys of the page "indexes" of a new table.
+    fn sqIndexKey(self: *App, key: Key) !void {
+        if (key.matches('s', .{ .ctrl = true })) return self.sqApply();
+        if (key.matches(Key.tab, .{})) {
+            self.sq_ix_focus = 1 - self.sq_ix_focus;
+            return;
+        }
+        if (self.sq_ix_focus == 1) {
+            const n = self.sq_idx.items.len;
+            if (key.matches(Key.up, .{})) self.sq_ix_sel = self.sq_ix_sel -| 1 else if (key.matches(Key.down, .{})) self.sq_ix_sel = @min(self.sq_ix_sel + 1, n -| 1) else if (key.matches(Key.delete, .{})) self.sqIdxRemove();
+            return;
+        }
+        const n = self.sq_cols.items.len;
+        if (key.matches(Key.up, .{})) self.sq_ix_cur = self.sq_ix_cur -| 1 else if (key.matches(Key.down, .{})) self.sq_ix_cur = @min(self.sq_ix_cur + 1, n - 1) else if (key.matches(Key.page_up, .{})) self.sq_ix_cur = self.sq_ix_cur -| 7 else if (key.matches(Key.page_down, .{})) self.sq_ix_cur = @min(self.sq_ix_cur + 7, n - 1) else if (key.matches(Key.space, .{})) self.sqIdxToggle(self.sq_ix_cur) else if (key.matches('u', .{})) self.sq_ix_uniq = !self.sq_ix_uniq else if (key.matches(Key.enter, .{}) or key.matches(Key.insert, .{})) try self.sqIdxAdd() else if (key.matches(Key.delete, .{})) self.sqIdxRemove();
     }
 
     pub fn sqChanges(self: *const App) usize {
@@ -2005,6 +3043,13 @@ pub const App = struct {
 
     /// The keys of the structure dialog of a SQLite table.
     fn sqKey(self: *App, key: Key) !void {
+        // a new table has three pages: Ctrl+Left and Ctrl+Right move between them; the first and the last have their own keys
+        if (self.sq_new and !self.sq_editing and !self.sq_drop) {
+            if (key.matches(Key.right, .{ .ctrl = true })) return self.sqGoPage(1);
+            if (key.matches(Key.left, .{ .ctrl = true })) return self.sqGoPage(-1);
+            if (self.sq_page == 0) return self.sqInfoKey(key);
+            if (self.sq_page == 2) return self.sqIndexKey(key);
+        }
         if (self.sq_editing) {
             if (key.matches(Key.enter, .{})) return self.sqCommit();
             try self.sq_edit.update(.{ .key_press = key });
@@ -2030,17 +3075,30 @@ pub const App = struct {
     /// The Apply button of the SQLite structure dialog: check the columns and ask before the table is rebuilt.
     fn sqApply(self: *App) !void {
         self.sq_error = null;
+        if (self.sq_new) {
+            const name = try self.sqTypedName();
+            defer self.gpa.free(name);
+            if (tableNameError(name)) |msg| {
+                self.sq_error = msg;
+                self.sq_page = 0;
+                return;
+            }
+            if (self.sq_table) |old| self.gpa.free(old);
+            self.sq_table = try self.gpa.dupe(u8, name);
+        }
         const items = self.sq_cols.items;
         for (items, 0..) |c, i| {
             if (sqlstruct.check(&c)) |msg| {
                 self.sq_error = msg;
                 self.sq_row = i;
+                if (self.sq_new) self.sq_page = 1;
                 return;
             }
             for (items[0..i]) |o| {
                 if (std.ascii.eqlIgnoreCase(o.nameS(), c.nameS())) {
                     self.sq_error = "two columns have the same name";
                     self.sq_row = i;
+                    self.sq_page = 1;
                     return;
                 }
             }
@@ -2057,17 +3115,41 @@ pub const App = struct {
         const gpa = self.gpa;
         const db = self.sq_db orelse return;
         const table = self.sq_table orelse return;
-        const script = if (self.sq_new) try sqlstruct.buildCreate(gpa, table, self.sq_cols.items) else try sqlstruct.buildScript(gpa, table, self.sq_cols.items, self.sq_orig.items);
-        defer gpa.free(script);
+        const base = if (self.sq_new) try sqlstruct.buildCreate(gpa, table, self.sq_cols.items) else try sqlstruct.buildScript(gpa, table, self.sq_cols.items, self.sq_orig.items);
+        defer gpa.free(base);
+        // the indexes of a new table go after the table, one statement each
+        var sb: std.ArrayList(u8) = .empty;
+        defer sb.deinit(gpa);
+        try sb.appendSlice(gpa, base);
+        if (self.sq_new) {
+            for (self.sq_idx.items) |ix| {
+                try sb.print(gpa, " create {s}index \"{s}\" on \"{s}\" (", .{ if (ix.unique) "unique " else "", ix.nameS(), table });
+                var it = std.mem.splitScalar(u8, ix.colsS(), ',');
+                var first = true;
+                while (it.next()) |cn| {
+                    if (!first) try sb.appendSlice(gpa, ", ");
+                    first = false;
+                    try sb.print(gpa, "\"{s}\"", .{cn});
+                }
+                try sb.appendSlice(gpa, ");");
+            }
+        }
+        const script = sb.items;
         const out = try self.eveText(&.{ "db", "sql", db, script });
         defer gpa.free(out);
         if (std.mem.indexOf(u8, out, "error:") != null) {
             self.sq_error = "SQLite refused the change (see the SQL panel)";
+            if (self.sq_new) self.sq_page = 0;
             try self.sql_log.addBlock(gpa, out, .err);
             self.openOverlay(.sq_structure);
             return;
         }
         self.overlay = .none;
+        if (self.sq_new) {
+            const desc = self.sq_desc_in.toOwnedContents(gpa) catch null;
+            defer if (desc) |d| gpa.free(d);
+            self.metaCreated(db, table, if (desc) |d| std.mem.trim(u8, d, " ") else "");
+        } else self.metaTouch(db, table);
         // the table is shown again with its new columns
         const key = try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, table });
         defer gpa.free(key);
@@ -2115,6 +3197,10 @@ pub const App = struct {
     // the loop), because after it the value is used as a plain slice.
     /// File > Rename…: the Info dialog of the file or table that is pointed at, with its name ready to edit.
     pub fn openRename(self: *App) void {
+        if (!self.menuEnabled(.rename_file)) {
+            self.setMessage("Rename works on one file or folder: {d} are selected (/ clears the selection)", .{self.marks.items.len});
+            return;
+        }
         const rel = self.fileTarget() orelse {
             self.setMessage("Rename: select a file in the tree, or open one (a new file must be saved first)", .{});
             return;
@@ -2376,44 +3462,602 @@ pub const App = struct {
         self.openPropertiesOf(try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, new }), false);
     }
 
-    /// File > Delete…: ask first; Yes deletes the file.
-    pub fn openDelete(self: *App) void {
-        const rel = self.fileTarget() orelse {
-            self.setMessage("Delete: select a file in the tree, or open one", .{});
-            return;
+    // Zig tip: a menu row is enabled or not by a function of the state of the app, so the drawing and the commands agree.
+    /// Can the command of a menu row run now? Rename works on one item: it is off while several are selected.
+    pub fn menuEnabled(self: *App, cmd: MenuCmd) bool {
+        const has_project = self.root.len > 0 and self.tree.entries.items.len > 0;
+        const tabs = self.tabs.items.len;
+        const tab = self.activeTab();
+        const text_tab = if (tab) |t| t.buf != null and !t.virtual else false;
+        const table = self.activeTable();
+        const editable_table = if (table) |tv| !tv.readonly else false;
+        return switch (cmd) {
+            // File
+            .new_file, .new_folder, .new_database, .find_file, .toggle_hidden, .find_files, .replace_files => has_project,
+            .create_table, .import_data => has_project and self.selectedDb() != null,
+            .save => if (tab) |t| text_tab or (t.table != null and !t.virtual) else false,
+            .save_as => text_tab or (table != null and !self.isOverview()),
+            .save_all => self.anyDirtyFile(),
+            .select_all, .select_row, .unselect_row, .unselect_all => has_project or (if (tab) |t| t.folder != null or t.table != null else false),
+            .rename_file => self.hasFileTarget() and self.marks.items.len <= 1,
+            .delete_file, .move_marked => self.hasFileTarget() or self.marks.items.len > 0,
+            .close_tab, .close_window, .close_all, .close_clean => tabs > 0,
+            .close_project => self.root.len > 0 and self.selected < self.tree.entries.items.len and self.tree.entries.items[self.selected].parent == null,
+            // Edit
+            .undo, .redo => text_tab,
+            .data_structure => if (table != null) !self.isOverview() else false,
+            .drop_table => (table != null and !self.isOverview() and !std.mem.startsWith(u8, tab.?.path, "filter:")) or self.selectedDb() != null,
+            .compact => table != null or self.selectedDb() != null,
+            .data_append, .data_append_n, .data_delete => editable_table,
+            .data_edit => text_tab or editable_table or self.isOverview() or (if (tab) |t| t.folder != null else false) or (self.focus == .tree and has_project),
+            // Search: Find and Replace work in a text file that can be edited
+            .find_text, .replace => text_tab,
+            .goto_line => self.activeBuffer() != null,
+            // Filter and Query work on the table of the window, or on the table that is selected in the tree and is open
+            .query => self.tableTab() != null,
+            .filter_table => self.tableTab() != null,
+            // Run
+            .run, .check_file => self.canRun() or self.job != null,
+            .dbg_next, .dbg_step, .dbg_exit, .dbg_trace => self.canRun() or self.job != null,
+            .stop => self.job != null or self.running,
+            .breakpoint => if (tab) |t| t.buf != null and t.eve else false,
+            // Window
+            .select_window => tabs > 1 or self.activePanel() == .tools,
+            .next_panel => self.shownPanels() > 1,
+            else => true,
         };
-        defer self.gpa.free(rel);
-        if (std.mem.indexOfScalar(u8, rel, '#') != null) {
-            self.setMessage("Delete works on files: use EDIT > Drop table… for a table", .{});
-            return;
-        }
-        const full = self.fullPath(rel) catch return;
-        defer self.gpa.free(full);
-        const st = Io.Dir.cwd().statFile(self.io, full, .{}) catch {
-            self.setMessage("{s} is not on the disk", .{rel});
-            return;
-        };
-        if (st.kind == .directory) {
-            self.setMessage("Delete works on files: {s} is a folder", .{rel});
-            return;
-        }
-        if (self.drop_a) |old| self.gpa.free(old);
-        self.drop_a = self.gpa.dupe(u8, rel) catch return;
-        self.askConfirm(.delete_file, 0, "Delete the file {s}? It cannot be recovered.", .{rel});
     }
 
-    /// The Yes of the delete dialog: delete the file, close its tab, scan the tree again.
-    fn performDeleteFile(self: *App) void {
-        const rel = self.drop_a orelse return;
-        const full = self.fullPath(rel) catch return;
-        defer self.gpa.free(full);
-        Io.Dir.cwd().deleteFile(self.io, full) catch |err| {
-            self.setMessage("cannot delete {s}: {s}", .{ rel, @errorName(err) });
+    fn shownPanels(self: *const App) u8 {
+        var n: u8 = 0;
+        for ([_]Panel{ .tree, .main, .tools }) |p| {
+            if (self.isShown(p)) n += 1;
+        }
+        return n;
+    }
+
+    // Zig tip: no allocation here, unlike `fileTarget`: the menu asks every frame, so the answer comes from looking at the
+    // selected row of the tree or at the active window, without copying a path.
+    /// Is there a file or folder that Rename, Delete and Move can work on?
+    fn hasFileTarget(self: *App) bool {
+        if (self.focus == .tree) {
+            return self.selected < self.tree.entries.items.len and self.tree.entries.items[self.selected].parent != null;
+        }
+        const t = self.activeTab() orelse return false;
+        if (t.folder != null) return t.path.len > 0;
+        return !t.virtual and t.path.len > 0 and !std.mem.startsWith(u8, t.path, "filter:") and t.path[t.path.len - 1] != '#';
+    }
+
+    /// The window of the table that Filter and Query work on: the table selected in the tree when it is open, else the table
+    /// of the active window (the list of the tables of a database is not a table to filter).
+    fn tableTab(self: *App) ?*Tab {
+        if (self.focus == .tree and self.selected < self.tree.entries.items.len) {
+            const e = self.tree.entries.items[self.selected];
+            for (self.tabs.items) |*t| {
+                if (t.table != null and std.mem.eql(u8, t.path, e.path)) return t;
+            }
+        }
+        const t = self.activeTab() orelse return null;
+        if (t.table == null or self.isOverview()) return null;
+        return t;
+    }
+
+    // Zig tip: SQLite gives the room of deleted rows back with `vacuum`, which rewrites the database file, and
+    // `pragma optimize` refreshes what the planner knows.
+    /// EDIT > Compact: vacuum and optimize a SQLite database.
+    pub fn compact(self: *App) void {
+        if (self.sqlView()) |st| return self.compactDb(st.db);
+        if (self.selectedDb()) |db| {
+            const copy = self.gpa.dupe(u8, db) catch return;
+            defer self.gpa.free(copy);
+            return self.compactDb(copy);
+        }
+        self.setMessage("Compact: select a SQLite database", .{});
+    }
+
+    fn compactDb(self: *App, db: []const u8) void {
+        if (!self.runSql(db, "vacuum;")) return;
+        _ = self.runSql(db, "pragma optimize;");
+        self.setMessage("{s} compacted (vacuum, optimize)", .{db});
+    }
+
+    // ------------------------------------------------------------ the filter of a table
+
+    // Zig tip: the dialog keeps a list of rows, each a column number and a pattern; the pattern of the row that is selected is
+    // being typed in a text field (`flt_in`), and it is copied back into the row (`filterCommit`) whenever the selection moves or
+    // the dialog ends. `gpa.dupe(u8, "")` makes an owned empty string, so every `pat` can be freed the same way.
+    /// Search > Filter…: choose columns and the values or patterns their cells must match; Enter shows the rows that match.
+    pub fn openFilter(self: *App) void {
+        const t = self.tableTab() orelse return;
+        const tv = t.table orelse return;
+        for (self.flt_rows.items) |r| self.gpa.free(r.pat);
+        self.flt_rows.clearRetainingCapacity();
+        if (self.flt_src) |old| self.gpa.free(old);
+        self.flt_src = null;
+        if (self.flt_replace) |old| self.gpa.free(old);
+        self.flt_replace = null;
+        if (self.flt_view) |old| self.gpa.free(old);
+        self.flt_view = null;
+        if (std.mem.startsWith(u8, t.path, "filter:") and tv.filter_src.len > 0) {
+            // Alter filter: the dialog starts with the filters of this window and works on the table it came from
+            var open = false;
+            for (self.tabs.items) |o| {
+                if (o.table != null and std.mem.eql(u8, o.path, tv.filter_src)) open = true;
+            }
+            if (!open) {
+                self.setMessage("open the table {s} first: the filter works on it", .{tv.filter_src});
+                return;
+            }
+            self.flt_src = self.gpa.dupe(u8, tv.filter_src) catch return;
+            self.flt_replace = self.gpa.dupe(u8, t.path) catch return;
+            for (tv.filter_rows) |r| self.filterPush(r.col, r.pat);
+        } else {
+            self.flt_src = self.gpa.dupe(u8, t.path) catch return;
+            // every field is in the filter, with no pattern, until the last patterns of the table are put back
+            for (0..tv.t.fields.len) |c| self.filterPush(c, "");
+            self.filtersLoad(self.flt_src.?);
+        }
+        self.flt_sel = 0;
+        self.flt_pick = false;
+        self.flt_in.clearRetainingCapacity();
+        if (self.flt_rows.items.len > 0) self.flt_in.insertSliceAtCursor(self.flt_rows.items[0].pat) catch {};
+        self.openOverlay(.filter);
+    }
+
+    /// Put `pat` in the row of column `col`, when the filter has that field.
+    fn filterSetPat(self: *App, col: usize, pat: []const u8) void {
+        for (self.flt_rows.items) |*r| {
+            if (r.col != col) continue;
+            const copy = self.gpa.dupe(u8, pat) catch return;
+            self.gpa.free(r.pat);
+            r.pat = copy;
+        }
+    }
+
+    fn filterPush(self: *App, col: usize, pat: []const u8) void {
+        const copy = self.gpa.dupe(u8, pat) catch return;
+        self.flt_rows.append(self.gpa, .{ .col = col, .pat = copy }) catch self.gpa.free(copy);
+    }
+
+    // Zig tip: the filter of a table is a preference of the person, not part of the table: it is kept in the file
+    // `evetx-filters.txt` of the user cache, one line for each filter: the table, the column number and the pattern, separated by
+    // tabs. A new apply replaces the lines of that table and leaves the others. Saving the filter for good is Save As: a view.
+    /// Put the filters last applied to the table `src` in the dialog.
+    fn filtersLoad(self: *App, src: []const u8) void {
+        const bytes = self.cache.readFile("evetx-filters.txt") orelse return;
+        defer self.gpa.free(bytes);
+        var lines = std.mem.splitScalar(u8, bytes, '\n');
+        while (lines.next()) |raw| {
+            var f = std.mem.splitScalar(u8, std.mem.trimEnd(u8, raw, "\r"), '\t');
+            const key = f.next() orelse continue;
+            if (!std.mem.eql(u8, key, src)) continue;
+            const col = std.fmt.parseInt(usize, f.next() orelse continue, 10) catch continue;
+            self.filterSetPat(col, f.next() orelse "");
+        }
+    }
+
+    /// Remember the filters of the dialog for the table `src`.
+    fn filtersStore(self: *App, src: []const u8) void {
+        var out: std.ArrayList(u8) = .empty;
+        defer out.deinit(self.gpa);
+        if (self.cache.readFile("evetx-filters.txt")) |bytes| {
+            defer self.gpa.free(bytes);
+            var lines = std.mem.splitScalar(u8, bytes, '\n');
+            while (lines.next()) |raw| {
+                if (raw.len == 0) continue;
+                const cut = std.mem.indexOfScalar(u8, raw, '\t') orelse continue;
+                if (std.mem.eql(u8, raw[0..cut], src)) continue;
+                out.appendSlice(self.gpa, raw) catch return;
+                out.append(self.gpa, '\n') catch return;
+            }
+        }
+        for (self.flt_rows.items) |r| {
+            if (r.pat.len == 0) continue;
+            const line = std.fmt.allocPrint(self.gpa, "{s}\t{d}\t{s}\n", .{ src, r.col, r.pat }) catch return;
+            defer self.gpa.free(line);
+            for (line[0 .. line.len - 1]) |*c| {
+                if (c.* == '\r') c.* = ' ';
+            }
+            out.appendSlice(self.gpa, line) catch return;
+        }
+        self.cache.writeFile("evetx-filters.txt", out.items) catch {};
+    }
+
+    fn filterTable(self: *App) ?*TableView {
+        const src = self.flt_src orelse return null;
+        for (self.tabs.items) |t| {
+            if (std.mem.eql(u8, t.path, src)) return t.table;
+        }
+        return null;
+    }
+
+    /// The name of column `c` of the table being filtered (the real name of a SQLite column).
+    pub fn filterColName(self: *App, c: usize) []const u8 {
+        const tv = self.filterTable() orelse return "";
+        if (c < tv.colnames.len) return tv.colnames[c];
+        if (c < tv.t.fields.len) return tv.t.fields[c].nameSlice();
+        return "";
+    }
+
+    /// The title of the tab of the table being filtered.
+    pub fn filterTableTitle(self: *App) []const u8 {
+        const src = self.flt_src orelse return "";
+        for (self.tabs.items) |t| {
+            if (std.mem.eql(u8, t.path, src)) return t.title();
+        }
+        return "";
+    }
+
+    fn filterCommit(self: *App) void {
+        if (self.flt_sel >= self.flt_rows.items.len) return;
+        const raw = self.flt_in.toOwnedContents(self.gpa) catch return;
+        const row = &self.flt_rows.items[self.flt_sel];
+        self.gpa.free(row.pat);
+        row.pat = raw;
+    }
+
+    fn filterSelect(self: *App, i: usize) void {
+        if (i >= self.flt_rows.items.len) return;
+        self.filterCommit();
+        self.flt_sel = i;
+        self.flt_in.clearRetainingCapacity();
+        self.flt_in.insertSliceAtCursor(self.flt_rows.items[i].pat) catch {};
+    }
+
+    // Zig tip: the fields that are not in the filter are found by looking, for each field of the table, whether a row has its column
+    // number; `buf` is an array of the caller that receives them, and the answer is the part of it that was filled.
+    /// The columns of the table that are not in the filter, in the order of the table.
+    fn filterMissing(self: *App, buf: *[256]usize) []usize {
+        const tv = self.filterTable() orelse return buf[0..0];
+        var n: usize = 0;
+        for (0..@min(tv.t.fields.len, 256)) |c| {
+            var in = false;
+            for (self.flt_rows.items) |r| {
+                if (r.col == c) in = true;
+            }
+            if (!in) {
+                buf[n] = c;
+                n += 1;
+            }
+        }
+        return buf[0..n];
+    }
+
+    /// The names of the fields that are not in the filter, for the list of Add field.
+    pub fn filterMissingCol(self: *App, k: usize) ?usize {
+        var buf: [256]usize = undefined;
+        const m = self.filterMissing(&buf);
+        return if (k < m.len) m[k] else null;
+    }
+
+    /// Add field: open the list of the fields that were taken out.
+    fn filterAdd(self: *App) void {
+        self.filterCommit();
+        var buf: [256]usize = undefined;
+        if (self.filterMissing(&buf).len == 0) {
+            self.setMessage("all the fields of the table are in the filter", .{});
+            return;
+        }
+        self.flt_pick = true;
+        self.flt_pick_sel = 0;
+    }
+
+    /// A field was chosen in the list: it goes back into the filter, at its place in the table.
+    fn filterPickChoose(self: *App, k: usize) void {
+        self.flt_pick = false;
+        const col = self.filterMissingCol(k) orelse return;
+        const empty = self.gpa.dupe(u8, "") catch return;
+        var at: usize = self.flt_rows.items.len;
+        for (self.flt_rows.items, 0..) |r, i| {
+            if (r.col > col) {
+                at = i;
+                break;
+            }
+        }
+        self.flt_rows.insert(self.gpa, at, .{ .col = col, .pat = empty }) catch {
+            self.gpa.free(empty);
             return;
         };
-        self.closeTabByPath(rel);
+        self.flt_sel = at;
+        self.flt_in.clearRetainingCapacity();
+    }
+
+    /// Remove field: the selected field leaves the filter (and the view that is made from it).
+    fn filterRemove(self: *App) void {
+        if (self.flt_sel >= self.flt_rows.items.len) return;
+        if (self.flt_rows.items.len <= 1) {
+            self.setMessage("a filter keeps at least one field", .{});
+            return;
+        }
+        const gone = self.flt_rows.orderedRemove(self.flt_sel);
+        self.gpa.free(gone.pat);
+        self.flt_sel = @min(self.flt_sel, self.flt_rows.items.len -| 1);
+        self.flt_in.clearRetainingCapacity();
+        if (self.flt_rows.items.len > 0) self.flt_in.insertSliceAtCursor(self.flt_rows.items[self.flt_sel].pat) catch {};
+    }
+
+    fn filterKey(self: *App, key: Key) !void {
+        if (self.flt_pick) {
+            // the list of the fields that can be added back
+            var buf: [256]usize = undefined;
+            const n = self.filterMissing(&buf).len;
+            if (key.matches(Key.up, .{})) self.flt_pick_sel = self.flt_pick_sel -| 1;
+            if (key.matches(Key.down, .{})) self.flt_pick_sel = @min(self.flt_pick_sel + 1, n -| 1);
+            if (key.matches(Key.enter, .{})) self.filterPickChoose(self.flt_pick_sel);
+            return;
+        }
+        if (key.matches(Key.enter, .{})) return self.filterApply();
+        if (key.matches(Key.up, .{})) return self.filterSelect(self.flt_sel -| 1);
+        if (key.matches(Key.down, .{})) return self.filterSelect(@min(self.flt_sel + 1, self.flt_rows.items.len -| 1));
+        if (key.matches(Key.tab, .{})) return self.filterSelect((self.flt_sel + 1) % @max(1, self.flt_rows.items.len));
+        if (key.matches(Key.tab, .{ .shift = true })) return self.filterSelect((self.flt_sel + self.flt_rows.items.len -| 1) % @max(1, self.flt_rows.items.len));
+        if (key.matches(Key.insert, .{}) or key.matches('n', .{ .ctrl = true })) return self.filterAdd();
+        if (key.matches('d', .{ .ctrl = true })) return self.filterRemove();
+        if (self.flt_rows.items.len == 0) return;
+        try self.flt_in.update(.{ .key_press = key });
+    }
+
+    // Zig tip: a pattern is first tried as a regular expression; one that is not valid (`compile` fails) is searched as plain text.
+    // `?regex.Regex` holds the compiled one or null. `std.ascii.indexOfIgnoreCase` is the plain search.
+    const Matcher = struct {
+        col: usize,
+        re: ?regex.Regex,
+        lit: []const u8,
+
+        fn test_(m: *const Matcher, cell: []const u8) bool {
+            if (m.re) |*re| return re.find(cell);
+            return std.ascii.indexOfIgnoreCase(cell, m.lit) != null;
+        }
+    };
+
+    /// Enter of the filter dialog: a new window with the rows that match every filter.
+    fn filterApply(self: *App) !void {
+        const gpa = self.gpa;
+        self.filterCommit();
+        const tv = self.filterTable() orelse {
+            self.overlay = .none;
+            return;
+        };
+        var ms: std.ArrayList(Matcher) = .empty;
+        defer {
+            for (ms.items) |*m| if (m.re) |*re| re.deinit();
+            ms.deinit(gpa);
+        }
+        for (self.flt_rows.items) |r| {
+            if (r.pat.len == 0) continue;
+            const re: ?regex.Regex = regex.Regex.compile(gpa, r.pat) catch null;
+            try ms.append(gpa, .{ .col = r.col, .re = re, .lit = r.pat });
+        }
+        if (ms.items.len == 0 and self.flt_rows.items.len >= tv.t.fields.len) {
+            self.setMessage("type a value or a pattern in a field, or take a field out", .{});
+            return;
+        }
+        var tsv: std.ArrayList(u8) = .empty;
+        defer tsv.deinit(gpa);
+        for (self.flt_rows.items, 0..) |fr, i| {
+            if (i > 0) try tsv.append(gpa, '\t');
+            try tsv.appendSlice(gpa, self.filterColName(fr.col));
+        }
+        try tsv.append(gpa, '\n');
+        var kept: usize = 0;
+        var kept_rows: std.ArrayList(usize) = .empty;
+        defer kept_rows.deinit(gpa);
+        var kept_ids: std.ArrayList(i64) = .empty;
+        defer kept_ids.deinit(gpa);
+        var r: usize = 0;
+        while (r < tv.t.records) : (r += 1) {
+            if (tv.t.deleted(r)) continue;
+            var ok = true;
+            for (ms.items) |*m| {
+                var b: [16]u8 = undefined;
+                if (!m.test_(std.mem.trim(u8, tv.t.display(r, m.col, &b), " "))) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) continue;
+            kept += 1;
+            try kept_rows.append(gpa, r);
+            if (tv.rowids.len == tv.t.records) try kept_ids.append(gpa, tv.rowids[r]);
+            for (self.flt_rows.items, 0..) |fr, i| {
+                if (i > 0) try tsv.append(gpa, '\t');
+                var b: [16]u8 = undefined;
+                for (std.mem.trim(u8, tv.t.display(r, fr.col, &b), " ")) |ch| try tsv.append(gpa, if (ch == '\t' or ch == '\n' or ch == '\r') ' ' else ch);
+            }
+            try tsv.append(gpa, '\n');
+        }
+        const table = try grid.fromTsv(gpa, tsv.items);
+        var nv: TableView = .{ .t = table, .readonly = true };
+        var keep = false;
+        defer if (!keep) nv.release();
+        // what Save As needs later: the table, the filters, the records, the real names of the columns
+        nv.filter_src = try gpa.dupe(u8, self.flt_src.?);
+        var rows: std.ArrayList(FilterRow) = .empty;
+        errdefer rows.deinit(gpa);
+        for (self.flt_rows.items) |fr| {
+            try rows.append(gpa, .{ .col = fr.col, .pat = try gpa.dupe(u8, fr.pat) });
+        }
+        nv.filter_rows = try rows.toOwnedSlice(gpa);
+        nv.kept = try kept_rows.toOwnedSlice(gpa);
+        nv.kept_ids = try kept_ids.toOwnedSlice(gpa);
+        const names = try gpa.alloc([]u8, tv.t.fields.len);
+        for (names, 0..) |*n, c| n.* = try gpa.dupe(u8, self.filterColName(c));
+        nv.colnames = names;
+        self.filtersStore(self.flt_src.?);
+        // Alter table on a view: the view is dropped and made again with the new filters
+        if (self.flt_view) |vn| {
+            const src = self.flt_src.?;
+            const h = std.mem.indexOfScalar(u8, src, '#') orelse src.len;
+            const db = try gpa.dupe(u8, src[0..h]);
+            defer gpa.free(db);
+            const base = try gpa.dupe(u8, if (h < src.len) src[h + 1 ..] else "");
+            defer gpa.free(base);
+            const view_name = try gpa.dupe(u8, vn);
+            defer gpa.free(view_name);
+            const tid = try sqlQuoted(gpa, base, '"');
+            defer gpa.free(tid);
+            var snapshot = false;
+            const sel = try self.selectSqlFor(tid, &nv, &snapshot);
+            defer gpa.free(sel);
+            self.overlay = .none;
+            if (!self.runDb(&.{ "drop", "view", db, view_name })) return;
+            if (!self.runDb(&.{ "create", "view", db, view_name, sel })) return;
+            self.metaTouch(db, view_name);
+            const key = try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, view_name });
+            defer gpa.free(key);
+            var i = self.tabs.items.len;
+            while (i > 0) {
+                i -= 1;
+                if (std.mem.eql(u8, self.tabs.items[i].path, key)) self.closeTab(i);
+            }
+            self.refreshDbTables(db) catch {};
+            try self.openSqliteTable(db, view_name);
+            self.setMessage("view {s} altered{s}", .{ view_name, if (snapshot) " (the pattern is a regular expression: it lists the rows found now)" else "" });
+            return;
+        }
+        // Alter filter replaces the rows of the window that was altered; Filter opens a new window
+        if (self.flt_replace) |rp| {
+            for (self.tabs.items, 0..) |*t, i| {
+                if (t.table != null and std.mem.eql(u8, t.path, rp)) {
+                    t.table.?.release();
+                    keep = true;
+                    t.table.?.* = nv;
+                    self.active = i;
+                    self.focus = .editor;
+                    self.overlay = .none;
+                    self.setMessage("filter: {d} of {d} rows match", .{ kept, tv.t.records });
+                    return;
+                }
+            }
+        }
+        const view = try gpa.create(TableView);
+        errdefer gpa.destroy(view);
+        view.* = nv;
+        keep = true;
+        self.flt_count += 1;
+        const key = try std.fmt.allocPrint(gpa, "filter:{d}:{s}", .{ self.flt_count, self.flt_src.? });
+        errdefer gpa.free(key);
+        const label = try gpa.dupe(u8, self.filterTableTitle());
+        errdefer gpa.free(label);
+        try self.tabs.insert(gpa, 0, .{ .path = key, .table = view, .label = label });
+        self.active = 0;
+        self.tab_first = 0;
+        self.focus = .editor;
+        self.overlay = .none;
+        self.setMessage("filter: {d} of {d} rows match", .{ kept, tv.t.records });
+    }
+
+    // Zig tip: the project is closed with all its windows, and the tree is empty until another is opened.
+    /// File > Close project: close all the windows and empty the tree (File > Open project opens another).
+    pub fn closeProject(self: *App) void {
+        if (self.root.len == 0) return;
+        for (self.tabs.items) |t| {
+            if (t.buf != null and t.buf.?.dirty) {
+                self.setMessage("save or close the changed files first", .{});
+                return;
+            }
+        }
+        const empty_name = self.gpa.dupe(u8, "") catch return;
+        const empty_root = self.gpa.dupe(u8, "") catch {
+            self.gpa.free(empty_name);
+            return;
+        };
+        self.saveSession() catch {};
+        while (self.tabs.items.len > 0) self.closeTab(0);
+        for (self.breakpoints.items) |b| self.gpa.free(b.path);
+        self.breakpoints.clearRetainingCapacity();
+        if (self.saved_open) |snap| self.gpa.free(snap);
+        self.saved_open = null;
+        self.tree.deinit();
+        self.tree = project.Tree.init(self.gpa);
+        self.gpa.free(self.project_name);
+        self.gpa.free(self.root);
+        if (self.work_dir) |c| self.gpa.free(c);
+        self.work_dir = null;
+        self.project_name = empty_name;
+        self.root = empty_root;
+        self.selected = 0;
+        self.tree_top = 0;
+        self.focus = .tree;
+        self.setMessage("project closed", .{});
+    }
+
+    /// The paths to delete, copied into `move_srcs` (the list is free while a question is open): the selected rows, else the
+    /// row under the cursor. Tables (`db#table`) and the project folder are left out.
+    fn deleteTargets(self: *App) !void {
+        for (self.move_srcs.items) |p| self.gpa.free(p);
+        self.move_srcs.clearRetainingCapacity();
+        if (self.marks.items.len > 0) {
+            for (self.marks.items) |p| {
+                if (std.mem.indexOfScalar(u8, p, '#') != null) continue;
+                try self.move_srcs.append(self.gpa, try self.gpa.dupe(u8, p));
+            }
+        } else if (self.fileTarget()) |rel| {
+            if (std.mem.indexOfScalar(u8, rel, '#') != null) self.gpa.free(rel) else try self.move_srcs.append(self.gpa, rel);
+        }
+    }
+
+    // Zig tip: the question names one thing, or counts several; `statFile(...).kind` tells a folder from a file, and a folder
+    // goes with everything inside it (`deleteTree`), so the question says so. The answer is the same dialog as everywhere.
+    /// File > Delete…: ask first; Yes deletes the selected files and folders (a folder with its content).
+    pub fn openDelete(self: *App) void {
+        self.deleteTargets() catch return;
+        const n = self.move_srcs.items.len;
+        if (n == 0) {
+            self.setMessage("Delete: select files or folders (a table is dropped with EDIT > Drop table…)", .{});
+            return;
+        }
+        var folders: usize = 0;
+        for (self.move_srcs.items) |rel| {
+            const full = self.fullPath(rel) catch continue;
+            defer self.gpa.free(full);
+            const st = Io.Dir.cwd().statFile(self.io, full, .{}) catch continue;
+            if (st.kind == .directory) folders += 1;
+        }
+        if (n == 1) {
+            const what: []const u8 = if (folders == 1) "the folder and everything in it" else "the file";
+            self.askConfirm(.delete_file, 0, "Delete {s} {s}? It cannot be recovered.", .{ what, self.move_srcs.items[0] });
+        } else if (folders == 0) {
+            self.askConfirm(.delete_file, 0, "Delete {d} files? They cannot be recovered.", .{n});
+        } else {
+            self.askConfirm(.delete_file, 0, "Delete {d} items ({d} folders with their content)? They cannot be recovered.", .{ n, folders });
+        }
+    }
+
+    /// Close the windows of a file, and of the files inside a folder, that is going away.
+    fn closeTabsUnder(self: *App, path: []const u8) void {
+        var i = self.tabs.items.len;
+        while (i > 0) {
+            i -= 1;
+            const tp = self.tabs.items[i].path;
+            const same = std.mem.eql(u8, tp, path);
+            const inside = tp.len > path.len and std.mem.startsWith(u8, tp, path) and tp[path.len] == '/';
+            if (same or inside) self.closeTab(i);
+        }
+    }
+
+    /// The Yes of the delete dialog: delete the files and folders, close their windows, scan the tree again.
+    fn performDelete(self: *App) void {
+        var done: usize = 0;
+        var failed: usize = 0;
+        for (self.move_srcs.items) |rel| {
+            const full = self.fullPath(rel) catch continue;
+            defer self.gpa.free(full);
+            // a folder inside a folder that went before is already gone
+            const st = Io.Dir.cwd().statFile(self.io, full, .{}) catch continue;
+            const res = if (st.kind == .directory) Io.Dir.cwd().deleteTree(self.io, full) else Io.Dir.cwd().deleteFile(self.io, full);
+            res catch {
+                failed += 1;
+                continue;
+            };
+            self.closeTabsUnder(rel);
+            done += 1;
+        }
+        self.clearMarks();
         self.refreshTree();
-        self.setMessage("deleted {s}", .{rel});
+        self.reloadFolders();
+        self.selected = @min(self.selected, @as(u32, @intCast(self.tree.entries.items.len -| 1)));
+        if (failed > 0) self.setMessage("deleted {d}, {d} failed", .{ done, failed }) else self.setMessage("deleted {d} item(s)", .{done});
     }
 
     // ------------------------------------------------------------ create table and drop table
@@ -2431,42 +4075,34 @@ pub const App = struct {
         };
     }
 
-    /// What a new table would be now, as a text for the dialog: the database or the folder it goes to.
-    pub fn createTableTarget(self: *const App) []const u8 {
-        if (self.selectedDb()) |db| return db;
-        const dir = self.targetDir();
-        return if (dir.len == 0) "the project folder" else dir;
-    }
-
-    /// EDIT > Create table…, or `create table` in the SQL panel: ask for the name.
-    pub fn openCreateTable(self: *App) void {
-        self.saveas_in.clearRetainingCapacity();
-        self.openOverlay(.new_table);
-    }
-
-    /// Make the table `name`: a SQLite table when a database is selected, a DBF table when a folder is.
-    fn createTableNamed(self: *App, name: []const u8) !void {
-        const gpa = self.gpa;
-        if (name.len == 0 or !(std.ascii.isAlphabetic(name[0]) or name[0] == '_')) {
-            self.setMessage("a table name begins with a letter", .{});
-            return;
-        }
+    // Zig tip: a name is checked in one place and the answer is the text of the problem, or null when the name is good: an
+    // optional that holds the error is a small way to return "what is wrong" without an error set.
+    /// Why `name` cannot be the name of a table, or null when it can.
+    pub fn tableNameError(name: []const u8) ?[]const u8 {
+        if (name.len == 0) return "the table needs a name";
+        if (!(std.ascii.isAlphabetic(name[0]) or name[0] == '_')) return "a table name begins with a letter";
         for (name) |c| {
-            if (!(std.ascii.isAlphanumeric(c) or c == '_')) {
-                self.setMessage("a table name has letters, digits and _ only", .{});
-                return;
-            }
+            if (!(std.ascii.isAlphanumeric(c) or c == '_')) return "a table name has letters, digits and _ only";
         }
-        if (self.selectedDb()) |db| {
-            const copy = try gpa.dupe(u8, db);
-            defer gpa.free(copy);
-            try self.openSqStructureNew(copy, name);
+        if (name.len > 47) return "the name is too long (47 characters at most)";
+        if (std.ascii.startsWithIgnoreCase(name, "eve_")) return "names that begin with eve_ are kept for Eve";
+        return null;
+    }
+
+    /// EDIT > Create table…: the dialog of a new table (name and description, fields, indexes) in the selected database.
+    pub fn openCreateTable(self: *App) void {
+        self.createTableNamed("") catch {};
+    }
+
+    /// Open the dialog of a new table `name` (it may be empty) in the database that is selected in the tree.
+    fn createTableNamed(self: *App, name: []const u8) !void {
+        const db = self.selectedDb() orelse {
+            self.setMessage("select a database in the tree first: tables are made in a SQLite database", .{});
             return;
-        }
-        const dir = self.targetDir();
-        const rel = if (dir.len == 0) try std.fmt.allocPrint(gpa, "{s}.dbf", .{name}) else try std.fmt.allocPrint(gpa, "{s}/{s}.dbf", .{ dir, name });
-        defer gpa.free(rel);
-        try self.createDbf(rel);
+        };
+        const copy = try self.gpa.dupe(u8, db);
+        defer self.gpa.free(copy);
+        try self.openSqStructureNew(copy, name);
     }
 
     /// The tables of a database of the tree are read again (and the database is opened), after one was made or dropped.
@@ -2481,33 +4117,31 @@ pub const App = struct {
     }
 
     // Zig tip: `drop table [name]` is understood here and not sent to the database: the table is found first (the one open or
-    // selected, or the one named in the database that is selected, or a DBF file of the current folder), and then the same
-    // Yes/No dialog as everywhere asks; only the Yes drops. What to drop is kept in `drop_a`, `drop_b` and `drop_is_dbf`.
+    // selected, or the one named in the database that is selected), and then the same
+    // Yes/No dialog as everywhere asks; only the Yes drops. What to drop is kept in `drop_a` and `drop_b`.
     /// Ask whether to drop a table: the current one, or the one called `name`.
     pub fn dropTable(self: *App, name: []const u8) !void {
         const gpa = self.gpa;
         var db: ?[]const u8 = null;
         var table: []const u8 = name;
-        var dbf_rel: ?[]u8 = null;
-        defer if (dbf_rel) |p| gpa.free(p);
         if (name.len == 0) {
             if (self.activeTab()) |t| {
                 if (t.table != null) {
                     if (std.mem.indexOfScalar(u8, t.path, '#')) |h| {
                         db = t.path[0..h];
                         table = t.path[h + 1 ..];
-                    } else dbf_rel = try gpa.dupe(u8, t.path);
+                    }
                 }
             }
-            if (db == null and dbf_rel == null and self.selected < self.tree.entries.items.len) {
+            if (db == null and self.selected < self.tree.entries.items.len) {
                 const e = self.tree.entries.items[self.selected];
                 if (e.kind == .table) {
                     const h = std.mem.indexOfScalar(u8, e.path, '#') orelse 0;
                     db = e.path[0..h];
                     table = e.path[h + 1 ..];
-                } else if (!e.is_dir and std.ascii.eqlIgnoreCase(extensionOf(e.path), "dbf")) dbf_rel = try gpa.dupe(u8, e.path);
+                }
             }
-            if (db == null and dbf_rel == null) {
+            if (db == null) {
                 self.setMessage("drop table: no table is open or selected", .{});
                 try self.sql_log.add(gpa, "drop table: no table is open or selected; open one, or write its name", .err);
                 return;
@@ -2515,43 +4149,22 @@ pub const App = struct {
         } else switch (self.sqlTarget()) {
             .sqlite => |d| db = d,
             else => {
-                dbf_rel = (try self.findDbf(name)) orelse {
-                    try self.sql_log.add(gpa, "drop table: there is no DBF table of that name in the current folder", .err);
-                    return;
-                };
+                try self.sql_log.add(gpa, "drop table: select a database in the tree (tables are in SQLite)", .err);
+                return;
             },
         }
         if (self.drop_a) |old| gpa.free(old);
         if (self.drop_b) |old| gpa.free(old);
         self.drop_b = null;
-        if (dbf_rel) |rel| {
-            self.drop_a = try gpa.dupe(u8, rel);
-            self.drop_is_dbf = true;
-            self.askConfirm(.drop_table, 0, "Drop the table {s}? The file is deleted.", .{rel});
-        } else {
-            self.drop_a = try gpa.dupe(u8, db.?);
-            self.drop_b = try gpa.dupe(u8, table);
-            self.drop_is_dbf = false;
-            self.askConfirm(.drop_table, 0, "Drop the table {s} of {s}? Its rows are lost.", .{ table, db.? });
-        }
+        self.drop_a = try gpa.dupe(u8, db.?);
+        self.drop_b = try gpa.dupe(u8, table);
+        self.askConfirm(.drop_table, 0, "Drop the table {s} of {s}? Its rows are lost.", .{ table, db.? });
     }
 
-    /// The Yes of the drop dialog: delete the DBF file, or drop the table of the database; close its tab; fix the tree.
+    /// The Yes of the drop dialog: drop the table of the database; close its tab; fix the tree.
     fn performDrop(self: *App) void {
         const gpa = self.gpa;
         const a_path = self.drop_a orelse return;
-        if (self.drop_is_dbf) {
-            const full = self.fullPath(a_path) catch return;
-            defer gpa.free(full);
-            Io.Dir.cwd().deleteFile(self.io, full) catch |err| {
-                self.setMessage("cannot drop {s}: {s}", .{ a_path, @errorName(err) });
-                return;
-            };
-            self.closeTabByPath(a_path);
-            self.refreshTree();
-            self.setMessage("dropped {s}", .{a_path});
-            return;
-        }
         const table = self.drop_b orelse return;
         const sql = std.fmt.allocPrint(gpa, "drop table \"{s}\";", .{table}) catch return;
         defer gpa.free(sql);
@@ -2594,26 +4207,6 @@ pub const App = struct {
         return "";
     }
 
-    // Zig tip: the folders to look in are tried in order: the one the console is in, the one that holds the table that is
-    // open or selected (or the selected folder), and the project folder. The answer is the path in the project of the first
-    // file that exists, copied (the caller frees it), or null.
-    /// The path in the project of the DBF table `name` (with or without `.dbf`), looked for in the current folders.
-    fn findDbf(self: *App, name: []const u8) !?[]u8 {
-        const gpa = self.gpa;
-        const file = if (std.ascii.endsWithIgnoreCase(name, ".dbf")) try gpa.dupe(u8, name) else try std.fmt.allocPrint(gpa, "{s}.dbf", .{name});
-        defer gpa.free(file);
-        const folders = [_][]const u8{ self.workDirRel(), self.currentFolder(), "" };
-        for (folders) |dir| {
-            const rel = if (dir.len == 0) try gpa.dupe(u8, file) else try std.fmt.allocPrint(gpa, "{s}/{s}", .{ dir, file });
-            const full = try self.fullPath(rel);
-            defer gpa.free(full);
-            if (Io.Dir.cwd().statFile(self.io, full, .{})) |_| {
-                return rel;
-            } else |_| gpa.free(rel);
-        }
-        return null;
-    }
-
     /// The folder of the table that is open or selected, else the target folder of the tree.
     fn currentFolder(self: *const App) []const u8 {
         if (self.tabs.items.len > 0) {
@@ -2633,7 +4226,6 @@ pub const App = struct {
             if (self.activeTab()) |t| {
                 if (t.table != null) {
                     if (std.mem.indexOfScalar(u8, t.path, '#')) |h| return self.openSqStructure(t.path[0..h], t.path[h + 1 ..]);
-                    return self.openStructure(t.path);
                 }
             }
             if (self.selected < self.tree.entries.items.len) {
@@ -2642,7 +4234,6 @@ pub const App = struct {
                     const h = std.mem.indexOfScalar(u8, e.path, '#') orelse return;
                     return self.openSqStructure(e.path[0..h], e.path[h + 1 ..]);
                 }
-                if (!e.is_dir and std.ascii.eqlIgnoreCase(extensionOf(e.path), "dbf")) return self.openStructure(e.path);
             }
             try self.sql_log.add(gpa, "alter table: no table is open or selected; open one, or write its name", .err);
             return;
@@ -2653,14 +4244,7 @@ pub const App = struct {
                 defer gpa.free(copy);
                 try self.openSqStructure(copy, name);
             },
-            else => {
-                const rel = (try self.findDbf(name)) orelse {
-                    try self.sql_log.add(gpa, "alter table: there is no DBF table of that name in the current folder", .err);
-                    return;
-                };
-                defer gpa.free(rel);
-                try self.openStructure(rel);
-            },
+            else => try self.sql_log.add(gpa, "alter table: select a database in the tree (tables are in SQLite)", .err),
         }
     }
 
@@ -2675,7 +4259,7 @@ pub const App = struct {
         }
         switch (self.sqlTarget()) {
             .sqlite => |db| {
-                const text_out = try self.eveText(&.{ "db", "sql", "-t", db, "select name from sqlite_master where type in ('table','view') and name not like 'sqlite_%' order by name;" });
+                const text_out = try self.eveText(&.{ "db", "sql", "-t", db, "select name from sqlite_master where type in ('table','view') and name not like 'sqlite_%' and name not like 'eve\\_%' escape '\\' order by name;" });
                 defer gpa.free(text_out);
                 if (std.mem.startsWith(u8, text_out, "error:")) return out;
                 var lines = std.mem.splitScalar(u8, text_out, '\n');
@@ -2685,26 +4269,7 @@ pub const App = struct {
                     if (n.len > 0) try out.append(gpa, try gpa.dupe(u8, n));
                 }
             },
-            else => {
-                const dir_rel = switch (self.sqlTarget()) {
-                    .dbf => |p| std.fs.path.dirname(p) orelse "",
-                    else => if (self.workDirRel().len > 0) self.workDirRel() else self.targetDir(),
-                };
-                const full = if (dir_rel.len == 0) try gpa.dupe(u8, if (self.root.len == 0) "." else self.root) else try self.fullPath(dir_rel);
-                defer gpa.free(full);
-                var dir = Io.Dir.cwd().openDir(self.io, full, .{ .iterate = true }) catch return out;
-                defer dir.close(self.io);
-                var it = dir.iterate();
-                while (it.next(self.io) catch null) |e| {
-                    if (e.kind != .file or !std.ascii.eqlIgnoreCase(extensionOf(e.name), "dbf")) continue;
-                    try out.append(gpa, try gpa.dupe(u8, std.fs.path.stem(e.name)));
-                }
-                std.mem.sort([]u8, out.items, {}, struct {
-                    fn less(_: void, x: []u8, y: []u8) bool {
-                        return std.ascii.lessThanIgnoreCase(x, y);
-                    }
-                }.less);
-            },
+            else => {},
         }
         return out;
     }
@@ -2754,7 +4319,7 @@ pub const App = struct {
     // Zig tip: a union with payloads names where the SQL goes: nowhere special (a memory database), a SQLite file, or a DBF
     // table (which SQLite gets as a copy). The target follows what is selected: the table that is open in the Main Panel
     // first, then the row selected in the tree. `use <file>` overrides it, `use auto` gives it back.
-    const SqlTarget = union(enum) { memory, sqlite: []const u8, dbf: []const u8 };
+    const SqlTarget = union(enum) { memory, sqlite: []const u8 };
 
     pub fn sqlTarget(self: *const App) SqlTarget {
         if (self.sql_db) |d| return if (std.mem.eql(u8, d, ":memory:")) .memory else .{ .sqlite = d };
@@ -2762,7 +4327,6 @@ pub const App = struct {
             const t = self.tabs.items[@min(self.active, self.tabs.items.len - 1)];
             if (t.table != null) {
                 if (std.mem.indexOfScalar(u8, t.path, '#')) |h| return .{ .sqlite = t.path[0..h] };
-                return .{ .dbf = t.path };
             }
         }
         if (self.selected < self.tree.entries.items.len) {
@@ -2770,7 +4334,7 @@ pub const App = struct {
             switch (e.kind) {
                 .db => return .{ .sqlite = e.path },
                 .table => return .{ .sqlite = e.path[0 .. std.mem.indexOfScalar(u8, e.path, '#') orelse e.path.len] },
-                .normal => if (!e.is_dir and std.ascii.eqlIgnoreCase(extensionOf(e.path), "dbf")) return .{ .dbf = e.path },
+                .normal => {},
             }
         }
         return .memory;
@@ -2781,11 +4345,10 @@ pub const App = struct {
         return switch (self.sqlTarget()) {
             .memory => "memory (forgotten after each command)",
             .sqlite => |p| p,
-            .dbf => |p| p,
         };
     }
 
-    // ------------------------------------------------------------ DBF tables
+    // ------------------------------------------------------------ the tree
 
     /// The tree after a file was made: scanned again, the open folders kept.
     fn refreshTree(self: *App) void {
@@ -2805,308 +4368,6 @@ pub const App = struct {
             for (open.items) |p| {
                 if (e.is_dir and std.mem.eql(u8, e.path, p)) e.expanded = true;
             }
-        }
-    }
-
-    /// Today as the three bytes of the header of a DBF file.
-    fn dbfDate(self: *const App) [3]u8 {
-        return dbf.headerDate(Io.Timestamp.now(self.io, .real).toSeconds());
-    }
-
-    // Zig tip: a new table is a file with a header and no fields. Right after, the table opens in the Main Panel and the
-    // command `alter table <name>` is typed in the SQL panel, where it waits for the run delay like every command, so the
-    // person sees it and can press Enter or Esc. `std.fs.path.stem` is the name without folder and extension.
-    /// A new DBF table (File > New DBF, or Save As with a name that ends in .dbf): make the file and ask for its fields.
-    fn createDbf(self: *App, rel: []const u8) !void {
-        const full = try self.fullPath(rel);
-        defer self.gpa.free(full);
-        if (Io.Dir.cwd().statFile(self.io, full, .{})) |_| {
-            self.setMessage("{s} exists already", .{rel});
-            return;
-        } else |_| {}
-        const bytes = try dbf.rebuild(self.gpa, null, &.{}, self.dbfDate());
-        defer self.gpa.free(bytes);
-        Io.Dir.cwd().writeFile(self.io, .{ .sub_path = full, .data = bytes }) catch |err| {
-            self.setMessage("cannot make {s}: {s}", .{ rel, @errorName(err) });
-            return;
-        };
-        self.refreshTree();
-        try self.openFile(rel);
-        const cmd = try std.fmt.allocPrint(self.gpa, "alter table {s}", .{std.fs.path.stem(rel)});
-        defer self.gpa.free(cmd);
-        try self.issueSql(cmd);
-    }
-
-    /// File > New DBF: the Save As box with a name to change.
-    pub fn newDbfDialog(self: *App) void {
-        self.saveas_in.clearRetainingCapacity();
-        self.saveas_in.insertSliceAtCursor("table.dbf") catch {};
-        self.openOverlay(.save_as);
-    }
-
-    // Zig tip: the name typed after `alter table` may or may not have the extension; `endsWithIgnoreCase` decides. The
-    // file is read whole and parsed by `dbf.Table.load`; the fields are copied into the list of the dialog twice: one list
-    // to edit and one to compare with, so the dialog can tell what changed.
-    /// `alter table <name>`: open the structure dialog of the DBF table.
-    fn openStructure(self: *App, name: []const u8) !void {
-        const gpa = self.gpa;
-        const rel = if (std.ascii.endsWithIgnoreCase(name, ".dbf")) try gpa.dupe(u8, name) else try std.fmt.allocPrint(gpa, "{s}.dbf", .{name});
-        errdefer gpa.free(rel);
-        const full = try self.fullPath(rel);
-        defer gpa.free(full);
-        const bytes = Io.Dir.cwd().readFileAlloc(self.io, full, gpa, .limited(256 << 20)) catch {
-            try self.sql_log.add(gpa, "alter table: there is no DBF table of that name in the project folder", .err);
-            gpa.free(rel);
-            return;
-        };
-        var table = dbf.Table.load(gpa, bytes) catch |err| {
-            gpa.free(bytes);
-            const msg = try std.fmt.allocPrint(gpa, "alter table: {s} is not a DBF table ({s})", .{ rel, @errorName(err) });
-            defer gpa.free(msg);
-            try self.sql_log.add(gpa, msg, .err);
-            gpa.free(rel);
-            return;
-        };
-        defer table.deinit();
-        self.st_fields.clearRetainingCapacity();
-        self.st_orig.clearRetainingCapacity();
-        for (table.fields, 0..) |f, i| {
-            try self.st_fields.append(gpa, .{ .f = f, .src = i });
-            try self.st_orig.append(gpa, .{ .f = f, .src = i });
-        }
-        self.st_records = table.records;
-        if (self.st_path) |old| gpa.free(old);
-        self.st_path = rel;
-        if (self.st_fields.items.len == 0) try self.stAdd();
-        self.st_row = 0;
-        self.st_col = 0;
-        self.st_editing = false;
-        self.st_drop = false;
-        self.st_error = null;
-        self.openOverlay(.structure);
-    }
-
-    /// Add a field after the selected one (a name that is not used yet, Character 10).
-    fn stAdd(self: *App) !void {
-        var f: dbf.Field = .{};
-        var n: usize = self.st_fields.items.len + 1;
-        var name_buf: [16]u8 = undefined;
-        while (true) : (n += 1) {
-            const name = std.fmt.bufPrint(&name_buf, "FIELD{d}", .{n}) catch "FIELD";
-            var used = false;
-            for (self.st_fields.items) |s| {
-                if (std.ascii.eqlIgnoreCase(s.f.nameSlice(), name)) used = true;
-            }
-            if (!used) {
-                f.setName(name);
-                break;
-            }
-        }
-        const at = if (self.st_fields.items.len == 0) 0 else self.st_row + 1;
-        try self.st_fields.insert(self.gpa, at, .{ .f = f });
-        self.st_row = at;
-        self.st_col = 0;
-    }
-
-    fn stRemove(self: *App) void {
-        if (self.st_fields.items.len <= 1) {
-            self.st_error = "a table needs at least one field";
-            return;
-        }
-        _ = self.st_fields.orderedRemove(self.st_row);
-        self.st_row = @min(self.st_row, self.st_fields.items.len - 1);
-    }
-
-    fn stMove(self: *App, delta: isize) void {
-        const n = self.st_fields.items.len;
-        const to_i: isize = @as(isize, @intCast(self.st_row)) + delta;
-        if (to_i < 0 or to_i >= n) return;
-        const to: usize = @intCast(to_i);
-        std.mem.swap(StField, &self.st_fields.items[self.st_row], &self.st_fields.items[to]);
-        self.st_row = to;
-    }
-
-    /// How many differences there are between the dialog and the file: fields added, removed, changed or moved.
-    pub fn stChanges(self: *const App) usize {
-        var n: usize = 0;
-        for (self.st_fields.items, 0..) |s, i| {
-            const same = i < self.st_orig.items.len and s.src == self.st_orig.items[i].src and std.meta.eql(s.f, self.st_orig.items[i].f);
-            if (!same) n += 1;
-        }
-        if (self.st_orig.items.len > self.st_fields.items.len) n += self.st_orig.items.len - self.st_fields.items.len;
-        return n;
-    }
-
-    // Zig tip: the text of a cell is parsed when Enter is pressed; a bad number or name leaves the old value and says why in
-    // `st_error`. `std.fmt.parseInt(u8, text, 10) catch` gives a number or runs the block after `catch`.
-    /// Put the text being edited into the selected cell.
-    fn stCommit(self: *App) !void {
-        const text_in = try self.st_edit.toOwnedContents(self.gpa);
-        defer self.gpa.free(text_in);
-        const t = std.mem.trim(u8, text_in, " ");
-        const f = &self.st_fields.items[self.st_row].f;
-        self.st_editing = false;
-        self.st_error = null;
-        if (t.len == 0 and self.st_col != 0) return;
-        switch (self.st_col) {
-            0 => f.setName(t),
-            2 => f.length = std.fmt.parseInt(u8, t, 10) catch {
-                self.st_error = "the length is a number from 1 to 254";
-                return;
-            },
-            3 => f.decimals = std.fmt.parseInt(u8, t, 10) catch {
-                self.st_error = "the decimals are a number";
-                return;
-            },
-            else => {},
-        }
-        self.st_error = dbf.checkField(f);
-    }
-
-    fn stStartEdit(self: *App) !void {
-        const f = &self.st_fields.items[self.st_row].f;
-        self.st_error = null;
-        if (self.st_col == 1) {
-            self.st_drop = true;
-            self.st_drop_sel = std.mem.indexOfScalar(u8, dbf.kinds, f.kind) orelse 0;
-            return;
-        }
-        if (self.st_col == 2 and (f.kind == 'D' or f.kind == 'L' or f.kind == 'M')) return;
-        if (self.st_col == 3 and f.kind != 'N' and f.kind != 'F') return;
-        self.st_edit.clearRetainingCapacity();
-        var nb: [8]u8 = undefined;
-        const cur: []const u8 = switch (self.st_col) {
-            0 => f.nameSlice(),
-            2 => std.fmt.bufPrint(&nb, "{d}", .{f.length}) catch "",
-            else => std.fmt.bufPrint(&nb, "{d}", .{f.decimals}) catch "",
-        };
-        // a number is typed anew (the old value would have to be erased first); a name is edited
-        if (self.st_col == 0) try self.st_edit.insertSliceAtCursor(cur);
-        self.st_editing = true;
-    }
-
-    fn stPickType(self: *App, k: u8) void {
-        const f = &self.st_fields.items[self.st_row].f;
-        if (k == 'M' and f.kind != 'M') {
-            self.st_error = "a memo field cannot be created (it needs a .FPT file); it is kept when the table has one";
-            self.st_drop = false;
-            return;
-        }
-        if (f.kind != k) dbf.defaultsFor(k, f);
-        self.st_drop = false;
-        self.st_error = null;
-    }
-
-    /// The keys of the structure dialog.
-    fn structureKey(self: *App, key: Key) !void {
-        if (self.st_editing) {
-            if (key.matches(Key.enter, .{})) return self.stCommit();
-            try self.st_edit.update(.{ .key_press = key });
-            return;
-        }
-        const kn = dbf.kinds.len;
-        if (self.st_drop) {
-            if (key.matches(Key.up, .{})) self.st_drop_sel = (self.st_drop_sel + kn - 1) % kn else if (key.matches(Key.down, .{})) self.st_drop_sel = (self.st_drop_sel + 1) % kn else if (key.matches(Key.enter, .{})) self.stPickType(dbf.kinds[self.st_drop_sel]);
-            return;
-        }
-        const n = self.st_fields.items.len;
-        if (key.matches(Key.up, .{ .ctrl = true })) return self.stMove(-1);
-        if (key.matches(Key.down, .{ .ctrl = true })) return self.stMove(1);
-        if (key.matches(Key.up, .{})) self.st_row = self.st_row -| 1 else if (key.matches(Key.down, .{})) self.st_row = @min(self.st_row + 1, n - 1) else if (key.matches(Key.left, .{})) self.st_col = self.st_col -| 1 else if (key.matches(Key.right, .{}) or key.matches(Key.tab, .{})) self.st_col = @min(self.st_col + 1, 3) else if (key.matches(Key.page_up, .{})) self.st_row = self.st_row -| 10 else if (key.matches(Key.page_down, .{})) self.st_row = @min(self.st_row + 10, n - 1) else if (key.matches(Key.enter, .{})) try self.stStartEdit() else if (key.matches(Key.insert, .{})) try self.stAdd() else if (key.matches(Key.delete, .{})) self.stRemove() else if (key.matches('s', .{ .ctrl = true })) try self.stApply();
-    }
-
-    // Zig tip: the checks come first and name the first problem; only then is the cost of losing data weighed. A field of
-    // the file that no field of the dialog comes from is dropped, and a field that changes type or gets shorter may lose
-    // text. When there are records and something may be lost, the same Yes/No dialog as for a breakpoint asks first.
-    /// The Apply button: check the fields, ask if data may be lost, then change the file.
-    fn stApply(self: *App) !void {
-        self.st_error = null;
-        const items = self.st_fields.items;
-        for (items, 0..) |s, i| {
-            if (dbf.checkField(&s.f)) |msg| {
-                self.st_error = msg;
-                self.st_row = i;
-                return;
-            }
-            for (items[0..i]) |other| {
-                if (std.ascii.eqlIgnoreCase(other.f.nameSlice(), s.f.nameSlice())) {
-                    self.st_error = "two fields have the same name";
-                    self.st_row = i;
-                    return;
-                }
-            }
-        }
-        if (self.stChanges() == 0) {
-            self.st_error = "nothing to apply";
-            return;
-        }
-        var risk: usize = 0;
-        for (self.st_orig.items, 0..) |o, c| {
-            var kept: ?StField = null;
-            for (items) |s| {
-                if (s.src == c) kept = s;
-            }
-            if (kept) |s| {
-                if (s.f.kind != o.f.kind and s.f.kind != 'C') risk += 1 else if (s.f.length < o.f.length) risk += 1;
-            } else risk += 1;
-        }
-        if (self.st_records > 0 and risk > 0) {
-            self.askConfirm(.apply_structure, 0, "{d} field(s) lose or convert their data in {d} records. Apply?", .{ risk, self.st_records });
-            return;
-        }
-        try self.stApplyNow();
-    }
-
-    /// Write the new structure: the file is read again, rebuilt with the data of the fields that stay, and written.
-    fn stApplyNow(self: *App) !void {
-        const gpa = self.gpa;
-        const rel = self.st_path orelse return;
-        const full = try self.fullPath(rel);
-        defer gpa.free(full);
-        const bytes = Io.Dir.cwd().readFileAlloc(self.io, full, gpa, .limited(256 << 20)) catch |err| {
-            self.st_error = @errorName(err);
-            self.openOverlay(.structure);
-            return;
-        };
-        var table = dbf.Table.load(gpa, bytes) catch |err| {
-            gpa.free(bytes);
-            self.st_error = @errorName(err);
-            self.openOverlay(.structure);
-            return;
-        };
-        defer table.deinit();
-        const specs = try gpa.alloc(dbf.Spec, self.st_fields.items.len);
-        defer gpa.free(specs);
-        for (self.st_fields.items, 0..) |s, i| specs[i] = .{ .field = s.f, .src = s.src };
-        const out = try dbf.rebuild(gpa, &table, specs, self.dbfDate());
-        defer gpa.free(out);
-        Io.Dir.cwd().writeFile(self.io, .{ .sub_path = full, .data = out }) catch |err| {
-            self.st_error = @errorName(err);
-            self.openOverlay(.structure);
-            return;
-        };
-        self.overlay = .none;
-        self.reloadTable(rel);
-        const msg = try std.fmt.allocPrint(gpa, "{s}: structure changed, {d} fields, {d} records", .{ rel, specs.len, table.records });
-        defer gpa.free(msg);
-        try self.sql_log.add(gpa, msg, .info);
-        self.setMessage("{s}", .{msg});
-    }
-
-    /// Read the table of an open tab again (its structure or its data changed on disk).
-    fn reloadTable(self: *App, rel: []const u8) void {
-        for (self.tabs.items) |*t| {
-            const tv = t.table orelse continue;
-            if (!std.mem.eql(u8, t.path, rel)) continue;
-            const full = self.fullPath(rel) catch return;
-            defer self.gpa.free(full);
-            const bytes = Io.Dir.cwd().readFileAlloc(self.io, full, self.gpa, .limited(256 << 20)) catch return;
-            const table = dbf.Table.load(self.gpa, bytes) catch {
-                self.gpa.free(bytes);
-                return;
-            };
-            tv.t.deinit();
-            tv.* = .{ .t = table };
         }
     }
 
@@ -3192,11 +4453,12 @@ pub const App = struct {
         switch (self.confirm_what) {
             .none => {},
             .delete_breakpoint => self.deleteBreakpoint(self.confirm_arg),
-            .apply_structure => self.stApplyNow() catch {},
             .move_files => self.performMove(),
             .apply_sqlite => self.sqApplyNow() catch {},
             .drop_table => self.performDrop(),
-            .delete_file => self.performDeleteFile(),
+            .delete_file => self.performDelete(),
+            .delete_rows => self.performDeleteRows(),
+            .replace_file => if (self.save_rel) |r| self.saveAs(r) catch |err| self.setMessage("cannot save {s}: {s}", .{ r, @errorName(err) }),
             .clear_breakpoints => {
                 while (self.breakpoints.items.len > 0) self.deleteBreakpoint(self.breakpoints.items.len - 1);
             },
@@ -3471,7 +4733,7 @@ pub const App = struct {
         if (t.path.len == 0 or t.buf.?.dirty) try self.save();
         if (t.path.len == 0) return;
         if (!self.show_tools) self.togglePanel(.tools);
-        self.bottom = .console;
+        if (!self.running) self.bottom = .console;
         try self.enterScriptFolder(t.path);
         if (self.dbg_path) |p| self.gpa.free(p);
         self.dbg_path = try self.gpa.dupe(u8, t.path);
@@ -3533,38 +4795,14 @@ pub const App = struct {
             return;
         }
         const cwd: std.process.Child.Cwd = if (self.root.len == 0 or std.mem.eql(u8, self.root, ".")) .inherit else .{ .path = self.root };
-        // a DBF table is given to SQLite as a copy: a script that makes the table, then the statement typed
-        var script_path: ?[]u8 = null;
-        defer if (script_path) |p| gpa.free(p);
         var db: []const u8 = ":memory:";
         switch (self.sqlTarget()) {
             .memory => {},
             .sqlite => |p| db = p,
-            .dbf => |rel| {
-                const full = try self.fullPath(rel);
-                defer gpa.free(full);
-                const bytes = Io.Dir.cwd().readFileAlloc(self.io, full, gpa, .limited(256 << 20)) catch |err| {
-                    const msg = try std.fmt.allocPrint(gpa, "cannot read {s}: {s}", .{ rel, @errorName(err) });
-                    defer gpa.free(msg);
-                    try self.sql_log.add(gpa, msg, .err);
-                    return;
-                };
-                var table = dbf.Table.load(gpa, bytes) catch {
-                    gpa.free(bytes);
-                    try self.sql_log.add(gpa, "not a DBF table", .err);
-                    return;
-                };
-                defer table.deinit();
-                const sql_text = try dbf.toSql(gpa, &table, std.fs.path.stem(rel));
-                defer gpa.free(sql_text);
-                self.cache.writeFile("dbf-sql.tmp.sql", sql_text) catch {};
-                script_path = try std.fmt.allocPrint(gpa, "{s}/dbf-sql.tmp.sql", .{if (self.cache.dir.len == 0) "." else self.cache.dir});
-            },
         }
         var argv_list: std.ArrayList([]const u8) = .empty;
         defer argv_list.deinit(gpa);
         try argv_list.appendSlice(gpa, &.{ eve_exe, "db", "sql" });
-        if (script_path) |sp| try argv_list.appendSlice(gpa, &.{ "--last", "-f", sp });
         try argv_list.appendSlice(gpa, &.{ db, cmd });
         const result = std.process.run(gpa, self.io, .{ .argv = argv_list.items, .cwd = cwd }) catch |err| {
             const msg = try std.fmt.allocPrint(gpa, "cannot run {s}: {s}", .{ eve_exe, @errorName(err) });
@@ -3595,7 +4833,7 @@ pub const App = struct {
             return self.sqlEnter();
         }
         if (self.pending_at != null) self.cancelPending();
-        if (key.matches(Key.tab, .{})) return self.sqlTab();
+        if (key.matches(Key.right, .{}) and self.sql_in.buf.secondHalf().len == 0 and self.sql_in.buf.firstHalf().len > 0) return self.sqlTab();
         self.sql_tab_active = false;
         if (key.matches(Key.page_up, .{})) {
             self.sql_log.scroll +|= @max(1, self.console_rect.h / 2);
@@ -3773,8 +5011,11 @@ pub const App = struct {
         self.pending_sql = false;
         if (!self.show_tools) self.togglePanel(.tools);
         if (self.maximized == .main) self.maximized = null;
-        self.bottom = .console;
-        self.focus = .console;
+        // while a program runs the tab of the Tools Panel that the person chose stays (the output, the watch)
+        if (!self.running) {
+            self.bottom = .console;
+            self.focus = .console;
+        }
         self.console_in.clearRetainingCapacity();
         try self.console_in.insertSliceAtCursor(line);
         self.history_pos = null;
@@ -3835,6 +5076,8 @@ pub const App = struct {
         var active: usize = 0;
         for (self.tabs.items, 0..) |t, i| {
             if (t.virtual or t.path.len == 0 or t.folder != null) continue;
+            // windows that are made on the fly are not saved: a filter, the list of the tables of a database
+            if (std.mem.startsWith(u8, t.path, "filter:") or t.path[t.path.len - 1] == '#') continue;
             if (i == self.active) active = saved;
             saved += 1;
             if (t.buf) |b| {
@@ -3933,6 +5176,8 @@ pub const App = struct {
                 }
             }
         }
+        // every tab was put first, so the list is backwards now
+        std.mem.reverse(Tab, self.tabs.items);
         if (active < self.tabs.items.len) self.active = active;
         self.follow = false;
         if (self.message) |m| {
@@ -4299,6 +5544,11 @@ pub const App = struct {
     // the parameter type, so no `Overlay.` prefix is needed.
     pub fn openOverlay(self: *App, which: Overlay) void {
         if (which == .save_as) {
+            // a table is saved as a new table, or as a view when it is a filter; a text file goes to the folder selector
+            if (self.activeTable() != null) return self.openTableSaveAs();
+            return self.openSaveChooser();
+        }
+        if (which == .save_as) {
             const untitled = if (self.activeTab()) |t| t.path.len == 0 else false;
             const dir = self.targetDir();
             if (untitled and dir.len > 0 and self.saveas_in.buf.firstHalf().len + self.saveas_in.buf.secondHalf().len == 0) {
@@ -4370,19 +5620,33 @@ pub const App = struct {
     // command has a branch. A branch may be a block, a call, or `try` on a call.
     pub fn runMenu(self: *App, cmd: MenuCmd, arg: usize) !void {
         self.overlay = .none;
+        if (!self.menuEnabled(cmd)) {
+            if (cmd == .rename_file) self.openRename() else self.setMessage("this command does not apply to the window that is open", .{});
+            return;
+        }
         switch (cmd) {
             .open_project => self.openProjectDialog(),
             .open_folder => self.openFolderDialog(),
-            .new_dbf, .new_file => self.openNewDialog(),
+            .new_file => self.openNewDialog(),
+            .new_folder => self.openNewKind(.folder),
+            .new_database => self.openNewKind(.database),
             .create_table => self.openCreateTable(),
+            .import_data => self.openImport(),
             .rename_file => self.openRename(),
             .delete_file => self.openDelete(),
+            .move_marked => try self.startMove(),
+            .select_all => try self.markAll(),
+            .select_row => try self.markCurrent(true),
+            .unselect_row => try self.markCurrent(false),
+            .unselect_all => self.clearSelection(),
             .drop_table => try self.dropTable(""),
             .data_structure => try self.dataStructure(),
             .data_append => try self.dataAppend(1),
             .data_append_n => self.openAppendN(),
             .data_delete => try self.dataDelete(),
-            .data_edit => self.dataEdit(),
+            .data_edit => self.dataEditOrOpen(),
+            .save_all => self.saveAll(),
+            .next_panel => self.rotatePanel(1),
             .save => try self.save(),
             .save_as => self.openOverlay(.save_as),
             .close_tab => self.closeTab(self.active),
@@ -4400,7 +5664,13 @@ pub const App = struct {
                 self.follow = true;
             },
             .goto_line => self.openOverlay(.goto),
-            .query => self.notYet("Query", "T7"),
+            .query => self.notYet("Query SQL", "T7"),
+            .filter_table => self.openFilter(),
+            .close_project => self.closeProject(),
+            .close_window => self.closeTab(self.active),
+            .find_files => self.notYet("Find in files", "later"),
+            .replace_files => self.notYet("Replace in files", "later"),
+            .compact => self.compact(),
             .run => try self.runActive(),
             .check_file => try self.checkActive(),
             .dbg_next => try self.debugCommand("next"),
@@ -4499,8 +5769,9 @@ pub const App = struct {
         } else if (self.isShown(.main)) {
             l.main = .{ .x = rx, .y = 1, .w = rw, .h = mh };
         } else if (tools_on) {
-            l.debug = .{ .x = rx, .y = 1, .w = rw, .h = 1 };
-            l.tools = .{ .x = rx, .y = 2, .w = rw, .h = mh - 1 };
+            // the Main Panel is off: the toolbar has a border of its own (a row above and below), until the panel is back
+            l.debug = .{ .x = rx, .y = 1, .w = rw, .h = 3 };
+            l.tools = .{ .x = rx, .y = 4, .w = rw, .h = mh - 3 };
         }
         self.layout = l;
         return l;
@@ -4542,6 +5813,20 @@ pub const App = struct {
             if (self.maximized == p) self.maximized = null;
             if (self.activePanel() == p) self.rotatePanel(1);
         }
+    }
+
+    // Zig tip: one shortcut, two cases: a hidden panel is shown (`togglePanel` also gives it the keyboard), a panel already on
+    // screen only gets the keyboard. A panel that is hidden by a maximized neighbour counts as not shown, so it comes back.
+    /// Alt+T, Alt+M, Alt+O: the panel is on and has the keyboard.
+    pub fn activatePanel(self: *App, p: Panel) void {
+        const flag = switch (p) {
+            .tree => self.show_tree,
+            .main => self.show_main,
+            .tools => self.show_tools,
+        };
+        if (!flag) return self.togglePanel(p);
+        if (self.maximized != null and self.maximized != p) self.maximized = null;
+        self.focusPanel(p);
     }
 
     /// The + button: a panel fills the screen, or goes back to its place.
@@ -4588,7 +5873,7 @@ pub const App = struct {
         if (t >= self.tabs.items.len) return;
         self.active = t;
         if (!self.show_main) self.togglePanel(.main);
-        self.focus = if (self.tabs.items[t].buf != null) .editor else self.focus;
+        self.focus = .editor;
     }
 
     // Zig tip: `errdefer` frees the copy only if a later `try` fails. After `append` succeeds the tab
@@ -4607,10 +5892,11 @@ pub const App = struct {
         b.dirty = false;
         const path = try self.gpa.dupe(u8, title);
         errdefer self.gpa.free(path);
-        try self.tabs.append(self.gpa, .{ .path = path, .buf = b, .virtual = true });
+        try self.tabs.insert(self.gpa, 0, .{ .path = path, .buf = b, .virtual = true });
         if (!self.show_main) self.togglePanel(.main);
         self.maximized = if (self.maximized == .tools) null else self.maximized;
-        self.active = self.tabs.items.len - 1;
+        self.active = 0;
+        self.tab_first = 0;
         self.focus = .editor;
     }
 
@@ -4716,6 +6002,8 @@ pub const App = struct {
             self.drag = .tbl_v;
         } else if (self.tblh_rect.contains(m.col, m.row)) {
             self.drag = .tbl_h;
+        } else if (self.pbar_rect.contains(m.col, m.row)) {
+            self.drag = .panel_v;
         } else if (self.tvbar_rect.contains(m.col, m.row)) {
             self.drag = .tree_v;
         } else if (self.thbar_rect.contains(m.col, m.row)) {
@@ -4744,6 +6032,28 @@ pub const App = struct {
                 if (r.w < 2) return;
                 const rel: usize = @intCast(@min(@max(@as(i32, m.col) - r.x, 0), r.w - 1));
                 tv.left = thumbToTop(rel, r.w, tv.t.fields.len, self.tbl_cols);
+            }
+            return;
+        }
+        if (self.drag == .panel_v) {
+            const r = self.pbar_rect;
+            if (r.h < 2 or self.pbar_total <= self.pbar_visible) return;
+            const rel: usize = @intCast(@min(@max(@as(i32, m.row) - r.y, 0), r.h - 1));
+            const at = thumbToTop(rel, r.h, self.pbar_total, self.pbar_visible);
+            switch (self.pbar_kind) {
+                // a log counts its scroll in lines from the end
+                .log => self.shownLog().scroll = self.pbar_total - self.pbar_visible -| at,
+                .folder => {
+                    const t = self.activeTab() orelse return;
+                    const fv = t.folder orelse return;
+                    fv.top = at;
+                },
+                .breaks => self.break_top = at,
+                .fbox => {
+                    self.fb_top = at;
+                    self.fb_sel = @min(@max(self.fb_sel, at), at + self.pbar_visible -| 1);
+                },
+                .none => {},
             }
             return;
         }
@@ -4841,7 +6151,7 @@ pub const App = struct {
             .none => {},
             .tree_split => self.tree_w = @intCast(@max(@as(i32, m.col) + 1, 0)),
             .tools_split => self.tools_h = @intCast(@max(@as(i32, self.rows) - 3 - m.row, 0)),
-            .vbar, .hbar, .tree_v, .tree_h, .tbl_v, .tbl_h => self.scrollTo(m),
+            .vbar, .hbar, .tree_v, .tree_h, .tbl_v, .tbl_h, .panel_v => self.scrollTo(m),
             .select => self.selectTo(m),
         }
     }
@@ -5280,6 +6590,7 @@ pub const App = struct {
         self.autosave_at = null;
         var n: usize = 0;
         for (self.tabs.items) |*t| {
+            if (t.table != null) continue;
             if (t.virtual or t.path.len == 0 or t.buf == null or !t.buf.?.dirty) continue;
             self.writeTab(t, t.path) catch continue;
             n += 1;
@@ -5379,17 +6690,16 @@ pub const App = struct {
             self.prop_editing = false;
             return;
         }
+        if (self.overlay == .filter and self.flt_pick) {
+            self.flt_pick = false;
+            return;
+        }
         if (self.overlay == .open_folder and self.fb_mode != .project) return self.chooserDone();
         if (self.overlay == .alert) {
             self.overlay = self.alert_back;
             return;
         }
         // Esc in the structure dialog first leaves the cell or the type list that is open
-        if (self.overlay == .structure and (self.st_editing or self.st_drop)) {
-            self.st_editing = false;
-            self.st_drop = false;
-            return;
-        }
         if (self.overlay == .sq_structure and (self.sq_editing or self.sq_drop)) {
             self.sq_editing = false;
             self.sq_drop = false;
@@ -5464,7 +6774,7 @@ pub const App = struct {
         self.fb_back = back;
         self.fbLoad(start);
         self.overlay = .open_folder;
-        self.dlg_field = if (mode == .theme_export) 2 else 1;
+        self.dlg_field = if (mode == .theme_export or mode == .save_as) 2 else 1;
     }
 
     // Zig tip: the names in `fb_files` are owned by the app, so each one is freed before the list is emptied.
@@ -5479,7 +6789,7 @@ pub const App = struct {
     // Zig tip: `self: *const App`: the drawing calls it too, and it only reads.
     /// Does the folder selector have a file name field (and list the theme files)?
     pub fn fbHasName(self: *const App) bool {
-        return self.fb_mode == .theme_export or self.fb_mode == .theme_import;
+        return self.fb_mode == .theme_export or self.fb_mode == .theme_import or self.fb_mode == .save_as;
     }
 
     // Zig tip: one button, four meanings: the `switch` on the mode is the whole dispatch.
@@ -5488,6 +6798,8 @@ pub const App = struct {
         switch (self.fb_mode) {
             .project => try self.openHere(),
             .move_to => try self.moveHere(),
+            .move_many => try self.moveManyHere(),
+            .save_as => try self.saveHere(),
             .theme_export => try self.exportTheme(),
             .theme_import => try self.importTheme(),
         }
@@ -5519,8 +6831,8 @@ pub const App = struct {
         const with_files = self.fbHasName();
         var it = dir.iterate();
         while (it.next(self.io) catch null) |e| {
-            if (self.fb_entries.items.len + self.fb_files.items.len >= 2000) break;
-            const list = if (e.kind == .directory) &self.fb_entries else if (with_files and e.kind == .file and std.ascii.endsWithIgnoreCase(e.name, ".json")) &self.fb_files else continue;
+            if (self.fb_entries.items.len + self.fb_files.items.len >= 20000) break;
+            const list = if (e.kind == .directory) &self.fb_entries else if (with_files and e.kind == .file and (self.fb_mode == .save_as or std.ascii.endsWithIgnoreCase(e.name, ".json"))) &self.fb_files else continue;
             const name = self.gpa.dupe(u8, e.name) catch break;
             list.append(self.gpa, name) catch {
                 self.gpa.free(name);
@@ -5687,37 +6999,41 @@ pub const App = struct {
         if (self.overlay != .none) return self.overlayKey(key);
 
         if (self.modify and try self.modifyKey(key)) return;
-        if (key.matches(Key.enter, .{ .ctrl = true }) or key.matches(Key.f10, .{})) return self.openMenu(0);
+        if ((key.matches(Key.enter, .{ .ctrl = true }) and !self.ctrlEnterOpens()) or key.matches(Key.f10, .{})) return self.openMenu(0);
         if (key.mods.alt and !key.mods.ctrl) {
             if (key.codepoint == Key.left) return self.rotatePanel(-1);
             if (key.codepoint == Key.right) return self.rotatePanel(1);
             if (key.codepoint == Key.tab) return self.nextTab(if (key.mods.shift) -1 else 1);
+            if (key.codepoint == Key.page_up) return self.nextTab(-1);
+            if (key.codepoint == Key.page_down) return self.nextTab(1);
+            if (key.codepoint >= '1' and key.codepoint <= '9') return self.pickDigit(key.codepoint - '1');
+            if (key.codepoint == 't') return self.activatePanel(.tree);
+            if (key.codepoint == 'm') return self.activatePanel(.main);
+            if (key.codepoint == 'o') return self.activatePanel(.tools);
             if (menuByLetter(key.codepoint)) |m| return self.openMenu(m);
         }
-        if (key.matches(Key.tab, .{ .shift = true })) return self.rotatePanel(1);
-        if (key.matches(Key.space, .{ .ctrl = true }) or key.codepoint == 0) return self.appendAtEnd();
+        if (key.matches(Key.tab, .{ .shift = true })) return self.nextTab(1);
+        if (key.matches(Key.tab, .{}) and self.tabSwitchesPanel()) return self.rotatePanel(1);
+        if (key.matches(Key.insert, .{ .ctrl = true })) return self.openAppendN();
         if (key.matches(Key.page_up, .{ .ctrl = true })) return self.nextTab(-1);
         if (key.matches(Key.page_down, .{ .ctrl = true })) return self.nextTab(1);
         if (key.matches(Key.tab, .{ .ctrl = true })) return self.nextTab(1);
-        if (ctrlDigit(key)) |d| {
-            if (d >= self.tabs.items.len) {
-                self.setMessage("no window {d}", .{d + 1});
-                return;
-            }
-            return self.pickWindow(d);
-        }
+        if (ctrlDigit(key)) |d| return self.pickDigit(d);
         if (key.matches('/', .{ .ctrl = true }) or key.matches(Key.f12, .{})) return self.runMenu(.shortcuts, 0);
-        if (key.matches(',', .{ .ctrl = true })) return self.openOptions();
+        if (key.matches(',', .{ .ctrl = true }) or key.matches(Key.f2, .{})) return self.openOptions();
         if (key.matches('u', .{ .ctrl = true })) return self.undoRedo(true);
         if (key.matches('y', .{ .ctrl = true })) return self.undoRedo(false);
-        if (key.matches('o', .{ .ctrl = true, .shift = true })) return self.openFolderDialog();
+        if (key.matches('o', .{ .ctrl = true, .shift = true }) or key.matches(Key.f4, .{ .shift = true })) return self.openFolderDialog();
         if (key.matches('o', .{ .ctrl = true })) return self.openProjectDialog();
         if (key.matches('q', .{ .ctrl = true })) {
             self.quit = true;
             return;
         }
-        if (key.matches('s', .{ .ctrl = true, .shift = true })) return self.openOverlay(.save_as);
+        // Zig tip: F3 is not used: the answer of the terminal to the cursor position question (`CSI row;col R`) looks like F3,
+        // so evetx took its own start-up answer for a key press and opened the dialog by itself.
+        if (key.matches('s', .{ .ctrl = true, .shift = true }) or key.matches(Key.f4, .{})) return self.openOverlay(.save_as);
         if (key.matches('s', .{ .ctrl = true })) return self.save();
+        if (key.matches('a', .{ .ctrl = true })) return self.saveAll();
         if (key.matches('w', .{ .ctrl = true })) return self.closeTab(self.active);
         if (key.matches('n', .{ .ctrl = true })) return self.openNewDialog();
         if (self.searchShortcut(key)) return;
@@ -5743,6 +7059,44 @@ pub const App = struct {
     // Zig tip: `?u8` is an optional byte: a number from 0 to 8, or null when the key is not Ctrl and a
     // digit. The digit is looked for in the code of the key and in the code of the key on the
     // standard layout (`base_layout_codepoint`), which terminals fill in differently.
+    /// Alt+1 to Alt+9 (and Ctrl+1 to Ctrl+9 where the terminal sends them): go to window `d`.
+    fn pickDigit(self: *App, d: usize) void {
+        if (d >= self.tabs.items.len) {
+            self.setMessage("no window {d}", .{d + 1});
+            return;
+        }
+        self.pickWindow(d);
+    }
+
+    // Zig tip: Tab moves to the next panel except where it has work of its own: in a text file that is in editing mode (it indents)
+    // or a cell being typed. In the tree, the Console, the SQL line, a window that is not being edited, it is the way out.
+    /// Does the Tab key change the panel now?
+    fn tabSwitchesPanel(self: *App) bool {
+        return switch (self.focus) {
+            .tree, .breaks => true,
+            .console, .sql => true,
+            // a text file that is in editing mode keeps Tab for indenting, and a cell being typed keeps it; otherwise it leaves
+            .editor => if (self.activeTab()) |t| !((t.buf != null and t.editing and !t.virtual) or self.tbl_editing) else true,
+        };
+    }
+
+    /// Does Ctrl+Enter open the row under the cursor (the tree, the list of the tables of a database) instead of the menu?
+    fn ctrlEnterOpens(self: *App) bool {
+        if (true) return false; // Enter opens now; Ctrl+Enter is the menu everywhere
+        if (self.focus == .tree) return true;
+        if (self.focus != .editor) return false;
+        if (self.activeTab()) |t| {
+            if (t.folder != null) return true;
+        }
+        return self.isOverview();
+    }
+
+    /// Is the window the list of the tables of a SQLite database?
+    fn isOverview(self: *App) bool {
+        const t = self.activeTab() orelse return false;
+        return t.table != null and t.path.len > 0 and t.path[t.path.len - 1] == '#';
+    }
+
     /// Ctrl+1 to Ctrl+9 give 0 to 8.
     fn ctrlDigit(key: Key) ?usize {
         if (!key.mods.ctrl or key.mods.alt) return null;
@@ -5772,7 +7126,7 @@ pub const App = struct {
     // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) return self.closeOverlay();
-        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .confirm and self.overlay != .structure and self.overlay != .sq_structure and self.overlay != .properties and self.overlay != .alert and self.overlay != .settings and self.overlay != .new_table and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
+        if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .confirm and self.overlay != .sq_structure and self.overlay != .properties and self.overlay != .alert and self.overlay != .settings and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
         switch (self.overlay) {
             .menu => try self.menuKey(key),
             .tab_menu => {
@@ -5793,7 +7147,6 @@ pub const App = struct {
             .append_n => {
                 if (key.matches(Key.enter, .{})) try self.appendNEnter() else try self.goto_in.update(.{ .key_press = key });
             },
-            .structure => try self.structureKey(key),
             .sq_structure => try self.sqKey(key),
             .properties => {
                 if (self.prop_editing) {
@@ -5805,14 +7158,6 @@ pub const App = struct {
                 } else if (key.matches(Key.enter, .{})) self.overlay = .none;
             },
             .alert => if (key.matches(Key.enter, .{})) self.closeOverlay(),
-            .new_table => {
-                if (key.matches(Key.enter, .{})) {
-                    const raw = try self.saveas_in.toOwnedContents(self.gpa);
-                    defer self.gpa.free(raw);
-                    self.overlay = .none;
-                    try self.createTableNamed(std.mem.trim(u8, raw, " "));
-                } else try self.saveas_in.update(.{ .key_press = key });
-            },
             .confirm => {
                 if (key.matches('y', .{}) or key.matches('Y', .{ .shift = true }) or key.matches(Key.enter, .{})) {
                     self.confirmYes();
@@ -5840,6 +7185,7 @@ pub const App = struct {
                 if (key.matches(Key.enter, .{})) try self.findNext() else try self.find_in.update(.{ .key_press = key });
             },
             .find_file => try self.filesKey(key),
+            .filter => try self.filterKey(key),
             .replace => try self.replaceKey(key),
             .none => {},
         }
@@ -5873,12 +7219,14 @@ pub const App = struct {
     // can leave it with a result.
     // Zig tip: the cell that is selected is `row` and `col`; the view moves `top` and `left` so it stays on the screen.
     // `-|` and `+|` are saturating: they stop at 0 or at the largest number instead of failing.
-    /// The keys of a DBF table: arrows move the cell, Page Up and Down a page, Home and End the first and last record.
+    /// The keys of a table: arrows move the cell, Page Up and Down a page, Home and End the first and last record.
     fn tableKey(self: *App, tv: *TableView, key: Key) !void {
         if (self.tbl_editing) {
             if (key.matches(Key.enter, .{})) return self.commitCell(tv);
             if (key.matches(Key.escape, .{})) {
+                // Esc leaves the cell without keeping what was typed, and ends the editing of the table
                 self.tbl_editing = false;
+                if (self.activeTab()) |t| t.editing = false;
                 return;
             }
             try self.tbl_edit.update(.{ .key_press = key });
@@ -5887,6 +7235,30 @@ pub const App = struct {
         const rows = tv.t.records;
         const cols = tv.t.fields.len;
         const page: usize = 15;
+        if (try self.markKey(key)) return;
+        // Esc ends the editing of the table (Enter starts it again)
+        if (key.matches(Key.escape, .{})) {
+            if (self.activeTab()) |t| {
+                if (t.editing) {
+                    t.editing = false;
+                    self.setMessage("editing stopped: Enter starts it again", .{});
+                }
+            }
+            return;
+        }
+        if (self.isOverview()) {
+            // the list of the tables: Enter says what the row is, Ctrl+Enter or Space opens the table
+            if (key.matches(Key.enter, .{}) or key.matches(Key.space, .{})) return self.dataEdit();
+            if (key.matches(Key.enter, .{ .ctrl = true })) {
+                if (tv.row < tv.t.records) {
+                    var b0: [16]u8 = undefined;
+                    var b1: [16]u8 = undefined;
+                    var b2: [16]u8 = undefined;
+                    self.setMessage("{s} · {s} columns · {s} rows · Ctrl+Enter or a double click opens it", .{ tv.t.display(tv.row, 0, &b0), tv.t.display(tv.row, 2, &b1), tv.t.display(tv.row, 3, &b2) });
+                }
+                return;
+            }
+        }
         if (key.matches(Key.enter, .{})) return self.dataEdit();
         if (key.matches(Key.insert, .{})) return self.dataAppend(1);
         if (key.matches(Key.delete, .{})) return self.dataDelete();
@@ -5900,10 +7272,15 @@ pub const App = struct {
             if (t.folder) |fv| return self.folderListKey(fv, key);
         }
         const b = self.activeBuffer() orelse return;
-        const ro = self.activeTab().?.virtual;
+        const tab = self.activeTab().?;
+        // a window that is not in editing mode (or is read only) can be moved in and copied from, not changed
+        const ro = tab.virtual or !tab.editing;
         if (key.matches('c', .{ .ctrl = true })) return self.copySelection(false);
-        if (key.matches('x', .{ .ctrl = true })) return self.copySelection(true);
-        if (key.matches('v', .{ .ctrl = true })) return self.pasteClip();
+        if (key.matches('x', .{ .ctrl = true })) return self.copySelection(!ro);
+        if (key.matches('v', .{ .ctrl = true })) {
+            if (ro) return self.needEditing(tab);
+            return self.pasteClip();
+        }
         if (key.matches('a', .{ .ctrl = true })) {
             b.selectAll();
             return;
@@ -5923,9 +7300,20 @@ pub const App = struct {
         }
         if (key.matches(Key.escape, .{})) {
             b.anchor = null;
+            if (tab.editing) {
+                tab.editing = false;
+                self.setMessage("editing stopped: Enter starts it again", .{});
+            }
             return;
         }
-        if (ro) return;
+        if (ro) {
+            // Enter starts the editing; the keys that would change the text only say how to start
+            if (!tab.virtual and key.matches(Key.enter, .{})) {
+                tab.editing = true;
+                self.setMessage("editing: Esc or Save stops it", .{});
+            } else if (key.text != null or key.matches(Key.backspace, .{}) or key.matches(Key.delete, .{}) or key.matches(Key.tab, .{})) self.needEditing(tab);
+            return;
+        }
         const selected = b.selection() != null;
         if (key.matches(Key.enter, .{})) {
             try b.checkpoint(.other);
@@ -5974,9 +7362,15 @@ pub const App = struct {
     }
 
     /// Ctrl+V: insert the copied text. (A paste made by the terminal comes as keys: see `pasteEnd`.)
+    /// Say how to start editing (a text file that is not in editing mode got a key that changes the text).
+    fn needEditing(self: *App, tab: *Tab) void {
+        if (tab.virtual) return self.setMessage("this window is read only", .{});
+        self.setMessage("press Enter to start editing (Esc stops)", .{});
+    }
+
     fn pasteClip(self: *App) !void {
         const b = self.activeBuffer() orelse return;
-        if (self.activeTab().?.virtual) return;
+        if (self.activeTab().?.virtual or !self.activeTab().?.editing) return;
         const c = self.clip orelse {
             self.setMessage("nothing copied yet", .{});
             return;
@@ -6017,9 +7411,11 @@ pub const App = struct {
             const ti: ?*TextInput = switch (self.overlay) {
                 .none => if (self.focus == .sql) &self.sql_in else &self.console_in,
                 .goto => &self.goto_in,
-                .save_as, .new_file, .new_table, .properties => &self.saveas_in,
+                .save_as, .new_file, .properties => &self.saveas_in,
+                .sq_structure => if (self.sq_new and self.sq_page == 0) (if (self.dlg_field == 0) &self.sq_name_in else &self.sq_desc_in) else if (self.sq_editing) &self.sq_edit else null,
                 .wizard => &self.wiz_name,
                 .append_n => &self.goto_in,
+                .filter => if (self.flt_rows.items.len > 0) &self.flt_in else null,
                 .find_text => &self.find_in,
                 .find_file => &self.files_in,
                 .replace => if (self.dlg_field == 0) &self.find_in else &self.replace_in,
@@ -6036,6 +7432,7 @@ pub const App = struct {
         if (self.focus == .editor) {
             const b = self.activeBuffer() orelse return;
             if (self.activeTab().?.virtual) return;
+            if (!self.activeTab().?.editing) return self.needEditing(self.activeTab().?);
             try b.checkpoint(.other);
             try b.insertText(t);
         }
@@ -6052,6 +7449,7 @@ pub const App = struct {
             if (r == self.selected) pos = i;
         }
         const e = &self.tree.entries.items[self.selected];
+        if (try self.markKey(key)) return;
         if (key.matches(Key.up, .{})) {
             self.selected = rows[if (pos > 0) pos - 1 else 0];
         } else if (key.matches(Key.down, .{})) {
@@ -6064,7 +7462,9 @@ pub const App = struct {
             }
         } else if (key.matches(Key.left, .{})) {
             if ((e.is_dir or e.kind == .db) and e.expanded and e.parent != null) e.expanded = false else if (e.parent) |p| self.selected = p;
-        } else if (key.matches(Key.enter, .{}) or key.matches(Key.space, .{})) {
+        } else if (key.matches(Key.enter, .{}) or key.matches(Key.enter, .{ .ctrl = true }) or key.matches(Key.space, .{})) {
+            // Enter says what is selected in the status bar and opens it (a folder in the Main Panel); it does not fold or unfold
+            self.selectionInfo();
             try self.openEntry(self.selected);
         } else if (key.matches(Key.page_up, .{})) {
             self.selected = rows[pos -| 10];
@@ -6075,6 +7475,25 @@ pub const App = struct {
         }
     }
 
+    // Zig tip: Enter only tells what is selected, in the status bar; Ctrl+Enter, Space or a double click open it. `statFile`
+    // gives the size of a file; a folder or a database says how to open it.
+    /// Enter in the tree: say in the status bar what is selected.
+    fn selectionInfo(self: *App) void {
+        if (self.selected >= self.tree.entries.items.len) return;
+        const e = self.tree.entries.items[self.selected];
+        const what: []const u8 = if (e.kind == .table) "table" else if (e.kind == .db) "database" else if (e.is_dir) "folder" else "file";
+        var size: u64 = 0;
+        if (!e.is_dir and e.kind == .normal) {
+            if (self.fullPath(e.path)) |full| {
+                defer self.gpa.free(full);
+                if (Io.Dir.cwd().statFile(self.io, full, .{})) |st| size = st.size else |_| {}
+            } else |_| {}
+        }
+        if (size > 0) {
+            self.setMessage("{s}: {s} · {d} bytes · Ctrl+Enter or a double click opens it", .{ what, e.path, size });
+        } else self.setMessage("{s}: {s} · Ctrl+Enter or a double click opens it", .{ what, e.path });
+    }
+
     // Zig tip: `const e = &self.tree.entries.items[index];` is a pointer to the entry, so `e.expanded
     // = !e.expanded` changes the tree itself and not a copy.
     pub fn openEntry(self: *App, index: u32) !void {
@@ -6083,12 +7502,14 @@ pub const App = struct {
         self.tree_follow = true;
         if (e.kind == .table) return self.openFile(e.path);
         if (e.kind == .db) {
-            e.expanded = !e.expanded;
-            if (e.expanded) try self.loadDbTables(index);
+            // the entry may move when the tables are put under it, so the path is copied first
+            const db_path = try self.gpa.dupe(u8, e.path);
+            defer self.gpa.free(db_path);
+            // a database is shown as the list of its tables; the icon and the arrow keys fold and unfold it
+            try self.showDatabase(db_path);
             return;
         }
         if (e.is_dir) {
-            if (e.parent != null) e.expanded = !e.expanded;
             // the folder that is clicked becomes the working folder of the console, and its content fills the Main Panel
             try self.enterFolder(e.path);
             const folder_path = try self.gpa.dupe(u8, e.path);
@@ -6223,7 +7644,8 @@ pub const App = struct {
             return self.consoleEnter();
         }
         if (self.pending_at != null) self.cancelPending();
-        if (key.matches(Key.tab, .{})) return self.consoleComplete();
+        // Right at the end of the line completes a file name (Tab leaves the panel)
+        if (key.matches(Key.right, .{}) and self.console_in.buf.secondHalf().len == 0 and self.console_in.buf.firstHalf().len > 0) return self.consoleComplete();
         if (key.matches(Key.up, .{ .ctrl = true })) return self.historyStep(-1);
         if (key.matches(Key.down, .{ .ctrl = true })) return self.historyStep(1);
         if (key.matches(Key.page_up, .{})) {
@@ -6255,13 +7677,14 @@ pub const App = struct {
         if (m.type == .motion) return self.hover(m);
         if (m.type == .release) {
             if (self.tdrag_src != null) try self.treeRelease();
+            if (self.fdrag != null) try self.folderRelease();
             self.drag = .none;
             // three seconds after the release the layout freezes by itself
             if (self.modify and self.mouse_modify) self.freeze_at = self.nowMs() + 3000;
             return;
         }
         if (m.type == .drag) {
-            if (self.tdrag_src != null) {
+            if (self.tdrag_src != null or self.fdrag != null) {
                 self.treeDragTo(m);
                 return;
             }
@@ -6272,7 +7695,19 @@ pub const App = struct {
         self.freeze_at = null;
         if (m.button == .wheel_up or m.button == .wheel_down) {
             const up = m.button == .wheel_up;
+            if (self.overlay == .open_folder) {
+                // the list of the folder selector: the selection moves, the list follows
+                const n = self.fbRowCount();
+                if (n > 0) self.fb_sel = if (up) self.fb_sel -| 3 else @min(self.fb_sel + 3, n - 1);
+                return;
+            }
             self.follow = false;
+            const lm = self.layout.main;
+            if (lm.w > 0 and m.row == lm.y and m.col >= lm.x and m.col < lm.x + lm.w) {
+                // the wheel over the tab row moves the row of tabs; the view keeps the active tab inside it
+                if (up) self.tab_first -|= 1 else if (self.tab_more_right) self.tab_first += 1;
+                return;
+            }
             if (self.tree_rect.contains(m.col, m.row)) {
                 self.tree_follow = false;
                 self.tree_top = if (up) self.tree_top -| 3 else self.tree_top + 3;
@@ -6328,6 +7763,11 @@ pub const App = struct {
         }
         if (m.button != .left) return;
         self.follow = true;
+        if (self.overlay == .open_folder and self.pbar_kind == .fbox and self.pbar_rect.contains(m.col, m.row)) {
+            self.drag = .panel_v;
+            self.scrollTo(m);
+            return;
+        }
         if (self.overlay == .none) {
             if (self.grabSplit(m)) {
                 // a press on a border starts Layout modify; a layout already in modify keeps how it was started
@@ -6369,6 +7809,12 @@ pub const App = struct {
             const h = self.hits.items[i];
             if (h.rect.contains(m.col, m.row)) {
                 if (h.action == .tree_row) return self.treePress(h.action.tree_row, m);
+                if (h.action == .folder_row) return self.folderPress(h.action.folder_row, m);
+                // a click inside a panel gives it the keyboard and goes on to the part that was clicked (a cell, the console)
+                if (h.action == .panel_focus) {
+                    try self.activate(h.action);
+                    break;
+                }
                 return self.activate(h.action);
             }
         }
@@ -6391,21 +7837,41 @@ pub const App = struct {
 
     // Zig tip: the column under the mouse is found by adding up the widths of the columns from the first one shown, the
     // way the view draws them (`tbl_widths`, fitted to the room): a row number column, then each field and its `│`.
-    /// A click on the grid of a DBF table: select the record and the field under the pointer.
+    /// A click on the grid of a table: select the record and the field under the pointer; Ctrl+click selects the row; a double click edits.
     fn clickTable(self: *App, tv: *TableView, m: vaxis.Mouse) void {
         const r = self.tbl_rect;
-        const row = tv.top + @as(usize, @intCast(@as(i32, m.row) - r.y));
-        if (row < tv.t.records) tv.row = row;
-        var x: i32 = @as(i32, r.x) + dbf_rownum_w;
+        const row = tv.top + @as(usize, @intCast(@max(@as(i32, m.row) - r.y, 0)));
+        var x: i32 = @as(i32, r.x) + rownumW(tv.t.records);
         var c = tv.left;
+        var found: ?usize = null;
         while (c < tv.t.fields.len) : (c += 1) {
-            const w: i32 = @as(i32, if (c < self.tbl_widths.len) self.tbl_widths[c] else dbf.displayWidth(&tv.t.fields[c])) + 1;
+            const w: i32 = @as(i32, if (c < self.tbl_widths.len) self.tbl_widths[c] else tv.t.fields[c].width) + 1;
             if (m.col >= x and m.col < x + w) {
-                tv.col = c;
-                return;
+                found = c;
+                break;
             }
             x += w;
         }
+        if (row >= tv.t.records) return;
+        // a click on the cell being edited goes on editing; a click elsewhere ends the editing and keeps the value
+        if (self.tbl_editing) {
+            if (found != null and row == tv.row and found.? == tv.col) return;
+            self.commitCell(tv) catch {};
+        }
+        tv.row = row;
+        if (m.mods.ctrl) {
+            if (tv.sel.contains(row)) _ = tv.sel.swapRemove(row) else tv.sel.put(self.gpa, row, {}) catch {};
+            return;
+        }
+        const col = found orelse return;
+        tv.col = col;
+        // a second click on the same cell within 400 ms starts the editing
+        const now = self.nowMs();
+        const double = now - self.tbl_click_ms < 400 and self.tbl_click_row == row and self.tbl_click_col == col;
+        self.tbl_click_ms = if (double) 0 else now;
+        self.tbl_click_row = row;
+        self.tbl_click_col = col;
+        if (double) self.dataEdit();
     }
 
     // ------------------------------------------------------------ marks and moving files in the tree
@@ -6443,17 +7909,45 @@ pub const App = struct {
             return;
         }
         if (e.kind == .table) {
-            // a table of a database is opened, never dragged
+            // a table of a database is never dragged: it is selected, and a double click opens it
             self.clearMarks();
             self.selected = idx;
-            try self.openEntry(idx);
+            const now = self.nowMs();
+            const double = self.last_click_row == idx and now - self.last_click_ms < 400;
+            self.last_click_row = if (double) null else idx;
+            self.last_click_ms = now;
+            if (double) try self.openEntry(idx);
             return;
         }
         if (!self.isMarked(e.path)) self.clearMarks();
         self.selected = idx;
+        // the icon is the cell after the connection lines: 3 cells for each level of depth, from column 1
+        const icon_col: i32 = @as(i32, self.tree_rect.x) + 1 + 3 * @as(i32, e.depth) - @as(i32, @intCast(self.tree_left));
+        self.tdrag_icon = m.col == icon_col or m.col == icon_col + 1; // the emoji takes two cells
         self.tdrag_src = idx;
         self.tdrag_active = false;
         self.tdrag_over = null;
+    }
+
+    // Zig tip: a folder (or database) has three answers to a click: on its icon it opens or closes; on its name it is only
+    // selected; a second click on the same row within 400 ms (a double click) also opens or closes it and shows its content.
+    // A file opens at once. The time comes from `nowMs`, so no timer is needed.
+    /// The button was released on a row of the tree without a drag.
+    fn treeClick(self: *App, idx: u32) !void {
+        const e = &self.tree.entries.items[idx];
+        const now = self.nowMs();
+        const double = self.last_click_row == idx and now - self.last_click_ms < 400;
+        self.last_click_row = if (double) null else idx;
+        self.last_click_ms = now;
+        // a file or a folder: a double click opens it, a single click only selects it (Enter opens it too)
+        if (double) return self.openEntry(idx);
+        if (!e.is_dir and e.kind != .db) return;
+        if (self.tdrag_icon) {
+            self.tdrag_icon = false;
+            if (e.parent == null) return;
+            e.expanded = !e.expanded;
+            if (e.kind == .db and e.expanded) try self.loadDbTables(idx);
+        }
     }
 
     /// The row of the tree under the pointer, or null.
@@ -6482,21 +7976,31 @@ pub const App = struct {
         self.tdrag_over = null;
         if (!active) {
             self.clearMarks();
-            return self.openEntry(src);
+            return self.treeClick(src);
         }
         const target = over orelse return;
         const te = self.tree.entries.items[target];
         const dest = if (te.is_dir) te.path else (std.fs.path.dirname(te.path) orelse "");
         const dragged = self.tree.entries.items[src].path;
+        // a dragged row that is not marked moves alone; a marked one takes all the marked rows with it
+        if (!self.isMarked(dragged)) {
+            self.clearMarks();
+            if (self.tree.entries.items[src].parent != null) try self.marks.append(self.gpa, try self.gpa.dupe(u8, dragged));
+        }
+        try self.askMove(dest);
+    }
+
+    // Zig tip: the marked paths are the list of what to move, whether they were marked in the tree, in a folder tab or both.
+    // `addMoveSource` leaves out what is already in the target, so the question is asked only if something is left.
+    /// Ask whether to move the marked files and folders into the folder `dest` (a path in the project, "" for its root).
+    fn askMove(self: *App, dest: []const u8) !void {
         for (self.move_srcs.items) |p| self.gpa.free(p);
         self.move_srcs.clearRetainingCapacity();
-        const use_marks = self.isMarked(dragged);
-        if (use_marks) {
-            for (self.marks.items) |p| try self.addMoveSource(p, dest);
-        } else if (self.tree.entries.items[src].parent != null) {
-            try self.addMoveSource(dragged, dest);
+        for (self.marks.items) |p| try self.addMoveSource(p, dest);
+        if (self.move_srcs.items.len == 0) {
+            self.setMessage("nothing to move there", .{});
+            return;
         }
-        if (self.move_srcs.items.len == 0) return;
         if (self.move_dest) |old| self.gpa.free(old);
         self.move_dest = try self.gpa.dupe(u8, dest);
         const shown: []const u8 = if (dest.len == 0) "the project folder" else dest;
@@ -6504,6 +8008,275 @@ pub const App = struct {
             self.askConfirm(.move_files, 0, "Move {s} to {s}?", .{ self.move_srcs.items[0], shown });
         } else {
             self.askConfirm(.move_files, 0, "Move {d} files to {s}?", .{ self.move_srcs.items.len, shown });
+        }
+    }
+
+    // Zig tip: a `?[]u8` result is a path the caller owns (and frees), or null when the row cannot be marked (the `..` row, the
+    // project folder itself). The two places that have rows, a folder tab and the tree, give the same answer the same way.
+    /// The path of the row under the cursor: of the folder tab when it has the keyboard, else of the tree.
+    fn currentRowPath(self: *App) ?[]u8 {
+        if (self.focus != .tree) {
+            if (self.activeTab()) |t| {
+                if (t.folder) |fv| {
+                    if (fv.sel >= fv.items.items.len or std.mem.eql(u8, fv.items.items[fv.sel].name, "..")) return null;
+                    return self.folderItemPath(fv, fv.sel) catch null;
+                }
+            }
+            if (self.focus == .editor) return null;
+        }
+        if (self.selected >= self.tree.entries.items.len) return null;
+        const e = self.tree.entries.items[self.selected];
+        if (e.parent == null) return null;
+        return self.gpa.dupe(u8, e.path) catch null;
+    }
+
+    /// Mark (`on`) or unmark a path; marking twice does nothing.
+    fn setMark(self: *App, path: []const u8, on: bool) !void {
+        for (self.marks.items, 0..) |p, i| {
+            if (std.mem.eql(u8, p, path)) {
+                if (!on) {
+                    self.gpa.free(p);
+                    _ = self.marks.orderedRemove(i);
+                }
+                return;
+            }
+        }
+        if (on) try self.marks.append(self.gpa, try self.gpa.dupe(u8, path));
+    }
+
+    /// The row under the cursor moves one row down (like the file managers do after a mark).
+    fn stepDown(self: *App) void {
+        if (self.focus != .tree) {
+            if (self.activeTab()) |t| {
+                if (t.folder) |fv| {
+                    fv.sel = @min(fv.sel + 1, fv.items.items.len -| 1);
+                    return;
+                }
+            }
+        }
+        const rows = self.visible.items;
+        for (rows, 0..) |r, i| {
+            if (r == self.selected) {
+                self.selected = rows[@min(i + 1, rows.len - 1)];
+                break;
+            }
+        }
+        self.tree_follow = true;
+    }
+
+    /// Empty the selection: the marked files and folders, and the selected rows of the table in the window.
+    pub fn clearSelection(self: *App) void {
+        self.clearMarks();
+        if (self.activeTable()) |tv| tv.sel.clearRetainingCapacity();
+    }
+
+    /// Select (`+`) or unselect (`-`) the row under the cursor, then go to the next row.
+    pub fn markCurrent(self: *App, on: bool) !void {
+        if (self.focus != .tree) {
+            if (self.activeTable()) |tv| {
+                if (tv.t.records == 0) return;
+                if (on) try tv.sel.put(self.gpa, tv.row, {}) else _ = tv.sel.swapRemove(tv.row);
+                tv.row = @min(tv.row + 1, tv.t.records - 1);
+                self.setMessage("{d} selected", .{tv.sel.count()});
+                return;
+            }
+        }
+        const path = self.currentRowPath() orelse return;
+        defer self.gpa.free(path);
+        try self.setMark(path, on);
+        self.stepDown();
+        if (self.marks.items.len > 0) self.setMessage("{d} selected", .{self.marks.items.len});
+    }
+
+    /// Select all the rows of the folder tab, or all the rows beside the one selected in the tree.
+    pub fn markAll(self: *App) !void {
+        if (self.focus != .tree) {
+            if (self.activeTable()) |tv| {
+                var r: usize = 0;
+                while (r < tv.t.records) : (r += 1) try tv.sel.put(self.gpa, r, {});
+                self.setMessage("{d} selected", .{tv.sel.count()});
+                return;
+            }
+            if (self.activeTab()) |t| {
+                if (t.folder) |fv| {
+                    for (fv.items.items, 0..) |it, i| {
+                        if (std.mem.eql(u8, it.name, "..")) continue;
+                        const path = try self.folderItemPath(fv, i);
+                        defer self.gpa.free(path);
+                        try self.setMark(path, true);
+                    }
+                    self.setMessage("{d} selected", .{self.marks.items.len});
+                    return;
+                }
+            }
+        }
+        if (self.selected >= self.tree.entries.items.len) return;
+        const parent = self.tree.entries.items[self.selected].parent orelse return;
+        for (self.tree.entries.items) |e| {
+            if (e.parent != null and e.parent.? == parent) try self.setMark(e.path, true);
+        }
+        self.setMessage("{d} selected", .{self.marks.items.len});
+    }
+
+    // Zig tip: the keys come as a letter (`+`, `-`, `*`, `/`) from the main keyboard, and as `kp_add`, `kp_subtract`, ... from
+    // the keypad of a terminal that tells them apart; both are accepted. Ctrl and Alt make other shortcuts, so they are left alone.
+    /// Keys of the selection in a folder tab and in the tree: + select, - unselect, * select all, / unselect all.
+    fn markKey(self: *App, key: Key) !bool {
+        if (key.mods.ctrl or key.mods.alt) return false;
+        const c = key.codepoint;
+        if (c == '+' or c == Key.kp_add) {
+            try self.markCurrent(true);
+        } else if (c == '-' or c == Key.kp_subtract) {
+            try self.markCurrent(false);
+        } else if (c == '*' or c == Key.kp_multiply) {
+            try self.markAll();
+        } else if (c == '/' or c == Key.kp_divide) {
+            self.clearSelection();
+            self.setMessage("selection cleared", .{});
+        } else return false;
+        return true;
+    }
+
+    // Zig tip: Save As is the folder selector with the files shown and a File name field: the name that was waiting in
+    // `saveas_in` (a New DBF asks for `table.dbf`) or the name of the file of the window is put in the field, and the list
+    // starts in the folder of that file. A click on a file puts its name in the field, so an existing file can be chosen.
+    /// Save As… (Ctrl+Shift+S, F4): choose the folder in the list and type the name.
+    fn openSaveChooser(self: *App) void {
+        const typed = self.saveas_in.toOwnedContents(self.gpa) catch return;
+        defer self.gpa.free(typed);
+        self.saveas_in.clearRetainingCapacity();
+        const path: []const u8 = if (self.activeTab()) |t| t.path else "";
+        const name: []const u8 = if (typed.len > 0) std.fs.path.basename(typed) else std.fs.path.basename(path);
+        const dir_rel: []const u8 = if (typed.len > 0 and std.fs.path.dirname(typed) != null) std.fs.path.dirname(typed).? else if (path.len > 0) (std.fs.path.dirname(path) orelse "") else self.targetDir();
+        const start = if (dir_rel.len == 0) self.gpa.dupe(u8, if (self.root.len > 0) self.root else ".") catch return else self.fullPath(dir_rel) catch return;
+        defer self.gpa.free(start);
+        self.fb_mode = .save_as;
+        self.fb_name.clearRetainingCapacity();
+        self.fb_name.insertSliceAtCursor(name) catch {};
+        self.openChooser(.save_as, .none, start);
+    }
+
+    // Zig tip: the folder shown by the selector is an absolute path; `projectRel` turns it into a path of the project. The file
+    // that exists gets a question first (`replace_file`); the name is kept in `save_rel` until the answer.
+    /// The Save button of the selector: save the window as the name typed in the folder shown.
+    fn saveHere(self: *App) !void {
+        const gpa = self.gpa;
+        const raw = try self.fb_name.toOwnedContents(gpa);
+        defer gpa.free(raw);
+        const name = std.mem.trim(u8, raw, " \"");
+        if (name.len == 0) {
+            self.setMessage("type the name of the file", .{});
+            return;
+        }
+        const dest = self.fb_path orelse return;
+        const dir_rel = (try self.projectRel(dest)) orelse {
+            self.setMessage("{s} is outside the project: choose a folder of the project", .{dest});
+            return;
+        };
+        defer gpa.free(dir_rel);
+        const rel = if (dir_rel.len == 0) try gpa.dupe(u8, name) else try std.fmt.allocPrint(gpa, "{s}/{s}", .{ dir_rel, name });
+        self.chooserDone();
+        if (self.save_rel) |old| gpa.free(old);
+        self.save_rel = rel;
+        const same = if (self.activeTab()) |t| std.mem.eql(u8, t.path, rel) else false;
+        const full = try self.fullPath(rel);
+        defer gpa.free(full);
+        const exists = if (Io.Dir.cwd().statFile(self.io, full, .{})) |_| true else |_| false;
+        if (exists and !same and !std.ascii.eqlIgnoreCase(extensionOf(rel), "dbf")) {
+            self.askConfirm(.replace_file, 0, "Replace the existing file {s}?", .{rel});
+            return;
+        }
+        try self.saveAs(rel);
+    }
+
+    /// File > Move…: the marked rows (or the row under the cursor) go to a folder chosen in the folder selector.
+    pub fn startMove(self: *App) !void {
+        if (self.marks.items.len == 0) {
+            const path = self.currentRowPath() orelse {
+                self.setMessage("Move: select files or folders first (+ on a row, * for all)", .{});
+                return;
+            };
+            defer self.gpa.free(path);
+            try self.setMark(path, true);
+        }
+        const first = self.marks.items[0];
+        const dir_rel = std.fs.path.dirname(first) orelse "";
+        const start = if (dir_rel.len == 0) try self.gpa.dupe(u8, if (self.root.len > 0) self.root else ".") else try self.fullPath(dir_rel);
+        defer self.gpa.free(start);
+        self.openChooser(.move_many, .none, start);
+    }
+
+    /// The folder selector of Move…: ask to move the marked rows into the folder shown.
+    fn moveManyHere(self: *App) !void {
+        const dest = self.fb_path orelse return;
+        const dir_rel = (try self.projectRel(dest)) orelse {
+            self.setMessage("{s} is outside the project: choose a folder of the project", .{dest});
+            return;
+        };
+        defer self.gpa.free(dir_rel);
+        self.chooserDone();
+        try self.askMove(dir_rel);
+    }
+
+    /// A press on a row of a folder tab: Ctrl+click marks it; a plain press selects it and may start a drag to the tree.
+    fn folderPress(self: *App, i: usize, m: vaxis.Mouse) !void {
+        self.focus = .editor;
+        const t = self.activeTab() orelse return;
+        const fv = t.folder orelse return;
+        if (i >= fv.items.items.len) return;
+        if (m.mods.ctrl) {
+            fv.sel = i;
+            if (std.mem.eql(u8, fv.items.items[i].name, "..")) return;
+            const path = try self.folderItemPath(fv, i);
+            defer self.gpa.free(path);
+            try self.setMark(path, !self.isMarked(path));
+            return;
+        }
+        self.fdrag = i;
+        self.fdrag_was_sel = fv.sel == i;
+        fv.sel = i;
+        self.tdrag_active = false;
+        self.tdrag_over = null;
+    }
+
+    /// The button was released after a press on a folder row: open the row (a second click), or drop it on the tree.
+    fn folderRelease(self: *App) !void {
+        const i = self.fdrag orelse return;
+        const active = self.tdrag_active;
+        const over = self.tdrag_over;
+        self.fdrag = null;
+        self.tdrag_active = false;
+        self.tdrag_over = null;
+        const t = self.activeTab() orelse return;
+        const fv = t.folder orelse return;
+        if (i >= fv.items.items.len) return;
+        if (!active) {
+            if (self.fdrag_was_sel) try self.openFolderItem(fv, i);
+            return;
+        }
+        const target = over orelse return;
+        if (std.mem.eql(u8, fv.items.items[i].name, "..")) return;
+        const te = self.tree.entries.items[target];
+        const dest = if (te.is_dir) te.path else (std.fs.path.dirname(te.path) orelse "");
+        const path = try self.folderItemPath(fv, i);
+        defer self.gpa.free(path);
+        if (!self.isMarked(path)) {
+            self.clearMarks();
+            try self.marks.append(self.gpa, try self.gpa.dupe(u8, path));
+        }
+        try self.askMove(dest);
+    }
+
+    /// Show the folder tabs again after files moved.
+    fn reloadFolders(self: *App) void {
+        for (self.tabs.items) |*t| {
+            const old = t.folder orelse continue;
+            const dir = self.gpa.dupe(u8, old.dir) catch continue;
+            defer self.gpa.free(dir);
+            const nf = self.loadFolder(dir) catch continue;
+            nf.sel = @min(old.sel, nf.items.items.len -| 1);
+            self.freeFolder(old);
+            t.folder = nf;
         }
     }
 
@@ -6544,6 +8317,7 @@ pub const App = struct {
         }
         self.clearMarks();
         self.refreshTree();
+        self.reloadFolders();
         self.saveSession() catch {};
         if (skipped > 0) self.setMessage("moved {d}, {d} skipped (the name exists in the folder)", .{ moved, skipped }) else self.setMessage("moved {d} file(s)", .{moved});
     }
@@ -6624,8 +8398,9 @@ pub const App = struct {
                 try self.openEntry(i);
             },
             .tab => |i| {
+                // a click on a tab gives the Main Panel the keyboard, whatever the window holds (a folder list too)
                 self.active = i;
-                self.focus = if (self.tabs.items[i].buf != null or self.tabs.items[i].table != null) .editor else .tree;
+                self.focus = .editor;
             },
             .tab_close => |i| self.closeTab(i),
             .bottom => |t| {
@@ -6720,7 +8495,12 @@ pub const App = struct {
                 .forget => try self.forgetProject(),
                 .browse => self.openFolderDialog(),
                 .open_here => try self.fbOk(),
+                .filter_add => self.filterAdd(),
+                .filter_remove => self.filterRemove(),
             },
+            .filter_row => |i| self.filterSelect(i),
+            .filter_col => |i| self.filterSelect(i),
+            .filter_pick => |i| self.filterPickChoose(i),
             .proj_row => |i| {
                 if (self.proj_sel == i) try self.openCached(i) else self.proj_sel = i;
             },
@@ -6759,34 +8539,30 @@ pub const App = struct {
                 if (i < sqlstruct.types.len) self.sq_cols.items[self.sq_row].setType(sqlstruct.types[i]);
                 self.sq_drop = false;
             },
+            .sq_ix_field => |i| {
+                self.sq_ix_focus = 0;
+                self.sq_ix_cur = i;
+                self.sqIdxToggle(i);
+            },
+            .sq_ix_row => |i| {
+                self.sq_ix_focus = 1;
+                self.sq_ix_sel = i;
+            },
+            .sq_ix_unique => self.sq_ix_uniq = !self.sq_ix_uniq,
+            .sq_ix_add => self.sqIdxAdd() catch {},
+            .sq_ix_remove => self.sqIdxRemove(),
             .sq_btn => |b| switch (b) {
-                .prev => self.sq_row = self.sq_row -| 10,
-                .next => self.sq_row = @min(self.sq_row + 10, self.sq_cols.items.len - 1),
+                .prev => if (self.sq_new) self.sqGoPage(-1) else {
+                    self.sq_row = self.sq_row -| 10;
+                },
+                .next => if (self.sq_new) self.sqGoPage(1) else {
+                    self.sq_row = @min(self.sq_row + 10, self.sq_cols.items.len - 1);
+                },
                 .add => self.sqAdd() catch {},
                 .remove => self.sqRemove(),
                 .up => self.sqMove(-1),
                 .down => self.sqMove(1),
                 .apply => try self.sqApply(),
-            },
-            .st_cell => |c| {
-                self.st_row = c.row;
-                self.st_col = c.col;
-                self.st_drop = false;
-                if (self.st_editing) self.st_editing = false;
-            },
-            .st_drop_open => {
-                self.st_col = 1;
-                self.stStartEdit() catch {};
-            },
-            .st_pick => |k| self.stPickType(k),
-            .st_btn => |b| switch (b) {
-                .prev => self.st_row = self.st_row -| 10,
-                .next => self.st_row = @min(self.st_row + 10, self.st_fields.items.len - 1),
-                .add => self.stAdd() catch {},
-                .remove => self.stRemove(),
-                .up => self.stMove(-1),
-                .down => self.stMove(1),
-                .apply => try self.stApply(),
             },
             .break_toggle => |i| self.toggleBreakpointEnabled(i),
             .break_trash => |i| {

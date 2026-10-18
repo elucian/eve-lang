@@ -1,0 +1,43 @@
+# Generics and traits. A generic procedure, a generic class, a trait with a required and a provided method.
+** spec: syntax/declarations.md#traits-and-generic-classes
+primary aspect s18_generics is
+  trait Describable is
+    method describe(@self) => (@result: String);
+    method show(@self) is
+      print "<{self.describe()}>";
+    return;
+  end Describable;
+
+  class Point = {x: Integer, y: Integer} <: (Object, Describable) is
+    public method describe(@self) => (@result: String) is
+      let result := "({self.x}, {self.y})";
+    return;
+  end Point;
+
+  class Box(:T) = {item: T} <: Object is
+    public method get(@self) => (@result: T) is
+      let result := self.item;
+    return;
+  end Box;
+
+  procedure show_all(:T)(label: String, items: ()T) is
+    for x in items do
+      print "{label}: {x}";
+    done;
+  return;
+
+  process main is
+    show_all("n", (1, 2));
+    show_all(:String)("s", ("a",));
+    expect Box(:Integer)(item: 5).get() + 1 == 6;
+    print Box(:String)(item: "five").get();
+    new p := Point(x: 1, y: 2);
+    p.show();
+    expect p is Describable;
+  return;
+end s18_generics;
+/*@expect
+{
+  "stdout": ["n: 1", "n: 2", "s: a", "five", "<(1, 2)>"]
+}
+*/

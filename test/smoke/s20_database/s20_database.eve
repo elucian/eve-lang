@@ -1,0 +1,33 @@
+# Database. SQLite of the machine: a table, typed parameters, records, a job that rolls back, a Memory table there and back.
+** spec: library/database.md
+primary aspect s20_database is
+  class Item = {id: Integer, name: String, price: Real} <: Record;
+  class Items = {id: Integer, name: String, price: Real} <: Memory;
+
+  process main is
+    new db := database.connect("smoke");
+    db.execute!("drop table if exists items");
+    db.execute!("create table items (id integer primary key, name text, price real)");
+    print db.execute!("insert into items values (?, ?, ?), (?, ?, ?)", 1, "bolt", 2.5, 2, "nut", 0.5);
+    for i in db.query!(:Item)("select * from items order by id") do
+      print "{i.id} {i.name} {i.price}";
+    done;
+    add: job
+    do
+      db.execute!("insert into items values (3, 'gone', 1)");
+      rollback;
+    done add;
+    print jobs["add"].status;
+    expect db.query_one!(:Item)("select * from items where id = ?", 3) == null;
+    new m := Items();
+    print m.store(db, "select id, name, price from items");
+    print m.price.sum();
+    db.execute!("drop table if exists items_copy");
+    print m.load(db, "items_copy");
+  return;
+end s20_database;
+/*@expect
+{
+  "stdout": ["2", "1 bolt 2.5", "2 nut 0.5", "rolled back", "2", "3", "2"]
+}
+*/

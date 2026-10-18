@@ -1,0 +1,56 @@
+# the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables (D-187)
+** spec: library/data-engines.md
+** The runner starts `eve db serve evedb.cfg`; the client (check/run.py) runs this script and stops evedb.
+primary aspect f02_evedb_columnar is
+  class Item = {id: Integer, name: String, price: Decimal?, ok: Logic} <: Record;
+  class Sales = {id: Integer, region: String, amount: Real, paid: Logic, note: String?} <: Memory;
+
+  process main is
+    new wh := database.connect("wh");
+    wh.execute!("drop table if exists items");
+    wh.execute!("create table items (id bigint primary key, name varchar, price decimal(10,2), ok boolean)");
+    print wh.execute!("insert into items values (?, ?, ?, ?), (?, ?, ?, ?)", 1, "bolt's", 2.50d, True, 2, "nut", null, False);
+    for i in wh.query!(:Item)("select * from items order by id") do
+      print "{i.id} {i.name} {i.price} {i.ok}";
+    done;
+    add: job
+    do
+      wh.execute!("insert into items values (3, 'gone', 1, true)");
+      rollback;
+    done add;
+    print jobs["add"].status;
+    print wh.query_one!(:Item)("select * from items where id = ?", 3) == null;
+
+    ** the fast path: a result as column batches into a Memory table, and back with the Appender
+    new s := Sales();
+    print s.store(wh, "select i::bigint as id, case when i % 3 = 0 then 'north' else 'south' end as region, i * 1.5 as amount, i % 2 = 0 as paid, case when i % 4 = 0 then null else 'n' end as note from range(10000) t(i)");
+    print s.amount.sum();
+    print s.note.count();
+    wh.execute!("drop table if exists sales_copy");
+    print s.load(wh, "sales_copy");
+    new back := Sales();
+    print back.store(wh, "select * from sales_copy where id < ? order by id", 4);
+    print "{back.id.at(3)} {back.region.at(3)} {back.amount.at(3)} {back.paid.at(3)} {back.note.at(0)}";
+    wh.close();
+  return;
+end f02_evedb_columnar;
+/*@expect
+{
+  "command": ["db", "serve", "evedb.cfg"],
+  "timeout": 60,
+  "client": ["python", "check/run.py"],
+  "stdout": [
+    "2",
+    "1 bolt's 2.50 True",
+    "2 nut null False",
+    "rolled back",
+    "True",
+    "10000",
+    "74992500",
+    "7500",
+    "10000",
+    "4",
+    "3 north 4.5 False null"
+  ]
+}
+*/

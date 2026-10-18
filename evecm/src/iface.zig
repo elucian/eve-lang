@@ -180,4 +180,11 @@ pub const Data = struct {
     register_sql_function: *const fn (Host, *value.Func) Signal!void,
     close_core: *const fn (Host) void,
     close_databases: *const fn (Host) void,
+    /// A class derived from `Memory` makes a columnar table (null for any other class); the methods of that table and of its
+    /// column objects (D-184).
+    memory_new: *const fn (Host, *value.Class) Signal!?Value,
+    is_memory: *const fn (Host, Value) bool,
+    memory_call: *const fn (Host, *value.Object, []const u8, []const *const Node) Signal!Value,
+    is_column: *const fn (Host, Value) bool,
+    column_call: *const fn (Host, *value.Object, []const u8, []const *const Node) Signal!Value,
 };

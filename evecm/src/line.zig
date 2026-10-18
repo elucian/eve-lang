@@ -143,7 +143,7 @@ fn redraw(out: *Io.Writer, prompt: []const u8, line: []const u8, old_len: usize)
 // `@memcpy(dest, source)` copies bytes; both slices must have the same length.
 // `in.takeByte()` fails with `error.EndOfStream` at the end of the input; `catch |e| switch (e)`
 // maps that one error to "no more input" (null) and passes every other error on.
-/// Read one line with editing: printable keys, Backspace, Tab, Enter. Ctrl-C drops the line (an
+/// Read one line with editing: printable keys, Backspace, Right (completion), Enter. Ctrl-C drops the line (an
 /// empty line is returned), Ctrl-D or Ctrl-Z on an empty line is the end of input (null).
 /// The returned slice is part of `buf`.
 pub fn readLine(
@@ -162,7 +162,15 @@ pub fn readLine(
             error.EndOfStream => return if (len == 0) null else buf[0..len],
             else => return e,
         };
-        if (b == '\t') {
+        // Tab is not the completion key (it belongs to the terminal and the panels); Right at the end of the line completes
+        if (b == '\t') continue;
+        var complete = false;
+        if (b == 27) {
+            complete = skipEscape(in);
+            if (!complete) comp.stop();
+        }
+        if (b == 27 and !complete) continue;
+        if (complete) {
             const old = len;
             const ext = extOf(buf[0..len]) orelse "";
             const found = if (ext.len > 0) try comp.tab(io, buf[0..len], ext) else null;
@@ -202,7 +210,6 @@ pub fn readLine(
                 while (len > 0 and buf[len] & 0xC0 == 0x80) len -= 1; // drop a whole UTF-8 character
                 try redraw(out, prompt, buf[0..len], old);
             },
-            27 => skipEscape(in),
             32...126, 128...255 => if (len < buf.len) {
                 buf[len] = b;
                 len += 1;
@@ -214,13 +221,15 @@ pub fn readLine(
     }
 }
 
-/// Arrow and function keys arrive as ESC [ ... letter; they are not edited, so drop them.
-fn skipEscape(in: *Io.Reader) void {
-    const first = in.takeByte() catch return;
-    if (first != '[' and first != 'O') return;
+/// Arrow and function keys arrive as ESC [ ... letter; they are not edited, so drop them. The answer is true for the
+/// Right arrow (`ESC [ C`), which asks for a completion.
+fn skipEscape(in: *Io.Reader) bool {
+    const first = in.takeByte() catch return false;
+    if (first != '[' and first != 'O') return false;
     while (in.takeByte()) |c| {
-        if (c >= 0x40 and c <= 0x7e) return;
+        if (c >= 0x40 and c <= 0x7e) return c == 'C';
     } else |_| {}
+    return false;
 }
 
 // Zig tip: a test that touches the real file system uses paths relative to the folder where
@@ -263,10 +272,10 @@ test "the editor edits and completes a line" {
     defer comp.deinit();
     var obuf: [512]u8 = undefined;
     var out: Io.Writer = .fixed(&obuf);
-    var in: Io.Reader = .fixed("chexx\x08\x08ck lib\t\x08\r");
+    var in: Io.Reader = .fixed("chexx\x08\x08ck lib\t\x1b[C\x08\r");
     var buf: [max_line]u8 = undefined;
     const got = (try readLine(std.testing.io, &in, &out, "eve:> ", &comp, &buf, testExt)).?;
-    // Tab filled "lib/...", then Backspace removed its last character.
+    // Tab did nothing; Right filled "lib/...", then Backspace removed its last character.
     try std.testing.expect(std.mem.startsWith(u8, got, "check lib/"));
     try std.testing.expect(std.mem.endsWith(u8, out.buffered(), "\r\n"));
 }

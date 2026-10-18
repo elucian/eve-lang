@@ -11,7 +11,7 @@ const App = app_mod.App;
 const Action = app_mod.Action;
 const Rect = app_mod.Rect;
 const theme = @import("theme.zig");
-const dbf = @import("dbf.zig");
+const grid = @import("grid.zig");
 const sqlstruct = @import("sqlstruct.zig");
 const text = @import("text.zig");
 const keywords = @import("keywords.zig");
@@ -37,7 +37,7 @@ fn boxed(win: Window, x: u16, y: u16, w: u16, h: u16, border: theme.Color) Windo
         .y_off = @intCast(y),
         .width = w,
         .height = h,
-        .border = .{ .where = .all, .glyphs = .single_square, .style = theme.on(border, theme.deep) },
+        .border = .{ .where = .all, .glyphs = .single_square, .style = theme.on(border, theme.panel) },
     });
 }
 
@@ -125,6 +125,7 @@ fn field(app: *App, win: Window, x: u16, y: u16, w: u16, ti: *TextInput, which: 
 pub fn draw(app: *App, win: Window) !void {
     app.beginFrame();
     app.hits.clearRetainingCapacity();
+    app.pbar_rect = .{};
     win.hideCursor();
     fillWith(win, theme.panel);
     const W = win.width;
@@ -140,7 +141,13 @@ pub fn draw(app: *App, win: Window) !void {
     try sidebar(app, win, l.tree);
     try mainPanel(app, win, l);
     try toolsPanel(app, win, l.tools);
-    if (l.debug.w > 0) try debugBar(app, win, l.debug.x, l.debug.y, l.debug.w);
+    if (l.debug.w > 0) {
+        if (l.debug.h >= 3) {
+            const live = app.overlay == .none and app.activePanel() == .tools;
+            const frame = boxed(win, l.debug.x, l.debug.y, l.debug.w, l.debug.h, if (app.modify) theme.amber else if (live) theme.accent() else theme.line);
+            try debugBar(app, frame, 0, 0, frame.width);
+        } else try debugBar(app, win, l.debug.x, l.debug.y, l.debug.w);
+    }
     try statusBar(app, win);
 
     drawSplitHint(app, win, l);
@@ -169,9 +176,7 @@ fn overlayBox(app: *App, win: Window, which: app_mod.Overlay) !void {
         .about => try about(app, win),
         .tab_menu => try tabMenuBox(app, win),
         .confirm => try confirmBox(app, win),
-        .structure => try structureBox(app, win),
         .sq_structure => try sqStructureBox(app, win),
-        .new_table => try newTableBox(app, win),
         .properties => try propertiesBox(app, win),
         .new_file => try newBox(app, win),
         .wizard => try wizardBox(app, win),
@@ -183,6 +188,7 @@ fn overlayBox(app: *App, win: Window, which: app_mod.Overlay) !void {
         .find_text => try findTextBox(app, win),
         .find_file => try findFileBox(app, win),
         .replace => try replaceBox(app, win),
+        .filter => try filterBox(app, win),
     }
 }
 
@@ -224,7 +230,8 @@ fn alertBox(app: *App, win: Window) !void {
 fn drawSplitHint(app: *App, win: Window, l: app_mod.Layout) void {
     const which = (if (app.drag == .tree_split or app.drag == .tools_split) app.drag else null) orelse app.hover_split orelse return;
     if (app.overlay != .none) return;
-    const style = theme.on(theme.amber, theme.deep);
+    // the colour of the border it covers: the panel colour, so the line keeps the look of the border in every theme
+    const style = theme.on(theme.amber, theme.panel);
     switch (which) {
         .tree_split => {
             var y: u16 = 2;
@@ -301,7 +308,7 @@ fn clipText(s: []const u8, max: usize) []const u8 {
 /// Draw the border of a panel and return its inside.
 fn panelBox(app: *App, win: Window, r: Rect, p: app_mod.Panel) !Window {
     const live = app.overlay == .none and app.activePanel() == p;
-    const color = if (app.modify) theme.amber else if (live) theme.blue else theme.line;
+    const color = if (app.modify) theme.amber else if (live) theme.accent() else theme.line;
     try addHit(app, win, r.x, r.y, r.w, r.h, .{ .panel_focus = p });
     return boxed(win, r.x, r.y, r.w, r.h, color);
 }
@@ -379,11 +386,11 @@ fn putScrolled(row: Window, vc: *usize, left: usize, width: usize, s: []const u8
 // (`top`) and how much it shows (`visible`). The vertical one has ▲ and ▼ with a free row above, and
 // returns the rectangle of its track for the mouse; with fewer than six rows it is only a track.
 /// A vertical bar in column `x` of `win`, `h` rows tall.
-fn vBar(app: *App, win: Window, x: u16, h: u16, total: usize, top: usize, visible: usize, up: Action, down: Action) Rect {
+fn vBar(app: *App, win: Window, x: u16, h: u16, total: usize, top: usize, visible: usize, up: Action, down: Action, flush: bool) Rect {
     const track = theme.on(theme.faint, theme.deep);
     const btn = theme.onBold(theme.text, theme.bar2);
     // a tall bar has a free row above the arrow; a short one (3 to 5 rows) has the arrows at its two ends
-    const tall = h >= 6;
+    const tall = h >= 6 and !flush;
     const buttons = h >= 3;
     const up_row: u16 = if (tall) 1 else 0;
     const y0: u16 = if (tall) 2 else if (buttons) 1 else 0;
@@ -402,6 +409,15 @@ fn vBar(app: *App, win: Window, x: u16, h: u16, total: usize, top: usize, visibl
     var k: usize = 0;
     while (k < th) : (k += 1) _ = put(win, x, y0 + @as(u16, @intCast(ty + k)), glyph_v_thumb, theme.on(theme.dim, theme.deep));
     return absRect(win, x, y0, 1, span);
+}
+
+// Zig tip: the bars of the panels of the Main and Tools Panel (a log, a folder, the breakpoints) share one slot in the app,
+// because only one of them is drawn at a time; it keeps the track and the numbers the mouse needs to drag the thumb.
+fn setPbar(app: *App, kind: app_mod.PbarKind, r: Rect, total: usize, visible: usize) void {
+    app.pbar_rect = r;
+    app.pbar_kind = kind;
+    app.pbar_total = total;
+    app.pbar_visible = visible;
 }
 
 /// A horizontal bar in row `y` of `win`, `w` cells wide, with ◀ and ▶ at the ends.
@@ -438,7 +454,13 @@ fn sidebar(app: *App, win: Window, place: Rect) !void {
     _ = put(bar, 0, 0, clipText(title, box.width -| 5), theme.onBold(if (focused) theme.bright else theme.dim, theme.bar2));
     try titleButtons(app, box, .tree);
     _ = put(box, 0, 1, "─" ** 400, theme.on(theme.line, theme.deep));
-    const list = sub(box, 0, 2, box.width, box.height -| 2);
+    // the foot of the panel: a thin line and the machine that evetx works with (more machines come with level 7)
+    const foot = box.height > 8;
+    if (foot) {
+        _ = put(box, 0, box.height - 2, "─" ** 400, theme.on(theme.line, theme.deep));
+        _ = put(box, 1, box.height - 1, "● local", theme.on(theme.green, theme.deep));
+    }
+    const list = sub(box, 0, 2, box.width, box.height -| (if (foot) @as(u16, 4) else @as(u16, 2)));
 
     try app.tree.visibleRows(app.gpa, &app.visible);
     const total = app.visible.items.len;
@@ -515,7 +537,7 @@ fn sidebar(app: *App, win: Window, place: Rect) !void {
 
     app.tvbar_rect = .{};
     app.thbar_rect = .{};
-    if (need_v) app.tvbar_rect = vBar(app, list, list.width - 1, rows_h, total, app.tree_top, rows_h, .{ .tree_scroll = .up }, .{ .tree_scroll = .down });
+    if (need_v) app.tvbar_rect = vBar(app, list, list.width - 1, rows_h, total, app.tree_top, rows_h, .{ .tree_scroll = .up }, .{ .tree_scroll = .down }, true);
     if (need_h) app.thbar_rect = hBar(app, list, list.height - 1, text_w, content, left, text_w, .{ .tree_scroll = .left }, .{ .tree_scroll = .right });
 }
 
@@ -546,6 +568,7 @@ fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
 // sign, a database or DBF file the disk, an Eve file the scroll, anything else the page. The choice is made from the path.
 /// The icon of a tab, the same as the one of the file in the tree.
 fn tabIcon(t: app_mod.Tab) []const u8 {
+    if (std.mem.startsWith(u8, t.path, "filter:")) return "▽";
     if (t.folder != null) return "📂";
     if (std.mem.indexOfScalar(u8, t.path, '#') != null) return "▦";
     if (hasExt(t.path, &.{ ".db", ".duckdb", ".sqlite", ".sqlite3", ".dbf" })) return "💾";
@@ -556,9 +579,17 @@ fn tabIcon(t: app_mod.Tab) []const u8 {
 // Zig tip: the text is made in the frame arena (`app.fmt`), because libvaxis keeps a pointer to it until the frame is shown.
 /// The text of a tab: its icon, a dot when it has unsaved changes, and its title (in the frame arena).
 fn tabLabel(app: *App, t: app_mod.Tab) []const u8 {
-    const dirty: []const u8 = if (t.buf != null and t.buf.?.dirty) "● " else "";
-    return app.fmt(" {s} {s}{s} ", .{ tabIcon(t), dirty, t.title() });
+    return app.fmt(" {s} {s} ", .{ if (tabChanged(t)) "●" else tabIcon(t), t.title() });
 }
+
+// Zig tip: a window with changes shows a red dot where its icon was, until the changes are saved. The red is fixed, the same
+// in every theme: the red of a palette can be dark or pale, and the dot must be seen at a glance.
+/// Does the window hold changes that are not saved?
+fn tabChanged(t: app_mod.Tab) bool {
+    return t.buf != null and t.buf.?.dirty;
+}
+
+const changed_red = theme.fromHex(0xff1f1f);
 
 // Zig tip: a tab takes its label and three more cells (`× ` and a space); the sum over the tabs `first` to `last` says
 // whether they fit in `room` cells together.
@@ -602,12 +633,19 @@ fn tabStrip(app: *App, box: Window) !void {
         const w = strip.gwidth(label);
         if (x - x0 + w + 3 > room) break;
         _ = put(strip, x, 0, label, style);
+        if (tabChanged(t)) _ = put(strip, x + 1, 0, "●", theme.onBold(changed_red, if (i == app.active) theme.blue else theme.bar2));
         try addHit(app, strip, x, 0, w, 1, .{ .tab = i });
         _ = put(strip, x + w, 0, "× ", style);
         try addHit(app, strip, x + w, 0, 2, 1, .{ .tab_close = i });
         x += w + 3;
     }
     app.tab_more_right = i < n;
+    // the wheel or a button moved the row: the active tab follows it, so it stays in view
+    if (app.tab_seen == active and i > app.tab_first) {
+        const shown_last = i - 1;
+        if (active < app.tab_first) app.active = app.tab_first else if (active > shown_last) app.active = shown_last;
+        app.tab_seen = app.active;
+    }
     const can_left = app.tab_first > 0;
     _ = put(strip, 0, 0, " < ", if (can_left) theme.onBold(theme.bright, theme.bar2) else theme.on(theme.faint, theme.bar2));
     if (can_left) try addHit(app, strip, 0, 0, 3, 1, .{ .tab_shift = -1 });
@@ -723,9 +761,11 @@ fn folderArea(app: *App, ed: Window, fv: *app_mod.FolderView) !void {
         const i = fv.top + r;
         const it = fv.items.items[i];
         const sel = i == fv.sel;
-        const bg = if (sel) theme.selected else theme.deep;
+        const marked = !std.mem.eql(u8, it.name, "..") and app.isMarked(app.fmt("{s}{s}{s}", .{ fv.dir, if (fv.dir.len > 0) "/" else "", it.name }));
+        const bg = if (sel) theme.selected else if (marked) theme.sel_bg else theme.deep;
         const y: u16 = @intCast(2 + r);
         fillWith(sub(ed, 0, y, ed.width, 1), bg);
+        if (marked) _ = put(ed, 0, y, "+", theme.onBold(theme.green, bg));
         _ = put(ed, 1, y, if (it.is_dir) "📁" else tabIconOfName(it.name), theme.on(theme.amber, bg));
         const fg = if (sel) theme.bright else if (it.is_dir) theme.bright else theme.text;
         _ = put(ed, 4, y, clipText(it.name, name_w), if (it.is_dir) theme.onBold(fg, bg) else theme.on(fg, bg));
@@ -737,7 +777,7 @@ fn folderArea(app: *App, ed: Window, fv: *app_mod.FolderView) !void {
         }
         try addHit(app, ed, 0, y, ed.width -| 1, 1, .{ .folder_row = i });
     }
-    if (n > rows) _ = vBar(app, ed, ed.width - 1, ed.height, n, fv.top, rows, .{ .folder_scroll = .up }, .{ .folder_scroll = .down });
+    if (n > rows) setPbar(app, .folder, vBar(app, ed, ed.width - 1, ed.height, n, fv.top, rows, .{ .folder_scroll = .up }, .{ .folder_scroll = .down }, false), n, rows);
 }
 
 /// The icon for a file name (the same as the tree and the tabs).
@@ -750,13 +790,8 @@ fn tabIconOfName(name: []const u8) []const u8 {
 // Zig tip: a field is as wide as its data needs (the length of the field, 10 for a date) or its name, whichever is longer;
 // the result is a `u16`, the type of a width on the screen.
 /// The width a field asks for in the grid of a table.
-fn naturalWidth(f: *const dbf.Field) u16 {
-    const data: usize = switch (f.kind) {
-        'D' => 10,
-        'M' => 6,
-        else => f.length,
-    };
-    return @intCast(std.math.clamp(@max(f.nameSlice().len, data), 4, 254));
+fn naturalWidth(f: *const grid.Field) u16 {
+    return @intCast(std.math.clamp(@max(f.name.len, f.width), 4, 254));
 }
 
 // Zig tip: the widths are worked out once per frame into an array of the frame arena, which the click code reads too
@@ -764,7 +799,7 @@ fn naturalWidth(f: *const dbf.Field) u16 {
 // have above 12 (rounded up, so the sum fits), and none goes under 12; if they still do not fit, the grid scrolls
 // sideways from `left`.
 /// The widths of the columns of a table for `room` cells; also says whether all of them fit.
-fn columnWidths(app: *App, t: *const dbf.Table, room: usize) struct { widths: []u16, fit: bool } {
+fn columnWidths(app: *App, t: *const grid.Table, room: usize) struct { widths: []u16, fit: bool } {
     const widths = app.frame.allocator().alloc(u16, t.fields.len) catch return .{ .widths = &.{}, .fit = true };
     var total: usize = 0;
     for (t.fields, widths) |*f, *w| {
@@ -801,7 +836,8 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
         _ = put(ed, 2, 2, "SQL:> alter table <name>  opens the dialog where you make them.", dim);
         return;
     }
-    const num_w = app_mod.dbf_rownum_w;
+    const num_w = app_mod.rownumW(t.records);
+    const num_d = app_mod.rownumDigits(t.records);
     // the room for the fields: the width less the record numbers and the vertical scroll bar
     const room: usize = (ed.width -| 1) -| num_w;
     const cw = columnWidths(app, t, room);
@@ -826,7 +862,7 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
     const head = theme.onBold(theme.bright, theme.bar2);
     const head_line = theme.on(theme.line, theme.bar2);
     fillWith(sub(ed, 0, 0, ed.width, 1), theme.bar2);
-    _ = put(ed, num_w - 3, 0, "#", head);
+    _ = put(ed, (num_w - 1 -| 4) / 2, 0, "rec#", head);
     _ = put(ed, num_w - 1, 0, "│", head_line);
     _ = put(ed, 0, 1, "─" ** 400, line);
     _ = put(ed, num_w - 1, 1, "┼", line);
@@ -851,7 +887,8 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
         const idx = tv.top + r;
         const odd = idx % 2 == 1;
         const cur = idx == tv.row and idx < t.records;
-        const row_bg = if (cur) theme.bar2 else if (odd) theme.panel else theme.deep;
+        const marked = tv.sel.contains(idx);
+        const row_bg = if (cur) theme.bar2 else if (marked) theme.bar else if (odd) theme.panel else theme.deep;
         fillWith(sub(body, 0, r, body.width, 1), row_bg);
         const sep = theme.on(theme.line, row_bg);
         // the separators go down to the bottom of the grid, so the columns stay drawn under the last record
@@ -865,11 +902,13 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
         }
         if (idx >= t.records) continue;
         const gone = t.deleted(idx);
-        _ = put(body, 0, r, app.fmt("{d:>6}{s}", .{ idx + 1, if (gone) "*" else " " }), theme.on(theme.faint, row_bg));
+        // the first cell is the selection column; the number is right aligned after it, red when the record is deleted
+        if (marked) _ = put(body, 0, r, "+", theme.onBold(theme.green, row_bg));
+        const num = app.fmt("{d}", .{idx + 1});
+        _ = put(body, 1 + num_d -| @as(u16, @intCast(num.len)), r, num, theme.on(if (gone) theme.red else theme.faint, row_bg));
         var cx: u16 = num_w;
         var k = tv.left;
         while (k < tv.left + shown) : (k += 1) {
-            const f = &t.fields[k];
             const w = widths[k];
             var buf: [16]u8 = undefined;
             const shown_text = clipText(t.display(idx, k, &buf), w);
@@ -885,14 +924,13 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
             }
             const style = if (cur and k == tv.col) theme.onBold(theme.bright, bg) else theme.on(if (gone) theme.faint else theme.text, bg);
             if (cur and k == tv.col) fillWith(sub(body, cx, r, w, 1), bg);
-            const right: u16 = if (f.kind == 'N' or f.kind == 'F') w -| @as(u16, @intCast(@min(copy.len, w))) else 0;
-            _ = put(body, cx + right, r, copy, style);
+            _ = put(body, cx, r, copy, style);
             cx += w + 1;
         }
     }
     app.tbl_rows = body_h;
     app.tbl_cols = shown;
-    if (t.records > body_h) app.tblv_rect = vBar(app, body, body.width - 1, body.height, t.records, tv.top, body_h, .{ .table_scroll = .up }, .{ .table_scroll = .down });
+    if (t.records > body_h) app.tblv_rect = vBar(app, body, body.width - 1, body.height, t.records, tv.top, body_h, .{ .table_scroll = .up }, .{ .table_scroll = .down }, false);
     if (need_h) app.tblh_rect = hBar(app, ed, ed.height - 1, ed.width -| 1, t.fields.len, tv.left, shown, .{ .table_scroll = .left }, .{ .table_scroll = .right });
     if (t.records == 0) _ = put(ed, num_w + 1, 2, if (tv.readonly) "No rows." else "No records. The structure is changed with  SQL:> alter table <name>", dim);
 }
@@ -1091,13 +1129,13 @@ fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, line
     const thumb = theme.on(theme.dim, theme.deep);
     const btn = theme.onBold(theme.text, theme.bar2);
 
-    // the vertical bar: a free row, ▲, the track, ▼
+    // the vertical bar: ▲ in the first row of the text, the track, ▼ in the last
     const vx = ed.width - 1;
     const total = b.lineCount() + 3; // the text may scroll up until three empty rows are left
-    const y0: u16 = 2;
-    const span: u16 = rows - 3;
-    _ = put(ed, vx, 1, glyph_up, btn);
-    addHit(app, ed, vx, 1, 1, 1, .{ .scroll = .up }) catch {};
+    const y0: u16 = 1;
+    const span: u16 = rows - 2;
+    _ = put(ed, vx, 0, glyph_up, btn);
+    addHit(app, ed, vx, 0, 1, 1, .{ .scroll = .up }) catch {};
     _ = put(ed, vx, rows - 1, glyph_down, btn);
     addHit(app, ed, vx, rows - 1, 1, 1, .{ .scroll = .down }) catch {};
     app.vbar_rect = absRect(ed, vx, y0, 1, span);
@@ -1446,6 +1484,7 @@ fn toolsPanel(app: *App, win: Window, r: Rect) !void {
         x += w + 1;
     }
     try titleButtons(app, box, .tools);
+    _ = put(box, 0, 1, "─" ** 400, theme.on(theme.line, theme.deep));
     const body = sub(box, 0, 2, box.width, box.height -| 2);
     fillWith(body, theme.deep);
     switch (app.bottom) {
@@ -1583,7 +1622,7 @@ fn drawLog(app: *App, w: Window, log: *app_mod.Log) void {
     }
     // the scroll bar: arrows at the ends and a thumb at the place of the view in the log
     if (bar and w.width > 3) {
-        _ = vBar(app, w, w.width - 1, w.height, total, first, @max(1, end - first), .{ .log_scroll = .up }, .{ .log_scroll = .down });
+        setPbar(app, .log, vBar(app, w, w.width - 1, w.height, total, first, @max(1, end - first), .{ .log_scroll = .up }, .{ .log_scroll = .down }, false), total, @max(1, end - first));
     }
 }
 
@@ -1656,7 +1695,7 @@ fn breaksPanel(app: *App, body: Window) !void {
     }
     if (n > cap and cap > 0) {
         const col = sub(body, 0, 1, body.width, @intCast(cap));
-        _ = vBar(app, col, col.width - 1, col.height, n, app.break_top, cap, .{ .break_scroll = .up }, .{ .break_scroll = .down });
+        setPbar(app, .breaks, vBar(app, col, col.width - 1, col.height, n, app.break_top, cap, .{ .break_scroll = .up }, .{ .break_scroll = .down }, false), n, cap);
     }
     _ = put(body, 1, body.height -| 1, "Enter or a second click jumps · Space switches · Del removes", theme.on(theme.dim, theme.deep));
 }
@@ -1692,7 +1731,7 @@ fn sqlPanel(app: *App, body: Window) !void {
 fn fileFacts(app: *App) []const u8 {
     const t = app.activeTab() orelse return "";
     if (t.folder) |fv| return app.fmt(" · folder · {d} items", .{fv.items.items.len});
-    if (t.table) |tv| return app.fmt(" · DBF table · {d} records · {d} fields", .{ tv.t.records, tv.t.fields.len });
+    if (t.table) |tv| return app.fmt(" · table · {d} records · {d} fields", .{ tv.t.records, tv.t.fields.len });
     if (t.buf) |*b| {
         if (t.virtual) return app.fmt(" · read only · {d} lines", .{b.lineCount()});
         const kind: []const u8 = if (t.eve) "Eve source" else if (t.sql) "SQL" else "text";
@@ -1742,9 +1781,11 @@ fn statusBar(app: *App, win: Window) !void {
     }
 
     if (app.activeBuffer()) |b| {
-        putRight(box, w -| 2, 0, app.fmt("Ln {d:>4}, Col {d:>3}", .{ b.row + 1, b.displayCol() + 1 }), theme.on(theme.text, theme.deep));
+        const mode: []const u8 = if (app.activeTab()) |t| (if (t.editing) "EDIT  " else "") else "";
+        putRight(box, w -| 2, 0, app.fmt("{s}Ln {d:>4}, Col {d:>3}", .{ mode, b.row + 1, b.displayCol() + 1 }), theme.on(theme.text, theme.deep));
     } else if (if (app.activeTab()) |t| t.table else null) |tv| {
-        putRight(box, w -| 2, 0, app.fmt("Rec {d:>6}/{d}", .{ tv.row + 1, tv.t.records }), theme.on(theme.text, theme.deep));
+        const mode: []const u8 = if (app.activeTab()) |t| (if (t.editing) "EDIT  " else "") else "";
+        putRight(box, w -| 2, 0, app.fmt("{s}Rec {d:>6}/{d}", .{ mode, tv.row + 1, tv.t.records }), theme.on(theme.text, theme.deep));
     } else {
         putRight(box, w -| 2, 0, "Ln    -, Col   -", theme.on(theme.faint, theme.deep));
     }
@@ -1850,6 +1891,66 @@ fn buttonRow(app: *App, box: Window, y: u16, specs: []const Btn) !void {
 
 const ok_btn: Action = .{ .dlg = .ok };
 
+// Zig tip: the rows of the dialog are drawn from the list in the app. The row that is selected shows its pattern as a text
+// field; the others show the text. The name of the column is a hit of its own, drawn after the hit of the row, so a click on
+// it is the one found first and changes the column, while a click elsewhere on the row only selects it.
+/// The filter dialog: one row for each filter (a column and a value or pattern), buttons under the list.
+fn filterBox(app: *App, win: Window) !void {
+    const box = dialog(app, win, 74, 20, app.fmt("{s} · {s}", .{ if (app.flt_view) |vn| app.fmt("Alter view {s} of", .{vn}) else if (app.flt_replace != null) "Alter filter" else "Filter", app.filterTableTitle() }));
+    const dim = theme.on(theme.dim, theme.panel);
+    _ = put(box, 2, 2, "Field", dim);
+    _ = put(box, 20, 2, "Value or regular expression (empty: the field is shown, not filtered)", dim);
+    const list_h: u16 = box.height -| 9;
+    const n = app.flt_rows.items.len;
+    const first: usize = if (app.flt_sel >= list_h) app.flt_sel + 1 - list_h else 0;
+    var r: u16 = 0;
+    while (r < list_h and first + r < n) : (r += 1) {
+        const i = first + r;
+        const sel = i == app.flt_sel;
+        const bg = if (sel) theme.selected else theme.panel;
+        const y: u16 = 3 + r;
+        fillWith(sub(box, 1, y, box.width -| 2, 1), bg);
+        try addHit(app, box, 1, y, box.width -| 2, 1, .{ .filter_row = i });
+        const row = app.flt_rows.items[i];
+        _ = put(box, 2, y, clipText(app.fmt("{s}", .{app.filterColName(row.col)}), 15), theme.onBold(if (sel) theme.bright else theme.blue, bg));
+        try addHit(app, box, 2, y, 16, 1, .{ .filter_col = i });
+        if (sel) {
+            const f = sub(box, 20, y, box.width -| 22, 1);
+            fillWith(f, theme.bar);
+            app.flt_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
+        } else {
+            _ = put(box, 20, y, clipText(app.fmt("{s}", .{row.pat}), box.width -| 23), theme.on(theme.text, bg));
+        }
+    }
+    // the list of the fields that are out of the filter: one is chosen to come back
+    if (app.flt_pick) {
+        var k: usize = 0;
+        while (app.filterMissingCol(k) != null) : (k += 1) {}
+        const h: u16 = @intCast(@min(k, list_h) + 2);
+        const pick = boxed(box, 16, 3, 28, h, theme.blue);
+        solid(app, box, 16, 3, 28, h);
+        fillWith(pick, theme.panel);
+        var row: u16 = 0;
+        while (row < h -| 2) : (row += 1) {
+            const idx: usize = if (app.flt_pick_sel >= row + 1 and app.flt_pick_sel + 1 > h - 2) app.flt_pick_sel + 1 - (h - 2) + row else row;
+            const col = app.filterMissingCol(idx) orelse break;
+            const on = idx == app.flt_pick_sel;
+            const bg = if (on) theme.selected else theme.panel;
+            fillWith(sub(pick, 0, row, pick.width, 1), bg);
+            _ = put(pick, 1, row, clipText(app.fmt("{s}", .{app.filterColName(col)}), 24), theme.on(if (on) theme.bright else theme.text, bg));
+            try addHit(app, pick, 0, row, pick.width, 1, .{ .filter_pick = idx });
+        }
+    }
+    _ = put(box, 2, box.height -| 6, "Up, Down, Tab: field · Insert: add a field back · Ctrl+D: take the field out · Enter: filter", dim);
+    _ = put(box, 2, box.height -| 5, "A cell matches when the value is in it (case ignored). Patterns: ^ $ . * + ? [a-z] ( | ) \\d", dim);
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "Add field", .action = .{ .dlg = .filter_add } },
+        .{ .label = "Remove field", .action = .{ .dlg = .filter_remove }, .enabled = n > 1 },
+        .{ .label = "Filter", .action = ok_btn, .primary = true },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
+}
+
 // Zig tip: The popup menu of a tab opens at the place of the click. `@min(x, win.width -| w)` keeps it
 // inside the screen when the click is near the right edge. The rows are hits like the rows of the
 // main menu, and the mouse hover moves the selection.
@@ -1946,25 +2047,6 @@ fn propertiesBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the dialog says where the table will go before the name is typed: the selected database (a SQLite table) or the
-// folder (a DBF table), so the choice is never a surprise.
-/// EDIT > Create table…: the name of the new table.
-fn newTableBox(app: *App, win: Window) !void {
-    const box = dialog(app, win, 70, 11, "Create table");
-    const dim = theme.on(theme.dim, theme.panel);
-    const db = app.selectedDb();
-    _ = put(box, 2, 1, if (db != null) app.fmt("A SQLite table in the database {s}", .{db.?}) else app.fmt("A DBF table in the folder {s}", .{app.createTableTarget()}), theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 3, "Name of the table:", dim);
-    const f = sub(box, 2, 4, box.width -| 4, 1);
-    fillWith(f, theme.bar);
-    app.saveas_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
-    _ = put(box, 2, 6, "Select a database in the tree for a SQLite table, a folder for a DBF table.", dim);
-    try buttonRow(app, box, box.height -| 2, &.{
-        .{ .label = "Next", .action = ok_btn, .primary = true },
-        .{ .label = "Cancel", .action = .close_overlay },
-    });
-}
-
 // Zig tip: the width of the dialog follows the message (`gwidth` counts cells, not bytes), with a minimum, so a short or a
 // long question fits. The two buttons are the usual `buttonRow`; Yes is the primary one (Enter), and the keys Y and N work.
 /// The confirmation dialog: a message and Yes / No. Reused by every question (`App.askConfirm`).
@@ -1979,139 +2061,40 @@ fn confirmBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the grid is drawn with box characters from a repeated string: `"─" ** 40` is made when the program is compiled,
-// and `hl[0 .. 3 * w]` takes `w` of them (each is 3 bytes in UTF-8). Every cell is a hit with its row and column; the
-// type list is drawn last, over the grid, so it is on top and its hits are found first.
-/// The structure dialog of a DBF table (design/design-structure.svg): a grid of the fields, one row each; Name, Type,
-/// Length and Decimals are the columns, the type is chosen from a list.
-fn structureBox(app: *App, win: Window) !void {
-    const name = app.st_path orelse "";
-    const box = dialog(app, win, 76, 28, app.fmt("Structure of {s}  (FoxPro 2.6 table)", .{name}));
-    const dim = theme.on(theme.dim, theme.panel);
-    const line = theme.on(theme.line, theme.panel);
-    const fields = app.st_fields.items;
-    const n = fields.len;
-    const per: usize = 10;
-    const page = app.st_row / per;
-    const pages = (n + per - 1) / per;
-    const first = page * per;
-    const last = @min(first + per, n);
-    _ = put(box, 2, 1, app.fmt("Fields {d}–{d} of {d} · page {d} of {d} · {d} records in the file", .{ first + 1, last, n, page + 1, pages, app.st_records }), theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 2, "arrows move · Enter edits · Ins adds · Del removes · Ctrl+Up/Down moves · Ctrl+S applies", dim);
-    const widths = [_]u16{ 4, 12, 26, 8, 10 };
-    const heads = [_][]const u8{ "#", "Name", "Type", "Length", "Decimals" };
-    const hl = "─" ** 40;
-    // borders: top, header separator, bottom
-    var rule_buf: [3][256]u8 = undefined;
-    const marks = [3][3][]const u8{ .{ "┌", "┬", "┐" }, .{ "├", "┼", "┤" }, .{ "└", "┴", "┘" } };
-    var rules: [3][]const u8 = undefined;
-    for (marks, 0..) |m, ri| {
-        var len: usize = 0;
-        for (widths, 0..) |w, k| {
-            const mark = if (k == 0) m[0] else m[1];
-            @memcpy(rule_buf[ri][len..][0..mark.len], mark);
-            len += mark.len;
-            @memcpy(rule_buf[ri][len..][0 .. 3 * w], hl[0 .. 3 * w]);
-            len += 3 * w;
-        }
-        @memcpy(rule_buf[ri][len..][0..m[2].len], m[2]);
-        len += m[2].len;
-        rules[ri] = app.fmt("{s}", .{rule_buf[ri][0..len]});
-    }
-    const gx: u16 = 2;
-    _ = put(box, gx, 4, rules[0], line);
-    _ = put(box, gx, 5, "│", line);
-    var cx: u16 = gx + 1;
-    var col_x: [5]u16 = undefined;
-    for (widths, 0..) |w, k| {
-        col_x[k] = cx;
-        _ = put(box, cx, 5, app.fmt(" {s}", .{heads[k]}), theme.onBold(theme.bright, theme.panel));
-        _ = put(box, cx + w, 5, "│", line);
-        cx += w + 1;
-    }
-    _ = put(box, gx, 6, rules[1], line);
-    var r: usize = first;
-    while (r < last) : (r += 1) {
-        const y: u16 = @intCast(7 + r - first);
-        const s = fields[r];
-        const selrow = r == app.st_row;
-        _ = put(box, gx, y, "│", line);
-        var texts: [5][]const u8 = undefined;
-        texts[0] = app.fmt("{d}", .{r + 1});
-        texts[1] = app.fmt("{s}", .{s.f.nameSlice()}); // a copy: `s` is a local, and the screen keeps the pointer
-        texts[2] = app.fmt("{c} {s}", .{ s.f.kind, dbf.kindName(s.f.kind) });
-        texts[3] = if (s.f.kind == 'C' or s.f.kind == 'N' or s.f.kind == 'F') app.fmt("{d}", .{s.f.length}) else app.fmt("{d}", .{s.f.length});
-        texts[4] = if (s.f.kind == 'N' or s.f.kind == 'F') app.fmt("{d}", .{s.f.decimals}) else "";
-        for (widths, 0..) |w, k| {
-            const kk: u8 = @intCast(k);
-            const sel_cell = selrow and k > 0 and app.st_col == k - 1;
-            const bg = if (sel_cell) theme.bar else if (selrow) theme.selected else theme.panel;
-            const cell = sub(box, col_x[k], y, w, 1);
-            fillWith(cell, bg);
-            const editable = k == 1 or k == 2 or (k == 3 and (s.f.kind == 'C' or s.f.kind == 'N' or s.f.kind == 'F')) or (k == 4 and (s.f.kind == 'N' or s.f.kind == 'F'));
-            const fg = if (sel_cell) theme.bright else if (editable or k == 0) theme.text else theme.faint;
-            if (app.st_editing and sel_cell) {
-                app.st_edit.drawWithStyle(cell, theme.on(theme.bright, theme.bar));
-            } else {
-                _ = put(cell, 1, 0, clipText(texts[k], w -| 2), theme.on(fg, bg));
-            }
-            if (k == 2) {
-                _ = put(cell, w -| 2, 0, "▾", theme.onBold(theme.amber, bg));
-                try addHit(app, box, col_x[k] + w -| 2, y, 2, 1, .st_drop_open);
-            }
-            if (k > 0) try addHit(app, box, col_x[k], y, if (k == 2) w -| 2 else w, 1, .{ .st_cell = .{ .row = @intCast(r), .col = @intCast(k - 1) } });
-            _ = put(box, col_x[k] + w, y, "│", line);
-            _ = kk;
-        }
-    }
-    _ = put(box, gx, @intCast(7 + last - first), rules[2], line);
-    // what is pending, and what is wrong
-    const changes = app.stChanges();
-    _ = put(box, 2, 20, if (changes == 0) "no changes yet" else app.fmt("{d} change(s) pending", .{changes}), theme.on(theme.amber, theme.panel));
-    if (app.st_error) |e| _ = put(box, 2, 21, clipText(e, box.width -| 4), theme.on(theme.red, theme.panel));
-    try buttonRow(app, box, box.height -| 4, &.{
-        .{ .label = "◄ Previous page", .action = .{ .st_btn = .prev } },
-        .{ .label = "Next page ►", .action = .{ .st_btn = .next } },
-        .{ .label = "+ Add field", .action = .{ .st_btn = .add } },
-        .{ .label = "− Remove field", .action = .{ .st_btn = .remove } },
-    });
-    try buttonRow(app, box, box.height -| 2, &.{
-        .{ .label = "Apply", .action = .{ .st_btn = .apply }, .primary = true, .enabled = changes > 0 },
-        .{ .label = "Cancel", .action = .close_overlay },
-    });
-    // the list of types, over the grid
-    if (app.st_drop) {
-        const dw: u16 = 32;
-        const dh: u16 = @intCast(dbf.kinds.len + 2);
-        const dx = col_x[2];
-        const dy: u16 = @intCast(7 + app.st_row - first + 1);
-        solid(app, box, dx, dy, dw, dh);
-        const dbox = boxed(box, dx, dy, dw, dh, theme.blue);
-        fillWith(dbox, theme.panel);
-        for (dbf.kinds, 0..) |k, i| {
-            const sel = i == app.st_drop_sel;
-            const bg = if (sel) theme.selected else theme.panel;
-            const row = sub(dbox, 0, @intCast(i), dbox.width, 1);
-            fillWith(row, bg);
-            _ = put(row, 1, 0, app.fmt("{c} {s}", .{ k, dbf.kindName(k) }), theme.on(if (sel) theme.bright else theme.text, bg));
-            try addHit(app, dbox, 0, @intCast(i), dbox.width, 1, .{ .st_pick = k });
-        }
-    }
-}
-
 // Zig tip: the New dialog shows the folder where the file will go (the selected folder of the tree), a field for the name
-// and the types the machine knows; the type is read from the extension when Enter is pressed.
-/// File > New…: the name of the new file.
+// and the types the machine knows; the type is read from the extension when Enter is pressed. The same box asks for the
+// name of a folder, of a database and of the copy of a table: `new_kind` says which one.
+/// File > New…: the name of the new file, folder or database.
 fn newBox(app: *App, win: Window) !void {
-    const box = dialog(app, win, 70, 11, "New file");
+    const box = dialog(app, win, 70, 11, switch (app.new_kind) {
+        .file => "New file",
+        .folder => "New folder",
+        .database => "New SQLite database",
+        .table_copy => "Save table as",
+        .import_data => "Import a file into the database",
+    });
     const dim = theme.on(theme.dim, theme.panel);
     const dir = app.targetDir();
-    _ = put(box, 2, 1, app.fmt("Folder: {s}/", .{if (dir.len == 0) "(the project folder)" else dir}), theme.on(theme.text, theme.panel));
-    _ = put(box, 2, 3, "Name, with its extension:", dim);
+    if (app.new_kind == .import_data) {
+        _ = put(box, 2, 1, app.fmt("Database: {s}", .{app.selectedDb() orelse ""}), theme.on(theme.text, theme.panel));
+    } else _ = put(box, 2, 1, app.fmt("Folder: {s}/", .{if (dir.len == 0) "(the project folder)" else dir}), theme.on(theme.text, theme.panel));
+    _ = put(box, 2, 3, switch (app.new_kind) {
+        .file => "Name, with its extension:",
+        .folder => "Name of the folder:",
+        .database => "Name of the database (.db when no extension):",
+        .table_copy => "Name of the new table, or of the view when the table is filtered:",
+        .import_data => "File to import (path in the project):",
+    }, dim);
     const f = sub(box, 2, 4, box.width -| 4, 1);
     fillWith(f, theme.bar);
     app.saveas_in.drawWithStyle(f, theme.on(theme.bright, theme.bar));
-    _ = put(box, 2, 6, ".eve  .sql  .dbf  .db  start a wizard · .md .json .txt ... start empty", dim);
+    _ = put(box, 2, 6, switch (app.new_kind) {
+        .file => ".eve  .sql  .db  start a wizard · .md .json .txt ... start empty",
+        .folder => "The folder is made inside the folder shown above.",
+        .database => "The database starts with the table eve_meta (descriptions and dates of the tables).",
+        .table_copy => "A filter becomes a view; a table is copied with its records.",
+        .import_data => "CSV, TXT, JSON, DBF: a new table named after the file (XLS: save as CSV)",
+    }, dim);
     try buttonRow(app, box, box.height -| 2, &.{
         .{ .label = "Next", .action = ok_btn, .primary = true },
         .{ .label = "Cancel", .action = .close_overlay },
@@ -2158,14 +2141,94 @@ fn appendNBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the same design as the structure of a DBF table (a bordered grid, one row for each field), with the columns of a
+// Zig tip: the bottom row of the dialog of a new table is the same on its three pages: Previous and Next walk the pages
+// (Next waits for a good name), Create makes the table, Cancel leaves.
+/// Previous, Next, Create and Cancel of the dialog of a new table.
+fn wizardButtons(app: *App, box: Window) !void {
+    const ok = app.sqNameOk();
+    try buttonRow(app, box, box.height -| 2, &.{
+        .{ .label = "◄ Previous", .action = .{ .sq_btn = .prev }, .enabled = app.sq_page > 0 },
+        .{ .label = "Next ►", .action = .{ .sq_btn = .next }, .enabled = app.sq_page < 2 and ok },
+        .{ .label = "Create", .action = .{ .sq_btn = .apply }, .primary = true, .enabled = ok },
+        .{ .label = "Cancel", .action = .close_overlay },
+    });
+}
+
+// Zig tip: page 0 asks for the name and the description; page 2 lists the indexes made and lets a new one be made from ticked
+// fields. Both are drawn here so `sqStructureBox` keeps the grid of the fields (page 1) for itself.
+/// The first and the last page of the dialog of a new table.
+fn newTablePages(app: *App, box: Window) !void {
+    const dim = theme.on(theme.dim, theme.panel);
+    const txt = theme.on(theme.text, theme.panel);
+    if (app.sq_page == 0) {
+        _ = put(box, 2, 1, "Step 1 of 3 · Name and description", theme.onBold(theme.bright, theme.panel));
+        _ = put(box, 2, 3, app.fmt("In the database {s}", .{app.sq_db orelse ""}), txt);
+        _ = put(box, 2, 5, "Name of the table:", dim);
+        try field(app, box, 2, 6, box.width -| 4, &app.sq_name_in, 0, app.dlg_field == 0);
+        _ = put(box, 2, 8, "Description:", dim);
+        try field(app, box, 2, 9, box.width -| 4, &app.sq_desc_in, 1, app.dlg_field == 1);
+        _ = put(box, 2, 11, "Letters, digits and _; it begins with a letter. Tab changes field · Enter or Next shows the fields.", dim);
+    } else {
+        _ = put(box, 2, 1, "Step 3 of 3 · Indexes", theme.onBold(theme.bright, theme.panel));
+        _ = put(box, 2, 2, "Tab changes list · Space ticks a field · U unique · Enter adds the index · Del removes · Ctrl+S creates", dim);
+        _ = put(box, 2, 4, "Indexes of the table", dim);
+        const n = app.sq_idx.items.len;
+        if (n == 0) _ = put(box, 2, 5, "no index yet", dim);
+        const first: usize = if (app.sq_ix_sel >= 5) app.sq_ix_sel - 4 else 0;
+        var r: usize = first;
+        while (r < @min(n, first + 5)) : (r += 1) {
+            const ix = &app.sq_idx.items[r];
+            const y: u16 = @intCast(5 + r - first);
+            const sel = r == app.sq_ix_sel;
+            const bg = if (sel and app.sq_ix_focus == 1) theme.bar else if (sel) theme.selected else theme.panel;
+            const row = sub(box, 2, y, box.width -| 4, 1);
+            fillWith(row, bg);
+            _ = put(row, 1, 0, clipText(app.fmt("{s}  ({s}){s}", .{ ix.nameS(), ix.colsS(), if (ix.unique) "  unique" else "" }), row.width -| 2), theme.on(theme.text, bg));
+            try addHit(app, box, 2, y, box.width -| 4, 1, .{ .sq_ix_row = @intCast(r) });
+        }
+        _ = put(box, 2, 11, "New index: tick one or more fields", dim);
+        const cols = app.sq_cols.items;
+        const per: usize = 7;
+        const fstart = (app.sq_ix_cur / per) * per;
+        var i: usize = fstart;
+        while (i < @min(cols.len, fstart + per)) : (i += 1) {
+            const y: u16 = @intCast(12 + i - fstart);
+            const cur = i == app.sq_ix_cur and app.sq_ix_focus == 0;
+            const bg = if (cur) theme.bar else theme.panel;
+            const ticked = i < 64 and app.sq_ix_mask & (@as(u64, 1) << @intCast(i)) != 0;
+            const row = sub(box, 2, y, 44, 1);
+            fillWith(row, bg);
+            _ = put(row, 1, 0, app.fmt("{s} {s}  {s}", .{ if (ticked) "[x]" else "[ ]", cols[i].nameS(), cols[i].typeS() }), theme.on(theme.text, bg));
+            try addHit(app, box, 2, y, 44, 1, .{ .sq_ix_field = @intCast(i) });
+        }
+        const ux: u16 = 52;
+        _ = put(box, ux, 12, app.fmt("{s} Unique", .{if (app.sq_ix_uniq) "[x]" else "[ ]"}), txt);
+        try addHit(app, box, ux, 12, 14, 1, .sq_ix_unique);
+        var cb: [160]u8 = undefined;
+        const chosen = app.sqIndexColsText(&cb);
+        _ = put(box, ux, 14, "Fields of the index:", dim);
+        _ = put(box, ux, 15, if (chosen.len == 0) "(none ticked)" else clipText(chosen, box.width -| ux -| 3), txt);
+        try buttonRow(app, box, box.height -| 4, &.{
+            .{ .label = "+ Add index", .action = .sq_ix_add },
+            .{ .label = "− Remove index", .action = .sq_ix_remove, .enabled = n > 0 },
+        });
+    }
+    if (app.sq_error) |e| _ = put(box, 2, 21, clipText(e, box.width -| 4), theme.on(theme.red, theme.panel));
+    try wizardButtons(app, box);
+}
+
+// Zig tip: a bordered grid, one row for each field, with the columns of a
 // SQLite table: Name, Type (from a list), Not null and Key (check boxes, Space or a click switches them) and Default. The
 // rule lines are cut from one long string, as in `structureBox`.
 /// The structure dialog of a SQLite table.
 fn sqStructureBox(app: *App, win: Window) !void {
-    const box = dialog(app, win, 92, 28, app.fmt("{s} {s}  ({s}, SQLite)", .{ if (app.sq_new) "New table" else "Structure of", app.sq_table orelse "", app.sq_db orelse "" }));
+    const box = dialog(app, win, 92, 28, if (app.sq_new) app.fmt("New table in {s}  (SQLite)", .{app.sq_db orelse ""}) else app.fmt("Structure of {s}  ({s}, SQLite)", .{ app.sq_table orelse "", app.sq_db orelse "" }));
     const dim = theme.on(theme.dim, theme.panel);
     const line = theme.on(theme.line, theme.panel);
+    if (app.sq_new and app.sq_page != 1) {
+        try newTablePages(app, box);
+        return;
+    }
     const cols = app.sq_cols.items;
     const n = cols.len;
     const per: usize = 10;
@@ -2173,7 +2236,9 @@ fn sqStructureBox(app: *App, win: Window) !void {
     const pages = (n + per - 1) / per;
     const first = page * per;
     const last = @min(first + per, n);
-    _ = put(box, 2, 1, app.fmt("Columns {d}–{d} of {d} · page {d} of {d}", .{ first + 1, last, n, page + 1, pages }), theme.on(theme.text, theme.panel));
+    if (app.sq_new) {
+        _ = put(box, 2, 1, app.fmt("Step 2 of 3 · Fields · columns {d}–{d} of {d}", .{ first + 1, last, n }), theme.on(theme.text, theme.panel));
+    } else _ = put(box, 2, 1, app.fmt("Columns {d}–{d} of {d} · page {d} of {d}", .{ first + 1, last, n, page + 1, pages }), theme.on(theme.text, theme.panel));
     _ = put(box, 2, 2, "arrows move · Enter edits · Space switches a box · Ins adds · Del removes · Ctrl+Up/Down moves · Ctrl+S applies", dim);
     const widths = [_]u16{ 4, 22, 18, 10, 6, 22 };
     const heads = [_][]const u8{ "#", "Name", "Type", "Not null", "Key", "Default" };
@@ -2242,16 +2307,24 @@ fn sqStructureBox(app: *App, win: Window) !void {
     const changes = app.sqChanges();
     _ = put(box, 2, 20, if (changes == 0) "no changes yet" else app.fmt("{d} change(s) pending: Apply rebuilds the table", .{changes}), theme.on(theme.amber, theme.panel));
     if (app.sq_error) |e| _ = put(box, 2, 21, clipText(e, box.width -| 4), theme.on(theme.red, theme.panel));
-    try buttonRow(app, box, box.height -| 4, &.{
-        .{ .label = "◄ Previous page", .action = .{ .sq_btn = .prev } },
-        .{ .label = "Next page ►", .action = .{ .sq_btn = .next } },
-        .{ .label = "+ Add field", .action = .{ .sq_btn = .add } },
-        .{ .label = "− Remove field", .action = .{ .sq_btn = .remove } },
-    });
-    try buttonRow(app, box, box.height -| 2, &.{
-        .{ .label = "Apply", .action = .{ .sq_btn = .apply }, .primary = true, .enabled = changes > 0 },
-        .{ .label = "Cancel", .action = .close_overlay },
-    });
+    if (app.sq_new) {
+        try buttonRow(app, box, box.height -| 4, &.{
+            .{ .label = "+ Add field", .action = .{ .sq_btn = .add } },
+            .{ .label = "− Remove field", .action = .{ .sq_btn = .remove } },
+        });
+        try wizardButtons(app, box);
+    } else {
+        try buttonRow(app, box, box.height -| 4, &.{
+            .{ .label = "◄ Previous page", .action = .{ .sq_btn = .prev } },
+            .{ .label = "Next page ►", .action = .{ .sq_btn = .next } },
+            .{ .label = "+ Add field", .action = .{ .sq_btn = .add } },
+            .{ .label = "− Remove field", .action = .{ .sq_btn = .remove } },
+        });
+        try buttonRow(app, box, box.height -| 2, &.{
+            .{ .label = "Apply", .action = .{ .sq_btn = .apply }, .primary = true, .enabled = changes > 0 },
+            .{ .label = "Cancel", .action = .close_overlay },
+        });
+    }
     if (app.sq_drop) {
         const dw: u16 = 22;
         const dh: u16 = @intCast(sqlstruct.types.len + 2);
@@ -2286,6 +2359,10 @@ fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
         .toggle_hidden => app.fmt("[{s}] {s}", .{ if (app.show_hidden) "x" else " ", row.label }),
         .toggle_wrap => app.fmt("[{s}] {s}", .{ if (app.wrap) "x" else " ", row.label }),
         .window_pick => app.fmt("{s} {s}", .{ if (row.arg == app.active) "●" else " ", row.label }),
+        .filter_table => if (app.activeTab()) |t| (if (std.mem.startsWith(u8, t.path, "filter:")) "Alter filter…" else row.label) else row.label,
+        .data_edit => if (app.activeTab()) |t| (if (t.editing) "Stop Editing" else row.label) else row.label,
+        // Close names what it closes: a table, a folder list or a file
+        .close_tab => if (app.activeTab()) |t| (if (t.table != null) "Close table" else if (t.folder != null) "Close folder" else "Close file") else row.label,
         else => row.label,
     };
 }
@@ -2293,6 +2370,11 @@ fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
 /// The shortcut shown at the right of a row. A window has Ctrl and its number.
 fn rowKey(app: *App, row: app_mod.MenuRow) []const u8 {
     if (row.cmd == .window_pick) return app.fmt("Ctrl+{d}", .{row.arg + 1});
+    if (row.cmd == .data_edit) {
+        if (app.activeTab()) |t| {
+            if (t.editing) return "Esc";
+        }
+    }
     return row.key;
 }
 
@@ -2314,6 +2396,7 @@ fn menuDrop(app: *App, win: Window) !void {
     const x = @min(menuX(win.width, m), win.width -| w);
     const h: u16 = @intCast(@min(n + 2, win.height -| 2));
     solid(app, win, x, 1, w, h);
+    shadow(win, x, 1, w, h);
     const box = boxed(win, x, 1, w, h, theme.blue);
     fillWith(box, theme.panel);
     k = 0;
@@ -2328,8 +2411,9 @@ fn menuDrop(app: *App, win: Window) !void {
         const bg = if (sel) theme.selected else theme.panel;
         const line = sub(box, 0, r, box.width, 1);
         fillWith(line, bg);
-        _ = put(line, 1, 0, rowLabel(app, row), theme.on(if (sel) theme.bright else theme.text, bg));
-        putRight(line, line.width -| 1, 0, rowKey(app, row), theme.on(if (sel) theme.bright else theme.dim, bg));
+        const enabled = app.menuEnabled(row.cmd.?);
+        _ = put(line, 1, 0, rowLabel(app, row), theme.on(if (!enabled) theme.faint else if (sel) theme.bright else theme.text, bg));
+        putRight(line, line.width -| 1, 0, rowKey(app, row), theme.on(if (!enabled) theme.faint else if (sel) theme.bright else theme.dim, bg));
         try addHit(app, box, 0, r, box.width, 1, .{ .menu_item = k });
     }
 }
@@ -2753,6 +2837,8 @@ fn folderBox(app: *App, win: Window) !void {
     const title: []const u8, const ok_label: []const u8 = switch (app.fb_mode) {
         .project => .{ "Open Folder", "Open as project" },
         .move_to => .{ app.fmt("Move {s} to a folder", .{app.infoName()}), "Move here" },
+        .move_many => .{ app.fmt("Move {d} selected to a folder", .{app.marks.items.len}), "Move here" },
+        .save_as => .{ "Save As", "Save" },
         .theme_export => .{ "Export theme", "Export" },
         .theme_import => .{ "Import theme", "Import" },
     };
@@ -2790,7 +2876,7 @@ fn folderBox(app: *App, win: Window) !void {
         }
         try addHit(app, frame, 0, r, row_w, 1, .{ .fb_row = i });
     }
-    if (need_bar) _ = vBar(app, frame, frame.width - 1, list_h, n, app.fb_top, list_h, .{ .fb_scroll = .up }, .{ .fb_scroll = .down });
+    if (need_bar) setPbar(app, .fbox, vBar(app, frame, frame.width - 1, list_h, n, app.fb_top, list_h, .{ .fb_scroll = .up }, .{ .fb_scroll = .down }, false), n, list_h);
     if (with_name) {
         _ = put(box, 2, box.height -| 6, "File name", dim);
         try field(app, box, 13, box.height -| 6, box.width -| 15, &app.fb_name, 2, app.dlg_field == 2);
@@ -2798,7 +2884,8 @@ fn folderBox(app: *App, win: Window) !void {
     const count = app.fb_entries.items.len;
     const info = switch (app.fb_mode) {
         .project => app.fmt("{d} folders · Enter in · Backspace up · Tab field/list · F2 open as project", .{count}),
-        .move_to => app.fmt("{d} folders · Enter in · Backspace up · F2 moves here", .{count}),
+        .move_to, .move_many => app.fmt("{d} folders · Enter in · Backspace up · F2 moves here", .{count}),
+        .save_as => app.fmt("{d} folders · {d} files · click a file for its name · Tab next field · F2 save", .{ count, app.fb_files.items.len }),
         else => app.fmt("{d} folders · {d} theme files · Tab next field · F2 {s}", .{ count, app.fb_files.items.len, ok_label }),
     };
     _ = put(box, 2, box.height -| 4, clipText(info, box.width -| 4), dim);

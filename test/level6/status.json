@@ -1,3 +1,24 @@
 {
- "tests": {}
+ "tests": {
+  "f01_pg_driver": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 6,
+   "checks": 0,
+   "last": "2026-10-18 03:21",
+   "mtime": 1792283376,
+   "title": "the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (evedb/README.md 5A, 5B)",
+   "reason": ""
+  },
+  "f02_evedb_columnar": {
+   "status": "PASS",
+   "failures": 2,
+   "runs": 5,
+   "checks": 0,
+   "last": "2026-10-18 03:21",
+   "mtime": 1792304245,
+   "title": "the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables (D-187)",
+   "reason": ""
+  }
+ }
 }

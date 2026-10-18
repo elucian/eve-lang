@@ -30,6 +30,8 @@ pub const client = @import("client.zig");
 
 /// The machine as a process: `stop`, `evevm`, `-u`.
 pub const daemon = @import("daemon.zig");
+/// Service mode: `eve -s` (D-185).
+pub const service = @import("service.zig");
 
 /// The look of the REPL: banner and help table.
 pub const screen = @import("screen.zig");

@@ -1,0 +1,22 @@
+# level 6 performance: a Memory table written into a new table of evedb by the bulk load (the Appender of DuckDB, D-187)
+** perf: 200,000 rows read into a Memory table, then loaded into a new evedb table as column batches, and counted
+primary aspect p6b_evedb_load is
+  class Big = {id: Integer, region: String, amount: Real, paid: Logic} <: Memory;
+  class Cnt = {n: Integer} <: Record;
+
+  process main is
+    new wh := database.connect("wh");
+    wh.execute!("create or replace table big as select i::bigint as id, case when i % 4 = 0 then 'north' when i % 4 = 1 then 'south' when i % 4 = 2 then 'east' else 'west' end as region, i * 1.5 as amount, i % 2 = 1 as paid from range(200000) t(i)");
+    wh.execute!("drop table if exists big2");
+    new b := Big();
+    new got := b.store(wh, "select id, region, amount, paid from big");
+    print b.load(wh, "big2");
+    print wh.query_one!(:Cnt)("select count(*) as n from big2").n;
+    wh.close();
+  return;
+end p6b_evedb_load;
+/*@expect
+{
+  "stdout": ["200000", "200000"]
+}
+*/

@@ -21,8 +21,6 @@ pub const Options = struct {
     debug: bool = false,
     config: ?[]const u8 = null,
     memory: ?[]const u8 = null,
-    slot: ?[]const u8 = null,
-    idle: ?[]const u8 = null,
     /// `-x`: execute the script in this process (implies the `execute` command); it never looks for a machine.
     execute: bool = false,
     /// Command chosen with `--<command>` or implied by a script path.
@@ -35,6 +33,8 @@ pub const Options = struct {
     ui: bool = false,
     /// `-tx`: start the terminal IDE, evetx, with the rest of the line (D-172).
     tx: bool = false,
+    /// `-s [file.cfg]`: start the machine as a service, silent (D-185); nothing else may come with it but `-db` (D-188).
+    service: bool = false,
     /// `--stdio`: a machine whose door is the standard input and output, for an IDE that starts it (evetx, `ssh host eve --stdio`).
     stdio: bool = false,
     /// `--kill`: stop every other eve program that runs from the same `bin/` folder (eve, evetx, evedb), so a build can replace the files.
@@ -52,6 +52,13 @@ pub fn isPort(text: []const u8) bool {
     return true;
 }
 
+// Zig tip: the value of `-s` is optional (D-188): `-s` starts the service, and the word after it is its configuration only
+// when it ends in `.cfg`. A configuration for anything else is `-e file.cfg` (`--setup file.cfg`).
+/// True when `text` is a configuration file name (ends in `.cfg`).
+pub fn isConfig(text: []const u8) bool {
+    return std.mem.endsWith(u8, text, ".cfg");
+}
+
 // Zig tip: the value of `-rem` is optional, so the parser looks at the next word: an option (starts with `-`) or a
 // script (ends in `.eve`) is not an address. `std.mem.endsWith` is a test on the end of a slice.
 /// True when `text` can be the address after `-rem`.
@@ -63,14 +70,25 @@ pub fn isAddress(text: []const u8) bool {
 // function that can fail says so in its return type (`ParseError!Options`) and the caller must
 // deal with it. Errors cannot carry data, so the bad argument is returned through the pointer
 // parameter `bad` of parseArgs.
-pub const ParseError = error{ MissingValue, UnknownOption, BadWord, OutOfMemory };
+pub const ParseError = error{ MissingValue, UnknownOption, BadWord, ServiceAlone, OutOfMemory };
 
 // Zig tip: `gpa.dupe(T, slice)` copies a slice into new memory, so one element can be changed without touching
 // the caller's array (`argv` is `[]const`, read only). Returning a sub-slice, `argv[1..]`, copies nothing.
 /// The first word of the command line may name a part of `eve` (D-163): `vm` (the runtime) and `cp` (the compiler)
 /// select what the options already do, `cp project` is `--project`, `ux` (the UI) is `--serve`, `db` (the database
 /// part) is the command `--db`, `tx` (the terminal IDE) is `-tx`. Gives the line the rest of `parseArgs` reads.
-pub fn partWords(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]const []const u8 {
+pub fn partWords(gpa: std.mem.Allocator, argv_in: []const []const u8) ParseError![]const []const u8 {
+    // `-db --serve file.cfg` is the spelling of `db serve file.cfg` that goes with `-s` (D-186): `eve -s -db --serve evedb.cfg`
+    var argv = argv_in;
+    for (argv_in, 0..) |a, i| {
+        if (std.mem.eql(u8, a, "-db")) {
+            const copy = try gpa.dupe([]const u8, argv_in);
+            copy[i] = "--db";
+            if (i + 1 < copy.len and std.mem.eql(u8, copy[i + 1], "--serve")) copy[i + 1] = "serve";
+            argv = copy;
+            break;
+        }
+    }
     if (argv.len == 0) return argv;
     const first = argv[0];
     const eql = std.mem.eql;
@@ -105,7 +123,13 @@ pub fn commandWord(gpa: std.mem.Allocator, argv: []const []const u8) ParseError!
     var i: usize = 0;
     while (i < argv.len) : (i += 1) {
         const a = argv[i];
-        if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "-i") or std.mem.eql(u8, a, "-t")) {
+        if (std.mem.eql(u8, a, "--db")) {
+            // the words after the database part are its own (`db serve evedb.cfg`): none of them is a command of eve
+            return argv;
+        } else if (std.mem.eql(u8, a, "-s")) {
+            // the service: a configuration file may follow
+            if (i + 1 < argv.len and isConfig(argv[i + 1])) i += 1;
+        } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m")) {
             i += 1;
         } else if (std.mem.eql(u8, a, "-loc") and i + 1 < argv.len and isPort(argv[i + 1])) {
             i += 1;
@@ -162,18 +186,21 @@ pub fn parseArgs(
             o.tx = true;
             o.tx_args = line[i + 1 ..];
             break;
-        } else if (std.mem.eql(u8, a, "-s") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "-i") or std.mem.eql(u8, a, "-t")) {
+        } else if (std.mem.eql(u8, a, "-s")) {
+            // `-s` is the service and only the service (D-185, D-188); a `.cfg` after it is its configuration
+            o.service = true;
+            if (i + 1 < line.len and isConfig(line[i + 1])) {
+                i += 1;
+                o.config = line[i];
+            }
+        } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m")) {
+            // `-e file.cfg` (`--setup file.cfg`): the configuration file; `-m size`: the memory (D-188)
             i += 1;
             if (i >= line.len) {
                 bad.* = a;
                 return error.MissingValue;
             }
-            switch (a[1]) {
-                's' => o.config = line[i],
-                'm' => o.memory = line[i],
-                't' => o.idle = line[i],
-                else => o.slot = line[i],
-            }
+            if (a[1] == 'm') o.memory = line[i] else o.config = line[i];
         } else if (std.mem.eql(u8, a, "--listen") or std.mem.eql(u8, a, "--serve")) {
             // Zig tip: `break` leaves the `for` at the first match. Without it the loop would go on comparing
             // `argv[i + 1]` after `i` moved, and read past the end of the slice (a panic in a safe build).
@@ -218,6 +245,13 @@ pub fn parseArgs(
     }
     if (o.execute and o.command == null) o.command = cli.find("execute");
     o.args = try rest.toOwnedSlice(gpa);
+    // the service takes nothing else (D-188), except the database part: `eve -s -db --serve evedb.cfg` (D-186)
+    if (o.service and o.command != cli.find("db") and (o.command != null or o.args.len > 0 or o.execute or o.ui or o.tx or o.kill or o.stdio or
+        o.machine.listen or o.machine.serve or o.machine.local or o.machine.remote))
+    {
+        bad.* = "-s";
+        return error.ServiceAlone;
+    }
     o.machine.config = o.config;
     if (o.command == cli.find("execute") and o.args.len > 0) {
         o.machine.script = o.args[0];

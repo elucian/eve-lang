@@ -12,6 +12,9 @@ const Host = evecm.iface.Host;
 const Heap = evecm.heap.Heap;
 const sqlite = @import("sqlite.zig");
 const orm = @import("orm.zig");
+const importer = @import("importer.zig");
+const pgdriver = @import("pgdriver.zig");
+const ewpdriver = @import("ewpdriver.zig");
 const state = @import("state.zig").state;
 
 const Node = ast.Node;
@@ -104,6 +107,15 @@ fn checkMapping(it: Host, name: []const u8, db: *sqlite.Db) Signal!void {
 pub fn connect(it: Host, args: []const *const Node) Signal!Value {
     if (args.len != 1) return it.fail("database.connect takes the name of a connection", .{});
     const name = try it.text(try it.eval(args[0]));
+    // a `postgres://` connection goes to the PostgreSQL driver (evedb, or any PostgreSQL server)
+    if (it.io()) |io| {
+        if (Io.Dir.cwd().readFileAlloc(io, "eve.cfg", it.temp(), .limited(1 << 20))) |cfg| {
+            if (data.connectionUrl(cfg, name)) |url| {
+                if (pgdriver.isPgUrl(url)) return pgdriver.connectPg(it, name, url);
+                if (ewpdriver.isEvUrl(url)) return ewpdriver.connectEv(it, name, url);
+            }
+        } else |_| {}
+    }
     const idx = try openConnection(it, name);
     const b = state(it);
     if (b.conn_class == null) {
@@ -131,6 +143,8 @@ pub fn enlist(it: Host, idx: usize, db: *sqlite.Db) Signal!void {
 // already ended), and a failed `rollback` means the connection is gone, which rolls back anyway.
 /// At `done`: commit every transaction the job began, or roll it back when the job failed.
 pub fn finishTransactions(it: Host, ok: bool) void {
+    pgdriver.finishTransactions(it, ok);
+    ewpdriver.finishTransactions(it, ok);
     const b = state(it);
     for (b.dbs.items, 0..) |db, i| {
         if (!b.tx.items[i]) continue;
@@ -357,6 +371,8 @@ fn sqlMismatch(it: Host, sf: *SqlFn, q: *const Node, kind: []const u8) Signal {
 
 /// The methods of a `Connection`: `script`, `execute!`, `query!`, `query_one!` and `close`.
 pub fn connectionCall(it: Host, conn: *Object, name: []const u8, args: []const *const Node) Signal!Value {
+    if (pgdriver.isPgObject(it, .{ .object = conn })) return pgdriver.call(it, conn, name, args);
+    if (ewpdriver.isEvObject(it, .{ .object = conn })) return ewpdriver.call(it, conn, name, args);
     const eql = std.mem.eql;
     const targs = it.typeArgs();
     const idx: usize = @intCast(value.intOf(value.fieldOf(conn, "handle").?));
@@ -378,6 +394,23 @@ pub fn connectionCall(it: Host, conn: *Object, name: []const u8, args: []const *
             return it.failWith(err_file, "cannot read {s}: {s}", .{ first, @errorName(e) });
         db.exec(try it.temp().dupeZ(u8, sql)) catch return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), first });
         return .nil;
+    }
+    // Zig tip: `import(path, table)` is the call form of `eve db import` (D-184): the file is decoded into a columnar table and
+    // loaded as the new table `table` in one transaction, so a bad file leaves nothing behind. The answer is the number of rows.
+    if (eql(u8, name, "import")) {
+        if (args.len != 2) return it.fail("import needs a file path and a table name", .{});
+        const table = try it.text(try it.eval(args[1]));
+        try orm.flushConn(it, idx);
+        const io = it.io() orelse return it.fail("import: no input/output handle", .{});
+        const format = importer.formatOf(first) orelse
+            return it.failWith(err_file, "cannot import {s}: the formats are .csv .txt .tsv .json .dbf (save a spreadsheet as CSV)", .{first});
+        const bytes = Io.Dir.cwd().readFileAlloc(io, first, it.temp(), .limited(1 << 30)) catch |e|
+            return it.failWith(err_file, "cannot read {s}: {s}", .{ first, @errorName(e) });
+        const res = importer.importInto(it.temp(), db, bytes, format, table) catch |e| switch (e) {
+            error.Exec => return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()}),
+            else => return it.failWith(err_file, "cannot import {s}: {s}", .{ first, @errorName(e) }),
+        };
+        return .{ .int = @intCast(res.rows) };
     }
     var params: std.ArrayList(Value) = .empty;
     for (args[1..]) |a| try params.append(it.temp(), try it.eval(a));

@@ -71,7 +71,9 @@ The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29
 - [ ] **SQLite structure dialog loses indexes and triggers** on Apply: recreate them, or refuse when the table has any
 - [ ] **Wide characters:** the emoji icons of the tree and the tabs are two cells wide in some terminals; use one-cell symbols
 - [ ] Remove the Query stub (F7, SEARCH > Query…) or build it
-- [ ] Decide on DBF support: keep, freeze, or remove (legacy format, outside the ETL mission)
+- [x] DBF support decided (D-184): a file decoder only for legacy ingestion; creation removed 2026-10-17
+- [ ] D-184: Import command (CSV, TXT, DBF, XLS, JSON) into a database; then remove the DBF structure dialog and the DBF writing code
+- [ ] D-184: SQLite `:memory:` query engine with tuned PRAGMAs; native columnar (SoA) tables for the pipelines; the grid reads from them, not from `dbf.Table`
 - [ ] Decide on the `$` shell mode of the console (keep the one-shot `shell <command>`; interactive commands hang)
 - [ ] Old options: a custom theme saved by an older evetx (`color.*` lines of `evetx-options.txt`) is not read any more; make it again or import a theme file
 - [ ] Split `app.zig` (about 6,500 lines) into parts: debugger, SQL panel, dialogs, tree actions, menu

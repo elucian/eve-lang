@@ -55,7 +55,7 @@ pub const commands = [_]Command{
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = vm_cmds.cmdDebug },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = vm_cmds.cmdExecute },
     .{ .name = "project", .summary = "project init|new <folder>: make a project with the standard layout", .run = cp_cmds.cmdProject },
-    .{ .name = "db", .summary = "db proc list: the database part (eve db ...)", .run = db_cmds.cmdDb },
+    .{ .name = "db", .summary = "database: sql, views and tables, proc list", .run = db_cmds.cmdDb },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },
     .{ .name = "enter", .summary = "execute the next step", .run = stub("enter") },
     .{ .name = "run", .summary = "execute the loaded script, or the file given (parsed first)", .file = ".eve", .run = vm_cmds.viaSession("run") },
@@ -112,7 +112,7 @@ pub fn find(name: []const u8) ?*const Command {
 // optional. Arrays and slices are bounds-checked: a wrong index stops the program in Debug.
 /// Run one line typed at the prompt. Blank lines are ignored.
 pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
-    var words: [16][]const u8 = undefined;
+    var words: [256][]const u8 = undefined;
     var n: usize = 0;
     var it = std.mem.tokenizeAny(u8, line, " \t\r");
     while (it.next()) |w| {
@@ -130,6 +130,12 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
     if (n >= 2 and std.mem.eql(u8, words[n - 1], "?") and find(words[0]) != null) return ui_cmds.cmdHelp(ctx, words[0..1]);
     if (find(words[0])) |c| {
         try c.run(ctx, words[1..n]);
+    } else if (std.mem.eql(u8, words[0], "cd")) {
+        // `cd` and the commands of the shell (md, dir, ls, rm ...) work at the prompt as they do in a shell
+        try vm_cmds.cdLine(ctx, raw["cd".len..]);
+    } else if (@import("evevm").channel.shellLine(ctx.gpa, raw)) |sh| {
+        defer ctx.gpa.free(sh);
+        try vm_cmds.shellLine(ctx, sh);
     } else {
         try ctx.out.print("unknown command: {s} (type help or ?)\n", .{words[0]});
     }
@@ -146,13 +152,13 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
 // other are hard to follow), so the REPL hands it this function: "which file extension does Tab
 // complete here?". `std.mem.trimEnd` cuts the listed characters from the end of a slice. `orelse`
 // gives a default for the null of `indexOfAny`. `return if (cond) a else null` is an `if` expression.
-/// The extension Tab completes for the last word of `line`: `.cfg` after `-s`, otherwise what the
+/// The extension Tab completes for the last word of `line`: `.cfg` after `-e` or `-s`, otherwise what the
 /// command takes (`.eve` for check, debug, execute and compile; `.cfg` for setup), else null.
 pub fn completionExt(line: []const u8) ?[]const u8 {
     const head = std.mem.trimEnd(u8, line[0..editor.lastWordStart(line)], " \t");
     const c = find(head[0 .. std.mem.indexOfAny(u8, head, " \t") orelse head.len]) orelse return null;
-    if (std.mem.eql(u8, head[editor.lastWordStart(head)..], "-s")) return ".cfg";
-    if (std.mem.eql(u8, head[editor.lastWordStart(head)..], "-i")) return ".vmc";
+    const last = head[editor.lastWordStart(head)..];
+    if (std.mem.eql(u8, last, "-e") or std.mem.eql(u8, last, "--setup") or std.mem.eql(u8, last, "-s")) return ".cfg";
     return if (c.file.len > 0) c.file else null;
 }
 
@@ -336,7 +342,7 @@ test "options: flags, command and script" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     var bad: []const u8 = "";
-    const o = try cmdline.parseArgs(arena.allocator(), &.{ "-d", "-s", "f.cfg", "--check", "a.eve" }, &bad);
+    const o = try cmdline.parseArgs(arena.allocator(), &.{ "-d", "-e", "f.cfg", "--check", "a.eve" }, &bad);
     try std.testing.expect(o.debug);
     try std.testing.expectEqualStrings("f.cfg", o.config.?);
     try std.testing.expectEqualStrings("check", o.command.?.name);
@@ -345,21 +351,52 @@ test "options: flags, command and script" {
     const s = try cmdline.parseArgs(arena.allocator(), &.{"a.eve"}, &bad);
     try std.testing.expectEqualStrings("execute", s.command.?.name);
 
-    const x = try cmdline.parseArgs(arena.allocator(), &.{ "-x", "-i", "cmds.txt", "a.eve" }, &bad);
+    const x = try cmdline.parseArgs(arena.allocator(), &.{ "-x", "--setup", "m.cfg", "a.eve" }, &bad);
     try std.testing.expect(x.execute);
     try std.testing.expectEqualStrings("execute", x.command.?.name);
-    try std.testing.expectEqualStrings("cmds.txt", x.slot.?);
+    try std.testing.expectEqualStrings("m.cfg", x.config.?);
+    // the command files are gone (D-188): `-i` and `-t` are unknown options
+    try std.testing.expectError(error.UnknownOption, cmdline.parseArgs(arena.allocator(), &.{ "-x", "-i", "cmds.vmc" }, &bad));
+    try std.testing.expectError(error.UnknownOption, cmdline.parseArgs(arena.allocator(), &.{ "-t", "30" }, &bad));
 
     try std.testing.expectError(error.UnknownOption, cmdline.parseArgs(arena.allocator(), &.{"--bogus"}, &bad));
     try std.testing.expectEqualStrings("--bogus", bad);
-    try std.testing.expectError(error.MissingValue, cmdline.parseArgs(arena.allocator(), &.{"-s"}, &bad));
+    try std.testing.expectError(error.MissingValue, cmdline.parseArgs(arena.allocator(), &.{"-m"}, &bad));
 }
 
-test "completion extension follows the command and -s" {
+// Zig tip: `expectError(error.X, call)` passes when the call fails with exactly that error. These cases are the rules of
+// D-188: `-s [file.cfg]` is the service and nothing else; `-e file.cfg` (`--setup`) loads a configuration for a script,
+// a command or a door; `-s` with a script, a command or a door is refused.
+test "options: -s is the service, -e the configuration file" {
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var bad: []const u8 = "";
+    const bare = try cmdline.parseArgs(arena.allocator(), &.{"-s"}, &bad);
+    try std.testing.expect(bare.service and bare.config == null);
+    const with_file = try cmdline.parseArgs(arena.allocator(), &.{ "-s", "m.cfg" }, &bad);
+    try std.testing.expect(with_file.service);
+    try std.testing.expectEqualStrings("m.cfg", with_file.config.?);
+    const script = try cmdline.parseArgs(arena.allocator(), &.{ "-e", "m.cfg", "a.eve" }, &bad);
+    try std.testing.expect(!script.service);
+    try std.testing.expectEqualStrings("m.cfg", script.config.?);
+    const command = try cmdline.parseArgs(arena.allocator(), &.{ "--setup", "m.cfg", "--check", "a.eve" }, &bad);
+    try std.testing.expect(!command.service);
+    const door = try cmdline.parseArgs(arena.allocator(), &.{ "--listen", "-e", "m.cfg" }, &bad);
+    try std.testing.expect(!door.service and door.machine.listen);
+    const stop = try cmdline.parseArgs(arena.allocator(), &.{ "--serve", "stop", "-e", "m.cfg" }, &bad);
+    try std.testing.expect(!stop.service);
+    const db = try cmdline.parseArgs(arena.allocator(), &.{ "-s", "-db", "--serve", "evedb.cfg" }, &bad);
+    try std.testing.expect(db.service);
+    try std.testing.expectError(error.ServiceAlone, cmdline.parseArgs(arena.allocator(), &.{ "-s", "m.cfg", "a.eve" }, &bad));
+    try std.testing.expectError(error.ServiceAlone, cmdline.parseArgs(arena.allocator(), &.{ "--listen", "-s" }, &bad));
+    try std.testing.expectError(error.MissingValue, cmdline.parseArgs(arena.allocator(), &.{"-e"}, &bad));
+}
+
+test "completion extension follows the command and -e" {
     try std.testing.expectEqualStrings(".eve", completionExt("check te").?);
     try std.testing.expectEqualStrings(".eve", completionExt("compile ").?);
     try std.testing.expectEqualStrings(".cfg", completionExt("setup c").?);
-    try std.testing.expectEqualStrings(".cfg", completionExt("debug a.eve -s c").?);
+    try std.testing.expectEqualStrings(".cfg", completionExt("debug a.eve -e c").?);
     try std.testing.expect(completionExt("print x") == null);
     try std.testing.expect(completionExt("che") == null);
 }

@@ -41,8 +41,6 @@ Other folders are not tests. The expectation keys, all optional:
   "command"    a list of arguments for `eve` alone, with no script: the test runs one command of the
                VM, `eve <command...>` (for example ["--project", "init", "out/proj"]); the file of
                the test is only its home and its expectations
-  "serve"      a command file (path from the repo root): the test then runs the VM as
-               `eve -x -t 5 -i <serve>` (a session, no script on the command line)
   "stdout"     the exact expected output: a string, or a list of lines (line
                endings and trailing white space at the end are ignored)
   "contains"   a list of strings that must all appear in the output
@@ -278,13 +276,9 @@ def check_test(eve, test, timeout):
 
 
 def eve_args(test, exp):
-    """The arguments of `eve` for a test: the script and its args, or, with "serve", a session
-    that runs the command file: `eve -x -i <serve> [-t sec]` (the test file is then only the subject
-    that the command file loads)."""
+    """The arguments of `eve` for a test: the script and its args, or the command of "command"."""
     if "command" in exp:
         return list(exp["command"])
-    if "serve" in exp:
-        return ["-x", "-t", "5", "-i", exp["serve"], *exp["args"]]
     return [script_arg(test), *exp["args"]]
 
 

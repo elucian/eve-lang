@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eve: a remote PostgreSQL connection to evedb</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 60rem; color: #222; }
+  h1 { font-size: 1.4rem; }
+  button { padding: .4rem .9rem; margin: .2rem .3rem .2rem 0; cursor: pointer; }
+  input { padding: .3rem; }
+  pre { background: #f4f4f4; border: 1px solid #ddd; padding: .8rem; min-height: 6rem; white-space: pre-wrap; }
+  .err { color: #a00; }
+  code { background: #f4f4f4; padding: 0 .2rem; }
+  small { color: #666; }
+</style>
+</head>
+<body>
+<h1>Eve &rarr; PostgreSQL protocol &rarr; evedb (DuckDB) on port 5432</h1>
+<p>Each button sends an Eve script to the machine (<code>POST /rpc</code>, method <code>vm.run</code>). The script opens
+<code>database.connect("shop")</code>; <code>eve.cfg</code> says <code>postgres://eve:demo@127.0.0.1:5432/shop</code>, so the
+Eve driver for PostgreSQL logs in to evedb with md5 and runs the SQL there. This page stands in for the database tab of
+eveux, which is not built yet.</p>
+
+<p>
+  <button onclick="run(setup)">Create the table and two rows</button>
+  <button onclick="run(list)">List the items</button>
+  <button onclick="run(version)">Ask the server who it is</button>
+</p>
+<p>
+  Name <input id="name" value="washer" size="12">
+  Price <input id="price" value="0.10" size="6">
+  <button onclick="addItem()">Insert an item</button>
+  <small>(letters, digits and spaces; a number)</small>
+</p>
+<pre id="out">ready</pre>
+<p><small>Start evedb first: <code>eve -s -db --serve evedb.cfg</code>; then this page: <code>eve -ux</code> in this folder.</small></p>
+
+<script>
+const head = 'primary aspect demo is\n  class Item = {id: Integer, name: String, price: Decimal} <: Record;\n  class Who = {v: String} <: Record;\n  process main is\n    new shop := database.connect("shop");\n';
+const tail = '    shop.close();\n  return;\nend demo;\n';
+const setup = head +
+  '    shop.execute!("drop table if exists items");\n' +
+  '    shop.execute!("create table items (id bigint primary key, name varchar not null, price decimal(10,2))");\n' +
+  '    print shop.execute!("insert into items values (?, ?, ?), (?, ?, ?)", 1, "bolt", 2.50d, 2, "nut", 0.25d);\n' +
+  '    print "table items made";\n' + tail;
+const list = head +
+  '    for i in shop.query!(:Item)("select id, name, price from items order by id") do\n' +
+  '      print "{i.id}  {i.name}  {i.price}";\n' +
+  '    done;\n' + tail;
+const version = head +
+  '    print shop.query_one!(:Who)("select version() as v").v;\n' + tail;
+
+function addItem() {
+  const name = document.getElementById('name').value.trim();
+  const price = document.getElementById('price').value.trim();
+  if (!/^[A-Za-z0-9 ]{1,40}$/.test(name) || !/^[0-9]+(\.[0-9]+)?$/.test(price)) {
+    show('a name of letters, digits and spaces, and a number for the price', true);
+    return;
+  }
+  run(head +
+    '    print shop.execute!("insert into items select coalesce(max(id), 0) + 1, ?, ? from items", "' + name + '", ' + price + 'd);\n' +
+    '    print "inserted";\n' + tail);
+}
+
+function show(text, bad) {
+  const out = document.getElementById('out');
+  out.textContent = text;
+  out.className = bad ? 'err' : '';
+}
+
+async function run(source) {
+  show('running…');
+  try {
+    const r = await fetch('/rpc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'vm.run', params: { name: 'demo.eve', source: source } })
+    });
+    const m = await r.json();
+    if (m.error) return show(m.error.message, true);
+    const res = m.result;
+    show((res.output || '') + (res.errors ? '\n' + res.errors : '') + '\n(exit ' + res.status + ')', res.status !== 0);
+  } catch (e) {
+    show('the machine does not answer: ' + e, true);
+  }
+}
+</script>
+</body>
+</html>

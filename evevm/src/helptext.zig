@@ -27,7 +27,7 @@ pub const entries = [_]Entry{
         .short = "check the syntax of a script, do not execute it",
         .syntax = &.{"check <file.eve> [<file.eve> ...]"},
         .text = "Parses each file and prints every syntax error as file:line:col: error: text. Nothing is executed.\n" ++
-            "The exit status is 65 when a file has a syntax error, 66 when a file cannot be read and 64 when no name is given. Tab completes the name of the file.",
+            "The exit status is 65 when a file has a syntax error, 66 when a file cannot be read and 64 when no name is given. Right (at the end of the line) completes the name of the file.",
         .examples = &.{"check hello.eve"},
     },
     .{
@@ -72,11 +72,23 @@ pub const entries = [_]Entry{
     },
     .{
         .name = "db",
-        .short = "the database part: db proc list",
-        .syntax = &.{"db proc list"},
-        .text = "Lists each module of the folder proc/ of the project, in order, with the hash of its source and the procedures and functions it exports with their signatures. " ++
+        .short = "database: sql, views and tables, proc list",
+        .syntax = &.{ "db sql [-t] <file> <statement>", "db create view <file> <name> <select…>", "db create table <file> <name> <select…>", "db drop view <file> <name>", "db import <file.db> <file> [table]", "db export <file.db> <table> <file>", "db serve [evedb.cfg]", "db proc list" },
+        .text = "db sql runs SQL statements on a SQLite file. db create makes a view or a table from a select; db drop view removes a view. " ++
+            "db serve starts evedb, the database server that answers as PostgreSQL on port 5432, with its configuration file; eve -s -db --serve evedb.cfg starts it as a service. " ++
+            "db import reads a .csv, .txt, .tsv, .json or .dbf file into a new table of the database (the types are found from the values; a DBF file declares them); db export writes a table as .csv, .txt, .json or .dbf. A spreadsheet is saved as CSV first. " ++
+            "db proc list lists each module of the folder proc/ of the project, in order, with the hash of its source and the procedures and functions it exports with their signatures. " ++
             "It says so when there is no folder proc/ here (exit status 66).",
-        .options = &.{.{ .word = "proc list", .text = "the stored procedures written in Eve." }},
+        .options = &.{
+            .{ .word = "sql", .text = "run a statement on the database file." },
+            .{ .word = "create view", .text = "make the view <name> as the <select>." },
+            .{ .word = "create table", .text = "make the table <name> from the <select>." },
+            .{ .word = "drop view", .text = "remove the view <name>." },
+            .{ .word = "import", .text = "load a CSV, TXT, JSON or DBF file as a new table." },
+            .{ .word = "export", .text = "write a table as CSV, TXT, JSON or DBF." },
+            .{ .word = "serve", .text = "run evedb (PostgreSQL protocol, DuckDB inside) with a configuration file." },
+            .{ .word = "proc list", .text = "the stored procedures written in Eve." },
+        },
     },
     .{
         .name = "begin",
@@ -221,13 +233,13 @@ pub const entries = [_]Entry{
         .name = "clear",
         .short = "clear the upper part of the screen",
         .syntax = &.{"clear"},
-        .text = "Empties the upper part, the output and its scrollback, and keeps the command line and the status bar. In a slot file (-i) clear forgets the current script instead.",
+        .text = "Empties the upper part, the output and its scrollback, and keeps the command line and the status bar.",
     },
     .{
         .name = "setup",
         .short = "load the configuration file (not implemented yet)",
         .syntax = &.{"setup <file.cfg>"},
-        .text = "Reserved. Today the option -s <file.cfg> names the configuration file when eve starts, and status shows which file it looks for.",
+        .text = "Reserved. Today the option -e <file.cfg> (--setup <file.cfg>) names the configuration file when eve starts, and status shows which file it looks for.",
     },
     .{
         .name = "help",

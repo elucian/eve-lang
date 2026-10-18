@@ -1,0 +1,24 @@
+# level 6 performance: records over the PostgreSQL protocol (the driver postgres://, D-186), one object per row
+** perf: 100,000 rows read from evedb as records through postgres://, and a loop that adds one field of each
+primary aspect p6c_pg_records is
+  class Row = {id: Integer, region: String, amount: Real, paid: Logic} <: Record;
+
+  process main is
+    new pg := database.connect("pgwh");
+    pg.execute!("create or replace table big as select i::bigint as id, case when i % 4 = 0 then 'north' when i % 4 = 1 then 'south' when i % 4 = 2 then 'east' else 'west' end as region, i * 1.5 as amount, i % 2 = 1 as paid from range(100000) t(i)");
+    new total := 0;
+    new n := 0;
+    for r in pg.query!(:Row)("select id, region, amount, paid from big") do
+      let total += r.id;
+      let n += 1;
+    done;
+    print n;
+    print total;
+    pg.close();
+  return;
+end p6c_pg_records;
+/*@expect
+{
+  "stdout": ["100000", "4999950000"]
+}
+*/

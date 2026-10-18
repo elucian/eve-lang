@@ -47,6 +47,28 @@ pub fn shellLine(ctx: *Context, text: []const u8) Io.Writer.Error!void {
     if (ctx.status != 0) try ctx.out.print("shell: exit {d}\n", .{ctx.status});
 }
 
+// Zig tip: at the prompt of `eve` the folder is the folder of the process, so `cd` changes it for real (`setCurrentPath`) and
+// the commands that follow, of Eve or of the shell, start there. `currentPathAlloc` gives the new folder back as the system
+// spells it. An error of the system (no such folder) is printed, as a shell prints it.
+/// `cd [folder]` at the prompt: show or change the folder.
+pub fn cdLine(ctx: *Context, text: []const u8) Io.Writer.Error!void {
+    var arg = std.mem.trim(u8, text, " \t\r");
+    // `cd /d <folder>` of the Windows shell
+    if (arg.len > 3 and std.ascii.eqlIgnoreCase(arg[0..3], "/d ")) arg = std.mem.trim(u8, arg[3..], " \t");
+    arg = std.mem.trim(u8, arg, "\"");
+    if (arg.len > 0) {
+        std.process.setCurrentPath(ctx.io, arg) catch |err| {
+            try ctx.out.print("cd: {s}: {s}\n", .{ arg, @errorName(err) });
+            ctx.status = 1;
+            return;
+        };
+    }
+    const here = std.process.currentPathAlloc(ctx.io, ctx.gpa) catch return;
+    defer ctx.gpa.free(here);
+    try ctx.out.print("{s}\n", .{here});
+    ctx.status = 0;
+}
+
 pub fn cmdStop(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
     try ctx.out.flush();
     ctx.status = daemon.stopMachines(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
@@ -54,18 +76,12 @@ pub fn cmdStop(ctx: *Context, _: []const []const u8) Io.Writer.Error!void {
 
 // the next command finds the script the previous one loaded. `gpa.create(T)` allocates one `T` and
 // returns a pointer; `s.* = .{ ... }` fills it. A `?*T` field is null until then, and `orelse`
-// would also do: `if (ctx.machine) |s| return s;` is the early-return form. The slot is created
-// with the session, because the interpreter polls it between statements.
+// would also do: `if (ctx.machine) |s| return s;` is the early-return form.
 /// The session of this run of `eve`.
 pub fn session(ctx: *Context) Io.Writer.Error!*vm.Session {
     if (ctx.machine) |s| return s;
     const s = ctx.gpa.create(vm.Session) catch return error.WriteFailed;
     s.* = .{ .io = ctx.io, .gpa = ctx.gpa, .out = ctx.out, .debug = ctx.debug };
-    if (ctx.slot) |p| {
-        const sl = ctx.gpa.create(vm.Slot) catch return error.WriteFailed;
-        sl.* = .{ .io = ctx.io, .gpa = ctx.gpa, .path = p };
-        s.slot = sl;
-    }
     ctx.machine = s;
     return s;
 }
@@ -176,21 +192,14 @@ pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
 }
 
 // Zig tip: parse first, run second: the session's `run` parses the file when it was not parsed,
-// and returns early on a syntax error, so a script with errors never starts. With no file name
-// and a slot (`eve -x -i file.vmc`) the machine does not run a script: it serves the commands
-// of the slot until `stop` (a workflow). Unhandled errors go to stderr, so the standard
-// output stays what the script printed.
+// and returns early on a syntax error, so a script with errors never starts. Unhandled errors go
+// to stderr, so the standard output stays what the script printed.
 /// `execute`: parse the script (as `check` does) and, only if it is correct, run its main process.
 pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     const s = try session(ctx);
     if (args.len == 0) {
-        if (s.slot == null) {
-            try ctx.out.writeAll("execute: file name missing\n");
-            ctx.status = exit_usage;
-            return;
-        }
-        try s.serve(ctx.idle_ms);
-        ctx.status = s.status;
+        try ctx.out.writeAll("execute: file name missing\n");
+        ctx.status = exit_usage;
         return;
     }
     s.quiet = true;
@@ -204,7 +213,7 @@ pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void 
     try s.run();
     ctx.status = s.status;
     if (s.outcome) |o| {
-        if (o.stopped) try ctx.out.print("{s}: stopped by a command from the slot\n", .{args[0]});
+        if (o.stopped) try ctx.out.print("{s}: stopped\n", .{args[0]});
         if (o.code != 0 and s.machine != null) {
             try ctx.out.flush();
             for (s.machine.?.reports.items) |r| {

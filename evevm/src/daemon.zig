@@ -60,6 +60,23 @@ pub fn logPath(gpa: std.mem.Allocator, cfg: Config) ![]u8 {
 // `.file` gives it an open file as its output: the machine has no terminal, so its log goes to a file. With
 // `create_no_window` Windows gives the child no console window of its own, and it goes on running after this program
 // has ended. The result is a `Child`; this function does not wait for it, because the machine is meant to stay.
+// Zig tip: on Windows a new process inherits *every* handle of its parent that is marked inheritable, not only the three
+// it is given as its standard streams. A program that started `eve -s` with pipes (a script, a service manager, a test)
+// would then wait for the end of those pipes until the machine itself ended. Clearing the inherit flag of our own standard
+// handles before the start keeps the machine from holding them. `extern "kernel32"` declares a system function by name.
+pub fn releaseStdHandles() void {
+    if (builtin.os.tag != .windows) return;
+    const k = struct {
+        extern "kernel32" fn GetStdHandle(which: u32) callconv(.winapi) ?*anyopaque;
+        extern "kernel32" fn SetHandleInformation(h: ?*anyopaque, mask: u32, flags: u32) callconv(.winapi) i32;
+    };
+    // STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE; HANDLE_FLAG_INHERIT is 1
+    for ([_]u32{ 0xFFFFFFF6, 0xFFFFFFF5, 0xFFFFFFF4 }) |which| {
+        const h = k.GetStdHandle(which);
+        if (h != null and h != @as(?*anyopaque, @ptrFromInt(std.math.maxInt(usize)))) _ = k.SetHandleInformation(h, 1, 0);
+    }
+}
+
 /// Start `eve --listen --serve` as a new process, wait until its IPC door answers, and report. The machine runs on
 /// its own: the prompt of the system comes back.
 pub fn startDetached(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, config_path: ?[]const u8) !u8 {
@@ -77,20 +94,32 @@ pub fn startDetached(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Confi
     };
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(gpa, &.{ try gpa.dupe(u8, exe_buf[0..exe_len]), "--listen", "--serve" });
-    if (config_path) |p| try argv.appendSlice(gpa, &.{ "-s", p });
+    if (config_path) |p| try argv.appendSlice(gpa, &.{ "-e", p });
     const log = try logPath(gpa, cfg);
     const log_file: ?Io.File = Io.Dir.cwd().createFile(io, log, .{}) catch null;
     const sink: std.process.SpawnOptions.StdIo = if (log_file) |f| .{ .file = f } else .ignore;
-    _ = std.process.spawn(io, .{
+    releaseStdHandles();
+    // Zig tip: `pgid = 0` makes the child the leader of a new process group on POSIX systems, so a Ctrl+C or a hangup of the
+    // terminal that started it does not reach the machine; on Windows the field is not used (`create_no_window` does the job).
+    const child = std.process.spawn(io, .{
         .argv = argv.items,
         .stdin = .ignore,
         .stdout = sink,
         .stderr = sink,
         .create_no_window = true,
+        .pgid = if (builtin.os.tag == .windows) null else 0,
     }) catch |e| {
         try out.print("evevm: cannot start the machine: {s}\n", .{@errorName(e)});
         return exit_unavailable;
     };
+    // the pid file lets an init system (systemd `Type=forking` with `PIDFile=`) find the machine; the starter knows the pid
+    if (builtin.os.tag != .windows and builtin.os.tag != .wasi) {
+        if (child.id) |pid| {
+            if (std.fmt.allocPrint(gpa, "{s}/eve-{s}-{d}.pid", .{ config.runtime_dir, cfg.domain, cfg.ipc_port })) |path| {
+                if (std.fmt.allocPrint(gpa, "{d}\n", .{pid})) |text| Io.Dir.cwd().writeFile(io, .{ .sub_path = path, .data = text }) catch {} else |_| {}
+            } else |_| {}
+        }
+    }
     if (log_file) |f| f.close(io); // the machine has its own handle of the file
     var tries: usize = 0;
     while (tries < 100) : (tries += 1) {
@@ -109,21 +138,21 @@ pub fn startDetached(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Confi
 
 pub const daemon_usage =
     \\evevm: start the Eve machine (both doors, as eve --listen --serve) in a new process; the system prompt comes back
-    \\usage: evevm [start|stop|restart|status] [-s file.cfg]
+    \\usage: evevm [start|stop|restart|status] [-e file.cfg]
     \\
 ;
 
 // Zig tip: the program decides what to do from its own name (`evevm` or `eve`) and from a word; `eql` is a comparison
 // of two texts. `orelse 0` turns "the machine options did not handle it" into a plain success. A `restart` is a `stop`
 // followed by a wait until nobody answers, then a `start`.
-/// The command `evevm [start|stop|restart|status] [-s file.cfg]`; returns the exit code.
+/// The command `evevm [start|stop|restart|status] [-e file.cfg]`; returns the exit code.
 pub fn daemonMain(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, argv: []const []const u8) !u8 {
     var word: []const u8 = "start";
     var config_path: ?[]const u8 = null;
     var i: usize = 0;
     while (i < argv.len) : (i += 1) {
         const a = argv[i];
-        if (std.mem.eql(u8, a, "-s") and i + 1 < argv.len) {
+        if ((std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup")) and i + 1 < argv.len) {
             i += 1;
             config_path = argv[i];
         } else if (std.mem.eql(u8, a, "-h") or std.mem.eql(u8, a, "--help")) {

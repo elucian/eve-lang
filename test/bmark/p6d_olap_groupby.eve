@@ -1,0 +1,23 @@
+# level 6 performance: OLAP in DuckDB: a group-by over a large table, the answer read as records through evedb://
+** perf: 1,000,000 rows in evedb, then ten group-by queries over all of them (sum and count by region)
+primary aspect p6d_olap_groupby is
+  class Agg = {region: String, total: Real, n: Integer} <: Record;
+
+  process main is
+    new wh := database.connect("wh");
+    wh.execute!("create or replace table big as select i::bigint as id, case when i % 4 = 0 then 'north' when i % 4 = 1 then 'south' when i % 4 = 2 then 'east' else 'west' end as region, i * 1.5 as amount, i % 2 = 1 as paid from range(1000000) t(i)");
+    new rows := 0;
+    for k in (1..10) do
+      for g in wh.query!(:Agg)("select region, sum(amount) as total, count(*) as n from big group by region order by region") do
+        let rows += g.n;
+      done;
+    done;
+    print rows;
+    wh.close();
+  return;
+end p6d_olap_groupby;
+/*@expect
+{
+  "stdout": ["10000000"]
+}
+*/

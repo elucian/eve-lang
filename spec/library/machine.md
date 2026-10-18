@@ -59,7 +59,7 @@ The file `eve.cfg` of the working folder (or the file of `-s`): one `key = value
 | `remote` | none | `host:port` that a bare `-rem` addresses |
 | `eve_width` | `100` | the width of the `help` table and texts at the prompt, in characters (30 to 400); the variable `EVE_WIDTH` of the environment wins, and a narrower window wins over both |
 
-`<runtime>` is `$XDG_RUNTIME_DIR`, else `$TMPDIR`, else `%TEMP%`, else `/tmp`. The ports come from the configuration only (an option `-s other.cfg` names another file); `-loc <port>` addresses the machine of another `ipc_port`.
+`<runtime>` is `$XDG_RUNTIME_DIR`, else `$TMPDIR`, else `%TEMP%`, else `/tmp`. The ports come from the configuration only (the option `-e other.cfg`, or `--setup other.cfg`, names another file; `-s` starts the service, section "Service mode"); `-loc <port>` addresses the machine of another `ipc_port`.
 
 ## The options
 
@@ -68,6 +68,9 @@ The file `eve.cfg` of the working folder (or the file of `-s`): one `key = value
 | `--listen [word]` | | the IPC door: `start` (the default) starts a machine with the IPC door; `stop`, `restart` and `status` speak to the machine **through the IPC door only**, as `-loc` does (without it: `eve: no local machine`, exit 69) |
 | `--serve [word]` | | the HTTP door: `start` (the default) starts a machine with the HTTP door; `stop`, `restart` and `status` speak to the machine through the IPC door, then the HTTP door of `localhost` |
 | the words | | `stop` ends the machine (exit 0); `restart` stops it, if it runs, then starts it again in this process with the doors it had (the option on the line adds its door; with no machine running it starts like `start`); `status` prints the doors. `--listen --serve` starts a machine with both doors (D-169). Another word after a door is a usage error: `eve: nope: expected start, stop, restart or status after --listen or --serve`, exit 64 |
+| `-s [file.cfg]` | | **the service** (D-185, section "Service mode"): the machine without a user interface; the file after it is its configuration; `-s` takes nothing else (D-188) |
+| `-e file.cfg` | `--setup file.cfg` | the configuration file, for a script, a command or a door (D-188) |
+| `-s -db --serve evedb.cfg` | `-s db serve evedb.cfg` | **evedb as a service** (D-186): the database server that answers as PostgreSQL, with its configuration file; without `-s`, `eve db serve evedb.cfg` runs it in the foreground |
 | `-loc [port]` | `--local` | the command is local: it never uses the network |
 | `-rem [host:port]` | `--remote` | the command runs on a remote machine, found by its HTTP door |
 | `-x file.eve [args]` | `--execute` | the script runs at once in this process: no machine is looked for |
@@ -76,7 +79,7 @@ Options are whole words and are not bundled: `-loc` is one option. The two doors
 
 **Direct run.** `eve -x file.eve` (or `eve file.eve`) is the fast way to run a script: it does not read the doors of `eve.cfg`, asks no IPC socket and no HTTP port, and executes the script in the process of `eve`, which exits with the exit code of the script. A machine that listens on the same computer does not see the run and does not count it. To run the script in that machine, write `-loc -x` or `-rem -x`.
 
-**In its own process.** `evevm [start|stop|restart|status] [-s file.cfg]` (the same program as `eve`, installed under a second name) starts a machine with both doors in a new process, without a window, with its output in `<runtime>/eve-<domain>-<ipc_port>.log`, and ends as soon as the IPC door answers. `stop` closes both doors of the machine of the process and tells every running script to stop at its next statement; in the prompt of `eve` the process stays, and the machine of another process (the one started by `evevm`) ends. `eve -ux` (it was `-u`, D-172) opens the user interface, the page of the HTTP door, starting the machine in its own process when no door answers.
+**In its own process.** `evevm [start|stop|restart|status] [-e file.cfg]` (the same program as `eve`, installed under a second name) starts a machine with both doors in a new process, without a window, with its output in `<runtime>/eve-<domain>-<ipc_port>.log`, and ends as soon as the IPC door answers. `stop` closes both doors of the machine of the process and tells every running script to stop at its next statement; in the prompt of `eve` the process stays, and the machine of another process (the one started by `evevm`) ends. `eve -ux` (it was `-u`, D-172) opens the user interface, the page of the HTTP door, starting the machine in its own process when no door answers.
 
 **Start.** The machine prints one line per door (`eve: ipc localhost:4195`, `eve: http http://localhost:8095`) and stays active. Then it prints one line per request, the **log of the machine**: the door and the method (`eve: ipc status`), a script with its exit code and its duration (`eve: http run hello.eve: exit 0, 1 ms`, with `(waited 4712 ms for another script)` when it had to wait its turn), a page with its status (`eve: http GET /css/style.css: 200`). If a door of the new machine is taken by a running machine (something answers on the IPC socket, or on the HTTP port), the new one prints `eve: already running (…)` and ends with the exit code **75**. The HTTP door is tested by a `ping` and not by the bind, because some systems (Windows) let a second socket bind a port that listens. A socket left by a crash is found by a failed connect and removed.
 
@@ -103,6 +106,20 @@ parts: vm ux
 The first four lines are the first form of the answer; the lines after them come from `vm.stat` (fields `requests`, `uptime_ms`, `running`, `running_ms`, `web`, `http_host`). The machine serves each connection in a thread of its own, so a `status` is answered while a script runs on the same door; the scripts still run one at a time.
 
 The REPL command `status` (and `eve --status`) prints the same lines under a header about the process: the script, the configuration file (`loaded`, or `not found, the defaults are in use`) and its ports, and `machine: running` or `machine: not running`, with the command that starts it.
+
+## Service mode (level 6)
+
+`eve -s` starts the machine as a **service** (D-185): no prompt, nothing written on the standard output, the doors of the configuration open (IPC and HTTP), the log in `<runtime>/eve-<domain>-<ipc_port>.log`. On Windows it is a service of the Service Control Manager; on Linux and macOS it is a daemon.
+
+| Form | Does |
+|---|---|
+| `eve -s [file.cfg]` from a console or a shell | starts the machine in a process of its own, detached from the terminal; waits until the IPC door answers; prints nothing and ends with 0. A running machine: `already running` on the error output, status 75; no answer in ten seconds: the log on the error output, status 69 |
+| `eve.exe -s [file.cfg]` started by the Service Control Manager | the process is the service: it reports `START_PENDING` and `RUNNING`, runs the machine, and reports `STOPPED` on a `STOP` or `SHUTDOWN` control |
+| `EVE_SERVICE=foreground eve -s [file.cfg]` | the process is the machine, in the foreground of its parent (a container, `Type=simple`); it ends with 0 on `SIGTERM`, `SIGINT` or `vm.stop` |
+
+**Reading `-s`.** `-s` is the service and only that (D-188). A word after it that ends in `.cfg` is the configuration of the service. With a script, a command, `-x`, `--listen`, `--serve`, `-loc` or `-rem`, `-s` is a usage error (exit 64); the configuration of those is `-e file.cfg` (`--setup file.cfg`). The one exception is the database part: `eve -s -db --serve evedb.cfg` (D-186).
+
+**The pid file** `<runtime>/eve-<domain>-<ipc_port>.pid` holds the pid and a line break, from the moment the machine runs to its stop. **To stop:** `eve --serve stop`, `evevm stop`, `vm.stop`, `sc stop`, `SIGTERM`, `systemctl stop`; the running scripts are cancelled, the doors close, the socket and the pid file are removed. Install recipes and the open points: `../../plan/design-service.md` section 17. Tests: `script/service_check.py`.
 
 ## Channels
 

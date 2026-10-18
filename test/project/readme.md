@@ -239,7 +239,7 @@ eve: http http://localhost:8042
 A second machine runs next to the first on another IPC port, named in another configuration file (`second.cfg` of this folder: `ipc_port = 4043`); `-loc <port>` addresses it:
 
 ```
-terminal 3> eve -s second.cfg --listen
+terminal 3> eve -e second.cfg --listen
 eve: ipc localhost:4043
 
 terminal 2> eve -loc 4043 --serve status
@@ -275,7 +275,7 @@ The methods are those of the machine API (D-165): `vm.ping`, `vm.stat` (the door
 
 | Command | Does |
 |---|---|
-| `eve --listen` | start a machine with the IPC door (`eve -s other.cfg --listen` for the ports of another file) |
+| `eve --listen` | start a machine with the IPC door (`eve -e other.cfg --listen` for the ports of another file) |
 | `eve --serve` | start a machine with the HTTP door (the web server) |
 | `eve --listen --serve` | start a machine with both doors |
 | `eve --listen status`, `stop`, `restart` | the same words as `--serve`, through the IPC door only |
