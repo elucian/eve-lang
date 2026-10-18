@@ -35,7 +35,7 @@ Every text file is LF, in the index and in the working tree (`.gitattributes`); 
   `manual/features/` tables are generated from `spec/` + `manual/support/*.json`, never hand-edited.
   Conventions in `manual/README.md`. Release notes and the release policy in `manual/release/` (D-153).
 - `script/` Python scripts: the test runner (`runtest.py`) and the token-saving utilities below.
-- `tools/` typing aids (`alt-codes.md`)
+- `tools/` typing aids (`alt-codes.md`), the editor plugins (`zed-eve/`, `vscode-eve/`, `tree-sitter-eve/`) and their debt (`tools/tech-debt.md`)
 - `tutorial/` **junction** to `C:\Users\eluci\sage-code\scl\projects\eve`: the published Eve
   tutorial (44 topic pages), owned by the `scl` repo. See "Tutorial" below.
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is`
