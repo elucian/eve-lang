@@ -12,6 +12,7 @@ const data = interp.data;
 const overload = interp.overload;
 const decimal = interp.decimal;
 const dlib = interp.dlib;
+const netlib = interp.netlib;
 const instant = interp.instant;
 const Heap = interp.Heap;
 const Node = interp.Node;
@@ -218,6 +219,7 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
         return it.generatorCall(recv.object, name, args);
     }
     if (dlib.isStream(it, recv)) return dlib.streamCall(it, recv.object, name, args);
+    if (netlib.isNet(it, recv)) return netlib.call(it, recv.object, name, args);
     if (interp.data_api) |d| {
         if (d.is_table(it.host(), recv)) return d.table_call(it.host(), recv.object, name, args);
         if (d.is_connection(it.host(), recv)) return d.connection_call(it.host(), recv.object, name, args);

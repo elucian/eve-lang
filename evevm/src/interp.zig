@@ -14,6 +14,7 @@ pub const data = @import("evecm").data;
 pub const overload = @import("evecp").overload;
 pub const decimal = @import("evecm").decimal;
 pub const dlib = @import("dlib.zig");
+pub const netlib = @import("netlib.zig");
 pub const instant = @import("evecm").instant;
 pub const Scratch = @import("scratch.zig").Scratch;
 pub const heap = @import("evecm").heap;
@@ -208,6 +209,12 @@ pub const Interp = struct {
     /// field `handle`) and the class of those objects (dlib.zig).
     streams: std.ArrayList(*dlib.Stream) = .empty,
     stream_class: ?*Class = null,
+    /// The open sockets and listeners of the `net` module (their objects keep the index in the field `handle`) and the
+    /// classes of those objects (netlib.zig).
+    net_conns: std.ArrayList(*netlib.Conn) = .empty,
+    net_listeners: std.ArrayList(*netlib.Listen) = .empty,
+    net_socket_class: ?*Class = null,
+    net_listener_class: ?*Class = null,
     /// The object of the `update` block that runs, and the scope that holds its field names.
     update_obj: ?*Object = null,
     update_scope: ?*Scope = null,
@@ -351,7 +358,7 @@ pub const Interp = struct {
         try it.define("Null", .nil, true);
         try it.define("null", .nil, true);
         try it.define("nil", .{ .sym = 0 }, true);
-        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "os" };
+        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "os", "net", "Listener", "Socket" };
         for (types) |t| try it.define(t, .{ .typ = t }, true);
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the

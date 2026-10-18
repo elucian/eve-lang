@@ -12,7 +12,7 @@ import re, sys, pathlib
 
 root = pathlib.Path(__file__).resolve().parent.parent
 zig_dlib = (root / "evevm/src/dlib.zig").read_text(encoding="utf-8")
-zig = zig_dlib + (root / "evevm/src/syslib.zig").read_text(encoding="utf-8")
+zig = zig_dlib + (root / "evevm/src/syslib.zig").read_text(encoding="utf-8") + (root / "evevm/src/netlib.zig").read_text(encoding="utf-8")
 table = re.search(r"natives = std\.StaticStringMap\(Native\)\.initComptime\(\.\{(.*?)\}\);", zig, re.S)
 natives = set(re.findall(r'\.\{\s*"([a-z_]+)"', table.group(1))) if table else set()
 bad = []

@@ -17,6 +17,7 @@ const instant = @import("evecm").instant;
 const nfc = @import("evecm").nfc;
 const Heap = @import("evecm").heap.Heap;
 const syslib = @import("syslib.zig");
+const netlib = @import("netlib.zig");
 
 const Node = ast.Node;
 const Interp = interp.Interp;
@@ -108,6 +109,7 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "secret", secretModule },
     .{ "crypto", syslib.cryptoModule },
     .{ "os", syslib.osModule },
+    .{ "net", netlib.netModule },
 });
 
 // @eve-impl entry point of every `module.name(...)` call on a prelude type

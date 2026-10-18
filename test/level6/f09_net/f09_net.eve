@@ -1,0 +1,49 @@
+# the system module net: a server and a client as tasks of one script, lines over TCP (F-NET-02, D-189)
+** spec: library/net.md
+primary aspect f09_net is
+  async procedure echo(server: Listener, times: Integer) is
+    new peer := server.accept!();
+    for i in (1..times) do
+      new line := peer.read_line!();
+      peer.write("echo {i}: {line}\n");
+    done;
+    peer.close();
+  return;
+
+  process main is
+    new server := net.listen!("127.0.0.1", 0);
+    new port := server.port();
+    print port > 0;
+    work: job
+    do
+      spawn echo(server, 2);
+      new c := net.connect!("127.0.0.1", server.port());
+      print c.is_open();
+      c.write("hello\n");
+      print c.read_line!();
+      c.write("second\r\n");
+      print c.read_line!();
+      print c.read_line!() == null;
+      c.close();
+      print c.is_open();
+    done work;
+    server.close();
+    net.connect!("127.0.0.1", port);
+    print "never";
+  recover
+    print "refused";
+  return;
+end f09_net;
+/*@expect
+{
+  "stdout": [
+    "True",
+    "True",
+    "echo 1: hello",
+    "echo 2: second",
+    "True",
+    "False",
+    "refused"
+  ]
+}
+*/

@@ -172,3 +172,8 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 - **Not done, with reason:** `gz` as a module (the readers already inflate `.gz`; a module with `gzip.open!` and writers is TD-24); `traits` needs no module, they are part of the language and `registry.md` points to `declarations.md`; AEAD and password hashing wait for login (level 7, TD-5).
 - **Open questions for the author:** Q-066 (string functions are plain text; regex in the module `regex`), D-192 (2) to (4) to confirm, Q-064 answered.
 - **Lesson:** each Eve module written so far found a gap in the language or the VM (G-1, G-4 to G-7). M3 will find more; the rule stays: fix the language, do not work around it.
+
+## 14. State of M3 (2026-10-18), step 2: `net`
+
+- Done: the system module `net` (`net.listen!`, `net.connect!`, `Listener`, `Socket`; `spec/library/net.md`, `evevm/src/netlib.zig`, test `f09_net`): a server and its clients run as tasks of one script. Found: the sockets of Zig 0.16 on Windows are AFD handles, so readiness polling with `WSAPoll` fails; a blocking call runs on a helper thread polled with `waitFor` (TD-28).
+- Next in M3: the HTTP protocol in Eve over `net` (`http`: request, response, client `get!` and `post!`), then `route` and `service`, and the test `f10_route_hello`.
