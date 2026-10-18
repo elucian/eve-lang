@@ -1,0 +1,49 @@
+# JSON-RPC 2.0 over HTTP between a server and a client on localhost: rpc, http, route, service and net together (F-NET-08, D-189)
+** spec: library/rpc.md
+primary aspect f11_rpc_roundtrip is
+  from lib use (rpc, http, route, service);
+
+  async procedure run_server(server: Listener, routes: Any, count: Integer) is
+    service.serve(server, routes, count);
+  return;
+
+  function call!(base: String, id: Integer, name: String, params: Any) => (@result: Any) is
+    new answer := http.post!(base + "/rpc", rpc.request(id, name, params));
+    let result := rpc.result_of(answer.body);
+  return;
+
+  process main is
+    new add := (p) => (p[1] + p[2]);
+    new ping := (p) => ("pong");
+    new fail := (p) => (p[1] / p[2]);
+    new handlers := {"add": add, "vm.ping": ping, "div": fail};
+    ** a list of one route: the comma after it keeps the parentheses from being a plain expression
+    new routes := (
+      route.post("/rpc", (req, p) => (route.text(rpc.dispatch(req.body, handlers)))),
+    );
+    new server := net.listen!("127.0.0.1", 0);
+    new base := "http://127.0.0.1:{server.port()}";
+    work: job
+    do
+      spawn run_server(server, routes, 4);
+      print call!(base, 1, "vm.ping", ());
+      print call!(base, 2, "add", (20, 22));
+      print http.post!(base + "/rpc", rpc.notify("vm.ping", ())).body.length();
+      print call!(base, 3, "nope", ());
+    done work;
+    print "never";
+  recover
+    print "client: {$error.message}";
+    server.close();
+  return;
+end f11_rpc_roundtrip;
+/*@expect
+{
+  "stdout": [
+    "pong",
+    "42",
+    "0",
+    "client: rpc: -32601 method not found: nope"
+  ]
+}
+*/

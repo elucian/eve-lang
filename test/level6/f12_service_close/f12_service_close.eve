@@ -1,0 +1,32 @@
+# a service with no count runs until its listener is closed; close wakes the pending accept (F-NET-02, D-189)
+** spec: library/net.md#waiting
+primary aspect f12_service_close is
+  from lib use (http, route, service);
+  async procedure run_server(server: Listener, routes: Any) is
+    service.serve(server, routes, 0);
+  return;
+  process main is
+    new routes := (
+      route.get("/hello", (req, p) => (route.text("hello"))),
+    );
+    new server := net.listen!("127.0.0.1", 0);
+    new base := "http://127.0.0.1:{server.port()}";
+    work: job
+    do
+      spawn run_server(server, routes);
+      print http.get!(base + "/hello").body;
+      server.close();
+    done work;
+    print "done";
+  recover
+    print "err: {$error.message}";
+  return;
+end f12_service_close;
+/*@expect
+{
+  "stdout": [
+    "hello",
+    "done"
+  ]
+}
+*/

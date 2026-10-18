@@ -37,6 +37,9 @@ pub const Listen = struct {
     server: net.Server,
     open: bool = true,
     port: u16 = 0,
+    /// An `accept!` waits on a helper thread; `close()` must not free the socket under it (Zig panics) but wake it.
+    pending: bool = false,
+    closing: bool = false,
 };
 
 // @eve-impl run a blocking call without stopping the other tasks: in a run with tasks, on a helper thread that is polled
@@ -194,13 +197,31 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
         const l = listenOf(it, o);
         if (eql(u8, name, "port")) return .{ .int = l.port };
         if (eql(u8, name, "close")) {
-            if (l.open) l.server.deinit(io);
-            l.open = false;
+            if (!l.open or l.closing) return .nil;
+            if (!l.pending) {
+                l.server.deinit(io);
+                l.open = false;
+                return .nil;
+            }
+            // @eve-impl a listener with an accept in flight: ask it to end, and wake it with a connection to ourselves; the
+            // accept! call frees the socket when it returns (closing the socket under the helper thread panics in Zig 0.16)
+            l.closing = true;
+            if (net.IpAddress.parse("127.0.0.1", l.port)) |addr| {
+                if (addr.connect(io, .{ .mode = .stream })) |wake| wake.close(io) else |_| {}
+            } else |_| {}
             return .nil;
         }
         if (eql(u8, name, "accept!")) {
-            if (!l.open) return it.failWith(err_io, "accept!: the listener is closed", .{});
+            if (!l.open or l.closing) return it.failWith(err_io, "accept!: the listener is closed", .{});
+            l.pending = true;
             const got = try offload(it, net.Server.AcceptError!net.Stream, acceptNow, AcceptCtx{ .server = &l.server, .io = io });
+            l.pending = false;
+            if (l.closing) {
+                if (got) |extra| extra.close(io) else |_| {}
+                l.server.deinit(io);
+                l.open = false;
+                return it.failWith(err_io, "accept!: the listener is closed", .{});
+            }
             const stream = got catch |e| return it.failWith(err_io, "accept!: {s}", .{@errorName(e)});
             return try newSocket(it, stream, "client");
         }

@@ -103,7 +103,7 @@ The work that turns "a folder with two drafts" into a real library:
 | M0 | audit (section 4), Q-064 answered | `plan/library-audit.md` committed |
 | M1 | registry (section 3) and signature files of the kept modules | all levels pass; `bmark --check` ok; `eve --doc` lists the 8 modules |
 | M2 **done 2026-10-18** | S1 `crypto`, S6 `os`, E6 `config`, E11 `test`, the string functions (G-7); `traits` were already in the language (spec only); `gz` postponed (TD-24) | `f03_test_module`, `f04_crypto`, `f05_os`, `f08_config`, `a86`, `a87` |
-| M3 | S2 `net`, S8 http primitives, E2 `rpc`, E1 `route`/`service` | `f08_route_hello`, `f09_rpc_roundtrip` (client and server projects on localhost); finishes F-NET-02 and F-STR-08 |
+| M3 **done 2026-10-18** | S2 `net`, `http` (in Eve, not Zig: measured, TD-30), E2 `rpc`, E1 `route`/`service` | `f09_net`, `f10_route_hello`, `f11_rpc_roundtrip`, `f12_service_close`, benchmark `p6e` |
 | M4 | S3 `ws`, S4 `ewp`, E4 `remote`, E10 `streams` | `f10_ws_stream`, `f11_ewp_resume`, `f12_remote_apply` |
 | M5 (**level 7**, D-189) | S5 `keyring`, S12 `oidc`, E5 `auth`, E3 `machines` | `f13_login_two_machines` (the exit criterion of level 6: one by single sign-on, one by token, reconnect from the keyring) |
 | M6 | E7 `jobs`, E8 `log`, E9 `pager`, S11 `regex` | `f14_jobs`, `f15_pager_1m_rows`, `f16_log_follow` |
@@ -183,3 +183,11 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 - Done: `http` (Request, HttpResponse, `read_request!`, `respond`, `get!`, `post!`), `route` (route table, patterns with `{name}`, `Reply`, 404/405/500) and `service` (`handle`, `serve`), all in Eve over `net`; test `f10_route_hello` runs a server with five routes and a client in one script (`spec/library/http.md`, `route.md`). The `recover` of a function (D-192) is what makes a failing handler a 500.
 - Found: G-8 (a module member named like a prelude module hides it), G-9, and again G-6 (`method`). Debt: TD-29, TD-30.
 - Left in M3: the exit test with a machine on one port and a client project on another (`f11_two_machines`), the performance benchmark `p6e`, and the status marks of F-NET-02 and F-STR-08 in `plan/version_map.md`.
+
+## 16. Round-up of M3 (2026-10-18)
+
+- **Done:** `net` (Zig), `json.parse/text/valid`, `rpc`, `http`, `route`, `service` (Eve), `recover` in functions (D-192). A server with routes and a client run as tasks of one script (`f10`), JSON-RPC 2.0 goes over HTTP between them (`f11`), a service ends when its listener is closed (`f12`). 399 of 399 tests pass.
+- **Decision of the session:** `http` stayed in Eve. The benchmark `p6e_http_requests` (300 requests) takes 0.54 s in Eve against 0.90 s for the Python twin in the bmark run; the first version, which polled with sleeps, took 7 s (24 ms a request on Windows) and was replaced by the scheduler state `io` and a wake-up from the helper thread.
+- **Not done:** the exit test with two machines (`f13`, needs `machines`, level 7 login), keep-alive and one task for each connection (TD-29, M4), time-outs (TD-27), `eve --api` (F-TLS-15).
+- **Gaps found:** G-4 (closed by D-192), G-5, G-6, G-7 (closed), G-8, G-9; questions open for the author: Q-066, D-192 (2) to (4), G-8.
+- **Next, M4:** `ws` (WebSocket framing), `ewp` (framed protocol, credit, resume), `remote` (apply with deadline and idempotency key), `streams`; spec first.
