@@ -32,7 +32,7 @@ A signature file is documentation and the source of `eve --doc` and `help`; the 
 2. the folders of `$EVE_LIB_PATH`;
 3. the `lib/` of the project.
 
-A project module cannot shadow a standard module by its name; it needs an alias in `use` (test `c03_import_alias`). The implicit imports are a fixed, versioned list: `io`, `exception` (and `traits` from level 6).
+A project module cannot shadow a standard module by its name; it needs an alias in `use` (test `c03_import_alias`). The implicit imports are a fixed, versioned list: `io`, `exception` ; the traits `Iterable`, `Stream`, `Comparable` and `Printable` are part of the language, see `../syntax/declarations.md#traits-and-generic-classes`.
 
 ## Version
 
@@ -45,7 +45,9 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | `io`, `exception` | F-LIB-01 | in the interpreter; signature files | (this page) |
 | `fs`, `csv`, `json`, `txt`, `time`, `secret`, `database`, `checkpoint` | F-DAT-xx | implemented (level 5); signature files at level 6 | `data-language.md`, `database.md` |
 | `crypto`, `os` | F-LIB-10, F-LIB-07 | implemented (M2, 2026-10-18) | [crypto.md](crypto.md), [os.md](os.md) |
-| `regex`, `gz` | F-LIB-09 | planned (M2, M6) | to write |
+| string functions (`trim`, `find`, `replace`, slice, ...) | F-LIB-03 | implemented (2026-10-18, G-7) | [strings.md](strings.md) |
+| `regex` | F-LIB-03 | planned (M6) | to write |
+| `gzip` (module; the readers already inflate `.gz`) | F-LIB-09 | postponed (TD-24) | |
 | `net`, `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M3, M4) | to write |
 | `keyring`, `oidc`, `auth` | F-NET-07 | **level 7** (D-189) | |
 | outbound TLS in `http` | F-DAT-02 | **level 9, backlog** (D-189) | |
@@ -55,4 +57,4 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | Module | Feature | State | Page |
 |---|---|---|---|
 | `test` | F-LIB-12 | implemented (M2, 2026-10-18) | [test.md](test.md) |
-| `config`, `traits` | F-TLS-12 | planned (M2) | to write |
+| `config` | F-TLS-12 | implemented (M2, 2026-10-18) | [config.md](config.md) |

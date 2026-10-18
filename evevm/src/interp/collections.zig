@@ -299,7 +299,22 @@ pub fn indexOf(it: *Interp, obj: Value, args: []const *const Node) Signal!Value 
         .str => |s| {
             const items = try it.iterate(obj);
             const ix = try it.evalIdx(args[0], @intCast(items.len));
-            _ = s;
+            // @eve-impl a range on a string: the substring of runes lo..hi, a copy (a string is immutable)
+            // @spec spec/library/strings.md#slice
+            // @feature F-LIB-03
+            // @test test/level1/a86_string_slice
+            if (ix == .rng) {
+                const lo = ix.rng.lo;
+                const hi = ix.rng.hi;
+                if (lo < 1 or hi > items.len or lo > hi + 1) return it.failWith(err_index, "Range {d}..{d} is out of range 1..{d}", .{ lo, hi, items.len });
+                var start: usize = 0;
+                var rune: usize = 1;
+                var pos: usize = 0;
+                while (pos < s.len and rune < lo) : (rune += 1) pos += std.unicode.utf8ByteSequenceLength(s[pos]) catch 1;
+                start = pos;
+                while (pos < s.len and rune <= hi) : (rune += 1) pos += std.unicode.utf8ByteSequenceLength(s[pos]) catch 1;
+                return try it.newStr(s[start..@min(pos, s.len)]);
+            }
             if (ix != .one or ix.one < 1 or ix.one > items.len) return it.failWith(err_index, "Index is out of range 1..{d}", .{items.len});
             return items[@intCast(ix.one - 1)];
         },

@@ -14,3 +14,4 @@ One line per gap: what was missing or wrong, found by which module, where it sho
 **answer** Improve DataMap with proper methods.
 - **G-6** `method` is a reserved word, so it can not be a parameter name (`rpc.request(id, method, params)` became `name`). Contextual keywords (D-116) would allow it. Low priority.
 **answer** Enable contextual keywords.
+- **G-7** *(found 2026-10-18 by `config`)* `String` had only `split`, `length`, `count` and the single-rune index: no slice `s[a..b]` (the spec says a string is indexed by runes and takes ranges), no `trim`, `upper`, `lower`, `starts_with`, `ends_with`, `contains`, `find`, `replace`. Closed by `spec/library/strings.md` and the VM on 2026-10-18 (tests a86, a87); Q-066 stays open for the regex reading.

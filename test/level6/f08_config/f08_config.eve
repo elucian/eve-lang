@@ -1,0 +1,49 @@
+# the standard module config, in Eve: key = value files into a DataMap (F-TLS-12, D-189)
+** spec: library/config.md
+primary aspect f08_config is
+  from lib use (config);
+
+  process main is
+    new cfg := config.parse("# the machine\ndomain = \"localhost\"\nipc_port = 4042\n\n  web=web  \nverbose = true\nquiet = false\nwidth = -3\nbroken line\n= nokey\nport = 1\nport = 2\n");
+    print cfg["domain"];
+    print cfg["ipc_port"] + 1;
+    print cfg["web"];
+    print cfg["verbose"];
+    print cfg["quiet"];
+    print cfg["width"];
+    print cfg["port"];
+    print cfg.length();
+    print config.has(cfg, "web");
+    print config.has(cfg, "nope");
+    print config.get(cfg, "ipc_port", 0);
+    print config.get(cfg, "http_port", 8042);
+    fs.write("f08_data.cfg", "name = \"eve\"\nretries = 3\n");
+    new file := config.read!("f08_data.cfg");
+    print "{file["name"]} {file["retries"]}";
+    fs.remove("f08_data.cfg");
+    config.read!("no_such_file.cfg");
+    print "never";
+  recover
+    print "read failed";
+  return;
+end f08_config;
+/*@expect
+{
+  "stdout": [
+    "localhost",
+    "4043",
+    "web",
+    "True",
+    "False",
+    "-3",
+    "2",
+    "7",
+    "True",
+    "False",
+    "4042",
+    "8042",
+    "eve 3",
+    "read failed"
+  ]
+}
+*/

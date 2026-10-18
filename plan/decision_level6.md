@@ -858,3 +858,13 @@ Read as rules (the details marked *proposed* are the model's completions; the sp
 - (5) The implementation: parser (`routineOf`, the handler is `kids[4]`), interpreter (`runRoutine`). Tests: level 2 `b55` to `b59`, level 3 `c34` to `c36`. Feature F-STR-11. Consequence: `rpc.dispatch` (`lib/rpc.eve`) turns a handler error into a `-32603` answer; G-4 and TD-13 are closed by it.
 
 **Please confirm or correct (2) to (4).**
+
+## Q-066 String functions: plain text or regular expression (2026-10-18)
+
+The tutorial (`strings.html`, String functions) lists `String.find(pattern: Regex)`, `String.count(pattern)` and `String.replace(pattern, cargo)`, and says a string literal that starts with `/` is a regex literal. The standard library needs `trim`, `upper`, `lower`, `starts_with`, `ends_with`, `contains`, `find` and `replace` now (config files, routes, headers), before the regex engine (S11) exists, and a path such as `"/data"` must not be read as a pattern. `spec/library/strings.md` takes the **plain text** reading for these functions and keeps the regex forms for the module `regex` (`regex.find`, `regex.replace`, `regex.count`) and the operator `=~`.
+
+- (a) Plain text for the string methods, regex in the module `regex`: confirm or change.
+- (b) `find` gives `0` when there is no occurrence (proposed); or an optional/`Null` result.
+- (c) `upper` and `lower` ASCII only for now; full Unicode case mapping later.
+
+**Answer:**

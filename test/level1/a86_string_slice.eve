@@ -1,0 +1,31 @@
+# a string takes a range as index: s[a..b] is the substring of runes a to b, a copy (expressions.md, D-049)
+** spec: library/strings.md#slice
+primary aspect a86_string_slice is
+  process main is
+    new s := "abcdef";
+    print s[2..4];
+    print s[1..1];
+    print s[3..-1];
+    print s[1..-1];
+    print "αβγδ"[2..3];
+    print s[3..2].length();
+    print s[2..4].length();
+    print s[4..9];
+  recover
+    print "range: {$error.message}";
+  return;
+end a86_string_slice;
+/*@expect
+{
+  "stdout": [
+    "bcd",
+    "a",
+    "cdef",
+    "abcdef",
+    "βγ",
+    "0",
+    "3",
+    "range: Range 4..9 is out of range 1..6"
+  ]
+}
+*/

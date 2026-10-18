@@ -25,6 +25,7 @@ const Func = interp.Func;
 const Var = interp.Var;
 const Arg = interp.Arg;
 const err_parse = interp.err_parse;
+const err_argument = interp.err_argument;
 
 // ---- calls ----------------------------------------------------------------------------
 
@@ -266,6 +267,7 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
             else => return it.fail("{s} has no length", .{Interp.typeName(recv)}),
         } };
     }
+    if (recv == .str) if (try stringFunction(it, recv.str, name, args)) |v| return v;
     if (eql(u8, name, "split") and recv == .str and args.len == 1) {
         const sep = try it.text(try it.eval(args[0]));
         const out = try it.h.make(List, .{});
@@ -450,6 +452,47 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     }
     if (res.len == 1) return s.find(res[0].text).?.value;
     return .nil;
+}
+
+// @eve-fn String.trim, String.trim_start, String.trim_end, String.upper, String.lower, String.starts_with, String.ends_with
+// @eve-fn String.contains, String.find, String.replace
+// @spec spec/library/strings.md#functions
+// @feature F-LIB-03
+// @decision D-189
+// @test test/level1/a87_string_functions
+// @invariant plain text, not a pattern, even when the argument starts with `/` (Q-066); `find` counts runes from 1, 0 = none
+/// A string function of the library, or null when `name` is not one.
+fn stringFunction(it: *Interp, s: []const u8, name: []const u8, args: []const *const Node) Signal!?Value {
+    const eql = std.mem.eql;
+    const white = [_]u8{ ' ', 9, 10, 13 }; // space, tab, LF, CR
+    if (args.len == 0) {
+        if (eql(u8, name, "trim")) return try it.newStr(std.mem.trim(u8, s, &white));
+        if (eql(u8, name, "trim_start")) return try it.newStr(std.mem.trimStart(u8, s, &white));
+        if (eql(u8, name, "trim_end")) return try it.newStr(std.mem.trimEnd(u8, s, &white));
+        if (eql(u8, name, "upper") or eql(u8, name, "lower")) {
+            const out = try it.t.alloc(u8, s.len);
+            for (s, 0..) |c, i| out[i] = if (name[0] == 'u') std.ascii.toUpper(c) else std.ascii.toLower(c);
+            return try it.newStr(out);
+        }
+        return null;
+    }
+    const one = eql(u8, name, "starts_with") or eql(u8, name, "ends_with") or eql(u8, name, "contains") or eql(u8, name, "find");
+    const two = eql(u8, name, "replace");
+    if (!(one and args.len == 1) and !(two and args.len == 2)) return null;
+    const t = try it.eval(args[0]);
+    if (t != .str) return it.failWith(err_argument, "{s}: the argument is a String", .{name});
+    if (one) {
+        if (eql(u8, name, "starts_with")) return .{ .bool = std.mem.startsWith(u8, s, t.str) };
+        if (eql(u8, name, "ends_with")) return .{ .bool = std.mem.endsWith(u8, s, t.str) };
+        const at = std.mem.indexOf(u8, s, t.str);
+        if (eql(u8, name, "contains")) return .{ .bool = at != null };
+        const byte = at orelse return .{ .int = 0 };
+        return .{ .int = @intCast((std.unicode.utf8CountCodepoints(s[0..byte]) catch byte) + 1) };
+    }
+    const repl = try it.eval(args[1]);
+    if (repl != .str) return it.failWith(err_argument, "replace: the new text is a String", .{});
+    if (t.str.len == 0) return it.failWith(err_argument, "replace: the text to replace is empty", .{});
+    return try it.newStr(try std.mem.replaceOwned(u8, it.t, s, t.str, repl.str));
 }
 
 // Zig tip: `construct` relies on the same Zig feature as `define` above: see the tip there.

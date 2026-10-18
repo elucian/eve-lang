@@ -102,7 +102,7 @@ The work that turns "a folder with two drafts" into a real library:
 |---|---|---|
 | M0 | audit (section 4), Q-064 answered | `plan/library-audit.md` committed |
 | M1 | registry (section 3) and signature files of the kept modules | all levels pass; `bmark --check` ok; `eve --doc` lists the 8 modules |
-| M2 | S1 `crypto`, S6 `os`, S10 `gz`, E6 `config`, E14 `traits`, E11 `test` | `f03_crypto`, `f04_os`, `f05_config`, `f06_traits`, `f07_test_module` |
+| M2 **done 2026-10-18** | S1 `crypto`, S6 `os`, E6 `config`, E11 `test`, the string functions (G-7); `traits` were already in the language (spec only); `gz` postponed (TD-24) | `f03_test_module`, `f04_crypto`, `f05_os`, `f08_config`, `a86`, `a87` |
 | M3 | S2 `net`, S8 http primitives, E2 `rpc`, E1 `route`/`service` | `f08_route_hello`, `f09_rpc_roundtrip` (client and server projects on localhost); finishes F-NET-02 and F-STR-08 |
 | M4 | S3 `ws`, S4 `ewp`, E4 `remote`, E10 `streams` | `f10_ws_stream`, `f11_ewp_resume`, `f12_remote_apply` |
 | M5 (**level 7**, D-189) | S5 `keyring`, S12 `oidc`, E5 `auth`, E3 `machines` | `f13_login_two_machines` (the exit criterion of level 6: one by single sign-on, one by token, reconnect from the keyring) |
@@ -165,3 +165,10 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 - Done: `json.parse`, `json.text`, `json.valid` (native, `spec/library/data-language.md`, test `f06_json_text`); the Eve module `rpc` (`request`, `notify`, `reply`, `failure`, `dispatch`, `result_of`; `spec/library/rpc.md`, test `f07_rpc`).
 - Found: G-4 (an error can not be caught in Eve code; Q-065), G-5 (thin collection methods), G-6 (`method` reserved). Debt: TD-13, TD-14.
 - Next steps of M3: `net` (TCP client and server, Zig; spec first), the HTTP primitives (S8), then `route` and `service` in Eve, whose handler design waits for Q-065.
+
+## 13. Round-up of M2 (2026-10-18)
+
+- **Done:** `test` (Eve), `crypto` and `os` (Zig), `config` (Eve, `f08_config`), the string functions and the string slice in the VM (`a86_string_slice`, `a87_string_functions`; found missing while writing `config`, G-7), `json.parse/text/valid` and `rpc` (M3 step 1), `recover` in a function (D-192).
+- **Not done, with reason:** `gz` as a module (the readers already inflate `.gz`; a module with `gzip.open!` and writers is TD-24); `traits` needs no module, they are part of the language and `registry.md` points to `declarations.md`; AEAD and password hashing wait for login (level 7, TD-5).
+- **Open questions for the author:** Q-066 (string functions are plain text; regex in the module `regex`), D-192 (2) to (4) to confirm, Q-064 answered.
+- **Lesson:** each Eve module written so far found a gap in the language or the VM (G-1, G-4 to G-7). M3 will find more; the rule stays: fix the language, do not work around it.

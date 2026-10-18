@@ -1,0 +1,56 @@
+# string functions: trim, upper, lower, starts_with, ends_with, contains, find, replace (strings.md, G-7)
+** spec: library/strings.md#functions
+primary aspect a87_string_functions is
+  process main is
+    new s := "  Eve, the language  ";
+    print "[{s.trim()}]";
+    print "[{s.trim_start()}]";
+    print "[{s.trim_end()}]";
+    print s.trim().upper();
+    print s.trim().lower();
+    print s.trim().starts_with("Eve");
+    print s.trim().starts_with("eve");
+    print s.trim().ends_with("language");
+    print s.contains("the");
+    print s.contains("xyz");
+    print s.trim().find("the");
+    print s.find("zzz");
+    print "αβγ".find("γ");
+    print "a.b.c".replace(".", "-");
+    print "aaa".replace("aa", "b");
+    print "path/data".starts_with("path");
+    print "/data".starts_with("/");
+    print "x".contains("");
+    print "port = 8042".split("=")[2].trim();
+    "abc".replace("", "x");
+    print "never";
+  recover
+    print "error: {$error.message}";
+  return;
+end a87_string_functions;
+/*@expect
+{
+  "stdout": [
+    "[Eve, the language]",
+    "[Eve, the language  ]",
+    "[  Eve, the language]",
+    "EVE, THE LANGUAGE",
+    "eve, the language",
+    "True",
+    "False",
+    "True",
+    "True",
+    "False",
+    "6",
+    "0",
+    "3",
+    "a-b-c",
+    "ba",
+    "True",
+    "True",
+    "True",
+    "8042",
+    "error: replace: the text to replace is empty"
+  ]
+}
+*/

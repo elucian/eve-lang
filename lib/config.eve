@@ -1,0 +1,48 @@
+** Read key = value files (eve.cfg, evedb.cfg, eve.env) into a DataMap: quoted text, whole numbers, true and false.
+** @spec spec/library/config.md  @feature F-TLS-12  @decision D-189  @tests test/level6/f08_config
+module config is
+  export (parse, read!, get, has);
+
+  ** The Eve value of the text after the equal sign: "text" is a String, 42 an Integer, true and false a Logic.
+  function value_of(raw: String) => (@result: Any) is
+    let result := raw;
+    if raw.length() >= 2 and raw.starts_with("\"") and raw.ends_with("\"") do
+      let result := raw[2..-2];
+    else if raw =~ "/^-?[0-9]+$/" do
+      let result := Integer.parse(raw);
+    else if raw == "true" do
+      let result := True;
+    else if raw == "false" do
+      let result := False;
+    done;
+  return;
+
+  ** The settings of a text: one key = value for each line.
+  function parse(text: String) => (@result: Any) is
+    new settings := {:};
+    for line in text.split("\n") do
+      new item := line.trim();
+      new at := item.find("=");
+      if item.length() > 0 and not item.starts_with("#") and at > 1 do
+        let settings[item[1..at - 1].trim()] := value_of(item[at + 1..-1].trim());
+      done;
+    done;
+    let result := settings;
+  return;
+
+  ** The settings of a file; a missing file is the error $err_file.
+  function read!(path: String) => (@result: Any) is
+    let result := parse(fs.read!(path));
+  return;
+
+  ** Is the key in the settings.
+  function has(settings: Any, key: String) => (@result: Logic) is
+    let result := key in settings;
+  return;
+
+  ** The value of the key, or the default when the key is not there.
+  function get(:T)(settings: Any, key: String, default: T) => (@result: T) is
+    let result := default;
+    let result := settings[key] if (key in settings);
+  return;
+end config;
