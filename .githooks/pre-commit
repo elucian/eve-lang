@@ -5,3 +5,10 @@ if git diff --cached --name-only | grep -q "^spec/lexical/keywords.json$"; then
   python script/genkeywords.py || exit 1
   echo "pre-commit: tutorial/js/eve1.js refreshed; commit it with: git -C tutorial add projects/eve/js/eve1.js"
 fi
+
+# the editors read the same words: evetx (keywords.zig) and the Zed grammar (tools/tree-sitter-eve/grammar.js)
+if git diff --cached --name-only | grep -q "^spec/lexical/keywords.json$"; then
+  python evetx/gen_keywords.py && python tools/zed-eve/gen_zed.py || exit 1
+  git add evetx/src/keywords.zig tools/tree-sitter-eve/grammar.js tools/tree-sitter-eve/queries/highlights.scm tools/zed-eve/languages/eve/highlights.scm
+  echo "pre-commit: evetx keywords and the Zed grammar refreshed; run 'npx tree-sitter-cli generate' in tools/tree-sitter-eve to rebuild src/parser.c"
+fi
