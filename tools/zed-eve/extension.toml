@@ -10,5 +10,5 @@ repository = "https://github.com/sagecode/eve-lang"
 # `repository` is a local clone for development; for publishing, give the grammar its own public repository and its commit.
 [grammars.eve]
 repository = "file:///C:/Users/eluci/sage-code/eve-lang"
-rev = "REV"
+rev = "f067087a1a62431aa763f1099d453de0a5ac3d5d"
 path = "tools/tree-sitter-eve"
