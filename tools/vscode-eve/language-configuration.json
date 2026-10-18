@@ -1,0 +1,93 @@
+{
+  "comments": {
+    "lineComment": "**",
+    "blockComment": [
+      "/*",
+      "*/"
+    ]
+  },
+  "brackets": [
+    [
+      "(",
+      ")"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "{",
+      "}"
+    ]
+  ],
+  "autoClosingPairs": [
+    {
+      "open": "(",
+      "close": ")"
+    },
+    {
+      "open": "[",
+      "close": "]"
+    },
+    {
+      "open": "{",
+      "close": "}"
+    },
+    {
+      "open": "\"",
+      "close": "\"",
+      "notIn": [
+        "string",
+        "comment"
+      ]
+    },
+    {
+      "open": "'",
+      "close": "'",
+      "notIn": [
+        "string",
+        "comment"
+      ]
+    },
+    {
+      "open": "/*",
+      "close": " */",
+      "notIn": [
+        "string"
+      ]
+    }
+  ],
+  "surroundingPairs": [
+    [
+      "(",
+      ")"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "{",
+      "}"
+    ],
+    [
+      "\"",
+      "\""
+    ],
+    [
+      "'",
+      "'"
+    ]
+  ],
+  "wordPattern": "[$@]?[A-Za-z_][A-Za-z0-9_]*!?",
+  "indentationRules": {
+    "increaseIndentPattern": "(\\bis|\\bdo|\\bthen|\\belse|^\\s*initialize|^\\s*recover|^\\s*finalize)\\s*(\\*\\*.*)?$",
+    "decreaseIndentPattern": "^\\s*(done|return|end|else|recover|finalize)\\b"
+  },
+  "folding": {
+    "markers": {
+      "start": "^\\s*(/\\*|(\\*\\*)",
+      "end": "(\\*/|\\*\\*))"
+    }
+  }
+}

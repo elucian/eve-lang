@@ -1,0 +1,32 @@
+{
+  "name": "eve-language",
+  "displayName": "Eve Language",
+  "description": "Syntax colors, snippets and editing rules for the Eve language (.eve files).",
+  "version": "0.1.0",
+  "publisher": "sage-code",
+  "license": "UNLICENSED",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Programming Languages", "Snippets"],
+  "keywords": ["eve", "etl", "scripting"],
+  "repository": { "type": "git", "url": "https://github.com/sagecode/eve-lang" },
+  "contributes": {
+    "languages": [
+      {
+        "id": "eve",
+        "aliases": ["Eve", "eve"],
+        "extensions": [".eve"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "eve",
+        "scopeName": "source.eve",
+        "path": "./syntaxes/eve.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      { "language": "eve", "path": "./snippets/eve.json" }
+    ]
+  }
+}

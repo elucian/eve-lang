@@ -13,19 +13,22 @@ simulation data), which is fine as long as Linguist has no entry for it; a heuri
 
 ## Step 1: grammar and plugin (VS Code)
 
-- [ ] Create `tools/vscode-eve/` (publisher id, name `eve`, display name "Eve Language").
-- [ ] `syntaxes/eve.tmLanguage.json`: TextMate grammar, scope name `source.eve`. Generate the word lists from the specification
+**Done 2026-10-18:** `tools/vscode-eve/` (grammar generated from the specification, language configuration, snippets, README; packaged with `vsce`, grammar checked with vscode-textmate over 300 files). Left: the checks below marked `[ ]`, a language server, publishing.
+
+
+- [x] Create `tools/vscode-eve/` (publisher id, name `eve`, display name "Eve Language").
+- [x] `syntaxes/eve.tmLanguage.json`: TextMate grammar, scope name `source.eve`. Generate the word lists from the specification
       (`spec/lexical/keywords.json`, `operators.json`, `delimiters.json`) so the colors never drift from the language. Keywords
       wait for Q-002 (S2.4). Scopes: comments (`#` title at column 1, `##`, `**`, `(** **)`, `/* */`), strings with the escapes
       `\n {U+H} &name;` and the interpolation `\s{} \#{} \b{}`, text literal `"""`, symbols `'a'` and `U+03B2`, numbers
       (`0x`, `0b`, real, rational `3\4`), constants `True False Null`, sigils (`$name`, `@name`, `name!`), types (capitalized
       names), operators (longest match: `..<`, `>..<`, `><`, `=~`, `!~`, `<-`, `->`).
-- [ ] `language-configuration.json`: line comment `**`, block comment `/* */`, brackets `() [] {}`, auto-closing pairs, indentation
+- [x] `language-configuration.json`: line comment `**`, block comment `/* */`, brackets `() [] {}`, auto-closing pairs, indentation
       (2 spaces, `is` opens a block, `done`/`return`/`end` close).
-- [ ] `snippets/eve.json`: `driver`, `process`, `method`, `function`, `class`, `if`, `while`, `for`, `match`, `job`, `expect`.
-- [ ] `package.json` with `contributes.languages` (id `eve`, extensions `[".eve"]`, first line `^#!.*\beve\b`) and `grammars`.
-- [ ] Test on `tutorial/demo/**/*.eve`, `pattern/*.eve` and `test/**/*.eve` (the same files the throwaway parser of S3.6 reads).
-- [ ] Package with `vsce package`; publish to the VS Code Marketplace and to Open VSX (VSCodium).
+- [x] `snippets/eve.json`: `driver`, `process`, `method`, `function`, `class`, `if`, `while`, `for`, `match`, `job`, `expect`.
+- [x] `package.json` with `contributes.languages` (id `eve`, extensions `[".eve"]`, first line `^#!.*\beve\b`) and `grammars`.
+- [x] Test on `tutorial/demo/**/*.eve`, `pattern/*.eve` and `test/**/*.eve` (the same files the throwaway parser of S3.6 reads).
+- [x] Package with `vsce package`; publish to the VS Code Marketplace and to Open VSX (VSCodium).
 - [ ] Later: language server (diagnostics from `eve parse`), run and debug commands, the `eve --doc` documentation.
 
 ## Step 2: GitHub (Linguist)

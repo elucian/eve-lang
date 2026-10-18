@@ -1,0 +1,92 @@
+{
+  "primary aspect": {
+    "prefix": "primary",
+    "body": ["# ${1:title}", "primary aspect ${2:name} is", "  process main is", "    $0", "  return;", "end ${2:name};"],
+    "description": "A primary aspect with its main process"
+  },
+  "process": {
+    "prefix": "process",
+    "body": ["process ${1:main} is", "  $0", "return;"],
+    "description": "A process"
+  },
+  "function": {
+    "prefix": "function",
+    "body": ["function ${1:name}(${2:x: Integer}) => (@result: ${3:Integer}) is", "  $0", "return;"],
+    "description": "A function with a result"
+  },
+  "procedure": {
+    "prefix": "procedure",
+    "body": ["procedure ${1:name}(${2:x: Integer}) is", "  $0", "return;"],
+    "description": "A procedure (no result)"
+  },
+  "function with recover": {
+    "prefix": "functionrecover",
+    "body": ["function ${1:name}(${2:x: Integer}) => (@result: ${3:Integer}) is", "  $0", "recover", "  let result := ${4:0};", "return;"],
+    "description": "A function with a recover region (D-192)"
+  },
+  "method": {
+    "prefix": "method",
+    "body": ["public method ${1:name}(@self${2}) => (@result: ${3:Integer}) is", "  $0", "return;"],
+    "description": "A public method of a class"
+  },
+  "class": {
+    "prefix": "class",
+    "body": ["class ${1:Name} = {${2:x: Integer}} <: Object is", "  $0", "end ${1:Name};"],
+    "description": "A class"
+  },
+  "module": {
+    "prefix": "module",
+    "body": ["# ${1:title}", "module ${2:name} is", "  export (${3});", "", "  $0", "end ${2:name};"],
+    "description": "A module with an export list"
+  },
+  "from use": {
+    "prefix": "from",
+    "body": "from ${1:lib} use (${2:name});",
+    "description": "Import names of a module"
+  },
+  "if": {
+    "prefix": "if",
+    "body": ["if ${1:condition} do", "  $0", "done;"],
+    "description": "if"
+  },
+  "if else": {
+    "prefix": "ifelse",
+    "body": ["if ${1:condition} do", "  $2", "else", "  $0", "done;"],
+    "description": "if with else"
+  },
+  "while": {
+    "prefix": "while",
+    "body": ["while ${1:condition} do", "  $0", "done;"],
+    "description": "while loop"
+  },
+  "for": {
+    "prefix": "for",
+    "body": ["for ${1:x} in ${2:items} do", "  $0", "done;"],
+    "description": "for loop"
+  },
+  "match": {
+    "prefix": "match",
+    "body": ["match ${1:value} do", "  when ${2:1} then", "    $0", "done;"],
+    "description": "match"
+  },
+  "job": {
+    "prefix": "job",
+    "body": ["${1:name}: job", "do", "  $0", "done ${1:name};"],
+    "description": "A job"
+  },
+  "recover": {
+    "prefix": "recover",
+    "body": ["recover", "  print \"error: {\\$error.message}\";"],
+    "description": "A recover region of a process"
+  },
+  "expect": {
+    "prefix": "expect",
+    "body": "expect ${1:condition};",
+    "description": "expect"
+  },
+  "print": {
+    "prefix": "print",
+    "body": "print \"${1:text}\";",
+    "description": "print a line"
+  }
+}

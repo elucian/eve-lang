@@ -8,7 +8,7 @@ fi
 
 # the editors read the same words: evetx (keywords.zig) and the Zed grammar (tools/tree-sitter-eve/grammar.js)
 if git diff --cached --name-only | grep -q "^spec/lexical/keywords.json$"; then
-  python evetx/gen_keywords.py && python tools/zed-eve/gen_zed.py || exit 1
-  git add evetx/src/keywords.zig tools/tree-sitter-eve/grammar.js tools/tree-sitter-eve/queries/highlights.scm tools/zed-eve/languages/eve/highlights.scm
+  python evetx/gen_keywords.py && python tools/zed-eve/gen_zed.py && python tools/vscode-eve/gen_vscode.py || exit 1
+  git add evetx/src/keywords.zig tools/tree-sitter-eve/grammar.js tools/tree-sitter-eve/queries/highlights.scm tools/zed-eve/languages/eve/highlights.scm tools/vscode-eve/syntaxes/eve.tmLanguage.json tools/vscode-eve/language-configuration.json
   echo "pre-commit: evetx keywords and the Zed grammar refreshed; run 'npx tree-sitter-cli generate' in tools/tree-sitter-eve to rebuild src/parser.c"
 fi

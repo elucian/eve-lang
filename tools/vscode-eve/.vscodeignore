@@ -1,0 +1,4 @@
+.vscodeignore
+gen_vscode.py
+*.vsix
+node_modules/
