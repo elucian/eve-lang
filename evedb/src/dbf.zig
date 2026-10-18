@@ -27,7 +27,7 @@ pub const Error = error{ NotDbf, Damaged };
 // The name is a fixed array of 11 bytes (as in the file), padded with zeros; `nameSlice` gives the text part.
 /// One field (column) of a file.
 pub const Field = struct {
-    name: [11]u8 = [_]u8{0} ** 11,
+    name: [11]u8 = @splat(0),
     kind: u8 = 'C',
     length: u8 = 10,
     decimals: u8 = 0,
@@ -40,7 +40,7 @@ pub const Field = struct {
 
     // Zig tip: `setName` relies on the same Zig feature as `Field` above: see the tip there.
     pub fn setName(self: *Field, s: []const u8) void {
-        self.name = [_]u8{0} ** 11;
+        self.name = @splat(0);
         const n = @min(s.len, max_name);
         @memcpy(self.name[0..n], s[0..n]);
     }
@@ -196,7 +196,7 @@ pub const Writer = struct {
         std.mem.writeInt(u16, out.items[8..10], header_len, .little);
         std.mem.writeInt(u16, out.items[10..12], rec_len, .little);
         for (self.fields) |f| {
-            var d = [_]u8{0} ** 32;
+            var d: [32]u8 = @splat(0);
             @memcpy(d[0..11], &f.name);
             d[11] = f.kind;
             d[16] = f.length;

@@ -11,7 +11,7 @@ Status: **0.1-draft**, level 5 (version 0.4), first step of the machine and its 
 | runtime | `eve vm …`, or `eve` with a script or the options of this page | runs scripts, the REPL, the machine and its IPC door | `eve file.eve`, `eve -x f.eve`, `eve --listen`, `eve vm --api` |
 | compiler | `eve cp …` | checks, documents and compiles source files; makes projects; runs nothing | `eve cp --check f.eve`, `eve cp --doc lib lib/doc`, `eve cp project new shop` |
 | database | `eve db …` | the database commands (`database.md#admin-commands`), the stored procedures, the database door | `eve db serve --test`, `eve db sql shop "select 1"`, `eve db proc list` |
-| UI | `eve ux …` | the web door, the Workbench, the AI agents (ACP) | `eve ux start`, `eve ux status`, `eve ux stop` |
+| UI | `eve ux …` | the web door, the Workbench, the AI agents (ACP) | `eve ux start`, `eve ux status`, `eve ux stop` (any other rest of the line, `eve ux [folder]` or `eve -ux`, starts the native workbench `eveux`, D-193) |
 
 - Without one of the four words, `eve` keeps the meaning it has today: `eve file.eve`, `-x`, `--listen`, `-loc`, `-rem` belong to the runtime; `--check`, `--doc` and `project` are synonyms of `eve cp …`; `--serve start`, `stop`, `restart` and `status` are synonyms of `eve ux …`.
 - **A direct command** runs the parts it needs inside its own process and ends: `eve file.eve` compiles the script, runs it, and opens its databases in the same process.

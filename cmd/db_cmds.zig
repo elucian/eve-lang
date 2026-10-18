@@ -76,7 +76,7 @@ fn sqlCommand(ctx: *Context, args: []const []const u8) !void {
         ctx.status = exit_usage;
         return;
     }
-    const path = try a.dupeZ(u8, args[k]);
+    const path = try a.dupeSentinel(u8, args[k], 0);
     var db = sqlite.Db.open(path) catch {
         try ctx.out.print("error: cannot open {s}\n", .{args[k]});
         ctx.status = exit_no_input;
@@ -104,7 +104,7 @@ fn sqlCommand(ctx: *Context, args: []const []const u8) !void {
     const max_rows: usize = if (tsv) 5000 else 1000;
     for (pieces.items, 0..) |stmt_text, idx| {
         const out: *Io.Writer = if (last_only and idx + 1 < pieces.items.len) &discard.writer else ctx.out;
-        var st = db.prepare(try a.dupeZ(u8, stmt_text)) catch {
+        var st = db.prepare(try a.dupeSentinel(u8, stmt_text, 0)) catch {
             try ctx.out.print("error: {s}\n", .{db.errorMessage()});
             ctx.status = exit_syntax;
             return;
@@ -226,7 +226,7 @@ fn transferCommand(ctx: *Context, args: []const []const u8) !void {
         ctx.status = exit_usage;
         return;
     }
-    const db_path = try a.dupeZ(u8, args[1]);
+    const db_path = try a.dupeSentinel(u8, args[1], 0);
     const file = if (is_import) args[2] else args[3];
     const format = import_mod.formatOf(file) orelse {
         try ctx.out.print("error: {s}: the formats are .csv .txt .tsv .json .dbf (save a spreadsheet as CSV)\n", .{file});

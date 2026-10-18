@@ -61,7 +61,7 @@ pub fn openConnection(it: Host, name: []const u8) Signal!usize {
         return it.failWith(err_argument, "database.connect: '{s}' is not a sqlite:// connection; no other driver yet", .{url});
     if (std.fs.path.dirname(path)) |dir| Io.Dir.cwd().createDirPath(io, dir) catch {};
     const db = try it.arena().create(sqlite.Db);
-    db.* = sqlite.Db.open(try it.temp().dupeZ(u8, path)) catch
+    db.* = sqlite.Db.open(try it.temp().dupeSentinel(u8, path, 0)) catch
         return it.failWith(err_io, "DatabaseError: cannot open {s}", .{path});
     _ = db.exec("pragma foreign_keys = on") catch {};
     try checkMapping(it, name, db);
@@ -193,7 +193,7 @@ pub fn columnValue(it: Host, st: *sqlite.Stmt, col: u16, m: *const Node, class_n
 /// Run one statement with its parameters. A statement with columns is read into records of `cls`;
 /// without `cls` it must have none. Gives the rows, and the number of rows changed through `changed`.
 pub fn runStatement(it: Host, db: *sqlite.Db, sql: []const u8, params: []const Value, cls: ?*Class, changed: *i64) Signal!*List {
-    var st = db.prepare(try it.temp().dupeZ(u8, sql)) catch
+    var st = db.prepare(try it.temp().dupeSentinel(u8, sql, 0)) catch
         return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), sql });
     defer st.finalize();
     try bindAll(it, db, &st, params);
@@ -265,7 +265,7 @@ pub const SqlFn = struct {
 pub fn registerSqlFunction(it: Host, f: *value.Func) Signal!void {
     const b = state(it);
     const sf = try it.arena().create(SqlFn);
-    sf.* = .{ .it = it, .func = f, .name = try it.arena().dupeZ(u8, f.node.text) };
+    sf.* = .{ .it = it, .func = f, .name = try it.arena().dupeSentinel(u8, f.node.text, 0) };
     Heap.retain(.{ .func = f });
     try b.sql_funcs.append(it.arena(), sf);
     for (b.dbs.items) |db| if (db.handle != null) try addSqlFunction(it, db, sf);
@@ -392,7 +392,7 @@ pub fn connectionCall(it: Host, conn: *Object, name: []const u8, args: []const *
         const io = it.io() orelse return it.fail("script: no input/output handle", .{});
         const sql = Io.Dir.cwd().readFileAlloc(io, first, it.temp(), .limited(16 << 20)) catch |e|
             return it.failWith(err_file, "cannot read {s}: {s}", .{ first, @errorName(e) });
-        db.exec(try it.temp().dupeZ(u8, sql)) catch return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), first });
+        db.exec(try it.temp().dupeSentinel(u8, sql, 0)) catch return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), first });
         return .nil;
     }
     // Zig tip: `import(path, table)` is the call form of `eve db import` (D-184): the file is decoded into a columnar table and

@@ -47,7 +47,10 @@ pub fn build(b: *std.Build) void {
     // step below runs a command (`addSystemCommand`) that stops the eve programs of that folder, and `dependOn` makes
     // the copy wait for it. Compiling goes on in parallel; only the install waits. The same script is `eve --kill`.
     // `builtin.os.tag` is the system the build runs on (not the target), so other systems skip the step.
-    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", b.pathFromRoot("../script/stop_eve.ps1"), "-Bin", b.getInstallPath(.bin, "") });
+    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File" });
+    stop.addFileArg(b.path("../script/stop_eve.ps1"));
+    stop.addArg("-Bin");
+    stop.addFileArg(.{ .relative = .{ .base = .install_prefix, .sub_path = "bin" } });
     stop.has_side_effects = true;
     const install_exe = b.addInstallArtifact(exe, .{});
     if (@import("builtin").os.tag == .windows) install_exe.step.dependOn(&stop.step);
@@ -57,7 +60,7 @@ pub fn build(b: *std.Build) void {
     run_cmd.step.dependOn(b.getInstallStep());
     // Zig tip: `b.args` holds what the user typed after `--` on the command line, so
     // `zig build run -- ..\test` passes `..\test` to evetx.
-    if (b.args) |args| run_cmd.addArgs(args);
+    run_cmd.addPassthruArgs();
     b.step("run", "Run evetx").dependOn(&run_cmd.step);
 
     // @eve-impl `zig build test` in evetx/: the unit tests of the pure parts (the comment scanner of view.zig, grid, options)

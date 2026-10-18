@@ -338,7 +338,7 @@ pub fn evalArgs(it: *Interp, nodes: []const *const Node) Signal![]Arg {
 // parameter does not copy the value: it binds the parameter name to the caller's `*Var`.
 /// Bind the parameters of `params` in the current scope. `self_var` is the receiver of a method.
 pub fn bindParams(it: *Interp, params: []const *const Node, args: []const Arg, self_var: ?*Var) Signal!void {
-    var taken = [_]bool{false} ** 32;
+    var taken: [32]bool = @splat(false);
     if (args.len > taken.len) return it.fail("too many arguments", .{});
     var pos: usize = 0;
     for (params, 0..) |prm, k| {

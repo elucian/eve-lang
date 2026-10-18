@@ -14,6 +14,7 @@ const theme = @import("theme.zig");
 const grid = @import("grid.zig");
 const sqlstruct = @import("sqlstruct.zig");
 const text = @import("text.zig");
+const scan = @import("scan.zig");
 const keywords = @import("keywords.zig");
 
 const Style = theme.Style;
@@ -79,10 +80,10 @@ fn addHit(app: *App, win: Window, x: u16, y: u16, w: u16, h: u16, action: Action
 // Zig tip: The label is drawn between two spaces, and the same rectangle is registered as a hit.
 // `x + w` is the column after the button, so buttons can be placed one after another.
 // Zig tip: the label is padded with spaces on both sides to a fixed width, so a row of buttons has the same width for each.
-// `" " ** 40` is a string of 40 spaces made when the program is compiled; `[0..n]` takes the first n of them.
+// `repeat(" ", 40)` is a string of 40 spaces made when the program is compiled; `[0..n]` takes the first n of them.
 /// A button of a given width (the label is centered).
 fn fixedButton(app: *App, win: Window, x: u16, label: []const u8, w: u16, style: Style, action: Action) !u16 {
-    const spaces = " " ** 40;
+    const spaces = repeat(" ", 40);
     const gw = win.gwidth(label);
     const left: usize = @min(spaces.len, (w -| gw) / 2);
     const right: usize = @min(spaces.len, w -| gw -| left);
@@ -453,11 +454,11 @@ fn sidebar(app: *App, win: Window, place: Rect) !void {
     const title = if (app.project_name.len > 0) app.fmt(" Files · {s}", .{app.project_name}) else " Files";
     _ = put(bar, 0, 0, clipText(title, box.width -| 5), theme.onBold(if (focused) theme.bright else theme.dim, theme.bar2));
     try titleButtons(app, box, .tree);
-    _ = put(box, 0, 1, "─" ** 400, theme.on(theme.line, theme.deep));
+    _ = put(box, 0, 1, repeat("─", 400), theme.on(theme.line, theme.deep));
     // the foot of the panel: a thin line and the machine that evetx works with (more machines come with level 7)
     const foot = box.height > 8;
     if (foot) {
-        _ = put(box, 0, box.height - 2, "─" ** 400, theme.on(theme.line, theme.deep));
+        _ = put(box, 0, box.height - 2, repeat("─", 400), theme.on(theme.line, theme.deep));
         _ = put(box, 1, box.height - 1, "● local", theme.on(theme.green, theme.deep));
     }
     const list = sub(box, 0, 2, box.width, box.height -| (if (foot) @as(u16, 4) else @as(u16, 2)));
@@ -560,7 +561,7 @@ fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
     fillWith(box, theme.deep);
     try tabStrip(app, box);
     try titleButtons(app, box, .main);
-    _ = put(box, 0, 1, "─" ** 400, theme.on(theme.line, theme.deep));
+    _ = put(box, 0, 1, repeat("─", 400), theme.on(theme.line, theme.deep));
     try editorArea(app, sub(box, 0, 2, box.width, box.height -| 2));
 }
 
@@ -749,7 +750,7 @@ fn folderArea(app: *App, ed: Window, fv: *app_mod.FolderView) !void {
     _ = put(ed, x_desc, 0, "Description", head);
     _ = put(ed, x_date, 0, "Created (UTC)", head);
     _ = put(ed, x_size, 0, "Size", head);
-    _ = put(ed, 0, 1, "─" ** 400, theme.on(theme.line, theme.deep));
+    _ = put(ed, 0, 1, repeat("─", 400), theme.on(theme.line, theme.deep));
     const rows: usize = ed.height -| 2;
     if (rows == 0) return;
     if (fv.sel < fv.top) fv.top = fv.sel;
@@ -864,7 +865,7 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
     fillWith(sub(ed, 0, 0, ed.width, 1), theme.bar2);
     _ = put(ed, (num_w - 1 -| 4) / 2, 0, "rec#", head);
     _ = put(ed, num_w - 1, 0, "│", head_line);
-    _ = put(ed, 0, 1, "─" ** 400, line);
+    _ = put(ed, 0, 1, repeat("─", 400), line);
     _ = put(ed, num_w - 1, 1, "┼", line);
     var x: u16 = num_w;
     var shown: usize = 0;
@@ -1045,10 +1046,10 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
     var lines_shown: usize = 0;
     var line_prev: []const u8 = "";
     // the state of comments at the first visible line, then line by line (a `/* ... */` may span lines)
-    var carry: Carry = if (tab.eve and !tab.sql) carryAt(b, ln) else .none;
+    var carry: scan.Carry = if (tab.eve and !tab.sql) scan.carryAt(b, ln) else .none;
     while (r < rows and ln < b.lineCount()) : ({
         ln += 1;
-        carry = carryAfter(line_prev, carry);
+        carry = scan.carryAfter(line_prev, carry);
     }) {
         const line = b.lineAt(ln);
         line_prev = line;
@@ -1203,100 +1204,8 @@ fn drawSelection(cw: Window, line: []const u8, shown: []const u8, row: usize, se
     }
 }
 
-// @eve-impl syntax colors of an Eve line for the editor; the scan always starts at byte 0 of the line (and in the state
-// `carry` left by the lines above), then the part from `start` on is drawn. So a wrapped piece or a line scrolled to the
-// right keeps the color of the string or comment it is inside, and `/* ... */` and `(** ... **)` may span lines.
-// @feature F-TLS-24
-// @invariant the same scanner (`Scan`) gives the colors and the state at the end of a line; they can not disagree
-// @see evetx/src/view.zig:editor (computes `carry` for the first visible line and passes it on line by line)
-
-/// Where a line begins: in no comment, inside `/* ... */`, or inside `(** ... **)` opened on an earlier line.
-const Carry = enum { none, block, expr };
-
-const TokenKind = enum { plain, string, comment, comment_expr, comment_block, number, word };
-
-const Token = struct { start: usize, end: usize, kind: TokenKind };
-
-/// One scan of an Eve line: `next` gives the tokens in order and keeps the carry for the next line in `carry`.
-const Scan = struct {
-    line: []const u8,
-    i: usize = 0,
-    carry: Carry,
-
-    fn next(self: *Scan) ?Token {
-        const s = self.line;
-        const i = self.i;
-        if (i >= s.len) return null;
-        var j = i + 1;
-        var kind: TokenKind = .plain;
-        if (self.carry != .none) {
-            // inside a comment of an earlier line: it goes on to its closing mark, or to the end of this line
-            const was = self.carry;
-            const close = if (was == .block) "*/" else "**)";
-            if (std.mem.indexOf(u8, s[i..], close)) |e| {
-                j = i + e + close.len;
-                self.carry = .none;
-            } else j = s.len;
-            kind = if (was == .block) .comment_block else .comment_expr;
-        } else if (i == 0 and s[0] == '#') {
-            j = s.len;
-            kind = .comment; // the caller colors a `#` line as a title
-        } else if (s[i] == '"') {
-            while (j < s.len and s[j] != '"') j += 1;
-            if (j < s.len) j += 1;
-            kind = .string;
-        } else if (s[i] == '*' and i + 1 < s.len and s[i + 1] == '*') {
-            j = s.len;
-            kind = .comment;
-        } else if (std.mem.startsWith(u8, s[i..], "(**")) {
-            if (std.mem.indexOf(u8, s[i + 3 ..], "**)")) |e| {
-                j = i + 3 + e + 3;
-            } else {
-                j = s.len;
-                self.carry = .expr;
-            }
-            kind = .comment_expr;
-        } else if (std.mem.startsWith(u8, s[i..], "/*")) {
-            if (std.mem.indexOf(u8, s[i + 2 ..], "*/")) |e| {
-                j = i + 2 + e + 2;
-            } else {
-                j = s.len;
-                self.carry = .block;
-            }
-            kind = .comment_block;
-        } else if (std.ascii.isDigit(s[i])) {
-            while (j < s.len and (std.ascii.isDigit(s[j]) or s[j] == '.' or s[j] == '_')) j += 1;
-            kind = .number;
-        } else if (std.ascii.isAlphabetic(s[i]) or s[i] == '_') {
-            while (j < s.len and (std.ascii.isAlphanumeric(s[j]) or s[j] == '_')) j += 1;
-            kind = .word;
-        } else {
-            // a character that is not a word: one UTF-8 character at a time
-            const n = std.unicode.utf8ByteSequenceLength(s[i]) catch 1;
-            j = @min(s.len, i + n);
-        }
-        self.i = j;
-        return .{ .start = i, .end = j, .kind = kind };
-    }
-};
-
-/// The state at the end of an Eve line that begins in `carry`.
-fn carryAfter(line: []const u8, carry: Carry) Carry {
-    var sc: Scan = .{ .line = line, .carry = carry };
-    while (sc.next()) |_| {}
-    return sc.carry;
-}
-
-/// The state at the start of line `row`: the lines above it are scanned (a comment may begin far above).
-fn carryAt(b: *text.Buffer, row: usize) Carry {
-    var carry: Carry = .none;
-    var r: usize = 0;
-    while (r < row) : (r += 1) carry = carryAfter(b.lineAt(r), carry);
-    return carry;
-}
-
 /// Draw one line of text from byte `start`. Eve files get colors for comments, strings, numbers and keywords.
-fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Color, carry: Carry) void {
+fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Color, carry: scan.Carry) void {
     const s = line;
     const plain = theme.on(theme.text, bg);
     if (!eve) {
@@ -1304,7 +1213,7 @@ fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Colo
         return;
     }
     var col: u16 = 0;
-    var sc: Scan = .{ .line = s, .carry = carry };
+    var sc: scan.Scan = .{ .line = s, .carry = carry };
     while (sc.next()) |t| {
         if (t.end <= start) continue;
         const from = @max(t.start, start);
@@ -1565,7 +1474,7 @@ fn toolsPanel(app: *App, win: Window, r: Rect) !void {
         x += w + 1;
     }
     try titleButtons(app, box, .tools);
-    _ = put(box, 0, 1, "─" ** 400, theme.on(theme.line, theme.deep));
+    _ = put(box, 0, 1, repeat("─", 400), theme.on(theme.line, theme.deep));
     const body = sub(box, 0, 2, box.width, box.height -| 2);
     fillWith(body, theme.deep);
     switch (app.bottom) {
@@ -1718,7 +1627,7 @@ fn logPanel(app: *App, body: Window, log: *app_mod.Log, empty: []const u8) void 
     drawLog(app, body, log);
 }
 
-// Zig tip: `"─" ** 400` repeats a string at compile time (`**` is array repetition), which gives a
+// Zig tip: `repeat("─", 400)` repeats a string at compile time (`**` is array repetition), which gives a
 // rule longer than any window; the window clips it.
 /// The console of evevm: the output scrolls above, then a rule and the prompt `eve:> `.
 fn consolePanel(app: *App, body: Window) !void {
@@ -1726,7 +1635,7 @@ fn consolePanel(app: *App, body: Window) !void {
     if (h < 3) return;
     const out = sub(body, 0, 0, body.width, h - 2);
     drawLog(app, out, &app.console);
-    _ = put(body, 0, h - 2, "─" ** 400, theme.on(theme.line, theme.deep));
+    _ = put(body, 0, h - 2, repeat("─", 400), theme.on(theme.line, theme.deep));
     const prompt = if (app.running) "Running… " else "eve:> ";
     _ = put(body, 1, h - 1, prompt, theme.onBold(if (app.running) theme.amber else theme.green, theme.deep));
     const pw: u16 = @intCast(body.gwidth(prompt));
@@ -1793,7 +1702,7 @@ fn sqlPanel(app: *App, body: Window) !void {
         _ = put(out, 2, 0, "SQL goes to the table or the database that is selected · use <file.db> chooses a file, use auto goes back · clear empties this panel", theme.on(theme.faint, theme.deep));
         app.console_rect = absRect(out, 0, 0, out.width, out.height);
     } else drawLog(app, out, &app.sql_log);
-    _ = put(body, 0, h - 2, "─" ** 400, theme.on(theme.line, theme.deep));
+    _ = put(body, 0, h - 2, repeat("─", 400), theme.on(theme.line, theme.deep));
     // the target of the SQL, on the rule, at the right
     const target = clipText(app.fmt(" {s} ", .{app.sqlTargetText()}), body.width -| 4);
     _ = put(body, body.width -| (body.gwidth(target) + 2), h - 2, target, theme.onBold(theme.blue, theme.deep));
@@ -2054,7 +1963,7 @@ fn tabMenuBox(app: *App, win: Window) !void {
         const line = sub(box, 0, r, box.width, 1);
         fillWith(line, bg);
         if (row.cmd == .sep) {
-            _ = put(box, 0, r, "─" ** 60, theme.on(theme.line, theme.panel));
+            _ = put(box, 0, r, repeat("─", 60), theme.on(theme.line, theme.panel));
             continue;
         }
         _ = put(line, 1, 0, row.label, theme.on(if (sel) theme.bright else theme.text, bg));
@@ -2102,7 +2011,7 @@ fn propertiesBox(app: *App, win: Window) !void {
     const h: u16 = @intCast(9 + n);
     const box = dialog(app, win, 70, h, app.fmt("{s}: {s}", .{ what, app.infoName() }));
     const dim = theme.on(theme.dim, theme.panel);
-    _ = put(box, 0, 1, "─" ** 200, theme.on(theme.line, theme.panel));
+    _ = put(box, 0, 1, repeat("─", 200), theme.on(theme.line, theme.panel));
     _ = put(box, 2, 2, "Name", dim);
     if (app.prop_editing) {
         const f = sub(box, 13, 2, box.width -| 15, 1);
@@ -2323,7 +2232,7 @@ fn sqStructureBox(app: *App, win: Window) !void {
     _ = put(box, 2, 2, "arrows move · Enter edits · Space switches a box · Ins adds · Del removes · Ctrl+Up/Down moves · Ctrl+S applies", dim);
     const widths = [_]u16{ 4, 22, 18, 10, 6, 22 };
     const heads = [_][]const u8{ "#", "Name", "Type", "Not null", "Key", "Default" };
-    const hl = "─" ** 40;
+    const hl = repeat("─", 40);
     var rule_buf: [3][320]u8 = undefined;
     const marks = [3][3][]const u8{ .{ "┌", "┬", "┐" }, .{ "├", "┼", "┤" }, .{ "└", "┴", "┘" } };
     var rules: [3][]const u8 = undefined;
@@ -2485,7 +2394,7 @@ fn menuDrop(app: *App, win: Window) !void {
         const row = app.rowAt(m, k);
         const r: u16 = @intCast(k);
         if (row.cmd == null) {
-            _ = put(box, 0, r, "─" ** 100, theme.on(theme.line, theme.panel));
+            _ = put(box, 0, r, repeat("─", 100), theme.on(theme.line, theme.panel));
             continue;
         }
         const sel = app.menu_sel == k;
@@ -2541,7 +2450,7 @@ fn settings(app: *App, win: Window) !void {
         try addHit(app, box, x, 2, w, 1, .{ .opt = .{ .tab = @intCast(i) } });
         x += w + 1;
     }
-    _ = put(box, 0, 3, "─" ** 200, theme.on(theme.line, theme.panel));
+    _ = put(box, 0, 3, repeat("─", 200), theme.on(theme.line, theme.panel));
     const body = sub(box, 1, 4, box.width -| 2, box.height -| 8);
     switch (app.opt_tab) {
         0 => try themeTab(app, body),
@@ -2925,7 +2834,7 @@ fn folderBox(app: *App, win: Window) !void {
     };
     const box = dialog(app, win, 78, 22, title);
     const dim = theme.on(theme.dim, theme.panel);
-    _ = put(box, 0, 1, "─" ** 200, theme.on(theme.line, theme.panel));
+    _ = put(box, 0, 1, repeat("─", 200), theme.on(theme.line, theme.panel));
     _ = put(box, 2, 2, "Folder", dim);
     try field(app, box, 10, 2, box.width -| 12, &app.project_in, 0, app.dlg_field == 0);
     const n = app.fbRowCount();
@@ -2976,38 +2885,27 @@ fn folderBox(app: *App, win: Window) !void {
     });
 }
 
-// @test syntax colors of Eve comments: state across lines, and a piece that starts inside a comment
-test "carry of block and expression comments across lines" {
-    try std.testing.expectEqual(Carry.block, carryAfter("x /* start", .none));
-    try std.testing.expectEqual(Carry.block, carryAfter("still inside", .block));
-    try std.testing.expectEqual(Carry.none, carryAfter("end */ code", .block));
-    try std.testing.expectEqual(Carry.expr, carryAfter("a (** note", .none));
-    try std.testing.expectEqual(Carry.none, carryAfter("done **) b", .expr));
-    try std.testing.expectEqual(Carry.none, carryAfter("a ** comment /* not a block", .none));
-    try std.testing.expectEqual(Carry.none, carryAfter("print \"/* in a string\";", .none));
-    try std.testing.expectEqual(Carry.none, carryAfter("# title /* not a block", .none));
-}
-
-test "a line inside a block comment is one comment token" {
-    var sc: Scan = .{ .line = "# not a title, new x := 1;", .carry = .block };
-    const t = sc.next().?;
-    try std.testing.expectEqual(TokenKind.comment_block, t.kind);
-    try std.testing.expectEqual(@as(usize, 26), t.end);
-    try std.testing.expect(sc.next() == null);
-    try std.testing.expectEqual(Carry.block, sc.carry);
-}
-
-test "tokens of a line after a closed comment" {
-    var sc: Scan = .{ .line = "*/ new x", .carry = .block };
-    try std.testing.expectEqual(TokenKind.comment_block, sc.next().?.kind);
-    try std.testing.expectEqual(TokenKind.plain, sc.next().?.kind);
-    try std.testing.expectEqual(TokenKind.word, sc.next().?.kind);
-}
-
 // @test the words of the aspect kinds, export and the newer types have a color (keywords.zig is generated from the spec)
 test "wordColor knows primary, export, print and the newer types" {
     for ([_][]const u8{ "primary", "exclusive", "concurrent", "aspect", "export", "external", "recover", "print", "write", "Instant", "Secret", "Stream" }) |w| {
         try std.testing.expect(wordColor(w) != null);
     }
     try std.testing.expect(wordColor("banana") == null);
+}
+
+// @test the tests of the shared scanner run with `zig build test`
+test {
+    _ = @import("scan.zig");
+}
+
+/// `piece` repeated `n` times, at compile time (Zig 0.17 removed the operator `**`).
+fn repeat(comptime piece: []const u8, comptime n: usize) *const [piece.len * n]u8 {
+    const S = struct {
+        const value = blk: {
+            var a: [piece.len * n]u8 = undefined;
+            for (0..n) |i| @memcpy(a[i * piece.len ..][0..piece.len], piece);
+            break :blk a;
+        };
+    };
+    return &S.value;
 }

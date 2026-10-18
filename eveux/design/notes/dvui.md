@@ -1,14 +1,14 @@
 # eveux, second design: a native GUI in Zig with dvui
 
-> **Update 2026-10-18.** This analysis became the base of `eveux/README.md`: the author moved the browser Workbench to **evewp** (the Eve Web Portal, a production web server and a web framework in Eve, `evewp/README.md`) and made `eveux` the native Zig client. So the conflict with D-154 of section 7 is resolved by the move: the final test of Eve is evewp (option 2a for eveux, with the language test kept in evewp). The comparison table, the dvui facts and the spike (sections 2, 6, 9) stay valid.
+> **Update 2026-10-18.** This analysis became the base of `eveux/README.md`: the author moved the browser Workbench to **evewp** (the Eve Web Portal, a production web server and a web framework in Eve, `evewp/README.md`) and made `eveux` the native Zig client. So the conflict with D-154 of section 7 is resolved by the move: the final test of Eve is evewp (option 2a for eveux, with the language test kept in evewp). The comparison table and the spike (sections 6, 9) stay valid; the facts of section 2 are corrected below: the source of v0.5.0 has a tree, tabs, docking and a completion widget (found by reading `src/widgets`), but no undo and redo in the text entry. Also found: fetching dvui needs symbolic links on Windows (Developer Mode), see `eveux/README.md` section 12.
 
-Status: **proposal for comparison**, 2026-10-18. It is the second design of eveux, next to the first one (`eveux/README.md` with `eveux/design-elaboration.md`: a browser Workbench written in Eve, D-154). **Nothing in `spec/`, the tutorial, the plan or the code was changed for it.** The facts about dvui come from its public repository (links at the end); what I could not confirm from there is marked *to verify* and is the content of the spike in section 9.
+Status: **proposal for comparison**, 2026-10-18. It is the second design of eveux, next to the first one (`eveux/README.md` with `eveux/design/notes/elaboration.md`: a browser Workbench written in Eve, D-154). **Nothing in `spec/`, the tutorial, the plan or the code was changed for it.** The facts about dvui come from its public repository (links at the end); what I could not confirm from there is marked *to verify* and is the content of the spike in section 9.
 
 ## 1. The idea
 
 eveux becomes a **native desktop program written in Zig** on [dvui](https://github.com/david-vanderson/dvui), an immediate-mode GUI toolkit (MIT license). It is the graphical sibling of evetx: the same job (a client of the Eve machine: edit, run, debug, jobs, logs, databases), in a window instead of a terminal. It is built for **Windows first**, with Linux and macOS as later ports of the same code.
 
-What stays from the first design (everything about the *server* side): Eve is the server, eveux and evetx are clients, evedb is the backend of the server; one set of JSON-RPC messages (`vm.*`, `db.*` and the additions of `design-elaboration.md` §6: `deploy.*`, `fs.*`, `job.*`, `log.*`); the local machine holds the logins and the keyring; local Git and deploy as in `design-elaboration.md` §4 and §5. Only the **client** changes.
+What stays from the first design (everything about the *server* side): Eve is the server, eveux and evetx are clients, evedb is the backend of the server; one set of JSON-RPC messages (`vm.*`, `db.*` and the additions of `elaboration.md` §6: `deploy.*`, `fs.*`, `job.*`, `log.*`); the local machine holds the logins and the keyring; local Git and deploy as in `elaboration.md` §4 and §5. Only the **client** changes.
 
 What does not stay: D-154 says eveux is written in Eve as the final test of the language, with no Zig in `eveux/`. A dvui eveux is Zig. That is the main cost of this design (section 7).
 
@@ -21,7 +21,8 @@ What does not stay: D-154 says eveux is written in Eve as the final test of the 
 | Zig | the branch `main` (version `0.6.0-dev`) needs **Zig 0.17**; the tag **v0.5.0** is "tested with Zig 0.16.0", the version of this project |
 | Backends | SDL3, SDL2, SDL3 GPU, Raylib (C and raylib-zig), **DX11** (Windows, Win32 binding), GLFW + OpenGL, wio (OpenGL or Vulkan), pugl (OpenGL), Web (WebAssembly); each as *app* (dvui runs the loop), *standalone* or *on top* of another program |
 | Widgets | single and multi-line text entry, number entry, text layout with styled and clickable parts, floating windows, menus, popups and context menus, scroll areas, buttons, links, tooltips, sliders, checkboxes, radio buttons, toasts, resizable panes, dropdown, combo box, reorderable lists, a **data grid**, group boxes; native file dialogs through tinyfiledialogs |
-| Not listed | a **tree** widget, **tabs**, docking, a **code editor** (line numbers, syntax colors, find and replace, folding), a terminal-like console |
+| Found in the source of v0.5.0 (2026-10-18; the README does not list them) | `TreeWidget`, `TabsWidget`, `DockingWidget`, `GridWidget`, `SuggestionWidget` (a completion list), `PlotWidget`, `ColorPickerWidget`, `FlexBoxWidget`, `ImageWidget` over stb_image, and an optional tree-sitter highlighter in `TextEntryWidget` |
+| Still missing | **undo and redo** in the text entry, a **code editor** (gutter, bracket matching, find and replace, folding), a terminal-like console, Markdown, HTML, audio and video |
 | Text | FreeType or stb_truetype; one glyph per Unicode code point; **no grapheme clusters, no right-to-left or mixed direction** |
 | Input | most widgets work by keyboard; **IME only on the SDL and web backends** (not on DX11) |
 | Accessibility | screen reader support through AccessKit with `-Daccesskit`; high-contrast themes; no integration with the operating system beyond that |
@@ -61,8 +62,8 @@ The screen of `eveux/README.md` §5 (menu bar, explorer, tabbed editor, bottom p
 |---|---|---|
 | Menu bar, context menus, tooltips, toasts, dialogs | yes | style and shortcuts table (one table for menu, keys and palette, as `js/actions.js` was planned) |
 | Panes with draggable borders | yes (resizable panes) | layout persistence in `eve.db` |
-| Tabs of the editor and of the bottom panel | not listed | a tab bar widget from buttons and a scroll area (small) |
-| Explorer tree (machines, files, database objects) | not listed | a tree widget with lazy children, icons, context menu, keyboard navigation (medium) |
+| Tabs of the editor and of the bottom panel | `TabsWidget` (found in the source) | styling, close buttons, drag to reorder (small) |
+| Explorer tree (machines, files, database objects) | `TreeWidget` (found in the source) | lazy children, icons, context menu, keyboard navigation (small to medium) |
 | **Code editor** | multi-line text entry only | **a custom widget**: line numbers, gutter with breakpoints, syntax colors (the shared scanner for Eve; a scanner each for SQL, JSON, XML, HTML), current line, matching brackets, find and replace, go to line, undo and redo, selection, large files, tabs and indentation, Unicode. **The largest single piece of work (large).** |
 | Command window and output | text layout | a scrollback with colors, input line, history (medium) |
 | Result grid for SQL | a data grid | paging, sorting, filtering, Eve types, copy as TSV; *to verify* that the grid virtualises rows for 1,000,000 results (the first design pages in the browser too) |
@@ -111,7 +112,7 @@ D-154 (2026-10-10): eveux is **written in Eve**, in level 7, "Zig only for the V
 
 - **2a. Replace.** The native client replaces the browser Workbench. D-154 is revised: the final test of Eve becomes something else (for example the library work now in progress, which already acts as one: `test`, `config`, `rpc`, `http`, `route`, `service` found seven gaps). Simplest; loses the big application test.
 - **2b. Native shell, logic in Eve.** The window is Zig; the *logic* of the Workbench (machines, jobs, deploy, grids, source control) stays a big Eve project that the local machine runs, exposing its results as JSON-RPC `ux.*` methods that the Zig window calls. The window is thin; Eve keeps the stress test (server side only: aspects, modules, `http`, `route`, `rpc`, database, tasks, streams). The cost is two programs again, but no JavaScript and no web stack.
-- **2c. Both.** The browser Workbench (first design, in Eve) stays the language acceptance test at level 7 and may be a smaller product; the native client is the day-to-day tool, built first because it needs less of Eve. Both speak the same API, which is the point of keeping the API clean (`design-elaboration.md` §6). This is the most work.
+- **2c. Both.** The browser Workbench (first design, in Eve) stays the language acceptance test at level 7 and may be a smaller product; the native client is the day-to-day tool, built first because it needs less of Eve. Both speak the same API, which is the point of keeping the API clean (`elaboration.md` §6). This is the most work.
 
 A fourth idea, **an Eve binding for dvui** (Eve code that draws immediate-mode widgets, run in-process), would make the UI itself Eve code. It needs the interpreter linked into the window program, a widget API in Eve and a frame loop in the baton scheduler: a large research item, not proposed now.
 
@@ -124,7 +125,7 @@ A fourth idea, **an Eve binding for dvui** (Eve code that draws immediate-mode w
 | P2 | `eveux` shell: window, menu table, panes, tabs, explorer tree over `vm.*` and `fs.*`, status bar, connection to the local machine on stdio | opens a project, runs a script, shows its output |
 | P3 | **Editor widget** on the shared buffer and scanner: colors for Eve first, then SQL, JSON, XML; gutter; find and replace; undo | edit and save a project file; comparable to evetx's editor |
 | P4 | Command window, SQL tab with the grid, database tree (`db.*`) | direct SQL on SQLite and evedb |
-| P5 | Jobs, logs, source control panel, deploy dialog, login (level 7) | the flows of `design-elaboration.md` §4 to §6 |
+| P5 | Jobs, logs, source control panel, deploy dialog, login (level 7) | the flows of `elaboration.md` §4 to §6 |
 | P6 | Debugger panels; Help (Markdown subset); packaging; Linux port; macOS port | the exit of eveux 1.0 for each platform |
 
 ## 9. What the spike must answer (the *to verify* list)
@@ -140,7 +141,7 @@ A fourth idea, **an Eve binding for dvui** (Eve code that draws immediate-mode w
 
 ## 10. Recommendation
 
-Do not decide on paper. **Run the spike P0**, which costs little, and decide with its numbers. Meanwhile keep the server work (the `design-elaboration.md` API) as the single contract, because it serves both clients. If the editor widget and the platform checks go well, the best split looks like **2c**: the native dvui client as the working tool, early and shared with evetx, and the browser Workbench in Eve kept for level 7 as the acceptance test of the language that D-154 wants. If the author puts the weight on the language test, keep the first design and let evetx remain the fast client.
+Do not decide on paper. **Run the spike P0**, which costs little, and decide with its numbers. Meanwhile keep the server work (the `elaboration.md` API) as the single contract, because it serves both clients. If the editor widget and the platform checks go well, the best split looks like **2c**: the native dvui client as the working tool, early and shared with evetx, and the browser Workbench in Eve kept for level 7 as the acceptance test of the language that D-154 wants. If the author puts the weight on the language test, keep the first design and let evetx remain the fast client.
 
 ## 11. Questions for the author
 

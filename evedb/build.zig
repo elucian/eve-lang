@@ -53,7 +53,10 @@ pub fn build(b: *std.Build) void {
     // step below runs a command (`addSystemCommand`) that stops the eve programs of that folder, and `dependOn` makes
     // the copy wait for it. Compiling goes on in parallel; only the install waits. The same script is `eve --kill`.
     // `builtin.os.tag` is the system the build runs on (not the target), so other systems skip the step.
-    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", b.pathFromRoot("../script/stop_eve.ps1"), "-Bin", b.getInstallPath(.bin, "") });
+    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File" });
+    stop.addFileArg(b.path("../script/stop_eve.ps1"));
+    stop.addArg("-Bin");
+    stop.addFileArg(.{ .relative = .{ .base = .install_prefix, .sub_path = "bin" } });
     stop.has_side_effects = true;
     const install_exe = b.addInstallArtifact(exe, .{});
     if (@import("builtin").os.tag == .windows) install_exe.step.dependOn(&stop.step);
@@ -76,6 +79,6 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(tests);
     // The test program needs duckdb.dll too: run it from the install folder, where the DLL is.
     run_tests.step.dependOn(b.getInstallStep());
-    if (os == .windows) run_tests.setCwd(.{ .cwd_relative = b.getInstallPath(.bin, "") });
+    if (os == .windows) run_tests.setCwd(.{ .relative = .{ .base = .install_prefix, .sub_path = "bin" } });
     b.step("test", "Run unit tests").dependOn(&run_tests.step);
 }

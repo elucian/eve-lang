@@ -15,11 +15,11 @@ pub const types = [_][]const u8{ "INTEGER", "BIGINT", "REAL", "TEXT", "BLOB", "N
 // compared with `std.meta.eql`; no memory has to be freed. `std.mem.sliceTo(&buf, 0)` reads the text up to the first zero.
 /// One column of the table.
 pub const Col = struct {
-    name: [48]u8 = [_]u8{0} ** 48,
-    ty: [28]u8 = [_]u8{0} ** 28,
+    name: [48]u8 = @as([48]u8, @splat(0)),
+    ty: [28]u8 = @as([28]u8, @splat(0)),
     notnull: bool = false,
     pk: bool = false,
-    dflt: [40]u8 = [_]u8{0} ** 40,
+    dflt: [40]u8 = @as([40]u8, @splat(0)),
     /// The place of this column in the table as it is now (null for a new column).
     src: ?usize = null,
 

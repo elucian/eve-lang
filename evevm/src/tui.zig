@@ -768,7 +768,7 @@ test "long lines are split at 120 characters and short ones are not wrapped" {
         t.gpa.destroy(t);
     }
     t.feed("short line\n");
-    t.feed("x" ** 130 ++ "\n");
+    t.feed(&(@as([130]u8, @splat('x')) ++ [_]u8{10}));
     t.feed("a\tb\r\nnext\rover\n");
     try std.testing.expectEqual(@as(usize, 5), t.starts.items.len);
     try std.testing.expectEqualStrings("short line", t.lineAt(0));
@@ -788,7 +788,7 @@ test "colors take no room and a view scrolled back stays on its text" {
         t.partial.deinit(t.gpa);
         t.gpa.destroy(t);
     }
-    t.feed("\x1b[1;36m" ++ "y" ** 120 ++ "\x1b[0m\n");
+    t.feed("\x1b[1;36m" ++ @as([120]u8, @splat('y')) ++ "\x1b[0m\n");
     try std.testing.expectEqual(@as(usize, 1), t.starts.items.len);
     t.offset = 1;
     t.feed("more\n");

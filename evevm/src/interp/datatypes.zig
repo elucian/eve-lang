@@ -104,7 +104,7 @@ pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
     var upper: std.ArrayList(u8) = .empty;
     try upper.appendSlice(it.t, "EVE_SECRET_");
     for (name) |ch| try upper.append(it.t, std.ascii.toUpper(ch));
-    const z = try it.t.dupeZ(u8, upper.items);
+    const z = try it.t.dupeSentinel(u8, upper.items, 0);
     const found = std.c.getenv(z) orelse return it.failWith(err_key, "secret.get: no secret '{s}' (set {s})", .{ name, upper.items });
     return it.secretObject(try it.newStr(std.mem.span(found)));
 }

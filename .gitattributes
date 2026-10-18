@@ -28,6 +28,10 @@ LICENSE    text eol=lf
 *.bat      text eol=crlf
 *.cmd      text eol=crlf
 *.ps1      text eol=crlf
+# Images in Git LFS (large files live on the LFS server, the repo keeps a pointer).
+# Needs git-lfs installed (`git lfs install` once per clone). SVG is XML text, but
+# LFS stores it whole, so it has no line-ending rule and no text diff.
+*.svg      filter=lfs diff=lfs merge=lfs -text
 # Binary files: no line-ending change, no text diff.
 *.exe      binary
 *.dll      binary
@@ -41,4 +45,3 @@ LICENSE    text eol=lf
 *.ico      binary
 *.pdf      binary
 *.zip      binary
-*.svg filter=lfs diff=lfs merge=lfs -text

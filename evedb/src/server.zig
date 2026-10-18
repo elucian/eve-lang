@@ -175,7 +175,7 @@ pub fn openDbPg(srv: *Server, name: []const u8) !*Db {
     if (srv.cfg.databases.len > 0) {
         for (srv.cfg.databases) |m| {
             if (std.mem.eql(u8, m.name, name)) {
-                const z = try srv.gpa.dupeZ(u8, m.path);
+                const z = try srv.gpa.dupeSentinel(u8, m.path, 0);
                 defer srv.gpa.free(z);
                 return openDbAt(srv, m.name, z);
             }
@@ -249,13 +249,13 @@ pub fn logStatement(srv: *Server, s: *Session, sql: []const u8, rows: i64) void 
     var p = d.log_conn.prepare("insert into eve_log.statements values (?, ?, ?, ?, ?, ?, ?, now())") catch return;
     defer p.deinit();
     const a = srv.gpa;
-    const tx_z = a.dupeZ(u8, tx) catch return;
+    const tx_z = a.dupeSentinel(u8, tx, 0) catch return;
     defer a.free(tx_z);
-    const kind_z = a.dupeZ(u8, statementKind(sql)) catch return;
+    const kind_z = a.dupeSentinel(u8, statementKind(sql), 0) catch return;
     defer a.free(kind_z);
-    const tbl_z = a.dupeZ(u8, tbl) catch return;
+    const tbl_z = a.dupeSentinel(u8, tbl, 0) catch return;
     defer a.free(tbl_z);
-    const sql_z = a.dupeZ(u8, sql) catch return;
+    const sql_z = a.dupeSentinel(u8, sql, 0) catch return;
     defer a.free(sql_z);
     p.bindInt(1, @intCast(s.id)) catch return;
     p.bindText(2, tx_z) catch return;
@@ -423,7 +423,7 @@ fn handleLoad(srv: *Server, s: *Session, r: *Io.Reader, w: *Io.Writer, f: ewp.Fr
             try sql.appendSlice(aa, sqlType(h.wire));
         }
         try sql.append(aa, ')');
-        s.conn.exec(try aa.dupeZ(u8, sql.items)) catch {
+        s.conn.exec(try aa.dupeSentinel(u8, sql.items, 0)) catch {
             failed = true;
             const cls = types.classify(s.conn.err_kind, s.conn.lastError());
             err_class = cls.name;
@@ -433,7 +433,7 @@ fn handleLoad(srv: *Server, s: *Session, r: *Io.Reader, w: *Io.Writer, f: ewp.Fr
     }
     var app: ?duckdb.Appender = null;
     if (!failed) {
-        app = duckdb.Appender.create(&s.conn, try aa.dupeZ(u8, table)) catch blk: {
+        app = duckdb.Appender.create(&s.conn, try aa.dupeSentinel(u8, table, 0)) catch blk: {
             failed = true;
             try err_msg.appendSlice(aa, s.conn.lastError());
             break :blk null;
@@ -561,7 +561,7 @@ fn bindParams(srv: *Server, p: *duckdb.Prepared, params: []const ewp.Value) !voi
             .int => |x| try p.bindInt(k, x),
             .real => |x| try p.bindReal(k, x),
             .string, .decimal, .huge => |s| {
-                const z = try a.dupeZ(u8, s);
+                const z = try a.dupeSentinel(u8, s, 0);
                 defer a.free(z);
                 try p.bindText(k, z);
             },
@@ -643,7 +643,7 @@ fn runStatement(srv: *Server, s: *Session, w: *Io.Writer, stream: u32, sql: []co
             }
         }
     }
-    const sql_z = srv.gpa.dupeZ(u8, sql) catch {
+    const sql_z = srv.gpa.dupeSentinel(u8, sql, 0) catch {
         sendError(w, stream, "DatabaseError", "HY001", false, "out of memory");
         return false;
     };
@@ -810,7 +810,7 @@ fn handleCommit(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome
     }
     // the id is written in the same transaction as the data
     var hex: [33]u8 = undefined;
-    const idtext = std.fmt.bufPrintZ(&hex, "{x}", .{id}) catch unreachable;
+    const idtext = std.fmt.bufPrintSentinel(&hex, "{x}", .{id}, 0) catch unreachable;
     var p = s.conn.prepare("insert into eve_tx values (?, now())") catch {
         replyDbError(srv, s, w, f.stream);
         return .go_on;
@@ -866,7 +866,7 @@ fn handleStatus(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome
         srv.lock.unlock(srv.io);
         if (code == 1) {
             var hex: [33]u8 = undefined;
-            const idtext = std.fmt.bufPrintZ(&hex, "{x}", .{idb}) catch unreachable;
+            const idtext = std.fmt.bufPrintSentinel(&hex, "{x}", .{idb}, 0) catch unreachable;
             var p = s.conn.prepare("select count(*) from eve_tx where id = ?") catch {
                 replyDbError(srv, s, w, f.stream);
                 return .go_on;

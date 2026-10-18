@@ -250,14 +250,14 @@ pub const Options = struct {
 };
 
 // Zig tip: `inline for` over the fields of the enum `theme.Slot` writes one `"slot": "#rrggbb"` line for each color; in
-// each copy of the body `f.name` is a string known to the compiler. `{f}` prints a value with its own `format`
+// each copy of the body `fname` is a string known to the compiler. `{f}` prints a value with its own `format`
 // function: `std.json.fmt(name, .{})` writes the name as a JSON string, with quotes and escapes.
 /// Write one theme as a JSON object, each line after the first starting with `indent`.
 pub fn writeTheme(w: *std.Io.Writer, name: []const u8, base: theme.Base, colors: theme.Palette, indent: []const u8) !void {
     try w.print("{s}{{\n{s}  \"name\": {f},\n{s}  \"base\": \"{s}\",\n{s}  \"colors\": {{\n", .{ indent, indent, std.json.fmt(name, .{}), indent, @tagName(base), indent });
-    inline for (@typeInfo(theme.Slot).@"enum".fields, 0..) |f, i| {
+    inline for (comptime std.meta.fieldNames(theme.Slot), 0..) |fname, i| {
         const comma = if (i + 1 < theme.slot_count) "," else "";
-        try w.print("{s}    \"" ++ f.name ++ "\": \"#{x:0>6}\"{s}\n", .{ indent, colors[i], comma });
+        try w.print("{s}    \"" ++ fname ++ "\": \"#{x:0>6}\"{s}\n", .{ indent, colors[i], comma });
     }
     try w.print("{s}  }}\n{s}}}", .{ indent, indent });
 }
@@ -289,8 +289,8 @@ pub fn themeFromValue(v: std.json.Value) ?UserTheme {
     var given: [theme.slot_count]bool = @splat(false);
     if (colors_v) |cv| {
         if (cv == .object) {
-            inline for (@typeInfo(theme.Slot).@"enum".fields, 0..) |f, i| {
-                if (cv.object.get(f.name)) |c| {
+            inline for (comptime std.meta.fieldNames(theme.Slot), 0..) |fname, i| {
+                if (cv.object.get(fname)) |c| {
                     if (c == .string) {
                         const hex = std.mem.trimStart(u8, c.string, "#");
                         if (std.fmt.parseInt(u24, hex, 16)) |x| {

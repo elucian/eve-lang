@@ -336,7 +336,7 @@ pub const Table = struct {
         // a savepoint works alone and also inside the transaction of a job, where `begin` would be refused
         try db.exec("savepoint eve_load");
         errdefer db.exec("rollback to eve_load; release eve_load") catch {};
-        try db.exec(try a.dupeZ(u8, sql.items));
+        try db.exec(try a.dupeSentinel(u8, sql.items, 0));
         if (self.cols.items.len > 0) {
             var ins: std.ArrayList(u8) = .empty;
             try ins.appendSlice(a, "insert into ");
@@ -344,7 +344,7 @@ pub const Table = struct {
             try ins.appendSlice(a, " values (");
             for (self.cols.items, 0..) |_, k| try ins.appendSlice(a, if (k == 0) "?" else ",?");
             try ins.appendSlice(a, ")");
-            var st = try db.prepare(try a.dupeZ(u8, ins.items));
+            var st = try db.prepare(try a.dupeSentinel(u8, ins.items, 0));
             defer st.finalize();
             for (0..self.rows) |r| {
                 for (self.cols.items, 0..) |c, k| {

@@ -214,7 +214,7 @@ fn kindOf(sql: []const u8) Kind {
     if (eq(u8, w, "set") or eq(u8, w, "reset") or eq(u8, w, "discard") or eq(u8, w, "deallocate") or eq(u8, w, "listen") or eq(u8, w, "unlisten") or eq(u8, w, "lock")) return .ack;
     if (eq(u8, w, "show")) return .show;
     if (eq(u8, w, "insert") or eq(u8, w, "update") or eq(u8, w, "delete")) {
-        if (std.ascii.indexOfIgnoreCase(sql, "returning") != null) return .rows;
+        if (std.ascii.findIgnoreCase(sql, "returning") != null) return .rows;
         return .count;
     }
     if (eq(u8, w, "create") or eq(u8, w, "drop") or eq(u8, w, "alter") or eq(u8, w, "truncate") or eq(u8, w, "attach") or eq(u8, w, "detach") or eq(u8, w, "checkpoint") or eq(u8, w, "vacuum") or eq(u8, w, "analyze") or eq(u8, w, "comment") or eq(u8, w, "grant") or eq(u8, w, "revoke") or eq(u8, w, "copy") or eq(u8, w, "use") or eq(u8, w, "load") or eq(u8, w, "install")) return .command;
@@ -301,7 +301,7 @@ fn bindParam(srv: *Server, p: *duckdb.Prepared, i: u64, prm: Param) !void {
         16 => return p.bindBool(i, t.len > 0 and (t[0] == 't' or t[0] == 'T' or t[0] == '1' or t[0] == 'y')),
         else => {},
     }
-    const z = try a.dupeZ(u8, t);
+    const z = try a.dupeSentinel(u8, t, 0);
     defer a.free(z);
     try p.bindText(i, z);
 }
@@ -374,7 +374,7 @@ fn runStatement(srv: *Server, s: *Session, sql: []const u8, params: []const Para
     if (r.kind == .begin) exec_sql = "begin transaction";
     if (r.kind == .rollback) exec_sql = "rollback";
     if (r.kind == .commit) exec_sql = "commit";
-    const sql_z = a.dupeZ(u8, exec_sql) catch {
+    const sql_z = a.dupeSentinel(u8, exec_sql, 0) catch {
         r.fail("53200", "out of memory");
         return r;
     };
@@ -920,7 +920,7 @@ fn handleMessage(srv: *Server, s: *Session, c: *Conn, out: *Out, m: Msg, skip: *
                 for (st.oids) |o| try out.i32_(@intCast(if (o == 0) 25 else o));
                 out.end();
                 // the columns: ask DuckDB to prepare the statement
-                const z = try a.dupeZ(u8, st.sql);
+                const z = try a.dupeSentinel(u8, st.sql, 0);
                 defer a.free(z);
                 var p = s.conn.prepare(z) catch {
                     try out.begin('n');

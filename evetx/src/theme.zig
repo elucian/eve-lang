@@ -29,7 +29,7 @@ pub const Slot = enum {
     control, interrupt, oper, type_name, title, subtitle, comment_expr, comment_block,
 };
 
-pub const slot_count = @typeInfo(Slot).@"enum".fields.len;
+pub const slot_count = std.meta.fieldNames(Slot).len;
 
 /// The values of all the colors of a theme, `0xRRGGBB`, in the order of `Slot`.
 pub const Palette = [slot_count]u24;
@@ -93,13 +93,13 @@ pub var comment_expr: Color = fromHex(themes[0].colors[26]);
 pub var comment_block: Color = fromHex(themes[0].colors[27]);
 
 // Zig tip: `inline for` unrolls the loop at compile time, one copy of the body for each field of
-// `Slot`. In each copy `f.name` is a string known to the compiler, and `@field(@This(), f.name)`
+// `Slot`. In each copy `fname` is a string known to the compiler, and `@field(@This(), fname)`
 // names the variable of that name in this file, so one loop sets all the variables without a line
 // for each of them.
 /// Put the colors of a palette in use.
 pub fn apply(p: Palette) void {
-    inline for (@typeInfo(Slot).@"enum".fields, 0..) |f, i| {
-        @field(@This(), f.name) = fromHex(p[i]);
+    inline for (comptime std.meta.fieldNames(Slot), 0..) |fname, i| {
+        @field(@This(), fname) = fromHex(p[i]);
     }
 }
 

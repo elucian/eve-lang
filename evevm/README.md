@@ -7,7 +7,7 @@ Version: **0.0.6**. Status: level 1 passes (82 of 82 tests of `test/level1/`) an
 
 ## Build
 
-Requires Zig 0.16.0 (`winget install zig.zig`). The build is at the **root of the repository** (one `build.zig` for all the modules, D-163); run it from there:
+Requires Zig 0.17.0 (`winget install zig.zig`; since 2026-10-18, TD-37). The build is at the **root of the repository** (one `build.zig` for all the modules, D-163); run it from there:
 
 | Command | Result |
 |---|---|

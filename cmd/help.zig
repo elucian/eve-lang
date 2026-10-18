@@ -22,8 +22,7 @@ pub const quick_help =
     \\Quick help:
     \\  -x                execute the script now, in this process (parsed first): no IPC or
     \\                    HTTP lookup, the fast way to run a script; same as --execute
-    \\  -ux               open the web user interface (the page of the machine) if it is not open; with a
-    \\                    command, open it and then run the command
+    \\  -ux [folder]      start the native workbench, eveux, on a project folder (also: eve ux; eve ux start is the web door)
     \\  -tx [folder]      start the terminal IDE, evetx, on a project folder (also: eve tx)
     \\  --kill            stop all the other eve programs of this bin/ folder (eve, evetx, evedb); the build runs it (also: eve kill)
     \\  -d                debug mode: halt statements stop the script (ignored otherwise)

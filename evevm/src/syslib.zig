@@ -140,7 +140,7 @@ pub fn osModule(it: *Interp, name: []const u8, _: []const *const Node, args: []c
     if (eql(u8, name, "env!")) {
         const var_name = try strArg(it, args, 0, "os.env!");
         const default = try strArg(it, args, 1, "os.env!");
-        const z = try it.t.dupeZ(u8, var_name);
+        const z = try it.t.dupeSentinel(u8, var_name, 0);
         const got = std.c.getenv(z.ptr) orelse return try it.newStr(default);
         return try it.newStr(std.mem.span(got));
     }

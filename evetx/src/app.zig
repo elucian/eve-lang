@@ -3798,7 +3798,7 @@ pub const App = struct {
     }
 
     // Zig tip: a pattern is first tried as a regular expression; one that is not valid (`compile` fails) is searched as plain text.
-    // `?regex.Regex` holds the compiled one or null. `std.ascii.indexOfIgnoreCase` is the plain search.
+    // `?regex.Regex` holds the compiled one or null. `std.ascii.findIgnoreCase` is the plain search.
     const Matcher = struct {
         col: usize,
         re: ?regex.Regex,
@@ -3806,7 +3806,7 @@ pub const App = struct {
 
         fn test_(m: *const Matcher, cell: []const u8) bool {
             if (m.re) |*re| return re.find(cell);
-            return std.ascii.indexOfIgnoreCase(cell, m.lit) != null;
+            return std.ascii.findIgnoreCase(cell, m.lit) != null;
         }
     };
 
@@ -4769,7 +4769,7 @@ pub const App = struct {
             if (name.len == 0) self.openCreateTable() else try self.createTableNamed(name);
             return;
         }
-        if (cmd.len >= 10 and std.ascii.eqlIgnoreCase(cmd[0..10], "drop table") and (cmd.len == 10 or cmd[10] == ' ') and std.ascii.indexOfIgnoreCase(cmd, " if ") == null) {
+        if (cmd.len >= 10 and std.ascii.eqlIgnoreCase(cmd[0..10], "drop table") and (cmd.len == 10 or cmd[10] == ' ') and std.ascii.findIgnoreCase(cmd, " if ") == null) {
             try self.dropTable(std.mem.trim(u8, cmd[10..], " ;"));
             return;
         }

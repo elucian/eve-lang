@@ -119,7 +119,10 @@ pub fn build(b: *std.Build) void {
     // step below runs a command (`addSystemCommand`) that stops the eve programs of that folder, and `dependOn` makes
     // the copy wait for it. Compiling goes on in parallel; only the install waits. The same script is `eve --kill`.
     // `builtin.os.tag` is the system the build runs on (not the target), so other systems skip the step.
-    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", b.pathFromRoot("script/stop_eve.ps1"), "-Bin", b.getInstallPath(.bin, "") });
+    const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File" });
+    stop.addFileArg(b.path("script/stop_eve.ps1"));
+    stop.addArg("-Bin");
+    stop.addFileArg(.{ .relative = .{ .base = .install_prefix, .sub_path = "bin" } });
     stop.has_side_effects = true;
     const install_exe = b.addInstallArtifact(exe, .{});
     if (@import("builtin").os.tag == .windows) install_exe.step.dependOn(&stop.step);
@@ -138,9 +141,7 @@ pub fn build(b: *std.Build) void {
     const run_cmd = b.addRunArtifact(exe);
     run_step.dependOn(&run_cmd.step);
     run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    run_cmd.addPassthruArgs();
 
     // `zig build doc` writes lib/doc from lib/ (the standard modules in Eve) and lib/sys/ (the signatures of the
     // native modules) with the `doc` command of eve (`eve --doc`, D-082, D-189).
@@ -153,17 +154,15 @@ pub fn build(b: *std.Build) void {
     }
 
     // The standard library in Eve is found beside the program: `<prefix>/lib/*.eve` for `<prefix>/bin/eve.exe`
-    // (cmd/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and `lib/` is already there.
-    const prefix_is_root = std.mem.eql(u8, b.install_path, ".") or std.mem.eql(u8, b.install_path, b.build_root.path orelse "");
-    if (!prefix_is_root) {
-        const install_lib = b.addInstallDirectory(.{
-            .source_dir = b.path("lib"),
-            .install_dir = .prefix,
-            .install_subdir = "lib",
-            .exclude_extensions = &.{ "md" },
-        });
-        b.getInstallStep().dependOn(&install_lib.step);
-    }
+    // (cmd/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and the copy lands on the same files
+    // (Zig 0.17 cannot tell the prefix while configuring, so the step is always there).
+    const install_lib = b.addInstallDirectory(.{
+        .source_dir = b.path("lib"),
+        .install_dir = .prefix,
+        .install_subdir = "lib",
+        .exclude_extensions = &.{"md"},
+    });
+    b.getInstallStep().dependOn(&install_lib.step);
 
     // One test program per module: each runs the tests of its own files.
     const test_step = b.step("test", "Run unit tests");

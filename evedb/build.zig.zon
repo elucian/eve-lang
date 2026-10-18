@@ -2,7 +2,7 @@
     .name = .evedb,
     .version = "0.0.1",
     .fingerprint = 0x3595577cc7d3d75f, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .duckdb_windows_amd64 = .{
             .url = "https://github.com/duckdb/duckdb/releases/download/v1.5.6/libduckdb-windows-amd64.zip",

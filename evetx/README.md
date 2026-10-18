@@ -157,7 +157,7 @@ All the drawings are in [design/](design/). They are written by `design/gen_svg.
 
 - It reaches a machine only through the JSON-RPC client of `evecm/wire`; one task per machine (`std.Io`), so a slow machine never freezes the screen.
 - The list of projects and machines, the history of commands and the upload manifest are in the **user cache** `eve.db` (SQLite, `<user data folder>/eve/meta/eve.db`), reached through the `Meta` interface of `evecm`, implemented by `evedb`, wired by `cmd` (Q-052 b). It holds no password and no token.
-- Started by **`eve -tx`** (D-172); `eve tx` stays a synonym, and `./run.sh evetx` is the shortcut. `eve -ux` starts the web UI. A direct command, not a serving part (D-164).
+- Started by **`eve -tx`** (D-172); `eve tx` stays a synonym, and `./run.sh evetx` is the shortcut. `eve -ux` starts eveux, the native workbench (D-193; it was the web UI, now `eve ux start`). A direct command, not a serving part (D-164).
 - The line editor of `evecm/term` stays for the REPL; `evetx` takes the terminal (raw mode, alternate screen) only while it runs.
 
 ```

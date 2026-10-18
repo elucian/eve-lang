@@ -119,7 +119,7 @@ pub const Heap = struct {
     const big_classes = 33;
     const big_keep = 4;
 
-    const kind_count = @typeInfo(Kind).@"enum".fields.len;
+    const kind_count = std.meta.fieldNames(Kind).len;
     /// How many freed objects of one kind are kept, and the largest inner buffer kept with them.
     const pool_max = 4096;
     const buffer_max = 64;

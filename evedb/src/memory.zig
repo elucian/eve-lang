@@ -253,7 +253,7 @@ pub fn memoryCall(it: Host, obj: *Object, name: []const u8, args: []const *const
         for (args[2..]) |a| try params.append(it.temp(), try it.eval(a));
         try conn.enlist(it, c.idx, c.db);
         try orm.flushConn(it, c.idx);
-        var st = c.db.prepare(try it.temp().dupeZ(u8, sql)) catch
+        var st = c.db.prepare(try it.temp().dupeSentinel(u8, sql, 0)) catch
             return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ c.db.errorMessage(), sql });
         defer st.finalize();
         try conn.bindAll(it, c.db, &st, params.items);

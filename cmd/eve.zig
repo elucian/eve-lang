@@ -195,15 +195,9 @@ pub fn main(init: std.process.Init) !void {
         try errw.interface.flush();
         std.process.exit(code);
     }
-    if (opts.tx) std.process.exit(try startTx(init.io, arena, stdout, opts.tx_args));
+    if (opts.tx) std.process.exit(try startPart(init.io, arena, stdout, "evetx", opts.tx_args));
+    if (opts.ux) std.process.exit(try startPart(init.io, arena, stdout, "eveux", opts.ux_args));
     if (opts.kill) std.process.exit(try killOthers(init.io, arena, stdout));
-    // `-ux`: open the user interface (the web page of the machine) if it is not open. Alone it ends here and the system
-    // prompt comes back; with a command (`eve -ux check a.eve`) the command runs after it, as it would without `-ux`.
-    if (opts.ui) {
-        const code = try evevm.daemon.openUi(init.io, arena, stdout, opts.config);
-        try stdout.flush();
-        if (code != 0 or opts.command == null) std.process.exit(code);
-    }
     const interactive = (try Io.File.stdin().isTty(init.io)) and (try Io.File.stdout().isTty(init.io));
     // Zig tip: `Io.Writer.Allocating` is a writer that keeps what it is given in memory. At a terminal the machine
     // options write into it first, because the full-screen REPL (which may follow) starts only afterwards and has to
@@ -301,18 +295,20 @@ fn killOthers(io: Io, arena: std.mem.Allocator, out: *Io.Writer) !u8 {
     return 0;
 }
 
-// Zig tip: `std.process.executableDirPathAlloc` gives the folder of the running program, so `eve` finds `evetx` beside
-// it in `bin/` whatever the current folder is. `.inherit` lets the child use this terminal directly: evetx takes the
-// screen, and `wait` returns when it ends with a `Term`, whose `.exited` case carries the exit code of the child.
-/// `eve -tx [folder]`: start the terminal IDE (evetx, a separate program until it joins the root build) and wait for it.
-fn startTx(io: Io, arena: std.mem.Allocator, out: *Io.Writer, args: []const []const u8) !u8 {
+// @eve-impl `eve -tx` and `eve -ux`: start a separate program that sits beside eve in bin/ and wait for it
+// @spec manual/usage.md#the-user-interfaces--ux-and--tx-d-172
+// @decision D-172
+// @decision D-193
+/// Start `name` (`evetx` the terminal IDE, `eveux` the native workbench) from the folder of `eve` with `args`, sharing this terminal, and
+/// wait for it. Both are separate programs until they join the root build; a missing file is exit 69 with the build command.
+fn startPart(io: Io, arena: std.mem.Allocator, out: *Io.Writer, name: []const u8, args: []const []const u8) !u8 {
     const dir = try std.process.executableDirPathAlloc(io, arena);
-    const exe = try std.fmt.allocPrint(arena, "{s}{c}evetx{s}", .{ dir, std.fs.path.sep, @import("builtin").target.exeFileExt() });
+    const exe = try std.fmt.allocPrint(arena, "{s}{c}{s}{s}", .{ dir, std.fs.path.sep, name, @import("builtin").target.exeFileExt() });
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.append(arena, exe);
     try argv.appendSlice(arena, args);
     var child = std.process.spawn(io, .{ .argv = argv.items, .stdin = .inherit, .stdout = .inherit, .stderr = .inherit }) catch |err| {
-        try out.print("eve: cannot start {s}: {s} (build it: cd evetx && zig build -p ..)\n", .{ exe, @errorName(err) });
+        try out.print("eve: cannot start {s}: {s} (build it: cd {s} && zig build -p ..)\n", .{ exe, @errorName(err), name });
         try out.flush();
         return 69;
     };

@@ -29,8 +29,9 @@ pub const Options = struct {
     args: []const []const u8 = &.{},
     /// The options of the machine (`--listen`, `--serve`, `-loc`, `-rem`; spec/library/machine.md).
     machine: client.Cmd = .{},
-    /// `-ux`: open the web user interface (the page of the machine) when it is not open (D-172; was `-u`).
-    ui: bool = false,
+    /// `-ux`: start the native workbench, eveux, with the rest of the line (D-193; D-172 made it the web page, now `eve ux start`).
+    ux: bool = false,
+    ux_args: []const []const u8 = &.{},
     /// `-tx`: start the terminal IDE, evetx, with the rest of the line (D-172).
     tx: bool = false,
     /// `-s [file.cfg]`: start the machine as a service, silent (D-185); nothing else may come with it but `-db` (D-188).
@@ -106,9 +107,18 @@ pub fn partWords(gpa: std.mem.Allocator, argv_in: []const []const u8) ParseError
         copy[0] = if (eql(u8, first, "tx")) "-tx" else "--kill";
         return copy;
     }
-    if (eql(u8, first, "ux") or eql(u8, first, "db")) {
+    if (eql(u8, first, "ux")) {
+        // `eve ux start|stop|restart|status` stays the web door (D-163, test e95_test4); any other rest starts eveux (D-193)
+        const door = argv.len > 1 and for ([_][]const u8{ "start", "stop", "restart", "status" }) |w| {
+            if (eql(u8, argv[1], w)) break true;
+        } else false;
         const copy = try gpa.dupe([]const u8, argv);
-        copy[0] = if (eql(u8, first, "ux")) "--serve" else "--db";
+        copy[0] = if (door) "--serve" else "-ux";
+        return copy;
+    }
+    if (eql(u8, first, "db")) {
+        const copy = try gpa.dupe([]const u8, argv);
+        copy[0] = "--db";
         return copy;
     }
     return try commandWord(gpa, argv);
@@ -176,7 +186,10 @@ pub fn parseArgs(
         } else if (std.mem.eql(u8, a, "-x")) {
             o.execute = true;
         } else if (std.mem.eql(u8, a, "-ux")) {
-            o.ui = true;
+            // everything after `-ux` belongs to eveux (a project folder), so the parse stops here
+            o.ux = true;
+            o.ux_args = line[i + 1 ..];
+            break;
         } else if (std.mem.eql(u8, a, "--kill")) {
             o.kill = true;
         } else if (std.mem.eql(u8, a, "--stdio")) {
@@ -246,7 +259,7 @@ pub fn parseArgs(
     if (o.execute and o.command == null) o.command = cli.find("execute");
     o.args = try rest.toOwnedSlice(gpa);
     // the service takes nothing else (D-188), except the database part: `eve -s -db --serve evedb.cfg` (D-186)
-    if (o.service and o.command != cli.find("db") and (o.command != null or o.args.len > 0 or o.execute or o.ui or o.tx or o.kill or o.stdio or
+    if (o.service and o.command != cli.find("db") and (o.command != null or o.args.len > 0 or o.execute or o.ux or o.tx or o.kill or o.stdio or
         o.machine.listen or o.machine.serve or o.machine.local or o.machine.remote))
     {
         bad.* = "-s";

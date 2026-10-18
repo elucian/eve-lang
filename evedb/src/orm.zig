@@ -220,7 +220,7 @@ fn ensureTemporary(it: Host, t: *Table, db: *sqlite.Db) Signal!void {
         try quote(it, &buf, t.columns[k]);
     }
     try buf.appendSlice(it.temp(), "))");
-    db.exec(try it.temp().dupeZ(u8, buf.items)) catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
+    db.exec(try it.temp().dupeSentinel(u8, buf.items, 0)) catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
     t.created = true;
 }
 
@@ -380,7 +380,7 @@ fn count(it: Host, t: *Table, args: []const *const Node) Signal!Value {
     try quoteTable(it, &buf, t);
     try buf.appendSlice(it.temp(), " where ");
     try buf.appendSlice(it.temp(), cond);
-    var st = db.prepare(try it.temp().dupeZ(u8, buf.items)) catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
+    var st = db.prepare(try it.temp().dupeSentinel(u8, buf.items, 0)) catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
     defer st.finalize();
     try dbconn.bindAll(it, db, &st, values);
     const row = st.step() catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
@@ -502,7 +502,7 @@ fn conflict(it: Host, t: *const Table, obj: *Object) Signal {
 
 /// Run one write statement; when the statement has a RETURNING clause, read the row into the fields `ret`.
 fn writeStatement(it: Host, db: *sqlite.Db, sql: []const u8, params: []const Value, t: *const Table, ret: []const usize, obj: *Object) Signal!i64 {
-    var st = db.prepare(try it.temp().dupeZ(u8, sql)) catch return it.failWith(value.err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), sql });
+    var st = db.prepare(try it.temp().dupeSentinel(u8, sql, 0)) catch return it.failWith(value.err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), sql });
     defer st.finalize();
     try dbconn.bindAll(it, db, &st, params);
     const row = st.step() catch {
@@ -780,7 +780,7 @@ fn load(it: Host, t: *Table, args: []const *const Node) Signal!Value {
             try probe.appendSlice(it.temp(), "select 1 from ");
             try quoteTable(it, &probe, t);
             try whereKeyOnly(it, t, &probe, &pp, row.object);
-            var st = db.prepare(try it.temp().dupeZ(u8, probe.items)) catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
+            var st = db.prepare(try it.temp().dupeSentinel(u8, probe.items, 0)) catch return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
             defer st.finalize();
             try dbconn.bindAll(it, db, &st, pp.items);
             existed = st.step() catch false;
@@ -950,7 +950,7 @@ fn coreDb(it: Host) Signal!*sqlite.Db {
     } else |_| {}
     if (std.fs.path.dirname(path)) |dir| Io.Dir.cwd().createDirPath(io, dir) catch {};
     const db = try it.arena().create(sqlite.Db);
-    db.* = sqlite.Db.open(try it.temp().dupeZ(u8, path)) catch return it.failWith(err_io, "DatabaseError: cannot open the core database {s}", .{path});
+    db.* = sqlite.Db.open(try it.temp().dupeSentinel(u8, path, 0)) catch return it.failWith(err_io, "DatabaseError: cannot open the core database {s}", .{path});
     db.exec("create table if not exists eve_checkpoint (name text primary key, value text not null, updated text not null) strict") catch
         return it.failWith(err_io, "DatabaseError: {s}", .{db.errorMessage()});
     b.core_db = db;

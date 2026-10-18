@@ -300,7 +300,7 @@ test "values round trip through the builder and the cursor" {
         .{ .instant = 1_700_000_000_000_000 },
         .{ .date = -3 },
         .{ .huge = "170141183460469231731687303715884105727" },
-        .{ .uuid = [_]u8{7} ** 16 },
+        .{ .uuid = @as([16]u8, @splat(7)) },
     };
     for (vals) |v| try b.value(v);
     var c: Cursor = .{ .buf = b.buf.items };

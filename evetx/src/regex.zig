@@ -125,7 +125,7 @@ const Parser = struct {
                 const e = p.peek() orelse return error.BadPattern;
                 p.i += 1;
                 if (std.mem.indexOfScalar(u8, "dDwWsS", e) != null) {
-                    var set: Set = [_]bool{false} ** 256;
+                    var set: Set = @as([256]bool, @splat(false));
                     fillEscape(&set, e);
                     return p.addSet(set);
                 }
@@ -149,7 +149,7 @@ const Parser = struct {
     // Zig tip: a set of letters is a table of 256 booleans, one for each byte, so asking "is this byte in the set?" is one
     // index. Both cases of a letter are put in, so the match ignores the case.
     fn parseClass(p: *Parser) Error!*const Node {
-        var set: Set = [_]bool{false} ** 256;
+        var set: Set = @as([256]bool, @splat(false));
         var negate = false;
         if (p.peek() == '^') {
             negate = true;

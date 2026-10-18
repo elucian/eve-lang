@@ -298,7 +298,7 @@ pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
         if (h.len == 0) break;
         const colon = std.mem.indexOfScalar(u8, h, ':') orelse continue;
         if (std.ascii.eqlIgnoreCase(h[0..colon], "content-length")) length = std.fmt.parseInt(usize, std.mem.trim(u8, h[colon + 1 ..], " "), 10) catch 0;
-        if (std.ascii.eqlIgnoreCase(h[0..colon], "transfer-encoding") and std.ascii.indexOfIgnoreCase(h[colon + 1 ..], "chunked") != null) chunked = true;
+        if (std.ascii.eqlIgnoreCase(h[0..colon], "transfer-encoding") and std.ascii.findIgnoreCase(h[colon + 1 ..], "chunked") != null) chunked = true;
     }
     const target = target_all[0 .. std.mem.indexOfScalar(u8, target_all, '?') orelse target_all.len];
     if (std.mem.eql(u8, method, "POST")) {

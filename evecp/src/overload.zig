@@ -93,7 +93,7 @@ pub fn hasResult(decl: *const Node) bool {
 pub fn score(decl: *const Node, args: []const ArgInfo) ?u32 {
     const params = valueParams(decl);
     const tparams = decl.kids[1].kids;
-    var taken = [_]bool{false} ** 32;
+    var taken: [32]bool = @splat(false);
     if (args.len > taken.len) return null;
     var total: u32 = 0;
     var pos: usize = 0;

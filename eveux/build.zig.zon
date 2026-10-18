@@ -1,0 +1,14 @@
+.{
+    .name = .eveux,
+    .version = "0.0.0",
+    .fingerprint = 0x9b2e8d162d5ce7e7,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        // dvui main (0.6.0-dev) needs Zig 0.17; the tag v0.5.0 is the Zig 0.16 line; see design/notes/dvui.md
+        .dvui = .{
+            .url = "git+https://github.com/david-vanderson/dvui?ref=main#f68fa8ae8b078a7df0bac21ac19ac57fca181958",
+            .hash = "dvui-0.6.0-dev-AQFJmac1BAESesukeXZhVyMJy-98QmL8EPI4Rdvdh6zr",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}

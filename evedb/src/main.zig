@@ -259,7 +259,7 @@ pub fn main(init: std.process.Init) !u8 {
         };
         defer d.db.close();
         defer d.conn.close();
-        const sql = try arena.dupeZ(u8, w[1]);
+        const sql = try arena.dupeSentinel(u8, w[1], 0);
         var res = d.conn.query(sql) catch {
             try out.print("evedb: error: {s}\n", .{d.conn.lastError()});
             return 65;
