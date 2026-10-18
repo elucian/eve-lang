@@ -10,7 +10,7 @@ An **error** is a record `{code, message, job, line}`. It is created by `raise e
 
 ## Process
 
-An error raised anywhere in a process (also inside a job or a called function or procedure) makes the process jump to its `recover` region. A process without `recover` aborts on every error.
+An error raised anywhere in a process (also inside a job or a called function or procedure) makes the process jump to its `recover` region, unless a function, procedure or method on the way has a `recover` of its own and handles it first (D-192, below). A process without `recover` aborts on every error.
 
 ### `recover`
 
@@ -27,6 +27,31 @@ An error raised anywhere in a process (also inside a job or a called function or
 `$error.attempt` (level 5) is the number of the run of the failed job: 1 for the first run, 2 after one retry. `$error.transient` is `True` for the errors that a new try can cure (a lost connection, a deadlock, a time-out). **Fatal errors:** `retry` and `resume` are refused for a `MappingError` and for a `CommitError`: the process aborts with exit code 4 (`../library/database.md#errors`). When a job fails, the database layer has rolled back its transaction before `recover` runs; the records in memory keep their values and are detached (`../library/database.md#transactions`). `$error.failed` (a `BatchError`) is the collection of the failing records `{key, reason}` of a batch. A job that ends by `rollback;` is not an error: `recover` does not run.
 
 `retry` and `resume` need a failed job: an error outside a job can only be aborted or handled by reaching the end of `recover`. An error raised inside `recover` aborts with that error. A `retry` that always fails is a user error: the compiler does not limit retries.
+
+### `recover` in a function, procedure or method
+
+Level 2 (D-192, answer to Q-065). A function, a procedure and a method can have a `recover` region, written like the one of a process: aligned with the keyword, at the end, before `return;`.
+
+```eve
+function half(n: Integer) => (@result: Integer) is
+  let result := 100 / n;
+recover
+  print "recovered: {$error.message}";
+  let result := -1;
+return;
+```
+
+- **When it runs.** An error raised in the body, or in anything the body calls and does not handle, makes the routine jump to its `recover`. `$error` is available as in a process. The variables and the parameters of the routine, `@self` of a method and the result variables are in scope.
+- **End of `recover`: the error is handled** and the routine **returns normally**. A function gives its result variables as they are at that moment: the value that `recover` or the body set, or the zero value of the type (`0`, `""`, `False`, empty collections). Nothing else changes for the caller; it never sees the error.
+- **`abort;`** passes the same error to the caller, which may handle it in its own `recover` (the routine's `defer`s run first).
+- **An error raised in `recover`** is the error that goes to the caller; the first error is dropped.
+- **`retry` and `resume`** need a failed job (see above): in the `recover` of a routine they are a run-time error with the message `retry and resume need a failed job: a <function|procedure|method> can only handle the error or abort`.
+- **`defer`** blocks of the routine run after `recover`, on every way out.
+- **A `recover` does not change the kind of the routine:** a function with `recover` is still deterministic when its body is, and a safe module function stays safe. The handled error is counted in the report of the machine like any handled error.
+- **Not allowed:** a **constructor**, a **generator** and a **lambda** have no `recover` (compile error, exit 65). A routine of a trait that is only a signature has none. `finalize` is not offered: `defer` does that work in a routine (a process keeps `finalize`).
+- **Where it helps:** a library function that must turn a failure into a value (`rpc.dispatch` answers `-32603`), a module function that logs and goes on, a method that refuses an operation and says why.
+
+Tests: level 2 `b55` to `b59`; level 3 `c34` to `c36`. Grammar: `../syntax/grammar.md#procedures-functions-and-methods`.
 
 ### `finalize`
 

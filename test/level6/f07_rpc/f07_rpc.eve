@@ -11,10 +11,12 @@ primary aspect f07_rpc is
 
     new add := (p) => (p[1] + p[2]);
     new ping := (p) => ("pong");
-    new handlers := {"add": add, "vm.ping": ping};
+    new boom := (p) => (p[1] / p[2]);
+    new handlers := {"add": add, "vm.ping": ping, "div": boom};
     print rpc.dispatch(rpc.request(5, "add", (2, 3)), handlers);
     print rpc.dispatch(rpc.request(6, "vm.ping", ()), handlers);
     print rpc.dispatch(rpc.request(7, "nope", ()), handlers);
+    print rpc.dispatch(rpc.request(8, "div", (1, 0)), handlers);
     print rpc.dispatch(rpc.notify("vm.ping", ()), handlers).length();
     print rpc.dispatch("not json", handlers);
     print rpc.dispatch("[1]", handlers);
@@ -35,6 +37,7 @@ end f07_rpc;
     "{\"id\":5,\"jsonrpc\":\"2.0\",\"result\":5}",
     "{\"id\":6,\"jsonrpc\":\"2.0\",\"result\":\"pong\"}",
     "{\"error\":{\"code\":-32601,\"message\":\"method not found: nope\"},\"id\":7,\"jsonrpc\":\"2.0\"}",
+    "{\"error\":{\"code\":-32603,\"message\":\"Division by zero\"},\"id\":8,\"jsonrpc\":\"2.0\"}",
     "0",
     "{\"error\":{\"code\":-32700,\"message\":\"parse error\"},\"id\":null,\"jsonrpc\":\"2.0\"}",
     "{\"error\":{\"code\":-32600,\"message\":\"invalid request\"},\"id\":null,\"jsonrpc\":\"2.0\"}",

@@ -1,0 +1,22 @@
+# retry and resume need a failed job: in the recover of a function they are a run-time error (D-192)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect b58_recover_retry_refused is
+  procedure flaky() is
+    raise "boom";
+  recover
+    retry;
+  return;
+
+  process main is
+    flaky();
+  recover
+    print "caller: {$error.message}";
+  return;
+end b58_recover_retry_refused;
+/*@expect
+{
+  "stdout": [
+    "caller: retry and resume need a failed job: a procedure can only handle the error or abort (D-192)"
+  ]
+}
+*/

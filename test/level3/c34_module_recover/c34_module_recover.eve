@@ -1,0 +1,22 @@
+# an exported function or procedure of a module can have a recover region; it handles the error before the importer sees it (D-192)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect c34_module_recover is
+  from lib use (safe);
+
+  process main is
+    print safe.divide(10, 2);
+    print safe.divide(1, 0);
+    safe.log_failure("disk full");
+    print "failures: {safe.failures!()}";
+  return;
+end c34_module_recover;
+/*@expect
+{
+  "stdout": [
+    "5",
+    "0",
+    "logged: disk full",
+    "failures: 2"
+  ]
+}
+*/

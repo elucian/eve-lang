@@ -1,0 +1,22 @@
+# a constructor has no recover region: it is a compile error (D-192)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect c36_constructor_no_recover is
+  class Box = {n: Integer} <: Object is
+    constructor(n: Integer) => (@self) is
+      let self := Object();
+      let self.n := n;
+    recover
+      pass;
+    return;
+  end Box;
+
+  process main is
+    print "never";
+  return;
+end c36_constructor_no_recover;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

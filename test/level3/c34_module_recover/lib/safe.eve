@@ -1,0 +1,26 @@
+# safe: exported functions and procedures that handle their own errors (D-192)
+module safe is
+  export (divide, log_failure, failures!);
+
+  new count = 0 :Integer;
+
+  ** a division that never fails: 0 when the divisor is 0
+  function divide(a, b: Integer) => (@result: Integer) is
+    let result := a / b;
+  recover
+    let count += 1;
+    let result := 0;
+  return;
+
+  ** the module state changes inside recover too
+  procedure log_failure(text: String) is
+    raise text;
+  recover
+    let count += 1;
+    print "logged: {$error.message}";
+  return;
+
+  function failures!() => (@result: Integer) is
+    let result := count;
+  return;
+end safe;

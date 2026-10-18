@@ -1,0 +1,31 @@
+# a method can have a recover region; it sees self and its own variables (D-192)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect c35_method_recover is
+  class Account = {balance: Integer} <: Object is
+    public method withdraw(@self, amount: Integer) => (@ok: Logic) is
+      raise "insufficient funds" if amount > self.balance;
+      let self.balance -= amount;
+      let ok := True;
+    recover
+      print "refused {amount}: {$error.message}";
+      let ok := False;
+    return;
+  end Account;
+
+  process main is
+    new a := Account(balance: 100);
+    print a.withdraw(30);
+    print a.withdraw(500);
+    print a.balance;
+  return;
+end c35_method_recover;
+/*@expect
+{
+  "stdout": [
+    "True",
+    "refused 500: insufficient funds",
+    "False",
+    "70"
+  ]
+}
+*/

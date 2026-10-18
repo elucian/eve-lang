@@ -1,0 +1,33 @@
+# an error raised in recover goes to the caller; abort passes the same error on; the caller's recover sees it (D-192)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect b57_recover_propagates is
+  procedure inner() is
+    raise "first";
+  recover
+    print "inner saw: {$error.message}";
+    abort;
+  return;
+
+  procedure middle() is
+    inner();
+  recover
+    print "middle saw: {$error.message}";
+    raise "second";
+  return;
+
+  process main is
+    middle();
+    print "never";
+  recover
+    print "main saw: {$error.message}";
+  return;
+end b57_recover_propagates;
+/*@expect
+{
+  "stdout": [
+    "inner saw: first",
+    "middle saw: first",
+    "main saw: second"
+  ]
+}
+*/

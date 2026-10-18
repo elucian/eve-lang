@@ -1,0 +1,34 @@
+# a function and a procedure can have a recover region: the error is handled inside, the caller goes on (D-192, Q-065)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect b55_function_recover is
+  function half(n: Integer) => (@result: Integer) is
+    let result := 100 / n;
+  recover
+    print "recovered: {$error.message}";
+    let result := -1;
+  return;
+
+  procedure shout(text: String) is
+    raise "no shouting: {text}";
+  recover
+    print "procedure recovered: {$error.message}";
+  return;
+
+  process main is
+    print half(4);
+    print half(0);
+    shout("hi");
+    print "after";
+  return;
+end b55_function_recover;
+/*@expect
+{
+  "stdout": [
+    "25",
+    "recovered: Division by zero",
+    "-1",
+    "procedure recovered: no shouting: hi",
+    "after"
+  ]
+}
+*/

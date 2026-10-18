@@ -163,9 +163,9 @@ constant    = "set" , ( const-binding , { "," , const-binding } | "(" , names , 
 alias       = "def" , name , "=" , name-path , ";" ;
 
 procedure   = "procedure" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
-              { declaration | statement } , "return" , ";" ;       (* no result, never "!" (D-100, D-101) *)
+              { declaration | statement } , [ recover ] , "return" , ";" ;   (* no result, never "!" (D-100, D-101); recover: D-192 *)
 function    = "function" , name , [ "!" ] , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
-              { declaration | statement } , "return" , ";" ;
+              { declaration | statement } , [ recover ] , "return" , ";" ;   (* recover: D-192 *)
 results     = "(" , result , { "," , result } , ")" ;
 result      = [ "@" ] , name , [ "!" ] , ":" , type ;           (* a result of a non-deterministic kind may be named name! *)
 parameters  = parameter , { "," , parameter } ;
@@ -188,7 +188,7 @@ attribute   = names , type-hint ;
 names       = name , { "," , name } ;
 class-member = [ visibility ] , ( method | constructor | destructor ) ;
 visibility  = "public" | "protected" | "private" ;
-method      = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body ;
+method      = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body , [ recover ] ;   (* recover: D-192; a constructor, a generator and a lambda have none *)
 constructor = "constructor" , "(" , [ parameters ] , ")" , "=>" , "(" , "@self" , ")" , "is" , body ;
 destructor  = "destructor" , "(" , "@self" , ")" , "is" , body ;
 body        = { declaration | statement } , "return" , ";" ;

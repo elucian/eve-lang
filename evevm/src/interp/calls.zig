@@ -422,7 +422,24 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     try it.frames.append(it.a, .{ .kind = @tagName(node.tag), .name = node.text, .call_line = it.line });
     defer _ = it.frames.pop();
     const mark = it.defers.items.len;
-    const outcome = it.execBlock(node.kids[3]);
+    var outcome = it.execBlock(node.kids[3]);
+    // @eve-impl the `recover` region of a function, procedure or method (kids[4]): runs after a raised error, with `$error`;
+    // reaching its end handles the error and the routine returns the result variables as they are; `abort` passes the error on
+    // @spec spec/semantics/errors.md#recover-in-a-function-procedure-or-method
+    // @feature F-STR-11
+    // @decision D-192
+    if (node.kids.len > 4) if (outcome) |_| {} else |e| if (e == error.Raise) {
+        try it.define("$error", try it.errorObject(), false);
+        const idx = it.reports.items.len - 1;
+        outcome = it.execBlock(node.kids[4]);
+        if (outcome) |_| {
+            it.reports.items[idx].handled = true;
+        } else |re| switch (re) {
+            error.Abort => outcome = error.Raise,
+            error.Retry, error.Resume => outcome = it.fail("retry and resume need a failed job: a {s} can only handle the error or abort (D-192)", .{@tagName(node.tag)}),
+            else => {},
+        }
+    };
     if (outcome) |_| it.runDefers(mark) else |e| if (e != error.Panic) it.runDefers(mark);
     outcome catch |e| if (e != error.Exit) return e;
     const res = node.kids[2].kids;

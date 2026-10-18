@@ -23,7 +23,7 @@ A declaration header ends with the keyword `is` (D-015): `aspect name is`, `proc
 
 ### Process
 
-`process main is` … `return;` is the executable part of an aspect. A process takes parameters (`process main(*args) is`); the parameters belong to the process, not to the aspect (D-040). A process has no result: its outputs are `@` parameters (D-038). It can end with a `recover` region and a `finalize` region, aligned with `process`, before `return;` (see `../semantics/errors.md`). A process has access to the variables of its script.
+A function, a procedure and a method may end with a `recover` region too, before `return;` (D-192, `../semantics/errors.md#recover-in-a-function-procedure-or-method`). `process main is` … `return;` is the executable part of an aspect. A process takes parameters (`process main(*args) is`); the parameters belong to the process, not to the aspect (D-040). A process has no result: its outputs are `@` parameters (D-038). It can end with a `recover` region and a `finalize` region, aligned with `process`, before `return;` (see `../semantics/errors.md`). A process has access to the variables of its script.
 
 ## Variables and constants
 

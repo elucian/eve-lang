@@ -183,6 +183,7 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-VM-06 | Efficient collections | open | hashed and sorted maps, sets, ropes for Text (review `RVM-R04`). |
 | F-STR-09 | Eve macro (hybrid script) | open | one self-contained file: shared declarations and several aspects, exactly one of them `primary`; `apply` (level 2) and `parallel`/`start` (level 4) inside it; a concurrent aspect uses only the thread-safe shared names (D-152, D-180; tests e16 to e22, e108, e109). |
 | F-STR-10 | Unified aspect | ✓ done | no `driver` keyword, no free script, no `#!`; the kinds `exclusive`, `concurrent` and `primary`; `main` and private processes; calls between aspects at most three levels deep and without a cycle; a concurrent aspect is called from a primary or an exclusive aspect; a primary aspect is run by a command (D-179 to D-183; tests a04, b15, b24, b45 to b54, c24, d36 to d40, e21, e61, e108, e109). |
+| F-STR-11 | `recover` in a function, procedure and method | ✓ done | the end of `recover` handles the error and the routine returns normally; `abort` passes it on; no `recover` in a constructor, generator or lambda (D-192, Q-065; `spec/semantics/errors.md`; tests b55 to b59, c34 to c36; 2026-10-18). |
 
 Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; level 5 passes against the Eve database (SQLite) and a PostgreSQL server; a killed load restarts from its checkpoint; `db backup` and `db restore` round-trip.
 

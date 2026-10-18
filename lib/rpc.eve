@@ -23,8 +23,14 @@ module rpc is
     let result := json.text({"jsonrpc": "2.0", "id": id, "error": {"code": code, "message": message}});
   return;
 
+  ** The answer of one handler call; an error of the handler becomes the answer -32603 (recover in a function, D-192).
+  function answer(:H, :I, :P)(handler: H, id: I, params: P) => (@result: String) is
+    let result := reply(id, handler(params));
+  recover
+    let result := failure(id, -32603, $error.message);
+  return;
+
   ** Read one request line, call handlers[method](params) and give the text of the answer; "" for a notification.
-  ** An error raised by a handler is not caught here: a function of Eve code can not catch an error (plan/library-gaps.md G-4).
   function dispatch(:H)(line: String, handlers: H) => (@result: String) is
     let result := failure(json.parse("null"), -32700, "parse error");
     if json.valid(line) do
@@ -37,8 +43,7 @@ module rpc is
         let params := msg["params"] if ("params" in msg);
         if name in handlers do
           new handler := handlers[name];
-          new value := handler(params);
-          let result := reply(id, value);
+          let result := answer(handler, id, params);
           let result := "" if not ("id" in msg);
         else
           let result := failure(id, -32601, "method not found: {name}");

@@ -3,8 +3,14 @@
 One line per gap: what was missing or wrong, found by which module, where it should be fixed. Fix the language, never work around it in the library.
 
 - **G-1** An error raised in a module of the standard library reports the file name of the *calling* script with the line of the module (`f03_test_module.eve:71` for a line of `lib/test.eve`). Found by `test`. Fix: the frame and the error carry the file of the code that raised.
+**answer** good find and good fix.
 - **G-2** The unhandled `raise "message"` ends with exit code 4; a test runner may want its own code. There is no `exit <code>` statement. Found by `test`. Decide (Q): `exit <code>;` or `$exit_code`.
+**answer** No problem, enable exit <code>; and also over <code>. When you define new exit codes, add them in spec with description.
 - **G-3** A user module that declares `external` cannot be bound to a native (D-191 (4)). Found by the signature files.
-- **G-4** A function, a procedure or a module can not catch an error: `recover` exists only at the end of a process (and aspect). A server library must turn the error of a handler into an error answer, not stop. Found by `rpc.dispatch` (a handler error propagates; `json.valid` was added so a bad text is tested before `json.parse`). Needs an author decision (Q-065): a `try` form, or `recover` in a function, or a native `call_safe`. Not decided by the model (author owns the syntax).
+**answer** find a sollution.
+- **G-4** *(closed by D-192: `recover` in a function, procedure and method)* A function, a procedure or a module can not catch an error: `recover` exists only at the end of a process (and aspect). A server library must turn the error of a handler into an error answer, not stop. Found by `rpc.dispatch` (a handler error propagates; `json.valid` was added so a bad text is tested before `json.parse`). Needs an author decision (Q-065): a `try` form, or `recover` in a function, or a native `call_safe`. Not decided by the model (author owns the syntax).
+**answer** Enable recover region in any subprogram.
 - **G-5** The collections have a thin method set in the VM: a `DataMap` has no `has`, `keys`, `values`, `get(key, default)`; the test `key in map` works. Found by `rpc`. Fix in the VM and the spec of collections before `config` and `route` need them.
+**answer** Improve DataMap with proper methods.
 - **G-6** `method` is a reserved word, so it can not be a parameter name (`rpc.request(id, method, params)` became `name`). Contextual keywords (D-116) would allow it. Low priority.
+**answer** Enable contextual keywords.

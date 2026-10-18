@@ -1,0 +1,32 @@
+# when recover ends, the function returns its result variables as they are: the zero value if recover sets nothing (D-192)
+** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
+primary aspect b56_recover_result is
+  function risky(n: Integer) => (@result: Integer) is
+    let result := 7;
+    raise "stop" if n > 1;
+    let result := 9;
+  recover
+    pass;
+  return;
+
+  function empty() => (@result: Integer) is
+    raise "stop";
+  recover
+    pass;
+  return;
+
+  process main is
+    print risky(1);
+    print risky(2);
+    print empty();
+  return;
+end b56_recover_result;
+/*@expect
+{
+  "stdout": [
+    "9",
+    "7",
+    "0"
+  ]
+}
+*/

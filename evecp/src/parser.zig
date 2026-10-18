@@ -637,6 +637,17 @@ const Parser = struct {
         }
         try p.expectWord("is");
         const body = try p.block();
+        // @eve-impl optional `recover` region of a function, procedure or method: kids[4]; a routine without it has four kids
+        // @spec spec/semantics/errors.md#recover-in-a-function-procedure-or-method
+        // @feature F-STR-11
+        // @decision D-192
+        // @test test/level2/b55_function_recover, test/level3/c35_method_recover
+        if ((tag == .function or tag == .procedure or tag == .method) and p.acceptWord("recover")) {
+            const handler = try p.block();
+            try p.expectWord("return");
+            try p.expectSym(";");
+            return p.mk(tag, kw, name.text, &.{ first, types, results, body, handler });
+        }
         try p.expectWord("return");
         try p.expectSym(";");
         return p.mk(tag, kw, if (tag == .constructor) "" else name.text, &.{ first, types, results, body });

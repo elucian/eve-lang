@@ -829,6 +829,7 @@ Read as rules:
 - (2) **Legacy to retire** (flag `@legacy retire` in the code, `grep -rn "@legacy"`): the `.` prefix accepted by `eve --doc` (`evecp/src/doc.zig`, `startsDeclaration`). Retire when no file in `lib/`, `test/`, `manual/` or `spec/` starts a declaration with `.`; the tutorial migrates last (D-190). `lib/io.eve` and `lib/exception.eve` still have draft forms (`*args`, `@v`, `external set $error`) that the parser does not read; they are documentation of statements of the language and migrate with the `io` and `exception` spec pages.
 - (3) **`external function` and `external procedure` in a module** (grammar `module-external`, parser `declarationInDriver`, node flag `is_external`): a signature ending with `;`, no body. A native that returns nothing is a **procedure** (`fs.write`, `fs.append`, `fs.write_bytes`, `fs.make_dir`, `fs.move`, `fs.remove`, `csv.write`, `json.write`, `txt.write`, `checkpoint.write`); a native with a result is a function. A reserved word may be the name of an external and stand in `export (…)`.
 - (4) **Not yet:** a user module that declares `external` has no native bound (a call is a run-time error, c31). Binding the externals of `lib/<module>.eve` to the `natives` table of `evevm/src/dlib.zig` (they take the argument nodes, not evaluated values) is the next step of M1; until then the standard modules are prelude values and their `lib/*.eve` files are read by `eve --doc`, `script/libcheck.py` and as a check that they parse (tests c29 to c31).
+**answer** User can't define externals yet. This is technical debt. Test that try to use externals must fail to pass these are negative tests. Only standard libraries use externals for now. Add a technical debt.
 
 ## Q-065 Catching an error inside Eve code (2026-10-18)
 
@@ -842,3 +843,18 @@ The standard library found that `recover` exists only at the end of a process (a
 **Model's lean:** (c) for level 6, because it needs nothing new and matches how a service script is designed (one aspect per group of routes); (a) later if functions need it.
 
 **Answer:**
+I agree with (a). Any subprogram like a process can have a recover region. A function, procedure or method can have a recover region.
+
+## D-192 `recover` in a function, procedure and method (2026-10-18)
+
+Author answer to Q-065 (2026-10-18): "I agree with (a). Any subprogram like a process can have a recover region. A function, procedure or method can have a recover region."
+
+Read as rules (the details marked *proposed* are the model's completions; the specification is `spec/semantics/errors.md#recover-in-a-function-procedure-or-method`):
+
+- (1) A function, a procedure and a method can end with a `recover` region before `return;`; `$error` is available.
+- (2) *(proposed)* The end of `recover` handles the error and the routine returns normally; a function gives its result variables as they are (the zero value when nothing set them).
+- (3) *(proposed)* `abort;` passes the error on; an error raised in `recover` replaces it; `retry` and `resume` are a run-time error outside a job; `defer` runs after `recover`.
+- (4) *(proposed)* No `recover` in a constructor, a generator or a lambda; no `finalize` in a routine (`defer` does that).
+- (5) The implementation: parser (`routineOf`, the handler is `kids[4]`), interpreter (`runRoutine`). Tests: level 2 `b55` to `b59`, level 3 `c34` to `c36`. Feature F-STR-11. Consequence: `rpc.dispatch` (`lib/rpc.eve`) turns a handler error into a `-32603` answer; G-4 and TD-13 are closed by it.
+
+**Please confirm or correct (2) to (4).**
