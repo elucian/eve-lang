@@ -22,7 +22,7 @@ This file is the one place to track the project: the levels, the versions and **
 | Level 4 | parallel processing and streams, generics and traits (D-138) | Version 0.3 | [decision_level4.md](decision_level4.md) | `test/level4` (d) |
 | Level 5 | data language (types, records, generators, files, formats, HTTP client), database layer and the Eve database (D-125) | Version 0.4 | [decision_level5.md](decision_level5.md) | `test/level5` (e) |
 | Level 6 | the Eve machine and the server | Version 0.5 | [decision_level6.md](decision_level6.md) | `test/level6` (f) |
-| Level 7 | web: HTML and WebAssembly; the RAD Workbench eveux, written in Eve, the final test (D-154) | Version 0.6 | [decision_level7.md](decision_level7.md) | `test/level7` (g) |
+| Level 7 | web: HTML and WebAssembly; the Eve Web Portal evewp, written in Eve with a framework compiled to WebAssembly, the final test (D-193, was D-154) | Version 0.6 | [decision_level7.md](decision_level7.md) | `test/level7` (g) |
 
 ## Versions that were named before
 
@@ -46,7 +46,7 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 | Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
 | Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 29 | planned |
 | Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 22 | planned |
-| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the RAD Workbench eveux, written in Eve, as the final test of the language. | 0 of 8 | planned |
+| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the Eve Web Portal evewp, written in Eve, as the final test of the language (D-193). | 0 of 12 | planned |
 | Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
 | Version 0.9 | Levels 1 to 7 | Release candidate | Package manager, more database drivers, web kit, hardening. | 0 of 3 | planned |
 | Version 1.0 | Levels 1 to 7 | Stable | Frozen language, every level passes, registry for other implementations. | 0 of 2 | planned |
@@ -224,23 +224,27 @@ Exit: a local machine logs in to two remote machines on `localhost`, one by sing
 
 ## Version 0.6: Web (level 7)
 
-Level 7. Goal: Safe HTML and Eve in the browser; the RAD Workbench eveux, written in Eve, as the final test of the language.
+Level 7. Goal: Safe HTML and Eve in the browser; the Eve Web Portal evewp (production edge, host, monitor and web framework), written in Eve, as the final test of the language (D-193; `evewp/README.md`). The development client eveux is now native Zig (`eveux/README.md`); its features F-TLS-19 to F-TLS-22 are listed here for history and start after the spike of that design.
 
-0 of 8 features done.
+0 of 12 features done.
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
 | F-VM-09 | WebAssembly build | open | the VM compiled to `wasm32` with host imports (review `RVM-R06`). |
-| F-TLS-19 | eveux, the RAD Workbench: shell | open | an Eve project (service script, aspects, modules) run by the local machine, with a browser part in plain JavaScript and CSS: screen and menus, editor with syntax colors for Eve, SQL, JSON, XML and HTML, file dialog and upload, command window, login to remote machines with single sign-on and the keyring, Help and About with the versions; written in Eve as the final test and stress test of the language (D-154, `eveux/README.md`, Q-047). |
-| F-TLS-20 | eveux: direct SQL and database tree | open | SQL mode of the command window and SQL tabs, results in a grid with Eve types, Commit and Rollback, the database object tree of the connections of a machine, import wizard (`eveux/README.md` §7, §9, §12). |
-| F-TLS-21 | eveux: jobs, logs and admin | open | job browser and scheduler forms over the remote scheduler of every connected machine, live run output, stage view of the aspects, resume from checkpoint, log inspector, admin pages of a machine (`eveux/README.md` §6.6, §10). *2026-10-13 (Q-050): eveux owns schedule management and the management of runs; the schedule methods of the machine API are designed with it; evetx only runs a driver for debug and test (F-TLS-24).* |
-| F-TLS-22 | eveux: debugger | open | breakpoints in the gutter, step into, over and out, variable inspector, watch window, call stack; needs the debugger of the machine (F-TLS-04) and the commands proposed in Q-047 (`eveux/README.md` §11). |
+| F-TLS-19 | eveux, the RAD Workbench: shell | open | *(2026-10-18, D-193: eveux is now a native Zig client on dvui, `eveux/README.md`; the text that follows describes the browser design, kept in `evewp/workbench-design.md`, and is the functional specification of the native client.)* an Eve project (service script, aspects, modules) run by the local machine, with a browser part in plain JavaScript and CSS: screen and menus, editor with syntax colors for Eve, SQL, JSON, XML and HTML, file dialog and upload, command window, login to remote machines with single sign-on and the keyring, Help and About with the versions; written in Eve as the final test and stress test of the language (D-154, `eveux/README.md`, Q-047). |
+| F-TLS-20 | eveux: direct SQL and database tree | open | *(2026-10-18, D-193: eveux is now a native Zig client on dvui, `eveux/README.md`; the text that follows describes the browser design, kept in `evewp/workbench-design.md`, and is the functional specification of the native client.)* SQL mode of the command window and SQL tabs, results in a grid with Eve types, Commit and Rollback, the database object tree of the connections of a machine, import wizard (`eveux/README.md` §7, §9, §12). |
+| F-TLS-21 | eveux: jobs, logs and admin | open | *(2026-10-18, D-193: eveux is now a native Zig client on dvui, `eveux/README.md`; the text that follows describes the browser design, kept in `evewp/workbench-design.md`, and is the functional specification of the native client.)* job browser and scheduler forms over the remote scheduler of every connected machine, live run output, stage view of the aspects, resume from checkpoint, log inspector, admin pages of a machine (`eveux/README.md` §6.6, §10). *2026-10-13 (Q-050): eveux owns schedule management and the management of runs; the schedule methods of the machine API are designed with it; evetx only runs a driver for debug and test (F-TLS-24).* |
+| F-TLS-22 | eveux: debugger | open | *(2026-10-18, D-193: eveux is now a native Zig client on dvui, `eveux/README.md`; the text that follows describes the browser design, kept in `evewp/workbench-design.md`, and is the functional specification of the native client.)* breakpoints in the gutter, step into, over and out, variable inspector, watch window, call stack; needs the debugger of the machine (F-TLS-04) and the commands proposed in Q-047 (`eveux/README.md` §11). |
 | F-TLS-23 | New project | partial | `project init <folder>` and `project new <folder>` (D-160 names it `new project`): `init` also works on an existing project and never overwrites; `new` fails on a non-empty folder. Makes `db`, `log`, `meta`, `data/in`, `data/out`, `test`, `asp`, `lib`, `src`, `doc`, `web`, the files `<name>.eve`, `eve.cfg`, `meta/project.json` and a `.gitignore`, and runs `git init` outside a repository. *Partial:* done and tested (`evevm/src/scaffold.zig`, tests e54, e55); the writer of the minimal fallback log is not written (`plan/design-project-layout.md`). |
 | F-WEB-01 | HTML templates | open | `HTML` type, context-aware escaping, template files, components (review `RNW-R05`). |
 | F-WEB-02 | Eve in the browser | open | the WASM VM runs signed `.evb` code with limited capabilities, `dom` module (review `RNW-R06`). |
 | F-WEB-03 | Tutorial playground | open | a "Run" button on tutorial examples using the WASM VM. |
+| F-WEB-05 | evewp: edge and host | open | the Eve Web Portal as the production edge: host table by `Host` header (domains, subdomains, wildcards), static files, proxy to the Eve machine of each application, request log and limits; the host keeps each application in its own folder with versions, starts and supervises its machine, receives deploys, rollback (D-193, `evewp/README.md` sections 3, 5). Behind a reverse proxy for TLS (D-189). |
+| F-WEB-06 | evewp: monitor | open | a graphic health server written in Eve: connections, requests, domains, users, applications, memory, logs, alerts; SVG charts and pages with no JavaScript, live updates through the framework (`evewp/README.md` section 6). |
+| F-WEB-07 | The Eve Web framework | open | Eve (a dialect with a browser profile) written once and compiled to WebAssembly modules that run in the page: stage W1 the VM in Wasm running source or `.evb`, stage W2 a typed subset compiled to Wasm; shared modules with the server; a fixed generated loader shim, no JavaScript written by the developer (`evewp/README.md` section 7). Needs F-VM-09, F-WEB-01, F-WEB-02. |
+| F-VM-12 | Process supervision API | open | `os` handles for spawn with limits, wait, kill and signals, status of a child through its IPC door; used by the host of evewp (D-193). |
 
-Exit: tutorial examples run in the browser; templates pass an escaping test suite; the browser VM refuses `fs` and `shell`; eveux passes the tests of `test/level7` and meets its stress goals (`eveux/README.md` §2).
+Exit: tutorial examples run in the browser; templates pass an escaping test suite; the browser VM refuses `fs` and `shell`; evewp passes the tests of `test/level7` and meets its stress goals (`evewp/README.md` section 11).
 
 ## Version 0.7: Bytecode and embedding (levels 1 to 7)
 

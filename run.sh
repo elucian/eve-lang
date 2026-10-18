@@ -9,7 +9,7 @@
 #   ./run.sh release [minor]  bump the version label (patch by default), build and test
 #   ./run.sh check 1          dry run: only check the syntax of level1 (eve --check), no execution
 #   ./run.sh -q 1             options go to script/runtest.py
-#   ./run.sh eve <args>       bin/eve with the arguments; also evevm, evecp, evedb, eveux:
+#   ./run.sh eve <args>       bin/eve with the arguments; also evevm, evecp, evedb, eveux, evewp:
 #                             bin/eve vm|cp|db|ux <args> (D-163), from any folder: paths stay relative to it
 #   ./run.sh                  this help
 export MSYS_NO_PATHCONV=1
@@ -20,7 +20,7 @@ case "$1" in
   evevm) shift; exec "$root/bin/eve" vm "$@" ;;
   evecp) shift; exec "$root/bin/eve" cp "$@" ;;
   evedb) shift; exec "$root/bin/eve" db "$@" ;;
-  eveux) shift; exec "$root/bin/eve" ux "$@" ;;
+  eveux|evewp) shift; exec "$root/bin/eve" ux "$@" ;;
 esac
 cd "$root" || exit 1
 # A running program locks its .exe on Windows, and the build then fails with AccessDenied.
