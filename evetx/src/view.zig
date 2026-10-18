@@ -1431,6 +1431,9 @@ const type_words = [_][]const u8{
     "Byte", "Short", "Integer", "Natural", "Huge", "Real", "Float", "Decimal", "Rational", "String", "Logic", "Table",
     "Rune", "Record", "Ordinal", "Variant", "Date", "Time", "Array", "List", "Object", "Class", "Lambda", "Function",
     "DataSet", "DataMap", "Folder", "File", "Null", "True", "False", "Type",
+    // the types and traits added by levels 3 to 6 (spec/semantics/types.md, spec/library/)
+    "Text", "Symbol", "HashMap", "Instant", "Duration", "Secret", "Channel", "Memory", "Stream", "Iterable", "Comparable",
+    "Printable", "Bytes", "Connection", "Atomic", "Error", "Warning",
 };
 
 // Zig tip: a parameter of type `[]const []const u8` is a slice of strings; passing `&array` turns the
@@ -2999,4 +3002,12 @@ test "tokens of a line after a closed comment" {
     try std.testing.expectEqual(TokenKind.comment_block, sc.next().?.kind);
     try std.testing.expectEqual(TokenKind.plain, sc.next().?.kind);
     try std.testing.expectEqual(TokenKind.word, sc.next().?.kind);
+}
+
+// @test the words of the aspect kinds, export and the newer types have a color (keywords.zig is generated from the spec)
+test "wordColor knows primary, export, print and the newer types" {
+    for ([_][]const u8{ "primary", "exclusive", "concurrent", "aspect", "export", "external", "recover", "print", "write", "Instant", "Secret", "Stream" }) |w| {
+        try std.testing.expect(wordColor(w) != null);
+    }
+    try std.testing.expect(wordColor("banana") == null);
 }

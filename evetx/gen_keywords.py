@@ -8,7 +8,9 @@ SPEC = 'spec/lexical/keywords.json'
 OUT = 'evetx/src/keywords.zig'
 
 items = json.load(open(SPEC, encoding='utf-8'))['items']
-words = sorted({x['id'] for x in items if x['id'].isalpha()})
+# print, write and read are statements of the parser but not words of keywords.json (D-086: library functions)
+EXTRA = ['print', 'read', 'write']
+words = sorted({x['id'] for x in items if x['id'].isalpha()} | set(EXTRA))
 lines = [
     '//! The keywords of Eve, for the colors of the editor.',
     '//!',
