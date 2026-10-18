@@ -95,7 +95,7 @@ async function main() {
 
   check((await call("vm.cancel")).result === "cancelled", "vm.cancel answers");
   const plain = (await call("vm.eval", { line: "cd check", cwd: "." })).result;
-  check(plain.status === 0 && plain.session !== sid && plain.output.includes("folder: ./check"), "an eval without a session uses the default session of the channel");
+  check(plain.status === 0 && plain.session !== sid && /^folder: .*[\\/]check\r?\n$/.test(plain.output), "an eval without a session uses the default session of the channel");
   check((await call("vm.stat")).result.sessions === 2, "vm.stat counts the open sessions");
   check((await call("vm.close", { session: sid })).result === "closed", "vm.close ends the session");
   check((await call("vm.eval", { session: sid, line: "status" })).error.code === -32602, "an eval in a closed session is -32602");

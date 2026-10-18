@@ -1,0 +1,13 @@
+** Read and write txt files as streams of records typed by a record class (D-189). Signature file: the body is native, in evevm/src/dlib.zig (txtModule, recordModule).
+** @spec spec/library/data-language.md  @feature F-LIB-05  @tests test/level5
+module txt is
+  export (read!, write);
+
+
+  ** A stream of records of the class given as type argument: txt.read!(:Row)(path).
+  external function read!(path: String) => (@result: Stream);
+
+  ** Write records to a file: txt.write(path, rows).
+  external procedure write(path: String, rows: Iterable);
+
+end txt;

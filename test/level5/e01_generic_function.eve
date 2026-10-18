@@ -6,7 +6,7 @@ primary aspect e01_generic_function is
     for x in items do
       let result := x if x.compare(result) > 0;
     done;
-  return
+  return;
   
   function first(:T)(items: ()T) => (@result: T) is
     let result := items[1];

@@ -43,7 +43,7 @@ A module holds **declarations** and the regions around them (D-126): `from … u
 | extension method | `method name(@self: Class, …)` | no: visible in the module that declares it and in the scripts that import the class (D-086, D-072) |
 | variable | `new name …;` | **no**: a module is shared, and a public variable is not safe when tasks run at the same time (D-068). `export (total)` of a variable is a compile error *(proposed)* |
 | channel | `set name := new Channel(:T)(capacity: n);` | yes (level 4) |
-| external | `external function …` | as any other; the body is in the machine (D-056) |
+| external | `external function name(…) => (…);` or `external procedure name(…);` | as any other; the signature ends with `;` and has **no body**, the machine provides it (D-056, D-189). A function has a result list, a procedure has none: a native that changes the world and returns nothing (`write`, `append`, `remove`) is a procedure. A reserved word (`write`) may be the name and may stand in `export (…)`. Calling an external that the machine does not implement is a run-time error (test c31); an external with a body is a compile error (c30) |
 
 A member is **private** unless `export (…)` lists it. `export` may stand anywhere in the module, once or more. Exporting a name that is not declared is a compile error *(proposed)*.
 

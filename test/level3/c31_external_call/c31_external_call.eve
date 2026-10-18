@@ -1,0 +1,21 @@
+# calling an external of a user module that the machine does not implement is a run-time error with a clear message (D-189)
+** spec: semantics/modules.md#members
+primary aspect c31_external_call is
+  from lib use (native);
+
+  process main is
+    print "before";
+    print native.size!("x");
+  return;
+end c31_external_call;
+/*@expect
+{
+  "stdout": [
+    "before"
+  ],
+  "exit": 4,
+  "stderr": [
+    "external function size! has no native implementation in this machine"
+  ]
+}
+*/

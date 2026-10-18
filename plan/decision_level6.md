@@ -802,3 +802,30 @@ Read as rules:
 Note on performance (asked by the author): the `.vmc` file was not faster. Its gain was one process for many scripts, and the stdio door keeps that gain: one `eve` serves the whole series, with no start per command. The file had costs of its own: the machine polled it every 25 ms, read it whole at each look (limit 1 MB), and needed an idle timeout (`-t`) to end a forgotten session. Calling `eve` once per command from a shell or Python script would be slower (one process start each); the stdio door or the IPC door of a running machine is the fast way. Measured: `python script/workflow.py 1 2` runs 139 tests in one process; 135 pass, and the 3 that fail are the known failures of level 2 (b16, b19, b21).
 
 Changed: `cmd/options.zig`, `cmd/cli.zig` (unit tests of the options), `cmd/help.zig`, `cmd/eve.zig`, `cmd/context.zig`, `cmd/vm_cmds.zig`, `evevm/src/vm.zig`, `evevm/src/daemon.zig` (`evevm start -e file.cfg`), `evevm/src/helptext.zig`, `script/workflow.py`, `script/runtest.py` (the key `"serve"` of `expect.json`, unused, is gone), `script/service_check.py`. Docs: `manual/usage.md`, `spec/library/machine.md`, `plan/design-service.md`, `test/project/readme.md`, the tutorial pages `server.html` and `compiler.html`.
+
+## D-189 Libraries of level 6: the Zig/Eve rule, the answers to Q-064, the order of work (2026-10-18)
+
+The plan is `plan/design-libraries.md`. Author answers (2026-10-18), read as rules:
+
+- (1) **The rule:** Zig for primitives, hot paths and C or OS interaction; Eve for policy and composition; a module may be split in two (an Eve API over `external` Zig primitives). Performance comes before purity.
+- (2) **Signature files** `lib/<name>.eve` (no bodies) for the Zig modules (`fs`, `csv`, `json`, `txt`, `time`, `secret`, `database`, `checkpoint`): accepted.
+- (3) **The registry** replacing the string chain of `libraryCall` is the single refactor; a small loss in speed is acceptable.
+- (4) **HTTPS:** no TLS in the machine; the Workbench is HTTP on `127.0.0.1` (level 7); production behind a reverse proxy (level 8, backlog); the outbound TLS client for external APIs and OIDC issuers is level 9, backlog (technical debt until Zig is mature). **S9 `tls` leaves level 6.**
+- (5) **Names** accepted as written. **`test` and `regex` are in level 6** (very important).
+- (6) **No login in level 6:** two machines connect on `localhost` without login; level 6 is not production ready and is tested locally. Login (SSO, keyring, `auth`, `oidc`) moves to **level 7**, with a remote Linux machine to simulate production. **M5 of the plan moves to level 7.**
+
+## D-190 Order of the work and comments for AI (2026-10-18)
+
+- (1) **Priority of the work, changed on 2026-10-18:** (1) the plan (`plan/`), (2) the specification (`spec/`), (3) tests and implementation, (4) the manual (`manual/`), (5) the tutorial (`tutorial/`), last. Before: the tutorial first (the FOCUS of 2026-10-07). A feature starts as a plan entry, then spec text, then a failing test and the code; the manual and the tutorial follow and may lag.
+- (2) **Zig comments are written for AI, not for humans.** The `// Zig tip:` teaching blocks (CLAUDE.md, 2026-10) stop for new and touched code; existing tips stay until the code around them changes. A comment says what feature the code implements and where the specification is, in a form that `grep` finds. The convention is in CLAUDE.md ("Zig comments for AI").
+
+## D-191 External signatures in modules; a native that returns nothing is a procedure; the prefix `.` is legacy (2026-10-18)
+
+Author questions (2026-10-18): "Have I decided to use `export` in modules to make members public? ... I have also introduced public, protected, private for methods"; "Should the write be a procedure though? It returns nothing so why is a function? ... Public `.` is legacy and flag it for retirement until all code migrates to the new convention."
+
+Read as rules:
+
+- (1) **D-085 stands.** A module member is public only if the module lists it in `export (…)`; `public`, `protected`, `private` are words for the members of a class. The prefix `.` (public) and `_` (protected) are **legacy**.
+- (2) **Legacy to retire** (flag `@legacy retire` in the code, `grep -rn "@legacy"`): the `.` prefix accepted by `eve --doc` (`evecp/src/doc.zig`, `startsDeclaration`). Retire when no file in `lib/`, `test/`, `manual/` or `spec/` starts a declaration with `.`; the tutorial migrates last (D-190). `lib/io.eve` and `lib/exception.eve` still have draft forms (`*args`, `@v`, `external set $error`) that the parser does not read; they are documentation of statements of the language and migrate with the `io` and `exception` spec pages.
+- (3) **`external function` and `external procedure` in a module** (grammar `module-external`, parser `declarationInDriver`, node flag `is_external`): a signature ending with `;`, no body. A native that returns nothing is a **procedure** (`fs.write`, `fs.append`, `fs.write_bytes`, `fs.make_dir`, `fs.move`, `fs.remove`, `csv.write`, `json.write`, `txt.write`, `checkpoint.write`); a native with a result is a function. A reserved word may be the name of an external and stand in `export (…)`.
+- (4) **Not yet:** a user module that declares `external` has no native bound (a call is a run-time error, c31). Binding the externals of `lib/<module>.eve` to the `natives` table of `evevm/src/dlib.zig` (they take the argument nodes, not evaluated values) is the next step of M1; until then the standard modules are prelude values and their `lib/*.eve` files are read by `eve --doc`, `script/libcheck.py` and as a check that they parse (tests c29 to c31).

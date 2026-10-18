@@ -1,0 +1,7 @@
+module bad is
+  export (f);
+
+  external function f() => (@result: Integer) is
+    let result := 1;
+  return;
+end bad;

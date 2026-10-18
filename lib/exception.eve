@@ -3,6 +3,8 @@
 ** The same codes and message patterns are listed in tutorial/exceptions.html: keep both in step.
 ** A declaration with the keyword external is implemented in Zig by the virtual machine.
 module exception is
+  export (raise, expect, assert, warn);
+
 
   ** An error that interrupts a process. Its code is also the exit code of the application.
   class .Error = {code: Integer, message: String, module: String, line: Integer, job: String} <: Object is
@@ -41,22 +43,22 @@ module exception is
   external set $trace: ()Error;
 
   ** Raise an exception object.
-  external .raise(e: Error);
+  external procedure raise(e: Error);
 
   ** Raise an error with a code and a message.
-  external .raise(code: Integer, message: String);
+  external procedure raise(code: Integer, message: String);
 
   ** Raise an error with the default code 4.
-  external .raise(message: String);
+  external procedure raise(message: String);
 
   ** Raise the error 2 when the condition is false. The message is optional.
-  external .expect(condition: Logic, message := "");
+  external procedure expect(condition: Logic, message := "");
 
   ** Report the warning 3 when the condition is false and go on. The message is optional.
-  external .assert(condition: Logic, message := "");
+  external procedure assert(condition: Logic, message := "");
 
   ** Report a warning and go on.
-  external .warn(code: Integer, message: String);
+  external procedure warn(code: Integer, message: String);
 
   ** panic: the message given to panic
   set $err_panic = 1;

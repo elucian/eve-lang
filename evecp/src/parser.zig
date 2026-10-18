@@ -71,6 +71,8 @@ const Parser = struct {
     in_process: bool = false,
     /// True in the body of a generator: `yield` is allowed only there (D-067).
     in_generator: bool = false,
+    /// Reading the name of an `external` routine: a reserved word such as `write` is a valid native name (D-189).
+    external_name: bool = false,
 
     // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
     // syntax: `p.name(...)`.
@@ -173,6 +175,13 @@ const Parser = struct {
         if (t.kind != .ident or reserved.has(t.text)) {
             return p.fail("expected {s} but found '{s}'", .{ what, describe(t) });
         }
+        return p.advance();
+    }
+
+    // @eve-impl a name that may be a reserved word (the native members `write`, `expect`, `assert` of the system library)
+    fn expectAnyName(p: *Parser) Error!Token {
+        const t = p.peek();
+        if (t.kind != .ident) return p.fail("expected a name but found '{s}'", .{describe(t)});
         return p.advance();
     }
 
@@ -599,7 +608,7 @@ const Parser = struct {
             p.in_generator = saved_generator;
         }
         const kw = p.advance();
-        const name = if (tag == .constructor) kw else try p.expectName("a name");
+        const name = if (tag == .constructor) kw else if (p.external_name) try p.expectAnyName() else try p.expectName("a name");
         const empty = try p.mk(.params, kw, "", &.{});
         const types = try p.typeList();
         const first = if (p.isSym("(")) try p.params() else empty;
@@ -1792,6 +1801,19 @@ const Parser = struct {
             @constCast(r).is_async = true;
             return r;
         }
+        if (p.isWord("external") and (p.isWordAt(1, "function") or p.isWordAt(1, "procedure"))) {
+            // @eve-impl `external function|procedure name(...) [=> (...)];` of a module: a signature, the machine has the body
+            // @spec spec/semantics/modules.md#members
+            // @feature F-LIB-01
+            // @decision D-056, D-189
+            _ = p.advance();
+            p.external_name = true;
+            defer p.external_name = false;
+            const r = try p.routineOf(if (p.isWord("function")) .function else .procedure, true);
+            if (r.kids[3].tag != .none) return p.failAt(p.peek(), "an external {s} has no body: end the signature with ';'", .{@tagName(r.tag)});
+            @constCast(r).is_external = true;
+            return r;
+        }
         if (p.isWord("function")) return p.routine(.function);
         if (p.isSqlFunction()) return p.sqlFunction();
         if (p.isWord("procedure")) return p.routine(.procedure);
@@ -1858,7 +1880,10 @@ const Parser = struct {
         try p.expectSym("(");
         var names: std.ArrayList(*const Node) = .empty;
         while (true) {
-            const n = try p.expectName("a member name");
+            // a reserved word may be the name of a native member (`write`, `expect`): the export list is not a statement
+            const t = p.peek();
+            if (t.kind != .ident) return p.fail("expected a member name but found '{s}'", .{describe(t)});
+            const n = p.advance();
             try names.append(p.a, try p.mk(.name, n, n.text, &.{}));
             if (!p.acceptSym(",")) break;
         }

@@ -1,0 +1,5 @@
+module native is
+  export (size!);
+
+  external function size!(path: String) => (@result: Integer);
+end native;

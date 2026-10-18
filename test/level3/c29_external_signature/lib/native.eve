@@ -1,0 +1,11 @@
+** a module of signatures: the body of an external is native; a reserved word may be a native name (D-056, D-189)
+module native is
+  export (write, size!, double);
+
+  external procedure write(path: String, text: String);
+  external function size!(path: String) => (@result: Integer);
+
+  function double(n: Integer) => (@result: Integer) is
+    let result := n * 2;
+  return;
+end native;

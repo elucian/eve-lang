@@ -220,6 +220,8 @@ pub const Node = struct {
     public: bool = false,
     /// A function or procedure declared `async`: it runs as a task, started by `spawn` or `await` (D-143).
     is_async: bool = false,
+    /// A function or procedure declared `external`: a signature with no body, the machine provides it (D-056, D-189).
+    is_external: bool = false,
     /// A function declared `sql function`: SQLite (and later DuckDB) can call it from SQL (D-166).
     is_sql: bool = false,
     /// The traits a class adopts, after its superclass in `<: (Object, Printable)` (D-145).

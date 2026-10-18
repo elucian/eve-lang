@@ -1,3 +1,8 @@
+//! @eve-module dlib: native modules `database`, `csv`, `json`, `txt`, `fs`, `checkpoint`, `time`, `secret` (registry `natives`)
+//! @spec spec/library/registry.md, spec/library/data-language.md, spec/library/database.md
+//! @feature F-LIB-04, F-LIB-05, F-LIB-06, F-LIB-08, F-DAT-01
+//! @decision D-189
+//! @tests test/level5, test/level6/f01_pg_driver, test/level6/f02_evedb_columnar
 //! The library of the data language (spec/library/data-language.md, spec/library/database.md): the modules
 //! `csv`, `json` and `database`, the `Connection` of a database and the readers and writers of the formats.
 //! They are free functions that take the interpreter, so `interp.zig` stays the core of the language: it calls
@@ -79,46 +84,112 @@ fn noMoreOptions(it: *Interp, opts: []Opt, what: []const u8) Signal!void {
     for (opts) |o| if (!o.used) return it.failWith(err_argument, "{s}: unknown option '{s}'", .{ what, o.name });
 }
 
-// Zig tip: `?Value` is "a Value or nothing". Here null means "this is not a function of the library",
-// so the caller goes on with the other kinds of method. `try` inside an `if (...) |v|` unwraps both
-// the error union and the optional step by step. `const targs = it.type_args;` copies the slice at
-// once: evaluating the arguments runs other calls, which overwrite the field.
+// @eve-impl library registry: module name -> native handler (one hash lookup instead of a chain of string compares)
+// @spec spec/library/registry.md#registry-rules
+// @feature F-LIB-01
+// @decision D-189
+// @invariant a module name is in `natives` iff it is a value of the prelude with native members (the `types` list in evevm/src/interp.zig:354)
+// @see lib/README.md (signature files of the same modules)
+/// A native handler: the functions of one module. Returns null when `name` is not a function of the module.
+pub const Native = *const fn (it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value;
+
+// @eve-impl the table of native modules; add a module here and give it a signature file lib/<module>.eve
+// @spec spec/library/registry.md#modules-of-the-system-library-at-level-6
+// @feature F-LIB-01
+pub const natives = std.StaticStringMap(Native).initComptime(.{
+    .{ "database", databaseModule },
+    .{ "csv", csvModule },
+    .{ "json", jsonModule },
+    .{ "txt", txtModule },
+    .{ "fs", fsModule },
+    .{ "checkpoint", checkpointModule },
+    .{ "time", timeModule },
+    .{ "secret", secretModule },
+});
+
+// @eve-impl entry point of every `module.name(...)` call on a prelude type
+// @feature F-LIB-01
+// @perf hot
+// @see evevm/src/interp/calls.zig (callMethod, `recv == .typ`)
 /// A function of a library module, or null when `module.name` is not one.
 pub fn libraryCall(it: *Interp, module: []const u8, name: []const u8, args: []const *const Node) Signal!?Value {
-    const eql = std.mem.eql;
-    const targs = it.type_args;
-    if (eql(u8, module, "database") and eql(u8, name, "connect")) return try it.dataApi().connect(it.host(), args);
-    if (eql(u8, module, "csv")) {
-        if (eql(u8, name, "read!")) return try openRecords(it, .csv, targs, args);
-        if (eql(u8, name, "write")) {
-            try writeRecords(it, .csv, args);
-            return .nil;
-        }
+    const handler = natives.get(module) orelse return null;
+    // the type arguments are copied now: evaluating the arguments runs other calls, which overwrite the field
+    return try handler(it, name, it.type_args, args);
+}
+
+// @eve-fn database.connect
+// @spec spec/library/database.md#direct-sql
+fn databaseModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
+    if (std.mem.eql(u8, name, "connect")) return try it.dataApi().connect(it.host(), args);
+    return null;
+}
+
+// @eve-fn csv.read!, csv.write
+// @spec spec/library/data-language.md
+fn csvModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    return try recordModule(it, .csv, name, targs, args);
+}
+
+// @eve-fn json.read!, json.write
+// @spec spec/library/data-language.md
+fn jsonModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    return try recordModule(it, .json, name, targs, args);
+}
+
+// @eve-fn txt.read!, txt.write
+// @spec spec/library/data-language.md
+fn txtModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    return try recordModule(it, .txt, name, targs, args);
+}
+
+// @eve-impl shared body of csv, json and txt: `read!` opens a stream of records, `write` writes them
+fn recordModule(it: *Interp, kind: Kind, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    if (std.mem.eql(u8, name, "read!")) return try openRecords(it, kind, targs, args);
+    if (std.mem.eql(u8, name, "write")) {
+        try writeRecords(it, kind, args);
+        return .nil;
     }
-    if (eql(u8, module, "json")) {
-        if (eql(u8, name, "read!")) return try openRecords(it, .json, targs, args);
-        if (eql(u8, name, "write")) {
-            try writeRecords(it, .json, args);
-            return .nil;
-        }
-    }
-    if (eql(u8, module, "txt")) {
-        if (eql(u8, name, "read!")) return try openRecords(it, .txt, targs, args);
-        if (eql(u8, name, "write")) {
-            try writeRecords(it, .txt, args);
-            return .nil;
-        }
-    }
-    if (eql(u8, module, "fs")) return try fsCall(it, name, args);
-    if (eql(u8, module, "checkpoint")) return try it.dataApi().checkpoint_call(it.host(), name, targs, args);
-    // the clock gives another value at each call: its name ends with `!` (D-087, D-168)
-    if (eql(u8, module, "time") and eql(u8, name, "now")) return it.fail("time.now is not deterministic: write time.now!() (D-087)", .{});
-    if (eql(u8, module, "time") and eql(u8, name, "now!")) {
+    return null;
+}
+
+// @eve-fn fs.*
+// @spec spec/library/data-language.md
+// @see fsCall (the list of functions)
+fn fsModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
+    return try fsCall(it, name, args);
+}
+
+// @eve-fn checkpoint.*
+// @spec spec/library/database.md
+fn checkpointModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    return try it.dataApi().checkpoint_call(it.host(), name, targs, args);
+}
+
+// @eve-fn time.now!
+// @spec spec/library/registry.md#registry-rules (rule 3: a name that gives another value at each call ends with `!`)
+// @decision D-087
+fn timeModule(it: *Interp, name: []const u8, _: []const *const Node, _: []const *const Node) Signal!?Value {
+    if (std.mem.eql(u8, name, "now")) return it.fail("time.now is not deterministic: write time.now!() (D-087)", .{});
+    if (std.mem.eql(u8, name, "now!")) {
         const io = it.io orelse return it.fail("time.now!: no input/output handle", .{});
         return .{ .instant = @intCast(@divFloor(Io.Timestamp.now(io, .real).toNanoseconds(), 1000)) };
     }
-    if (eql(u8, module, "secret") and eql(u8, name, "get")) return try it.secretGet(args);
     return null;
+}
+
+// @eve-fn secret.get
+// @spec spec/library/registry.md#registry-rules (rule 5: a Secret is never printed)
+fn secretModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
+    if (std.mem.eql(u8, name, "get")) return try it.secretGet(args);
+    return null;
+}
+
+// @test registry: every module of `natives` has a handler and `libraryCall` of an unknown module is null
+test "natives registry names" {
+    try std.testing.expect(natives.get("fs") != null);
+    try std.testing.expect(natives.get("database") != null);
+    try std.testing.expect(natives.get("no_such_module") == null);
 }
 
 // Zig tip: a record class is a `Class` whose `node` holds the declaration; the members are the kids of

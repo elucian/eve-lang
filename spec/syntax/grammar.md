@@ -132,6 +132,8 @@ retry-stmt   = "retry" , [ "after" , duration ] ;                    (* replaces
 function     = "sql" , "function" , name , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
                { declaration | statement } , "return" , ";" ;       (* adds to function: a SQL function in Eve, no "!", no type list (D-166) *)
 declaration  = … | external ;                                        (* adds to declaration *)
+module-external = "external" , ( "function" , name , "(" , [ parameters ] , ")" , "=>" , results
+                              | "procedure" , name , "(" , [ parameters ] , ")" ) , ";" ;   (* in a module: a signature, the machine has the body; name may be a reserved word (D-189, tests c29 to c31) *)
 external     = "external" , ( "procedure" , name , [ "(" , [ parameters ] , ")" ]
                             | "function" , name , "!" , "(" , [ parameters ] , ")" , "=>" , results ) ,
                "in" , string , [ "as" , string ] , ";" ;             (* a native stored procedure of a connection (D-166, Q-043e) *)

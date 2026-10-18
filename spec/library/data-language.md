@@ -68,7 +68,7 @@ expect answer.status == 200;
 for o in json.read!(:Order)(answer.body) do … done;      ** the body is a Stream(:Bytes)
 ```
 
-`http.get!`, `http.post!(url, body: …)` and `http.request!(method, url, …)` give an `HttpResponse` with `status`, `headers` and `body`. A status of 400 or more is not an error by itself; `answer.check()` raises `HttpError` with `status`, `url` and the text of the body. A time-out raises `TimeoutError`, a refused or lost connection `ConnectionError` (transient). TLS is on for `https://`; a certificate that does not match is an error. A header of type `Secret` goes on the wire but never to a log.
+`http.get!`, `http.post!(url, body: …)` and `http.request!(method, url, …)` give an `HttpResponse` with `status`, `headers` and `body`. A status of 400 or more is not an error by itself; `answer.check()` raises `HttpError` with `status`, `url` and the text of the body. A time-out raises `TimeoutError`, a refused or lost connection `ConnectionError` (transient). `https://` needs the outbound TLS client, which is level 9 (D-189, backlog): until then an `https://` URL raises `ConnectionError` with the reason "TLS client not available"; when it exists a certificate that does not match is an error. A header of type `Secret` goes on the wire but never to a log.
 
 ## Secrets
 

@@ -401,6 +401,10 @@ pub fn invokeWith(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
 /// Run the body of a routine with the arguments already evaluated.
 pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {
     const node = f.node;
+    // @eve-impl an `external` routine of a user module has no native yet: a clear error, not a crash on the empty body
+    // @spec spec/semantics/modules.md#members
+    // @decision D-189
+    if (node.is_external) return it.fail("external {s} {s} has no native implementation in this machine", .{ @tagName(node.tag), node.text });
     const s = try it.newScope(f.closure);
     const saved = try it.enterScope(s);
     defer it.leaveScope(saved);

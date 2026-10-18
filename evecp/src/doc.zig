@@ -17,10 +17,14 @@ const Io = std.Io;
 /// Words that start a declaration worth documenting.
 const declarations = [_][]const u8{
     "primary", "exclusive", "concurrent", "aspect", "module", "class", "trait", "function",
-    "method", "process", "routine", "set",  "def",  "service",
+    "method", "process", "routine", "set",  "def",  "service", "procedure",
     "generator",
 };
 
+// @eve-impl `eve --doc`: does a line start a declaration that gets a documentation entry (`external function|procedure` included)
+// @spec spec/semantics/modules.md#members
+// @feature F-LIB-01
+// @decision D-189, D-191
 // Zig tip: `var rest = ...` makes a variable we can change; `rest = rest[1..]` re-slices it
 // to drop the first byte, without copying the text. A slice is only a pointer and a length,
 // so slicing is free. `rest[word.len]` reads one byte; Zig checks the index at run time in
@@ -29,7 +33,8 @@ fn startsDeclaration(line: []const u8) bool {
     var rest = std.mem.trimStart(u8, line, " \t");
     // `external` in front of a signature: implemented in Zig by the virtual machine.
     if (std.mem.startsWith(u8, rest, "external ")) return true;
-    if (std.mem.startsWith(u8, rest, ".")) rest = rest[1..]; // public member prefix
+    // @legacy retire: the public-member prefix `.` of the drafts before D-085; remove when no file in lib/, test/, manual/ starts a declaration with `.` (D-191)
+    if (std.mem.startsWith(u8, rest, ".")) rest = rest[1..];
     for (declarations) |word| {
         if (std.mem.startsWith(u8, rest, word) and rest.len > word.len and
             (rest[word.len] == ' ' or rest[word.len] == '\t')) return true;
