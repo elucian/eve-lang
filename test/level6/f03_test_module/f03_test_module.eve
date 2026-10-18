@@ -1,0 +1,31 @@
+# the standard module test, written in Eve: checks print one line, count, and summary raises when one failed (D-189)
+** spec: library/test.md
+primary aspect f03_test_module is
+  from lib use (test);
+
+  process main is
+    test.check("one is positive", 1 > 0);
+    test.equal("sum", 1 + 2, 3);
+    test.equal("text", "a" + "b", "ab");
+    test.differ("not the same", "a", "b");
+    test.close("pi", 3.14159, 3.14, 0.01);
+    test.equal("wrong on purpose", 2, 3);
+    print "passed {test.passed!()} failed {test.failed!()}";
+    test.summary();
+  return;
+end f03_test_module;
+/*@expect
+{
+  "stdout": [
+    "ok one is positive",
+    "ok sum",
+    "ok text",
+    "ok not the same",
+    "ok pi",
+    "FAIL wrong on purpose: expected 3, got 2",
+    "passed 5 failed 1",
+    "5 passed, 1 failed"
+  ],
+  "exit": 4
+}
+*/

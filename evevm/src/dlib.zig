@@ -1,4 +1,4 @@
-//! @eve-module dlib: native modules `database`, `csv`, `json`, `txt`, `fs`, `checkpoint`, `time`, `secret` (registry `natives`)
+//! @eve-module dlib: native modules `database`, `csv`, `json`, `txt`, `fs`, `checkpoint`, `time`, `secret`, `crypto`, `os` (registry `natives`; crypto and os are in syslib.zig)
 //! @spec spec/library/registry.md, spec/library/data-language.md, spec/library/database.md
 //! @feature F-LIB-04, F-LIB-05, F-LIB-06, F-LIB-08, F-DAT-01
 //! @decision D-189
@@ -16,6 +16,7 @@ const decimal = @import("evecm").decimal;
 const instant = @import("evecm").instant;
 const nfc = @import("evecm").nfc;
 const Heap = @import("evecm").heap.Heap;
+const syslib = @import("syslib.zig");
 
 const Node = ast.Node;
 const Interp = interp.Interp;
@@ -105,6 +106,8 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "checkpoint", checkpointModule },
     .{ "time", timeModule },
     .{ "secret", secretModule },
+    .{ "crypto", syslib.cryptoModule },
+    .{ "os", syslib.osModule },
 });
 
 // @eve-impl entry point of every `module.name(...)` call on a prelude type
@@ -295,7 +298,7 @@ fn decodeBytes(it: *Interp, bytes_in: []const u8, encoding_opt: ?[]const u8, inv
 }
 
 /// Read a whole file into memory of the run; a missing file is the error `$err_file`.
-fn readFile(it: *Interp, path: []const u8) Signal![]const u8 {
+pub fn readFile(it: *Interp, path: []const u8) Signal![]const u8 {
     const io = it.io orelse return it.fail("no input/output handle", .{});
     return Io.Dir.cwd().readFileAlloc(io, path, it.a, .limited(1 << 30)) catch |e| switch (e) {
         error.FileNotFound => it.failWith(err_file, "cannot read {s}: the file does not exist", .{path}),

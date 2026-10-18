@@ -1,0 +1,74 @@
+** Checks for the tests that a user writes in Eve: one line per check, counters, a summary that fails the process.
+** @spec spec/library/test.md  @feature F-LIB-12  @decision D-189  @tests test/level6/f03_test_module
+module test is
+  export (check, equal, differ, close, passed!, failed!, summary);
+
+  new passes = 0 :Integer;
+  new failures = 0 :Integer;
+
+  ** Count a pass when ok is True, a failure otherwise.
+  procedure check(name: String, ok: Logic) is
+    if ok do
+      let passes += 1;
+      print "ok {name}";
+    else
+      let failures += 1;
+      print "FAIL {name}";
+    done;
+  return;
+
+  ** A pass when actual equals expected; a failure shows both values.
+  procedure equal(:T)(name: String, actual: T, expected: T) is
+    if actual == expected do
+      let passes += 1;
+      print "ok {name}";
+    else
+      let failures += 1;
+      print "FAIL {name}: expected {expected}, got {actual}";
+    done;
+  return;
+
+  ** A pass when the two values are not equal.
+  procedure differ(:T)(name: String, actual: T, other: T) is
+    if actual == other do
+      let failures += 1;
+      print "FAIL {name}: both are {actual}";
+    else
+      let passes += 1;
+      print "ok {name}";
+    done;
+  return;
+
+  ** A pass when actual is within tolerance of expected.
+  procedure close(name: String, actual: Real, expected: Real, tolerance: Real) is
+    new gap := actual - expected;
+    if gap < 0.0 do
+      let gap := 0.0 - gap;
+    done;
+    if gap <= tolerance do
+      let passes += 1;
+      print "ok {name}";
+    else
+      let failures += 1;
+      print "FAIL {name}: expected {expected} within {tolerance}, got {actual}";
+    done;
+  return;
+
+  ** The number of passes so far.
+  function passed!() => (@result: Integer) is
+    let result := passes;
+  return;
+
+  ** The number of failures so far.
+  function failed!() => (@result: Integer) is
+    let result := failures;
+  return;
+
+  ** Print the totals; raise an error when a check failed, so the process ends with a failure code.
+  procedure summary() is
+    print "{passes} passed, {failures} failed";
+    if failures > 0 do
+      raise "test failed: {failures} checks";
+    done;
+  return;
+end test;

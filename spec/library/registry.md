@@ -28,7 +28,7 @@ A signature file is documentation and the source of `eve --doc` and `help`; the 
 
 ## Search order
 
-1. the standard library (`lib/` beside the implementation, or the one it was built with);
+1. the standard library in Eve: the folder `lib/` beside the program (`<prefix>/lib` for `<prefix>/bin/eve.exe`) or `$EVE_STDLIB`; the folder `lib/sys/` holds signature files and is never imported;
 2. the folders of `$EVE_LIB_PATH`;
 3. the `lib/` of the project.
 
@@ -44,7 +44,15 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 |---|---|---|---|
 | `io`, `exception` | F-LIB-01 | in the interpreter; signature files | (this page) |
 | `fs`, `csv`, `json`, `txt`, `time`, `secret`, `database`, `checkpoint` | F-DAT-xx | implemented (level 5); signature files at level 6 | `data-language.md`, `database.md` |
-| `os`, `crypto`, `regex` | F-LIB-10, Q-024 | planned (M2) | to write |
+| `crypto`, `os` | F-LIB-10, F-LIB-07 | implemented (M2, 2026-10-18) | [crypto.md](crypto.md), [os.md](os.md) |
+| `regex`, `gz` | F-LIB-09 | planned (M2, M6) | to write |
 | `net`, `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M3, M4) | to write |
 | `keyring`, `oidc`, `auth` | F-NET-07 | **level 7** (D-189) | |
 | outbound TLS in `http` | F-DAT-02 | **level 9, backlog** (D-189) | |
+
+## Modules of the standard library in Eve at level 6
+
+| Module | Feature | State | Page |
+|---|---|---|---|
+| `test` | F-LIB-12 | implemented (M2, 2026-10-18) | [test.md](test.md) |
+| `config`, `traits` | F-TLS-12 | planned (M2) | to write |

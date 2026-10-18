@@ -152,3 +152,10 @@ M1 is done in part: the registry (`natives` in `evevm/src/dlib.zig`, one hash lo
 - **(9) Gaps found in the audit to close before level 7:** `fs` glob, copy, stat, temp files; `time.sleep!`, formats, zones; `http` (client without TLS); `os.run`; `task` (worker pool, with the generators). Each gets a line in the spec page first (D-190).
 
 Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `regex.md`, `config.md`, `traits.md` (with the signatures and the errors); then the failing tests `f03` to `f07`; then the code of M2.
+
+## 11. State of M2 (2026-10-18)
+
+- **Standard library in Eve is real:** `lib/*.eve` is found beside the program (`<prefix>/lib`, installed by `zig build -p <prefix>`; `$EVE_STDLIB` overrides) and searched before `$EVE_LIB_PATH`; `lib/sys/` keeps the signature files, never imported. First module: `test` (E11), test `f03_test_module`.
+- **System modules done:** `crypto` (S1: sha256, sha512, sha256_file!, hmac_sha256, hex and base64 codecs, random_hex!, same) and `os` (S6: run!, env!, hostname!, pid!, platform) in `evevm/src/syslib.zig`; tests `f04_crypto`, `f05_os`. Not yet in `crypto`: AEAD encryption and password hashing (scrypt/pbkdf2).
+- **Left in M2:** S10 `gz` (the readers already inflate `.gz`), E6 `config`, E14 `traits` (`Iterable`, `Comparable`, `Printable` already exist in the interpreter; the task is their signature and spec page). The test numbers f06 to f07 are free for them.
+- **Gaps found:** `plan/library-gaps.md` (G-1 to G-3).

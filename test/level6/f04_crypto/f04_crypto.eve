@@ -1,0 +1,41 @@
+# the system module crypto: hashes, HMAC, codecs, random bytes (F-LIB-10, D-189)
+** spec: library/crypto.md
+primary aspect f04_crypto is
+  process main is
+    print crypto.sha256("abc");
+    print crypto.sha512("abc");
+    print crypto.hmac_sha256("key", "The quick brown fox jumps over the lazy dog");
+    print crypto.hex_encode("Eve");
+    print crypto.hex_decode("457665");
+    print crypto.base64_encode("Eve language");
+    print crypto.base64_decode("RXZlIGxhbmd1YWdl");
+    print crypto.same("abc", "abc");
+    print crypto.same("abc", "abd");
+    print crypto.random_hex!(8).length();
+    fs.write("f04_data.txt", "abc");
+    print crypto.sha256_file!("f04_data.txt");
+    fs.remove("f04_data.txt");
+    print crypto.hex_decode("zz");
+    print "never";
+  recover
+    print "bad hex";
+  return;
+end f04_crypto;
+/*@expect
+{
+  "stdout": [
+    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f",
+    "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8",
+    "457665",
+    "Eve",
+    "RXZlIGxhbmd1YWdl",
+    "Eve language",
+    "True",
+    "False",
+    "16",
+    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "bad hex"
+  ]
+}
+*/

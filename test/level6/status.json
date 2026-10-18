@@ -3,9 +3,9 @@
   "f01_pg_driver": {
    "status": "PASS",
    "failures": 0,
-   "runs": 10,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-18 07:40",
+   "last": "2026-10-18 07:53",
    "mtime": 1792283376,
    "title": "the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (evedb/README.md 5A, 5B)",
    "reason": ""
@@ -13,11 +13,41 @@
   "f02_evedb_columnar": {
    "status": "PASS",
    "failures": 2,
-   "runs": 9,
+   "runs": 11,
    "checks": 0,
-   "last": "2026-10-18 07:40",
+   "last": "2026-10-18 07:53",
    "mtime": 1792304245,
    "title": "the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables (D-187)",
+   "reason": ""
+  },
+  "f03_test_module": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 2,
+   "checks": 0,
+   "last": "2026-10-18 07:53",
+   "mtime": 1792324062,
+   "title": "the standard module test, written in Eve: checks print one line, count, and summary raises when one failed (D-189)",
+   "reason": ""
+  },
+  "f04_crypto": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 1,
+   "checks": 0,
+   "last": "2026-10-18 07:53",
+   "mtime": 1792324118,
+   "title": "the system module crypto: hashes, HMAC, codecs, random bytes (F-LIB-10, D-189)",
+   "reason": ""
+  },
+  "f05_os": {
+   "status": "PASS",
+   "failures": 0,
+   "runs": 1,
+   "checks": 0,
+   "last": "2026-10-18 07:53",
+   "mtime": 1792324118,
+   "title": "the system module os: run a program without a shell, read the environment (F-LIB-07, D-189)",
    "reason": ""
   }
  }

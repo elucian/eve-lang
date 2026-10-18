@@ -1,0 +1,28 @@
+# the system module os: run a program without a shell, read the environment (F-LIB-07, D-189)
+** spec: library/os.md
+primary aspect f05_os is
+  process main is
+    new r := os.run!("eve", ("--version",), "");
+    print "status {r.status}";
+    print r.out.length() > 0;
+    new missing := os.run!("no_such_program_xyz", (), "");
+    print "missing {missing.status}";
+    print os.env!("NO_SUCH_VARIABLE_XYZ", "fallback");
+    print os.hostname!().length() > 0;
+    print os.pid!() > 0;
+    print (os.platform() == "windows" or os.platform() == "linux" or os.platform() == "macos");
+  return;
+end f05_os;
+/*@expect
+{
+  "stdout": [
+    "status 0",
+    "True",
+    "missing 127",
+    "fallback",
+    "True",
+    "True",
+    "True"
+  ]
+}
+*/

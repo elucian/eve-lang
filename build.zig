@@ -142,12 +142,28 @@ pub fn build(b: *std.Build) void {
         run_cmd.addArgs(args);
     }
 
-    // `zig build doc` writes lib/doc from lib/ with the `doc` command of eve (`eve --doc`, D-082).
-    const doc_cmd = b.addRunArtifact(exe);
-    doc_cmd.addArgs(&.{ "--doc", "lib", "lib/doc" });
-    doc_cmd.setCwd(b.path("."));
-    const doc_step = b.step("doc", "Generate lib/doc from the Eve sources in lib/");
-    doc_step.dependOn(&doc_cmd.step);
+    // `zig build doc` writes lib/doc from lib/ (the standard modules in Eve) and lib/sys/ (the signatures of the
+    // native modules) with the `doc` command of eve (`eve --doc`, D-082, D-189).
+    const doc_step = b.step("doc", "Generate lib/doc from the Eve sources in lib/ and lib/sys/");
+    for ([_][]const u8{ "lib", "lib/sys" }) |folder| {
+        const doc_cmd = b.addRunArtifact(exe);
+        doc_cmd.addArgs(&.{ "--doc", folder, "lib/doc" });
+        doc_cmd.setCwd(b.path("."));
+        doc_step.dependOn(&doc_cmd.step);
+    }
+
+    // The standard library in Eve is found beside the program: `<prefix>/lib/*.eve` for `<prefix>/bin/eve.exe`
+    // (cmd/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and `lib/` is already there.
+    const prefix_is_root = std.mem.eql(u8, b.install_path, ".") or std.mem.eql(u8, b.install_path, b.build_root.path orelse "");
+    if (!prefix_is_root) {
+        const install_lib = b.addInstallDirectory(.{
+            .source_dir = b.path("lib"),
+            .install_dir = .prefix,
+            .install_subdir = "lib",
+            .exclude_extensions = &.{ "md" },
+        });
+        b.getInstallStep().dependOn(&install_lib.step);
+    }
 
     // One test program per module: each runs the tests of its own files.
     const test_step = b.step("test", "Run unit tests");

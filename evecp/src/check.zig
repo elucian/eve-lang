@@ -115,7 +115,10 @@ const Checker = struct {
     /// Is `n` the name `secret` used as the library module and not declared as anything else?
     fn isSecretModule(c: *Checker, n: *const Node) bool {
         if (n.tag != .name) return false;
-        const library = std.mem.eql(u8, n.text, "secret") or std.mem.eql(u8, n.text, "checkpoint");
+        // @eve-impl names of native modules that are also common variable names: a module only when no variable of that name is in scope
+        // @see evevm/src/dlib.zig (`natives`), spec/library/registry.md
+        const library = std.mem.eql(u8, n.text, "secret") or std.mem.eql(u8, n.text, "checkpoint") or
+            std.mem.eql(u8, n.text, "crypto") or std.mem.eql(u8, n.text, "os");
         return library and c.lookup(n.text) == null;
     }
 

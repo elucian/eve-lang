@@ -33,6 +33,19 @@ fn programName(buf: []u8, path: []const u8) []const u8 {
     return std.ascii.lowerString(buf, name);
 }
 
+// @eve-impl folder of the standard modules written in Eve; null when there is none (a bare `eve.exe` copied alone)
+// @spec spec/library/registry.md#search-order
+// @invariant the folder holds `*.eve` modules directly (no `sys/`: those are signature files, never imported)
+fn standardLibrary(init: std.process.Init, arena: std.mem.Allocator) ?[]const u8 {
+    const folder = if (init.environ_map.get("EVE_STDLIB")) |f| f else blk: {
+        const exe_dir = std.process.executableDirPathAlloc(init.io, arena) catch return null;
+        break :blk std.fs.path.join(arena, &.{ exe_dir, "..", "lib" }) catch return null;
+    };
+    var dir = Io.Dir.cwd().openDir(init.io, folder, .{}) catch return null;
+    dir.close(init.io);
+    return folder;
+}
+
 // Zig tip: in Zig 0.16 `main` may take a `std.process.Init` that the runtime fills: `init.io`
 // (the handle for input/output), `init.arena` (an allocator freed when the program ends) and
 // `init.minimal.args` (the command line). `!void` means main may return an error; the runtime
@@ -52,6 +65,17 @@ pub fn main(init: std.process.Init) !void {
         var folders: std.ArrayList([]const u8) = .empty;
         var parts = std.mem.tokenizeScalar(u8, list, std.fs.path.delimiter);
         while (parts.next()) |folder| try folders.append(arena, folder);
+        evecp.project.env_lib_path = folders.items;
+    }
+
+    // @eve-impl the standard library in Eve: `<prefix>/lib` for `<prefix>/bin/eve.exe`, or `$EVE_STDLIB`; searched before `$EVE_LIB_PATH`
+    // @spec spec/library/registry.md#search-order
+    // @feature F-LIB-01
+    // @decision D-189
+    if (standardLibrary(init, arena)) |std_folder| {
+        var folders: std.ArrayList([]const u8) = .empty;
+        try folders.append(arena, std_folder);
+        try folders.appendSlice(arena, evecp.project.env_lib_path);
         evecp.project.env_lib_path = folders.items;
     }
 

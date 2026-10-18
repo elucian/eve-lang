@@ -127,6 +127,7 @@ Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with b
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
+| F-LIB-12 | Testing module `test` | done | checks that print `ok`/`FAIL`, counters, `summary` that raises (`spec/library/test.md`, `lib/test.eve`, test f03; D-189, 2026-10-18). |
 | F-LIB-11 | Logging and observability | open | structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`). |
 | F-LNG-11 | Traits, abstract classes, generics | partial | `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable` (D-039, D-145, tests d20 to d24). Moved from Version 0.2 to Level 4 (D-138). *Partial:* traits, abstract classes, generic classes with erased type arguments and the library traits work (d20 to d24, d34, d35); a constraint is not checked yet, generic functions wait for Version 0.4. |
 | F-LNG-17 | Stream type | partial | `Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; in Version 0.3 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it in Version 0.4, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`). *Partial:* `for` on a channel, `batch`, `split` (d12, d16). |
@@ -170,7 +171,7 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | F-LIB-04 | Files and paths | open | `fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). |
 | F-LIB-05 | Data formats | open | JSON and CSV read/write, decode into records; later XML, Parquet. |
 | F-LIB-06 | Time and dates | open | `now`, parse, format, zones, durations. |
-| F-LIB-07 | Shell commands | open | `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`). |
+| F-LIB-07 | Shell commands | partial | `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`). *Partial (2026-10-18, D-189):* module `os` with `run!` (no shell), `env!`, `hostname!`, `pid!`, `platform` (`spec/library/os.md`, test f05). |
 | F-LIB-08 | Secrets | open | a `Secret` type and `secret.get` from environment, file or vault (review `RIO-R01`). *Specified (2026-10-10):* `spec/library/data-language.md#secrets`. |
 | F-LIB-09 | Compression and archives | open | gzip, zip, stream codecs (manifest). |
 | F-LNG-20 | Generic functions and procedures | open | a first parameter list of types, `function largest(:T <: Comparable)(items: ()T)`, called `largest(xs)` (types inferred) or `largest(:Integer)(xs)`; also procedures, methods and processes; no type list on a lambda, overloaded functions instead; possible because self-calling lambdas are removed (D-145, D-147, D-148). Tests e01 to e04, e14, e15 (written first). |
@@ -194,7 +195,7 @@ Level 6. Goal: The Eve machine: setup, remote control of many machines with logi
 | Code | Feature | Status | Description |
 |---|---|---|---|
 | F-DOC-03 | Tutorial, network and web part | open | client and server, services, protocol, security, HTML, WebAssembly (review `RTU` phases T2, T3). (Version 0.5 –v0.6) |
-| F-LIB-10 | Encryption and hashing | open | hashes, HMAC, symmetric encryption (manifest). |
+| F-LIB-10 | Encryption and hashing | partial | hashes, HMAC, symmetric encryption (manifest). *Partial (2026-10-18, D-189):* module `crypto` with sha256, sha512, sha256_file!, hmac_sha256, hex and Base64, random_hex!, same (`spec/library/crypto.md`, `evevm/src/syslib.zig`, test f04); not yet symmetric encryption and password hashing. |
 | F-NET-02 | HTTP server | partial | routes, request and response records, static files, one state per request (review `RNW-R02`). *Partial (2026-10-11, D-162):* the machine with its two doors, IPC (`--listen`, was `-lsn` until D-169) and HTTP (`--serve`: the web folder, `POST /rpc`), JSON-RPC methods `ping`, `status`, `run`, `stop`, the client options `-loc` and `-rem` (`spec/library/machine.md`); tests `e95_web_hello` and `e95_test1` to `e95_test3` pass. *2026-10-13:* the machine at the prompt (`listen`, `serve`, `stop`, the doors in threads, one thread per connection), `evevm` (the machine in its own process, log in a file) and `eve -u` (open the web page). Not yet: routes and `service` scripts, HTTPS, login, WebSocket. |
 | F-NET-03 | Eve Wire Protocol (EWP) | open | framed binary protocol for Eve-to-Eve calls and data streams, flow control, resumable streams (review `RNW-R04`). |
 | F-NET-04 | Remote apply | open | run an aspect on another node with a deadline and an idempotency key (review `RNW-R01`). |
