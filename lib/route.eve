@@ -1,0 +1,105 @@
+** Route tables: patterns with {name} segments, handlers that give a Reply, and the dispatch of a request (404, 405, 500).
+** @spec spec/library/route.md  @feature F-NET-02  @decision D-189, D-192  @tests test/level6/f10_route_hello
+module route is
+  export (Reply, Route, Match, add, get, post, text, as_json, status, find, dispatch);
+
+  ** What a handler gives back.
+  class Reply = {status: Integer, body: String, headers: Any} <: Object is
+  end Reply;
+
+  ** One route: the verb, the pattern and the handler (req, params) => Reply.
+  class Route = {verb: String, pattern: String, handler: Any} <: Object is
+  end Route;
+
+  ** The result of find: found, or only another verb matches; the captured parameters; the handler.
+  class Match = {found: Logic, other_verb: Logic, params: Any, handler: Any?} <: Object is
+  end Match;
+
+  ** A route for any verb.
+  function add(verb: String, pattern: String, handler: Any) => (@result: Route) is
+    let result := Route(verb: verb, pattern: pattern, handler: handler);
+  return;
+
+  ** A GET route.
+  function get(pattern: String, handler: Any) => (@result: Route) is
+    let result := add("GET", pattern, handler);
+  return;
+
+  ** A POST route.
+  function post(pattern: String, handler: Any) => (@result: Route) is
+    let result := add("POST", pattern, handler);
+  return;
+
+  ** A reply with a status and a text body.
+  function status(code: Integer, body: String) => (@result: Reply) is
+    let result := Reply(status: code, body: body, headers: {"content-type": "text/plain; charset=utf-8"});
+  return;
+
+  ** A 200 reply with a text body.
+  function text(body: String) => (@result: Reply) is
+    let result := status(200, body);
+  return;
+
+  ** A 200 reply with the JSON text of a value.
+  function as_json(:T)(value: T) => (@result: Reply) is
+    let result := Reply(status: 200, body: json.text(value), headers: {"content-type": "application/json"});
+  return;
+
+  ** The non-empty segments of a path.
+  function segments(path: String) => (@result: Any) is
+    new out := ();
+    for piece in path.split("/") do
+      let out <+ piece if piece.length() > 0;
+    done;
+    let result := out;
+  return;
+
+  ** The parameters captured by a pattern in a path, or null when the path does not match.
+  function match_path(pattern: String, path: String) => (@result: Any?) is
+    new ps := segments(pattern);
+    new xs := segments(path);
+    new params := {:};
+    new same := ps.length() == xs.length();
+    if same do
+      for i in (1..ps.length()) do
+        new a := ps[i];
+        if a.starts_with("\{") and a.ends_with("\}") do
+          let params[a[2..-2]] := xs[i];
+        else if a <> xs[i] do
+          let same := False;
+        done;
+      done;
+    done;
+    let result := params;
+    let result := null if not same;
+  return;
+
+  ** The first route of the table that matches the verb and the path.
+  function find(routes: Any, verb: String, path: String) => (@result: Match) is
+    let result := Match(found: False, other_verb: False, params: {:}, handler: null);
+    for r in routes do
+      new params := match_path(r.pattern, path);
+      if params <> null and not result.found do
+        if r.verb == verb do
+          let result := Match(found: True, other_verb: False, params: params, handler: r.handler);
+        else
+          let result := Match(found: False, other_verb: True, params: {:}, handler: null);
+        done;
+      done;
+    done;
+  return;
+
+  ** The reply for a request: 404, 405 or the handler result; a handler that raises gives a 500 with the message.
+  function dispatch(routes: Any, req: Any) => (@result: Reply) is
+    new m := find(routes, req.verb, req.path);
+    let result := status(404, "Not Found");
+    if m.found do
+      new handler := m.handler;
+      let result := handler(req, m.params);
+    else if m.other_verb do
+      let result := status(405, "Method Not Allowed");
+    done;
+  recover
+    let result := status(500, "Internal Server Error: {$error.message}");
+  return;
+end route;

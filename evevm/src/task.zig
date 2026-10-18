@@ -14,7 +14,7 @@ const Io = std.Io;
 // only when something changed since it blocked (the `progress` counter), a sleeper only when its time
 // has come.
 /// What a task waits for.
-pub const Wait = enum { none, send, receive, join, sleep, gen };
+pub const Wait = enum { none, send, receive, join, sleep, gen, io };
 
 // Zig tip: a second enum for the reason a task must stop: `cancel` comes from `on error cancel`,
 // `timeout` from the `within` deadline of its group (D-140).
@@ -39,6 +39,8 @@ pub const Task = struct {
     limit_ms: i64 = 0,
     /// Set by the scheduler when every task waits and nothing can move: the task raises DeadlockError.
     deadlock: bool = false,
+    /// For `io`: set by the helper thread of a blocking call (netlib.zig) when it has ended.
+    io_ready: std.atomic.Value(bool) = .init(false),
     thread: ?std.Thread = null,
 };
 
@@ -105,6 +107,7 @@ pub const Sched = struct {
             .none => true,
             .send, .receive, .join => t.blocked_at != s.progress,
             .sleep => now_ms >= t.wake_at,
+            .io => t.io_ready.load(.acquire),
             // a generator and the task that resumed it hand the baton to each other by name, never by `pick`
             .gen => false,
         };
@@ -126,6 +129,26 @@ pub const Sched = struct {
 
     // Zig tip: a `bool` parameter selects a variant of the search: with `channels` false the time-outs
     // of the channel waits (`$timeout`) are left out, so the scheduler can see that only they remain.
+    /// Does any task wait for a helper thread?
+    fn ioPending(s: *Sched) bool {
+        for (s.tasks.items) |t| if (!t.done and t.wait == .io) return true;
+        return false;
+    }
+
+    /// Has any task that waits for a helper thread been told that the helper has ended?
+    fn anyIoReady(s: *Sched) bool {
+        for (s.tasks.items) |t| if (!t.done and t.wait == .io and t.io_ready.load(.acquire)) return true;
+        return false;
+    }
+
+    /// Called by the helper thread of a blocking call when it ends: wake the scheduler.
+    pub fn ioDone(s: *Sched, t: *Task) void {
+        s.mutex.lockUncancelable(s.io);
+        t.io_ready.store(true, .release);
+        s.cond.broadcast(s.io);
+        s.mutex.unlock(s.io);
+    }
+
     /// The earliest time a sleeping task or a deadline wakes up, or null when there is none.
     fn nextTimer(s: *Sched, channels: bool) ?i64 {
         var best: ?i64 = null;
@@ -169,6 +192,21 @@ pub const Sched = struct {
             if (s.pick(me)) |next| {
                 if (next != me) s.handoff(me, next);
                 return;
+            }
+            // @eve-impl a task waits for the helper thread of a blocking call (`io`): nothing else can run, so sleep on the
+            // condition until a helper says it has ended, or wake for the earliest timer; no deadlock can be declared
+            // while a call is pending, because its end is the progress that the other tasks wait for
+            // @see evevm/src/netlib.zig (`offload`), `ioDone`
+            if (s.ioPending()) {
+                if (s.nextTimer(true)) |at| {
+                    const left = at - s.now();
+                    if (left > 0) Io.sleep(s.io, .fromMilliseconds(@min(left, 1)), .awake) catch {};
+                    continue;
+                }
+                s.mutex.lockUncancelable(s.io);
+                while (!s.anyIoReady()) s.cond.waitUncancelable(s.io, &s.mutex);
+                s.mutex.unlock(s.io);
+                continue;
             }
             // a deadlock is reported at once, before the time-outs of the channel waits: when only they
             // remain, nothing but a time-out could move, and every waiter would wait for nothing

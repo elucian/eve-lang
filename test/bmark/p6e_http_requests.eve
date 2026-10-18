@@ -1,0 +1,32 @@
+# level 6 performance: a route table served in Eve and called by an Eve client in the same script (D-189)
+** perf: 300 requests (GET with a path parameter, GET with a query, POST with a body), each on its own connection
+primary aspect p6e_http_requests is
+  from lib use (http, route, service);
+
+  async procedure run_server(server: Listener, routes: Any, count: Integer) is
+    service.serve(server, routes, count);
+  return;
+
+  process main is
+    new routes := (
+      route.get("/users/{id}", (req, p) => (route.text("user " + p["id"]))),
+      route.get("/sum", (req, p) => (route.text("{Integer.parse(req.query["a"]) + Integer.parse(req.query["b"])}"))),
+      route.post("/echo", (req, p) => (route.text(req.body)))
+    );
+    new server := net.listen!("127.0.0.1", 0);
+    new base := "http://127.0.0.1:{server.port()}";
+    new bytes := 0;
+    work: job
+    do
+      spawn run_server(server, routes, 300);
+      for i in (1..100) do
+        let bytes += http.get!(base + "/users/" + "{i}").body.length();
+        let bytes += http.get!(base + "/sum?a=" + "{i}" + "&b=1").body.length();
+        let bytes += http.post!(base + "/echo", "payload {i}").body.length();
+      done;
+    done work;
+    server.close();
+    expect bytes == 1878;
+    print bytes;
+  return;
+end p6e_http_requests;

@@ -1,0 +1,153 @@
+** HTTP/1.1 as text on a net Socket: read a request, write a response, call a server. One request for each connection.
+** @spec spec/library/http.md  @feature F-NET-02  @decision D-189  @tests test/level6/f10_route_hello
+module http is
+  export (Request, HttpResponse, read_request!, respond, get!, post!, reason);
+
+  ** A request as the server reads it; verb is "" when the client closed before sending anything.
+  class Request = {verb: String, target: String, path: String, query: Any, headers: Any, body: String} <: Object is
+  end Request;
+
+  ** An answer as the client reads it.
+  class HttpResponse = {status: Integer, headers: Any, body: String} <: Object is
+    ** Raise HttpError when the status is 400 or more.
+    public method check(@self) => (@ok: Logic) is
+      raise "HttpError {self.status}" if self.status >= 400;
+      let ok := True;
+    return;
+  end HttpResponse;
+
+  ** The standard text of a status code.
+  function reason(status: Integer) => (@result: String) is
+    new names := {200: "OK", 201: "Created", 204: "No Content", 301: "Moved Permanently", 302: "Found", 400: "Bad Request",
+                  401: "Unauthorized", 403: "Forbidden", 404: "Not Found", 405: "Method Not Allowed", 500: "Internal Server Error",
+                  501: "Not Implemented", 503: "Service Unavailable"};
+    let result := "";
+    let result := names[status] if (status in names);
+  return;
+
+  ** The number of bytes of a text (length() counts runes).
+  function byte_length(text: String) => (@result: Integer) is
+    let result := crypto.hex_encode(text).length() / 2;
+  return;
+
+  ** a=1&b=2 into a DataMap of texts.
+  function parse_query(text: String) => (@result: Any) is
+    new out := {:};
+    for pair in text.split("&") do
+      new at := pair.find("=");
+      if at > 1 do
+        let out[pair[1..at - 1]] := pair[at + 1..-1];
+      else if pair.length() > 0 and at == 0 do
+        let out[pair] := "";
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The headers after the first line, up to the empty line; names in lower case.
+  function read_headers!(sock: Socket) => (@result: Any) is
+    new headers := {:};
+    new line := sock.read_line!();
+    while line <> null and line <> "" do
+      new at := line.find(":");
+      if at > 1 do
+        let headers[line[1..at - 1].trim().lower()] := line[at + 1..-1].trim();
+      done;
+      let line := sock.read_line!();
+    done;
+    let result := headers;
+  return;
+
+  ** Read one request from the socket.
+  function read_request!(sock: Socket) => (@result: Request) is
+    new first := sock.read_line!();
+    let result := Request(verb: "", target: "", path: "", query: {:}, headers: {:}, body: "");
+    if first <> null and first.length() > 0 do
+      new parts := first.split(" ");
+      if parts.length() < 3 or not parts[3].starts_with("HTTP/1.") do
+        raise "FormatError: bad request line: {first}";
+      done;
+      new target := parts[2];
+      new mark := target.find("?");
+      new path := target;
+      new query := {:};
+      if mark > 0 do
+        let path := target[1..mark - 1];
+        let query := parse_query(target[mark + 1..-1]);
+      done;
+      new headers := read_headers!(sock);
+      new body := "";
+      if "content-length" in headers do
+        new size := Integer.parse(headers["content-length"]);
+        let body := sock.read_exact!(size) if size > 0;
+      done;
+      let result := Request(verb: parts[1], target: target, path: path, query: query, headers: headers, body: body);
+    done;
+  return;
+
+  ** Write a response and nothing else; the caller closes the socket.
+  procedure respond(sock: Socket, status: Integer, body: String, headers = {:} :Any) is
+    new text := "HTTP/1.1 {status} {reason(status)}\r\nContent-Length: {byte_length(body)}\r\nConnection: close\r\n";
+    for pair in headers do
+      let text := text + "{pair[1]}: {pair[2]}\r\n";
+    done;
+    sock.write(text + "\r\n" + body);
+  return;
+
+  ** Send a request to http://host:port/path and read the whole answer.
+  function exchange!(verb: String, url: String, body: String, headers: Any) => (@result: HttpResponse) is
+    if url.starts_with("https://") do
+      raise "ConnectionError: https needs the TLS client (level 9)";
+    done;
+    if not url.starts_with("http://") do
+      raise "ArgumentError: the address starts with http://";
+    done;
+    new rest := url[8..-1];
+    new slash := rest.find("/");
+    new hostport := rest;
+    new path := "/";
+    if slash > 0 do
+      let hostport := rest[1..slash - 1];
+      let path := rest[slash..-1];
+    done;
+    new colon := hostport.find(":");
+    new host := hostport;
+    new port := 80;
+    if colon > 0 do
+      let host := hostport[1..colon - 1];
+      let port := Integer.parse(hostport[colon + 1..-1]);
+    done;
+    new sock := net.connect!(host, port);
+    new text := "{verb} {path} HTTP/1.1\r\nHost: {hostport}\r\nConnection: close\r\nContent-Length: {byte_length(body)}\r\n";
+    for pair in headers do
+      let text := text + "{pair[1]}: {pair[2]}\r\n";
+    done;
+    sock.write(text + "\r\n" + body);
+    new status_line := sock.read_line!();
+    new parts := status_line.split(" ");
+    new answer_headers := read_headers!(sock);
+    new answer := "";
+    if "content-length" in answer_headers do
+      new size := Integer.parse(answer_headers["content-length"]);
+      let answer := sock.read_exact!(size) if size > 0;
+    else
+      new piece := sock.read!(4096);
+      while piece.length() > 0 do
+        let answer := answer + piece;
+        let piece := sock.read!(4096);
+      done;
+    done;
+    sock.close();
+    let result := HttpResponse(status: Integer.parse(parts[2]), headers: answer_headers, body: answer);
+  return;
+
+  ** GET a URL; a status of 400 or more is not an error by itself (call check()).
+  function get!(url: String, headers = {:} :Any) => (@result: HttpResponse) is
+    let result := exchange!("GET", url, "", headers);
+  return;
+
+  ** POST a body to a URL.
+  function post!(url: String, body: String, headers = {:} :Any) => (@result: HttpResponse) is
+    let result := exchange!("POST", url, body, headers);
+  return;
+end http;

@@ -46,22 +46,34 @@ pub const Listen = struct {
 // @see spec/library/net.md#waiting
 fn offload(it: *Interp, comptime R: type, comptime func: anytype, ctx: anytype) Signal!R {
     if (it.sched == null) return func(ctx);
+    const s = it.sched.?;
+    const me = it.me.?;
     const Job = struct {
         done: std.atomic.Value(bool) = .init(false),
         result: R = undefined,
         ctx: @TypeOf(ctx),
+        sched: *@import("task.zig").Sched,
+        task: *@import("task.zig").Task,
     };
     const job = try it.a.create(Job);
-    job.* = .{ .ctx = ctx };
+    job.* = .{ .ctx = ctx, .sched = s, .task = me };
     const Run = struct {
         fn main(j: *Job) void {
             j.result = func(j.ctx);
             j.done.store(true, .release);
+            j.sched.ioDone(j.task);
         }
     };
-    const th = std.Thread.spawn(.{}, Run.main, .{job}) catch return it.fail("net: cannot start a helper thread", .{});
+    me.io_ready.store(false, .release);
+    me.wait = .io;
+    const th = std.Thread.spawn(.{}, Run.main, .{job}) catch {
+        me.wait = .none;
+        return it.fail("net: cannot start a helper thread", .{});
+    };
     th.detach();
-    while (!job.done.load(.acquire)) try it.waitFor(1);
+    while (!job.done.load(.acquire) and me.cancel == .none) s.yield(me);
+    me.wait = .none;
+    try it.checkCancel();
     const result = job.result;
     it.a.destroy(job);
     return result;

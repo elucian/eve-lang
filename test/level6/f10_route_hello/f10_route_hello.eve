@@ -1,0 +1,62 @@
+# a server with routes and a client in one script: the modules net, http, route and service (F-NET-02, F-STR-08, D-189)
+** spec: library/route.md
+primary aspect f10_route_hello is
+  from lib use (http, route, service);
+
+  async procedure run_server(server: Listener, routes: Any, count: Integer) is
+    service.serve(server, routes, count);
+  return;
+
+  process main is
+    new boom := (req, p) => (route.text("x" + p["nope"]));
+    new routes := (
+      route.get("/hello", (req, p) => (route.text("hello"))),
+      route.get("/users/{id}", (req, p) => (route.text("user " + p["id"]))),
+      route.get("/sum", (req, p) => (route.as_json({"sum": Integer.parse(req.query["a"]) + Integer.parse(req.query["b"])}))),
+      route.post("/echo", (req, p) => (route.text(req.body))),
+      route.get("/boom", boom)
+    );
+    new server := net.listen!("127.0.0.1", 0);
+    new base := "http://127.0.0.1:{server.port()}";
+    work: job
+    do
+      spawn run_server(server, routes, 8);
+      new a := http.get!(base + "/hello");
+      print "{a.status} {a.body}";
+      new b := http.get!(base + "/users/42");
+      print "{b.status} {b.body}";
+      new c := http.get!(base + "/sum?a=2&b=3");
+      print "{c.status} {c.body} {c.headers["content-type"]}";
+      new d := http.post!(base + "/echo", "héllo body");
+      print "{d.status} {d.body}";
+      new e := http.get!(base + "/missing");
+      print "{e.status} {e.body}";
+      new f := http.post!(base + "/hello", "x");
+      print "{f.status} {f.body}";
+      new g := http.get!(base + "/boom");
+      print "{g.status}";
+      new h := http.get!(base + "/hello/");
+      print "{h.status} {h.body}";
+    done work;
+    server.close();
+    http.get!(base + "/hello").check();
+    print "never";
+  recover
+    print "closed: {$error.message.starts_with("net.connect!")}";
+  return;
+end f10_route_hello;
+/*@expect
+{
+  "stdout": [
+    "200 hello",
+    "200 user 42",
+    "200 {\"sum\":5} application/json",
+    "200 héllo body",
+    "404 Not Found",
+    "405 Method Not Allowed",
+    "500",
+    "200 hello",
+    "closed: True"
+  ]
+}
+*/

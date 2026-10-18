@@ -38,7 +38,7 @@ return;
 
 ## Waiting
 
-A call that waits (`accept!`, `read_line!`, `read!`, `read_exact!`) gives the baton to the other tasks of the run (`multitasking.md`) while it waits, so a server and its clients can be tasks of one script, as in the example: the call runs on a helper thread and the task looks at it every millisecond. Outside any task the call simply waits in the system. **No time-out yet** (TD-27): the calls wait without limit; `timeout:` of the design (`design-libraries.md` §10 (3)) comes with the first user. A task cancelled while it waits leaves its helper thread to end by itself (TD-28).
+A call that waits (`accept!`, `read_line!`, `read!`, `read_exact!`) gives the baton to the other tasks of the run (`multitasking.md`) while it waits, so a server and its clients can be tasks of one script, as in the example: the call runs on a helper thread and the task sleeps on the scheduler (state `io`) until the helper ends. Outside any task the call simply waits in the system. **No time-out yet** (TD-27): the calls wait without limit; `timeout:` of the design (`design-libraries.md` §10 (3)) comes with the first user. A task cancelled while it waits leaves its helper thread to end by itself (TD-28).
 
 ## Errors
 
