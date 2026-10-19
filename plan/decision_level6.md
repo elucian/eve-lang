@@ -816,7 +816,7 @@ The plan is `plan/design-libraries.md`. Author answers (2026-10-18), read as rul
 
 ## D-190 Order of the work and comments for AI (2026-10-18)
 
-- (1) **Priority of the work, changed on 2026-10-18:** (1) the plan (`plan/`), (2) the specification (`spec/`), (3) tests and implementation, (4) the manual (`manual/`), (5) the tutorial (`tutorial/`), last. Before: the tutorial first (the FOCUS of 2026-10-07). A feature starts as a plan entry, then spec text, then a failing test and the code; the manual and the tutorial follow and may lag.
+- (1) **Priority of the work, changed on 2026-10-18:** (1) the plan (`plan/`), (2) the specification (`spec/`), (3) tests and implementation, (4) the manual (`manual/`), (5) the tutorial (`tutorial/`), last. Before: the tutorial first (the FOCUS of 2026-10-07). A feature starts as a plan entry, then spec text, then a failing test and the code; the manual and the tutorial follow and may lag. **The order was replaced by D-194 (2026-10-18)**; rule (2) below stands.
 - (2) **Zig comments are written for AI, not for humans.** The `// Zig tip:` teaching blocks (CLAUDE.md, 2026-10) stop for new and touched code; existing tips stay until the code around them changes. A comment says what feature the code implements and where the specification is, in a form that `grep` finds. The convention is in CLAUDE.md ("Zig comments for AI").
 
 ## D-191 External signatures in modules; a native that returns nothing is a procedure; the prefix `.` is legacy (2026-10-18)

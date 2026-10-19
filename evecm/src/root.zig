@@ -1,7 +1,7 @@
 //! evecm: the common part of Eve, the leaf of the module graph (design-packages.md §3). It holds
 //! what every other part uses and imports nothing but `std` and the build options: the syntax
 //! tree, the number and time types, the Unicode tables, the data codecs, the version, and the
-//! terminal and line editor. It holds Zig code only, never data.
+//! terminal and line editor, and the files that evetx and eveux share (`ide`). It holds Zig code only, never data.
 const std = @import("std");
 
 // Zig tip: `pub const x = @import("file.zig");` re-exports a file under a name. This file is the
@@ -45,6 +45,9 @@ pub const line = @import("line.zig");
 /// Raw keyboard mode of the REPL prompt.
 pub const terminal = @import("terminal.zig");
 
+/// What the two editors share, evetx and eveux: text buffer, Eve scanner, keywords, project tree, machine link, regex, grid, sqlstruct, cache.
+pub const ide = @import("ide.zig");
+
 /// The version, written once in the root build.zig.zon: `version.version`, `version.title`.
 pub const version = @import("version.zig");
 
@@ -63,6 +66,7 @@ test {
     _ = data;
     _ = line;
     _ = terminal;
+    _ = ide;
 }
 
 test "version strings are set" {

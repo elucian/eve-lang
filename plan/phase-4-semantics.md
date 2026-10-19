@@ -1,5 +1,7 @@
 # Phase 4 — Semantics
 
+> Rank 7 (the specification) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: the meaning of every construct, precise enough that two independent compilers produce the same output for the same program.
 
 ### S4.1 `semantics/types.md` + `types.json` `[ ]`

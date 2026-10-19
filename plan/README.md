@@ -1,6 +1,6 @@
 # Eve Improvement Plan
 
-Permanent, step-by-step plan for two linked goals:
+Permanent plan of the Eve project. The order of the work is the table under "Current focus" (D-194). The steps of the phases below serve three linked goals (the tutorial is the last of the work, rank 10):
 
 1. **Improve the tutorial** (`tutorial/`, published by the scl repo) so it is correct,
    consistent and teaches everything a compiler author needs.
@@ -11,7 +11,7 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 
 ## How to use this plan
 
-- Work one step per session. Take the first open step (`[ ]`) of the lowest open phase unless a later step is explicitly unblocked.
+- Work one piece per session, from the highest rank of the priority table (Current focus). For the steps of the phases: take the first open step (`[ ]`) of the lowest open phase of that rank unless a later step is explicitly unblocked.
 - Before starting, mark the step `[~]`. When it is done, mark it `[x]` and add the date and a one-line result, for example `[x] 2026-10-02: 41 keywords, 3 conflicts → D-004`.
 - A step needs a decision from the author → mark `[!]`, add a question to
   [`decision_level1.md`](decision_level1.md) or [`decision_level2.md`](decision_level2.md), and move on to the next unblocked step.
@@ -30,11 +30,35 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 
 Do not read the logs whole. `python script/plan.py status` prints the focus, the open steps and the open questions (about 50 lines). `python script/plan.py show D-087 Q-035` prints single entries. Each `decision_level1.md` and `decision_level2.md` holds an index of every id, the open questions and the newest decisions; settled entries are in `plan/archive/` with the full text (`python script/plan.py archive --keep 4` moves them; it loses nothing). Append a new `D-`/`Q-` entry at the end of the active file. Mark steps in the phase files as before.
 
-## Current focus (2026-10-07)
+## Current focus (2026-10-18)
 
-2026-10-07: tutorial first. Phase 2 ends with the page Subprograms (parameters, procedures; D-105); Q-036 is answered (D-106); Q-035 (async, level 4) is open. Level 1 spec and tests (D-094) wait for the author's review, then the VM.
+2026-10-18 (D-194): the order of the work is plan, design, user interfaces, refactor, optimize, test, spec, compiler, manual, tutorial last. Take the next piece from the highest rank that has open work; `python script/plan.py status` lists the open steps and questions, `plan/tech-debt.md` the debt.
 
-The **tutorial** comes first: it is reviewed and improved until it is good enough and feature complete, because it gives the complete vision of Eve and will shape the architecture of the interpreter. **Parked until the author says go:** the specification (`spec/`, phases 2–4), the test suites (`test/`, phase 5), the virtual machine (`evevm/`) and `demo/`. Design notes in `plan/` continue when they serve the tutorial.
+| Rank | Work | Where |
+|---|---|---|
+| 1 | Plan | `plan/` (decision logs, `version_map.md`, `tech-debt.md`, `library-gaps.md`) |
+| 2 | Design | `plan/design-*.md`, the README and `design/` of `evetx/`, `eveux/`, `evewp/`, `evedb/` |
+| 3 | User interfaces | `evetx/` (terminal), `eveux/` (native window), `evewp/` (web portal) |
+| 4 | Refactor | shared code in `evecm/` (`evecm/src/ide/` is shared by evetx and eveux), module borders (`plan/design-packages.md`) |
+| 5 | Optimize | `test/bmark/`, `script/bmark.py` |
+| 6 | Test | `test/level1` to `level7`, `test/smoke`, `script/runtest.py` (phase 5) |
+| 7 | Specification | `spec/` (phases 2 to 4); it follows the tests |
+| 8 | Compiler | `evecp/`, `evevm/`, `evecm/`, `evedb/`, `cmd/` (phase 6) |
+| 9 | Manual | `manual/` (phase 7) |
+| 10 | Tutorial | `tutorial/` (phase 1), last; the steps wait, none is dropped |
+
+**By case (D-196).** The ranks decide what to take; the way through one piece of work depends on its kind.
+
+| Kind of work | Way through |
+|---|---|
+| A screen or an interface feature | **visual design first** (a drawing, reviewed by the author) → plan entry → code → tests of the logic → spec of the new messages → manual → tutorial |
+| A language or compiler feature | plan → design (decision with examples) → failing test → compiler → spec → manual → tutorial |
+| A library module | plan (`design-libraries.md`) → failing test → code → spec page → manual |
+| A bug | failing test → fix |
+| A refactor | tests green → move → tests green; no change of behavior; its own commit |
+| An optimization | `bmark.py` before → change → `bmark.py` after |
+
+The old focus (2026-10-07, "tutorial first": the tutorial was reviewed until feature complete, and the spec, the tests and the VM were parked) is over. The tutorial still teaches Eve, but it follows the other work and may lag.
 
 ## Features and versions
 
@@ -45,15 +69,15 @@ The **tutorial** comes first: it is reviewed and improved until it is good enoug
 
 ## Phases
 
-| Phase | File | Goal |
-|---|---|---|
-| 1 | [phase-1-tutorial.md](phase-1-tutorial.md) | Fix and complete the tutorial; add the compiler page |
-| 2 | [phase-2-spec-foundation.md](phase-2-spec-foundation.md) | Spec skeleton, schemas, lexical rules, keywords, operators |
-| 3 | [phase-3-syntax.md](phase-3-syntax.md) | Grammar: regions, statements, expressions, declarations |
-| 4 | [phase-4-semantics.md](phase-4-semantics.md) | Types, scopes, topology, control flow, multitasking |
-| 5 | [phase-5-conformance.md](phase-5-conformance.md) | Built-ins, conformance tests, test levels 1–3 |
-| 6 | [phase-6-compiler-track.md](phase-6-compiler-track.md) | Test-runner contract, compiler registry, approval |
-| 7 | [phase-7-manual.md](phase-7-manual.md) | Compiler manual: implement, use, generated feature tables |
+| Phase | File | Goal | Rank (D-194) |
+|---|---|---|---|
+| 1 | [phase-1-tutorial.md](phase-1-tutorial.md) | Fix and complete the tutorial; add the compiler page | 10 |
+| 2 | [phase-2-spec-foundation.md](phase-2-spec-foundation.md) | Spec skeleton, schemas, lexical rules, keywords, operators | 7 |
+| 3 | [phase-3-syntax.md](phase-3-syntax.md) | Grammar: regions, statements, expressions, declarations | 7 |
+| 4 | [phase-4-semantics.md](phase-4-semantics.md) | Types, scopes, topology, control flow, multitasking | 7 |
+| 5 | [phase-5-conformance.md](phase-5-conformance.md) | Built-ins, conformance tests, test levels 1–3 | 6 |
+| 6 | [phase-6-compiler-track.md](phase-6-compiler-track.md) | Test-runner contract, compiler registry, approval | 8 |
+| 7 | [phase-7-manual.md](phase-7-manual.md) | Compiler manual: implement, use, generated feature tables | 9 |
 
 Phases 1 and 2 can run in parallel. Phase 3 needs lexical rules from phase 2. Phase 5 needs the parts of phases 3–4 that its tests cover. Phase 7's generator needs the schemas (S2.2) and grows with each spec JSON file.
 

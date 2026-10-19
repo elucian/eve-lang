@@ -6,7 +6,7 @@
 //! Threads: the UI thread owns `App`. A worker thread never touches it: it sends a message through a queue (see `queue.zig`,
 //! to write) and the UI thread applies it at the start of the next frame.
 const std = @import("std");
-const shared = @import("shared");
+const ide = @import("ide");
 const kind = @import("preview/kind.zig");
 
 pub const Tab = struct {
@@ -14,7 +14,7 @@ pub const Tab = struct {
     file_kind: kind.Kind,
     viewer: kind.Viewer,
     /// For a text tab: the buffer with its undo history (the one of evetx).
-    buffer: ?shared.text.Buffer = null,
+    buffer: ?ide.text.Buffer = null,
     /// A Markdown or HTML tab: Source, Split or Preview.
     mode: enum { source, split, preview } = .split,
     dirty: bool = false,
@@ -30,16 +30,16 @@ pub const App = struct {
     gpa: std.mem.Allocator,
     io: std.Io,
     project_root: []const u8 = "",
-    tree: shared.project.Tree,
+    tree: ide.project.Tree,
     tabs: std.ArrayList(Tab) = .empty,
     active: usize = 0,
     machines: std.ArrayList(Machine) = .empty,
     machine: usize = 0,
     /// The child `eve --stdio`; null until the first command needs it.
-    link: ?*shared.link.Link = null,
+    link: ?*ide.link.Link = null,
 
     pub fn init(gpa: std.mem.Allocator, io: std.Io) App {
-        return .{ .gpa = gpa, .io = io, .tree = shared.project.Tree.init(gpa) };
+        return .{ .gpa = gpa, .io = io, .tree = ide.project.Tree.init(gpa) };
     }
 
     pub fn deinit(self: *App) void {

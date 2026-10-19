@@ -6,6 +6,7 @@
 
 # Default: let Git detect text, store and check out LF.
 * text=auto eol=lf
+
 # Sources of the project, declared so detection never guesses wrong.
 *.eve      text eol=lf
 *.md       text eol=lf diff=markdown
@@ -24,14 +25,17 @@
 *.csv      text eol=lf
 LICENSE    text eol=lf
 .githooks/* text eol=lf
+
 # Windows scripts: cmd.exe and PowerShell 5.1 need CRLF.
 *.bat      text eol=crlf
 *.cmd      text eol=crlf
 *.ps1      text eol=crlf
+
 # Images in Git LFS (large files live on the LFS server, the repo keeps a pointer).
 # Needs git-lfs installed (`git lfs install` once per clone). SVG is XML text, but
 # LFS stores it whole, so it has no line-ending rule and no text diff.
 *.svg      filter=lfs diff=lfs merge=lfs -text
+
 # Binary files: no line-ending change, no text diff.
 *.exe      binary
 *.dll      binary

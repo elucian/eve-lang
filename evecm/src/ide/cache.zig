@@ -1,3 +1,5 @@
+//! @eve-module ide.cache
+//! @decision D-193
 //! The user cache of evetx: the list of the projects it knows. A project is added when a folder is
 //! imported (File > Open Folder) and leaves the list when the user forgets it. Forgetting never
 //! touches the files of the project.

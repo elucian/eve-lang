@@ -1,3 +1,5 @@
+//! @eve-module ide.text
+//! @decision D-193
 //! The text of a file in the editor: lines, a cursor, and the find and replace operations.
 const std = @import("std");
 const Allocator = std.mem.Allocator;

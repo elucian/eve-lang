@@ -1,5 +1,7 @@
 # Phase 1 — Tutorial
 
+> Rank 10 (the tutorial, last) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: a correct, consistent tutorial that teaches Eve and points compiler authors to the spec. Files live in `tutorial/` (scl repo; commit with `git -C tutorial …`). After every step: `bee-ed balance` on the touched pages, then `npm run build` in `C:\Users\eluci\sage-code\scl`.
 
 Baseline measured 2026-09-28: 17 pages, 14 sidebar JSON files, all sidebar links resolve.

@@ -20,6 +20,10 @@ pub fn build(b: *std.Build) void {
     // passed to that package's own build.zig, so it is compiled for the same target and mode.
     const vaxis_dep = b.dependency("vaxis", .{ .target = target, .optimize = optimize });
 
+    // The files that evetx shares with eveux (text buffer, scanner, project tree, machine link, grid, ...) live in
+    // evecm/src/ide.zig and import `std` only, so this module needs no build options. Their tests run in the root `zig build test`.
+    const ide_mod = b.createModule(.{ .root_source_file = b.path("../evecm/src/ide.zig"), .target = target, .optimize = optimize });
+
     const exe = b.addExecutable(.{
         .name = "evetx",
         .root_module = b.createModule(.{
@@ -30,6 +34,7 @@ pub fn build(b: *std.Build) void {
             // can write `@import("vaxis")`: the other parts of Eve do not see the library.
             .imports = &.{
                 .{ .name = "vaxis", .module = vaxis_dep.module("vaxis") },
+                .{ .name = "ide", .module = ide_mod },
             },
         }),
     });
@@ -63,7 +68,7 @@ pub fn build(b: *std.Build) void {
     run_cmd.addPassthruArgs();
     b.step("run", "Run evetx").dependOn(&run_cmd.step);
 
-    // @eve-impl `zig build test` in evetx/: the unit tests of the pure parts (the comment scanner of view.zig, grid, options)
+    // @eve-impl `zig build test` in evetx/: the unit tests of the pure parts (the comment carry of view.zig, options; the shared files test in the root build)
     // @see evetx/src/view.zig (`carryAfter`, `Scan`)
     const unit = b.addTest(.{ .root_module = exe.root_module });
     b.step("test", "Run the unit tests of evetx").dependOn(&b.addRunArtifact(unit).step);

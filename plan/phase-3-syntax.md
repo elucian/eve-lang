@@ -1,5 +1,7 @@
 # Phase 3 — Syntax
 
+> Rank 7 (the specification) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: a complete, testable grammar. EBNF lives in fenced `ebnf` blocks, so a tool can extract it; the prose explains each rule with an example taken from `demo/` or `pattern/`.
 
 ### S3.1 Grammar skeleton `[x]` `grammar.md` written (levels 1 and 2), checked by S3.6 (D-115)

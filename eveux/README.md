@@ -11,12 +11,18 @@ A full IDE project with **embedded Eve functionality** and **debugging**:
 | **Edit** | Eve, SQL, JSON, XML, HTML, **JavaScript**, CSS, Markdown and plain text with syntax colors, find and replace, find in files, go to line, undo and redo, bracket matching, completion and hover docs for Eve |
 | **Create** | New file from a template (Eve aspect, module, class, test; HTML page, **JavaScript module**, CSS; SQL script; JSON; Markdown; evewp application), new project (`project new`) |
 | **Embedded Eve** | the compiler front end is **linked into the program**: live syntax and semantic checks while typing, outline and symbols, go to definition, docs from `**` comments, later format; scripts **run in the Eve machine** (a child process), never inside the window |
-| **Run and debug** | run, check, stop; breakpoints in the gutter, step into, over and out, variables, watch, call stack, console, output, all over the machine API |
+| **Run and debug** | **local only** (D-195): run, check, stop; breakpoints in the gutter, step into, over and out, variables, watch, call stack, console, output, all over the machine API of the local machine; one **tool bar that follows the file** (section 1.1) |
 | **Preview** | Markdown (rendered, split with the source), HTML (rendered by a subset renderer, or in the browser), images and SVG, audio and video; a file of another kind opens a card |
 | **Database** | a database file opens its tables; the data of a table in a grid; structure dialog; SQL tabs with a result grid and Eve types, commit and rollback; the object tree of a connection |
 | **Source control** | status, side-by-side diff, stage, commit, branches, history (the `git` program is run for each action) |
-| **Deploy** | to a machine or an evewp application, with a diff against the target, checks, versions and rollback |
-| **Machines** | the local machine and remote machines, login (single sign-on, keyring), jobs, schedules, live logs |
+| **Deploy** | a project that passed its tests goes to a machine or an evewp application, with a diff against the target, checks, versions and rollback |
+| **Operate** | a remote machine is operated, never edited (D-195): status, schedules, jobs and last runs, live logs, versions, rollback; login (single sign-on, keyring) |
+
+### 1.1 Working model and the tool bar (D-195, author, 2026-10-18)
+
+**Code is always local.** It is edited, run, debugged and tested in the local machine. After a local test the project is **deployed** to a remote machine; there it is controlled by a **schedule** or by an **evewp** production application, and the UI no longer connects to it visually: it **operates** it (status, schedules, jobs, logs, versions, rollback). The same holds for evetx. The difference: evetx can run on the remote computer inside an SSH session and edit the files there; eveux is a window, so it reaches a remote machine only through the machine API, over `ssh host eve --stdio`, for deploy and operate (not written: TD-38).
+
+**One tool bar, and it follows the active file** ([design-toolbar.svg](design/design-toolbar.svg)): Eve (Run, Stop, Debug, Check, Test, Deploy…; the step buttons appear only while debugging), SQL (connection, **Run**, Script, Explain, Commit, Rollback), database table, data file, document (Source, Split, Preview), image, audio and video. **Run is one slot** (F5 for Eve, Ctrl+Enter for a SQL statement), so the second Run of the SQL tab is gone. No machine selector, no search field and no machine name in the title: remote machines are in Tools > Machines and in the Deploy dialog. The buttons are the table `TOOLBARS` of `design/gen_svg.py`, one entry per file kind.
 
 Roles of the family (author, 2026-10-18): **`eve` is the server; `eveux` and `evetx` are the clients; `evedb` is the backend of the server; `evewp` is the production web layer.** eveux is a client: it does not run Eve code itself and never holds a password.
 
@@ -39,7 +45,8 @@ The window follows the layout of evetx with more panels. Drawings (`design/gen_s
 | [design-preview-image.svg](design/design-preview-image.svg) | an image or SVG: fit, zoom, pixel info |
 | [design-preview-media.svg](design/design-preview-media.svg) | audio and video: the player |
 | [design-db.svg](design/design-db.svg) | a database: tables, columns, the data grid |
-| [design-sql.svg](design/design-sql.svg) | a SQL tab: connection, Run, Commit, Rollback, the result grid |
+| [design-toolbar.svg](design/design-toolbar.svg) | **the tool bar of each file kind** (D-195): Eve, SQL, table, data, document, image, media |
+| [design-sql.svg](design/design-sql.svg) | a SQL tab: the editor and the result grid; its buttons are in the tool bar |
 | [design-structure.svg](design/design-structure.svg) | the structure dialog of a table |
 | [design-git.svg](design/design-git.svg) | source control: changes, side-by-side diff, commit, branches |
 | [design-deploy.svg](design/design-deploy.svg) | the deploy dialog: files, checks, versions, options |
@@ -66,12 +73,12 @@ The other drawings are in [design/](design/). Keys and menus: one table (`src/vi
 | Worker threads, queues to and from the UI      |                     | HTTP, WebSocket, SSH stdio
 |   machine link, file watcher, git runner,      |                     v
 |   decoders (image, media), search in files     |     servers: eve -s, evedb child, evewp apps
-| Shared with evetx: module `shared`             |
+| Shared with evetx: module `ide` (evecm)        |
 +------------------------------------------------+
 ```
 
 - **Rules.** (1) The UI thread never waits: no file, process or network call inside a frame. (2) A script runs in the child machine: a loop in the user's program cannot freeze the window and cannot crash it. (3) The compiler in the process only reads text: parse, check, outline, docs. (4) The window never sees a password or a token: the local machine holds them. (5) Every preview is a widget over a decoder that runs on a worker thread; a decoder that fails shows the file card.
-- **One connection, on stdio**, exactly as evetx: the child `eve --stdio`, JSON-RPC 2.0, one message a line, `vm.output` notifications (`shared.link.Link`). A remote machine is reached by the local machine (HTTP, WebSocket, SSH `eve --stdio`). The messages are the machine API; new names (`deploy.*`, `fs.*`, `job.*`, `log.*`, `db.tree`, `db.describe`, `db.sample`, `dbg.*`) are listed in `src/machine/api.zig` with the proposals of `design/notes/elaboration.md` §6.
+- **One connection, on stdio**, exactly as evetx: the child `eve --stdio`, JSON-RPC 2.0, one message a line, `vm.output` notifications (`ide.link.Link`). A remote machine is reached by the local machine (HTTP, WebSocket, SSH `eve --stdio`), only to deploy and to operate (D-195); the code on it is never edited or run by hand. The messages are the machine API; new names (`deploy.*`, `fs.*`, `job.*`, `log.*`, `db.tree`, `db.describe`, `db.sample`, `dbg.*`) are listed in `src/machine/api.zig` with the proposals of `design/notes/elaboration.md` §6.
 - **Local state** in the user cache `eve.db` (SQLite, F-DAT-13): layout, open tabs, theme, the list of machines without secrets, recent projects, the last manifest sent to each machine; the state of a server lives in its own core database.
 - **Threading model.** dvui calls widgets every frame on the UI thread. Workers produce **messages** (a tree scanned, a file decoded, a git status, a machine event) into a queue; the UI thread takes them at the start of a frame and updates the state; a frame draws from the state. There is no shared mutable state and no lock in the drawing code.
 
@@ -84,7 +91,7 @@ eveux links `evecm` and `evecp` (the common part and the compiler front end of t
 | diagnostics | `evecp` parser and `check` (the errors with file, line and column of `eve cp --check`) | red marks in the gutter, the Problems list |
 | outline and symbols | the AST of the parser | the outline panel, go to symbol, go to definition, rename (later) |
 | docs | `evecp/src/doc.zig` (the `**` comments and the signatures) | hover and the completion list |
-| keywords and operators | `spec/lexical/keywords.json` through `evetx/src/keywords.zig` | colors, completion |
+| keywords and operators | `spec/lexical/keywords.json` through `evecm/src/ide/keywords.zig` | colors, completion |
 | imports and libraries | the link step (`project.zig`: `lib/`, `$EVE_LIB_PATH`, the standard library folder) | open the file of a module, check across files |
 | format (later) | a printer over the AST | Format on save |
 
@@ -132,13 +139,13 @@ The terminal client already solved the parts that have no screen. Surveyed 2026-
 | `app.zig` | 8,600 | yes | **not reused as is**: it mixes state and terminal events. The state types that have no terminal type (tabs, breakpoints, machine list) are the model for `eveux/src/app.zig`; the key handling stays. |
 | `main.zig` | 205 | yes | not reused (the terminal loop). |
 
-**How it is shared today, with no copy and no change to evetx beyond one new file:** `evetx/src/shared.zig` exposes the vaxis-free files as one Zig module; `eveux/build.zig` builds it with `b.path("../evetx/src/shared.zig")` and imports it as `shared`. The module root is `evetx/src/`, so the files import each other as they do in evetx. `zig test` of `shared.zig` runs the tests of text, scan, regex and grid (9 tests pass). **Later**, when the set is stable, the files move to a folder `evecl/` (the client library) and both programs import it; nothing in eveux changes but the path.
+**How it is shared (D-193, 2026-10-18):** the vaxis-free files of evetx moved to `evecm/src/ide/` (text, scan, keywords, project, link, regex, grid, sqlstruct, cache), aggregated by `evecm/src/ide.zig`. Inside `evecm` they are `evecm.ide` (the root build, where their 11 tests run with `zig build test`); `eveux/build.zig` and `evetx/build.zig` make the module `ide` from `b.path("../evecm/src/ide.zig")`, which needs no build options, and import it as `ide`. No copy: one set of files for both programs. A file that needs a screen type (`theme.zig`, `options.zig`) stays in its program until the neutral split of TD-33.
 
 ## 7. The code
 
 ```
 eveux/
-  README.md  build.zig  build.zig.zon       this design; the build (dvui v0.5.0, module `shared`)
+  README.md  build.zig  build.zig.zon       this design; the build (dvui v0.5.0, module `ide`)
   design/
     gen_svg.py  *.svg                       the drawings (python eveux/design/gen_svg.py)
     notes/                                  design-ideas.md (the author), elaboration.md, dvui.md
@@ -171,7 +178,7 @@ eveux/
 
 ## 8. The editor widget
 
-Built on `shared.text.Buffer` (lines, selection, undo and redo exist) and drawn by a **custom dvui widget**, not by `TextEntryWidget`, because the editor needs the gutter, glyph positions, per-line colors, bracket matching, folding, find marks and breakpoints. What the widget does: draw only the visible lines from the buffer, color each line with `lang.highlight` (the state `carry` of comments is kept for the first visible line by one pass over the lines above and updated line by line, as `evetx` does), draw the cursor and selection, handle keys, mouse, wheel and the clipboard, show the diagnostics of the embedded compiler as marks, scroll by pixel. Completion uses dvui's suggestion widget fed by the symbols and the keyword list. A 10 MB file draws only a screen of text each frame, so size is not a problem; the line scanner is linear in the line. The tree-sitter option of dvui's text entry is **not** used for Eve (the scanner of the repository is the source of colors); a tree-sitter grammar exists (`tools/tree-sitter-eve`) if a later widget wants it for HTML, CSS or JavaScript.
+Built on `ide.text.Buffer` (lines, selection, undo and redo exist) and drawn by a **custom dvui widget**, not by `TextEntryWidget`, because the editor needs the gutter, glyph positions, per-line colors, bracket matching, folding, find marks and breakpoints. What the widget does: draw only the visible lines from the buffer, color each line with `lang.highlight` (the state `carry` of comments is kept for the first visible line by one pass over the lines above and updated line by line, as `evetx` does), draw the cursor and selection, handle keys, mouse, wheel and the clipboard, show the diagnostics of the embedded compiler as marks, scroll by pixel. Completion uses dvui's suggestion widget fed by the symbols and the keyword list. A 10 MB file draws only a screen of text each frame, so size is not a problem; the line scanner is linear in the line. The tree-sitter option of dvui's text entry is **not** used for Eve (the scanner of the repository is the source of colors); a tree-sitter grammar exists (`tools/tree-sitter-eve`) if a later widget wants it for HTML, CSS or JavaScript.
 
 ## 9. Database views
 
@@ -190,7 +197,7 @@ The explorer lists database files; a double click opens a **tables tab** (names,
 |---|---|---|
 | P0 | **Spike, two weeks at most**: build dvui v0.5.0 on Windows (needs Developer Mode, see section 7) with SDL3 and DX11; a window with menus, docking, tabs, a tree, the data grid with 1,000,000 virtual rows; a text view of a 10 MB file; Romanian letters and the clipboard; HiDPI; Linux and macOS builds | the numbers; go or stop |
 | P1 | shared modules: `evecl` out of evetx; the theme split; evetx unchanged | evetx tests pass |
-| P2 | shell: window, menus, docking, explorer over `shared.project`, tabs, status bar, the link to the local machine, run and the console | open a project, run a script |
+| P2 | shell: window, menus, docking, explorer over `ide.project`, tabs, status bar, the link to the local machine, run and the console | open a project, run a script |
 | P3 | the editor widget with colors for Eve; the embedded diagnostics and outline; find and replace; save | edit and check a file |
 | P4 | the other colorizers; Markdown preview; image and SVG viewer; the file card | open every kind |
 | P5 | the database tabs, SQL tab, grid, structure dialog | direct SQL |
@@ -217,7 +224,7 @@ Features: F-TLS-19 (shell, editor, previews), F-TLS-20 (SQL and database), F-TLS
 **Answer:**
 2. **Developer Mode.** May the Windows development computers turn it on (needed to fetch dvui), or should a trimmed vendored copy of dvui be kept in the repository? *Recommended: turn it on; a vendored copy is a fork to maintain.*
 **Answer:**
-3. **Shared modules.** Keep `evetx/src/shared.zig` as the bridge for now and move the files to `evecl/` after the spike (P1)? *Recommended: yes.*
+3. **Shared modules.** Done: the files moved to `evecm/src/ide/` (module `ide`), not to a new `evecl/`; evetx and eveux import them.
 **Answer:**
 4. **Windows backend.** SDL3 by default (IME, same code everywhere), DX11 as an option? *Recommended: yes.*
 **Answer:**

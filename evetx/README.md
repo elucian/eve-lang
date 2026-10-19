@@ -14,7 +14,7 @@ Status: **design for review**, eighth draft 2026-10-13 (D-174 to D-178). **Imple
 - opens a **database file** of the project, sees its tables, browses their data in tabs and edits the structure in a dialog;
 - *later, not in this version (cut 2026-10-16):* **connects** to a remote machine, **uploads** the server side of the project, and runs and debugs there; the machine is chosen with **F1** (local), **F2** (a remote machine), **F3** (another one).
 
-It works over SSH and needs nothing but a terminal. It is the terminal sibling of the browser Workbench [eveux](../eveux/README.md): the same machine API, another screen.
+It works over SSH and needs nothing but a terminal: started inside an SSH session on the remote computer, it edits the files that are there. Code is local, a tested project is deployed, and a deployed project is operated by schedules or evewp, not run by hand (D-195). It is the terminal sibling of the browser Workbench [eveux](../eveux/README.md): the same machine API, another screen.
 
 | | `eveux` (level 7) | `evetx` (level 6) |
 |---|---|---|
@@ -134,7 +134,7 @@ All the drawings are in [design/](design/). They are written by `design/gen_svg.
 
 **Breakpoints.** A click on the gutter (or F9) puts a red dot on a line and adds it to **Breaks**; the same again removes it. A paused line has a yellow arrow and background.
 
-**Machines** (*design for later: not in this version, cut 2026-10-16*). The top bar shows `F1 local`, `F2 prod`, `F3 test`; the selected one is green. The status line says `Ready: connection: local` or `Ready: connection: prod` (the same words as the REPL, D-171). **F1** is the local machine, **F2** a remote machine, **F3** another one; **Ctrl+Left** and **Ctrl+Right** go through all of them. Run and debug act on the selected machine; on a remote one **only a program that was uploaded can run** (D-171), and Tab completes only stored procedures and code on the server.
+**Machines** (*design for later: not in this version, cut 2026-10-16; **replaced by D-195 (2026-10-18)**: code is local, a remote machine is deployed to and operated, nothing is run by hand on it; the text below and its drawings are kept until the Machines view is drawn, TD-39*). The top bar shows `F1 local`, `F2 prod`, `F3 test`; the selected one is green. The status line says `Ready: connection: local` or `Ready: connection: prod` (the same words as the REPL, D-171). **F1** is the local machine, **F2** a remote machine, **F3** another one; **Ctrl+Left** and **Ctrl+Right** go through all of them. Run and debug act on the selected machine; on a remote one **only a program that was uploaded can run** (D-171), and Tab completes only stored procedures and code on the server.
 
 **Dialogs.**
 
@@ -237,7 +237,7 @@ Q-053 in `decision_level6.md`: the size of the scope, the debugger of the machin
 
 Started 2026-10-13, as a **separate Zig program** in this folder until the split of design-packages.md (phase A) exists: `build.zig` and `build.zig.zon` here, built from `evetx/` with `zig build -p ..` into `bin/evetx.exe` (like `evedb`). Run it as `evetx [project-folder]` (the default is the current folder). When the root `build.zig` is made (step A7) the folder becomes the module `evetx`, the option `eve -tx` starts it, and the module imports `evecm` only. libvaxis is pinned in `build.zig.zon` to the commit `5b0c724` (2026-10-07), the last one for Zig 0.16 (its `main` branch has moved to Zig 0.17). **There are no automated tests** (D-178): the author tests the screen by hand.
 
-**Source** (`src/`): `main.zig` (the event loop), `app.zig` (state, keys, mouse, run, console, searches, menu), `view.zig` (all the drawing; it records the clickable places), `text.zig` (the text buffer of the editor), `project.zig` (the tree of files), `theme.zig` (the colors of the drawings and the three built-in themes), `options.zig` (the options, the custom themes and the theme files; its own test: `zig test src/options.zig`), `link.zig` (the machine of evetx: `eve --stdio` and its messages), `cache.zig` (the user cache folder), `dbf.zig` (DBF tables; `zig test src/dbf.zig`), `sqlstruct.zig` (the SQL of the structure dialog of a SQLite table), `keywords.zig` (**generated** from `spec/lexical/keywords.json` by `gen_keywords.py`; run it again when the keywords change).
+**Source** (`src/`): `main.zig` (the event loop), `app.zig` (state, keys, mouse, run, console, searches, menu), `view.zig` (all the drawing; it records the clickable places), `theme.zig` (the colors of the drawings and the three built-in themes), `options.zig` (the options, the custom themes and the theme files; its own test: `zig test src/options.zig`), `dbf.zig` (DBF tables; `zig test src/dbf.zig`). The files that have no screen library are shared with eveux and live in `evecm/src/ide/` (module `ide`, tests in the root `zig build test`): `text.zig` (the text buffer of the editor), `project.zig` (the tree of files), `scan.zig` (the colors of a line), `link.zig` (the machine of evetx: `eve --stdio` and its messages), `cache.zig` (the user cache folder), `grid.zig`, `regex.zig`, `sqlstruct.zig` (the SQL of the structure dialog of a SQLite table), `keywords.zig` (**generated** from `spec/lexical/keywords.json` by `gen_keywords.py`; run it again when the keywords change).
 
 
 ### Features now (2026-10-16)

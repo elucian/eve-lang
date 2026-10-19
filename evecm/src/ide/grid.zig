@@ -1,3 +1,6 @@
+//! @eve-module ide.grid
+//! @decision D-193
+//! @tests evecm/src/ide/grid.zig (zig build test)
 //! The table that the grid of the Main Panel shows (D-184): the rows that a SQLite query returned, kept in memory as columns.
 //!
 //! The layout is columnar (a struct of arrays): each column owns one byte buffer with all its cells one after the other, and

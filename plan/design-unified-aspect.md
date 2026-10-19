@@ -89,7 +89,7 @@ Kept as they are: `exclusive` / `concurrent` per aspect and the default exclusiv
 
 ## 6. Plan of the work
 
-One step per session, in the order of the project: tutorial first, tests before the VM.
+One step per session, in the order of the project (D-194: plan, design, user interfaces, refactor, optimize, test, spec, compiler, manual, tutorial last).
 
 - **U0 Decision.** D-179 and D-180 written (2026-10-14). Nothing blocks the work.
 - **U1 Tutorial.** topology.html (two kinds of scripts: aspect and module; the driver as a role), processing.html (the root aspect, calls by name, 3 levels, no cycle), multitasking/concurrency (private processes started from `main`, rules 1 and 7), syntax.html (`driver` out of the keywords, no `#!`), the macro section (no `driver`, no `#!`), every other page: `driver name is` → `aspect name is` by a script in `temp/`, checked with `git -C tutorial diff --stat`; `genkeywords.py`; `bee-ed balance` on every changed page; sidebars in `tutorial/data/`.

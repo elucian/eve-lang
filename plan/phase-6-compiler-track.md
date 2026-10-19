@@ -1,5 +1,7 @@
 # Phase 6 — Compiler Track for Students
 
+> Rank 8 (the compiler) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: a student can pick an implementation language, build an Eve compiler or interpreter in stages, and prove it with the conformance suite. The public entry point is the tutorial page `tutorial/compiler.html` (T1.1).
 
 ### S6.1 Compiler kit `[-]`

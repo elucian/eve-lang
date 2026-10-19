@@ -1,5 +1,7 @@
 # Phase 5 — Library and Conformance
 
+> Rank 6 (tests) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: a conformance suite that decides objectively whether a compiler implements Eve.
 `test/readme.md` already defines three levels (a01…, b01…, c01…); this phase formalizes them.
 

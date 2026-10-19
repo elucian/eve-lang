@@ -1,5 +1,7 @@
 # Phase 7 — Compiler Manual
 
+> Rank 9 (the manual) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: `manual/` documents an Eve implementation: how to implement it, how to use it, what was implemented, and which spec features it supports, in tables generated from `spec/`. Layout and conventions are in `manual/README.md`. Decision: D-004.
 
 ### M7.1 Rename `docs/` to `manual/` `[x]`

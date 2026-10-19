@@ -11,11 +11,12 @@ const App = app_mod.App;
 const Action = app_mod.Action;
 const Rect = app_mod.Rect;
 const theme = @import("theme.zig");
-const grid = @import("grid.zig");
-const sqlstruct = @import("sqlstruct.zig");
-const text = @import("text.zig");
-const scan = @import("scan.zig");
-const keywords = @import("keywords.zig");
+const ide = @import("ide");
+const grid = ide.grid;
+const sqlstruct = ide.sqlstruct;
+const text = ide.text;
+const scan = ide.scan;
+const keywords = ide.keywords;
 
 const Style = theme.Style;
 
@@ -360,7 +361,7 @@ fn hasExt(name: []const u8, endings: []const []const u8) bool {
 // Zig tip: a function may take a struct by value (`e: Entry`) when it only reads a few fields. The
 // result is a string literal, which lives for the whole program, so nothing is allocated.
 /// The picture of an entry: a folder (open or closed) or a file, by its kind.
-fn iconOf(e: @import("project.zig").Entry) []const u8 {
+fn iconOf(e: ide.project.Entry) []const u8 {
     if (e.kind == .table) return "▦";
     if (e.kind == .db) return if (e.expanded) "💽" else "💾";
     if (e.is_dir) return if (e.expanded) "📂" else "📁";
@@ -2893,10 +2894,7 @@ test "wordColor knows primary, export, print and the newer types" {
     try std.testing.expect(wordColor("banana") == null);
 }
 
-// @test the tests of the shared scanner run with `zig build test`
-test {
-    _ = @import("scan.zig");
-}
+// @test the tests of the shared files (evecm/src/ide/) run with `zig build test` at the repository root
 
 /// `piece` repeated `n` times, at compile time (Zig 0.17 removed the operator `**`).
 fn repeat(comptime piece: []const u8, comptime n: usize) *const [piece.len * n]u8 {

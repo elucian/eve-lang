@@ -7,14 +7,16 @@ const vaxis = @import("vaxis");
 const TextInput = vaxis.widgets.TextInput;
 const Key = vaxis.Key;
 
-const project = @import("project.zig");
-const text = @import("text.zig");
-const grid = @import("grid.zig");
-const regex = @import("regex.zig");
-const sqlstruct = @import("sqlstruct.zig");
-const cache_mod = @import("cache.zig");
+// the files that evetx shares with eveux live in evecm/src/ide/ (module `ide`, made by evetx/build.zig)
+const ide = @import("ide");
+const project = ide.project;
+const text = ide.text;
+const grid = ide.grid;
+const regex = ide.regex;
+const sqlstruct = ide.sqlstruct;
+const cache_mod = ide.cache;
 const options_mod = @import("options.zig");
-const link_mod = @import("link.zig");
+const link_mod = ide.link;
 const theme = @import("theme.zig");
 
 // ------------------------------------------------------------------ small types

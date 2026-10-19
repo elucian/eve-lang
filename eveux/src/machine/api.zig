@@ -2,7 +2,7 @@
 //! @spec spec/library/machine.md#the-machine-api
 //! @feature F-NET-08
 //! @decision D-165, D-193
-//! The transport is `shared.link.Link` (evetx): a child `eve --stdio`, one JSON message a line, `vm.output` notifications.
+//! The transport is `ide.link.Link` (evecm/src/ide/link.zig, as in evetx): a child `eve --stdio`, one JSON message a line, `vm.output` notifications.
 //! This file only holds names, so a message is searched in one place; the methods marked (new) are the proposals of
 //! eveux/design/notes/elaboration.md section 6 and do not exist in the machine yet.
 pub const vm = struct {

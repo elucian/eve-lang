@@ -1,3 +1,5 @@
+//! @eve-module ide.project
+//! @decision D-193
 //! The tree of the files of a project: what the left panel shows.
 const std = @import("std");
 const Io = std.Io;

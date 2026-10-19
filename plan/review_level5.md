@@ -1,6 +1,6 @@
 # Review: level 5, data language and database layer
 
-Date 2026-10-10. For the author. You asked to implement the design of level 5 in the tutorial and the specification, taking the most logical alternative where a decision was missing. This file lists what was written, every choice I made for you, and what to check first. Nothing here is a decision: no `D-nnn` was created and no `Q-nnn` was closed. Answer on the `**Answer:**` lines of Q-024, Q-039, Q-043, Q-044 and Q-046 in [decision_level5.md](decision_level5.md) (the entry point is [focus-level5.md](focus-level5.md)); a point that you reject needs a change in the files below.
+Date 2026-10-10. For the author. You asked to implement the design of level 5 in the tutorial and the specification, taking the most logical alternative where a decision was missing. This file lists what was written, every choice I made for you, and what to check first. Nothing here is a decision: no `D-nnn` was created and no `Q-nnn` was closed. Answer on the `**Answer:**` lines of Q-024, Q-039, Q-043, Q-044 and Q-046 in [decision_level5.md](decision_level5.md) (the entry point is [focus-level5.md](archive/focus-level5.md)); a point that you reject needs a change in the files below.
 
 ## What was written
 

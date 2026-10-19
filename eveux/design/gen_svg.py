@@ -144,14 +144,68 @@ TREE = [  # indent, glyph, label, colour, tag
 MENUS = ['File', 'Edit', 'View', 'Run', 'Debug', 'Database', 'Source', 'Tools', 'Window', 'Help']
 
 
+# D-195: the tool bar follows the active file. Each entry is (label, width, role); a role is a button kind of Svg.button, or
+# 'sep' (a gap), 'field' (a drop-down), 'text' (a note). The slot "Run" is one place whose meaning follows the file.
+TOOLBARS = {
+    'eve': [('▶ Run', 74, 'run'), ('■ Stop', 74, 'stop'), ('⏵ Debug', 84, 'dbg'), ('sep', 14, 'sep'), ('✓ Check', 82, 'use'),
+            ('⚗ Test', 74, 'use'), ('sep', 14, 'sep'), ('⇪ Deploy…', 100, 'use')],
+    'sql': [('local (SQLite) ▾', 150, 'field'), ('▶ Run', 74, 'ok'), ('▶▶ Script', 90, 'plain'), ('Explain', 74, 'plain'), ('sep', 14, 'sep'),
+            ('Commit', 74, 'off'), ('Rollback', 82, 'off'), ('transaction: none', 140, 'text')],
+    'db': [('Describe', 84, 'plain'), ('Structure…', 96, 'plain'), ('sep', 14, 'sep'), ('Import…', 78, 'plain'), ('Export…', 78, 'plain'),
+           ('sep', 14, 'sep'), ('⟳ Refresh', 90, 'plain'), ('read only', 80, 'text')],
+    'data': [('Grid', 60, 'hot'), ('Text', 60, 'plain'), ('sep', 14, 'sep'), ('filter ▾', 200, 'field'), ('sep', 14, 'sep'),
+             ('Load into table…', 130, 'plain'), ('Save as…', 84, 'plain')],
+    'doc': [('Source', 70, 'plain'), ('Split', 64, 'hot'), ('Preview', 74, 'plain'), ('sep', 14, 'sep'), ('Open in browser', 124, 'plain'),
+            ('Hints', 64, 'plain')],
+    'image': [('−', 36, 'plain'), ('100%', 64, 'plain'), ('+', 36, 'plain'), ('Fit', 52, 'hot'), ('sep', 14, 'sep'), ('Rotate', 72, 'plain'),
+              ('Copy', 64, 'plain'), ('1200 × 630', 90, 'text')],
+    'media': [('⏮', 40, 'plain'), ('▶ Play', 74, 'hot'), ('⏭', 40, 'plain'), ('sep', 14, 'sep'), ('🔊 80%', 80, 'plain'), ('1×', 48, 'plain'),
+              ('sep', 14, 'sep'), ('00:12 / 03:48', 110, 'text')],
+}
+
+
+def toolbar_strip(svg, x, y, w, kind, state='idle'):
+    """One tool bar: the buttons of a file kind. For an Eve file the state (idle, run, debug) turns buttons on and off, and the
+    step buttons appear only while debugging, so the bar never shows a button that cannot be used."""
+    svg.rect(x, y, w, 36, PANEL)
+    svg.line(x, y + 36, x + w, y + 36)
+    bx = x + 11
+    items = list(TOOLBARS[kind])
+    if kind == 'eve' and state == 'debug':
+        at = [i for i, it in enumerate(items) if it[2] == 'sep'][0]
+        items[at:at] = [(lab, 64, 'step') for lab in ('↷ Over', '↓ Into', '↑ Out', '⏩ Go')]
+    for lab, wd, role in items:
+        if role == 'sep':
+            bx += wd
+            continue
+        if role == 'text':
+            svg.text(bx, y + 23, lab, DIM)
+        elif role == 'field':
+            svg.field(bx, y + 6, wd, lab, 24)
+        else:
+            if kind == 'eve':
+                look = {'run': 'ok' if state == 'idle' else 'off', 'stop': 'stop' if state != 'idle' else 'off',
+                        'dbg': 'plain' if state == 'idle' else 'off', 'step': 'hot',
+                        'use': 'off' if state == 'debug' else 'plain'}[role]
+            else:
+                look = role
+            svg.button(bx, y + 5, wd, lab, look)
+        bx += wd + 6
+    svg.text(x + w - 56, y + 23, '⌕', TXT, anchor='end', size=16)
+    svg.text(x + w - 20, y + 23, '⚙', TXT, anchor='end', size=16)
+
+
+KIND_OF_LANG = {'Eve': 'eve', 'SQL': 'sql', 'SQLite': 'db', 'Markdown': 'doc', 'HTML': 'doc', 'PNG': 'image', 'MP4': 'media'}
+
+
 def window(svg, project='sales_etl', machine='local', menu_open=None, toolbar='idle', state=('Ready', GREEN),
-           pos='Ln 8, Col 12', lang='Eve', check=('check ok', GREEN)):
-    """The frame of the window: title bar, menu bar, tool bar, status bar."""
+           pos='Ln 8, Col 12', lang='Eve', check=('check ok', GREEN), kind=None):
+    """The frame of the window: title bar, menu bar, tool bar (it follows the file, D-195), status bar."""
     svg.rect(X0, Y0, WW, WH, PANEL, LINE, 8, 2)
     svg.rect(X0 + 1, Y0 + 1, WW - 2, 30, BAR, rx=7)
     svg.rect(X0 + 10, Y0 + 8, 16, 16, BLUE, rx=3)
     svg.text(X0 + 14, Y0 + 21, 'e', '#ffffff', bold=True)
-    svg.text(X0 + 36, Y0 + 21, f'eveux  —  {project}  —  {machine}', BRIGHT, bold=True)
+    svg.text(X0 + 36, Y0 + 21, f'eveux  —  {project}', BRIGHT, bold=True)
     for i, g in enumerate(('—', '☐', '✕')):
         svg.text(X0 + WW - 100 + i * 32, Y0 + 21, g, '#ff7b72' if g == '✕' else TXT, anchor='middle')
     # menu bar
@@ -168,21 +222,7 @@ def window(svg, project='sales_etl', machine='local', menu_open=None, toolbar='i
     ty = my + 26
     svg.rect(X0 + 1, ty, WW - 2, 36, PANEL)
     svg.line(X0 + 1, ty + 36, X0 + WW - 1, ty + 36)
-    on = {'idle': ('ok', 'off', 'plain', 'plain'), 'run': ('off', 'stop', 'plain', 'plain'),
-          'debug': ('off', 'stop', 'hot', 'hot')}[toolbar]
-    svg.button(X0 + 12, ty + 5, 74, '▶ Run', on[0])
-    svg.button(X0 + 92, ty + 5, 74, '■ Stop', on[1])
-    svg.button(X0 + 180, ty + 5, 84, '⏵ Debug', 'plain' if toolbar == 'idle' else 'off')
-    for i, lab in enumerate(('↷ Over', '↓ Into', '↑ Out', '⏩ Go')):
-        svg.button(X0 + 276 + i * 70, ty + 5, 64, lab, 'hot' if toolbar == 'debug' else 'off')
-    svg.field(X0 + 600, ty + 6, 300, '', 24, ph='search in project  (Ctrl+Shift+F)')
-    svg.text(X0 + 920, ty + 23, 'machine', DIM)
-    for i, (k, nm) in enumerate((('F1', 'local'), ('F2', 'prod'), ('F3', 'test'))):
-        bx = X0 + 980 + i * 104
-        sel = nm == machine
-        svg.rect(bx, ty + 6, 98, 24, '#2f6f4f' if sel else '#1d2733', GREEN if sel else LINE, 4)
-        svg.text(bx + 49, ty + 23, f'{k} {nm}', '#ffffff' if sel else TXT, anchor='middle', bold=sel)
-    svg.text(X0 + WW - 20, ty + 23, '⚙', TXT, anchor='end', size=16)
+    toolbar_strip(svg, X0 + 1, ty, WW - 2, kind or KIND_OF_LANG.get(lang, 'eve'), toolbar)
     # status bar
     sy = Y0 + WH - 26
     svg.rect(X0 + 1, sy, WW - 2, 25, BAR, rx=6)
@@ -499,21 +539,14 @@ def db_screen():
 
 
 def sql_screen():
-    s = Svg('eveux: SQL tab', 'Ctrl+Enter runs the statement under the cursor; the result grid shows Eve types; a statement that changes data waits for Commit or Rollback.')
+    s = Svg('eveux: SQL tab', 'the tool bar of a SQL file: Ctrl+Enter runs the statement under the cursor; the result grid shows Eve types; a statement that changes data waits for Commit or Rollback.')
     window(s, lang='SQL', pos='Ln 3, Col 31', check=('local.db', DIM))
     explorer(s, 'orders.sql')
     tabs(s, ['sales_load.eve', 'orders.sql'], 1)
     x, y, w = ED_X, BODY_Y + 28, ED_W
-    s.rect(x, y, w, 32, PANEL, LINE)
-    s.text(x + 10, y + 21, 'connection', DIM)
-    s.field(x + 90, y + 4, 200, 'local (SQLite)', 24)
-    s.button(x + 306, y + 3, 90, '▶ Run', 'ok', 26)
-    s.button(x + 404, y + 3, 90, 'Commit', 'off', 26)
-    s.button(x + 502, y + 3, 90, 'Rollback', 'off', 26)
-    s.text(x + w - 12, y + 21, 'transaction: none', DIM, anchor='end')
     sql = ['-- sales by region', 'select region, sum(amount) as total, count(*) as n',
            'from orders', 'where created >= \'2026-10-01\'', 'group by region', 'order by total desc;']
-    editor(s, sql, lang='sql', x=x, y=y + 32, w=w, h=160)
+    editor(s, sql, lang='sql', x=x, y=y, w=w, h=192)
     gy = y + 192
     s.rect(x, gy, w, 28, BAR2, LINE)
     for i, lab in enumerate(('Results', 'Messages', 'Plan', 'History')):
@@ -536,6 +569,23 @@ def sql_screen():
                  ('History', [('select region, sum…  ✓', TXT), ('update orders set…  rolled back', DIM)], 120)])
     bottom(s, ['Console', 'Output', 'Log'], 2, [('(no output)', DIM)])
     s.save('design-sql.svg')
+
+
+def toolbar_screen():
+    s = Svg('eveux: one tool bar that follows the file', 'The active tab decides the buttons. Run is one slot: F5 runs an Eve file in the local machine, Ctrl+Enter runs a SQL statement. Nothing that cannot be used is shown.')
+    rows = [('Eve file', 'eve', 'idle', '.eve'), ('Eve file, running', 'eve', 'run', 'Stop is on, Run and Debug are off'),
+            ('Eve file, debugging', 'eve', 'debug', 'the step buttons appear only here'), ('SQL file', 'sql', 'idle', '.sql: the connection, one Run, the transaction'),
+            ('Database table', 'db', 'idle', 'a table of a SQLite file, read only'), ('Data file', 'data', 'idle', '.csv .tsv .json .dbf'),
+            ('Document', 'doc', 'idle', '.md .html: Source, Split or Preview'), ('Image', 'image', 'idle', '.png .jpg .gif .svg'),
+            ('Audio and video', 'media', 'idle', '.mp4 .mp3 .wav')]
+    y = 66
+    for title, kind, state, note in rows:
+        s.text(20, y + 14, title, BRIGHT, bold=True)
+        s.text(240, y + 14, note, DIM, size=12)
+        toolbar_strip(s, 20, y + 22, 1360, kind, state)
+        y += 70
+    s.text(20, y + 14, 'Not in the bar: a machine selector (code is local; remote machines are in Tools > Machines and in the Deploy dialog), a search field (Ctrl+Shift+F, the ⌕ icon), a second Run (SQL had its own).', TXT, size=12)
+    s.save('design-toolbar.svg')
 
 
 def structure_screen():
@@ -613,7 +663,7 @@ def git_screen():
 
 def deploy_screen():
     s = Svg('eveux: deploy', 'the server side of the project goes to a machine or to an evewp application: a diff against what is there, a check under the rules of the target, then an atomic switch.')
-    window(s, machine='prod', state=('Connected', GREEN), pos='Ln 9, Col 5')
+    window(s, pos='Ln 9, Col 5')
     explorer(s, 'sales_load.eve')
     tabs(s, ['sales_load.eve'], 0)
     editor(s, ESALES)
@@ -690,7 +740,7 @@ def new_screen():
 
 
 def menu_screen():
-    s = Svg('eveux: menus', 'one table holds the menu items, the shortcuts and the command palette (Ctrl+Shift+P).')
+    s = Svg('eveux: menus', 'one table holds the menu items, the shortcuts and the command palette (Ctrl+Shift+P). Run is always local; Tools > Deploy sends a tested project to a machine.')
     window(s, menu_open='Run')
     explorer(s, 'sales_load.eve')
     tabs(s, ['sales_load.eve'], 0)
@@ -698,7 +748,7 @@ def menu_screen():
     x, y = X0 + 12 + 4 * 0 + 14 + 4 * 8 + 4 + 14 + 8 * 4 + 12 + 14 + 8 * 4 + 30, Y0 + 57
     items = [('Check', 'F6'), ('Run', 'F5'), ('Run with arguments…', 'Ctrl+F5'), ('Stop', 'Shift+F5'), ('─', ''),
              ('Load into the machine', ''), ('Dismiss', ''), ('─', ''), ('Generate docs', ''), ('Run tests of the project', 'Ctrl+T'),
-             ('─', ''), ('Run on machine ▸', ''), ('Command palette…', 'Ctrl+Shift+P')]
+             ('─', ''), ('Command palette…', 'Ctrl+Shift+P')]
     s.popup(x, y, 300, 28 + len(items) * 24)
     for i, (t, k) in enumerate(items):
         yy = y + 24 + i * 24
@@ -813,12 +863,13 @@ def arch_screen():
                            'A script runs in the child machine, never in eveux: a loop cannot freeze the window.',
                            'The compiler in the process only reads text: parse, check, outline, docs.',
                            'The window never sees a password or a token: the local machine holds them.',
-                           'Each preview is a widget over a decoder on a worker thread; a failure shows a card.')):
+                           'Each preview is a widget over a decoder on a worker thread; a failure shows a card.',
+                           'Code is local. A remote machine receives a deployed bundle and is operated (status, schedules, logs), never edited.')):
         s.text(760, 468 + i * 24, '· ' + t, TXT, size=12)
     s.save('design-architecture.svg')
 
 
 if __name__ == '__main__':
     main_screen(); debug_screen(); md_screen(); html_screen(); image_screen(); media_screen(); db_screen(); sql_screen()
-    structure_screen(); git_screen(); deploy_screen(); new_screen(); menu_screen(); dialogs_screen(); arch_screen()
-    print('15 drawings written to eveux/design/')
+    structure_screen(); git_screen(); deploy_screen(); new_screen(); menu_screen(); dialogs_screen(); arch_screen(); toolbar_screen()
+    print('16 drawings written to eveux/design/')

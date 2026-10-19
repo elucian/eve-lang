@@ -1,4 +1,4 @@
-//! @eve-module scan: the scanner of Eve source lines for syntax colors (shared by evetx and eveux)
+//! @eve-module ide.scan: the scanner of Eve source lines for syntax colors (shared by evetx and eveux)
 //! @spec spec/lexical/lexical.md#comments
 //! @feature F-TLS-24
 //! @decision D-190

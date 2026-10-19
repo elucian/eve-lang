@@ -1,3 +1,6 @@
+//! @eve-module ide.regex
+//! @decision D-193
+//! @tests evecm/src/ide/regex.zig (zig build test)
 //! A small regular expression engine for the filter of a table: `.` `*` `+` `?` `{n,m}` `|` `( )` `[a-z]` `[^x]` `^` `$` and the
 //! escapes `\d \w \s` (and their capitals). The match is made anywhere in the text and ignores the case of the letters.
 //! A pattern that is not a valid expression is the caller's to treat as plain text (`compile` fails with `BadPattern`).

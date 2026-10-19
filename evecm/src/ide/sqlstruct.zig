@@ -1,3 +1,6 @@
+//! @eve-module ide.sqlstruct
+//! @decision D-193
+//! @tests evecm/src/ide/sqlstruct.zig (zig build test)
 //! The structure of a SQLite table as the structure dialog edits it: a list of columns (name, type, not null, key,
 //! default), read from the result of `pragma table_info`, and the SQL script that rebuilds the table with the new
 //! columns. SQLite changes some things only by making a new table, copying the rows and renaming (a new type for a column,

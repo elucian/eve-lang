@@ -1,3 +1,6 @@
+//! @eve-module ide.link
+//! @spec spec/library/machine.md#lasting-doors
+//! @decision D-193
 //! The link of evetx to its machine (`spec/library/machine.md#lasting-doors`): evetx starts one `eve --stdio` as its
 //! child, the first time the console needs it, and speaks JSON-RPC with it on the pipes, one message per line. The
 //! commands of the console (`load`, `parse`, `errors`, `status`, …) go to `vm.eval` in the default session of the

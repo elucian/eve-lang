@@ -1,5 +1,7 @@
 # Phase 2 — Specification Foundation
 
+> Rank 7 (the specification) of the order of the work (D-194, 2026-10-18). The open steps wait for their turn; none is dropped.
+
 Goal: the spec skeleton, validated JSON data, and the lexical layer (everything a lexer needs). Conventions are in `spec/README.md`.
 
 ### S2.1 Spec index and front matter `[x]` 2026-10-02: spec/index.md; license CC BY 4.0 (D-061)

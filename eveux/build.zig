@@ -21,9 +21,9 @@ pub fn build(b: *std.Build) void {
         .dx11 => "dvui_dx11",
     });
 
-    // The files of evetx that have no screen library, as one module (evetx/src/shared.zig): text buffer, Eve scanner, keywords,
+    // The files that evetx and eveux share, as one module (evecm/src/ide.zig): text buffer, Eve scanner, keywords,
     // project tree, machine link, regex, grid, sqlstruct, cache. See README.md section 6.
-    const shared_mod = b.createModule(.{ .root_source_file = b.path("../evetx/src/shared.zig"), .target = target, .optimize = optimize });
+    const ide_mod = b.createModule(.{ .root_source_file = b.path("../evecm/src/ide.zig"), .target = target, .optimize = optimize });
 
     const exe = b.addExecutable(.{
         .name = "eveux",
@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
-            .imports = &.{ .{ .name = "dvui", .module = dvui_mod }, .{ .name = "shared", .module = shared_mod } },
+            .imports = &.{ .{ .name = "dvui", .module = dvui_mod }, .{ .name = "ide", .module = ide_mod } },
         }),
     });
     b.installArtifact(exe);
@@ -41,14 +41,14 @@ pub fn build(b: *std.Build) void {
     run_cmd.addPassthruArgs();
     b.step("run", "Run eveux").dependOn(&run_cmd.step);
 
-    // @eve-impl `zig build test` in eveux/: the files with no window code, each as its own test root (they import `shared` only)
+    // @eve-impl `zig build test` in eveux/: the files with no window code, each as its own test root (they import `ide` only)
     const test_step = b.step("test", "Run the unit tests of eveux (the logic that has no window)");
     for ([_][]const u8{ "src/app.zig", "src/editor/lang.zig", "src/preview/kind.zig", "src/preview/markdown.zig", "src/vcs/git_status.zig", "src/deploy/manifest.zig" }) |file| {
         const t = b.addTest(.{ .root_module = b.createModule(.{
             .root_source_file = b.path(file),
             .target = target,
             .optimize = optimize,
-            .imports = &.{.{ .name = "shared", .module = shared_mod }},
+            .imports = &.{.{ .name = "ide", .module = ide_mod }},
         }) });
         test_step.dependOn(&b.addRunArtifact(t).step);
     }

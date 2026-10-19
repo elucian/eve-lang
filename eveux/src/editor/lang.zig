@@ -2,13 +2,13 @@
 //! @spec eveux/README.md#7-the-code
 //! @feature F-TLS-19
 //! @decision D-193
-//! @tests zig test --dep shared -Mroot=src/editor/lang.zig -Mshared=../evetx/src/shared.zig (from eveux/)
+//! @tests zig test --dep ide -Mroot=src/editor/lang.zig -Mide=../evecm/src/ide.zig (from eveux/)
 //! A colorizer turns one line (and the state left by the lines above) into spans of a class; the editor widget maps a class to a
-//! theme color. Eve uses the scanner and the keyword list of evetx (module `shared`, generated from spec/lexical/keywords.json).
+//! theme color. Eve uses the scanner and the keyword list of Eve (module `ide`, evecm/src/ide/, generated from spec/lexical/keywords.json).
 //! The other languages are plain in this draft: each gets its own file next to this one (html.zig, css.zig, js.zig, json.zig,
 //! xml.zig, sql.zig, md.zig), as small hand-written scanners like the one of evetx for SQL.
 const std = @import("std");
-const shared = @import("shared");
+const ide = @import("ide");
 
 pub const Lang = enum { eve, sql, json, xml, html, css, javascript, markdown, plain };
 
@@ -17,12 +17,12 @@ pub const Class = enum { plain, comment, string, number, keyword, title, type_na
 pub const Span = struct { start: usize, end: usize, class: Class };
 
 /// The state at the start of a line: inside a block comment or an expression comment of an earlier line.
-pub const Carry = shared.scan.Carry;
+pub const Carry = ide.scan.Carry;
 
 // @eve-fn isKeyword
 /// Is `word` a keyword of Eve (the generated list of evetx).
 pub fn isKeyword(word: []const u8) bool {
-    for (shared.keywords.words) |k| if (std.mem.eql(u8, k, word)) return true;
+    for (ide.keywords.words) |k| if (std.mem.eql(u8, k, word)) return true;
     return false;
 }
 
@@ -37,7 +37,7 @@ pub fn highlight(a: std.mem.Allocator, lang: Lang, line: []const u8, carry: *Car
 
 fn highlightEve(a: std.mem.Allocator, line: []const u8, carry: *Carry, out: *std.ArrayList(Span)) std.mem.Allocator.Error!void {
     const start_carry = carry.*;
-    var sc: shared.scan.Scan = .{ .line = line, .carry = carry.* };
+    var sc: ide.scan.Scan = .{ .line = line, .carry = carry.* };
     while (sc.next()) |t| {
         const class: Class = switch (t.kind) {
             .comment => if (start_carry == .none and line[0] == '#') .title else .comment,
