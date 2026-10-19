@@ -161,11 +161,12 @@ pub fn osModule(it: *Interp, name: []const u8, _: []const *const Node, args: []c
 // @spec spec/library/os.md
 // @invariant the child's stdin is closed; a program that can not start gives status 127 and the reason in `err`
 fn run(it: *Interp, args: []const *const Node) Signal!Value {
-    if (args.len != 3) return it.failWith(err_argument, "os.run! takes a command, a list of arguments and a folder", .{});
+    if (args.len != 3 and args.len != 4) return it.failWith(err_argument, "os.run! takes a command, a list of arguments, a folder and an optional time-out", .{});
     const command = try strArg(it, args, 0, "os.run!");
     const list = try it.eval(args[1]);
     if (list != .list) return it.failWith(err_argument, "os.run!: the arguments are a list of String", .{});
     const cwd = try strArg(it, args, 2, "os.run!");
+    const limit_ms: i64 = if (args.len == 4) (try it.eval(args[3])).int else 0;
     const io = it.io orelse return it.fail("os.run!: no input/output handle", .{});
 
     var argv: std.ArrayList([]const u8) = .empty;
@@ -196,8 +197,20 @@ fn run(it: *Interp, args: []const *const Node) Signal!Value {
         var mr: Io.File.MultiReader = undefined;
         mr.init(it.t, io, buf.toStreams(), &.{ child.stdout.?, child.stderr.? });
         defer mr.deinit();
+        // @eve-impl time-out of os.run! (TD-9, TD-27): the deadline covers the whole run; the child is killed and the status is 124
+        const deadline: Io.Timeout = if (limit_ms > 0) .{ .deadline = .fromNow(io, .{ .raw = .fromMilliseconds(limit_ms), .clock = .awake }) } else .none;
+        var timed_out = false;
         while (true) {
-            mr.fill(1, .none) catch break;
+            mr.fill(1, deadline) catch |e| {
+                timed_out = e == error.Timeout;
+                break;
+            };
+        }
+        if (timed_out) {
+            child.kill(io);
+            status = 124;
+            try err.print(it.t, "{s}: Time-out after {d} ms", .{ command, limit_ms });
+            break :spawn;
         }
         try out.appendSlice(it.t, mr.reader(0).buffered());
         try err.appendSlice(it.t, mr.reader(1).buffered());

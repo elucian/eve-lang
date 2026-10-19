@@ -1,0 +1,19 @@
+# os.run! with a time-out: the child is killed, status 124 (TD-9, TD-27)
+** spec: library/os.md#run
+primary aspect f15_os_timeout is
+  process main is
+    new quick := os.run!("eve", ("--version",), "", 5000);
+    print quick.status;
+    new r := os.run!("sleep", ("5",), "", 300);
+    if os.platform() == "windows" do
+      let r := os.run!("ping", ("-n", "6", "127.0.0.1"), "", 300);
+    done;
+    print r.status;
+    print r.err.contains("Time-out after 300 ms");
+  return;
+end f15_os_timeout;
+/*@expect
+{
+  "stdout": ["0", "124", "True"]
+}
+*/
