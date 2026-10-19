@@ -9,7 +9,7 @@ shows the median and the best time of each benchmark and the change against the 
   --save    append this run to test/bmark/history.json (do it for every version and optimization)
   Every benchmark has a twin in Python (test/bmark/ref/<name>.py): the run also reports its time and the ratio Eve / Python.
   --check   exit 1 when a benchmark is more than 25% slower than the last saved run
-Every run also reports the size of eve.exe (bytes) and its change against the last saved run of the same build; --save records it in history.json and in the size table of the README.
+Every run also reports the size of eve, evevm, evecp, evetx, eveux and evedb (those found beside eve.exe) and the change of eve.exe its change against the last saved run of the same build; --save records it in history.json and in the size table of the README.
 Times depend on the machine: compare runs made on the same machine. Notes per version: test/bmark/README.md.
 Level 6 needs the database server: when a p6 benchmark is selected, bmark starts evedb (evedb.exe beside eve.exe) with
 test/bmark/evedb.cfg, in test/bmark/, and stops it at the end; the Python twins of level 6 need psycopg2.
@@ -112,29 +112,51 @@ def describe(path):
     return m.group(1).strip() if m else ''
 
 
+def put_block(name, rows):
+    """Replace the lines between <!-- name:begin --> and <!-- name:end --> in the README."""
+    text = open(README, encoding='utf-8', newline='').read()
+    b, e = '<!-- %s:begin -->' % name, '<!-- %s:end -->' % name
+    if b not in text:
+        return
+    nl = '\r\n' if '\r\n' in text else '\n'
+    i, j = text.index(b) + len(b), text.index(e)
+    open(README, 'w', encoding='utf-8', newline='').write(text[:i] + nl + nl.join(rows) + nl + text[j:])
+
+
 def update_readme(hist):
-    """Rewrite the table between the bench markers of the README: description and latest ReleaseSafe time."""
+    """Rewrite the generated tables of the README: what each benchmark measures, the latest ReleaseSafe results, the totals per run."""
     rel = [h for h in hist if h.get('build') == 'ReleaseSafe']
     last = rel[-1]['results'] if rel else {}
-    rows = ['| Benchmark | Duration | Python | Eve / Python | What it measures |', '|---|---|---|---|---|']
     py = rel[-1].get('python', {}) if rel else {}
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
+    what = ['| Benchmark | What it measures |', '|---|---|']
+    res = ['| Benchmark | Eve | Python | Eve / Python | Peak memory |', '|---|---|---|---|---|']
     for lvl in range(1, 8):
-        rows.append('| **Level %d** | | | | |' % lvl)
+        what.append('| **Level %d** | |' % lvl)
+        res.append('| **Level %d** | | | | |' % lvl)
         mine = [f for f in files if os.path.basename(f).startswith('p%d' % lvl)]
         for f in mine:
             n = os.path.basename(f)[:-4]
-            ms = ('%.0f ms' % last[n]['median_ms']) if n in last else 'not measured'
-            pms = ('%.0f ms' % py[n]) if n in py else '-'
-            ratio = ('%.1fx' % (last[n]['median_ms'] / py[n])) if n in last and n in py else '-'
-            rows.append('| `%s.eve` | %s | %s | %s | %s |' % (n, ms, pms, ratio, describe(f)))
+            what.append('| `%s` | %s |' % (n, describe(f)))
+            if n in last:
+                r = last[n]
+                res.append('| `%s` | %.0f ms | %s | %s | %s |' % (n, r['median_ms'], ('%.0f ms' % py[n]) if n in py else '-',
+                           ('%.1fx' % (r['median_ms'] / py[n])) if n in py else '-', ('%.1f MB' % r['peak_mb']) if 'peak_mb' in r else '-'))
+            else:
+                res.append('| `%s` | not measured | - | - | - |' % n)
         if not mine:
-            rows.append('| planned | | | | %s |' % PLANNED[lvl])
-    text = open(README, encoding='utf-8', newline='').read()
-    nl = '\r\n' if '\r\n' in text else '\n'
-    b, e = '<!-- bench:begin -->', '<!-- bench:end -->'
-    i, j = text.index(b) + len(b), text.index(e)
-    open(README, 'w', encoding='utf-8', newline='').write(text[:i] + nl + nl.join(rows) + nl + text[j:])
+            what.append('| planned | %s |' % PLANNED[lvl])
+            res.append('| planned | | | | |')
+    put_block('bench', what)
+    put_block('results', res)
+    runs = ['| Version | Date | Build | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |', '|---|---|---|---|---|---|---|---|---|']
+    for h in hist:
+        cells = []
+        for lvl in range(1, 7):
+            t = [r['median_ms'] for n, r in h['results'].items() if n[1] == str(lvl)]
+            cells.append('%.0f ms' % sum(t) if t else '-')
+        runs.append('| %s | %s | %s | %s |' % (h['version'], h['date'][:10], h.get('build', 'Debug'), ' | '.join(cells)))
+    put_block('runs', runs)
 
 
 def run_reference(name, runs):
@@ -159,25 +181,38 @@ def git_short():
         return ''
 
 
+PROGRAMS = ['eve', 'evevm', 'evecp', 'evetx', 'eveux', 'evedb']
+
+
+def program_sizes(eve):
+    """Size in bytes of each program of the build, found beside eve.exe (a missing one is left out)."""
+    d = os.path.dirname(eve)
+    out = {}
+    for p in PROGRAMS:
+        f = os.path.join(d, p + os.path.splitext(eve)[1])
+        if os.path.exists(f):
+            out[p] = os.path.getsize(f)
+    return out
+
+
 def update_size_table(hist):
-    """Rewrite the table between the size markers of the README: size of eve.exe per saved run and its evolution."""
-    rows = ['| Version | Date | Build | Commit | eve.exe | Change |', '|---|---|---|---|---|---|']
+    """Rewrite the table between the size markers of the README: size of each program per saved run, and the change of eve."""
+    rows = ['| Version | Date | Build | Commit | ' + ' | '.join(PROGRAMS) + ' | eve change |', '|---|---|---|---|' + '---|' * (len(PROGRAMS) + 1)]
     prev = {}
     for h in hist:
-        if 'exe_bytes' not in h:
+        sz = dict(h.get('sizes', {}))
+        if 'exe_bytes' in h:
+            sz.setdefault('eve', h['exe_bytes'])
+        if not sz:
             continue
         b = h.get('build', 'Debug')
         old = prev.get(b)
-        change = '%+.1f%%' % ((h['exe_bytes'] - old) / old * 100) if old else '-'
-        rows.append('| %s | %s | %s | %s | %s KB | %s |' % (h['version'], h['date'][:10], b, h.get('commit', '-'), format(round(h['exe_bytes'] / 1024), ','), change))
-        prev[b] = h['exe_bytes']
-    text = open(README, encoding='utf-8', newline='').read()
-    b, e = '<!-- size:begin -->', '<!-- size:end -->'
-    if b not in text:
-        return
-    nl = '\r\n' if '\r\n' in text else '\n'
-    i, j = text.index(b) + len(b), text.index(e)
-    open(README, 'w', encoding='utf-8', newline='').write(text[:i] + nl + nl.join(rows) + nl + text[j:])
+        change = '%+.1f%%' % ((sz['eve'] - old) / old * 100) if old and 'eve' in sz else '-'
+        cells = ['%s KB' % format(round(sz[p] / 1024), ',') if p in sz else '-' for p in PROGRAMS]
+        rows.append('| %s | %s | %s | %s | %s | %s |' % (h['version'], h['date'][:10], b, h.get('commit', '-'), ' | '.join(cells), change))
+        if 'eve' in sz:
+            prev[b] = sz['eve']
+    put_block('size', rows)
 
 
 def main():
@@ -222,6 +257,7 @@ def main():
     old_exe = next((h['exe_bytes'] for h in reversed(same) if 'exe_bytes' in h), None)
     print('size of eve.exe: %s bytes (%.0f KB)%s' % (format(exe_bytes, ','), exe_bytes / 1024,
           (', %+.1f%% against the last saved run' % ((exe_bytes - old_exe) / old_exe * 100)) if old_exe else ', no earlier size saved'))
+    print('sizes: ' + ', '.join('%s %s KB' % (k, format(round(v / 1024), ',')) for k, v in program_sizes(a.eve).items()))
     refs = {n: run_reference(n, a.runs) for n in results}
     server.__exit__(None, None, None)
     print('%-22s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
@@ -242,7 +278,7 @@ def main():
         ptot = sum(last[n]['median_ms'] for n in results if n[1] == lvl and n in last)
         print('level %s total %.1f ms%s' % (lvl, tot, (' (%+.0f%%)' % ((tot - ptot) / ptot * 100)) if ptot else ''))
     if a.save and not bad:
-        hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(), 'exe_bytes': exe_bytes,
+        hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(), 'exe_bytes': exe_bytes, 'sizes': program_sizes(a.eve),
                      'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results, 'python': {n: v for n, v in refs.items() if v}})
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
         update_readme(hist)

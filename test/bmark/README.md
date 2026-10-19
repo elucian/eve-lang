@@ -1,103 +1,138 @@
 # Performance tests
 
-A small benchmark for each level. They are not conformance tests (the runner of `test/levelN/` ignores this folder): they check that the VM stays fast while features and optimizations arrive. Every benchmark prints a result and declares it in an `/*@expect*/` block, so a wrong answer is reported as an error, never as a fast time.
+One small benchmark for each level, to see that the VM stays fast while features and optimizations arrive. They are not conformance tests: the runner of `test/levelN/` ignores this folder. Each benchmark prints a result and declares it in an `/*@expect*/` block, so a wrong answer is an error, never a fast time. Each has a twin in Python (`ref/<name>.py`) that does the same work, and the report shows the ratio Eve / Python (1.0x is the speed of CPython). The twin is a yardstick, not a goal.
 
 ## Run
 
 ```
-python script/bmark.py                    # 5 runs of every benchmark, the report compares with the last saved run
-python script/bmark.py --save             # also append the run to history.json (do it for every version and optimization)
+python script/bmark.py                    # 5 runs of each benchmark, compared with the last saved run
+python script/bmark.py --save             # also append the run to history.json and rewrite the tables below
 python script/bmark.py --check            # exit 1 when a benchmark is more than 25% slower than the last saved run
 python script/bmark.py --level 1 --runs 9
 python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --save
 ```
 
-A Debug build (`zig build -p ..`) and a ReleaseSafe build (`zig build -Doptimize=ReleaseSafe -p ../temp/rel`) are compared only with runs of the same build. Times depend on the machine and on its load: compare runs made on the same machine, with nothing else running, and trust the median of several runs, not one.
+- Compare only runs of the same build and the same machine, with nothing else running; trust the median, not one run. The ReleaseSafe build (`zig build -Doptimize=ReleaseSafe -p temp/rel`) is the one to compare between versions; Debug is for development.
+- The sizes come from the programs found beside `eve.exe`: build `evetx` and `eveux` into the same folder (`cd comp/evetx && zig build -Doptimize=ReleaseSafe -p ../../temp/rel`) or their column stays empty.
+- Level 6 needs `evedb.exe` beside `eve.exe`; `bmark.py` starts it with `evedb.cfg` and stops it. Its Python twins need `psycopg2`.
+- A new benchmark is `p<level><letter>_<name>.eve` with a `** perf:` description line and a twin with the same loops and sizes. Keep it between 50 ms and 2 s.
 
 ## Benchmarks
 
+What each one measures (the `** perf:` line of the file).
+
 <!-- bench:begin -->
-| Benchmark | Duration | Python | Eve / Python | What it measures |
-|---|---|---|---|---|
-| **Level 1** | | | | |
-| `p1a_arith.eve` | 202 ms | 57 ms | 3.5x | integer and real arithmetic, `for` and `while` loops, variables |
-| `p1b_calls.eve` | 65 ms | 35 ms | 1.9x | function calls, recursion (`fib(20)`), parameter binding |
-| `p1c_collections.eve` | 23 ms | 33 ms | 0.7x | list appends and iteration (60,000 elements), DataMap and DataSet |
-| `p1d_strings.eve` | 18 ms | 41 ms | 0.4x | string appends, placeholders, regular expression matches |
-| **Level 2** | | | | |
-| `p2a_aspects.eve` | 11 ms | 27 ms | 0.4x | 5,000 `apply` of an aspect with two inputs and one output (a new scope and a new boot for each call) |
-| `p2b_closures.eve` | 51 ms | 37 ms | 1.4x | a closure called 50,000 times, a lambda called 50,000 times, a function that makes closures 2,000 times |
-| `p2c_procedures.eve` | 57 ms | 37 ms | 1.5x | 30,000 calls of a procedure with `@` parameters, a function with defaults and a vararg procedure |
-| **Level 3** | | | | |
-| `p3a_modules.eve` | 102 ms | 41 ms | 2.5x | 50,000 calls of module functions (`mathx.square`, `mathx.clamp`) and 50,000 reads of a module constant |
-| `p3b_objects.eve` | 89 ms | 40 ms | 2.3x | 5,000 objects of a class and of its subclass, 50,000 method calls, 20,000 extension method calls |
-| `p3c_module_state.eve` | 37 ms | 36 ms | 1.0x | 50,000 calls of a module procedure that changes private state and 50,000 reads of it |
-| **Level 4** | | | | |
-| `p4a_parallel_sum.eve` | 235 ms | 80 ms | 2.9x | 5 rounds of a parallel group that sums 200,000 integers in 4 parts (`split`, `start`, inputs copied by value) |
-| `p4b_channel.eve` | 69 ms | 223 ms | 0.3x | 50,000 messages from a producer through 2 workers to a collector (two channels of capacity 100, back-pressure) |
-| `p4c_groups.eve` | 130 ms | 122 ms | 1.1x | 250 parallel groups of 4 started aspects each (a task, a thread and an output buffer per start) |
-| `p4d_tasks.eve` | 124 ms | 109 ms | 1.1x | 50 jobs that spawn 20 async procedures each and wait for them at done (the tasks of a job share one core) |
-| `p4e_garbage.eve` | 192 ms | 85 ms | 2.3x | 200,000 iterations that each build a string and a list and drop them; watch the peak memory |
-| **Level 5** | | | | |
-| `p5a_sql_function.eve` | 91 ms | 112 ms | 0.8x | 20,000 rows made in SQL, then a query that calls a sql function on each row, three times (60,000 calls) |
-| **Level 6** | | | | |
-| `p6a_evedb_store.eve` | not measured | - | - | 1,000,000 rows made by DuckDB, read through evedb:// into a Memory table of four columns, then one sum |
-| `p6b_evedb_load.eve` | not measured | - | - | 200,000 rows read into a Memory table, then loaded into a new evedb table as column batches, and counted |
-| `p6c_pg_records.eve` | not measured | - | - | 100,000 rows read from evedb as records through postgres://, and a loop that adds one field of each |
-| `p6d_olap_groupby.eve` | not measured | - | - | 1,000,000 rows in evedb, then ten group-by queries over all of them (sum and count by region) |
-| **Level 7** | | | | |
-| planned | | | | render an HTML template 1,000 times |
+| Benchmark | What it measures |
+|---|---|
+| **Level 1** | |
+| `p1a_arith` | integer and real arithmetic, `for` and `while` loops, variables |
+| `p1b_calls` | function calls, recursion (`fib(20)`), parameter binding |
+| `p1c_collections` | list appends and iteration (60,000 elements), DataMap and DataSet |
+| `p1d_strings` | string appends, placeholders, regular expression matches |
+| **Level 2** | |
+| `p2a_aspects` | 5,000 `apply` of an aspect with two inputs and one output (a new scope and a new boot for each call) |
+| `p2b_closures` | a closure called 50,000 times, a lambda called 50,000 times, a function that makes closures 2,000 times |
+| `p2c_procedures` | 30,000 calls of a procedure with `@` parameters, a function with defaults and a vararg procedure |
+| **Level 3** | |
+| `p3a_modules` | 50,000 calls of module functions (`mathx.square`, `mathx.clamp`) and 50,000 reads of a module constant |
+| `p3b_objects` | 5,000 objects of a class and of its subclass, 50,000 method calls, 20,000 extension method calls |
+| `p3c_module_state` | 50,000 calls of a module procedure that changes private state and 50,000 reads of it |
+| **Level 4** | |
+| `p4a_parallel_sum` | 5 rounds of a parallel group that sums 200,000 integers in 4 parts (`split`, `start`, inputs copied by value) |
+| `p4b_channel` | 50,000 messages from a producer through 2 workers to a collector (two channels of capacity 100, back-pressure) |
+| `p4c_groups` | 250 parallel groups of 4 started aspects each (a task, a thread and an output buffer per start) |
+| `p4d_tasks` | 50 jobs that spawn 20 async procedures each and wait for them at done (the tasks of a job share one core) |
+| `p4e_garbage` | 200,000 iterations that each build a string and a list and drop them; watch the peak memory |
+| **Level 5** | |
+| `p5a_sql_function` | 20,000 rows made in SQL, then a query that calls a sql function on each row, three times (60,000 calls) |
+| **Level 6** | |
+| `p6a_evedb_store` | 1,000,000 rows made by DuckDB, read through evedb:// into a Memory table of four columns, then one sum |
+| `p6b_evedb_load` | 200,000 rows read into a Memory table, then loaded into a new evedb table as column batches, and counted |
+| `p6c_pg_records` | 100,000 rows read from evedb as records through postgres://, and a loop that adds one field of each |
+| `p6d_olap_groupby` | 1,000,000 rows in evedb, then ten group-by queries over all of them (sum and count by region) |
+| `p6e_http_requests` | 300 requests (GET with a path parameter, GET with a query, POST with a body), each on its own connection |
+| **Level 7** | |
+| planned | render an HTML template 1,000 times |
 <!-- bench:end -->
 
-The table is rewritten by `--save` from the last ReleaseSafe run and from the `** perf:` line of each file. A new level adds a file `p<level><letter>_<name>.eve`; `script/bmark.py` finds it by its name. Keep a benchmark between 50 ms and 2 s: long enough to measure, short enough to run at every commit.
+## Results
 
-## Reference language
+The latest saved ReleaseSafe run: median time of the whole process (start-up included), the time of the Python twin, and the peak memory of Eve.
 
-Every benchmark has a twin written in Python, `ref/<name>.py`, that does the same work and prints the same result. `script/bmark.py` runs both, whole process against whole process (start-up included), and reports the ratio **Eve / Python**: 1.0x is the speed of CPython, 5x is five times slower. The twin is a permanent yardstick, not a goal: a machine and a Python version change, the ratio shows whether Eve moves toward or away from a mature interpreter when features and optimizations arrive. The times of Python are saved with each run in `history.json` (key `python`). A new benchmark adds its twin; a twin must keep the same work (same loops, same sizes) as the Eve file. Other reference languages can be added the same way (`ref/<name>.js`, ...) when someone needs them.
+<!-- results:begin -->
+| Benchmark | Eve | Python | Eve / Python | Peak memory |
+|---|---|---|---|---|
+| **Level 1** | | | | |
+| `p1a_arith` | 218 ms | 94 ms | 2.3x | 5.9 MB |
+| `p1b_calls` | 72 ms | 58 ms | 1.2x | 6.0 MB |
+| `p1c_collections` | 27 ms | 62 ms | 0.4x | 7.9 MB |
+| `p1d_strings` | 23 ms | 80 ms | 0.3x | 6.2 MB |
+| **Level 2** | | | | |
+| `p2a_aspects` | 14 ms | 50 ms | 0.3x | 5.9 MB |
+| `p2b_closures` | 60 ms | 65 ms | 0.9x | 7.4 MB |
+| `p2c_procedures` | 68 ms | 64 ms | 1.1x | 6.0 MB |
+| **Level 3** | | | | |
+| `p3a_modules` | 105 ms | 70 ms | 1.5x | 6.0 MB |
+| `p3b_objects` | 82 ms | 72 ms | 1.1x | 6.0 MB |
+| `p3c_module_state` | 43 ms | 70 ms | 0.6x | 6.0 MB |
+| **Level 4** | | | | |
+| `p4a_parallel_sum` | 228 ms | 145 ms | 1.6x | 40.4 MB |
+| `p4b_channel` | 95 ms | 1498 ms | 0.1x | 6.1 MB |
+| `p4c_groups` | 168 ms | 265 ms | 0.6x | 8.1 MB |
+| `p4d_tasks` | 251 ms | 241 ms | 1.0x | 8.0 MB |
+| `p4e_garbage` | 285 ms | 140 ms | 2.0x | 6.0 MB |
+| **Level 5** | | | | |
+| `p5a_sql_function` | 158 ms | 193 ms | 0.8x | 9.2 MB |
+| **Level 6** | | | | |
+| `p6a_evedb_store` | 785 ms | 2653 ms | 0.3x | 56.1 MB |
+| `p6b_evedb_load` | 318 ms | 9727 ms | 0.0x | 16.4 MB |
+| `p6c_pg_records` | 244 ms | 330 ms | 0.7x | 81.7 MB |
+| `p6d_olap_groupby` | 626 ms | 704 ms | 0.9x | 6.1 MB |
+| `p6e_http_requests` | 452 ms | 783 ms | 0.6x | 51.8 MB |
+| **Level 7** | | | | |
+| planned | | | | |
+<!-- results:end -->
+
+## Size of the programs
+
+The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
+
+<!-- size:begin -->
+| Version | Date | Build | Commit | eve | evevm | evecp | evetx | eveux | evedb | eve change |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0.0.3 | 2026-10-13 | ReleaseSafe | 505c7dc | 3,572 KB | - | - | - | - | - | - |
+| 0.0.7 | 2026-10-19 | ReleaseSafe | cc28760 | 3,988 KB | 3,988 KB | 1,210 KB | 2,198 KB | 9,088 KB | 1,264 KB | +11.7% |
+<!-- size:end -->
 
 ## History
 
-The measured runs are in `history.json` (date, version, commit, build, median and best time of each benchmark). Whoever saves a run adds a paragraph for the version under "Notes by version" (what changed in the VM, whether the benchmarks got faster, appreciation, or slower, depreciation, and why a drop of more than 10% happened), then a row in the table of runs. The table stays slim: the change against the previous row of the same level and build is written in the notes, not in a column.
+Each saved run adds a paragraph to the notes (what changed in the VM, faster or slower, and why when a benchmark moves by more than 10%) and a row to the totals.
 
 ### Notes by version
 
-**0.0.1 (2026-10-07), baseline.** First measure, right after level 1 passed 82 of 82. Tree-walking interpreter: names are found by a linear scan of the scopes, values are copied as tagged unions, the static check runs once before the run. `p1a_arith` (500,000 loop turns) dominates the total. The ReleaseSafe build is about 4.6 times faster than Debug on the same code; compare versions on ReleaseSafe and use Debug only to develop. No earlier version exists, so there is no appreciation or depreciation yet.
+**0.0.1 (2026-10-07), baseline.** The first measure, after level 1 passed. A tree walker: names found by a linear scan of the scopes, values copied as tagged unions. `p1a_arith` dominates. ReleaseSafe is about 4.6 times faster than Debug.
 
-**0.0.1 (2026-10-08), levels 2 and 3 measured.** Six benchmarks were added with their Python twins: `p2a_aspects` (5,000 `apply`), `p2b_closures` (closure and lambda calls, closures made in a loop), `p2c_procedures` (`@` parameters, defaults, vararg), `p3a_modules` (calls and constants through a module), `p3b_objects` (objects, inheritance, methods, extension method) and `p3c_module_state` (private state of a module). Their ratios Eve / Python are 1.0 to 2.4, so no benchmark shows an accidental quadratic cost. The slowest is `p3a_modules` (2.4): `module.member` scans the `export` lists of the module on every access, then scans its scope by name; a table of members built when the module is loaded would remove the first scan. `apply` is cheap (1.0): a scope and the boot names per call. Level 1 is 9% above the first measure of 2026-10-07 (435 ms against 400 ms), inside the noise of the machine (the Python twins are 15 to 25% slower than in that run); the modules and classes of levels 2 and 3 do not touch the code that level 1 runs. A first run of this day was made with the laptop in power save mode (level 1 at 607 ms, Python twins 45 to 90% slower) and was discarded: measure with the laptop in normal power mode. The Debug build was measured the same day (levels 1, 2, 3: 2073, 955 and 1951 ms; level 1 is 12% above the first Debug measure). In Debug the ratios Eve / Python are higher (4 to 15; `p1a_arith`, `p3a_modules` and `p3c_module_state` are above 10), because the Debug build keeps every safety check; the ReleaseSafe ratios are 0.5 to 2.8, so none of them is an accidental quadratic cost.
+**0.0.1 (2026-10-08), levels 2 and 3 measured.** Six benchmarks added with their twins; ratios Eve / Python of 1.0 to 2.4, so no accidental quadratic cost. The slowest is `p3a_modules` (2.4): `module.member` scans the `export` list on each access. Level 1 is 9% above the first run, which is noise of the machine.
 
-**0.0.2 (2026-10-09), memory manager; level 4 measured.** Until this version every value lived in one arena freed only when the script ended, so memory grew with the work: `p1d_strings` peaked at 174 MB, `p4e_garbage` and `p4a_parallel_sum` at 122 MB. The VM now frees memory while it runs (D-151): values live in a heap (`comp/evevm/src/heap.zig`) and are **reference counted**; a value whose count falls to zero is freed at the next safe point of its region (the end of a statement, of a pass of a loop, of a `done`); variables and scopes are freed when their call or block ends; a **tracing collector** is the backup for cycles (a closure that holds its own scope) and runs at `done` and when many objects were made. Buffers that live during one statement (the cells of an index, the text being printed, the arguments of a call) use a scratch memory released at the end of the statement (`scratch.zig`). Every benchmark now peaks between 4.4 and 6.6 MB, except `p4a_parallel_sum` (39 MB: it copies a list of 200,000 elements for each task, and nothing is freed while tasks run). `bmark.py` reports the peak memory of each run (column `peak MB`). The speed improved too, against the last saved run: level 1 25% faster, level 2 46%, level 3 29%. The gains come from three changes made with the memory work: the built-in names live in one shared prelude scope instead of being defined again at each `apply` (`p2a_aspects` from 49 to 10 ms, 0.4 times Python), freed big strings are reused instead of asking the operating system for a new block at each append (`p1d_strings` from 72 to 23 ms), and one index `a[i]` reads its element directly instead of listing every element first. A variable declared again in the same scope (a loop variable, a `new` in a loop body) is reused when nobody else holds it, and freed objects wait in pools for reuse, so a loop allocates almost nothing. The five benchmarks of level 4 were added with their Python twins: `p4a_parallel_sum` (2.6 times Python), `p4b_channel` (0.3), `p4c_groups` (0.8), `p4d_tasks` (1.6) and `p4e_garbage` (2.2, the memory churn test: 1,000,000 objects made, at most 73 alive). The Debug build was not measured in this run.
+**0.0.2 (2026-10-09), memory manager; level 4 measured.** Values live in a reference counted heap (D-151) with a tracing backup for cycles, and a scratch memory for one statement. Peak memory fell from 174 MB (`p1d_strings`) to 4 to 7 MB; only `p4a_parallel_sum` keeps 39 MB (it copies a 200,000-element list per task). Faster too: level 1 by 25%, level 2 by 46%, level 3 by 29%, from a shared prelude scope, reuse of freed strings and a direct `a[i]`. Level 4 added.
 
-**0.0.3 (2026-10-13), the machine at the prompt; level 5 measured.** The work of this version is around the interpreter, not in it: the full-screen prompt, `help`, `stop`, `evevm`, the doors in threads, SQL functions. The only change on the path of a running script is the poll between two statements, which now also reads one shared counter (an atomic load, so that `stop` can end a script): it is not measurable in `p1a_arith` (+2%). One benchmark was added, `p5a_sql_function` (level 5, 90.7 ms; 0.8x the time of its Python twin). Against the last saved run, levels 1 and 4 are faster (-6% and -19%), level 2 is +4% and level 3 is +0%; I did not change anything that explains the gains, so they are read as noise of the machine (a run saved on another day, with other programs open), not as an improvement. One drop above 10%: `p3b_objects` +17% (median 89.2 ms, best 79.4 ms). The spread between its median and its best run is 10 ms, as large as the change, and nothing in this version touches objects, so I attribute it to noise; it is not proven, and the next saved run will confirm or reject it. The peak memory is unchanged (5 to 8 MB, `p4a_parallel_sum` 39.5 MB). The size of `eve.exe` is recorded for the first time (3,572 KB, ReleaseSafe), so there is nothing to compare it with.
+**0.0.3 (2026-10-13), the machine at the prompt; level 5 measured.** Work around the interpreter; the only cost on the script path is one atomic load between statements (+2% in `p1a_arith`). `p5a_sql_function` added (0.8x Python). `p3b_objects` is +17%, read as noise (its median and best differ by 10 ms). The size of `eve.exe` is recorded for the first time: 3,572 KB.
 
-### Table of runs
+**0.0.7 (2026-10-19), baseline for the bytecode.** Levels 5 and 6 measured for the first time: `p6a` to `p6e` run against `evedb` and are 0.0 to 0.9 of the Python twins (psycopg2 pays per row what the column batches do not). Against the run of 0.0.3 most benchmarks are 10 to 40% slower (`p4d_tasks` +102%, `p5a_sql_function` +74%), but that run was made on another day with another load, and the ratios Eve / Python moved less than the times (Python twins are 20 to 40% slower too, `p1a_arith` 2.3x against 3.5x). Read this run as the new base line, not as a regression; the next run on this machine is the first fair comparison. `eve.exe` grew 11.7% (3,572 to 3,988 KB) with the machine API, the database layer and the drivers moved into the module; `evevm.exe` is the same file as `eve.exe`. Targets for the bytecode: `design/design-bytecode.md` §11.
 
-Columns: **Version** is the version of the VM; **Date** the day of the run; **Time (Debug Mode)** the total median time of the benchmarks of the level with the Debug build (`zig build -p ..`), the one used to develop; **Time (Optimized)** the same with the ReleaseSafe build (`zig build -Doptimize=ReleaseSafe`), the one to compare between versions. A run made in only one mode leaves the other cell with a dash. The change against the previous version is written in the notes above, not in a column.
+### Totals per run
 
-| Version | Date | Time (Debug Mode) | Time (Optimized) |
-|---|---|---|---|
-| **Level 1** | | | |
-| 0.0.1 | 2026-10-07 | 1843 ms | 400 ms |
-| 0.0.1 | 2026-10-08 | 2073 ms | 435 ms |
-| 0.0.2 | 2026-10-09 | - | 327 ms |
-| **Level 2** | | | |
-| 0.0.1 | 2026-10-08 | 955 ms | 212 ms |
-| 0.0.2 | 2026-10-09 | - | 114 ms |
-| **Level 3** | | | |
-| 0.0.1 | 2026-10-08 | 1951 ms | 319 ms |
-| 0.0.2 | 2026-10-09 | - | 228 ms |
-| **Level 4** | | | |
-| 0.0.2 | 2026-10-09 | - | 931 ms |
+The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
 
-### Size of eve.exe
-
-The size of the VM executable is recorded with every saved run (`exe_bytes` in `history.json`), next to the version, and the table below is rewritten by `bmark.py --save`. It follows the size over the versions: a feature that adds SQLite, a driver or the data formats makes the file larger, and a jump that no feature explains is looked at. The change is computed against the previous saved run of the **same build** (a Debug build is much larger than a ReleaseSafe one, so the two are never compared). Every report (with or without `--save`) prints the size and the change against the last saved run. A version that grows the file by more than 10% gets a sentence in "Notes by version": what was added and why the size changed.
-
-Runs saved before 2026-10-10 have no size. For reference, the files on 2026-10-10 were `bin/eve.exe` (Debug) 3,734,528 bytes and `temp/rel/bin/eve.exe` (ReleaseSafe, built 2026-10-09) 1,479,680 bytes; they are not a saved run.
-
-<!-- size:begin -->
-| Version | Date | Build | Commit | eve.exe | Change |
-|---|---|---|---|---|---|
-| 0.0.3 | 2026-10-13 | ReleaseSafe | 505c7dc | 3,572 KB | - |
-<!-- size:end -->
-
-Ideas to watch, in the order of their likely gain: variable lookup by slot instead of by name (the scan of the scopes shows in `p1a_arith` and `p1b_calls`); the operators are found by comparing their text one after the other in `apply` (`p1a_arith` is still 2.7 times Python); no copy of the argument list for each call; inputs of a started aspect are copied twice in `p4a_parallel_sum` (by `split` and by `start`); the static check should cost almost nothing against the run, so its time is part of every benchmark. Memory: run a benchmark with `EVE_MEMSTATS=1` to see how many objects were made, freed by the count, freed by the trace, and how many are alive at the end.
+<!-- runs:begin -->
+| Version | Date | Build | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |
+|---|---|---|---|---|---|---|---|---|
+| 0.0.1 | 2026-10-07 | Debug | 1843 ms | - | - | - | - | - |
+| 0.0.1 | 2026-10-07 | ReleaseSafe | 400 ms | - | - | - | - | - |
+| 0.0.1 | 2026-10-07 | ReleaseSafe | 399 ms | - | - | - | - | - |
+| 0.0.1 | 2026-10-08 | ReleaseSafe | 435 ms | 212 ms | 319 ms | - | - | - |
+| 0.0.1 | 2026-10-08 | Debug | 2073 ms | 955 ms | 1951 ms | - | - | - |
+| 0.0.2 | 2026-10-09 | ReleaseSafe | 327 ms | 114 ms | 228 ms | 931 ms | - | - |
+| 0.0.3 | 2026-10-13 | ReleaseSafe | 308 ms | 118 ms | 228 ms | 751 ms | 91 ms | - |
+| 0.0.7 | 2026-10-19 | ReleaseSafe | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
+<!-- runs:end -->
