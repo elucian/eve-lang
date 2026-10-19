@@ -25,7 +25,6 @@ pub const Node = ast.Node;
 // The values live in evecm (value.zig); they are named here too, so that the code of the interpreter and of the
 // libraries keeps writing `interp.Value`.
 pub const value = @import("evecm").value;
-pub const iface = @import("evecm").iface;
 pub const Signal = value.Signal;
 pub const Value = value.Value;
 pub const Channel = value.Channel;
@@ -157,9 +156,6 @@ pub const Outcome = struct {
 
 
 
-// Zig tip: `Interp` relies on the same Zig feature as `List` above: see the tip there.
-/// The database layer (evedb), given by the program at its start (`evedb.data`); null when there is none.
-pub var data_api: ?*const iface.Data = null;
 
 
 // Zig tip: the methods of `Interp` are written in several files (interp/*.zig), grouped by concern. Each file holds plain
@@ -913,7 +909,6 @@ pub const Interp = struct {
     // ---- level 4: parallel groups, channels, tasks (spec/semantics/multitasking.md) -----------------
     // (in interp/parallel.zig)
     pub const host = part_parallel.host;
-    pub const dataApi = part_parallel.dataApi;
     pub const base = part_parallel.base;
     pub const ensureSched = part_parallel.ensureSched;
     pub const durText = part_parallel.durText;

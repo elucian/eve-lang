@@ -6,6 +6,7 @@ const std = @import("std");
 // between files of one module: declarations are resolved lazily, when they are used, not in the order
 // of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
+const db = @import("../db.zig");
 const Interp = interp.Interp;
 const task = interp.task;
 const data = interp.data;
@@ -220,12 +221,10 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     }
     if (dlib.isStream(it, recv)) return dlib.streamCall(it, recv.object, name, args);
     if (netlib.isNet(it, recv)) return netlib.call(it, recv.object, name, args);
-    if (interp.data_api) |d| {
-        if (d.is_table(it.host(), recv)) return d.table_call(it.host(), recv.object, name, args);
-        if (d.is_connection(it.host(), recv)) return d.connection_call(it.host(), recv.object, name, args);
-        if (d.is_memory(it.host(), recv)) return d.memory_call(it.host(), recv.object, name, args);
-        if (d.is_column(it.host(), recv)) return d.column_call(it.host(), recv.object, name, args);
-    }
+    if (db.orm.isTable(it.host(), recv)) return db.orm.tableCall(it.host(), recv.object, name, args);
+    if (db.isConnection(it.host(), recv)) return db.conn.connectionCall(it.host(), recv.object, name, args);
+    if (db.memory.isMemory(it.host(), recv)) return db.memory.memoryCall(it.host(), recv.object, name, args);
+    if (db.memory.isColumn(it.host(), recv)) return db.memory.columnCall(it.host(), recv.object, name, args);
     if (recv == .chan) return it.channelMethod(recv.chan, name, args);
     if ((eql(u8, name, "batch") or eql(u8, name, "split")) and recv == .list and args.len == 1) {
         return it.cut(recv.list, eql(u8, name, "split"), try it.eval(args[0]));
@@ -501,7 +500,7 @@ fn stringFunction(it: *Interp, s: []const u8, name: []const u8, args: []const *c
 /// `new Class(args)`.
 pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) Signal!Value {
     // a class derived from `Memory` is a columnar table (D-184)
-    if (cls.node != null) if (interp.data_api) |d| if (try d.memory_new(it.host(), cls)) |v| return v;
+    if (cls.node != null) if (try db.memory.memoryNew(it.host(), cls)) |v| return v;
     const obj = try it.newObject();
     if (cls.node == null) return .{ .object = obj };
     const args = try it.evalArgs(arg_nodes);

@@ -40,12 +40,14 @@ The gate of every stage includes these two: `zig build test` in the root (and in
 - **Gate:** the common gate; `zig build test` in `comp/evedb`; the two Python checks of S8.1; the ReleaseSafe `eve.exe` within 3% of the baseline size.
 - **Review:** `git diff --stat -M` (renames, not rewrites), the root `build.zig` diff, the first-build time of the `evevm` tests (they now compile SQLite once).
 
-### S8.3 The interface `Data` goes `[ ]`
+### S8.3 The interface `Data` goes `[x]`
+2026-10-19: the 21 functions of the table are direct calls (`db.orm.…`, `db.conn.…`, `db.memory.…`) at 15 call sites in `interp/` and `dlib.zig`; `interp.data_api`, `dataApi()` and the plug-in line of `eve.zig` are gone. The optional table meant some sites skipped the call when no layer was set; the layer is always there now.
 - **Change:** the interpreter calls the database layer directly (`interp/calls.zig`, `datatypes.zig`, `parallel.zig`, `stmt.zig`, `host.zig`) instead of through the function table `interp.data_api`; `comp/eve/eve.zig` no longer plugs it in; `Data` leaves `comp/evecm/src/iface.zig`.
 - **Gate:** the common gate; `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe` compared by hand with the baseline: no benchmark more than 10% slower (a direct call should be as fast or faster).
 - **Review:** the list of call sites changed, the benchmark table next to the baseline.
 
-### S8.4 The interface `Host` goes `[ ]`
+### S8.4 The interface `Host` goes `[x]`
+2026-10-19: `Host` is a struct of one pointer to the interpreter whose methods call it directly (`comp/evevm/src/host.zig`); the function table, the `*anyopaque` casts and `comp/evecm/src/iface.zig` (190 lines) are gone, and the database files only changed their import of `Host`. Unit tests unchanged (109 and 23); 399 of 399; both Python checks pass; the memory check `EVE_GC_VERIFY=1` on the Debug build passes levels 5, 6 and smoke (150 tests); `eve.exe` +7,680 bytes (+0.19%). The benchmark comparison was left out at the author's request.
 - **Change:** the database layer calls the interpreter helpers directly (evaluate an argument, make a value, raise an error) instead of through `Host`; `comp/evecm/src/iface.zig` is deleted. Both sides are files of the one module `evevm`, so they may import each other.
 - **Gate:** the common gate; the benchmark comparison as in S8.3; and the memory check of the project on the Debug build: `EVE_GC_VERIFY=1 python script/runtest.py all` (the database layer builds values, so a count forgotten by a holder would show here).
 - **Review:** what each former `Host` function became, any value that crossed the old boundary with a different ownership rule.

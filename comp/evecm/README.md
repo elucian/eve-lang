@@ -6,7 +6,6 @@ The leaf of the module graph (design/design-packages.md §3). It imports `std` a
 |---|---|
 | `ast.zig` | the syntax tree (until the bytecode, step B5, moves it to `evecp`) |
 | `value.zig`, `heap.zig` | `Value`, the objects it points to (`List`, `Map`, `Object`, `Class`, `Func`, `Scope`, `Var`), the error codes, the helpers on values; the heap with reference counting and the tracing collector |
-| `iface.zig` | `Host` and `Data`, the two interfaces between the runtime and the database layer |
 | `config.zig`, `wire.zig` | the keys of `eve.cfg`, the socket folder, the exit codes; JSON-RPC answers, HTTP helpers, the client calls to a machine |
 | `decimal.zig`, `instant.zig`, `nfc.zig`, `nfc_data.zig` | exact numbers, time, Unicode normalization (`script/gen_nfc.py` writes `nfc_data.zig`) |
 | `data.zig` | CSV and JSON text, connection URLs |

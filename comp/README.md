@@ -22,7 +22,7 @@ eve ──► evevm ──► evecp ──► evecm
            └────► ewp_protocol   (also imported by the evedb server)
 ```
 
-The database layer is a part of `evevm` (since 2026-10-19); the interfaces `Host` and `Data` of `evecm` that used to connect it to the interpreter go in the next steps of the refactor (`design/phase-8-architecture.md`). `evetx` and `eveux` import only the editor part of `evecm` (`evecm/src/ide.zig`) and talk to a machine like any client.
+The database layer is a part of `evevm` (since 2026-10-19); the interpreter and the layer call each other directly (the interfaces `Host` and `Data` of `evecm` are gone, S8.3 and S8.4 of `design/phase-8-architecture.md`). `evetx` and `eveux` import only the editor part of `evecm` (`evecm/src/ide.zig`) and talk to a machine like any client.
 
 ## Building
 

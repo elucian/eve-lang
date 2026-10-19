@@ -6,6 +6,7 @@ const std = @import("std");
 // between files of one module: declarations are resolved lazily, when they are used, not in the order
 // of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
+const db = @import("../db.zig");
 const Interp = interp.Interp;
 const data = interp.data;
 const decimal = interp.decimal;
@@ -112,16 +113,16 @@ pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
 // Zig tip: `runRoot` relies on the same Zig feature as `define` above: see the tip there.
 pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
     defer it.finalizeModules();
-    defer if (interp.data_api) |d| d.close_databases(it.host());
+    defer db.closeDatabases(it.host());
     defer dlib.closeStreams(it);
-    defer if (interp.data_api) |d| d.close_core(it.host());
+    defer db.orm.closeCore(it.host());
     defer it.closeGenerators();
     for (root.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
     for (root.kids) |d| {
         if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
     }
     for (root.kids) |d| if (d.tag == .table_decl) {
-        try it.dataApi().declare_tables(it.host(), root.kids);
+        try db.declareTables(it.host(), root.kids);
         break;
     };
     for (root.kids) |d| {

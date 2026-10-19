@@ -1,7 +1,7 @@
 //! The database layer of the language (spec/library/database.md): `table` declarations, records that a session
 //! tracks (dirty fields, optimistic locking), the methods of a table, the transaction of a job, `commit;` and
 //! `rollback;`, and the checkpoints of the core database. Everything works on SQLite in this version.
-//! The functions take the interpreter, like those of conn.zig; the interpreter calls the few entry points through `Data` (root.zig).
+//! The functions take the interpreter, like those of conn.zig; the interpreter calls the few entry points directly (db.zig).
 const std = @import("std");
 const Io = std.Io;
 const evecm = @import("evecm");
@@ -10,7 +10,7 @@ const value = evecm.value;
 const data = evecm.data;
 const decimal = evecm.decimal;
 const instant = evecm.instant;
-const Host = evecm.iface.Host;
+const Host = @import("../host.zig").Host;
 const Heap = evecm.heap.Heap;
 const sqlite = @import("sqlite.zig");
 const dbconn = @import("conn.zig");

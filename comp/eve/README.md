@@ -4,7 +4,7 @@ The only place that imports every module (design/design-packages.md §3). Nothin
 
 | File | Holds |
 |---|---|
-| `eve.zig` | the entry point: the name the program was started with, the options, the choice between the REPL, a script, the machine and the commands; it connects the parts (`interp.data_api = &evedb.data`) and starts `evetx` for `-tx` |
+| `eve.zig` | the entry point: the name the program was started with, the options, the choice between the REPL, a script, the machine and the commands; it starts `evetx` for `-tx` |
 | `cli.zig` | the command table, dispatch and the REPL loop (the commands of the REPL are also command-line options) |
 | `options.zig` | the command line: the options, the part words `vm`, `cp`, `db`, `ux`, `tx` (D-163, D-172), the command words |
 | `context.zig` | the shared types (`Context`, `Handler`, `Command`) and the exit codes |

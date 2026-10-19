@@ -1,138 +1,119 @@
-//! The `Host` of an interpreter: the table of functions that lets the database layer (evedb) use it
-//! without importing it (comp/evecm/src/iface.zig). Every function takes the interpreter back from the
-//! `*anyopaque` and calls the method of the same name.
+//! @eve-module evevm.host
+//! @decision D-198
+//! @tests the tests of comp/evevm/src/db/ (they build values and raise errors through a `Host`)
+//! The `Host` of the database layer: the part of the interpreter that `evevm.db` uses (memory, the heap, evaluating an
+//! argument, errors, building values). A `Host` is one pointer to the interpreter and every method calls the interpreter
+//! directly. It replaces the table of functions that lived in `comp/evecm/src/iface.zig` (S8.4): the layer is a part of
+//! this module now, so nothing needs to hide the interpreter behind a pointer cast.
 const std = @import("std");
 const evecm = @import("evecm");
-const iface = evecm.iface;
 const value = evecm.value;
 const decimal = evecm.decimal;
 const interp = @import("interp.zig");
 const Interp = interp.Interp;
 
-const Host = iface.Host;
 const Node = evecm.ast.Node;
 const Value = value.Value;
 const Signal = value.Signal;
 
-// Zig tip: `@ptrCast(@alignCast(p))` is the way back from `*anyopaque` to a typed pointer: `@alignCast`
-// states the alignment that the real type needs (checked in a safe build) and `@ptrCast` changes the
-// type. It is only correct because this file is the only one that puts an `*Interp` into the pointer.
-fn me(p: *anyopaque) *Interp {
-    return @ptrCast(@alignCast(p));
-}
+/// The services of the interpreter that the database layer uses.
+pub const Host = struct {
+    it: *Interp,
 
-fn arena(p: *anyopaque) std.mem.Allocator {
-    return me(p).a;
-}
-fn temp(p: *anyopaque) std.mem.Allocator {
-    return me(p).t;
-}
-fn heap(p: *anyopaque) *evecm.heap.Heap {
-    return me(p).h;
-}
-fn io(p: *anyopaque) ?std.Io {
-    return me(p).io;
-}
-fn base(p: *anyopaque) Host {
-    return of(me(p).base());
-}
-fn dataSlot(p: *anyopaque) *?*anyopaque {
-    return &me(p).base().data_slot;
-}
-fn currentJob(p: *anyopaque) []const u8 {
-    return me(p).current_job;
-}
-fn typeArgs(p: *anyopaque) []const *const Node {
-    return me(p).type_args;
-}
-fn lastReport(p: *anyopaque) ?*value.Report {
-    const r = &me(p).reports;
-    return if (r.items.len == 0) null else &r.items[r.items.len - 1];
-}
-fn failMsg(p: *anyopaque, code: u8, msg: []const u8) Signal {
-    return me(p).failMsg(code, msg);
-}
-fn eval(p: *anyopaque, n: *const Node) Signal!Value {
-    return me(p).eval(n);
-}
-fn lookup(p: *anyopaque, name: []const u8) Signal!Value {
-    return me(p).lookup(name);
-}
-fn define(p: *anyopaque, name: []const u8, v: Value, constant: bool) Signal!void {
-    return me(p).define(name, v, constant);
-}
-fn setField(p: *anyopaque, o: *value.Object, name: []const u8, v: Value) Signal!void {
-    return me(p).setField(o, name, v);
-}
-fn text(p: *anyopaque, v: Value) Signal![]const u8 {
-    return me(p).text(v);
-}
-fn newStr(p: *anyopaque, bytes: []const u8) Signal!Value {
-    return me(p).newStr(bytes);
-}
-fn newObject(p: *anyopaque) Signal!*value.Object {
-    return me(p).newObject();
-}
-fn newList(p: *anyopaque, items: []const Value, array: bool) Signal!*value.List {
-    return me(p).newList(items, array);
-}
-fn listAppend(p: *anyopaque, l: *value.List, v: Value) Signal!void {
-    return me(p).listAppend(l, v);
-}
-fn setCell(p: *anyopaque, c: *Value, v: Value) void {
-    me(p).setCell(c, v);
-}
-fn iterate(p: *anyopaque, v: Value) Signal![]const Value {
-    return me(p).iterate(v);
-}
-fn callMethod(p: *anyopaque, recv: Value, name: []const u8, args: []const *const Node) Signal!Value {
-    return me(p).callMethod(recv, name, args);
-}
-fn invokeWith(p: *anyopaque, f: *value.Func, recv: ?Value, args: []const value.Arg) Signal!Value {
-    return me(p).invokeWith(f, recv, args);
-}
-fn overflow(p: *anyopaque) Signal {
-    return me(p).overflow();
-}
-fn fromSqlText(p: *anyopaque, raw: []const u8, m: *const Node) Signal!Value {
-    return me(p).fromSqlText(raw, m);
-}
-fn decFromReal(p: *anyopaque, x: f64) Signal!decimal.Dec {
-    return me(p).decFromReal(x);
-}
+    /// The arena of the run: lives until the script is unloaded.
+    pub fn arena(h: Host) std.mem.Allocator {
+        return h.it.a;
+    }
+    /// Memory for the work of one statement.
+    pub fn temp(h: Host) std.mem.Allocator {
+        return h.it.t;
+    }
+    pub fn heap(h: Host) *evecm.heap.Heap {
+        return h.it.h;
+    }
+    pub fn io(h: Host) ?std.Io {
+        return h.it.io;
+    }
+    /// The host of the driver's interpreter: the one that keeps the state of the database layer.
+    pub fn base(h: Host) Host {
+        return of(h.it.base());
+    }
+    /// Where the database layer keeps its own state, in the driver's interpreter.
+    pub fn dataSlot(h: Host) *?*anyopaque {
+        return &h.it.base().data_slot;
+    }
+    pub fn currentJob(h: Host) []const u8 {
+        return h.it.current_job;
+    }
+    /// The type arguments of the library call being made: `(:Row)` in `csv.read!(:Row)(path)`.
+    pub fn typeArgs(h: Host) []const *const Node {
+        return h.it.type_args;
+    }
+    /// The last error that was raised, to read its message.
+    pub fn lastReport(h: Host) ?*value.Report {
+        const r = &h.it.reports;
+        return if (r.items.len == 0) null else &r.items[r.items.len - 1];
+    }
 
-// Zig tip: a `const` of struct type at file level with function names as values is built at compile
-// time; its address (`&vtable`) is the same for every interpreter, so a `Host` is just two pointers.
-const vtable: Host.VTable = .{
-    .arena = arena,
-    .temp = temp,
-    .heap = heap,
-    .io = io,
-    .base = base,
-    .data_slot = dataSlot,
-    .current_job = currentJob,
-    .type_args = typeArgs,
-    .last_report = lastReport,
-    .fail_msg = failMsg,
-    .eval = eval,
-    .lookup = lookup,
-    .define = define,
-    .set_field = setField,
-    .text = text,
-    .new_str = newStr,
-    .new_object = newObject,
-    .new_list = newList,
-    .list_append = listAppend,
-    .set_cell = setCell,
-    .iterate = iterate,
-    .call_method = callMethod,
-    .invoke_with = invokeWith,
-    .overflow = overflow,
-    .from_sql_text = fromSqlText,
-    .dec_from_real = decFromReal,
+    /// Raise an error with a code and a message.
+    pub fn failWith(h: Host, code: u8, comptime fmt: []const u8, args: anytype) Signal {
+        const msg = std.fmt.allocPrint(h.arena(), fmt, args) catch return error.OutOfMemory;
+        return h.it.failMsg(code, msg);
+    }
+    pub fn fail(h: Host, comptime fmt: []const u8, args: anytype) Signal {
+        return h.failWith(value.err_raise, fmt, args);
+    }
+    pub fn eval(h: Host, n: *const Node) Signal!Value {
+        return h.it.eval(n);
+    }
+    pub fn lookup(h: Host, name: []const u8) Signal!Value {
+        return h.it.lookup(name);
+    }
+    pub fn define(h: Host, name: []const u8, v: Value, constant: bool) Signal!void {
+        return h.it.define(name, v, constant);
+    }
+    pub fn setField(h: Host, o: *value.Object, name: []const u8, v: Value) Signal!void {
+        return h.it.setField(o, name, v);
+    }
+    pub fn text(h: Host, v: Value) Signal![]const u8 {
+        return h.it.text(v);
+    }
+    pub fn newStr(h: Host, bytes: []const u8) Signal!Value {
+        return h.it.newStr(bytes);
+    }
+    pub fn newObject(h: Host) Signal!*value.Object {
+        return h.it.newObject();
+    }
+    pub fn newList(h: Host, items: []const Value, array: bool) Signal!*value.List {
+        return h.it.newList(items, array);
+    }
+    pub fn listAppend(h: Host, l: *value.List, v: Value) Signal!void {
+        return h.it.listAppend(l, v);
+    }
+    pub fn setCell(h: Host, c: *Value, v: Value) void {
+        h.it.setCell(c, v);
+    }
+    pub fn iterate(h: Host, v: Value) Signal![]const Value {
+        return h.it.iterate(v);
+    }
+    pub fn callMethod(h: Host, recv: Value, name: []const u8, args: []const *const Node) Signal!Value {
+        return h.it.callMethod(recv, name, args);
+    }
+    pub fn invokeWith(h: Host, f: *value.Func, recv: ?Value, args: []const value.Arg) Signal!Value {
+        return h.it.invokeWith(f, recv, args);
+    }
+    pub fn overflow(h: Host) Signal {
+        return h.it.overflow();
+    }
+    pub fn fromSqlText(h: Host, raw: []const u8, m: *const Node) Signal!Value {
+        return h.it.fromSqlText(raw, m);
+    }
+    pub fn decFromReal(h: Host, x: f64) Signal!decimal.Dec {
+        return h.it.decFromReal(x);
+    }
 };
 
 /// The host of an interpreter.
 pub fn of(it: *Interp) Host {
-    return .{ .ptr = it, .vt = &vtable };
+    return .{ .it = it };
 }

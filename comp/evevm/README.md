@@ -24,19 +24,18 @@ The source is split into modules (design/design-packages.md). The arrows are the
 
 ```
 eve ──► evevm ──► evecp ──► evecm
- ├────► evedb ─────────────►
- └─────────────────────────►
+ │         └────► ewp_protocol
+ └──────────────────────────► evecm
 ```
 
 | Module | Holds | Imports |
 |---|---|---|
-| [`comp/evecm/`](../evecm) | the common part: the syntax tree (`ast`), the values and the heap (`value`, `heap`), the interfaces `Host` and `Data` (`iface`), Decimal, Instant, NFC, the codecs of data (`data`), the configuration of a machine (`config`), the wire (`wire`: JSON-RPC, HTTP, client calls), the line editor and the terminal, the version | `std` |
+| [`comp/evecm/`](../evecm) | the common part: the syntax tree (`ast`), the values and the heap (`value`, `heap`), Decimal, Instant, NFC, the codecs of data (`data`), the configuration of a machine (`config`), the wire (`wire`: JSON-RPC, HTTP, client calls), the line editor and the terminal, the version | `std` |
 | [`comp/evecp/`](../evecp) | the compiler: `lexer`, `parser`, `check`, `overload`, the project link (`project`), `doc`, `scaffold` | `evecm` |
-| `comp/evevm/` (here) | the runtime: `interp` (the tree walker: the state, errors, scopes and values in `interp.zig`, its methods by concern in `interp/`: `show`, `expr`, `collections`, `calls`, `stmt`, `script`, `parallel`, `generators`, `datatypes`), `task`, `scratch`, `vm` (session and slot), `dlib` (the natives of the library: streams, files), `host` (the `Host` of an interpreter), `machine` (the machine and its two doors), `client` (`-loc`, `-rem`, the words `status` and `stop`), `daemon` (`stop`, the machine in its own process, `-u`), the REPL (`tui`, `screen`, `helptext`) | `evecp`, `evecm` |
-| [`comp/evedb/`](../evedb) | the database layer: `sqlite`, `conn` (connections, statements, `sql function`), `orm` (tables, records, the transaction of a job), `state` | `evecm` |
-| [`comp/eve/`](../cmd) | the `eve` command: `eve.zig` (the entry point), `cli.zig` (options, commands, REPL commands); it connects the parts (`interp.data_api = &evedb.data`) | all |
+| `comp/evevm/` (here) | the runtime: `interp` (the tree walker: the state, errors, scopes and values in `interp.zig`, its methods by concern in `interp/`: `show`, `expr`, `collections`, `calls`, `stmt`, `script`, `parallel`, `generators`, `datatypes`), `task`, `scratch`, `vm` (session and slot), `dlib` (the natives of the library: streams, files), `machine` (the machine and its two doors), `client` (`-loc`, `-rem`, the words `status` and `stop`), `daemon` (`stop`, the machine in its own process, `-u`), the REPL (`tui`, `screen`, `helptext`), and the **database layer** `db` | `evecp`, `evecm`, `ewp_protocol`, SQLite (C) |
+| [`comp/eve/`](../eve) | the `eve` command: `eve.zig` (the entry point), `cli.zig` (options, commands, REPL commands) | all |
 
-`evevm` and `evedb` never import each other. They meet through two interfaces defined in `comp/evecm/src/iface.zig`: `Host` (what the interpreter offers to the database layer: memory, the heap, evaluating an argument, errors, building values) and `Data` (what the database layer offers to the interpreter: `database.connect`, the methods of a connection and a table, the transaction of a job). `lib/` holds the Eve standard library, mostly written in Eve ([README](../../lib/README.md)); `lib/doc/` is generated from it by `eve --doc` and never edited by hand.
+The **database layer** (`comp/evevm/src/db.zig` and `db/`) is a part of `evevm` since 2026-10-19 (D-198): `sqlite` (the core database and the databases of a script, SQLite compiled in), `conn` (connections, statements, `sql function`), `orm` (tables, records, the transaction of a job), `state`, `memory` and `columnar` (the `Memory` tables), `importer` and `dbf` (files into tables), and the drivers `pgdriver` (`postgres://`) and `ewpdriver` (`evedb://`). The interpreter calls it directly, and it reaches the interpreter through `Host` (`host.zig`), a one-pointer struct. `ewp_protocol` (`comp/evedb/protocol/`) is the wire protocol of the `evedb://` driver, shared with the DuckDB server program of `comp/evedb/`, which is a separate program that `evevm` never links. `lib/` holds the Eve standard library, mostly written in Eve ([README](../../lib/README.md)); `lib/doc/` is generated from it by `eve --doc` and never edited by hand.
 
 ## License
 

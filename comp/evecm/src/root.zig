@@ -27,9 +27,6 @@ pub const value = @import("value.zig");
 /// The heap of the values: reference counting, regions and the tracing collector.
 pub const heap = @import("heap.zig");
 
-/// The interfaces between the runtime and the database layer: `Host` and `Data`.
-pub const iface = @import("iface.zig");
-
 /// The configuration of a machine: `eve.cfg`, the socket folder, the exit codes.
 pub const config = @import("config.zig");
 
@@ -60,7 +57,6 @@ test {
     _ = nfc;
     _ = value;
     _ = heap;
-    _ = iface;
     _ = config;
     _ = wire;
     _ = data;

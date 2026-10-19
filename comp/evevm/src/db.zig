@@ -4,13 +4,12 @@
 //! The database layer of Eve inside the runtime (was the module `evedb`, design-packages.md §3): SQLite (the core database
 //! and the databases of a script), the object-relational layer (`table`, records, transactions of a job), the connections,
 //! the `sql function`s, the drivers `postgres://` and `evedb://` and the `Memory` tables. It is a part of `evevm`; the
-//! DuckDB server is a separate program (`comp/evedb/`). The interpreter is still reached through the `Host` interface and
-//! reaches this layer through `Data` (S8.3 and S8.4 remove them).
+//! DuckDB server is a separate program (`comp/evedb/`). The interpreter calls this layer directly and the layer reaches the
+//! interpreter through `Host` (`host.zig`): the interfaces `Data` and `Host` of `evecm` are gone (S8.3, S8.4).
 const std = @import("std");
 const evecm = @import("evecm");
-const iface = evecm.iface;
 const value = evecm.value;
-const Host = iface.Host;
+const Host = @import("host.zig").Host;
 const Signal = value.Signal;
 const Node = evecm.ast.Node;
 
@@ -36,52 +35,26 @@ pub const pgdriver = @import("db/pgdriver.zig");
 pub const ewpdriver = @import("db/ewpdriver.zig");
 pub const batch = @import("ewp_protocol").batch;
 
-// Zig tip: each entry of `data` is a small function that has the signature of the interface and
-// calls the real one. A function `fn (Host, ...) T` cannot be taken from a function that has other
-// parameters, and the wrappers also hide the layout of the files behind the table.
-fn isConnection(it: Host, v: value.Value) bool {
+/// Is `v` a connection object of one of the drivers (SQLite, `postgres://`, `evedb://`)?
+// @eve-impl database.connect objects
+pub fn isConnection(it: Host, v: value.Value) bool {
     if (pgdriver.isPgObject(it, v) or ewpdriver.isEvObject(it, v)) return true;
     return v == .object and v.object.class != null and v.object.class == state.state(it).conn_class;
 }
 
 /// Every table of the program is known before the first is declared: the order of the inserts depends on them all.
-fn declareTables(it: Host, kids: []const *const Node) Signal!void {
+pub fn declareTables(it: Host, kids: []const *const Node) Signal!void {
     const st = state.state(it);
     for (kids) |d| if (d.tag == .table_decl) try st.table_nodes.append(it.base().arena(), d);
     for (kids) |d| if (d.tag == .table_decl) try orm.declareTable(it, d);
 }
 
-fn closeDatabases(it: Host) void {
+pub fn closeDatabases(it: Host) void {
     for (state.state(it).dbs.items) |db| db.close();
     memory.closeAll(it);
     pgdriver.closeAll(it);
     ewpdriver.closeAll(it);
 }
-
-/// The table of functions that the interpreter calls: set `evevm.interp.data_api = &evevm.db.data` at the start.
-pub const data: iface.Data = .{
-    .connect = conn.connect,
-    .connection_call = conn.connectionCall,
-    .is_connection = isConnection,
-    .checkpoint_call = orm.checkpointCall,
-    .is_table = orm.isTable,
-    .table_call = orm.tableCall,
-    .table_add = orm.tableAdd,
-    .declare_tables = declareTables,
-    .before_change = orm.beforeChange,
-    .after_change = orm.afterChange,
-    .active = orm.active,
-    .commit_job = orm.commitJob,
-    .end_job = orm.endJob,
-    .register_sql_function = conn.registerSqlFunction,
-    .close_core = orm.closeCore,
-    .close_databases = closeDatabases,
-    .memory_new = memory.memoryNew,
-    .is_memory = memory.isMemory,
-    .memory_call = memory.memoryCall,
-    .is_column = memory.isColumn,
-    .column_call = memory.columnCall,
-};
 
 test {
     _ = sqlite;

@@ -6,6 +6,7 @@ const std = @import("std");
 // between files of one module: declarations are resolved lazily, when they are used, not in the order
 // of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
+const db = @import("../db.zig");
 const Interp = interp.Interp;
 const ast = interp.ast;
 const Heap = interp.Heap;
@@ -302,7 +303,7 @@ pub fn runAspect(it: *Interp, aspect: *const Node, args: []const Arg) Signal!voi
         if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
     }
     for (aspect.kids) |d| if (d.tag == .table_decl) {
-        try it.dataApi().declare_tables(it.host(), aspect.kids);
+        try db.declareTables(it.host(), aspect.kids);
         break;
     };
     for (aspect.kids) |d| {

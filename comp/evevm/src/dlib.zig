@@ -11,6 +11,7 @@ const std = @import("std");
 const Io = std.Io;
 const ast = @import("evecm").ast;
 const interp = @import("interp.zig");
+const db = @import("db.zig");
 const data = @import("evecm").data;
 const decimal = @import("evecm").decimal;
 const instant = @import("evecm").instant;
@@ -126,7 +127,7 @@ pub fn libraryCall(it: *Interp, module: []const u8, name: []const u8, args: []co
 // @eve-fn database.connect
 // @spec spec/library/database.md#direct-sql
 fn databaseModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
-    if (std.mem.eql(u8, name, "connect")) return try it.dataApi().connect(it.host(), args);
+    if (std.mem.eql(u8, name, "connect")) return try db.conn.connect(it.host(), args);
     return null;
 }
 
@@ -239,7 +240,7 @@ fn fsModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const
 // @eve-fn checkpoint.*
 // @spec spec/library/database.md
 fn checkpointModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
-    return try it.dataApi().checkpoint_call(it.host(), name, targs, args);
+    return try db.orm.checkpointCall(it.host(), name, targs, args);
 }
 
 // @eve-fn time.now!

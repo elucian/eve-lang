@@ -6,6 +6,7 @@ const std = @import("std");
 // between files of one module: declarations are resolved lazily, when they are used, not in the order
 // of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
+const db = @import("../db.zig");
 const Interp = interp.Interp;
 const data = interp.data;
 const overload = interp.overload;
@@ -91,7 +92,7 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         .exit_stmt => return error.Exit,
         .stop_stmt => return error.StopJob,
         .yield_stmt => try it.yieldStmt(n),
-        .commit_stmt => if (interp.data_api) |d| try d.commit_job(it.host()),
+        .commit_stmt => try db.orm.commitJob(it.host()),
         .rollback_stmt => return error.JobRollback,
         .update_stmt => try it.updateStmt(n),
         .pass_stmt => {},
@@ -129,7 +130,7 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
             // the end of the job: flush and commit when it went well, roll back otherwise (database.md, transactions)
             const rolled_back = if (outcome) |_| false else |e| e == error.JobRollback;
             const went_well = if (outcome) |_| true else |e| e == error.StopJob;
-            const closed: Signal!void = if (interp.data_api) |d| d.end_job(it.host(), went_well) else {};
+            const closed: Signal!void = db.orm.endJob(it.host(), went_well);
             if (rolled_back) {
                 it.setJob(n.text, "rolled back");
                 return;
@@ -334,7 +335,7 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
     // a function declared inside another one closes over that call's scope (a closure, D-101)
     const f = try it.newFunc(n, if (it.scope == it.unit) it.unit else it.scope);
     try it.define(n.text, .{ .func = f }, true);
-    if (n.is_sql) try it.dataApi().register_sql_function(it.host(), f);
+    if (n.is_sql) try db.conn.registerSqlFunction(it.host(), f);
 }
 
 // Zig tip: `coerce` relies on the same Zig feature as `bind` above: see the tip there.
@@ -507,7 +508,7 @@ pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
     const list_node = if (front) n.kids[1] else n.kids[0];
     const item = try it.eval(if (front) n.kids[0] else n.kids[1]);
     const lv = try it.eval(list_node);
-    if (interp.data_api) |d| if (d.is_table(it.host(), lv)) return d.table_add(it.host(), lv.object, item);
+    if (db.orm.isTable(it.host(), lv)) return db.orm.tableAdd(it.host(), lv.object, item);
     if (lv == .str) {
         const add = try it.text(item);
         const joined = if (front) try it.persist2(add, lv.str) else try it.persist2(lv.str, add);
@@ -547,19 +548,19 @@ pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
             if (cell.constant) return it.fail("'{s}' is a constant", .{target.text});
             if (it.update_obj) |rec| if (it.update_scope) |us| if (Interp.hasLocal(us, target.text)) {
                 // a field name inside `update record do … done;` is the field of that record
-                try it.dataApi().before_change(it.host(), rec, target.text, v);
+                try db.orm.beforeChange(it.host(), rec, target.text, v);
                 try it.setField(rec, target.text, v);
-                try it.dataApi().after_change(it.host(), rec);
+                try db.orm.afterChange(it.host(), rec);
             };
             it.setVar(cell, v);
         },
         .field => {
             const obj = try it.eval(target.kids[0]);
             if (obj != .object) return it.fail("{s} has no attributes", .{Interp.typeName(obj)});
-            const watched = if (interp.data_api) |d| d.active(it.host()) else false;
-            if (watched) try it.dataApi().before_change(it.host(), obj.object, target.text, v);
+            const watched = db.orm.active(it.host());
+            if (watched) try db.orm.beforeChange(it.host(), obj.object, target.text, v);
             try it.setField(obj.object, target.text, v);
-            if (watched) try it.dataApi().after_change(it.host(), obj.object);
+            if (watched) try db.orm.afterChange(it.host(), obj.object);
         },
         .index => {
             const r = try it.indexChain(target);

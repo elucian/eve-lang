@@ -13,7 +13,7 @@ const heap = interp.heap;
 const Heap = interp.Heap;
 const Node = interp.Node;
 const value = interp.value;
-const iface = interp.iface;
+const host_mod = @import("../host.zig");
 const Signal = interp.Signal;
 const Value = interp.Value;
 const Channel = interp.Channel;
@@ -31,13 +31,8 @@ const Outcome = interp.Outcome;
 // the root aspect's interpreter has no `root`, so it is its own base.
 /// The interpreter that owns the modules of the run: the root aspect's.
 /// The interface that lets the database layer use this interpreter (host.zig).
-pub fn host(it: *Interp) iface.Host {
-    return @import("../host.zig").of(it);
-}
-
-/// The database layer: a script that uses a database needs one (the program sets `interp.data_api`).
-pub fn dataApi(_: *Interp) *const iface.Data {
-    return interp.data_api orelse @panic("no database layer: the program must set interp.data_api");
+pub fn host(it: *Interp) host_mod.Host {
+    return host_mod.of(it);
 }
 
 pub fn base(it: *Interp) *Interp {
