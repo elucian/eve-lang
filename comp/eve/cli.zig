@@ -54,6 +54,8 @@ pub const commands = [_]Command{
     .{ .name = "doc", .summary = "write Markdown documentation of a .eve file or folder", .file = ".eve", .run = cp_cmds.cmdDoc },
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = vm_cmds.cmdDebug },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = vm_cmds.cmdExecute },
+    .{ .name = "outline", .summary = "the aspects, classes and subprograms of a script, nested", .file = ".eve", .run = cp_cmds.cmdOutline },
+    .{ .name = "symbols", .summary = "the symbols of a script as a flat list", .file = ".eve", .run = cp_cmds.cmdSymbols },
     .{ .name = "project", .summary = "project init|new <folder>: make a project with the standard layout", .run = cp_cmds.cmdProject },
     .{ .name = "db", .summary = "database: sql, views and tables, proc list", .run = db_cmds.cmdDb },
     .{ .name = "begin", .summary = "start the step by step execution", .run = stub("begin") },

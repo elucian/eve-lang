@@ -24,6 +24,12 @@ pub const doc = @import("doc.zig");
 /// `project init` and `project new`: the layout of a new project.
 pub const scaffold = @import("scaffold.zig");
 
+/// The entry point of the tools: diagnostics and outline of a text in one call (TD-34).
+pub const analyze = @import("analyze.zig");
+
+/// The commands `check`, `doc` and `project`, shared by the program `evecp` and by `eve cp` (D-198).
+pub const cli = @import("cli.zig");
+
 test {
     _ = lexer;
     _ = parser;
@@ -32,4 +38,6 @@ test {
     _ = project;
     _ = doc;
     _ = scaffold;
+    _ = cli;
+    _ = analyze;
 }

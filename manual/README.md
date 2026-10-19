@@ -17,6 +17,7 @@ This is the manual of **Eve**, a scripting language for data processing and test
 | Program | Component or driver | What it is |
 |---|---|---|
 | `eve` | [evevm](evevm/README.md), [evecp](evecp/README.md), [evecm](evecm/README.md) | runs Eve programs, the REPL, the machine and the service; the compiler front end and the common part are built in |
+| `evecp` | [evecp](evecp/README.md) | the compiler front end as a program: check a script, write documentation, make a project |
 | `evedb` | driver [duckdb](drivers/duckdb/README.md) | a database server around DuckDB that answers as PostgreSQL; the test and analytic database of Eve |
 | `evetx` | [evetx](evetx/README.md) | the terminal IDE: tree, editor, run and debug, data tables |
 | `eveux` | [eveux](eveux/README.md) | the native graphical workbench (early draft) |

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build the Eve VM, run the conformity tests, and start the parts of eve.
 #   ./run.sh build            build eve and evevm (bin/eve.exe, bin/evevm.exe, lib/): no tests
-#   ./run.sh build <part>...  build only the named parts: eve, evevm, duckdb (the DuckDB server, was evedb), evetx, eveux (evewp has no build yet)
-#   ./run.sh build all        build every part: eve, evevm, duckdb, evetx, eveux
+#   ./run.sh build <part>...  build only the named parts: eve, evevm, evecp, duckdb (the DuckDB server, was evedb), evetx, eveux (evewp has no build yet)
+#   ./run.sh build all        build every part: eve, evevm, evecp, duckdb, evetx, eveux
 #   ./run.sh build manual     refresh the generated manual and tutorial pages from spec and source
 #   ./run.sh tx               stop the running eve programs, build evetx and install bin/evetx.exe
 #   ./run.sh ux               stop the running eve programs, build eveux and install bin/eveux.exe
@@ -42,12 +42,13 @@ stop_eve() {
 build_part() {
   case "$1" in
     eve | evevm) stop_eve; zig build "$1" -p . ;;
+    evecp) stop_eve; (cd comp/evecp && zig build -p ../..) ;;
     duckdb | evedb) stop_eve; (cd drivers/duckdb && zig build -p ../..) ;;
     evetx) stop_eve; (cd comp/evetx && zig build -p ../..) ;;
     eveux) stop_eve; (cd comp/eveux && zig build -p ../..) ;;
     evewp) echo "build evewp: there is no build yet, evewp is a design (comp/evewp/README.md)" >&2; return 1 ;;
     manual) build_manual ;;
-    *) echo "build: unknown part '$1' (eve evevm duckdb evetx eveux all manual)" >&2; return 1 ;;
+    *) echo "build: unknown part '$1' (eve evevm evecp duckdb evetx eveux all manual)" >&2; return 1 ;;
   esac
 }
 # the generated parts of the manual and the tutorial: from spec/ (keywords, features) and from the source (lib/doc)
@@ -60,7 +61,7 @@ case "$1" in
   build) shift; [ $# -eq 0 ] && set -- eve evevm
     for p in "$@"; do
       if [ "$p" = all ]; then
-        for q in eve evevm duckdb evetx eveux; do build_part "$q" || exit 1; done
+        for q in eve evevm evecp duckdb evetx eveux; do build_part "$q" || exit 1; done
       else
         build_part "$p" || exit 1
       fi

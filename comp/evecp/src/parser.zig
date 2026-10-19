@@ -2156,11 +2156,19 @@ const Parser = struct {
 // at the source text (tokens are views into `src`, so `src` must outlive the tree).
 /// Parse `src` into a tree. On a syntax error returns `error.Syntax` and fills `diag`.
 pub fn parse(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error!*const Node {
-    const toks = try lexer.tokenize(arena, src, diag);
-    var p: Parser = .{ .toks = toks, .diag = diag, .a = arena };
-    const tree = try p.script();
+    const tree = try parseSyntax(arena, src, diag);
     try checker.check(arena, tree, diag);
     return tree;
+}
+
+/// The syntax only: the tree of a text that is Eve, before the static checks (names, scopes, overloads). The tools use it to
+/// show an outline even when a rule of the checker is broken (`analyze.zig`); `parse` is this plus `checker.check`.
+// @eve-impl parse without the static checks
+// @see comp/evecp/src/analyze.zig:analyze
+pub fn parseSyntax(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error!*const Node {
+    const toks = try lexer.tokenize(arena, src, diag);
+    var p: Parser = .{ .toks = toks, .diag = diag, .a = arena };
+    return try p.script();
 }
 
 // Zig tip: `std.heap.ArenaAllocator.init(gpa)` makes an arena on top of another allocator;

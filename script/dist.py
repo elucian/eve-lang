@@ -36,8 +36,8 @@ DIST = os.path.join(ROOT, "dist")
 ARCHIVE = os.path.join(DIST, "archive")
 PLATFORM = ("windows-x64", "Windows (x64)")
 # the folders with a build.zig: the root (eve, evevm, lib), then the parts that have their own
-PARTS = [ROOT, os.path.join(ROOT, "drivers", "duckdb")] + [os.path.join(ROOT, "comp", p) for p in ("evetx", "eveux")]
-EXPECTED = ["bin/eve.exe", "bin/evevm.exe", "bin/evedb.exe", "bin/evetx.exe", "bin/eveux.exe", "bin/duckdb.dll",
+PARTS = [ROOT, os.path.join(ROOT, "drivers", "duckdb")] + [os.path.join(ROOT, "comp", p) for p in ("evecp", "evetx", "eveux")]
+EXPECTED = ["bin/eve.exe", "bin/evevm.exe", "bin/evecp.exe", "bin/evedb.exe", "bin/evetx.exe", "bin/eveux.exe", "bin/duckdb.dll",
             "lib/config.eve", "manual/README.md", "manual/features.md", "manual/evevm/README.md", "README.md", "LICENSE"]
 SKIP_NAMES = {".git", ".gitignore", "__pycache__", "node_modules", ".zig-cache", "zig-out"}
 NAME = re.compile(r"eve-(\d+\.\d+\.\d+)-" + PLATFORM[0] + r"(\.zip)?$")

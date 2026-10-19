@@ -7,7 +7,7 @@
 
 | Folder | Holds |
 |---|---|
-| `bin/` | `eve.exe` (runs Eve programs, the REPL, the machine and the service), `evevm.exe` (starts a machine in its own process), `evedb.exe` with `duckdb.dll` (the Eve database server), `evetx.exe` (the terminal IDE), `eveux.exe` (the graphical workbench, early draft) |
+| `bin/` | `eve.exe` (runs Eve programs, the REPL, the machine and the service), `evevm.exe` (starts a machine in its own process), `evecp.exe` (the compiler front end: check, doc, project), `evedb.exe` with `duckdb.dll` (the Eve database server), `evetx.exe` (the terminal IDE), `eveux.exe` (the graphical workbench, early draft) |
 | `lib/` | the standard library of Eve; `eve` finds it beside `bin/`, so keep the two folders together |
 | `manual/` | the manual: start with `manual/README.md` (usage, features, tests, performance, one page per component) |
 | `tools/` | syntax colors for VS Code, Zed and Tree-sitter, and the typing aids for the symbols of Eve |
@@ -38,7 +38,7 @@ Then:
 
 ```
 eve hello.eve                 run it
-eve --check hello.eve         check it without running it
+eve --check hello.eve         check it without running it (evecp check hello.eve does the same)
 eve                           the REPL: type help, then quit
 eve project new shop          a new project folder with the standard layout
 evetx shop                    open it in the terminal IDE

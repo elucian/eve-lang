@@ -94,14 +94,9 @@ pub fn partWords(gpa: std.mem.Allocator, argv_in: []const []const u8) ParseError
     const first = argv[0];
     const eql = std.mem.eql;
     if (eql(u8, first, "vm")) return argv[1..];
-    if (eql(u8, first, "cp")) {
-        if (argv.len > 1 and eql(u8, argv[1], "project")) {
-            const copy = try gpa.dupe([]const u8, argv[1..]);
-            copy[0] = "--project";
-            return copy;
-        }
-        return argv[1..];
-    }
+    // `cp` is the compiler part: `eve cp check a.eve`, `eve cp doc lib`, `eve cp project new shop` are what `evecp check a.eve`
+    // and so on give (D-198), so the word after it is read as a command, as at `eve check a.eve`; the option spellings still work.
+    if (eql(u8, first, "cp")) return try commandWord(gpa, argv[1..]);
     if (eql(u8, first, "tx") or eql(u8, first, "kill")) {
         const copy = try gpa.dupe([]const u8, argv);
         copy[0] = if (eql(u8, first, "tx")) "-tx" else "--kill";

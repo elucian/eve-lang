@@ -65,12 +65,14 @@ The gate of every stage includes these two: `zig build test` in the root (and in
 - **Gate:** the common gate (the two level 6 tests start the server); `zig build test` in `drivers/duckdb`; the two Python checks of S8.1; `./run.sh dist` produces a zip that holds the server in `bin/`.
 - **Review:** the tree (`comp/` now has seven folders), the new `drivers/README.md`, the manual page of the driver.
 
-### S8.6 `evecp` becomes a program `[ ]`
+### S8.6 `evecp` becomes a program `[x]`
+2026-10-19: `comp/evecp/` has `build.zig`, `build.zig.zon` and `src/main.zig`; `bin/evecp.exe` (2.7 MB Debug, 1.2 MB ReleaseSafe) runs `check`, `doc` and `project`, written once in `comp/evecp/src/cli.zig`; `comp/eve/cp_cmds.zig` is three wrappers that call it in the `eve` process. The version is read from the root `build.zig.zon` when the build is configured. `eve cp check a.eve` did not work before (the word after `cp` was read as a file); `cp` now reads it as a command, like `eve check`. `temp/cpcompare.py`: 18 scenarios give the same text, exit status and files with `evecp X` and `eve cp X`. `run.sh build evecp`, `dist.py` and the manual follow.
 - **Change:** `comp/evecp/` gets `build.zig`, `build.zig.zon` and `src/main.zig`; `bin/evecp.exe` with `check`, `doc`, `project init|new` (the commands of `comp/eve/cp_cmds.zig`, whose logic moves into `evecp` as one file); `eve cp ...` calls that same code in the `eve` process. `run.sh build evecp`; `dist.py` ships `bin/evecp.exe`; the manual page of `evecp` shows the commands. The module stays also in the root build, for `evevm`.
 - **Gate:** the common gate; a script in `temp/` runs ten commands both ways (`evecp X` and `eve cp X`: good and bad scripts, `doc`, `project new`) and compares the output and the exit code byte for byte; `zig build test` in `comp/evecp`.
 - **Review:** the comparison table, the size of `evecp.exe`, the new `comp/evecp/` listing.
 
-### S8.7 The tooling entry point of `evecp` (TD-34) `[ ]`
+### S8.7 The tooling entry point of `evecp` (TD-34) `[x]`
+2026-10-19: `comp/evecp/src/analyze.zig`: `analyze(gpa, text)` gives the diagnostics (kind syntax or semantic, line, column, message) and the outline (name, kind, line, column and the container of each symbol). The parser got `parseSyntax` (the syntax without the static checks), so a text that breaks a rule of the checker keeps its full outline; a text that is not Eve has one error and no outline. `evecp outline` and `evecp symbols` print it, and the same two words work as `eve cp outline`. On the 555 `.eve` files of `test/`, `check` and `outline` agree on every one, with no crash and 1,482 outline lines. TD-34 is paid. Unit tests: evecp 29 (was 25), 114 in the root build, 29 in the program build.
 - **Change:** one call, text in, result out: the diagnostics (file, line, column, message), the outline (aspects, processes, functions, classes) and the symbols with their positions. Unit tests on sources of `test/`; `evecp outline <file>` and `evecp symbols <file>` as a way to look at it. The type names and the call shape are shown in the report **before** the editors depend on them.
 - **Gate:** the common gate; the new unit tests; TD-34 is paid in `backlog/tech-debt.md`.
 - **Review:** the API as written, a sample output of `evecp outline` on a test script.

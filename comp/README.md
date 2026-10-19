@@ -6,7 +6,7 @@ The source code of the Eve implementation, one folder per component. The databas
 |---|---|---|
 | [eve](eve/README.md) | the `eve` command: the entry point, the options, the commands of each part, the help pages; the only place that imports every module | `bin/eve.exe` |
 | [evecm](evecm/README.md) | the common part: values and the heap, decimals, time and Unicode, the data codecs (CSV, JSON), the configuration and the wire of a machine, the interfaces between the runtime and the database layer, the editor parts that need no screen | every program |
-| [evecp](evecp/README.md) | the compiler front end: lexer, parser, static checks, the link of a project, `eve --doc`, `project init` and `project new` | `bin/eve.exe` |
+| [evecp](evecp/README.md) | the compiler front end: lexer, parser, static checks, the link of a project, `check`, `doc`, `project init` and `project new`; a program of its own (`evecp check a.eve`) and the same code inside `eve` (`eve cp check a.eve`) | `bin/eve.exe`, `bin/evecp.exe` |
 | [evevm](evevm/README.md) | the runtime: the interpreter, tasks and parallel work, the native modules of the library, the machine with its IPC, HTTP and stdio doors, the service, the REPL, and the database layer with SQLite (tables and records, connections, the transaction of a job, the drivers `postgres://` and `evedb://`) | `bin/eve.exe`, `bin/evevm.exe` |
 | [evetx](evetx/README.md) | the terminal IDE on libvaxis: file tree, editor, run and debug, data tables | `bin/evetx.exe` |
 | [eveux](eveux/README.md) | the native graphical workbench on dvui (early draft) | `bin/eveux.exe` |
@@ -30,7 +30,7 @@ From the root of the repository (Zig 0.17.0):
 | Command | Builds |
 |---|---|
 | `./run.sh build` | `eve` and `evevm` (`bin/eve.exe`, `bin/evevm.exe`, `lib/`) |
-| `./run.sh build <part>` | one part: `eve`, `evevm`, `duckdb` (the server of `drivers/duckdb`), `evetx`, `eveux` |
+| `./run.sh build <part>` | one part: `eve`, `evevm`, `evecp`, `duckdb` (the server of `drivers/duckdb`), `evetx`, `eveux` |
 | `./run.sh build all` | every part |
 | `zig build test` | the unit tests of the modules of `eve`; `zig build test` in `drivers/duckdb`, `comp/evetx` and `comp/eveux` for theirs |
 

@@ -6,6 +6,7 @@ const vm = @import("evevm").vm;
 const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
 const cli = @import("cli.zig");
+const evecp = @import("evecp");
 
 // Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
 // Without it the name is private to this file. A `const` number without a type is a
@@ -15,16 +16,16 @@ const cli = @import("cli.zig");
 pub const exit_usage = 64;
 
 /// Exit status: the script has syntax errors (EX_DATAERR), reported by `check`.
-pub const exit_syntax = 65;
+pub const exit_syntax = evecp.cli.exit_syntax;
 
 /// Exit status: not implemented, outside the Eve range (EX_SOFTWARE).
 pub const exit_not_implemented = 70;
 
 /// The input file cannot be read (EX_NOINPUT of sysexits.h).
-pub const exit_no_input = 66;
+pub const exit_no_input = evecp.cli.exit_no_input;
 
 /// A file or folder cannot be created (EX_CANTCREAT of sysexits.h).
-pub const exit_cant_create = 73;
+pub const exit_cant_create = evecp.cli.exit_cant_create;
 
 // Zig tip: a string literal is a pointer to a constant array of bytes; there is no string type.
 // Text is `[]const u8`: a slice (pointer + length) of read-only bytes, in UTF-8.
