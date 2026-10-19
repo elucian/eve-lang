@@ -569,7 +569,7 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
         // an array: the first dimension is built here, the others inside
         const dim = try it.eval(t.kids[0]);
         if (!Interp.isInt(dim)) return it.fail("an array size is an integer", .{});
-        const inner: Node = .{ .tag = .type, .text = t.text, .kids = t.kids[1..] };
+        const inner: Node = .{ .tag = .type, .text = t.text, .kids = t.kids[1..], .tk = t.tk };
         const l = try it.h.make(List, .{ .array = true });
         var k: i64 = 0;
         while (k < Interp.intOf(dim)) : (k += 1) try it.listAppend(l, try it.zero(&inner));
@@ -579,6 +579,20 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
     if (t.text.len > 0 and t.text[t.text.len - 1] == '?') return .nil; // an optional type starts as null
     if (std.mem.startsWith(u8, t.text, "()")) return .{ .list = try it.newList(&.{}, false) };
     if (std.mem.startsWith(u8, t.text, "[]")) return .{ .list = try it.newList(&.{}, true) };
+    switch (t.tk) {
+        .integer, .short, .byte => return .{ .int = 0 },
+        .natural => return .{ .nat = 0 },
+        .real, .float => return .{ .real = 0 },
+        .logic => return .{ .bool = false },
+        .decimal => return .{ .dec = .{ .scale = 0, .m = 0 } },
+        .instant => return .{ .instant = 0 },
+        .string => return it.staticStr(""),
+        .symbol, .rune => return .{ .sym = 0 },
+        .dataset => return .{ .set = try it.newList(&.{}, false) },
+        .datamap => return .{ .map = try it.newMap() },
+        .other => return .nil,
+        .none => {},
+    }
     if (eql(u8, t.text, "Integer") or eql(u8, t.text, "Short") or eql(u8, t.text, "Byte")) return .{ .int = 0 };
     if (eql(u8, t.text, "Natural")) return .{ .nat = 0 };
     if (eql(u8, t.text, "Real") or eql(u8, t.text, "Float")) return .{ .real = 0 };

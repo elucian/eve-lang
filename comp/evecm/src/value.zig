@@ -166,6 +166,15 @@ pub const Domain = struct { hdr: Obj = .{ .kind = .domain }, lo: ?f64 = null, hi
 pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false };
 pub const Binding = struct { name: []const u8, v: *Var };
 // Zig tip: `Scope` relies on the same Zig feature as `List` above: see the tip there.
+// @eve-impl comparison of two variable names: the length and the first byte decide almost every mismatch without a call
+// @perf hot
+/// Are two names equal? Cheaper than `std.mem.eql` for the short names of a scope.
+pub inline fn nameEql(a: []const u8, b: []const u8) bool {
+    if (a.len != b.len) return false;
+    if (a.ptr == b.ptr or a.len == 0) return true;
+    return a[0] == b[0] and std.mem.eql(u8, a, b);
+}
+
 pub const Scope = struct {
     hdr: Obj = .{ .kind = .scope },
     binds: std.ArrayList(Binding) = .empty,
@@ -178,7 +187,7 @@ pub const Scope = struct {
         var cur: ?*Scope = sc;
         while (cur) |s| : (cur = s.parent) {
             for (s.binds.items) |b| {
-                if (std.mem.eql(u8, b.name, name)) return b.v;
+                if (nameEql(b.name, name)) return b.v;
             }
         }
         return null;

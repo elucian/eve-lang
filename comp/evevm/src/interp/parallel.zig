@@ -10,6 +10,7 @@ const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const task = interp.task;
 const heap = interp.heap;
+const profile = @import("../profile.zig");
 const Heap = interp.Heap;
 const Node = interp.Node;
 const value = interp.value;
@@ -609,7 +610,7 @@ pub fn raiseFailed(it: *Interp, members: *std.ArrayList(*Started), label: []cons
 // Zig tip: `Scope.find` walks the parents too; this looks at one scope only, the one of the process.
 /// Is `name` declared in `sc` itself?
 pub fn hasLocal(sc: *Scope, name: []const u8) bool {
-    for (sc.binds.items) |b| if (std.mem.eql(u8, b.name, name)) return true;
+    for (sc.binds.items) |b| if (interp.value.nameEql(b.name, name)) return true;
     return false;
 }
 
@@ -627,6 +628,7 @@ pub fn run(it: *Interp, root: *const Node) Outcome {
     it.h.root_fn = Interp.roots;
     it.h.root_ctx = it;
     defer if (heap.show_stats) it.h.report();
+    defer if (profile.active) profile.report(it.a);
     const result = it.runRoot(root);
     if (result) |_| return .{ .code = it.base().exit_code } else |e| switch (e) {
         error.Stop => return .{ .stopped = true },

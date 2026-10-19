@@ -80,6 +80,7 @@ pub fn main(init: std.process.Init) !void {
     // empty one, so one comparison covers both cases. The heap reads these two switches (heap.zig).
     evecm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
     evecm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
+    if (std.mem.eql(u8, init.environ_map.get("EVE_PROFILE") orelse "", "1")) evevm.profile.start(arena);
 
     // Zig tip: `File.Writer.init` writes at its own position from 0 when the file can seek, which is right for a
     // file the program opened, but wrong for the standard output: `eve -x a.eve >> log.txt` overwrote the start of

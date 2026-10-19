@@ -435,7 +435,7 @@ pub const Interp = struct {
         // a name declared again in the same scope (a loop variable, a `new` in a loop body) keeps its
         // variable when nobody else holds it: the value is replaced, nothing is allocated
         for (it.scope.binds.items) |b| {
-            if (b.v.hdr.rc == 1 and std.mem.eql(u8, b.name, name)) {
+            if (b.v.hdr.rc == 1 and value.nameEql(b.name, name)) {
                 it.setVar(b.v, v);
                 b.v.constant = constant;
                 return;
@@ -452,7 +452,7 @@ pub const Interp = struct {
     pub fn bind(it: *Interp, name: []const u8, cell: *Var) Signal!void {
         Heap.retainVar(cell);
         for (it.scope.binds.items) |*b| {
-            if (std.mem.eql(u8, b.name, name)) {
+            if (value.nameEql(b.name, name)) {
                 const old = b.v;
                 b.v = cell;
                 it.h.releaseVar(old);

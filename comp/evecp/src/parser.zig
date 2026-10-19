@@ -219,10 +219,19 @@ const Parser = struct {
         n.* = .{ .tag = tag, .line = at.line, .col = at.col, .text = text, .kids = try p.a.dupe(*const Node, kids) };
         switch (tag) {
             .bin => n.op = ast.opOf(text),
-            .assign => if (text.len == 2 and text[1] == '=' and text[0] != ':') {
+            .assign => if (std.mem.eql(u8, text, ":=")) {
+                n.op = .set;
+            } else if (std.mem.eql(u8, text, "::")) {
+                n.op = .copy;
+            } else if (std.mem.eql(u8, text, "<+")) {
+                n.op = .push_back;
+            } else if (std.mem.eql(u8, text, "+>")) {
+                n.op = .push_front;
+            } else if (text.len == 2 and text[1] == '=') {
                 n.op = ast.opOf(text[0..1]);
             },
             .num => plainNumber(n, text),
+            .type => n.tk = ast.typeKindOf(text),
             .function, .procedure, .method, .constructor, .process, .generator => n.file = p.file_ref,
             else => {},
         }

@@ -199,13 +199,27 @@ pub const Tag = enum {
 // @eve-impl the operators of the hot path as data, set by the parser (R1 of design/design-bytecode.md)
 // @decision D-201
 /// A binary operator that the interpreter (and later the bytecode) handles without comparing text; `other` is every other one.
-pub const Op = enum(u8) { none, add, sub, mul, div, mod, eq, ne, lt, gt, le, ge, other };
+pub const Op = enum(u8) { none, add, sub, mul, div, mod, eq, ne, lt, gt, le, ge, other, set, copy, push_back, push_front };
 
 /// The `Op` of the text of an operator.
 pub fn opOf(text: []const u8) Op {
     const map = std.StaticStringMap(Op).initComptime(.{
         .{ "+", .add }, .{ "-", .sub },  .{ "*", .mul }, .{ "/", .div }, .{ "%", .mod }, .{ "==", .eq },
         .{ "<>", .ne }, .{ "<", .lt },   .{ ">", .gt },  .{ "<=", .le }, .{ ">=", .ge },
+    });
+    return map.get(text) orelse .other;
+}
+
+/// The built-in type a `type` node names, set by the parser so that the interpreter does not compare type names; `other` is any other name.
+pub const TypeKind = enum(u8) { none, integer, short, byte, natural, real, float, logic, decimal, instant, string, symbol, rune, dataset, datamap, other };
+
+/// The `TypeKind` of the exact text of a type.
+pub fn typeKindOf(text: []const u8) TypeKind {
+    const map = std.StaticStringMap(TypeKind).initComptime(.{
+        .{ "Integer", .integer }, .{ "Short", .short },     .{ "Byte", .byte },       .{ "Natural", .natural },
+        .{ "Real", .real },       .{ "Float", .float },     .{ "Logic", .logic },     .{ "Decimal", .decimal },
+        .{ "Instant", .instant }, .{ "String", .string },   .{ "Symbol", .symbol },   .{ "Rune", .rune },
+        .{ "DataSet", .dataset }, .{ "DataMap", .datamap },
     });
     return map.get(text) orelse .other;
 }
@@ -249,10 +263,12 @@ pub const Node = struct {
     /// The root made from an Eve macro, and each aspect of it: the aspects see the shared declarations of the
     /// macro, which are the declarations of the root node (D-152).
     macro: bool = false,
-    /// `bin`: the operator; `assign`: the operator of `+=`, `-=`... (the first character of the text).
+    /// `bin`: the operator; `assign`: `set` for `:=`, `copy` for `::`, `push_back`/`push_front` for `<+`/`+>`, else the operator of `+=`, `-=`...
     op: Op = .none,
     /// `num`: a plain literal already converted; `lit_bits` holds the `i64` or the bits of the `f64`.
     lit_kind: LitKind = .none,
+    /// `type`: the built-in type named by the text; `none` for a node made by the interpreter.
+    tk: TypeKind = .none,
     lit_bits: u64 = 0,
     /// The file of a routine that does not belong to the main script (a module or an aspect found by the link); empty otherwise.
     file: ?*const []const u8 = null,

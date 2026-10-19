@@ -347,6 +347,25 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
 // Zig tip: `coerce` relies on the same Zig feature as `bind` above: see the tip there.
 pub fn coerce(v: Value, ty: ?*const Node) Value {
     const t = ty orelse return v;
+    // @perf hot
+    if (t.tk != .none) {
+        if (t.kids.len != 0) return v;
+        switch (t.tk) {
+            .real => {
+                if (Interp.isInt(v)) return .{ .real = @floatFromInt(Interp.intOf(v)) };
+                return Interp.coerceLike(.{ .real = 0 }, v);
+            },
+            .decimal => {
+                if (Interp.isInt(v)) if (decimal.fromInt(Interp.intOf(v))) |d| return .{ .dec = d };
+                return Interp.coerceLike(.{ .dec = .{ .m = 0, .scale = 0 } }, v);
+            },
+            .integer => {
+                if (v == .real or v == .float) return .{ .int = @intFromFloat(Interp.realOf(v).?) };
+                return v;
+            },
+            else => return v,
+        }
+    }
     if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Real") and Interp.isInt(v)) return .{ .real = @floatFromInt(Interp.intOf(v)) };
     if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Decimal") and Interp.isInt(v)) {
         if (decimal.fromInt(Interp.intOf(v))) |d| return .{ .dec = d };
@@ -461,11 +480,11 @@ pub fn declareOne(it: *Interp, t: *const Node, v: Value, constant: bool) Signal!
 pub fn assign(it: *Interp, n: *const Node) Signal!void {
     const target = n.kids[0];
     const op = n.text;
-    if (std.mem.eql(u8, op, "<+") or std.mem.eql(u8, op, "+>")) return it.listModifier(n);
+    if (n.op == .push_back or n.op == .push_front) return it.listModifier(n);
     var v = try it.eval(n.kids[1]);
-    if (std.mem.eql(u8, op, "::")) {
+    if (n.op == .copy) {
         v = try it.clone(v);
-    } else if (!std.mem.eql(u8, op, ":=")) {
+    } else if (n.op != .set) {
         const cur = try it.eval(target);
         // a list and a scalar: every element is updated in place (D-118)
         if (cur == .list and Interp.isScalar(v)) {
@@ -500,7 +519,7 @@ pub fn assign(it: *Interp, n: *const Node) Signal!void {
         v = try it.applyOp(n.op, op[0..1], cur, v);
     }
     // `let r := d;` converts a Decimal for a variable that holds a Real, and the other way (D-168)
-    if (std.mem.eql(u8, op, ":=") and target.tag == .name) {
+    if (n.op == .set and target.tag == .name) {
         if (it.scope.find(target.text)) |cell| v = Interp.coerceLike(cell.value, v);
     }
     try it.assignTo(target, v);

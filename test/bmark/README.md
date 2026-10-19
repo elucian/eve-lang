@@ -63,32 +63,32 @@ The latest saved ReleaseSafe run: median time of the whole process (start-up inc
 | Benchmark | Eve | Python | Eve / Python | Peak memory |
 |---|---|---|---|---|
 | **Level 1** | | | | |
-| `p1a_arith` | 79 ms | 80 ms | 1.0x | 5.9 MB |
-| `p1b_calls` | 50 ms | 50 ms | 1.0x | 6.0 MB |
-| `p1c_collections` | 20 ms | 51 ms | 0.4x | 8.0 MB |
-| `p1d_strings` | 16 ms | 64 ms | 0.2x | 6.3 MB |
+| `p1a_arith` | 70 ms | 80 ms | 0.9x | 5.9 MB |
+| `p1b_calls` | 45 ms | 45 ms | 1.0x | 6.0 MB |
+| `p1c_collections` | 17 ms | 42 ms | 0.4x | 8.0 MB |
+| `p1d_strings` | 15 ms | 59 ms | 0.3x | 6.3 MB |
 | **Level 2** | | | | |
-| `p2a_aspects` | 13 ms | 41 ms | 0.3x | 5.9 MB |
-| `p2b_closures` | 46 ms | 53 ms | 0.9x | 7.4 MB |
-| `p2c_procedures` | 54 ms | 56 ms | 1.0x | 6.0 MB |
+| `p2a_aspects` | 10 ms | 37 ms | 0.3x | 5.9 MB |
+| `p2b_closures` | 40 ms | 49 ms | 0.8x | 7.4 MB |
+| `p2c_procedures` | 46 ms | 47 ms | 1.0x | 6.0 MB |
 | **Level 3** | | | | |
-| `p3a_modules` | 74 ms | 61 ms | 1.2x | 6.0 MB |
-| `p3b_objects` | 64 ms | 61 ms | 1.0x | 6.1 MB |
-| `p3c_module_state` | 38 ms | 56 ms | 0.7x | 6.0 MB |
+| `p3a_modules` | 65 ms | 50 ms | 1.3x | 6.0 MB |
+| `p3b_objects` | 58 ms | 53 ms | 1.1x | 6.1 MB |
+| `p3c_module_state` | 31 ms | 48 ms | 0.7x | 6.0 MB |
 | **Level 4** | | | | |
-| `p4a_parallel_sum` | 147 ms | 118 ms | 1.2x | 40.4 MB |
-| `p4b_channel` | 71 ms | 362 ms | 0.2x | 6.1 MB |
-| `p4c_groups` | 156 ms | 196 ms | 0.8x | 8.1 MB |
-| `p4d_tasks` | 148 ms | 190 ms | 0.8x | 8.0 MB |
-| `p4e_garbage` | 136 ms | 108 ms | 1.3x | 6.0 MB |
+| `p4a_parallel_sum` | 120 ms | 97 ms | 1.2x | 40.4 MB |
+| `p4b_channel` | 62 ms | 462 ms | 0.1x | 6.1 MB |
+| `p4c_groups` | 177 ms | 124 ms | 1.4x | 8.1 MB |
+| `p4d_tasks` | 176 ms | 153 ms | 1.1x | 8.0 MB |
+| `p4e_garbage` | 144 ms | 103 ms | 1.4x | 6.0 MB |
 | **Level 5** | | | | |
-| `p5a_sql_function` | 107 ms | 193 ms | 0.6x | 9.2 MB |
+| `p5a_sql_function` | 106 ms | 168 ms | 0.6x | 9.2 MB |
 | **Level 6** | | | | |
-| `p6a_evedb_store` | 632 ms | 2281 ms | 0.3x | 56.2 MB |
-| `p6b_evedb_load` | 296 ms | 9182 ms | 0.0x | 16.5 MB |
-| `p6c_pg_records` | 208 ms | 313 ms | 0.7x | 81.7 MB |
-| `p6d_olap_groupby` | 543 ms | 658 ms | 0.8x | 6.1 MB |
-| `p6e_http_requests` | 394 ms | 890 ms | 0.4x | 51.8 MB |
+| `p6a_evedb_store` | 633 ms | 1768 ms | 0.4x | 56.2 MB |
+| `p6b_evedb_load` | 273 ms | 7536 ms | 0.0x | 16.5 MB |
+| `p6c_pg_records` | 174 ms | 268 ms | 0.7x | 81.7 MB |
+| `p6d_olap_groupby` | 512 ms | 533 ms | 1.0x | 6.2 MB |
+| `p6e_http_requests` | 328 ms | 451 ms | 0.7x | 51.8 MB |
 | **Level 7** | | | | |
 | planned | | | | |
 <!-- results:end -->
@@ -98,18 +98,18 @@ The latest saved ReleaseSafe run: median time of the whole process (start-up inc
 The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
 
 <!-- size:begin -->
-| Version | 0.0.7 | 0.0.7 |
-|---|---|---|
-| Date | 2026-10-19 | 2026-10-19 |
-| Build | ReleaseSafe | ReleaseSafe |
-| Commit | cc28760 | 810aae5 |
-| eve | 3,988 KB | 4,002 KB |
-| evevm | 3,988 KB | 4,002 KB |
-| evecp | 1,210 KB | 1,210 KB |
-| evetx | 2,198 KB | 2,198 KB |
-| eveux | 9,088 KB | 9,088 KB |
-| evedb | 1,264 KB | 1,264 KB |
-| eve change | - | +0.4% |
+| Version | 0.0.7 | 0.0.7 | 0.0.7 |
+|---|---|---|---|
+| Date | 2026-10-19 | 2026-10-19 | 2026-10-19 |
+| Build | ReleaseSafe | ReleaseSafe | ReleaseSafe |
+| Commit | cc28760 | 810aae5 | 320a228 |
+| eve | 3,988 KB | 4,002 KB | 4,000 KB |
+| evevm | 3,988 KB | 4,002 KB | 4,000 KB |
+| evecp | 1,210 KB | 1,210 KB | 1,210 KB |
+| evetx | 2,198 KB | 2,198 KB | 2,198 KB |
+| eveux | 9,088 KB | 9,088 KB | 9,088 KB |
+| evedb | 1,264 KB | 1,264 KB | 1,264 KB |
+| eve change | - | +0.4% | -0.0% |
 <!-- size:end -->
 
 ## History
@@ -124,6 +124,8 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 
 **0.0.7 (2026-10-19), R3 and R4.** R3 (a cheaper statement prologue) was measured before it was written: a build with the debugger, hook and cancel tests removed from `tick` is not faster (`p1a_arith` 82 against 84 ms, `p1b_calls` 59 against 51 ms, inside the noise of 15 runs), so R3 is dropped. R4 (calls without a scope allocation) needs the slots of R2; without them only two small changes were made: the bindings of a call are allocated once (`ensureTotalCapacity`) and the test for `floor`, `ceiling` and `round` compares the name before it searches the scopes. A 830,000-call `fib(27)` takes 255 ms with R1 (352 ms before R1) and 262 ms with R4: no measurable gain, the changes stay because they are free. The cost of a call, about 300 ns, is in the allocations and the name lookups that R2 removes.
 
+**0.0.7 (2026-10-19), R2 and a profiler.** `EVE_PROFILE=1 eve -x file.eve` samples the main thread every millisecond and prints the functions with most samples (Windows, symbols from the `.pdb`). The profile of `fib` and of `p1a` to `p4e` showed that the time was in comparisons of text, not in the scope search itself: the name of a variable (`Scope.find`), the operator of an assignment (`:=`, `::`, `<+`) and the name of a type (`Integer`, `Real`: `zero` and `coerce` run at every call for the result variable). Three changes: `nameEql` compares the length and the first byte before the text; the parser puts an `Op` on every assignment (`set`, `copy`, `push_back`, `push_front`) and a `TypeKind` on every type node. Full slot resolution in `check.zig` was not done: a block has no scope of its own and a `new` adds its binding when it runs, so the position of a variable depends on the path taken (design/design-bytecode.md, R2). Against the build before R1, same machine, alternating, 9 runs: `p1a_arith` 193 to 73 ms, `p1b_calls` 65 to 46, `p2c_procedures` 62 to 51, `p3a_modules` 97 to 75, `p3b_objects` 76 to 66, `p3c_module_state` 46 to 35; level 4 unchanged (`p4c`, `p4d` equal to the old build). `eve.exe` unchanged in size (4,000 KB).
+
 ### Totals per run
 
 The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
@@ -133,4 +135,5 @@ The sum of the median times of the benchmarks of each level. A dash means the le
 |---|---|---|---|---|---|---|---|---|---|
 | 0.0.7 | 2026-10-19 | ReleaseSafe | cc28760 | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
 | 0.0.7 | 2026-10-19 | ReleaseSafe | 810aae5 | 164 ms | 112 ms | 175 ms | 657 ms | 107 ms | 2072 ms |
+| 0.0.7 | 2026-10-19 | ReleaseSafe | 320a228 | 148 ms | 97 ms | 154 ms | 678 ms | 106 ms | 1920 ms |
 <!-- runs:end -->
