@@ -193,6 +193,8 @@ pub const Report = struct {
     message: []const u8,
     job: []const u8,
     handled: bool = false,
+    /// The file of the module whose routine raised it; empty for the main script.
+    file: []const u8 = "",
     /// The calls that led to the error, innermost first, one `line n in kind name` per line (D-113).
     trace: []const u8 = "",
     /// A ParallelError: the errors of the failed tasks, in the order of `start` (D-140).

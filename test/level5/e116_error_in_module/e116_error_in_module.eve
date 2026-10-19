@@ -1,0 +1,18 @@
+# an error raised in a module names the file of the module, not the script that called it (G-1)
+** spec: semantics/errors.md#where-an-error-is-reported
+primary aspect e116_error_in_module is
+  from lib use (boom);
+
+  process main is
+    boom.fail_now();
+  return;
+end e116_error_in_module;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [],
+  "stderr": [
+    "boom.eve:6: error 4: boom"
+  ]
+}
+*/

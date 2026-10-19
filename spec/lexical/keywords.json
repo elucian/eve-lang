@@ -370,6 +370,7 @@
       "id": "method",
       "category": "declaration",
       "status": "stable",
+      "contextual": true,
       "ref": "syntax/declarations.md#classes-and-objects",
       "summary": "Declares a method of a class, or an extension method outside it."
     },

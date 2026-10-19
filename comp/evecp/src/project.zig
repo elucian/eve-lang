@@ -88,7 +88,7 @@ const Linker = struct {
             return l.fail(at, "aspect '{s}' not found (looked for {s}{s})", .{ key, tried, if (candidates.len > 1) " and the project root" else "" });
         };
         l.where.* = path;
-        const tree = try parser.parse(l.a, src, l.diag);
+        const tree = try parser.parseFile(l.a, src, l.diag, path);
         try l.paths.put(l.a, key, path);
         if (tree.tag != .aspect) return l.fail(at, "'{s}' is not an aspect: apply runs only aspects", .{path});
         if (!std.mem.eql(u8, tree.text, short)) {
@@ -211,7 +211,7 @@ const Linker = struct {
         }
         const saved = l.where.*;
         l.where.* = file;
-        const tree = try parser.parse(l.a, src, l.diag);
+        const tree = try parser.parseFile(l.a, src, l.diag, file);
         // these three errors are in the importing script, at the import: `where` goes back to it
         if (tree.tag != .module or !std.mem.eql(u8, tree.text, name)) l.where.* = saved;
         if (tree.tag == .aspect) return l.fail(at, "'{s}' is an aspect: an aspect can't be imported, only a module can (D-126, D-179)", .{file});

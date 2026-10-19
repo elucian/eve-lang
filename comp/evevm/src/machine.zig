@@ -250,7 +250,7 @@ pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.js
     if (stream) os.finish();
     var errors: Io.Writer.Allocating = .init(a);
     if (s.outcome) |o| if (o.code != 0) if (s.machine) |machine| for (machine.reports.items) |r| {
-        if (!r.handled) errors.writer.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ name, r.line, r.code, r.message, r.trace, r.details }) catch {};
+        if (!r.handled) errors.writer.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ if (r.file.len > 0) r.file else name, r.line, r.code, r.message, r.trace, r.details }) catch {};
     };
     _ = m.runs.fetchAdd(1, .monotonic);
     const waited = started - asked;

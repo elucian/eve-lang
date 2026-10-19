@@ -408,10 +408,31 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     // @eve-impl an `external` routine of a user module has no native yet: a clear error, not a crash on the empty body
     // @spec spec/semantics/modules.md#members
     // @decision D-189
-    if (node.is_external) return it.fail("external {s} {s} has no native implementation in this machine", .{ @tagName(node.tag), node.text });
+    // @eve-impl an `external` routine of module M is the native `M.name` of the machine (G-3, TD-2): the arguments are bound as parameters, then the native reads them by name
+    // @spec spec/semantics/modules.md#members
+    // @decision D-189
     const s = try it.newScope(f.closure);
     const saved = try it.enterScope(s);
     defer it.leaveScope(saved);
+    if (node.is_external) {
+        var mod: ?*interp.Module = null;
+        var mods = it.base().loaded.valueIterator();
+        while (mods.next()) |m| if (m.*.scope == f.closure) {
+            mod = m.*;
+        };
+        try it.bindParams(node.kids[0].kids, args, null);
+        if (mod) |m| {
+            const params = node.kids[0].kids;
+            const names = try it.a.alloc(*const Node, params.len);
+            for (params, names) |p, *slot| {
+                const nm = try it.a.create(Node);
+                nm.* = .{ .tag = .name, .line = it.line, .text = p.text };
+                slot.* = nm;
+            }
+            if (try dlib.libraryCall(it, m.name, node.text, names)) |v| return v;
+        }
+        return it.fail("external {s} {s} has no native implementation in this machine", .{ @tagName(node.tag), node.text });
+    }
     if (node.tag == .lambda) {
         try it.bindParams(node.kids[0].kids, args, null);
         return it.eval(node.kids[1]);
@@ -423,7 +444,7 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     }
     try it.bindParams(node.kids[0].kids, args, self_var);
     for (node.kids[2].kids) |res| try it.define(res.text, try it.zero(res.ty), false);
-    try it.frames.append(it.a, .{ .kind = @tagName(node.tag), .name = node.text, .call_line = it.line });
+    try it.frames.append(it.a, .{ .kind = @tagName(node.tag), .name = node.text, .call_line = it.line, .file = node.file });
     defer _ = it.frames.pop();
     const mark = it.defers.items.len;
     var outcome = it.execBlock(node.kids[3]);

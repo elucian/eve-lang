@@ -1,0 +1,17 @@
+# an external of a module is bound to the native of the machine with the same module and name (G-3, TD-2)
+** spec: semantics/modules.md#members
+primary aspect e117_external_native is
+  from lib use (os);
+
+  process main is
+    expect os.platform() in ("windows", "linux", "macos");
+    print os.env!("EVE_NO_SUCH_VARIABLE", "fallback");
+    expect os.pid!() > 0;
+    print "bound";
+  return;
+end e117_external_native;
+/*@expect
+{
+  "stdout": ["fallback", "bound"]
+}
+*/

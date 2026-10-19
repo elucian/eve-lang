@@ -232,6 +232,8 @@ pub const Node = struct {
     /// The root made from an Eve macro, and each aspect of it: the aspects see the shared declarations of the
     /// macro, which are the declarations of the root node (D-152).
     macro: bool = false,
+    /// The file of a routine that does not belong to the main script (a module or an aspect found by the link); empty otherwise.
+    file: []const u8 = "",
     /// An aspect declared `primary`: it is run by a command and no aspect applies or starts it (D-181).
     primary: bool = false,
 };

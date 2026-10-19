@@ -185,7 +185,7 @@ pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
         if (o.code != 0 and s.machine != null) {
             try ctx.out.flush();
             for (s.machine.?.reports.items) |r| {
-                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ args[0], r.line, r.code, r.message, r.trace, r.details });
+                if (!r.handled) std.debug.print("{s}:{d}: error {d}: {s}\n{s}{s}", .{ if (r.file.len > 0) r.file else args[0], r.line, r.code, r.message, r.trace, r.details });
             }
         }
     }
@@ -219,7 +219,7 @@ pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void 
             for (s.machine.?.reports.items) |r| {
                 if (!r.handled) {
                     const fmt = "{s}:{d}: error {d}: {s}\n{s}{s}";
-                    const parts = .{ args[0], r.line, r.code, r.message, r.trace, r.details };
+                    const parts = .{ if (r.file.len > 0) r.file else args[0], r.line, r.code, r.message, r.trace, r.details };
                     // on the full-screen REPL the error goes to the upper part, not under the bars (stderr)
                     if (ctx.tui != null) try ctx.out.print(fmt, parts) else std.debug.print(fmt, parts);
                 }

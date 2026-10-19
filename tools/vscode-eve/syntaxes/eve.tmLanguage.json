@@ -183,7 +183,7 @@
         },
         {
           "name": "storage.type.eve",
-          "match": "\\b(?:aspect|class|constructor|def|destructor|function|generator|method|module|new|procedure|process|set|trait)\\b"
+          "match": "\\b(?:aspect|class|constructor|def|destructor|function|generator|module|new|procedure|process|set|trait)\\b"
         },
         {
           "name": "storage.modifier.eve",
@@ -199,7 +199,7 @@
         },
         {
           "name": "storage.modifier.eve",
-          "match": "^\\s*(?:after|async|cached|column|commit|direct|external|generated|key|managed|only|private|protected|public|read|reference|rollback|sql|table|temporary|to|version)\\b"
+          "match": "^\\s*(?:after|async|cached|column|commit|direct|external|generated|key|managed|method|only|private|protected|public|read|reference|rollback|sql|table|temporary|to|version)\\b"
         }
       ]
     },

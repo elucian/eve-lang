@@ -1,0 +1,8 @@
+# a module that names natives of the machine: an external is the native of the same module and name (G-3)
+module os is
+  export (platform, env!, pid!);
+
+  external function platform() => (@name: String);
+  external function env!(key: String, other: String) => (@value: String);
+  external function pid!() => (@id: Integer);
+end os;

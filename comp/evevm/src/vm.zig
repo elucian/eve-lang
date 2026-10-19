@@ -443,7 +443,7 @@ pub const Session = struct {
         if (self.machine) |m| {
             for (m.reports.items) |r| {
                 w.print("{s}:{d}: error {d}{s}{s}: {s}{s}\n", .{
-                    self.path,                                  r.line,
+                    if (r.file.len > 0) r.file else self.path,  r.line,
                     r.code,                                     if (r.job.len > 0) " in job " else "",
                     r.job,                                      r.message,
                     if (r.handled) " (handled by recover)" else "",

@@ -40,7 +40,7 @@ const reserved = std.StaticStringMap(void).initComptime(.{
     .{"for"},         .{"in"},        .{"match"},     .{"when"},      .{"then"},      .{"break"},   .{"skip"},
     .{"raise"},       .{"recover"},   .{"finalize"},  .{"job"},       .{"retry"},     .{"resume"},  .{"abort"},
     .{"over"},        .{"exit"},      .{"stop"},      .{"pass"},      .{"panic"},     .{"print"},   .{"write"},
-    .{"expect"},      .{"assert"},    .{"defer"},     .{"class"},     .{"function"},  .{"procedure"}, .{"method"},
+    .{"expect"},      .{"assert"},    .{"defer"},     .{"class"},     .{"function"},  .{"procedure"},
     .{"constructor"}, .{"public"},    .{"protected"}, .{"private"},   .{"and"},       .{"or"},      .{"xor"},
     .{"not"},         .{"repeat"},    .{"eq"},        .{"apply"},     .{"aspect"},    .{"exclusive"}, .{"concurrent"},
     .{"parallel"},    .{"start"},     .{"spawn"},     .{"await"},     .{"wait"},      .{"trait"},
@@ -69,6 +69,8 @@ const Parser = struct {
     job_depth: usize = 0,
     /// True in the body of a process: a `parallel` group is allowed only there (D-140).
     in_process: bool = false,
+    /// The file being parsed when it is a module or an aspect of a project: routine nodes carry it (G-1).
+    file: []const u8 = "",
     /// True in the body of a generator: `yield` is allowed only there (D-067).
     in_generator: bool = false,
     /// Reading the name of an `external` routine: a reserved word such as `write` is a valid native name (D-189).
@@ -194,6 +196,10 @@ const Parser = struct {
     fn mk(p: *Parser, tag: Tag, at: Token, text: []const u8, kids: []const *const Node) Error!*Node {
         const n = try p.a.create(Node);
         n.* = .{ .tag = tag, .line = at.line, .col = at.col, .text = text, .kids = try p.a.dupe(*const Node, kids) };
+        switch (tag) {
+            .function, .procedure, .method, .constructor, .process, .generator => n.file = p.file,
+            else => {},
+        }
         return n;
     }
 
@@ -2160,7 +2166,16 @@ const Parser = struct {
 // at the source text (tokens are views into `src`, so `src` must outlive the tree).
 /// Parse `src` into a tree. On a syntax error returns `error.Syntax` and fills `diag`.
 pub fn parse(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error!*const Node {
-    const tree = try parseSyntax(arena, src, diag);
+    return parseFile(arena, src, diag, "");
+}
+
+// @eve-impl parse a module or an aspect of a project: its routines remember the file for the errors
+// @see backlog/library-gaps.md:G-1
+/// `parse`, and every routine of the tree carries `file` (the path of the module), so an error raised in it names that file.
+pub fn parseFile(arena: std.mem.Allocator, src: []const u8, diag: *Diag, file: []const u8) Error!*const Node {
+    const toks = try lexer.tokenize(arena, src, diag);
+    var p: Parser = .{ .toks = toks, .diag = diag, .a = arena, .file = file };
+    const tree = try p.script();
     try checker.check(arena, tree, diag);
     return tree;
 }

@@ -121,7 +121,7 @@ pub const Group = struct {
 // `procedure`, `method`, `aspect`) and `call_line` is the line, in the caller, where
 // this call was made: with it the trace can tell on which line each unit was running.
 /// One call in progress: what runs and from which line it was called.
-pub const Frame = struct { kind: []const u8, name: []const u8, call_line: u32 };
+pub const Frame = struct { kind: []const u8, name: []const u8, call_line: u32, file: []const u8 = "" };
 
 // Zig tip: a `bool` field is the cheapest way to say "one of two kinds"; `is_error` false means a
 // warning. The interpreter only collects these messages: it has no file system, so the session
@@ -398,7 +398,7 @@ pub const Interp = struct {
     /// Raise an error whose message is already made (the database layer formats its own).
     pub fn failMsg(it: *Interp, code: u8, msg: []const u8) Signal {
         const trace = try it.traceText();
-        it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace }) catch return error.OutOfMemory;
+        it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace, .file = if (it.frames.items.len > 0) it.frames.items[it.frames.items.len - 1].file else "" }) catch return error.OutOfMemory;
         it.err_code = code;
         return error.Raise;
     }
@@ -413,7 +413,7 @@ pub const Interp = struct {
         var i = it.frames.items.len;
         while (i > 0) : (i -= 1) {
             const f = it.frames.items[i - 1];
-            try appendFmt(&buf, it.a, "  line {d} in {s} {s}\n", .{ line, f.kind, f.name });
+            try appendFmt(&buf, it.a, "  line {d} in {s} {s}{s}{s}\n", .{ line, f.kind, f.name, if (f.file.len > 0) " of " else "", f.file });
             line = f.call_line;
         }
         if (it.current_job.len > 0) try appendFmt(&buf, it.a, "  in job {s}\n", .{it.current_job});

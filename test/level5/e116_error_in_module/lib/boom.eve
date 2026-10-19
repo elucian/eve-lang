@@ -1,0 +1,8 @@
+# boom: a module whose function fails, to see the file in the error (G-1)
+module boom is
+  export (fail_now);
+
+  procedure fail_now() is
+    raise "boom";
+  return;
+end boom;
