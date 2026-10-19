@@ -50,8 +50,9 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
         it.call_is_stmt = stmt;
         return it.callMethod(recv, callee.text, args);
     }
-    if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
-        (std.mem.eql(u8, callee.text, "floor") or std.mem.eql(u8, callee.text, "ceiling") or std.mem.eql(u8, callee.text, "round")))
+    if (callee.tag == .name and args.len == 1 and
+        (std.mem.eql(u8, callee.text, "floor") or std.mem.eql(u8, callee.text, "ceiling") or std.mem.eql(u8, callee.text, "round")) and
+        it.scope.find(callee.text) == null)
     {
         const eql = std.mem.eql;
         const x = Interp.realOf(try it.eval(args[0])) orelse return it.fail("{s}() needs a number", .{callee.text});
@@ -412,6 +413,9 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     // @spec spec/semantics/modules.md#members
     // @decision D-189
     const s = try it.newScope(f.closure);
+    // @perf hot
+    // one allocation for the bindings of the call (parameters, results, `self`) instead of a growth by steps
+    if (node.tag != .lambda) try s.binds.ensureTotalCapacity(it.g, node.kids[0].kids.len + node.kids[2].kids.len + 1) else try s.binds.ensureTotalCapacity(it.g, node.kids[0].kids.len);
     const saved = try it.enterScope(s);
     defer it.leaveScope(saved);
     if (node.is_external) {
