@@ -4,7 +4,7 @@ Status: **0.1-draft**, level 6 (D-189). Feature: F-LIB-12 (testing module, new).
 
 ## What it is
 
-A small module for the tests that a user writes in Eve. Each check prints one line, `ok <name>` or `FAIL <name>` (with the two values for `equal`), counts it, and goes on; `summary` prints the totals and raises an error when a check failed, so the process ends with a failure code and a script or a CI job sees it. It is the first big program of the standard library written in Eve (D-189): a missing feature of the language found while writing it goes to `plan/library-gaps.md`.
+A small module for the tests that a user writes in Eve. Each check prints one line, `ok <name>` or `FAIL <name>` (with the two values for `equal`), counts it, and goes on; `summary` prints the totals and raises an error when a check failed, so the process ends with a failure code and a script or a CI job sees it. It is the first big program of the standard library written in Eve (D-189): a missing feature of the language found while writing it goes to `backlog/library-gaps.md`.
 
 ```eve
 from lib use (test);

@@ -1,6 +1,6 @@
 # The library registry
 
-Status: **0.1-draft**, level 6 (D-189, D-190). Features: F-LIB-01 (standard library), F-LIB-10 (encryption and hashing), F-SPEC-06. Plan: `plan/design-libraries.md`. Audit: `plan/library-audit.md`.
+Status: **0.1-draft**, level 6 (D-189, D-190). Features: F-LIB-01 (standard library), F-LIB-10 (encryption and hashing), F-SPEC-06. Plan: `design/design-libraries.md`. Audit: `design/library-audit.md`.
 
 ## Two libraries
 

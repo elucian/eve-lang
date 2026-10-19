@@ -16,7 +16,7 @@ Syntax colors, snippets and editing rules for `.eve` files.
 | `snippets/eve.json` | the snippets |
 | `gen_vscode.py` | writes the two generated files from `spec/lexical/keywords.json` |
 
-The same grammar is what GitHub Linguist needs (`tools/TODO-vscode-plugin.md`, step 2) and can be imported by Sublime Text and JetBrains.
+The same grammar is what GitHub Linguist needs (`backlog/vscode-plugin.md`, step 2) and can be imported by Sublime Text and JetBrains.
 
 ## Install
 

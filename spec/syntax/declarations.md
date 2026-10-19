@@ -1,6 +1,6 @@
 # Declarations
 
-Status: **0.1-draft**, level 1. Grammar: [`grammar.md`](grammar.md). Each rule names the decision it comes from (`D-nnn`, in `plan/decision_level1.md`).
+Status: **0.1-draft**, level 1. Grammar: [`grammar.md`](grammar.md). Each rule names the decision it comes from (`D-nnn`, in `design/decision/level1.md`).
 
 ## Scripts
 

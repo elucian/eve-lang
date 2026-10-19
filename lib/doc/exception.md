@@ -29,27 +29,27 @@ The calls that led to the error.
 
 The errors and the warnings of the process.
 
-## `external .raise(e: Error);`
+## `external procedure raise(e: Error);`
 
 Raise an exception object.
 
-## `external .raise(code: Integer, message: String);`
+## `external procedure raise(code: Integer, message: String);`
 
 Raise an error with a code and a message.
 
-## `external .raise(message: String);`
+## `external procedure raise(message: String);`
 
 Raise an error with the default code 4.
 
-## `external .expect(condition: Logic, message := "");`
+## `external procedure expect(condition: Logic, message := "");`
 
 Raise the error 2 when the condition is false. The message is optional.
 
-## `external .assert(condition: Logic, message := "");`
+## `external procedure assert(condition: Logic, message := "");`
 
 Report the warning 3 when the condition is false and go on. The message is optional.
 
-## `external .warn(code: Integer, message: String);`
+## `external procedure warn(code: Integer, message: String);`
 
 Report a warning and go on.
 

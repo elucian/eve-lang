@@ -15,7 +15,7 @@ You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tuto
 
 ## Features
 
-The features and their versions are planned in [plan/version_map.md](plan/version_map.md). The implementation manual [Eve Compiler Manual](manual/README.md) tell you more about the implementation.
+The features and their versions are planned in [design/version_map.md](design/version_map.md). The [Eve manual](manual/README.md) tells you how to use the programs, which features work, the tests and the performance.
 
 
 ## Testing
@@ -30,7 +30,7 @@ You can contribute in 2 ways: First you can start a discussion or participate. S
 
 The compiler manual documents an Eve implementation: how to implement it, how to use it, what was implemented, and which features of the specification it supports. The feature tables are generated from the specification. Every other compiler can use the same layout for its own manual, with reference to this one.
 
-Open: [Eve Compiler Manual](manual/README.md)
+Open: [Eve manual](manual/README.md)
 
 You can contribute to this documentation. Connect to Eve User Manual and reverse engineer the original documentation. Then add technical details and expand the concepts. Connect with examples of code and test use-cases.
 
@@ -42,13 +42,13 @@ WORK IN PROGRESS, CONTRIBUTORS ARE WELCOME
 
 We use 2 licenses:
 
-### Eve virtual machine: Business Source License 1.1
+### Eve components: Business Source License 1.1
 
-The code in `evevm/` is under the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [evevm/LICENSE](evevm/LICENSE).
+The code of every component in [`comp/`](comp/README.md) (the virtual machine, the compiler, the common part, the `eve` command, the database server, the user interfaces and the web portal) is under one license, the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [comp/LICENSE](comp/LICENSE).
 
 ### Everything else: CC BY-NC-SA 4.0
 
-Everything outside `evevm/` (specification, tutorial text, manual, examples, tests, plans, scripts) is under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0). The code snippets and examples shown in the tutorial are under the Apache License 2.0, as the Sage-Code Laboratory licensing of the scl repository says. You may use and adapt it for learning, research and non-profit work, with credit and under the same license. A commercial implementation or product based on Eve needs written permission from the author. Full text: [spec/LICENSE](spec/LICENSE).
+Everything outside `comp/` (specification, tutorial text, manual, examples, tests, plans, scripts) is under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0). The code snippets and examples shown in the tutorial are under the Apache License 2.0, as the Sage-Code Laboratory licensing of the scl repository says. You may use and adapt it for learning, research and non-profit work, with credit and under the same license. A commercial implementation or product based on Eve needs written permission from the author. Full text: [spec/LICENSE](spec/LICENSE).
 
 ### Trademark
 

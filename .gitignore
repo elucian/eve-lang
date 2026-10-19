@@ -34,7 +34,7 @@
 *.app
 .DS_Store
 
-# Zig build output (evevm/); `zig build -p ..` installs eve.exe + eve.pdb into /bin
+# Zig build output; `zig build -p .` at the root (and `-p ../..` in comp/<part>/) installs the programs into /bin
 .zig-cache/
 zig-out/
 zig-pkg/
@@ -63,3 +63,9 @@ test/smoke/*/db/*.db-*
 test/bmark/db/
 # the DuckDB files of evedb for the level 6 benchmarks (test/bmark/evedb.cfg)
 test/bmark/data/
+
+# the distribution (script/dist.py, ./run.sh dist): generated, never committed
+/dist/
+
+# Zed builds the grammar of a dev extension here (a clone of the grammar repository and eve.wasm)
+tools/zed-eve/grammars/

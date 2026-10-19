@@ -1,0 +1,103 @@
+EVE-TX  Shortcuts
+=================
+
+Options
+  F2, Ctrl+,          the Options dialog (HELP > Options): Theme, Colors, Timers.
+                      Tab: next tab; arrows change the value; Enter saves; Esc cancels
+  Theme tab           Up, Down choose a theme; n rename, Del remove (custom themes only),
+                      e export, i import a JSON theme file (a folder selector with a
+                      file name field; F2 or Enter in the name field does it). A change of a color of a
+                      built-in theme (Dark, Gray, Light) makes a copy: Dark Custom1, ...
+
+Menu
+  F10                 open the menu bar (Ctrl+Enter too, except in the tree and in a list of tables)
+  Alt + letter        open a menu: F E S R W H
+  Left, Right         next menu
+  Up, Down, Enter     choose a command, Esc closes
+
+File
+  Ctrl+O              open project (the list of known projects)
+  Shift+F4, Ctrl+Shift+O  open folder (browse and import a folder as a project)
+  Ctrl+N              new file
+  Ctrl+S              save
+  Ctrl+A              save all (every window with changes)
+  F4, Ctrl+Shift+S    save as
+  Ctrl+W              close the window (tab)
+  + / keypad +        select the row (tree or folder tab), then go down; - unselects it
+  * / keypad *        select all the rows of the folder (or beside the row in the tree); / clears the selection
+  Ctrl+click          select or unselect a row; FILE > Move… moves the selected rows to a folder you choose;
+                      or drag the rows (a folder tab or the tree) onto a folder of the tree
+  Ctrl+Q              quit
+
+Edit and search
+  Ctrl+U, Ctrl+Y      undo, redo (typing and erasing are undone in runs)
+  Ctrl+H              replace (Tab between the fields)
+  Ctrl+F              find text (Enter next match)
+  Ctrl+P              locate a file (File > Locate file…; Up, Down, Enter opens)
+  Ctrl+G              go to line (42 or 42:7)
+  F7                  query (later)
+
+Selecting and copying
+  EDIT > Import…   (a database selected) load a CSV, TXT, JSON or DBF file as a new table of the database
+  New table (EDIT > Create table, a database selected)   three pages: name and description, fields, indexes; Ctrl+Left / Ctrl+Right or Previous / Next move between them; Ctrl+S creates
+  Insert, Ctrl+Insert  in a table: append one row; append many rows (asks how many). A table keeps its changes in memory until Save
+  Shift + arrows, Home, End, PgUp, PgDn   select text
+  Ctrl+Left, Ctrl+Right   move one word; with Shift they select it
+  Ctrl+Shift+A        select all (Ctrl+A saves all)
+  Ctrl+C, Ctrl+X      copy, cut (the system clipboard gets the text too)
+  Ctrl+V              paste (a paste made by the terminal works as well)
+  Mouse               click puts the cursor, drag selects, Shift+click extends
+
+Editor view
+  Edit > Show hidden characters   middle dot = space, arrow = tab, return sign = line end
+  Edit > Wrap       wrap long lines (no horizontal bar; the vertical bar gets ^ and v
+                    buttons: half a page). Without wrap the horizontal bar has
+                    < and > buttons: ten columns each
+  Click on a line number (or the space next to it)   set a breakpoint;
+                    click on the red circle to remove it. F9: on the cursor line
+
+Run and debug
+  F5                  run the .eve file: `run <file>` is typed in the Console prompt
+                      and starts after 3 seconds (Enter: now, Esc: cancel,
+                      typing keeps the text and stops the countdown)
+  F6                  check the syntax: `--check <file>`, the same way
+  F9                  breakpoint
+  F8, F11, Shift+F11  debugger: Next, Step, Exit; Shift+F8 Trace; Shift+F5 Halt
+
+Windows and panels
+  Alt+Left, Alt+Right previous / next panel: Tree, Main, Tools 
+  Tab                 next panel (not in a text file or the Console, where Tab types or completes)
+  Shift+Tab           next window of the Main panel, or next tab of the Tools panel
+  Enter in the tree   say what is selected in the status bar; Ctrl+Enter, Space or a double click open it
+                      (the same in the list of the tables of a database)
+  Alt+T, Alt+M, Alt+O the Tree, Main or Tools panel: shown if hidden, and it takes the keyboard
+  Alt+PgDn, Ctrl+Tab  next window of the Main panel, or next tab of the Tools panel
+  Alt+PgUp, Ctrl+PgUp previous window or tab (Ctrl+PgDn: next)
+  Alt+1 .. Alt+9      window number 1 to 9 (Ctrl+1 .. Ctrl+9 in terminals that send them)
+  Layout: the lock at the right of the toolbar; open it (or Ctrl+L) and a border
+                      between panels turns amber under the pointer: press and drag it.
+                      A locked layout does not move.
+  Ctrl+L              layout modify (WINDOW > Layout modify): drag the borders or
+                      use the arrow keys (Left, Right: Tree Panel width; Up, Down:
+                      Tools Panel height)
+  Ctrl+Z              layout freeze (in layout modify; Esc and Enter too)
+  < and > on the tab row of the Main Panel: show the tabs further left or right
+  Info… (right click on a tab): the facts of the file; r renames it in place,
+                      m moves it to another folder (folder selector, F2 moves here)
+  The buttons + and x of a panel maximize and hide it;
+  Window > Tree Panel, Main Panel, Tools Panel show it again
+
+Console
+  Enter               run `eve <line>`
+  Ctrl+Up, Ctrl+Down  history
+  PgUp, PgDn          scroll
+
+Tree
+  Up, Down, Left, Right   move
+  Enter, Space            open or close
+
+Mouse
+  click, wheel and scroll bars in the tree, the editor and the console;
+  a middle click on a window title closes it; a right click on it opens the
+  popup menu: Save, Save As, Close this, Close right, Close left, Close clean
+  WINDOW > Close All (when nothing is modified), Close Clean (the unmodified ones)

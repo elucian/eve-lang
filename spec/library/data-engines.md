@@ -1,6 +1,6 @@
 # Data engines and legacy files
 
-Status: **first draft (2026-10-17)**, decision D-184. The behaviour below is implemented in the machine (`evedb/src/columnar.zig`, `dbf.zig`, `importer.zig`, and the commands `eve db import` and `eve db export`). The Eve syntax is decided in Q-059 (`plan/decision_level6.md`) and shown in the section "The `Memory` class" below: this page defines what the operations do and what they are called in the machine, not how a script writes them.
+Status: **first draft (2026-10-17)**, decision D-184. The behaviour below is implemented in the machine (`comp/evedb/src/columnar.zig`, `dbf.zig`, `importer.zig`, and the commands `eve db import` and `eve db export`). The Eve syntax is decided in Q-059 (`design/decision/level6.md`) and shown in the section "The `Memory` class" below: this page defines what the operations do and what they are called in the machine, not how a script writes them.
 
 ## Two engines
 

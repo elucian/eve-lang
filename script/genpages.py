@@ -56,9 +56,9 @@ def rel(path):
 
 
 def level_names():
-    """{1: 'the language of a single script', ...} from the table of plan/version_map.md."""
+    """{1: 'the language of a single script', ...} from the table of design/version_map.md."""
     names, versions = {}, {}
-    with open(os.path.join(ROOT, 'plan', 'version_map.md'), encoding='utf-8') as f:
+    with open(os.path.join(ROOT, 'design', 'version_map.md'), encoding='utf-8') as f:
         for line in f:
             m = re.match(r'\|\s*(?:Level\s*)?(\d)\s*\|\s*([^|]+?)\s*\|\s*(?:Version\s*)?([0-9.]+)\s*\|', line)
             if m:
@@ -113,7 +113,7 @@ def test_rows(folder, with_code=True):
 
 
 # ------------------------------------------------------------------------------------------ pages
-# One or two words for the title of a level; the full description is the paragraph under it (plan/version_map.md).
+# One or two words for the title of a level; the full description is the paragraph under it (design/version_map.md).
 LEVEL_TITLES = {1: 'Scripts', 2: 'Subprograms', 3: 'Modules', 4: 'Parallel', 5: 'Data', 6: 'Server', 7: 'Web'}
 
 

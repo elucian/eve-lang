@@ -1,0 +1,29 @@
+EVE-TX  Manual
+==============
+
+evetx is the Eve text user interface: a project IDE in the terminal.
+
+Start
+  evetx [folder]      open a project folder
+  eve -tx [folder]    the same, from the eve command
+  Without a folder no project is open and the Files tree is empty;
+  use File > Open project (Ctrl+O) for the list of known projects, or
+  File > Open Folder (Ctrl+Shift+O) to browse for a folder and import it:
+  it is added to the project cache and opened. Forget takes a project
+  off the list; its files stay on the disk.
+
+The screen
+  Tree Panel          the files of the project; a click opens a file
+  Main Panel          the windows (one tab for each open file), with the
+                      Run buttons under it
+  Tools Panel         Console, Watch, Stderr, Stdout and Breaks
+  Status bar          state, file name, line and column
+
+Running
+  F5 saves and runs the .eve file with `eve`; the output goes to the
+  Console, Stdout and Stderr tabs. The Console runs `eve <what you type>`.
+
+More
+  Help > Shortcuts lists every key.
+  The Eve manual is in the manual/ folder of the Eve repository
+  (manual/README.md, manual/usage.md).

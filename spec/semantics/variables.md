@@ -7,7 +7,7 @@ Status: **0.1-draft**. This file is the register of the system variables of Eve:
 - A system variable starts with the sigil `$`. It is static and public, shared by the whole process, and needs no module qualifier.
 - **Environment.** Every OS environment variable `NAME` is visible as `$NAME` (D-031, D-052). It is a `String`.
 - **Configuration.** A configuration file (`.cfg`) of the aspect run by a command sets system variables as `$key = value` lines with Eve literals and `#` comments (D-031). That aspect can also set one with `set $name = value;` (example: `$EVE_ASP`).
-- **Library.** A library module declares the system variables it provides with `external set $name: Type;` (D-056), like `$error` in `evevm/lib/exception.eve`.
+- **Library.** A library module declares the system variables it provides with `external set $name: Type;` (D-056), like `$error` in `comp/evevm/lib/exception.eve`.
 - **Naming.** Capital names (`$EVE_OUT`) are environment and configuration values; lowercase names (`$error`) are objects of the runtime and of the library. Error and warning codes are the constants `$err_name` and `$wrn_name`.
 
 Status values in the tables: **0.1** the VM must provide it in version 0.1; **draft** described, version not decided; **later** after 0.1 (D-050 for multitasking); **question** see [Open points](#open-points). Column VM: what `bin/eve.exe` does today.

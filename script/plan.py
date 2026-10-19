@@ -4,16 +4,17 @@
   python script/plan.py status            open steps, open questions, current focus (about 60 lines)
   python script/plan.py show D-087 [Q-035 ...]   print the full entry (active file or archive)
   python script/plan.py list              every id and title, active and archived (the files hold no index)
-  python script/plan.py archive [N] [--keep K]   move settled entries to plan/archive/ (default: keep the last 8)
+  python script/plan.py archive [N] [--keep K]   move settled entries to design/decision/archive/ (default: keep the last 8)
 
-Decision logs: plan/decision_level<N>.md holds a preamble, an index of EVERY id (one line each),
-the open questions and the newest decisions in full. plan/archive/decision_level<N>.md holds the
+Decision logs: design/decision/level<N>.md holds a preamble, an index of EVERY id (one line each),
+the open questions and the newest decisions in full. design/decision/archive/level<N>.md holds the
 full text of the settled ones. A new D-/Q- entry is simply appended to the active file; run
 `archive` now and then. `show` finds an id in either place. Line endings are preserved.
 """
 import re, sys, glob, os
 
-PLAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'plan')
+PLAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'design')
+DEC = os.path.join(PLAN, 'decision')
 HEAD = re.compile(r'^## ((?:D|Q)-\d+)\b(.*)$')
 MARK_BEGIN, MARK_END = '<!-- index:begin -->', '<!-- index:end -->'
 WITH_INDEX = False  # the active files hold only what is current; `list` prints every id
@@ -69,8 +70,8 @@ def one_line(i, title):
 
 
 def paths(n):
-    return (os.path.join(PLAN, 'decision_level%s.md' % n),
-            os.path.join(PLAN, 'archive', 'decision_level%s.md' % n))
+    return (os.path.join(DEC, 'level%s.md' % n),
+            os.path.join(DEC, 'archive', 'level%s.md' % n))
 
 
 def rebuild(n, keep=None):
@@ -84,7 +85,7 @@ def rebuild(n, keep=None):
         moved = [e for e in ents if not is_open(*e) and id(e) not in recent]
         ents = [e for e in ents if e not in moved] if moved else ents
         if moved:
-            arch_text = '# Archive of decision_level%s.md: settled entries, full text\n\n' % n
+            arch_text = '# Archive of level%s.md: settled entries, full text\n\n' % n
             write(arch, arch_text + '\n'.join(e[2] for e in old_arch + moved), '\r\n' if os.name == 'nt' and False else nl)
             old_arch += moved
     idx = [] if not WITH_INDEX else [MARK_BEGIN, '## Index (every id; full text: `python script/plan.py show ID`)', '']
@@ -101,7 +102,7 @@ def rebuild(n, keep=None):
 
 def find(id_):
     out = []
-    for p in sorted(glob.glob(os.path.join(PLAN, 'decision_level*.md')) + glob.glob(os.path.join(PLAN, 'archive', '*.md'))):
+    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))):
         for i, t, b in split(read(p)[0])[1]:
             if i == id_:
                 out.append(b)
@@ -120,7 +121,7 @@ def status():
             if m:
                 print('  %s [%s] %s %s' % (m.group(1), m.group(3), m.group(2)[:60], m.group(4)[:70]))
     print('\nOPEN QUESTIONS / PROPOSALS:')
-    for p in sorted(glob.glob(os.path.join(PLAN, 'decision_level*.md'))):
+    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md'))):
         for i, t, b in split(read(p)[0])[1]:
             if is_open(i, t, b):
                 print('  ' + one_line(i, t))
@@ -132,7 +133,7 @@ def main(a):
     c = a[0]
     if c == 'status': status()
     elif c == 'list':
-        for p in sorted(glob.glob(os.path.join(PLAN, 'decision_level*.md')) + glob.glob(os.path.join(PLAN, 'archive', '*.md'))):
+        for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))):
             for i, t, b in split(read(p)[0])[1]:
                 print(one_line(i, t))
     elif c == 'show':

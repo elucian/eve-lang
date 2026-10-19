@@ -3,9 +3,9 @@
 This folder holds the **normative specification** of Eve: the reference any Eve compiler or interpreter must follow. This specification is self-contained: it needs nothing outside this repository to be understood or implemented. The tutorial (published at
 <https://sagecode.org/projects/eve/>) is a separate, non-normative teaching text; it teaches the language, this specification defines it.
 When the two disagree, the specification wins. Record the conflict in
-[`../plan/decision_level1.md`](../plan/decision_level1.md) or [`../plan/decision_level2.md`](../plan/decision_level2.md) and fix the tutorial.
+[`../design/decision/level1.md`](../design/decision/level1.md) or [`../design/decision/level2.md`](../design/decision/level2.md) and fix the tutorial.
 
-License: [CC BY-NC-SA 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../plan/`](../plan/README.md).
+License: [CC BY-NC-SA 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../design/`](../design/README.md).
 
 ## Why Markdown + JSON
 

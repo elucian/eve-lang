@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate evecm/src/nfc_data.zig, the tables of Unicode normalization form C (NFC), from the Unicode
+"""Generate comp/evecm/src/nfc_data.zig, the tables of Unicode normalization form C (NFC), from the Unicode
 data of the Python that runs this script (module unicodedata).
 
 usage: python script/gen_nfc.py
@@ -16,7 +16,7 @@ import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "evecm", "src", "nfc_data.zig")
+OUT = os.path.join(HERE, "..", "comp", "evecm", "src", "nfc_data.zig")
 
 
 def main():

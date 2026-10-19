@@ -1,4 +1,4 @@
-# the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (evedb/README.md 5A, 5B)
+# the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (comp/evedb/README.md 5A, 5B)
 ** spec: library/database.md#drivers-and-the-server
 ** The runner starts `eve db serve evedb.cfg` (evedb in the foreground); the client (check/run.py) runs this script with the
 ** VM of the test, prints its output, and stops evedb.

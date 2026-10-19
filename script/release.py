@@ -6,11 +6,11 @@ Usage: python script/release.py [patch|minor|major|X.Y.Z] [--dry-run]
 The current version is read from the root build.zig.zon (`.version`), the one place of the version (D-167). The default bump is
 patch. These labels are rewritten, keeping each file's line endings:
   build.zig.zon           .version = "X.Y.Z",   (shown by `eve -v`)
-  evevm/README.md         Version: **X.Y.Z**
+  comp/evevm/README.md         Version: **X.Y.Z**
   README.md               Version <strong>X.Y.Z</strong>
 Then it runs `zig build -p .` and `zig build test` in the root. It does not commit or tag.
 This is step 2 of a release; the other steps (tests, benchmarks, version map, release notes with
-script/relnotes.py, the manual, commit and tag) are in manual/release/README.md (D-153).
+script/relnotes.py, the manual, commit and tag) are in design/release.md (D-153).
 """
 import os
 import re
@@ -22,7 +22,7 @@ V = r"\d+\.\d+\.\d+"
 # (file, regex with the version in group 2, replacement template with {} for the version)
 LABELS = [
     ("build.zig.zon", rf'(\.version = ")({V})(")'),
-    ("evevm/README.md", rf"(Version: \*\*)({V})(\*\*)"),
+    ("comp/evevm/README.md", rf"(Version: \*\*)({V})(\*\*)"),
     ("README.md", rf"(Version <strong>)({V})(</strong>)"),
 ]
 
@@ -86,8 +86,8 @@ def main():
                     f.write(text)
             die("build or tests failed, labels restored to " + old + ". On Windows, "
                 "'AccessDenied' on bin/eve.exe means an eve REPL is still running: quit it first.")
-    print(f"done. Next: steps 3 to 9 of manual/release/README.md (tests, benchmarks, version map,\n"
-          f"  python script/relnotes.py, the TODOs of manual/release/v{new}.md, --check), then:\n"
+    print(f"done. Next: steps 3 to 9 of design/release.md (tests, benchmarks, version map,\n"
+          f"  python script/relnotes.py, the TODOs of manual/releases/v{new}.md, --check), then:\n"
           f"  git commit -am 'Release {new}' && git tag v{new}")
 
 

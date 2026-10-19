@@ -82,7 +82,7 @@ def evedb_server(eve, needed):
         return
     exe = os.path.join(os.path.dirname(eve), 'evedb.exe' if os.name == 'nt' else 'evedb')
     if not os.path.exists(exe):
-        sys.exit('level 6 needs %s: build it in evedb/ with zig build -p ..' % exe)
+        sys.exit('level 6 needs %s: build it in comp/evedb/ with zig build -p ../..' % exe)
     srv = subprocess.Popen([exe, 'serve', '--config', 'evedb.cfg'], cwd=PERF, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     for _ in range(2):  # evedb prints one ready line per port
         line = srv.stdout.readline()
@@ -187,7 +187,7 @@ def main():
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--eve', default=os.path.join(ROOT, 'bin', 'eve.exe'))
     ap.add_argument('--level', type=int)
-    ap.add_argument('--build', default='Debug', help='how the VM was built: Debug (zig build -p ..) or ReleaseSafe; runs are compared with the same build')
+    ap.add_argument('--build', default='Debug', help='how the VM was built: Debug (zig build -p . at the root) or ReleaseSafe; runs are compared with the same build')
     a = ap.parse_args()
     a.eve = os.path.abspath(a.eve)
     ver = subprocess.run([a.eve, '--version'], capture_output=True, text=True).stdout.strip().split()[-1]

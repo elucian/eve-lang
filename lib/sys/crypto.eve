@@ -1,4 +1,4 @@
-** Hashes, a keyed hash, random bytes and text codecs (F-LIB-10, D-189). Signature file: the body is native, in evevm/src/syslib.zig (cryptoModule).
+** Hashes, a keyed hash, random bytes and text codecs (F-LIB-10, D-189). Signature file: the body is native, in comp/evevm/src/syslib.zig (cryptoModule).
 ** @spec spec/library/crypto.md  @feature F-LIB-10  @decision D-189  @tests test/level6/f04_crypto
 module crypto is
   export (sha256, sha512, sha256_file!, hmac_sha256, hex_encode, hex_decode, base64_encode, base64_decode, random_hex!, same);

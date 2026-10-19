@@ -1,4 +1,4 @@
-"""Tests of the PostgreSQL face of evedb and of the Eve driver for PostgreSQL (evedb/README.md, sections 5A and 5B).
+"""Tests of the PostgreSQL face of evedb and of the Eve driver for PostgreSQL (comp/evedb/README.md, sections 5A and 5B).
 
 The checks use two independent client libraries of PostgreSQL: psycopg2 (libpq, the C library of PostgreSQL itself, simple query
 protocol) and pg8000 (pure Python, extended protocol). Then an Eve script with `postgres://` in its eve.cfg talks to the same

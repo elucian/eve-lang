@@ -1,157 +1,86 @@
-# Eve Compiler Manual
+# Eve manual
 
-This folder is the **manual of an Eve implementation**: how the compiler is built, how to use it, and which parts of the specification it supports. It replaces the old `docs/` skeleton (decision D-004 in [`../plan/decision_level1.md`](../plan/decision_level1.md)).
+This is the manual of **Eve**, a scripting language for data processing and test automation, and of its first implementation: the Eve virtual machine, `eve`, written in Zig. The language itself is defined by the [specification](https://github.com/elucian/eve-lang/blob/master/spec/index.md) and taught by the [tutorial](https://sagecode.org/projects/eve/index.html); this manual says how to install and use the programs, which features work, and how well.
 
-| Source | Role | Format |
+## Contents
+
+| Page | What it covers |
+|---|---|
+| [Using eve](usage.md) | the command line, the REPL, the machine and the service, the exit codes |
+| [Features](features.md) | every feature of Eve and how far it is: validated, drafted, design, planned |
+| [Tests](tests.md) | the conformance tests of each level and the smoke tests: how many pass |
+| [Performance](performance.md) | the benchmarks, against twin programs in Python |
+| [Release notes](releases/README.md) | what each release delivered |
+
+## The programs
+
+| Program | Component | What it is |
 |---|---|---|
-| [Tutorial](https://sagecode.org/projects/eve/index.html) | Teaches the language | HTML (scl repo, published on sagecode.org) |
-| [`spec/`](../spec/README.md) | Defines the language (normative) | Markdown, EBNF, JSON |
-| [`test/`](../test/readme.md) | Conformance tests of every level, smoke tests, benchmarks | Eve, with `/*@expect*/` blocks |
-| `manual/` | Documents one implementation of the spec | Markdown, with generated tables |
+| `eve` | [evevm](evevm/README.md), [evecp](evecp/README.md), [evecm](evecm/README.md) | runs Eve programs, the REPL, the machine and the service; the compiler front end and the common part are built in |
+| `evedb` | [evedb](evedb/README.md) | a database server around DuckDB that answers as PostgreSQL; the test and analytic database of Eve |
+| `evetx` | [evetx](evetx/README.md) | the terminal IDE: tree, editor, run and debug, data tables |
+| `eveux` | [eveux](eveux/README.md) | the native graphical workbench (early draft) |
+| `evewp` | [evewp](evewp/README.md) | the Eve Web Portal: hosting, monitoring and the web framework (design; not in the distribution yet) |
 
-The manual never restates a language rule. It links to the spec section that defines the rule and says how the implementation handles it. Other Eve compilers can copy this folder's layout and generator for their own manual (D-003: many compilers, one specification).
+A distribution holds `bin/` (the programs and `duckdb.dll`), `lib/` (the standard library in Eve, found by `eve` beside `bin/`), `manual/` (this manual) and `tools/` (syntax colors for VS Code, Zed and Tree-sitter, and the typing aids).
 
-Status: **in progress**. Usage of the machine: [usage.md](usage.md). Releases: [release/](release/README.md), one notes file per release (D-153). The first Eve implementation is a **virtual machine written in Zig** that runs Eve source as a scripting language (D-006). Its source is in `evevm/`, and the build produces `bin/eve.exe`, the official Eve implementation (D-007). It is being built now, and this manual is written alongside it (D-005). There is no compiler yet. Steps are in [`../plan/phase-7-manual.md`](../plan/phase-7-manual.md).
+## Progress
 
-## Progress and performance
-
-Updated at every release by `script/relnotes.py` from the tests, the [version map](../plan/version_map.md) and the saved benchmark runs; never edited by hand. The stages of a feature (design, drafted, validated) are defined in the [release policy](release/README.md#stages-of-a-feature).
+Written by the release tooling at every release, never by hand.
 
 <!-- GEN:progress (script/relnotes.py) -->
-Progress at release 0.0.3 (2026-10-13); full record: [release notes 0.0.3](release/v0.0.3.md).
+State of the working tree on 2026-10-19, version 0.0.7, not a release; last release: no release notes yet.
 
-**Tests.** 349 of 349 conformance and smoke tests pass (the status that `script/runtest.py` saved):
+**Tests.** 399 of 399 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
 
 | Tests | Total | Pass | % |
 |---|---|---|---|
-| [Level 1](../test/level1/readme.md) | 66 | 66 | 100% |
-| [Level 2](../test/level2/readme.md) | 63 | 63 | 100% |
-| [Level 3](../test/level3/readme.md) | 50 | 50 | 100% |
-| [Level 4](../test/level4/readme.md) | 42 | 42 | 100% |
-| [Level 5](../test/level5/readme.md) | 112 | 112 | 100% |
-| [Level 6](../test/level6/readme.md) | 0 | 0 | - |
-| [Level 7](../test/level7/readme.md) | 0 | 0 | - |
-| [Smoke](../test/smoke/readme.md) | 16 | 16 | 100% |
+| Level 1 | 68 | 68 | 100% |
+| Level 2 | 78 | 78 | 100% |
+| Level 3 | 56 | 56 | 100% |
+| Level 4 | 47 | 47 | 100% |
+| Level 5 | 117 | 117 | 100% |
+| Level 6 | 12 | 12 | 100% |
+| Level 7 | 0 | 0 | - |
+| Smoke | 21 | 21 | 100% |
 
-**Features.** By target version and stage (stages: [policy](release/README.md)):
+**Features.** By target version and stage (the stages and every feature: [features](features.md)):
 
 | Version | Validated | Drafted | Design | Planned | Total |
 |---|---|---|---|---|---|
 | Version 0.1 | 23 | 10 | 0 | 0 | 33 |
 | Version 0.2 | 4 | 8 | 0 | 1 | 13 |
-| Version 0.3 | 4 | 7 | 1 | 2 | 14 |
-| Version 0.4 | 0 | 8 | 8 | 13 | 29 |
-| Version 0.5 | 0 | 2 | 5 | 8 | 15 |
-| Version 0.6 | 0 | 1 | 4 | 4 | 9 |
+| Version 0.3 | 5 | 8 | 0 | 2 | 15 |
+| Version 0.4 | 2 | 8 | 9 | 12 | 31 |
+| Version 0.5 | 0 | 5 | 11 | 7 | 23 |
+| Version 0.6 | 0 | 1 | 8 | 4 | 13 |
 | Version 0.7 | 0 | 0 | 3 | 0 | 3 |
 | Version 0.9 | 0 | 0 | 0 | 3 | 3 |
 | Version 1.0 | 0 | 0 | 0 | 2 | 2 |
-| **All** | **31** | **36** | **21** | **33** | **121** |
+| **All** | **34** | **40** | **31** | **31** | **136** |
 
-**Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-13 11:44 (commit `505c7dc`), against the twins in Python and against version 0.0.2 (2026-10-09). Notes by version and history: [test/bmark/README.md](../test/bmark/README.md).
-
-| Benchmarks | Eve | Python | Eve / Python | Change |
-|---|---|---|---|---|
-| Level 1 | 308 ms | 165 ms | 1.9x | -6% (faster) |
-| Level 2 | 118 ms | 101 ms | 1.2x | +4% |
-| Level 3 | 228 ms | 117 ms | 1.9x | +0% |
-| Level 4 | 751 ms | 618 ms | 1.2x | -19% (faster) |
-| Level 5 | 91 ms | 112 ms | 0.8x | - |
+**Performance.** TODO: no saved ReleaseSafe benchmark run of 0.0.7. Run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --save`, then this script again. Benchmarks: [performance report](performance.md).
 <!-- /GEN:progress -->
 
 ## Links
 
-The specification, the tutorial and the readme file of every test folder. Generated from the files that git tracks, so the case of each path is exact.
-
 <!-- GEN:links (script/relnotes.py) -->
-- [Specification: conventions](../spec/README.md)
-- [Specification: contents](../spec/index.md)
-- [Conformance tests: format](../spec/conformance/README.md)
-- [Tests: how to run them](../test/readme.md)
-- [Tests: level 1](../test/level1/readme.md)
-- [Tests: level 2](../test/level2/readme.md)
-- [Tests: level 3](../test/level3/readme.md)
-- [Tests: level 4](../test/level4/readme.md)
-- [Tests: level 5](../test/level5/readme.md)
-- [Tests: level 6](../test/level6/readme.md)
-- [Tests: level 7](../test/level7/readme.md)
-- [Tests: project](../test/project/readme.md)
-- [Tests: scaffold](../test/scaffold/readme.md)
-- [Tests: smoke](../test/smoke/readme.md)
+- [Using eve: the command line](usage.md)
+- [Features and their stage](features.md)
+- [Tests: summary](tests.md)
+- [Performance report](performance.md)
+- [Release notes](releases/README.md)
+- [Component: evevm](evevm/README.md)
+- [Component: evecp](evecp/README.md)
+- [Component: evecm](evecm/README.md)
+- [Component: evedb](evedb/README.md)
+- [Component: evetx](evetx/README.md)
+- [Component: eveux](eveux/README.md)
+- [Component: evewp](evewp/README.md)
+- [Specification: contents](https://github.com/elucian/eve-lang/blob/master/spec/index.md)
+- [Specification: conventions](https://github.com/elucian/eve-lang/blob/master/spec/README.md)
 - [Tutorial: topics](https://sagecode.org/projects/eve/index.html)
 - [Tutorial: feature tests](https://sagecode.org/projects/eve/features.html)
 - [Tutorial: smoke test and performance](https://sagecode.org/projects/eve/quality.html)
 - [Tutorial: the Eve VM](https://sagecode.org/projects/eve/vm.html)
-- [Performance: benchmarks and notes by version](../test/bmark/README.md)
-- [Versions and features](../plan/version_map.md)
 <!-- /GEN:links -->
-
-## Layout (planned)
-
-```
-manual/
-  README.md            this file
-  implement.md         how to implement: architecture, milestones, spec files per milestone
-  usage.md             how to use: command line, options, exit codes, diagnostics
-  release/
-    README.md          the release policy: stages of a feature, steps of a release, links (D-153)
-    template.md        the template of the release notes
-    vX.Y.Z.md          the notes of each release (generated parts + hand-written parts)
-  support/
-    <impl>.json        support data: spec feature id -> status (hand-edited, the input)
-  features/            GENERATED from spec/ + support/, never edited by hand
-    README.md          summary: supported / partial / missing per category
-    keywords.md        from spec/lexical/keywords.json
-    operators.md       from spec/lexical/operators.json
-    delimiters.md      from spec/lexical/delimiters.json
-    grammar.md         from the ebnf blocks in spec/syntax/*.md, one row per rule
-    types.md           from spec/semantics/types.json
-    builtins.md        from spec/library/builtins.json
-  schema/
-    support.schema.json
-```
-
-## Feature tables
-
-Every table in `features/` is generated. The generator reads:
-
-1. **Spec JSON** (`spec/**/*.json`): one row per item, using its `id`, `status` and `ref`.
-2. **Spec grammar**: one row per rule defined in a fenced `ebnf` block.
-3. **Support data** (`support/*.json`): the status of each feature in each implementation.
-
-Rows are spec features, columns are implementations, so one table compares every compiler that has a support file. A generated file starts with a comment naming its generator and inputs. Running the generator with `--check` fails when a table is out of date, or when a support file names a feature id that the spec does not define.
-
-### Feature ids
-
-A feature id is `<source>:<id>`, so ids stay unique across files:
-
-| Source | Example | Taken from |
-|---|---|---|
-| `keyword` | `keyword:aspect` | `spec/lexical/keywords.json` |
-| `operator` | `operator:assign` | `spec/lexical/operators.json` |
-| `delimiter` | `delimiter:block-comment` | `spec/lexical/delimiters.json` |
-| `rule` | `rule:statement` | `ebnf` blocks in `spec/syntax/` |
-| `type` | `type:Integer` | `spec/semantics/types.json` |
-| `builtin` | `builtin:print` | `spec/library/builtins.json` |
-
-### Support data
-
-```json
-{
-  "$schema": "../schema/support.schema.json",
-  "implementation": "eve",
-  "version": "0.1.0",
-  "specVersion": "0.1-draft",
-  "features": {
-    "keyword:aspect": { "status": "yes" },
-    "rule:statement": { "status": "partial", "note": "no line continuation yet" }
-  }
-}
-```
-
-| Status | Meaning |
-|---|---|
-| `yes` | Implemented and covered by conformance tests |
-| `partial` | Implemented with limits; `note` says which |
-| `planned` | Scheduled for a named version |
-| `no` | Not implemented. A feature missing from the file counts as `no` |

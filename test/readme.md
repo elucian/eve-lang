@@ -4,7 +4,7 @@ EVE test folder contains examples of EVE code used for testing the interpreter, 
 
 ## Running tests
 
-Tests run on the Eve virtual machine (`bin/eve.exe`, built from `evevm/`) with `script/runtest.py`:
+Tests run on the Eve virtual machine (`bin/eve.exe`, built from `comp/evevm/`) with `script/runtest.py`:
 
 | Command | Runs |
 |---|---|
@@ -39,7 +39,7 @@ a time.
 2. Run it: `python script/runtest.py <name>`. It must fail first; a new test that already
    passes does not test anything new.
 3. Read the report in `temp/output/`. When the result is not the expected one, fix whichever is
-   wrong: the **VM** (`evevm/`), the **spec** (`spec/`, through `plan/decision_levelN.md`), or the
+   wrong: the **VM** (`comp/evevm/`), the **spec** (`spec/`, through `design/decision/levelN.md`), or the
    **test** itself.
 4. Run the whole level again (`python script/runtest.py 1`) so earlier tests stay green.
 
@@ -53,7 +53,7 @@ Single script tests each test is a driver. We verify basic syntax elements and m
 
 You can run every script individually by hand using the interpreter command line. For this level we do not have test automation scripts. These tests are developer tests. After you pass level 1, you can start testing Level2.
 
-Tests a04 to a54 were written from the specification and the tutorial, one feature each. On 2026-10-06 (D-094) all of them were rewritten to the syntax of the decisions up to D-093 (`new` creates, `let` changes, `Rune`, `DataMap`, `a[-1]`, constructors with `=> (@self)`, visibility words, functions instead of free methods, `done label;`, `loop … do … repeat;`), with their expectations in `/*@expect*/` blocks, and c11 to a54 were added (extension methods, inheritance, visibility, negative tests, exit codes). The VM (`evevm/`) still follows the old syntax, so most tests fail first: that is the work list. Rules the tests assume without a decision are listed in `plan/decision_level1.md` (Q-019, D-094). On 2026-10-06 (D-098) the tests were brought to D-096 and D-097 by static analysis, without running the VM: placeholders `\n{name % format}`, `delete` instead of removal by value, ordinals from 1, `assert` stops with code 3, `-2 ^ 2` is 4, regex literals keep their backslashes; a43 became `let_creates_name` and c14 (an attribute added from outside, a compile error) is new.
+Tests a04 to a54 were written from the specification and the tutorial, one feature each. On 2026-10-06 (D-094) all of them were rewritten to the syntax of the decisions up to D-093 (`new` creates, `let` changes, `Rune`, `DataMap`, `a[-1]`, constructors with `=> (@self)`, visibility words, functions instead of free methods, `done label;`, `loop … do … repeat;`), with their expectations in `/*@expect*/` blocks, and c11 to a54 were added (extension methods, inheritance, visibility, negative tests, exit codes). The VM (`comp/evevm/`) still follows the old syntax, so most tests fail first: that is the work list. Rules the tests assume without a decision are listed in `design/decision/level1.md` (Q-019, D-094). On 2026-10-06 (D-098) the tests were brought to D-096 and D-097 by static analysis, without running the VM: placeholders `\n{name % format}`, `delete` instead of removal by value, ordinals from 1, `assert` stops with code 3, `-2 ^ 2` is 4, regex literals keep their backslashes; a43 became `let_creates_name` and c14 (an attribute added from outside, a compile error) is new.
 
 ## Level 2
 
@@ -68,7 +68,7 @@ At this level **a test is a folder only when it needs a project** (D-073, D-124)
 
 ## Levels 3 to 7
 
-The levels after 2 follow the versions of Eve (`plan/version_map.md`); each has its decision log `plan/decision_levelN.md`. A test is a project folder, as at level 2. No test is written yet: the features are drafts.
+The levels after 2 follow the versions of Eve (`design/version_map.md`); each has its decision log `design/decision/levelN.md`. A test is a project folder, as at level 2. No test is written yet: the features are drafts.
 
 | Level | Topic | Version | Prefix |
 |---|---|---|---|

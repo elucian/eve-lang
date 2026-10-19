@@ -35,4 +35,4 @@ service.serve(server, routes, 3);
 
 Run `serve` in an `async procedure` started with `spawn` in a job, so the client or the other code of the script goes on (the example of [net.md](net.md)). One connection at a time at level 6; a handler that waits stops the other clients (TD-29).
 
-The function is `as_json` and not `json`: inside a module a member named `json` would hide the module `json` (`plan/library-gaps.md` G-8).
+The function is `as_json` and not `json`: inside a module a member named `json` would hide the module `json` (`backlog/library-gaps.md` G-8).

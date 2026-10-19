@@ -1,4 +1,4 @@
-** Run a program without a shell, the environment, the machine (F-LIB-07, D-189). Signature file: the body is native, in evevm/src/syslib.zig (osModule).
+** Run a program without a shell, the environment, the machine (F-LIB-07, D-189). Signature file: the body is native, in comp/evevm/src/syslib.zig (osModule).
 ** @spec spec/library/os.md  @feature F-LIB-07  @decision D-189  @tests test/level6/f05_os
 module os is
   export (run!, env!, hostname!, pid!, platform);

@@ -1,6 +1,6 @@
 # The Eve machine: parts, doors, local and remote
 
-Status: **0.1-draft**, level 5 (version 0.4), first step of the machine and its web server (F-NET-02, F-TLS-14). Design: `../../plan/design-service.md` sections 3a, 4 and 5, and `../../plan/design-packages.md` (the parts of `eve`). Tests: `test/level5/e95_web_hello` (the page, `e95_test1` IPC only, `e95_test2` HTTP only, `e95_test3` both). Decisions: D-162 (the doors, implemented and tested); D-163 to D-165 (2026-10-12: the parts of `eve`, the serving machine, the machine API, remote access, ACP), whose sections are marked with the level that brings them.
+Status: **0.1-draft**, level 5 (version 0.4), first step of the machine and its web server (F-NET-02, F-TLS-14). Design: `../../design/design-service.md` sections 3a, 4 and 5, and `../../design/design-packages.md` (the parts of `eve`). Tests: `test/level5/e95_web_hello` (the page, `e95_test1` IPC only, `e95_test2` HTTP only, `e95_test3` both). Decisions: D-162 (the doors, implemented and tested); D-163 to D-165 (2026-10-12: the parts of `eve`, the serving machine, the machine API, remote access, ACP), whose sections are marked with the level that brings them.
 
 ## The parts of `eve`
 
@@ -119,7 +119,7 @@ The REPL command `status` (and `eve --status`) prints the same lines under a hea
 
 **Reading `-s`.** `-s` is the service and only that (D-188). A word after it that ends in `.cfg` is the configuration of the service. With a script, a command, `-x`, `--listen`, `--serve`, `-loc` or `-rem`, `-s` is a usage error (exit 64); the configuration of those is `-e file.cfg` (`--setup file.cfg`). The one exception is the database part: `eve -s -db --serve evedb.cfg` (D-186).
 
-**The pid file** `<runtime>/eve-<domain>-<ipc_port>.pid` holds the pid and a line break, from the moment the machine runs to its stop. **To stop:** `eve --serve stop`, `evevm stop`, `vm.stop`, `sc stop`, `SIGTERM`, `systemctl stop`; the running scripts are cancelled, the doors close, the socket and the pid file are removed. Install recipes and the open points: `../../plan/design-service.md` section 17. Tests: `script/service_check.py`.
+**The pid file** `<runtime>/eve-<domain>-<ipc_port>.pid` holds the pid and a line break, from the moment the machine runs to its stop. **To stop:** `eve --serve stop`, `evevm stop`, `vm.stop`, `sc stop`, `SIGTERM`, `systemctl stop`; the running scripts are cancelled, the doors close, the socket and the pid file are removed. Install recipes and the open points: `../../design/design-service.md` section 17. Tests: `script/service_check.py`.
 
 ## Channels
 

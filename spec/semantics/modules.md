@@ -96,7 +96,7 @@ A module that is shared by tasks must not be changed by two of them at the same 
 
 ## Libraries
 
-A **library** is a folder of modules. The folder `lib/` of a project (`$EVE_LIB`) is its **local library**; the standard library is the library of the machine (`evevm/lib/`), found first; the external modules installed outside the project are in the folders of `$EVE_LIB_PATH`. A module in a library is imported by the name of its file. Libraries are not packaged or versioned at this level; a manifest and the installation of libraries are later (`tutorial/manifest.html`).
+A **library** is a folder of modules. The folder `lib/` of a project (`$EVE_LIB`) is its **local library**; the standard library is the library of the machine (`comp/evevm/lib/`), found first; the external modules installed outside the project are in the folders of `$EVE_LIB_PATH`. A module in a library is imported by the name of its file. Libraries are not packaged or versioned at this level; a manifest and the installation of libraries are later (`tutorial/manifest.html`).
 
 ## Extension methods
 

@@ -14,10 +14,7 @@
     .paths = .{
         "build.zig",
         "build.zig.zon",
-        "evecm",
-        "evecp",
-        "evevm",
-        "cmd",
+        "comp",
         "lib",
     },
 }

@@ -1,0 +1,15 @@
+# net
+
+TCP for Eve code: a client connection and a listening server, as text (F-NET-02, D-189). Signature file: the body is native, in comp/evevm/src/netlib.zig (netModule, call).
+@spec spec/library/net.md  @feature F-NET-02  @decision D-189  @tests test/level6/f09_net
+
+## `external function listen!(host: String, port: Integer) => (@result: Listener);`
+
+Open a listening socket; port 0 lets the system choose (read it with the method port of the Listener).
+Methods of Listener: accept!() => Socket, port() => Integer, close().
+
+## `external function connect!(host: String, port: Integer) => (@result: Socket);`
+
+Connect to a server.
+Methods of Socket: read_line!() => String (Null at the end), read!(n) => String, read_exact!(n) => String, write(text), close(), is_open() => Logic, peer() => String.
+

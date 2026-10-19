@@ -255,7 +255,7 @@ A conforming implementation reports a lexical error for: an invalid UTF-8 sequen
 
 ## Open points
 
-These rules were added by the specification writer and wait for confirmation; the numbered questions are in [`plan/decision_level1.md`](../../plan/decision_level1.md).
+These rules were added by the specification writer and wait for confirmation; the numbered questions are in [`design/decision/level1.md`](../../design/decision/level1.md).
 
 | Point | Question |
 |---|---|

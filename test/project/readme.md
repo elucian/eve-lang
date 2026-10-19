@@ -9,7 +9,7 @@ Every output below was captured from real runs on Windows 11 (2026-10-11).
 Build the VM once (from the root of the repository), then open **two terminals in this folder**: the machine reads `eve.cfg` of the current folder, so always run `eve` from `test/project`.
 
 ```
-cd evevm && zig build -p ..          # installs bin/eve.exe
+zig build -p .                       # at the root: installs bin/eve.exe
 cd ../test/project
 ```
 
@@ -302,4 +302,4 @@ The methods are those of the machine API (D-165): `vm.ping`, `vm.stat` (the door
 - **Windows:** a refused HTTP connection takes about 2 s, so `eve --serve status` with no machine, and every start of `--serve` (it first asks the port whether someone is there), take 2 s. The IPC door answers in about 50 ms.
 - **Ideas to try:** stop the machine while the page is open (the status turns red), run `slow.eve` from the page and `hello.eve` from the CLI at the same time, run two machines on two ports, kill the machine with Ctrl+C and start it again.
 
-Write what you would like to change as a question or a request; the decisions go to `plan/decision_level5.md` and the rules to `spec/library/machine.md`.
+Write what you would like to change as a question or a request; the decisions go to `design/decision/level5.md` and the rules to `spec/library/machine.md`.

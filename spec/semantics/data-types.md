@@ -1,6 +1,6 @@
 # Data file types
 
-Status: **0.1-draft**, level 5 (the data language, D-125; version 0.4). Written from the proposals of Q-039 and Q-044 and from `../../plan/design-database-remote.md` (ETL), **as proposed**: the author has not answered yet, and the choices are listed in `../../plan/review_level5.md`. Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
+Status: **0.1-draft**, level 5 (the data language, D-125; version 0.4). Written from the proposals of Q-039 and Q-044 and from `../../design/design-database-remote.md` (ETL), **as proposed**: the author has not answered yet, and the choices are listed in `../../design/review/level5.md`. Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
 
 ## What they are
 
@@ -38,7 +38,7 @@ new lines := txt.read!(:Order)("in/orders.txt", widths: (8, 10, 12, 20));
 
 ## Output formats for reports: PRN and PDF (backlog)
 
-`PRN` (a print-out file, extension `.prn`) and `PDF` are formats for **output only**, for data reporting: a report that a person reads or a printer prints. They are planned and **not specified yet**: the style (fonts, sizes, margins, headers and footers, page numbers, columns and their alignment) and the limits (the width of a line, the lines per page, what happens to a value longer than its field) are a todo, recorded in `../../plan/backlog.md`. What is already clear: what only changes the look belongs to the style of the report (and to the UX, `eveux`), not to a data format like `TXT`; the report is written from the same record classes and streams as the data files.
+`PRN` (a print-out file, extension `.prn`) and `PDF` are formats for **output only**, for data reporting: a report that a person reads or a printer prints. They are planned and **not specified yet**: the style (fonts, sizes, margins, headers and footers, page numbers, columns and their alignment) and the limits (the width of a line, the lines per page, what happens to a value longer than its field) are a todo, recorded in `../../design/backlog.md`. What is already clear: what only changes the look belongs to the style of the report (and to the UX, `eveux`), not to a data format like `TXT`; the report is written from the same record classes and streams as the data files.
 
 ## Reading a unit
 
@@ -208,4 +208,4 @@ end orders_upload;
 
 ## Open points
 
-All in `../../plan/review_level5.md`: the layout of a `TXT` file, the position of `XML` (0.5) and `HTML` (0.6), the module for compression.
+All in `../../design/review/level5.md`: the layout of a `TXT` file, the position of `XML` (0.5) and `HTML` (0.6), the module for compression.

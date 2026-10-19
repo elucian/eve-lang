@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Release notes and the progress paragraph of the manual (D-153; policy: manual/release/README.md).
+"""Release notes and the progress paragraph of the manual (D-153; policy: design/release.md).
 
   python script/relnotes.py [X.Y.Z]     write the notes of release X.Y.Z and refresh the manual
   python script/relnotes.py --manual    refresh only the progress and links of manual/README.md, from
@@ -8,15 +8,15 @@
 
 X.Y.Z defaults to the version of the root build.zig.zon, the one `script/release.py` just set.
 Files written:
-  manual/release/vX.Y.Z.md    made from manual/release/template.md when missing. Afterwards only the
+  manual/releases/vX.Y.Z.md    made from design/template/release-notes.md when missing. Afterwards only the
                               blocks between <!-- GEN:<name> --> and <!-- /GEN:<name> --> are written
                               again; the text around them (Highlights, Decisions, ...) is kept.
   manual/README.md            the blocks "progress" (tests, features, performance of the release)
                               and "links" (spec, tutorial, test readme files)
-  manual/release/README.md    the block "releases" (one line per notes file)
+  design/release.md    the block "releases" (one line per notes file)
 Notes of an older or tagged release are never written: a release is a record.
 
-Sources: plan/version_map.md (features and status), test/*/status.json (tests, as runtest.py left
+Sources: design/version_map.md (features and status), test/*/status.json (tests, as runtest.py left
 them: run `python script/runtest.py all` first), test/bmark/history.json (saved ReleaseSafe runs:
 run `bmark.py --save` first), and the notes of the previous release (stages before, timings before).
 
@@ -45,8 +45,11 @@ from _common import read, write  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 MANUAL = os.path.join(ROOT, 'manual')
-RELEASE = os.path.join(MANUAL, 'release')
+RELEASE = os.path.join(MANUAL, 'releases')
 SITE = 'https://sagecode.org/projects/eve/'
+REPO = 'https://github.com/elucian/eve-lang/blob/master/'
+# the components whose doc/ folder is copied into manual/<name>/ (script/genmanual.py)
+COMPONENTS = ('evevm', 'evecp', 'evecm', 'evedb', 'evetx', 'eveux', 'evewp')
 STAGES = ('validated', 'drafted', 'design')
 V = r'\d+\.\d+\.\d+'
 
@@ -74,7 +77,7 @@ def current_version():
 def features():
     """-> [(code, name, target version, stage or 'planned')] from the tables of version_map.md."""
     out, target = [], None
-    for line in read(path('plan', 'version_map.md'))[0].split('\n'):
+    for line in read(path('design', 'version_map.md'))[0].split('\n'):
         m = re.match(r'## (Version \d+\.\d+)', line)
         if m:
             target = m.group(1)
@@ -230,7 +233,7 @@ def perf_rows(version, prev_version):
 
 def gen_head(version, prev):
     commit = git('rev-parse', '--short', 'HEAD') or '?'
-    prev_text = link('manual/release/v%s.md' % prev, prev, 'manual/release') if prev else 'none (first notes)'
+    prev_text = link('manual/releases/v%s.md' % prev, prev, 'manual/releases') if prev else 'none (first notes)'
     return '\n'.join([
         '| Release | Date | Commit | Previous release |',
         '|---|---|---|---|',
@@ -238,8 +241,8 @@ def gen_head(version, prev):
 
 
 def gen_progress(version, feats, test_rows, here):
-    rows = [(link(readme, label, here) if readme else label, total, passed,
-             '%d%%' % (100 * passed // total) if total else '-') for label, readme, total, passed in test_rows]
+    rows = [(label, total, passed, '%d%%' % (100 * passed // total) if total else '-')
+            for label, _readme, total, passed in test_rows]
     total = sum(r[2] for r in test_rows)
     passed = sum(r[3] for r in test_rows)
     vers = sorted({f[2] for f in feats}, key=lambda v: vkey(v.split()[1] + '.0'))
@@ -250,15 +253,17 @@ def gen_progress(version, feats, test_rows, here):
     frows.append(['**All**'] + ['**%d**' % sum(1 for f in feats if f[3] == s) for s in STAGES + ('planned',)]
                  + ['**%d**' % len(feats)])
     return '\n'.join([
-        '**Tests.** %d of %d conformance and smoke tests pass (the status that `script/runtest.py` saved):' % (passed, total),
+        '**Tests.** %d of %d conformance and smoke tests pass (the last run of each suite; %s):'
+        % (passed, total, link('manual/tests.md', 'summary', here)),
         '', table(('Tests', 'Total', 'Pass', '%'), rows), '',
-        '**Features.** By target version and stage (stages: %s):' % link('manual/release/README.md', 'policy', here),
+        '**Features.** By target version and stage (the stages and every feature: %s):'
+        % link('manual/features.md', 'features', here),
         '', table(('Version', 'Validated', 'Drafted', 'Design', 'Planned', 'Total'), frows)])
 
 
 def gen_performance(version, prev, here):
     pair, rows = perf_rows(version, prev)
-    bm = link('test/bmark/README.md', 'test/bmark/README.md', here)
+    bm = link('manual/performance.md', 'performance report', here)
     if not rows:
         return ('TODO: no saved ReleaseSafe benchmark run of %s. Run `python script/bmark.py --build ReleaseSafe '
                 '--eve temp/rel/bin/eve.exe --save`, then this script again. Benchmarks: %s.' % (version, bm))
@@ -266,7 +271,7 @@ def gen_performance(version, prev, here):
     since = 'version %s (%s)' % (base['version'], base['date'][:10]) if base else 'nothing (first run)'
     return '\n'.join([
         'Total median time of the benchmarks of each level, ReleaseSafe build, run of %s (commit `%s`), '
-        'against the twins in Python and against %s. Notes by version and history: %s.'
+        'against the twins in Python and against %s. Every benchmark: %s.'
         % (run['date'], run.get('commit', '?'), since, bm),
         '', table(('Benchmarks', 'Eve', 'Python', 'Eve / Python', 'Change'), rows)])
 
@@ -294,20 +299,18 @@ def gen_stages(feats):
 
 
 def gen_links(here):
-    spec = [('spec/README.md', 'Specification: conventions'), ('spec/index.md', 'Specification: contents'),
-            ('spec/conformance/README.md', 'Conformance tests: format')]
-    tests = [('test/readme.md', 'Tests: how to run them')]
-    for f in sorted(tracked()):
-        m = re.fullmatch(r'test/([^/]+)/readme\.md', f, re.I)
-        if m and m.group(1) != 'bmark':          # the benchmarks have their own line below
-            tests.append((f, 'Tests: ' + ('level ' + m.group(1)[5:] if m.group(1).startswith('level')
-                                          else m.group(1))))
+    """Links of the manual: its own pages and the component docs (manual/<name>/), the specification and
+    the tutorial on the web. Nothing outside manual/ is linked by path, so the links work in a distribution."""
+    pages = [('manual/usage.md', 'Using eve: the command line'), ('manual/features.md', 'Features and their stage'),
+             ('manual/tests.md', 'Tests: summary'), ('manual/performance.md', 'Performance report'),
+             ('manual/releases/README.md', 'Release notes')]
+    pages += [('manual/%s/README.md' % c, 'Component: %s' % c) for c in COMPONENTS]
+    out = ['- ' + link(f, t, here) for f, t in pages if f in tracked() or os.path.exists(path(f))]
+    out += ['- [Specification: contents](%sspec/index.md)' % REPO,
+            '- [Specification: conventions](%sspec/README.md)' % REPO]
     tut = [('index.html', 'Tutorial: topics'), ('features.html', 'Tutorial: feature tests'),
            ('quality.html', 'Tutorial: smoke test and performance'), ('vm.html', 'Tutorial: the Eve VM')]
-    out = ['- ' + link(f, t, here) for f, t in spec + tests if f in tracked()]
     out += ['- [%s](%s%s)' % (t, SITE, p) for p, t in tut]
-    out += ['- ' + link('test/bmark/README.md', 'Performance: benchmarks and notes by version', here),
-            '- ' + link('plan/version_map.md', 'Versions and features', here)]
     return '\n'.join(out)
 
 
@@ -382,10 +385,10 @@ def main(args):
         problems = check_links()
         notes = os.path.join(RELEASE, 'v%s.md' % version)
         if os.path.exists(notes) and 'TODO' in read(notes)[0]:
-            problems.append('manual/release/v%s.md: still holds TODO' % version)
+            problems.append('manual/releases/v%s.md: still holds TODO' % version)
         rtext = read(os.path.join(RELEASE, 'README.md'))[0]
         if put(rtext, 'releases', gen_releases()) != rtext:
-            problems.append('manual/release/README.md: the list of releases is stale (run relnotes.py)')
+            problems.append('manual/releases/README.md: the list of releases is stale (run relnotes.py)')
         for p in problems:
             print(p)
         print('relnotes: %d problem(s)' % len(problems))
@@ -393,7 +396,7 @@ def main(args):
 
     if manual_only:
         last = notes_files()[-1] if notes_files() else None
-        record = link('manual/release/v%s.md' % last, 'release notes %s' % last) if last else 'no release notes yet'
+        record = link('manual/releases/v%s.md' % last, 'release notes %s' % last) if last else 'no release notes yet'
         write_manual('State of the working tree on %s, version %s, not a release; last release: %s.\n\n'
                      % (date.today().isoformat(), version, record), version, last)
         return 0
@@ -408,10 +411,10 @@ def main(args):
     if os.path.exists(notes):
         text, eol = read(notes)
     else:
-        text, eol = read(os.path.join(RELEASE, 'template.md'))
+        text, eol = read(path('design', 'template', 'release-notes.md'))
         text = text.replace('X.Y.Z', version)
         text = re.sub(r'\A(?:<!--.*?-->\n)+', '', text, flags=re.S)   # the comment that explains the template
-    here = 'manual/release'
+    here = 'manual/releases'
     text = put(text, 'head', gen_head(version, prev))
     text = put(text, 'changes', gen_changes(version, prev, feats))
     text = put(text, 'progress', gen_progress(version, feats, test_rows, here))
@@ -419,17 +422,17 @@ def main(args):
     text = put(text, 'links', gen_links(here))
     text = put(text, 'stages', gen_stages(feats))
     write(notes, text, eol)
-    print('wrote manual/release/v%s.md' % version)
+    print('wrote manual/releases/v%s.md' % version)
 
     write_manual('Progress at release %s (%s); full record: %s.\n\n'
-                 % (version, date.today().isoformat(), link('manual/release/v%s.md' % version, 'release notes %s' % version)),
+                 % (version, date.today().isoformat(), link('manual/releases/v%s.md' % version, 'release notes %s' % version)),
                  version, prev)
 
     rtext, reol = read(os.path.join(RELEASE, 'README.md'))
     write(os.path.join(RELEASE, 'README.md'), put(rtext, 'releases', gen_releases()), reol)
-    print('wrote manual/release/README.md (releases)')
+    print('wrote manual/releases/README.md (releases)')
     if 'TODO' in text:
-        print('next: replace every TODO of manual/release/v%s.md, then `python script/relnotes.py --check`' % version)
+        print('next: replace every TODO of manual/releases/v%s.md, then `python script/relnotes.py --check`' % version)
     return 0
 
 

@@ -7,8 +7,8 @@ provides the body. The compiler creates the external library; the signature is a
 
 | Module | Contents | Status |
 |---|---|---|
-| [`io.eve`](io.eve) | `write`, `print`, `read`, `error`, `warning`, `log_err`, `log_wrn` | draft signatures |
-| [`exception.eve`](exception.eve) | `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, the constants `$err_name` and `$wrn_name` | draft |
+| [`sys/io.eve`](sys/io.eve) | `write`, `print`, `read`, `error`, `warning`, `log_err`, `log_wrn` | draft signatures |
+| [`sys/exception.eve`](sys/exception.eve) | `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, the constants `$err_name` and `$wrn_name` | draft |
 
 ## Rules
 
@@ -17,7 +17,7 @@ provides the body. The compiler creates the external library; the signature is a
 - Every public member has a comment block right above its signature, lines starting with `**`.
   The first comment lines of the file, above the `module` header, are the summary of the module.
 - The documentation is generated from these comments and the signatures, never written twice:
-  see [`../doc/`](../doc/README.md).
+  see [`doc/`](doc/README.md).
 
 ## Output
 
@@ -28,5 +28,5 @@ last error to stderr: with the call stack in debug mode, only the message otherw
 
 ## Documentation
 
-Run `zig build doc` in `evevm/`: it runs `eve --doc lib doc` (D-082), which reads `lib/*.eve`
-and writes one Markdown page for each module into `doc/`. The generator is in [`../src/doc.zig`](../src/doc.zig).
+Run `zig build doc` in `comp/evevm/`: it runs `eve --doc lib doc` (D-082), which reads `lib/*.eve`
+and writes one Markdown page for each module into `doc/`. The generator is the `doc` command of `eve` (source `comp/evecp/src/doc.zig`).

@@ -1,6 +1,6 @@
 # test Level 7
 
-This level tests web: HTML templates and Eve in WebAssembly (version 0.6, plan/decision_level7.md).
+This level tests web: HTML templates and Eve in WebAssembly (version 0.6, design/decision/level7.md).
 
 A test is a project folder (D-073): `test/level7/g01_feature/` holds the driver `g01_feature.eve` and its `expect.json`. Test names start with `g`. No test is written yet: the features of this level are drafts.
 
