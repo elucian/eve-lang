@@ -62,10 +62,15 @@ def peak_memory(proc):
         return None
 
 
-def run_once(eve, path):
+def run_once(eve, path, bc=False):
     t = time.perf_counter()
+    env = dict(os.environ)
+    if bc:
+        env['EVE_ENGINE'] = 'bc'
+    else:
+        env.pop('EVE_ENGINE', None)
     # the folder of the benchmarks is the working folder: its eve.cfg names the database of the level 5 benchmarks
-    p = subprocess.Popen([eve, '-x', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=PERF)
+    p = subprocess.Popen([eve, '-x', path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=PERF, env=env)
     out, err = p.communicate()
     ms = (time.perf_counter() - t) * 1000
     return ms, Done(p.returncode, out, err, peak_memory(p))
@@ -130,23 +135,24 @@ def update_readme(hist):
     py = rel[-1].get('python', {}) if rel else {}
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
     what = ['| Benchmark | What it measures |', '|---|---|']
-    res = ['| Benchmark | Eve | Python | Eve / Python | Peak memory |', '|---|---|---|---|---|']
+    res = ['| Benchmark | Eve | BCode | Python | EVE/PT | Mem |', '|---|---|---|---|---|---|']
     for lvl in range(1, 8):
         what.append('| **Level %d** | |' % lvl)
-        res.append('| **Level %d** | | | | |' % lvl)
+        res.append('| **Level %d** | | | | | |' % lvl)
         mine = [f for f in files if os.path.basename(f).startswith('p%d' % lvl)]
         for f in mine:
             n = os.path.basename(f)[:-4]
             what.append('| `%s` | %s |' % (n, describe(f)))
             if n in last:
                 r = last[n]
-                res.append('| `%s` | %.0f ms | %s | %s | %s |' % (n, r['median_ms'], ('%.0f ms' % py[n]) if n in py else '-',
-                           ('%.1fx' % (r['median_ms'] / py[n])) if n in py else '-', ('%.1f MB' % r['peak_mb']) if 'peak_mb' in r else '-'))
+                res.append('| `%s` | %.0f ms | %s | %s | %s | %s |' % (n, r['median_ms'], ('%.0f ms' % r['bc_ms']) if 'bc_ms' in r else '-',
+                           ('%.0f ms' % py[n]) if n in py else '-', ('%.1fx' % (r['median_ms'] / py[n])) if n in py else '-',
+                           ('%.1f MB' % r['peak_mb']) if 'peak_mb' in r else '-'))
             else:
-                res.append('| `%s` | not measured | - | - | - |' % n)
+                res.append('| `%s` | not measured | - | - | - | - |' % n)
         if not mine:
             what.append('| planned | %s |' % PLANNED[lvl])
-            res.append('| planned | | | | |')
+            res.append('| planned | | | | | |')
     put_block('bench', what)
     put_block('results', res)
     runs = ['| Version | Date | Build | Commit | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |', '|---|---|---|---|---|---|---|---|---|---|']
@@ -227,13 +233,14 @@ def main():
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--eve', default=os.path.join(ROOT, 'bin', 'eve.exe'))
     ap.add_argument('--level', type=int)
-    ap.add_argument('--engine', choices=['tree', 'bc'], default='tree', help='the engine of the VM (design/design-bytecode.md); a bc run can not be saved yet')
+    ap.add_argument('--engine', choices=['tree', 'bc'], default='tree', help='the engine of the VM (design/design-bytecode.md); a bc run alone can not be saved')
+    ap.add_argument('--both', action='store_true', help='run every benchmark on the tree walker and on the bytecode machine: the BCode column, and the two outputs must be equal')
     ap.add_argument('--build', default='Debug', help='how the VM was built: Debug (zig build -p . at the root) or ReleaseSafe; runs are compared with the same build')
     a = ap.parse_args()
     a.eve = os.path.abspath(a.eve)
     if a.engine == 'bc':
         if a.save:
-            sys.exit('bmark: save a bytecode run when the history has a column for it (stage B5.3)')
+            sys.exit('bmark: a bytecode run alone is not saved: use --both')
         os.environ['EVE_ENGINE'] = 'bc'
     ver = subprocess.run([a.eve, '--version'], capture_output=True, text=True).stdout.strip().split()[-1]
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
@@ -262,6 +269,20 @@ def main():
             results[name] = {'median_ms': round(statistics.median(times), 1), 'min_ms': round(min(times), 1)}
             if peaks:
                 results[name]['peak_mb'] = max(peaks)
+        if a.both and times and name not in bad:
+            # the bytecode machine: the same output, and its time
+            bc_times, tree_out = [], r.stdout.strip().replace('\r', '')
+            for _ in range(a.runs):
+                ms, r2 = run_once(a.eve, f, bc=True)
+                same_out = r2.stdout.strip().replace('\r', '') == tree_out
+                if r2.returncode != 0 or not same_out or (want is not None and r2.stdout.strip().replace('\r', '') != want.strip()):
+                    print('%s: THE ENGINES DIFFER (bytecode exit %d): %s' % (name, r2.returncode, (r2.stdout + r2.stderr).strip()[:120]))
+                    bad.append(name)
+                    break
+                bc_times.append(ms)
+            if bc_times:
+                results[name]['bc_ms'] = round(statistics.median(bc_times), 1)
+                results[name]['bc_min_ms'] = round(min(bc_times), 1)
     print('Eve %s (%s build), %d runs each, %s' % (ver, a.build, a.runs, platform.platform()))
     exe_bytes = os.path.getsize(a.eve)
     old_exe = next((h['exe_bytes'] for h in reversed(same) if 'exe_bytes' in h), None)
@@ -270,7 +291,7 @@ def main():
     print('sizes: ' + ', '.join('%s %s KB' % (k, format(round(v / 1024), ',')) for k, v in program_sizes(a.eve).items()))
     refs = {n: run_reference(n, a.runs) for n in results}
     server.__exit__(None, None, None)
-    print('%-22s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
+    print('%-22s %9s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'bcode ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
     slow = []
     for name, r in results.items():
         prev = last.get(name)
@@ -281,7 +302,7 @@ def main():
             if pct > 25:
                 slow.append(name)
         py = refs.get(name)
-        print('%-22s %9.1f %9.1f %9s %9s %7s %9s' % (name, r['median_ms'], r['min_ms'], delta, '%.1f' % py if py else '-',
+        print('%-22s %9.1f %9.1f %9s %9s %9s %7s %9s' % (name, r['median_ms'], r['min_ms'], '%.1f' % r['bc_ms'] if 'bc_ms' in r else '-', delta, '%.1f' % py if py else '-',
                                                     '%.1fx' % (r['median_ms'] / py) if py else '-', r.get('peak_mb', '-')))
     for lvl in sorted({n[1] for n in results}):
         tot = sum(r['median_ms'] for n, r in results.items() if n[1] == lvl)

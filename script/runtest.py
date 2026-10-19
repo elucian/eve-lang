@@ -609,6 +609,38 @@ def write(path, text):
         f.write(text if text.endswith("\n") else text + "\n")
 
 
+def run_both(eve, test, timeout):
+    """Run a test on the tree walker and on the bytecode machine (EVE_ENGINE=bc). The test passes when both pass and agree."""
+    saved = os.environ.pop("EVE_ENGINE", None)
+    try:
+        tree = run_test(eve, test, timeout)
+        os.environ["EVE_ENGINE"] = "bc"
+        bc = run_test(eve, test, timeout)
+    finally:
+        os.environ.pop("EVE_ENGINE", None)
+        if saved is not None:
+            os.environ["EVE_ENGINE"] = saved
+    res = tree
+    res["ms_bc"] = bc["ms"]
+    if tree["verdict"] != "PASS":
+        return res
+    problems = []
+    if bc["verdict"] != "PASS":
+        problems.append("bytecode machine: " + (bc["reason"] or bc["verdict"]))
+    else:
+        if bc["exit"] != tree["exit"]:
+            problems.append(f"exit codes differ: tree {tree['exit']}, bytecode {bc['exit']}")
+        if bc["stdout"] != tree["stdout"]:
+            problems.append("the output differs")
+        if norm(bc["stderr"]) != norm(tree["stderr"]):
+            problems.append("the error output differs")
+    if problems:
+        res["verdict"] = "FAIL"
+        res["reason"] = "; ".join(problems)
+        res["stdout"] = tree["stdout"] + "\n--- bytecode machine ---\n" + bc["stdout"]
+    return res
+
+
 def main():
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="replace")
@@ -629,8 +661,15 @@ def main():
     ap.add_argument("--engine", choices=["tree", "bc"], default="tree",
                     help="the engine of the VM: tree (the reference, default) or bc (the bytecode machine, design/design-bytecode.md); "
                          "a bc run writes its reports to temp/output-bc and never updates the status files or the tutorial pages")
+    ap.add_argument("--both", action="store_true",
+                    help="run every test on the tree walker and on the bytecode machine: both must pass and give the same exit code, "
+                         "output and error output (the reports go to temp/output-both; the status files are not updated)")
     args = ap.parse_args()
-    if args.engine == "bc":
+    if args.both:
+        args.no_update = True
+        if args.out == os.path.join(ROOT, "temp", "output"):
+            args.out = os.path.join(ROOT, "temp", "output-both")
+    elif args.engine == "bc":
         os.environ["EVE_ENGINE"] = "bc"
         args.no_update = True
         if args.out == os.path.join(ROOT, "temp", "output"):
@@ -666,6 +705,15 @@ def main():
 
     results = []
     for test in tests:
+        if args.both:
+            res = run_both(eve, test, args.timeout)
+            results.append(res)
+            report = os.path.join(args.out, level_of(test), os.path.basename(test)[:-4] + ".md")
+            write(report, test_report(res))
+            res["report"] = report
+            if not args.quiet or res["verdict"] != "PASS":
+                print(f"{res['verdict']:5}  {rel(test)}" + (f"  ({res['reason']})" if res["reason"] else ""))
+            continue
         res = run_test(eve, test, args.timeout)
         for k in range(2, max(args.repeat, 1) + 1):
             if res["verdict"] != "PASS":

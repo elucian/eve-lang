@@ -9,7 +9,7 @@ python script/bmark.py                    # 5 runs of each benchmark, compared w
 python script/bmark.py --save             # also append the run to history.json and rewrite the tables below
 python script/bmark.py --check            # exit 1 when a benchmark is more than 25% slower than the last saved run
 python script/bmark.py --level 1 --runs 9
-python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --save
+python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --both --save   # also the bytecode machine (column BCode)
 ```
 
 - Compare only runs of the same build and the same machine, with nothing else running; trust the median, not one run. The ReleaseSafe build (`zig build -Doptimize=ReleaseSafe -p temp/rel`) is the one to compare between versions; Debug is for development.
@@ -57,40 +57,40 @@ What each one measures (the `** perf:` line of the file).
 
 ## Results
 
-The latest saved ReleaseSafe run: median time of the whole process (start-up included), the time of the Python twin, and the peak memory of Eve.
+The latest saved ReleaseSafe run, median time of the whole process (start-up included): **Eve** is the tree walker, **BCode** the bytecode machine (`--both`, the output must be equal), **Python** the twin, **EVE/PT** the ratio Eve / Python, **Mem** the peak memory of Eve.
 
 <!-- results:begin -->
-| Benchmark | Eve | Python | Eve / Python | Peak memory |
-|---|---|---|---|---|
-| **Level 1** | | | | |
-| `p1a_arith` | 70 ms | 80 ms | 0.9x | 5.9 MB |
-| `p1b_calls` | 45 ms | 45 ms | 1.0x | 6.0 MB |
-| `p1c_collections` | 17 ms | 42 ms | 0.4x | 8.0 MB |
-| `p1d_strings` | 15 ms | 59 ms | 0.3x | 6.3 MB |
-| **Level 2** | | | | |
-| `p2a_aspects` | 10 ms | 37 ms | 0.3x | 5.9 MB |
-| `p2b_closures` | 40 ms | 49 ms | 0.8x | 7.4 MB |
-| `p2c_procedures` | 46 ms | 47 ms | 1.0x | 6.0 MB |
-| **Level 3** | | | | |
-| `p3a_modules` | 65 ms | 50 ms | 1.3x | 6.0 MB |
-| `p3b_objects` | 58 ms | 53 ms | 1.1x | 6.1 MB |
-| `p3c_module_state` | 31 ms | 48 ms | 0.7x | 6.0 MB |
-| **Level 4** | | | | |
-| `p4a_parallel_sum` | 120 ms | 97 ms | 1.2x | 40.4 MB |
-| `p4b_channel` | 62 ms | 462 ms | 0.1x | 6.1 MB |
-| `p4c_groups` | 177 ms | 124 ms | 1.4x | 8.1 MB |
-| `p4d_tasks` | 176 ms | 153 ms | 1.1x | 8.0 MB |
-| `p4e_garbage` | 144 ms | 103 ms | 1.4x | 6.0 MB |
-| **Level 5** | | | | |
-| `p5a_sql_function` | 106 ms | 168 ms | 0.6x | 9.2 MB |
-| **Level 6** | | | | |
-| `p6a_evedb_store` | 633 ms | 1768 ms | 0.4x | 56.2 MB |
-| `p6b_evedb_load` | 273 ms | 7536 ms | 0.0x | 16.5 MB |
-| `p6c_pg_records` | 174 ms | 268 ms | 0.7x | 81.7 MB |
-| `p6d_olap_groupby` | 512 ms | 533 ms | 1.0x | 6.2 MB |
-| `p6e_http_requests` | 328 ms | 451 ms | 0.7x | 51.8 MB |
-| **Level 7** | | | | |
-| planned | | | | |
+| Benchmark | Eve | BCode | Python | EVE/PT | Mem |
+|---|---|---|---|---|---|
+| **Level 1** | | | | | |
+| `p1a_arith` | 64 ms | 26 ms | 66 ms | 1.0x | 5.9 MB |
+| `p1b_calls` | 41 ms | 16 ms | 47 ms | 0.9x | 6.0 MB |
+| `p1c_collections` | 19 ms | 23 ms | 38 ms | 0.5x | 8.0 MB |
+| `p1d_strings` | 16 ms | 15 ms | 51 ms | 0.3x | 6.3 MB |
+| **Level 2** | | | | | |
+| `p2a_aspects` | 11 ms | 12 ms | 31 ms | 0.4x | 5.9 MB |
+| `p2b_closures` | 36 ms | 38 ms | 40 ms | 0.9x | 7.4 MB |
+| `p2c_procedures` | 43 ms | 43 ms | 42 ms | 1.0x | 6.0 MB |
+| **Level 3** | | | | | |
+| `p3a_modules` | 58 ms | 56 ms | 43 ms | 1.4x | 6.0 MB |
+| `p3b_objects` | 54 ms | 52 ms | 44 ms | 1.2x | 6.1 MB |
+| `p3c_module_state` | 29 ms | 30 ms | 42 ms | 0.7x | 6.0 MB |
+| **Level 4** | | | | | |
+| `p4a_parallel_sum` | 111 ms | 110 ms | 84 ms | 1.3x | 40.3 MB |
+| `p4b_channel` | 61 ms | 60 ms | 230 ms | 0.3x | 6.1 MB |
+| `p4c_groups` | 134 ms | 135 ms | 147 ms | 0.9x | 8.2 MB |
+| `p4d_tasks` | 131 ms | 131 ms | 143 ms | 0.9x | 8.0 MB |
+| `p4e_garbage` | 113 ms | 135 ms | 93 ms | 1.2x | 6.0 MB |
+| **Level 5** | | | | | |
+| `p5a_sql_function` | 80 ms | 78 ms | 136 ms | 0.6x | 9.2 MB |
+| **Level 6** | | | | | |
+| `p6a_evedb_store` | 812 ms | 802 ms | 2124 ms | 0.4x | 56.2 MB |
+| `p6b_evedb_load` | 345 ms | 332 ms | 7795 ms | 0.0x | 16.5 MB |
+| `p6c_pg_records` | 190 ms | 181 ms | 329 ms | 0.6x | 81.7 MB |
+| `p6d_olap_groupby` | 666 ms | 653 ms | 624 ms | 1.1x | 6.1 MB |
+| `p6e_http_requests` | 283 ms | 274 ms | 441 ms | 0.6x | 51.8 MB |
+| **Level 7** | | | | | |
+| planned | | | | | |
 <!-- results:end -->
 
 ## Size of the programs
@@ -98,18 +98,18 @@ The latest saved ReleaseSafe run: median time of the whole process (start-up inc
 The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
 
 <!-- size:begin -->
-| Version | 0.0.7 | 0.0.7 | 0.0.7 |
-|---|---|---|---|
-| Date | 2026-10-19 | 2026-10-19 | 2026-10-19 |
-| Build | ReleaseSafe | ReleaseSafe | ReleaseSafe |
-| Commit | cc28760 | 810aae5 | 320a228 |
-| eve | 3,988 KB | 4,002 KB | 4,000 KB |
-| evevm | 3,988 KB | 4,002 KB | 4,000 KB |
-| evecp | 1,210 KB | 1,210 KB | 1,210 KB |
-| evetx | 2,198 KB | 2,198 KB | 2,198 KB |
-| eveux | 9,088 KB | 9,088 KB | 9,088 KB |
-| evedb | 1,264 KB | 1,264 KB | 1,264 KB |
-| eve change | - | +0.4% | -0.0% |
+| Version | 0.0.7 | 0.0.7 | 0.0.7 | 0.0.7 |
+|---|---|---|---|---|
+| Date | 2026-10-19 | 2026-10-19 | 2026-10-19 | 2026-10-19 |
+| Build | ReleaseSafe | ReleaseSafe | ReleaseSafe | ReleaseSafe |
+| Commit | cc28760 | 810aae5 | 320a228 | b3019cb |
+| eve | 3,988 KB | 4,002 KB | 4,000 KB | 4,055 KB |
+| evevm | 3,988 KB | 4,002 KB | 4,000 KB | 4,055 KB |
+| evecp | 1,210 KB | 1,210 KB | 1,210 KB | 1,210 KB |
+| evetx | 2,198 KB | 2,198 KB | 2,198 KB | 2,198 KB |
+| eveux | 9,088 KB | 9,088 KB | 9,088 KB | 9,088 KB |
+| evedb | 1,264 KB | 1,264 KB | 1,264 KB | 1,264 KB |
+| eve change | - | +0.4% | -0.0% | +1.4% |
 <!-- size:end -->
 
 ## History
@@ -128,6 +128,8 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 
 **0.0.7 (2026-10-19), the bytecode machine, stage B5.2.** `--engine bc` runs `process main` and the functions it calls on the register machine when the emitter translates them; the rest stays with the tree walker. Not saved in the history yet (`bmark.py --engine bc` refuses `--save`). Median of 9 runs, whole process: `p1a_arith` 70 to 26 ms, `p1b_calls` 46 to 15 ms (start-up is 7 ms of each); the other benchmarks use constructs that are not translated yet and keep their time.
 
+**0.0.7 (2026-10-19), BCode column.** `bmark.py --both` runs each benchmark on the tree walker and on the bytecode machine, refuses a run whose outputs differ, and saves both. Only the constructs of stage B5.2 are native, so most benchmarks equal the tree walker; where the bridge is used it costs: `p1c_collections` 18.6 to 23.2 ms, `p4e_garbage` 113 to 135 ms, `p2a_aspects` 11.4 to 12.2 ms. `p1a_arith` 64 to 26 ms and `p1b_calls` 41 to 16 ms. The run is the first with `Mem` and `EVE/PT` as column names. Level 6 is 20% above the earlier row (evedb on this load), BCode equal to Eve there.
+
 ### Totals per run
 
 The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
@@ -138,4 +140,5 @@ The sum of the median times of the benchmarks of each level. A dash means the le
 | 0.0.7 | 2026-10-19 | ReleaseSafe | cc28760 | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
 | 0.0.7 | 2026-10-19 | ReleaseSafe | 810aae5 | 164 ms | 112 ms | 175 ms | 657 ms | 107 ms | 2072 ms |
 | 0.0.7 | 2026-10-19 | ReleaseSafe | 320a228 | 148 ms | 97 ms | 154 ms | 678 ms | 106 ms | 1920 ms |
+| 0.0.7 | 2026-10-19 | ReleaseSafe | b3019cb | 138 ms | 91 ms | 141 ms | 550 ms | 80 ms | 2297 ms |
 <!-- runs:end -->

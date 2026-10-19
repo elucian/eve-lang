@@ -439,5 +439,194 @@
    "p6d_olap_groupby": 532.6,
    "p6e_http_requests": 451.2
   }
+ },
+ {
+  "date": "2026-10-19 17:49",
+  "version": "0.0.7",
+  "build": "ReleaseSafe",
+  "commit": "b3019cb",
+  "exe_bytes": 4152320,
+  "sizes": {
+   "eve": 4152320,
+   "evevm": 4152320,
+   "evecp": 1238528,
+   "evetx": 2250752,
+   "eveux": 9306624,
+   "evedb": 1294848
+  },
+  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+  "runs": 7,
+  "results": {
+   "p1a_arith": {
+    "median_ms": 63.6,
+    "min_ms": 61.5,
+    "peak_mb": 5.9,
+    "bc_ms": 25.5,
+    "bc_min_ms": 24.0
+   },
+   "p1b_calls": {
+    "median_ms": 40.7,
+    "min_ms": 39.2,
+    "peak_mb": 6.0,
+    "bc_ms": 16.1,
+    "bc_min_ms": 15.5
+   },
+   "p1c_collections": {
+    "median_ms": 18.6,
+    "min_ms": 17.6,
+    "peak_mb": 8.0,
+    "bc_ms": 23.2,
+    "bc_min_ms": 22.1
+   },
+   "p1d_strings": {
+    "median_ms": 15.5,
+    "min_ms": 15.0,
+    "peak_mb": 6.3,
+    "bc_ms": 15.4,
+    "bc_min_ms": 15.1
+   },
+   "p2a_aspects": {
+    "median_ms": 11.4,
+    "min_ms": 10.3,
+    "peak_mb": 5.9,
+    "bc_ms": 12.2,
+    "bc_min_ms": 10.9
+   },
+   "p2b_closures": {
+    "median_ms": 36.2,
+    "min_ms": 35.1,
+    "peak_mb": 7.4,
+    "bc_ms": 38.3,
+    "bc_min_ms": 37.2
+   },
+   "p2c_procedures": {
+    "median_ms": 43.1,
+    "min_ms": 41.4,
+    "peak_mb": 6.0,
+    "bc_ms": 43.1,
+    "bc_min_ms": 41.3
+   },
+   "p3a_modules": {
+    "median_ms": 58.5,
+    "min_ms": 55.6,
+    "peak_mb": 6.0,
+    "bc_ms": 56.4,
+    "bc_min_ms": 54.2
+   },
+   "p3b_objects": {
+    "median_ms": 53.6,
+    "min_ms": 49.3,
+    "peak_mb": 6.1,
+    "bc_ms": 52.2,
+    "bc_min_ms": 51.1
+   },
+   "p3c_module_state": {
+    "median_ms": 29.0,
+    "min_ms": 28.0,
+    "peak_mb": 6.0,
+    "bc_ms": 30.5,
+    "bc_min_ms": 28.3
+   },
+   "p4a_parallel_sum": {
+    "median_ms": 110.9,
+    "min_ms": 108.0,
+    "peak_mb": 40.3,
+    "bc_ms": 110.2,
+    "bc_min_ms": 107.5
+   },
+   "p4b_channel": {
+    "median_ms": 60.9,
+    "min_ms": 57.9,
+    "peak_mb": 6.1,
+    "bc_ms": 59.9,
+    "bc_min_ms": 56.4
+   },
+   "p4c_groups": {
+    "median_ms": 134.0,
+    "min_ms": 129.0,
+    "peak_mb": 8.2,
+    "bc_ms": 134.8,
+    "bc_min_ms": 130.9
+   },
+   "p4d_tasks": {
+    "median_ms": 131.3,
+    "min_ms": 125.5,
+    "peak_mb": 8.0,
+    "bc_ms": 131.0,
+    "bc_min_ms": 128.5
+   },
+   "p4e_garbage": {
+    "median_ms": 113.0,
+    "min_ms": 105.9,
+    "peak_mb": 6.0,
+    "bc_ms": 134.9,
+    "bc_min_ms": 130.5
+   },
+   "p5a_sql_function": {
+    "median_ms": 80.0,
+    "min_ms": 65.8,
+    "peak_mb": 9.2,
+    "bc_ms": 78.0,
+    "bc_min_ms": 75.0
+   },
+   "p6a_evedb_store": {
+    "median_ms": 812.3,
+    "min_ms": 770.1,
+    "peak_mb": 56.2,
+    "bc_ms": 802.3,
+    "bc_min_ms": 775.4
+   },
+   "p6b_evedb_load": {
+    "median_ms": 345.4,
+    "min_ms": 290.7,
+    "peak_mb": 16.5,
+    "bc_ms": 332.2,
+    "bc_min_ms": 302.1
+   },
+   "p6c_pg_records": {
+    "median_ms": 189.8,
+    "min_ms": 160.2,
+    "peak_mb": 81.7,
+    "bc_ms": 181.4,
+    "bc_min_ms": 177.0
+   },
+   "p6d_olap_groupby": {
+    "median_ms": 666.0,
+    "min_ms": 635.2,
+    "peak_mb": 6.1,
+    "bc_ms": 652.8,
+    "bc_min_ms": 625.9
+   },
+   "p6e_http_requests": {
+    "median_ms": 283.2,
+    "min_ms": 276.0,
+    "peak_mb": 51.8,
+    "bc_ms": 273.7,
+    "bc_min_ms": 270.9
+   }
+  },
+  "python": {
+   "p1a_arith": 66.2,
+   "p1b_calls": 46.6,
+   "p1c_collections": 38.2,
+   "p1d_strings": 51.3,
+   "p2a_aspects": 31.1,
+   "p2b_closures": 39.6,
+   "p2c_procedures": 41.5,
+   "p3a_modules": 42.7,
+   "p3b_objects": 44.1,
+   "p3c_module_state": 41.6,
+   "p4a_parallel_sum": 84.3,
+   "p4b_channel": 230.1,
+   "p4c_groups": 146.9,
+   "p4d_tasks": 143.4,
+   "p4e_garbage": 92.7,
+   "p5a_sql_function": 136.5,
+   "p6a_evedb_store": 2124.0,
+   "p6b_evedb_load": 7794.8,
+   "p6c_pg_records": 328.8,
+   "p6d_olap_groupby": 624.2,
+   "p6e_http_requests": 441.0
+  }
  }
 ]
