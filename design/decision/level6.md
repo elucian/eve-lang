@@ -64,7 +64,9 @@ Decisions: **D-083** (below): one machine and one mode, `-x`, `-c`, `-rem`, `-u`
 - D-197 The component `cmd` is renamed `eve` (2026-10-19)
 - Q-067 A simpler architecture: one runtime, a shared compiler, the compiler inside the editors [answered → D-198]
 - D-198 The architecture: one runtime with SQLite, the compiler as a program, the DuckDB server leaves (2026-10-19)
-- Q-068 Points the answers to Q-067 leave open [open]
+- Q-068 Points the answers to Q-067 leave open [answered → D-199, D-200]
+- D-200 Drivers: the DuckDB server stays an executable with DuckDB embedded, launched by eve; a driver table; documentation of every driver (2026-10-19)
+- D-199 Answers to Q-068: the editors include evecp; no license file in drivers/; the server ships in bin/; the protocol is a module imported by evevm (2026-10-19)
 
 ## D-083 The Eve machine: command channels, setup, remote control, serve, services, API for AI (2026-10-05)
 
@@ -931,15 +933,50 @@ Author answers to Q-067 (2026-10-19). Settled:
 
 Consequences: the interfaces `Host` and `Data` (`comp/evecm/src/iface.zig`) lose their reason to exist once the database layer is inside `evevm` and are removed in two steps; `comp/evedb/` becomes only the DuckDB server and leaves `comp/`. The plan, in stages with a halt after each: [phase-8-architecture.md](../phase-8-architecture.md).
 
-## Q-068 Points the answers to Q-067 leave open (2026-10-19)
+## Q-068 Points the answers to Q-067 leave open (2026-10-19, answered → D-199, D-200)
 
 Each point is needed by one stage only (in brackets); the stages before it can go on.
 
-1. **(c) The editors include `evecp`** (S8.6 to S8.8). Confirm: yes (the request said so; the answer lines skipped it).
-2. **The program of the DuckDB driver** (S8.4). The folder is `drivers/duckdb`. The program is `evedb.exe` today, and the tests, the scripts and the manual use that name. *Model: keep `evedb.exe` for now*, rename it only in a stage of its own if you want another name.
+1. **(c) The editors include `evecp`** (S8.6 to S8.8). Confirm: yes (the request said so; the answer lines skipped it). 
+**answer** yes 
+2. **The program of the DuckDB driver** (S8.4). The folder is `drivers/duckdb`. The program is `evedb.exe` today, and the tests, the scripts and the manual use that name. 
+**answer** keep it like it is until I figer out if a driver is executable or a dll. Where is the driver?
+**Reply (model):** There are two things with the name evedb. (1) The **client side**: the code that makes `database.connect("evedb://…")` and `"postgres://…"` work (`ewpdriver.zig`, `pgdriver.zig`, now in `comp/evedb/src/`). It is already compiled into `eve.exe`; S8.2 moves it to `comp/evevm/src/db/`. (2) The **server**: `bin/evedb.exe`, a separate program that loads `bin/duckdb.dll` (35 MB) and listens on ports. `eve.exe` never loads the DLL; it talks to the server over a socket. Three ways to have DuckDB: **executable server** (today: DuckDB stays out of `eve.exe`; many clients; the PostgreSQL face; faults for tests; cost: a second process), **embedded** (`eve.exe` loads DuckDB: no second process, the fastest, but `eve.exe` needs the DLL, and it reverses D-187 "DuckDB lives only in evedb"), **plug-in DLL** loaded by `eve` at run time (small `eve.exe`; Zig offers only the C ABI for it, and the project switched native extension loading off for SQLite on purpose). Stages S8.1 to S8.4 do not depend on the choice, and S8.5 only moves the folder. Kept as it is, as you say. The question "DLL files or embedded?" is analysed in [design-drivers.md](../design-drivers.md), with a recommendation: client drivers embedded in `evevm`, the DuckDB engine a server for now, no Eve plug-in DLLs.
 3. **The license of `drivers/`** (S8.4). `comp/LICENSE` (BUSL 1.1) covers `comp/` and the root README puts everything else under CC BY-NC-SA, which is not right for code. *Model: the same BUSL 1.1* for `drivers/`, with its own `LICENSE` file; or another license of your choice.
-4. **Does the distribution ship the driver?** (S8.4). Today `bin/evedb.exe` and `bin/duckdb.dll` (35 MB) are in the zip. *Model: yes, as an optional driver in `bin/`.*
+**answer** No license file.
+4. **Does the distribution ship the driver?** (S8.4). Today `bin/evedb.exe` and `bin/duckdb.dll` (35 MB) are in the zip. *Model: yes, as an optional driver in `bin/`.* 
+**answer** Why we need an optional driver?  
+**Reply (model):** "Optional" was my word, and there is no good reason for it: `eve.exe` runs every script without the server because SQLite is built in, but nothing is gained by leaving the server out of the zip. It ships in `bin/` with the other programs.
 5. **The protocol files shared by the driver and the Eve side** (S8.1, S8.4): `ewp.zig`, `batch.zig`, `client.zig`, about 800 lines, the wire protocol between the server and the native driver `evedb://`. *Model: each side keeps its own copy*, and the protocol document with its test (`script/evedb_check.py`) is the contract; the copy is a line of technical debt. Or the driver project exports them as a Zig package that `evevm` imports.
+**answer** Yes second. The driver is imported in evevm. Once we implement a new driver it will be included in VM.
 6. **The command words** `eve db serve <cfg>` and `eve -s -db --serve <cfg>` (S8.4). They start the server program found beside `eve.exe`. *Model: keep them as launchers* of the driver; `eve db import|export|sql|proc list` stay, since they work on the database layer inside `evevm`.
-
+**answer:** Is there any alternative? If not yes.
+**Reply (model):** Yes, there are alternatives, so please pick (needed by S8.5 only): **(A)** keep both words as launchers of the server (today: `eve -s -db` reuses the service mode of `eve`: silent, a log file, the Windows service manager); **(B)** drop them: the user runs `evedb serve --config evedb.cfg` and registers `evedb.exe` with the service manager itself (`sc create … binPath= "…\evedb.exe serve --config …"`); `evedb` then needs its own service mode and log; **(C)** if DuckDB is embedded (point 2), `eve db serve` runs the server inside `eve`. *Model: (A) for now*: (B) and (C) need work that is not planned, and (A) is a few lines of `comp/eve/db_cmds.zig`. `eve db import|export|sql|proc list` stay in every case.
 **Answer:**
+
+## D-199 Answers to Q-068: the editors include evecp; no license file in drivers/; the server ships in bin/; the protocol is a module imported by evevm (2026-10-19)
+
+Author answers to Q-068 (2026-10-19). Settled:
+
+- **(1) The editors include `evecp`: yes.** `evetx` and `eveux` import it (S8.6 to S8.9).
+- **(3) `drivers/` has no `LICENSE` file of its own.** Consequence: the root `README.md` must say which license covers the code of `drivers/` (today it says everything outside `comp/` is CC BY-NC-SA, which would reach it). *Model: name `drivers/` in the sentence about `comp/LICENSE` (BUSL 1.1) and add it to the Licensed Work of that file;* to confirm when S8.5 writes it.
+- **(4) The server ships in the distribution.** From "why do we need an optional driver?": no option; `bin/evedb.exe` and `bin/duckdb.dll` are in the zip.
+- **(5) The protocol is shared as a module, not copied.** "The driver is imported in evevm. Once we implement a new driver it will be included in VM." Drivers are code that `evevm` imports. The three files of the protocol (`ewp.zig`, `batch.zig`, `client.zig`) become the Zig module `ewp_protocol` (S8.1, in place), imported by the server project and by the Eve side in `evevm`. No second copy. The root build and the server's build each make the module from the same files by path, so the root build does not fetch the DuckDB library (it is a lazy dependency of the server's build only).
+
+Still open in Q-068: **(2)** whether the DuckDB driver is an executable server, embedded, or a library (the folder is `drivers/duckdb` and the program stays `evedb.exe` meanwhile), and **(6)** the command words (alternatives A, B, C in the reply). Both are needed by S8.5 only.
+**answer** 
+DuckDB is executable evedb.exe and is launch using eve launcher, but instead of using DuckDB.dll we should embed DuckDB uzing zig bindings into evedb.exe. evedb.exe can be called using eve command to read a configuration file that tell server where to store the files and what options to use. (If DuckDB has options) We need documentation for every driver.
+
+Root License apply to drivers.  
+Driver table is approved.
+
+## D-200 Drivers: the DuckDB server stays an executable with DuckDB embedded, launched by eve; a driver table; documentation of every driver (2026-10-19)
+
+Author answers to Q-068 points 2 and 6 and to `design/design-drivers.md` (2026-10-19). Settled:
+
+- **DuckDB stays a server.** The program is `evedb.exe`; `eve` launches it (alternative A of Q-068 6: `eve db serve evedb.cfg` and `eve -s -db --serve evedb.cfg` stay). The configuration file tells the server where to store the files and which options to use.
+- **DuckDB is embedded in `evedb.exe`.** "Instead of using DuckDB.dll we should embed DuckDB using zig bindings into evedb.exe." The binding `duckdb.zig` stays; the library is linked **statically**, so the zip no longer needs `duckdb.dll` (35 MB beside the program). How (the prebuilt static libraries, or the amalgamation compiled by Zig) is not known yet: stage S8.10a starts with a spike (does it link, how long does it build, how big is the program) and reports before the change is made. Until then the DLL ships (D-199 4).
+- **The root license applies to `drivers/`.** No `LICENSE` file in `drivers/` (D-199 3). The root `README.md` names `drivers/` in the sentence about the license of the code, and the Licensed Work line of `comp/LICENSE` names it (S8.5).
+- **Every driver is documented.** One manual page for each driver: the client drivers `sqlite://`, `postgres://`, `evedb://` (the URL, the options, the types, what is supported) and the DuckDB server (the commands, the configuration file). Written in S8.10 and kept with the driver.
+- **A driver table is approved** ("This is good, add to plan"): one struct of functions per driver, chosen by the URL scheme, in place of the `if` chains of `conn.zig`. Stage S8.4a.
+- **The recommendation of `design-drivers.md` is accepted:** client drivers are embedded in `evevm`, the DuckDB engine is a server, no Eve driver DLLs.
