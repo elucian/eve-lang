@@ -1,0 +1,36 @@
+# DataMap methods: has, get, keys, values, delete (G-5)
+** spec: semantics/types.md#datamap-methods
+primary aspect e112_datamap_methods is
+  process main is
+    new m := {"b": 2, "a": 1};
+    print m.has("a");
+    print m.has("z");
+    print m.keys();
+    print m.values();
+    print m.get("b");
+    print m.get("z", 0);
+    print m.get("z");
+    m.delete("a");
+    print m.count();
+    print m.keys();
+    for k in m.keys() do
+      print "{k}={m[k]}";
+    done;
+  return;
+end e112_datamap_methods;
+/*@expect
+{
+  "stdout": [
+    "True",
+    "False",
+    "(\"a\",\"b\")",
+    "(1,2)",
+    "2",
+    "0",
+    "null",
+    "1",
+    "(\"b\")",
+    "b=2"
+  ]
+}
+*/

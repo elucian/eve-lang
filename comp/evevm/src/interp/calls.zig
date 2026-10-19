@@ -226,6 +226,7 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     if (db.memory.isMemory(it.host(), recv)) return db.memory.memoryCall(it.host(), recv.object, name, args);
     if (db.memory.isColumn(it.host(), recv)) return db.memory.columnCall(it.host(), recv.object, name, args);
     if (recv == .chan) return it.channelMethod(recv.chan, name, args);
+    if (recv == .map) if (try it.mapMethod(recv.map, name, args)) |v| return v;
     if ((eql(u8, name, "batch") or eql(u8, name, "split")) and recv == .list and args.len == 1) {
         return it.cut(recv.list, eql(u8, name, "split"), try it.eval(args[0]));
     }

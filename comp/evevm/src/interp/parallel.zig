@@ -628,14 +628,14 @@ pub fn run(it: *Interp, root: *const Node) Outcome {
     it.h.root_ctx = it;
     defer if (heap.show_stats) it.h.report();
     const result = it.runRoot(root);
-    if (result) |_| return .{} else |e| switch (e) {
+    if (result) |_| return .{ .code = it.base().exit_code } else |e| switch (e) {
         error.Stop => return .{ .stopped = true },
         error.Panic => {
             it.note(1, "panic");
             return .{ .code = 1 };
         },
         error.Raise, error.Abort => return .{ .code = Interp.exitCodeOf(it.err_code) },
-        error.Over => return .{},
+        error.Over => return .{ .code = it.base().exit_code },
         error.OutOfMemory => return .{ .code = 70 },
         error.WriteFailed => return .{ .code = 74 },
         else => {

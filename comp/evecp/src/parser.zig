@@ -1588,6 +1588,10 @@ const Parser = struct {
             }) |pair| {
                 if (std.mem.eql(u8, w, pair[0])) {
                     _ = p.advance();
+                    // `over 7;` and `exit 7;` give the exit code of the program (statements.md#interruptions)
+                    if ((pair[1] == Tag.over_stmt or pair[1] == Tag.exit_stmt) and !p.isSym(";") and !p.isWord("if")) {
+                        return p.endSimple(try p.mk(pair[1], t, "", &.{try p.expr()}));
+                    }
                     return p.endSimple(try p.mk(pair[1], t, "", &.{}));
                 }
             }

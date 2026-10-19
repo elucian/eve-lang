@@ -88,8 +88,14 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
             it.jump_label = n.text;
             return error.Skip;
         },
-        .over_stmt => return error.Over,
-        .exit_stmt => return error.Exit,
+        .over_stmt => {
+            try it.exitCodeOfStmt(n);
+            return error.Over;
+        },
+        .exit_stmt => {
+            try it.exitCodeOfStmt(n);
+            return error.Exit;
+        },
         .stop_stmt => return error.StopJob,
         .yield_stmt => try it.yieldStmt(n),
         .commit_stmt => try db.orm.commitJob(it.host()),
@@ -754,4 +760,17 @@ pub fn matchStmt(it: *Interp, n: *const Node) Signal!void {
         }
     }
     try it.execBlock(n.kids[1]);
+}
+
+// @eve-impl the optional code of `over <code>;` and `exit <code>;`
+// @spec spec/semantics/errors.md#ending-the-process
+// @see backlog/library-gaps.md:G-2
+/// Store the exit code of the program: 0, or 6 to 125 (1 to 5 belong to the machine).
+pub fn exitCodeOfStmt(it: *Interp, n: *const Node) Signal!void {
+    if (n.kids.len == 0) return;
+    const v = try it.eval(n.kids[0]);
+    if (v != .int or v.int < 0 or v.int > 125 or (v.int >= 1 and v.int <= 5)) {
+        return it.failWith(interp.err_argument, "an exit code is 0 or a number from 6 to 125: 1 to 5 belong to the machine", .{});
+    }
+    it.base().exit_code = @intCast(v.int);
 }

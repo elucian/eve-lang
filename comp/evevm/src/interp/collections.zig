@@ -344,3 +344,37 @@ pub fn field(it: *Interp, n: *const Node) Signal!Value {
         else => return it.fail("{s} has no attribute '{s}'", .{ Interp.typeName(obj), n.text }),
     }
 }
+
+// @eve-impl methods of a DataMap: has, get, keys, values, delete
+// @spec spec/semantics/types.md#datamap-methods
+// @feature F-VM-06
+// @see backlog/library-gaps.md:G-5
+/// `m.has(k)`, `m.get(k)`, `m.get(k, default)`, `m.keys()`, `m.values()`, `m.delete(k)`; null when the name is not a map method.
+pub fn mapMethod(it: *Interp, m: *value.Map, name: []const u8, args: []const *const Node) Signal!?Value {
+    const eql = std.mem.eql;
+    if (eql(u8, name, "keys") or eql(u8, name, "values")) {
+        if (args.len != 0) return it.fail("{s}() takes no argument", .{name});
+        const out = try it.h.make(List, .{});
+        const keys = eql(u8, name, "keys");
+        for (m.entries.items) |e| try it.listAppend(out, if (keys) e.key else e.val);
+        return .{ .list = out };
+    }
+    if (eql(u8, name, "has") or eql(u8, name, "delete") or eql(u8, name, "get")) {
+        const want: usize = if (eql(u8, name, "get")) 2 else 1;
+        if (args.len < 1 or args.len > want) return it.fail("{s} takes {d} argument(s)", .{ name, want });
+        const key = try it.eval(args[0]);
+        const at = Interp.mapFind(m, key);
+        if (eql(u8, name, "has")) return .{ .bool = at != null };
+        if (eql(u8, name, "get")) {
+            if (at) |i| return m.entries.items[i].val;
+            return if (args.len == 2) try it.eval(args[1]) else .nil;
+        }
+        if (at) |i| {
+            const gone = m.entries.orderedRemove(i);
+            it.h.release(gone.key);
+            it.h.release(gone.val);
+        }
+        return .nil;
+    }
+    return null;
+}

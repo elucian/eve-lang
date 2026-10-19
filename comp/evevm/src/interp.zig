@@ -229,6 +229,8 @@ pub const Interp = struct {
     dbg: ?DebugHook = null,
     /// Statements executed and the line of the last one: what `report` shows.
     steps: usize = 0,
+    /// The exit code that `over <code>;` or `exit <code>;` gave; the program ends with it when nothing worse happens.
+    exit_code: u8 = 0,
     line: u32 = 0,
     /// `$` inside an index: the last index of the dimension being indexed.
     dollar: i64 = 0,
@@ -821,6 +823,8 @@ pub const Interp = struct {
     // ---- collections: iteration, builders, indexing ---------------------------------------
     // (in interp/collections.zig)
     pub const iterate = part_collections.iterate;
+    pub const exitCodeOfStmt = part_stmt.exitCodeOfStmt;
+    pub const mapMethod = part_collections.mapMethod;
     pub const bindPattern = part_collections.bindPattern;
     pub const builder = part_collections.builder;
     pub const allTrue = part_collections.allTrue;

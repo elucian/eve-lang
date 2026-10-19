@@ -56,6 +56,20 @@ Eve is gradually typed: a declaration may give a type (`:Integer`) or leave it t
 
 The types of the files that a program loads and parses (`JSON`, `CSV`, `TXT`, `XML`, `HTML`, `HTMT`) are described in [data-types.md](data-types.md) (proposal, level 3).
 
+### DataMap methods
+
+| Method | Result |
+|---|---|
+| `m.has(k)` | `Logic`: the key is in the map (same as `k in m`) |
+| `m.get(k)` | the value of `k`, or `null` when the key is missing (`m[k]` raises `$err_key` instead) |
+| `m.get(k, d)` | the value of `k`, or `d` when the key is missing |
+| `m.keys()` | a `List` of the keys, in key order |
+| `m.values()` | a `List` of the values, in key order |
+| `m.delete(k)` | removes the entry; nothing happens when the key is missing |
+| `m.count()` | the number of entries |
+
+Tests: `test/level5/e112_datamap_methods`.
+
 ## Strings
 
 - A string is immutable; indexing gives runes; `+` concatenates two strings; `*` replicates; `<+` and `+>` append and prepend, also a number converted to text.

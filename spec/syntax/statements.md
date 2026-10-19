@@ -64,6 +64,7 @@ A procedure is called as a statement, with or without parentheses when it has no
 | `skip [label] [if c];` | end the cycle and go to the continuation point of the loop (D-074) |
 | `stop [if c];` | end the current job without error; inside a loop inside a job it ends the job |
 | `exit;` | leave the subprogram or the process it is written in and give control back to the caller; in `main` of the aspect run by a command the program ends with code 0, `finalize` runs; in a function, procedure or method it is an early `return` (a function keeps the results assigned so far; `defer` runs) (D-111) |
+| `exit n;`, `over n;` | as `exit;` and `over;`, and `n` becomes the exit code of the program (an `Integer`: 0, or 6 to 125; 1 to 5 belong to the machine, see [errors.md](../semantics/errors.md#ending-the-process)) |
 | `over;` | from any depth (also inside functions it called) end the whole process it is in at once with code 0; no `recover`; `finalize` runs; in an aspect the caller goes on after `apply` (D-081, D-111) |
 | `panic;` | end the whole application at once with code 1; no `finalize` |
 | `raise expr;` | create an error; the process jumps to `recover` |

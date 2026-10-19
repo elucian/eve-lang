@@ -619,7 +619,7 @@ const Checker = struct {
                     }
                 } else if (target.tag != .name) _ = try c.expr(target);
             },
-            .print_stmt, .write_stmt, .expect_stmt, .assert_stmt, .raise_stmt, .yield_stmt => {
+            .print_stmt, .write_stmt, .expect_stmt, .assert_stmt, .raise_stmt, .yield_stmt, .over_stmt, .exit_stmt => {
                 for (s.kids) |k| _ = try c.expr(k);
             },
             .cond_stmt => {

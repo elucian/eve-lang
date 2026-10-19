@@ -1,0 +1,12 @@
+# an exit code from 1 to 5 belongs to the machine: a run-time error with code 4 (G-2)
+** spec: semantics/errors.md#ending-the-process
+primary aspect e114_exit_code_range is
+  process main is
+    exit 3;
+  return;
+end e114_exit_code_range;
+/*@expect
+{
+  "exit": 4
+}
+*/

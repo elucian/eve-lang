@@ -65,12 +65,15 @@ The exit code of a process is a small number, 0 to 5. It is not the code of an e
 |---|---|---|---|
 | end of process, `return;`, `exit;` in the process | 0 | no | yes |
 | `over;` | 0 | no | yes |
+| `over n;`, `exit n;` | `n` | no | yes |
 | `panic;` | 1 | no, ends the whole application | no |
 | failed `expect`, not recovered (or `abort`) | 2 | yes | yes |
 | failed `assert`, not recovered (or `abort`) | 3 | yes | yes |
 | `raise` or run-time error, not recovered (or `abort`) | 4 | yes | yes |
 | unexpected stop: the user stops the program (Ctrl+C), the program is halted, a `halt` breakpoint ended with Ctrl+C or `stop`, a hard time-out or another outage, recursion too deep, out of memory | 5 | no | no |
 | end of `recover` | 0 | | yes |
+
+**A code of your own.** `over n;` and `exit n;` (G-2) store `n` as the exit code of the program; `n` is an `Integer` that is 0 or from 6 to 125, so it never clashes with the codes 1 to 5 of the machine (above) and stays below the 126 and up that shells reserve. Any other value is a run-time error (`$err_argument`). The last code stored before the program ends is used, unless an unrecovered error or `panic` ends it first: those codes (1 to 4) win. Tests: `test/level5/e113_exit_code`, `e114_exit_code_range`.
 
 `abort` ends with the exit code of the error it passes on (2, 3 or 4). `panic` is not an error: it ends the whole application at once. When several codes apply, the first one reached wins. The error codes are `$err_` constants in the standard library: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4 (D-054, D-109, Q-031h); warnings have `$wrn_` constants. Messages of the VM go to the error output; `print` and `write` go to the standard output. The command-line errors of the VM (64, 65, 66, 70) are not exit codes of a process.
 

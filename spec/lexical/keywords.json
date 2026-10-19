@@ -227,7 +227,7 @@
       "category": "statement",
       "status": "stable",
       "ref": "syntax/statements.md#interruptions",
-      "summary": "Leaves the subprogram or process it is written in, back to the caller; in the main process of an aspect run by a command the program ends with code 0."
+      "summary": "Leaves the subprogram or process it is written in, back to the caller; in the main process of an aspect run by a command the program ends with code 0. `exit n;` also sets the exit code of the program."
     },
     {
       "id": "expect",
@@ -438,7 +438,7 @@
       "category": "statement",
       "status": "stable",
       "ref": "syntax/statements.md#interruptions",
-      "summary": "Ends the whole process it is in at once with code 0, from any depth: `over;`. No `recover`; `finalize` runs."
+      "summary": "Ends the whole process it is in at once with code 0, from any depth: `over;`; `over n;` gives the exit code of the program. No `recover`; `finalize` runs."
     },
     {
       "id": "panic",
