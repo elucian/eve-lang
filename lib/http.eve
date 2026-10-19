@@ -18,7 +18,7 @@ module http is
 
   ** The standard text of a status code.
   function reason(status: Integer) => (@result: String) is
-    new names := {200: "OK", 201: "Created", 204: "No Content", 301: "Moved Permanently", 302: "Found", 400: "Bad Request",
+    new names := {200: "OK", 201: "Created", 204: "No Content", 301: "Moved Permanently", 302: "Found", 400: "Bad Request", 408: "Request Time-out",
                   401: "Unauthorized", 403: "Forbidden", 404: "Not Found", 405: "Method Not Allowed", 500: "Internal Server Error",
                   501: "Not Implemented", 503: "Service Unavailable"};
     let result := "";

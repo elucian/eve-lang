@@ -8,6 +8,6 @@ module net is
   external function listen!(host: String, port: Integer) => (@result: Listener);
 
   ** Connect to a server.
-  ** Methods of Socket: read_line!() => String (Null at the end), read!(n) => String, read_exact!(n) => String, write(text), close(), is_open() => Logic, peer() => String.
+  ** Methods of Socket: read_line!() => String (Null at the end), read!(n) => String, read_exact!(n) => String, set_timeout(ms), write(text), close(), is_open() => Logic, peer() => String.
   external function connect!(host: String, port: Integer) => (@result: Socket);
 end net;

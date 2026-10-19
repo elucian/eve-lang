@@ -1,0 +1,37 @@
+# set_timeout: a read that waits too long fails with $err_timeout and the server goes on (TD-27)
+** spec: library/net.md#time-outs
+primary aspect f13_net_timeout is
+  async procedure slow_then_fast(server: Listener) is
+    new silent := server.accept!();
+    silent.set_timeout(200);
+    silent.read_line!();
+    print "never";
+  recover
+    print "timed out: {$error.code}";
+    silent.write("408\n");
+    silent.close();
+    new quick := server.accept!();
+    quick.set_timeout(2000);
+    print "got: {quick.read_line!()}";
+    quick.close();
+  return;
+
+  process main is
+    new server := net.listen!("127.0.0.1", 0);
+    work: job
+    do
+      spawn slow_then_fast(server);
+      new a := net.connect!("127.0.0.1", server.port());
+      print a.read_line!();
+      new b := net.connect!("127.0.0.1", server.port());
+      b.write("hello\n");
+      b.close();
+    done work;
+    server.close();
+  return;
+end f13_net_timeout;
+/*@expect
+{
+  "stdout": ["timed out: 41", "408", "got: hello"]
+}
+*/

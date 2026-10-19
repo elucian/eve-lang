@@ -34,11 +34,15 @@ return;
 
 `Listener`: `accept!()` gives the next `Socket` (waits for a client); `port()` the port number; `close()`.
 
-`Socket`: `read_line!()` the next line without its line ending (LF or CR LF), or `Null` at the end of the stream; `read!(n: Integer)` up to `n` bytes as text, waiting for at least one, `""` at the end of the stream; `read_exact!(n)` exactly `n` bytes or `$err_io` at the end; `write(text: String)` sends all of the text; `close()`; `is_open()`; `peer()` the address of the other side as `"host:port"`.
+`Socket`: `read_line!()` the next line without its line ending (LF or CR LF), or `Null` at the end of the stream; `read!(n: Integer)` up to `n` bytes as text, waiting for at least one, `""` at the end of the stream; `read_exact!(n)` exactly `n` bytes or `$err_io` at the end; `write(text: String)` sends all of the text; `set_timeout(ms)` limits the wait of the reads ([Time-outs](#time-outs)); `close()`; `is_open()`; `peer()` the address of the other side as `"host:port"`.
 
 ## Waiting
 
-A call that waits (`accept!`, `read_line!`, `read!`, `read_exact!`) gives the baton to the other tasks of the run (`multitasking.md`) while it waits, so a server and its clients can be tasks of one script, as in the example: the call runs on a helper thread and the task sleeps on the scheduler (state `io`) until the helper ends. Outside any task the call simply waits in the system. **No time-out yet** (TD-27): the calls wait without limit; `timeout:` of the design (`design-libraries.md` §10 (3)) comes with the first user. A task cancelled while it waits leaves its helper thread to end by itself (TD-28). `Listener.close()` while an `accept!` waits wakes that call (the module connects to the listener once and drops the connection); the `accept!` then raises `$err_io` "the listener is closed", which is how a `service.serve(server, routes, 0)` task ends.
+A call that waits (`accept!`, `read_line!`, `read!`, `read_exact!`) gives the baton to the other tasks of the run (`multitasking.md`) while it waits, so a server and its clients can be tasks of one script, as in the example: the call runs on a helper thread and the task sleeps on the scheduler (state `io`) until the helper ends. Outside any task the call simply waits in the system. A task cancelled while it waits leaves its helper thread to end by itself (TD-28). `Listener.close()` while an `accept!` waits wakes that call (the module connects to the listener once and drops the connection); the `accept!` then raises `$err_io` "the listener is closed", which is how a `service.serve(server, routes, 0)` task ends.
+
+## Time-outs
+
+`Socket.set_timeout(ms: Integer)` sets how long a read (`read_line!`, `read!`, `read_exact!`) may wait: 0 (the default) waits for ever. A read that waits longer raises `$err_timeout` (41, `Time-out after {n} ms`). After a time-out the socket is **abandoned**: it can still be written (`write`) and closed, but not read again, because the helper thread of the read is still waiting in it; the system drops the connection when the other side ends. `accept!` has no time-out: a server ends its loop by closing the listener. Tests: `test/level6/f13_net_timeout`, `f14_service_idle`.
 
 ## Errors
 

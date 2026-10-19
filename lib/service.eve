@@ -1,11 +1,19 @@
-** Serve a route table on a Listener: one connection at a time, one request for each connection.
+** Serve a route table on a Listener: one connection at a time, one request for each connection; a client that sends nothing for 5 seconds gets a 408 and the next connection is served.
 ** @spec spec/library/route.md  @feature F-NET-02, F-STR-08  @decision D-189  @tests test/level6/f10_route_hello
 module service is
   from lib use (http, route);
-  export (handle, serve);
+  export (handle, serve, idle);
+
+  new idle_ms = 5000 :Integer;
+
+  ** How long a client may stay silent, in milliseconds (default 5000); after it the reply is 408.
+  procedure idle(ms: Integer) is
+    let idle_ms := ms;
+  return;
 
   ** Read one request on the socket, write the reply of the route table, close the socket. A bad request gets a 400.
   procedure handle(sock: Socket, routes: Any) is
+    sock.set_timeout(idle_ms);
     new req := http.read_request!(sock);
     if req.verb <> "" do
       new reply := route.dispatch(routes, req);
@@ -13,7 +21,11 @@ module service is
     done;
     sock.close();
   recover
-    http.respond(sock, 400, "Bad Request: {$error.message}");
+    if $error.code == 41 do
+      http.respond(sock, 408, "Request Time-out");
+    else
+      http.respond(sock, 400, "Bad Request: {$error.message}");
+    done;
     sock.close();
   return;
 

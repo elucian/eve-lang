@@ -30,6 +30,10 @@ pub const Conn = struct {
     rbuf: []u8,
     open: bool = true,
     peer: []const u8 = "",
+    /// `set_timeout(ms)`: a read that waits longer fails with `$err_timeout`; 0 waits for ever (TD-27).
+    timeout_ms: i64 = 0,
+    /// A read timed out: its helper thread still holds the reader, so the socket can be written and dropped, never read or freed.
+    abandoned: bool = false,
 };
 
 // @eve-impl state of one listening socket (an Eve `Listener`)
@@ -47,36 +51,62 @@ pub const Listen = struct {
 // The helper thread is needed because the sockets of Zig's `std.Io` on Windows are not Winsock handles (no `WSAPoll`).
 // @invariant `ctx` and the result live in `it.a` memory until the thread ends; a cancelled task leaves the thread to finish
 // @see spec/library/net.md#waiting
-fn offload(it: *Interp, comptime R: type, comptime func: anytype, ctx: anytype) Signal!R {
-    if (it.sched == null) return func(ctx);
-    const s = it.sched.?;
-    const me = it.me.?;
+fn offload(it: *Interp, comptime R: type, comptime func: anytype, ctx: anytype, timeout_ms: i64) Signal!?R {
+    const io = it.io orelse return it.fail("net: no input/output handle", .{});
+    if (it.sched == null and timeout_ms <= 0) return func(ctx);
     const Job = struct {
         done: std.atomic.Value(bool) = .init(false),
         result: R = undefined,
         ctx: @TypeOf(ctx),
-        sched: *@import("task.zig").Sched,
-        task: *@import("task.zig").Task,
+        sched: ?*@import("task.zig").Sched,
+        task: ?*@import("task.zig").Task,
     };
     const job = try it.a.create(Job);
-    job.* = .{ .ctx = ctx, .sched = s, .task = me };
+    job.* = .{ .ctx = ctx, .sched = it.sched, .task = it.me };
     const Run = struct {
         fn main(j: *Job) void {
             j.result = func(j.ctx);
             j.done.store(true, .release);
-            j.sched.ioDone(j.task);
+            if (j.sched) |sc| sc.ioDone(j.task.?);
         }
     };
-    me.io_ready.store(false, .release);
-    me.wait = .io;
+    const deadline: i64 = if (timeout_ms > 0) Io.Timestamp.now(io, .awake).toMilliseconds() + timeout_ms else 0;
+    const me = it.me;
+    var old_timer = false;
+    var old_wake: i64 = 0;
+    if (me) |m| {
+        old_timer = m.timer;
+        old_wake = m.wake_at;
+        m.io_ready.store(false, .release);
+        m.wait = .io;
+        if (timeout_ms > 0 and !(m.timer and m.wake_at < deadline)) {
+            m.timer = true;
+            m.wake_at = deadline;
+        }
+    }
     const th = std.Thread.spawn(.{}, Run.main, .{job}) catch {
-        me.wait = .none;
+        if (me) |m| m.wait = .none;
         return it.fail("net: cannot start a helper thread", .{});
     };
     th.detach();
-    while (!job.done.load(.acquire) and me.cancel == .none) s.yield(me);
-    me.wait = .none;
+    var timed_out = false;
+    while (true) {
+        if (me) |m| m.io_ready.store(false, .release);
+        if (job.done.load(.acquire)) break;
+        if (me) |m| if (m.cancel != .none) break;
+        if (timeout_ms > 0 and Io.Timestamp.now(io, .awake).toMilliseconds() >= deadline) {
+            timed_out = true;
+            break;
+        }
+        if (it.sched) |sc| sc.yield(me.?) else Io.sleep(io, .fromMilliseconds(1), .awake) catch {};
+    }
+    if (me) |m| {
+        m.wait = .none;
+        m.timer = old_timer;
+        m.wake_at = old_wake;
+    }
     try it.checkCancel();
+    if (timed_out) return null;
     const result = job.result;
     it.a.destroy(job);
     return result;
@@ -186,6 +216,13 @@ pub fn netModule(it: *Interp, name: []const u8, _: []const *const Node, args: []
     return null;
 }
 
+// @eve-impl a read that timed out: the helper thread still waits in the reader, so the socket is abandoned
+// @spec spec/library/net.md#time-outs
+fn timedOut(it: *Interp, c: *Conn, name: []const u8) Signal {
+    c.abandoned = true;
+    return it.failWith(41, "{s}: Time-out after {d} ms", .{ name, c.timeout_ms });
+}
+
 // @eve-fn Listener.accept!, Listener.port, Listener.close, Socket.read_line!, Socket.read!, Socket.read_exact!, Socket.write
 // @eve-fn Socket.close, Socket.is_open, Socket.peer
 // @spec spec/library/net.md#functions
@@ -214,7 +251,7 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
         if (eql(u8, name, "accept!")) {
             if (!l.open or l.closing) return it.failWith(err_io, "accept!: the listener is closed", .{});
             l.pending = true;
-            const got = try offload(it, net.Server.AcceptError!net.Stream, acceptNow, AcceptCtx{ .server = &l.server, .io = io });
+            const got = (try offload(it, net.Server.AcceptError!net.Stream, acceptNow, AcceptCtx{ .server = &l.server, .io = io }, 0)).?;
             l.pending = false;
             if (l.closing) {
                 if (got) |extra| extra.close(io) else |_| {}
@@ -231,8 +268,15 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
     if (eql(u8, name, "is_open")) return .{ .bool = c.open };
     if (eql(u8, name, "peer")) return try it.newStr(c.peer);
     if (eql(u8, name, "close")) {
-        if (c.open) c.stream.close(io);
+        // an abandoned socket has a helper thread in its reader: closing under it panics, so it is only forgotten
+        if (c.open and !c.abandoned) c.stream.close(io);
         c.open = false;
+        return .nil;
+    }
+    if (eql(u8, name, "set_timeout")) {
+        const ms = try intArg(it, args, 0, name);
+        if (ms < 0) return it.failWith(err_argument, "set_timeout: a time-out of 0 or more milliseconds", .{});
+        c.timeout_ms = ms;
         return .nil;
     }
     if (!c.open) return it.failWith(err_io, "{s}: the socket is closed", .{name});
@@ -244,6 +288,7 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
         w.interface.flush() catch return it.failWith(err_io, "write: the connection is lost", .{});
         return .nil;
     }
+    if (c.abandoned and !eql(u8, name, "write")) return it.failWith(41, "{s}: an earlier read timed out; the socket can only be written and closed", .{name});
     const r = &c.reader.interface;
     if (eql(u8, name, "read_line!")) {
         while (true) {
@@ -255,7 +300,7 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
                 return v;
             }
             if (have.len >= buffer_size) return it.failWith(err_io, "read_line!: the line is longer than {d} bytes", .{buffer_size});
-            const filled = try offload(it, Io.Reader.Error!void, fillNow, r);
+            const filled = (try offload(it, Io.Reader.Error!void, fillNow, r, c.timeout_ms)) orelse return timedOut(it, c, name);
             filled catch |e| switch (e) {
                 error.EndOfStream => {
                     if (have.len == 0) return .nil;
@@ -280,7 +325,7 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
                 r.toss(take);
                 return v;
             }
-            const filled = try offload(it, Io.Reader.Error!void, fillNow, r);
+            const filled = (try offload(it, Io.Reader.Error!void, fillNow, r, c.timeout_ms)) orelse return timedOut(it, c, name);
             filled catch |e| switch (e) {
                 error.EndOfStream => {
                     if (exact) return it.failWith(err_io, "read_exact!: the stream ends before {d} bytes", .{n});

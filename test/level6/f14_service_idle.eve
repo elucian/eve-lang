@@ -1,0 +1,30 @@
+# a client that sends nothing gets a 408 after the idle time and the next client is served (TD-29)
+** spec: library/route.md
+primary aspect f14_service_idle is
+  from lib use (http, route, service);
+
+  async procedure run_server(server: Listener, routes: Any, count: Integer) is
+    service.serve(server, routes, count);
+  return;
+
+  process main is
+    service.idle(150);
+    new routes := (route.get("/hello", (req, p) => (route.text("hello"))), route.get("/x", (req, p) => (route.text("x"))));
+    new server := net.listen!("127.0.0.1", 0);
+    work: job
+    do
+      spawn run_server(server, routes, 2);
+      new silent := net.connect!("127.0.0.1", server.port());
+      print silent.read_line!();
+      new a := http.get!("http://127.0.0.1:{server.port()}/hello");
+      print "{a.status} {a.body}";
+      silent.close();
+    done work;
+    server.close();
+  return;
+end f14_service_idle;
+/*@expect
+{
+  "stdout": ["HTTP/1.1 408 Request Time-out", "200 hello"]
+}
+*/

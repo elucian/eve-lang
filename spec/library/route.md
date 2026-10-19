@@ -31,6 +31,7 @@ service.serve(server, routes, 3);
 | Member | Meaning |
 |---|---|
 | `handle(socket, routes)` | reads one request on the socket, writes the reply of `dispatch`, closes the socket |
+| `idle(ms: Integer)` | how long a client may stay silent before the reply `408 Request Time-out` (default 5000 ms) |
 | `serve(server: Listener, routes, count: Integer)` | accepts and handles `count` connections one after the other; `count` 0 serves until the listener is closed |
 
 Run `serve` in an `async procedure` started with `spawn` in a job, so the client or the other code of the script goes on (the example of [net.md](net.md)). One connection at a time at level 6; a handler that waits stops the other clients (TD-29).
