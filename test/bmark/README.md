@@ -98,18 +98,18 @@ The latest saved ReleaseSafe run: median time of the whole process (start-up inc
 The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
 
 <!-- size:begin -->
-| Version | 0.0.3 | 0.0.7 | 0.0.7 |
-|---|---|---|---|
-| Date | 2026-10-13 | 2026-10-19 | 2026-10-19 |
-| Build | ReleaseSafe | ReleaseSafe | ReleaseSafe |
-| Commit | 505c7dc | cc28760 | 810aae5 |
-| eve | 3,572 KB | 3,988 KB | 4,002 KB |
-| evevm | - | 3,988 KB | 4,002 KB |
-| evecp | - | 1,210 KB | 1,210 KB |
-| evetx | - | 2,198 KB | 2,198 KB |
-| eveux | - | 9,088 KB | 9,088 KB |
-| evedb | - | 1,264 KB | 1,264 KB |
-| eve change | - | +11.7% | +0.4% |
+| Version | 0.0.7 | 0.0.7 |
+|---|---|---|
+| Date | 2026-10-19 | 2026-10-19 |
+| Build | ReleaseSafe | ReleaseSafe |
+| Commit | cc28760 | 810aae5 |
+| eve | 3,988 KB | 4,002 KB |
+| evevm | 3,988 KB | 4,002 KB |
+| evecp | 1,210 KB | 1,210 KB |
+| evetx | 2,198 KB | 2,198 KB |
+| eveux | 9,088 KB | 9,088 KB |
+| evedb | 1,264 KB | 1,264 KB |
+| eve change | - | +0.4% |
 <!-- size:end -->
 
 ## History
@@ -118,15 +118,7 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 
 ### Notes by version
 
-**0.0.1 (2026-10-07), baseline.** The first measure, after level 1 passed. A tree walker: names found by a linear scan of the scopes, values copied as tagged unions. `p1a_arith` dominates. ReleaseSafe is about 4.6 times faster than Debug.
-
-**0.0.1 (2026-10-08), levels 2 and 3 measured.** Six benchmarks added with their twins; ratios Eve / Python of 1.0 to 2.4, so no accidental quadratic cost. The slowest is `p3a_modules` (2.4): `module.member` scans the `export` list on each access. Level 1 is 9% above the first run, which is noise of the machine.
-
-**0.0.2 (2026-10-09), memory manager; level 4 measured.** Values live in a reference counted heap (D-151) with a tracing backup for cycles, and a scratch memory for one statement. Peak memory fell from 174 MB (`p1d_strings`) to 4 to 7 MB; only `p4a_parallel_sum` keeps 39 MB (it copies a 200,000-element list per task). Faster too: level 1 by 25%, level 2 by 46%, level 3 by 29%, from a shared prelude scope, reuse of freed strings and a direct `a[i]`. Level 4 added.
-
-**0.0.3 (2026-10-13), the machine at the prompt; level 5 measured.** Work around the interpreter; the only cost on the script path is one atomic load between statements (+2% in `p1a_arith`). `p5a_sql_function` added (0.8x Python). `p3b_objects` is +17%, read as noise (its median and best differ by 10 ms). The size of `eve.exe` is recorded for the first time: 3,572 KB.
-
-**0.0.7 (2026-10-19), baseline for the bytecode.** Levels 5 and 6 measured for the first time: `p6a` to `p6e` run against `evedb` and are 0.0 to 0.9 of the Python twins (psycopg2 pays per row what the column batches do not). Against the run of 0.0.3 most benchmarks are 10 to 40% slower (`p4d_tasks` +102%, `p5a_sql_function` +74%), but that run was made on another day with another load, and the ratios Eve / Python moved less than the times (Python twins are 20 to 40% slower too, `p1a_arith` 2.3x against 3.5x). Read this run as the new base line, not as a regression; the next run on this machine is the first fair comparison. `eve.exe` grew 11.7% (3,572 to 3,988 KB) with the machine API, the database layer and the drivers moved into the module; `evevm.exe` is the same file as `eve.exe`. Targets for the bytecode: `design/design-bytecode.md` §11.
+**0.0.7 (2026-10-19), baseline for the bytecode.** The first run of the ladder (design/design-bytecode.md), before any change. Levels 5 and 6 are measured for the first time: `p6a` to `p6e` run against `evedb` and are 0.0 to 0.9 of the Python twins (psycopg2 pays per row what the column batches do not). `eve.exe` is 3,988 KB; `evevm.exe` is the same file. Runs of earlier versions were removed on 2026-10-19: they were made on another load and did not cover levels 5 and 6.
 
 **0.0.7 (2026-10-19), R0 and R1 of the bytecode ladder.** R0, the base line: `Value` is 24 bytes, `Node` 80 (104 after R1), `Var` 56, `Scope` 64, `Func` 40 (unit test `value sizes`). R1: the parser sets an `Op` on every binary and compound-assignment node and converts plain number literals once; `applyOp` does integer and real arithmetic and integer comparison without comparing the operator text. Measured against the commit before, same machine, alternating builds, 9 runs: `p1a_arith` 195 to 75 ms (3.0x to 1.1x Python), `p1b_calls` 62 to 45 ms, `p1c_collections` 22 to 18 ms, `p1d_strings` 15 to 14 ms. A first try of the net time-out (`set_timeout`) made `p6e_http_requests` 10 times slower, because a task with a time-out made the scheduler poll in 1 ms steps (about 15 ms on Windows); the scheduler now waits on its condition up to the timer, and `p6e` is 394 ms. `eve.exe` +0.4%. The absolute times of this row are lower than the first 0.0.7 row because the machine was less loaded; read the ratios Eve / Python.
 
@@ -135,15 +127,8 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
 
 <!-- runs:begin -->
-| Version | Date | Build | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |
-|---|---|---|---|---|---|---|---|---|
-| 0.0.1 | 2026-10-07 | Debug | 1843 ms | - | - | - | - | - |
-| 0.0.1 | 2026-10-07 | ReleaseSafe | 400 ms | - | - | - | - | - |
-| 0.0.1 | 2026-10-07 | ReleaseSafe | 399 ms | - | - | - | - | - |
-| 0.0.1 | 2026-10-08 | ReleaseSafe | 435 ms | 212 ms | 319 ms | - | - | - |
-| 0.0.1 | 2026-10-08 | Debug | 2073 ms | 955 ms | 1951 ms | - | - | - |
-| 0.0.2 | 2026-10-09 | ReleaseSafe | 327 ms | 114 ms | 228 ms | 931 ms | - | - |
-| 0.0.3 | 2026-10-13 | ReleaseSafe | 308 ms | 118 ms | 228 ms | 751 ms | 91 ms | - |
-| 0.0.7 | 2026-10-19 | ReleaseSafe | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
-| 0.0.7 | 2026-10-19 | ReleaseSafe | 164 ms | 112 ms | 175 ms | 657 ms | 107 ms | 2072 ms |
+| Version | Date | Build | Commit | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.0.7 | 2026-10-19 | ReleaseSafe | cc28760 | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
+| 0.0.7 | 2026-10-19 | ReleaseSafe | 810aae5 | 164 ms | 112 ms | 175 ms | 657 ms | 107 ms | 2072 ms |
 <!-- runs:end -->

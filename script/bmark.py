@@ -149,13 +149,13 @@ def update_readme(hist):
             res.append('| planned | | | | |')
     put_block('bench', what)
     put_block('results', res)
-    runs = ['| Version | Date | Build | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |', '|---|---|---|---|---|---|---|---|---|']
+    runs = ['| Version | Date | Build | Commit | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |', '|---|---|---|---|---|---|---|---|---|---|']
     for h in hist:
         cells = []
         for lvl in range(1, 7):
             t = [r['median_ms'] for n, r in h['results'].items() if n[1] == str(lvl)]
             cells.append('%.0f ms' % sum(t) if t else '-')
-        runs.append('| %s | %s | %s | %s |' % (h['version'], h['date'][:10], h.get('build', 'Debug'), ' | '.join(cells)))
+        runs.append('| %s | %s | %s | %s | %s |' % (h['version'], h['date'][:10], h.get('build', 'Debug'), h.get('commit', '-'), ' | '.join(cells)))
     put_block('runs', runs)
 
 
