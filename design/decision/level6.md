@@ -980,3 +980,17 @@ Author answers to Q-068 points 2 and 6 and to `design/design-drivers.md` (2026-1
 - **Every driver is documented.** One manual page for each driver: the client drivers `sqlite://`, `postgres://`, `evedb://` (the URL, the options, the types, what is supported) and the DuckDB server (the commands, the configuration file). Written in S8.10 and kept with the driver.
 - **A driver table is approved** ("This is good, add to plan"): one struct of functions per driver, chosen by the URL scheme, in place of the `if` chains of `conn.zig`. Stage S8.4a.
 - **The recommendation of `design-drivers.md` is accepted:** client drivers are embedded in `evevm`, the DuckDB engine is a server, no Eve driver DLLs.
+
+## D-201 Bytecode: a register machine, a project bundle, the tree walker kept as the reference (2026-10-19)
+
+Author answers to Q-B1 to Q-B9 of `design/design-bytecode.md`. Settled:
+
+- **Register machine** (Q-B1), 32-bit instructions.
+- **Versions** (Q-B2): the refactoring ladder R0 to R8 and the first stages of the VM in the current line; the `.evb` file and the embedding in 0.7 (`version_map.md`). `design-packages.md` B5 now points to the design.
+- **The tree walker is kept as the reference engine** (Q-B3): once stable it needs no maintenance, and it stays the oracle of the tests.
+- **One bundle per project** (Q-B4): Eve projects are small.
+- **JIT in version 0.8** (Q-B5); **change of the `Value` layout in version 0.8** (Q-B6); **tail calls in version 0.10** (Q-B7); a depth limit by configuration, `StackOverflow` as a language error.
+- **Targets** (Q-B8): those of §11, with +10% accepted in this phase; the risky and expensive steps are avoided; optimization stops after R4 if the result is good enough.
+- **Order of the ladder** (Q-B9): R0, R1, R2, test, R4, test.
+- **Order of the work:** the blockers left in levels 5 and 6 come before the bytecode.
+
