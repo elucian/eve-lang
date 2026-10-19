@@ -5,9 +5,18 @@
 
 A change of the emitter shows as a diff of listings; read it, then write the new listings with --update.
 """
-import argparse, glob, os, subprocess, sys
+import argparse, glob, os, re, subprocess, sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+
+
+def undocumented():
+    """Instructions of op.zig that comp/evecm/doc/instructions.md does not name."""
+    src = open(os.path.join(ROOT, 'comp', 'evecm', 'src', 'op.zig'), encoding='utf-8').read()
+    body = src[src.index('pub const Op = enum(u8) {'):src.index('// @eve-impl one instruction word')]
+    ops = re.findall(r'^    ([a-z_]+),$', body, re.M)
+    doc = open(os.path.join(ROOT, 'comp', 'evecm', 'doc', 'instructions.md'), encoding='utf-8').read()
+    return [o for o in ops if '`' + o + '`' not in doc]
 
 
 def main():
@@ -16,6 +25,10 @@ def main():
     ap.add_argument('--update', action='store_true')
     a = ap.parse_args()
     bad = 0
+    miss = undocumented()
+    if miss:
+        bad += 1
+        print('FAIL  comp/evecm/doc/instructions.md does not name: ' + ', '.join(miss))
     for src in sorted(glob.glob(os.path.join(ROOT, 'test', 'bytecode', '*.eve'))):
         golden = src[:-4] + '.lst'
         rel = os.path.relpath(src, ROOT).replace(os.sep, '/')

@@ -1,6 +1,6 @@
 # test/project: a live Eve machine to try by hand
 
-This folder is **not a test**: the runner never runs it. It is one Eve project, made by `eve --project init`, where you start a real machine and talk to it with the commands of the CLI and with a browser, to see how the machine reacts and to ask for improvements. The rules are in [`spec/library/machine.md`](../../spec/library/machine.md) (D-162); the automatic tests of the same rules are in [`test/level5/e95_web_hello`](../level5/e95_web_hello/readme.md). The old content of this folder, the shell test of `project init`, moved to [`test/scaffold`](../scaffold/readme.md).
+This folder is **not a test**: the runner never runs it. It is one Eve project, made by `eve --project init`, where you start a real machine and talk to it with the commands of the CLI and with a browser, to see how the machine reacts and to ask for improvements. The rules are in [`spec/library/machine.md`](../../spec/library/machine.md) (D-162); the automatic tests of the same rules are in [`test/level5/e95_web_hello`](../level5/e95_web_hello/readme.md). The old content of this folder, the shell test of `project init`, moved to `test/scaffold` (run with `runtest.py scaffold`).
 
 Every output below was captured from real runs on Windows 11 (2026-10-11).
 

@@ -14,16 +14,16 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 <!-- GEN:summary (script/genmanual.py) -->
 | Version | Validated | Drafted | Design | Planned | Total |
 |---|---|---|---|---|---|
-| Version 0.1 | 23 | 10 | 0 | 0 | 33 |
-| Version 0.2 | 4 | 8 | 0 | 1 | 13 |
+| Version 0.1 | 25 | 10 | 0 | 0 | 35 |
+| Version 0.2 | 5 | 8 | 0 | 1 | 14 |
 | Version 0.3 | 5 | 8 | 0 | 2 | 15 |
 | Version 0.4 | 2 | 8 | 9 | 12 | 31 |
-| Version 0.5 | 0 | 5 | 11 | 7 | 23 |
+| Version 0.5 | 0 | 6 | 11 | 7 | 24 |
 | Version 0.6 | 0 | 1 | 8 | 4 | 13 |
-| Version 0.7 | 0 | 0 | 3 | 0 | 3 |
+| Version 0.7 | 2 | 1 | 2 | 0 | 5 |
 | Version 0.9 | 0 | 0 | 0 | 3 | 3 |
 | Version 1.0 | 0 | 0 | 0 | 2 | 2 |
-| **All** | **34** | **40** | **31** | **31** | **136** |
+| **All** | **39** | **42** | **30** | **31** | **142** |
 <!-- /GEN:summary -->
 
 ## By version
@@ -66,6 +66,8 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-VM-01` | Lexer and parser | validated |
 | `F-VM-02` | Tree-walking interpreter | validated |
 | `F-VM-10` | Cross-platform releases | drafted |
+| `F-STR-12` | Exit code of the program | validated |
+| `F-LIB-13` | DataMap methods | validated |
 
 ### Version 0.2
 
@@ -84,6 +86,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-TLS-02` | REPL | drafted |
 | `F-TLS-03` | Interactive interpreter | planned |
 | `F-VM-03` | Library loader and `external` bindings | drafted |
+| `F-LNG-22` | External routines and errors of modules | validated |
 
 ### Version 0.3
 
@@ -168,6 +171,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-DAT-13` | The user cache `eve.db` | design |
 | `F-TLS-30` | Service mode | drafted |
 | `F-TLS-15` | Eve API for AI | design |
+| `F-NET-10` | Time-outs of the waiting calls | drafted |
 
 ### Version 0.6
 
@@ -191,8 +195,10 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 
 | Code | Feature | Stage |
 |---|---|---|
-| `F-VM-04` | Bytecode compiler and VM | design |
+| `F-VM-04` | Bytecode compiler and VM | drafted |
 | `F-VM-07` | Portable bytecode file `.evb` | design |
+| `F-VM-13` | Engine selection and equivalence tests | validated |
+| `F-VM-14` | Sampling profiler | validated |
 | `F-VM-08` | Embedding API | design |
 
 ### Version 0.9

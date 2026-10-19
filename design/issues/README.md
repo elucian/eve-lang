@@ -2,7 +2,7 @@
 
 One file per tutorial page (`tutorial/<page>.html` → `design/issues/<page>.md`): questions for the author and proposed improvements, found by the page-by-page review (plan step T1.10).
 
-Lost in the list? Start with the [priority list](PRIORITY.md).
+Lost in the list? The order of the work is in [CLAUDE.md](../../CLAUDE.md) (D-194) and `python script/plan.py status`.
 
 ## How to answer
 

@@ -1,6 +1,6 @@
 # The module `rpc`
 
-Status: **0.1-draft**, level 6 (D-189). Feature: F-NET-08. Written in Eve: `lib/rpc.eve`, over `json.parse` and `json.text` ([data-language.md](data-language.md#json-text-in-memory-jsonparse-and-jsontext)). Tests: `test/level6/f07_rpc`. The machine API that it speaks is in [machine.md](machine.md#the-machine-api).
+Status: **0.1-draft**, level 6 (D-189). Feature: F-NET-08. Written in Eve: `lib/rpc.eve`, over `json.parse` and `json.text` ([data-language.md](data-language.md#json-text-in-memory-jsonparse-and-jsontext)). Tests: `test/level6/f07_rpc`. The machine API that it speaks is in [machine.md](machine.md#the-machine-api-level-6).
 
 JSON-RPC 2.0 messages as text, one message per line. The module builds and reads messages and dispatches a request to a table of handlers; it does not own a socket (the lines travel on a connection of `net` or on the `POST /rpc` of a route).
 

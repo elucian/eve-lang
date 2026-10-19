@@ -155,13 +155,15 @@ def update_readme(hist):
             res.append('| planned | | | | | |')
     put_block('bench', what)
     put_block('results', res)
-    runs = ['| Version | Date | Build | Commit | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |', '|---|---|---|---|---|---|---|---|---|---|']
-    for h in hist:
+    shown = hist[-SHOWN:]
+    levels = [l for l in range(1, 8) if any(n[1] == str(l) for h in shown for n in h['results'])]
+    runs = ['| Version | Date | ' + ' | '.join('Level %d' % l for l in levels) + ' |', '|---|---|' + '---|' * len(levels)]
+    for h in shown:
         cells = []
-        for lvl in range(1, 7):
+        for lvl in levels:
             t = [r['median_ms'] for n, r in h['results'].items() if n[1] == str(lvl)]
             cells.append('%.0f ms' % sum(t) if t else '-')
-        runs.append('| %s | %s | %s | %s | %s |' % (h['version'], h['date'][:10], h.get('build', 'Debug'), h.get('commit', '-'), ' | '.join(cells)))
+        runs.append('| %s | %s | %s |' % (h['version'], h['date'][:10], ' | '.join(cells)))
     put_block('runs', runs)
 
 
@@ -185,6 +187,29 @@ def git_short():
         return subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     except OSError:
         return ''
+
+
+SHOWN = 2      # runs shown in the README tables (size, totals per run)
+VERSIONS = 5   # versions kept in history.json
+
+
+def prune(hist):
+    """Keep the last VERSIONS versions; of an older version only its last run of each build, of the newest version its last two."""
+    order = []
+    for h in hist:
+        if h['version'] not in order:
+            order.append(h['version'])
+    keep = order[-VERSIONS:]
+    out, count = [], {}
+    for h in reversed(hist):
+        v = h['version']
+        if v not in keep:
+            continue
+        k = (v, h.get('build', 'Debug'))
+        count[k] = count.get(k, 0) + 1
+        if count[k] <= (2 if v == keep[-1] else 1):
+            out.append(h)
+    return out[::-1]
 
 
 PROGRAMS = ['eve', 'evevm', 'evecp', 'evetx', 'eveux', 'evedb']
@@ -216,6 +241,7 @@ def update_size_table(hist):
         if 'eve' in sz:
             prev[b] = sz['eve']
         runs.append((h, sz, change))
+    runs = runs[-SHOWN:]
     rows = ['| Version | ' + ' | '.join(h['version'] for h, _, _ in runs) + ' |', '|---|' + '---|' * len(runs),
             '| Date | ' + ' | '.join(h['date'][:10] for h, _, _ in runs) + ' |',
             '| Build | ' + ' | '.join(h.get('build', 'Debug') for h, _, _ in runs) + ' |',
@@ -291,7 +317,7 @@ def main():
     print('sizes: ' + ', '.join('%s %s KB' % (k, format(round(v / 1024), ',')) for k, v in program_sizes(a.eve).items()))
     refs = {n: run_reference(n, a.runs) for n in results}
     server.__exit__(None, None, None)
-    print('%-22s %9s %9s %9s %9s %9s %7s %9s' % ('benchmark', 'median ms', 'best ms', 'bcode ms', 'vs last', 'python ms', 'eve/py', 'peak MB'))
+    print('%-22s %9s %9s %9s %7s %9s %9s %7s %8s' % ('benchmark', 'median ms', 'best ms', 'bcode ms', 'bc/tree', 'vs last', 'python ms', 'eve/py', 'peak MB'))
     slow = []
     for name, r in results.items():
         prev = last.get(name)
@@ -302,15 +328,19 @@ def main():
             if pct > 25:
                 slow.append(name)
         py = refs.get(name)
-        print('%-22s %9.1f %9.1f %9s %9s %9s %7s %9s' % (name, r['median_ms'], r['min_ms'], '%.1f' % r['bc_ms'] if 'bc_ms' in r else '-', delta, '%.1f' % py if py else '-',
+        print('%-22s %9.1f %9.1f %9s %7s %9s %9s %7s %8s' % (name, r['median_ms'], r['min_ms'], '%.1f' % r['bc_ms'] if 'bc_ms' in r else '-',
+                                                    '%.2fx' % (r['median_ms'] / r['bc_ms']) if r.get('bc_ms') else '-', delta, '%.1f' % py if py else '-',
                                                     '%.1fx' % (r['median_ms'] / py) if py else '-', r.get('peak_mb', '-')))
     for lvl in sorted({n[1] for n in results}):
         tot = sum(r['median_ms'] for n, r in results.items() if n[1] == lvl)
         ptot = sum(last[n]['median_ms'] for n in results if n[1] == lvl and n in last)
-        print('level %s total %.1f ms%s' % (lvl, tot, (' (%+.0f%%)' % ((tot - ptot) / ptot * 100)) if ptot else ''))
+        bct = sum(r['bc_ms'] for n, r in results.items() if n[1] == lvl and 'bc_ms' in r)
+        print('level %s total %.1f ms%s%s' % (lvl, tot, (' (%+.0f%% against the last run)' % ((tot - ptot) / ptot * 100)) if ptot else '',
+              ', bytecode %.1f ms' % bct if bct else ''))
     if a.save and not bad:
         hist.append({'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M'), 'version': ver, 'build': a.build, 'commit': git_short(), 'exe_bytes': exe_bytes, 'sizes': program_sizes(a.eve),
                      'machine': platform.processor() or platform.machine(), 'runs': a.runs, 'results': results, 'python': {n: v for n, v in refs.items() if v}})
+        hist = prune(hist)
         json.dump(hist, open(HIST, 'w', encoding='utf-8', newline='\n'), indent=1)
         update_readme(hist)
         update_size_table(hist)

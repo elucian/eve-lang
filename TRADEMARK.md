@@ -6,7 +6,7 @@ Effective 2026-10-02. Version 1.0.
 
 "EVE", the official EVE logo (the files `eve-logo.svg` and `eve-logo.jpg` of the project) and the associated branding
 are trademarks of **Sage-Code Laboratory** (the "Owner"), the project of Elucian Moise. The licenses of this repository
-([LICENSE](LICENSE): BUSL-1.1 for the code, CC BY-NC-SA 4.0 for the specification and the other documents) cover copyright only.
+([code: BUSL-1.1](comp/LICENSE); [specification and other documents: CC BY-NC-SA 4.0](spec/LICENSE)) cover copyright only.
 They do **not** grant any right in these trademarks.
 
 This policy keeps the name EVE trustworthy: a program that says it is EVE must behave as the specification says,

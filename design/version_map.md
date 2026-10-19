@@ -41,13 +41,13 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 
 | Version | Levels | Name | Goal | Features done | Status |
 |---|---|---|---|---|---|
-| Version 0.1 | Levels 1 and 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply`. | 23 of 33 | in progress |
-| Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 4 of 13 | in progress |
-| Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 0 of 14 | planned |
-| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 0 of 29 | planned |
-| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 22 | planned |
-| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the Eve Web Portal evewp, written in Eve, as the final test of the language (D-193). | 0 of 12 | planned |
-| Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 0 of 3 | planned |
+| Version 0.1 | Levels 1 and 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply`. | 25 of 35 | in progress |
+| Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 5 of 14 | in progress |
+| Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 5 of 15 | in progress |
+| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 2 of 31 | in progress |
+| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 24 | in progress |
+| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the Eve Web Portal evewp, written in Eve, as the final test of the language (D-193). | 0 of 13 | planned |
+| Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 2 of 5 | in progress |
 | Version 0.9 | Levels 1 to 7 | Release candidate | Package manager, more database drivers, web kit, hardening. | 0 of 3 | planned |
 | Version 1.0 | Levels 1 to 7 | Stable | Frozen language, every level passes, registry for other implementations. | 0 of 2 | planned |
 
@@ -55,7 +55,7 @@ The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. V
 
 Levels 1 and 2. Goal: Run a project: one driver and its aspects, error recovery across `apply`.
 
-23 of 33 features done.
+25 of 35 features done (10 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -101,7 +101,7 @@ Exit: level 1 and level 2 pass; `spec/` has the grammar and the semantics of eve
 
 Level 3. Goal: Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125).
 
-4 of 13 features done.
+5 of 14 features done (8 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -126,7 +126,7 @@ Exit: levels 1 to 3 pass (modules c01–c09 and c18–c31, classes c10–c17 inc
 
 Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138).
 
-4 of 14 features done (2026-10-08, stage A of D-144), 5 partial.
+5 of 15 features done (8 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -152,7 +152,7 @@ Exit: parallel tests are deterministic over 100 runs; a pipeline with more stage
 
 Level 5. Goal: The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands.
 
-0 of 29 features done.
+2 of 31 features done (6 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -194,7 +194,7 @@ Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; l
 
 Level 6. Goal: The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI.
 
-0 of 23 features done.
+0 of 24 features done (6 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -230,7 +230,7 @@ Exit: a local machine logs in to two remote machines on `localhost`, one by sing
 
 Level 7. Goal: Safe HTML and Eve in the browser; the Eve Web Portal evewp (production edge, host, monitor and web framework), written in Eve, as the final test of the language (D-193; `comp/evewp/README.md`). The development client eveux is now native Zig (`comp/eveux/README.md`); its features F-TLS-19 to F-TLS-22 are listed here for history and start after the spike of that design.
 
-0 of 12 features done.
+0 of 13 features done (1 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
@@ -254,7 +254,7 @@ Exit: tutorial examples run in the browser; templates pass an escaping test suit
 
 Levels 1 to 7. Goal: The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM.
 
-2 of 5 features done (F-VM-04 partial).
+2 of 5 features done (1 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|

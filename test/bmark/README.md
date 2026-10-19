@@ -98,23 +98,23 @@ The latest saved ReleaseSafe run, median time of the whole process (start-up inc
 The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
 
 <!-- size:begin -->
-| Version | 0.0.7 | 0.0.7 | 0.0.7 | 0.0.7 |
-|---|---|---|---|---|
-| Date | 2026-10-19 | 2026-10-19 | 2026-10-19 | 2026-10-19 |
-| Build | ReleaseSafe | ReleaseSafe | ReleaseSafe | ReleaseSafe |
-| Commit | cc28760 | 810aae5 | 320a228 | b3019cb |
-| eve | 3,988 KB | 4,002 KB | 4,000 KB | 4,055 KB |
-| evevm | 3,988 KB | 4,002 KB | 4,000 KB | 4,055 KB |
-| evecp | 1,210 KB | 1,210 KB | 1,210 KB | 1,210 KB |
-| evetx | 2,198 KB | 2,198 KB | 2,198 KB | 2,198 KB |
-| eveux | 9,088 KB | 9,088 KB | 9,088 KB | 9,088 KB |
-| evedb | 1,264 KB | 1,264 KB | 1,264 KB | 1,264 KB |
-| eve change | - | +0.4% | -0.0% | +1.4% |
+| Version | 0.0.7 | 0.0.7 |
+|---|---|---|
+| Date | 2026-10-19 | 2026-10-19 |
+| Build | ReleaseSafe | ReleaseSafe |
+| Commit | 320a228 | b3019cb |
+| eve | 4,000 KB | 4,055 KB |
+| evevm | 4,000 KB | 4,055 KB |
+| evecp | 1,210 KB | 1,210 KB |
+| evetx | 2,198 KB | 2,198 KB |
+| eveux | 9,088 KB | 9,088 KB |
+| evedb | 1,264 KB | 1,264 KB |
+| eve change | -0.0% | +1.4% |
 <!-- size:end -->
 
 ## History
 
-Each saved run adds a paragraph to the notes (what changed in the VM, faster or slower, and why when a benchmark moves by more than 10%) and a row to the totals.
+Each saved run adds a paragraph to the notes (what changed in the VM, faster or slower, and why when a benchmark moves by more than 10%) and a row to the totals. `history.json` keeps the last 5 versions: one run of each build for an older version, the last two runs for the newest. The tables below show the last two runs.
 
 ### Notes by version
 
@@ -135,10 +135,8 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
 
 <!-- runs:begin -->
-| Version | Date | Build | Commit | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |
-|---|---|---|---|---|---|---|---|---|---|
-| 0.0.7 | 2026-10-19 | ReleaseSafe | cc28760 | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
-| 0.0.7 | 2026-10-19 | ReleaseSafe | 810aae5 | 164 ms | 112 ms | 175 ms | 657 ms | 107 ms | 2072 ms |
-| 0.0.7 | 2026-10-19 | ReleaseSafe | 320a228 | 148 ms | 97 ms | 154 ms | 678 ms | 106 ms | 1920 ms |
-| 0.0.7 | 2026-10-19 | ReleaseSafe | b3019cb | 138 ms | 91 ms | 141 ms | 550 ms | 80 ms | 2297 ms |
+| Version | Date | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |
+|---|---|---|---|---|---|---|---|
+| 0.0.7 | 2026-10-19 | 148 ms | 97 ms | 154 ms | 678 ms | 106 ms | 1920 ms |
+| 0.0.7 | 2026-10-19 | 138 ms | 91 ms | 141 ms | 550 ms | 80 ms | 2297 ms |
 <!-- runs:end -->
