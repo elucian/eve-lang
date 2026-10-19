@@ -52,7 +52,8 @@ The gate of every stage includes these two: `zig build test` in the root (and in
 - **Gate:** the common gate; the benchmark comparison as in S8.3; and the memory check of the project on the Debug build: `EVE_GC_VERIFY=1 python script/runtest.py all` (the database layer builds values, so a count forgotten by a holder would show here).
 - **Review:** what each former `Host` function became, any value that crossed the old boundary with a different ownership rule.
 
-### S8.4a The driver table `[ ]`
+### S8.4a The driver table `[x]`
+2026-10-19: `comp/evevm/src/db/driver.zig` holds `Driver` (scheme, is_url, connect, is_object, call, finish_transactions, close_all) and `table = {sqlite, postgres, evedb}`; each driver file defines `pub const driver`. The `if` chains of `conn.zig`, `db.zig` and `orm.zig` are loops over the table (`inline for`, so the calls stay direct). A URL no driver knows now says which schemes exist. One new unit test (110 in all, 23 in the server); 399 of 399; both Python checks pass; `eve.exe` +2,048 bytes. The benchmark comparison was left out at the author's request.
 - **Change (D-200):** one struct of functions per driver (is it my URL, connect, call a method, is it my object, finish the transactions, close), chosen by the URL scheme; `sqlite`, `pgdriver` and `ewpdriver` each register one; the `if` chains of `comp/evevm/src/db/conn.zig` and `state.zig` become a lookup. A new driver is one file and one line in the table. The behavior does not change.
 - **Gate:** the common gate; the benchmark comparison as in S8.3 (the lookup is on `connect` and on a method call: no more than 10% slower).
 - **Review:** the table definition (the functions a driver must provide) and the three drivers as examples.

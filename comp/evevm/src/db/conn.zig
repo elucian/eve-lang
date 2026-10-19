@@ -1,4 +1,4 @@
-//! Connections: `database.connect`, the methods of a `Connection`, the transaction of a job, the
+//! SQLite connections: the methods of a `Connection`, the transaction of a job, the
 //! statements, and the `sql function`s that SQLite calls (spec/library/database.md). Part of evedb;
 //! it works on SQLite in this version. The interpreter is reached through `Host`.
 const std = @import("std");
@@ -13,8 +13,7 @@ const Heap = evecm.heap.Heap;
 const sqlite = @import("sqlite.zig");
 const orm = @import("orm.zig");
 const importer = @import("importer.zig");
-const pgdriver = @import("pgdriver.zig");
-const ewpdriver = @import("ewpdriver.zig");
+const Driver = @import("driver.zig").Driver;
 const state = @import("state.zig").state;
 
 const Node = ast.Node;
@@ -103,19 +102,28 @@ fn checkMapping(it: Host, name: []const u8, db: *sqlite.Db) Signal!void {
     }
 }
 
-/// `database.connect(name)`: the `Connection` of the name (the database is opened once per run).
-pub fn connect(it: Host, args: []const *const Node) Signal!Value {
-    if (args.len != 1) return it.fail("database.connect takes the name of a connection", .{});
-    const name = try it.text(try it.eval(args[0]));
-    // a `postgres://` connection goes to the PostgreSQL driver (evedb, or any PostgreSQL server)
-    if (it.io()) |io| {
-        if (Io.Dir.cwd().readFileAlloc(io, "eve.cfg", it.temp(), .limited(1 << 20))) |cfg| {
-            if (data.connectionUrl(cfg, name)) |url| {
-                if (pgdriver.isPgUrl(url)) return pgdriver.connectPg(it, name, url);
-                if (ewpdriver.isEvUrl(url)) return ewpdriver.connectEv(it, name, url);
-            }
-        } else |_| {}
-    }
+/// The SQLite driver of the table (`driver.zig`): the core database and the `sqlite://` files of a script.
+pub const driver: Driver = .{
+    .scheme = "sqlite",
+    .is_url = isSqliteUrl,
+    .connect = sqliteConnect,
+    .is_object = isSqliteObject,
+    .call = connectionCall,
+    .finish_transactions = finishTransactions,
+    .close_all = closeDatabases,
+};
+
+fn isSqliteUrl(url: []const u8) bool {
+    return data.sqlitePath(url) != null;
+}
+
+fn isSqliteObject(it: Host, v: Value) bool {
+    return v == .object and v.object.class != null and v.object.class == state(it).conn_class;
+}
+
+/// `database.connect(name)` for a `sqlite://` URL: the `Connection` of the name (the database is opened once per run).
+fn sqliteConnect(it: Host, name: []const u8, url: []const u8) Signal!Value {
+    _ = url;
     const idx = try openConnection(it, name);
     const b = state(it);
     if (b.conn_class == null) {
@@ -141,10 +149,8 @@ pub fn enlist(it: Host, idx: usize, db: *sqlite.Db) Signal!void {
 
 // Zig tip: `catch {}` drops an error on purpose; a failed `commit` here has nowhere to go (the job
 // already ended), and a failed `rollback` means the connection is gone, which rolls back anyway.
-/// At `done`: commit every transaction the job began, or roll it back when the job failed.
+/// At `done`: commit every transaction the job began on SQLite, or roll it back when the job failed.
 pub fn finishTransactions(it: Host, ok: bool) void {
-    pgdriver.finishTransactions(it, ok);
-    ewpdriver.finishTransactions(it, ok);
     const b = state(it);
     for (b.dbs.items, 0..) |db, i| {
         if (!b.tx.items[i]) continue;
@@ -153,7 +159,7 @@ pub fn finishTransactions(it: Host, ok: bool) void {
     }
 }
 
-/// At the end of the run: close the databases that the script left open.
+/// At the end of the run: close the SQLite databases that the script left open.
 pub fn closeDatabases(it: Host) void {
     for (state(it).dbs.items) |db| db.close();
 }
@@ -371,8 +377,6 @@ fn sqlMismatch(it: Host, sf: *SqlFn, q: *const Node, kind: []const u8) Signal {
 
 /// The methods of a `Connection`: `script`, `execute!`, `query!`, `query_one!` and `close`.
 pub fn connectionCall(it: Host, conn: *Object, name: []const u8, args: []const *const Node) Signal!Value {
-    if (pgdriver.isPgObject(it, .{ .object = conn })) return pgdriver.call(it, conn, name, args);
-    if (ewpdriver.isEvObject(it, .{ .object = conn })) return ewpdriver.call(it, conn, name, args);
     const eql = std.mem.eql;
     const targs = it.typeArgs();
     const idx: usize = @intCast(value.intOf(value.fieldOf(conn, "handle").?));

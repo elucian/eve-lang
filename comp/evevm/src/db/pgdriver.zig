@@ -12,6 +12,7 @@ const evecm = @import("evecm");
 const ast = evecm.ast;
 const value = evecm.value;
 const Host = @import("../host.zig").Host;
+const Driver = @import("driver.zig").Driver;
 const Node = ast.Node;
 const Value = value.Value;
 const Object = value.Object;
@@ -255,3 +256,14 @@ pub fn call(it: Host, obj: *Object, name: []const u8, args: []const *const Node)
     }
     return it.fail("a Connection has no method '{s}'", .{name});
 }
+
+/// The driver of the table (`driver.zig`) for `postgres://` URLs.
+pub const driver: Driver = .{
+    .scheme = "postgres",
+    .is_url = isPgUrl,
+    .connect = connectPg,
+    .is_object = isPgObject,
+    .call = call,
+    .finish_transactions = finishTransactions,
+    .close_all = closeAll,
+};

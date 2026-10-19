@@ -3,9 +3,9 @@
   "f01_pg_driver": {
    "status": "PASS",
    "failures": 1,
-   "runs": 26,
+   "runs": 27,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792401047,
    "title": "the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (comp/evedb/README.md 5A, 5B)",
    "reason": ""
@@ -13,9 +13,9 @@
   "f02_evedb_columnar": {
    "status": "PASS",
    "failures": 3,
-   "runs": 25,
+   "runs": 26,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792304245,
    "title": "the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables (D-187)",
    "reason": ""
@@ -23,9 +23,9 @@
   "f03_test_module": {
    "status": "PASS",
    "failures": 0,
-   "runs": 15,
+   "runs": 16,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792324062,
    "title": "the standard module test, written in Eve: checks print one line, count, and summary raises when one failed (D-189)",
    "reason": ""
@@ -33,9 +33,9 @@
   "f04_crypto": {
    "status": "PASS",
    "failures": 0,
-   "runs": 14,
+   "runs": 15,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792324118,
    "title": "the system module crypto: hashes, HMAC, codecs, random bytes (F-LIB-10, D-189)",
    "reason": ""
@@ -43,9 +43,9 @@
   "f05_os": {
    "status": "PASS",
    "failures": 0,
-   "runs": 14,
+   "runs": 15,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792324118,
    "title": "the system module os: run a program without a shell, read the environment (F-LIB-07, D-189)",
    "reason": ""
@@ -53,9 +53,9 @@
   "f06_json_text": {
    "status": "PASS",
    "failures": 0,
-   "runs": 13,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792324945,
    "title": "json.parse and json.text: JSON text in memory and plain values (F-LIB-05, D-189)",
    "reason": ""
@@ -63,9 +63,9 @@
   "f07_rpc": {
    "status": "PASS",
    "failures": 0,
-   "runs": 13,
+   "runs": 14,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792327320,
    "title": "the standard module rpc, in Eve: build JSON-RPC 2.0 lines (F-NET-08, D-189)",
    "reason": ""
@@ -73,9 +73,9 @@
   "f08_config": {
    "status": "PASS",
    "failures": 0,
-   "runs": 11,
+   "runs": 12,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792333073,
    "title": "the standard module config, in Eve: key = value files into a DataMap (F-TLS-12, D-189)",
    "reason": ""
@@ -83,9 +83,9 @@
   "f09_net": {
    "status": "PASS",
    "failures": 0,
-   "runs": 10,
+   "runs": 11,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792333625,
    "title": "the system module net: a server and a client as tasks of one script, lines over TCP (F-NET-02, D-189)",
    "reason": ""
@@ -93,9 +93,9 @@
   "f10_route_hello": {
    "status": "PASS",
    "failures": 0,
-   "runs": 9,
+   "runs": 10,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792334282,
    "title": "a server with routes and a client in one script: the modules net, http, route and service (F-NET-02, F-STR-08, D-189)",
    "reason": ""
@@ -103,9 +103,9 @@
   "f11_rpc_roundtrip": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 8,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792334808,
    "title": "JSON-RPC 2.0 over HTTP between a server and a client on localhost: rpc, http, route, service and net together (F-NET-08, D-189)",
    "reason": ""
@@ -113,9 +113,9 @@
   "f12_service_close": {
    "status": "PASS",
    "failures": 0,
-   "runs": 7,
+   "runs": 8,
    "checks": 0,
-   "last": "2026-10-19 09:32",
+   "last": "2026-10-19 09:44",
    "mtime": 1792334912,
    "title": "a service with no count runs until its listener is closed; close wakes the pending accept (F-NET-02, D-189)",
    "reason": ""

@@ -33,14 +33,9 @@ pub const pgclient = @import("db/pgclient.zig");
 pub const pgdriver = @import("db/pgdriver.zig");
 /// The Eve driver for evedb's native protocol, with the column batches of `Memory` tables (evedb README section 5.5).
 pub const ewpdriver = @import("db/ewpdriver.zig");
+/// The table of the drivers: `sqlite`, `postgres://`, `evedb://` (D-200).
+pub const driver = @import("db/driver.zig");
 pub const batch = @import("ewp_protocol").batch;
-
-/// Is `v` a connection object of one of the drivers (SQLite, `postgres://`, `evedb://`)?
-// @eve-impl database.connect objects
-pub fn isConnection(it: Host, v: value.Value) bool {
-    if (pgdriver.isPgObject(it, v) or ewpdriver.isEvObject(it, v)) return true;
-    return v == .object and v.object.class != null and v.object.class == state.state(it).conn_class;
-}
 
 /// Every table of the program is known before the first is declared: the order of the inserts depends on them all.
 pub fn declareTables(it: Host, kids: []const *const Node) Signal!void {
@@ -50,10 +45,8 @@ pub fn declareTables(it: Host, kids: []const *const Node) Signal!void {
 }
 
 pub fn closeDatabases(it: Host) void {
-    for (state.state(it).dbs.items) |db| db.close();
+    driver.closeAll(it);
     memory.closeAll(it);
-    pgdriver.closeAll(it);
-    ewpdriver.closeAll(it);
 }
 
 test {
@@ -67,5 +60,6 @@ test {
     _ = pgclient;
     _ = pgdriver;
     _ = ewpdriver;
+    _ = driver;
     _ = batch;
 }

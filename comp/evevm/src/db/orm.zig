@@ -14,6 +14,7 @@ const Host = @import("../host.zig").Host;
 const Heap = evecm.heap.Heap;
 const sqlite = @import("sqlite.zig");
 const dbconn = @import("conn.zig");
+const drivers = @import("driver.zig");
 const state = @import("state.zig").state;
 
 const Node = ast.Node;
@@ -909,14 +910,14 @@ fn releaseSession(it: Host, all: bool) void {
 pub fn endJob(it: Host, ok: bool) Signal!void {
     if (ok) {
         flushConn(it, null) catch |e| {
-            dbconn.finishTransactions(it, false);
+            drivers.finishTransactions(it, false);
             releaseSession(it, true);
             return e;
         };
-        dbconn.finishTransactions(it, true);
+        drivers.finishTransactions(it, true);
         releaseSession(it, false);
     } else {
-        dbconn.finishTransactions(it, false);
+        drivers.finishTransactions(it, false);
         releaseSession(it, true);
     }
 }
@@ -924,7 +925,7 @@ pub fn endJob(it: Host, ok: bool) Signal!void {
 /// `commit;` in a job: flush, commit, and a new transaction begins at the next statement.
 pub fn commitJob(it: Host) Signal!void {
     try flushConn(it, null);
-    dbconn.finishTransactions(it, true);
+    drivers.finishTransactions(it, true);
 }
 
 // ---- checkpoints (database.md, long loads) -----------------------------------------------------------

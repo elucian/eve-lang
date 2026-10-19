@@ -127,7 +127,7 @@ pub fn libraryCall(it: *Interp, module: []const u8, name: []const u8, args: []co
 // @eve-fn database.connect
 // @spec spec/library/database.md#direct-sql
 fn databaseModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
-    if (std.mem.eql(u8, name, "connect")) return try db.conn.connect(it.host(), args);
+    if (std.mem.eql(u8, name, "connect")) return try db.driver.connect(it.host(), args);
     return null;
 }
 

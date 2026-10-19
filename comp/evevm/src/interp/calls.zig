@@ -222,7 +222,7 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     if (dlib.isStream(it, recv)) return dlib.streamCall(it, recv.object, name, args);
     if (netlib.isNet(it, recv)) return netlib.call(it, recv.object, name, args);
     if (db.orm.isTable(it.host(), recv)) return db.orm.tableCall(it.host(), recv.object, name, args);
-    if (db.isConnection(it.host(), recv)) return db.conn.connectionCall(it.host(), recv.object, name, args);
+    if (db.driver.isConnection(it.host(), recv)) return db.driver.connectionCall(it.host(), recv.object, name, args);
     if (db.memory.isMemory(it.host(), recv)) return db.memory.memoryCall(it.host(), recv.object, name, args);
     if (db.memory.isColumn(it.host(), recv)) return db.memory.columnCall(it.host(), recv.object, name, args);
     if (recv == .chan) return it.channelMethod(recv.chan, name, args);

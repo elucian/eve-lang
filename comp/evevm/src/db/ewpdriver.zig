@@ -11,6 +11,7 @@ const evecm = @import("evecm");
 const ast = evecm.ast;
 const value = evecm.value;
 const Host = @import("../host.zig").Host;
+const Driver = @import("driver.zig").Driver;
 const Node = ast.Node;
 const Value = value.Value;
 const Object = value.Object;
@@ -541,3 +542,14 @@ test "an evedb URL" {
     try std.testing.expect(parseUrl("postgres://x") == null);
     try std.testing.expectEqualStrings("", parseUrl("evedb://localhost:8044/wh").?.token);
 }
+
+/// The driver of the table (`driver.zig`) for `evedb://` URLs.
+pub const driver: Driver = .{
+    .scheme = "evedb",
+    .is_url = isEvUrl,
+    .connect = connectEv,
+    .is_object = isEvObject,
+    .call = call,
+    .finish_transactions = finishTransactions,
+    .close_all = closeAll,
+};
