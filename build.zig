@@ -45,9 +45,9 @@ pub fn build(b: *std.Build) void {
         .imports = &.{.{ .name = "evecm", .module = evecm }},
     });
     // @eve-impl the module `ewp_protocol`: the wire protocol shared with the DuckDB server (D-199 5)
-    // @see comp/evedb/build.zig (the server makes the same module from the same files)
+    // @see drivers/duckdb/build.zig (the server makes the same module from the same files)
     const ewp_protocol = b.createModule(.{
-        .root_source_file = b.path("comp/evedb/protocol/protocol.zig"),
+        .root_source_file = b.path("drivers/duckdb/protocol/protocol.zig"),
         .target = target,
         .optimize = optimize,
     });

@@ -55,13 +55,13 @@ Do not read the logs whole. `python script/plan.py status` prints the focus, the
 | Rank | Work | Where |
 |---|---|---|
 | 1 | Plan | `design/` (decision logs, `version_map.md`, `tech-debt.md`, `library-gaps.md`) |
-| 2 | Design | `design/design-*.md`, the README and `design/` of `comp/evetx/`, `comp/eveux/`, `comp/evewp/`, `comp/evedb/` |
+| 2 | Design | `design/design-*.md`, the README and `design/` of `comp/evetx/`, `comp/eveux/`, `comp/evewp/`, `drivers/duckdb/` |
 | 3 | User interfaces | `comp/evetx/` (terminal), `comp/eveux/` (native window), `comp/evewp/` (web portal) |
 | 4 | Refactor | shared code in `comp/evecm/` (`comp/evecm/src/ide/` is shared by evetx and eveux), module borders (`design/design-packages.md`) |
 | 5 | Optimize | `test/bmark/`, `script/bmark.py` |
 | 6 | Test | `test/level1` to `level7`, `test/smoke`, `script/runtest.py` (phase 5) |
 | 7 | Specification | `spec/` (phases 2 to 4); it follows the tests |
-| 8 | Compiler | `comp/evecp/`, `comp/evevm/`, `comp/evecm/`, `comp/evedb/`, `comp/eve/` (phase 6) |
+| 8 | Compiler | `comp/evecp/`, `comp/evevm/`, `comp/evecm/`, `drivers/duckdb/`, `comp/eve/` (phase 6) |
 | 9 | Manual | `manual/` (phase 7) |
 | 10 | Tutorial | `tutorial/` (phase 1), last; the steps wait, none is dropped |
 
@@ -82,7 +82,7 @@ The old focus (2026-10-07, "tutorial first": the tutorial was reviewed until fea
 
 - [version_map.md](version_map.md): **one file to track the project** (D-138): the levels 1 to 7, the versions 0.1 to 1.0, and every large feature with a code (`F-<area>-<nn>`), its status and its version, with the exit criterion of each version. Mark a feature `✓ done` when it is implemented and tested.
 - Decision logs by level: [1](decision/level1.md) single script, [2](decision/level2.md) project, [3](decision/level3.md) data, [4](decision/level4.md) parallel, [5](decision/level5.md) database, [6](decision/level6.md) server, [7](decision/level7.md) web.
-- Designs for review: [design-multitasking.md](design-multitasking.md), [design-service.md](design-service.md) (the Eve machine and the server), [design-database-core.md](design-database-core.md) (SQLite core, ORM, transactions) and [design-database-remote.md](design-database-remote.md) (drivers, Eve server, ETL), [evedb](../comp/evedb/README.md) (the Eve test database around DuckDB), [design-packages.md](design-packages.md) (the split of the VM into modules and the parts of `eve`, D-163 to D-167, approved 2026-10-12); the first draft [design-database.md](archive/design-database.md) is archived with the author's answers.
+- Designs for review: [design-multitasking.md](design-multitasking.md), [design-service.md](design-service.md) (the Eve machine and the server), [design-database-core.md](design-database-core.md) (SQLite core, ORM, transactions) and [design-database-remote.md](design-database-remote.md) (drivers, Eve server, ETL), [evedb](../drivers/duckdb/README.md) (the Eve test database around DuckDB), [design-packages.md](design-packages.md) (the split of the VM into modules and the parts of `eve`, D-163 to D-167, approved 2026-10-12); the first draft [design-database.md](archive/design-database.md) is archived with the author's answers.
 - [backlog.md](../backlog/ideas.md): reserved words and ideas without a design.
 
 ## Phases

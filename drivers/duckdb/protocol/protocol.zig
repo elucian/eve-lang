@@ -1,10 +1,10 @@
 //! @eve-module ewp_protocol
-//! @spec comp/evedb/README.md#5-the-native-protocol-ewp-db
+//! @spec drivers/duckdb/README.md#5-the-native-protocol-ewp-db
 //! @decision D-199
-//! @tests comp/evedb/protocol/ewp.zig, comp/evedb/protocol/batch.zig
+//! @tests drivers/duckdb/protocol/ewp.zig, drivers/duckdb/protocol/batch.zig
 //! The wire protocol between the DuckDB server and the native driver `evedb://`: the frames, the column batches and a client.
 //!
-//! These three files are shared, not copied (D-199 5). The server (`comp/evedb/build.zig`) and the Eve side (the root
+//! These three files are shared, not copied (D-199 5). The server (`drivers/duckdb/build.zig`) and the Eve side (the root
 //! `build.zig`, for the driver in `evevm`) each make the module `ewp_protocol` from this file, so there is one protocol and
 //! one place to change it. The check from the other side is `script/evedb_check.py`, written from the document alone.
 

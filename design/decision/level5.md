@@ -8,7 +8,7 @@ The core of Eve as an ETL tool: a driver connects to databases by name, reads qu
 
 Features: F-DAT-01 to F-DAT-11, F-LIB-08 (secrets of the connections), F-LIB-11 (lineage in the run log).
 
-Design for review (2026-10-10): [design-database-core.md](../design-database-core.md), [design-database-remote.md](../design-database-remote.md) and [comp/evedb/README.md](../../comp/evedb/README.md) (the test database around DuckDB). First draft, archived with the author's answers: [design-database.md](../archive/design-database.md) (2026-10-05).
+Design for review (2026-10-10): [design-database-core.md](../design-database-core.md), [design-database-remote.md](../design-database-remote.md) and [drivers/duckdb/README.md](../../drivers/duckdb/README.md) (the test database around DuckDB). First draft, archived with the author's answers: [design-database.md](../archive/design-database.md) (2026-10-05).
 
 Decisions already taken in other files: D-020 (jobs and `recover`), D-080 (Decimal, optional types, DataMap), D-081 (error classes, `defer`, unsafe methods, run log), D-083 (machine folder, configuration, remote commands).
 

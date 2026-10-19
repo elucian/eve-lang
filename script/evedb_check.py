@@ -1,4 +1,4 @@
-"""Protocol tests of evedb (comp/evedb/README.md, section 5), written in Python from the document alone.
+"""Protocol tests of evedb (drivers/duckdb/README.md, section 5), written in Python from the document alone.
 
 The client below is independent of the Zig code: it builds and reads the frames with `struct`, so a mistake in the document or in
 the server shows up as a failed check. It starts `bin/evedb.exe serve --test` on a free port with a fresh data folder (and a

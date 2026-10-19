@@ -7,8 +7,8 @@ Licensor:             Elucian Moise
 
 Licensed Work:        The Eve components (comp/): the virtual machine, the
                       compiler, the common part, the eve command, the
-                      database server, the user interfaces and the web
-                      portal, version 0.1 and later.
+                      user interfaces and the web portal, and the database
+                      drivers (drivers/), version 0.1 and later.
                       The Licensed Work is (c) 2026 Elucian Moise.
 
 Additional Use Grant: You may make production use of the Licensed Work,

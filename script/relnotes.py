@@ -49,7 +49,9 @@ RELEASE = os.path.join(MANUAL, 'releases')
 SITE = 'https://sagecode.org/projects/eve/'
 REPO = 'https://github.com/elucian/eve-lang/blob/master/'
 # the components whose doc/ folder is copied into manual/<name>/ (script/genmanual.py)
-COMPONENTS = ('evevm', 'evecp', 'evecm', 'evedb', 'evetx', 'eveux', 'evewp')
+COMPONENTS = ('evevm', 'evecp', 'evecm', 'evetx', 'eveux', 'evewp')
+# the drivers whose doc/ folder is copied into manual/drivers/<name>/ (script/genmanual.py)
+DRIVERS = ('duckdb',)
 STAGES = ('validated', 'drafted', 'design')
 V = r'\d+\.\d+\.\d+'
 
@@ -305,6 +307,7 @@ def gen_links(here):
              ('manual/tests.md', 'Tests: summary'), ('manual/performance.md', 'Performance report'),
              ('manual/releases/README.md', 'Release notes')]
     pages += [('manual/%s/README.md' % c, 'Component: %s' % c) for c in COMPONENTS]
+    pages += [('manual/drivers/%s/README.md' % d, 'Driver: %s' % d) for d in DRIVERS]
     out = ['- ' + link(f, t, here) for f, t in pages if f in tracked() or os.path.exists(path(f))]
     out += ['- [Specification: contents](%sspec/index.md)' % REPO,
             '- [Specification: conventions](%sspec/README.md)' % REPO]

@@ -162,7 +162,7 @@ What option A adds to the plan (new, small, not started): `evedb` gets a **manag
 - `spec/library/machine.md`: the new methods, when they are built (level 6 for `deploy.*`, `fs.*`, `log.*`, `db.tree`; level 7 for the rest).
 - `design/design-libraries.md`: `fs` watch/stat/glob and `os.run!` streaming and time-out move from debt to the milestones M4/M6.
 - Tests: `test/level6` (deploy design/apply between two machines on localhost, `fs.*`, `log.tail`), `test/level7` (the Git panel against a temporary repository).
-- `design/version_map.md` and `comp/evedb/README.md`: F-DAT-12 gets the managed mode (option A of section 9); `design/design-packages.md` (D-164) names the supervisor of the database part.
+- `design/version_map.md` and `drivers/duckdb/README.md`: F-DAT-12 gets the managed mode (option A of section 9); `design/design-packages.md` (D-164) names the supervisor of the database part.
 - `comp/eveux/README.md` section 7 (explorer): label each connection with its engine (SQLite, evedb).
 
 ## 11. Questions for the author

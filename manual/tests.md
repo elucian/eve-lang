@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary (script/genmanual.py) -->
-399 of 399 tests pass; last run 2026-10-19 05:18.
+399 of 399 tests pass; last run 2026-10-19 09:44.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|

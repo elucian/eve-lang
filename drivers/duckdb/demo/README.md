@@ -6,7 +6,7 @@ The page stands in for the database tab of **eveux**, which is designed (`comp/e
 
 ## Run it
 
-From this folder, with `bin/` of the repository built (`zig build -p .` at the root, `zig build -p ../..` in `comp/evedb/`):
+From this folder, with `bin/` of the repository built (`zig build -p .` at the root, `zig build -p ../..` in `drivers/duckdb/`):
 
 ```
 eve -s -db --serve evedb.cfg      # evedb as a service, silent: PostgreSQL on 5432, control port 8044

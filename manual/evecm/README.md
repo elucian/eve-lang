@@ -11,7 +11,6 @@
 | Text | Unicode normalization (NFC), the line editor and the raw keyboard mode of the prompt |
 | Data | CSV and JSON text, connection URLs |
 | Machine | the keys of `eve.cfg`, the socket folder, the exit codes, the wire format (JSON-RPC answers, HTTP helpers, the client calls to a machine) |
-| Interfaces | `Host` and `Data`: the contract between the runtime and the database layer, so neither imports the other |
 | Editors | the parts of the editors that need no screen: the text buffer, the scanner and colors of Eve and SQL, the keyword list, projects, regular expressions, the data grid, the link to a machine, the user cache |
 | Version | the version of Eve, given by the build |
 

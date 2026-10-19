@@ -1,4 +1,4 @@
-"""Benchmark of the data paths between eve and its databases (comp/evedb/README.md section 5.5, D-187, phase 2).
+"""Benchmark of the data paths between eve and its databases (drivers/duckdb/README.md section 5.5, D-187, phase 2).
 
 It answers three questions with numbers instead of guesses:
   1. transfer: how fast do rows reach an Eve script? evedb:// column batches into a Memory table, the same into records

@@ -44,7 +44,7 @@ The same Eve code runs on every layer: a script does not know whether `"sales"` 
 
 The author decided to embed SQLite in the virtual machine (Q-043a). It is the core of the layer, not one driver among others: it is always there, it needs no server, and the conformance tests of level 5 run on it.
 
-DuckDB is the **secondary** database and never part of the VM: it is the engine of `evedb`, a separate database server written in Zig and tuned for Eve, that plays the remote database in the tests of the remote path (part 2, and the design in [comp/evedb/README.md](../comp/evedb/README.md)).
+DuckDB is the **secondary** database and never part of the VM: it is the engine of `evedb`, a separate database server written in Zig and tuned for Eve, that plays the remote database in the tests of the remote path (part 2, and the design in [drivers/duckdb/README.md](../drivers/duckdb/README.md)).
 
 ### 2.1 Roles
 

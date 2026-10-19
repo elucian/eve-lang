@@ -56,7 +56,7 @@ The author's answers (design-database.md §12 and question 8, Q-043i): open-sour
 | 4 | Cloudflare D1 | 0.5 | SQLite over HTTP, needs the HTTP client |
 | 5 | MongoDB | later | not SQL: a document API of its own, not the ORM of part 1 |
 | 6 | Oracle, SQL Server | community | through the driver interface below (question 1) |
-| test | evedb (DuckDB) | 0.4 | the Eve test database: a separate Zig server around DuckDB that speaks the database frames of EWP (§5); the remote database of the level 5 tests, with fault injection ([comp/evedb/README.md](../comp/evedb/README.md)) |
+| test | evedb (DuckDB) | 0.4 | the Eve test database: a separate Zig server around DuckDB that speaks the database frames of EWP (§5); the remote database of the level 5 tests, with fault injection ([drivers/duckdb/README.md](../drivers/duckdb/README.md)) |
 
 The diagram names Oracle as a remote database. The author's answer leaves Oracle to the community; the interface below is what such a driver implements, so Oracle can come without a change in the core.
 

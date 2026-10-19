@@ -4,7 +4,7 @@
 //! The database layer of Eve inside the runtime (was the module `evedb`, design-packages.md §3): SQLite (the core database
 //! and the databases of a script), the object-relational layer (`table`, records, transactions of a job), the connections,
 //! the `sql function`s, the drivers `postgres://` and `evedb://` and the `Memory` tables. It is a part of `evevm`; the
-//! DuckDB server is a separate program (`comp/evedb/`). The interpreter calls this layer directly and the layer reaches the
+//! DuckDB server is a separate program (`drivers/duckdb/`). The interpreter calls this layer directly and the layer reaches the
 //! interpreter through `Host` (`host.zig`): the interfaces `Data` and `Host` of `evecm` are gone (S8.3, S8.4).
 const std = @import("std");
 const evecm = @import("evecm");

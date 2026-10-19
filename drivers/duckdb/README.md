@@ -2,7 +2,7 @@
 
 Status: **detailed design, 2026-10-17**, with two builds written after it: version 0.1 (the EWP-db frames, sessions, faults, statement log) and **version 0.2: evedb behaves like a PostgreSQL server** (sections 5A and 5B, D-186): PostgreSQL clients and the Eve driver for PostgreSQL connect to it on port 5432. Stored procedures and triggers written in Eve were designed and then **dropped** (D-187): the logic lives in Eve jobs, evedb stays a plain engine. **Version 0.3 (D-187)** adds the fast path between eve and evedb: **column batches** on the native protocol (section 5.5) and the driver `evedb://` (section 5C), measured against the PostgreSQL protocol and SQLite (section 5.6). Feature F-DAT-12 of [version_map.md](../../design/version_map.md), level 6. The author decided that evedb stays in this repository (question 1). The Eve database layer is designed in [design-database-core.md](../../design/design-database-core.md) and [design-database-remote.md](../../design/design-database-remote.md); this file uses their terms. The service mode of the machine, which evedb shares, is in [design-service.md](../../design/design-service.md) section 17 and [spec/library/machine.md](../../spec/library/machine.md).
 
-**What lives in `comp/evedb/`** (since 2026-10-19, D-198): the **program `evedb`** (`bin/evedb.exe`, its own `build.zig`, DuckDB): the database server of this document, and `protocol/`, the module `ewp_protocol` (the frames, the column batches and a client) that the server shares with the driver `evedb://` of `eve`. The database layer of `eve` (SQLite, connections, tables and records, the drivers) moved into the runtime: `comp/evevm/src/db/`. The program never links into the virtual machine; the virtual machine never links DuckDB. The folder is to move to `drivers/duckdb` (S8.5).
+**What lives in `drivers/duckdb/`** (since 2026-10-19, D-198): the **program `evedb`** (`bin/evedb.exe`, its own `build.zig`, DuckDB): the database server of this document, and `protocol/`, the module `ewp_protocol` (the frames, the column batches and a client) that the server shares with the driver `evedb://` of `eve`. The database layer of `eve` (SQLite, connections, tables and records, the drivers) moved into the runtime: `comp/evevm/src/db/`. The program never links into the virtual machine; the virtual machine never links DuckDB. The folder moved from `comp/evedb` to `drivers/duckdb` on 2026-10-19 (S8.5): the server is a driver project, not a component of Eve.
 
 ## 1. What evedb is
 
@@ -99,7 +99,7 @@ Inside one `.duckdb` file every database also has the table `eve_tx` (the commit
 - **One process, one DuckDB database object per file**, opened at the first `OPEN` of its name and kept until the server stops. Each session has its own DuckDB connection; DuckDB runs the transactions of different connections in parallel (MVCC).
 - **One thread per client connection** (`std.Thread`). A session belongs to one connection at a time; a client that reconnects after a drop opens a new session and asks `STATUS` about its transaction.
 - **The reaper thread** wakes every second and rolls back the open transaction of any session whose lease ran out, closes its DuckDB connection and forgets it.
-- **Sources** (`comp/evedb/src/`):
+- **Sources** (`drivers/duckdb/src/`):
 
 | File | Holds |
 |---|---|
@@ -343,7 +343,7 @@ database "shop" = "postgres://eve:secret@db.example.com:5432/shop"
 | Errors | `DatabaseError: <message> [<SQL state>]: <statement>`, code 22 |
 | Not yet | `table` declarations and tracked records (the ORM works on SQLite connections), `import`, prepared statements of the server, TLS, a pool |
 
-The browser demo `comp/evedb/demo/` shows the whole path: a page of the machine (`web/index.html`, standing in for the database tab of eveux, which is not built) sends Eve scripts to `vm.run`; they open `postgres://eve:demo@127.0.0.1:5432/shop` and evedb answers on port 5432.
+The browser demo `drivers/duckdb/demo/` shows the whole path: a page of the machine (`web/index.html`, standing in for the database tab of eveux, which is not built) sends Eve scripts to `vm.run`; they open `postgres://eve:demo@127.0.0.1:5432/shop` and evedb answers on port 5432.
 
 ## 5C. The Eve driver for evedb (version 0.3, D-187)
 
@@ -465,7 +465,7 @@ When `database` lines are given, a client may ask only for those names (`FATAL 3
 
 | Level | What | Where |
 |---|---|---|
-| unit | the codec (`ewp.zig`: every value, a frame split in pieces, a frame too large), the error classifier, the lease arithmetic, the fault list | `zig build test` in `comp/evedb/` |
+| unit | the codec (`ewp.zig`: every value, a frame split in pieces, a frame too large), the error classifier, the lease arithmetic, the fault list | `zig build test` in `drivers/duckdb/` |
 | protocol | a **Python client** (`script/evedb_check.py`) written from section 5 alone, so it checks the document and the Zig code against each other: handshake, open, autocommit, transactions, rollback, `STATUS` after a commit and after a rollback, every fault, the statement log, lease expiry, two clients with a conflict, bad frames, a wrong token | `python script/evedb_check.py` (starts `bin/evedb.exe serve --test` on a free port with a fresh data folder) |
 | column batches | `QUERYB` with every wire type and NULL bitmaps over several chunks, `LOAD` in three batches and read back, a refused load that leaves the stream in step, a load undone by `ROLLBACK` (part of the protocol client) | `python script/evedb_check.py` |
 | speed | the benchmark of section 5.6: column batches, records over three protocols, OLAP in DuckDB and SQLite, bulk loads | `python script/evedb_bench.py --eve temp/rel/bin/eve.exe --evedb temp/rel/bin/evedb.exe` |
@@ -500,8 +500,8 @@ The rules instead:
 
 ## Questions for the author
 
-1. **Place.** `comp/evedb/` in the eve-lang repository. **Answer:** (2026-10-10) evedb stays in this repository.
-2. **Shared protocol code.** **Answer:** create a folder `modules` where different eve Zig projects can reuse. (`ewp.zig` is written to move there in 0.2; today it is in `comp/evedb/src/` because the machine does not speak EWP yet.)
+1. **Place.** `drivers/duckdb/` in the eve-lang repository. **Answer:** (2026-10-10) evedb stays in this repository.
+2. **Shared protocol code.** **Answer:** create a folder `modules` where different eve Zig projects can reuse. (`ewp.zig` is written to move there in 0.2; today it is in `drivers/duckdb/src/` because the machine does not speak EWP yet.)
 3. **DuckDB library.** **Answer:** I prefer DuckDB built from source. *Status:* the prebuilt library v1.5.6 is what builds today (a source build with `zig c++` takes tens of minutes and its result is the same API); this stays until a source build is attempted. **New question A:** is the prebuilt library acceptable for 0.1?
 4. **`DateTime` with a zone.** **Answer:** we store the offset in a second column.
 5. **Zig tips.** **Answer:** yes, we continue to add Zig tips.

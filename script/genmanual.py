@@ -195,8 +195,9 @@ def main(argv):
             if not check:
                 os.makedirs(out, exist_ok=True)
                 write(dst, text, eol)
-    for comp in R.COMPONENTS:
-        src, dst = R.path('comp', comp, 'doc'), os.path.join(out, comp)
+    copies = [(R.path('comp', c, 'doc'), os.path.join(out, c), c) for c in R.COMPONENTS]
+    copies += [(R.path('drivers', d, 'doc'), os.path.join(out, 'drivers', d), 'drivers/' + d) for d in R.DRIVERS]
+    for src, dst, comp in copies:
         if not os.path.isdir(src):
             continue
         if not same_tree(src, dst):

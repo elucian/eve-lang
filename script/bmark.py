@@ -82,7 +82,7 @@ def evedb_server(eve, needed):
         return
     exe = os.path.join(os.path.dirname(eve), 'evedb.exe' if os.name == 'nt' else 'evedb')
     if not os.path.exists(exe):
-        sys.exit('level 6 needs %s: build it in comp/evedb/ with zig build -p ../..' % exe)
+        sys.exit('level 6 needs %s: build it in drivers/duckdb/ with zig build -p ../..' % exe)
     srv = subprocess.Popen([exe, 'serve', '--config', 'evedb.cfg'], cwd=PERF, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     for _ in range(2):  # evedb prints one ready line per port
         line = srv.stdout.readline()

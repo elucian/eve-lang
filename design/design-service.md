@@ -547,7 +547,7 @@ WantedBy=multi-user.target
 
 A service has no user: it runs as `LocalSystem` on Windows unless `sc config eve obj= …` says otherwise, and as the user of the unit file on Linux. The machine does not drop privileges itself (question C).
 
-**evedb.** The database server (`comp/evedb/README.md`) will take the same option, `evedb serve -s`, with the same three forms, in version 0.2: the code is `comp/evevm/src/service.zig`, to move into the shared folder `modules/` (question D).
+**evedb.** The database server (`drivers/duckdb/README.md`) will take the same option, `evedb serve -s`, with the same three forms, in version 0.2: the code is `comp/evevm/src/service.zig`, to move into the shared folder `modules/` (question D).
 
 **Tests.** `python script/service_check.py`: start from a console (silent, status 0, both doors), the second start, the stop, the log, the foreground form (silent, pid file, clean stop), `SIGTERM` on POSIX systems, and the Service Control Manager (create, start, query, stop, delete) when the script runs elevated. Unit tests of the option: `comp/eve/cli.zig`, "options: -s is the service or the configuration file". *State of 2026-10-17:* the console form, the foreground form and the log and pid file are tested on Windows; the Service Control Manager form compiles and is not yet run (the test machine had no administrator rights); the POSIX code compiles for `x86_64-linux-gnu` and is not yet run.
 

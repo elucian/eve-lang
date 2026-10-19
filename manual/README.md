@@ -14,10 +14,10 @@ This is the manual of **Eve**, a scripting language for data processing and test
 
 ## The programs
 
-| Program | Component | What it is |
+| Program | Component or driver | What it is |
 |---|---|---|
 | `eve` | [evevm](evevm/README.md), [evecp](evecp/README.md), [evecm](evecm/README.md) | runs Eve programs, the REPL, the machine and the service; the compiler front end and the common part are built in |
-| `evedb` | [evedb](evedb/README.md) | a database server around DuckDB that answers as PostgreSQL; the test and analytic database of Eve |
+| `evedb` | driver [duckdb](drivers/duckdb/README.md) | a database server around DuckDB that answers as PostgreSQL; the test and analytic database of Eve |
 | `evetx` | [evetx](evetx/README.md) | the terminal IDE: tree, editor, run and debug, data tables |
 | `eveux` | [eveux](eveux/README.md) | the native graphical workbench (early draft) |
 | `evewp` | [evewp](evewp/README.md) | the Eve Web Portal: hosting, monitoring and the web framework (design; not in the distribution yet) |
@@ -73,10 +73,10 @@ State of the working tree on 2026-10-19, version 0.0.7, not a release; last rele
 - [Component: evevm](evevm/README.md)
 - [Component: evecp](evecp/README.md)
 - [Component: evecm](evecm/README.md)
-- [Component: evedb](evedb/README.md)
 - [Component: evetx](evetx/README.md)
 - [Component: eveux](eveux/README.md)
 - [Component: evewp](evewp/README.md)
+- [Driver: duckdb](drivers/duckdb/README.md)
 - [Specification: contents](https://github.com/elucian/eve-lang/blob/master/spec/index.md)
 - [Specification: conventions](https://github.com/elucian/eve-lang/blob/master/spec/README.md)
 - [Tutorial: topics](https://sagecode.org/projects/eve/index.html)

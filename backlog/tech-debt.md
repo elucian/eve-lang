@@ -11,7 +11,7 @@ Recorded as the work goes (author's word, 2026-10-18): when a shortcut, a gap or
 | TD-5 | `crypto` has no symmetric encryption (AEAD) and no password hashing (scrypt, pbkdf2) | needed only by login (level 7) | `comp/evevm/src/syslib.zig` | level 7 with `auth` |
 | TD-6 | Errors raised in a standard module show the file of the calling script with the line of the module (G-1) | frames do not carry the file | `backlog/library-gaps.md` | M3 or when diagnostics are worked on |
 | TD-7 | No `exit <code>` statement; the `test` module ends the process with code 4 (G-2) | needs a decision | `backlog/library-gaps.md` | Q to the author |
-| TD-8 | The Zig modules still carry the old `// Zig tip:` teaching comments; only touched code has the AI tags (D-190) | improve on the go | `comp/evecm/`, `comp/evecp/`, `comp/evevm/`, `comp/eve/`, `comp/evedb/`, `comp/evetx/` | on touch |
+| TD-8 | The Zig modules still carry the old `// Zig tip:` teaching comments; only touched code has the AI tags (D-190) | improve on the go | `comp/evecm/`, `comp/evecp/`, `comp/evevm/`, `comp/eve/`, `drivers/duckdb/`, `comp/evetx/` | on touch |
 | TD-9 | `os.run!` collects the output after the end (a long program streams nothing); no time-out; no cancel with `vm.cancel` | first version | `comp/evevm/src/syslib.zig` `run` | M3 with the `timeout:` option of every waiting call |
 | TD-10 | The permission door `it.allow(...)` of `design-libraries.md` §10 (4) is not written; `fs`, `os` call the system directly | level 6 allows everything (D-189) | `comp/evevm/src/dlib.zig`, `syslib.zig` | F-NET-05 |
 | TD-11 | The outbound TLS client of `http` (level 9) and the reverse-proxy documentation (level 8) | D-189 (4) | `backlog/ideas.md` | level 8, 9 |

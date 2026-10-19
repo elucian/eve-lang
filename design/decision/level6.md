@@ -629,7 +629,7 @@ Read as rules:
 
 - (5) **Replaced:** the DBF paragraph of `comp/evetx/README.md` §11 (a DBF table as an editable table with its own structure dialog) and the open point "Decide on DBF support" of `backlog/evetx-status.md`.
 
-**Done (2026-10-17):** the DBF code moved from `evetx` to `comp/evedb/src/dbf.zig` as a stream decoder and an encoder (no table, no editing); `evetx` shows only tables of SQLite (a column-wise `grid.zig`) and has EDIT > Import…; `columnar.zig` (types: INTEGER, REAL, BOOLEAN, DATE, TIMESTAMP, TEXT; answer (a)); `importer.zig` (CSV, TXT, JSON, DBF; XLS and XLSX not read); `eve db import` and `eve db export`; `:memory:` databases are tuned in `Db.open`, with `journal_mode=MEMORY` and not `OFF` because `OFF` makes `rollback` unsafe (the one change to (d)); DBF tests are in Python (`script/dbf_check.py`). The syntax in a script is Q-059.
+**Done (2026-10-17):** the DBF code moved from `evetx` to `drivers/duckdb/src/dbf.zig` as a stream decoder and an encoder (no table, no editing); `evetx` shows only tables of SQLite (a column-wise `grid.zig`) and has EDIT > Import…; `columnar.zig` (types: INTEGER, REAL, BOOLEAN, DATE, TIMESTAMP, TEXT; answer (a)); `importer.zig` (CSV, TXT, JSON, DBF; XLS and XLSX not read); `eve db import` and `eve db export`; `:memory:` databases are tuned in `Db.open`, with `journal_mode=MEMORY` and not `OFF` because `OFF` makes `rollback` unsafe (the one change to (d)); DBF tests are in Python (`script/dbf_check.py`). The syntax in a script is Q-059.
 
 Questions for the author.
 
@@ -657,7 +657,7 @@ Questions for the author.
 
 ## Q-059 The Eve syntax of the columnar table, `load` and `store` (2026-10-17)
 
-D-184 (c) asks for the code and for the tutorial and the spec. The code is done in Zig (`comp/evedb/src/columnar.zig`, `importer.zig`, `dbf.zig`; the commands `eve db import` and `eve db export`; 
+D-184 (c) asks for the code and for the tutorial and the spec. The code is done in Zig (`drivers/duckdb/src/columnar.zig`, `importer.zig`, `dbf.zig`; the commands `eve db import` and `eve db export`; 
 
 the PRAGMAs of `:memory:` in `sqlite.zig`), and the behaviour is written in `spec/library/data-engines.md` and in the tutorial page `databases.html` (section "Data engines and files"). What is **not** written is how an Eve script names these things, because the syntax is the author's to choose. Questions. 
 
@@ -681,13 +681,13 @@ the PRAGMAs of `:memory:` in `sqlite.zig`), and the behaviour is written in `spe
 
 **answer** no, user must export to intermediate format, then we use supported formats to load the data.
 
-**Done after the answers (2026-10-17):** (d) `conn.import(path, table)` is a method of the connection (`comp/evedb/src/conn.zig`, test e110); (e) only CSV, TXT, JSON and DBF are read, a spreadsheet is exported first. **Still open:**
+**Done after the answers (2026-10-17):** (d) `conn.import(path, table)` is a method of the connection (`drivers/duckdb/src/conn.zig`, test e110); (e) only CSV, TXT, JSON and DBF are read, a spreadsheet is exported first. **Still open:**
 
 - (a) the name and the declaration of the columnar table, and (c) whether a kernel names its column by a string or by a field (the answer "Yes" does not choose).
 
 - (b) says `load` and `store` are methods, which needs the type of (a) to hang them on.
 
-**Answers of 2026-10-17 and what was built:** (a) the type is a class derived from `Memory`, defined with field names and types; (c) a column is named by its field (`s.price.sum()`). Built: `comp/evedb/src/memory.zig` (`new s := Sales();`, `add`, `count`, `take`, `load`, `store`, and the column methods `count`, `sum`, `min`, `max`, `at`, `filter`), hooks `memory_new`, `is_memory`, `memory_call`, `is_column`, `column_call` in `Data` (`comp/evecm/src/iface.zig`), test `e111_memory_table`; spec in `spec/library/data-engines.md`, tutorial in `databases.html`. Choices of mine, to confirm: `add` takes the values in the order of the fields; `store` matches the columns of the select to the fields by name and appends; `filter` takes the comparison as a text (`">"`) and answers the rows; `Decimal` and `Instant` fields are refused for now.
+**Answers of 2026-10-17 and what was built:** (a) the type is a class derived from `Memory`, defined with field names and types; (c) a column is named by its field (`s.price.sum()`). Built: `drivers/duckdb/src/memory.zig` (`new s := Sales();`, `add`, `count`, `take`, `load`, `store`, and the column methods `count`, `sum`, `min`, `max`, `at`, `filter`), hooks `memory_new`, `is_memory`, `memory_call`, `is_column`, `column_call` in `Data` (`comp/evecm/src/iface.zig`), test `e111_memory_table`; spec in `spec/library/data-engines.md`, tutorial in `databases.html`. Choices of mine, to confirm: `add` takes the values in the order of the fields; `store` matches the columns of the select to the fields by name and appends; `filter` takes the comparison as a text (`">"`) and answers the rows; `Decimal` and `Instant` fields are refused for now.
 
 ## D-185 Service mode: `eve -s`, the machine without a user interface, a Windows service or a Linux daemon; evedb detailed design and version 0.1 (2026-10-17)
 
@@ -699,7 +699,7 @@ Read as rules:
 
 - (2) **`-s file.cfg` alone is the service** reading the file; with a script, a command, `-x` or a machine option it is only the configuration. This changes the old meaning of `eve -s file.cfg` (the REPL with that configuration).
 
-- (3) **evedb has a detailed design and a first build** (`comp/evedb/README.md`): the frames of EWP-db 0.1 (a frame has a length, a type and a stream; values with a tag; 13 request and 9 answer types), sessions with leases, transactions recorded in `eve_tx`, `STATUS` for the doubt after a broken commit, the error classes with SQL states, seven fault kinds, the statement log, and the commands `serve`, `create`, `sql`, `describe`, `snapshot`, `reset`, `status`, `stop`. Tests: `python script/evedb_check.py` (a Python client written from the document, 66 checks) and the unit tests of `comp/evedb/`.
+- (3) **evedb has a detailed design and a first build** (`drivers/duckdb/README.md`): the frames of EWP-db 0.1 (a frame has a length, a type and a stream; values with a tag; 13 request and 9 answer types), sessions with leases, transactions recorded in `eve_tx`, `STATUS` for the doubt after a broken commit, the error classes with SQL states, seven fault kinds, the statement log, and the commands `serve`, `create`, `sql`, `describe`, `snapshot`, `reset`, `status`, `stop`. Tests: `python script/evedb_check.py` (a Python client written from the document, 66 checks) and the unit tests of `drivers/duckdb/`.
 
 - (4) **Level 6 requirements reviewed** (`design/version_map.md`): F-TLS-30 (service mode) added; F-DAT-12 is partial, 0.1 built; the remaining level 6 features are unchanged and open.
 
@@ -725,7 +725,7 @@ Proposals and questions for the author.
 
 - **(E) The log.** A new file at each start today; rotation by size or by day, and a restart policy of the machine itself (the init system restarts it today)?
 
-- **(F) evedb 0.1 questions A to C** are at the end of `comp/evedb/README.md`: the prebuilt DuckDB library accepted for 0.1, a token in test mode, the shape of the `evedb://` driver.
+- **(F) evedb 0.1 questions A to C** are at the end of `drivers/duckdb/README.md`: the prebuilt DuckDB library accepted for 0.1, a token in test mode, the shape of the `evedb://` driver.
 
 **Answer:**
 
@@ -735,23 +735,23 @@ Author decision (2026-10-17): "Modify the design, so that my remote fake databas
 
 Read as rules:
 
-- (1) **evedb answers the PostgreSQL protocol** (version 3.0) on port 5432 (`comp/evedb/README.md` section 5A): startup, logins trust, password and md5, the simple and the extended query protocol, transactions with the aborted state, `SHOW`, errors with SQL states, rows in the text format with the type numbers of PostgreSQL; DuckDB answers the SQL. The EWP-db frames stay on a second port, the control port.
+- (1) **evedb answers the PostgreSQL protocol** (version 3.0) on port 5432 (`drivers/duckdb/README.md` section 5A): startup, logins trust, password and md5, the simple and the extended query protocol, transactions with the aborted state, `SHOW`, errors with SQL states, rows in the text format with the type numbers of PostgreSQL; DuckDB answers the SQL. The EWP-db frames stay on a second port, the control port.
 
-- (2) **The Eve driver for PostgreSQL** is part of the database layer of `eve` (`comp/evedb/src/pgclient.zig`, `pgdriver.zig`, section 5B): `postgres://` URLs, logins trust, password, md5 and SCRAM-SHA-256, `execute!`, `query!`, `query_one!`, `script`, `close`, jobs; it works with evedb and with PostgreSQL.
+- (2) **The Eve driver for PostgreSQL** is part of the database layer of `eve` (`drivers/duckdb/src/pgclient.zig`, `pgdriver.zig`, section 5B): `postgres://` URLs, logins trust, password, md5 and SCRAM-SHA-256, `execute!`, `query!`, `query_one!`, `script`, `close`, jobs; it works with evedb and with PostgreSQL.
 
 - (3) **The configuration file** of evedb (section 9) names the PostgreSQL port, the login, the test mode, the control port and its token, and the databases (`database "shop" = "data/shop.duckdb"`).
 
 - (4) **Three ways to start:** `evedb serve --config evedb.cfg`, `eve db serve evedb.cfg` (foreground), `eve -s -db --serve evedb.cfg` (service, silent; `-db --serve` is read as the part word `db` and its command `serve`).
 
-- (5) **eveux is not built**, so the demonstration is the smallest page of the machine (`comp/evedb/demo/web/index.html`), which sends Eve scripts to `vm.run`; they reach evedb on port 5432 through the driver.
+- (5) **eveux is not built**, so the demonstration is the smallest page of the machine (`drivers/duckdb/demo/web/index.html`), which sends Eve scripts to `vm.run`; they reach evedb on port 5432 through the driver.
 
 - (6) **Stored procedures and triggers in Eve** are designed (section 12, version 0.3): evedb hosts an Eve machine (`eve --stdio`) for the modules of `proc/`; `CALL`, scalar `sql function`s registered in DuckDB per data chunk, a connection back into the caller's transaction, and `CREATE TRIGGER` (a subset of PostgreSQL's) emulated with `RETURNING`, temporary tables and savepoints.
 
-Tests: `python script/pg_check.py` (32 checks: psycopg2, pg8000, the Eve driver, the start forms), `test/level6/f01_pg_driver` (the first test of level 6), the unit tests of `comp/evedb/` and of the root build (the SCRAM example of RFC 7677, the URL, the configuration file, the statement splitter, the command tags).
+Tests: `python script/pg_check.py` (32 checks: psycopg2, pg8000, the Eve driver, the start forms), `test/level6/f01_pg_driver` (the first test of level 6), the unit tests of `drivers/duckdb/` and of the root build (the SCRAM example of RFC 7677, the URL, the configuration file, the statement splitter, the command tags).
 
 ## Q-063 The details of D-186 (2026-10-17)
 
-Proposals and questions for the author; they are also at the end of `comp/evedb/README.md`.
+Proposals and questions for the author; they are also at the end of `drivers/duckdb/README.md`.
 
 - **(a) The control port.** Keep EWP-db as the control port of the tests, or move the control to SQL on the PostgreSQL port (`pragma eve_stop`, `select * from eve_status()`) and drop EWP-db? Proposal: keep it until the change sets are decided.
 
@@ -773,7 +773,7 @@ Author decision (2026-10-18), after reading `backlog/evedb-ideas.md` and the rev
 
 Read as rules:
 
-- (1) **SQLite stays in every `eve`** for its own state (the core database, job state, small caches, small local data); **DuckDB lives only in evedb**, which owns the DuckDB files: nothing else opens them (`comp/evedb/README.md` sections 3A and 3B, with the layout of the files and how a database is made and reached).
+- (1) **SQLite stays in every `eve`** for its own state (the core database, job state, small caches, small local data); **DuckDB lives only in evedb**, which owns the DuckDB files: nothing else opens them (`drivers/duckdb/README.md` sections 3A and 3B, with the layout of the files and how a database is made and reached).
 
 - (2) **The fast path between eve and evedb is the native protocol with column batches** (section 5.5): `QUERYB` answers a schema, one batch per DuckDB data chunk and an end; `LOAD` sends a schema, batches and an end, pipelined, into DuckDB's Appender. A batch is column by column: a validity bitmap and the values (1 or 8 bytes, or offsets and bytes for text), the layout of DuckDB's vectors and of Eve's `Memory` tables, so a fixed-width column is copied whole.
 
@@ -887,7 +887,7 @@ Author request (2026-10-19): "I want to simplify the architecture and I do not k
 
 - `evevm` alone cannot reach a database. The interpreter calls the database through the interface `Data` of `evecm`; `eve` (was `cmd`) plugs the database layer in at start (`interp.data_api = &evedb.data`). Without it, `database.connect` has nothing to call.
 - The database layer of `evedb` needs no compiler. It receives SQL text and values that the interpreter already computed, through the interface `Host` (evaluate an argument, make a value, raise an error). It imports only `evecm`, and SQLite is linked into it alone.
-- `comp/evedb/` holds two unrelated things under one name: that database layer (a module of `eve.exe`) and the `evedb` server program (DuckDB, PostgreSQL protocol; it imports no Eve module).
+- `drivers/duckdb/` holds two unrelated things under one name: that database layer (a module of `eve.exe`) and the `evedb` server program (DuckDB, PostgreSQL protocol; it imports no Eve module).
 - `evecp` is linked only into `eve.exe`. `evetx` and `eveux` import the editor part of `evecm` and ask a machine for every check, run and step (D-178, D-193).
 
 **Proposal (the model's), to confirm point by point:**
@@ -906,7 +906,7 @@ eve ──► evevm ──► evecp ──► evecm
 evecp.exe, evetx, eveux ──► evecp ──► evecm
 ```
 
-- (a) **One runtime.** The database layer (`sqlite`, `conn`, `orm`, `state`, the drivers `pgclient`, `pgdriver`, `ewpdriver`, `memory`, `columnar`, …) moves from `comp/evedb/src/` into `comp/evevm/src/db/`, with SQLite linked into `evevm`. The interfaces `Host` and `Data` go (or stay inside `evevm` only); `comp/evedb/` keeps only the server. *Model: yes.* Gain: one runtime that will execute the bytecode, no plug-in step in `eve`, no folder that holds two programs. Cost: the unit tests of `evevm` compile SQLite (cached after the first build).
+- (a) **One runtime.** The database layer (`sqlite`, `conn`, `orm`, `state`, the drivers `pgclient`, `pgdriver`, `ewpdriver`, `memory`, `columnar`, …) moves from `drivers/duckdb/src/` into `comp/evevm/src/db/`, with SQLite linked into `evevm`. The interfaces `Host` and `Data` go (or stay inside `evevm` only); `drivers/duckdb/` keeps only the server. *Model: yes.* Gain: one runtime that will execute the bytecode, no plug-in step in `eve`, no folder that holds two programs. Cost: the unit tests of `evevm` compile SQLite (cached after the first build).
 - (b) **`evecp` is a program too.** `comp/evecp/` gets its own `build.zig` and `bin/evecp.exe` (check, doc, project init/new, later `compile` to a bytecode file); `eve cp <args>` runs the same code inside `eve` (no second process), as `eve` needs the compiler anyway to run a source file. *Model: yes.*
 - (c) **The compiler inside the editors.** `evetx` and `eveux` import `evecp`: diagnostics, outline, symbols and go-to-definition while typing, with no machine. Needs the entry point of TD-34 (one call: text in, diagnostics, outline and symbols out). *Model: yes.*
 - (d) **Run and debug: in the editor process, or in a child machine?** In process means the editors import `evevm` too. *Model: a child machine, with a better debug protocol.* A script that loops, takes all the memory or hits a safety panic of the VM would stop the editor with it and lose unsaved work; a script that prints would draw over the screen of `evetx`; the debug experience depends on the protocol (breakpoints in every file, step, the variables and the call stack as structured messages), not on the process. The child is `eve --stdio`, already started by evetx. If the author wants in process anyway: the VM runs in a thread of the editor, its output goes to the Console panel, and a crash of the script still ends the editor.
@@ -924,14 +924,14 @@ f) ok
 
 Author answers to Q-067 (2026-10-19). Settled:
 
-- **(a) One runtime, SQLite inside.** `evevm` needs SQLite in process so that the user-defined functions written in Eve (`sql function`) work inside SQL. The database layer of `comp/evedb/src/` moves into `evevm` with SQLite. The DuckDB server contains DuckDB only and cannot run Eve functions in SQL; it has nothing to do with Eve and behaves like a driver. It is moved and renamed **`drivers/duckdb`**: a separate Zig project, no longer a component of Eve.
+- **(a) One runtime, SQLite inside.** `evevm` needs SQLite in process so that the user-defined functions written in Eve (`sql function`) work inside SQL. The database layer of `drivers/duckdb/src/` moves into `evevm` with SQLite. The DuckDB server contains DuckDB only and cannot run Eve functions in SQL; it has nothing to do with Eve and behaves like a driver. It is moved and renamed **`drivers/duckdb`**: a separate Zig project, no longer a component of Eve.
 - **(b) The compiler is a program.** `evecp` gets its own build and its own binary; the binary compiles Eve source to bytecode. `eve cp` runs the same code inside `eve` (the model's reading of the earlier request "I can call evecp using eve command").
 - **(c) The editors include `evecp`.** Not in the answer lines; taken from the request ("evetx and eveux will include evecp"). To confirm in Q-068 (1).
 - **(d) Run and debug in a child machine.** The editors do not run Eve in their own process. A richer debug protocol is a separate piece of work.
 - **(e) Bytecode: correct.** The compiler produces it, the runtime executes it. The timing stays as in `design/design-packages.md` §10 B5 (version 6), after the changes of this decision.
 - **(f) `evecm` stays the common part** of every program.
 
-Consequences: the interfaces `Host` and `Data` (`comp/evecm/src/iface.zig`) lose their reason to exist once the database layer is inside `evevm` and are removed in two steps; `comp/evedb/` becomes only the DuckDB server and leaves `comp/`. The plan, in stages with a halt after each: [phase-8-architecture.md](../phase-8-architecture.md).
+Consequences: the interfaces `Host` and `Data` (`comp/evecm/src/iface.zig`) lose their reason to exist once the database layer is inside `evevm` and are removed in two steps; `drivers/duckdb/` becomes only the DuckDB server and leaves `comp/`. The plan, in stages with a halt after each: [phase-8-architecture.md](../phase-8-architecture.md).
 
 ## Q-068 Points the answers to Q-067 leave open (2026-10-19, answered → D-199, D-200)
 
@@ -941,7 +941,7 @@ Each point is needed by one stage only (in brackets); the stages before it can g
 **answer** yes 
 2. **The program of the DuckDB driver** (S8.4). The folder is `drivers/duckdb`. The program is `evedb.exe` today, and the tests, the scripts and the manual use that name. 
 **answer** keep it like it is until I figer out if a driver is executable or a dll. Where is the driver?
-**Reply (model):** There are two things with the name evedb. (1) The **client side**: the code that makes `database.connect("evedb://…")` and `"postgres://…"` work (`ewpdriver.zig`, `pgdriver.zig`, now in `comp/evedb/src/`). It is already compiled into `eve.exe`; S8.2 moves it to `comp/evevm/src/db/`. (2) The **server**: `bin/evedb.exe`, a separate program that loads `bin/duckdb.dll` (35 MB) and listens on ports. `eve.exe` never loads the DLL; it talks to the server over a socket. Three ways to have DuckDB: **executable server** (today: DuckDB stays out of `eve.exe`; many clients; the PostgreSQL face; faults for tests; cost: a second process), **embedded** (`eve.exe` loads DuckDB: no second process, the fastest, but `eve.exe` needs the DLL, and it reverses D-187 "DuckDB lives only in evedb"), **plug-in DLL** loaded by `eve` at run time (small `eve.exe`; Zig offers only the C ABI for it, and the project switched native extension loading off for SQLite on purpose). Stages S8.1 to S8.4 do not depend on the choice, and S8.5 only moves the folder. Kept as it is, as you say. The question "DLL files or embedded?" is analysed in [design-drivers.md](../design-drivers.md), with a recommendation: client drivers embedded in `evevm`, the DuckDB engine a server for now, no Eve plug-in DLLs.
+**Reply (model):** There are two things with the name evedb. (1) The **client side**: the code that makes `database.connect("evedb://…")` and `"postgres://…"` work (`ewpdriver.zig`, `pgdriver.zig`, now in `drivers/duckdb/src/`). It is already compiled into `eve.exe`; S8.2 moves it to `comp/evevm/src/db/`. (2) The **server**: `bin/evedb.exe`, a separate program that loads `bin/duckdb.dll` (35 MB) and listens on ports. `eve.exe` never loads the DLL; it talks to the server over a socket. Three ways to have DuckDB: **executable server** (today: DuckDB stays out of `eve.exe`; many clients; the PostgreSQL face; faults for tests; cost: a second process), **embedded** (`eve.exe` loads DuckDB: no second process, the fastest, but `eve.exe` needs the DLL, and it reverses D-187 "DuckDB lives only in evedb"), **plug-in DLL** loaded by `eve` at run time (small `eve.exe`; Zig offers only the C ABI for it, and the project switched native extension loading off for SQLite on purpose). Stages S8.1 to S8.4 do not depend on the choice, and S8.5 only moves the folder. Kept as it is, as you say. The question "DLL files or embedded?" is analysed in [design-drivers.md](../design-drivers.md), with a recommendation: client drivers embedded in `evevm`, the DuckDB engine a server for now, no Eve plug-in DLLs.
 3. **The license of `drivers/`** (S8.4). `comp/LICENSE` (BUSL 1.1) covers `comp/` and the root README puts everything else under CC BY-NC-SA, which is not right for code. *Model: the same BUSL 1.1* for `drivers/`, with its own `LICENSE` file; or another license of your choice.
 **answer** No license file.
 4. **Does the distribution ship the driver?** (S8.4). Today `bin/evedb.exe` and `bin/duckdb.dll` (35 MB) are in the zip. *Model: yes, as an optional driver in `bin/`.* 

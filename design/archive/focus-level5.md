@@ -24,7 +24,7 @@ Answered and not blocking: [Q-045 Eve macro](../decision/level5.md#q-045-eve-mac
 
 - [design-database-core.md](../design-database-core.md): SQLite, mapping, tracked records, transactions, direct SQL; ends with its own questions.
 - [design-database-remote.md](../design-database-remote.md): drivers, the Eve server, protocol, ETL; ends with its own questions.
-- [comp/evedb/README.md](../../comp/evedb/README.md): the test database around DuckDB.
+- [drivers/duckdb/README.md](../../drivers/duckdb/README.md): the test database around DuckDB.
 - [design-database.md](design-database.md): first draft with the author's answers (2026-10-05).
 - Features: F-DAT-01 to F-DAT-12 in [version_map.md](../version_map.md).
 
