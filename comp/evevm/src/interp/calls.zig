@@ -444,7 +444,7 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     }
     try it.bindParams(node.kids[0].kids, args, self_var);
     for (node.kids[2].kids) |res| try it.define(res.text, try it.zero(res.ty), false);
-    try it.frames.append(it.a, .{ .kind = @tagName(node.tag), .name = node.text, .call_line = it.line, .file = node.file });
+    try it.frames.append(it.a, .{ .kind = @tagName(node.tag), .name = node.text, .call_line = it.line, .file = interp.ast.fileOf(node) });
     defer _ = it.frames.pop();
     const mark = it.defers.items.len;
     var outcome = it.execBlock(node.kids[3]);

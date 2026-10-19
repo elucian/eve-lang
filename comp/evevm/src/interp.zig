@@ -823,6 +823,7 @@ pub const Interp = struct {
     // ---- collections: iteration, builders, indexing ---------------------------------------
     // (in interp/collections.zig)
     pub const iterate = part_collections.iterate;
+    pub const applyOp = part_expr.applyOp;
     pub const exitCodeOfStmt = part_stmt.exitCodeOfStmt;
     pub const mapMethod = part_collections.mapMethod;
     pub const bindPattern = part_collections.bindPattern;

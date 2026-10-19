@@ -196,6 +196,23 @@ pub const Tag = enum {
 // allocator (see the tip in check.zig). The aspects an `apply` can reach are found before the run
 // (project.zig) and kept in one of these maps: the key is the path as written in the `apply`.
 /// The parsed aspects of a project, by the path written in `apply`.
+// @eve-impl the operators of the hot path as data, set by the parser (R1 of design/design-bytecode.md)
+// @decision D-201
+/// A binary operator that the interpreter (and later the bytecode) handles without comparing text; `other` is every other one.
+pub const Op = enum(u8) { none, add, sub, mul, div, mod, eq, ne, lt, gt, le, ge, other };
+
+/// The `Op` of the text of an operator.
+pub fn opOf(text: []const u8) Op {
+    const map = std.StaticStringMap(Op).initComptime(.{
+        .{ "+", .add }, .{ "-", .sub },  .{ "*", .mul }, .{ "/", .div }, .{ "%", .mod }, .{ "==", .eq },
+        .{ "<>", .ne }, .{ "<", .lt },   .{ ">", .gt },  .{ "<=", .le }, .{ ">=", .ge },
+    });
+    return map.get(text) orelse .other;
+}
+
+/// What the parser could convert of a number literal: a plain integer or a plain real; the rest is read at run time.
+pub const LitKind = enum(u8) { none, int, real };
+
 pub const Aspects = std.StringHashMapUnmanaged(*const Node);
 
 // Zig tip: a second map, with the same shape, for the modules: the key is the path as written in
@@ -232,8 +249,14 @@ pub const Node = struct {
     /// The root made from an Eve macro, and each aspect of it: the aspects see the shared declarations of the
     /// macro, which are the declarations of the root node (D-152).
     macro: bool = false,
+    /// `bin`: the operator; `assign`: the operator of `+=`, `-=`... (the first character of the text).
+    op: Op = .none,
+    /// `num`: a plain literal already converted; `lit_bits` holds the `i64` or the bits of the `f64`.
+    lit_kind: LitKind = .none,
+    lit_bits: u64 = 0,
     /// The file of a routine that does not belong to the main script (a module or an aspect found by the link); empty otherwise.
-    file: []const u8 = "",
+    file: ?*const []const u8 = null,
+
     /// An aspect declared `primary`: it is run by a command and no aspect applies or starts it (D-181).
     primary: bool = false,
 };
@@ -243,6 +266,11 @@ pub const Node = struct {
 // interpreter needs no `orelse`. `&none` is a pointer to it; it must be `const` to coerce to
 // `*const Node`.
 /// The node that stands for an absent optional part.
+/// The file of a routine, or empty.
+pub fn fileOf(n: *const Node) []const u8 {
+    return if (n.file) |f| f.* else "";
+}
+
 pub const none: Node = .{ .tag = .none };
 
 // Zig tip: a function with `anytype` takes a value of any type, checked when it is used. A

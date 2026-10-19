@@ -199,8 +199,13 @@ pub const Sched = struct {
             // @see comp/evevm/src/netlib.zig (`offload`), `ioDone`
             if (s.ioPending()) {
                 if (s.nextTimer(true)) |at| {
+                    // @eve-impl wait on the condition up to the timer, not in 1 ms steps (a Windows step is about 15 ms: p6e went from 450 ms to 4.8 s)
                     const left = at - s.now();
-                    if (left > 0) Io.sleep(s.io, .fromMilliseconds(@min(left, 1)), .awake) catch {};
+                    if (left > 0) {
+                        s.mutex.lockUncancelable(s.io);
+                        if (!s.anyIoReady()) s.cond.waitTimeout(s.io, &s.mutex, .{ .duration = .{ .raw = .fromMilliseconds(left), .clock = .awake } }) catch {};
+                        s.mutex.unlock(s.io);
+                    }
                     continue;
                 }
                 s.mutex.lockUncancelable(s.io);

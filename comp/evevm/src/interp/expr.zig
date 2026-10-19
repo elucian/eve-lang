@@ -7,6 +7,7 @@ const std = @import("std");
 // of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
+const ast = interp.ast;
 const data = interp.data;
 const decimal = interp.decimal;
 const dlib = interp.dlib;
@@ -30,6 +31,11 @@ const err_overflow = interp.err_overflow;
 // prefix itself (`0x`, `0b`). A failure falls back to a Real, so a huge integer literal is
 // still a number. `std.fmt.parseFloat(f64, s)` reads `3.5`.
 pub fn number(it: *Interp, n: *const Node) Signal!Value {
+    switch (n.lit_kind) {
+        .int => return .{ .int = @bitCast(n.lit_bits) },
+        .real => return .{ .real = @bitCast(n.lit_bits) },
+        .none => {},
+    }
     if (Interp.durationMs(n.text)) |ms| return .{ .int = ms };
     var buf: [64]u8 = undefined;
     var len: usize = 0;
@@ -258,7 +264,7 @@ pub fn binary(it: *Interp, n: *const Node) Signal!Value {
     }
     const l = try it.eval(n.kids[0]);
     const r = try it.eval(n.kids[1]);
-    return it.apply(op, l, r);
+    return it.applyOp(n.op, op, l, r);
 }
 
 pub const textual = value.textual;
@@ -271,6 +277,47 @@ pub fn overflow(it: *Interp) Signal {
 // Zig tip: `@addWithOverflow(a, b)` returns a tuple `.{ result, overflowed }`; Eve raises an
 // error instead of wrapping around silently. `@mulWithOverflow` and `@subWithOverflow` are alike.
 // `std.math.pow(f64, x, y)` is the power for reals; integers use a loop of multiplications.
+// @eve-impl the arithmetic and comparison of two integers or two reals without comparing the operator text; the rest is `apply`
+// @invariant gives what `apply` gives for these cases (overflow, division by zero, a real result of `/`)
+// @perf hot
+/// Apply a binary operator whose `Op` the parser set.
+pub fn applyOp(it: *Interp, o: ast.Op, op: []const u8, l: Value, r: Value) Signal!Value {
+    if (l == .int and r == .int) {
+        const x = l.int;
+        const y = r.int;
+        switch (o) {
+            .add => {
+                const s = @addWithOverflow(x, y);
+                return if (s[1] != 0) it.overflow() else .{ .int = s[0] };
+            },
+            .sub => {
+                const s = @subWithOverflow(x, y);
+                return if (s[1] != 0) it.overflow() else .{ .int = s[0] };
+            },
+            .mul => {
+                const s = @mulWithOverflow(x, y);
+                return if (s[1] != 0) it.overflow() else .{ .int = s[0] };
+            },
+            .mod => if (y != 0) return .{ .int = @mod(x, y) },
+            .eq => return .{ .bool = x == y },
+            .ne => return .{ .bool = x != y },
+            .lt => return .{ .bool = x < y },
+            .gt => return .{ .bool = x > y },
+            .le => return .{ .bool = x <= y },
+            .ge => return .{ .bool = x >= y },
+            else => {},
+        }
+    } else if (l == .real and r == .real) {
+        switch (o) {
+            .add => return .{ .real = l.real + r.real },
+            .sub => return .{ .real = l.real - r.real },
+            .mul => return .{ .real = l.real * r.real },
+            else => {},
+        }
+    }
+    return it.apply(op, l, r);
+}
+
 /// Apply a binary operator to two values.
 pub fn apply(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
     const eql = std.mem.eql;

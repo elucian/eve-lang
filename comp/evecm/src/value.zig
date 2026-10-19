@@ -401,3 +401,11 @@ pub fn classRoutine(c: *Class, name: []const u8) ?*const Node {
     }
     return null;
 }
+
+// @eve-impl size of the values: a base line for the bytecode (R0 of design/design-bytecode.md)
+// @decision D-201
+// @test value sizes
+test "value sizes" {
+    std.debug.print("\nsizeOf(Value) = {d}, Node = {d}, Var = {d}, Scope = {d}, Func = {d}\n", .{ @sizeOf(Value), @sizeOf(Node), @sizeOf(Var), @sizeOf(Scope), @sizeOf(Func) });
+    try std.testing.expect(@sizeOf(Value) <= 32);
+}

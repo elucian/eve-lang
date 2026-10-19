@@ -63,32 +63,32 @@ The latest saved ReleaseSafe run: median time of the whole process (start-up inc
 | Benchmark | Eve | Python | Eve / Python | Peak memory |
 |---|---|---|---|---|
 | **Level 1** | | | | |
-| `p1a_arith` | 218 ms | 94 ms | 2.3x | 5.9 MB |
-| `p1b_calls` | 72 ms | 58 ms | 1.2x | 6.0 MB |
-| `p1c_collections` | 27 ms | 62 ms | 0.4x | 7.9 MB |
-| `p1d_strings` | 23 ms | 80 ms | 0.3x | 6.2 MB |
+| `p1a_arith` | 79 ms | 80 ms | 1.0x | 5.9 MB |
+| `p1b_calls` | 50 ms | 50 ms | 1.0x | 6.0 MB |
+| `p1c_collections` | 20 ms | 51 ms | 0.4x | 8.0 MB |
+| `p1d_strings` | 16 ms | 64 ms | 0.2x | 6.3 MB |
 | **Level 2** | | | | |
-| `p2a_aspects` | 14 ms | 50 ms | 0.3x | 5.9 MB |
-| `p2b_closures` | 60 ms | 65 ms | 0.9x | 7.4 MB |
-| `p2c_procedures` | 68 ms | 64 ms | 1.1x | 6.0 MB |
+| `p2a_aspects` | 13 ms | 41 ms | 0.3x | 5.9 MB |
+| `p2b_closures` | 46 ms | 53 ms | 0.9x | 7.4 MB |
+| `p2c_procedures` | 54 ms | 56 ms | 1.0x | 6.0 MB |
 | **Level 3** | | | | |
-| `p3a_modules` | 105 ms | 70 ms | 1.5x | 6.0 MB |
-| `p3b_objects` | 82 ms | 72 ms | 1.1x | 6.0 MB |
-| `p3c_module_state` | 43 ms | 70 ms | 0.6x | 6.0 MB |
+| `p3a_modules` | 74 ms | 61 ms | 1.2x | 6.0 MB |
+| `p3b_objects` | 64 ms | 61 ms | 1.0x | 6.1 MB |
+| `p3c_module_state` | 38 ms | 56 ms | 0.7x | 6.0 MB |
 | **Level 4** | | | | |
-| `p4a_parallel_sum` | 228 ms | 145 ms | 1.6x | 40.4 MB |
-| `p4b_channel` | 95 ms | 1498 ms | 0.1x | 6.1 MB |
-| `p4c_groups` | 168 ms | 265 ms | 0.6x | 8.1 MB |
-| `p4d_tasks` | 251 ms | 241 ms | 1.0x | 8.0 MB |
-| `p4e_garbage` | 285 ms | 140 ms | 2.0x | 6.0 MB |
+| `p4a_parallel_sum` | 147 ms | 118 ms | 1.2x | 40.4 MB |
+| `p4b_channel` | 71 ms | 362 ms | 0.2x | 6.1 MB |
+| `p4c_groups` | 156 ms | 196 ms | 0.8x | 8.1 MB |
+| `p4d_tasks` | 148 ms | 190 ms | 0.8x | 8.0 MB |
+| `p4e_garbage` | 136 ms | 108 ms | 1.3x | 6.0 MB |
 | **Level 5** | | | | |
-| `p5a_sql_function` | 158 ms | 193 ms | 0.8x | 9.2 MB |
+| `p5a_sql_function` | 107 ms | 193 ms | 0.6x | 9.2 MB |
 | **Level 6** | | | | |
-| `p6a_evedb_store` | 785 ms | 2653 ms | 0.3x | 56.1 MB |
-| `p6b_evedb_load` | 318 ms | 9727 ms | 0.0x | 16.4 MB |
-| `p6c_pg_records` | 244 ms | 330 ms | 0.7x | 81.7 MB |
-| `p6d_olap_groupby` | 626 ms | 704 ms | 0.9x | 6.1 MB |
-| `p6e_http_requests` | 452 ms | 783 ms | 0.6x | 51.8 MB |
+| `p6a_evedb_store` | 632 ms | 2281 ms | 0.3x | 56.2 MB |
+| `p6b_evedb_load` | 296 ms | 9182 ms | 0.0x | 16.5 MB |
+| `p6c_pg_records` | 208 ms | 313 ms | 0.7x | 81.7 MB |
+| `p6d_olap_groupby` | 543 ms | 658 ms | 0.8x | 6.1 MB |
+| `p6e_http_requests` | 394 ms | 890 ms | 0.4x | 51.8 MB |
 | **Level 7** | | | | |
 | planned | | | | |
 <!-- results:end -->
@@ -98,10 +98,18 @@ The latest saved ReleaseSafe run: median time of the whole process (start-up inc
 The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
 
 <!-- size:begin -->
-| Version | Date | Build | Commit | eve | evevm | evecp | evetx | eveux | evedb | eve change |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 0.0.3 | 2026-10-13 | ReleaseSafe | 505c7dc | 3,572 KB | - | - | - | - | - | - |
-| 0.0.7 | 2026-10-19 | ReleaseSafe | cc28760 | 3,988 KB | 3,988 KB | 1,210 KB | 2,198 KB | 9,088 KB | 1,264 KB | +11.7% |
+| Version | 0.0.3 | 0.0.7 | 0.0.7 |
+|---|---|---|---|
+| Date | 2026-10-13 | 2026-10-19 | 2026-10-19 |
+| Build | ReleaseSafe | ReleaseSafe | ReleaseSafe |
+| Commit | 505c7dc | cc28760 | 810aae5 |
+| eve | 3,572 KB | 3,988 KB | 4,002 KB |
+| evevm | - | 3,988 KB | 4,002 KB |
+| evecp | - | 1,210 KB | 1,210 KB |
+| evetx | - | 2,198 KB | 2,198 KB |
+| eveux | - | 9,088 KB | 9,088 KB |
+| evedb | - | 1,264 KB | 1,264 KB |
+| eve change | - | +11.7% | +0.4% |
 <!-- size:end -->
 
 ## History
@@ -120,6 +128,8 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 
 **0.0.7 (2026-10-19), baseline for the bytecode.** Levels 5 and 6 measured for the first time: `p6a` to `p6e` run against `evedb` and are 0.0 to 0.9 of the Python twins (psycopg2 pays per row what the column batches do not). Against the run of 0.0.3 most benchmarks are 10 to 40% slower (`p4d_tasks` +102%, `p5a_sql_function` +74%), but that run was made on another day with another load, and the ratios Eve / Python moved less than the times (Python twins are 20 to 40% slower too, `p1a_arith` 2.3x against 3.5x). Read this run as the new base line, not as a regression; the next run on this machine is the first fair comparison. `eve.exe` grew 11.7% (3,572 to 3,988 KB) with the machine API, the database layer and the drivers moved into the module; `evevm.exe` is the same file as `eve.exe`. Targets for the bytecode: `design/design-bytecode.md` §11.
 
+**0.0.7 (2026-10-19), R0 and R1 of the bytecode ladder.** R0, the base line: `Value` is 24 bytes, `Node` 80 (104 after R1), `Var` 56, `Scope` 64, `Func` 40 (unit test `value sizes`). R1: the parser sets an `Op` on every binary and compound-assignment node and converts plain number literals once; `applyOp` does integer and real arithmetic and integer comparison without comparing the operator text. Measured against the commit before, same machine, alternating builds, 9 runs: `p1a_arith` 195 to 75 ms (3.0x to 1.1x Python), `p1b_calls` 62 to 45 ms, `p1c_collections` 22 to 18 ms, `p1d_strings` 15 to 14 ms. A first try of the net time-out (`set_timeout`) made `p6e_http_requests` 10 times slower, because a task with a time-out made the scheduler poll in 1 ms steps (about 15 ms on Windows); the scheduler now waits on its condition up to the timer, and `p6e` is 394 ms. `eve.exe` +0.4%. The absolute times of this row are lower than the first 0.0.7 row because the machine was less loaded; read the ratios Eve / Python.
+
 ### Totals per run
 
 The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
@@ -135,4 +145,5 @@ The sum of the median times of the benchmarks of each level. A dash means the le
 | 0.0.2 | 2026-10-09 | ReleaseSafe | 327 ms | 114 ms | 228 ms | 931 ms | - | - |
 | 0.0.3 | 2026-10-13 | ReleaseSafe | 308 ms | 118 ms | 228 ms | 751 ms | 91 ms | - |
 | 0.0.7 | 2026-10-19 | ReleaseSafe | 341 ms | 143 ms | 230 ms | 1026 ms | 158 ms | 2425 ms |
+| 0.0.7 | 2026-10-19 | ReleaseSafe | 164 ms | 112 ms | 175 ms | 657 ms | 107 ms | 2072 ms |
 <!-- runs:end -->

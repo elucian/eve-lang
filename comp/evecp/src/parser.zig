@@ -46,6 +46,25 @@ const reserved = std.StaticStringMap(void).initComptime(.{
     .{"parallel"},    .{"start"},     .{"spawn"},     .{"await"},     .{"wait"},      .{"trait"},
 });
 
+// @eve-impl a plain number literal is converted once, by the parser (R1 of design/design-bytecode.md)
+// @invariant the same value as `number` in comp/evevm/src/interp/expr.zig gives for a text of digits (no comma, no suffix, no leading zero)
+fn plainNumber(n: *Node, text: []const u8) void {
+    if (text.len == 0 or text.len > 18 or (text.len > 1 and text[0] == '0' and text[1] != '.')) return;
+    var dots: usize = 0;
+    for (text) |c| {
+        if (c == '.') {
+            dots += 1;
+        } else if (c < '0' or c > '9') return;
+    }
+    if (dots == 0) {
+        n.lit_kind = .int;
+        n.lit_bits = @bitCast(std.fmt.parseInt(i64, text, 10) catch return);
+    } else if (dots == 1 and text[0] != '.' and text[text.len - 1] != '.') {
+        n.lit_kind = .real;
+        n.lit_bits = @bitCast(std.fmt.parseFloat(f64, text) catch return);
+    }
+}
+
 /// Words that end a block: a statement list stops in front of them.
 const block_end = std.StaticStringMap(void).initComptime(.{
     .{"return"}, .{"recover"}, .{"finalize"}, .{"done"}, .{"else"}, .{"then"}, .{"when"}, .{"end"}, .{"repeat"},
@@ -71,6 +90,8 @@ const Parser = struct {
     in_process: bool = false,
     /// The file being parsed when it is a module or an aspect of a project: routine nodes carry it (G-1).
     file: []const u8 = "",
+    /// `file` once in the arena, shared by the routine nodes (a pointer costs less in a node than a slice).
+    file_ref: ?*const []const u8 = null,
     /// True in the body of a generator: `yield` is allowed only there (D-067).
     in_generator: bool = false,
     /// Reading the name of an `external` routine: a reserved word such as `write` is a valid native name (D-189).
@@ -197,7 +218,12 @@ const Parser = struct {
         const n = try p.a.create(Node);
         n.* = .{ .tag = tag, .line = at.line, .col = at.col, .text = text, .kids = try p.a.dupe(*const Node, kids) };
         switch (tag) {
-            .function, .procedure, .method, .constructor, .process, .generator => n.file = p.file,
+            .bin => n.op = ast.opOf(text),
+            .assign => if (text.len == 2 and text[1] == '=' and text[0] != ':') {
+                n.op = ast.opOf(text[0..1]);
+            },
+            .num => plainNumber(n, text),
+            .function, .procedure, .method, .constructor, .process, .generator => n.file = p.file_ref,
             else => {},
         }
         return n;
@@ -1595,7 +1621,7 @@ const Parser = struct {
                 if (std.mem.eql(u8, w, pair[0])) {
                     _ = p.advance();
                     // `over 7;` and `exit 7;` give the exit code of the program (statements.md#interruptions)
-                    if ((pair[1] == Tag.over_stmt or pair[1] == Tag.exit_stmt) and !p.isSym(";") and !p.isWord("if")) {
+                    if ((pair[1] == Tag.over_stmt or pair[1] == Tag.exit_stmt) and !p.isSym(";") and !p.isWord("if") and !(p.peek().kind == .ident and reserved.has(p.peek().text))) {
                         return p.endSimple(try p.mk(pair[1], t, "", &.{try p.expr()}));
                     }
                     return p.endSimple(try p.mk(pair[1], t, "", &.{}));
@@ -2175,6 +2201,11 @@ pub fn parse(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error!*cons
 pub fn parseFile(arena: std.mem.Allocator, src: []const u8, diag: *Diag, file: []const u8) Error!*const Node {
     const toks = try lexer.tokenize(arena, src, diag);
     var p: Parser = .{ .toks = toks, .diag = diag, .a = arena, .file = file };
+    if (file.len > 0) {
+        const ref = try arena.create([]const u8);
+        ref.* = file;
+        p.file_ref = ref;
+    }
     const tree = try p.script();
     try checker.check(arena, tree, diag);
     return tree;

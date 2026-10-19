@@ -196,9 +196,8 @@ def program_sizes(eve):
 
 
 def update_size_table(hist):
-    """Rewrite the table between the size markers of the README: size of each program per saved run, and the change of eve."""
-    rows = ['| Version | Date | Build | Commit | ' + ' | '.join(PROGRAMS) + ' | eve change |', '|---|---|---|---|' + '---|' * (len(PROGRAMS) + 1)]
-    prev = {}
+    """Rewrite the table between the size markers of the README: one column per saved run, one row per program."""
+    runs, prev = [], {}
     for h in hist:
         sz = dict(h.get('sizes', {}))
         if 'exe_bytes' in h:
@@ -208,10 +207,16 @@ def update_size_table(hist):
         b = h.get('build', 'Debug')
         old = prev.get(b)
         change = '%+.1f%%' % ((sz['eve'] - old) / old * 100) if old and 'eve' in sz else '-'
-        cells = ['%s KB' % format(round(sz[p] / 1024), ',') if p in sz else '-' for p in PROGRAMS]
-        rows.append('| %s | %s | %s | %s | %s | %s |' % (h['version'], h['date'][:10], b, h.get('commit', '-'), ' | '.join(cells), change))
         if 'eve' in sz:
             prev[b] = sz['eve']
+        runs.append((h, sz, change))
+    rows = ['| Version | ' + ' | '.join(h['version'] for h, _, _ in runs) + ' |', '|---|' + '---|' * len(runs),
+            '| Date | ' + ' | '.join(h['date'][:10] for h, _, _ in runs) + ' |',
+            '| Build | ' + ' | '.join(h.get('build', 'Debug') for h, _, _ in runs) + ' |',
+            '| Commit | ' + ' | '.join(h.get('commit', '-') for h, _, _ in runs) + ' |']
+    for p in PROGRAMS:
+        rows.append('| %s | ' % p + ' | '.join(('%s KB' % format(round(sz[p] / 1024), ',')) if p in sz else '-' for _, sz, _ in runs) + ' |')
+    rows.append('| eve change | ' + ' | '.join(c for _, _, c in runs) + ' |')
     put_block('size', rows)
 
 

@@ -497,7 +497,7 @@ pub fn assign(it: *Interp, n: *const Node) Signal!void {
             }
             return;
         }
-        v = try it.apply(op[0..1], cur, v);
+        v = try it.applyOp(n.op, op[0..1], cur, v);
     }
     // `let r := d;` converts a Decimal for a variable that holds a Real, and the other way (D-168)
     if (std.mem.eql(u8, op, ":=") and target.tag == .name) {
