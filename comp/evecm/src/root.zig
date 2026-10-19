@@ -11,6 +11,10 @@ const std = @import("std");
 
 /// The syntax tree that the parser makes and the interpreter walks.
 pub const ast = @import("ast.zig");
+/// The instructions of the register machine (bytecode).
+pub const op = @import("op.zig");
+/// The compiled form of a program.
+pub const chunk = @import("chunk.zig");
 
 /// The `Decimal` type (exact numbers).
 pub const decimal = @import("decimal.zig");
@@ -52,6 +56,8 @@ pub const version = @import("version.zig");
 // `test { }` references the file, so its tests also run with `zig build test`.
 test {
     _ = ast;
+    _ = op;
+    _ = chunk;
     _ = decimal;
     _ = instant;
     _ = nfc;

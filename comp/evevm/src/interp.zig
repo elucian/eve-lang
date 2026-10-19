@@ -63,6 +63,14 @@ pub const err_sql = value.err_sql;
 // `Started` keeps everything the parent needs after the task ended: the outcome, the arguments to
 // write back, the output to flush at `done`. `report` is copied from the child, because the child's
 // list of reports is gone with it from the parent's point of view.
+// @eve-impl which engine runs the program: the tree walker (the reference) or the bytecode machine (design/design-bytecode.md)
+// @decision D-201
+/// The engine of the run, chosen by `--engine` or `EVE_ENGINE`.
+pub const Engine = enum { tree, bytecode };
+
+/// The engine in use; the tree walker until the bytecode machine passes every level.
+pub var engine: Engine = .tree;
+
 /// A started aspect or a spawned subprogram, seen from the parent.
 pub const Started = struct {
     t: *task.Task,
@@ -229,6 +237,9 @@ pub const Interp = struct {
     dbg: ?DebugHook = null,
     /// Statements executed and the line of the last one: what `report` shows.
     steps: usize = 0,
+    /// The registers of the bytecode machine and how many are in use (the roots of a trace); empty with the tree walker.
+    bc_stack: []Value = &.{},
+    bc_top: usize = 0,
     /// The exit code that `over <code>;` or `exit <code>;` gave; the program ends with it when nothing worse happens.
     exit_code: u8 = 0,
     line: u32 = 0,
@@ -327,6 +338,8 @@ pub const Interp = struct {
         h.markFrom(&it.scope.hdr);
         if (it.proc_scope) |p| h.markFrom(&p.hdr);
         for (it.scope_stack.items) |sc| h.markFrom(&sc.hdr);
+        const b = it.base();
+        for (b.bc_stack[0..b.bc_top]) |v| h.markValue(v);
         var mods = it.loaded.valueIterator();
         while (mods.next()) |m| h.markFrom(&m.*.scope.hdr);
     }

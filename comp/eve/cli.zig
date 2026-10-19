@@ -50,7 +50,8 @@ pub const writeHelp = help_pages.writeHelp;
 /// The jump table. Order is the order of the menu.
 pub const commands = [_]Command{
     .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = cp_cmds.cmdCheck },
-    .{ .name = "compile", .summary = "compile a script to bytecode", .file = ".eve", .run = stub("compile") },
+    .{ .name = "compile", .summary = "compile a script to bytecode (the .evb file comes in stage B5.7)", .file = ".eve", .run = stub("compile") },
+    .{ .name = "disasm", .summary = "the bytecode of a script as a listing", .file = ".eve", .run = cp_cmds.cmdDisasm },
     .{ .name = "doc", .summary = "write Markdown documentation of a .eve file or folder", .file = ".eve", .run = cp_cmds.cmdDoc },
     .{ .name = "debug", .summary = "execute the main process in debug mode", .file = ".eve", .run = vm_cmds.cmdDebug },
     .{ .name = "execute", .summary = "execute the main process in production mode", .file = ".eve", .run = vm_cmds.cmdExecute },

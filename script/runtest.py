@@ -626,7 +626,15 @@ def main():
                     help="do not update test/status.json and test/readme.md")
     ap.add_argument("--repeat", type=int, default=1, metavar="N",
                     help="run every test N times; a test passes only when every run passes (determinism, D-144)")
+    ap.add_argument("--engine", choices=["tree", "bc"], default="tree",
+                    help="the engine of the VM: tree (the reference, default) or bc (the bytecode machine, design/design-bytecode.md); "
+                         "a bc run writes its reports to temp/output-bc and never updates the status files or the tutorial pages")
     args = ap.parse_args()
+    if args.engine == "bc":
+        os.environ["EVE_ENGINE"] = "bc"
+        args.no_update = True
+        if args.out == os.path.join(ROOT, "temp", "output"):
+            args.out = os.path.join(ROOT, "temp", "output-bc")
     eve = os.path.abspath(args.eve) if os.path.exists(args.eve) else args.eve
     version = eve_version(eve)
 

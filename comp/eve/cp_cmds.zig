@@ -27,6 +27,13 @@ pub fn cmdDoc(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     ctx.status = try evecp.cli.docs(env(ctx), args);
 }
 
+/// `disasm`: the bytecode listing of each file.
+// @eve-fn cp.disasm
+// @see comp/evecp/src/cli.zig:disasm
+pub fn cmdDisasm(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    ctx.status = try evecp.cli.disasm(env(ctx), args);
+}
+
 /// `outline`: the nested outline of each file, or its syntax error.
 // @eve-fn cp.outline
 // @see comp/evecp/src/cli.zig:outline

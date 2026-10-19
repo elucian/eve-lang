@@ -21,6 +21,8 @@ pub const Options = struct {
     debug: bool = false,
     config: ?[]const u8 = null,
     memory: ?[]const u8 = null,
+    /// `--engine tree|bc`.
+    engine: ?[]const u8 = null,
     /// `-x`: execute the script in this process (implies the `execute` command); it never looks for a machine.
     execute: bool = false,
     /// Command chosen with `--<command>` or implied by a script path.
@@ -134,7 +136,7 @@ pub fn commandWord(gpa: std.mem.Allocator, argv: []const []const u8) ParseError!
         } else if (std.mem.eql(u8, a, "-s")) {
             // the service: a configuration file may follow
             if (i + 1 < argv.len and isConfig(argv[i + 1])) i += 1;
-        } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m")) {
+        } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "--engine")) {
             i += 1;
         } else if (std.mem.eql(u8, a, "-loc") and i + 1 < argv.len and isPort(argv[i + 1])) {
             i += 1;
@@ -201,6 +203,14 @@ pub fn parseArgs(
                 i += 1;
                 o.config = line[i];
             }
+        } else if (std.mem.eql(u8, a, "--engine")) {
+            // `--engine tree|bc`: the tree walker (the default) or the bytecode machine (design/design-bytecode.md, D-201)
+            i += 1;
+            if (i >= line.len) {
+                bad.* = a;
+                return error.MissingValue;
+            }
+            o.engine = line[i];
         } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m")) {
             // `-e file.cfg` (`--setup file.cfg`): the configuration file; `-m size`: the memory (D-188)
             i += 1;

@@ -11,6 +11,8 @@ pub const parser = @import("parser.zig");
 
 /// The static checks of the language.
 pub const check = @import("check.zig");
+/// The emitter of the bytecode.
+pub const emit = @import("emit.zig");
 
 /// The rules for choosing among overloaded subprograms.
 pub const overload = @import("overload.zig");
@@ -40,4 +42,5 @@ test {
     _ = scaffold;
     _ = cli;
     _ = analyze;
+    _ = emit;
 }

@@ -4,6 +4,8 @@
 
 /// The interpreter: values, scopes and the walk over the syntax tree.
 pub const interp = @import("interp.zig");
+/// The bytecode machine.
+pub const bcvm = @import("bcvm.zig");
 /// The sampling profiler (`EVE_PROFILE=1`).
 pub const profile = @import("profile.zig");
 

@@ -80,6 +80,8 @@ pub fn main(init: std.process.Init) !void {
     // empty one, so one comparison covers both cases. The heap reads these two switches (heap.zig).
     evecm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
     evecm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
+    // @eve-impl the engine of the run: `--engine bc` or `EVE_ENGINE=bc` selects the bytecode machine (D-201)
+    if (std.mem.eql(u8, init.environ_map.get("EVE_ENGINE") orelse "", "bc")) evevm.interp.engine = .bytecode;
     if (std.mem.eql(u8, init.environ_map.get("EVE_PROFILE") orelse "", "1")) evevm.profile.start(arena);
 
     // Zig tip: `File.Writer.init` writes at its own position from 0 when the file can seek, which is right for a
@@ -128,6 +130,17 @@ pub fn main(init: std.process.Init) !void {
         std.debug.print("Try 'eve --help'.\n", .{});
         std.process.exit(cli.exit_usage);
     };
+
+    if (opts.engine) |name| {
+        if (std.mem.eql(u8, name, "bc") or std.mem.eql(u8, name, "bytecode")) {
+            evevm.interp.engine = .bytecode;
+        } else if (std.mem.eql(u8, name, "tree")) {
+            evevm.interp.engine = .tree;
+        } else {
+            std.debug.print("eve: --engine takes tree or bc, not {s}\n", .{name});
+            std.process.exit(cli.exit_usage);
+        }
+    }
 
     var stdin_buffer: [4096]u8 = undefined;
     var stdin_file_reader: Io.File.Reader = .init(.stdin(), init.io, &stdin_buffer);

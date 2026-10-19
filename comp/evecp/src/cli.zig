@@ -13,6 +13,7 @@ const parser = @import("parser.zig");
 const doc = @import("doc.zig");
 const scaffold = @import("scaffold.zig");
 const analyzer = @import("analyze.zig");
+const emitter = @import("emit.zig");
 
 /// Exit statuses (the codes of `sysexits.h`, as the manual lists them).
 pub const exit_usage = evecm.config.exit_usage;
@@ -34,6 +35,7 @@ pub const Env = struct {
 pub const usage =
     \\usage: evecp <command> [arguments]
     \\  check <file.eve>...                 check the syntax of scripts, run nothing (exit 65 on a syntax error)
+    \\  disasm <file.eve>...                 the bytecode of scripts as a listing (stage B5.2: the core of level 1)
     \\  doc <folder | file.eve> [folder]    write Markdown documentation of a .eve file or of the .eve files of a folder
     \\  outline <file.eve>...                the aspects, classes and subprograms of scripts, nested, with their lines
     \\  symbols <file.eve>...               the same as a flat list: line:col, kind, name, container
@@ -55,6 +57,7 @@ pub fn run(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
     const word = args[0];
     const rest = args[1..];
     if (std.mem.eql(u8, word, "check")) return check(env, rest);
+    if (std.mem.eql(u8, word, "disasm")) return disasm(env, rest);
     if (std.mem.eql(u8, word, "doc")) return docs(env, rest);
     if (std.mem.eql(u8, word, "project")) return project(env, rest);
     if (std.mem.eql(u8, word, "outline")) return outline(env, rest, false);
@@ -96,6 +99,56 @@ pub fn check(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
                 worst = @max(worst, exit_no_input);
             },
         }
+    }
+    return worst;
+}
+
+/// `disasm`: compile each file to bytecode and write the listing; status 65 on a syntax error, 70 when the emitter does not know a construct yet.
+// @eve-fn cp.disasm
+// @feature F-VM-04
+// @see comp/evecp/src/emit.zig:compile
+pub fn disasm(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
+    if (args.len == 0) {
+        try env.out.writeAll("disasm: file name missing\n");
+        return exit_usage;
+    }
+    var worst: u8 = 0;
+    for (args) |path| {
+        const src = Io.Dir.cwd().readFileAlloc(env.io, path, env.gpa, .limited(16 << 20)) catch |err| {
+            try env.out.print("{s}: cannot read: {s}\n", .{ path, @errorName(err) });
+            worst = @max(worst, exit_no_input);
+            continue;
+        };
+        defer env.gpa.free(src);
+        var arena: std.heap.ArenaAllocator = .init(env.gpa);
+        defer arena.deinit();
+        var diag: parser.Diag = .{};
+        const tree = parser.parse(arena.allocator(), src, &diag) catch |err| switch (err) {
+            error.Syntax => {
+                try env.out.print("{s}:{d}:{d}: error: {s}\n", .{ path, diag.line, diag.col, diag.message() });
+                worst = @max(worst, exit_syntax);
+                continue;
+            },
+            error.OutOfMemory => {
+                try env.out.print("{s}: out of memory\n", .{path});
+                worst = @max(worst, exit_no_input);
+                continue;
+            },
+        };
+        var why: emitter.Diag = .{};
+        const c = emitter.compile(arena.allocator(), tree, &why) catch |err| switch (err) {
+            error.Unsupported => {
+                try env.out.print("{s}:{d}: bytecode: {s} is not supported yet\n", .{ path, why.line, why.message });
+                worst = @max(worst, 70);
+                continue;
+            },
+            error.OutOfMemory => {
+                try env.out.print("{s}: out of memory\n", .{path});
+                worst = @max(worst, exit_no_input);
+                continue;
+            },
+        };
+        try evecm.chunk.disassemble(&c, env.out);
     }
     return worst;
 }
