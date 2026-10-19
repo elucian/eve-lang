@@ -1,0 +1,11 @@
+primary aspect bridge is
+  process main is
+    new xs := (3, 1, 2);
+    print xs.count();
+    new total := 0;
+    for x in xs do
+      let total += x;
+    done;
+    print total;
+  return;
+end bridge;

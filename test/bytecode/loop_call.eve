@@ -1,0 +1,23 @@
+primary aspect loop_call is
+  function sq(n: Integer) => (@r: Integer) is
+    let r := n * n;
+  return;
+
+  process main is
+    new total := 0;
+    set LIM = 10;
+    for i in (1..LIM) do
+      let total += sq(i);
+    done;
+    new k := 0;
+    while k < 3 do
+      let k += 1;
+    done;
+    if total > 5 do
+      print "big", total;
+    else
+      print "small";
+    done;
+    expect total == 385;
+  return;
+end loop_call;

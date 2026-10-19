@@ -1,6 +1,6 @@
 # DataMap methods: has, get, keys, values, delete (G-5)
 ** spec: semantics/types.md#datamap-methods
-primary aspect e112_datamap_methods is
+primary aspect a88_datamap_methods is
   process main is
     new m := {"b": 2, "a": 1};
     print m.has("a");
@@ -17,7 +17,7 @@ primary aspect e112_datamap_methods is
       print "{k}={m[k]}";
     done;
   return;
-end e112_datamap_methods;
+end a88_datamap_methods;
 /*@expect
 {
   "stdout": [

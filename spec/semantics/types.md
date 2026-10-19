@@ -68,7 +68,7 @@ The types of the files that a program loads and parses (`JSON`, `CSV`, `TXT`, `X
 | `m.delete(k)` | removes the entry; nothing happens when the key is missing |
 | `m.count()` | the number of entries |
 
-Tests: `test/level5/e112_datamap_methods`.
+Tests: `test/level1/a88_datamap_methods.eve`.
 
 ## Strings
 

@@ -10,7 +10,7 @@ This file is the one place to track the project: the levels, the versions and **
 - **Status**: `✓ done` means implemented in `bin/eve.exe` (or delivered, for documents and tools) and covered by tests where tests apply; `partial` says in the description what exists; `open` is not started; `dropped` is not wanted any more.
 - A feature belongs to **one version**. Moving it is changed here, in its section, and noted in the description with the decision.
 - A new large feature is added here first, then planned in a phase file, then decided (`D-nnn`), then built.
-- Status checked on 2026-10-09: level 1 65/65, level 2 63/63, level 3 50/50, level 4 42/42 (stage A of D-144: one core, deterministic), smoke 16/16: 235 tests pass on the VM; the benchmarks are in `test/bmark`.
+- Status checked on 2026-10-19: level 1 73/73, level 2 78/78, level 3 58/58, level 4 47/47, level 5 117/117, level 6 15/15, smoke 21/21: 409 tests pass on the tree walker and on the bytecode machine (`runtest.py all --both`); (2026-10-09: level 1 65/65, level 2 63/63, level 3 50/50, level 4 42/42 (stage A of D-144: one core, deterministic), smoke 16/16: 235 tests; the benchmarks are in `test/bmark`.
 
 ## Levels
 
@@ -92,6 +92,8 @@ Levels 1 and 2. Goal: Run a project: one driver and its aspects, error recovery 
 | F-VM-01 | Lexer and parser | ✓ done | source to syntax tree, errors with file, line and column (`lexer.zig`, `parser.zig`). |
 | F-VM-02 | Tree-walking interpreter | ✓ done | runs levels 1 to 3, the smoke test and the benchmarks (`interp.zig`, `project.zig`); 193 tests. |
 | F-VM-10 | Cross-platform releases | partial | Windows, Linux, macOS binaries from one build; `script/release.py` bumps versions. *Partial:* Windows build, release script. |
+| F-STR-12 | Exit code of the program | ✓ done | `over n;` and `exit n;` give the exit code: 0, or 6 to 125 (1 to 5 belong to the machine); anything else is `$err_argument` (`spec/semantics/errors.md#ending-the-process`; G-2; tests a89, a90). |
+| F-LIB-13 | DataMap methods | ✓ done | `has`, `get(k)`, `get(k, default)`, `keys`, `values`, `delete` (`spec/semantics/types.md#datamap-methods`; G-5; test a88). `method` is a contextual word, usable as a name (D-116; G-6; test a91). |
 
 Exit: level 1 and level 2 pass; `spec/` has the grammar and the semantics of every tested feature (no test relies on an unanswered `Q-nnn`); binaries for Windows and Linux.
 
@@ -116,6 +118,7 @@ Level 3. Goal: Programs in several files: modules and imports, local libraries, 
 | F-TLS-02 | REPL | partial | prompt, file completion, commands `check`, `execute`, `help`, `quit`; *2026-10-13:* the full-screen interface at a terminal (upper part with scrollback, command line between two rules, status bar with Ready / Running / time of the last run, Page Up and Down, resize), `help` as a table with a line between commands and `help <command>` pages that wrap to the window (`EVE_WIDTH`, `eve_width`), `clear`, `stop`, `listen`, `serve`, `status`, `eve <command>` without the prompt. *Partial:* `compile`, `debug`, `begin`, `enter`, `print`, `resume`, `setup` not implemented. |
 | F-TLS-03 | Interactive interpreter | open | evaluate Eve statements and expressions typed at the prompt, keep the session scope. |
 | F-VM-03 | Library loader and `external` bindings | partial | load `.eve` library modules and bind `external` declarations to Zig (D-053, D-056). *Partial:* project modules are loaded (`project.zig`); `external` is not implemented, `print` and the exception names are built into the interpreter. |
+| F-LNG-22 | External routines and errors of modules | ✓ done | an `external` routine of a module whose name is that of a native module (`os`, `fs`, `crypto`, ...) is bound to the native of the same name; an error raised in a module names the file of the module and the call lines end with `of <file>` (`spec/semantics/modules.md#members`, `errors.md#where-an-error-is-reported`; G-1, G-3; tests c37, c38). |
 
 Exit: levels 1 to 3 pass (modules c01–c09 and c18–c31, classes c10–c17 included): done on 2026-10-08, 50 of 50. Open for the release: the open features above.
 
@@ -219,6 +222,7 @@ Level 6. Goal: The Eve machine: setup, remote control of many machines with logi
 | F-DAT-13 | The user cache `eve.db` | open | a SQLite cache of the user (`<user data folder>/eve/meta/eve.db`): projects, machines without secrets, history of commands, upload manifest; the `Meta` interface of `evecm`, implemented by evedb; rebuilt if deleted (D-172, Q-052 b). |
 | F-TLS-30 | Service mode | partial | `eve -s`: the machine with no user interface, silent, both doors, a log and a pid file; a Windows service under the Service Control Manager, a Linux daemon, or the foreground form (`EVE_SERVICE=foreground`); `-s file.cfg` is the service reading that file, and `-s` takes nothing else; the configuration of a script, a command or a door is `-e file.cfg` (`--setup`), and the command files `.vmc` are removed (D-188, 2026-10-18) (D-185, `design/design-service.md` section 17, `spec/library/machine.md`). *Partial (2026-10-17):* the console and foreground forms tested on Windows (`script/service_check.py`); the Service Control Manager form compiles, run needs an administrator; the POSIX code compiles for Linux, not run; not yet: Event Log, run as another user, log rotation, `evedb serve -s`. |
 | F-TLS-15 | Eve API for AI | open | `eve --api`, an MCP server whose tools are the commands of the machine (D-083). |
+| F-NET-10 | Time-outs of the waiting calls | partial | `Socket.set_timeout(ms)` (a read fails with `$err_timeout`), `service.idle(ms)` and the reply `408`, `os.run!` with `timeout_ms` (status 124) (`spec/library/net.md#time-outs`; TD-27, TD-29; tests f13, f14, f15). *Open:* `accept!` has no time-out, one connection at a time (TD-29), no streaming `os.run!` (TD-9). |
 
 Exit: a local machine logs in to two remote machines on `localhost`, one by single sign-on, and connects again from the keyring without a form; a client project and a server project talk on `localhost`; a route answers HTTP; `eve --api` answers an MCP client; `.vmc` files are removed.
 
@@ -250,12 +254,14 @@ Exit: tutorial examples run in the browser; templates pass an escaping test suit
 
 Levels 1 to 7. Goal: The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM.
 
-0 of 3 features done.
+2 of 5 features done (F-VM-04 partial).
 
 | Code | Feature | Status | Description |
 |---|---|---|---|
-| F-VM-04 | Bytecode compiler and VM | open | compact bytecode, heap frames (needed by generators and scheduling; review `RVM-R01`). Moved from Version 0.4 to Version 0.7 (D-138). |
+| F-VM-04 | Bytecode compiler and VM | partial | register machine with 32-bit instructions (`design/design-bytecode.md`, D-201). *Stage B5.2 (2026-10-19):* `comp/evecm/src/op.zig`, `chunk.zig`, `comp/evecp/src/emit.zig`, `comp/evevm/src/bcvm.zig`; the core of level 1 is translated (numbers, text, variables, operators, `print`, `expect`, `if`, `while`, `for` over ranges, calls of the functions of the aspect), the rest runs on the tree walker through a bridge (TD-46); `p1a_arith` 64 to 26 ms, `p1b_calls` 41 to 16 ms. *Open:* B5.3 to B5.6 (collections and strings, errors, objects and modules, tasks, the data language). Moved from Version 0.4 to Version 0.7 (D-138). |
 | F-VM-07 | Portable bytecode file `.evb` | open | versioned, hashed, with debug lines and capabilities (review `RVM-R05`). Moved from Version 0.6 to Version 0.7 (D-138). |
+| F-VM-13 | Engine selection and equivalence tests | ✓ done | `--engine tree\|bc` and `EVE_ENGINE`; `runtest.py --both` and `bmark.py --both` run every test and benchmark on both engines and require equal results; `eve --disasm` and the golden listings `test/bytecode/*.lst` (`script/bctest.py`) (R8 of `design/design-bytecode.md`). |
+| F-VM-14 | Sampling profiler | ✓ done | `EVE_PROFILE=1` prints the functions with the most samples (Windows, symbols from the `.pdb`); the optimization steps R1 to R4 were chosen with it (`test/bmark/README.md`). *Open:* Linux and macOS. |
 | F-VM-08 | Embedding API | open | the VM as a library with a C ABI (the C ABI is the contract of the embedding) (review `RVM-R07`). Moved from Version 0.5 to Version 0.7 (D-138). |
 
 Exit: levels 1 to 7 pass on the bytecode VM and on the tree walker; an `.evb` file made on one machine runs on another; a C program embeds the VM through the C ABI.

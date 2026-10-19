@@ -32,16 +32,16 @@ Written by the release tooling at every release, never by hand.
 <!-- GEN:progress (script/relnotes.py) -->
 State of the working tree on 2026-10-19, version 0.0.7, not a release; last release: no release notes yet.
 
-**Tests.** 399 of 399 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
+**Tests.** 409 of 409 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
 
 | Tests | Total | Pass | % |
 |---|---|---|---|
-| Level 1 | 68 | 68 | 100% |
+| Level 1 | 73 | 73 | 100% |
 | Level 2 | 78 | 78 | 100% |
-| Level 3 | 56 | 56 | 100% |
+| Level 3 | 58 | 58 | 100% |
 | Level 4 | 47 | 47 | 100% |
 | Level 5 | 117 | 117 | 100% |
-| Level 6 | 12 | 12 | 100% |
+| Level 6 | 15 | 15 | 100% |
 | Level 7 | 0 | 0 | - |
 | Smoke | 21 | 21 | 100% |
 
@@ -49,18 +49,27 @@ State of the working tree on 2026-10-19, version 0.0.7, not a release; last rele
 
 | Version | Validated | Drafted | Design | Planned | Total |
 |---|---|---|---|---|---|
-| Version 0.1 | 23 | 10 | 0 | 0 | 33 |
-| Version 0.2 | 4 | 8 | 0 | 1 | 13 |
+| Version 0.1 | 25 | 10 | 0 | 0 | 35 |
+| Version 0.2 | 5 | 8 | 0 | 1 | 14 |
 | Version 0.3 | 5 | 8 | 0 | 2 | 15 |
 | Version 0.4 | 2 | 8 | 9 | 12 | 31 |
-| Version 0.5 | 0 | 5 | 11 | 7 | 23 |
+| Version 0.5 | 0 | 6 | 11 | 7 | 24 |
 | Version 0.6 | 0 | 1 | 8 | 4 | 13 |
-| Version 0.7 | 0 | 0 | 3 | 0 | 3 |
+| Version 0.7 | 2 | 1 | 2 | 0 | 5 |
 | Version 0.9 | 0 | 0 | 0 | 3 | 3 |
 | Version 1.0 | 0 | 0 | 0 | 2 | 2 |
-| **All** | **34** | **40** | **31** | **31** | **136** |
+| **All** | **39** | **42** | **30** | **31** | **142** |
 
-**Performance.** TODO: no saved ReleaseSafe benchmark run of 0.0.7. Run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --save`, then this script again. Benchmarks: [performance report](performance.md).
+**Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-19 17:49 (commit `b3019cb`), against the twins in Python and against nothing (first run). Every benchmark: [performance report](performance.md).
+
+| Benchmarks | Eve | Python | Eve / Python | Change |
+|---|---|---|---|---|
+| Level 1 | 138 ms | 202 ms | 0.7x | - |
+| Level 2 | 91 ms | 112 ms | 0.8x | - |
+| Level 3 | 141 ms | 128 ms | 1.1x | - |
+| Level 4 | 550 ms | 697 ms | 0.8x | - |
+| Level 5 | 80 ms | 136 ms | 0.6x | - |
+| Level 6 | 2297 ms | 11313 ms | 0.2x | - |
 <!-- /GEN:progress -->
 
 ## Links

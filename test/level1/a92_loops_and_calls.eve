@@ -1,0 +1,77 @@
+# loops, calls and assignments that every engine must treat alike: break, skip, for with else, short circuit on a variable, compound assignment on a list, recursion (D-201)
+** spec: syntax/statements.md#loops, semantics/control.md
+primary aspect a92_loops_and_calls is
+  function fact(n: Integer) => (@r: Integer) is
+    if n < 2 do
+      let r := 1;
+    else
+      let r := n * fact(n - 1);
+    done;
+  return;
+
+  function pick(flag: Logic, other: Logic) => (@r: Logic) is
+    let r := flag;
+    let r := r and other;
+  return;
+
+  procedure say(text: String) is
+    print "say {text}";
+  return;
+
+  process main is
+    ** break and skip leave and continue the innermost loop
+    new seen := 0;
+    for i in (1..10) do
+      if i % 2 == 0 do
+        skip;
+      done;
+      if i > 7 do
+        break;
+      done;
+      let seen += i;
+    done;
+    print seen;
+
+    ** the else block runs when the range is empty
+    for i in (5..1) do
+      print "never";
+    else
+      print "empty range";
+    done;
+
+    ** a while loop that counts down
+    new n := 3;
+    while n > 0 do
+      write n;
+      let n -= 1;
+    done;
+    print;
+
+    ** the right side of and reads the variable that receives the result
+    new ok := True;
+    let ok := False or ok;
+    print ok;
+    print pick(True, False), pick(True, True);
+
+    ** a list and a scalar: every element changes in place (D-118), a number is replaced
+    new xs := (1, 2);
+    new ys := xs;
+    let xs += 3;
+    print ys;
+    new total := 0.5;
+    let total += 1;
+    print total;
+
+    ** recursion and a procedure
+    print fact(10);
+    say("done");
+    new label := "a";
+    let label += "b";
+    print label;
+  return;
+end a92_loops_and_calls;
+/*@expect
+{
+  "stdout": ["16", "empty range", "321", "True", "False,True", "(4,5)", "1.5", "3628800", "say done", "ab"]
+}
+*/

@@ -1,6 +1,6 @@
 # over <code>; ends the process with the exit code, finalize still runs (G-2)
 ** spec: semantics/errors.md#ending-the-process
-primary aspect e113_exit_code is
+primary aspect a89_exit_code is
   procedure stop_here() is
     over 7;
   return;
@@ -12,7 +12,7 @@ primary aspect e113_exit_code is
   finalize
     print "cleanup";
   return;
-end e113_exit_code;
+end a89_exit_code;
 /*@expect
 {
   "stdout": ["start", "cleanup"],

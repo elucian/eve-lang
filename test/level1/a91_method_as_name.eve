@@ -1,6 +1,6 @@
 # method is a contextual word: a keyword where a declaration is expected, a name everywhere else (G-6, D-116)
 ** spec: lexical/keywords.json
-primary aspect e115_method_as_name is
+primary aspect a91_method_as_name is
   function describe(method: String, params: Integer) => (@r: String) is
     let r := "{method}/{params}";
   return;
@@ -11,7 +11,7 @@ primary aspect e115_method_as_name is
     let method := "POST";
     print method;
   return;
-end e115_method_as_name;
+end a91_method_as_name;
 /*@expect
 {
   "stdout": ["GET/2", "POST"]
