@@ -274,7 +274,7 @@ An interface is a struct with a context pointer and a table of functions, the sh
 | `task.zig`, `scratch.zig`, `vm.zig` | 1,149 | `comp/evevm/src/` (`vm.zig` becomes `session.zig`) |
 | `data.zig` | 403 | **cut** → `comp/evecm/src/codec/csv.zig`, `json.zig`; `comp/evedb/src/url.zig` |
 | `dlib.zig` 1–1050 | ~1,050 | **cut** → `comp/evevm/src/lib/stream.zig`, `fs.zig` |
-| `dlib.zig` 1050–1271 | ~220 | **cut** → `comp/evedb/src/conn.zig` |
+| `dlib.zig` 1050–1271 | ~220 | **cut** → `comp/evevm/src/db/conn.zig` |
 | `orm.zig`, `sqlite.zig` | 1,224 | `comp/evedb/src/` |
 | `comp/evedb/src/duckdb.zig`, `main.zig` | 169 | `comp/evedb/src/duckdb.zig` (loaded with `std.DynLib`); `main.zig` becomes the `db` commands |
 | `lexer.zig`, `parser.zig`, `check.zig`, `overload.zig`, `project.zig` | 4,775 | `comp/evecp/src/` (`project.zig` becomes `link.zig`; its `env_lib_path` goes to `evecm`) |

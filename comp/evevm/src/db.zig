@@ -1,7 +1,11 @@
-//! evedb: the database layer of Eve (design-packages.md §3). It holds SQLite (the core database
-//! and the databases of a script), the object-relational layer (`table`, records, transactions of
-//! a job), the connections and the `sql function`s. It imports `evecm` only: the interpreter is
-//! reached through the `Host` interface and reaches this module through `Data`.
+//! @eve-module evevm.db
+//! @decision D-198, D-199
+//! @tests the tests of the files in comp/evevm/src/db/
+//! The database layer of Eve inside the runtime (was the module `evedb`, design-packages.md §3): SQLite (the core database
+//! and the databases of a script), the object-relational layer (`table`, records, transactions of a job), the connections,
+//! the `sql function`s, the drivers `postgres://` and `evedb://` and the `Memory` tables. It is a part of `evevm`; the
+//! DuckDB server is a separate program (`comp/evedb/`). The interpreter is still reached through the `Host` interface and
+//! reaches this layer through `Data` (S8.3 and S8.4 remove them).
 const std = @import("std");
 const evecm = @import("evecm");
 const iface = evecm.iface;
@@ -11,26 +15,26 @@ const Signal = value.Signal;
 const Node = evecm.ast.Node;
 
 /// SQLite, bound for Zig.
-pub const sqlite = @import("sqlite.zig");
+pub const sqlite = @import("db/sqlite.zig");
 /// Connections, statements and `sql function`s.
-pub const conn = @import("conn.zig");
+pub const conn = @import("db/conn.zig");
 /// Tables, records and the transaction of a job.
-pub const orm = @import("orm.zig");
-pub const state = @import("state.zig");
+pub const orm = @import("db/orm.zig");
+pub const state = @import("db/state.zig");
 /// Columnar tables in memory, the tables of the computational pipelines (D-184).
-pub const columnar = @import("columnar.zig");
+pub const columnar = @import("db/columnar.zig");
 /// The DBF file decoder and encoder: legacy ingestion only (D-184).
-pub const dbf = @import("dbf.zig");
+pub const dbf = @import("db/dbf.zig");
 /// CSV, TXT, JSON and DBF files into a columnar table and into SQLite (D-184).
-pub const importer = @import("importer.zig");
+pub const importer = @import("db/importer.zig");
 /// `Memory` tables in scripts (D-184).
-pub const memory = @import("memory.zig");
+pub const memory = @import("db/memory.zig");
 /// The PostgreSQL protocol (client) and the Eve driver for `postgres://` connections (evedb README section 5B).
-pub const pgclient = @import("pgclient.zig");
-pub const pgdriver = @import("pgdriver.zig");
+pub const pgclient = @import("db/pgclient.zig");
+pub const pgdriver = @import("db/pgdriver.zig");
 /// The Eve driver for evedb's native protocol, with the column batches of `Memory` tables (evedb README section 5.5).
-pub const ewpdriver = @import("ewpdriver.zig");
-pub const batch = @import("batch.zig");
+pub const ewpdriver = @import("db/ewpdriver.zig");
+pub const batch = @import("ewp_protocol").batch;
 
 // Zig tip: each entry of `data` is a small function that has the signature of the interface and
 // calls the real one. A function `fn (Host, ...) T` cannot be taken from a function that has other
@@ -54,7 +58,7 @@ fn closeDatabases(it: Host) void {
     ewpdriver.closeAll(it);
 }
 
-/// The table of functions that the interpreter calls: set `evevm.interp.data_api = &evedb.data` at the start.
+/// The table of functions that the interpreter calls: set `evevm.interp.data_api = &evevm.db.data` at the start.
 pub const data: iface.Data = .{
     .connect = conn.connect,
     .connection_call = conn.connectionCall,

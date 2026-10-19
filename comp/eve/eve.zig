@@ -10,7 +10,7 @@ const builtin = @import("builtin");
 const evecm = @import("evecm");
 const evecp = @import("evecp");
 const evevm = @import("evevm");
-const evedb = @import("evedb");
+const evedb = evevm.db;
 const cli = @import("cli.zig");
 const Terminal = evecm.terminal.Terminal;
 

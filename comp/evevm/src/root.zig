@@ -1,6 +1,6 @@
 //! evevm: the runtime of Eve (design-packages.md §3): the interpreter, the heap of the values, the
-//! tasks, the natives of the standard library, the machine with its doors and the REPL. The databases are
-//! `evedb`, reached through the `Data` interface. It imports `evecp` and `evecm`.
+//! tasks, the natives of the standard library, the machine with its doors and the REPL, and the database layer
+//! (`db`, with SQLite; D-198). It imports `evecp`, `evecm` and the protocol module `ewp_protocol`.
 
 /// The interpreter: values, scopes and the walk over the syntax tree.
 pub const interp = @import("interp.zig");
@@ -19,6 +19,9 @@ pub const vm = @import("vm.zig");
 
 /// The natives of the standard library: streams, files, connections.
 pub const dlib = @import("dlib.zig");
+
+/// The database layer: SQLite, tables and records, connections, the drivers `postgres://` and `evedb://`, `Memory` tables.
+pub const db = @import("db.zig");
 
 /// The machine, server side: the IPC and HTTP doors and the methods of the machine (F-NET-02, spec/library/machine.md).
 pub const machine = @import("machine.zig");
@@ -48,6 +51,7 @@ test {
     _ = scratch;
     _ = vm;
     _ = dlib;
+    _ = db;
     _ = machine;
     _ = channel;
     _ = client;

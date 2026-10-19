@@ -34,6 +34,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // @eve-impl the module `ewp_protocol`: the wire protocol shared with the Eve side (D-199 5)
+    // @see build.zig (the root build makes the same module from the same files for the driver in evevm)
+    const protocol = b.createModule(.{
+        .root_source_file = b.path("protocol/protocol.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "evedb",
         .root_module = b.createModule(.{
@@ -43,6 +51,7 @@ pub fn build(b: *std.Build) void {
             .link_libc = true,
             .imports = &.{
                 .{ .name = "duckdb_c", .module = duckdb_c.createModule() },
+                .{ .name = "ewp_protocol", .module = protocol },
             },
         }),
     });
@@ -80,5 +89,8 @@ pub fn build(b: *std.Build) void {
     // The test program needs duckdb.dll too: run it from the install folder, where the DLL is.
     run_tests.step.dependOn(b.getInstallStep());
     if (os == .windows) run_tests.setCwd(.{ .relative = .{ .base = .install_prefix, .sub_path = "bin" } });
-    b.step("test", "Run unit tests").dependOn(&run_tests.step);
+    const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(&run_tests.step);
+    // the tests of the protocol files run in their own test root: tests of another module are not collected
+    test_step.dependOn(&b.addRunArtifact(b.addTest(.{ .root_module = protocol })).step);
 }

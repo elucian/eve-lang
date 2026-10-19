@@ -20,18 +20,21 @@ evedb.exe (DuckDB server, same folder)       drivers/duckdb (the DuckDB server: 
 
 The gate of every stage includes these two: `zig build test` in the root (and in the part builds the stage touches), and `python script/runtest.py all --eve temp/rel/bin/eve.exe` on the ReleaseSafe build (`zig build -Doptimize=ReleaseSafe -p temp/rel`, plus `evedb.exe` beside it for the two tests that need the database server): **399 of 399** pass, as today. A stage that cannot say so is not finished.
 
-### S8.0 Baseline `[ ]`
+### S8.0 Baseline `[x]`
+2026-10-19: the restructure was committed by the author (`2bebf90`) and the plan in `6bf6458`. Baseline in `temp/stage-baseline.txt`: 399 of 399 tests; unit tests 108 (root: evecm 33, evecp 25, evevm 24, database layer 26) and 22 (the evedb server); ReleaseSafe `eve.exe` 4,066,304 bytes, `evedb.exe` 1,294,848; benchmark totals per level 292.7, 119.8, 198.2, 830.7, 110.1, 1670.8 ms (level 6 includes the server).
 - **Needs the author's word:** commit the pending work (the restructure, `comp/`, the rename to `eve`, the manual and the dist tooling: 386 entries today) so that each stage shows as its own diff.
 - Record the baseline in `temp/stage-baseline.txt`: the test totals (399 of 399), the number of unit tests of each `zig build test`, the size of the ReleaseSafe `bin/eve.exe` (3.9 MB in `dist/`), and one run of `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe` **without `--save`**. The last saved run is of 0.0.3 (2026-10-13), so `--check` against it would measure seven versions, not this refactor.
 - No code changes. **Halt.**
 
-### S8.1 The protocol becomes a shared module `[ ]`
+### S8.1 The protocol becomes a shared module `[x]`
+2026-10-19: `ewp.zig`, `batch.zig`, `client.zig` are in `comp/evedb/protocol/` and the module `ewp_protocol` is made by the root build and by the server's build. No test lost: the protocol has its own test root (6 tests: the 5 of the files and one block that reaches them).
 - **Change:** `ewp.zig`, `batch.zig` and `client.zig` (about 800 lines: the wire protocol between the DuckDB server and the native driver `evedb://`) move to `comp/evedb/protocol/` with a root file `protocol.zig` that exports the three. The module `ewp_protocol` is made from that path by the root build (for the database layer) and by `comp/evedb/build.zig` (for the server). The files that used them (`server.zig`, `cells.zig`, `main.zig`, `ewpdriver.zig`, …) import the module instead of a sibling file. Nothing else moves. (D-199 5: shared, not copied.)
 - **Gate:** the common gate; `zig build test` in `comp/evedb`; `python script/evedb_check.py` and `python script/pg_check.py` (the protocol checked from the Python side: they need `pip install psycopg2-binary pg8000`); `eve.exe` and `evedb.exe` within 1% of the baseline size.
 - **Review:** the diff of the two build files and the changed import lines; the root build calls no `lazyDependency`, so it never fetches the DuckDB library.
 - **Risk:** a Zig file belongs to one module in a compilation. The server and the root build are two compilations, and inside each the files belong to `ewp_protocol` only.
 
-### S8.2 The database layer moves into `evevm` `[ ]`
+### S8.2 The database layer moves into `evevm` `[x]`
+2026-10-19: 11 files moved with `git mv` to `comp/evevm/src/db/`, the former root is `comp/evevm/src/db.zig` (`evevm.db`); SQLite is linked into `evevm`; the module `evedb` is gone from the root build. Unit tests 109 (evecm 33, evecp 25, evevm 45, protocol 6) and 23 in the server; 399 of 399; both Python checks pass; `eve.exe` and `evedb.exe` have the same size as the baseline, to the byte.
 - **Change:** `sqlite`, `conn`, `orm`, `state`, `memory`, `columnar`, `dbf`, `importer`, `pgclient`, `pgdriver`, `ewpdriver` (about 4,900 lines) move from `comp/evedb/src/` to `comp/evevm/src/db/`, exposed as `evevm.db`; `evevm` imports `ewp_protocol`. The module `evedb` and its `src/root.zig` disappear from the root `build.zig`; SQLite (C) is linked into `evevm`; `comp/eve` calls `evevm.db`. The interfaces `Host` and `Data` stay as they are.
 - **After:** `comp/evedb/` holds the DuckDB server and the protocol module only.
 - **Gate:** the common gate; `zig build test` in `comp/evedb`; the two Python checks of S8.1; the ReleaseSafe `eve.exe` within 3% of the baseline size.

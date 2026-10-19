@@ -53,7 +53,7 @@ fn splitStatements(gpa: std.mem.Allocator, text: []const u8) ![]const []const u8
 /// `db sql [-t] [--last] [-f <script>] <file|:memory:> [<statement>]`: run the SQL statements on a SQLite file and print
 /// each result as a table. The tool of the SQL panel of evetx; the statements end with `;`.
 fn sqlCommand(ctx: *Context, args: []const []const u8) !void {
-    const sqlite = @import("evedb").sqlite;
+    const sqlite = @import("evevm").db.sqlite;
     var arena = std.heap.ArenaAllocator.init(ctx.gpa);
     defer arena.deinit();
     const a = arena.allocator();
@@ -215,7 +215,7 @@ fn objectCommand(ctx: *Context, args: []const []const u8) !void {
 // is not a letter or a digit turned into `_`. The answer is one line, so a program (evetx) can show it.
 /// `db import <db> <file> [table]` and `db export <db> <table> <file>`.
 fn transferCommand(ctx: *Context, args: []const []const u8) !void {
-    const evedb = @import("evedb");
+    const evedb = @import("evevm").db;
     const import_mod = evedb.importer;
     var arena = std.heap.ArenaAllocator.init(ctx.gpa);
     defer arena.deinit();

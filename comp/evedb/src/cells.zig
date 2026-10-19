@@ -5,8 +5,9 @@
 //! vectors themselves: one array of the real type for each column, and a bitmap of the cells that are not NULL.
 const std = @import("std");
 const duckdb = @import("duckdb.zig");
-const ewp = @import("ewp.zig");
-const batch = @import("batch.zig");
+const protocol = @import("ewp_protocol");
+const ewp = protocol.ewp;
+const batch = protocol.batch;
 const c = @import("duckdb_c");
 
 // Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default

@@ -4,11 +4,12 @@ const std = @import("std");
 const Io = std.Io;
 
 const duckdb = @import("duckdb.zig");
-const ewp = @import("ewp.zig");
+const protocol = @import("ewp_protocol");
+const ewp = protocol.ewp;
 const types = @import("types.zig");
 const fault = @import("fault.zig");
 const server = @import("server.zig");
-const client = @import("client.zig");
+const client = protocol.client;
 const cfgfile = @import("cfg.zig");
 const pgserver = @import("pgserver.zig");
 
@@ -365,7 +366,6 @@ test {
     _ = ewp;
     _ = types;
     _ = @import("cells.zig");
-    _ = @import("batch.zig");
     _ = fault;
     _ = server;
     _ = cfgfile;

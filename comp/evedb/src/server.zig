@@ -4,11 +4,12 @@ const std = @import("std");
 const Io = std.Io;
 const net = Io.net;
 const duckdb = @import("duckdb.zig");
-const ewp = @import("ewp.zig");
+const protocol = @import("ewp_protocol");
+const ewp = protocol.ewp;
 const types = @import("types.zig");
 const cells_mod = @import("cells.zig");
 const fault = @import("fault.zig");
-const batch = @import("batch.zig");
+const batch = protocol.batch;
 const pgserver = @import("pgserver.zig");
 
 // Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default value

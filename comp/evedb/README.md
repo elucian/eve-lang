@@ -208,7 +208,7 @@ COMMIT(tx=9f3a…)              →     (the server writes the id into eve_tx, i
 
 ### 5.5 Column batches: the fast path (version 0.3, D-187)
 
-A query of the native protocol can answer **column by column**, and a client can load a table the same way. A batch has the layout that DuckDB uses inside, and that the `Memory` tables of Eve use (`comp/evedb/src/columnar.zig`): one array for each column and a bitmap for NULL. The code of the format is `src/batch.zig`, shared by the server and by the driver inside `eve`.
+A query of the native protocol can answer **column by column**, and a client can load a table the same way. A batch has the layout that DuckDB uses inside, and that the `Memory` tables of Eve use (`comp/evevm/src/db/columnar.zig`): one array for each column and a bitmap for NULL. The code of the format is `src/batch.zig`, shared by the server and by the driver inside `eve`.
 
 **Schema** (frame `SCHEMA`, and the head of `LOAD`): the number of columns `u16`; for each a name (string) and a wire type `u8`:
 
@@ -326,7 +326,7 @@ TLS; SCRAM on the server side; several users and roles; `COPY`; cancel requests;
 
 ## 5B. The Eve driver for PostgreSQL (version 0.2)
 
-A connection of `eve.cfg` whose URL starts with `postgres://` or `postgresql://` is opened by the driver of `comp/evedb/src/pgdriver.zig` and `pgclient.zig` (in the database layer of `eve`, not in the evedb program), which speaks the PostgreSQL protocol to evedb **or to any PostgreSQL server**:
+A connection of `eve.cfg` whose URL starts with `postgres://` or `postgresql://` is opened by the driver of `comp/evevm/src/db/pgdriver.zig` and `pgclient.zig` (in the database layer of `eve`, not in the evedb program), which speaks the PostgreSQL protocol to evedb **or to any PostgreSQL server**:
 
 ```
 database "shop" = "postgres://eve:secret@db.example.com:5432/shop"
@@ -347,7 +347,7 @@ The browser demo `comp/evedb/demo/` shows the whole path: a page of the machine 
 
 ## 5C. The Eve driver for evedb (version 0.3, D-187)
 
-`database "wh" = "evedb://[token@]host:port/database"` in `eve.cfg` opens a connection of the native protocol (`comp/evedb/src/ewpdriver.zig`, in the database layer of `eve`), on the control port of evedb (8044 by default).
+`database "wh" = "evedb://[token@]host:port/database"` in `eve.cfg` opens a connection of the native protocol (`comp/evevm/src/db/ewpdriver.zig`, in the database layer of `eve`), on the control port of evedb (8044 by default).
 
 | Method | Wire |
 |---|---|

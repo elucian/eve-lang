@@ -44,6 +44,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{.{ .name = "evecm", .module = evecm }},
     });
+    // @eve-impl the module `ewp_protocol`: the wire protocol shared with the DuckDB server (D-199 5)
+    // @see comp/evedb/build.zig (the server makes the same module from the same files)
+    const ewp_protocol = b.createModule(.{
+        .root_source_file = b.path("comp/evedb/protocol/protocol.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    // The runtime and, inside it, the database layer (SQLite is linked below; D-198).
     const evevm = b.createModule(.{
         .root_source_file = b.path("comp/evevm/src/root.zig"),
         .target = target,
@@ -53,14 +61,8 @@ pub fn build(b: *std.Build) void {
         .imports = &.{
             .{ .name = "evecm", .module = evecm },
             .{ .name = "evecp", .module = evecp },
+            .{ .name = "ewp_protocol", .module = ewp_protocol },
         },
-    });
-    // The database layer: imports evecm only, and reaches the interpreter through the `Host` interface.
-    const evedb = b.createModule(.{
-        .root_source_file = b.path("comp/evedb/src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{.{ .name = "evecm", .module = evecm }},
     });
 
     // Zig tip: `b.dependency("sqlite", .{})` finds the package named in build.zig.zon (fetched
@@ -97,8 +99,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    evedb.addImport("sqlite_c", sqlite_c.createModule());
-    evedb.linkLibrary(sqlite_lib);
+    evevm.addImport("sqlite_c", sqlite_c.createModule());
+    evevm.linkLibrary(sqlite_lib);
 
     // The `eve` command line.
     const exe = b.addExecutable(.{
@@ -111,7 +113,6 @@ pub fn build(b: *std.Build) void {
                 .{ .name = "evecm", .module = evecm },
                 .{ .name = "evecp", .module = evecp },
                 .{ .name = "evevm", .module = evevm },
-                .{ .name = "evedb", .module = evedb },
             },
         }),
     });
@@ -174,7 +175,7 @@ pub fn build(b: *std.Build) void {
 
     // One test program per module: each runs the tests of its own files.
     const test_step = b.step("test", "Run unit tests");
-    for ([_]*std.Build.Module{ evecm, evecp, evevm, evedb, exe.root_module }) |m| {
+    for ([_]*std.Build.Module{ evecm, evecp, evevm, ewp_protocol, exe.root_module }) |m| {
         const t = b.addTest(.{ .root_module = m });
         test_step.dependOn(&b.addRunArtifact(t).step);
     }
