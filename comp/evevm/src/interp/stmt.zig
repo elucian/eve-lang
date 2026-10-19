@@ -476,23 +476,19 @@ pub fn declareOne(it: *Interp, t: *const Node, v: Value, constant: bool) Signal!
     }
 }
 
-// Zig tip: `assign` relies on the same Zig feature as `define` above: see the tip there.
-pub fn assign(it: *Interp, n: *const Node) Signal!void {
-    const target = n.kids[0];
-    const op = n.text;
-    if (n.op == .push_back or n.op == .push_front) return it.listModifier(n);
-    var v = try it.eval(n.kids[1]);
-    if (n.op == .copy) {
-        v = try it.clone(v);
-    } else if (n.op != .set) {
-        const cur = try it.eval(target);
+
+// @eve-impl `cur op= v` on values: a list or a set changes in place (null), anything else gives the new value
+// @spec spec/semantics/types.md#composite-types
+// @see comp/evevm/src/bcvm.zig:execute
+/// The part of `assign` that works on two values; the bytecode machine calls it for the compound assignments that are not plain numbers.
+pub fn augmentValue(it: *Interp, o: interp.ast.Op, op: []const u8, cur: Value, v: Value) Signal!?Value {
         // a list and a scalar: every element is updated in place (D-118)
         if (cur == .list and Interp.isScalar(v)) {
             const src = cur.list.elems();
             const out = try it.t.alloc(Value, src.len);
-            for (src, 0..) |e, i| out[i] = try it.bulkOne(op[0..1], e, v);
+            for (src, 0..) |e, i| out[i] = try it.bulkOne(op, e, v);
             for (src, out) |*cell, x| it.setCell(cell, x);
-            return;
+            return null;
         }
         // += and -= on a collection change it in place
         if ((cur == .list or cur == .set) and (op[0] == '+' or op[0] == '-')) {
@@ -514,9 +510,22 @@ pub fn assign(it: *Interp, n: *const Node) Signal!void {
                     if (drop) _ = it.listRemove(l, k) else k += 1;
                 }
             }
-            return;
+            return null;
         }
-        v = try it.applyOp(n.op, op[0..1], cur, v);
+    return try it.applyOp(o, op, cur, v);
+}
+
+// Zig tip: `assign` relies on the same Zig feature as `define` above: see the tip there.
+pub fn assign(it: *Interp, n: *const Node) Signal!void {
+    const target = n.kids[0];
+    const op = n.text;
+    if (n.op == .push_back or n.op == .push_front) return it.listModifier(n);
+    var v = try it.eval(n.kids[1]);
+    if (n.op == .copy) {
+        v = try it.clone(v);
+    } else if (n.op != .set) {
+        const cur = try it.eval(target);
+        v = (try it.augmentValue(n.op, op[0..1], cur, v)) orelse return;
     }
     // `let r := d;` converts a Decimal for a variable that holds a Real, and the other way (D-168)
     if (n.op == .set and target.tag == .name) {

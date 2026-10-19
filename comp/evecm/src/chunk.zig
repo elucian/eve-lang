@@ -9,6 +9,7 @@
 const std = @import("std");
 const Io = std.Io;
 const op = @import("op.zig");
+const ast = @import("ast.zig");
 
 pub const Inst = op.Inst;
 
@@ -16,6 +17,14 @@ pub const Inst = op.Inst;
 pub const Const = union(enum) { int: i64, real: f64, str: []const u8 };
 
 pub const no_result: u8 = 255;
+
+/// A variable of the function and the register that holds it.
+pub const NameReg = struct { name: []const u8, reg: u8 };
+
+// @eve-impl a piece of the tree that the tree walker runs for the bytecode machine (the bridge of stage B5.2)
+// @invariant a chunk with xnodes can not be written as an .evb file: the bridge goes away when the constructs it carries are translated
+/// An expression or a statement left to the tree walker, with the variables it reads (and, for a statement, may change).
+pub const XNode = struct { node: *const ast.Node, names: []const NameReg };
 
 /// One function (or procedure, or the main process): where its code is and how many registers it needs.
 pub const Func = struct {
@@ -37,6 +46,8 @@ pub const Chunk = struct {
     funcs: []const Func,
     code: []const u32,
     lines: []const u32,
+    /// The pieces of the tree that the tree walker runs (`evalx`, `execx`).
+    xnodes: []const XNode = &.{},
     /// The index of the main process in `funcs`.
     main: u16,
 };
@@ -53,7 +64,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
             const i = Inst.fromWord(c.code[at]);
             try w.print("  {d:4}  line {d:<4} {s:<8}", .{ pc, c.lines[at], @tagName(i.op) });
             switch (i.op) {
-                .move, .neg, .not => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .move, .neg, .not, .setlike => try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .loadk => {
                     try w.print(" r{d} k{d}", .{ i.a, i.bx() });
                     switch (c.consts[i.bx()]) {
@@ -70,6 +81,12 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                 .callf => try w.print(" r{d} f{d} args {d}    ; {s}", .{ i.a, i.c, i.b, c.funcs[i.c].name }),
                 .ret => try w.print(" r{d} {s}", .{ i.a, if (i.b == 1) "value" else "none" }),
                 .print => try w.print(" r{d} x{d} {s}", .{ i.a, i.b, if (i.c == 1) "print" else "write" }),
+                .augment => try w.print(" r{d} r{d} {s}", .{ i.a, i.b, @tagName(@as(op.Op, @enumFromInt(i.c))) }),
+                .coerce => try w.print(" r{d} {s}", .{ i.a, @tagName(@as(ast.TypeKind, @enumFromInt(i.b))) }),
+                .evalx => try w.print(" r{d} x{d}    ; tree walker: {s}", .{ i.a, i.bx(), @tagName(c.xnodes[i.bx()].node.tag) }),
+                .execx => try w.print(" x{d}    ; tree walker: {s}", .{ i.bx(), @tagName(c.xnodes[i.bx()].node.tag) }),
+                .binx => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
+                .extra => try w.print(" k{d}", .{i.bx()}),
                 .over, .halt => {},
             }
             try w.writeByte('\n');

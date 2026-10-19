@@ -38,6 +38,10 @@ const Emitter = struct {
     lines: std.ArrayList(u32) = .empty,
     /// The function and procedure nodes of the aspect, by name; the index in `funcs` is the position + 1.
     routines: std.ArrayList(*const Node) = .empty,
+    /// For each routine: does it have a native translation (else the tree walker runs it)? And its index in `funcs`.
+    native: []bool = &.{},
+    fidx: []u8 = &.{},
+    xnodes: std.ArrayList(chunk.XNode) = .empty,
 
     // the function being compiled
     locals: std.ArrayList(Local) = .empty,
@@ -109,7 +113,10 @@ const Emitter = struct {
     }
 
     fn routineIndex(e: *Emitter, name: []const u8) ?u8 {
-        for (e.routines.items, 0..) |r, i| if (std.mem.eql(u8, r.text, name)) return @intCast(i + 1);
+        for (e.routines.items, 0..) |r, i| if (std.mem.eql(u8, r.text, name)) {
+            if (e.native.len == 0) return @intCast(i + 1); // a trial compilation: every routine counts as native
+            return if (e.native[i]) e.fidx[i] else null;
+        };
         return null;
     }
 
@@ -127,7 +134,7 @@ const Emitter = struct {
                     } else _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .int = v })), line);
                 },
                 .real => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .real = @bitCast(n.lit_bits) })), line),
-                .none => return e.unsupported(n, "a number with a suffix, a comma or a base"),
+                .none => try e.bridgeExpr(n, dst),
             },
             .str => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .str = n.text })), line),
             .name => {
@@ -139,19 +146,16 @@ const Emitter = struct {
                     _ = try e.emit(Inst.abc(.loadfalse, dst, 0, 0), line);
                 } else if (std.mem.eql(u8, n.text, "null")) {
                     _ = try e.emit(Inst.abc(.loadnil, dst, 0, 0), line);
-                } else return e.unsupported(n, "a name that is not a local variable of the function");
+                } else try e.bridgeExpr(n, dst);
             },
             .bin => try e.binary(n, dst),
             .un => {
+                if (!std.mem.eql(u8, n.text, "-") and !std.mem.eql(u8, n.text, "not")) return e.bridgeExpr(n, dst);
                 const src = try e.operand(n.kids[0]);
-                if (std.mem.eql(u8, n.text, "-")) {
-                    _ = try e.emit(Inst.abc(.neg, dst, src, 0), line);
-                } else if (std.mem.eql(u8, n.text, "not")) {
-                    _ = try e.emit(Inst.abc(.not, dst, src, 0), line);
-                } else return e.unsupported(n, "this unary operator");
+                _ = try e.emit(Inst.abc(if (n.text[0] == '-') .neg else .not, dst, src, 0), line);
             },
             .call => try e.call(n, dst),
-            else => return e.unsupported(n, @tagName(n.tag)),
+            else => try e.bridgeExpr(n, dst),
         }
     }
 
@@ -191,7 +195,15 @@ const Emitter = struct {
             .le => .le,
             .gt => .gt,
             .ge => .ge,
-            else => return e.unsupported(n, "this binary operator"),
+            else => {
+                // every other operator goes through `apply` with its text, except the forms that read their operands specially
+                if (std.mem.eql(u8, n.text, "=~") and n.kids[1].tag == .range) return e.bridgeExpr(n, dst);
+                const l = try e.operand(n.kids[0]);
+                const r = try e.operand(n.kids[1]);
+                _ = try e.emit(Inst.abc(.binx, dst, l, r), line);
+                _ = try e.emit(Inst.abx(.extra, 0, try e.konst(.{ .str = n.text })), line);
+                return;
+            },
         };
         const l = try e.operand(n.kids[0]);
         const r = try e.operand(n.kids[1]);
@@ -200,22 +212,76 @@ const Emitter = struct {
 
     fn call(e: *Emitter, n: *const Node, dst: u8) Error!void {
         const callee = n.kids[0];
-        if (callee.tag != .name) return e.unsupported(n, "a call of something that is not a function name");
-        const fi = e.routineIndex(callee.text) orelse return e.unsupported(n, "a call of a name that is not a function of the aspect");
-        const target = e.routines.items[fi - 1];
+        if (callee.tag != .name or e.find(callee.text) != null) return e.bridgeExpr(n, dst);
+        const fi = e.routineIndex(callee.text) orelse return e.bridgeExpr(n, dst);
+        const target = e.routineNode(callee.text).?;
         const args = n.kids[1..];
         const params = target.kids[0].kids;
-        if (args.len != params.len) return e.unsupported(n, "a call with default or named arguments");
+        if (args.len != params.len) return e.bridgeExpr(n, dst);
+        for (args) |a| if (a.tag == .pair or a.tag == .ref or a.tag == .spread) return e.bridgeExpr(n, dst);
         const mark = e.free;
         defer e.free = mark;
         const base = try e.alloc(n);
         for (args) |a| {
-            if (a.tag == .pair or a.tag == .ref or a.tag == .spread) return e.unsupported(a, "a named, reference or spread argument");
             const slot = try e.alloc(a);
             try e.exprTo(a, slot);
         }
         _ = try e.emit(Inst.abc(.callf, base, @intCast(args.len), fi), n.line);
         if (base != dst) _ = try e.emit(Inst.abc(.move, dst, base, 0), n.line);
+    }
+
+    // ---- the bridge to the tree walker -----------------------------------------------------
+
+    fn routineNode(e: *Emitter, name: []const u8) ?*const Node {
+        for (e.routines.items) |r| if (std.mem.eql(u8, r.text, name)) return r;
+        return null;
+    }
+
+    /// The local variables that `n` names, with their registers, added to `list`.
+    fn collectNames(e: *Emitter, n: *const Node, list: *std.ArrayList(chunk.NameReg)) Error!void {
+        if ((n.tag == .name or n.tag == .ref or (n.tag == .star and n.text.len > 0)) and !std.mem.eql(u8, n.text, "_")) {
+            if (e.find(n.text)) |r| {
+                for (list.items) |x| if (std.mem.eql(u8, x.name, n.text)) return;
+                try list.append(e.a, .{ .name = n.text, .reg = r });
+            }
+        }
+        for (n.kids) |k| try e.collectNames(k, list);
+        for (n.extra) |k| try e.collectNames(k, list);
+    }
+
+    /// Does the subtree hold something the bridge can not carry: a jump out of the statement, a closure over the variables, a task?
+    fn cannotBridge(n: *const Node) bool {
+        switch (n.tag) {
+            .break_stmt, .skip_stmt, .over_stmt, .exit_stmt, .stop_stmt, .retry_stmt, .resume_stmt, .abort_stmt, .lambda, .await_, .start_stmt, .spawn_stmt, .job, .parallel, .yield_stmt, .defer_stmt, .commit_stmt, .rollback_stmt, .panic_stmt => return true,
+            else => {},
+        }
+        for (n.kids) |k| if (cannotBridge(k)) return true;
+        for (n.extra) |k| if (cannotBridge(k)) return true;
+        return false;
+    }
+
+    fn bridgeExpr(e: *Emitter, n: *const Node, dst: u8) Error!void {
+        if (cannotBridge(n)) return e.unsupported(n, @tagName(n.tag));
+        var names: std.ArrayList(chunk.NameReg) = .empty;
+        try e.collectNames(n, &names);
+        try e.xnodes.append(e.a, .{ .node = n, .names = names.items });
+        _ = try e.emit(Inst.abx(.evalx, dst, @intCast(e.xnodes.items.len - 1)), n.line);
+    }
+
+    /// A statement the tree walker runs: the variables it declares get registers, the ones it names are copied in and out.
+    fn bridgeStmt(e: *Emitter, n: *const Node) Error!void {
+        if (cannotBridge(n)) return e.unsupported(n, @tagName(n.tag));
+        if (n.tag == .var_decl or n.tag == .set) {
+            for (n.kids[0].kids) |t| if (t.tag == .name or t.tag == .star) {
+                if (t.text.len > 0 and !std.mem.eql(u8, t.text, "_")) _ = try e.declare(n, t.text);
+            };
+        } else if (n.tag == .capture) {
+            if (n.kids[1].tag == .name and !std.mem.eql(u8, n.kids[1].text, "_") and e.find(n.kids[1].text) == null) _ = try e.declare(n, n.kids[1].text);
+        }
+        var names: std.ArrayList(chunk.NameReg) = .empty;
+        try e.collectNames(n, &names);
+        try e.xnodes.append(e.a, .{ .node = n, .names = names.items });
+        _ = try e.emit(Inst.abx(.execx, 0, @intCast(e.xnodes.items.len - 1)), n.line);
     }
 
     // ---- statements ----------------------------------------------------------------------
@@ -236,15 +302,20 @@ const Emitter = struct {
         const mark = e.free;
         switch (n.tag) {
             .var_decl, .set => {
-                if (n.ty != null or n.kids.len != 2 or n.kids[0].kids.len != 1 or !(std.mem.eql(u8, n.text, ":=") or std.mem.eql(u8, n.text, "="))) return e.unsupported(n, "a typed or multiple declaration");
+                const plain = n.kids.len == 2 and n.kids[0].kids.len == 1 and n.kids[0].kids[0].tag == .name and n.kids[1].tag != .none and
+                    (std.mem.eql(u8, n.text, ":=") or std.mem.eql(u8, n.text, "=")) and (n.ty == null or n.ty.?.tk == .integer or n.ty.?.tk == .real or n.ty.?.tk == .string or n.ty.?.tk == .logic);
+                if (!plain) return e.bridgeStmt(n);
                 const t = n.kids[0].kids[0];
-                if (t.tag != .name) return e.unsupported(n, "a declaration of something that is not a name");
                 // the value is computed before the name exists, as in the tree walker
                 const tmp = try e.alloc(n);
                 try e.exprTo(n.kids[1], tmp);
                 e.free = mark;
                 const r = try e.declare(n, t.text);
                 if (r != tmp) _ = try e.emit(Inst.abc(.move, r, tmp, 0), line);
+                // a declared type may convert the value: an Integer to a Real, a Real to an Integer (`coerce` of the tree walker)
+                if (n.ty) |ty| if (ty.kids.len == 0 and (ty.tk == .real or ty.tk == .integer)) {
+                    _ = try e.emit(Inst.abc(.coerce, r, @intFromEnum(ty.tk), 0), line);
+                };
             },
             .assign => try e.assign(n),
             .print_stmt, .write_stmt => try e.printStmt(n),
@@ -264,7 +335,9 @@ const Emitter = struct {
             },
             .expr_stmt => {
                 const x = n.kids[0];
-                if (x.tag != .call) return e.unsupported(n, "an expression that is not a call, as a statement");
+                if (x.tag != .call) return e.bridgeStmt(n);
+                const callee = x.kids[0];
+                if (callee.tag != .name or e.routineIndex(callee.text) == null) return e.bridgeStmt(n);
                 const t = try e.alloc(n);
                 try e.call(x, t);
             },
@@ -285,7 +358,7 @@ const Emitter = struct {
                 } else _ = try e.emit(Inst.abc(.ret, e.result_reg, if (e.result_reg == chunk.no_result) 0 else 1, 0), line);
             },
             .pass_stmt => {},
-            else => return e.unsupported(n, @tagName(n.tag)),
+            else => return e.bridgeStmt(n),
         }
         e.free = e.floor();
     }
@@ -293,12 +366,14 @@ const Emitter = struct {
     fn assign(e: *Emitter, n: *const Node) Error!void {
         const line = n.line;
         const target = n.kids[0];
-        if (target.tag != .name) return e.unsupported(n, "an assignment to something that is not a variable");
-        const reg = e.find(target.text) orelse return e.unsupported(n, "an assignment to a name that is not a local variable");
+        if (target.tag != .name) return e.bridgeStmt(n);
+        const reg = e.find(target.text) orelse return e.bridgeStmt(n);
         const op: Op = switch (n.op) {
             .set => {
-                // `let x := x + 1`: the new value may read x, so it is computed in place only when it does not
-                try e.exprTo(n.kids[1], reg);
+                // the new value is computed first (it may read the variable), then stored with the conversion of `:=`
+                const t = try e.alloc(n);
+                try e.exprTo(n.kids[1], t);
+                _ = try e.emit(Inst.abc(.setlike, reg, t, 0), line);
                 return;
             },
             .add => .add,
@@ -306,10 +381,10 @@ const Emitter = struct {
             .mul => .mul,
             .div => .div,
             .mod => .mod,
-            else => return e.unsupported(n, "this assignment operator"),
+            else => return e.bridgeStmt(n),
         };
         const v = try e.operand(n.kids[1]);
-        _ = try e.emit(Inst.abc(op, reg, reg, v), line);
+        _ = try e.emit(Inst.abc(.augment, reg, v, @intFromEnum(op)), line);
     }
 
     fn printStmt(e: *Emitter, n: *const Node) Error!void {
@@ -323,7 +398,7 @@ const Emitter = struct {
         const base = e.free;
         if (arg.tag == .list) {
             for (arg.kids) |k| {
-                if (k.tag == .pair) return e.unsupported(k, "print with sep:");
+                if (k.tag == .pair) return e.bridgeStmt(n);
                 const slot = try e.alloc(k);
                 try e.exprTo(k, slot);
             }
@@ -357,7 +432,7 @@ const Emitter = struct {
     }
 
     fn whileStmt(e: *Emitter, n: *const Node) Error!void {
-        if (n.kids[0].kids.len > 0 or n.kids[3].kids.len > 0) return e.unsupported(n, "a while with a block before the test or an else block");
+        if (n.kids[0].kids.len > 0 or n.kids[3].kids.len > 0) return e.bridgeStmt(n);
         const saved_locals = e.locals.items.len;
         const mark = e.free;
         try e.enterLoop();
@@ -382,9 +457,7 @@ const Emitter = struct {
 
     fn forStmt(e: *Emitter, n: *const Node) Error!void {
         const range = n.kids[1];
-        if (n.kids[0].tag != .name or range.tag != .range or !std.mem.eql(u8, range.text, "..")) {
-            return e.unsupported(n, "a for loop that is not over a range of integers a..b");
-        }
+        if (n.kids[0].tag != .name or range.tag != .range or !std.mem.eql(u8, range.text, "..")) return e.bridgeStmt(n);
         const saved_locals = e.locals.items.len;
         const base = try e.alloc(n);
         const limit = try e.alloc(n);
@@ -497,13 +570,91 @@ pub fn compile(a: Alloc, root: *const Node, diag: *Diag) Error!chunk.Chunk {
         else => return e.unsupported(k, @tagName(k.tag)),
     };
     const m = main orelse return e.unsupported(root, "an aspect without process main");
+    // a routine that has a construct the bridge can not carry stays with the tree walker: a trial compilation tells which
+    e.native = try a.alloc(bool, e.routines.items.len);
+    e.fidx = try a.alloc(u8, e.routines.items.len);
+    var next: u8 = 1;
+    for (e.routines.items, 0..) |r, i| {
+        // several routines with one name are chosen by the types of the arguments: the tree walker does that
+        var shared = false;
+        for (e.routines.items, 0..) |o, j| if (j != i and std.mem.eql(u8, o.text, r.text)) {
+            shared = true;
+        };
+        if (shared) {
+            e.native[i] = false;
+            continue;
+        }
+        var trial: Emitter = .{ .a = a, .diag = diag, .routines = e.routines };
+        trial.function(r) catch |err| switch (err) {
+            error.Unsupported => {
+                e.native[i] = false;
+                continue;
+            },
+            error.OutOfMemory => return error.OutOfMemory,
+        };
+        e.native[i] = true;
+        e.fidx[i] = next;
+        next += 1;
+    }
     try e.function(m);
-    for (e.routines.items) |r| try e.function(r);
+    for (e.routines.items, 0..) |r, i| if (e.native[i]) try e.function(r);
     return .{
         .consts = e.consts.items,
         .funcs = e.funcs.items,
         .code = e.code.items,
         .lines = e.lines.items,
+        .xnodes = e.xnodes.items,
         .main = 0,
     };
+}
+
+test "a counting loop and a call are translated" {
+    const parser = @import("parser.zig");
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var pd: parser.Diag = .{};
+    const tree = try parser.parse(arena.allocator(),
+        \\primary aspect t is
+        \\  function sq(n: Integer) => (@r: Integer) is
+        \\    let r := n * n;
+        \\  return;
+        \\  process main is
+        \\    new total := 0;
+        \\    for i in (1..3) do
+        \\      let total += sq(i);
+        \\    done;
+        \\    print total;
+        \\  return;
+        \\end t;
+    , &pd);
+    var d: Diag = .{};
+    const c = try compile(arena.allocator(), tree, &d);
+    try std.testing.expectEqual(@as(usize, 2), c.funcs.len);
+    try std.testing.expectEqual(@as(usize, 0), c.xnodes.len);
+    var found_call = false;
+    var found_for = false;
+    for (c.code) |w| {
+        const i = Inst.fromWord(w);
+        if (i.op == .callf and i.c == 1) found_call = true;
+        if (i.op == .forloop) found_for = true;
+    }
+    try std.testing.expect(found_call and found_for);
+}
+
+test "a construct without a translation goes to the tree walker" {
+    const parser = @import("parser.zig");
+    var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
+    defer arena.deinit();
+    var pd: parser.Diag = .{};
+    const tree = try parser.parse(arena.allocator(),
+        \\primary aspect t is
+        \\  process main is
+        \\    new xs := (3, 1, 2);
+        \\    print xs.count();
+        \\  return;
+        \\end t;
+    , &pd);
+    var d: Diag = .{};
+    const c = try compile(arena.allocator(), tree, &d);
+    try std.testing.expect(c.xnodes.len >= 2);
 }

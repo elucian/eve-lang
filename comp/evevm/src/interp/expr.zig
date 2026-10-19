@@ -155,6 +155,12 @@ pub fn unary(it: *Interp, n: *const Node) Signal!Value {
     const op = n.text;
     if (std.mem.eql(u8, op, "not")) return .{ .bool = !(try it.truth(v)) };
     if (std.mem.eql(u8, op, "+")) return v;
+    return it.negate(v);
+}
+
+// @eve-impl the arithmetic negation of a value, shared with the bytecode machine
+/// `-v`.
+pub fn negate(it: *Interp, v: Value) Signal!Value {
     return switch (v) {
         .int, .nat, .byte, .short => |x| .{ .int = -x },
         .huge => |x| .{ .huge = -x },

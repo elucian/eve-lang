@@ -629,7 +629,7 @@ pub fn run(it: *Interp, root: *const Node) Outcome {
     it.h.root_ctx = it;
     defer if (heap.show_stats) it.h.report();
     defer if (profile.active) profile.report(it.a);
-    const result = if (interp.engine == .bytecode) @import("../bcvm.zig").runRoot(it, root) else it.runRoot(root);
+    const result = it.runRoot(root);
     if (result) |_| return .{ .code = it.base().exit_code } else |e| switch (e) {
         error.Stop => return .{ .stopped = true },
         error.Panic => {

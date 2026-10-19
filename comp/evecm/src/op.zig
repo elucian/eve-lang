@@ -59,6 +59,20 @@ pub const Op = enum(u8) {
     print,
     /// fail with an `expect` error when A is not True
     expect,
+    /// convert register A to the type with the `TypeKind` number B: an Integer becomes a Real for `real`, a Real becomes an Integer for `integer`
+    coerce,
+    /// `A := the tree walker's value of xnode[Bx]`: an expression the emitter does not translate yet; the variables it names are copied into a scope first
+    evalx,
+    /// run the statement xnode[Bx] on the tree walker, then copy the variables it names back into their registers
+    execx,
+    /// `A := B`, converted to the kind of the value that A holds: a Decimal becomes a Real when A holds a Real and the other way (the `:=` of the tree walker)
+    setlike,
+    /// `A := A op B`, where C is the arithmetic instruction (`add`...`mod`) as a number: the compound assignment `let A += B`; collections change in place
+    augment,
+    /// `A := B op C`, where the text of the operator is the constant in Bx of the next word (an `extra` word)
+    binx,
+    /// the second word of `binx`: `Bx` is the constant that holds the operator
+    extra,
     /// end the process (`over;`)
     over,
     /// end of the main process

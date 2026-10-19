@@ -227,9 +227,14 @@ def main():
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--eve', default=os.path.join(ROOT, 'bin', 'eve.exe'))
     ap.add_argument('--level', type=int)
+    ap.add_argument('--engine', choices=['tree', 'bc'], default='tree', help='the engine of the VM (design/design-bytecode.md); a bc run can not be saved yet')
     ap.add_argument('--build', default='Debug', help='how the VM was built: Debug (zig build -p . at the root) or ReleaseSafe; runs are compared with the same build')
     a = ap.parse_args()
     a.eve = os.path.abspath(a.eve)
+    if a.engine == 'bc':
+        if a.save:
+            sys.exit('bmark: save a bytecode run when the history has a column for it (stage B5.3)')
+        os.environ['EVE_ENGINE'] = 'bc'
     ver = subprocess.run([a.eve, '--version'], capture_output=True, text=True).stdout.strip().split()[-1]
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
     if a.level:

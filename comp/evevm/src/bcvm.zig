@@ -91,22 +91,34 @@ fn astOp(o: evecm.op.Op) ast.Op {
     };
 }
 
-// @eve-impl run the aspect `root` on the bytecode machine: compile, then execute from `process main`
+/// Print why a program runs on the tree walker (`EVE_BC_TRACE=1`).
+pub var trace: bool = false;
+
+// @eve-impl run `process main` on the bytecode machine; false when the emitter can not translate it (the tree walker then runs it)
 // @spec design/design-bytecode.md#9-stages
 // @see comp/evevm/src/interp/datatypes.zig:runRoot
-/// The bytecode counterpart of `Interp.runRoot`. A construct the emitter does not know yet is an error with its line.
-pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
+/// The bytecode counterpart of `runProcess` for `main`: true when it ran, false when the program stays with the tree walker.
+pub fn runMain(it: *Interp, root: *const Node, main: *const Node) Signal!bool {
+    _ = main;
     var diag: evecp.emit.Diag = .{};
     const c = evecp.emit.compile(it.a, root, &diag) catch |e| switch (e) {
         error.Unsupported => {
-            it.line = diag.line;
-            return it.fail("bytecode: {s} is not supported yet", .{diag.message});
+            if (trace) std.debug.print("bytecode: the tree walker runs this program: {s} (line {d})\n", .{ diag.message, diag.line });
+            return false;
         },
         error.OutOfMemory => return error.OutOfMemory,
     };
+    const saved = try it.pushScope();
+    defer it.leaveScope(saved);
+    it.setProc(it.scope);
     try it.frames.append(it.a, .{ .kind = "aspect", .name = root.text, .call_line = it.line });
     defer _ = it.frames.pop();
+    const jobs = try it.newMap();
+    try it.define("jobs", .{ .map = jobs }, false);
+    it.regionIn();
+    defer it.regionOut();
     try execute(it, &c);
+    return true;
 }
 
 // @eve-impl the loop of the machine: fetch, decode, do; a call pushes a frame, `ret` pops it
@@ -152,7 +164,7 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
                 put(it, &regs[i.a], switch (v) {
                     .int, .nat, .byte, .short => |x| Value{ .int = -x },
                     .real, .float => |x| Value{ .real = -x },
-                    else => return it.fail("cannot negate {s}", .{Interp.typeName(v)}),
+                    else => try it.negate(v),
                 });
             },
             .not => {
@@ -175,19 +187,23 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
             .forprep => {
                 const lo = regs[i.a];
                 const hi = regs[i.a + 1];
-                if (lo != .int or hi != .int) {
+                const is_sym = lo == .sym and hi == .sym;
+                if (!is_sym and (lo != .int or hi != .int)) {
                     it.line = c.lines[at];
-                    return it.fail("bytecode: a for loop over something other than integers is not supported yet", .{});
+                    return it.fail("bytecode: a for loop over something other than integers or runes is not supported yet", .{});
                 }
-                if (lo.int > hi.int) {
+                const l: i64 = if (is_sym) lo.sym else lo.int;
+                const h: i64 = if (is_sym) hi.sym else hi.int;
+                if (l > h) {
                     fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
                 } else regs[i.a + 2] = lo;
             },
             .forloop => {
-                const next = regs[i.a].int + 1;
-                if (next <= regs[i.a + 1].int) {
-                    regs[i.a] = .{ .int = next };
-                    regs[i.a + 2] = .{ .int = next };
+                const is_sym = regs[i.a] == .sym;
+                const next = (if (is_sym) @as(i64, regs[i.a].sym) else regs[i.a].int) + 1;
+                if (next <= (if (is_sym) @as(i64, regs[i.a + 1].sym) else regs[i.a + 1].int)) {
+                    regs[i.a] = if (is_sym) .{ .sym = @intCast(next) } else .{ .int = next };
+                    regs[i.a + 2] = regs[i.a];
                     fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
                     it.h.safePoint();
                 }
@@ -234,6 +250,58 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
             .expect => {
                 it.line = c.lines[at];
                 if (!try it.truth(regs[i.a])) return it.failWith(interp.err_expect, "expect failed", .{});
+            },
+            .setlike => {
+                const v = regs[i.b];
+                put(it, &regs[i.a], if (heapless(regs[i.a]) and heapless(v) and (regs[i.a] == .int or regs[i.a] == .bool or regs[i.a] == .nil)) v else Interp.coerceLike(regs[i.a], v));
+            },
+            .augment => {
+                it.line = c.lines[at];
+                const o: evecm.op.Op = @enumFromInt(i.c);
+                const cur = regs[i.a];
+                const v = regs[i.b];
+                if (cur == .list or cur == .set or v == .list or v == .set) {
+                    if (try it.augmentValue(astOp(o), opText(o), cur, v)) |nv| put(it, &regs[i.a], nv);
+                } else put(it, &regs[i.a], try it.applyOp(astOp(o), opText(o), cur, v));
+            },
+            .coerce => {
+                const tk: ast.TypeKind = @enumFromInt(i.b);
+                const v = regs[i.a];
+                switch (tk) {
+                    .real => if (Interp.isInt(v)) put(it, &regs[i.a], .{ .real = @floatFromInt(Interp.intOf(v)) }) else put(it, &regs[i.a], Interp.coerceLike(.{ .real = 0 }, v)),
+                    .integer => if (v == .real or v == .float) put(it, &regs[i.a], .{ .int = @intFromFloat(Interp.realOf(v).?) }),
+                    else => {},
+                }
+            },
+            .binx => {
+                const next = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
+                it.line = c.lines[at];
+                put(it, &regs[i.a], try it.apply(c.consts[next.bx()].str, regs[i.b], regs[i.c]));
+            },
+            .extra => unreachable,
+            .evalx => {
+                const x = c.xnodes[i.bx()];
+                it.line = c.lines[at];
+                const mark = it.scratch.mark();
+                defer it.scratch.release(mark);
+                const outer = try it.pushScope();
+                defer it.leaveScope(outer);
+                for (x.names) |nm| try it.define(nm.name, regs[nm.reg], false);
+                const v = try it.eval(x.node);
+                put(it, &regs[i.a], v);
+            },
+            .execx => {
+                const x = c.xnodes[i.bx()];
+                it.line = c.lines[at];
+                const mark = it.scratch.mark();
+                defer it.scratch.release(mark);
+                const outer = try it.pushScope();
+                defer it.leaveScope(outer);
+                const scope = it.scope;
+                for (x.names) |nm| try it.define(nm.name, regs[nm.reg], false);
+                try it.exec(x.node);
+                for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &regs[nm.reg], cell.value);
             },
             .over, .halt => return,
         }

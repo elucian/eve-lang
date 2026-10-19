@@ -129,6 +129,10 @@ pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
         if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
     }
     const main = Interp.findProcess(root, "main") orelse return it.fail("the aspect has no process main", .{});
+    // @eve-impl the bytecode machine runs `process main` after the same preparation as the tree walker (D-201)
+    if (interp.engine == .bytecode and it.script_args.len == 0) {
+        if (try @import("../bcvm.zig").runMain(it, root, main)) return;
+    }
     // the arguments of the command line go to the parameters of the process
     var args: std.ArrayList(Arg) = .empty;
     for (it.script_args) |a| try args.append(it.a, .{ .value = try it.staticStr(a) });
