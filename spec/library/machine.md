@@ -70,7 +70,9 @@ The file `eve.cfg` of the working folder (or the file of `-s`): one `key = value
 | the words | | `stop` ends the machine (exit 0); `restart` stops it, if it runs, then starts it again in this process with the doors it had (the option on the line adds its door; with no machine running it starts like `start`); `status` prints the doors. `--listen --serve` starts a machine with both doors (D-169). Another word after a door is a usage error: `eve: nope: expected start, stop, restart or status after --listen or --serve`, exit 64 |
 | `-s [file.cfg]` | | **the service** (D-185, section "Service mode"): the machine without a user interface; the file after it is its configuration; `-s` takes nothing else (D-188) |
 | `-e file.cfg` | `--setup file.cfg` | the configuration file, for a script, a command or a door (D-188) |
-| `-s -db --serve evedb.cfg` | `-s db serve evedb.cfg` | **evedb as a service** (D-186): the database server that answers as PostgreSQL, with its configuration file; without `-s`, `eve db serve evedb.cfg` runs it in the foreground |
+| `-s -db --serve evedb.cfg` | `-s db serve evedb.cfg` | **evedb as a service** (D-186, D-203): the database server, which is the Eve machine with DuckDB inside (level 7) and answers as PostgreSQL, with its configuration file; without `-s`, `eve db serve evedb.cfg` runs it in the foreground |
+| `-u name` | `--user name` | the user who logs in to the machine (D-205); the password is asked in a dialog, never given on the line |
+| `-a` | `--admin` | the superuser: `eve` enters admin mode and accepts the commands of "Users and login" (D-205) |
 | `-loc [port]` | `--local` | the command is local: it never uses the network |
 | `-rem [host:port]` | `--remote` | the command runs on a remote machine, found by its HTTP door |
 | `-x file.eve [args]` | `--execute` | the script runs at once in this process: no machine is looked for |
@@ -198,6 +200,20 @@ The UI part speaks the **Agent Client Protocol** (ACP) toward AI agents and IDEs
 `GET` (and `HEAD`, without the body) returns the file of the web folder that the path names: `/` is `index.html`; the type comes from the extension (`html`, `css`, `js`, `json`, `svg`, `png`, `jpg`, `ico`, `txt`, `wasm`; any other is `application/octet-stream`). A path that is not a file of the web folder, or that leaves it (`..`), is `404`: no other folder of the project is served. `POST` is `/rpc` only; any other method or path is `405` or `404`. The body of a `POST` is read by its `Content-Length`, or in chunks when the request says `Transfer-Encoding: chunked` (D-168); a body larger than 16 MB is `413`. The web folder is organized for a single page application: `index.html` at the top and the folders `css/`, `js/`, `img/` and others as the application needs; the backend is Eve, the frontend is JavaScript. From level 6 the web door belongs to the UI part.
 
 **Browser pages (2026-10-20, normative).** A page in the user's browser can post to `http://localhost:<port>/rpc` without any login, and a name that resolves to `127.0.0.1` reaches the door too; `vm.run` runs a script. So `POST /rpc` is answered `403 Forbidden` when (1) `http_host` is a loopback name and the `Host` header is not one (`localhost`, `127.0.0.1`, `[::1]`, with or without the port), or (2) the request has an `Origin` header that does not name the same host as `Host`. A client that is not a browser (`eve -rem`, the editors, a script) sends no `Origin` and passes. A machine bound to another address on purpose (a proxy in front) skips rule (1) and keeps rule (2). Test: `machine: the HTTP door refuses a foreign Host or Origin` in `code/evevm/src/machine.zig`.
+
+## Users and login (level 6)
+
+Decided by D-205. The credentials of the users of a machine are kept in the SQLite database of that machine (for the client `eve`, its own store), as a **checksum of the password**, never the password.
+
+| Form | Meaning |
+|---|---|
+| `eve -u name …`, `eve --user name …` | the command runs as this user; the machine asks the password in a dialog, a secret field that shows one star for each character |
+| `eve -a`, `eve --admin` | admin mode (the superuser); the prompt accepts the commands below |
+| `create user <username>/<password>` | adds a user |
+| `alter user <username>/<password>` | changes the password of a user |
+| `remove user <username>` | removes a user |
+
+The password is never an argument of the command line and never written in a log. A service is started with the credentials of the operating system; evedb is started like any other Eve machine and manages its users the same way. `eveux` and `evetx` show a login dialog with the same fields and use the same store. More fields of a user are planned (stored secured in SQLite and managed remotely by a form); single sign-on, a keyring and roles are set aside (D-205).
 
 ## Not yet
 

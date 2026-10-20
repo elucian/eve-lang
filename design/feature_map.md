@@ -62,11 +62,11 @@ A script that runs from its first line to its last, with no user subprograms and
 ### F-LIB-01 Console I/O
 
 **Status:** partial
-**Tests:** level1: a03 a05
+**Tests:** level1: a03 a05 a95
 
 `print`, `write`, `read`, `error`, `warning`, `log_err`, `log_wrn` (D-053, D-057).
 
-*Partial:* `print`, `write`, `log_err` and `log_wrn` (run log, D-114) work; `read`, `error` and `warning` are missing; `io.eve` is a draft.
+*Partial:* `print`, `write`, `log_err` and `log_wrn` (run log, D-114), `error` and `warning` (standard error, a95) work; `read` is missing; `io.eve` is a draft.
 
 ### F-LIB-02 Exception module
 
@@ -164,11 +164,11 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 ### F-STR-07 System variables
 
 **Status:** partial
-**Tests:** level1: a77
+**Tests:** level1: a77 a94
 
 The register (`$error`, environment names such as `$HOME`, `$epsilon`, `$err_`/`$wrn_` constants) (D-071).
 
-*Partial:* `$error`, `$epsilon` and the `$err_`/`$wrn_` constants work; the environment names and `$EVE_*` are undefined.
+*Partial:* `$error`, `$epsilon`, `$OS_PWD`, the `$err_`/`$wrn_` constants and every environment name `$NAME` (a String, read when used, a94) work; `$EVE_*` are undefined.
 
 ### F-VM-01 Lexer and parser
 

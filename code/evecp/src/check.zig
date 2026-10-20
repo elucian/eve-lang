@@ -35,7 +35,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
     .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Ordinal"}, .{"Function"},
-    .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"Atomic"},
+    .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"error"}, .{"warning"}, .{"Atomic"},
     .{"Channel"}, .{"Duration"}, .{"database"}, .{"csv"}, .{"json"}, .{"Instant"}, .{"Secret"}, .{"Table"}, .{"time"}, .{"txt"}, .{"fs"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
 });
 

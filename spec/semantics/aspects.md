@@ -113,6 +113,10 @@ All are reported before the run, exit 65.
 | `from lib use (x)` where `x` is an aspect | `'x' is an aspect: an aspect can't be imported` | c24 |
 | a concurrent aspect run by a command or called from a concurrent aspect | `a concurrent aspect is called from a primary or an exclusive aspect` | d39, d40 |
 
+## Messages on the standard error (D-057)
+
+`error(text)` and `warning(text)` write `text` and a new line on the standard error and the process goes on. They do not raise an error and do not write the run log; for the run log use `log_err` and `log_wrn` (next section). Test: `a95_error_warning`.
+
 ## Log files (D-114)
 
 `log_err(text)` and `log_wrn(text)` write the run log, in the output folder `$EVE_OUT` (default `out/`): one file per date, `run-log-<date>.json` (`<date>` is `YYYY-MM-DD`, in UTC, as is `time`), for errors and warnings together. The file is a JSON array with one object per run; a new run is appended at the end. A run that writes nothing adds nothing.

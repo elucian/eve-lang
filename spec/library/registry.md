@@ -50,7 +50,7 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | `gzip` (module; the readers already inflate `.gz`) | F-LIB-09 | postponed (TD-24) | |
 | `net` | F-NET-02 | implemented (M3, 2026-10-19): TCP, `listen`, `accept!`, time-outs | [net.md](net.md) |
 | `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M4) | to write |
-| `keyring`, `oidc`, `auth` | F-NET-07 | **level 7** (D-189) | |
+| `keyring`, `oidc`, `auth` | F-NET-07 | **set aside** (D-205): the login is a user and a password checked against the SQLite of the machine, see [machine.md](machine.md#users-and-login-level-6) | |
 | outbound TLS in `http` | F-NET-01 | **level 9, backlog** (D-189) | |
 
 ## Modules of the standard library in Eve at level 6

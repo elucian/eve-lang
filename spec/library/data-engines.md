@@ -4,7 +4,7 @@ Status: **first draft (2026-10-17)**, decision D-184. The behaviour below is imp
 
 ## Two engines
 
-**Where each one lives (D-187).** SQLite is compiled into every `eve` and holds its own state. DuckDB lives only in the evedb server, which owns the DuckDB files; a script reaches them through `evedb://` (column batches, the fast path) or `postgres://` (other tools). `../../evedb/README.md` sections 3A and 3B give the roles and the layout of the files.
+**Where each one lives (D-203).** SQLite is compiled into every `eve` (the light edition, usually a client) and holds its own state and the functions written in Eve. DuckDB lives in evedb, the enterprise edition: the same code as `eve` plus DuckDB, so Eve procedures, functions and business logic run inside the server (level 7). A script reaches the DuckDB files through `evedb://` (column batches, the fast path) or `postgres://` (other tools). `../../drivers/duckdb/README.md` sections 3A and 3B give the roles and the layout of the files.
 
 | Engine | What it is for | Where the data lives |
 |---|---|---|
@@ -95,7 +95,7 @@ There is no object for a row. The operations work on one column at a time:
 
 ## Moving data between the engines
 
-On an `evedb://` connection `load` and `store` move **column batches** (the arrays of the columns and their NULL bitmaps), not rows: a fixed-width column is copied whole, and the load goes to DuckDB's Appender. Measured (`../../evedb/README.md` section 5.6): 1,000,000 rows into a `Memory` table in 0.23 s, 3.4 times faster than from a local SQLite file.
+On an `evedb://` connection `load` and `store` move **column batches** (the arrays of the columns and their NULL bitmaps), not rows: a fixed-width column is copied whole, and the load goes to DuckDB's Appender. Measured (`../../drivers/duckdb/README.md` section 5.6): 1,000,000 rows into a `Memory` table in 0.23 s, 3.4 times faster than from a local SQLite file.
 
 | Operation | What it does |
 |---|---|

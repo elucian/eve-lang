@@ -459,8 +459,15 @@ pub const Interp = struct {
         c.* = v;
     }
 
+    // @eve-impl `$NAME`: any operating system environment variable, read when the name is used (a String)
+    // @spec spec/semantics/variables.md
+    // @test a94_env_variable
     pub fn lookup(it: *Interp, name: []const u8) Signal!Value {
         if (it.scope.find(name)) |v| return v.value;
+        if (name.len > 1 and name[0] == '$') {
+            const z = try it.t.dupeSentinel(u8, name[1..], 0);
+            if (std.c.getenv(z.ptr)) |got| return try it.newStr(std.mem.span(got));
+        }
         return it.fail("undefined name '{s}'", .{name});
     }
 

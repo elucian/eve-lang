@@ -1,0 +1,15 @@
+# $NAME is an operating system environment variable, a String (D-031, D-052)
+** spec: semantics/variables.md
+primary aspect a94_env_variable is
+  process main is
+    expect $PATH.length() > 0;
+    print $PATH == os.env!("PATH", "");
+    new copy := $PATH;
+    expect copy == $PATH;
+  return;
+end a94_env_variable;
+/*@expect
+{
+  "stdout": ["True"]
+}
+*/

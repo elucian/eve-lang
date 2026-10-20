@@ -1,0 +1,16 @@
+# error(text) and warning(text) write a line on the standard error and go on (D-057)
+** spec: semantics/aspects.md
+primary aspect a95_error_warning is
+  process main is
+    print "before";
+    error("an error line");
+    warning("a warning line");
+    print "after";
+  return;
+end a95_error_warning;
+/*@expect
+{
+  "stdout": ["before", "after"],
+  "stderr": ["an error line", "a warning line"]
+}
+*/

@@ -61,6 +61,21 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
         if (eql(u8, callee.text, "ceiling")) return .{ .int = @intFromFloat(@ceil(x)) };
         if (eql(u8, callee.text, "round")) return .{ .int = @intFromFloat(@round(x)) };
     }
+    // @eve-fn error, warning
+    // @spec spec/semantics/aspects.md#messages-on-the-standard-error-d-057
+    // @decision D-057
+    // @test a95_error_warning
+    if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
+        (std.mem.eql(u8, callee.text, "error") or std.mem.eql(u8, callee.text, "warning")))
+    {
+        const msg = try it.text(try it.eval(args[0]));
+        const io = it.io orelse return it.fail("{s}(): no standard error", .{callee.text});
+        var buf: [256]u8 = undefined;
+        var w: std.Io.File.Writer = .initStreaming(.stderr(), io, &buf);
+        w.interface.print("{s}\n", .{msg}) catch {};
+        w.interface.flush() catch {};
+        return .nil;
+    }
     if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
         (std.mem.eql(u8, callee.text, "log_err") or std.mem.eql(u8, callee.text, "log_wrn")))
     {
