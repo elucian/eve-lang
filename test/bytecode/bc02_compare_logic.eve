@@ -1,5 +1,5 @@
 # comparison instructions, not, and, or, and the short circuit
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc02_compare_logic.lst
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc02_compare_logic.lst
 primary aspect bc02_compare_logic is
   process main is
     new a := 3;

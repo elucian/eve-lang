@@ -16,6 +16,16 @@ Tests run on the Eve virtual machine (`bin/eve.exe`, built from `code/evevm/`) w
 | `python script/runtest.py scaffold` | the special test of `project init` and `project new` (`test/scaffold/`, a shell script on real folders; run separately, not part of `all`) |
 | `test/project/` | not a test: a live Eve project to start a machine by hand and try its commands (`test/project/readme.md`) |
 
+## Which engine runs which test (2026-10-20)
+
+Eve has two engines (D-201): the tree walker (the parser's syntax tree, run in memory), which is the reference, and the bytecode machine, which is under construction. The rule for the tests:
+
+- **Every conformance test of `test/level1` to `test/level7` and `test/smoke` runs on the tree walker only** (`runtest.py all`, the default engine). They are written once and say what the language must do.
+- **The bytecode machine has tests of its own, in `test/bytecode/`**: small programs for each group of instructions (arithmetic, comparison, loops, calls, lists, maps, sets, strings, interpolation, augment, coerce, errors, `recover`/`retry`/`finalize`, shared names, destructors at the safe points) and the programs that still go to the tree walker. `python script/runtest.py bytecode` runs them on the bytecode machine (`EVE_ENGINE=bc` is set for every test of that folder); each has an `/*@expect*/` block taken from the tree walker, so a difference between the engines is a failing test. Never part of `all`; no status file.
+- **The golden listings** `test/bytecode/<name>.lst` are the output of `eve --disasm`: a change of the emitter shows as a diff. `python script/bctest.py` compares the listings, prints how many pieces of each program still run on the tree walker (`evalx`, `execx`: it should only go down), and then runs `runtest.py bytecode`. `python script/bctest.py --update` writes new listings after you have read the diff. A test with `(no listing)` in its first lines has no listing (`eve --disasm` refuses it).
+- **The benchmarks (`test/bmark/`, `script/bmark.py`) run on the bytecode machine** by default; `--both` also runs the tree walker (the two columns that `--save` needs), `--engine tree` runs only the reference.
+- **The equivalence sweep**: `python script/runtest.py all --both` runs every conformance test on both engines and compares the exit code, the output and the error output. It is not part of the normal flow; run it when the emitter, `op.zig` or `bcvm.zig` changed a lot, and before a release.
+
 A test is a `.eve` file directly in `test/levelN/`. What it must produce, all optional:
 
 - `/*@expect { json } */` blocks inside the test (D-094): `{"exit": 1, "args": [], "stdout": ["line 1", "line 2"], "contains": ["text"], "stderr": ["text"], "syntax_error": true, "skip": "reason"}`.

@@ -6,7 +6,7 @@ Eve is a domain-specific scripting language (data processing, test automation). 
 
 - Build: `zig build -p .` (Debug, `bin/eve.exe`); unit tests: `zig build test`. Version: `build.zig.zon`. First build compiles SQLite (about 3 minutes).
 - **Test on ReleaseSafe** (4.6 times faster): `zig build -Doptimize=ReleaseSafe -p temp/rel`, then `python script/runtest.py 1 --eve temp/rel/bin/eve.exe` (`1`..`6`, `all`, `smoke`, one test name). Debug only to debug a failure.
-- Two engines (tree walker = reference, bytecode machine under construction): `python script/runtest.py all --both` must stay green; run it before committing a change of compiler, emitter or interpreter files.
+- Two engines (D-201): every conformance test runs on the tree walker only; the bytecode machine has its own tests, `python script/bctest.py` (golden listings and `runtest.py bytecode`), and the benchmarks run on it. Run `bctest.py` after a change of `emit.zig`, `op.zig` or `bcvm.zig`; the sweep `runtest.py all --both` before a release or a big emitter change (`test/readme.md`, "Which engine runs which test").
 - Performance: before and after a VM change run `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --check`. Details, profiling, memory checks: `design/dev-guide.md` "VM workflow".
 - Parts with their own `build.zig` (`drivers/duckdb`, `code/evetx`, `code/eveux`): `./run.sh build <part>`.
 

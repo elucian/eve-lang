@@ -222,6 +222,8 @@ pub const Interp = struct {
     /// The registers of the bytecode machine and how many are in use (the roots of a trace); empty with the tree walker.
     bc_stack: []Value = &.{},
     bc_top: usize = 0,
+    /// The pc (relative to `main`) of the main frame when the last error left the machine: the failing statement for `recover`.
+    bc_main_pc: u32 = 0,
     /// The exit code that `over <code>;` or `exit <code>;` gave; the program ends with it when nothing worse happens.
     exit_code: u8 = 0,
     line: u32 = 0,

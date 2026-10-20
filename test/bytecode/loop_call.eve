@@ -1,5 +1,5 @@
 # a loop that calls a function
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is loop_call.lst
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is loop_call.lst
 primary aspect loop_call is
   function sq(n: Integer) => (@r: Integer) is
     let r := n * n;

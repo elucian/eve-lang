@@ -1193,7 +1193,7 @@ Windows, Linux, macOS binaries from one build; `script/release.py` bumps version
 
 Register machine with 32-bit instructions (`design/design-bytecode.md`, D-201). *Stage B5.2 (2026-10-19):* `code/evecm/src/op.zig`, `chunk.zig`, `code/evecp/src/emit.zig`, `code/evevm/src/bcvm.zig`; the core of level 1 is translated (numbers, text, variables, operators, `print`, `expect`, `if`, `while`, `for` over ranges, calls of the functions of the aspect), the rest runs on the tree walker through a bridge (TD-46); `p1a_arith` 64 to 26 ms, `p1b_calls` 41 to 16 ms.
 
-*Open:* B5.3 to B5.6 (collections and strings, errors, objects and modules, tasks, the data language). Moved from level 5 to All levels (D-138).
+*Stage B5.3 (2026-10-20):* lists, maps, sets, indexes and stores, `<+`, `.count()` and `.length()`, interpolation, `for` over a list, a map, a set or a string, the names of the aspect (`loadg`), the process `main` with `recover`, `retry`, `resume` and `finalize`, safe points; a fast case with the tree walker as the exact slow case (`xref`). 326 of 348 test programs run on the bytecode machine from the first line to the last; the others hold jobs, nested aspects, `panic`, private processes, lambdas and a few forms of `for` and `call` (`EVE_BC_TRACE=1` says which). Tests: `test/bytecode` (`python script/bctest.py`). *Open:* B5.4 to B5.6 (classes and closures, tasks, the data language), the typed forms of the instructions, `.evb`. Moved from level 5 to All levels (D-138).
 
 ### F-VM-07 Portable bytecode file `.evb`
 

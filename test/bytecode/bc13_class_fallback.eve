@@ -1,5 +1,5 @@
 # a script with a class or a lambda is not translated yet (the emitter says so): it runs entirely on the tree walker with the same result (TD-46)
-** runs on the bytecode machine (test/readme.md, Bytecode tests); (no listing): `eve --disasm` refuses a class or a lambda
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); (no listing): `eve --disasm` refuses a class or a lambda
 primary aspect bc13_class_fallback is
   class Counter = {n: Integer} <: Object is
     public method bump(@self) => (@result: Integer) is

@@ -1,0 +1,25 @@
+# interpolation with names, expressions inside the braces and several parts
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc17_interpolation.lst
+primary aspect bc17_interpolation is
+  process main is
+    new name := "Eve";
+    new n := 42;
+    new r := 2.5;
+    print "hello {name}";
+    print "{name} has {n} and {r}";
+    print "{n}{n}";
+    print "no braces";
+    print "{name}";
+  return;
+end bc17_interpolation;
+/*@expect
+{
+  "stdout": [
+    "hello Eve",
+    "Eve has 42 and 2.5",
+    "4242",
+    "no braces",
+    "Eve"
+  ]
+}
+*/

@@ -1,5 +1,5 @@
 # coerce and setlike: a declared type converts the value it receives
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc09_coerce.lst
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc09_coerce.lst
 primary aspect bc09_coerce is
   process main is
     new a := 3 :Real;

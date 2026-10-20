@@ -1,0 +1,31 @@
+# recover, retry, resume and finalize of the process main run with the bytecode body
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc14_recover.lst
+primary aspect bc14_recover is
+  process main is
+    new attempts := 0;
+    new log := ();
+    print "start";
+    let attempts += 1;
+    expect attempts == 1;
+    print "unlucky";
+    raise "first failure";
+    print "after the raise";
+  recover
+    let log <+ $error.message;
+    print "recovered: {$error.message}";
+    resume;
+  finalize
+    print "finalize: {log.count()} message(s), attempts {attempts}";
+  return;
+end bc14_recover;
+/*@expect
+{
+  "stdout": [
+    "start",
+    "unlucky",
+    "recovered: first failure",
+    "after the raise",
+    "finalize: 1 message(s), attempts 1"
+  ]
+}
+*/

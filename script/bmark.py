@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Performance watch of the Eve VM: one small benchmark per level in test/bmark/.
 
-  python script/bmark.py [--runs N] [--save] [--check] [--eve PATH] [--level N] [--build Debug|ReleaseSafe]
+  python script/bmark.py [--runs N] [--save] [--check] [--eve PATH] [--level N] [--build Debug|ReleaseSafe] [--engine bc|tree] [--both]
+
+The benchmarks run on the bytecode machine by default (--engine bc); --both runs the tree walker too and gives the two columns that --save needs.
 
 Every file test/bmark/p<level><letter>_<name>.eve is run N times (default 5) with `eve -x`; the
 output must match its /*@expect*/ block, otherwise the benchmark is wrong, not slow. The report
@@ -259,14 +261,14 @@ def main():
     ap.add_argument('--check', action='store_true')
     ap.add_argument('--eve', default=os.path.join(ROOT, 'bin', 'eve.exe'))
     ap.add_argument('--level', type=int)
-    ap.add_argument('--engine', choices=['tree', 'bc'], default='tree', help='the engine of the VM (design/design-bytecode.md); a bc run alone can not be saved')
+    ap.add_argument('--engine', choices=['tree', 'bc'], default='bc', help='the engine of the VM (design/design-bytecode.md): bc, the bytecode machine (default, the benchmarks measure it), or tree, the reference; a run of one engine alone can not be saved: use --both')
     ap.add_argument('--both', action='store_true', help='run every benchmark on the tree walker and on the bytecode machine: the BCode column, and the two outputs must be equal')
     ap.add_argument('--build', default='Debug', help='how the VM was built: Debug (zig build -p . at the root) or ReleaseSafe; runs are compared with the same build')
     a = ap.parse_args()
     a.eve = os.path.abspath(a.eve)
-    if a.engine == 'bc':
-        if a.save:
-            sys.exit('bmark: a bytecode run alone is not saved: use --both')
+    if a.save and not a.both:
+        sys.exit('bmark: a run of one engine alone is not saved: use --both (the Eve and BCode columns)')
+    if a.engine == 'bc' and not a.both:
         os.environ['EVE_ENGINE'] = 'bc'
     ver = subprocess.run([a.eve, '--version'], capture_output=True, text=True).stdout.strip().split()[-1]
     files = sorted(glob.glob(os.path.join(PERF, 'p[0-9]*.eve')))
@@ -275,6 +277,8 @@ def main():
     hist = json.load(open(HIST, encoding='utf-8')) if os.path.exists(HIST) else []
     same = [h for h in hist if h.get('build', 'Debug') == a.build]
     last = same[-1]['results'] if same else {}
+    if a.engine == 'bc' and not a.both:      # a bytecode run is compared with the bytecode times of the last saved run
+        last = {n: dict(r, median_ms=r.get('bc_ms', r['median_ms']), min_ms=r.get('bc_min_ms', r.get('min_ms'))) for n, r in last.items()}
     results, bad = {}, []
     server = evedb_server(a.eve, any(os.path.basename(f).startswith('p6') for f in files))
     server.__enter__()
@@ -283,7 +287,7 @@ def main():
         want = expected(f)
         times, peaks = [], []
         for _ in range(a.runs):
-            ms, r = run_once(a.eve, f)
+            ms, r = run_once(a.eve, f, bc=(a.engine == 'bc' and not a.both))
             if r.peak_mb:
                 peaks.append(r.peak_mb)
             if r.returncode != 0 or (want is not None and r.stdout.strip().replace('\r', '') != want.strip()):
@@ -309,7 +313,7 @@ def main():
             if bc_times:
                 results[name]['bc_ms'] = round(statistics.median(bc_times), 1)
                 results[name]['bc_min_ms'] = round(min(bc_times), 1)
-    print('Eve %s (%s build), %d runs each, %s' % (ver, a.build, a.runs, platform.platform()))
+    print('Eve %s (%s build), %d runs each, %s%s' % (ver, a.build, a.runs, platform.platform(), '' if a.both else ', engine: ' + ('bytecode machine' if a.engine == 'bc' else 'tree walker')))
     exe_bytes = os.path.getsize(a.eve)
     old_exe = next((h['exe_bytes'] for h in reversed(same) if 'exe_bytes' in h), None)
     print('size of eve.exe: %s bytes (%.0f KB)%s' % (format(exe_bytes, ','), exe_bytes / 1024,

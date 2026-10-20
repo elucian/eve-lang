@@ -1,0 +1,34 @@
+process main  (function 0, 9 registers, 0 parameters)
+     0  line 5    loadk    r0 k0    ; "Eve"
+     1  line 5    safe    
+     2  line 6    loadi    r1 42
+     3  line 6    safe    
+     4  line 7    loadk    r2 k1    ; 2.5
+     5  line 7    safe    
+     6  line 1    move     r5 r0
+     7  line 8    interp   r3 r4
+     8  line 8    xref     x0    ; the tree walker does the rare case: interp
+     9  line 8    print    r3 x1 print
+    10  line 8    safe    
+    11  line 1    move     r4 r0
+    12  line 1    move     r6 r1
+    13  line 1    move     r8 r2
+    14  line 9    interp   r3 r4
+    15  line 9    xref     x1    ; the tree walker does the rare case: interp
+    16  line 9    print    r3 x1 print
+    17  line 9    safe    
+    18  line 1    move     r4 r1
+    19  line 1    move     r5 r1
+    20  line 10   interp   r3 r4
+    21  line 10   xref     x2    ; the tree walker does the rare case: interp
+    22  line 10   print    r3 x1 print
+    23  line 10   safe    
+    24  line 11   loadk    r3 k2    ; "no braces"
+    25  line 11   print    r3 x1 print
+    26  line 11   safe    
+    27  line 1    move     r4 r0
+    28  line 12   interp   r3 r4
+    29  line 12   xref     x3    ; the tree walker does the rare case: interp
+    30  line 12   print    r3 x1 print
+    31  line 12   safe    
+    32  line 4    halt    

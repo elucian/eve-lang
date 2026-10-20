@@ -1,0 +1,16 @@
+process main  (function 0, 5 registers, 0 parameters)
+     0  line 5    loadi    r0 0
+     1  line 5    safe    
+     2  line 6    loadk    r1 k0    ; "begin"
+     3  line 6    print    r1 x1 print
+     4  line 6    safe    
+     5  line 7    loadi    r2 3
+     6  line 7    ge       r1 r0 r2
+     7  line 7    expect   r1
+     8  line 7    safe    
+     9  line 1    move     r3 r0
+    10  line 8    interp   r1 r2
+    11  line 8    xref     x0    ; the tree walker does the rare case: interp
+    12  line 8    print    r1 x1 print
+    13  line 8    safe    
+    14  line 4    halt    

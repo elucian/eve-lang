@@ -1,0 +1,25 @@
+# retry runs the failing statement again with the variables the recover block changed
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc15_retry.lst
+primary aspect bc15_retry is
+  process main is
+    new tries := 0;
+    print "begin";
+    expect tries >= 3;
+    print "done with {tries} tries";
+  recover
+    let tries += 1;
+    print "try {tries}";
+    retry;
+  return;
+end bc15_retry;
+/*@expect
+{
+  "stdout": [
+    "begin",
+    "try 1",
+    "try 2",
+    "try 3",
+    "done with 3 tries"
+  ]
+}
+*/

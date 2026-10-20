@@ -1,0 +1,24 @@
+process main  (function 0, 4 registers, 0 parameters)
+     0  line 5    loadi    r0 0
+     1  line 5    safe    
+     2  line 6    new_list r1
+     3  line 6    safe    
+     4  line 7    loadk    r2 k0    ; "start"
+     5  line 7    print    r2 x1 print
+     6  line 7    safe    
+     7  line 8    loadi    r2 1
+     8  line 8    augment  r0 r2 add
+     9  line 8    safe    
+    10  line 9    loadi    r3 1
+    11  line 9    eq       r2 r0 r3
+    12  line 9    expect   r2
+    13  line 9    safe    
+    14  line 10   loadk    r2 k1    ; "unlucky"
+    15  line 10   print    r2 x1 print
+    16  line 10   safe    
+    17  line 11   execx    x0    ; tree walker: raise_stmt
+    18  line 11   safe    
+    19  line 12   loadk    r2 k2    ; "after the raise"
+    20  line 12   print    r2 x1 print
+    21  line 12   safe    
+    22  line 4    halt    

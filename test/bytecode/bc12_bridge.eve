@@ -1,5 +1,5 @@
-# what the emitter does not translate runs on the tree walker with the same result (TD-46): a loop over a list
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc12_bridge.lst
+# a loop over a list literal runs natively: iterprep and iterloop
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc12_bridge.lst
 primary aspect bc12_bridge is
   process main is
     new total := 0;

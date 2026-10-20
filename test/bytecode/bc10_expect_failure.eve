@@ -1,5 +1,5 @@
 # expect raises an error with the exit code 2 and the machine stops
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc10_expect_failure.lst
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc10_expect_failure.lst
 primary aspect bc10_expect_failure is
   process main is
     print "before";

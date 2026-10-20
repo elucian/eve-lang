@@ -1,4 +1,4 @@
-# Checks on every push: the build, the unit tests, the conformance tests on both engines, the tags and the map.
+# Checks on every push: the build, the unit tests, the conformance tests (tree walker), the bytecode tests, the tags and the map.
 # Windows is the reference platform and must pass. Ubuntu is allowed to fail until a Linux build has been seen to
 # pass once (review R2-PR-D02); remove `continue-on-error` then.
 name: ci
@@ -32,12 +32,13 @@ jobs:
         run: zig build test --summary all
       - name: ReleaseSafe build
         run: zig build -Doptimize=ReleaseSafe -p temp/rel
-      - name: conformance tests on both engines
+      - name: conformance tests (tree walker) and bytecode tests
         shell: bash
         run: |
           exe=temp/rel/bin/eve
           if [ "$RUNNER_OS" = "Windows" ]; then exe=temp/rel/bin/eve.exe; fi
-          python script/runtest.py all --both --eve "$exe"
+          python script/runtest.py all --eve "$exe"
+          python script/bctest.py --eve "$exe"
       - name: tags, map and links
         run: |
           python script/tagcheck.py

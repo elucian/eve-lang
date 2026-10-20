@@ -117,8 +117,83 @@ pub fn runMain(it: *Interp, root: *const Node, main: *const Node) Signal!bool {
     try it.define("jobs", .{ .map = jobs }, false);
     it.regionIn();
     defer it.regionOut();
-    try execute(it, &c);
+    // @eve-impl the process `main` with `recover` and `finalize` (the loop of `runProcess` on the bytecode): an error leaves `execute`,
+    // `recover` runs on the tree walker with the variables copied in and out, `retry` and `resume` start again at a statement
+    // @spec spec/semantics/errors.md#recover
+    // @test test/bytecode/bc14_recover
+    const frames_len = it.frames.items.len;
+    const m = c.funcs[c.main];
+    var entry: u32 = 0;
+    var failed: ?Signal = null;
+    while (true) {
+        execute(it, &c, entry) catch |e| {
+            // the frames of the calls that the error left, and their registers, are gone
+            it.frames.shrinkRetainingCapacity(frames_len);
+            const b = it.base();
+            for (b.bc_stack[m.nregs..@max(b.bc_top, m.nregs)]) |*slot| put(it, slot, .nil);
+            b.bc_top = m.nregs;
+            switch (e) {
+                error.Raise => {
+                    if (c.recover == chunk.no_x) {
+                        failed = e;
+                        break;
+                    }
+                    var k: usize = 0;
+                    const pc = b.bc_main_pc -| 1;
+                    while (k + 2 < c.main_stmts.len and c.main_stmts[k + 1] <= pc) k += 1;
+                    const idx = it.reports.items.len - 1;
+                    runBlock(it, &c, b.bc_stack.ptr, c.recover, true) catch |re| switch (re) {
+                        error.Retry => {
+                            entry = c.main_stmts[k];
+                            continue;
+                        },
+                        error.Resume => {
+                            it.reports.items[idx].handled = true;
+                            entry = c.main_stmts[k + 1];
+                            continue;
+                        },
+                        error.Abort => {
+                            failed = error.Raise;
+                            break;
+                        },
+                        error.Over, error.Exit => break,
+                        error.Raise => {
+                            failed = re;
+                            break;
+                        },
+                        else => return re,
+                    };
+                    it.reports.items[idx].handled = true;
+                    break;
+                },
+                error.Over, error.Exit => break,
+                else => return e,
+            }
+        };
+        break;
+    }
+    it.collectAtDone(); // the end of a process is a `done` too
+    if (c.finalize != chunk.no_x) try runBlock(it, &c, it.base().bc_stack.ptr, c.finalize, false);
+    if (failed) |f| return f;
     return true;
+}
+
+// @eve-impl a `recover` or `finalize` block on the tree walker: the variables of the process are copied in, and copied back also when the block ends with `retry`, `resume` or an error
+fn runBlock(it: *Interp, c: *const chunk.Chunk, regs: [*]Value, xi: u16, with_error: bool) Signal!void {
+    const x = c.xnodes[xi];
+    const mark = it.scratch.mark();
+    defer it.scratch.release(mark);
+    const outer = try it.pushScope();
+    defer it.leaveScope(outer);
+    const scope = it.scope;
+    for (x.names) |nm| try it.define(nm.name, regs[nm.reg], false);
+    if (with_error) try it.define("$error", try it.errorObject(), false);
+    var result: Signal!void = {};
+    it.execBlock(x.node) catch |e| {
+        result = e;
+    };
+    for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &regs[nm.reg], cell.value);
+    return result;
 }
 
 // @eve-impl the rare case of a fast instruction: the expression `xnode` runs on the tree walker and its value goes to `dst`
@@ -148,14 +223,16 @@ fn execSlow(it: *Interp, c: *const chunk.Chunk, regs: [*]Value, xi: u16) Signal!
 
 // @eve-impl the loop of the machine: fetch, decode, do; a call pushes a frame, `ret` pops it
 // @perf hot
-fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
+fn execute(it: *Interp, c: *const chunk.Chunk, entry: u32) Signal!void {
     const b = it.base();
     var frames: std.ArrayList(Frame) = .empty;
     try grow(it, 4096);
     const main = c.funcs[c.main];
     try grow(it, main.nregs);
     b.bc_top = main.nregs;
-    try frames.append(it.a, .{ .func = c.main, .pc = 0, .base = 0 });
+    try frames.append(it.a, .{ .func = c.main, .pc = entry, .base = 0 });
+    // the pc of the main frame when an error leaves: the statement that failed (`recover`, `retry`, `resume`)
+    errdefer b.bc_main_pc = frames.items[0].pc;
     var fr: *Frame = &frames.items[frames.items.len - 1];
     var func = c.funcs[fr.func];
     var regs: [*]Value = b.bc_stack.ptr + fr.base;
@@ -452,13 +529,13 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
                     else => {
                         // a range, a channel, a generator, a stream, a table: the tree walker runs the whole loop
                         try execSlow(it, c, regs, x.bx());
-                        fr.pc = @intCast(@as(i64, fr.pc) + i.sbx() - 1);
+                        fr.pc = @intCast(@as(i64, fr.pc) + i.sbx() - 2); // the jump counts from the word after iterprep; the landing is the jmp before the else block
                         continue;
                     },
                 }
                 const items = regs[i.a].list.elems();
                 if (items.len == 0) {
-                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx() - 1); // counted from the word after iterprep, before the xref word
                 } else {
                     regs[i.a + 1] = .{ .int = 1 };
                     put(it, &regs[i.a + 2], items[0]);

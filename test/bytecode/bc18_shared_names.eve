@@ -1,0 +1,39 @@
+# constants and variables of the aspect, a class and a destructor are reached by name; the safe points free in the same order
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc18_shared_names.lst
+primary aspect bc18_shared_names is
+  set limit = 3 :Integer;
+  new counter := 10;
+
+  class Res = {name: String} <: Object is
+    destructor(@self) is
+      print "free {self.name}";
+    return;
+  end Res;
+
+  function bump(n: Integer) => (@result: Integer) is
+    let counter += n;
+    let result := counter;
+  return;
+
+  process main is
+    print limit * 2;
+    print bump(5);
+    print counter;
+    new a := Res(name: "a");
+    new b := Res(name: "b");
+    let a := null;
+    print "after a";
+  return;
+end bc18_shared_names;
+/*@expect
+{
+  "stdout": [
+    "6",
+    "15",
+    "15",
+    "free a",
+    "after a",
+    "free b"
+  ]
+}
+*/

@@ -18,6 +18,9 @@ pub const Const = union(enum) { int: i64, real: f64, str: []const u8 };
 
 pub const no_result: u8 = 255;
 
+/// The index of an xnode that is not there.
+pub const no_x: u16 = 65535;
+
 /// A variable of the function and the register that holds it.
 pub const NameReg = struct { name: []const u8, reg: u8 };
 
@@ -50,6 +53,12 @@ pub const Chunk = struct {
     xnodes: []const XNode = &.{},
     /// The index of the main process in `funcs`.
     main: u16,
+    /// The first instruction (relative to `main`) of each statement of the body of the process, and the one after the last: where
+    /// `retry` and `resume` of its `recover` go on.
+    main_stmts: []const u32 = &.{},
+    /// The `recover` and `finalize` blocks of the process, as xnodes that name all its variables, or `no_x`.
+    recover: u16 = no_x,
+    finalize: u16 = no_x,
 };
 
 // @eve-impl the readable listing of a chunk (`eve cp --disasm`)

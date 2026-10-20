@@ -46,5 +46,6 @@ An instruction is a 32-bit word: `op` (8 bits), then the operands `A`, `B`, `C` 
 
 ## Rules
 
-- The tree walker is the reference: for every program both engines give the same output, exit code and errors (`runtest.py all --both`).
+- The tree walker is the reference: for every program both engines give the same output, exit code and errors. The bytecode machine is tested by `test/bytecode` (`python script/bctest.py`); the sweep over every conformance test is `runtest.py all --both`.
+- An instruction with a fast case (`index`, `index_set`, `push`, `length`, `iterprep`) is followed by an `xref` word: the case it does not handle (a string, a view, a matrix, a missing key, an index out of range, a channel, a generator) runs the same node on the tree walker, so the values and the error messages are those of the reference.
 - A routine that the emitter cannot translate stays on the tree walker; `EVE_BC_TRACE=1` says why.

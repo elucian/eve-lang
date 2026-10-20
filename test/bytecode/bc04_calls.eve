@@ -1,5 +1,5 @@
 # callf and ret: parameters, results, recursion and calls inside expressions
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc04_calls.lst
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc04_calls.lst
 primary aspect bc04_calls is
   function fact(n: Integer) => (@result: Integer) is
     if n <= 1 do

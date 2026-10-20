@@ -1,5 +1,5 @@
 # augment: compound assignment on numbers, strings and lists
-** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc08_augment.lst
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc08_augment.lst
 primary aspect bc08_augment is
   process main is
     new n := 10;

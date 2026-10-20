@@ -42,6 +42,10 @@ const Emitter = struct {
     native: []bool = &.{},
     fidx: []u8 = &.{},
     xnodes: std.ArrayList(chunk.XNode) = .empty,
+    /// The statements of the body of `main`, its `recover` and its `finalize` (see `chunk.Chunk`).
+    stmt_pcs: std.ArrayList(u32) = .empty,
+    recover_x: u16 = chunk.no_x,
+    finalize_x: u16 = chunk.no_x,
 
     // the function being compiled
     locals: std.ArrayList(Local) = .empty,
@@ -652,7 +656,6 @@ const Emitter = struct {
         var nparams: u8 = 0;
         var body: *const Node = undefined;
         if (n.tag == .process) {
-            if (n.kids[1].tag != .none or n.kids[2].tag != .none) return e.unsupported(n, "a process with recover or finalize");
             if (n.kids[3].kids.len > 0) return e.unsupported(n, "a process with parameters");
             body = n.kids[0];
         } else {
@@ -684,8 +687,23 @@ const Emitter = struct {
             // a safe point follows each statement of the process body, as in the tree walker: the objects that nobody holds
             // any more are freed there (and their destructors run) at the same place in both engines
             for (body.kids) |s| {
+                try e.stmt_pcs.append(e.a, @intCast(e.code.items.len - e.start));
                 try e.statement(s);
                 _ = try e.emit(Inst.abc(.safe, 0, 0, 0), s.line);
+            }
+            try e.stmt_pcs.append(e.a, @intCast(e.code.items.len - e.start));
+            // `recover` and `finalize` run on the tree walker, with the variables of the process copied in and out
+            if (n.kids[1].tag != .none or n.kids[2].tag != .none) {
+                var names: std.ArrayList(chunk.NameReg) = .empty;
+                for (e.locals.items) |l| try names.append(e.a, .{ .name = l.name, .reg = l.reg });
+                if (n.kids[1].tag != .none) {
+                    try e.xnodes.append(e.a, .{ .node = n.kids[1], .names = names.items });
+                    e.recover_x = @intCast(e.xnodes.items.len - 1);
+                }
+                if (n.kids[2].tag != .none) {
+                    try e.xnodes.append(e.a, .{ .node = n.kids[2], .names = names.items });
+                    e.finalize_x = @intCast(e.xnodes.items.len - 1);
+                }
             }
         } else try e.block(body);
         if (e.in_process) {
@@ -762,6 +780,9 @@ pub fn compile(a: Alloc, root: *const Node, diag: *Diag) Error!chunk.Chunk {
         .lines = e.lines.items,
         .xnodes = e.xnodes.items,
         .main = 0,
+        .main_stmts = e.stmt_pcs.items,
+        .recover = e.recover_x,
+        .finalize = e.finalize_x,
     };
 }
 
