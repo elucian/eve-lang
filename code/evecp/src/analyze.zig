@@ -35,7 +35,7 @@ pub const Diagnostic = struct {
 };
 
 /// What a symbol of the outline is.
-pub const SymbolKind = enum { aspect, module, class, trait, process, function, procedure, method, constructor, generator, table, import, member };
+pub const SymbolKind = enum { aspect, module, class, trait, process, function, procedure, method, constructor, destructor, generator, table, import, member };
 
 /// One entry of the outline.
 pub const Symbol = struct {
@@ -69,6 +69,7 @@ fn symbolKind(tag: Tag) ?SymbolKind {
         .procedure => .procedure,
         .method => .method,
         .constructor => .constructor,
+        .destructor => .destructor,
         .generator => .generator,
         .table_decl => .table,
         .import_decl => .import,
@@ -89,7 +90,7 @@ fn walk(arena: std.mem.Allocator, list: *std.ArrayList(Symbol), node: *const Nod
     for (node.kids) |kid| {
         var next = parent;
         if (symbolKind(kid.tag)) |kind| {
-            const name = if (kind == .constructor and kid.text.len == 0 and parent != null) list.items[parent.?].name else kid.text;
+            const name = if ((kind == .constructor or kind == .destructor) and kid.text.len == 0 and parent != null) list.items[parent.?].name else kid.text;
             try list.append(arena, .{ .name = name, .kind = kind, .line = kid.line, .col = kid.col, .parent = parent });
             next = @intCast(list.items.len - 1);
         }

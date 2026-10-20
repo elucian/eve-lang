@@ -1,0 +1,25 @@
+# os.run! gives variables to the program it starts: a map String -> String is added to its environment (CMD-04, G-10, D-202)
+** spec: library/os.md
+primary aspect f16_os_env is
+  process main is
+    new vars := {"EVE_TEST_ONE": "alpha", "EVE_TEST_TWO": "beta"};
+    new r := os.run!("eve", ("--version",), "", 0, vars);
+    print "status {r.status}";
+    new prog := "sh";
+    new arguments := ("-c", "echo $EVE_TEST_ONE-$EVE_TEST_TWO");
+    if os.platform() == "windows" do
+      let prog := "cmd";
+      let arguments := ("/c", "echo %EVE_TEST_ONE%-%EVE_TEST_TWO%");
+    done;
+    new e := os.run!(prog, arguments, "", 0, vars);
+    print e.out.trim();
+  return;
+end f16_os_env;
+/*@expect
+{
+  "stdout": [
+    "status 0",
+    "alpha-beta"
+  ]
+}
+*/

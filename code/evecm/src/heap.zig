@@ -42,6 +42,8 @@ pub const Obj = struct {
     idx: u32 = 0,
     /// The order of creation: a region holds the objects whose `seq` is at least its start.
     seq: u64 = 0,
+    /// The destructor of the object has run (it runs once).
+    finalized: bool = false,
 };
 
 /// The header of a heap string; the bytes follow it.
@@ -53,6 +55,12 @@ pub const Str = struct {
     cap: u32 = 0,
 };
 const str_magic: u32 = 0x5354_524e;
+
+/// The interpreter's side of the destructors: `run` calls the destructor of `cls` with `obj` as `self`.
+pub const Finalizer = struct {
+    ctx: *anyopaque,
+    run: *const fn (ctx: *anyopaque, obj: *I.Object, cls: *I.Class) void,
+};
 
 /// Objects made since `start`, and the ones among them whose count fell to zero.
 const Region = struct { start: u64, zct: std.ArrayList(*Obj) = .empty };
@@ -85,6 +93,8 @@ pub const Heap = struct {
     deferred: std.ArrayList(*Obj) = .empty,
     /// How many tasks are alive; nothing is freed while there are any.
     paused: u32 = 0,
+    /// Runs the destructor of an object (CLS-14, D-202); set by the interpreter.
+    finalizer: ?Finalizer = null,
     /// Interned strings: one pinned copy per literal or constant text.
     statics: std.AutoHashMapUnmanaged(usize, []const u8) = .empty,
     /// The objects made since the last trace, and the limit that starts the next one.
@@ -417,9 +427,62 @@ pub const Heap = struct {
 
     /// Free one object.
     fn free(h: *Heap, o: *Obj, why: Why) void {
+        if (o.kind == .object and !h.finalize(o)) return;
         h.releaseChildren(o);
         h.unregister(o, why);
         h.destroy(o);
+    }
+
+    // @eve-impl destructors: run the `destructor` of the class and of its parents, child first, once per object
+    // @spec spec/syntax/declarations.md#classes-and-objects
+    // @decision D-202
+    // @test c41_destructor
+    // @invariant a destructor runs while the object is alive (its count is raised) and while freeing is paused, so it frees nothing
+    /// False when the destructor kept a reference to the object (the free is cancelled).
+    fn finalize(h: *Heap, o: *Obj) bool {
+        const f = h.finalizer orelse return true;
+        if (o.finalized) return true;
+        const ob: *I.Object = @fieldParentPtr("hdr", o);
+        var cur = ob.class;
+        var any = false;
+        while (cur) |cls| : (cur = cls.parent) {
+            if (cls.destructor() != null) any = true;
+        }
+        o.finalized = true;
+        if (!any) return true;
+        o.rc += 1;
+        h.paused += 1;
+        cur = ob.class;
+        while (cur) |cls| : (cur = cls.parent) {
+            if (cls.destructor() != null) f.run(f.ctx, ob, cls);
+        }
+        h.paused -= 1;
+        o.rc -= 1;
+        return o.rc == 0;
+    }
+
+    /// The end of a run: the destructors of the objects that are still alive, the newest first (CLS-14).
+    pub fn finalizeAll(h: *Heap) void {
+        if (h.finalizer == null) return;
+        var live: std.ArrayList(*Obj) = .empty;
+        defer live.deinit(h.gpa);
+        for (h.objs.items) |o| {
+            if (o.kind != .object or o.finalized) continue;
+            const ob: *I.Object = @fieldParentPtr("hdr", o);
+            var cur = ob.class;
+            while (cur) |cls| : (cur = cls.parent) {
+                if (cls.destructor() != null) {
+                    live.append(h.gpa, o) catch return;
+                    break;
+                }
+            }
+        }
+        std.mem.sort(*Obj, live.items, {}, newer);
+        for (live.items) |o| _ = h.finalize(o);
+    }
+
+    fn newer(_: void, a: *Obj, b: *Obj) bool {
+        return a.seq > b.seq;
     }
 
     /// Let go of everything the object holds.
@@ -632,6 +695,12 @@ pub const Heap = struct {
             if (!o.mark and !o.in_zct and !o.pinned and o.seq >= start) garbage.append(h.gpa, o) catch {
                 h.clearMarks();
                 return;
+            };
+        }
+        if (h.finalizer != null) {
+            std.mem.sort(*Obj, garbage.items, {}, newer);
+            for (garbage.items) |o| if (o.kind == .object) {
+                _ = h.finalize(o);
             };
         }
         for (garbage.items) |o| h.dropSurvivors(o, &late);

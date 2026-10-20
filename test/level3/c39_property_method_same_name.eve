@@ -1,0 +1,20 @@
+# a property and a method of one class may not share a name (CLS-13, D-202)
+** spec: syntax/declarations.md#classes-and-objects
+primary aspect c39_property_method_same_name is
+  class Acc = {sum: Integer} <: Object is
+    public method sum(@self) => (@result: Integer) is
+      let result := self.sum;
+    return;
+  end Acc;
+
+  process main is
+    new a := Acc(sum: 1);
+    print a.sum();
+  return;
+end c39_property_method_same_name;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

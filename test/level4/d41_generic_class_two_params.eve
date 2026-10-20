@@ -1,0 +1,29 @@
+# a generic class takes several type parameters, written in the same list (CLS-09, D-202)
+** spec: syntax/declarations.md#traits-and-generic-classes
+primary aspect d41_generic_class_two_params is
+  class Pair(:K, :V) = {key: K, value: V} <: Object is
+    public method show(@self) => (@result: String) is
+      let result := "{self.key}={self.value}";
+    return;
+    public method value_of(@self) => (@result: V) is
+      let result := self.value;
+    return;
+  end Pair;
+
+  process main is
+    new p := Pair(:String, :Integer)(key: "a", value: 1);
+    new q := Pair(:Integer, :String)(key: 2, value: "two");
+    print p.show();
+    print q.show();
+    print p.value_of() + 1;
+  return;
+end d41_generic_class_two_params;
+/*@expect
+{
+  "stdout": [
+    "a=1",
+    "2=two",
+    "2"
+  ]
+}
+*/

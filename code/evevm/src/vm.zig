@@ -222,6 +222,7 @@ pub const Session = struct {
         machine.aspects = &self.aspects;
         machine.modules = &self.modules;
         machine.io = self.io; // threads, locks and clocks of the tasks (level 4)
+        machine.defineOsPwd() catch {};
         self.machine = machine;
         self.steps = 0;
         self.line = 0;

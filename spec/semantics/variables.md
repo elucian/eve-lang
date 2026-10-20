@@ -37,8 +37,7 @@ Status values in the tables: **0.1** (the first release) the VM must provide it 
 | `$MY_DIR` | `String` | Folder of the running aspect | | draft | no | — |
 | `$MY_LIB` | `String` | Library folder of the project | | question | no | — |
 | `$MY_LOG` | `String` | Log folder of the project | | question | no | — |
-| `$OS_PWD` | `String` | Current working folder | | question | no | — |
-| `$CWD` | `String` | Current working folder | | question | no | — |
+| `$OS_PWD` | `String` | Current working folder of the program, read-only; a program started with `os.run!` runs in another folder through its `cwd` argument, not by changing this value | | 0.1 | yes | D-202, CMD-05, test a93 |
 
 ## Settings
 
@@ -78,7 +77,7 @@ Names written with `$` in the pages that are not system variables. They stay out
 
 Questions for the author; answers become decisions and update the tables.
 
-1. **Working folder.** `$OS_PWD` and `$CWD` mean the same. Keep one, or use the OS variable `$PWD` (Linux) and drop both?
+1. ~~**Working folder.**~~ Settled (D-202): `$OS_PWD` stays, `$CWD` is dropped.
 2. **Project folders.** `$MY_LIB` and `$MY_LOG` overlap with `$EVE_ASP` (aspects and project libraries) and `$EVE_OUT` (log files). Drop them?
 3. **`$trace`.** One use is the list of errors and warnings; another is the generated SQL. One meaning only? Proposal: the errors list; the SQL goes to `$query`.
 4. **`$object`.** Methods of a class use the parameter `@self`. Is `$object` still needed?

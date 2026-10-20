@@ -9,6 +9,4 @@ The page lists `≠ ≤ ≥ ÷ ≈ ø π ¬ ± ^ • ¶ § ∞ √ ∫ Ω µ ∆
 
 **Suggestion (2026-10-20):** the lexer stays ASCII only; the symbols are tutorial notation, shown next to the operator they stand for, and never accepted as source. Those that match an operator get a row in a table on the page: `≠ <>`, `≤ <=`, `≥ >=`, `÷ /`, `¬ not`, `∧ and`, `∨ or`, `∈ in`, `≡ eq`, `⊤ true`, `⊥ false`, `∅ []` or `{}`. The others (`≈ ø π ± • ¶ § ∞ √ ∫ Ω µ ∆ ∂ ∑ ∏`) have no meaning in Eve and are removed from the page. Nothing changes in `operators.json`.
 
-**Answer:** _(open)_
-
-Status: open
+**Answer:** Agreed. Also for this special case, remove them from the tutorial immediatly. Remove this page option.md after the option.html is removed. Cleanup.

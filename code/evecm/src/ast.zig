@@ -143,6 +143,8 @@ pub const Tag = enum {
     procedure,
     method,
     constructor,
+    /// `destructor(@self) is ... return;`: text empty; kids as a method with no results (CLS-14, D-202).
+    destructor,
     /// `( [@]name [= default] [: Type] )`: kids = `param` and `ref_param` nodes (kids = [default or none]; `ty`).
     params,
     param,
@@ -326,7 +328,7 @@ pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void
             try w.print("{s}{s} {s}\n", .{ indent(depth), @tagName(n.tag), n.text });
             for (n.kids) |k| try outline(w, k, depth + 1);
         },
-        .process, .function, .procedure, .method, .constructor, .class, .job => {
+        .process, .function, .procedure, .method, .constructor, .destructor, .class, .job => {
             try w.print("{s}{s} {s}  @{d}\n", .{ indent(depth), @tagName(n.tag), n.text, n.line });
             for (n.kids) |k| try outline(w, k, depth + 1);
         },

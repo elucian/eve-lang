@@ -157,16 +157,37 @@ pub fn osModule(it: *Interp, name: []const u8, _: []const *const Node, args: []c
     return null;
 }
 
+/// The environment of this process as a map, to add variables to it for a child.
+fn currentEnvironMap(gpa: std.mem.Allocator) !std.process.Environ.Map {
+    const E = std.process.Environ;
+    const env: E = if (@import("builtin").os.tag == .windows) .{ .block = .global } else .{ .block = .{ .slice = std.mem.span(std.c.environ) } };
+    return env.createMap(gpa);
+}
+
 // @eve-impl os.run!: start a program with an argument list (no shell), collect both outputs, give a ProcessResult
 // @spec spec/library/os.md
 // @invariant the child's stdin is closed; a program that can not start gives status 127 and the reason in `err`
 fn run(it: *Interp, args: []const *const Node) Signal!Value {
-    if (args.len != 3 and args.len != 4) return it.failWith(err_argument, "os.run! takes a command, a list of arguments, a folder and an optional time-out", .{});
+    if (args.len < 3 or args.len > 5) return it.failWith(err_argument, "os.run! takes a command, a list of arguments, a folder, an optional time-out and an optional map of environment variables", .{});
     const command = try strArg(it, args, 0, "os.run!");
     const list = try it.eval(args[1]);
     if (list != .list) return it.failWith(err_argument, "os.run!: the arguments are a list of String", .{});
     const cwd = try strArg(it, args, 2, "os.run!");
     const limit_ms: i64 = if (args.len == 4) (try it.eval(args[3])).int else 0;
+    // @eve-impl the optional 5th argument of os.run!: a map String -> String added to the environment of the child (CLS: CMD-04, G-10)
+    var child_env: ?std.process.Environ.Map = null;
+    defer if (child_env) |*m| m.deinit();
+    if (args.len == 5) {
+        const extra = try it.eval(args[4]);
+        if (extra != .map) return it.failWith(err_argument, "os.run!: the environment is a map of String to String", .{});
+        var m = currentEnvironMap(it.t) catch return it.fail("os.run!: cannot read the environment", .{});
+        child_env = m;
+        for (extra.map.entries.items) |e| {
+            if (e.key != .str or e.val != .str) return it.failWith(err_argument, "os.run!: the environment is a map of String to String", .{});
+            child_env.?.put(e.key.str, e.val.str) catch return it.fail("os.run!: out of memory", .{});
+        }
+        m = child_env.?;
+    }
     const io = it.io orelse return it.fail("os.run!: no input/output handle", .{});
 
     var argv: std.ArrayList([]const u8) = .empty;
@@ -184,6 +205,7 @@ fn run(it: *Interp, args: []const *const Node) Signal!Value {
         var child = std.process.spawn(io, .{
             .argv = argv.items,
             .cwd = if (cwd.len > 0) .{ .path = cwd } else .inherit,
+            .environ_map = if (child_env) |*m| m else null,
             .stdin = .ignore,
             .stdout = .pipe,
             .stderr = .pipe,

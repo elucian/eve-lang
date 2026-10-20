@@ -1,0 +1,41 @@
+# a destructor runs when the last reference goes away, newest first, once; an error in it is dropped (CLS-14, D-202)
+** spec: syntax/declarations.md#classes-and-objects
+primary aspect c41_destructor is
+  class Res = {name: String} <: Object is
+    destructor(@self) is
+      print "free {self.name}";
+    return;
+  end Res;
+
+  class Loud = {name: String} <: Res is
+    destructor(@self) is
+      print "loud {self.name}";
+      raise "an error in a destructor is dropped";
+    return;
+  end Loud;
+
+  process main is
+    new a := Res(name: "a");
+    new b := Res(name: "b");
+    new c := Loud(name: "c");
+    new d := Res(name: "d");
+    let b := null;
+    print "after b";
+    let d := Res(name: "d2");
+    print "body";
+  return;
+end c41_destructor;
+/*@expect
+{
+  "stdout": [
+    "free b",
+    "after b",
+    "free d",
+    "body",
+    "free d2",
+    "loud c",
+    "free c",
+    "free a"
+  ]
+}
+*/

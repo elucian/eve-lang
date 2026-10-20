@@ -105,6 +105,14 @@ pub const Class = struct {
     /// The traits the class adopts (D-145); a trait itself is a `Class` with `trait` set.
     traits: std.ArrayList(*Class) = .empty,
     trait: bool = false,
+
+    // @eve-impl the destructor of a class: the member `destructor` of its body, or null (CLS-14, D-202)
+    pub fn destructor(c: *const Class) ?*const Node {
+        const n = c.node orelse return null;
+        if (n.kids.len < 3) return null;
+        for (n.kids[2..]) |r| if (r.tag == .destructor) return r;
+        return null;
+    }
 };
 
 /// The traits of the library: `Printable`, `Comparable`, `Iterable`, `Stream` (D-145).
@@ -348,7 +356,7 @@ pub fn classRoutine(c: *Class, name: []const u8) ?*const Node {
     while (cur) |k| : (cur = k.parent) {
         const node = k.node orelse continue;
         for (node.kids[2..]) |r| {
-            if (r.tag != .constructor and r.kids[3].tag != .none and std.mem.eql(u8, r.text, name)) return r;
+            if (r.tag != .constructor and r.tag != .destructor and r.kids[3].tag != .none and std.mem.eql(u8, r.text, name)) return r;
         }
     }
     // a method provided by a trait, when the class and its ancestors do not write it (D-145)

@@ -4,7 +4,7 @@ module os is
   export (run!, env!, hostname!, pid!, platform);
 
   ** Start command with the arguments of the list in the folder cwd ("" = here); gives status, out and err.
-  external function run!(command: String, args: List, cwd: String, timeout_ms = 0 :Integer) => (@result: ProcessResult);
+  external function run!(command: String, args: List, cwd: String, timeout_ms = 0 :Integer, env = {} :Map) => (@result: ProcessResult);
 
   ** The value of an environment variable, or default when it is not set.
   external function env!(name: String, default: String) => (@result: String);

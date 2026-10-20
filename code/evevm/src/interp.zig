@@ -323,6 +323,16 @@ pub const Interp = struct {
         try it.define("_", .nil, false);
     }
 
+    // @eve-impl `$OS_PWD`: the working folder of the machine when the run starts; read-only (CMD-05, D-202)
+    // @spec spec/semantics/variables.md
+    // @test a93_os_pwd
+    /// Called once `io` is known (the interpreter is made before it).
+    pub fn defineOsPwd(it: *Interp) Signal!void {
+        const io = it.io orelse return;
+        const here = std.process.currentPathAlloc(io, it.t) catch return;
+        try it.define("$OS_PWD", try it.newStr(here), true);
+    }
+
     /// The scope of the built-in names, made on first use: `True`, `False`, `Null`, the types, `Object`.
     pub fn preludeScope(it: *Interp) Signal!*Scope {
         const b = it.base();
@@ -784,6 +794,13 @@ pub const Interp = struct {
     pub const invoke = part_calls.invoke;
     pub const invokeWith = part_calls.invokeWith;
     pub const runRoutine = part_calls.runRoutine;
+    pub const runDestructor = part_calls.runDestructor;
+
+    /// The `Finalizer` of the heap (CLS-14).
+    pub fn finalizeObject(ctx: *anyopaque, obj: *Object, cls: *Class) void {
+        const it: *Interp = @ptrCast(@alignCast(ctx));
+        it.runDestructor(obj, cls);
+    }
     pub const constructClass = part_calls.constructClass;
     pub const zero = part_calls.zero;
     pub const atomLen = part_calls.atomLen;

@@ -512,7 +512,7 @@ const Checker = struct {
             // `self` of a method or a constructor has the type of its class
             try c.declare(res, res.text, .{ .kind = .variable, .ty = if (std.mem.eql(u8, res.text, "self")) class_name else ty });
         }
-        if (r.tag == .method and r.kids[0].kids.len > 0 and r.kids[0].kids[0].ty == null) {
+        if ((r.tag == .method or r.tag == .destructor) and r.kids[0].kids.len > 0 and r.kids[0].kids[0].ty == null) {
             // a method inside a class: `@self` without a type is an object of that class
             if (class_name) |cn| try c.retypeSelf(r, cn);
         }
@@ -1054,6 +1054,20 @@ const Checker = struct {
         }
     }
 
+    // @eve-impl a property and a method of one class never share a name
+    // @spec spec/syntax/declarations.md#classes-and-objects
+    // @decision D-202
+    // @test c39_property_method_same_name
+    /// `class Acc = {sum: Integer}` with `method sum(...)`: `self.sum` and `self.sum()` would read alike (CLS-13).
+    fn propertyMethodClash(c: *Checker, cls: *const Node) Error!void {
+        for (cls.kids[0].kids) |attr| {
+            for (cls.kids[2..]) |r| {
+                if (r.tag != .method or !std.mem.eql(u8, r.text, attr.text)) continue;
+                return c.fail(r, "{s} is a property and a method of {s}: a property and a method may not share a name (D-202)", .{ attr.text, cls.text });
+            }
+        }
+    }
+
     /// Does a `start` below `n` start the private process `name` (D-179)?
     fn startsProcess(n: *const Node, name: []const u8) bool {
         if (n.tag == .start_stmt and std.mem.eql(u8, n.text, name)) return true;
@@ -1095,6 +1109,7 @@ const Checker = struct {
                     };
                     if (m.tag == .class) try c.traitConflicts(m);
                     try c.duplicateMethods(m);
+                    try c.propertyMethodClash(m);
                     for (m.kids[2..]) |r| try c.routine(r, m.text);
                 },
                 .method => {

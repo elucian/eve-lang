@@ -559,7 +559,13 @@ pub fn run(it: *Interp, root: *const Node) Outcome {
     it.h.root_ctx = it;
     defer if (heap.show_stats) it.h.report();
     defer if (profile.active) profile.report(it.a);
+    it.h.finalizer = .{ .ctx = it, .run = Interp.finalizeObject };
     const result = it.runRoot(root);
+    // the destructors of the objects that live to the end of the run, unless the run was cut off (CLS-14)
+    if (result) |_| it.h.finalizeAll() else |e| switch (e) {
+        error.Stop, error.Panic => {},
+        else => it.h.finalizeAll(),
+    }
     if (result) |_| return .{ .code = it.base().exit_code } else |e| switch (e) {
         error.Stop => return .{ .stopped = true },
         error.Panic => {

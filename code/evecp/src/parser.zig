@@ -200,7 +200,7 @@ const Parser = struct {
             },
             .num => plainNumber(n, text),
             .type => n.tk = ast.typeKindOf(text),
-            .function, .procedure, .method, .constructor, .process, .generator => n.file = p.file_ref,
+            .function, .procedure, .method, .constructor, .destructor, .process, .generator => n.file = p.file_ref,
             else => {},
         }
         return n;
@@ -583,7 +583,7 @@ const Parser = struct {
             p.in_generator = saved_generator;
         }
         const kw = p.advance();
-        const name = if (tag == .constructor) kw else if (p.external_name) try p.expectAnyName() else try p.expectName("a name");
+        const name = if (tag == .constructor or tag == .destructor) kw else if (p.external_name) try p.expectAnyName() else try p.expectName("a name");
         const empty = try p.mk(.params, kw, "", &.{});
         const types = try p.typeList();
         const first = if (p.isSym("(")) try p.params() else empty;
@@ -624,7 +624,7 @@ const Parser = struct {
         }
         try p.expectWord("return");
         try p.expectSym(";");
-        return p.mk(tag, kw, if (tag == .constructor) "" else name.text, &.{ first, types, results, body });
+        return p.mk(tag, kw, if (tag == .constructor or tag == .destructor) "" else name.text, &.{ first, types, results, body });
     }
 
     // ---- expressions ------------------------------------------------------------------------
@@ -1626,6 +1626,11 @@ const Parser = struct {
                 return p.fail("a class hosts only methods: declare the {s} outside the class (D-123)", .{p.peek().text});
             } else if (p.isWord("constructor")) {
                 try kids.append(p.a, try p.routine(.constructor));
+            } else if (p.isWord("destructor")) {
+                // @eve-impl the destructor of a class, run when the object is freed (CLS-14, D-202)
+                // @spec spec/syntax/declarations.md#classes-and-objects
+                // @test c41_destructor
+                try kids.append(p.a, try p.routine(.destructor));
             } else if (p.isWord("method")) {
                 try kids.append(p.a, try p.routineOf(.method, true));
             } else if (p.isGeneratorDecl()) {

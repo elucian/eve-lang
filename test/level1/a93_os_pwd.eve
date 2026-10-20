@@ -1,0 +1,15 @@
+# $OS_PWD is the working folder of the program, read-only (CMD-05, D-202)
+** spec: semantics/variables.md
+primary aspect a93_os_pwd is
+  process main is
+    expect $OS_PWD.length() > 0;
+    print $OS_PWD == os.env!("NO_SUCH_VARIABLE_XYZ", $OS_PWD);
+    let $OS_PWD := "elsewhere";
+  return;
+end a93_os_pwd;
+/*@expect
+{
+  "stdout": ["True"],
+  "exit": 4
+}
+*/

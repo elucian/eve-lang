@@ -6,7 +6,7 @@ The safe way to run another program and to read the environment. `call` (the she
 
 | Function | Result | Meaning |
 |---|---|---|
-| `run!(command: String, args: List, cwd: String)`, `run!(command, args, cwd, timeout_ms: Integer)` | `ProcessResult` | start `command` with the arguments of the list (each element a `String`), in `cwd` (`""` = here), wait for its end, and give its status and both outputs; the standard input of the child is closed. With `timeout_ms` above 0 the child is killed when it runs longer: the status is 124 and `err` says `Time-out after N ms` (test `test/level6/f15_os_timeout`) |
+| `run!(command: String, args: List, cwd: String)`, `run!(command, args, cwd, timeout_ms: Integer)`, `run!(command, args, cwd, timeout_ms, env: Map)` | `ProcessResult` | start `command` with the arguments of the list (each element a `String`), in `cwd` (`""` = here), wait for its end, and give its status and both outputs; the standard input of the child is closed. With `timeout_ms` above 0 the child is killed when it runs longer: the status is 124 and `err` says `Time-out after N ms` (test `test/level6/f15_os_timeout`). `env` is a map of `String` to `String` that is **added** to the environment of this program for the child (a name that is already set is replaced); there is no shell `export` statement (CMD-04, D-202; test `f16_os_env`) |
 | `env!(name: String, default: String)` | `String` | the value of an environment variable, or `default` when it is not set |
 | `hostname!()` | `String` | the name of this computer |
 | `pid!()` | `Integer` | the process id of this machine |

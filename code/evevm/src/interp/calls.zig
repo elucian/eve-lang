@@ -537,6 +537,19 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
     return .{ .object = obj };
 }
 
+// @eve-impl run the destructor of `cls` on `obj` (CLS-14, D-202); an error in it is dropped and the free goes on
+// @spec spec/syntax/declarations.md#classes-and-objects
+// @test c41_destructor
+pub fn runDestructor(it: *Interp, obj: *interp.Object, cls: *Class) void {
+    const d = cls.destructor() orelse return;
+    const saved = it.enterScope(it.newScope(it.unit) catch return) catch return;
+    defer it.leaveScope(saved);
+    const self_var = it.h.make(Var, .{ .value = .nil }) catch return;
+    it.bind("self", self_var) catch return;
+    it.setVar(self_var, .{ .object = obj });
+    it.execBlock(d.kids[3]) catch {};
+}
+
 /// The value a variable of a type has before it is assigned.
 pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
     const t = ty orelse return .nil;
