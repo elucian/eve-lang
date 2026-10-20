@@ -1,6 +1,6 @@
 # Errors, Recovery and Exit Codes
 
-Status: **0.1-draft**, level 1. Sources: D-010, D-020, D-038, D-054, D-063, D-081, D-096. The codes are settled (D-109).
+Status: **draft**, level 1. Sources: D-010, D-020, D-038, D-054, D-063, D-081, D-096. The codes are settled (D-109).
 
 ## Errors
 

@@ -1,6 +1,6 @@
 # Modules and libraries
 
-Status: **0.1-draft**, level 3 (version 0.2), first part of the level: modules and imports, then the local libraries; classes and methods follow (`declarations.md#classes-and-objects`, D-122, D-123). Sources: D-041, D-056, D-068, D-072, D-085, D-087, D-112 (g), D-122, D-126, D-129, D-131. Tests: `test/level3` (c01 to c28), `test/level4` (d01, d02). Grammar: `../syntax/grammar.md#modules-and-imports-level-3`. Items marked *(proposed)* are not stated by the author. **Implemented in the VM (2026-10-08):** the loader, the import forms, `export`, the regions, the search path, `safe` and `unsafe`, the checks of c08 and c18 to c28; `$EVE_LIB_PATH` is read from the environment of the machine (`EVE_LIB_PATH`).
+Status: **draft**, level 3, first part of the level: modules and imports, then the local libraries; classes and methods follow (`declarations.md#classes-and-objects`, D-122, D-123). Sources: D-041, D-056, D-068, D-072, D-085, D-087, D-112 (g), D-122, D-126, D-129, D-131. Tests: `test/level3` (c01 to c38), `test/level4` (d01, d02). Grammar: `../syntax/grammar.md#modules-and-imports-level-3`. Items marked *(proposed)* are not stated by the author. **Implemented in the VM (2026-10-08):** the loader, the import forms, `export`, the regions, the search path, `safe` and `unsafe`, the checks of c08 and c18 to c28; `$EVE_LIB_PATH` is read from the environment of the machine (`EVE_LIB_PATH`).
 
 ## What a module is
 

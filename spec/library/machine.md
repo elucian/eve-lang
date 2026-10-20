@@ -1,6 +1,6 @@
 # The Eve machine: parts, doors, local and remote
 
-Status: **0.1-draft**, level 5 (version 0.4), first step of the machine and its web server (F-NET-02, F-TLS-14). Design: `../../design/design-service.md` sections 3a, 4 and 5, and `../../design/design-packages.md` (the parts of `eve`). Tests: `test/level5/e95_web_hello` (the page, `e95_test1` IPC only, `e95_test2` HTTP only, `e95_test3` both). Decisions: D-162 (the doors, implemented and tested); D-163 to D-165 (2026-10-12: the parts of `eve`, the serving machine, the machine API, remote access, ACP), whose sections are marked with the level that brings them.
+Status: **draft**, level 6, implemented: the machine with its doors (IPC, HTTP, stdio), the machine API `vm.*`, sessions and streamed output (F-NET-02, F-TLS-12 to F-TLS-14, F-NET-08). Design: `../../design/design-service.md` sections 3a, 4 and 5, and `../../design/design-packages.md` (the parts of `eve`). Tests: `test/level6` (f07 `rpc`, f10 to f15), `test/level5/e95_web_hello` (the page, `e95_test1` IPC only, `e95_test2` HTTP only, `e95_test3` both). Decisions: D-162 (the doors, implemented and tested); D-163 to D-165 (2026-10-12: the parts of `eve`, the serving machine, the machine API, remote access, ACP), whose sections are marked with the level that brings them.
 
 ## The parts of `eve`
 

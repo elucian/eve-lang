@@ -1,6 +1,6 @@
 # The module `http`
 
-Status: **0.1-draft**, level 6 (D-189). Features: F-NET-02 (server side), F-DAT-02 (the client of `data-language.md`). Written in Eve: `lib/http.eve`, over [net](net.md). Tests: `test/level6/f10_route_hello`.
+Status: **draft**, level 6 (D-189). Features: F-NET-02 (server side), F-NET-01 (the client of `data-language.md`). Written in Eve: `lib/http.eve`, over [net](net.md). Tests: `test/level6/f10_route_hello`.
 
 HTTP/1.1 as text on a `Socket`: read a request, write a response, call a server. One request for each connection (`Connection: close`); no keep-alive, no chunked bodies, no TLS (`https://` is level 9, D-189), no percent-decoding of the path.
 

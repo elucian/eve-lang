@@ -1,6 +1,6 @@
 # Grammar
 
-Status: **0.1-draft**, levels 1 to 4 (a primary aspect; the aspects it calls; modules; parallel processing, traits and generic classes), and the generic subprograms and the Eve macro of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
+Status: **draft**, levels 1 to 4 (a primary aspect; the aspects it calls; modules; parallel processing, traits and generic classes), and the generic subprograms and the Eve macro of level 5. The grammar starts from the tokens of [`../lexical/lexical.md`](../lexical/lexical.md). The meaning of each rule is in [`declarations.md`](declarations.md), [`statements.md`](statements.md), [`expressions.md`](expressions.md) and in `../semantics/`. Rules for levels 5 to 7 (data language, database, server, web) are not in this file yet. A level section may add alternatives to a rule of the base grammar by repeating its name; the note `(* adds to … *)` says so.
 
 Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeats zero or more times, `( )` groups, `"…"` is a keyword or a symbol token, `(* … *)` is a note. Every statement ends with `;`. Layout (2 spaces per level) is checked after parsing, not by the grammar (see lexical.md, Layout).
 
@@ -123,7 +123,7 @@ table-clause = "key" , "(" , names , ")" , ";"
              | "reference" , name , "to" , name , ";"
              | "read" , "only" , ";"
              | "temporary" , ";"
-             | "cached" , duration , ";" ;                           (* version 0.5, the Eve server *)
+             | "cached" , duration , ";" ;                           (* level 6, the Eve server *)
 simple       = … | commit-stmt | rollback-stmt ;                    (* adds to simple; only in the do region of a job *)
 commit-stmt  = "commit" ;
 rollback-stmt = "rollback" ;                                         (* both take the suffix: rollback if dry_run; *)
@@ -213,12 +213,14 @@ dimension   = integer | "?" ;
 ```ebnf
 statement   = ( simple , [ "if" , expression ] , ";" ) | block | variable ;
 simple      = let-stmt | defer-stmt | call-stmt | apply-stmt | expect-stmt | raise-stmt | jump | "return" | "pass"
-            | retry-stmt | "resume" | "abort" | "exit" | "over" | "panic" | "stop" ;
+            | retry-stmt | "resume" | "abort" | exit-stmt | "panic" | "stop" ;
+exit-stmt   = ( "exit" | "over" ) , [ expression ] ;                            (* the number is the exit code of the program, 0 or 6 to 125: errors.md#ending-the-process (G-2) *)
 let-stmt    = "let" , target , modifier , ( expression | "new" , names ) ;      (* let lst -> new f;  the explicit capture *)
 defer-stmt  = "defer" , simple ;                                                (* registers a statement for the end of the subprogram (D-117) *)
 modifier    = ":=" | "::" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<+" | "+>" | "<<" | ">>" | "->" | "<-" ;
 target      = name-path , { "[" , index-list , "]" } | "_" ;
-call-stmt   = name-path , [ "!" ] , [ "(" , [ arguments ] , ")" | arguments ] ;     (* print x;  save(data);  foo; *)
+call-stmt   = name-path , [ "!" ] , [ "(" , [ arguments ] , ")" | arguments ]     (* print x;  save(data);  foo; *)
+            | postfix ;                                                         (* a call on any value, its result dropped: "abc".replace("", "x");  rows[1].close(); *)
 expect-stmt = ( "expect" | "assert" ) , expression ;
 raise-stmt  = "raise" , expression ;
 jump        = ( "break" | "skip" ) , [ label ] ;
@@ -241,7 +243,7 @@ loop-head   = [ label , ":" ] , "loop" , { declaration } ;      (* the label of 
 while-block = [ loop-head ] , "while" , expression , "do" , { statement } ,
               [ "else" , { statement } ] , "done" , [ label ] , ";" ;
 for-block   = [ loop-head ] , "for" , pattern , "in" , expression , "do" , { statement } ,
-              "done" , [ label ] , ";" ;
+              [ "else" , { statement } ] , "done" , [ label ] , ";" ;
 repeat-block = [ label , ":" ] , "loop" , { declaration } , "do" , { statement } ,
               "repeat" , [ label ] , [ "while" , expression ] , ";" ;
 pattern     = name | "(" , pattern , { "," , pattern } , ")" | "(" , name , ":" , name , ")" | "*" , [ name ] | "_" ;   (* (k: v) visits a map *)

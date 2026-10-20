@@ -1,6 +1,6 @@
 # The modules `route` and `service`
 
-Status: **0.1-draft**, level 6 (D-189). Features: F-NET-02, F-STR-08, F-TLS-14. Written in Eve: `lib/route.eve`, `lib/service.eve`, over [http](http.md). Tests: `test/level6/f10_route_hello`.
+Status: **draft**, level 6 (D-189). Features: F-NET-02, F-STR-08, F-TLS-14. Written in Eve: `lib/route.eve`, `lib/service.eve`, over [http](http.md). Tests: `test/level6/f10_route_hello`.
 
 A **route table** is a list of routes; a route is made with `route.get`, `route.post` or `route.add`. A handler is a function of two values, the `Request` and the `DataMap` of the path parameters, that gives a `Reply`. `service.serve` accepts connections on a `Listener` and answers each one.
 

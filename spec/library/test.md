@@ -1,6 +1,6 @@
 # The module `test`
 
-Status: **0.1-draft**, level 6 (D-189). Feature: F-LIB-12 (testing module, new). Written in Eve: `lib/test.eve`. Tests: `test/level6/f03_test_module`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6 (D-189). Feature: F-LIB-12 (testing module, new). Written in Eve: `lib/test.eve`. Tests: `test/level6/f03_test_module`. Registry: [registry.md](registry.md).
 
 ## What it is
 

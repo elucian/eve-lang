@@ -1,6 +1,6 @@
 # Lexical Structure
 
-Status: **0.1-draft**. This file defines how Eve source text is split into tokens: everything a lexer needs. The grammar (`../syntax/grammar.md`) starts from the tokens defined here. Keywords, operators and delimiters are tables in `keywords.json`, [`operators.json`](operators.json) and [`delimiters.json`](delimiters.json); this file gives the rules they follow.
+Status: **draft**. This file defines how Eve source text is split into tokens: everything a lexer needs. The grammar (`../syntax/grammar.md`) starts from the tokens defined here. Keywords, operators and delimiters are tables in `keywords.json`, [`operators.json`](operators.json) and [`delimiters.json`](delimiters.json); this file gives the rules they follow.
 
 Words in this document: **must** and **must not** mark a requirement for every implementation; **may** marks a free choice. A rule marked *(proposed)* is not yet decided by the author; it is listed in [Open points](#open-points).
 
@@ -116,7 +116,7 @@ A **prefix** is written in a declaration and is not part of the name. A **sigil*
 
 ## Keywords
 
-Eve reserves English words. The reserved words of 0.1 are listed with a description in [`keywords.json`](keywords.json) (D-094); the words of the levels 2 to 7 are reserved from level 1. A keyword can not be used as an identifier. `True` and `False` are predefined constants of type `Logic`; `null` is a value; none of them is a keyword. `print`, `write` and `read` are library functions, not keywords.
+Eve reserves English words. The reserved words are listed with a description in [`keywords.json`](keywords.json) (D-094); the words of the levels 2 to 7 are reserved from level 1. A keyword can not be used as an identifier. `True` and `False` are predefined constants of type `Logic`; `null` is a value; none of them is a keyword. `print`, `write` and `read` are library functions, not keywords.
 
 ## Literals
 
@@ -145,7 +145,7 @@ A real literal has digits on both sides of the point: `0.5`, `9.9`. `1.` and `.5
 
 ### Rational
 
-`3\4` is a `Rational` and belongs to version 2 (D-080): a version 1 implementation reports it as not supported.
+`3\4` is a `Rational` and is not part of levels 1 to 6 (D-080): an implementation reports it as not supported.
 
 ### Rune
 
@@ -174,11 +174,11 @@ A string literal is UTF-8 text between double quotes. It ends on the same line u
 | `\{` `\}` | a literal brace: an unescaped brace in a string always belongs to a placeholder (D-102) |
 | `\n` `\r` `\t` | line feed, carriage return, tab |
 | `\0` | the NUL character |
-| `{U+H…}` | Unicode code point, 1 to 6 hexadecimal digits: `{U+03B2}` is β (D-119) |
+| `{U+H…}` | Unicode code point, 1 to 6 hexadecimal digits: `{U+03B2}` is β (D-120) |
 | `&name;` | HTML character reference: `&alpha;` is α |
 | `\&` | the ampersand |
 
-Not all Unicode characters have an HTML name, so `{U+H…}` (a rune literal in a placeholder, D-120) and `&name;` are both valid. The numeric references `&#N;` and `&#xH;` do not exist (D-119). The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
+Not all Unicode characters have an HTML name, so `{U+H…}` (a rune literal in a placeholder, D-120) and `&name;` are both valid. The numeric references `&#N;` and `&#xH;` do not exist (D-120). The ampersand itself is written `\&` or `&amp;`; both forms are supported. A `&` that does not start a character reference is an ordinary character.
 
 **Interpolation (D-102, D-120).** A string inserts values with placeholders: a name or a literal in braces, with an optional format after the format operator `%`:
 
@@ -197,7 +197,7 @@ literal       = number | string | symbol | boolean | list | ... ;   (* any liter
 | `{literal}` | the literal, written by its type: `{399}`, `{"test"}`, `{(1,2,3)}`, `{'x'}`, `{True}`, `{U+03B1}` |
 | `\{` `\}` | a literal brace |
 
-In a string literal every unescaped `{` opens a placeholder; a `{` that does not open a valid placeholder (`"{1, 2}"`, `"{}"`, `"{a + b}"`) and a lone `}` are lexical errors, so a literal brace is always written `\{` or `\}`. A placeholder holds a **name**, a **literal** or a **simple expression** (Q-015, Q-033a, D-120, D-121): `{n + 1}`, `{a * 2 - 1}`, `{s.length()}`, `{a > 2}`, `{s + "!"}`. A statement, an assignment or a lambda is not allowed. `%` always starts the format, so an expression that needs it is written in parentheses: `{((n + 1) % 3)}`. A literal is any literal of the language: `{399}`, `{"test"}`, `{(a, b, c)}`, `{'x'}`, `{True}`, `{U+03B1}` (the rune of that code point). **The quotes of a literal inside the braces are not escaped**: the string ends at the first `"` outside the braces, and a brace or a `%` inside a quoted text of a placeholder does not count. A name is: a variable, a constant, a system variable (`{$HOME}`), an attribute path (`{p.x}`, `{self.value}`), or a member selected with brackets: an element (`{a[1]}`, `{a[-1]}`, `{a[i]}`, `{m[key]}`, `{m["key"]}`) or a part by a range (`{a[2..4]}`). An index is an integer, a name, a quoted key or a range; the quotes of a key are written as they are.  Inside a placeholder `%` is the format operator and has no other meaning: `{n % i5}`. The `format` has its own rules, defined in `../library/format.md` (pending). `{U+H…}` is a rune literal like any other (D-119); `\xHH` and `\u{…}` do not exist. The text literal and the regex literal are raw: they have no placeholders and their braces need no escape. The older forms `\s{…}`, `\n{…}`, `\b{…}`, `\#{…}`, `#s`, `#n`, `#{…}`, the format after `:` and the template operator `?` do not exist; `#` is used only in comments.
+In a string literal every unescaped `{` opens a placeholder; a `{` that does not open a valid placeholder (`"{1, 2}"`, `"{}"`, `"{a + b}"`) and a lone `}` are lexical errors, so a literal brace is always written `\{` or `\}`. A placeholder holds a **name**, a **literal** or a **simple expression** (Q-015, Q-033a, D-120, D-121): `{n + 1}`, `{a * 2 - 1}`, `{s.length()}`, `{a > 2}`, `{s + "!"}`. A statement, an assignment or a lambda is not allowed. `%` always starts the format, so an expression that needs it is written in parentheses: `{((n + 1) % 3)}`. A literal is any literal of the language: `{399}`, `{"test"}`, `{(a, b, c)}`, `{'x'}`, `{True}`, `{U+03B1}` (the rune of that code point). **The quotes of a literal inside the braces are not escaped**: the string ends at the first `"` outside the braces, and a brace or a `%` inside a quoted text of a placeholder does not count. A name is: a variable, a constant, a system variable (`{$HOME}`), an attribute path (`{p.x}`, `{self.value}`), or a member selected with brackets: an element (`{a[1]}`, `{a[-1]}`, `{a[i]}`, `{m[key]}`, `{m["key"]}`) or a part by a range (`{a[2..4]}`). An index is an integer, a name, a quoted key or a range; the quotes of a key are written as they are.  Inside a placeholder `%` is the format operator and has no other meaning: `{n % i5}`. The `format` has its own rules, defined in `../library/format.md` (pending). `{U+H…}` is a rune literal like any other (D-120); `\xHH` and `\u{…}` do not exist. The text literal and the regex literal are raw: they have no placeholders and their braces need no escape. The older forms `\s{…}`, `\n{…}`, `\b{…}`, `\#{…}`, `#s`, `#n`, `#{…}`, the format after `:` and the template operator `?` do not exist; `#` is used only in comments.
 
 **Text literal.** `"""…"""` is a text literal on several lines. It is raw: there are no escape sequences and no interpolation; double quotes need no escape. The closing `"""` is alone on its line, and the number of spaces before it is the indentation that the compiler removes from every line of the text. The line break after the opening quotes and the one before the closing quotes are not part of the text (Q-014). A text literal has the type `Text`. The tag forms `<text>`, `<xml>`, `<html>`, `<data>` and `<code>` also create a `Text` literal, with the same rule for the first and the last line break *(their syntax is not specified yet)*.
 

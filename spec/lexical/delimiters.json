@@ -120,7 +120,7 @@
       "kind": "escape",
       "nests": false,
       "multiline": false,
-      "summary": "Placeholder with a Unicode code point, 1 to 6 hexadecimal digits: `{U+03B1}` is α (D-119).",
+      "summary": "Placeholder with a Unicode code point, 1 to 6 hexadecimal digits: `{U+03B1}` is α (D-120).",
       "status": "draft",
       "ref": "lexical/lexical.md#literals",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#escapes"

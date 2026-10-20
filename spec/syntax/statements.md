@@ -1,6 +1,6 @@
 # Statements
 
-Status: **0.1-draft**, level 1. Grammar: [`grammar.md`](grammar.md). Control blocks (`if`, `match`, `job`, loops) are in [`../semantics/control.md`](../semantics/control.md); errors in [`../semantics/errors.md`](../semantics/errors.md).
+Status: **draft**, level 1. Grammar: [`grammar.md`](grammar.md). Control blocks (`if`, `match`, `job`, loops) are in [`../semantics/control.md`](../semantics/control.md); errors in [`../semantics/errors.md`](../semantics/errors.md).
 
 A statement ends with `;` and may span lines. A group of statements is a block, indented by 2 spaces. A simple statement may end with the condition suffix `if expression`: `break if c;`, `raise "bad" if n < 0;`, `print "even" if n % 2 == 0;`. The suffix is not allowed after `done` or `expect`.
 
@@ -80,4 +80,4 @@ A procedure is called as a statement, with or without parentheses when it has no
 
 ## Other statements of later levels
 
-`apply` is level 2 (`../semantics/aspects.md`). `start`, `spawn`, `await`, `wait` and `async` are level 4, defined in `../semantics/multitasking.md` (D-140, D-143, D-144); `yield` is version 0.4, `call` level 3. In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. The open points of Q-035 are settled by D-143.
+`apply` is level 2 (`../semantics/aspects.md`). `start`, `spawn`, `await`, `wait` and `async` are level 4, defined in `../semantics/multitasking.md` (D-140, D-143, D-144); `yield` is level 5, `call` level 3. In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. The open points of Q-035 are settled by D-143.

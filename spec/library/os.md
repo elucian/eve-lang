@@ -1,6 +1,6 @@
 # The module `os`
 
-Status: **0.1-draft**, level 6 (D-189, Q-024 (a), (b)). Feature: F-LIB-07. Native module (Zig), signatures in `lib/sys/os.eve`. Tests: `test/level6/f05_os`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6 (D-189, Q-024 (a), (b)). Feature: F-LIB-07. Native module (Zig), signatures in `lib/sys/os.eve`. Tests: `test/level6/f05_os`. Registry: [registry.md](registry.md).
 
 The safe way to run another program and to read the environment. `call` (the shell statement of the language, level 3) stays; `os.run!` is the form for programs whose arguments are built from data: **no shell is involved**, so a space, a quote or `&` in an argument is just text.
 

@@ -1,6 +1,6 @@
 # Conformance
 
-Status: **0.1-draft**. An implementation conforms to a level when it passes every test of that level and of the levels below it. The tests are in `test/levelN/`; this file defines how a test is written and what a runner checks (D-094, answers Q-005). The reference runner is `script/runtest.py`.
+Status: **draft**. An implementation conforms to a level when it passes every test of that level and of the levels below it. The tests are in `test/levelN/`; this file defines how a test is written and what a runner checks (D-094, answers Q-005). The reference runner is `script/runtest.py`.
 
 ## Levels
 

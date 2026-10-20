@@ -1,6 +1,6 @@
 # Data file types
 
-Status: **0.1-draft**, level 5 (the data language, D-125; version 0.4). Written from the proposals of Q-039 and Q-044 and from `../../design/design-database-remote.md` (ETL), **as proposed**: the author has not answered yet, and the choices are listed in `../../design/archive/review-2026-10-04/level5.md`. Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
+Status: **draft**, level 5 (the data language, D-125). Written from the proposals of Q-039 and Q-044 and from `../../design/design-database-remote.md` (ETL), and implemented in the VM, tested by `test/level5` (2026-10-20); the author settled the names of the file types in D-157, and the points still open are those of Q-039 and Q-044 (`design/decision/level5.md`). Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
 
 ## What they are
 
@@ -150,7 +150,7 @@ json.write("data/out/lines.json", lines);
 - `query!(:Line)(sql, args…)` matches the result columns to the members of `Line` by name; a `NULL` in a member that is not optional is a `ConvertError`. Arguments are bound to the `?` placeholders in order (`Integer`, `Real`, `String`, `Logic` and `null`).
 - `json.write(path, rows)` writes the array (or JSON Lines) of the rules above and makes the folders of the path.
 - The test `test/level5/e56_etl_csv_sqlite_json` does exactly this and compares the file written to `data/out/`.
-- *Version 0.4 reads and writes in memory:* `csv.read!` and `query!` return a `List` of records, not a lazy `Stream`; a file or a result larger than memory waits for the streams (data-language.md, open points).
+- *Level 5 reads and writes in memory:* `csv.read!` and `query!` return a `List` of records, not a lazy `Stream`; a file or a result larger than memory waits for the streams (data-language.md, open points).
 
 ## ETL: the cycle
 

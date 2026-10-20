@@ -1,6 +1,6 @@
 # The library registry
 
-Status: **0.1-draft**, level 6 (D-189, D-190). Features: F-LIB-01 (standard library), F-LIB-10 (encryption and hashing), F-SPEC-06. Plan: `design/design-libraries.md`. Audit: `design/library-audit.md`.
+Status: **draft**, level 6 (D-189, D-190). Features: F-LIB-01 (standard library), F-LIB-10 (encryption and hashing), F-SPEC-06. Plan: `design/design-libraries.md`. Audit: `design/library-audit.md`.
 
 ## Two libraries
 
@@ -48,9 +48,10 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | string functions (`trim`, `find`, `replace`, slice, ...) | F-LIB-03 | implemented (2026-10-18, G-7) | [strings.md](strings.md) |
 | `regex` | F-LIB-03 | planned (M6) | to write |
 | `gzip` (module; the readers already inflate `.gz`) | F-LIB-09 | postponed (TD-24) | |
-| `net`, `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M3, M4) | to write |
+| `net` | F-NET-02 | implemented (M3, 2026-10-19): TCP, `listen`, `accept!`, time-outs | [net.md](net.md) |
+| `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M4) | to write |
 | `keyring`, `oidc`, `auth` | F-NET-07 | **level 7** (D-189) | |
-| outbound TLS in `http` | F-DAT-02 | **level 9, backlog** (D-189) | |
+| outbound TLS in `http` | F-NET-01 | **level 9, backlog** (D-189) | |
 
 ## Modules of the standard library in Eve at level 6
 

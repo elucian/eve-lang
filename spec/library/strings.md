@@ -1,6 +1,6 @@
 # String functions
 
-Status: **0.1-draft**, level 6 (D-189), found missing by the standard library (`backlog/library-gaps.md` G-7). Written in the VM, in Zig (hot and simple). Tests: `test/level1/a86_string_slice`, `a87_string_functions`. The tutorial (`strings.html`) lists `split`, `length`, `find`, `count` and `replace` as wanted and leaves the inventory to the library specification; this page is that inventory for level 6. The regular-expression forms wait for the module `regex` (planned) and Q-066.
+Status: **draft**, level 6 (D-189), found missing by the standard library (`backlog/library-gaps.md` G-7). Written in the VM, in Zig (hot and simple). Tests: `test/level1/a86_string_slice`, `a87_string_functions`. The tutorial (`strings.html`) lists `split`, `length`, `find`, `count` and `replace` as wanted and leaves the inventory to the library specification; this page is that inventory for level 6. The regular-expression forms wait for the module `regex` (planned) and Q-066.
 
 A `String` is a sequence of runes, indexed from 1 (`semantics/types.md`). A function is called on a value, `s.trim()`, and gives a new string; a string is never changed in place.
 

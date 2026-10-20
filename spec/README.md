@@ -5,7 +5,7 @@ This folder holds the **normative specification** of Eve: the reference any Eve 
 When the two disagree, the specification wins. Record the conflict in
 [`../design/decision/level1.md`](../design/decision/level1.md) or [`../design/decision/level2.md`](../design/decision/level2.md) and fix the tutorial.
 
-License: [CC BY-NC-SA 4.0](LICENSE). Status: **0.1-draft**, being built step by step according to [`../design/`](../design/README.md).
+License: [CC BY-NC-SA 4.0](LICENSE). Status: **draft**, being built step by step according to [`../design/`](../design/README.md).
 
 ## Why Markdown + JSON
 

@@ -1,6 +1,6 @@
 # Aspects
 
-Status: **0.1-draft**, level 2 (a project of a primary aspect and the aspects it calls). Sources: D-066, D-072, D-090, D-112, D-113, D-179 to D-182. Tests: `test/level2` (b01 to b09, b10 to b17 planned). Modules, imports and libraries are level 3; `parallel` and `start` are level 4.
+Status: **draft**, level 2 (a project of a primary aspect and the aspects it calls). Sources: D-066, D-072, D-090, D-112, D-113, D-179 to D-182. Tests: `test/level2` (b01 to b59). Modules, imports and libraries are level 3; `parallel` and `start` are level 4.
 
 ## What an aspect is
 

@@ -1,6 +1,6 @@
 # Control Flow
 
-Status: **0.1-draft**, level 1. Syntax: [`../syntax/grammar.md`](../syntax/grammar.md). Sources: D-016, D-020, D-030, D-033, D-034, D-074.
+Status: **draft**, level 1. Syntax: [`../syntax/grammar.md`](../syntax/grammar.md). Sources: D-016, D-020, D-030, D-033, D-034, D-074.
 
 ## General pattern
 
@@ -60,7 +60,7 @@ for x in r do … done;                ** visits a range or a collection
 | Loop | Rules |
 |---|---|
 | `while c do` | the condition is checked before every cycle; `else` runs only if the condition was false the first time |
-| `for x in r do` | `r` is a range or a collection (a trait `Iterable` in version 2); `x` is created for the loop and is not visible after `done`; a collection is not changed while it is visited; a pattern `(k, v)` deconstructs a pair; a DataMap is visited in key order |
+| `for x in r do` | `r` is a range or a collection (any value of the trait `Iterable`, level 4); `else` runs only if there is nothing to visit (an empty range or collection); `x` is created for the loop and is not visible after `done`; a collection is not changed while it is visited; a pattern `(k, v)` deconstructs a pair; a DataMap is visited in key order |
 | `loop … do … repeat;` | `repeat` closes the loop; `repeat while c;` goes on while `c` is true, tested after the body; a bare `repeat;` loops until `break`; no `else` |
 
 - `break [label] [if c];` leaves the loop (an outer loop with its label).

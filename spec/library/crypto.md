@@ -1,6 +1,6 @@
 # The module `crypto`
 
-Status: **0.1-draft**, level 6 (D-189). Feature: F-LIB-10. Native module (Zig, `std.crypto`), signatures in `lib/sys/crypto.eve`. Tests: `test/level6/f04_crypto`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6 (D-189). Feature: F-LIB-10. Native module (Zig, `std.crypto`), signatures in `lib/sys/crypto.eve`. Tests: `test/level6/f04_crypto`. Registry: [registry.md](registry.md).
 
 Hashes, a keyed hash, random bytes and the text codecs. A `String` is a sequence of bytes (UTF-8 text); a function that works on bytes takes and gives a `String`, and a digest is given as lower-case hexadecimal text.
 

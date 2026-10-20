@@ -1,6 +1,6 @@
 # Declarations
 
-Status: **0.1-draft**, level 1. Grammar: [`grammar.md`](grammar.md). Each rule names the decision it comes from (`D-nnn`, in `design/decision/level1.md`).
+Status: **draft**, level 1. Grammar: [`grammar.md`](grammar.md). Each rule names the decision it comes from (`D-nnn`, in `design/decision/level1.md`).
 
 ## Scripts
 
@@ -39,7 +39,7 @@ Every declaration starts with a keyword (D-076):
 - The type hint comes **after** the value: `new a = 0 :Integer;`, never `new a :Integer = 0;` (D-032). Without a value a variable gets the zero value of its type (`0`, `0.0`, `""`, an empty collection), never `null` (D-080): `new n :Integer;`. A variable that may hold `null` has an optional type: `new age :Integer?;`.
 - Several variables: `new a = 1, b = 2 :Integer;` is the same as `new (a = 1, b = 2) :Integer;`; one value for all: `new (a, b, c) = 5 :Integer;`; one value each: `new (a, b) = (1, 2);` (D-079).
 - `::` makes a deep copy, `:=` shares the reference of an object or a collection and copies a native value (D-049). A slice by `:=` is a view; by `::` a copy.
-- Redeclaring a name in the same scope is an error, except overloaded subprograms (version 0.4, `#overloading`). Reading a name that is not declared is an error; a `let` capture creates a missing name (Q-017, Q-033e, see statements.md).
+- Redeclaring a name in the same scope is an error, except overloaded subprograms (level 5, `#overloading`). Reading a name that is not declared is an error; a `let` capture creates a missing name (Q-017, Q-033e, see statements.md).
 - `set` is allowed only at script level, not inside a process or a subprogram. A constant is never changed.
 
 ## Types
@@ -75,7 +75,7 @@ return;
 
 - The result is written `=> (@name: Type)`; `@` makes it a reference; the result variable is assigned in the body; `return;` carries no value (D-036). Several results: `=> (@q: Integer, @r: Integer)`.
 - A plain function and a `!` function can not change a global, a module variable or a parameter, and can not call a procedure. A procedure may call any function or procedure.
-- Parameters: one list of values (D-029). A first list of types in front of it makes a generic function, procedure, method or process, `function largest(:T <: Comparable)(items: ()T) => (@result: T)`; at the call the types are inferred or written, `largest(xs)`, `largest(:Integer)(xs)`; a lambda has no type list (version 0.4, D-147, D-148). `name: Type` is mandatory; `name = value :Type` or `name := expression` is optional with a default (D-070); `*name` collects the rest (vararg); `@name` is an input/output reference and has no default (D-048). Parameters after a vararg are optional and are named at the call.
+- Parameters: one list of values (D-029). A first list of types in front of it makes a generic function, procedure, method or process, `function largest(:T <: Comparable)(items: ()T) => (@result: T)`; at the call the types are inferred or written, `largest(xs)`, `largest(:Integer)(xs)`; a lambda has no type list (level 5, D-147, D-148). `name: Type` is mandatory; `name = value :Type` or `name := expression` is optional with a default (D-070); `*name` collects the rest (vararg); `@name` is an input/output reference and has no default (D-048). Parameters after a vararg are optional and are named at the call.
 - Order: a mandatory parameter may follow an optional one (typically an `@` parameter); the call must then name it (`add(1, 2, op: @result)`, D-106). Every `@` parameter is input/output; there are no pure output parameters.
 - At the call, positional arguments come first; an optional parameter is named with `:` (`greet("Eve", greeting: "Hi")`); an `@` parameter needs `@` on the argument (`swap(@a, @b)`).
 - Without `@` an argument is passed by value, collections included (like `::`).
@@ -116,11 +116,11 @@ end Point;
 - **Only a method binds the object.** `@self` is the parameter of a method (in the class body or outside it, as an extension method). A function or a procedure can not have `@self`, and so can not be bound to a class: `function total(@self: Point) => (...)` is a compile error (D-123).
 - **Methods are not values** (D-103). There are no references to methods and no method type: a method can't be passed as an argument, stored or returned, and it is never a callback. A lambda that calls the method is passed instead: `shapes.map((s) => (s.area()))`.
 - Extension methods are static: they never change the class, can not hide a method of the class, see only its public members, and are visible only in the scripts that declare or import them (D-086).
-- Generators belong to version 0.4 (level 5, D-087, D-125). Traits, abstract classes and generic classes are level 4, below.
+- Generators belong to level 5 (level 5, D-087, D-125). Traits, abstract classes and generic classes are level 4, below.
 
 ## Traits and generic classes
 
-Level 4 (version 0.3). Sources: D-039, D-145. Grammar: `grammar.md#traits-and-generic-classes-level-4`. Tests: d20 to d24. Compile errors (exit 65): a missing required method, `{class} does not implement {method}` (d21); an abstract class created outside a subclass constructor, `{class} is abstract` (d23); two traits that provide the same method, `{class} must write {method}: it comes from {trait} and {trait}`.
+Level 4. Sources: D-039, D-145. Grammar: `grammar.md#traits-and-generic-classes-level-4`. Tests: d20 to d24. Compile errors (exit 65): a missing required method, `{class} does not implement {method}` (d21); an abstract class created outside a subclass constructor, `{class} is abstract` (d23); two traits that provide the same method, `{class} must write {method}: it comes from {trait} and {trait}`.
 
 ```eve
 trait Printable is
@@ -140,13 +140,13 @@ end Point;
 - **Trait.** `trait Name is … end Name;` holds required methods (a signature that ends with `;`) and provided methods (with a body, which may call the required ones through `self`). A trait has no attributes, no constructor and no instances. Every method of a trait is public. A trait is a type: `new p: Printable := pt;`, `pt is Printable`.
 - **Adopting.** After `<:` comes one class, then the traits, in parentheses: `<: (Object, Printable, Comparable)`. A method of the class wins over a provided method. When two traits provide a method with the same name, the class must write it. A class that can be created must implement every required method: a missing one is a compile error that names the class and the method.
 - **Abstract class.** A class with at least one required method (a `method` signature that ends with `;`) is abstract. Its constructor is called only as the first statement of a subclass constructor (`let self := Shape(name);`); a call anywhere else is a compile error.
-- **Generic class.** `class Box(:T) = {item: T} <: Object is` declares a type parameter `T`, used in the attributes and the methods. The type argument is always written when an object is made: `new b := Box(:Integer)(5);`, like `Channel(:Integer)(capacity: 10)` and `Atomic(:Integer)`. There is no inference in version 0.3. A constraint is written `(:T <: Comparable)`: the type argument must adopt the trait.
-- **Library traits** of version 0.3: `Iterable(:T)` (what `for` reads), `Stream(:T) <: Iterable(:T)` (`../semantics/multitasking.md#streams-and-batches`), `Comparable` (`method compare(@self, other) => (@result: Integer);`, negative, zero or positive) and `Printable` (`method describe(@self) => (@result: String);`, used by `print` and by `{x}` in a string). The basic types adopt `Comparable` and `Printable` in the library.
-- Not in version 0.3: generic functions, procedures, methods and processes, overloading (next section), and adopting a trait for an existing type outside its declaration (version 0.4).
+- **Generic class.** `class Box(:T) = {item: T} <: Object is` declares a type parameter `T`, used in the attributes and the methods. The type argument is always written when an object is made: `new b := Box(:Integer)(5);`, like `Channel(:Integer)(capacity: 10)` and `Atomic(:Integer)`. There is no inference in level 4. A constraint is written `(:T <: Comparable)`: the type argument must adopt the trait.
+- **Library traits** of level 4: `Iterable(:T)` (what `for` reads), `Stream(:T) <: Iterable(:T)` (`../semantics/multitasking.md#streams-and-batches`), `Comparable` (`method compare(@self, other) => (@result: Integer);`, negative, zero or positive) and `Printable` (`method describe(@self) => (@result: String);`, used by `print` and by `{x}` in a string). The basic types adopt `Comparable` and `Printable` in the library.
+- Not in level 4: generic functions, procedures, methods and processes, overloading (next section), and adopting a trait for an existing type outside its declaration (level 5).
 
 ## Generic subprograms and overloading
 
-Level 5 (version 0.4). Sources: D-147 to D-150. Grammar: `grammar.md#generic-subprograms-and-overloading-level-5`. Tests: e01 to e15. Compile errors (exit 65) and their messages: `can not infer the type T of make` (e15), `a lambda has no type list` (e14), `ambiguous call of f` (e08, e09), `no signature of half matches` (e10), `report is both a function and a procedure` (e11), `half is declared twice with the same signature` (e12).
+Level 5. Sources: D-147 to D-150. Grammar: `grammar.md#generic-subprograms-and-overloading-level-5`. Tests: e01 to e15. Compile errors (exit 65) and their messages: `can not infer the type T of make` (e15), `a lambda has no type list` (e14), `ambiguous call of f` (e08, e09), `no signature of half matches` (e10), `report is both a function and a procedure` (e11), `half is declared twice with the same signature` (e12).
 
 ```eve
 function largest(:T <: Comparable)(items: ()T) => (@result: T) is
@@ -192,7 +192,7 @@ print half(8), half(9.0);               ** 4,4.5
 
 ## Generators (level 5)
 
-Version 0.4, feature F-LNG-12. Sources: D-067, D-144, `tutorial/generators.html`. Grammar: `grammar.md#generators-level-5`.
+Level 5, feature F-LNG-12. Sources: D-067, D-144, `tutorial/generators.html`. Grammar: `grammar.md#generators-level-5`.
 
 A **generator** is a subprogram that produces its values one at a time. It is declared with the keyword `generator`, like a function or a method, and has exactly one result, the value it produces:
 
@@ -234,7 +234,7 @@ end customers;
 
 ## Eve macro (level 5)
 
-Level 5 (version 0.4). Sources: D-152, D-180, D-181. Grammar: `grammar.md#eve-macro-level-5`. Tests: e04, e16 to e22. An **Eve macro** is one self-contained file that holds **shared declarations** and any number of **aspects**, exactly one of them a **primary aspect**. A small job, also a parallel one, needs no project folder and no `asp/`.
+Level 5. Sources: D-152, D-180, D-181. Grammar: `grammar.md#eve-macro-level-5`. Tests: e04, e16 to e22. An **Eve macro** is one self-contained file that holds **shared declarations** and any number of **aspects**, exactly one of them a **primary aspect**. A small job, also a parallel one, needs no project folder and no `asp/`.
 
 ```eve
 # pipeline: two workers in parallel, one file

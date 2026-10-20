@@ -1,6 +1,6 @@
 # Data language
 
-Status: **0.1-draft**, level 5 (version 0.4, D-125). Written from the proposals of Q-044 and Q-024 **as proposed**: the author has not answered yet, and the choices are listed in `../../design/archive/review-2026-10-04/level5.md`. This page lists the types and the modules that the database layer (`database.md`) and the data files (`../semantics/data-types.md`) stand on. Tests: `test/level5`.
+Status: **draft**, level 5 (level 5, D-125). Written from the proposals of Q-044 and Q-024, implemented in the VM and tested by `test/level5` (2026-10-20); the author settled parts of it in D-156 to D-159 and D-168, and the points still open are those of Q-039, Q-043, Q-044 and Q-046 (`design/decision/level5.md`). This page lists the types and the modules that the database layer (`database.md`) and the data files (`../semantics/data-types.md`) stand on. Tests: `test/level5`.
 
 ## Features and versions
 
@@ -87,7 +87,7 @@ A `Secret` is a value that never appears in a log, a trace or an error message (
 
 ## Compression
 
-A gzip reader in version 0.4: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!`, and `gzip.open!(path)` gives a `Stream(:Bytes)`. Zip and writers are version 0.5.
+A gzip reader in level 5: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!`, and `gzip.open!(path)` gives a `Stream(:Bytes)`. Zip and writers are level 6.
 
 ## System library modules
 
@@ -117,7 +117,7 @@ All in `../../design/archive/review-2026-10-04/level5.md`.
 
 ## JSON text in memory: `json.parse` and `json.text`
 
-Status: **0.1-draft**, level 6 (D-189), needed by `rpc` and the services. Tests: `test/level6/f06_json_text`.
+Status: **draft**, level 6 (D-189), needed by `rpc` and the services. Tests: `test/level6/f06_json_text`.
 
 `json.read!` and `json.write` work on files and records. Two functions work on a **text in memory** and on plain values, with no record class:
 

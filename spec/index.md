@@ -1,36 +1,34 @@
 # Eve Specification
 
-Version **0.1-draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions: [README](README.md).
+Status: **draft**. License: [CC BY-NC-SA 4.0](LICENSE) (D-078). Conventions: [README](README.md).
 
 ## Reading order
 
-| Part | File | State |
-|---|---|---|
-| Lexical structure | [lexical/lexical.md](lexical/lexical.md) | first draft (2026-10-02); Q-013 to Q-016 and Q-018 answered (D-095 to D-097) |
-| Operators | [lexical/operators.json](lexical/operators.json) | first draft; Q-017 answered (D-107) |
-| Delimiters | [lexical/delimiters.json](lexical/delimiters.json) | first draft |
-| Keywords | [lexical/keywords.json](lexical/keywords.json) | 70 words, level 1 (D-094) |
-| Grammar | [syntax/grammar.md](syntax/grammar.md) | EBNF of level 1, first draft (2026-10-06) |
-| Declarations, statements, expressions | [declarations.md](syntax/declarations.md), [statements.md](syntax/statements.md), [expressions.md](syntax/expressions.md) | level 1, first draft |
-| System variables | [semantics/variables.md](semantics/variables.md) | register, grows with each new variable (D-071); open points 1 to 6 |
-| Types | [semantics/types.md](semantics/types.md) | level 1, first draft |
-| Control flow, errors | [semantics/control.md](semantics/control.md), [semantics/errors.md](semantics/errors.md) | level 1, first draft; open points marked *(proposed)* |
-| Conformance | [conformance/README.md](conformance/README.md) | test format (`/*@expect*/`), levels, coverage of level 1 |
-| Aspects | [semantics/aspects.md](semantics/aspects.md) | level 2, first draft (2026-10-07); open points 1 to 4 |
-| Modules and libraries | [semantics/modules.md](semantics/modules.md) | level 3, first draft (2026-10-08); tests c01 to c28; open points 1 to 4 |
-| Generic subprograms, overloading | [syntax/declarations.md](syntax/declarations.md#generic-subprograms-and-overloading) | level 5, first draft (2026-10-09): D-147 to D-149; tests e01 to e15 |
-| Eve macro (hybrid script) | [syntax/declarations.md](syntax/declarations.md#eve-macro-level-5) | level 5, first draft (2026-10-10): D-152; tests e04, e16 to e22 |
-| Data file types, ETL | [semantics/data-types.md](semantics/data-types.md) | level 5, first draft (2026-10-10), as proposed in Q-039 and the remote design: `CSV`, `JSON`, `TXT` (0.4), `XML` (0.5), `HTML`, `HTMT` (0.6), Unicode streams, rejects, canonical form, the ETL cycle |
-| Data language | [library/data-language.md](library/data-language.md) | level 5, first draft (2026-10-10), as proposed in Q-044 and Q-024: generators, time types, `Decimal`, `T?`, `Bytes`, `fs`, HTTP client, secrets, `os.run`, gzip |
-| Data engines | [library/data-engines.md](library/data-engines.md) | first draft (2026-10-17), D-184: SQLite `:memory:` with tuned PRAGMAs, the columnar table (struct of arrays, validity bitmap, column kernels), explicit `load` and `store`, legacy files (CSV, TXT, JSON, DBF) and `db import`, `db export`; the Eve syntax is Q-059 |
-| Database layer | [library/database.md](library/database.md) | level 5, first draft (2026-10-10), as proposed in Q-043 and Q-046: records, `table`, mapping and its validation, tracked records, `commit;`, `rollback;`, isolation, direct SQL, errors, drivers, the Eve server; stored procedures (`sql/`, `proc/`, `external`) and `sql function` (D-166, 2026-10-12) |
-| Multitasking | [semantics/multitasking.md](semantics/multitasking.md) | level 4, first draft (2026-10-08): parallel groups, channels, tasks in a job, durations; D-140 to D-144; tests d01 to d24 |
-| Standard library | [library/atomic.md](library/atomic.md) | `Atomic(:T)`, first draft (2026-10-08); the rest of the library is not started |
-| Machine | [library/machine.md](library/machine.md) | the doors IPC and HTTP, `--listen`, `--serve`, `-loc`, `-rem`, JSON-RPC, the web folder (D-162, 2026-10-11); the parts of `eve` (`vm`, `cp`, `db`, `ux`), the serving machine, the machine API `vm.*` and `db.*`, the reverse proxy, ACP (D-163 to D-165, 2026-10-12) |
-| Other semantics | `semantics/*` | levels 3 to 7 not started |
-| Library | `library/*` | not started (phase 5) |
+The specification is written level by level (the levels are in `design/feature_map.md`). Each page names its tests in `test/levelN/`.
 
-Check the data files with `python script/speccheck.py`.
+| Level | Part | File | State |
+|---|---|---|---|
+| 1 | Lexical structure, operators, delimiters, keywords | [lexical/lexical.md](lexical/lexical.md), [operators.json](lexical/operators.json), [delimiters.json](lexical/delimiters.json), [keywords.json](lexical/keywords.json) | written; checked by `script/speccheck.py` |
+| 1 | Grammar (EBNF) | [syntax/grammar.md](syntax/grammar.md) | every test file of levels 1 to 6 parses (`script/grammarcheck.py`) |
+| 1 | Declarations, statements, expressions | [declarations.md](syntax/declarations.md), [statements.md](syntax/statements.md), [expressions.md](syntax/expressions.md) | written |
+| 1 | Types, control flow, errors and exit codes | [types.md](semantics/types.md), [control.md](semantics/control.md), [errors.md](semantics/errors.md) | written |
+| 1 | System variables | [semantics/variables.md](semantics/variables.md) | the register; a new variable is added here first (D-071); open points 1 to 6 |
+| 1 | Strings | [library/strings.md](library/strings.md) | written; gaps in `backlog/library-gaps.md` (G-7) |
+| 1 to 7 | Conformance | [conformance/README.md](conformance/README.md) | the test format (`/*@expect*/`) and the levels |
+| 2 | Aspects, `apply`, errors across `apply` | [semantics/aspects.md](semantics/aspects.md) | written; tests b01 to b59 |
+| 3 | Modules, imports, libraries, managed modules | [semantics/modules.md](semantics/modules.md) | written; tests c01 to c38 |
+| 3 | `Atomic(:T)` | [library/atomic.md](library/atomic.md) | written |
+| 4 | Parallel groups, channels, tasks, traits, generic classes | [semantics/multitasking.md](semantics/multitasking.md), [syntax/declarations.md](syntax/declarations.md#traits-and-generic-classes) | written; tests d01 to d40 |
+| 5 | Generic subprograms, overloading, Eve macro | [syntax/declarations.md](syntax/declarations.md#generic-subprograms-and-overloading) | written; tests e01 to e22 |
+| 5 | Data file types, ETL | [semantics/data-types.md](semantics/data-types.md) | written; open points of Q-039 and Q-044 |
+| 5 | Data language: types, files, formats, generators | [library/data-language.md](library/data-language.md) | written; open points of Q-044 and Q-046 |
+| 5 | Data engines, the columnar table, `load` and `store` | [library/data-engines.md](library/data-engines.md) | first draft (D-184) |
+| 5 | Database layer: records, `table`, `commit`, stored procedures, `sql function` | [library/database.md](library/database.md) | written; open points of Q-043 and Q-046 |
+| 6 | The machine: doors, `vm.*` and `db.*`, sessions, services, the reverse proxy, ACP | [library/machine.md](library/machine.md) | written; the doors and the API are implemented |
+| 6 | Standard modules in Eve and in the VM | [registry.md](library/registry.md), [os.md](library/os.md), [net.md](library/net.md), [crypto.md](library/crypto.md), [http.md](library/http.md), [route.md](library/route.md), [rpc.md](library/rpc.md), [config.md](library/config.md), [test.md](library/test.md) | written (D-189); tests f01 to f15 |
+| 7 | Web | none yet | not started |
+
+Check the data files with `python script/speccheck.py` and the grammar with `python script/grammarcheck.py`.
 
 ## Sources of the rules
 

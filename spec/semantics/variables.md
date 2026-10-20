@@ -1,6 +1,6 @@
 # System Variables
 
-Status: **0.1-draft**. This file is the register of the system variables of Eve: every `$name` that the language or the library defines is listed here, with its type and meaning. **A new system variable is added here first**, then used in a page, a test or the VM (D-071). Answers TOP-08.
+Status: **draft**. This file is the register of the system variables of Eve: every `$name` that the language or the library defines is listed here, with its type and meaning. **A new system variable is added here first**, then used in a page, a test or the VM (D-071). Answers TOP-08.
 
 ## Rules
 
@@ -10,7 +10,7 @@ Status: **0.1-draft**. This file is the register of the system variables of Eve:
 - **Library.** A library module declares the system variables it provides with `external set $name: Type;` (D-056), like `$error` in `code/evevm/lib/exception.eve`.
 - **Naming.** Capital names (`$EVE_OUT`) are environment and configuration values; lowercase names (`$error`) are objects of the runtime and of the library. Error and warning codes are the constants `$err_name` and `$wrn_name`.
 
-Status values in the tables: **0.1** the VM must provide it in version 0.1; **draft** described, version not decided; **later** after 0.1 (D-050 for multitasking); **question** see [Open points](#open-points). Column VM: what `bin/eve.exe` does today.
+Status values in the tables: **0.1** (the first release) the VM must provide it from level 1; **draft** described, level not decided; **later** after level 1 (D-050 for multitasking); **question** see [Open points](#open-points). Column VM: what `bin/eve.exe` does today.
 
 ## Runtime objects
 

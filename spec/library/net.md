@@ -1,6 +1,6 @@
 # The module `net`
 
-Status: **0.1-draft**, level 6 (D-189). Features: F-NET-02, F-NET-03. Native module (Zig), signatures in `lib/sys/net.eve`; code in `code/evevm/src/netlib.zig`. Tests: `test/level6/f09_net`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6 (D-189). Features: F-NET-02, F-NET-03. Native module (Zig), signatures in `lib/sys/net.eve`; code in `code/evevm/src/netlib.zig`. Tests: `test/level6/f09_net`. Registry: [registry.md](registry.md).
 
 TCP for Eve code: a client connection and a listening server, as text. The module is the base of `rpc`, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a host name or an IP literal and a port; the machine itself listens only on `127.0.0.1` unless the configuration says otherwise (D-189: level 6 is tested on `localhost`).
 

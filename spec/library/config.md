@@ -1,6 +1,6 @@
 # The module `config`
 
-Status: **0.1-draft**, level 6 (D-189). Feature: F-TLS-12. Written in Eve: `lib/config.eve`, over the string functions ([strings.md](strings.md)). Tests: `test/level6/f08_config`.
+Status: **draft**, level 6 (D-189). Feature: F-TLS-12. Written in Eve: `lib/config.eve`, over the string functions ([strings.md](strings.md)). Tests: `test/level6/f08_config`.
 
 Reads the `key = value` files of the machine (`eve.cfg`, `evedb.cfg`, `eve.env`; format in [machine.md](machine.md#configuration)) into a `DataMap`.
 
