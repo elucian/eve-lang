@@ -1,3 +1,8 @@
+//! @eve-module parser
+//! @spec spec/syntax/grammar.md, spec/syntax/declarations.md, spec/syntax/statements.md, spec/syntax/expressions.md
+//! @feature F-VM-01, F-SPEC-02
+//! @decision D-179
+//! @tests test/level1, test/level2, test/level3
 //! Parser: turns the tokens of a script into a syntax tree (see ast.zig) following the Eve grammar
 //! (spec/syntax). On a syntax error it stops at the first one and says where.
 //!

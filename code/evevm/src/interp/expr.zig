@@ -1,3 +1,7 @@
+//! @eve-module interp.expr
+//! @spec spec/syntax/expressions.md
+//! @feature F-LNG-03
+//! @tests test/level1
 //! Expressions and operators: `eval` and the arithmetic, comparison and logic of values.
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

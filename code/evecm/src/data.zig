@@ -1,3 +1,7 @@
+//! @eve-module data
+//! @spec spec/library/data-language.md, spec/library/database.md
+//! @feature F-LNG-13
+//! @tests test/level5
 //! The plain parts of the data language (spec/library/data-language.md, database.md): the CSV
 //! reader, the connection lines of `eve.cfg` and the JSON text writer. They work on bytes and
 //! slices only; the interpreter (interp.zig) turns the results into Eve values.

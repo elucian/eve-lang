@@ -1,3 +1,7 @@
+//! @eve-module interp.datatypes
+//! @spec spec/library/data-language.md
+//! @feature F-LNG-13, F-LIB-06, F-LIB-08
+//! @tests test/level5
 //! Decimal, Instant and Secret values (spec/library/data-language.md).
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

@@ -1,3 +1,8 @@
+//! @eve-module heap
+//! @spec spec/semantics/variables.md#runtime-objects
+//! @feature F-VM-05, F-VM-02
+//! @decision D-151
+//! @tests test/level1, test/level4
 //! The heap of the values of a script: strings, lists, maps, objects, functions, ranges, channels,
 //! and the scopes and variables that hold them.
 //!

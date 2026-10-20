@@ -1,3 +1,7 @@
+//! @eve-module instant
+//! @spec spec/library/data-language.md#time-types, spec/semantics/data-types.md#canonical-form-and-round-trip
+//! @feature F-LNG-13, F-LIB-06
+//! @tests test/level5
 //! `Instant`: a point in time in UTC, kept as microseconds since 1970-01-01T00:00:00Z
 //! (spec/library/data-language.md#time-types). The canonical text is ISO 8601 with a `Z`, with no fraction
 //! when the fraction is zero (spec/semantics/data-types.md#canonical-form-and-round-trip).

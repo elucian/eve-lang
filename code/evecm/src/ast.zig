@@ -1,3 +1,7 @@
+//! @eve-module ast
+//! @spec spec/syntax/grammar.md
+//! @feature F-VM-01
+//! @tests test/level1
 //! The syntax tree of an Eve script, and the introspection of it: `dump` writes the tree as text,
 //! `Stats` counts what a script is made of. The parser builds the tree, the interpreter walks it.
 //!

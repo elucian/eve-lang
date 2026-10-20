@@ -1,3 +1,8 @@
+//! @eve-module overload
+//! @spec spec/syntax/declarations.md#generic-subprograms-and-overloading
+//! @feature F-LNG-21
+//! @decision D-149, D-150
+//! @tests test/level4
 //! Overloading (D-149, D-150): functions, procedures and methods that share a name when their signatures
 //! differ. This file holds the rules, on syntax nodes and type names only, so the checker (at compile time,
 //! with the types it knows) and the interpreter (at run time, with the types of the values) apply the same ones.

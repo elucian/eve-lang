@@ -1,3 +1,8 @@
+//! @eve-module interp
+//! @spec spec/semantics/control.md, spec/semantics/variables.md, spec/semantics/errors.md
+//! @feature F-VM-02, F-LNG-04, F-LNG-05
+//! @decision D-151
+//! @tests test/level1, test/level2, test/level3
 //! The interpreter: walks the syntax tree (ast.zig) and executes it. It is a plain "tree walker":
 //! `exec` runs a statement, `eval` computes an expression, both by looking at the `tag` of the node.
 //!

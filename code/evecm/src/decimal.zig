@@ -1,3 +1,7 @@
+//! @eve-module decimal
+//! @spec spec/library/data-language.md#decimal-and-optional-types
+//! @feature F-LNG-13
+//! @tests test/level5
 //! `Decimal`: exact base 10 numbers that keep their scale (spec/library/data-language.md#decimal-and-optional-types).
 //! A value is an integer `m` and a scale `s`: it means `m / 10^s`, so `12.50d` is `m = 1250, s = 2` and prints
 //! as `12.50`. The value fits in 64 bits (a 56-bit signed integer and an 8-bit scale), so it travels in a

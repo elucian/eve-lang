@@ -1,3 +1,8 @@
+//! @eve-module vm
+//! @spec spec/library/machine.md
+//! @feature F-VM-02, F-TLS-02
+//! @decision D-188
+//! @tests test/level1, test/smoke
 //! The virtual machine session: it holds one script at a time (loaded, parsed, executed).
 //!
 //! Its commands (`load a.eve`, `parse`, `run`, `errors`, `ast`, `inspect`, `status`, ...) come from the

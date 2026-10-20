@@ -1,5 +1,5 @@
 //! @eve-module kind: what a file is, and which viewer opens it
-//! @spec code/eveux/README.md#8-previews
+//! @spec code/eveux/README.md#5-previews
 //! @feature F-TLS-19
 //! @decision D-193
 //! @tests zig test src/preview/kind.zig (from code/eveux/)

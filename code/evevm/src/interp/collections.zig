@@ -1,3 +1,7 @@
+//! @eve-module interp.collections
+//! @spec spec/syntax/expressions.md#index-slice-member, spec/syntax/expressions.md#literals-and-builders
+//! @feature F-LNG-07
+//! @tests test/level1
 //! Collections: iteration, builders, indexing and slicing.
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

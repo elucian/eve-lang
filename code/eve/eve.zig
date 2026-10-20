@@ -241,7 +241,7 @@ fn killOthers(io: Io, arena: std.mem.Allocator, out: *Io.Writer) !u8 {
 }
 
 // @eve-impl `eve -tx` and `eve -ux`: start a separate program that sits beside eve in bin/ and wait for it
-// @spec manual/usage.md#the-user-interfaces--ux-and--tx-d-172
+// @spec manual/usage.md#the-machine---listen---serve--loc--rem
 // @decision D-172
 // @decision D-193
 /// Start `name` (`evetx` the terminal IDE, `eveux` the native workbench) from the folder of `eve` with `args`, sharing this terminal, and

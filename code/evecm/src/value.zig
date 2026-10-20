@@ -1,3 +1,7 @@
+//! @eve-module value
+//! @spec spec/semantics/types.md, spec/semantics/data-types.md
+//! @feature F-LNG-06, F-LNG-07
+//! @tests test/level1, test/level2
 //! The values of an Eve script and the objects they point to: `Value`, the lists, maps, objects,
 //! classes, functions, scopes and variables, and the error codes. They are data with a few small
 //! methods; the interpreter (evevm) works on them, and the database layer reads and builds them.

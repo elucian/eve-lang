@@ -1,3 +1,7 @@
+//! @eve-module interp.generators
+//! @spec spec/syntax/declarations.md#generators-level-5
+//! @feature F-LNG-12
+//! @tests test/level5
 //! The `update` block of a record, and generators (`yield`).
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

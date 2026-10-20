@@ -12,3 +12,8 @@ if git diff --cached --name-only | grep -q "^spec/lexical/keywords.json$"; then
   git add code/evecm/src/ide/keywords.zig tools/tree-sitter-eve/grammar.js tools/tree-sitter-eve/queries/highlights.scm tools/zed-eve/languages/eve/highlights.scm tools/vscode-eve/syntaxes/eve.tmLanguage.json tools/vscode-eve/language-configuration.json
   echo "pre-commit: evetx keywords and the Zed grammar refreshed; run 'npx tree-sitter-cli generate' in tools/tree-sitter-eve to rebuild src/parser.c"
 fi
+
+# the AI tags of the Zig sources must point to real spec pages, anchors, features and decisions (plan A4)
+if git diff --cached --name-only | grep -q "\.zig$"; then
+  python script/tagcheck.py --staged || exit 1
+fi

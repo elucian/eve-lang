@@ -1,3 +1,8 @@
+//! @eve-module check
+//! @spec spec/semantics/variables.md, spec/semantics/errors.md
+//! @feature F-LNG-16
+//! @decision D-110, D-106, D-080
+//! @tests test/level2, test/level3
 //! Static check: the pass between the parser and the interpreter. Eve is a compiler first: it
 //! analyzes the whole script before it runs anything (D-110). This pass finds, without running the
 //! script: an undefined name, a name declared twice in one scope, a `let` of a name that was never

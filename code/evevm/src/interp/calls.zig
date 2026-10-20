@@ -1,3 +1,8 @@
+//! @eve-module interp.calls
+//! @spec spec/syntax/declarations.md#functions-and-procedures, spec/syntax/declarations.md#generic-subprograms-and-overloading
+//! @feature F-LNG-09, F-LNG-10, F-LNG-21
+//! @decision D-106, D-149
+//! @tests test/level2, test/level3
 //! Calls: functions, methods, constructors, overloads and the arguments of a call.
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

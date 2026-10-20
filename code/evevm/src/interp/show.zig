@@ -1,3 +1,7 @@
+//! @eve-module interp.show
+//! @spec spec/syntax/expressions.md, spec/semantics/data-types.md#canonical-form-and-round-trip
+//! @feature F-LNG-08
+//! @tests test/level1
 //! The text of a value: `show`, `text`, and the formats of the interpolation (`{x:...}`).
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

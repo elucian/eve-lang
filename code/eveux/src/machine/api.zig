@@ -1,5 +1,5 @@
 //! @eve-module api: the names of the machine messages that eveux sends, and the shape of their answers
-//! @spec spec/library/machine.md#the-machine-api
+//! @spec spec/library/machine.md#the-machine-api-level-6
 //! @feature F-NET-08
 //! @decision D-165, D-193
 //! The transport is `ide.link.Link` (code/evecm/src/ide/link.zig, as in evetx): a child `eve --stdio`, one JSON message a line, `vm.output` notifications.

@@ -1,3 +1,8 @@
+//! @eve-module lexer
+//! @spec spec/lexical/lexical.md
+//! @feature F-VM-01, F-SPEC-01
+//! @decision D-011, D-014
+//! @tests test/level1
 //! Lexer: turns the text of an Eve script into tokens (spec/lexical/lexical.md).
 //!
 //! Comments are skipped here, the parser never sees them: `#` or `##` at column 0 and `**` run to

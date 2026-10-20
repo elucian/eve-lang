@@ -1,3 +1,8 @@
+//! @eve-module interp.parallel
+//! @spec spec/semantics/multitasking.md
+//! @feature F-MTK-01, F-MTK-03, F-MTK-04
+//! @decision D-144
+//! @tests test/level4
 //! Level 4: parallel groups, channels and tasks (spec/semantics/multitasking.md).
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

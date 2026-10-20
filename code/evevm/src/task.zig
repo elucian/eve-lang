@@ -1,3 +1,8 @@
+//! @eve-module task
+//! @spec spec/semantics/multitasking.md#tasks-in-a-job
+//! @feature F-MTK-02, F-MTK-04, F-MTK-05
+//! @decision D-144
+//! @tests test/level4
 //! The scheduler of the tasks of a run: started aspects (`start`) and spawned subprograms (`spawn`).
 //! This is stage A of D-144: every task runs on its own operating-system thread, so the recursive
 //! interpreter keeps its own Zig call stack per task, but only the thread that holds the **baton**

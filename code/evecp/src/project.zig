@@ -1,3 +1,8 @@
+//! @eve-module project
+//! @spec spec/semantics/aspects.md#compile-errors-of-the-calls-d-179-to-d-183, spec/semantics/modules.md
+//! @feature F-STR-04, F-STR-02
+//! @decision D-066, D-112, D-179
+//! @tests test/level2, test/project
 //! The project of a run: the aspects its `apply` and `start` statements call (D-066, D-112, D-179). Eve is a
 //! compiler first (D-110): before the run starts, every aspect it calls is found, read,
 //! parsed and checked, and every `apply` is matched with the parameters of the `main` of that

@@ -1,3 +1,7 @@
+//! @eve-module channel
+//! @spec spec/library/machine.md#lasting-doors-level-6
+//! @feature F-NET-02
+//! @tests test/level6
 //! The lasting doors of the machine (level 6, `spec/library/machine.md#lasting-doors`): one connection carries many
 //! JSON-RPC messages both ways. The IPC door keeps its connection open, and the stdio door (`eve --stdio`) is the
 //! standard input and output of a machine that an IDE starts as its child: on this computer, or at the other end of an

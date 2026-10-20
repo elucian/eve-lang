@@ -1,3 +1,7 @@
+//! @eve-module interp.stmt
+//! @spec spec/syntax/statements.md, spec/semantics/control.md
+//! @feature F-LNG-02, F-LNG-04
+//! @tests test/level1
 //! Statements: `exec`, declarations, assignment, and the control statements.
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

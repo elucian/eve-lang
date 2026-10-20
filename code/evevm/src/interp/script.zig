@@ -1,3 +1,7 @@
+//! @eve-module interp.script
+//! @spec spec/semantics/aspects.md, spec/semantics/modules.md#import
+//! @feature F-LNG-01, F-STR-01, F-STR-02
+//! @tests test/level2, test/level3
 //! Running a script and its modules: `run`, the root aspect and its aspects, imports.
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.

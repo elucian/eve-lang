@@ -1,5 +1,5 @@
 //! @eve-module markdown: a Markdown subset parsed to blocks and spans, for the preview tab
-//! @spec code/eveux/README.md#8-previews
+//! @spec code/eveux/README.md#5-previews
 //! @feature F-TLS-19
 //! @decision D-193
 //! @tests zig test src/preview/markdown.zig (from code/eveux/)
