@@ -1,0 +1,27 @@
+# a script with a class or a lambda is not translated yet (the emitter says so): it runs entirely on the tree walker with the same result (TD-46)
+** runs on the bytecode machine (test/readme.md, Bytecode tests); (no listing): `eve --disasm` refuses a class or a lambda
+primary aspect bc13_class_fallback is
+  class Counter = {n: Integer} <: Object is
+    public method bump(@self) => (@result: Integer) is
+      let self.n += 1;
+      let result := self.n;
+    return;
+  end Counter;
+
+  process main is
+    new k := Counter(n: 0);
+    print k.bump();
+    print k.bump();
+    new add := (a, b) => (a + b);
+    print add(2, 3);
+  return;
+end bc13_class_fallback;
+/*@expect
+{
+  "stdout": [
+    "1",
+    "2",
+    "5"
+  ]
+}
+*/

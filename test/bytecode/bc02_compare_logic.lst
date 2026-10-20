@@ -1,0 +1,55 @@
+process main  (function 0, 6 registers, 0 parameters)
+     0  line 5    loadi    r0 3
+     1  line 6    loadi    r1 8
+     2  line 7    eq       r2 r0 r1
+     3  line 7    print    r2 x1 print
+     4  line 8    ne       r2 r0 r1
+     5  line 8    print    r2 x1 print
+     6  line 9    lt       r2 r0 r1
+     7  line 9    print    r2 x1 print
+     8  line 10   loadi    r3 3
+     9  line 10   le       r2 r0 r3
+    10  line 10   print    r2 x1 print
+    11  line 11   gt       r2 r0 r1
+    12  line 11   print    r2 x1 print
+    13  line 12   loadi    r3 8
+    14  line 12   ge       r2 r1 r3
+    15  line 12   print    r2 x1 print
+    16  line 13   lt       r3 r0 r1
+    17  line 13   not      r2 r3
+    18  line 13   print    r2 x1 print
+    19  line 14   lt       r3 r0 r1
+    20  line 14   jf       r3 -> 23
+    21  line 14   loadi    r4 10
+    22  line 14   lt       r3 r1 r4
+    23  line 14   move     r2 r3
+    24  line 14   print    r2 x1 print
+    25  line 15   gt       r3 r0 r1
+    26  line 15   jt       r3 -> 29
+    27  line 15   loadi    r4 5
+    28  line 15   gt       r3 r1 r4
+    29  line 15   move     r2 r3
+    30  line 15   print    r2 x1 print
+    31  line 16   loadk    r3 k0    ; "ab"
+    32  line 16   loadk    r4 k0    ; "ab"
+    33  line 16   eq       r2 r3 r4
+    34  line 16   print    r2 x1 print
+    35  line 17   loadk    r3 k0    ; "ab"
+    36  line 17   loadk    r4 k1    ; "b"
+    37  line 17   lt       r2 r3 r4
+    38  line 17   print    r2 x1 print
+    39  line 18   loadtrue r2
+    40  line 19   loadfalse r3
+    41  line 20   move     r5 r2
+    42  line 20   jf       r5 -> 44
+    43  line 20   move     r5 r3
+    44  line 20   move     r4 r5
+    45  line 20   print    r4 x1 print
+    46  line 21   move     r5 r2
+    47  line 21   jt       r5 -> 49
+    48  line 21   move     r5 r3
+    49  line 21   move     r4 r5
+    50  line 21   print    r4 x1 print
+    51  line 22   not      r4 r3
+    52  line 22   print    r4 x1 print
+    53  line 4    halt    

@@ -1,0 +1,44 @@
+# callf and ret: parameters, results, recursion and calls inside expressions
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc04_calls.lst
+primary aspect bc04_calls is
+  function fact(n: Integer) => (@result: Integer) is
+    if n <= 1 do
+      let result := 1;
+    else
+      let result := n * fact(n - 1);
+    done;
+  return;
+
+  function fib(n: Integer) => (@result: Integer) is
+    if n < 2 do
+      let result := n;
+    else
+      let result := fib(n - 1) + fib(n - 2);
+    done;
+  return;
+
+  function twice(x: Integer) => (@result: Integer) is
+    let result := x * 2;
+  return;
+
+  procedure show(label: String, v: Integer) is
+    print "{label}={v}";
+  return;
+
+  process main is
+    print fact(10);
+    print fib(15);
+    print twice(twice(3)) + 1;
+    show("answer", twice(21));
+  return;
+end bc04_calls;
+/*@expect
+{
+  "stdout": [
+    "3628800",
+    "610",
+    "13",
+    "answer=42"
+  ]
+}
+*/

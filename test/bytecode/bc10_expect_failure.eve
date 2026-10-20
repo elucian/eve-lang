@@ -1,0 +1,17 @@
+# expect raises an error with the exit code 2 and the machine stops
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc10_expect_failure.lst
+primary aspect bc10_expect_failure is
+  process main is
+    print "before";
+    expect 1 + 1 == 3;
+    print "after";
+  return;
+end bc10_expect_failure;
+/*@expect
+{
+  "stdout": [
+    "before"
+  ],
+  "exit": 2
+}
+*/

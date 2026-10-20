@@ -1,0 +1,28 @@
+# strings: concatenation, interpolation, length, comparison, write and print
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc07_strings.lst
+primary aspect bc07_strings is
+  process main is
+    new s := "hello";
+    new t := "world";
+    print s + " " + t;
+    print s.length();
+    print "{s}, {t}!";
+    write "a";
+    write "b";
+    print "c";
+    print s == "hello";
+    print s < t;
+  return;
+end bc07_strings;
+/*@expect
+{
+  "stdout": [
+    "hello world",
+    "5",
+    "hello, world!",
+    "abc",
+    "True",
+    "True"
+  ]
+}
+*/

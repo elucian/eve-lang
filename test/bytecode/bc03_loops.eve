@@ -1,0 +1,35 @@
+# forprep and forloop over ranges, while with jumps, nested loops
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc03_loops.lst
+primary aspect bc03_loops is
+  process main is
+    new total := 0;
+    for i in (1..10) do
+      let total += i;
+    done;
+    print total;
+    new n := 0;
+    while n < 5 do
+      let n += 1;
+    done;
+    print n;
+    new pairs := 0;
+    for i in (1..4) do
+      for j in (1..i) do
+        let pairs += 1;
+      done;
+    done;
+    print pairs;
+    for k in (3..1) do
+      print "never";
+    done;
+  return;
+end bc03_loops;
+/*@expect
+{
+  "stdout": [
+    "55",
+    "5",
+    "10"
+  ]
+}
+*/

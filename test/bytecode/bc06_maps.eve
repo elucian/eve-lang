@@ -1,0 +1,23 @@
+# new_map, map_set, map_get and the length of a map
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc06_maps.lst
+primary aspect bc06_maps is
+  process main is
+    new m := {"a": 1, "b": 2};
+    print m["a"] + m["b"];
+    let m["c"] := 30;
+    print m["c"];
+    let m["a"] := 100;
+    print m["a"];
+    print m.count();
+  return;
+end bc06_maps;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "30",
+    "100",
+    "3"
+  ]
+}
+*/

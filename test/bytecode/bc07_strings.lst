@@ -1,0 +1,23 @@
+process main  (function 0, 5 registers, 0 parameters)
+     0  line 5    loadk    r0 k0    ; "hello"
+     1  line 6    loadk    r1 k1    ; "world"
+     2  line 7    loadk    r4 k2    ; " "
+     3  line 7    add      r3 r0 r4
+     4  line 7    add      r2 r3 r1
+     5  line 7    print    r2 x1 print
+     6  line 8    evalx    r2 x0    ; tree walker: call
+     7  line 8    print    r2 x1 print
+     8  line 9    evalx    r2 x1    ; tree walker: interp
+     9  line 9    print    r2 x1 print
+    10  line 10   loadk    r2 k3    ; "a"
+    11  line 10   print    r2 x1 write
+    12  line 11   loadk    r2 k4    ; "b"
+    13  line 11   print    r2 x1 write
+    14  line 12   loadk    r2 k5    ; "c"
+    15  line 12   print    r2 x1 print
+    16  line 13   loadk    r3 k0    ; "hello"
+    17  line 13   eq       r2 r0 r3
+    18  line 13   print    r2 x1 print
+    19  line 14   lt       r2 r0 r1
+    20  line 14   print    r2 x1 print
+    21  line 4    halt    

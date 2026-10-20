@@ -9,6 +9,8 @@ TARGET is one of:
   1 | level1          every test in test/level1 (likewise 2 to 7)
   smoke               every test in test/smoke (the tools of the VM: slot, workflow)
   all                 every level, and smoke
+  bytecode            the bytecode special tests, test/bytecode: they run on the bytecode machine (EVE_ENGINE=bc);
+                      never part of `all`; the status files are not updated (`python script/bctest.py` runs them too)
   scaffold            the special test of `project init` and `project new` (test/scaffold/run.sh,
                       a shell script on real folders); run on its own, never part of `all`
   a03 | a03_print     one test, by name or name prefix, searched in every level
@@ -179,6 +181,8 @@ def resolve(target):
                        for p in level_tests(lv)]
     if t.isdigit():
         t = "level" + t
+    if t == "bytecode":
+        return t, level_tests(t)
     if t in LEVELS:
         return t, level_tests(t)
     tests = find_test(target)
@@ -362,8 +366,10 @@ def run_test(eve, test, timeout):
         if "client" in exp:
             p = run_with_client(eve, test, exp, timeout)
         else:
+            # the tests of test/bytecode run on the bytecode machine, all the others on the tree walker
+            env = dict(os.environ, EVE_ENGINE="bc") if level_of(test) == "bytecode" else None
             p = subprocess.run([eve, *eve_args(test, exp)], cwd=test_cwd(test), capture_output=True,
-                               timeout=timeout)
+                               timeout=timeout, env=env)
     except subprocess.TimeoutExpired as e:
         res.update(verdict="ERROR", reason=f"timeout after {timeout}s",
                    stdout=(e.stdout or b"").decode("utf-8", "replace"))
@@ -692,6 +698,8 @@ def main():
         label = label[:50] + "-etc"   # a long list of tests would be a file name too long for the system
     if not tests:
         die(f"no tests in {label}")
+    if any(level_of(t) == "bytecode" for t in tests):
+        args.no_update = True   # the bytecode suite has no status file or page of its own
 
     if args.check:
         bad = 0

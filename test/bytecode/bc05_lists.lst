@@ -1,0 +1,22 @@
+process main  (function 0, 5 registers, 0 parameters)
+     0  line 5    evalx    r0 x0    ; tree walker: list
+     1  line 6    execx    x1    ; tree walker: assign
+     2  line 7    execx    x2    ; tree walker: assign
+     3  line 8    execx    x3    ; tree walker: assign
+     4  line 9    evalx    r1 x4    ; tree walker: index
+     5  line 9    print    r1 x1 print
+     6  line 10   evalx    r1 x5    ; tree walker: index
+     7  line 10   print    r1 x1 print
+     8  line 11   evalx    r1 x6    ; tree walker: index
+     9  line 11   print    r1 x1 print
+    10  line 12   execx    x7    ; tree walker: assign
+    11  line 13   evalx    r1 x8    ; tree walker: index
+    12  line 13   print    r1 x1 print
+    13  line 14   evalx    r1 x9    ; tree walker: call
+    14  line 14   print    r1 x1 print
+    15  line 15   evalx    r1 x10    ; tree walker: list
+    16  line 16   evalx    r3 x11    ; tree walker: index
+    17  line 16   evalx    r4 x12    ; tree walker: index
+    18  line 16   add      r2 r3 r4
+    19  line 16   print    r2 x1 print
+    20  line 4    halt    

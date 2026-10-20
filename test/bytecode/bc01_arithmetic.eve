@@ -1,0 +1,42 @@
+# every arithmetic instruction on integers and reals, the sign and the precedence
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc01_arithmetic.lst
+primary aspect bc01_arithmetic is
+  process main is
+    new a := 17;
+    new b := 5;
+    print a + b;
+    print a - b;
+    print a * b;
+    print a / b;
+    print a % b;
+    print -a;
+    print a + b * 2 - 1;
+    print (a + b) * (a - b);
+    new x := 7.5;
+    new y := 2.0;
+    print x + y;
+    print x * y;
+    print x / y;
+    print x - a;
+    print -x;
+  return;
+end bc01_arithmetic;
+/*@expect
+{
+  "stdout": [
+    "22",
+    "12",
+    "85",
+    "3.4",
+    "2",
+    "-17",
+    "26",
+    "264",
+    "9.5",
+    "15",
+    "3.75",
+    "-9.5",
+    "-7.5"
+  ]
+}
+*/

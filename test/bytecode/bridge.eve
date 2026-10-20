@@ -1,3 +1,5 @@
+# what the emitter does not translate runs on the tree walker (TD-46)
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bridge.lst
 primary aspect bridge is
   process main is
     new xs := (3, 1, 2);
@@ -9,3 +11,11 @@ primary aspect bridge is
     print total;
   return;
 end bridge;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "6"
+  ]
+}
+*/

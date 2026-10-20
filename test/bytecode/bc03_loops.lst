@@ -1,0 +1,38 @@
+process main  (function 0, 10 registers, 0 parameters)
+     0  line 5    loadi    r0 0
+     1  line 6    loadi    r1 1
+     2  line 6    loadi    r2 10
+     3  line 6    forprep  r1 -> 6
+     4  line 7    augment  r0 r3 add
+     5  line 6    forloop  r1 -> 4
+     6  line 9    move     r1 r0
+     7  line 9    print    r1 x1 print
+     8  line 10   loadi    r1 0
+     9  line 11   loadi    r3 5
+    10  line 11   lt       r2 r1 r3
+    11  line 11   jf       r2 -> 15
+    12  line 12   loadi    r2 1
+    13  line 12   augment  r1 r2 add
+    14  line 11   jmp      -> 9
+    15  line 14   move     r2 r1
+    16  line 14   print    r2 x1 print
+    17  line 15   loadi    r2 0
+    18  line 16   loadi    r3 1
+    19  line 16   loadi    r4 4
+    20  line 16   forprep  r3 -> 28
+    21  line 17   loadi    r6 1
+    22  line 17   move     r7 r5
+    23  line 17   forprep  r6 -> 27
+    24  line 18   loadi    r9 1
+    25  line 18   augment  r2 r9 add
+    26  line 17   forloop  r6 -> 24
+    27  line 16   forloop  r3 -> 21
+    28  line 21   move     r3 r2
+    29  line 21   print    r3 x1 print
+    30  line 22   loadi    r3 3
+    31  line 22   loadi    r4 1
+    32  line 22   forprep  r3 -> 36
+    33  line 23   loadk    r6 k0    ; "never"
+    34  line 23   print    r6 x1 print
+    35  line 22   forloop  r3 -> 33
+    36  line 4    halt    

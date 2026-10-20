@@ -1,0 +1,44 @@
+# comparison instructions, not, and, or, and the short circuit
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc02_compare_logic.lst
+primary aspect bc02_compare_logic is
+  process main is
+    new a := 3;
+    new b := 8;
+    print a == b;
+    print a <> b;
+    print a < b;
+    print a <= 3;
+    print a > b;
+    print b >= 8;
+    print not (a < b);
+    print a < b and b < 10;
+    print a > b or b > 5;
+    print "ab" == "ab";
+    print "ab" < "b";
+    new t := True;
+    new f := False;
+    print t and f;
+    print t or f;
+    print not f;
+  return;
+end bc02_compare_logic;
+/*@expect
+{
+  "stdout": [
+    "False",
+    "True",
+    "True",
+    "True",
+    "False",
+    "True",
+    "False",
+    "True",
+    "True",
+    "True",
+    "True",
+    "False",
+    "True",
+    "True"
+  ]
+}
+*/

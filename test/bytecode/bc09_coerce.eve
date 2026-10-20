@@ -1,0 +1,25 @@
+# coerce and setlike: a declared type converts the value it receives
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc09_coerce.lst
+primary aspect bc09_coerce is
+  process main is
+    new a := 3 :Real;
+    print a;
+    new b := 2.0 :Real;
+    let b := 5;
+    print b;
+    new c := 7 :Integer;
+    print c / 2;
+    new d := 7.0 :Real;
+    print d / 2;
+  return;
+end bc09_coerce;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "5",
+    "3.5",
+    "3.5"
+  ]
+}
+*/

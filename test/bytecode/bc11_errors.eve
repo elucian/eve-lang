@@ -1,0 +1,18 @@
+# a run-time error (division by zero, an index out of range) is the same error on the machine
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc11_errors.lst
+primary aspect bc11_errors is
+  process main is
+    new xs := (1, 2, 3);
+    print xs[2];
+    new z := 0;
+    print 10 / z;
+  return;
+end bc11_errors;
+/*@expect
+{
+  "stdout": [
+    "2"
+  ],
+  "exit": 4
+}
+*/

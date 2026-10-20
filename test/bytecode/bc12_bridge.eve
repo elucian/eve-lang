@@ -1,0 +1,18 @@
+# what the emitter does not translate runs on the tree walker with the same result (TD-46): a loop over a list
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc12_bridge.lst
+primary aspect bc12_bridge is
+  process main is
+    new total := 0;
+    for x in (4, 5, 6) do
+      let total += x;
+    done;
+    print total;
+  return;
+end bc12_bridge;
+/*@expect
+{
+  "stdout": [
+    "15"
+  ]
+}
+*/

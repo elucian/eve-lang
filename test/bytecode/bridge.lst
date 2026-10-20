@@ -1,9 +1,9 @@
 process main  (function 0, 3 registers, 0 parameters)
-     0  line 3    evalx    r0 x0    ; tree walker: list
-     1  line 4    evalx    r1 x1    ; tree walker: call
-     2  line 4    print    r1 x1 print
-     3  line 5    loadi    r1 0
-     4  line 6    execx    x2    ; tree walker: for_
-     5  line 9    move     r2 r1
-     6  line 9    print    r2 x1 print
-     7  line 2    halt    
+     0  line 5    evalx    r0 x0    ; tree walker: list
+     1  line 6    evalx    r1 x1    ; tree walker: call
+     2  line 6    print    r1 x1 print
+     3  line 7    loadi    r1 0
+     4  line 8    execx    x2    ; tree walker: for_
+     5  line 11   move     r2 r1
+     6  line 11   print    r2 x1 print
+     7  line 4    halt    

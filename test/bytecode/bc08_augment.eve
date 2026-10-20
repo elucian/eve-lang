@@ -1,0 +1,31 @@
+# augment: compound assignment on numbers, strings and lists
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc08_augment.lst
+primary aspect bc08_augment is
+  process main is
+    new n := 10;
+    let n += 5;
+    let n -= 3;
+    let n *= 2;
+    let n /= 4;
+    print n;
+    new s := "ab";
+    let s += "cd";
+    print s;
+    new xs := (1, 2);
+    let xs += 10;
+    print xs[1] + xs[2];
+    new r := 1.5;
+    let r *= 4;
+    print r;
+  return;
+end bc08_augment;
+/*@expect
+{
+  "stdout": [
+    "6",
+    "abcd",
+    "23",
+    "6"
+  ]
+}
+*/

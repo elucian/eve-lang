@@ -1,0 +1,30 @@
+# new_list, list_push, list_index, list_set, length, negative index
+** runs on the bytecode machine (test/readme.md, Bytecode tests); the golden listing is bc05_lists.lst
+primary aspect bc05_lists is
+  process main is
+    new xs := ();
+    let xs <+ 10;
+    let xs <+ 20;
+    let xs <+ 30;
+    print xs[1];
+    print xs[3];
+    print xs[-1];
+    let xs[2] := 25;
+    print xs[2];
+    print xs.count();
+    new ys := (1, 2, 3);
+    print ys[2] + ys[3];
+  return;
+end bc05_lists;
+/*@expect
+{
+  "stdout": [
+    "10",
+    "30",
+    "30",
+    "25",
+    "3",
+    "5"
+  ]
+}
+*/

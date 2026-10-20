@@ -1,0 +1,9 @@
+process main  (function 0, 4 registers, 0 parameters)
+     0  line 5    evalx    r0 x0    ; tree walker: list
+     1  line 6    evalx    r1 x1    ; tree walker: index
+     2  line 6    print    r1 x1 print
+     3  line 7    loadi    r1 0
+     4  line 8    loadi    r3 10
+     5  line 8    div      r2 r3 r1
+     6  line 8    print    r2 x1 print
+     7  line 4    halt    
