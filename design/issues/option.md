@@ -1,30 +1,14 @@
-# Issues: option.html
+# Issues: option
 
-Page: `tutorial/option.html` (94 lines, "Eve Optional Symbols"). Reviewed 2026-09-28. How to answer: [README](README.md).
+Page: `tutorial/option.html` ("Eve Optional Symbols"). How to answer: [README](README.md). Triage of 2026-10-20: OPT-03 (the page is not in the index) moved to `backlog/tutorial.md`. Two questions are left; the suggestion is not a decision.
 
 ## Questions
 
-### OPT-01 Symbol → ASCII table
-The page lists `≠ ≤ ≥ ÷ ≈ ø π ¬ ± ^ • ¶ § ∞ √ ∫ Ω µ ∆ ∂ ∑ ∏` and says "every one of them has an ASCII alternative", but gives none except `≠` = `<>`. Please give the ASCII form of each, for example `≤` `<=`, `≥` `>=`, `÷` `/`, `¬` `not`, `π` `PI`?, `√` `sqrt`?, `∞` ?. Which have no meaning in 0.1 (`¶`, `§`, `∫`, `Ω`, `µ`, `∂`)? `^` is already ASCII.
+### OPT-01 Symbol → ASCII table, and OPT-02 other symbols
+The page lists `≠ ≤ ≥ ÷ ≈ ø π ¬ ± ^ • ¶ § ∞ √ ∫ Ω µ ∆ ∂ ∑ ∏` and says "every one of them has an ASCII alternative", giving none but `≠` = `<>`. The tutorial also uses `∅`, `≡`, `∈`, `⊤`, `⊥`, `∧`, `∨`. Which does the lexer accept? Today none: `spec/lexical/operators.json` has no `unicode` field and the lexer reads ASCII operators only.
+
+**Suggestion (2026-10-20):** the lexer stays ASCII only; the symbols are tutorial notation, shown next to the operator they stand for, and never accepted as source. Those that match an operator get a row in a table on the page: `≠ <>`, `≤ <=`, `≥ >=`, `÷ /`, `¬ not`, `∧ and`, `∨ or`, `∈ in`, `≡ eq`, `⊤ true`, `⊥ false`, `∅ []` or `{}`. The others (`≈ ø π ± • ¶ § ∞ √ ∫ Ω µ ∆ ∂ ∑ ∏`) have no meaning in Eve and are removed from the page. Nothing changes in `operators.json`.
 
 **Answer:** _(open)_
 
 Status: open
-
-### OPT-02 Other symbols used by the tutorial
-syntax.html uses `∅` (empty collection) and mentions `≡` (`eq`), `∈` (`in`); types.html uses `⊤`, `⊥`, `∧`, `∨`. Are any of these accepted by the lexer?
-
-**Answer:** _(open)_
-
-Status: open
-
-### OPT-03 Not in the index
-option.html is not linked from index.html (T1.7). Where does it belong in the topic order?
-
-**Answer:** _(open)_
-
-Status: open
-
-## Spec additions once answered
-
-- `spec/lexical/operators.json`: an `unicode` field per operator (OPT-01, 02).

@@ -68,22 +68,22 @@ Per page: review → issues in `issues/<page>.md` (the author answers by editing
 
 | Page | Review | Questions | Page fixed | Spec updated | Notes |
 |---|---|---|---|---|---|
-| syntax | 2026-09-28 | 24 answered; 6 spec questions | [x] | [ ] | [design/issues/syntax.md](issues/syntax.md) |
-| types | 2026-09-28 | 22 answered (D-032) | [x] | [ ] | [design/issues/types.md](issues/types.md) |
-| topology | 2026-09-28 | 16 answered (D-031); TOP-08, 10 partly | [x] | [ ] | [design/issues/topology.md](issues/topology.md) |
-| control | 2026-09-28 | 16 answered (D-030) | [x] | [ ] | [design/issues/control.md](issues/control.md) |
-| functions | 2026-09-28 | 10 answered (D-025 to D-029) | [x] | [ ] | [design/issues/functions.md](issues/functions.md) |
+| syntax | 2026-09-28 | 24 answered; 6 spec questions | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| types | 2026-09-28 | 22 answered (D-032) | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| topology | 2026-09-28 | 16 answered (D-031); TOP-08, 10 partly | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| control | 2026-09-28 | 16 answered (D-030) | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| functions | 2026-09-28 | 10 answered (D-025 to D-029) | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | modules (new page, D-068) | not reviewed | - | [ ] | [ ] | - |
 | classes | 2026-09-28 | 14 asked | [ ] | [ ] | [design/issues/classes.md](issues/classes.md) |
-| collections | 2026-09-28 | 20 asked | [ ] | [ ] | [design/issues/collections.md](issues/collections.md) |
-| processing | 2026-09-28 | 11 asked | [ ] | [ ] | [design/issues/processing.md](issues/processing.md) |
-| multitasking (was concurrency) | 2026-09-28 | 8 asked | [ ] | [ ] | [design/issues/multitasking.md](issues/multitasking.md) |
-| library | 2026-09-28 | 6 asked | [ ] | [ ] | [design/issues/library.md](issues/library.md) |
+| collections | 2026-09-28 | 20 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| processing | 2026-09-28 | 11 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| multitasking (was concurrency) | 2026-09-28 | 8 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| library | 2026-09-28 | 6 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | command | 2026-09-28 | 6 asked | [ ] | [ ] | [design/issues/command.md](issues/command.md) |
-| databases | 2026-09-28 | 4 asked | [ ] | [ ] | [design/issues/databases.md](issues/databases.md) |
-| manifest | 2026-09-28 | 4 asked | [ ] | [ ] | [design/issues/manifest.md](issues/manifest.md) |
+| databases | 2026-09-28 | 4 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
+| manifest | 2026-09-28 | 4 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | option | 2026-09-28 | 3 asked | [ ] | [ ] | [design/issues/option.md](issues/option.md) |
-| compiler | 2026-09-28 | 2 asked | [ ] | [ ] | [design/issues/compiler.md](issues/compiler.md) |
+| compiler | 2026-09-28 | 2 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 
 For each page:
 - Check every rule it states against the spec; mismatches go to `decision_level1.md` or `decision_level2.md`.

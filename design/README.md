@@ -21,7 +21,7 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 | `release.md` | the release policy and the steps of a release (D-153) |
 | `manual.md` | how the manual is made: what is written by hand, what is generated |
 | `decision/` | `level1.md` to `level7.md`: the decisions and the open questions, by level; `archive/` keeps the settled entries in full |
-| `issues/` | one file per tutorial page: the questions of the page review and the author's answers |
+| `issues/` | the open questions of the tutorial review (three files, 9 questions, each with a suggestion) and the ledger of the closed ones; wording items are in `../backlog/tutorial.md` |
 | `review/` | the critical review of the project (second round, 2026-10-20: README, follow-up of the first round, findings); the first round (2026-10-04) is in `archive/review-2026-10-04/` |
 | `template/` | the templates of the generators: release notes, the generated pages of the manual, the README of a distribution, an issue page |
 | `archive/` | designs and focus notes that were replaced |

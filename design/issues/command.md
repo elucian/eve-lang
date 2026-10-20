@@ -1,45 +1,23 @@
-# Issues: command.html
+# Issues: command
 
-Page: `tutorial/command.html` (163 lines). Reviewed 2026-09-28; CMD-F1 applied 2026-10-06. How to answer: [README](README.md).
+Page: `tutorial/command.html`. How to answer: [README](README.md). Triage of 2026-10-20: CMD-02, CMD-03 and CMD-06 are closed by `os.run!` and the `fs` module (ledger in the README). Two questions are left, with a **Suggestion** each; a suggestion is not a decision.
 
 ## Questions
 
-### CMD-02 Exit status of a shell command
-`call "ls -l *.dat" +> files;` captures stdout as a list of lines. How does the script read the command's exit code (`$status`?), and does a non-zero code raise an error?
-
-**Answer:** _(open)_
-
-Status: open
-
-### CMD-03 `cd` and the working directory
-`call "cd #($HOME)/test";` then `call "ls …"`. Each `call` normally runs in its own shell, so the `cd` would be lost. Does `call "cd …"` change the VM's working directory (`$CWD`)?
-
-**Answer:** _(open)_
-
-Status: open
-
 ### CMD-04 `export`
-"You can export Eve shared variables to the operating system using `export`." Is `export` a keyword (it is not in the keyword table)? Syntax?
+"You can export Eve shared variables to the operating system using `export`." `export` is a keyword, but of the modules (`export (LIMIT, tick);`, `spec/semantics/modules.md`), not of the shell. How does a script give variables to a program it starts?
+
+**Suggestion (2026-10-20):** no shell `export` statement. A program gets variables as an argument: add an `env` map to `os.run!` (`os.run!(command, args, cwd, env)`), logged as library gap G-10. The tutorial sentence is then removed.
 
 **Answer:** _(open)_
 
 Status: open
 
 ### CMD-05 Working directory variable
-This page: `$CWD`, `$HOME`. topology.html: `$OS_PWD`, `$MY_DIR`. Which names? Conflict still open: `spec/semantics/variables.md` lists both `$OS_PWD` and `$CWD` as "question"; keep one, or use the OS variable `$PWD`.
+`$CWD`, `$HOME` on this page; `$OS_PWD`, `$MY_DIR` in `spec/semantics/variables.md`, where `$OS_PWD` and `$CWD` are both marked "question" (open point 1 there).
+
+**Suggestion (2026-10-20):** keep `$OS_PWD`, drop `$CWD`. The names then follow the families already in the table: `$EVE_*` for the runtime and the project, `$MY_*` for the running aspect, `$OS_*` for the system. It is read-only; a program runs in another folder through the `cwd` argument of `os.run!`, not by changing a global (this is also the answer to the closed CMD-03).
 
 **Answer:** _(open)_
 
 Status: open
-
-### CMD-06 `File` and `Folder` classes
-"These classes are not yet designed." Are they part of 0.1, or planned for level 3?
-
-**Answer:** _(open)_
-
-Status: open
-
-## Spec additions once answered
-
-- `spec/semantics/`: shell commands, `call`, exit status (CMD-02..04, D-025).
-- `spec/library/builtins.json`: `File`, `Folder` if in 0.1 (CMD-06).

@@ -1,69 +1,51 @@
-# Tutorial Issues
+# Tutorial issues
 
-One file per tutorial page (`tutorial/<page>.html` → `design/issues/<page>.md`): questions for the author and proposed improvements, found by the page-by-page review (plan step T1.10).
-
-Lost in the list? The order of the work is in [CLAUDE.md](../../CLAUDE.md) (D-194) and `python script/plan.py status`.
+One file per tutorial topic that still has an open question for the author (page `tutorial/<page>.html` → `design/issues/<page>.md`), from the page-by-page review (plan step T1.10). Since the tutorial is last in the order of the work (D-194) this folder is kept small: only questions that need an answer live here; wording and layout items are in [`backlog/tutorial.md`](../../backlog/tutorial.md); a closed item is a row of the ledger below. The order of the work: [CLAUDE.md](../../CLAUDE.md), `python script/plan.py status`.
 
 ## How to answer
 
-Edit the file. Write your answer under the issue's `Answer:` line, replacing `_(open)_`. Short answers are fine ("yes", "use `<>`", "drop it"). To reject a proposed fix, write "no" and why.
+Write your answer on the `**Answer:**` line of the issue, replacing `_(open)_`. Short answers are fine ("yes", "use `<>`", "drop it"). Each open issue has a **Suggestion** (dated); "yes" accepts it, "no" and a reason rejects it. A suggestion is not a decision.
 
-```
-### SYN-05 Not-equal operator
-...
-**Answer:** `<>` only. `!` is the sigil for unsafe operations.
-```
+When a file is answered, Claude: (1) turns the answer into a decision in `design/decision/levelN.md`; (2) adds the rule to `spec/` after any follow-up question; (3) lists the page fix in `backlog/tutorial.md`; (4) removes the issue and adds its id to the ledger. Ids are stable and retired when removed (the text stays in git history).
 
-When a file is answered, Claude:
+## Open (2026-10-20)
 
-1. turns settled answers into decisions in `design/decision/level1.md` or `design/decision/level2.md`;
-2. fixes the page (the tutorial is edited in the scl repo);
-3. adds the rules to the specification in `spec/`, after asking any follow-up questions;
-4. marks each issue: `Status: open` → `answered` → `done`.
-
-Issue ids are stable: `CLS-09` stays `CLS-09` even when issues are added or closed. An issue that depends on another points to it (`see CLS-09`).
-
-## Kinds
-
-| Kind | Meaning |
+| File | Open questions |
 |---|---|
-| **Question** | The page contradicts itself, the examples, or the spec. Needs an answer. |
-| **Fix** | An error with one obvious correction: typo, broken HTML, wrong example. Applied unless you write "no". |
-| **Improve** | A suggestion for structure or clarity. Applied only if you write "yes". |
+| [classes.md](classes.md) | 6: CLS-09, 13, 14, 15, 16, 17b |
+| [command.md](command.md) | 2: CMD-04, CMD-05 |
+| [option.md](option.md) | 1: OPT-01 with OPT-02 |
 
-## Pages
+## Ledger of the triage of 2026-10-20
 
-In index order (index.html first). Open items on 2026-10-06: 28 open questions, 3 open fixes or improvements, 6 answered questions waiting for the spec (syntax.md) and 2 for the library. An item is removed when its answer is applied to the tutorial and recorded in `design/decision/levelN.md`; the ids of removed items are retired (their text is in the git history before 2026-10-06). Spec work still points to the decisions.
+Deleted files with nothing open: `control`, `functions`, `index`, `manifest`, `topology`, `types`, `processing`, `collections`, `multitasking`, `compiler`, `library`, `syntax`, `databases`. Reasons, by issue:
 
-| Page | File | Open questions | Open fixes / improvements |
-|---|---|---|---|
-| index.html | [index.md](index.md) | 0 | 0 |
-| manifest.html | [manifest.md](manifest.md) | 0 | 0 |
-| syntax.html | [syntax.md](syntax.md) | 6 (answered, spec pending) | 0 |
-| types.html, datetime.html | [types.md](types.md) | 1 | 0 |
-| topology.html | [topology.md](topology.md) | 0 | 0 |
-| control.html | [control.md](control.md) | 0 | 0 |
-| functions.html | [functions.md](functions.md) | 0 | 0 |
-| classes.html | [classes.md](classes.md) | 7 | 2 |
-| collections.html | [collections.md](collections.md) | 2 | 0 |
-| processing.html | [processing.md](processing.md) | 0 (PRC-10: VM and manual only) | 0 |
-| multitasking.html | [multitasking.md](multitasking.md) | 3 | 0 |
-| library.html | [library.md](library.md) | 0 (LIB-01, LIB-02: answered, library and spec pending) | 0 |
-| command.html | [command.md](command.md) | 5 | 0 |
-| databases.html | [databases.md](databases.md) | 4 (ask again after the rewrite, F4) | 0 |
-| option.html | [option.md](option.md) | 3 | 0 |
-| compiler.html | [compiler.md](compiler.md) | 1 | 1 |
-| template.html | [template.md](../template/issue.md) | 0 | 0 |
-
-## Questions that span pages
-
-Some questions recur; one answer closes all of them:
-
-| Topic | Issues |
+| Id | Closed by |
 |---|---|
-| Placeholders and escapes in strings | COL-15, COL-16, LIB-06 |
-| Exit codes and interruptions | PRC-02, CON-07 |
-| Result and output parameters (`@`) | ALG-02 (CON-02 retired, D-048) |
-| System variables | TOP-08, CMD-05 |
-| Class model (destructor, traits) | CLS-14 to CLS-16, CLS-17b |
-| Broken `/images/` links | COL-F2, PRC-F1, CON-F1 |
+| CLS-12 | `spec/semantics/types.md` (code outside the class cannot add an attribute, Q-031k) and `spec/syntax/declarations.md` (`new self.extra` in a constructor or a method) |
+| CLS-I1, CLS-I2 | `backlog/tutorial.md` TB-1, TB-2 |
+| CMD-02 | `spec/library/os.md`: `ProcessResult.status` is the exit code (127 when the program can not start), not an error of the language |
+| CMD-03 | each run is its own process; `os.run!` takes a `cwd` (see CMD-05) |
+| CMD-06 | no `File` or `Folder` class: the `fs` module and `os` (`spec/library/registry.md`) |
+| DB-01 | the database layer is level 5 and implemented (117 tests, D-156 to D-188) |
+| DB-02 | `from … use (name as alias)`, `spec/semantics/modules.md`, `spec/library/registry.md` |
+| DB-03 | `commit;` and `rollback;` only in a job, `spec/library/database.md`; the `update` block of a record |
+| DB-04 | debug mode connects, production trusts `db/mappings.json` (D-158), `spec/library/database.md` |
+| COL-05 | implemented and tested: `let _ <- m;`, `new head <- q;` in `test/level1/a17_list.eve` |
+| COL-16 | `backlog/tutorial.md` TB-4 |
+| CON-06 | D-051 removed `wait all` and `wait name`; `wait <duration>` is in `spec/syntax/statements.md` and the level 4 tests |
+| CON-11 | `spec/semantics/multitasking.md#parallel-groups` (D-140), level 4 tests |
+| CON-12 | `capacity` is required (`multitasking.md`, D-145); the rest (`select`, directed parameters) is in `backlog/ideas.md` |
+| CMP-02, CMP-F3 | `backlog/tutorial.md` TB-5 |
+| LIB-01, LIB-02 | D-053; `spec/library/strings.md`; what is missing is G-7 of `backlog/library-gaps.md` |
+| SPEC-01 | `status` of each word in `spec/lexical/keywords.json`; D-116 made most words contextual |
+| SPEC-02 | replaced by D-116 (contextual keywords; the answer "reserved everywhere" no longer holds) |
+| SPEC-03 | replaced by D-179 (no free script, no `#!`) |
+| SPEC-04 | `spec/lexical/lexical.md` (Interpolation, D-102, D-120): a name or a literal in braces, a format after `%` |
+| SPEC-05 | `spec/lexical/lexical.md#layout`: 2 spaces, a tab in the indentation is an error |
+| SPEC-06 | D-078: the specification is CC BY-NC-SA 4.0 (`spec/LICENSE`); the license named in the author's answer (CC BY-ND) was replaced |
+| TYP-19 | `backlog/tutorial.md` TB-8 (`Date` is in `spec/library/data-language.md#time-types`; an era field is not specified) |
+| PRC-10 | `backlog/tutorial.md` TB-6 (the VM side is F-STR-05) |
+| OPT-03 | `backlog/tutorial.md` TB-3 |
+
+The template for a new issue file is `design/template/issue.md`.
