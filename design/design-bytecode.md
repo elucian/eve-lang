@@ -1,6 +1,6 @@
 <!--# Bytecode design-->
 
-Status: **answered** 2026-10-19: the author answered Q-B1 to Q-B9 (settled as D-201); the stages wait for the order of the work (level 5 and 6 blockers first). Step S8.12 of `phase-8-architecture.md`, step B5 of `design-packages.md` §10. Builds on RVM-R01, R03 and R05 of `review/07-vm.md`, D-144 (baton tasks), D-151 (reference counted heap), D-163 (modules), D-194 (order of the work). The answers of the author are in §13 and in D-201 (`decision/level6.md`).
+Status: **answered** 2026-10-19: the author answered Q-B1 to Q-B9 (settled as D-201); the stages wait for the order of the work (level 5 and 6 blockers first). Step S8.12 of `phase-8-architecture.md`, step B5 of `design-packages.md` §10. Builds on RVM-R01, R03 and R05 of `archive/review-2026-10-04/07-vm.md`, D-144 (baton tasks), D-151 (reference counted heap), D-163 (modules), D-194 (order of the work). The answers of the author are in §13 and in D-201 (`decision/level6.md`).
 
 ## 1. Goal and the steering rule
 

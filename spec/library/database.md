@@ -1,6 +1,6 @@
 # Database layer
 
-Status: **0.1-draft**, level 5 (version 0.4). Sources: the author's request of 2026-10-10 (Q-046), Q-043, D-020, D-080, D-089, D-116, D-123, D-151; stored procedures, SQL functions and the database part of `eve`: D-163, D-166 (2026-10-12). Design notes: `../../design/design-database-core.md` and `../../design/design-database-remote.md`. Every rule on this page was written from the design **as proposed**: the author has not confirmed it yet, and the points that needed a choice are listed in `../../design/review/level5.md`. Tests: `test/level5` (prefix `e`, the database tests follow the generic ones). Grammar: `../syntax/grammar.md#database-declarations-and-statements-level-5`.
+Status: **0.1-draft**, level 5 (version 0.4). Sources: the author's request of 2026-10-10 (Q-046), Q-043, D-020, D-080, D-089, D-116, D-123, D-151; stored procedures, SQL functions and the database part of `eve`: D-163, D-166 (2026-10-12). Design notes: `../../design/design-database-core.md` and `../../design/design-database-remote.md`. Every rule on this page was written from the design **as proposed**: the author has not confirmed it yet, and the points that needed a choice are listed in `../../design/archive/review-2026-10-04/level5.md`. Tests: `test/level5` (prefix `e`, the database tests follow the generic ones). Grammar: `../syntax/grammar.md#database-declarations-and-statements-level-5`.
 
 ## Layers
 
@@ -401,4 +401,4 @@ The commands are words of the database part: `eve db <command>` (D-163). `db lis
 
 ## Open points
 
-All in `../../design/review/level5.md` and in Q-043 and Q-046 of `../../design/decision/level5.md`: the shape of the `table` declaration, the production check at first use, nullable columns against non-optional fields, the restore of memory on rollback, savepoints, two databases in one job, Oracle (postponed), the client cache (no), 
+All in `../../design/archive/review-2026-10-04/level5.md` and in Q-043 and Q-046 of `../../design/decision/level5.md`: the shape of the `table` declaration, the production check at first use, nullable columns against non-optional fields, the restore of memory on rollback, savepoints, two databases in one job, Oracle (postponed), the client cache (no), 

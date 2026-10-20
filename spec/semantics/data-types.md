@@ -1,6 +1,6 @@
 # Data file types
 
-Status: **0.1-draft**, level 5 (the data language, D-125; version 0.4). Written from the proposals of Q-039 and Q-044 and from `../../design/design-database-remote.md` (ETL), **as proposed**: the author has not answered yet, and the choices are listed in `../../design/review/level5.md`. Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
+Status: **0.1-draft**, level 5 (the data language, D-125; version 0.4). Written from the proposals of Q-039 and Q-044 and from `../../design/design-database-remote.md` (ETL), **as proposed**: the author has not answered yet, and the choices are listed in `../../design/archive/review-2026-10-04/level5.md`. Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
 
 ## What they are
 
@@ -208,4 +208,4 @@ end orders_upload;
 
 ## Open points
 
-All in `../../design/review/level5.md`: the layout of a `TXT` file, the position of `XML` (0.5) and `HTML` (0.6), the module for compression.
+All in `../../design/archive/review-2026-10-04/level5.md`: the layout of a `TXT` file, the position of `XML` (0.5) and `HTML` (0.6), the module for compression.

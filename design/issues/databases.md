@@ -1,6 +1,6 @@
 # Issues: databases.html
 
-Page: `tutorial/databases.html` (342 lines, "Eve Database/SQL"). Reviewed 2026-09-28; DB-F1 to F3 applied 2026-10-06. The page is to be rewritten from `design/design-database.md` (review/focus.md F4), so DB-01 to DB-04 are asked again after the 8 questions of that note are answered. How to answer: [README](README.md).
+Page: `tutorial/databases.html` (342 lines, "Eve Database/SQL"). Reviewed 2026-09-28; DB-F1 to F3 applied 2026-10-06. The page is to be rewritten from `design/design-database.md` (archive/review-2026-10-04/focus.md F4), so DB-01 to DB-04 are asked again after the 8 questions of that note are answered. How to answer: [README](README.md).
 
 ## Questions
 

@@ -239,7 +239,7 @@ Author decision. Replaces the test-folder part of D-072 (g) (a folder named by t
 - Applied: script/runtest.py, .gitignore, test/readme.md, test/level2/readme.md. Checked with a throwaway project test (runs from its folder, `out/` emptied, missing file reported).
 
 ## D-081 Process end, exit codes, error classes, imports, `defer`, unsafe methods, parallel errors and limits (2026-10-05)
-Author decision, from the answers to review points RST-D03, RST-D04, RST-D05, RST-D06, RST-X01, RST-X02, RST-X03, RST-R02, RST-R04, RST-R05, RST-R06, RST-R07 (`review/05-structure-errors.md`) and RMT-D02, RMT-X01, RMT-X02, RMT-R01 (`review/06-multitasking.md`), and the answers of 2026-10-05. Replaces the `finalize` rules of D-055 and D-063 and the exit-code rules of D-010, D-038 and D-055. The `service` script (RST-R03) gets its own decision.
+Author decision, from the answers to review points RST-D03, RST-D04, RST-D05, RST-D06, RST-X01, RST-X02, RST-X03, RST-R02, RST-R04, RST-R05, RST-R06, RST-R07 (`archive/review-2026-10-04/05-structure-errors.md`) and RMT-D02, RMT-X01, RMT-X02, RMT-R01 (`archive/review-2026-10-04/06-multitasking.md`), and the answers of 2026-10-05. Replaces the `finalize` rules of D-055 and D-063 and the exit-code rules of D-010, D-038 and D-055. The `service` script (RST-R03) gets its own decision.
 
 **1. `finalize` runs on every way out** except `panic` and an unexpected stop: `return`, `over` (was skipped), `exit`, `abort` (was skipped), the normal end of `recover`.
 

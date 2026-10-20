@@ -1,6 +1,6 @@
 # Data language
 
-Status: **0.1-draft**, level 5 (version 0.4, D-125). Written from the proposals of Q-044 and Q-024 **as proposed**: the author has not answered yet, and the choices are listed in `../../design/review/level5.md`. This page lists the types and the modules that the database layer (`database.md`) and the data files (`../semantics/data-types.md`) stand on. Tests: `test/level5`.
+Status: **0.1-draft**, level 5 (version 0.4, D-125). Written from the proposals of Q-044 and Q-024 **as proposed**: the author has not answered yet, and the choices are listed in `../../design/archive/review-2026-10-04/level5.md`. This page lists the types and the modules that the database layer (`database.md`) and the data files (`../semantics/data-types.md`) stand on. Tests: `test/level5`.
 
 ## Features and versions
 
@@ -111,7 +111,7 @@ The modules of this table are part of the standard library of the machine and ar
 ## Open points
 
 
-All in `../../design/review/level5.md`.
+All in `../../design/archive/review-2026-10-04/level5.md`.
 
 - **Streams.** `csv.read!`, `json.read!` and `query!` give a `Stream(:T)`. The first implementation (e56, `data-types.md#local-etl-files-and-a-local-sqlite-database`) returns a `List` with all the rows, so a `for` loop over the result and `.count()` work, and `Stream` as a lazy source is still to do.
 

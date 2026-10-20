@@ -55,7 +55,7 @@ Read as rules:
 - (2) **The spec follows the tests.** D-190 wrote spec text before the failing test; now the behavior is settled by the tests and the code, and the spec page is written or corrected after them (rank 7). The spec stays normative once written: when it and the tutorial disagree, the spec wins.
 - (3) **The manual is not named in the order**; it is placed ninth, before the tutorial, where D-190 had it (after the implementation). *To confirm.*
 - (4) **Optimization is allowed.** The restriction of 2026-10-07 ("do not optimize early", until level 2 passes) is over: levels 1 to 5 pass. The benchmark rules of CLAUDE.md stay (measure before and after, ReleaseSafe build, `bmark.py --check`).
-- (5) **Cleaned in the same round:** the focus of `design/README.md` (it still said "tutorial first", 2026-10-07), the phases table (a rank for each phase), the old notes "tutorial first" in `design/design-unified-aspect.md` and `design/review/focus.md`, TD-13 (paid by D-192) removed from `backlog/tech-debt.md`, and `design/focus-level5.md` (level 5 passes: 115 of 115) moved to `design/archive/`.
+- (5) **Cleaned in the same round:** the focus of `design/README.md` (it still said "tutorial first", 2026-10-07), the phases table (a rank for each phase), the old notes "tutorial first" in `design/design-unified-aspect.md` and `design/archive/review-2026-10-04/focus.md`, TD-13 (paid by D-192) removed from `backlog/tech-debt.md`, and `design/focus-level5.md` (level 5 passes: 115 of 115) moved to `design/archive/`.
 
 ## D-195 Code is local; a tested project is deployed and then operated; one tool bar that follows the file (2026-10-18)
 

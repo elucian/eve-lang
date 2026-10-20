@@ -67,7 +67,7 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 - D-159 Remote databases: no offline work, SQLite only for logs and metadata, no tables in a target
 - D-168 The answers of 2026-10-13: `$err_sql`, `null` prints `null`, `time.now!()`, Decimal and Real conversions, the rules the tests use, chunked bodies
 - Q-046 Database ORM and ACID: the language proposals of the two design files [open; proposals]
-Note 2026-10-10: the proposals of Q-024, Q-039, Q-043, Q-044 and Q-046 are written in the specification (`spec/library/database.md`, `spec/library/data-language.md`, `spec/semantics/data-types.md`) and taught in the tutorial (`databases.html`, `etl.html`) as proposed, still not decided. The choices made for the author are in [review_level5.md](../review/level5.md).
+Note 2026-10-10: the proposals of Q-024, Q-039, Q-043, Q-044 and Q-046 are written in the specification (`spec/library/database.md`, `spec/library/data-language.md`, `spec/semantics/data-types.md`) and taught in the tutorial (`databases.html`, `etl.html`) as proposed, still not decided. The choices made for the author are in [review_level5.md](../archive/review-2026-10-04/level5.md).
 
 
 ## Q-039 Data file types: JSON, CSV, TXT, XML, HTML, HTMT (2026-10-08; was numbered Q-038, an id taken by level 2)

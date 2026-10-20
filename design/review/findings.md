@@ -1,0 +1,48 @@
+# Findings of the second round (2026-10-20)
+
+Codes `R2-<area><kind><nn>`; see [README](README.md) for the kinds and the top actions. "Inference" marks a point that was not measured or run.
+
+## Process and tracking
+
+- **R2-PR-D01 The version map is behind the code.** Version 0.4 (level 5) lists 23 of 31 features as `open` and version 0.5 (level 6) 18 of 24, while level 5 passes 117 of 117 tests and level 6 15 of 15, and the code exists: `code/evecp/src/overload.zig` and `test/level5/e05_overload_types.eve` against F-LNG-21 `open`, `code/evevm/src/interp/generators.zig` against F-LNG-12 `open`, `decimal.zig` and `instant.zig` against F-LNG-13 `open`. `relnotes.py` derives the stage of each feature from these rows, so the release notes would say "planned" for working features (command: `python script/plan.py features open 0.4`).
+- **R2-PR-R01 Let the tests set the status.** Put `@feature F-XXX-nn` in a header comment of each test (the `/*@expect*/` block is the natural place), let `runtest.py` write which features have all their tests passing, and let `relnotes.py` read that instead of the hand-kept column. The rows of 0.4 and 0.5 are corrected once, by hand, with the author.
+- **R2-PR-D02 Nothing runs the tests but the author.** `.github/` holds only `FUNDING.yml`. The 409 conformance tests, the unit tests, `tagcheck.py` and `grammarcheck.py` are run by hand on one Windows machine; the distribution is Windows x64 only (TD-42, `gh` is not installed). A Linux build has never been seen to pass (inference: no Linux run is recorded anywhere in the tree).
+- **R2-PR-R02 Add a CI workflow:** build with Zig 0.17, `zig build test`, ReleaseSafe `runtest.py all --both`, `tagcheck.py`, `mdlinks.py check manual`; Windows and Ubuntu. The first Linux run will list the portability debt honestly (the SQLite build takes about 3 minutes, so cache `zig-pkg/`).
+- **R2-PR-D03 Generated pages drift.** After a plain test run `genmanual.py --check` reported `manual/tests.md` out of date: the pages written by the test runner are committed, so every run dirties the tree. Alternative: commit them only in the release step (the policy of `design/release.md`) and keep them out of the tree between releases, or let the check ignore what a run rewrites.
+- **R2-PR-A01 The tooling that keeps the context small works.** `plan.py` (status, show, feature, features, archive), `ctxsize.py`, `tagcheck.py` and the tag rule of `CLAUDE.md` turned a 28 KB instruction file and a 54 KB version map into things read by command. Keep them in the pre-commit hook and in CI.
+
+## The machines and the code
+
+- **R2-VM-A01 Speed is no longer a risk.** Every benchmark in `test/bmark/README.md` is between 0.0 and 1.4 times its CPython twin; the bytecode machine is 2 to 2.6 times faster than the walker on arithmetic and calls.
+- **R2-VM-D01 A flaky unit test.** During this review `zig build test` failed once in a test binary started with `--listen` and passed on the next run, with no change in between. Network tests with fixed ports or timing are the usual cause (inference). **R2-VM-R01:** run the root unit tests 20 times in a loop, find the test, give it an ephemeral port; do it before more network tests (level 6 has many).
+- **R2-VM-D02 Two engines, one of them half done.** TD-46 (the bridge: variables copied in and out, no closure or task across it, no `.evb` for a chunk with bridged pieces), TD-45 (variables found by name) and TD-47 (24-byte registers, 250 per function) are open debt (TD-47 is planned for version 0.8). Keeping both engines equal costs a `--both` run on every change. **R2-VM-R02:** finish the bridge in the order of the number of tests that use it, and set a date after which a new language feature must land in both engines in the same commit.
+- **R2-VM-D03 Files too large to work in.** `code/evetx/src/app.zig` 7,998 lines, `view.zig` 2,658, `code/evecp/src/parser.zig` 2,163; 53 Zig files have no tag at all (`python script/ctxsize.py`). Plan steps A4 and A6 (`design/design-ai-context.md`).
+
+## Security and the machine
+
+- **R2-SC-D01 Permissions do not exist yet.** D-189 lets level 6 allow everything: `fs`, `os.run!` and `database` call the system directly (TD-10), capabilities are F-NET-05 `open`, and `crypto` has no AEAD or password hashing (TD-5). That is acceptable for a local tool; it is not for a serving machine of level 6 whose `http_host` is not loopback.
+- **R2-SC-D02 The HTTP door and the browser (inference).** `config.zig` defaults `http_host` to `localhost` and the spec says another address is allowed "only on purpose", marked proposed. A web page open in the user's browser can still post to `http://localhost:8095/rpc`. Whether `vm.eval` or `os.run!` is reachable that way was not tested; `channel.zig` says the HTTP door has none of the lasting-door commands, which is the right design. **R2-SC-R01:** add a test that `/rpc` answers 403 to a foreign `Origin` or `Host`, and move the "only on purpose" rule from proposed to normative.
+
+## Documents
+
+- **R2-DT-D01 Open questions age.** `plan.py status` lists 16 open questions; Q-027 (templates), Q-028 (networking) and Q-039, Q-043, Q-044, Q-046 (data layer) date from 2026-10-06 to 2026-10-09, and the level 5 features they ask about are implemented. Some are answered in practice by later decisions (Q-052 to Q-054 by D-174 to D-176) but still have an empty `**Answer:**`, so the decision logs of levels 5 and 6 stay above 25 KB (step A2b). **R2-DT-R01:** one sitting with the author: for each open `Q-nnn`, "closed by D-xxx", "still open" or "drop"; `plan.py archive` does the rest.
+- **R2-DT-D02 The tutorial is last and is old.** `tutorial/` has 46 pages and is rank 10 of D-194; the language it teaches has moved (generics, overloading, the data language, bytecode, `exit` and `over`, `recover` in subprograms). The order is fine, but the page-by-page issue process (T1.10) is stalled with it. Read anything the tutorial says about levels 5 and 6 as unchecked.
+- **R2-DT-D03 `design/issues/` is stale and costs context.** See below.
+
+### Issues folder
+
+State on 2026-10-20 (counted by `Status:` lines): 17 files, 28 KB, last page review 2026-10-06. Seven files have nothing in them (`control`, `functions`, `index`, `manifest`, `processing`, `topology`, `types`), seven hold 24 open items (`classes` 7, `command` 5, `databases` 4, `option` 3, `collections` 2, `multitasking` 2, `compiler` 1), two hold 8 answered items waiting for the spec (`syntax` 6, `library` 2). The `README` keeps a hand-written table of counts dated 2026-10-06. The questions are about tutorial pages, the tutorial is last, and the level 5 and 6 decisions (D-156 to D-188) very likely answered several of the `databases`, `command`, `option` and `multitasking` items (inference: not read item by item).
+
+Proposal **R2-DT-R02**, four steps, each its own commit; none is done yet:
+
+1. **Delete the seven empty files** and their rows (the history is in git).
+2. **Triage the 24 open items** against `plan.py list`: an item that a decision answered is removed with "closed by D-xxx" in the commit message; an item that is still a real language question becomes a `Q-nnn` in `design/decision/level5.md` or `level6.md` (the one place the author answers); an item that is only about the wording of a page becomes one line in `backlog/tutorial.md`.
+3. **Send the 8 answered items to the spec work:** the syntax ones to the spec backlog (rank 7 of D-194), the library ones to `backlog/library-gaps.md`.
+4. **Replace the hand-written table by a command** (`python script/plan.py issues`, counting `Status:` lines) and move what is left of `design/issues/` to `design/archive/issues-2026-10-06/`; keep `design/template/issue.md` for the day the tutorial work restarts.
+
+Result: no folder to read, one decision log for questions, the tutorial backlog in one file. The cost is one session with the author for step 2.
+
+## Level 7
+
+- **R2-L7-D01 The web level rests on an untried build.** F-VM-09 (the VM for `wasm32`) is `open`; F-WEB-01 to F-WEB-07 are `open`; version 0.6 has 14 features and 0 done. D-193 makes evewp, written in Eve with no JavaScript, the final test of the language. If the VM cannot be built for `wasm32` with its host imports (threads, sockets, a heap that calls the OS), the whole level changes shape. **R2-L7-R01:** a spike of two days, before any level 7 design is refined: build a core without the machine, the database layer and threads for `wasm32-freestanding`, run `hello.eve` in a page. Record the size of the `.wasm` and what had to be cut. Go or no-go for D-193 is written as a decision.
+- **R2-L7-D02 Three interfaces in Zig and one in Eve at once.** evetx (partial), eveux (window files never compiled, TD-31: dvui needs Developer Mode on Windows) and evewp (design only) share one author. **R2-L7-R02:** finish evetx as the one complete interface, treat eveux as a design until TD-31 is paid, and start evewp only from the result of the spike; otherwise the level 7 list grows faster than level 6 closes.

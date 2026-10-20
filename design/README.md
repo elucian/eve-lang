@@ -22,7 +22,7 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 | `manual.md` | how the manual is made: what is written by hand, what is generated |
 | `decision/` | `level1.md` to `level7.md`: the decisions and the open questions, by level; `archive/` keeps the settled entries in full |
 | `issues/` | one file per tutorial page: the questions of the page review and the author's answers |
-| `review/` | the review prompts by topic, and the reviews |
+| `review/` | the critical review of the project (second round, 2026-10-20: README, follow-up of the first round, findings); the first round (2026-10-04) is in `archive/review-2026-10-04/` |
 | `template/` | the templates of the generators: release notes, the generated pages of the manual, the README of a distribution, an issue page |
 | `archive/` | designs and focus notes that were replaced |
 

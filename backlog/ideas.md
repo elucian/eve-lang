@@ -8,7 +8,7 @@ The log is split in 7 files + This file. Ids are shared and keep counting across
 
 ## Next Ideas, add here:
 
-Ideas that are not designed yet, kept out of the language until a feature needs them. Answers review point `RPJ-X04` (`review/01-project.md`): Eve is verbose, but it does not reserve words for fun. A word leaves this file only together with a decision (`D-nnn`) that gives it a meaning, an example in the tutorial, and a place in the version map.
+Ideas that are not designed yet, kept out of the language until a feature needs them. Answers review point `RPJ-X04` (`design/archive/review-2026-10-04/01-project.md`): Eve is verbose, but it does not reserve words for fun. A word leaves this file only together with a decision (`D-nnn`) that gives it a meaning, an example in the tutorial, and a place in the version map.
 
 ## Reserved words without a design
 

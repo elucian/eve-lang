@@ -43,7 +43,7 @@ Every rule comes from a decision in [`../design/decision/level1.md`](../design/d
 | 2026-10-02 | Lexical structure, operators and delimiters (S2.2, S2.3, S2.5, S2.6); `speccheck.py` |
 | 2026-10-03 | Register of system variables, `semantics/variables.md` (D-071) |
 | 2026-10-07 | Level 2: aspects, `apply`, spreading, errors across `apply`, trace, log files (D-112, D-113); modules move to level 3 |
-| 2026-10-10 | Level 5 data and database: `library/database.md`, `library/data-language.md`, `semantics/data-types.md` rewritten; `table`, `commit`, `rollback`, `retry after`, `$isolation`, `$lock_timeout`, `$read_only`, error codes 50 to 57; listed in `design/review/level5.md` |
+| 2026-10-10 | Level 5 data and database: `library/database.md`, `library/data-language.md`, `semantics/data-types.md` rewritten; `table`, `commit`, `rollback`, `retry after`, `$isolation`, `$lock_timeout`, `$read_only`, error codes 50 to 57; listed in `design/archive/review-2026-10-04/level5.md` |
 | 2026-10-10 | Eve macro: a hybrid script with shared declarations, aspects and one driver (D-152); tests e16 to e22, e04 is now a macro |
 | 2026-10-14 | The unified aspect: no `driver` keyword, no free script, no `#!`; kinds `exclusive`, `concurrent` and `primary`; private processes; calls between aspects, three levels, no cycle (D-179 to D-182); the macro has one primary aspect |
 | 2026-10-09 | No self-calling lambdas (D-147); generic functions, procedures, methods and processes (D-148); overloading (D-149); tests e01 to e15 |
