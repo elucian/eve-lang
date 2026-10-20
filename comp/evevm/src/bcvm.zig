@@ -303,6 +303,78 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
                 try it.exec(x.node);
                 for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &regs[nm.reg], cell.value);
             },
+            .new_list => {
+                put(it, &regs[i.a], .{ .list = try it.h.make(interp.List, .{}) });
+            },
+            .new_map => {
+                put(it, &regs[i.a], .{ .map = try it.h.make(interp.Map, .{}) });
+            },
+            .list_push => {
+                it.line = c.lines[at];
+                const lst = regs[i.a].list;
+                try it.listAppend(lst, regs[i.b]);
+            },
+            .list_index => {
+                it.line = c.lines[at];
+                const lst = regs[i.b].list;
+                const idx_val = regs[i.c];
+                if (idx_val != .int) return it.fail("list index must be an integer, not {s}", .{Interp.typeName(idx_val)});
+                const idx = idx_val.int;
+                const len = @as(i64, @intCast(lst.items.items.len));
+                const pos: i64 = if (idx > 0) idx - 1 else len + idx;
+                if (pos < 0 or pos >= len) return it.fail("list index {d} out of range [{d}..{d}]", .{ idx, 1 - len, len });
+                put(it, &regs[i.a], lst.items.items[@intCast(pos)]);
+            },
+            .list_set => {
+                it.line = c.lines[at];
+                const lst = regs[i.a].list;
+                const idx_val = regs[i.b];
+                if (idx_val != .int) return it.fail("list index must be an integer, not {s}", .{Interp.typeName(idx_val)});
+                const idx = idx_val.int;
+                const len = @as(i64, @intCast(lst.items.items.len));
+                const pos: i64 = if (idx > 0) idx - 1 else len + idx;
+                if (pos < 0 or pos >= len) return it.fail("list index {d} out of range [{d}..{d}]", .{ idx, 1 - len, len });
+                it.setCell(&lst.items.items[@intCast(pos)], regs[i.c]);
+            },
+            .map_get => {
+                it.line = c.lines[at];
+                const m = regs[i.b].map;
+                const key = regs[i.c];
+                const at_idx = Interp.mapFind(m, key);
+                put(it, &regs[i.a], if (at_idx) |j| m.entries.items[j].val else .nil);
+            },
+            .map_set => {
+                it.line = c.lines[at];
+                const m = regs[i.a].map;
+                const key = regs[i.b];
+                const val = regs[i.c];
+                try it.mapPut(m, key, val);
+            },
+            .set_add => {
+                it.line = c.lines[at];
+                const s = regs[i.a].set;
+                const v = regs[i.b];
+                try it.setAdd(s, v);
+            },
+            .set_has => {
+                it.line = c.lines[at];
+                const has = try it.contains(regs[i.c], regs[i.b]);
+                put(it, &regs[i.a], .{ .bool = has });
+            },
+            .length => {
+                const v = regs[i.b];
+                const len: i64 = switch (v) {
+                    .str => @intCast(std.unicode.utf8CountCodepoints(v.str) catch v.str.len),
+                    .list, .set => @intCast(v.list.items.items.len),
+                    .map => @intCast(v.map.entries.items.len),
+                    else => return it.fail("{s} has no length", .{Interp.typeName(v)}),
+                };
+                put(it, &regs[i.a], .{ .int = len });
+            },
+            .call_method => {
+                // Stub: not yet implemented; bridge for now
+                return it.fail("call_method: not yet implemented", .{});
+            },
             .over, .halt => return,
         }
     }

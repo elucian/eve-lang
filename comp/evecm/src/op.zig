@@ -73,6 +73,28 @@ pub const Op = enum(u8) {
     binx,
     /// the second word of `binx`: `Bx` is the constant that holds the operator
     extra,
+    /// `A := ()` (empty list)
+    new_list,
+    /// `A := {}` (empty map or set; the type is known from context)
+    new_map,
+    /// `A <+ B` (append B to list A; A is modified in place)
+    list_push,
+    /// `A := B[C]` (get element C from list B, 1-based indexing with negative index support)
+    list_index,
+    /// `A[B] := C` (set element B of list A to C; A is modified)
+    list_set,
+    /// `A := B[C]` (get value for key C from map B)
+    map_get,
+    /// `A[B] := C` (set A[B] to C for map A; A is modified)
+    map_set,
+    /// `A <+ B` (add B to set A; A is modified in place)
+    set_add,
+    /// `A := B in C` (check if B is in set C, return boolean)
+    set_has,
+    /// `A := B.count()` (or `.length()`, works on any collection or string; C is 0 for all types)
+    length,
+    /// `A := B.method(...)` where method name and args are in the next word; not yet implemented
+    call_method,
     /// end the process (`over;`)
     over,
     /// end of the main process
