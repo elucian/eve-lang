@@ -12,6 +12,7 @@ An instruction is a 32-bit word: `op` (8 bits), then the operands `A`, `B`, `C` 
 |---|---|
 | `move` | `A := B` |
 | `loadk` | `A := const[Bx]` |
+| `loadg` | `A := ` the variable named `const[Bx]` of the enclosing scopes: a variable or constant of the aspect, a class, a module (looked up as the tree walker does) |
 | `loadi` | `A := sBx`, an integer |
 | `loadnil`, `loadtrue`, `loadfalse` | `A` gets null, True, False |
 | `add`, `sub`, `mul`, `div`, `mod` | `A := B op C` |
@@ -29,17 +30,17 @@ An instruction is a 32-bit word: `op` (8 bits), then the operands `A`, `B`, `C` 
 | `setlike` | `A := B`, converted to the kind that `A` holds |
 | `augment` | `A := A op B`, `C` is the arithmetic instruction; lists and sets change in place |
 | `binx`, `extra` | `A := B op C` for an operator without its own instruction; the operator text is the constant of the `extra` word |
-| `new_list`, `new_map` | `A := ()` or `A := {}`; create an empty list or map |
-| `list_push` | `A <+ B`; append B to list A (A is modified) |
-| `list_index` | `A := B[C]`; get element C from list B (1-based indexing, negative indices from end) |
-| `list_set` | `A[B] := C`; set element B of list A to C (A is modified) |
-| `map_get` | `A := B[C]`; get value for key C from map B |
-| `map_set` | `A[B] := C`; set A[B] to C for map A (A is modified) |
-| `set_add` | `A <+ B`; add B to set A (A is modified) |
-| `set_has` | `A := B in C`; check if B is in set C (result is boolean) |
-| `length` | `A := B.count()` or `.length()`; length of list, map, set, or string |
-| `call_method` | method call on a collection or string (stub; not yet implemented) |
+| `new_list`, `new_map`, `new_set` | `A := ()`, `A := {}` of pairs, `A := {}` of values; with `new_list`, B = 1 makes an array `[]` |
+| `list_push`, `map_set`, `set_add` | build the fresh list, map or set of a literal: `A <+ B`, `A[B] := C`, `A <+ B` (no other case exists) |
+| `index` | `A := B[C]`: the element of a list (an integer index, negative from the end), or the value of an existing key of a map; a string, a view, a matrix, a missing key or an index out of range take the slow case |
+| `index_set` | `A[B] := C` on a list (an integer index in range) or a map; any other case takes the slow case |
+| `push` | `let A <+ B`: append to a list, add to a set; any other case (a string, a list added to a list, a table) takes the slow case |
+| `length` | `A := B.count()` or `.length()` of a string, a list, a set or a map; an object takes the slow case |
+| `xref` | the second word of `index`, `index_set`, `push`, `length`, `iterprep` and `interp`: `Bx` is the node (xnode) that the tree walker runs for the slow case, so the error messages and the rare kinds are those of the reference |
+| `interp` | `A := ` the text of an interpolation; the value of its part k is in register B+k and the format is in the node of the next `xref` word |
+| `iterprep`, `iterloop` | the loop over a collection: A holds the collection (a map, a set or a string becomes a list of its elements), A+1 the position, A+2 the user's variable; `iterprep` jumps by `sBx` when there is nothing to visit; a range value, a channel, a generator or a table runs the whole loop on the tree walker (slow case) |
 | `evalx`, `execx` | the bridge (TD-46): evaluate an expression or run a statement on the tree walker, with the named variables copied in and out |
+| `safe` | a safe point after a statement of the process body: the objects that nobody holds are freed and their destructors run, at the same place as in the tree walker |
 | `over` | end the process |
 | `halt` | end of the main process |
 

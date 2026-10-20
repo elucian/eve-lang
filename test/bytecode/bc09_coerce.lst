@@ -1,22 +1,31 @@
 process main  (function 0, 6 registers, 0 parameters)
      0  line 5    loadi    r0 3
      1  line 5    coerce   r0 real
-     2  line 6    move     r1 r0
-     3  line 6    print    r1 x1 print
-     4  line 7    loadk    r1 k0    ; 2
-     5  line 7    coerce   r1 real
-     6  line 8    loadi    r2 5
-     7  line 8    setlike  r1 r2
-     8  line 9    move     r2 r1
-     9  line 9    print    r2 x1 print
-    10  line 10   loadi    r2 7
-    11  line 10   coerce   r2 integer
-    12  line 11   loadi    r4 2
-    13  line 11   div      r3 r2 r4
-    14  line 11   print    r3 x1 print
-    15  line 12   loadk    r3 k1    ; 7
-    16  line 12   coerce   r3 real
-    17  line 13   loadi    r5 2
-    18  line 13   div      r4 r3 r5
-    19  line 13   print    r4 x1 print
-    20  line 4    halt    
+     2  line 5    safe    
+     3  line 6    move     r1 r0
+     4  line 6    print    r1 x1 print
+     5  line 6    safe    
+     6  line 7    loadk    r1 k0    ; 2
+     7  line 7    coerce   r1 real
+     8  line 7    safe    
+     9  line 8    loadi    r2 5
+    10  line 8    setlike  r1 r2
+    11  line 8    safe    
+    12  line 9    move     r2 r1
+    13  line 9    print    r2 x1 print
+    14  line 9    safe    
+    15  line 10   loadi    r2 7
+    16  line 10   coerce   r2 integer
+    17  line 10   safe    
+    18  line 11   loadi    r4 2
+    19  line 11   div      r3 r2 r4
+    20  line 11   print    r3 x1 print
+    21  line 11   safe    
+    22  line 12   loadk    r3 k1    ; 7
+    23  line 12   coerce   r3 real
+    24  line 12   safe    
+    25  line 13   loadi    r5 2
+    26  line 13   div      r4 r3 r5
+    27  line 13   print    r4 x1 print
+    28  line 13   safe    
+    29  line 4    halt    

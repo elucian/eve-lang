@@ -1,23 +1,37 @@
-process main  (function 0, 5 registers, 0 parameters)
+process main  (function 0, 7 registers, 0 parameters)
      0  line 5    loadk    r0 k0    ; "hello"
-     1  line 6    loadk    r1 k1    ; "world"
-     2  line 7    loadk    r4 k2    ; " "
-     3  line 7    add      r3 r0 r4
-     4  line 7    add      r2 r3 r1
-     5  line 7    print    r2 x1 print
-     6  line 8    evalx    r2 x0    ; tree walker: call
-     7  line 8    print    r2 x1 print
-     8  line 9    evalx    r2 x1    ; tree walker: interp
-     9  line 9    print    r2 x1 print
-    10  line 10   loadk    r2 k3    ; "a"
-    11  line 10   print    r2 x1 write
-    12  line 11   loadk    r2 k4    ; "b"
-    13  line 11   print    r2 x1 write
-    14  line 12   loadk    r2 k5    ; "c"
-    15  line 12   print    r2 x1 print
-    16  line 13   loadk    r3 k0    ; "hello"
-    17  line 13   eq       r2 r0 r3
-    18  line 13   print    r2 x1 print
-    19  line 14   lt       r2 r0 r1
-    20  line 14   print    r2 x1 print
-    21  line 4    halt    
+     1  line 5    safe    
+     2  line 6    loadk    r1 k1    ; "world"
+     3  line 6    safe    
+     4  line 7    loadk    r4 k2    ; " "
+     5  line 7    add      r3 r0 r4
+     6  line 7    add      r2 r3 r1
+     7  line 7    print    r2 x1 print
+     8  line 7    safe    
+     9  line 8    length   r2 r0
+    10  line 8    xref     x0    ; the tree walker does the rare case: call
+    11  line 8    print    r2 x1 print
+    12  line 8    safe    
+    13  line 1    move     r3 r0
+    14  line 1    move     r5 r1
+    15  line 9    interp   r2 r3
+    16  line 9    xref     x1    ; the tree walker does the rare case: interp
+    17  line 9    print    r2 x1 print
+    18  line 9    safe    
+    19  line 10   loadk    r2 k3    ; "a"
+    20  line 10   print    r2 x1 write
+    21  line 10   safe    
+    22  line 11   loadk    r2 k4    ; "b"
+    23  line 11   print    r2 x1 write
+    24  line 11   safe    
+    25  line 12   loadk    r2 k5    ; "c"
+    26  line 12   print    r2 x1 print
+    27  line 12   safe    
+    28  line 13   loadk    r3 k0    ; "hello"
+    29  line 13   eq       r2 r0 r3
+    30  line 13   print    r2 x1 print
+    31  line 13   safe    
+    32  line 14   lt       r2 r0 r1
+    33  line 14   print    r2 x1 print
+    34  line 14   safe    
+    35  line 4    halt    

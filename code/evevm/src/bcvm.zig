@@ -121,6 +121,31 @@ pub fn runMain(it: *Interp, root: *const Node, main: *const Node) Signal!bool {
     return true;
 }
 
+// @eve-impl the rare case of a fast instruction: the expression `xnode` runs on the tree walker and its value goes to `dst`
+fn evalSlow(it: *Interp, c: *const chunk.Chunk, regs: [*]Value, xi: u16, dst: *Value) Signal!void {
+    const x = c.xnodes[xi];
+    const mark = it.scratch.mark();
+    defer it.scratch.release(mark);
+    const outer = try it.pushScope();
+    defer it.leaveScope(outer);
+    for (x.names) |nm| try it.define(nm.name, regs[nm.reg], false);
+    const v = try it.eval(x.node);
+    put(it, dst, v);
+}
+
+// @eve-impl the rare case of a fast instruction: the statement `xnode` runs on the tree walker, the variables it names are copied back
+fn execSlow(it: *Interp, c: *const chunk.Chunk, regs: [*]Value, xi: u16) Signal!void {
+    const x = c.xnodes[xi];
+    const mark = it.scratch.mark();
+    defer it.scratch.release(mark);
+    const outer = try it.pushScope();
+    defer it.leaveScope(outer);
+    const scope = it.scope;
+    for (x.names) |nm| try it.define(nm.name, regs[nm.reg], false);
+    try it.exec(x.node);
+    for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &regs[nm.reg], cell.value);
+}
+
 // @eve-impl the loop of the machine: fetch, decode, do; a call pushes a frame, `ret` pops it
 // @perf hot
 fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
@@ -149,6 +174,10 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
                 },
             }),
             .loadi => put(it, &regs[i.a], .{ .int = i.sbx() }),
+            .loadg => {
+                it.line = c.lines[at];
+                put(it, &regs[i.a], try it.lookup(c.consts[i.bx()].str));
+            },
             .loadnil => put(it, &regs[i.a], .nil),
             .loadtrue => put(it, &regs[i.a], .{ .bool = true }),
             .loadfalse => put(it, &regs[i.a], .{ .bool = false }),
@@ -303,78 +332,149 @@ fn execute(it: *Interp, c: *const chunk.Chunk) Signal!void {
                 try it.exec(x.node);
                 for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &regs[nm.reg], cell.value);
             },
-            .new_list => {
-                put(it, &regs[i.a], .{ .list = try it.h.make(interp.List, .{}) });
-            },
-            .new_map => {
-                put(it, &regs[i.a], .{ .map = try it.h.make(interp.Map, .{}) });
-            },
-            .list_push => {
+            .new_list => put(it, &regs[i.a], .{ .list = try it.h.make(interp.List, .{ .array = i.b == 1 }) }),
+            .new_map => put(it, &regs[i.a], .{ .map = try it.newMap() }),
+            .new_set => put(it, &regs[i.a], .{ .set = try it.h.make(interp.List, .{}) }),
+            .list_push => try it.listAppend(regs[i.a].list, regs[i.b]),
+            .set_add => {
                 it.line = c.lines[at];
-                const lst = regs[i.a].list;
-                try it.listAppend(lst, regs[i.b]);
-            },
-            .list_index => {
-                it.line = c.lines[at];
-                const lst = regs[i.b].list;
-                const idx_val = regs[i.c];
-                if (idx_val != .int) return it.fail("list index must be an integer, not {s}", .{Interp.typeName(idx_val)});
-                const idx = idx_val.int;
-                const len = @as(i64, @intCast(lst.items.items.len));
-                const pos: i64 = if (idx > 0) idx - 1 else len + idx;
-                if (pos < 0 or pos >= len) return it.fail("list index {d} out of range [{d}..{d}]", .{ idx, 1 - len, len });
-                put(it, &regs[i.a], lst.items.items[@intCast(pos)]);
-            },
-            .list_set => {
-                it.line = c.lines[at];
-                const lst = regs[i.a].list;
-                const idx_val = regs[i.b];
-                if (idx_val != .int) return it.fail("list index must be an integer, not {s}", .{Interp.typeName(idx_val)});
-                const idx = idx_val.int;
-                const len = @as(i64, @intCast(lst.items.items.len));
-                const pos: i64 = if (idx > 0) idx - 1 else len + idx;
-                if (pos < 0 or pos >= len) return it.fail("list index {d} out of range [{d}..{d}]", .{ idx, 1 - len, len });
-                it.setCell(&lst.items.items[@intCast(pos)], regs[i.c]);
-            },
-            .map_get => {
-                it.line = c.lines[at];
-                const m = regs[i.b].map;
-                const key = regs[i.c];
-                const at_idx = Interp.mapFind(m, key);
-                put(it, &regs[i.a], if (at_idx) |j| m.entries.items[j].val else .nil);
+                try it.setAdd(regs[i.a].set, regs[i.b]);
             },
             .map_set => {
                 it.line = c.lines[at];
-                const m = regs[i.a].map;
+                try it.mapPut(regs[i.a].map, regs[i.b], regs[i.c]);
+            },
+            .index => {
+                const x = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
+                it.line = c.lines[at];
+                const key = regs[i.c];
+                switch (regs[i.b]) {
+                    .list => |l| if (key == .int and !Interp.isMatrix(l)) {
+                        const items = l.elems();
+                        const k = if (key.int < 0) @as(i64, @intCast(items.len)) + 1 + key.int else key.int;
+                        if (k >= 1 and k <= items.len) {
+                            put(it, &regs[i.a], items[@intCast(k - 1)]);
+                            continue;
+                        }
+                    },
+                    .map => |m| if (Interp.mapFind(m, key)) |at_key| {
+                        put(it, &regs[i.a], m.entries.items[at_key].val);
+                        continue;
+                    },
+                    else => {},
+                }
+                try evalSlow(it, c, regs, x.bx(), &regs[i.a]);
+            },
+            .index_set => {
+                const x = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
+                it.line = c.lines[at];
                 const key = regs[i.b];
-                const val = regs[i.c];
-                try it.mapPut(m, key, val);
+                switch (regs[i.a]) {
+                    .list => |l| if (key == .int and !Interp.isMatrix(l)) {
+                        const items = l.elems();
+                        const k = if (key.int < 0) @as(i64, @intCast(items.len)) + 1 + key.int else key.int;
+                        if (k >= 1 and k <= items.len) {
+                            it.setCell(&items[@intCast(k - 1)], regs[i.c]);
+                            continue;
+                        }
+                    },
+                    .map => |m| {
+                        try it.mapPut(m, key, regs[i.c]);
+                        continue;
+                    },
+                    else => {},
+                }
+                try execSlow(it, c, regs, x.bx());
             },
-            .set_add => {
+            .push => {
+                const x = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
                 it.line = c.lines[at];
-                const s = regs[i.a].set;
-                const v = regs[i.b];
-                try it.setAdd(s, v);
-            },
-            .set_has => {
-                it.line = c.lines[at];
-                const has = try it.contains(regs[i.c], regs[i.b]);
-                put(it, &regs[i.a], .{ .bool = has });
+                switch (regs[i.a]) {
+                    .list => |l| if (regs[i.b] != .list and l.base == null) {
+                        try it.listAppend(l, regs[i.b]);
+                        continue;
+                    },
+                    .set => |l| {
+                        try it.setAdd(l, regs[i.b]);
+                        continue;
+                    },
+                    else => {},
+                }
+                try execSlow(it, c, regs, x.bx());
             },
             .length => {
+                const x = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
+                it.line = c.lines[at];
                 const v = regs[i.b];
-                const len: i64 = switch (v) {
+                const len: ?i64 = switch (v) {
                     .str => @intCast(std.unicode.utf8CountCodepoints(v.str) catch v.str.len),
-                    .list, .set => @intCast(v.list.items.items.len),
-                    .map => @intCast(v.map.entries.items.len),
-                    else => return it.fail("{s} has no length", .{Interp.typeName(v)}),
+                    .list, .set => |l| @intCast(l.elems().len),
+                    .map => |m| @intCast(m.entries.items.len),
+                    else => null,
                 };
-                put(it, &regs[i.a], .{ .int = len });
+                if (len) |n| {
+                    put(it, &regs[i.a], .{ .int = n });
+                } else try evalSlow(it, c, regs, x.bx(), &regs[i.a]);
             },
-            .call_method => {
-                // Stub: not yet implemented; bridge for now
-                return it.fail("call_method: not yet implemented", .{});
+            .xref => unreachable,
+            .interp => {
+                const x = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
+                it.line = c.lines[at];
+                const mark = it.scratch.mark();
+                defer it.scratch.release(mark);
+                var buf: std.ArrayList(u8) = .empty;
+                for (c.xnodes[x.bx()].node.kids, 0..) |part, k| {
+                    if (part.tag == .str) {
+                        try buf.appendSlice(it.t, part.text);
+                    } else try buf.appendSlice(it.t, try it.format(part.text[0], part.text[1..], regs[i.b + k]));
+                }
+                put(it, &regs[i.a], .{ .str = try it.persist(buf.items) });
             },
+            .iterprep => {
+                const x = Inst.fromWord(c.code[at + 1]);
+                fr.pc += 1;
+                it.line = c.lines[at];
+                const src = regs[i.a];
+                switch (src) {
+                    .list => {},
+                    .map, .set, .str => {
+                        // the elements are listed once: the pairs of a map are made here and live through every pass
+                        const items = try it.iterate(src);
+                        const snap = try it.h.make(interp.List, .{});
+                        for (items) |e| try it.listAppend(snap, e);
+                        put(it, &regs[i.a], .{ .list = snap });
+                    },
+                    else => {
+                        // a range, a channel, a generator, a stream, a table: the tree walker runs the whole loop
+                        try execSlow(it, c, regs, x.bx());
+                        fr.pc = @intCast(@as(i64, fr.pc) + i.sbx() - 1);
+                        continue;
+                    },
+                }
+                const items = regs[i.a].list.elems();
+                if (items.len == 0) {
+                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                } else {
+                    regs[i.a + 1] = .{ .int = 1 };
+                    put(it, &regs[i.a + 2], items[0]);
+                }
+            },
+            .iterloop => {
+                const items = regs[i.a].list.elems();
+                const next = regs[i.a + 1].int + 1;
+                if (next <= items.len) {
+                    regs[i.a + 1] = .{ .int = next };
+                    put(it, &regs[i.a + 2], items[@intCast(next - 1)]);
+                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                    it.h.safePoint();
+                }
+            },
+            .safe => it.safe(),
             .over, .halt => return,
         }
     }

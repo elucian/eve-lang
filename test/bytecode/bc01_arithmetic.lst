@@ -1,38 +1,55 @@
 process main  (function 0, 6 registers, 0 parameters)
      0  line 5    loadi    r0 17
-     1  line 6    loadi    r1 5
-     2  line 7    add      r2 r0 r1
-     3  line 7    print    r2 x1 print
-     4  line 8    sub      r2 r0 r1
-     5  line 8    print    r2 x1 print
-     6  line 9    mul      r2 r0 r1
-     7  line 9    print    r2 x1 print
-     8  line 10   div      r2 r0 r1
-     9  line 10   print    r2 x1 print
-    10  line 11   mod      r2 r0 r1
-    11  line 11   print    r2 x1 print
-    12  line 12   neg      r2 r0
-    13  line 12   print    r2 x1 print
-    14  line 13   loadi    r5 2
-    15  line 13   mul      r4 r1 r5
-    16  line 13   add      r3 r0 r4
-    17  line 13   loadi    r4 1
-    18  line 13   sub      r2 r3 r4
-    19  line 13   print    r2 x1 print
-    20  line 14   add      r3 r0 r1
-    21  line 14   sub      r4 r0 r1
-    22  line 14   mul      r2 r3 r4
-    23  line 14   print    r2 x1 print
-    24  line 15   loadk    r2 k0    ; 7.5
-    25  line 16   loadk    r3 k1    ; 2
-    26  line 17   add      r4 r2 r3
-    27  line 17   print    r4 x1 print
-    28  line 18   mul      r4 r2 r3
-    29  line 18   print    r4 x1 print
-    30  line 19   div      r4 r2 r3
-    31  line 19   print    r4 x1 print
-    32  line 20   sub      r4 r2 r0
-    33  line 20   print    r4 x1 print
-    34  line 21   neg      r4 r2
-    35  line 21   print    r4 x1 print
-    36  line 4    halt    
+     1  line 5    safe    
+     2  line 6    loadi    r1 5
+     3  line 6    safe    
+     4  line 7    add      r2 r0 r1
+     5  line 7    print    r2 x1 print
+     6  line 7    safe    
+     7  line 8    sub      r2 r0 r1
+     8  line 8    print    r2 x1 print
+     9  line 8    safe    
+    10  line 9    mul      r2 r0 r1
+    11  line 9    print    r2 x1 print
+    12  line 9    safe    
+    13  line 10   div      r2 r0 r1
+    14  line 10   print    r2 x1 print
+    15  line 10   safe    
+    16  line 11   mod      r2 r0 r1
+    17  line 11   print    r2 x1 print
+    18  line 11   safe    
+    19  line 12   neg      r2 r0
+    20  line 12   print    r2 x1 print
+    21  line 12   safe    
+    22  line 13   loadi    r5 2
+    23  line 13   mul      r4 r1 r5
+    24  line 13   add      r3 r0 r4
+    25  line 13   loadi    r4 1
+    26  line 13   sub      r2 r3 r4
+    27  line 13   print    r2 x1 print
+    28  line 13   safe    
+    29  line 14   add      r3 r0 r1
+    30  line 14   sub      r4 r0 r1
+    31  line 14   mul      r2 r3 r4
+    32  line 14   print    r2 x1 print
+    33  line 14   safe    
+    34  line 15   loadk    r2 k0    ; 7.5
+    35  line 15   safe    
+    36  line 16   loadk    r3 k1    ; 2
+    37  line 16   safe    
+    38  line 17   add      r4 r2 r3
+    39  line 17   print    r4 x1 print
+    40  line 17   safe    
+    41  line 18   mul      r4 r2 r3
+    42  line 18   print    r4 x1 print
+    43  line 18   safe    
+    44  line 19   div      r4 r2 r3
+    45  line 19   print    r4 x1 print
+    46  line 19   safe    
+    47  line 20   sub      r4 r2 r0
+    48  line 20   print    r4 x1 print
+    49  line 20   safe    
+    50  line 21   neg      r4 r2
+    51  line 21   print    r4 x1 print
+    52  line 21   safe    
+    53  line 4    halt    

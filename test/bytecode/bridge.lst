@@ -1,9 +1,26 @@
-process main  (function 0, 3 registers, 0 parameters)
-     0  line 5    evalx    r0 x0    ; tree walker: list
-     1  line 6    evalx    r1 x1    ; tree walker: call
-     2  line 6    print    r1 x1 print
-     3  line 7    loadi    r1 0
-     4  line 8    execx    x2    ; tree walker: for_
-     5  line 11   move     r2 r1
-     6  line 11   print    r2 x1 print
-     7  line 4    halt    
+process main  (function 0, 5 registers, 0 parameters)
+     0  line 5    new_list r0
+     1  line 5    loadi    r1 3
+     2  line 5    list_push r0 r1
+     3  line 5    loadi    r1 1
+     4  line 5    list_push r0 r1
+     5  line 5    loadi    r1 2
+     6  line 5    list_push r0 r1
+     7  line 5    safe    
+     8  line 6    length   r1 r0
+     9  line 6    xref     x0    ; the tree walker does the rare case: call
+    10  line 6    print    r1 x1 print
+    11  line 6    safe    
+    12  line 7    loadi    r1 0
+    13  line 7    safe    
+    14  line 8    move     r2 r0
+    15  line 8    iterprep r2 -> 20
+    16  line 8    xref     x1    ; the tree walker does the rare case: for_
+    17  line 9    augment  r1 r4 add
+    18  line 8    iterloop r2 -> 17
+    19  line 8    jmp      -> 20
+    20  line 8    safe    
+    21  line 11   move     r2 r1
+    22  line 11   print    r2 x1 print
+    23  line 11   safe    
+    24  line 4    halt    

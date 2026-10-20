@@ -1,34 +1,41 @@
 process main  (function 0, 8 registers, 0 parameters)
      0  line 9    loadi    r0 0
-     1  line 10   loadi    r1 10
-     2  line 11   loadi    r2 1
-     3  line 11   move     r3 r1
-     4  line 11   forprep  r2 -> 10
-     5  line 12   move     r7 r4
-     6  line 12   callf    r6 f1 args 1    ; sq
-     7  line 12   move     r5 r6
-     8  line 12   augment  r0 r5 add
-     9  line 11   forloop  r2 -> 5
-    10  line 14   loadi    r2 0
-    11  line 15   loadi    r4 3
-    12  line 15   lt       r3 r2 r4
-    13  line 15   jf       r3 -> 17
-    14  line 16   loadi    r3 1
-    15  line 16   augment  r2 r3 add
-    16  line 15   jmp      -> 11
-    17  line 18   loadi    r4 5
-    18  line 18   gt       r3 r0 r4
-    19  line 18   jf       r3 -> 24
-    20  line 19   loadk    r3 k0    ; "big"
-    21  line 19   move     r4 r0
-    22  line 19   print    r3 x2 print
-    23  line 18   jmp      -> 26
-    24  line 21   loadk    r3 k1    ; "small"
-    25  line 21   print    r3 x1 print
-    26  line 23   loadi    r4 385
-    27  line 23   eq       r3 r0 r4
-    28  line 23   expect   r3
-    29  line 8    halt    
+     1  line 9    safe    
+     2  line 10   loadi    r1 10
+     3  line 10   safe    
+     4  line 11   loadi    r2 1
+     5  line 11   move     r3 r1
+     6  line 11   forprep  r2 -> 12
+     7  line 12   move     r7 r4
+     8  line 12   callf    r6 f1 args 1    ; sq
+     9  line 12   move     r5 r6
+    10  line 12   augment  r0 r5 add
+    11  line 11   forloop  r2 -> 7
+    12  line 11   safe    
+    13  line 14   loadi    r2 0
+    14  line 14   safe    
+    15  line 15   loadi    r4 3
+    16  line 15   lt       r3 r2 r4
+    17  line 15   jf       r3 -> 21
+    18  line 16   loadi    r3 1
+    19  line 16   augment  r2 r3 add
+    20  line 15   jmp      -> 15
+    21  line 15   safe    
+    22  line 18   loadi    r4 5
+    23  line 18   gt       r3 r0 r4
+    24  line 18   jf       r3 -> 29
+    25  line 19   loadk    r3 k0    ; "big"
+    26  line 19   move     r4 r0
+    27  line 19   print    r3 x2 print
+    28  line 18   jmp      -> 31
+    29  line 21   loadk    r3 k1    ; "small"
+    30  line 21   print    r3 x1 print
+    31  line 18   safe    
+    32  line 23   loadi    r4 385
+    33  line 23   eq       r3 r0 r4
+    34  line 23   expect   r3
+    35  line 23   safe    
+    36  line 8    halt    
 function sq  (function 1, 3 registers, 1 parameters)
      0  line 4    loadi    r1 0
      1  line 5    mul      r2 r0 r0

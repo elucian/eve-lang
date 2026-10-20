@@ -146,7 +146,62 @@ const Emitter = struct {
                     _ = try e.emit(Inst.abc(.loadfalse, dst, 0, 0), line);
                 } else if (std.mem.eql(u8, n.text, "null")) {
                     _ = try e.emit(Inst.abc(.loadnil, dst, 0, 0), line);
-                } else try e.bridgeExpr(n, dst);
+                } else _ = try e.emit(Inst.abx(.loadg, dst, try e.konst(.{ .str = n.text })), line);
+            },
+            .list, .array => {
+                for (n.kids) |k| if (k.tag == .pair or k.tag == .star or k.tag == .spread) return e.bridgeExpr(n, dst);
+                const mark = e.free;
+                defer e.free = mark;
+                _ = try e.emit(Inst.abc(.new_list, dst, if (n.tag == .array) 1 else 0, 0), line);
+                for (n.kids) |k| {
+                    const slot = try e.alloc(k);
+                    try e.exprTo(k, slot);
+                    _ = try e.emit(Inst.abc(.list_push, dst, slot, 0), line);
+                    e.free = mark;
+                }
+            },
+            .brace => {
+                const is_map = std.mem.eql(u8, n.text, "map");
+                if (!is_map and !std.mem.eql(u8, n.text, "set")) return e.bridgeExpr(n, dst);
+                for (n.kids) |k| if ((k.tag == .pair) != is_map or k.tag == .star or k.tag == .spread) return e.bridgeExpr(n, dst);
+                const mark = e.free;
+                defer e.free = mark;
+                _ = try e.emit(Inst.abc(if (is_map) .new_map else .new_set, dst, 0, 0), line);
+                for (n.kids) |k| {
+                    if (is_map) {
+                        const key = try e.alloc(k);
+                        try e.exprTo(k.kids[0], key);
+                        const val = try e.alloc(k);
+                        try e.exprTo(k.kids[1], val);
+                        _ = try e.emit(Inst.abc(.map_set, dst, key, val), line);
+                    } else {
+                        const slot = try e.alloc(k);
+                        try e.exprTo(k, slot);
+                        _ = try e.emit(Inst.abc(.set_add, dst, slot, 0), line);
+                    }
+                    e.free = mark;
+                }
+            },
+            .index => {
+                if (!plainIndex(n)) return e.bridgeExpr(n, dst);
+                const mark = e.free;
+                defer e.free = mark;
+                const obj = try e.operand(n.kids[0]);
+                const key = try e.operand(n.kids[1]);
+                _ = try e.emit(Inst.abc(.index, dst, obj, key), line);
+                try e.xref(n);
+            },
+            .interp => {
+                if (n.kids.len > 200) return e.bridgeExpr(n, dst);
+                const mark = e.free;
+                defer e.free = mark;
+                const base = e.free;
+                for (n.kids) |part| {
+                    const slot = try e.alloc(part);
+                    if (part.tag != .str) try e.exprTo(part.kids[0], slot);
+                }
+                _ = try e.emit(Inst.abc(.interp, dst, base, 0), line);
+                try e.xrefNode(n);
             },
             .bin => try e.binary(n, dst),
             .un => {
@@ -212,6 +267,13 @@ const Emitter = struct {
 
     fn call(e: *Emitter, n: *const Node, dst: u8) Error!void {
         const callee = n.kids[0];
+        if (callee.tag == .field and n.kids.len == 1 and (std.mem.eql(u8, callee.text, "count") or std.mem.eql(u8, callee.text, "length"))) {
+            const mark = e.free;
+            defer e.free = mark;
+            const obj = try e.operand(callee.kids[0]);
+            _ = try e.emit(Inst.abc(.length, dst, obj, 0), n.line);
+            return e.xref(n);
+        }
         if (callee.tag != .name or e.find(callee.text) != null) return e.bridgeExpr(n, dst);
         const fi = e.routineIndex(callee.text) orelse return e.bridgeExpr(n, dst);
         const target = e.routineNode(callee.text).?;
@@ -258,6 +320,38 @@ const Emitter = struct {
         for (n.kids) |k| if (cannotBridge(k)) return true;
         for (n.extra) |k| if (cannotBridge(k)) return true;
         return false;
+    }
+
+    // @eve-impl the second word of an instruction with a fast case: the tree walker runs `n` when the fast case does not apply
+    // @spec design/design-bytecode.md#9-stages
+    // @test test/bytecode
+    fn xref(e: *Emitter, n: *const Node) Error!void {
+        if (cannotBridge(n)) return e.unsupported(n, @tagName(n.tag));
+        var names: std.ArrayList(chunk.NameReg) = .empty;
+        try e.collectNames(n, &names);
+        try e.xnodes.append(e.a, .{ .node = n, .names = names.items });
+        _ = try e.emit(Inst.abx(.xref, 0, @intCast(e.xnodes.items.len - 1)), n.line);
+    }
+
+    /// An `xref` word that carries a node the machine only reads (the parts of an interpolation) or never runs.
+    fn xrefNode(e: *Emitter, n: *const Node) Error!void {
+        try e.xnodes.append(e.a, .{ .node = n, .names = &.{} });
+        _ = try e.emit(Inst.abx(.xref, 0, @intCast(e.xnodes.items.len - 1)), n.line);
+    }
+
+    /// Does `n` use `$`, `*` or a range as an index, which only the tree walker knows?
+    fn specialIndex(n: *const Node) bool {
+        switch (n.tag) {
+            .dollar, .all, .range, .pair, .star, .spread => return true,
+            else => {},
+        }
+        for (n.kids) |k| if (specialIndex(k)) return true;
+        return false;
+    }
+
+    /// `obj[i]` with one plain index on an object that is not itself indexed.
+    fn plainIndex(n: *const Node) bool {
+        return n.tag == .index and n.kids.len == 2 and n.kids[0].tag != .index and !specialIndex(n.kids[1]);
     }
 
     fn bridgeExpr(e: *Emitter, n: *const Node, dst: u8) Error!void {
@@ -317,6 +411,7 @@ const Emitter = struct {
                     _ = try e.emit(Inst.abc(.coerce, r, @intFromEnum(ty.tk), 0), line);
                 };
             },
+            .block => try e.block(n), // the groups of declarations (`new x = 1, y = 2 :Integer;`) are not a scope
             .assign => try e.assign(n),
             .print_stmt, .write_stmt => try e.printStmt(n),
             .expect_stmt => {
@@ -366,6 +461,19 @@ const Emitter = struct {
     fn assign(e: *Emitter, n: *const Node) Error!void {
         const line = n.line;
         const target = n.kids[0];
+        if (target.tag == .index and n.op == .set and plainIndex(target)) {
+            // the value first, as the tree walker does, then the object and the index
+            const v = try e.operand(n.kids[1]);
+            const obj = try e.operand(target.kids[0]);
+            const key = try e.operand(target.kids[1]);
+            _ = try e.emit(Inst.abc(.index_set, obj, key, v), line);
+            return e.xref(n);
+        }
+        if (target.tag == .name and n.op == .push_back) if (e.find(target.text)) |reg| {
+            const v = try e.operand(n.kids[1]);
+            _ = try e.emit(Inst.abc(.push, reg, v, 0), line);
+            return e.xref(n);
+        };
         if (target.tag != .name) return e.bridgeStmt(n);
         const reg = e.find(target.text) orelse return e.bridgeStmt(n);
         const op: Op = switch (n.op) {
@@ -457,6 +565,7 @@ const Emitter = struct {
 
     fn forStmt(e: *Emitter, n: *const Node) Error!void {
         const range = n.kids[1];
+        if (n.kids[0].tag == .name and range.tag != .range) return e.forEach(n);
         if (n.kids[0].tag != .name or range.tag != .range or !std.mem.eql(u8, range.text, "..")) return e.bridgeStmt(n);
         const saved_locals = e.locals.items.len;
         const base = try e.alloc(n);
@@ -482,6 +591,45 @@ const Emitter = struct {
         try e.block(n.kids[3]);
         const end = e.here();
         if (skip_else) |j| e.patch(j, end);
+        for (lp.breaks.items) |j| e.patch(j, end);
+        lp.breaks.deinit(e.a);
+        lp.skips.deinit(e.a);
+        e.locals.shrinkRetainingCapacity(saved_locals);
+        e.free = e.floor();
+        try e.block(n.kids[4]);
+    }
+
+    // @eve-impl `for x in collection`: a list, a map, a set or a string is visited by `iterprep` and `iterloop`; a range value, a channel,
+    // a generator, a stream or a table runs the whole statement on the tree walker (only when it can be bridged)
+    // @spec spec/semantics/control.md#loops
+    // @test test/bytecode/bc03_loops
+    fn forEach(e: *Emitter, n: *const Node) Error!void {
+        const src = n.kids[1];
+        const literal = src.tag == .list or src.tag == .array or src.tag == .str or (src.tag == .brace and !std.mem.eql(u8, src.text, "object"));
+        if (cannotBridge(n) and !literal) return e.bridgeStmt(n);
+        const saved_locals = e.locals.items.len;
+        const base = try e.alloc(n);
+        const pos = try e.alloc(n);
+        const user = try e.alloc(n);
+        std.debug.assert(pos == base + 1 and user == base + 2);
+        try e.exprTo(src, base);
+        try e.locals.append(e.a, .{ .name = n.kids[0].text, .reg = user });
+        try e.enterLoop();
+        const prep = try e.emit(Inst.asbx(.iterprep, base, 0), n.line);
+        if (literal) try e.xrefNode(n) else try e.xref(n);
+        const body = e.here();
+        try e.block(n.kids[2]);
+        var lp = e.loops.pop().?;
+        const cont = e.here();
+        for (lp.skips.items) |j| e.patch(j, cont);
+        const back = try e.emit(Inst.asbx(.iterloop, base, 0), n.line);
+        e.patch(back, body);
+        // the tree walker that ran the whole loop lands on this jump; an empty collection goes to the else block
+        const skip_else = try e.emit(Inst.asbx(.jmp, 0, 0), n.line);
+        e.patch(prep, e.here());
+        try e.block(n.kids[3]);
+        const end = e.here();
+        e.patch(skip_else, end);
         for (lp.breaks.items) |j| e.patch(j, end);
         lp.breaks.deinit(e.a);
         lp.skips.deinit(e.a);
@@ -532,7 +680,14 @@ const Emitter = struct {
             }
             body = n.kids[3];
         }
-        try e.block(body);
+        if (e.in_process) {
+            // a safe point follows each statement of the process body, as in the tree walker: the objects that nobody holds
+            // any more are freed there (and their destructors run) at the same place in both engines
+            for (body.kids) |s| {
+                try e.statement(s);
+                _ = try e.emit(Inst.abc(.safe, 0, 0, 0), s.line);
+            }
+        } else try e.block(body);
         if (e.in_process) {
             _ = try e.emit(Inst.abc(.halt, 0, 0, 0), n.line);
         } else _ = try e.emit(Inst.abc(.ret, e.result_reg, if (e.result_reg == chunk.no_result) 0 else 1, 0), n.line);
@@ -567,6 +722,8 @@ pub fn compile(a: Alloc, root: *const Node, diag: *Diag) Error!chunk.Chunk {
             main = k;
         } else return e.unsupported(k, "a process other than main"),
         .none, .params => {},
+        // declared by the tree walker before the machine starts (runRoot): the code reaches them by name
+        .class, .trait, .adopt, .var_decl, .set, .generator, .table_decl, .import_decl, .method => {},
         else => return e.unsupported(k, @tagName(k.tag)),
     };
     const m = main orelse return e.unsupported(root, "an aspect without process main");

@@ -16,6 +16,8 @@ pub const Op = enum(u8) {
     move,
     /// `A := const[Bx]`
     loadk,
+    /// `A := the variable named const[Bx]` of the enclosing scopes (a shared variable of the aspect, a constant, a class, a module): the name is looked up as the tree walker does
+    loadg,
     /// `A := sBx` (an integer)
     loadi,
     /// `A := null`
@@ -73,28 +75,40 @@ pub const Op = enum(u8) {
     binx,
     /// the second word of `binx`: `Bx` is the constant that holds the operator
     extra,
-    /// `A := ()` (empty list)
+    /// `A := ()` (an empty list); with B = 1, `A := []` (an array)
     new_list,
-    /// `A := {}` (empty map or set; the type is known from context)
+    /// `A := {}` of keys and values (an empty map)
     new_map,
-    /// `A <+ B` (append B to list A; A is modified in place)
+    /// `A := {}` of values (an empty set)
+    new_set,
+    /// `A <+ B`: append B to the list A, the fresh list of a literal (no fallback)
     list_push,
-    /// `A := B[C]` (get element C from list B, 1-based indexing with negative index support)
-    list_index,
-    /// `A[B] := C` (set element B of list A to C; A is modified)
-    list_set,
-    /// `A := B[C]` (get value for key C from map B)
-    map_get,
-    /// `A[B] := C` (set A[B] to C for map A; A is modified)
+    /// `A[B] := C` on the fresh map A of a literal (no fallback)
     map_set,
-    /// `A <+ B` (add B to set A; A is modified in place)
+    /// `A <+ B` on the fresh set A of a literal (no fallback)
     set_add,
-    /// `A := B in C` (check if B is in set C, return boolean)
-    set_has,
-    /// `A := B.count()` (or `.length()`, works on any collection or string; C is 0 for all types)
+    /// `A := B[C]`: the element of a list, or the value of an existing key of a map; any other case (a string, a view, a matrix,
+    /// a missing key, an index out of range) runs the expression xnode[Bx of the next `xref` word] on the tree walker, which gives
+    /// its value or its error
+    index,
+    /// `A[B] := C`: store in a list or a map; any other case runs the statement xnode[Bx of the next `xref` word] on the tree walker
+    index_set,
+    /// `A <+ B` (the statement `let A <+ B`): append to a list, add to a set; any other case runs xnode[Bx of the `xref` word]
+    push,
+    /// `A := B.count()` (or `.length()`) of a string, a list, a set or a map; any other case runs xnode[Bx of the `xref` word]
     length,
-    /// `A := B.method(...)` where method name and args are in the next word; not yet implemented
-    call_method,
+    /// the second word of `index`, `index_set`, `push` and `length`: `Bx` is the xnode that the tree walker runs when the fast case does not apply
+    xref,
+    /// `A := the text of an interpolation`: the node is the xnode of the next `xref` word, the value of its part k is in the register B+k
+    interp,
+    /// the loop `for A in collection`: A holds the collection (it becomes a list of the elements), A+1 the position, A+2 the user's
+    /// variable; `pc += sBx` when there is nothing to visit; a collection that is not a list, a map, a set, a string or a range
+    /// runs the whole loop statement (xnode[Bx of the next `xref` word]) on the tree walker and jumps past it
+    iterprep,
+    /// the position A+1 grows by one; while it is not past the end of the list A, the variable A+2 gets the element and `pc += sBx` (back to the body)
+    iterloop,
+    /// a safe point: free what nobody holds any more (the end of a statement of the process body)
+    safe,
     /// end the process (`over;`)
     over,
     /// end of the main process

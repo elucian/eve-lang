@@ -1,9 +1,21 @@
 process main  (function 0, 4 registers, 0 parameters)
-     0  line 5    evalx    r0 x0    ; tree walker: list
-     1  line 6    evalx    r1 x1    ; tree walker: index
-     2  line 6    print    r1 x1 print
-     3  line 7    loadi    r1 0
-     4  line 8    loadi    r3 10
-     5  line 8    div      r2 r3 r1
-     6  line 8    print    r2 x1 print
-     7  line 4    halt    
+     0  line 5    new_list r0
+     1  line 5    loadi    r1 1
+     2  line 5    list_push r0 r1
+     3  line 5    loadi    r1 2
+     4  line 5    list_push r0 r1
+     5  line 5    loadi    r1 3
+     6  line 5    list_push r0 r1
+     7  line 5    safe    
+     8  line 6    loadi    r2 2
+     9  line 6    index    r1 r0 r2
+    10  line 6    xref     x0    ; the tree walker does the rare case: index
+    11  line 6    print    r1 x1 print
+    12  line 6    safe    
+    13  line 7    loadi    r1 0
+    14  line 7    safe    
+    15  line 8    loadi    r3 10
+    16  line 8    div      r2 r3 r1
+    17  line 8    print    r2 x1 print
+    18  line 8    safe    
+    19  line 4    halt    

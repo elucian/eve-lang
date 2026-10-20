@@ -1,30 +1,53 @@
-process main  (function 0, 6 registers, 0 parameters)
+process main  (function 0, 7 registers, 0 parameters)
      0  line 5    loadi    r0 10
-     1  line 6    loadi    r1 5
-     2  line 6    augment  r0 r1 add
-     3  line 7    loadi    r1 3
-     4  line 7    augment  r0 r1 sub
-     5  line 8    loadi    r1 2
-     6  line 8    augment  r0 r1 mul
-     7  line 9    loadi    r1 4
-     8  line 9    augment  r0 r1 div
-     9  line 10   move     r1 r0
-    10  line 10   print    r1 x1 print
-    11  line 11   loadk    r1 k0    ; "ab"
-    12  line 12   loadk    r2 k1    ; "cd"
-    13  line 12   augment  r1 r2 add
-    14  line 13   move     r2 r1
-    15  line 13   print    r2 x1 print
-    16  line 14   evalx    r2 x0    ; tree walker: list
-    17  line 15   loadi    r3 10
-    18  line 15   augment  r2 r3 add
-    19  line 16   evalx    r4 x1    ; tree walker: index
-    20  line 16   evalx    r5 x2    ; tree walker: index
-    21  line 16   add      r3 r4 r5
-    22  line 16   print    r3 x1 print
-    23  line 17   loadk    r3 k2    ; 1.5
-    24  line 18   loadi    r4 4
-    25  line 18   augment  r3 r4 mul
-    26  line 19   move     r4 r3
-    27  line 19   print    r4 x1 print
-    28  line 4    halt    
+     1  line 5    safe    
+     2  line 6    loadi    r1 5
+     3  line 6    augment  r0 r1 add
+     4  line 6    safe    
+     5  line 7    loadi    r1 3
+     6  line 7    augment  r0 r1 sub
+     7  line 7    safe    
+     8  line 8    loadi    r1 2
+     9  line 8    augment  r0 r1 mul
+    10  line 8    safe    
+    11  line 9    loadi    r1 4
+    12  line 9    augment  r0 r1 div
+    13  line 9    safe    
+    14  line 10   move     r1 r0
+    15  line 10   print    r1 x1 print
+    16  line 10   safe    
+    17  line 11   loadk    r1 k0    ; "ab"
+    18  line 11   safe    
+    19  line 12   loadk    r2 k1    ; "cd"
+    20  line 12   augment  r1 r2 add
+    21  line 12   safe    
+    22  line 13   move     r2 r1
+    23  line 13   print    r2 x1 print
+    24  line 13   safe    
+    25  line 14   new_list r2
+    26  line 14   loadi    r3 1
+    27  line 14   list_push r2 r3
+    28  line 14   loadi    r3 2
+    29  line 14   list_push r2 r3
+    30  line 14   safe    
+    31  line 15   loadi    r3 10
+    32  line 15   augment  r2 r3 add
+    33  line 15   safe    
+    34  line 16   loadi    r5 1
+    35  line 16   index    r4 r2 r5
+    36  line 16   xref     x0    ; the tree walker does the rare case: index
+    37  line 16   loadi    r6 2
+    38  line 16   index    r5 r2 r6
+    39  line 16   xref     x1    ; the tree walker does the rare case: index
+    40  line 16   add      r3 r4 r5
+    41  line 16   print    r3 x1 print
+    42  line 16   safe    
+    43  line 17   loadk    r3 k2    ; 1.5
+    44  line 17   safe    
+    45  line 18   loadi    r4 4
+    46  line 18   augment  r3 r4 mul
+    47  line 18   safe    
+    48  line 19   move     r4 r3
+    49  line 19   print    r4 x1 print
+    50  line 19   safe    
+    51  line 4    halt    

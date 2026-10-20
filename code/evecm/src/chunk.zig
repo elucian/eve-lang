@@ -73,6 +73,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                         .str => |v| try w.print("    ; \"{s}\"", .{v}),
                     }
                 },
+                .loadg => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
                 .loadi => try w.print(" r{d} {d}", .{ i.a, i.sbx() }),
                 .loadnil, .loadtrue, .loadfalse, .expect => try w.print(" r{d}", .{i.a}),
                 .add, .sub, .mul, .div, .mod, .eq, .ne, .lt, .le, .gt, .ge => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
@@ -87,14 +88,14 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                 .execx => try w.print(" x{d}    ; tree walker: {s}", .{ i.bx(), @tagName(c.xnodes[i.bx()].node.tag) }),
                 .binx => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
                 .extra => try w.print(" k{d}", .{i.bx()}),
-                .new_list, .new_map => try w.print(" r{d}", .{i.a}),
-                .list_push, .set_add => try w.print(" r{d} r{d}", .{ i.a, i.b }),
-                .list_index, .map_get => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
-                .list_set, .map_set => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
-                .set_has => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
+                .new_list, .new_map, .new_set => try w.print(" r{d}", .{i.a}),
+                .list_push, .set_add, .push => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .index, .index_set, .map_set => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
                 .length => try w.print(" r{d} r{d}", .{ i.a, i.b }),
-                .call_method => try w.print(" r{d} r{d} x{d}", .{ i.a, i.b, i.bx() }),
-                .over, .halt => {},
+                .xref => try w.print(" x{d}    ; the tree walker does the rare case: {s}", .{ i.bx(), @tagName(c.xnodes[i.bx()].node.tag) }),
+                .interp => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .iterprep, .iterloop => try w.print(" r{d} -> {d}", .{ i.a, @as(i64, pc) + 1 + i.sbx() }),
+                .over, .halt, .safe => {},
             }
             try w.writeByte('\n');
         }
