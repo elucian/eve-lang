@@ -145,6 +145,9 @@ pub const Tag = enum {
     constructor,
     /// `destructor(@self) is ... return;`: text empty; kids as a method with no results (CLS-14, D-202).
     destructor,
+    /// `adopt Trait for Type is methods end adopt;`: text = the trait; kids = [type, method...]; the methods are
+    /// extension methods of the type (CLS-15, D-202).
+    adopt,
     /// `( [@]name [= default] [: Type] )`: kids = `param` and `ref_param` nodes (kids = [default or none]; `ty`).
     params,
     param,

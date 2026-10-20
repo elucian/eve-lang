@@ -1,0 +1,20 @@
+# a private attribute needs a constructor in the same class (CLS-17b, D-202)
+** spec: syntax/declarations.md#classes-and-objects
+primary aspect c40_private_attribute_needs_constructor is
+  class Counter = {} <: Object is
+    public method bump(@self) is
+      new self.state := 0;
+    return;
+  end Counter;
+
+  process main is
+    new k := Counter();
+    k.bump();
+  return;
+end c40_private_attribute_needs_constructor;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

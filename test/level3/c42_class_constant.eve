@@ -1,0 +1,28 @@
+# set in the body of a class defines a constant, initialized once when the class is declared, read as Class.NAME (CLS-17b, D-202)
+** spec: syntax/declarations.md#classes-and-objects
+primary aspect c42_class_constant is
+  class Shape = {name: String} <: Object is
+    set sides = 4 :Integer;
+    set label = "shape" :String;
+
+    public method describe(@self) => (@result: String) is
+      let result := "{self.name} has {Shape.sides} sides";
+    return;
+  end Shape;
+
+  process main is
+    new s := Shape(name: "box");
+    print s.describe();
+    print Shape.label;
+    print Shape.sides * 2;
+  return;
+end c42_class_constant;
+/*@expect
+{
+  "stdout": [
+    "box has 4 sides",
+    "shape",
+    "8"
+  ]
+}
+*/

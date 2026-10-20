@@ -18,11 +18,11 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | Level 2 | 2 | 1 | 0 | 0 | 3 |
 | Level 3 | 5 | 8 | 0 | 1 | 14 |
 | Level 4 | 5 | 8 | 0 | 2 | 15 |
-| Level 5 | 6 | 9 | 0 | 15 | 30 |
+| Level 5 | 7 | 15 | 0 | 8 | 30 |
 | Level 6 | 0 | 6 | 0 | 18 | 24 |
 | Level 7 | 0 | 1 | 0 | 13 | 14 |
 | All levels | 11 | 5 | 0 | 7 | 23 |
-| **All** | **43** | **43** | **0** | **56** | **142** |
+| **All** | **44** | **49** | **0** | **49** | **142** |
 <!-- /GEN:summary -->
 
 ## By version
@@ -104,21 +104,21 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | Code | Feature | Stage |
 |---|---|---|
 | `F-DAT-01` | Database layer | drafted |
-| `F-DAT-03` | ETL pipeline model | planned |
-| `F-DAT-04` | Checkpoints and restart | planned |
-| `F-DAT-05` | Columnar tables | planned |
+| `F-DAT-03` | ETL pipeline model | drafted |
+| `F-DAT-04` | Checkpoints and restart | drafted |
+| `F-DAT-05` | Columnar tables | drafted |
 | `F-DAT-06` | Data lineage and run reports | planned |
 | `F-DAT-08` | The Eve database | planned |
 | `F-DAT-09` | Database admin commands | planned |
 | `F-DAT-10` | Schema migrations | planned |
-| `F-DAT-11` | Record-table mapping | planned |
+| `F-DAT-11` | Record-table mapping | validated |
 | `F-DAT-12` | evedb, the Eve test database | drafted |
 | `F-DAT-13` | `sql function` | drafted |
 | `F-DAT-14` | Stored procedures | drafted |
 | `F-VM-11` | One `eve`, its source in modules | drafted |
 | `F-DOC-02` | Tutorial, data client part | planned |
-| `F-LIB-04` | Files and paths | planned |
-| `F-LIB-05` | Data formats | planned |
+| `F-LIB-04` | Files and paths | drafted |
+| `F-LIB-05` | Data formats | drafted |
 | `F-LIB-06` | Time and dates | drafted |
 | `F-LIB-07` | Shell commands | drafted |
 | `F-LIB-08` | Secrets | drafted |
@@ -127,7 +127,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-LNG-21` | Overloading | validated |
 | `F-LNG-12` | Generators | validated |
 | `F-LNG-13` | Data types for ETL | drafted |
-| `F-LNG-14` | Record types and optional values | planned |
+| `F-LNG-14` | Record types and optional values | drafted |
 | `F-NET-01` | HTTP client | planned |
 | `F-VM-06` | Efficient collections | planned |
 | `F-STR-09` | Eve macro (hybrid script) | validated |

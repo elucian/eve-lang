@@ -144,7 +144,7 @@ pub fn routinesNamed(it: *Interp, c: *Class, name: []const u8, out: *std.ArrayLi
     while (cur) |k| : (cur = k.parent) {
         if (k.node) |node| {
             for (node.kids[2..]) |r| {
-                if (r.tag == .constructor or r.kids[3].tag == .none or !std.mem.eql(u8, r.text, name)) continue;
+                if (r.tag == .set or r.tag == .constructor or r.kids[3].tag == .none or !std.mem.eql(u8, r.text, name)) continue;
                 try it.addUnique(out, r);
             }
         }
@@ -277,6 +277,14 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
         }
         return .{ .str = try it.persist(buf.items) };
     }
+    // @eve-impl an extension method of a basic type (`method describe(@self: Integer)`, `adopt ... for Integer`): CLS-15, D-202
+    // @spec spec/syntax/declarations.md#traits-and-generic-classes
+    // @test d42_adopt_trait
+    if (recv != .object) for (it.exts.items) |m| {
+        if (!eql(u8, m.text, name) or m.kids[0].kids.len == 0) continue;
+        const ty = m.kids[0].kids[0].ty orelse continue;
+        if (eql(u8, ty.text, Interp.typeName(recv))) return it.invoke(try it.newFunc(m, it.unit), recv, args);
+    };
     return it.fail("{s} has no method '{s}'", .{ Interp.typeName(recv), name });
 }
 

@@ -47,6 +47,8 @@ const Checker = struct {
     in_class: ?[]const u8 = null,
     /// Every class of the script by name, for the methods of `obj.method()`.
     classes: std.StringHashMapUnmanaged(*const Node) = .empty,
+    /// The `adopt Trait for Type` blocks of the unit (CLS-15, D-202).
+    adoptions: std.ArrayList(*const Node) = .empty,
     /// The script being checked is an aspect: it can't `apply` another aspect (D-066).
     /// An import brings names without a prefix (`m(*)` or `*`): they are known only when the modules
     /// are read (project.zig), so an unknown name is not an error here (modules.md).
@@ -450,6 +452,7 @@ const Checker = struct {
 
     /// Does the class `name` adopt the trait `trait`, directly, through a parent or through a trait?
     fn adopts(c: *Checker, name: []const u8, trait: []const u8) bool {
+        for (c.adoptions.items) |a| if (std.mem.eql(u8, a.kids[0].text, name) and std.mem.eql(u8, a.text, trait)) return true;
         var cur: ?[]const u8 = name;
         while (cur) |cn| {
             if (std.mem.eql(u8, cn, trait)) return true;
@@ -458,6 +461,35 @@ const Checker = struct {
             cur = if (cls.kids[1].tag == .name) cls.kids[1].text else null;
         }
         return false;
+    }
+
+    // @eve-impl check an `adopt Trait for Type` block: the trait exists, the block writes every required method and no other
+    // @spec spec/syntax/declarations.md#traits-and-generic-classes
+    // @test d42_adopt_trait
+    fn checkAdopt(c: *Checker, a: *const Node) Error!void {
+        const ty = a.kids[0].text;
+        if (c.classes.get(a.text)) |tn| {
+            if (tn.tag != .trait) return c.fail(a, "{s} is not a trait (D-202)", .{a.text});
+            for (tn.kids[2..]) |m| {
+                if (m.tag != .method or m.kids[3].tag != .none) continue;
+                var written = false;
+                for (a.kids[1..]) |w| if (std.mem.eql(u8, w.text, m.text) and w.kids[3].tag != .none) {
+                    written = true;
+                };
+                if (!written) return c.fail(a, "{s} does not implement {s}, required by the trait {s} (D-202)", .{ ty, m.text, a.text });
+            }
+            for (a.kids[1..]) |w| {
+                var known = false;
+                for (tn.kids[2..]) |m| if (m.tag == .method and std.mem.eql(u8, w.text, m.text)) {
+                    known = true;
+                };
+                if (!known) return c.fail(w, "{s} is not a method of the trait {s} (D-202)", .{ w.text, a.text });
+            }
+        } else if (!(std.mem.eql(u8, a.text, "Printable") or std.mem.eql(u8, a.text, "Comparable") or std.mem.eql(u8, a.text, "Iterable") or std.mem.eql(u8, a.text, "Stream"))) {
+            return c.fail(a, "undefined trait '{s}'", .{a.text});
+        }
+        if (!c.classes.contains(ty) and !overload.isPrimitive(ty)) return c.fail(a, "undefined type '{s}'", .{ty});
+        for (a.kids[1..]) |w| try c.routine(w, null);
     }
 
     /// The written types of `largest(:Point)(...)` must adopt the constraints of the declaration (D-145, D-148).
@@ -723,6 +755,16 @@ const Checker = struct {
                     if (c.in_class == null or r.tag != .name or !std.mem.eql(u8, r.text, "self")) {
                         return c.fail(t, "code outside a class can't add the attribute '{s}' to an object", .{t.text});
                     }
+                    // @eve-impl a private attribute needs a constructor in the same class (CLS-17b, D-202)
+                    // @spec spec/syntax/declarations.md#classes-and-objects
+                    // @test c40_private_attribute_needs_constructor
+                    if (c.classes.get(c.in_class.?)) |cls| {
+                        var has_ctor = false;
+                        for (cls.kids[2..]) |k| if (k.tag == .constructor) {
+                            has_ctor = true;
+                        };
+                        if (!has_ctor and cls.tag == .class) return c.fail(t, "the private attribute '{s}' of {s} has no constructor to set it: write a constructor (D-202)", .{ t.text, cls.text });
+                    }
                 },
                 else => {},
             }
@@ -746,6 +788,7 @@ const Checker = struct {
                     }
                 },
                 .function, .procedure, .generator => try c.declareSubprogram(m),
+                .adopt => try c.adoptions.append(c.a, m),
                 .table_decl => {
                     try c.declare(m, m.text, .{ .kind = .variable, .ty = "Table", .node = m });
                     try c.tables.put(c.a, m.text, m);
@@ -1110,13 +1153,20 @@ const Checker = struct {
                     if (m.tag == .class) try c.traitConflicts(m);
                     try c.duplicateMethods(m);
                     try c.propertyMethodClash(m);
-                    for (m.kids[2..]) |r| try c.routine(r, m.text);
+                    for (m.kids[2..]) |r| {
+                        if (r.tag == .set) { // a constant of the class (D-202)
+                            if (r.kids[1].tag != .none) _ = try c.expr(r.kids[1]);
+                            continue;
+                        }
+                        try c.routine(r, m.text);
+                    }
                 },
                 .method => {
                     try c.extensionClash(m);
                     try c.routine(m, null);
                 },
                 .function, .procedure, .generator => try c.routine(m, null),
+                .adopt => try c.checkAdopt(m),
                 .table_decl => try c.checkTable(m),
                 .aspect => {
                     try c.push();

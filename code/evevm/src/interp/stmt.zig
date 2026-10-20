@@ -148,7 +148,7 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
             };
             it.setJob(n.text, "pass");
         },
-        .class, .trait, .function, .procedure, .method, .generator => try it.declareRoutine(n),
+        .class, .trait, .adopt, .function, .procedure, .method, .generator => try it.declareRoutine(n),
         .apply_stmt => try it.applyAspect(n),
         .parallel => try it.parallelGroup(n),
         .start_stmt => try it.startAspect(n),
@@ -267,7 +267,45 @@ pub fn raise(it: *Interp, n: *const Node) Signal {
 
 // ---- declarations and assignment ------------------------------------------------------
 
+// @eve-impl `adopt Trait for Type`: the methods of the block become extension methods of the type, the provided methods
+// of the trait that the block does not write too, and `x is Trait` is true for the type (CLS-15, D-202)
+// @spec spec/syntax/declarations.md#traits-and-generic-classes
+// @test d42_adopt_trait
+fn adoptTrait(it: *Interp, n: *const Node) Signal!void {
+    const tv = it.scope.find(n.text) orelse return it.fail("undefined trait '{s}': write the trait before the adopt block", .{n.text});
+    if (tv.value != .class or !tv.value.class.trait) return it.fail("'{s}' is not a trait", .{n.text});
+    const tr = tv.value.class;
+    const ty = n.kids[0];
+    for (n.kids[1..]) |m| try it.exts.append(it.a, m);
+    if (tr.node) |tn| for (tn.kids[2..]) |pm| {
+        if (pm.tag != .method or pm.kids[3].tag == .none) continue;
+        var written = false;
+        for (n.kids[1..]) |m| if (std.mem.eql(u8, m.text, pm.text)) {
+            written = true;
+        };
+        if (written) continue;
+        const params = try it.a.create(Node);
+        params.* = pm.kids[0].*;
+        const first = try it.a.dupe(*const Node, pm.kids[0].kids);
+        if (first.len > 0) {
+            const p0 = try it.a.create(Node);
+            p0.* = first[0].*;
+            p0.ty = ty;
+            first[0] = p0;
+        }
+        params.kids = first;
+        const copy = try it.a.create(Node);
+        copy.* = pm.*;
+        const mk = try it.a.dupe(*const Node, pm.kids);
+        mk[0] = params;
+        copy.kids = mk;
+        try it.exts.append(it.a, copy);
+    };
+    try it.adopted.append(it.a, .{ .ty = ty.text, .trait = tr });
+}
+
 pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
+    if (n.tag == .adopt) return adoptTrait(it, n);
     if (n.tag == .trait) {
         const c = try it.a.create(Class);
         c.* = .{ .name = n.text, .node = n, .trait = true };
@@ -299,6 +337,11 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
                 next += 1;
             }
         }
+        // the `set` constants of the body are evaluated once, here, and read as `Class.NAME` (D-202)
+        if (n.kids.len > 2) for (n.kids[2..]) |m| if (m.tag == .set) {
+            const val = if (m.kids[1].tag != .none) try it.eval(m.kids[1]) else Value.nil;
+            for (m.kids[0].kids) |t| if (t.tag == .name) try c.ord.append(it.a, .{ .name = t.text, .val = val });
+        };
         try it.define(n.text, .{ .class = c }, true);
         return;
     }

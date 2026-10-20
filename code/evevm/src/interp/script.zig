@@ -141,7 +141,7 @@ pub fn instantiate(it: *Interp, node: *const Node) Signal!*Module {
     try it.boot();
     for (node.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
     for (node.kids) |d| {
-        if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
+        if (d.tag == .adopt or d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method) try it.declareRoutine(d);
     }
     for (node.kids) |d| {
         if (d.tag == .var_decl or d.tag == .set) try it.exec(d);
@@ -270,7 +270,7 @@ pub fn runAspect(it: *Interp, aspect: *const Node, args: []const Arg) Signal!voi
     try it.boot();
     for (aspect.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
     for (aspect.kids) |d| {
-        if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
+        if (d.tag == .adopt or d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
     }
     for (aspect.kids) |d| if (d.tag == .table_decl) {
         try db.declareTables(it.host(), aspect.kids);

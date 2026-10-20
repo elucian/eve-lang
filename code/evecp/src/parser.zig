@@ -1626,6 +1626,11 @@ const Parser = struct {
                 return p.fail("a class hosts only methods: declare the {s} outside the class (D-123)", .{p.peek().text});
             } else if (p.isWord("constructor")) {
                 try kids.append(p.a, try p.routine(.constructor));
+            } else if (p.isWord("set")) {
+                // @eve-impl a constant of the class, `set NAME = value :Type;`, read as `Class.NAME` (CLS-17b, D-202)
+                // @spec spec/syntax/declarations.md#classes-and-objects
+                // @test c42_class_constant
+                try kids.append(p.a, try p.declaration());
             } else if (p.isWord("destructor")) {
                 // @eve-impl the destructor of a class, run when the object is freed (CLS-14, D-202)
                 // @spec spec/syntax/declarations.md#classes-and-objects
@@ -1700,7 +1705,38 @@ const Parser = struct {
         return p.mk(.trait, kw, name.text, kids.items);
     }
 
+    // @eve-impl `adopt Trait for Type is method ... end adopt;`: a type adopts a trait outside its declaration (CLS-15, D-202)
+    // @spec spec/syntax/declarations.md#traits-and-generic-classes
+    // @test d42_adopt_trait
+    fn adopt(p: *Parser) Error!*const Node {
+        const kw = p.advance();
+        const trait_name = try p.expectName("a trait name");
+        try p.expectWord("for");
+        const ty = try p.typeName();
+        try p.expectWord("is");
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.append(p.a, ty);
+        while (!p.isWord("end")) {
+            if (!p.isWord("method")) return p.fail("an adopt block holds only methods, found '{s}'", .{describe(p.peek())});
+            const m = try p.routineOf(.method, false);
+            // the methods are extension methods: `@self` has the type that adopts the trait
+            const first = m.kids[0].kids;
+            if (first.len > 0 and first[0].ty == null) @constCast(first[0]).ty = ty;
+            @constCast(m).public = true;
+            try kids.append(p.a, m);
+        }
+        try p.expectWord("end");
+        const end_name = try p.expectName("adopt");
+        if (!std.mem.eql(u8, end_name.text, "adopt")) {
+            p.i -= 1;
+            return p.fail("'end {s}' does not match 'adopt'", .{end_name.text});
+        }
+        try p.expectSym(";");
+        return p.mk(.adopt, kw, trait_name.text, kids.items);
+    }
+
     fn declarationInDriver(p: *Parser) Error!*const Node {
+        if (p.isWord("adopt") and p.isWordAt(2, "for")) return p.adopt();
         if (p.isWord("new") or p.isWord("set")) return p.declaration();
         if (p.isWord("class")) return p.class();
         if (p.isWord("trait")) return p.trait();
@@ -1980,7 +2016,7 @@ const Parser = struct {
                 return p.fail("a macro exports nothing: export is not allowed in a macro (D-126, D-152)", .{});
             } else if (p.isWord("module") or p.isWord("managed") or p.isWord("direct")) {
                 return p.fail("a module is its own file: it is not declared inside a macro (D-152)", .{});
-            } else if (p.isWord("new") or p.isWord("set") or p.isWord("class") or p.isWord("trait") or p.isWord("async") or
+            } else if (p.isWord("new") or p.isWord("set") or p.isWord("class") or p.isWord("trait") or (p.isWord("adopt") and p.isWordAt(2, "for")) or p.isWord("async") or
                 p.isWord("function") or p.isWord("procedure") or p.isWord("method") or p.isWord("from") or p.isGeneratorDecl() or p.isTableDecl() or
                 p.isSqlFunction())
             {

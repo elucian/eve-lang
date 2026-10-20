@@ -10,18 +10,23 @@ When a file is answered, Claude: (1) turns the answer into a decision in `design
 
 ## Open (2026-10-20)
 
-| File | Open questions |
-|---|---|
-| [classes.md](classes.md) | 6: CLS-09, 13, 14, 15, 16, 17b |
-| [command.md](command.md) | 2: CMD-04, CMD-05 |
-| [option.md](option.md) | 1: OPT-01 with OPT-02 |
+None. The nine questions that were open (classes, command, option) were answered on 2026-10-20 and applied: decision D-202 (`design/decision/level6.md`), the specification (`spec/syntax/declarations.md`, `spec/library/os.md`, `spec/semantics/variables.md`), the VM and tests (c39 to c42, d41 to d43, a93, f16), and the tutorial (the Unicode symbols are gone, `option.html` is deleted). A new question from the tutorial review goes in a new file here, as `<page>.md` from `design/template/issue.md`.
 
 ## Ledger of the triage of 2026-10-20
 
-Deleted files with nothing open: `control`, `functions`, `index`, `manifest`, `topology`, `types`, `processing`, `collections`, `multitasking`, `compiler`, `library`, `syntax`, `databases`. Reasons, by issue:
+Deleted files with nothing open (the last three, `classes`, `command` and `option`, after the answers of the same day): `classes`, `command`, `option`, `control`, `functions`, `index`, `manifest`, `topology`, `types`, `processing`, `collections`, `multitasking`, `compiler`, `library`, `syntax`, `databases`. Reasons, by issue:
 
 | Id | Closed by |
 |---|---|
+| CLS-09 | D-202 (1): several type parameters in one list; `spec/syntax/declarations.md#traits-and-generic-classes`; test d41 |
+| CLS-13 | D-202 (2): a property and a method may not share a name; test c39 |
+| CLS-14 | D-202 (3): destructors, implemented; test c41 |
+| CLS-15 | D-202 (4): `adopt Trait for Type is … end adopt;`, level 4, implemented; tests d42, d43 |
+| CLS-16 | D-202 (5): the library traits may be Eve files; plan step S5.1a |
+| CLS-17b | D-202 (6): a private attribute needs a constructor; `set` constants in a class body; tests c40, c42 |
+| CMD-04 | D-202 (7): no shell `export`; `os.run!` takes an `env` map (G-10 closed); test f16 |
+| CMD-05 | D-202 (8): `$OS_PWD` stays, `$CWD` is dropped; test a93 |
+| OPT-01, OPT-02 | D-202 (9): the lexer stays ASCII; the symbols and `option.html` are removed from the tutorial |
 | CLS-12 | `spec/semantics/types.md` (code outside the class cannot add an attribute, Q-031k) and `spec/syntax/declarations.md` (`new self.extra` in a constructor or a method) |
 | CLS-I1, CLS-I2 | `backlog/tutorial.md` TB-1, TB-2 |
 | CMD-02 | `spec/library/os.md`: `ProcessResult.status` is the exit code (127 when the program can not start), not an error of the language |

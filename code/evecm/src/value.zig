@@ -356,7 +356,7 @@ pub fn classRoutine(c: *Class, name: []const u8) ?*const Node {
     while (cur) |k| : (cur = k.parent) {
         const node = k.node orelse continue;
         for (node.kids[2..]) |r| {
-            if (r.tag != .constructor and r.tag != .destructor and r.kids[3].tag != .none and std.mem.eql(u8, r.text, name)) return r;
+            if (r.tag != .set and r.tag != .constructor and r.tag != .destructor and r.kids[3].tag != .none and std.mem.eql(u8, r.text, name)) return r;
         }
     }
     // a method provided by a trait, when the class and its ancestors do not write it (D-145)

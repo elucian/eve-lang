@@ -1,0 +1,54 @@
+# a type adopts a trait outside its declaration: adopt Trait for Type is ... end adopt; (CLS-15, D-202)
+** spec: syntax/declarations.md#traits-and-generic-classes
+primary aspect d42_adopt_trait is
+  trait Describable is
+    method describe(@self) => (@result: String);
+    method banner(@self) => (@result: String) is
+      let result := "[" + self.describe() + "]";
+    return;
+  end Describable;
+
+  class Point = {x: Integer, y: Integer} <: Object;
+
+  adopt Describable for Integer is
+    method describe(@self) => (@result: String) is
+      let result := "int {self}";
+    return;
+  end adopt;
+
+  adopt Describable for Point is
+    method describe(@self) => (@result: String) is
+      let result := "({self.x}, {self.y})";
+    return;
+  end adopt;
+
+  function banner_of(:T <: Describable)(item: T) => (@result: String) is
+    let result := item.banner();
+  return;
+
+  process main is
+    new p := Point(x: 1, y: 2);
+    print 5.describe();
+    print 5.banner();
+    print p.describe();
+    print banner_of(7);
+    print banner_of(p);
+    print 5 is Describable;
+    print p is Describable;
+    print "text" is Describable;
+  return;
+end d42_adopt_trait;
+/*@expect
+{
+  "stdout": [
+    "int 5",
+    "[int 5]",
+    "(1, 2)",
+    "[int 7]",
+    "[(1, 2)]",
+    "True",
+    "True",
+    "False"
+  ]
+}
+*/

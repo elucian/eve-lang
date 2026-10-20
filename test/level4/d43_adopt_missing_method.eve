@@ -1,0 +1,20 @@
+# an adopt block must write every method that the trait requires (CLS-15, D-202)
+** spec: syntax/declarations.md#traits-and-generic-classes
+primary aspect d43_adopt_missing_method is
+  trait Describable is
+    method describe(@self) => (@result: String);
+  end Describable;
+
+  adopt Describable for Integer is
+  end adopt;
+
+  process main is
+    print 5.describe();
+  return;
+end d43_adopt_missing_method;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

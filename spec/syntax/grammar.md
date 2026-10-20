@@ -68,6 +68,8 @@ class-member = [ visibility ] , partial-method ;                  (* adds to cla
 
 trait       = "trait" , name , [ type-params ] , "is" , { trait-member } , "end" , name , ";" ;
 trait-member = partial-method | method ;                          (* every method of a trait is public *)
+declaration = adopt ;                                             (* adds to declaration: a type adopts a trait outside its declaration (D-202) *)
+adopt       = "adopt" , name , "for" , type , "is" , { method } , "end" , "adopt" , ";" ;   (* the methods are extension methods of the type; they write every required method of the trait *)
 partial-method = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , ";" ;
 ```
 
@@ -186,7 +188,7 @@ ordinal-value = name , [ ":" , integer ] ;
 members     = attribute , { "," , attribute } ;
 attribute   = names , type-hint ;
 names       = name , { "," , name } ;
-class-member = [ visibility ] , ( method | constructor | destructor ) ;
+class-member = [ visibility ] , ( method | constructor | destructor ) | constant ;   (* a constant of the class, read as Class.NAME (D-202) *)
 visibility  = "public" | "protected" | "private" ;
 method      = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body , [ recover ] ;   (* recover: D-192; a constructor, a generator and a lambda have none *)
 constructor = "constructor" , "(" , [ parameters ] , ")" , "=>" , "(" , "@self" , ")" , "is" , body ;
@@ -218,7 +220,7 @@ exit-stmt   = ( "exit" | "over" ) , [ expression ] ;                            
 let-stmt    = "let" , target , modifier , ( expression | "new" , names ) ;      (* let lst -> new f;  the explicit capture *)
 defer-stmt  = "defer" , simple ;                                                (* registers a statement for the end of the subprogram (D-117) *)
 modifier    = ":=" | "::" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<+" | "+>" | "<<" | ">>" | "->" | "<-" ;
-target      = name-path , { "[" , index-list , "]" } | "_" ;
+target      = ( name-path | sysname ) , { "[" , index-list , "]" } | "_" ;   (* a system variable is a target too; a constant one is a run-time error *)
 call-stmt   = name-path , [ "!" ] , [ "(" , [ arguments ] , ")" | arguments ]     (* print x;  save(data);  foo; *)
             | postfix ;                                                         (* a call on any value, its result dropped: "abc".replace("", "x");  rows[1].close(); *)
 expect-stmt = ( "expect" | "assert" ) , expression ;

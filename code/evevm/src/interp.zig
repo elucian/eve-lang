@@ -242,6 +242,8 @@ pub const Interp = struct {
     script_args: []const []const u8 = &.{},
     /// The extension methods declared outside a class (D-040).
     exts: std.ArrayList(*const Node) = .empty,
+    /// The `adopt Trait for Type` declarations: `x is Trait` is true for a value of the type (CLS-15).
+    adopted: std.ArrayList(struct { ty: []const u8, trait: *Class }) = .empty,
     /// The `defer` statements registered and not yet run, oldest first (D-081).
     defers: std.ArrayList(*const Node) = .empty,
     /// The scope of the script being run: the root aspect's globals, or the scope of one aspect call.

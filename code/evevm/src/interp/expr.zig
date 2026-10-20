@@ -438,7 +438,9 @@ pub fn broadcast(it: *Interp, op: []const u8, src: *List, s: Value) Signal!Value
 }
 
 pub fn isOp(it: *Interp, l: Value, r: Value) bool {
-    _ = it;
+    if (r == .class and r.class.trait) {
+        for (it.adopted.items) |a| if (a.trait == r.class and std.mem.eql(u8, a.ty, Interp.typeName(l))) return true;
+    }
     if (l == .typ and r == .typ) return std.mem.eql(u8, l.typ, r.typ);
     if (r == .typ) return std.mem.eql(u8, Interp.typeName(l), r.typ);
     if (r == .class and l == .object) {

@@ -74,15 +74,15 @@ Per page: review → issues in `issues/<page>.md` (the author answers by editing
 | control | 2026-09-28 | 16 answered (D-030) | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | functions | 2026-09-28 | 10 answered (D-025 to D-029) | [x] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | modules (new page, D-068) | not reviewed | - | [ ] | [ ] | - |
-| classes | 2026-09-28 | 14 asked | [ ] | [ ] | [design/issues/classes.md](issues/classes.md) |
+| classes | 2026-09-28 | 14 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | collections | 2026-09-28 | 20 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | processing | 2026-09-28 | 11 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | multitasking (was concurrency) | 2026-09-28 | 8 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | library | 2026-09-28 | 6 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
-| command | 2026-09-28 | 6 asked | [ ] | [ ] | [design/issues/command.md](issues/command.md) |
+| command | 2026-09-28 | 6 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | databases | 2026-09-28 | 4 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | manifest | 2026-09-28 | 4 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
-| option | 2026-09-28 | 3 asked | [ ] | [ ] | [design/issues/option.md](issues/option.md) |
+| option | 2026-09-28 | 3 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 | compiler | 2026-09-28 | 2 asked | [ ] | [ ] | [closed](issues/README.md#ledger-of-the-triage-of-2026-10-20) |
 
 For each page:

@@ -110,7 +110,7 @@ pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
     defer it.closeGenerators();
     for (root.kids) |d| if (d.tag == .import_decl) try it.execImport(d);
     for (root.kids) |d| {
-        if (d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
+        if (d.tag == .adopt or d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
     }
     for (root.kids) |d| if (d.tag == .table_decl) {
         try db.declareTables(it.host(), root.kids);
