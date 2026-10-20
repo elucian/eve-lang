@@ -806,8 +806,8 @@ test "a construct without a translation goes to the tree walker" {
     const tree = try parser.parse(arena.allocator(),
         \\primary aspect t is
         \\  process main is
-        \\    new xs := (3, 1, 2);
-        \\    print xs.count();
+        \\    new o := {x: 3};
+        \\    print o.x;
         \\  return;
         \\end t;
     , &pd);
