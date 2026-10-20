@@ -326,6 +326,7 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
                 c.parent = pv.value.class;
             };
         }
+        c.has_destructor = c.destructor() != null or (if (c.parent) |pc| pc.has_destructor else false);
         if (parent.tag == .name and std.mem.eql(u8, parent.text, "Ordinal")) {
             c.ordinal = true;
             var next: i64 = 1;

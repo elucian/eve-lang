@@ -443,6 +443,7 @@ pub const Heap = struct {
         const f = h.finalizer orelse return true;
         if (o.finalized) return true;
         const ob: *I.Object = @fieldParentPtr("hdr", o);
+        if (!(ob.class orelse return true).has_destructor) return true;
         var cur = ob.class;
         var any = false;
         while (cur) |cls| : (cur = cls.parent) {

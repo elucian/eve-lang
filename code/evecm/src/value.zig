@@ -105,6 +105,8 @@ pub const Class = struct {
     /// The traits the class adopts (D-145); a trait itself is a `Class` with `trait` set.
     traits: std.ArrayList(*Class) = .empty,
     trait: bool = false,
+    /// The class or one of its parents has a destructor (set when the class is declared; keeps the free of an object cheap).
+    has_destructor: bool = false,
 
     // @eve-impl the destructor of a class: the member `destructor` of its body, or null (CLS-14, D-202)
     pub fn destructor(c: *const Class) ?*const Node {
