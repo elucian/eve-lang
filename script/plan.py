@@ -4,6 +4,8 @@
   python script/plan.py status            open steps, open questions, current focus (about 60 lines)
   python script/plan.py show D-087 [Q-035 ...]   print the full entry (active file or archive)
   python script/plan.py list              every id and title, active and archived (the files hold no index)
+  python script/plan.py feature F-NET-02 [...]   the row of a feature of design/version_map.md (version, status, description)
+  python script/plan.py features [open|partial|done] [0.5]   one line per feature (code, status, name); filter by status and version
   python script/plan.py archive [N] [--keep K]   move settled entries to design/decision/archive/ (default: keep the last 8)
 
 Decision logs: design/decision/level<N>.md holds a preamble, an index of EVERY id (one line each),
@@ -127,6 +129,40 @@ def status():
                 print('  ' + one_line(i, t))
 
 
+VMAP = os.path.join(PLAN, 'version_map.md')
+
+
+def feature_rows():
+    """-> [(version, code, name, status, description)] from the tables of version_map.md."""
+    out, ver = [], None
+    for line in open(VMAP, encoding='utf-8').read().split('\n'):
+        m = re.match(r'## Version (\d+\.\d+)', line)
+        if m:
+            ver = m.group(1)
+        elif line.startswith('## '):
+            ver = None
+        cells = [c.strip() for c in line.strip().strip('|').split('|')]
+        if ver and len(cells) >= 4 and re.fullmatch(r'F-[A-Z]+-\d+', cells[0]):
+            out.append((ver, cells[0], cells[1], cells[2], ' | '.join(cells[3:])))
+    return out
+
+
+def features(a):
+    rows = feature_rows()
+    want = [x for x in a if x in ('open', 'partial', 'done', 'dropped')]
+    ver = [x for x in a if re.fullmatch(r'\d+\.\d+', x)]
+    for v, c, n, st, d in rows:
+        if (not want or any(w in st for w in want)) and (not ver or v in ver):
+            print('%s  %-9s %-8s %s' % (v, c, st[:8], n[:70]))
+
+
+def feature(codes):
+    rows = {r[1]: r for r in feature_rows()}
+    for c in codes:
+        r = rows.get(c)
+        print('%s: not found' % c if not r else 'Version %s  %s  [%s]  %s\n%s\n' % (r[0], r[1], r[3], r[2], r[4]))
+
+
 def main(a):
     if not a or a[0] in ('-h', '--help'):
         print(__doc__); return
@@ -136,6 +172,8 @@ def main(a):
         for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))):
             for i, t, b in split(read(p)[0])[1]:
                 print(one_line(i, t))
+    elif c == 'features': features(a[1:])
+    elif c == 'feature': feature(a[1:])
     elif c == 'show':
         for i in a[1:]:
             r = find(i)
