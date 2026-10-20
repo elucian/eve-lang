@@ -1129,7 +1129,7 @@ JSON schemas, `script/speccheck.py`.
 
 Level 1 (a single script), level 2 (functions, procedures, lambdas, aspects), level 3 (modules, classes), levels 4 to 7 (parallel, data and database, server, web; `design/feature_map.md`, D-122, D-125), with the expected-output convention (Q-005).
 
-*Partial:* suites of levels 1 to 3 done, level 4 has 3 tests, a smoke test and benchmarks exist (D-135);
+*Partial (2026-10-20):* suites of levels 1 to 6 exist and pass (see `manual/tests.md`), with a smoke test and benchmarks (D-135); level 7 has no tests; no list says which implementation passes which level (the registry, F-SPEC-09).
 
 ### F-SPEC-10 Licenses and trademark
 
