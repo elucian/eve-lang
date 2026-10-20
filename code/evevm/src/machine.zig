@@ -256,16 +256,24 @@ pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
     const target_all = a.dupe(u8, words.next() orelse return false) catch return false;
     var length: usize = 0;
     var chunked = false;
+    var host_header: []const u8 = "";
+    var origin_header: []const u8 = "";
     while (true) {
         const h = std.mem.trim(u8, r.takeDelimiterInclusive('\n') catch return false, "\r\n");
         if (h.len == 0) break;
         const colon = std.mem.indexOfScalar(u8, h, ':') orelse continue;
+        if (std.ascii.eqlIgnoreCase(h[0..colon], "host")) host_header = a.dupe(u8, std.mem.trim(u8, h[colon + 1 ..], " ")) catch return false;
+        if (std.ascii.eqlIgnoreCase(h[0..colon], "origin")) origin_header = a.dupe(u8, std.mem.trim(u8, h[colon + 1 ..], " ")) catch return false;
         if (std.ascii.eqlIgnoreCase(h[0..colon], "content-length")) length = std.fmt.parseInt(usize, std.mem.trim(u8, h[colon + 1 ..], " "), 10) catch 0;
         if (std.ascii.eqlIgnoreCase(h[0..colon], "transfer-encoding") and std.ascii.findIgnoreCase(h[colon + 1 ..], "chunked") != null) chunked = true;
     }
     const target = target_all[0 .. std.mem.indexOfScalar(u8, target_all, '?') orelse target_all.len];
     if (std.mem.eql(u8, method, "POST")) {
         if (!std.mem.eql(u8, target, "/rpc")) return respondText(w, "404 Not Found", "not found\n");
+        if (!rpcAllowed(m.cfg.http_host, host_header, origin_header)) {
+            note(m, "http POST /rpc: 403 (host '{s}', origin '{s}')", .{ host_header, origin_header });
+            return respondText(w, "403 Forbidden", "forbidden\n");
+        }
         if (length > 16 << 20) return respondText(w, "413 Payload Too Large", "too large\n");
         const body = (if (chunked) readChunked(r, a, 16 << 20) else r.readAlloc(a, length)) catch |e| switch (e) {
             error.TooLarge => return respondText(w, "413 Payload Too Large", "too large\n"),
@@ -294,6 +302,48 @@ pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
     }
     respond(w, "200 OK", contentType(path), bytes);
     return false;
+}
+
+// @eve-impl the check of the HTTP door against pages of a browser (DNS rebinding and cross-site posts to localhost)
+// @spec spec/library/machine.md#the-web-door
+// @decision D-189
+// @test machine: the HTTP door refuses a foreign Host or Origin
+// @invariant a machine bound to a loopback address answers `POST /rpc` only to a loopback Host and to a same-origin Origin
+/// True when a `POST /rpc` may be served. A browser page can post to `http://localhost:<port>/rpc` without any login (a
+/// "simple" request needs no preflight), and a name that resolves to 127.0.0.1 reaches the door too; `vm.run` runs a
+/// script, so the door refuses both. Rules: when `http_host` is a loopback name the `Host` header must be one of them; an
+/// `Origin` header, which every browser sends on a cross-site post, must name the same host as `Host`. A client that is
+/// not a browser sends no `Origin`. A machine bound to another address on purpose (a proxy in front) skips the `Host` rule.
+pub fn rpcAllowed(http_host: []const u8, host_header: []const u8, origin_header: []const u8) bool {
+    const loopback = std.mem.eql(u8, http_host, "localhost") or std.mem.eql(u8, http_host, "127.0.0.1") or std.mem.eql(u8, http_host, "::1");
+    if (loopback and !isLoopbackHost(hostName(host_header))) return false;
+    if (origin_header.len == 0) return true;
+    const rest = if (std.mem.startsWith(u8, origin_header, "http://")) origin_header[7..] else if (std.mem.startsWith(u8, origin_header, "https://")) origin_header[8..] else return false;
+    return std.ascii.eqlIgnoreCase(rest, host_header);
+}
+
+fn hostName(host_header: []const u8) []const u8 {
+    if (host_header.len > 0 and host_header[0] == '[') return host_header[0 .. (std.mem.indexOfScalar(u8, host_header, ']') orelse return host_header) + 1];
+    return host_header[0 .. std.mem.lastIndexOfScalar(u8, host_header, ':') orelse host_header.len];
+}
+
+fn isLoopbackHost(name: []const u8) bool {
+    return std.ascii.eqlIgnoreCase(name, "localhost") or std.mem.eql(u8, name, "127.0.0.1") or std.mem.eql(u8, name, "[::1]");
+}
+
+test "machine: the HTTP door refuses a foreign Host or Origin" {
+    try std.testing.expect(rpcAllowed("localhost", "localhost:8095", ""));
+    try std.testing.expect(rpcAllowed("localhost", "127.0.0.1:8095", ""));
+    try std.testing.expect(rpcAllowed("localhost", "[::1]:8095", ""));
+    try std.testing.expect(rpcAllowed("localhost", "localhost:8095", "http://localhost:8095"));
+    try std.testing.expect(!rpcAllowed("localhost", "evil.example:8095", ""));
+    try std.testing.expect(!rpcAllowed("localhost", "evil.example", "http://evil.example"));
+    try std.testing.expect(!rpcAllowed("localhost", "localhost:8095", "http://evil.example"));
+    try std.testing.expect(!rpcAllowed("localhost", "localhost:8095", "null"));
+    try std.testing.expect(!rpcAllowed("localhost", "", ""));
+    // a machine bound on purpose to another address (a proxy in front): the Host rule is off, the Origin rule stays
+    try std.testing.expect(rpcAllowed("10.0.0.5", "eve.example.org", "https://eve.example.org"));
+    try std.testing.expect(!rpcAllowed("10.0.0.5", "eve.example.org", "https://other.org"));
 }
 
 /// Serve one IPC connection: JSON-RPC messages on lines, until the client closes it. Returns true on `stop`.
