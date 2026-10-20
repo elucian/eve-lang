@@ -17,13 +17,13 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | Version 0.1 | 25 | 10 | 0 | 0 | 35 |
 | Version 0.2 | 5 | 8 | 0 | 1 | 14 |
 | Version 0.3 | 5 | 8 | 0 | 2 | 15 |
-| Version 0.4 | 2 | 8 | 9 | 12 | 31 |
-| Version 0.5 | 0 | 6 | 11 | 7 | 24 |
-| Version 0.6 | 0 | 1 | 8 | 4 | 13 |
-| Version 0.7 | 2 | 1 | 2 | 0 | 5 |
+| Version 0.4 | 6 | 9 | 0 | 15 | 30 |
+| Version 0.5 | 0 | 6 | 0 | 18 | 24 |
+| Version 0.6 | 0 | 1 | 0 | 13 | 14 |
+| Version 0.7 | 2 | 1 | 0 | 2 | 5 |
 | Version 0.9 | 0 | 0 | 0 | 3 | 3 |
 | Version 1.0 | 0 | 0 | 0 | 2 | 2 |
-| **All** | **39** | **42** | **30** | **31** | **142** |
+| **All** | **43** | **43** | **0** | **56** | **142** |
 <!-- /GEN:summary -->
 
 ## By version
@@ -113,15 +113,14 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | Code | Feature | Stage |
 |---|---|---|
 | `F-DAT-01` | Database layer | drafted |
-| `F-DAT-02` | Database drivers | design |
-| `F-DAT-03` | ETL pipeline model | design |
-| `F-DAT-04` | Checkpoints and restart | design |
+| `F-DAT-03` | ETL pipeline model | planned |
+| `F-DAT-04` | Checkpoints and restart | planned |
 | `F-DAT-05` | Columnar tables | planned |
 | `F-DAT-06` | Data lineage and run reports | planned |
-| `F-DAT-08` | The Eve database | design |
-| `F-DAT-09` | Database admin commands | design |
+| `F-DAT-08` | The Eve database | planned |
+| `F-DAT-09` | Database admin commands | planned |
 | `F-DAT-10` | Schema migrations | planned |
-| `F-DAT-11` | Record-table mapping | design |
+| `F-DAT-11` | Record-table mapping | planned |
 | `F-DAT-12` | evedb, the Eve test database | drafted |
 | `F-DAT-13` | `sql function` | drafted |
 | `F-DAT-14` | Stored procedures | drafted |
@@ -129,18 +128,18 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-DOC-02` | Tutorial, data client part | planned |
 | `F-LIB-04` | Files and paths | planned |
 | `F-LIB-05` | Data formats | planned |
-| `F-LIB-06` | Time and dates | planned |
+| `F-LIB-06` | Time and dates | drafted |
 | `F-LIB-07` | Shell commands | drafted |
-| `F-LIB-08` | Secrets | design |
+| `F-LIB-08` | Secrets | drafted |
 | `F-LIB-09` | Compression and archives | planned |
-| `F-LNG-20` | Generic functions and procedures | drafted |
-| `F-LNG-21` | Overloading | drafted |
-| `F-LNG-12` | Generators | design |
-| `F-LNG-13` | Data types for ETL | planned |
+| `F-LNG-20` | Generic functions and procedures | validated |
+| `F-LNG-21` | Overloading | validated |
+| `F-LNG-12` | Generators | validated |
+| `F-LNG-13` | Data types for ETL | drafted |
 | `F-LNG-14` | Record types and optional values | planned |
 | `F-NET-01` | HTTP client | planned |
 | `F-VM-06` | Efficient collections | planned |
-| `F-STR-09` | Eve macro (hybrid script) | design |
+| `F-STR-09` | Eve macro (hybrid script) | validated |
 | `F-STR-10` | Unified aspect | validated |
 | `F-STR-11` | `recover` in a function, procedure and method | validated |
 
@@ -155,22 +154,22 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-NET-04` | Remote apply | planned |
 | `F-NET-05` | Capabilities and sandbox | planned |
 | `F-NET-06` | Authentication | planned |
-| `F-NET-07` | Machine login: single sign-on and the keyring | design |
+| `F-NET-07` | Machine login: single sign-on and the keyring | planned |
 | `F-NET-08` | The machine API | drafted |
 | `F-SPEC-06` | Network semantics and protocol | planned |
 | `F-STR-08` | Service script kind | planned |
-| `F-TLS-12` | Machine setup | design |
-| `F-TLS-13` | Remote control | design |
-| `F-TLS-14` | Local HTTP | design |
+| `F-TLS-12` | Machine setup | planned |
+| `F-TLS-13` | Remote control | planned |
+| `F-TLS-14` | Local HTTP | planned |
 | `F-TLS-24` | evetx, the terminal IDE: files, editor, run, machines | drafted |
-| `F-TLS-27` | evetx: debugger | design |
-| `F-TLS-28` | evetx: databases | design |
-| `F-TLS-29` | evetx: file card | design |
-| `F-NET-09` | Credentials, connect and upload | design |
-| `F-TLS-26` | REPL: selected machine | design |
-| `F-DAT-13` | The user cache `eve.db` | design |
+| `F-TLS-27` | evetx: debugger | planned |
+| `F-TLS-28` | evetx: databases | planned |
+| `F-TLS-29` | evetx: file card | planned |
+| `F-NET-09` | Credentials, connect and upload | planned |
+| `F-TLS-26` | REPL: selected machine | planned |
+| `F-DAT-15` | The user cache `eve.db` | planned |
 | `F-TLS-30` | Service mode | drafted |
-| `F-TLS-15` | Eve API for AI | design |
+| `F-TLS-15` | Eve API for AI | planned |
 | `F-NET-10` | Time-outs of the waiting calls | drafted |
 
 ### Version 0.6
@@ -178,28 +177,29 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | Code | Feature | Stage |
 |---|---|---|
 | `F-VM-09` | WebAssembly build | planned |
-| `F-TLS-19` | eveux, the RAD Workbench: shell | design |
-| `F-TLS-20` | eveux: direct SQL and database tree | design |
-| `F-TLS-21` | eveux: jobs, logs and admin | design |
-| `F-TLS-22` | eveux: debugger | design |
+| `F-TLS-19` | eveux, the RAD Workbench: shell | planned |
+| `F-TLS-20` | eveux: direct SQL and database tree | planned |
+| `F-TLS-21` | eveux: jobs, logs and admin | planned |
+| `F-TLS-22` | eveux: debugger | planned |
+| `F-TLS-31` | eveux: source control | planned |
 | `F-TLS-23` | New project | drafted |
 | `F-WEB-01` | HTML templates | planned |
 | `F-WEB-02` | Eve in the browser | planned |
 | `F-WEB-03` | Tutorial playground | planned |
-| `F-WEB-05` | evewp: edge and host | design |
-| `F-WEB-06` | evewp: monitor | design |
-| `F-WEB-07` | The Eve Web framework | design |
-| `F-VM-12` | Process supervision API | design |
+| `F-WEB-05` | evewp: edge and host | planned |
+| `F-WEB-06` | evewp: monitor | planned |
+| `F-WEB-07` | The Eve Web framework | planned |
+| `F-VM-12` | Process supervision API | planned |
 
 ### Version 0.7
 
 | Code | Feature | Stage |
 |---|---|---|
 | `F-VM-04` | Bytecode compiler and VM | drafted |
-| `F-VM-07` | Portable bytecode file `.evb` | design |
+| `F-VM-07` | Portable bytecode file `.evb` | planned |
 | `F-VM-13` | Engine selection and equivalence tests | validated |
 | `F-VM-14` | Sampling profiler | validated |
-| `F-VM-08` | Embedding API | design |
+| `F-VM-08` | Embedding API | planned |
 
 ### Version 0.9
 

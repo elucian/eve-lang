@@ -17,3 +17,9 @@ fi
 if git diff --cached --name-only | grep -q "\.zig$"; then
   python script/tagcheck.py --staged || exit 1
 fi
+
+# the feature tables of design/version_map.md are generated from the feature sections (plan: design-ai-context.md, featmap.py)
+if git diff --cached --name-only | grep -q "^design/version_map.md$"; then
+  python script/featmap.py --write && python script/featmap.py --check || exit 1
+  git add design/version_map.md
+fi

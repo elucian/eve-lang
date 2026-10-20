@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary (script/genmanual.py) -->
-409 of 409 tests pass; last run 2026-10-19 17:57.
+409 of 409 tests pass; last run 2026-10-20 00:23.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
@@ -16,7 +16,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Level 5 | 117 | 117 | 0 | 100% | 2026-10-19 |
 | Level 6 | 15 | 15 | 0 | 100% | 2026-10-19 |
 | Level 7 | 0 | 0 | 0 | - | - |
-| Smoke | 21 | 21 | 0 | 100% | 2026-10-19 |
+| Smoke | 21 | 21 | 0 | 100% | 2026-10-20 |
 | **All** | **409** | **409** | **0** | **100%** |  |
 <!-- /GEN:summary -->
 

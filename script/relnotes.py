@@ -77,29 +77,21 @@ def current_version():
 # ---------------------------------------------------------------- sources
 
 def features():
-    """-> [(code, name, target version, stage or 'planned')] from the tables of version_map.md."""
-    out, target = [], None
-    for line in read(path('design', 'version_map.md'))[0].split('\n'):
-        m = re.match(r'## (Version \d+\.\d+)', line)
-        if m:
-            target = m.group(1)
-        elif line.startswith('## '):
-            target = None
-        cells = [c.strip() for c in line.strip().strip('|').split('|')]
-        if not target or len(cells) < 4 or not re.fullmatch(r'F-[A-Z]+-\d+', cells[0]):
-            continue
-        status, desc = cells[2], ' '.join(cells[3:])
+    """-> [(code, name, target version, stage or 'planned')] from the feature sections of version_map.md (featmap.py)."""
+    import featmap
+    out = []
+    for ver, code, name, status, desc in featmap.load(read(path('design', 'version_map.md'))[0]):
         if 'done' in status:
             stage = 'validated'
         elif status == 'partial' or (status == 'open' and 'written first' in desc):
             stage = 'drafted'
-        elif status == 'open' and re.search(r'\bD-\d+|\.md\b', desc):
+        elif status == 'open' and re.search(r'D-\d+|\.md', desc):
             stage = 'design'
         elif status == 'open':
             stage = 'planned'
         else:
             continue
-        out.append((cells[0], cells[1], target, stage))
+        out.append((code, name, 'Version ' + ver, stage))
     return out
 
 

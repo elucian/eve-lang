@@ -47,12 +47,8 @@ def anchors(path):
 
 
 def known_features():
-    s = set()
-    for ln in open(os.path.join(ROOT, 'design', 'version_map.md'), encoding='utf8'):
-        m = re.match(r'\|\s*(F-[A-Z]+-\d+)\s*\|', ln)
-        if m:
-            s.add(m.group(1))
-    return s
+    import featmap
+    return featmap.all_codes()
 
 
 def known_decisions():

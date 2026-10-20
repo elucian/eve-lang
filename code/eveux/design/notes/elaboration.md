@@ -70,7 +70,7 @@ Rules of the picture:
 
 The panel is shown only when the folder is inside a Git repository and `git` is found; otherwise it offers `git init` or says that Git is not installed. A merge, a rebase or a conflict is not solved in eveux at 0.1: the panel says "use your Git tool" and shows the conflicted files. Credentials of Git remotes (GitHub, GitLab) belong to Git's own helpers, never to eveux.
 
-**Preferences.** Layout, open tabs, theme, font size, recent projects, the list of machines without secrets, the last manifest sent to each machine: tables of the user cache `eve.db` in the user data folder (F-DAT-13, SQLite, as the corrected `design-ideas.md` says), written by the local machine, one set per user. What belongs to a server (users, roles, sessions, jobs, deploy versions) is in that server's core database (section 9).
+**Preferences.** Layout, open tabs, theme, font size, recent projects, the list of machines without secrets, the last manifest sent to each machine: tables of the user cache `eve.db` in the user data folder (F-DAT-15, SQLite, as the corrected `design-ideas.md` says), written by the local machine, one set per user. What belongs to a server (users, roles, sessions, jobs, deploy versions) is in that server's core database (section 9).
 
 ## 5. Deployment
 
@@ -80,7 +80,7 @@ The panel is shown only when the folder is inside a Git repository and `git` is 
 
 1. **Choose the machine and, if wanted, the commit** (default: the working tree; a dirty tree is allowed for a test machine and refused for a machine marked `production` in its `eve.cfg` without a clean commit).
 2. **Build the bundle**: the files of `web/`, `proc/`, `sql/`, `server/` and the modules they import (the rule of Q-052 a), never `db/*.db`, `log/`, `eve.env` or anything in `.gitignore`.
-3. **Manifest**: for each file its path, size and SHA-256, and for the bundle the project name, the Git commit id, the branch, whether the tree was clean, the user, the time and the version of Eve. The local cache `eve.db` (F-DAT-13) keeps the last manifest sent to each machine.
+3. **Manifest**: for each file its path, size and SHA-256, and for the bundle the project name, the Git commit id, the branch, whether the tree was clean, the user, the time and the version of Eve. The local cache `eve.db` (F-DAT-15) keeps the last manifest sent to each machine.
 4. **Diff against the machine** (`deploy.plan`): the remote returns its current manifest; eveux shows files *added*, *changed* and *removed*, and only the changed files are sent (a "fast sync"). The first deploy sends everything.
 5. **Send** (`deploy.apply`), one request or a stream of batches; the remote writes into a staging folder.
 6. **Check on the remote**: `eve cp --check` of the whole bundle under the remote's rules and capabilities (F-NET-05). Errors come back with file and line and are shown in the Problems tab; nothing is activated.
@@ -139,7 +139,7 @@ The corrected `design-ideas.md` ends with a verdict: *keep eve as the server dae
 |---|---|---|
 | eve is the central execution server and hosts the REPL; evetx and eveux are its clients over IPC, SSH and WebSocket | **Confirmed** | as sections 3 and 7 |
 | SQLite is embedded in eve (D-156, D-187) | **Confirmed** | The **core database** of a project (`db/`, D-156 to D-159) already holds logs, checkpoints, users, run history. Add: the deploy versions and manifests, the job state, session records. |
-| SQLite holds *user preferences, session states, workspace configurations* | **Confirmed, in two places** (Q-4) | *On the server* (the core database of the machine): users, roles, sessions, jobs, deploy versions, audit. *On the developer's computer* (`eve.db` of the user cache, F-DAT-13): the layout, open tabs, theme, the list of machines **without secrets**, recent projects, the last manifest sent to each machine. A preference follows the person to a new computer only if it is also stored on a machine they use; that is a choice for later (sync of preferences). |
+| SQLite holds *user preferences, session states, workspace configurations* | **Confirmed, in two places** (Q-4) | *On the server* (the core database of the machine): users, roles, sessions, jobs, deploy versions, audit. *On the developer's computer* (`eve.db` of the user cache, F-DAT-15): the layout, open tabs, theme, the list of machines **without secrets**, recent projects, the last manifest sent to each machine. A preference follows the person to a new computer only if it is also stored on a machine they use; that is a choice for later (sync of preferences). |
 | evedb (DuckDB) runs heavy analytical ETL | **Confirmed** | `Memory` tables, `Memory.store/load` as column batches, a group-by 55 times faster than SQLite (D-187). |
 | eve **embeds or spawns** evedb; evedb is not a network daemon for the clients | **Changes the current use, keeps the code** | Today `evedb` is a **separate program** that answers as PostgreSQL on port 5432 and on the EWP-db control port, and the Eve driver `evedb://` connects to it (D-186, D-187). A user starts it by hand or as a service. The verdict makes it a **managed backend**: see the two options below. |
 

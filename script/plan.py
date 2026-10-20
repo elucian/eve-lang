@@ -133,18 +133,9 @@ VMAP = os.path.join(PLAN, 'version_map.md')
 
 
 def feature_rows():
-    """-> [(version, code, name, status, description)] from the tables of version_map.md."""
-    out, ver = [], None
-    for line in open(VMAP, encoding='utf-8').read().split('\n'):
-        m = re.match(r'## Version (\d+\.\d+)', line)
-        if m:
-            ver = m.group(1)
-        elif line.startswith('## '):
-            ver = None
-        cells = [c.strip() for c in line.strip().strip('|').split('|')]
-        if ver and len(cells) >= 4 and re.fullmatch(r'F-[A-Z]+-\d+', cells[0]):
-            out.append((ver, cells[0], cells[1], cells[2], ' | '.join(cells[3:])))
-    return out
+    """-> [(version, code, name, status, description)] from the feature sections of version_map.md (featmap.py)."""
+    import featmap
+    return featmap.load()
 
 
 def features(a):
