@@ -222,6 +222,19 @@ def evidence():
     return 0
 
 
+def expand(tokens):
+    """['a10-a14', 'a20'] -> ['a10', 'a11', 'a12', 'a13', 'a14', 'a20'] (same letters, same width)."""
+    out = []
+    for t in tokens:
+        m = re.fullmatch(r'([a-z]+)(\d+)-(?:[a-z]+)?(\d+)', t)
+        if m:
+            w = len(m.group(2))
+            out += ['%s%0*d' % (m.group(1), w, n) for n in range(int(m.group(2)), int(m.group(3)) + 1)]
+        else:
+            out.append(t)
+    return out
+
+
 def test_lines(text=None):
     """-> {code: [(level folder, [test ids])]} from the optional **Tests:** line of each feature section."""
     out, code = {}, None
@@ -234,7 +247,7 @@ def test_lines(text=None):
         elif code and ln.startswith('**Tests:**'):
             for part in ln[len('**Tests:**'):].split(';'):
                 lvl, _, ids = part.partition(':')
-                out.setdefault(code, []).append((lvl.strip(), ids.split()))
+                out.setdefault(code, []).append((lvl.strip(), expand(ids.split())))
     return out
 
 

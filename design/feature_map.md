@@ -23,7 +23,7 @@ The status of a level is derived from its features: planned when none is started
 | [Level 2](#level-2-a-project-subprograms-and-aspects) | A project: subprograms and aspects | in progress | 2 of 3 | [level2.md](decision/level2.md) | `test/level2` (b) |
 | [Level 3](#level-3-modules-and-classes) | Modules and classes | in progress | 5 of 14 | [level3.md](decision/level3.md) | `test/level3` (c) |
 | [Level 4](#level-4-parallel-processing) | Parallel processing | in progress | 5 of 15 | [level4.md](decision/level4.md) | `test/level4` (d) |
-| [Level 5](#level-5-data-and-database) | Data and database | in progress | 6 of 30 | [level5.md](decision/level5.md) | `test/level5` (e) |
+| [Level 5](#level-5-data-and-database) | Data and database | in progress | 7 of 30 | [level5.md](decision/level5.md) | `test/level5` (e) |
 | [Level 6](#level-6-the-eve-machine-and-the-server) | The Eve machine and the server | in progress | 0 of 24 | [level6.md](decision/level6.md) | `test/level6` (f) |
 | [Level 7](#level-7-the-web) | The web | in progress | 0 of 14 | [level7.md](decision/level7.md) | `test/level7` (g) |
 | [All levels](#all-levels-tools-documents-bytecode-and-release) | Tools, documents, bytecode and release | in progress | 11 of 23 | - | - |
@@ -62,6 +62,7 @@ A script that runs from its first line to its last, with no user subprograms and
 ### F-LIB-01 Console I/O
 
 **Status:** partial
+**Tests:** level1: a03 a05
 
 `print`, `write`, `read`, `error`, `warning`, `log_err`, `log_wrn` (D-053, D-057).
 
@@ -78,48 +79,56 @@ A script that runs from its first line to its last, with no user subprograms and
 ### F-LNG-01 Script shapes
 
 **Status:** ✓ done
+**Tests:** level1: a01-a05 a60
 
 Aspect with `process main`, title/subtitle header, comments; no free script and no `#!` since D-179 (earlier D-014, D-037, D-040).
 
 ### F-LNG-02 Declarations and assignment
 
 **Status:** ✓ done
+**Tests:** level1: a06 a43-a46 a80 a81
 
 `let`, `set`, `:=`, `=`, `::` clone, views (D-036, D-049).
 
 ### F-LNG-03 Expressions and operators
 
 **Status:** ✓ done
+**Tests:** level1: a07-a09 a76 a78 a83 a84
 
 Arithmetic, logic, comparison, ranges, membership, precedence (D-019, D-022).
 
 ### F-LNG-04 Control flow
 
 **Status:** ✓ done
+**Tests:** level1: a12-a15 a39 a63 a92
 
 `if`, `match`, `while`, `for`, `loop … repeat [while c]`, labels, `break`, `skip` (D-034, D-074).
 
 ### F-LNG-05 Jobs and error recovery
 
 **Status:** ✓ done
+**Tests:** level1: a29-a37 a49 a51 a75
 
 Jobs, `recover` with `retry`/`resume`/`abort`, `finalize`, `raise`, `expect`, `over`, `panic`, exit codes (D-020, D-055, D-063).
 
 ### F-LNG-06 Primitive types
 
 **Status:** ✓ done
+**Tests:** level1: a07 a09 a16 a57-a59 a76
 
 Integer, Natural, Real, Logic, Symbol, String, ordinals, type checks with `is` (D-032). *Rational, Duration, Time, Date not yet.*
 
 ### F-LNG-07 Collections
 
 **Status:** ✓ done
+**Tests:** level1: a17-a23 a38 a82 a88
 
 List, Array, Matrix, DataSet, HashMap, Object, slices, builders, deconstruction (D-058, D-064).
 
 ### F-LNG-08 Strings and interpolation
 
 **Status:** ✓ done
+**Tests:** level1: a10 a11 a27 a28 a48 a62 a66 a86 a87
 
 Escapes, text literal `"""`, placeholders `{name}`, `{literal}`, simple expressions and formats `{n % i5}`, code points `{U+H}`, HTML entities `&name;`, regular expressions (subset) (D-060, D-102, D-119, D-120, D-121).
 
@@ -146,6 +155,7 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 ### F-STR-05 Command-line parameters of a script
 
 **Status:** partial
+**Tests:** level1: a60
 
 `-p`/`--param` mapped to `main` parameters, `eve script.eve -h` from `** @param` comments (D-055).
 
@@ -154,6 +164,7 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 ### F-STR-07 System variables
 
 **Status:** partial
+**Tests:** level1: a77
 
 The register (`$error`, environment names such as `$HOME`, `$epsilon`, `$err_`/`$wrn_` constants) (D-071).
 
@@ -174,12 +185,14 @@ Runs levels 1 to 3, the smoke test and the benchmarks (`interp.zig`, `project.zi
 ### F-STR-12 Exit code of the program
 
 **Status:** ✓ done
+**Tests:** level1: a50 a53 a54 a89 a90
 
 `over n;` and `exit n;` give the exit code: 0, or 6 to 125 (1 to 5 belong to the machine); anything else is `$err_argument` (`spec/semantics/errors.md#ending-the-process`; G-2; tests a89, a90).
 
 ### F-LIB-13 DataMap methods
 
 **Status:** ✓ done
+**Tests:** level1: a21 a88
 
 `has`, `get(k)`, `get(k, default)`, `keys`, `values`, `delete` (`spec/semantics/types.md#datamap-methods`; G-5; test a88). `method` is a contextual word, usable as a name (D-116; G-6; test a91).
 
@@ -200,12 +213,14 @@ A script becomes a project: functions, procedures, lambdas and closures (D-122),
 ### F-LNG-09 Functions and methods
 
 **Status:** ✓ done
+**Tests:** level2: b18 b19 b30-b44 b55-b59
 
 Pure functions, `!` functions, procedures, `@` parameters, defaults, varargs, named arguments, lambdas, closures, recursion (D-025 to D-029, D-048, D-070, D-100, D-101). A lambda is not called where it is written (D-147). Conformity level 2 since D-122.
 
 ### F-STR-02 Aspects (serial)
 
 **Status:** ✓ done
+**Tests:** level2: b01-b17 b20-b29 b45-b54
 
 `apply`, state per call, `@` outputs, named and spread arguments, errors and `over`/`panic` across `apply`, `exclusive` by default, `concurrent` kind (D-066, D-090, D-130; tests b01 to b29).
 
@@ -261,6 +276,7 @@ Generated by `eve --doc` for every standard module.
 ### F-LNG-10 Classes
 
 **Status:** ✓ done
+**Tests:** level3: c10 c12-c17 c35 c36
 
 Attributes, constructors, `new`, methods with `@self`, inheritance, visibility; a class hosts only methods and only a method has `@self` (D-036, D-123). Conformity level 3 since D-122.
 
@@ -283,6 +299,7 @@ Name resolution, arity, visibility and type errors before the run (exit 65).
 ### F-LNG-19 Managed and direct modules
 
 **Status:** ✓ done
+**Tests:** level3: c26-c31 c33
 
 `managed module` / `direct module` (default), per-member thread safety proved by the compiler, a concurrent aspect calls only safe members (D-129). Tests c26 to c30, c33, d01 to d03; a bare name from `m(*)` or `*` is checked like `m.name`.
 
@@ -297,6 +314,7 @@ Built-ins and standard modules as signatures (`spec/library/`).
 ### F-STR-01 Modules and imports
 
 **Status:** ✓ done
+**Tests:** level3: c01-c09 c18-c28 c32 c34 c37
 
 `module`, `from … use (…)`, aliases, `m(*)`, `(*)`, singletons, `initialize`/`recover`/`finalize`, `export`, private members, circular imports, `$err_module` (D-041, D-068, D-072, D-112, D-126, D-131; tests c01 to c31). A module is identified by its file, whatever the spelling of the path (c32).
 
@@ -305,6 +323,7 @@ Built-ins and standard modules as signatures (`spec/library/`).
 ### F-STR-03 Extension methods
 
 **Status:** ✓ done
+**Tests:** level3: c09 c11
 
 `method name(@self: Class)` outside the class (D-072, D-086; tests c09, c11).
 
@@ -341,6 +360,7 @@ Load `.eve` library modules and bind `external` declarations to Zig (D-053, D-05
 ### F-LNG-22 External routines and errors of modules
 
 **Status:** ✓ done
+**Tests:** level3: c29-c31 c38
 
 An `external` routine of a module whose name is that of a native module (`os`, `fs`, `crypto`, ...) is bound to the native of the same name; an error raised in a module names the file of the module and the call lines end with `of <file>` (`spec/semantics/modules.md#members`, `errors.md#where-an-error-is-reported`; G-1, G-3; tests c37, c38).
 
@@ -394,6 +414,7 @@ Structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`
 ### F-LNG-17 Stream type
 
 **Status:** partial
+**Tests:** level4: d16
 
 `Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; at level 4 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it at level 5, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`).
 
@@ -402,6 +423,7 @@ Structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`
 ### F-LNG-18 `Atomic(:T)`
 
 **Status:** partial
+**Tests:** level4: d15
 
 A class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; `class Name <: Atomic(:T)` (D-132).
 
@@ -410,6 +432,7 @@ A class of the standard library that wraps the atomic of the machine, for Logic,
 ### F-MTK-01 Parallel aspects
 
 **Status:** ✓ done
+**Tests:** level4: d04 d05 d08 d09 d10 d25 d26 d31 d32
 
 `parallel … do start … done`, barrier, data rules, errors as a job (D-066).
 
@@ -426,6 +449,7 @@ A class of the standard library that wraps the atomic of the machine, for Logic,
 ### F-MTK-03 Channels
 
 **Status:** ✓ done
+**Tests:** level4: d12-d14 d28-d30
 
 `Channel(:T)`, send, receive, close, pipelines, deadlock detection, time-out (D-051).
 
@@ -434,6 +458,7 @@ A class of the standard library that wraps the atomic of the machine, for Logic,
 ### F-MTK-04 Tasks in a job
 
 **Status:** ✓ done
+**Tests:** level4: d17-d19 d33
 
 `async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to level 5 with the generators (D-144).
 
@@ -442,6 +467,7 @@ A class of the standard library that wraps the atomic of the machine, for Logic,
 ### F-MTK-05 Deadlines and cancellation
 
 **Status:** ✓ done
+**Tests:** level4: d10 d11 d30
 
 Per-group time limits, cancel or collect errors (review `RMT-R01`).
 
@@ -488,26 +514,26 @@ Arena per aspect call, job and request; long-lived heap for modules and channels
 The data language and the ETL core: real data with the right types (`Decimal`, `Instant`, records, tables, `Secret`), files and formats (CSV, JSON, text), the HTTP client, generators, generic functions, overloading and the Eve macro, and the database layer with connections, query streams, bulk loads, transactions per job, checkpoints, lineage and the Eve database. It is tested by `test/level5` (the `e` series). It is done when JSON and CSV round-trip, a killed load restarts from its checkpoint, level 5 passes against SQLite and a PostgreSQL server, and `db backup` and `db restore` round-trip.
 
 <!-- GEN:features -->
-6 of 30 features done (9 partial).
+7 of 30 features done (15 partial).
 
 | Code | Feature | Status |
 |---|---|---|
 | [F-DAT-01](#f-dat-01-database-layer) | Database layer | partial |
-| [F-DAT-03](#f-dat-03-etl-pipeline-model) | ETL pipeline model | open |
-| [F-DAT-04](#f-dat-04-checkpoints-and-restart) | Checkpoints and restart | open |
-| [F-DAT-05](#f-dat-05-columnar-tables) | Columnar tables | open |
+| [F-DAT-03](#f-dat-03-etl-pipeline-model) | ETL pipeline model | partial |
+| [F-DAT-04](#f-dat-04-checkpoints-and-restart) | Checkpoints and restart | partial |
+| [F-DAT-05](#f-dat-05-columnar-tables) | Columnar tables | partial |
 | [F-DAT-06](#f-dat-06-data-lineage-and-run-reports) | Data lineage and run reports | open |
 | [F-DAT-08](#f-dat-08-the-eve-database) | The Eve database | open |
 | [F-DAT-09](#f-dat-09-database-admin-commands) | Database admin commands | open |
 | [F-DAT-10](#f-dat-10-schema-migrations) | Schema migrations | open |
-| [F-DAT-11](#f-dat-11-record-table-mapping) | Record-table mapping | open |
+| [F-DAT-11](#f-dat-11-record-table-mapping) | Record-table mapping | done |
 | [F-DAT-12](#f-dat-12-evedb-the-eve-test-database) | evedb, the Eve test database | partial |
 | [F-DAT-13](#f-dat-13-sql-function) | `sql function` | partial |
 | [F-DAT-14](#f-dat-14-stored-procedures) | Stored procedures | partial |
 | [F-VM-11](#f-vm-11-one-eve-its-source-in-modules) | One `eve`, its source in modules | partial |
 | [F-DOC-02](#f-doc-02-tutorial-data-client-part) | Tutorial, data client part | open |
-| [F-LIB-04](#f-lib-04-files-and-paths) | Files and paths | open |
-| [F-LIB-05](#f-lib-05-data-formats) | Data formats | open |
+| [F-LIB-04](#f-lib-04-files-and-paths) | Files and paths | partial |
+| [F-LIB-05](#f-lib-05-data-formats) | Data formats | partial |
 | [F-LIB-06](#f-lib-06-time-and-dates) | Time and dates | partial |
 | [F-LIB-07](#f-lib-07-shell-commands) | Shell commands | partial |
 | [F-LIB-08](#f-lib-08-secrets) | Secrets | partial |
@@ -516,7 +542,7 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | [F-LNG-21](#f-lng-21-overloading) | Overloading | done |
 | [F-LNG-12](#f-lng-12-generators) | Generators | done |
 | [F-LNG-13](#f-lng-13-data-types-for-etl) | Data types for ETL | partial |
-| [F-LNG-14](#f-lng-14-record-types-and-optional-values) | Record types and optional values | open |
+| [F-LNG-14](#f-lng-14-record-types-and-optional-values) | Record types and optional values | partial |
 | [F-NET-01](#f-net-01-http-client) | HTTP client | open |
 | [F-VM-06](#f-vm-06-efficient-collections) | Efficient collections | open |
 | [F-STR-09](#f-str-09-eve-macro-hybrid-script) | Eve macro (hybrid script) | done |
@@ -527,6 +553,7 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 ### F-DAT-01 Database layer
 
 **Status:** partial
+**Tests:** level5: e39-e45 e48-e52 e110
 
 Connect, parameterized query as a stream, execute, transactions, bulk load (databases.html; review `RIO-R02`). *Specified and taught (2026-10-10):* `spec/library/database.md`, `databases.html`; the VM has none of it yet.
 
@@ -534,21 +561,24 @@ Connect, parameterized query as a stream, execute, transactions, bulk load (data
 
 ### F-DAT-03 ETL pipeline model
 
-**Status:** open
+**Status:** partial
+**Tests:** level5: e56 e85 e86
 
-Extract, transform, load with jobs and aspects; dead-letter output; the pattern taught in the tutorial (review `RIO-R04`). *Specified and taught (2026-10-10):* `spec/semantics/data-types.md`, `etl.html`; the VM has none of it yet.
+Extract, transform, load with jobs and aspects; dead-letter output; the pattern taught in the tutorial (review `RIO-R04`). *Specified and taught (2026-10-10):* `spec/semantics/data-types.md`, `etl.html`. *State (2026-10-20):* a local ETL runs (CSV to SQLite to JSON, `test/level5/e56`), a bad row goes to the rejects with a limit (e35, e85), streams have `map`, `filter` and the like (e86); the pipeline stages with back-pressure over a database and the lineage report (F-DAT-06) are not done.
 
 ### F-DAT-04 Checkpoints and restart
 
-**Status:** open
+**Status:** partial
+**Tests:** level5: e53
 
-Resume a failed pipeline at the last committed batch (review `RIO-R05`). *Specified (2026-10-10):* checkpoints in the target database, `commit;` in a job (`spec/library/database.md#transactions`).
+Resume a failed pipeline at the last committed batch (review `RIO-R05`). *Specified (2026-10-10):* checkpoints in the target database, `commit;` in a job (`spec/library/database.md#transactions`). *State:* `commit;` with a checkpoint is tested (e53); restart of a killed load from its checkpoint is not tested yet.
 
 ### F-DAT-05 Columnar tables
 
-**Status:** open
+**Status:** partial
+**Tests:** level5: e111
 
-`Table` type with typed columns, Arrow-compatible (review `RTY-R06`).
+`Table` type with typed columns, Arrow-compatible (review `RTY-R06`). *State:* the `Memory` table with typed columns and the column batches of evedb (e111, `test/level6/f02_evedb_columnar`) exist; Arrow compatibility does not.
 
 ### F-DAT-06 Data lineage and run reports
 
@@ -576,13 +606,15 @@ Numbered SQL scripts in `db/migrations/<name>/`, applied by `db migrate` and rec
 
 ### F-DAT-11 Record-table mapping
 
-**Status:** open
+**Status:** done
+**Tests:** level5: e46 e47 e87-e94
 
 `table` declarations binding record classes to tables, tracked records with dirty fields, updates of the changed fields only, mapping validated in debug mode and refused in production (`design/design-database-core.md`, Q-046). *Specified and taught (2026-10-10), as proposed in Q-046:* `spec/library/database.md`, `databases.html`; review points in `design/archive/review-2026-10-04/level5.md`.
 
 ### F-DAT-12 evedb, the Eve test database
 
 **Status:** partial
+**Tests:** level6: f01 f02
 
 A database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log (`drivers/duckdb/README.md`).
 
@@ -591,6 +623,7 @@ A database server in Zig around DuckDB, outside the VM, that speaks the database
 ### F-DAT-13 `sql function`
 
 **Status:** partial
+**Tests:** level5: e96-e101
 
 An Eve function marked `sql function` is registered on every SQLite and DuckDB connection and called from SQL; deterministic, one result, SQL types, not overloaded; SQL `NULL` only for nullable types; an error stops the query with `$err_sql` (code 59) (D-166, `spec/library/database.md#sql-functions`).
 
@@ -599,6 +632,7 @@ An Eve function marked `sql function` is registered on every SQLite and DuckDB c
 ### F-DAT-14 Stored procedures
 
 **Status:** partial
+**Tests:** level5: e102
 
 Native procedures in `sql/` called through `external` signatures; Eve procedures in `proc/`, run by the database part, listed by `eve db proc list`, reloaded by `eve db proc reload`, called by `db.call` (D-166, `spec/library/database.md#stored-procedures`).
 
@@ -620,15 +654,17 @@ Files, formats, streams, HTTP client, ETL pipelines (review `RTU` phase T1).
 
 ### F-LIB-04 Files and paths
 
-**Status:** open
+**Status:** partial
+**Tests:** level5: e31 e84
 
-`fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`).
+`fs` and `path` modules, text and bytes, line streams, globbing (review `RIO-R01`). *State:* `fs` files, folders and lines work (e31, e84); a `path` module, bytes and globbing are not done.
 
 ### F-LIB-05 Data formats
 
-**Status:** open
+**Status:** partial
+**Tests:** level5: e32-e37 e80-e83
 
-JSON and CSV read/write, decode into records; later XML, Parquet.
+JSON and CSV read/write, decode into records; later XML, Parquet. *State:* JSON, JSON lines, CSV (options, rejects, encodings) and fixed-width text work (e32 to e37, e80 to e83); XML and Parquet are not done.
 
 ### F-LIB-06 Time and dates
 
@@ -640,6 +676,7 @@ JSON and CSV read/write, decode into records; later XML, Parquet.
 ### F-LIB-07 Shell commands
 
 **Status:** partial
+**Tests:** level6: f05 f15
 
 `call` with pipes, and a safe `run(cmd, args, cwd)` (command.html; review `RIO-R03`).
 
@@ -688,9 +725,10 @@ Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid (review `
 
 ### F-LNG-14 Record types and optional values
 
-**Status:** open
+**Status:** partial
+**Tests:** level5: e30 e106
 
-Typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`; needs a decision).
+Typed records for rows, JSON objects and messages; `T?` (review `RTY-R01`, `RTY-R02`). *State:* records, `null` in plain fields and printing of `null` are tested (e30, e106); the full optional type is in `spec/library/data-language.md`.
 
 ### F-NET-01 HTTP client
 
@@ -767,6 +805,7 @@ Client and server, services, protocol, security, HTML, WebAssembly (review `RTU`
 ### F-LIB-10 Encryption and hashing
 
 **Status:** partial
+**Tests:** level6: f04
 
 Hashes, HMAC, symmetric encryption (manifest).
 
@@ -775,6 +814,7 @@ Hashes, HMAC, symmetric encryption (manifest).
 ### F-NET-02 HTTP server
 
 **Status:** partial
+**Tests:** level6: f10 f12 f14; level5: e95
 
 Routes, request and response records, static files, one state per request (review `RNW-R02`).
 
@@ -813,6 +853,7 @@ From one local machine, a login per remote machine: single sign-on (OpenID Conne
 ### F-NET-08 The machine API
 
 **Status:** partial
+**Tests:** level6: f07 f11
 
 JSON-RPC 2.0 methods named by part: `vm.ping`, `vm.stat`, `vm.run`, `vm.eval`, `vm.suspend`, `vm.resume`, `vm.inspect`, `vm.cancel`, `vm.stop`; `db.*`; the first names of D-162 answered until level 6; no TLS in the machine, a reverse proxy for remote HTTPS; ACP outward (D-165, `spec/library/machine.md#the-machine-api`).
 
@@ -909,6 +950,7 @@ A SQLite cache of the user (`<user data folder>/eve/meta/eve.db`): projects, mac
 ### F-NET-10 Time-outs of the waiting calls
 
 **Status:** partial
+**Tests:** level6: f13-f15
 
 `Socket.set_timeout(ms)` (a read fails with `$err_timeout`), `service.idle(ms)` and the reply `408`, `os.run!` with `timeout_ms` (status 124) (`spec/library/net.md#time-outs`; TD-27, TD-29; tests f13, f14, f15).
 
@@ -1087,7 +1129,7 @@ JSON schemas, `script/speccheck.py`.
 
 Level 1 (a single script), level 2 (functions, procedures, lambdas, aspects), level 3 (modules, classes), levels 4 to 7 (parallel, data and database, server, web; `design/feature_map.md`, D-122, D-125), with the expected-output convention (Q-005).
 
-*Partial:* suites of levels 1 to 3 done, level 4 has 3 tests, a smoke test and benchmarks exist (D-135); levels 5 to 7 are empty.
+*Partial:* suites of levels 1 to 3 done, level 4 has 3 tests, a smoke test and benchmarks exist (D-135);
 
 ### F-SPEC-10 Licenses and trademark
 
