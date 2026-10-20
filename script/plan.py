@@ -17,6 +17,7 @@ import re, sys, glob, os
 
 PLAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'design')
 DEC = os.path.join(PLAN, 'decision')
+EXTRA = [os.path.join(os.path.dirname(PLAN), 'code', 'evetx', 'design', 'questions.md')]  # questions kept with a component
 HEAD = re.compile(r'^## ((?:D|Q)-\d+)\b(.*)$')
 MARK_BEGIN, MARK_END = '<!-- index:begin -->', '<!-- index:end -->'
 WITH_INDEX = False  # the active files hold only what is current; `list` prints every id
@@ -104,7 +105,7 @@ def rebuild(n, keep=None):
 
 def find(id_):
     out = []
-    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))):
+    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))) + EXTRA:
         for i, t, b in split(read(p)[0])[1]:
             if i == id_:
                 out.append(b)
@@ -123,7 +124,7 @@ def status():
             if m:
                 print('  %s [%s] %s %s' % (m.group(1), m.group(3), m.group(2)[:60], m.group(4)[:70]))
     print('\nOPEN QUESTIONS / PROPOSALS:')
-    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md'))):
+    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md'))) + EXTRA:
         for i, t, b in split(read(p)[0])[1]:
             if is_open(i, t, b):
                 print('  ' + one_line(i, t))
@@ -160,7 +161,7 @@ def main(a):
     c = a[0]
     if c == 'status': status()
     elif c == 'list':
-        for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))):
+        for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))) + EXTRA:
             for i, t, b in split(read(p)[0])[1]:
                 print(one_line(i, t))
     elif c == 'features': features(a[1:])

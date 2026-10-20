@@ -1,7 +1,7 @@
 # the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables (D-187)
 ** spec: library/data-engines.md
 ** The runner starts `eve db serve evedb.cfg`; the client (check/run.py) runs this script and stops evedb.
-primary aspect f02_evedb_columnar is
+primary aspect g02_evedb_columnar is
   class Item = {id: Integer, name: String, price: Decimal?, ok: Logic} <: Record;
   class Sales = {id: Integer, region: String, amount: Real, paid: Logic, note: String?} <: Memory;
 
@@ -33,7 +33,7 @@ primary aspect f02_evedb_columnar is
     print "{back.id.at(3)} {back.region.at(3)} {back.amount.at(3)} {back.paid.at(3)} {back.note.at(0)}";
     wh.close();
   return;
-end f02_evedb_columnar;
+end g02_evedb_columnar;
 /*@expect
 {
   "command": ["db", "serve", "evedb.cfg"],

@@ -2,7 +2,7 @@
 //! @spec spec/library/registry.md, spec/library/data-language.md, spec/library/database.md
 //! @feature F-LIB-04, F-LIB-05, F-LIB-06, F-LIB-08, F-DAT-01
 //! @decision D-189
-//! @tests test/level5, test/level6/f01_pg_driver, test/level6/f02_evedb_columnar
+//! @tests test/level5, test/level7/g01_pg_driver, test/level7/g02_evedb_columnar
 //! The library of the data language (spec/library/data-language.md, spec/library/database.md): the modules
 //! `csv`, `json` and `database`, the `Connection` of a database and the readers and writers of the formats.
 //! They are free functions that take the interpreter, so `interp.zig` stays the core of the language: it calls

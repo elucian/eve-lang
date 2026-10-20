@@ -23,7 +23,7 @@ Date 2026-10-18. Source: `code/evevm/src/dlib.zig`, `code/evevm/src/interp/{call
 | csv, json, txt | `dlib.zig` | read!, write | keep | `data-language.md` | level 5 |
 | time | `dlib.zig` | now! | add sleep!, format | `datetime` in tutorial only | level 5 |
 | secret | `datatypes.zig` | get | keep | `database.md`? | level 5 |
-| database, checkpoint | `dlib.zig` + `evedb`, `sqlite.zig` | connect, transactions, procs | keep | `database.md` | level 5, 6 f01 f02 |
+| database, checkpoint | `dlib.zig` + `evedb`, `sqlite.zig` | connect, transactions, procs | keep | `database.md` | level 5, 7 g01 g02 |
 | os | none | none | S6 | new | f04 |
 | crypto | none | none | S1 | new | f03 |
 | test | none | none | E11 | new | f07 |

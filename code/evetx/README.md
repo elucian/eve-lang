@@ -218,7 +218,7 @@ If level 6 is too full, **T6 and T7 are the first to move** to the next version;
 
 ## 9. Open points
 
-Q-053 in `decision_level6.md`: the size of the scope, the debugger of the machine, the methods to add, the structure changes, step over, what the editor must do, where a run goes when the file is local. Q-050 to Q-052 stay open for the registry, the layout and the user cache.
+Q-053 in `design/questions.md`: the size of the scope, the debugger of the machine, the methods to add, the structure changes, step over, what the editor must do, where a run goes when the file is local. Q-050 to Q-052 stay open for the registry, the layout and the user cache.
 
 ## 10. Risks
 

@@ -23,9 +23,9 @@ The status of a level is derived from its features: planned when none is started
 | [Level 2](#level-2-a-project-subprograms-and-aspects) | A project: subprograms and aspects | in progress | 2 of 3 | [level2.md](decision/level2.md) | `test/level2` (b) |
 | [Level 3](#level-3-modules-and-classes) | Modules and classes | in progress | 5 of 14 | [level3.md](decision/level3.md) | `test/level3` (c) |
 | [Level 4](#level-4-parallel-processing) | Parallel processing | in progress | 5 of 15 | [level4.md](decision/level4.md) | `test/level4` (d) |
-| [Level 5](#level-5-data-and-database) | Data and database | in progress | 7 of 30 | [level5.md](decision/level5.md) | `test/level5` (e) |
-| [Level 6](#level-6-the-eve-machine-and-the-server) | The Eve machine and the server | in progress | 0 of 24 | [level6.md](decision/level6.md) | `test/level6` (f) |
-| [Level 7](#level-7-the-web) | The web | in progress | 0 of 14 | [level7.md](decision/level7.md) | `test/level7` (g) |
+| [Level 5](#level-5-data-and-database) | Data and database | in progress | 7 of 29 | [level5.md](decision/level5.md) | `test/level5` (e) |
+| [Level 6](#level-6-the-eve-machine-and-the-server) | The Eve machine and the server | in progress | 0 of 29 | [level6.md](decision/level6.md) | `test/level6` (f) |
+| [Level 7](#level-7-the-web) | The web | in progress | 0 of 10 | [level7.md](decision/level7.md) | `test/level7` (g) |
 | [All levels](#all-levels-tools-documents-bytecode-and-release) | Tools, documents, bytecode and release | in progress | 11 of 23 | - | - |
 <!-- /GEN:levels -->
 
@@ -514,7 +514,7 @@ Arena per aspect call, job and request; long-lived heap for modules and channels
 The data language and the ETL core: real data with the right types (`Decimal`, `Instant`, records, tables, `Secret`), files and formats (CSV, JSON, text), the HTTP client, generators, generic functions, overloading and the Eve macro, and the database layer with connections, query streams, bulk loads, transactions per job, checkpoints, lineage and the Eve database. It is tested by `test/level5` (the `e` series). It is done when JSON and CSV round-trip, a killed load restarts from its checkpoint, level 5 passes against SQLite and a PostgreSQL server, and `db backup` and `db restore` round-trip.
 
 <!-- GEN:features -->
-7 of 30 features done (15 partial).
+7 of 29 features done (14 partial).
 
 | Code | Feature | Status |
 |---|---|---|
@@ -527,7 +527,6 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | [F-DAT-09](#f-dat-09-database-admin-commands) | Database admin commands | open |
 | [F-DAT-10](#f-dat-10-schema-migrations) | Schema migrations | open |
 | [F-DAT-11](#f-dat-11-record-table-mapping) | Record-table mapping | done |
-| [F-DAT-12](#f-dat-12-evedb-the-eve-test-database) | evedb, the Eve test database | partial |
 | [F-DAT-13](#f-dat-13-sql-function) | `sql function` | partial |
 | [F-DAT-14](#f-dat-14-stored-procedures) | Stored procedures | partial |
 | [F-VM-11](#f-vm-11-one-eve-its-source-in-modules) | One `eve`, its source in modules | partial |
@@ -578,7 +577,7 @@ Resume a failed pipeline at the last committed batch (review `RIO-R05`). *Specif
 **Status:** partial
 **Tests:** level5: e111
 
-`Table` type with typed columns, Arrow-compatible (review `RTY-R06`). *State:* the `Memory` table with typed columns and the column batches of evedb (e111, `test/level6/f02_evedb_columnar`) exist; Arrow compatibility does not.
+`Table` type with typed columns, Arrow-compatible (review `RTY-R06`). *State:* the `Memory` table with typed columns and the column batches of evedb (e111, `test/level7/g02_evedb_columnar`) exist; Arrow compatibility does not.
 
 ### F-DAT-06 Data lineage and run reports
 
@@ -610,15 +609,6 @@ Numbered SQL scripts in `db/migrations/<name>/`, applied by `db migrate` and rec
 **Tests:** level5: e46 e47 e87-e94
 
 `table` declarations binding record classes to tables, tracked records with dirty fields, updates of the changed fields only, mapping validated in debug mode and refused in production (`design/design-database-core.md`, Q-046). *Specified and taught (2026-10-10), as proposed in Q-046:* `spec/library/database.md`, `databases.html`; review points in `design/archive/review-2026-10-04/level5.md`.
-
-### F-DAT-12 evedb, the Eve test database
-
-**Status:** partial
-**Tests:** level6: f01 f02
-
-A database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log (`drivers/duckdb/README.md`).
-
-*Partial (2026-10-18):* detailed design in `drivers/duckdb/README.md`; version 0.3 (D-187): column batches on the native protocol (`QUERYB`, `LOAD` into DuckDB's Appender), the driver `evedb://` with `Memory.store` and `Memory.load`, measured by `script/evedb_bench.py` (1,000,000 rows into a `Memory` table in 0.23 s; a group-by 55 times faster than SQLite), `test/level6/f02_evedb_columnar`; triggers and stored procedures in evedb dropped. Version 0.2 (D-186): evedb answers the **PostgreSQL protocol** on port 5432 (logins trust, password, md5; simple and extended query; types, errors, transactions), a configuration file, `eve db serve` and `eve -s -db --serve`; tested by `script/pg_check.py` (psycopg2, pg8000) and `test/level6/f01_pg_driver`; stored procedures and triggers in Eve designed (version 0.3). Version 0.1 built: the server of the EWP-db frames, sessions with leases, `eve_tx` and `STATUS`, error classes, seven faults, the statement log, tokens, and the commands `serve`, `create`, `sql`, `describe`, `snapshot`, `reset`, `status`, `stop`; 16 unit tests and 66 protocol checks in Python (`script/evedb_check.py`). Not yet: the Eve driver `evedb://`, change sets (`CHANGES`/`APPLIED`), `BATCH`/`CREDIT`, the appender, `drift`, import and export, service mode (0.2).
 
 ### F-DAT-13 `sql function`
 
@@ -763,10 +753,10 @@ The end of `recover` handles the error and the routine returns normally; `abort`
 
 ## Level 6: The Eve machine and the server
 
-The Eve machine and the server: setup from a folder, control by scripts and by other machines through the doors (IPC, stdio, HTTP), sessions and the machine API `vm.*`, services and routes written in Eve, the editors' link to the machine, and the test database evedb that speaks the PostgreSQL protocol. Login with single sign-on per machine, capabilities and the Eve Wire Protocol are still open. It is tested by `test/level6` (the `f` series) and by the smoke test; it is done when a client project and a server project talk on `localhost`, a route answers HTTP, and the machine logs in to two remote machines.
+The Eve machine and the server: setup from a folder, control by scripts and by other machines through the doors (IPC, stdio, HTTP), sessions and the machine API `vm.*`, services and routes written in Eve, the editors' link to the machine, and the clients of the machine: `eve` with a user (`-u`, `-a`, D-205), the terminal IDE evetx and the native workbench eveux. Capabilities and the Eve Wire Protocol are still open. It is tested by `test/level6` (the `f` series) and by the smoke test; it is done when a client project and a server project talk on `localhost`, a route answers HTTP, and the machine logs in to two remote machines.
 
 <!-- GEN:features -->
-0 of 24 features done (6 partial).
+0 of 29 features done (6 partial).
 
 | Code | Feature | Status |
 |---|---|---|
@@ -794,6 +784,11 @@ The Eve machine and the server: setup from a folder, control by scripts and by o
 | [F-TLS-30](#f-tls-30-service-mode) | Service mode | partial |
 | [F-TLS-15](#f-tls-15-eve-api-for-ai) | Eve API for AI | open |
 | [F-NET-10](#f-net-10-time-outs-of-the-waiting-calls) | Time-outs of the waiting calls | partial |
+| [F-TLS-19](#f-tls-19-eveux-the-rad-workbench-shell) | eveux, the RAD Workbench: shell | open |
+| [F-TLS-20](#f-tls-20-eveux-direct-sql-and-database-tree) | eveux: direct SQL and database tree | open |
+| [F-TLS-21](#f-tls-21-eveux-jobs-logs-and-admin) | eveux: jobs, logs and admin | open |
+| [F-TLS-22](#f-tls-22-eveux-debugger) | eveux: debugger | open |
+| [F-TLS-31](#f-tls-31-eveux-source-control) | eveux: source control | open |
 <!-- /GEN:features -->
 
 ### F-DOC-03 Tutorial, network and web part
@@ -956,37 +951,6 @@ A SQLite cache of the user (`<user data folder>/eve/meta/eve.db`): projects, mac
 
 *Open:* `accept!` has no time-out, one connection at a time (TD-29), no streaming `os.run!` (TD-9).
 
-## Level 7: The web
-
-The web: safe HTML templates, Eve in the browser, and the Eve Web Portal evewp, written in Eve with no JavaScript, as the last and hardest test of the language (D-193). The development clients evetx (terminal) and eveux (native window) are tools of this level in their later stages. Nothing here is built yet; the first step is a trial build of the machine for WebAssembly. It will be tested by `test/level7` (the `g` series).
-
-<!-- GEN:features -->
-0 of 14 features done (1 partial).
-
-| Code | Feature | Status |
-|---|---|---|
-| [F-VM-09](#f-vm-09-webassembly-build) | WebAssembly build | open |
-| [F-TLS-19](#f-tls-19-eveux-the-rad-workbench-shell) | eveux, the RAD Workbench: shell | open |
-| [F-TLS-20](#f-tls-20-eveux-direct-sql-and-database-tree) | eveux: direct SQL and database tree | open |
-| [F-TLS-21](#f-tls-21-eveux-jobs-logs-and-admin) | eveux: jobs, logs and admin | open |
-| [F-TLS-22](#f-tls-22-eveux-debugger) | eveux: debugger | open |
-| [F-TLS-31](#f-tls-31-eveux-source-control) | eveux: source control | open |
-| [F-TLS-23](#f-tls-23-new-project) | New project | partial |
-| [F-WEB-01](#f-web-01-html-templates) | HTML templates | open |
-| [F-WEB-02](#f-web-02-eve-in-the-browser) | Eve in the browser | open |
-| [F-WEB-03](#f-web-03-tutorial-playground) | Tutorial playground | open |
-| [F-WEB-05](#f-web-05-evewp-edge-and-host) | evewp: edge and host | open |
-| [F-WEB-06](#f-web-06-evewp-monitor) | evewp: monitor | open |
-| [F-WEB-07](#f-web-07-the-eve-web-framework) | The Eve Web framework | open |
-| [F-VM-12](#f-vm-12-process-supervision-api) | Process supervision API | open |
-<!-- /GEN:features -->
-
-### F-VM-09 WebAssembly build
-
-**Status:** open
-
-The VM compiled to `wasm32` with host imports (review `RVM-R06`).
-
 ### F-TLS-19 eveux, the RAD Workbench: shell
 
 **Status:** open
@@ -1016,6 +980,35 @@ The VM compiled to `wasm32` with host imports (review `RVM-R06`).
 **Status:** open
 
 The Git panel of eveux: the status of the working tree (`git status --porcelain=v1 -b` read by a worker thread, no shell), stage, commit, diff; the local tier of the two-tier design of `code/eveux/design/notes/elaboration.md` §4 (D-193). Test: `test/level7` against a temporary repository. Code started: `code/eveux/src/vcs/git_status.zig`.
+
+*Moved to level 6 (2026-10-20, D-205):* the clients evetx and eveux are developed at level 6; level 7 is the server.
+
+## Level 7: The web
+
+The web: safe HTML templates, Eve in the browser, and the Eve Web Portal evewp, written in Eve with no JavaScript, as the last and hardest test of the language (D-193). Level 7 is the server: evedb, the Eve machine with DuckDB inside (D-203, D-204), and the portal. The development clients evetx (terminal) and eveux (native window) belong to level 6 (D-205). Nothing here is built yet; the first step is a trial build of the machine for WebAssembly. It will be tested by `test/level7` (the `g` series).
+
+<!-- GEN:features -->
+0 of 10 features done (2 partial).
+
+| Code | Feature | Status |
+|---|---|---|
+| [F-VM-09](#f-vm-09-webassembly-build) | WebAssembly build | open |
+| [F-TLS-23](#f-tls-23-new-project) | New project | partial |
+| [F-WEB-01](#f-web-01-html-templates) | HTML templates | open |
+| [F-WEB-02](#f-web-02-eve-in-the-browser) | Eve in the browser | open |
+| [F-WEB-03](#f-web-03-tutorial-playground) | Tutorial playground | open |
+| [F-WEB-05](#f-web-05-evewp-edge-and-host) | evewp: edge and host | open |
+| [F-WEB-06](#f-web-06-evewp-monitor) | evewp: monitor | open |
+| [F-WEB-07](#f-web-07-the-eve-web-framework) | The Eve Web framework | open |
+| [F-VM-12](#f-vm-12-process-supervision-api) | Process supervision API | open |
+| [F-DAT-12](#f-dat-12-evedb-the-eve-test-database) | evedb, the Eve test database | partial |
+<!-- /GEN:features -->
+
+### F-VM-09 WebAssembly build
+
+**Status:** open
+
+The VM compiled to `wasm32` with host imports (review `RVM-R06`).
 
 ### F-TLS-23 New project
 
@@ -1066,6 +1059,17 @@ Eve (a dialect with a browser profile) written once and compiled to WebAssembly 
 **Status:** open
 
 `os` handles for spawn with limits, wait, kill and signals, status of a child through its IPC door; used by the host of evewp (D-193).
+
+### F-DAT-12 evedb, the Eve test database
+
+**Status:** partial
+**Tests:** level7: g01 g02
+
+A database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log (`drivers/duckdb/README.md`).
+
+*Partial (2026-10-18):* detailed design in `drivers/duckdb/README.md`; version 0.3 (D-187): column batches on the native protocol (`QUERYB`, `LOAD` into DuckDB's Appender), the driver `evedb://` with `Memory.store` and `Memory.load`, measured by `script/evedb_bench.py` (1,000,000 rows into a `Memory` table in 0.23 s; a group-by 55 times faster than SQLite), `test/level7/g02_evedb_columnar`; triggers and stored procedures in evedb dropped. Version 0.2 (D-186): evedb answers the **PostgreSQL protocol** on port 5432 (logins trust, password, md5; simple and extended query; types, errors, transactions), a configuration file, `eve db serve` and `eve -s -db --serve`; tested by `script/pg_check.py` (psycopg2, pg8000) and `test/level6/f01_pg_driver`; stored procedures and triggers in Eve designed (version 0.3). Version 0.1 built: the server of the EWP-db frames, sessions with leases, `eve_tx` and `STATUS`, error classes, seven faults, the statement log, tokens, and the commands `serve`, `create`, `sql`, `describe`, `snapshot`, `reset`, `status`, `stop`; 16 unit tests and 66 protocol checks in Python (`script/evedb_check.py`). Not yet: the Eve driver `evedb://`, change sets (`CHANGES`/`APPLIED`), `BATCH`/`CREDIT`, the appender, `drift`, import and export, service mode (0.2).
+
+*Moved to level 7 (2026-10-20, D-203, D-204):* evedb is the server; levels 1 to 6 are the client. The column batches of D-187 are kept with their tests.
 
 ## All levels: tools, documents, bytecode and release
 

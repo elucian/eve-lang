@@ -42,3 +42,7 @@ From the Q-002 evidence (`design/decision/level1.md`, 2026-10-02): 30 words of t
 **Backlog (D-189):** reverse proxy and HTTPS for the Workbench in production (Nginx, Caddy, Cloudflare Tunnel; level 8); the outbound TLS client of the `http` module for external APIs and OIDC issuers (Zig `std.http.Client` with TLS; level 9, technical debt until Zig matures).
 
 - **Channels: `select` and directed parameters** (from CON-12 of `design/issues`, 2026-10-20). `capacity` is required (`spec/semantics/multitasking.md#channels`, D-145) and `for x in ch` reads a channel. Not specified, not needed by a test: a `select` over several channels (wait for the first that has a value), `ch.receive(@x)` next to `for x in ch`, and send-only or receive-only channel parameters. Take them up when a library (`service`, `rpc`) asks for one.
+
+## Login alternatives set aside by D-205 (2026-10-20)
+
+From Q-048 of level 6: single sign-on by OpenID Connect (authorization code with PKCE, device code), the system keyring holding a renewal token (30 days without use), a machine token from the environment on a server without a keyring, roles `viewer`, `operator`, `developer`, `admin` with `$EVE_REGISTRATION` (`closed`, `approval`, `open`) and a mapping of provider groups, the machine commands `login`, `logout`, `forget`, `whoami`, `user role`, `session end`, a `machine prod at "host:4042" login sso` line in the configuration, the macOS Keychain. The full text is in `design/decision/level6.md`, Q-048.
