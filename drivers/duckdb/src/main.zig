@@ -13,17 +13,11 @@ const client = protocol.client;
 const cfgfile = @import("cfg.zig");
 const pgserver = @import("pgserver.zig");
 
-// Zig tip: `std_options` of the root file tunes the standard library at compile time. On Windows Zig 0.16 does not map a refused
-// connection, and a Debug build would print a stack trace each time the server checks that its port is free (README.md section 9);
-// the server handles that error itself, so the trace is turned off, as in `eve`.
 pub const std_options: std.Options = .{ .unexpected_error_tracing = false };
 
 /// The version of evedb itself (README.md section 12).
 pub const version = "0.2.0";
 
-// Zig tip: the server's `ready` callback has no state of its own, so it uses a global that `serve` sets before it starts:
-// the writer of the standard output. It prints one line with the port that was bound, which a test reads to know where to
-// connect (the port 0 asks the system for a free one).
 var ready_out: ?*Io.Writer = null;
 
 fn ready(ewp_port: u16, pg_port: u16, test_mode: bool) void {
@@ -108,8 +102,6 @@ fn openDirect(arena: std.mem.Allocator, io: Io, o: Opts, name: []const u8) !stru
     return .{ .db = db, .conn = conn };
 }
 
-// Zig tip: a result is printed as text cells with a tab between them, the first line holds the column names. `Result.text`
-// turns any cell into text (NULL is `null`, printed as NULL), so the command works for every type.
 fn printResult(arena: std.mem.Allocator, out: *Io.Writer, res: *duckdb.Result) !void {
     const ncols = res.columnCount();
     if (ncols == 0) return;
@@ -359,8 +351,6 @@ fn hasFlag(args: []const []const u8, flag: []const u8) bool {
     return false;
 }
 
-// Zig tip: tests live only in files the compiler reaches; `_ = duckdb;` in an unnamed test block makes `zig build test`
-// run the tests of every module that evedb is made of.
 test {
     _ = duckdb;
     _ = ewp;

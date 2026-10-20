@@ -7,10 +7,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 const Io = std.Io;
 
-// Zig tip: `switch` is an expression and `builtin.os.tag` is known at compile time, so this picks a
-// type while compiling. The branch that is not chosen is never analysed, so the Windows code
-// below does not even have to compile on Linux, and the other way round. This is how one
-// source tree serves several operating systems without `#ifdef`.
 /// Handle to restore the keyboard mode: `enter` it, `leave` it when done.
 pub const Terminal = switch (builtin.os.tag) {
     .windows => WindowsTerminal,
@@ -23,11 +19,6 @@ pub const EnterError = error{NotATerminal};
 pub const Size = struct { rows: usize, cols: usize };
 
 const WindowsTerminal = struct {
-    // Zig tip: `extern` declares a function written in another language, here Windows' own
-    // `kernel32.dll`, which Zig can call directly with no wrapper and no C header. The signature
-    // is typed by hand: `callconv(.winapi)` is the calling convention Windows uses, `*u32` is a
-    // pointer through which the function writes its result, and the `i32` result is a C `BOOL`
-    // (0 means failure).
     extern "kernel32" fn GetConsoleMode(handle: std.os.windows.HANDLE, mode: *u32) callconv(.winapi) i32;
     extern "kernel32" fn SetConsoleMode(handle: std.os.windows.HANDLE, mode: u32) callconv(.winapi) i32;
     extern "kernel32" fn GetConsoleScreenBufferInfo(handle: std.os.windows.HANDLE, info: *BufferInfo) callconv(.winapi) i32;
@@ -38,8 +29,6 @@ const WindowsTerminal = struct {
     const enable_line_input = 0x0002; // the system collects a whole line
     const enable_echo_input = 0x0004; // the system shows the typed characters
 
-    // Zig tip: `extern struct` has the memory layout of a C struct, field after field, which is what the Windows call
-    // writes into. `i16` is a signed 16-bit number, the type of a console coordinate.
     const Coord = extern struct { x: i16, y: i16 };
     const SmallRect = extern struct { left: i16, top: i16, right: i16, bottom: i16 };
     const BufferInfo = extern struct { size: Coord, cursor: Coord, attributes: u16, window: SmallRect, max_size: Coord };
@@ -53,10 +42,6 @@ const WindowsTerminal = struct {
     saved_out_mode: ?u32 = null,
     saved_code_page: u32 = 0,
 
-    // Zig tip: `~` inverts all bits and `&` keeps the bits set in both, so `mode & ~(a | b)`
-    // clears the flags a and b. The constants above are untyped `comptime_int`, so the compiler
-    // gives them the type `u32` needed here. `.{ .saved_mode = mode }` builds the struct that the
-    // return type `EnterError!Terminal` names. `orelse` is not used here: `== 0` tests the BOOL.
     pub fn enter() EnterError!WindowsTerminal {
         const handle = Io.File.stdin().handle;
         var mode: u32 = 0;
@@ -64,8 +49,6 @@ const WindowsTerminal = struct {
         const raw = (mode & ~@as(u32, enable_processed_input | enable_line_input | enable_echo_input)) | enable_virtual_terminal_input;
         if (SetConsoleMode(handle, raw) == 0) return error.NotATerminal;
         var self: WindowsTerminal = .{ .saved_mode = mode };
-        // Zig tip: the same two calls prepare the output: UTF-8 so that the box and block characters of the banner
-        // are drawn, and the ANSI colors. A failure is not an error: the banner is plainer on a console that refuses.
         const out = Io.File.stdout().handle;
         var out_mode: u32 = 0;
         if (GetConsoleMode(out, &out_mode) != 0) {
@@ -98,11 +81,6 @@ const WindowsTerminal = struct {
 const PosixTerminal = struct {
     saved: std.posix.termios,
 
-    // Zig tip: `termios` is the terminal settings record of Linux and macOS. `var raw = saved;`
-    // copies the struct (assignment copies, it never aliases), so the original stays intact for
-    // `leave`. `lflag` is a packed struct of booleans, one per flag: `raw.lflag.ECHO = false`
-    // switches one flag off. `catch return error.NotATerminal` converts any error of the call
-    // into ours. This branch is compiled only on non-Windows targets.
     pub fn enter() EnterError!PosixTerminal {
         const fd = Io.File.stdin().handle;
         const saved = std.posix.tcgetattr(fd) catch return error.NotATerminal;
@@ -116,8 +94,6 @@ const PosixTerminal = struct {
         return .{ .saved = saved };
     }
 
-    // Zig tip: `ioctl` asks the terminal driver a question; `TIOCGWINSZ` is "get the window size" and fills a
-    // `winsize` record. This branch is not compiled on Windows, and it has not been run there.
     pub fn size() ?Size {
         var ws: std.posix.winsize = undefined;
         const rc = std.posix.system.ioctl(Io.File.stdout().handle, std.posix.T.IOCGWINSZ, @intFromPtr(&ws));

@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -24,10 +21,6 @@ const err_convert = interp.err_convert;
 
 // ---- Decimal, Instant, Secret (spec/library/data-language.md) ---------------------------------------
 
-// Zig tip: a function returns the value or an error from the same union `Signal`. The operators of a
-// Decimal are exact; a Real never mixes in. `decimal.add(x, y) orelse return it.overflow()` says "if the
-// result does not fit in the Decimal, raise Overflow". A comparison never reaches this function: `eq` and
-// `order` handle it before.
 /// An arithmetic operator when one side is a Decimal and the other a Decimal or a whole number.
 pub fn decimalOp(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
     const eql = std.mem.eql;
@@ -61,8 +54,6 @@ pub fn fromSqlText(it: *Interp, raw: []const u8, m: *const Node) Signal!Value {
     return it.newStr(raw);
 }
 
-// Zig tip: a Secret is an object of a core class with one field, `text`. `show` knows the class and writes
-// `***`, so `print` and interpolation never reveal it; no operator reads the field. The class is made once.
 /// `Secret(text)`: a value that prints as `***`.
 pub fn makeSecret(it: *Interp, args: []const *const Node) Signal!Value {
     if (args.len != 1) return it.fail("Secret takes one text", .{});
@@ -94,10 +85,7 @@ pub fn secretObject(it: *Interp, secret_text: Value) Signal!Value {
     return .{ .object = obj };
 }
 
-// Zig tip: `std.c.getenv` is the C function of the same name, available because the VM links the C library
-// (SQLite needs it). It takes a zero-terminated name and answers a pointer or null. The first implementation
-// reads the secrets of the machine from environment variables `EVE_SECRET_<NAME>`, in capitals; the keyring
-// of the machine (D-155) replaces it later.
+// @decision D-155
 /// `secret.get(name)`: the secret of the machine, or the error `$err_key` when there is none.
 pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
     if (args.len != 1) return it.fail("secret.get takes the name of a secret", .{});
@@ -110,7 +98,6 @@ pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
     return it.secretObject(try it.newStr(std.mem.span(found)));
 }
 
-// Zig tip: `runRoot` relies on the same Zig feature as `define` above: see the tip there.
 pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
     defer it.finalizeModules();
     defer db.closeDatabases(it.host());

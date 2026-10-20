@@ -28,15 +28,11 @@ const err_io = value.err_io;
 const err_null = value.err_null;
 const err_convert = value.err_convert;
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 /// Is the URL one of PostgreSQL?
 pub fn isPgUrl(url: []const u8) bool {
     return std.mem.startsWith(u8, url, "postgres://") or std.mem.startsWith(u8, url, "postgresql://");
 }
 
-// Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to the
-// caller; `f() catch …` handles it in place.
 /// Open the connection `name` of `eve.cfg` (once per run) and give it its object.
 pub fn connectPg(it: Host, name: []const u8, url_text: []const u8) Signal!Value {
     const b = state(it);
@@ -56,7 +52,6 @@ pub fn connectPg(it: Host, name: []const u8, url_text: []const u8) Signal!Value 
     return makeObject(it, name, idx);
 }
 
-// Zig tip: `makeObject` relies on the same Zig feature as `connectPg` above: see the tip there.
 fn makeObject(it: Host, name: []const u8, idx: usize) Signal!Value {
     const b = state(it);
     if (b.pg_class == null) {
@@ -71,15 +66,11 @@ fn makeObject(it: Host, name: []const u8, idx: usize) Signal!Value {
     return .{ .object = obj };
 }
 
-// Zig tip: `a orelse b` unwraps an optional: the value when there is one, else `b` (which may be `return` or `continue`,
-// leaving the function or the loop).
 pub fn isPgObject(it: Host, v: Value) bool {
     const cls = state(it).pg_class orelse return false;
     return v == .object and v.object.class == cls;
 }
 
-// Zig tip: `defer` runs its statement when the scope ends, by any path (a `return`, an error, the end of the block), so a
-// free or a close is written once, next to what it undoes.
 /// At the end of a job: commit or roll back the transactions that the job began on PostgreSQL connections.
 pub fn finishTransactions(it: Host, ok: bool) void {
     for (state(it).pgs.items) |c| {
@@ -91,15 +82,12 @@ pub fn finishTransactions(it: Host, ok: bool) void {
     }
 }
 
-// Zig tip: `closeAll` relies on the same Zig feature as `isPgUrl` above: see the tip there.
 pub fn closeAll(it: Host) void {
     for (state(it).pgs.items) |c| {
         if (!c.closed) c.close();
     }
 }
 
-// Zig tip: a `?` in the SQL of Eve is replaced by the literal of the value, but not the `?` inside a quoted text, a quoted
-// name or a comment. The scanner walks the bytes once and copies them; at a `?` outside quotes it writes the next value.
 /// The SQL with its `?` replaced by the literals of the parameters.
 pub fn interpolate(it: Host, a: std.mem.Allocator, sql: []const u8, params: []const Value, scs: bool) Signal![]u8 {
     var out: std.ArrayList(u8) = .empty;
@@ -134,7 +122,6 @@ pub fn interpolate(it: Host, a: std.mem.Allocator, sql: []const u8, params: []co
     return out.items;
 }
 
-// Zig tip: `quoted` relies on the same Zig feature as `connectPg` above: see the tip there.
 fn quoted(a: std.mem.Allocator, out: *std.ArrayList(u8), s: []const u8, scs: bool) !void {
     if (!scs) try out.append(a, 'E');
     try out.append(a, '\'');
@@ -146,7 +133,6 @@ fn quoted(a: std.mem.Allocator, out: *std.ArrayList(u8), s: []const u8, scs: boo
     try out.append(a, '\'');
 }
 
-// Zig tip: `literal` relies on the same Zig feature as `connectPg` above: see the tip there.
 fn literal(it: Host, a: std.mem.Allocator, out: *std.ArrayList(u8), v: Value, scs: bool) Signal!void {
     switch (v) {
         .nil => try out.appendSlice(a, "NULL"),
@@ -164,9 +150,6 @@ fn literal(it: Host, a: std.mem.Allocator, out: *std.ArrayList(u8), v: Value, sc
     }
 }
 
-// Zig tip: the rows come back as text. A member of the record class says what the text means: `Logic` is `t` or `f`, whole
-// numbers and reals are parsed, a `Decimal` or an `Instant` is read by the same function the SQLite driver uses for text
-// columns, and a `String` is the text. NULL is `null` only for an optional member.
 fn rowValue(it: Host, cell: ?[]const u8, m: *const Node, class_name: []const u8) Signal!Value {
     const text = cell orelse {
         if (conn.isOptional(m.ty)) return .nil;
@@ -187,13 +170,10 @@ fn rowValue(it: Host, cell: ?[]const u8, m: *const Node, class_name: []const u8)
     return it.fromSqlText(text, m);
 }
 
-// Zig tip: `failServer` relies on the same Zig feature as `isPgUrl` above: see the tip there.
 fn failServer(it: Host, c: *pgclient.Client, sql: []const u8) Signal {
     return it.failWith(err_io, "DatabaseError: {s} [{s}]: {s}", .{ c.errorMessage(), c.errorCode(), sql });
 }
 
-// Zig tip: the first statement of a job begins a transaction on the connection, as the SQLite driver does (`enlist`), and
-// `finishTransactions` ends it. Outside a job each statement commits at once (the server's autocommit).
 fn enlist(it: Host, c: *pgclient.Client) Signal!void {
     if (it.currentJob().len == 0 or c.job_tx) return;
     var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
@@ -202,7 +182,6 @@ fn enlist(it: Host, c: *pgclient.Client) Signal!void {
     c.job_tx = true;
 }
 
-// Zig tip: `call` relies on the same Zig feature as `connectPg` above: see the tip there.
 /// A method of a PostgreSQL connection.
 pub fn call(it: Host, obj: *Object, name: []const u8, args: []const *const Node) Signal!Value {
     const eql = std.mem.eql;

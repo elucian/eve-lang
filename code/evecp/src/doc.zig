@@ -12,8 +12,6 @@
 const std = @import("std");
 const Io = std.Io;
 
-// Zig tip: `[_][]const u8{ ... }` is an array of strings whose length the compiler counts
-// (`_`). A `const` at file level is built once, at compile time, and stored in the program.
 /// Words that start a declaration worth documenting.
 const declarations = [_][]const u8{
     "primary", "exclusive", "concurrent", "aspect", "module", "class", "trait", "function",
@@ -25,10 +23,6 @@ const declarations = [_][]const u8{
 // @spec spec/semantics/modules.md#members
 // @feature F-LIB-01
 // @decision D-189, D-191
-// Zig tip: `var rest = ...` makes a variable we can change; `rest = rest[1..]` re-slices it
-// to drop the first byte, without copying the text. A slice is only a pointer and a length,
-// so slicing is free. `rest[word.len]` reads one byte; Zig checks the index at run time in
-// Debug builds, which is why the length test comes first (`and` stops early).
 fn startsDeclaration(line: []const u8) bool {
     var rest = std.mem.trimStart(u8, line, " \t");
     // `external` in front of a signature: implemented in Zig by the virtual machine.
@@ -42,8 +36,6 @@ fn startsDeclaration(line: []const u8) bool {
     return false;
 }
 
-// Zig tip: the return type `?[]const u8` is an optional: the text of the comment, or `null`
-// when the line is not a comment. The caller unwraps it with `if (text) |t| { ... }`.
 /// Text of a line comment: `#` or `##` at column 0, or `**` after the indentation.
 fn lineComment(line: []const u8) ?[]const u8 {
     if (line.len > 0 and line[0] == '#') {
@@ -55,9 +47,6 @@ fn lineComment(line: []const u8) ?[]const u8 {
     return std.mem.trim(u8, t[2..], " \t\r");
 }
 
-// Zig tip: `t[0 .. t.len - 2]` is a slice with an end index: everything but the last two bytes.
-// `std.mem.trim` takes the set of characters to cut as a string: here blanks and the frame
-// characters `| - * =`.
 /// Strips the delimiters and the frame characters people draw inside a block comment.
 fn blockText(line: []const u8) []const u8 {
     var t = std.mem.trim(u8, line, " \t\r");
@@ -66,10 +55,6 @@ fn blockText(line: []const u8) []const u8 {
     return std.mem.trim(u8, t, " \t\r|-*=");
 }
 
-// Zig tip: `var comment: [64][]const u8 = undefined;` is a fixed array of 64 slices on the stack:
-// no allocation. `undefined` means "not set yet"; only the first `count` entries are ever read.
-// `std.mem.splitScalar` returns an iterator; `while (lines.next()) |raw|` runs until `next()`
-// returns null. The function writes into any `*Io.Writer`: a file, a buffer in memory, stdout.
 /// Writes the Markdown page of one Eve source. A comment is documentation when it comes right
 /// above a declaration: any other line of code between them cancels it.
 pub fn render(source: []const u8, name: []const u8, out: *Io.Writer) Io.Writer.Error!void {
@@ -114,8 +99,6 @@ pub fn render(source: []const u8, name: []const u8, out: *Io.Writer) Io.Writer.E
     }
 }
 
-// Zig tip: `std.mem.lastIndexOfAny` returns the position of the last `/` or `\`, or null;
-// `orelse` turns the null into a default. Windows accepts both separators, so both are cut.
 /// The name of a page: the file name of `path` without its folder and without `.eve`.
 fn stem(path: []const u8) []const u8 {
     const start = if (std.mem.lastIndexOfAny(u8, path, "/\\")) |i| i + 1 else 0;
@@ -123,12 +106,6 @@ fn stem(path: []const u8) []const u8 {
     return if (std.mem.endsWith(u8, base, ".eve")) base[0 .. base.len - 4] else base;
 }
 
-// Zig tip: an `ArenaAllocator` hands out memory from big blocks and frees everything in one
-// `deinit`, so the file contents and the pages need no `free` each; `defer` pairs the arena
-// with its release. `Io.Writer.Allocating` is a writer that grows a buffer in memory;
-// `written()` is what it holds. The return type `!usize` has an inferred error set: the compiler
-// collects every error that a `try` in the body can pass up (missing folder, read or write
-// failure, out of memory) and the caller can `switch` on them.
 /// Writes `<out_path>/<name>.md` for the `.eve` file `source`, or for every `.eve` file directly
 /// in the folder `source`. Logs one line per page on `log` and returns the number of pages.
 pub fn generate(io: Io, gpa: std.mem.Allocator, source: []const u8, out_path: []const u8, log: *Io.Writer) !usize {
@@ -160,8 +137,6 @@ pub fn generate(io: Io, gpa: std.mem.Allocator, source: []const u8, out_path: []
     return pages;
 }
 
-// Zig tip: `Io.Dir` is passed by value: it is a small handle (the open folder), cheap to copy.
-// `std.fmt.allocPrint` formats into new memory from the allocator, here the arena of `generate`.
 /// Renders one source and writes `<name>.md` into `out_dir`.
 fn writePage(io: Io, arena: std.mem.Allocator, out_dir: Io.Dir, text: []const u8, name: []const u8, out_path: []const u8, log: *Io.Writer) !void {
     var buf: Io.Writer.Allocating = .init(arena);
@@ -171,8 +146,6 @@ fn writePage(io: Io, arena: std.mem.Allocator, out_dir: Io.Dir, text: []const u8
     try log.print("doc: {s}.eve -> {s}/{s}\n", .{ name, out_path, out_name });
 }
 
-// Zig tip: `++` joins string literals at compile time, so a long test input can be split over
-// lines. `std.testing.allocator` fails the test if memory is not freed, hence `defer buf.deinit()`.
 test "documents a declaration with its comment" {
     const src = "** Strings.\nmodule strings is\n\n  ** Remove blanks at both ends.\n" ++
         "  function .trim(s: String) => (String) is\n  return;\nend strings;\n";
@@ -185,7 +158,6 @@ test "documents a declaration with its comment" {
     );
 }
 
-// Zig tip: this test relies on the same features as the test above: see the tip there.
 test "reads #, ## and block comments, ignores expression comments" {
     const src = "#! free script\n# Title\n## Subtitle\n/* block\n | framed */\nmodule m is\n" ++
         "  (** inline **)\n  ** about f\n  function .f() => (Integer) is\nend m;\n";
@@ -198,8 +170,6 @@ test "reads #, ## and block comments, ignores expression comments" {
     );
 }
 
-// Zig tip: `expectEqualStrings(expected, actual)` compares the contents of two slices and
-// prints both when they differ.
 test "the page name is the file name without folder and extension" {
     try std.testing.expectEqualStrings("io", stem("lib/io.eve"));
     try std.testing.expectEqualStrings("io", stem("C:\\eve\\lib\\io.eve"));

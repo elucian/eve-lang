@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -31,7 +28,6 @@ const err_argument = interp.err_argument;
 
 // ---- calls ----------------------------------------------------------------------------
 
-// Zig tip: `call` relies on the same Zig feature as `define` above: see the tip there.
 pub fn call(it: *Interp, n: *const Node) Signal!Value {
     const callee = n.kids[0];
     const args = n.kids[1..];
@@ -83,10 +79,7 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
     return it.callValue(try it.eval(callee), null, args);
 }
 
-// Zig tip: the types of the arguments are read from the values (`typeName`), then the shared rules of
-// overload.zig choose, as the checker did at compile time with the types it knew (D-149). `newFunc` makes
-// a function value for the chosen declaration with the scope of the first one; `invokeWith` calls it
-// directly, so the choice is not made twice.
+// @decision D-149
 /// Call the right declaration among several with the same name, from the values of the arguments.
 pub fn invokeOverloaded(it: *Interp, f: *Func, decls: []const *const Node, recv: ?Value, arg_nodes: []const *const Node) Signal!Value {
     const args = try it.evalArgs(arg_nodes);
@@ -107,7 +100,6 @@ pub fn invokeOverloaded(it: *Interp, f: *Func, decls: []const *const Node, recv:
     }
 }
 
-// Zig tip: `callValue` relies on the same Zig feature as `define` above: see the tip there.
 pub fn callValue(it: *Interp, v: Value, recv: ?Value, args: []const *const Node) Signal!Value {
     switch (v) {
         .func => |f| {
@@ -141,9 +133,6 @@ pub fn callValue(it: *Interp, v: Value, recv: ?Value, args: []const *const Node)
 
 pub const classRoutine = value.classRoutine;
 
-// Zig tip: a method of a subclass hides the method of its parent that has the same signature, so a
-// candidate is added only if no nearer one has the same signature (`overload.sameSignature`). The list
-// lives in the scratch memory of the statement (`it.t`).
 /// Every method called `name` that the class, its ancestors, its traits and the extension methods give.
 pub fn routinesNamed(it: *Interp, c: *Class, name: []const u8, out: *std.ArrayList(*const Node)) Signal!void {
     var cur: ?*Class = c;
@@ -172,9 +161,7 @@ pub fn addUnique(it: *Interp, out: *std.ArrayList(*const Node), r: *const Node) 
     try out.append(it.t, r);
 }
 
-// Zig tip: an extension method is declared outside the class; its first parameter is `@self`
-// with the type of the class (D-040). The call `p.shift(1, 2)` finds it by the name of the
-// class of `p` or of one of its ancestors.
+// @decision D-040
 /// The extension method `name` for objects of class `c`.
 pub fn extensionFor(it: *Interp, c: *Class, name: []const u8) ?*const Node {
     for (it.exts.items) |m| {
@@ -188,8 +175,6 @@ pub fn extensionFor(it: *Interp, c: *Class, name: []const u8) ?*const Node {
     return null;
 }
 
-// Zig tip: `if (opt) |v| ... else ...` runs the first branch only when the optional has a value,
-// and names it `v`.
 pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *const Node) Signal!Value {
     const stmt = it.call_is_stmt;
     it.call_is_stmt = false;
@@ -290,7 +275,6 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     return it.fail("{s} has no method '{s}'", .{ Interp.typeName(recv), name });
 }
 
-// Zig tip: `evalArgs` relies on the same Zig feature as `define` above: see the tip there.
 /// Evaluate the arguments of a call in the caller's scope.
 pub fn evalArgs(it: *Interp, nodes: []const *const Node) Signal![]Arg {
     var out: std.ArrayList(Arg) = .empty;
@@ -309,8 +293,6 @@ pub fn evalArgs(it: *Interp, nodes: []const *const Node) Signal![]Arg {
             if (spread == .map) {
                 // `*map`: every key is the name of a parameter, every value its argument
                 for (spread.map.entries.items) |e| {
-                    // Zig tip: a labeled block `blk: { ... break :blk v; }` is an expression whose value is
-                    // the `break`; here it builds the text of a symbol, while a text key is used as it is.
                     const key = switch (e.key) {
                         .str => |s| s,
                         .sym => |c| blk: {
@@ -333,10 +315,6 @@ pub fn evalArgs(it: *Interp, nodes: []const *const Node) Signal![]Arg {
     return out.items;
 }
 
-// Zig tip: parameters are matched to arguments in three steps: by name, then by position,
-// then by default value. `taken` marks the arguments already used, a stack array of booleans
-// (`[_]bool{false} ** 32` repeats one value 32 times at compile time). A by-reference
-// parameter does not copy the value: it binds the parameter name to the caller's `*Var`.
 /// Bind the parameters of `params` in the current scope. `self_var` is the receiver of a method.
 pub fn bindParams(it: *Interp, params: []const *const Node, args: []const Arg, self_var: ?*Var) Signal!void {
     var taken: [32]bool = @splat(false);
@@ -382,8 +360,6 @@ pub fn bindParams(it: *Interp, params: []const *const Node, args: []const Arg, s
     }
 }
 
-// Zig tip: `defer it.scope = saved;` restores the caller's scope however the function ends, also
-// when a `raise` unwinds through it: this is what makes error handling with Zig errors safe.
 /// Call a function, method or lambda. `recv` is the object of `obj.method(...)`.
 pub fn invoke(it: *Interp, f: *Func, recv: ?Value, arg_nodes: []const *const Node) Signal!Value {
     const args = try it.evalArgs(arg_nodes);
@@ -392,8 +368,6 @@ pub fn invoke(it: *Interp, f: *Func, recv: ?Value, arg_nodes: []const *const Nod
     return it.invokeWith(f, recv, args);
 }
 
-// Zig tip: `invokeWith` relies on the same Zig feature as `invoke` above: see the tip there. A
-// spawned task evaluates its arguments in the parent, at `spawn`, and calls this in its own thread.
 /// Call a function, method or lambda with arguments already evaluated.
 pub fn invokeWith(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {
     // a call of a generator does not run its body: it makes the generator object (D-067)
@@ -401,8 +375,6 @@ pub fn invokeWith(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     return it.runRoutine(f, recv, args);
 }
 
-// Zig tip: `runRoutine` is the old body of `invokeWith`: it runs a function, method, lambda or the body of a
-// generator (on the thread of the generator).
 /// Run the body of a routine with the arguments already evaluated.
 pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {
     const node = f.node;
@@ -522,7 +494,6 @@ fn stringFunction(it: *Interp, s: []const u8, name: []const u8, args: []const *c
     return try it.newStr(try std.mem.replaceOwned(u8, it.t, s, t.str, repl.str));
 }
 
-// Zig tip: `construct` relies on the same Zig feature as `define` above: see the tip there.
 /// `new Class(args)`.
 pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) Signal!Value {
     // a class derived from `Memory` is a columnar table (D-184)
@@ -561,7 +532,6 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
     return .{ .object = obj };
 }
 
-// Zig tip: `zero` relies on the same Zig feature as `define` above: see the tip there.
 /// The value a variable of a type has before it is assigned.
 pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
     const t = ty orelse return .nil;
@@ -606,16 +576,12 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
     return .nil;
 }
 
-// Zig tip: a tiny matcher, written as three small recursive functions. It supports literals,
-// `.`, `^`, `$`, classes `[a-z]`, `\d \w \s`, the quantifiers `* + ?` and `|` between whole
-// alternatives; groups are not supported. `pattern` is `/body/flags`; the flag `i` ignores case.
 pub fn atomLen(pat: []const u8) usize {
     if (pat[0] == '\\' and pat.len > 1) return 2;
     if (pat[0] == '[') return (std.mem.indexOfScalar(u8, pat, ']') orelse pat.len - 1) + 1;
     return 1;
 }
 
-// Zig tip: `atomMatch` relies on the same Zig feature as `mapPut` above: see the tip there.
 pub fn atomMatch(atom: []const u8, c: u8, ic: bool) bool {
     const ch = if (ic) std.ascii.toLower(c) else c;
     if (atom[0] == '.') return true;
@@ -647,7 +613,6 @@ pub fn atomMatch(atom: []const u8, c: u8, ic: bool) bool {
     return ch == (if (ic) std.ascii.toLower(atom[0]) else atom[0]);
 }
 
-// Zig tip: `matchHere` relies on the same Zig feature as `mapPut` above: see the tip there.
 pub fn matchHere(pat: []const u8, txt: []const u8, ic: bool) bool {
     if (pat.len == 0) return true;
     if (pat.len == 1 and pat[0] == '$') return txt.len == 0;
@@ -669,7 +634,6 @@ pub fn matchHere(pat: []const u8, txt: []const u8, ic: bool) bool {
     return false;
 }
 
-// Zig tip: `regexMatch` relies on the same Zig feature as `mapPut` above: see the tip there.
 /// Does `text` match the pattern `/body/flags`?
 pub fn regexMatch(spec: []const u8, txt: []const u8) bool {
     const last = std.mem.lastIndexOfScalar(u8, spec, '/') orelse return std.mem.indexOf(u8, txt, spec) != null;

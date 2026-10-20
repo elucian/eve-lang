@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const ast = interp.ast;
@@ -26,10 +23,6 @@ const err_overflow = interp.err_overflow;
 
 // ---- expressions ----------------------------------------------------------------------
 
-// Zig tip: `std.mem.replaceScalar`-style cleanup is avoided: the number text is copied without
-// its `_` separators into a stack buffer. `std.fmt.parseInt(i64, s, 0)` with base 0 reads the
-// prefix itself (`0x`, `0b`). A failure falls back to a Real, so a huge integer literal is
-// still a number. `std.fmt.parseFloat(f64, s)` reads `3.5`.
 pub fn number(it: *Interp, n: *const Node) Signal!Value {
     switch (n.lit_kind) {
         .int => return .{ .int = @bitCast(n.lit_bits) },
@@ -84,17 +77,13 @@ pub fn number(it: *Interp, n: *const Node) Signal!Value {
     return .{ .int = v };
 }
 
-// Zig tip: `symbolOf` relies on the same Zig feature as `utf8` above: see the tip there.
 /// The code point of the UTF-8 text of a symbol node.
 pub fn symbolOf(t: []const u8) u21 {
     if (t.len == 0) return 0; // the empty rune, nil
     return std.unicode.utf8Decode(t) catch 0xFFFD;
 }
 
-// Zig tip: `eval` relies on the same Zig feature as `define` above: see the tip there.
-// Zig tip: `std.mem.endsWith` tests the end of a text. A duration literal is kept as an Integer of
-// milliseconds in version 0.3: `wait`, `within` and `$timeout` read it; its own type comes with
-// the time types of level 5 (D-144). `orelse return null` gives up when the digits do not parse.
+// @decision D-144
 /// The milliseconds of a duration literal (`10ms`, `30s`, `2m`, `1h`), or null for another number.
 pub fn durationMs(lit: []const u8) ?i64 {
     if (lit.len < 2 or !std.ascii.isDigit(lit[0])) return null;
@@ -149,7 +138,6 @@ pub fn eval(it: *Interp, n: *const Node) Signal!Value {
     }
 }
 
-// Zig tip: `unary` relies on the same Zig feature as `define` above: see the tip there.
 pub fn unary(it: *Interp, n: *const Node) Signal!Value {
     const v = try it.eval(n.kids[0]);
     const op = n.text;
@@ -170,7 +158,6 @@ pub fn negate(it: *Interp, v: Value) Signal!Value {
     };
 }
 
-// Zig tip: `makeRange` relies on the same Zig feature as `define` above: see the tip there.
 pub fn makeRange(it: *Interp, n: *const Node) Signal!Value {
     const open_lo = n.kids[0].tag == .open_end;
     const open_hi = n.kids[1].tag == .open_end;
@@ -195,8 +182,6 @@ pub fn makeRange(it: *Interp, n: *const Node) Signal!Value {
     return .{ .domain = try it.newDomain(.{ .lo = Interp.realOf(lo), .hi = Interp.realOf(hi), .lo_excl = excl_lo, .hi_excl = excl_hi }) };
 }
 
-// Zig tip: `x - @round(x)` is the distance to the nearest whole number; a value is on the grid
-// of a step when `x / step` is whole, with a small tolerance for the rounding of a `f64`.
 /// Is the real `x` inside the domain `d`? (limits, excluded limits, step)
 pub fn inDomain(d: *const Domain, x: f64) bool {
     if (d.lo) |lo| if (x < lo or (d.lo_excl and x == lo)) return false;
@@ -208,7 +193,6 @@ pub fn inDomain(d: *const Domain, x: f64) bool {
     return true;
 }
 
-// Zig tip: `brace` relies on the same Zig feature as `define` above: see the tip there.
 /// `{ ... }`: a DataSet, a HashMap or an Object, as the parser decided.
 pub fn brace(it: *Interp, n: *const Node) Signal!Value {
     if (std.mem.eql(u8, n.text, "set")) {
@@ -226,7 +210,6 @@ pub fn brace(it: *Interp, n: *const Node) Signal!Value {
     return .{ .object = o };
 }
 
-// Zig tip: `mapFind` relies on the same Zig feature as `newList` above: see the tip there.
 pub fn mapFind(m: *Map, key: Value) ?usize {
     for (m.entries.items, 0..) |e, i| {
         if (Interp.eq(e.key, key)) return i;
@@ -234,8 +217,6 @@ pub fn mapFind(m: *Map, key: Value) ?usize {
     return null;
 }
 
-// Zig tip: `while (cond) { ... }` repeats; `while (opt) |v|` repeats as long as an optional has
-// a value.
 /// Set `key` in the sorted map, creating the entry in its place when it is missing.
 pub fn mapPut(it: *Interp, m: *Map, key: Value, val: Value) Signal!void {
     if (Interp.mapFind(m, key)) |i| {
@@ -251,7 +232,6 @@ pub fn mapPut(it: *Interp, m: *Map, key: Value, val: Value) Signal!void {
 
 // ---- operators ------------------------------------------------------------------------
 
-// Zig tip: `binary` relies on the same Zig feature as `define` above: see the tip there.
 pub fn binary(it: *Interp, n: *const Node) Signal!Value {
     const op = n.text;
     if (std.mem.eql(u8, op, "and")) {
@@ -275,14 +255,10 @@ pub fn binary(it: *Interp, n: *const Node) Signal!Value {
 
 pub const textual = value.textual;
 
-// Zig tip: `overflow` relies on the same Zig feature as `fail` above: see the tip there.
 pub fn overflow(it: *Interp) Signal {
     return it.failWith(err_overflow, "Overflow in integer arithmetic", .{});
 }
 
-// Zig tip: `@addWithOverflow(a, b)` returns a tuple `.{ result, overflowed }`; Eve raises an
-// error instead of wrapping around silently. `@mulWithOverflow` and `@subWithOverflow` are alike.
-// `std.math.pow(f64, x, y)` is the power for reals; integers use a loop of multiplications.
 // @eve-impl the arithmetic and comparison of two integers or two reals without comparing the operator text; the rest is `apply`
 // @invariant gives what `apply` gives for these cases (overflow, division by zero, a real result of `/`)
 // @perf hot
@@ -433,8 +409,6 @@ pub fn apply(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
 
 pub const isScalar = value.isScalar;
 
-// Zig tip: `inline for` unrolls a loop over a comptime-known array, so each `op` is a constant.
-// `std.mem.eql(u8, a, b)` compares two byte slices (strings) by content, not by address.
 /// The operators that apply to every element of a list when the other operand is a scalar (D-118).
 pub fn isBulkOp(op: []const u8) bool {
     inline for (.{ "+", "-", "*", "/", "%", "^", "<", ">", "<=", ">=", "=~" }) |o| {
@@ -443,8 +417,6 @@ pub fn isBulkOp(op: []const u8) bool {
     return false;
 }
 
-// Zig tip: `std.mem.indexOfScalar(u8, "+-*/%^", op[0])` finds one byte in a slice and returns an
-// optional index (`?usize`); `!= null` turns it into a yes/no answer.
 /// One element with a scalar. Arithmetic never builds a string: that needs a loop (D-118).
 pub fn bulkOne(it: *Interp, op: []const u8, e: Value, s: Value) Signal!Value {
     const arithmetic = std.mem.indexOfScalar(u8, "+-*/%^", op[0]) != null and op.len == 1;
@@ -454,8 +426,6 @@ pub fn bulkOne(it: *Interp, op: []const u8, e: Value, s: Value) Signal!Value {
     return it.apply(op, e, s);
 }
 
-// Zig tip: `try` inside a `for` leaves the function at the first error, so a half-built `out`
-// is simply dropped: its count is zero, and the next safe point frees it.
 /// `list op scalar`: a new list with `op` applied to each element (D-118).
 pub fn broadcast(it: *Interp, op: []const u8, src: *List, s: Value) Signal!Value {
     const out = try it.h.make(List, .{ .array = src.array });
@@ -463,7 +433,6 @@ pub fn broadcast(it: *Interp, op: []const u8, src: *List, s: Value) Signal!Value
     return .{ .list = out };
 }
 
-// Zig tip: `isOp` relies on the same Zig feature as `bind` above: see the tip there.
 pub fn isOp(it: *Interp, l: Value, r: Value) bool {
     _ = it;
     if (l == .typ and r == .typ) return std.mem.eql(u8, l.typ, r.typ);
@@ -479,7 +448,6 @@ pub fn isOp(it: *Interp, l: Value, r: Value) bool {
     return Interp.same(l, r);
 }
 
-// Zig tip: `setOp` relies on the same Zig feature as `define` above: see the tip there.
 /// `||` union, `&&` intersection, `-` difference: the result is a DataSet.
 pub fn setOp(it: *Interp, op: u8, l: Value, r: Value) Signal!Value {
     const a = try it.setOf(l);
@@ -493,7 +461,6 @@ pub fn setOp(it: *Interp, op: u8, l: Value, r: Value) Signal!Value {
     return .{ .set = out };
 }
 
-// Zig tip: `concat` relies on the same Zig feature as `define` above: see the tip there.
 /// `a <+ b` as an expression: a new list with the element or the list `b` added at the end.
 pub fn concat(it: *Interp, l: Value, r: Value) Signal!Value {
     const src = switch (l) {
@@ -506,7 +473,6 @@ pub fn concat(it: *Interp, l: Value, r: Value) Signal!Value {
     return .{ .list = out };
 }
 
-// Zig tip: `product` relies on the same Zig feature as `define` above: see the tip there.
 /// `A >< B`: the pairs (a, b) of two collections, as a list of lists.
 pub fn product(it: *Interp, l: Value, r: Value) Signal!Value {
     const xs = try it.iterate(l);

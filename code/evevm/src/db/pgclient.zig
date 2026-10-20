@@ -10,12 +10,9 @@ const Sha256 = std.crypto.hash.sha2.Sha256;
 
 pub const Error = error{ Connect, Auth, Protocol, Server, Unsupported } || std.mem.Allocator.Error || Io.Reader.Error || Io.Writer.Error;
 
-// Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default value
-// may be left out when a value is made with `.{ ... }`.
 /// A column of a result: its name and the type number of PostgreSQL.
 pub const Col = struct { name: []const u8, oid: u32 };
 
-// Zig tip: `Result` relies on the same Zig feature as `Col` above: see the tip there.
 /// The answer to a query: the columns and the rows of the last statement, the command tag, and the rows it changed.
 pub const Result = struct {
     cols: []Col = &.{},
@@ -25,7 +22,6 @@ pub const Result = struct {
     affected: u64 = 0,
 };
 
-// Zig tip: `Url` relies on the same Zig feature as `Col` above: see the tip there.
 /// The URL of a connection: `postgres://user:password@host:port/database`.
 pub const Url = struct {
     user: []const u8,
@@ -35,14 +31,10 @@ pub const Url = struct {
     database: []const u8,
 };
 
-// Zig tip: the result type `?T` is an optional: a value or `null`. The caller must unwrap it (`if (x) |v|`, `orelse`), so a
-// missing value can never be used by accident.
 fn hexValue(c: u8) ?u8 {
     return std.fmt.charToDigit(c, 16) catch null;
 }
 
-// Zig tip: a password in a URL may hold characters that mean something in a URL (`@`, `:`, `/`), so they are written as `%40`,
-// `%3A`, `%2F`. This reads them back. The result is allocated; the input is not changed.
 fn percentDecode(a: std.mem.Allocator, s: []const u8) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     var i: usize = 0;
@@ -55,7 +47,6 @@ fn percentDecode(a: std.mem.Allocator, s: []const u8) ![]u8 {
     return out.items;
 }
 
-// Zig tip: `parseUrl` relies on the same Zig feature as `hexValue` above: see the tip there.
 /// Parse `postgres://user:password@host:port/database` (also `postgresql://`); the user and the database may be missing.
 pub fn parseUrl(a: std.mem.Allocator, url: []const u8) ?Url {
     var rest: []const u8 = undefined;
@@ -89,7 +80,6 @@ pub fn parseUrl(a: std.mem.Allocator, url: []const u8) ?Url {
     return .{ .user = user, .password = password, .host = host, .port = port, .database = if (database.len == 0) user else database };
 }
 
-// Zig tip: `Client` relies on the same Zig feature as `Col` above: see the tip there.
 pub const Client = struct {
     io: Io,
     gpa: std.mem.Allocator,
@@ -110,19 +100,14 @@ pub const Client = struct {
     /// A transaction was begun for a job (the driver commits or rolls it back at the end of the job).
     job_tx: bool = false,
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     pub fn errorMessage(self: *const Client) []const u8 {
         return self.err_msg[0..self.err_len];
     }
 
-    // Zig tip: `errorCode` relies on the same Zig feature as `errorMessage` above: see the tip there.
     pub fn errorCode(self: *const Client) []const u8 {
         return &self.err_code;
     }
 
-    // Zig tip: `a orelse b` unwraps an optional: the value when there is one, else `b` (which may be `return` or
-    // `continue`, leaving the function or the loop).
     fn keepError(self: *Client, body: []const u8) void {
         // fields: a letter and a text ending in a zero, until a zero letter
         var i: usize = 0;
@@ -141,10 +126,8 @@ pub const Client = struct {
         }
     }
 
-    // Zig tip: `Msg` relies on the same Zig feature as `Col` above: see the tip there.
     const Msg = struct { kind: u8, body: []u8 };
 
-    // Zig tip: `readMsg` relies on the same Zig feature as `percentDecode` above: see the tip there.
     fn readMsg(self: *Client, a: std.mem.Allocator) Error!Msg {
         var head: [5]u8 = undefined;
         try self.reader.interface.readSliceAll(&head);
@@ -155,7 +138,6 @@ pub const Client = struct {
         return .{ .kind = head[0], .body = body };
     }
 
-    // Zig tip: `send` relies on the same Zig feature as `percentDecode` above: see the tip there.
     fn send(self: *Client, kind: u8, body: []const u8) Error!void {
         var head: [5]u8 = undefined;
         head[0] = kind;
@@ -165,7 +147,6 @@ pub const Client = struct {
         try self.writer.interface.flush();
     }
 
-    // Zig tip: `connect` relies on the same Zig feature as `Client` above: see the tip there.
     /// Connect, log in, and wait for the first ReadyForQuery.
     pub fn connect(io: Io, gpa: std.mem.Allocator, url: Url) Error!*Client {
         const host = if (std.mem.eql(u8, url.host, "localhost")) "127.0.0.1" else url.host;
@@ -183,8 +164,6 @@ pub const Client = struct {
         return c;
     }
 
-    // Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an
-    // error that nobody handles.
     pub fn close(self: *Client) void {
         if (!self.closed) {
             self.closed = true;
@@ -193,8 +172,6 @@ pub const Client = struct {
         self.stream.close(self.io);
     }
 
-    // Zig tip: `defer` runs its statement when the scope ends, by any path (a `return`, an error, the end of the block), so
-    // a free or a close is written once, next to what it undoes.
     fn startup(self: *Client, url: Url) Error!void {
         var arena: std.heap.ArenaAllocator = .init(self.gpa);
         defer arena.deinit();
@@ -249,10 +226,6 @@ pub const Client = struct {
         }
     }
 
-    // Zig tip: SCRAM-SHA-256 (RFC 5802 and 7677) proves that the client knows the password without sending it. The client
-    // sends a nonce; the server answers with its own nonce, a salt and an iteration count; the client derives a key from the
-    // password with PBKDF2, signs the whole exchange, and sends the proof; the server answers with its signature, which the
-    // client checks. `std.crypto` has HMAC, SHA-256 and PBKDF2, so no code of ours does the arithmetic.
     fn scram(self: *Client, a: std.mem.Allocator, url: Url, mechanisms: []const u8) Error!void {
         if (std.mem.indexOf(u8, mechanisms, "SCRAM-SHA-256") == null) return error.Unsupported;
         var nonce_src: [18]u8 = undefined;
@@ -293,7 +266,6 @@ pub const Client = struct {
         if (!std.mem.eql(u8, v[2..], client_final_body.server_signature)) return error.Auth;
     }
 
-    // Zig tip: `query` relies on the same Zig feature as `percentDecode` above: see the tip there.
     /// Run SQL (one statement or several, with no parameters) and read all the answers. A failure of the server is
     /// `error.Server`, with the SQL state and the message in `errorCode` and `errorMessage`.
     pub fn query(self: *Client, a: std.mem.Allocator, sql: []const u8) Error!Result {
@@ -367,8 +339,6 @@ pub const Client = struct {
     }
 };
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 fn md5hex(out: *[32]u8, parts: []const []const u8) void {
     var h = std.crypto.hash.Md5.init(.{});
     for (parts) |p| h.update(p);
@@ -377,11 +347,8 @@ fn md5hex(out: *[32]u8, parts: []const []const u8) void {
     out.* = std.fmt.bytesToHex(d, .lower);
 }
 
-// Zig tip: `ScramFinal` relies on the same Zig feature as `Col` above: see the tip there.
 const ScramFinal = struct { message: []const u8, server_signature: []const u8 };
 
-// Zig tip: this function holds all the arithmetic of the exchange, with no network, so a test can feed it the example of
-// RFC 7677 and compare the proof byte for byte. Everything is allocated in the arena of the caller.
 /// The client-final message and the signature the server must answer with.
 fn scramFinal(a: std.mem.Allocator, password: []const u8, first_bare: []const u8, server_first: []const u8, nonce: []const u8) !ScramFinal {
     var r: ?[]const u8 = null;
@@ -423,8 +390,6 @@ fn scramFinal(a: std.mem.Allocator, password: []const u8, first_bare: []const u8
     };
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "SCRAM-SHA-256 gives the proof of RFC 7677" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -433,8 +398,6 @@ test "SCRAM-SHA-256 gives the proof of RFC 7677" {
     try std.testing.expectEqualStrings("6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=", f.server_signature);
 }
 
-// Zig tip: test "a connection URL" relies on the same Zig feature as test "SCRAM-SHA-256 gives the proof of RFC 7677"
-// above: see the tip there.
 test "a connection URL" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

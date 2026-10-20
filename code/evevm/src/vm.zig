@@ -15,11 +15,6 @@ const project = @import("evecp").project;
 const interp = @import("interp.zig");
 const debugger = @import("debugger.zig");
 
-// Zig tip: one number shared by every thread tells all the scripts to stop without a list of them. A script remembers
-// the number when it starts (`cancel_seen`) and looks at it between two statements (`pollHook`): when the number has
-// moved, the script ends as if `stop` had been typed. `std.atomic.Value` is read and written safely by several
-// threads at once, and `fetchAdd` adds one and answers the old value. Scripts that start later see the new number
-// as their own and run normally, so a `stop` does not poison the next run.
 /// How many times `cancelAll` was called.
 pub var cancel_generation: std.atomic.Value(usize) = .init(0);
 
@@ -35,11 +30,6 @@ pub const exit_syntax = 65;
 /// Words of a command line, at most this many.
 const max_words = 16;
 
-// Zig tip: a struct holds the whole state of the machine, so a command is a method that changes
-// it. Fields with a default (`= ""`, `= null`) need not be given when the struct is built. The
-// per-script memory is an arena: `load` drops the previous one with `deinit`, so a session of
-// hundreds of scripts does not grow. `std.heap.page_allocator` is the allocator that asks the
-// operating system for memory directly; the arena is built on top of it.
 /// One VM session. Commands are the `exec` methods below; the REPL and `vm.eval` both call them.
 pub const Session = struct {
     io: Io,
@@ -88,26 +78,18 @@ pub const Session = struct {
     /// The text of `summary.log`, one line per `status` or `log`.
     summary: std.ArrayList(u8) = .empty,
 
-    // Zig tip: the interpreter holds memory outside the arena (its scratch and its heap), so it is
-    // released explicitly before the arena goes, or before a second run replaces it.
     /// Free the memory of the last run's interpreter.
     fn dropMachine(self: *Session) void {
         if (self.machine) |m| m.deinit();
         self.machine = null;
     }
 
-    // Zig tip: `opt.?` unwraps an optional and panics ("attempt to use null value") when it is
-    // null, so it is only safe when null is impossible. Here a fresh session has no script yet
-    // (`status` before `load`), so `mem` makes the arena on first use. `&self.arena.?` takes a
-    // pointer into the optional: `allocator()` needs a pointer, not a copy, to the arena.
     /// The memory of the current script (created when the session has none yet).
     fn mem(self: *Session) std.mem.Allocator {
         if (self.arena == null) self.arena = .init(std.heap.page_allocator);
         return self.arena.?.allocator();
     }
 
-    // Zig tip: `if (opt) |v| ... else ...` runs the first branch only when the optional has a value,
-    // and names it `v`.
     fn forget(self: *Session) void {
         self.dropMachine();
         if (self.arena) |*a| a.deinit();
@@ -127,9 +109,6 @@ pub const Session = struct {
 
     // ---- loading, parsing, running --------------------------------------------------------
 
-    // Zig tip: `std.fs.path.stem` was moved in 0.16; the name of the script is cut by hand:
-    // after the last `/` or `\`, before the last `.`. `std.mem.lastIndexOfAny` finds the last byte
-    // that is in a set. `self.arena = .init(page_allocator)` assigns a fresh arena to the optional.
     /// Load the script `path` (the previous one is forgotten).
     pub fn load(self: *Session, path: []const u8) Io.Writer.Error!void {
         self.forget();
@@ -143,8 +122,6 @@ pub const Session = struct {
         try self.loadSource(path, src);
     }
 
-    // Zig tip: `x catch |e| ...` handles the error of a call on the spot, where `try` would pass it
-    // up to the caller.
     /// Use `src` (kept by the caller for as long as the session needs it) as the current script.
     pub fn loadSource(self: *Session, path: []const u8, src: []const u8) Io.Writer.Error!void {
         if (self.arena == null) self.arena = .init(std.heap.page_allocator);
@@ -153,7 +130,6 @@ pub const Session = struct {
         self.setName(if (cut) |i| path[i + 1 ..] else path, src);
     }
 
-    // Zig tip: `setName` relies on the same Zig feature as `loadSource` above: see the tip there.
     fn setName(self: *Session, base: []const u8, src: []const u8) void {
         const stem = base[0 .. std.mem.lastIndexOfScalar(u8, base, '.') orelse base.len];
         self.name = self.mem().dupe(u8, stem) catch stem;
@@ -169,10 +145,6 @@ pub const Session = struct {
         self.status = 0;
     }
 
-    // Zig tip: `std.mem.lastIndexOfAny` returns the position of the last byte that is in a set, or
-    // null; `if (cut) |i| path[0..i] else "."` takes the folder part of a path, or the current folder
-    // when the path has none. The error set of `build` is the one of `parser.parse` (`Syntax`,
-    // `OutOfMemory`), because `project.link` returns the same errors.
     /// Parse the script and, for a root aspect, read the aspects it applies and match every `apply`.
     fn build(self: *Session) parser.Error!*const ast.Node {
         const tree = try parser.parse(self.mem(), self.src, &self.diag);
@@ -182,8 +154,6 @@ pub const Session = struct {
         return tree;
     }
 
-    // Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
-    // compiler checks it.
     /// `parse`: build the syntax tree. A syntax error is printed as `file:line:col: error: text`.
     pub fn parse(self: *Session) Io.Writer.Error!void {
         if (self.arena == null) {
@@ -212,8 +182,6 @@ pub const Session = struct {
         }
     }
 
-    // Zig tip: builtin functions start with `@`: they are the compiler's own, such as conversions
-    // (`@intCast`, `@as`) and `@min`/`@max`.
     fn pollHook(ctx: *anyopaque, steps: usize, line: u32) bool {
         const self: *Session = @ptrCast(@alignCast(ctx));
         self.steps = steps;
@@ -221,10 +189,6 @@ pub const Session = struct {
         return self.stopping or cancel_generation.load(.monotonic) != self.cancel_seen;
     }
 
-    // Zig tip: `@ptrCast(@alignCast(ctx))` turns the `*anyopaque` the hook carries back into a
-    // `*Session`: the interpreter stored it without knowing the type, and only this file knows what
-    // it really is. The destination type comes from the declaration on the left. `.run` keeps
-    // the previous parse when it is already there ("parse first, only once").
     /// `run`: execute the loaded script. A script that was not parsed yet is parsed first.
     pub fn run(self: *Session) Io.Writer.Error!void {
         if (self.arena == null) {
@@ -276,11 +240,6 @@ pub const Session = struct {
         }
     }
 
-    // Zig tip: `std.time.epoch` turns seconds since 1970 into a calendar date: `EpochSeconds` gives the
-    // day number and the seconds into the day, `calculateYearDay` and `calculateMonthDay` the year, the
-    // month (an enum, `@intFromEnum` makes it a number) and the day. `{d:0>2}` prints a number in two
-    // places filled with zeros. All of it is UTC: the log file of a day is the same on every machine.
-    // `catch return` gives up quietly: a log that cannot be written must not change the exit code.
     /// Append the run to `out/run-log-<date>.json` of the project: a JSON array, one object per run (D-114).
     fn writeRunLog(self: *Session, m: *const interp.Interp) void {
         if (m.logs.items.len == 0) return;
@@ -326,37 +285,27 @@ pub const Session = struct {
 
     // ---- reports --------------------------------------------------------------------------
 
-    // Zig tip: `ensureDir` relies on the same Zig feature as `loadSource` above: see the tip there.
     fn ensureDir(self: *Session) void {
         Io.Dir.cwd().createDirPath(self.io, self.outdir) catch {};
     }
 
-    // Zig tip: `std.fs.path.join` is replaced here by `allocPrint`, which builds `dir/name.ext` in
-    // the arena. `catch return` abandons a report that cannot be written: a missing report must not
-    // stop the machine. `Io.Dir.cwd().writeFile(io, .{ .sub_path = ..., .data = ... })` creates or
-    // replaces a whole file.
     fn writeReport(self: *Session, ext: []const u8, data: []const u8) void {
         const p = std.fmt.allocPrint(self.mem(), "{s}/{s}.{s}", .{ self.outdir, self.name, ext }) catch return;
         Io.Dir.cwd().writeFile(self.io, .{ .sub_path = p, .data = data }) catch {};
     }
 
-    // Zig tip: `std.ArrayList(T)` is a growable array: it starts `.empty`, `append(allocator, x)`
-    // adds, `.items` is the slice of what it holds.
     fn writeSummary(self: *Session) void {
         self.ensureDir();
         const p = std.fmt.allocPrint(self.mem(), "{s}/summary.log", .{self.outdir}) catch return;
         Io.Dir.cwd().writeFile(self.io, .{ .sub_path = p, .data = self.summary.items }) catch {};
     }
 
-    // Zig tip: `scratch` relies on the same Zig feature as `loadSource` above: see the tip there.
     /// A buffer of `n` bytes in the script's arena, wrapped as a writer: reports are rendered into it.
     fn scratch(self: *Session, n: usize) ?Io.Writer {
         const buf = self.mem().alloc(u8, n) catch return null;
         return .fixed(buf);
     }
 
-    // Zig tip: `try f()` calls `f` and, when it returns an error, returns that error from this
-    // function too.
     /// `ast [depth]`: the syntax tree as indented text, in `<outdir>/<name>.ast`.
     fn cmdAst(self: *Session, args: []const []const u8) Io.Writer.Error!void {
         const tree = self.tree orelse {
@@ -374,7 +323,6 @@ pub const Session = struct {
         try self.out.print("{s}: ast written ({d} bytes)\n", .{ self.name, w.buffered().len });
     }
 
-    // Zig tip: `cmdInspect` relies on the same Zig feature as `cmdAst` above: see the tip there.
     /// `inspect`: what the script is made of (node counts, depth), its declarations, and the
     /// result of the last run: the introspection report `<outdir>/<name>.inspect`.
     fn cmdInspect(self: *Session) Io.Writer.Error!void {
@@ -402,10 +350,6 @@ pub const Session = struct {
         try self.out.print("{s}: inspect written ({d} nodes, depth {d})\n", .{ self.name, stats.nodes, stats.depth });
     }
 
-    // Zig tip: `switch (b.v.value)` with `continue` skips the bindings that are not data (functions,
-    // classes, type names). `catch ""` gives an empty text when the value cannot be shown. The
-    // built-in names (`True`, `Null`, `_`, ...) are constants defined before the script: they are
-    // left out by name so the list shows only what the script created.
     /// Write `title` and the variables of `scope` with their type and value.
     fn listVariables(self: *Session, w: *Io.Writer, m: *interp.Interp, title: []const u8, scope: *interp.Scope) void {
         _ = self;
@@ -425,15 +369,12 @@ pub const Session = struct {
         }
     }
 
-    // Zig tip: `errorCount` relies on the same Zig feature as `writeSummary` above: see the tip
-    // there.
     fn errorCount(self: *const Session) usize {
         var n: usize = if (self.parse_failed) 1 else 0;
         if (self.machine) |m| n += m.reports.items.len;
         return n;
     }
 
-    // Zig tip: `for (xs) |x| ...` walks a slice; `for (xs, 0..) |x, i|` also gives the index.
     /// `errors`: every error of the script (syntax, raised, failed expect) in `<outdir>/<name>.err`.
     fn cmdErrors(self: *Session) Io.Writer.Error!void {
         var w = self.scratch(1 << 20) orelse return error.WriteFailed;
@@ -457,7 +398,6 @@ pub const Session = struct {
         if (n > 0) try self.out.writeAll(w.buffered());
     }
 
-    // Zig tip: `cmdStatus` relies on the same Zig feature as `cmdAst` above: see the tip there.
     /// `status`: one line in `<outdir>/summary.log` for the current script.
     fn cmdStatus(self: *Session) Io.Writer.Error!void {
         if (try self.logStatus()) {
@@ -467,8 +407,6 @@ pub const Session = struct {
         }
     }
 
-    // Zig tip: a `pub` method can be called from another file (the REPL command in cli.zig). The result `bool` says
-    // if a line was written: with no script there is no line to log, and an empty name would pollute `summary.log`.
     /// Add the line of the script to `summary.log` (the work of the `status` command). False when no script is loaded.
     pub fn logStatus(self: *Session) Io.Writer.Error!bool {
         if (self.name.len == 0) return false;
@@ -483,8 +421,6 @@ pub const Session = struct {
         return true;
     }
 
-    // Zig tip: `*const Session` promises that the method only reads the session, so it can be called from anywhere
-    // without risk. An `if` expression picks a text for each state; `{s}` prints it.
     /// The lines of `status` about this session: the script, its state, and the report folder.
     pub fn writeState(self: *const Session, w: *Io.Writer) Io.Writer.Error!void {
         if (self.name.len == 0) {
@@ -504,7 +440,6 @@ pub const Session = struct {
         try w.print("reports: folder {s}, capture {s}\n", .{ self.outdir, if (self.capture) "on" else "off" });
     }
 
-    // Zig tip: `cmdReport` relies on the same Zig feature as `cmdAst` above: see the tip there.
     fn cmdReport(self: *Session) Io.Writer.Error!void {
         try self.out.print("report: pc {d}, {d} steps, {s}\n", .{ self.line, self.steps, if (self.running) "running" else "idle" });
     }
@@ -513,10 +448,6 @@ pub const Session = struct {
 
     pub const command_names = [_][]const u8{ "load", "parse", "run", "ast", "inspect", "errors", "status", "outdir", "capture", "log", "clear", "report", "stop", "quit", "exit", "help" };
 
-    // Zig tip: one `if` per command name is the plainest dispatch: `std.mem.eql(u8, cmd, "load")`
-    // compares text. The function returns `false` for a name it does not know, so the caller can say
-    // "unknown command". A word list (`args`) is a slice of slices of bytes: `args[0]` is the first
-    // argument, and `std.mem.join` would glue them back when a command takes the rest of the line.
     /// Run one command. Returns false when `cmd` is not a session command.
     pub fn exec(self: *Session, cmd: []const u8, args: []const []const u8, rest: []const u8) Io.Writer.Error!bool {
         const eql = std.mem.eql;
@@ -568,24 +499,16 @@ pub const Session = struct {
         return true;
     }
 
-    // Zig tip: `ensureDirNow` relies on the same Zig feature as `loadSource` above: see the tip
-    // there.
     fn ensureDirNow(self: *Session) void {
         Io.Dir.cwd().createDirPath(self.io, self.outdir) catch {};
     }
 
-    // Zig tip: `writeSummaryNow` relies on the same Zig feature as `writeSummary` above: see the tip
-    // there.
     fn writeSummaryNow(self: *Session) void {
         self.ensureDirNow();
         const p = std.fmt.allocPrint(self.gpa, "{s}/summary.log", .{self.outdir}) catch return;
         Io.Dir.cwd().writeFile(self.io, .{ .sub_path = p, .data = self.summary.items }) catch {};
     }
 
-    // Zig tip: `tokenizeAny` splits a line on blanks without allocating. `it.rest()` is the text
-    // not yet consumed, used here to give `log` the whole remainder of the line. While a script runs
-    // only a few commands are allowed: Zig's single thread cannot load another script in the middle
-    // of the first one.
     /// Run one command line (of the REPL or of `vm.eval`). While a script runs, only `report` and `stop` work.
     pub fn handleLine(self: *Session, line: []const u8) Io.Writer.Error!void {
         const t = clean(line);
@@ -615,15 +538,11 @@ pub const Session = struct {
         if (!try self.exec(cmd, words[1..n], rest)) try self.out.print("unknown command: {s}\n", .{t});
     }
 
-    // Zig tip: a struct can own memory, so it has a `deinit` that frees it, and the caller pairs the struct with
-    // `defer s.deinit()`. Zig has no destructors that run by themselves.
     pub fn deinit(self: *Session) void {
         self.forget();
     }
 };
 
-// Zig tip: a `test` block runs under `zig build test`; `try std.testing.expect...` fails it when the
-// value is not the expected one.
 test "comments are removed from command lines" {
     try std.testing.expectEqualStrings("report", clean(" report\r"));
     try std.testing.expectEqualStrings("report", clean("report ** show the state"));
@@ -633,9 +552,6 @@ test "comments are removed from command lines" {
     try std.testing.expectEqualStrings("frob", clean(" frob  ** why\r"));
 }
 
-// Zig tip: `.fixed(&buf)` makes a Writer that fills a byte array, so the test can read the
-// output with `w.buffered()`. The session is built with a struct literal; fields not named take
-// their defaults. `defer s.deinit()` frees the arena of the loaded script at the end of the test.
 test "a session parses and runs a script from text" {
     var buf: [512]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -648,8 +564,6 @@ test "a session parses and runs a script from text" {
     try std.testing.expectEqual(@as(u8, 0), s.status);
 }
 
-// Zig tip: `a syntax error is reported with its position and the run does not start` relies on the
-// same Zig feature as `comments are removed from command lines` above: see the tip there.
 test "a syntax error is reported with its position and the run does not start" {
     var buf: [512]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -661,8 +575,6 @@ test "a syntax error is reported with its position and the run does not start" {
     try std.testing.expectEqual(@as(u8, exit_syntax), s.status);
 }
 
-// Zig tip: `report and stop commands, unknown words` relies on the same Zig feature as `comments are
-// removed from command lines` above: see the tip there.
 test "report and stop commands, unknown words" {
     var buf: [512]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);

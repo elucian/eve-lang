@@ -21,44 +21,27 @@ const theme = @import("theme.zig");
 
 // ------------------------------------------------------------------ small types
 
-// Zig tip: An `enum` names a fixed set of choices. A `switch` on an enum must handle every value
-// or have an `else`, so adding a choice later makes the compiler point at every place that needs a
-// new case.
 /// Where the keyboard goes.
 pub const Focus = enum { tree, editor, console, breaks, sql };
 
-// Zig tip: An enum like `Focus`: one name for every tab. `@tagName(tab)` would give its name as
-// text.
 /// The five tabs of the Tools Panel.
 pub const BottomTab = enum { console, watch, stderr, stdout, breaks, sql };
 
-// Zig tip: The three panels of the screen are an enum too. The keyboard focus (`Focus`) is finer
-// than this: the Main Panel is the `editor` focus, the Tools Panel is `console` or `breaks`.
 /// The three panels: the files tree, the windows with their editor, the console and the other tools.
 pub const Panel = enum { tree, main, tools };
 
-// Zig tip: The state "what is open over the screen" is one enum, so two dialogs can never be open
-// together.
 /// What is open over the screen, if anything.
 pub const Overlay = enum { none, properties, alert, sq_structure, new_file, wizard, append_n, confirm, tab_menu, menu, settings, about, goto, save_as, find_text, find_file, replace, open_project, open_folder, filter };
 
-// Zig tip: Naming every button lets `activate` use one `switch` for all clicks. `cont` is written
-// instead of `continue` because `continue` is a keyword of Zig.
 /// The buttons of the tool bars.
 pub const Button = enum { run, halt, next, step, exit, trace, replace, replace_all };
 
-// Zig tip: A tagged union with payloads, like `Event` in main.zig. `.tree_row = 5` builds a value;
-// `switch (a) { .tree_row => |i| ... }` reads its payload. A field without a payload
-// (`menu_title`) has type `void`.
 /// The buttons of the dialogs that are not a plain "close": `ok` does what Enter does in that dialog.
 pub const DlgAction = enum { ok, forget, browse, open_here, filter_add, filter_remove };
 
-// Zig tip: two small enums with one value per button; the click carries the value and `activate` switches on it.
 /// The buttons of the Info dialog that are not Close.
 pub const PropBtn = enum { rename, move };
 
-// Zig tip: the folder selector is one dialog with four uses. The use is an enum stored in the app (`fb_mode`): the
-// drawing reads it for the title, the button and the name field, and `fbOk` reads it to know what the main button does.
 /// Why the folder selector is open: Open Folder (a project), Move (a file of the Info dialog), Export or Import a theme.
 pub const FbMode = enum { project, move_to, move_many, save_as, theme_export, theme_import };
 
@@ -130,8 +113,6 @@ pub const Action = union(enum) {
     filter_pick: usize,
 };
 
-// Zig tip: a struct with methods is how Zig does what other languages call a class. `contains` is
-// called as `rect.contains(col, row)`: the value before the dot is passed as `self`.
 pub const Rect = struct {
     x: u16 = 0,
     y: u16 = 0,
@@ -143,15 +124,10 @@ pub const Rect = struct {
     }
 };
 
-// Zig tip: A struct made of other types: a place on the screen and what a click on it does. The
-// list of hits is rebuilt in every frame.
 /// A clickable rectangle that the last drawing recorded.
 pub const Hit = struct { rect: Rect, action: Action };
 
-// Zig tip: Four kinds of line, and one color for each in view.zig.
 pub const LineKind = enum { input, out, err, info, sql, shell };
-// Zig tip: `[]u8` (without `const`) is a slice that this struct owns and may change or free,
-// unlike the `[]const u8` slices that only look at memory of somebody else.
 pub const LogLine = struct { text: []u8, kind: LineKind };
 
 /// A list of lines with a scroll position, the shape of the console and of the Stdout and Stderr tabs.
@@ -160,8 +136,6 @@ pub const Log = struct {
     /// How many lines the view is above the end (0 shows the end).
     scroll: usize = 0,
 
-    // Zig tip: `gpa.dupe(u8, s)` makes a copy of a slice in new memory. `errdefer gpa.free(copy)`
-    // frees the copy if the `append` after it fails, so a failure leaks nothing.
     pub fn add(self: *Log, gpa: std.mem.Allocator, s: []const u8, kind: LineKind) !void {
         const copy = try gpa.dupe(u8, s);
         errdefer gpa.free(copy);
@@ -169,9 +143,6 @@ pub const Log = struct {
         self.scroll = 0;
     }
 
-    // Zig tip: `std.mem.splitScalar` returns an iterator over the pieces between line ends.
-    // `it.peek()` looks at the next piece without taking it, which lets the loop skip the empty piece
-    // after a final line end.
     /// Add a block of text, one line for every line end.
     pub fn addBlock(self: *Log, gpa: std.mem.Allocator, bytes: []const u8, kind: LineKind) !void {
         var it = std.mem.splitScalar(u8, bytes, '\n');
@@ -182,29 +153,21 @@ pub const Log = struct {
         }
     }
 
-    // Zig tip: `clearRetainingCapacity` empties the list but keeps its memory for the next lines. The
-    // text of every line is owned by the log, so each one is freed first.
     pub fn clear(self: *Log, gpa: std.mem.Allocator) void {
         for (self.lines.items) |l| gpa.free(l.text);
         self.lines.clearRetainingCapacity();
         self.scroll = 0;
     }
 
-    // Zig tip: Cleanup runs in the opposite order of creation: the lines are freed first (`clear`),
-    // then the list that held them.
     pub fn deinit(self: *Log, gpa: std.mem.Allocator) void {
         self.clear(gpa);
         self.lines.deinit(gpa);
     }
 };
 
-// Zig tip: Fields with a default value (`= ""`, `= 0`) can be left out when a value is written:
-// `.{ .kind = "PNG image" }` fills the others.
 /// What the card of a file that is not text shows.
 pub const Card = struct { kind: []const u8 = "", size: u64 = 0, note: []const u8 = "" };
 
-// Zig tip: `?u64 = null` is an optional number with a default: null means "this fact does not apply" (a table has no size
-// on the disk, a binary file has no lines), so the dialog shows only the facts that have a value.
 /// What the Properties dialog shows about a file or a table of a SQLite file (see `App.openPropertiesOf`).
 pub const Props = struct {
     kind: []const u8 = "",
@@ -223,8 +186,6 @@ pub const Props = struct {
 };
 
 /// A table opened in a tab: the table, the cell that is selected, and the first row and column shown.
-// Zig tip: a plain function can compute a size from a number: the digits of the biggest record number (at least four, so
-// 9999 always fits). The cells of the left part are one for the selection mark (`+` or blank), the digits, and the `│`.
 /// The number of digits of the record numbers of a grid of `records` rows.
 pub fn rownumDigits(records: usize) u16 {
     var n: u16 = 4;
@@ -258,8 +219,6 @@ pub const TableView = struct {
     kept: []usize = &.{},
     kept_ids: []i64 = &.{},
 
-    // Zig tip: a table owns more than its cells, so one `release` frees all of it; the empty defaults (`&.{}`) are
-    // never freed because their length is zero.
     /// Free what the view holds besides the table itself.
     pub fn freeExtras(self: *TableView) void {
         const g = self.t.gpa;
@@ -291,8 +250,6 @@ pub const FolderView = struct {
     top: usize = 0,
 };
 
-// Zig tip: a table of a few rows, written in the function, says what to call each kind of file; the first row whose extension
-// matches wins (the case is ignored). The labels of images, audio and so on come from `card_exts`.
 /// A few words about a file or folder, for the list of a folder.
 pub fn describeName(name: []const u8, is_dir: bool) []const u8 {
     if (is_dir) return if (std.mem.eql(u8, name, "..")) "Parent folder" else "Folder";
@@ -346,9 +303,6 @@ pub const Tab = struct {
     /// have its cells changed, until then.
     editing: bool = false,
 
-    // Zig tip: `self: Tab` takes a copy of the struct. The result is a slice into `self.path`, not a
-    // new string, so it costs nothing. `if (cut) |i| a else b` unwraps the optional from
-    // `lastIndexOfScalar`.
     pub fn title(self: Tab) []const u8 {
         if (self.label.len > 0) return self.label;
         if (self.path.len == 0) return "untitled";
@@ -357,8 +311,6 @@ pub const Tab = struct {
     }
 };
 
-// Zig tip: `path` is owned (`[]u8`): every breakpoint has its own copy, freed when the breakpoint
-// goes.
 /// What a Yes of the confirmation dialog does.
 /// One row of the filter dialog: a column of the table and the value or pattern its cells must match.
 pub const FilterRow = struct { col: usize, pat: []u8 };
@@ -371,20 +323,12 @@ pub const Confirm = enum { none, delete_breakpoint, clear_breakpoints, move_file
 /// A breakpoint of the editor. A breakpoint that is not enabled stays in the list but the debugger does not stop at it.
 pub const Breakpoint = struct { path: []u8, line: usize, enabled: bool = true };
 
-// Zig tip: An enum with many values can be written over several lines. Each value is a command
-// that the menu, a key or a click can ask for. A command that needs a number (which window, which
-// machine) gets it in the `arg` of its row.
-// Zig tip: A union of the things a click in the Options dialog can do. `slider` holds a small
-// struct written in place (`struct { ch: u8, v: u8 }`): the channel (0 red, 1 green, 2 blue) and
-// the value 0 to 255 that the clicked cell stands for. `i16` is signed so a button can add or take.
 /// The buttons of the structure dialog.
 /// The wizards of the new files that have choices to make.
 pub const WizKind = enum { eve, sql };
 
 pub const StBtn = enum { prev, next, add, remove, up, down, apply };
 
-// Zig tip: an index of the new table is kept as plain text in fixed arrays (`[N]u8` plus a length), so the list needs no
-// allocation and no freeing: the struct is copied by value. `[48]u8 = undefined` is a buffer whose bytes are not set yet.
 /// An index that the dialog of a new table will create: its name, its fields (a list separated by commas) and unique or not.
 pub const IndexDef = struct {
     name: [112]u8 = undefined,
@@ -401,13 +345,9 @@ pub const IndexDef = struct {
     }
 };
 
-// Zig tip: `export` and `import` are not keywords of Zig, but names that say what they do in full (`export_file`) read
-// better in a `switch` and cannot be mistaken for the `export` keyword of declarations.
 /// The buttons under the list of themes, and the button that applies the field of Rename, Export or Import.
 pub const ThemeBtn = enum { rename, remove, export_file, import_file, apply };
 
-// Zig tip: one enum value per use of the field, with `none` for "no field": the dialog draws and routes the keys by a
-// `switch` on it, instead of three separate flags that could be on together by mistake.
 /// What the field under the list of themes is for (none: there is no field). Export and Import use the folder selector.
 pub const OptEdit = enum { none, rename };
 
@@ -455,17 +395,12 @@ pub const MenuCmd = enum {
     shortcuts, manual, tutorial, about, options,
 };
 
-// Zig tip: `cmd: ?MenuCmd = null` is an optional enum with a default: a row without a command is a
-// separator line. One struct serves both kinds of row.
 /// A row of a menu: a command with its shortcut, or a separator (`cmd` null).
 pub const MenuRow = struct { label: []const u8, key: []const u8 = "", cmd: ?MenuCmd = null, arg: usize = 0 };
 
 /// A separator row.
 const sep: MenuRow = .{ .label = "-" };
 
-// Zig tip: `items: []const MenuRow` is a slice, so every menu can have its own number of rows. The
-// literal `&.{ ... }` below makes a constant array and takes its address, which coerces to the
-// slice; all of it is built by the compiler.
 /// One menu of the bar: its name (upper case; the first letter is the Alt key) and its fixed rows.
 /// The WINDOW menu has more rows after these: one for each open window (see `App.rowAt`).
 pub const Menu = struct { label: []const u8, items: []const MenuRow };
@@ -473,8 +408,6 @@ pub const Menu = struct { label: []const u8, items: []const MenuRow };
 /// The place of the WINDOW menu in `menus`.
 pub const menu_window: usize = 4;
 
-// Zig tip: A `const` array of struct literals is built at compile time and stored in the program.
-// `[_]Menu{...}` lets the compiler count the menus; `menus.len` is then a compile-time number.
 /// The menus of the bar, left to right. The last one (HELP) is drawn at the right side.
 pub const menus = [_]Menu{
     .{ .label = "FILE", .items = &.{
@@ -570,26 +503,16 @@ pub const menus = [_]Menu{
     } },
 };
 
-// Zig tip: `@embedFile("help_shortcuts")` copies a file into the program at build time and gives
-// it as a string: no file is read when evetx runs. The name is the one `build.zig` gave to the file.
 const help_shortcuts = @embedFile("help_shortcuts");
 const help_manual = @embedFile("help_manual");
 const help_tutorial = @embedFile("help_tutorial");
 
-// Zig tip: A struct without fields is a namespace for a constant; with fields it is a record. This
-// one is the answer of `computeLayout`: where each panel is, as rectangles of the screen. A panel
-// that is hidden has a rectangle of width 0.
 /// The places of the panels on the screen (absolute cells).
 pub const Layout = struct { tree: Rect = .{}, main: Rect = .{}, debug: Rect = .{}, tools: Rect = .{} };
 
 /// The small buttons at the ends of the scroll bars: ten columns left or right, half a page up or down.
 pub const ScrollBtn = enum { left, right, up, down };
 
-// Zig tip: `std.atomic.Value(bool)` is a flag that two threads can use without a lock: `store` and `load` are
-// indivisible. The worker thread owns the plain fields until it sets `done`; after that the main thread (which sees
-// `done` through an `.acquire` load) owns them. That rule replaces a mutex here. A debug session also shares a few
-// things while it runs (the output lines, the commands, the place where the program is stopped): the numbers are atomic,
-// and the two lists are guarded by `busy`, a tiny spin lock made from one atomic flag.
 /// One run of `eve`: a worker thread starts the process and collects its output, so the screen keeps working and the
 /// Stop button can end the process. A debug run (`eve debug`) also takes commands for the debugger on the standard input
 /// and shows its output while it runs.
@@ -633,9 +556,6 @@ pub const RunJob = struct {
         self.gpa.destroy(self);
     }
 
-    // Zig tip: `cmpxchgWeak(false, true, ...)` sets the flag to true only if it is false and returns null when it won;
-    // a non-null answer means somebody else holds it, so the loop tries again. `spinLoopHint` tells the processor we
-    // are waiting. The lock is held for a few instructions only (copying a short line), so spinning is fine.
     fn lock(self: *RunJob) void {
         while (self.busy.cmpxchgWeak(false, true, .acquire, .monotonic) != null) std.atomic.spinLoopHint();
     }
@@ -679,9 +599,6 @@ pub const RunJob = struct {
         self.done.store(true, .release);
     }
 
-    // Zig tip: `std.fmt.parseInt(u32, word, 10) catch 0` gives a default instead of an error; `tokenizeScalar` splits
-    // the event line at spaces. An event is `@debug paused <line> <depth> <text>`, `@debug trace <line> <depth>` or
-    // `@debug end <status>`; the lines `@debug break` and `@debug clear` only confirm a command.
     fn event(self: *RunJob, ev_text: []const u8) void {
         var words = std.mem.tokenizeScalar(u8, ev_text, ' ');
         _ = words.next();
@@ -712,9 +629,6 @@ pub const RunJob = struct {
         }
     }
 
-    // Zig tip: the output of the child stays in the buffer of the reader, which we do not consume: `scanned` marks how
-    // far we have looked. Only complete lines are handled (up to the last newline); at the end `final` also takes the
-    // rest. A line is either an event of the debugger or a line of the program, which goes to `live`.
     fn scan(self: *RunJob, data: []const u8, final: bool) void {
         while (self.scanned < data.len) {
             const rest = data[self.scanned..];
@@ -734,9 +648,6 @@ pub const RunJob = struct {
         }
     }
 
-    // Zig tip: `fill` waits for output with a timeout, so the loop wakes ten times a second to look at the stop flag and
-    // to write the queued commands. `error.Timeout` just means "nothing yet"; `error.EndOfStream` means both pipes are
-    // closed. `defer child.kill` ends the process on every way out of the function (it does nothing after `wait`).
     fn runChild(self: *RunJob) !void {
         const io = self.io;
         var child = try std.process.spawn(io, .{
@@ -792,8 +703,6 @@ pub const PbarKind = enum { none, log, folder, breaks, fbox };
 
 // File kinds that open a card and never an editor (D-178): images, SVG, audio, video, archives,
 // documents, programs and database files.
-// Zig tip: A small private struct (no `pub`): only this file needs the pair of a file extension
-// and its description.
 const CardExt = struct { ext: []const u8, label: []const u8 };
 const card_exts = [_]CardExt{
     .{ .ext = "png", .label = "PNG image" },       .{ .ext = "jpg", .label = "JPEG image" },
@@ -812,16 +721,12 @@ const card_exts = [_]CardExt{
     .{ .ext = "duckdb", .label = "DuckDB database" }, .{ .ext = "sqlite", .label = "SQLite database" },
 };
 
-// Zig tip: The result is a slice of the argument, not a copy, so it is valid only as long as
-// `path` is. `orelse return ""` leaves the function early when there is no dot.
 fn extensionOf(path: []const u8) []const u8 {
     const base = if (std.mem.lastIndexOfScalar(u8, path, '/')) |i| path[i + 1 ..] else path;
     const dot = std.mem.lastIndexOfScalar(u8, base, '.') orelse return "";
     return base[dot + 1 ..];
 }
 
-// Zig tip: A function that may find nothing returns an optional (`?[]const u8`).
-// `std.ascii.eqlIgnoreCase` compares two strings without regard to upper or lower case.
 fn cardLabel(path: []const u8) ?[]const u8 {
     const ext = extensionOf(path);
     for (card_exts) |c| {
@@ -832,8 +737,6 @@ fn cardLabel(path: []const u8) ?[]const u8 {
 
 // ------------------------------------------------------------------ the application
 
-// Zig tip: The whole state of the program is one struct, so every function receives it as `self:
-// *App`. Fields with a default (`= 0`, `= .empty`) can be left out when it is created.
 pub const App = struct {
     gpa: std.mem.Allocator,
     io: Io,
@@ -1119,18 +1022,12 @@ pub const App = struct {
     message: ?[]u8 = null,
 
     hits: std.ArrayList(Hit) = .empty,
-    // Zig tip: libvaxis keeps a pointer to every string that is drawn until the frame is rendered,
-    // it does not copy the text. A string formatted into a local buffer would be gone by then.
-    // So every string of a frame lives in this arena, which is emptied at the start of the next one.
     frame: std.heap.ArenaAllocator,
     tree_rect: Rect = .{},
     editor_rect: Rect = .{},
     console_rect: Rect = .{},
     breaks_rect: Rect = .{},
 
-    // Zig tip: `create` allocates the App on the heap and returns a pointer to it. The arena inside
-    // `tree` must stay where it is (project.zig), and a heap object never moves, unlike a local
-    // variable that is copied when it is returned. `errdefer` runs only if the function fails later.
     pub fn create(gpa: std.mem.Allocator, io: Io, env: *const std.process.Environ.Map, root: []const u8) !*App {
         const self = try gpa.create(App);
         errdefer gpa.destroy(self);
@@ -1191,8 +1088,6 @@ pub const App = struct {
         return self;
     }
 
-    // Zig tip: `for ([_]*TextInput{ &a, &b }) |ti|` loops over an array of pointers written in place.
-    // `destroy` frees in the opposite order of `create`, and the last step frees the `App` itself.
     pub fn destroy(self: *App) void {
         const gpa = self.gpa;
         if (self.job) |j| {
@@ -1271,9 +1166,6 @@ pub const App = struct {
     }
 
     // The name of the project: the last part of the folder's real path.
-    // Zig tip: `var buf: [N]u8 = undefined` is a buffer on the stack that is not set to zero: it is
-    // filled by the call that follows. `dir.realPath(io, &buf)` returns how many bytes it wrote, and
-    // `buf[0..n]` is the part that counts.
     fn projectName(gpa: std.mem.Allocator, io: Io, root: []const u8) ![]u8 {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
         var dir = try Io.Dir.cwd().openDir(io, root, .{});
@@ -1284,8 +1176,6 @@ pub const App = struct {
         return gpa.dupe(u8, if (cut) |i| full[i + 1 ..] else full);
     }
 
-    // Zig tip: The real path of a folder (no `..`, the true letters of every name) is the key of the
-    // session: two ways of writing the same folder give the same text.
     fn realPathOf(gpa: std.mem.Allocator, io: Io, path: []const u8) ![]u8 {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
         var dir = try Io.Dir.cwd().openDir(io, path, .{});
@@ -1296,25 +1186,16 @@ pub const App = struct {
 
     // ------------------------------------------------------------ messages and paths
 
-    // Zig tip: `_ = x;` throws a value away on purpose: Zig does not let a result be ignored by
-    // accident. `reset(.retain_capacity)` empties an arena and keeps its memory for the next frame.
     /// Start a frame: forget the strings of the last one.
     pub fn beginFrame(self: *App) void {
         _ = self.frame.reset(.retain_capacity);
     }
 
-    // Zig tip: `comptime f: []const u8` is a format string that the compiler checks against `args`
-    // (`anytype` takes any tuple). A wrong `{d}` for a string is a compile error. `catch "?"` shows a
-    // mark instead of failing the drawing.
     /// Format a string that stays valid until the end of this frame (see `frame`).
     pub fn fmt(self: *App, comptime f: []const u8, args: anytype) []const u8 {
         return std.fmt.allocPrint(self.frame.allocator(), f, args) catch "?";
     }
 
-    // Zig tip: The format string is `comptime`, as in `fmt`, and the old message is freed before the
-    // new one is stored: the app owns exactly one message at a time.
-    // Zig tip: a message for the person (the bar at the bottom) and a record for later (the Stderr tab) are made together,
-    // so an error is never only on the screen for a moment. The text may hold several lines: each is one line of the log.
     /// Report an error: the last line in the message bar and every line in the Stderr tab.
     pub fn logError(self: *App, text_in: []const u8) void {
         var last: []const u8 = "";
@@ -1354,23 +1235,17 @@ pub const App = struct {
         self.message = std.fmt.allocPrint(self.gpa, f, args) catch null;
     }
 
-    // Zig tip: A function that returns a new string says in its doc comment who frees it: here the
-    // caller, with `self.gpa`. `std.fmt.allocPrint` builds the text in memory it allocates.
     /// The path of a file of the project, as the operating system wants it. The caller frees it.
     pub fn fullPath(self: *App, rel: []const u8) ![]u8 {
         if (self.root.len == 0 or std.mem.eql(u8, self.root, ".")) return self.gpa.dupe(u8, rel);
         return std.fmt.allocPrint(self.gpa, "{s}/{s}", .{ self.root, rel });
     }
 
-    // Zig tip: `?*Tab` is an optional pointer: null when no tab is open. The caller can change the tab
-    // through the pointer, and must unwrap it before use.
     pub fn activeTab(self: *App) ?*Tab {
         if (self.tabs.items.len == 0) return null;
         return &self.tabs.items[@min(self.active, self.tabs.items.len - 1)];
     }
 
-    // Zig tip: `if (t.buf) |*b| return b;` unwraps an optional field by pointer (`|*b|`): `b` points
-    // at the buffer inside the tab and is not a copy of it.
     pub fn activeBuffer(self: *App) ?*text.Buffer {
         const t = self.activeTab() orelse return null;
         if (t.buf) |*b| return b;
@@ -1379,9 +1254,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ files and tabs
 
-    // Zig tip: `for (xs, 0..) |t, i|` walks a slice and a counter together. `if (call) |v| {...} else
-    // |err| {...}` takes the value of an error union or its error: here the file is read, or its error
-    // name goes in the card.
     /// Open a file of the project in a tab (or go to its tab when it is open).
     pub fn openFile(self: *App, rel: []const u8) !void {
         if (std.mem.indexOfScalar(u8, rel, '#')) |h| return self.openSqliteTable(rel[0..h], rel[h + 1 ..]);
@@ -1426,9 +1298,6 @@ pub const App = struct {
         self.saveSession() catch {};
     }
 
-    // Zig tip: `orderedRemove(i)` takes element `i` out of the list, keeps the order of the others and
-    // returns the element, which we own and free. A `var` is needed because we call methods that
-    // change it.
     pub fn closeTab(self: *App, index: usize) void {
         if (index >= self.tabs.items.len) return;
         var t = self.tabs.orderedRemove(index);
@@ -1445,8 +1314,6 @@ pub const App = struct {
         self.saveSession() catch {};
     }
 
-    // Zig tip: `.{ .path = ..., .buf = b, .eve = true }` is a struct literal; the fields that are not
-    // written take their defaults. The anonymous literal takes its type from `append`.
     pub fn newFile(self: *App) !void {
         var b = try text.Buffer.init(self.gpa);
         errdefer b.deinit();
@@ -1456,8 +1323,6 @@ pub const App = struct {
         self.focus = .editor;
     }
 
-    // Zig tip: `return self.openOverlay(...)` returns the result of a call that returns `void`: legal,
-    // and it ends the function. Errors from `writeTab` go up through `try`.
     pub fn save(self: *App) !void {
         const t = self.activeTab() orelse return;
         // saving ends the editing of the window
@@ -1479,8 +1344,6 @@ pub const App = struct {
         self.setMessage("saved {s}", .{t.path});
     }
 
-    // Zig tip: `defer self.gpa.free(bytes)` frees the buffer when the function ends, on every path
-    // including a failed write. Two `defer` lines run in the opposite order.
     fn writeTab(self: *App, t: *Tab, rel: []const u8) !void {
         const b = &t.buf.?;
         const bytes = try b.toBytes(self.gpa);
@@ -1491,8 +1354,6 @@ pub const App = struct {
         b.dirty = false;
     }
 
-    // Zig tip: After `free` the old slice must not be used. The code stores the new one in `t.path` at
-    // once, so the tab is never left pointing at freed memory.
     pub fn saveAs(self: *App, rel: []const u8) !void {
         if (rel.len > 0 and std.ascii.eqlIgnoreCase(extensionOf(rel), "dbf")) {
             self.setMessage("DBF files are not made here: import them into a database (EDIT > Import)", .{});
@@ -1524,9 +1385,6 @@ pub const App = struct {
         self.gpa.destroy(fv);
     }
 
-    // Zig tip: each name is copied (`dupe`) because the iterator reuses its buffer; the size and the creation time come from
-    // `statFile` on the entry. The list is sorted with the folders first, then by name, and a `..` row is put first when the
-    // folder is not the project folder, so the list can go up as well as down.
     /// Read the content of folder `dir_rel` (a path in the project, "" for the project folder) into a new list.
     fn loadFolder(self: *App, dir_rel: []const u8) !*FolderView {
         const gpa = self.gpa;
@@ -1621,9 +1479,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the file that is selected in the list of a folder has the same buttons as an open file: Run when it is an Eve
-    // file, Preview when it is Markdown. When the button is used, the file is opened first (`adoptFolderSelection`), so the
-    // rest of the code finds an ordinary open tab.
     /// The file selected in the folder list of the active tab (its path in the project, copied), or null.
     fn folderSelectedFile(self: *App) ?[]u8 {
         const t = self.activeTab() orelse return null;
@@ -1651,8 +1506,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ SQLite databases in the tree
 
-    // Zig tip: `std.process.run` runs `eve db sql ...` and returns what it printed; the caller frees the text. A failure to
-    // start the program is an error; an error of SQL is a text that begins with `error:`, which the callers look for.
     /// Run `eve <args>` and give back its output (the caller frees it).
     fn eveText(self: *App, args: []const []const u8) ![]u8 {
         const gpa = self.gpa;
@@ -1693,17 +1546,6 @@ pub const App = struct {
         if (names.items.len == 0) self.setMessage("{s} has no tables", .{db_rel});
     }
 
-    // Zig tip: a table of a database is a tab like a file, whose path is `db#table`. Its rows come from one `select`, as text
-    // with tabs, and become a `grid.Table` in memory (columns of text), so the grid of the Main Panel
-    // draws them. `readonly` keeps the DATA commands from changing it. At most 5000 rows are read.
-    // Zig tip: the rows come in the order of `rowid`, and a second `select rowid` gives the number of every row, so an edit can
-    // say `where rowid = N`. A view has no `rowid` (the first select fails) and is shown read only; so is a table whose
-    // second answer does not match the rows. `blk: { ... break :blk value; }` is a block that gives a value.
-    // Zig tip: the list of the tables of a database is built with three `select`s, and handed to `fromTsv` as text, so the
-    // same grid that shows a table shows the list. The first select gives the name, the kind and the counts of columns and
-    // indexes (`pragma_table_info(name)` and `pragma_index_list(name)` are functions that SQLite offers as tables). The
-    // rows need one `count(*)` for each table: one `union all` statement gives them in the order of the tables. The table
-    // `_eve_meta`, when the database has it, gives the description and the dates, which SQLite itself does not keep.
     /// The overview of a SQLite database as a read only grid: one row for each table or view.
     fn buildDbOverview(self: *App, db_rel: []const u8) !TableView {
         const gpa = self.gpa;
@@ -1906,9 +1748,6 @@ pub const App = struct {
         return .{ .db = t.path[0..h], .table = t.path[h + 1 ..], .tv = tv };
     }
 
-    // Zig tip: `eve_meta` is kept up to date without a word to the person: no echo and no pop-up, so these two helpers call
-    // `eveText` and drop the answer. A table that is new gets its row (and the table `eve_meta` itself if the database
-    // has none); a change only moves the `changed` date, and does nothing when there is no `eve_meta` or no row.
     /// A table was made in a SQLite database: write its row in `eve_meta`.
     fn metaCreated(self: *App, db: []const u8, table: []const u8, desc: []const u8) void {
         const lit = sqlQuoted(self.gpa, table, '\'') catch return;
@@ -1929,9 +1768,6 @@ pub const App = struct {
         if (self.eveText(&.{ "db", "sql", db, sql })) |out| self.gpa.free(out) else |_| {}
     }
 
-    // Zig tip: the Console shows the command as it is typed at the prompt `eve:>` (no `eve` before it, no quotes around the
-    // statement): the words after `db` are joined with spaces, and that line works there as it is. The same words are the
-    // arguments of the process. `argv` is a list that starts with `db` and takes the rest.
     /// Run a `db` command of the machine (`db sql …`, `db create view …`); a refusal opens the pop-up.
     fn runDb(self: *App, args: []const []const u8) bool {
         var echo: std.ArrayList(u8) = .empty;
@@ -1963,8 +1799,6 @@ pub const App = struct {
         return self.runDb(&.{ "sql", db, sql });
     }
 
-    // Zig tip: a name goes into SQL between double quotes with every `"` doubled, a text between single quotes with every `'`
-    // doubled; that is all SQL asks, and nothing the person types can end the quote early. An empty cell is NULL.
     fn sqlQuoted(a: std.mem.Allocator, s_: []const u8, q: u8) ![]u8 {
         var out: std.ArrayList(u8) = .empty;
         errdefer out.deinit(a);
@@ -2008,9 +1842,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ new files and wizards
 
-    // Zig tip: the entry that is selected in the tree decides where a new file goes: a folder is the place itself, a file
-    // means the folder that holds it. The answer is a slice of the path inside the tree (valid until the tree is scanned
-    // again), "" for the project folder. `std.fs.path.dirname` returns null for a name with no folder.
     /// The folder of the project where a new file goes: the selected folder, or the folder of the selected file.
     pub fn targetDir(self: *const App) []const u8 {
         if (self.selected >= self.tree.entries.items.len) return "";
@@ -2024,8 +1855,6 @@ pub const App = struct {
         self.openNewKind(.file);
     }
 
-    // Zig tip: Save As of a table asks for a name in the same small dialog as New. The default name says what it is: a filter
-    // is saved as a view, a table as a copy.
     /// Save As… of a table window: ask for the name of the new table or view.
     fn openTableSaveAs(self: *App) void {
         const t = self.activeTab() orelse return;
@@ -2072,12 +1901,6 @@ pub const App = struct {
         return try std.fmt.allocPrint(gpa, "{s} like {s} escape '\\'", .{ id, lit.items });
     }
 
-    // Zig tip: a filter window knows its table, its filters and the rowids of the rows that matched. A SQLite filter becomes a
-    // view with a `where` made of LIKEs when every pattern is plain text (a view that follows the table); with a real regular
-    // expression, which SQLite cannot run, the view lists the rowids of the rows that matched (a snapshot). A DBF filter becomes
-    // a new table with those records, because DBF has no views. A table without a filter is copied whole.
-    // Zig tip: `snapshot` is a pointer to the caller's `bool`: the function says through it that the select lists rowids because a
-    // pattern could not be written as a LIKE. The select names the fields that are in the filter, each between double quotes.
     /// The select of the filter window `tv` from the table `tid` (a quoted name): its fields, and a where for the patterns.
     fn selectSqlFor(self: *App, tid: []const u8, tv: *const TableView, snapshot: *bool) ![]u8 {
         const gpa = self.gpa;
@@ -2113,10 +1936,6 @@ pub const App = struct {
         return std.fmt.allocPrint(gpa, "select {s} from {s} where {s}", .{ cols.items, tid, conds.items });
     }
 
-    // Zig tip: the view that evetx makes has a known shape: `create view "v" as select * from "t" where <cond> and <cond>`, each
-    // condition `"col" like 'text' escape '\'`. This reads that shape back into filters: the `%` at the ends say there is no
-    // anchor, a backslash escapes `%` and `_`, a doubled quote is one quote. A view of any other shape gives no rows: the dialog
-    // starts empty and what is applied replaces the view.
     /// Alter table on a view: the filter dialog opens with the conditions of the view; Enter makes the view again.
     fn alterView(self: *App, db: []const u8, view: []const u8, sql_text: []const u8) !void {
         const gpa = self.gpa;
@@ -2247,8 +2066,6 @@ pub const App = struct {
         self.setMessage("Save As works on a table of a database: {s} is not one", .{src});
     }
 
-    // Zig tip: the importable formats are the ones `eve db import` reads, found by the extension. The dialog starts with the
-    // file that is selected in the tree when it is one of them, so a click and EDIT > Import… is enough.
     /// EDIT > Import…: ask for the file (CSV, TXT, JSON, DBF) to load into the selected database as a new table.
     pub fn openImport(self: *App) void {
         const db = self.selectedDb() orelse {
@@ -2274,9 +2091,6 @@ pub const App = struct {
         return false;
     }
 
-    // Zig tip: the work is done by the machine (`db import <db> <file>`), the same command that can be typed at the prompt, so
-    // the Console shows it. The table is named after the file (`eve db import` turns every character that is not a letter or
-    // a digit into `_`); its description says where it came from. XLS and XLSX are refused with the reason.
     /// Import the file `rel` into the database selected in the tree.
     fn importFile(self: *App, rel: []const u8) void {
         const db_sel = self.selectedDb() orelse {
@@ -2317,9 +2131,6 @@ pub const App = struct {
         return std.fmt.allocPrint(self.gpa, "{s}/{s}", .{ dir, name });
     }
 
-    // Zig tip: the machine reads the type from the extension and starts the wizard of that type: a DBF table asks for its
-    // fields (the structure dialog), an Eve file and an SQL file ask what to start from, a SQLite file is just made, and any
-    // other file starts empty (a few types start with one line). `switch` on the lower-cased extension picks the way.
     /// The name was typed in the New dialog: make the file in the target folder, with the wizard of its type.
     fn newFromName(self: *App) !void {
         const raw = try self.saveas_in.toOwnedContents(self.gpa);
@@ -2439,8 +2250,6 @@ pub const App = struct {
         } else try self.wiz_name.update(.{ .key_press = key });
     }
 
-    // Zig tip: the templates are format strings; `{{` and `}}` write a brace, because Eve's own `"{name}"` uses braces.
-    // Each template is a complete, valid file of its kind, so the new file runs (or imports) at once.
     /// Create the file of the wizard with the text of the choice made.
     fn wizardCreate(self: *App) !void {
         const rel = self.wiz_path orelse return;
@@ -2582,8 +2391,6 @@ pub const App = struct {
         self.readonlyMessage();
     }
 
-    // Zig tip: the rows to delete go into one `delete ... where rowid in (...)`, 400 at a time, so a long selection does not
-    // make a statement too long. The numbers are written with `bufPrint` into a small buffer and appended to the text.
     /// The Yes of "Delete rows": delete the selected rows (or the current one) from the SQLite table.
     fn performDeleteRows(self: *App) void {
         const st = self.sqlView() orelse return;
@@ -2650,8 +2457,6 @@ pub const App = struct {
         self.focus = .editor;
     }
 
-    // Zig tip: `writeTab` can fail (a folder that is gone, a locked file); `catch` turns the error into a count of failures so
-    // one bad file does not stop the others from being saved.
     /// File > Save All (Ctrl+A): save every window of a file that has unsaved changes.
     pub fn saveAll(self: *App) void {
         var saved: usize = 0;
@@ -2673,8 +2478,6 @@ pub const App = struct {
         if (failed > 0) self.setMessage("saved {d}, {d} failed", .{ saved, failed }) else if (untitled > 0) self.setMessage("saved {d}; {d} new file(s) need Save As first", .{ saved, untitled }) else if (saved == 0) self.setMessage("nothing to save", .{}) else self.setMessage("saved {d} file(s)", .{saved});
     }
 
-    // Zig tip: Edit is one command with the meaning of what is selected: a cell of a table, a file or a table of the tree
-    // (opened in the Main Panel), a file of a folder tab. A folder is never edited this way: it is renamed (File > Rename).
     /// Edit > Edit cell, file or table (Enter): open the file or table that is selected, or edit the cell.
     pub fn dataEditOrOpen(self: *App) void {
         if (self.focus == .tree) {
@@ -2715,8 +2518,6 @@ pub const App = struct {
         self.dataEdit();
     }
 
-    // Zig tip: a SQLite cell is changed in the database at once (`update ... where rowid = N`) and the table is read again,
-    // so the grid shows what the database holds.
     fn commitCell(self: *App, tv: *TableView) !void {
         const raw = try self.tbl_edit.toOwnedContents(self.gpa);
         defer self.gpa.free(raw);
@@ -2743,8 +2544,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ the structure of a SQLite table
 
-    // Zig tip: the columns come from `pragma table_info` (read with `eve db sql -t`) and are parsed by `sqlstruct`. They are
-    // copied into two lists: one the person edits and one to compare with, so the dialog can count the changes.
     /// SQL:> alter table <name>, or DATA > Structure on a table of a database: open the dialog of its columns.
     fn openSqStructure(self: *App, db_rel: []const u8, table: []const u8) !void {
         const gpa = self.gpa;
@@ -2775,10 +2574,6 @@ pub const App = struct {
         self.openOverlay(.sq_structure);
     }
 
-    // Zig tip: a new table starts with one column, `id INTEGER` as the key, so the dialog is not empty; the rest of the
-    // dialog is the same as for an old table. With nothing to compare with (`sq_orig` empty), every column counts as a change.
-    // The dialog has three pages (name and description, fields, indexes); the name is in a text field, not in `sq_table`,
-    // until the table is made.
     /// The dialog of a new SQLite table in the file `db_rel`; `name` may be empty.
     fn openSqStructureNew(self: *App, db_rel: []const u8, name: []const u8) !void {
         const gpa = self.gpa;
@@ -2826,8 +2621,6 @@ pub const App = struct {
         return tableNameError(name) == null;
     }
 
-    // Zig tip: Previous and Next move between the three pages. Leaving the first page forward needs a good name, so the later
-    // pages (and the Create button) always have a table name to work with.
     /// Go to the page before (-1) or after (+1) in the dialog of a new table.
     fn sqGoPage(self: *App, delta: i8) void {
         self.sq_error = null;
@@ -2851,8 +2644,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the keys of the first page. Tab (or Up and Down) moves between the name and the description; Enter goes to the
-    // next page when the name is good. The keys that are not for the dialog go to the text field that has the focus.
     /// The keys of the page "name and description" of a new table.
     fn sqInfoKey(self: *App, key: Key) !void {
         if (key.matches('s', .{ .ctrl = true })) return self.sqApply();
@@ -2889,9 +2680,6 @@ pub const App = struct {
         return buf[0..len];
     }
 
-    // Zig tip: the name of the index is made from the table and its fields (`ix_<table>_<field>_<field>`), and `u` is added for
-    // a unique index, so two indexes on the same fields do not clash. `bufPrint` writes into a fixed buffer and fails when the
-    // text is too long, which here is answered with a message.
     /// Add the index made of the ticked fields to the list.
     fn sqIdxAdd(self: *App) !void {
         self.sq_error = null;
@@ -2945,8 +2733,6 @@ pub const App = struct {
         self.sq_ix_mask ^= @as(u64, 1) << @intCast(i);
     }
 
-    // Zig tip: two lists share the page: the fields of the index being made, and the indexes already made. Tab changes the
-    // list that has the keys. In the first, Space ticks a field, U switches unique, Enter adds the index to the list.
     /// The keys of the page "indexes" of a new table.
     fn sqIndexKey(self: *App, key: Key) !void {
         if (key.matches('s', .{ .ctrl = true })) return self.sqApply();
@@ -3071,9 +2857,6 @@ pub const App = struct {
         if (key.matches(Key.up, .{})) self.sq_row = self.sq_row -| 1 else if (key.matches(Key.down, .{})) self.sq_row = @min(self.sq_row + 1, n - 1) else if (key.matches(Key.left, .{})) self.sq_col = self.sq_col -| 1 else if (key.matches(Key.right, .{}) or key.matches(Key.tab, .{})) self.sq_col = @min(self.sq_col + 1, 4) else if (key.matches(Key.page_up, .{})) self.sq_row = self.sq_row -| 10 else if (key.matches(Key.page_down, .{})) self.sq_row = @min(self.sq_row + 10, n - 1) else if (key.matches(Key.enter, .{}) or key.matches(Key.space, .{})) try self.sqStartEdit() else if (key.matches(Key.insert, .{})) try self.sqAdd() else if (key.matches(Key.delete, .{})) self.sqRemove() else if (key.matches('s', .{ .ctrl = true })) try self.sqApply();
     }
 
-    // Zig tip: SQLite cannot change a column in place, so Apply rebuilds the table: a new table, the rows copied, the old
-    // table dropped, the new one renamed. That loses the indexes and the triggers of the table, so the question is asked first
-    // (the same Yes/No dialog) whenever something changes.
     /// The Apply button of the SQLite structure dialog: check the columns and ask before the table is rebuilt.
     fn sqApply(self: *App) !void {
         self.sq_error = null;
@@ -3171,9 +2954,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ properties, rename and delete
 
-    // Zig tip: the file that Rename and Delete act on is the one the person is pointing at: the selected row of the tree when
-    // the tree has the keyboard (not the project folder; a database and a table of a database count), else the file of the
-    // tab (a file chosen in a folder list counts). The answer is a copy of the path in the project; the caller frees it.
     /// The file, folder or table that File > Rename and File > Delete work on, or null.
     fn fileTarget(self: *App) ?[]u8 {
         if (self.focus == .tree and self.selected < self.tree.entries.items.len) {
@@ -3183,8 +2963,6 @@ pub const App = struct {
         return self.propsTarget();
     }
 
-    // Zig tip: `if (opt) |v| return v;` returns the payload of an optional at once when there is one; the code after it
-    // runs only for null. The tab path is copied (`dupe`) because the caller keeps it after the tab may be gone.
     /// The file of the Info dialog of the active tab: the file selected in a folder list (else the folder of the list), or
     /// the file (or table) of the tab.
     fn propsTarget(self: *App) ?[]u8 {
@@ -3195,8 +2973,6 @@ pub const App = struct {
         return self.gpa.dupe(u8, t.path) catch null;
     }
 
-    // Zig tip: `orelse { ...; return; }` runs a block when the optional is null; the block must leave the function (or
-    // the loop), because after it the value is used as a plain slice.
     /// File > Rename…: the Info dialog of the file or table that is pointed at, with its name ready to edit.
     pub fn openRename(self: *App) void {
         if (!self.menuEnabled(.rename_file)) {
@@ -3210,8 +2986,6 @@ pub const App = struct {
         self.openPropertiesOf(rel, true);
     }
 
-    // Zig tip: the same shape as `openRename`, with another way to find the file: two small functions that end in the same
-    // `openPropertiesOf` keep each way easy to read.
     /// Info… of the popup menu of a tab: the Info dialog of the file of the active tab.
     pub fn openInfo(self: *App) void {
         const rel = self.propsTarget() orelse {
@@ -3221,8 +2995,6 @@ pub const App = struct {
         self.openPropertiesOf(rel, false);
     }
 
-    // Zig tip: `rel` is owned and given to the app (`rename_from`), which frees the old one first; `self.props = .{}` sets
-    // every fact back to its default before the new ones are found.
     /// Open the Info dialog of `rel` (a path in the project, or `db#table`); takes `rel`. `edit` opens the name for editing.
     fn openPropertiesOf(self: *App, rel: []u8, edit: bool) void {
         if (self.rename_from) |old| self.gpa.free(old);
@@ -3234,7 +3006,6 @@ pub const App = struct {
         if (edit) self.startRename();
     }
 
-    // Zig tip: the answer is a slice of `rename_from`; `std.fs.path.basename` cuts at the last `/` (and `\` on Windows).
     /// The name of the Info dialog: the last part of the path, or the name of the table.
     pub fn infoName(self: *const App) []const u8 {
         const rel = self.rename_from orelse return "";
@@ -3242,7 +3013,6 @@ pub const App = struct {
         return std.fs.path.basename(rel);
     }
 
-    // Zig tip: `insertSliceAtCursor` copies the text into the field, so the field does not depend on `rename_from` later.
     /// The Rename button: the name of the Info dialog becomes a field in its place; Enter renames, Esc leaves it.
     pub fn startRename(self: *App) void {
         if (self.props.is_view) {
@@ -3254,8 +3024,6 @@ pub const App = struct {
         self.prop_editing = true;
     }
 
-    // Zig tip: `statFile` answers with the kind, the size and the times of a file without opening it; `mtime.toSeconds()`
-    // turns the time of the last change into seconds since 1970. A file that is open in a tab adds what its tab knows.
     /// The facts of a file of the project.
     fn fileFacts(self: *App, rel: []const u8) void {
         const p = &self.props;
@@ -3283,8 +3051,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `eve db sql -t` prints a header line and then the rows, so the answer of a one-value query is its second line.
-    // A quote in the name is doubled for SQL (`'` in a string, `"` in a name), the way SQL escapes them.
     /// The facts of the table (or view) `table` of the SQLite file `db`.
     fn tableFacts(self: *App, db: []const u8, table: []const u8) void {
         const gpa = self.gpa;
@@ -3312,8 +3078,6 @@ pub const App = struct {
         } else |_| {}
     }
 
-    // Zig tip: a function in the struct without `self` is called by its name inside the struct (`secondLine(out)`); the
-    // answer is a slice of `out`, so it lives as long as `out` does.
     /// The second line of a text, trimmed ("" when there is none): the value under the header of `eve db sql -t`.
     fn secondLine(out: []const u8) []const u8 {
         var it = std.mem.splitScalar(u8, out, '\n');
@@ -3321,8 +3085,6 @@ pub const App = struct {
         return std.mem.trim(u8, it.next() orelse "", " \r\t");
     }
 
-    // Zig tip: the field holds a name only: the folder is a fact of the dialog, changed with Move. The new path is the folder
-    // of the old one and the new name; after the rename the dialog shows the file under its new name.
     /// Enter in the name field of the Info dialog: rename the file on the disk, or the table in its database.
     fn doRename(self: *App) !void {
         const gpa = self.gpa;
@@ -3342,9 +3104,6 @@ pub const App = struct {
         if (try self.moveFile(old, new_rel)) self.openPropertiesOf(try gpa.dupe(u8, new_rel), false);
     }
 
-    // Zig tip: a name that exists is never overwritten. After the move the open tabs and the breakpoints follow the file
-    // (`retarget`), the tree is scanned again (it keeps the open folders), and the session is written. The `bool` says
-    // whether it happened; the bar says why not.
     /// Rename or move the file (or folder) `old` to `new`, two paths in the project.
     fn moveFile(self: *App, old: []const u8, new: []const u8) !bool {
         const gpa = self.gpa;
@@ -3367,8 +3126,6 @@ pub const App = struct {
         return true;
     }
 
-    // Zig tip: the folder selector starts in the folder of the file (`fbLoad` of its full path); the file is not moved until
-    // the person presses Move here, see `moveHere`.
     /// The Move button of the Info dialog: the folder selector, to choose where the file goes.
     pub fn openMove(self: *App) !void {
         const rel = self.rename_from orelse return;
@@ -3382,8 +3139,6 @@ pub const App = struct {
         self.openChooser(.move_to, .properties, start);
     }
 
-    // Zig tip: `realPath` gives the folder of the project as the system writes it, so it can be compared with the path of the
-    // folder selector. On Windows the case of the letters does not matter (`eqlIgnoreCase`) and `\` is turned into `/`.
     /// The path in the project of the folder `abs` ("" for the project folder), or null when it is outside the project.
     fn projectRel(self: *App, abs: []const u8) !?[]u8 {
         var dir = Io.Dir.cwd().openDir(self.io, if (self.root.len > 0) self.root else ".", .{}) catch return null;
@@ -3401,8 +3156,6 @@ pub const App = struct {
         return rel;
     }
 
-    // Zig tip: `(try self.projectRel(dest)) orelse {...}` first passes up an error (`try`), then handles the null of the
-    // optional (`orelse`): the parentheses make the order clear.
     /// Move here (the folder selector opened by Move): the file goes to the folder shown, then the Info dialog comes back.
     fn moveHere(self: *App) !void {
         const gpa = self.gpa;
@@ -3425,8 +3178,6 @@ pub const App = struct {
         if (try self.moveFile(old, new_rel)) self.openPropertiesOf(try gpa.dupe(u8, new_rel), false);
     }
 
-    // Zig tip: `alter table … rename to …` is run by `eve db sql`; an answer that holds `error:` is the refusal of SQLite. The
-    // tab of the table is a copy of its rows under the old name, so it is closed and opened again under the new one.
     /// Rename the table `old` of the SQLite file `db` to `new`.
     fn renameTable(self: *App, db: []const u8, old: []const u8, new: []const u8) !void {
         const gpa = self.gpa;
@@ -3464,7 +3215,6 @@ pub const App = struct {
         self.openPropertiesOf(try std.fmt.allocPrint(gpa, "{s}#{s}", .{ db, new }), false);
     }
 
-    // Zig tip: a menu row is enabled or not by a function of the state of the app, so the drawing and the commands agree.
     /// Can the command of a menu row run now? Rename works on one item: it is off while several are selected.
     pub fn menuEnabled(self: *App, cmd: MenuCmd) bool {
         const has_project = self.root.len > 0 and self.tree.entries.items.len > 0;
@@ -3518,8 +3268,6 @@ pub const App = struct {
         return n;
     }
 
-    // Zig tip: no allocation here, unlike `fileTarget`: the menu asks every frame, so the answer comes from looking at the
-    // selected row of the tree or at the active window, without copying a path.
     /// Is there a file or folder that Rename, Delete and Move can work on?
     fn hasFileTarget(self: *App) bool {
         if (self.focus == .tree) {
@@ -3544,8 +3292,6 @@ pub const App = struct {
         return t;
     }
 
-    // Zig tip: SQLite gives the room of deleted rows back with `vacuum`, which rewrites the database file, and
-    // `pragma optimize` refreshes what the planner knows.
     /// EDIT > Compact: vacuum and optimize a SQLite database.
     pub fn compact(self: *App) void {
         if (self.sqlView()) |st| return self.compactDb(st.db);
@@ -3565,9 +3311,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ the filter of a table
 
-    // Zig tip: the dialog keeps a list of rows, each a column number and a pattern; the pattern of the row that is selected is
-    // being typed in a text field (`flt_in`), and it is copied back into the row (`filterCommit`) whenever the selection moves or
-    // the dialog ends. `gpa.dupe(u8, "")` makes an owned empty string, so every `pat` can be freed the same way.
     /// Search > Filter…: choose columns and the values or patterns their cells must match; Enter shows the rows that match.
     pub fn openFilter(self: *App) void {
         const t = self.tableTab() orelse return;
@@ -3621,9 +3364,6 @@ pub const App = struct {
         self.flt_rows.append(self.gpa, .{ .col = col, .pat = copy }) catch self.gpa.free(copy);
     }
 
-    // Zig tip: the filter of a table is a preference of the person, not part of the table: it is kept in the file
-    // `evetx-filters.txt` of the user cache, one line for each filter: the table, the column number and the pattern, separated by
-    // tabs. A new apply replaces the lines of that table and leaves the others. Saving the filter for good is Save As: a view.
     /// Put the filters last applied to the table `src` in the dialog.
     fn filtersLoad(self: *App, src: []const u8) void {
         const bytes = self.cache.readFile("evetx-filters.txt") orelse return;
@@ -3706,8 +3446,6 @@ pub const App = struct {
         self.flt_in.insertSliceAtCursor(self.flt_rows.items[i].pat) catch {};
     }
 
-    // Zig tip: the fields that are not in the filter are found by looking, for each field of the table, whether a row has its column
-    // number; `buf` is an array of the caller that receives them, and the answer is the part of it that was filled.
     /// The columns of the table that are not in the filter, in the order of the table.
     fn filterMissing(self: *App, buf: *[256]usize) []usize {
         const tv = self.filterTable() orelse return buf[0..0];
@@ -3799,8 +3537,6 @@ pub const App = struct {
         try self.flt_in.update(.{ .key_press = key });
     }
 
-    // Zig tip: a pattern is first tried as a regular expression; one that is not valid (`compile` fails) is searched as plain text.
-    // `?regex.Regex` holds the compiled one or null. `std.ascii.findIgnoreCase` is the plain search.
     const Matcher = struct {
         col: usize,
         re: ?regex.Regex,
@@ -3949,7 +3685,6 @@ pub const App = struct {
         self.setMessage("filter: {d} of {d} rows match", .{ kept, tv.t.records });
     }
 
-    // Zig tip: the project is closed with all its windows, and the tree is empty until another is opened.
     /// File > Close project: close all the windows and empty the tree (File > Open project opens another).
     pub fn closeProject(self: *App) void {
         if (self.root.len == 0) return;
@@ -3999,8 +3734,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the question names one thing, or counts several; `statFile(...).kind` tells a folder from a file, and a folder
-    // goes with everything inside it (`deleteTree`), so the question says so. The answer is the same dialog as everywhere.
     /// File > Delete…: ask first; Yes deletes the selected files and folders (a folder with its content).
     pub fn openDelete(self: *App) void {
         self.deleteTargets() catch return;
@@ -4064,8 +3797,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ create table and drop table
 
-    // Zig tip: the tree is the place to read "what is selected": a database (or one of its tables) means SQLite, a folder (or a
-    // file in a folder) means DBF. `?[]const u8` is the path of the database, or null when the selection is not a database.
     /// The SQLite file that is selected in the tree (the file itself, or the file of a table), or null.
     pub fn selectedDb(self: *const App) ?[]const u8 {
         if (self.selected >= self.tree.entries.items.len) return null;
@@ -4077,8 +3808,6 @@ pub const App = struct {
         };
     }
 
-    // Zig tip: a name is checked in one place and the answer is the text of the problem, or null when the name is good: an
-    // optional that holds the error is a small way to return "what is wrong" without an error set.
     /// Why `name` cannot be the name of a table, or null when it can.
     pub fn tableNameError(name: []const u8) ?[]const u8 {
         if (name.len == 0) return "the table needs a name";
@@ -4118,9 +3847,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `drop table [name]` is understood here and not sent to the database: the table is found first (the one open or
-    // selected, or the one named in the database that is selected), and then the same
-    // Yes/No dialog as everywhere asks; only the Yes drops. What to drop is kept in `drop_a` and `drop_b`.
     /// Ask whether to drop a table: the current one, or the one called `name`.
     pub fn dropTable(self: *App, name: []const u8) !void {
         const gpa = self.gpa;
@@ -4218,9 +3944,6 @@ pub const App = struct {
         return self.targetDir();
     }
 
-    // Zig tip: `alter table` alone means "the table I am on": the one open in the Main Panel, else the one selected in the
-    // tree. With a name, the target of the SQL decides: a database that is selected owns the name; otherwise the name is a
-    // DBF file in the current folder. A message in the SQL panel says when nothing is found.
     /// `alter table [name]`: open the structure dialog of that table.
     fn alterTable(self: *App, name: []const u8) !void {
         const gpa = self.gpa;
@@ -4276,10 +3999,6 @@ pub const App = struct {
         return out;
     }
 
-    // Zig tip: Tab cycles. The first Tab remembers what was typed (the word before the cursor) and puts the first table whose
-    // name starts with it (the first table of all when nothing is typed); each next Tab puts the next one, and after the last
-    // the first again. The word on the line is replaced each time: its letters are erased one by one with `deleteBeforeCursor`.
-    // Any other key ends the cycle (`sql_tab_active` is set to false in `sqlKey`).
     /// Tab in the SQL panel: complete the word with the next table whose name starts with the letters typed.
     fn sqlTab(self: *App) !void {
         const gpa = self.gpa;
@@ -4318,9 +4037,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ the target of SQL
 
-    // Zig tip: a union with payloads names where the SQL goes: nowhere special (a memory database), a SQLite file, or a DBF
-    // table (which SQLite gets as a copy). The target follows what is selected: the table that is open in the Main Panel
-    // first, then the row selected in the tree. `use <file>` overrides it, `use auto` gives it back.
     const SqlTarget = union(enum) { memory, sqlite: []const u8 };
 
     pub fn sqlTarget(self: *const App) SqlTarget {
@@ -4375,8 +4091,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ breakpoints
 
-    // Zig tip: `const b = t.buf orelse return;` unwraps an optional or leaves the function. Removing
-    // from the list while looping is safe here because the loop returns right after `orderedRemove`.
     pub fn toggleBreakpoint(self: *App) !void {
         const b = self.activeBuffer() orelse return;
         try self.toggleBreakpointAt(b.row + 1);
@@ -4403,8 +4117,6 @@ pub const App = struct {
         self.syncBreakpoint(t.path, line, true);
     }
 
-    // Zig tip: `self: *const App` is enough for a function that only looks. The view calls it for
-    // every line it draws, so it does no allocation.
     pub fn hasBreakpoint(self: *const App, path: []const u8, line: usize) bool {
         return self.breakpointState(path, line) != null;
     }
@@ -4417,8 +4129,6 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: a breakpoint is switched, not removed: the line stays in the list (gray in the gutter) and the debugger
-    // of a running session is told `clear` or `break`, as for a removal or a new breakpoint.
     /// The check box of the Breaks tab: enable or disable breakpoint `i`.
     fn toggleBreakpointEnabled(self: *App, i: usize) void {
         if (i >= self.breakpoints.items.len) return;
@@ -4436,9 +4146,6 @@ pub const App = struct {
         self.break_sel = @min(self.break_sel, self.breakpoints.items.len -| 1);
     }
 
-    // Zig tip: one dialog serves every "are you sure": the message is a parameter (formatted by the caller), `what` says
-    // what a Yes does and `arg` for which item. A new question is a new value of `Confirm` and one more branch in
-    // `confirmYes`; the dialog and its keys stay as they are.
     /// Ask a yes/no question in a dialog. Yes does `what` for `arg`; No and Esc do nothing.
     pub fn askConfirm(self: *App, what: Confirm, arg: usize, comptime f: []const u8, args: anytype) void {
         const msg = std.fmt.allocPrint(self.gpa, f, args) catch return;
@@ -4468,8 +4175,6 @@ pub const App = struct {
         self.confirm_what = .none;
     }
 
-    // Zig tip: a `switch` on the tab of the bottom panel names what each one clears. The breakpoints are not a log: they
-    // are removed only after the question, with the same dialog as the trash icon.
     /// The tool Clear: empty the panel of the Tools Panel that is shown (the Console, the SQL panel, Stdout, Stderr, Watch).
     pub fn clearPanel(self: *App) !void {
         switch (self.bottom) {
@@ -4485,8 +4190,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: A private function (no `pub`) of the struct: only the code of `App` can call it. It
-    // uses `try` for the calls that can fail and passes the error on.
     fn jumpToBreakpoint(self: *App, index: usize) !void {
         if (index >= self.breakpoints.items.len) return;
         const bp = self.breakpoints.items[index];
@@ -4497,12 +4200,8 @@ pub const App = struct {
 
     // ------------------------------------------------------------ run and the console
 
-    // Zig tip: A `const` inside a struct is shared by all instances. The `if` on `builtin.os.tag` is
-    // decided by the compiler: the Windows build contains "eve.exe" and no other name.
     const eve_exe = if (builtin.os.tag == .windows) "eve.exe" else "eve";
 
-    // Zig tip: `Thread.spawn(.{}, RunJob.work, .{job})` starts the worker; the job lives on the heap (`gpa.create`)
-    // because both threads use it. `errdefer` undoes each step if a later one fails.
     /// Run `eve` with these arguments in the working folder of the console. The process runs in a thread; the output
     /// goes to the Stdout and Stderr tabs and a summary to the console when it ends (`finishRun`, called by `tick`).
     pub fn runEve(self: *App, args: []const []const u8) !void {
@@ -4514,9 +4213,6 @@ pub const App = struct {
         return self.startJob(eve_exe, args, debug);
     }
 
-    // Zig tip: the shell takes the whole line as one argument after `-c` (`/c` for cmd.exe), so pipes, quotes and `&&` are
-    // the shell's own business. The program runs like any job (output in the console, Halt stops it), in the working
-    // folder; when it ends the console is where it was: at the eve prompt for `shell <command>`.
     /// Run one line in the shell that started evetx.
     fn runShellLine(self: *App, line: []const u8) !void {
         const flag: []const u8 = if (builtin.os.tag == .windows and std.ascii.eqlIgnoreCase(self.shell_exe, "cmd.exe")) "/c" else "-c";
@@ -4556,8 +4252,6 @@ pub const App = struct {
         self.running = true;
     }
 
-    // Zig tip: `takeLive` hands over a slice that this function frees with `defer`. The same text goes to the Console and
-    // to the Stdout tab, as the output of a finished run does.
     /// Show the output lines that a debug run produced since the last call.
     fn takeOutput(self: *App, job: *RunJob) !void {
         const live = job.takeLive() orelse return;
@@ -4568,11 +4262,6 @@ pub const App = struct {
         self.stdout_log.scroll = 0;
     }
 
-    // Zig tip: `tick` calls this ten times a second while a job exists. A new stop is seen through `serial`: the first
-    // time, the breakpoints of the editor are sent to the debugger and then the command that was waiting for the stop
-    // (Run with breakpoints, Trace); every time, the variables go to the Watch tab, the file is opened and the cursor goes to
-    // the line where the program stopped. While the program traces, the line changes without a stop, and the editor
-    // follows it.
     /// Debug session: show the output and the variables, and follow the debugger to the line of the program.
     fn pollDebug(self: *App) !void {
         const job = self.job orelse return;
@@ -4634,8 +4323,6 @@ pub const App = struct {
         self.watch_log.scroll = 0;
     }
 
-    // Zig tip: the line of a breakpoint set or removed while a session runs is sent at once, so the debugger and the
-    // editor agree; before the first stop nothing is sent, because the whole list goes then (`pollDebug`).
     /// A breakpoint was set (`added`) or removed in the file `path`: tell the debugger of a running session.
     fn syncBreakpoint(self: *App, path: []const u8, line: usize, added: bool) void {
         const job = self.job orelse return;
@@ -4671,9 +4358,6 @@ pub const App = struct {
         return false;
     }
 
-    // Zig tip: the command goes to the debugger only when the program is stopped; while it runs, a click says so. With
-    // no session, `next`, `step` and `exit` start one (the script stops before its first statement), and `trace` starts
-    // one and traces at once; `run` is the ordinary Run (see `runActive`).
     /// A debugger button or key: next, step, exit, trace, or run.
     pub fn debugCommand(self: *App, verb: []const u8) !void {
         if (self.job) |job| {
@@ -4748,9 +4432,6 @@ pub const App = struct {
         try self.runEveMode(&args, true);
     }
 
-    // Zig tip: `std.process.run` runs a program and waits for it. The SQL is short work, so the wait is not noticed; the
-    // statement is one argument, so no quoting of the shell is involved. The database is a file of the project, or
-    // `:memory:` (forgotten after each command: `use <file.db>` chooses a file).
     /// Enter in the SQL panel: run the line with `eve db sql` and show the result table.
     fn sqlEnter(self: *App) !void {
         const gpa = self.gpa;
@@ -4867,8 +4548,6 @@ pub const App = struct {
         } else self.setMessage("nothing is running", .{});
     }
 
-    // Zig tip: `.acquire` on the `done` flag pairs with the `.release` store of the worker: everything the worker wrote
-    // before setting it is visible here. After `join` the thread is gone and the job is ours to read and free.
     /// When the worker is done: show its output and a summary, and free the job.
     fn finishRun(self: *App) !void {
         const job = self.job orelse return;
@@ -4908,9 +4587,6 @@ pub const App = struct {
         self.stderr_log.scroll = 0;
     }
 
-    // Zig tip: `Io.Dir.cwd().openDir(io, path, .{})` fails with an error (a name of the error set, e.g.
-    // `error.FileNotFound`) when the folder does not exist, so opening it is also the test. `defer dir.close(io)`
-    // gives the handle back whatever happens. `try`-free code here: every failure is reported to the console.
     /// `cd`: the commands of the console run in this folder from now on. Says so in the console.
     fn changeDir(self: *App, target: []const u8) !void {
         var dir = Io.Dir.cwd().openDir(self.io, if (target.len == 0) "." else target, .{}) catch |err| {
@@ -4928,9 +4604,6 @@ pub const App = struct {
         try self.console.add(self.gpa, msg, .info);
     }
 
-    // Zig tip: `std.fs.path.dirname` and `basename` cut a path into the folder part and the file name without
-    // copying: both are slices of the same text. `dirname` returns an optional (null for a bare name), and
-    // `orelse ""` turns "no folder" into the empty folder, the project root.
     /// Run and Check: go to the folder of the script first (a `cd` line in the console), and give back the file name.
     /// The folder of a script matters: `eve` loads the `eve.cfg` of its working folder, and a project may hold
     /// several sub-projects, each with its own.
@@ -4938,8 +4611,6 @@ pub const App = struct {
         try self.enterFolder(std.fs.path.dirname(rel) orelse "");
     }
 
-    // Zig tip: the folder is a path from the project folder ("" is the project folder itself). The `cd` line is written in
-    // the console, so the console tells what happened. A folder that is already the working folder says nothing.
     /// Make a folder of the project the working folder of the console, and say so in the console.
     pub fn enterFolder(self: *App, dir_rel: []const u8) !void {
         const full = if (dir_rel.len == 0) try self.gpa.dupe(u8, if (self.root.len == 0) "." else self.root) else try self.fullPath(dir_rel);
@@ -4953,8 +4624,6 @@ pub const App = struct {
         try self.changeDir(full);
     }
 
-    // Zig tip: `orelse { ...; return; }` can hold a block: unwrap the optional, or run the block and
-    // leave. After that line `t` is a plain pointer, not an optional.
     /// F5, the Run button: save the file and run it.
     pub fn runActive(self: *App) !void {
         if (self.canRun()) try self.adoptFolderSelection();
@@ -4998,9 +4667,6 @@ pub const App = struct {
         try self.issueCommand(line);
     }
 
-    // Zig tip: `Io.Timestamp.now(io, .awake).toMilliseconds()` reads a clock that only goes forward
-    // (it does not jump when the user changes the time of the computer), the right one to measure a
-    // delay. The delay is a constant at file level so that it is written once.
     pub fn nowMs(self: *const App) i64 {
         return Io.Timestamp.now(self.io, .awake).toMilliseconds();
     }
@@ -5027,8 +4693,6 @@ pub const App = struct {
         self.pending_at = self.nowMs() + @as(i64, self.options.run_delay_s) * 1000;
     }
 
-    // Zig tip: the same countdown as `issueCommand`, with the text typed in the prompt of the SQL panel; `tick` runs it
-    // when the delay (Options > Timers, Run delay) is over, Enter runs it at once, Esc cancels.
     /// Type an SQL command in the SQL panel and run it after the run delay.
     pub fn issueSql(self: *App, line: []const u8) !void {
         if (!self.show_tools) self.togglePanel(.tools);
@@ -5045,16 +4709,12 @@ pub const App = struct {
 
     // ------------------------------------------------------------ the session
 
-    // Zig tip: `comptime f: []const u8` and `f ++ "\n"` build the format string at compile time, so
-    // every call writes one line of the session file. `anytype` takes the tuple of arguments.
     fn sline(self: *App, out: *std.ArrayList(u8), comptime f: []const u8, args: anytype) !void {
         const s = try std.fmt.allocPrint(self.gpa, f ++ "\n", args);
         defer self.gpa.free(s);
         try out.appendSlice(self.gpa, s);
     }
 
-    // Zig tip: `@intFromBool(b)` is 1 or 0; `@tagName(e)` is the name of an enum value as text, which
-    // `std.meta.stringToEnum` turns back into the value when the session is read.
     /// Write where the user is: the project, the panel sizes and visibility, the open files with their
     /// cursors, the open folders of the tree and the breakpoints. It goes to `evetx-session.txt` in the
     /// cache folder; evetx reads it at the next start. Called when the program ends and when the files change.
@@ -5095,9 +4755,6 @@ pub const App = struct {
         try self.cache.writeFile("evetx-session.txt", out.items);
     }
 
-    // Zig tip: A `switch` cannot take strings, so the keys are tried with a chain of `std.mem.eql`.
-    // `std.fmt.parseInt(...) catch 0` reads a number and uses 0 when the text is not one. Errors are
-    // never passed up from here: a damaged session file must not stop the program from starting.
     /// Read `evetx-session.txt` and put the screen back as it was, when it is the session of this project.
     fn restoreSession(self: *App) void {
         const bytes = self.cache.readFile("evetx-session.txt") orelse return;
@@ -5225,10 +4882,6 @@ pub const App = struct {
         try self.consoleEnter();
     }
 
-    // Zig tip: `std.mem.tokenizeScalar` skips empty pieces, so two spaces count as one. `words.items[1..]` is the slice from
-    // the second word on. The line goes where it belongs: evetx itself (`clear`, `cd`, `exit`), the machine (a command of
-    // its session, or of the system with `!`), or eve as a process of its own (`run`, `--check`, and any other line), so
-    // a run keeps the folder of its script and Halt can end it.
     fn consoleEnter(self: *App) !void {
         const line = try self.console_in.toOwnedContents(self.gpa);
         defer self.gpa.free(line);
@@ -5286,15 +4939,11 @@ pub const App = struct {
         try self.runEve(args);
     }
 
-    // Zig tip: a `const` array inside the struct, made at compile time and shared by every `App`.
     /// The words of the console that are commands of a session of the machine (`vm.eval`).
     const session_words = [_][]const u8{ "load", "parse", "ast", "inspect", "errors", "status", "report", "help", "outdir", "capture", "log" };
 
     // ------------------------------------------------------------ the machine of the console
 
-    // Zig tip: the machine starts the first time it is needed and is started again when it ended (a crash, or `vm.stop`
-    // from somewhere else): `alive` reads the flag of its thread. A failure to start is said in the console, and the
-    // caller falls back to what evetx can do alone.
     /// The machine of the console, started if needed; null when it cannot start.
     fn machineLink(self: *App) ?*link_mod.Link {
         if (self.link) |l| {
@@ -5311,21 +4960,17 @@ pub const App = struct {
         return self.link;
     }
 
-    // Zig tip: `if (opt) |w| return w;` returns the payload of an optional at once; the rest runs only for null.
     /// The working folder of the console, as evetx and its machine see it (both start in the same folder).
     fn consoleDir(self: *const App) []const u8 {
         if (self.work_dir) |w| return w;
         return if (self.root.len == 0) "." else self.root;
     }
 
-    // Zig tip: `*const App`: the drawing (view.zig) and `needsTick` call it, and it only reads.
     /// Is a request of the machine not answered yet? (The toolbar shows it as running.)
     pub fn linkBusy(self: *const App) bool {
         return self.link_pending.items.len > 0;
     }
 
-    // Zig tip: `.{ .command = text, .cwd = ..., .stream = true }` becomes the params object of the message; with `stream`
-    // the output comes line by line while the command runs. Without a machine the shell of evetx runs it.
     /// `!<command>`: a command of the system, run by the machine in the working folder of the console.
     fn machineShell(self: *App, command: []const u8) !void {
         const l = self.machineLink() orelse return self.runShellLine(command);
@@ -5333,7 +4978,6 @@ pub const App = struct {
         if (id != 0) try self.link_pending.append(self.gpa, id);
     }
 
-    // Zig tip: the same shape as `machineShell` above: see the tip there; `orelse return` gives up when there is no machine.
     /// A command of the session of the machine (`load`, `parse`, `errors`, `status`, …), in the working folder.
     fn machineEval(self: *App, line_text: []const u8) !void {
         const l = self.machineLink() orelse return;
@@ -5341,14 +4985,10 @@ pub const App = struct {
         if (id != 0) try self.link_pending.append(self.gpa, id);
     }
 
-    // Zig tip: `std.mem.indexOfScalar` finds the id in the list of pending requests; `swapRemove` takes it out by moving the
-    // last one into its place (the order of the list does not matter).
     fn forgetPending(self: *App, id: u32) void {
         if (std.mem.indexOfScalar(u32, self.link_pending.items, id)) |i| _ = self.link_pending.swapRemove(i);
     }
 
-    // Zig tip: the events are owned by this function once taken: `defer` frees each text and the list on every way out.
-    // Output goes to the Console and the Stdout tab as it comes; the log of the machine goes to the Stderr tab.
     /// Called by `tick`: show what the machine sent since the last frame.
     fn pollLink(self: *App) !void {
         const l = self.link orelse return;
@@ -5389,9 +5029,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `isize` is the signed integer of pointer width, used because the position can go below
-    // zero before `clamp` brings it back. `@intCast` converts between integer types and checks the
-    // value in safe builds.
     fn historyStep(self: *App, delta: isize) !void {
         if (self.history.items.len == 0) return;
         const n: isize = @intCast(self.history.items.len);
@@ -5406,9 +5043,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ the two searches
 
-    // Zig tip: A function can return early from `if (q.len == 0) {...; return;}`. The snapshot `snap`
-    // is a slice of `bool`, one per entry, allocated with `gpa.alloc(bool, n)` and freed in
-    // `filesRestore`.
     /// The Files search: the tree goes to the first name that starts with the typed letters and opens the way to it.
     fn filesChanged(self: *App) !void {
         const q = try self.files_in.toOwnedContents(self.gpa);
@@ -5425,9 +5059,6 @@ pub const App = struct {
         if (self.nextMatch(q, 0, 1)) |i| self.selectEntry(i);
     }
 
-    // Zig tip: `@mod(i, n)` is the modulo that stays positive for a negative `i`, which `%` does not
-    // allow on signed numbers. It lets the loop wrap in both directions. The result is `?u32`: null
-    // when nothing matches.
     /// The first entry at or after `from` (going `step` entries at a time, wrapping) whose name starts with `q`.
     fn nextMatch(self: *App, q: []const u8, from: usize, step: isize) ?u32 {
         const n: isize = @intCast(self.tree.entries.items.len);
@@ -5442,17 +5073,12 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: A tiny function with a name is clearer than the two lines it holds, and the two places
-    // that select an entry now agree.
     fn selectEntry(self: *App, i: u32) void {
         self.tree_follow = true;
         self.tree.expandTo(i);
         self.selected = i;
     }
 
-    // Zig tip: `@as(isize, @intCast(x))` again: first the width, then the type.
-    // `std.ascii.eqlIgnoreCase` and `startsWith` are not used here because `nextMatch` does the
-    // matching.
     fn filesStep(self: *App, step: isize) !void {
         const q = try self.files_in.toOwnedContents(self.gpa);
         defer self.gpa.free(q);
@@ -5461,8 +5087,6 @@ pub const App = struct {
         if (self.nextMatch(q, @intCast(@mod(from, @as(isize, @intCast(self.tree.entries.items.len)))), step)) |i| self.selectEntry(i);
     }
 
-    // Zig tip: `snap` is freed after its values are copied back. Setting `self.saved_open = null`
-    // makes sure that a second call finds nothing to restore and cannot free it twice.
     fn filesRestore(self: *App) void {
         if (self.saved_open) |snap| {
             for (self.tree.entries.items, 0..) |*e, i| {
@@ -5473,16 +5097,12 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: Several small functions are composed here: restore, clear, change focus. Each one can
-    // be read, and tested by hand, alone.
     fn filesCancel(self: *App) void {
         self.filesRestore();
         self.files_in.clearRetainingCapacity();
         self.focus = .tree;
     }
 
-    // Zig tip: A method of `App` may have the same name as a method of `Buffer`: each belongs to its
-    // own struct, and the call `b.findNext(q)` says which one is meant.
     fn findNext(self: *App) !void {
         const b = self.activeBuffer() orelse return;
         const q = try self.find_in.toOwnedContents(self.gpa);
@@ -5490,8 +5110,6 @@ pub const App = struct {
         if (!b.findNext(q)) self.setMessage("not found: {s}", .{q});
     }
 
-    // Zig tip: `if (!try b.replaceMatch(q, w))`: `try` is applied first, then `!` negates the `bool`.
-    // The function says to the user what happened through `setMessage`.
     fn replaceOne(self: *App) !void {
         const b = self.activeBuffer() orelse return;
         if (self.activeTab().?.virtual) return self.setMessage("a read-only window cannot be changed", .{});
@@ -5503,8 +5121,6 @@ pub const App = struct {
         if (!try b.replaceMatch(q, w)) self.setMessage("no more matches", .{});
     }
 
-    // Zig tip: `{d}` in the format prints an integer in decimal. The count comes from `replaceAll`,
-    // which returns a `usize`.
     fn replaceEvery(self: *App) !void {
         const b = self.activeBuffer() orelse return;
         if (self.activeTab().?.virtual) return self.setMessage("a read-only window cannot be changed", .{});
@@ -5517,8 +5133,6 @@ pub const App = struct {
         self.setMessage("{d} replaced", .{n});
     }
 
-    // Zig tip: `std.fmt.parseInt(usize, text, 10)` turns text into a number or returns an error;
-    // `catch { ...; return; }` handles the error with a block and `catch 0` supplies a default.
     /// The `#` prompt: `42` or `42:7` goes to a line (and a column).
     fn gotoEnter(self: *App) !void {
         const s = try self.goto_in.toOwnedContents(self.gpa);
@@ -5542,8 +5156,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ overlays and the menu
 
-    // Zig tip: `which: Overlay` is an enum parameter: callers write `.menu`. Zig finds the enum from
-    // the parameter type, so no `Overlay.` prefix is needed.
     pub fn openOverlay(self: *App, which: Overlay) void {
         if (which == .save_as) {
             // a table is saved as a new table, or as a view when it is a filter; a text file goes to the folder selector
@@ -5562,10 +5174,6 @@ pub const App = struct {
         self.dlg_field = 0;
     }
 
-    // Zig tip: `self: *const App` promises that the function only reads the app, so the drawing
-    // code can call it too. A row that is not in the fixed list of the menu is made on the spot: the
-    // WINDOW menu ends with a separator and one row for each open window (at most nine, the ones
-    // that Ctrl+1 to Ctrl+9 reach).
     /// How many rows menu `m` has now.
     pub fn rowCount(self: *const App, m: usize) usize {
         const base = menus[m].items.len;
@@ -5591,8 +5199,6 @@ pub const App = struct {
         return 0;
     }
 
-    // Zig tip: `menus[i]` is checked against the array length in a safe build, so a wrong `i` stops
-    // the program with a message instead of reading other memory.
     /// Open menu `i` of the bar (a click, F10 or Alt and its letter) with its first command selected.
     pub fn openMenu(self: *App, i: usize) void {
         self.overlay = .menu;
@@ -5600,8 +5206,6 @@ pub const App = struct {
         self.menu_sel = self.firstItem(i);
     }
 
-    // Zig tip: `menus[i].label[0]` is the first byte of a string literal, a `u8`. `std.ascii.toLower`
-    // turns it into the lower case letter that the comparison needs.
     /// The menu whose letter is `c` (upper or lower case), if there is one.
     fn menuByLetter(c: u21) ?usize {
         if (c > 127) return null;
@@ -5612,14 +5216,10 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: A helper for the features that are planned but not built, so the message is the same
-    // everywhere and easy to find with a search for `notYet`.
     fn notYet(self: *App, what: []const u8, step: []const u8) void {
         self.setMessage("{s}: not yet ({s}, README.md §8)", .{ what, step });
     }
 
-    // Zig tip: A `switch` over an enum with one branch for each value. The compiler checks that every
-    // command has a branch. A branch may be a block, a call, or `try` on a call.
     pub fn runMenu(self: *App, cmd: MenuCmd, arg: usize) !void {
         self.overlay = .none;
         if (!self.menuEnabled(cmd)) {
@@ -5697,8 +5297,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `while (true) {... break;}` loops until a `break`. `@mod` wraps the index; the loop
-    // skips the rows that have no command (separators).
     fn menuMove(self: *App, delta: isize) void {
         var i: isize = @intCast(self.menu_sel);
         const n: isize = @intCast(self.rowCount(self.menu_top));
@@ -5709,8 +5307,6 @@ pub const App = struct {
         self.menu_sel = @intCast(i);
     }
 
-    // Zig tip: `@intCast(self.menu_top)` widens to `isize` so that `-1` can be added without the
-    // unsigned wrap-around; `@mod` brings the result back in `0..n`.
     fn menuSide(self: *App, delta: isize) void {
         const n: isize = menus.len;
         const to: usize = @intCast(@mod(@as(isize, @intCast(self.menu_top)) + delta, n));
@@ -5719,9 +5315,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ panels and windows
 
-    // Zig tip: `std.math.clamp(v, lo, hi)` needs `lo <= hi`; the window is at least 70 x 18 cells
-    // (view.zig), so the ranges below are never empty. `@as(u16, ...)` makes the type of the
-    // literal explicit.
     /// The width of the Tree Panel: the chosen one (Window > Modify) or a quarter of the screen.
     pub fn treeWidth(self: *const App) u16 {
         const w: u16 = if (self.tree_w == 0) std.math.clamp(self.cols / 4, 26, 40) else self.tree_w;
@@ -5735,7 +5328,6 @@ pub const App = struct {
         return std.math.clamp(h, 5, mh -| 6);
     }
 
-    // Zig tip: A `switch` that returns a value is an expression; each branch is one `bool`.
     /// Is panel `p` on the screen? A maximized panel hides the others.
     pub fn isShown(self: *const App, p: Panel) bool {
         return switch (p) {
@@ -5745,9 +5337,6 @@ pub const App = struct {
         };
     }
 
-    // Zig tip: The drawing asks for the places of the panels once per frame, and the mouse code
-    // reads the saved answer (`self.layout`). Rows: 0 is the menu bar, the last three are the
-    // status bar. The row with the Run buttons belongs to the Tools Panel: it is above it, and goes with it.
     /// Work out where each panel is for a screen of `W` x `H` cells, and keep the answer.
     pub fn computeLayout(self: *App, W: u16, H: u16) Layout {
         const tools_on = self.isShown(.tools);
@@ -5797,9 +5386,6 @@ pub const App = struct {
         };
     }
 
-    // Zig tip: `inline else` is not needed here: the `switch` lists the three panels. Taking the
-    // address of a field of a struct chosen by a switch (`&self.show_tree`) gives a pointer to the
-    // one `bool`, so the three panels share the same code after the `switch`.
     /// Hide panel `p`, or show it again (Window > Tree Panel, Main Panel, Tools Panel; the x buttons).
     pub fn togglePanel(self: *App, p: Panel) void {
         const flag = switch (p) {
@@ -5817,8 +5403,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: one shortcut, two cases: a hidden panel is shown (`togglePanel` also gives it the keyboard), a panel already on
-    // screen only gets the keyboard. A panel that is hidden by a maximized neighbour counts as not shown, so it comes back.
     /// Alt+T, Alt+M, Alt+O: the panel is on and has the keyboard.
     pub fn activatePanel(self: *App, p: Panel) void {
         const flag = switch (p) {
@@ -5837,9 +5421,6 @@ pub const App = struct {
         self.focusPanel(p);
     }
 
-    // Zig tip: `for (0..3) |k|` counts from 0 to 2 without a variable. `@enumFromInt` turns a number
-    // back into the enum value, and `@intFromEnum` turns a value into its number: the panels are
-    // numbered 0, 1, 2 in the order of the declaration.
     /// Shift+Tab and Alt+Right: the keyboard goes to the next panel that is on the screen (Tree, Main, Tools); Alt+Left goes back.
     pub fn rotatePanel(self: *App, delta: isize) void {
         const here: isize = @intFromEnum(self.activePanel());
@@ -5852,9 +5433,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `(a + n + delta) % n` wraps around the end of a list in both directions when `delta`
-    // is 1 or `n - 1`; here the signed `@mod` is simpler. The tabs of the Tools Panel are the enum
-    // `BottomTab`, so the same arithmetic walks them with `@intFromEnum`.
     /// Alt+Tab: the next window of the Main Panel, or the next tab of the Tools Panel when that panel has the keyboard.
     pub fn nextTab(self: *App, delta: isize) void {
         if (self.activePanel() == .tools) {
@@ -5878,8 +5456,6 @@ pub const App = struct {
         self.focus = .editor;
     }
 
-    // Zig tip: `errdefer` frees the copy only if a later `try` fails. After `append` succeeds the tab
-    // owns `path`, and `closeTab` frees it.
     /// Open a window that is not a file: the text is read only, the title is its name.
     pub fn openVirtual(self: *App, title: []const u8, content: []const u8) !void {
         for (self.tabs.items, 0..) |t, i| {
@@ -5902,10 +5478,6 @@ pub const App = struct {
         self.focus = .editor;
     }
 
-    // Zig tip: The folder is checked first (`projectName` opens it), and only then the old project is
-    // let go, so a wrong path leaves the screen as it was. `self.tree.deinit()` followed by
-    // `self.tree = Tree.init(...)` reuses the same place of the struct: the tree is never copied
-    // after it gave out memory.
     /// Open a project folder: the tree shows its files and the windows of the old project close.
     pub fn openProject(self: *App, path: []const u8) !void {
         if (path.len == 0) return;
@@ -5950,9 +5522,6 @@ pub const App = struct {
         self.saveSession() catch {};
     }
 
-    // Zig tip: A `switch` on the enum `Drag` decides what the moving mouse changes. The raw column
-    // of the pointer is stored; `treeWidth` and `toolsHeight` clamp it, so a wild drag cannot break
-    // the screen.
     /// A press on a border between panels: start dragging it. (Layout modify starts by itself, see `onMouse`.)
     fn grabSplit(self: *App, m: vaxis.Mouse) bool {
         const which = self.splitAt(m) orelse return false;
@@ -5962,9 +5531,6 @@ pub const App = struct {
         return true;
     }
 
-    // Zig tip: `?Drag` is an optional enum: the answer is a kind of border, or null when the pointer is
-    // not over one. The borders are the two columns where the Tree Panel and the Main Panel touch, and
-    // the top border row of the Tools Panel (the row of the Run buttons above it is not part of it).
     /// Which border between panels is under the pointer?
     fn splitAt(self: *const App, m: vaxis.Mouse) ?Drag {
         const l = self.layout;
@@ -5981,10 +5547,6 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: the thumb has a size (`th`) and can only be at places from 0 to `span - th`; so the pointer places the *middle*
-    // of the thumb, and the first item shown is the proportion of that place in the range of the thumb. Then the thumb goes
-    // all the way to both ends of the track with the pointer, and the first and last item are reached. All the numbers are
-    // `usize`; `-|` is a subtraction that stops at 0.
     /// The first item shown when the pointer is `rel` cells from the start of a track of `span` cells.
     fn thumbToTop(rel: usize, span: usize, total: usize, visible: usize) usize {
         if (total <= visible or span == 0) return 0;
@@ -6016,9 +5578,6 @@ pub const App = struct {
         return true;
     }
 
-    // Zig tip: The position of the pointer on the bar, from 0 to `len - 1`, is turned into a line (or
-    // column) by a proportion: `rel * (total - shown) / (len - 1)`. `@max(..., 0)` first, because the
-    // pointer may be outside the bar during a drag and `m.row` is signed.
     /// Scroll the editor to the place of the pointer on the bar that is being dragged.
     fn scrollTo(self: *App, m: vaxis.Mouse) void {
         if (self.drag == .tbl_v or self.drag == .tbl_h) {
@@ -6091,9 +5650,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: With wrapping, one line takes several rows, so a row of the screen is found by
-    // walking the lines from the first one shown and taking away the rows each one uses
-    // (`Buffer.segRows`). The function returns the line and which piece of it (0 for the first row).
     /// The line and the piece of it that are drawn at row `rel` of the editor (null below the last line).
     fn rowToLine(self: *const App, b: *const text.Buffer, rel: usize) ?struct { line: usize, seg: usize } {
         if (!self.wrap) return if (b.top + rel < b.lineCount()) .{ .line = b.top + rel, .seg = 0 } else null;
@@ -6113,10 +5669,6 @@ pub const App = struct {
         return at.line;
     }
 
-    // Zig tip: The place under the pointer is found from the rectangle of the text: the row is the
-    // first row shown plus the distance from the top of the rectangle, the column goes through
-    // `byteAtDisplay` so that it lands at the start of a character. A pointer above or below the
-    // text scrolls it one line, so a drag can select more than the screen shows.
     /// The place in the text under the mouse pointer.
     fn editorPos(self: *App, b: *text.Buffer, m: vaxis.Mouse) text.Pos {
         const r = self.editor_rect;
@@ -6158,9 +5710,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `fn startModify(self: *App, by_mouse: bool)` takes a plain `bool`; the two ways in (the
-    // menu or Ctrl+L, and a click on a border) differ only in this flag: with the mouse the layout
-    // freezes by itself after the release, with the keyboard it stays until Ctrl+F or Esc.
     /// Layout modify: the borders between the panels can be dragged, and the arrow keys change the sizes.
     pub fn startModify(self: *App, by_mouse: bool) void {
         self.modify = true;
@@ -6182,9 +5731,6 @@ pub const App = struct {
         return self.pending_at != null or self.freeze_at != null or self.job != null or self.linkBusy() or (self.options.autosave_s > 0 and self.anyDirtyFile());
     }
 
-    // Zig tip: The function returns `!bool`: an error union around a plain `bool`. The caller writes
-    // `try self.modifyKey(key)` to get the `bool` or pass the error up. Here nothing can fail, but
-    // the shape is the same as the other key functions.
     /// While Window > Modify is on: the arrows change the sizes, Esc and Enter freeze them. True when the key was used.
     fn modifyKey(self: *App, key: Key) !bool {
         // the keyboard takes over: a countdown that the mouse started is cancelled
@@ -6210,7 +5756,6 @@ pub const App = struct {
         theme.apply(self.options.palette());
     }
 
-    // Zig tip: two files are written; a failure of one is said in the bar and does not stop the other.
     /// Write the options and the custom themes to the user cache.
     pub fn saveOptions(self: *App) void {
         if (self.options.format(self.gpa)) |text_out| {
@@ -6239,9 +5784,6 @@ pub const App = struct {
         self.setMessage("options saved", .{});
     }
 
-    // Zig tip: The first change of a color of a built-in theme makes a custom copy (`Dark Custom1`, the first free number of
-    // its kind) and switches to it, so the built-in themes never change; a custom theme is changed in place. `orelse` handles
-    // the full list: the change is refused and the bar says why.
     /// The custom theme to change: the one in use, or a new copy of the built-in one in use. Null when the list is full.
     fn editableTheme(self: *App) ?*options_mod.UserTheme {
         const o = &self.options;
@@ -6258,9 +5800,6 @@ pub const App = struct {
         return o.custom(id);
     }
 
-    // Zig tip: A color is edited by changing one of its three bytes. `hex >> shift & 0xff` reads the
-    // byte, and `(hex & ~mask) | (v << shift)` writes it: `~` flips all the bits, so the mask keeps the
-    // other two bytes.
     /// Set a color of the theme in use (a built-in theme is copied first, see `editableTheme`).
     fn setSlotColor(self: *App, slot: usize, hex: u24) void {
         const t = self.editableTheme() orelse return;
@@ -6284,8 +5823,6 @@ pub const App = struct {
         self.setChannel(self.opt_channel, @intCast(std.math.clamp(now + delta, 0, 255)));
     }
 
-    // Zig tip: `std.math.clamp(v, lo, hi)` keeps a number in a range; the sum is made in `i32` (`@as(i32, ...)`) so a step
-    // below zero does not wrap around, and `@intCast` brings the clamped result back to the `u16` of the option.
     /// Change timer `row` of the Timers tab (0 Auto save, 1 Run delay, 2 Trace delay) by `delta`.
     fn adjustTimer(self: *App, row: u8, delta: i32) void {
         if (row == 0) {
@@ -6297,7 +5834,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the last id comes from the number of themes, which grows with the custom ones, so it is computed each time.
     /// Select the theme `delta` places up or down the list (Up and Down on the Theme tab).
     fn themeStep(self: *App, delta: i32) void {
         const id: i32 = @intCast(self.options.theme_id);
@@ -6306,16 +5842,12 @@ pub const App = struct {
         self.applyOptions();
     }
 
-    // Zig tip: the folder of the user's theme files is a sister of the cache folder (`…/eve/meta` → `…/eve/themes`);
-    // `std.fs.path.dirname` cuts the last part of a path. The caller frees the answer.
     /// The folder where Export writes and Import looks first: `<user data folder>/eve/themes`.
     fn themesDir(self: *App) ![]u8 {
         const up = std.fs.path.dirname(self.cache.dir) orelse ".";
         return std.fmt.allocPrint(self.gpa, "{s}/themes", .{up});
     }
 
-    // Zig tip: a file name made from a theme name: letters and digits in lower case, every other run of characters one `-`
-    // (`Dark Custom1` → `dark-custom1.json`). The bytes are written into a buffer of the caller.
     /// The file name of a theme.
     fn themeSlug(name: []const u8, buf: []u8) []const u8 {
         var n: usize = 0;
@@ -6340,8 +5872,6 @@ pub const App = struct {
         return buf[0 .. n + 5];
     }
 
-    // Zig tip: a `switch` on the enum does what the button needs: Rename opens the field with the name of the theme, Export
-    // and Import open the folder selector in the folder of the theme files (made the first time with `createDirPath`).
     /// A button under the list of themes.
     fn themeButton(self: *App, b: ThemeBtn) !void {
         const o = &self.options;
@@ -6382,7 +5912,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `defer self.opt_edit = .none;` runs when the function returns, by any path, so the field always closes.
     /// Enter in the field under the list of themes: rename the theme.
     fn themeFieldEnter(self: *App) !void {
         const gpa = self.gpa;
@@ -6409,9 +5938,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `var k = key; k.mods.shift = false;` copies the key without Shift so the same
-    // `matches` calls work with and without it; Shift then means "a small step". One `switch` on the
-    // tab number sends the arrows to the tab that is open.
     /// The keys of the Options dialog: Tab changes the tab, the arrows change the values, Enter saves.
     fn optionsKey(self: *App, key: Key) !void {
         // while the field under the list of themes is open, the keys go to it; Enter applies it (Esc: `closeOverlay`)
@@ -6449,8 +5975,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the function returns `!void` because a theme button may allocate (the text of the field); `activate` calls
-    // it with `try`, so an "out of memory" goes up to the event loop like every other error.
     /// A click in the Options dialog.
     fn optAction(self: *App, o: OptAction) !void {
         switch (o) {
@@ -6493,8 +6017,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the name field and the folder shown make the path (`std.fs.path.join` puts the separator between them). The
-    // caller frees it; null when the field is empty.
     /// The file that the folder selector names: the folder shown and the name field.
     fn chooserFile(self: *App) !?[]u8 {
         const raw = try self.fb_name.toOwnedContents(self.gpa);
@@ -6505,7 +6027,6 @@ pub const App = struct {
         return try std.fs.path.join(self.gpa, &.{ dir, name });
     }
 
-    // Zig tip: `std.ascii.endsWithIgnoreCase` checks the ending without regard to case, so `x.JSON` is not given a second one.
     /// Export (the folder selector opened by Export): write the theme in use to the file named.
     fn exportTheme(self: *App) !void {
         const gpa = self.gpa;
@@ -6526,8 +6047,6 @@ pub const App = struct {
         self.setMessage("exported {s} to {s}", .{ o.nameOf(o.theme_id), path });
     }
 
-    // Zig tip: `return self.fail(...)` in a function that returns `!void`: `fail` returns `void`, which is a valid value of
-    // `!void`, so one line opens the pop-up and leaves.
     /// Import (the folder selector opened by Import): read the theme file named and add it as a custom theme.
     fn importTheme(self: *App) !void {
         const gpa = self.gpa;
@@ -6555,8 +6074,6 @@ pub const App = struct {
         self.setMessage("imported {s}: rename it if you like", .{o.nameOf(id)});
     }
 
-    // Zig tip: the message is made with `allocPrint` and owned by the app until the next pop-up; the pop-up goes back to the
-    // dialog that was open (`overlay` at the call), so OK closes only the pop-up.
     /// An operation failed: a pop-up says why (title "Operation failed"); OK goes back to the dialog that was open.
     fn fail(self: *App, comptime f: []const u8, args: anytype) void {
         if (self.alert_msg) |m| self.gpa.free(m);
@@ -6574,9 +6091,6 @@ pub const App = struct {
         return false;
     }
 
-    // Zig tip: The countdown starts when the first change is seen and runs even if the user goes on
-    // typing: the file is saved at most `autosave_s` seconds after the oldest unsaved change. Setting
-    // the time to null when nothing is changed makes the next change start a new countdown.
     /// Called all the time by `tick`: saves the files that have changes when the auto save time is over.
     fn autoSaveTick(self: *App) void {
         if (self.options.autosave_s == 0 or !self.anyDirtyFile()) {
@@ -6602,8 +6116,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ undo and closing many windows
 
-    // Zig tip: One function for both directions, with a `bool`: `undo` or `redo` of the buffer return
-    // false when there is nothing to do, and the message tells the user.
     /// Ctrl+U (undo) and Ctrl+Y (redo) on the current window.
     pub fn undoRedo(self: *App, undo: bool) !void {
         const b = self.activeBuffer() orelse return;
@@ -6613,9 +6125,6 @@ pub const App = struct {
         self.follow = true;
     }
 
-    // Zig tip: The loop counts down (`while (i > lo) { i -= 1; ... }`) because closing a tab moves the
-    // ones after it one place to the left: going from the end keeps the numbers that are still to be
-    // visited correct. A window with changes is kept, and the message says how many.
     /// Close the windows `lo` to `hi - 1` that have no unsaved changes.
     pub fn closeClean(self: *App, lo: usize, hi: usize) void {
         var kept: usize = 0;
@@ -6683,8 +6192,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ dialogs: projects and folders
 
-    // Zig tip: One function is the single way to close a dialog (Esc, the x button, a click outside),
-    // so the work that some dialogs need when they close is written once.
     /// Close the dialog that is open. The Find File dialog puts the tree back as it was.
     pub fn closeOverlay(self: *App) void {
         // Esc in the Info dialog first leaves the name field; the folder selector and the pop-up go back to their dialog
@@ -6736,8 +6243,6 @@ pub const App = struct {
         self.dlg_field = 1;
     }
 
-    // Zig tip: `orelse return` leaves the function when the optional is null. The path is copied
-    // first because `openProject` and the cache change the lists that the original lives in.
     /// Open project `i` of the list and move it to the top of the list.
     fn openCached(self: *App, i: usize) !void {
         if (i >= self.cache.projects.items.len) return;
@@ -6769,7 +6274,6 @@ pub const App = struct {
         try self.openProject(path);
     }
 
-    // Zig tip: the mode is set before `fbLoad`, because the mode decides whether the theme files are listed too.
     /// Open the folder selector for `mode` in the folder `start`; Cancel and Esc go back to the dialog `back`.
     fn openChooser(self: *App, mode: FbMode, back: Overlay, start: []const u8) void {
         self.fb_mode = mode;
@@ -6779,7 +6283,6 @@ pub const App = struct {
         self.dlg_field = if (mode == .theme_export or mode == .save_as) 2 else 1;
     }
 
-    // Zig tip: the names in `fb_files` are owned by the app, so each one is freed before the list is emptied.
     /// The folder selector is done: back to the dialog that opened it; the next Open Folder lists folders only.
     fn chooserDone(self: *App) void {
         self.overlay = self.fb_back;
@@ -6788,13 +6291,11 @@ pub const App = struct {
         self.fb_files.clearRetainingCapacity();
     }
 
-    // Zig tip: `self: *const App`: the drawing calls it too, and it only reads.
     /// Does the folder selector have a file name field (and list the theme files)?
     pub fn fbHasName(self: *const App) bool {
         return self.fb_mode == .theme_export or self.fb_mode == .theme_import or self.fb_mode == .save_as;
     }
 
-    // Zig tip: one button, four meanings: the `switch` on the mode is the whole dispatch.
     /// The main button of the folder selector (and F2).
     fn fbOk(self: *App) !void {
         switch (self.fb_mode) {
@@ -6813,8 +6314,6 @@ pub const App = struct {
         return if (cut) |i| path[i + 1 ..] else path;
     }
 
-    // Zig tip: `std.mem.sort` with an anonymous struct that holds the comparison, as in project.zig.
-    // `catch null` inside the `while` condition turns an error of `next` into the end of the loop.
     /// Show folder `path` in the browser: read its sub folders, and put its real path in the field.
     /// A folder that cannot be read leaves the browser as it was.
     pub fn fbLoad(self: *App, path: []const u8) void {
@@ -6874,8 +6373,6 @@ pub const App = struct {
         return self.fb_entries.items.len + self.fb_files.items.len + @intFromBool(self.fbHasParent());
     }
 
-    // Zig tip: the rows are three lists one after the other; taking away the length of each list in turn finds the list
-    // that holds row `i` and the place in it.
     /// The name shown in row `i`.
     pub fn fbRowName(self: *const App, i: usize) []const u8 {
         var k = i;
@@ -6887,14 +6384,11 @@ pub const App = struct {
         return self.fb_files.items[k - self.fb_entries.items.len];
     }
 
-    // Zig tip: `@intFromBool(b)` is 1 for true and 0 for false, so the `..` row counts only when there is one.
     /// Is row `i` a file (not `..`, not a folder)?
     pub fn fbRowIsFile(self: *const App, i: usize) bool {
         return i >= @intFromBool(self.fbHasParent()) + self.fb_entries.items.len;
     }
 
-    // Zig tip: `insertSliceAtCursor(...) catch {}` ignores the only possible error (out of memory): the field then simply
-    // keeps the old name.
     /// A file row that is selected puts its name in the name field.
     fn fbPickName(self: *App) void {
         if (!self.fbHasName() or self.fb_sel >= self.fbRowCount() or !self.fbRowIsFile(self.fb_sel)) return;
@@ -6902,8 +6396,6 @@ pub const App = struct {
         self.fb_name.insertSliceAtCursor(self.fbRowName(self.fb_sel)) catch {};
     }
 
-    // Zig tip: `std.fs.path.dirname` returns a slice of the path itself, and `fbLoad` frees the old
-    // path, so the parent is copied before the call and freed after it.
     fn fbUp(self: *App) void {
         const p = self.fb_path orelse return;
         const parent = std.fs.path.dirname(p) orelse return;
@@ -6912,7 +6404,6 @@ pub const App = struct {
         self.fbLoad(copy);
     }
 
-    // Zig tip: the function returns `!void` because a file row can end in `fbOk`, which may fail; the callers write `try`.
     /// Go into the folder of row `i` (or up, for `..`); a file row is chosen: Import reads it, Export takes its name.
     fn fbEnterRow(self: *App, i: usize) !void {
         if (i >= self.fbRowCount()) return;
@@ -6931,8 +6422,6 @@ pub const App = struct {
         self.fbLoad(joined);
     }
 
-    // Zig tip: Keys are tried in order and each `return` ends the function, so the order is the
-    // priority. `Key.f2` opens the shown folder as a project without going into a sub folder.
     /// The keys of the project list.
     fn projectKey(self: *App, key: Key) !void {
         const n = self.cache.projects.items.len;
@@ -6976,13 +6465,7 @@ pub const App = struct {
 
     // ------------------------------------------------------------ keys
 
-    // Zig tip: `key.matches(codepoint, mods)` compares a key with a letter and the modifier keys,
-    // written as a struct with defaults: `.{ .ctrl = true }`. The order of the `if`s matters: the
-    // first that matches wins.
     pub fn onKey(self: *App, key: Key) !void {
-        // Zig tip: the Windows console reports the Alt key on its own as a key press whose code is
-        // `Key.left_alt` or `Key.right_alt`; there is no event when it is released, so the hint
-        // stays until the next key or click.
         if (key.codepoint == Key.left_alt or key.codepoint == Key.right_alt) {
             self.alt_hint = true;
             return;
@@ -7031,8 +6514,6 @@ pub const App = struct {
             self.quit = true;
             return;
         }
-        // Zig tip: F3 is not used: the answer of the terminal to the cursor position question (`CSI row;col R`) looks like F3,
-        // so evetx took its own start-up answer for a key press and opened the dialog by itself.
         if (key.matches('s', .{ .ctrl = true, .shift = true }) or key.matches(Key.f4, .{})) return self.openOverlay(.save_as);
         if (key.matches('s', .{ .ctrl = true })) return self.save();
         if (key.matches('a', .{ .ctrl = true })) return self.saveAll();
@@ -7058,9 +6539,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `?u8` is an optional byte: a number from 0 to 8, or null when the key is not Ctrl and a
-    // digit. The digit is looked for in the code of the key and in the code of the key on the
-    // standard layout (`base_layout_codepoint`), which terminals fill in differently.
     /// Alt+1 to Alt+9 (and Ctrl+1 to Ctrl+9 where the terminal sends them): go to window `d`.
     fn pickDigit(self: *App, d: usize) void {
         if (d >= self.tabs.items.len) {
@@ -7070,8 +6548,6 @@ pub const App = struct {
         self.pickWindow(d);
     }
 
-    // Zig tip: Tab moves to the next panel except where it has work of its own: in a text file that is in editing mode (it indents)
-    // or a cell being typed. In the tree, the Console, the SQL line, a window that is not being edited, it is the way out.
     /// Does the Tab key change the panel now?
     fn tabSwitchesPanel(self: *App) bool {
         return switch (self.focus) {
@@ -7109,9 +6585,6 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: A function that returns `bool` can say "I used this key" to its caller, which then
-    // stops looking. The same shortcuts work on the screen and inside a dialog, so the dialogs
-    // can replace each other.
     /// Ctrl+F, Ctrl+P, Ctrl+H, Ctrl+G, Ctrl+L: open a search dialog. True when the key was one of them.
     fn searchShortcut(self: *App, key: Key) bool {
         if (key.matches('f', .{ .ctrl = true })) self.openOverlay(.find_text) else if (key.matches('p', .{ .ctrl = true })) self.openOverlay(.find_file) else if (key.matches('h', .{ .ctrl = true })) self.openOverlay(.replace) else if (key.matches('g', .{ .ctrl = true })) self.openOverlay(.goto) else if (key.matches('l', .{ .ctrl = true })) self.startModify(false) else return false;
@@ -7124,8 +6597,6 @@ pub const App = struct {
         return std.mem.trim(u8, s, " ");
     }
 
-    // Zig tip: `switch (self.overlay)` on an enum, with `.none => {}` for the value that needs
-    // nothing. An `if` chain with `else if` works as well, but the `switch` lists every case.
     fn overlayKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) return self.closeOverlay();
         if (self.overlay != .menu and self.overlay != .tab_menu and self.overlay != .confirm and self.overlay != .sq_structure and self.overlay != .properties and self.overlay != .alert and self.overlay != .settings and self.overlay != .new_file and self.overlay != .wizard and self.overlay != .append_n and self.searchShortcut(key)) return;
@@ -7193,8 +6664,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: A plain `if` chain with early `return`s reads like a table of keys. A letter without
-    // Ctrl goes to the menu bar and opens the menu of that letter.
     /// The keys while a menu is open: arrows move, Enter runs, a letter opens another menu.
     fn menuKey(self: *App, key: Key) !void {
         if (key.matches(Key.up, .{})) return self.menuMove(-1);
@@ -7215,12 +6684,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `var k = key; k.mods.shift = false;` copies the key and clears one flag of the copy, so
-    // the same `matches` calls recognize an arrow whether Shift is held or not. Shift then only
-    // says "extend the selection". The `blk:` label gives the block a name so `break :blk value`
-    // can leave it with a result.
-    // Zig tip: the cell that is selected is `row` and `col`; the view moves `top` and `left` so it stays on the screen.
-    // `-|` and `+|` are saturating: they stop at 0 or at the largest number instead of failing.
     /// The keys of a table: arrows move the cell, Page Up and Down a page, Home and End the first and last record.
     fn tableKey(self: *App, tv: *TableView, key: Key) !void {
         if (self.tbl_editing) {
@@ -7341,9 +6804,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: The copy is kept twice: `clip` for Ctrl+V inside evetx, and `sys_clip`, which the main
-    // loop sends to the clipboard of the system with the terminal (OSC 52) after the event. Each
-    // is replaced by freeing the old one first, so the app owns at most one of each.
     /// Ctrl+C, and Ctrl+X when `cut` is true.
     fn copySelection(self: *App, cut: bool) !void {
         const b = self.activeBuffer() orelse return;
@@ -7381,8 +6841,6 @@ pub const App = struct {
         try b.insertText(c);
     }
 
-    // Zig tip: `std.fmt.bufPrint` formats into a buffer the caller owns and returns the part it
-    // wrote; it fails when the buffer is too small, and `catch` then falls back to the plain name.
     /// The title of the terminal window: the program and the project.
     pub fn windowTitle(self: *const App, buf: []u8) []const u8 {
         if (self.project_name.len == 0) return "EVE-TX";
@@ -7401,9 +6859,6 @@ pub const App = struct {
         self.paste_buf.clearRetainingCapacity();
     }
 
-    // Zig tip: A switch on the overlay picks which text field gets the pasted text; `?*TextInput` is
-    // an optional pointer, null when the dialog has no field. Only the first line of a paste goes to
-    // a one-line field.
     /// The terminal ended a paste: the collected text goes to the dialog field, the console or the editor.
     pub fn pasteEnd(self: *App) !void {
         self.pasting = false;
@@ -7440,8 +6895,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `self.selected = rows[pos -| 10]` uses `-|`, the subtraction that stops at zero instead
-    // of failing on an unsigned number that would go below zero. `+|` does the same for the top.
     fn treeKey(self: *App, key: Key) !void {
         self.tree_follow = true;
         const rows = self.visible.items;
@@ -7477,8 +6930,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: Enter only tells what is selected, in the status bar; Ctrl+Enter, Space or a double click open it. `statFile`
-    // gives the size of a file; a folder or a database says how to open it.
     /// Enter in the tree: say in the status bar what is selected.
     fn selectionInfo(self: *App) void {
         if (self.selected >= self.tree.entries.items.len) return;
@@ -7496,8 +6947,6 @@ pub const App = struct {
         } else self.setMessage("{s}: {s} · Ctrl+Enter or a double click opens it", .{ what, e.path });
     }
 
-    // Zig tip: `const e = &self.tree.entries.items[index];` is a pointer to the entry, so `e.expanded
-    // = !e.expanded` changes the tree itself and not a copy.
     pub fn openEntry(self: *App, index: u32) !void {
         const e = &self.tree.entries.items[index];
         self.selected = index;
@@ -7520,9 +6969,6 @@ pub const App = struct {
         } else try self.openFile(e.path);
     }
 
-    // Zig tip: The keys are tried in order: Esc, Enter, Up and Down belong to the search; any other
-    // key goes to the text field widget with `update`. The `had` flag shows `if` used as a plain
-    // statement.
     fn filesKey(self: *App, key: Key) !void {
         if (key.matches(Key.enter, .{})) {
             const had = self.saved_open != null;
@@ -7541,8 +6987,6 @@ pub const App = struct {
         try self.filesChanged();
     }
 
-    // Zig tip: `const ti = if (a) &x else &y;` picks which field gets the key, and the one call
-    // `ti.update` serves both. Tab moves between the two fields.
     fn replaceKey(self: *App, key: Key) !void {
         if (key.matches(Key.tab, .{}) or key.matches(Key.down, .{}) or key.matches(Key.up, .{})) {
             self.dlg_field = 1 - self.dlg_field;
@@ -7553,10 +6997,6 @@ pub const App = struct {
         try ti.update(.{ .key_press = key });
     }
 
-    // Zig tip: the word before the cursor is cut at the last space; if it holds a `/` or `\`, what comes before the last one
-    // is the folder to look in and what comes after is the beginning of the name. `first` is a slice of the text field,
-    // and the completion inserts only the letters that are still missing, so the user's own letters (and their case) stay.
-    // The names found are copied (`dupe`) before the directory is closed, and freed by the `defer` loop.
     /// Tab in the console: complete the file or folder name that starts with the letters before the cursor. One match is
     /// completed (a folder gets a `/`), several are completed as far as they agree and listed in the console.
     fn consoleComplete(self: *App) !void {
@@ -7628,8 +7068,6 @@ pub const App = struct {
         try self.console.add(gpa, std.mem.trimEnd(u8, line.items, " "), .info);
     }
 
-    // Zig tip: `self.console.scroll +|= n` is saturating addition with assignment: it stops at the
-    // largest number instead of failing on overflow. `-|=` stops at zero.
     fn consoleKey(self: *App, key: Key) !void {
         if (key.matches(Key.escape, .{})) {
             // Esc cancels a waiting command, and clears the prompt
@@ -7661,8 +7099,6 @@ pub const App = struct {
         try self.console_in.update(.{ .key_press = key });
     }
 
-    // Zig tip: `orderedRemove` returns the removed element and we ignore it with `_ =`: the path was
-    // freed one line before. The index is clamped after the removal so it never points past the end.
     fn breaksKey(self: *App, key: Key) !void {
         const n = self.breakpoints.items.len;
         if (n == 0) return;
@@ -7673,8 +7109,6 @@ pub const App = struct {
 
     // ------------------------------------------------------------ the mouse
 
-    // Zig tip: `m.type != .press` compares an enum value. The `while (i > 0) { i -= 1; ... }` loop
-    // walks the hits from the last to the first, so what was drawn last (an open menu) is hit first.
     pub fn onMouse(self: *App, m: vaxis.Mouse) !void {
         if (m.type == .motion) return self.hover(m);
         if (m.type == .release) {
@@ -7837,8 +7271,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: the column under the mouse is found by adding up the widths of the columns from the first one shown, the
-    // way the view draws them (`tbl_widths`, fitted to the room): a row number column, then each field and its `│`.
     /// A click on the grid of a table: select the record and the field under the pointer; Ctrl+click selects the row; a double click edits.
     fn clickTable(self: *App, tv: *TableView, m: vaxis.Mouse) void {
         const r = self.tbl_rect;
@@ -7890,9 +7322,6 @@ pub const App = struct {
         self.marks.clearRetainingCapacity();
     }
 
-    // Zig tip: a press on a row does not open it yet: the row may be the start of a drag. `tdrag_src` remembers it; the
-    // release without any drag opens it (`treeRelease`), the release after a drag drops it on the row under the pointer.
-    // Ctrl+click is different: it marks or unmarks the file, so several can be moved together.
     /// A press on a row of the tree.
     fn treePress(self: *App, idx: u32, m: vaxis.Mouse) !void {
         self.focus = .tree;
@@ -7931,9 +7360,6 @@ pub const App = struct {
         self.tdrag_over = null;
     }
 
-    // Zig tip: a folder (or database) has three answers to a click: on its icon it opens or closes; on its name it is only
-    // selected; a second click on the same row within 400 ms (a double click) also opens or closes it and shows its content.
-    // A file opens at once. The time comes from `nowMs`, so no timer is needed.
     /// The button was released on a row of the tree without a drag.
     fn treeClick(self: *App, idx: u32) !void {
         const e = &self.tree.entries.items[idx];
@@ -7965,9 +7391,6 @@ pub const App = struct {
         self.tdrag_over = self.treeRowAt(m);
     }
 
-    // Zig tip: the folder that receives the files is the row under the pointer if it is a folder, else the folder of that
-    // file. The files to move are the marked ones if the dragged row is marked, else just the dragged row. A file whose
-    // folder is already the target, and a folder dropped into itself, are left out; if nothing is left, nothing happens.
     /// The button was released: open the row (no drag), or ask whether to move the files to the folder under the pointer.
     fn treeRelease(self: *App) !void {
         const src = self.tdrag_src orelse return;
@@ -7992,8 +7415,6 @@ pub const App = struct {
         try self.askMove(dest);
     }
 
-    // Zig tip: the marked paths are the list of what to move, whether they were marked in the tree, in a folder tab or both.
-    // `addMoveSource` leaves out what is already in the target, so the question is asked only if something is left.
     /// Ask whether to move the marked files and folders into the folder `dest` (a path in the project, "" for its root).
     fn askMove(self: *App, dest: []const u8) !void {
         for (self.move_srcs.items) |p| self.gpa.free(p);
@@ -8013,8 +7434,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: a `?[]u8` result is a path the caller owns (and frees), or null when the row cannot be marked (the `..` row, the
-    // project folder itself). The two places that have rows, a folder tab and the tree, give the same answer the same way.
     /// The path of the row under the cursor: of the folder tab when it has the keyboard, else of the tree.
     fn currentRowPath(self: *App) ?[]u8 {
         if (self.focus != .tree) {
@@ -8120,8 +7539,6 @@ pub const App = struct {
         self.setMessage("{d} selected", .{self.marks.items.len});
     }
 
-    // Zig tip: the keys come as a letter (`+`, `-`, `*`, `/`) from the main keyboard, and as `kp_add`, `kp_subtract`, ... from
-    // the keypad of a terminal that tells them apart; both are accepted. Ctrl and Alt make other shortcuts, so they are left alone.
     /// Keys of the selection in a folder tab and in the tree: + select, - unselect, * select all, / unselect all.
     fn markKey(self: *App, key: Key) !bool {
         if (key.mods.ctrl or key.mods.alt) return false;
@@ -8139,9 +7556,6 @@ pub const App = struct {
         return true;
     }
 
-    // Zig tip: Save As is the folder selector with the files shown and a File name field: the name that was waiting in
-    // `saveas_in` (a New DBF asks for `table.dbf`) or the name of the file of the window is put in the field, and the list
-    // starts in the folder of that file. A click on a file puts its name in the field, so an existing file can be chosen.
     /// Save As… (Ctrl+Shift+S, F4): choose the folder in the list and type the name.
     fn openSaveChooser(self: *App) void {
         const typed = self.saveas_in.toOwnedContents(self.gpa) catch return;
@@ -8158,8 +7572,6 @@ pub const App = struct {
         self.openChooser(.save_as, .none, start);
     }
 
-    // Zig tip: the folder shown by the selector is an absolute path; `projectRel` turns it into a path of the project. The file
-    // that exists gets a question first (`replace_file`); the name is kept in `save_rel` until the answer.
     /// The Save button of the selector: save the window as the name typed in the folder shown.
     fn saveHere(self: *App) !void {
         const gpa = self.gpa;
@@ -8290,9 +7702,6 @@ pub const App = struct {
         try self.move_srcs.append(self.gpa, try self.gpa.dupe(u8, path));
     }
 
-    // Zig tip: `Io.Dir.rename(dir, old, dir, new, io)` moves a file or a folder inside one file system. A name that exists
-    // in the target is never overwritten: that file is skipped and counted. The paths of the open tabs and of the
-    // breakpoints that were inside the moved path follow it, so nothing points to a file that is gone.
     /// Yes of the move dialog: move the files, then fix the tabs, the breakpoints and the tree.
     fn performMove(self: *App) void {
         const dest = self.move_dest orelse return;
@@ -8348,8 +7757,6 @@ pub const App = struct {
         return null;
     }
 
-    // Zig tip: `if (self.modify) self.splitAt(m) else null` is an `if` used as a value: both branches give a `?Drag`. A locked
-    // layout has no active border, so a press there is an ordinary click; unlock it (the lock, Ctrl+L) to drag a border.
     /// The border under the pointer is active when the layout is unlocked; set the shape of the pointer.
     fn refreshHover(self: *App, m: vaxis.Mouse) void {
         self.hover_split = if (self.modify) self.splitAt(m) else null;
@@ -8365,8 +7772,6 @@ pub const App = struct {
         if (self.modify) self.freezeLayout() else self.startModify(false);
     }
 
-    // Zig tip: A `motion` event arrives when the mouse moves. Only an open menu cares: the row or
-    // the menu title under the pointer becomes the selected one, as in a classic menu.
     fn hover(self: *App, m: vaxis.Mouse) void {
         if (self.overlay == .none) {
             // over a border between panels the pointer is a double arrow while the layout is unlocked
@@ -8391,8 +7796,6 @@ pub const App = struct {
         }
     }
 
-    // Zig tip: `switch` on the `Action` union with a payload capture in each branch: `.tree_row => |i|
-    // ...` gives the index that the click carried. The inner `switch (b)` handles the buttons.
     fn activate(self: *App, action: Action) !void {
         switch (action) {
             .tree_row => |i| {

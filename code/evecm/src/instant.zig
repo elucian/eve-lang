@@ -7,10 +7,6 @@ const Io = std.Io;
 const us_per_second: i64 = 1_000_000;
 const seconds_per_day: i64 = 86_400;
 
-// Zig tip: these are the "civil from days" and "days from civil" algorithms of Howard Hinnant: they turn a day
-// count since 1970-01-01 into a year, month and day (and back) with integer arithmetic only, with no table and
-// no loop, for any date of the proleptic Gregorian calendar. `@divFloor` divides and rounds toward minus
-// infinity, so dates before 1970 work too.
 fn daysFromCivil(y_in: i64, m: i64, d: i64) i64 {
     const y = if (m <= 2) y_in - 1 else y_in;
     const era = @divFloor(y, 400);
@@ -56,9 +52,6 @@ fn daysIn(y: i64, m: i64) i64 {
     };
 }
 
-// Zig tip: a parser that reads fixed-width fields (`YYYY-MM-DDTHH:MM:SS`) by position is a few `digits` calls
-// and character tests; each `orelse return null` leaves with "not an instant". The fraction is optional,
-// 1 to 6 digits; a longer one is refused so no digit is lost silently.
 /// Read `2026-10-10T08:00:00Z` (with an optional fraction `.5`, `.123456`). Null if the text is not an instant.
 pub fn parse(text: []const u8) ?i64 {
     if (text.len < 20 or text[text.len - 1] != 'Z') return null;
@@ -93,8 +86,6 @@ pub fn write(w: *Io.Writer, us: i64) Io.Writer.Error!void {
     const days = @divFloor(secs, seconds_per_day);
     const sod = @mod(secs, seconds_per_day);
     const c = civilFromDays(days);
-    // Zig tip: with a width, `{d}` on a signed integer prints a `+`; the fields are never negative here, so each
-    // one is turned into an unsigned integer first (`@intCast` checks that it fits).
     const f: [6]u32 = .{ @intCast(c.y), @intCast(c.m), @intCast(c.d), @intCast(@divFloor(sod, 3600)), @intCast(@divFloor(@mod(sod, 3600), 60)), @intCast(@mod(sod, 60)) };
     try w.print("{d:0>4}-{d:0>2}-{d:0>2}T{d:0>2}:{d:0>2}:{d:0>2}", .{ f[0], f[1], f[2], f[3], f[4], f[5] });
     if (frac != 0) {

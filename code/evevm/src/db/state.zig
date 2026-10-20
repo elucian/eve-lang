@@ -11,8 +11,6 @@ const pgclient = @import("pgclient.zig");
 const ewpdriver = @import("ewpdriver.zig");
 const columnar = @import("columnar.zig");
 
-// Zig tip: a `struct` groups fields; a field with a default value (`= …`) may be left out when a value is made with `.{ …
-// }`.
 pub const State = struct {
     /// The databases the script opened, by the handle number kept in its `Connection` objects, and whether a
     /// transaction of a job is open on each (database.md#transactions).
@@ -51,9 +49,6 @@ pub const State = struct {
     core_db: ?*sqlite.Db = null,
 };
 
-// Zig tip: `@ptrCast(@alignCast(p))` turns the `*anyopaque` of the slot back into a `*State`: the
-// interpreter keeps the pointer without knowing its type, and only this file knows it. `@alignCast`
-// checks (in a safe build) that the address fits the alignment of `State`.
 /// The state of the run, made at the first use. It lives in the arena of the driver's interpreter.
 pub fn state(it: Host) *State {
     const slot = it.base().dataSlot();

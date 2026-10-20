@@ -8,8 +8,6 @@ const Io = std.Io;
 const net = Io.net;
 const vm = @import("vm.zig");
 const channel = @import("channel.zig");
-// Zig tip: `const ok = wire.ok;` gives a function of another file a short local name. It copies nothing: the
-// name points to the same function, and calls read as they did before the code was split into files.
 const config = @import("evecm").config;
 const wire = @import("evecm").wire;
 
@@ -31,9 +29,6 @@ const httpCall = wire.httpCall;
 
 // ---- the machine (server side) -------------------------------------------------------------------------------
 
-// Zig tip: a struct that threads share holds what they share. `std.atomic.Value(usize)` is a counter that several
-// threads can add to without a lock; `Io.Mutex` is a lock (each call takes the `Io` handle in Zig 0.16). The two doors
-// run in two threads, and the mutex makes the scripts run one at a time.
 /// What both doors share: the configuration, the counters, the lock of the scripts and the log of the machine.
 pub const Machine = struct {
     io: Io,
@@ -66,21 +61,12 @@ pub const Machine = struct {
     sessions: channel.Sessions = .{},
 };
 
-// Zig tip: a `pub var` at file level is a global that other files may read. This one is written once, by `serve`, on
-// the thread that starts the machine, before `main` reads it. The REPL of `main` looks at it to know that the doors
-// are open in its own process and that the prompt must come back.
 /// True after `serve` opened the doors inside this process and returned (the REPL is the foreground).
 pub var embedded = false;
 
-// Zig tip: the log of an embedded machine normally has a writer of its own, but the full-screen REPL needs the lines in
-// its upper part, so `main` can point the log at the screen's writer (a global read at each line, set before any
-// request can arrive). A null means "use the machine's own writer".
 /// Where the log of an embedded machine goes instead of its own writer.
 pub var embed_log: ?*Io.Writer = null;
 
-// Zig tip: `comptime fmt: []const u8` makes the format a compile-time value, so `"eve: " ++ fmt ++ "\n"` joins the
-// texts while compiling (`++` works only on comptime values). A `Writer` is not safe for two threads at once: the two
-// doors log through the same terminal, so the lock makes each line whole.
 /// Write one line of the log of the machine on its terminal.
 pub fn note(m: *Machine, comptime fmt: []const u8, args: anytype) void {
     if (m.quiet) return;
@@ -91,17 +77,10 @@ pub fn note(m: *Machine, comptime fmt: []const u8, args: anytype) void {
     out.flush() catch {};
 }
 
-// Zig tip: `Io.Timestamp.now(io, .awake)` reads a clock that only goes forward (it does not jump when the time of
-// day is changed), the right one to measure a duration. `toMilliseconds` turns it into a number.
 pub fn millis(io: Io) i64 {
     return Io.Timestamp.now(io, .awake).toMilliseconds();
 }
 
-// Zig tip: the per-request memory is an arena over `page_allocator`: everything the request allocates (the parsed
-// JSON, the answer, the session of the script) is freed with one `deinit`, so a machine that runs for days does not
-// grow. The process arena of `main` is never freed, so it must not be used for a server.
-// Zig tip: `ch: ?*channel.Channel` is null on the HTTP door, where a reply is the whole answer; on a lasting door it is
-// the connection, through which the machine also sends notifications. The methods that need it check it first.
 /// One JSON-RPC message in, one message out (allocated in `a`). Sets `stop` when the method is `stop`. `door` is
 /// `ipc`, `http` or `stdio`, for the log and `vm.stat`.
 pub fn rpc(m: *Machine, a: std.mem.Allocator, door: []const u8, body: []const u8, stop: *bool, ch: ?*channel.Channel) []const u8 {
@@ -171,13 +150,9 @@ pub fn rpc(m: *Machine, a: std.mem.Allocator, door: []const u8, body: []const u8
     }
 }
 
-// Zig tip: an `enum` names a closed set of choices, and `switch` on it must cover every one: adding a method to
-// the enum makes the compiler point at the `switch` of `rpc` until the new method is handled.
 /// The methods a machine answers today (D-165): the names of the machine API and their first names (D-162).
 pub const Method = enum { ping, stat, run, stop, cancel, open, eval, close, shell };
 
-// Zig tip: a table of pairs `.{ name, value }` walked by `for` is the simplest map for a handful of names; the
-// result is an optional (`?Method`), null for a name that is not in the table.
 /// `vm.ping` and `ping`, `vm.stat` and `status`, `vm.run` and `run`, `vm.stop` and `stop`, and the methods of the
 /// lasting doors (`vm.cancel`, `vm.open`, `vm.eval`, `vm.close`, `vm.shell`); null for another name.
 pub fn methodName(method: []const u8) ?Method {
@@ -194,12 +169,6 @@ pub fn methodName(method: []const u8) ?Method {
     return null;
 }
 
-// Zig tip: the session (`vm.Session`) is the same object the REPL uses; here its output is an `Io.Writer.Allocating`,
-// a writer that grows in memory, so the text of the script comes back in the answer instead of the terminal. `defer`
-// runs at the end of the function on every path, which releases the lock even when something fails.
-// Zig tip: a script comes as text (`source`, what a remote client sends) or as a file of the machine (`path`, what an IDE
-// on the same computer sends: nothing to copy). With `"stream": true` on a lasting door the output goes out as
-// `vm.output` notifications while the script runs, and `output` in the answer is empty.
 /// `run`: execute the script of the params in a session of its own, one at a time.
 pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.json.Value, params: std.json.Value, ch: ?*channel.Channel) []const u8 {
     if (params != .object) return fail(a, id, -32602, "run needs the params name and source, or path");
@@ -262,9 +231,6 @@ pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.js
     return ok(a, id, .{ .status = s.status, .output = out.written(), .errors = errors.written() });
 }
 
-// Zig tip: `defer setCurrent(m, null, 0)` in `runScript` runs before the `unlock` deferred above it (defers run in
-// reverse order), so the machine is never seen "running" a script whose lock is already free. The name points into the
-// memory of the request, which lives until the answer is sent, longer than the run.
 /// Say which script runs now (null: none); `vm.stat` reports it.
 pub fn setCurrent(m: *Machine, name: ?[]const u8, since: i64) void {
     m.log_lock.lockUncancelable(m.io);
@@ -273,9 +239,6 @@ pub fn setCurrent(m: *Machine, name: ?[]const u8, since: i64) void {
     m.current_since = since;
 }
 
-// Zig tip: `takeDelimiterInclusive('\n')` reads one line with its newline from a `Reader`; the bytes live in the
-// reader's buffer, so a line longer than the buffer is an error (`StreamTooLong`) and the connection is dropped.
-// `std.ascii.eqlIgnoreCase` compares header names, which are case-insensitive in HTTP.
 /// Serve one HTTP connection: `GET` a file of the web folder, `POST /rpc` a JSON-RPC message. Returns true on `stop`.
 pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
     var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
@@ -333,9 +296,6 @@ pub fn serveHttp(m: *Machine, stream: net.Stream) bool {
     return false;
 }
 
-// Zig tip: the connection stays open while the client keeps it (channel.zig): one message per line, the answers and the
-// notifications back on the same connection. A client that sends one line and closes (the CLI) still works: the next
-// read finds the end of the stream. The buffer of the reader (16 MiB here) is the longest message accepted.
 /// Serve one IPC connection: JSON-RPC messages on lines, until the client closes it. Returns true on `stop`.
 pub fn serveIpc(m: *Machine, stream: net.Stream) bool {
     const rbuf = std.heap.page_allocator.alloc(u8, 16 << 20) catch return false;
@@ -347,9 +307,6 @@ pub fn serveIpc(m: *Machine, stream: net.Stream) bool {
     return channel.serveLines(m, &reader.interface, &ch, "ipc");
 }
 
-// Zig tip: a thread function takes its arguments as a tuple: `std.Thread.spawn(.{}, loop, .{ m, kind })`. It cannot
-// return an error, so every failure is handled inside. After `stop` the machine ends with `std.process.exit(0)`: the
-// reply was flushed first, and the socket file is removed so the next start does not find a dead one.
 /// The accept loop of one door; it never returns, except by ending the process on `stop`.
 pub fn accepting(m: *Machine, ipc: bool) void {
     while (true) {
@@ -377,8 +334,6 @@ pub fn accepting(m: *Machine, ipc: bool) void {
     }
 }
 
-// Zig tip: `Thread.detach` lets a thread end by itself, with nobody to `join` it: right for a thread that serves one
-// connection and is done. `connection` is the body of that thread; it owns the stream and closes it.
 /// Serve one connection of a door, close it, and end the process when the request was `stop`.
 pub fn connection(m: *Machine, stream: net.Stream, ipc: bool) void {
     const stop = if (ipc) serveIpc(m, stream) else serveHttp(m, stream);
@@ -390,11 +345,6 @@ pub fn connection(m: *Machine, stream: net.Stream, ipc: bool) void {
     }
 }
 
-// Zig tip: a thread that waits in `accept` must not have its socket closed from outside: the standard library of
-// Zig 0.16 treats the resulting `CANCELLED` code on Windows as impossible (`unreachable`) and the program panics. The
-// safe way to stop a loop is to ask it: set the flag, then connect to the door once so that `accept` returns, and the
-// loop (which sees the flag) closes its own socket and ends. `atomic.Value.swap` sets the flag and says if it was
-// already set, so a second `stop` does nothing.
 /// Stop the doors of a machine that lives inside the REPL, and leave the process running.
 pub fn shutdown(m: *Machine) void {
     if (m.stopping.swap(true, .acq_rel)) return;
@@ -411,9 +361,6 @@ pub fn shutdown(m: *Machine) void {
     note(m, "stopped, the prompt keeps running", .{});
 }
 
-// Zig tip: the start is a list of steps that can each fail; a failure prints one line and returns the exit code,
-// so `main` only has to exit with it. `catch |e| switch (e) { error.AddressInUse => …, else => … }` picks the message
-// by the kind of error.
 /// `--listen`, `--serve`: open the doors and stay active. Returns the exit code if the machine could not start.
 pub fn serve(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, ipc: bool, http: bool, embed: bool) !u8 {
     const m = try gpa.create(Machine);
@@ -474,9 +421,6 @@ pub fn serve(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, ipc: 
 }
 
 
-// Zig tip: `@splat(null)` fills an array with one value; here four empty places for the machines that this process
-// opened (a machine is opened in the process by `serve` with `embed`). The array is read by `stop` on the thread of the
-// prompt, and written by `serve` on the same thread, so it needs no lock.
 pub var machines: [4]?*Machine = @splat(null);
 
 /// Remember a machine that lives in this process, so that `stop` finds it. A place of a machine that stopped is reused.

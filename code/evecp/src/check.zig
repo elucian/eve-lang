@@ -13,18 +13,12 @@ const Node = ast.Node;
 pub const Diag = lexer.Diag;
 pub const Error = lexer.Error;
 
-// Zig tip: an `enum` with a few names is the clearest way to say "what kind of thing is this".
-// `?[]const u8` is a text or nothing: the type name that the check could work out, or null when it
-// does not know (then it says nothing: the check never guesses).
 const overload = @import("overload.zig");
 
 const Kind = enum { variable, constant, function, procedure, class, param, builtin };
 
 const Info = struct { kind: Kind, ty: ?[]const u8 = null, node: ?*const Node = null };
 
-// Zig tip: `std.StringHashMapUnmanaged(V)` is a hash map whose keys are strings; "unmanaged" means
-// it does not remember its allocator, so every call that may allocate gets it (`put(a, k, v)`).
-// `.empty` is its empty value, like the lists in the other files.
 const Frame = struct {
     names: std.StringHashMapUnmanaged(Info) = .empty,
 };
@@ -66,8 +60,6 @@ const Checker = struct {
     /// of `let`, the type of a parameter. Only a call reads it, to choose among overloads by the result (D-149).
     expected: ?[]const u8 = null,
 
-    // Zig tip: `fail` fills the `Diag` and returns the error, as in the parser, so a caller writes
-    // `return c.fail(n, "...", .{})`. `comptime fmt` is checked against `args` by the compiler.
     fn fail(c: *Checker, n: *const Node, comptime fmt: []const u8, args: anytype) Error {
         c.diag.set(n.line, n.col, fmt, args);
         return error.Syntax;
@@ -81,8 +73,6 @@ const Checker = struct {
         _ = c.frames.pop();
     }
 
-    // Zig tip: a loop that walks the list from the end uses an index that counts down; `while (i > 0)
-    // { i -= 1; ... }` reads the last frame first, the innermost scope.
     fn lookup(c: *Checker, name: []const u8) ?Info {
         var i = c.frames.items.len;
         while (i > 0) {
@@ -99,8 +89,7 @@ const Checker = struct {
         try frame.names.put(c.a, name, info);
     }
 
-    // Zig tip: `name[0] == '$'` looks at the first byte. A system variable such as `$epsilon` or
-    // `$error` always exists and a root aspect may create its own (D-109), so it is never undefined.
+    // @decision D-109
     fn resolve(c: *Checker, at: *const Node, name: []const u8) Error!Info {
         if (name.len > 0 and name[0] == '$') return .{ .kind = .variable };
         if (c.lookup(name)) |info| return info;
@@ -109,9 +98,6 @@ const Checker = struct {
         return c.fail(at, "undefined name '{s}'", .{name});
     }
 
-    // Zig tip: `secret` is the name of a library module (`secret.get(name)`), but also a common name for a
-    // variable. It is not in the list of built-in names: only the receiver of a member access is taken for the
-    // module when no variable of that name is in scope, so `print secret;` of an undeclared name is still an error.
     /// Is `n` the name `secret` used as the library module and not declared as anything else?
     fn isSecretModule(c: *Checker, n: *const Node) bool {
         if (n.tag != .name) return false;
@@ -127,15 +113,11 @@ const Checker = struct {
         return std.mem.eql(u8, t, "Integer") or std.mem.eql(u8, t, "Real");
     }
 
-    // Zig tip: `ty orelse return false` unwraps an optional or leaves the function: a missing type is never a match.
     fn isType(ty: ?[]const u8, name: []const u8) bool {
         const t = ty orelse return false;
         return std.mem.eql(u8, t, name);
     }
 
-    // Zig tip: a slice of bytes can be read from both ends: `text[0]` is the first byte, `text[text.len - 1]` the last.
-    // A Decimal literal is digits, perhaps a point and more digits, then `d` (`12.50d`); `0xAD` is a hexadecimal
-    // Integer that also ends with `d`, so a literal that starts with `0x` or `0b` is never a Decimal.
     fn isDecimalLiteral(text: []const u8) bool {
         if (text.len < 2 or text[text.len - 1] != 'd' or !std.ascii.isDigit(text[0])) return false;
         if (text.len > 2 and text[0] == '0' and (text[1] == 'x' or text[1] == 'b')) return false;
@@ -150,8 +132,6 @@ const Checker = struct {
 
     // ---- expressions ------------------------------------------------------------------------
 
-    // Zig tip: a recursive function that returns `Error!?[]const u8` returns an error union of an
-    // optional: `try` unwraps the error, the caller still has the optional type name.
     /// Check an expression and return its type when the check knows it.
     fn expr(c: *Checker, n: *const Node) Error!?[]const u8 {
         const exp = c.expected;
@@ -256,8 +236,6 @@ const Checker = struct {
         return null;
     }
 
-    // Zig tip: `(x | x in (1..10) and x % 2 == 0)` names `x` in its generator, after the bar. The
-    // names of the generators are declared first, in a scope of their own, then the item is checked.
     fn builder(c: *Checker, n: *const Node) Error!?[]const u8 {
         try c.push();
         defer c.pop();
@@ -293,9 +271,6 @@ const Checker = struct {
         return c.callExpecting(n, as_statement, null);
     }
 
-    // Zig tip: `callExpecting` is `call` with the type the context expects. The arguments are checked once, in
-    // the loop at the end, and their types are kept (`infos`) for the choice among overloaded declarations;
-    // `[_]overload.ArgInfo{.{}} ** 32` would be a fixed array, here an `ArrayList` of the exact size is used.
     fn callExpecting(c: *Checker, n: *const Node, as_statement: bool, exp: ?[]const u8) Error!?[]const u8 {
         const callee = n.kids[0];
         const args = n.kids[1..];
@@ -373,8 +348,7 @@ const Checker = struct {
         return result;
     }
 
-    // Zig tip: `std.mem.eql(u8, a, b)` compares two texts. A private method (the default, D-085) may
-    // be called only inside its class or a subclass; `in_class` says where the check is now.
+    // @decision D-085
     /// `obj.name()` where the type of `obj` is a known class: the method must be public here.
     fn method(c: *Checker, n: *const Node, class_name: []const u8, name: []const u8) Error!void {
         var cur: ?[]const u8 = class_name;
@@ -395,9 +369,6 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: two nested loops over the same slice compare every pair once when the inner one starts
-    // after the outer index (`for (cls.extra[i + 1 ..])`). A labeled `continue :outer` is not needed: a
-    // method the class writes itself is simply skipped with `if (...) continue`.
     /// Two traits that provide a method with the same name force the class to write it (D-145).
     fn traitConflicts(c: *Checker, cls: *const Node) Error!void {
         for (cls.extra, 0..) |t1, i| {
@@ -419,10 +390,7 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `orelse continue` skips a name that is not
-    // a known class (a library class such as `Object`). A routine whose body is the `none` node is a
-    // required method: a signature that ends with `;` (D-145). `only_traits` limits the search to the
-    // methods required by the traits, which a class must write as soon as it is declared.
+    // @decision D-145
     /// The first method that a class requires (from itself, its ancestors or its traits) and nobody writes.
     fn missing(c: *Checker, cls: *const Node, only_traits: bool) ?[]const u8 {
         var required: std.ArrayList([]const u8) = .empty;
@@ -453,9 +421,7 @@ const Checker = struct {
         return null;
     }
 
-    // Zig tip: a position counter that skips the named arguments (`pair` nodes) finds which
-    // parameter each positional argument reaches. A mandatory parameter that comes after an
-    // optional one must be named (D-106): giving it by position is an error.
+    // @decision D-106
     /// The arguments of a call to `routine`: positional first, a late mandatory parameter by name.
     fn order(c: *Checker, n: *const Node, target: *const Node, args: []const *const Node) Error!void {
         const plist = target.kids[0].kids;
@@ -477,9 +443,6 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `c.classes` maps a class name to its declaration; `kids[1]` is the parent, `extra` the traits it
-    // adopts. The loop climbs the parents. The basic types adopt `Comparable` and `Printable` in the library
-    // (declarations.md, library traits), so a type argument that is not a class passes.
     /// Does the class `name` adopt the trait `trait`, directly, through a parent or through a trait?
     fn adopts(c: *Checker, name: []const u8, trait: []const u8) bool {
         var cur: ?[]const u8 = name;
@@ -502,8 +465,6 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `overload.mentions` finds a whole word in the text of a type. A type parameter that appears in
-    // no parameter type can not be read from the arguments, so the call must write it: `make(:Integer)()`.
     /// A call without a type list of a generic subprogram whose type parameters the arguments do not give.
     fn inferable(c: *Checker, n: *const Node, target: *const Node) Error!void {
         if (target.tag != .function and target.tag != .procedure) return;
@@ -706,10 +667,6 @@ const Checker = struct {
                 try c.jobWrites(s);
                 try c.block(s.kids[0]);
             },
-            // Zig tip: a `switch` prong may list the work in a block `{ ... }` and `return c.fail(...)`
-            // leaves the whole function with the error. Only the arguments are looked at here: the
-            // aspect itself and the match of the arguments to its parameters are checked once the
-            // aspect file is read (project.zig).
             .apply_stmt => {
                 for (s.kids) |a| _ = try c.expr(a);
             },
@@ -717,9 +674,7 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `std.mem.endsWith(u8, text, "?")` tests the end of a type text: `String?` is optional. A member
-    // that is not optional never holds `null` (D-080), so a literal `null` for it is refused when the program is
-    // compiled. `pair` nodes are the `name: value` items of an object literal or of a call.
+    // @decision D-080
     /// `{name: null} :Customer` or `Customer(name: null)`: `null` for a member that is not optional (D-080).
     fn nullFields(c: *Checker, class_name: []const u8, value: *const Node) Error!void {
         const cls = c.classes.get(class_name) orelse return;
@@ -742,9 +697,7 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: the value is checked before the names are declared, so `new x := x + 1;` does not see
-    // the new `x`. A declaration with a field target (`new p.z := 7;`) adds an attribute: only a
-    // method or a constructor may do it, and only to `self` (Q-019h, D-096).
+    // @decision D-096
     fn declaration(c: *Checker, s: *const Node) Error!void {
         if (s.ty) |hint_node| try c.nullFields(hint_node.text, s.kids[1]);
         var vt: ?[]const u8 = null;
@@ -812,9 +765,7 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `getPtr` gives a pointer into the map, so the list can grow in place (`append`). The first
-    // declaration of a name is declared as before; the next ones with the same name join its list when they
-    // are of the same kind and their signature is new (D-149).
+    // @decision D-149
     /// Declare a function or a procedure; several may share a name if their signatures differ.
     fn declareSubprogram(c: *Checker, m: *const Node) Error!void {
         if (c.ov.getPtr(m.text)) |list| {
@@ -832,9 +783,6 @@ const Checker = struct {
         try c.ov.put(c.a, m.text, list);
     }
 
-    // Zig tip: a set of names is a `StringHashMapUnmanaged(void)`: `put(a, name, {})` adds, `contains` asks. A
-    // recursive walk collects every name that a node declares (parameters, variables, loop patterns), so a
-    // use of the same name inside the aspect is its own variable and not the shared one.
     fn collectNames(c: *Checker, n: *const Node, set: *std.StringHashMapUnmanaged(void)) Error!void {
         switch (n.tag) {
             .param, .ref_param, .vararg_param => try set.put(c.a, n.text, {}),
@@ -856,8 +804,6 @@ const Checker = struct {
         return t.public;
     }
 
-    // Zig tip: `visiting` is the list of the subprograms being examined: a function that calls itself would loop
-    // for ever, so a name already in the list counts as safe for now (as in project.zig, `memberSafe`).
     /// Is the shared function or procedure `name` thread safe? No shared plain variable, no unsafe call (D-152).
     fn subprogramSafe(c: *Checker, macro_root: *const Node, name: []const u8, visiting: *std.ArrayList([]const u8)) Error!bool {
         for (visiting.items) |v| if (std.mem.eql(u8, v, name)) return true;
@@ -942,9 +888,6 @@ const Checker = struct {
         return false;
     }
 
-    // Zig tip: the key of a table is the clause `key (…)`, or `(id)` when the class has a field `id` and the clause is
-    // missing. The function returns the names in a slice of the arena; with no key at all the slice is empty and the
-    // caller reports it.
     /// The names of the key fields of a table.
     pub fn keyFields(a: std.mem.Allocator, t: *const Node, cls: *const Node) ![]const []const u8 {
         var out: std.ArrayList([]const u8) = .empty;
@@ -954,9 +897,6 @@ const Checker = struct {
         return out.items;
     }
 
-    // Zig tip: all the rules of a declaration are checked together, in the order of the table of compile errors of
-    // the specification. `c.fail(node, fmt, args)` reports at the line of the node. The class of the table was
-    // declared in this scope (`c.classes`); a class that is not found is an error.
     /// The compile errors of one `table` declaration.
     fn checkTable(c: *Checker, t: *const Node) Error!void {
         const class_name = t.kids[0].text;
@@ -995,8 +935,6 @@ const Checker = struct {
         return keyFields(c.a, t, cls);
     }
 
-    // Zig tip: a depth-first walk over the `reference f to t` edges. `path` is the tables on the way; meeting one that
-    // is already on the way is a cycle, and the message lists the tables of the cycle in order.
     /// A cycle of `reference` clauses is a compile error (database.md): `aa -> bb -> aa`.
     fn referenceCycle(c: *Checker, start: *const Node) Error!void {
         var path: std.ArrayList(*const Node) = .empty;
@@ -1025,9 +963,6 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `fieldChange` is called with the type name of a record. Every table of that class says which fields
-    // are its key or generated: the first table declared for the class decides. A record read with `find!` has the
-    // class of its table, so the type is known to the compiler (the checker keeps it in the variable).
     /// A key or generated field never changes (database.md, dirty fields); the compiler refuses a change it can see.
     fn fieldChange(c: *Checker, at: *const Node, class_name: []const u8, field: []const u8) Error!void {
         var it = c.tables.iterator();
@@ -1043,9 +978,6 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: `update c do … done;` names the fields of the record `c` as variables inside the block, so the block is
-    // checked in a scope where each member of the class is declared. When the class of `c` is not known to the
-    // compiler the names are accepted as they come (`open_names`), as for an import without prefix.
     /// `update record do … done;` (database.md, the update block).
     fn updateBlock(c: *Checker, s: *const Node) Error!void {
         const ty = try c.expr(s.kids[0]);
@@ -1068,8 +1000,7 @@ const Checker = struct {
         for (n.kids) |k| try c.updateTargets(k, class_name);
     }
 
-    // Zig tip: one walk over the body of a job collects the connection of every table it writes (`let t <+ r;`,
-    // `t.remove(r)`, `t.add(r)`, `t.flush()`, `t.load!(…)`). A second connection name is the error of D-158.
+    // @decision D-158
     /// A job writes to one connection only (database.md, transactions).
     fn jobWrites(c: *Checker, job: *const Node) Error!void {
         var first: ?[]const u8 = null;
@@ -1118,9 +1049,6 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: a function that only reads a tree can be written as a short recursion: `startsProcess` answers whether
-    // any `start name(...)` below `n` names the process `name`. `for (n.kids) |k| if (...) return true;` leaves at the
-    // first hit; the final `return false` is the answer when none was found.
     /// Does a `start` below `n` start the private process `name` (D-179)?
     fn startsProcess(n: *const Node, name: []const u8) bool {
         if (n.tag == .start_stmt and std.mem.eql(u8, n.text, name)) return true;
@@ -1128,9 +1056,8 @@ const Checker = struct {
         return false;
     }
 
-    // Zig tip: `aspectSafe` and `collectNames` are the checks of a concurrent aspect of a macro; here they are used on the
-    // aspect itself, with the aspect as the "root" whose plain variables and subprograms are the shared ones. A private
-    // process that the aspect starts runs as a task, so it may use only the names that are thread safe (D-179, D-152).
+    // @decision D-179
+    // @decision D-152
     /// A concurrent aspect: each private process it starts uses only atomic variables and thread-safe subprograms.
     fn startedSafety(c: *Checker, aspect: *const Node) Error!void {
         for (aspect.kids) |prc| {
@@ -1142,8 +1069,8 @@ const Checker = struct {
         }
     }
 
-    // Zig tip: the root of a run is an aspect (D-179). Its declarations are declared first, in any order (D-041), then
-    // checked; a concurrent aspect also has its started private processes checked for thread safety.
+    // @decision D-179
+    // @decision D-041
     fn checkRoot(c: *Checker, root_node: *const Node) Error!void {
         try c.push();
         try c.declareMembers(root_node.kids);
@@ -1152,10 +1079,7 @@ const Checker = struct {
         if (root_node.public) try c.startedSafety(root_node);
     }
 
-    // Zig tip: the loop over the declarations is a function of its own, so an aspect of a macro can be checked
-    // with the same code, inside the scope of the shared declarations (D-152). `defer c.pop()` in a `switch`
-    // branch runs when the branch ends. An aspect sees the names declared before it (the shared ones), not the
-    // variables of a process, which are gone when its frame is popped.
+    // @decision D-152
     /// Check the declarations of a root aspect, an aspect, a module or a macro.
     fn declMembers(c: *Checker, kids: []const *const Node) Error!void {
         for (kids) |m| {
@@ -1200,19 +1124,12 @@ const Checker = struct {
     }
 };
 
-// Zig tip: `check` is the one public function: it makes the checker, runs it on the tree and
-// returns `error.Syntax` with the `Diag` filled when something is wrong. The checker allocates
-// from the arena of the parse (frames, maps), freed together with the tree.
 /// Check a parsed script: an aspect (or the root of a macro) or a module, as a whole.
 pub fn check(arena: std.mem.Allocator, tree: *const Node, diag: *Diag) Error!void {
     var c: Checker = .{ .a = arena, .diag = diag };
     return c.checkRoot(tree);
 }
 
-// Zig tip: a test of a pass that is part of `parse` goes through `parse`: the script is parsed and
-// then checked, and `expectError` proves the whole chain refuses it. `d.message()` is the text
-// that the compiler would print. Two files may import each other in Zig: `check.zig` is used by
-// `parser.zig`, and this test uses `parser.zig` back.
 test "an undefined name and a redeclared name are refused" {
     const parser = @import("parser.zig");
     var d: Diag = .{};
@@ -1222,8 +1139,6 @@ test "an undefined name and a redeclared name are refused" {
     try std.testing.expectEqualStrings("'x' is already declared in this scope", d.message());
 }
 
-// Zig tip: the same helper `parser.check` returns nothing when the script is accepted, so `try`
-// alone is the assertion.
 test "a correct script passes, a let of a missing name does not" {
     const parser = @import("parser.zig");
     var d: Diag = .{};
@@ -1231,7 +1146,6 @@ test "a correct script passes, a let of a missing name does not" {
     try std.testing.expectError(error.Syntax, parser.check(std.testing.allocator, "primary aspect a is process main is let y := 5; return; end a;", &d));
 }
 
-// Zig tip: a procedure has no value, so using it in an expression is refused before the run.
 test "a procedure is a statement, and a late mandatory parameter is named" {
     const parser = @import("parser.zig");
     var d: Diag = .{};

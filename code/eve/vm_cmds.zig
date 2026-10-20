@@ -12,29 +12,20 @@ const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
 const context = @import("context.zig");
 const cli = @import("cli.zig");
-// Zig tip: the shared names come from context.zig under short local names (`const Context = context.Context;`):
-// the same type, not a copy. Files of one module may import each other, also in a circle.
 const Context = context.Context;
 const Handler = context.Handler;
 const exit_usage = context.exit_usage;
 const prompt = context.prompt;
 const stub = context.stub;
 
-// Zig tip: `catch return error.WriteFailed` turns the errors of the stop (out of memory, a failed write) into the one
-// error that a handler of this table may return. The text is written before the call is made, and flushed, so that the
-// screen shows it even if the stop takes a moment.
 /// `stop`: close the doors this process opened (ipc and http together), tell the running scripts to stop, and stay at
 /// the prompt. With no door open here, it stops the machine of another process (the one `evevm` started).
-// Zig tip: the words of the line were split at the spaces; `std.mem.join` puts them back with one space, which is right
-// for the table of commands (the prompt itself calls `shellLine` with the line as it was typed).
 /// `shell <command>`: run a command of the system; the prompt stays in eve.
 pub fn cmdShell(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     const line = std.mem.join(ctx.gpa, " ", args) catch return error.WriteFailed;
     return shellLine(ctx, line);
 }
 
-// Zig tip: `channel.runShell` writes the output of the command to `ctx.out` while it comes (the upper part of the
-// full-screen prompt, or the plain screen) and answers its exit code, which becomes the status of the prompt.
 /// Run `text` in the system shell, in the current folder; `exit` is not needed: eve stays.
 pub fn shellLine(ctx: *Context, text: []const u8) Io.Writer.Error!void {
     const command = std.mem.trim(u8, text, " \t\r");
@@ -47,9 +38,6 @@ pub fn shellLine(ctx: *Context, text: []const u8) Io.Writer.Error!void {
     if (ctx.status != 0) try ctx.out.print("shell: exit {d}\n", .{ctx.status});
 }
 
-// Zig tip: at the prompt of `eve` the folder is the folder of the process, so `cd` changes it for real (`setCurrentPath`) and
-// the commands that follow, of Eve or of the shell, start there. `currentPathAlloc` gives the new folder back as the system
-// spells it. An error of the system (no such folder) is printed, as a shell prints it.
 /// `cd [folder]` at the prompt: show or change the folder.
 pub fn cdLine(ctx: *Context, text: []const u8) Io.Writer.Error!void {
     var arg = std.mem.trim(u8, text, " \t\r");
@@ -86,10 +74,6 @@ pub fn session(ctx: *Context) Io.Writer.Error!*vm.Session {
     return s;
 }
 
-// Zig tip: `viaSession("load")` is a comptime function like `stub`: it returns a handler for one
-// session command. `std.mem.join(gpa, " ", args)` glues the words back into one string (the
-// `log` command takes the rest of the line). `ctx.status = s.status` copies the exit status of the
-// command, and a `stop` from the session ends the REPL too.
 /// A REPL command that is implemented by the session (vm.zig): `load`, `parse`, `ast`, ...
 pub fn viaSession(comptime name: []const u8) Handler {
     return struct {
@@ -103,9 +87,6 @@ pub fn viaSession(comptime name: []const u8) Handler {
     }.run;
 }
 
-// Zig tip: `comptime listen: bool` makes two handlers from one function, `door(true)` for `listen` and `door(false)`
-// for `serve`, as `viaSession` does for the session commands. The words are read in any order: `start`, `stop`,
-// `restart` or `status` is the action, and the other door's name adds that door (`listen serve` opens both).
 /// `listen [word]` and `serve [word]` in the REPL: the same as `--listen` and `--serve`, but the doors open in this
 /// process and the prompt stays.
 pub fn door(comptime listen: bool) Handler {
@@ -138,8 +119,6 @@ pub fn door(comptime listen: bool) Handler {
     }.run;
 }
 
-// Zig tip: a handler ignores the arguments it does not need with `_ = args;`: Zig reports an unused parameter as an
-// error, so this line says "not used, on purpose". The report is only text written to `ctx.out`; it opens no door.
 /// `status`: the machine in one page. The process (version, script, folder of the reports), then the configuration,
 /// the doors and what a machine on them is doing. The line of the script in `summary.log` is still added.
 pub fn cmdStatus(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
@@ -152,9 +131,6 @@ pub fn cmdStatus(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     client.machineStatus(ctx.io, ctx.gpa, ctx.out, ctx.config orelse "eve.cfg") catch return error.WriteFailed;
 }
 
-// Zig tip: a stack buffer for the reader of the standard input lives as long as the function; the debugger keeps a
-// pointer to the reader (`&reader.interface`), which is fine because `s.run()` ends before the function does. The
-// debugger itself is allocated with `gpa.create` because the session keeps a pointer to it in `s.dbg`.
 /// `debug <file>`: run the script under the debugger. It stops before the first statement and reads commands (run,
 /// halt, next, step, exit, trace, break, clear) from the standard input; see code/evevm/src/debugger.zig.
 pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
@@ -191,9 +167,6 @@ pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     }
 }
 
-// Zig tip: parse first, run second: the session's `run` parses the file when it was not parsed,
-// and returns early on a syntax error, so a script with errors never starts. Unhandled errors go
-// to stderr, so the standard output stays what the script printed.
 /// `execute`: parse the script (as `check` does) and, only if it is correct, run its main process.
 pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     const s = try session(ctx);

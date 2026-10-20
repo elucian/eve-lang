@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -27,18 +24,12 @@ const Started = interp.Started;
 
 // ---- statements -----------------------------------------------------------------------
 
-// Zig tip: `execBlock` relies on the same Zig feature as `define` above: see the tip there.
-// Zig tip: a block is a region of the heap: after each statement, the values it made and dropped are
-// freed (a safe point); `defer` leaves the region however the block ends.
 pub fn execBlock(it: *Interp, b: *const Node) Signal!void {
     it.regionIn();
     defer it.regionOut();
     try it.execBody(b);
 }
 
-// Zig tip: the body of a loop needs no region of its own: the loop has one, and the statements of the
-// body end at safe points of that region. Entering a region at each pass would cost a little for
-// nothing.
 /// The statements of a loop body, each followed by a safe point.
 pub fn execBody(it: *Interp, b: *const Node) Signal!void {
     for (b.kids) |s| {
@@ -47,10 +38,6 @@ pub fn execBody(it: *Interp, b: *const Node) Signal!void {
     }
 }
 
-// Zig tip: `tick` is the "step" of the execution loop: it counts the statement, remembers its
-// line, and lets the VM look into the slot for external commands. A hook is a function pointer
-// plus an opaque context pointer (`*anyopaque`): the interpreter calls "something" without
-// knowing the VM, so this file does not import vm.zig.
 pub fn tick(it: *Interp, n: *const Node) Signal!void {
     if (it.dbg) |d| {
         if (it.root == null) try d.before(d.ctx, it, n);
@@ -63,7 +50,6 @@ pub fn tick(it: *Interp, n: *const Node) Signal!void {
     if (n.line > 0) it.line = n.line;
 }
 
-// Zig tip: `exec` relies on the same Zig feature as `define` above: see the tip there.
 pub fn exec(it: *Interp, n: *const Node) Signal!void {
     // what the statement puts in the scratch memory is freed when it ends, however it ends
     const m = it.scratch.mark();
@@ -173,8 +159,6 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
     }
 }
 
-// Zig tip: `catch {}` after a call drops its error on purpose; here a missing `jobs` map
-// (a free script) is not a failure. The state of a job is one field of an object in the map.
 /// Record the state of the job `label` in `jobs["label"].status`.
 pub fn setJob(it: *Interp, label: []const u8, status: []const u8) void {
     const cell = it.scope.find("jobs") orelse return;
@@ -184,7 +168,6 @@ pub fn setJob(it: *Interp, label: []const u8, status: []const u8) void {
     if (rec == .object) it.setField(rec.object, "status", it.staticStr(status) catch return) catch {};
 }
 
-// Zig tip: `exprStmt` relies on the same Zig feature as `define` above: see the tip there.
 pub fn exprStmt(it: *Interp, e: *const Node) Signal!void {
     if (e.tag == .bin and (std.mem.eql(u8, e.text, "<+") or std.mem.eql(u8, e.text, "<-") or std.mem.eql(u8, e.text, "->"))) {
         return it.listOp(e);
@@ -196,7 +179,6 @@ pub fn exprStmt(it: *Interp, e: *const Node) Signal!void {
     if (e.tag == .name and v == .func) _ = try it.callValue(v, null, &.{});
 }
 
-// Zig tip: `listOp` relies on the same Zig feature as `define` above: see the tip there.
 /// `a <+ x;` appends in place, `x <- a;` removes the first `x`, `a -> x;` removes the last.
 pub fn listOp(it: *Interp, e: *const Node) Signal!void {
     const op = e.text;
@@ -233,7 +215,6 @@ pub fn listOp(it: *Interp, e: *const Node) Signal!void {
     if (found) |i| _ = it.listRemove(l, i);
 }
 
-// Zig tip: `print` relies on the same Zig feature as `define` above: see the tip there.
 pub fn print(it: *Interp, n: *const Node) Signal!void {
     const is_print = n.tag == .print_stmt;
     var buf: std.ArrayList(u8) = .empty;
@@ -259,7 +240,6 @@ pub fn print(it: *Interp, n: *const Node) Signal!void {
     try it.out.writeAll(buf.items);
 }
 
-// Zig tip: `raise` relies on the same Zig feature as `realOf` above: see the tip there.
 pub fn raise(it: *Interp, n: *const Node) Signal {
     if (n.kids.len == 0) return it.fail("raise", .{});
     const v = it.eval(n.kids[0]) catch |e| return e;
@@ -283,7 +263,6 @@ pub fn raise(it: *Interp, n: *const Node) Signal {
 
 // ---- declarations and assignment ------------------------------------------------------
 
-// Zig tip: `declareRoutine` relies on the same Zig feature as `define` above: see the tip there.
 pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
     if (n.tag == .trait) {
         const c = try it.a.create(Class);
@@ -344,7 +323,6 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
     if (n.is_sql) try db.conn.registerSqlFunction(it.host(), f);
 }
 
-// Zig tip: `coerce` relies on the same Zig feature as `bind` above: see the tip there.
 pub fn coerce(v: Value, ty: ?*const Node) Value {
     const t = ty orelse return v;
     // @perf hot
@@ -378,9 +356,6 @@ pub fn coerce(v: Value, ty: ?*const Node) Value {
     return v;
 }
 
-// Zig tip: `while (i > mark) { i -= 1; ... }` walks a list backwards: the last `defer`
-// registered runs first. `pop()` of an `ArrayList` returns an optional (null when empty).
-// `catch {}` drops an error on purpose: a failing `defer` does not hide the first error.
 /// Run the `defer` statements registered since `mark`, newest first, and forget them.
 pub fn runDefers(it: *Interp, mark: usize) void {
     while (it.defers.items.len > mark) {
@@ -389,9 +364,7 @@ pub fn runDefers(it: *Interp, mark: usize) void {
     }
 }
 
-// Zig tip: `std.mem.eql(u8, a, b)` compares text. `orderedRemove(0)` takes the first element
-// and moves the others down; `pop()` takes the last one. The third kid of a capture node says
-// whether the name may already exist: `.none` is the explicit `new` (D-104).
+// @decision D-104
 /// `let lst -> e;` takes the last element, `let e <- lst;` and `new e <- lst;` the first (D-104).
 pub fn capture(it: *Interp, n: *const Node) Signal!void {
     const lv = try it.eval(n.kids[0]);
@@ -410,7 +383,6 @@ pub fn capture(it: *Interp, n: *const Node) Signal!void {
     try it.assignTo(target, item);
 }
 
-// Zig tip: `declare` relies on the same Zig feature as `define` above: see the tip there.
 pub fn declare(it: *Interp, n: *const Node) Signal!void {
     const targets = n.kids[0].kids;
     const constant = n.tag == .set;
@@ -452,8 +424,6 @@ pub fn declare(it: *Interp, n: *const Node) Signal!void {
     }
 }
 
-// Zig tip: `new c := {id: 1} :Customer;` gives a literal the class named by the type hint: the object is then a
-// `Customer` for the methods, the checks and the database layer. A class that is not in scope is left alone.
 /// Make an object literal an object of the class that the type hint of a declaration names.
 pub fn typeLiteral(it: *Interp, v: Value, ty: ?*const Node) void {
     const t = ty orelse return;
@@ -463,7 +433,6 @@ pub fn typeLiteral(it: *Interp, v: Value, ty: ?*const Node) void {
     if (cell.value == .class and cell.value.class.node != null) v.object.class = cell.value.class;
 }
 
-// Zig tip: `declareOne` relies on the same Zig feature as `define` above: see the tip there.
 pub fn declareOne(it: *Interp, t: *const Node, v: Value, constant: bool) Signal!void {
     switch (t.tag) {
         .name => {
@@ -515,7 +484,6 @@ pub fn augmentValue(it: *Interp, o: interp.ast.Op, op: []const u8, cur: Value, v
     return try it.applyOp(o, op, cur, v);
 }
 
-// Zig tip: `assign` relies on the same Zig feature as `define` above: see the tip there.
 pub fn assign(it: *Interp, n: *const Node) Signal!void {
     const target = n.kids[0];
     const op = n.text;
@@ -534,8 +502,7 @@ pub fn assign(it: *Interp, n: *const Node) Signal!void {
     try it.assignTo(target, v);
 }
 
-// Zig tip: `let a <+ x;` has the list on the left, `let x +> a;` on the right: the arrow points
-// away from the list (D-107). `insert(allocator, 0, x)` puts an element at the front.
+// @decision D-107
 /// `let lst <+ x;` appends, `let x +> lst;` puts in front. A list given as `x` adds its elements.
 pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
     const front = n.text[0] == '+';
@@ -560,8 +527,6 @@ pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
     } else try it.listAppend(l, item);
 }
 
-// Zig tip: `Value{ .real = 0 }` names the union type before the braces when Zig can not infer it from the
-// context. A `switch` is not needed for two cases: two `if`s on the tags (`cur == .real`) read as plainly.
 /// `v` converted to the number kind that `cur` holds, Decimal or Real; any other value is kept (D-168). A Real
 /// becomes the Decimal of its shortest text (`0.1` is `0.1d`); a Real too large for a Decimal is kept, and the
 /// operator that uses it will say so.
@@ -573,7 +538,6 @@ pub fn coerceLike(cur: Value, v: Value) Value {
     return v;
 }
 
-// Zig tip: `assignTo` relies on the same Zig feature as `define` above: see the tip there.
 pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
     switch (target.tag) {
         .name => {
@@ -621,7 +585,6 @@ pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
 
 // ---- control statements ---------------------------------------------------------------
 
-// Zig tip: `ifStmt` relies on the same Zig feature as `define` above: see the tip there.
 pub fn ifStmt(it: *Interp, n: *const Node) Signal!void {
     var i: usize = 0;
     while (i + 1 < n.kids.len) : (i += 2) {
@@ -630,9 +593,7 @@ pub fn ifStmt(it: *Interp, n: *const Node) Signal!void {
     if (n.kids.len % 2 == 1) try it.execBlock(n.kids[n.kids.len - 1]);
 }
 
-// Zig tip: a `break` or `skip` with a label unwinds through the inner loops as a Zig error; each
-// loop asks `caught` whether the signal is for it. A bare `break` (empty label) belongs to the
-// innermost loop, a labeled one to the loop with that label (D-034).
+// @decision D-034
 pub fn caught(it: *Interp, label: []const u8) bool {
     if (it.jump_label.len == 0) return true;
     if (std.mem.eql(u8, it.jump_label, label)) {
@@ -642,7 +603,6 @@ pub fn caught(it: *Interp, label: []const u8) bool {
     return false;
 }
 
-// Zig tip: `whileStmt` relies on the same Zig feature as `define` above: see the tip there.
 pub fn whileStmt(it: *Interp, n: *const Node) Signal!void {
     const saved = try it.pushScope();
     defer it.leaveScope(saved);
@@ -667,7 +627,6 @@ pub fn whileStmt(it: *Interp, n: *const Node) Signal!void {
     try it.execBlock(n.kids[4]);
 }
 
-// Zig tip: `forStmt` relies on the same Zig feature as `define` above: see the tip there.
 pub fn forStmt(it: *Interp, n: *const Node) Signal!void {
     const saved = try it.pushScope();
     defer it.leaveScope(saved);
@@ -734,11 +693,6 @@ pub fn forStmt(it: *Interp, n: *const Node) Signal!void {
     try it.execBlock(n.kids[4]);
 }
 
-// Zig tip: `while (true)` has no condition of its own: the loop ends only by `break`. The test
-// sits at the bottom, after the body. In `catch |e| switch (e)`, the branch `error.Skip => {}`
-// is an empty block: the error is swallowed and execution falls through to the bottom test,
-// which is exactly what `skip` means in a `repeat` loop. `n.kids.len > 2` checks whether the
-// optional `while` condition was written; a bare `repeat;` loops until `break`.
 /// `loop [header] do body repeat [while c];` (D-074): the body runs at least once.
 pub fn repeatStmt(it: *Interp, n: *const Node) Signal!void {
     const saved = try it.pushScope();
@@ -759,7 +713,6 @@ pub fn repeatStmt(it: *Interp, n: *const Node) Signal!void {
     }
 }
 
-// Zig tip: `matchStmt` relies on the same Zig feature as `define` above: see the tip there.
 pub fn matchStmt(it: *Interp, n: *const Node) Signal!void {
     const subject = try it.eval(n.kids[0]);
     const all = std.mem.startsWith(u8, n.text, "all");

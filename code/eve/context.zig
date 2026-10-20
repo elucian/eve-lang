@@ -8,10 +8,6 @@ const tui = @import("evevm").tui;
 const cli = @import("cli.zig");
 const evecp = @import("evecp");
 
-// Zig tip: `pub` makes a declaration visible to other files (main.zig uses `cli.exit_usage`).
-// Without it the name is private to this file. A `const` number without a type is a
-// `comptime_int`: it has no size until it is used (here as the `u8` exit status).
-// `///` documents the next declaration, `//!` documents the file; tools show both.
 /// Exit status: bad command line (EX_USAGE).
 pub const exit_usage = 64;
 
@@ -27,15 +23,8 @@ pub const exit_no_input = evecp.cli.exit_no_input;
 /// A file or folder cannot be created (EX_CANTCREAT of sysexits.h).
 pub const exit_cant_create = evecp.cli.exit_cant_create;
 
-// Zig tip: a string literal is a pointer to a constant array of bytes; there is no string type.
-// Text is `[]const u8`: a slice (pointer + length) of read-only bytes, in UTF-8.
 pub const prompt = "eve:> ";
 
-// Zig tip: a `struct` is a record. Fields can have default values (`= false`), so
-// `.{ .out = w }` builds a Context and fills the rest. Types are written after the name:
-//   `*Io.Writer`    pointer to one Writer (the struct does not own it, it only borrows it)
-//   `?[]const u8`   optional: either a string or `null` (no -s option given)
-//   `u8`            unsigned 8-bit integer, 0 to 255, exactly what a process exit code is
 /// State shared by the command handlers.
 pub const Context = struct {
     out: *Io.Writer,
@@ -62,11 +51,6 @@ pub const Context = struct {
     width: usize = screen.default_width,
 };
 
-// Zig tip: types are ordinary values, so `const Handler = ...` names a type. This one is a
-// pointer to a function (`*const fn`): the jump table stores handlers in it and calls them.
-// `Io.Writer.Error!void` is an error union: the function returns either `void` (nothing) or
-// one of the errors of Io.Writer. The caller must handle it: `try` (pass it up) or `catch`.
-// `[]const []const u8` is a slice of strings: the words after the command name.
 pub const Handler = *const fn (ctx: *Context, args: []const []const u8) Io.Writer.Error!void;
 
 pub const Command = struct {
@@ -77,13 +61,6 @@ pub const Command = struct {
     file: []const u8 = "",
 };
 
-// Zig tip: `comptime` parameters are known while compiling. `stub("check")` is evaluated by the
-// compiler, which generates a separate small function for each name. A function cannot capture
-// local variables, so the trick is to return a function declared inside an anonymous struct,
-// whose `name` is a constant the compiler fills in. `_` as a parameter name means "unused":
-// Zig reports unused parameters and variables as errors. `try x` means: if `x` is an error,
-// return it from this function at once; otherwise use the value. `.{name}` is a tuple of the
-// values for the `{s}` placeholder (`s` = string) of `print`.
 /// A branch that is not written yet: it echoes its name.
 pub fn stub(comptime name: []const u8) Handler {
     return struct {

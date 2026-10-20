@@ -59,10 +59,6 @@ pub const err_access = value.err_access;
 pub const err_overflow = value.err_overflow;
 pub const err_sql = value.err_sql;
 
-// Zig tip: a task needs its own interpreter (`child`): its scope, its call stack, its output buffer.
-// `Started` keeps everything the parent needs after the task ended: the outcome, the arguments to
-// write back, the output to flush at `done`. `report` is copied from the child, because the child's
-// list of reports is gone with it from the parent's point of view.
 // @eve-impl which engine runs the program: the tree walker (the reference) or the bytecode machine (design/design-bytecode.md)
 // @decision D-201
 /// The engine of the run, chosen by `--engine` or `EVE_ENGINE`.
@@ -93,10 +89,6 @@ pub const Started = struct {
     report: Report = .{ .line = 0, .code = 0, .message = "", .job = "" },
 };
 
-// Zig tip: a generator is a coroutine: its body runs on a thread of its own (the child interpreter), but only when
-// its caller asks for a value, because the two hand the baton to each other (task.zig, `resumeGen`). This record is
-// what they share. `value` holds what the generator yielded last; `closing` asks the body to stop at its next
-// `yield`; the flags tell the caller what happened while the body ran.
 /// The state of one generator object (declarations.md#generators-level-5).
 pub const GenState = struct {
     t: *task.Task,
@@ -115,8 +107,6 @@ pub const GenState = struct {
     report: Report = .{ .line = 0, .code = 0, .message = "", .job = "" },
 };
 
-// Zig tip: a group is a list of the tasks started in it plus its policy; the interpreter keeps a
-// pointer to the group whose `do` region is running, so `start` knows where to add the task.
 /// The parallel group whose do region is running.
 pub const Group = struct {
     list: *std.ArrayList(*Started),
@@ -125,19 +115,13 @@ pub const Group = struct {
     owned: *std.ArrayList(usize),
 };
 
-// Zig tip: a small struct for the stack of calls. `kind` is a word that is printed (`function`,
-// `procedure`, `method`, `aspect`) and `call_line` is the line, in the caller, where
-// this call was made: with it the trace can tell on which line each unit was running.
 /// One call in progress: what runs and from which line it was called.
 pub const Frame = struct { kind: []const u8, name: []const u8, call_line: u32, file: []const u8 = "" };
 
-// Zig tip: a `bool` field is the cheapest way to say "one of two kinds"; `is_error` false means a
-// warning. The interpreter only collects these messages: it has no file system, so the session
-// (vm.zig) writes them to the run log when the run is over (D-114).
+// @decision D-114
 /// One message of `log_err` or `log_wrn`.
 pub const LogMsg = struct { is_error: bool, line: u32, unit: []const u8, level: usize, text: []const u8 };
 
-// Zig tip: `Hook` relies on the same Zig feature as `List` above: see the tip there.
 /// How the VM asks to look into the slot between two statements.
 pub const Hook = struct {
     ctx: *anyopaque,
@@ -145,16 +129,12 @@ pub const Hook = struct {
     poll: *const fn (ctx: *anyopaque, steps: usize, line: u32) bool,
 };
 
-// Zig tip: `Hook` above sees only numbers; the debugger must see the node about to run and the interpreter (for the
-// depth of the calls), so its hook gets both. `*const fn (...) Signal!void` can fail: an error from the hook (the
-// `halt` command is `error.Stop`) unwinds the run exactly as an error of the script would.
 /// How the debugger (debugger.zig) is called before each statement of the main task.
 pub const DebugHook = struct {
     ctx: *anyopaque,
     before: *const fn (ctx: *anyopaque, it: *Interp, n: *const Node) Signal!void,
 };
 
-// Zig tip: `Outcome` relies on the same Zig feature as `List` above: see the tip there.
 /// The end of a run.
 pub const Outcome = struct {
     /// Exit status: 0, 1 panic, 2 failed expect, 4 raise (D-055).
@@ -166,9 +146,6 @@ pub const Outcome = struct {
 
 
 
-// Zig tip: the methods of `Interp` are written in several files (interp/*.zig), grouped by concern. Each file holds plain
-// functions whose first parameter is `it: *Interp`; the struct names each of them again (`pub const eval = part_expr.eval;`),
-// and Zig lets a declaration that is a function be called with the dot syntax: `it.eval(n)` calls `part_expr.eval(it, n)`.
 const part_show = @import("interp/show.zig");
 const part_expr = @import("interp/expr.zig");
 const part_collections = @import("interp/collections.zig");
@@ -294,9 +271,6 @@ pub const Interp = struct {
     sent: std.ArrayList(*Channel) = .empty,
     closed: std.ArrayList(*Channel) = .empty,
 
-    // Zig tip: `init` builds the struct and `boot` fills the global scope. They are two steps
-    // because the scope must live at a stable address (`a.create` gives a pointer that stays valid)
-    // and the struct is returned by value. `a.create(Scope)` allocates one; `.* = .{}` sets it.
     pub fn init(a: std.mem.Allocator, out: *Io.Writer) Signal!Interp {
         const hp = try a.create(Heap);
         hp.* = Heap.init(std.heap.smp_allocator);
@@ -310,9 +284,6 @@ pub const Interp = struct {
         return it;
     }
 
-    // Zig tip: the scratch struct must stay at one address (its allocator interface points to it), so it
-    // is created in the arena and the interpreter keeps a pointer. Its chunks come from `page_allocator`,
-    // memory asked directly from the operating system, and go back to it in `deinit`.
     /// A new scratch memory for an interpreter.
     pub fn newScratch(a: std.mem.Allocator) Signal!*Scratch {
         const sc = try a.create(Scratch);
@@ -320,7 +291,6 @@ pub const Interp = struct {
         return sc;
     }
 
-    // Zig tip: `deinit` relies on the same Zig feature as `newScratch` above: see the tip there.
     /// Give back the memory the interpreter took outside its arena.
     pub fn deinit(it: *Interp) void {
         it.scratch.deinit();
@@ -328,8 +298,6 @@ pub const Interp = struct {
         it.scope_stack.deinit(it.g);
     }
 
-    // Zig tip: a function pointer with a context pointer (`*anyopaque`) lets the heap call back into the
-    // interpreter without importing it as a type it must know: the same idea as `Hook` below.
     /// Mark what the interpreter reaches without the heap: its scopes (the roots of a trace).
     pub fn roots(ctx: *anyopaque, h: *Heap) void {
         const it: *Interp = @ptrCast(@alignCast(ctx));
@@ -344,16 +312,12 @@ pub const Interp = struct {
         while (mods.next()) |m| h.markFrom(&m.*.scope.hdr);
     }
 
-    // Zig tip: only the two names a script may change are defined in each unit; the constants are found
-    // in the prelude, the parent scope of the unit, so an `apply` does not define sixty names again.
     /// Define the names every unit owns: `$epsilon` and `_` (the constants are in the prelude).
     pub fn boot(it: *Interp) Signal!void {
         try it.define("$epsilon", .{ .real = 1e-9 }, false);
         try it.define("_", .nil, false);
     }
 
-    // Zig tip: `for (xs) |x| ...` walks a slice; `for (xs, 0..) |x, i|` also gives the index. The prelude is
-    // pinned: it lives to the end of the run, and the units count it as their parent without freeing it.
     /// The scope of the built-in names, made on first use: `True`, `False`, `Null`, the types, `Object`.
     pub fn preludeScope(it: *Interp) Signal!*Scope {
         const b = it.base();
@@ -399,9 +363,6 @@ pub const Interp = struct {
 
     // ---- errors ---------------------------------------------------------------------------
 
-    // Zig tip: `fail` formats a message into the arena and returns `error.Raise`, so a caller writes
-    // `return it.fail("...", .{})`. The message is kept in `reports`, where the `recover` block
-    // (`$error.message`) and the `errors` command read it. `comptime fmt` is checked against `args`.
     /// Raise an error with a code and a message.
     pub fn failWith(it: *Interp, code: u8, comptime fmt: []const u8, args: anytype) Signal {
         const msg = std.fmt.allocPrint(it.a, fmt, args) catch return error.OutOfMemory;
@@ -416,9 +377,6 @@ pub const Interp = struct {
         return error.Raise;
     }
 
-    // Zig tip: the trace is built from the stack of frames, walking it from the top (`while (i > 0) :
-    // (i -= 1)` counts down, see check.zig). The innermost unit was running on `it.line`; the unit
-    // below it was running on the line where it made the call, which the frame above remembers.
     /// The stack of calls as text, innermost first (D-113).
     pub fn traceText(it: *Interp) Signal![]const u8 {
         var buf: std.ArrayList(u8) = .empty;
@@ -433,16 +391,12 @@ pub const Interp = struct {
         return buf.items;
     }
 
-    // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
-    // syntax: `p.name(...)`.
     pub fn fail(it: *Interp, comptime fmt: []const u8, args: anytype) Signal {
         return it.failWith(err_raise, fmt, args);
     }
 
     // ---- scopes ---------------------------------------------------------------------------
 
-    // Zig tip: `try f()` calls `f` and, when it returns an error, returns that error from this
-    // function too.
     /// Declare `name` in the current scope (a second declaration replaces the first).
     pub fn define(it: *Interp, name: []const u8, v: Value, constant: bool) Signal!void {
         // a name declared again in the same scope (a loop variable, a `new` in a loop body) keeps its
@@ -459,9 +413,6 @@ pub const Interp = struct {
         try it.bind(name, cell);
     }
 
-    // Zig tip: `std.mem.eql(u8, a, b)` compares two slices by content; `==` on slices would compare
-    // their addresses.
-    // A binding counts its variable: replacing one lets the old variable go.
     pub fn bind(it: *Interp, name: []const u8, cell: *Var) Signal!void {
         Heap.retainVar(cell);
         for (it.scope.binds.items) |*b| {
@@ -475,8 +426,6 @@ pub const Interp = struct {
         try it.scope.binds.append(it.g, .{ .name = name, .v = cell });
     }
 
-    // Zig tip: the new value is counted before the old one is let go: if both are the same object, its
-    // count never touches zero on the way.
     /// Store `v` in the variable `cell`.
     pub fn setVar(it: *Interp, cell: *Var, v: Value) void {
         Heap.retain(v);
@@ -484,7 +433,6 @@ pub const Interp = struct {
         cell.value = v;
     }
 
-    // Zig tip: `setCell` relies on the same Zig feature as `setVar` above: see the tip there.
     /// Store `v` in an element of a list (or any counted cell).
     pub fn setCell(it: *Interp, c: *Value, v: Value) void {
         Heap.retain(v);
@@ -492,18 +440,15 @@ pub const Interp = struct {
         c.* = v;
     }
 
-    // Zig tip: `lookup` relies on the same Zig feature as `fail` above: see the tip there.
     pub fn lookup(it: *Interp, name: []const u8) Signal!Value {
         if (it.scope.find(name)) |v| return v.value;
         return it.fail("undefined name '{s}'", .{name});
     }
 
-    // Zig tip: `pushScope` relies on the same Zig feature as `define` above: see the tip there.
     pub fn pushScope(it: *Interp) Signal!*Scope {
         return it.enterScope(try it.newScope(it.scope));
     }
 
-    // Zig tip: a child scope counts its parent: the parent lives as long as any scope below it.
     /// A new scope below `parent` (none for the scope of an aspect or a module).
     pub fn newScope(it: *Interp, parent: ?*Scope) Signal!*Scope {
         const s = try it.h.make(Scope, .{ .parent = parent });
@@ -511,9 +456,6 @@ pub const Interp = struct {
         return s;
     }
 
-    // Zig tip: the frame that enters a scope counts it, and `leaveScope` lets it go: a scope that no
-    // closure captured is freed right there, with its variables. The scope that was current goes on
-    // `scope_stack`, where the tracing collector finds it.
     /// Make `s` the current scope; returns the scope to come back to.
     pub fn enterScope(it: *Interp, s: *Scope) Signal!*Scope {
         Heap.retainScope(s);
@@ -523,7 +465,6 @@ pub const Interp = struct {
         return saved;
     }
 
-    // Zig tip: `leaveScope` relies on the same Zig feature as `enterScope` above: see the tip there.
     /// Come back to `saved` and let the scope that ends go.
     pub fn leaveScope(it: *Interp, saved: *Scope) void {
         const s = it.scope;
@@ -532,7 +473,6 @@ pub const Interp = struct {
         it.h.releaseScope(s);
     }
 
-    // Zig tip: `setProc` relies on the same Zig feature as `setVar` above: see the tip there.
     /// Remember the scope of the last process that ran (for the introspection commands).
     pub fn setProc(it: *Interp, s: ?*Scope) void {
         if (s) |x| Heap.retainScope(x);
@@ -542,20 +482,16 @@ pub const Interp = struct {
 
     // ---- regions and safe points (heap.zig) -------------------------------------------------------
 
-    // Zig tip: only the root aspect's interpreter keeps regions: tasks share the heap, and while they run
-    // nothing is freed (see `Heap.pause`), so their blocks need no bookkeeping.
     /// Start a region (a block, a loop, a process).
     pub fn regionIn(it: *Interp) void {
         if (it.root == null) it.h.pushRegion();
     }
 
-    // Zig tip: `regionOut` relies on the same Zig feature as `regionIn` above: see the tip there.
     /// Leave the region.
     pub fn regionOut(it: *Interp) void {
         if (it.root == null) it.h.popRegion();
     }
 
-    // Zig tip: `safe` relies on the same Zig feature as `regionIn` above: see the tip there.
     /// A safe point: a statement or a pass of a loop has ended, its temporaries are gone.
     pub fn safe(it: *Interp) void {
         if (it.root == null) it.h.safePoint();
@@ -563,82 +499,66 @@ pub const Interp = struct {
 
     // ---- counted containers ---------------------------------------------------------------------
 
-    // Zig tip: every change of a list goes through these helpers, which count what comes in and let
-    // go of what goes out. A removed value is still usable until the next safe point.
     pub fn listAppend(it: *Interp, l: *List, v: Value) Signal!void {
         try l.items.append(it.g, v);
         Heap.retain(v);
     }
 
-    // Zig tip: `listAppendSlice` relies on the same Zig feature as `listAppend` above: see the tip there.
     pub fn listAppendSlice(it: *Interp, l: *List, vs: []const Value) Signal!void {
         try l.items.appendSlice(it.g, vs);
         for (vs) |v| Heap.retain(v);
     }
 
-    // Zig tip: `listInsert` relies on the same Zig feature as `listAppend` above: see the tip there.
     pub fn listInsert(it: *Interp, l: *List, i: usize, v: Value) Signal!void {
         try l.items.insert(it.g, i, v);
         Heap.retain(v);
     }
 
-    // Zig tip: `listInsertSlice` relies on the same Zig feature as `listAppend` above: see the tip there.
     pub fn listInsertSlice(it: *Interp, l: *List, i: usize, vs: []const Value) Signal!void {
         try l.items.insertSlice(it.g, i, vs);
         for (vs) |v| Heap.retain(v);
     }
 
-    // Zig tip: `listRemove` relies on the same Zig feature as `listAppend` above: see the tip there.
     pub fn listRemove(it: *Interp, l: *List, i: usize) Value {
         const v = l.items.orderedRemove(i);
         it.h.release(v);
         return v;
     }
 
-    // Zig tip: `listPop` relies on the same Zig feature as `listAppend` above: see the tip there.
     pub fn listPop(it: *Interp, l: *List) Value {
         const v = l.items.pop().?;
         it.h.release(v);
         return v;
     }
 
-    // Zig tip: `newRange` relies on the same Zig feature as `newObject` below: see the tip there.
     pub fn newRange(it: *Interp, r: Range) Signal!*Range {
         return it.h.make(Range, r);
     }
 
-    // Zig tip: `newDomain` relies on the same Zig feature as `newObject` below: see the tip there.
     pub fn newDomain(it: *Interp, d: Domain) Signal!*Domain {
         return it.h.make(Domain, d);
     }
 
-    // Zig tip: a function counts the scope it closes over: the scope lives as long as the function.
     pub fn newFunc(it: *Interp, node: *const Node, closure: *Scope) Signal!*Func {
         const f = try it.h.make(Func, .{ .node = node, .closure = closure });
         Heap.retainScope(closure);
         return f;
     }
 
-    // Zig tip: `newMap` relies on the same Zig feature as `newObject` below: see the tip there.
     pub fn newMap(it: *Interp) Signal!*Map {
         return it.h.make(Map, .{});
     }
 
-    // Zig tip: a string value always lives in the heap (heap.zig, `Str`): this copies scratch or arena
-    // text into it.
     /// A new heap string with a copy of `bytes`.
     pub fn newStr(it: *Interp, bytes: []const u8) Signal!Value {
         return .{ .str = try it.h.str(bytes) };
     }
 
-    // Zig tip: `staticStr` relies on the same Zig feature as `newStr` above: see the tip there.
     /// The pinned heap copy of a text that never changes (a literal, a constant word).
     pub fn staticStr(it: *Interp, bytes: []const u8) Signal!Value {
         return .{ .str = try it.h.static(bytes) };
     }
 
-    // Zig tip: an argument `@s[i]` owns the variable made for it (see `elementRef`): once its value is
-    // written back, the variable is let go.
     /// Let go of the variables the arguments own.
     pub fn dropArgs(it: *Interp, args: []const Arg) void {
         for (args) |a| if (a.cell != null) {
@@ -648,15 +568,12 @@ pub const Interp = struct {
 
     // ---- values: construction and inspection ----------------------------------------------
 
-    // Zig tip: `std.ArrayList(T)` is a growable array: it starts `.empty`, `append(allocator, x)`
-    // adds, `.items` is the slice of what it holds.
     pub fn newList(it: *Interp, items: []const Value, array: bool) Signal!*List {
         const l = try it.h.make(List, .{ .array = array });
         try it.listAppendSlice(l, items);
         return l;
     }
 
-    // Zig tip: `newObject` relies on the same Zig feature as `define` above: see the tip there.
     pub fn newObject(it: *Interp) Signal!*Object {
         return it.h.make(Object, .{});
     }
@@ -671,7 +588,6 @@ pub const Interp = struct {
 
     pub const decOf = value.decOf;
 
-    // Zig tip: `truth` relies on the same Zig feature as `typeName` above: see the tip there.
     pub fn truth(it: *Interp, v: Value) Signal!bool {
         return switch (v) {
             .bool => |b| b,
@@ -679,8 +595,6 @@ pub const Interp = struct {
         };
     }
 
-    // Zig tip: `std.math.order(a, b)` returns `.lt`, `.eq` or `.gt` for numbers. A function returns
-    // an error union when it can fail: comparing a String with a List is a script error here.
     /// Order two values of the same family (numbers, strings, symbols).
     pub fn order(it: *Interp, a: Value, b: Value) Signal!std.math.Order {
         if (isInt(a) and isInt(b)) return std.math.order(intOf(a), intOf(b));
@@ -698,7 +612,6 @@ pub const Interp = struct {
 
     pub const fieldOf = value.fieldOf;
 
-    // Zig tip: `setField` relies on the same Zig feature as `define` above: see the tip there.
     pub fn setField(it: *Interp, o: *Object, name: []const u8, v: Value) Signal!void {
         for (o.fields.items) |*f| {
             if (std.mem.eql(u8, f.name, name)) {
@@ -710,9 +623,6 @@ pub const Interp = struct {
         Heap.retain(v);
     }
 
-    // Zig tip: `std.mem.order(u8, a, b)` compares two byte slices. Keeping the set sorted at every
-    // insertion (`insert` at the found position) costs a little per element and makes `==`, `print`
-    // and `in` simple. A `while` loop with an index finds the first element not smaller than `v`.
     /// Add `v` to the sorted list `s` unless an equal element is there.
     pub fn setAdd(it: *Interp, s: *List, v: Value) Signal!void {
         var i: usize = 0;
@@ -726,7 +636,6 @@ pub const Interp = struct {
         try it.listInsert(s, i, v);
     }
 
-    // Zig tip: `setOf` relies on the same Zig feature as `define` above: see the tip there.
     pub fn setOf(it: *Interp, v: Value) Signal!*List {
         const s = try it.h.make(List, .{});
         switch (v) {
@@ -736,7 +645,6 @@ pub const Interp = struct {
         return s;
     }
 
-    // Zig tip: `contains` relies on the same Zig feature as `newList` above: see the tip there.
     pub fn contains(it: *Interp, coll: Value, v: Value) Signal!bool {
         switch (coll) {
             .list, .set => |l| {
@@ -759,7 +667,6 @@ pub const Interp = struct {
         }
     }
 
-    // Zig tip: `clone` relies on the same Zig feature as `define` above: see the tip there.
     /// `::`: a deep copy. Natives are copied anyway.
     pub fn clone(it: *Interp, v: Value) Signal!Value {
         switch (v) {
@@ -992,9 +899,6 @@ pub const Interp = struct {
     pub const runRoot = part_datatypes.runRoot;
 };
 
-// Zig tip: the interpreter is tested end to end: parse a script, run it, compare what it printed.
-// `std.heap.ArenaAllocator` over the testing allocator frees every node and value at `deinit`,
-// and the testing allocator then checks that nothing leaked. `Io.Writer.fixed` collects the output.
 fn runSource(src: []const u8, buf: []u8) !struct { out: []const u8, code: u8 } {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -1007,8 +911,6 @@ fn runSource(src: []const u8, buf: []u8) !struct { out: []const u8, code: u8 } {
     return .{ .out = w.buffered(), .code = o.code };
 }
 
-// Zig tip: a `test` block runs under `zig build test`; `try std.testing.expect...` fails it when the
-// value is not the expected one.
 test "a free script prints, computes and interpolates" {
     var buf: [256]u8 = undefined;
     const r = try runSource("primary aspect t is\n  process main is\n    new a := 2;\n    let a += 3;\n    expect a == 5;\n    print \"a = {a}\";\n  return;\nend t;\n", &buf);
@@ -1016,8 +918,6 @@ test "a free script prints, computes and interpolates" {
     try std.testing.expectEqual(@as(u8, 0), r.code);
 }
 
-// Zig tip: `a failed expect exits with 2 and recover catches a raise` relies on the same Zig feature
-// as `a free script prints, computes and interpolates` above: see the tip there.
 test "a failed expect exits with 2 and recover catches a raise" {
     var buf: [256]u8 = undefined;
     const r = try runSource("primary aspect d is process main is print \"x\"; expect 1 == 2; return; end d;", &buf);
@@ -1028,8 +928,6 @@ test "a failed expect exits with 2 and recover catches a raise" {
     try std.testing.expectEqual(@as(u8, 0), s.code);
 }
 
-// Zig tip: `regular expressions` relies on the same Zig feature as `a free script prints, computes
-// and interpolates` above: see the tip there.
 test "regular expressions" {
     try std.testing.expect(Interp.regexMatch("/^this/", "this is"));
     try std.testing.expect(Interp.regexMatch("/l.ke$/", "like"));
@@ -1038,9 +936,8 @@ test "regular expressions" {
     try std.testing.expect(Interp.regexMatch("/c[0-9]+/", "abc123"));
 }
 
-// Zig tip: `std.testing.expectEqual(expected, actual)` compares two values of the same type; `@as(?i64, 30_000)`
-// gives the literal the optional type of the result, so the two sides match. The second half runs a
-// small script: `split` and `batch` need no task, so no input/output handle is needed (D-142, D-144).
+// @decision D-142
+// @decision D-144
 test "durations are milliseconds, split and batch cut a list" {
     try std.testing.expectEqual(@as(?i64, 30_000), Interp.durationMs("30s"));
     try std.testing.expectEqual(@as(?i64, 10), Interp.durationMs("10ms"));
@@ -1050,9 +947,6 @@ test "durations are milliseconds, split and batch cut a list" {
     try std.testing.expectEqualStrings("((1,2,3),(4,5))\n((1,2),(3,4),(5))\n", r.out);
 }
 
-// Zig tip: a test can look inside the interpreter after a run: `it.h.stats` counts what the heap made
-// and freed. A loop that builds a string and a list at each pass must not keep them: reference
-// counting frees them at the end of each pass, so only a few objects are alive at the end.
 test "a loop frees what each pass makes" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

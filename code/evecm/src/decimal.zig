@@ -9,9 +9,6 @@ const Io = std.Io;
 /// The largest scale (digits after the point) that a Decimal keeps.
 pub const max_scale: u8 = 18;
 
-// Zig tip: `packed struct(u64)` lays the fields out bit by bit in a 64-bit integer: no padding, the size is
-// exactly what the fields add up to. `i56` is a signed integer of 56 bits, a type Zig allows for any width.
-// The whole struct is 8 bytes, the same as an `f64`, so a union that holds it does not get bigger.
 /// A decimal number: `m / 10^scale`.
 pub const Dec = packed struct(u64) {
     scale: u8,
@@ -21,9 +18,6 @@ pub const Dec = packed struct(u64) {
 const min_m: i128 = std.math.minInt(i56);
 const max_m: i128 = std.math.maxInt(i56);
 
-// Zig tip: `std.math.pow(i128, 10, n)` is an integer power. `comptime` is not needed: the loop is short and
-// the table is built when the file is compiled (`const pow10 = blk: { ... }` is a labeled block that runs at
-// compile time, because the initializer of a file-level `const` must be known then).
 const pow10: [39]i128 = blk: {
     var t: [39]i128 = undefined;
     var v: i128 = 1;
@@ -44,9 +38,6 @@ pub fn fromInt(n: i64) ?Dec {
     return make(n, 0);
 }
 
-// Zig tip: the text is read once from left to right with a state held in a few variables. `std.ascii.isDigit`
-// tests one byte. A `?Dec` result says "not a decimal number" without an error type: the caller decides what
-// to do (the interpreter raises the error `parse`).
 /// Read `12.50`, `-3`, `+0.1` or `7` (digits, an optional point, an optional sign). Null if it is not a number
 /// or does not fit.
 pub fn parse(text: []const u8) ?Dec {
@@ -80,9 +71,6 @@ pub fn parse(text: []const u8) ?Dec {
 }
 
 /// The value as a `Real` (it can lose digits).
-// Zig tip: `std.fmt.bufPrint` writes into a buffer on the stack and gives the slice it filled; `{d}` writes a
-// float as the shortest text that reads back as the same float, so `0.1` stays `0.1` and not `0.1000000000000000055`.
-// `catch return null` turns a buffer that is too small into "no Decimal".
 /// The Decimal of the shortest text of a Real: `0.1` is `0.1d`, `2.5e3` is `2500d`. Null when it does not fit.
 pub fn fromF64(x: f64) ?Dec {
     if (std.math.isNan(x) or std.math.isInf(x)) return null;
@@ -95,8 +83,6 @@ pub fn toF64(d: Dec) f64 {
     return @as(f64, @floatFromInt(d.m)) / std.math.pow(f64, 10, @floatFromInt(d.scale));
 }
 
-// Zig tip: to add two numbers of different scales, the one with the smaller scale is multiplied by a power of
-// ten until the scales are equal; the arithmetic is done in `i128`, which cannot overflow for 56-bit values.
 fn aligned(a: Dec, b: Dec) struct { x: i128, y: i128, scale: u8 } {
     const s = @max(a.scale, b.scale);
     return .{ .x = @as(i128, a.m) * pow10[s - a.scale], .y = @as(i128, b.m) * pow10[s - b.scale], .scale = s };
@@ -114,8 +100,6 @@ pub fn sub(a: Dec, b: Dec) ?Dec {
     return make(v.x - v.y, v.scale);
 }
 
-// Zig tip: `@divTrunc` divides and rounds toward zero; adding half the divisor before dividing (with the sign
-// of the number) rounds half away from zero, which is what a person doing the sum by hand expects.
 fn roundDiv(n: i256, d: i256) i256 {
     const half = @divTrunc(if (d < 0) -d else d, 2);
     return @divTrunc(if ((n < 0) != (d < 0)) n - half else n + half, d);
@@ -160,9 +144,6 @@ pub fn order(a: Dec, b: Dec) std.math.Order {
     return std.math.order(v.x, v.y);
 }
 
-// Zig tip: `{d}` prints an integer; the point is placed by hand. `std.fmt.bufPrint` writes into a stack buffer
-// and returns the used part. A value like `5` with scale 3 must print `0.005`: the integer part is `m` divided
-// by `10^scale`, the fraction is the remainder padded with zeros on the left (`{d:0>3}`).
 /// Write the decimal with all its digits: `12.50`, `0.30`, `-0.05`, `7`.
 pub fn write(w: *Io.Writer, d: Dec) Io.Writer.Error!void {
     var m: i128 = d.m;

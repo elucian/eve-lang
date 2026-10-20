@@ -4,12 +4,6 @@
 const std = @import("std");
 const Io = std.Io;
 
-// Zig tip: `?u32` is an optional: it holds a `u32` or `null`. `parent` is null for the root. To
-// use an optional you unwrap it: `if (e.parent) |p| ...` runs only when it holds a value, and `p`
-// is the number inside.
-// Zig tip: an enum with a default in the struct below (`kind: Kind = .normal`) lets all the old code that makes an entry stay as
-// it is. A SQLite file is `.db`: it is a file for the disk, but the tree opens it like a folder and shows its tables, which
-// are entries of kind `.table` with a path like `data/x.db#orders`.
 /// What an entry is besides a file or a folder.
 pub const Kind = enum { normal, db, table };
 
@@ -35,8 +29,6 @@ pub fn isSqliteName(name: []const u8) bool {
     return false;
 }
 
-// Zig tip: a `const` array of slices written at file level is checked and sized by the compiler.
-// A folder with one of these names is not shown: they are generated files or other people's code.
 const ignored = [_][]const u8{ ".git", ".zig-cache", "zig-out", "zig-pkg", "node_modules", "temp" };
 
 const max_entries = 6000;
@@ -44,27 +36,17 @@ const max_depth = 12;
 
 /// The files of a project, scanned once at the start (and again when asked).
 pub const Tree = struct {
-    // Zig tip: an arena allocator gives out memory that is all freed together, with one call to
-    // `deinit`. Every name of the tree lives in it, so no name is freed one by one. An arena must
-    // not be copied after it gave out memory, so the `Tree` is created in place (see App.create).
     arena: std.heap.ArenaAllocator,
     entries: std.ArrayList(Entry) = .empty,
 
-    // Zig tip: `.init(gpa)` after a field name has no type in front of it: Zig knows the field is an
-    // arena, so `.init` means `ArenaAllocator.init`. The `Tree` is returned by value, which is fine
-    // until something is allocated from the arena.
     pub fn init(gpa: std.mem.Allocator) Tree {
         return .{ .arena = .init(gpa) };
     }
 
-    // Zig tip: `deinit` is the usual name of the function that gives resources back. Freeing the arena
-    // frees every name of the tree at once; nothing else has to be freed.
     pub fn deinit(self: *Tree) void {
         self.arena.deinit();
     }
 
-    // Zig tip: `!void` is an error union: the function returns nothing, or an error. The caller
-    // must handle it with `try` (pass the error up), `catch` (decide here), or `if (...) |_| else |err|`.
     /// Scan the folder `root` (a path from the current folder) and fill `entries`.
     pub fn scan(self: *Tree, io: Io, root: []const u8, root_name: []const u8) !void {
         const a = self.arena.allocator();
@@ -75,9 +57,6 @@ pub const Tree = struct {
         try self.scanDir(io, dir, "", 1, 0);
     }
 
-    // Zig tip: a function that calls itself cannot have an inferred error set (`!void`), because the
-    // compiler would have to know the set before it has read the body. `anyerror!void` says "any
-    // error", which is what a recursive function names. It still has to be handled by the caller.
     fn scanDir(self: *Tree, io: Io, dir: Io.Dir, rel: []const u8, depth: u16, parent: u32) anyerror!void {
         if (depth > max_depth) return;
         const a = self.arena.allocator();
@@ -93,8 +72,6 @@ pub const Tree = struct {
             if (is_dir and isIgnored(e.name)) continue;
             try items.append(a, .{ .name = try a.dupe(u8, e.name), .is_dir = is_dir });
         }
-        // Zig tip: `std.mem.sort` takes a context value and a `lessThan` function. An anonymous
-        // struct holding a function is the usual way to write that function next to its use.
         std.mem.sort(Item, items.items, {}, struct {
             fn less(_: void, x: Item, y: Item) bool {
                 if (x.is_dir != y.is_dir) return x.is_dir;
@@ -116,8 +93,6 @@ pub const Tree = struct {
         }
     }
 
-    // Zig tip: `self: *const Tree` promises that the function only reads the tree. `out:
-    // *std.ArrayList(u32)` is an out parameter: the caller owns the list and this function fills it.
     /// Fill `out` with the indices of the rows that the panel shows: an entry is shown when every
     /// folder above it is open.
     pub fn visibleRows(self: *const Tree, gpa: std.mem.Allocator, out: *std.ArrayList(u32)) !void {
@@ -130,9 +105,6 @@ pub const Tree = struct {
         }
     }
 
-    // Zig tip: `while (cur) |p| : (cur = ...)` loops while an optional holds a value; the part after
-    // the colon runs after every turn. Here it climbs from a folder to its parent until the root,
-    // where the optional is null.
     fn isShown(self: *const Tree, index: u32) bool {
         var cur = self.entries.items[index].parent;
         while (cur) |p| : (cur = self.entries.items[p].parent) {
@@ -141,9 +113,6 @@ pub const Tree = struct {
         return true;
     }
 
-    // Zig tip: `var i = index + 1; while (i < n) : (i += 1)` is a counting loop written with `while`.
-    // Because the entries are in depth-first order, the entries after `index` with a bigger depth
-    // are its content; the first entry that is not deeper decides if `index` has a younger sibling.
     /// True when no entry after `index` has the same parent: the tree draws `└─` for it and not `├─`.
     pub fn isLast(self: *const Tree, index: u32) bool {
         const depth = self.entries.items[index].depth;
@@ -156,12 +125,6 @@ pub const Tree = struct {
         return true;
     }
 
-    // Zig tip: A function that takes `self: *Tree` (not `*const`) may change the tree. Writing
-    // `self.entries.items[p].expanded = true` changes the element in place.
-    // Zig tip: the tables of a database are put into the list right after its entry, as children (one level deeper), and the
-    // old tables, if any, are taken out first (`replaceRange` does both at once). Every entry after them that has a parent
-    // placed after the database entry has moved in the list, so its `parent` number is corrected by the difference. The
-    // answer is that difference, so the app can correct the selected row. The names are copied into the arena of the tree.
     /// Put the tables of the database entry `index` in the tree. Returns how many entries the list grew by (it may be negative).
     pub fn setTables(self: *Tree, index: u32, names: []const []const u8) !isize {
         const a = self.arena.allocator();
@@ -199,8 +162,6 @@ pub const Tree = struct {
     }
 };
 
-// Zig tip: `for (ignored) |bad|` visits every element of the array. Slices are compared with
-// `std.mem.eql(u8, a, b)`: `==` on slices would compare the pointers, not the letters.
 fn isIgnored(name: []const u8) bool {
     for (ignored) |bad| {
         if (std.mem.eql(u8, name, bad)) return true;

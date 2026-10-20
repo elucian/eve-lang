@@ -10,8 +10,6 @@ const version = @import("evecm").version;
 /// The layout version written in `meta/project.json`.
 pub const layout_version = 1;
 
-// Zig tip: a `const` at file level is evaluated at compile time, so these tables and texts cost
-// nothing at run time. `[_][]const u8{ ... }` is an array of strings whose length the compiler counts.
 /// A folder of the layout and the reason it exists. An empty folder gets a `.gitkeep` file, because
 /// git does not keep an empty folder.
 const folders = [_][]const u8{
@@ -42,8 +40,6 @@ const gitignore =
     \\
 ;
 
-// Zig tip: a format string is checked at compile time; `{{` writes a literal brace, so JSON can be
-// a format string. The format of `allocPrint` must be known at compile time (`comptime fmt`).
 const project_json_fmt =
     \\{{
     \\  "name": "{s}",
@@ -79,8 +75,6 @@ const aspect_fmt =
     \\
 ;
 
-// Zig tip: the counters are `usize`, the type of lengths and indexes. Fields with a default
-// (`= 0`) let `.{}` build a struct that starts at zero.
 /// What `init` did.
 pub const Result = struct {
     created: usize = 0,
@@ -88,8 +82,6 @@ pub const Result = struct {
     git: Git = .skipped,
 };
 
-// Zig tip: an `enum` is a closed set of names; `switch` over it must list every case. Here it says
-// what the Git step did.
 /// What `init` did about Git.
 pub const Git = enum {
     /// not asked (the unit tests)
@@ -102,10 +94,6 @@ pub const Git = enum {
     missing,
 };
 
-// Zig tip: the name of a root aspect must be an identifier, but a folder can be called anything. This
-// function builds a new text in memory the caller owns (`gpa.alloc`), so it returns an error union
-// with `Allocator.Error` (only out of memory can fail). `for (name, 0..) |c, i|` walks the bytes
-// together with their index; `std.ascii.isAlphanumeric` tests one byte.
 /// The root aspect name for a folder: its last component with every character that an identifier cannot
 /// have turned into `_`, and `p_` in front of a name that starts with a digit. `project` when empty.
 pub fn aspectName(gpa: std.mem.Allocator, folder: []const u8) std.mem.Allocator.Error![]u8 {
@@ -123,17 +111,11 @@ pub fn aspectName(gpa: std.mem.Allocator, folder: []const u8) std.mem.Allocator.
     return out.toOwnedSlice(gpa);
 }
 
-// Zig tip: `access` answers with an error when the path is missing, and `catch` turns that into a
-// boolean: `access(...) catch return false` returns false from the function on any error, and falls
-// through to `true` when the call succeeded. A probe whose only question is "is it there?" can drop the reason of the error.
 fn exists(io: Io, base: Io.Dir, path: []const u8) bool {
     base.access(io, path, .{}) catch return false;
     return true;
 }
 
-// Zig tip: `anytype` for `args` lets one function format any tuple, like `allocPrint` does; here the
-// values are only passed through. The arena (see the tip in doc.zig) frees every path and text at
-// once, so this function never frees what it builds.
 fn putFile(
     io: Io,
     arena: std.mem.Allocator,
@@ -155,10 +137,6 @@ fn putFile(
     try out.print("  create  {s}\n", .{path});
 }
 
-// Zig tip: `std.process.run` starts a program and waits for it. It returns the exit state in a
-// tagged union (`Term`): `.exited` carries the code. A program that cannot start (not installed) is
-// an error value, so `catch return null` says "no answer". The output buffers belong to the caller,
-// hence the two `defer gpa.free`. `.cwd = .{ .dir = d }` starts the child inside the directory `d`.
 /// Run `git <args>` in `dir`; the exit code, or null when Git can not be started.
 fn git(io: Io, gpa: std.mem.Allocator, dir: Io.Dir, args: []const []const u8) ?u8 {
     var argv: [4][]const u8 = undefined;
@@ -173,9 +151,6 @@ fn git(io: Io, gpa: std.mem.Allocator, dir: Io.Dir, args: []const []const u8) ?u
     };
 }
 
-// Zig tip: `openDir(..., .{ .iterate = true })` opens a folder so that `iterate()` can list it; the
-// first `next()` that returns an entry proves the folder is not empty. A folder that does not exist
-// is an error (`FileNotFound`), which here means "empty enough".
 /// True when `folder` does not exist or has nothing in it. `project new` needs this.
 pub fn isEmptyOrAbsent(io: Io, base: Io.Dir, folder: []const u8) !bool {
     var dir = base.openDir(io, folder, .{ .iterate = true }) catch |err| switch (err) {
@@ -187,10 +162,6 @@ pub fn isEmptyOrAbsent(io: Io, base: Io.Dir, folder: []const u8) !bool {
     return (try it.next(io)) == null;
 }
 
-// Zig tip: a function that can fail in many ways (disk, memory, the output) can leave its error set
-// to the compiler with `!Result`: the set is inferred from every `try` in the body. `base` is a
-// directory handle, not a path: the folder is made inside it, which is what lets the tests use a
-// temporary directory instead of the real working directory.
 /// Make the project `folder` (inside `base`). Every action is logged on `out`.
 pub fn init(io: Io, gpa: std.mem.Allocator, base: Io.Dir, folder: []const u8, use_git: bool, out: *Io.Writer) !Result {
     var arena_state: std.heap.ArenaAllocator = .init(gpa);
@@ -241,10 +212,6 @@ pub fn init(io: Io, gpa: std.mem.Allocator, base: Io.Dir, folder: []const u8, us
     return result;
 }
 
-// Zig tip: a test is a block `test "name" { ... }` that `zig build test` runs; any error that
-// escapes (`try`) fails it. `std.testing.tmpDir(.{})` makes a fresh directory and `defer
-// tmp.cleanup()` removes it, so tests leave nothing behind. `std.testing.allocator` reports a leak
-// as a failure, and `std.testing.io` is the `Io` that tests pass to code that touches files.
 test "the aspect name is an identifier made from the folder" {
     const a = std.testing.allocator;
     const cases = [_][2][]const u8{
@@ -261,8 +228,6 @@ test "the aspect name is an identifier made from the folder" {
     }
 }
 
-// Zig tip: `Io.Writer.Allocating` collects the log in memory (see doc.zig). `expect(cond)` fails
-// the test when `cond` is false; `try` is needed because it returns an error then.
 test "init makes the layout, the files parse, and a second run keeps everything" {
     const a = std.testing.allocator;
     var tmp = std.testing.tmpDir(.{});
@@ -293,8 +258,6 @@ test "init makes the layout, the files parse, and a second run keeps everything"
     try std.testing.expectEqualStrings("mine\n", cfg);
 }
 
-// Zig tip: `!` in front of a call negates its bool result; `try` goes first: `!try f()` would be
-// written `!(try f())`, so the test writes the parentheses to be clear.
 test "a folder is empty or absent until something is in it" {
     var tmp = std.testing.tmpDir(.{});
     defer tmp.cleanup();

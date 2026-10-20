@@ -12,8 +12,6 @@ const sqlite = @import("sqlite.zig");
 /// The formats this module can read.
 pub const Format = enum { csv, txt, json, dbf };
 
-// Zig tip: the result type `?T` is an optional: a value or `null`. The caller must unwrap it (`if (x) |v|`, `orelse`), so a
-// missing value can never be used by accident.
 /// The format of a file, from its extension; null when it is not one this module reads.
 pub fn formatOf(path: []const u8) ?Format {
     const ext = std.fs.path.extension(path);
@@ -26,8 +24,6 @@ pub fn formatOf(path: []const u8) ?Format {
 
 pub const Error = error{ BadFile, Empty } || dbf.Error || std.mem.Allocator.Error;
 
-// Zig tip: a cell is `?[]const u8`: null is NULL (an empty cell of a CSV, a `null` of JSON). All the slices point into the
-// arena of the import, so nothing is freed one by one.
 /// The text cells of a file, before the types are known.
 const Raw = struct {
     names: [][]const u8,
@@ -36,15 +32,11 @@ const Raw = struct {
     /// The type of each column when the file declares it (DBF); null when the values decide.
     kinds: ?[]columnar.Kind = null,
 
-    // Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-    // arguments, so a call always passes every parameter.
     fn rows(self: Raw) usize {
         return if (self.names.len == 0) 0 else self.cells.len / self.names.len;
     }
 };
 
-// Zig tip: the characters of the first line decide the delimiter of a TXT file: the one that appears most (a tab, a comma, a
-// semicolon or a bar), a tab when none appears. A `switch` on a byte needs the cases to be constants.
 fn sniff(first: []const u8) u8 {
     var best: u8 = '\t';
     var best_n: usize = 0;
@@ -58,10 +50,6 @@ fn sniff(first: []const u8) u8 {
     return best;
 }
 
-// Zig tip: the CSV reader is a loop over the bytes with two states: inside a quoted cell, a doubled quote is one quote and the
-// delimiter and the line breaks are text; outside, the delimiter ends a cell and a line break ends a row. A cell without
-// quotes that is empty is NULL; a quoted empty cell is an empty text. The cells are copied into the arena only when they hold
-// a doubled quote; otherwise they are slices of the file.
 /// Read delimited text into rows of cells; the first row holds the names.
 fn readDelimited(a: std.mem.Allocator, bytes: []const u8, delim: u8) Error!Raw {
     var all: std.ArrayList(?[]const u8) = .empty;
@@ -139,8 +127,6 @@ fn readDelimited(a: std.mem.Allocator, bytes: []const u8, delim: u8) Error!Raw {
     return .{ .names = names, .cells = cells.items };
 }
 
-// Zig tip: two columns with the same name cannot be in a table, so the second becomes `name_2`, the third `name_3`. The
-// comparison ignores case because SQLite does.
 fn uniqueNames(a: std.mem.Allocator, names: [][]const u8) !void {
     for (names, 0..) |*n, i| {
         var k: usize = 2;
@@ -158,10 +144,6 @@ fn uniqueNames(a: std.mem.Allocator, names: [][]const u8) !void {
     }
 }
 
-// Zig tip: `std.json.parseFromSlice(std.json.Value, ...)` reads any JSON into a tree of `Value`s that lives in the arena.
-// The file must be an array of objects (or an object with one array in it); the columns are the keys, in the order they first
-// appear. A number is kept as its own text, so the types are found later like for CSV; a nested object or array is written back
-// as JSON text.
 fn readJson(a: std.mem.Allocator, bytes: []const u8) Error!Raw {
     const parsed = std.json.parseFromSliceLeaky(std.json.Value, a, bytes, .{}) catch return error.BadFile;
     var list = parsed;
@@ -211,9 +193,6 @@ fn readJson(a: std.mem.Allocator, bytes: []const u8) Error!Raw {
     return .{ .names = names.items, .cells = cells.items };
 }
 
-// Zig tip: a DBF file declares its types, so the columns are made from them: N without decimals is an integer, N or F with
-// decimals a real, D a date, L a boolean, the rest text. A blank cell is NULL. `Stream` reads the records one by one; each cell
-// is copied into the arena because the stream's buffer changes.
 fn readDbf(a: std.mem.Allocator, bytes: []const u8) Error!Raw {
     var s = try dbf.Stream.init(bytes);
     const fs = s.fields();
@@ -241,10 +220,6 @@ fn readDbf(a: std.mem.Allocator, bytes: []const u8) Error!Raw {
     return .{ .names = names, .cells = cells.items, .kinds = kinds };
 }
 
-// Zig tip: an old DBF file stores its text in the code page of the machine that made it (the header says which one with a
-// byte that this reader does not use). A text that is valid UTF-8 is kept as it is; any other text is read as Latin-1, where
-// each byte is the code point of the same number, and written as UTF-8 (a byte from 0x80 to 0xFF takes two bytes). `utf8Encode`
-// writes a code point into a buffer and answers how many bytes it used.
 /// Copy a text into the arena as UTF-8: as it is when it is valid UTF-8, else read as Latin-1.
 fn utf8Copy(a: std.mem.Allocator, t: []const u8) ![]const u8 {
     if (std.unicode.utf8ValidateSlice(t)) return a.dupe(u8, t);
@@ -257,13 +232,10 @@ fn utf8Copy(a: std.mem.Allocator, t: []const u8) ![]const u8 {
     return out.items;
 }
 
-// Zig tip: `isBoolWord` relies on the same Zig feature as `rows` above: see the tip there.
 fn isBoolWord(s: []const u8) bool {
     return std.ascii.eqlIgnoreCase(s, "true") or std.ascii.eqlIgnoreCase(s, "false");
 }
 
-// Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an error
-// that nobody handles.
 fn isInteger(s: []const u8) bool {
     const body = if (s.len > 0 and s[0] == '-') s[1..] else s;
     if (body.len == 0 or (body.len > 1 and body[0] == '0')) return false;
@@ -274,7 +246,6 @@ fn isInteger(s: []const u8) bool {
     return true;
 }
 
-// Zig tip: `isReal` relies on the same Zig feature as `isInteger` above: see the tip there.
 fn isReal(s: []const u8) bool {
     if (s.len == 0) return false;
     for (s) |ch| {
@@ -285,8 +256,6 @@ fn isReal(s: []const u8) bool {
     return true;
 }
 
-// Zig tip: the kind of a column is the narrowest one that all its values fit, tried in order: boolean words, integers, reals,
-// dates, and text for anything else. A column where every cell is NULL is text. One pass over the column decides.
 fn inferKind(raw: Raw, col: usize) columnar.Kind {
     var all_bool = true;
     var all_int = true;
@@ -310,8 +279,6 @@ fn inferKind(raw: Raw, col: usize) columnar.Kind {
     return .text;
 }
 
-// Zig tip: `errdefer` runs its statement only when the function leaves with an error, so what was made before the failure
-// is freed and nothing leaks; on success it does nothing.
 /// Turn the text cells into a columnar table with a type for each column.
 fn build(gpa: std.mem.Allocator, raw: Raw) Error!columnar.Table {
     var t = columnar.Table.init(gpa);
@@ -341,8 +308,6 @@ fn build(gpa: std.mem.Allocator, raw: Raw) Error!columnar.Table {
     return t;
 }
 
-// Zig tip: `defer` runs its statement when the scope ends, by any path (a `return`, an error, the end of the block), so a
-// free or a close is written once, next to what it undoes.
 /// Decode the bytes of a file into a columnar table (not yet in a database).
 pub fn parse(gpa: std.mem.Allocator, bytes: []const u8, format: Format) Error!columnar.Table {
     var arena = std.heap.ArenaAllocator.init(gpa);
@@ -360,11 +325,9 @@ pub fn parse(gpa: std.mem.Allocator, bytes: []const u8, format: Format) Error!co
     return build(gpa, raw);
 }
 
-// Zig tip: `Result` relies on the same Zig feature as `Raw` above: see the tip there.
 /// What an import made.
 pub const Result = struct { rows: usize, cols: usize };
 
-// Zig tip: `importInto` relies on the same Zig feature as `parse` above: see the tip there.
 /// Read a file and load it into `db` as the new table `table` (explicit load, in one transaction).
 pub fn importInto(gpa: std.mem.Allocator, db: *sqlite.Db, bytes: []const u8, format: Format, table: []const u8) !Result {
     var t = try parse(gpa, bytes, format);
@@ -373,9 +336,6 @@ pub fn importInto(gpa: std.mem.Allocator, db: *sqlite.Db, bytes: []const u8, for
     return .{ .rows = t.rows, .cols = t.cols.items.len };
 }
 
-// Zig tip: an export reads the table into columns first (the explicit store, `fromQuery`) and then writes them in the format
-// asked for. The three writers walk the same columns: CSV quotes a cell that holds a comma, a quote or a line break, JSON writes
-// numbers as numbers and NULL as null, and DBF gives each column a width found from its values (names are cut to ten bytes).
 /// The bytes of the table `table` of `db` in the format `format` (CSV, JSON or DBF); the caller frees them.
 pub fn exportBytes(gpa: std.mem.Allocator, db: *sqlite.Db, table: []const u8, format: Format, date: [3]u8) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(gpa);
@@ -461,7 +421,6 @@ pub fn exportBytes(gpa: std.mem.Allocator, db: *sqlite.Db, table: []const u8, fo
     return out.toOwnedSlice(gpa);
 }
 
-// Zig tip: `withKind` relies on the same Zig feature as `rows` above: see the tip there.
 fn withKind(f: dbf.Field, kind: u8, length: u8, decimals: u8) dbf.Field {
     var g = f;
     g.kind = kind;
@@ -470,7 +429,6 @@ fn withKind(f: dbf.Field, kind: u8, length: u8, decimals: u8) dbf.Field {
     return g;
 }
 
-// Zig tip: `cellText` relies on the same Zig feature as `readDelimited` above: see the tip there.
 fn cellText(a: std.mem.Allocator, t: *const columnar.Table, col: usize, row: usize) ![]const u8 {
     return switch (t.cols.items[col].kind) {
         .integer, .boolean, .date, .timestamp => try std.fmt.allocPrint(a, "{d}", .{t.int(col, row)}),
@@ -479,7 +437,6 @@ fn cellText(a: std.mem.Allocator, t: *const columnar.Table, col: usize, row: usi
     };
 }
 
-// Zig tip: `csvCell` relies on the same Zig feature as `readDelimited` above: see the tip there.
 fn csvCell(out: *std.ArrayList(u8), gpa: std.mem.Allocator, cell: []const u8, delim: u8) !void {
     const plain = std.mem.indexOfAny(u8, cell, "\"\r\n") == null and std.mem.indexOfScalar(u8, cell, delim) == null;
     if (plain) return out.appendSlice(gpa, cell);
@@ -491,7 +448,6 @@ fn csvCell(out: *std.ArrayList(u8), gpa: std.mem.Allocator, cell: []const u8, de
     try out.append(gpa, '"');
 }
 
-// Zig tip: `jsonString` relies on the same Zig feature as `readDelimited` above: see the tip there.
 fn jsonString(out: *std.ArrayList(u8), gpa: std.mem.Allocator, s: []const u8) !void {
     try out.append(gpa, '"');
     for (s) |ch| switch (ch) {
@@ -505,8 +461,6 @@ fn jsonString(out: *std.ArrayList(u8), gpa: std.mem.Allocator, s: []const u8) !v
     try out.append(gpa, '"');
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "export: csv quotes, json types, and a dbf that reads back" {
     var db = try sqlite.Db.open(":memory:");
     defer db.close();
@@ -526,8 +480,6 @@ test "export: csv quotes, json types, and a dbf that reads back" {
     try std.testing.expectEqual(@as(usize, 2), res.rows);
 }
 
-// Zig tip: test "csv: quotes, a doubled quote, a short row and the types found" relies on the same Zig feature as test
-// "export: csv quotes, json types, and a dbf that reads back" above: see the tip there.
 test "csv: quotes, a doubled quote, a short row and the types found" {
     const csv = "id,name,price,day\n1,\"Smith, J\",2.5,2026-10-01\n2,\"say \"\"hi\"\"\",,2026-10-02\n3,plain\n";
     var t = try parse(std.testing.allocator, csv, .csv);
@@ -542,8 +494,6 @@ test "csv: quotes, a doubled quote, a short row and the types found" {
     try std.testing.expect(t.isNull(3, 2));
 }
 
-// Zig tip: test "txt: the delimiter is found, a leading zero stays text" relies on the same Zig feature as test "export:
-// csv quotes, json types, and a dbf that reads back" above: see the tip there.
 test "txt: the delimiter is found, a leading zero stays text" {
     var t = try parse(std.testing.allocator, "code;qty\n007;5\n010;6\n", .txt);
     defer t.deinit();
@@ -552,8 +502,6 @@ test "txt: the delimiter is found, a leading zero stays text" {
     try std.testing.expectEqualStrings("007", t.text(0, 0));
 }
 
-// Zig tip: test "json: an array of objects with different keys" relies on the same Zig feature as test "export: csv quotes,
-// json types, and a dbf that reads back" above: see the tip there.
 test "json: an array of objects with different keys" {
     var t = try parse(std.testing.allocator, "[{\"a\":1,\"b\":\"x\"},{\"a\":2,\"c\":true},{\"a\":null}]", .json);
     defer t.deinit();
@@ -564,8 +512,6 @@ test "json: an array of objects with different keys" {
     try std.testing.expect(t.isNull(0, 2));
 }
 
-// Zig tip: test "dbf goes through the stream into SQLite" relies on the same Zig feature as test "export: csv quotes, json
-// types, and a dbf that reads back" above: see the tip there.
 test "dbf goes through the stream into SQLite" {
     var f1: dbf.Field = .{ .kind = 'C', .length = 8 };
     f1.setName("name");
@@ -590,8 +536,6 @@ test "dbf goes through the stream into SQLite" {
     try std.testing.expect(back.isNull(2, 1));
 }
 
-// Zig tip: test "a DBF text in Latin-1 becomes UTF-8" relies on the same Zig feature as test "export: csv quotes, json
-// types, and a dbf that reads back" above: see the tip there.
 test "a DBF text in Latin-1 becomes UTF-8" {
     var f1: dbf.Field = .{ .kind = 'C', .length = 6 };
     f1.setName("name");

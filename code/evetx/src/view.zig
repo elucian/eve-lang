@@ -22,16 +22,11 @@ const Style = theme.Style;
 
 // ------------------------------------------------------------------ helpers
 
-// Zig tip: `win.child(.{...})` makes a window that is a part of its parent: drawing outside it is
-// clipped. `@intCast(x)` converts a `u16` to the wider signed type that libvaxis wants for the
-// offset.
 /// A child window at a place of `win`, without a border.
 fn sub(win: Window, x: u16, y: u16, w: u16, h: u16) Window {
     return win.child(.{ .x_off = @intCast(x), .y_off = @intCast(y), .width = w, .height = h });
 }
 
-// Zig tip: A struct literal can nest another: `.border = .{ .where = .all, ... }`. `child` draws
-// the border on the parent and returns the window inside it, one cell smaller on every side.
 /// A child window with a one-cell border; the result is the inside.
 fn boxed(win: Window, x: u16, y: u16, w: u16, h: u16, border: theme.Color) Window {
     return win.child(.{
@@ -43,45 +38,30 @@ fn boxed(win: Window, x: u16, y: u16, w: u16, h: u16, border: theme.Color) Windo
     });
 }
 
-// Zig tip: `.{ .style = .{ .bg = bg } }` is a `Cell` with only its style written; the other fields
-// take their defaults, so the cell is a space with that background.
 fn fillWith(win: Window, bg: theme.Color) void {
     win.fill(.{ .style = .{ .bg = bg } });
 }
 
-// Zig tip: `printSegment` draws text from a column and row and returns where it stopped. The text
-// must stay valid until the screen is rendered: libvaxis keeps the pointer, so strings are
-// formatted into the frame arena.
 /// Print `s` at (col, row) of `win` on one line; returns the column after it.
 fn put(win: Window, col: u16, row: u16, s: []const u8, style: Style) u16 {
     const r = win.printSegment(.{ .text = s, .style = style }, .{ .col_offset = col, .row_offset = row, .wrap = .none });
     return r.col;
 }
 
-// Zig tip: `end -| w` is saturating subtraction: when the text is wider than the room, the column
-// is 0 and not a crash.
 /// Print `s` so that it ends at column `end` (right aligned).
 fn putRight(win: Window, end: u16, row: u16, s: []const u8, style: Style) void {
     const w = win.gwidth(s);
     _ = put(win, end -| w, row, s, style);
 }
 
-// Zig tip: Window offsets are absolute cell positions. `@as(i32, win.x_off) + x` widens the signed
-// offset first, then adds the `u16`; `@intCast` brings it back to `u16` for the rectangle.
 fn absRect(win: Window, x: u16, y: u16, w: u16, h: u16) Rect {
     return .{ .x = @intCast(@as(i32, win.x_off) + x), .y = @intCast(@as(i32, win.y_off) + y), .w = w, .h = h };
 }
 
-// Zig tip: `try app.hits.append(app.gpa, ...)` can fail with out of memory, so the function
-// returns `!void`. The list lives in the `App` and is emptied at the start of each frame.
 fn addHit(app: *App, win: Window, x: u16, y: u16, w: u16, h: u16, action: Action) !void {
     try app.hits.append(app.gpa, .{ .rect = absRect(win, x, y, w, h), .action = action });
 }
 
-// Zig tip: The label is drawn between two spaces, and the same rectangle is registered as a hit.
-// `x + w` is the column after the button, so buttons can be placed one after another.
-// Zig tip: the label is padded with spaces on both sides to a fixed width, so a row of buttons has the same width for each.
-// `repeat(" ", 40)` is a string of 40 spaces made when the program is compiled; `[0..n]` takes the first n of them.
 /// A button of a given width (the label is centered).
 fn fixedButton(app: *App, win: Window, x: u16, label: []const u8, w: u16, style: Style, action: Action) !u16 {
     const spaces = repeat(" ", 40);
@@ -101,9 +81,6 @@ fn button(app: *App, win: Window, x: u16, y: u16, label: []const u8, style: Styl
     return x + w;
 }
 
-// Zig tip: `ti: *TextInput` is the widget of libvaxis. Only the focused field is drawn with
-// `drawWithStyle`, because that call also sets the cursor of the terminal and only one field can
-// have it. A click on the field gives it the focus (`dlg_field`).
 /// A one-line input field of a dialog. The focused one shows its cursor; the others show their text.
 fn field(app: *App, win: Window, x: u16, y: u16, w: u16, ti: *TextInput, which: u8, focused: bool) !void {
     if (w < 3) return;
@@ -121,9 +98,6 @@ fn field(app: *App, win: Window, x: u16, y: u16, w: u16, ti: *TextInput, which: 
 
 // ------------------------------------------------------------------ the whole screen
 
-// Zig tip: `switch (app.overlay)` ends the drawing with whatever is open over the screen. An
-// overlay is modal: the hits of the screen under it are forgotten, so a click cannot reach them.
-// The places of the panels come from `App.computeLayout`, so the mouse code sees the same ones.
 pub fn draw(app: *App, win: Window) !void {
     app.beginFrame();
     app.hits.clearRetainingCapacity();
@@ -164,8 +138,6 @@ pub fn draw(app: *App, win: Window) !void {
     try overlayBox(app, win, app.overlay);
 }
 
-// Zig tip: the `switch` names every dialog; `.none` and `.alert` draw nothing here (`draw` handles the pop-up), so the
-// function never calls itself, and its error set can be inferred by the compiler.
 /// Draw the dialog `which`.
 fn overlayBox(app: *App, win: Window, which: app_mod.Overlay) !void {
     switch (which) {
@@ -194,9 +166,6 @@ fn overlayBox(app: *App, win: Window, which: app_mod.Overlay) !void {
     }
 }
 
-// Zig tip: the message is cut into lines at the spaces, as many words as fit in `w` cells; `std.mem.tokenizeScalar` gives
-// the words and skips runs of spaces. The lines live in a small array on the stack (at most 6), and the dialog is as tall
-// as they need.
 /// The pop-up of a failed operation: its title, the message, and OK, which closes it (and goes back to the dialog under it).
 fn alertBox(app: *App, win: Window) !void {
     const msg = app.alert_msg orelse "The operation failed.";
@@ -225,9 +194,6 @@ fn alertBox(app: *App, win: Window) !void {
     try buttonRow(app, box, box.height -| 2, &.{.{ .label = "OK", .action = ok_btn, .primary = true }});
 }
 
-// Zig tip: A terminal may not change the shape of the mouse pointer (the shape is asked for with an
-// escape code that not every terminal knows), so the border under the pointer, or being dragged, is
-// also painted in amber: the user sees what a click would take.
 /// Paint the border between panels that is under the pointer.
 fn drawSplitHint(app: *App, win: Window, l: app_mod.Layout) void {
     const which = (if (app.drag == .tree_split or app.drag == .tools_split) app.drag else null) orelse app.hover_split orelse return;
@@ -255,8 +221,6 @@ fn drawSplitHint(app: *App, win: Window, l: app_mod.Layout) void {
     }
 }
 
-// Zig tip: `app_mod.menus[0..i]` is a slice of the first `i` menus; `for (slice) |m|` adds up their
-// widths. A menu is drawn as ` NAME `, so it is two cells wider than its label.
 /// The column of menu `i` in the bar: the menus follow each other from the left, the last one
 /// (HELP) is at the right side.
 fn menuX(W: u16, i: usize) u16 {
@@ -267,8 +231,6 @@ fn menuX(W: u16, i: usize) u16 {
     return x;
 }
 
-// Zig tip: A style is a struct, so `var hot = theme.onBold(...)` makes a copy that can be changed
-// field by field: `hot.ul_style = .single` adds an underline to this copy only.
 /// The classic menu bar: upper case names, the first letter is the Alt key. The letter has its own
 /// color; when the user presses Alt, or while a menu is open, it is underlined too.
 fn menuBar(app: *App, win: Window) !void {
@@ -292,9 +254,6 @@ fn menuBar(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: A slice can be cut at a byte that is inside a UTF-8 character; the continuation bytes
-// of a character all look like `10xxxxxx`, so `(s[n] & 0xC0) == 0x80` tells that `n` is not a
-// place where a character starts, and the loop steps back.
 /// `s` cut to at most `max` bytes, at the start of a character.
 fn clipText(s: []const u8, max: usize) []const u8 {
     if (s.len <= max) return s;
@@ -303,10 +262,6 @@ fn clipText(s: []const u8, max: usize) []const u8 {
     return s[0..n];
 }
 
-// Zig tip: The border color tells the state of a panel: amber while Window > Modify is on, blue when
-// the panel has the keyboard, grey otherwise. The panel also records a hit over its whole
-// rectangle, drawn first, so a click on an empty place of the panel gives it the keyboard; the
-// buttons and rows drawn later are on top of it.
 /// Draw the border of a panel and return its inside.
 fn panelBox(app: *App, win: Window, r: Rect, p: app_mod.Panel) !Window {
     const live = app.overlay == .none and app.activePanel() == p;
@@ -315,9 +270,6 @@ fn panelBox(app: *App, win: Window, r: Rect, p: app_mod.Panel) !Window {
     return boxed(win, r.x, r.y, r.w, r.h, color);
 }
 
-// Zig tip: `if (cond) a else b` as an argument picks the text of the "maximize" button. The buttons
-// are three cells wide (` + `, ` × `) and sit at the right end of the title bar; the Tree Panel has
-// only the hide button.
 /// The + (maximize) and × (hide) buttons at the right of the title bar of a panel.
 fn titleButtons(app: *App, box: Window, p: app_mod.Panel) !void {
     const w = box.width;
@@ -341,15 +293,11 @@ fn titleButtons(app: *App, box: Window, p: app_mod.Panel) !void {
     }
 }
 
-// Zig tip: A string literal is an array of bytes; the compiler joins neighbours at compile time
-// with `++`. The tree glyphs are each three bytes of UTF-8, and `put` counts them as one cell.
 const vbar = "│  ";
 const blank = "   ";
 const tee = "├─ ";
 const corner = "└─ ";
 
-// Zig tip: `&.{ ".db", ".sqlite" }` is a list of strings written in the call; the function receives
-// it as a slice. Comparing the end of the name with each ending ignores upper and lower case.
 /// Does `name` end with one of the endings?
 fn hasExt(name: []const u8, endings: []const []const u8) bool {
     for (endings) |end| {
@@ -358,8 +306,6 @@ fn hasExt(name: []const u8, endings: []const []const u8) bool {
     return false;
 }
 
-// Zig tip: a function may take a struct by value (`e: Entry`) when it only reads a few fields. The
-// result is a string literal, which lives for the whole program, so nothing is allocated.
 /// The picture of an entry: a folder (open or closed) or a file, by its kind.
 fn iconOf(e: ide.project.Entry) []const u8 {
     if (e.kind == .table) return "▦";
@@ -370,10 +316,6 @@ fn iconOf(e: ide.project.Entry) []const u8 {
     return "📄";
 }
 
-// Zig tip: A part of a row of the tree is drawn character by character at a virtual column `vc` that
-// does not depend on the scrolling; the cells left of `left` (the horizontal scroll) are skipped, and
-// so are the cells that would pass the width. `std.unicode.Utf8View` walks the text one character at
-// a time, and `gwidth` tells if a character takes one cell or two (the pictures take two).
 /// Draw `s` in one style at virtual column `vc` of a tree row, scrolled by `left`; `vc` moves to the end of `s`.
 fn putScrolled(row: Window, vc: *usize, left: usize, width: usize, s: []const u8, style: Style) void {
     var it = (std.unicode.Utf8View.init(s) catch return).iterator();
@@ -384,9 +326,6 @@ fn putScrolled(row: Window, vc: *usize, left: usize, width: usize, s: []const u8
     }
 }
 
-// Zig tip: A bar is drawn from numbers only: how much there is (`total`), where the view starts
-// (`top`) and how much it shows (`visible`). The vertical one has ▲ and ▼ with a free row above, and
-// returns the rectangle of its track for the mouse; with fewer than six rows it is only a track.
 /// A vertical bar in column `x` of `win`, `h` rows tall.
 fn vBar(app: *App, win: Window, x: u16, h: u16, total: usize, top: usize, visible: usize, up: Action, down: Action, flush: bool) Rect {
     const track = theme.on(theme.faint, theme.deep);
@@ -413,8 +352,6 @@ fn vBar(app: *App, win: Window, x: u16, h: u16, total: usize, top: usize, visibl
     return absRect(win, x, y0, 1, span);
 }
 
-// Zig tip: the bars of the panels of the Main and Tools Panel (a log, a folder, the breakpoints) share one slot in the app,
-// because only one of them is drawn at a time; it keeps the track and the numbers the mouse needs to drag the thumb.
 fn setPbar(app: *App, kind: app_mod.PbarKind, r: Rect, total: usize, visible: usize) void {
     app.pbar_rect = r;
     app.pbar_kind = kind;
@@ -441,10 +378,6 @@ fn hBar(app: *App, win: Window, y: u16, w: u16, total: usize, left: usize, visib
     return absRect(win, 1, y, hw, 1);
 }
 
-// Zig tip: The tree is scrolled in both directions when it does not fit. The two bars depend on each
-// other (a bar takes a row or a column that the other one then lacks), so the need for the vertical
-// bar is decided twice. `tree_left` is the first column shown; the rows are drawn with `putScrolled`
-// so that the connection lines, the picture and the name all move together.
 fn sidebar(app: *App, win: Window, place: Rect) !void {
     if (place.w == 0) return;
     const focused = app.overlay == .none and app.focus == .tree;
@@ -543,8 +476,6 @@ fn sidebar(app: *App, win: Window, place: Rect) !void {
     if (need_h) app.thbar_rect = hBar(app, list, list.height - 1, text_w, content, left, text_w, .{ .tree_scroll = .left }, .{ .tree_scroll = .right });
 }
 
-// Zig tip: `for ([_][]const u8{ ... }) |s|` loops over an array written in place. The four names
-// are the folders that the upload sends (README.md §3).
 fn isServerSide(name: []const u8) bool {
     for ([_][]const u8{ "proc", "sql", "web", "server" }) |s| {
         if (std.mem.eql(u8, name, s)) return true;
@@ -552,8 +483,6 @@ fn isServerSide(name: []const u8) bool {
     return false;
 }
 
-// Zig tip: A struct passed by value (`l: app_mod.Layout`) is a bundle of rectangles; the function
-// reads the ones it needs. The Run buttons are drawn by `debugBar`.
 /// The Main Panel: the windows as tabs and the editor.
 fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
     const r = l.main;
@@ -566,8 +495,6 @@ fn mainPanel(app: *App, win: Window, l: app_mod.Layout) !void {
     try editorArea(app, sub(box, 0, 2, box.width, box.height -| 2));
 }
 
-// Zig tip: a tab has the picture that its file has in the tree: a folder view the open folder, a table of a database the table
-// sign, a database or DBF file the disk, an Eve file the scroll, anything else the page. The choice is made from the path.
 /// The icon of a tab, the same as the one of the file in the tree.
 fn tabIcon(t: app_mod.Tab) []const u8 {
     if (std.mem.startsWith(u8, t.path, "filter:")) return "▽";
@@ -578,14 +505,11 @@ fn tabIcon(t: app_mod.Tab) []const u8 {
     return "📄";
 }
 
-// Zig tip: the text is made in the frame arena (`app.fmt`), because libvaxis keeps a pointer to it until the frame is shown.
 /// The text of a tab: its icon, a dot when it has unsaved changes, and its title (in the frame arena).
 fn tabLabel(app: *App, t: app_mod.Tab) []const u8 {
     return app.fmt(" {s} {s} ", .{ if (tabChanged(t)) "●" else tabIcon(t), t.title() });
 }
 
-// Zig tip: a window with changes shows a red dot where its icon was, until the changes are saved. The red is fixed, the same
-// in every theme: the red of a palette can be dark or pale, and the dot must be seen at a glance.
 /// Does the window hold changes that are not saved?
 fn tabChanged(t: app_mod.Tab) bool {
     return t.buf != null and t.buf.?.dirty;
@@ -593,8 +517,6 @@ fn tabChanged(t: app_mod.Tab) bool {
 
 const changed_red = theme.fromHex(0xff1f1f);
 
-// Zig tip: a tab takes its label and three more cells (`× ` and a space); the sum over the tabs `first` to `last` says
-// whether they fit in `room` cells together.
 /// Do the tabs `first` to `last` fit in `room` cells?
 fn tabsFit(app: *App, strip: Window, first: usize, last: usize, room: u16) bool {
     var used: usize = 0;
@@ -602,9 +524,6 @@ fn tabsFit(app: *App, strip: Window, first: usize, last: usize, room: u16) bool 
     return used <= room;
 }
 
-// Zig tip: `break` leaves the loop when the next tab would not fit. A tab and its `×` are two hits on neighbouring cells,
-// so a click on either does its own action (and a middle click closes). The row starts at `tab_first`; when the active
-// tab changes (`tab_seen`), the row moves just enough to show it, and the `<` and `>` buttons move it freely.
 /// The tab row of the Main Panel: `<` at the left, the tabs, and (in `titleButtons`) `>` at the right.
 fn tabStrip(app: *App, box: Window) !void {
     const strip = sub(box, 0, 0, box.width, 1);
@@ -653,8 +572,6 @@ fn tabStrip(app: *App, box: Window) !void {
     if (can_left) try addHit(app, strip, 0, 0, 3, 1, .{ .tab_shift = -1 });
 }
 
-// Zig tip: A `const` array of string literals at file level is stored once in the program. All five
-// rows have the same width (41 cells), so the logo is centered by its first row.
 const logo_rows = [_][]const u8{
     "██████ ██  ██ ██████        ██████ ██  ██",
     "██     ██  ██ ██              ██    ████ ",
@@ -663,8 +580,6 @@ const logo_rows = [_][]const u8{
     "██████   ██   ██████          ██   ██  ██",
 };
 
-// Zig tip: `(win.width -| w) / 2` centers: the saturating subtraction gives 0 when the text is wider
-// than the window, so the text starts at the left edge instead of failing.
 /// Print `s` in the middle of `row`.
 fn center(win: Window, row: u16, s: []const u8, style: Style) void {
     _ = put(win, (win.width -| win.gwidth(s)) / 2, row, s, style);
@@ -691,8 +606,6 @@ fn logo(ed: Window) void {
     center(ed, y0 + 8, "(c) Sage-Code Laboratory", dim);
 }
 
-// Zig tip: `const tab = app.activeTab() orelse { ...; return; };` unwraps the optional, or draws
-// the logo and returns. After this line `tab` is a plain pointer.
 fn editorArea(app: *App, ed: Window) !void {
     fillWith(ed, theme.deep);
     app.vbar_rect = .{};
@@ -718,8 +631,6 @@ fn editorArea(app: *App, ed: Window) !void {
     }
 }
 
-// Zig tip: a date is split with `std.time.epoch`: `EpochSeconds` gives the day (year, month, day) and the seconds of that day
-// (hour, minute). Nothing is allocated: the text is made in the frame arena.
 /// `YYYY-MM-DD HH:MM` for a moment given in seconds since 1970 (UTC), or "" for 0.
 fn dateText(app: *App, secs: i64) []const u8 {
     if (secs <= 0) return "";
@@ -730,9 +641,6 @@ fn dateText(app: *App, secs: i64) []const u8 {
     return app.fmt("{d}-{d:0>2}-{d:0>2} {d:0>2}:{d:0>2}", .{ yd.year, @intFromEnum(mday.month), mday.day_index + 1, ds.getHoursIntoDay(), ds.getMinutesIntoHour() });
 }
 
-// Zig tip: the list is a table drawn row by row: the icon, then the name, the description, the date and the size in KB, at
-// columns that depend on the width of the panel (the name gets what is left). The row that is selected is painted; each row
-// is a hit, so a click selects it and a second click opens it. The selected file decides if Run and Preview are active.
 /// The Main Panel shows the content of a folder: icon, name, description, date made, size in KB.
 fn folderArea(app: *App, ed: Window, fv: *app_mod.FolderView) !void {
     const dim = theme.on(theme.dim, theme.deep);
@@ -789,17 +697,11 @@ fn tabIconOfName(name: []const u8) []const u8 {
     return "📄";
 }
 
-// Zig tip: a field is as wide as its data needs (the length of the field, 10 for a date) or its name, whichever is longer;
-// the result is a `u16`, the type of a width on the screen.
 /// The width a field asks for in the grid of a table.
 fn naturalWidth(f: *const grid.Field) u16 {
     return @intCast(std.math.clamp(@max(f.name.len, f.width), 4, 254));
 }
 
-// Zig tip: the widths are worked out once per frame into an array of the frame arena, which the click code reads too
-// (`app.tbl_widths`): when the fields do not fit, the ones wider than 12 cells give up width in proportion to what they
-// have above 12 (rounded up, so the sum fits), and none goes under 12; if they still do not fit, the grid scrolls
-// sideways from `left`.
 /// The widths of the columns of a table for `room` cells; also says whether all of them fit.
 fn columnWidths(app: *App, t: *const grid.Table, room: usize) struct { widths: []u16, fit: bool } {
     const widths = app.frame.allocator().alloc(u16, t.fields.len) catch return .{ .widths = &.{}, .fit = true };
@@ -824,9 +726,6 @@ fn columnWidths(app: *App, t: *const grid.Table, room: usize) struct { widths: [
     return .{ .widths = widths, .fit = total <= room };
 }
 
-// Zig tip: the grid is drawn column by column from `left`, with a `│` after each column and a `┼` where the rule under the
-// header crosses it. The rows take turns between two backgrounds (`idx % 2`), the selected row a third one. The cell text
-// is copied into the frame arena before `put`, because `put` keeps a pointer until the frame is shown.
 /// The Main Panel shows a table: `#`, the names of the fields, then the records, with scroll bars.
 fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
     const t = &tv.t;
@@ -937,10 +836,6 @@ fn tableArea(app: *App, ed: Window, tv: *app_mod.TableView) void {
     if (t.records == 0) _ = put(ed, num_w + 1, 2, if (tv.readonly) "No rows." else "No records. The structure is changed with  SQL:> alter table <name>", dim);
 }
 
-// Zig tip: A tab is one character in the text but several cells on the screen. For drawing, the line is
-// copied with every tab replaced by the spaces up to the next tab stop, so that the rest of the code
-// can count one cell for each character. The copy is made in the arena of the frame (no free), and
-// a line without tabs is returned as it is.
 /// The line with its tabs spread into spaces.
 fn expandTabs(app: *App, line: []const u8) []const u8 {
     if (std.mem.indexOfScalar(u8, line, '\t') == null) return line;
@@ -960,10 +855,6 @@ fn expandTabs(app: *App, line: []const u8) []const u8 {
     return out.items;
 }
 
-// Zig tip: The hidden characters are drawn over the line after the text: a middle dot for a space, a
-// thin arrow at the start of a tab, and the line end sign right after the last character. The walk
-// counts the cells like `displayWidth` does; only the cells inside the window (`left` to
-// `left + cols`) are drawn.
 /// Show the spaces, tabs and the line end of one line.
 fn drawHidden(cw: Window, line: []const u8, left: usize, cols: usize, eol: []const u8, style: Style) void {
     var col: usize = 0;
@@ -981,10 +872,6 @@ fn drawHidden(cw: Window, line: []const u8, left: usize, cols: usize, eol: []con
     if (col >= left and col < left + cols) _ = put(cw, @intCast(col - left), 0, eol, style);
 }
 
-// Zig tip: The last line the view can start from: the end of the text may go up the screen until only
-// three empty rows are left under the last line, never more. Without wrapping that is a sum; with
-// wrapping the rows of the lines are counted from the end of the text until they fill the window
-// less those three rows.
 /// The largest first line that the editor can show.
 fn maxTop(b: *const text.Buffer, rows: usize, cols: usize, wrap: bool) usize {
     if (!wrap) return (b.lineCount() + 3) -| rows;
@@ -999,9 +886,6 @@ fn maxTop(b: *const text.Buffer, rows: usize, cols: usize, wrap: bool) usize {
     return 0;
 }
 
-// Zig tip: With wrapping, the cursor is kept in view by counting rows, not lines: the rows of the
-// lines from the first one shown up to the cursor, plus the piece of the cursor line it is in. When
-// the cursor is far below, the first line jumps near it at once so the count stays short.
 fn followWrap(b: *text.Buffer, rows: usize, cols: usize) void {
     if (rows == 0 or cols == 0) return;
     b.left = 0;
@@ -1018,11 +902,6 @@ fn followWrap(b: *text.Buffer, rows: usize, cols: usize) void {
     }
 }
 
-// Zig tip: `b.follow(rows, cols)` scrolls the buffer so the cursor is inside the window.
-// `code.showCursor(col, row)` tells the terminal where the cursor is; the view hides the cursor at
-// the start of every frame. In the wrap mode a line is drawn in several rows, one piece of `cols`
-// cells each, and `left` is the first cell of the piece; the line number and the breakpoint are
-// drawn on the first piece only. The variable `r` counts the rows of the screen, `ln` the lines.
 fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
     var digits: u16 = 1;
     var n = b.lineCount();
@@ -1105,11 +984,6 @@ fn editor(app: *App, ed: Window, tab: *app_mod.Tab, b: *text.Buffer) !void {
     scrollBars(app, ed, b, rows, cols, lines_shown);
 }
 
-// Zig tip: The glyphs of the bars are constants in one place, one set for each bar, so the look of
-// the vertical and of the horizontal bar can be changed apart. The track is a light shade, the thumb
-// a full block, the buttons are triangles. Block Elements has half blocks (`▀ ▄ ▌ ▐`) at the edges
-// of a cell but no centered thin bar; `▬` (horizontal) and `▮` (vertical) of Geometric Shapes are
-// centered, but fonts draw them differently: put them in `glyph_h_thumb` and `glyph_v_thumb` to try.
 const glyph_v_track = "░";
 const glyph_v_thumb = "█";
 const glyph_h_track = "░";
@@ -1119,14 +993,6 @@ const glyph_down = "▼";
 const glyph_left = "◀";
 const glyph_right = "▶";
 
-// Zig tip: The bars are one cell wide or tall. A proportion in integers gives the thumb: as long as
-// the share of the text that is on the screen (`visible * span / total`), and placed by the share
-// that is above the screen. The multiplication comes before the division, otherwise the integer
-// division would round to 0. The vertical bar always has its buttons ▲ and ▼ (half a page each),
-// with a free row above the first one so that it does not touch the title bar of the panel. The
-// horizontal bar has ◀ and ▶ (ten columns each) and runs under the line numbers too, so it covers
-// the whole width of the editor; with wrapping it is not drawn. Every button is a hit with the
-// action `scroll`.
 /// The vertical bar at the right of the text and, unless the text wraps, the horizontal bar under it.
 /// The rectangles of the tracks are saved in the app for the mouse.
 fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, lines_shown: usize) void {
@@ -1180,11 +1046,6 @@ fn scrollBars(app: *App, ed: Window, b: *text.Buffer, rows: u16, cols: u16, line
     while (k < tw) : (k += 1) _ = put(ed, 1 + @as(u16, @intCast(tx + k)), hy, glyph_h_thumb, thumb);
 }
 
-// Zig tip: The selected part of a line is drawn again over the code with the selection colors. The
-// selection is made of byte offsets in the real line; the columns they fall on (tabs count several
-// cells) are found with `displayWidth` of the text before them, and the text to draw is cut from the
-// copy with the tabs spread (`shown`), where a column is a character. A line whose end is selected
-// gets one more colored cell, so the user sees that the line break is selected.
 /// Paint the selected part of one line.
 fn drawSelection(cw: Window, line: []const u8, shown: []const u8, row: usize, sel: text.Range, left: usize) void {
     if (row < sel.start.row or row > sel.end.row) return;
@@ -1235,8 +1096,6 @@ fn drawCode(w: Window, line: []const u8, start: usize, eve: bool, bg: theme.Colo
     }
 }
 
-// Zig tip: the SQL words are written in lower case and compared with the lower-cased word, because SQL does not care
-// about the case. `std.ascii.lowerString` fills a small buffer: a word longer than the buffer is not a keyword.
 const sql_keywords = [_][]const u8{
     "select",   "insert",  "update",     "delete",    "create",  "drop",      "alter",   "table",       "view",      "index",     "trigger",
     "into",     "values",  "set",        "as",        "distinct", "union",    "all",     "pragma",      "begin",     "commit",    "rollback",
@@ -1276,9 +1135,6 @@ fn sqlWordColor(word: []const u8) ?theme.Color {
     return null;
 }
 
-// Zig tip: the same hand-written scanner as `drawCode`, for SQL: comments `-- ...` and `/* ... */`, strings in single
-// quotes ('' inside is a quote), names in double quotes, numbers, words. A word followed by `(` that is not a keyword is
-// a function (COUNT, SUM, ...). A block comment is colored on its own line only: the scanner keeps no state between lines.
 /// Draw one line of SQL from byte `start`, with the colors of the theme.
 fn drawSql(w: Window, line: []const u8, start: usize, bg: theme.Color) void {
     const s = line[start..];
@@ -1330,10 +1186,6 @@ fn drawSql(w: Window, line: []const u8, start: usize, bg: theme.Color) void {
     }
 }
 
-// Zig tip: `[_][]const u8{ ... }` is an array of string slices whose length the compiler counts. These
-// lists are hand-written (the interruptions and the types of SCL, see `eve1.js` of the tutorial); the
-// generated `keywords.words` holds all the keywords, and what is not in a list here is a plain keyword.
-// `return` is not here: it closes a block, like the keywords that open one (`procedure`), and has their color.
 const interrupt_words = [_][]const u8{ "abort", "break", "exit", "panic", "raise", "resume", "retry", "skip", "stop", "yield" };
 const control_words = [_][]const u8{ "do", "done", "else", "for", "if", "job", "loop", "match", "parallel", "repeat", "then", "when", "while" };
 const operator_words = [_][]const u8{ "and", "as", "eq", "in", "is", "not", "or", "xor" };
@@ -1346,8 +1198,6 @@ const type_words = [_][]const u8{
     "Printable", "Bytes", "Connection", "Atomic", "Error", "Warning",
 };
 
-// Zig tip: a parameter of type `[]const []const u8` is a slice of strings; passing `&array` turns the
-// address of a fixed array into such a slice. `for (list) |k|` visits each word.
 fn inList(list: []const []const u8, word: []const u8) bool {
     for (list) |k| {
         if (std.mem.eql(u8, k, word)) return true;
@@ -1355,9 +1205,6 @@ fn inList(list: []const []const u8, word: []const u8) bool {
     return false;
 }
 
-// Zig tip: A function that returns `?Color` says "a color or nothing": `null` means the word is not
-// special and keeps the plain text color. The caller unpacks it with `if (...) |color|`.
-// A linear search over short lists is fast enough for the few lines on the screen.
 /// The color of a word: type, interruption, control word, operator word or keyword (`null` for none).
 fn wordColor(word: []const u8) ?theme.Color {
     if (inList(&type_words, word)) return theme.type_name;
@@ -1368,8 +1215,7 @@ fn wordColor(word: []const u8) ?theme.Color {
     return null;
 }
 
-// Zig tip: The card of D-178: facts and no preview. `ed.width -| 4` and `@min(..., 64)` keep the
-// box inside a narrow window; the function returns early when there is no room.
+// @decision D-178
 /// The card of a file that is not text: its facts, and no preview (D-178).
 fn card(app: *App, tab: *app_mod.Tab, ed: Window) void {
     const w: u16 = @min(ed.width -| 4, 64);
@@ -1390,23 +1236,17 @@ fn card(app: *App, tab: *app_mod.Tab, ed: Window) void {
     _ = put(box, 2, box.height -| 1, tab.card.note, theme.on(theme.dim, theme.deep));
 }
 
-// Zig tip: `std.mem.indexOfScalar(u8, path, '/') orelse return false` finds the first slash or
-// leaves; `path[0..cut]` is then the first folder of the path.
 fn isServerPath(path: []const u8) bool {
     const cut = std.mem.indexOfScalar(u8, path, '/') orelse return false;
     return isServerSide(path[0..cut]);
 }
 
-// Zig tip: `size >> 20` shifts the bits right by 20, which divides by 1,048,576. The tenth of a
-// unit is `(size & mask) * 10 >> 20`; this is integer arithmetic, with no floating point.
 fn sizeText(app: *App, size: u64) []const u8 {
     if (size >= 1 << 20) return app.fmt("{d}.{d} MB ({d} bytes)", .{ size >> 20, (size & ((1 << 20) - 1)) * 10 >> 20, size });
     if (size >= 1 << 10) return app.fmt("{d}.{d} KB ({d} bytes)", .{ size >> 10, (size & 1023) * 10 >> 10, size });
     return app.fmt("{d} bytes", .{size});
 }
 
-// Zig tip: The bar belongs to the Tools Panel: it is drawn above it and is not on the screen when that panel is hidden.
-// A button that cannot act now is drawn dimmed and its hit is `.nop`, so a click on it does nothing.
 fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     const bar = sub(win, x0, y, rw, 1);
     fillWith(bar, theme.panel);
@@ -1450,8 +1290,6 @@ fn debugBar(app: *App, win: Window, x0: u16, y: u16, rw: u16) !void {
     }
 }
 
-// Zig tip: `for (tabs, names) |t, n|` walks two arrays of the same length together. The label is a
-// different string for the Breaks tab when there are breakpoints.
 fn toolsPanel(app: *App, win: Window, r: Rect) !void {
     if (r.w == 0) return;
     const box = try panelBox(app, win, r, .tools);
@@ -1488,9 +1326,6 @@ fn toolsPanel(app: *App, win: Window, r: Rect) !void {
     }
 }
 
-// Zig tip: A long line is cut into pieces of at most `cap` cells (a cell is a column of the screen; a wide character counts
-// two), and each piece gets its own row: this is the wrapping of the logs. `segCount` says how many rows a line needs and
-// `segText` gives the piece number `seg`. They walk the characters with `std.unicode.Utf8View`, never cutting one in two.
 /// How many rows the text needs when a row holds `cap` cells.
 fn segCount(w: Window, s: []const u8, cap: usize) usize {
     if (cap == 0) return 1;
@@ -1540,8 +1375,6 @@ fn logPrefix(kind: app_mod.LineKind) []const u8 {
     };
 }
 
-// Zig tip: A `switch` on the kind of line gives each kind its color. The prompt is drawn on the first row of a line only;
-// the other rows of a wrapped line start under the text, so the columns line up.
 fn logLine(w: Window, row: u16, l: app_mod.LogLine, seg: usize, cap: usize) void {
     const piece = segText(w, l.text, cap, seg);
     const prefix = logPrefix(l.kind);
@@ -1566,9 +1399,6 @@ fn logLine(w: Window, row: u16, l: app_mod.LogLine, seg: usize, cap: usize) void
     }
 }
 
-// Zig tip: The rows are counted from the end: lines are taken from the last one (less `scroll`) backwards until the window
-// is full. The first line taken may be only partly visible, so its first pieces are skipped (`skip`). Then the lines are
-// drawn from the top. The scroll bar counts lines, not rows: it shows where the view is in the list of lines.
 /// Draw the last lines of a log into `w` (the line `scroll` lines above the end is the last one shown); long lines wrap.
 fn drawLog(app: *App, w: Window, log: *app_mod.Log) void {
     app.console_rect = absRect(w, 0, 0, w.width, w.height);
@@ -1617,8 +1447,6 @@ fn drawLog(app: *App, w: Window, log: *app_mod.Log) void {
     }
 }
 
-// Zig tip: One function serves the Stdout and the Stderr tabs: the log to show is a parameter, a
-// `*app_mod.Log` pointer.
 fn logPanel(app: *App, body: Window, log: *app_mod.Log, empty: []const u8) void {
     if (log.lines.items.len == 0) {
         _ = put(body, 2, 1, empty, theme.on(theme.faint, theme.deep));
@@ -1628,8 +1456,6 @@ fn logPanel(app: *App, body: Window, log: *app_mod.Log, empty: []const u8) void 
     drawLog(app, body, log);
 }
 
-// Zig tip: `repeat("─", 400)` repeats a string at compile time (`**` is array repetition), which gives a
-// rule longer than any window; the window clips it.
 /// The console of evevm: the output scrolls above, then a rule and the prompt `eve:> `.
 fn consolePanel(app: *App, body: Window) !void {
     const h = body.height;
@@ -1651,9 +1477,6 @@ fn consolePanel(app: *App, body: Window) !void {
     }
 }
 
-// Zig tip: `app.breakpoints.items` is a slice; `for (slice, 0..) |bp, i|` gives each breakpoint
-// and its number. `row` is a child window of one line, filled with the selected color when it is
-// the selected row.
 fn breaksPanel(app: *App, body: Window) !void {
     app.console_rect = .{};
     _ = put(body, 1, 0, "On Del File : line", theme.on(theme.dim, theme.deep));
@@ -1691,9 +1514,6 @@ fn breaksPanel(app: *App, body: Window) !void {
     _ = put(body, 1, body.height -| 1, "Enter or a second click jumps · Space switches · Del removes", theme.on(theme.dim, theme.deep));
 }
 
-// Zig tip: the SQL panel has the same shape as the console: the output scrolls above, then a rule and the prompt. The
-// line being typed is drawn by `drawSql`, so it has the colors of SQL, and the cursor of the terminal is put by hand
-// (`showCursor`) at the width of the text before the cursor, since `TextInput.drawWithStyle` knows one style only.
 /// The SQL panel: type a statement, Enter runs it on the database (`use <file.db>`, `clear`), the result is a table.
 fn sqlPanel(app: *App, body: Window) !void {
     const h = body.height;
@@ -1731,10 +1551,6 @@ fn fileFacts(app: *App) []const u8 {
     return app.fmt(" · {s} · {s}", .{ t.card.kind, sizeText(app, t.card.size) });
 }
 
-// Zig tip: The bar has two parts. At the left the name of the current file with its path from the
-// project folder (or a message or the running state, which take its place for a moment); at the
-// right a fixed panel of 16 cells with the line and the column. `{d:>4}` prints a number right
-// aligned in 4 cells, so the panel is wide enough for 9999 lines and 999 columns and does not move.
 fn statusBar(app: *App, win: Window) !void {
     const W = win.width;
     const H = win.height;
@@ -1784,28 +1600,17 @@ fn statusBar(app: *App, win: Window) !void {
 
 // ------------------------------------------------------------------ overlays
 
-// Zig tip: `addHit(...) catch {}` ignores an error on purpose: the empty block after `catch` is the
-// whole handler. It is right here because the only error is "out of memory", and the worst result
-// is that a click inside the dialog closes it.
 /// Make the rectangle of a dialog a click that does nothing, so a click on its text does not close it.
 fn solid(app: *App, win: Window, x: u16, y: u16, w: u16, h: u16) void {
     addHit(app, win, x, y, w, h, .nop) catch {};
 }
 
-// Zig tip: The close button of every dialog is the same: ` × ` drawn at a place, and a hit with the
-// action `close_overlay`. Making it a function keeps all dialogs alike.
 /// The × button that closes a dialog.
 fn closeButton(app: *App, win: Window, x: u16, y: u16, style: Style) void {
     _ = put(win, x, y, " × ", style);
     addHit(app, win, x, y, 3, 1, .close_overlay) catch {};
 }
 
-// Zig tip: `@as(u32, ww) * 10 <= @as(u32, main.w) * 9` is the test "ww <= 90% of main.w" in whole numbers: both sides
-// are multiplied by 10, so no floating point is needed, and widening to `u32` first keeps the product from overflowing.
-// Zig tip: the shadow is made of the cells that touch the box on its right and under it, one cell wide and one row high,
-// shifted by one: each keeps its character and its text color and gets a darker background, so what is behind the dialog is
-// still readable, like under a real shadow. `win.readCell` gives the cell that is already drawn; `writeCell` puts it back.
-// It is only for light themes: on a dark one a shadow would not show.
 /// Draw the shadow of a box at (x, y) of `win`, `w` cells wide and `h` rows high (light themes only).
 fn shadow(win: Window, x: u16, y: u16, w: u16, h: u16) void {
     if (!theme.isLight()) return;
@@ -1849,9 +1654,6 @@ fn dialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     return box;
 }
 
-// Zig tip: The search dialogs sit at the top right, under the menu bar, so the code stays visible
-// while the user searches. The title and the × button are written over the top border of the box,
-// in the parent window.
 /// A small dialog at the top right of the screen: returns the inside.
 fn topDialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     const ww = @min(w, win.width -| 2);
@@ -1865,8 +1667,6 @@ fn topDialog(app: *App, win: Window, w: u16, h: u16, title: []const u8) Window {
     return box;
 }
 
-// Zig tip: A struct for a button lets a dialog list its buttons as data: `buttonRow` lays them out
-// from the right edge, the usual place of OK and Cancel. `primary` marks the one that Enter does.
 const Btn = struct { label: []const u8, action: Action, primary: bool = false, enabled: bool = true };
 
 /// A row of buttons at the right end of row `y` of a dialog.
@@ -1882,9 +1682,6 @@ fn buttonRow(app: *App, box: Window, y: u16, specs: []const Btn) !void {
 
 const ok_btn: Action = .{ .dlg = .ok };
 
-// Zig tip: the rows of the dialog are drawn from the list in the app. The row that is selected shows its pattern as a text
-// field; the others show the text. The name of the column is a hit of its own, drawn after the hit of the row, so a click on
-// it is the one found first and changes the column, while a click elsewhere on the row only selects it.
 /// The filter dialog: one row for each filter (a column and a value or pattern), buttons under the list.
 fn filterBox(app: *App, win: Window) !void {
     const box = dialog(app, win, 74, 20, app.fmt("{s} · {s}", .{ if (app.flt_view) |vn| app.fmt("Alter view {s} of", .{vn}) else if (app.flt_replace != null) "Alter filter" else "Filter", app.filterTableTitle() }));
@@ -1942,9 +1739,6 @@ fn filterBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: The popup menu of a tab opens at the place of the click. `@min(x, win.width -| w)` keeps it
-// inside the screen when the click is near the right edge. The rows are hits like the rows of the
-// main menu, and the mouse hover moves the selection.
 /// The popup menu of a tab (right click on its title).
 fn tabMenuBox(app: *App, win: Window) !void {
     var lw: u16 = 0;
@@ -1972,9 +1766,6 @@ fn tabMenuBox(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: the facts are a fixed array of label and value pairs; `n` counts the ones that apply (an optional fact with no
-// value is left out), and the height of the dialog follows. The name is the first row: Rename turns it into a field in
-// the same place; the folder is a fact of its own, changed with Move (the folder selector).
 /// The Info dialog (Info… of a tab, File > Rename…): `File: name` (or `Table:`, `View:`, `Folder:`), a rule, the facts.
 fn propertiesBox(app: *App, win: Window) !void {
     const p = app.props;
@@ -2038,8 +1829,6 @@ fn propertiesBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the width of the dialog follows the message (`gwidth` counts cells, not bytes), with a minimum, so a short or a
-// long question fits. The two buttons are the usual `buttonRow`; Yes is the primary one (Enter), and the keys Y and N work.
 /// The confirmation dialog: a message and Yes / No. Reused by every question (`App.askConfirm`).
 fn confirmBox(app: *App, win: Window) !void {
     const msg = app.confirm_msg orelse "Are you sure?";
@@ -2052,9 +1841,6 @@ fn confirmBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the New dialog shows the folder where the file will go (the selected folder of the tree), a field for the name
-// and the types the machine knows; the type is read from the extension when Enter is pressed. The same box asks for the
-// name of a folder, of a database and of the copy of a table: `new_kind` says which one.
 /// File > New…: the name of the new file, folder or database.
 fn newBox(app: *App, win: Window) !void {
     const box = dialog(app, win, 70, 11, switch (app.new_kind) {
@@ -2132,8 +1918,6 @@ fn appendNBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the bottom row of the dialog of a new table is the same on its three pages: Previous and Next walk the pages
-// (Next waits for a good name), Create makes the table, Cancel leaves.
 /// Previous, Next, Create and Cancel of the dialog of a new table.
 fn wizardButtons(app: *App, box: Window) !void {
     const ok = app.sqNameOk();
@@ -2145,8 +1929,6 @@ fn wizardButtons(app: *App, box: Window) !void {
     });
 }
 
-// Zig tip: page 0 asks for the name and the description; page 2 lists the indexes made and lets a new one be made from ticked
-// fields. Both are drawn here so `sqStructureBox` keeps the grid of the fields (page 1) for itself.
 /// The first and the last page of the dialog of a new table.
 fn newTablePages(app: *App, box: Window) !void {
     const dim = theme.on(theme.dim, theme.panel);
@@ -2208,9 +1990,6 @@ fn newTablePages(app: *App, box: Window) !void {
     try wizardButtons(app, box);
 }
 
-// Zig tip: a bordered grid, one row for each field, with the columns of a
-// SQLite table: Name, Type (from a list), Not null and Key (check boxes, Space or a click switches them) and Default. The
-// rule lines are cut from one long string, as in `structureBox`.
 /// The structure dialog of a SQLite table.
 fn sqStructureBox(app: *App, win: Window) !void {
     const box = dialog(app, win, 92, 28, if (app.sq_new) app.fmt("New table in {s}  (SQLite)", .{app.sq_db orelse ""}) else app.fmt("Structure of {s}  ({s}, SQLite)", .{ app.sq_table orelse "", app.sq_db orelse "" }));
@@ -2335,10 +2114,6 @@ fn sqStructureBox(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: A `switch` on the optional command: `row.cmd orelse` is not needed because the labels
-// that change with the state have a command, and a separator is handled before this function is
-// called. The marks `[x]`, `[ ]` and `●` are drawn from the state of the app on every frame, so
-// the menu is never out of date.
 /// The text of a menu row: its label, with a check box (panels) or a dot (the current window)
 /// in front when the row has one.
 fn rowLabel(app: *App, row: app_mod.MenuRow) []const u8 {
@@ -2369,8 +2144,6 @@ fn rowKey(app: *App, row: app_mod.MenuRow) []const u8 {
     return row.key;
 }
 
-// Zig tip: `@max(a, b)` takes the larger of two numbers; a `for`
-// over the rows finds the widest label and shortcut, so the box fits its content.
 /// The drop-down of the open menu, under its name in the bar.
 fn menuDrop(app: *App, win: Window) !void {
     const m = app.menu_top;
@@ -2409,9 +2182,6 @@ fn menuDrop(app: *App, win: Window) !void {
     }
 }
 
-// Zig tip: A color from hue, saturation and value (each 0 to 1), for the palette of the Colors tab.
-// `@floor` and `@mod` split the hue circle in six parts; `@intFromFloat` makes the final byte. The
-// function is pure: the same numbers always give the same color.
 /// The color `0xRRGGBB` of a hue (0 to 1), a saturation and a value.
 fn hsvHex(h: f32, s: f32, v: f32) u24 {
     const hh = h * 6.0;
@@ -2434,9 +2204,6 @@ fn hsvHex(h: f32, s: f32, v: f32) u24 {
     return (r << 16) | (g << 8) | b;
 }
 
-// Zig tip: The dialog has three tabs drawn by three functions; the tab number lives in the app
-// (`opt_tab`), so a click and the Tab key change the same thing. The tabs of the dialog are drawn
-// like the tabs of the editor: the open one in inverted colors.
 /// The Options dialog: Theme, Colors, Timers. The options belong to the user and to the tool; the
 /// settings of Eve are in the configuration files of the project.
 fn settings(app: *App, win: Window) !void {
@@ -2467,9 +2234,6 @@ fn settings(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: the list has two groups, the built-in themes and then the custom ones, with a rule between them. The rows that
-// are shown start at `first`, moved only as far as the selected theme needs, like the file tree. `opt.count()` is the
-// number of themes; the id of a theme is its place in the list, so a click sends that number.
 /// The list of themes, the buttons under it (and the field of Rename, Export, Import), and a sample of the theme in use.
 fn themeTab(app: *App, body: Window) !void {
     const dim = theme.on(theme.dim, theme.panel);
@@ -2682,11 +2446,7 @@ fn timersTab(app: *App, body: Window) !void {
     _ = put(body, 2, 15, "cache. The settings of Eve are in the configuration files.", dim);
 }
 
-// Zig tip: `@embedFile("eve_zon")` is the text of the root `build.zig.zon` of the repository, copied
-// into the program when it is built. The block below runs at compile time (`comptime`): it looks
-// for `.version = "` and cuts the text up to the next quote, so the version is written once, in
-// that file (D-167), and the About dialog shows it. `@setEvalBranchQuota` allows the compiler to
-// run the search over a text of a few thousand bytes.
+// @decision D-167
 const eve_version = blk: {
     @setEvalBranchQuota(200_000);
     const zon = @embedFile("eve_zon");
@@ -2706,8 +2466,6 @@ fn about(app: *App, win: Window) !void {
     try buttonRow(app, box, box.height -| 2, &.{.{ .label = "Close", .action = .close_overlay, .primary = true }});
 }
 
-// Zig tip: The text field is the one of the `App` (`goto_in`), drawn with `drawWithStyle`; the
-// dialog never needs the keyboard focus, because an overlay takes the keys first.
 fn gotoBox(app: *App, win: Window) !void {
     const box = topDialog(app, win, 40, 5, "GoTo");
     try field(app, box, 1, 0, box.width -| 2, &app.goto_in, 0, true);
@@ -2728,8 +2486,6 @@ fn findTextBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: `app.tree.entries.items[app.selected]` is the entry that the search moved to; the dialog
-// shows its path so that the user sees the answer before pressing Enter.
 fn findFileBox(app: *App, win: Window) !void {
     const box = topDialog(app, win, 52, 6, "Find File");
     try field(app, box, 1, 0, box.width -| 2, &app.files_in, 0, true);
@@ -2761,8 +2517,6 @@ fn replaceBox(app: *App, win: Window) !void {
     _ = put(box, 1, 3, "Tab switches the field", theme.on(theme.dim, theme.panel));
 }
 
-// Zig tip: A dialog with one field. The key handling is in `App.overlayKey`: Enter saves under the
-// typed path, Esc closes.
 fn saveAsBox(app: *App, win: Window) !void {
     const box = dialog(app, win, 64, 9, "Save As");
     _ = put(box, 2, 2, "File path, relative to the project folder:", theme.on(theme.text, theme.panel));
@@ -2775,9 +2529,6 @@ fn saveAsBox(app: *App, win: Window) !void {
     });
 }
 
-// Zig tip: A list with a selected row that must stay on the screen: `top` is the first row shown and
-// is moved only as far as needed, the same rule as the file tree. The rows are child windows of one
-// line; each is a hit with the number of the project.
 /// File > Open project: the projects of the cache, one row each.
 fn projectBox(app: *App, win: Window) !void {
     const box = dialog(app, win, 76, 19, "Open project");
@@ -2819,9 +2570,6 @@ fn projectBox(app: *App, win: Window) !void {
 
 /// File > Open Folder: a browser of folders. The field shows the path; the list shows the sub
 /// folders; Open as project adds the folder to the cache and opens it.
-// Zig tip: one dialog for four uses (`app.fb_mode`): a `switch` picks the title and the main button; Export and Import
-// also list the theme files (`.json`) after the folders and have a name field under the list, so the list is two rows
-// shorter for them.
 /// The folder selector: Open Folder, Move (a file of the Info dialog), Export and Import of a theme.
 fn folderBox(app: *App, win: Window) !void {
     const with_name = app.fbHasName();

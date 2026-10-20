@@ -3,8 +3,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 const Io = std.Io;
 const vm = @import("vm.zig");
-// Zig tip: `const ok = wire.ok;` gives a function of another file a short local name. It copies nothing: the
-// name points to the same function, and calls read as they did before the code was split into files.
 const config = @import("evecm").config;
 const wire = @import("evecm").wire;
 
@@ -24,9 +22,6 @@ const client = @import("client.zig");
 // ---- stop, the machine as its own process (evevm) and the user interface (-ux) ---------------------------------------
 
 
-// Zig tip: `for (&machines) |*slot|` walks the array by pointer; `slot.* orelse continue` reads the optional behind the
-// pointer and skips a place that is empty. The function does three things in order of preference, and returns after the
-// first that finds something to stop: the doors of this process, then a machine in another process.
 /// `stop`: close the doors that this process opened and tell the scripts to stop, without leaving the prompt. When this
 /// process has no door open, stop the machine of another process that answers (the one that `evevm` started).
 pub fn stopMachines(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_path: []const u8) !u8 {
@@ -56,14 +51,6 @@ pub fn logPath(gpa: std.mem.Allocator, cfg: Config) ![]u8 {
     return std.fmt.allocPrint(gpa, "{s}/eve-{s}-{d}.log", .{ config.runtime_dir, cfg.domain, cfg.ipc_port });
 }
 
-// Zig tip: `std.process.spawn` starts another program. `.stdin = .ignore` connects it to the null device, and a
-// `.file` gives it an open file as its output: the machine has no terminal, so its log goes to a file. With
-// `create_no_window` Windows gives the child no console window of its own, and it goes on running after this program
-// has ended. The result is a `Child`; this function does not wait for it, because the machine is meant to stay.
-// Zig tip: on Windows a new process inherits *every* handle of its parent that is marked inheritable, not only the three
-// it is given as its standard streams. A program that started `eve -s` with pipes (a script, a service manager, a test)
-// would then wait for the end of those pipes until the machine itself ended. Clearing the inherit flag of our own standard
-// handles before the start keeps the machine from holding them. `extern "kernel32"` declares a system function by name.
 pub fn releaseStdHandles() void {
     if (builtin.os.tag != .windows) return;
     const k = struct {
@@ -99,8 +86,6 @@ pub fn startDetached(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Confi
     const log_file: ?Io.File = Io.Dir.cwd().createFile(io, log, .{}) catch null;
     const sink: std.process.SpawnOptions.StdIo = if (log_file) |f| .{ .file = f } else .ignore;
     releaseStdHandles();
-    // Zig tip: `pgid = 0` makes the child the leader of a new process group on POSIX systems, so a Ctrl+C or a hangup of the
-    // terminal that started it does not reach the machine; on Windows the field is not used (`create_no_window` does the job).
     const child = std.process.spawn(io, .{
         .argv = argv.items,
         .stdin = .ignore,
@@ -142,9 +127,6 @@ pub const daemon_usage =
     \\
 ;
 
-// Zig tip: the program decides what to do from its own name (`evevm` or `eve`) and from a word; `eql` is a comparison
-// of two texts. `orelse 0` turns "the machine options did not handle it" into a plain success. A `restart` is a `stop`
-// followed by a wait until nobody answers, then a `start`.
 /// The command `evevm [start|stop|restart|status] [-e file.cfg]`; returns the exit code.
 pub fn daemonMain(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, argv: []const []const u8) !u8 {
     var word: []const u8 = "start";
@@ -179,9 +161,6 @@ pub fn daemonMain(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, argv: []const
     return (try client.handle(io, gpa, out, .{ .serve = true, .word = word, .config = config_path }, false)) orelse 0;
 }
 
-// Zig tip: a failed call to `spawn` or `wait` is not worth stopping for here, so the result is a plain `bool`:
-// "the helper program ran and ended". `&.{ ... }` with a value that is known only at run time (`url`) is an array
-// built on the stack, which `spawn` reads and does not keep.
 /// Run a helper program with no window and no input or output, and wait for it to end.
 pub fn runQuiet(io: Io, argv: []const []const u8) bool {
     var child = std.process.spawn(io, .{
@@ -232,8 +211,6 @@ pub fn openUi(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_path: ?[]c
     return 0;
 }
 
-// Zig tip: a test of the pure parts needs no network: the path check and the configuration reader are plain functions
-// of text. `std.testing.expect` fails the test when the value is false.
 test "web paths stay below the web folder" {
     try std.testing.expect(safePath("/index.html"));
     try std.testing.expect(safePath("/css/style.css"));
@@ -243,8 +220,6 @@ test "web paths stay below the web folder" {
     try std.testing.expectEqualStrings("text/css; charset=utf-8", contentType("/css/style.css"));
 }
 
-// Zig tip: a multi-line string literal (lines that start with `\\`) holds a whole file in the test, with no escapes.
-// `expectEqual` compares numbers; the ports show that a `**` comment at the end of a line is not part of the value.
 test "eve.cfg: keys of the machine, comments and unknown keys" {
     const cfg = parseConfig(
         \\# configuration of a test

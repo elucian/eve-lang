@@ -19,10 +19,6 @@ pub const Row = struct {
     fields: []const Field,
 };
 
-// Zig tip: an `ArenaAllocator` (see doc.zig) frees all the rows at once, so the parser can allocate
-// freely and never frees one piece. The caller passes the arena's allocator and drops the arena.
-// `while (i < text.len) : (i += 1)` is a loop with a step; here the index also moves inside the
-// body, so the step is written by hand. `line` counts the line breaks read so far, also those inside a quoted field.
 /// Parse CSV text: fields separated by `sep` (a comma by default), a field in double quotes may hold the
 /// separator, line breaks and `""` for one quote; rows end with LF or CRLF. An empty line is not a row.
 pub fn parseCsv(a: std.mem.Allocator, text: []const u8, sep: u8) CsvError![]const Row {
@@ -77,9 +73,6 @@ pub fn parseCsv(a: std.mem.Allocator, text: []const u8, sep: u8) CsvError![]cons
     return rows.items;
 }
 
-// Zig tip: `std.mem.trim(u8, s, " \t\r")` cuts the listed bytes at both ends. A function that
-// returns `?[]const u8` answers a slice of the input or null; no memory is allocated, the answer
-// points into `cfg`. `orelse return null` leaves with null when a step finds nothing.
 /// The URL of the connection `name` in the text of `eve.cfg`: the line `database "name" = "url"`.
 /// Lines that start with `#` or `**` are comments. Null when the name is not declared.
 pub fn connectionUrl(cfg: []const u8, name: []const u8) ?[]const u8 {
@@ -98,8 +91,6 @@ pub fn connectionUrl(cfg: []const u8, name: []const u8) ?[]const u8 {
     return null;
 }
 
-// Zig tip: `rest: *[]const u8` is a pointer to a slice, so the function can move the caller's slice
-// forward (an output parameter, like `@` in Eve). `rest.*` is the slice itself.
 /// Reads `"text"` at the start of `rest` and moves `rest` after it; null when there is no quote.
 fn quotedText(rest: *[]const u8) ?[]const u8 {
     if (rest.len == 0 or rest.*[0] != '"') return null;
@@ -116,9 +107,6 @@ pub fn sqlitePath(url: []const u8) ?[]const u8 {
     return url[prefix.len..];
 }
 
-// Zig tip: `for (s) |ch| switch (ch) { ... }` walks the bytes of a string. `w.print("\\u{x:0>4}", ...)`
-// writes a control character as `\u00XX`: `x` is lowercase hexadecimal, `0>4` pads with zeros to
-// width 4. A byte of 0x80 or more is part of a UTF-8 character and is written as it is, which is valid JSON.
 /// Writes `s` as a JSON string, with the quotes.
 pub fn writeJsonString(w: *Io.Writer, s: []const u8) Io.Writer.Error!void {
     try w.writeByte('"');
@@ -159,9 +147,6 @@ pub const JsonDiag = struct {
 
 pub const JsonError = error{ BadJson, OutOfMemory };
 
-// Zig tip: a parser is a struct that holds the text and a cursor, with one method for each rule of the
-// grammar. `fail` records the position and the reason in the `JsonDiag` that the caller gave, then returns the
-// error `BadJson`. The strings are unescaped into the arena of the caller, so their memory lives with it.
 const JsonParser = struct {
     a: std.mem.Allocator,
     text: []const u8,
@@ -364,7 +349,6 @@ pub fn parseJsonDocuments(a: std.mem.Allocator, text: []const u8, diag: *JsonDia
     return out.items;
 }
 
-// Zig tip: `Io.Writer.Allocating` collects what a writer gets in memory (see doc.zig); `written()` reads it.
 test "the CSV reader keeps quotes, commas, empty and quoted-empty fields apart" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

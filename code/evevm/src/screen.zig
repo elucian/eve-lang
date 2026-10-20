@@ -10,8 +10,6 @@ const Io = std.Io;
 const version = @import("evecm").version;
 const helptext = @import("helptext.zig");
 
-// Zig tip: a struct with a default field is a small "settings" value: `.{}` is plain, `.{ .fancy = true }` is the
-// terminal look. Passing it around keeps one `if` per drawing function instead of a flag in every call.
 /// How to draw.
 pub const Style = struct {
     fancy: bool = false,
@@ -33,8 +31,6 @@ const bold = "\x1b[1m";
 const accent = "\x1b[1;36m";
 const dim = "\x1b[2m";
 
-// Zig tip: a struct of strings is a table of constants. `unicode` and `ascii` have the same fields, so the drawing
-// code picks one of them once (`const c = if (...) unicode else ascii;`) and never asks again.
 const Chars = struct {
     h: []const u8,
     v: []const u8,
@@ -52,9 +48,6 @@ const Chars = struct {
 const unicode: Chars = .{ .h = "─", .v = "│", .tl = "┌", .tm = "┬", .tr = "┐", .ml = "├", .mm = "┼", .mr = "┤", .bl = "└", .bm = "┴", .br = "┘" };
 const ascii: Chars = .{ .h = "-", .v = "|", .tl = "+", .tm = "+", .tr = "+", .ml = "+", .mm = "+", .mr = "+", .bl = "+", .bm = "+", .br = "+" };
 
-// Zig tip: a string is bytes, and one UTF-8 character can take up to four of them. The continuation bytes all look
-// like `10xxxxxx`, so counting the bytes that do not (`b & 0xC0 != 0x80`) counts the characters, which is the width on
-// a fixed-width screen. `.len` would make a box with `─` or `█` too narrow to pad.
 /// The width of a text on the screen, in characters.
 pub fn cells(s: []const u8) usize {
     var n: usize = 0;
@@ -64,7 +57,6 @@ pub fn cells(s: []const u8) usize {
     return n;
 }
 
-// Zig tip: `for (0..n) |_|` repeats n times; the range `0..n` has no values worth a name, so `_` drops them.
 fn pad(w: *Io.Writer, n: usize) Io.Writer.Error!void {
     for (0..n) |_| try w.writeByte(' ');
 }
@@ -73,8 +65,6 @@ fn repeat(w: *Io.Writer, s: []const u8, n: usize) Io.Writer.Error!void {
     for (0..n) |_| try w.writeAll(s);
 }
 
-// Zig tip: `fancy and color.len > 0` short-circuits: with a plain style the color text is never written. The helper
-// writes `text` in a color and the padding outside it, so the colors do not change the width of the column.
 /// One cell of a row: a blank, the text (in `color` when fancy), blanks up to `width`, a blank.
 fn cell(w: *Io.Writer, style: Style, text: []const u8, width: usize, color: []const u8) Io.Writer.Error!void {
     try w.writeByte(' ');
@@ -100,9 +90,6 @@ fn rule(w: *Io.Writer, c: Chars, left: []const u8, mid: []const u8, right: []con
     try w.writeByte('\n');
 }
 
-// Zig tip: the loop walks the bytes once and remembers where the last blank was, so a line breaks between words; a
-// word longer than the width is cut at the width. Only the first byte of a character counts, as in `cells`. The
-// function answers a length, and the caller slices the text with it: nothing is copied.
 /// The length in bytes of the first line of `text` when it is wrapped at `width` characters.
 fn firstLine(text: []const u8, width: usize) usize {
     var n: usize = 0;
@@ -120,9 +107,6 @@ fn firstLine(text: []const u8, width: usize) usize {
     return text.len;
 }
 
-// Zig tip: `std.mem.splitScalar` walks the pieces of a text between a separator, here the paragraphs; it gives the
-// empty pieces too, which the loop skips. The first paragraph starts at `first` blanks and the next lines at `rest`:
-// a hanging indent is two different numbers. `@max(avail, 1)` keeps the width positive in a very narrow window.
 /// Write `text` wrapped to `width` characters. A `\n` in the text starts a new paragraph, after a blank line.
 pub fn writeWrapped(w: *Io.Writer, text: []const u8, width: usize, first: usize, rest: usize) Io.Writer.Error!void {
     var paragraphs = std.mem.splitScalar(u8, text, '\n');
@@ -182,10 +166,6 @@ fn line(w: *Io.Writer, style: Style, c: Chars, widths: []const usize, name: []co
     try w.writeByte('\n');
 }
 
-// Zig tip: `@max(a, b)` is a builtin that works on any number type, and `[2]usize{ ... }` is an array whose length is
-// part of its type. `std.mem.trimStart` cuts the listed characters from the start of a slice without copying: the
-// result is a view of the same bytes. The table is as wide as `width` says (never less than the room the first
-// column and a few characters of text need); a summary longer than its column continues on the next line.
 /// Draw the table of the commands: two columns, a header, and a line between the commands.
 pub fn writeTable(w: *Io.Writer, style: Style, rows: []const Row, width: usize) Io.Writer.Error!void {
     const c = if (style.fancy) unicode else ascii;
@@ -216,9 +196,6 @@ fn writeHint(w: *Io.Writer, style: Style, width: usize) Io.Writer.Error!void {
     if (style.fancy) try w.writeAll(reset);
 }
 
-// Zig tip: `rows` is built in a fixed array on the stack, as long as the table of the help texts, which is known while
-// compiling (`helptext.entries.len`). `for (&helptext.entries, &rows) |e, *row|` walks both together and fills each
-// row in place through the pointer `*row`.
 /// `help`: the table of all the commands and the hint.
 pub fn writeHelpTable(w: *Io.Writer, style: Style, width: usize) Io.Writer.Error!void {
     var rows: [helptext.entries.len]Row = undefined;
@@ -269,8 +246,6 @@ const info = [3][]const u8{
     "machine, doors and database in one program",
 };
 
-// Zig tip: `inline for` is unrolled by the compiler and needs a comptime-known array, which `info` is, so the width
-// of the box is computed while compiling and costs nothing at run time. `comptime` forces a block to run then.
 /// The banner: a box with the logo, the version and the ready message under it.
 pub fn writeBanner(w: *Io.Writer, style: Style) Io.Writer.Error!void {
     if (!style.fancy) {

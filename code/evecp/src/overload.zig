@@ -22,8 +22,6 @@ pub const Choice = union(enum) {
     ambiguous,
 };
 
-// Zig tip: `std.StaticStringMap(void).initComptime` is a set of strings built while compiling (see
-// check.zig). `has` answers "is this text in the set?".
 const primitives = std.StaticStringMap(void).initComptime(.{
     .{"Integer"}, .{"Natural"}, .{"Real"}, .{"Float"},  .{"Decimal"}, .{"Byte"},   .{"Short"},
     .{"Huge"},    .{"String"},  .{"Text"}, .{"Logic"},  .{"Symbol"},  .{"Rune"},
@@ -39,10 +37,6 @@ const universal = std.StaticStringMap(void).initComptime(.{
     .{"Object"}, .{"Printable"}, .{"Comparable"}, .{"Iterable"}, .{"Stream"},
 });
 
-// Zig tip: the score is a small number, bigger when the match is closer: 3 the same type, 2 a widening
-// (an `Integer` given to a `Real`), 1 when the match can not be judged (an unknown type, a type parameter, a
-// class whose parents are not looked at here). Returning `null` means "this argument is not accepted". An
-// optional result `?u32` is how one function answers both "no" and "how well".
 /// How well an argument of type `arg` fits a parameter of type `param`; null when it does not fit.
 fn fit(param: ?*const Node, arg: ?[]const u8, tparams: []const *const Node) ?u32 {
     const p = param orelse return 1;
@@ -73,8 +67,6 @@ fn fit(param: ?*const Node, arg: ?[]const u8, tparams: []const *const Node) ?u32
     return 1;
 }
 
-// Zig tip: `decl.kids[0].kids` is the list of value parameters of a routine, `decl.kids[1].kids` its list of
-// types (ast.zig). A method starts with `@self`, which the caller does not write, so it is skipped.
 fn valueParams(decl: *const Node) []const *const Node {
     const list = decl.kids[0].kids;
     if (decl.tag == .method and list.len > 0 and list[0].tag == .ref_param and std.mem.eql(u8, list[0].text, "self")) return list[1..];
@@ -86,9 +78,6 @@ pub fn hasResult(decl: *const Node) bool {
     return decl.kids[2].kids.len > 0;
 }
 
-// Zig tip: the same loops as `bindParams` in interp.zig decide which argument reaches which parameter: named
-// arguments first, then the positional ones in order, a vararg takes the rest. `var taken = [_]bool{false} ** 32`
-// is a stack array of 32 booleans (see the tip there). Here nothing is bound, only counted.
 /// The score of a call to `decl`, or null when `decl` does not accept the arguments (number, names, types).
 pub fn score(decl: *const Node, args: []const ArgInfo) ?u32 {
     const params = valueParams(decl);
@@ -131,9 +120,6 @@ fn resultType(decl: *const Node) ?[]const u8 {
     return t.text;
 }
 
-// Zig tip: a function can keep a short list on the stack with a fixed-size array and a counter (`n`), when the
-// number of candidates is small. `[16]*const Node` holds up to 16 pointers; more overloads of one name than
-// that are refused by the checker long before.
 /// Choose the declaration for a call (D-149). `expected` is the type the context asks for, `statement` says
 /// whether the call stands alone (a method without a result) or is part of an expression (a method with one).
 pub fn select(decls: []const *const Node, args: []const ArgInfo, expected: ?[]const u8, statement: ?bool) Choice {
@@ -186,9 +172,7 @@ pub fn select(decls: []const *const Node, args: []const ArgInfo, expected: ?[]co
     return .ambiguous;
 }
 
-// Zig tip: the signature of a declaration is the types of its value parameters and, for a function, the type of
-// its result. Names, defaults and `@` marks are not part of it (D-150). A parameter without a type is written
-// `?` so that `f(x)` and `f(x: Integer)` differ.
+// @decision D-150
 /// Two declarations with the same signature: the second is a compile error (D-149).
 pub fn sameSignature(a: *const Node, b: *const Node) bool {
     const pa = valueParams(a);
@@ -218,8 +202,6 @@ pub fn mentions(ty_text: []const u8, name: []const u8) bool {
     return false;
 }
 
-// Zig tip: a test builds small syntax nodes by hand with `.{ .tag = ..., .kids = ... }`. A `const` node can be
-// pointed to by `&x` as `*const Node`. This is the same data the parser makes, without a source text.
 fn testParam(name: []const u8, ty: *const Node) Node {
     return .{ .tag = .param, .text = name, .ty = ty, .kids = &.{&ast.none} };
 }

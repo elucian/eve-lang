@@ -4,23 +4,14 @@
 const std = @import("std");
 const vaxis = @import("vaxis");
 
-// Zig tip: `vaxis.Cell.Color` is a tagged union: `.default`, `.index` (the 256 colors of a
-// terminal) or `.rgb` (true color, three bytes). A tagged union holds exactly one of its fields
-// and remembers which one, so a `switch` on it is checked by the compiler.
 pub const Color = vaxis.Cell.Color;
 pub const Style = vaxis.Cell.Style;
 
-// Zig tip: A function whose parameters are known when the program is compiled can also be called by
-// the compiler: the initial values of the variables below are such calls. `hex >> 16` moves the red
-// byte down, `& 0xff` keeps one byte, and `@intCast` narrows the number to the `u8` of the color.
 /// A color from `0xRRGGBB`.
 pub fn fromHex(hex: u24) Color {
     return .{ .rgb = .{ @intCast(hex >> 16), @intCast((hex >> 8) & 0xff), @intCast(hex & 0xff) } };
 }
 
-// Zig tip: An enum names the colors that a theme sets. `slot_count` is computed by the compiler from
-// the number of fields of the enum, so adding a color here is enough for the tables below to ask for
-// one more value (a table of the wrong length is a compile error).
 /// The colors that a theme sets, in the order of the tables below.
 pub const Slot = enum {
     panel, deep, bar, bar2, line, text, dim, faint, bright, selected, sel_bg,
@@ -44,13 +35,9 @@ pub const slot_labels = [slot_count][]const u8{
     "Subtitle (##)",    "Comment (** **)",   "Comment (/* */)",
 };
 
-// Zig tip: an enum without values written is numbered by the compiler (0, 1, 2); `@tagName(b)` gives the name of a value
-// as text ("dark"), which is how the theme files write it.
 /// The kind of a theme: a changed copy of a built-in theme is named after it (`Dark Custom1`).
 pub const Base = enum { dark, gray, light };
 
-// Zig tip: a struct written on one line; `name` is a `[]const u8` that points at a string literal of the program, so a
-// built-in theme needs no memory of its own.
 /// A built-in theme.
 pub const Theme = struct { name: []const u8, base: Base, colors: Palette };
 
@@ -92,10 +79,6 @@ pub var subtitle: Color = fromHex(themes[0].colors[25]);
 pub var comment_expr: Color = fromHex(themes[0].colors[26]);
 pub var comment_block: Color = fromHex(themes[0].colors[27]);
 
-// Zig tip: `inline for` unrolls the loop at compile time, one copy of the body for each field of
-// `Slot`. In each copy `fname` is a string known to the compiler, and `@field(@This(), fname)`
-// names the variable of that name in this file, so one loop sets all the variables without a line
-// for each of them.
 /// Put the colors of a palette in use.
 pub fn apply(p: Palette) void {
     inline for (comptime std.meta.fieldNames(Slot), 0..) |fname, i| {
@@ -103,8 +86,6 @@ pub fn apply(p: Palette) void {
     }
 }
 
-// Zig tip: `@enumFromInt` turns the number of a slot back into the enum value, and a `switch` over
-// the enum must name every slot: adding a color to `Slot` without adding it here is a compile error.
 /// The color in use for slot number `slot`.
 pub fn colorOf(slot: usize) Color {
     return switch (@as(Slot, @enumFromInt(slot))) {
@@ -139,26 +120,17 @@ pub fn colorOf(slot: usize) Color {
     };
 }
 
-// Zig tip: a function can return a struct literal with only some fields written: the others take
-// their default values (`.bold = false`, and so on, see Style in libvaxis).
 /// A style from a foreground and a background color.
 pub fn on(fg: Color, bg: Color) Style {
     return .{ .fg = fg, .bg = bg };
 }
 
-// Zig tip: `pub` makes a declaration visible to the other files; without it a function or constant
-// belongs to its file only. The body is one expression: a struct literal whose type comes from the
-// return type.
 /// The same, in bold.
 pub fn onBold(fg: Color, bg: Color) Style {
     return .{ .fg = fg, .bg = bg, .bold = true };
 }
 
-// Zig tip: the brightness of a color is a weighted sum of its three bytes (green counts most, as the eye sees it); a theme is
-// light when the background of the editor is brighter than the middle. A color that is not `.rgb` counts as dark.
 /// Is the theme in use a light one? (Dialogs then get a shadow, so they stand out like a raised card.)
-// Zig tip: the colour of the border of the panel that has the keyboard. The palette blue of the light theme is a dark indigo
-// that hardly shows against the green background, so a light theme gets a clear blue of its own; the others keep their blue.
 /// The colour of the border of the active panel.
 pub fn accent() Color {
     return if (isLight()) fromHex(0x0064ff) else blue;

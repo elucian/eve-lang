@@ -6,13 +6,8 @@ const version = @import("evecm").version;
 const screen = @import("evevm").screen;
 const context = @import("context.zig");
 const cli = @import("cli.zig");
-// Zig tip: the shared names come from context.zig under short local names (`const Context = context.Context;`):
-// the same type, not a copy. Files of one module may import each other, also in a circle.
 const prompt = context.prompt;
 
-// Zig tip: lines that start with `\\` form a multi-line string literal. There are no escapes
-// inside; each line ends with a newline and the text starts right after the `\\`. The last
-// line `\\` followed by nothing adds an empty line.
 pub const quick_help =
     \\Usage: eve [options]                      start the REPL
     \\       eve [options] <script.eve> [args]  execute a script (same as -x)
@@ -56,18 +51,12 @@ pub const commands_head =
     \\
 ;
 
-// Zig tip: `w.print("{s}\n\n", .{version.title})` formats like printf, checked by the compiler:
-// the number and types of the values must match the placeholders. `{s}` is a string, `{d}` a
-// number. `{s: <9}` (see below) pads a string with spaces on the right to 9 characters.
-// `version.title` is built with `++` at compile time (see version.zig).
 /// Page 1 of the help: the title and the short options.
 pub fn writeQuickHelp(w: *Io.Writer) Io.Writer.Error!void {
     try w.print("{s}\n\n", .{version.title});
     try w.writeAll(quick_help);
 }
 
-// Zig tip: `for (&commands) |c|` here captures each element by value (a copy); the one-line
-// body after `)` needs no braces. `'\n'` in single quotes is one byte (a `u8`), not a string.
 /// Page 2 of the help: the same title and the `--<command>` list.
 pub fn writeCommandsHelp(w: *Io.Writer) Io.Writer.Error!void {
     try w.print("{s}\n\n", .{version.title});
@@ -82,11 +71,6 @@ pub fn writeMenu(w: *Io.Writer) Io.Writer.Error!void {
     try writeCommandsHelp(w);
 }
 
-// Zig tip: `!void` without an error set means "any error": the compiler works out which ones
-// from the body. `in: ?*Io.Reader` is an optional pointer; `if (in) |r| { ... }` runs the block
-// only when it is not null, and `r` is the unwrapped pointer. `_ = expr;` explicitly throws a
-// result away (Zig refuses to ignore values silently). `w.flush()` matters: a Writer keeps
-// text in a buffer and sends it to the screen only on flush, so flush before waiting for input.
 /// The paged help of `eve -h`: the quick page, then, after Enter, the commands page. Without `in`
 /// (output is not a terminal) both pages are written without waiting.
 pub fn writeHelp(w: *Io.Writer, in: ?*Io.Reader) !void {

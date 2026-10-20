@@ -9,19 +9,10 @@ const heap = @import("heap.zig");
 const Obj = heap.Obj;
 const Node = ast.Node;
 
-// Zig tip: an error set is a list of names; `||` merges sets. Every function that can fail while
-// running a script returns `Signal!T`. Recursive functions (`eval` calls itself through its
-// helpers) must name their error set: Zig cannot infer it for a cycle. The first names are
-// control flow, the last two are the failures of the allocator and of the output writer.
 /// What interrupts the normal flow of a script.
 pub const Signal = error{ JobRollback, Raise, Break, Skip, Over, Exit, StopJob, Panic, Retry, Resume, Abort, Stop, Cancel, OutOfMemory, WriteFailed };
 
-// Zig tip: a `union(enum)` is a "tagged union": a value that is exactly one of several kinds, and
-// remembers which. `switch (v)` must handle every kind. `.int => |n|` captures the payload. Kinds
-// that point to a struct (`*List`) are shared: copying the `Value` copies the pointer, so two
-// variables see the same list. Kinds such as `int` and `real` are copied. This is Eve's rule:
-// "`:=` shares a collection, native values are always copied" (D-049). A field cannot be called
-// `null` in Zig (a keyword), hence `nil`.
+// @decision D-049
 /// Any value of an Eve script.
 pub const Value = union(enum) {
     nil,
@@ -59,9 +50,6 @@ pub const Value = union(enum) {
     chan: *Channel,
 };
 
-// Zig tip: a channel is a queue with a fixed capacity, shared by pointer: every task that receives it
-// with `@` sees the same one. It needs no lock, because only the task holding the baton runs (task.zig);
-// a full or empty channel makes the task give the baton away and try again later.
 /// `Channel(:T)(capacity: n, senders: m)`: values in order, closed after `senders` closes (D-141).
 pub const Channel = struct {
     hdr: Obj = .{ .kind = .chan },
@@ -74,15 +62,10 @@ pub const Channel = struct {
     closed: bool = false,
 };
 
-// Zig tip: a module is loaded once (D-068), so one `Module` exists per module file for the whole run. It
-// owns a `Scope` of its own: the private variables of the module live there and the functions of the
-// module close over it, so only they can change them. `node` is the parsed tree, kept for its
-// `export` list and its regions.
+// @decision D-068
 /// A loaded module: its scope, its tree and its name.
 pub const Module = struct { name: []const u8, node: *const Node, scope: *Scope };
 
-// Zig tip: a `struct` groups named fields (and functions); `pub` makes a name visible to other
-// files; a field with `= value` has a default, so `.{ ... }` need not give it.
 /// A list, an array, a set, or a view of a part of another list (a slice `v[2..3]`).
 pub const List = struct {
     hdr: Obj = .{ .kind = .list },
@@ -93,8 +76,6 @@ pub const List = struct {
     off: usize = 0,
     len: usize = 0,
 
-    // Zig tip: a method that returns a slice into another struct's memory is a "view": no copy.
-    // `b.elems()[a..b]` slices the slice. Writing through it changes the base list.
     /// The elements, whether the list owns them or is a view.
     pub fn elems(l: *List) []Value {
         if (l.base) |b| return b.elems()[l.off .. l.off + l.len];
@@ -103,17 +84,13 @@ pub const List = struct {
 };
 
 pub const Entry = struct { key: Value, val: Value };
-// Zig tip: `hdr: Obj = .{ .kind = .map }` is the header every heap object starts with (heap.zig, `Obj`):
-// a field with a default value, so the heap can build the map with `.{}` and then fill the header in.
 /// A sorted map: the entries are kept in key order.
 pub const Map = struct { hdr: Obj = .{ .kind = .map }, entries: std.ArrayList(Entry) = .empty };
 
 pub const Field = struct { name: []const u8, val: Value };
-// Zig tip: `Object` relies on the same Zig feature as `Map` above: see the tip there.
 /// An object: named attributes in the order they were created; `class` is set for `new C(...)`.
 pub const Object = struct { hdr: Obj = .{ .kind = .object }, class: ?*Class = null, fields: std.ArrayList(Field) = .empty };
 
-// Zig tip: `Class` relies on the same Zig feature as `List` above: see the tip there.
 /// A class. `node` is null for the built-in `Object`. An ordinal class keeps its named values in `ord`.
 pub const Class = struct {
     name: []const u8,
@@ -126,9 +103,6 @@ pub const Class = struct {
     trait: bool = false,
 };
 
-// Zig tip: a `var` at file level is a global with a fixed address for the whole program; `&library_traits[0]`
-// is a pointer that stays valid, so every scope can point to the same trait. They hold no allocated memory
-// (no node, empty lists), so sharing them between runs is safe.
 /// The traits of the library: `Printable`, `Comparable`, `Iterable`, `Stream` (D-145).
 pub var library_traits = [_]Class{
     .{ .name = "Printable", .trait = true },
@@ -137,7 +111,6 @@ pub var library_traits = [_]Class{
     .{ .name = "Stream", .trait = true },
 };
 
-// Zig tip: `?*Class` may be null (an object made without a class); `orelse return false` answers for it.
 /// Does the class, or one of its ancestors, adopt the trait called `name`?
 pub fn adopts(cls: ?*Class, name: []const u8) bool {
     var cur: ?*Class = cls orelse return false;
@@ -147,25 +120,18 @@ pub fn adopts(cls: ?*Class, name: []const u8) bool {
     return false;
 }
 
-// Zig tip: `Func` relies on the same Zig feature as `Map` above: see the tip there.
 /// A function, method or lambda together with the scope it was created in.
 pub const Func = struct { hdr: Obj = .{ .kind = .func }, node: *const Node, closure: *Scope };
 
-// Zig tip: `Range` relies on the same Zig feature as `Map` above: see the tip there.
 /// An integer range with both ends included; `(1..<5)` is stored as 1 to 4.
 pub const Range = struct { hdr: Obj = .{ .kind = .range }, lo: i64, hi: i64, step: i64 = 1, sym: bool = false };
 
-// Zig tip: a range that is not a plain run of integers is a "domain": real limits, an open end
-// (`null` is no limit), a limit that is excluded, a step that sets the precision (`(0..1)(0.01)`).
-// An optional `?f64` is a float or nothing.
 /// A domain of values (D-022, D-079): `x in domain` asks whether the value is inside.
 pub const Domain = struct { hdr: Obj = .{ .kind = .domain }, lo: ?f64 = null, hi: ?f64 = null, lo_excl: bool = false, hi_excl: bool = false, step: ?f64 = null };
 
-// Zig tip: `Var` relies on the same Zig feature as `Map` above: see the tip there.
 /// A variable. It is a separate struct so that a by-reference parameter can share it.
 pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false };
 pub const Binding = struct { name: []const u8, v: *Var };
-// Zig tip: `Scope` relies on the same Zig feature as `List` above: see the tip there.
 // @eve-impl comparison of two variable names: the length and the first byte decide almost every mismatch without a call
 // @perf hot
 /// Are two names equal? Cheaper than `std.mem.eql` for the short names of a scope.
@@ -180,8 +146,6 @@ pub const Scope = struct {
     binds: std.ArrayList(Binding) = .empty,
     parent: ?*Scope = null,
 
-    // Zig tip: `?*Var` is a pointer that may be null. A `while (cur) |s|` loop walks the chain of
-    // parent scopes: `cur = s.parent` moves one level up and the loop ends at the null.
     /// The variable called `name` in this scope or the enclosing ones.
     pub fn find(sc: *Scope, name: []const u8) ?*Var {
         var cur: ?*Scope = sc;
@@ -194,7 +158,6 @@ pub const Scope = struct {
     }
 };
 
-// Zig tip: `Report` relies on the same Zig feature as `List` above: see the tip there.
 /// One error met while running: kept for the reports (`errors` command) even when `recover` handles it.
 pub const Report = struct {
     line: u32,
@@ -214,9 +177,6 @@ pub const Report = struct {
     details: []const u8 = "",
 };
 
-// Zig tip: an argument passed as `@s[i]` is one element of a list. A parameter binds to a `*Var`, so
-// the element is copied into a fresh `Var`, and `cell` remembers where it came from: when the call or
-// the task ends, the value is written back there (`writeBack`).
 /// One argument of a call, `apply`, `start` or `spawn`.
 pub const Arg = struct { name: []const u8 = "", value: Value, ref: ?*Var = null, cell: ?*Value = null };
 
@@ -240,8 +200,6 @@ pub const err_sql = 59;
 // ------------------------------------------------------------------ helpers on values
 // Plain functions of the values, moved here from the interpreter: nothing in them needs it.
 
-// Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
-// compiler checks it.
 /// The name of the type of a value (what `type(x)` gives and `x is Integer` tests).
 pub fn typeName(v: Value) []const u8 {
     return switch (v) {
@@ -271,12 +229,10 @@ pub fn typeName(v: Value) []const u8 {
     };
 }
 
-// Zig tip: `isInt` relies on the same Zig feature as `fail` above: see the tip there.
 pub fn isInt(v: Value) bool {
     return v == .int or v == .nat or v == .byte or v == .short or v == .huge;
 }
 
-// Zig tip: `intOf` relies on the same Zig feature as `typeName` above: see the tip there.
 pub fn intOf(v: Value) i64 {
     return switch (v) {
         .int, .nat, .byte, .short, .huge => |n| n,
@@ -284,8 +240,6 @@ pub fn intOf(v: Value) i64 {
     };
 }
 
-// Zig tip: builtin functions start with `@`: they are the compiler's own, such as conversions
-// (`@intCast`, `@as`) and `@min`/`@max`.
 pub fn realOf(v: Value) ?f64 {
     return switch (v) {
         .int, .nat, .byte, .short, .huge => |n| @floatFromInt(n),
@@ -295,8 +249,6 @@ pub fn realOf(v: Value) ?f64 {
     };
 }
 
-// Zig tip: an optional result lets one function say "this value is not a Decimal-compatible number". A whole
-// number is a Decimal of scale 0, so `5 + 0.50d` is exact; a Real is not converted (spec: never mixed).
 /// The value as a Decimal: a Decimal itself, or an integer.
 pub fn decOf(v: Value) ?decimal.Dec {
     return switch (v) {
@@ -306,8 +258,6 @@ pub fn decOf(v: Value) ?decimal.Dec {
     };
 }
 
-// Zig tip: `a orelse b` unwraps an optional: it gives `b` when `a` is null, and `b` may leave
-// the function with `return`.
 /// `==`: same value. Collections and objects compare their contents.
 pub fn eq(a: Value, b: Value) bool {
     if (isInt(a) and isInt(b)) return intOf(a) == intOf(b);
@@ -357,7 +307,6 @@ pub fn eq(a: Value, b: Value) bool {
     }
 }
 
-// Zig tip: `same` relies on the same Zig feature as `typeName` above: see the tip there.
 /// `is`: the same thing (identity for references, equality for values).
 pub fn same(a: Value, b: Value) bool {
     return switch (a) {
@@ -371,7 +320,6 @@ pub fn same(a: Value, b: Value) bool {
     };
 }
 
-// Zig tip: `fieldOf` relies on the same Zig feature as `newList` above: see the tip there.
 pub fn fieldOf(o: *Object, name: []const u8) ?Value {
     for (o.fields.items) |f| {
         if (std.mem.eql(u8, f.name, name)) return f.val;
@@ -379,13 +327,10 @@ pub fn fieldOf(o: *Object, name: []const u8) ?Value {
     return null;
 }
 
-// Zig tip: `textual` relies on the same Zig feature as `fail` above: see the tip there.
 pub fn textual(v: Value) bool {
     return v == .str or v == .sym;
 }
 
-// Zig tip: a `switch` on a `Value` (a tagged union) with `=> true` arms and an `else` arm is the
-// short way to ask "is it one of these cases?". A `bool` function like this one can be inlined.
 /// A scalar is a single value: a number, a boolean, a symbol or a string (never a collection).
 pub fn isScalar(v: Value) bool {
     return switch (v) {
@@ -394,7 +339,6 @@ pub fn isScalar(v: Value) bool {
     };
 }
 
-// Zig tip: `classRoutine` relies on the same Zig feature as `bind` above: see the tip there.
 pub fn classRoutine(c: *Class, name: []const u8) ?*const Node {
     var cur: ?*Class = c;
     while (cur) |k| : (cur = k.parent) {

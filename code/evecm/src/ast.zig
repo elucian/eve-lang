@@ -7,10 +7,6 @@
 const std = @import("std");
 const Io = std.Io;
 
-// Zig tip: an `enum` with many names is Zig's list of cases. A name that is a Zig keyword (`if`,
-// `while`, `for`, `break`...) cannot be written plainly: it needs `@"if"`. To avoid that every
-// tag below that clashes ends with `_` (`if_`, `while_`...). `@tagName(x)` gives the name of an
-// enum value as text, which is how the dump prints it without a table.
 /// What a node is. The comment on each tag lists its `kids`.
 pub const Tag = enum {
     /// A missing optional part (a shared empty node, never null).
@@ -192,9 +188,6 @@ pub const Tag = enum {
     trait,
 };
 
-// Zig tip: `std.StringHashMapUnmanaged(V)` is a hash map with text keys that does not remember its
-// allocator (see the tip in check.zig). The aspects an `apply` can reach are found before the run
-// (project.zig) and kept in one of these maps: the key is the path as written in the `apply`.
 /// The parsed aspects of a project, by the path written in `apply`.
 // @eve-impl the operators of the hot path as data, set by the parser (R1 of design/design-bytecode.md)
 // @decision D-201
@@ -229,15 +222,9 @@ pub const LitKind = enum(u8) { none, int, real };
 
 pub const Aspects = std.StringHashMapUnmanaged(*const Node);
 
-// Zig tip: a second map, with the same shape, for the modules: the key is the path as written in
-// the import, a `|` and the module name (`lib|counter`), so the interpreter finds the tree that the
-// link step read without searching the disk again. The key `lib|*` holds a `block` node whose kids
-// are the modules of the whole folder.
 /// The parsed modules of a project, by `path|name`.
 pub const Modules = std.StringHashMapUnmanaged(*const Node);
 
-// Zig tip: a `struct` groups named fields (and functions); `pub` makes a name visible to other
-// files; a field with `= value` has a default, so `.{ ... }` need not give it.
 /// One node of the tree.
 pub const Node = struct {
     tag: Tag,
@@ -277,10 +264,6 @@ pub const Node = struct {
     primary: bool = false,
 };
 
-// Zig tip: a `const` of a struct type at file level is a value built while compiling. Parts that
-// are missing in the source all point to this single node, so a `kids` slot is never null and the
-// interpreter needs no `orelse`. `&none` is a pointer to it; it must be `const` to coerce to
-// `*const Node`.
 /// The node that stands for an absent optional part.
 /// The file of a routine, or empty.
 pub fn fileOf(n: *const Node) []const u8 {
@@ -289,11 +272,6 @@ pub fn fileOf(n: *const Node) []const u8 {
 
 pub const none: Node = .{ .tag = .none };
 
-// Zig tip: a function with `anytype` takes a value of any type, checked when it is used. A
-// recursive function (`dump` calls itself for each kid) needs an explicit error type: the
-// compiler cannot infer the errors of a function that calls itself, so `Io.Writer.Error!void` is
-// written out. `for (n.kids) |k|` walks a slice; `\n` is a newline; `{d}` prints a number.
-// `w.splatByteAll(' ', n)` writes the same byte n times (the indentation).
 /// Write the tree as indented text, one node per line: `tag text @line`. `max_depth` cuts the output.
 pub fn dump(w: *Io.Writer, n: *const Node, depth: usize, max_depth: usize) Io.Writer.Error!void {
     try w.splatByteAll(' ', depth * 2);
@@ -312,17 +290,12 @@ pub fn dump(w: *Io.Writer, n: *const Node, depth: usize, max_depth: usize) Io.Wr
     for (n.kids) |k| try dump(w, k, depth + 1, max_depth);
 }
 
-// Zig tip: `std.EnumArray(Tag, usize)` is an array indexed by an enum: `counts.get(.num)`. It is
-// as big as the enum and needs no hash map. `.initFill(0)` starts every cell at 0.
-// `std.enums.values(Tag)` is the list of all the values of the enum, known at compile time.
 /// What a script is made of: node count per tag, the deepest nesting, and the declared names.
 pub const Stats = struct {
     counts: std.EnumArray(Tag, usize) = .initFill(0),
     nodes: usize = 0,
     depth: usize = 0,
 
-    // Zig tip: `if (opt) |v| ... else ...` runs the first branch only when the optional has a value,
-    // and names it `v`.
     /// Count `n` and everything under it.
     pub fn add(s: *Stats, n: *const Node, depth: usize) void {
         s.counts.set(n.tag, s.counts.get(n.tag) + 1);
@@ -332,7 +305,6 @@ pub const Stats = struct {
         for (n.kids) |k| s.add(k, depth + 1);
     }
 
-    // Zig tip: `for (xs) |x| ...` walks a slice; `for (xs, 0..) |x, i|` also gives the index.
     /// One line per tag that occurs, most frequent first is left to the reader: tags are in declaration order.
     pub fn write(s: *const Stats, w: *Io.Writer) Io.Writer.Error!void {
         try w.print("nodes {d}, depth {d}\n", .{ s.nodes, s.depth });
@@ -343,9 +315,6 @@ pub const Stats = struct {
     }
 };
 
-// Zig tip: a walk that collects names is another recursive function. `inline` is not needed: it
-// is an ordinary run-time recursion. The `switch` on the tag has an `else => {}` branch for every
-// tag it does not care about.
 /// Write the declarations of the script: aspects, processes, functions, classes, variables.
 pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void {
     switch (n.tag) {
@@ -367,15 +336,11 @@ pub fn outline(w: *Io.Writer, n: *const Node, depth: usize) Io.Writer.Error!void
     }
 }
 
-// Zig tip: builtin functions start with `@`: they are the compiler's own, such as conversions
-// (`@intCast`, `@as`) and `@min`/`@max`.
 fn indent(depth: usize) []const u8 {
     const spaces = "                                ";
     return spaces[0..@min(depth * 2, spaces.len)];
 }
 
-// Zig tip: a `test` block runs under `zig build test`; `try std.testing.expect...` fails it when the
-// value is not the expected one.
 test "dump writes one line per node" {
     var buf: [256]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -390,8 +355,6 @@ test "dump writes one line per node" {
     try std.testing.expectEqual(@as(usize, 1), s.depth);
 }
 
-// Zig tip: a type is written `String?` for an optional one; the parser keeps the `?` at the end of
-// the text of the type node. `ty` is itself optional (`?*const Node`): a member without a type.
 /// Does the type end with `?`: may the value be `null`?
 pub fn isOptional(ty: ?*const Node) bool {
     const t = ty orelse return false;

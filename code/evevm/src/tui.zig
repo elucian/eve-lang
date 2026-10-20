@@ -36,20 +36,12 @@ const Key = enum { up, down, page_up, page_down, home, end, right, other };
 /// What a re-drawable block of the upper part shows; `arg` is the number of the command for `help_command`.
 pub const BlockKind = enum { help_table, help_command };
 
-// Zig tip: a block remembers what it shows (`kind`, `arg`) and where its lines are (`first`, `count`), not how it
-// looks. When the window changes width the screen asks the renderer to make the text again for the new width and puts
-// the new lines where the old ones were. The text of a program's output is not a block: it is kept as it was written.
 /// A part of the scrollback that is drawn again when the width changes.
 const Block = struct { kind: BlockKind, arg: usize, first: usize, count: usize };
 
-// Zig tip: a function pointer type is a type like any other: `*const fn (...) void`. cli.zig gives the screen a
-// function with this shape; the screen calls it and never needs to know the texts, so tui.zig does not import cli.zig
-// (two files that import each other are hard to follow).
 /// Writes a block for `width` characters. Given by cli.zig, which knows the texts.
 pub const Renderer = *const fn (kind: BlockKind, arg: usize, width: usize, w: *Io.Writer) void;
 
-// Zig tip: a struct that must not move in memory (its `out` field is found again from the pointer to the writer
-// inside it, `@fieldParentPtr`) is made once with `gpa.create` and used through a pointer, never copied.
 /// The state of the screen: the scrollback, the command line, the status bar.
 pub const Tui = struct {
     io: Io,
@@ -104,9 +96,6 @@ pub const Tui = struct {
     dirty: bool = false,
     last_paint: i64 = 0,
 
-    // Zig tip: `.{ .vtable = &vtable, .buffer = ... }` builds a `Writer` by hand: a table of functions (`drain`, called
-    // when the buffer is full, and `flush`) and a buffer. Whatever the program writes ends in `drain`, which here
-    // feeds the scrollback. A writer is the Zig way to say "a place that takes bytes" without naming the place.
     const vtable: Io.Writer.VTable = .{ .drain = drain, .flush = flush };
 
     /// Make the screen state; call `enter` to take the terminal.
@@ -144,9 +133,6 @@ pub const Tui = struct {
         if (std.Thread.spawn(.{}, watch, .{t})) |th| th.detach() else |_| {}
     }
 
-    // Zig tip: a detached thread that polls is the simplest way to learn that a window was resized: the program sleeps
-    // on the keyboard and gets no event for it. `Io.sleep` waits without using the processor. The thread takes the
-    // lock for every look, as every painter does, and ends when `leave` sets `closing`.
     fn watch(t: *Tui) void {
         while (!t.closing.load(.acquire)) {
             Io.sleep(t.io, .fromMilliseconds(150), .awake) catch {};
@@ -160,8 +146,6 @@ pub const Tui = struct {
         }
     }
 
-    // Zig tip: the escape codes are plain text in a string: the first byte (code 27) is Esc, and `[2J` clears the screen, `[3J` its
-    // scrollback, `[H` puts the cursor at the top left. A terminal does the work; the program only writes the bytes.
     /// Give the screen back to the terminal, cleared.
     pub fn leave(t: *Tui) void {
         t.closing.store(true, .release);
@@ -174,9 +158,6 @@ pub const Tui = struct {
 
     // ---- the scrollback ---------------------------------------------------------------------------------------
 
-    // Zig tip: `@fieldParentPtr("out", w)` goes from a pointer to a field (the `Writer`) back to the struct that
-    // contains it. `@alignCast` tells the compiler the pointer is aligned like a `Tui`, which it is. The lock is the
-    // `Io.Mutex` of the server: the REPL and the threads of the machine all write here, one at a time.
     fn drain(w: *Io.Writer, data: []const []const u8, splat: usize) Io.Writer.Error!usize {
         const t: *Tui = @alignCast(@fieldParentPtr("out", w));
         t.lock.lockUncancelable(t.io);
@@ -204,9 +185,6 @@ pub const Tui = struct {
         t.paintLive(true);
     }
 
-    // Zig tip: a small state machine reads the bytes one at a time. The states are plain fields (`escape`, `cr`), so
-    // text that arrives cut in two pieces (a drain can end in the middle of a color code) is still read right. A UTF-8
-    // character is counted once, by its first byte (`b & 0xC0 != 0x80`), because that is one place on the screen.
     /// Add bytes to the scrollback: split into lines, tabs expanded, long lines cut at `wrap_at`.
     fn feed(t: *Tui, bytes: []const u8) void {
         for (bytes) |b| {
@@ -272,9 +250,6 @@ pub const Tui = struct {
         if (!t.no_trim and (t.starts.items.len > max_lines or t.text.items.len > max_bytes)) t.drop(t.starts.items.len / 4);
     }
 
-    // Zig tip: `replaceRange(gpa, start, len, new)` removes `len` bytes at `start` and puts `new` in their place; with
-    // an empty `new` it deletes, and moves the rest down in one copy. The offsets of the lines that stay all move
-    // by the same amount.
     /// Forget the oldest `n` lines.
     fn drop(t: *Tui, n: usize) void {
         if (n == 0 or n > t.starts.items.len) return;
@@ -300,8 +275,6 @@ pub const Tui = struct {
         return @max(screen.min_width, @min(t.eve_width, t.cols));
     }
 
-    // Zig tip: `Io.Writer.Allocating` collects what the renderer writes into memory; `defer aw.deinit()` frees it on
-    // every way out. The text is then fed to the scrollback like any other output, with the limit of 120 lifted.
     /// Draw one block at the current width and add its lines to the end of the scrollback.
     fn renderInto(t: *Tui, kind: BlockKind, arg: usize) void {
         const render = t.renderer orelse return;
@@ -330,9 +303,6 @@ pub const Tui = struct {
         t.paintLive(true);
     }
 
-    // Zig tip: the old lines are copied aside (`gpa.dupe`) and the scrollback is built again from the start: lines that
-    // are not blocks are copied byte for byte, and each block is drawn at the new width. The line being typed or
-    // written (`partial`) is set aside and put back, because `feed` uses it as its workspace.
     /// Draw the blocks again for the current width, keeping everything else as it is.
     fn reflowBlocks(t: *Tui) void {
         t.laid_width = t.blockWidth();
@@ -404,9 +374,6 @@ pub const Tui = struct {
 
     // ---- painting -----------------------------------------------------------------------------------------------
 
-    // Zig tip: painting never fails the program: a terminal that cannot be written to is not a reason to stop the
-    // REPL, so every write ends with `catch {}`. The cursor is hidden while the screen is drawn and shown at the end
-    // on the command line, so it does not jump around.
     /// Draw everything.
     fn paintAll(t: *Tui) void {
         t.refreshSize();
@@ -453,8 +420,6 @@ pub const Tui = struct {
         }
     }
 
-    // Zig tip: a line may hold color codes, which take no room on the screen, so the cut is made on the characters
-    // that show: escape sequences are copied whole and only the other characters are counted.
     /// Write at most `width` characters of `s`, and the color codes that go with them.
     fn clipped(t: *Tui, s: []const u8, width: usize) void {
         var shown: usize = 0;
@@ -508,8 +473,6 @@ pub const Tui = struct {
         t.raw.print("\x1b[{d};{d}H\x1b[?25h", .{ t.rows - 2, screen.cells(t.prompt) + typed + 1 }) catch {};
     }
 
-    // Zig tip: `std.fmt.bufPrint(&buf, ...)` formats into a buffer on the stack and returns the part it used, so no
-    // memory is allocated for a short text. The `catch ""` keeps the status bar alive if a text did not fit.
     /// The status bar: Ready, or Running… (blinking, by the terminal), then the time of the last run; on the right the
     /// scroll position or the version.
     fn paintStatus(t: *Tui) void {
@@ -652,9 +615,6 @@ pub const Tui = struct {
         t.paintAll();
     }
 
-    // Zig tip: a keyboard sends one byte for a letter and a sequence for the other keys: `ESC [ A` for the up arrow,
-    // `ESC [ 5 ~` for Page Up. The function reads the digits of the first parameter and the last byte (a letter or `~`)
-    // and names the key. An unknown sequence is read to its end and ignored, so it cannot leak into the line.
     fn readKey(in: *Io.Reader) Key {
         const first = in.takeByte() catch return .other;
         if (first != '[' and first != 'O') return .other;
@@ -755,8 +715,6 @@ pub const Tui = struct {
     }
 };
 
-// Zig tip: the tests drive the scrollback without a terminal: `Tui.create` takes any `Writer` as the screen, here a
-// fixed buffer, and `feed` is called directly. `std.testing.allocator` also checks that nothing leaks.
 test "long lines are split at 120 characters and short ones are not wrapped" {
     var sink: [65536]u8 = undefined;
     var raw: Io.Writer = .fixed(&sink);

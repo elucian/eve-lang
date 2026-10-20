@@ -3,8 +3,6 @@
 const std = @import("std");
 const Io = std.Io;
 const vm = @import("vm.zig");
-// Zig tip: `const ok = wire.ok;` gives a function of another file a short local name. It copies nothing: the
-// name points to the same function, and calls read as they did before the code was split into files.
 const config = @import("evecm").config;
 const wire = @import("evecm").wire;
 
@@ -22,8 +20,6 @@ const machine = @import("machine.zig");
 
 // ---- the client side -----------------------------------------------------------------------------------------
 
-// Zig tip: `?[]const u8 = null` is an optional text that is absent by default: `-loc` with no port leaves
-// `local_port` null, and the configuration keeps its own port.
 /// What the command line asked for (built by `main.zig` from the options).
 pub const Cmd = struct {
     listen: bool = false,
@@ -40,15 +36,9 @@ pub const Cmd = struct {
     script_args: []const []const u8 = &.{},
 };
 
-// Zig tip: a struct with one field gives a name to a value: `?Answer` reads better than `?std.json.Value`, where null
-// (nobody answered) and the JSON `null` would look alike.
 /// The answer to a call: the JSON `result` of the message.
 pub const Answer = struct { result: std.json.Value };
 
-// Zig tip: the outcome is an optional, not an error: `Answer` when the machine answered, `null` when nobody did, and
-// the caller prints the message that fits its option. `remote_name: *[]const u8` is an out-parameter: the function
-// writes the address it tried through the pointer (`remote_name.* = addr`). `std.json.parseFromSliceLeaky` allocates
-// the parsed tree in `gpa` and never frees it, which is fine for a program that sends one command and exits.
 /// Send `request` to the machine the options point to: `-rem` the HTTP door of that address, `-loc` the IPC door, and
 /// without option the IPC door and then the HTTP door of `localhost`.
 pub fn send(io: Io, gpa: std.mem.Allocator, cfg: Config, cmd: Cmd, request: []const u8, remote_name: *[]const u8) ?Answer {
@@ -70,8 +60,6 @@ pub fn send(io: Io, gpa: std.mem.Allocator, cfg: Config, cmd: Cmd, request: []co
     return .{ .result = parsed.object.get("result") orelse .null };
 }
 
-// Zig tip: `std.json.Value` is a tagged union: `v == .object` tests the tag, and `v.object` is then safe to use.
-// These four small readers give a neutral value (null, "", 0, "off") when the answer has another shape.
 pub fn field(v: std.json.Value, name: []const u8) std.json.Value {
     return if (v == .object) (v.object.get(name) orelse .null) else .null;
 }
@@ -88,8 +76,6 @@ pub fn listening(v: std.json.Value) []const u8 {
     return if (v == .bool and v.bool) "listening" else "off";
 }
 
-// Zig tip: `{d:0>2}` pads a number with zeros to two digits. `@divTrunc` and `@mod` are the integer division and
-// remainder; Zig asks for them by name on signed numbers because `/` and `%` are not defined for negative values.
 /// Write a duration in milliseconds as `850 ms`, `12 s`, `3 min 05 s` or `2 h 05 min`.
 pub fn writeDuration(out: *Io.Writer, ms: i64) !void {
     const s = @divTrunc(@max(ms, 0), 1000);
@@ -99,9 +85,6 @@ pub fn writeDuration(out: *Io.Writer, ms: i64) !void {
     return out.print("{d} h {d:0>2} min", .{ @divTrunc(s, 3600), @mod(@divTrunc(s, 60), 60) });
 }
 
-// Zig tip: the first four lines are the answer of the first version of `--serve status` and keep their form; the lines
-// after them need the fields that only `vm.stat` sends (`uptime_ms`), so an older machine prints just the four.
-// `field(r, "x") == .integer` tests the tag of a JSON value before it is read.
 /// Print the answer of `vm.stat`: the doors, then what the machine has done and what it is doing.
 pub fn printMachine(out: *Io.Writer, r: std.json.Value) !void {
     try out.print("machine: {s} ipc={d} http={d}\nipc: {s}\nhttp: {s}\nruns: {d}\n", .{
@@ -133,8 +116,6 @@ pub fn printMachine(out: *Io.Writer, r: std.json.Value) !void {
     try out.writeByte('\n');
 }
 
-// Zig tip: a struct literal for a type with all defaults, `Cmd{}`, is "no option given": `send` then tries the IPC
-// door and the HTTP door of the configuration. The whole function only reads: it opens no door and starts nothing.
 /// The part of `status` about the machine: the configuration file, the doors, and whether a machine answers on them.
 pub fn machineStatus(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_path: []const u8) !void {
     const found = readConfig(io, gpa, config_path);
@@ -157,8 +138,6 @@ pub fn machineStatus(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, config_pat
     try printMachine(out, answer.result);
 }
 
-// Zig tip: `!u8` returns an exit code or a write error; `try out.print` passes the error up. One function chooses
-// the message of each option, so the three ways to miss a machine are worded in one place.
 pub fn gone(out: *Io.Writer, cmd: Cmd, name: []const u8) !u8 {
     if (cmd.remote) {
         try out.print("eve: no remote machine at {s}\n", .{name});
@@ -170,9 +149,6 @@ pub fn gone(out: *Io.Writer, cmd: Cmd, name: []const u8) !u8 {
     return exit_unavailable;
 }
 
-// Zig tip: `if (cond) |x| …` unwraps an optional in the condition; `?u8` is "an exit code, or nothing". Returning
-// null here means "the machine options did not handle this command: run it the normal way". `try out.print` passes a
-// write error up to the caller; the VM never expects one on a terminal.
 /// Handle the options of the machine. Returns the exit code, or null when the command is an ordinary local one.
 /// With `embed` a start opens the doors in threads and returns 0 at once (the caller shows the prompt); without it the
 /// start waits for the doors, as a service does.
@@ -236,9 +212,6 @@ pub fn handle(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cmd: Cmd, embed: 
     return null;
 }
 
-// Zig tip: `path[if (...) |i| i + 1 else 0..]` slices from an index computed in place: `if` is an expression, so
-// the base name of the file is cut without a temporary. `@intCast` narrows the exit code to `u8` after `@min`/`@max`
-// kept it in 0..255, so the cast can never fail.
 /// `-loc -x file` and `-rem addr -x file`: send the text of the script to the machine and print what comes back.
 pub fn runVia(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, cmd: Cmd) !?u8 {
     const path = cmd.script.?;

@@ -24,16 +24,11 @@ const message = wire.message;
 /// Set by a stop request (the Service Control Manager, SIGTERM, SIGINT): the foreground loop sees it and shuts the machine.
 var stop_flag = std.atomic.Value(bool).init(false);
 
-// Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to the
-// caller; `f() catch …` handles it in place.
 /// Where the pid of the machine is written: `<runtime>/eve-<domain>-<ipc_port>.pid`.
 pub fn pidPath(gpa: std.mem.Allocator, cfg: Config) ![]u8 {
     return std.fmt.allocPrint(gpa, "{s}/eve-{s}-{d}.pid", .{ config.runtime_dir, cfg.domain, cfg.ipc_port });
 }
 
-// Zig tip: a pid file holds the number of the process and a line break. It is written by the process that knows the number
-// (the machine in the foreground, or the starter that just spawned it) and removed when the machine stops, so an init system
-// can find the machine to stop it. A failure to write it is not an error: the machine works without.
 fn writePid(io: Io, gpa: std.mem.Allocator, cfg: Config, pid: u64) void {
     const path = pidPath(gpa, cfg) catch return;
     defer gpa.free(path);
@@ -42,22 +37,16 @@ fn writePid(io: Io, gpa: std.mem.Allocator, cfg: Config, pid: u64) void {
     Io.Dir.cwd().writeFile(io, .{ .sub_path = path, .data = text }) catch {};
 }
 
-// Zig tip: `removePid` relies on the same Zig feature as `writePid` above: see the tip there.
 fn removePid(io: Io, gpa: std.mem.Allocator, cfg: Config) void {
     const path = pidPath(gpa, cfg) catch return;
     defer gpa.free(path);
     Io.Dir.cwd().deleteFile(io, path) catch {};
 }
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 fn onSignal(_: std.posix.SIG) callconv(.c) void {
     stop_flag.store(true, .release);
 }
 
-// Zig tip: a signal handler may only do very little, so it sets an atomic flag and nothing else; the loop that waits for the
-// machine reads the flag and does the real work. `SIGHUP` is ignored: the machine must not stop when the terminal that
-// started it closes.
 fn installSignals() void {
     if (builtin.os.tag == .windows or builtin.os.tag == .wasi) return;
     const term: std.posix.Sigaction = .{ .handler = .{ .handler = onSignal }, .mask = std.posix.sigemptyset(), .flags = 0 };
@@ -67,8 +56,6 @@ fn installSignals() void {
     std.posix.sigaction(std.posix.SIG.HUP, &ign, null);
 }
 
-// Zig tip: `a orelse b` unwraps an optional: the value when there is one, else `b` (which may be `return` or `continue`,
-// leaving the function or the loop).
 fn anyMachineRuns() bool {
     for (&machine.machines) |*slot| {
         const m = slot.* orelse continue;
@@ -77,10 +64,6 @@ fn anyMachineRuns() bool {
     return false;
 }
 
-// Zig tip: the machine is started "embedded" (its threads run on their own and `serve` returns), so this function can wait:
-// it sleeps in short steps until a stop is asked or the machine ended by itself (`vm.stop`), then shuts the doors. The log of
-// an embedded machine goes where `embed_log` points, here the log file. `catch return` gives up quietly: a service has no
-// terminal to tell.
 /// Run the machine in this process until it is stopped; the log goes to `<runtime>/eve-<domain>-<ipc_port>.log`.
 pub fn runForeground(io: Io, gpa: std.mem.Allocator, config_path: ?[]const u8, report: ?*const fn (state: u32) void) u8 {
     const cfg = config.loadConfig(io, gpa, config_path orelse "eve.cfg");
@@ -115,8 +98,6 @@ pub fn runForeground(io: Io, gpa: std.mem.Allocator, config_path: ?[]const u8, r
     return 0;
 }
 
-// Zig tip: `switch` must cover every value of what it tests (or have `else`); the compiler checks it, so a new case can not
-// be forgotten. A prong can be an expression that gives the result.
 fn currentPid() u64 {
     return switch (builtin.os.tag) {
         .windows => std.os.windows.GetCurrentProcessId(),
@@ -128,8 +109,6 @@ fn currentPid() u64 {
 // ---- Windows: the Service Control Manager ---------------------------------------------------------------------------------
 
 const win = if (builtin.os.tag == .windows) struct {
-    // Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default
-    // value may be left out when a value is made with `.{ ... }`.
     const SERVICE_STATUS = extern struct {
         dwServiceType: u32,
         dwCurrentState: u32,
@@ -141,7 +120,6 @@ const win = if (builtin.os.tag == .windows) struct {
     };
     const ServiceMainFn = *const fn (argc: u32, argv: ?[*]?[*:0]u16) callconv(.winapi) void;
     const HandlerFn = *const fn (control: u32, event_type: u32, data: ?*anyopaque, ctx: ?*anyopaque) callconv(.winapi) u32;
-    // Zig tip: `TableEntry` relies on the same Zig feature as `SERVICE_STATUS` above: see the tip there.
     const TableEntry = extern struct { name: ?[*:0]const u16, proc: ?ServiceMainFn };
     extern "advapi32" fn StartServiceCtrlDispatcherW(table: [*]const TableEntry) callconv(.winapi) i32;
     extern "advapi32" fn RegisterServiceCtrlHandlerExW(name: [*:0]const u16, handler: HandlerFn, ctx: ?*anyopaque) callconv(.winapi) ?*anyopaque;
@@ -166,7 +144,6 @@ const win = if (builtin.os.tag == .windows) struct {
     var g_child: ?[]const []const u8 = null;
     var g_child_log: []const u8 = "";
 
-    // Zig tip: `setState` relies on the same Zig feature as `onSignal` above: see the tip there.
     fn setState(state: u32, exit_code: u32) void {
         const accepted: u32 = if (state == SERVICE_RUNNING) SERVICE_ACCEPT_STOP_SHUTDOWN else 0;
         const st: SERVICE_STATUS = .{
@@ -181,14 +158,10 @@ const win = if (builtin.os.tag == .windows) struct {
         _ = SetServiceStatus(handle, &st);
     }
 
-    // Zig tip: `report` relies on the same Zig feature as `onSignal` above: see the tip there.
     fn report(state: u32) void {
         setState(state, 0);
     }
 
-    // Zig tip: the Service Control Manager calls this function on one of its threads with a stop (1), an interrogate (4) or a
-    // shutdown (5). It only sets the flag the machine loop watches, and answers NO_ERROR (0); anything else is "not
-    // implemented" (120).
     fn control(code: u32, _: u32, _: ?*anyopaque, _: ?*anyopaque) callconv(.winapi) u32 {
         switch (code) {
             1, 5 => {
@@ -200,7 +173,6 @@ const win = if (builtin.os.tag == .windows) struct {
         }
     }
 
-    // Zig tip: `serviceMain` relies on the same Zig feature as `onSignal` above: see the tip there.
     fn serviceMain(_: u32, _: ?[*]?[*:0]u16) callconv(.winapi) void {
         handle = RegisterServiceCtrlHandlerExW(service_name, control, null);
         if (handle == null) return;
@@ -209,7 +181,6 @@ const win = if (builtin.os.tag == .windows) struct {
         setState(SERVICE_STOPPED, g_exit);
     }
 
-    // Zig tip: `dispatch` relies on the same Zig feature as `onSignal` above: see the tip there.
     /// Hand this process to the Service Control Manager. True when it was started by it (and the service has ended);
     /// false when it was started from a console.
     fn dispatch(io: Io, gpa: std.mem.Allocator, config_path: ?[]const u8) bool {
@@ -227,15 +198,12 @@ const win = if (builtin.os.tag == .windows) struct {
 
 // ---- evedb as a service: `eve -s -db --serve evedb.cfg` (evedb README section 11) ----------------------------------------------
 
-// Zig tip: `std.process.executableDirPathAlloc` gives the folder of this program, so `eve` finds `evedb` beside it in `bin/`.
-// `exeFileExt` is `.exe` on Windows and empty elsewhere, known when the program is compiled.
 /// The path of `evedb` beside this program.
 pub fn evedbPath(io: Io, gpa: std.mem.Allocator) ![]u8 {
     const dir = try std.process.executableDirPathAlloc(io, gpa);
     return std.fmt.allocPrint(gpa, "{s}{c}evedb{s}", .{ dir, std.fs.path.sep, builtin.target.exeFileExt() });
 }
 
-// Zig tip: `evedbLog` relies on the same Zig feature as `pidPath` above: see the tip there.
 /// Where the log of evedb started as a service goes: `<runtime>/evedb-<name of the configuration>.log`.
 pub fn evedbLog(gpa: std.mem.Allocator, config_path: []const u8) ![]u8 {
     return std.fmt.allocPrint(gpa, "{s}/evedb-{s}.log", .{ config.runtime_dir, std.fs.path.stem(config_path) });
@@ -243,16 +211,11 @@ pub fn evedbLog(gpa: std.mem.Allocator, config_path: []const u8) ![]u8 {
 
 var child_done = std.atomic.Value(bool).init(false);
 
-// Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an error
-// that nobody handles.
 fn waitChild(io: Io, child: *std.process.Child) void {
     _ = child.wait(io) catch {};
     child_done.store(true, .release);
 }
 
-// Zig tip: a service that runs another program watches two things at once: the stop request (a flag set by the Service
-// Control Manager or a signal) and the end of the child (a thread blocks in `wait` and sets another flag). The main loop
-// sleeps in short steps until one of the flags is set; on a stop it kills the child.
 /// Run `argv` as the work of the service, its output in the log, until a stop is asked or it ends by itself.
 pub fn supervise(io: Io, _: std.mem.Allocator, argv: []const []const u8, log: []const u8, report: ?*const fn (state: u32) void) u8 {
     const log_file = Io.Dir.cwd().createFile(io, log, .{}) catch null;
@@ -269,9 +232,6 @@ pub fn supervise(io: Io, _: std.mem.Allocator, argv: []const []const u8, log: []
     return 0;
 }
 
-// Zig tip: from a console, evedb is started detached (no window, its own process group, our standard handles not inherited),
-// and `eve` waits until the log says on which ports it listens. The ready line is written by evedb itself, so this works for
-// any port of the configuration, including 0.
 /// Start evedb in a process of its own and end when it is ready; silent when all went well.
 pub fn startEvedbDetached(io: Io, gpa: std.mem.Allocator, argv: []const []const u8, log: []const u8, err: *Io.Writer) !u8 {
     const log_file = Io.Dir.cwd().createFile(io, log, .{}) catch {
@@ -311,7 +271,6 @@ pub fn startEvedbDetached(io: Io, gpa: std.mem.Allocator, argv: []const []const 
     return 69;
 }
 
-// Zig tip: `runEvedb` relies on the same Zig feature as `pidPath` above: see the tip there.
 /// `eve -s -db --serve evedb.cfg` (also `eve -s db serve evedb.cfg`): evedb as a service, silent.
 pub fn runEvedb(io: Io, gpa: std.mem.Allocator, config_path: []const u8, environ_foreground: bool, err: *Io.Writer) !u8 {
     const exe = try evedbPath(io, gpa);
@@ -326,7 +285,6 @@ pub fn runEvedb(io: Io, gpa: std.mem.Allocator, config_path: []const u8, environ
     return startEvedbDetached(io, gpa, argv, log, err);
 }
 
-// Zig tip: `run` relies on the same Zig feature as `writePid` above: see the tip there.
 /// `eve -s [file.cfg]`: start the machine as a service; returns the exit code of the command.
 pub fn run(io: Io, gpa: std.mem.Allocator, config_path: ?[]const u8, environ_foreground: bool, err: *Io.Writer) !u8 {
     if (builtin.os.tag == .windows and !environ_foreground) {
@@ -343,8 +301,6 @@ pub fn run(io: Io, gpa: std.mem.Allocator, config_path: ?[]const u8, environ_for
     return code;
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "the pid file and the log are named after the machine" {
     const cfg: Config = .{};
     const gpa = std.testing.allocator;

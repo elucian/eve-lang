@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const dlib = interp.dlib;
@@ -19,7 +16,6 @@ const err_key = interp.err_key;
 
 // ---- collections: iteration, builders, indexing ---------------------------------------
 
-// Zig tip: `iterate` relies on the same Zig feature as `define` above: see the tip there.
 /// The elements of a collection, a range or a string, as a slice.
 pub fn iterate(it: *Interp, v: Value) Signal![]const Value {
     switch (v) {
@@ -57,7 +53,6 @@ pub fn iterate(it: *Interp, v: Value) Signal![]const Value {
     }
 }
 
-// Zig tip: `bindPattern` relies on the same Zig feature as `define` above: see the tip there.
 /// Give the names of a loop or builder pattern their values: `x`, or `(a, b)` for a pair.
 pub fn bindPattern(it: *Interp, pat: *const Node, v: Value) Signal!void {
     switch (pat.tag) {
@@ -80,8 +75,6 @@ pub fn bindPattern(it: *Interp, pat: *const Node, v: Value) Signal!void {
     }
 }
 
-// Zig tip: `defer stmt;` runs `stmt` when the scope ends, however it ends: it pairs a release
-// with the line that took the resource.
 /// `(item | x in source and cond)`, `[...]` and `{...}`.
 pub fn builder(it: *Interp, n: *const Node) Signal!Value {
     const saved = try it.pushScope();
@@ -121,13 +114,11 @@ pub fn builder(it: *Interp, n: *const Node) Signal!Value {
     return if (open == '{') .{ .set = out } else .{ .list = out };
 }
 
-// Zig tip: `allTrue` relies on the same Zig feature as `define` above: see the tip there.
 pub fn allTrue(it: *Interp, conds: []const *const Node) Signal!bool {
     for (conds) |c| if (!try it.truth(try it.eval(c))) return false;
     return true;
 }
 
-// Zig tip: `collect` relies on the same Zig feature as `define` above: see the tip there.
 pub fn collect(it: *Interp, out: *List, open: u8, v: Value) Signal!void {
     if (open == '{') try it.setAdd(out, v) else try it.listAppend(out, v);
 }
@@ -135,17 +126,13 @@ pub fn collect(it: *Interp, out: *List, open: u8, v: Value) Signal!void {
 // One index of `a[i, j]`: a number, `$` (already a number), `*` (all) or a range.
 pub const Idx = union(enum) { one: i64, all, rng: struct { lo: i64, hi: i64 } };
 
-// Zig tip: `isMatrix` relies on the same Zig feature as `realOf` above: see the tip there.
 /// A matrix or a tensor is an array whose elements are arrays.
-// Zig tip: `and` stops at the first false operand, so `l.elems()[0]` is read only when the list
-// has an element. A matrix is an array of arrays, `[[1, 2], [3, 4]]` (types.md); a list of lists
-// `((1, 2), (3))` is not one, so each pair of brackets indexes the result of the previous (D-064).
+// @decision D-064
 /// Is `l` a matrix or a tensor: an array whose elements are arrays?
 pub fn isMatrix(l: *List) bool {
     return l.array and l.elems().len > 0 and l.elems()[0] == .list and l.elems()[0].list.array;
 }
 
-// Zig tip: `dimLen` relies on the same Zig feature as `realOf` above: see the tip there.
 pub fn dimLen(root: *List, depth: usize) i64 {
     var l = root;
     var d: usize = 0;
@@ -157,7 +144,6 @@ pub fn dimLen(root: *List, depth: usize) i64 {
     return @intCast(l.elems().len);
 }
 
-// Zig tip: `evalIdx` relies on the same Zig feature as `define` above: see the tip there.
 pub fn evalIdx(it: *Interp, n: *const Node, len: i64) Signal!Idx {
     if (n.tag == .all) return .all;
     const saved = it.dollar;
@@ -175,14 +161,12 @@ pub fn evalIdx(it: *Interp, n: *const Node, len: i64) Signal!Idx {
     return .{ .one = if (k < 0) len + 1 + k else k };
 }
 
-// Zig tip: `leaves` relies on the same Zig feature as `define` above: see the tip there.
 pub fn leaves(it: *Interp, l: *List, out: *std.ArrayList(*Value)) Signal!void {
     for (l.elems()) |*e| {
         if (e.* == .list) try it.leaves(e.list, out) else try out.append(it.t, e);
     }
 }
 
-// Zig tip: `slots` relies on the same Zig feature as `define` above: see the tip there.
 /// The storage cells an index expression selects (one for `a[2]`, several for a slice or `[*]`).
 pub fn slots(it: *Interp, root: *List, args: []const *const Node, out: *std.ArrayList(*Value)) Signal!void {
     if (args.len == 1 and Interp.isMatrix(root)) {
@@ -196,7 +180,6 @@ pub fn slots(it: *Interp, root: *List, args: []const *const Node, out: *std.Arra
     try it.walk(root, args, 0, out);
 }
 
-// Zig tip: `pick` relies on the same Zig feature as `define` above: see the tip there.
 pub fn pick(it: *Interp, cells: []*Value, ix: Idx, out: *std.ArrayList(*Value)) Signal!void {
     switch (ix) {
         .all => for (cells) |c| try out.append(it.t, c),
@@ -212,7 +195,6 @@ pub fn pick(it: *Interp, cells: []*Value, ix: Idx, out: *std.ArrayList(*Value)) 
     }
 }
 
-// Zig tip: `walk` relies on the same Zig feature as `define` above: see the tip there.
 pub fn walk(it: *Interp, l: *List, args: []const *const Node, depth: usize, out: *std.ArrayList(*Value)) Signal!void {
     const ix = try it.evalIdx(args[depth], Interp.dimLen(l, 0));
     var cells: std.ArrayList(*Value) = .empty;
@@ -228,9 +210,6 @@ pub fn walk(it: *Interp, l: *List, args: []const *const Node, depth: usize, out:
     }
 }
 
-// Zig tip: a function can return a struct type written on the spot, with no name (an anonymous
-// struct): `Signal!struct { obj: Value, args: ... }`. The caller reads `r.obj` and `r.args`, and
-// the two results travel together without declaring a type used only here.
 /// Resolves a chain of brackets `a[i][j]...` to the value indexed last and its indexes. On a
 /// matrix or a tensor the remaining groups merge into one: `m[x][y]` is `m[x, y]` (D-064). One
 /// group alone keeps its meaning: `m[k]` is the absolute row-major index.
@@ -255,13 +234,11 @@ pub fn indexChain(it: *Interp, n: *const Node) Signal!struct { obj: Value, args:
     return .{ .obj = obj, .args = groups.items[i] };
 }
 
-// Zig tip: `index` relies on the same Zig feature as `define` above: see the tip there.
 pub fn index(it: *Interp, n: *const Node) Signal!Value {
     const r = try it.indexChain(n);
     return it.indexOf(r.obj, r.args);
 }
 
-// Zig tip: `indexOf` relies on the same Zig feature as `define` above: see the tip there.
 /// One group of brackets applied to a value: `obj[args]`.
 pub fn indexOf(it: *Interp, obj: Value, args: []const *const Node) Signal!Value {
     switch (obj) {
@@ -322,7 +299,6 @@ pub fn indexOf(it: *Interp, obj: Value, args: []const *const Node) Signal!Value 
     }
 }
 
-// Zig tip: `field` relies on the same Zig feature as `define` above: see the tip there.
 pub fn field(it: *Interp, n: *const Node) Signal!Value {
     const obj = try it.eval(n.kids[0]);
     switch (obj) {

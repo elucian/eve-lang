@@ -10,8 +10,6 @@
 const std = @import("std");
 const Io = std.Io;
 
-// Zig tip: an enum of the kinds of event, and a struct for one event. `text` is owned by the event (`[]u8`): the
-// main thread that takes the events frees it (`Event.free`).
 /// What the machine sent: some output of a request, its end (with the exit status), a failure, or a line of its log.
 pub const Kind = enum { output, done, failed, log };
 
@@ -27,9 +25,6 @@ pub const Event = struct {
     }
 };
 
-// Zig tip: the same sharing rule as `RunJob` in app.zig: the two lists are guarded by `busy`, a tiny spin lock made of one
-// atomic flag, and the flags `stop` and `done` are atomics. The worker owns the child process; the main thread only
-// queues bytes (`call`) and takes events (`take`).
 /// One machine of evetx, and the thread that talks to it.
 pub const Link = struct {
     io: Io,
@@ -47,8 +42,6 @@ pub const Link = struct {
     /// Why the machine could not start or ended (an error name), for the console.
     err_name: ?[]const u8 = null,
 
-    // Zig tip: `gpa.create` puts the link on the heap, so its address stays the same for the worker thread, which keeps a
-    // pointer to it. `errdefer` frees it if the thread cannot start.
     /// Start the machine (`<exe> --stdio`, in the current folder of evetx) and the thread that talks to it.
     pub fn start(gpa: std.mem.Allocator, io: Io, exe: []const u8) !*Link {
         const self = try gpa.create(Link);
@@ -58,8 +51,6 @@ pub const Link = struct {
         return self;
     }
 
-    // Zig tip: after `stop` the worker closes the input of the machine, which ends it (the end of its input), then waits
-    // for it; `join` waits for the worker. Every event that nobody took is freed.
     /// Stop the machine and free the link.
     pub fn destroy(self: *Link) void {
         self.stop.store(true, .release);
@@ -70,7 +61,6 @@ pub const Link = struct {
         self.gpa.destroy(self);
     }
 
-    // Zig tip: the spin lock of `RunJob.lock` in app.zig: see the tip there.
     fn lock(self: *Link) void {
         while (self.busy.cmpxchgWeak(false, true, .acquire, .monotonic) != null) std.atomic.spinLoopHint();
     }
@@ -79,14 +69,11 @@ pub const Link = struct {
         self.busy.store(false, .release);
     }
 
-    // Zig tip: `self: *const Link` only reads; `.acquire` makes the work of the worker before `done` visible here.
     /// Is the machine still there? (False after it ended or could not start.)
     pub fn alive(self: *const Link) bool {
         return !self.done.load(.acquire);
     }
 
-    // Zig tip: `std.json.Stringify.valueAlloc` writes the message from a struct literal; `params: anytype` lets the caller
-    // pass any struct (`.{ .line = text, .stream = true }`). The id is the answer, so the caller can match the events.
     /// Send a request to the machine; answers its id (0 when it could not be queued).
     pub fn call(self: *Link, method: []const u8, params: anytype) u32 {
         const id = self.next_id;
@@ -100,7 +87,6 @@ pub const Link = struct {
         return id;
     }
 
-    // Zig tip: `toOwnedSlice` hands the items to the caller and leaves the list empty, all under the lock.
     /// Take the events that came since the last call; the caller frees the list and each event.
     pub fn take(self: *Link) ?[]Event {
         self.lock();
@@ -109,8 +95,6 @@ pub const Link = struct {
         return self.events.toOwnedSlice(self.gpa) catch null;
     }
 
-    // Zig tip: the text is copied before the lock is taken (an allocation can be slow); `catch self.gpa.free(copy)` gives it
-    // back when the list cannot grow.
     /// Add an event for the main thread.
     fn push(self: *Link, kind: Kind, id: u32, text: []const u8, status: i64) void {
         const copy = self.gpa.dupe(u8, text) catch return;
@@ -119,7 +103,6 @@ pub const Link = struct {
         self.events.append(self.gpa, .{ .kind = kind, .id = id, .text = copy, .status = status }) catch self.gpa.free(copy);
     }
 
-    // Zig tip: the body of the worker thread: it cannot return an error, so the name of the error is kept for the console.
     fn work(self: *Link) void {
         self.talk() catch |err| {
             self.err_name = @errorName(err);
@@ -127,9 +110,6 @@ pub const Link = struct {
         self.done.store(true, .release);
     }
 
-    // Zig tip: the loop is the one of `RunJob.runChild`: `fill` waits for output at most 50 ms, then the queued messages are
-    // written to the machine. The lines of the standard output are messages; the lines of the error output are its log.
-    // Only whole lines are handled; `toss` marks them as read, so the buffers do not grow.
     fn talk(self: *Link) !void {
         const io = self.io;
         const argv = [_][]const u8{ self.exe, "--stdio" };
@@ -165,7 +145,6 @@ pub const Link = struct {
         _ = child.wait(io) catch {};
     }
 
-    // Zig tip: `while (opt) |nl|` repeats while a newline is found in what the reader holds; `toss` consumes the line.
     /// Handle the whole lines that a pipe holds now: messages (`log` false) or lines of the log.
     fn lines(self: *Link, r: *Io.Reader, log: bool) void {
         while (std.mem.indexOfScalar(u8, r.buffered(), '\n')) |nl| {
@@ -175,8 +154,6 @@ pub const Link = struct {
         }
     }
 
-    // Zig tip: the message is read into a tree of JSON values (`std.json.Value`), whose memory is one arena freed at the end
-    // (`parsed.deinit()`): the texts that the events keep are copied first (`push` duplicates them).
     /// One message of the machine: a `vm.output` notification, or the answer to a request.
     fn message(self: *Link, line: []const u8) void {
         const parsed = std.json.parseFromSlice(std.json.Value, self.gpa, line, .{}) catch return;
@@ -211,7 +188,6 @@ pub const Link = struct {
         self.push(.done, id, text.items, status);
     }
 
-    // Zig tip: a JSON number is an `i64` in `std.json.Value`; it is checked to fit a `u32` before `@intCast`.
     /// The id of a message as a number (0 when it has none).
     fn idOf(v: ?std.json.Value) u32 {
         const x = v orelse return 0;

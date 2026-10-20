@@ -12,12 +12,9 @@ const fault = @import("fault.zig");
 const batch = protocol.batch;
 const pgserver = @import("pgserver.zig");
 
-// Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default value
-// may be left out when a value is made with `.{ ... }`.
 /// One database of the configuration file: the name a PostgreSQL client asks for, and the file.
 pub const DbMap = struct { name: []const u8, path: []const u8 };
 
-// Zig tip: `Config` relies on the same Zig feature as `DbMap` above: see the tip there.
 /// How the server was started.
 pub const Config = struct {
     host: []const u8 = "127.0.0.1",
@@ -39,7 +36,6 @@ pub const Config = struct {
     databases: []const DbMap = &.{},
 };
 
-// Zig tip: `Db` relies on the same Zig feature as `DbMap` above: see the tip there.
 /// One database file that is open, with the connection that writes the statement log.
 pub const Db = struct {
     name: []u8,
@@ -49,9 +45,6 @@ pub const Db = struct {
     seq: u64 = 0,
 };
 
-// Zig tip: a session is plain data guarded by two things: `busy` (a mutex held by the thread that handles a frame of this
-// session, so the reaper never closes the DuckDB connection under its feet) and the atomic `deadline` (read by the reaper
-// without the mutex). `closed` is set when the connection of DuckDB is gone, and every later frame answers `LeaseExpired`.
 /// One client session.
 pub const Session = struct {
     id: u64,
@@ -65,7 +58,6 @@ pub const Session = struct {
     faults: fault.List = .{},
 };
 
-// Zig tip: `Server` relies on the same Zig feature as `DbMap` above: see the tip there.
 pub const Server = struct {
     gpa: std.mem.Allocator,
     io: Io,
@@ -87,8 +79,6 @@ pub const Server = struct {
     bound_port: u16 = 0,
     started: i64 = 0,
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     pub fn now(self: *const Server) i64 {
         return Io.Timestamp.now(self.io, .awake).toMilliseconds();
     }
@@ -96,8 +86,6 @@ pub const Server = struct {
 
 // ---------------------------------------------------------------------------------------------------------------- helpers
 
-// Zig tip: `defer` runs its statement when the scope ends, by any path (a `return`, an error, the end of the block), so a
-// free or a close is written once, next to what it undoes.
 fn sendError(w: *Io.Writer, stream: u32, class: []const u8, state: []const u8, transient: bool, msg: []const u8) void {
     var b = ewp.Builder.init(std.heap.page_allocator);
     defer b.deinit();
@@ -108,14 +96,10 @@ fn sendError(w: *Io.Writer, stream: u32, class: []const u8, state: []const u8, t
     ewp.writeFrame(w, .err, stream, b.buf.items) catch {};
 }
 
-// Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to the
-// caller; `f() catch …` handles it in place.
 fn sendOk(w: *Io.Writer, stream: u32) !void {
     try ewp.writeFrame(w, .ok, stream, "");
 }
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 /// A database name is letters, digits and `_`: no name can leave the data folder.
 pub fn validName(name: []const u8) bool {
     if (name.len == 0 or name.len > 64) return false;
@@ -123,8 +107,6 @@ pub fn validName(name: []const u8) bool {
     return true;
 }
 
-// Zig tip: `for (a, b) |x, y|` walks two slices of the same length side by side (`0..` gives the index); the lengths are
-// checked in safe builds.
 fn constantTimeEql(a: []const u8, b: []const u8) bool {
     if (a.len != b.len) return false;
     var diff: u8 = 0;
@@ -132,8 +114,6 @@ fn constantTimeEql(a: []const u8, b: []const u8) bool {
     return diff == 0;
 }
 
-// Zig tip: the first keyword of a statement names its kind, and the first word after `into`, `update`, `from` or `table`
-// names the table; both are cut from the text without parsing SQL, which is enough for a log that a test reads.
 fn statementKind(sql: []const u8) []const u8 {
     const t = std.mem.trimStart(u8, sql, " \t\r\n(");
     var end: usize = 0;
@@ -141,8 +121,6 @@ fn statementKind(sql: []const u8) []const u8 {
     return t[0..end];
 }
 
-// Zig tip: `a orelse b` unwraps an optional: the value when there is one, else `b` (which may be `return` or `continue`,
-// leaving the function or the loop).
 fn statementTable(buf: []u8, sql: []const u8) []const u8 {
     const words = [_][]const u8{ "into ", "update ", "from ", "table " };
     var best: ?usize = null;
@@ -168,9 +146,6 @@ fn statementTable(buf: []u8, sql: []const u8) []const u8 {
 
 // ---------------------------------------------------------------------------------------------------------------- databases
 
-// Zig tip: with a configuration file the names a client may ask for are the ones listed in it; each has its own file. Without
-// one a name is a file of the data folder. `openDbPg` is for the PostgreSQL port: an unknown name is an error (the client gets
-// `database does not exist`), where the frames of EWP-db create the file in test mode.
 /// Open (once) the database a PostgreSQL client asked for.
 pub fn openDbPg(srv: *Server, name: []const u8) !*Db {
     if (srv.cfg.databases.len > 0) {
@@ -192,22 +167,16 @@ pub fn openDbPg(srv: *Server, name: []const u8) !*Db {
     return openDb(srv, name);
 }
 
-// Zig tip: `dbPath` relies on the same Zig feature as `sendOk` above: see the tip there.
 fn dbPath(srv: *Server, name: []const u8) ![:0]u8 {
     return std.fmt.allocPrintSentinel(srv.gpa, "{s}/{s}.duckdb", .{ srv.cfg.data_dir, name }, 0);
 }
 
-// Zig tip: a database is opened once, on its first `OPEN`, and kept for the life of the server. `getOrPut` finds the entry
-// or makes the place for it. The tables every database has (`eve_tx`, and in test mode the schema `eve_log`) are made here,
-// on the connection that also writes the statement log.
 fn openDb(srv: *Server, name: []const u8) !*Db {
     const path = try dbPath(srv, name);
     defer srv.gpa.free(path);
     return openDbAt(srv, name, path);
 }
 
-// Zig tip: `errdefer` runs its statement only when the function leaves with an error, so what was made before the failure
-// is freed and nothing leaks; on success it does nothing.
 fn openDbAt(srv: *Server, name: []const u8, path: [:0]const u8) !*Db {
     srv.lock.lockUncancelable(srv.io);
     defer srv.lock.unlock(srv.io);
@@ -234,9 +203,6 @@ fn openDbAt(srv: *Server, name: []const u8, path: [:0]const u8) !*Db {
     return d;
 }
 
-// Zig tip: the log is written on its own connection, so the line stays when the transaction of the session rolls back: a
-// test wants to see what was *sent*. The statement is a prepared one with parameters, so the SQL text of the client cannot
-// break the log statement. A failure to log is ignored: logging must never fail a request.
 pub fn logStatement(srv: *Server, s: *Session, sql: []const u8, rows: i64) void {
     if (!srv.cfg.test_mode) return;
     const d = s.db;
@@ -271,7 +237,6 @@ pub fn logStatement(srv: *Server, s: *Session, sql: []const u8, rows: i64) void 
 
 // ---------------------------------------------------------------------------------------------------------------- sessions
 
-// Zig tip: `newSession` relies on the same Zig feature as `openDbAt` above: see the tip there.
 pub fn newSession(srv: *Server, d: *Db) !*Session {
     const s = try srv.gpa.create(Session);
     errdefer srv.gpa.destroy(s);
@@ -284,7 +249,6 @@ pub fn newSession(srv: *Server, d: *Db) !*Session {
     return s;
 }
 
-// Zig tip: `forgetTx` relies on the same Zig feature as `sendError` above: see the tip there.
 fn forgetTx(srv: *Server, id: [16]u8) void {
     srv.lock.lockUncancelable(srv.io);
     defer srv.lock.unlock(srv.io);
@@ -296,9 +260,6 @@ fn forgetTx(srv: *Server, id: [16]u8) void {
     }
 }
 
-// Zig tip: closing a session rolls back what is open (a DuckDB connection that is closed with a transaction open rolls it
-// back too, but doing it explicitly keeps the list of open transactions right), closes the DuckDB connection and takes the
-// session out of the table. The caller holds `busy`.
 pub fn closeSession(srv: *Server, s: *Session) void {
     if (!s.closed) {
         if (s.tx) |id| {
@@ -314,12 +275,6 @@ pub fn closeSession(srv: *Server, s: *Session) void {
     srv.lock.unlock(srv.io);
 }
 
-// Zig tip: `reaper` relies on the same Zig feature as `sendError` above: see the tip there.
-// ---------------------------------------------------------------------------------------------------------------- batches
-
-// Zig tip: a query of the columnar path sends three kinds of frames on one stream: the schema, one batch for each data chunk
-// of DuckDB, and the end with the number of rows. The client reads until the end; nothing has to be held for the whole
-// result on either side but one chunk.
 /// `QUERYB`: run the statement and send its result as column batches (section 5.5).
 fn handleQueryB(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     const a = srv.gpa;
@@ -363,8 +318,6 @@ fn handleQueryB(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome
     return .go_on;
 }
 
-// Zig tip: `switch` must cover every value of what it tests (or have `else`); the compiler checks it, so a new case can not
-// be forgotten. A prong can be an expression that gives the result.
 fn sqlType(wire: batch.Wire) []const u8 {
     return switch (wire) {
         .boolean => "BOOLEAN",
@@ -378,7 +331,6 @@ fn sqlType(wire: batch.Wire) []const u8 {
     };
 }
 
-// Zig tip: `quoteName` relies on the same Zig feature as `sendOk` above: see the tip there.
 fn quoteName(out: *std.ArrayList(u8), a: std.mem.Allocator, name: []const u8) !void {
     try out.append(a, '"');
     for (name) |ch| {
@@ -388,10 +340,6 @@ fn quoteName(out: *std.ArrayList(u8), a: std.mem.Allocator, name: []const u8) !v
     try out.append(a, '"');
 }
 
-// Zig tip: a load is a conversation of many frames: the head (the table and its columns), the batches, the end. They come
-// pipelined, without waiting for an answer, and the server answers once, at the end. After a failure the following batches
-// are read and dropped, so the stream stays in step; the answer is then the error. The values go into DuckDB through the
-// Appender (no SQL for each row), in the transaction of the session.
 /// `LOAD`: append the column batches that follow to a table (made first when the head asks for it).
 fn handleLoad(srv: *Server, s: *Session, r: *Io.Reader, w: *Io.Writer, f: ewp.Frame) !Outcome {
     const a = srv.gpa;
@@ -509,7 +457,6 @@ fn handleLoad(srv: *Server, s: *Session, r: *Io.Reader, w: *Io.Writer, f: ewp.Fr
     return .go_on;
 }
 
-// Zig tip: `reaper` relies on the same Zig feature as `sendError` above: see the tip there.
 /// The reaper: every second, roll back the sessions whose lease ran out.
 fn reaper(srv: *Server) void {
     while (!srv.stopping.load(.acquire)) {
@@ -535,8 +482,6 @@ fn reaper(srv: *Server) void {
 
 // ---------------------------------------------------------------------------------------------------------------- statements
 
-// Zig tip: a cast is written with a builtin: `@intCast` checks (in safe builds) that the number fits the smaller type,
-// `@bitCast` keeps the bits and changes the type, `@truncate` keeps the low bits.
 fn civilFromDays(days: i64) struct { y: i64, m: u8, d: u8 } {
     const z = days + 719468;
     const era = @divFloor(z, 146097);
@@ -549,9 +494,6 @@ fn civilFromDays(days: i64) struct { y: i64, m: u8, d: u8 } {
     return .{ .y = yoe + era * 400 + @as(i64, if (m <= 2) 1 else 0), .m = m, .d = d };
 }
 
-// Zig tip: each parameter is bound by its kind. A date or an instant is sent as text in the form DuckDB reads
-// (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS.ffffff`), a decimal, a huge number and a uuid as their text. Bytes are not accepted as
-// parameters in 0.1 (a `ProtocolError`). The text is made zero-terminated because the C function wants that.
 fn bindParams(srv: *Server, p: *duckdb.Prepared, params: []const ewp.Value) !void {
     const a = srv.gpa;
     for (params, 1..) |v, i| {
@@ -594,7 +536,6 @@ fn bindParams(srv: *Server, p: *duckdb.Prepared, params: []const ewp.Value) !voi
 
 const Outcome = enum { go_on, drop };
 
-// Zig tip: `replyDbError` relies on the same Zig feature as `validName` above: see the tip there.
 fn replyDbError(srv: *Server, s: *Session, w: *Io.Writer, stream: u32) void {
     _ = srv;
     const msg = s.conn.lastError();
@@ -602,8 +543,6 @@ fn replyDbError(srv: *Server, s: *Session, w: *Io.Writer, stream: u32) void {
     sendError(w, stream, cls.name, cls.state, cls.transient, msg);
 }
 
-// Zig tip: `switch` must cover every value of what it tests (or have `else`); the compiler checks it, so a new case can not
-// be forgotten. A prong can be an expression that gives the result.
 fn faultError(w: *Io.Writer, stream: u32, kind: fault.Kind) void {
     switch (kind) {
         .conflict => sendError(w, stream, "ConflictError", "40001", true, "Conflict on update (fault injected)"),
@@ -612,7 +551,6 @@ fn faultError(w: *Io.Writer, stream: u32, kind: fault.Kind) void {
     }
 }
 
-// Zig tip: `takeFault` relies on the same Zig feature as `sendError` above: see the tip there.
 /// Take a one-shot fault of the session or of the server (scope all).
 pub fn takeFault(srv: *Server, s: *Session, kind: fault.Kind, point: ?[]const u8) ?fault.Fault {
     if (s.faults.take(kind, point)) |f| return f;
@@ -621,9 +559,6 @@ pub fn takeFault(srv: *Server, s: *Session, kind: fault.Kind, point: ?[]const u8
     return srv.all_faults.take(kind, point);
 }
 
-// Zig tip: `QUERY` and `EXECUTE` share their start: the faults that fire before the statement runs, the preparation and the
-// binding. They differ in what they send back, so the shared part answers `true` when the statement ran and left a result
-// in `out`; on `false` the error frame was already sent.
 fn runStatement(srv: *Server, s: *Session, w: *Io.Writer, stream: u32, sql: []const u8, params: []const ewp.Value, out: *duckdb.Result) bool {
     if (s.faults.items.items.len > 0 or srv.all_faults.items.items.len > 0) {
         for ([_]fault.Kind{ .conflict, .deadlock }) |k| {
@@ -666,7 +601,6 @@ fn runStatement(srv: *Server, s: *Session, w: *Io.Writer, stream: u32, sql: []co
     return true;
 }
 
-// Zig tip: `readParams` relies on the same Zig feature as `openDbAt` above: see the tip there.
 fn readParams(c: *ewp.Cursor, gpa: std.mem.Allocator) ![]ewp.Value {
     const n = try c.u32_();
     if (n > 65535) return error.BadValue;
@@ -678,7 +612,6 @@ fn readParams(c: *ewp.Cursor, gpa: std.mem.Allocator) ![]ewp.Value {
 
 // ---------------------------------------------------------------------------------------------------------------- frames
 
-// Zig tip: `handleQuery` relies on the same Zig feature as `sendError` above: see the tip there.
 fn handleQuery(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     const a = srv.gpa;
     var c: ewp.Cursor = .{ .buf = f.payload };
@@ -720,7 +653,6 @@ fn handleQuery(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome 
     return .go_on;
 }
 
-// Zig tip: `handleExecute` relies on the same Zig feature as `sendError` above: see the tip there.
 fn handleExecute(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     const a = srv.gpa;
     var c: ewp.Cursor = .{ .buf = f.payload };
@@ -762,7 +694,6 @@ fn handleExecute(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcom
     return .go_on;
 }
 
-// Zig tip: `handleBegin` relies on the same Zig feature as `sendOk` above: see the tip there.
 fn handleBegin(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     var c: ewp.Cursor = .{ .buf = f.payload };
     const idb = try c.take(16);
@@ -789,7 +720,6 @@ fn handleBegin(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome 
     return .go_on;
 }
 
-// Zig tip: `handleCommit` relies on the same Zig feature as `sendError` above: see the tip there.
 fn handleCommit(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     var c: ewp.Cursor = .{ .buf = f.payload };
     const idb = try c.take(16);
@@ -840,7 +770,6 @@ fn handleCommit(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome
     return .go_on;
 }
 
-// Zig tip: `handleRollback` relies on the same Zig feature as `sendOk` above: see the tip there.
 fn handleRollback(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     const id = s.tx orelse {
         sendError(w, f.stream, "ProtocolError", "25P01", false, "no transaction is open");
@@ -853,7 +782,6 @@ fn handleRollback(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outco
     return .go_on;
 }
 
-// Zig tip: `handleStatus` relies on the same Zig feature as `sendError` above: see the tip there.
 fn handleStatus(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     var c: ewp.Cursor = .{ .buf = f.payload };
     const idb = (try c.take(16))[0..16].*;
@@ -889,7 +817,6 @@ fn handleStatus(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome
     return .go_on;
 }
 
-// Zig tip: `handleDescribe` relies on the same Zig feature as `sendError` above: see the tip there.
 fn handleDescribe(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     var c: ewp.Cursor = .{ .buf = f.payload };
     const table = try c.string();
@@ -927,10 +854,6 @@ fn handleDescribe(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outco
     return .go_on;
 }
 
-// Zig tip: a connection is a loop that reads one frame, handles it and writes the answer. The session is kept in a local
-// optional: `HELLO` and `OPEN` come first, and every other frame needs the session. `busy` is taken for the length of
-// one frame and released while the loop waits for the next, which is when the reaper may act. A lease that ran out while
-// the loop waited makes the next frame answer `LeaseExpired` and end the connection.
 /// Serve one connection until it closes, a fault drops it, or the server stops.
 fn connection(srv: *Server, stream: net.Stream) void {
     defer stream.close(srv.io);
@@ -1059,7 +982,6 @@ fn connection(srv: *Server, stream: net.Stream) void {
     }
 }
 
-// Zig tip: `handle` relies on the same Zig feature as `sendError` above: see the tip there.
 fn handle(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     switch (f.kind) {
         .begin => return handleBegin(srv, s, w, f),
@@ -1084,7 +1006,6 @@ fn handle(srv: *Server, s: *Session, w: *Io.Writer, f: ewp.Frame) !Outcome {
     }
 }
 
-// Zig tip: `wake` relies on the same Zig feature as `validName` above: see the tip there.
 fn wake(srv: *Server, port: u16) void {
     if (port == 0) return;
     if (net.IpAddress.parse(srv.cfg.host, port)) |addr| {
@@ -1092,7 +1013,6 @@ fn wake(srv: *Server, port: u16) void {
     } else |_| {}
 }
 
-// Zig tip: `stopServer` relies on the same Zig feature as `validName` above: see the tip there.
 /// Ask the accept loops to end: set the flag, then connect once to each port so that `accept` returns.
 pub fn stopServer(srv: *Server) void {
     if (srv.stopping.swap(true, .acq_rel)) return;
@@ -1100,19 +1020,11 @@ pub fn stopServer(srv: *Server) void {
     wake(srv, srv.pg_bound_port);
 }
 
-// Zig tip: `listenPortOf` relies on the same Zig feature as `validName` above: see the tip there.
 pub fn listenPortOf(listener: *const net.Server) u16 {
     return listener.socket.address.getPort();
 }
 
-// Zig tip: a server has up to two ports: the frames of EWP-db (the test control: `STATUS`, `evedb stop`, tokens) and the
-// PostgreSQL port that a driver uses. Each has its accept loop; the PostgreSQL loop runs on a thread of its own, the EWP-db
-// loop on the calling thread (or, when it is switched off, the calling thread just waits for the stop). `ready` is called
-// once with the ports that were bound (a configured port 0 asks the system to choose).
 /// Bind and run until stopped.
-// Zig tip: on Windows `SO_REUSEADDR` lets a second socket take a port that is already listening, so binding is no lock there:
-// the server first tries to connect to its own port, and a port that answers means another server runs (the error
-// `AddressInUse`, which the command line reports). Elsewhere the option only skips the wait after a restart.
 fn checkFree(srv: *Server, port: u16) !void {
     if (port == 0) return;
     const addr = try net.IpAddress.parse(srv.cfg.host, port);
@@ -1124,7 +1036,6 @@ fn checkFree(srv: *Server, port: u16) !void {
 
 const reuse = @import("builtin").os.tag != .windows;
 
-// Zig tip: `run` relies on the same Zig feature as `sendOk` above: see the tip there.
 pub fn run(srv: *Server, ready: *const fn (ewp_port: u16, pg_port: u16, test_mode: bool) void) !void {
     srv.started = srv.now();
     if (srv.cfg.ewp) try checkFree(srv, srv.cfg.port);

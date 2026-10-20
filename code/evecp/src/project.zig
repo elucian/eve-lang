@@ -13,10 +13,6 @@ const Node = ast.Node;
 pub const Diag = lexer.Diag;
 pub const Error = lexer.Error;
 
-// Zig tip: a struct can carry the state of a whole pass, so its functions take one `*Linker`
-// instead of five parameters. `where` is the file the error is in ("" for the root aspect itself):
-// the caller prints it in front of the position. `[]const u8` slices are views, never copies;
-// every text here lives in the arena `a`, which the caller frees when the run is over.
 const Linker = struct {
     a: std.mem.Allocator,
     io: Io,
@@ -33,23 +29,15 @@ const Linker = struct {
     /// of that aspect is reported in its file.
     paths: std.StringHashMapUnmanaged([]const u8) = .empty,
 
-    // Zig tip: `fail` fills the `Diag` like the parser does and returns `error.Syntax`, so a caller
-    // writes `return l.fail(n, "...", .{})`; see the tip on `Parser.fail`.
     fn fail(l: *Linker, n: *const Node, comptime fmt: []const u8, args: anytype) Error {
         l.diag.set(n.line, n.col, fmt, args);
         return error.Syntax;
     }
 
-    // Zig tip: `std.fmt.allocPrint(a, fmt, args)` formats into memory taken from `a` and returns
-    // the slice. `catch return error.OutOfMemory` turns any allocation error into the one error
-    // this function lists in its type.
     fn join(l: *Linker, comptime fmt: []const u8, args: anytype) Error![]const u8 {
         return std.fmt.allocPrint(l.a, fmt, args) catch return error.OutOfMemory;
     }
 
-    // Zig tip: `Io.Dir.cwd().readFileAlloc(io, path, a, .limited(n))` reads a whole file, at most
-    // `n` bytes. A file that cannot be opened is an error value, not a crash: here it only means
-    // "not in this folder", so `catch null` turns it into an optional and the caller tries the next one.
     /// Read the first of the candidate files that exists. `path` gets the one that was found.
     fn read(l: *Linker, candidates: []const []const u8, path: *[]const u8) ?[]const u8 {
         for (candidates) |c| {
@@ -61,8 +49,6 @@ const Linker = struct {
         return null;
     }
 
-    // Zig tip: `std.mem.lastIndexOfScalar` finds the last position of one byte, or null. The name
-    // of the file is what follows the last `/`; `orelse` gives the whole text when there is none.
     /// Find, parse and check the aspect written `path` in an `apply`; remember it in the map.
     fn load(l: *Linker, at: *const Node) Error!*const Node {
         const key = at.text;
@@ -71,8 +57,6 @@ const Linker = struct {
         const slash = std.mem.lastIndexOfScalar(u8, key, '/');
         const short = if (slash) |i| key[i + 1 ..] else key;
         // the folder written in the call comes first (D-112), then asp/, then the project root
-        // Zig tip: `[2][]const u8 = undefined` is a fixed array of two texts, filled below;
-        // `buf[0..n]` is the slice of the part that was filled. The array lives on the stack.
         var buf: [2][]const u8 = undefined;
         var n: usize = 0;
         if (slash == null) {
@@ -105,9 +89,7 @@ const Linker = struct {
 
     // ---- modules (spec/semantics/modules.md) -----------------------------------------------------
 
-    // Zig tip: `?*const Node` is "a node, or nothing": a module that is not found is not a compile error
-    // (it is the run-time error `$err_module`, D-131), so the search answers `null` and the caller
-    // decides. `catch null` turns the error of opening a folder into the same "nothing".
+    // @decision D-131
     /// The names a module exports, from its `export (...)` declarations.
     fn exportsOf(l: *Linker, m: *const Node) Error![]const []const u8 {
         var list: std.ArrayList([]const u8) = .empty;
@@ -118,9 +100,6 @@ const Linker = struct {
         return list.items;
     }
 
-    // Zig tip: a function that only reads its arguments and answers yes or no is declared without `pub` and
-    // with a plain `bool`: `for (names) |n| if (...) return true;` stops at the first hit, and the `return
-    // false` after the loop is the answer when there was none.
     /// Is `name` one of `names`?
     fn isListed(names: []const []const u8, name: []const u8) bool {
         for (names) |n| if (std.mem.eql(u8, n, name)) return true;
@@ -129,8 +108,7 @@ const Linker = struct {
 
     const Member = enum { none, shared, variable };
 
-    // Zig tip: an `enum` names the answers of a question: the member is shared (a function, a procedure,
-    // a class or a constant), a variable (which can not be shared, D-068) or not declared at all.
+    // @decision D-068
     /// What a module declares under `name`.
     fn memberKind(m: *const Node, name: []const u8) Member {
         for (m.kids) |k| {
@@ -147,8 +125,6 @@ const Linker = struct {
         return .none;
     }
 
-    // Zig tip: `std.mem.startsWith(u8, text, prefix)` tests the beginning of a text. The longer
-    // system variable is tried first, because `$EVE_LIB_PATH` also starts with `$EVE_LIB`.
     /// The folder an import path names: `$EVE_HOME` and `$EVE_LIB` are replaced, a path that starts
     /// with `/` is absolute, any other path is relative to `$EVE_HOME`, the folder of the root aspect (D-131).
     fn folderOf(l: *Linker, path: []const u8) Error![]const u8 {
@@ -166,10 +142,7 @@ const Linker = struct {
         return l.join("{s}/{s}", .{ l.dir, text });
     }
 
-    // Zig tip: `std.mem.tokenizeAny(u8, text, "/\\")` walks the pieces of a text between any of the separators
-    // and skips the empty ones. `parts.pop()` removes the last piece, which is how `lib/../lib` goes back to
-    // `lib`. `std.mem.join(allocator, "/", pieces)` glues the pieces again. Two spellings of one file, `./lib/c.eve`
-    // and `lib/c.eve`, give the same text, and so the same module (D-068: a module is loaded once).
+    // @decision D-068
     /// The path of a file in one standard spelling: no `.`, no empty part, no `..` that can be resolved, only `/`.
     fn canonical(l: *Linker, path: []const u8) Error![]const u8 {
         var parts: std.ArrayList([]const u8) = .empty;
@@ -186,9 +159,6 @@ const Linker = struct {
         return if (path.len > 0 and path[0] == '/') l.join("/{s}", .{joined}) else joined;
     }
 
-    // Zig tip: `[_][]const u8{ a, b }` is an array whose length the compiler counts. The file of a module is
-    // searched in the folder of the import, then in every folder of `$EVE_LIB_PATH`, as `<folder>/<path>/m.eve`,
-    // `<folder>/m.eve` and `<folder>/m/m.eve` (a package installed in its own folder).
     /// Find, read, parse and check the module `name` of the import path `path`; remember it. `null`: not found.
     fn loadModule(l: *Linker, at: *const Node, path: []const u8, name: []const u8) Error!?*const Node {
         const key = try l.join("{s}|{s}", .{ path, name });
@@ -235,9 +205,6 @@ const Linker = struct {
         return tree;
     }
 
-    // Zig tip: `std.mem.endsWith(u8, text, suffix)` tests the end of a text; the stem of a file is what
-    // comes before the last dot. Every module of a folder is read for the import `use (*)`; a file that
-    // is not a module is skipped, so a folder may hold other things.
     /// Load every module of the folder of `path`, for `use (*)`; the key `path|*` holds them all.
     fn loadFolder(l: *Linker, at: *const Node, path: []const u8) Error!void {
         const folder = try l.folderOf(path);
@@ -255,8 +222,7 @@ const Linker = struct {
         try l.modules.put(l.a, try l.join("{s}|*", .{path}), block);
     }
 
-    // Zig tip: the names of two lists meet in a double loop. `seen` is the modules that give bare names
-    // so far: a name in two of them is a conflict (D-112 a), and the message lists the two modules.
+    // @decision D-112
     /// Read the modules of every import of `tree` and check the names they merge.
     fn imports(l: *Linker, tree: *const Node) Error!void {
         var seen: std.ArrayList(*const Node) = .empty;
@@ -275,7 +241,6 @@ const Linker = struct {
         }
     }
 
-    // Zig tip: `merge` relies on the same Zig feature as `imports` above: see the tip there.
     /// Check that the names of the module `m` do not collide with those of the modules already merged.
     fn merge(l: *Linker, at: *const Node, seen: *std.ArrayList(*const Node), m: *const Node) Error!void {
         const mine = try l.exportsOf(m);
@@ -290,9 +255,6 @@ const Linker = struct {
         try seen.append(l.a, m);
     }
 
-    // Zig tip: `std.StringHashMapUnmanaged([]const u8)`-free: the aliases of a script are found again by a
-    // walk over its import declarations, so no table is stored. The module of an alias is looked up by the
-    // key of the import. `null` means that the name is not the module of an import.
     /// The module that the name `name` stands for in the imports of `tree` (a module name or an alias).
     fn moduleOf(l: *Linker, tree: *const Node, name: []const u8) ?*const Node {
         for (tree.kids) |decl| {
@@ -308,8 +270,7 @@ const Linker = struct {
         return null;
     }
 
-    // Zig tip: a recursive function over the tree, like `walk`: `anyerror`-free, its errors are those of `Error`.
-    // `m.name` on a module that is not exported is refused at check time, exit 65 (D-112 b, c08).
+    // @decision D-112
     /// Every `module.member` of `n` must name an exported member of the module.
     fn accessWalk(l: *Linker, tree: *const Node, n: *const Node) Error!void {
         if (n.tag == .call and n.kids[0].tag == .name) {
@@ -327,15 +288,11 @@ const Linker = struct {
         for (n.kids) |k| try l.accessWalk(tree, k);
     }
 
-    // Zig tip: `access` relies on the same Zig feature as `accessWalk` above: see the tip there.
     /// Check the members used through a module in a whole script.
     fn access(l: *Linker, tree: *const Node) Error!void {
         for (tree.kids) |k| try l.accessWalk(tree, k);
     }
 
-    // Zig tip: `k.ty` is `?*const Node`, an optional: `if (k.ty) |t|` runs only when the variable has a type
-    // hint. `Atomic(:Integer)` was read by the parser as `Integer` with `public` set; a class of the module
-    // that is derived from `Atomic(...)` makes its own name atomic too (`class SageInteger <: Atomic(:Integer);`).
     /// Is the variable declaration `k` of the module `m` atomic: typed `Atomic(:T)` or by a class derived from it?
     fn isAtomicVar(m: *const Node, k: *const Node) bool {
         const t = k.ty orelse return false;
@@ -346,8 +303,7 @@ const Linker = struct {
         return false;
     }
 
-    // Zig tip: a managed module is checked with two plain rules (D-129): each variable is atomic (`isAtomicVar`),
-    // and no call goes to a member of a direct module.
+    // @decision D-129
     /// Reject a `managed` module that has a plain variable or calls a module that is not managed.
     fn checkSafe(l: *Linker, m: *const Node) Error!void {
         for (m.kids) |k| {
@@ -367,10 +323,7 @@ const Linker = struct {
         return false;
     }
 
-    // Zig tip: `orelse continue` inside a loop skips to the next item when a lookup finds nothing. A bare name
-    // (`poke()` after `use (u(*))`) belongs to the module that exports it; a name that the script declares
-    // itself is not looked up, because the local one wins. The thread safety checks use the owner like they
-    // use the prefix of `u.poke()`, so `m(*)` and `(*)` can not hide an unsafe call (D-129).
+    // @decision D-129
     /// The module that gives the bare name `name` to the script `tree` through `m(*)` or `*`, or null.
     fn bareOwner(l: *Linker, tree: *const Node, name: []const u8) ?*const Node {
         if (memberKind(tree, name) != .none) return null;
@@ -391,7 +344,6 @@ const Linker = struct {
         return null;
     }
 
-    // Zig tip: `unsafeCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
     /// Reject a call of a member of a module that is not managed, in the tree `n` of the module `tree`.
     fn unsafeCalls(l: *Linker, tree: *const Node, n: *const Node, who: []const u8) Error!void {
         if (n.tag == .call and n.kids[0].tag == .name) {
@@ -407,9 +359,7 @@ const Linker = struct {
         for (n.kids) |k| try l.unsafeCalls(tree, k, who);
     }
 
-    // Zig tip: `visiting` is the list of the members being examined: a function that calls itself would
-    // loop for ever, so a name already in the list counts as safe for now. This is the check of a
-    // `concurrent` aspect (level 4, D-129): it calls only members that the compiler proves thread safe.
+    // @decision D-129
     /// Is the member `name` of the module `m` thread safe? A managed module: yes. Otherwise it must not touch a
     /// variable of the module, nor call an unsafe member.
     fn memberSafe(l: *Linker, m: *const Node, name: []const u8, visiting: *std.ArrayList([]const u8)) Error!bool {
@@ -423,7 +373,6 @@ const Linker = struct {
         return true;
     }
 
-    // Zig tip: `bodySafe` relies on the same Zig feature as `memberSafe` above: see the tip there.
     /// Does the code of `n` leave the module `m` thread safe? No variable of the module, no unsafe call.
     fn bodySafe(l: *Linker, m: *const Node, n: *const Node, visiting: *std.ArrayList([]const u8)) Error!bool {
         if (n.tag == .name) {
@@ -442,7 +391,6 @@ const Linker = struct {
         return true;
     }
 
-    // Zig tip: `concurrentCalls` relies on the same Zig feature as `accessWalk` above: see the tip there.
     /// Reject the call of a member that is not thread safe, in the tree of a `concurrent` aspect.
     fn concurrentCalls(l: *Linker, tree: *const Node, n: *const Node) Error!void {
         if (n.tag == .call and n.kids[0].tag == .name) {
@@ -464,17 +412,13 @@ const Linker = struct {
         for (n.kids) |k| try l.concurrentCalls(tree, k);
     }
 
-    // Zig tip: `unreachable` tells the compiler (and, in a safe build, traps) that a line can never
-    // run. It is for facts another part of the program has already proved, like the parser here.
     /// The `process main` of a parsed aspect.
     fn mainOf(aspect: *const Node) *const Node {
         for (aspect.kids) |k| if (k.tag == .process and std.mem.eql(u8, k.text, "main")) return k;
         unreachable; // the parser guarantees a process main (Parser.aspect)
     }
 
-    // Zig tip: `?*const Node` again: the answer is the process, or null when the aspect declares no process of that name.
-    // A bare name in `apply` or `start` is first looked for here, among the private processes of the aspect that
-    // contains the call (D-179); only when it is not one, it names another aspect.
+    // @decision D-179
     /// The process `name` of the aspect `cur`, or null.
     fn processOf(cur: *const Node, name: []const u8) ?*const Node {
         for (cur.kids) |k| if (k.tag == .process and std.mem.eql(u8, k.text, name)) return k;
@@ -494,8 +438,6 @@ const Linker = struct {
         }
     }
 
-    // Zig tip: `comptime names` is a list known while compiling, and `inline for` unrolls the loop over
-    // it: the comparison is written out once per name, with no loop left at run time.
     /// Is `name` one of `names`?
     fn isOneOf(name: []const u8, comptime names: []const []const u8) bool {
         inline for (names) |n| if (std.mem.eql(u8, name, n)) return true;
@@ -514,18 +456,12 @@ const Linker = struct {
         return true;
     }
 
-    // Zig tip: this walks the arguments the way `Interp.bindParams` binds them at run time: a
-    // named argument takes its parameter, the others fill the remaining parameters in order. `used`
-    // is a stack array of booleans (`[_]bool{false} ** 32`, see bindParams) that marks the arguments
-    // already taken. A spread (`*list`, `*map`) is known only at run time, so with a spread the
-    // counts are not checked, only the names that are written.
     /// Match the arguments of one `apply` with the parameters of `main`.
     fn match(l: *Linker, apply: *const Node, aspect: *const Node) Error!void {
         return l.matchParams(apply, aspect.text, mainOf(aspect).kids[3].kids);
     }
 
-    // Zig tip: the matching works on a list of parameters and a name for the messages, so the same code serves the
-    // `main` of another aspect and a private process of the same aspect (D-179).
+    // @decision D-179
     /// Match the arguments of one `apply` or `start` with the parameters `params` of the unit called `name`.
     fn matchParams(l: *Linker, apply: *const Node, name: []const u8, params: []const *const Node) Error!void {
         const aspect = .{ .text = name };
@@ -585,9 +521,7 @@ const Linker = struct {
         }
     }
 
-    // Zig tip: a recursive walk over the tree: every node is looked at, then its kids. The `chain` is the list of the
-    // aspects whose calls led here, the aspect that is run first at index 0: its length is the level of `cur` (D-179).
-    // `defer _ = chain.pop();` takes the aspect off the chain when the walk of its calls is over, however it ends.
+    // @decision D-179
     /// Walk the calls of the aspect `cur`, which is level `chain.len + 1` of the chain of calls (the first is level 1).
     fn walkAspect(l: *Linker, cur: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
         try chain.append(l.a, cur);
@@ -595,9 +529,7 @@ const Linker = struct {
         for (cur.kids) |k| try l.walkNode(cur, k, chain);
     }
 
-    // Zig tip: `walkNode` finds every `apply` and `start` under a node of the aspect `cur`. The aspects written inside a
-    // macro are skipped here: they are walked when a call reaches them, with the right chain. After the kids of a
-    // parallel group are walked, the group itself is checked: the started aspects are loaded by then (D-140).
+    // @decision D-140
     /// Find every `apply` and `start` under `n`; check each parallel group on the way.
     fn walkNode(l: *Linker, cur: *const Node, n: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
         if (n.tag == .aspect) return;
@@ -609,9 +541,6 @@ const Linker = struct {
         }
     }
 
-    // Zig tip: `std.mem.indexOfScalar(u8, text, '/')` is null when the text has no folder part. A bare name that the
-    // aspect declares as a process is a call of a private process: it runs on the state of the same aspect, so no
-    // aspect is loaded and no level is added. The node keeps the process in `sel`, which the interpreter reads.
     /// One `apply` or `start`: a private process of `cur`, or another aspect to load, check and walk (D-179 to D-183).
     fn callOf(l: *Linker, cur: *const Node, n: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
         const is_start = n.tag == .start_stmt;
@@ -654,9 +583,8 @@ const Linker = struct {
         l.where.* = saved;
     }
 
-    // Zig tip: the level of the aspect that holds the group is the length of the chain. The aspect that is run is level
-    // 1 and has no limit but `$max_parallel`; an aspect it calls is level 2 and starts at most 2 tasks, none in a loop;
-    // level 3 is a leaf and has no group (D-140, D-179).
+    // @decision D-140
+    // @decision D-179
     /// The rules of one parallel group, by the level of its aspect.
     fn groupRules(l: *Linker, cur: *const Node, group: *const Node, level: usize) Error!void {
         if (level >= 3) {
@@ -672,8 +600,6 @@ const Linker = struct {
         }
     }
 
-    // Zig tip: a counter passed by pointer (`*usize`) lets a recursive walk add to one total; `in_loop`
-    // is a plain parameter, true below a `for`, `while` or `loop`, so a `start` there is seen as many.
     /// Count the `start` statements under `n`; `looped` becomes true when one of them sits in a loop.
     fn countStarts(n: *const Node, in_loop: bool, count: *usize, looped: *bool) void {
         if (n.tag == .start_stmt) {
@@ -684,19 +610,13 @@ const Linker = struct {
         for (n.kids) |k| countStarts(k, loop, count, looped);
     }
 
-    // Zig tip: the output arguments of a group are collected as text keys in a list: `s` for a whole
-    // variable, `s[2]` for an element with a constant index. `std.fmt.allocPrint` builds the key; a key
-    // seen twice means two tasks would write the same place (D-140). An index computed at run time
-    // (`@s[i]`) can not be compared here.
+    // @decision D-140
     /// Refuse the same output variable, or the same constant element, given to two starts of a group.
     fn owners(l: *Linker, group: *const Node) Error!void {
         var seen: std.ArrayList([]const u8) = .empty;
         try l.ownersIn(group.kids[1], false, &seen);
     }
 
-    // Zig tip: `[]const *const Node` may be the empty slice `&.{}` when the aspect is not known; the
-    // loops then do nothing. A named argument (`pair`) finds its parameter by name, a positional one by
-    // its place in the call.
     /// Is the parameter that receives the argument `a` (the `i`-th of the call) a `Channel`?
     fn sharedParam(params: []const *const Node, a: *const Node, i: usize) bool {
         var prm: ?*const Node = null;
@@ -709,7 +629,6 @@ const Linker = struct {
         return std.mem.eql(u8, ty.text, "Channel");
     }
 
-    // Zig tip: `ownersIn` relies on the same Zig feature as `countStarts` above: see the tip there.
     /// The recursive part of `owners`: one `start` at a time, in the order of the source.
     fn ownersIn(l: *Linker, n: *const Node, in_loop: bool, seen: *std.ArrayList([]const u8)) Error!void {
         if (n.tag == .parallel) return;
@@ -740,15 +659,10 @@ const Linker = struct {
     }
 };
 
-// Zig tip: a `pub var` at file level is a global that other files can read and set. `main` fills it once
-// at the start, from the environment variable `EVE_LIB_PATH` (D-128), and the link step reads it. It is
-// the only global of this file: a list of folders, empty when the variable is not set.
+// @decision D-128
 /// The folders of `$EVE_LIB_PATH`, where external modules are installed.
 pub var env_lib_path: []const []const u8 = &.{};
 
-// Zig tip: `*[]const u8` is a pointer to a slice: the function writes the answer through it, here
-// the path of the file in which an error was found. A function returns one value (the error
-// union), so extra answers come back this way, through pointers the caller gave.
 /// Link the aspect that is run: read every aspect it calls into `aspects`. On an error returns `error.Syntax`,
 /// fills `diag`, and sets `where` to the aspect file when the problem is inside it (else "").
 pub fn link(
@@ -788,8 +702,6 @@ pub fn link(
     }
 }
 
-// Zig tip: a test builds a small project in memory instead of on disk: here the matching of
-// arguments is tried on a parsed primary aspect and a parsed aspect, with no file read.
 test "an apply is matched with the parameters of main" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -807,9 +719,9 @@ test "an apply is matched with the parameters of main" {
     try std.testing.expectEqualStrings("the parameter 'who' is String, the argument is Integer", d.message());
 }
 
-// Zig tip: the aspects can be put in the map by hand (`aspects.put(a, name, node)`), as the link step does for the
-// aspects of a macro; `load` then finds them without reading a file. `walkAspect` is the whole check of the calls: the
-// test gives it the root and an empty chain, and reads the message of each refusal (D-179, D-181, D-183).
+// @decision D-179
+// @decision D-181
+// @decision D-183
 test "the calls between aspects: a primary aspect, a cycle, itself, a fourth level and a concurrent caller are refused" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -860,8 +772,8 @@ test "the calls between aspects: a primary aspect, a cycle, itself, a fourth lev
     try std.testing.expect(std.mem.indexOf(u8, d.message(), "a concurrent aspect is called from a primary or an exclusive aspect") != null);
 }
 
-// Zig tip: a call of a private process is not looked up as an aspect: the walk stores the process in `sel`, and a
-// `start` of it is allowed only in a concurrent aspect (D-179, D-181).
+// @decision D-179
+// @decision D-181
 test "a private process is called by its bare name, and only a concurrent aspect starts one" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

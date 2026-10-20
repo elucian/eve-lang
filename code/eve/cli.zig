@@ -2,15 +2,9 @@
 //!
 //! Every REPL command is one entry of the jump table `commands`. The same table serves the command
 //! line: `eve --check script.eve` runs the `check` entry once and exits, without the REPL.
-// Zig tip: `@import` returns a whole file as a struct (a namespace). Nothing is global: a file
-// sees only what it imports. `@import("std")` is the standard library; `@import("evecm").version`
-// is a file next to this one. `const` binds a name once; `var` would allow reassignment.
-// `std.Io` is the input/output part of the library (Zig 0.16): readers, writers, files.
 const std = @import("std");
 const Io = std.Io;
 const version = @import("evecm").version;
-// Zig tip: Zig forbids a name that hides another one in an outer scope (shadowing). The file-level
-// import is called `editor`, not `line`, because several functions below have a parameter `line`.
 const editor = @import("evecm").line;
 const parser = @import("evecp").parser;
 const ast = @import("evecm").ast;
@@ -19,8 +13,6 @@ const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
 const helptext = @import("evevm").helptext;
 
-// Zig tip: the parts of the command are files of their own; `cli.zig` imports them and names again what the
-// program (eve.zig) uses, so `cli.parseArgs` keeps working. Files of one module may import each other.
 const context = @import("context.zig");
 const ui_cmds = @import("ui_cmds.zig");
 const cp_cmds = @import("cp_cmds.zig");
@@ -42,11 +34,6 @@ pub const parseArgs = cmdline.parseArgs;
 pub const Options = cmdline.Options;
 pub const writeHelp = help_pages.writeHelp;
 
-// Zig tip: the jump table is a plain array. `[_]Command{ ... }` lets the compiler count the
-// elements. `.{ .name = "x", ... }` is an anonymous struct literal: the type `Command` is taken
-// from the array, so it need not be repeated. `.run = cmdHelp` stores the function itself (a
-// function name without `()` is a value); `stub("check")` calls a comptime function that
-// returns one. The whole table is a constant, built by the compiler and stored in the program.
 /// The jump table. Order is the order of the menu.
 pub const commands = [_]Command{
     .{ .name = "check", .summary = "check the syntax of a script, do not execute it", .file = ".eve", .run = cp_cmds.cmdCheck },
@@ -85,11 +72,6 @@ pub const commands = [_]Command{
     .{ .name = "exit", .summary = "same as quit", .run = ui_cmds.cmdQuit },
 };
 
-// Zig tip: `?*const Command` is "a pointer to a Command, or null". There are no null pointers
-// in other types: absence must be written in the type with `?`. `for (&commands) |*c|`
-// walks the array by pointer (`&` takes the address, `|*c|` captures each element by
-// pointer, so nothing is copied). `std.mem.eql(u8, a, b)` compares two slices of bytes; `==`
-// on slices does not compare contents. `return` inside the loop leaves the function.
 pub fn find(name: []const u8) ?*const Command {
     for (&commands) |*c| {
         if (std.mem.eql(u8, c.name, name)) return c;
@@ -97,22 +79,6 @@ pub fn find(name: []const u8) ?*const Command {
     return null;
 }
 
-// Zig tip: memory is never allocated behind your back. A function that needs memory receives
-// an `std.mem.Allocator` (`gpa`) from the caller, who decides where it comes from (here an
-// arena that frees everything at once at the end of the program). `std.ArrayList(T)` is a
-// growable array; `.empty` starts it with nothing and `append(gpa, x)` needs the allocator.
-// `bad.* = a` writes through the pointer (`.*` dereferences). `orelse` gives a fallback when an
-// optional is null, here by leaving the function with `return error.UnknownOption`.
-// `while (cond) : (i += 1)` has a continue-expression that runs after each pass.
-// `a[1] == 's'` compares a byte of the string with a character literal.
-
-// Zig tip: `var words: [16][]const u8 = undefined;` is an array of 16 slices whose content is
-// not initialised on purpose (`undefined`): it lives on the stack, no allocator needed, and
-// only the first `n` are used. `words[1..n]` is a slice of the array from index 1 up to n (n
-// excluded), a view without copying. `while (it.next()) |w|` repeats while `next()` returns a
-// value (an optional) and ends on null. `std.mem.tokenizeAny` splits on any of the characters
-// of the delimiter string and skips empty pieces. `if (opt) |c| {...} else {...}` unwraps an
-// optional. Arrays and slices are bounds-checked: a wrong index stops the program in Debug.
 /// Run one line typed at the prompt. Blank lines are ignored.
 pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
     var words: [256][]const u8 = undefined;
@@ -144,17 +110,6 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
     }
 }
 
-// Zig tip: the REPL takes any `*Io.Reader`, not the keyboard itself. Real code passes stdin;
-// the tests pass a string (`Io.Reader.fixed("quit\n")`). Writing code against an interface
-// like this is how Zig programs are made testable. `(try in.takeDelimiter('\n')) orelse break`
-// reads up to the newline; the result is null at the end of the input, and `orelse break`
-// leaves the loop then. The slice points into the reader's own buffer and is valid only
-// until the next read, so `dispatch` uses it at once and does not keep it.
-// Zig tip: a function can return an optional slice: `?[]const u8` is a string or null. The line
-// editor does not know the commands (line.zig must not import cli.zig, two files that import each
-// other are hard to follow), so the REPL hands it this function: "which file extension does Tab
-// complete here?". `std.mem.trimEnd` cuts the listed characters from the end of a slice. `orelse`
-// gives a default for the null of `indexOfAny`. `return if (cond) a else null` is an `if` expression.
 /// The extension Tab completes for the last word of `line`: `.cfg` after `-e` or `-s`, otherwise what the
 /// command takes (`.eve` for check, debug, execute and compile; `.cfg` for setup), else null.
 pub fn completionExt(line: []const u8) ?[]const u8 {
@@ -183,9 +138,6 @@ pub fn repl(ctx: *Context, in: *Io.Reader, edit: ?Edit) !void {
         t.renderer = ui_cmds.renderBlock;
     }
     while (!ctx.quit) {
-        // Zig tip: `if (ctx.tui) |t| { ... continue; }` runs the full-screen branch when there is a screen and goes
-        // back to the top of the loop; the code after it is the older line-by-line prompt, still used for pipes and
-        // for a terminal whose size is unknown. The clock is read before and after the command for the status bar.
         if (ctx.tui) |t| {
             const text = (try t.readLine(in, &comp.?, &buf, completionExt)) orelse break;
             var words = std.mem.tokenizeAny(u8, text, " \t");
@@ -208,21 +160,11 @@ pub fn repl(ctx: *Context, in: *Io.Reader, edit: ?Edit) !void {
     try ctx.out.flush();
 }
 
-// Zig tip: `test "name" { }` blocks are compiled only by `zig build test` (./run.sh unit) and
-// live next to the code they check. `std.testing.expect(cond)` and `expectEqual(expected,
-// actual)` fail the test with an error. `.?` unwraps an optional and stops with an error if it
-// is null. `expectEqual(c, find(c.name).?)` compares two pointers: the same table element.
-// Zig tip: a test can keep two tables in step: the jump table and the help texts must name the same commands in the
-// same order, or `help` would miss one or show one that does not exist. `inline for` is not needed: the arrays are
-// walked at run time and `try` fails the test with the position of the first difference.
 test "the help texts cover the commands of the jump table, in the same order" {
     try std.testing.expectEqual(commands.len, helptext.entries.len);
     for (&commands, &helptext.entries) |c, e| try std.testing.expectEqualStrings(c.name, e.name);
 }
 
-// Zig tip: an arena allocator frees everything at once with `deinit`, which suits a test that parses a few lines and
-// looks at the result. `&.{ "a", "b" }` is a slice of texts written in place. The three cases are the ones that were
-// confused once: a word after a door belongs to the door, a command word is the command, and `-u` is an option.
 test "a command word is the command, a vm_cmds.door word stays with its vm_cmds.door, -u is an option" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -269,11 +211,6 @@ test "every command is found by name" {
     try std.testing.expect(find("nope") == null);
 }
 
-// Zig tip: `var buf: [128]u8 = undefined;` is a byte array on the stack; `Io.Writer.fixed(&buf)`
-// makes a writer that writes into it and `w.buffered()` returns what was written, so the test
-// reads the output without a terminal. `.fixed(...)` is shorthand for `Io.Writer.fixed(...)`:
-// with a declared type on the left, `.name` looks the function up in that type.
-// `@as(u8, x)` gives x an explicit type; a builtin like it always starts with `@`.
 test "a stub echoes its name" {
     var buf: [128]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -283,7 +220,6 @@ test "a stub echoes its name" {
     try std.testing.expectEqual(@as(u8, exit_not_implemented), ctx.status);
 }
 
-// Zig tip: this test relies on the same features as the test above: see the tip there.
 test "doc without a path is a usage error" {
     var buf: [128]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);
@@ -292,13 +228,6 @@ test "doc without a path is a usage error" {
     try std.testing.expectEqual(@as(u8, exit_usage), ctx.status);
 }
 
-// Zig tip: `defer arena.deinit();` runs at the end of the scope, however it ends: the usual way
-// to pair a resource with its release on the next line. The testing allocator reports memory
-// that is never freed as a test failure. An ArenaAllocator frees everything in one `deinit`,
-// so the parser's `append`s need no individual `free`. `&.{ "-d", "a.eve" }` is an inline
-// array of strings, passed as a slice. `expectError(error.X, call)` checks that a call fails.
-// Zig tip: `expectEqualStrings` compares two texts and prints both when they differ. The last word of a command line
-// is the edge case of a parser that looks ahead: `--serve stop` must not read past the end of `argv`.
 test "options of the machine: --listen, --serve, -loc, -rem" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -327,9 +256,7 @@ test "options of the machine: --listen, --serve, -loc, -rem" {
     try std.testing.expectEqualStrings("4043", long.machine.local_port.?);
 }
 
-// Zig tip: a `for` over an array literal checks several inputs with one body. The old two-letter names of the
-// machine options (`-lo`, `-r`, `-ls`) and `-lsn` (replaced by `--listen`, D-169) are unknown now, and `bad` names the
-// word that was refused.
+// @decision D-169
 test "-x alone touches no machine; the old names are refused" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -369,9 +296,7 @@ test "options: flags, command and script" {
     try std.testing.expectError(error.MissingValue, cmdline.parseArgs(arena.allocator(), &.{"-m"}, &bad));
 }
 
-// Zig tip: `expectError(error.X, call)` passes when the call fails with exactly that error. These cases are the rules of
-// D-188: `-s [file.cfg]` is the service and nothing else; `-e file.cfg` (`--setup`) loads a configuration for a script,
-// a command or a door; `-s` with a script, a command or a door is refused.
+// @decision D-188
 test "options: -s is the service, -e the configuration file" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -406,9 +331,6 @@ test "completion extension follows the command and -e" {
     try std.testing.expect(completionExt("che") == null);
 }
 
-// Zig tip: `inline for` is unrolled by the compiler: the body is compiled once per element,
-// so `word` is a compile-time known string and `"..." ++ word ++ "..."` (compile-time
-// concatenation) is allowed. A plain `for` could not do that.
 test "repl ends on quit and on exit" {
     inline for (.{ "quit", "exit" }) |word| {
         var buf: [256]u8 = undefined;

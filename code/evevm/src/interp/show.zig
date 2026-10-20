@@ -3,9 +3,6 @@
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
 const Io = std.Io;
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const data = interp.data;
@@ -19,25 +16,17 @@ const Channel = interp.Channel;
 
 // ---- text of a value ------------------------------------------------------------------
 
-// Zig tip: `x catch |e| ...` handles the error of a call on the spot, where `try` would pass it
-// up to the caller.
 pub fn utf8(it: *Interp, buf: *std.ArrayList(u8), cp: u21) Signal!void {
     var tmp: [4]u8 = undefined;
     const n = std.unicode.utf8Encode(cp, &tmp) catch 1;
     try buf.appendSlice(it.t, tmp[0..n]);
 }
 
-// Zig tip: `buf.print(allocator, fmt, args)` formats straight into the growing list: no
-// temporary string is made. The allocator is a parameter because the list may live in the
-// scratch memory (text being built) or in the arena (a report that is kept).
 /// Append formatted text to `buf`, which grows in `mem`.
 pub fn appendFmt(buf: *std.ArrayList(u8), mem: std.mem.Allocator, comptime fmt: []const u8, args: anytype) Signal!void {
     try buf.print(mem, fmt, args);
 }
 
-// Zig tip: `show` writes the text of a value into a growable byte list. `quoted` is true inside
-// a collection, where strings and symbols are shown with their quotes. `inline else` is not
-// needed: every kind is listed. `for (items, 0..) |e, i|` loops with the index `i` too.
 /// Append the text `print` gives for `v`.
 pub fn show(it: *Interp, buf: *std.ArrayList(u8), v: Value, quoted: bool) Signal!void {
     switch (v) {
@@ -115,23 +104,17 @@ pub fn show(it: *Interp, buf: *std.ArrayList(u8), v: Value, quoted: bool) Signal
     }
 }
 
-// Zig tip: `text` relies on the same Zig feature as `define` above: see the tip there.
-// The text is in the scratch memory: it lives until the statement ends. A caller that keeps it
-// copies it with `persist`.
 pub fn text(it: *Interp, v: Value) Signal![]const u8 {
     var buf: std.ArrayList(u8) = .empty;
     try it.show(&buf, v, false);
     return buf.items;
 }
 
-// Zig tip: `a.dupe(u8, bytes)` copies a slice into memory of the allocator `a`: the copy stays
-// valid after the scratch memory of the statement is released.
 /// Keep `bytes` beyond the current statement: the string of a value.
 pub fn persist(it: *Interp, bytes: []const u8) Signal![]const u8 {
     return it.h.str(bytes);
 }
 
-// Zig tip: `persist2` relies on the same Zig feature as `persist` above: see the tip there.
 /// The persistent string `x ++ y`, built without an intermediate copy.
 pub fn persist2(it: *Interp, x: []const u8, y: []const u8) Signal![]const u8 {
     return it.h.str2(x, y);
@@ -139,16 +122,10 @@ pub fn persist2(it: *Interp, x: []const u8, y: []const u8) Signal![]const u8 {
 
 // ---- formats of the interpolation -----------------------------------------------------
 
-// Zig tip: a plain `fn` at file level; without `pub` it is private to this file, and its
-// parameters are read-only.
 pub fn isAlign(c: u8) bool {
     return c == '<' or c == '>' or c == '^';
 }
 
-// Zig tip: a format such as `0>i5` is a tiny language: [fill][align][,][i|f]width[.precision].
-// `spec` is cut with indexes; `std.fmt.parseInt(usize, digits, 10)` reads a number (`catch 0` when
-// there are no digits). `@as(usize, ...)` pins the type of a literal. `std.unicode.utf8CountCodepoints`
-// counts symbols, not bytes, so the width of "αβγ" is 3. Padding is built with `appendNTimes`.
 /// Apply the format `spec` (the text after the `:`) of `\s{}`, `\#{}` or `\b{}` to `v`.
 pub fn format(it: *Interp, letter: u8, spec: []const u8, v: Value) Signal![]const u8 {
     var buf: std.ArrayList(u8) = .empty;
@@ -225,10 +202,6 @@ pub fn format(it: *Interp, letter: u8, spec: []const u8, v: Value) Signal![]cons
     return out.items;
 }
 
-// Zig tip: a format string must be known while compiling, so a precision that is only known
-// when the script runs cannot be written `{d:.*}`. `inline for` repeats its body once per
-// value of the range, each time with a compile-time `p`, so `"{d:." ++ digit ++ "}"` is built
-// by the compiler for p = 0, 1, 2, ... and the run-time `prec` picks the right copy.
 /// A Real with `prec` decimals.
 pub fn fixed(it: *Interp, x: f64, prec: usize) Signal![]const u8 {
     inline for (0..10) |p| {
@@ -237,7 +210,6 @@ pub fn fixed(it: *Interp, x: f64, prec: usize) Signal![]const u8 {
     return std.fmt.allocPrint(it.t, "{d:.9}", .{x});
 }
 
-// Zig tip: `interpolate` relies on the same Zig feature as `define` above: see the tip there.
 pub fn interpolate(it: *Interp, n: *const Node) Signal!Value {
     var buf: std.ArrayList(u8) = .empty;
     for (n.kids) |part| {

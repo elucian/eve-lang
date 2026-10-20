@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -19,7 +16,6 @@ const Arg = interp.Arg;
 
 // ---- running a script -----------------------------------------------------------------
 
-// Zig tip: `errorObject` relies on the same Zig feature as `define` above: see the tip there.
 pub fn errorObject(it: *Interp) Signal!Value {
     const o = try it.newObject();
     const r = it.reports.items[it.reports.items.len - 1];
@@ -34,10 +30,6 @@ pub fn errorObject(it: *Interp) Signal!Value {
     return .{ .object = o };
 }
 
-// Zig tip: `catch |e| switch (e) { ... }` handles each error name differently: `Raise` goes to
-// `recover`, `Over` ends the process quietly, anything else is passed up with `return e`.
-// `continue` inside the `catch` block restarts the loop without advancing `i`: that is how `retry`
-// runs the same statement again, and `resume` (which adds one to `i`) skips it.
 /// Run a process: its statements, then `recover` after an error, then `finalize`.
 pub fn runProcess(it: *Interp, p: *const Node, args: []const Arg, kind: []const u8, unit_name: []const u8) Signal!void {
     const saved = try it.pushScope();
@@ -106,9 +98,6 @@ pub fn runProcess(it: *Interp, p: *const Node, args: []const Arg, kind: []const 
 
 // ---- modules (spec/semantics/modules.md) ------------------------------------------------------
 
-// Zig tip: a member of a module is read through the module's own scope: `find` walks the scope and
-// answers a pointer to the variable, or null. Only the names in an `export` list are public; the link
-// step already refused a private name written in the source, this check guards the rest.
 /// The exported member `name` of a module.
 pub fn moduleMember(it: *Interp, m: *Module, name: []const u8) Signal!Value {
     var listed = false;
@@ -123,11 +112,6 @@ pub fn moduleMember(it: *Interp, m: *Module, name: []const u8) Signal!Value {
     return cell.value;
 }
 
-// Zig tip: `std.AutoHashMapUnmanaged(*const Node, *Module)` is a map whose key is a pointer: two
-// imports of the same module give the same tree, so the second finds the first. The module is put in
-// the map before its code runs, so a module that imports itself, directly or through others, finds
-// the module that is being loaded and does not load it again. `defer` restores the scope and the
-// other fields on every way out, as `applyAspect` does.
 /// Load a module once: its imports first, then its routines and variables, then `initialize`.
 pub fn instantiate(it: *Interp, node: *const Node) Signal!*Module {
     const owner = it.base();
@@ -177,16 +161,12 @@ pub fn instantiate(it: *Interp, node: *const Node) Signal!*Module {
     return m;
 }
 
-// Zig tip: `_ = it;` says that a parameter is deliberately unused, so the compiler does not complain. The
-// method keeps the same call style as the others: `it.noneNode()`.
 /// The shared node that stands for an absent part.
 pub fn noneNode(it: *Interp) *const Node {
     _ = it;
     return &ast.none;
 }
 
-// Zig tip: bare names are shared, not copied: `bind` puts the same `Var` cell of the module under the
-// name in the importing scope, so a constant or a function is one thing seen from two places.
 /// Bring the exported names of a module into the current scope, without a prefix (`m(*)` and `*`).
 pub fn bindBare(it: *Interp, m: *Module) Signal!void {
     for (m.node.kids) |k| {
@@ -195,10 +175,7 @@ pub fn bindBare(it: *Interp, m: *Module) Signal!void {
     }
 }
 
-// Zig tip: the link step stored every module under `path|name`; the same key finds it here. A module
-// that was not found is the run-time error `$err_module`, code 30 (D-131): `failWith` raises it with
-// the message `Module {name} not found in {library}`; nobody can recover it before the process
-// starts, so the program ends with exit code 4.
+// @decision D-131
 /// Run an import declaration: load the modules and bind their names in the current scope.
 pub fn execImport(it: *Interp, decl: *const Node) Signal!void {
     const known = it.modules orelse return it.fail("no module is loaded: '{s}'", .{decl.text});
@@ -221,9 +198,7 @@ pub fn execImport(it: *Interp, decl: *const Node) Signal!void {
     }
 }
 
-// Zig tip: `finalize` of the modules runs when the root aspect has ended, after its process, in the reverse
-// order of the initialization (D-068): the loop counts down. An error in one `finalize` does not stop
-// the others: `catch {}` drops it.
+// @decision D-068
 /// Run the `finalize` region of every loaded module, last loaded first.
 pub fn finalizeModules(it: *Interp) void {
     var i = it.load_order.items.len;
@@ -239,11 +214,7 @@ pub fn finalizeModules(it: *Interp) void {
     }
 }
 
-// Zig tip: `defer` runs when the function ends however it ends, so the three fields that this
-// call changes (`scope`, `unit`, `proc_scope`) are restored on success, on `over`, and on an
-// error that unwinds through (the same idea as in `invoke`). The aspect gets a scope of its own
-// with no parent but the names every script knows (`boot`): it cannot see the root aspect's variables,
-// and the state it builds is dropped with that scope when the call ends (D-066).
+// @decision D-066
 /// `apply name(args);`: run the `main` of an aspect, read and checked before the run.
 pub fn applyAspect(it: *Interp, n: *const Node) Signal!void {
     if (n.sel) |prc| return it.applyPrivate(n, prc);
@@ -255,10 +226,7 @@ pub fn applyAspect(it: *Interp, n: *const Node) Signal!void {
     try it.runAspect(aspect, args);
 }
 
-// Zig tip: a private process is not an aspect: it runs on the state of the aspect that declares it (D-179). That state
-// is the scope `it.unit`, the one `runAspect` made for the call (or the global scope of the aspect that is run), so
-// `enterScope(it.unit)` makes it the parent of the new process scope, and the process sees the aspect-level
-// variables and not the locals of the process that called it. The link step stored the process in `n.sel`.
+// @decision D-179
 /// `apply name(args);` where `name` is a private process of the aspect that contains the call.
 pub fn applyPrivate(it: *Interp, n: *const Node, prc: *const Node) Signal!void {
     const args = try it.evalArgs(n.kids);
@@ -267,8 +235,7 @@ pub fn applyPrivate(it: *Interp, n: *const Node, prc: *const Node) Signal!void {
     try it.runPrivate(prc, args, it.unit);
 }
 
-// Zig tip: `runPrivate` is also the body of a started private process: the task's interpreter calls it with the scope of
-// the aspect state it was started from, and with its own arguments (copied at `start`, D-048).
+// @decision D-048
 /// Run the private process `prc` in the state `unit` of its aspect.
 pub fn runPrivate(it: *Interp, prc: *const Node, args: []const Arg, unit: *interp.Scope) Signal!void {
     const saved_unit = it.unit;
@@ -279,7 +246,6 @@ pub fn runPrivate(it: *Interp, prc: *const Node, args: []const Arg, unit: *inter
     try it.runProcess(prc, args, "aspect", prc.text);
 }
 
-// Zig tip: `runAspect` relies on the same Zig feature as `applyAspect` above: see the tip there.
 /// Run the `main` of an aspect with evaluated arguments, in a fresh scope (D-066).
 pub fn runAspect(it: *Interp, aspect: *const Node, args: []const Arg) Signal!void {
     const saved_unit = it.unit;

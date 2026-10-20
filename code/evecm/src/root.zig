@@ -4,11 +4,6 @@
 //! terminal and line editor, and the files that evetx and eveux share (`ide`). It holds Zig code only, never data.
 const std = @import("std");
 
-// Zig tip: `pub const x = @import("file.zig");` re-exports a file under a name. This file is the
-// public face of the module: the other modules write `@import("evecm").ast`, and the layout of
-// the files behind it can change without touching them. Declarations are lazy: nothing is
-// compiled until it is used.
-
 /// The syntax tree that the parser makes and the interpreter walks.
 pub const ast = @import("ast.zig");
 /// The instructions of the register machine (bytecode).
@@ -52,8 +47,6 @@ pub const ide = @import("ide.zig");
 /// The version, written once in the root build.zig.zon: `version.version`, `version.title`.
 pub const version = @import("version.zig");
 
-// Zig tip: tests are found only in files that the compiler reaches. `_ = x;` inside an unnamed
-// `test { }` references the file, so its tests also run with `zig build test`.
 test {
     _ = ast;
     _ = op;

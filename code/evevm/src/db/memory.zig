@@ -33,38 +33,27 @@ const err_null = value.err_null;
 const err_index = value.err_index;
 const err_io = value.err_io;
 
-// Zig tip: the columns live outside the heap of the interpreter, in the general purpose allocator of the program, because a
-// column grows by doubling and the arena of a run never gives memory back. They are freed when the run ends (`closeAll`).
 const gpa = std.heap.smp_allocator;
 
-// Zig tip: `a orelse b` unwraps an optional: the value when there is one, else `b` (which may be `return` or `continue`,
-// leaving the function or the loop).
 /// Is this class derived from `Memory`?
 pub fn isMemoryClass(cls: *const Class) bool {
     const n = cls.node orelse return false;
     return n.kids.len > 1 and n.kids[1].tag == .name and std.mem.eql(u8, n.kids[1].text, "Memory");
 }
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 pub fn isMemory(_: Host, v: Value) bool {
     return v == .object and v.object.class != null and isMemoryClass(v.object.class.?) and value.fieldOf(v.object, "handle") != null;
 }
 
-// Zig tip: `isColumn` relies on the same Zig feature as `isMemoryClass` above: see the tip there.
 pub fn isColumn(it: Host, v: Value) bool {
     const cc = state(it).column_class orelse return false;
     return v == .object and v.object.class == cc;
 }
 
-// Zig tip: `members` relies on the same Zig feature as `isMemory` above: see the tip there.
 fn members(cls: *const Class) []const *const Node {
     return cls.node.?.kids[0].kids;
 }
 
-// Zig tip: the type of a field decides the type of its column: whole numbers are INTEGER, `Real` and `Float` are REAL, `Logic`
-// is BOOLEAN, `String` is TEXT. A `Decimal` or an `Instant` has no column yet, and the error says so (a `Decimal` can be kept
-// as a `Real` or as a `String`).
 fn kindOf(it: Host, m: *const Node) Signal!columnar.Kind {
     const ty = ast.baseType(m.ty);
     const eql = std.mem.eql;
@@ -75,18 +64,14 @@ fn kindOf(it: Host, m: *const Node) Signal!columnar.Kind {
     return it.failWith(err_argument, "a Memory table can not hold the field {s}: {s} (use Integer, Real, Logic or String)", .{ m.text, ty });
 }
 
-// Zig tip: a cast is written with a builtin: `@intCast` checks (in safe builds) that the number fits the smaller type,
-// `@bitCast` keeps the bits and changes the type, `@truncate` keeps the low bits.
 fn idxOf(obj: *Object, field: []const u8) usize {
     return @intCast(value.intOf(value.fieldOf(obj, field).?));
 }
 
-// Zig tip: `tableOf` relies on the same Zig feature as `isMemory` above: see the tip there.
 fn tableOf(it: Host, obj: *Object) *columnar.Table {
     return state(it).mems.items[idxOf(obj, "handle")];
 }
 
-// Zig tip: `columnObject` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn columnObject(it: Host, mem: usize, k: usize, name: []const u8) Signal!Value {
     const b = state(it);
     if (b.column_class == null) {
@@ -102,7 +87,6 @@ fn columnObject(it: Host, mem: usize, k: usize, name: []const u8) Signal!Value {
     return .{ .object = obj };
 }
 
-// Zig tip: `wrap` relies on the same Zig feature as `kindOf` above: see the tip there.
 /// Make the object of a table that is already in the state: its fields are the columns.
 fn wrap(it: Host, cls: *Class, mem: usize) Signal!Value {
     const obj = try it.newObject();
@@ -112,15 +96,12 @@ fn wrap(it: Host, cls: *Class, mem: usize) Signal!Value {
     return .{ .object = obj };
 }
 
-// Zig tip: `register` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn register(it: Host, t: *columnar.Table) Signal!usize {
     const b = state(it);
     try b.mems.append(it.base().arena(), t);
     return b.mems.items.len - 1;
 }
 
-// Zig tip: `errdefer` runs its statement only when the function leaves with an error, so what was made before the failure
-// is freed and nothing leaks; on success it does nothing.
 /// `Sales()`: when the class is derived from `Memory`, an empty table with a column for each field; else null.
 pub fn memoryNew(it: Host, cls: *Class) Signal!?Value {
     if (!isMemoryClass(cls)) return null;
@@ -134,7 +115,6 @@ pub fn memoryNew(it: Host, cls: *Class) Signal!?Value {
     return try wrap(it, cls, try register(it, t));
 }
 
-// Zig tip: `closeAll` relies on the same Zig feature as `isMemory` above: see the tip there.
 /// At the end of the run: free the tables.
 pub fn closeAll(it: Host) void {
     const b = state(it);
@@ -145,8 +125,6 @@ pub fn closeAll(it: Host) void {
     b.mems.clearRetainingCapacity();
 }
 
-// Zig tip: the result type `?T` is an optional: a value or `null`. The caller must unwrap it (`if (x) |v|`, `orelse`), so a
-// missing value can never be used by accident.
 fn isWhole(v: Value) ?i64 {
     return switch (v) {
         .int, .nat, .byte, .short, .huge => |n| n,
@@ -154,8 +132,6 @@ fn isWhole(v: Value) ?i64 {
     };
 }
 
-// Zig tip: a row is checked in full before any column is touched, so a wrong value in the third field cannot leave the first
-// two columns one cell longer than the rest. `optional` comes from the declaration of the field (`String?`).
 fn check(it: Host, kind: columnar.Kind, optional: bool, name: []const u8, v: Value) Signal!void {
     if (v == .nil) {
         if (!optional) return it.failWith(err_null, "{s} is not optional: a Memory table can not hold null there", .{name});
@@ -171,7 +147,6 @@ fn check(it: Host, kind: columnar.Kind, optional: bool, name: []const u8, v: Val
     if (!ok) return it.failWith(err_convert, "the field {s} can not take a {s}", .{ name, value.typeName(v) });
 }
 
-// Zig tip: `put` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn put(t: *columnar.Table, k: usize, v: Value) Signal!void {
     if (v == .nil) return t.appendNull(k);
     switch (t.cols.items[k].kind) {
@@ -183,7 +158,6 @@ fn put(t: *columnar.Table, k: usize, v: Value) Signal!void {
     }
 }
 
-// Zig tip: `addRow` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn addRow(it: Host, cls: *Class, t: *columnar.Table, row: []const Value) Signal!void {
     const ms = members(cls);
     for (ms, row, 0..) |m, v, k| try check(it, t.cols.items[k].kind, ast.isOptional(m.ty), m.text, v);
@@ -191,7 +165,6 @@ fn addRow(it: Host, cls: *Class, t: *columnar.Table, row: []const Value) Signal!
     t.endRow();
 }
 
-// Zig tip: `connectionOf` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn connectionOf(it: Host, v: Value) Signal!struct { idx: usize, db: *sqlite.Db } {
     const b = state(it);
     if (v != .object or v.object.class == null or v.object.class != b.conn_class) return it.failWith(err_argument, "expected a connection", .{});
@@ -201,7 +174,6 @@ fn connectionOf(it: Host, v: Value) Signal!struct { idx: usize, db: *sqlite.Db }
     return .{ .idx = idx, .db = db };
 }
 
-// Zig tip: `memoryCall` relies on the same Zig feature as `memoryNew` above: see the tip there.
 /// A method of a `Memory` table.
 pub fn memoryCall(it: Host, obj: *Object, name: []const u8, args: []const *const Node) Signal!Value {
     const eql = std.mem.eql;
@@ -276,7 +248,6 @@ pub fn memoryCall(it: Host, obj: *Object, name: []const u8, args: []const *const
     return it.fail("a Memory table has no method '{s}'", .{name});
 }
 
-// Zig tip: `cmpOf` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn cmpOf(it: Host, op: []const u8) Signal!columnar.Cmp {
     const eql = std.mem.eql;
     if (eql(u8, op, "=") or eql(u8, op, "==")) return .eq;
@@ -288,8 +259,6 @@ fn cmpOf(it: Host, op: []const u8) Signal!columnar.Cmp {
     return it.failWith(err_argument, "filter: '{s}' is not a comparison (= <> < <= > >=)", .{op});
 }
 
-// Zig tip: `defer` runs its statement when the scope ends, by any path (a `return`, an error, the end of the block), so a
-// free or a close is written once, next to what it undoes.
 /// A method of a column: `s.price.sum()`.
 pub fn columnCall(it: Host, obj: *Object, name: []const u8, args: []const *const Node) Signal!Value {
     const eql = std.mem.eql;

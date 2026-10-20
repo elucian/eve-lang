@@ -6,9 +6,6 @@ const std = @import("std");
 /// One option or sub-command of a command, with its explanation.
 pub const Opt = struct { word: []const u8, text: []const u8 };
 
-// Zig tip: a struct whose fields have defaults (`= &.{}`, an empty slice) lets each entry below name only what it has.
-// `[]const []const u8` is a slice of texts. In `text`, a `\n` starts a new paragraph; the layout wraps each paragraph to
-// the width of the screen.
 /// What `help` knows about one command.
 pub const Entry = struct {
     name: []const u8,
@@ -272,8 +269,6 @@ pub const entries = [_]Entry{
     },
 };
 
-// Zig tip: `for (&entries) |*e|` walks the array by pointer, so the result of `find` points at the entry itself and
-// nothing is copied. The function answers an optional: the entry, or null for a name that has no help.
 /// The entry of a command, or null.
 pub fn find(name: []const u8) ?*const Entry {
     for (&entries) |*e| if (std.mem.eql(u8, e.name, name)) return e;

@@ -43,9 +43,6 @@ const err_null = interp.err_null;
 /// The error code of a `FormatError`: a unit of a data file is not well formed (errors.md, `$err_format`).
 pub const err_format = 56;
 
-// Zig tip: a named option of a call, `rejects: "out/bad.csv"`, is a `pair` node whose first kid is the name.
-// They are evaluated once into a small list, so a function can ask for the options it knows with `opt` and the
-// rest is refused by `noMoreOptions`: a misspelled option is an error and not silently ignored.
 /// One option of a library call: `name: value`.
 pub const Opt = struct {
     name: []const u8,
@@ -269,9 +266,6 @@ test "natives registry names" {
     try std.testing.expect(natives.get("no_such_module") == null);
 }
 
-// Zig tip: a record class is a `Class` whose `node` holds the declaration; the members are the kids of
-// its first kid. `lookup` finds the class by name in the scope. The checks come first and the function
-// returns the pointer, so the callers can use it without checking again.
 /// The class named by the type argument of a library call (`(:Row)`): it must be a record class.
 pub fn recordClass(it: *Interp, targs: []const *const Node, what: []const u8) Signal!*Class {
     if (targs.len != 1) return it.failWith(err_argument, "{s} needs the record class as a type argument: {s}(:Row)(...)", .{ what, what });
@@ -301,10 +295,6 @@ const win1252 = [32]u21{
     0x90,   0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x9D,   0x017E, 0x0178,
 };
 
-// Zig tip: the bytes of a file become text in four steps: a BOM decides the encoding, otherwise the option
-// `encoding:`, otherwise UTF-8 (data-types.md, Unicode streams). A single-byte encoding maps every byte to a
-// code point; UTF-16 reads pairs of bytes. Invalid UTF-8 is an error with its position (`invalid: "error"`) or
-// is replaced by U+FFFD (`invalid: "replace"`). The result is always valid UTF-8, in memory of the arena.
 /// Decode the bytes of a file to UTF-8 text.
 fn decodeBytes(it: *Interp, bytes_in: []const u8, encoding_opt: ?[]const u8, invalid: []const u8, what: []const u8, path: []const u8) Signal![]const u8 {
     var bytes = bytes_in;
@@ -401,10 +391,6 @@ const Reject = struct {
     reason: []const u8,
 };
 
-// Zig tip: a `Stream` is the state of one open file for the loop that reads it. Nothing is converted until the
-// loop asks for the next unit, so an error in a row is raised when the loop reaches it and the rows before it
-// were given already (data-types.md, Rules). The text of the file stays in memory of the run (a first
-// implementation: the specification reads by blocks); the units are made one by one.
 /// The open source of a `for` loop over `csv.read!`, `json.read!`, `txt.read!` or `fs.lines!`.
 pub const Stream = struct {
     kind: Kind,
@@ -458,9 +444,6 @@ fn newStream(it: *Interp, st: Stream) Signal!Value {
     return .{ .object = obj };
 }
 
-// Zig tip: `std.mem.indexOfScalarPos` finds the next line feed; the line ends before it, and a CR in front is
-// dropped, so a file with CRLF line endings reads like one with LF. `orelse` handles the last line, which may
-// have no line feed at all. An empty file has no line; a file that ends with a line feed has no extra empty line.
 /// `fs.lines!(path)`: a stream of the lines of a text file, without their line endings.
 fn openLines(it: *Interp, args: []const *const Node) Signal!Value {
     if (args.len < 1) return it.fail("fs.lines! takes a path", .{});
@@ -553,9 +536,6 @@ fn openRecords(it: *Interp, kind: Kind, targs: []const *const Node, args: []cons
     return newStream(it, st);
 }
 
-// Zig tip: `?Value` with an out parameter for the reason: null means "this unit is refused", and `reason`
-// then says why. The caller turns that into a `FormatError` or into a line of the rejects file. Each branch of
-// the `if` chain is one type of the field; they are the canonical forms of data-types.md.
 /// Convert one field (text and whether it was quoted) to the value of the member `m`; null if it can not be.
 fn fromField(it: *Interp, f: data.Field, m: *const Node, reason: *[]const u8) Signal!?Value {
     const eql = std.mem.eql;
@@ -657,9 +637,6 @@ fn normalized(it: *Interp, st: *Stream, f: data.Field) Signal!data.Field {
     return .{ .text = nfc.normalize(it.a, f.text) catch return error.OutOfMemory, .quoted = f.quoted };
 }
 
-// Zig tip: `streamNext` is the heart of a reader: it gives the next unit or null at the end. A unit that can not
-// be read is either an error at once or, when the read has a rejects output, a line for it and the loop goes on
-// with the next unit. `while (true)` with `continue` repeats until a good unit or the end.
 /// The next value of a stream, or null at the end. Errors of a unit are raised here, when the loop reaches it.
 pub fn streamNext(it: *Interp, st: *Stream) Signal!?Value {
     if (st.finished) return null;
@@ -786,9 +763,6 @@ fn joinFields(it: *Interp, fields: []const data.Field) Signal![]const u8 {
     return out.items;
 }
 
-// Zig tip: the rejects are written when the stream ends (by its end, by `break` or by an error): one file with a
-// header line and one line for each refused unit, as CSV: where it was found, why, and its text. They were
-// kept in memory of the run until now, in a list that is as long as the number of rejects only.
 /// The stream is done: write the rejects file (once) and close the source.
 pub fn finishStream(it: *Interp, st: *Stream) Signal!void {
     if (st.finished) return;
@@ -920,9 +894,6 @@ fn codepoints(text: []const u8) usize {
     return std.unicode.utf8CountCodepoints(text) catch text.len;
 }
 
-// Zig tip: one function writes the three formats: the common part (the path, the rows, the options) is read
-// first, then a `switch` on the kind makes the text. `buf.writer(it.t)` gives a writer over the list so
-// `print` can format into it. The text is kept in memory of the statement and written in one go to the file.
 /// `csv.write(path, rows, …)`, `json.write(path, rows)` and `txt.write(path, rows, widths: …)`.
 fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void {
     const what: []const u8 = switch (kind) {
@@ -1021,9 +992,6 @@ fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void 
     try writeFile(it, path, buf.items);
 }
 
-// Zig tip: a `switch` on a tagged union (`Value`) picks the case by the active tag and binds the
-// payload with `|x|`; several tags can share one branch. A function that calls itself (a list in a list)
-// is recursive: Zig needs the error set written (here `Signal`), it can not infer it.
 /// Write a value as JSON text: `null`, numbers, strings, lists as arrays, objects and maps as objects. The keys
 /// of a record come in the order of the members of its class (data-types.md, JSON).
 pub fn jsonValue(it: *Interp, w: *Io.Writer, v: Value) Signal!void {
@@ -1085,9 +1053,6 @@ fn pathArg(it: *Interp, args: []const *const Node, index: usize, what: []const u
     return v.str;
 }
 
-// Zig tip: one function answers all the `fs` calls: it compares the name with each known function and
-// returns the value, or null if the name is not one of them. The pure path functions (`join`, `name`,
-// `parent`, `extension`) do no input or output; the others call the operating system through `Io.Dir.cwd()`.
 fn fsCall(it: *Interp, name: []const u8, args: []const *const Node) Signal!?Value {
     const eql = std.mem.eql;
     const io = it.io orelse return it.fail("fs: no input/output handle", .{});

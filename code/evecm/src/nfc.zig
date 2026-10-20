@@ -5,8 +5,6 @@
 const std = @import("std");
 const tables = @import("nfc_data.zig");
 
-// Zig tip: the constants of the Hangul algorithm (Unicode 3.12): the syllables are not in the tables, a few
-// integer operations turn a syllable into its jamo and back. `const` at file level is known while compiling.
 const s_base: u21 = 0xAC00;
 const l_base: u21 = 0x1100;
 const v_base: u21 = 0x1161;
@@ -17,9 +15,6 @@ const t_count: u21 = 28;
 const n_count: u21 = v_count * t_count;
 const s_count: u21 = l_count * n_count;
 
-// Zig tip: a binary search over a sorted array of structs. `lo` and `hi` bound the part still possible; the
-// middle element decides which half remains. The tables are sorted by code point (the generator sorts them),
-// which is what makes the search valid. `std.math.order` compares two integers.
 fn findDecomp(cp: u21) ?tables.Decomp {
     var lo: usize = 0;
     var hi: usize = tables.decomp.len;
@@ -75,8 +70,6 @@ fn composePair(a: u21, b: u21) ?u21 {
     return null;
 }
 
-// Zig tip: a recursive function appends the full canonical decomposition of one code point to a list. A code
-// point without an entry is its own decomposition. `try out.append(a, cp)` can fail only with `OutOfMemory`.
 fn decompose(a: std.mem.Allocator, cp: u21, out: *std.ArrayList(u21)) std.mem.Allocator.Error!void {
     if (cp >= s_base and cp < s_base + s_count) {
         const si = cp - s_base;
@@ -106,9 +99,6 @@ pub fn isNormalized(a: std.mem.Allocator, text: []const u8) bool {
     return std.mem.eql(u8, out, text);
 }
 
-// Zig tip: the steps are three loops over a list of code points: decompose everything, put the combining marks
-// in the order of their combining class (a stable insertion sort of each run of marks), then compose from the left.
-// `std.unicode.Utf8View` walks the code points of a text; an invalid text is returned unchanged by the caller.
 /// The NFC form of `text`, in new memory the caller frees. Text with an invalid UTF-8 sequence is copied unchanged.
 pub fn normalize(a: std.mem.Allocator, text: []const u8) std.mem.Allocator.Error![]u8 {
     if (isAscii(text)) return a.dupe(u8, text);

@@ -7,9 +7,6 @@ const vaxis = @import("vaxis");
 const app_mod = @import("app.zig");
 const view = @import("view.zig");
 
-// Zig tip: a `union(enum)` is a tagged union: a value that is exactly one of its fields, with the
-// name of the field stored beside it. libvaxis looks at the field names of this type and sends
-// the events that have a field here (`key_press`, `mouse`, `winsize`, ...) and no others.
 const Event = union(enum) {
     key_press: vaxis.Key,
     mouse: vaxis.Mouse,
@@ -22,10 +19,6 @@ const Event = union(enum) {
     quit_request,
 };
 
-// Zig tip: `std_options` is a declaration of the root file that the standard library reads: `.logFn` replaces the function
-// behind `std.log`. The default one writes to the standard error, which here is the same terminal as the screen, so a
-// warning of the keyboard library (an unknown key) was written over the interface. This one keeps the text in a small buffer
-// that the main loop empties into the message bar and the Stderr tab. It runs in any thread, so a spin lock guards the buffer.
 pub const std_options: std.Options = .{ .logFn = logToApp };
 
 var log_lock = std.atomic.Value(bool).init(false);
@@ -66,10 +59,6 @@ fn takeLog(gpa: std.mem.Allocator) ?[]u8 {
     return copy;
 }
 
-// Zig tip: a function that runs in a second thread cannot share plain variables safely, so the flag that tells it
-// to end is a `std.atomic.Value(bool)`: `load` and `store` are indivisible, and the order argument says how the other
-// thread's writes become visible (`.acquire`/`.release`). `loop.postEvent` is made to be called from another thread:
-// it puts an event in the queue that `nextEvent` waits on, so the blocked main loop wakes up.
 /// The thread that looks, five times a second, for the file `evetx.quit` beside the program. When it appears
 /// the file is removed and the loop gets `quit_request`: evetx ends the normal way, and the terminal is given back
 /// (a program killed from outside leaves the mouse mode and the alternate screen on, and the shell shows numbers).
@@ -84,14 +73,8 @@ fn watchQuit(io: std.Io, loop: *vaxis.Loop(Event), path: []const u8, stop: *std.
     }
 }
 
-// Zig tip: a file-level `pub const panic` replaces the handler that runs when the program panics
-// (an index out of range, an overflow in a safe build). libvaxis gives one that first puts the
-// terminal back in its normal mode, so a crash does not leave the shell in raw mode.
 pub const panic = vaxis.panic_handler;
 
-// Zig tip: in Zig 0.16 `main` may take a `std.process.Init`, filled by the runtime: `init.io` is
-// the handle for input and output, `init.gpa` a general purpose allocator, and `init.minimal.args`
-// the command line. `!void` means `main` may return an error, which ends the program with its name.
 pub fn main(init: std.process.Init) !void {
     const gpa = init.gpa;
     const io = init.io;
@@ -110,8 +93,6 @@ pub fn main(init: std.process.Init) !void {
     var tty = try vaxis.Tty.init(io, &tty_buffer);
     defer tty.deinit();
     const writer = tty.writer();
-    // Zig tip: `defer` blocks run in the opposite order, so this one runs after `vx.deinit` (which leaves the alternate screen)
-    // and before `tty.deinit`: the screen of the shell is cleared and the cursor goes to the top, so the prompt comes back there.
     defer {
         writer.writeAll("\x1b[2J\x1b[3J\x1b[H") catch {};
         writer.flush() catch {};
@@ -133,16 +114,12 @@ pub fn main(init: std.process.Init) !void {
     defer gpa.free(quit_path);
     std.Io.Dir.cwd().deleteFile(io, quit_path) catch {};
     var stop_watch = std.atomic.Value(bool).init(false);
-    // Zig tip: `std.Thread.spawn` starts a function in a new thread with the arguments in a tuple; `join` waits for it.
-    // If the thread cannot start, evetx works as before (`catch null`) and only the polite quit is missing.
     const watcher: ?std.Thread = std.Thread.spawn(.{}, watchQuit, .{ io, &loop, quit_path, &stop_watch }) catch null;
     defer {
         stop_watch.store(true, .release);
         if (watcher) |t| t.join();
     }
 
-    // Zig tip: `defer` runs when the scope ends, in the opposite order of the `defer` lines. So the
-    // terminal is given back (loop.stop, tty.deinit) even when the program ends with an error.
     try vx.enterAltScreen(writer);
     try vx.setMouseMode(writer, true);
     // a paste made by the terminal arrives between two markers, so it can be inserted as one piece
@@ -159,10 +136,6 @@ pub fn main(init: std.process.Init) !void {
     var last_title: []const u8 = "";
 
     while (!app.quit) {
-        // Zig tip: while a command waits in the prompt the loop must wake up by itself, so it asks for an
-        // event without blocking (`tryEvent`), sleeps a tenth of a second when there is none, and
-        // lets `app.tick` start the command when its time is over. Without a waiting command the
-        // loop blocks in `nextEvent` and uses no time.
         const maybe: ?Event = if (app.needsTick()) blk: {
             const ev = try loop.tryEvent();
             if (ev == null) try io.sleep(.fromMilliseconds(100), .awake);
@@ -183,8 +156,6 @@ pub fn main(init: std.process.Init) !void {
             defer gpa.free(logged);
             app.logError(logged);
         }
-        // Zig tip: `takeSystemClip` hands over the text of the last copy; the terminal puts it in the
-        // clipboard of the system (OSC 52), and the copy is freed here.
         if (app.takeSystemClip()) |clip| {
             defer gpa.free(clip);
             vx.copyToSystemClipboard(writer, clip, gpa) catch {};

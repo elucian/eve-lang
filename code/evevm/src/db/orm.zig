@@ -30,8 +30,6 @@ pub const err_mapping = 54;
 const err_argument = value.err_argument;
 const err_io = value.err_io;
 
-// Zig tip: the states of a record are an `enum`; `@tagName(status)` gives the name for `status(r)`. The names are
-// those of the specification (database.md, states of a record).
 /// The state of a record in the session of its table.
 pub const Status = enum { detached, added, clean, dirty, removed, stale };
 
@@ -90,9 +88,6 @@ fn memberIndex(members: []const *const Node, name: []const u8) ?usize {
     return null;
 }
 
-// Zig tip: the depth of a table is one more than the deepest table it references (`reference f to t`); the
-// checker refused cycles, so the recursion ends. The tables are found by name in the nodes of the declarations
-// that the interpreter keeps in `b.table_nodes`.
 fn depthOf(it: Host, n: *const Node) usize {
     var d: usize = 0;
     for (n.kids[3..]) |cl| {
@@ -157,8 +152,6 @@ pub fn declareTable(it: Host, n: *const Node) Signal!void {
 
 // ---- SQL text ---------------------------------------------------------------------------------
 
-// Zig tip: generated SQL always quotes identifiers, so the names match exactly and a name that is a keyword of
-// SQL is still a name (database.md, column = value mapping, rule 1). A quote inside a name is doubled.
 fn quote(it: Host, buf: *std.ArrayList(u8), name: []const u8) Signal!void {
     try buf.append(it.temp(), '"');
     for (name) |ch| {
@@ -200,8 +193,6 @@ fn sqlType(m: *const Node) []const u8 {
     return "text";
 }
 
-// Zig tip: a `temporary` table is the only table that the VM creates: from the class, at the first use (database.md,
-// the table declaration). The columns follow the type table of the specification; the key is the primary key.
 fn ensureTemporary(it: Host, t: *Table, db: *sqlite.Db) Signal!void {
     if (!t.temporary or t.created) return;
     var buf: std.ArrayList(u8) = .empty;
@@ -594,9 +585,6 @@ fn whereKey(it: Host, t: *const Table, sql: *std.ArrayList(u8), params: *std.Arr
     }
 }
 
-// Zig tip: the statement of an update lists only the dirty fields, in the order of the plan, then the version
-// (`"version" = "version" + 1`); the `where` has the key and the version that was read. A statement that changes
-// no row means that someone else changed (or removed) the row: a ConflictError, and the record becomes `stale`.
 fn doUpdate(it: Host, tr: *Track) Signal!void {
     const t = tr.table;
     const db = state(it).dbs.items[tr.conn];
@@ -656,10 +644,6 @@ fn doDelete(it: Host, tr: *Track) Signal!void {
     }
 }
 
-// Zig tip: the order of a flush (database.md): inserts in the order of the references (customers before orders),
-// then updates in the same order, then deletes in the reverse order. `std.mem.sort` is stable enough for this
-// here because the pending list is already in the order of the changes. The records that were written are taken
-// out of the pending list; the others (another connection) stay.
 /// Write the pending changes of the connection `only` (all connections when null) to the database.
 pub fn flushConn(it: Host, only: ?usize) Signal!void {
     const b = state(it);
@@ -746,10 +730,6 @@ fn detach(it: Host, args: []const *const Node) Signal!void {
     if (rec == .object) if (trackOf(it, rec.object)) |tr| untrack(it, tr);
 }
 
-// Zig tip: `load!` is the bulk path: the rows are written without being tracked, with the key of the declaration.
-// "insert" adds the rows; "upsert" and "merge" insert and, when the key exists, update the other columns
-// (`on conflict (key) do update set …`). The counts are the rows the statements changed; a row that was inserted
-// and a row that was updated are told apart by asking the database whether the key was there before.
 /// `t.load!(rows, mode: …)`: write many rows at once, not tracked; the result has `inserted`, `updated` and `deleted`.
 fn load(it: Host, t: *Table, args: []const *const Node) Signal!Value {
     try writeAccess(it, t, "load!");
@@ -902,10 +882,7 @@ fn releaseSession(it: Host, all: bool) void {
     }
 }
 
-// Zig tip: the end of a job (database.md, transactions): when the job went well, every enlisted session is flushed
-// and then every enlisted connection is committed; when the flush fails the job fails and everything is rolled
-// back. When the job failed or ended by `rollback;`, the database rolls back and the records are detached (they
-// keep their values in memory, D-158). The function returns the error of the flush so the caller can fail the job.
+// @decision D-158
 /// `done` of a job: flush and commit, or roll back.
 pub fn endJob(it: Host, ok: bool) Signal!void {
     if (ok) {

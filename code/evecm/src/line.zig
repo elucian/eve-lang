@@ -17,11 +17,6 @@ pub fn lastWordStart(line: []const u8) usize {
     return i;
 }
 
-// Zig tip: a struct can own an allocator-backed value. The completer keeps its candidate names in an
-// `ArenaAllocator`: an allocator that never frees single items but drops everything at once with
-// `reset` or `deinit`. That suits a list rebuilt from scratch at every new word: no per-name
-// `free` and no leaks to track. `.init(gpa)` wraps a parent allocator ("general purpose") that
-// supplies the real memory.
 /// Tab completion state, kept between the keys of one prompt.
 pub const Completer = struct {
     arena: std.heap.ArenaAllocator,
@@ -47,11 +42,6 @@ pub const Completer = struct {
         c.active = false;
     }
 
-    // Zig tip: `!?[]const u8` reads as "an error, or null, or a string": three outcomes in one return
-    // value. Here null means "nothing to show" (first word, or no file matches), which is not a
-    // failure. `%` is the remainder, so `(next + 1) % len` wraps the index back to 0.
-    // `c.arena.reset(.retain_capacity)` frees every name at once but keeps the memory for reuse.
-    // `catch &.{}` turns a failed folder read into an empty list: no completion, no crash.
     /// The candidate for the last word of `line` that this Tab shows, or null when there is none.
     /// The first word (the command name) is not completed.
     pub fn tab(c: *Completer, io: Io, line: []const u8, ext: []const u8) !?[]const u8 {
@@ -80,13 +70,6 @@ fn lessThan(_: void, a: []const u8, b: []const u8) bool {
     return std.mem.lessThan(u8, a, b);
 }
 
-// Zig tip: `arena` is the allocator for the returned names, chosen by the caller (the arena above), so
-// this function never frees anything itself. `std.fmt.allocPrint` is `printf` into fresh memory.
-// `lastIndexOfAny` returns an optional index, unwrapped with `if (...) |i|`. `defer dir.close(io)`
-// closes the folder on every way out of the function, including an error return. `it.next(io)`
-// is the folder iterator: it returns an optional entry, so the `while (...) |entry|` loop ends
-// when the folder is read to the end. A `switch` on an enum (`entry.kind`) needs a branch for
-// each tag or an `else`. `std.mem.sort` sorts a slice in place, given a comparison function.
 /// The files ending in `ext` and the sub-folders that complete `word`, with the folder part as typed. A word
 /// that is a folder without a trailing slash (`test/level1`) lists the content of that folder.
 fn matches(arena: std.mem.Allocator, io: Io, word: []const u8, ext: []const u8) ![]const []const u8 {
@@ -121,11 +104,6 @@ fn matches(arena: std.mem.Allocator, io: Io, word: []const u8, ext: []const u8) 
     return found.items;
 }
 
-// Zig tip: `-|` is saturating subtraction: `old -| new` is 0 instead of an overflow error when new is
-// larger (plain unsigned `-` that goes below zero stops the program in Debug builds).
-// `for (0..n) |_|` repeats n times; `0..n` is a range and `_` discards the index.
-// `\r` returns the cursor to column 0 and byte 8 moves it one column left, so redrawing needs
-// no terminal escape codes and works in the Windows console too.
 /// Draw the prompt and the line again from column 0, wiping what is left of a longer old line.
 fn redraw(out: *Io.Writer, prompt: []const u8, line: []const u8, old_len: usize) !void {
     try out.writeAll("\r");
@@ -137,12 +115,6 @@ fn redraw(out: *Io.Writer, prompt: []const u8, line: []const u8, old_len: usize)
     try out.flush();
 }
 
-// Zig tip: `switch (b)` on an integer lists values and ranges (`32...126`); `else` handles the rest.
-// A `switch` branch can use `continue`, `break` and `return` of the loop around it. `buf: *[N]u8` is
-// a pointer to an array of known size, and `buf[0..len]` makes a slice of its first `len` bytes.
-// `@memcpy(dest, source)` copies bytes; both slices must have the same length.
-// `in.takeByte()` fails with `error.EndOfStream` at the end of the input; `catch |e| switch (e)`
-// maps that one error to "no more input" (null) and passes every other error on.
 /// Read one line with editing: printable keys, Backspace, Right (completion), Enter. Ctrl-C drops the line (an
 /// empty line is returned), Ctrl-D or Ctrl-Z on an empty line is the end of input (null).
 /// The returned slice is part of `buf`.
@@ -232,9 +204,6 @@ fn skipEscape(in: *Io.Reader) bool {
     return false;
 }
 
-// Zig tip: a test that touches the real file system uses paths relative to the folder where
-// `zig build test` runs (code/evevm/). `std.testing.allocator` is a leak-checking allocator for
-// tests. `std.testing.io` is the `Io` value tests pass to code that reads files.
 fn testExt(_: []const u8) ?[]const u8 {
     return ".eve";
 }

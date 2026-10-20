@@ -7,14 +7,9 @@ const vm = @import("evevm").vm;
 const client = @import("evevm").client;
 const context = @import("context.zig");
 const cli = @import("cli.zig");
-// Zig tip: the shared names come from context.zig under short local names (`const Context = context.Context;`):
-// the same type, not a copy. Files of one module may import each other, also in a circle.
 const Command = context.Command;
 const prompt = context.prompt;
 
-// Zig tip: a struct can group the result of parsing. Every field has a default, so
-// `var o: Options = .{};` is the all-defaults value. `&.{}` is an empty slice literal, the
-// default of `args`.
 pub const Options = struct {
     help: bool = false,
     version: bool = false,
@@ -45,9 +40,6 @@ pub const Options = struct {
     tx_args: []const []const u8 = &.{},
 };
 
-// Zig tip: a small function with no state can be tested alone. `isPort` is true for a text of digits, which is how
-// `-loc 4195` tells a port from the next option or a file. `for (text) |c|` visits each byte; `std.ascii.isDigit` is
-// the test for one byte. An empty text is not a port.
 /// True when `text` is a port number (digits only).
 pub fn isPort(text: []const u8) bool {
     if (text.len == 0) return false;
@@ -55,28 +47,19 @@ pub fn isPort(text: []const u8) bool {
     return true;
 }
 
-// Zig tip: the value of `-s` is optional (D-188): `-s` starts the service, and the word after it is its configuration only
-// when it ends in `.cfg`. A configuration for anything else is `-e file.cfg` (`--setup file.cfg`).
+// @decision D-188
 /// True when `text` is a configuration file name (ends in `.cfg`).
 pub fn isConfig(text: []const u8) bool {
     return std.mem.endsWith(u8, text, ".cfg");
 }
 
-// Zig tip: the value of `-rem` is optional, so the parser looks at the next word: an option (starts with `-`) or a
-// script (ends in `.eve`) is not an address. `std.mem.endsWith` is a test on the end of a slice.
 /// True when `text` can be the address after `-rem`.
 pub fn isAddress(text: []const u8) bool {
     return text.len > 0 and text[0] != '-' and !std.mem.endsWith(u8, text, ".eve");
 }
 
-// Zig tip: `error{ A, B }` is a set of error names. Errors are values, not exceptions: a
-// function that can fail says so in its return type (`ParseError!Options`) and the caller must
-// deal with it. Errors cannot carry data, so the bad argument is returned through the pointer
-// parameter `bad` of parseArgs.
 pub const ParseError = error{ MissingValue, UnknownOption, BadWord, ServiceAlone, OutOfMemory };
 
-// Zig tip: `gpa.dupe(T, slice)` copies a slice into new memory, so one element can be changed without touching
-// the caller's array (`argv` is `[]const`, read only). Returning a sub-slice, `argv[1..]`, copies nothing.
 /// The first word of the command line may name a part of `eve` (D-163): `vm` (the runtime) and `cp` (the compiler)
 /// select what the options already do, `cp project` is `--project`, `ux` (the UI) is `--serve`, `db` (the database
 /// part) is the command `--db`, `tx` (the terminal IDE) is `-tx`. Gives the line the rest of `parseArgs` reads.
@@ -121,10 +104,6 @@ pub fn partWords(gpa: std.mem.Allocator, argv_in: []const []const u8) ParseError
     return try commandWord(gpa, argv);
 }
 
-// Zig tip: the loop skips the options in front of the first word: the ones that take a value (`-s file`) are skipped
-// together with it, the others alone. The first word left is a command if it names one, and then `check f.eve` is
-// read as `--check f.eve`: the same command, one-shot, with no prompt. A word that ends in `.eve` is a script and a
-// word that is no command is left alone (it is a script name or a mistake, as before).
 /// `eve check file.eve` is `eve --check file.eve`: the first word that is a command is the command.
 pub fn commandWord(gpa: std.mem.Allocator, argv: []const []const u8) ParseError![]const []const u8 {
     var i: usize = 0;
@@ -220,9 +199,7 @@ pub fn parseArgs(
             }
             if (a[1] == 'm') o.memory = line[i] else o.config = line[i];
         } else if (std.mem.eql(u8, a, "--listen") or std.mem.eql(u8, a, "--serve")) {
-            // Zig tip: `break` leaves the `for` at the first match. Without it the loop would go on comparing
-            // `argv[i + 1]` after `i` moved, and read past the end of the slice (a panic in a safe build).
-            // `--listen` (the IPC door) and `--serve` (the HTTP door) take the same words (D-169).
+            // @decision D-169
             if (std.mem.eql(u8, a, "--listen")) o.machine.listen = true else o.machine.serve = true;
             const words = [_][]const u8{ "start", "stop", "restart", "status" };
             if (i + 1 < line.len) for (words) |w| if (std.mem.eql(u8, line[i + 1], w)) {

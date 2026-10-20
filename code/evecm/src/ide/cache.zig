@@ -24,9 +24,6 @@ pub const Cache = struct {
     /// The absolute paths of the projects, the last used first (every path is owned).
     projects: std.ArrayList([]u8) = .empty,
 
-    // Zig tip: `env.get("NAME")` returns an optional string (`?[]const u8`): null when the variable
-    // does not exist. `orelse` chains pick the first variable that is set. `std.fmt.allocPrint`
-    // builds the text in memory the caller owns, so `init` hands the folder name to the struct.
     /// Make the cache; the folder is the user data folder of the system (`LOCALAPPDATA` on Windows,
     /// `XDG_DATA_HOME` or `~/.local/share` elsewhere) plus `eve/meta`.
     pub fn init(gpa: Allocator, io: Io, env: *const std.process.Environ.Map) !Cache {
@@ -43,15 +40,12 @@ pub const Cache = struct {
         return .{ .gpa = gpa, .io = io, .dir = dir };
     }
 
-    // Zig tip: `deinit` gives back what the struct owns: each path, then the list, then the folder.
     pub fn deinit(self: *Cache) void {
         for (self.projects.items) |p| self.gpa.free(p);
         self.projects.deinit(self.gpa);
         self.gpa.free(self.dir);
     }
 
-    // Zig tip: `catch return` ends the function quietly on any error: a missing or unreadable cache
-    // file is not a problem, the list is just empty. `std.mem.splitScalar` walks the lines.
     /// Read the list from the file (a missing file is an empty list).
     pub fn load(self: *Cache) void {
         if (self.dir.len == 0) return;
@@ -71,9 +65,6 @@ pub const Cache = struct {
         }
     }
 
-    // Zig tip: `std.ArrayList(u8)` used as a string builder: `appendSlice` adds text and `toOwnedSlice`
-    // hands the bytes to the caller. `defer out.deinit(gpa)` still runs after it and frees nothing
-    // extra, because `toOwnedSlice` left the list empty.
     /// Write the list to the file; creates the folder the first time.
     pub fn save(self: *Cache) !void {
         if (self.dir.len == 0) return;
@@ -89,8 +80,6 @@ pub const Cache = struct {
         try Io.Dir.cwd().writeFile(self.io, .{ .sub_path = path, .data = out.items });
     }
 
-    // Zig tip: `?[]u8` is an optional owned slice: null when the file does not exist. The caller
-    // frees the bytes. `catch return null` turns any read error into "no file".
     /// The content of a file of the cache folder, or null.
     pub fn readFile(self: *Cache, name: []const u8) ?[]u8 {
         if (self.dir.len == 0) return null;
@@ -133,8 +122,6 @@ pub const Cache = struct {
         return null;
     }
 
-    // Zig tip: `orderedRemove` returns the removed item, which the list owned, so the code frees it.
-    // `insert(gpa, 0, copy)` puts the new item first and moves the others one place on.
     /// Put `path` first in the list (adding it, or moving it when it is known) and save.
     pub fn add(self: *Cache, path: []const u8) !void {
         if (self.find(path)) |i| self.gpa.free(self.projects.orderedRemove(i));

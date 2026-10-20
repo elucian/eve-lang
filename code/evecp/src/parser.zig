@@ -30,10 +30,6 @@ const Tag = ast.Tag;
 pub const Diag = lexer.Diag;
 pub const Error = lexer.Error;
 
-// Zig tip: a `const` array of strings at file level is built by the compiler. `std.StaticStringMap`
-// is a lookup table of strings fixed at compile time: `.initComptime(.{ ... })` takes a tuple of
-// `.{ key }` entries (with `void` as value, it acts as a set), and `has(text)` is the test. No
-// allocation and no hashing at run time.
 const reserved = std.StaticStringMap(void).initComptime(.{
     .{"primary"},     .{"is"},        .{"process"},   .{"return"},    .{"end"},       .{"new"},     .{"set"},
     .{"let"},         .{"if"},        .{"else"},      .{"do"},        .{"done"},      .{"while"},   .{"loop"},
@@ -70,13 +66,6 @@ const block_end = std.StaticStringMap(void).initComptime(.{
     .{"return"}, .{"recover"}, .{"finalize"}, .{"done"}, .{"else"}, .{"then"}, .{"when"}, .{"end"}, .{"repeat"},
 });
 
-// Zig tip: this is a "recursive descent" parser: one function per grammar rule, each one consuming
-// tokens and calling the functions of the rules inside it. `p.i` is the index of the next token.
-// Operator precedence is encoded by the call chain: `orExpr` calls `xorExpr`, which calls
-// `andExpr`, ... down to `primary`; the tighter an operator binds, the deeper its function is.
-// Every function returns `Error!*const Node` (or `Error!void`) and the callers use `try`, so the
-// first syntax error unwinds the whole parse and `diag` keeps its message. Nodes are allocated
-// from `a`, an arena: nothing is freed one by one, the whole tree goes away with the arena.
 const Parser = struct {
     toks: []const Token,
     i: usize = 0,
@@ -97,55 +86,43 @@ const Parser = struct {
     /// Reading the name of an `external` routine: a reserved word such as `write` is a valid native name (D-189).
     external_name: bool = false,
 
-    // Zig tip: a function whose first parameter is the struct (`p: *Parser`) is called with dot
-    // syntax: `p.name(...)`.
     fn peek(p: *const Parser) Token {
         return p.toks[p.i];
     }
 
-    // Zig tip: `@min(a, b)` keeps an index inside the array: past the last token (always the eof
-    // token) the parser sees eof again instead of reading out of bounds.
     fn peekAt(p: *const Parser, n: usize) Token {
         return p.toks[@min(p.i + n, p.toks.len - 1)];
     }
 
-    // Zig tip: `advance` relies on the same Zig feature as `peek` above: see the tip there.
     fn advance(p: *Parser) Token {
         const t = p.toks[p.i];
         if (t.kind != .eof) p.i += 1;
         return t;
     }
 
-    // Zig tip: `std.mem.eql(u8, a, b)` compares two slices by content; `==` on slices would compare
-    // their addresses.
     fn tokIs(t: Token, kind: Kind, text: []const u8) bool {
         return t.kind == kind and std.mem.eql(u8, t.text, text);
     }
 
     const Kind = lexer.Kind;
 
-    // Zig tip: `isWord` relies on the same Zig feature as `peek` above: see the tip there.
     /// Is the next token the identifier `text` (the keywords are identifiers to the lexer)?
     fn isWord(p: *const Parser, text: []const u8) bool {
         return tokIs(p.peek(), .ident, text);
     }
 
-    // Zig tip: `isWordAt` relies on the same Zig feature as `peek` above: see the tip there.
     fn isWordAt(p: *const Parser, n: usize, text: []const u8) bool {
         return tokIs(p.peekAt(n), .ident, text);
     }
 
-    // Zig tip: `isSym` relies on the same Zig feature as `peek` above: see the tip there.
     fn isSym(p: *const Parser, text: []const u8) bool {
         return tokIs(p.peek(), .symbol, text);
     }
 
-    // Zig tip: `isSymAt` relies on the same Zig feature as `peek` above: see the tip there.
     fn isSymAt(p: *const Parser, n: usize, text: []const u8) bool {
         return tokIs(p.peekAt(n), .symbol, text);
     }
 
-    // Zig tip: `acceptWord` relies on the same Zig feature as `peek` above: see the tip there.
     /// Consume the word if it is next; tell whether it was.
     fn acceptWord(p: *Parser, text: []const u8) bool {
         if (!p.isWord(text)) return false;
@@ -153,46 +130,36 @@ const Parser = struct {
         return true;
     }
 
-    // Zig tip: `acceptSym` relies on the same Zig feature as `peek` above: see the tip there.
     fn acceptSym(p: *Parser, text: []const u8) bool {
         if (!p.isSym(text)) return false;
         _ = p.advance();
         return true;
     }
 
-    // Zig tip: `anytype` and `comptime fmt` let one `fail` take any message. `{s}` prints a
-    // string. The function returns `Error` (not `Error!void`): it always fails, so callers
-    // write `return p.fail(...)`, and the compiler accepts it wherever an error union is
-    // expected, since an error value coerces to any error union that contains it.
     fn fail(p: *Parser, comptime fmt: []const u8, args: anytype) Error {
         const t = p.peek();
         p.diag.set(t.line, t.col, fmt, args);
         return error.Syntax;
     }
 
-    // Zig tip: `failAt` relies on the same Zig feature as `peek` above: see the tip there.
     /// Like `fail`, but the error is reported at the token `t`.
     fn failAt(p: *Parser, t: Token, comptime fmt: []const u8, args: anytype) Error {
         p.diag.set(t.line, t.col, fmt, args);
         return error.Syntax;
     }
 
-    // Zig tip: `describe` relies on the same Zig feature as `peek` above: see the tip there.
     fn describe(t: Token) []const u8 {
         return if (t.kind == .eof) "end of file" else t.text;
     }
 
-    // Zig tip: `expectWord` relies on the same Zig feature as `peek` above: see the tip there.
     fn expectWord(p: *Parser, text: []const u8) Error!void {
         if (!p.acceptWord(text)) return p.fail("expected '{s}' but found '{s}'", .{ text, describe(p.peek()) });
     }
 
-    // Zig tip: `expectSym` relies on the same Zig feature as `peek` above: see the tip there.
     fn expectSym(p: *Parser, text: []const u8) Error!void {
         if (!p.acceptSym(text)) return p.fail("expected '{s}' but found '{s}'", .{ text, describe(p.peek()) });
     }
 
-    // Zig tip: `expectName` relies on the same Zig feature as `peek` above: see the tip there.
     fn expectName(p: *Parser, what: []const u8) Error!Token {
         const t = p.peek();
         if (t.kind != .ident or reserved.has(t.text)) {
@@ -210,10 +177,6 @@ const Parser = struct {
 
     // ---- node construction ------------------------------------------------------------------
 
-    // Zig tip: `a.create(Node)` allocates one `Node` and returns a pointer to it; `a.dupe(T, xs)`
-    // allocates a copy of a slice. `ptr.* = .{ ... }` fills the new node by writing through the
-    // pointer. `[]const *const Node` is "a slice of pointers to read-only nodes": the parts of a
-    // node are shared, never copied. `&.{ l, r }` is an inline array that coerces to that slice.
     fn mk(p: *Parser, tag: Tag, at: Token, text: []const u8, kids: []const *const Node) Error!*Node {
         const n = try p.a.create(Node);
         n.* = .{ .tag = tag, .line = at.line, .col = at.col, .text = text, .kids = try p.a.dupe(*const Node, kids) };
@@ -238,7 +201,6 @@ const Parser = struct {
         return n;
     }
 
-    // Zig tip: `noneNode` relies on the same Zig feature as `peek` above: see the tip there.
     fn noneNode(p: *const Parser) *const Node {
         _ = p;
         return &ast.none;
@@ -246,18 +208,12 @@ const Parser = struct {
 
     // ---- literals ---------------------------------------------------------------------------
 
-    // Zig tip: `std.fmt.parseInt(u21, hex, 16)` converts text to a number in a base; it returns an
-    // error union, so `catch` gives a fallback. `u21` is the type of a Unicode code point.
-    // `std.unicode.utf8Encode(cp, &buf)` writes the UTF-8 bytes of a code point and returns how
-    // many. `buf[0..n]` is then a slice of exactly those bytes.
     fn appendCodePoint(p: *Parser, out: *std.ArrayList(u8), cp: u21) Error!void {
         var buf: [4]u8 = undefined;
         const n = std.unicode.utf8Encode(cp, &buf) catch return p.fail("invalid Unicode code point", .{});
         try out.appendSlice(p.a, buf[0..n]);
     }
 
-    // Zig tip: a `switch` is an expression: it must cover every case, or end with `else`, and the
-    // compiler checks it.
     /// The character an escape letter stands for, or null when the letter is not a simple escape.
     fn simpleEscape(c: u8) ?u8 {
         return switch (c) {
@@ -274,8 +230,6 @@ const Parser = struct {
         };
     }
 
-    // Zig tip: `x catch |e| ...` handles the error of a call on the spot, where `try` would pass it
-    // up to the caller.
     /// `'a'`, `'\n'` or `U+0061`: the node holds the UTF-8 bytes of the symbol.
     fn charNode(p: *Parser, t: Token) Error!*Node {
         var out: std.ArrayList(u8) = .empty;
@@ -295,7 +249,6 @@ const Parser = struct {
         return p.mk(.chr, t, try out.toOwnedSlice(p.a), &.{});
     }
 
-    // Zig tip: `subExpr` relies on the same Zig feature as `charNode` above: see the tip there.
     /// Parse the text of an interpolation `\s{...}` as an expression.
     fn subExpr(p: *Parser, text: []const u8, at: Token) Error!*const Node {
         var d: Diag = .{};
@@ -321,13 +274,8 @@ const Parser = struct {
         return e;
     }
 
-    // Zig tip: a string is decoded once, here, not every time the script runs: the tree holds the
-    // final text. `std.ArrayList(u8)` is the growable byte buffer that builds it. The `while`
-    // loop walks the raw bytes by index because an escape takes several of them. `parts` collects
-    // the pieces of a string with placeholders. A string that starts with `/` is a regular
-    // expression: raw, no escapes and no placeholders, only `\"` (D-097). In any other string a
-    // `{` opens a placeholder `{name}` or `{name % format}` (D-102); `\{` and `\}` are literal
-    // braces, and a brace that opens no valid placeholder is an error.
+    // @decision D-097
+    // @decision D-102
     /// A string literal: escapes decoded, placeholders parsed. `str` when plain, `interp` otherwise.
     fn stringNode(p: *Parser, t: Token) Error!*const Node {
         if (std.mem.startsWith(u8, t.text, "\"\"\"")) return p.textLiteral(t);
@@ -395,8 +343,6 @@ const Parser = struct {
         return p.mk(.interp, t, "", parts.items);
     }
 
-    // Zig tip: a function can answer "did it apply?" with a `bool` and still change what it was
-    // given through a pointer: `out` receives the character. `&amp;`, `&lt;`, `&gt;`, `&quot;` and `&apos;` name the five marked characters.
     /// A character reference `&...;` (the text between `&` and `;`): append it and say so, or say no.
     fn reference(p: *Parser, out: *std.ArrayList(u8), name: []const u8) Error!bool {
         const names = [_]struct { []const u8, u8 }{ .{ "amp", '&' }, .{ "lt", '<' }, .{ "gt", '>' }, .{ "quot", '"' }, .{ "apos", '\'' } };
@@ -417,8 +363,6 @@ const Parser = struct {
         return false;
     }
 
-    // Zig tip: an argument of `print` is an expression, or `name: expression` (`sep: " "`). A plain
-    // `expr` is used, not `conditional`, so a trailing `if` stays the condition of the statement.
     fn printArg(p: *Parser) Error!*const Node {
         const k = try p.expr();
         if (p.isSym(":")) {
@@ -428,8 +372,6 @@ const Parser = struct {
         return k;
     }
 
-    // Zig tip: `?usize` is "an index or nothing". A function that searches returns it, and the
-    // caller unwraps with `orelse`. `depth` counts the nested braces so `\#{ {a: 1}.a }` works.
     /// Index of the `}` that closes the `{` at `raw[open]`.
     fn matchBrace(raw: []const u8, open: usize) ?usize {
         var depth: usize = 0;
@@ -455,7 +397,6 @@ const Parser = struct {
         return null;
     }
 
-    // Zig tip: `for (xs) |x| ...` walks a slice; `for (xs, 0..) |x, i|` also gives the index.
     /// Index of the `%` that starts the format of a placeholder: the first one outside brackets.
     fn formatPercent(inner: []const u8) ?usize {
         var depth: usize = 0;
@@ -482,8 +423,6 @@ const Parser = struct {
         return null;
     }
 
-    // Zig tip: `while (cond) { ... }` repeats; `while (opt) |v|` repeats as long as an optional has
-    // a value.
     /// `"""` text literal: raw, several lines; the indentation of the closing quotes is removed.
     fn textLiteral(p: *Parser, t: Token) Error!*const Node {
         var s = t.text[3 .. t.text.len - 3];
@@ -513,10 +452,6 @@ const Parser = struct {
 
     // ---- types, parameters ------------------------------------------------------------------
 
-    // Zig tip: a `while (true)` loop with `break` is the usual way to write "repeat until a
-    // condition found inside". `if (!p.acceptSym(",")) break;` reads: no comma, the list is over.
-    // `std.ArrayList(T).empty` starts an empty list; `append(allocator, x)` adds; `.items` is the
-    // slice of what it holds. `std.fmt.allocPrint(a, "...", args)` builds a new string in the arena.
     /// `Integer`, `[5]Integer`, `[]Integer`, `()Integer`, `Integer?`.
     fn typeName(p: *Parser) Error!*const Node {
         var dims: std.ArrayList(*const Node) = .empty;
@@ -587,9 +522,6 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: `@constCast` removes `const` from a pointer. The nodes are shared as `*const Node`
-    // once the tree is built, but while a parameter list is being read the parser may still give
-    // a type to the parameters that came before it: `a, b: Integer` gives `Integer` to `a` and `b`.
     /// `( [@|*]name [= value | := value] [: Type], ... )` of a function, procedure, method, constructor,
     /// process or lambda; also the result list `(@r: Type, ...)`. A type is shared by the names before it
     /// that have none (D-028). `*name` is the vararg, `@name` the input/output parameter (D-048, D-106).
@@ -620,18 +552,15 @@ const Parser = struct {
         return p.mk(.params, open, "", list.items);
     }
 
-    // Zig tip: `if (a) b else c` is an expression too. A subprogram has one parameter list (D-029) and
-    // an optional result list after `=>`. A `function` must have results and a `procedure` must not
-    // (D-100); a procedure is never deterministic, so its name does not end with `!` (D-101).
+    // @decision D-029
+    // @decision D-100
+    // @decision D-101
     /// `function|procedure|method|constructor name [(params)] [=> (results)] is block return ;`.
     fn routine(p: *Parser, tag: Tag) Error!*const Node {
         return p.routineOf(tag, false);
     }
 
-    // Zig tip: a struct field that the parser sets while it reads (`group_depth`, `in_process`) is
-    // saved in a local constant and restored by `defer`, so a nested declaration starts clean and the
-    // outer value comes back on every way out, also on an error. `partial` is true for a method of a
-    // trait or of an abstract class, whose signature ends with `;` and has no body (D-145).
+    // @decision D-145
     /// A function, procedure, method or constructor; with `partial`, a signature that may end with `;`.
     fn routineOf(p: *Parser, tag: Tag, partial: bool) Error!*const Node {
         const saved_group = p.group_depth;
@@ -653,8 +582,7 @@ const Parser = struct {
         const empty = try p.mk(.params, kw, "", &.{});
         const types = try p.typeList();
         const first = if (p.isSym("(")) try p.params() else empty;
-        // Zig tip: `return` inside a `for` leaves the whole function, not only the loop. Only a
-        // method binds the object, so `@self` in a function or a procedure is refused (D-123).
+        // @decision D-123
         if (tag == .generator) {
             // a generator has inputs only, by value (declarations.md#generators-level-5)
             for (first.kids) |q| if (q.tag == .ref_param and !std.mem.eql(u8, q.text, "self")) return p.failAt(kw, "a generator has inputs only, by value: '@{s}' is not allowed", .{q.text});
@@ -696,9 +624,6 @@ const Parser = struct {
 
     // ---- expressions ------------------------------------------------------------------------
 
-    // Zig tip: `const t = p.peek();` before building a node keeps the token of the operator for the
-    // line number. `p.mk(.bin, t, t.text, &.{ l, r })` is a binary node. The loop `while (cond) { l = ... }`
-    // rebinds `l` (a `var`) so `a - b - c` becomes `(a - b) - c`: left to right.
     fn expr(p: *Parser) Error!*const Node {
         var l = try p.orExpr();
         while (p.isSym("<+") or p.isSym("+>") or p.isSym("<-") or p.isSym("->")) {
@@ -709,7 +634,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `orExpr` relies on the same Zig feature as `routine` above: see the tip there.
     fn orExpr(p: *Parser) Error!*const Node {
         var l = try p.xorExpr();
         while (p.isWord("or")) {
@@ -719,7 +643,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `xorExpr` relies on the same Zig feature as `routine` above: see the tip there.
     fn xorExpr(p: *Parser) Error!*const Node {
         var l = try p.andExpr();
         while (p.isWord("xor")) {
@@ -729,7 +652,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `andExpr` relies on the same Zig feature as `routine` above: see the tip there.
     fn andExpr(p: *Parser) Error!*const Node {
         var l = try p.notExpr();
         while (p.isWord("and")) {
@@ -739,9 +661,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: a function may call itself: `not not x` is read by `notExpr` calling `notExpr`.
-    // Recursion is how a grammar rule that contains itself (nested parentheses, `not not`) is
-    // written; `return p.notExpr();` hands the result of the inner call straight back.
     fn notExpr(p: *Parser) Error!*const Node {
         if (p.isWord("not") and !p.isWordAt(1, "in")) {
             const t = p.advance();
@@ -750,9 +669,6 @@ const Parser = struct {
         return p.compare();
     }
 
-    // Zig tip: an optional result `?[]const u8` lets one function both test and return: `compareOp`
-    // answers "which comparison operator comes next, if any" and consumes it. `while (p.compareOp())
-    // |op|` repeats while it returns a value. `==` on integers is a plain comparison; text needs `eql`.
     /// `== <> < > <= >= =~ !~ in, not in, is, is not` (a chain is accepted, left to right).
     fn compare(p: *Parser) Error!*const Node {
         var l = try p.range();
@@ -762,7 +678,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `compareOp` relies on the same Zig feature as `formatColon` above: see the tip there.
     fn compareOp(p: *Parser) ?struct { tok: Token, text: []const u8 } {
         const ops = [_][]const u8{ "==", "<>", "<=", ">=", "<", ">", "=~" };
         const t = p.peek();
@@ -782,7 +697,6 @@ const Parser = struct {
         return null;
     }
 
-    // Zig tip: `range` relies on the same Zig feature as `routine` above: see the tip there.
     /// `a..b  a..<b  a>..b  a>..<b`
     fn range(p: *Parser) Error!*const Node {
         const l = try p.additive();
@@ -794,7 +708,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `additive` relies on the same Zig feature as `routine` above: see the tip there.
     fn additive(p: *Parser) Error!*const Node {
         var l = try p.multiplicative();
         while (p.isSym("+") or p.isSym("-") or p.isSym("||")) {
@@ -804,8 +717,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `multiplicative` relies on the same Zig feature as `routine` above: see the tip
-    // there.
     fn multiplicative(p: *Parser) Error!*const Node {
         var l = try p.power();
         while (p.isSym("*") or p.isSym("/") or p.isSym("%") or p.isSym("&&") or p.isSym("><") or
@@ -817,8 +728,7 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: the unary minus is read before the power: `-2 ^ 2` is `(-2) ^ 2`, 4 (Q-030, the
-    // grammar of spec/syntax/grammar.md). `unary` calls itself for `- - x` and falls to `postfix`.
+    // @spec spec/syntax/grammar.md
     fn unary(p: *Parser) Error!*const Node {
         if (p.isWord("await")) {
             // `await f(x)` starts an async subprogram and waits for it at once (D-143)
@@ -834,7 +744,6 @@ const Parser = struct {
         return p.postfix();
     }
 
-    // Zig tip: `power` relies on the same Zig feature as `unary` above: see the tip there.
     /// `^` goes right to left: `2 ^ 3 ^ 2` is `2 ^ (3 ^ 2)`.
     fn power(p: *Parser) Error!*const Node {
         const l = try p.unary();
@@ -845,10 +754,6 @@ const Parser = struct {
         return l;
     }
 
-    // Zig tip: `a.b`, `a[i]` and `a(x)` are "postfix" operations that can follow each other, so
-    // they are a loop that wraps the node built so far. A call `(` may follow a name, a `)` or a
-    // `]` but not a literal: `"x"(...)` is not a call, and the check also stops `print "a" (...)`
-    // from being read as a call.
     fn postfix(p: *Parser) Error!*const Node {
         const first = p.peek();
         var n = try p.primary();
@@ -900,7 +805,6 @@ const Parser = struct {
         return n;
     }
 
-    // Zig tip: `indexList` relies on the same Zig feature as `routine` above: see the tip there.
     /// The inside of `[ ... ]`: expressions, `$` for the last index, `*` for a whole dimension.
     /// Returns the kids of the index node: the indexed object first.
     fn indexList(p: *Parser, obj: *const Node) Error![]const *const Node {
@@ -916,7 +820,6 @@ const Parser = struct {
         return kids.items;
     }
 
-    // Zig tip: `item` relies on the same Zig feature as `routine` above: see the tip there.
     /// One element of a list, call or object: `expr`, `name: expr`, `x if c else y`, `@name`.
     fn item(p: *Parser) Error!*const Node {
         const k = try p.conditional();
@@ -927,7 +830,6 @@ const Parser = struct {
         return k;
     }
 
-    // Zig tip: `conditional` relies on the same Zig feature as `routine` above: see the tip there.
     fn conditional(p: *Parser) Error!*const Node {
         if (p.isSym("*") and !p.isSymAt(1, ")") and !p.isSymAt(1, ",")) { // `*list` spreads a list into the arguments
             const star = p.advance();
@@ -956,7 +858,6 @@ const Parser = struct {
         return x;
     }
 
-    // Zig tip: `items` relies on the same Zig feature as `routine` above: see the tip there.
     /// The items after an opening symbol up to `close` (the opening one is consumed here too).
     fn items(p: *Parser, close: []const u8, out: *std.ArrayList(*const Node)) Error!void {
         _ = p.advance();
@@ -969,10 +870,6 @@ const Parser = struct {
         try p.expectSym(close);
     }
 
-    // Zig tip: `group` decides, after reading the items, what the brackets mean. `(`: one item and
-    // no comma is plain grouping, otherwise a list. `[`: an array. `{`: a set, a map (the first
-    // item is `key: value` with a literal key) or an object (an unquoted name as key). `|` after the
-    // items makes a builder. `kids.items` is the slice of what was collected so far.
     /// A bracketed group: list, array, set, map, object or builder.
     fn group(p: *Parser, close: []const u8) Error!*const Node {
         const open = p.advance();
@@ -1009,8 +906,6 @@ const Parser = struct {
         return p.mk(.brace, open, kind, kids.items);
     }
 
-    // Zig tip: builtin functions start with `@`: they are the compiler's own, such as conversions
-    // (`@intCast`, `@as`) and `@min`/`@max`.
     /// Is the `(` at the cursor the start of a lambda `(params) => (expression)`?
     fn isLambda(p: *const Parser) bool {
         var depth: usize = 0;
@@ -1028,7 +923,6 @@ const Parser = struct {
         return false;
     }
 
-    // Zig tip: `primary` relies on the same Zig feature as `routine` above: see the tip there.
     fn primary(p: *Parser) Error!*const Node {
         const t = p.peek();
         switch (t.kind) {
@@ -1081,9 +975,6 @@ const Parser = struct {
 
     // ---- statements -------------------------------------------------------------------------
 
-    // Zig tip: `block_end.has(t.text)` asks a compile-time string set (see `reserved`) whether the
-    // word ends the statement list. The loop leaves with `return` (success: the caller then
-    // checks which word it is) or fails at the end of the file with a message.
     /// Statements up to a word that ends the block (`return`, `done`, `else`, ...).
     fn block(p: *Parser) Error!*const Node {
         const open = p.peek();
@@ -1097,7 +988,6 @@ const Parser = struct {
         return p.mk(.block, open, "", list.items);
     }
 
-    // Zig tip: `endSimple` relies on the same Zig feature as `routine` above: see the tip there.
     /// `[ if condition ] ;` ends every simple statement; the condition wraps the statement.
     fn endSimple(p: *Parser, stmt: *const Node) Error!*const Node {
         if (p.isWord("if")) {
@@ -1110,7 +1000,6 @@ const Parser = struct {
         return stmt;
     }
 
-    // Zig tip: `assignOp` relies on the same Zig feature as `formatColon` above: see the tip there.
     fn assignOp(p: *const Parser) ?[]const u8 {
         const ops = [_][]const u8{ ":=", "::", "+=", "-=", "*=", "/=", "%=", "^=" };
         for (ops) |op| {
@@ -1121,9 +1010,6 @@ const Parser = struct {
 
     /// `new a, b := value :Type;`, `new x = y = 1 :Integer;`, `new a :Type;`, `new p, *rest :: n;`,
     /// `new e <- list;` and the constants `set A = 1;` (D-076).
-    // Zig tip: `p.acceptSym(":=") or p.acceptSym("::")` relies on short-circuit evaluation: the
-    // second call runs only if the first returned false, and each call moves the cursor only
-    // when it matches, so the `or` reads "one of these two symbols".
     fn declaration(p: *Parser) Error!*const Node {
         const kw = p.advance(); // new or set
         const tag: Tag = if (std.mem.eql(u8, kw.text, "new")) .var_decl else .set;
@@ -1200,11 +1086,7 @@ const Parser = struct {
         return p.endSimple(decl);
     }
 
-    // Zig tip: a function can return early with `return` as soon as it knows the answer; here each
-    // `if` handles one shape of the `let` statement and leaves. In `let lst -> e;` the list is on
-    // the left and the target on the right; in `let e <- lst;` the target is on the left. For
-    // `let x +> lst;` the target is the list on the right: the node keeps source order, the
-    // interpreter knows which side is which (D-107).
+    // @decision D-107
     /// `let target modifier expression;` changes a variable (D-076); `let lst -> e;` and `let e <- lst;`
     /// capture an element and create `e` when it does not exist (D-104); `let lst -> new f;` says it.
     fn letStatement(p: *Parser) Error!*const Node {
@@ -1232,8 +1114,7 @@ const Parser = struct {
         return p.fail("expected an assignment operator after 'let' but found '{s}'", .{describe(p.peek())});
     }
 
-    // Zig tip: a loop with a label closes with `done label;` and a loop without one with `done;`
-    // (D-034). The label is kept in the text of the node so `break label` and `skip label` can find it.
+    // @decision D-034
     /// The common end of `while`, `for`: `block [else block] done [label] ;`. Appends the body, else and
     /// then blocks to `kids`; the then block is always empty, the slot stays so the tree keeps its shape.
     fn loopTail(p: *Parser, kids: *std.ArrayList(*const Node), label: []const u8) Error!void {
@@ -1247,14 +1128,11 @@ const Parser = struct {
         try p.closeLabel(label);
     }
 
-    // Zig tip: a function that only checks returns `Error!void`: nothing on success, an error to stop
-    // the parse. `p.fail` builds the message and returns the error, so `return p.fail(...)` ends the check.
     /// `then` was removed from `match` and the loops: the code goes after `done;`, in the scope of the process or job.
     fn refuseThen(p: *Parser) Error!void {
         if (p.isWord("then")) return p.fail("'then' no longer exists: write the statements after 'done;'", .{});
     }
 
-    // Zig tip: `closeLabel` checks the name after `done`: it must repeat the label of the block.
     fn closeLabel(p: *Parser, label: []const u8) Error!void {
         if (label.len > 0) {
             const name = try p.expectName("the label");
@@ -1266,8 +1144,7 @@ const Parser = struct {
         try p.expectSym(";");
     }
 
-    // Zig tip: `whileLoop`, `forLoop` and `loopBlock` are the three loops of D-074. Each one
-    // takes the label that was written before it (empty when there is none).
+    // @decision D-074
     /// `while condition do ... done [label];`
     fn whileLoop(p: *Parser, label: []const u8, header: []const *const Node) Error!*const Node {
         const t = p.advance();
@@ -1322,7 +1199,6 @@ const Parser = struct {
         return p.mk(.repeat_, t, label, kids.items);
     }
 
-    // Zig tip: `ifStatement` relies on the same Zig feature as `routine` above: see the tip there.
     fn ifStatement(p: *Parser) Error!*const Node {
         const kw = p.peek();
         try p.expectWord("if");
@@ -1345,8 +1221,6 @@ const Parser = struct {
         return p.mk(.if_, kw, "", kids.items);
     }
 
-    // Zig tip: `matchStatement` relies on the same Zig feature as `routine` above: see the tip
-    // there.
     fn matchStatement(p: *Parser, label: []const u8) Error!*const Node {
         const kw = p.peek();
         try p.expectWord("match");
@@ -1376,9 +1250,7 @@ const Parser = struct {
         return p.mk(.match_, kw, try std.fmt.allocPrint(p.a, "{s}:{s}", .{ mode, label }), kids.items);
     }
 
-    // Zig tip: `generator` and `yield` are contextual words (D-116): they are keywords only where the grammar
-    // expects them, so a variable may still be called `yield`. `isYieldStatement` looks at the token after the
-    // word: if it starts an assignment, a call or an access, the word is a name.
+    // @decision D-116
     /// Is the word under the cursor a `yield` statement (and not a variable called yield)?
     fn isYieldStatement(p: *const Parser) bool {
         const next = p.peekAt(1);
@@ -1388,16 +1260,11 @@ const Parser = struct {
         return true;
     }
 
-    // Zig tip: `isSqlFunction` relies on the same Zig feature as `isTableDecl` below: a contextual keyword is a word
-    // checked with the token after it, so `sql` stays a free name everywhere else.
     /// `sql function …` as a declaration (`sql` is a keyword only before `function`, D-116, D-166).
     fn isSqlFunction(p: *const Parser) bool {
         return p.isWord("sql") and p.isWordAt(1, "function");
     }
 
-    // Zig tip: `for (list) |q|` with an early `return` checks every element and stops at the first bad one;
-    // the error names the element. The rules of a `sql function` are about its shape, so the parser checks them
-    // where the source position is at hand, as it does for a generator.
     /// `sql function name(params) => (@r: T) is … return;`: a function that SQL can call (database.md, SQL functions).
     fn sqlFunction(p: *Parser) Error!*const Node {
         const kw = p.advance();
@@ -1414,8 +1281,6 @@ const Parser = struct {
         return r;
     }
 
-    // Zig tip: an array of string literals, `[_][]const u8{ ... }`, has its length counted by the compiler
-    // (`_`). `std.mem.trimEnd` removes the `?` of an optional type, so `Decimal?` checks as `Decimal`.
     /// A parameter or the result of a `sql function` has a type that maps to a SQL value (database.md, mapping).
     fn sqlType(p: *Parser, kw: Token, q: *const Node, what: []const u8) Error!void {
         const ty = q.ty orelse return p.failAt(kw, "the {s} '{s}' of a sql function needs a type (D-166)", .{ what, q.text });
@@ -1430,9 +1295,6 @@ const Parser = struct {
         return p.isWord("table") and p.peekAt(1).kind == .ident and p.isSymAt(2, ":");
     }
 
-    // Zig tip: a declaration with an optional body: the short form ends with `;`, the long form has `is`, a list of
-    // clauses and `end name;`. Each clause is a word and its arguments up to `;`, read by one `if` per word; the
-    // clauses become `clause` nodes, so the checker and the interpreter read the table without parsing text again.
     /// `table name: Class in "connection" [as "name"] ;` or with `is clauses end name;` (database.md, the table declaration).
     fn tableDecl(p: *Parser) Error!*const Node {
         const kw = p.advance();
@@ -1508,10 +1370,6 @@ const Parser = struct {
         return p.isWord("generator") and p.peekAt(1).kind == .ident;
     }
 
-    // Zig tip: `std.mem.eql(u8, w, "let")` is how Zig compares text. A chain of `if` with early
-    // `return` is a plain dispatch on the first word of the statement. `inline for` over a tuple
-    // of `.{ word, tag }` pairs is unrolled by the compiler, so `tag` is a comptime-known enum
-    // value, which `p.mk` needs for its `Tag` parameter.
     fn statement(p: *Parser) Error!*const Node {
         const t = p.peek();
         if (t.kind == .ident) {
@@ -1673,7 +1531,6 @@ const Parser = struct {
 
     // ---- declarations -----------------------------------------------------------------------
 
-    // Zig tip: `process` relies on the same Zig feature as `routine` above: see the tip there.
     fn process(p: *Parser) Error!*const Node {
         const kw = p.peek();
         try p.expectWord("process");
@@ -1691,9 +1548,6 @@ const Parser = struct {
         return p.mk(.process, kw, name.text, &.{ body, recover, finalize, prm, types });
     }
 
-    // Zig tip: the signature of a callback is a class with no members: `class BinEx = (p1, p2 :Integer):
-    // Integer <: Function;`. `params()` reads the parenthesized list, an optional `: Type` is the
-    // result, and the node is a `class` whose member block is empty and whose parent is `Function`.
     /// `class Name = (params) [: Type] <: Function;` (callbacks.html).
     fn functionType(p: *Parser, kw: Token, name: []const u8) Error!*const Node {
         _ = try p.params();
@@ -1704,7 +1558,6 @@ const Parser = struct {
         return p.mk(.class, kw, name, &.{ try p.mk(.block, kw, "", &.{}), try p.mk(.name, parent, parent.text, &.{}) });
     }
 
-    // Zig tip: `class` relies on the same Zig feature as `routine` above: see the tip there.
     fn class(p: *Parser) Error!*const Node {
         const kw = p.peek();
         try p.expectWord("class");
@@ -1787,17 +1640,13 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: `typeParams` relies on the same Zig feature as `importDecl` below: a loop that reads
-    // "one or more, separated by commas". Only the syntax is read: version 0.3 erases the type
-    // parameters at run time, and a constraint `<: Comparable` is documentation for now (D-145).
+    // @decision D-145
     /// `(:T)` or `(:T <: Comparable, :U)` after the name of a generic class or trait.
     fn typeParams(p: *Parser) Error!void {
         _ = try p.typeList();
     }
 
-    // Zig tip: the same text is read for a class and for a subprogram, but a subprogram keeps the result: a
-    // `params` node whose kids are `param` nodes, one for each type parameter (`text` = its name, `ty` = the
-    // constraint after `<:` or null). It goes in the second slot of the routine node, which was empty (D-148).
+    // @decision D-148
     /// The list of types of a generic subprogram or class; an empty `params` node when there is none.
     fn typeList(p: *Parser) Error!*const Node {
         const open = p.peek();
@@ -1816,9 +1665,6 @@ const Parser = struct {
         return p.mk(.params, open, "", list.items);
     }
 
-    // Zig tip: a trait is parsed into the same shape as a class (kids = [members, parent, methods...]),
-    // so the checker and the interpreter look up its methods with the code they already have for
-    // classes. Every method of a trait is public: `public` is set on each node after it is made.
     /// `trait Name is method ...; method ... is ... return; end Name;` (D-145).
     fn trait(p: *Parser) Error!*const Node {
         const kw = p.advance();
@@ -1844,8 +1690,6 @@ const Parser = struct {
         return p.mk(.trait, kw, name.text, kids.items);
     }
 
-    // Zig tip: `declarationInDriver` relies on the same Zig feature as `peek` above: see the tip
-    // there.
     fn declarationInDriver(p: *Parser) Error!*const Node {
         if (p.isWord("new") or p.isWord("set")) return p.declaration();
         if (p.isWord("class")) return p.class();
@@ -1882,10 +1726,6 @@ const Parser = struct {
         return p.fail("unexpected '{s}': an aspect or a module holds declarations; a statement goes in a process, a function, a procedure or a method (D-126)", .{describe(p.peek())});
     }
 
-    // Zig tip: a `while (true)` loop with a `break` is the way to read "one or more, separated by": the
-    // first item is read, then the loop continues while the separator `/` is found. `std.ArrayList(u8)`
-    // builds the text of the path piece by piece (see `applyStatement`). A string token carries its
-    // quotes, so `t.text[1 .. t.text.len - 1]` cuts them off.
     /// `from path use (m, m as x, m(*), *);`: the path is folder names or strings joined by `/` (modules.md).
     fn importDecl(p: *Parser) Error!*const Node {
         const kw = p.advance();
@@ -1929,7 +1769,6 @@ const Parser = struct {
         return p.mk(.import_decl, kw, path.items, picks.items);
     }
 
-    // Zig tip: `exportDecl` relies on the same Zig feature as `importDecl` above: see the tip there.
     /// `export (a, b!);`: the public members of a module (D-085).
     fn exportDecl(p: *Parser) Error!*const Node {
         const kw = p.advance();
@@ -1948,11 +1787,7 @@ const Parser = struct {
         return p.mk(.export_decl, kw, "", names.items);
     }
 
-    // Zig tip: `module` relies on the same Zig feature as `importDecl` above: see the tip there. The
-    // regions `initialize`, `recover` and `finalize` come after the declarations, in that order; a
-    // statement outside a function, a procedure, a method or a region is refused because
-    // `declarationInDriver` accepts declarations only (D-126). `@constCast` sets the managed flag on
-    // the node after it is made, as `class` does for `public`.
+    // @decision D-126
     /// `[managed|direct] module name is ... end name;` (modules.md).
     fn module(p: *Parser) Error!*const Node {
         const kw = p.peek();
@@ -1986,9 +1821,6 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: `std.ArrayList(u8)` is a growable text buffer: `appendSlice` adds a piece and `.items`
-    // is the finished slice. The path of an aspect is built here, name by name, from the tokens
-    // `folder`, `/`, `name`, so `apply tools/hello()` keeps its folder in `text`.
     /// `apply path(args);`: run an aspect. The parentheses are always written (processing.html).
     fn applyStatement(p: *Parser) Error!*const Node {
         const kw = p.advance();
@@ -2018,9 +1850,7 @@ const Parser = struct {
         return p.endSimple(node);
     }
 
-    // Zig tip: `startStatement` reads like `applyStatement` and only changes the tag; the rule
-    // "only in the do region of a parallel group" is a counter kept by the parser (`group_depth`),
-    // so the error points at the `start` itself (D-140).
+    // @decision D-140
     /// `start path(args);`: start a concurrent aspect in a parallel group.
     fn startStatement(p: *Parser) Error!*const Node {
         if (p.group_depth == 0) return p.fail("start is allowed only in the do region of a parallel group (D-140)", .{});
@@ -2029,9 +1859,6 @@ const Parser = struct {
         return n;
     }
 
-    // Zig tip: an optional part of the syntax is read with `acceptWord`, which answers whether the
-    // word was there. `on error cancel` is three words; `within` takes any expression, usually a
-    // duration literal such as `100ms`. The counter `group_depth` goes up for the `do` region only.
     /// `[label:] parallel [on error cancel] [within d] declarations do statements done [label];` (D-140).
     fn parallelBlock(p: *Parser, at: Token, label: []const u8) Error!*const Node {
         if (!p.in_process) return p.fail("parallel is allowed only in a process (D-140)", .{});
@@ -2070,17 +1897,13 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: `isWord("a") or isWord("b")` is the way to test a small set of words at the cursor. The kind word of an
-    // aspect is one of three reserved words (D-181); `aspect` alone is an exclusive aspect (D-130).
+    // @decision D-181
+    // @decision D-130
     /// Is the cursor on the start of an aspect: a kind word or `aspect`?
     fn isAspectStart(p: *Parser) bool {
         return p.isWord("exclusive") or p.isWord("concurrent") or p.isWord("primary") or p.isWord("aspect");
     }
 
-    // Zig tip: a rule can be checked after it is parsed: the aspect is read like any script with declarations, then
-    // the list of declarations is searched for its processes. `return p.fail(...)` reports at the token under the
-    // cursor, so `p.i -= 1` first moves it back onto the name after `end`. A `for` with an index (`decls.items, 0..`)
-    // walks the list and counts at once; `decls.items[i + 1 ..]` is the rest of the list after the item.
     /// `[exclusive|concurrent|primary] aspect name is … end name;`: a process `main`, the entry point, and perhaps
     /// private processes (D-179). Without a kind word the aspect is exclusive (D-130).
     fn aspect(p: *Parser) Error!*const Node {
@@ -2117,8 +1940,7 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: a scan over the rest of the tokens: `p.toks[p.i..]` is the slice from the cursor. An aspect is a word
-    // written at column 1, so one found after other declarations makes the file an Eve macro (D-152).
+    // @decision D-152
     /// Does the file hold a top-level aspect after other declarations?
     fn looksLikeMacro(p: *Parser) bool {
         for (p.toks[p.i..]) |t| {
@@ -2129,11 +1951,6 @@ const Parser = struct {
         return false;
     }
 
-    // Zig tip: `first` is the node the caller already read (an aspect), or null. The declarations are sorted into
-    // three lists, then one node is built from the primary aspect: its kids are the shared declarations, the
-    // declarations of the primary aspect itself and the other aspects, so the checker and the interpreter see an
-    // aspect whose scope is the scope shared by the whole file. `@constCast` sets the flag after the nodes are made,
-    // as the parser does elsewhere.
     /// An Eve macro (D-152): shared declarations and aspects in one file, exactly one of them primary (D-180).
     fn macro(p: *Parser, first: ?*const Node) Error!*const Node {
         var shared: std.ArrayList(*const Node) = .empty;
@@ -2175,9 +1992,7 @@ const Parser = struct {
         return node;
     }
 
-    // Zig tip: `script` relies on the same Zig feature as `routine` above: see the tip there. A file is an aspect, a
-    // module or a macro; anything else, such as a statement at the top, is refused with a message that says what a file
-    // holds (D-179).
+    // @decision D-179
     fn script(p: *Parser) Error!*const Node {
         var result: *const Node = undefined;
         if (p.isAspectStart()) {
@@ -2195,10 +2010,6 @@ const Parser = struct {
     }
 };
 
-// Zig tip: `pub fn` makes a function visible to other files. The caller passes an arena (see
-// `std.heap.ArenaAllocator`): the tokens and every node are allocated from it and freed together
-// when the caller drops the arena, which is why the nodes can point at each other freely and
-// at the source text (tokens are views into `src`, so `src` must outlive the tree).
 /// Parse `src` into a tree. On a syntax error returns `error.Syntax` and fills `diag`.
 pub fn parse(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error!*const Node {
     return parseFile(arena, src, diag, "");
@@ -2230,9 +2041,6 @@ pub fn parseSyntax(arena: std.mem.Allocator, src: []const u8, diag: *Diag) Error
     return try p.script();
 }
 
-// Zig tip: `std.heap.ArenaAllocator.init(gpa)` makes an arena on top of another allocator;
-// `defer arena.deinit()` frees every allocation at once. `check` parses only to learn whether
-// the script is correct, then drops the tree.
 /// Check the script `src`. On a syntax error returns `error.Syntax` and fills `diag`.
 pub fn check(gpa: std.mem.Allocator, src: []const u8, diag: *Diag) Error!void {
     var arena: std.heap.ArenaAllocator = .init(gpa);
@@ -2240,8 +2048,6 @@ pub fn check(gpa: std.mem.Allocator, src: []const u8, diag: *Diag) Error!void {
     _ = try parse(arena.allocator(), src, diag);
 }
 
-// Zig tip: `expectError` checks that a call fails with that exact error; after it the test reads
-// the `Diag` to check the message and the position.
 test "a minimal primary aspect parses" {
     var d: Diag = .{};
     try check(std.testing.allocator,
@@ -2255,8 +2061,6 @@ test "a minimal primary aspect parses" {
     , &d);
 }
 
-// Zig tip: a `test` block runs under `zig build test`; `try std.testing.expect...` fails it when the
-// value is not the expected one.
 test "errors are reported with a position" {
     var d: Diag = .{};
     try std.testing.expectError(error.Syntax, check(std.testing.allocator,
@@ -2273,9 +2077,7 @@ test "errors are reported with a position" {
     try std.testing.expectEqualStrings("'end b' does not match 'aspect a'", d.message());
 }
 
-// Zig tip: `a primary aspect with expressions parses` relies on the same Zig feature as `errors are
-// reported with a position` above: see the tip there. A script that starts with `#!` or with a statement is no
-// longer a script (D-179): the second `expectError` shows it.
+// @decision D-179
 test "a primary aspect with expressions parses, and a free statement does not" {
     var d: Diag = .{};
     try check(std.testing.allocator,
@@ -2291,8 +2093,6 @@ test "a primary aspect with expressions parses, and a free statement does not" {
     try std.testing.expectError(error.Syntax, check(std.testing.allocator, "print \"Hello\";", &d));
 }
 
-// Zig tip: a table of scripts that must be rejected, checked in a loop: `for (bad) |src| { ... }`.
-// `expectError` fails the test if the call succeeds, so each entry proves the parser says no.
 test "wrong scripts are rejected" {
     const bad = [_][]const u8{
         "let := 1;",
@@ -2311,10 +2111,10 @@ test "wrong scripts are rejected" {
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
 }
 
-// Zig tip: one test can hold the good and the bad cases of a rule. The first `try check(...)` must
-// succeed (an error would fail the test through `try`); the list of bad scripts must all fail with
-// `error.Syntax`. Here: an aspect has a process named main and may have private ones, the three kind words
-// are accepted and the default is exclusive (D-090, D-130, D-179, D-181).
+// @decision D-090
+// @decision D-130
+// @decision D-179
+// @decision D-181
 test "an aspect and an apply parse, and the aspect rules hold" {
     var d: Diag = .{};
     try check(std.testing.allocator, "exclusive aspect a is process main(x: Integer, @y: Integer) is let y := x; return; end a;", &d);
@@ -2332,9 +2132,7 @@ test "an aspect and an apply parse, and the aspect rules hold" {
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
 }
 
-// Zig tip: a module is parsed like an aspect whose body has only declarations and regions: the test
-// feeds one with an import, an export, a private variable and the three regions, then checks that a free
-// statement and a `process` are refused (D-126). `check` is the helper of the tests above: see the tip there.
+// @decision D-126
 test "a module parses: imports, exports and regions; a free statement is refused" {
     var d: Diag = .{};
     try check(std.testing.allocator, "managed module m is from lib use (a, b as c, d(*)); export (f, g!); " ++
@@ -2348,10 +2146,6 @@ test "a module parses: imports, exports and regions; a free statement is refused
     for (bad) |src| try std.testing.expectError(error.Syntax, check(std.testing.allocator, src, &d));
 }
 
-// Zig tip: `Atomic(:Integer)` is read as the type `Integer` with the flag `public` set (the parser's way to
-// say "atomic"), and a class with no shape is `class Name <: Parent(:T);`. The test parses a script that uses
-// both and looks at the node of the declaration: `kids[0].kids[0]` is the first variable of a `new`.
-// `check` is the helper of the tests above: see the tip there.
 test "Atomic(:T) is a type hint and a class may have no shape" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

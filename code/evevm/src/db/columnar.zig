@@ -8,21 +8,15 @@
 const std = @import("std");
 const sqlite = @import("sqlite.zig");
 
-// Zig tip: an `enum` lists the types of the columns; `date` is a number of days since 1970-01-01 and `timestamp` a number of
-// seconds since 1970-01-01 00:00:00 (UTC); both are kept in the integer array of the column, and `boolean` is 0 or 1 there.
 /// The type of a column.
 pub const Kind = enum { integer, real, boolean, date, timestamp, text };
 
-// Zig tip: a `union(enum)` holds one of several shapes, and `switch` must handle each. Each column keeps only the array it
-// needs. `std.ArrayList(T)` is unmanaged in Zig 0.16: the allocator is passed to each call that grows or frees it.
 const Data = union(enum) {
     ints: std.ArrayList(i64),
     reals: std.ArrayList(f64),
     text: struct { offs: std.ArrayList(u32), bytes: std.ArrayList(u8) },
 };
 
-// Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default value
-// may be left out when a value is made with `.{ ... }`.
 /// One column: a name, a type, the values and the bitmap of the cells that are not NULL.
 pub const Column = struct {
     name: []u8,
@@ -32,14 +26,11 @@ pub const Column = struct {
     valid: std.ArrayList(u64) = .empty,
     len: usize = 0,
 
-    // Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to
-    // the caller; `f() catch …` handles it in place.
     fn setValid(self: *Column, gpa: std.mem.Allocator, on: bool) !void {
         if (self.len % 64 == 0) try self.valid.append(gpa, 0);
         if (on) self.valid.items[self.len / 64] |= @as(u64, 1) << @intCast(self.len % 64);
     }
 
-    // Zig tip: `isValid` relies on the same Zig feature as `Column` above: see the tip there.
     /// Is the cell `row` a value (not NULL)?
     pub fn isValid(self: *const Column, row: usize) bool {
         return self.valid.items[row / 64] >> @intCast(row % 64) & 1 == 1;
@@ -49,20 +40,15 @@ pub const Column = struct {
 /// A comparison for `filterInt`.
 pub const Cmp = enum { eq, ne, lt, le, gt, ge };
 
-// Zig tip: `Table` relies on the same Zig feature as `Column` above: see the tip there.
 pub const Table = struct {
     gpa: std.mem.Allocator,
     cols: std.ArrayList(Column) = .empty,
     rows: usize = 0,
 
-    // Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-    // arguments, so a call always passes every parameter.
     pub fn init(gpa: std.mem.Allocator) Table {
         return .{ .gpa = gpa };
     }
 
-    // Zig tip: `switch` must cover every value of what it tests (or have `else`); the compiler checks it, so a new case can
-    // not be forgotten. A prong can be an expression that gives the result.
     pub fn deinit(self: *Table) void {
         for (self.cols.items) |*c| {
             self.gpa.free(c.name);
@@ -79,7 +65,6 @@ pub const Table = struct {
         self.cols.deinit(self.gpa);
     }
 
-    // Zig tip: `addColumn` relies on the same Zig feature as `Table` above: see the tip there.
     /// Add a column (before the first row); the answer is its number.
     pub fn addColumn(self: *Table, name: []const u8, kind: Kind) !usize {
         const copy = try self.gpa.dupe(u8, name);
@@ -94,7 +79,6 @@ pub const Table = struct {
         return self.cols.items.len - 1;
     }
 
-    // Zig tip: `appendInt` relies on the same Zig feature as `setValid` above: see the tip there.
     pub fn appendInt(self: *Table, col: usize, v: i64) !void {
         const c = &self.cols.items[col];
         try c.data.ints.append(self.gpa, v);
@@ -102,7 +86,6 @@ pub const Table = struct {
         c.len += 1;
     }
 
-    // Zig tip: `appendReal` relies on the same Zig feature as `setValid` above: see the tip there.
     pub fn appendReal(self: *Table, col: usize, v: f64) !void {
         const c = &self.cols.items[col];
         try c.data.reals.append(self.gpa, v);
@@ -110,7 +93,6 @@ pub const Table = struct {
         c.len += 1;
     }
 
-    // Zig tip: `appendText` relies on the same Zig feature as `setValid` above: see the tip there.
     pub fn appendText(self: *Table, col: usize, v: []const u8) !void {
         const c = &self.cols.items[col];
         try c.data.text.bytes.appendSlice(self.gpa, v);
@@ -119,8 +101,6 @@ pub const Table = struct {
         c.len += 1;
     }
 
-    // Zig tip: a NULL still takes a place in the array (a zero, or an empty text) so every column has the same length and a
-    // row number means the same cell in all of them; only the bit of the bitmap says "no value".
     pub fn appendNull(self: *Table, col: usize) !void {
         const c = &self.cols.items[col];
         switch (c.data) {
@@ -132,40 +112,31 @@ pub const Table = struct {
         c.len += 1;
     }
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     /// Close the row: every column has one more cell.
     pub fn endRow(self: *Table) void {
         self.rows += 1;
         for (self.cols.items) |c| std.debug.assert(c.len == self.rows);
     }
 
-    // Zig tip: `int` relies on the same Zig feature as `endRow` above: see the tip there.
     pub fn int(self: *const Table, col: usize, row: usize) i64 {
         return self.cols.items[col].data.ints.items[row];
     }
 
-    // Zig tip: `real` relies on the same Zig feature as `endRow` above: see the tip there.
     pub fn real(self: *const Table, col: usize, row: usize) f64 {
         return self.cols.items[col].data.reals.items[row];
     }
 
-    // Zig tip: `text` relies on the same Zig feature as `endRow` above: see the tip there.
     pub fn text(self: *const Table, col: usize, row: usize) []const u8 {
         const t = self.cols.items[col].data.text;
         return t.bytes.items[t.offs.items[row]..t.offs.items[row + 1]];
     }
 
-    // Zig tip: `isNull` relies on the same Zig feature as `endRow` above: see the tip there.
     pub fn isNull(self: *const Table, col: usize, row: usize) bool {
         return !self.cols.items[col].isValid(row);
     }
 
     // ---------------------------------------------------------------- column kernels
 
-    // Zig tip: a kernel works on one column at a time: a plain loop over a slice, with no call per cell, which is what the
-    // optimizer turns into vector instructions. `+%` is addition that wraps around instead of stopping the program at an
-    // overflow; a sum that must not wrap is the business of the caller.
     /// The sum of the integer cells that are not NULL.
     pub fn sumInt(self: *const Table, col: usize) i64 {
         const c = &self.cols.items[col];
@@ -176,7 +147,6 @@ pub const Table = struct {
         return s;
     }
 
-    // Zig tip: `sumReal` relies on the same Zig feature as `sumInt` above: see the tip there.
     /// The sum of the real cells that are not NULL.
     pub fn sumReal(self: *const Table, col: usize) f64 {
         const c = &self.cols.items[col];
@@ -187,7 +157,6 @@ pub const Table = struct {
         return s;
     }
 
-    // Zig tip: `countValid` relies on the same Zig feature as `endRow` above: see the tip there.
     /// How many cells of the column are not NULL.
     pub fn countValid(self: *const Table, col: usize) usize {
         const c = &self.cols.items[col];
@@ -196,8 +165,6 @@ pub const Table = struct {
         return n;
     }
 
-    // Zig tip: the result type `?T` is an optional: a value or `null`. The caller must unwrap it (`if (x) |v|`, `orelse`),
-    // so a missing value can never be used by accident.
     /// The smallest and the largest integer cell that is not NULL, or null when the column has none.
     pub fn minMaxInt(self: *const Table, col: usize) ?[2]i64 {
         const c = &self.cols.items[col];
@@ -213,7 +180,6 @@ pub const Table = struct {
         return if (any) .{ lo, hi } else null;
     }
 
-    // Zig tip: `minMaxReal` relies on the same Zig feature as `minMaxInt` above: see the tip there.
     /// The smallest and the largest real cell that is not NULL, or null when the column has none.
     pub fn minMaxReal(self: *const Table, col: usize) ?[2]f64 {
         const c = &self.cols.items[col];
@@ -229,7 +195,6 @@ pub const Table = struct {
         return if (any) .{ lo, hi } else null;
     }
 
-    // Zig tip: `filterReal` relies on the same Zig feature as `setValid` above: see the tip there.
     /// The rows where the real cell compares to `v` (NULL cells never match), in order.
     pub fn filterReal(self: *const Table, col: usize, cmp: Cmp, v: f64, out: *std.ArrayList(u32)) !void {
         const c = &self.cols.items[col];
@@ -247,7 +212,6 @@ pub const Table = struct {
         }
     }
 
-    // Zig tip: `filterText` relies on the same Zig feature as `setValid` above: see the tip there.
     /// The rows where the text cell is equal (`.eq`) or not equal (`.ne`) to `v`, or compares to it byte by byte.
     pub fn filterText(self: *const Table, col: usize, cmp: Cmp, v: []const u8, out: *std.ArrayList(u32)) !void {
         const c = &self.cols.items[col];
@@ -266,9 +230,6 @@ pub const Table = struct {
         }
     }
 
-    // Zig tip: the result of a filter is a selection vector, the numbers of the rows that matched; `take` then builds a table
-    // from them. A NULL never matches. `inline` for the comparison is not needed: the `switch` is outside the loop, so each
-    // loop is a plain comparison.
     /// The rows where the integer cell compares to `v` (NULL cells never match), in order.
     pub fn filterInt(self: *const Table, col: usize, cmp: Cmp, v: i64, out: *std.ArrayList(u32)) !void {
         const c = &self.cols.items[col];
@@ -283,7 +244,6 @@ pub const Table = struct {
         }
     }
 
-    // Zig tip: `take` relies on the same Zig feature as `Table` above: see the tip there.
     /// A new table with the rows of the selection, in its order (the columns are copied one at a time).
     pub fn take(self: *const Table, sel: []const u32) !Table {
         var out = Table.init(self.gpa);
@@ -308,9 +268,6 @@ pub const Table = struct {
 
     // ---------------------------------------------------------------- the two engines meet
 
-    // Zig tip: `toSqlite` is the explicit load: it makes the table in the database and fills it in one transaction, with one
-    // prepared `insert` bound again for every row, which is the fast way to put many rows in SQLite. A date is stored as the
-    // text `YYYY-MM-DD`, a timestamp as `YYYY-MM-DD HH:MM:SS` and a boolean as 0 or 1.
     /// Load the table into `db` as the table `name` (made new); the rows are inserted in one transaction.
     pub fn toSqlite(self: *const Table, db: *sqlite.Db, name: []const u8) !void {
         var arena = std.heap.ArenaAllocator.init(self.gpa);
@@ -374,10 +331,6 @@ pub const Table = struct {
         try db.exec("release eve_load");
     }
 
-    // Zig tip: the type of a column is the type of the first value that is not NULL (SQLite types the value, not the
-    // column); a column of only NULLs is text. A later value of another kind is kept as text of the same column only when the
-    // column is text; otherwise it is stored as NULL, because a column has one type. `columnText` is valid until the next
-    // `step`, so the text is copied into the column at once.
     /// Store the answer of a query in a new table (explicit): the rows of `sql` become columns.
     pub fn fromQuery(gpa: std.mem.Allocator, db: *sqlite.Db, sql: [:0]const u8) !Table {
         var st = try db.prepare(sql);
@@ -420,7 +373,6 @@ pub const Table = struct {
     }
 };
 
-// Zig tip: `quote` relies on the same Zig feature as `setValid` above: see the tip there.
 fn quote(w: *std.ArrayList(u8), a: std.mem.Allocator, name: []const u8) !void {
     try w.append(a, '"');
     for (name) |ch| {
@@ -430,8 +382,6 @@ fn quote(w: *std.ArrayList(u8), a: std.mem.Allocator, name: []const u8) !void {
     try w.append(a, '"');
 }
 
-// Zig tip: the calendar conversions use the "days from civil" algorithm of Howard Hinnant: the year is cut at March, so the
-// leap day is the last day of the year and every month length is a plain formula. All the arithmetic is on integers.
 /// The number of days since 1970-01-01 of a calendar date.
 pub fn daysFromCivil(year: i64, month: u8, day: u8) i64 {
     const y = if (month <= 2) year - 1 else year;
@@ -443,7 +393,6 @@ pub fn daysFromCivil(year: i64, month: u8, day: u8) i64 {
     return era * 146097 + doe - 719468;
 }
 
-// Zig tip: `civilFromDays` relies on the same Zig feature as `Column` above: see the tip there.
 /// The calendar date of a number of days since 1970-01-01.
 pub fn civilFromDays(days: i64) struct { year: i64, month: u8, day: u8 } {
     const z = days + 719468;
@@ -458,15 +407,12 @@ pub fn civilFromDays(days: i64) struct { year: i64, month: u8, day: u8 } {
     return .{ .year = y, .month = m, .day = d };
 }
 
-// Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an error
-// that nobody handles.
 /// `YYYY-MM-DD` for a number of days (the text is written in `buf`).
 pub fn formatDate(buf: *[16]u8, days: i64) []const u8 {
     const c = civilFromDays(days);
     return std.fmt.bufPrint(buf, "{d:0>4}-{d:0>2}-{d:0>2}", .{ @as(u64, @intCast(@max(c.year, 0))), c.month, c.day }) catch "";
 }
 
-// Zig tip: `formatTimestamp` relies on the same Zig feature as `formatDate` above: see the tip there.
 /// `YYYY-MM-DD HH:MM:SS` for a number of seconds.
 pub fn formatTimestamp(buf: *[24]u8, secs: i64) []const u8 {
     const days = @divFloor(secs, 86400);
@@ -475,7 +421,6 @@ pub fn formatTimestamp(buf: *[24]u8, secs: i64) []const u8 {
     return std.fmt.bufPrint(buf, "{d:0>4}-{d:0>2}-{d:0>2} {d:0>2}:{d:0>2}:{d:0>2}", .{ @as(u64, @intCast(@max(c.year, 0))), c.month, c.day, rem / 3600, rem % 3600 / 60, rem % 60 }) catch "";
 }
 
-// Zig tip: `parseDate` relies on the same Zig feature as `minMaxInt` above: see the tip there.
 /// The days of `YYYY-MM-DD` (nothing after the date is read), or null when the text is not a date.
 pub fn parseDate(s: []const u8) ?i64 {
     if (s.len < 10 or s[4] != '-' or s[7] != '-') return null;
@@ -486,8 +431,6 @@ pub fn parseDate(s: []const u8) ?i64 {
     return daysFromCivil(y, m, d);
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "a column keeps NULL apart from zero and the kernels skip it" {
     var t = Table.init(std.testing.allocator);
     defer t.deinit();
@@ -513,8 +456,6 @@ test "a column keeps NULL apart from zero and the kernels skip it" {
     try std.testing.expectEqualStrings("washer", small.text(b, 1));
 }
 
-// Zig tip: test "real and text kernels skip NULL" relies on the same Zig feature as test "a column keeps NULL apart from
-// zero and the kernels skip it" above: see the tip there.
 test "real and text kernels skip NULL" {
     var t = Table.init(std.testing.allocator);
     defer t.deinit();
@@ -535,8 +476,6 @@ test "real and text kernels skip NULL" {
     try std.testing.expectEqualSlices(u32, &.{ 0, 2 }, sel.items);
 }
 
-// Zig tip: test "a table goes to SQLite and comes back as columns" relies on the same Zig feature as test "a column keeps
-// NULL apart from zero and the kernels skip it" above: see the tip there.
 test "a table goes to SQLite and comes back as columns" {
     var t = Table.init(std.testing.allocator);
     defer t.deinit();
@@ -562,8 +501,6 @@ test "a table goes to SQLite and comes back as columns" {
     try std.testing.expectEqualStrings("2026-10-16", back.text(2, 1));
 }
 
-// Zig tip: test "dates round trip through days" relies on the same Zig feature as test "a column keeps NULL apart from zero
-// and the kernels skip it" above: see the tip there.
 test "dates round trip through days" {
     const d = daysFromCivil(2024, 2, 29);
     var b: [16]u8 = undefined;

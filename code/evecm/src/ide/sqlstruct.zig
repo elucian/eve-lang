@@ -14,8 +14,6 @@ pub const max_default = 39;
 /// The types in the list of the dialog.
 pub const types = [_][]const u8{ "INTEGER", "BIGINT", "REAL", "TEXT", "BLOB", "NUMERIC", "BOOLEAN", "DATE", "TIMESTAMP", "DECIMAL(12,2)" };
 
-// Zig tip: the texts live in fixed arrays inside the struct, zero padded, so a column is plain data that can be copied and
-// compared with `std.meta.eql`; no memory has to be freed. `std.mem.sliceTo(&buf, 0)` reads the text up to the first zero.
 /// One column of the table.
 pub const Col = struct {
     name: [48]u8 = @as([48]u8, @splat(0)),
@@ -61,9 +59,6 @@ pub fn check(c: *const Col) ?[]const u8 {
     return null;
 }
 
-// Zig tip: `pragma table_info` gives one line for each column: cid, name, type, notnull, dflt_value, pk (tab separated, with
-// a header line that is skipped). Each field is cut with `splitScalar`; a missing field is read as empty. The columns are
-// appended to the list the caller gives.
 /// Read the columns from the text of `pragma table_info` (tab separated, with a header line).
 pub fn parseTableInfo(gpa: std.mem.Allocator, tsv: []const u8, out: *std.ArrayList(Col)) !void {
     var lines = std.mem.splitScalar(u8, tsv, '\n');
@@ -94,12 +89,6 @@ fn quoteIdent(w: *std.ArrayList(u8), gpa: std.mem.Allocator, name: []const u8) !
     try w.append(gpa, '"');
 }
 
-// Zig tip: the script is built piece by piece in an `ArrayList(u8)`. One column that is the key and an INTEGER stays
-// `INTEGER PRIMARY KEY` (the row number of SQLite); other keys become a `primary key (...)` line. The columns copied from
-// the old table are those with a `src`; the rest are filled by their default or NULL.
-// Zig tip: the definition of the columns is written once, here, for the script that makes a new table and for the one that
-// rebuilds an old table. `w` is the text being built; `pk_count` says if the key is one column (written beside the column) or
-// several (written as a `primary key (...)` at the end).
 fn writeColumns(w: *std.ArrayList(u8), gpa: std.mem.Allocator, cols: []const Col, pk_count: usize) !void {
     for (cols, 0..) |c, i| {
         if (i > 0) try w.appendSlice(gpa, ", ");
@@ -189,8 +178,6 @@ pub fn buildScript(gpa: std.mem.Allocator, table: []const u8, cols: []const Col,
     return w.toOwnedSlice(gpa);
 }
 
-// Zig tip: the test reads a `table_info` text, renames one column, adds one, and checks the script; `defer free` gives the
-// script back. `std.mem.indexOf(...) != null` tests that a piece of text is in the script.
 test "table info and the rebuild script" {
     const gpa = std.testing.allocator;
     var cols: std.ArrayList(Col) = .empty;
@@ -213,8 +200,6 @@ test "table info and the rebuild script" {
     try std.testing.expect(std.mem.indexOf(u8, script, "rename to \"items\"") != null);
 }
 
-// Zig tip: a new table has nothing to copy, so its script is only the `create table`; the test checks the text for a table
-// with a one-column key and a second column that cannot be NULL.
 test "the script of a new table" {
     const gpa = std.testing.allocator;
     var id: Col = .{ .pk = true, .notnull = true };

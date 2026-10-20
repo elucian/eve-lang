@@ -6,10 +6,6 @@
 const std = @import("std");
 const Alignment = std.mem.Alignment;
 
-// Zig tip: a struct that hands out memory keeps it in "chunks" taken from a parent allocator. A
-// chunk is a slice of bytes; `used` says how much of the last chunk is taken. Asking for more than
-// a chunk holds starts a new, bigger chunk. Nothing is given back to the parent until `deinit`, so
-// a loop that runs a million statements reuses the same few chunks.
 /// A stack-like bump allocator with marks.
 pub const Scratch = struct {
     parent: std.mem.Allocator,
@@ -22,26 +18,20 @@ pub const Scratch = struct {
 
     const first_size = 64 * 1024;
 
-    // Zig tip: a mark is a small value struct: going back to it is two assignments. Marks must be
-    // released in the reverse order they were taken, like the statements that take them.
     /// A position in the scratch memory.
     pub const Mark = struct { cur: usize, used: usize };
 
-    // Zig tip: `mark` relies on the same Zig feature as `Mark` above: see the tip there.
     /// The current position: give it to `release` to free what comes after.
     pub fn mark(s: *const Scratch) Mark {
         return .{ .cur = s.cur, .used = s.used };
     }
 
-    // Zig tip: releasing does not free chunks: the next allocations reuse them. Only the position moves.
     /// Free everything allocated since `m`.
     pub fn release(s: *Scratch, m: Mark) void {
         s.cur = m.cur;
         s.used = m.used;
     }
 
-    // Zig tip: `deinit` gives every chunk back to the parent allocator; `defer s.deinit()` pairs it
-    // with the creation of the scratch.
     /// Give all the memory back.
     pub fn deinit(s: *Scratch) void {
         for (s.chunks.items) |c| s.parent.free(c);
@@ -49,9 +39,6 @@ pub const Scratch = struct {
         s.* = .{ .parent = s.parent };
     }
 
-    // Zig tip: `std.mem.Allocator` is an interface: a pointer to the object (`ptr`, of type `*anyopaque`,
-    // "a pointer to anything") and a table of functions (`vtable`). Code that takes an `Allocator` does
-    // not know it talks to a Scratch: it only calls `alloc`, `resize`, `remap` and `free` through the table.
     /// This scratch as a `std.mem.Allocator`.
     pub fn allocator(s: *Scratch) std.mem.Allocator {
         return .{ .ptr = s, .vtable = &vtable };
@@ -59,9 +46,6 @@ pub const Scratch = struct {
 
     const vtable: std.mem.Allocator.VTable = .{ .alloc = alloc, .resize = resize, .remap = remap, .free = free };
 
-    // Zig tip: `alignment.forward(address)` rounds an address up to the next multiple of the alignment;
-    // `@intFromPtr` gives the address of a pointer as a number, `@ptrFromInt` the reverse. The function
-    // returns `?[*]u8`: a many-item pointer, or null when the parent allocator has no memory left.
     fn alloc(ctx: *anyopaque, len: usize, alignment: Alignment, ret_addr: usize) ?[*]u8 {
         _ = ret_addr;
         const s: *Scratch = @ptrCast(@alignCast(ctx));
@@ -94,7 +78,6 @@ pub const Scratch = struct {
         }
     }
 
-    // Zig tip: `notePeak` relies on the same Zig feature as `mark` above: see the tip there.
     /// Remember the largest amount of scratch memory in use.
     fn notePeak(s: *Scratch) void {
         var total: usize = s.used;
@@ -102,9 +85,6 @@ pub const Scratch = struct {
         if (total > s.peak) s.peak = total;
     }
 
-    // Zig tip: a buffer can grow in place only when it is the last thing allocated in the current chunk
-    // (its end is the end of the used part) and the chunk has room. Otherwise `resize` answers false and
-    // the caller (an `ArrayList`) allocates a new buffer and copies.
     fn resize(ctx: *anyopaque, memory: []u8, alignment: Alignment, new_len: usize, ret_addr: usize) bool {
         _ = alignment;
         _ = ret_addr;
@@ -121,13 +101,10 @@ pub const Scratch = struct {
         return true;
     }
 
-    // Zig tip: `remap` may move the memory; answering null tells the caller to allocate and copy itself.
     fn remap(ctx: *anyopaque, memory: []u8, alignment: Alignment, new_len: usize, ret_addr: usize) ?[*]u8 {
         return if (resize(ctx, memory, alignment, new_len, ret_addr)) memory.ptr else null;
     }
 
-    // Zig tip: freeing the last allocation gives its bytes back at once; any other free does nothing
-    // until the statement releases its mark.
     fn free(ctx: *anyopaque, memory: []u8, alignment: Alignment, ret_addr: usize) void {
         _ = alignment;
         _ = ret_addr;
@@ -140,8 +117,6 @@ pub const Scratch = struct {
     }
 };
 
-// Zig tip: the test allocator checks that every byte taken from it is given back: `deinit` must free
-// the chunks, or the test fails with a leak report.
 test "scratch memory is freed back to a mark" {
     var s: Scratch = .{ .parent = std.testing.allocator };
     defer s.deinit();

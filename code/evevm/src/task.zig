@@ -9,21 +9,13 @@
 const std = @import("std");
 const Io = std.Io;
 
-// Zig tip: an `enum` lists the states a task can be in. `wait` says what a task waits for when it has
-// given the baton away, so the scheduler can tell whether it may go on: a channel waiter is tried again
-// only when something changed since it blocked (the `progress` counter), a sleeper only when its time
-// has come.
 /// What a task waits for.
 pub const Wait = enum { none, send, receive, join, sleep, gen, io };
 
-// Zig tip: a second enum for the reason a task must stop: `cancel` comes from `on error cancel`,
-// `timeout` from the `within` deadline of its group (D-140).
+// @decision D-140
 /// Why a task is asked to stop.
 pub const Cancel = enum { none, cancel, timeout };
 
-// Zig tip: fields with a default (`= .none`) need not be given when the struct is made: `.{ .index = 3 }`
-// fills the rest. `?std.Thread` is "a thread, or nothing": the root task is the thread that runs the
-// root aspect, it was not spawned and is never joined.
 /// One task: its place in the order of creation and what it is doing.
 pub const Task = struct {
     index: usize,
@@ -44,10 +36,6 @@ pub const Task = struct {
     thread: ?std.Thread = null,
 };
 
-// Zig tip: `Io.Mutex` and `Io.Condition` are the locks of Zig 0.16: each call takes the `Io` handle,
-// which knows how to put a thread to sleep. A thread waits on the condition, inside the mutex, until
-// `current` is itself; the thread that gives the baton sets `current` and wakes everybody with
-// `broadcast`. The running thread holds no lock while it executes the script.
 /// The baton and the list of every task of the run.
 pub const Sched = struct {
     io: Io,
@@ -61,9 +49,6 @@ pub const Sched = struct {
     /// a task ended.
     progress: u64 = 0,
 
-    // Zig tip: `a.create(T)` allocates one value and returns a pointer that stays valid; the scheduler
-    // and its tasks live in the arena of the run and are freed with it. The thread that calls `init` is
-    // the root task, index 0, and holds the baton from the start.
     /// A scheduler whose root task is the calling thread.
     pub fn init(a: std.mem.Allocator, io: Io) error{OutOfMemory}!*Sched {
         const first = try a.create(Task);
@@ -79,8 +64,6 @@ pub const Sched = struct {
         return s.tasks.items[0];
     }
 
-    // Zig tip: a new task is only a record; its thread is spawned by the interpreter, and the thread
-    // first waits for the baton (`waitTurn`). Only the baton holder calls `add`, so the list needs no lock.
     /// Register a new task, last in the order of creation.
     pub fn add(s: *Sched) error{OutOfMemory}!*Task {
         const t = try s.a.create(Task);
@@ -89,15 +72,11 @@ pub const Sched = struct {
         return t;
     }
 
-    // Zig tip: `Io.Clock.awake` is a monotonic clock: it never goes back, so it is the right one to
-    // measure a deadline. `toMilliseconds` turns the timestamp into an `i64`.
     /// The time now, in milliseconds of the monotonic clock.
     pub fn now(s: *Sched) i64 {
         return Io.Timestamp.now(s.io, .awake).toMilliseconds();
     }
 
-    // Zig tip: `switch` on an enum must name every value or have `else`; each prong here answers
-    // whether the task may run now.
     /// May `t` take the baton now?
     fn runnable(s: *Sched, t: *Task, now_ms: i64) bool {
         if (t.done) return false;
@@ -113,8 +92,6 @@ pub const Sched = struct {
         };
     }
 
-    // Zig tip: `(i + k) % n` walks a list in a circle: the search starts after `me` and comes back to
-    // `me` last, so the tasks take turns in the order of creation.
     /// The next task that may run, starting after `me`; `me` itself last.
     fn pick(s: *Sched, me: *Task) ?*Task {
         const n = s.tasks.items.len;
@@ -127,8 +104,6 @@ pub const Sched = struct {
         return null;
     }
 
-    // Zig tip: a `bool` parameter selects a variant of the search: with `channels` false the time-outs
-    // of the channel waits (`$timeout`) are left out, so the scheduler can see that only they remain.
     /// Does any task wait for a helper thread?
     fn ioPending(s: *Sched) bool {
         for (s.tasks.items) |t| if (!t.done and t.wait == .io) return true;
@@ -162,9 +137,6 @@ pub const Sched = struct {
         return best;
     }
 
-    // Zig tip: `lockUncancelable` and `waitUncancelable` are the forms that never fail: the scheduler
-    // has no way to report a cancelation of the thread itself, so it does not ask for one. The loop
-    // `while (s.current != me)` protects against a spurious wake-up: a thread may wake without being chosen.
     /// Give the baton to `next` and sleep until it comes back to `me`.
     fn handoff(s: *Sched, me: *Task, next: *Task) void {
         s.mutex.lockUncancelable(s.io);
@@ -181,10 +153,7 @@ pub const Sched = struct {
         s.mutex.unlock(s.io);
     }
 
-    // Zig tip: when no task may run, either one is asleep (the thread sleeps until the earliest timer,
-    // with `Io.sleep`, and looks again) or every unfinished task waits on a channel or on a `done`: a
-    // deadlock. Then each channel waiter gets the flag `deadlock`, which makes it runnable, and raises
-    // DeadlockError when it gets the baton (D-141).
+    // @decision D-141
     /// The running task `me` has set its `wait`: give the baton to the next runnable task and return
     /// when `me` may go on (or must react to a cancel or a deadlock).
     pub fn yield(s: *Sched, me: *Task) void {
@@ -234,10 +203,6 @@ pub const Sched = struct {
         }
     }
 
-    // Zig tip: a generator is a coroutine made of a task: the consumer gives the baton to the generator and
-    // sleeps until the generator gives it back, at the next `yield` or at its end. Both sides are marked
-    // `.gen` while they sleep, so the scheduler never picks one of them by itself (`runnable` says false); this is
-    // what keeps the body of a generator from running ahead of the requests of its caller.
     /// The task `me` asks the generator task `gen` for the next value and waits for it.
     pub fn resumeGen(s: *Sched, me: *Task, gen: *Task) void {
         me.wait = .gen;
@@ -264,8 +229,6 @@ pub const Sched = struct {
         s.mutex.unlock(s.io);
     }
 
-    // Zig tip: the thread of a finished task gives the baton away and does not wait for it: it ends
-    // right after, and the parent joins it at `done`. `progress += 1` wakes the parent waiting on `done`.
     /// The task `me` has ended: mark it and give the baton to the next runnable task.
     pub fn finish(s: *Sched, me: *Task) void {
         me.done = true;

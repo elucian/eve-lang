@@ -40,10 +40,6 @@ pub fn recordClass(it: Host, targs: []const *const Node, what: []const u8) Signa
 pub const isOptional = ast.isOptional;
 pub const baseType = ast.baseType;
 
-// Zig tip: `catch |e| return it.failWith(..., .{@errorName(e)})` is the usual way to report a Zig error
-// as an Eve one. `dupeZ` copies a slice and adds the zero byte that the C library wants (`[:0]u8`).
-// A connection name is opened once per run: the same name gives the same database, with the same transaction,
-// whether it is reached by `database.connect` or by a `table` (database.md, sessions).
 /// Open the SQLite file that `eve.cfg` declares for `name` (`database "cache" = "sqlite://db/cache.db"`), once.
 /// Returns the place of the database in the list of the run. In production the schema version is checked.
 pub fn openConnection(it: Host, name: []const u8) Signal!usize {
@@ -72,10 +68,6 @@ pub fn openConnection(it: Host, name: []const u8) Signal!usize {
     return idx;
 }
 
-// Zig tip: in production the VM trusts the file `db/mappings.json` (database.md, mapping validation): for each
-// connection it records the schema version the code was validated against. The version of a SQLite database is its
-// `user_version`. A difference stops the program with a MappingError (code 54, exit code 4) before a row is read or
-// written. A project without the file, or without an entry for the connection, is not checked.
 fn checkMapping(it: Host, name: []const u8, db: *sqlite.Db) Signal!void {
     const io = it.io() orelse return;
     const text = Io.Dir.cwd().readFileAlloc(io, "db/mappings.json", it.temp(), .limited(1 << 20)) catch return;
@@ -147,8 +139,6 @@ pub fn enlist(it: Host, idx: usize, db: *sqlite.Db) Signal!void {
     b.tx.items[idx] = true;
 }
 
-// Zig tip: `catch {}` drops an error on purpose; a failed `commit` here has nowhere to go (the job
-// already ended), and a failed `rollback` means the connection is gone, which rolls back anyway.
 /// At `done`: commit every transaction the job began on SQLite, or roll it back when the job failed.
 pub fn finishTransactions(it: Host, ok: bool) void {
     const b = state(it);
@@ -181,10 +171,6 @@ pub fn bindAll(it: Host, db: *sqlite.Db, st: *sqlite.Stmt, params: []const Value
     }
 }
 
-// Zig tip: `defer st.finalize()` releases the compiled statement however the function ends (an error
-// included). The loop `while (try st.step())` runs once for each row of the result.
-// Zig tip: the value of one column of the current row, as the member `m` wants it: a NULL is `null` only for an optional
-// member (`ConvertError` otherwise), a Decimal or an Instant is read from its text, a Logic from 0 and 1.
 /// The value of column `col` of the current row of `st`, for the member `m` of the class `class_name`.
 pub fn columnValue(it: Host, st: *sqlite.Stmt, col: u16, m: *const Node, class_name: []const u8) Signal!Value {
     return switch (st.columnKind(col)) {
@@ -237,8 +223,6 @@ pub fn runStatement(it: Host, db: *sqlite.Db, sql: []const u8, params: []const V
     return out;
 }
 
-// Zig tip: an error set value can be returned like any value: `stepFailed` gives back the `Signal` that the
-// caller returns (`return stepFailed(...)`), so the three ways a statement can fail are decided in one place.
 /// A statement stopped: by a `sql function` (the signal it ended with, or `$err_sql`), or by the database.
 fn stepFailed(it: Host, db: *sqlite.Db, sql: []const u8) Signal {
     const b = state(it);
@@ -255,9 +239,6 @@ fn stepFailed(it: Host, db: *sqlite.Db, sql: []const u8) Signal {
 
 // ---- sql function: Eve functions that SQL calls (database.md#sql-functions, D-166) -----------------------
 
-// Zig tip: SQLite keeps the pointer to a `SqlFn` for as long as the connection lives, so the struct is made with
-// the long-lived allocator `it.arena()` and never moves: a pointer into an `ArrayList` of structs would move when the
-// list grows, which is why the list holds pointers (`*SqlFn`).
 /// A `sql function` of the program: the function value, the interpreter that declared it and its name in SQL.
 pub const SqlFn = struct {
     it: Host,
@@ -265,8 +246,6 @@ pub const SqlFn = struct {
     name: [:0]const u8,
 };
 
-// Zig tip: `Heap.retain` counts one more holder of the function, so it outlives the scope that declared it (an
-// aspect that ends): SQLite may still call it from a later statement.
 /// Keep a `sql function` and register it on every open connection; `openConnection` registers it on the next ones.
 pub fn registerSqlFunction(it: Host, f: *value.Func) Signal!void {
     const b = state(it);
@@ -277,9 +256,6 @@ pub fn registerSqlFunction(it: Host, f: *value.Func) Signal!void {
     for (b.dbs.items) |db| if (db.handle != null) try addSqlFunction(it, db, sf);
 }
 
-// Zig tip: `@intCast` converts an integer to the type the result needs (`u8` here) and checks in a safe build that the
-// value fits; a function has far fewer than 256 parameters. `catch return ...` turns the error of the binding into a
-// `DatabaseError` of Eve.
 /// Register one `sql function` on one connection.
 fn addSqlFunction(it: Host, db: *sqlite.Db, sf: *SqlFn) Signal!void {
     const n: u8 = @intCast(sf.func.node.kids[0].kids.len);
@@ -287,9 +263,6 @@ fn addSqlFunction(it: Host, db: *sqlite.Db, sf: *SqlFn) Signal!void {
         return it.failWith(err_io, "DatabaseError: cannot add the sql function {s}: {s}", .{ sf.name, db.errorMessage() });
 }
 
-// Zig tip: a function with `callconv(.c)` can not return a Zig error: C knows none. So the work is done by
-// `sqlRun`, which may fail, and the callback turns a failure into `resultError` and remembers it in the
-// interpreter, where `stepFailed` finds it when SQLite gives the statement back.
 /// SQLite calls this for each call of a `sql function` in a statement.
 fn sqlCallback(ctx: ?*sqlite.CallHandle, argc: c_int, argv: [*c]?*sqlite.ArgHandle) callconv(.c) void {
     const call = sqlite.Call{ .handle = ctx };
@@ -308,8 +281,6 @@ fn sqlCallback(ctx: ?*sqlite.CallHandle, argc: c_int, argv: [*c]?*sqlite.ArgHand
     };
 }
 
-// Zig tip: `for (prms, argv, 0..) |q, raw, i|` walks two slices of the same length and a counter at once; Zig
-// checks that the lengths match (SQLite passes exactly the number of arguments the function was registered with).
 /// Convert the arguments by the types of the parameters, run the function, and give its result to SQL.
 fn sqlRun(it: Host, sf: *SqlFn, call: sqlite.Call, argv: []const ?*sqlite.ArgHandle) Signal!void {
     const eql = std.mem.eql;
@@ -366,8 +337,6 @@ fn sqlRun(it: Host, sf: *SqlFn, call: sqlite.Call, argv: []const ?*sqlite.ArgHan
     }
 }
 
-// Zig tip: `sqlMismatch` relies on the same Zig feature as `stepFailed`: it returns the `Signal` that its caller
-// returns. `catch return error.OutOfMemory` keeps the one error that `allocPrint` can give.
 /// A SQL value that does not fit the type of a parameter: the call fails with `$err_sql`.
 fn sqlMismatch(it: Host, sf: *SqlFn, q: *const Node, kind: []const u8) Signal {
     const ty = if (q.ty) |t| t.text else "String";
@@ -399,8 +368,7 @@ pub fn connectionCall(it: Host, conn: *Object, name: []const u8, args: []const *
         db.exec(try it.temp().dupeSentinel(u8, sql, 0)) catch return it.failWith(err_io, "DatabaseError: {s}: {s}", .{ db.errorMessage(), first });
         return .nil;
     }
-    // Zig tip: `import(path, table)` is the call form of `eve db import` (D-184): the file is decoded into a columnar table and
-    // loaded as the new table `table` in one transaction, so a bad file leaves nothing behind. The answer is the number of rows.
+    // @decision D-184
     if (eql(u8, name, "import")) {
         if (args.len != 2) return it.fail("import needs a file path and a table name", .{});
         const table = try it.text(try it.eval(args[1]));

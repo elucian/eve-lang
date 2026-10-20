@@ -4,12 +4,8 @@
 //! the end of the line, `(** ... **)` and `/* ... */` run to their closing marker (no nesting).
 const std = @import("std");
 
-// Zig tip: an `enum` is a closed list of names. `switch` on an enum must cover every name (or have
-// an `else`), so adding a name later makes the compiler show every `switch` to update.
 pub const Kind = enum { ident, number, string, char, symbol, eof };
 
-// Zig tip: `text` is a view into the script's own bytes, not a copy, so a token costs no
-// allocation. `u32` is a 32-bit unsigned integer, plenty for a line number.
 pub const Token = struct {
     kind: Kind,
     text: []const u8,
@@ -18,10 +14,6 @@ pub const Token = struct {
     col: u32,
 };
 
-// Zig tip: an error in Zig is only a name; it cannot carry a message or a position. The usual
-// answer is an out parameter: the failing function fills a `Diag` that the caller passes in, and
-// returns `error.Syntax` to say "look at the Diag". `std.fmt.bufPrint` formats into a fixed
-// buffer, so reporting an error never allocates (and cannot fail for lack of memory).
 /// Where and why a script is wrong. The lexer and the parser both fill it.
 pub const Diag = struct {
     line: u32 = 0,
@@ -29,9 +21,6 @@ pub const Diag = struct {
     buf: [160]u8 = undefined,
     len: usize = 0,
 
-    // Zig tip: `comptime fmt: []const u8, args: anytype` is how a function takes a format string
-    // and a tuple of values, like `print`: the compiler checks them against each other.
-    // `catch @as([]u8, &d.buf)` keeps the text cut when it is too long (error.NoSpaceLeft).
     pub fn set(d: *Diag, line: u32, col: u32, comptime fmt: []const u8, args: anytype) void {
         d.line = line;
         d.col = col;
@@ -53,10 +42,6 @@ fn isIdentChar(c: u8) bool {
     return std.ascii.isAlphanumeric(c) or c == '_';
 }
 
-// Zig tip: a struct with fields and functions is Zig's "class". A function whose first parameter
-// is the struct (`lx: *Lexer`) is called as a method: `lx.next()`. `*const Lexer` promises not
-// to change it. `src[i]` is bounds-checked: reading past the end stops the program in Debug,
-// which is why `at` returns 0 instead of reading outside the text.
 const Lexer = struct {
     src: []const u8,
     pos: usize = 0,
@@ -70,8 +55,6 @@ const Lexer = struct {
         return if (i < lx.src.len) lx.src[i] else 0;
     }
 
-    // Zig tip: `@intCast` converts between integer types (here `usize` to `u32`) and, in Debug,
-    // stops the program if the value does not fit.
     fn col(lx: *const Lexer) u32 {
         return @intCast(lx.pos - lx.line_start + 1);
     }
@@ -80,9 +63,6 @@ const Lexer = struct {
         while (lx.pos < lx.src.len and lx.src[lx.pos] != '\n') lx.pos += 1;
     }
 
-    // Zig tip: a function that returns `Error!void` can fail with `return error.Syntax`; the
-    // caller passes the failure on with `try`. The `while` loop here ends with `else return`:
-    // a chain of `if ... else if` where the last `else` leaves the function.
     /// Skip blanks and comments. An unterminated block comment is the only thing that can fail.
     fn skipBlanks(lx: *Lexer) Error!void {
         while (lx.pos < lx.src.len) {
@@ -105,9 +85,6 @@ const Lexer = struct {
         }
     }
 
-    // Zig tip: `std.mem.indexOf(u8, haystack, needle)` returns `?usize`: the position or null.
-    // `orelse { ... }` runs a block when it is null; the block must leave the function.
-    // The lines inside the comment are counted so later positions stay right.
     fn skipBlock(lx: *Lexer, close: []const u8, what: []const u8) Error!void {
         const start_line = lx.line;
         const start_col = lx.col();
@@ -128,16 +105,11 @@ const Lexer = struct {
         return .{ .kind = kind, .text = lx.src[start..lx.pos], .line = line, .col = column };
     }
 
-    // Zig tip: a `bool` function can be used directly as a loop or `if` condition. The digit
-    // separator `_` is not accepted in a number (Q-013, D-095), so `1_000` lexes as the number
-    // `1` followed by the name `_000`, which the parser then refuses.
+    // @decision D-095
     fn digits(lx: *Lexer) void {
         while (std.ascii.isDigit(lx.at(0))) lx.pos += 1;
     }
 
-    // Zig tip: a number is lexed by looking at the next bytes without consuming them (`at(1)`).
-    // `1..5` must lex as `1`, `..`, `5`, so a `.` belongs to the number only when a digit follows.
-    // `std.ascii.isAlphanumeric` accepts the hex digits of `0xFF` and the `0b101` marker alike.
     fn number(lx: *Lexer) void {
         if (lx.at(0) == '0' and (lx.at(1) == 'x' or lx.at(1) == 'b')) {
             lx.pos += 2;
@@ -173,10 +145,6 @@ const Lexer = struct {
         }
     }
 
-    // Zig tip: `"""` opens a text literal: raw, several lines, closed by the next `"""`. The
-    // ordinary string ends at its closing quote, skips the byte after a backslash (so `\"`
-    // does not end it) and may not contain a line break. `interpolation` escapes such as `\#{x}`
-    // need no special care here: the backslash skips the `#`, the rest is plain text.
     fn string(lx: *Lexer, line: u32, column: u32) Error!void {
         if (lx.at(1) == '"' and lx.at(2) == '"') {
             const end = std.mem.indexOf(u8, lx.src[lx.pos + 3 ..], "\"\"\"") orelse {
@@ -234,19 +202,11 @@ const Lexer = struct {
         }
     }
 
-    // Zig tip: a table of constant strings, longest first, is the simplest "longest match" lexer:
-    // `for` tries each entry with `startsWith` and the first hit wins, so `>..<` is tried before
-    // `>..` and `..`. `inline`-free: the table is an ordinary array evaluated at run time.
     const operators = [_][]const u8{
         ">..<", "..<", ">..", ":=", "::", "+=", "-=", "*=", "/=", "%=", "^=", "==", "<>", "<=", ">=",
         "=>",   "<:",  "<+",  "+>", "+-", "<-", "->", "=~", "..", "||", "&&", "<<", ">>", "><",
     };
 
-    // Zig tip: `std.ascii.isDigit` and friends test one byte. `'a'` in single quotes is a byte
-    // value (`u8`), so it can be compared and used in ranges, unlike a string. An identifier
-    // may start with `$` (`$error`); a lone `$` is the last-index symbol. `U+0061` is a symbol
-    // literal written with its code point. `return lx.token(...)` ends the function with the
-    // token; `continue`-free style: each `if` returns.
     fn next(lx: *Lexer) Error!Token {
         try lx.skipBlanks();
         const start = lx.pos;
@@ -298,11 +258,7 @@ const Lexer = struct {
     }
 };
 
-// Zig tip: the caller owns what an allocating function returns: `toOwnedSlice` hands the list's
-// memory over as a plain slice, and the caller frees it with `gpa.free(tokens)`. `errdefer` is
-// like `defer` but runs only when the function returns an error, so a failure half way does not
-// leak the list. `std.mem.startsWith(u8, text, prefix)` tests the first bytes: a file that starts
-// with `#!` is refused before any token is read (D-179).
+// @decision D-179
 /// All the tokens of `src`, ending with one `.eof`. On a syntax error `diag` tells where.
 pub fn tokenize(gpa: std.mem.Allocator, src: []const u8, diag: *Diag) Error![]Token {
     if (std.mem.startsWith(u8, src, "#!")) {
@@ -320,9 +276,6 @@ pub fn tokenize(gpa: std.mem.Allocator, src: []const u8, diag: *Diag) Error![]To
     return list.toOwnedSlice(gpa);
 }
 
-// Zig tip: a multi-line string literal (`\\` lines) holds a whole script inside a test.
-// `defer gpa.free(toks)` pairs the release with the line that took the memory; the testing
-// allocator fails the test if it is forgotten.
 test "comments are skipped and positions are kept" {
     const gpa = std.testing.allocator;
     var d: Diag = .{};
@@ -343,7 +296,6 @@ test "comments are skipped and positions are kept" {
     try std.testing.expectEqual(Kind.eof, toks[5].kind);
 }
 
-// Zig tip: `expectError` proves that a call fails with the named error; `d.message()` is the text the compiler prints.
 test "a #! line is refused" {
     var d: Diag = .{};
     try std.testing.expectError(error.Syntax, tokenize(std.testing.allocator, "#!/usr/bin/env eve\nprint 1;", &d));

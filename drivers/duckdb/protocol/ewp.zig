@@ -12,8 +12,6 @@ pub const magic = "EWPD";
 /// The largest frame, in bytes after the length field.
 pub const max_frame: u32 = 16 << 20;
 
-// Zig tip: an `enum(u8)` gives each frame type its byte; the `_` at the end makes it non-exhaustive, so a byte that no
-// frame uses can be held in the enum and answered with a `ProtocolError` instead of being undefined behaviour.
 /// The type byte of a frame (README.md section 5.3).
 pub const Type = enum(u8) {
     hello = 0x01,
@@ -51,8 +49,6 @@ pub const Type = enum(u8) {
 
 pub const Error = error{ BadFrame, FrameTooLarge, Short, BadValue } || std.mem.Allocator.Error || Io.Reader.Error || Io.Writer.Error;
 
-// Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default value
-// may be left out when a value is made with `.{ ... }`.
 /// One frame as read: the type, the stream number and the payload (owned by the allocator that read it).
 pub const Frame = struct {
     kind: Type,
@@ -60,8 +56,6 @@ pub const Frame = struct {
     payload: []u8,
 };
 
-// Zig tip: a value is a tagged union, one shape for each tag of section 5.2. A slice inside it (`string`, `bytes`) borrows
-// the bytes of the frame, so a value read from a frame is valid as long as the frame is.
 /// A value of the protocol.
 pub const Value = union(enum) {
     null,
@@ -77,58 +71,44 @@ pub const Value = union(enum) {
     uuid: [16]u8,
 };
 
-// Zig tip: `Builder` collects the payload of a frame in a growing list. Every method appends and returns nothing; the
-// allocator is stored once, so the calls stay short. `buf.items` is the finished payload.
 /// Builds the payload of a frame.
 pub const Builder = struct {
     gpa: std.mem.Allocator,
     buf: std.ArrayList(u8) = .empty,
 
-    // Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-    // arguments, so a call always passes every parameter.
     pub fn init(gpa: std.mem.Allocator) Builder {
         return .{ .gpa = gpa };
     }
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     pub fn deinit(self: *Builder) void {
         self.buf.deinit(self.gpa);
     }
 
-    // Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to
-    // the caller; `f() catch …` handles it in place.
     pub fn u8_(self: *Builder, v: u8) !void {
         try self.buf.append(self.gpa, v);
     }
 
-    // Zig tip: `u16_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u16_(self: *Builder, v: u16) !void {
         try self.buf.appendSlice(self.gpa, &std.mem.toBytes(std.mem.nativeToLittle(u16, v)));
     }
 
-    // Zig tip: `u32_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u32_(self: *Builder, v: u32) !void {
         try self.buf.appendSlice(self.gpa, &std.mem.toBytes(std.mem.nativeToLittle(u32, v)));
     }
 
-    // Zig tip: `u64_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u64_(self: *Builder, v: u64) !void {
         try self.buf.appendSlice(self.gpa, &std.mem.toBytes(std.mem.nativeToLittle(u64, v)));
     }
 
-    // Zig tip: `i64_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn i64_(self: *Builder, v: i64) !void {
         try self.u64_(@bitCast(v));
     }
 
-    // Zig tip: `string` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn string(self: *Builder, s: []const u8) !void {
         try self.u32_(@intCast(s.len));
         try self.buf.appendSlice(self.gpa, s);
     }
 
-    // Zig tip: `value` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn value(self: *Builder, v: Value) !void {
         switch (v) {
             .null => try self.u8_(0),
@@ -176,15 +156,11 @@ pub const Builder = struct {
     }
 };
 
-// Zig tip: `Cursor` reads a payload from the front. Each read checks that the bytes are there and answers `error.Short`
-// when they are not, so a frame that lies about a length can never read past its end. The slices it answers point into
-// the payload, nothing is copied.
 /// Reads the payload of a frame.
 pub const Cursor = struct {
     buf: []const u8,
     pos: usize = 0,
 
-    // Zig tip: `take` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn take(self: *Cursor, n: usize) Error![]const u8 {
         if (self.buf.len - self.pos < n) return error.Short;
         const s = self.buf[self.pos..][0..n];
@@ -192,38 +168,31 @@ pub const Cursor = struct {
         return s;
     }
 
-    // Zig tip: `u8_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u8_(self: *Cursor) Error!u8 {
         return (try self.take(1))[0];
     }
 
-    // Zig tip: `u16_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u16_(self: *Cursor) Error!u16 {
         return std.mem.readInt(u16, (try self.take(2))[0..2], .little);
     }
 
-    // Zig tip: `u32_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u32_(self: *Cursor) Error!u32 {
         return std.mem.readInt(u32, (try self.take(4))[0..4], .little);
     }
 
-    // Zig tip: `u64_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn u64_(self: *Cursor) Error!u64 {
         return std.mem.readInt(u64, (try self.take(8))[0..8], .little);
     }
 
-    // Zig tip: `i64_` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn i64_(self: *Cursor) Error!i64 {
         return @bitCast(try self.u64_());
     }
 
-    // Zig tip: `string` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn string(self: *Cursor) Error![]const u8 {
         const n = try self.u32_();
         return self.take(n);
     }
 
-    // Zig tip: `value` relies on the same Zig feature as `u8_` above: see the tip there.
     pub fn value(self: *Cursor) Error!Value {
         return switch (try self.u8_()) {
             0 => .null,
@@ -241,15 +210,11 @@ pub const Cursor = struct {
         };
     }
 
-    // Zig tip: `done` relies on the same Zig feature as `deinit` above: see the tip there.
     pub fn done(self: *const Cursor) bool {
         return self.pos == self.buf.len;
     }
 };
 
-// Zig tip: `readSliceAll` fills a buffer completely or fails; the length is checked against the limit *before* memory is
-// asked for, so a client cannot make the server allocate 4 GiB with four bytes. The frame header is 5 bytes after the
-// length: the type and the stream number.
 /// Read one frame; the payload is allocated with `gpa` (free it with `freeFrame`).
 pub fn readFrame(r: *Io.Reader, gpa: std.mem.Allocator) Error!Frame {
     var head: [4]u8 = undefined;
@@ -265,12 +230,10 @@ pub fn readFrame(r: *Io.Reader, gpa: std.mem.Allocator) Error!Frame {
     return .{ .kind = @enumFromInt(rest[0]), .stream = std.mem.readInt(u32, rest[1..5], .little), .payload = payload };
 }
 
-// Zig tip: `freeFrame` relies on the same Zig feature as `init` above: see the tip there.
 pub fn freeFrame(gpa: std.mem.Allocator, f: Frame) void {
     gpa.free(f.payload);
 }
 
-// Zig tip: `writeFrame` relies on the same Zig feature as `u8_` above: see the tip there.
 /// Write one frame and flush it.
 pub fn writeFrame(w: *Io.Writer, kind: Type, stream: u32, payload: []const u8) Error!void {
     if (payload.len + 5 > max_frame) return error.FrameTooLarge;
@@ -283,8 +246,6 @@ pub fn writeFrame(w: *Io.Writer, kind: Type, stream: u32, payload: []const u8) E
     try w.flush();
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "values round trip through the builder and the cursor" {
     const gpa = std.testing.allocator;
     var b = Builder.init(gpa);
@@ -318,8 +279,6 @@ test "values round trip through the builder and the cursor" {
     try std.testing.expect(c.done());
 }
 
-// Zig tip: test "a frame is written and read back, also when it arrives in pieces" relies on the same Zig feature as test
-// "values round trip through the builder and the cursor" above: see the tip there.
 test "a frame is written and read back, also when it arrives in pieces" {
     const gpa = std.testing.allocator;
     var out: [64]u8 = undefined;
@@ -335,8 +294,6 @@ test "a frame is written and read back, also when it arrives in pieces" {
     try std.testing.expectEqualStrings("select 1", f.payload);
 }
 
-// Zig tip: test "a frame that is too large or too short is refused before memory is asked for" relies on the same Zig
-// feature as test "values round trip through the builder and the cursor" above: see the tip there.
 test "a frame that is too large or too short is refused before memory is asked for" {
     const gpa = std.testing.allocator;
     var big: [4]u8 = undefined;
@@ -349,8 +306,6 @@ test "a frame that is too large or too short is refused before memory is asked f
     try std.testing.expectError(error.BadFrame, readFrame(&r2, gpa));
 }
 
-// Zig tip: test "a cursor never reads past the end" relies on the same Zig feature as test "values round trip through the
-// builder and the cursor" above: see the tip there.
 test "a cursor never reads past the end" {
     var c: Cursor = .{ .buf = &.{ 5, 0, 0, 0, 'a' } };
     try std.testing.expectError(error.Short, c.string());

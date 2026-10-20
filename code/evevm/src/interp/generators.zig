@@ -2,9 +2,6 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
-// Zig tip: interp.zig imports this file and this file imports interp.zig back. Zig allows such a cycle
-// between files of one module: declarations are resolved lazily, when they are used, not in the order
-// of the imports. `../` names the parent folder; a module may import any file below its root folder.
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const task = interp.task;
@@ -21,10 +18,6 @@ const GenState = interp.GenState;
 
 // ---- the update block (database.md) ---------------------------------------------------------------
 
-// Zig tip: `update c do … done;` runs its block in a scope that binds each field of the record to a variable
-// with the current value; an assignment to such a name goes to the field of the record (`assignTo`). The old
-// block is saved and put back with `defer`, so blocks nest and a field name always means the field of the
-// innermost block. At `done` the method `validate` of the record runs, with all the fields changed together.
 /// `update record do … done;`: change several fields of one record without repeating its name.
 pub fn updateStmt(it: *Interp, n: *const Node) Signal!void {
     const rec = try it.eval(n.kids[0]);
@@ -50,10 +43,6 @@ pub fn updateStmt(it: *Interp, n: *const Node) Signal!void {
 
 // ---- generators (spec/syntax/declarations.md#generators-level-5) ---------------------------------
 
-// Zig tip: a call of a generator makes an object of the core class `Generator`; the object has two fields
-// that the program reads, `done` and `value`, and one hidden, `handle`, the place of its `GenState` in the
-// list of the root aspect's interpreter. Nothing runs yet: the thread starts at the first `next()`. The arguments
-// are copied (inputs are by value) and the heap stops freeing while tasks live, as for `spawn`.
 /// `count_to(5)`: the generator object. The body begins at the first request for a value.
 pub fn makeGenerator(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {
     const s = try it.ensureSched();
@@ -88,9 +77,6 @@ pub fn makeGenerator(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Sig
     return .{ .object = obj };
 }
 
-// Zig tip: the body of a generator thread. It waits for the baton like every task, runs the routine, records
-// how it ended and gives the baton back to its caller; after `finishGen` it touches nothing shared.
-// `error.Cancel` is how `close()` unwinds the body: the `defer` statements of the body still run.
 /// The thread of a generator.
 pub fn genMain(gs: *GenState) void {
     const c = gs.child;
@@ -181,8 +167,6 @@ pub fn generatorCall(it: *Interp, g: *Object, name: []const u8, args: []const *c
     return it.fail("a Generator has no method '{s}'", .{name});
 }
 
-// Zig tip: `defer` runs when the function ends by any way, so a `break`, a `raise` or an error in the body of
-// the loop closes the generator; the check `!gs.finished` avoids closing twice.
 /// `for x in generator do … done`: take the values one by one; leaving the loop closes the generator.
 pub fn forGenerator(it: *Interp, n: *const Node, g: *Object) Signal!void {
     const gs = it.base().gens.items[@intCast(Interp.intOf(Interp.fieldOf(g, "handle").?))];

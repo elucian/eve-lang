@@ -19,61 +19,47 @@ pub const Auth = enum { trust, password, md5 };
 
 // ---------------------------------------------------------------------------------------------------------------- messages
 
-// Zig tip: a PostgreSQL message is one type byte, a 4-byte length (counting itself, big endian) and the body. `Out` builds the
-// bytes of many messages in one list and sends them with one write, so an answer to a query is one network call. `begin`
-// opens a message and remembers where its length goes; `end` writes the length once the body is known.
 const Out = struct {
     gpa: std.mem.Allocator,
     buf: std.ArrayList(u8) = .empty,
     at: usize = 0,
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     fn deinit(self: *Out) void {
         self.buf.deinit(self.gpa);
     }
 
-    // Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to
-    // the caller; `f() catch …` handles it in place.
     fn begin(self: *Out, kind: u8) !void {
         try self.buf.append(self.gpa, kind);
         self.at = self.buf.items.len;
         try self.buf.appendNTimes(self.gpa, 0, 4);
     }
 
-    // Zig tip: `end` relies on the same Zig feature as `Out` above: see the tip there.
     fn end(self: *Out) void {
         const len: u32 = @intCast(self.buf.items.len - self.at);
         std.mem.writeInt(u32, self.buf.items[self.at..][0..4], len, .big);
     }
 
-    // Zig tip: `i16_` relies on the same Zig feature as `begin` above: see the tip there.
     fn i16_(self: *Out, v: i16) !void {
         try self.buf.appendSlice(self.gpa, &std.mem.toBytes(std.mem.nativeToBig(i16, v)));
     }
 
-    // Zig tip: `i32_` relies on the same Zig feature as `begin` above: see the tip there.
     fn i32_(self: *Out, v: i32) !void {
         try self.buf.appendSlice(self.gpa, &std.mem.toBytes(std.mem.nativeToBig(i32, v)));
     }
 
-    // Zig tip: `u8_` relies on the same Zig feature as `begin` above: see the tip there.
     fn u8_(self: *Out, v: u8) !void {
         try self.buf.append(self.gpa, v);
     }
 
-    // Zig tip: `cstr` relies on the same Zig feature as `begin` above: see the tip there.
     fn cstr(self: *Out, s: []const u8) !void {
         try self.buf.appendSlice(self.gpa, s);
         try self.buf.append(self.gpa, 0);
     }
 
-    // Zig tip: `raw` relies on the same Zig feature as `begin` above: see the tip there.
     fn raw(self: *Out, s: []const u8) !void {
         try self.buf.appendSlice(self.gpa, s);
     }
 
-    // Zig tip: `flush` relies on the same Zig feature as `begin` above: see the tip there.
     fn flush(self: *Out, w: *Io.Writer) !void {
         try w.writeAll(self.buf.items);
         try w.flush();
@@ -81,20 +67,16 @@ const Out = struct {
     }
 };
 
-// Zig tip: `readI32` relies on the same Zig feature as `Out` above: see the tip there.
 fn readI32(b: []const u8) i32 {
     return std.mem.readInt(i32, b[0..4], .big);
 }
 
-// Zig tip: `readI16` relies on the same Zig feature as `Out` above: see the tip there.
 fn readI16(b: []const u8) i16 {
     return std.mem.readInt(i16, b[0..2], .big);
 }
 
-// Zig tip: `Msg` relies on the same Zig feature as `Out` above: see the tip there.
 const Msg = struct { kind: u8, body: []u8 };
 
-// Zig tip: `readMsg` relies on the same Zig feature as `Msg` above: see the tip there.
 fn readMsg(r: *Io.Reader, gpa: std.mem.Allocator) !Msg {
     var head: [5]u8 = undefined;
     try r.readSliceAll(&head);
@@ -106,7 +88,6 @@ fn readMsg(r: *Io.Reader, gpa: std.mem.Allocator) !Msg {
     return .{ .kind = head[0], .body = body };
 }
 
-// Zig tip: `errorResponse` relies on the same Zig feature as `begin` above: see the tip there.
 /// An error message: severity, SQL state and text.
 fn errorResponse(out: *Out, fatal: bool, state: []const u8, msg: []const u8) !void {
     try out.begin('E');
@@ -122,21 +103,18 @@ fn errorResponse(out: *Out, fatal: bool, state: []const u8, msg: []const u8) !vo
     out.end();
 }
 
-// Zig tip: `readyForQuery` relies on the same Zig feature as `begin` above: see the tip there.
 fn readyForQuery(out: *Out, st: u8) !void {
     try out.begin('Z');
     try out.u8_(st);
     out.end();
 }
 
-// Zig tip: `commandComplete` relies on the same Zig feature as `begin` above: see the tip there.
 fn commandComplete(out: *Out, tag: []const u8) !void {
     try out.begin('C');
     try out.cstr(tag);
     out.end();
 }
 
-// Zig tip: `parameterStatus` relies on the same Zig feature as `begin` above: see the tip there.
 fn parameterStatus(out: *Out, name: []const u8, value: []const u8) !void {
     try out.begin('S');
     try out.cstr(name);
@@ -146,7 +124,6 @@ fn parameterStatus(out: *Out, name: []const u8, value: []const u8) !void {
 
 // ---------------------------------------------------------------------------------------------------------------- statements
 
-// Zig tip: `splitStatements` relies on the same Zig feature as `begin` above: see the tip there.
 /// Split the text of a simple query at the `;` that are outside quotes, comments and `$$` strings.
 fn splitStatements(gpa: std.mem.Allocator, text: []const u8) ![]const []const u8 {
     var out: std.ArrayList([]const u8) = .empty;
@@ -176,8 +153,6 @@ fn splitStatements(gpa: std.mem.Allocator, text: []const u8) ![]const []const u8
     return out.toOwnedSlice(gpa);
 }
 
-// Zig tip: `for (a, b) |x, y|` walks two slices of the same length side by side (`0..` gives the index); the lengths are
-// checked in safe builds.
 fn word(text: []const u8, n: usize, buf: []u8) []const u8 {
     var it = std.mem.tokenizeAny(u8, text, " \t\r\n(;");
     var k: usize = 0;
@@ -191,7 +166,6 @@ fn word(text: []const u8, n: usize, buf: []u8) []const u8 {
     return "";
 }
 
-// Zig tip: `upper` relies on the same Zig feature as `word` above: see the tip there.
 fn upper(buf: []u8, s: []const u8) []const u8 {
     const m = @min(s.len, buf.len);
     for (s[0..m], 0..) |ch, j| buf[j] = std.ascii.toUpper(ch);
@@ -200,8 +174,6 @@ fn upper(buf: []u8, s: []const u8) []const u8 {
 
 const Kind = enum { empty, ack, begin, commit, rollback, count, rows, command, show, fault_pragma };
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 fn kindOf(sql: []const u8) Kind {
     var b: [24]u8 = undefined;
     const w = word(sql, 0, &b);
@@ -221,8 +193,6 @@ fn kindOf(sql: []const u8) Kind {
     return .rows;
 }
 
-// Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an error
-// that nobody handles.
 /// The command tag of a statement that returns no rows.
 fn commandTag(buf: []u8, sql: []const u8, kind: Kind, n: u64) []const u8 {
     var b0: [24]u8 = undefined;
@@ -243,9 +213,6 @@ fn commandTag(buf: []u8, sql: []const u8, kind: Kind, n: u64) []const u8 {
     return upper(buf, w0);
 }
 
-// Zig tip: the connection keeps what a statement left: the open result (DuckDB's, and the cells that read it), freed when the
-// reply has been sent. `Run` is the outcome of running one statement: nothing to say, an acknowledgement, a count, a result
-// set, or a failure whose message is already known.
 const Run = struct {
     kind: Kind = .ack,
     res: ?duckdb.Result = null,
@@ -257,7 +224,6 @@ const Run = struct {
     err_buf: [600]u8 = undefined,
     drop: bool = false,
 
-    // Zig tip: `deinit` relies on the same Zig feature as `deinit` above: see the tip there.
     fn deinit(self: *Run) void {
         if (self.cells) |*c| c.deinit();
         if (self.res) |*r| r.deinit();
@@ -265,7 +231,6 @@ const Run = struct {
         self.res = null;
     }
 
-    // Zig tip: `fail` relies on the same Zig feature as `Run` above: see the tip there.
     fn fail(self: *Run, state: []const u8, msg: []const u8) void {
         self.failed = true;
         self.err_state = state;
@@ -275,23 +240,18 @@ const Run = struct {
         self.err_len = n;
     }
 
-    // Zig tip: the message is kept in the fixed buffer of the struct and read back through this method, because a slice that
-    // pointed into the buffer would still point to the old place after the struct is copied (returned by value).
     fn message(self: *const Run) []const u8 {
         return self.err_buf[0..self.err_len];
     }
 };
 
-// Zig tip: `sqlState` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn sqlState(cls: types.ErrorClass) []const u8 {
     return cls.state;
 }
 
-// Zig tip: `Param` relies on the same Zig feature as `Out` above: see the tip there.
 /// One parameter: its text (null for NULL), and the type number the client gave (0: not given).
 const Param = struct { text: ?[]const u8, oid: u32 };
 
-// Zig tip: `bindParam` relies on the same Zig feature as `Param` above: see the tip there.
 fn bindParam(srv: *Server, p: *duckdb.Prepared, i: u64, prm: Param) !void {
     const a = srv.gpa;
     const t = prm.text orelse return p.bindNull(i);
@@ -306,9 +266,6 @@ fn bindParam(srv: *Server, p: *duckdb.Prepared, i: u64, prm: Param) !void {
     try p.bindText(i, z);
 }
 
-// Zig tip: running a statement is the same for the simple and the extended protocol: the faults that fire before it, the
-// preparation, the binding of the parameters, the run, the statement log. The result stays open in `Run` for the caller to
-// send. A failure becomes `Run.failed` with a SQL state taken from `types.classify`.
 fn runStatement(srv: *Server, s: *Session, sql: []const u8, params: []const Param) Run {
     var r: Run = .{};
     r.kind = kindOf(sql);
@@ -421,7 +378,6 @@ fn runStatement(srv: *Server, s: *Session, sql: []const u8, params: []const Para
     return r;
 }
 
-// Zig tip: `sendRowDescription` relies on the same Zig feature as `begin` above: see the tip there.
 fn sendRowDescription(out: *Out, r: *Run) !void {
     const res = &r.res.?;
     const n = res.columnCount();
@@ -440,7 +396,6 @@ fn sendRowDescription(out: *Out, r: *Run) !void {
     out.end();
 }
 
-// Zig tip: `sendRows` relies on the same Zig feature as `Param` above: see the tip there.
 fn sendRows(srv: *Server, out: *Out, r: *Run) !u64 {
     const res = &r.res.?;
     const n = res.columnCount();
@@ -465,16 +420,12 @@ fn sendRows(srv: *Server, out: *Out, r: *Run) !u64 {
     return rows;
 }
 
-// Zig tip: `showName` relies on the same Zig feature as `kindOf` above: see the tip there.
 /// The name of the setting after SHOW.
 fn showName(sql: []const u8) []const u8 {
     const t = std.mem.trim(u8, sql, " \t\r\n;");
     return std.mem.trim(u8, t[@min(4, t.len)..], " \t\r\n");
 }
 
-// Zig tip: PostgreSQL writes bytes as `'\x0102'::bytea` (hexadecimal digits after `\x`), where DuckDB reads `\x` as the start of one
-// escaped byte. The literal is rewritten to `unhex('0102')`, which DuckDB turns into the same bytes. Only that exact shape is
-// rewritten; the text is copied as it is otherwise.
 /// The SQL with the bytea literals of PostgreSQL written for DuckDB.
 fn rewriteBytea(a: std.mem.Allocator, sql: []const u8) ![]const u8 {
     if (std.mem.indexOf(u8, sql, "::bytea") == null) return sql;
@@ -498,9 +449,6 @@ fn rewriteBytea(a: std.mem.Allocator, sql: []const u8) ![]const u8 {
     return out.items;
 }
 
-// Zig tip: the result type `?T` is an optional: a value or `null`. The caller must unwrap it (`if (x) |v|`, `orelse`), so a
-// missing value can never be used by accident.
-// A pretend answer for `show`: the settings that drivers ask after the startup.
 fn showValue(name: []const u8) ?[]const u8 {
     const t = [_][2][]const u8{
         .{ "server_version", "16.4" },
@@ -519,7 +467,6 @@ fn showValue(name: []const u8) ?[]const u8 {
     return null;
 }
 
-// Zig tip: `reply` relies on the same Zig feature as `begin` above: see the tip there.
 /// Send the answer of one statement; the transaction state letter is updated. False when the connection must end.
 fn reply(srv: *Server, out: *Out, c: *Conn, sql: []const u8, r: *Run, send_description: bool) !void {
     if (r.drop) return error.Dropped;
@@ -597,10 +544,8 @@ fn reply(srv: *Server, out: *Out, c: *Conn, sql: []const u8, r: *Run, send_descr
 
 // ---------------------------------------------------------------------------------------------------------------- connection
 
-// Zig tip: `Stmt` relies on the same Zig feature as `Out` above: see the tip there.
 const Stmt = struct { sql: []u8, oids: []u32 };
 
-// Zig tip: `Portal` relies on the same Zig feature as `Out` above: see the tip there.
 const Portal = struct {
     sql: []u8,
     params: []Param,
@@ -608,7 +553,6 @@ const Portal = struct {
     run: ?Run = null,
 };
 
-// Zig tip: `Conn` relies on the same Zig feature as `Out` above: see the tip there.
 /// The state of one client connection.
 const Conn = struct {
     in_tx: bool = false,
@@ -617,14 +561,12 @@ const Conn = struct {
     portals: std.StringHashMapUnmanaged(Portal) = .empty,
 };
 
-// Zig tip: `txState` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn txState(c: *const Conn) u8 {
     if (c.failed) return 'E';
     if (c.in_tx) return 'T';
     return 'I';
 }
 
-// Zig tip: `freePortal` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn freePortal(gpa: std.mem.Allocator, p: *Portal) void {
     gpa.free(p.sql);
     for (p.params) |prm| if (prm.text) |t| gpa.free(t);
@@ -632,7 +574,6 @@ fn freePortal(gpa: std.mem.Allocator, p: *Portal) void {
     if (p.run) |*r| r.deinit();
 }
 
-// Zig tip: `freeConn` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn freeConn(gpa: std.mem.Allocator, c: *Conn) void {
     var si = c.stmts.iterator();
     while (si.next()) |e| {
@@ -649,7 +590,6 @@ fn freeConn(gpa: std.mem.Allocator, c: *Conn) void {
     c.portals.deinit(gpa);
 }
 
-// Zig tip: `md5hex` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn md5hex(out: *[32]u8, parts: []const []const u8) void {
     var h = std.crypto.hash.Md5.init(.{});
     for (parts) |p| h.update(p);
@@ -658,7 +598,6 @@ fn md5hex(out: *[32]u8, parts: []const []const u8) void {
     out.* = std.fmt.bytesToHex(d, .lower);
 }
 
-// Zig tip: `startup` relies on the same Zig feature as `Param` above: see the tip there.
 fn startup(srv: *Server, r: *Io.Reader, w: *Io.Writer, out: *Out) !?struct { db: []const u8, user: []const u8 } {
     const a = srv.gpa;
     while (true) {
@@ -696,7 +635,6 @@ fn startup(srv: *Server, r: *Io.Reader, w: *Io.Writer, out: *Out) !?struct { db:
     }
 }
 
-// Zig tip: `authenticate` relies on the same Zig feature as `Param` above: see the tip there.
 fn authenticate(srv: *Server, r: *Io.Reader, w: *Io.Writer, out: *Out, user: []const u8) !bool {
     const a = srv.gpa;
     const cfg = srv.cfg;
@@ -744,7 +682,6 @@ fn authenticate(srv: *Server, r: *Io.Reader, w: *Io.Writer, out: *Out, user: []c
     return ok;
 }
 
-// Zig tip: `paramCount` relies on the same Zig feature as `kindOf` above: see the tip there.
 fn paramCount(sql: []const u8) usize {
     var n: usize = 0;
     var i: usize = 0;
@@ -763,7 +700,6 @@ fn paramCount(sql: []const u8) usize {
     return n;
 }
 
-// Zig tip: `binaryParam` relies on the same Zig feature as `begin` above: see the tip there.
 /// Decode a parameter sent in binary (format 1) into text; integers, floats, booleans and text are understood.
 fn binaryParam(gpa: std.mem.Allocator, oid: u32, b: []const u8) ![]u8 {
     switch (oid) {
@@ -779,7 +715,6 @@ fn binaryParam(gpa: std.mem.Allocator, oid: u32, b: []const u8) ![]u8 {
     return error.BadMessage;
 }
 
-// Zig tip: `connection` relies on the same Zig feature as `Param` above: see the tip there.
 fn connection(srv: *Server, stream: net.Stream) void {
     defer stream.close(srv.io);
     const a = srv.gpa;
@@ -850,7 +785,6 @@ fn connection(srv: *Server, stream: net.Stream) void {
     }
 }
 
-// Zig tip: `handleMessage` relies on the same Zig feature as `Param` above: see the tip there.
 fn handleMessage(srv: *Server, s: *Session, c: *Conn, out: *Out, m: Msg, skip: *bool) !void {
     const a = srv.gpa;
     if (skip.* and m.kind != 'S' and m.kind != 'X') return; // after an error the extended messages are skipped up to Sync
@@ -1022,7 +956,6 @@ fn handleMessage(srv: *Server, s: *Session, c: *Conn, out: *Out, m: Msg, skip: *
     }
 }
 
-// Zig tip: `handleBind` relies on the same Zig feature as `Msg` above: see the tip there.
 fn handleBind(srv: *Server, c: *Conn, out: *Out, m: Msg, a: std.mem.Allocator) !void {
     _ = srv;
     var pos: usize = 0;
@@ -1077,8 +1010,6 @@ fn handleBind(srv: *Server, c: *Conn, out: *Out, m: Msg, a: std.mem.Allocator) !
     out.end();
 }
 
-// Zig tip: `switch` must cover every value of what it tests (or have `else`); the compiler checks it, so a new case can not
-// be forgotten. A prong can be an expression that gives the result.
 /// The accept loop of the PostgreSQL port: one thread for each client, until the server stops.
 pub fn acceptLoop(srv: *Server) void {
     while (true) {
@@ -1099,8 +1030,6 @@ pub fn acceptLoop(srv: *Server) void {
     srv.pg_listener.?.deinit(srv.io);
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "statements are split outside quotes and comments" {
     const gpa = std.testing.allocator;
     const parts = try splitStatements(gpa, "select 'a;b'; -- x; y\nselect 2; select $$c;d$$");
@@ -1108,8 +1037,6 @@ test "statements are split outside quotes and comments" {
     try std.testing.expectEqual(@as(usize, 3), parts.len);
 }
 
-// Zig tip: test "the kind of a statement" relies on the same Zig feature as test "statements are split outside quotes and
-// comments" above: see the tip there.
 test "the kind of a statement" {
     try std.testing.expectEqual(Kind.count, kindOf("insert into t values (1)"));
     try std.testing.expectEqual(Kind.rows, kindOf("insert into t values (1) returning id"));
@@ -1120,8 +1047,6 @@ test "the kind of a statement" {
     try std.testing.expectEqual(Kind.fault_pragma, kindOf("pragma eve_fault('drop', 'begin')"));
 }
 
-// Zig tip: test "a bytea literal of PostgreSQL is rewritten for DuckDB" relies on the same Zig feature as test "statements
-// are split outside quotes and comments" above: see the tip there.
 test "a bytea literal of PostgreSQL is rewritten for DuckDB" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
@@ -1129,8 +1054,6 @@ test "a bytea literal of PostgreSQL is rewritten for DuckDB" {
     try std.testing.expectEqualStrings("select 1", try rewriteBytea(arena.allocator(), "select 1"));
 }
 
-// Zig tip: test "command tags" relies on the same Zig feature as test "statements are split outside quotes and comments"
-// above: see the tip there.
 test "command tags" {
     var b: [64]u8 = undefined;
     try std.testing.expectEqualStrings("INSERT 0 3", commandTag(&b, "insert into t values (1)", .count, 3));

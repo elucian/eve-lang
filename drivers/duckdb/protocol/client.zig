@@ -6,8 +6,6 @@ const ewp = @import("ewp.zig");
 
 pub const Error = error{ Connect, Server, Protocol } || ewp.Error;
 
-// Zig tip: a `struct` groups named fields, and may hold functions (its methods) and constants; a field with a default value
-// may be left out when a value is made with `.{ ... }`.
 /// The rows of a `RESULT`, all owned by the arena the call was given.
 pub const Rows = struct {
     names: [][]const u8,
@@ -16,15 +14,11 @@ pub const Rows = struct {
     cells: []ewp.Value,
     truncated: bool,
 
-    // Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-    // arguments, so a call always passes every parameter.
     pub fn rowCount(self: Rows) usize {
         return if (self.names.len == 0) 0 else self.cells.len / self.names.len;
     }
 };
 
-// Zig tip: the reader and the writer of a stream keep a pointer to their buffers, so the connection is allocated on the
-// heap and filled in place (`create` then assign), never copied after the buffers are set up.
 /// An open connection.
 pub const Conn = struct {
     io: Io,
@@ -41,7 +35,6 @@ pub const Conn = struct {
     err_msg: []u8 = &.{},
     err_transient: bool = false,
 
-    // Zig tip: `connect` relies on the same Zig feature as `Conn` above: see the tip there.
     /// Connect to `host:port` and say `HELLO` with the token.
     pub fn connect(io: Io, gpa: std.mem.Allocator, host_port: []const u8, token: []const u8) Error!*Conn {
         const colon = std.mem.lastIndexOfScalar(u8, host_port, ':') orelse return error.Connect;
@@ -67,8 +60,6 @@ pub const Conn = struct {
         return c;
     }
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     pub fn deinit(self: *Conn) void {
         self.stream.close(self.io);
         self.gpa.free(self.rbuf);
@@ -79,8 +70,6 @@ pub const Conn = struct {
         self.gpa.destroy(self);
     }
 
-    // Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an
-    // error that nobody handles.
     fn keepError(self: *Conn, f: ewp.Frame) void {
         var c: ewp.Cursor = .{ .buf = f.payload };
         const class = c.string() catch "";
@@ -96,8 +85,6 @@ pub const Conn = struct {
         self.err_transient = transient;
     }
 
-    // Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to
-    // the caller; `f() catch …` handles it in place.
     /// Send one frame and read the answer. An `ERROR` frame becomes `error.Server` with the details in `err_*`.
     pub fn request(self: *Conn, kind: ewp.Type, payload: []const u8) Error!ewp.Frame {
         const stream = self.next;
@@ -116,9 +103,6 @@ pub const Conn = struct {
         return f;
     }
 
-    // Zig tip: the streaming calls split `request` in two, for the conversations of many frames (a columnar result, a load):
-    // `send` opens a new stream and writes its first frame, `sendOn` writes more frames on it, and `receive` reads the next frame
-    // of that stream (an `ERROR` frame becomes `error.Server`, as in `request`).
     /// Write the first frame of a new stream; answers the stream number.
     pub fn send(self: *Conn, kind: ewp.Type, payload: []const u8) Error!u32 {
         const stream = self.next;
@@ -127,13 +111,11 @@ pub const Conn = struct {
         return stream;
     }
 
-    // Zig tip: `sendOn` relies on the same Zig feature as `request` above: see the tip there.
     /// Write one more frame on a stream that is open.
     pub fn sendOn(self: *Conn, kind: ewp.Type, stream: u32, payload: []const u8) Error!void {
         try ewp.writeFrame(&self.writer.interface, kind, stream, payload);
     }
 
-    // Zig tip: `receive` relies on the same Zig feature as `request` above: see the tip there.
     /// Read the next frame of `stream` (free it with `ewp.freeFrame(conn.gpa, f)`).
     pub fn receive(self: *Conn, stream: u32) Error!ewp.Frame {
         const f = try ewp.readFrame(&self.reader.interface, self.gpa);
@@ -149,14 +131,11 @@ pub const Conn = struct {
         return f;
     }
 
-    // Zig tip: `simple` relies on the same Zig feature as `request` above: see the tip there.
     fn simple(self: *Conn, kind: ewp.Type, payload: []const u8) Error!void {
         const f = try self.request(kind, payload);
         ewp.freeFrame(self.gpa, f);
     }
 
-    // Zig tip: `defer` runs its statement when the scope ends, by any path (a `return`, an error, the end of the block), so
-    // a free or a close is written once, next to what it undoes.
     /// Open the database `name`; answers the session id.
     pub fn open(self: *Conn, name: []const u8) Error!u64 {
         var b = ewp.Builder.init(self.gpa);
@@ -169,7 +148,6 @@ pub const Conn = struct {
         return c.u64_();
     }
 
-    // Zig tip: `begin` relies on the same Zig feature as `open` above: see the tip there.
     pub fn begin(self: *Conn, id: [16]u8, read_only: bool) Error!void {
         var b = ewp.Builder.init(self.gpa);
         defer b.deinit();
@@ -179,27 +157,22 @@ pub const Conn = struct {
         try self.simple(.begin, b.buf.items);
     }
 
-    // Zig tip: `commit` relies on the same Zig feature as `request` above: see the tip there.
     pub fn commit(self: *Conn, id: [16]u8) Error!void {
         try self.simple(.commit, &id);
     }
 
-    // Zig tip: `rollback` relies on the same Zig feature as `request` above: see the tip there.
     pub fn rollback(self: *Conn, id: [16]u8) Error!void {
         try self.simple(.rollback, &id);
     }
 
-    // Zig tip: `ping` relies on the same Zig feature as `request` above: see the tip there.
     pub fn ping(self: *Conn) Error!void {
         try self.simple(.ping, "");
     }
 
-    // Zig tip: `stop` relies on the same Zig feature as `request` above: see the tip there.
     pub fn stop(self: *Conn) Error!void {
         try self.simple(.stop, "");
     }
 
-    // Zig tip: `status` relies on the same Zig feature as `open` above: see the tip there.
     /// 0 committed, 1 rolled back, 2 unknown, 3 in progress.
     pub fn status(self: *Conn, id: [16]u8) Error!u8 {
         const f = try self.request(.status, &id);
@@ -208,7 +181,6 @@ pub const Conn = struct {
         return c.u8_();
     }
 
-    // Zig tip: `execute` relies on the same Zig feature as `open` above: see the tip there.
     /// Run a statement that changes rows; answers the rows changed.
     pub fn execute(self: *Conn, sql: []const u8, params: []const ewp.Value) Error!i64 {
         var b = ewp.Builder.init(self.gpa);
@@ -222,7 +194,6 @@ pub const Conn = struct {
         return c.i64_();
     }
 
-    // Zig tip: `query` relies on the same Zig feature as `open` above: see the tip there.
     /// Run a query; the rows are allocated in `arena`.
     pub fn query(self: *Conn, arena: std.mem.Allocator, sql: []const u8, params: []const ewp.Value, limit: u32) Error!Rows {
         var b = ewp.Builder.init(self.gpa);
@@ -258,7 +229,6 @@ pub const Conn = struct {
         return .{ .names = names, .types = tys, .cells = cells, .truncated = truncated };
     }
 
-    // Zig tip: `serverStat` relies on the same Zig feature as `open` above: see the tip there.
     /// The counters of the server: databases, sessions, open transactions, statements, uptime in milliseconds.
     pub fn serverStat(self: *Conn) Error![5]u64 {
         const f = try self.request(.serverstat, "");
@@ -268,7 +238,6 @@ pub const Conn = struct {
     }
 };
 
-// Zig tip: `writeValue` relies on the same Zig feature as `request` above: see the tip there.
 /// Write a value as text, for the output of `evedb sql --connect`.
 pub fn writeValue(w: *Io.Writer, v: ewp.Value) !void {
     switch (v) {

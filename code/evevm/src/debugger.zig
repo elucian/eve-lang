@@ -21,14 +21,9 @@ const Interp = interp.Interp;
 const Node = interp.Node;
 const Signal = interp.Signal;
 
-// Zig tip: an enum names the states of the debugger. A `switch` over it must name every state, so a new mode cannot be
-// forgotten in `before`. `start` is the state before the first statement: the program is loaded but not started.
 /// What the debugger does when it resumes.
 pub const Mode = enum { start, run, step, next, exit, trace };
 
-// Zig tip: the debugger keeps pointers to the writer and the reader of the command line, which live longer than it
-// does; a struct that only borrows them says so in its doc comment. `std.ArrayList(u32)` is a growing array of line
-// numbers; `.empty` starts it without allocating.
 /// One debugging session.
 pub const Debugger = struct {
     out: *Io.Writer,
@@ -47,22 +42,15 @@ pub const Debugger = struct {
     /// The commands ended (the input is closed): the program goes on to its end without stopping.
     detached: bool = false,
 
-    // Zig tip: `*const fn (...) T` is a pointer to a function; the interpreter stores it with an untyped context pointer
-    // and calls it before each statement, without knowing what a `Debugger` is. `@ptrCast` makes the pointer untyped.
     /// The hook to give to the interpreter (`Interp.dbg`).
     pub fn hook(self: *Debugger) interp.DebugHook {
         return .{ .ctx = self, .before = before };
     }
 
-    // Zig tip: `std.mem.indexOfScalar(u32, list, line) != null` is the test "is `line` in the list". A breakpoint is
-    // a plain number; there is no file name because only the main script is debugged.
     fn hasBreak(self: *const Debugger, line: u32) bool {
         return std.mem.indexOfScalar(u32, self.breaks.items, line) != null;
     }
 
-    // Zig tip: a `switch` on the tag of a syntax node with `else => true`: every kind of node is a statement except the
-    // few listed. A block only groups statements, and the declarations of subprograms are not executed when they are
-    // met, so stopping on them would tell nothing.
     /// Does the debugger stop before this node? Declarations and blocks are not statements to stop on.
     fn isStatement(n: *const Node) bool {
         return switch (n.tag) {
@@ -71,9 +59,6 @@ pub const Debugger = struct {
         };
     }
 
-    // Zig tip: the first parameter of a hook is the untyped context, turned back into `*Debugger` with `@ptrCast` and
-    // `@alignCast`. The function returns `Signal!void`: an error such as `error.Stop` unwinds the interpreter, which is
-    // how `halt` ends the program. `or` of two conditions stops at the first one that is true.
     /// Called before each statement of the main task: decide whether to stop, and stop.
     fn before(ctx: *anyopaque, it: *Interp, n: *const Node) Signal!void {
         const self: *Debugger = @ptrCast(@alignCast(ctx));
@@ -95,8 +80,6 @@ pub const Debugger = struct {
         if (stop_here) try self.pause(it, line, depth);
     }
 
-    // Zig tip: `std.mem.splitScalar` walks the lines of the text without copying; `while (it.next()) |l|` stops at the
-    // end, and `n` counts from 1. The result is a slice of `src`, so nothing is freed.
     /// The text of line `n` (from 1) of the script, or "" when there is no such line.
     fn lineText(self: *const Debugger, n: u32) []const u8 {
         var it = std.mem.splitScalar(u8, self.src, '\n');
@@ -107,9 +90,6 @@ pub const Debugger = struct {
         return "";
     }
 
-    // Zig tip: the output of the program and the lines of the debugger share one stream, so the writer of the program
-    // is flushed first: the person (or the IDE) then sees the output in the order it happened. A read error or the end
-    // of the input is not an error of the program: the debugger lets go and the script runs to its end.
     /// Stop before a statement: write where, then read commands until one of them resumes the program.
     fn pause(self: *Debugger, it: *Interp, line: u32, depth: u32) Signal!void {
         it.out.flush() catch {};
@@ -127,10 +107,6 @@ pub const Debugger = struct {
         }
     }
 
-    // Zig tip: the scopes form a chain, from the block where the program is up to the prelude (the names every program
-    // has: `True`, the type names). `while (cur) |s| : (cur = s.parent)` walks it; the prelude is left out. `it.show`
-    // writes a value as text in scratch memory of the interpreter, which is released at the end of the statement, so
-    // nothing here is freed. A value of several lines is put on one line and cut at 200 bytes.
     /// Write the variables that the program can see (`@debug vars`, then one `@debug var name=value` each).
     fn writeVars(self: *Debugger, it: *Interp) void {
         self.out.writeAll("@debug vars\n") catch return;
@@ -154,9 +130,6 @@ pub const Debugger = struct {
         }
     }
 
-    // Zig tip: the function answers `true` when the command resumes the program and `false` when the debugger goes on
-    // reading (the breakpoints). `std.mem.tokenizeScalar` splits the line at spaces; `parseInt(u32, text, 10) catch`
-    // turns a bad number into an `@debug error` line instead of a failure.
     /// Run one command of the person who debugs. True when the program resumes.
     fn command(self: *Debugger, cmd: []const u8, depth: u32) Signal!bool {
         var words = std.mem.tokenizeScalar(u8, cmd, ' ');
@@ -197,8 +170,6 @@ pub const Debugger = struct {
         return true;
     }
 
-    // Zig tip: `orelse` on the optional word handles "break" with no number; `ArrayList.append` can fail only for lack
-    // of memory, which `catch` turns into the error the interpreter already knows (`OutOfMemory` is part of `Signal`).
     /// `break <n>`, `clear <n>` and `clear all`.
     fn breakCommand(self: *Debugger, verb: []const u8, arg: ?[]const u8) Signal!void {
         const text = arg orelse {

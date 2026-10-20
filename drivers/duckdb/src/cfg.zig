@@ -16,16 +16,12 @@ const pgserver = @import("pgserver.zig");
 
 pub const Error = error{ BadLine, BadValue, OutOfMemory };
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 fn unquote(s: []const u8) []const u8 {
     const t = std.mem.trim(u8, s, " \t\r");
     if (t.len >= 2 and t[0] == '"' and t[t.len - 1] == '"') return t[1 .. t.len - 1];
     return t;
 }
 
-// Zig tip: `s[a..b]` is a slice: a pointer and a length into memory that someone else owns; nothing is copied, and the
-// bounds are checked in safe builds.
 fn cut(line: []const u8) []const u8 {
     var in_q = false;
     var i: usize = 0;
@@ -37,18 +33,12 @@ fn cut(line: []const u8) []const u8 {
     return line;
 }
 
-// Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to the
-// caller; `f() catch …` handles it in place.
 fn truth(v: []const u8) Error!bool {
     if (std.mem.eql(u8, v, "true") or std.mem.eql(u8, v, "yes") or std.mem.eql(u8, v, "on")) return true;
     if (std.mem.eql(u8, v, "false") or std.mem.eql(u8, v, "no") or std.mem.eql(u8, v, "off")) return false;
     return error.BadValue;
 }
 
-// Zig tip: the text is read line by line into a `Config`; the strings in it are slices of the text (nothing is copied), so
-// the text must live as long as the configuration. The list of databases is built in an `ArrayList` and handed over as a
-// slice. An unknown key is an error, so a typo does not go unnoticed. `base` is the folder of the file: a relative path of a
-// database is relative to it, so a configuration works from any working folder.
 /// Parse the text of a configuration file over the values already in `cfg`.
 pub fn parse(arena: std.mem.Allocator, text: []const u8, base: []const u8, cfg: *server.Config) Error!void {
     var dbs: std.ArrayList(server.DbMap) = .empty;
@@ -89,8 +79,6 @@ pub fn parse(arena: std.mem.Allocator, text: []const u8, base: []const u8, cfg: 
     if (dbs.items.len > 0) cfg.databases = try dbs.toOwnedSlice(arena);
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "a configuration file" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();

@@ -10,23 +10,16 @@ const ewp = protocol.ewp;
 const batch = protocol.batch;
 const c = @import("duckdb_c");
 
-// Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-// arguments, so a call always passes every parameter.
 fn id(comptime name: []const u8) c_uint {
     return @field(c, "DUCKDB_TYPE_" ++ name);
 }
 
-// Zig tip: the binary layout of the C types is described to Zig with `extern struct`, which has the order and the padding of
-// C. A HUGEINT is two 64-bit halves, the low one first.
 const HugeInt = extern struct { lower: u64, upper: i64 };
-// Zig tip: `UHugeInt` relies on the same Zig feature as `HugeInt` above: see the tip there.
 const UHugeInt = extern struct { lower: u64, upper: u64 };
-// Zig tip: `Interval` relies on the same Zig feature as `HugeInt` above: see the tip there.
 const Interval = extern struct { months: i32, days: i32, micros: i64 };
 
 pub const Error = error{ Unsupported, OutOfMemory };
 
-// Zig tip: `supportedType` relies on the same Zig feature as `HugeInt` above: see the tip there.
 /// Which DuckDB types this reader turns into protocol values (the others are refused with `error.Unsupported`).
 pub fn supportedType(ty: c_uint) bool {
     return switch (ty) {
@@ -35,7 +28,6 @@ pub fn supportedType(ty: c_uint) bool {
     };
 }
 
-// Zig tip: `Cells` relies on the same Zig feature as `HugeInt` above: see the tip there.
 pub const Cells = struct {
     gpa: std.mem.Allocator,
     ncols: usize,
@@ -50,8 +42,6 @@ pub const Cells = struct {
     data: []?*anyopaque,
     validity: []?[*]u64,
 
-    // Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to
-    // the caller; `f() catch …` handles it in place.
     pub fn init(gpa: std.mem.Allocator, res: *duckdb.Result) Error!Cells {
         const ncols: usize = @intCast(res.columnCount());
         const nch: usize = @intCast(c.duckdb_result_chunk_count(res.raw));
@@ -94,8 +84,6 @@ pub const Cells = struct {
         return s;
     }
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     pub fn deinit(self: *Cells) void {
         for (self.chunks) |*ch| c.duckdb_destroy_data_chunk(ch);
         for (self.ltypes) |*lt| c.duckdb_destroy_logical_type(lt);
@@ -109,16 +97,12 @@ pub const Cells = struct {
         self.gpa.free(self.validity);
     }
 
-    // Zig tip: the result type `?T` is an optional: a value or `null`. The caller must unwrap it (`if (x) |v|`, `orelse`),
-    // so a missing value can never be used by accident.
     /// The columns whose type this reader does not handle: the number of the first, or null.
     pub fn firstUnsupported(self: *const Cells) ?usize {
         for (self.types, 0..) |t, k| if (!supportedType(t)) return k;
         return null;
     }
 
-    // Zig tip: a cast is written with a builtin: `@intCast` checks (in safe builds) that the number fits the smaller type,
-    // `@bitCast` keeps the bits and changes the type, `@truncate` keeps the low bits.
     fn locate(self: *const Cells, row: u64) struct { chunk: usize, off: usize } {
         var lo: usize = 0;
         var hi: usize = self.chunks.len;
@@ -129,22 +113,18 @@ pub const Cells = struct {
         return .{ .chunk = lo, .off = @intCast(row - self.starts[lo]) };
     }
 
-    // Zig tip: `a orelse b` unwraps an optional: the value when there is one, else `b` (which may be `return` or
-    // `continue`, leaving the function or the loop).
     pub fn isNull(self: *const Cells, col: usize, row: u64) bool {
         const at = self.locate(row);
         const v = self.validity[at.chunk * self.ncols + col] orelse return false;
         return !c.duckdb_validity_row_is_valid(v, at.off);
     }
 
-    // Zig tip: `array` relies on the same Zig feature as `locate` above: see the tip there.
     fn array(self: *const Cells, comptime T: type, col: usize, row: u64) T {
         const at = self.locate(row);
         const p: [*]const T = @ptrCast(@alignCast(self.data[at.chunk * self.ncols + col].?));
         return p[at.off];
     }
 
-    // Zig tip: `append` relies on the same Zig feature as `Cells` above: see the tip there.
     /// Append the cell to a payload as a value of section 5.2.
     pub fn append(self: *const Cells, b: *ewp.Builder, col: usize, row: u64) !void {
         if (self.types[col] == id("SQLNULL") or self.isNull(col, row)) return b.value(.null);
@@ -233,10 +213,6 @@ pub const Cells = struct {
         }
     }
 
-    // Zig tip: the PostgreSQL wire protocol sends every value as text in its default format (`DataRow`, format 0), so this
-    // writes a cell the way PostgreSQL prints it: `t` and `f` for a boolean, `YYYY-MM-DD` for a date, `YYYY-MM-DD HH:MM:SS[.ffffff]`
-    // for a timestamp (with `+00` when the column has a zone), `\x` and hexadecimal digits for bytes. A NULL is answered with `false`
-    // and nothing written; the caller sends the length -1.
     /// Write the PostgreSQL text of a cell into `out`; false for NULL.
     pub fn appendPgText(self: *const Cells, out: *std.ArrayList(u8), gpa: std.mem.Allocator, col: usize, row: u64) !bool {
         if (self.types[col] == id("SQLNULL") or self.isNull(col, row)) return false;
@@ -328,9 +304,6 @@ pub const Cells = struct {
         return true;
     }
 
-    // Zig tip: `internal_enum` relies on the same Zig feature as `deinit` above: see the tip there.
-    // Zig tip: each DuckDB type has one wire type; the integers of any width travel as 64 bits, the floats as 64 bits, and the
-    // types with no fixed form (a decimal, a huge number, a uuid, a time, an interval) as their text.
     /// The wire type of a column (section 5.5).
     pub fn wireOf(self: *const Cells, col: usize) batch.Wire {
         return switch (self.types[col]) {
@@ -345,21 +318,15 @@ pub const Cells = struct {
         };
     }
 
-    // Zig tip: `chunkCount` relies on the same Zig feature as `deinit` above: see the tip there.
     /// How many data chunks the result has, and how many rows chunk `ci` holds.
     pub fn chunkCount(self: *const Cells) usize {
         return self.chunks.len;
     }
 
-    // Zig tip: `chunkRows` relies on the same Zig feature as `locate` above: see the tip there.
     pub fn chunkRows(self: *const Cells, ci: usize) usize {
         return @intCast(self.starts[ci + 1] - self.starts[ci]);
     }
 
-    // Zig tip: `std.mem.sliceAsBytes` sees an array of numbers as its bytes, so a whole vector of BIGINT (or DOUBLE, or
-    // TIMESTAMP) goes into the payload with one `appendSlice`: the fast path of the protocol. A narrower integer is widened in a
-    // loop. The validity of DuckDB is a bitmap of 64-bit words, least significant bit first, which on a little-endian computer is
-    // byte for byte the bitmap of the wire.
     /// Append the chunk `ci` to a payload as one batch (the frame `BATCH` of section 5.5).
     pub fn encodeChunk(self: *const Cells, b: *ewp.Builder, ci: usize) !void {
         const n = self.chunkRows(ci);
@@ -440,14 +407,10 @@ pub const Cells = struct {
         }
     }
 
-    // Zig tip: `internal_enum` relies on the same Zig feature as `deinit` above: see the tip there.
     fn internal_enum(self: *const Cells, col: usize) c_uint {
         return c.duckdb_enum_internal_type(self.ltypes[col]);
     }
 
-    // Zig tip: a DuckDB string is 16 bytes: a length and then either the bytes themselves (12 or fewer) or a prefix and a
-    // pointer to the rest. The two C helper functions hide that, and the slice we answer points into DuckDB's memory, which
-    // stays valid until the result is destroyed; the caller copies it into the payload at once.
     fn stringAt(self: *const Cells, col: usize, row: u64) []const u8 {
         // the string must be read where it is: a short string is stored inside the 16 bytes of the vector, and a copy on the
         // stack would be gone when this function returns
@@ -461,15 +424,12 @@ pub const Cells = struct {
     }
 };
 
-// Zig tip: `f() catch x` uses `x` when `f` fails; `catch {}` drops the error on purpose. Zig refuses to compile an error
-// that nobody handles.
 fn fmtReal(buf: []u8, x: anytype) []const u8 {
     if (std.math.isNan(x)) return "NaN";
     if (std.math.isInf(x)) return if (x > 0) "Infinity" else "-Infinity";
     return std.fmt.bufPrint(buf, "{d}", .{x}) catch "0";
 }
 
-// Zig tip: `civil` relies on the same Zig feature as `locate` above: see the tip there.
 fn civil(days: i64) struct { y: i64, m: u8, d: u8 } {
     const z = days + 719468;
     const era = @divFloor(z, 146097);
@@ -482,13 +442,11 @@ fn civil(days: i64) struct { y: i64, m: u8, d: u8 } {
     return .{ .y = yoe + era * 400 + @as(i64, if (m <= 2) 1 else 0), .m = m, .d = d };
 }
 
-// Zig tip: `fmtDate` relies on the same Zig feature as `fmtReal` above: see the tip there.
 fn fmtDate(buf: []u8, days: i64) []const u8 {
     const c3 = civil(days);
     return std.fmt.bufPrint(buf, "{d:0>4}-{d:0>2}-{d:0>2}", .{ @as(u64, @intCast(@max(c3.y, 0))), c3.m, c3.d }) catch "";
 }
 
-// Zig tip: `fmtTimestamp` relies on the same Zig feature as `fmtReal` above: see the tip there.
 fn fmtTimestamp(buf: []u8, micros: i64, zone: bool) []const u8 {
     const secs = @divFloor(micros, 1_000_000);
     const frac: u64 = @intCast(micros - secs * 1_000_000);
@@ -500,7 +458,6 @@ fn fmtTimestamp(buf: []u8, micros: i64, zone: bool) []const u8 {
     return std.fmt.bufPrint(buf, "{d:0>4}-{d:0>2}-{d:0>2} {d:0>2}:{d:0>2}:{d:0>2}.{d:0>6}{s}", .{ @as(u64, @intCast(@max(c3.y, 0))), c3.m, c3.d, rem / 3600, rem % 3600 / 60, rem % 60, frac, tz }) catch "";
 }
 
-// Zig tip: `pgOid` relies on the same Zig feature as `HugeInt` above: see the tip there.
 /// The number of the PostgreSQL type that stands for a DuckDB type (the `oid` of `RowDescription`).
 pub fn pgOid(ty: c_uint) u32 {
     return switch (ty) {
@@ -522,7 +479,6 @@ pub fn pgOid(ty: c_uint) u32 {
     };
 }
 
-// Zig tip: `pgSize` relies on the same Zig feature as `HugeInt` above: see the tip there.
 /// The size in bytes of a PostgreSQL type for `RowDescription` (-1: variable).
 pub fn pgSize(oid: u32) i16 {
     return switch (oid) {
@@ -536,9 +492,6 @@ pub fn pgSize(oid: u32) i16 {
     };
 }
 
-// Zig tip: a decimal is an integer and a scale. The digits of the absolute value are padded on the left with zeros until there
-// is at least one digit before the point, then the point goes `scale` digits from the right. `abs` of the smallest i128 does
-// not fit, so the unsigned type is used for the digits.
 /// The text of the decimal `v` with `scale` digits after the point, written in `buf`.
 pub fn formatDecimal(buf: []u8, v: i128, scale: u8) []const u8 {
     var digits: [48]u8 = undefined;
@@ -568,8 +521,6 @@ pub fn formatDecimal(buf: []u8, v: i128, scale: u8) []const u8 {
     return buf[0..len];
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "decimals are written with their scale" {
     var buf: [64]u8 = undefined;
     try std.testing.expectEqualStrings("12.50", formatDecimal(&buf, 1250, 2));
@@ -578,8 +529,6 @@ test "decimals are written with their scale" {
     try std.testing.expectEqualStrings("0.001", formatDecimal(&buf, 1, 3));
 }
 
-// Zig tip: test "the cells of a result: many types, NULLs, and more than one chunk" relies on the same Zig feature as test
-// "decimals are written with their scale" above: see the tip there.
 test "the cells of a result: many types, NULLs, and more than one chunk" {
     const gpa = std.testing.allocator;
     var db = try duckdb.Database.open(null);

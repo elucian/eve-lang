@@ -11,8 +11,6 @@ const std = @import("std");
 
 pub const max_fields = 255;
 
-// Zig tip: a field owns its name (a slice that was allocated), so a name can be as long as the database allows. `width` is
-// the number of cells the widest value (or the name) needs, worked out once when the table is read.
 /// One column of the table: its name and the width it asks for in the grid.
 pub const Field = struct {
     name: []u8,
@@ -23,8 +21,6 @@ pub const Field = struct {
     }
 };
 
-// Zig tip: `offs` has one entry more than there are cells: cell `i` is `data[offs[i]..offs[i + 1]]`, so the length of a cell
-// is a subtraction and the last cell needs no special case.
 const Column = struct {
     data: []u8 = &.{},
     offs: []u32 = &.{},
@@ -47,8 +43,6 @@ pub const Table = struct {
         self.gpa.free(self.cols);
     }
 
-    // Zig tip: the buffer argument is kept from the days when a cell had to be formatted; a text cell is returned as it is,
-    // a slice of the column buffer, so nothing is copied and the slice lives as long as the table.
     /// The text of a cell (empty outside the table).
     pub fn display(self: *const Table, row: usize, col: usize, buf: *[16]u8) []const u8 {
         _ = buf;
@@ -69,9 +63,6 @@ pub const Table = struct {
     }
 };
 
-// Zig tip: the text is read twice. The first pass counts the records and the widest cell of each column; the second copies
-// each cell into its column buffer, whose size is known by then, so nothing grows while it is filled. `errdefer` frees what
-// was made when a later allocation fails. An empty text (no header) gives a table with no column.
 /// A table from tab separated text: the first line holds the names of the columns; a short line is padded with empty cells.
 pub fn fromTsv(gpa: std.mem.Allocator, tsv: []const u8) std.mem.Allocator.Error!Table {
     var lines = std.mem.splitScalar(u8, tsv, '\n');

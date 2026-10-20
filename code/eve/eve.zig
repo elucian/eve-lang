@@ -1,8 +1,4 @@
 //! `eve` command line: help, REPL and one-shot commands (the commands are not implemented yet).
-// Zig tip: `@import("evevm")` is not a file but a module named in build.zig (`.imports`). That
-// is how the thin `eve` program uses the parts of Eve; the parts never import the program, and the
-// build refuses an import that the arrows of design-packages.md §3 do not allow. Only the module
-// root file is named, and it re-exports what others may use.
 const std = @import("std");
 const Io = std.Io;
 const builtin = @import("builtin");
@@ -13,16 +9,8 @@ const evevm = @import("evevm");
 const cli = @import("cli.zig");
 const Terminal = evecm.terminal.Terminal;
 
-// Zig tip: a root file can declare `pub const std_options: std.Options`, and the standard library reads it at compile
-// time to tune itself. `unexpected_error_tracing` prints a stack trace in Debug builds each time the system returns a
-// code the library does not map. On Windows, Zig 0.16 does not map CONNECTION_REFUSED, so asking for a machine that
-// is not running (`eve --serve status`) printed two traces before the right answer, `eve: not running`. The VM
-// handles that error itself (code/evevm/src/client.zig), so the trace is turned off.
 pub const std_options: std.Options = .{ .unexpected_error_tracing = false };
 
-// Zig tip: `std.ascii.lowerString(buf, text)` copies the text in lower case letters into `buf` and answers the part it
-// used; a name that does not fit in the buffer cannot be `evevm`, so it is answered as it is. `lastIndexOfAny` finds
-// the last `/` or `\`, which is where the file name starts on either system.
 /// The name of the program without its folder and extension, in lower case: `C:\bin\EVEVM.exe` is `evevm`.
 fn programName(buf: []u8, path: []const u8) []const u8 {
     const cut = std.mem.lastIndexOfAny(u8, path, "/\\");
@@ -45,19 +33,11 @@ fn standardLibrary(init: std.process.Init, arena: std.mem.Allocator) ?[]const u8
     return folder;
 }
 
-// Zig tip: in Zig 0.16 `main` may take a `std.process.Init` that the runtime fills: `init.io`
-// (the handle for input/output), `init.arena` (an allocator freed when the program ends) and
-// `init.minimal.args` (the command line). `!void` means main may return an error; the runtime
-// then prints it and exits with a failure. There are no global streams: output goes through a
-// `Writer` you build yourself, with a buffer you provide (`var stdout_buffer: [1024]u8`).
-// `.init(.stdout(), ...)` uses the declared type on the left to find `init`; `&x.interface`
-// is the generic Writer inside the file writer, which is what other code asks for.
 pub fn main(init: std.process.Init) !void {
     const arena: std.mem.Allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(arena);
 
-    // Zig tip: `std.mem.tokenizeScalar(u8, text, ';')` walks the pieces of a text between separators and skips
-    // empty ones. The folders of `EVE_LIB_PATH` are separated like the PATH of the system (D-128).
+    // @decision D-128
     if (init.environ_map.get("EVE_LIB_PATH")) |list| {
         var folders: std.ArrayList([]const u8) = .empty;
         var parts = std.mem.tokenizeScalar(u8, list, std.fs.path.delimiter);
@@ -76,8 +56,6 @@ pub fn main(init: std.process.Init) !void {
         evecp.project.env_lib_path = folders.items;
     }
 
-    // Zig tip: `environ_map.get` answers an optional text; `orelse ""` turns a missing variable into an
-    // empty one, so one comparison covers both cases. The heap reads these two switches (heap.zig).
     evecm.heap.show_stats = std.mem.eql(u8, init.environ_map.get("EVE_MEMSTATS") orelse "", "1");
     evecm.heap.verify = std.mem.eql(u8, init.environ_map.get("EVE_GC_VERIFY") orelse "", "1");
     evevm.bcvm.trace = std.mem.eql(u8, init.environ_map.get("EVE_BC_TRACE") orelse "", "1");
@@ -85,23 +63,13 @@ pub fn main(init: std.process.Init) !void {
     if (std.mem.eql(u8, init.environ_map.get("EVE_ENGINE") orelse "", "bc")) evevm.interp.engine = .bytecode;
     if (std.mem.eql(u8, init.environ_map.get("EVE_PROFILE") orelse "", "1")) evevm.profile.start(arena);
 
-    // Zig tip: `File.Writer.init` writes at its own position from 0 when the file can seek, which is right for a
-    // file the program opened, but wrong for the standard output: `eve -x a.eve >> log.txt` overwrote the start of
-    // the log. `initStreaming` writes where the system says (the end, with `>>`), like a pipe or a terminal.
     var stdout_buffer: [1024]u8 = undefined;
     var stdout_file_writer: Io.File.Writer = .initStreaming(.stdout(), init.io, &stdout_buffer);
     const stdout = &stdout_file_writer.interface;
 
-    // Zig tip: `args[@min(1, args.len)..]` is a slice from index 1 (skip the program name);
-    // `@min` keeps it valid even when args is empty. `for (xs) |a| stmt;` loops over a slice.
     var argv: std.ArrayList([]const u8) = .empty;
     for (args[@min(1, args.len)..]) |a| try argv.append(arena, a);
 
-    // Zig tip: the same program file is installed twice, as `eve` and as `evevm`, and it looks at its own name to know
-    // which one it is. `evevm` starts the machine in a new process and gives the prompt of the system back, so it
-    // needs the runtime folder for the sockets before anything else, and it never reads the options of `eve`.
-    // The machine that `evevm` starts is this same file started with `--listen --serve`: with one of these options
-    // `evevm` behaves as `eve` and runs the machine in the foreground of its own (hidden) process.
     var name_buffer: [64]u8 = undefined;
     var foreground = false;
     for (argv.items) |a| {
@@ -115,11 +83,6 @@ pub fn main(init: std.process.Init) !void {
     }
 
     var bad: []const u8 = "";
-    // Zig tip: `call() catch |err| { ... }` handles an error in place. The block must end by
-    // leaving (return, exit) or produce the success type. `switch (err)` over an error set must
-    // list every error (Zig checks it); `error.OutOfMemory => return err` passes it on.
-    // `std.process.exit(n)` stops the program with exit status n. `std.debug.print` writes to
-    // stderr, unbuffered: for messages that should not mix with the normal output.
     const opts = cli.parseArgs(arena, argv.items, &bad) catch |err| {
         switch (err) {
             error.MissingValue => std.debug.print("eve: option {s} needs a value\n", .{bad}),
@@ -148,9 +111,6 @@ pub fn main(init: std.process.Init) !void {
 
     if (opts.help) {
         // Page by page only when a person is at both ends; a pipe or a file gets everything.
-        // Zig tip: `if` is an expression, so `if (paged) &reader else null` picks a value; the
-        // result type is `?*Io.Reader` (a pointer or null). `and`/`or` are the logical operators
-        // (not `&&`/`||`); they stop early.
         const paged = (try Io.File.stdin().isTty(init.io)) and (try Io.File.stdout().isTty(init.io));
         try cli.writeHelp(stdout, if (paged) &stdin_file_reader.interface else null);
         try stdout.flush();
@@ -162,9 +122,6 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
 
-    // Zig tip: the struct literal fills `Context` by field name; `out`, `debug`, ... are
-    // given and `quit` and `status` take their defaults. Always `flush` before exiting: the
-    // buffer is not written by itself, and `std.process.exit` does not run `defer`s.
     var ctx: cli.Context = .{
         .out = stdout,
         .io = init.io,
@@ -174,8 +131,6 @@ pub fn main(init: std.process.Init) !void {
         .memory = opts.memory,
     };
 
-    // Zig tip: the runtime directory for the IPC sockets comes from the environment, once, before any thread starts.
-    // `orelse` chains try the variables in order; `get` answers an optional text.
     evecm.config.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";
     // the shell of `shell <command>`, `!<command>` and `vm.shell`: the one that started eve (`SHELL`: Git Bash, a Linux
     // shell; a Unix path such as /usr/bin/bash is not a Windows path, so on Windows its name is looked up in PATH), else
@@ -189,11 +144,7 @@ pub fn main(init: std.process.Init) !void {
     if (opts.stdio) std.process.exit(try evevm.channel.serveStdio(init.io, arena, opts.config orelse "eve.cfg", init.environ_map.get("EVE_LOG") != null));
     // The machine options (`--listen`, `--serve`, `-loc`, `-rem`): a result means they handled the command. Without them
     // nothing here runs: `eve -x file.eve` reads no `eve.cfg` and asks no door, it executes the script at once.
-    // Zig tip: at a terminal `eve --serve` opens the doors in threads and the prompt comes back (`embed`), so the same
-    // window can send commands to its own machine; with a pipe, a file or a service manager nobody types, and the
-    // start waits for the doors as before. `machine.embedded` tells that the doors are open in this process.
-    // `-s`: the service (D-185). Nothing is printed on success; a failure goes to the error output. With EVE_SERVICE=foreground
-    // this process is the machine itself (a container, systemd `Type=simple`); otherwise it starts one in a process of its own.
+    // @decision D-185
     if (opts.service) {
         var errbuf: [512]u8 = undefined;
         var errw: Io.File.Writer = .initStreaming(.stderr(), init.io, &errbuf);
@@ -211,9 +162,6 @@ pub fn main(init: std.process.Init) !void {
     if (opts.ux) std.process.exit(try startPart(init.io, arena, stdout, "eveux", opts.ux_args));
     if (opts.kill) std.process.exit(try killOthers(init.io, arena, stdout));
     const interactive = (try Io.File.stdin().isTty(init.io)) and (try Io.File.stdout().isTty(init.io));
-    // Zig tip: `Io.Writer.Allocating` is a writer that keeps what it is given in memory. At a terminal the machine
-    // options write into it first, because the full-screen REPL (which may follow) starts only afterwards and has to
-    // show these lines in its own upper part; a command that ends the program prints them on the plain screen.
     var held: Io.Writer.Allocating = .init(arena);
     const early_out: *Io.Writer = if (interactive) &held.writer else stdout;
     if (opts.machine.listen or opts.machine.serve or opts.machine.local or opts.machine.remote) {
@@ -235,24 +183,13 @@ pub fn main(init: std.process.Init) !void {
         std.process.exit(ctx.status);
     }
 
-    // Zig tip: `Terminal.enter() catch null` means "try it, and if it fails carry on without": the
-    // result is an optional that is null when the console cannot switch mode. `defer` runs when
-    // `main` ends, which restores the keyboard mode on every normal way out (`quit`, end of
-    // input, an error); `if (term) |t|` unwraps the optional. Raw mode is used only when a
-    // person is at both ends, so pipes behave as before.
     const term: ?Terminal = if (interactive) Terminal.enter() catch null else null;
     defer if (term) |t| t.leave();
-    // Zig tip: the width of the help table and texts: the variable EVE_WIDTH wins, then `eve_width` of the configuration
-    // file, then 100. `parseInt(...) catch width` keeps the earlier value when the text is not a number, and
-    // `std.math.clamp` keeps the result between the least width worth drawing and a generous maximum.
     var width: usize = evevm.screen.default_width;
     if (evecm.config.readConfig(init.io, arena, opts.config orelse "eve.cfg")) |c| width = c.eve_width;
     if (init.environ_map.get("EVE_WIDTH")) |text| width = std.fmt.parseInt(usize, std.mem.trim(u8, text, " "), 10) catch width;
     ctx.width = std.math.clamp(width, evevm.screen.min_width, 400);
 
-    // Zig tip: the full-screen REPL (tui.zig) needs the size of the window; without it the prompt keeps the plainer
-    // look of a banner and a line editor. `defer t.leave()` is declared after the terminal's, so it runs first: the
-    // screen is given back, then the keyboard mode.
     var screen_ui: ?*evevm.tui.Tui = null;
     if (term != null and Terminal.size() != null) {
         const raw_buffer = try arena.alloc(u8, 16384);
@@ -283,10 +220,6 @@ pub fn main(init: std.process.Init) !void {
     try cli.repl(&ctx, &stdin_file_reader.interface, edit);
 }
 
-// Zig tip: a program cannot replace its own file, or the file of a program that runs, on Windows: the build fails with
-// AccessDenied. `eve --kill` asks the system to end the other programs of its own `bin/` folder. On Windows the work is
-// the PowerShell script `script/stop_eve.ps1` (the same one `run.sh` and the build use); `-SkipParent` keeps this eve
-// alive, since it is the parent of the PowerShell it started. Elsewhere `pkill -f` matches the full path of the program.
 /// `eve --kill`: stop every other eve program that runs from the folder of this one.
 fn killOthers(io: Io, arena: std.mem.Allocator, out: *Io.Writer) !u8 {
     const dir = try std.process.executableDirPathAlloc(io, arena);

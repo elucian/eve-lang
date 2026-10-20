@@ -23,8 +23,6 @@ pub const version_plain: u8 = 0x03;
 
 pub const Error = error{ NotDbf, Damaged };
 
-// Zig tip: a struct whose fields have defaults can be created with only the fields that matter: `.{ .kind = 'N' }`.
-// The name is a fixed array of 11 bytes (as in the file), padded with zeros; `nameSlice` gives the text part.
 /// One field (column) of a file.
 pub const Field = struct {
     name: [11]u8 = @splat(0),
@@ -32,13 +30,10 @@ pub const Field = struct {
     length: u8 = 10,
     decimals: u8 = 0,
 
-    // Zig tip: a function declared inside a struct whose first parameter is the struct (`self: *T`) is a method: `x.f()`
-    // calls `f(&x)`.
     pub fn nameSlice(self: *const Field) []const u8 {
         return std.mem.sliceTo(&self.name, 0);
     }
 
-    // Zig tip: `setName` relies on the same Zig feature as `Field` above: see the tip there.
     pub fn setName(self: *Field, s: []const u8) void {
         self.name = @splat(0);
         const n = @min(s.len, max_name);
@@ -46,9 +41,6 @@ pub const Field = struct {
     }
 };
 
-// Zig tip: `Stream` borrows the bytes of the file (it never copies them) and keeps its place in them: `next` moves to the
-// next record that is not deleted and returns `true`, then `cell(i)` is a slice of the file bytes, trimmed of the blanks of
-// the format. Nothing is allocated, so the stream needs no `deinit`; the fields are in a fixed array of 255.
 /// A forward reader of the records of a DBF file held in memory.
 pub const Stream = struct {
     bytes: []const u8,
@@ -61,8 +53,6 @@ pub const Stream = struct {
     at: u32 = 0,
     current: []const u8 = &.{},
 
-    // Zig tip: the result type `!T` (or `Error!T`) is an error union: a value or an error. `try f()` passes the error to
-    // the caller; `f() catch …` handles it in place.
     /// Read the header of the file.
     pub fn init(bytes: []const u8) Error!Stream {
         if (bytes.len < 33) return error.NotDbf;
@@ -94,12 +84,10 @@ pub const Stream = struct {
         return s;
     }
 
-    // Zig tip: `fields` relies on the same Zig feature as `nameSlice` above: see the tip there.
     pub fn fields(self: *const Stream) []const Field {
         return self.fields_buf[0..self.nfields];
     }
 
-    // Zig tip: `next` relies on the same Zig feature as `Field` above: see the tip there.
     /// Move to the next record that is not deleted; false at the end.
     pub fn next(self: *Stream) bool {
         while (self.at < self.records) {
@@ -113,7 +101,6 @@ pub const Stream = struct {
         return false;
     }
 
-    // Zig tip: `cell` relies on the same Zig feature as `Stream` above: see the tip there.
     /// The text of field `i` of the current record, trimmed. A date is `YYYY-MM-DD` and a logical `1` or `0`, written in
     /// `buf`; a date or a logical that is blank or unreadable is the empty text.
     pub fn cell(self: *const Stream, i: usize, buf: *[16]u8) []const u8 {
@@ -136,8 +123,6 @@ pub const Stream = struct {
     }
 };
 
-// Zig tip: the encoder is told its fields first, then each row as a list of texts; every cell is cut or padded to the width
-// of its field (numbers on the right, the rest on the left). `finish` hands over the bytes, which the caller owns and frees.
 /// Builds the bytes of a DBF file from rows of text.
 pub const Writer = struct {
     gpa: std.mem.Allocator,
@@ -146,18 +131,14 @@ pub const Writer = struct {
     records: u32 = 0,
     date: [3]u8,
 
-    // Zig tip: a plain function: the types of the parameters and of the result are written out, and Zig has no default
-    // arguments, so a call always passes every parameter.
     pub fn init(gpa: std.mem.Allocator, fields: []const Field, date: [3]u8) Writer {
         return .{ .gpa = gpa, .fields = fields, .date = date };
     }
 
-    // Zig tip: `deinit` relies on the same Zig feature as `nameSlice` above: see the tip there.
     pub fn deinit(self: *Writer) void {
         self.body.deinit(self.gpa);
     }
 
-    // Zig tip: `add` relies on the same Zig feature as `init` above: see the tip there.
     /// Add a record: one text for each field (an empty text is a blank cell).
     pub fn add(self: *Writer, cells: []const []const u8) !void {
         try self.body.append(self.gpa, ' ');
@@ -181,7 +162,6 @@ pub const Writer = struct {
         self.records += 1;
     }
 
-    // Zig tip: `finish` relies on the same Zig feature as `Writer` above: see the tip there.
     /// The bytes of the whole file.
     pub fn finish(self: *Writer) ![]u8 {
         const header_len: u16 = @intCast(32 + self.fields.len * 32 + 1);
@@ -210,8 +190,6 @@ pub const Writer = struct {
     }
 };
 
-// Zig tip: the date of the header is three bytes, the year since 1900. `std.time.epoch` turns seconds since 1970 into a
-// calendar day. The result is a plain array, so the caller needs no allocation.
 /// The bytes YY MM DD of a moment given in seconds since 1970.
 pub fn headerDate(secs: i64) [3]u8 {
     const es = std.time.epoch.EpochSeconds{ .secs = @intCast(@max(secs, 0)) };
@@ -220,8 +198,6 @@ pub fn headerDate(secs: i64) [3]u8 {
     return .{ @intCast(@mod(yd.year, 100)), @intFromEnum(md.month), md.day_index + 1 };
 }
 
-// Zig tip: a `test` block is compiled only by `zig build test`; `try std.testing.expect…` fails the test, with the values,
-// when a check is false.
 test "the encoder and the stream agree" {
     var f1: Field = .{ .kind = 'C', .length = 8 };
     f1.setName("name");
@@ -251,8 +227,6 @@ test "the encoder and the stream agree" {
     try std.testing.expect(!s.next());
 }
 
-// Zig tip: test "a deleted record is skipped and a text that is not DBF is refused" relies on the same Zig feature as test
-// "the encoder and the stream agree" above: see the tip there.
 test "a deleted record is skipped and a text that is not DBF is refused" {
     var f1: Field = .{ .kind = 'C', .length = 4 };
     f1.setName("a");

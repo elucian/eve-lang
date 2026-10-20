@@ -13,14 +13,10 @@ pub const Error = error{ BadPattern, OutOfMemory };
 
 const Op = enum { char, any, class, split, jmp, assert_start, assert_end, match };
 
-// Zig tip: `x` and `y` are the two places a `split` can go to, or the one place of a `jmp`; `c` is the letter of a `char`, and
-// for a `class` it is the number of the set of letters. One struct with a few numbers is enough for every instruction.
 const Inst = struct { op: Op, c: u8 = 0, x: usize = 0, y: usize = 0 };
 
 const Set = [256]bool;
 
-// Zig tip: a tagged union is a value that is one of several shapes, and `switch` must name them all. `*const Node` is a pointer to
-// a node that is not changed; the nodes live in an arena, so they are all freed together when the parse ends.
 const Node = union(enum) {
     char: u8,
     any,
@@ -51,9 +47,6 @@ const Parser = struct {
         return ptr;
     }
 
-    // Zig tip: the three `parse` functions call each other, one for each level of the grammar: an alternative (`a|b`) is a list of
-    // sequences, a sequence is a list of items, an item is an atom with an optional repeat. The level that binds tighter is
-    // called by the one above it. This is called recursive descent.
     fn parseAlt(p: *Parser) Error!*const Node {
         const left = try p.parseSeq();
         if (p.peek() == '|') {
@@ -149,8 +142,6 @@ const Parser = struct {
         return p.node(.{ .class = @intCast(p.sets.items.len - 1) });
     }
 
-    // Zig tip: a set of letters is a table of 256 booleans, one for each byte, so asking "is this byte in the set?" is one
-    // index. Both cases of a letter are put in, so the match ignores the case.
     fn parseClass(p: *Parser) Error!*const Node {
         var set: Set = @as([256]bool, @splat(false));
         var negate = false;
@@ -213,8 +204,6 @@ pub const Regex = struct {
     prog: []Inst,
     sets: []Set,
 
-    // Zig tip: `defer arena.deinit()` frees the whole tree of the parse when `compile` returns; only the program and the sets,
-    // copied into memory of the caller (`toOwnedSlice`), stay.
     /// Compile a pattern; `error.BadPattern` when it is not a regular expression.
     pub fn compile(gpa: std.mem.Allocator, pattern: []const u8) Error!Regex {
         var arena_state = std.heap.ArenaAllocator.init(gpa);
@@ -274,9 +263,6 @@ pub const Regex = struct {
 
     const Threads = struct { list: []usize, len: usize = 0, mark: u32 = 0 };
 
-    // Zig tip: `split`, `jmp` and the two assertions cost no letter, so they are followed at once; the instructions that read a
-    // letter are put in the list. `marks[pc] == list.mark` says the place was already followed in this step. The answer is true as
-    // soon as `match` is reached.
     fn add(self: *const Regex, t: *Threads, marks: []u32, pc: usize, pos: usize, end: usize) bool {
         if (marks[pc] == t.mark) return false;
         marks[pc] = t.mark;
@@ -301,9 +287,6 @@ fn push(gpa: std.mem.Allocator, prog: *std.ArrayList(Inst), inst: Inst) Error!us
     return prog.items.len - 1;
 }
 
-// Zig tip: the program is written in order, and a `split` or `jmp` whose target is not known yet is written with a blank and
-// filled in later ("patched") when the target is reached. A repeat of `min` to `max` times writes the node `min` times, then
-// either a loop (no maximum) or `max - min` optional copies, each able to skip the rest.
 fn emit(gpa: std.mem.Allocator, prog: *std.ArrayList(Inst), n: *const Node) Error!void {
     switch (n.*) {
         .char => |c| _ = try push(gpa, prog, .{ .op = .char, .c = c }),
