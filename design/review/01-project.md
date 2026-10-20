@@ -56,7 +56,7 @@
 
 **todo** I try my best. 
 
-**RPJ-R02 Grammar before more tests.** Derive the EBNF from `comp/evevm/src/parser.zig` (1 226 lines) now (S3.1), check it against every `.eve` file (S3.6), and only then write level 2 and 3 tests. Every Q-019/Q-022 assumption becomes a sentence in the spec before the test that relies on it is merged.
+**RPJ-R02 Grammar before more tests.** Derive the EBNF from `code/evevm/src/parser.zig` (1 226 lines) now (S3.1), check it against every `.eve` file (S3.6), and only then write level 2 and 3 tests. Every Q-019/Q-022 assumption becomes a sentence in the spec before the test that relies on it is merged.
 
 **todo** bed idea, we draft specification from /tutorial not from code. The code will be revised and will refer specification items with code for faster identification.
 

@@ -15,7 +15,7 @@ Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a
 - Q-005 Expected-output convention for tests (answered 2026-10-06 → D-094)
 - D-006 First implementation: an Eve VM written in Zig
 - Q-006 Specification license (answered 2026-10-06 → D-061, D-078)
-- D-007 `comp/evevm/` source, `bin/eve.exe` official implementation
+- D-007 `code/evevm/` source, `bin/eve.exe` official implementation
 - Q-007 Which implementation does `manual/` document? (answered 2026-09-28 → D-005)
 - D-008 Shebang line
 - Q-008 Implementation language and name of the first compiler (answered 2026-09-28 → D-006, D-007)
@@ -133,7 +133,7 @@ Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a
 - Q-005 Expected-output convention for tests (answered 2026-10-06 → D-094)
 - D-006 First implementation: an Eve VM written in Zig
 - Q-006 Specification license (answered 2026-10-06 → D-061, D-078)
-- D-007 `comp/evevm/` source, `bin/eve.exe` official implementation
+- D-007 `code/evevm/` source, `bin/eve.exe` official implementation
 - Q-007 Which implementation does `manual/` document? (answered 2026-09-28 → D-005)
 - D-008 Shebang line
 - Q-008 Implementation language and name of the first compiler (answered 2026-09-28 → D-006, D-007)

@@ -1,12 +1,12 @@
 # Plan: the system library and the standard library (level 6)
 
-Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of level 6. Nothing here is decided: the choices that need the author are collected in section 9 (Q-064). Related: `tutorial/syslib.html`, `lib/README.md`, D-053, D-132, D-145, Q-024 (`design/decision/level5.md`), `spec/library/`, `comp/eveux/README.md` §2 and §4, `design/design-service.md`.
+Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of level 6. Nothing here is decided: the choices that need the author are collected in section 9 (Q-064). Related: `tutorial/syslib.html`, `lib/README.md`, D-053, D-132, D-145, Q-024 (`design/decision/level5.md`), `spec/library/`, `code/eveux/README.md` §2 and §4, `design/design-service.md`.
 
 ## 1. Principles
 
 - **Performance first, purity second.** A function is written in Zig when it is on a hot path, calls C or the operating system, or needs a secret to stay out of Eve values. Eve is used where it is fast enough, or where writing it in Eve teaches us something about the language.
 - **Keep what works.** Every module of level 5 (`csv`, `json`, `txt`, `fs`, `time`, `secret`, `database`, `checkpoint`) stays in Zig as it is. No behavior change, no rewrite, no test change.
-- **Minimum refactoring.** One refactor only: the string chain of `libraryCall` in `comp/evevm/src/dlib.zig` becomes a registry (section 3). It is mechanical and the 66+63+50+42+115 tests prove it.
+- **Minimum refactoring.** One refactor only: the string chain of `libraryCall` in `code/evevm/src/dlib.zig` becomes a registry (section 3). It is mechanical and the 66+63+50+42+115 tests prove it.
 - **Strengthen Eve where it pays.** New modules that are *policy* (routes, rpc client, machines, jobs, pager, auth) are written in Eve on top of Zig primitives. They are the stress test of the language for level 7, and the stronger library the user asked for.
 - **Emancipation.** The standard library becomes a real, versioned, tested, documented thing: a folder of `.eve` modules with a manifest, found before anything else on the library path, loaded by the same machinery as user libraries (c01 to c09), with `external` declarations as the only door to Zig (D-053).
 
@@ -14,7 +14,7 @@ Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of le
 
 | | System library | Standard library |
 |---|---|---|
-| Written in | Zig (`comp/evevm/src/`, `evecm`, and the binding files such as `sqlite.zig`) | Eve (`lib/*.eve`) |
+| Written in | Zig (`code/evevm/src/`, `evecm`, and the binding files such as `sqlite.zig`) | Eve (`lib/*.eve`) |
 | Holds | primitives: files, sockets, clock, process, keyring, hashes, drivers, parsers, formats, the `vm.*` API | policy and composition: routes, rpc, machines, jobs, pager, auth, config, log reader, test helpers, traits |
 | Reached by | `external` declarations in a `.eve` module, or built in the interpreter for the hot ones | `use (module)` like any module |
 | Changes | rarely, with the VM version | with the library version, without a new `eve.exe` when it only uses existing primitives |
@@ -26,7 +26,7 @@ Rule of thumb for a new function: needs the OS, C, bytes, a loop over many value
 
 ## 3. The one refactor: a registry for external functions
 
-Today `libraryCall` (`comp/evevm/src/dlib.zig:87`) is a chain of `eql(u8, module, "fs")` tests; each new module adds lines and every call pays the comparisons. Replace it with:
+Today `libraryCall` (`code/evevm/src/dlib.zig:87`) is a chain of `eql(u8, module, "fs")` tests; each new module adds lines and every call pays the comparisons. Replace it with:
 
 - a comptime table `pub const natives = [_]Native{ .{ .module = "fs", .name = "read!", .call = fsRead }, ... }`, built with `std.StaticStringMap` so lookup is a hash, not a chain;
 - the same table is what `external function read!(...)` in a `.eve` file binds to: the compiler checks that every `external` has an entry and every entry has a signature, so `eve --doc` and the VM cannot disagree;
@@ -139,7 +139,7 @@ Isolate Outbound vs. Inbound: Use Zig's standard TLS client (std.http.Client wit
 
 ## 10. Design improvements after M1 (2026-10-18)
 
-M1 is done in part: the registry (`natives` in `comp/evevm/src/dlib.zig`, one hash lookup per module; all levels give the same results as before, 371 pass and the same 5 failures that were failing before the change; `bmark.py` shows no slowdown), signature files `lib/{fs,time,secret,csv,json,txt,checkpoint,database}.eve`, the spec page `spec/library/registry.md`, and `script/libcheck.py`, which fails when a signature file and the native table disagree (it found the two files that were missing). The rest of this section is what the design gains from that experience.
+M1 is done in part: the registry (`natives` in `code/evevm/src/dlib.zig`, one hash lookup per module; all levels give the same results as before, 371 pass and the same 5 failures that were failing before the change; `bmark.py` shows no slowdown), signature files `lib/{fs,time,secret,csv,json,txt,checkpoint,database}.eve`, the spec page `spec/library/registry.md`, and `script/libcheck.py`, which fails when a signature file and the native table disagree (it found the two files that were missing). The rest of this section is what the design gains from that experience.
 
 - **(1) One contract, checked by a script.** `libcheck.py` enforces rules 1 and 2 of `registry.md` (every `external` has a native, every native module has a signature file). Run it in `zig build test` and in `runtest.py all` (to do). The table is by module, not by function: a function table adds code and no speed, because the handlers already switch on the name. Go to a table by function only for a function that is measured to be hot.
 - **(2) Layers with a rule of direction.** Layer 0: the interpreter (`io`, `exception`, the types). Layer 1: system modules (Zig). Layer 2: standard modules (Eve). A module may use only a lower layer or its own `external`s. This keeps `rpc` from importing `machines`, and lets a module in Layer 2 move to Zig without a change for its users.
@@ -156,7 +156,7 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 ## 11. State of M2 (2026-10-18)
 
 - **Standard library in Eve is real:** `lib/*.eve` is found beside the program (`<prefix>/lib`, installed by `zig build -p <prefix>`; `$EVE_STDLIB` overrides) and searched before `$EVE_LIB_PATH`; `lib/sys/` keeps the signature files, never imported. First module: `test` (E11), test `f03_test_module`.
-- **System modules done:** `crypto` (S1: sha256, sha512, sha256_file!, hmac_sha256, hex and base64 codecs, random_hex!, same) and `os` (S6: run!, env!, hostname!, pid!, platform) in `comp/evevm/src/syslib.zig`; tests `f04_crypto`, `f05_os`. Not yet in `crypto`: AEAD encryption and password hashing (scrypt/pbkdf2).
+- **System modules done:** `crypto` (S1: sha256, sha512, sha256_file!, hmac_sha256, hex and base64 codecs, random_hex!, same) and `os` (S6: run!, env!, hostname!, pid!, platform) in `code/evevm/src/syslib.zig`; tests `f04_crypto`, `f05_os`. Not yet in `crypto`: AEAD encryption and password hashing (scrypt/pbkdf2).
 - **Left in M2:** S10 `gz` (the readers already inflate `.gz`), E6 `config`, E14 `traits` (`Iterable`, `Comparable`, `Printable` already exist in the interpreter; the task is their signature and spec page). The test numbers f06 to f07 are free for them.
 - **Gaps found:** `backlog/library-gaps.md` (G-1 to G-3).
 
@@ -175,7 +175,7 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 
 ## 14. State of M3 (2026-10-18), step 2: `net`
 
-- Done: the system module `net` (`net.listen!`, `net.connect!`, `Listener`, `Socket`; `spec/library/net.md`, `comp/evevm/src/netlib.zig`, test `f09_net`): a server and its clients run as tasks of one script. Found: the sockets of Zig 0.16 on Windows are AFD handles, so readiness polling with `WSAPoll` fails; a blocking call runs on a helper thread polled with `waitFor` (TD-28).
+- Done: the system module `net` (`net.listen!`, `net.connect!`, `Listener`, `Socket`; `spec/library/net.md`, `code/evevm/src/netlib.zig`, test `f09_net`): a server and its clients run as tasks of one script. Found: the sockets of Zig 0.16 on Windows are AFD handles, so readiness polling with `WSAPoll` fails; a blocking call runs on a helper thread polled with `waitFor` (TD-28).
 - Next in M3: the HTTP protocol in Eve over `net` (`http`: request, response, client `get!` and `post!`), then `route` and `service`, and the test `f10_route_hello`.
 
 ## 15. State of M3 (2026-10-18), step 3: HTTP, routes and service in Eve

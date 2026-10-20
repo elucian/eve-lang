@@ -112,13 +112,13 @@ Author answers TOP-08, TOP-10, TOP-I2. Refines D-031, D-043.
 ## D-053 Library in Eve, documented by eved (2026-10-02)
 The tool `eved` is replaced by the command `eve --doc` (D-082).
 Author answers LIB-01 to LIB-06.
-- The library is mostly written in Eve, in `comp/evevm/lib/` (README.md documents it). Only primitives that need the machine are native: a routine whose signature ends in `;`.
-- Documentation is generated, not written: `comp/evevm/doc/` holds Markdown made from the comments (`**` blocks above a declaration) and the signatures. The tool is `eved` (Eve doc), written in Zig, in `comp/evevm/doc/eved.zig`, next to its output; `zig build doc`.
+- The library is mostly written in Eve, in `code/evevm/lib/` (README.md documents it). Only primitives that need the machine are native: a routine whose signature ends in `;`.
+- Documentation is generated, not written: `code/evevm/doc/` holds Markdown made from the comments (`**` blocks above a declaration) and the signatures. The tool is `eved` (Eve doc), written in Zig, in `code/evevm/doc/eved.zig`, next to its output; `zig build doc`.
 - LIB-01: built-ins are both functions and methods; public methods in a string module, possibly a `String` class. LIB-02: `truncate`, `fill`, `erase` return a new string; old references stay valid; garbage collected.
 - LIB-03/04: `read` is callable as a statement. `routine .write(*args:String, sep:=" ", eol:=False)` writes at the current position; `print` adds a new line by default. Both write to stdout.
 - LIB-05: new `log_err()` and `log_wrn()` for the `recover` region (corrected by D-057: they write log files). An unhandled error at the end of a driver goes to stderr: last error and call stack in debug mode, only the message otherwise.
 - LIB-06: a backslash escapes, a double backslash is one backslash; `&code;` sends any HTML character code. Spec pending.
-- Applied: `comp/evevm/lib/io.eve` (draft), lib and doc READMEs, `eved` with a unit test. Not yet applied: tutorial library.html, the string module, `spec/library/builtins.*`.
+- Applied: `code/evevm/lib/io.eve` (draft), lib and doc READMEs, `eved` with a unit test. Not yet applied: tutorial library.html, the string module, `spec/library/builtins.*`.
 
 ## D-055 Processing answers: interruptions, raise, aspects, command line (2026-10-02)
 Author answers PRC-02, 03, 06 to 11, 13, 14. Replaces parts of D-010, D-038, D-043.
@@ -132,10 +132,10 @@ Author answers PRC-02, 03, 06 to 11, 13, 14. Replaces parts of D-010, D-038, D-0
 - Applied: processing.html, topology.html, exceptions.html, data/processing.json. Spec work pending.
 
 ## D-056 `external` declarations; exception.eve (2026-10-02)
-Author decision. A declaration with the keyword `external` in front (`external .print(...)`) keeps only the signature; the body is implemented in Zig by the virtual machine, and the compiler creates the external library. It replaces the trailing `;` proposed in D-053. `comp/evevm/lib/exception.eve` (module `exception`: Error, Warning, Call, `raise`, `expect`, `assert`, `warn`, constants `$err_name` and `$wrn_name`) and `io.eve` use it; `eved` documents it. exceptions.html: tables have plain cells, no `<code>`; the module is `exception` in lower case.
+Author decision. A declaration with the keyword `external` in front (`external .print(...)`) keeps only the signature; the body is implemented in Zig by the virtual machine, and the compiler creates the external library. It replaces the trailing `;` proposed in D-053. `code/evevm/lib/exception.eve` (module `exception`: Error, Warning, Call, `raise`, `expect`, `assert`, `warn`, constants `$err_name` and `$wrn_name`) and `io.eve` use it; `eved` documents it. exceptions.html: tables have plain cells, no `<code>`; the module is `exception` in lower case.
 
 ## D-057 io library: error and warning, log files, $EVE_OUT (2026-10-02)
-Author correction of D-053 (LIB-05). `error(message)` and `warning(message)` write to stderr (as the tutorial already says). `log_err(message)` and `log_wrn(message)` do not print: they create log files in the output folder, `out` by default. The system variable `$EVE_OUT` sets the output folder. Open: the names of the log files and their line format. Applied: comp/evevm/lib/io.eve, comp/evevm/lib/README.md, topology.html (system variables).
+Author correction of D-053 (LIB-05). `error(message)` and `warning(message)` write to stderr (as the tutorial already says). `log_err(message)` and `log_wrn(message)` do not print: they create log files in the output folder, `out` by default. The system variable `$EVE_OUT` sets the output folder. Open: the names of the log files and their line format. Applied: code/evevm/lib/io.eve, code/evevm/lib/README.md, topology.html (system variables).
 
 ## D-066 An aspect is an encapsulated machine with one `main`; parallel blocks start aspects (2026-10-03)
 Author decision (design/design-issues.md). Answers Q-020 (a), (b), (c), PRC-14, CON-09, CON-11 (who is started). Replaces D-042 and the aspect part of D-043 (named processes), the parallel methods of D-047, and the singleton scope and `reset` of D-055.
@@ -212,7 +212,7 @@ Author decision. Answers Q-020 (f) for the life cycle; refines D-035 (visibility
 
 ## D-071 Register of system variables (2026-10-03)
 Author decision. Answers TOP-08 (the list of the 0.1 system variables was open).
-- `spec/semantics/variables.md` is the register of the system variables: name, type, meaning, default, status (0.1, draft, later, question), VM support and source. It lists the 19 variables and the 2 constant families found in the tutorial, the decisions and `comp/evevm/lib`, and 13 `$` names that are not system variables (placeholders, examples).
+- `spec/semantics/variables.md` is the register of the system variables: name, type, meaning, default, status (0.1, draft, later, question), VM support and source. It lists the 19 variables and the 2 constant families found in the tutorial, the decisions and `code/evevm/lib`, and 13 `$` names that are not system variables (placeholders, examples).
 - A new system variable is added to the register first, then used in a page, a test or the VM.
 - Tutorial: the table "System Variables" of syntax.html is the only list of system variables in the tutorial (status 0.1, draft and later; the question rows wait). topology.html lost its two lists and links to it, like exceptions.html and command.html. `$object` left the table (open point 4); databases.html `$evelib` → `$EVE_LIB`.
 - Proposed for 0.1: `$error`, `$NAME` (environment), `$EVE_LIB`, `$EVE_ASP`, `$EVE_OUT`, and the `$err_`/`$wrn_` constants. Six open points (duplicates `$OS_PWD`/`$CWD`, `$MY_LIB`/`$MY_LOG`, the two meanings of `$trace`, `$object` next to `@self`, folder types, which variables a driver may set) are in the register.
@@ -309,9 +309,9 @@ The level 2 tests (project tests, D-073) follow D-066, D-068 and D-072. These ru
 Author decision. Replaces the separate tool `eved` of D-053; the rules of the generated documentation do not change.
 - Every function of the Eve tools is a command of `eve`: there is no second program. The documentation generator is the command `doc`: `eve --doc <folder | file.eve> [output folder]` on the command line, `doc …` in the REPL (every REPL command is also a `--<command>` option, `manual/usage.md`).
 - It writes `<name>.md` for the file given, or for each `.eve` file directly in the folder; the output folder is `doc` by default and is created when missing. Exit status 0, 64 (path missing), 66 (can't read).
-- Code: `comp/evevm/src/doc.zig` (moved from `comp/evevm/doc/eved.zig`, with Zig tips), the jump-table entry `doc` and the handler `cmdDoc` in `cli.zig`. `zig build doc` runs `eve --doc lib doc`. The build no longer makes `eved.exe`; `comp/evevm/doc/eved.zig` and `bin/eved.*` are deleted. The declarations recognized now also include `generator` and `service`.
+- Code: `code/evevm/src/doc.zig` (moved from `code/evevm/doc/eved.zig`, with Zig tips), the jump-table entry `doc` and the handler `cmdDoc` in `cli.zig`. `zig build doc` runs `eve --doc lib doc`. The build no longer makes `eved.exe`; `code/evevm/doc/eved.zig` and `bin/eved.*` are deleted. The declarations recognized now also include `generator` and `service`.
 - Checked: `zig build test` passes; `zig build doc` regenerates `doc/io.md` and `doc/exception.md` unchanged; `eve --doc lib/io.eve <folder>` writes the same page.
-- Applied: evevm README, `comp/evevm/doc/README.md`, `comp/evevm/lib/README.md`, `manual/usage.md` (command table, section "Documentation: doc"), tutorial modules.html, `design/features_inventory.md` (F-TLS-07, F-DOC-05), `backlog/vscode-plugin.md`.
+- Applied: evevm README, `code/evevm/doc/README.md`, `code/evevm/lib/README.md`, `manual/usage.md` (command table, section "Documentation: doc"), tutorial modules.html, `design/features_inventory.md` (F-TLS-07, F-DOC-05), `backlog/vscode-plugin.md`.
 
 ## Q-037 Shape of the stack trace of an aspect error (2026-10-07; answered 2026-10-07 → D-113)
 D-112 (d): `$error.line` is the line of the original `raise`, and the trace names the aspect. What is the trace? Proposal: `$error.trace` is a list of `(unit, line)` pairs, innermost first, for example `(("fail", 6), ("b17_aspect_trace", 8))`; `$error.unit` is the name of the aspect where it started. What is printed for an unhandled error: one line per pair on the error output, after the message?

@@ -1,6 +1,6 @@
 # Instruction set of the bytecode machine
 
-Status: stage B5.2 (D-201, F-VM-04); the set grows with B5.3 to B5.6. The source of truth is `comp/evecm/src/op.zig`; `python script/bctest.py` fails when an instruction of the source is missing from this page. `eve --disasm file.eve` prints the listing of a script.
+Status: stage B5.2 to B5.3 (D-201, F-VM-04); the set grows with B5.4 to B5.6. The source of truth is `code/evecm/src/op.zig`; `python script/bctest.py` fails when an instruction of the source is missing from this page. `eve --disasm file.eve` prints the listing of a script.
 
 ## Encoding
 
@@ -29,6 +29,16 @@ An instruction is a 32-bit word: `op` (8 bits), then the operands `A`, `B`, `C` 
 | `setlike` | `A := B`, converted to the kind that `A` holds |
 | `augment` | `A := A op B`, `C` is the arithmetic instruction; lists and sets change in place |
 | `binx`, `extra` | `A := B op C` for an operator without its own instruction; the operator text is the constant of the `extra` word |
+| `new_list`, `new_map` | `A := ()` or `A := {}`; create an empty list or map |
+| `list_push` | `A <+ B`; append B to list A (A is modified) |
+| `list_index` | `A := B[C]`; get element C from list B (1-based indexing, negative indices from end) |
+| `list_set` | `A[B] := C`; set element B of list A to C (A is modified) |
+| `map_get` | `A := B[C]`; get value for key C from map B |
+| `map_set` | `A[B] := C`; set A[B] to C for map A (A is modified) |
+| `set_add` | `A <+ B`; add B to set A (A is modified) |
+| `set_has` | `A := B in C`; check if B is in set C (result is boolean) |
+| `length` | `A := B.count()` or `.length()`; length of list, map, set, or string |
+| `call_method` | method call on a collection or string (stub; not yet implemented) |
 | `evalx`, `execx` | the bridge (TD-46): evaluate an expression or run a statement on the tree walker, with the named variables copied in and out |
 | `over` | end the process |
 | `halt` | end of the main process |

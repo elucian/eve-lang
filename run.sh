@@ -42,18 +42,18 @@ stop_eve() {
 build_part() {
   case "$1" in
     eve | evevm) stop_eve; zig build "$1" -p . ;;
-    evecp) stop_eve; (cd comp/evecp && zig build -p ../..) ;;
+    evecp) stop_eve; (cd code/evecp && zig build -p ../..) ;;
     duckdb | evedb) stop_eve; (cd drivers/duckdb && zig build -p ../..) ;;
-    evetx) stop_eve; (cd comp/evetx && zig build -p ../..) ;;
-    eveux) stop_eve; (cd comp/eveux && zig build -p ../..) ;;
-    evewp) echo "build evewp: there is no build yet, evewp is a design (comp/evewp/README.md)" >&2; return 1 ;;
+    evetx) stop_eve; (cd code/evetx && zig build -p ../..) ;;
+    eveux) stop_eve; (cd code/eveux && zig build -p ../..) ;;
+    evewp) echo "build evewp: there is no build yet, evewp is a design (code/evewp/README.md)" >&2; return 1 ;;
     manual) build_manual ;;
     *) echo "build: unknown part '$1' (eve evevm evecp duckdb evetx eveux all manual)" >&2; return 1 ;;
   esac
 }
 # the generated parts of the manual and the tutorial: from spec/ (keywords, features) and from the source (lib/doc)
 build_manual() {
-  python script/genkeywords.py && python comp/evetx/gen_keywords.py && zig build doc &&
+  python script/genkeywords.py && python code/evetx/gen_keywords.py && zig build doc &&
     python script/genpages.py && python script/genmanual.py && python script/relnotes.py --manual
 }
 case "$1" in

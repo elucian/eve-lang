@@ -1,6 +1,6 @@
 # 08 Static review of evevm against the spec (2026-10-07)
 
-Scope: `comp/evevm/src/lexer.zig`, `parser.zig`, `ast.zig`, `interp.zig` (tree-walking interpreter, 5.9k lines) read against `spec/` (D-093 to D-111). Baseline on level 1: 16 pass, 66 fail, almost all with exit 65 (the parser refuses the new syntax). Findings are grouped by the part that must change; each is closed when the test that shows it passes.
+Scope: `code/evevm/src/lexer.zig`, `parser.zig`, `ast.zig`, `interp.zig` (tree-walking interpreter, 5.9k lines) read against `spec/` (D-093 to D-111). Baseline on level 1: 16 pass, 66 fail, almost all with exit 65 (the parser refuses the new syntax). Findings are grouped by the part that must change; each is closed when the test that shows it passes.
 
 ## Lexer
 - L1 `digits` accepts `_`: `1_000` must be a lexical error (a78, Q-013).

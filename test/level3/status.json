@@ -226,7 +226,7 @@
    "runs": 167,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a private member is seen only inside its class (D-085)",
    "reason": ""
   },
@@ -236,7 +236,7 @@
    "runs": 167,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "code outside a class can't add an attribute to an object (Q-019h, Q-031k, D-096)",
    "reason": ""
   },
@@ -246,7 +246,7 @@
    "runs": 167,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a class hosts only methods: a procedure in a class body is a compile error (D-103, D-123)",
    "reason": ""
   },
@@ -256,7 +256,7 @@
    "runs": 165,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a function or a procedure can't be bound to a class with @self: only a method can (D-123)",
    "reason": ""
   },
@@ -266,7 +266,7 @@
    "runs": 165,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a class hosts only methods: a function in a class body is a compile error (D-123)",
    "reason": ""
   },
@@ -276,7 +276,7 @@
    "runs": 158,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "use (m(*)) merges the names: two modules that export the same name are a compile error (D-112 a)",
    "reason": ""
   },
@@ -296,7 +296,7 @@
    "runs": 158,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a module has no public variables: exporting one is a compile error (D-068)",
    "reason": ""
   },
@@ -306,7 +306,7 @@
    "runs": 158,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "export lists declared members only: an undeclared name is a compile error (proposed)",
    "reason": ""
   },
@@ -316,7 +316,7 @@
    "runs": 158,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a module is not a class: it has no instances (D-068)",
    "reason": ""
   },
@@ -356,7 +356,7 @@
    "runs": 156,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a module holds declarations and regions only: a free statement is a compile error (D-126)",
    "reason": ""
   },
@@ -366,7 +366,7 @@
    "runs": 50,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "an aspect can't be imported: only a module can (D-126, D-179)",
    "reason": ""
   },
@@ -466,7 +466,7 @@
    "runs": 34,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792322981,
+   "mtime": 1792470166,
    "title": "an external routine has no body: giving one is a compile error (D-056, D-189)",
    "reason": ""
   },
@@ -556,7 +556,7 @@
    "runs": 29,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792327266,
+   "mtime": 1792470166,
    "title": "a constructor has no recover region: it is a compile error (D-192)",
    "reason": ""
   },

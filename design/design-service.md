@@ -162,7 +162,7 @@ To test on one workstation, both configurations use `localhost` with different p
 
 ## 5. `serve`: local HTTP
 
-**Dual mode and singleton (author, 2026-10-11).** A machine is a **singleton identified by its domain and port**. When the configuration names `localhost`, another machine can be started on `localhost` with a different port; on one port there is only one machine. The one machine has two doors to the same VM core and the same shared state: a command channel for the CLI clients (`eve -x file.eve`, `eve -c …`) through IPC, a Unix socket or TCP, and an HTTP/WebSocket server for the browser (the files of the web folder, and the Eve UX, `comp/eveux/`).
+**Dual mode and singleton (author, 2026-10-11).** A machine is a **singleton identified by its domain and port**. When the configuration names `localhost`, another machine can be started on `localhost` with a different port; on one port there is only one machine. The one machine has two doors to the same VM core and the same shared state: a command channel for the CLI clients (`eve -x file.eve`, `eve -c …`) through IPC, a Unix socket or TCP, and an HTTP/WebSocket server for the browser (the files of the web folder, and the Eve UX, `code/eveux/`).
 
 ```
                   ┌────────────────────────────────────────┐
@@ -481,7 +481,7 @@ eve:> select local
 - **Ctrl+Up, Ctrl+Down** show the previous and the next command issued, to edit and send again.
 - **`help`** shows the commands that make sense for the selected machine: on a remote one, not the local file and check commands.
 - **Tab** on a remote machine completes the stored procedures and the code on the server (D-172 point 7), not the local files.
-- The REPL is started by `eve`; the terminal UI by `eve -tx` (screen: `comp/evetx/design/design.svg`), the web UI by `eve -ux` (D-172).
+- The REPL is started by `eve`; the terminal UI by `eve -tx` (screen: `code/evetx/design/design.svg`), the web UI by `eve -ux` (D-172).
 - A program that was not uploaded cannot be run on a remote machine.
 
 ## 17. Service mode: `eve -s` (D-185, 2026-10-17)
@@ -547,9 +547,9 @@ WantedBy=multi-user.target
 
 A service has no user: it runs as `LocalSystem` on Windows unless `sc config eve obj= …` says otherwise, and as the user of the unit file on Linux. The machine does not drop privileges itself (question C).
 
-**evedb.** The database server (`drivers/duckdb/README.md`) will take the same option, `evedb serve -s`, with the same three forms, in version 0.2: the code is `comp/evevm/src/service.zig`, to move into the shared folder `modules/` (question D).
+**evedb.** The database server (`drivers/duckdb/README.md`) will take the same option, `evedb serve -s`, with the same three forms, in version 0.2: the code is `code/evevm/src/service.zig`, to move into the shared folder `modules/` (question D).
 
-**Tests.** `python script/service_check.py`: start from a console (silent, status 0, both doors), the second start, the stop, the log, the foreground form (silent, pid file, clean stop), `SIGTERM` on POSIX systems, and the Service Control Manager (create, start, query, stop, delete) when the script runs elevated. Unit tests of the option: `comp/eve/cli.zig`, "options: -s is the service or the configuration file". *State of 2026-10-17:* the console form, the foreground form and the log and pid file are tested on Windows; the Service Control Manager form compiles and is not yet run (the test machine had no administrator rights); the POSIX code compiles for `x86_64-linux-gnu` and is not yet run.
+**Tests.** `python script/service_check.py`: start from a console (silent, status 0, both doors), the second start, the stop, the log, the foreground form (silent, pid file, clean stop), `SIGTERM` on POSIX systems, and the Service Control Manager (create, start, query, stop, delete) when the script runs elevated. Unit tests of the option: `code/eve/cli.zig`, "options: -s is the service or the configuration file". *State of 2026-10-17:* the console form, the foreground form and the log and pid file are tested on Windows; the Service Control Manager form compiles and is not yet run (the test machine had no administrator rights); the POSIX code compiles for `x86_64-linux-gnu` and is not yet run.
 
 **Questions for the author (service mode).** **(A)** The REPL with a configuration file. Bare `eve -s file.cfg` is now the service. Should the REPL with a file get an option (for example `--repl`, or `-s file.cfg -i`... the letters are taken), or is `setup file.cfg` at the prompt enough? **(B)** The foreground form is selected by the variable `EVE_SERVICE=foreground`, because an option would be new syntax. Keep the variable, or choose an option (`--foreground`)? **(C)** Run as another user, drop privileges, and the Windows Event Log (start, stop, errors) instead of only the file: wanted in version 0.5? **(D)** `evedb serve -s` in 0.2 and `modules/service` as the shared code: agreed? **(E)** Rotation of the log (size or day) and a restart policy of the machine itself (the init system restarts it today): needed now?
 

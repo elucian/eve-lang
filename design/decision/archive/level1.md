@@ -12,8 +12,8 @@ Answers Q-007. No Eve implementation exists; the first compiler is being built n
 ## D-006 First implementation: an Eve VM written in Zig (2026-09-28)
 Answers Q-008 in part. The first Eve implementation is a virtual machine written in Zig that runs Eve source as a scripting language. There is no ahead-of-time compiler yet. `manual/` documents this VM; the feature tables have one column for it. A compiler can come later as a second implementation with its own support file.
 
-## D-007 `comp/evevm/` source, `bin/eve.exe` official implementation (2026-09-28)
-Answers Q-009. The Zig source of the Eve virtual machine lives in `comp/evevm/` in this repo. The build produces `bin/eve.exe` (`bin/eve` on Unix), the official Eve implementation. Its implementation id in the manual is `eve` (support file `manual/support/eve.json`). `bin/` holds build output only; `*.exe` is already git-ignored.
+## D-007 `code/evevm/` source, `bin/eve.exe` official implementation (2026-09-28)
+Answers Q-009. The Zig source of the Eve virtual machine lives in `code/evevm/` in this repo. The build produces `bin/eve.exe` (`bin/eve` on Unix), the official Eve implementation. Its implementation id in the manual is `eve` (support file `manual/support/eve.json`). `bin/` holds build output only; `*.exe` is already git-ignored.
 
 ## D-008 Shebang line (2026-09-28)
 Eve files run as scripts, so a file may start with a shebang line, for example
@@ -96,7 +96,7 @@ What are the VM's name and executable name (the manual uses the placeholder `eve
 
 Blocks: M7.6 (command-line examples), the support file name in M7.3.
 
-**Answer:** source folder `comp/evevm/`, executable `bin/eve.exe`, the official implementation (D-007).
+**Answer:** source folder `code/evevm/`, executable `bin/eve.exe`, the official implementation (D-007).
 
 ## Q-010 Exit codes of an Eve process (answered 2026-09-28 → D-010)
 The tutorial lists `exit`, `over` and `panic` as ways to interrupt a program, but gives no exit codes. Does `over N;` end the process with exit code N? Which codes do `exit`, `panic`, a failed `expect` and an unhandled error produce? `test/level1/expect.json` assumes `over 1;` → 1 (a02). The VM stub uses 70 for "not implemented"; the spec could reserve a range for VM failures.
@@ -469,10 +469,10 @@ Blocks: `lexical/lexical.md`.
 ## D-061 Licenses: BUSL-1.1 for code, CC BY 4.0 for the specification (2026-10-02)
 The CC BY 4.0 part is replaced by D-078 (CC BY-NC-SA 4.0).
 Author decision. Answers Q-006 and the open part of MAN-01; replaces the Apache 2.0 license of the repository and the CC BY-ND 4.0 of manifest.html.
-- Code (`comp/evevm/`, `script/`): Business Source License 1.1, text and parameters in `comp/evevm/LICENSE`. Licensor Elucian Moise; Change License Apache 2.0; Change Date 2030-10-02. The Additional Use Grant (proposed by the model, to confirm) allows production use except offering the VM or a derivative as a competing commercial VM, interpreter or hosted service for Eve.
+- Code (`code/evevm/`, `script/`): Business Source License 1.1, text and parameters in `code/evevm/LICENSE`. Licensor Elucian Moise; Change License Apache 2.0; Change Date 2030-10-02. The Additional Use Grant (proposed by the model, to confirm) allows production use except offering the VM or a derivative as a competing commercial VM, interpreter or hosted service for Eve.
 - Specification (`spec/`): CC BY 4.0, full legal code in `spec/LICENSE`. Adaptation is allowed, so the NoDerivatives bullets and the "implementation grant is needed because of ND" reasoning are gone; the grant and the trademark policy stay.
 - Manual, demo, pattern, test, plan, issues, tools: CC BY 4.0 (assumed by the model, to confirm). Root `LICENSE` is a summary.
-- Applied: LICENSE, README.md (section License), spec/index.md, comp/evevm/README.md, tutorial manifest.html (License section, legal notice).
+- Applied: LICENSE, README.md (section License), spec/index.md, code/evevm/README.md, tutorial manifest.html (License section, legal notice).
 - Note: the scl repo, which holds the tutorial pages, has a GPL-3.0 `LICENSE`. Which license covers the tutorial text is open.
 
 ## D-062 Trademark policy (2026-10-02)
@@ -530,7 +530,7 @@ Fix the mistake.
 **answer** confirm. We ise pair-up operator ":" to call optional parameters by name. when function/method use only optional parameters, calling by position is possible, but it could mess-up the code runtime, so refactory is preffered method when signature of functions change. 
 
 ## D-063 First execution of level 1: what running the tests taught (2026-10-02)
-Model decisions taken while writing the interpreter (`comp/evevm/src/interp.zig`); all of `test/level1/` (37 tests) passes. Each one is a rule the tests needed and no decision gave; change the test or the rule when you answer.
+Model decisions taken while writing the interpreter (`code/evevm/src/interp.zig`); all of `test/level1/` (37 tests) passes. Each one is a rule the tests needed and no decision gave; change the test or the rule when you answer.
 - Author answer: `(x)` is grouping, not a list; `(x,)` is the list of one element (corrects D-058, which said `(x)` is a list). The tests use `(2 + 3) * 4` and `("yes" if c else "no")`; a17 checks `(5,)`.
 - A symbol literal holds exactly one code point: `'one'` and `'zz'` are syntax errors ("use "..." for text"). a21 and a36 wrote strings in single quotes; they now use double quotes.
 - Matrix indexes: `g[1]` is the absolute row-major index (D-058), so a row is `g[1, *]` and a column `g[*, 1]`. a19 said `g[1][*]`. *(Corrected by D-064: `g[1][*]` is a row again.)*
@@ -553,7 +553,7 @@ Author request. Corrects the matrix line of D-063 (`g[1][*]` is again a row).
 - Each index may be a number, a range or `*`, so a chain selects a part: `m[1..5][3]` is column 3 of rows 1 to 5 (5 elements), `m[3][1..5]` is row 3, columns 1 to 5. The result is an array; a part takes one value with `:=` (D-058).
 - One pair of brackets with one index keeps D-058: `m[k]` is the absolute row-major index. Only a chain after it is a second dimension.
 - On a value that is not a matrix (a map, a list, a 1-dimension array) each pair of brackets indexes the result of the previous one: `h["k"][2]`, `v[2..5][1]` (an element of the slice).
-- Applied: spec/lexical/lexical.md, spec/lexical/delimiters.json, tutorial collections.html (Matrix indexes), comp/evevm/src/interp.zig (`indexChain`), test a38_matrix_index.
+- Applied: spec/lexical/lexical.md, spec/lexical/delimiters.json, tutorial collections.html (Matrix indexes), code/evevm/src/interp.zig (`indexChain`), test a38_matrix_index.
 
 ## D-065 `demo/` is temporary (2026-10-03)
 **Replaced (D-094):** by D-075: the demos are kept, never run, only analysed.

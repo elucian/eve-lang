@@ -1,6 +1,6 @@
 # Release policy
 
-Every release of the Eve virtual machine (`bin/eve.exe`, version in `comp/evevm/src/version.zig`) has **release notes** in `manual/releases/` and **updates the manual**. The rule is decision D-153 (`python script/plan.py show D-153`). A release is a record: once tagged, its notes are never edited again; a mistake is corrected in the notes of the next release.
+Every release of the Eve virtual machine (`bin/eve.exe`, version in `code/evevm/src/version.zig`) has **release notes** in `manual/releases/` and **updates the manual**. The rule is decision D-153 (`python script/plan.py show D-153`). A release is a record: once tagged, its notes are never edited again; a mistake is corrected in the notes of the next release.
 
 ## What a release delivers
 

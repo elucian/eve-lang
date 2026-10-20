@@ -16,8 +16,8 @@ All collection operations run on the tree walker through the bridge (`evalx`/`ex
 - `p1d_strings`: 16.3 ms tree walker, 15.3 ms bytecode (slightly faster due to reduced bridge calls)
 
 The method implementations are in:
-- `comp/evevm/src/interp/calls.zig` lines 250-291 (general methods: `.count()`, `.length()`, `.delete()`, string methods)
-- `comp/evevm/src/interp/collections.zig` lines 348-380 (map methods: `.has()`, `.get()`, `.keys()`, `.values()`, `.delete()`)
+- `code/evevm/src/interp/calls.zig` lines 250-291 (general methods: `.count()`, `.length()`, `.delete()`, string methods)
+- `code/evevm/src/interp/collections.zig` lines 348-380 (map methods: `.has()`, `.get()`, `.keys()`, `.values()`, `.delete()`)
 
 ## New instructions
 
@@ -89,13 +89,13 @@ The method implementations are in:
 
 ## Files to change
 
-- `comp/evecm/src/op.zig`: add new Op enum variants
-- `comp/evecm/src/chunk.zig`: add disassembly for new instructions
-- `comp/evecp/src/emit.zig`: emitter support for collection literals and indexing
-- `comp/evevm/src/bcvm.zig`: add execute cases for new instructions
-- `comp/evevm/src/interp/collections.zig`: share method dispatch with bytecode
+- `code/evecm/src/op.zig`: add new Op enum variants
+- `code/evecm/src/chunk.zig`: add disassembly for new instructions
+- `code/evecp/src/emit.zig`: emitter support for collection literals and indexing
+- `code/evevm/src/bcvm.zig`: add execute cases for new instructions
+- `code/evevm/src/interp/collections.zig`: share method dispatch with bytecode
 - `test/bytecode/`: add golde listings for collection operations
-- `comp/evecm/doc/instructions.md`: update instruction table
+- `code/evecm/doc/instructions.md`: update instruction table
 
 ## Dependencies
 

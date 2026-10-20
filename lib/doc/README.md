@@ -1,6 +1,6 @@
 # Library documentation
 
-**Generated.** Do not edit the pages here: change the comments and signatures in [`lib/`](../README.md) and run `zig build doc` at the root of the source tree (or `./run.sh build manual`), which runs `eve --doc lib lib/doc` (D-082). The generator is the `doc` command of `eve` (source `comp/evecp/src/doc.zig`).
+**Generated.** Do not edit the pages here: change the comments and signatures in [`lib/`](../README.md) and run `zig build doc` at the root of the source tree (or `./run.sh build manual`), which runs `eve --doc lib lib/doc` (D-082). The generator is the `doc` command of `eve` (source `code/evecp/src/doc.zig`).
 
 For each `lib/<name>.eve`, `eve --doc` writes `doc/<name>.md` with:
 

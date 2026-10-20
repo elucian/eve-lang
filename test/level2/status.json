@@ -16,7 +16,7 @@
    "runs": 141,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "variation 1 of b01: the same aspect, called in a loop with a computed argument (D-133)",
    "reason": ""
   },
@@ -266,7 +266,7 @@
    "runs": 183,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003038,
+   "mtime": 1792470166,
    "title": "an aspect may apply another aspect, by its name (D-179, it was a compile error with D-066)",
    "reason": ""
   },
@@ -516,7 +516,7 @@
    "runs": 162,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a function must have a result: a subprogram without result is declared with procedure (D-100)",
    "reason": ""
   },
@@ -526,7 +526,7 @@
    "runs": 162,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a procedure is made for side effects and is never deterministic: it never ends with ! (D-101)",
    "reason": ""
   },
@@ -566,7 +566,7 @@
    "runs": 162,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a parameter after optional parameters can't be positional: the call must name it (D-106)",
    "reason": ""
   },
@@ -586,7 +586,7 @@
    "runs": 162,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a procedure has no value: it can't be used in an expression (D-100)",
    "reason": ""
   },
@@ -596,7 +596,7 @@
    "runs": 162,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a variant type holds one of the listed types and takes the type of the value assigned (from demo/variant_type.eve and demo/variant_params.eve, D-099)",
    "reason": ""
   },
@@ -626,7 +626,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a lambda is not called where it is written: it gets a name, then the name is called (D-147)",
    "reason": ""
   },
@@ -636,7 +636,7 @@
    "runs": 50,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "no aspect applies a primary aspect: it is run by a command (D-181)",
    "reason": ""
   },
@@ -656,7 +656,7 @@
    "runs": 50,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "a chain of calls that comes back to an aspect is a compile error (D-179)",
    "reason": ""
   },
@@ -706,7 +706,7 @@
    "runs": 50,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "the dot is never applied to an aspect: only main is public (D-179, D-066)",
    "reason": ""
   },
@@ -716,7 +716,7 @@
    "runs": 50,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "an aspect without a process main can't be applied (D-179)",
    "reason": ""
   },
@@ -776,7 +776,7 @@
    "runs": 29,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792327246,
+   "mtime": 1792470166,
    "title": "a generator has no recover region: it is a compile error (D-192)",
    "reason": ""
   }

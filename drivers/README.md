@@ -1,6 +1,6 @@
 # Drivers
 
-Separate projects that give Eve access to database engines. A driver is **not a component** of Eve: it has its own build, it is not linked into `eve.exe`, and `eve` talks to it only through a documented protocol. The code that connects Eve to a database, the **client drivers** (`sqlite://`, `postgres://`, `evedb://`), is inside the runtime (`comp/evevm/src/db/`), because it builds Eve values; the table of those drivers is `comp/evevm/src/db/driver.zig` (D-200).
+Separate projects that give Eve access to database engines. A driver is **not a component** of Eve: it has its own build, it is not linked into `eve.exe`, and `eve` talks to it only through a documented protocol. The code that connects Eve to a database, the **client drivers** (`sqlite://`, `postgres://`, `evedb://`), is inside the runtime (`code/evevm/src/db/`), because it builds Eve values; the table of those drivers is `code/evevm/src/db/driver.zig` (D-200).
 
 | Project | What it is | Program |
 |---|---|---|
@@ -16,4 +16,4 @@ From the root of the repository: `./run.sh build duckdb` (or from `drivers/duckd
 
 ## License
 
-The same license as the components: the Business Source License 1.1, [`comp/LICENSE`](../comp/LICENSE). A driver has no license file of its own (D-200).
+The same license as the components: the Business Source License 1.1, [`code/LICENSE`](../code/LICENSE). A driver has no license file of its own (D-200).

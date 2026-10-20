@@ -18,7 +18,7 @@ These are facts from the code (2026-10-19), they are what the bytecode removes.
 
 | Cost | Where | Effect |
 |---|---|---|
-| Variables are found by **name**: a linear walk of the chain of scopes, comparing strings | `Scope.find` in `comp/evecm/src/value.zig`, `Interp.lookup` | every read and write of a variable is a string search; deeper scopes cost more; this is the first planned optimization ("slot-resolved variables") |
+| Variables are found by **name**: a linear walk of the chain of scopes, comparing strings | `Scope.find` in `code/evecm/src/value.zig`, `Interp.lookup` | every read and write of a variable is a string search; deeper scopes cost more; this is the first planned optimization ("slot-resolved variables") |
 | Operators are **strings**: `apply(it, op: []const u8, ...)` compares the operator with up to twenty literals in a row | `interp/expr.zig` `apply` | an `a + b` of two integers passes through a chain of `eql` calls before it adds |
 | Number literals are **parsed at every evaluation**: suffixes, commas, durations, then the conversion | `interp/expr.zig` `number` | a literal in a loop is parsed again each turn |
 | Every statement pays for the **scratch mark, the debugger test, the hook test, the cancel test and the line store** | `interp/stmt.zig` `exec`, `tick` | fixed cost per statement, even with no debugger |
@@ -128,7 +128,7 @@ This is the main gain over the tree walker, and the reason RVM-R01 asked for the
 
 ### 3.10 The database layer and `sql`
 
-Tables, `sql` blocks, `sql function` and stored procedures keep their text in the constant pool and run through the existing `db` module by native calls (`sqlrun`, `tablefield`, `ormstore`...). Nothing in `comp/evevm/src/db/` needs the syntax tree after the move except where it reads `Node` today (`orm.zig`, `importer.zig`); those places are listed by R7 (§9) and receive a plain description (`TableDef`, fields and types) built by the emitter instead of a node.
+Tables, `sql` blocks, `sql function` and stored procedures keep their text in the constant pool and run through the existing `db` module by native calls (`sqlrun`, `tablefield`, `ormstore`...). Nothing in `code/evevm/src/db/` needs the syntax tree after the move except where it reads `Node` today (`orm.zig`, `importer.zig`); those places are listed by R7 (§9) and receive a plain description (`TableDef`, fields and types) built by the emitter instead of a node.
 
 ## 4. The refactoring ladder (do these first, on the tree walker)
 
@@ -150,7 +150,7 @@ R1, R2, R3 and R4 are the largest gain for the least work and are worth doing on
 
 ## 5. Instruction set (first version)
 
-About 90 instructions. Names are proposals; the final list is in `comp/evecm/src/op.zig` with the `@spec` tags.
+About 90 instructions. Names are proposals; the final list is in `code/evecm/src/op.zig` with the `@spec` tags.
 
 | Group | Instructions |
 |---|---|
@@ -257,7 +257,7 @@ To be confirmed by the author (Q-B8) after R0 gives the base line. The proposal,
 | Two engines diverge in a corner (map order, error text, a trace) | B5.2 to B5.8 | `--both` from the first instruction; the tree walker is the oracle until B5.8; a difference is fixed in the bytecode unless the tree walker is the one that is wrong (then both, and a test) |
 | A value freed too early or leaked in registers | B5.2 to B5.6 | `EVE_GC_VERIFY=1` at each stage; the rule "a register is a holder" has one implementation (`setReg`) |
 | The emitter and the checker disagree on scope or capture | R2, B5.4 | one pass decides (R2 in `check.zig`); the emitter reads the decision, never recomputes it |
-| R7 (the tree leaves the runtime) touches the database layer, the debugger, the libraries | B5.1 | list every use first (`grep -rn "\.node" comp/evevm`), change one holder at a time, run the suite after each |
+| R7 (the tree leaves the runtime) touches the database layer, the debugger, the libraries | B5.1 | list every use first (`grep -rn "\.node" code/evevm`), change one holder at a time, run the suite after each |
 | Generators and tasks without threads change the order of output | B5.5 | determinism is a spec rule: the scheduler keeps the order of creation; the `p4*` tests and the level 4 suite are the check |
 | Natives that block (sockets, `sleep`, database calls) | B5.5, B5.6 | a native either completes, or returns `.park` with a wake condition; a native that blocks a thread (a plain socket read) is wrapped, and its latency is measured |
 | Register limit of 255 per function | B5.2 | an error with the function name; the `wide` prefix when first met |
@@ -298,12 +298,12 @@ Answer under each point; the answers become decisions.
 
 ## 14. Not in this design
 
-A JIT; running tasks on several cores (D-183, Q-061); regions per aspect call and per job (RVM-R02); changes to the `Value` layout (Q-B6); WebAssembly as a target of the compiler (the Eve Web framework of `comp/evewp`; it compiles from the same chunk, later); the data structures of RVM-R04 (hash index for `Map`, columnar `Table`), which are independent of the bytecode and stay in the optimization list of rank 5.
+A JIT; running tasks on several cores (D-183, Q-061); regions per aspect call and per job (RVM-R02); changes to the `Value` layout (Q-B6); WebAssembly as a target of the compiler (the Eve Web framework of `code/evewp`; it compiles from the same chunk, later); the data structures of RVM-R04 (hash index for `Map`, columnar `Table`), which are independent of the bytecode and stay in the optimization list of rank 5.
 **answer** add to back-log for further optimizatons with a note.
 
 ## 15. State of the work
 
-**B5.2, 2026-10-19.** The pipeline runs end to end: `comp/evecm/src/op.zig` (the instructions), `chunk.zig` (the chunk and its listing), `comp/evecp/src/emit.zig` (the emitter), `comp/evevm/src/bcvm.zig` (the machine); `eve --engine bc -x file.eve` (or `EVE_ENGINE=bc`), `eve --disasm file.eve` for the listing, `python script/runtest.py N --engine bc` (reports in `temp/output-bc`, never the status files). Every level and the smoke tests pass on the bytecode machine (408 of 408 tests), but not all natively: the emitter translates what it knows and **leaves the rest to the tree walker through a bridge**.
+**B5.2, 2026-10-19.** The pipeline runs end to end: `code/evecm/src/op.zig` (the instructions), `chunk.zig` (the chunk and its listing), `code/evecp/src/emit.zig` (the emitter), `code/evevm/src/bcvm.zig` (the machine); `eve --engine bc -x file.eve` (or `EVE_ENGINE=bc`), `eve --disasm file.eve` for the listing, `python script/runtest.py N --engine bc` (reports in `temp/output-bc`, never the status files). Every level and the smoke tests pass on the bytecode machine (408 of 408 tests), but not all natively: the emitter translates what it knows and **leaves the rest to the tree walker through a bridge**.
 
 - **Natively translated:** numbers, text, `True`, `False`, `null`, local variables, the operators `+ - * / % == <> < <= > >=` (integer fast path, the rest through `applyOp`), `and`, `or`, `not`, unary minus, every other binary operator through `binx`, `new`, `set`, `let` (also the compound forms, collections in place), `print`, `write`, `expect`, `if`, `while`, `for` over integer and rune ranges, `break`, `skip`, `over`, `exit`, calls of the functions and procedures of the aspect with positional arguments, typed declarations of Integer, Real, String and Logic.
 - **The bridge:** `evalx` (an expression) and `execx` (a statement) run a piece of the tree on the tree walker. The variables it names are copied into a scope before and, for a statement, back into their registers after. A piece with a jump out of it, a lambda, a task, `defer` or a `panic` can not be bridged: the routine that holds it stays with the tree walker as a whole (a call of it is bridged), and when `process main` itself can not be translated the whole program runs on the tree walker (`EVE_BC_TRACE=1` says why).

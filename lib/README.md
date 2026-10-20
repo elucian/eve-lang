@@ -28,5 +28,5 @@ last error to stderr: with the call stack in debug mode, only the message otherw
 
 ## Documentation
 
-Run `zig build doc` in `comp/evevm/`: it runs `eve --doc lib doc` (D-082), which reads `lib/*.eve`
-and writes one Markdown page for each module into `doc/`. The generator is the `doc` command of `eve` (source `comp/evecp/src/doc.zig`).
+Run `zig build doc` in `code/evevm/`: it runs `eve --doc lib doc` (D-082), which reads `lib/*.eve`
+and writes one Markdown page for each module into `doc/`. The generator is the `doc` command of `eve` (source `code/evecp/src/doc.zig`).

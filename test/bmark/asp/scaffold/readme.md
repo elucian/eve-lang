@@ -6,7 +6,7 @@
 python script/runtest.py scaffold [--eve PATH]
 ```
 
-This calls `sh test/scaffold/run.sh <eve>` (the same script can be run by hand: `sh test/scaffold/run.sh [path-to-eve]`, default `bin/eve.exe`); the verdict is the last line of the output and the exit status is 0 or 1. Run it after every change of `comp/evevm/src/scaffold.zig` or of the `project` command.
+This calls `sh test/scaffold/run.sh <eve>` (the same script can be run by hand: `sh test/scaffold/run.sh [path-to-eve]`, default `bin/eve.exe`); the verdict is the last line of the output and the exit status is 0 or 1. Run it after every change of `code/evevm/src/scaffold.zig` or of the `project` command.
 
  The script removes the old `work/` folder (ignored by git), makes the projects again and checks 43 things: the folders and files of the layout, the contents of `eve.cfg` (`db/local.db`), `meta/project.json` and `.gitignore`, that the first driver passes `eve --check`, that no project gets a `.git` of its own under this versioned folder, that a second `init` adds the missing folders and keeps the files of the author, that `init` accepts a folder that is not empty, that `new` refuses it (exit 73, nothing written), that a folder name like `my-shop` gives a driver `my_shop`, and the usage errors (exit 64). It prints `PASS` or one `FAIL:` line per failed check, and exits 0 or 1.
 

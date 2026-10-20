@@ -1,6 +1,6 @@
 # Focus: make the tutorial good enough and feature complete
 
-Status 2026-10-05 (**old: D-194 of 2026-10-18 puts the tutorial last**). The tutorial came first (`design/README.md`, "Current focus"): it gives the complete vision of Eve and will shape the architecture of the interpreter. Parked until the author says go: the specification, the test suites, the VM (`comp/evevm/`) and `demo/`.
+Status 2026-10-05 (**old: D-194 of 2026-10-18 puts the tutorial last**). The tutorial came first (`design/README.md`, "Current focus"): it gives the complete vision of Eve and will shape the architecture of the interpreter. Parked until the author says go: the specification, the test suites, the VM (`code/evevm/`) and `demo/`.
 
 Each item has a code (`F1`, `F2`, …) so it can be cited. Answer the questions on the `**Answer:**` lines; every batch is drafted as a decision (`D-nnn`) for review before any page changes.
 

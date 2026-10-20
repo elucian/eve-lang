@@ -14,7 +14,7 @@ manual/
   release/
     README.md          the list of releases (block GEN:releases, script/relnotes.py)
     vX.Y.Z.md          the notes of each release (generated parts + hand-written parts; policy: design/release.md)
-  comp/evevm/ comp/evecp/ comp/evecm/ drivers/duckdb/ comp/evetx/ comp/eveux/ comp/evewp/
+  code/evevm/ code/evecp/ code/evecm/ drivers/duckdb/ code/evetx/ code/eveux/ code/evewp/
                        GENERATED: a copy of comp/<component>/doc/ (script/genmanual.py); edit the original, never the copy
 ```
 

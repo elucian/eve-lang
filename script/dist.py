@@ -18,7 +18,7 @@ dist/ is generated and git-ignored. Its layout:
   dist/archive/                      the zips of the older releases, and their SHA256SUMS.txt
 When the version changes, the zip of the previous release moves to dist/archive/ and its folder is removed;
 a dist of the same version replaces the current release. The repository is never changed.
-Not in the distribution: design/, backlog/, test/, script/, spec/, comp/eve/ and the source code.
+Not in the distribution: design/, backlog/, test/, script/, spec/, code/eve/ and the source code.
 `--no-build` keeps the binaries already in the release folder and stages, checks and zips again.
 Step: `./run.sh dist` (Windows only for now). Publishing: `./run.sh release` (script/publish.py).
 """
@@ -36,7 +36,7 @@ DIST = os.path.join(ROOT, "dist")
 ARCHIVE = os.path.join(DIST, "archive")
 PLATFORM = ("windows-x64", "Windows (x64)")
 # the folders with a build.zig: the root (eve, evevm, lib), then the parts that have their own
-PARTS = [ROOT, os.path.join(ROOT, "drivers", "duckdb")] + [os.path.join(ROOT, "comp", p) for p in ("evecp", "evetx", "eveux")]
+PARTS = [ROOT, os.path.join(ROOT, "drivers", "duckdb")] + [os.path.join(ROOT, "code", p) for p in ("evecp", "evetx", "eveux")]
 EXPECTED = ["bin/eve.exe", "bin/evevm.exe", "bin/evecp.exe", "bin/evedb.exe", "bin/evetx.exe", "bin/eveux.exe", "bin/duckdb.dll",
             "lib/config.eve", "manual/README.md", "manual/features.md", "manual/evevm/README.md", "README.md", "LICENSE"]
 SKIP_NAMES = {".git", ".gitignore", "__pycache__", "node_modules", ".zig-cache", "zig-out"}
@@ -117,7 +117,7 @@ def stage(ver, rel, folder):
         copy_folder(name, rel)
     # the generated pages and the component docs, made again for this release, in the release folder only
     run([sys.executable, os.path.join(ROOT, "script", "genmanual.py"), "--out", os.path.join(rel, "manual")], ROOT)
-    shutil.copyfile(os.path.join(ROOT, "comp", "LICENSE"), os.path.join(rel, "LICENSE"))
+    shutil.copyfile(os.path.join(ROOT, "code", "LICENSE"), os.path.join(rel, "LICENSE"))
     shutil.copyfile(os.path.join(ROOT, "TRADEMARK.md"), os.path.join(rel, "TRADEMARK.md"))
     with open(os.path.join(ROOT, "design", "template", "dist-readme.md"), encoding="utf-8") as f:
         text = re.sub(r"\A(?:<!--.*?-->\n)+", "", f.read(), flags=re.S)

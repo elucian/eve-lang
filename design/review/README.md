@@ -51,4 +51,4 @@ Eve has one genuinely strong idea that most scripting languages lack: the **aspe
 
 ## What was read
 
-`README.md`, `design/` (README, both decision logs, `design-multitasking.md`, `design-issues.md`, phase files), `spec/` tree, tutorial pages (index, manifest, databases, processing, topology, command, library, multitasking, types and classes in part), `comp/evevm/` layout, `interp.zig` header and types, `lib/io.eve`, level 1 and level 2 tests. Points that rely on an inference rather than a quote say so.
+`README.md`, `design/` (README, both decision logs, `design-multitasking.md`, `design-issues.md`, phase files), `spec/` tree, tutorial pages (index, manifest, databases, processing, topology, command, library, multitasking, types and classes in part), `code/evevm/` layout, `interp.zig` header and types, `lib/io.eve`, level 1 and level 2 tests. Points that rely on an inference rather than a quote say so.

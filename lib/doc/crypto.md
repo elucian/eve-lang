@@ -1,6 +1,6 @@
 # crypto
 
-Hashes, a keyed hash, random bytes and text codecs (F-LIB-10, D-189). Signature file: the body is native, in comp/evevm/src/syslib.zig (cryptoModule).
+Hashes, a keyed hash, random bytes and text codecs (F-LIB-10, D-189). Signature file: the body is native, in code/evevm/src/syslib.zig (cryptoModule).
 @spec spec/library/crypto.md  @feature F-LIB-10  @decision D-189  @tests test/level6/f04_crypto
 
 ## `external function sha256(data: String) => (@result: String);`

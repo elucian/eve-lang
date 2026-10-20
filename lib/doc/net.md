@@ -1,6 +1,6 @@
 # net
 
-TCP for Eve code: a client connection and a listening server, as text (F-NET-02, D-189). Signature file: the body is native, in comp/evevm/src/netlib.zig (netModule, call).
+TCP for Eve code: a client connection and a listening server, as text (F-NET-02, D-189). Signature file: the body is native, in code/evevm/src/netlib.zig (netModule, call).
 @spec spec/library/net.md  @feature F-NET-02  @decision D-189  @tests test/level6/f09_net
 
 ## `external function listen!(host: String, port: Integer) => (@result: Listener);`

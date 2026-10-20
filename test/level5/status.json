@@ -6,7 +6,7 @@
    "runs": 132,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792323485,
+   "mtime": 1792470166,
    "title": "a generic function has a list of types before its parameters; the call infers the types or writes them (D-148)",
    "reason": ""
   },
@@ -36,7 +36,7 @@
    "runs": 132,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "the process of an aspect takes a list of types; apply infers it or writes it (D-148); one Eve macro (D-152)",
    "reason": ""
   },
@@ -76,7 +76,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a call that does not fix the type of the result of an overloaded function is ambiguous: compile error (D-149)",
    "reason": ""
   },
@@ -86,7 +86,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a default value can make two signatures match the same call: compile error (D-149)",
    "reason": ""
   },
@@ -136,7 +136,7 @@
    "runs": 86,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a Secret is not a String: joining it to a text with + is a compile error (data-language.md#secrets, D-110)",
    "reason": ""
   },
@@ -146,7 +146,7 @@
    "runs": 85,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "yield in a function declared inside a generator is a compile error: only the body of the generator itself yields (D-067)",
    "reason": ""
   },
@@ -196,7 +196,7 @@
    "runs": 54,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "in a macro, no aspect applies the primary aspect (D-180, D-181)",
    "reason": ""
   },
@@ -206,7 +206,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a call that matches no signature of an overloaded name is a compile error (D-149)",
    "reason": ""
   },
@@ -236,7 +236,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a function and a procedure never share a name: compile error (D-149)",
    "reason": ""
   },
@@ -246,7 +246,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "two declarations with the same signature are a compile error (D-149)",
    "reason": ""
   },
@@ -266,7 +266,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a lambda has no list of types: compile error (D-148)",
    "reason": ""
   },
@@ -276,7 +276,7 @@
    "runs": 131,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a type that the arguments do not give must be written at the call: compile error (D-148)",
    "reason": ""
   },
@@ -316,7 +316,7 @@
    "runs": 115,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a concurrent aspect of a macro can not use a shared variable that is not atomic: compile error (D-152)",
    "reason": ""
   },
@@ -326,7 +326,7 @@
    "runs": 115,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a concurrent aspect of a macro can not call a shared procedure that changes a plain variable: compile error (D-152)",
    "reason": ""
   },
@@ -336,7 +336,7 @@
    "runs": 54,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "a macro has one primary aspect: a second one is a compile error (D-152)",
    "reason": ""
   },
@@ -346,7 +346,7 @@
    "runs": 115,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a statement outside a declaration is a compile error in a macro (D-152)",
    "reason": ""
   },
@@ -376,7 +376,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "yield in a function is a compile error: only the body of a generator can yield (D-067)",
    "reason": ""
   },
@@ -386,7 +386,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a generator called as a statement is a compile error: its values would be lost",
    "reason": ""
   },
@@ -396,7 +396,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a Decimal keeps its scale, adds exactly and compares by value (D-080)",
    "reason": ""
   },
@@ -426,7 +426,7 @@
    "runs": 113,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a null for a field that is not optional is a compile error (D-080)",
    "reason": ""
   },
@@ -506,7 +506,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "normalize: \"nfc\" composes e + accent into one code point; by default the text is kept as read",
    "reason": ""
   },
@@ -516,7 +516,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a key that names a field the class does not have is a compile error",
    "reason": ""
   },
@@ -526,7 +526,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "two tables that reference each other are a compile error",
    "reason": ""
   },
@@ -536,7 +536,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "temporary is allowed only for the staging database: a table of another connection is a compile error",
    "reason": ""
   },
@@ -546,7 +546,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "commit; is allowed only in the do region of a job: a compile error elsewhere",
    "reason": ""
   },
@@ -556,7 +556,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a key field can not be changed in an update block: a compile error (D-158)",
    "reason": ""
   },
@@ -566,7 +566,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a record can not be added to a read only table: a compile error",
    "reason": ""
   },
@@ -576,7 +576,7 @@
    "runs": 112,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a job writes to one connection only: writing to two is a compile error (D-158)",
    "reason": ""
   },
@@ -706,7 +706,7 @@
    "runs": 105,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a type argument must adopt the trait of its constraint: compile error (D-145, D-148)",
    "reason": ""
   },
@@ -716,7 +716,7 @@
    "runs": 104,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an extension method with the signature of a method of the class would replace it: compile error (D-150); another signature overloads it: e60",
    "reason": ""
   },
@@ -736,7 +736,7 @@
    "runs": 54,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "a file with an aspect and shared declarations but no primary aspect is not a macro: compile error (D-152)",
    "reason": ""
   },
@@ -746,7 +746,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a macro exports nothing: export is a compile error (D-126, D-152)",
    "reason": ""
   },
@@ -766,7 +766,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a top-level name declared twice in a macro is a compile error: one scope for the whole file (D-041, D-152)",
    "reason": ""
   },
@@ -776,7 +776,7 @@
    "runs": 104,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an aspect of the macro with the name of an aspect file of the project is a compile error (D-152)",
    "reason": ""
   },
@@ -816,7 +816,7 @@
    "runs": 105,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a generator can be a member of a class; a comprehension collects its values (D-067)",
    "reason": ""
   },
@@ -826,7 +826,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a generator has exactly one result: compile error (D-067)",
    "reason": ""
   },
@@ -836,7 +836,7 @@
    "runs": 104,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a generator has inputs only, by value: an @ parameter is a compile error (D-067)",
    "reason": ""
   },
@@ -846,7 +846,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "yield in a process is a compile error: only the body of a generator yields (D-067); in a function inside a generator: e104",
    "reason": ""
   },
@@ -856,7 +856,7 @@
    "runs": 102,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "Decimal arithmetic is exact: subtraction, division, negation, remainder, comparison and a whole number on one side (D-080)",
    "reason": ""
   },
@@ -866,7 +866,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a Decimal and a Real are never mixed without a conversion: an operand of the wrong type is a compile error (D-080, D-110)",
    "reason": ""
   },
@@ -876,7 +876,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an Instant keeps a fraction of a second, compares by time, and a date that does not exist is the error parse",
    "reason": ""
   },
@@ -906,7 +906,7 @@
    "runs": 103,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "null as an argument for a member that is not optional is a compile error, in a call of the class too (D-080)",
    "reason": ""
   },

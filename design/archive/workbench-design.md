@@ -396,7 +396,7 @@ Every request that changes something carries the CSRF token of the session in a 
 eveux is a machine folder, so the local machine runs it as any other Eve project:
 
 ```
-comp/eveux/
+code/eveux/
   README.md            this design
   eve.cfg              the configuration of the local machine that runs the Workbench: serve, the remote machines by name
   eveux_api.eve        the service script: the routes of section 14
@@ -419,7 +419,7 @@ test/level7/           the tests of eveux (prefix g): its API driven by Eve scri
 test/bmark/            p7a_eveux.eve: the stress run of section 2, with its twin
 ```
 
-- **Language and rules.** The server part is Eve only: no Zig, no Python in `comp/eveux/`. The JavaScript is ES2022 modules with JSDoc types, so an editor can check it, with no compile step; the CSS uses custom properties, grid and flexbox, no preprocessor.
+- **Language and rules.** The server part is Eve only: no Zig, no Python in `code/eveux/`. The JavaScript is ES2022 modules with JSDoc types, so an editor can check it, with no compile step; the CSS uses custom properties, grid and flexbox, no preprocessor.
 - **Browsers.** The last two versions of Firefox, Chrome, Edge and Safari.
 - **Size goal.** The web part under 300 KB before compression.
 

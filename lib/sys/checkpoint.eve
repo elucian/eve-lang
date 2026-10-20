@@ -1,4 +1,4 @@
-** Checkpoints of a restartable load, kept in the core database (D-158, D-159, D-189). Signature file: the body is native, in comp/evevm/src/dlib.zig (checkpointModule); the type argument names the type of the value: checkpoint.read!(:Instant)(name, default: x).
+** Checkpoints of a restartable load, kept in the core database (D-158, D-159, D-189). Signature file: the body is native, in code/evevm/src/dlib.zig (checkpointModule); the type argument names the type of the value: checkpoint.read!(:Instant)(name, default: x).
 ** @spec spec/library/database.md#checkpoints  @feature F-DAT-04  @decision D-159  @tests test/level5
 module checkpoint is
   export (read!, write);

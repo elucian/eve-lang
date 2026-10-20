@@ -4,7 +4,7 @@ Status 2026-10-10. Level 5 has two parts. Part 1 is ready to implement; part 2 w
 
 ## Part 1: generics, overloading, macros (ready)
 
-Settled: D-147 to D-149 (generic subprograms and overloading, [declarations.md](../../spec/syntax/declarations.md#generic-subprograms-and-overloading)) and D-152 (Eve macro). Tests e01 to e22 in [test/level5](../../test/level5/readme.md): 0 of 22 pass, no open question blocks them. The next step is the VM (`comp/evevm/`).
+Settled: D-147 to D-149 (generic subprograms and overloading, [declarations.md](../../spec/syntax/declarations.md#generic-subprograms-and-overloading)) and D-152 (Eve macro). Tests e01 to e22 in [test/level5](../../test/level5/readme.md): 0 of 22 pass, no open question blocks them. The next step is the VM (`code/evevm/`).
 
 ## Part 2: data language and database layer (blocked by answers)
 

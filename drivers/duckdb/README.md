@@ -2,7 +2,7 @@
 
 Status: **detailed design, 2026-10-17**, with two builds written after it: version 0.1 (the EWP-db frames, sessions, faults, statement log) and **version 0.2: evedb behaves like a PostgreSQL server** (sections 5A and 5B, D-186): PostgreSQL clients and the Eve driver for PostgreSQL connect to it on port 5432. Stored procedures and triggers written in Eve were designed and then **dropped** (D-187): the logic lives in Eve jobs, evedb stays a plain engine. **Version 0.3 (D-187)** adds the fast path between eve and evedb: **column batches** on the native protocol (section 5.5) and the driver `evedb://` (section 5C), measured against the PostgreSQL protocol and SQLite (section 5.6). Feature F-DAT-12 of [version_map.md](../../design/version_map.md), level 6. The author decided that evedb stays in this repository (question 1). The Eve database layer is designed in [design-database-core.md](../../design/design-database-core.md) and [design-database-remote.md](../../design/design-database-remote.md); this file uses their terms. The service mode of the machine, which evedb shares, is in [design-service.md](../../design/design-service.md) section 17 and [spec/library/machine.md](../../spec/library/machine.md).
 
-**What lives in `drivers/duckdb/`** (since 2026-10-19, D-198): the **program `evedb`** (`bin/evedb.exe`, its own `build.zig`, DuckDB): the database server of this document, and `protocol/`, the module `ewp_protocol` (the frames, the column batches and a client) that the server shares with the driver `evedb://` of `eve`. The database layer of `eve` (SQLite, connections, tables and records, the drivers) moved into the runtime: `comp/evevm/src/db/`. The program never links into the virtual machine; the virtual machine never links DuckDB. The folder moved from `comp/evedb` to `drivers/duckdb` on 2026-10-19 (S8.5): the server is a driver project, not a component of Eve.
+**What lives in `drivers/duckdb/`** (since 2026-10-19, D-198): the **program `evedb`** (`bin/evedb.exe`, its own `build.zig`, DuckDB): the database server of this document, and `protocol/`, the module `ewp_protocol` (the frames, the column batches and a client) that the server shares with the driver `evedb://` of `eve`. The database layer of `eve` (SQLite, connections, tables and records, the drivers) moved into the runtime: `code/evevm/src/db/`. The program never links into the virtual machine; the virtual machine never links DuckDB. The folder moved from `code/evedb` to `drivers/duckdb` on 2026-10-19 (S8.5): the server is a driver project, not a component of Eve.
 
 ## 1. What evedb is
 
@@ -115,7 +115,7 @@ Inside one `.duckdb` file every database also has the table `eve_tx` (the commit
 | `client.zig` | a client of the frames, used by `evedb sql --connect`, `evedb status` and the Zig tests |
 
 - **Concurrency rules.** The session table and the fault lists are guarded by a mutex; a session is used by one thread at a time (its connection thread, or the reaper after the lease ran out, which takes the session out of the table first).
-- **Language and rules.** Zig 0.16, like `comp/evevm/`; every function, test, type and non-obvious declaration has its `// Zig tip:` comment (question 5).
+- **Language and rules.** Zig 0.16, like `code/evevm/`; every function, test, type and non-obvious declaration has its `// Zig tip:` comment (question 5).
 
 ## 5. The native protocol: EWP-db
 
@@ -208,7 +208,7 @@ COMMIT(tx=9f3a…)              →     (the server writes the id into eve_tx, i
 
 ### 5.5 Column batches: the fast path (version 0.3, D-187)
 
-A query of the native protocol can answer **column by column**, and a client can load a table the same way. A batch has the layout that DuckDB uses inside, and that the `Memory` tables of Eve use (`comp/evevm/src/db/columnar.zig`): one array for each column and a bitmap for NULL. The code of the format is `src/batch.zig`, shared by the server and by the driver inside `eve`.
+A query of the native protocol can answer **column by column**, and a client can load a table the same way. A batch has the layout that DuckDB uses inside, and that the `Memory` tables of Eve use (`code/evevm/src/db/columnar.zig`): one array for each column and a bitmap for NULL. The code of the format is `src/batch.zig`, shared by the server and by the driver inside `eve`.
 
 **Schema** (frame `SCHEMA`, and the head of `LOAD`): the number of columns `u16`; for each a name (string) and a wire type `u8`:
 
@@ -326,7 +326,7 @@ TLS; SCRAM on the server side; several users and roles; `COPY`; cancel requests;
 
 ## 5B. The Eve driver for PostgreSQL (version 0.2)
 
-A connection of `eve.cfg` whose URL starts with `postgres://` or `postgresql://` is opened by the driver of `comp/evevm/src/db/pgdriver.zig` and `pgclient.zig` (in the database layer of `eve`, not in the evedb program), which speaks the PostgreSQL protocol to evedb **or to any PostgreSQL server**:
+A connection of `eve.cfg` whose URL starts with `postgres://` or `postgresql://` is opened by the driver of `code/evevm/src/db/pgdriver.zig` and `pgclient.zig` (in the database layer of `eve`, not in the evedb program), which speaks the PostgreSQL protocol to evedb **or to any PostgreSQL server**:
 
 ```
 database "shop" = "postgres://eve:secret@db.example.com:5432/shop"
@@ -347,7 +347,7 @@ The browser demo `drivers/duckdb/demo/` shows the whole path: a page of the mach
 
 ## 5C. The Eve driver for evedb (version 0.3, D-187)
 
-`database "wh" = "evedb://[token@]host:port/database"` in `eve.cfg` opens a connection of the native protocol (`comp/evevm/src/db/ewpdriver.zig`, in the database layer of `eve`), on the control port of evedb (8044 by default).
+`database "wh" = "evedb://[token@]host:port/database"` in `eve.cfg` opens a connection of the native protocol (`code/evevm/src/db/ewpdriver.zig`, in the database layer of `eve`), on the control port of evedb (8044 by default).
 
 | Method | Wire |
 |---|---|
@@ -474,7 +474,7 @@ When `database` lines are given, a client may ask only for those names (`FATAL 3
 
 ## 11. Service mode
 
-`eve -s -db --serve evedb.cfg` (section 9) makes evedb a service with the code of the machine's service mode (`comp/evevm/src/service.zig`, design-service.md section 17): the same three forms (console, Service Control Manager, foreground) and the same silent behaviour; the supervised program is evedb instead of the machine. On Windows: `sc create evedb binPath= "C:\eve\bin\eve.exe -s -db --serve C:\eve\evedb.cfg" start= auto`. On Linux: a systemd unit of `Type=simple` with `Environment=EVE_SERVICE=foreground` and `ExecStart=/opt/eve/bin/eve -s -db --serve /etc/eve/evedb.cfg`. *Tested:* the console form (`script/pg_check.py`); the Service Control Manager form compiles and needs an administrator to run.
+`eve -s -db --serve evedb.cfg` (section 9) makes evedb a service with the code of the machine's service mode (`code/evevm/src/service.zig`, design-service.md section 17): the same three forms (console, Service Control Manager, foreground) and the same silent behaviour; the supervised program is evedb instead of the machine. On Windows: `sc create evedb binPath= "C:\eve\bin\eve.exe -s -db --serve C:\eve\evedb.cfg" start= auto`. On Linux: a systemd unit of `Type=simple` with `Environment=EVE_SERVICE=foreground` and `ExecStart=/opt/eve/bin/eve -s -db --serve /etc/eve/evedb.cfg`. *Tested:* the console form (`script/pg_check.py`); the Service Control Manager form compiles and needs an administrator to run.
 
 ## 12. Logic lives in Eve, not in evedb (D-187)
 

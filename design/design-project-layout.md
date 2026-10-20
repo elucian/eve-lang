@@ -1,6 +1,6 @@
 # Project layout, `project init` and the fallback log (F-TLS-23)
 
-Author request (2026-10-11), on top of D-160 (`new project <folder>`): define the folders of an Eve project, a minimal fallback log in `log/`, the extended log in the local SQLite database in `db/`, a `meta/` folder, a `data/` folder split in `in` and `out`, and a `test/` folder for the test database (`evedb`). Implemented as the command `project init <folder>` (`comp/evevm/src/scaffold.zig`, tests `test/level5/e54_project_init`, `e55_project_new_not_empty` and the shell test `test/scaffold/run.sh`). Status: the author answered the questions on 2026-10-11 (see the end); the layout is implemented.
+Author request (2026-10-11), on top of D-160 (`new project <folder>`): define the folders of an Eve project, a minimal fallback log in `log/`, the extended log in the local SQLite database in `db/`, a `meta/` folder, a `data/` folder split in `in` and `out`, and a `test/` folder for the test database (`evedb`). Implemented as the command `project init <folder>` (`code/evevm/src/scaffold.zig`, tests `test/level5/e54_project_init`, `e55_project_new_not_empty` and the shell test `test/scaffold/run.sh`). Status: the author answered the questions on 2026-10-11 (see the end); the layout is implemented.
 
 ## The layout
 

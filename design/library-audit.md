@@ -1,13 +1,13 @@
 # Library audit (M0 of `design/design-libraries.md`, D-189)
 
-Date 2026-10-18. Source: `comp/evevm/src/dlib.zig`, `comp/evevm/src/interp/{calls,stmt,datatypes}.zig`, `lib/*.eve`, `spec/library/*.md`, `tutorial/syslib.html`. Read the code, not run: no test was executed for this audit.
+Date 2026-10-18. Source: `code/evevm/src/dlib.zig`, `code/evevm/src/interp/{calls,stmt,datatypes}.zig`, `lib/*.eve`, `spec/library/*.md`, `tutorial/syslib.html`. Read the code, not run: no test was executed for this audit.
 
 ## Findings
 
 1. **`io` and `exception` are language statements, not library calls.** `print`, `write`, `raise` are parser nodes executed by `interp/stmt.zig` (`print`, `raise`); `log_err` and `log_wrn` are special-cased in `interp/calls.zig:60`. `lib/io.eve` and `lib/exception.eve` are draft signatures that nothing loads. Decision: they stay in the interpreter (hot path); the `.eve` files become signature files (documentation and type information only).
-2. **Library calls are one chain** `libraryCall` (`comp/evevm/src/dlib.zig:87`), entered from `interp/calls.zig:215` when the receiver is a type name. Modules in it: `database` (`connect`), `csv`/`json`/`txt` (`read!`, `write`), `fs`, `checkpoint`, `time` (`now!`), `secret` (`get`). Connection methods are in `connectionCall`.
+2. **Library calls are one chain** `libraryCall` (`code/evevm/src/dlib.zig:87`), entered from `interp/calls.zig:215` when the receiver is a type name. Modules in it: `database` (`connect`), `csv`/`json`/`txt` (`read!`, `write`), `fs`, `checkpoint`, `time` (`now!`), `secret` (`get`). Connection methods are in `connectionCall`.
 3. **`fs` functions today:** `append`, `exists!`, `extension`, `join`, `lines!`, `list!`, `make_dir`, `move`, `name`, `parent`, `read!`, `read_bytes!`, `remove`, `size!`, `write`, `write_bytes`. Missing against `syslib.html`: glob, copy, stat (times, kind), temp files, `watch`.
-4. **`time`:** only `now!`. Missing: `sleep`, formats, zones, `Instant` arithmetic as module functions (the types exist in `comp/evecm/src/instant.zig`).
+4. **`time`:** only `now!`. Missing: `sleep`, formats, zones, `Instant` arithmetic as module functions (the types exist in `code/evecm/src/instant.zig`).
 5. **Not implemented at all:** `http` (client; the spec `spec/library/data-language.md` says "TLS is on for https", which conflicts with D-189 (outbound TLS is level 9): the spec text must say "https: level 9"), `os`, `task`, `crypto`, `net`, `ws`, `ewp`, `keyring`, `regex`, `test`.
 6. **Machine API and doors** (`machine.zig`, `channel.zig`, `daemon.zig`, `service.zig`, `client.zig`) are Zig and not reachable from Eve code. E2 `rpc` and E3 `machines` need `net` primitives first.
 7. **Spec files:** `spec/library/` has only `atomic.md`, `data-engines.md`, `data-language.md`, `database.md`, `machine.md`. There is no spec page for `io`, `exception`, `fs`, `time`, `secret`, `os`, `http`, `crypto`, `net`, `route`, `rpc`, `test`, `regex`. Priority order (D-190) says the spec comes before the code: **new spec pages are the next work**, see "Next steps".

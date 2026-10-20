@@ -1,6 +1,6 @@
 # os
 
-Run a program without a shell, the environment, the machine (F-LIB-07, D-189). Signature file: the body is native, in comp/evevm/src/syslib.zig (osModule).
+Run a program without a shell, the environment, the machine (F-LIB-07, D-189). Signature file: the body is native, in code/evevm/src/syslib.zig (osModule).
 @spec spec/library/os.md  @feature F-LIB-07  @decision D-189  @tests test/level6/f05_os
 
 ## `external function run!(command: String, args: List, cwd: String) => (@result: ProcessResult);`

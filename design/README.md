@@ -55,13 +55,13 @@ Do not read the logs whole. `python script/plan.py status` prints the focus, the
 | Rank | Work | Where |
 |---|---|---|
 | 1 | Plan | `design/` (decision logs, `version_map.md`, `tech-debt.md`, `library-gaps.md`) |
-| 2 | Design | `design/design-*.md`, the README and `design/` of `comp/evetx/`, `comp/eveux/`, `comp/evewp/`, `drivers/duckdb/` |
-| 3 | User interfaces | `comp/evetx/` (terminal), `comp/eveux/` (native window), `comp/evewp/` (web portal) |
-| 4 | Refactor | shared code in `comp/evecm/` (`comp/evecm/src/ide/` is shared by evetx and eveux), module borders (`design/design-packages.md`) |
+| 2 | Design | `design/design-*.md`, the README and `design/` of `code/evetx/`, `code/eveux/`, `code/evewp/`, `drivers/duckdb/` |
+| 3 | User interfaces | `code/evetx/` (terminal), `code/eveux/` (native window), `code/evewp/` (web portal) |
+| 4 | Refactor | shared code in `code/evecm/` (`code/evecm/src/ide/` is shared by evetx and eveux), module borders (`design/design-packages.md`) |
 | 5 | Optimize | `test/bmark/`, `script/bmark.py` |
 | 6 | Test | `test/level1` to `level7`, `test/smoke`, `script/runtest.py` (phase 5) |
 | 7 | Specification | `spec/` (phases 2 to 4); it follows the tests |
-| 8 | Compiler | `comp/evecp/`, `comp/evevm/`, `comp/evecm/`, `drivers/duckdb/`, `comp/eve/` (phase 6) |
+| 8 | Compiler | `code/evecp/`, `code/evevm/`, `code/evecm/`, `drivers/duckdb/`, `code/eve/` (phase 6) |
 | 9 | Manual | `manual/` (phase 7) |
 | 10 | Tutorial | `tutorial/` (phase 1), last; the steps wait, none is dropped |
 

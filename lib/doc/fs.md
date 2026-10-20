@@ -1,6 +1,6 @@
 # fs
 
-Files, folders and paths in one module (Q-024 a, D-189). Signature file: the body is native, in comp/evevm/src/dlib.zig (fsCall).
+Files, folders and paths in one module (Q-024 a, D-189). Signature file: the body is native, in code/evevm/src/dlib.zig (fsCall).
 @spec spec/library/data-language.md  @feature F-LIB-04  @decision D-189  @tests test/level5
 
 ## `external function read!(path: String) => (@result: String);`

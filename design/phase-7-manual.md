@@ -25,7 +25,7 @@ Goal: `manual/` documents an Eve implementation: how to implement it, how to use
 ### M7.5 How to implement: `implement.md` `[ ]`
 - Architecture of the Zig VM (D-006): lexer, parser, checker, the VM's internal code form
   (bytecode or tree), interpreter loop, runtime and memory management.
-- Zig specifics: toolchain version, `zig build` steps, the `comp/evevm/` source layout, and how the build installs `bin/eve.exe` (D-007).
+- Zig specifics: toolchain version, `zig build` steps, the `code/evevm/` source layout, and how the build installs `bin/eve.exe` (D-007).
 - Milestones M1–M7 from `tutorial/compiler.html`, each mapped to spec files and the test level it must pass. This takes over S6.1: the compiler kit lives here, and the tutorial page links to it.
 
 ### M7.6 How to use: `usage.md` `[ ]` (after S6.2)

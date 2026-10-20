@@ -6,7 +6,7 @@
    "runs": 158,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "the compiler flags the call of a direct module from a concurrent aspect (D-129)",
    "reason": ""
   },
@@ -76,7 +76,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "start of an aspect without a kind word is a compile error: it is exclusive (D-130, D-140)",
    "reason": ""
   },
@@ -86,7 +86,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "start outside the do region of a parallel group is a compile error (D-140)",
    "reason": ""
   },
@@ -96,7 +96,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "two starts of a group can not receive the same output variable (D-140, $err_output)",
    "reason": ""
   },
@@ -106,7 +106,7 @@
    "runs": 114,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "variation 1 of d08: an output with a computed index is checked at start: $err_output 43 (D-140)",
    "reason": ""
   },
@@ -226,7 +226,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "spawn of an async function is a compile error: its result would be lost (D-143)",
    "reason": ""
   },
@@ -236,7 +236,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an async procedure called without spawn or await is a compile error (D-104 b)",
    "reason": ""
   },
@@ -256,7 +256,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a class that does not write a required method of its trait is a compile error (D-145)",
    "reason": ""
   },
@@ -276,7 +276,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an abstract class can not be created outside the constructor of a subclass (D-145)",
    "reason": ""
   },
@@ -286,7 +286,7 @@
    "runs": 122,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a generic class is made with its type argument written; a constraint asks for a trait (D-145)",
    "reason": ""
   },
@@ -376,7 +376,7 @@
    "runs": 114,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003038,
+   "mtime": 1792470166,
    "title": "a concurrent aspect of the third level is a leaf: a parallel group in it is a compile error (D-081, D-140, D-183)",
    "reason": ""
   },
@@ -386,7 +386,7 @@
    "runs": 114,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "a parallel group in a procedure is a compile error: only in the main of a primary aspect or of an aspect (D-140)",
    "reason": ""
   },
@@ -406,7 +406,7 @@
    "runs": 114,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "two traits that provide the same method force the class to write it (D-145)",
    "reason": ""
   },
@@ -416,7 +416,7 @@
    "runs": 114,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "a Printable object prints its describe; Comparable gives compare to numbers and texts (D-145)",
    "reason": ""
   },
@@ -446,7 +446,7 @@
    "runs": 50,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792003006,
+   "mtime": 1792470166,
    "title": "a primary aspect is serial: it applies its private processes, it does not start them (D-181)",
    "reason": ""
   },

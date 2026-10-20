@@ -10,7 +10,7 @@
 
 ## Disadvantages
 
-**RIO-D01 There is no data library.** `comp/evevm/lib/` has `io.eve` (stdout, stdin, stderr, two log files) and `exception.eve`. No file API (open, read lines, write, list a folder, glob, stat), no path module beyond the "smart `/`" rule (D-031), no JSON, CSV, XML, Parquet, no compression, no HTTP client, no database driver. The manifest and databases.html describe all of them as goals. A client for internet ETL can't be written yet.
+**RIO-D01 There is no data library.** `code/evevm/lib/` has `io.eve` (stdout, stdin, stderr, two log files) and `exception.eve`. No file API (open, read lines, write, list a folder, glob, stat), no path module beyond the "smart `/`" rule (D-031), no JSON, CSV, XML, Parquet, no compression, no HTTP client, no database driver. The manifest and databases.html describe all of them as goals. A client for internet ETL can't be written yet.
 
 **RIO-D02 databases.html is a design sketch in an obsolete dialect.** It uses `class … = {…} <: orcl.Database is`, `update record1:` blocks with colons, `let demoDB = set db := new …`, `db.query(query_template ? source)` (the `?` template operator was removed by D-059), typos (`deleded1`), credentials passed as globals. Its ORM with "memory tables mirrored automatically in the database" is the hardest database abstraction to build and the one ETL needs least.
 

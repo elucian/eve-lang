@@ -76,7 +76,7 @@
    "runs": 230,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "relation and logical operators, conditional statement and expression",
    "reason": ""
   },
@@ -156,7 +156,7 @@
    "runs": 231,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an Ordinal is a set of named integer values; the first value is 1 unless one is given (Q-029, D-096)",
    "reason": ""
   },
@@ -196,7 +196,7 @@
    "runs": 230,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "DataSet: sorted unique values, union, intersection, difference (D-058)",
    "reason": ""
   },
@@ -206,7 +206,7 @@
    "runs": 216,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "DataMap: a sorted map of key:value pairs; quoted or numeric keys (D-058, D-080)",
    "reason": ""
   },
@@ -216,7 +216,7 @@
    "runs": 230,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "Object: unquoted keys make an object, quoted or numeric keys make a DataMap (D-058, D-080)",
    "reason": ""
   },
@@ -246,7 +246,7 @@
    "runs": 230,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "regular expressions: =~ matches, not (...) negates; a string that starts with / is a regex literal and keeps its backslashes (D-079, D-097)",
    "reason": ""
   },
@@ -386,7 +386,7 @@
    "runs": 215,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "redeclaring a name in the same scope is an error (D-076)",
    "reason": ""
   },
@@ -396,7 +396,7 @@
    "runs": 215,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "= is the light assignment of a declaration; it never changes a variable (D-079)",
    "reason": ""
   },
@@ -406,7 +406,7 @@
    "runs": 215,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "+ between a string and a number is a type error; <+ converts the number (D-080)",
    "reason": ""
   },
@@ -556,7 +556,7 @@
    "runs": 210,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "an undefined name is a compile error: the script does not start (D-110)",
    "reason": ""
   },
@@ -616,7 +616,7 @@
    "runs": 210,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792002920,
+   "mtime": 1792470166,
    "title": "let creates a missing name only in a capture: let y := 5 with no y is an error (D-104)",
    "reason": ""
   },
@@ -726,7 +726,7 @@
    "runs": 1,
    "checks": 0,
    "last": "2026-10-19 17:56",
-   "mtime": 1792446957,
+   "mtime": 1792470166,
    "title": "loops, calls and assignments that every engine must treat alike: break, skip, for with else, short circuit on a variable, compound assignment on a list, recursion (D-201)",
    "reason": ""
   }

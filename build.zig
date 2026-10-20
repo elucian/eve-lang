@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Zig tip: `b.addOptions()` makes a small module of constants that the build decides. The
-    // module `build_options` is read by comp/evecm/src/version.zig.
+    // module `build_options` is read by code/evecm/src/version.zig.
     const options = b.addOptions();
     options.addOption([]const u8, "version", zon.version);
 
@@ -33,13 +33,13 @@ pub fn build(b: *std.Build) void {
     // not an executable by itself. `target` and `optimize` are given to every module, so they are
     // all compiled for the same system and in the same mode.
     const evecm = b.createModule(.{
-        .root_source_file = b.path("comp/evecm/src/root.zig"),
+        .root_source_file = b.path("code/evecm/src/root.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{.{ .name = "build_options", .module = options.createModule() }},
     });
     const evecp = b.createModule(.{
-        .root_source_file = b.path("comp/evecp/src/root.zig"),
+        .root_source_file = b.path("code/evecp/src/root.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{.{ .name = "evecm", .module = evecm }},
@@ -53,7 +53,7 @@ pub fn build(b: *std.Build) void {
     });
     // The runtime and, inside it, the database layer (SQLite is linked below; D-198).
     const evevm = b.createModule(.{
-        .root_source_file = b.path("comp/evevm/src/root.zig"),
+        .root_source_file = b.path("code/evevm/src/root.zig"),
         .target = target,
         .optimize = optimize,
         // the secrets of a script are read from the environment with the C library
@@ -106,7 +106,7 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "eve",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("comp/eve/eve.zig"),
+            .root_source_file = b.path("code/eve/eve.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
@@ -130,7 +130,7 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&install_exe.step);
 
     // Zig tip: `addInstallBinFile` copies a file into `bin/` under another name. The program `evevm` is the very same
-    // file as `eve`: at start it reads its own name (comp/eve/eve.zig), and as `evevm` it starts the machine in a new process.
+    // file as `eve`: at start it reads its own name (code/eve/eve.zig), and as `evevm` it starts the machine in a new process.
     // `getEmittedBin()` is the file the compiler makes, so the copy waits for the build of `eve`. The extension of the
     // copy follows the target (`.exe` on Windows, none elsewhere).
     const evevm_name = b.fmt("evevm{s}", .{target.result.exeFileExt()});
@@ -155,7 +155,7 @@ pub fn build(b: *std.Build) void {
     }
 
     // The standard library in Eve is found beside the program: `<prefix>/lib/*.eve` for `<prefix>/bin/eve.exe`
-    // (comp/eve/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and the copy lands on the same files
+    // (code/eve/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and the copy lands on the same files
     // (Zig 0.17 cannot tell the prefix while configuring, so the step is always there).
     const install_lib = b.addInstallDirectory(.{
         .source_dir = b.path("lib"),

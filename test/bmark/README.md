@@ -13,7 +13,7 @@ python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --both --s
 ```
 
 - Compare only runs of the same build and the same machine, with nothing else running; trust the median, not one run. The ReleaseSafe build (`zig build -Doptimize=ReleaseSafe -p temp/rel`) is the one to compare between versions; Debug is for development.
-- The sizes come from the programs found beside `eve.exe`: build `evetx` and `eveux` into the same folder (`cd comp/evetx && zig build -Doptimize=ReleaseSafe -p ../../temp/rel`) or their column stays empty.
+- The sizes come from the programs found beside `eve.exe`: build `evetx` and `eveux` into the same folder (`cd code/evetx && zig build -Doptimize=ReleaseSafe -p ../../temp/rel`) or their column stays empty.
 - Level 6 needs `evedb.exe` beside `eve.exe`; `bmark.py` starts it with `evedb.cfg` and stops it. Its Python twins need `psycopg2`.
 - A new benchmark is `p<level><letter>_<name>.eve` with a `** perf:` description line and a twin with the same loops and sizes. Keep it between 50 ms and 2 s.
 
