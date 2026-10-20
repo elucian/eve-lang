@@ -17,7 +17,7 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 | `phase-*.md` | the steps of each phase |
 | `feature_map.md` | a paragraph for each level and a subtitle with a paragraph for every feature, with its status; the tables are generated (`script/featmap.py`) |
 | `design-*.md`, `library-audit.md` | the designs of the parts of Eve |
-| `design-ai-context.md`, `dev-guide.md` | the plan to cut the AI context (A1 to A6) and the full development guide that `CLAUDE.md` points to |
+| `design-ai-context.md`, `dev-guide.md` | the plan to cut the AI context (A1 to A8, done; the long text is in `archive/`) and the full development guide that `CLAUDE.md` points to |
 | `release.md` | the release policy and the steps of a release (D-153) |
 | `manual.md` | how the manual is made: what is written by hand, what is generated |
 | `decision/` | `level1.md` to `level7.md`: the decisions and the open questions, by level; `archive/` keeps the settled entries in full |
