@@ -39,4 +39,4 @@ The **database layer** (`code/evevm/src/db.zig` and `db/`) is a part of `evevm` 
 
 ## License
 
-Business Source License 1.1, the license of every component of `comp/`: see [LICENSE](../LICENSE). The code becomes Apache 2.0 on the Change Date.
+Business Source License 1.1, the license of every component of `code/`: see [LICENSE](../LICENSE). The code becomes Apache 2.0 on the Change Date.

@@ -8,7 +8,7 @@ Writes, in manual/ (or in DIR):
   tests.md        the summary of the last run of each test suite     (template design/template/manual-tests.md)
   performance.md  the last saved ReleaseSafe benchmark run, and the totals by version
                                                                      (template design/template/manual-performance.md)
-  <component>/    a copy of comp/<component>/doc/ for each name of relnotes.COMPONENTS (evevm, evecp, evecm, ...)
+  <component>/    a copy of code/<component>/doc/ for each name of relnotes.COMPONENTS (evevm, evecp, evecm, ...)
 A page is made from its template when it does not exist; afterwards only its GEN blocks are written again
 and the text around them is kept. With --out the hand-written text is read from manual/ and the pages go
 to DIR: script/dist.py uses it, so a distribution never changes the repository. --check writes nothing

@@ -5,7 +5,7 @@ Parameters
 
 Licensor:             Elucian Moise
 
-Licensed Work:        The Eve components (comp/): the virtual machine, the
+Licensed Work:        The Eve components (code/): the virtual machine, the
                       compiler, the common part, the eve command, the
                       user interfaces and the web portal, and the database
                       drivers (drivers/), version 0.1 and later.

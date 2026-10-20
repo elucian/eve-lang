@@ -34,7 +34,7 @@
 *.app
 .DS_Store
 
-# Zig build output; `zig build -p .` at the root (and `-p ../..` in comp/<part>/) installs the programs into /bin
+# Zig build output; `zig build -p .` at the root (and `-p ../..` in code/<part>/) installs the programs into /bin
 .zig-cache/
 zig-out/
 zig-pkg/

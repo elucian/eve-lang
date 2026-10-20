@@ -44,11 +44,11 @@ We use 2 licenses:
 
 ### Eve components: Business Source License 1.1
 
-The code of every component in [`comp/`](code/README.md) (the virtual machine, the compiler, the common part, the `eve` command, the user interfaces and the web portal) and of every database driver in [`drivers/`](drivers/README.md) is under one license, the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [code/LICENSE](code/LICENSE).
+The code of every component in [`code/`](code/README.md) (the virtual machine, the compiler, the common part, the `eve` command, the user interfaces and the web portal) and of every database driver in [`drivers/`](drivers/README.md) is under one license, the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [code/LICENSE](code/LICENSE).
 
 ### Everything else: CC BY-NC-SA 4.0
 
-Everything outside `comp/` and `drivers/` (specification, tutorial text, manual, examples, tests, plans, scripts) is under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0). The code snippets and examples shown in the tutorial are under the Apache License 2.0, as the Sage-Code Laboratory licensing of the scl repository says. You may use and adapt it for learning, research and non-profit work, with credit and under the same license. A commercial implementation or product based on Eve needs written permission from the author. Full text: [spec/LICENSE](spec/LICENSE).
+Everything outside `code/` and `drivers/` (specification, tutorial text, manual, examples, tests, plans, scripts) is under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0). The code snippets and examples shown in the tutorial are under the Apache License 2.0, as the Sage-Code Laboratory licensing of the scl repository says. You may use and adapt it for learning, research and non-profit work, with credit and under the same license. A commercial implementation or product based on Eve needs written permission from the author. Full text: [spec/LICENSE](spec/LICENSE).
 
 ### Trademark
 
