@@ -1,68 +1,43 @@
-# Version map and features
+# Feature map
 
-Two different things are numbered here, and they are never mixed: a **level** is a group of features (Level 1 to Level 7) and a **version** is a release (Version 0.1 to Version 1.0). A level is tested by `test/levelN/`; a version is released when its levels pass. Each version completes one or two levels: a level is a group of features with its own decision log (`design/decision/levelN.md`) and its own conformance tests (`test/levelN/`). Each version below lists its features, with their codes and status, and an exit criterion. A version is released by `script/release.py` when every feature of its section below is `✓ done`.
+The map of Eve in two parts: the **levels** and the **features**. A level is a group of features that is tested together by `test/levelN/` (Level 1 to Level 7), plus a group for the work that spans all levels. Each level has a paragraph below, and each feature has a subtitle and a paragraph under its level. Versions and release numbers are not used here: what is done is what the tests and the code show.
 
-This file is the one place to track the project: the levels, the versions and **every feature** with its status. The decisions are in `design/decision/level1.md` to `decision_level7.md`, the steps of the plan in `design/phase-*.md`.
+This file is the one place to track the project: the levels and **every feature** with its status. The decisions are in `design/decision/level1.md` to `level7.md`, the steps of the plan in `design/phase-*.md`.
 
 ## How to read the features
 
 - Each feature has a stable code `F-<area>-<nn>` (areas: SPEC specification, LNG language, STR structure, MTK multitasking, VM virtual machine, TLS tools, LIB library, DAT data, NET network, WEB web, DOC documentation). Codes are never renumbered or reused; a dropped feature keeps its line, with the reason.
-- **Status**: `✓ done` means implemented in `bin/eve.exe` (or delivered, for documents and tools) and covered by tests where tests apply; `partial` says in the description what exists; `open` is not started; `dropped` is not wanted any more.
-- A feature belongs to **one version**. Moving it is changed here, in its section, and noted in the description with the decision.
-- **Where to edit (2026-10-20).** Every feature is a subtitle `### F-XXX-nn Name` with a `**Status:**` line, an optional `**Tests:**` line (`level5: e23 e24`, the tests of the feature) and a paragraph. The tables of a version, the counts and the Overview column are **generated** from the subtitles by `python script/featmap.py --write` (the pre-commit hook runs it): edit the Status line of the feature, never the table. The code of a table row links to its subtitle. `python script/featmap.py --verify` compares each Status with the results of its Tests line, `--evidence` lists features whose code carries `@feature` tags but whose status is `open`, `--check` finds a stale table.
+- **Status**: `✓ done` means implemented in `bin/eve.exe` (or delivered, for documents and tools) and covered by tests where tests apply; `partial` says in the description what exists; `open` is not started; `dropped` is not wanted any more. Test results are in `manual/tests.md` (`python script/runtest.py all --both`).
+- A feature belongs to **one level**, or to "All levels" when it is a tool, a document, the bytecode machine or the release. To move it, move its subtitle under another level and note the decision in its paragraph.
+- **Where to edit (2026-10-20).** Every feature is a subtitle `### F-XXX-nn Name` with a `**Status:**` line, an optional `**Tests:**` line (`level5: e23 e24`, the tests of the feature) and a paragraph. The table of levels, the table of each level and the counts are **generated** from the subtitles by `python script/featmap.py --write` (the pre-commit hook runs it): edit the Status line of the feature, never the table. The code of a table row links to its subtitle. `python script/featmap.py --verify` compares each Status with the results of its Tests line, `--evidence` lists features whose code carries `@feature` tags but whose status is `open`, `--check` finds a stale table.
 - A new large feature is added here first, then planned in a phase file, then decided (`D-nnn`), then built.
-- Status checked on 2026-10-19: level 1 73/73, level 2 78/78, level 3 58/58, level 4 47/47, level 5 117/117, level 6 15/15, smoke 21/21: 409 tests pass on the tree walker and on the bytecode machine (`runtest.py all --both`); (2026-10-09: level 1 65/65, level 2 63/63, level 3 50/50, level 4 42/42 (stage A of D-144: one core, deterministic), smoke 16/16: 235 tests; the benchmarks are in `test/bmark`.
 
 ## Levels
 
-| Level | Topic | Released in | Decisions | Tests |
-|---|---|---|---|---|
-| Level 1 | the language of a single script (no user subprograms and no classes, D-122) | Version 0.1 | [decision_level1.md](decision/level1.md) | `test/level1` (a) |
-| Level 2 | a project: functions, procedures, lambdas and closures (D-122), and aspects | Version 0.1 | [decision_level2.md](decision/level2.md) | `test/level2` (b) |
-| Level 3 | modules and imports, local libraries, then classes and methods (D-122) | Version 0.2 | [decision_level3.md](decision/level3.md) | `test/level3` (c) |
-| Level 4 | parallel processing and streams, generics and traits (D-138) | Version 0.3 | [decision_level4.md](decision/level4.md) | `test/level4` (d) |
-| Level 5 | data language (types, records, generators, files, formats, HTTP client), database layer and the Eve database (D-125) | Version 0.4 | [decision_level5.md](decision/level5.md) | `test/level5` (e) |
-| Level 6 | the Eve machine and the server | Version 0.5 | [decision_level6.md](decision/level6.md) | `test/level6` (f) |
-| Level 7 | web: HTML and WebAssembly; the Eve Web Portal evewp, written in Eve with a framework compiled to WebAssembly, the final test (D-193, was D-154) | Version 0.6 | [decision_level7.md](decision/level7.md) | `test/level7` (g) |
+The status of a level is derived from its features: planned when none is started, in progress, done when every feature is done.
 
-## Versions that were named before
-
-The decisions used several scales. They map to this one as follows:
-
-| Old wording | Where | Version here |
-|---|---|---|
-| "0.1", "version 1", "not in 0.1" | D-050, D-031 | Version 0.1 is the first release; "not in 0.1" features are placed below |
-| "version 2" (generators, module `task`) | D-067 | generators: Version 0.4, level 5, with the data language (D-125); `task`: Version 0.3, level 4 *(to confirm)* |
-| "about 0.9" (VM modes: REPL, service, exclusive) | D-031, TOP-14 | REPL Version 0.2, the listening machine Version 0.5 (D-083) |
-| "planned" (parallel aspects, channels) | D-050, D-051, D-066 | Version 0.3, level 4 |
-
-The spec version follows the release: Eve spec 0.1 is the spec of release 0.1. Version 1.0 freezes the language; until then a minor version may change the syntax, but only through a decision and a migration script.
-
-## Overview
-
-| Version | Levels | Name | Goal | Features done | Status |
+<!-- GEN:levels -->
+| Level | Name | Status | Features done | Decisions | Tests |
 |---|---|---|---|---|---|
-| Version 0.1 | Levels 1 and 2 | Core client | Run a project: one driver and its aspects, error recovery across `apply`. | 25 of 35 | in progress |
-| Version 0.2 | Level 3 | Modules and classes | Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125). | 5 of 14 | in progress |
-| Version 0.3 | Level 4 | Parallel | Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138). | 5 of 15 | in progress |
-| Version 0.4 | Level 5 | Data and database | The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands. | 6 of 30 | in progress |
-| Version 0.5 | Level 6 | Server | The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI. | 0 of 24 | in progress |
-| Version 0.6 | Level 7 | Web | Safe HTML and Eve in the browser; the Eve Web Portal evewp, written in Eve, as the final test of the language (D-193). | 0 of 14 | planned |
-| Version 0.7 | Levels 1 to 7 | Bytecode and embedding | The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM. | 2 of 5 | in progress |
-| Version 0.9 | Levels 1 to 7 | Release candidate | Package manager, more database drivers, web kit, hardening. | 0 of 3 | planned |
-| Version 1.0 | Levels 1 to 7 | Stable | Frozen language, every level passes, registry for other implementations. | 0 of 2 | planned |
+| [Level 1](#level-1-the-language-of-a-single-script) | The language of a single script | in progress | 14 of 19 | [level1.md](decision/level1.md) | `test/level1` (a) |
+| [Level 2](#level-2-a-project-subprograms-and-aspects) | A project: subprograms and aspects | in progress | 2 of 3 | [level2.md](decision/level2.md) | `test/level2` (b) |
+| [Level 3](#level-3-modules-and-classes) | Modules and classes | in progress | 5 of 14 | [level3.md](decision/level3.md) | `test/level3` (c) |
+| [Level 4](#level-4-parallel-processing) | Parallel processing | in progress | 5 of 15 | [level4.md](decision/level4.md) | `test/level4` (d) |
+| [Level 5](#level-5-data-and-database) | Data and database | in progress | 6 of 30 | [level5.md](decision/level5.md) | `test/level5` (e) |
+| [Level 6](#level-6-the-eve-machine-and-the-server) | The Eve machine and the server | in progress | 0 of 24 | [level6.md](decision/level6.md) | `test/level6` (f) |
+| [Level 7](#level-7-the-web) | The web | in progress | 0 of 14 | [level7.md](decision/level7.md) | `test/level7` (g) |
+| [All levels](#all-levels-tools-documents-bytecode-and-release) | Tools, documents, bytecode and release | in progress | 11 of 23 | - | - |
+<!-- /GEN:levels -->
 
-## Version 0.1: Core client (levels 1 and 2)
+## Level 1: The language of a single script
 
-Levels 1 and 2. Goal: Run a project: one driver and its aspects, error recovery across `apply`.
+A script that runs from its first line to its last, with no user subprograms and no classes (D-122). It has declarations and assignment, expressions and operators, control flow, strings with interpolation, the primitive types and the collections, and jobs with error recovery. This level is the core of the lexical and syntactic specification, the first lexer and parser, and the tree-walking interpreter, which stay the reference for the bytecode machine. It is tested by `test/level1` (the `a` series) and is done when the level passes and `spec/` gives the grammar and the semantics of every tested feature, with no test that relies on an unanswered `Q-nnn`.
 
 <!-- GEN:features -->
-25 of 35 features done (10 partial).
+14 of 19 features done (5 partial).
 
 | Code | Feature | Status |
 |---|---|---|
-| [F-DOC-01](#f-doc-01-tutorial-language-part) | Tutorial, language part | partial |
-| [F-DOC-04](#f-doc-04-compiler-manual) | Compiler manual | partial |
 | [F-LIB-01](#f-lib-01-console-io) | Console I/O | partial |
 | [F-LIB-02](#f-lib-02-exception-module) | Exception module | partial |
 | [F-LNG-01](#f-lng-01-script-shapes) | Script shapes | ✓ done |
@@ -73,48 +48,16 @@ Levels 1 and 2. Goal: Run a project: one driver and its aspects, error recovery 
 | [F-LNG-06](#f-lng-06-primitive-types) | Primitive types | ✓ done |
 | [F-LNG-07](#f-lng-07-collections) | Collections | ✓ done |
 | [F-LNG-08](#f-lng-08-strings-and-interpolation) | Strings and interpolation | ✓ done |
-| [F-LNG-09](#f-lng-09-functions-and-methods) | Functions and methods | ✓ done |
 | [F-SPEC-01](#f-spec-01-lexical-specification) | Lexical specification | ✓ done |
 | [F-SPEC-02](#f-spec-02-grammar-ebnf) | Grammar (EBNF) | ✓ done |
 | [F-SPEC-03](#f-spec-03-core-semantics) | Core semantics | partial |
-| [F-SPEC-07](#f-spec-07-machine-readable-tables-with-schemas) | Machine-readable tables with schemas | ✓ done |
-| [F-SPEC-08](#f-spec-08-conformance-levels) | Conformance levels | partial |
-| [F-SPEC-10](#f-spec-10-licenses-and-trademark) | Licenses and trademark | ✓ done |
-| [F-STR-02](#f-str-02-aspects-serial) | Aspects (serial) | ✓ done |
 | [F-STR-05](#f-str-05-command-line-parameters-of-a-script) | Command-line parameters of a script | partial |
-| [F-STR-06](#f-str-06-configuration-files) | Configuration files | partial |
 | [F-STR-07](#f-str-07-system-variables) | System variables | partial |
-| [F-TLS-01](#f-tls-01-command-line-cli) | Command line (CLI) | ✓ done |
-| [F-TLS-05](#f-tls-05-command-files-and-serve-mode) | Command files and serve mode | ✓ done |
-| [F-TLS-06](#f-tls-06-test-runner) | Test runner | ✓ done |
-| [F-TLS-07](#f-tls-07-documentation-generator-eve---doc) | Documentation generator `eve --doc` | ✓ done |
-| [F-TLS-16](#f-tls-16-smoke-test) | Smoke test | ✓ done |
-| [F-TLS-17](#f-tls-17-benchmarks) | Benchmarks | ✓ done |
-| [F-TLS-18](#f-tls-18-tutorial-pages-of-the-tests) | Tutorial pages of the tests | ✓ done |
 | [F-VM-01](#f-vm-01-lexer-and-parser) | Lexer and parser | ✓ done |
 | [F-VM-02](#f-vm-02-tree-walking-interpreter) | Tree-walking interpreter | ✓ done |
-| [F-VM-10](#f-vm-10-cross-platform-releases) | Cross-platform releases | partial |
 | [F-STR-12](#f-str-12-exit-code-of-the-program) | Exit code of the program | ✓ done |
 | [F-LIB-13](#f-lib-13-datamap-methods) | DataMap methods | ✓ done |
 <!-- /GEN:features -->
-
-Exit: level 1 and level 2 pass; `spec/` has the grammar and the semantics of every tested feature (no test relies on an unanswered `Q-nnn`); binaries for Windows and Linux.
-
-### F-DOC-01 Tutorial, language part
-
-**Status:** partial
-
-The topic pages reviewed and consistent with the decisions (phase 1, T1.10).
-
-*Partial:* 38 topic pages and the generated pages of Phase 8 (demos, feature tests, smoke and performance); a few pages still describe old forms.
-
-### F-DOC-04 Compiler manual
-
-**Status:** partial
-
-Implement, usage, generated feature tables, implemented features (phase 7).
-
-*Partial:* `manual/usage.md`.
 
 ### F-LIB-01 Console I/O
 
@@ -180,12 +123,6 @@ List, Array, Matrix, DataSet, HashMap, Object, slices, builders, deconstruction 
 
 Escapes, text literal `"""`, placeholders `{name}`, `{literal}`, simple expressions and formats `{n % i5}`, code points `{U+H}`, HTML entities `&name;`, regular expressions (subset) (D-060, D-102, D-119, D-120, D-121).
 
-### F-LNG-09 Functions and methods
-
-**Status:** ✓ done
-
-Pure functions, `!` functions, procedures, `@` parameters, defaults, varargs, named arguments, lambdas, closures, recursion (D-025 to D-029, D-048, D-070, D-100, D-101). A lambda is not called where it is written (D-147). Conformity level 2 since D-122.
-
 ### F-SPEC-01 Lexical specification
 
 **Status:** ✓ done
@@ -206,32 +143,6 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 
 *Partial:* `semantics/` has variables, types, control, errors, aspects, modules and data-types (a proposal); scopes, topology and collections are missing.
 
-### F-SPEC-07 Machine-readable tables with schemas
-
-**Status:** ✓ done
-
-JSON schemas, `script/speccheck.py`.
-
-### F-SPEC-08 Conformance levels
-
-**Status:** partial
-
-Level 1 (a single script), level 2 (functions, procedures, lambdas, aspects), level 3 (modules, classes), levels 4 to 7 (parallel, data and database, server, web; `design/version_map.md`, D-122, D-125), with the expected-output convention (Q-005).
-
-*Partial:* suites of levels 1 to 3 done, level 4 has 3 tests, a smoke test and benchmarks exist (D-135); levels 5 to 7 are empty. (Version 0.1 (levels 1–2), v0.2 (level 3), v1.0 (levels 4–7))
-
-### F-SPEC-10 Licenses and trademark
-
-**Status:** ✓ done
-
-BUSL-1.1 code, CC BY-NC-SA 4.0 spec and documents, TRADEMARK.md (D-061, D-062, D-078).
-
-### F-STR-02 Aspects (serial)
-
-**Status:** ✓ done
-
-`apply`, state per call, `@` outputs, named and spread arguments, errors and `over`/`panic` across `apply`, `exclusive` by default, `concurrent` kind (D-066, D-090, D-130; tests b01 to b29).
-
 ### F-STR-05 Command-line parameters of a script
 
 **Status:** partial
@@ -240,14 +151,6 @@ BUSL-1.1 code, CC BY-NC-SA 4.0 spec and documents, TRADEMARK.md (D-061, D-062, D
 
 *Partial:* the arguments after the script name go to `process main`; `-p` and the generated help are not implemented.
 
-### F-STR-06 Configuration files
-
-**Status:** partial
-
-`.cfg` with `$key = value`, loaded with `-s` (D-031).
-
-*Partial:* `-s` is accepted by the command line, the `setup` command is a stub.
-
 ### F-STR-07 System variables
 
 **Status:** partial
@@ -255,48 +158,6 @@ BUSL-1.1 code, CC BY-NC-SA 4.0 spec and documents, TRADEMARK.md (D-061, D-062, D
 The register (`$error`, environment names such as `$HOME`, `$epsilon`, `$err_`/`$wrn_` constants) (D-071).
 
 *Partial:* `$error`, `$epsilon` and the `$err_`/`$wrn_` constants work; the environment names and `$EVE_*` are undefined.
-
-### F-TLS-01 Command line (CLI)
-
-**Status:** ✓ done
-
-`eve script.eve`, `--check`, `--execute`, `-h`, `-v`, `-s`, `-d`, `-x`, `-i`, `-t`, exit codes 64–66 (`manual/usage.md`).
-
-### F-TLS-05 Command files and serve mode
-
-**Status:** ✓ done
-
-(scheduled for removal, replaced by F-TLS-13, D-083): `.vmc` slot, workflow commands `load`, `parse`, `run`, `errors`, `ast`, `inspect`, `status` (D-063). The tests v01 to v11 were removed (D-135): no test covers it now.
-
-### F-TLS-06 Test runner
-
-**Status:** ✓ done
-
-`script/runtest.py` for levels, project tests, several drivers per project (D-133), `/*@expect*/` blocks, reports in `temp/output/`, the status in `status.json` and in each `readme.md` (D-009, D-073, D-094).
-
-### F-TLS-07 Documentation generator `eve --doc`
-
-**Status:** ✓ done
-
-Markdown from `**` comments and signatures, a command of the VM (D-053, D-082).
-
-### F-TLS-16 Smoke test
-
-**Status:** ✓ done
-
-16 small scripts, one feature each, in less than a second, independent of the other tests (`test/smoke`, D-134, D-135).
-
-### F-TLS-17 Benchmarks
-
-**Status:** ✓ done
-
-One per level with a twin in Python, a history of the runs (`script/bmark.py`, `test/bmark`). Levels 1 to 3 measured.
-
-### F-TLS-18 Tutorial pages of the tests
-
-**Status:** ✓ done
-
-`features.html` and `quality.html` generated from the tests and the benchmarks (`script/genpages.py`, D-136).
 
 ### F-VM-01 Lexer and parser
 
@@ -310,14 +171,6 @@ Source to syntax tree, errors with file, line and column (`lexer.zig`, `parser.z
 
 Runs levels 1 to 3, the smoke test and the benchmarks (`interp.zig`, `project.zig`); 193 tests.
 
-### F-VM-10 Cross-platform releases
-
-**Status:** partial
-
-Windows, Linux, macOS binaries from one build; `script/release.py` bumps versions.
-
-*Partial:* Windows build, release script.
-
 ### F-STR-12 Exit code of the program
 
 **Status:** ✓ done
@@ -330,9 +183,43 @@ Windows, Linux, macOS binaries from one build; `script/release.py` bumps version
 
 `has`, `get(k)`, `get(k, default)`, `keys`, `values`, `delete` (`spec/semantics/types.md#datamap-methods`; G-5; test a88). `method` is a contextual word, usable as a name (D-116; G-6; test a91).
 
-## Version 0.2: Modules and classes (level 3)
+## Level 2: A project: subprograms and aspects
 
-Level 3. Goal: Programs in several files: modules and imports, local libraries, classes and methods (D-122, D-125).
+A script becomes a project: functions, procedures, lambdas and closures (D-122), and aspects, the units of work that `apply` calls with copy-in parameters, with errors recovered across `apply` and a log per call. Configuration files belong here. It is tested by `test/level2` (the `b` series, each test a folder when it needs several files) and is done when a driver and its aspects run as one project.
+
+<!-- GEN:features -->
+2 of 3 features done (1 partial).
+
+| Code | Feature | Status |
+|---|---|---|
+| [F-LNG-09](#f-lng-09-functions-and-methods) | Functions and methods | ✓ done |
+| [F-STR-02](#f-str-02-aspects-serial) | Aspects (serial) | ✓ done |
+| [F-STR-06](#f-str-06-configuration-files) | Configuration files | partial |
+<!-- /GEN:features -->
+
+### F-LNG-09 Functions and methods
+
+**Status:** ✓ done
+
+Pure functions, `!` functions, procedures, `@` parameters, defaults, varargs, named arguments, lambdas, closures, recursion (D-025 to D-029, D-048, D-070, D-100, D-101). A lambda is not called where it is written (D-147). Conformity level 2 since D-122.
+
+### F-STR-02 Aspects (serial)
+
+**Status:** ✓ done
+
+`apply`, state per call, `@` outputs, named and spread arguments, errors and `over`/`panic` across `apply`, `exclusive` by default, `concurrent` kind (D-066, D-090, D-130; tests b01 to b29).
+
+### F-STR-06 Configuration files
+
+**Status:** partial
+
+`.cfg` with `$key = value`, loaded with `-s` (D-031).
+
+*Partial:* `-s` is accepted by the command line, the `setup` command is a stub.
+
+## Level 3: Modules and classes
+
+Programs in several files: modules and imports, local libraries, managed and direct modules, extension methods, and then classes and methods (D-122, D-125) with constructors, visibility and inheritance. The standard library of the language is also written as modules from this level on. It is tested by `test/level3` (the `c` series) and is done when levels 1 to 3 pass and the modules and classes have their specification pages.
 
 <!-- GEN:features -->
 5 of 14 features done (8 partial).
@@ -354,8 +241,6 @@ Level 3. Goal: Programs in several files: modules and imports, local libraries, 
 | [F-VM-03](#f-vm-03-library-loader-and-external-bindings) | Library loader and `external` bindings | partial |
 | [F-LNG-22](#f-lng-22-external-routines-and-errors-of-modules) | External routines and errors of modules | ✓ done |
 <!-- /GEN:features -->
-
-Exit: levels 1 to 3 pass (modules c01–c09 and c18–c31, classes c10–c17 included): done on 2026-10-08, 50 of 50. Open for the release: the open features above.
 
 ### F-DOC-05 Library reference
 
@@ -459,9 +344,9 @@ Load `.eve` library modules and bind `external` declarations to Zig (D-053, D-05
 
 An `external` routine of a module whose name is that of a native module (`os`, `fs`, `crypto`, ...) is bound to the native of the same name; an error raised in a module names the file of the module and the call lines end with `of <file>` (`spec/semantics/modules.md#members`, `errors.md#where-an-error-is-reported`; G-1, G-3; tests c37, c38).
 
-## Version 0.3: Parallel (level 4)
+## Level 4: Parallel processing
 
-Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with back-pressure, region memory. Generics and traits (D-039, D-138).
+Many cores and many waits: parallel groups, channels, streams with back-pressure, tasks in a job (`async`, `spawn`, `await`), deadlines and cancellation, and region memory. Generics for classes, traits and abstract classes also arrive here (D-039, D-138). The results of parallel code must be deterministic: it is tested by `test/level4` (the `d` series) and the exit test is that the tests give the same output over 100 runs and that a pipeline with more stages than cores completes.
 
 <!-- GEN:features -->
 5 of 15 features done (8 partial).
@@ -484,8 +369,6 @@ Level 4. Goal: Many cores, many waits: parallel groups, channels, streams with b
 | [F-TLS-09](#f-tls-09-editor-support) | Editor support | partial |
 | [F-VM-05](#f-vm-05-region-memory) | Region memory | partial |
 <!-- /GEN:features -->
-
-Exit: parallel tests are deterministic over 100 runs; a pipeline with more stages than cores completes.
 
 ### F-LIB-12 Testing module `test`
 
@@ -512,7 +395,7 @@ Structured logs, job events, run reports, trace ids (review `RST-R07`, `RNW-R09`
 
 **Status:** partial
 
-`Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; in Version 0.3 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it in Version 0.4, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`).
+`Stream(:T) <: Iterable(:T)`, read by `for` with back-pressure; at level 4 `Channel(:T)` is the stream, and lists get `batch(n)` and `split(k)` (D-142, test d16). Generators, files and queries adopt it at level 5, with `map`, `filter`, `merge`, `window`, `parallel(n)` (review `RMT-R02`).
 
 *Partial:* `for` on a channel, `batch`, `split` (d12, d16).
 
@@ -552,7 +435,7 @@ A class of the standard library that wraps the atomic of the machine, for Logic,
 
 **Status:** ✓ done
 
-`async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to Version 0.4 with the generators (D-144).
+`async` subprograms, `spawn`, `await`; the tasks of a job share its core (D-104, D-143, tests d17 to d19). The module `task` (`round_robin`, `until`) moves to level 5 with the generators (D-144).
 
 *Done:* tests d17 to d19, d33.
 
@@ -570,7 +453,7 @@ Per-group time limits, cancel or collect errors (review `RMT-R01`).
 
 `semantics/multitasking.md`: parallel groups, channels, tasks in a job, durations, determinism (D-140 to D-144).
 
-*Partial:* generators wait for Version 0.4.
+*Partial:* generators are level 5 (F-LNG-12).
 
 ### F-TLS-04 Debugger
 
@@ -600,9 +483,9 @@ Arena per aspect call, job and request; long-lived heap for modules and channels
 
 *Partial (D-151):* the values are reference counted and freed at the safe points of their region (statement, pass of a loop, `done`), a tracing collector frees cycles at `done`, scratch memory per statement; nothing is freed while tasks run; benchmarks peak at 4.4 to 6.6 MB (`p4a_parallel_sum` 39 MB). Open: an arena per task.
 
-## Version 0.4: Data and database (level 5)
+## Level 5: Data and database
 
-Level 5. Goal: The data language (real data with the right types, files, JSON, CSV, HTTP client, generators) and the ETL core: connections, query streams, bulk loads, transactions per job, checkpoints, lineage, the Eve database and its admin commands.
+The data language and the ETL core: real data with the right types (`Decimal`, `Instant`, records, tables, `Secret`), files and formats (CSV, JSON, text), the HTTP client, generators, generic functions, overloading and the Eve macro, and the database layer with connections, query streams, bulk loads, transactions per job, checkpoints, lineage and the Eve database. It is tested by `test/level5` (the `e` series). It is done when JSON and CSV round-trip, a killed load restarts from its checkpoint, level 5 passes against SQLite and a PostgreSQL server, and `db backup` and `db restore` round-trip.
 
 <!-- GEN:features -->
 6 of 30 features done (9 partial).
@@ -640,9 +523,6 @@ Level 5. Goal: The data language (real data with the right types, files, JSON, C
 | [F-STR-10](#f-str-10-unified-aspect) | Unified aspect | ✓ done |
 | [F-STR-11](#f-str-11-recover-in-a-function-procedure-and-method) | `recover` in a function, procedure and method | ✓ done |
 <!-- /GEN:features -->
-| F-DAT-02 | Database drivers | open | PostgreSQL and SQLite first (SQLite for external files; Eve data goes to `evedb`, D-159), then MySQL; Oracle is postponed (`backlog/ideas.md`). (Version 0.4 (PostgreSQL, SQLite), v0.9 (others)) | *PostgreSQL (2026-10-17, D-186):* the Eve driver `postgres://` (`code/evevm/src/db/pgclient.zig`, `pgdriver.zig`): logins trust, password, md5, SCRAM-SHA-256; `execute!`, `query!`, `query_one!`, `script`, jobs; not yet the ORM, TLS, a pool; tested against evedb (`test/level6/f01_pg_driver`).
-
-Exit: JSON and CSV round-trip tests; an HTTP call against a local test server; level 5 passes against the Eve database (SQLite) and a PostgreSQL server; a killed load restarts from its checkpoint; `db backup` and `db restore` round-trip.
 
 ### F-DAT-01 Database layer
 
@@ -843,9 +723,9 @@ No `driver` keyword, no free script, no `#!`; the kinds `exclusive`, `concurrent
 
 The end of `recover` handles the error and the routine returns normally; `abort` passes it on; no `recover` in a constructor, generator or lambda (D-192, Q-065; `spec/semantics/errors.md`; tests b55 to b59, c34 to c36; 2026-10-18).
 
-## Version 0.5: Server (level 6)
+## Level 6: The Eve machine and the server
 
-Level 6. Goal: The Eve machine: setup, remote control of many machines with login and single sign-on, `serve`, services and routes, the API for AI.
+The Eve machine and the server: setup from a folder, control by scripts and by other machines through the doors (IPC, stdio, HTTP), sessions and the machine API `vm.*`, services and routes written in Eve, the editors' link to the machine, and the test database evedb that speaks the PostgreSQL protocol. Login with single sign-on per machine, capabilities and the Eve Wire Protocol are still open. It is tested by `test/level6` (the `f` series) and by the smoke test; it is done when a client project and a server project talk on `localhost`, a route answers HTTP, and the machine logs in to two remote machines.
 
 <!-- GEN:features -->
 0 of 24 features done (6 partial).
@@ -878,14 +758,11 @@ Level 6. Goal: The Eve machine: setup, remote control of many machines with logi
 | [F-NET-10](#f-net-10-time-outs-of-the-waiting-calls) | Time-outs of the waiting calls | partial |
 <!-- /GEN:features -->
 
-
-Exit: a local machine logs in to two remote machines on `localhost`, one by single sign-on, and connects again from the keyring without a form; a client project and a server project talk on `localhost`; a route answers HTTP; `eve --api` answers an MCP client; `.vmc` files are removed.
-
 ### F-DOC-03 Tutorial, network and web part
 
 **Status:** open
 
-Client and server, services, protocol, security, HTML, WebAssembly (review `RTU` phases T2, T3). (Version 0.5 –v0.6)
+Client and server, services, protocol, security, HTML, WebAssembly (review `RTU` phases T2, T3). (levels 6 and 7)
 
 ### F-LIB-10 Encryption and hashing
 
@@ -1037,9 +914,9 @@ A SQLite cache of the user (`<user data folder>/eve/meta/eve.db`): projects, mac
 
 *Open:* `accept!` has no time-out, one connection at a time (TD-29), no streaming `os.run!` (TD-9).
 
-## Version 0.6: Web (level 7)
+## Level 7: The web
 
-Level 7. Goal: Safe HTML and Eve in the browser; the Eve Web Portal evewp (production edge, host, monitor and web framework), written in Eve, as the final test of the language (D-193; `code/evewp/README.md`). The development client eveux is now native Zig (`code/eveux/README.md`); its features F-TLS-19 to F-TLS-22 are listed here for history and start after the spike of that design.
+The web: safe HTML templates, Eve in the browser, and the Eve Web Portal evewp, written in Eve with no JavaScript, as the last and hardest test of the language (D-193). The development clients evetx (terminal) and eveux (native window) are tools of this level in their later stages. Nothing here is built yet; the first step is a trial build of the machine for WebAssembly. It will be tested by `test/level7` (the `g` series).
 
 <!-- GEN:features -->
 0 of 14 features done (1 partial).
@@ -1061,8 +938,6 @@ Level 7. Goal: Safe HTML and Eve in the browser; the Eve Web Portal evewp (produ
 | [F-WEB-07](#f-web-07-the-eve-web-framework) | The Eve Web framework | open |
 | [F-VM-12](#f-vm-12-process-supervision-api) | Process supervision API | open |
 <!-- /GEN:features -->
-
-Exit: tutorial examples run in the browser; templates pass an escaping test suite; the browser VM refuses `fs` and `shell`; evewp passes the tests of `test/level7` and meets its stress goals (`code/evewp/README.md` section 11).
 
 ### F-VM-09 WebAssembly build
 
@@ -1150,23 +1025,125 @@ Eve (a dialect with a browser profile) written once and compiled to WebAssembly 
 
 `os` handles for spawn with limits, wait, kill and signals, status of a child through its IPC door; used by the host of evewp (D-193).
 
-## Version 0.7: Bytecode and embedding (levels 1 to 7)
+## All levels: tools, documents, bytecode and release
 
-Levels 1 to 7. Goal: The bytecode compiler and VM, the portable `.evb` file and the embedding API with a C ABI; every level passes on the bytecode VM.
+Work that does not belong to one level. The tools: the command line, the test runner, the documentation generator, the smoke test and the benchmarks; the documents: the tutorial, the compiler manual, the specification tables and the licenses; the second engine, the bytecode compiler and machine, the portable `.evb` file and the embedding API; and the road to a stable release: package manager, hardening, the compiler registry and the compiler course. A feature here is checked at every level, for example by running all levels on both engines.
 
 <!-- GEN:features -->
-2 of 5 features done (1 partial).
+11 of 23 features done (5 partial).
 
 | Code | Feature | Status |
 |---|---|---|
+| [F-DOC-01](#f-doc-01-tutorial-language-part) | Tutorial, language part | partial |
+| [F-DOC-04](#f-doc-04-compiler-manual) | Compiler manual | partial |
+| [F-SPEC-07](#f-spec-07-machine-readable-tables-with-schemas) | Machine-readable tables with schemas | ✓ done |
+| [F-SPEC-08](#f-spec-08-conformance-levels) | Conformance levels | partial |
+| [F-SPEC-10](#f-spec-10-licenses-and-trademark) | Licenses and trademark | ✓ done |
+| [F-TLS-01](#f-tls-01-command-line-cli) | Command line (CLI) | ✓ done |
+| [F-TLS-05](#f-tls-05-command-files-and-serve-mode) | Command files and serve mode | ✓ done |
+| [F-TLS-06](#f-tls-06-test-runner) | Test runner | ✓ done |
+| [F-TLS-07](#f-tls-07-documentation-generator-eve---doc) | Documentation generator `eve --doc` | ✓ done |
+| [F-TLS-16](#f-tls-16-smoke-test) | Smoke test | ✓ done |
+| [F-TLS-17](#f-tls-17-benchmarks) | Benchmarks | ✓ done |
+| [F-TLS-18](#f-tls-18-tutorial-pages-of-the-tests) | Tutorial pages of the tests | ✓ done |
+| [F-VM-10](#f-vm-10-cross-platform-releases) | Cross-platform releases | partial |
 | [F-VM-04](#f-vm-04-bytecode-compiler-and-vm) | Bytecode compiler and VM | partial |
 | [F-VM-07](#f-vm-07-portable-bytecode-file-evb) | Portable bytecode file `.evb` | open |
 | [F-VM-13](#f-vm-13-engine-selection-and-equivalence-tests) | Engine selection and equivalence tests | ✓ done |
 | [F-VM-14](#f-vm-14-sampling-profiler) | Sampling profiler | ✓ done |
 | [F-VM-08](#f-vm-08-embedding-api) | Embedding API | open |
+| [F-DAT-07](#f-dat-07-database-synchronization) | Database synchronization | open |
+| [F-TLS-10](#f-tls-10-package-manager) | Package manager | open |
+| [F-WEB-04](#f-web-04-web-application-kit) | Web application kit | open |
+| [F-DOC-06](#f-doc-06-compiler-course) | Compiler course | open |
+| [F-SPEC-09](#f-spec-09-compiler-registry-and-approval) | Compiler registry and approval | open |
 <!-- /GEN:features -->
 
-Exit: levels 1 to 7 pass on the bytecode VM and on the tree walker; an `.evb` file made on one machine runs on another; a C program embeds the VM through the C ABI.
+### F-DOC-01 Tutorial, language part
+
+**Status:** partial
+
+The topic pages reviewed and consistent with the decisions (phase 1, T1.10).
+
+*Partial:* 38 topic pages and the generated pages of Phase 8 (demos, feature tests, smoke and performance); a few pages still describe old forms.
+
+### F-DOC-04 Compiler manual
+
+**Status:** partial
+
+Implement, usage, generated feature tables, implemented features (phase 7).
+
+*Partial:* `manual/usage.md`.
+
+### F-SPEC-07 Machine-readable tables with schemas
+
+**Status:** ✓ done
+
+JSON schemas, `script/speccheck.py`.
+
+### F-SPEC-08 Conformance levels
+
+**Status:** partial
+
+Level 1 (a single script), level 2 (functions, procedures, lambdas, aspects), level 3 (modules, classes), levels 4 to 7 (parallel, data and database, server, web; `design/feature_map.md`, D-122, D-125), with the expected-output convention (Q-005).
+
+*Partial:* suites of levels 1 to 3 done, level 4 has 3 tests, a smoke test and benchmarks exist (D-135); levels 5 to 7 are empty.
+
+### F-SPEC-10 Licenses and trademark
+
+**Status:** ✓ done
+
+BUSL-1.1 code, CC BY-NC-SA 4.0 spec and documents, TRADEMARK.md (D-061, D-062, D-078).
+
+### F-TLS-01 Command line (CLI)
+
+**Status:** ✓ done
+
+`eve script.eve`, `--check`, `--execute`, `-h`, `-v`, `-s`, `-d`, `-x`, `-i`, `-t`, exit codes 64–66 (`manual/usage.md`).
+
+### F-TLS-05 Command files and serve mode
+
+**Status:** ✓ done
+
+(scheduled for removal, replaced by F-TLS-13, D-083): `.vmc` slot, workflow commands `load`, `parse`, `run`, `errors`, `ast`, `inspect`, `status` (D-063). The tests v01 to v11 were removed (D-135): no test covers it now.
+
+### F-TLS-06 Test runner
+
+**Status:** ✓ done
+
+`script/runtest.py` for levels, project tests, several drivers per project (D-133), `/*@expect*/` blocks, reports in `temp/output/`, the status in `status.json` and in each `readme.md` (D-009, D-073, D-094).
+
+### F-TLS-07 Documentation generator `eve --doc`
+
+**Status:** ✓ done
+
+Markdown from `**` comments and signatures, a command of the VM (D-053, D-082).
+
+### F-TLS-16 Smoke test
+
+**Status:** ✓ done
+
+16 small scripts, one feature each, in less than a second, independent of the other tests (`test/smoke`, D-134, D-135).
+
+### F-TLS-17 Benchmarks
+
+**Status:** ✓ done
+
+One per level with a twin in Python, a history of the runs (`script/bmark.py`, `test/bmark`). Levels 1 to 3 measured.
+
+### F-TLS-18 Tutorial pages of the tests
+
+**Status:** ✓ done
+
+`features.html` and `quality.html` generated from the tests and the benchmarks (`script/genpages.py`, D-136).
+
+### F-VM-10 Cross-platform releases
+
+**Status:** partial
+
+Windows, Linux, macOS binaries from one build; `script/release.py` bumps versions.
+
+*Partial:* Windows build, release script.
 
 ### F-VM-04 Bytecode compiler and VM
 
@@ -1174,13 +1151,13 @@ Exit: levels 1 to 7 pass on the bytecode VM and on the tree walker; an `.evb` fi
 
 Register machine with 32-bit instructions (`design/design-bytecode.md`, D-201). *Stage B5.2 (2026-10-19):* `code/evecm/src/op.zig`, `chunk.zig`, `code/evecp/src/emit.zig`, `code/evevm/src/bcvm.zig`; the core of level 1 is translated (numbers, text, variables, operators, `print`, `expect`, `if`, `while`, `for` over ranges, calls of the functions of the aspect), the rest runs on the tree walker through a bridge (TD-46); `p1a_arith` 64 to 26 ms, `p1b_calls` 41 to 16 ms.
 
-*Open:* B5.3 to B5.6 (collections and strings, errors, objects and modules, tasks, the data language). Moved from Version 0.4 to Version 0.7 (D-138).
+*Open:* B5.3 to B5.6 (collections and strings, errors, objects and modules, tasks, the data language). Moved from level 5 to All levels (D-138).
 
 ### F-VM-07 Portable bytecode file `.evb`
 
 **Status:** open
 
-Versioned, hashed, with debug lines and capabilities (review `RVM-R05`). Moved from Version 0.6 to Version 0.7 (D-138).
+Versioned, hashed, with debug lines and capabilities (review `RVM-R05`). Moved from level 7 to All levels (D-138).
 
 ### F-VM-13 Engine selection and equivalence tests
 
@@ -1200,23 +1177,7 @@ Versioned, hashed, with debug lines and capabilities (review `RVM-R05`). Moved f
 
 **Status:** open
 
-The VM as a library with a C ABI (the C ABI is the contract of the embedding) (review `RVM-R07`). Moved from Version 0.5 to Version 0.7 (D-138).
-
-## Version 0.9: Release candidate (levels 1 to 7)
-
-Levels 1 to 7. Goal: Package manager, more database drivers, web kit, hardening.
-
-<!-- GEN:features -->
-0 of 3 features done.
-
-| Code | Feature | Status |
-|---|---|---|
-| [F-DAT-07](#f-dat-07-database-synchronization) | Database synchronization | open |
-| [F-TLS-10](#f-tls-10-package-manager) | Package manager | open |
-| [F-WEB-04](#f-web-04-web-application-kit) | Web application kit | open |
-<!-- /GEN:features -->
-
-Exit: no open `Q-nnn` on a feature of 0.1 to 0.6; performance and memory baselines recorded.
+The VM as a library with a C ABI (the C ABI is the contract of the embedding) (review `RVM-R07`). Moved from level 6 to All levels (D-138).
 
 ### F-DAT-07 Database synchronization
 
@@ -1235,21 +1196,6 @@ Library folders, versions, dependencies, a registry.
 **Status:** open
 
 Service + EWP feed + browser client, deployment guide.
-
-## Version 1.0: Stable (levels 1 to 7)
-
-Levels 1 to 7. Goal: Frozen language, every level passes, registry for other implementations.
-
-<!-- GEN:features -->
-0 of 2 features done.
-
-| Code | Feature | Status |
-|---|---|---|
-| [F-DOC-06](#f-doc-06-compiler-course) | Compiler course | open |
-| [F-SPEC-09](#f-spec-09-compiler-registry-and-approval) | Compiler registry and approval | open |
-<!-- /GEN:features -->
-
-Exit: the language is frozen; every level passes; one implementation other than `evevm` is registered against the spec.
 
 ### F-DOC-06 Compiler course
 
@@ -1271,9 +1217,8 @@ How a third-party implementation claims a spec version and a level (S6.3, S6.4).
 
 ## Open questions
 
-Decided on 2026-10-08 and removed from this list: the order of the levels (Level 3 modules and classes, Level 4 parallel, Level 5 data language and database, D-122, D-125), the place of the generators (Level 5, Version 0.4), generics and traits (Level 4, Version 0.3) and the bytecode, `.evb` and the C ABI (Version 0.7), D-138.
+Decided on 2026-10-08 and removed from this list: the order of the levels (Level 3 modules and classes, Level 4 parallel, Level 5 data language and database, D-122, D-125), the place of the generators (Level 5), generics and traits (Level 4) and the bytecode, `.evb` and the C ABI (All levels), D-138.
 
 - The data types (F-LNG-13, F-LNG-14), the service kind (F-STR-08) and the network features come from the review; each needs a decision before it is specified.
-- **Generators and the bytecode.** F-LNG-12 (Version 0.4) needs a method that can stop and continue, which the tree walker can not do (`design-multitasking.md` §5), and the bytecode VM (F-VM-04) is now in Version 0.7. Either the generators are built on the tree walker (a separate thread or a continuation), or F-LNG-12 moves to Version 0.7. *Proposed by D-144:* the baton threads of stage A give the tree walker a task that stops and continues, so a generator can be such a task and F-LNG-12 stays in Version 0.4.
-- **The web and `.evb`.** F-WEB-02 (Version 0.6) runs signed `.evb` code in the browser, and `.evb` (F-VM-07) is now in Version 0.7. Does Version 0.6 run source in the browser, or does F-WEB-02 move to Version 0.7?
-- Features left open in Version 0.2 (Level 3): the REPL (F-TLS-02, F-TLS-03), `sort` and search (F-LIB-03), the standard library as modules (F-VM-03), the variables `$EVE_*` (F-STR-04, F-STR-07): confirm that they stay in Version 0.2 or move them.
+- **The web and `.evb`.** F-WEB-02 (Level 7) runs signed `.evb` code in the browser, and `.evb` (F-VM-07) is in All levels. Does level 7 run source in the browser, or does F-WEB-02 wait for `.evb`?
+- Features of Level 3 that are not done: the REPL (F-TLS-02, F-TLS-03), `sort` and search (F-LIB-03), the standard library as modules (F-VM-03), the variables `$EVE_*` (F-STR-04, F-STR-07): confirm that they stay in level 3 or move them.

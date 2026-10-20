@@ -56,15 +56,14 @@ def rel(path):
 
 
 def level_names():
-    """{1: 'the language of a single script', ...} from the table of design/version_map.md."""
-    names, versions = {}, {}
-    with open(os.path.join(ROOT, 'design', 'version_map.md'), encoding='utf-8') as f:
+    """({1: 'The language of a single script', ...}, {}) from the table of levels of design/feature_map.md."""
+    names = {}
+    with open(os.path.join(ROOT, 'design', 'feature_map.md'), encoding='utf-8') as f:
         for line in f:
-            m = re.match(r'\|\s*(?:Level\s*)?(\d)\s*\|\s*([^|]+?)\s*\|\s*(?:Version\s*)?([0-9.]+)\s*\|', line)
+            m = re.match(r'\|\s*\[Level (\d)\]\([^)]*\)\s*\|\s*([^|]+?)\s*\|', line)
             if m:
-                names[int(m.group(1))] = re.sub(r'\s*\([^)]*D-\d+[^)]*\)', '', m.group(2))
-                versions[int(m.group(1))] = m.group(3)
-    return names, versions
+                names[int(m.group(1))] = m.group(2)
+    return names, {}
 
 
 def tests_of(folder):
@@ -113,7 +112,7 @@ def test_rows(folder, with_code=True):
 
 
 # ------------------------------------------------------------------------------------------ pages
-# One or two words for the title of a level; the full description is the paragraph under it (design/version_map.md).
+# One or two words for the title of a level; the full description is the paragraph under it (design/feature_map.md).
 LEVEL_TITLES = {1: 'Scripts', 2: 'Subprograms', 3: 'Modules', 4: 'Parallel', 5: 'Data', 6: 'Server', 7: 'Web'}
 
 
@@ -132,7 +131,7 @@ def gen_tests():
         topic = names.get(n, '')
         topic = topic[:1].upper() + topic[1:]
         count = '%d tests' % len(tests) if tests else 'no tests yet'
-        out.append('<p>%s. Version %s, %s. <a href="%stest/level%d" target="_blank" rel="noopener noreferrer nofollow">The folder on GitHub</a>.</p>' % (esc(topic), versions.get(n, ''), count, TREE, n))
+        out.append('<p>%s, %s. <a href="%stest/level%d" target="_blank" rel="noopener noreferrer nofollow">The folder on GitHub</a>.</p>' % (esc(topic), count, TREE, n))
         if tests:
             out.append(table(['Code', 'Test', 'What it checks', 'Source'], test_rows(folder)))
         out.append('')

@@ -2,7 +2,7 @@
 
 Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a question is answered, turn it into a decision with the date and keep the question text for history. Plan steps reference these ids. **Read cheaply:** `python script/plan.py list` prints every id; `python script/plan.py show D-087` prints one entry from here or from `archive/` (settled entries, full text); `python script/plan.py status` lists what is open.
 
-The log is split by level; ids are shared and keep counting across the files (an id not found here is in another file). A new entry goes to the file of its topic. The levels are in [version_map.md](../version_map.md). Settled and implemented entries move to [archive/decision_level2.md](archive/level2.md); this file keeps the scope, the newest decisions and the open questions.
+The log is split by level; ids are shared and keep counting across the files (an id not found here is in another file). A new entry goes to the file of its topic. The levels are in [feature_map.md](../feature_map.md). Settled and implemented entries move to [archive/decision_level2.md](archive/level2.md); this file keeps the scope, the newest decisions and the open questions.
 
 ## Scope
 

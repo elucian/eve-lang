@@ -30,7 +30,7 @@
 
 **RPJ-D05 Scope promised far ahead of capability.** The manifest promises compression, encryption, database synchronization, archiving, image and video streams; the library today is `io.eve` (28 lines) and `exception.eve`. Readers judge a language by its promises.
 
-**todo** drop scope that is not realistic actually scope is not necesary. We already have a version_map that describe what is included in every major version.
+**todo** drop scope that is not realistic actually scope is not necesary. We already have a feature_map that describe what is included in every major version.
 
 ## Antipatterns
 
@@ -72,7 +72,7 @@
 
 **todo** Rejected proposal. License is established already at advice from Gemini. I want to keep ownership of ideas and people can't make compilers and products based on these ideas. Except for learning and non profit with obligation to contribute back to specification and tutorial.
 
-**RPJ-R06 Version map.** *Addressed 2026-10-04: [design/version_map.md](../../version_map.md) and [design/version_map.md](../../version_map.md).* Publish one table: feature → version (0.1 client core, 0.2 library + generators, 0.3 parallel aspects + channels, 0.4 server, 0.5 WebAssembly). Today "not in 0.1" (D-050), "version 2" (D-067) and "about 0.9" (D-031) use different scales.
+**RPJ-R06 Feature map.** *Addressed 2026-10-04: [design/feature_map.md](../../feature_map.md) and [design/feature_map.md](../../feature_map.md).* Publish one table: feature → version (0.1 client core, 0.2 library + generators, 0.3 parallel aspects + channels, 0.4 server, 0.5 WebAssembly). Today "not in 0.1" (D-050), "version 2" (D-067) and "about 0.9" (D-031) use different scales.
 
 **todo** good idea, done. 
 

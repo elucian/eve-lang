@@ -15,7 +15,7 @@ Eve is an open standard meant to have **many compilers**. Students build their o
 |---|---|
 | `README.md` | this plan: the focus, the phases, the rules |
 | `phase-*.md` | the steps of each phase |
-| `version_map.md` | the levels, the versions and every feature with its status (D-138) |
+| `feature_map.md` | a paragraph for each level and a subtitle with a paragraph for every feature, with its status; the tables are generated (`script/featmap.py`) |
 | `design-*.md`, `library-audit.md` | the designs of the parts of Eve |
 | `design-ai-context.md`, `dev-guide.md` | the plan to cut the AI context (A1 to A6) and the full development guide that `CLAUDE.md` points to |
 | `release.md` | the release policy and the steps of a release (D-153) |
@@ -55,7 +55,7 @@ Do not read the logs whole. `python script/plan.py status` prints the focus, the
 
 | Rank | Work | Where |
 |---|---|---|
-| 1 | Plan | `design/` (decision logs, `version_map.md`, `tech-debt.md`, `library-gaps.md`) |
+| 1 | Plan | `design/` (decision logs, `feature_map.md`, `tech-debt.md`, `library-gaps.md`) |
 | 2 | Design | `design/design-*.md`, the README and `design/` of `code/evetx/`, `code/eveux/`, `code/evewp/`, `drivers/duckdb/` |
 | 3 | User interfaces | `code/evetx/` (terminal), `code/eveux/` (native window), `code/evewp/` (web portal) |
 | 4 | Refactor | shared code in `code/evecm/` (`code/evecm/src/ide/` is shared by evetx and eveux), module borders (`design/design-packages.md`) |
@@ -81,7 +81,7 @@ The old focus (2026-10-07, "tutorial first": the tutorial was reviewed until fea
 
 ## Features and versions
 
-- [version_map.md](version_map.md): **one file to track the project** (D-138): the levels 1 to 7, the versions 0.1 to 1.0, and every large feature with a code (`F-<area>-<nn>`), its status and its version, with the exit criterion of each version. Mark a feature `✓ done` when it is implemented and tested.
+- [feature_map.md](feature_map.md): **one file to track the project** (D-138): the levels 1 to 7 and every large feature with a code (`F-<area>-<nn>`), its status and its version, with the exit criterion of each version. Mark a feature `✓ done` when it is implemented and tested.
 - Decision logs by level: [1](decision/level1.md) single script, [2](decision/level2.md) project, [3](decision/level3.md) data, [4](decision/level4.md) parallel, [5](decision/level5.md) database, [6](decision/level6.md) server, [7](decision/level7.md) web.
 - Designs for review: [design-multitasking.md](design-multitasking.md), [design-service.md](design-service.md) (the Eve machine and the server), [design-database-core.md](design-database-core.md) (SQLite core, ORM, transactions) and [design-database-remote.md](design-database-remote.md) (drivers, Eve server, ETL), [evedb](../drivers/duckdb/README.md) (the Eve test database around DuckDB), [design-packages.md](design-packages.md) (the split of the VM into modules and the parts of `eve`, D-163 to D-167, approved 2026-10-12); the first draft [design-database.md](archive/design-database.md) is archived with the author's answers.
 - [backlog.md](../backlog/ideas.md): reserved words and ideas without a design.

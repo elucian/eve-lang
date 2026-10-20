@@ -52,7 +52,7 @@ Three things of the original example do not compile under the current rules: (1)
 - **Name lookup.** An aspect named in `apply` or `start` is searched first in the file, then in `asp/` and the project root (`spec/semantics/aspects.md`). An aspect of the file with the name of an aspect file of the project is a compile error, so the reader never wonders which one runs.
 - **Rules unchanged.** Each aspect keeps its own scope and state (D-066): it sees no variable of the driver nor of another aspect of the file. `start` still starts only a concurrent aspect, checked for thread safety (D-090, D-130, D-140); nesting, data rules, output order and errors of the groups are those of `multitasking.md`.
 - **Compile errors (exit 65).** Two drivers in one file; aspects without a driver; a statement outside a declaration; a name used twice at the top level.
-- **Level.** With `apply` only, a hybrid script is level 2; with `parallel` and `start`, level 4. Tests: one in `test/level2` (an exclusive aspect applied), one in `test/level4` (this example), and the compile errors above. Feature F-STR-09 in `version_map.md`.
+- **Level.** With `apply` only, a hybrid script is level 2; with `parallel` and `start`, level 4. Tests: one in `test/level2` (an exclusive aspect applied), one in `test/level4` (this example), and the compile errors above. Feature F-STR-09 in `feature_map.md`.
 
 (a) Is "hybrid script" the name, or is "macro" part of it (`macro script`)? Does a keyword mark the file, or is it known from its content (several top-level declarations, one of them a driver)? Proposed: no keyword, the content decides; the name in the documentation is "hybrid script". 
 
@@ -80,7 +80,7 @@ Author decision, given while the database layer was specified (level 5, F-DAT-08
 - **The file name has a default:** `local`, with the extension that SQLite programs prefer. SQLite has no required extension; this specification writes `local.db` *(proposed, see `review_level5.md`)*.
 - **The name can be configured** in the configuration file of the machine (`eve.cfg`, key `core_db` *(proposed)*) and is loaded as the system variable `$EVE_CORE_DB`, a `String` with the path of the file. The connection name `"eve"` of `database.connect("eve")` and of `table … in "eve"` is the core database.
 - **Consequence for the roles of SQLite files** (`spec/library/database.md`): the cache of reference tables was to be part of the core database (it was a separate file `cache.db`); **changed by D-159**: the core database holds no data, the staging database and the cache are `evedb` (DuckDB) databases.
-Applied (2026-10-10): `spec/library/database.md`, `semantics/variables.md`, `design/design-database-core.md`, tutorial `databases.html`, `design/version_map.md` (F-DAT-08).
+Applied (2026-10-10): `spec/library/database.md`, `semantics/variables.md`, `design/design-database-core.md`, tutorial `databases.html`, `design/feature_map.md` (F-DAT-08).
 
 ## D-159 Remote databases: no offline work, SQLite only for logs and metadata, no tables in a target (2026-10-10)
 Author answers to the six questions at the end of `design/design-database-remote.md`.

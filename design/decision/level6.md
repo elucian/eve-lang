@@ -1,6 +1,6 @@
 # Decisions, level 6: the Eve machine and the server (version 0.5)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), 6, [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [version_map.md](../version_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), 6, [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
 
 ## Scope
 
@@ -302,7 +302,7 @@ Author answers to Q-068 points 2 and 6 and to `design/design-drivers.md` (2026-1
 Author answers to Q-B1 to Q-B9 of `design/design-bytecode.md`. Settled:
 
 - **Register machine** (Q-B1), 32-bit instructions.
-- **Versions** (Q-B2): the refactoring ladder R0 to R8 and the first stages of the VM in the current line; the `.evb` file and the embedding in 0.7 (`version_map.md`). `design-packages.md` B5 now points to the design.
+- **Versions** (Q-B2): the refactoring ladder R0 to R8 and the first stages of the VM in the current line; the `.evb` file and the embedding in 0.7 (`feature_map.md`). `design-packages.md` B5 now points to the design.
 - **The tree walker is kept as the reference engine** (Q-B3): once stable it needs no maintenance, and it stays the oracle of the tests.
 - **One bundle per project** (Q-B4): Eve projects are small.
 - **JIT in version 0.8** (Q-B5); **change of the `Value` layout in version 0.8** (Q-B6); **tail calls in version 0.10** (Q-B7); a depth limit by configuration, `StackOverflow` as a language error.

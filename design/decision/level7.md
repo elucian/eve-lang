@@ -1,6 +1,6 @@
 # Decisions, level 7: web, HTML and WebAssembly (version 0.6)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), [6](level6.md), 7); the list of levels is in [decision_level3.md](level3.md) and [version_map.md](../version_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), [6](level6.md), 7); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
 
 ## Scope
 

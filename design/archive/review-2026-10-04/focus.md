@@ -60,7 +60,7 @@ Question: which order? Proposal: classes, collections, processing, multitasking,
 **F8 Small open points**, each one line:
 - the name of the 128-bit integer, `Huge` (D-080);
 - the class names of the standard errors, `IoError`, `KeyError`, … (D-081);
-- the order of levels 4 and 5: parallel before database, or database first (`design/version_map.md`);
+- the order of levels 4 and 5: parallel before database, or database first (`design/feature_map.md`);
 - the time types, Instant and DateTime (`design/decision/level3.md`).
 **Answer:**
 

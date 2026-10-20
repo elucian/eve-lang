@@ -17,7 +17,7 @@ This plan adds a third part, **"Eve on the network"**, and revises the pages it 
 |---|---|---|
 | RTU-S01 `[ ]` | Rewrite databases.html in the current dialect; replace the ORM with SQL-first, parameterized, streaming access; remove credentials from code | `RIO-D02`, `RIO-X01`, `RIO-X02`, `RIO-R02` |
 | RTU-S02 `[ ]` | Fix command.html: argument-list `run`, `cwd`, no `cd` across calls, injection warning | `RIO-D03`, `RIO-R03` |
-| RTU-S03 `[ ]` | Manifest: replace the capability list with the real roadmap (client, server, web) and the version map | `RPJ-D05`, `RPJ-R06` |
+| RTU-S03 `[ ]` | Manifest: replace the capability list with the real roadmap (client, server, web) and the feature map | `RPJ-D05`, `RPJ-R06` |
 | RTU-S04 `[ ]` | Data Types: add Decimal, Instant/DateTime/Zone, Bytes, Uuid, Record, `T?` (after decisions) | `RTY-R01`, `RTY-R02` |
 | RTU-S05 `[ ]` | Standard Library: one table of 0.1 modules with signatures (`fs`, `path`, `json`, `csv`, `http`, `db`, `time`, `secret`) | `RIO-R01` |
 | RTU-S06 `[ ]` | Exceptions: typed errors, `finalize` always runs, error data fields | `RST-R01`, `RST-R02` |

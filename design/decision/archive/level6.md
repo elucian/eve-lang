@@ -112,7 +112,7 @@ Author decisions (Q-049, answers 8, 9, 13).
 
 - (2) **Version N is level N**: the release 0.0.3 holds levels 1 to 3; 0.0.4 is level 4, 0.0.5 level 5, 0.0.6 level 6.
 
-- (3) The split is part of 0.0.5 (phase A) and 0.0.6 (phase B); the bytecode compiler and VM and the `.evb` file (F-VM-04, F-VM-07) move to 0.0.6. The headings of `version_map.md` ("Version 0.4 = Level 5") are renumbered to match (step A11); revises D-138.
+- (3) The split is part of 0.0.5 (phase A) and 0.0.6 (phase B); the bytecode compiler and VM and the `.evb` file (F-VM-04, F-VM-07) move to 0.0.6. The headings of `feature_map.md` ("Version 0.4 = Level 5") are renumbered to match (step A11); revises D-138.
 
 ## D-169 `--listen [word]` replaces `-lsn [port]`: the two doors take the same words (2026-10-13)
 
@@ -495,7 +495,7 @@ Read as rules:
 
 - (3) **evedb has a detailed design and a first build** (`drivers/duckdb/README.md`): the frames of EWP-db 0.1 (a frame has a length, a type and a stream; values with a tag; 13 request and 9 answer types), sessions with leases, transactions recorded in `eve_tx`, `STATUS` for the doubt after a broken commit, the error classes with SQL states, seven fault kinds, the statement log, and the commands `serve`, `create`, `sql`, `describe`, `snapshot`, `reset`, `status`, `stop`. Tests: `python script/evedb_check.py` (a Python client written from the document, 66 checks) and the unit tests of `drivers/duckdb/`.
 
-- (4) **Level 6 requirements reviewed** (`design/version_map.md`): F-TLS-30 (service mode) added; F-DAT-12 is partial, 0.1 built; the remaining level 6 features are unchanged and open.
+- (4) **Level 6 requirements reviewed** (`design/feature_map.md`): F-TLS-30 (service mode) added; F-DAT-12 is partial, 0.1 built; the remaining level 6 features are unchanged and open.
 
 Not done in this round, and why: the **Eve driver** `evedb://` (the connection code of `conn.zig` takes SQLite handles; it needs a second backend), `CHANGES`/`APPLIED` and `BATCH`/`CREDIT` (evedb 0.2), `evedb serve -s` (0.2), and a live run of the Service Control Manager form and of the POSIX forms (no administrator rights and no Linux on the test machine; both compile).
 

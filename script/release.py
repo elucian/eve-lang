@@ -9,7 +9,7 @@ patch. These labels are rewritten, keeping each file's line endings:
   code/evevm/README.md         Version: **X.Y.Z**
   README.md               Version <strong>X.Y.Z</strong>
 Then it runs `zig build -p .` and `zig build test` in the root. It does not commit or tag.
-This is step 2 of a release; the other steps (tests, benchmarks, version map, release notes with
+This is step 2 of a release; the other steps (tests, benchmarks, feature map, release notes with
 script/relnotes.py, the manual, commit and tag) are in design/release.md (D-153).
 """
 import os
@@ -86,7 +86,7 @@ def main():
                     f.write(text)
             die("build or tests failed, labels restored to " + old + ". On Windows, "
                 "'AccessDenied' on bin/eve.exe means an eve REPL is still running: quit it first.")
-    print(f"done. Next: steps 3 to 9 of design/release.md (tests, benchmarks, version map,\n"
+    print(f"done. Next: steps 3 to 9 of design/release.md (tests, benchmarks, feature map,\n"
           f"  python script/relnotes.py, the TODOs of manual/releases/v{new}.md, --check), then:\n"
           f"  git commit -am 'Release {new}' && git tag v{new}")
 

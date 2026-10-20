@@ -197,7 +197,7 @@ NATIVES     the names of the externals used, in the order of the `callnat` index
 Rules:
 - The **loader verifies** before running: magic, versions, hash, section bounds, every jump target inside its function, every register below `nregs`, every constant index below the pool size, every native name known, the capabilities allowed by the machine (a chunk that needs `net` on a machine that forbids it does not load). Verification is linear; a verified chunk runs with no bounds checks on registers in a release build, with them in a debug build.
 - A **project** compiles to one `.evb` per module plus an index (`project.evx`: the modules, their versions, the entry aspect) or to one bundle; Q-B4.
-- **Stability**: `format version` changes with the encoding; `spec version` is the Eve version the source follows (D-138 ties both to the version map). A VM refuses a higher format version and may read lower ones for one release.
+- **Stability**: `format version` changes with the encoding; `spec version` is the Eve version the source follows (D-138 ties both to the feature map). A VM refuses a higher format version and may read lower ones for one release.
 - **Source maps**: DEBUG keeps the file name and line; `eve cp --compile --strip` removes DEBUG and the names of locals, with the consequence that traces lose lines (the code number stays).
 - `eve cp --compile f.eve [-o f.evb]`, `eve vm f.evb`, `eve cp --disasm f.evb` (a readable listing with the pc, instruction, operands and the line), `eve cp --check` unchanged.
 
@@ -272,7 +272,7 @@ Answer under each point; the answers become decisions.
 **Q-B1. Register machine or stack machine?** Proposal: register machine (§3.2).
 **Answer:** Agree. Register machine.
 
-**Q-B2. Which version?** `design-packages.md` §3 says the bytecode comes "in 0.0.6", `version_map.md` puts F-VM-04 and F-VM-07 in Version 0.7 (D-138), and the note "move bytecode in version 6" is in `phase-8-architecture.md`. Proposal: the ladder (B5.0, B5.1) in the current version, B5.2 to B5.6 in the next one with the tree walker as the default, B5.7 to B5.9 in the version that `version_map.md` names for the `.evb` file (0.7).
+**Q-B2. Which version?** `design-packages.md` §3 says the bytecode comes "in 0.0.6", `feature_map.md` puts F-VM-04 and F-VM-07 in Version 0.7 (D-138), and the note "move bytecode in version 6" is in `phase-8-architecture.md`. Proposal: the ladder (B5.0, B5.1) in the current version, B5.2 to B5.6 in the next one with the tree walker as the default, B5.7 to B5.9 in the version that `feature_map.md` names for the `.evb` file (0.7).
 **Answer:** Agree. Correct the design-packages version.
 
 **Q-B3. Is the tree walker kept?** After B5.8 either keep it as the reference engine (a slower oracle for the tests, a few thousand lines to maintain) or remove it. Proposal: keep it until the end of version 0.7, then decide.

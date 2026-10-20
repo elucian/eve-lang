@@ -1,6 +1,6 @@
 # Decisions, level 4: parallel processing and streams (version 0.3)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), 4, [5](level5.md), [6](level6.md), [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [version_map.md](../version_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), 4, [5](level5.md), [6](level6.md), [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
 
 ## Scope
 
@@ -27,13 +27,13 @@ Status of the draft features (2026-10-08): 1 and 2 are cut to Version 0.3 and th
 - Q-035 Asynchronous subprograms: open points
 - D-089 Thread safety is decided by the compiler; `!` means stochastic; generators; atomic and mutex
 - D-090 `exclusive aspect` and `concurrent aspect`
-- D-138 Answers to the version map; one file for versions and features
+- D-138 Answers to the feature map; one file for versions and features
 
 - Q-023 How is an aspect marked as thread safe or not? (answered: D-090)
 - Q-035 Asynchronous subprograms: open points
 - D-089 Thread safety is decided by the compiler; `!` means stochastic; generators; atomic and mutex
 - D-090 `exclusive aspect` and `concurrent aspect`
-- D-138 Answers to the version map; one file for versions and features
+- D-138 Answers to the feature map; one file for versions and features
 - D-140 Parallel groups: syntax, rules, output and errors
 - D-141 Channels: rules completed
 - D-142 Streams and the split of data

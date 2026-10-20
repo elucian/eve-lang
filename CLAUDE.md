@@ -1,6 +1,6 @@
 # Eve language repository
 
-Eve is a domain-specific scripting language (data processing, test automation). This repo holds the language **examples, spec and manual** and the first implementation: the Eve virtual machine in Zig 0.17, built to `bin/eve.exe`. Status, test counts and features: `design/version_map.md`, `python script/plan.py status`. **Full guide (every rule that is not here): `design/dev-guide.md`**; read it by section (`python script/outline.py design/dev-guide.md`), never whole.
+Eve is a domain-specific scripting language (data processing, test automation). This repo holds the language **examples, spec and manual** and the first implementation: the Eve virtual machine in Zig 0.17, built to `bin/eve.exe`. Status, test counts and features: `design/feature_map.md`, `python script/plan.py status`. **Full guide (every rule that is not here): `design/dev-guide.md`**; read it by section (`python script/outline.py design/dev-guide.md`), never whole.
 
 ## Build and test (from the repository root)
 
@@ -15,7 +15,7 @@ Eve is a domain-specific scripting language (data processing, test automation). 
 - `code/` the components, `code/README.md`: `evecm` (common), `evecp` (compiler), `evevm` (runtime), `eve` (command), `evetx` (terminal IDE), `eveux` (native workbench), `evewp` (web portal, design only). Each has `README.md` (design, state) and `doc/` (user docs, copied to `manual/<component>/` by `script/genmanual.py`: edit the original). License: `code/LICENSE`.
 - `drivers/duckdb/` the Eve test database (evedb); client drivers are in `code/evevm/src/db/`.
 - `spec/` the specification (Markdown + JSON, normative; conventions in `spec/README.md`). `lib/` the standard library in Eve. `test/level1-7/` conformity tests (expectations in `/*@expect*/` blocks), `test/bmark/` benchmarks.
-- `design/` the plan and the design (`README.md`, `phase-*.md`, `design-*.md`, `version_map.md`, `decision/levelN.md`, `release.md`, `manual.md`). `backlog/` unscheduled work (`tech-debt.md`, `library-gaps.md`, `ideas.md`).
+- `design/` the plan and the design (`README.md`, `phase-*.md`, `design-*.md`, `feature_map.md`, `decision/levelN.md`, `release.md`, `manual.md`). `backlog/` unscheduled work (`tech-debt.md`, `library-gaps.md`, `ideas.md`).
 - `manual/` the user manual, shipped in every distribution: it names no folder of the repo (`design/`, `backlog/`, `test/`, `script/`). `script/` Python tools. `tools/` editor plugins. `dist/`, `temp/` git-ignored.
 - `tutorial/` junction to the scl repo (published tutorial, last in the order of work). Commit it with `git -C tutorial`; never `git add` it here. Rules: `design/dev-guide.md` "Tutorial".
 - Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is` … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`, `/* … */`.
@@ -42,7 +42,7 @@ The Zig modules (`code/*/`, `drivers/duckdb/`) and the Eve library (`lib/`) are 
 
 ## Budget of the context (read less, edit exactly)
 
-1. **Orient cheaply:** `python script/repomap.py [dir]`, `python script/outline.py <file> --depth 2`, then Read with `offset`/`limit`. Do not read a file whole to change a few lines. Never read `design/decision/level*.md`, `design/version_map.md` or `manual/*.md` generated pages whole: `python script/plan.py show D-nnn`, `plan.py status`, `plan.py feature F-XXX-nn`, `plan.py features open 0.5` (one line per feature); edit a feature's `**Status:**` line in its subtitle of `design/version_map.md`, never the generated table (`script/featmap.py`), grep. Measure the context: `python script/ctxsize.py`.
+1. **Orient cheaply:** `python script/repomap.py [dir]`, `python script/outline.py <file> --depth 2`, then Read with `offset`/`limit`. Do not read a file whole to change a few lines. Never read `design/decision/level*.md`, `design/feature_map.md` or `manual/*.md` generated pages whole: `python script/plan.py show D-nnn`, `plan.py status`, `plan.py feature F-XXX-nn`, `plan.py features open 6` (one line per feature); edit a feature's `**Status:**` line in its subtitle of `design/feature_map.md`, never the generated table (`script/featmap.py`), grep. Measure the context: `python script/ctxsize.py`.
 2. **Search before reading:** Grep tool; for a feature, grep its tag (`@feature`, `@spec`) to land on the code and the rule at once.
 3. **Edit without re-reading:** `python script/multiedit.py` (several edits, atomic), `python script/splice.py` (by line number), `bee-ed edit|sed|search|append` (tools and quirks: `design/dev-guide.md` "Which tool" and "bee-ed notes"). Write patch scripts to `temp/*.py` with raw strings; quote regexes (an unquoted backslash is lost in the shell).
 4. **Verify with summaries**: `git diff --stat`, `git diff -U1 <file>`, test summaries (`temp/output/`); do not re-read an edited file.

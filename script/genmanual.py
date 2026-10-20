@@ -4,7 +4,7 @@
 Usage: python script/genmanual.py [--out DIR] [--check]
 
 Writes, in manual/ (or in DIR):
-  features.md     every feature of the version map with its stage   (template design/template/manual-features.md)
+  features.md     every feature of the feature map with its stage   (template design/template/manual-features.md)
   tests.md        the summary of the last run of each test suite     (template design/template/manual-tests.md)
   performance.md  the last saved ReleaseSafe benchmark run, and the totals by version
                                                                      (template design/template/manual-performance.md)
@@ -13,7 +13,7 @@ A page is made from its template when it does not exist; afterwards only its GEN
 and the text around them is kept. With --out the hand-written text is read from manual/ and the pages go
 to DIR: script/dist.py uses it, so a distribution never changes the repository. --check writes nothing
 and exits 1 when a page or a copy is out of date.
-Sources: design/version_map.md, test/*/status.json, test/bmark/history.json and test/bmark/*.eve (the
+Sources: design/feature_map.md, test/*/status.json, test/bmark/history.json and test/bmark/*.eve (the
 `** perf:` line), read with the functions of script/relnotes.py. The pages name no folder of the
 repository, so they read the same in a distribution.
 Steps: `./run.sh build manual` (the repository), `./run.sh dist` (the distribution).
@@ -35,7 +35,7 @@ STAGE_ORDER = R.STAGES + ('planned',)
 
 
 def level_key(v):
-    return R.vkey(v.split()[1] + '.0')
+    return R.lkey(v)
 
 
 # ---------------------------------------------------------------- features.md
@@ -49,7 +49,7 @@ def features_blocks():
         rows.append([v] + [sum(1 for f in mine if f[3] == s) for s in STAGE_ORDER] + [len(mine)])
     rows.append(['**All**'] + ['**%d**' % sum(1 for f in feats if f[3] == s) for s in STAGE_ORDER]
                 + ['**%d**' % len(feats)])
-    summary = R.table(('Version', 'Validated', 'Drafted', 'Design', 'Planned', 'Total'), rows)
+    summary = R.table(('Level', 'Validated', 'Drafted', 'Design', 'Planned', 'Total'), rows)
     parts = []
     for v in vers:
         mine = [f for f in feats if f[2] == v]

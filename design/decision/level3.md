@@ -1,6 +1,6 @@
 # Decisions, level 3: modules, libraries, classes and methods (version 0.2)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files and keep counting across them; a new entry goes to the file of its topic. The levels and their versions are in [version_map.md](../version_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files and keep counting across them; a new entry goes to the file of its topic. The levels and their versions are in [feature_map.md](../feature_map.md).
 
 | File | Level | Topic | Version | Tests |
 |---|---|---|---|---|

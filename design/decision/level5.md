@@ -1,6 +1,6 @@
 # Decisions, level 5: data language, database layer and the Eve database (version 0.4)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), 5, [6](level6.md), [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [version_map.md](../version_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), 5, [6](level6.md), [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
 
 ## Scope
 
@@ -135,7 +135,7 @@ Note 2026-10-10 on (g): point (2) below is void. It rests on the old meaning of 
 ## Q-044 Data language: features and versions (2026-10-09)
 The draft features of the section "Data language" above and its two open questions. **Proposed** for each feature: the version, and the shape when it is not settled yet.
 
-(a) **Generators** (feature 1). The keyword `generator` (author's answer to review RSB-R03): `generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;`, replacing the detection of `yield` in a method (D-067). Version 0.4, built on the baton tasks of stage A (D-144): a generator is a task that stops at `yield` and continues at the next read, so the tree walker can run it and F-LNG-12 does not wait for the bytecode (answers the open question "Generators and the bytecode" of version_map.md). 
+(a) **Generators** (feature 1). The keyword `generator` (author's answer to review RSB-R03): `generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;`, replacing the detection of `yield` in a method (D-067). Version 0.4, built on the baton tasks of stage A (D-144): a generator is a task that stops at `yield` and continues at the next read, so the tree walker can run it and F-LNG-12 does not wait for the bytecode (answers the open question "Generators and the bytecode" of feature_map.md). 
 
 **Answer:** 
 

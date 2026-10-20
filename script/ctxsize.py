@@ -12,7 +12,7 @@ import os, re, sys
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 SKIP = {'.zig-cache', 'zig-pkg', 'zig-out', 'temp', '.git', 'node_modules'}
 LIMITS = {'CLAUDE.md': 8000, 'zig_tips': 0, 'decision_file': 40000}  # decision_file: 25000 after A2b
-WARN = {'zig_file_lines': 2000, 'version_map_features_bytes': 12000}
+WARN = {'zig_file_lines': 2000, 'feature_map_features_bytes': 12000}
 TAG = re.compile(r'@(spec|feature|eve-module|eve-fn|eve-impl)\b')
 
 
@@ -62,7 +62,7 @@ def main(a):
     for f in sorted(os.listdir(dd)):
         if f.endswith('.md'):
             row('decision/' + f, size('design', 'decision', f), LIMITS['decision_file'])
-    row('design/version_map.md (read by plan.py features)', size('design', 'version_map.md'))
+    row('design/feature_map.md (read by plan.py features)', size('design', 'feature_map.md'))
     big.sort(reverse=True)
     for n, f in big[:3]:
         row(f, n, WARN['zig_file_lines'], 'lines', warn=True)

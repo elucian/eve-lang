@@ -511,7 +511,7 @@ end reprice;
 | mapping validation in the compiler (debug) and the VM (production); `db/mappings.json` | compiler, VM |
 | `db create-table` | admin command |
 | SQLite in the VM, the files of §2.1, the settings of §2.2 | VM |
-| F-DAT-11 kept (it was proposed for removal by Q-043d) | version map |
+| F-DAT-11 kept (it was proposed for removal by Q-043d) | feature map |
 | tutorial databases.html rewritten from this design and part 2 | tutorial |
 
 ## Questions for the author

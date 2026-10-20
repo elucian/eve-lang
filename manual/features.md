@@ -12,29 +12,26 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 ## Summary
 
 <!-- GEN:summary (script/genmanual.py) -->
-| Version | Validated | Drafted | Design | Planned | Total |
+| Level | Validated | Drafted | Design | Planned | Total |
 |---|---|---|---|---|---|
-| Version 0.1 | 25 | 10 | 0 | 0 | 35 |
-| Version 0.2 | 5 | 8 | 0 | 1 | 14 |
-| Version 0.3 | 5 | 8 | 0 | 2 | 15 |
-| Version 0.4 | 6 | 9 | 0 | 15 | 30 |
-| Version 0.5 | 0 | 6 | 0 | 18 | 24 |
-| Version 0.6 | 0 | 1 | 0 | 13 | 14 |
-| Version 0.7 | 2 | 1 | 0 | 2 | 5 |
-| Version 0.9 | 0 | 0 | 0 | 3 | 3 |
-| Version 1.0 | 0 | 0 | 0 | 2 | 2 |
+| Level 1 | 14 | 5 | 0 | 0 | 19 |
+| Level 2 | 2 | 1 | 0 | 0 | 3 |
+| Level 3 | 5 | 8 | 0 | 1 | 14 |
+| Level 4 | 5 | 8 | 0 | 2 | 15 |
+| Level 5 | 6 | 9 | 0 | 15 | 30 |
+| Level 6 | 0 | 6 | 0 | 18 | 24 |
+| Level 7 | 0 | 1 | 0 | 13 | 14 |
+| All levels | 11 | 5 | 0 | 7 | 23 |
 | **All** | **43** | **43** | **0** | **56** | **142** |
 <!-- /GEN:summary -->
 
 ## By version
 
 <!-- GEN:list (script/genmanual.py) -->
-### Version 0.1
+### Level 1
 
 | Code | Feature | Stage |
 |---|---|---|
-| `F-DOC-01` | Tutorial, language part | drafted |
-| `F-DOC-04` | Compiler manual | drafted |
 | `F-LIB-01` | Console I/O | drafted |
 | `F-LIB-02` | Exception module | drafted |
 | `F-LNG-01` | Script shapes | validated |
@@ -45,31 +42,25 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-LNG-06` | Primitive types | validated |
 | `F-LNG-07` | Collections | validated |
 | `F-LNG-08` | Strings and interpolation | validated |
-| `F-LNG-09` | Functions and methods | validated |
 | `F-SPEC-01` | Lexical specification | validated |
 | `F-SPEC-02` | Grammar (EBNF) | validated |
 | `F-SPEC-03` | Core semantics | drafted |
-| `F-SPEC-07` | Machine-readable tables with schemas | validated |
-| `F-SPEC-08` | Conformance levels | drafted |
-| `F-SPEC-10` | Licenses and trademark | validated |
-| `F-STR-02` | Aspects (serial) | validated |
 | `F-STR-05` | Command-line parameters of a script | drafted |
-| `F-STR-06` | Configuration files | drafted |
 | `F-STR-07` | System variables | drafted |
-| `F-TLS-01` | Command line (CLI) | validated |
-| `F-TLS-05` | Command files and serve mode | validated |
-| `F-TLS-06` | Test runner | validated |
-| `F-TLS-07` | Documentation generator `eve --doc` | validated |
-| `F-TLS-16` | Smoke test | validated |
-| `F-TLS-17` | Benchmarks | validated |
-| `F-TLS-18` | Tutorial pages of the tests | validated |
 | `F-VM-01` | Lexer and parser | validated |
 | `F-VM-02` | Tree-walking interpreter | validated |
-| `F-VM-10` | Cross-platform releases | drafted |
 | `F-STR-12` | Exit code of the program | validated |
 | `F-LIB-13` | DataMap methods | validated |
 
-### Version 0.2
+### Level 2
+
+| Code | Feature | Stage |
+|---|---|---|
+| `F-LNG-09` | Functions and methods | validated |
+| `F-STR-02` | Aspects (serial) | validated |
+| `F-STR-06` | Configuration files | drafted |
+
+### Level 3
 
 | Code | Feature | Stage |
 |---|---|---|
@@ -88,7 +79,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-VM-03` | Library loader and `external` bindings | drafted |
 | `F-LNG-22` | External routines and errors of modules | validated |
 
-### Version 0.3
+### Level 4
 
 | Code | Feature | Stage |
 |---|---|---|
@@ -108,7 +99,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-TLS-09` | Editor support | drafted |
 | `F-VM-05` | Region memory | drafted |
 
-### Version 0.4
+### Level 5
 
 | Code | Feature | Stage |
 |---|---|---|
@@ -143,7 +134,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-STR-10` | Unified aspect | validated |
 | `F-STR-11` | `recover` in a function, procedure and method | validated |
 
-### Version 0.5
+### Level 6
 
 | Code | Feature | Stage |
 |---|---|---|
@@ -172,7 +163,7 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-TLS-15` | Eve API for AI | planned |
 | `F-NET-10` | Time-outs of the waiting calls | drafted |
 
-### Version 0.6
+### Level 7
 
 | Code | Feature | Stage |
 |---|---|---|
@@ -191,28 +182,31 @@ Every feature of Eve has a code `F-<area>-<nn>` and the version that should deli
 | `F-WEB-07` | The Eve Web framework | planned |
 | `F-VM-12` | Process supervision API | planned |
 
-### Version 0.7
+### All levels
 
 | Code | Feature | Stage |
 |---|---|---|
+| `F-DOC-01` | Tutorial, language part | drafted |
+| `F-DOC-04` | Compiler manual | drafted |
+| `F-SPEC-07` | Machine-readable tables with schemas | validated |
+| `F-SPEC-08` | Conformance levels | drafted |
+| `F-SPEC-10` | Licenses and trademark | validated |
+| `F-TLS-01` | Command line (CLI) | validated |
+| `F-TLS-05` | Command files and serve mode | validated |
+| `F-TLS-06` | Test runner | validated |
+| `F-TLS-07` | Documentation generator `eve --doc` | validated |
+| `F-TLS-16` | Smoke test | validated |
+| `F-TLS-17` | Benchmarks | validated |
+| `F-TLS-18` | Tutorial pages of the tests | validated |
+| `F-VM-10` | Cross-platform releases | drafted |
 | `F-VM-04` | Bytecode compiler and VM | drafted |
 | `F-VM-07` | Portable bytecode file `.evb` | planned |
 | `F-VM-13` | Engine selection and equivalence tests | validated |
 | `F-VM-14` | Sampling profiler | validated |
 | `F-VM-08` | Embedding API | planned |
-
-### Version 0.9
-
-| Code | Feature | Stage |
-|---|---|---|
 | `F-DAT-07` | Database synchronization | planned |
 | `F-TLS-10` | Package manager | planned |
 | `F-WEB-04` | Web application kit | planned |
-
-### Version 1.0
-
-| Code | Feature | Stage |
-|---|---|---|
 | `F-DOC-06` | Compiler course | planned |
 | `F-SPEC-09` | Compiler registry and approval | planned |
 <!-- /GEN:list -->

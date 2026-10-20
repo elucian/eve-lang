@@ -1,6 +1,6 @@
 # Follow-up of the first round (2026-10-04)
 
-Each of the 12 actions of the first round, with what the tree shows on 2026-10-20. The evidence is a file or a row of `design/version_map.md` (`python script/plan.py feature F-XXX-nn`). Codes `R2-FU-nn` are the numbers of the old actions.
+Each of the 12 actions of the first round, with what the tree shows on 2026-10-20. The evidence is a file or a row of `design/feature_map.md` (`python script/plan.py feature F-XXX-nn`). Codes `R2-FU-nn` are the numbers of the old actions.
 
 | # | Old code | Action | Status | Evidence |
 |---|---|---|---|---|

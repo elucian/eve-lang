@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
-"""The feature map of design/version_map.md: one subtitle and one paragraph per feature, tables made from them.
+"""The feature map of design/feature_map.md: a paragraph per level, a subtitle and a paragraph per feature, tables made from them.
 
-  python script/featmap.py --migrate     one time: turn the old tables (Code | Feature | Status | Description) into feature sections
-  python script/featmap.py --write       rewrite the generated tables and counts from the feature sections
-  python script/featmap.py --check       exit 1 when a table is stale, a section has no Status line, or an anchor is not unique
-  python script/featmap.py --evidence    features whose status disagrees with the code tags (@feature) and the tests found
+  python script/featmap.py --write       rewrite the generated tables and counts from the level and feature sections
+  python script/featmap.py --check       exit 1 when a table is stale, a feature has no Status line, or a code is used twice
   python script/featmap.py --verify      compare each Status with the results of its Tests line (test/levelN/status.json, left by runtest.py)
-  python script/featmap.py --list [open|partial|done] [0.5]   one line per feature
+  python script/featmap.py --evidence    features whose status disagrees with the code tags (@feature) and the tests found
+  python script/featmap.py --list [open|partial|done] [1..7|all]   one line per feature
 
-Format of a version section of design/version_map.md:
+Versions are not used in the map: a feature belongs to a level (1 to 7) or to "All levels" (tools, documents,
+the bytecode machine, the release). Format of design/feature_map.md:
 
-    ## Version 0.4: Data and database (level 5)
-    ...intro...
-    <!-- GEN:features -->   the count line and the table (Code is a link to the subtitle below), written by --write
+    ## Levels                       a generated table: level, name, status, features done, decisions, tests
+    <!-- GEN:levels --> ... <!-- /GEN:levels -->
+    ## Level 5: Data and database   one paragraph that describes the level
+    <!-- GEN:features -->           the count and the table of the level (Code links to the subtitle below)
     <!-- /GEN:features -->
-    Exit: ...
-    ### F-LNG-12 Generators
-    **Status:** open
-    **Tests:** level5: e23 e24 e26        (optional: the tests of the feature, ids without the rest of the name)
-    The paragraph: what the feature is. **State.** what exists, with decisions and tests.
+    ### F-LNG-12 Generators         one subtitle per feature
+    **Status:** done
+    **Tests:** level5: e23 e24      optional: the tests of the feature, ids without the rest of the name
+    The paragraph: what the feature is. State, decisions, tests.
 
-The Status line of a feature is the only place a status is written; edit it, run `--write` (the pre-commit hook does), done.
+The Status line of a feature is the only place a status is written; edit it, run `--write` (the pre-commit hook does).
+The status of a level is derived: planned (nothing started), in progress, done (every feature done).
 Other scripts read the features through `load()`: plan.py, relnotes.py, tagcheck.py.
 """
 import os, re, sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-MAP = os.path.join(ROOT, 'design', 'version_map.md')
+MAP = os.path.join(ROOT, 'design', 'feature_map.md')
 CODE = r'F-[A-Z]+-\d+'
 STATUS = r'(?:✓ )?(?:done|partial|open|dropped)'
-OLD_ROW = re.compile(r'^\|\s*(' + CODE + r')\s*\|\s*(.*?)\s*\|\s*(' + STATUS + r')\s*\|\s*(.*?)\s*\|\s*$')
-VERSION = re.compile(r'^## Version (\d+\.\d+)\b')
+LEVEL = re.compile(r'^## (?:Level (\d+)|(All levels))\b:?\s*(.*)$')
 FEATURE = re.compile(r'^### (' + CODE + r') (.+?)\s*$')
 STATUS_LINE = re.compile(r'^\*\*Status:\*\*\s*(' + STATUS + r')\b')
-GEN_BEGIN, GEN_END = '<!-- GEN:features -->', '<!-- /GEN:features -->'
-OVERVIEW_ROW = re.compile(r'^(\| Version (\d+\.\d+) \|.*\| )(\d+ of \d+)( \| .*)$')
+GEN = {'features': ('<!-- GEN:features -->', '<!-- /GEN:features -->'),
+       'levels': ('<!-- GEN:levels -->', '<!-- /GEN:levels -->')}
 
 
 def slug(h):
@@ -53,17 +53,32 @@ def write(text):
         f.write(text)
 
 
-def load(text=None):
-    """-> [(version, code, name, status, description)] in file order, from the feature sections."""
-    lines = (text if text is not None else read()).split('\n')
-    out, ver, i = [], None, 0
-    while i < len(lines):
-        m = VERSION.match(lines[i])
+def level_key(m):
+    return m.group(1) or 'all'
+
+
+def levels(text=None):
+    """-> [(key, heading text, name)] in file order; key is '1'..'7' or 'all'."""
+    out = []
+    for ln in (text if text is not None else read()).split('\n'):
+        m = LEVEL.match(ln)
         if m:
-            ver = m.group(1)
+            nm = m.group(3).strip() or 'All levels'
+            out.append((level_key(m), ln[3:].strip(), nm[0].upper() + nm[1:]))
+    return out
+
+
+def load(text=None):
+    """-> [(level, code, name, status, description)] in file order, from the feature sections."""
+    lines = (text if text is not None else read()).split('\n')
+    out, lvl, i = [], None, 0
+    while i < len(lines):
+        m = LEVEL.match(lines[i])
+        if m:
+            lvl = level_key(m)
         elif lines[i].startswith('## '):
-            ver = None
-        f = FEATURE.match(lines[i]) if ver else None
+            lvl = None
+        f = FEATURE.match(lines[i]) if lvl else None
         if f:
             code, name = f.groups()
             j = i + 1
@@ -73,8 +88,8 @@ def load(text=None):
             k = j + 1
             while k < len(lines) and not lines[k].startswith('#'):
                 k += 1
-            desc = '\n'.join(lines[j + 1:k]).strip()
-            out.append((ver, code, name, s.group(1) if s else '?', desc))
+            desc = '\n'.join(x for x in lines[j + 1:k] if not x.startswith('**Tests:**')).strip()
+            out.append((lvl, code, name, s.group(1) if s else '?', desc))
             i = k
             continue
         i += 1
@@ -93,13 +108,35 @@ def counts(rows):
     return done, part, len(rows)
 
 
-def table_block(rows):
+def level_status(rows):
     d, p, n = counts(rows)
-    out = [GEN_BEGIN, '%d of %d features done%s.' % (d, n, ' (%d partial)' % p if p else ''), '',
+    if n and d == n:
+        return 'done'
+    return 'in progress' if d or p else 'planned'
+
+
+def features_block(rows):
+    b, e = GEN['features']
+    d, p, n = counts(rows)
+    out = [b, '%d of %d features done%s.' % (d, n, ' (%d partial)' % p if p else ''), '',
            '| Code | Feature | Status |', '|---|---|---|']
-    for ver, code, name, status, desc in rows:
+    for lvl, code, name, status, desc in rows:
         out.append('| [%s](#%s) | %s | %s |' % (code, slug(code + ' ' + name), name, status))
-    out.append(GEN_END)
+    out.append(e)
+    return '\n'.join(out)
+
+
+def levels_block(text, rows):
+    b, e = GEN['levels']
+    out = [b, '| Level | Name | Status | Features done | Decisions | Tests |', '|---|---|---|---|---|---|']
+    for key, heading, name in levels(text):
+        mine = [r for r in rows if r[0] == key]
+        d, p, n = counts(mine)
+        label = 'Level ' + key if key != 'all' else 'All levels'
+        dec = '[level%s.md](decision/level%s.md)' % (key, key) if key != 'all' else '-'
+        tst = '`test/level%s` (%s)' % (key, chr(96 + int(key))) if key != 'all' else '-'
+        out.append('| [%s](#%s) | %s | %s | %d of %d | %s | %s |' % (label, slug(heading), name, level_status(mine), d, n, dec, tst))
+    out.append(e)
     return '\n'.join(out)
 
 
@@ -109,67 +146,22 @@ def regenerate(text):
     for r in rows:
         by.setdefault(r[0], []).append(r)
     lines = text.split('\n')
-    out, i = [], 0
+    out, i, cur = [], 0, None
     while i < len(lines):
-        if lines[i] == GEN_BEGIN:
-            j = i
-            while lines[j] != GEN_END:
-                j += 1
-            # the version of the section is the last "## Version" line written so far
-            ver = next(VERSION.match(x).group(1) for x in reversed(out) if VERSION.match(x))
-            out.append(table_block(by.get(ver, [])))
-            i = j + 1
-            continue
-        m = OVERVIEW_ROW.match(lines[i])
-        if m and m.group(2) in by:
-            d, p, n = counts(by[m.group(2)])
-            lines[i] = '%s%d of %d%s' % (m.group(1), d, n, m.group(4))
-        out.append(lines[i])
-        i += 1
-    return '\n'.join(out)
-
-
-def migrate(text):
-    lines = text.split('\n')
-    out, i = [], 0
-    while i < len(lines):
-        m = VERSION.match(lines[i])
-        if not m:
-            out.append(lines[i]); i += 1; continue
-        j = i + 1
-        while j < len(lines) and not lines[j].startswith('## '):
-            j += 1
-        sec = lines[i:j]
-        rows, body, placed = [], [], False
-        k = 0
-        while k < len(sec):
-            r = OLD_ROW.match(sec[k])
-            if sec[k].startswith('| Code | Feature | Status | Description |'):
-                k += 2          # header and separator
-                if not placed:
-                    body.append(GEN_BEGIN); body.append(GEN_END); placed = True
-                continue
-            if r:
-                rows.append(r.groups()); k += 1; continue
-            if re.match(r'^\d+ of \d+ features done', sec[k]):
-                k += 1
-                if k < len(sec) and sec[k] == '':
-                    k += 1
-                continue
-            body.append(sec[k]); k += 1
-        while body and body[-1] == '':
-            body.pop()
-        out.extend(body)
-        for code, name, status, desc in rows:
-            out += ['', '### %s %s' % (code, name), '', '**Status:** %s' % status, '']
-            d = desc.strip()
-            cut = re.search(r'\s\*(?:Partial|Done|Open|Not done|State)\b', d)
-            if cut and cut.start() > 40:
-                out += [d[:cut.start()].strip(), '', d[cut.start():].strip()]
-            else:
-                out.append(d)
-        out.append('')
-        i = j
+        m = LEVEL.match(lines[i])
+        if m:
+            cur = level_key(m)
+        for kind, (b, e) in GEN.items():
+            if lines[i] == b:
+                j = i
+                while lines[j] != e:
+                    j += 1
+                out.append(features_block(by.get(cur, [])) if kind == 'features' else levels_block(text, rows))
+                i = j + 1
+                break
+        else:
+            out.append(lines[i])
+            i += 1
     return '\n'.join(out)
 
 
@@ -186,48 +178,52 @@ def check():
         seen.add(r[1])
     if regenerate(text) != text:
         print('stale tables: run python script/featmap.py --write'); bad += 1
-    print('featmap: %d features, %d problem(s)' % (len(rows), bad))
+    print('featmap: %d features in %d levels, %d problem(s)' % (len(rows), len(levels(text)), bad))
     return 1 if bad else 0
 
 
-def evidence():
-    import subprocess
-    rows = load()
+def tag_files():
     tagged = {}
     for r, d, fs in os.walk(os.path.join(ROOT, 'code')):
         d[:] = [x for x in d if x not in ('.zig-cache', 'zig-pkg', 'zig-out')]
         for f in fs:
             if f.endswith('.zig'):
                 t = open(os.path.join(r, f), encoding='utf8', errors='ignore').read()
-                for ln in t.split('\n'):
+                for ln in t.split(chr(10)):
                     if '@feature' in ln:
                         for c in re.findall(CODE, ln):
                             tagged.setdefault(c, set()).add(os.path.relpath(os.path.join(r, f), ROOT).replace(os.sep, '/'))
+    return tagged
+
+
+def evidence():
+    rows = load()
+    tagged = tag_files()
     tests = {}
     for r, d, fs in os.walk(os.path.join(ROOT, 'test')):
         for f in fs:
             if f.endswith('.eve'):
                 t = open(os.path.join(r, f), encoding='utf8', errors='ignore').read()
                 for c in set(re.findall(CODE, t)):
-                    tests.setdefault(c, set()).add(os.path.relpath(os.path.join(r, f), ROOT).replace(os.sep, '/'))
+                    tests.setdefault(c, set()).add(f)
     print('code = files with @feature in code/, tests = test files that name the feature\n')
-    print('%-5s %-9s %-8s %4s %5s  %s' % ('ver', 'code', 'status', 'code', 'tests', 'check'))
-    for ver, c, n, st, d in rows:
+    print('%-5s %-9s %-8s %4s %5s  %s' % ('level', 'code', 'status', 'code', 'tests', 'check'))
+    for lvl, c, n, st, d in rows:
         nc, nt = len(tagged.get(c, ())), len(tests.get(c, ()))
         flag = ''
-        if st in ('open', 'partial') and nc >= 2:
+        if st in ('open', 'partial') and nc >= 1:
             flag = 'code exists: review the status'
         elif 'done' in st and nc == 0:
             flag = 'done, no code tag'
         if flag:
-            print('%-5s %-9s %-8s %4d %5d  %s' % (ver, c, st[:8], nc, nt, flag))
+            print('%-5s %-9s %-8s %4d %5d  %s' % (lvl, c, st[:8], nc, nt, flag))
     print('\nfeatures without any code tag: %d of %d; with a test naming them: %d' % (
         sum(1 for r in rows if r[1] not in tagged), len(rows), sum(1 for r in rows if r[1] in tests)))
     return 0
 
 
 def test_lines(text=None):
-    """-> {code: [(level, [test ids])]} from the optional **Tests:** line of each feature section."""
+    """-> {code: [(level folder, [test ids])]} from the optional **Tests:** line of each feature section."""
     out, code = {}, None
     for ln in (text if text is not None else read()).split(chr(10)):
         f = FEATURE.match(ln)
@@ -275,19 +271,17 @@ def verify():
 
 def listing(a):
     want = [x for x in a if x in ('open', 'partial', 'done', 'dropped')]
-    ver = [x for x in a if re.fullmatch(r'\d+\.\d+', x)]
-    for v, c, n, st, d in load():
-        if (not want or any(w in st for w in want)) and (not ver or v in ver):
-            print('%s  %-9s %-8s %s' % (v, c, st[:8], n[:70]))
+    lv = [x for x in a if re.fullmatch(r'[1-7]|all', x)]
+    for l, c, n, st, d in load():
+        if (not want or any(w in st for w in want)) and (not lv or l in lv):
+            print('L%-3s %-9s %-8s %s' % (l, c, st[:8], n[:70]))
 
 
 def main(a):
-    if '--migrate' in a:
-        write(regenerate(migrate(read()))); print('migrated: %d features' % len(load()))
-    elif '--write' in a:
+    if '--write' in a:
         t = read(); n = regenerate(t)
         if n != t:
-            write(n); print('version_map.md: tables rewritten')
+            write(n); print('feature_map.md: tables rewritten')
     elif '--check' in a:
         return check()
     elif '--evidence' in a:

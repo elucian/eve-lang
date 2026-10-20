@@ -12,7 +12,7 @@ Date 2026-10-10. For the author. You asked to implement the design of level 5 in
 | [spec/syntax/grammar.md](../../../spec/syntax/grammar.md), [declarations.md](../../../spec/syntax/declarations.md) | `table`, `commit`, `rollback`, `retry after`; section "Table declaration" |
 | [spec/semantics/control.md](../../../spec/semantics/control.md), [errors.md](../../../spec/semantics/errors.md), [variables.md](../../../spec/semantics/variables.md) | job as a transaction, status `rolled back`, `retry after`, `$error.attempt`, fatal errors, error codes 50 to 57, `$isolation`, `$lock_timeout`, `$read_only`, `$trace` |
 | [spec/lexical/keywords.json](../../../spec/lexical/keywords.json) | 14 contextual words (below); `eve1.js` of the tutorial regenerated |
-| [spec/index.md](../../../spec/index.md), [spec/conformance/README.md](../../../spec/conformance/README.md), [design/version_map.md](../../version_map.md) | rows, change log, notes on F-DAT-01, 03, 04, 09, 11 and F-LIB-08 (statuses unchanged: the VM has none of it) |
+| [spec/index.md](../../../spec/index.md), [spec/conformance/README.md](../../../spec/conformance/README.md), [design/feature_map.md](../../feature_map.md) | rows, change log, notes on F-DAT-01, 03, 04, 09, 11 and F-LIB-08 (statuses unchanged: the VM has none of it) |
 | tutorial `databases.html` (rewritten), `etl.html` (new, topic 42), `processing.html`, `exceptions.html`, `syslib.html`, `index.html` | the pages that teach it; the sidebar `data/databases.json` and `data/etl.json` regenerated |
 
 Checks run: `speccheck.py` (0 problems), `grammarcheck.py` (156/156 files parse), `genkeywords.py`, `mdlinks.py check spec`, `bee-ed balance` on every edited page. Not done: no conformance test (the VM has no SQLite binding for this, no files or formats), no `GEN:` table, no commit.
@@ -93,7 +93,7 @@ Check: (1) the template type is `HTMT` (an HTML template), a name you chose on p
 ## Not done, and why
 
 - **Conformance tests** `e23` onward: they need expected output from a VM that has no database, file-format or time binding yet. They are the next step; I suggest the order: `Decimal` and `T?`, then `CSV` round trip in canonical form, then SQLite `table` mapping.
-- **Other tutorial pages** that still describe level 5 as planned or older: `networking.html` ("the version map puts the HTTP client at level 3"), `generators.html` ("Designed, not in Eve 0.1... version 2"), `datetime.html` (only `Date`, `Time`, `Duration`; no `Instant`/`DateTime` rules), `types.html` (`Decimal`, `T?`), `library.html`, `features.html`. Say if you want them aligned now.
+- **Other tutorial pages** that still describe level 5 as planned or older: `networking.html` ("the feature map puts the HTTP client at level 3"), `generators.html` ("Designed, not in Eve 0.1... version 2"), `datetime.html` (only `Date`, `Time`, `Duration`; no `Instant`/`DateTime` rules), `types.html` (`Decimal`, `T?`), `library.html`, `features.html`. Say if you want them aligned now.
 - **Release notes, `manual/`:** untouched.
 - **Commit:** nothing is committed. The tutorial files are in the `scl` repo (`git -C tutorial`); `data/server.json`, `server.html`, `classes.html`, `index.html` also hold edits from before this work.
 

@@ -7,7 +7,7 @@
 
 Reports, one line each:
   bad-spec     `@spec path#anchor` whose file does not exist, or whose anchor is no heading of that file
-  bad-feature  `@feature F-XXX-nn` that is not a row of design/version_map.md
+  bad-feature  `@feature F-XXX-nn` that is not a row of design/feature_map.md
   bad-decision `@decision D-nnn` that is in no decision file (live or archive)
   no-head      a file whose first lines have no `//! @eve-module`
 The exit code is 1 when a bad-* line is printed; no-head and --untagged are information.

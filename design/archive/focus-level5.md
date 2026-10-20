@@ -26,7 +26,7 @@ Answered and not blocking: [Q-045 Eve macro](../decision/archive/level5.md#q-045
 - [design-database-remote.md](../design-database-remote.md): drivers, the Eve server, protocol, ETL; ends with its own questions.
 - [drivers/duckdb/README.md](../../drivers/duckdb/README.md): the test database around DuckDB.
 - [design-database.md](design-database.md): first draft with the author's answers (2026-10-05).
-- Features: F-DAT-01 to F-DAT-12 in [version_map.md](../version_map.md).
+- Features: F-DAT-01 to F-DAT-12 in [feature_map.md](../feature_map.md).
 
 ## Not blocking level 5
 

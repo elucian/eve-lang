@@ -4,8 +4,8 @@
   python script/plan.py status            open steps, open questions, current focus (about 60 lines)
   python script/plan.py show D-087 [Q-035 ...]   print the full entry (active file or archive)
   python script/plan.py list              every id and title, active and archived (the files hold no index)
-  python script/plan.py feature F-NET-02 [...]   the row of a feature of design/version_map.md (version, status, description)
-  python script/plan.py features [open|partial|done] [0.5]   one line per feature (code, status, name); filter by status and version
+  python script/plan.py feature F-NET-02 [...]   the row of a feature of design/feature_map.md (version, status, description)
+  python script/plan.py features [open|partial|done] [1..7|all]   one line per feature (code, status, name); filter by status and version
   python script/plan.py archive [N] [--keep K]   move settled entries to design/decision/archive/ (default: keep the last 8)
 
 Decision logs: design/decision/level<N>.md holds a preamble, an index of EVERY id (one line each),
@@ -129,11 +129,11 @@ def status():
                 print('  ' + one_line(i, t))
 
 
-VMAP = os.path.join(PLAN, 'version_map.md')
+VMAP = os.path.join(PLAN, 'feature_map.md')
 
 
 def feature_rows():
-    """-> [(version, code, name, status, description)] from the feature sections of version_map.md (featmap.py)."""
+    """-> [(version, code, name, status, description)] from the feature sections of feature_map.md (featmap.py)."""
     import featmap
     return featmap.load()
 
@@ -141,17 +141,17 @@ def feature_rows():
 def features(a):
     rows = feature_rows()
     want = [x for x in a if x in ('open', 'partial', 'done', 'dropped')]
-    ver = [x for x in a if re.fullmatch(r'\d+\.\d+', x)]
+    ver = [x for x in a if re.fullmatch(r'[1-7]|all', x)]
     for v, c, n, st, d in rows:
         if (not want or any(w in st for w in want)) and (not ver or v in ver):
-            print('%s  %-9s %-8s %s' % (v, c, st[:8], n[:70]))
+            print('L%-3s %-9s %-8s %s' % (v, c, st[:8], n[:70]))
 
 
 def feature(codes):
     rows = {r[1]: r for r in feature_rows()}
     for c in codes:
         r = rows.get(c)
-        print('%s: not found' % c if not r else 'Version %s  %s  [%s]  %s\n%s\n' % (r[0], r[1], r[3], r[2], r[4]))
+        print('%s: not found' % c if not r else 'Level %s  %s  [%s]  %s\n%s\n' % (r[0], r[1], r[3], r[2], r[4]))
 
 
 def main(a):

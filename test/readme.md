@@ -68,7 +68,7 @@ At this level **a test is a folder only when it needs a project** (D-073, D-124)
 
 ## Levels 3 to 7
 
-The levels after 2 follow the versions of Eve (`design/version_map.md`); each has its decision log `design/decision/levelN.md`. A test is a project folder, as at level 2. No test is written yet: the features are drafts.
+The levels after 2 follow the versions of Eve (`design/feature_map.md`); each has its decision log `design/decision/levelN.md`. A test is a project folder, as at level 2. No test is written yet: the features are drafts.
 
 | Level | Topic | Version | Prefix |
 |---|---|---|---|

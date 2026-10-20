@@ -16,11 +16,11 @@ Files written:
   design/release.md    the block "releases" (one line per notes file)
 Notes of an older or tagged release are never written: a release is a record.
 
-Sources: design/version_map.md (features and status), test/*/status.json (tests, as runtest.py left
+Sources: design/feature_map.md (features and status), test/*/status.json (tests, as runtest.py left
 them: run `python script/runtest.py all` first), test/bmark/history.json (saved ReleaseSafe runs:
 run `bmark.py --save` first), and the notes of the previous release (stages before, timings before).
 
-Stage of a feature, from its row in version_map.md:
+Stage of a feature, from its row in feature_map.md:
   validated   status "✓ done": implemented (or delivered) and its tests pass
   drafted     status "partial", or "open" with tests written first ("written first" in the description)
   design      status "open" and the description names a decision (D-nnn) or a design file (*.md)
@@ -76,11 +76,16 @@ def current_version():
 
 # ---------------------------------------------------------------- sources
 
+def lkey(label):
+    """Sort key of a level label: 'Level 3' -> 3, 'All levels' -> 99."""
+    return int(label.split()[1]) if label.startswith('Level') else 99
+
+
 def features():
-    """-> [(code, name, target version, stage or 'planned')] from the feature sections of version_map.md (featmap.py)."""
+    """-> [(code, name, level label, stage or 'planned')] from the feature sections of feature_map.md (featmap.py)."""
     import featmap
     out = []
-    for ver, code, name, status, desc in featmap.load(read(path('design', 'version_map.md'))[0]):
+    for lvl, code, name, status, desc in featmap.load(read(path('design', 'feature_map.md'))[0]):
         if 'done' in status:
             stage = 'validated'
         elif status == 'partial' or (status == 'open' and 'written first' in desc):
@@ -91,7 +96,7 @@ def features():
             stage = 'planned'
         else:
             continue
-        out.append((code, name, 'Version ' + ver, stage))
+        out.append((code, name, 'Level ' + lvl if lvl != 'all' else 'All levels', stage))
     return out
 
 
@@ -239,7 +244,7 @@ def gen_progress(version, feats, test_rows, here):
             for label, _readme, total, passed in test_rows]
     total = sum(r[2] for r in test_rows)
     passed = sum(r[3] for r in test_rows)
-    vers = sorted({f[2] for f in feats}, key=lambda v: vkey(v.split()[1] + '.0'))
+    vers = sorted({f[2] for f in feats}, key=lkey)
     frows = []
     for v in vers:
         mine = [f for f in feats if f[2] == v]
@@ -250,9 +255,9 @@ def gen_progress(version, feats, test_rows, here):
         '**Tests.** %d of %d conformance and smoke tests pass (the last run of each suite; %s):'
         % (passed, total, link('manual/tests.md', 'summary', here)),
         '', table(('Tests', 'Total', 'Pass', '%'), rows), '',
-        '**Features.** By target version and stage (the stages and every feature: %s):'
+        '**Features.** By level and stage (the stages and every feature: %s):'
         % link('manual/features.md', 'features', here),
-        '', table(('Version', 'Validated', 'Drafted', 'Design', 'Planned', 'Total'), frows)])
+        '', table(('Level', 'Validated', 'Drafted', 'Design', 'Planned', 'Total'), frows)])
 
 
 def gen_performance(version, prev, here):
@@ -283,13 +288,13 @@ def gen_changes(version, prev, feats):
         return 'No feature changed stage since %s.' % prev
     intro = ('Every feature that changed stage since %s.' % prev if prev else
              'First notes: every feature that is designed, drafted or validated.')
-    return intro + '\n\n' + table(('Code', 'Feature', 'Target', 'Before', 'Now'), rows)
+    return intro + '\n\n' + table(('Code', 'Feature', 'Level', 'Before', 'Now'), rows)
 
 
 def gen_stages(feats):
     rows = [('`%s`' % c, n, t, s) for c, n, t, s in feats if s != 'planned']
     return ('The stage of every feature at this release (read by the notes of the next release; '
-            'planned features are not listed).\n\n' + table(('Code', 'Feature', 'Target', 'Stage'), rows))
+            'planned features are not listed).\n\n' + table(('Code', 'Feature', 'Level', 'Stage'), rows))
 
 
 def gen_links(here):
