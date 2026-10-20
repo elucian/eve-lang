@@ -91,7 +91,7 @@ def rebuild(n, keep=None):
     idx = [] if not WITH_INDEX else [MARK_BEGIN, '## Index (every id; full text: `python script/plan.py show ID`)', '']
     where = {id(e): 'A' for e in ents}
     allents = sorted(old_arch + ents, key=lambda e: int(e[0][2:]) * 10 + (e[0][0] == 'Q'))
-    for e in allents:
+    for e in (allents if WITH_INDEX else []):
         mark = '*' if (e in ents and is_open(*e)) else ('' if e in ents else '~')
         idx.append('- %s%s' % (one_line(e[0], e[1]), ' [open]' if mark == '*' else ''))
     idx += [MARK_END, ''] if WITH_INDEX else []

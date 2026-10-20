@@ -16,9 +16,9 @@ Suggested order of answering: each question builds on the one above it.
 | 2 | [Q-039 Data file types](../decision/level5.md#q-039-data-file-types-json-csv-txt-xml-html-htmt-2026-10-08-was-numbered-q-038-an-id-taken-by-level-2) | `JSON`, `CSV`, `TXT`, `XML`, `HTML`, `HTMT`: names, the `Iterable` protocol, reading a row, modules, encoding, errors | (a) to (g) |
 | 3 | [Q-046 Database ORM and ACID](../decision/level5.md#q-046-database-orm-and-acid-the-language-proposals-of-the-two-design-files-2026-10-10) | `table` declaration, `commit;`, `rollback;`, `$isolation`, `retry after`, fatal errors, record methods, `cached`, naming by D-089 | (a) to (j) |
 | 4 | [Q-043 Database layer: rules](../decision/level5.md#q-043-database-layer-the-answers-of-design-databasemd-as-rules-2026-10-09) | Eve database engine, transactions, records, checkpoints, admin commands; (c) and (d) are replaced by Q-046 | (a) to (h) |
-| 5 | [Q-024 The system library](../decision/level5.md#q-024-the-system-library-names-and-members-2026-10-06) | Names and members of the standard modules that the points above use | |
+| 5 | [Q-024 The system library](../decision/archive/level5.md#q-024-the-system-library-names-and-members-2026-10-06) | Names and members of the standard modules that the points above use | |
 
-Answered and not blocking: [Q-045 Eve macro](../decision/level5.md#q-045-eve-macro-hybrid-script-aspects-and-a-driver-in-one-file-2026-10-10) (D-152).
+Answered and not blocking: [Q-045 Eve macro](../decision/archive/level5.md#q-045-eve-macro-hybrid-script-aspects-and-a-driver-in-one-file-2026-10-10) (D-152).
 
 ## Design files behind the questions
 
