@@ -18,7 +18,7 @@ Eve is a domain-specific scripting language (data processing, test automation). 
 - `design/` the plan and the design (`README.md`, `phase-*.md`, `design-*.md`, `feature_map.md`, `decision/levelN.md`, `release.md`, `manual.md`). `backlog/` unscheduled work (`tech-debt.md`, `library-gaps.md`, `ideas.md`).
 - `manual/` the user manual, shipped in every distribution: it names no folder of the repo (`design/`, `backlog/`, `test/`, `script/`). `script/` Python tools. `tools/` editor plugins. `dist/`, `temp/` git-ignored.
 - `tutorial/` junction to the scl repo (published tutorial, last in the order of work). Commit it with `git -C tutorial`; never `git add` it here. Rules: `design/dev-guide.md` "Tutorial".
-- Eve file shape: line 1 is `#!` (free script), `#` title or `##` subtitle; then `driver name is` … `  process main is` … `  return;`, `end name;`. Comments: `#`/`##` at column 0, `**` to end of line, `(** … **)`, `/* … */`.
+- Eve file shape (D-179): line 1 is a `#` title or `##` subtitle (no `#!`, no `driver`); then `primary aspect name is` … `  process main is` … `  return;`, `end name;`. Skills: `eve-primer` (language, where the rules live), `eve-test-loop` (build, tests), `zig-split-file` (split a big file).
 
 ## Rules of the work
 
@@ -47,4 +47,3 @@ The Zig modules (`code/*/`, `drivers/duckdb/`) and the Eve library (`lib/`) are 
 3. **Edit without re-reading:** `python script/multiedit.py` (several edits, atomic), `python script/splice.py` (by line number), `bee-ed edit|sed|search|append` (tools and quirks: `design/dev-guide.md` "Which tool" and "bee-ed notes"). Write patch scripts to `temp/*.py` with raw strings; quote regexes (an unquoted backslash is lost in the shell).
 4. **Verify with summaries**: `git diff --stat`, `git diff -U1 <file>`, test summaries (`temp/output/`); do not re-read an edited file.
 5. **Do not spawn sub-agents** unless the author asks; they start cold and cost more than a direct search.
-6. Large outputs (build logs, test runs): pipe to a file in `temp/` and read the tail or grep it.
