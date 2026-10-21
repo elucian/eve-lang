@@ -492,14 +492,22 @@ def title_of(test):
 
 
 def update_status(results, now):
-    """For every suite folder: sync test/<suite>/<suite>.json with the files on disk and the results of the run."""
+    """For every suite folder: sync test/<suite>/<suite>.json with the files on disk and the results of the run.
+    Prints one line with the difference to the tracking files (S15.1)."""
     by_level = {}
     for res in results:
         by_level.setdefault(level_of(res["test"]), []).append(res)
+    changed, added, removed = [], 0, 0
     for lv in LEVELS:
         if os.path.isdir(os.path.join(TEST_DIR, lv)):
-            update_level(lv, by_level.get(lv, []), now)
+            c, a, r = update_level(lv, by_level.get(lv, []), now)
+            changed += c
+            added += a
+            removed += r
     refresh_pages()
+    print(f"tracking: {len(changed)} changed, {added} new, {removed} removed")
+    for c in changed[:20]:
+        print("  " + c)
 
 
 def refresh_pages():
@@ -513,13 +521,17 @@ def refresh_pages():
 
 
 def update_level(suite, results, now):
+    """-> (the status changes as 'name: old -> new', the number of new tests, the number of removed tests)."""
     doc = testtrack.load(suite)
+    before = {x["name"]: x["status"] for x in doc.get("tests", [])}
     found = {os.path.basename(p)[:-4]: (lambda p=p: title_of(p), int(os.path.getmtime(p))) for p in level_tests(suite)}
     state = testtrack.sync(doc, found)
     for res in results:
         entry = state[os.path.basename(res["test"])[:-4]]
         testtrack.record(entry, res["verdict"], res.get("checks", 0), res.get("reason", ""), now)
     testtrack.save(doc)
+    changed = [f"{suite}/{n}: {before[n]} -> {e['status']}" for n, e in state.items() if n in before and before[n] != e["status"]]
+    return changed, sum(n not in before for n in state), sum(n not in state for n in before)
 
 
 def run_scaffold(eve, now, update):
