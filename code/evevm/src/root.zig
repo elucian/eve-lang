@@ -21,6 +21,7 @@ pub const scratch = @import("scratch.zig");
 /// Execution loop and the slot for external commands.
 pub const vm = @import("vm.zig");
 pub const settings = @import("settings.zig");
+pub const scriptparams = @import("scriptparams.zig");
 
 /// The natives of the standard library: streams, files, connections.
 pub const dlib = @import("dlib.zig");

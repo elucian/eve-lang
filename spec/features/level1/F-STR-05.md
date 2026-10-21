@@ -2,9 +2,4 @@
 
 `-p`/`--param` mapped to `main` parameters, `eve script.eve -h` from `** @param` comments.
 
-*Partial:* the arguments after the script name go to `process main`; `-p` and the generated help are not implemented.
-
-## Missing
-
-- `-p`/`--param name=value` mapped to the parameters of `process main`: today `eve script.eve -p n=3` answers `unknown option -p`.
-- `eve script.eve -h` builds the help from the `** @param` comments.
+*Done:* the texts after the script name and `-p name=value` go to the parameters of `process main`, converted to their types; `-h` after the script prints its help; a missing parameter is exit 64 (`aspects.md`). `-p` is not sent to a machine with `-loc` or `-rem` (level 6).

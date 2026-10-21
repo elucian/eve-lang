@@ -58,6 +58,9 @@ pub const err_convert = value.err_convert;
 pub const err_parse = value.err_parse;
 pub const err_null = value.err_null;
 pub const err_argument = value.err_argument;
+
+/// One `-p name=value` of the command line.
+pub const ScriptParam = struct { name: []const u8, value: []const u8 };
 pub const err_file = value.err_file;
 pub const err_io = value.err_io;
 pub const err_access = value.err_access;
@@ -242,6 +245,8 @@ pub const Interp = struct {
     text_ptrs: std.AutoHashMapUnmanaged(usize, void) = .empty,
     /// The command-line arguments after the script name: the arguments of `process main`.
     script_args: []const []const u8 = &.{},
+    /// `-p name=value`: the arguments of `process main` given by name (cmdargs.zig).
+    script_params: []const ScriptParam = &.{},
     /// The extension methods declared outside a class (D-040).
     exts: std.ArrayList(*const Node) = .empty,
     /// The `adopt Trait for Type` declarations: `x is Trait` is true for a value of the type (CLS-15).

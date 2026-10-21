@@ -129,6 +129,8 @@ pub fn main(init: std.process.Init) !void {
         .debug = opts.debug,
         .config = opts.config,
         .memory = opts.memory,
+        .params = opts.params,
+        .script_help = opts.script_help,
     };
 
     evecm.config.runtime_dir = init.environ_map.get("XDG_RUNTIME_DIR") orelse init.environ_map.get("TMPDIR") orelse init.environ_map.get("TEMP") orelse "/tmp";

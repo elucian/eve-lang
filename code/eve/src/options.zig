@@ -16,6 +16,10 @@ pub const Options = struct {
     debug: bool = false,
     config: ?[]const u8 = null,
     memory: ?[]const u8 = null,
+    /// `-p name=value` (repeatable): the parameters of `process main` by name (evevm scriptparams.zig).
+    params: []const []const u8 = &.{},
+    /// `-h` after the script name: the help of the script, not the help of `eve`.
+    script_help: bool = false,
     /// `--engine tree|bc`.
     engine: ?[]const u8 = null,
     /// `-x`: execute the script in this process (implies the `execute` command); it never looks for a machine.
@@ -115,7 +119,9 @@ pub fn commandWord(gpa: std.mem.Allocator, argv: []const []const u8) ParseError!
         } else if (std.mem.eql(u8, a, "-s")) {
             // the service: a configuration file may follow
             if (i + 1 < argv.len and isConfig(argv[i + 1])) i += 1;
-        } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "--engine")) {
+        } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "--engine") or
+            std.mem.eql(u8, a, "-p") or std.mem.eql(u8, a, "--param"))
+        {
             i += 1;
         } else if (std.mem.eql(u8, a, "-loc") and i + 1 < argv.len and isPort(argv[i + 1])) {
             i += 1;
@@ -144,6 +150,7 @@ pub fn parseArgs(
 ) ParseError!Options {
     var o: Options = .{};
     var rest: std.ArrayList([]const u8) = .empty;
+    var params: std.ArrayList([]const u8) = .empty;
     const line = try partWords(gpa, argv);
     var i: usize = 0;
     while (i < line.len) : (i += 1) {
@@ -154,7 +161,16 @@ pub fn parseArgs(
             continue;
         }
         if (std.mem.eql(u8, a, "-h") or std.mem.eql(u8, a, "--help")) {
-            o.help = true;
+            // after the name of a script, `-h` is the help of the script
+            if (rest.items.len > 0 and o.command == cli.find("execute")) o.script_help = true else o.help = true;
+        } else if (std.mem.eql(u8, a, "-p") or std.mem.eql(u8, a, "--param")) {
+            // `-p name=value`, repeatable
+            i += 1;
+            if (i >= line.len) {
+                bad.* = a;
+                return error.MissingValue;
+            }
+            try params.append(gpa, line[i]);
         } else if (std.mem.eql(u8, a, "-v") or std.mem.eql(u8, a, "--version")) {
             o.version = true;
         } else if (std.mem.eql(u8, a, "-d")) {
@@ -240,6 +256,7 @@ pub fn parseArgs(
     }
     if (o.execute and o.command == null) o.command = cli.find("execute");
     o.args = try rest.toOwnedSlice(gpa);
+    o.params = try params.toOwnedSlice(gpa);
     // the service takes nothing else (D-188), except the database part: `eve -s -db --serve evedb.cfg` (D-186)
     if (o.service and o.command != cli.find("db") and (o.command != null or o.args.len > 0 or o.execute or o.ux or o.tx or o.kill or o.stdio or
         o.machine.listen or o.machine.serve or o.machine.local or o.machine.remote))

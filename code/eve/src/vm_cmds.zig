@@ -8,6 +8,7 @@ const vm = @import("evevm").vm;
 const client = @import("evevm").client;
 const daemon = @import("evevm").daemon;
 const settings = @import("evevm").settings;
+const scriptparams = @import("evevm").scriptparams;
 const channel = @import("evevm").channel;
 const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
@@ -213,8 +214,20 @@ pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void 
     s.script_args = args[1..];
     if (ctx.config) |cf| if (!try checkConfig(ctx, cf)) return;
     s.config_file = ctx.config;
+    var bad_param: []const u8 = "";
+    const pairs = scriptparams.pairs(ctx.gpa, ctx.params, &bad_param) catch return error.WriteFailed;
+    s.script_params = pairs orelse {
+        try ctx.out.print("execute: -p wants name=value, not '{s}'\n", .{bad_param});
+        ctx.status = exit_usage;
+        return;
+    };
+    s.script_help = ctx.script_help;
     try s.load(args[0]);
     if (s.arena == null) {
+        ctx.status = s.status;
+        return;
+    }
+    if (!try s.paramsReady()) {
         ctx.status = s.status;
         return;
     }

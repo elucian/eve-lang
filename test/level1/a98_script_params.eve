@@ -1,0 +1,22 @@
+# the arguments after the script and -p name=value become the parameters of process main, converted to their types
+** spec: semantics/aspects.md#parameters-on-the-command-line
+** @param n:Integer; a whole number
+** @param price:Decimal; an exact amount
+** @param ok:Logic; True or False
+** @param names:()String; a list written (a,b,c)
+** @param label:String; a text
+primary aspect a98_script_params is
+  process main(n :Integer, price :Decimal, ok :Logic, names :()String, label = "none" :String) is
+    print n + 1;
+    print price + 0.5d;
+    print not ok;
+    print names[3];
+    print label;
+  return;
+end a98_script_params;
+/*@expect
+{
+  "args": ["41", "-p", "price=2.25", "-p", "ok=True", "-p", "names=(a,b,c)", "-p", "label=\"hi there\""],
+  "stdout": ["42", "2.75", "False", "c", "hi there"]
+}
+*/

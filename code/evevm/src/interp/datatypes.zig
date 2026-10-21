@@ -6,6 +6,7 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
+const cmdargs = @import("cmdargs.zig");
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -121,11 +122,10 @@ pub fn runRoot(it: *Interp, root: *const Node) Signal!void {
     }
     const main = Interp.findProcess(root, "main") orelse return it.fail("the aspect has no process main", .{});
     // @eve-impl the bytecode machine runs `process main` after the same preparation as the tree walker (D-201)
-    if (interp.engine == .bytecode and it.script_args.len == 0) {
+    if (interp.engine == .bytecode and it.script_args.len == 0 and it.script_params.len == 0) {
         if (try @import("../bcvm.zig").runMain(it, root, main)) return;
     }
     // the arguments of the command line go to the parameters of the process
-    var args: std.ArrayList(Arg) = .empty;
-    for (it.script_args) |a| try args.append(it.a, .{ .value = try it.staticStr(a) });
-    try it.runProcess(main, args.items, "aspect", root.text);
+    // each text is converted to the type of its parameter; `-p name=value` goes to the parameter of that name (cmdargs.zig)
+    try it.runProcess(main, try cmdargs.build(it, main), "aspect", root.text);
 }

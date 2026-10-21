@@ -33,19 +33,19 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 
 ### S15.2 Open questions that block levels 1 to 5 `[x]` (S, the author)
 - **Answered 2026-10-21:** Q-061 → D-206 (only the primary aspect starts concurrent aspects; an exclusive aspect starts nothing in parallel; a concurrent aspect may have private parallel processes), Q-065 → D-207 (option (a), a `recover` region in a function, procedure and method: already built, tests b55 to b58), Q-027 → D-209 (a template is a `Text` with `{var}`, no loops), Q-028 → D-208 (HTTP client level 5, server level 6).
-- **Still open for the author** (they do not block a step, each step that depends on one says so): Q-069 (`read` at the end of input), Q-070 (the draft files `io.eve`, `exception.eve`, the classes `Error`/`Warning`), Q-071 (`-p` and `-h` of a script). `python script/plan.py status` lists the others.
+- Q-069, Q-070 and Q-071 (S15.10, S15.11) were answered the same day: D-210, D-211, D-212. `python script/plan.py status` lists the questions that are still open.
 
 ## Level 1 — one script
 
-### S15.10 Console and exceptions `[~]` (M)
+### S15.10 Console and exceptions `[x]` (M)
 - **Features:** F-LIB-01, F-LIB-02. **Missing:** `read` (a line from standard input, with an end-of-input value); `exception.eve` and `io.eve` are drafts the VM does not load: either load them or remove them and say in the spec that the names are built in.
 - **Tests:** `read` with piped input (`"args"`/stdin key in the runner if needed); `Error` and `Warning` construction, `warn`.
-- **State (2026-10-21):** `read(@v, prompt)` done (test `a96_read_line`, runner key `"stdin"`, spec `syntax/statements.md#calls`; end of input raises `$err_io`, Q-069). Blocked on the author: the draft files and the classes `Error`/`Warning`, `warn`, `raise(code, message)` (Q-070). Next step: S15.11.
+- **State (2026-10-21): done.** `read(prompt)` gives `String?`, `null` at the end of the input (D-210, test a96, `spec/library/builtins.md`, runner key `"stdin"`). The draft files `io.eve` and `exception.eve` are deleted and the names are built in (D-211, TD-3 closed). The classes `Error`/`Warning`, `warn` and `raise(code, message)` move to S15.31 (F-LIB-02 stays `partial`, F-LIB-01 is `done`).
 
-### S15.11 Command line and variables `[~]` (M)
+### S15.11 Command line and variables `[x]` (M)
 - **Features:** F-STR-05, F-STR-07. **Missing:** `-p`/`--param` mapped to `main` parameters and `eve script.eve -h` from `** @param` comments; the `$EVE_*` variables (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`) readable from a script.
 - **Tests:** a script with parameters, the generated help, each `$EVE_*` variable.
-- **State (2026-10-21):** the `$EVE_*` variables done (test `a97_eve_variables`; `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`; TD-60). Blocked on the author: the forms of `-p` and `-h` (Q-071).
+- **State (2026-10-21): done.** The `$EVE_*` variables (test a97, TD-60) and the parameters of a script: `-p name=value` with the types of `process main`, `-h` after the script, exit 64 for a missing parameter, comments `** @param name:Type; description` (D-212, tests a98 to a100, `semantics/aspects.md#parameters-on-the-command-line`). F-STR-05 is `done`; F-STR-07 stays `partial` (`$EVE_DIR`, `$EVE_ASP`). TD-62: `-p` with `-loc`/`-rem`.
 
 ### S15.12 Core semantics pages `[ ]` (M)
 - **Feature:** F-SPEC-03. **Missing pages in `spec/semantics/`:** scopes, topology, collections and objects. Write them from the tests and the tutorial; each rule gets an anchor that a test already names.
@@ -63,6 +63,7 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 ### S15.30 Library basics `[ ]` (M)
 - **Features:** F-LIB-03, F-DOC-05, F-SPEC-04. **Missing:** `sort` and search on lists; the String gaps G-7 and TD-25 (slices `s[a..b]`, Unicode `upper`, `lower`, `trim`, `replace`); the other built-ins named in the spec; `eve --doc` for every standard module; one library page per module in `spec/library/` (strings, math, collections are missing).
 - **Tests:** one per function; each page lists only functions that have a test.
+**agree** Document the libraries and finalize the design of libraries: design-libraries.md, if a library is large and has many aspects like math it can be a folder side by side with sys. Design a sofisticated library for general purpose data, math, bussines, statistics, engineering, no graphics or games yet.
 
 ### S15.31 Typed exceptions and static checks `[ ]` (M)
 - **Features:** F-LNG-15, F-LNG-16. **Missing:** error classes with fields, `recover` by type, exit-code mapping (`recover` in a function, procedure and method is built: D-207); the type checks of `check.zig` (argument types, return types, assignment) before the run, exit 65.

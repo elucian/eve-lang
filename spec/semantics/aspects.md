@@ -30,6 +30,14 @@ An aspect declares, directly in its body and in any order (the declarations are 
 - **Functions and procedures** follow the rules of level 1 (`declarations.md`, Functions and procedures). They run serially on the core of their caller. A plain function is deterministic and changes nothing; a `!` function may differ for the same arguments; a procedure does work and may read and change the aspect-level variables.
 - The aspect can't read a variable of the aspect that calls it. The variables of the caller reach the aspect only through arguments.
 
+## Parameters on the command line
+
+`eve file.eve a b` gives the texts after the file to the parameters of `process main` in order; `eve file.eve -p name=value` (repeatable, also `--param`) gives one by name. Each text is converted to the declared type of its parameter: an Integer or Natural (`42`), a Real (`2.5`), a Decimal (`2.25`), a Logic (`True` or `False`), a String (quotes are optional: `-p 'label="hi there"'`), a list written `(a,b,c)` converted element by element, an optional type (`null`). A parameter that does not fit its type is the error `$err_argument` (17). Extra texts go to a vararg parameter (`*args`) as Strings.
+
+A parameter without a default and without a value is a usage error: nothing runs, the exit code is 64, and the message names the missing parameters and prints the help. `-p` without `name=value` is also exit 64.
+
+`eve file.eve -h` prints the help of the script and does not run it: the first line of the file when it is a `#` comment, the usage, and one line for each parameter of `process main` with its type, `(required)` when it has no default, and its description. The description comes from comments of the file in the form `** @param name:Type; description` (one for each parameter, anywhere above `process main`).
+
 ## `apply`
 
 ```ebnf

@@ -15,7 +15,7 @@ Each level has a page of its own, with every feature described and an example th
 <!-- GEN:summary -->
 | Level | Validated | Drafted | Planned | Total |
 |---|---|---|---|---|
-| Level 1 | 14 | 5 | 0 | 19 |
+| Level 1 | 16 | 3 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 5 | 8 | 1 | 14 |
 | Level 4 | 5 | 8 | 2 | 15 |
@@ -23,7 +23,7 @@ Each level has a page of its own, with every feature described and an example th
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **47** | **48** | **49** | **144** |
+| **All** | **49** | **46** | **49** | **144** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -35,7 +35,7 @@ A script that runs from its first line to its last, with no user subprograms and
 
 | Code | Feature | Stage | What it is |
 |---|---|---|---|
-| `F-LIB-01` | Console I/O | drafted | print, write, read, error, warning, log_err, log_wrn. |
+| `F-LIB-01` | Console I/O | validated | print, write, read, error, warning, log_err, log_wrn. |
 | `F-LIB-02` | Exception module | drafted | Error, Warning, raise, expect, assert, warn, code constants. |
 | `F-LIB-13` | DataMap methods | validated | has, get(k), get(k, default), keys, values, delete. |
 | `F-LNG-01` | Script shapes | validated | Aspect with process main, title/subtitle header, comments; no free script and no #!. |
@@ -49,7 +49,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | `F-SPEC-01` | Lexical specification | validated | Tokens, comments, literals, escapes, placeholders, keywords, operators, delimiters as Markdown + JSON. |
 | `F-SPEC-02` | Grammar (EBNF) | validated | Declarations, statements, expressions, modules and imports, checked against every.eve test by script/grammarcheck.py (199 of 199 files of levels 1 to 4 and the smoke test). |
 | `F-SPEC-03` | Core semantics | drafted | Types, scopes, control flow, jobs and recover, topology, collections and objects. |
-| `F-STR-05` | Command-line parameters of a script | drafted | -p/--param mapped to main parameters, eve script.eve -h from  @param comments. |
+| `F-STR-05` | Command-line parameters of a script | validated | -p/--param mapped to main parameters, eve script.eve -h from  @param comments. |
 | `F-STR-07` | System variables | drafted | The register ($error, environment names such as $HOME, $epsilon, $err_/$wrn_ constants). |
 | `F-STR-12` | Exit code of the program | validated | over n; and exit n; give the exit code: 0, or 6 to 125 (1 to 5 belong to the machine); anything else is $err_argument. |
 | `F-VM-01` | Lexer and parser | validated | Source to syntax tree, errors with file, line and column (lexer.zig, parser.zig). |

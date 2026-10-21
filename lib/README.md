@@ -7,8 +7,7 @@ provides the body. The compiler creates the external library; the signature is a
 
 | Module | Contents | Status |
 |---|---|---|
-| [`sys/io.eve`](sys/io.eve) | `write`, `print`, `read`, `error`, `warning`, `log_err`, `log_wrn` | draft signatures |
-| [`sys/exception.eve`](sys/exception.eve) | `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, the constants `$err_name` and `$wrn_name` | draft |
+| (built in) | `write`, `print`, `read`, `error`, `warning`, `log_err`, `log_wrn`, `raise`, `expect`, `assert`, `$error`, `$err_name`, `$wrn_name` | in the machine, no file: `spec/library/builtins.md` |
 
 ## Rules
 

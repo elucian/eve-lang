@@ -21,6 +21,7 @@ const interp = @import("interp.zig");
 const sysvars = @import("interp/sysvars.zig");
 const debugger = @import("debugger.zig");
 const settings = @import("settings.zig");
+const scriptparams = @import("scriptparams.zig");
 
 /// How many times `cancelAll` was called.
 pub var cancel_generation: std.atomic.Value(usize) = .init(0);
@@ -82,6 +83,9 @@ pub const Session = struct {
     script_args: []const []const u8 = &.{},
     /// `-e file.cfg`: the settings that become `$` variables of the run (settings.zig); checked by the caller before `run`.
     config_file: ?[]const u8 = null,
+    /// `-p name=value` (scriptparams.zig) and `-h` after the script name.
+    script_params: []const interp.ScriptParam = &.{},
+    script_help: bool = false,
     outcome: ?interp.Outcome = null,
 
     /// The text of `summary.log`, one line per `status` or `log`.
@@ -223,6 +227,7 @@ pub const Session = struct {
             machine.dbg = d.hook();
         }
         machine.script_args = self.script_args;
+        machine.script_params = self.script_params;
         machine.aspects = &self.aspects;
         machine.modules = &self.modules;
         machine.io = self.io; // threads, locks and clocks of the tasks (level 4)
@@ -254,6 +259,31 @@ pub const Session = struct {
             self.writeReport("out", w.buffered());
             try self.out.print("{s}: run, exit {d}{s}\n", .{ self.name, o.code, if (o.stopped) ", stopped" else "" });
         }
+    }
+
+    // @eve-impl `eve script.eve -h` prints the help of the script; a required parameter without a value is a usage error (64)
+    // @spec spec/semantics/aspects.md#parameters-on-the-command-line
+    // @test a98_script_params
+    /// False when the run must not start: the help was asked for, or a parameter of `process main` has no value.
+    pub fn paramsReady(self: *Session) Io.Writer.Error!bool {
+        if (self.arena == null) return true;
+        if (self.tree == null and !self.parse_failed) try self.parse();
+        const tree = self.tree orelse return true;
+        const main = interp.Interp.findProcess(tree, "main") orelse return true;
+        const a = self.mem();
+        if (self.script_help) {
+            scriptparams.writeHelp(a, self.out, self.path, self.src, main) catch return error.WriteFailed;
+            self.status = 0;
+            return false;
+        }
+        const miss = scriptparams.missing(a, main, self.script_args.len, self.script_params) catch return error.WriteFailed;
+        if (miss.len == 0) return true;
+        try self.out.print("{s}: missing parameter{s}:", .{ self.path, if (miss.len > 1) "s" else "" });
+        for (miss) |m| try self.out.print(" {s}", .{m});
+        try self.out.writeAll("\n\n");
+        scriptparams.writeHelp(a, self.out, self.path, self.src, main) catch return error.WriteFailed;
+        self.status = scriptparams.exit_usage;
+        return false;
     }
 
     /// Append the run to `out/run-log-<date>.json` of the project: a JSON array, one object per run (D-114).

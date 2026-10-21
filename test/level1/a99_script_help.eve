@@ -1,0 +1,23 @@
+# eve script.eve -h prints the help made from the ** @param comments and the parameters of process main; the script does not run
+** spec: semantics/aspects.md#parameters-on-the-command-line
+** @param n:Integer; how many rows
+** @param label:String; the name of the report
+primary aspect a99_script_help is
+  process main(n :Integer, label = "report" :String) is
+    print "never";
+  return;
+end a99_script_help;
+/*@expect
+{
+  "args": ["-h"],
+  "stdout": [
+    "eve script.eve -h prints the help made from the ** @param comments and the parameters of process main; the script does not run",
+    "",
+    "Usage: eve a99_script_help.eve [-p name=value]... [value]...",
+    "",
+    "Parameters:",
+    "  n:Integer (required)  how many rows",
+    "  label:String  the name of the report"
+  ]
+}
+*/

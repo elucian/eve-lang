@@ -37,6 +37,9 @@ pub const Context = struct {
     config: ?[]const u8 = null,
     /// `-m size`
     memory: ?[]const u8 = null,
+    /// `-p name=value`: the parameters of the script by name; `-h` after the script name asks for its help.
+    params: []const []const u8 = &.{},
+    script_help: bool = false,
     /// The VM session, created by the first command that needs it.
     machine: ?*vm.Session = null,
     /// Set by `quit` and `exit`: the REPL ends.

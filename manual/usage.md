@@ -16,6 +16,8 @@ eve [options] --<command> [args]   run one command and exit, without the REPL
 | `-v`, `--version` | display the title `EVE - Version: <version>` and exit; the version is written once, in the root `build.zig.zon` |
 | `-e file.cfg`, `--setup file.cfg` | setup: load the configuration file (the same file the `setup` command loads), for a script, a command or a door |
 | `-s [file.cfg]` | the **service**, and only that: the machine with no user interface, silent, both doors, log in `<runtime>/eve-<domain>-<ipc_port>.log` (Windows service, Linux daemon; see "The service" below). The file after it is the configuration of the service; with a script, a command or a door `-s` is a usage error (exit 64) |
+| `-p name=value`, `--param name=value` | after a script: the value of a parameter of `process main` by name (repeatable); the value is converted to the type of the parameter: `-p n=3 -p ok=True -p names=(a,b,c)` |
+| `-h` after a script | `eve script.eve -h` prints the help of the script (its parameters, from the `** @param name:Type; description` comments) and does not run it |
 | `-m size` | memory for the process |
 | `--engine tree\|bc` | the engine that runs the script: the tree walker (default) or the bytecode machine (`bc`, also `EVE_ENGINE=bc`). The bytecode machine is under construction: it runs what it translates and leaves the rest to the tree walker; both give the same output |
 | `-d` | debug mode: `halt` statements work (otherwise they are ignored) |

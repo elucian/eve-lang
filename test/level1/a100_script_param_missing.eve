@@ -1,0 +1,14 @@
+# a parameter of process main without a default and without a value is a usage error: exit 64, the help is printed
+** spec: semantics/aspects.md#parameters-on-the-command-line
+primary aspect a100_script_param_missing is
+  process main(n :Integer, label = "report" :String) is
+    print "never";
+  return;
+end a100_script_param_missing;
+/*@expect
+{
+  "args": ["-p", "label=x"],
+  "exit": 64,
+  "contains": ["a100_script_param_missing.eve: missing parameter: n", "n:Integer (required)"]
+}
+*/

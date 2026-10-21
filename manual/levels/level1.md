@@ -6,7 +6,7 @@ A script that runs from its first line to its last, with no user subprograms and
 
 | Code | Feature | Stage |
 |---|---|---|
-| [`F-LIB-01`](#f-lib-01-console-io) | Console I/O | drafted |
+| [`F-LIB-01`](#f-lib-01-console-io) | Console I/O | validated |
 | [`F-LIB-02`](#f-lib-02-exception-module) | Exception module | drafted |
 | [`F-LIB-13`](#f-lib-13-datamap-methods) | DataMap methods | validated |
 | [`F-LNG-01`](#f-lng-01-script-shapes) | Script shapes | validated |
@@ -20,7 +20,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | [`F-SPEC-01`](#f-spec-01-lexical-specification) | Lexical specification | validated |
 | [`F-SPEC-02`](#f-spec-02-grammar-ebnf) | Grammar (EBNF) | validated |
 | [`F-SPEC-03`](#f-spec-03-core-semantics) | Core semantics | drafted |
-| [`F-STR-05`](#f-str-05-command-line-parameters-of-a-script) | Command-line parameters of a script | drafted |
+| [`F-STR-05`](#f-str-05-command-line-parameters-of-a-script) | Command-line parameters of a script | validated |
 | [`F-STR-07`](#f-str-07-system-variables) | System variables | drafted |
 | [`F-STR-12`](#f-str-12-exit-code-of-the-program) | Exit code of the program | validated |
 | [`F-VM-01`](#f-vm-01-lexer-and-parser) | Lexer and parser | validated |
@@ -28,16 +28,11 @@ A script that runs from its first line to its last, with no user subprograms and
 
 ## F-LIB-01 Console I/O
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `print`, `write`, `read`, `error`, `warning`, `log_err`, `log_wrn`.
 
-*Partial:* `print`, `write`, `log_err` and `log_wrn` (run log), `error` and `warning` (standard error) work; `read(@v, prompt)` reads a line (end of input: `$err_io`); `io.eve` is a draft.
-
-## Missing
-
-- `read` at the end of input: the error `$err_io` stands in until the author decides on an end-of-input value.
-- `lib/sys/io.eve` is a draft the VM does not load: load it, or remove it and state in the library page that the names are built in.
+*Done:* all seven are built in (`builtins.md`); `read(prompt)` gives a `String?` and `null` at the end of the input. There is no library file for them.
 
 An example that runs, and what it prints:
 
@@ -62,12 +57,12 @@ Stage: **drafted**.
 
 `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, code constants.
 
-*Partial:* `raise`, `expect`, `assert` and the `$err_` constants are in the interpreter; `exception.eve` is a draft that is not loaded.
+*Partial:* `raise`, `expect`, `assert`, `$error` and the `$err_` constants are built in (`builtins.md`); there is no library file for them.
 
 ## Missing
 
-- `lib/sys/exception.eve` is a draft the VM does not load: same decision as `io.eve`.
-- `Error` and `Warning` construction and `warn` have no test.
+- The classes `Error` and `Warning` with their constructors (`Error(9, "text")` is an undefined name), the function `warn` and `raise(code, message)`: they belong to typed exceptions (F-LNG-15).
+- `expect` and `assert` with a custom message.
 
 ## F-LIB-13 DataMap methods
 
@@ -432,16 +427,11 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 
 ## F-STR-05 Command-line parameters of a script
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `-p`/`--param` mapped to `main` parameters, `eve script.eve -h` from `** @param` comments.
 
-*Partial:* the arguments after the script name go to `process main`; `-p` and the generated help are not implemented.
-
-## Missing
-
-- `-p`/`--param name=value` mapped to the parameters of `process main`: today `eve script.eve -p n=3` answers `unknown option -p`.
-- `eve script.eve -h` builds the help from the `** @param` comments.
+*Done:* the texts after the script name and `-p name=value` go to the parameters of `process main`, converted to their types; `-h` after the script prints its help; a missing parameter is exit 64 (`aspects.md`). `-p` is not sent to a machine with `-loc` or `-rem` (level 6).
 
 ## F-STR-07 System variables
 

@@ -41,6 +41,10 @@
     [2, "using", 31, "Using"],
     [2, "open-points", 35, "Open points"]
    ]},
+  {"path": "library/builtins.md", "title": "Built-in names", "status": "draft", "summary": "These names need no import and no library file: the virtual machine provides them. A later version may write some of them in a library module that the machine loads on its own; the names and the rules", "lines": 24, "bytes": 1693, "features": ["F-LIB-01", "F-LIB-02"], "sections": [
+    [2, "output-input-and-logs", 7, "Output, input and logs"],
+    [2, "errors", 21, "Errors"]
+   ]},
   {"path": "library/config.md", "title": "The module `config`", "status": "draft", "summary": "Reads the key = value files of the machine (eve.cfg, evedb.cfg, eve.env; format in [machine.md](machine.md#configuration)) into a DataMap.", "lines": 28, "bytes": 1352, "features": [], "sections": [
     [2, "format", 13, "Format"],
     [2, "members", 20, "Members"]
@@ -153,21 +157,22 @@
     [2, "json-conventions", 39, "JSON conventions"],
     [2, "versioning", 65, "Versioning"]
    ]},
-  {"path": "semantics/aspects.md", "title": "Aspects", "status": "draft", "summary": "An aspect is a script file that holds a process main, its entry point, the other processes it needs (private), and the declarations of them all. An aspect is the one kind of script that runs; the word", "lines": 146, "bytes": 11660, "features": [], "sections": [
+  {"path": "semantics/aspects.md", "title": "Aspects", "status": "draft", "summary": "An aspect is a script file that holds a process main, its entry point, the other processes it needs (private), and the declarations of them all. An aspect is the one kind of script that runs; the word", "lines": 154, "bytes": 12920, "features": [], "sections": [
     [2, "what-an-aspect-is", 5, "What an aspect is"],
     [2, "declarations-of-an-aspect", 25, "Declarations of an aspect"],
-    [2, "apply", 33, "`apply`"],
-    [3, "finding-the-aspect", 43, "Finding the aspect"],
-    [3, "arguments", 54, "Arguments"],
-    [3, "results", 64, "Results"],
-    [2, "state-per-call", 68, "State per call"],
-    [2, "errors-across-apply", 72, "Errors across `apply`"],
-    [3, "position-and-stack-trace", 85, "Position and stack trace"],
-    [2, "compile-errors-of-the-calls", 100, "Compile errors of the calls"],
-    [2, "messages-on-the-standard-error", 116, "Messages on the standard error"],
-    [2, "log-files", 120, "Log files"],
-    [2, "not-in-level-2", 136, "Not in level 2"],
-    [2, "open-points", 140, "Open points"]
+    [2, "parameters-on-the-command-line", 33, "Parameters on the command line"],
+    [2, "apply", 41, "`apply`"],
+    [3, "finding-the-aspect", 51, "Finding the aspect"],
+    [3, "arguments", 62, "Arguments"],
+    [3, "results", 72, "Results"],
+    [2, "state-per-call", 76, "State per call"],
+    [2, "errors-across-apply", 80, "Errors across `apply`"],
+    [3, "position-and-stack-trace", 93, "Position and stack trace"],
+    [2, "compile-errors-of-the-calls", 108, "Compile errors of the calls"],
+    [2, "messages-on-the-standard-error", 124, "Messages on the standard error"],
+    [2, "log-files", 128, "Log files"],
+    [2, "not-in-level-2", 144, "Not in level 2"],
+    [2, "open-points", 148, "Open points"]
    ]},
   {"path": "semantics/control.md", "title": "Control Flow", "status": "draft", "summary": "A control block has declarations, a transition keyword, executable statements, optional clauses and a terminator:", "lines": 101, "bytes": 5112, "features": [], "sections": [
     [2, "general-pattern", 5, "General pattern"],
