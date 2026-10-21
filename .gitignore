@@ -69,3 +69,7 @@ test/bmark/data/
 
 # Zed builds the grammar of a dev extension here (a clone of the grammar repository and eve.wasm)
 tools/zed-eve/grammars/
+
+# Compiled bytecode (.evb) and project index (.evx): generated, never committed (the golden listings test/bytecode/*.lst are text and stay)
+*.evb
+*.evx
