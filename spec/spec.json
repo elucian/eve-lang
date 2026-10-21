@@ -186,7 +186,7 @@
     [2, "deconstruct", 40, "Deconstruct"],
     [2, "share-and-copy", 44, "Share and copy"]
    ]},
-  {"path": "semantics/control.md", "title": "Control Flow", "status": "draft", "summary": "A control block has declarations, a transition keyword, executable statements, optional clauses and a terminator:", "lines": 101, "bytes": 5112, "features": [], "sections": [
+  {"path": "semantics/control.md", "title": "Control Flow", "status": "draft", "summary": "A control block has declarations, a transition keyword, executable statements, optional clauses and a terminator:", "lines": 101, "bytes": 5401, "features": [], "sections": [
     [2, "general-pattern", 5, "General pattern"],
     [2, "if", 20, "`if`"],
     [2, "match", 34, "`match`"],
@@ -257,11 +257,10 @@
     [2, "project-new-folder", 27, "`project new <folder>`"],
     [2, "errors", 31, "Errors"]
    ]},
-  {"path": "semantics/scopes.md", "title": "Scopes", "status": "draft", "summary": "A scope is the place where the names declared with new, set and the other declarations live. A name is visible from its declaration to the end of its scope, in that scope and in the scopes inside it, ", "lines": 37, "bytes": 3331, "features": [], "sections": [
+  {"path": "semantics/scopes.md", "title": "Scopes", "status": "draft", "summary": "A scope is the place where the names declared with new, set and the other declarations live. A name is visible from its declaration to the end of its scope, in that scope and in the scopes inside it, ", "lines": 37, "bytes": 4042, "features": [], "sections": [
     [2, "blocks", 5, "Blocks"],
     [2, "visibility", 22, "Visibility"],
-    [2, "redeclaration", 30, "Redeclaration"],
-    [2, "open-points", 34, "Open points"]
+    [2, "redeclaration", 30, "Redeclaration"]
    ]},
   {"path": "semantics/topology.md", "title": "Topology of a program", "status": "draft", "summary": "An import without a path searches, in this order: the standard library, $EVE_LIB (the lib folder of the project), then each folder of $EVE_LIB_PATH ([modules.md](modules.md)). A path that does not sta", "lines": 27, "bytes": 2122, "features": [], "sections": [
     [2, "the-pieces", 5, "The pieces"],

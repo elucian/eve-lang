@@ -3,9 +3,11 @@
 primary aspect p4e_garbage is
   process main is
     new total := 0;
+    new s := "";
+    new parts := ();
     for i in (1..200000) do
-      new s := "item {i}";
-      new parts := (i, i + 1, i + 2);
+      let s := "item {i}";
+      let parts := (i, i + 1, i + 2);
       let total += s.length() + parts.length();
     done;
     expect total == 2688895;

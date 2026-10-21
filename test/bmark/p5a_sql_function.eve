@@ -14,8 +14,7 @@ primary aspect p5a_sql_function is
     new rows := db.execute!("with recursive c(n) as (select 1 union all select n + 1 from c where n < 20000) insert into t select n from c");
     new sum := 0;
     for k in (1..3) do
-      new r := db.query_one!(:Row)("select count(*) as n, sum(weight(n)) as total from t");
-      let sum += r.total;
+      let sum += db.query_one!(:Row)("select count(*) as n, sum(weight(n)) as total from t").total;
     done;
     expect sum == 1800150000;
     print sum;

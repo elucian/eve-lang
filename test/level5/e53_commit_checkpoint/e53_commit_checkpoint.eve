@@ -17,8 +17,7 @@ primary aspect e53_commit_checkpoint is
     do
       print "since {since}";
       for i in (since + 1 .. since + 2) do
-        new o := {id: i, amount: 1.50d} :Order;
-        let orders <+ o;
+        let orders <+ Order(id: i, amount: 1.50d);
       done;
       commit;
       checkpoint.write("e53", since + 2);
@@ -29,8 +28,7 @@ primary aspect e53_commit_checkpoint is
     do
       print "since {since}";
       for i in (since + 1 .. since + 2) do
-        new o := {id: i, amount: 1.50d} :Order;
-        let orders <+ o;
+        let orders <+ Order(id: i, amount: 1.50d);
       done;
       commit;
       checkpoint.write("e53", since + 2);

@@ -17,8 +17,7 @@ primary aspect e92_orm_temporary is
     fill: job
     do
       for i in (1..3) do
-        new r := {id: i, label: "row {i}", amount: 1.25d, note: null} :Row;
-        let staged <+ r;
+        let staged <+ Row(id: i, label: "row {i}", amount: 1.25d, note: null);
       done;
     done fill;
 

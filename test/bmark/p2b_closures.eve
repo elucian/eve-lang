@@ -23,8 +23,9 @@ primary aspect p2b_closures is
     done;
     expect total == 1250025000;
     new made := 0;
+    new d! := make_counter!(0);
     for i in (1..2000) do
-      new d! := make_counter!(i);
+      let d! := make_counter!(i);
       let made += d!();
     done;
     expect made == 2003000;

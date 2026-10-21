@@ -51,8 +51,9 @@ primary aspect s06_variables is
       new local := 9;
       expect local == 9;
     done;
+    new each := 0;
     for i in (1..2) do
-      new each := i * 10;
+      let each := i * 10;
       expect each == i * 10;
     done;
     print "variables: ok";

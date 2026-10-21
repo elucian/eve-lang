@@ -33,8 +33,9 @@ module http is
   ** a=1&b=2 into a DataMap of texts.
   function parse_query(text: String) => (@result: Any) is
     new out := {:};
+    new at := 0;
     for pair in text.split("&") do
-      new at := pair.find("=");
+      let at := pair.find("=");
       if at > 1 do
         let out[pair[1..at - 1]] := pair[at + 1..-1];
       else if pair.length() > 0 and at == 0 do
@@ -48,8 +49,9 @@ module http is
   function read_headers!(sock: Socket) => (@result: Any) is
     new headers := {:};
     new line := sock.read_line!();
+    new at := 0;
     while line <> null and line <> "" do
-      new at := line.find(":");
+      let at := line.find(":");
       if at > 1 do
         let headers[line[1..at - 1].trim().lower()] := line[at + 1..-1].trim();
       done;

@@ -116,7 +116,10 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
             const saved_tasks = it.job_tasks;
             it.job_tasks = spawned;
             defer it.job_tasks = saved_tasks;
+            // a job opens a scope for each attempt (control.md#job): a retry declares its names again
+            const job_scope = try it.pushScope();
             const outcome = it.execBlock(n.kids[0]);
+            it.leaveScope(job_scope);
             if (spawned.items.len > 0) {
                 try it.joinTasks(spawned, null, 0);
                 try it.endTasks(spawned);
@@ -431,7 +434,28 @@ pub fn capture(it: *Interp, n: *const Node) Signal!void {
     try it.assignTo(target, item);
 }
 
+// @eve-impl a loop has one scope for all its cycles: the same `new` run a second time in that scope is a run-time error
+// @spec spec/semantics/scopes.md#redeclaration
+// @test a104_scope_loop_redeclare
 pub fn declare(it: *Interp, n: *const Node) Signal!void {
+    const targets = n.kids[0].kids;
+    for (targets) |t| {
+        if ((t.tag != .name and t.tag != .star) or t.text.len == 0 or std.mem.eql(u8, t.text, "_")) continue;
+        for (it.scope.binds.items) |b| {
+            if (value.nameEql(b.name, t.text) and b.v.decl == @as(?*const anyopaque, n))
+                return it.fail("'{s}' is already declared in this scope: a loop has one scope for all its cycles, declare the name before the loop", .{t.text});
+        }
+    }
+    try declareStatement(it, n);
+    for (targets) |t| {
+        if ((t.tag != .name and t.tag != .star) or t.text.len == 0 or std.mem.eql(u8, t.text, "_")) continue;
+        for (it.scope.binds.items) |b| if (value.nameEql(b.name, t.text)) {
+            b.v.decl = n;
+        };
+    }
+}
+
+fn declareStatement(it: *Interp, n: *const Node) Signal!void {
     const targets = n.kids[0].kids;
     const constant = n.tag == .set;
     const vnode = n.kids[1];

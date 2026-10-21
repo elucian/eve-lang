@@ -50,7 +50,9 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 ### S15.12 Core semantics pages `[x]` (M)
 - **Feature:** F-SPEC-03. **Missing pages in `spec/semantics/`:** scopes, topology, collections and objects. Write them from the tests and the tutorial; each rule gets an anchor that a test already names.
 - **Gate:** every `** spec:` line of the level 1 tests resolves (`evegen check` has no spec error).
-- **State (2026-10-21): done.** Pages `scopes.md`, `collections.md` and `topology.md`, written from the tests and from probes of the machine; the tests a17 to a23, a35, a36, a38, a45, a82, a83 and a88 name their anchors; new tests a101 to a103 (scopes). F-SPEC-03 is `done`. Found on the way: the bytecode machine does not shadow a name inside a loop body (TD-63).
+- **State (2026-10-21): done.** Pages `scopes.md`, `collections.md` and `topology.md`, written from the tests and from probes of the machine; the tests a17 to a23, a35, a36, a38, a45, a82, a83 and a88 name their anchors; new tests a101 to a103 (scopes). F-SPEC-03 is `done`. Found on the way and settled by the author (D-213, TD-63 closed): a loop has one scope, a `new` in its body fails at the second cycle, in both engines (tests a104, a105).
+**answer**
+DT-63. If a variable is created with new in internal scope it can hide the external variable but only one time. A second iteration will fail because the variable already exist in local scope. The loop do not create 2 scopes.
 
 ## Level 2 — a project
 

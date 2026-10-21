@@ -20,9 +20,11 @@ module config is
   ** The settings of a text: one key = value for each line.
   function parse(text: String) => (@result: Any) is
     new settings := {:};
+    new item := "";
+    new at := 0;
     for line in text.split("\n") do
-      new item := line.trim();
-      new at := item.find("=");
+      let item := line.trim();
+      let at := item.find("=");
       if item.length() > 0 and not item.starts_with("#") and at > 1 do
         let settings[item[1..at - 1].trim()] := value_of(item[at + 1..-1].trim());
       done;

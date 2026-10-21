@@ -35,9 +35,11 @@ primary aspect p3b_objects is
 
   process main is
     new made := 0;
+    new p := Point(0, 1);
+    new q := Point3(0, 1, 1);
     for i in (1..5000) do
-      new p := Point(i, 1);
-      new q := Point3(i, 1, 1);
+      let p := Point(i, 1);
+      let q := Point3(i, 1, 1);
       let made += p.sum() + q.total();
     done;
     expect made == 25020000;

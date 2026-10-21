@@ -400,6 +400,11 @@ const Emitter = struct {
         const mark = e.free;
         switch (n.tag) {
             .var_decl, .set => {
+                // @eve-impl a `new` or `set` in the body of a loop: the loop has one scope for all its cycles and the second cycle is an
+                // error, which only the tree walker reports (the declaration marks live in its variables); the program stays with it
+                // @spec spec/semantics/scopes.md#redeclaration
+                // @test a104_scope_loop_redeclare
+                if (e.loops.items.len > 0) return e.unsupported(n, "a declaration in the body of a loop");
                 const plain = n.kids.len == 2 and n.kids[0].kids.len == 1 and n.kids[0].kids[0].tag == .name and n.kids[1].tag != .none and
                     (std.mem.eql(u8, n.text, ":=") or std.mem.eql(u8, n.text, "=")) and (n.ty == null or n.ty.?.tk == .integer or n.ty.?.tk == .real or n.ty.?.tk == .string or n.ty.?.tk == .logic);
                 if (!plain) return e.bridgeStmt(n);

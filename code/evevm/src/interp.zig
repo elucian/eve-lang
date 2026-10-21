@@ -989,7 +989,7 @@ test "a loop frees what each pass makes" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
     var diag: @import("evecp").lexer.Diag = .{};
-    const src = "primary aspect t is\n  process main is\n    new total := 0;\n    for i in (1..10000) do\n      new s := \"item {i}\";\n      new parts := (i, i + 1);\n      let total += parts.length();\n    done;\n    print total;\n  return;\nend t;\n";
+    const src = "primary aspect t is\n  process main is\n    new total := 0;\n    new s := \"\";\n    new parts := ();\n    for i in (1..10000) do\n      let s := \"item {i}\";\n      let parts := (i, i + 1);\n      let total += parts.length();\n    done;\n    print total;\n  return;\nend t;\n";
     const root = try @import("evecp").parser.parse(arena.allocator(), src, &diag);
     var buf: [64]u8 = undefined;
     var w: Io.Writer = .fixed(&buf);

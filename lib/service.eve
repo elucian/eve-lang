@@ -32,8 +32,9 @@ module service is
   ** Accept and handle count connections (0: until the listener is closed).
   procedure serve(server: Listener, routes: Any, count: Integer) is
     new served := 0;
+    new sock := null;
     while count == 0 or served < count do
-      new sock := server.accept!();
+      let sock := server.accept!();
       handle(sock, routes);
       let served += 1;
     done;

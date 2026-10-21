@@ -61,8 +61,9 @@ module route is
     new params := {:};
     new same := ps.length() == xs.length();
     if same do
+      new a := "";
       for i in (1..ps.length()) do
-        new a := ps[i];
+        let a := ps[i];
         if a.starts_with("\{") and a.ends_with("\}") do
           let params[a[2..-2]] := xs[i];
         else if a <> xs[i] do
@@ -77,8 +78,9 @@ module route is
   ** The first route of the table that matches the verb and the path.
   function find(routes: Any, verb: String, path: String) => (@result: Match) is
     let result := Match(found: False, other_verb: False, params: {:}, handler: null);
+    new params := null;
     for r in routes do
-      new params := match_path(r.pattern, path);
+      let params := match_path(r.pattern, path);
       if params <> null and not result.found do
         if r.verb == verb do
           let result := Match(found: True, other_verb: False, params: params, handler: r.handler);

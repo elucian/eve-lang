@@ -14,7 +14,7 @@ A **scope** is the place where the names declared with `new`, `set` and the othe
 | `if` and its `else if` and `else` branches | **no** | a name created in a branch belongs to the enclosing scope |
 | `match` | yes: the part before the first `when` | the declarations of the match |
 | `job` | yes: the declarations before `do` | the declarations of the job |
-| `while`, `for`, `loop` | the header declarations once, the body at every cycle | `loop new n := 0; while …`: `n` lives in the loop scope and survives the cycles; a name created in the body is new at each cycle |
+| `while`, `for`, `loop` | **one** scope for the header and all the cycles | `loop new n := 0; while …`: `n` lives in the loop scope and survives the cycles; a name created in the body is created once, so a `new` in the body fails at the second cycle (see Redeclaration) |
 | a `for` without header | only its control variable | `x` in `for x in r do` |
 
 A name created inside a loop, a `match` or a job is gone after `done;`: the control variable of a `for`, the names of the body and the names of the header are a compile error (exit 65, `undefined name`) when used after the block. A variable that is read after the loop is declared before it, in the scope of the process.
@@ -31,6 +31,6 @@ A name created inside a loop, a `match` or a job is gone after `done;`: the cont
 
 Declaring a name that already exists **in the same scope** is a compile error (`'a' is already declared in this scope`), except overloaded subprograms ([declarations.md](../syntax/declarations.md#generic-subprograms-and-overloading)). A constant (`set`) can not be assigned with `let`.
 
-## Open points
+**Loops.** A loop does not make a scope for each cycle. A `new` or `set` written in the body creates its name in the loop scope at the first cycle; at the second cycle the same statement finds the name and fails with a run-time error, `'x' is already declared in this scope`. This happens also when the name exists outside the loop: the first cycle hides the outer name inside the loop scope, the second cycle fails. The compiler can not see it, because it does not know how many cycles will run; a test must catch it. What the cycles share is declared before the loop, or in the header (`loop new n := 0; while …`), and the body changes it with `let`. A function called from the body has its own scope for each call, so it may declare freely.
 
-A name declared in a block that already exists in an enclosing scope hides it inside the block. The tree walker (the reference) does so; the bytecode machine reuses the outer variable. The behavior is not fixed by a test yet.
+**Jobs.** Each attempt of a job (the first run and every `retry`) has a scope of its own, so a retried job declares its names again without error.

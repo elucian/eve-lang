@@ -3,8 +3,8 @@
 primary aspect p4c_groups is
   process main is
     new total := 0;
+    new outs: [4]Integer;
     for r in (1..250) do
-      new outs: [4]Integer;
       parallel
       do
         for k in (1..4) do

@@ -8,8 +8,9 @@ primary aspect p1d_strings is
     done;
     expect text.length() == 58893;
     new hits := 0;
+    new word := "";
     for i in (1..3000) do
-      new word := "item{i}";
+      let word := "item{i}";
       if word =~ "/^item[0-9]+$/" do
         let hits += 1;
       done;

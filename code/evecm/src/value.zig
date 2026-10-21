@@ -144,7 +144,8 @@ pub const Range = struct { hdr: Obj = .{ .kind = .range }, lo: i64, hi: i64, ste
 pub const Domain = struct { hdr: Obj = .{ .kind = .domain }, lo: ?f64 = null, hi: ?f64 = null, lo_excl: bool = false, hi_excl: bool = false, step: ?f64 = null };
 
 /// A variable. It is a separate struct so that a by-reference parameter can share it.
-pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false };
+/// `decl` is the `new` or `set` statement that made the variable: the same statement run again in the same scope is an error (loops).
+pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false, decl: ?*const anyopaque = null };
 pub const Binding = struct { name: []const u8, v: *Var };
 // @eve-impl comparison of two variable names: the length and the first byte decide almost every mismatch without a call
 // @perf hot

@@ -423,7 +423,7 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 An example that runs, and what it prints:
 
 ```eve
-# where a name lives: the aspect (hoisted, shared with its functions), a process, the body of a loop at every cycle, a loop header, an if (no scope)
+# where a name lives: the aspect (hoisted, shared with its functions), a process, a loop (one scope for the header and all the cycles), an if (no scope)
 primary aspect a101_scopes is
   new shared:= 10;
   function show => (@r:Integer) is
@@ -431,12 +431,11 @@ primary aspect a101_scopes is
   return;
   new later:= 1;
   process main is
-    new x:= 1;
+    new y:= 0;
     for i in (1, 2) do
-      new y:= i * 10;
+      let y:= i * 10;
       print y;
     done;
-    print x;
     new n:= 0;
     loop new steps:= 100;
     while n < 2 do
@@ -456,7 +455,6 @@ end a101_scopes;
 ```text
 10
 20
-1
 101
 102
 11

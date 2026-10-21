@@ -65,7 +65,7 @@ for x in r do … done;                ** visits a range or a collection
 
 - `break [label] [if c];` leaves the loop (an outer loop with its label).
 - `skip [label] [if c];` goes to the continuation point: in a `for` the next element; in a `while` the test of the condition; in a `repeat` loop the test at the end (a bare `repeat;` starts the next cycle).
-- A `new` in the body is created again at every cycle; what must survive is declared in the `loop` header.
+- A loop has **one scope** for its header and all its cycles. A `new` or `set` written in the body runs again at the second cycle and fails with a run-time error, `'x' is already declared in this scope`; the compiler can not see it. What the cycles share is declared before the loop or in the `loop` header, and the body changes it with `let` ([scopes.md](scopes.md#redeclaration)).
 - An infinite loop is `loop do … repeat;` left with `break`, or `while True do`; a constant `True` condition gets no warning.
 
 ## Job
@@ -92,7 +92,7 @@ At level 5 a job is also a **database transaction** (`../library/database.md#tra
 | `if`, ladder | no |
 | `match` | yes: the part before the first `when` |
 | `job` | yes: the declarations before `do` |
-| `while`, `for`, `loop` | the header declarations, once; the body, at every cycle |
+| `while`, `for`, `loop` | one scope for the header declarations and all the cycles of the body |
 | a `for` without header | only its control variable |
 
 ## Parallel

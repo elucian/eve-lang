@@ -1,0 +1,23 @@
+# a loop has one scope for the header and all its cycles: a new written in the body is run again at the second cycle and fails, a name used by all cycles is declared before the loop
+** spec: semantics/scopes.md#redeclaration
+primary aspect a104_scope_loop_redeclare is
+  process main is
+    new total := 0;
+    for i in (1, 2, 3) do
+      let total += i;
+    done;
+    print total;
+    for i in (1, 2) do
+      new t := i * 2;
+      print t;
+    done;
+    print "never";
+  return;
+end a104_scope_loop_redeclare;
+/*@expect
+{
+  "exit": 4,
+  "stdout": ["6", "2"],
+  "stderr": ["'t' is already declared in this scope"]
+}
+*/

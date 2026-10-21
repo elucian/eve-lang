@@ -1,0 +1,19 @@
+# a name that exists outside a loop is shadowed by a new in the body at the first cycle; the second cycle fails because the loop scope already has the name
+** spec: semantics/scopes.md#redeclaration
+primary aspect a105_scope_shadow_in_loop is
+  process main is
+    new x := 1;
+    for i in (1, 2) do
+      new x := i * 10;
+      print x;
+    done;
+    print "never";
+  return;
+end a105_scope_shadow_in_loop;
+/*@expect
+{
+  "exit": 4,
+  "stdout": ["10"],
+  "stderr": ["'x' is already declared in this scope"]
+}
+*/

@@ -4,9 +4,10 @@ primary aspect p4a_parallel_sum is
   process main is
     new rows := (x | x in (1..200000));
     new total := 0;
+    new parts := rows.split(4);
+    new sums: [4]Integer;
     for round in (1..5) do
-      new parts := rows.split(4);
-      new sums: [4]Integer;
+      let parts := rows.split(4);
       parallel
       do
         for i in (1..4) do
