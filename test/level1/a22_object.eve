@@ -1,5 +1,5 @@
 # Object: unquoted keys make an object, quoted or numeric keys make a DataMap
-** spec: semantics/types.md#composite-types
+** spec: semantics/types.md#composite-types, semantics/collections.md#object
 primary aspect a22_object is
   process main is
     new p := {x: 1.5, y: 2};

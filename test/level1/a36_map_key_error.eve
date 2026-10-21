@@ -1,5 +1,5 @@
 # += on a missing key of a map raises an error
-** spec: syntax/expressions.md#index-slice-member
+** spec: syntax/expressions.md#index-slice-member, semantics/collections.md#datamap
 primary aspect a36_map_key_error is
   process main is
     new h := {"a": 1};

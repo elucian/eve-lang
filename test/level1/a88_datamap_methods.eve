@@ -1,5 +1,5 @@
 # DataMap methods: has, get, keys, values, delete (G-5)
-** spec: semantics/types.md#datamap-methods
+** spec: semantics/types.md#datamap-methods, semantics/collections.md#datamap
 primary aspect a88_datamap_methods is
   process main is
     new m := {"b": 2, "a": 1};

@@ -1,5 +1,5 @@
 #:= shares a collection or an object,:: makes a deep copy, native values are always copied
-** spec: syntax/declarations.md#variables-and-constants
+** spec: syntax/declarations.md#variables-and-constants, semantics/collections.md#share-and-copy
 primary aspect a23_clone_view is
   process main is
     new x := 1;

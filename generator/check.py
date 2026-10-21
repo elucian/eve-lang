@@ -53,6 +53,17 @@ def check_features(root, levels, errors):
     return seen
 
 
+def spec_ref_problem(root, ref):
+    """None when `page.md#anchor` of a `** spec:` line exists in spec/, else what is wrong."""
+    page, _, anchor = ref.partition("#")
+    path = root / "spec" / page
+    if not path.is_file():
+        return "no such page"
+    if anchor and anchor not in {model.slug(m) for m in re.findall(r"^#+\s+(.*)$", read_text(path), re.M)}:
+        return "no such anchor"
+    return None
+
+
 def check_tests(root, suites, known, errors, warnings):
     covered = set()
     for s in suites:
@@ -70,6 +81,13 @@ def check_tests(root, suites, known, errors, warnings):
                 errors.append("%s/%s: no source file" % (s["suite"], t["name"]))
             elif src is not None and TEST_SOURCE.search(read_text(src)):
                 warnings.append("%s/%s: the source names a decision or the design" % (s["suite"], t["name"]))
+            if src is not None:
+                for line in read_text(src).splitlines()[:6]:
+                    if line.startswith("** spec:"):
+                        for ref in re.findall(r"[\w/.-]+\.md(?:#[\w-]+)?", line):
+                            problem = spec_ref_problem(root, ref)
+                            if problem:
+                                warnings.append("%s/%s: spec reference %s: %s" % (s["suite"], t["name"], ref, problem))
         folder = root / "test" / s["suite"]
         for p in sorted(folder.glob("*.eve")):
             if p.stem not in names and re.match(r"[a-z]\d+_", p.stem):

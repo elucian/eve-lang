@@ -1,5 +1,5 @@
 # matrix: two indexes, last index, absolute index, [*] selects a dimension
-** spec: syntax/expressions.md#index-slice-member
+** spec: syntax/expressions.md#index-slice-member, semantics/collections.md#matrix
 primary aspect a19_matrix is
   process main is
     new m := [[1, 2, 3],

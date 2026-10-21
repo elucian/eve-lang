@@ -1,5 +1,5 @@
 # redeclaring a name in the same scope is an error
-** spec: syntax/declarations.md#variables-and-constants
+** spec: syntax/declarations.md#variables-and-constants, semantics/scopes.md#redeclaration
 primary aspect a45_redeclare is
   process main is
     new x := 1;

@@ -9,10 +9,10 @@
     [2, "verdicts", 59, "Verdicts"],
     [2, "the-tracking-file", 63, "The tracking file"]
    ]},
-  {"path": "index.md", "title": "Eve Specification", "status": "draft", "summary": "The specification is written level by level. The features of each level, with their status, are in [features/](features/level1.json) (level1.json to level7.json, all.json); each feature has a short Ma", "lines": 51, "bytes": 5293, "features": [], "sections": [
+  {"path": "index.md", "title": "Eve Specification", "status": "draft", "summary": "The specification is written level by level. The features of each level, with their status, are in [features/](features/level1.json) (level1.json to level7.json, all.json); each feature has a short Ma", "lines": 52, "bytes": 5515, "features": [], "sections": [
     [2, "reading-order", 5, "Reading order"],
-    [2, "sources-of-the-rules", 33, "Sources of the rules"],
-    [2, "change-log", 37, "Change log"]
+    [2, "sources-of-the-rules", 34, "Sources of the rules"],
+    [2, "change-log", 38, "Change log"]
    ]},
   {"path": "lexical/lexical.md", "title": "Lexical Structure", "status": "draft", "summary": "Words in this document: must and must not mark a requirement for every implementation; may marks a free choice. A rule marked (proposed) is not yet decided by the author; it is listed in [Open points]", "lines": 264, "bytes": 19538, "features": [], "sections": [
     [2, "source-text", 7, "Source text"],
@@ -174,6 +174,18 @@
     [2, "not-in-level-2", 144, "Not in level 2"],
     [2, "open-points", 148, "Open points"]
    ]},
+  {"path": "semantics/collections.md", "title": "Collections and objects", "status": "draft", "summary": "(1, 2, 3), (). Ordered, not sorted, the only unsorted collection. (5,) is a list of one element; (5) is the number 5 in parentheses; a trailing comma is allowed. let a <+ x appends, let a +> x puts in", "lines": 47, "bytes": 3516, "features": [], "sections": [
+    [2, "indexes", 5, "Indexes"],
+    [2, "list", 12, "List"],
+    [2, "array", 16, "Array"],
+    [2, "matrix", 20, "Matrix"],
+    [2, "dataset", 24, "DataSet"],
+    [2, "datamap", 28, "DataMap"],
+    [2, "object", 32, "Object"],
+    [2, "builders", 36, "Builders"],
+    [2, "deconstruct", 40, "Deconstruct"],
+    [2, "share-and-copy", 44, "Share and copy"]
+   ]},
   {"path": "semantics/control.md", "title": "Control Flow", "status": "draft", "summary": "A control block has declarations, a transition keyword, executable statements, optional clauses and a terminator:", "lines": 101, "bytes": 5112, "features": [], "sections": [
     [2, "general-pattern", 5, "General pattern"],
     [2, "if", 20, "`if`"],
@@ -244,6 +256,17 @@
     [2, "project-init-folder", 23, "`project init <folder>`"],
     [2, "project-new-folder", 27, "`project new <folder>`"],
     [2, "errors", 31, "Errors"]
+   ]},
+  {"path": "semantics/scopes.md", "title": "Scopes", "status": "draft", "summary": "A scope is the place where the names declared with new, set and the other declarations live. A name is visible from its declaration to the end of its scope, in that scope and in the scopes inside it, ", "lines": 37, "bytes": 3331, "features": [], "sections": [
+    [2, "blocks", 5, "Blocks"],
+    [2, "visibility", 22, "Visibility"],
+    [2, "redeclaration", 30, "Redeclaration"],
+    [2, "open-points", 34, "Open points"]
+   ]},
+  {"path": "semantics/topology.md", "title": "Topology of a program", "status": "draft", "summary": "An import without a path searches, in this order: the standard library, $EVE_LIB (the lib folder of the project), then each folder of $EVE_LIB_PATH ([modules.md](modules.md)). A path that does not sta", "lines": 27, "bytes": 2122, "features": [], "sections": [
+    [2, "the-pieces", 5, "The pieces"],
+    [2, "who-calls-and-who-sees", 16, "Who calls and who sees"],
+    [2, "where-a-module-is-searched", 24, "Where a module is searched"]
    ]},
   {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 95, "bytes": 6207, "features": ["F-LIB-13"], "sections": [
     [2, "native-and-primitive-types", 7, "Native and primitive types"],

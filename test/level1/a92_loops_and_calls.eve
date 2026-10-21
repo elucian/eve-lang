@@ -1,5 +1,5 @@
 # loops, calls and assignments that every engine must treat alike: break, skip, for with else, short circuit on a variable, compound assignment on a list, recursion
-** spec: syntax/statements.md#loops, semantics/control.md
+** spec: semantics/control.md#loops
 primary aspect a92_loops_and_calls is
   function fact(n: Integer) => (@r: Integer) is
     if n < 2 do

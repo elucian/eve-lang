@@ -1,5 +1,5 @@
 # DataSet: sorted unique values, union, intersection, difference
-** spec: semantics/types.md#composite-types
+** spec: semantics/types.md#composite-types, semantics/collections.md#dataset
 primary aspect a20_dataset is
   process main is
     new a := {3, 1, 2, 3};

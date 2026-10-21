@@ -1,0 +1,34 @@
+# where a name lives: the aspect (hoisted, shared with its functions), a process, the body of a loop at every cycle, a loop header, an if (no scope)
+** spec: semantics/scopes.md#blocks
+primary aspect a101_scopes is
+  new shared := 10;
+  function show() => (@r :Integer) is
+    let r := shared + later;
+  return;
+  new later := 1;
+  process main is
+    new x := 1;
+    for i in (1, 2) do
+      new y := i * 10;
+      print y;
+    done;
+    print x;
+    new n := 0;
+    loop new steps := 100;
+    while n < 2 do
+      let steps := steps + 1;
+      let n := n + 1;
+      print steps;
+    done;
+    print show();
+    if n == 2 do
+      new inside := 7;
+    done;
+    print inside;
+  return;
+end a101_scopes;
+/*@expect
+{
+  "stdout": ["10", "20", "1", "101", "102", "11", "7"]
+}
+*/

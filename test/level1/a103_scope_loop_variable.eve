@@ -1,0 +1,16 @@
+# the control variable of a for loop and the variables of its body are gone after done: using them is a compile error
+** spec: semantics/scopes.md#blocks
+primary aspect a103_scope_loop_variable is
+  process main is
+    for i in (1, 2) do
+      new t := i;
+    done;
+    print t;
+  return;
+end a103_scope_loop_variable;
+/*@expect
+{
+  "exit": 65,
+  "contains": ["undefined name 't'"]
+}
+*/

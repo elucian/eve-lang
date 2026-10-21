@@ -12,6 +12,7 @@ The specification is written level by level. The features of each level, with th
 | 1 | Grammar (EBNF) | [syntax/grammar.md](syntax/grammar.md) | written; every example program parses (`script/grammarcheck.py`) |
 | 1 | Declarations, statements, expressions | [declarations.md](syntax/declarations.md), [statements.md](syntax/statements.md), [expressions.md](syntax/expressions.md) | written |
 | 1 | Types, control flow, errors and exit codes | [types.md](semantics/types.md), [control.md](semantics/control.md), [errors.md](semantics/errors.md) | written |
+| 1 | Scopes, collections and objects, the topology of a program | [semantics/scopes.md](semantics/scopes.md), [semantics/collections.md](semantics/collections.md), [semantics/topology.md](semantics/topology.md) | draft |
 | 1 | System variables | [semantics/variables.md](semantics/variables.md) | the register; a new variable is added here first |
 | 1 | Strings | [library/strings.md](library/strings.md) | written |
 | 1 to 7 | Conformance | [conformance/README.md](conformance/README.md) | the levels and the form of a test |

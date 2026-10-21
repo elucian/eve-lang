@@ -1,5 +1,5 @@
 # matrix and tensor indexes: [x, y] is the same as [x][y]; a range selects a part
-** spec: syntax/expressions.md#index-slice-member
+** spec: syntax/expressions.md#index-slice-member, semantics/collections.md#matrix
 primary aspect a38_matrix_index is
   process main is
     new m := [[1,  2,  3,  4],

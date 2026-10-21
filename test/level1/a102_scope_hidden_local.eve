@@ -1,0 +1,17 @@
+# a function does not see the variables of a process, and the variable of a loop is gone after done: both are compile errors
+** spec: semantics/scopes.md#visibility
+primary aspect a102_scope_hidden_local is
+  function f() => (@r :Integer) is
+    let r := secret;
+  return;
+  process main is
+    new secret := 3;
+    print f();
+  return;
+end a102_scope_hidden_local;
+/*@expect
+{
+  "exit": 65,
+  "contains": ["undefined name 'secret'"]
+}
+*/

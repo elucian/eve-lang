@@ -1,5 +1,5 @@
 # the digit separator _ is not accepted in a number: a lexical error
-** spec: lexical/lexical.md#numbers
+** spec: lexical/lexical.md#integer-and-natural
 primary aspect a78_digit_separator is
   process main is
     new x := 1_000;              ** lexical error

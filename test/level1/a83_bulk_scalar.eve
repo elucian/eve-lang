@@ -1,5 +1,5 @@
 # collection op scalar: the operator applies to every element
-** spec: syntax/expressions.md#operators-on-collections, syntax/statements.md#let
+** spec: syntax/expressions.md#operators-on-collections, syntax/statements.md#let, semantics/collections.md#share-and-copy
 primary aspect a83_bulk_scalar is
   process main is
     new a := (1, 2, 3, 4);

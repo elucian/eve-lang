@@ -1,5 +1,5 @@
 # index 0 is an error: indexes start at 1
-** spec: syntax/expressions.md#index-slice-member
+** spec: syntax/expressions.md#index-slice-member, semantics/collections.md#indexes
 primary aspect a35_index_error is
   process main is
     new a := (1, 2, 3);

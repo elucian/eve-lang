@@ -1,5 +1,5 @@
 # list: literal, index, append, remove, capture, delete, builder, deconstruct
-** spec: syntax/expressions.md#literals-and-builders, syntax/statements.md#let
+** spec: syntax/expressions.md#literals-and-builders, syntax/statements.md#let, semantics/collections.md#list
 primary aspect a17_list is
   process main is
     new a := (1, 2, 3);

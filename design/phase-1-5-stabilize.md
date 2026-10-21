@@ -47,9 +47,10 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 - **Tests:** a script with parameters, the generated help, each `$EVE_*` variable.
 - **State (2026-10-21): done.** The `$EVE_*` variables (test a97, TD-60) and the parameters of a script: `-p name=value` with the types of `process main`, `-h` after the script, exit 64 for a missing parameter, comments `** @param name:Type; description` (D-212, tests a98 to a100, `semantics/aspects.md#parameters-on-the-command-line`). F-STR-05 is `done`; F-STR-07 stays `partial` (`$EVE_DIR`, `$EVE_ASP`). TD-62: `-p` with `-loc`/`-rem`.
 
-### S15.12 Core semantics pages `[ ]` (M)
+### S15.12 Core semantics pages `[x]` (M)
 - **Feature:** F-SPEC-03. **Missing pages in `spec/semantics/`:** scopes, topology, collections and objects. Write them from the tests and the tutorial; each rule gets an anchor that a test already names.
 - **Gate:** every `** spec:` line of the level 1 tests resolves (`evegen check` has no spec error).
+- **State (2026-10-21): done.** Pages `scopes.md`, `collections.md` and `topology.md`, written from the tests and from probes of the machine; the tests a17 to a23, a35, a36, a38, a45, a82, a83 and a88 name their anchors; new tests a101 to a103 (scopes). F-SPEC-03 is `done`. Found on the way: the bytecode machine does not shadow a name inside a loop body (TD-63).
 
 ## Level 2 — a project
 

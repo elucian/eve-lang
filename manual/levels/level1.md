@@ -19,7 +19,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | [`F-LNG-08`](#f-lng-08-strings-and-interpolation) | Strings and interpolation | validated |
 | [`F-SPEC-01`](#f-spec-01-lexical-specification) | Lexical specification | validated |
 | [`F-SPEC-02`](#f-spec-02-grammar-ebnf) | Grammar (EBNF) | validated |
-| [`F-SPEC-03`](#f-spec-03-core-semantics) | Core semantics | drafted |
+| [`F-SPEC-03`](#f-spec-03-core-semantics) | Core semantics | validated |
 | [`F-STR-05`](#f-str-05-command-line-parameters-of-a-script) | Command-line parameters of a script | validated |
 | [`F-STR-07`](#f-str-07-system-variables) | System variables | drafted |
 | [`F-STR-12`](#f-str-12-exit-code-of-the-program) | Exit code of the program | validated |
@@ -414,16 +414,54 @@ Declarations, statements, expressions, modules and imports, checked against ever
 
 ## F-SPEC-03 Core semantics
 
-Stage: **drafted**.
+Stage: **validated**.
 
 Types, scopes, control flow, jobs and `recover`, topology, collections and objects.
 
-*Partial:* `semantics/` has variables, types, control, errors, aspects, modules and data-types (a proposal); scopes, topology and collections are missing.
+*Done:* `semantics/` has variables, types, scopes, control, errors, collections, aspects, modules, topology and data-types (a proposal for level 5). Every `** spec:` line of the level 1 tests resolves to a page and an anchor.
 
-## Missing
+An example that runs, and what it prints:
 
-- Pages in: scopes, topology, collections and objects.
-- Every `** spec:` line of the level 1 tests resolves to an anchor.
+```eve
+# where a name lives: the aspect (hoisted, shared with its functions), a process, the body of a loop at every cycle, a loop header, an if (no scope)
+primary aspect a101_scopes is
+  new shared:= 10;
+  function show => (@r:Integer) is
+    let r:= shared + later;
+  return;
+  new later:= 1;
+  process main is
+    new x:= 1;
+    for i in (1, 2) do
+      new y:= i * 10;
+      print y;
+    done;
+    print x;
+    new n:= 0;
+    loop new steps:= 100;
+    while n < 2 do
+      let steps:= steps + 1;
+      let n:= n + 1;
+      print steps;
+    done;
+    print show;
+    if n == 2 do
+      new inside:= 7;
+    done;
+    print inside;
+  return;
+end a101_scopes;
+```
+
+```text
+10
+20
+1
+101
+102
+11
+7
+```
 
 ## F-STR-05 Command-line parameters of a script
 

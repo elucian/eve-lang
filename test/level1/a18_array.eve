@@ -1,5 +1,5 @@
 # array: literal, index, slice, view and clone, bulk assignment, builder
-** spec: syntax/expressions.md#index-slice-member
+** spec: syntax/expressions.md#index-slice-member, semantics/collections.md#array
 primary aspect a18_array is
   process main is
     new v := [10, 20, 30, 40];

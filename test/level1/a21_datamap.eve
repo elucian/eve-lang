@@ -1,5 +1,5 @@
 # DataMap: a sorted map of key:value pairs; quoted or numeric keys
-** spec: semantics/types.md#composite-types
+** spec: semantics/types.md#composite-types, semantics/collections.md#datamap
 primary aspect a21_datamap is
   process main is
     new h := {"a": 1, "b": 2};
