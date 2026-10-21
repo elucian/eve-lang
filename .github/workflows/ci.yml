@@ -1,6 +1,5 @@
 # Checks on every push: the build, the unit tests, the conformance tests (tree walker), the bytecode tests, the tags and the map.
-# Windows is the reference platform and must pass. Ubuntu is allowed to fail until a Linux build has been seen to
-# pass once (review R2-PR-D02); remove `continue-on-error` then.
+# Both systems must pass (Ubuntu passed first on ff256b1). Test on Linux before a push: python script/wsl-gate.py
 name: ci
 on:
   push:
@@ -10,7 +9,6 @@ jobs:
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os == 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
