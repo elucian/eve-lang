@@ -87,6 +87,7 @@ import difflib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -588,6 +589,20 @@ def run_both(eve, test, timeout):
     return res
 
 
+def prepare_path(eve):
+    """The tests start `eve` and `python` by name: the folder of the machine under test comes first on PATH (not the
+    installed one), and a `python` that is only `python3` (Linux) gets a link in temp/shim."""
+    parts = [os.path.dirname(eve)] if os.path.isabs(eve) else []
+    if not shutil.which("python"):
+        shim = os.path.join(ROOT, "temp", "shim")
+        os.makedirs(shim, exist_ok=True)
+        link = os.path.join(shim, "python")
+        if not os.path.lexists(link):
+            os.symlink(sys.executable, link)
+        parts.append(shim)
+    os.environ["PATH"] = os.pathsep.join(parts + [os.environ.get("PATH", "")])
+
+
 def main():
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8", errors="replace")
@@ -622,6 +637,7 @@ def main():
         if args.out == os.path.join(ROOT, "temp", "output"):
             args.out = os.path.join(ROOT, "temp", "output-bc")
     eve = os.path.abspath(args.eve) if os.path.exists(args.eve) else args.eve
+    prepare_path(eve)
     version = eve_version(eve)
 
     if args.targets == ["scaffold"]:

@@ -46,6 +46,11 @@ def table(head, rows):
     return "\n".join(out)
 
 
+def path_key(p):
+    """Order of paths that is the same on Windows and Linux: part by part, ignoring case."""
+    return tuple(x.lower() for x in p.parts)
+
+
 def feature_key(code):
     m = re.match(r"F-([A-Z]+)-(\d+)", code)
     return (m.group(1), int(m.group(2))) if m else (code, 0)

@@ -57,9 +57,9 @@ def data_entry(root, path):
 
 def build(root=ROOT):
     spec = root / "spec"
-    pages = [page_entry(root, p) for p in sorted(spec.rglob("*.md"))
+    pages = [page_entry(root, p) for p in sorted(spec.rglob("*.md"), key=model.path_key)
              if not p.relative_to(spec).as_posix().startswith(SKIP_PAGES)]
-    data = [data_entry(root, p) for p in sorted(spec.rglob("*.json"))
+    data = [data_entry(root, p) for p in sorted(spec.rglob("*.json"), key=model.path_key)
             if not p.relative_to(spec).as_posix().startswith(SKIP_DATA)]
     levels = model.load_levels(root)
     feats = [{"path": "features/%s.json" % lv["id"], "id": lv["id"], "name": lv["name"],

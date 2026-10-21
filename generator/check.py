@@ -25,7 +25,7 @@ LINK_OUT = re.compile(r"\]\((?:\.\./)*(?:spec|test)/|https://github\.com/[^)]*/(
 
 def spec_files(root):
     spec = root / "spec"
-    return [p for p in sorted(spec.rglob("*")) if p.is_file() and p.suffix in (".md", ".json") and p.name != "spec.json"]
+    return [p for p in sorted(spec.rglob("*"), key=model.path_key) if p.is_file() and p.suffix in (".md", ".json") and p.name != "spec.json"]
 
 
 def check_features(root, levels, errors):
@@ -85,7 +85,7 @@ def check_isolation(root, errors):
                 errors.append("%s:%d: the spec names the design, a decision or a test: %s" % (rel, n, line.strip()[:90]))
                 break
     manual = root / "manual"
-    for p in sorted(manual.rglob("*.md")) if manual.is_dir() else []:
+    for p in sorted(manual.rglob("*.md"), key=model.path_key) if manual.is_dir() else []:
         rel = p.relative_to(root).as_posix()
         if rel.startswith(("manual/releases/", "manual/evevm/", "manual/evecp/", "manual/evecm/", "manual/evetx/",
                            "manual/eveux/", "manual/evewp/", "manual/drivers/")):
