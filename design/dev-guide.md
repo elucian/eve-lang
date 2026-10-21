@@ -58,6 +58,10 @@ Every text file is LF, in the index and in the working tree (`.gitattributes`); 
 - **Every benchmark has a twin in Python** (`test/bmark/ref/<name>.py`); the report shows the ratio Eve / Python. Level 6 (`p6a` to `p6d`: evedb column batches, bulk load, records over PostgreSQL, OLAP group-by) needs `evedb.exe` beside `eve.exe` (for `temp/rel`: `zig build -Doptimize=ReleaseSafe -p ../../temp/rel` in `drivers/duckdb/`); `bmark.py` starts it with `test/bmark/evedb.cfg` and stops it; the twins need psycopg2. A new level or a new kind of work adds a benchmark `p<level><letter>_<name>.eve` with its twin and a `** perf:` description line.
 - **Optimization is rank 5 of the order** (D-194; the "do not optimize early" rule of 2026-10-07 ended when level 2 passed). Measure before and after, as above. Slot-resolved variables wait for the final scope rules. Fix first any benchmark that falls more than 10 times behind Python, it points to an accidental quadratic cost. The first planned optimization is variable lookup by slot, resolved in `check.zig`.
 
+## Linux gate (WSL)
+
+Before a push that touches the VM, the runner, a build file or the generator: `python script/wsl-gate.py` runs the steps of `.github/workflows/ci.yml` on Linux (WSL, Ubuntu 24.04) on the committed HEAD; `--quick` skips the unit tests, `--setup` only installs Zig 0.17.0 and Node. Uncommitted changes are not tested. The log is `temp/output-linux/gate.log`. Rules it taught: a Linux build must not use a name that exists only on one system (`std.posix.HOST_NAME_MAX` is `void` on Windows); a test starts `eve` and `python` by name and the runner provides both; servers bind with `SO_REUSEADDR` on Linux; tracking files and `manual/tests.md` are committed together (`evegen.py all`).
+
 ## Releases (D-153; full policy and steps: `design/release.md`)
 
 A release is made only when the author asks for it ("release", "cut 0.0.3"). Then follow the steps of `design/release.md` in order, and stop at the first one that fails: report it, don't work around it.
