@@ -1,6 +1,6 @@
 //! evecp: the compiler front end as a program. Build from code/evecp/: `zig build -p ../..` installs `bin/evecp.exe`.
 //! `./run.sh build evecp` does the same from the root. The version is the one of the root `build.zig.zon` (D-167).
-//! The same code is also a module of the root build (`eve cp ...` runs it inside `eve`).
+//! The same code is also a module of the root build (`eve cp ...` runs it inside `eve`): the root build.zig.zon lists this package.
 const std = @import("std");
 
 // @eve-impl read `.version` of the root build.zig.zon when the build is configured (the file is outside this package)
@@ -19,15 +19,10 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const options = b.addOptions();
-    options.addOption([]const u8, "version", rootVersion(b));
-    const evecm = b.createModule(.{
-        .root_source_file = b.path("../evecm/src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{.{ .name = "build_options", .module = options.createModule() }},
-    });
-    const evecp = b.createModule(.{
+    // evecm is a package of its own; the version of Eve goes to it as an option
+    const version = b.option([]const u8, "version", "the version of Eve (default: the root build.zig.zon)") orelse rootVersion(b);
+    const evecm = b.dependency("evecm", .{ .target = target, .optimize = optimize, .version = version }).module("evecm");
+    const evecp = b.addModule("evecp", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,

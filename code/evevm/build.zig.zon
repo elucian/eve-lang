@@ -1,0 +1,19 @@
+.{
+    .name = .evevm,
+    .version = "0.0.0",
+    .fingerprint = 0xddde3a3ed532f8d7,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .evecm = .{ .path = "../evecm" },
+        .evecp = .{ .path = "../evecp" },
+        .sqlite = .{
+            .url = "https://www.sqlite.org/2026/sqlite-amalgamation-3540000.zip",
+            .hash = "N-V-__8AAIbIsACiE8KD1p1yFmEmwfDyxM6oeFpCwhUhBARB",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

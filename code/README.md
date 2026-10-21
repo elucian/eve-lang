@@ -4,10 +4,10 @@ The source code of the Eve implementation, one folder per component. The design,
 
 | Component | What it is | Built by |
 |---|---|---|
-| [eve](eve/) | the `eve` command: entry point, options, the commands of each part, the help pages; the only place that imports every module | root `build.zig` |
-| [evecm](evecm/) | the common part: values and heap, decimals, time, Unicode, data codecs, configuration and wire of a machine, the editor parts that need no screen | root `build.zig` (module) |
-| [evecp](evecp/) | the compiler front end: lexer, parser, static checks, project link, `check`, `doc`, `project init/new`; also a program of its own | root `build.zig` (module) and its own `build.zig` |
-| [evevm](evevm/) | the runtime: interpreter, bytecode machine, tasks, native library modules, the machine (IPC, HTTP, stdio), REPL, database layer | root `build.zig` |
+| [eve](eve/) | the `eve` command: entry point, options, the commands of each part, the help pages; the only place that imports every module | root `build.zig` (no build file of its own) |
+| [evecm](evecm/) | the common part: values and heap, decimals, time, Unicode, data codecs, configuration and wire of a machine, the editor parts that need no screen | package `evecm` |
+| [evecp](evecp/) | the compiler front end: lexer, parser, static checks, project link, `check`, `doc`, `project init/new`; also a program of its own | package `evecp` (also a program) |
+| [evevm](evevm/) | the runtime: interpreter, bytecode machine, tasks, native library modules, the machine (IPC, HTTP, stdio), REPL, database layer | package `evevm` |
 | [evetx](evetx/) | the terminal IDE on libvaxis | its own `build.zig` |
 | [eveux](eveux/) | the native graphical workbench on dvui (early draft) | its own `build.zig` |
 | evewp | the Eve Web Portal, written in Eve; design only, no code yet (`design/components/evewp/`) | not built |
@@ -19,12 +19,12 @@ Every component has the same shape. Nothing but code is here: the README, the de
 ```
 code/<component>/
   src/            all the Zig source of the component (no .zig file at the root of the component)
-  build.zig       only a component that is also built as a program of its own, with its own dependencies
-  build.zig.zon     (evecp, evetx, eveux); the others are built by the root build.zig
+  build.zig       the package: it exposes the module of the component and runs its unit tests (`zig build test` here)
+  build.zig.zon     the dependencies on other components; `eve` is the exception, see below
   assets/         optional: data files that belong to the code (evetx: assets/themes/)
 ```
 
-Tests are Zig `test` blocks next to the code they cover. Generated code carries a header that names its generator (`script/`); tools that write code live in `script/`, not here.
+Every component but `eve` is a Zig package listed in the root `build.zig.zon`; the root `build.zig` makes the command `eve` (`code/eve/`, which has no build file of its own) from the modules of `evecm`, `evecp` and `evevm`. The arrows between the components are their `build.zig.zon` files. `evecp`, `evetx` and `eveux` also build a program of their own. `evetx` and `eveux` still take `evecm` by path (backlog `TD-61`). Tests are Zig `test` blocks next to the code they cover. Generated code carries a header that names its generator (`script/`); tools that write code live in `script/`, not here.
 
 ## License
 

@@ -19,12 +19,12 @@ The code and the design are in two places with the same shape for every componen
 ```
 code/<component>/                       design/components/<component>/
   src/        the Zig source              README.md   design and state of the work
-  build.zig   only evecp, evetx, eveux    design/     drawings and notes of an interface (evetx, eveux)
-  build.zig.zon                           doc/        user documents, copied into manual/<component>/
+  build.zig   the package and its tests   design/     drawings and notes of an interface (evetx, eveux)
+  build.zig.zon  its dependencies         doc/        user documents, copied into manual/<component>/
   assets/     optional (evetx: themes)
 ```
 
-`code/README.md` lists the components and the license. A component built by the root `build.zig` (`eve`, `evecm`, `evevm`) has no build file of its own; `evecp`, `evetx` and `eveux` have one because they are programs with their own dependencies (`evecp` is also a module of the root build). `evewp` has no code yet, so it has only a design folder. Tools that write code (`script/genidekeywords.py` writes `evecm/src/ide/keywords.zig`) are in `script/`.
+`code/README.md` lists the components and the license. Every component but `eve` is a Zig package: its `build.zig` exposes the module and runs its unit tests (`cd code/evecm && zig build test`), its `build.zig.zon` names the packages it imports, and the root `build.zig.zon` lists `evecm`, `evecp` and `evevm`; the root `build.zig` makes the command `eve` from them (the version of Eve is written once, in the root `build.zig.zon`, and passed to the packages as the option `version`). `evecp`, `evetx` and `eveux` also build a program of their own. `evewp` has no code yet, so it has only a design folder. Tools that write code (`script/genidekeywords.py` writes `evecm/src/ide/keywords.zig`) are in `script/`.
 
 ## How they depend on each other
 

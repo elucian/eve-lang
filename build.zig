@@ -1,4 +1,4 @@
-//! Build Eve: one executable, `eve`, made of modules (design/design-packages.md).
+//! Build Eve: one executable, `eve`, made of the packages evecm, evecp and evevm (code/<component>/build.zig, design/components/README.md).
 //!
 //!   zig build            -> zig-out/bin/eve.exe
 //!   zig build -p .       -> bin/eve.exe (the official location, D-007)
@@ -6,7 +6,7 @@
 //!   zig build test       -> the unit tests of every module
 //!   zig build doc        -> lib/doc from the Eve sources of lib/
 //!
-//! The arrows between the modules are the `.imports` below; a module that is not listed cannot be
+//! The arrows between the packages are their build.zig.zon files; a package that is not listed cannot be
 //! imported, so a wrong import is a compile error, not a habit that creeps in:
 //!
 //!     eve ──► evevm ──► evecp ──► evecm
@@ -24,83 +24,15 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // Zig tip: `b.addOptions()` makes a small module of constants that the build decides. The
-    // module `build_options` is read by code/evecm/src/version.zig.
-    const options = b.addOptions();
-    options.addOption([]const u8, "version", zon.version);
-
-    // Zig tip: `b.createModule` makes a module (a root file and the modules it may import) that is
-    // not an executable by itself. `target` and `optimize` are given to every module, so they are
-    // all compiled for the same system and in the same mode.
-    const evecm = b.createModule(.{
-        .root_source_file = b.path("code/evecm/src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{.{ .name = "build_options", .module = options.createModule() }},
-    });
-    const evecp = b.createModule(.{
-        .root_source_file = b.path("code/evecp/src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{.{ .name = "evecm", .module = evecm }},
-    });
-    // @eve-impl the module `ewp_protocol`: the wire protocol shared with the DuckDB server (D-199 5)
-    // @see drivers/duckdb/build.zig (the server makes the same module from the same files)
-    const ewp_protocol = b.createModule(.{
-        .root_source_file = b.path("drivers/duckdb/protocol/protocol.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    // The runtime and, inside it, the database layer (SQLite is linked below; D-198).
-    const evevm = b.createModule(.{
-        .root_source_file = b.path("code/evevm/src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        // the secrets of a script are read from the environment with the C library
-        .link_libc = true,
-        .imports = &.{
-            .{ .name = "evecm", .module = evecm },
-            .{ .name = "evecp", .module = evecp },
-            .{ .name = "ewp_protocol", .module = ewp_protocol },
-        },
-    });
-
-    // Zig tip: `b.dependency("sqlite", .{})` finds the package named in build.zig.zon (fetched
-    // once by `zig build`, checked against its hash, kept in the global cache); `dep.path(...)`
-    // names a file inside it. Nothing of SQLite is copied into this repository.
-    // SQLite, the core database (design-database-core.md §2), compiled from the amalgamation
-    // into a static library and linked into the VM.
-    const sqlite_dep = b.dependency("sqlite", .{});
-    const sqlite_lib = b.addLibrary(.{
-        .name = "sqlite3",
-        .linkage = .static,
-        .root_module = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
-        }),
-    });
-    sqlite_lib.root_module.addCSourceFile(.{
-        .file = sqlite_dep.path("sqlite3.c"),
-        .flags = &.{
-            "-DSQLITE_THREADSAFE=1", // serialized: safe whatever thread uses a connection
-            "-DSQLITE_DEFAULT_FOREIGN_KEYS=1", // foreign keys checked unless turned off
-            "-DSQLITE_DQS=0", // "x" is always a name, never a string (Eve quotes names)
-            "-DSQLITE_OMIT_LOAD_EXTENSION", // no native code loaded from a database
-            "-DSQLITE_OMIT_DEPRECATED",
-            "-DSQLITE_DEFAULT_MEMSTATUS=0", // no global memory counters: faster malloc
-            "-DSQLITE_ENABLE_MATH_FUNCTIONS",
-        },
-    });
-    // Zig tip: `addTranslateC` turns a C header into a Zig module at build time, replacing
-    // `@cImport` in the source: the module is imported by name (`@import("sqlite_c")`).
-    const sqlite_c = b.addTranslateC(.{
-        .root_source_file = sqlite_dep.path("sqlite3.h"),
-        .target = target,
-        .optimize = optimize,
-    });
-    evevm.addImport("sqlite_c", sqlite_c.createModule());
-    evevm.linkLibrary(sqlite_lib);
+    // Each component is a package of its own (code/<component>/build.zig, listed in build.zig.zon) that exposes its module and
+    // its unit tests. The arrows between the packages are their build.zig.zon files; the version of Eve goes to them as an option.
+    const args = .{ .target = target, .optimize = optimize, .version = zon.version };
+    const evecm_dep = b.dependency("evecm", args);
+    const evecp_dep = b.dependency("evecp", args);
+    const evevm_dep = b.dependency("evevm", args);
+    const evecm = evecm_dep.module("evecm");
+    const evecp = evecp_dep.module("evecp");
+    const evevm = evevm_dep.module("evevm");
 
     // The `eve` command line.
     const exe = b.addExecutable(.{
@@ -173,10 +105,10 @@ pub fn build(b: *std.Build) void {
     const evevm_step = b.step("evevm", "Install bin/evevm.exe (a copy of eve, the machine)");
     evevm_step.dependOn(&install_evevm.step);
 
-    // One test program per module: each runs the tests of its own files.
+    // The tests: the program `eve` itself, and the test step of each package.
     const test_step = b.step("test", "Run unit tests");
-    for ([_]*std.Build.Module{ evecm, evecp, evevm, ewp_protocol, exe.root_module }) |m| {
-        const t = b.addTest(.{ .root_module = m });
-        test_step.dependOn(&b.addRunArtifact(t).step);
+    test_step.dependOn(&b.addRunArtifact(b.addTest(.{ .root_module = exe.root_module })).step);
+    for ([_]*std.Build.Dependency{ evecm_dep, evecp_dep, evevm_dep }) |dep| {
+        test_step.dependOn(&dep.builder.top_level_steps.get("test").?.step);
     }
 }
