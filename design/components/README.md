@@ -12,6 +12,20 @@ The design of the Eve implementation, one folder per component; the source code 
 | [eveux](eveux/README.md) | the native graphical workbench on dvui (early draft) | `bin/eveux.exe` |
 | [evewp](evewp/README.md) | the Eve Web Portal, written in Eve: edge, host, monitor and the web framework (design only) | not built yet |
 
+## Structure
+
+The code and the design are in two places with the same shape for every component:
+
+```
+code/<component>/                       design/components/<component>/
+  src/        the Zig source              README.md   design and state of the work
+  build.zig   only evecp, evetx, eveux    design/     drawings and notes of an interface (evetx, eveux)
+  build.zig.zon                           doc/        user documents, copied into manual/<component>/
+  assets/     optional (evetx: themes)
+```
+
+`code/README.md` lists the components and the license. A component built by the root `build.zig` (`eve`, `evecm`, `evevm`) has no build file of its own; `evecp`, `evetx` and `eveux` have one because they are programs with their own dependencies (`evecp` is also a module of the root build). `evewp` has no code yet, so it has only a design folder. Tools that write code (`script/genidekeywords.py` writes `evecm/src/ide/keywords.zig`) are in `script/`.
+
 ## How they depend on each other
 
 The modules of `eve` are built by the root `build.zig`; an arrow is an import, and a module that is not listed cannot be imported:

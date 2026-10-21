@@ -4,7 +4,7 @@
 //! @decision D-198
 //! @tests code/evecp/src/cli.zig
 //! The commands of the compiler: `check`, `doc` and `project init|new`. They are written once, here, and run in two places:
-//! the program `evecp` (`main.zig`) and the `eve` command (`eve cp ...`, `eve check ...`, `code/eve/cp_cmds.zig`), which calls
+//! the program `evecp` (`main.zig`) and the `eve` command (`eve cp ...`, `eve check ...`, `code/eve/src/cp_cmds.zig`), which calls
 //! these functions in its own process. Both give the same text and the same exit status.
 const std = @import("std");
 const Io = std.Io;

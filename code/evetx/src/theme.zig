@@ -42,7 +42,7 @@ pub const Base = enum { dark, gray, light };
 pub const Theme = struct { name: []const u8, base: Base, colors: Palette };
 
 /// The themes that come with evetx, in the order of the Options dialog. They cannot be changed, renamed or removed: a change
-/// of a color makes a custom copy. More themes are files of the folder `code/evetx/themes/`, which Options > Import reads.
+/// of a color makes a custom copy. More themes are files of the folder `code/evetx/assets/themes/`, which Options > Import reads.
 pub const themes = [_]Theme{
     .{ .name = "Dark Theme", .base = .dark, .colors = .{ 0x171c22, 0x0e1216, 0x25323f, 0x1b252e, 0x3a4753, 0xd0d6dc, 0x7a8794, 0x505b66, 0xffffff, 0x2a4560, 0x264f78, 0x00bfff, 0x3cb371, 0x2f6f4f, 0xf08080, 0xffa500, 0xffa500, 0xf0e060, 0xda9cf0, 0x8f98a3, 0x00bfff, 0xf08080, 0xf08080, 0x4fd8e0, 0x00e676, 0xc0c0c0, 0x9cc7ff, 0x20b2aa } },
     .{ .name = "Gray Theme", .base = .gray, .colors = .{ 0x333333, 0x222222, 0x666666, 0x444444, 0x888888, 0xcccccc, 0x999999, 0x777777, 0xffffff, 0x555555, 0x666666, 0xeeeeee, 0xbbbbbb, 0x555555, 0xffffff, 0xdddddd, 0xffffff, 0xdddddd, 0xaaaaaa, 0x777777, 0x999999, 0xeeeeee, 0x888888, 0xbbbbbb, 0xffffff, 0xcccccc, 0x888888, 0x777777 } },

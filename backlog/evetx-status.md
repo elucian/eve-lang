@@ -25,7 +25,7 @@ The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29
 - [x] Properties renames a file, a folder, a DBF table or a table of a SQLite file; File > Rename… and Rename… of a tab open the same dialog
 - [x] Remote machines removed: the registration form, the machine name and its dropdown on the toolbar, the MACHINE menu, Alt+1 to Alt+3
 - [x] Upload removed (FILE menu and the popup menu of a tab)
-- [x] Themes: the 13 themes exported to [themes/](../code/evetx/themes) as JSON files
+- [x] Themes: the 13 themes exported to [themes/](../code/evetx/assets/themes) as JSON files
 - [x] Themes: three built-in themes, Dark Theme, Gray Theme, Light Theme (from Dark Sage, Shades of Gray, Light Sage); they cannot be changed, renamed or removed
 - [x] Themes: a change of a color of a built-in theme makes a custom theme `Dark Custom1`, `Gray Custom1`, `Light Custom1`, …
 - [x] Themes: many custom themes (up to 24); Rename, Remove, Export (JSON), Import (JSON; a name that is taken gets a number)

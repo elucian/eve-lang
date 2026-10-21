@@ -106,7 +106,7 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "eve",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("code/eve/eve.zig"),
+            .root_source_file = b.path("code/eve/src/eve.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
@@ -130,7 +130,7 @@ pub fn build(b: *std.Build) void {
     b.getInstallStep().dependOn(&install_exe.step);
 
     // Zig tip: `addInstallBinFile` copies a file into `bin/` under another name. The program `evevm` is the very same
-    // file as `eve`: at start it reads its own name (code/eve/eve.zig), and as `evevm` it starts the machine in a new process.
+    // file as `eve`: at start it reads its own name (code/eve/src/eve.zig), and as `evevm` it starts the machine in a new process.
     // `getEmittedBin()` is the file the compiler makes, so the copy waits for the build of `eve`. The extension of the
     // copy follows the target (`.exe` on Windows, none elsewhere).
     const evevm_name = b.fmt("evevm{s}", .{target.result.exeFileExt()});
@@ -155,7 +155,7 @@ pub fn build(b: *std.Build) void {
     }
 
     // The standard library in Eve is found beside the program: `<prefix>/lib/*.eve` for `<prefix>/bin/eve.exe`
-    // (code/eve/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and the copy lands on the same files
+    // (code/eve/src/eve.zig, `standardLibrary`). With `-p .` the prefix is the repository and the copy lands on the same files
     // (Zig 0.17 cannot tell the prefix while configuring, so the step is always there).
     const install_lib = b.addInstallDirectory(.{
         .source_dir = b.path("lib"),
