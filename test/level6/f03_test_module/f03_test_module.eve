@@ -1,4 +1,4 @@
-# the standard module test, written in Eve: checks print one line, count, and summary raises when one failed (D-189)
+# the standard module test, written in Eve: checks print one line, count, and summary raises when one failed
 ** spec: library/test.md
 primary aspect f03_test_module is
   from lib use (test);

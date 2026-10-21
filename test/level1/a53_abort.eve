@@ -1,4 +1,4 @@
-# abort in recover ends the process, runs finalize and passes the error on (D-020)
+# abort in recover ends the process, runs finalize and passes the error on
 ** spec: semantics/errors.md#recover
 primary aspect a53_abort is
   process main is

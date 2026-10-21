@@ -1,4 +1,4 @@
-# tally: a managed module with an atomic counter (D-129, D-132)
+# tally: a managed module with an atomic counter
 managed module tally is
   export (add, total!);
 

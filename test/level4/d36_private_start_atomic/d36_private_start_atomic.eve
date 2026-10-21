@@ -1,4 +1,4 @@
-# a concurrent aspect starts its own private processes; they add to an atomic variable (D-179)
+# a concurrent aspect starts its own private processes; they add to an atomic variable
 ** spec: semantics/multitasking.md#what-can-be-started
 primary aspect d36_private_start_atomic is
   process main is

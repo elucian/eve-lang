@@ -1,4 +1,4 @@
-# on error cancel stops the other tasks after the first failure; they are counted, not listed (D-140)
+# on error cancel stops the other tasks after the first failure; they are counted, not listed
 ** spec: semantics/multitasking.md#errors
 primary aspect d10_on_error_cancel is
   process main is

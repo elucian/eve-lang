@@ -1,4 +1,4 @@
-# a concurrent aspect can also be applied, one call after the other (D-090)
+# a concurrent aspect can also be applied, one call after the other
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b27_aspect_concurrent is
   process main is

@@ -1,4 +1,4 @@
-# an error without recover ends the process with the exit code 4, after finalize (D-081)
+# an error without recover ends the process with the exit code 4, after finalize
 ** spec: semantics/errors.md#ending-the-process
 primary aspect a51_unhandled_error is
   process main is

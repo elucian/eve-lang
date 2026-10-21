@@ -1,4 +1,4 @@
-# a key field can not be changed in an update block: a compile error (D-158)
+# a key field can not be changed in an update block: a compile error
 ** spec: library/database.md#the-update-block
 primary aspect e43_update_block_key is
   class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;

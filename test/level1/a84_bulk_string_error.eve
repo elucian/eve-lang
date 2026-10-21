@@ -1,4 +1,4 @@
-# a bulk operation never builds strings: a string element or scalar is an error (D-118)
+# a bulk operation never builds strings: a string element or scalar is an error
 ** spec: syntax/expressions.md#operators-on-collections
 primary aspect a84_bulk_string_error is
   process main is

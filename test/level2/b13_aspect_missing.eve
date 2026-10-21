@@ -1,4 +1,4 @@
-# apply of an aspect that has no file is an error before the run (D-112)
+# apply of an aspect that has no file is an error before the run
 ** spec: semantics/aspects.md#finding-the-aspect
 primary aspect b13_aspect_missing is
   process main is

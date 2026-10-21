@@ -56,13 +56,13 @@ def rel(path):
 
 
 def level_names():
-    """({1: 'The language of a single script', ...}, {}) from the table of levels of design/feature_map.md."""
+    """({1: 'The language of a single script', ...}, {}) from spec/features/level<N>.json."""
     names = {}
-    with open(os.path.join(ROOT, 'design', 'feature_map.md'), encoding='utf-8') as f:
-        for line in f:
-            m = re.match(r'\|\s*\[Level (\d)\]\([^)]*\)\s*\|\s*([^|]+?)\s*\|', line)
-            if m:
-                names[int(m.group(1))] = m.group(2)
+    for n in range(1, 8):
+        p = os.path.join(ROOT, 'spec', 'features', 'level%d.json' % n)
+        if os.path.exists(p):
+            with open(p, encoding='utf-8') as f:
+                names[n] = json.load(f)['name']
     return names, {}
 
 
@@ -112,7 +112,7 @@ def test_rows(folder, with_code=True):
 
 
 # ------------------------------------------------------------------------------------------ pages
-# One or two words for the title of a level; the full description is the paragraph under it (design/feature_map.md).
+# One or two words for the title of a level; the full description is in spec/features/level<N>.json.
 LEVEL_TITLES = {1: 'Scripts', 2: 'Subprograms', 3: 'Modules', 4: 'Parallel', 5: 'Data', 6: 'Server', 7: 'Web'}
 
 

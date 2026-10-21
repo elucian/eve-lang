@@ -1,4 +1,4 @@
-# an undefined name is a compile error: the script does not start (D-110)
+# an undefined name is a compile error: the script does not start
 ** spec: syntax/declarations.md#variables-and-constants
 primary aspect a68_undefined_name is
   process main is

@@ -1,4 +1,4 @@
-# a generic procedure takes a list of types; the call infers it or writes it (D-148)
+# a generic procedure takes a list of types; the call infers it or writes it
 ** spec: syntax/declarations.md#generic-subprograms
 primary aspect e02_generic_procedure is
   procedure show_all(:T)(label: String, items: ()T) is

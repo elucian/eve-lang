@@ -1,4 +1,4 @@
-# an aspect may apply another aspect, by its name (D-179, it was a compile error with D-066)
+# an aspect may apply another aspect, by its name (it was a compile error with)
 ** spec: semantics/aspects.md#apply
 primary aspect b15_aspect_apply_aspect is
   process main is

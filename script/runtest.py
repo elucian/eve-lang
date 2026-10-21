@@ -1,4 +1,4 @@
-"""Run Eve conformance tests on an Eve implementation and write Markdown reports.
+"""Run Eve conformance tests on an Eve implementation and track the results in JSON.
 
 usage: python script/runtest.py TARGET... [--eve PATH] [--timeout SEC] [--out DIR] [-q] [--repeat N]
 
@@ -10,7 +10,7 @@ TARGET is one of:
   smoke               every test in test/smoke (the tools of the VM: slot, workflow)
   all                 every level, and smoke
   bytecode            the bytecode special tests, test/bytecode: they run on the bytecode machine (EVE_ENGINE=bc);
-                      never part of `all`; the status files are not updated (`python script/bctest.py` runs them too)
+                      never part of `all` (`python script/bctest.py` runs them too)
   scaffold            the special test of `project init` and `project new` (test/scaffold/run.sh,
                       a shell script on real folders); run on its own, never part of `all`
   a03 | a03_print     one test, by name or name prefix, searched in every level
@@ -65,20 +65,19 @@ output that is not found in the real output makes the test FAIL. A legacy
 A file test runs as `<eve> test/levelN/<name>.eve [args]` from the repo root; a project test
 runs as `<eve> <name>.eve [args]` from its folder.
 Verdicts: PASS, FAIL (wrong exit code or stdout), ERROR (timeout, eve missing),
-SKIP. Reports go to temp/output/ (git-ignored): one `<level>/<name>.md` per
-test, plus a summary `<targets>.md` when a run has more than one test.
+SKIP. Reports are JSON in temp/output/ (git-ignored) and exist only for what needs a look: a test that
+fails or errors gets `<level>/<name>.json` (command, exit codes, stdout, stderr, expected output, diff; the
+diff is also printed when one test is run), and a run of more than one test gets `<targets>.json` (the
+verdict, exit code and time of every test). A test that passes leaves no file.
 Exit status: 0 when nothing failed or errored.
 
-After every run the framework updates status.json (history per test) and the
-the list between the TESTS markers of readme.md, both in each level folder. status.json
-keeps, for every test file of test/levelN/: status, failed runs, failed checks and
-reason of the last run, date, title. A new test is added as NEW and a deleted one is
-removed. The readme lists code, name and the title cut to 50 characters, in
-fixed-width columns, and is rewritten only when that list changes. Use --no-update
-to leave these files alone.
+After every run the tracking file of each suite, test/<suite>/<suite>.json (script/testtrack.py), is
+updated: for every test file its status, failed runs, failed checks, reason and date of the last run, title
+and the spec features it covers (`features`, written by hand, kept by the runner). A new test is added as
+NEW and a deleted one is removed. Use --no-update to leave these files alone.
 
 --check is a dry run for syntax errors: `eve --check <test>` must exit 0 (65 when expect.json
-declares "syntax_error": true). Nothing is executed, written or recorded in status.json.
+declares "syntax_error": true). Nothing is executed, written or recorded in the tracking files.
 
 --eve defaults to $EVE, else bin/eve.exe (Windows) or bin/eve.
 """
@@ -93,11 +92,12 @@ import sys
 import tempfile
 import time
 
+import testtrack
 from _common import die
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_DIR = os.path.join(ROOT, "test")
-LEVELS = ("level1", "level2", "level3", "level4", "level5", "level6", "level7", "smoke")
+LEVELS = ("level1", "level2", "level3", "level4", "level5", "level6", "level7", "smoke", "bytecode")
 # Process exit codes, design/decision/level1.md D-010.
 EXIT_MEANING = {0: "normal", 1: "abnormal exit", 2: "error", 3: "warning", 70: "VM not implemented"}
 
@@ -426,38 +426,47 @@ def run_test(eve, test, timeout):
     return res
 
 
-def fence(text, lang="text"):
-    text = text.replace("\r\n", "\n").rstrip("\n")
-    tick = "````" if "```" in text else "```"
-    return f"{tick}{lang}\n{text}\n{tick}\n" if text else "_(empty)_\n"
+def lines_of(text):
+    return text.replace("\r\n", "\n").rstrip("\n").split("\n") if text else []
 
 
-def test_report(res):
-    name = os.path.basename(res["test"])[:-4]
+def failure_report(res):
+    """The report of a test that did not pass: a JSON object with what a person needs to see (no source, the
+    test file is where it is). A passing test has no report."""
     exp = res["expect"]
-    with open(res["test"], encoding="utf-8", errors="replace") as f:
-        source = f.read()
-    exit_cell = exit_label(res["exit"])
-    lines = [
-        f"# {name}: {res['verdict']}", "",
-        "| | |", "|---|---|",
-        f"| Test | `{rel(res['test'])}` |",
-        f"| Command | `{' '.join(res['cmd'])}` |",
-        f"| Exit code | {exit_cell} (expected {exit_label(exp['exit'])}) |",
-        f"| Time | {res['ms']} ms |",
-        f"| Reason | {res['reason'] or '-'} |", "",
-        "## Source", "", fence(source, "eve"),
-        "## stdout", "", fence(res["stdout"]),
-        "## stderr", "", fence(res["stderr"]),
-    ]
+    rep = {"test": rel(res["test"]), "verdict": res["verdict"], "reason": res["reason"],
+           "command": " ".join(res["cmd"]), "exit": res["exit"], "expected_exit": exp["exit"], "ms": res["ms"],
+           "stdout": lines_of(res["stdout"]), "stderr": lines_of(res["stderr"])}
     if "stdout" in exp:
-        lines += ["## Expected stdout", "", fence(exp["stdout"])]
+        rep["expected_stdout"] = lines_of(norm(exp["stdout"]))
         if "stdout differs" in res["reason"]:
-            diff = difflib.unified_diff(norm(exp["stdout"]).split("\n"),
-                                        norm(res["stdout"]).split("\n"),
-                                        "expected", "actual", lineterm="")
-            lines += ["## Diff", "", fence("\n".join(diff), "diff")]
-    return "\n".join(lines)
+            rep["diff"] = list(difflib.unified_diff(norm(exp["stdout"]).split("\n"), norm(res["stdout"]).split("\n"),
+                                                    "expected", "actual", lineterm=""))
+    return rep
+
+
+def write_report(res, out):
+    """temp/output/<level>/<name>.json for a test that failed; the old report of a test that passes is removed."""
+    path = os.path.join(out, level_of(res["test"]), os.path.basename(res["test"])[:-4] + ".json")
+    if res["verdict"] in ("PASS", "SKIP"):
+        if os.path.isfile(path):
+            os.remove(path)
+        return None
+    write(path, json.dumps(failure_report(res), indent=1, ensure_ascii=False))
+    return path
+
+
+def print_diff(res, limit=30):
+    """The diff of a failed test on the console, so that a single run needs no report file."""
+    rep = failure_report(res)
+    shown = rep.get("diff") or []
+    for line in shown[:limit]:
+        print("      " + line)
+    if len(shown) > limit:
+        print(f"      ... {len(shown) - limit} more lines in the report")
+    if not shown and rep["stderr"] and res["verdict"] != "PASS":
+        for line in rep["stderr"][:6]:
+            print("      stderr: " + line)
 
 
 def eve_version(eve):
@@ -466,11 +475,6 @@ def eve_version(eve):
         return p.stdout.decode("utf-8", "replace").strip() or "-"
     except (OSError, subprocess.TimeoutExpired):
         return "not available"
-
-
-BEGIN = "<!-- TESTS:BEGIN (generated by script/runtest.py, do not edit) -->"
-END = "<!-- TESTS:END -->"
-DESC = 45      # width of the description column of the readme list
 
 
 def title_of(test):
@@ -488,14 +492,13 @@ def title_of(test):
 
 
 def update_status(results, now):
-    """For every level folder: sync status.json and the test list of readme.md with the files on disk."""
+    """For every suite folder: sync test/<suite>/<suite>.json with the files on disk and the results of the run."""
     by_level = {}
     for res in results:
         by_level.setdefault(level_of(res["test"]), []).append(res)
     for lv in LEVELS:
-        folder = os.path.join(TEST_DIR, lv)
-        if os.path.isdir(folder):
-            update_level(folder, by_level.get(lv, []), now)
+        if os.path.isdir(os.path.join(TEST_DIR, lv)):
+            update_level(lv, by_level.get(lv, []), now)
     refresh_pages()
 
 
@@ -509,104 +512,30 @@ def refresh_pages():
         print(f"genpages: not updated ({e})")
 
 
-def update_level(folder, results, now):
-    status_file = os.path.join(folder, "status.json")
-    state = {}
-    if os.path.isfile(status_file):
-        with open(status_file, encoding="utf-8") as f:
-            state = json.load(f).get("tests", {})
-    tests = {os.path.basename(p)[:-4]: p for p in level_tests(os.path.basename(folder))}
-    state = {k: v for k, v in state.items() if k in tests}          # removed tests disappear
-    for name, path in tests.items():                                # new tests are appended
-        s = state.setdefault(name, {"status": "NEW", "failures": 0, "runs": 0, "checks": 0, "last": "-"})
-        mtime = int(os.path.getmtime(path))
-        if s.get("mtime") != mtime:        # the title is read again only when the file changed
-            s["mtime"] = mtime
-            s["title"] = title_of(path)
+def update_level(suite, results, now):
+    doc = testtrack.load(suite)
+    found = {os.path.basename(p)[:-4]: (lambda p=p: title_of(p), int(os.path.getmtime(p))) for p in level_tests(suite)}
+    state = testtrack.sync(doc, found)
     for res in results:
-        s = state[os.path.basename(res["test"])[:-4]]
-        s["status"] = res["verdict"]
-        s["checks"] = res.get("checks", 0)
-        s["reason"] = res.get("reason", "")
-        s["last"] = now
-        if res["verdict"] != "SKIP":
-            s["runs"] += 1
-        if res["verdict"] in ("FAIL", "ERROR"):
-            s["failures"] += 1
-    new_json = json.dumps({"tests": dict(sorted(state.items()))}, indent=1, ensure_ascii=False) + "\n"
-    if results or not os.path.isfile(status_file) or new_json != open(status_file, encoding="utf-8", newline="").read():
-        with open(status_file, "w", encoding="utf-8", newline="\n") as f:
-            f.write(new_json)
-    update_readme(os.path.join(folder, "readme.md"), readme_block(state))
+        entry = state[os.path.basename(res["test"])[:-4]]
+        testtrack.record(entry, res["verdict"], res.get("checks", 0), res.get("reason", ""), now)
+    testtrack.save(doc)
 
 
-def update_readme(path, block):
-    text = ""
-    if os.path.isfile(path):
-        with open(path, encoding="utf-8", newline="") as f:
-            text = f.read()
-    eol = "\r\n" if "\r\n" in text else "\n"
-    text = text.replace("\r\n", "\n")
-    if BEGIN in text and END in text:
-        a, b = text.index(BEGIN), text.index(END) + len(END)
-        new_text = text[:a] + block + text[b:]
-    else:
-        new_text = text.rstrip("\n") + "\n\n## Tests\n\n" + block + "\n"
-    if new_text != text:                       # the readme changes only when the list of tests changes
-        with open(path, "w", encoding="utf-8", newline="") as f:
-            f.write(new_text.replace("\n", eol))
-
-
-def wrap_desc(text, width=DESC, rows=2):
-    """The description in at most `rows` lines of `width` characters, joined with <br>, cut at a space;
-    what does not fit in the last line ends with '...'."""
-    words = text.split()
-    lines, cur = [], ""
-    for w in words:
-        if cur and len(cur) + 1 + len(w) > width:
-            lines.append(cur)
-            cur = w
-        else:
-            cur = (cur + " " + w).strip()
-    lines.append(cur)
-    if len(lines) > rows:
-        lines = lines[:rows]
-        last = lines[-1]
-        lines[-1] = (last[:width - 3].rstrip() if len(last) > width - 3 else last) + "..."
-    return "<br>".join(l for l in lines if l)
-
-
-def readme_block(state):
-    """Fixed-width list of the tests of one level, with the status of the last run. The details
-    (failures, runs, last run, reason) are in status.json of the folder."""
-    names = sorted(state, key=natural)
-
-    def code_of(name):
-        head = name.split("_")[0]
-        return head if re.fullmatch(r"[a-z]\d+", head) else "-"
-
-    rows_data = []
-    for name in names:
-        desc = wrap_desc(state[name].get("title", ""))
-        rows_data.append((code_of(name), name, state[name].get("status", "NEW"), desc))
-    heads = ("Code", "Test", "Status", "Description")
-    if all(r[0] == "-" for r in rows_data):          # tests without a code (smoke): no Code column
-        heads = heads[1:]
-        rows_data = [r[1:] for r in rows_data]
-    cols = len(heads)
-    widths = [max(len(heads[i]), *(len(r[i]) for r in rows_data)) if rows_data else len(heads[i]) for i in range(cols)]
-
-    def line(cells):
-        return "| " + " | ".join(c.ljust(w) for c, w in zip(cells, widths)) + " |"
-
-    rows = [line(heads), "|" + "|".join("-" * (w + 2) for w in widths) + "|"]
-    rows += [line(r) for r in rows_data]
-    count = {}
-    for r in rows_data:
-        count[r[-2]] = count.get(r[-2], 0) + 1
-    summary = ", ".join(f"{n} {k}" for k, n in sorted(count.items()))
-    return "\n".join([BEGIN, "", f"{len(state)} tests ({summary}). Failures, runs, last run and the reason of a failure "
-                      "are in `status.json` of this folder.", "", *rows, "", END])
+def run_scaffold(eve, now, update):
+    """The special test of `project init` and `project new` (test/scaffold/): a shell script on real folders.
+    Its verdict is the last line of its output; it is recorded in test/scaffold/scaffold.json as one test."""
+    script = os.path.join(ROOT, "test", "scaffold", "run.sh")
+    p = subprocess.run(["sh", script, eve], capture_output=True)
+    out = p.stdout.decode("utf-8", "replace")
+    print(out + p.stderr.decode("utf-8", "replace"), end="")
+    failed = [l[5:].strip() for l in out.splitlines() if l.startswith("FAIL:")]
+    if update:
+        doc = testtrack.load("scaffold")
+        state = testtrack.sync(doc, {"scaffold": (lambda: "project init and project new on real folders", int(os.path.getmtime(script)))})
+        testtrack.record(state["scaffold"], "PASS" if p.returncode == 0 else "FAIL", len(failed), "; ".join(failed), now)
+        testtrack.save(doc)
+    return p.returncode
 
 
 def write(path, text):
@@ -661,15 +590,15 @@ def main():
                     help="dry run: only check the syntax of the scripts with `eve --check`, do not execute or compare "
                          "output; no reports, no status update")
     ap.add_argument("--no-update", action="store_true",
-                    help="do not update test/status.json and test/readme.md")
+                    help="do not update the tracking files test/<suite>/<suite>.json")
     ap.add_argument("--repeat", type=int, default=1, metavar="N",
                     help="run every test N times; a test passes only when every run passes (determinism, D-144)")
     ap.add_argument("--engine", choices=["tree", "bc"], default="tree",
                     help="the engine of the VM: tree (the reference, default) or bc (the bytecode machine, design/design-bytecode.md); "
-                         "a bc run writes its reports to temp/output-bc and never updates the status files or the tutorial pages")
+                         "a bc run writes its reports to temp/output-bc and never updates the tracking files or the tutorial pages")
     ap.add_argument("--both", action="store_true",
                     help="run every test on the tree walker and on the bytecode machine: both must pass and give the same exit code, "
-                         "output and error output (the reports go to temp/output-both; the status files are not updated)")
+                         "output and error output (the reports go to temp/output-both; the tracking files are not updated)")
     args = ap.parse_args()
     if args.both:
         args.no_update = True
@@ -684,9 +613,8 @@ def main():
     version = eve_version(eve)
 
     if args.targets == ["scaffold"]:
-        # The special test (test/scaffold/readme.md): a shell script, with its own verdict and exit status.
-        script = os.path.join(ROOT, "test", "scaffold", "run.sh")
-        sys.exit(subprocess.run(["sh", script, eve]).returncode)
+        # The special test (test/scaffold/): a shell script, with its own verdict, recorded in scaffold.json.
+        sys.exit(run_scaffold(eve, f"{datetime.datetime.now():%Y-%m-%d %H:%M}", not args.no_update))
 
     labels, tests = [], []
     for target in args.targets:
@@ -698,9 +626,6 @@ def main():
         label = label[:50] + "-etc"   # a long list of tests would be a file name too long for the system
     if not tests:
         die(f"no tests in {label}")
-    if any(level_of(t) == "bytecode" for t in tests):
-        args.no_update = True   # the bytecode suite has no status file or page of its own
-
     if args.check:
         bad = 0
         for test in tests:
@@ -715,49 +640,41 @@ def main():
     for test in tests:
         if args.both:
             res = run_both(eve, test, args.timeout)
-            results.append(res)
-            report = os.path.join(args.out, level_of(test), os.path.basename(test)[:-4] + ".md")
-            write(report, test_report(res))
-            res["report"] = report
-            if not args.quiet or res["verdict"] != "PASS":
-                print(f"{res['verdict']:5}  {rel(test)}" + (f"  ({res['reason']})" if res["reason"] else ""))
-            continue
-        res = run_test(eve, test, args.timeout)
-        for k in range(2, max(args.repeat, 1) + 1):
-            if res["verdict"] != "PASS":
-                break
-            again = run_test(eve, test, args.timeout)
-            if again["verdict"] != "PASS":
-                again["reason"] = f"run {k} of {args.repeat}: {again['reason']}"
-                res = again
+        else:
+            res = run_test(eve, test, args.timeout)
+            for k in range(2, max(args.repeat, 1) + 1):
+                if res["verdict"] != "PASS":
+                    break
+                again = run_test(eve, test, args.timeout)
+                if again["verdict"] != "PASS":
+                    again["reason"] = f"run {k} of {args.repeat}: {again['reason']}"
+                    res = again
         results.append(res)
-        report = os.path.join(args.out, level_of(test), os.path.basename(test)[:-4] + ".md")
-        write(report, test_report(res))
-        res["report"] = report
-        if not args.quiet:
+        res["report"] = write_report(res, args.out)
+        if res["verdict"] != "PASS" or not args.quiet:
             print(f"{res['verdict']:5}  {rel(test)}" + (f"  ({res['reason']})" if res["reason"] else ""))
+        if res["verdict"] in ("FAIL", "ERROR") and len(tests) == 1:
+            print_diff(res)
 
+    now = f"{datetime.datetime.now():%Y-%m-%d %H:%M}"
     if not args.no_update:
-        update_status(results, f"{datetime.datetime.now():%Y-%m-%d %H:%M}")
+        update_status(results, now)
     counts = {v: sum(r["verdict"] == v for r in results) for v in ("PASS", "FAIL", "ERROR", "SKIP")}
     tally = ", ".join(f"{n} {v.lower()}" for v, n in counts.items())
+    failed = counts["FAIL"] or counts["ERROR"]
     if len(results) == 1:
-        print(f"{label}: {tally}  -> {rel(results[0]['report'])}")
-        sys.exit(1 if counts["FAIL"] or counts["ERROR"] else 0)
-    summary_path = os.path.join(args.out, label + ".md")
-    rows = [f"| [{os.path.basename(r['test'])[:-4]}]"
-            f"({os.path.relpath(r['report'], args.out).replace(os.sep, '/')}) | {r['verdict']} | "
-            f"{exit_label(r['exit'])} | {r['ms']} | {r['reason'] or '-'} |"
-            for r in results]
-    write(summary_path, "\n".join([
-        f"# Test run: {label}", "",
-        f"- Date: {datetime.datetime.now():%Y-%m-%d %H:%M}",
-        f"- Implementation: `{rel(eve) if eve.startswith(ROOT) else eve}` ({version})",
-        f"- Result: {tally}", "",
-        "| Test | Verdict | Exit | ms | Reason |", "|---|---|---|---|---|", *rows,
-    ]))
+        where = f"  -> {rel(results[0]['report'])}" if results[0]["report"] else ""
+        print(f"{label}: {tally}{where}")
+        sys.exit(1 if failed else 0)
+    summary_path = os.path.join(args.out, label + ".json")
+    rows = ",\n".join("  " + json.dumps({"test": os.path.basename(r["test"])[:-4], "verdict": r["verdict"], "exit": r["exit"],
+                                         "ms": r["ms"], "reason": r["reason"], "report": rel(r["report"]) if r["report"] else None},
+                                        ensure_ascii=False) for r in results)
+    head = json.dumps({"run": label, "date": now, "eve": rel(eve) if eve.startswith(ROOT) else eve, "version": version,
+                       "counts": counts}, ensure_ascii=False)
+    write(summary_path, head[:-1] + ', "results": [\n' + rows + "\n]}")
     print(f"{label}: {tally}  -> {rel(summary_path)}")
-    sys.exit(1 if counts["FAIL"] or counts["ERROR"] else 0)
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":

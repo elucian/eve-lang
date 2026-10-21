@@ -1,4 +1,4 @@
-# no aspect applies a primary aspect: it is run by a command (D-181)
+# no aspect applies a primary aspect: it is run by a command
 ** spec: syntax/declarations.md#scripts
 primary aspect b45_primary_not_applied is
   process main is

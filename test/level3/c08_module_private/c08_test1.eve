@@ -1,4 +1,4 @@
-# variation 1 of c08: the exported members only (D-133)
+# variation 1 of c08: the exported members only
 ** spec: semantics/modules.md#members
 primary aspect c08_test1 is
   from lib use (counter);

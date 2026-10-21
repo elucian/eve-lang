@@ -1,4 +1,4 @@
-# in a macro, no aspect applies the primary aspect (D-180, D-181)
+# in a macro, no aspect applies the primary aspect
 ** spec: syntax/declarations.md#eve-macro-level-5
 exclusive aspect helper is
   process main is

@@ -1,4 +1,4 @@
-# a private process is applied by its bare name, in the aspect that declares it (D-179)
+# a private process is applied by its bare name, in the aspect that declares it
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b50_private_process is
   process show(label: String, n: Integer) is

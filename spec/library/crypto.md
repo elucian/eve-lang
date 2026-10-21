@@ -1,6 +1,6 @@
 # The module `crypto`
 
-Status: **draft**, level 6 (D-189). Feature: F-LIB-10. Native module (Zig, `std.crypto`), signatures in `lib/sys/crypto.eve`. Tests: `test/level6/f04_crypto`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6. Feature: F-LIB-10. Native module (Zig, `std.crypto`), signatures in `lib/sys/crypto.eve`. Registry: [registry.md](registry.md).
 
 Hashes, a keyed hash, random bytes and the text codecs. A `String` is a sequence of bytes (UTF-8 text); a function that works on bytes takes and gives a `String`, and a digest is given as lower-case hexadecimal text.
 
@@ -12,7 +12,7 @@ Hashes, a keyed hash, random bytes and the text codecs. A `String` is a sequence
 | `hmac_sha256(key: String or Secret, data: String)` | `String` (64 hex digits) | HMAC-SHA-256 (RFC 2104) |
 | `hex_encode(data: String)` / `hex_decode(text: String)` | `String` | bytes to hex and back; a bad digit is `$err_argument` |
 | `base64_encode(data: String)` / `base64_decode(text: String)` | `String` | standard Base64 with padding (RFC 4648); a bad character is `$err_argument` |
-| `random_hex!(n: Natural)` | `String` (2n hex digits) | `n` random bytes from the system generator; non-deterministic, so `!` (D-087) |
+| `random_hex!(n: Natural)` | `String` (2n hex digits) | `n` random bytes from the system generator; non-deterministic, so `!` |
 | `same(a: String, b: String)` | `Logic` | equality that takes the same time whatever the position of the first difference (for tokens and digests) |
 
 `base64_decode` and `hex_decode` give bytes that need not be valid UTF-8; such a `String` can be written with `fs.write_bytes` after conversion, or compared, but printing it is the business of the caller.

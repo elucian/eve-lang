@@ -1,4 +1,4 @@
-# jobs: retry runs a failed job again, resume goes on after it (D-020, D-034)
+# jobs: retry runs a failed job again, resume goes on after it
 ** spec: semantics/control.md#job, semantics/errors.md#recover
 primary aspect a34_jobs is
   process main is

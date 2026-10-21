@@ -1,4 +1,4 @@
-# a started private process uses only the thread-safe names of its aspect (D-179)
+# a started private process uses only the thread-safe names of its aspect
 ** spec: semantics/multitasking.md#what-can-be-started
 primary aspect d37_private_start_plain is
   process main is

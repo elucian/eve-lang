@@ -1,4 +1,4 @@
-# an Eve macro starts its concurrent aspects in a parallel group; a shared class carries the results (D-152)
+# an Eve macro starts its concurrent aspects in a parallel group; a shared class carries the results
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 class Result = {name :String, count :Integer} <: Object is

@@ -1,4 +1,4 @@
-# an argument of the wrong type is a check-time error (D-112)
+# an argument of the wrong type is a check-time error
 ** spec: semantics/aspects.md#arguments
 primary aspect b22_aspect_wrong_type is
   process main is

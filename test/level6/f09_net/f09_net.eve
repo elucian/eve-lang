@@ -1,4 +1,4 @@
-# the system module net: a server and a client as tasks of one script, lines over TCP (F-NET-02, D-189)
+# the system module net: a server and a client as tasks of one script, lines over TCP (F-NET-02)
 ** spec: library/net.md
 primary aspect f09_net is
   async procedure echo(server: Listener, times: Integer) is

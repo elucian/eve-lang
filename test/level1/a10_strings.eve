@@ -1,4 +1,4 @@
-# strings are immutable UTF-8 text (D-058, D-080)
+# strings are immutable UTF-8 text
 ** spec: semantics/types.md#strings
 primary aspect a10_strings is
   process main is

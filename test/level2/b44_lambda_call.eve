@@ -1,4 +1,4 @@
-# a lambda is not called where it is written: it gets a name, then the name is called (D-147)
+# a lambda is not called where it is written: it gets a name, then the name is called
 ** spec: syntax/expressions.md#index-slice-member
 primary aspect b44_lambda_call is
   process main is

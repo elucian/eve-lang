@@ -1,4 +1,4 @@
-# a macro: the primary aspect applies a concurrent aspect that starts its own private processes (D-179, D-180)
+# a macro: the primary aspect applies a concurrent aspect that starts its own private processes
 ** spec: syntax/declarations.md#eve-macro-level-5
 concurrent aspect pipeline is
   process ingest(source: String) is

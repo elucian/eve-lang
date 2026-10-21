@@ -1,4 +1,4 @@
-# the standard module rpc, in Eve: build JSON-RPC 2.0 lines (F-NET-08, D-189)
+# the standard module rpc, in Eve: build JSON-RPC 2.0 lines (F-NET-08)
 ** spec: library/rpc.md
 primary aspect f07_rpc is
   from lib use (rpc);

@@ -1,4 +1,4 @@
-# variation 1 of c29: the atomic counter, many times (D-133)
+# variation 1 of c29: the atomic counter, many times
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c29_test1 is
   from lib use (hits);

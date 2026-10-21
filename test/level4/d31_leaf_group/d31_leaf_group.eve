@@ -1,4 +1,4 @@
-# a concurrent aspect of the third level is a leaf: a parallel group in it is a compile error (D-081, D-140, D-183)
+# a concurrent aspect of the third level is a leaf: a parallel group in it is a compile error
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d31_leaf_group is
   process main is

@@ -1,4 +1,4 @@
-# variation 1 of b10: the function of the aspect with its default and by name (D-133)
+# variation 1 of b10: the function of the aspect with its default and by name
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b10_test1 is
   process main is

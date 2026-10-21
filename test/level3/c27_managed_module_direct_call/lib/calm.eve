@@ -1,4 +1,4 @@
-# calm: a managed module can't use the functions or the procedures of a direct module (D-129)
+# calm: a managed module can't use the functions or the procedures of a direct module
 managed module calm is
   from lib use (raw);
   export (work);

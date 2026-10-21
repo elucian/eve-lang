@@ -1,4 +1,4 @@
-# a service with no count runs until its listener is closed; close wakes the pending accept (F-NET-02, D-189)
+# a service with no count runs until its listener is closed; close wakes the pending accept (F-NET-02)
 ** spec: library/net.md#waiting
 primary aspect f12_service_close is
   from lib use (http, route, service);

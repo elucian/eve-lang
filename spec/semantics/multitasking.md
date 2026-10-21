@@ -1,8 +1,8 @@
 # Multitasking: parallel groups, channels and tasks
 
-Status: **draft**, level 4. Sources: D-047, D-048, D-051, D-066, D-067, D-081, D-089, D-090, D-104, D-129, D-130, D-132, D-140 to D-145, D-152 (Eve macro). Tests: `test/level4` (d01 to d40). Grammar: [`../syntax/grammar.md#parallel-processing-level-4`](../syntax/grammar.md#parallel-processing-level-4). Thread safety of modules: [`modules.md#managed-and-direct-modules`](modules.md#managed-and-direct-modules).
+Status: **draft**, level 4. (Eve macro). Grammar: [`../syntax/grammar.md#parallel-processing-level-4`](../syntax/grammar.md#parallel-processing-level-4). Thread safety of modules: [`modules.md#managed-and-direct-modules`](modules.md#managed-and-direct-modules).
 
-Eve has two ways to do several things at once. A **parallel group** starts aspects on several cores. A **job with tasks** runs asynchronous subprograms on one core, taking turns while they wait. **Channels** connect tasks that run at the same time. The tutorial calls the first **concurrency** (`concurrency.html`) and the second **multitasking** (`multitasking.html`), two pages of phase 5 (D-146). Generators and the module `task` are level 5.
+Eve has two ways to do several things at once. A **parallel group** starts aspects on several cores. A **job with tasks** runs asynchronous subprograms on one core, taking turns while they wait. **Channels** connect tasks that run at the same time. The tutorial calls the first **concurrency** (`concurrency.html`) and the second **multitasking** (`multitasking.html`), two pages of phase 5. Generators and the module `task` are level 5.
 
 | Word | Meaning |
 |---|---|
@@ -37,23 +37,23 @@ done [label];
 | an applied aspect that is not in the first two levels, a function, a procedure, a method | no | no |
 | outside the `do` region of a group | | no |
 
-The levels are those of the calls between aspects (D-179: at most three, no cycle). Only the call of an aspect makes a level; a private process started in a group is a task of that group and counts in its limit of 2 at level 2, but it is not a level. A primary aspect is serial: its processes are applied and a `start` of one of them is a compile error; its groups start aspects.
+The levels are those of the calls between aspects (: at most three, no cycle). Only the call of an aspect makes a level; a private process started in a group is a task of that group and counts in its limit of 2 at level 2, but it is not a level. A primary aspect is serial: its processes are applied and a `start` of one of them is a compile error; its groups start aspects.
 
 A violation is a compile error (exit 65). `$max_parallel` (default 8) is not a compile rule: a start beyond it waits until a task of the group has ended.
 
 ### What can be started
 
-`start` starts a `concurrent aspect`, or a private process of the concurrent aspect in which it is written (D-179). An aspect without a kind word is `exclusive` (D-130), a `primary` aspect is run by a command (D-181), and starting either is a compile error that names the aspect. A private process of an exclusive or primary aspect is applied, and a `start` of it is a compile error. A concurrent aspect is checked at its declaration: it fails to compile when it can reach a function or procedure that is not thread safe (D-089, D-129, D-137). A private process that is started uses only the thread-safe names of its aspect: constants, atomic variables, channels and thread-safe subprograms; any other aspect-level name is a compile error that names it and the chain of calls. A private process that is only applied uses every name of its aspect.
+`start` starts a `concurrent aspect`, or a private process of the concurrent aspect in which it is written. An aspect without a kind word is `exclusive`, a `primary` aspect is run by a command, and starting either is a compile error that names the aspect. A private process of an exclusive or primary aspect is applied, and a `start` of it is a compile error. A concurrent aspect is checked at its declaration: it fails to compile when it can reach a function or procedure that is not thread safe. A private process that is started uses only the thread-safe names of its aspect: constants, atomic variables, channels and thread-safe subprograms; any other aspect-level name is a compile error that names it and the chain of calls. A private process that is only applied uses every name of its aspect.
 
-In an **Eve macro** (level 5, D-152) the aspects share the top-level declarations of the file. A concurrent aspect uses only the thread-safe ones: constants, classes, atomic variables, channels, and subprograms that the compiler proves safe (`../syntax/declarations.md#eve-macro-level-5`; tests e17 to e20).
+In an **Eve macro** (level 5) the aspects share the top-level declarations of the file. A concurrent aspect uses only the thread-safe ones: constants, classes, atomic variables, channels, and subprograms that the compiler proves safe (`../syntax/declarations.md#eve-macro-level-5`; tests e17 to e20).
 
 ### Data rules
 
 - **Inputs by value.** The arguments are evaluated at `start` and copied: the task works on its own copy and the process that started it may go on changing its variables.
 - **One owner for each output.** An `@` argument is a reference that belongs to one task. The compiler rejects the same variable, or the same element with a constant index, given to two starts of a group. The VM checks elements with a computed index at `start`. Both report `$err_output` 43: `Output {name} is given to two tasks of the group`.
 - **Channels** are the only objects that several tasks may share (see below).
-- **Modules are shared**: every task sees the same copy of a module. A concurrent aspect calls only thread-safe members (`modules.md`). The variables of a managed module are `Atomic(:T)` (D-132), so `let count += 1;` from several tasks gives the exact total.
-- An aspect sees no variable of the aspect that calls it, and its state belongs to one task (D-066).
+- **Modules are shared**: every task sees the same copy of a module. A concurrent aspect calls only thread-safe members (`modules.md`). The variables of a managed module are `Atomic(:T)`, so `let count += 1;` from several tasks gives the exact total.
+- An aspect sees no variable of the aspect that calls it, and its state belongs to one task.
 
 ### Output
 
@@ -91,7 +91,7 @@ new jobs := Channel(:Integer)(capacity: 100);
 new results := Channel(:Integer)(capacity: 100, senders: 4);
 ```
 
-`Channel(:T)` is a generic class of the core library (D-145). `capacity` is required; `senders` (default 1) is the number of closes after which the channel is closed. A channel is created before a group or in its declarations and passed to tasks with `@`: the parameter is declared `@jobs: Channel(:Integer)`.
+`Channel(:T)` is a generic class of the core library. `capacity` is required; `senders` (default 1) is the number of closes after which the channel is closed. A channel is created before a group or in its declarations and passed to tasks with `@`: the parameter is declared `@jobs: Channel(:Integer)`.
 
 | Operation | Meaning |
 |---|---|
@@ -110,7 +110,7 @@ new results := Channel(:Integer)(capacity: 100, senders: 4);
 
 ## Streams and batches
 
-`Stream(:T)` is a library trait that extends `Iterable(:T)`: `for x in s do` reads it value by value and waits when the next value is not ready (back-pressure). In level 4, `Channel(:T)` is the only stream; lists and ranges are `Iterable`. Generators, file lines and query results become streams in level 5 (D-142).
+`Stream(:T)` is a library trait that extends `Iterable(:T)`: `for x in s do` reads it value by value and waits when the next value is not ready (back-pressure). In level 4, `Channel(:T)` is the only stream; lists and ranges are `Iterable`. Generators, file lines and query results become streams in level 5.
 
 A group splits its data by hand, with two methods of lists. The size is always written at the call:
 
@@ -134,7 +134,7 @@ for s in sums do let total += s; done;
 
 ## Tasks in a job
 
-An asynchronous subprogram runs as a task that shares the core of its caller (D-104, D-143).
+An asynchronous subprogram runs as a task that shares the core of its caller.
 
 ```eve
 async procedure load(path: String, @text: String) is … return;
@@ -177,7 +177,7 @@ Each is a compile error (exit 65). The message holds the text of the second colu
 
 ## Durations
 
-A duration literal is an integer followed at once by a unit: `ms`, `s`, `m`, `h` (`10ms`, `30s`, `2m`, `1h`). Its type is `Duration`. Level 4 uses durations in `within`, `wait duration;` and `$timeout`; their arithmetic and the time types are level 5 (D-125, D-144).
+A duration literal is an integer followed at once by a unit: `ms`, `s`, `m`, `h` (`10ms`, `30s`, `2m`, `1h`). Its type is `Duration`. Level 4 uses durations in `within`, `wait duration;` and `$timeout`; their arithmetic and the time types are level 5.
 
 ## Determinism
 
@@ -185,11 +185,11 @@ A program whose result does not depend on the order of values from several sende
 
 ## Implementation notes
 
-Not normative (D-144). An implementation may reach the rules above in stages.
+Not normative. An implementation may reach the rules above in stages.
 
 1. **Stage A, one core.** Each task runs on its own interpreter thread, but only the thread holding the baton runs. The baton passes when the running task waits (channel, `wait`, `await`, inner `done`, end of task), to the next ready task in the order of `start`. Deterministic by construction; a deadlock is "every unfinished task waits and no timer is pending".
 2. **Stage B, many cores.** Up to `$cores` batons. Channels use a mutex and a condition; `Atomic(:T)` uses the atomics of the machine; the module table is read only after the link step.
-3. **Stage C, memory.** The reference VM frees memory while it runs (D-151): values are reference counted and freed at the safe point of the region that made them (the end of a statement, of a pass of a loop, of a `done`); a tracing collector frees cycles at `done`. While the tasks of a group or a job run, nothing is freed: the zero counts wait until `done`. An arena per task, freed when the task ends, is a later step.
+3. **Stage C, memory.** The reference VM frees memory while it runs: values are reference counted and freed at the safe point of the region that made them (the end of a statement, of a pass of a loop, of a `done`); a tracing collector frees cycles at `done`. While the tasks of a group or a job run, nothing is freed: the zero counts wait until `done`. An arena per task, freed when the task ends, is a later step.
 
 `Mutex` is not part of level 4.
 

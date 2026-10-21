@@ -1,4 +1,4 @@
-# retry and resume need a failed job: in the recover of a function they are a run-time error (D-192)
+# retry and resume need a failed job: in the recover of a function they are a run-time error
 ** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
 primary aspect b58_recover_retry_refused is
   procedure flaky() is

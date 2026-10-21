@@ -1,10 +1,10 @@
 # Atomic
 
-Status: **draft**, standard library (D-132). The declaration is level 3 (it makes a variable of a managed module legal, `semantics/modules.md`); the operations that need threads are level 4. Tests: `test/level3` (c29, c30, c31).
+Status: **draft**, standard library. The declaration is level 3 (it makes a variable of a managed module legal, `semantics/modules.md`); the operations that need threads are level 4.
 
 ## What it is
 
-`Atomic(:T)` is a class of the standard library. It wraps the atomic of the machine (the virtual machine is written in Zig, and the class is a wrapper of the Zig atomic): each operation on the value is indivisible, needs no lock and can never be part of a deadlock. A variable of an atomic type is thread safe, so a `safe` module may have it (D-129), and a concurrent aspect may use it.
+`Atomic(:T)` is a class of the standard library. It wraps the atomic of the machine (the virtual machine is written in Zig, and the class is a wrapper of the Zig atomic): each operation on the value is indivisible, needs no lock and can never be part of a deadlock. A variable of an atomic type is thread safe, so a `safe` module may have it, and a concurrent aspect may use it.
 
 `T` is one of:
 

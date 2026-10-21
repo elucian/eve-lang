@@ -1,4 +1,4 @@
-# a module may declare external functions and procedures (no body), exported by name, even a reserved word like write (D-056, D-085, D-189)
+# a module may declare external functions and procedures (no body), exported by name, even a reserved word like write
 ** spec: semantics/modules.md#members
 primary aspect c29_external_signature is
   from lib use (native);

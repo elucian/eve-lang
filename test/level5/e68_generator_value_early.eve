@@ -1,4 +1,4 @@
-# reading g.value before the first next() is an error (D-067)
+# reading g.value before the first next() is an error
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e68_generator_value_early is
   generator count_to(n: Integer) => (@x: Integer) is

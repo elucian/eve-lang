@@ -1,4 +1,4 @@
-# DataSet: sorted unique values, union, intersection, difference (D-058)
+# DataSet: sorted unique values, union, intersection, difference
 ** spec: semantics/types.md#composite-types
 primary aspect a20_dataset is
   process main is

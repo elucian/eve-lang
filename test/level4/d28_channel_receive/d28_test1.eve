@@ -1,4 +1,4 @@
-# variation 1 of d28: receive from a closed, empty channel raises ChannelError 46 (D-141)
+# variation 1 of d28: receive from a closed, empty channel raises ChannelError 46
 ** spec: semantics/multitasking.md#channels
 primary aspect d28_test1 is
   process main is

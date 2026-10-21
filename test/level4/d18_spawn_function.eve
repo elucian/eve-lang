@@ -1,4 +1,4 @@
-# spawn of an async function is a compile error: its result would be lost (D-143)
+# spawn of an async function is a compile error: its result would be lost
 ** spec: semantics/multitasking.md#tasks-in-a-job
 primary aspect d18_spawn_function is
   async function double(n: Integer) => (@result: Integer) is

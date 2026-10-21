@@ -1,4 +1,4 @@
-## Eve stored procedures of the shop: archive old orders, and a SQL function for the totals (D-166)
+## Eve stored procedures of the shop: archive old orders, and a SQL function for the totals
 module orders is
   export (archive, cents);
 

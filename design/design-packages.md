@@ -20,7 +20,7 @@ Status: **approved by the author**, 2026-10-12 (revision 5): recorded as Q-049 a
   - **no TLS in `eve.exe`**: the machine speaks plain JSON-RPC/HTTP on loopback, and a reverse proxy gives HTTPS to remote clients (§5, §6);
   - **`sql function`s called by DuckDB threads** are guarded by a session mutex or a thread-safe execution pool, measured in A9 before query concurrency grows (§7).
 
-Related: [design-service.md](design-service.md), [design-database-core.md](design-database-core.md), [design-database-remote.md](design-database-remote.md), [spec/library/machine.md](../spec/library/machine.md) (D-162), [drivers/duckdb/README.md](../drivers/duckdb/README.md), [code/eveux/README.md](../code/eveux/README.md), [feature_map.md](feature_map.md), [design/release.md](release.md) (D-153).
+Related: [design-service.md](design-service.md), [design-database-core.md](design-database-core.md), [design-database-remote.md](design-database-remote.md), [spec/library/machine.md](../spec/library/machine.md) (D-162), [drivers/duckdb/README.md](../drivers/duckdb/README.md), [code/eveux/README.md](../code/eveux/README.md), spec/features, [design/release.md](release.md) (D-153).
 
 ## 1. Decisions to record
 
@@ -31,7 +31,7 @@ Related: [design-service.md](design-service.md), [design-database-core.md](desig
 | **D-165** The machine API | evevm started with `-lsn` exposes a JSON-RPC 2.0 machine API over a Unix socket, or plain HTTP bound to loopback; **`eve.exe` holds no TLS server**, and a remote machine is reached through a reverse proxy (Nginx, Caddy, Cloudflare Tunnel) that gives HTTPS: `vm.ping`, `vm.stat`, `vm.run`, `vm.eval`, `vm.suspend`, `vm.resume`, `vm.inspect`, `vm.cancel`, `vm.stop`. The database part answers `db.*`. `eve -rem` and eveux are **clients**: they speak ACP to AI agents and IDEs and turn the intent of the agent into the exact `vm.*` calls of the remote evevm. | 1, 1a, review of revision 4 |
 | **D-166** Stored procedures and `sql function` | **Two kinds of stored procedures:** native ones (PL/SQL, PL/pgSQL, …) in the `sql/` folder of a project, called through `external` declarations (signature only); and Eve procedures in its `proc/` folder, run by evedb for SQLite and DuckDB. **`sql function name`** (new keyword `sql`) marks an Eve function that evedb registers as a SQL function in SQLite and DuckDB through their C API. Other databases get no custom functions: their data is brought into the process, changed in Eve, and written back in bulk or row by row. SQLite is linked into `eve.exe`; DuckDB is loaded only when a DuckDB connection opens. A `sql function` that DuckDB calls from its worker threads runs under a session mutex or a thread-safe execution pool. | 7, 10, 14, 15, review of revision 4 |
 | **D-170** (proposed, Q-050; scope by D-173) The terminal UI | A new module `evetx` (the option `eve -tx`, D-172; the word `eve tx`; shortcut `./run.sh evetx`) is a full-screen TUI built on the Zig library libvaxis, a package dependency of that module alone (nothing to bind: libvaxis is Zig). It is a **project IDE**: file tree, editor, run and debug, database tabs with a structure dialog, and the machine chosen with F1 to F3. It imports `evecm` only, like `eveux`, and reaches machines through the machine API (`vm.*`, `db.*`). Schedules and runs are `eveux` work. It belongs to level 6, version 0.0.6, step B6. | the author's requests of 2026-10-13 |
-| **D-167** Versions | One version for everything. It is written once (the root `build.zig.zon`), and the release notes stay in `manual/releases/` (D-153). **Version N is level N**: today 0.0.3 (levels 1 to 3); 0.0.4 is level 4, 0.0.5 level 5, 0.0.6 level 6. The split lands in 0.0.5 and 0.0.6; the bytecode (F-VM-04, F-VM-07) moves to 0.0.6. The headings of `feature_map.md` (today "Version 0.4 = Level 5") are renumbered to match, which revises D-138. | 8, 9, 13 |
+| **D-167** Versions | One version for everything. It is written once (the root `build.zig.zon`), and the release notes stay in `manual/releases/` (D-153). **Version N is level N**: today 0.0.3 (levels 1 to 3); 0.0.4 is level 4, 0.0.5 level 5, 0.0.6 level 6. The split lands in 0.0.5 and 0.0.6; the bytecode (F-VM-04, F-VM-07) moves to 0.0.6. The headings of `spec/features/` (today "Version 0.4 = Level 5") are renumbered to match, which revises D-138. | 8, 9, 13 |
 
 **Decisions that change:**
 
@@ -302,7 +302,7 @@ A step is done when all of them pass. A slowdown above 10% is explained in `test
 
 - Every moved function, type or test keeps its `// Zig tip:`; a cut file gets the tips its new half needs. New code gets tips: the vtable pattern, `*anyopaque`, `@ptrCast`, `std.DynLib`, `std.Thread.Mutex`, `std.Io` tasks.
 - Cuts and moves are separate commits, so `git log --follow` still works.
-- `design/feature_map.md` is updated when a feature changes stage.
+- `spec/features/` is updated when a feature changes stage.
 
 ### Phase A, version 0.0.5 (level 5): the split, `eve db`, `sql function`, `proc/`
 
@@ -321,7 +321,7 @@ What the user sees: `eve vm`, `eve cp`, `eve db` (the former `evedb.exe`), `eve 
 | **A8 Parts and `run.sh`** | The first word `vm`, `cp`, `db`, `ux` chooses the part; `eve db …` takes over the commands of `evedb.exe`; the old forms stay as synonyms; `run.sh` gets the shortcuts of §4; `runtest.py` starts `eve db serve --test`; `eve project new` may write a start script. | `./run.sh evedb --version` prints the version of `eve`; the shortcuts work from a test project with relative paths; the remote-path tests run against `eve db serve --test` |
 | **A9 `sql function`** | Spec first: the keyword (contextual or reserved, the author's choice) in `spec/lexical/keywords.json`, a page in `spec/library/`; tests (level 5, after e95) for SQLite and DuckDB; then the code: the checker collects them, evedb registers them, `Host.call` runs them. A benchmark `p5x_sql_function` with its Python twin (`sqlite3.Connection.create_function`). | the tests pass on both engines; the benchmark is in the table |
 | **A10 Stored procedures** | Spec and tests first: `sql/` (native, through `external`) and `proc/` (Eve, run by evedb); `evedb proc list` and `evedb proc reload`; calls from a script and from SQL. | the tests pass |
-| **A11 Tools and documents** | `runtest.py`, `bmark.py` (build from the root), `release.py`, `relnotes.py`, `gen_nfc.py`, `genkeywords.py`; `CLAUDE.md`; the READMEs of the modules; `manual/usage.md` (the parts, `run.sh`, `eve db`); `feature_map.md` renumbered (D-167); a paragraph in `test/bmark/README.md` (speed and size against A0) | `mdlinks.py check manual` and `relnotes.py --check` clean. The release itself only when the author asks (D-153). |
+| **A11 Tools and documents** | `runtest.py`, `bmark.py` (build from the root), `release.py`, `relnotes.py`, `gen_nfc.py`, `genkeywords.py`; `CLAUDE.md`; the READMEs of the modules; `manual/usage.md` (the parts, `run.sh`, `eve db`); `spec/features/` renumbered (D-167); a paragraph in `test/bmark/README.md` (speed and size against A0) | `mdlinks.py check manual` and `relnotes.py --check` clean. The release itself only when the author asks (D-153). |
 
 ### Phase B, version 0.0.6 (level 6): the serving machine, the APIs, ACP, the bytecode
 
@@ -341,7 +341,7 @@ What the user sees: `eve vm`, `eve cp`, `eve db` (the former `evedb.exe`), `eve 
 |---|---|---|
 | `design/decision/level6.md` | before A0 | Q-049 and D-163 to D-167 (§1) |
 | `code/evetx/README.md`, `manual/usage.md`, tutorial page | B6, B7 | `eve tx`, the views, the keys; the page after the spec of `sched.*` |
-| `design/feature_map.md` | A0 and A11 | the headings renumbered (version N = level N); a feature for the split (F-VM-11); `sql function`, Eve procedures, the parts of `eve`, the machine API, the ACP client as features; F-VM-04 and F-VM-07 to 0.0.6; F-DAT-12 (evedb is part of `eve`) |
+| `spec/features/` | A0 and A11 | the headings renumbered (version N = level N); a feature for the split (F-VM-11); `sql function`, Eve procedures, the parts of `eve`, the machine API, the ACP client as features; F-VM-04 and F-VM-07 to 0.0.6; F-DAT-12 (evedb is part of `eve`) |
 | `spec/lexical/keywords.json`, a page in `spec/library/` | A9, A10 | `sql`, `sql function`, `sql/` and `proc/` |
 | `spec/library/machine.md` | B1, B2, B3 | the parts, their doors, `vm.*` and `db.*`; "HTTPS outside `localhost`" becomes "HTTPS by a reverse proxy" |
 | `manual/usage.md` | A8, B2, B3 | `eve vm`, `cp`, `db`, `ux`, the shortcuts of `run.sh`, start scripts, the machine API, the proxy examples |

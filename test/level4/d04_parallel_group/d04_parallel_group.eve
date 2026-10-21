@@ -1,4 +1,4 @@
-# two parallel groups run one after the other; the output of a group is in the order of start (D-140)
+# two parallel groups run one after the other; the output of a group is in the order of start
 ** spec: semantics/multitasking.md#parallel-groups
 primary aspect d04_parallel_group is
   process main is

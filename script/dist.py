@@ -11,7 +11,7 @@ dist/ is generated and git-ignored. Its layout:
       bin/                           eve.exe, evevm.exe, evedb.exe, evetx.exe, eveux.exe, duckdb.dll (ReleaseSafe)
       lib/                           the Eve library with its docs (eve finds it at ../lib from bin/)
       manual/                        manual/ of the repository, with its generated pages and the component docs
-                                     made again for this release (script/genmanual.py --out)
+                                     made again for this release (generator/evegen.py manual --out)
       tools/                         the editor plugins and the typing aids (no nested repositories)
   dist/eve-X.Y.Z-windows-x64.zip     that folder zipped (unzip gives the folder)
   dist/SHA256SUMS.txt                the SHA-256 of the current zip (script/publish.py uploads both)
@@ -116,7 +116,7 @@ def stage(ver, rel, folder):
     for name in ["lib", "tools", "manual"]:
         copy_folder(name, rel)
     # the generated pages and the component docs, made again for this release, in the release folder only
-    run([sys.executable, os.path.join(ROOT, "script", "genmanual.py"), "--out", os.path.join(rel, "manual")], ROOT)
+    run([sys.executable, os.path.join(ROOT, "generator", "evegen.py"), "manual", "--out", os.path.join(rel, "manual")], ROOT)
     shutil.copyfile(os.path.join(ROOT, "code", "LICENSE"), os.path.join(rel, "LICENSE"))
     shutil.copyfile(os.path.join(ROOT, "TRADEMARK.md"), os.path.join(rel, "TRADEMARK.md"))
     with open(os.path.join(ROOT, "design", "template", "dist-readme.md"), encoding="utf-8") as f:

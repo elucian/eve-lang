@@ -1,4 +1,4 @@
-# a managed module is accepted: no variable, no unsafe call (D-129)
+# a managed module is accepted: no variable, no unsafe call
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c28_managed_module is
   from lib use (pure);

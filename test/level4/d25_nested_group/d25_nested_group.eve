@@ -1,4 +1,4 @@
-# an exclusive aspect applied by the primary aspect opens a group of two concurrent leaf aspects; outputs keep the order of start (D-140, D-183)
+# an exclusive aspect applied by the primary aspect opens a group of two concurrent leaf aspects; outputs keep the order of start
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d25_nested_group is
   process main is

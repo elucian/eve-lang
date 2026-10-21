@@ -1,4 +1,4 @@
-# a function and a procedure never share a name: compile error (D-149)
+# a function and a procedure never share a name: compile error
 ** spec: syntax/declarations.md#overloading
 primary aspect e11_function_procedure_name is
   function report(x: Integer) => (@result: String) is

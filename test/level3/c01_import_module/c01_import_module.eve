@@ -1,4 +1,4 @@
-# Import a module with an unquoted path; members are reached as module.member (D-072)
+# Import a module with an unquoted path; members are reached as module.member
 primary aspect c01_import_module is
   from lib use (counter);
 

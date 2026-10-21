@@ -1,10 +1,10 @@
 # The module `test`
 
-Status: **draft**, level 6 (D-189). Feature: F-LIB-12 (testing module, new). Written in Eve: `lib/test.eve`. Tests: `test/level6/f03_test_module`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6. Feature: F-LIB-12 (testing module, new). Written in Eve: `lib/test.eve`. Registry: [registry.md](registry.md).
 
 ## What it is
 
-A small module for the tests that a user writes in Eve. Each check prints one line, `ok <name>` or `FAIL <name>` (with the two values for `equal`), counts it, and goes on; `summary` prints the totals and raises an error when a check failed, so the process ends with a failure code and a script or a CI job sees it. It is the first big program of the standard library written in Eve (D-189): a missing feature of the language found while writing it goes to `backlog/library-gaps.md`.
+A small module for the tests that a user writes in Eve. Each check prints one line, `ok <name>` or `FAIL <name>` (with the two values for `equal`), counts it, and goes on; `summary` prints the totals and raises an error when a check failed, so the process ends with a failure code and a script or a CI job sees it. It is the first big program of the standard library written in Eve: a missing feature of the language found while writing it is a gap of the language.
 
 ```eve
 from lib use (test);
@@ -32,7 +32,7 @@ end t;
 | `failed!() => (@result: Integer)` | function | the number of failures so far |
 | `summary()` | procedure | prints `<n> passed, <m> failed`; raises the error `test failed: <m> checks` (code 4, the plain `raise` of a message) when `m > 0` |
 
-The counters are state of the module (one per process, D-068); they are read with `!` functions because they change between calls (D-087).
+The counters are state of the module (one per process); they are read with `!` functions because they change between calls.
 
 ## Rules
 

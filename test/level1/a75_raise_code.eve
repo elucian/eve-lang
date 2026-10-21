@@ -1,4 +1,4 @@
-# raise "text" creates an error with code 4 and that message (D-054, D-109)
+# raise "text" creates an error with code 4 and that message
 ** spec: semantics/errors.md#errors
 primary aspect a75_raise_code is
   process main is

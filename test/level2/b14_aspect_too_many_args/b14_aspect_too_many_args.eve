@@ -1,4 +1,4 @@
-# more positional arguments than parameters is a check-time error (D-112)
+# more positional arguments than parameters is a check-time error
 ** spec: semantics/aspects.md#arguments
 primary aspect b14_aspect_too_many_args is
   process main is

@@ -7,7 +7,7 @@
 
 Reports, one line each:
   bad-spec     `@spec path#anchor` whose file does not exist, or whose anchor is no heading of that file
-  bad-feature  `@feature F-XXX-nn` that is not a row of design/feature_map.md
+  bad-feature  `@feature F-XXX-nn` that is no feature of spec/features/*.json
   bad-decision `@decision D-nnn` that is in no decision file (live or archive)
   no-head      a file whose first lines have no `//! @eve-module`
 The exit code is 1 when a bad-* line is printed; no-head and --untagged are information.
@@ -47,8 +47,14 @@ def anchors(path):
 
 
 def known_features():
-    import featmap
-    return featmap.all_codes()
+    """The feature ids of spec/features/*.json,."""
+    import glob
+    import json
+    codes = set()
+    for f in glob.glob(os.path.join(ROOT, 'spec', 'features', '*.json')):
+        with open(f, encoding='utf-8') as fh:
+            codes |= {x['id'] for x in json.load(fh)['features']}
+    return codes
 
 
 def known_decisions():
@@ -57,7 +63,7 @@ def known_decisions():
         for f in fs:
             if f.endswith('.md'):
                 for ln in open(os.path.join(r, f), encoding='utf8', errors='ignore'):
-                    m = re.match(r'## ((?:D|Q)-\d+)\b', ln)
+                    m = re.match(r'(?:## |- )((?:D|Q)-\d+)\b', ln)
                     if m:
                         s.add(m.group(1))
     return s

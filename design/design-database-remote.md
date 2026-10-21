@@ -1,6 +1,6 @@
 # Design: remote databases, the Eve server, drivers and ETL
 
-Status: **draft for review**, 2026-10-10. Nothing here is decided. Level 5 (drivers, ETL) and level 6 (the Eve server), versions 0.4 and 0.5. Part 2 of 2; part 1 is [design-database-core.md](design-database-core.md) (SQLite, the `table` declaration, tracked records, transactions, direct SQL), whose terms this file uses. It builds on [design-database.md](archive/design-database.md), on the machine and its protocols in [design-service.md](design-service.md) (EWP, remote `apply`, rules of a remote machine), and on the data file types of Q-039. Questions for the author are at the end.
+Status: **draft for review**, 2026-10-10. Nothing here is decided. Level 5 (drivers, ETL) and level 6 (the Eve server), versions 0.4 and 0.5. Part 2 of 2; part 1 is [design-database-core.md](design-database-core.md) (SQLite, the `table` declaration, tracked records, transactions, direct SQL), whose terms this file uses. It builds on design-database.md, on the machine and its protocols in [design-service.md](design-service.md) (EWP, remote `apply`, rules of a remote machine), and on the data file types of Q-039. Questions for the author are at the end.
 
 ## 1. Three ways to reach a database
 

@@ -1,4 +1,4 @@
-# bad: a module can't export a variable (D-068)
+# bad: a module can't export a variable
 module bad is
   export (total);
 

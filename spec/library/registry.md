@@ -1,6 +1,6 @@
 # The library registry
 
-Status: **draft**, level 6 (D-189, D-190). Features: F-LIB-01 (standard library), F-LIB-10 (encryption and hashing), F-SPEC-06. Plan: `design/design-libraries.md`. Audit: `design/library-audit.md`.
+Status: **draft**, level 6. Features: F-LIB-01 (standard library), F-LIB-10 (encryption and hashing), F-SPEC-06.
 
 ## Two libraries
 
@@ -14,15 +14,15 @@ An implementation may write any function of either library natively, **if the Ev
 
 ## A module is a file
 
-`lib/<name>.eve` declares `module <name> is`. A member is public only if the module lists it in `export (…)` (D-085); the old prefix `.` is gone. A member written `external function name(…) => (…);` has a signature and no body: the implementation provides the body (D-053, D-056). Visibility words `public`, `protected`, `private` belong to the members of a class (D-085), not to module functions.
+`lib/<name>.eve` declares `module <name> is`. A member is public only if the module lists it in `export (…)`; the old prefix `.` is gone. A member written `external function name(…) => (…);` has a signature and no body: the implementation provides the body. Visibility words `public`, `protected`, `private` belong to the members of a class, not to module functions.
 
-A signature file is documentation and the source of `eve --doc` and `help`; the compiler does not load it (the modules of `natives` are values of the prelude), and its parser support for `external function` in a module is not written yet (the grammar has only the stored-procedure form, D-166). Until it is, `script/libcheck.py` is the check of the file. A module of natives is therefore a **signature file**: it documents the module without changing how it runs; type-checking calls against it comes when the parser reads `external function`.
+A signature file is documentation and the source of `eve --doc` and `help`; the compiler does not load it (the modules of `natives` are values of the prelude), and its parser support for `external function` in a module is not written yet (the grammar has only the stored-procedure form). Until it is, `script/libcheck.py` is the check of the file. A module of natives is therefore a **signature file**: it documents the module without changing how it runs; type-checking calls against it comes when the parser reads `external function`.
 
 ## Registry rules
 
 - (1) **Every `external` has exactly one native entry** in the implementation, keyed by `module` and `name`; a missing entry is an error when the module is loaded (not when the function is called).
 - (2) **Every native entry has a signature** in a `lib/<module>.eve`; `eve --doc` and `help` list the module from the signature file.
-- (3) **The name of a function that gives another value at each call ends with `!`** (D-087): `time.now!`, `fs.read!`.
+- (3) **The name of a function that gives another value at each call ends with `!`**: `time.now!`, `fs.read!`.
 - (4) **Errors** are raised with the codes of the `exception` module, so one `recover` handles them.
 - (5) **A native module never prints a `Secret`** (see `semantics/types.md`, Secret).
 
@@ -50,8 +50,8 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | `gzip` (module; the readers already inflate `.gz`) | F-LIB-09 | postponed (TD-24) | |
 | `net` | F-NET-02 | implemented (M3, 2026-10-19): TCP, `listen`, `accept!`, time-outs | [net.md](net.md) |
 | `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M4) | to write |
-| `keyring`, `oidc`, `auth` | F-NET-07 | **set aside** (D-205): the login is a user and a password checked against the SQLite of the machine, see [machine.md](machine.md#users-and-login-level-6) | |
-| outbound TLS in `http` | F-NET-01 | **level 9, backlog** (D-189) | |
+| `keyring`, `oidc`, `auth` | F-NET-07 | **set aside**: the login is a user and a password checked against the SQLite of the machine, see [machine.md](machine.md#users-and-login-level-6) | |
+| outbound TLS in `http` | F-NET-01 | **level 9, backlog** | |
 
 ## Modules of the standard library in Eve at level 6
 

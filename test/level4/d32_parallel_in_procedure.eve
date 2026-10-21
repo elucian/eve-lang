@@ -1,4 +1,4 @@
-# a parallel group in a procedure is a compile error: only in the main of a primary aspect or of an aspect (D-140)
+# a parallel group in a procedure is a compile error: only in the main of a primary aspect or of an aspect
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d32_parallel_in_procedure is
   procedure fan is

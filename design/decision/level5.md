@@ -1,6 +1,6 @@
 # Decisions, level 5: data language, database layer and the Eve database (version 0.4)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), 5, [6](level6.md), [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), 5, [6](level6.md), [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and spec/features.
 
 ## Scope
 
@@ -8,7 +8,7 @@ The core of Eve as an ETL tool: a driver connects to databases by name, reads qu
 
 Features: F-DAT-01 to F-DAT-11, F-LIB-08 (secrets of the connections), F-LIB-11 (lineage in the run log).
 
-Design for review (2026-10-10): [design-database-core.md](../design-database-core.md), [design-database-remote.md](../design-database-remote.md) and [drivers/duckdb/README.md](../../drivers/duckdb/README.md) (the test database around DuckDB). First draft, archived with the author's answers: [design-database.md](../archive/design-database.md) (2026-10-05).
+Design for review (2026-10-10): [design-database-core.md](../design-database-core.md), [design-database-remote.md](../design-database-remote.md) and [drivers/duckdb/README.md](../../drivers/duckdb/README.md) (the test database around DuckDB). First draft, archived with the author's answers: design-database.md (2026-10-05).
 
 Decisions already taken in other files: D-020 (jobs and `recover`), D-080 (Decimal, optional types, DataMap), D-081 (error classes, `defer`, unsafe methods, run log), D-083 (machine folder, configuration, remote commands).
 
@@ -29,7 +29,7 @@ The design note holds the details; in short:
 
 ## Open questions
 
-Answered by the author in [design-database.md](../archive/design-database.md); the rules that follow are proposed in Q-043 for confirmation. The eight questions were: the engine of the Eve database, transactions bound to jobs, the record syntax, the extent of the mapping, the rights of `db sql`, parallel writes with their own connection, the `db` prefix of the commands, the order of the drivers.
+Answered by the author in design-database.md; the rules that follow are proposed in Q-043 for confirmation. The eight questions were: the engine of the Eve database, transactions bound to jobs, the record syntax, the extent of the mapping, the rights of `db sql`, parallel writes with their own connection, the `db` prefix of the commands, the order of the drivers.
 
 ## Data language (moved from level 3, D-125)
 
@@ -67,7 +67,7 @@ Proposals waiting for a decision. Each becomes a `D-nnn` here when the author co
 - D-159 Remote databases: no offline work, SQLite only for logs and metadata, no tables in a target
 - D-168 The answers of 2026-10-13: `$err_sql`, `null` prints `null`, `time.now!()`, Decimal and Real conversions, the rules the tests use, chunked bodies
 - Q-046 Database ORM and ACID: the language proposals of the two design files [open; proposals]
-Note 2026-10-10: the proposals of Q-024, Q-039, Q-043, Q-044 and Q-046 are written in the specification (`spec/library/database.md`, `spec/library/data-language.md`, `spec/semantics/data-types.md`) and taught in the tutorial (`databases.html`, `etl.html`) as proposed, still not decided. The choices made for the author are in [review_level5.md](../archive/review-2026-10-04/level5.md).
+Note 2026-10-10: the proposals of Q-024, Q-039, Q-043, Q-044 and Q-046 are written in the specification (`spec/library/database.md`, `spec/library/data-language.md`, `spec/semantics/data-types.md`) and taught in the tutorial (`databases.html`, `etl.html`) as proposed, still not decided. The choices made for the author are in review_level5.md.
 
 
 ## D-162 The machine: doors, `-loc`, `-rem`, `-lsn`, `--serve` (2026-10-11)

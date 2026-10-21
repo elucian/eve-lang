@@ -1,5 +1,5 @@
 # Memory: a class derived from Memory is a columnar table; a column is named by its field; load and store move data
-# between it and SQLite, always on request (D-184)
+# between it and SQLite, always on request
 ** spec: library/data-engines.md
 primary aspect e111_memory_table is
   class Sales = {id: Integer, region: String, price: Real, paid: Logic, note: String?} <: Memory;

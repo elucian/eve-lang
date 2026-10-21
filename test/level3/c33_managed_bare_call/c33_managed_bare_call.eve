@@ -1,4 +1,4 @@
-# a managed module can not call a direct module, also by a bare name from m(*) (D-129)
+# a managed module can not call a direct module, also by a bare name from m(*)
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c33_managed_bare_call is
   from lib use (calm);

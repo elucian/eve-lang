@@ -1,4 +1,4 @@
-# variation 1 of b26: finalize in a loop, by return and by over (D-133)
+# variation 1 of b26: finalize in a loop, by return and by over
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b26_test1 is
   process main is

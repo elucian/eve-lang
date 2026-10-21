@@ -1,5 +1,5 @@
 # project init <folder> makes a new project with the standard layout (F-TLS-23)
-** spec: design/design-project-layout.md
+** spec: semantics/project-layout.md
 ** The runner calls the command of the VM, not this script: see "command" below.
 primary aspect e54_project_init is
   process main is

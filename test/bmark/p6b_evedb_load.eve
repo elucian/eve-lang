@@ -1,4 +1,4 @@
-# level 6 performance: a Memory table written into a new table of evedb by the bulk load (the Appender of DuckDB, D-187)
+# level 6 performance: a Memory table written into a new table of evedb by the bulk load (the Appender of DuckDB)
 ** perf: 200,000 rows read into a Memory table, then loaded into a new evedb table as column batches, and counted
 primary aspect p6b_evedb_load is
   class Big = {id: Integer, region: String, amount: Real, paid: Logic} <: Memory;

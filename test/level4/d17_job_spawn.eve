@@ -1,4 +1,4 @@
-# spawn starts async procedures in a job, await waits for an async function; done waits for every task (D-143)
+# spawn starts async procedures in a job, await waits for an async function; done waits for every task
 ** spec: semantics/multitasking.md#tasks-in-a-job
 primary aspect d17_job_spawn is
   async procedure square(n: Integer, @r: Integer) is

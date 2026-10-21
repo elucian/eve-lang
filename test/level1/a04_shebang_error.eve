@@ -1,5 +1,5 @@
 #!/usr/bin/env eve
-** a file has no #! line: Eve has no free scripts, every program is an aspect (D-179)
+** a file has no #! line: Eve has no free scripts, every program is an aspect
 ** spec: lexical/lexical.md#file-header
 primary aspect a04_shebang_error is
   process main is

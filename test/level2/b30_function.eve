@@ -1,4 +1,4 @@
-# functions: result, named arguments, default values, several results (D-028, D-070, D-086, D-087)
+# functions: result, named arguments, default values, several results
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b30_function is
   function sum(a, b: Integer) => (@result: Integer) is

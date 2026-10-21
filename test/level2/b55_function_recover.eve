@@ -1,4 +1,4 @@
-# a function and a procedure can have a recover region: the error is handled inside, the caller goes on (D-192, Q-065)
+# a function and a procedure can have a recover region: the error is handled inside, the caller goes on
 ** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
 primary aspect b55_function_recover is
   function half(n: Integer) => (@result: Integer) is

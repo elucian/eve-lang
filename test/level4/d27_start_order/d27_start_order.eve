@@ -1,4 +1,4 @@
-# the output of a group is written in the order of start, whatever task ends first (D-140, D-144)
+# the output of a group is written in the order of start, whatever task ends first
 ** spec: semantics/multitasking.md#output
 primary aspect d27_start_order is
   process main is

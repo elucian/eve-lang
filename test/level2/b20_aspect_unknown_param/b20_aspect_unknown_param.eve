@@ -1,4 +1,4 @@
-# an argument named like no parameter is a check-time error (D-112)
+# an argument named like no parameter is a check-time error
 ** spec: semantics/aspects.md#arguments
 primary aspect b20_aspect_unknown_param is
   process main is

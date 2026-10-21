@@ -1,4 +1,4 @@
-# a method has its own list of types, in a generic class or in a plain class (D-148)
+# a method has its own list of types, in a generic class or in a plain class
 ** spec: syntax/declarations.md#generic-subprograms
 primary aspect e03_generic_method is
   class Box(:T) = {item: T} <: Object is

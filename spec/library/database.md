@@ -1,10 +1,10 @@
 # Database layer
 
-Status: **draft**, level 5. Sources: the author's request of 2026-10-10 (Q-046), Q-043, D-020, D-080, D-089, D-116, D-123, D-151; stored procedures, SQL functions and the database part of `eve`: D-163, D-166 (2026-10-12). Design notes: `../../design/design-database-core.md` and `../../design/design-database-remote.md`. The layer is implemented in the VM and tested by `test/level5` (2026-10-20); the author settled parts of it in D-156 to D-159 and D-168 (the core database, remote databases, the answers about the database layer), and the points still open are those of Q-043 and Q-046 (`design/decision/level5.md`). Tests: `test/level5` (prefix `e`, the database tests follow the generic ones). Grammar: `../syntax/grammar.md#database-declarations-and-statements-level-5`.
+Status: **draft**, level 5. Stored procedures, SQL functions and the database part of `eve`. Grammar: `../syntax/grammar.md#database-declarations-and-statements-level-5`.
 
 ## Layers
 
-A program reaches a database by a **connection name**. The name is declared in `eve.cfg` with a URL; the script never sees the URL, the driver or the password (D-083). The same code runs on every path:
+A program reaches a database by a **connection name**. The name is declared in `eve.cfg` with a URL; the script never sees the URL, the driver or the password. The same code runs on every path:
 
 | Path | URL | Driver runs on | Version |
 |---|---|---|---|
@@ -13,9 +13,9 @@ A program reaches a database by a **connection name**. The name is declared in `
 | 3. through an Eve server | `eve://prod/erp` | the Eve server, which holds the credentials, the sessions and a cache (an `evedb` database) | 0.5 (level 6) |
 | test | `evedb://localhost/eve_test` | `evedb`, the Eve test database (DuckDB), a remote database for the tests | 0.4 |
 
-**The database part of `eve`** (D-163, D-166). The database layer is a part of the one program `eve`, reached by `eve db …` (section "Admin commands"); `evedb` is no longer a separate program. SQLite is embedded in `eve`. The DuckDB library, the engine of `evedb` databases, is loaded only when the first DuckDB connection of a run opens: a program that uses no DuckDB database starts without it, and when the library is missing, that first connection fails with a `ConnectionError` that names it.
+**The database part of `eve`**. The database layer is a part of the one program `eve`, reached by `eve db …` (section "Admin commands"); `evedb` is no longer a separate program. SQLite is embedded in `eve`. The DuckDB library, the engine of `evedb` databases, is loaded only when the first DuckDB connection of a run opens: a program that uses no DuckDB database starts without it, and when the library is missing, that first connection fails with a `ConnectionError` that names it.
 
-SQLite is the core database (Q-043a), but it **never holds ETL data** (D-159): it stores the logs and the metadata. Data is never loaded in SQLite. The roles of the files, in the `db/` folder of the **project** (D-156):
+SQLite is the core database, but it **never holds ETL data**: it stores the logs and the metadata. Data is never loaded in SQLite. The roles of the files, in the `db/` folder of the **project**:
 
 | Role | Where | Content |
 |---|---|---|
@@ -28,7 +28,7 @@ There is no offline work: a local Eve session is connected to a remote session, 
 
 ## Configuration: `eve.cfg`
 
-The connections are declared in the configuration file `eve.cfg` of the machine and of the project (the project file adds to the machine file and wins on the same name). *(Proposed: the author has given only the system variable `$EVE_CORE_DB`, D-156.)* A line has one setting; a line that starts with `#` or `**` is a comment; a value is a string in double quotes.
+The connections are declared in the configuration file `eve.cfg` of the machine and of the project (the project file adds to the machine file and wins on the same name). *(Proposed: the author has given only the system variable `$EVE_CORE_DB`.)* A line has one setting; a line that starts with `#` or `**` is a comment; a value is a string in double quotes.
 
 ```
 core_db = "db/local.db"                                    ** the core database, read as $EVE_CORE_DB
@@ -64,13 +64,13 @@ A row type is a class derived from `Record`:
 class Customer = {id: Integer, name: String, city: String?, version: Integer} <: Record;
 ```
 
-- A field of type `T?` may hold `null`; a field of type `T` never does (D-080).
-- A record class may declare methods (D-123); the fields are the mapped data, methods are never mapped. A method `validate(@self)` is called before every write (section "Validation").
+- A field of type `T?` may hold `null`; a field of type `T` never does.
+- A record class may declare methods; the fields are the mapped data, methods are never mapped. A method `validate(@self)` is called before every write (section "Validation").
 - A record made by a literal, `{id: 0, name: "Ann", city: null, version: 0} :Customer`, is **detached**: plain data. A record read by `find!` or `where!` is **tracked** by the session of its connection.
 
 ## The `table` declaration
 
-A class says what a row is; a `table` declaration says where the rows live. It binds a record class to a table of a named connection and declares a name, an object of the library class `Table(:Class)`. `table` is a contextual keyword (D-116): a keyword only at the start of a declaration. A `table` is declared in a driver, an aspect, a module or an Eve macro, like a class.
+A class says what a row is; a `table` declaration says where the rows live. It binds a record class to a table of a named connection and declares a name, an object of the library class `Table(:Class)`. `table` is a contextual keyword: a keyword only at the start of a declaration. A `table` is declared in a driver, an aspect, a module or an Eve macro, like a class.
 
 ```eve
 table customers: Customer in "sales" is
@@ -163,12 +163,12 @@ The goal: recognize the database structure while developing, and stop hard in pr
 | a name that matches only when case is ignored | error, with the fix |
 
 - **Debug mode** (`eve -d`, the `debug` command): the compiler connects to every database that a `table` names and runs all the checks. It collects the differences of all the tables before it stops, prints for each one the line of the declaration and a fix (the corrected field, the `column … as` clause, or the class and `table` text generated from the database, as `db describe <name> <table> --eve` prints them). Errors stop the compilation (exit code 65), warnings are printed. After a run without errors, the compiler writes the **mapping** to `db/mappings.json`, which is committed with the code: for each connection the schema version of the database it was validated against, and for each mapped table a fingerprint (a hash of its columns, types, nullability and keys).
-- **Production mode** (the default): the compiler does not connect, and the VM **trusts the file** `db/mappings.json` (D-158). The database carries a **schema version**, a number that `db migrate` raises with every migration (SQLite and `evedb`: their own version number; other databases: the query `schema_version` that the connection gives in `eve.cfg`, for example the migration table of the DBA, because **Eve installs no table in a target database** (D-159); with no query, the version is a hash of the catalog, read once at the first use), and the mapping file records the schema version it was validated against, per connection. When the VM opens a connection for the first time, before the first statement of the program goes to it, it reads the schema version (one cheap query) and compares it with the file. **Equal:** the mapping is trusted and no catalog is read. **Different:** the program stops with a `MappingError` ("schema version {a}, mapping validated for {b}: validate the mapping again"), and the user validates the mapping again in debug mode (`eve -d`, or `db validate <name>`) and commits the new file. A `MappingError` stops the program before it has read or written a row through that connection. `recover` runs, so the error is written to the run log, but `retry` and `resume` are refused (the process aborts, exit code 4). The checks of the table above run only in debug mode. A change made to the database outside `db migrate` does not change the schema version: the run does not see it, and debug mode finds it.
+- **Production mode** (the default): the compiler does not connect, and the VM **trusts the file** `db/mappings.json`. The database carries a **schema version**, a number that `db migrate` raises with every migration (SQLite and `evedb`: their own version number; other databases: the query `schema_version` that the connection gives in `eve.cfg`, for example the migration table of the DBA, because **Eve installs no table in a target database**; with no query, the version is a hash of the catalog, read once at the first use), and the mapping file records the schema version it was validated against, per connection. When the VM opens a connection for the first time, before the first statement of the program goes to it, it reads the schema version (one cheap query) and compares it with the file. **Equal:** the mapping is trusted and no catalog is read. **Different:** the program stops with a `MappingError` ("schema version {a}, mapping validated for {b}: validate the mapping again"), and the user validates the mapping again in debug mode (`eve -d`, or `db validate <name>`) and commits the new file. A `MappingError` stops the program before it has read or written a row through that connection. `recover` runs, so the error is written to the run log, but `retry` and `resume` are refused (the process aborts, exit code 4). The checks of the table above run only in debug mode. A change made to the database outside `db migrate` does not change the schema version: the run does not see it, and debug mode finds it.
 - A value that the converter can't take at row level (a text that is not a UUID, a number larger than the field) is a `ConvertError` with the table, the column and the key of the row: a data error, recoverable like any other.
 
 ## Sessions and tracked records
 
-A **session** is the connection of one process to one connection name, with its transaction and the buffers of its bound tables. It is opened by the first use of the name in the process (a method of a `table`, or `database.connect("sales")`) and closed when the process ends. Each process has its own sessions, so each aspect has its own connections: a started aspect never shares a session with its siblings. A session is never shared state, so parallel loads need no special rule: the compiler decides thread safety on the call graph (D-089), `!` plays no part in it. A concurrent aspect may use the shared `table` declarations (constants, no data); it may not keep tracked records in a shared variable or pass a `Connection` to a started aspect.
+A **session** is the connection of one process to one connection name, with its transaction and the buffers of its bound tables. It is opened by the first use of the name in the process (a method of a `table`, or `database.connect("sales")`) and closed when the process ends. Each process has its own sessions, so each aspect has its own connections: a started aspect never shares a session with its siblings. A session is never shared state, so parallel loads need no special rule: the compiler decides thread safety on the call graph, `!` plays no part in it. A concurrent aspect may use the shared `table` declarations (constants, no data); it may not keep tracked records in a shared variable or pass a `Connection` to a started aspect.
 
 ### States of a record
 
@@ -190,11 +190,11 @@ A tracked record carries a header the program can't see: its session, its status
 - `let c.city := "Lyon";` compares the new value with the original. When they differ, the bit is set and the original is kept (only at the first change of that field). When the new value equals the original, the bit is cleared: a field set back makes the record clean again.
 - Equality is the equality of values of the type: strings by code points, `Decimal` by value (`1.50d` equals `1.5d`), `Real` by bits (a `NaN` read and written back is not a change).
 - A change to a field of a `read only` table, a `generated` field or a `key` field is a compile error when the compiler sees it, a run-time error otherwise. Changing a key is a delete and an insert: write it so.
-- The memory of a bound table is an identity map: a second `find!(42)` returns the same record. Clean records are held weakly (the VM counts references, D-151), so a clean record the program no longer uses is freed; a changed record is held until it is written. A report uses `scan!`, which tracks nothing.
+- The memory of a bound table is an identity map: a second `find!(42)` returns the same record. Clean records are held weakly (the VM counts references), so a clean record the program no longer uses is freed; a changed record is held until it is written. A report uses `scan!`, which tracks nothing.
 
 ### The `update` block
 
-`update c do … done;` changes several fields of one tracked record without repeating its name (D-158):
+`update c do … done;` changes several fields of one tracked record without repeating its name:
 
 ```eve
 new c := customers.find!(42);
@@ -224,7 +224,7 @@ Inside the block, the names of the fields of the record are in scope, and `let c
 | `load!(rows, mode: "insert" \| "upsert" \| "merge")` | counts | the bulk path of the driver, with the plan and the key of the declaration; the rows are not tracked |
 | `prepare(tables)`, `activate(tables)`, `reindex(tables)` | none | disable, enable and rebuild the indexes, constraints and triggers of a bulk load (a method of `Connection`). Only on a connection that Eve owns: an `evedb` database or a connection with `exclusive` in `eve.cfg`. On any other connection they do nothing and the run log gets a warning: the constraints stay on, the load works, slower, and gives more failures on an active database |
 
-Names follow D-089: `!` marks a stochastic result, and every read of a database is one (the same call can give other rows tomorrow), so `find!`, `where!`, `scan!`, `count!` and `query!` carry it. A write that returns nothing has no `!` (`add`, `remove`, `refresh`, `flush`, `script`, `prepare`, `activate`, `reindex`); a write that returns counts keeps it (`load!`, `execute!`). `cond` is the SQL text after `where`, with `?` placeholders and the arguments apart; a `{…}` placeholder of Eve inside it is a compile warning (SQL injection).
+Names follow: `!` marks a stochastic result, and every read of a database is one (the same call can give other rows tomorrow), so `find!`, `where!`, `scan!`, `count!` and `query!` carry it. A write that returns nothing has no `!` (`add`, `remove`, `refresh`, `flush`, `script`, `prepare`, `activate`, `reindex`); a write that returns counts keeps it (`load!`, `execute!`). `cond` is the SQL text after `where`, with `?` placeholders and the arguments apart; a `{…}` placeholder of Eve inside it is a compile warning (SQL injection).
 
 A **free** table, `new batch := Table(:Order)(capacity: 10000);`, is a plain buffer for ETL with no database: `let batch <+ order;` appends and `for o in batch do … done;` reads in order. When it grows over `capacity` it spills its oldest part to a temporary SQLite file and reads it back in order.
 
@@ -250,7 +250,7 @@ When a record class declares `method validate(@self)`, the flush calls it for ev
 
 ## Transactions
 
-**A job is a transaction** (Q-043b). The first statement of a job that uses a connection begins a transaction on it (`BEGIN`, or `BEGIN IMMEDIATE` on SQLite when the job writes); the connection is **enlisted** in the job. At `done` or `stop` the job flushes every enlisted session, then commits every enlisted connection; a failed flush or commit fails the job. Outside a job a tracked change or a write method is written and committed at once, one statement at a time (debug mode warns). Jobs are not nested (D-020), so there is no nested transaction and no savepoint in level 5.
+**A job is a transaction**. The first statement of a job that uses a connection begins a transaction on it (`BEGIN`, or `BEGIN IMMEDIATE` on SQLite when the job writes); the connection is **enlisted** in the job. At `done` or `stop` the job flushes every enlisted session, then commits every enlisted connection; a failed flush or commit fails the job. Outside a job a tracked change or a write method is written and committed at once, one statement at a time (debug mode warns). Jobs are not nested, so there is no nested transaction and no savepoint in level 5.
 
 | Event | Database | Tracked records in memory | Then |
 |---|---|---|---|
@@ -261,13 +261,13 @@ When a record class declares `method validate(@self)`, the flush calls it for ev
 | `retry` in `recover` | (already rolled back) | (already detached) | the job runs again from its declarations, in a new transaction |
 | `resume`, `abort` | (already rolled back) | (already detached) | as in `../semantics/errors.md#recover` |
 | a lost connection | the server rolls back | keep their values; detached | `DatabaseError` with `transient: True` |
-| `panic`, Ctrl+C, kill, power loss | the database rolls back when the connection drops; SQLite recovers its WAL at the next open | gone | nothing runs (D-081) |
+| `panic`, Ctrl+C, kill, power loss | the database rolls back when the connection drops; SQLite recovers its WAL at the next open | gone | nothing runs |
 
-**Memory after a rollback** (D-158). A rollback does not change the records in memory: their fields keep the values they had, also the changed ones. The records that the job read, added or changed are **detached** (plain data, no longer tracked), because they may not match the database any more. The program decides what to do: read the data again from the database (`find!` gives a new record), make another record, compare the two to find what went wrong, or discard the changes by hand. A `retry` runs the job again from its declarations, and its reads give fresh records.
+**Memory after a rollback**. A rollback does not change the records in memory: their fields keep the values they had, also the changed ones. The records that the job read, added or changed are **detached** (plain data, no longer tracked), because they may not match the database any more. The program decides what to do: read the data again from the database (`find!` gives a new record), make another record, compare the two to find what went wrong, or discard the changes by hand. A `retry` runs the job again from its declarations, and its reads give fresh records.
 
-**Statements.** `commit;` and `rollback;` are contextual keywords (D-116), allowed only in the `do` region of a job at the top level of a process; both take the conditional suffix, `rollback if dry_run;`. The job status `rolled back` is a value of `jobs["name"].status` next to `"pass"` and `"fail"`, and is written to the run log.
+**Statements.** `commit;` and `rollback;` are contextual keywords, allowed only in the `do` region of a job at the top level of a process; both take the conditional suffix, `rollback if dry_run;`. The job status `rolled back` is a value of `jobs["name"].status` next to `"pass"` and `"fail"`, and is written to the run log.
 
-**Isolation and locks** are the defaults of the database (read committed for PostgreSQL and MySQL, serializable for SQLite). A job changes them in its declarations with the system variables `$isolation` (`"read committed"`, `"repeatable read"`, `"serializable"`, `"snapshot"`), `$lock_timeout` (a duration) and `$read_only` (a `Logic`: a read-only transaction, a consistent snapshot, no locks on PostgreSQL), shadowed in the job as `$timeout` is shadowed by an aspect (D-081). A serialization failure or a deadlock is a `DeadlockError`, transient.
+**Isolation and locks** are the defaults of the database (read committed for PostgreSQL and MySQL, serializable for SQLite). A job changes them in its declarations with the system variables `$isolation` (`"read committed"`, `"repeatable read"`, `"serializable"`, `"snapshot"`), `$lock_timeout` (a duration) and `$read_only` (a `Logic`: a read-only transaction, a consistent snapshot, no locks on PostgreSQL), shadowed in the job as `$timeout` is shadowed by an aspect. A serialization failure or a deadlock is a `DeadlockError`, transient.
 
 **Optimistic locking.** With `version v`, a new row is written with the version 1, every update and delete has `and "v" = ?` with the version that was read, and every update increases it by 1. When the statement changes no row, someone else changed the row: the record becomes `stale` and the job fails with a `ConflictError` (not transient). A rollback detaches the records of the job (see above), so a `retry` reads them fresh. Without `version` the last writer wins; debug mode warns once per table written by more than one job of the project.
 
@@ -287,9 +287,9 @@ do
 done load;
 ```
 
-`checkpoint.read!` and `checkpoint.write` use the core database: Eve does not install a checkpoint table in a target (D-159), and a write to the core database (logs, checkpoints) is not counted as the write connection of the job. Debug mode warns when a job has `commit;` and its writes are not idempotent (inserts rather than upserts).
+`checkpoint.read!` and `checkpoint.write` use the core database: Eve does not install a checkpoint table in a target, and a write to the core database (logs, checkpoints) is not counted as the write connection of the job. Debug mode warns when a job has `commit;` and its writes are not idempotent (inserts rather than upserts).
 
-**One connection per job** (D-158). A job writes to one connection. It may read from other connections: the transaction there only reads, and there is nothing to commit. A write to a second connection is a compile error when the compiler sees it (`job {name} writes to {a} and {b}: one connection per job`), a run-time `DatabaseError` otherwise. To move data between two databases, use two jobs: stage in one job, move in the next. Writing to two databases in one job is not supported in level 5; it is technical debt in `../../design/backlog.md`.
+**One connection per job**. A job writes to one connection. It may read from other connections: the transaction there only reads, and there is nothing to commit. A write to a second connection is a compile error when the compiler sees it (`job {name} writes to {a} and {b}: one connection per job`), a run-time `DatabaseError` otherwise. To move data between two databases, use two jobs: stage in one job, move in the next. Writing to two databases in one job is not supported in level 5.
 
 **Batch errors.** When some records of a batch fail (a constraint, a conversion, `validate`) in `flush()` or `load!`, the batch is rolled back and the job fails with a `BatchError`. Its field `failed` is a collection of `{key, reason}`, one for each failing record, and `recover` reads it as `$error.failed`: it can count the failures, log the records and decide. `retry` runs the job again from its declarations: with `commit;` and a checkpoint per batch (above), the batches already committed are not processed again, only the failed batch and the ones after it. `resume` ends the job as failed and the process goes on after `done`.
 
@@ -310,26 +310,26 @@ A direct write on a table with pending tracked changes flushes that table first.
 
 ## Stored procedures
 
-There are two kinds of stored procedures (D-166):
+There are two kinds of stored procedures:
 
 | Kind | Written in | Folder of the project | Runs in | Called from Eve |
 |---|---|---|---|---|
 | **native** | the language of the database: PL/pgSQL, PL/SQL, T-SQL, … | `sql/` | the database | through an `external` declaration |
 | **Eve procedure** | Eve | `proc/` | the database part of `eve`, next to a SQLite or DuckDB database | as a module; over IPC with `db.call` |
 
-**Native procedures.** The files of `sql/` are sent to the database by `script(path)`, `eve db script` or `eve db migrate`; Eve does not read their language. A program calls a native procedure through an `external` declaration, which brings only its signature into Eve (Q-043e):
+**Native procedures.** The files of `sql/` are sent to the database by `script(path)`, `eve db script` or `eve db migrate`; Eve does not read their language. A program calls a native procedure through an `external` declaration, which brings only its signature into Eve:
 
 ```eve
 external procedure archive_orders(before: Date) in "sales";
 external function total_sales!(region: String) => (@total: Decimal) in "sales" as "etl.total_sales";
 ```
 
-- A procedure without a result is an `external procedure`. One with a result is an `external function` whose name ends with `!`, because its result depends on the database (D-087).
+- A procedure without a result is an `external procedure`. One with a result is an `external function` whose name ends with `!`, because its result depends on the database.
 - The name in the database is the Eve name, or the string after `as`.
 - The call runs in the transaction of the job, like `execute!`. The arguments and the results are converted by the column = value mapping; a database error is a `DatabaseError`.
 - This works for every database that has stored procedures. For the databases other than SQLite and DuckDB, this is the only kind: the database part of `eve` is a wrapper that sends the call.
 
-**Eve procedures.** A module in the folder `proc/` of a project is a module of Eve stored procedures: its exported procedures and functions are the procedures. The forms of the call below were proposed with D-166 and chosen as the most convenient (author, 2026-10-12).
+**Eve procedures.** A module in the folder `proc/` of a project is a module of Eve stored procedures: its exported procedures and functions are the procedures. The forms of the call below were proposed with and chosen as the most convenient (author, 2026-10-12).
 
 ```eve
 module orders is
@@ -350,7 +350,7 @@ end orders;
 
 ## SQL functions
 
-A `sql function` is an Eve function that SQLite and DuckDB can call from SQL (D-166). `sql` is a contextual keyword (D-116): a keyword only before `function`, a free name elsewhere.
+A `sql function` is an Eve function that SQLite and DuckDB can call from SQL. `sql` is a contextual keyword: a keyword only before `function`, a free name elsewhere.
 
 ```eve
 sql function tax(amount: Decimal, country: String) => (@result: Decimal) is
@@ -364,9 +364,9 @@ new rows := shop.query!(:Taxed)("select id, tax(amount, country) as tax from ord
 ```
 
 - **Registration.** When the database part opens a SQLite or DuckDB connection, it registers **every** `sql function` of the program (the driver, its aspects, the modules it imports, and the modules of `proc/`), through the C API of the engine: `sqlite3_create_function_v2` for SQLite, the scalar functions of DuckDB. The name in SQL is the Eve name; a connection opened before a module is loaded gets its functions when the module is loaded.
-- **Rules checked by the compiler.** A `sql function` has no `!`: it is deterministic (D-087), and it does no input or output and opens no connection. It is not generic and not overloaded: SQL finds a function by its name. It has exactly one result. Its parameters and its result have the types of the column = value mapping (section "Column = value mapping"). **SQL `NULL` maps only to a nullable type:** a parameter of type `T?` receives `NULL` as `null`, and a result of type `T?` that is `null` is returned as `NULL`. When SQL gives `NULL` to a parameter of type `T`, the mapping fails: the function is not called and the statement stops with `$err_sql` (below).
+- **Rules checked by the compiler.** A `sql function` has no `!`: it is deterministic, and it does no input or output and opens no connection. It is not generic and not overloaded: SQL finds a function by its name. It has exactly one result. Its parameters and its result have the types of the column = value mapping (section "Column = value mapping"). **SQL `NULL` maps only to a nullable type:** a parameter of type `T?` receives `NULL` as `null`, and a result of type `T?` that is `null` is returned as `NULL`. When SQL gives `NULL` to a parameter of type `T`, the mapping fails: the function is not called and the statement stops with `$err_sql` (below).
 - **Errors.** An error in a `sql function` is an exception that stops the query: the engine abandons the statement, and the method that ran it (`query!`, `query_one!`, `execute!`, `load!`) raises the error **`$err_sql`** (code 59, class `SqlError` <: `DatabaseError`). Its message names the function and gives the message of the Eve error, or the reason the mapping failed: `SQL function tax failed: Division by zero`. Like any database error it can be recovered, retried or resumed.
-- **Threads.** An engine may call a `sql function` from several threads at once: DuckDB runs a query on worker threads. The VM protects the session: it runs one call at a time with a session mutex, or hands the calls to a pool of interpreters that each own their heap (D-166). The order and the number of the calls are not specified; this is why a `sql function` has no `!`.
+- **Threads.** An engine may call a `sql function` from several threads at once: DuckDB runs a query on worker threads. The VM protects the session: it runs one call at a time with a session mutex, or hands the calls to a pool of interpreters that each own their heap. The order and the number of the calls are not specified; this is why a `sql function` has no `!`.
 - **Other databases.** PostgreSQL, MySQL and the other drivers get no Eve functions. For them a `sql function` is an ordinary Eve function: the program reads the data into the process, changes it in Eve and writes it back with `load!` (in bulk) or one row at a time.
 
 ## Errors
@@ -387,18 +387,18 @@ A driver classifies a native error: a lost connection (`08xxx`), a serialization
 
 ## Drivers and the server
 
-**The evedb driver** (level 7, D-187, reverted by D-203 and kept). A connection whose URL starts with `evedb://` (`database "wh" = "evedb://host:8044/warehouse"`, `evedb://token@host:8044/warehouse` for a server with a token) speaks the native protocol of evedb, the server that owns the DuckDB databases. It has the methods of the other drivers (`execute!`, `query!`, `query_one!`, `script`, `close`, the transaction of a job) with typed parameters, and the fast path for large data: `s.store(wh, select, params…)` and `s.load(wh, name)` on a `Memory` table move the rows as column batches (`data-engines.md`). Details: `../../evedb/README.md` sections 5.5 and 5C; tests: `test/level6/f02_evedb_columnar`.
+**The evedb driver** (level 7, reverted by and kept). A connection whose URL starts with `evedb://` (`database "wh" = "evedb://host:8044/warehouse"`, `evedb://token@host:8044/warehouse` for a server with a token) speaks the native protocol of evedb, the server that owns the DuckDB databases. It has the methods of the other drivers (`execute!`, `query!`, `query_one!`, `script`, `close`, the transaction of a job) with typed parameters, and the fast path for large data: `s.store(wh, select, params…)` and `s.load(wh, name)` on a `Memory` table move the rows as column batches (`data-engines.md`).
 
-**The PostgreSQL driver** (level 7, D-186). A connection whose URL starts with `postgres://` or `postgresql://` (`database "shop" = "postgres://user:password@host:5432/shop"`) speaks the PostgreSQL protocol, to a PostgreSQL server or to evedb, the Eve test database that answers as one. The login is trust, password, md5 or SCRAM-SHA-256; there is no TLS yet. On such a connection `execute!`, `query!`, `query_one!`, `script` and `close` work as on SQLite, and a job begins a transaction at its first statement and commits or rolls it back at its end. The parameters `?` are sent as literals with their quotes doubled. `table` declarations, tracked records and `import` work on SQLite connections only: on a PostgreSQL connection they are an error. Details: `../../evedb/README.md` section 5B; tests: `test/level6/f01_pg_driver`, `script/pg_check.py`.
+**The PostgreSQL driver** (level 7). A connection whose URL starts with `postgres://` or `postgresql://` (`database "shop" = "postgres://user:password@host:5432/shop"`) speaks the PostgreSQL protocol, to a PostgreSQL server or to evedb, the Eve test database that answers as one. The login is trust, password, md5 or SCRAM-SHA-256; there is no TLS yet. On such a connection `execute!`, `query!`, `query_one!`, `script` and `close` work as on SQLite, and a job begins a transaction at its first statement and commits or rolls it back at its end. The parameters `?` are sent as literals with their quotes doubled. `table` declarations, tracked records and `import` work on SQLite connections only: on a PostgreSQL connection they are an error.
 
 A driver implements one interface: `open`/`close`, `begin`/`commit`/`rollback`, `prepare`/`bind`/`step`, `execute_batch`, `bulk_load`, `describe` (the catalog, for the validation), the dialect (`quote`, `placeholder`, `returning`), the type map and `classify`. Order: SQLite (embedded) and PostgreSQL in level 5 (Supabase and Neon speak its protocol); MySQL and MariaDB, Cloudflare D1 in 0.5; MongoDB later, with an API of its own. Oracle is postponed (backlog); SQL Server by the community through the interface.
 
-Path 3 (level 6): the **Eve server** holds the sessions, the drivers and the cache. A remote session has a lease (30 s by default) renewed by `PING`, and a lease that runs out rolls back the transaction. Each transaction has an id chosen by the client, kept in the journal of the core database of the server. Eve installs no table in the target database, so after a break at `COMMIT` the client asks `STATUS <id>` and the server asks the database when the driver can answer (PostgreSQL: `txid_status`): committed means the job passed, rolled back means a transient `ConnectionError` (so `retry` is right). When the driver can not answer, the status is "unknown" and the job fails with a fatal `CommitError`: an administrator checks. Only the dirty columns travel in a `CHANGES` frame. The frames `OPEN`, `BEGIN`, `QUERY`, `CHANGES`, `APPLIED`, `COMMIT`, `ROLLBACK` and `STATUS` extend EWP (`../../design/design-service.md`). A **cached** table (`cached 1h;`) is read from the cache of the server (an `evedb` database) and written through to the remote database; the cache is never the authority, and `db cache list`, `refresh` and `clear` administer it.
+Path 3 (level 6): the **Eve server** holds the sessions, the drivers and the cache. A remote session has a lease (30 s by default) renewed by `PING`, and a lease that runs out rolls back the transaction. Each transaction has an id chosen by the client, kept in the journal of the core database of the server. Eve installs no table in the target database, so after a break at `COMMIT` the client asks `STATUS <id>` and the server asks the database when the driver can answer (PostgreSQL: `txid_status`): committed means the job passed, rolled back means a transient `ConnectionError` (so `retry` is right). When the driver can not answer, the status is "unknown" and the job fails with a fatal `CommitError`: an administrator checks. Only the dirty columns travel in a `CHANGES` frame. The frames `OPEN`, `BEGIN`, `QUERY`, `CHANGES`, `APPLIED`, `COMMIT`, `ROLLBACK` and `STATUS` extend EWP. A **cached** table (`cached 1h;`) is read from the cache of the server (an `evedb` database) and written through to the remote database; the cache is never the authority, and `db cache list`, `refresh` and `clear` administer it.
 
 ## Admin commands
 
-The commands are words of the database part: `eve db <command>` (D-163). `db list`, `db add`, `db remove`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db import`, `db export` (files into and out of a table: see [data-engines.md](data-engines.md)), `db script`, `db create`, `db create-table`, `db migrate`, `db backup`, `db prepare`, `db activate`, `db reindex` (these three only on an exclusive connection), `db validate`, `db cache` (Q-043h), `db proc list`, `db proc reload` (D-166), `db serve` (the test database of the remote path, the former `evedb serve`). `db sql` and `db script` run with the rights of the database user of the connection (Q-043f). Schema changes go through scripts and `db migrate` (`db/migrations/<name>/`); the ORM never changes a schema at run time.
+The commands are words of the database part: `eve db <command>`. `db list`, `db add`, `db remove`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db import`, `db export` (files into and out of a table: see [data-engines.md](data-engines.md)), `db script`, `db create`, `db create-table`, `db migrate`, `db backup`, `db prepare`, `db activate`, `db reindex` (these three only on an exclusive connection), `db validate`, `db cache`, `db proc list`, `db proc reload`, `db serve` (the test database of the remote path, the former `evedb serve`). `db sql` and `db script` run with the rights of the database user of the connection. Schema changes go through scripts and `db migrate` (`db/migrations/<name>/`); the ORM never changes a schema at run time.
 
 ## Open points
 
-All in `../../design/archive/review-2026-10-04/level5.md` and in Q-043 and Q-046 of `../../design/decision/level5.md`: the shape of the `table` declaration, the production check at first use, nullable columns against non-optional fields, the restore of memory on rollback, savepoints, two databases in one job, Oracle (postponed), the client cache (no), 
+Open points: the shape of the `table` declaration, the production check at first use, nullable columns against non-optional fields, the restore of memory on rollback, savepoints, two databases in one job, Oracle (postponed), the client cache (no), 

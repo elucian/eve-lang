@@ -1,4 +1,4 @@
-# an aspect of a macro sees the shared declarations and no variable of the primary aspect's process (D-066, D-152)
+# an aspect of a macro sees the shared declarations and no variable of the primary aspect's process
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set limit = 3 :Integer;

@@ -1,0 +1,8 @@
+{
+ "suite": "scaffold",
+ "kind": "special",
+ "title": "Scaffold: the commands project init and project new on real folders",
+ "tests": [
+  {"id": "scaffold", "name": "scaffold", "title": "project init and project new on real folders", "features": [], "status": "PASS", "runs": 1, "failures": 0, "checks": 0, "last": "2026-10-20 20:57", "mtime": 1792467520, "reason": ""}
+ ]
+}

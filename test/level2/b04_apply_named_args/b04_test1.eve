@@ -1,4 +1,4 @@
-# variation 1 of b04: every argument by name, in another order (D-133)
+# variation 1 of b04: every argument by name, in another order
 ** spec: syntax/statements.md#apply
 primary aspect b04_test1 is
   process main is

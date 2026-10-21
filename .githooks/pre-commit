@@ -18,8 +18,10 @@ if git diff --cached --name-only | grep -q "\.zig$"; then
   python script/tagcheck.py --staged || exit 1
 fi
 
-# the feature tables of design/feature_map.md are generated from the feature sections (plan: design-ai-context.md, featmap.py)
-if git diff --cached --name-only | grep -q "^design/feature_map.md$"; then
-  python script/featmap.py --write && python script/featmap.py --check || exit 1
-  git add design/feature_map.md
+# the index of the spec and the rules between spec, tests and manual (generator/README.md)
+if git diff --cached --name-only | grep -q "^spec/"; then
+  python generator/evegen.py index && git add spec/spec.json
+fi
+if git diff --cached --name-only | grep -qE "^(spec/|test/[^/]+/[^/]+\.json|generator/)"; then
+  python generator/evegen.py check || exit 1
 fi

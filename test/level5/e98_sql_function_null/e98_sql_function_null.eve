@@ -1,4 +1,4 @@
-# SQL NULL maps only to a nullable type: a NULL for a parameter of type String stops the query with $err_sql (D-166)
+# SQL NULL maps only to a nullable type: a NULL for a parameter of type String stops the query with $err_sql
 ** spec: library/database.md#sql-functions
 primary aspect e98_sql_function_null is
   class Person = {id: Integer, name: String} <: Record;

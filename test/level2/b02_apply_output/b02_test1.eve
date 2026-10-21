@@ -1,4 +1,4 @@
-# variation 1 of b02: results used as inputs, in a loop (D-133)
+# variation 1 of b02: results used as inputs, in a loop
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b02_test1 is
   process main is

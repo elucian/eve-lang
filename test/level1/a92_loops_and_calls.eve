@@ -1,4 +1,4 @@
-# loops, calls and assignments that every engine must treat alike: break, skip, for with else, short circuit on a variable, compound assignment on a list, recursion (D-201)
+# loops, calls and assignments that every engine must treat alike: break, skip, for with else, short circuit on a variable, compound assignment on a list, recursion
 ** spec: syntax/statements.md#loops, semantics/control.md
 primary aspect a92_loops_and_calls is
   function fact(n: Integer) => (@r: Integer) is
@@ -53,7 +53,7 @@ primary aspect a92_loops_and_calls is
     print ok;
     print pick(True, False), pick(True, True);
 
-    ** a list and a scalar: every element changes in place (D-118), a number is replaced
+    ** a list and a scalar: every element changes in place, a number is replaced
     new xs := (1, 2);
     new ys := xs;
     let xs += 3;

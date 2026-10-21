@@ -1,6 +1,6 @@
 # Data file types
 
-Status: **draft**, level 5 (the data language, D-125). Written from the proposals of Q-039 and Q-044 and from `../../design/design-database-remote.md` (ETL), and implemented in the VM, tested by `test/level5` (2026-10-20); the author settled the names of the file types in D-157, and the points still open are those of Q-039 and Q-044 (`design/decision/level5.md`). Sources: the author's request of 2026-10-08. Tests: `test/level5`. The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
+Status: **draft**, level 5 (the data language). The basic types and modules that these types use are in `../library/data-language.md`; the database side is in `../library/database.md`.
 
 ## What they are
 
@@ -18,14 +18,14 @@ Six types describe the content of a file that a program loads and parses in memo
 ## Rules
 
 - **One ancestor.** Every one of these types is derived from `Document(:U) <: (Object, Iterable(:U))`, where `U` is the unit: `CSV` and `TXT` give a `Row`, `JSON`, `XML` and `HTML` give a `Node`. They are written mostly in Eve in the standard library; the compiler knows only the ancestor and the traversal protocol.
-- **Traversal protocol.** The library trait `Iterable(:U)` (level 4, D-145): a class gives its next unit, or `null` at the end. A `for` loop reads any `Iterable`. The unit is valid inside the body (a `clone` keeps it longer).
+- **Traversal protocol.** The library trait `Iterable(:U)` (level 4): a class gives its next unit, or `null` at the end. A `for` loop reads any `Iterable`. The unit is valid inside the body (a `clone` keeps it longer).
 - **Buffered load.** Opening a file reads nothing but the first block. The parser reads a block, hands out the units one by one and reads the next block when the buffer is empty, so the memory used does not depend on the size of the file. `.all()` asks for the whole content on purpose.
 - **Errors.** A unit that is not well formed raises a `FormatError` with `line` and `column`, when the loop reaches it: the units before it have been given already. The file is closed when the loop ends, by `break` or by an error.
 - **`HTML` is one type**: a parsed document tree. A rendered template gives an `HTML` value too; text placed in it is always a text node, so it is escaped when the value is written. There is no second name for the safe page.
 
 ## Names of the types
 
-The name of a type is the usual name of its format, in capitals when the format is an acronym: `CSV`, `JSON`, `XML`, `HTML`, `HTMT`, `TXT` (D-157). A type name does not have to be one capital letter followed by lower case; the convention is only that it starts with an upper-case letter. The module of a format has the same name in lower case (`csv`, `json`, `xml`, `html`, `txt`).
+The name of a type is the usual name of its format, in capitals when the format is an acronym: `CSV`, `JSON`, `XML`, `HTML`, `HTMT`, `TXT`. A type name does not have to be one capital letter followed by lower case; the convention is only that it starts with an upper-case letter. The module of a format has the same name in lower case (`csv`, `json`, `xml`, `html`, `txt`).
 
 ## TXT: fixed-length text
 
@@ -38,7 +38,7 @@ new lines := txt.read!(:Order)("in/orders.txt", widths: (8, 10, 12, 20));
 
 ## Output formats for reports: PRN and PDF (backlog)
 
-`PRN` (a print-out file, extension `.prn`) and `PDF` are formats for **output only**, for data reporting: a report that a person reads or a printer prints. They are planned and **not specified yet**: the style (fonts, sizes, margins, headers and footers, page numbers, columns and their alignment) and the limits (the width of a line, the lines per page, what happens to a value longer than its field) are a todo, recorded in `../../design/backlog.md`. What is already clear: what only changes the look belongs to the style of the report (and to the UX, `eveux`), not to a data format like `TXT`; the report is written from the same record classes and streams as the data files.
+`PRN` (a print-out file, extension `.prn`) and `PDF` are formats for **output only**, for data reporting: a report that a person reads or a printer prints. They are planned and **not specified yet**: the style (fonts, sizes, margins, headers and footers, page numbers, columns and their alignment) and the limits (the width of a line, the lines per page, what happens to a value longer than its field) are a todo. What is already clear: what only changes the look belongs to the style of the report (and to the UX, `eveux`), not to a data format like `TXT`; the report is written from the same record classes and streams as the data files.
 
 ## Reading a unit
 
@@ -62,7 +62,7 @@ One module per format: `csv`, `json`, `txt`, `xml`, `html`. Each has
 | Function | Meaning |
 |---|---|
 | `open(source)` | untyped: gives the document (`CSV`, `JSON`, …), rows by position or name |
-| `read!(:T)(source, options…)` | typed: gives a `Stream(:T)`; a read of a file carries `!` (D-089) |
+| `read!(:T)(source, options…)` | typed: gives a `Stream(:T)`; a read of a file carries `!` |
 | `write(path, rows, options…)` | writes a stream or a table; a write without a result has no `!` |
 
 The `source` is a path or a `Stream(:Bytes)`, such as the body of an HTTP response. A `.gz` path is decompressed on the fly (`../library/data-language.md#compression`).
@@ -83,7 +83,7 @@ Every file is read as a stream of bytes, decoded to code points, then parsed int
 
 ## Transform and rejects
 
-A transform is a pure function from one record to another (`function to_target(o: Order) => (@t: Target)`), applied in a loop or a comprehension; pure functions run in the parallel aspects of a transfer with no lock. A unit that can't be read or converted, or a record whose `validate` fails, is not an error of the whole job when the read has a rejects output (D-159): `csv.read!(:Order)(path, rejects: "out/orders_rejects.csv")`, or `rejects: @bad` with a `Table(:Reject)`. The output is created **in batches**: one reject batch for each batch read, with the source, line, column, the text of the unit and the reason, written when the batch is done, so the memory stays small. `max_rejects: 100` turns the 101st reject into an error of the job. Every count goes to the run log (lineage).
+A transform is a pure function from one record to another (`function to_target(o: Order) => (@t: Target)`), applied in a loop or a comprehension; pure functions run in the parallel aspects of a transfer with no lock. A unit that can't be read or converted, or a record whose `validate` fails, is not an error of the whole job when the read has a rejects output: `csv.read!(:Order)(path, rejects: "out/orders_rejects.csv")`, or `rejects: @bad` with a `Table(:Reject)`. The output is created **in batches**: one reject batch for each batch read, with the source, line, column, the text of the unit and the reason, written when the batch is done, so the memory stays small. `max_rejects: 100` turns the 101st reject into an error of the job. Every count goes to the run log (lineage).
 
 ### What NFC is
 
@@ -131,7 +131,7 @@ These rules fix the text of the files that the writers produce (the canonical fo
 
 ## Local ETL: files and a local SQLite database
 
-The smallest ETL needs no server and no network: a project reads files of `data/in/`, loads them into a local application database (a SQLite file of `db/`, for example `db/cache.db`, declared in `eve.cfg` as `database "cache" = "sqlite://db/cache.db"`), transforms the data with SQL, and writes the result as files into `data/out/`. The core database (`db/local.db`) keeps only the logs and the metadata (D-159); the data goes to the application database, which a test may recreate at every run with `script("sql/schema.sql")`.
+The smallest ETL needs no server and no network: a project reads files of `data/in/`, loads them into a local application database (a SQLite file of `db/`, for example `db/cache.db`, declared in `eve.cfg` as `database "cache" = "sqlite://db/cache.db"`), transforms the data with SQL, and writes the result as files into `data/out/`. The core database (`db/local.db`) keeps only the logs and the metadata; the data goes to the application database, which a test may recreate at every run with `script("sql/schema.sql")`.
 
 ```eve
 new cache := database.connect("cache");
@@ -149,7 +149,6 @@ json.write("data/out/lines.json", lines);
 - `csv.read!(:Sale)(path)` reads the rows into records of the class `Sale`; the columns are matched to the members by name (rule above), a missing column is an error before the first row, and an unquoted empty field is `null` (only for an optional member, otherwise a `ConvertError`).
 - `query!(:Line)(sql, args…)` matches the result columns to the members of `Line` by name; a `NULL` in a member that is not optional is a `ConvertError`. Arguments are bound to the `?` placeholders in order (`Integer`, `Real`, `String`, `Logic` and `null`).
 - `json.write(path, rows)` writes the array (or JSON Lines) of the rules above and makes the folders of the path.
-- The test `test/level5/e56_etl_csv_sqlite_json` does exactly this and compares the file written to `data/out/`.
 - *Level 5 reads and writes in memory:* `csv.read!` and `query!` return a `List` of records, not a lazy `Stream`; a file or a result larger than memory waits for the streams (data-language.md, open points).
 
 ## ETL: the cycle
@@ -208,4 +207,4 @@ end orders_upload;
 
 ## Open points
 
-All in `../../design/archive/review-2026-10-04/level5.md`: the layout of a `TXT` file, the position of `XML` (0.5) and `HTML` (0.6), the module for compression.
+Open points: the layout of a `TXT` file, the position of `XML` (0.5) and `HTML` (0.6), the module for compression.

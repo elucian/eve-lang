@@ -1,4 +1,4 @@
-# an aspect recovers its own error: the primary aspect never sees it (D-020, D-072)
+# an aspect recovers its own error: the primary aspect never sees it
 ** spec: semantics/aspects.md#errors-across-apply
 primary aspect b16_aspect_recover is
   process main is

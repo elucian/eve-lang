@@ -1,4 +1,4 @@
-# Object: unquoted keys make an object, quoted or numeric keys make a DataMap (D-058, D-080)
+# Object: unquoted keys make an object, quoted or numeric keys make a DataMap
 ** spec: semantics/types.md#composite-types
 primary aspect a22_object is
   process main is

@@ -1,4 +1,4 @@
-# variation 1 of d08: an output with a computed index is checked at start: $err_output 43 (D-140)
+# variation 1 of d08: an output with a computed index is checked at start: $err_output 43
 ** spec: semantics/multitasking.md#data-rules
 primary aspect d08_test1 is
   process main is

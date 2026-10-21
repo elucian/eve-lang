@@ -1,6 +1,6 @@
 # Critical review of Eve, second round (2026-10-20)
 
-A design review of the project as of `master` on 2026-10-20: levels 1 to 6 implemented (409 tests agree on the tree walker and on the bytecode machine), the architecture of D-198 to D-201 done, level 7 (the web, evewp) not started. It replaces the review of 2026-10-04 (commit `f6500d3`, before the VM had a data layer or a server), which is kept whole in [`../archive/review-2026-10-04/`](../archive/review-2026-10-04/README.md): its codes (`RPJ-R01`, `RNW-R02`, …) are cited by decisions and by the feature map and stay valid there.
+A design review of the project as of `master` on 2026-10-20: levels 1 to 6 implemented (409 tests agree on the tree walker and on the bytecode machine), the architecture of D-198 to D-201 done, level 7 (the web, evewp) not started. It replaces the review of 2026-10-04 (commit `f6500d3`, before the VM had a data layer or a server), which is kept whole in `../archive/review-2026-10-04/`: its codes (`RPJ-R01`, `RNW-R02`, …) are cited by decisions and by the feature map and stay valid there.
 
 The review is critical on purpose: praise is short, every problem comes with evidence (a file, a command, a number) and an alternative. What was read and run is listed at the end, so that a point that rests on an inference can be told from one that was measured.
 
@@ -42,4 +42,4 @@ The first round asked for a spec made from the tests, a bytecode VM, a data laye
 
 ## What was read and run
 
-Run on 2026-10-20: `plan.py status` and `features`, `runtest.py smoke`, `runtest.py all --both` (409 pass), `zig build test` (one failure, then a pass), `ctxsize.py`, `tagcheck.py`, `genmanual.py --check`, `bmark` table in `test/bmark/README.md`. Read: `design/README.md`, `design/feature_map.md` (rows by command), `design/phase-8-architecture.md` (head), `backlog/tech-debt.md`, `backlog/library-gaps.md`, `design/issues/README.md`, the first round's README. Not read this round: the tutorial pages, the spec pages in full, the code of the interpreter beyond its file heads. Points about those are marked "inference".
+Run on 2026-10-20: `plan.py status` and `features`, `runtest.py smoke`, `runtest.py all --both` (409 pass), `zig build test` (one failure, then a pass), `ctxsize.py`, `tagcheck.py`, `genmanual.py --check`, `bmark` table in `test/bmark/README.md`. Read: `design/README.md`, `spec/features/` (rows by command), `design/phase-8-architecture.md` (head), `backlog/tech-debt.md`, `backlog/library-gaps.md`, `design/issues/README.md`, the first round's README. Not read this round: the tutorial pages, the spec pages in full, the code of the interpreter beyond its file heads. Points about those are marked "inference".

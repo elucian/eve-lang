@@ -1,4 +1,4 @@
-# send into a closed channel raises ChannelError, code 46 (D-141)
+# send into a closed channel raises ChannelError, code 46
 ** spec: semantics/multitasking.md#channels
 primary aspect d13_channel_closed is
   process main is

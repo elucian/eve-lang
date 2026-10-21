@@ -1,4 +1,4 @@
-# redeclaring a name in the same scope is an error (D-076)
+# redeclaring a name in the same scope is an error
 ** spec: syntax/declarations.md#variables-and-constants
 primary aspect a45_redeclare is
   process main is

@@ -1,4 +1,4 @@
-# variation 1 of c33: the bare name of a managed module is accepted (D-133)
+# variation 1 of c33: the bare name of a managed module is accepted
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c33_test1 is
   from lib use (pure(*));

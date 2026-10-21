@@ -1,6 +1,6 @@
 # Data language
 
-Status: **draft**, level 5 (level 5, D-125). Written from the proposals of Q-044 and Q-024, implemented in the VM and tested by `test/level5` (2026-10-20); the author settled parts of it in D-156 to D-159 and D-168, and the points still open are those of Q-039, Q-043, Q-044 and Q-046 (`design/decision/level5.md`). This page lists the types and the modules that the database layer (`database.md`) and the data files (`../semantics/data-types.md`) stand on. Tests: `test/level5`.
+Status: **draft**, level 5. This page lists the types and the modules that the database layer (`database.md`) and the data files (`../semantics/data-types.md`) stand on.
 
 ## Features and versions
 
@@ -21,7 +21,7 @@ Status: **draft**, level 5 (level 5, D-125). Written from the proposals of Q-044
 
 ## Generators
 
-A generator is declared with the keyword `generator`: `generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;`. It replaces the detection of `yield` in a method (D-067). A generator is a task that stops at `yield` and continues at the next read (the baton tasks of stage A, D-144), so the tree walker runs it. A generator is read with `for x in count_to(3) do … done;` or with `next()`; its call is deterministic, the object moves on, so its name carries no `!`. A generator is an `Iterable(:T)` (level 4). The files and queries of the data layer are generators of this kind: `Stream(:T)` adopts them.
+A generator is declared with the keyword `generator`: `generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;`. It replaces the detection of `yield` in a method. A generator is a task that stops at `yield` and continues at the next read (the baton tasks of stage A), so the tree walker runs it. A generator is read with `for x in count_to(3) do … done;` or with `next()`; its call is deterministic, the object moves on, so its name carries no `!`. A generator is an `Iterable(:T)` (level 4). The files and queries of the data layer are generators of this kind: `Stream(:T)` adopts them.
 
 ## Time types
 
@@ -29,14 +29,14 @@ A generator is declared with the keyword `generator`: `generator count_to(n: Int
 
 | Type | Meaning |
 |---|---|
-| `Instant` | a point in time in UTC (not `Timestamp`); `Instant.epoch`, `time.now!()` (the clock gives another value at each call, so its name ends with `!`, D-087, D-168) |
+| `Instant` | a point in time in UTC (not `Timestamp`); `Instant.epoch`, `time.now!()` (the clock gives another value at each call, so its name ends with `!`) |
 | `DateTime` | a date and a time with a zone (not `LocalTime`) |
 
 Parsing and formats use the format codes of strings. The canonical text forms are in `../semantics/data-types.md#canonical-form-and-round-trip`. The module `time` also holds the clock and `sleep`.
 
 ## Decimal and optional types
 
-`Decimal` (`12.50d`) is exact base 10; it keeps its scale (`12.50d` is written `12.50`) and compares by value (`1.50d == 1.5d`). It maps to SQL `NUMERIC`. `T?` is a type that may hold `null`; a plain `T` never does (D-080). `null` is the value and `Null` its type: `print` writes `null` (alone, in a text and in a collection) and `type(x)` of it gives `Null` (D-168). A record field `city: String?` maps to a nullable column; a `T?` value used where a `T` is needed is tested first (`if c.city <> null do … done;`); the rules of optional types are in `../semantics/types.md`.
+`Decimal` (`12.50d`) is exact base 10; it keeps its scale (`12.50d` is written `12.50`) and compares by value (`1.50d == 1.5d`). It maps to SQL `NUMERIC`. `T?` is a type that may hold `null`; a plain `T` never does. `null` is the value and `Null` its type: `print` writes `null` (alone, in a text and in a collection) and `type(x)` of it gives `Null`. A record field `city: String?` maps to a nullable column; a `T?` value used where a `T` is needed is tested first (`if c.city <> null do … done;`); the rules of optional types are in `../semantics/types.md`.
 
 ## Bytes
 
@@ -68,11 +68,11 @@ expect answer.status == 200;
 for o in json.read!(:Order)(answer.body) do … done;      ** the body is a Stream(:Bytes)
 ```
 
-`http.get!`, `http.post!(url, body: …)` and `http.request!(method, url, …)` give an `HttpResponse` with `status`, `headers` and `body`. A status of 400 or more is not an error by itself; `answer.check()` raises `HttpError` with `status`, `url` and the text of the body. A time-out raises `TimeoutError`, a refused or lost connection `ConnectionError` (transient). `https://` needs the outbound TLS client, which is level 9 (D-189, backlog): until then an `https://` URL raises `ConnectionError` with the reason "TLS client not available"; when it exists a certificate that does not match is an error. A header of type `Secret` goes on the wire but never to a log.
+`http.get!`, `http.post!(url, body: …)` and `http.request!(method, url, …)` give an `HttpResponse` with `status`, `headers` and `body`. A status of 400 or more is not an error by itself; `answer.check()` raises `HttpError` with `status`, `url` and the text of the body. A time-out raises `TimeoutError`, a refused or lost connection `ConnectionError` (transient). `https://` needs the outbound TLS client, which is level 9 (backlog): until then an `https://` URL raises `ConnectionError` with the reason "TLS client not available"; when it exists a certificate that does not match is an error. A header of type `Secret` goes on the wire but never to a log.
 
 ## Secrets
 
-A `Secret` is a value that never appears in a log, a trace or an error message (it prints as `***`) and never in the source: the machine gives it to a project from its configuration (D-083). `secret.get("sales_password")` returns a `Secret`; its text is read only by a sink that accepts it (a connection of `eve.cfg`, an HTTP header). Every connection with a password needs it. Converting a `Secret` to a `String` is an error.
+A `Secret` is a value that never appears in a log, a trace or an error message (it prints as `***`) and never in the source: the machine gives it to a project from its configuration. `secret.get("sales_password")` returns a `Secret`; its text is read only by a sink that accepts it (a connection of `eve.cfg`, an HTTP header). Every connection with a password needs it. Converting a `Secret` to a `String` is an error.
 
 ## Shell by argument list
 
@@ -80,7 +80,7 @@ A `Secret` is a value that never appears in a log, a trace or an error message (
 
 ## Details used by the tests
 
-- **`Decimal`.** `+` and `-` keep the larger scale (`0.10d + 0.20d` is `0.30d`), `*` adds the scales (`1.5d * 2.00d` is `3.000d`), a comparison compares the values (`1.50d == 1.5d` is `True`), and printing shows the scale of the value (`print 12.50d;` writes `12.50`). `/` gives the larger scale of the two plus 6 digits, at most 18, rounded half away from zero (`1d / 3d` is `0.333333d`, `10.00d / 4d` is `2.50000000d`); `%` gives the remainder with the sign of the divisor, at the larger scale; an `Integer` with a `Decimal` is a `Decimal` of scale 0 (`5 + 0.50d` is `5.50d`); a division by zero is `$err_divide`. A `Decimal` and a `Real` are never mixed without a conversion: an operator between them is a compile error (D-110). The conversion is explicit (D-168): `d.real()` gives the `Real` (it can lose digits), `r.decimal()` gives the `Decimal` of the shortest text of the `Real` (`0.1.decimal()` is `0.1d`, not the 55 digits of its binary value); and `:=` converts, to a variable that holds the other kind (`new r := 0.0; let r := price;`) or with a type hint (`new x := 3.75d :Real;`).
+- **`Decimal`.** `+` and `-` keep the larger scale (`0.10d + 0.20d` is `0.30d`), `*` adds the scales (`1.5d * 2.00d` is `3.000d`), a comparison compares the values (`1.50d == 1.5d` is `True`), and printing shows the scale of the value (`print 12.50d;` writes `12.50`). `/` gives the larger scale of the two plus 6 digits, at most 18, rounded half away from zero (`1d / 3d` is `0.333333d`, `10.00d / 4d` is `2.50000000d`); `%` gives the remainder with the sign of the divisor, at the larger scale; an `Integer` with a `Decimal` is a `Decimal` of scale 0 (`5 + 0.50d` is `5.50d`); a division by zero is `$err_divide`. A `Decimal` and a `Real` are never mixed without a conversion: an operator between them is a compile error. The conversion is explicit: `d.real()` gives the `Real` (it can lose digits), `r.decimal()` gives the `Decimal` of the shortest text of the `Real` (`0.1.decimal()` is `0.1d`, not the 55 digits of its binary value); and `:=` converts, to a variable that holds the other kind (`new r:= 0.0; let r:= price;`) or with a type hint (`new x:= 3.75d:Real;`).
 - **`Instant`.** `Instant.epoch` is 1970-01-01T00:00:00Z. Printing an `Instant` writes the canonical form, `2026-10-10T08:00:00Z` (ISO 8601, UTC, `Z`, no fraction when the fraction is zero; a fraction is written to the microsecond with its trailing zeros cut: `2026-10-10T08:00:00.5Z`, `…:00.123456Z`). `Instant.parse(text)` reads it; a text that is not an instant is the error `$err_parse`.
 - **`Secret`.** `Secret(text)` makes a secret from a string (for a value read from an input; the text is not shown again). `print` and interpolation of a `Secret` write `***`. The text is read only by a sink that accepts a `Secret`. `secret.get(name)` returns the secret of the machine; a name that does not exist is the error `$err_key`.
 - **`fs`.** A path is relative to the working folder (the project). `fs.write(path, text)` creates the folders of the path; `fs.read!(path)` of a missing file is `$err_file`; `fs.lines!(path)` gives the lines without their line ending.
@@ -111,13 +111,12 @@ The modules of this table are part of the standard library of the machine and ar
 ## Open points
 
 
-All in `../../design/archive/review-2026-10-04/level5.md`.
 
 - **Streams.** `csv.read!`, `json.read!` and `query!` give a `Stream(:T)`. The first implementation (e56, `data-types.md#local-etl-files-and-a-local-sqlite-database`) returns a `List` with all the rows, so a `for` loop over the result and `.count()` work, and `Stream` as a lazy source is still to do.
 
 ## JSON text in memory: `json.parse` and `json.text`
 
-Status: **draft**, level 6 (D-189), needed by `rpc` and the services. Tests: `test/level6/f06_json_text`.
+Status: **draft**, level 6, needed by `rpc` and the services.
 
 `json.read!` and `json.write` work on files and records. Two functions work on a **text in memory** and on plain values, with no record class:
 
@@ -126,6 +125,6 @@ Status: **draft**, level 6 (D-189), needed by `rpc` and the services. Tests: `te
 | `json.parse(text: String)` | a value | the JSON text as one value: `null` is `null`, `true` and `false` are `Logic`, a number without a point or exponent is an `Integer` (a `Real` when it does not fit), any other number is a `Real`, a string is a `String`, an array is a `List`, an object is a `DataMap` with `String` keys; a text that is not well formed is `$err_format` with the line and the column |
 | `json.text(value)` | `String` | the compact JSON text of a value: a `List` or a set is an array, a `DataMap` or an object with fields is an object, `Instant` and `Decimal` are written as in `json.write`; a `Secret`, a function or a channel is `$err_argument` |
 
-| `json.valid(text: String)` | `Logic` | `True` when `json.parse` would accept the text; a function of Eve code can not catch an error (`backlog/library-gaps.md` G-4), so a library asks first |
+| `json.valid(text: String)` | `Logic` | `True` when `json.parse` would accept the text; a function of Eve code can not catch an error, so a library asks first |
 
 A top-level array is **one** value here (`json.read!` takes its items as records). `json.text(json.parse(t))` gives back the same value, with the keys of an object in sorted order.

@@ -1,4 +1,4 @@
-# variation 1 of c02: a string path and the members without prefix (D-133)
+# variation 1 of c02: a string path and the members without prefix
 ** spec: semantics/modules.md#import
 primary aspect c02_test1 is
   from "lib" use (greeting(*));

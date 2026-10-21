@@ -1,4 +1,4 @@
-# a subclass builds its object through the constructor of its superclass (D-084)
+# a subclass builds its object through the constructor of its superclass
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c12_inheritance is
   class Shape = {name: String} <: Object is

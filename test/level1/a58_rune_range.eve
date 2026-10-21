@@ -1,4 +1,4 @@
-# a range of runes: ('a'..'c') visits the code points in order (from demo/symbol_range.eve, D-099)
+# a range of runes: ('a'..'c') visits the code points in order (from demo/symbol_range.eve)
 ** spec: syntax/expressions.md#ranges
 primary aspect a58_rune_range is
   process main is

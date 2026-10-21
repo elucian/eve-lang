@@ -1,4 +1,4 @@
-# method is a contextual word: a keyword where a declaration is expected, a name everywhere else (G-6, D-116)
+# method is a contextual word: a keyword where a declaration is expected, a name everywhere else (G-6)
 ** spec: lexical/keywords.json
 primary aspect a91_method_as_name is
   function describe(method: String, params: Integer) => (@r: String) is

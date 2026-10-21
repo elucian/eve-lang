@@ -1,4 +1,4 @@
-# variation 1 of b11: the state of the aspect is new in every call (D-133)
+# variation 1 of b11: the state of the aspect is new in every call
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b11_test1 is
   process main is

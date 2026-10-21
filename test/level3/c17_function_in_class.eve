@@ -1,4 +1,4 @@
-# a class hosts only methods: a function in a class body is a compile error (D-123)
+# a class hosts only methods: a function in a class body is a compile error
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c17_function_in_class is
   class Counter = {n: Integer} <: Object is

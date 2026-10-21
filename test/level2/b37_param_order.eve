@@ -1,4 +1,4 @@
-# a mandatory parameter may follow optional ones, and the call then names it (D-106)
+# a mandatory parameter may follow optional ones, and the call then names it
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b37_param_order is
   procedure add(p1 = 0, p2 = 1: Integer, @op: Integer) is

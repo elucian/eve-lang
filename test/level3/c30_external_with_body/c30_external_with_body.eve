@@ -1,4 +1,4 @@
-# an external routine has no body: giving one is a compile error (D-056, D-189)
+# an external routine has no body: giving one is a compile error
 ** spec: semantics/modules.md#members
 primary aspect c30_external_with_body is
   from lib use (bad);

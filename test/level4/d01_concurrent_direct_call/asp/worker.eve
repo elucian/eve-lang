@@ -1,4 +1,4 @@
-# worker: a concurrent aspect can't call a thread unsafe procedure (D-129)
+# worker: a concurrent aspect can't call a thread unsafe procedure
 concurrent aspect worker is
   from lib use (raw);
 

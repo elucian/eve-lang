@@ -1,4 +1,4 @@
-# integer overflow is an error with its own code, 13 (D-109)
+# integer overflow is an error with its own code, 13
 ** spec: semantics/errors.md#errors
 primary aspect a76_overflow is
   process main is

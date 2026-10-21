@@ -15,7 +15,7 @@ The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29
 - [ ] T6 Debugger: breakpoints in aspect and module files
 - [x] T7 Databases, local: SQLite tables and views in the tree, read-only grid, structure dialog, create, drop, rename
 - [ ] T7 Query (F7, a find that filters tables or data)
-- [ ] T8 Documents: the evetx section of `manual/usage.md`, the tutorial page, `design/feature_map.md`
+- [ ] T8 Documents: the evetx section of `manual/usage.md`, the tutorial page, `spec/features/`
 
 ## Cuts and changes of 2026-10-16
 
@@ -77,7 +77,7 @@ The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29
 - [ ] Decide on the `$` shell mode of the console (keep the one-shot `shell <command>`; interactive commands hang)
 - [ ] Old options: a custom theme saved by an older evetx (`color.*` lines of `evetx-options.txt`) is not read any more; make it again or import a theme file
 - [ ] Split `app.zig` (about 6,500 lines) into parts: debugger, SQL panel, dialogs, tree actions, menu
-- [ ] `design/feature_map.md`: F-TLS-24, F-TLS-27, F-TLS-28, F-TLS-29 still say "open" or "partial" with old notes
+- [ ] `spec/features/`: F-TLS-24, F-TLS-27, F-TLS-28, F-TLS-29 still say "open" or "partial" with old notes
 - [ ] T8 documents (see above)
 
 ## Later: the machine connection (for T5 and eveux)

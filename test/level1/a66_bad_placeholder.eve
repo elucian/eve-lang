@@ -1,4 +1,4 @@
-# in a string every unescaped brace opens a placeholder {name}; a literal brace is \{ or \} (D-102)
+# in a string every unescaped brace opens a placeholder {name}; a literal brace is \{ or \}
 ** spec: lexical/lexical.md#string
 primary aspect a66_bad_placeholder is
   process main is

@@ -1,4 +1,4 @@
-# variation 1 of d09: nobody recovers the ParallelError: exit 4, one line per failed task (D-140)
+# variation 1 of d09: nobody recovers the ParallelError: exit 4, one line per failed task
 ** spec: semantics/multitasking.md#errors
 primary aspect d09_test1 is
   process main is

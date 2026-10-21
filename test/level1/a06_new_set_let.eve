@@ -1,4 +1,4 @@
-# new creates variables, set creates constants, let changes a value (D-076, D-079)
+# new creates variables, set creates constants, let changes a value
 ** spec: syntax/statements.md#new, syntax/statements.md#let
 primary aspect a06_new_set_let is
   set limit = 10 :Integer;

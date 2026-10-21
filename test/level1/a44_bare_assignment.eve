@@ -1,4 +1,4 @@
-# a change without let is a syntax error (D-076)
+# a change without let is a syntax error
 ** spec: syntax/statements.md#let
 primary aspect a44_bare_assignment is
   process main is

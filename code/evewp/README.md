@@ -1,6 +1,6 @@
 # evewp: the Eve Web Portal
 
-Status: **design for review**, first draft 2026-10-18. Nothing is built. It replaces the browser Workbench as the level 7 project (the old design is kept in [workbench-design.md](../../design/archive/workbench-design.md)); the idea notes of the author are in [wp-design-ideas.md](wp-design-ideas.md). The development tool is now the native `eveux` (see `code/eveux/README.md`).
+Status: **design for review**, first draft 2026-10-18. Nothing is built. It replaces the browser Workbench as the level 7 project (the old design is kept in workbench-design.md); the idea notes of the author are in [wp-design-ideas.md](wp-design-ideas.md). The development tool is now the native `eveux` (see `code/eveux/README.md`).
 
 ## 1. What evewp is
 

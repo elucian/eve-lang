@@ -1,4 +1,4 @@
-# eve db proc list: the modules of proc/ with the hash of their source, and their exported procedures with signatures (D-163, D-166)
+# eve db proc list: the modules of proc/ with the hash of their source, and their exported procedures with signatures
 ** spec: library/database.md#stored-procedures
 ** The runner calls the command of the VM, not this script: see "command" below.
 primary aspect e102_test1 is

@@ -1,8 +1,8 @@
 # The module `net`
 
-Status: **draft**, level 6 (D-189). Features: F-NET-02, F-NET-03. Native module (Zig), signatures in `lib/sys/net.eve`; code in `code/evevm/src/netlib.zig`. Tests: `test/level6/f09_net`. Registry: [registry.md](registry.md).
+Status: **draft**, level 6. Features: F-NET-02, F-NET-03. Native module (Zig), signatures in `lib/sys/net.eve`; code in `code/evevm/src/netlib.zig`. Registry: [registry.md](registry.md).
 
-TCP for Eve code: a client connection and a listening server, as text. The module is the base of `rpc`, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a host name or an IP literal and a port; the machine itself listens only on `127.0.0.1` unless the configuration says otherwise (D-189: level 6 is tested on `localhost`).
+TCP for Eve code: a client connection and a listening server, as text. The module is the base of `rpc`, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a host name or an IP literal and a port; the machine itself listens only on `127.0.0.1` unless the configuration says otherwise (: level 6 is tested on `localhost`).
 
 ```eve
 async procedure echo(server: Listener) is
@@ -42,7 +42,7 @@ A call that waits (`accept!`, `read_line!`, `read!`, `read_exact!`) gives the ba
 
 ## Time-outs
 
-`Socket.set_timeout(ms: Integer)` sets how long a read (`read_line!`, `read!`, `read_exact!`) may wait: 0 (the default) waits for ever. A read that waits longer raises `$err_timeout` (41, `Time-out after {n} ms`). After a time-out the socket is **abandoned**: it can still be written (`write`) and closed, but not read again, because the helper thread of the read is still waiting in it; the system drops the connection when the other side ends. `accept!` has no time-out: a server ends its loop by closing the listener. Tests: `test/level6/f13_net_timeout`, `f14_service_idle`.
+`Socket.set_timeout(ms: Integer)` sets how long a read (`read_line!`, `read!`, `read_exact!`) may wait: 0 (the default) waits for ever. A read that waits longer raises `$err_timeout` (41, `Time-out after {n} ms`). After a time-out the socket is **abandoned**: it can still be written (`write`) and closed, but not read again, because the helper thread of the read is still waiting in it; the system drops the connection when the other side ends. `accept!` has no time-out: a server ends its loop by closing the listener.
 
 ## Errors
 

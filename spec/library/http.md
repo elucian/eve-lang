@@ -1,8 +1,8 @@
 # The module `http`
 
-Status: **draft**, level 6 (D-189). Features: F-NET-02 (server side), F-NET-01 (the client of `data-language.md`). Written in Eve: `lib/http.eve`, over [net](net.md). Tests: `test/level6/f10_route_hello`.
+Status: **draft**, level 6. Features: F-NET-02 (server side), F-NET-01 (the client of `data-language.md`). Written in Eve: `lib/http.eve`, over [net](net.md).
 
-HTTP/1.1 as text on a `Socket`: read a request, write a response, call a server. One request for each connection (`Connection: close`); no keep-alive, no chunked bodies, no TLS (`https://` is level 9, D-189), no percent-decoding of the path.
+HTTP/1.1 as text on a `Socket`: read a request, write a response, call a server. One request for each connection (`Connection: close`); no keep-alive, no chunked bodies, no TLS (`https://` is level 9), no percent-decoding of the path.
 
 ## Classes
 
@@ -11,7 +11,7 @@ HTTP/1.1 as text on a `Socket`: read a request, write a response, call a server.
 | `Request` | `verb: String` (`"GET"`, `"POST"`, ...), `target: String` (as sent), `path: String` (before `?`), `query: DataMap` (`a=1&b=2` → `{"a":"1","b":"2"}`), `headers: DataMap` (names in lower case), `body: String` |
 | `HttpResponse` | `status: Integer`, `headers: DataMap` (lower case), `body: String`; method `check()` raises `HttpError` for a status of 400 or more |
 
-The field is `verb` and not `method` because `method` is a reserved word (`backlog/library-gaps.md` G-6).
+The field is `verb` and not `method` because `method` is a reserved word.
 
 ## Functions
 

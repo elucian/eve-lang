@@ -1,4 +1,4 @@
-# a generator is lazy: its body runs only when the caller asks for a value, and an infinite one is closed by break (D-067)
+# a generator is lazy: its body runs only when the caller asks for a value, and an infinite one is closed by break
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e66_generator_lazy is
   generator naturals() => (@n: Integer) is

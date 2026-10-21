@@ -1,4 +1,4 @@
-# a function or a procedure can't be bound to a class with @self: only a method can (D-123)
+# a function or a procedure can't be bound to a class with @self: only a method can
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c16_function_self is
   class Point = {x, y :Integer} <: Object is

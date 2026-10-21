@@ -1,4 +1,4 @@
-# a module that is not found is the error $err_module (code 30), raised at the import, before the process starts (D-131)
+# a module that is not found is the error $err_module (code 30), raised at the import, before the process starts
 ** spec: semantics/modules.md#import
 primary aspect c25_module_not_found is
   from lib use (nowhere);

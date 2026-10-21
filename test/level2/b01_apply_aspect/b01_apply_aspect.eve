@@ -1,4 +1,4 @@
-# apply runs the main process of an aspect from asp/ and waits (D-066)
+# apply runs the main process of an aspect from asp/ and waits
 primary aspect b01_apply_aspect is
   process main is
     apply greet("Eve");

@@ -1,4 +1,4 @@
-# variation 1 of c04: the same module with its name as prefix (D-133)
+# variation 1 of c04: the same module with its name as prefix
 ** spec: semantics/modules.md#import
 primary aspect c04_test1 is
   from lib use (text);

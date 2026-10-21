@@ -82,7 +82,7 @@
       "kind": "literal",
       "nests": false,
       "multiline": false,
-      "summary": "String: UTF-8 text on one line; placeholders `{name}` and `{name % format}`; literal braces `\\{` `\\}` (D-102).",
+      "summary": "String: UTF-8 text on one line; placeholders `{name}` and `{name % format}`; literal braces `\\{` `\\}`.",
       "status": "draft",
       "ref": "lexical/lexical.md#literals",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#strings",
@@ -108,7 +108,7 @@
       "kind": "escape",
       "nests": false,
       "multiline": false,
-      "summary": "Placeholder inside a string: `{name}` or `{name % format}`; the value is written by its type; a literal brace is `\\{` or `\\}` (D-102).",
+      "summary": "Placeholder inside a string: `{name}` or `{name % format}`; the value is written by its type; a literal brace is `\\{` or `\\}`.",
       "status": "draft",
       "ref": "lexical/lexical.md#literals",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#escapes"
@@ -120,7 +120,7 @@
       "kind": "escape",
       "nests": false,
       "multiline": false,
-      "summary": "Placeholder with a Unicode code point, 1 to 6 hexadecimal digits: `{U+03B1}` is α (D-120).",
+      "summary": "Placeholder with a Unicode code point, 1 to 6 hexadecimal digits: `{U+03B1}` is α.",
       "status": "draft",
       "ref": "lexical/lexical.md#literals",
       "tutorial": "https://sagecode.org/projects/eve/syntax.html#escapes"

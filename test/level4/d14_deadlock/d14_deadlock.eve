@@ -1,4 +1,4 @@
-# a consumer that waits on a channel nobody sends to is a deadlock; the error names it (D-141)
+# a consumer that waits on a channel nobody sends to is a deadlock; the error names it
 ** spec: semantics/multitasking.md#channels
 primary aspect d14_deadlock is
   process main is

@@ -1,4 +1,4 @@
-# null as an argument for a member that is not optional is a compile error, in a call of the class too (D-080)
+# null as an argument for a member that is not optional is a compile error, in a call of the class too
 ** spec: library/database.md#records
 primary aspect e78_null_constructor_argument is
   class Customer = {id: Integer, name: String, city: String?} <: Object;

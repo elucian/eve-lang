@@ -1,4 +1,4 @@
-# an aspect without a process main can't be applied (D-179)
+# an aspect without a process main can't be applied
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b53_no_main is
   process main is

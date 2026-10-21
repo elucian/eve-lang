@@ -1,4 +1,4 @@
-# a primary aspect is serial: it applies its private processes, it does not start them (D-181)
+# a primary aspect is serial: it applies its private processes, it does not start them
 ** spec: syntax/declarations.md#scripts
 primary aspect d38_primary_start_private is
   process work is

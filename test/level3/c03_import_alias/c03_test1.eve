@@ -1,4 +1,4 @@
-# variation 1 of c03: the same module without a prefix (D-133)
+# variation 1 of c03: the same module without a prefix
 ** spec: semantics/modules.md#import
 primary aspect c03_test1 is
   from lib use (geometry(*));

@@ -1,4 +1,4 @@
-# yield in a function declared inside a generator is a compile error: only the body of the generator itself yields (D-067)
+# yield in a function declared inside a generator is a compile error: only the body of the generator itself yields
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e104_yield_in_nested_function is
   generator outer() => (@x: Integer) is

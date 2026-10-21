@@ -1,4 +1,4 @@
-# yield in a process is a compile error: only the body of a generator yields (D-067); in a function inside a generator: e104
+# yield in a process is a compile error: only the body of a generator yields; in a function inside a generator: e104
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e72_yield_in_process is
   process main is

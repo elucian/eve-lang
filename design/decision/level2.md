@@ -2,7 +2,7 @@
 
 Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a question is answered, turn it into a decision with the date and keep the question text for history. Plan steps reference these ids. **Read cheaply:** `python script/plan.py list` prints every id; `python script/plan.py show D-087` prints one entry from here or from `archive/` (settled entries, full text); `python script/plan.py status` lists what is open.
 
-The log is split by level; ids are shared and keep counting across the files (an id not found here is in another file). A new entry goes to the file of its topic. The levels are in [feature_map.md](../feature_map.md). Settled and implemented entries move to [archive/decision_level2.md](archive/level2.md); this file keeps the scope, the newest decisions and the open questions.
+The log is split by level; ids are shared and keep counting across the files (an id not found here is in another file). A new entry goes to the file of its topic. The levels are in spec/features. Settled and implemented entries move to archive/decision_level2.md; this file keeps the scope, the newest decisions and the open questions.
 
 ## Scope
 
@@ -58,85 +58,6 @@ All settled, in the archive (`python script/plan.py show <id>`): D-066 (an aspec
 - D-149 Overloading of functions, procedures and methods; the signature
 - Q-042 Generic subprograms and overloading: rules added by the specification (answered: D-150)
 - D-150 Rules of the generic subprograms and of overloading, confirmed
-
-## D-149 Overloading of functions, procedures and methods; the signature (2026-10-09)
-Author decision (2026-10-09), follows D-148 (a lambda has no type list; work that differs by type is written as overloaded functions). Feature F-LNG-21.
-- **Overloading.** Several functions, procedures or methods may have the same name when their signatures differ.
-- **Signature.** The number of parameters and the types of the parameters; for a function (it has a result) also the type of the result. A procedure has no result: its signature is its parameters only.
-- **Compile time.** The signature is selected at compile time, never at run time by the type of a value. The call picks it by the number and types of the arguments; for functions that differ only by the result type, the type expected at the call decides: `new n := parse(s) :Integer;`, `new r := parse(s) :Real;`.
-- **Unique.** The call must identify exactly one signature. A call that matches two signatures, or none, is a compile error that lists the candidates; this covers defaults and varargs (`f(x: Integer)` and `f(x: Integer, y := 1)` are ambiguous for `f(5)`).
-- **Functions and procedures.** A function name and a procedure name are always distinct: a function and a procedure can not share a name.
-- **Methods.** A method without a result (called like a procedure, as a statement) and a method with a result (called like a function, in an expression) may share a name: they are different methods. The place of the call selects one: `log.flush();` as a statement, `new n := log.flush();` in an expression.
-- **Version 0.4** (author, 2026-10-09), with the generic functions (F-LNG-20).
-
-## Q-042 Generic subprograms and overloading: rules added by the specification (2026-10-09)
-Model proposals written into `spec/syntax/declarations.md#generic-subprograms-and-overloading` as *(proposed)*, and used by the tests e01 to e15.
-
-(a) The type parameters are inferred from the arguments only, not from the type expected for the result: `function make(:T)() => (@result: ()T)` is always called `make(:Integer)()`.
-
-**Answer:** Confirmed (2026-10-09).
-
-(b) The names of the parameters, their defaults and the `@` marks are not part of the signature: `f(a: Integer)` and `f(b: Integer)` are the same signature (a compile error).
-
-**Answer:** Confirmed (2026-10-09).
-
-(c) Processes, constructors, lambdas and function variables are not overloaded.
-
-**Answer:** Confirmed (2026-10-09).
-
-(d) An extension method may overload a method of the class with another signature; with the same signature it is a compile error (it would replace the method, `methods.html`).
-
-**Answer:** Confirmed (2026-10-09).
-
-(e) When a generic subprogram and a plain one with the same name both accept the arguments, the plain one wins (it fits exactly), instead of a compile error for an ambiguous call.
-
-**Answer:** Confirmed (2026-10-09).
-
-(f) The messages of the compile errors: `can not infer the type T of make`, `a lambda has no type list`, `ambiguous call of f`, `no signature of half matches`, `report is both a function and a procedure`, `half is declared twice with the same signature`.
-
-**Answer:** Confirmed (2026-10-09).
-All correct assumptions. Confirmed by Author.
-
-## D-150 Rules of the generic subprograms and of overloading, confirmed (2026-10-09)
-Author decision: the six proposals of Q-042 are confirmed as written. (a) A type parameter is inferred from the arguments only, never from the type expected for the result. (b) The names of the parameters, their defaults and the `@` marks are not part of a signature. (c) Processes, constructors, lambdas and function variables are not overloaded. (d) An extension method may overload a method of its class with another signature; with the same signature it is a compile error. (e) When a generic subprogram and a plain one both accept the arguments, the plain one wins. (f) The compile errors say `can not infer the type T of make`, `a lambda has no type list`, `ambiguous call of f`, `no signature of half matches`, `report is both a function and a procedure`, `half is declared twice with the same signature`. Applied: `spec/syntax/declarations.md#generic-subprograms-and-overloading` (the *(proposed)* marks are removed), `tutorial/methods.html`, tests e01 to e15.
-
-## Q-058 The unified aspect: one executable kind, no driver, no macro, no free script (2026-10-14) (answered 2026-10-14 → D-179)
-Author proposal (2026-10-14): the aspect is the one unit of execution. A file is an aspect or a module; a "driver" is the aspect the machine runs first, a "macro" is an aspect with shared declarations and several named processes, `apply a(…)` and `start a(…)` run `a.main`, `apply a.p(…)` and `start a.p(…)` run a named process, and inside an aspect a process starts its siblings by their bare names in a `parallel` group. Three rules: race safety of the shared state, a bounded task tree, arguments by value. It replaces D-012, D-037, D-040, the scopes of D-043, D-066, the free script of D-014, D-091 and D-126, and D-152; D-140 is adjusted (depth from the root). Plan, rules made precise and the size of the work: `design/design-unified-aspect.md`. To decide, recommendation first: (a) a process with a leading dot is public (`process .ingest`), `main` always, the others only for siblings; or every process public. (b) one aspect per file; or private helper aspects in the file. (c) `exclusive`/`concurrent` per aspect; or per process. (d) any aspect may apply another, cycles are compile errors; or only the root applies. (e) depth as in D-140 counted from the root; or one level only. (f) `eve pipeline.eve:ingest args`; or an option `-e ingest`. (g) `driver` removed, a migration error for one version; or a synonym of `aspect`. (h) free scripts removed, `#!` legal on line 1 of an aspect; or `#!` + statements as a short form of `process main`. (i) level 1 teaches `aspect` with `main`, level 2 named processes, level 4 sibling `start`, F-STR-09 (macro) dropped for F-STR-10.
-**Answer:** in `design/design-unified-aspect.md` §4 of 2026-10-14, recorded as D-179: aspects are called by name only, `main` is the one entry point, the other processes are private; macros stay, free scripts and `#!` go; 3 levels of calls, no cycle.
-
-## D-179 The unified aspect: no `driver` keyword, no free script, private processes (2026-10-14)
-Author decision, answers to Q-058 (the author's own words are in `design/design-unified-aspect.md` of that date). Replaces D-012, D-037 and D-040 (the `driver` header), the driver scope of D-043, the free script of D-014, D-091 and D-126, and the `#!` of D-152; refines D-066 and D-140.
-- **One kind that runs.** A script is an aspect (one, or several in a macro) or a module. `driver` is no longer a keyword: any aspect can be a driver, and "driver" stays in the text as a role, the aspect that is run first and calls the others.
-- **Encapsulated (D-066 kept).** An aspect is called by its name only (`apply a(…)`, `start a(…)`), `process main` is its one public entry point, and the dot is never applied to an aspect. Every other process of the aspect is private: only the processes of the same aspect call it, by its bare name; started ones run on the state of the aspect and use only its thread-safe names. `exclusive`/`concurrent` stays a word of the aspect (D-090, D-130).
-- **Calls.** Any aspect may apply or start another. An aspect can't call itself and no chain of calls comes back to an aspect in it (compile error). At most 3 levels: the root aspect, an aspect it calls, and one called from there.
-- **Free script and `#!` removed.** Line 1 is a `#` title or a `##` subtitle, or the code itself. Eve does not compete with Bash or Python as a shell script language.
-- **The Eve macro stays** (D-152): shared declarations and several aspects in one file, for demos and tests; its driver is its `primary aspect` (D-180).
-- Rules made precise and the plan of the work (steps U1 to U8): `design/design-unified-aspect.md`. Not yet applied.
-
-## Q-059 The details of D-179: the driver of a macro, private processes and levels (2026-10-14) (answered 2026-10-14 → D-180)
-(a) A macro has no `driver` keyword any more: which of its aspects does `eve file.eve` run? Recommended: the aspect that has the name of the file (the tests already name the driver like the file, D-133); without one, a compile error. Other: the last aspect of the file; or the one aspect that no other aspect of the file calls. (b) Does a private process count as a level? Recommended: an `apply` of a private process does not (it is serial, like a procedure call); a `start` of one counts as a task level for the limits of D-140, so an aspect of level 3 may not start its private processes. Other: private processes never count.
-**Answer:** (a) a `primary` aspect is the entry point of a macro; (b) only a call of an aspect is a level, never a private process. Recorded as D-180.
-
-## D-180 `primary aspect`: the entry point of a macro; levels count aspects only (2026-10-14)
-Author answers to Q-059. Refines D-152 and D-179.
-- **`primary aspect name is`.** In a macro the entry point is marked with `primary` in front of `aspect`, in the place of `exclusive` or `concurrent`: a primary aspect is neither. `primary` is used only in a macro. A macro has exactly one primary aspect; none or two is a compile error, and `primary` in a file with one aspect is a compile error. `eve file.eve` runs its `main`; it is the root of the run, so no aspect applies or starts it.
-- **Levels.** Only an `apply` or a `start` of an aspect makes a level (3 at most, D-179); a call of a private process, applied or started, never does. In a macro the calls between its aspects count like any other.
-- **Serial.** A primary aspect exists only in a macro and is serial: its processes are exclusive (applied, never started), but its parallel groups start aspects (author, 2026-10-14).
-- **Reserved.** `primary`, `exclusive` and `concurrent` are reserved keywords, all three of the same design (D-090); `primary` goes into `spec/lexical/keywords.json` with them.
-- Details: `design/design-unified-aspect.md` rules 2, 7 and 8. Not yet applied.
-
-## D-181 `primary aspect` is a kind of aspect for any file; it is run by a command only (2026-10-14)
-Author decision, a correction of D-180. Replaces "only in a macro" of D-180.
-- **Three kinds, one design.** `exclusive aspect` (the default), `concurrent aspect` and `primary aspect` are reserved words that go in front of `aspect`, in any file, not only in a macro. A file with one `primary aspect` is the shortest program.
-- **Who calls what.** An exclusive aspect is called with `apply`. A concurrent aspect is called with `apply` or `start`. A primary aspect is designed to be executed first and can run alone: **no aspect applies or starts it**, it is run by a command (`eve file.eve`, the machine API, a schedule). `apply` or `start` of a primary aspect is a compile error.
-- **Serial.** A primary aspect is serial: its processes are exclusive (applied, never started), and its parallel groups start aspects.
-- **In a macro** there is exactly one primary aspect (D-180); it is the aspect that `eve file.eve` runs.
-- **The word driver** is not used as a role in the tutorial any more (page drivers.html dissolved, 2026-10-14); a `driver` of the old tests and demos becomes a `primary aspect`.
-- Details and consequences: `design/design-unified-aspect.md` rules 7 and 8. Q-060 asks whether the machine may also run an exclusive or a concurrent aspect by a command.
-
-## Q-060 The details of D-181: running an aspect that is not primary (2026-10-14) (answered 2026-10-14 → D-182)
-(a) May `eve file.eve` run an exclusive or a concurrent aspect, for example to test one aspect alone? Recommended: yes, the machine runs any aspect and takes it as the root of the run; `primary` only forbids being called by an aspect (it removes nothing from the command line). Other: the command line runs only a primary aspect, and a test of one aspect needs a small primary aspect that applies it. (b) May a project hold several primary aspects (several use cases, D-133)? Recommended: yes, one for each file. (c) The old `driver` of the tests: 376 files, `driver x is` becomes `primary aspect x is`; 2 recommended exceptions: none.
-**Answer:** (a) yes, an exclusive aspect can be run by a command, for testing. (b) yes, a project can be based on one or several primary aspects. (c) the old drivers become primary aspects in general; some may become exclusive aspects. Recorded as D-182.
 
 ## D-182 What a command can run: primary and exclusive aspects (2026-10-14)
 Author answers to Q-060. Refines D-181.

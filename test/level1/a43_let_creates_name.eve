@@ -1,4 +1,4 @@
-# let changes names and creates the ones that are missing, by type inference (Q-017, D-096)
+# let changes names and creates the ones that are missing, by type inference
 ** spec: syntax/statements.md#let
 primary aspect a43_let_creates_name is
   process main is

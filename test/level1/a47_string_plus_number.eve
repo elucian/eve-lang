@@ -1,4 +1,4 @@
-# + between a string and a number is a type error; <+ converts the number (D-080)
+# + between a string and a number is a type error; <+ converts the number
 ** spec: syntax/expressions.md#arithmetic
 primary aspect a47_string_plus_number is
   process main is

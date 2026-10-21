@@ -1,4 +1,4 @@
-# a function can call itself: Fibonacci (from demo/fibonacci.eve, D-099)
+# a function can call itself: Fibonacci (from demo/fibonacci.eve)
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b32_recursion is
 

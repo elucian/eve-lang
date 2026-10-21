@@ -1,4 +1,4 @@
-# if, else if, else and the conditional statement (D-016)
+# if, else if, else and the conditional statement
 ** spec: semantics/control.md#if
 primary aspect a12_if is
   process main is

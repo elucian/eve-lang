@@ -17,11 +17,13 @@ Run everything from the repository root. Scratch files and logs go in `temp/`, n
 | evetx (terminal IDE) | `cd code/evetx && zig build -p ../../temp/evetx`, then `zig build test` there; also `drivers/duckdb`, `code/eveux` via `./run.sh build <part>` |
 | Performance (VM changes) | `python script/bmark.py --build ReleaseSafe --eve temp/rel/bin/eve.exe --check`, before and after |
 | Tags and links | `python script/tagcheck.py`; size budget `python script/ctxsize.py --check` |
+| Spec, tests and manual agree (links, no design in the spec, manual up to date) | `python generator/evegen.py check`; rebuild with `python generator/evegen.py all` |
 
 ## Rules
 
 - Pipe long output to `temp/` and read the tail: `... > temp/output_x.txt 2>&1; tail -5 temp/output_x.txt`.
-- `runtest.py` rewrites `test/*/status.json`. If you did not mean to change test results, `git checkout test/*/status.json` before committing.
+- `runtest.py` rewrites the tracking file of each suite it ran, `test/<suite>/<suite>.json` (also `bytecode` and `scaffold`). If you did not mean to change test results, `git checkout test/*/*.json` before committing. The field `features` of a test is written by hand and kept by the runner.
+- Reports are JSON in `temp/output/`: `<level>/<name>.json` only for a test that failed (the diff is also printed when one test is run), `<targets>.json` for a run of several tests. A test that passes leaves no file.
 - Which engine runs which test: conformance tests on the tree walker only; `test/bytecode/` and `test/bmark/` on the bytecode machine (`test/readme.md`, "Which engine runs which test"). Run `bctest.py` after any change of `emit.zig`, `op.zig` or `bcvm.zig`.
 - A failing test with `expected output not found: '<text>'` after a pure refactor means a message text changed. Look first at what the refactor did to string literals.
 - evetx has no automated screen tests; a pure move of code is verified by the build plus `zig build test`. A headless smoke harness can be rebuilt in `temp/` (pywinpty + pyte, memory `evetx-tui-smoke-test`).

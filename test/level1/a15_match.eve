@@ -1,4 +1,4 @@
-# match with values, lists of values, ranges, other, one and all (D-016, D-030)
+# match with values, lists of values, ranges, other, one and all
 ** spec: semantics/control.md#match
 primary aspect a15_match is
   process main is

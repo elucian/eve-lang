@@ -1,4 +1,4 @@
-# a parameter after optional parameters can't be positional: the call must name it (D-106)
+# a parameter after optional parameters can't be positional: the call must name it
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b38_named_required is
   procedure add(p1 = 0, p2 = 1: Integer, @op: Integer) is

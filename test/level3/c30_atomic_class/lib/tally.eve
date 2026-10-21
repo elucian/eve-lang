@@ -1,4 +1,4 @@
-# tally: a class derived from Atomic(:Integer) is an atomic type; a variable of that class is atomic (D-132)
+# tally: a class derived from Atomic(:Integer) is an atomic type; a variable of that class is atomic
 managed module tally is
   export (bump, value!);
 

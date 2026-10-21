@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tests",
+  "description": "The tracking file of one test suite: test/<suite>/<suite>.json, written by the test runner.",
+  "type": "object",
+  "required": ["suite", "kind", "title", "tests"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "suite": { "type": "string" },
+    "kind": { "enum": ["level", "special"] },
+    "title": { "type": "string" },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "title", "features", "status", "runs", "failures", "checks", "last", "mtime", "reason"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "title": { "type": "string" },
+          "features": { "type": "array", "items": { "type": "string" } },
+          "status": { "enum": ["NEW", "PASS", "FAIL", "ERROR", "SKIP"] },
+          "runs": { "type": "integer" },
+          "failures": { "type": "integer" },
+          "checks": { "type": "integer" },
+          "last": { "type": "string" },
+          "mtime": { "type": "integer" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

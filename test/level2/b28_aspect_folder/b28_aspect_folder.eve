@@ -1,4 +1,4 @@
-# apply with a folder: the aspect is searched there first, then in asp/ and in the root (D-112)
+# apply with a folder: the aspect is searched there first, then in asp/ and in the root
 ** spec: semantics/aspects.md#finding-the-aspect
 primary aspect b28_aspect_folder is
   process main is

@@ -1,4 +1,4 @@
-# panic in an aspect ends the whole application with exit code 1 (D-072 d)
+# panic in an aspect ends the whole application with exit code 1
 primary aspect b08_aspect_panic is
   process main is
     apply crash();

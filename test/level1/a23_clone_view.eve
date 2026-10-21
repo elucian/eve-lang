@@ -1,4 +1,4 @@
-# := shares a collection or an object, :: makes a deep copy, native values are always copied (D-049)
+#:= shares a collection or an object,:: makes a deep copy, native values are always copied
 ** spec: syntax/declarations.md#variables-and-constants
 primary aspect a23_clone_view is
   process main is

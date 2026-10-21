@@ -1,4 +1,4 @@
-# an Eve macro: shared declarations, an exclusive aspect and the primary aspect in one file (D-152)
+# an Eve macro: shared declarations, an exclusive aspect and the primary aspect in one file
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set step = 5 :Integer;

@@ -1,4 +1,4 @@
-# two traits that provide the same method force the class to write it (D-145)
+# two traits that provide the same method force the class to write it
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d34_trait_conflict is
   trait Hello is

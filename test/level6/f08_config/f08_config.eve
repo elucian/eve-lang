@@ -1,4 +1,4 @@
-# the standard module config, in Eve: key = value files into a DataMap (F-TLS-12, D-189)
+# the standard module config, in Eve: key = value files into a DataMap (F-TLS-12)
 ** spec: library/config.md
 primary aspect f08_config is
   from lib use (config);

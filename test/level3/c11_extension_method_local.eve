@@ -1,4 +1,4 @@
-# an extension method: declared outside the class, first parameter @self with the class type (D-086)
+# an extension method: declared outside the class, first parameter @self with the class type
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c11_extension_method_local is
   class Point = {x, y :Integer} <: Object is

@@ -1,4 +1,4 @@
-# an Ordinal is a set of named integer values; the first value is 1 unless one is given (Q-029, D-096)
+# an Ordinal is a set of named integer values; the first value is 1 unless one is given
 ** spec: semantics/types.md#composite-types
 primary aspect a16_ordinal is
   class Color = {Red, Green, Blue} <: Ordinal;

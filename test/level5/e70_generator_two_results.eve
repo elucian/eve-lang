@@ -1,4 +1,4 @@
-# a generator has exactly one result: compile error (D-067)
+# a generator has exactly one result: compile error
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e70_generator_two_results is
   generator pairs(n: Integer) => (@a: Integer, @b: Integer) is

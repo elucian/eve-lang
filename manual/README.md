@@ -1,6 +1,6 @@
 # Eve manual
 
-This is the manual of **Eve**, a scripting language for data processing and test automation, and of its first implementation: the Eve virtual machine, `eve`, written in Zig. The language itself is defined by the [specification](https://github.com/elucian/eve-lang/blob/master/spec/index.md) and taught by the [tutorial](https://sagecode.org/projects/eve/index.html); this manual says how to install and use the programs, which features work, and how well.
+This is the manual of **Eve**, a scripting language for data processing and test automation, and of its first implementation: the Eve virtual machine, `eve`, written in Zig. The language is taught by the [tutorial](https://sagecode.org/projects/eve/index.html); this manual says how to install and use the programs, which features work, and how well.
 
 ## Contents
 
@@ -30,35 +30,36 @@ A distribution holds `bin/` (the programs and `duckdb.dll`), `lib/` (the standar
 Written by the release tooling at every release, never by hand.
 
 <!-- GEN:progress (script/relnotes.py) -->
-State of the working tree on 2026-10-19, version 0.0.7, not a release; last release: no release notes yet.
+State of the working tree on 2026-10-20, version 0.0.7, not a release; last release: no release notes yet.
 
-**Tests.** 409 of 409 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
+**Tests.** 436 of 441 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
 
 | Tests | Total | Pass | % |
 |---|---|---|---|
-| Level 1 | 73 | 73 | 100% |
-| Level 2 | 78 | 78 | 100% |
-| Level 3 | 58 | 58 | 100% |
-| Level 4 | 47 | 47 | 100% |
-| Level 5 | 117 | 117 | 100% |
-| Level 6 | 15 | 15 | 100% |
-| Level 7 | 0 | 0 | - |
+| Level 1 | 76 | 74 | 97% |
+| Level 2 | 78 | 77 | 98% |
+| Level 3 | 62 | 62 | 100% |
+| Level 4 | 50 | 50 | 100% |
+| Level 5 | 117 | 115 | 98% |
+| Level 6 | 14 | 14 | 100% |
+| Level 7 | 2 | 2 | 100% |
 | Smoke | 21 | 21 | 100% |
+| Bytecode | 20 | 20 | 100% |
+| Scaffold | 1 | 1 | 100% |
 
-**Features.** By target version and stage (the stages and every feature: [features](features.md)):
+**Features.** By level and stage (the stages and every feature: [features](features.md)):
 
-| Version | Validated | Drafted | Design | Planned | Total |
+| Level | Validated | Drafted | Design | Planned | Total |
 |---|---|---|---|---|---|
-| Version 0.1 | 25 | 10 | 0 | 0 | 35 |
-| Version 0.2 | 5 | 8 | 0 | 1 | 14 |
-| Version 0.3 | 5 | 8 | 0 | 2 | 15 |
-| Version 0.4 | 2 | 8 | 9 | 12 | 31 |
-| Version 0.5 | 0 | 6 | 11 | 7 | 24 |
-| Version 0.6 | 0 | 1 | 8 | 4 | 13 |
-| Version 0.7 | 2 | 1 | 2 | 0 | 5 |
-| Version 0.9 | 0 | 0 | 0 | 3 | 3 |
-| Version 1.0 | 0 | 0 | 0 | 2 | 2 |
-| **All** | **39** | **42** | **30** | **31** | **142** |
+| Level 1 | 14 | 5 | 0 | 0 | 19 |
+| Level 2 | 2 | 1 | 0 | 0 | 3 |
+| Level 3 | 5 | 8 | 0 | 1 | 14 |
+| Level 4 | 5 | 8 | 0 | 2 | 15 |
+| Level 5 | 7 | 14 | 0 | 8 | 29 |
+| Level 6 | 0 | 6 | 0 | 23 | 29 |
+| Level 7 | 0 | 2 | 0 | 8 | 10 |
+| All levels | 13 | 5 | 0 | 7 | 25 |
+| **All** | **46** | **49** | **0** | **49** | **144** |
 
 **Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-19 17:49 (commit `b3019cb`), against the twins in Python and against nothing (first run). Every benchmark: [performance report](performance.md).
 
@@ -80,6 +81,17 @@ State of the working tree on 2026-10-19, version 0.0.7, not a release; last rele
 - [Tests: summary](tests.md)
 - [Performance report](performance.md)
 - [Release notes](releases/README.md)
+- [Level 1: features and examples](levels/level1.md)
+- [Level 2: features and examples](levels/level2.md)
+- [Level 3: features and examples](levels/level3.md)
+- [Level 4: features and examples](levels/level4.md)
+- [Level 5: features and examples](levels/level5.md)
+- [Level 6: features and examples](levels/level6.md)
+- [Level 7: features and examples](levels/level7.md)
+- [All levels: tools and documents](levels/all.md)
+- [Reference: keywords](reference/keywords.md)
+- [Reference: operators](reference/operators.md)
+- [Reference: delimiters](reference/delimiters.md)
 - [Component: evevm](evevm/README.md)
 - [Component: evecp](evecp/README.md)
 - [Component: evecm](evecm/README.md)
@@ -87,8 +99,6 @@ State of the working tree on 2026-10-19, version 0.0.7, not a release; last rele
 - [Component: eveux](eveux/README.md)
 - [Component: evewp](evewp/README.md)
 - [Driver: duckdb](drivers/duckdb/README.md)
-- [Specification: contents](https://github.com/elucian/eve-lang/blob/master/spec/index.md)
-- [Specification: conventions](https://github.com/elucian/eve-lang/blob/master/spec/README.md)
 - [Tutorial: topics](https://sagecode.org/projects/eve/index.html)
 - [Tutorial: feature tests](https://sagecode.org/projects/eve/features.html)
 - [Tutorial: smoke test and performance](https://sagecode.org/projects/eve/quality.html)

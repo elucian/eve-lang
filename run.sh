@@ -54,7 +54,7 @@ build_part() {
 # the generated parts of the manual and the tutorial: from spec/ (keywords, features) and from the source (lib/doc)
 build_manual() {
   python script/genkeywords.py && python code/evetx/gen_keywords.py && zig build doc &&
-    python script/genpages.py && python script/genmanual.py && python script/relnotes.py --manual
+    python script/genpages.py && python generator/evegen.py all && python script/relnotes.py --manual
 }
 case "$1" in
   "" | -h | --help) sed -n "2,21p" "$0" | sed 's/^# \{0,1\}//' ;;

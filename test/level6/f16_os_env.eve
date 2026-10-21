@@ -1,4 +1,4 @@
-# os.run! gives variables to the program it starts: a map String -> String is added to its environment (CMD-04, G-10, D-202)
+# os.run! gives variables to the program it starts: a map String -> String is added to its environment (CMD-04, G-10)
 ** spec: library/os.md
 primary aspect f16_os_env is
   process main is

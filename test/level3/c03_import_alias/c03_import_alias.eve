@@ -1,4 +1,4 @@
-# use (m as x): members are reached through the alias (D-072)
+# use (m as x): members are reached through the alias
 primary aspect c03_import_alias is
   from lib use (geometry as g);
 

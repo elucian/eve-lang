@@ -1,4 +1,4 @@
-# the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables (D-187)
+# the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables
 ** spec: library/data-engines.md
 ** The runner starts `eve db serve evedb.cfg`; the client (check/run.py) runs this script and stops evedb.
 primary aspect g02_evedb_columnar is

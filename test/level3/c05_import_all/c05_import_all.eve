@@ -1,4 +1,4 @@
-# use (*): every module of the folder, names merged into the scope (D-072)
+# use (*): every module of the folder, names merged into the scope
 primary aspect c05_import_all is
   from lib use (*);
 

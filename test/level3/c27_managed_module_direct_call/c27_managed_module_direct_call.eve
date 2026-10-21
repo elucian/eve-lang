@@ -1,4 +1,4 @@
-# a managed module that calls a direct module is rejected (D-129)
+# a managed module that calls a direct module is rejected
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c27_managed_module_direct_call is
   from lib use (calm);

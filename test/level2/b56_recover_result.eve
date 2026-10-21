@@ -1,4 +1,4 @@
-# when recover ends, the function returns its result variables as they are: the zero value if recover sets nothing (D-192)
+# when recover ends, the function returns its result variables as they are: the zero value if recover sets nothing
 ** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
 primary aspect b56_recover_result is
   function risky(n: Integer) => (@result: Integer) is

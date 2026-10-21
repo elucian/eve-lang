@@ -109,7 +109,7 @@ The work that turns "a folder with two drafts" into a real library:
 | M6 | E7 `jobs`, E8 `log`, E9 `pager`, S11 `regex` | `f14_jobs`, `f15_pager_1m_rows`, `f16_log_follow` |
 | M7 | level 7 gate: E12 `html`, E13 `syntax`; a vertical slice of eveux (list machines, follow one log) | `g01_eveux_slice`; list of gaps in `backlog/library-gaps.md` |
 
-Order inside a milestone is free. Each milestone ends with: `runtest.py all` on ReleaseSafe, `bmark.py --check`, the status mark of the features in `design/feature_map.md`.
+Order inside a milestone is free. Each milestone ends with: `runtest.py all` on ReleaseSafe, `bmark.py --check`, the status mark of the features in `spec/features/`.
 
 ## 9. Q-064: questions for the author
 
@@ -182,7 +182,7 @@ Next steps in the order of D-190: spec pages `os.md`, `crypto.md`, `test.md`, `r
 
 - Done: `http` (Request, HttpResponse, `read_request!`, `respond`, `get!`, `post!`), `route` (route table, patterns with `{name}`, `Reply`, 404/405/500) and `service` (`handle`, `serve`), all in Eve over `net`; test `f10_route_hello` runs a server with five routes and a client in one script (`spec/library/http.md`, `route.md`). The `recover` of a function (D-192) is what makes a failing handler a 500.
 - Found: G-8 (a module member named like a prelude module hides it), G-9, and again G-6 (`method`). Debt: TD-29, TD-30.
-- Left in M3: the exit test with a machine on one port and a client project on another (`f11_two_machines`), the performance benchmark `p6e`, and the status marks of F-NET-02 and F-STR-08 in `design/feature_map.md`.
+- Left in M3: the exit test with a machine on one port and a client project on another (`f11_two_machines`), the performance benchmark `p6e`, and the status marks of F-NET-02 and F-STR-08 in `spec/features/`.
 
 ## 16. Round-up of M3 (2026-10-18)
 

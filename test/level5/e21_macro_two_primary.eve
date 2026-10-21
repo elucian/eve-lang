@@ -1,4 +1,4 @@
-# a macro has one primary aspect: a second one is a compile error (D-152)
+# a macro has one primary aspect: a second one is a compile error
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set greeting = "hello" :String;

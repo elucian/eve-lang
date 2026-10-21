@@ -1,4 +1,4 @@
-# functions and procedures share a name when the number of their parameters differs (D-149)
+# functions and procedures share a name when the number of their parameters differs
 ** spec: syntax/declarations.md#overloading
 primary aspect e06_overload_count is
   function area(side: Integer) => (@result: Integer) is

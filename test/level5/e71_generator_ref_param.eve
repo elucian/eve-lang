@@ -1,4 +1,4 @@
-# a generator has inputs only, by value: an @ parameter is a compile error (D-067)
+# a generator has inputs only, by value: an @ parameter is a compile error
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e71_generator_ref_param is
   generator fill(@total: Integer) => (@x: Integer) is

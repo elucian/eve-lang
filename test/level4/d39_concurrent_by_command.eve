@@ -1,4 +1,4 @@
-# a command does not run a concurrent aspect: it is called from a primary or an exclusive aspect (D-183)
+# a command does not run a concurrent aspect: it is called from a primary or an exclusive aspect
 ** spec: syntax/declarations.md#scripts
 concurrent aspect d39_concurrent_by_command is
   process main is

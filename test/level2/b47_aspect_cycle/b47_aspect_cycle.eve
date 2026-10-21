@@ -1,4 +1,4 @@
-# a chain of calls that comes back to an aspect is a compile error (D-179)
+# a chain of calls that comes back to an aspect is a compile error
 ** spec: semantics/aspects.md#apply
 primary aspect b47_aspect_cycle is
   process main is

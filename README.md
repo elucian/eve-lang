@@ -15,7 +15,7 @@ You can learn Eve on our website: [sagecode.org](https://sagecode.org). The tuto
 
 ## Features
 
-The features and their versions are planned in [design/feature_map.md](design/feature_map.md). The [Eve manual](manual/README.md) tells you how to use the programs, which features work, the tests and the performance.
+The features and their versions are planned in spec/features/. The [Eve manual](manual/README.md) tells you how to use the programs, which features work, the tests and the performance.
 
 
 ## Testing

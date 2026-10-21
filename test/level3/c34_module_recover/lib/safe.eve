@@ -1,4 +1,4 @@
-# safe: exported functions and procedures that handle their own errors (D-192)
+# safe: exported functions and procedures that handle their own errors
 module safe is
   export (divide, log_failure, failures!);
 

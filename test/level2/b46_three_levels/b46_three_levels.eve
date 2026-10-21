@@ -1,4 +1,4 @@
-# an aspect calls an aspect that calls a third one: three levels (D-179)
+# an aspect calls an aspect that calls a third one: three levels
 ** spec: semantics/aspects.md#apply
 primary aspect b46_three_levels is
   process main is

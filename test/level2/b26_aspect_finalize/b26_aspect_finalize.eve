@@ -1,4 +1,4 @@
-# finalize of an aspect runs when main ends, also by over; then the primary aspect goes on (D-063, D-072)
+# finalize of an aspect runs when main ends, also by over; then the primary aspect goes on
 ** spec: semantics/aspects.md#errors-across-apply
 primary aspect b26_aspect_finalize is
   process main is

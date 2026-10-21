@@ -1,4 +1,4 @@
-# a sql function is deterministic: its name can not end with ! (D-166)
+# a sql function is deterministic: its name can not end with !
 ** spec: library/database.md#sql-functions
 primary aspect e99_sql_function_bang is
   sql function stamp!(x: Integer) => (@result: Integer) is

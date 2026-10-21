@@ -1,4 +1,4 @@
-# JSON-RPC 2.0 over HTTP between a server and a client on localhost: rpc, http, route, service and net together (F-NET-08, D-189)
+# JSON-RPC 2.0 over HTTP between a server and a client on localhost: rpc, http, route, service and net together (F-NET-08)
 ** spec: library/rpc.md
 primary aspect f11_rpc_roundtrip is
   from lib use (rpc, http, route, service);

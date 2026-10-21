@@ -1,10 +1,10 @@
 # Data engines and legacy files
 
-Status: **first draft (2026-10-17)**, decision D-184. The behaviour below is implemented in the machine (`code/evevm/src/db/columnar.zig`, `dbf.zig`, `importer.zig`, and the commands `eve db import` and `eve db export`). The Eve syntax is decided in Q-059 (`design/decision/level6.md`) and shown in the section "The `Memory` class" below: this page defines what the operations do and what they are called in the machine, not how a script writes them.
+Status: **first draft (2026-10-17)**. The behaviour below is implemented in the machine (`code/evevm/src/db/columnar.zig`, `dbf.zig`, `importer.zig`, and the commands `eve db import` and `eve db export`). The Eve syntax is decided in and shown in the section "The `Memory` class" below: this page defines what the operations do and what they are called in the machine, not how a script writes them.
 
 ## Two engines
 
-**Where each one lives (D-203).** SQLite is compiled into every `eve` (the light edition, usually a client) and holds its own state and the functions written in Eve. DuckDB lives in evedb, the enterprise edition: the same code as `eve` plus DuckDB, so Eve procedures, functions and business logic run inside the server (level 7). A script reaches the DuckDB files through `evedb://` (column batches, the fast path) or `postgres://` (other tools). `../../drivers/duckdb/README.md` sections 3A and 3B give the roles and the layout of the files.
+**Where each one lives.** SQLite is compiled into every `eve` (the light edition, usually a client) and holds its own state and the functions written in Eve. DuckDB lives in evedb, the enterprise edition: the same code as `eve` plus DuckDB, so Eve procedures, functions and business logic run inside the server (level 7). A script reaches the DuckDB files through `evedb://` (column batches, the fast path) or `postgres://` (other tools). `../../drivers/duckdb/README.md` sections 3A and 3B give the roles and the layout of the files.
 
 | Engine | What it is for | Where the data lives |
 |---|---|---|
@@ -19,17 +19,17 @@ Every `:memory:` database is opened with these PRAGMAs, set by `Db.open` (`tuneM
 
 | PRAGMA | Value | Why |
 |---|---|---|
-| `journal_mode` | `MEMORY` | the rollback journal stays in memory; `OFF` was proposed in D-184 (d), but it makes `rollback` unsafe, and a job rolls back |
+| `journal_mode` | `MEMORY` | the rollback journal stays in memory; `OFF` was proposed in (d), but it makes `rollback` unsafe, and a job rolls back |
 | `synchronous` | `OFF` | no wait for the disk |
 | `temp_store` | `MEMORY` | temporary tables and indexes stay in memory |
 | `cache_size` | large (negative value: kibibytes) | the pages stay in the cache |
 | `locking_mode` | `EXCLUSIVE` | one connection owns the database |
 
-A database that is a file is not tuned by the machine: it keeps the defaults of SQLite (a durable journal and `synchronous=FULL`); a different mode for files (`WAL` with `synchronous=NORMAL` was proposed in D-184 (d)) waits until the files of the tests can be checked with it. Relational indexing is SQLite's: `create index`, unique indexes and the query planner.
+A database that is a file is not tuned by the machine: it keeps the defaults of SQLite (a durable journal and `synchronous=FULL`); a different mode for files (`WAL` with `synchronous=NORMAL` was proposed in (d)) waits until the files of the tests can be checked with it. Relational indexing is SQLite's: `create index`, unique indexes and the query planner.
 
 ## The `Memory` class
 
-A columnar table is declared like a class, with field names and types, derived from `Memory` (answer to Q-059 (a)); a column is named by its field (Q-059 (c)):
+A columnar table is declared like a class, with field names and types, derived from `Memory` (answer to (a)); a column is named by its field ( (c)):
 
 ```eve
 class Sales = {id: Integer, region: String, price: Real, paid: Logic, note: String?} <: Memory;
@@ -72,7 +72,7 @@ Methods of a column (`s.price`):
 | `at(row)` | the cell, or `null` for a NULL; an index error outside the table |
 | `filter(op, value)` | the list of the numbers of the rows that match, in order; `op` is the text `"="`, `"<>"`, `"<"`, `"<="`, `">"` or `">="`; a number column takes a number, a `String` column a `String` (compared byte by byte), a `Logic` column `True` or `False`; a NULL never matches |
 
-Tests: `test/level5/e111_memory_table`.
+
 
 ## The columnar table
 
@@ -102,7 +102,7 @@ On an `evedb://` connection `load` and `store` move **column batches** (the arra
 | `load` a table into a SQLite database as the name `n` | makes the table `n` (it must not exist) and inserts every row in **one transaction** with one prepared statement; a date is stored as the text `YYYY-MM-DD`, a timestamp as `YYYY-MM-DD HH:MM:SS`, a boolean as 0 or 1; on any error nothing is kept |
 | `store` the answer of a query | makes a columnar table from the rows of a `select`: a column takes the type of the first value that is not NULL (integer, real, otherwise text); a value of another type in that column is stored as NULL |
 
-The copy is **explicit** (answer of the author to D-184 (c)): a script that wants a table in SQLite says `load`, a script that wants the rows of a query as columns says `store`.
+The copy is **explicit** (answer of the author to (c)): a script that wants a table in SQLite says `load`, a script that wants the rows of a query as columns says `store`.
 
 ## Files: legacy ingestion
 
@@ -129,8 +129,8 @@ The commands (`eve db …`, also typed at the prompt as `db …`):
 
 An import that fails (a file that is not of its format, a table that exists) changes nothing.
 
-In a script the same import is a method of the connection (answer to Q-059 (d)): `shop.import("data/items.csv", "items")` loads the file as the new table `items` and answers the number of rows. It runs in a savepoint, so inside the transaction of a job it is undone by `rollback;` with the rest. The formats are the same; a spreadsheet must be exported to CSV first (Q-059 (e)). Test: `test/level5/e110_connection_import`.
+In a script the same import is a method of the connection (answer to (d)): `shop.import("data/items.csv", "items")` loads the file as the new table `items` and answers the number of rows. It runs in a savepoint, so inside the transaction of a job it is undone by `rollback;` with the rest. The formats are the same; a spreadsheet must be exported to CSV first ( (e)).
 
 ## Open points
 
-`Decimal` and `Instant` fields in a `Memory` table (and the columns DECIMAL and TIMESTAMP in the importers); a streaming import for files that do not fit in memory. XLS and XLSX are not read: the user exports to CSV (Q-059 (e)).
+`Decimal` and `Instant` fields in a `Memory` table (and the columns DECIMAL and TIMESTAMP in the importers); a streaming import for files that do not fit in memory. XLS and XLSX are not read: the user exports to CSV ( (e)).

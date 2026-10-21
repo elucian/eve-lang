@@ -1,4 +1,4 @@
-# variation 2 of d28: a close beyond the number of senders is an error (D-141)
+# variation 2 of d28: a close beyond the number of senders is an error
 ** spec: semantics/multitasking.md#channels
 primary aspect d28_test2 is
   process main is

@@ -1,4 +1,4 @@
-# a type that the arguments do not give must be written at the call: compile error (D-148)
+# a type that the arguments do not give must be written at the call: compile error
 ** spec: syntax/declarations.md#generic-subprograms
 primary aspect e15_type_not_inferred is
   function make(:T)() => (@result: ()T) is

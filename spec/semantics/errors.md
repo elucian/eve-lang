@@ -1,20 +1,20 @@
 # Errors, Recovery and Exit Codes
 
-Status: **draft**, level 1. Sources: D-010, D-020, D-038, D-054, D-063, D-081, D-096. The codes are settled (D-109).
+Status: **draft**, level 1. The codes are settled.
 
 ## Errors
 
-An **error** is a record `{code, message, job, line}`. It is created by `raise expr;`, by a failed `expect` (code 2), by a failed `assert` (code 3, Q-031h) and by the run-time checks of the language. Every run-time check of the language has its own error class and its own code, so a code always names one precise error (D-109): index 0 or out of range `$err_index` 10, a missing DataMap key `$err_key` 11, division or remainder by zero `$err_divide` 12, integer overflow `$err_overflow` 13. `raise "text";` has the generic code 4 `$err_raise`. The full table of codes is in [Error codes](#error-codes). An undefined name and an operand of the wrong type are compile errors, never error values: Eve analyzes the whole script before it runs (D-109, D-110). A compile error is not an error value: the script does not run.
+An **error** is a record `{code, message, job, line}`. It is created by `raise expr;`, by a failed `expect` (code 2), by a failed `assert` (code 3) and by the run-time checks of the language. Every run-time check of the language has its own error class and its own code, so a code always names one precise error: index 0 or out of range `$err_index` 10, a missing DataMap key `$err_key` 11, division or remainder by zero `$err_divide` 12, integer overflow `$err_overflow` 13. `raise "text";` has the generic code 4 `$err_raise`. The full table of codes is in [Error codes](#error-codes). An undefined name and an operand of the wrong type are compile errors, never error values: Eve analyzes the whole script before it runs. A compile error is not an error value: the script does not run.
 
-`raise "text";` creates an error with code 4 and that message. Functions and procedures do not handle errors; an error propagates out of them to the process that called them (D-028).
+`raise "text";` creates an error with code 4 and that message. Functions and procedures do not handle errors; an error propagates out of them to the process that called them.
 
 ## Process
 
-An error raised anywhere in a process (also inside a job or a called function or procedure) makes the process jump to its `recover` region, unless a function, procedure or method on the way has a `recover` of its own and handles it first (D-192, below). A process without `recover` aborts on every error.
+An error raised anywhere in a process (also inside a job or a called function or procedure) makes the process jump to its `recover` region, unless a function, procedure or method on the way has a `recover` of its own and handles it first (below). A process without `recover` aborts on every error.
 
 ### `recover`
 
-`recover` sits at the end of the process, aligned with `process`, before `finalize` and `return;`. Its statements are normal statements; `$error` is available: `$error.message`, `$error.code`, `$error.job` (a string; empty outside a job). After a parallel group or a job with tasks (level 4) also `$error.errors`, the list of the errors of the tasks in the order of `start` or `spawn`, and `$error.cancelled` (`multitasking.md#errors`, D-140). It ends in one of:
+`recover` sits at the end of the process, aligned with `process`, before `finalize` and `return;`. Its statements are normal statements; `$error` is available: `$error.message`, `$error.code`, `$error.job` (a string; empty outside a job). After a parallel group or a job with tasks (level 4) also `$error.errors`, the list of the errors of the tasks in the order of `start` or `spawn`, and `$error.cancelled` (`multitasking.md#errors`). It ends in one of:
 
 | Statement | Effect |
 |---|---|
@@ -30,7 +30,7 @@ An error raised anywhere in a process (also inside a job or a called function or
 
 ### `recover` in a function, procedure or method
 
-Level 2 (D-192, answer to Q-065). A function, a procedure and a method can have a `recover` region, written like the one of a process: aligned with the keyword, at the end, before `return;`.
+Level 2. A function, a procedure and a method can have a `recover` region, written like the one of a process: aligned with the keyword, at the end, before `return;`.
 
 ```eve
 function half(n: Integer) => (@result: Integer) is
@@ -51,15 +51,15 @@ return;
 - **Not allowed:** a **constructor**, a **generator** and a **lambda** have no `recover` (compile error, exit 65). A routine of a trait that is only a signature has none. `finalize` is not offered: `defer` does that work in a routine (a process keeps `finalize`).
 - **Where it helps:** a library function that must turn a failure into a value (`rpc.dispatch` answers `-32603`), a module function that logs and goes on, a method that refuses an operation and says why.
 
-Tests: level 2 `b55` to `b59`; level 3 `c34` to `c36`. Grammar: `../syntax/grammar.md#procedures-functions-and-methods`.
+ Grammar: `../syntax/grammar.md#procedures-functions-and-methods`.
 
 ### `finalize`
 
-`finalize` runs once when the process ends by `return`, `over;`, `exit` in the process itself, by the end of `recover` or by `abort`: a clean way out never skips the cleanup. It does not run after `panic;` or after an unexpected stop (D-081).
+`finalize` runs once when the process ends by `return`, `over;`, `exit` in the process itself, by the end of `recover` or by `abort`: a clean way out never skips the cleanup. It does not run after `panic;` or after an unexpected stop.
 
 ## Ending the process
 
-The exit code of a process is a small number, 0 to 5. It is not the code of an error: `$error.code` and the `$err_` constants identify the error and are never exit codes (D-081).
+The exit code of a process is a small number, 0 to 5. It is not the code of an error: `$error.code` and the `$err_` constants identify the error and are never exit codes.
 
 | Cause | Exit code | `recover` | `finalize` |
 |---|---|---|---|
@@ -73,13 +73,13 @@ The exit code of a process is a small number, 0 to 5. It is not the code of an e
 | unexpected stop: the user stops the program (Ctrl+C), the program is halted, a `halt` breakpoint ended with Ctrl+C or `stop`, a hard time-out or another outage, recursion too deep, out of memory | 5 | no | no |
 | end of `recover` | 0 | | yes |
 
-**A code of your own.** `over n;` and `exit n;` (G-2) store `n` as the exit code of the program; `n` is an `Integer` that is 0 or from 6 to 125, so it never clashes with the codes 1 to 5 of the machine (above) and stays below the 126 and up that shells reserve. Any other value is a run-time error (`$err_argument`). The last code stored before the program ends is used, unless an unrecovered error or `panic` ends it first: those codes (1 to 4) win. Tests: `test/level1/a89_exit_code.eve`, `a90_exit_code_range`.
+**A code of your own.** `over n;` and `exit n;` (G-2) store `n` as the exit code of the program; `n` is an `Integer` that is 0 or from 6 to 125, so it never clashes with the codes 1 to 5 of the machine (above) and stays below the 126 and up that shells reserve. Any other value is a run-time error (`$err_argument`). The last code stored before the program ends is used, unless an unrecovered error or `panic` ends it first: those codes (1 to 4) win.
 
-`abort` ends with the exit code of the error it passes on (2, 3 or 4). `panic` is not an error: it ends the whole application at once. When several codes apply, the first one reached wins. The error codes are `$err_` constants in the standard library: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4 (D-054, D-109, Q-031h); warnings have `$wrn_` constants. Messages of the VM go to the error output; `print` and `write` go to the standard output. The command-line errors of the VM (64, 65, 66, 70) are not exit codes of a process.
+`abort` ends with the exit code of the error it passes on (2, 3 or 4). `panic` is not an error: it ends the whole application at once. When several codes apply, the first one reached wins. The error codes are `$err_` constants in the standard library: `$err_panic` 1, `$err_expect` 2, `$err_assert` 3, `$err_raise` 4; warnings have `$wrn_` constants. Messages of the VM go to the error output; `print` and `write` go to the standard output. The command-line errors of the VM (64, 65, 66, 70) are not exit codes of a process.
 
 ## Where an error is reported
 
-An error is reported as `file:line: error code: message`, followed by the calls that led to it, innermost first. The file is the one that holds the line: an error raised in a function of a module names the file of the module, and the call lines of a module routine end with `of <file>`; a routine of the main script has no suffix (G-1). Test: `test/level3/c37_error_in_module`.
+An error is reported as `file:line: error code: message`, followed by the calls that led to it, innermost first. The file is the one that holds the line: an error raised in a function of a module names the file of the module, and the call lines of a module routine end with `of <file>`; a routine of the main script has no suffix (G-1).
 
 ## Error codes
 
@@ -106,11 +106,11 @@ The constants are declared by the Exception module of the standard library. The 
 | `$err_process` | 31 | `Process {name} not found in aspect {aspect}` |
 | `$err_memory` | 40 | `Out of memory while allocating {size}` |
 | `$err_timeout` | 41 | `Time-out after {time}` |
-| `$err_deadlock` | 42 | `Deadlock: {task} waits to {send to | receive from} {channel}`, one per waiting task (D-141) |
+| `$err_deadlock` | 42 | `Deadlock: {task} waits to {send to | receive from} {channel}`, one per waiting task |
 | `$err_output` | 43 | `Output {name} is given to two tasks of the group` |
 | `$err_recursion` | 44 | recursion too deep |
 | `$err_parallel` | 45 | `{n} of {m} tasks failed` (level 4: a parallel group or a job with tasks; the items are in `$error.errors`, `multitasking.md#errors`) |
-| `$err_channel` | 46 | `Channel {name} is closed` (level 4, D-141) |
+| `$err_channel` | 46 | `Channel {name} is closed` (level 4) |
 | `$err_database` | 50 | `Database error {sqlstate} on {table}: {reason}` (level 5, `DatabaseError`) |
 | `$err_connection` | 51 | `Cannot reach {host}: {reason}` (`ConnectionError`, transient) |
 | `$err_constraint` | 52 | `Constraint {constraint} violated by {key}` (`ConstraintError`) |
@@ -120,7 +120,7 @@ The constants are declared by the Exception module of the standard library. The 
 | `$err_format` | 56 | `Bad {format} at line {line}, column {column}: {reason}` (`FormatError`, data files) |
 | `$err_http` | 57 | `HTTP {status} from {url}` (`HttpError`) |
 | `$err_batch` | 58 | `{count} records of batch {batch} failed` (`BatchError`; the records are in `$error.failed`) |
-| `$err_sql` | 59 | `SQL function {name} failed: {reason}` (`SqlError` <: `DatabaseError`: an error or a `NULL` for a non-nullable parameter in a `sql function`; the query stops, `../library/database.md#sql-functions`, D-166, D-168) |
+| `$err_sql` | 59 | `SQL function {name} failed: {reason}` (`SqlError` <: `DatabaseError`: an error or a `NULL` for a non-nullable parameter in a `sql function`; the query stops, `../library/database.md#sql-functions`) |
 
 Warnings do not stop the process; `.warn(code, message)` reports them.
 

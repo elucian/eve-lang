@@ -1,4 +1,4 @@
-# variation 1 of c01: the same module, another use case: only the constant, no call (D-133)
+# variation 1 of c01: the same module, another use case: only the constant, no call
 ** spec: semantics/modules.md#import
 primary aspect c01_test1 is
   from lib use (counter);

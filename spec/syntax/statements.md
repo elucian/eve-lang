@@ -6,7 +6,7 @@ A statement ends with `;` and may span lines. A group of statements is a block, 
 
 ## Statements that bind a value
 
-Every statement that creates or changes a value starts with a keyword, so the reader sees what it does (D-076, D-077).
+Every statement that creates or changes a value starts with a keyword, so the reader sees what it does.
 
 ### `new`
 
@@ -25,22 +25,22 @@ A `new` statement may change the names it reads from (`new e <- queue;` changes 
 
 ### `let`
 
-`let` executes an assignment or an expression. One `let` statement may change several names. Only a **capture** (`let lst -> e;`, `let e <- lst;`) creates a name that does not exist, with the type of the element (Q-017, Q-033e); in a loop the name is created on the first pass and assigned again on the next ones. Any other `let` on a missing name is an error (D-076): `let y := 5;`. When the name holds a native value, the value is overwritten; when it holds a reference, the reference changes and the old object is released at the end of the scope. Writing `new` before the name is the explicit form: `let lst -> new e;`. A change without `let` (`x := 1;`) is a syntax error. The target may be a variable, an attribute `a.b`, an element `a[i]`, a slice `a[i..j]`, or `_`.
+`let` executes an assignment or an expression. One `let` statement may change several names. Only a **capture** (`let lst -> e;`, `let e <- lst;`) creates a name that does not exist, with the type of the element; in a loop the name is created on the first pass and assigned again on the next ones. Any other `let` on a missing name is an error: `let y:= 5;`. When the name holds a native value, the value is overwritten; when it holds a reference, the reference changes and the old object is released at the end of the scope. Writing `new` before the name is the explicit form: `let lst -> new e;`. A change without `let` (`x:= 1;`) is a syntax error. The target may be a variable, an attribute `a.b`, an element `a[i]`, a slice `a[i..j]`, or `_`.
 
 | Form | Meaning |
 |---|---|
 | `let x := e;` | assign the value of `e`; shares an object or collection, copies a native value |
 | `let x :: e;` | assign a deep copy |
-| `let x += e;` `-=` `*=` `/=` `%=` `^=` | combined assignment; on a List or Array with a scalar on the right it updates every element in place (`let a += 5;` on `(1, 2)` gives `(6, 7)`, D-118); on a DataSet `+=` and `-=` add and remove |
+| `let x += e;` `-=` `*=` `/=` `%=` `^=` | combined assignment; on a List or Array with a scalar on the right it updates every element in place (`let a += 5;` on `(1, 2)` gives `(6, 7)`); on a DataSet `+=` and `-=` add and remove |
 | `let a <+ x;` `let x +> a;` | append `x` at the end of `a`; put `x` at the start of `a` |
 | `let x << n;` `let x >> n;` | shift in place |
 | `let x <- lst;` | remove the first element of `lst` into `x` (created when missing, also on the first pass of a loop) |
 | `let lst -> y;` `let lst -> new y;` | remove the last element of `lst` into `y` |
 | `let _ <- lst;` `let lst -> _;` | remove the first / last element and drop it |
-| `lst.delete(v);` | remove every element equal to `v`; neither `-=` nor an arrow removes by value (Q-031c, Q-033i, D-118) |
+| `lst.delete(v);` | remove every element equal to `v`; neither `-=` nor an arrow removes by value |
 | `let f(x);` | run `f` and drop its result |
 
-`=` is not an assignment operator after `let`: `let x = 5;` is an error (D-079).
+`=` is not an assignment operator after `let`: `let x = 5;` is an error.
 
 ### `set`
 
@@ -50,34 +50,34 @@ Creates a constant at script level; see declarations.
 
 A procedure is called as a statement, with or without parentheses when it has no arguments: `save(data);`, `foo;`, `print x;`. A function may be called as a statement only through `let f(x);`, which drops the result. A bare call of a class is not a statement.
 
-`print` and `write` take a list of expressions. `print (1, 2, 3)` writes `1,2,3` and a new line; the named argument `sep:` changes the separator: `print (1, 2, 3, sep: " ");` writes `1 2 3`. `sep` goes between arguments only: a list given as one argument prints as a list, `(1,2,3)` (Q-019b). `write` adds no separator and no new line; `print;` alone ends the line. `read(@v, prompt)` reads a line.
+`print` and `write` take a list of expressions. `print (1, 2, 3)` writes `1,2,3` and a new line; the named argument `sep:` changes the separator: `print (1, 2, 3, sep: " ");` writes `1 2 3`. `sep` goes between arguments only: a list given as one argument prints as a list, `(1,2,3)`. `write` adds no separator and no new line; `print;` alone ends the line. `read(@v, prompt)` reads a line.
 
 ## `expect` and `assert`
 
-`expect condition;` fails when the condition is false: an error with code 2 (see errors.md). `assert condition;` fails with an error with code 3 (Q-031h): like any error, it makes the process jump to `recover`, and it ends the process when it is not recovered. The condition is a Logic expression; any other type is a compile error.
+`expect condition;` fails when the condition is false: an error with code 2 (see errors.md). `assert condition;` fails with an error with code 3: like any error, it makes the process jump to `recover`, and it ends the process when it is not recovered. The condition is a Logic expression; any other type is a compile error.
 
 ## Interruptions
 
 | Statement | Effect |
 |---|---|
 | `break [label] [if c];` | leave the innermost loop, or the loop with that label; continue after its `done` (a `repeat` loop: after its `repeat`) |
-| `skip [label] [if c];` | end the cycle and go to the continuation point of the loop (D-074) |
+| `skip [label] [if c];` | end the cycle and go to the continuation point of the loop |
 | `stop [if c];` | end the current job without error; inside a loop inside a job it ends the job |
-| `exit;` | leave the subprogram or the process it is written in and give control back to the caller; in `main` of the aspect run by a command the program ends with code 0, `finalize` runs; in a function, procedure or method it is an early `return` (a function keeps the results assigned so far; `defer` runs) (D-111) |
+| `exit;` | leave the subprogram or the process it is written in and give control back to the caller; in `main` of the aspect run by a command the program ends with code 0, `finalize` runs; in a function, procedure or method it is an early `return` (a function keeps the results assigned so far; `defer` runs) |
 | `exit n;`, `over n;` | as `exit;` and `over;`, and `n` becomes the exit code of the program (an `Integer`: 0, or 6 to 125; 1 to 5 belong to the machine, see [errors.md](../semantics/errors.md#ending-the-process)) |
-| `over;` | from any depth (also inside functions it called) end the whole process it is in at once with code 0; no `recover`; `finalize` runs; in an aspect the caller goes on after `apply` (D-081, D-111) |
+| `over;` | from any depth (also inside functions it called) end the whole process it is in at once with code 0; no `recover`; `finalize` runs; in an aspect the caller goes on after `apply` |
 | `panic;` | end the whole application at once with code 1; no `finalize` |
 | `raise expr;` | create an error; the process jumps to `recover` |
 | `return;` | end the subprogram or the process; carries no value |
-| `defer stmt;` | register a simple statement that runs when the subprogram ends, by any path (`return`, `exit`, an error), in reverse order of registration: the last registered runs first (D-081, D-117) |
+| `defer stmt;` | register a simple statement that runs when the subprogram ends, by any path (`return`, `exit`, an error), in reverse order of registration: the last registered runs first |
 | `pass;` | do nothing |
 
 `break` and `skip` outside a loop, and `stop` outside a job, are compile errors. `retry`, `resume` and `abort` are valid only in `recover`.
 
 ## `return`
 
-`return;` closes a process, function, procedure, method, constructor and destructor and ends it when it is reached. It has no value: results are assigned to the result variables (D-036). Closers in short: `done [label];` control blocks, `repeat [label];` the loop tested at the end, `return;` subprograms and processes, `end name;` scripts, classes and traits.
+`return;` closes a process, function, procedure, method, constructor and destructor and ends it when it is reached. It has no value: results are assigned to the result variables. Closers in short: `done [label];` control blocks, `repeat [label];` the loop tested at the end, `return;` subprograms and processes, `end name;` scripts, classes and traits.
 
 ## Other statements of later levels
 
-`apply` is level 2 (`../semantics/aspects.md`). `start`, `spawn`, `await`, `wait` and `async` are level 4, defined in `../semantics/multitasking.md` (D-140, D-143, D-144); `yield` is level 5, `call` level 3. In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. The open points of Q-035 are settled by D-143.
+`apply` is level 2 (`../semantics/aspects.md`). `start`, `spawn`, `await`, `wait` and `async` are level 4, defined in `../semantics/multitasking.md`; `yield` is level 5, `call` level 3. In a job, `spawn f(args);` starts a task and goes on; `await f(args);` starts one and waits for it, in serial mode. The tasks of a job share its core and give it away when they wait; the `done` of the job waits for every spawned task. `start` starts an aspect in a `parallel` group. An `async` subprogram can only be started with `spawn` or `await`. The open points of are settled by.

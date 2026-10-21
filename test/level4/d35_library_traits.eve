@@ -1,4 +1,4 @@
-# a Printable object prints its describe; Comparable gives compare to numbers and texts (D-145)
+# a Printable object prints its describe; Comparable gives compare to numbers and texts
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d35_library_traits is
   class Point = {x: Integer, y: Integer} <: (Object, Printable) is

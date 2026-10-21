@@ -1,4 +1,4 @@
-# an extension method with the signature of a method of the class would replace it: compile error (D-150); another signature overloads it: e60
+# an extension method with the signature of a method of the class would replace it: compile error; another signature overloads it: e60
 ** spec: syntax/declarations.md#overloading
 primary aspect e59_extension_same_signature is
   class Counter = {n: Integer} <: Object is

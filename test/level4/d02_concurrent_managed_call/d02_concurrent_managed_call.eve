@@ -1,4 +1,4 @@
-# a concurrent aspect calls a managed module (D-129)
+# a concurrent aspect calls a managed module
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect d02_concurrent_managed_call is
   process main is

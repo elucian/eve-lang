@@ -1,4 +1,4 @@
-# exit ends the process without error and runs finalize (D-020)
+# exit ends the process without error and runs finalize
 ** spec: syntax/statements.md#interruptions
 primary aspect a50_exit is
   process main is

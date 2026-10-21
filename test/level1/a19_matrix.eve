@@ -1,4 +1,4 @@
-# matrix: two indexes, last index, absolute index, [*] selects a dimension (D-058, D-064, D-079)
+# matrix: two indexes, last index, absolute index, [*] selects a dimension
 ** spec: syntax/expressions.md#index-slice-member
 primary aspect a19_matrix is
   process main is

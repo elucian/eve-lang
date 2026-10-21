@@ -1,4 +1,4 @@
-# a procedure has no value: it can't be used in an expression (D-100)
+# a procedure has no value: it can't be used in an expression
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b40_procedure_in_expression is
   procedure hello is

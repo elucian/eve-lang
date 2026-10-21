@@ -1,4 +1,4 @@
-# level 6 performance: records over the PostgreSQL protocol (the driver postgres://, D-186), one object per row
+# level 6 performance: records over the PostgreSQL protocol (the driver postgres://), one object per row
 ** perf: 100,000 rows read from evedb as records through postgres://, and a loop that adds one field of each
 primary aspect p6c_pg_records is
   class Row = {id: Integer, region: String, amount: Real, paid: Logic} <: Record;

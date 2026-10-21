@@ -1,11 +1,8 @@
 # Eve Language Specification
 
-This folder holds the **normative specification** of Eve: the reference any Eve compiler or interpreter must follow. This specification is self-contained: it needs nothing outside this repository to be understood or implemented. The tutorial (published at
-<https://sagecode.org/projects/eve/>) is a separate, non-normative teaching text; it teaches the language, this specification defines it.
-When the two disagree, the specification wins. Record the conflict in
-[`../design/decision/level1.md`](../design/decision/level1.md) or [`../design/decision/level2.md`](../design/decision/level2.md) and fix the tutorial.
+This folder holds the **normative specification** of Eve: the reference any Eve compiler or interpreter must follow. This specification is self-contained: it needs nothing outside this folder to be understood or implemented. The tutorial (published at <https://sagecode.org/projects/eve/>) is a separate, non-normative teaching text; it teaches the language, this specification defines it. When the two disagree, the specification wins and the tutorial is fixed.
 
-License: [CC BY-NC-SA 4.0](LICENSE). Status: **draft**, being built step by step according to [`../design/`](../design/README.md).
+License: [CC BY-NC-SA 4.0](LICENSE). Status: **draft**.
 
 ## Why Markdown + JSON
 
@@ -14,44 +11,30 @@ The specification is written for two readers: people (students, compiler authors
 | Format | Used for | Rule |
 |---|---|---|
 | Markdown (`.md`) | Prose: rules, rationale, examples, grammar | One topic per file; stable `##` headings are link targets |
-| JSON (`.json`) | Tables a compiler loads: keywords, operators, delimiters, types, built-ins | Data only, no prose beyond a short `summary` field |
+| JSON (`.json`) | Tables a compiler loads: keywords, operators, delimiters; the features of each level; the index | Data only, no prose beyond a short `summary` field |
 | EBNF in Markdown | Grammar | Fenced blocks tagged `ebnf`, so a tool can extract them |
 
 Nothing here is HTML. Every JSON file must validate against its schema in `schema/`.
 
-## Layout (planned)
+## Layout
 
 ```
 spec/
   README.md            this file
-  index.md             table of contents, reading order, version history
-  lexical/
-    lexical.md         source text, encoding, line endings, comments, identifiers, literals
-    keywords.json      reserved words with category and status
-    operators.json     symbols, arity, precedence, associativity
-    delimiters.json    comment, string and collection delimiters
-  syntax/
-    grammar.md         complete EBNF grammar
-    regions.md         script regions: aspect, module, import, global, process, ...
-    statements.md
-    expressions.md
-    declarations.md    types, classes, functions, methods
-  semantics/
-    types.md, types.json
-    scopes.md          names, sigils, globals
-    variables.md       register of the system variables ($name)
-    topology.md        projects, scripts, aspects, modules, execution
-    control.md         control flow, errors, recovery
-    multitasking.md      methods, generators (version 2), parallel aspects (planned)
-  library/
-    builtins.md, builtins.json
-  conformance/
-    README.md          test levels, file conventions, expected-output format
-  schema/
-    *.schema.json      JSON Schemas for the data files
+  index.md             table of contents, reading order, change log
+  spec.json            index of every page: title, status, size, sections with their line (generated)
+  lexical/             lexical.md, keywords.json, operators.json, delimiters.json
+  syntax/              grammar.md, declarations.md, statements.md, expressions.md
+  semantics/           types, data-types, variables, control, errors, aspects, modules, multitasking
+  library/             the standard library and the machine: one page per module
+  conformance/         README.md: the levels and the form of a test
+  features/            level1.json .. level7.json, all.json, and a folder per file with one page per feature
+  schema/              JSON Schemas of the data files
 ```
 
-Files appear here as the plan steps complete; a missing file means that step is still open.
+A **feature** is a unit of the language or of the tools that has a stable code `F-<area>-<nn>`. `features/levelN.json` lists the features of level N with their `status` (`done`, `partial`, `open`, `dropped`), a one-line `summary`, the `doc` page that describes the feature (`features/levelN/F-XXX-nn.md`) and the `spec` pages and anchors that define it. Whether a feature is tested is not written here: a test names the features it checks.
+
+The specification refers to nothing outside this folder: no tests, no plans, no decision records. Programs find a rule by reading `spec.json` first (it gives the line of every section, so a section can be read alone) and then the page.
 
 ## JSON conventions
 

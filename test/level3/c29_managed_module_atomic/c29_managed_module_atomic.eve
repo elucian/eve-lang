@@ -1,4 +1,4 @@
-# a managed module is accepted when every variable is Atomic(:T) (D-129, D-132)
+# a managed module is accepted when every variable is Atomic(:T)
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c29_managed_module_atomic is
   from lib use (hits);

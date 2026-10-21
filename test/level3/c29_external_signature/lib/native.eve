@@ -1,4 +1,4 @@
-** a module of signatures: the body of an external is native; a reserved word may be a native name (D-056, D-189)
+** a module of signatures: the body of an external is native; a reserved word may be a native name
 module native is
   export (write, size!, double);
 

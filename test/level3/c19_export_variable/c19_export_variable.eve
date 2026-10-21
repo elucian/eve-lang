@@ -1,4 +1,4 @@
-# a module has no public variables: exporting one is a compile error (D-068)
+# a module has no public variables: exporting one is a compile error
 ** spec: semantics/modules.md#members
 primary aspect c19_export_variable is
   from lib use (bad);

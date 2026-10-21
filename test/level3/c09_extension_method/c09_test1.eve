@@ -1,4 +1,4 @@
-# variation 1 of c09: another extension of the imported class (D-133)
+# variation 1 of c09: another extension of the imported class
 ** spec: semantics/modules.md#extension-methods
 primary aspect c09_test1 is
   from lib use (geometry(*));

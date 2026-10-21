@@ -1,4 +1,4 @@
-# a Decimal keeps its scale, adds exactly and compares by value (D-080)
+# a Decimal keeps its scale, adds exactly and compares by value
 ** spec: library/data-language.md#details-used-by-the-tests
 primary aspect e27_decimal_scale is
   process main is

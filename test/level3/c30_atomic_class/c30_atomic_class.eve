@@ -1,4 +1,4 @@
-# class Name <: Atomic(:T) declares an atomic type (D-132)
+# class Name <: Atomic(:T) declares an atomic type
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c30_atomic_class is
   from lib use (tally);

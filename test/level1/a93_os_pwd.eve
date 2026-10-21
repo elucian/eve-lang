@@ -1,4 +1,4 @@
-# $OS_PWD is the working folder of the program, read-only (CMD-05, D-202)
+# $OS_PWD is the working folder of the program, read-only (CMD-05)
 ** spec: semantics/variables.md
 primary aspect a93_os_pwd is
   process main is

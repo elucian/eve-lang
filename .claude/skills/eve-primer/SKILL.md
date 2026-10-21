@@ -41,7 +41,7 @@ end a06_new_set_let;
 | Is the feature built | `python script/plan.py feature F-XXX-nn`, `plan.py features open 6` |
 | The parser or checker code | `grep -rn "@spec spec/syntax/statements.md#let" code/` (tags link code to spec) |
 
-Levels (`design/feature_map.md`): 1 a single script, 2 a project (subprograms, aspects), 3 modules and classes, 4 parallel processing, 5 data and database (macros tests are here too), 6 the Eve machine and the server, 7 the web. `test/smoke/` is a quick sample of all; `test/bytecode/` tests the bytecode machine only.
+Levels (`spec/features/`): 1 a single script, 2 a project (subprograms, aspects), 3 modules and classes, 4 parallel processing, 5 data and database (macros tests are here too), 6 the Eve machine and the server, 7 the web. `test/smoke/` is a quick sample of all; `test/bytecode/` tests the bytecode machine only.
 
 ## Expectations in tests
 

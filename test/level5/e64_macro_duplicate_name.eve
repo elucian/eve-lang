@@ -1,4 +1,4 @@
-# a top-level name declared twice in a macro is a compile error: one scope for the whole file (D-041, D-152)
+# a top-level name declared twice in a macro is a compile error: one scope for the whole file
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set limit = 3 :Integer;

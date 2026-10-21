@@ -1,4 +1,4 @@
-# finalize runs after the process ends normally, and after recover (D-020)
+# finalize runs after the process ends normally, and after recover
 ** spec: semantics/errors.md#finalize
 primary aspect a32_finalize is
   process main is

@@ -1,4 +1,4 @@
-# a managed module is rejected when it has a variable that is not atomic (D-129)
+# a managed module is rejected when it has a variable that is not atomic
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c26_managed_module_variable is
   from lib use (shared);

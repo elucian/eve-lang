@@ -1,4 +1,4 @@
-# variation 1 of c18: the right way: the two modules by name (D-133)
+# variation 1 of c18: the right way: the two modules by name
 ** spec: semantics/modules.md#import
 primary aspect c18_test1 is
   from lib use (one, two);

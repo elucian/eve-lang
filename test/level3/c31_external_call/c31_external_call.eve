@@ -1,4 +1,4 @@
-# calling an external of a user module that the machine does not implement is a run-time error with a clear message (D-189)
+# calling an external of a user module that the machine does not implement is a run-time error with a clear message
 ** spec: semantics/modules.md#members
 primary aspect c31_external_call is
   from lib use (native);

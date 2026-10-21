@@ -1,4 +1,4 @@
-# receive(@x) takes one value; a for loop takes the rest until the channel is closed (D-141)
+# receive(@x) takes one value; a for loop takes the rest until the channel is closed
 ** spec: semantics/multitasking.md#channels
 primary aspect d28_channel_receive is
   process main is

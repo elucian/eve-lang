@@ -1,4 +1,4 @@
-# the same module reached by two spellings of the path is one module: loaded once, one state (D-068)
+# the same module reached by two spellings of the path is one module: loaded once, one state
 ** spec: semantics/modules.md#life-cycle
 primary aspect c32_module_path_spelling is
   from lib use (tally);

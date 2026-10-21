@@ -1,4 +1,4 @@
-# a private attribute needs a constructor in the same class (CLS-17b, D-202)
+# a private attribute needs a constructor in the same class (CLS-17b)
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c40_private_attribute_needs_constructor is
   class Counter = {} <: Object is

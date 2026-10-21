@@ -1,4 +1,4 @@
-# a statement outside a declaration is a compile error in a macro (D-152)
+# a statement outside a declaration is a compile error in a macro
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 set greeting = "hello" :String;

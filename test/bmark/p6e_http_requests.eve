@@ -1,4 +1,4 @@
-# level 6 performance: a route table served in Eve and called by an Eve client in the same script (D-189)
+# level 6 performance: a route table served in Eve and called by an Eve client in the same script
 ** perf: 300 requests (GET with a path parameter, GET with a query, POST with a body), each on its own connection
 primary aspect p6e_http_requests is
   from lib use (http, route, service);

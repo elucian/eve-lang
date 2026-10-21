@@ -62,7 +62,7 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
         if (eql(u8, callee.text, "round")) return .{ .int = @intFromFloat(@round(x)) };
     }
     // @eve-fn error, warning
-    // @spec spec/semantics/aspects.md#messages-on-the-standard-error-d-057
+    // @spec spec/semantics/aspects.md#messages-on-the-standard-error
     // @decision D-057
     // @test a95_error_warning
     if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and

@@ -1,6 +1,6 @@
 # Decisions, level 6: the Eve machine and the server (version 0.5)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), 6, [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), 6, [7](level7.md)); the list of levels is in [decision_level3.md](level3.md) and spec/features.
 
 ## Scope
 
@@ -93,22 +93,12 @@ The standard library found that `recover` exists only at the end of a process (a
 **Answer:**
 I agree with (a). Any subprogram like a process can have a recover region. A function, procedure or method can have a recover region.
 
-## Q-066 String functions: plain text or regular expression (2026-10-18)
-
-The tutorial (`strings.html`, String functions) lists `String.find(pattern: Regex)`, `String.count(pattern)` and `String.replace(pattern, cargo)`, and says a string literal that starts with `/` is a regex literal. The standard library needs `trim`, `upper`, `lower`, `starts_with`, `ends_with`, `contains`, `find` and `replace` now (config files, routes, headers), before the regex engine (S11) exists, and a path such as `"/data"` must not be read as a pattern. `spec/library/strings.md` takes the **plain text** reading for these functions and keeps the regex forms for the module `regex` (`regex.find`, `regex.replace`, `regex.count`) and the operator `=~`.
-
-- (a) Plain text for the string methods, regex in the module `regex`: confirm or change.
-- (b) `find` gives `0` when there is no occurrence (proposed); or an optional/`Null` result.
-- (c) `upper` and `lower` ASCII only for now; full Unicode case mapping later.
-
-**Answer:** Regex literals are regular strings: "/exp/", depending of the context "/test" could be a fragment of path, but who chares. Eve has a gradual typing system, default type is string if the variable is used as regex parameter the literal type is is converted to regex and is fully established. Regex should be inherited from String. so it can be manipulated as a string before use. So Regex is also a string.
-
 ## D-201 Bytecode: a register machine, a project bundle, the tree walker kept as the reference (2026-10-19)
 
 Author answers to Q-B1 to Q-B9 of `design/design-bytecode.md`. Settled:
 
 - **Register machine** (Q-B1), 32-bit instructions.
-- **Versions** (Q-B2): the refactoring ladder R0 to R8 and the first stages of the VM in the current line; the `.evb` file and the embedding in 0.7 (`feature_map.md`). `design-packages.md` B5 now points to the design.
+- **Versions** (Q-B2): the refactoring ladder R0 to R8 and the first stages of the VM in the current line; the `.evb` file and the embedding in 0.7 (`spec/features/`). `design-packages.md` B5 now points to the design.
 - **The tree walker is kept as the reference engine** (Q-B3): once stable it needs no maintenance, and it stays the oracle of the tests.
 - **One bundle per project** (Q-B4): Eve projects are small.
 - **JIT in version 0.8** (Q-B5); **change of the `Value` layout in version 0.8** (Q-B6); **tail calls in version 0.10** (Q-B7); a depth limit by configuration, `StackOverflow` as a language error.
@@ -146,6 +136,6 @@ Read as rules:
 
 - (6) **The alternatives of Q-048 are set aside:** single sign-on by OpenID Connect, the keyring with a renewal token, roles `viewer` to `admin`, `$EVE_REGISTRATION`, `login`/`logout`/`whoami`, the macOS Keychain. They are not built; they stay as ideas (`backlog/ideas.md`) for when the simple scheme is not enough.
 
-- (7) **Levels.** `eve` with a user and the GUI clients, evetx (`-tx`) and eveux (`-ux`), are developed at **level 6**; the features F-TLS-19 to F-TLS-22 and F-TLS-31 (eveux) moved from level 7 to level 6 in `design/feature_map.md`. **Level 7 is all about the server** (evedb, D-203 and D-204, and the portal). This changes the level of D-154 and D-193 for eveux.
+- (7) **Levels.** `eve` with a user and the GUI clients, evetx (`-tx`) and eveux (`-ux`), are developed at **level 6**; the features F-TLS-19 to F-TLS-22 and F-TLS-31 (eveux) moved from level 7 to level 6 in `spec/features/`. **Level 7 is all about the server** (evedb, D-203 and D-204, and the portal). This changes the level of D-154 and D-193 for eveux.
 
 Not done by this decision: the code of `-u`/`-a` and the dialogs (a plan entry and a failing test first, D-194), and the tests of level 6 for them.

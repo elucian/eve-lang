@@ -1,4 +1,4 @@
-# a variable without a value has the zero value of its type, never null; an optional type T? may hold null (D-080; from demo/null_strings.eve, D-099)
+# a variable without a value has the zero value of its type, never null; an optional type T? may hold null (from demo/null_strings.eve)
 ** spec: semantics/types.md#zero-values-and-optional-types
 primary aspect a59_optional_null is
   process main is

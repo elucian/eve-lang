@@ -1,4 +1,4 @@
-# procedures: no result, side effects, @ passes by reference, no @ passes a copy (D-048, D-086, D-100)
+# procedures: no result, side effects, @ passes by reference, no @ passes a copy
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b31_procedure is
   procedure add(p1, p2: Integer, @out: Integer) is

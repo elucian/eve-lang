@@ -1,4 +1,4 @@
-# a rune holds one code point; 'one' is a lexical error (D-063)
+# a rune holds one code point; 'one' is a lexical error
 ** spec: lexical/lexical.md#rune
 primary aspect a48_single_quote_text is
   process main is

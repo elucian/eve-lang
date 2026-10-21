@@ -1,4 +1,4 @@
-# a missing mandatory argument is a check-time error (D-112)
+# a missing mandatory argument is a check-time error
 ** spec: semantics/aspects.md#arguments
 primary aspect b21_aspect_missing_arg is
   process main is

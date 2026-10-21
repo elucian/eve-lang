@@ -1,4 +1,4 @@
-# each started aspect writes its own element of an array; the results are ready after done (D-140)
+# each started aspect writes its own element of an array; the results are ready after done
 ** spec: semantics/multitasking.md#data-rules
 primary aspect d05_parallel_outputs is
   process main is

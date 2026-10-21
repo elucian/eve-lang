@@ -1,4 +1,4 @@
-# a server with routes and a client in one script: the modules net, http, route and service (F-NET-02, F-STR-08, D-189)
+# a server with routes and a client in one script: the modules net, http, route and service (F-NET-02, F-STR-08)
 ** spec: library/route.md
 primary aspect f10_route_hello is
   from lib use (http, route, service);

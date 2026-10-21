@@ -1,4 +1,4 @@
-# an aspect can't read a variable of the primary aspect (D-072)
+# an aspect can't read a variable of the primary aspect
 ** spec: semantics/aspects.md#declarations-of-an-aspect
 primary aspect b25_aspect_driver_variable is
   new secret := 5;
@@ -11,6 +11,6 @@ end b25_aspect_driver_variable;
 {
   "syntax_error": true,
   "exit": 65,
-  "note": "secret is not declared in the aspect: undefined name (D-110)"
+  "note": "secret is not declared in the aspect: undefined name"
 }
 */

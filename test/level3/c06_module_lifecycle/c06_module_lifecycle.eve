@@ -1,4 +1,4 @@
-# initialize runs at the import, finalize after the process of the primary aspect (D-068)
+# initialize runs at the import, finalize after the process of the primary aspect
 primary aspect c06_module_lifecycle is
   from lib use (counter);
 

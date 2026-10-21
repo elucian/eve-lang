@@ -1,4 +1,4 @@
-# spreading a list into positional arguments and a map into named arguments (D-072 i)
+# spreading a list into positional arguments and a map into named arguments ( i)
 primary aspect b05_apply_spread is
   process main is
     new xs := (2, 3);
@@ -13,6 +13,6 @@ end b05_apply_spread;
     "6",
     "60"
   ],
-  "note": "the keys of a spread map are symbols named like the parameters (Q-022 c)"
+  "note": "the keys of a spread map are symbols named like the parameters ( c)"
 }
 */

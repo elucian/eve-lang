@@ -1,4 +1,4 @@
-# regular expressions: =~ matches, not (...) negates; a string that starts with / is a regex literal and keeps its backslashes (D-079, D-097)
+# regular expressions: =~ matches, not (...) negates; a string that starts with / is a regex literal and keeps its backslashes
 ** spec: lexical/lexical.md#string, syntax/expressions.md#comparison-and-logic
 primary aspect a28_regex is
   process main is

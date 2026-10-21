@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "features",
+  "description": "The features of one level: spec/features/levelN.json (and all.json for the features that span all levels). The prose of a feature is the Markdown file named by doc.",
+  "type": "object",
+  "required": ["id", "name", "description", "features"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string" },
+    "level": { "type": ["integer", "null"] },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "summary", "doc"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "enum": ["done", "partial", "open", "dropped"] },
+          "summary": { "type": "string" },
+          "doc": { "type": "string" },
+          "spec": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

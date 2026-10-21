@@ -1,4 +1,4 @@
-# class with a constructor, methods, visibility, reference and clone (D-076, D-084, D-085)
+# class with a constructor, methods, visibility, reference and clone
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c10_class is
   class Point = {x, y :Integer} <: Object is

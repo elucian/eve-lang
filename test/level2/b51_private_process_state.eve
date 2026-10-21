@@ -1,4 +1,4 @@
-# the private processes of a call share the state of the aspect (D-179, D-066)
+# the private processes of a call share the state of the aspect
 ** spec: semantics/aspects.md#state-per-call
 primary aspect b51_private_process_state is
   new calls = 0 :Integer;

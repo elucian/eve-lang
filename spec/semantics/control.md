@@ -1,6 +1,6 @@
 # Control Flow
 
-Status: **draft**, level 1. Syntax: [`../syntax/grammar.md`](../syntax/grammar.md). Sources: D-016, D-020, D-030, D-033, D-034, D-074.
+Status: **draft**, level 1. Syntax: [`../syntax/grammar.md`](../syntax/grammar.md).
 
 ## General pattern
 
@@ -15,7 +15,7 @@ A control block has declarations, a transition keyword, executable statements, o
 <terminator>
 ```
 
-A block with a label closes with `done label;`, one without with `done;` (D-034). `if` has no label. `done job`, `done match`, `done loop` and `done if` do not exist. A statement that is a jump point (`job`) requires a label; the others may have one.
+A block with a label closes with `done label;`, one without with `done;`. `if` has no label. `done job`, `done match`, `done loop` and `done if` do not exist. A statement that is a jump point (`job`) requires a label; the others may have one.
 
 ## `if`
 
@@ -44,12 +44,12 @@ print "done";             ** after done: runs for any path
 
 - `match s one` (the default) runs only the first `when` whose value matches; `match s all` runs every matching `when`.
 - A `when` lists values, or a range, or an ordinal name. Values are compared with `==`; a range with `in`.
-- `when other do` runs only when no other `when` matched. There is no `then` (D-161): the statements after `done;` run for any path, including `other`.
+- `when other do` runs only when no other `when` matched. There is no `then`: the statements after `done;` run for any path, including `other`.
 - Declarations written before the first `when` live in the scope of the match. A compiler warns when an ordinal selector has no `when other` and not all values are covered.
 
 ## Loops
 
-There are three loops (D-074). The optional header `[label:] loop` followed by declarations belongs to a `while` or `for` loop: its declarations live in the loop scope, survive all iterations and are visible in the body and in `else`, not after `done` (D-161: `then` was removed; what is read after the loop is declared before it).
+There are three loops. The optional header `[label:] loop` followed by declarations belongs to a `while` or `for` loop: its declarations live in the loop scope, survive all iterations and are visible in the body and in `else`, not after `done` (: `then` was removed; what is read after the loop is declared before it).
 
 ```eve
 while c do … done;                   ** tested at the start

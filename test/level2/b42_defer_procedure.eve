@@ -1,4 +1,4 @@
-# defer in a procedure runs when the procedure ends, by any path, in reverse order (D-081)
+# defer in a procedure runs when the procedure ends, by any path, in reverse order
 ** spec: syntax/statements.md#interruptions
 primary aspect b42_defer_procedure is
   procedure work(early: Logic) is

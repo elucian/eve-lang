@@ -6,8 +6,8 @@ How fast `eve` runs, measured with the ReleaseSafe build on one machine. Compare
 
 The total time of the benchmarks of each level of the language, against their twins in Python.
 
-<!-- GEN:summary (script/genmanual.py) -->
-Run of 2026-10-19 17:49, version 0.0.7 (commit `b3019cb`), `eve.exe` 4.0 MB.
+<!-- GEN:summary -->
+Run of 2026-10-19 17:49, version 0.0.7, `eve.exe` 4.0 MB.
 
 | Benchmarks | Eve | Python | Eve / Python |
 |---|---|---|---|
@@ -23,7 +23,7 @@ Run of 2026-10-19 17:49, version 0.0.7 (commit `b3019cb`), `eve.exe` 4.0 MB.
 
 A benchmark is a small Eve program that does one kind of work many times: arithmetic and loops, function calls, collections, strings, classes, parallel work, database reads and writes, the machine and the network. The levels follow the versions of Eve, as the tests do, so each version adds the benchmarks of its own features. Every benchmark has a **twin written in Python** that does the same work, the reference for the comparison.
 
-<!-- GEN:benchmarks (script/genmanual.py) -->
+<!-- GEN:benchmarks -->
 | Benchmark | Level | What it measures |
 |---|---|---|
 | `p1a_arith` | 1 | integer and real arithmetic, `for` and `while` loops, variables |
@@ -53,7 +53,7 @@ A benchmark is a small Eve program that does one kind of work many times: arithm
 
 The median time of several runs of each benchmark and of its Python twin, and the peak memory of `eve`. **Eve / Python** below 1 means Eve is faster.
 
-<!-- GEN:results (script/genmanual.py) -->
+<!-- GEN:results -->
 | Benchmark | Eve | Python | Eve / Python | Peak memory |
 |---|---|---|---|---|
 | `p1a_arith` | 64 ms | 66 ms | 1.0x | 5.9 MB |
@@ -81,7 +81,7 @@ The median time of several runs of each benchmark and of its Python twin, and th
 
 ## By version
 
-<!-- GEN:history (script/genmanual.py) -->
+<!-- GEN:history -->
 The last saved run of each version; the set of benchmarks grows with the versions.
 
 | Version | Date | Benchmarks | Eve total | Python total | Eve / Python |

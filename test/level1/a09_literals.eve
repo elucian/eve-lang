@@ -1,4 +1,4 @@
-# literals of the primitive types (D-032, D-080)
+# literals of the primitive types
 ** spec: lexical/lexical.md#literals, semantics/types.md
 primary aspect a09_literals is
   process main is

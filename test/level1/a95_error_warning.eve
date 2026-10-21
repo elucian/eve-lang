@@ -1,4 +1,4 @@
-# error(text) and warning(text) write a line on the standard error and go on (D-057)
+# error(text) and warning(text) write a line on the standard error and go on
 ** spec: semantics/aspects.md
 primary aspect a95_error_warning is
   process main is

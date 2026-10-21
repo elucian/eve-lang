@@ -1,4 +1,4 @@
-# counter: a constant, private state, life cycle (D-068, D-085, D-087)
+# counter: a constant, private state, life cycle
 module counter is
   export (LIMIT, tick, count!);
 

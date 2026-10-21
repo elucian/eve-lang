@@ -1,4 +1,4 @@
-# split(k) and batch(n) cut a list; the parts are summed in parallel and combined by index (D-142)
+# split(k) and batch(n) cut a list; the parts are summed in parallel and combined by index
 ** spec: semantics/multitasking.md#streams-and-batches
 primary aspect d16_split_batch is
   process main is

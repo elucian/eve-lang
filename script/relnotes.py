@@ -12,19 +12,18 @@ Files written:
                               blocks between <!-- GEN:<name> --> and <!-- /GEN:<name> --> are written
                               again; the text around them (Highlights, Decisions, ...) is kept.
   manual/README.md            the blocks "progress" (tests, features, performance of the release)
-                              and "links" (spec, tutorial, test readme files)
+                              and "links" (the pages of the manual and the tutorial)
   design/release.md    the block "releases" (one line per notes file)
 Notes of an older or tagged release are never written: a release is a record.
 
-Sources: design/feature_map.md (features and status), test/*/status.json (tests, as runtest.py left
+Sources: spec/features/*.json (features and status), test/<suite>/<suite>.json (tests, as runtest.py left
 them: run `python script/runtest.py all` first), test/bmark/history.json (saved ReleaseSafe runs:
 run `bmark.py --save` first), and the notes of the previous release (stages before, timings before).
 
-Stage of a feature, from its row in feature_map.md:
-  validated   status "✓ done": implemented (or delivered) and its tests pass
-  drafted     status "partial", or "open" with tests written first ("written first" in the description)
-  design      status "open" and the description names a decision (D-nnn) or a design file (*.md)
-  planned     any other open feature: counted, not listed
+Stage of a feature, from its status in spec/features:
+  validated   status "done": implemented (or delivered) and its tests pass
+  drafted     status "partial"
+  planned     status "open": counted, not listed
 Dropped and replaced features are left out.
 
 --check fails when: a relative link in manual/ does not name a tracked file or folder with the exact
@@ -48,9 +47,9 @@ MANUAL = os.path.join(ROOT, 'manual')
 RELEASE = os.path.join(MANUAL, 'releases')
 SITE = 'https://sagecode.org/projects/eve/'
 REPO = 'https://github.com/elucian/eve-lang/blob/master/'
-# the components whose doc/ folder is copied into manual/<name>/ (script/genmanual.py)
+# the components whose doc/ folder is copied into manual/<name>/ (generator/evegen.py)
 COMPONENTS = ('evevm', 'evecp', 'evecm', 'evetx', 'eveux', 'evewp')
-# the drivers whose doc/ folder is copied into manual/drivers/<name>/ (script/genmanual.py)
+# the drivers whose doc/ folder is copied into manual/drivers/<name>/ (generator/evegen.py)
 DRIVERS = ('duckdb',)
 STAGES = ('validated', 'drafted', 'design')
 V = r'\d+\.\d+\.\d+'
@@ -82,37 +81,31 @@ def lkey(label):
 
 
 def features():
-    """-> [(code, name, level label, stage or 'planned')] from the feature sections of feature_map.md (featmap.py)."""
-    import featmap
+    """-> [(code, name, level label, stage)] from spec/features/*.json: done is validated, partial is drafted,
+    open is planned; a dropped feature is left out."""
+    stage_of = {'done': 'validated', 'partial': 'drafted', 'open': 'planned'}
     out = []
-    for lvl, code, name, status, desc in featmap.load(read(path('design', 'feature_map.md'))[0]):
-        if 'done' in status:
-            stage = 'validated'
-        elif status == 'partial' or (status == 'open' and 'written first' in desc):
-            stage = 'drafted'
-        elif status == 'open' and re.search(r'D-\d+|\.md', desc):
-            stage = 'design'
-        elif status == 'open':
-            stage = 'planned'
-        else:
+    for name in ['level%d' % n for n in range(1, 8)] + ['all']:
+        f = path('spec', 'features', name + '.json')
+        if not os.path.isfile(f):
             continue
-        out.append((code, name, 'Level ' + lvl if lvl != 'all' else 'All levels', stage))
+        lv = json.load(open(f, encoding='utf-8'))
+        label = 'All levels' if name == 'all' else 'Level ' + name[5:]
+        out += [(x['id'], x['name'], label, stage_of[x['status']]) for x in lv['features'] if x['status'] in stage_of]
     return out
 
 
 def tests():
-    """-> [(label, readme path, total, passed)] for each test folder with a status.json."""
+    """-> [(label, None, total, passed)] for each suite with a tracking file test/<suite>/<suite>.json."""
     out = []
-    for folder in sorted(glob.glob(path('test', '*', 'status.json'))):
-        name = os.path.basename(os.path.dirname(folder))
-        data = json.load(open(folder, encoding='utf-8')).get('tests', {})
-        passed = sum(1 for t in data.values() if t.get('status') == 'PASS')
+    for name in ['level%d' % n for n in range(1, 8)] + ['smoke', 'bytecode', 'scaffold']:
+        f = path('test', name, name + '.json')
+        if not os.path.isfile(f):
+            continue
+        data = json.load(open(f, encoding='utf-8'))['tests']
         label = 'Level ' + name[5:] if name.startswith('level') else name.capitalize()
-        out.append((label, tracked_readme('test/' + name), len(data), passed))
-    for name in ('level%d' % n for n in range(1, 8)):          # a level with no run yet
-        if not any(r[1] and ('/' + name + '/') in r[1] for r in out) and os.path.isdir(path('test', name)):
-            out.append(('Level ' + name[5:], tracked_readme('test/' + name), 0, 0))
-    return sorted(out, key=lambda r: (not r[0].startswith('Level'), r[0]))
+        out.append((label, None, len(data), sum(1 for t in data if t['status'] == 'PASS')))
+    return out
 
 
 def runs():
@@ -303,11 +296,12 @@ def gen_links(here):
     pages = [('manual/usage.md', 'Using eve: the command line'), ('manual/features.md', 'Features and their stage'),
              ('manual/tests.md', 'Tests: summary'), ('manual/performance.md', 'Performance report'),
              ('manual/releases/README.md', 'Release notes')]
+    pages += [('manual/levels/level%d.md' % n, 'Level %d: features and examples' % n) for n in range(1, 8)]
+    pages += [('manual/levels/all.md', 'All levels: tools and documents'), ('manual/reference/keywords.md', 'Reference: keywords'),
+              ('manual/reference/operators.md', 'Reference: operators'), ('manual/reference/delimiters.md', 'Reference: delimiters')]
     pages += [('manual/%s/README.md' % c, 'Component: %s' % c) for c in COMPONENTS]
     pages += [('manual/drivers/%s/README.md' % d, 'Driver: %s' % d) for d in DRIVERS]
     out = ['- ' + link(f, t, here) for f, t in pages if f in tracked() or os.path.exists(path(f))]
-    out += ['- [Specification: contents](%sspec/index.md)' % REPO,
-            '- [Specification: conventions](%sspec/README.md)' % REPO]
     tut = [('index.html', 'Tutorial: topics'), ('features.html', 'Tutorial: feature tests'),
            ('quality.html', 'Tutorial: smoke test and performance'), ('vm.html', 'Tutorial: the Eve VM')]
     out += ['- [%s](%s%s)' % (t, SITE, p) for p, t in tut]

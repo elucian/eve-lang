@@ -1,4 +1,4 @@
-# over skips recover but runs finalize: a clean exit never skips cleanup (D-081)
+# over skips recover but runs finalize: a clean exit never skips cleanup
 ** spec: semantics/errors.md#finalize
 primary aspect a33_over_finalize is
   process main is

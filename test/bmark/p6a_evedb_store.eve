@@ -1,4 +1,4 @@
-# level 6 performance: a query of evedb (DuckDB) read as column batches into a Memory table (D-187)
+# level 6 performance: a query of evedb (DuckDB) read as column batches into a Memory table
 ** perf: 1,000,000 rows made by DuckDB, read through evedb:// into a Memory table of four columns, then one sum
 primary aspect p6a_evedb_store is
   class Big = {id: Integer, region: String, amount: Real, paid: Logic} <: Memory;

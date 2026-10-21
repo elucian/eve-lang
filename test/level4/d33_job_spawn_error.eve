@@ -1,4 +1,4 @@
-# a failing spawned task does not stop the others; the done of the job raises ParallelError (D-143)
+# a failing spawned task does not stop the others; the done of the job raises ParallelError
 ** spec: semantics/multitasking.md#tasks-in-a-job
 primary aspect d33_job_spawn_error is
   async procedure check(n: Integer, @r: Integer) is

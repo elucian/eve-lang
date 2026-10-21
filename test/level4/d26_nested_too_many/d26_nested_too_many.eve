@@ -1,4 +1,4 @@
-# an aspect group holds at most two start statements (D-081, D-140)
+# an aspect group holds at most two start statements
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d26_nested_too_many is
   process main is

@@ -1,4 +1,4 @@
-# a division by zero raises an error, also for Real: no infinity, no NaN (Q-019a)
+# a division by zero raises an error, also for Real: no infinity, no NaN
 ** spec: syntax/expressions.md#arithmetic
 primary aspect a37_division_error is
   process main is

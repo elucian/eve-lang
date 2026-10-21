@@ -1,6 +1,6 @@
 # test/scaffold: the special test of the project commands
 
-`project init` and `project new` (F-TLS-23) make folders and files on disk, so besides the two runner tests `e54` and `e55` in `test/level5/` there is this test with a shell script, on real folders. It is a **special test**: it is not a level, it has no `status.json`, and `python script/runtest.py all` does not run it. Run it on its own:
+`project init` and `project new` (F-TLS-23) make folders and files on disk, so besides the two runner tests `e54` and `e55` in `test/level5/` there is this test with a shell script, on real folders. It is a **special test**: it is not a level, it has a tracking file of its own, `scaffold.json`, and `python script/runtest.py all` does not run it. Run it on its own:
 
 ```
 python script/runtest.py scaffold [--eve PATH]

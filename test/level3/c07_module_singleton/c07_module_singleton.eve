@@ -1,4 +1,4 @@
-# a module is loaded once: the primary aspect and an aspect share the same copy (D-068)
+# a module is loaded once: the primary aspect and an aspect share the same copy
 primary aspect c07_module_singleton is
   from lib use (counter);
 

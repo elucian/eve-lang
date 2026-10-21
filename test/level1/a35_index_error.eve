@@ -1,4 +1,4 @@
-# index 0 is an error: indexes start at 1 (D-021)
+# index 0 is an error: indexes start at 1
 ** spec: syntax/expressions.md#index-slice-member
 primary aspect a35_index_error is
   process main is

@@ -1,4 +1,4 @@
-# variation 1 of b07: over in the aspect twice: the primary aspect goes on each time (D-133)
+# variation 1 of b07: over in the aspect twice: the primary aspect goes on each time
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b07_test1 is
   process main is

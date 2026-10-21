@@ -1,4 +1,4 @@
-# an abstract class can not be created outside the constructor of a subclass (D-145)
+# an abstract class can not be created outside the constructor of a subclass
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d23_abstract_new is
   class Shape = {name: String} <: Object is

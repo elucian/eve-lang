@@ -1,4 +1,4 @@
-# a job writes to one connection only: writing to two is a compile error (D-158)
+# a job writes to one connection only: writing to two is a compile error
 ** spec: library/database.md#transactions
 primary aspect e45_job_two_writes is
   class A = {id: Integer} <: Record;

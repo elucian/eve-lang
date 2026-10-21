@@ -1,4 +1,4 @@
-# in a loop a capture creates its name once: the next turns assign it, they do not create it again (D-104)
+# in a loop a capture creates its name once: the next turns assign it, they do not create it again
 ** spec: syntax/statements.md#let
 primary aspect a80_let_capture_loop is
   process main is

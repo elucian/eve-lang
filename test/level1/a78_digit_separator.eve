@@ -1,4 +1,4 @@
-# the digit separator _ is not accepted in a number: a lexical error (Q-013, D-095)
+# the digit separator _ is not accepted in a number: a lexical error
 ** spec: lexical/lexical.md#numbers
 primary aspect a78_digit_separator is
   process main is

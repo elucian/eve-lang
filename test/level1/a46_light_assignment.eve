@@ -1,4 +1,4 @@
-# = is the light assignment of a declaration; it never changes a variable (D-079)
+# = is the light assignment of a declaration; it never changes a variable
 ** spec: syntax/declarations.md#variables-and-constants
 primary aspect a46_light_assignment is
   process main is

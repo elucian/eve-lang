@@ -1,4 +1,4 @@
-# the dot is never applied to an aspect: only main is public (D-179, D-066)
+# the dot is never applied to an aspect: only main is public
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b52_dot_on_aspect is
   process main is

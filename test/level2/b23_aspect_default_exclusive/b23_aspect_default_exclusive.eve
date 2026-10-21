@@ -1,4 +1,4 @@
-# an aspect without a kind word is exclusive (D-130)
+# an aspect without a kind word is exclusive
 ** spec: syntax/declarations.md#scripts
 primary aspect b23_aspect_default_exclusive is
   process main is

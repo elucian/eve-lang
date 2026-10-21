@@ -1,4 +1,4 @@
-# the clock is not deterministic: its name ends with !, time.now!(); time.now() is refused (D-087, D-168)
+# the clock is not deterministic: its name ends with !, time.now!(); time.now() is refused
 ** spec: library/data-language.md#time-types
 primary aspect e107_time_now_bang is
   process main is

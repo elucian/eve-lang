@@ -1,4 +1,4 @@
-# a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed (Q-014)
+# a text literal is raw and keeps the line breaks; the indentation of the closing quotes is removed
 ** spec: lexical/lexical.md#string
 primary aspect a27_text_literal is
   process main is

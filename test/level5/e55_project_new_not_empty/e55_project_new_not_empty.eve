@@ -1,5 +1,5 @@
 # project new <folder> fails when the folder exists and is not empty; project init does not (F-TLS-23)
-** spec: design/design-project-layout.md
+** spec: semantics/project-layout.md
 ** The runner calls the command of the VM, not this script. "." is the folder of the test, which holds this file.
 primary aspect e55_project_new_not_empty is
   process main is

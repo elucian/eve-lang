@@ -1,4 +1,4 @@
-# variation 1 of c06: a module that is imported and never called (D-133)
+# variation 1 of c06: a module that is imported and never called
 ** spec: semantics/modules.md#life-cycle
 primary aspect c06_test1 is
   from lib use (counter);

@@ -1,4 +1,4 @@
-# a destructor runs when the last reference goes away, newest first, once; an error in it is dropped (CLS-14, D-202)
+# a destructor runs when the last reference goes away, newest first, once; an error in it is dropped (CLS-14)
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c41_destructor is
   class Res = {name: String} <: Object is

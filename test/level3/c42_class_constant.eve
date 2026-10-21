@@ -1,4 +1,4 @@
-# set in the body of a class defines a constant, initialized once when the class is declared, read as Class.NAME (CLS-17b, D-202)
+# set in the body of a class defines a constant, initialized once when the class is declared, read as Class.NAME (CLS-17b)
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c42_class_constant is
   class Shape = {name: String} <: Object is

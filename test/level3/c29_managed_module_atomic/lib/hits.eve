@@ -1,4 +1,4 @@
-# hits: a managed module may have a variable when it is atomic: Atomic(:Integer) (D-129, D-132)
+# hits: a managed module may have a variable when it is atomic: Atomic(:Integer)
 managed module hits is
   export (record, total!);
 

@@ -1,0 +1,28 @@
+{
+ "$schema": "../schema/features.schema.json",
+ "id": "level1",
+ "level": 1,
+ "name": "The language of a single script",
+ "description": "A script that runs from its first line to its last, with no user subprograms and no classes. It has declarations and assignment, expressions and operators, control flow, strings with interpolation, the primitive types and the collections, and jobs with error recovery. This level is the core of the lexical and syntactic specification, the first lexer and parser, and the tree-walking interpreter, which stay the reference for the bytecode machine.",
+ "features": [
+  {"id": "F-LIB-01", "name": "Console I/O", "status": "partial", "summary": "print, write, read, error, warning, log_err, log_wrn.", "doc": "level1/F-LIB-01.md"},
+  {"id": "F-LIB-02", "name": "Exception module", "status": "partial", "summary": "Error, Warning, raise, expect, assert, warn, code constants.", "doc": "level1/F-LIB-02.md"},
+  {"id": "F-LIB-13", "name": "DataMap methods", "status": "done", "summary": "has, get(k), get(k, default), keys, values, delete.", "doc": "level1/F-LIB-13.md", "spec": ["semantics/types.md#datamap-methods"]},
+  {"id": "F-LNG-01", "name": "Script shapes", "status": "done", "summary": "Aspect with process main, title/subtitle header, comments; no free script and no #!.", "doc": "level1/F-LNG-01.md"},
+  {"id": "F-LNG-02", "name": "Declarations and assignment", "status": "done", "summary": "let, set, :=, =, :: clone, views.", "doc": "level1/F-LNG-02.md"},
+  {"id": "F-LNG-03", "name": "Expressions and operators", "status": "done", "summary": "Arithmetic, logic, comparison, ranges, membership, precedence.", "doc": "level1/F-LNG-03.md"},
+  {"id": "F-LNG-04", "name": "Control flow", "status": "done", "summary": "if, match, while, for, loop … repeat [while c], labels, break, skip.", "doc": "level1/F-LNG-04.md"},
+  {"id": "F-LNG-05", "name": "Jobs and error recovery", "status": "done", "summary": "Jobs, recover with retry/resume/abort, finalize, raise, expect, over, panic, exit codes.", "doc": "level1/F-LNG-05.md"},
+  {"id": "F-LNG-06", "name": "Primitive types", "status": "done", "summary": "Integer, Natural, Real, Logic, Symbol, String, ordinals, type checks with is.", "doc": "level1/F-LNG-06.md"},
+  {"id": "F-LNG-07", "name": "Collections", "status": "done", "summary": "List, Array, Matrix, DataSet, HashMap, Object, slices, builders, deconstruction.", "doc": "level1/F-LNG-07.md"},
+  {"id": "F-LNG-08", "name": "Strings and interpolation", "status": "done", "summary": "Escapes, text literal \"\"\", placeholders {name}, {literal}, simple expressions and formats {n % i5}, code points {U+H}, HTML entities &name;, regular expressions (subset).", "doc": "level1/F-LNG-08.md"},
+  {"id": "F-SPEC-01", "name": "Lexical specification", "status": "done", "summary": "Tokens, comments, literals, escapes, placeholders, keywords, operators, delimiters as Markdown + JSON.", "doc": "level1/F-SPEC-01.md"},
+  {"id": "F-SPEC-02", "name": "Grammar (EBNF)", "status": "done", "summary": "Declarations, statements, expressions, modules and imports, checked against every .eve test by script/grammarcheck.py (199 of 199 files of levels 1 to 4 and the smoke test).", "doc": "level1/F-SPEC-02.md", "spec": ["syntax/grammar.md"]},
+  {"id": "F-SPEC-03", "name": "Core semantics", "status": "partial", "summary": "Types, scopes, control flow, jobs and recover, topology, collections and objects.", "doc": "level1/F-SPEC-03.md"},
+  {"id": "F-STR-05", "name": "Command-line parameters of a script", "status": "partial", "summary": "-p/--param mapped to main parameters, eve script.eve -h from  @param comments.", "doc": "level1/F-STR-05.md"},
+  {"id": "F-STR-07", "name": "System variables", "status": "partial", "summary": "The register ($error, environment names such as $HOME, $epsilon, $err_/$wrn_ constants).", "doc": "level1/F-STR-07.md"},
+  {"id": "F-STR-12", "name": "Exit code of the program", "status": "done", "summary": "over n; and exit n; give the exit code: 0, or 6 to 125 (1 to 5 belong to the machine); anything else is $err_argument.", "doc": "level1/F-STR-12.md", "spec": ["semantics/errors.md#ending-the-process"]},
+  {"id": "F-VM-01", "name": "Lexer and parser", "status": "done", "summary": "Source to syntax tree, errors with file, line and column (lexer.zig, parser.zig).", "doc": "level1/F-VM-01.md"},
+  {"id": "F-VM-02", "name": "Tree-walking interpreter", "status": "done", "summary": "Runs levels 1 to 3, the smoke test and the benchmarks (interp.zig, project.zig); 193 tests.", "doc": "level1/F-VM-02.md"}
+ ]
+}

@@ -1,4 +1,4 @@
-# DataMap: a sorted map of key:value pairs; quoted or numeric keys (D-058, D-080)
+# DataMap: a sorted map of key:value pairs; quoted or numeric keys
 ** spec: semantics/types.md#composite-types
 primary aspect a21_datamap is
   process main is

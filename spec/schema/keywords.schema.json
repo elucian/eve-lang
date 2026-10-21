@@ -45,7 +45,7 @@
           },
           "contextual": {
             "type": "boolean",
-            "description": "True: a keyword only where the grammar expects it; elsewhere an ordinary name (D-116)."
+            "description": "True: a keyword only where the grammar expects it; elsewhere an ordinary name."
           },
           "tutorial": {
             "type": "string",

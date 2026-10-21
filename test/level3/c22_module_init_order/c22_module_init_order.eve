@@ -1,4 +1,4 @@
-# dependencies are initialized first, and finalized last: the reverse order of the initialization (D-068)
+# dependencies are initialized first, and finalized last: the reverse order of the initialization
 ** spec: semantics/modules.md#life-cycle
 primary aspect c22_module_init_order is
   from lib use (top);

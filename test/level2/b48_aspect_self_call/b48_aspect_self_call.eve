@@ -1,4 +1,4 @@
-# an aspect can't call itself (D-179)
+# an aspect can't call itself
 ** spec: semantics/aspects.md#apply
 primary aspect b48_aspect_self_call is
   process main is

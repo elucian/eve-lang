@@ -1,4 +1,4 @@
-# print adds a new line and separates its arguments with sep, write adds nothing; a list is one argument (Q-019b)
+# print adds a new line and separates its arguments with sep, write adds nothing; a list is one argument
 ** spec: syntax/statements.md#calls
 primary aspect a05_print_write is
   process main is

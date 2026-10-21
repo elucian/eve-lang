@@ -1,0 +1,19 @@
+{
+ "$schema": "../schema/features.schema.json",
+ "id": "level7",
+ "level": 7,
+ "name": "The web",
+ "description": "The web: safe HTML templates, Eve in the browser, and the Eve Web Portal evewp, written in Eve with no JavaScript, as the last and hardest test of the language. Level 7 is the server: evedb, the Eve machine with DuckDB inside, and the portal. The development clients evetx (terminal) and eveux (native window) belong to level 6. Nothing here is built yet; the first step is a trial build of the machine for WebAssembly. It will be ",
+ "features": [
+  {"id": "F-DAT-12", "name": "evedb, the Eve test database", "status": "partial", "summary": "A database server in Zig around DuckDB, outside the VM, that speaks the database frames of EWP; the remote database of the level 5 tests, with fault injection and a statement log...", "doc": "level7/F-DAT-12.md"},
+  {"id": "F-TLS-23", "name": "New project", "status": "partial", "summary": "project init <folder> and project new <folder>: init also works on an existing project and never overwrites; new fails on a non-empty folder.", "doc": "level7/F-TLS-23.md", "spec": ["semantics/project-layout.md"]},
+  {"id": "F-VM-09", "name": "WebAssembly build", "status": "open", "summary": "The VM compiled to wasm32 with host imports.", "doc": "level7/F-VM-09.md"},
+  {"id": "F-VM-12", "name": "Process supervision API", "status": "open", "summary": "os handles for spawn with limits, wait, kill and signals, status of a child through its IPC door; used by the host of evewp.", "doc": "level7/F-VM-12.md"},
+  {"id": "F-WEB-01", "name": "HTML templates", "status": "open", "summary": "HTML type, context-aware escaping, template files, components.", "doc": "level7/F-WEB-01.md"},
+  {"id": "F-WEB-02", "name": "Eve in the browser", "status": "open", "summary": "The WASM VM runs signed .evb code with limited capabilities, dom module.", "doc": "level7/F-WEB-02.md"},
+  {"id": "F-WEB-03", "name": "Tutorial playground", "status": "open", "summary": "A \"Run\" button on tutorial examples using the WASM VM.", "doc": "level7/F-WEB-03.md"},
+  {"id": "F-WEB-05", "name": "evewp: edge and host", "status": "open", "summary": "The Eve Web Portal as the production edge: host table by Host header (domains, subdomains, wildcards), static files, proxy to the Eve machine of each application, request log and limits; the host...", "doc": "level7/F-WEB-05.md"},
+  {"id": "F-WEB-06", "name": "evewp: monitor", "status": "open", "summary": "A graphic health server written in Eve: connections, requests, domains, users, applications, memory, logs, alerts; SVG charts and pages with no JavaScript, live updates through the framework...", "doc": "level7/F-WEB-06.md"},
+  {"id": "F-WEB-07", "name": "The Eve Web framework", "status": "open", "summary": "Eve (a dialect with a browser profile) written once and compiled to WebAssembly modules that run in the page: stage W1 the VM in Wasm running source or .evb, stage W2 a typed subset compiled to Wasm...", "doc": "level7/F-WEB-07.md"}
+ ]
+}

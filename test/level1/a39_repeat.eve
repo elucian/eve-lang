@@ -1,4 +1,4 @@
-# loop tested at the end: loop … do … repeat [while c]; and skip (D-074)
+# loop tested at the end: loop … do … repeat [while c]; and skip
 ** spec: semantics/control.md#loops
 primary aspect a39_repeat is
   process main is

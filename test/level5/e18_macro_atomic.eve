@@ -1,4 +1,4 @@
-# concurrent aspects of a macro add to a shared atomic variable: the total is exact (D-152, D-132)
+# concurrent aspects of a macro add to a shared atomic variable: the total is exact
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 new count = 0 :Atomic(:Integer);

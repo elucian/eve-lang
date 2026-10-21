@@ -1,4 +1,4 @@
-# a procedure is made for side effects and is never deterministic: it never ends with ! (D-101)
+# a procedure is made for side effects and is never deterministic: it never ends with !
 ** spec: syntax/declarations.md#functions-and-procedures
 primary aspect b34_procedure_bang is
   procedure tick!() is              ** compile error: a procedure has no !

@@ -1,0 +1,5 @@
+# F-NET-08 The machine API
+
+JSON-RPC 2.0 methods named by part: `vm.ping`, `vm.stat`, `vm.run`, `vm.eval`, `vm.suspend`, `vm.resume`, `vm.inspect`, `vm.cancel`, `vm.stop`; `db.*`; the first names of answered until level 6; no TLS in the machine, a reverse proxy for remote HTTPS; ACP outward (`spec/library/machine.md#the-machine-api-level-6`).
+
+*Partial (2026-10-12):* `vm.ping`, `vm.stat` (with the active parts), `vm.run`, `vm.stop` and the first names, `-32601` for another method. *2026-10-13:* `vm.stat` adds `requests`, `uptime_ms`, `running`, `running_ms`, `web`; `stop` cancels the running scripts. *2026-10-16:* the lasting doors (`spec/library/machine.md#lasting-doors-level-6`): the stdio door `eve --stdio` (an IDE starts the machine as its child; over SSH `ssh host eve --stdio`), the IPC connection stays open, `vm.output` notifications (`"stream": true`), sessions `vm.open`, `vm.eval`, `vm.close` (a default session per connection), `vm.shell`, `vm.cancel`, `vm.run` by `path`, `vm.stat` with `door` and `sessions`; `shell <command>` and `!<command>` at the prompt; evetx uses it for its console. Not yet: WebSocket, `dbg.*`, `db.*` in JSON.

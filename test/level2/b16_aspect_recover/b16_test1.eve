@@ -1,4 +1,4 @@
-# variation 1 of b16: the aspect recovers its own error, twice (D-133)
+# variation 1 of b16: the aspect recovers its own error, twice
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b16_test1 is
   process main is

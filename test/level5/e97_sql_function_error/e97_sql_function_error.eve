@@ -1,4 +1,4 @@
-# an error in a sql function stops the query: the statement raises $err_sql with the message of the error (D-166)
+# an error in a sql function stops the query: the statement raises $err_sql with the message of the error
 ** spec: library/database.md#sql-functions
 primary aspect e97_sql_function_error is
   class Ratio = {id: Integer, r: Decimal} <: Record;

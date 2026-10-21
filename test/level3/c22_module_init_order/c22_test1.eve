@@ -1,4 +1,4 @@
-# variation 1 of c22: only the module with no import (D-133)
+# variation 1 of c22: only the module with no import
 ** spec: semantics/modules.md#life-cycle
 primary aspect c22_test1 is
   from lib use (base);

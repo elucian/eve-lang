@@ -39,9 +39,9 @@ jobs:
           if [ "$RUNNER_OS" = "Windows" ]; then exe=temp/rel/bin/eve.exe; fi
           python script/runtest.py all --eve "$exe"
           python script/bctest.py --eve "$exe"
-      - name: tags, map and links
+      - name: tags, features and links
         run: |
           python script/tagcheck.py
-          python script/featmap.py --check
+          python generator/evegen.py check
           python script/relnotes.py --check
           python script/mdlinks.py check manual

@@ -1,4 +1,4 @@
-# the system module crypto: hashes, HMAC, codecs, random bytes (F-LIB-10, D-189)
+# the system module crypto: hashes, HMAC, codecs, random bytes (F-LIB-10)
 ** spec: library/crypto.md
 primary aspect f04_crypto is
   process main is

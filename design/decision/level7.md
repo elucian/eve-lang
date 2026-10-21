@@ -1,6 +1,6 @@
 # Decisions, level 7: web, HTML and WebAssembly (version 0.6)
 
-Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), [6](level6.md), 7); the list of levels is in [decision_level3.md](level3.md) and [feature_map.md](../feature_map.md).
+Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. Ids are shared by all the decision files ([level 1](level1.md), [2](level2.md), [3](level3.md), [4](level4.md), [5](level5.md), [6](level6.md), 7); the list of levels is in [decision_level3.md](level3.md) and spec/features.
 
 ## Scope
 
@@ -23,7 +23,6 @@ Features: F-WEB-01 to F-WEB-04, F-VM-07, F-VM-09, F-DOC-03 (web part), the serve
 
 - Q-027 Templates [open]
 - D-154 eveux, the RAD Workbench, is written in Eve: the final test of the language, in level 7
-
 
 ## Q-027 Templates (2026-10-06)
 The page templates.html teaches string templates (today) and proposes HTML templates: files `.htmt` or literals, `{expr}` escaped by context (text, attribute, URL, script), the type `HTML`, components as functions that return `HTML`, the module `html` with `html.render` and `html.write`. Questions: files, literals or both? The extension and the module name? Loops and conditions inside a template (`{for o in orders}`)? Is `HTML` required by the functions that send a page?
@@ -84,30 +83,6 @@ Proposals and questions for the author; they are also at the end of `drivers/duc
 
 **Answer:**
 
-## D-203 evedb is the Eve machine with DuckDB inside; D-187 is reverted; D-186 stands; all evedb decisions are level 7 (2026-10-20)
-
-Author decision (2026-10-20): "I want to revert D-187 and resolve the conflict to D-186. When we compile evedb, it will include Eve parts to support Eve procedures, functions and business logic inside. That means evedb behaves like evevm, it can be used to serve a web portal and is a database embedded in a monolithic structure. It is not necessary to spin evevm and evedb, because evedb has the same code as evevm plus the database DuckDB. evedb is the enterprise version of Eve, that runs as a server, while evevm is the light version of Eve that is usually running as a client. For now, because Zig does not have a proper ABI, we use and deploy duckdb.dll with evedb in the release dist folder. Move evedb to level 7, all decisions and questions."
-
-The author's notes in the review list of level 6 agree: D-187 "reverted", D-186 "approved", D-198 "modified"; Q-063: "evedb will respond like a PostgreSQL database on the same protocol but will also respond on the http protocol and can listen to other Eve commands on the IPC protocol. It all depends on how the user configures evedb, it is like a swiss knife, can do this or that."; Q-062: "eve -s will start evedb, that is the silent service and not evevm, because evedb has evevm functionality + enterprise OLAP database functionality."
-
-Read as rules:
-
-- (1) **D-187 is reverted.** Its six rules no longer stand as decisions: the split "SQLite in eve, DuckDB only in evedb", the column batches as the fast path, the driver `evedb://` as designed there, "shared memory only after a benchmark", and above all "no triggers and no stored procedures in evedb". What was built under it stays in the tree until the author says to keep or remove it (TD-52).
-
-- (2) **D-186 stands** (approved), including point (6): **stored procedures and triggers in Eve**, evedb hosts the Eve machine. The points of Q-063 that D-187 had closed (c: names of the procedures, triggers and `database.caller()`; d: one Eve host per server) are open again, and (d) is answered by (3).
-
-- (3) **evedb is one program with the code of evevm plus DuckDB** (monolithic). It runs Eve procedures, functions and business logic inside, and can serve a web portal (evewp, level 7); no second process for the Eve part. It answers the PostgreSQL protocol (D-186), HTTP and the IPC commands of the Eve machine, as configured. `eve -s` starts evedb (Q-062).
-
-- (4) **Two editions of Eve:** evedb is the enterprise edition, a server with the OLAP database; evevm is the light edition, usually a client (SQLite inside for its own state and for `sql function`, D-166).
-
-- (5) **DuckDB ships as `duckdb.dll` beside evedb in the dist folder, for now**, because Zig has no stable ABI to link the library statically. This replaces the plan of D-200 to embed DuckDB in `evedb.exe` (stage S8.10a) until a way to link it exists; the DLL stays in the zip (D-199 4).
-
-- (6) **Superseded in part:** D-198 (a) ("the DuckDB server contains DuckDB only, has nothing to do with Eve, behaves like a driver, is renamed `drivers/duckdb`") and D-200 ("DuckDB stays a server executable launched by eve"). The folder `drivers/duckdb/` keeps its name until the author decides on the layout of evedb.
-
-- (7) **Level 7.** Every decision and question about evedb belongs to level 7 and is in this file: D-185, Q-062, D-186, Q-063, D-187 (reverted), D-200 (in part), D-203.
-
-Not done by this decision: `drivers/duckdb/README.md` (sections 3A, 3B, 5.5 to 5.6, 12 and the architecture) and `design/design-drivers.md` still describe D-187 and D-198 (a); TD-52.
-
 ## Q-068 Points the answers to Q-067 leave open (2026-10-19, answered → D-199, D-200)
 
 Each point is needed by one stage only (in brackets); the stages before it can go on.
@@ -160,7 +135,7 @@ Read as rules:
 
 - (3) **The tests moved from level 6 to level 7 and were renamed** (test names of level 7 start with `g`): `test/level6/f01_pg_driver` is now `test/level7/g01_pg_driver` (an Eve script over `postgres://` against `eve db serve evedb.cfg`, md5, a job that rolls back), and `test/level6/f02_evedb_columnar` is now `test/level7/g02_evedb_columnar` (typed parameters, records, a job and the column batches over `evedb://`). Both start evedb, so they are server tests. Run them with `python script/runtest.py g01` and `g02`.
 
-- (4) **The feature F-DAT-12 (evedb)** moved from the level 5 section to the level 7 section of `design/feature_map.md`; its `Tests` line is `level7: g01 g02`. `F-TLS-30` (service mode, `eve -s`) stays in level 6 as the machine; what `eve -s` starts as the enterprise edition is D-203.
+- (4) **The feature F-DAT-12 (evedb)** moved from the level 5 section to the level 7 section of `spec/features/`; its `Tests` line is `level7: g01 g02`. `F-TLS-30` (service mode, `eve -s`) stays in level 6 as the machine; what `eve -s` starts as the enterprise edition is D-203.
 
 - (5) **D-199 and Q-068** (the answers about the editors, the license, the server in `bin/`, the protocol module) moved to level 7 with the other evedb entries. The author's notes on them (quoted): D-199: It looks like the drivers are actually components used by evevm and evedb, should be moved into evecm then? If they are eve code, no, if they are zig or c code, yes.
 

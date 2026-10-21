@@ -1,4 +1,4 @@
-# Decimal arithmetic is exact: subtraction, division, negation, remainder, comparison and a whole number on one side (D-080)
+# Decimal arithmetic is exact: subtraction, division, negation, remainder, comparison and a whole number on one side
 ** spec: library/data-language.md#details-used-by-the-tests
 primary aspect e73_decimal_ops is
   process main is

@@ -1,4 +1,4 @@
-# a generator has no recover region: it is a compile error (D-192)
+# a generator has no recover region: it is a compile error
 ** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
 primary aspect b59_generator_no_recover is
   generator count(n: Integer) => (@x: Integer) is

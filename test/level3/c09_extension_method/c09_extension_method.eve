@@ -1,4 +1,4 @@
-# an extension method: a method with @self of a class, declared outside the class (D-072, D-085)
+# an extension method: a method with @self of a class, declared outside the class
 primary aspect c09_extension_method is
   from lib use (geometry(*));
 
@@ -20,6 +20,6 @@ end c09_extension_method;
   "stdout": [
     "(3, 5)"
   ],
-  "note": "a driver may extend a class imported from a module (Q-022 e)"
+  "note": "a driver may extend a class imported from a module ( e)"
 }
 */

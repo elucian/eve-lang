@@ -1,4 +1,4 @@
-# a type adopts a trait outside its declaration: adopt Trait for Type is ... end adopt; (CLS-15, D-202)
+# a type adopts a trait outside its declaration: adopt Trait for Type is... end adopt; (CLS-15)
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d42_adopt_trait is
   trait Describable is

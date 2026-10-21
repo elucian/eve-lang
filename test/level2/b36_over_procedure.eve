@@ -1,4 +1,4 @@
-# over in a procedure ends the whole process, not only the procedure (D-111)
+# over in a procedure ends the whole process, not only the procedure
 ** spec: syntax/statements.md#interruptions
 primary aspect b36_over_procedure is
   procedure stop_all is

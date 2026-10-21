@@ -1,4 +1,4 @@
-# an aspect gives results back through @ output parameters (D-048, D-066)
+# an aspect gives results back through @ output parameters
 primary aspect b02_apply_output is
   process main is
     new t :Integer;

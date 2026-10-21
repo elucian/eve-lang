@@ -1,4 +1,4 @@
-# $NAME is an operating system environment variable, a String (D-031, D-052)
+# $NAME is an operating system environment variable, a String
 ** spec: semantics/variables.md
 primary aspect a94_env_variable is
   process main is

@@ -1,4 +1,4 @@
-# variation 1 of d02: the concurrent aspect with another input (D-133)
+# variation 1 of d02: the concurrent aspect with another input
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect d02_test1 is
   process main is

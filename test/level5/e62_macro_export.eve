@@ -1,4 +1,4 @@
-# a macro exports nothing: export is a compile error (D-126, D-152)
+# a macro exports nothing: export is a compile error
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 function twice(x: Integer) => (@result: Integer) is

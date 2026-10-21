@@ -1,4 +1,4 @@
-# while loop with a header, break and else (D-030, D-033, D-034); `then` was removed, the code goes after `done;`
+# while loop with a header, break and else; `then` was removed, the code goes after `done;`
 ** spec: semantics/control.md#loops
 primary aspect a13_while is
   process main is

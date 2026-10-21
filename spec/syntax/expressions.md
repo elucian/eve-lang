@@ -2,16 +2,16 @@
 
 Status: **draft**, level 1. Grammar: [`grammar.md`](grammar.md). Operator table: [`../lexical/operators.json`](../lexical/operators.json). Types of the operands: [`../semantics/types.md`](../semantics/types.md).
 
-An expression has a value and a type. Round parentheses group: `(x)` is the value of `x`, not a list; the list of one element is `(x,)` (D-063). The type of an expression is inferred.
+An expression has a value and a type. Round parentheses group: `(x)` is the value of `x`, not a list; the list of one element is `(x,)`. The type of an expression is inferred.
 
 ## Precedence
 
-Operators on a higher row bind tighter; operators on one row go from left to right, except `^` (D-019, D-079).
+Operators on a higher row bind tighter; operators on one row go from left to right, except `^`.
 
 | Level | Operators |
 |---|---|
 | 1 | `.` `()` `[]` member, call, index |
-| 2 | unary `-`, `not`: applied before `^`, so `-2 ^ 2` is `(-2) ^ 2 = 4` (Q-030) |
+| 2 | unary `-`, `not`: applied before `^`, so `-2 ^ 2` is `(-2) ^ 2 = 4` |
 | 3 | `^` (right to left) |
 | 4 | `*` `/` `%` |
 | 5 | `+` `-` |
@@ -25,25 +25,25 @@ Operators on a higher row bind tighter; operators on one row go from left to rig
 | 13 | `or` |
 | 14 | `a if c else b` |
 
-A `-` with no operand on its left is the unary minus and binds tighter than `^`; a `-` with an operand on its left is the subtraction: `4 - 2 ^ 2` is `0` and `4 - -2 ^ 2` is `4 - (-2) ^ 2`, also `0`. The negative of a power is written `-(2 ^ 2)` (Q-030, author decision: Eve differs here from most languages).
+A `-` with no operand on its left is the unary minus and binds tighter than `^`; a `-` with an operand on its left is the subtraction: `4 - 2 ^ 2` is `0` and `4 - -2 ^ 2` is `4 - (-2) ^ 2`, also `0`. The negative of a power is written `-(2 ^ 2)` (author decision: Eve differs here from most languages).
 
 The relations do not chain: `a < b < c` is a compile error; write `a < b and b < c`, or `b in (a>..<c)`. `and` and `or` evaluate the right operand only when needed.
 
 ## Arithmetic
 
-- `+ - * % ^` on two Integers give an Integer; with a Real the result is Real. `/` always gives a Real (`9 / 3` is `3.0`); `new x = a / b :Integer;` converts it (D-032, D-080). Integer overflow is an error.
+- `+ - * % ^` on two Integers give an Integer; with a Real the result is Real. `/` always gives a Real (`9 / 3` is `3.0`); `new x = a / b:Integer;` converts it. Integer overflow is an error.
 - `%` is the remainder, with the sign of the left operand. `^` is the power; `**` is a comment.
-- Division or remainder by zero is an error with code 4, also for `Real` and `Float`: there is no infinity and no NaN (Q-019a). A `Rational` with a zero denominator, `1\0`, is not supported.
-- `+` on two strings concatenates. `+` between a string and a number is a compile-time type error; `s <+ 1` appends the number as text (D-080).
+- Division or remainder by zero is an error with code 4, also for `Real` and `Float`: there is no infinity and no NaN. A `Rational` with a zero denominator, `1\0`, is not supported.
+- `+` on two strings concatenates. `+` between a string and a number is a compile-time type error; `s <+ 1` appends the number as text.
 - `*` between a string and an Integer replicates the string: `"ab" * 3` is `"ababab"`.
 
 ## Comparison and logic
 
 - `==` and `<>` compare values; on objects and collections the comparison is deep. Numbers of different numeric types are compared by value (`9 / 3 == 3` is true); any other operands of different types are never equal. `<` `>` `<=` `>=` compare numbers, runes and strings (by code point).
-- `is` compares references: `a is b` is true when both name the same object; on native values it is false. `x is Type` tests a type. `x is Null` tests the type, `x == null` the value (D-080). `eq` is true when value and type are the same.
+- `is` compares references: `a is b` is true when both name the same object; on native values it is false. `x is Type` tests a type. `x is Null` tests the type, `x == null` the value. `eq` is true when value and type are the same.
 - `and`, `or`, `xor`, `not` take Logic values; `not`, `is not`, `not in`, `not eq` are negations. `True` and `False` are the constants of type Logic, with the values 1 and 0.
 - `a if c else b` evaluates `c` first, then only the chosen branch; it chains: `a if c1 else b if c2 else d`. It needs parentheses when it is an argument or an initial value.
-- `=~` is the approximate match: `s =~ "/regex/flags"` for a string (the right operand is a pattern when its value starts with `/`; a literal that starts with `/` is raw, Q-018), `x =~ b +- t` for a number within the tolerance `t`, `x =~ b` within `$epsilon` (D-079). `==` is the exact one. There is no `!~` and no `~`.
+- `=~` is the approximate match: `s =~ "/regex/flags"` for a string (the right operand is a pattern when its value starts with `/`; a literal that starts with `/` is raw), `x =~ b +- t` for a number within the tolerance `t`, `x =~ b` within `$epsilon`. `==` is the exact one. There is no `!~` and no `~`.
 
 ## Ranges
 
@@ -57,40 +57,40 @@ The relations do not chain: `a < b < c` is a compile error; write `a < b and b <
 | `(a..b)(s)` | the range with a step `s`; the number of decimals of the step sets the precision |
 | `(0..?)` `(?..0)` | an open end |
 
-A range is a value, not an array; there is no `[1..10]` (D-022, D-023). It is used in `for`, `in`, `when`, a builder and as an index. `a >< b` is the cartesian product of two collections or ranges: pairs in row-major order, the left operand is the outer loop (D-024).
+A range is a value, not an array; there is no `[1..10]`. It is used in `for`, `in`, `when`, a builder and as an index. `a >< b` is the cartesian product of two collections or ranges: pairs in row-major order, the left operand is the outer loop.
 
 ## Index, slice, member
 
-- Collections are indexed **from 1** (D-021). `a[-1]` is the last element and `a[-x]` is `a[N + 1 - x]`; `a[0]` and an index outside `-N..N` are errors with code 4 (D-079).
-- A slice is a range as index: `a[2..4]`, `a[1..-1]` (all), `a[2..-2]`. By `:=` it is a view, by `::` a copy (D-049). A string is indexed by runes.
-- A matrix or tensor takes one index per dimension, in one pair of brackets or one pair each: `m[x, y]` is `m[x][y]`; an index is a number, a range or `*` (all of the dimension). A single index `m[k]` is the absolute row-major index (D-064).
-- On a DataMap `h["k"]` reads a key; a missing key is an error with code 4. Assigning to a missing key creates it (D-058).
-- `object.name` reads an attribute; `Class.name` a class member; `module.name` an exported member. Code outside a class can not add an attribute to an object: `new p.z := 7;` is a compile error (Q-019h, Q-031k).
-- A call applies to a name, a member or an index: `f(5)`, `m.f(5)`. A lambda is not called where it is written: `((x) => (x * 2))(5)` is a compile error; assign the lambda to a name, then call the name (D-147). An anonymous function can not call itself (Q-025a). Optional parameters are named at the call.
-- A second parenthesized list after a name is a list of types, only with `:`: `Box(:Integer)(5)` (D-145). Generic functions, procedures, methods and processes take a type list too, `largest(:Integer)(xs)`, which may be left out when the types are inferred from the arguments: `largest(xs)`; a lambda has no type list (level 5, D-148, `declarations.md#generic-subprograms`).
-- A call of an overloaded name selects one signature at compile time, by the arguments and, for a function, by the type expected for the result (level 5, D-149, `declarations.md#overloading`).
+- Collections are indexed **from 1**. `a[-1]` is the last element and `a[-x]` is `a[N + 1 - x]`; `a[0]` and an index outside `-N..N` are errors with code 4.
+- A slice is a range as index: `a[2..4]`, `a[1..-1]` (all), `a[2..-2]`. By `:=` it is a view, by `::` a copy. A string is indexed by runes.
+- A matrix or tensor takes one index per dimension, in one pair of brackets or one pair each: `m[x, y]` is `m[x][y]`; an index is a number, a range or `*` (all of the dimension). A single index `m[k]` is the absolute row-major index.
+- On a DataMap `h["k"]` reads a key; a missing key is an error with code 4. Assigning to a missing key creates it.
+- `object.name` reads an attribute; `Class.name` a class member; `module.name` an exported member. Code outside a class can not add an attribute to an object: `new p.z:= 7;` is a compile error.
+- A call applies to a name, a member or an index: `f(5)`, `m.f(5)`. A lambda is not called where it is written: `((x) => (x * 2))(5)` is a compile error; assign the lambda to a name, then call the name. An anonymous function can not call itself. Optional parameters are named at the call.
+- A second parenthesized list after a name is a list of types, only with `:`: `Box(:Integer)(5)`. Generic functions, procedures, methods and processes take a type list too, `largest(:Integer)(xs)`, which may be left out when the types are inferred from the arguments: `largest(xs)`; a lambda has no type list (level 5, `declarations.md#generic-subprograms`).
+- A call of an overloaded name selects one signature at compile time, by the arguments and, for a function, by the type expected for the result (level 5, `declarations.md#overloading`).
 
 ## Literals and builders
 
 - Number, rune, string and text literals: `../lexical/lexical.md`.
-- `(1, 2, 3)` List; `[1, 2, 3]` Array; `{1, 2, 3}` DataSet (sorted, no duplicates); `{"a": 1}` DataMap (quoted or numeric keys); `{a: 1}` Object (names as keys); `()` empty List; `[]` empty Array; `{}` empty DataSet; `{:}` empty DataMap (D-058, D-080).
-- A builder takes values from generators and an optional condition joined by `and`: `[x * x | x in (1..10) and x % 2 == 0]`, `[(x, y) | (x, y) in (1..3) >< (1..3)]`. The brackets decide the collection (D-023, D-059).
-- A **deconstruct** assigns the elements of a collection to several names: `new (a, b, *rest) := lst;`; `_` drops one element and `*` skips many (D-058).
+- `(1, 2, 3)` List; `[1, 2, 3]` Array; `{1, 2, 3}` DataSet (sorted, no duplicates); `{"a": 1}` DataMap (quoted or numeric keys); `{a: 1}` Object (names as keys); `()` empty List; `[]` empty Array; `{}` empty DataSet; `{:}` empty DataMap.
+- A builder takes values from generators and an optional condition joined by `and`: `[x * x | x in (1..10) and x % 2 == 0]`, `[(x, y) | (x, y) in (1..3) >< (1..3)]`. The brackets decide the collection.
+- A **deconstruct** assigns the elements of a collection to several names: `new (a, b, *rest):= lst;`; `_` drops one element and `*` skips many.
 
 ## Operators on collections
 
 | Operator | List / Array | DataSet | DataMap |
 |---|---|---|---|
-| `<+` | concatenate / append (never `+`: with a scalar `+` is arithmetic on every element, D-118) | | |
+| `<+` | concatenate / append (never `+`: with a scalar `+` is arithmetic on every element) | | |
 | `+` | | union | merge |
 | `+=` `-=` | with a scalar: see below / with a collection: add / remove | add / remove | add pair / remove key |
-| `<+` `+>` | append at the end (`lst <+ x`) / put in front (`x +> lst`); the list stays after `+>` and before `<+` (D-107) | | |
+| `<+` `+>` | append at the end (`lst <+ x`) / put in front (`x +> lst`); the list stays after `+>` and before `<+` | | |
 | `<-` `->` | remove the first / last element | | |
 | `.delete(v)` | remove every element equal to `v` | remove `v` | remove the key `v` |
 | `in` | membership | membership | key membership |
 | `\|\|` `&&` `-` | | union, intersection, difference | |
 | `.count()` | number of elements | | |
 
-**Collection and scalar (D-118).** When the left operand is a List or Array and the right one a scalar (number, boolean, symbol or string), `+ - * / % ^ < > <= >= =~` apply to **every element**: `(1, 2, 3) * 2` is `(2, 4, 6)`, `[1, 2, 3] > 1` is `[False, True, True]`, `("cat", "dog") =~ "/^c/"` is `(True, False)`. The expression returns a new collection of the same kind; the combined assignment `let a += 5;` updates the elements in place, so `(1, 2, 3, 4)` becomes `(6, 7, 8, 9)`: it is a bulk update, not an append (use `<+`) and not a removal (use `.delete(v)`). `==` and `<>` still compare whole collections. Arithmetic never builds strings: `("a", "b") + "x"` is an error, build a new collection or a string with a loop. A collection with a collection keeps its meaning (`<+` appends, `-` on DataSets is the difference). DataSet and DataMap keep `+=` and `-=` as add and remove, because a bulk update could merge elements.
+**Collection and scalar.** When the left operand is a List or Array and the right one a scalar (number, boolean, symbol or string), `+ - * / % ^ < > <= >= =~` apply to **every element**: `(1, 2, 3) * 2` is `(2, 4, 6)`, `[1, 2, 3] > 1` is `[False, True, True]`, `("cat", "dog") =~ "/^c/"` is `(True, False)`. The expression returns a new collection of the same kind; the combined assignment `let a += 5;` updates the elements in place, so `(1, 2, 3, 4)` becomes `(6, 7, 8, 9)`: it is a bulk update, not an append (use `<+`) and not a removal (use `.delete(v)`). `==` and `<>` still compare whole collections. Arithmetic never builds strings: `("a", "b") + "x"` is an error, build a new collection or a string with a loop. A collection with a collection keeps its meaning (`<+` appends, `-` on DataSets is the difference). DataSet and DataMap keep `+=` and `-=` as add and remove, because a bulk update could merge elements.
 
-As a statement, `let a <+ b;` appends `b` to `a`; `new a <+ b;` creates a new list `a` that holds `b`, and is an error when `a` exists (Q-019d). As an expression, `a <+ b` returns a new collection *(proposed)*. An arrow never removes by value: `lst.delete(v)` does (Q-031c). The list of methods is in `../library/builtins.md` (pending).
+As a statement, `let a <+ b;` appends `b` to `a`; `new a <+ b;` creates a new list `a` that holds `b`, and is an error when `a` exists. As an expression, `a <+ b` returns a new collection *(proposed)*. An arrow never removes by value: `lst.delete(v)` does. The list of methods is in `../library/builtins.md` (pending).

@@ -1,4 +1,4 @@
-# a lambda has no list of types: compile error (D-148)
+# a lambda has no list of types: compile error
 ** spec: syntax/declarations.md#generic-subprograms
 primary aspect e14_generic_lambda is
   process main is

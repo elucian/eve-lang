@@ -1,4 +1,4 @@
-# a concurrent aspect of a macro can not use a shared variable that is not atomic: compile error (D-152)
+# a concurrent aspect of a macro can not use a shared variable that is not atomic: compile error
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 new count := 0;

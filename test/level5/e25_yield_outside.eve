@@ -1,4 +1,4 @@
-# yield in a function is a compile error: only the body of a generator can yield (D-067)
+# yield in a function is a compile error: only the body of a generator can yield
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e25_yield_outside is
   function f() => (@r: Integer) is

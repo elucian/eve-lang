@@ -1,21 +1,21 @@
 # The Eve machine: parts, doors, local and remote
 
-Status: **draft**, level 6, implemented: the machine with its doors (IPC, HTTP, stdio), the machine API `vm.*`, sessions and streamed output (F-NET-02, F-TLS-12 to F-TLS-14, F-NET-08). Design: `../../design/design-service.md` sections 3a, 4 and 5, and `../../design/design-packages.md` (the parts of `eve`). Tests: `test/level6` (f07 `rpc`, f10 to f15), `test/level5/e95_web_hello` (the page, `e95_test1` IPC only, `e95_test2` HTTP only, `e95_test3` both). Decisions: D-162 (the doors, implemented and tested); D-163 to D-165 (2026-10-12: the parts of `eve`, the serving machine, the machine API, remote access, ACP), whose sections are marked with the level that brings them.
+Status: **draft**, level 6, implemented: the machine with its doors (IPC, HTTP, stdio), the machine API `vm.*`, sessions and streamed output. The parts of `eve`, the serving machine, the machine API, remote access and ACP are described here; each section is marked with the level that brings it.
 
 ## The parts of `eve`
 
-`eve` is one program, with one version (D-163, D-167). Its **first word** chooses a part:
+`eve` is one program, with one version. Its **first word** chooses a part:
 
 | Part | Command | Does | Examples |
 |---|---|---|---|
 | runtime | `eve vm …`, or `eve` with a script or the options of this page | runs scripts, the REPL, the machine and its IPC door | `eve file.eve`, `eve -x f.eve`, `eve --listen`, `eve vm --api` |
 | compiler | `eve cp …` | checks, documents and compiles source files; makes projects; runs nothing | `eve cp --check f.eve`, `eve cp --doc lib lib/doc`, `eve cp project new shop` |
 | database | `eve db …` | the database commands (`database.md#admin-commands`), the stored procedures, the database door | `eve db serve --test`, `eve db sql shop "select 1"`, `eve db proc list` |
-| UI | `eve ux …` | the web door, the Workbench, the AI agents (ACP) | `eve ux start`, `eve ux status`, `eve ux stop` (any other rest of the line, `eve ux [folder]` or `eve -ux`, starts the native workbench `eveux`, D-193) |
+| UI | `eve ux …` | the web door, the Workbench, the AI agents (ACP) | `eve ux start`, `eve ux status`, `eve ux stop` (any other rest of the line, `eve ux [folder]` or `eve -ux`, starts the native workbench `eveux`) |
 
 - Without one of the four words, `eve` keeps the meaning it has today: `eve file.eve`, `-x`, `--listen`, `-loc`, `-rem` belong to the runtime; `--check`, `--doc` and `project` are synonyms of `eve cp …`; `--serve start`, `stop`, `restart` and `status` are synonyms of `eve ux …`.
 - **A direct command** runs the parts it needs inside its own process and ends: `eve file.eve` compiles the script, runs it, and opens its databases in the same process.
-- The words are read since 2026-10-12, before the split of the VM into modules: `vm` and `cp` select what the options already do, `ux` is `--serve`, and `eve db` has its first command, `eve db proc list` (`database.md#stored-procedures`). Tests: `e95_test4` (`eve ux start`, `eve ux stop`), `e102_test1` (`eve db proc list`).
+- The words are read since 2026-10-12, before the split of the VM into modules: `vm` and `cp` select what the options already do, `ux` is `--serve`, and `eve db` has its first command, `eve db proc list` (`database.md#stored-procedures`).
 
 ## The machine
 
@@ -31,7 +31,7 @@ A **machine** is a process of `eve` that stays active and answers requests. It i
 
 ## The serving machine (level 6)
 
-From level 6 a machine is the **serving machine** of D-164:
+From level 6 a machine is the **serving machine** of:
 
 - **One process, its parts as tasks.** One process per domain and port, as above. Its active parts (runtime, database, UI) run as concurrent tasks of that process and call each other in the process, never through IPC. A part is active when its door is open, or when another active part needs it: a script that opens a connection makes the database part active.
 - **One door per part:**
@@ -67,21 +67,21 @@ The file `eve.cfg` of the working folder (or the file of `-s`): one `key = value
 |---|---|---|
 | `--listen [word]` | | the IPC door: `start` (the default) starts a machine with the IPC door; `stop`, `restart` and `status` speak to the machine **through the IPC door only**, as `-loc` does (without it: `eve: no local machine`, exit 69) |
 | `--serve [word]` | | the HTTP door: `start` (the default) starts a machine with the HTTP door; `stop`, `restart` and `status` speak to the machine through the IPC door, then the HTTP door of `localhost` |
-| the words | | `stop` ends the machine (exit 0); `restart` stops it, if it runs, then starts it again in this process with the doors it had (the option on the line adds its door; with no machine running it starts like `start`); `status` prints the doors. `--listen --serve` starts a machine with both doors (D-169). Another word after a door is a usage error: `eve: nope: expected start, stop, restart or status after --listen or --serve`, exit 64 |
-| `-s [file.cfg]` | | **the service** (D-185, section "Service mode"): the machine without a user interface; the file after it is its configuration; `-s` takes nothing else (D-188) |
-| `-e file.cfg` | `--setup file.cfg` | the configuration file, for a script, a command or a door (D-188) |
-| `-s -db --serve evedb.cfg` | `-s db serve evedb.cfg` | **evedb as a service** (D-186, D-203): the database server, which is the Eve machine with DuckDB inside (level 7) and answers as PostgreSQL, with its configuration file; without `-s`, `eve db serve evedb.cfg` runs it in the foreground |
-| `-u name` | `--user name` | the user who logs in to the machine (D-205); the password is asked in a dialog, never given on the line |
-| `-a` | `--admin` | the superuser: `eve` enters admin mode and accepts the commands of "Users and login" (D-205) |
+| the words | | `stop` ends the machine (exit 0); `restart` stops it, if it runs, then starts it again in this process with the doors it had (the option on the line adds its door; with no machine running it starts like `start`); `status` prints the doors. `--listen --serve` starts a machine with both doors. Another word after a door is a usage error: `eve: nope: expected start, stop, restart or status after --listen or --serve`, exit 64 |
+| `-s [file.cfg]` | | **the service** (section "Service mode"): the machine without a user interface; the file after it is its configuration; `-s` takes nothing else |
+| `-e file.cfg` | `--setup file.cfg` | the configuration file, for a script, a command or a door |
+| `-s -db --serve evedb.cfg` | `-s db serve evedb.cfg` | **evedb as a service**: the database server, which is the Eve machine with DuckDB inside (level 7) and answers as PostgreSQL, with its configuration file; without `-s`, `eve db serve evedb.cfg` runs it in the foreground |
+| `-u name` | `--user name` | the user who logs in to the machine; the password is asked in a dialog, never given on the line |
+| `-a` | `--admin` | the superuser: `eve` enters admin mode and accepts the commands of "Users and login" |
 | `-loc [port]` | `--local` | the command is local: it never uses the network |
 | `-rem [host:port]` | `--remote` | the command runs on a remote machine, found by its HTTP door |
 | `-x file.eve [args]` | `--execute` | the script runs at once in this process: no machine is looked for |
 
-Options are whole words and are not bundled: `-loc` is one option. The two doors have the same form, `--listen [word]` and `--serve [word]` (D-169: `-lsn [port]` was the IPC door until 2026-10-13 and is now an unknown option, exit 64). The client options have three letters (`-loc` local, `-rem` remote), so they never clash with the one-letter options of the CLI. A command without `-loc` and without `-rem` is local.
+Options are whole words and are not bundled: `-loc` is one option. The two doors have the same form, `--listen [word]` and `--serve [word]` (: `-lsn [port]` was the IPC door until 2026-10-13 and is now an unknown option, exit 64). The client options have three letters (`-loc` local, `-rem` remote), so they never clash with the one-letter options of the CLI. A command without `-loc` and without `-rem` is local.
 
 **Direct run.** `eve -x file.eve` (or `eve file.eve`) is the fast way to run a script: it does not read the doors of `eve.cfg`, asks no IPC socket and no HTTP port, and executes the script in the process of `eve`, which exits with the exit code of the script. A machine that listens on the same computer does not see the run and does not count it. To run the script in that machine, write `-loc -x` or `-rem -x`.
 
-**In its own process.** `evevm [start|stop|restart|status] [-e file.cfg]` (the same program as `eve`, installed under a second name) starts a machine with both doors in a new process, without a window, with its output in `<runtime>/eve-<domain>-<ipc_port>.log`, and ends as soon as the IPC door answers. `stop` closes both doors of the machine of the process and tells every running script to stop at its next statement; in the prompt of `eve` the process stays, and the machine of another process (the one started by `evevm`) ends. `eve -ux` (it was `-u`, D-172) opens the user interface, the page of the HTTP door, starting the machine in its own process when no door answers.
+**In its own process.** `evevm [start|stop|restart|status] [-e file.cfg]` (the same program as `eve`, installed under a second name) starts a machine with both doors in a new process, without a window, with its output in `<runtime>/eve-<domain>-<ipc_port>.log`, and ends as soon as the IPC door answers. `stop` closes both doors of the machine of the process and tells every running script to stop at its next statement; in the prompt of `eve` the process stays, and the machine of another process (the one started by `evevm`) ends. `eve -ux` (it was `-u`) opens the user interface, the page of the HTTP door, starting the machine in its own process when no door answers.
 
 **Start.** The machine prints one line per door (`eve: ipc localhost:4195`, `eve: http http://localhost:8095`) and stays active. Then it prints one line per request, the **log of the machine**: the door and the method (`eve: ipc status`), a script with its exit code and its duration (`eve: http run hello.eve: exit 0, 1 ms`, with `(waited 4712 ms for another script)` when it had to wait its turn), a page with its status (`eve: http GET /css/style.css: 200`). If a door of the new machine is taken by a running machine (something answers on the IPC socket, or on the HTTP port), the new one prints `eve: already running (…)` and ends with the exit code **75**. The HTTP door is tested by a `ping` and not by the bind, because some systems (Windows) let a second socket bind a port that listens. A socket left by a crash is found by a failed connect and removed.
 
@@ -111,7 +111,7 @@ The REPL command `status` (and `eve --status`) prints the same lines under a hea
 
 ## Service mode (level 6)
 
-`eve -s` starts the machine as a **service** (D-185): no prompt, nothing written on the standard output, the doors of the configuration open (IPC and HTTP), the log in `<runtime>/eve-<domain>-<ipc_port>.log`. On Windows it is a service of the Service Control Manager; on Linux and macOS it is a daemon.
+`eve -s` starts the machine as a **service**: no prompt, nothing written on the standard output, the doors of the configuration open (IPC and HTTP), the log in `<runtime>/eve-<domain>-<ipc_port>.log`. On Windows it is a service of the Service Control Manager; on Linux and macOS it is a daemon.
 
 | Form | Does |
 |---|---|
@@ -119,9 +119,9 @@ The REPL command `status` (and `eve --status`) prints the same lines under a hea
 | `eve.exe -s [file.cfg]` started by the Service Control Manager | the process is the service: it reports `START_PENDING` and `RUNNING`, runs the machine, and reports `STOPPED` on a `STOP` or `SHUTDOWN` control |
 | `EVE_SERVICE=foreground eve -s [file.cfg]` | the process is the machine, in the foreground of its parent (a container, `Type=simple`); it ends with 0 on `SIGTERM`, `SIGINT` or `vm.stop` |
 
-**Reading `-s`.** `-s` is the service and only that (D-188). A word after it that ends in `.cfg` is the configuration of the service. With a script, a command, `-x`, `--listen`, `--serve`, `-loc` or `-rem`, `-s` is a usage error (exit 64); the configuration of those is `-e file.cfg` (`--setup file.cfg`). The one exception is the database part: `eve -s -db --serve evedb.cfg` (D-186).
+**Reading `-s`.** `-s` is the service and only that. A word after it that ends in `.cfg` is the configuration of the service. With a script, a command, `-x`, `--listen`, `--serve`, `-loc` or `-rem`, `-s` is a usage error (exit 64); the configuration of those is `-e file.cfg` (`--setup file.cfg`). The one exception is the database part: `eve -s -db --serve evedb.cfg`.
 
-**The pid file** `<runtime>/eve-<domain>-<ipc_port>.pid` holds the pid and a line break, from the moment the machine runs to its stop. **To stop:** `eve --serve stop`, `evevm stop`, `vm.stop`, `sc stop`, `SIGTERM`, `systemctl stop`; the running scripts are cancelled, the doors close, the socket and the pid file are removed. Install recipes and the open points: `../../design/design-service.md` section 17. Tests: `script/service_check.py`.
+**The pid file** `<runtime>/eve-<domain>-<ipc_port>.pid` holds the pid and a line break, from the moment the machine runs to its stop. **To stop:** `eve --serve stop`, `evevm stop`, `vm.stop`, `sc stop`, `SIGTERM`, `systemctl stop`; the running scripts are cancelled, the doors close, the socket and the pid file are removed.
 
 ## Channels
 
@@ -155,11 +155,11 @@ The IPC door and the stdio door keep their connection: a client sends many messa
 | `vm.run` | as in "Channels", or `{"path": "file.eve", "stream": bool}` | as in "Channels"; `path` is a file of the machine (not on the HTTP door), 66 when it cannot be read |
 | `vm.cancel` | none | `"cancelled"`: the scripts that run stop at their next statement, a command of the system is ended |
 
-`vm.stat` adds `door` (`ipc`, `http` or `stdio`: the door of the request) and `sessions` (how many are open). Tests: `test/level5/e95_web_hello/e95_test5.eve` (the stdio door, the sessions, the streamed output, the order of the answers).
+`vm.stat` adds `door` (`ipc`, `http` or `stdio`: the door of the request) and `sessions` (how many are open).
 
 ## The machine API (level 6)
 
-The methods of the machine are named by their part (D-165): `vm.` for the runtime, `db.` for the database. The four methods of the section "Channels" are the first names of `vm.ping`, `vm.stat`, `vm.run` and `vm.stop`; a machine answers both names until level 6 ends, then only the new ones. The params and the results of the four are those of "Channels".
+The methods of the machine are named by their part: `vm.` for the runtime, `db.` for the database. The four methods of the section "Channels" are the first names of `vm.ping`, `vm.stat`, `vm.run` and `vm.stop`; a machine answers both names until level 6 ends, then only the new ones. The params and the results of the four are those of "Channels".
 
 | Method | Params | Result |
 |---|---|---|
@@ -180,30 +180,30 @@ The params and the results of the new methods are made when a test needs them (a
 
 ## Remote access: a reverse proxy
 
-`eve` holds **no TLS server** (D-165). Every door speaks plain JSON-RPC or plain HTTP, and listens only on a Unix socket or on loopback (`localhost`, `127.0.0.1`, `::1`) unless the configuration says otherwise.
+`eve` holds **no TLS server**. Every door speaks plain JSON-RPC or plain HTTP, and listens only on a Unix socket or on loopback (`localhost`, `127.0.0.1`, `::1`) unless the configuration says otherwise.
 
 - **HTTPS for remote clients** is given by a **reverse proxy** in front of the machine, such as Nginx, Caddy or Cloudflare Tunnel. It ends HTTPS and forwards to the loopback port of the HTTP door; WebSocket goes through it the same way.
-- **The machine still checks who calls.** The login and the token of the machine (D-155) are checked by the machine, not by the proxy: the proxy carries the bytes, it does not decide who may run what.
+- **The machine still checks who calls.** The login and the token of the machine are checked by the machine, not by the proxy: the proxy carries the bytes, it does not decide who may run what.
 - **Another address only on purpose.** A machine binds a `http_host` that is not loopback only when `eve.cfg` says that a proxy is in front of it *(proposed key: `behind_proxy = true`; level 6)*; otherwise it refuses to start, so a plain door is never opened to the network by accident.
 - **The client side.** `eve -rem https://host` speaks HTTPS with the TLS client of Zig's standard library. `-rem host:port` without `https://` stays plain HTTP, for `localhost` and the tests.
 
 ## AI agents: ACP and the eve skills (level 6)
 
-The UI part speaks the **Agent Client Protocol** (ACP) toward AI agents and IDEs, and turns what an agent asks into the exact calls of the machine API (D-165). `eve -rem` is the same kind of client without a browser.
+The UI part speaks the **Agent Client Protocol** (ACP) toward AI agents and IDEs, and turns what an agent asks into the exact calls of the machine API. `eve -rem` is the same kind of client without a browser.
 
 - **Toward an AI agent**, the UI part is the ACP client: it starts the agent and opens a session on the project folder. It hands the agent the **eve skills**, the MCP server of the machine (`eve vm --api`), whose tools are the methods `vm.*` and `db.*`. It streams the answers of the agent to the browser and asks the user before an action that the agent wants to take.
 - **Toward an IDE that speaks ACP**, the UI part answers as an agent: a request about the project becomes calls of the machine API on the local or a remote machine.
-- **Credentials.** The API key or the OAuth login of the agent's provider is kept in the keyring of the system (D-155), never in the browser or in a file of the project.
+- **Credentials.** The API key or the OAuth login of the agent's provider is kept in the keyring of the system, never in the browser or in a file of the project.
 
 ## The web door
 
-`GET` (and `HEAD`, without the body) returns the file of the web folder that the path names: `/` is `index.html`; the type comes from the extension (`html`, `css`, `js`, `json`, `svg`, `png`, `jpg`, `ico`, `txt`, `wasm`; any other is `application/octet-stream`). A path that is not a file of the web folder, or that leaves it (`..`), is `404`: no other folder of the project is served. `POST` is `/rpc` only; any other method or path is `405` or `404`. The body of a `POST` is read by its `Content-Length`, or in chunks when the request says `Transfer-Encoding: chunked` (D-168); a body larger than 16 MB is `413`. The web folder is organized for a single page application: `index.html` at the top and the folders `css/`, `js/`, `img/` and others as the application needs; the backend is Eve, the frontend is JavaScript. From level 6 the web door belongs to the UI part.
+`GET` (and `HEAD`, without the body) returns the file of the web folder that the path names: `/` is `index.html`; the type comes from the extension (`html`, `css`, `js`, `json`, `svg`, `png`, `jpg`, `ico`, `txt`, `wasm`; any other is `application/octet-stream`). A path that is not a file of the web folder, or that leaves it (`..`), is `404`: no other folder of the project is served. `POST` is `/rpc` only; any other method or path is `405` or `404`. The body of a `POST` is read by its `Content-Length`, or in chunks when the request says `Transfer-Encoding: chunked`; a body larger than 16 MB is `413`. The web folder is organized for a single page application: `index.html` at the top and the folders `css/`, `js/`, `img/` and others as the application needs; the backend is Eve, the frontend is JavaScript. From level 6 the web door belongs to the UI part.
 
-**Browser pages (2026-10-20, normative).** A page in the user's browser can post to `http://localhost:<port>/rpc` without any login, and a name that resolves to `127.0.0.1` reaches the door too; `vm.run` runs a script. So `POST /rpc` is answered `403 Forbidden` when (1) `http_host` is a loopback name and the `Host` header is not one (`localhost`, `127.0.0.1`, `[::1]`, with or without the port), or (2) the request has an `Origin` header that does not name the same host as `Host`. A client that is not a browser (`eve -rem`, the editors, a script) sends no `Origin` and passes. A machine bound to another address on purpose (a proxy in front) skips rule (1) and keeps rule (2). Test: `machine: the HTTP door refuses a foreign Host or Origin` in `code/evevm/src/machine.zig`.
+**Browser pages (2026-10-20, normative).** A page in the user's browser can post to `http://localhost:<port>/rpc` without any login, and a name that resolves to `127.0.0.1` reaches the door too; `vm.run` runs a script. So `POST /rpc` is answered `403 Forbidden` when (1) `http_host` is a loopback name and the `Host` header is not one (`localhost`, `127.0.0.1`, `[::1]`, with or without the port), or (2) the request has an `Origin` header that does not name the same host as `Host`. A client that is not a browser (`eve -rem`, the editors, a script) sends no `Origin` and passes. A machine bound to another address on purpose (a proxy in front) skips rule (1) and keeps rule (2).in `code/evevm/src/machine.zig`.
 
 ## Users and login (level 6)
 
-Decided by D-205. The credentials of the users of a machine are kept in the SQLite database of that machine (for the client `eve`, its own store), as a **checksum of the password**, never the password.
+Decided by. The credentials of the users of a machine are kept in the SQLite database of that machine (for the client `eve`, its own store), as a **checksum of the password**, never the password.
 
 | Form | Meaning |
 |---|---|
@@ -213,7 +213,7 @@ Decided by D-205. The credentials of the users of a machine are kept in the SQLi
 | `alter user <username>/<password>` | changes the password of a user |
 | `remove user <username>` | removes a user |
 
-The password is never an argument of the command line and never written in a log. A service is started with the credentials of the operating system; evedb is started like any other Eve machine and manages its users the same way. `eveux` and `evetx` show a login dialog with the same fields and use the same store. More fields of a user are planned (stored secured in SQLite and managed remotely by a form); single sign-on, a keyring and roles are set aside (D-205).
+The password is never an argument of the command line and never written in a log. A service is started with the credentials of the operating system; evedb is started like any other Eve machine and manages its users the same way. `eveux` and `evetx` show a login dialog with the same fields and use the same store. More fields of a user are planned (stored secured in SQLite and managed remotely by a form); single sign-on, a keyring and roles are set aside.
 
 ## Not yet
 

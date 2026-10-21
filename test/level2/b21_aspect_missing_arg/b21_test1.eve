@@ -1,4 +1,4 @@
-# variation 1 of b21: the mandatory argument by name (D-133)
+# variation 1 of b21: the mandatory argument by name
 ** spec: syntax/statements.md#apply
 primary aspect b21_test1 is
   process main is

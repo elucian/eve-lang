@@ -1,4 +1,4 @@
-# a type argument must adopt the trait of its constraint: compile error (D-145, D-148)
+# a type argument must adopt the trait of its constraint: compile error
 ** spec: syntax/declarations.md#generic-subprograms
 primary aspect e58_generic_constraint is
   class Point = {x: Integer, y: Integer} <: Object;

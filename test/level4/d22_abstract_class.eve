@@ -1,4 +1,4 @@
-# an abstract class is built only by the constructor of a subclass that writes its required method (D-145)
+# an abstract class is built only by the constructor of a subclass that writes its required method
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d22_abstract_class is
   class Shape = {name: String} <: Object is

@@ -1,4 +1,4 @@
-# a private member is seen only inside its class (D-085)
+# a private member is seen only inside its class
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c13_visibility is
   class Counter = {n :Integer} <: Object is

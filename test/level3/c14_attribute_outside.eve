@@ -1,4 +1,4 @@
-# code outside a class can't add an attribute to an object (Q-019h, Q-031k, D-096)
+# code outside a class can't add an attribute to an object
 ** spec: syntax/declarations.md#classes-and-objects
 primary aspect c14_attribute_outside is
   process main is

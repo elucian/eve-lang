@@ -1,4 +1,4 @@
-# variation 1 of c05: the two modules one by one, each with its prefix (D-133)
+# variation 1 of c05: the two modules one by one, each with its prefix
 ** spec: semantics/modules.md#import
 primary aspect c05_test1 is
   from lib use (alpha, beta);

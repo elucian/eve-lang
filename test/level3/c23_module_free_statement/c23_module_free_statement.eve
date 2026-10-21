@@ -1,4 +1,4 @@
-# a module holds declarations and regions only: a free statement is a compile error (D-126)
+# a module holds declarations and regions only: a free statement is a compile error
 ** spec: semantics/modules.md#what-a-module-may-contain
 primary aspect c23_module_free_statement is
   from lib use (loose);

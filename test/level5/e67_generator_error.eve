@@ -1,4 +1,4 @@
-# an error raised in the body ends the generator and is raised in the caller, at the for line (D-067)
+# an error raised in the body ends the generator and is raised in the caller, at the for line
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e67_generator_error is
   generator risky(n: Integer) => (@x: Integer) is

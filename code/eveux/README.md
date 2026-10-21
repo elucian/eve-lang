@@ -205,7 +205,7 @@ The explorer lists database files; a double click opens a **tables tab** (names,
 | P7 | source control; deploy; login; jobs and logs | the flows of `design/notes/elaboration.md` |
 | P8 | HTML renderer; audio and video; polish; Linux and macOS | version 1.0 per platform |
 
-Features: F-TLS-19 (shell, editor, previews), F-TLS-20 (SQL and database), F-TLS-21 (jobs, logs, admin), F-TLS-22 (debugger) of `design/feature_map.md`, F-TLS-31 (source control) and F-NET-10 (deploy) proposed in the elaboration. Tests: unit tests for the logic files (done for six), no automated screen tests (as evetx); a headless backend for screenshots is a question of the spike.
+Features: F-TLS-19 (shell, editor, previews), F-TLS-20 (SQL and database), F-TLS-21 (jobs, logs, admin), F-TLS-22 (debugger) of `spec/features/`, F-TLS-31 (source control) and F-NET-10 (deploy) proposed in the elaboration. Tests: unit tests for the logic files (done for six), no automated screen tests (as evetx); a headless backend for screenshots is a question of the spike.
 
 ## 12. Findings, limits and risks
 

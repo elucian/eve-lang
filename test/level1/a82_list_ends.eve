@@ -1,4 +1,4 @@
-# list modifiers: <+ appends at the end, +> puts in front; the list stays after +> and before <+ (D-107)
+# list modifiers: <+ appends at the end, +> puts in front; the list stays after +> and before <+
 ** spec: syntax/statements.md#let
 primary aspect a82_list_ends is
   process main is

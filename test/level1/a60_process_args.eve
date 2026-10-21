@@ -1,4 +1,4 @@
-# the process receives the command-line arguments; a vararg collects them (D-029, D-040; from demo/method_call.eve and demo/test_args.eve, D-099)
+# the process receives the command-line arguments; a vararg collects them (from demo/method_call.eve and demo/test_args.eve)
 ** spec: syntax/declarations.md#scripts
 primary aspect a60_process_args is
 

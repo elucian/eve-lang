@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 """Cheap tracking of the plan: read little, find fast.
 
-  python script/plan.py status            open steps, open questions, current focus (about 60 lines)
-  python script/plan.py show D-087 [Q-035 ...]   print the full entry (active file or archive)
-  python script/plan.py list              every id and title, active and archived (the files hold no index)
-  python script/plan.py feature F-NET-02 [...]   the row of a feature of design/feature_map.md (version, status, description)
-  python script/plan.py features [open|partial|done] [1..7|all]   one line per feature (code, status, name); filter by status and version
-  python script/plan.py archive [N] [--keep K]   move settled entries to design/decision/archive/ (default: keep the last 8)
+  python script/plan.py status            open steps, open questions, current focus (about 40 lines)
+  python script/plan.py show D-087 [Q-035 ...]   print the full entry of a live decision or question; a settled one prints its line of the index
+  python script/plan.py list              every id and title, live and settled
+  python script/plan.py feature F-NET-02 [...]   a feature of spec/features: level, status, summary and page
+  python script/plan.py features [open|partial|done] [1..7|all]   one line per feature (code, status, name); filter by status and level
+  python script/plan.py archive [--keep K]   move settled entries from the live files to design/decision/index.md as one line each (default: keep the last 8)
 
-Decision logs: design/decision/level<N>.md holds a preamble, an index of EVERY id (one line each),
-the open questions and the newest decisions in full. design/decision/archive/level<N>.md holds the
-full text of the settled ones. A new D-/Q- entry is simply appended to the active file; run
-`archive` now and then. `show` finds an id in either place. Line endings are preserved.
+Decision logs: design/decision/level<N>.md holds a preamble, the open questions and the newest decisions in
+full. design/decision/index.md holds one line for each settled decision; the full text of an old one is in
+the git history (`git log -S"D-087" -- design/decision`). A new D-/Q- entry is simply appended to the live
+file; run `archive` now and then. The features and their status are in spec/features/*.json. Line endings are preserved.
 """
-import re, sys, glob, os
+import json, re, sys, glob, os
 
-PLAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'design')
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+PLAN = os.path.join(ROOT, 'design')
 DEC = os.path.join(PLAN, 'decision')
 EXTRA = [os.path.join(os.path.dirname(PLAN), 'code', 'evetx', 'design', 'questions.md')]  # questions kept with a component
 HEAD = re.compile(r'^## ((?:D|Q)-\d+)\b(.*)$')
@@ -72,43 +73,75 @@ def one_line(i, title):
     return '%s %s' % (i, t[:95])
 
 
-def paths(n):
-    return (os.path.join(DEC, 'level%s.md' % n),
-            os.path.join(DEC, 'archive', 'level%s.md' % n))
+INDEX = os.path.join(DEC, 'index.md')
+LEVEL_NAMES = {'1': 'single script', '2': 'project', '3': 'modules and classes', '4': 'parallel', '5': 'data and database',
+               '6': 'server', '7': 'web'}
 
 
-def rebuild(n, keep=None):
-    active, arch = paths(n)
-    text, nl = read(active)
-    pre, ents = split(text)
-    pre = strip_index(pre)
-    old_arch = split(read(arch)[0])[1] if os.path.exists(arch) else []
-    if keep is not None:
+def live_files():
+    return sorted(glob.glob(os.path.join(DEC, 'level*.md')))
+
+
+def index_lines():
+    """-> {level: [line]} of design/decision/index.md."""
+    out, cur = {}, None
+    if os.path.exists(INDEX):
+        for ln in read(INDEX)[0].split('\n'):
+            m = re.match(r'## Level (\d)', ln)
+            if m:
+                cur = m.group(1)
+                out[cur] = []
+            elif cur and ln.startswith('- '):
+                out[cur].append(ln)
+    return out
+
+
+def write_index(lines):
+    head = ['# Index of the settled decisions', '',
+            'One line per decision (D) or answered question (Q) that left the live files `level1.md` .. `level7.md`. '
+            'The full text is in the git history: `git log -S"D-087" -- design/decision`. The live files hold the open '
+            'questions and the newest decisions in full; `python script/plan.py archive` moves a settled entry here, keeping its title only.', '']
+    for n in sorted(lines):
+        head += ['## Level %s: %s' % (n, LEVEL_NAMES[n]), ''] + sorted(lines[n], key=idkey) + ['']
+    write(INDEX, '\n'.join(head), '\n')
+
+
+def idkey(line):
+    m = re.match(r'- ([DQ])-(\d+)', line)
+    return (int(m.group(2)) * 10 + (m.group(1) == 'Q')) if m else 0
+
+
+def archive(keep):
+    """Move the settled entries of each live file, except the newest `keep`, to the index as one line each."""
+    lines = index_lines()
+    for n in '1234567':
+        active = os.path.join(DEC, 'level%s.md' % n)
+        if not os.path.exists(active):
+            continue
+        text, nl = read(active)
+        pre, ents = split(text)
         recent = {id(e) for e in ents[-keep:]} if keep else set()
         moved = [e for e in ents if not is_open(*e) and id(e) not in recent]
-        ents = [e for e in ents if e not in moved] if moved else ents
-        if moved:
-            arch_text = '# Archive of level%s.md: settled entries, full text\n\n' % n
-            write(arch, arch_text + '\n'.join(e[2] for e in old_arch + moved), '\r\n' if os.name == 'nt' and False else nl)
-            old_arch += moved
-    idx = [] if not WITH_INDEX else [MARK_BEGIN, '## Index (every id; full text: `python script/plan.py show ID`)', '']
-    where = {id(e): 'A' for e in ents}
-    allents = sorted(old_arch + ents, key=lambda e: int(e[0][2:]) * 10 + (e[0][0] == 'Q'))
-    for e in (allents if WITH_INDEX else []):
-        mark = '*' if (e in ents and is_open(*e)) else ('' if e in ents else '~')
-        idx.append('- %s%s' % (one_line(e[0], e[1]), ' [open]' if mark == '*' else ''))
-    idx += [MARK_END, ''] if WITH_INDEX else []
-    body = pre.rstrip('\n') + '\n\n' + '\n'.join(idx) + '\n' + '\n'.join(e[2] for e in ents)
-    write(active, body, nl)
-    print('level %s: %d active, %d archived' % (n, len(ents), len(old_arch)))
+        if not moved:
+            continue
+        have = {l.split()[1] for l in lines.get(n, [])}
+        lines.setdefault(n, []).extend('- %s %s' % (e[0], e[1].replace('`', '')[:150]) for e in moved if e[0] not in have)
+        keepents = [e for e in ents if e not in moved]
+        write(active, pre.rstrip('\n') + '\n\n' + '\n'.join(e[2] for e in keepents), nl)
+        print('level %s: %d kept, %d moved to the index' % (n, len(keepents), len(moved)))
+    write_index(lines)
 
 
 def find(id_):
     out = []
-    for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))) + EXTRA:
+    for p in live_files() + EXTRA:
         for i, t, b in split(read(p)[0])[1]:
             if i == id_:
                 out.append(b)
+    if not out:
+        for n, ls in index_lines().items():
+            out += [l[2:] + '  (settled, level %s; full text: git log -S"%s" -- design/decision)\n' % (n, id_)
+                    for l in ls if l.split()[1] == id_]
     return out
 
 
@@ -130,21 +163,21 @@ def status():
                 print('  ' + one_line(i, t))
 
 
-VMAP = os.path.join(PLAN, 'feature_map.md')
-
-
 def feature_rows():
-    """-> [(version, code, name, status, description)] from the feature sections of feature_map.md (featmap.py)."""
-    import featmap
-    return featmap.load()
+    """-> [(level, code, name, status, summary, page)] from spec/features/*.json."""
+    out = []
+    for f in sorted(glob.glob(os.path.join(ROOT, 'spec', 'features', '*.json'))):
+        d = json.load(open(f, encoding='utf-8'))
+        lv = 'all' if d['level'] is None else str(d['level'])
+        out += [(lv, x['id'], x['name'], x['status'], x['summary'], x['doc']) for x in d['features']]
+    return out
 
 
 def features(a):
-    rows = feature_rows()
     want = [x for x in a if x in ('open', 'partial', 'done', 'dropped')]
     ver = [x for x in a if re.fullmatch(r'[1-7]|all', x)]
-    for v, c, n, st, d in rows:
-        if (not want or any(w in st for w in want)) and (not ver or v in ver):
+    for v, c, n, st, d, doc in feature_rows():
+        if (not want or st in want) and (not ver or v in ver):
             print('L%-3s %-9s %-8s %s' % (v, c, st[:8], n[:70]))
 
 
@@ -152,7 +185,7 @@ def feature(codes):
     rows = {r[1]: r for r in feature_rows()}
     for c in codes:
         r = rows.get(c)
-        print('%s: not found' % c if not r else 'Level %s  %s  [%s]  %s\n%s\n' % (r[0], r[1], r[3], r[2], r[4]))
+        print('%s: not found' % c if not r else 'Level %s  %s  [%s]  %s\n%s\npage: spec/features/%s\n' % (r[0], r[1], r[3], r[2], r[4], r[5]))
 
 
 def main(a):
@@ -161,7 +194,10 @@ def main(a):
     c = a[0]
     if c == 'status': status()
     elif c == 'list':
-        for p in sorted(glob.glob(os.path.join(DEC, 'level*.md')) + glob.glob(os.path.join(DEC, 'archive', 'level*.md'))) + EXTRA:
+        for ls in index_lines().values():
+            for l in ls:
+                print(l[2:])
+        for p in live_files() + EXTRA:
             for i, t, b in split(read(p)[0])[1]:
                 print(one_line(i, t))
     elif c == 'features': features(a[1:])
@@ -170,14 +206,8 @@ def main(a):
         for i in a[1:]:
             r = find(i)
             print(''.join(r) if r else '%s: not found' % i)
-    elif c in ('index', 'archive'):
-        keep = None
-        if c == 'archive':
-            keep = int(a[a.index('--keep') + 1]) if '--keep' in a else 8
-        rest = [x for i, x in enumerate(a[1:], 1) if x.isdigit() and a[i - 1] != '--keep']
-        ns = rest or ['1', '2']
-        for n in ns:
-            rebuild(n, keep)
+    elif c == 'archive':
+        archive(int(a[a.index('--keep') + 1]) if '--keep' in a else 8)
     else:
         print(__doc__)
 

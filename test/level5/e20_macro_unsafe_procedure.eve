@@ -1,4 +1,4 @@
-# a concurrent aspect of a macro can not call a shared procedure that changes a plain variable: compile error (D-152)
+# a concurrent aspect of a macro can not call a shared procedure that changes a plain variable: compile error
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 new seen := 0;

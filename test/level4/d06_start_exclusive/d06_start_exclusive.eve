@@ -1,4 +1,4 @@
-# start of an aspect without a kind word is a compile error: it is exclusive (D-130, D-140)
+# start of an aspect without a kind word is a compile error: it is exclusive
 ** spec: semantics/multitasking.md#what-can-be-started
 primary aspect d06_start_exclusive is
   process main is

@@ -1,4 +1,4 @@
-# use (m(*)): the exported members of m are used without prefix (D-072)
+# use (m(*)): the exported members of m are used without prefix
 primary aspect c04_import_members is
   from lib use (text(*));
 

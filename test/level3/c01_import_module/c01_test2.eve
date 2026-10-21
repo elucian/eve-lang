@@ -1,4 +1,4 @@
-# variation 2 of c01: the same module under an alias, called in a loop (D-133)
+# variation 2 of c01: the same module under an alias, called in a loop
 ** spec: semantics/modules.md#import
 primary aspect c01_test2 is
   from lib use (counter as c);

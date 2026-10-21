@@ -1,4 +1,4 @@
-# a null for a field that is not optional is a compile error (D-080)
+# a null for a field that is not optional is a compile error
 ** spec: library/database.md#records
 primary aspect e30_null_in_plain_field is
   class Customer = {id: Integer, name: String, city: String?} <: Record;

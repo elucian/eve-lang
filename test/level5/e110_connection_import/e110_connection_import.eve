@@ -1,4 +1,4 @@
-# import: a method of the connection that loads a file (CSV, TXT, JSON or DBF) as a new table (D-184)
+# import: a method of the connection that loads a file (CSV, TXT, JSON or DBF) as a new table
 ** spec: library/data-engines.md
 primary aspect e110_connection_import is
   class Item = {id: Integer, name: String, price: Decimal?, day: String} <: Record;

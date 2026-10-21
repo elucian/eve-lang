@@ -1,4 +1,4 @@
-# the chain of calls is at most three levels deep (D-179)
+# the chain of calls is at most three levels deep
 ** spec: semantics/aspects.md#apply
 primary aspect b49_four_levels is
   process main is

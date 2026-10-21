@@ -1,4 +1,4 @@
-# two starts of a group can not receive the same output variable (D-140, $err_output)
+# two starts of a group can not receive the same output variable ($err_output)
 ** spec: semantics/multitasking.md#data-rules
 primary aspect d08_same_output is
   process main is

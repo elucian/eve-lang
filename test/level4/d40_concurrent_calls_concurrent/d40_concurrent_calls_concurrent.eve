@@ -1,4 +1,4 @@
-# a concurrent aspect does not call another concurrent aspect (D-183)
+# a concurrent aspect does not call another concurrent aspect
 ** spec: syntax/declarations.md#scripts
 primary aspect d40_concurrent_calls_concurrent is
   process main is

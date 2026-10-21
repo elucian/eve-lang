@@ -1,4 +1,4 @@
-# two declarations with the same signature are a compile error (D-149)
+# two declarations with the same signature are a compile error
 ** spec: syntax/declarations.md#overloading
 primary aspect e12_same_signature is
   function half(x: Integer) => (@result: Integer) is

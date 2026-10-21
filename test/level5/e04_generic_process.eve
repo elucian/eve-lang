@@ -1,4 +1,4 @@
-# the process of an aspect takes a list of types; apply infers it or writes it (D-148); one Eve macro (D-152)
+# the process of an aspect takes a list of types; apply infers it or writes it; one Eve macro
 ** spec: syntax/declarations.md#generic-subprograms
 
 # largest: an aspect whose process has a list of types

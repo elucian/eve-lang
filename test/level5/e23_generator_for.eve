@@ -1,4 +1,4 @@
-# a generator gives its values one at a time to a for loop (D-067)
+# a generator gives its values one at a time to a for loop
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e23_generator_for is
   generator count_to(n: Integer) => (@x: Integer) is

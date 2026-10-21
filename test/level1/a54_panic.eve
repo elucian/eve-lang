@@ -1,4 +1,4 @@
-# panic ends the whole application at once with code 1, without finalize (D-038)
+# panic ends the whole application at once with code 1, without finalize
 ** spec: syntax/statements.md#interruptions
 primary aspect a54_panic is
   process main is

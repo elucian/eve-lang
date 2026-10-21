@@ -1,4 +1,4 @@
-# a method can have a recover region; it sees self and its own variables (D-192)
+# a method can have a recover region; it sees self and its own variables
 ** spec: semantics/errors.md#recover-in-a-function-procedure-or-method
 primary aspect c35_method_recover is
   class Account = {balance: Integer} <: Object is

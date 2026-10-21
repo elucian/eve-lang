@@ -1,4 +1,4 @@
-# variation 1 of c07: the aspect applied twice shares the same module (D-133)
+# variation 1 of c07: the aspect applied twice shares the same module
 ** spec: semantics/modules.md#life-cycle
 primary aspect c07_test1 is
   from lib use (counter);

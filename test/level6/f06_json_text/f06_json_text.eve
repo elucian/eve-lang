@@ -1,4 +1,4 @@
-# json.parse and json.text: JSON text in memory and plain values (F-LIB-05, D-189)
+# json.parse and json.text: JSON text in memory and plain values (F-LIB-05)
 ** spec: library/data-language.md#json-text-in-memory-jsonparse-and-jsontext
 primary aspect f06_json_text is
   process main is

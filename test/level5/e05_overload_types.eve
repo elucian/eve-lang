@@ -1,4 +1,4 @@
-# functions and procedures share a name when the types of their parameters differ (D-149)
+# functions and procedures share a name when the types of their parameters differ
 ** spec: syntax/declarations.md#overloading
 primary aspect e05_overload_types is
   function half(x: Integer) => (@result: Integer) is

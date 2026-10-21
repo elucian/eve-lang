@@ -1,4 +1,4 @@
-# raw: a module without a safety word is direct by default (D-129)
+# raw: a module without a safety word is direct by default
 module raw is
   export (tick);
 

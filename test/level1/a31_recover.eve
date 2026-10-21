@@ -1,4 +1,4 @@
-# an error jumps to recover; reaching the end of recover handles the error (D-020)
+# an error jumps to recover; reaching the end of recover handles the error
 ** spec: semantics/errors.md#recover
 primary aspect a31_recover is
   process main is

@@ -1,4 +1,4 @@
-# matrix and tensor indexes: [x, y] is the same as [x][y]; a range selects a part (D-064)
+# matrix and tensor indexes: [x, y] is the same as [x][y]; a range selects a part
 ** spec: syntax/expressions.md#index-slice-member
 primary aspect a38_matrix_index is
   process main is

@@ -1,4 +1,4 @@
-# exit in a procedure leaves only the procedure; the process goes on (D-111)
+# exit in a procedure leaves only the procedure; the process goes on
 ** spec: syntax/statements.md#interruptions
 primary aspect b35_exit_procedure is
   procedure check(n: Integer) is

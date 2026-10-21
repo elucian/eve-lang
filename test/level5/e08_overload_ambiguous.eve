@@ -1,4 +1,4 @@
-# a call that does not fix the type of the result of an overloaded function is ambiguous: compile error (D-149)
+# a call that does not fix the type of the result of an overloaded function is ambiguous: compile error
 ** spec: syntax/declarations.md#overloading
 primary aspect e08_overload_ambiguous is
   function unit() => (@result: Integer) is

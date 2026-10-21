@@ -1,4 +1,4 @@
-# variation 1 of c30: a type derived from Atomic, used ten times (D-133)
+# variation 1 of c30: a type derived from Atomic, used ten times
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c30_test1 is
   from lib use (tally);

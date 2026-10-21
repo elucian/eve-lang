@@ -1,4 +1,4 @@
-# an aspect of the macro with the name of an aspect file of the project is a compile error (D-152)
+# an aspect of the macro with the name of an aspect file of the project is a compile error
 ** spec: syntax/declarations.md#eve-macro-level-5
 
 exclusive aspect worker is

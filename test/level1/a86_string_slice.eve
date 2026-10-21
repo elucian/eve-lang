@@ -1,4 +1,4 @@
-# a string takes a range as index: s[a..b] is the substring of runes a to b, a copy (expressions.md, D-049)
+# a string takes a range as index: s[a..b] is the substring of runes a to b, a copy (expressions.md)
 ** spec: library/strings.md#slice
 primary aspect a86_string_slice is
   process main is

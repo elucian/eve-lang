@@ -1,4 +1,4 @@
-# a plain function whose parameters fit exactly wins over a generic one with the same name (D-150)
+# a plain function whose parameters fit exactly wins over a generic one with the same name
 ** spec: syntax/declarations.md#overloading
 primary aspect e57_overload_generic_plain is
   function describe(x: Integer) => (@result: String) is

@@ -1,4 +1,4 @@
-# variation 1 of b27: a concurrent aspect applied with other texts (D-133)
+# variation 1 of b27: a concurrent aspect applied with other texts
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b27_test1 is
   process main is

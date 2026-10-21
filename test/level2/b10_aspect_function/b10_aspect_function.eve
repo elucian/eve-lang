@@ -1,4 +1,4 @@
-# a function declared in an aspect is used by its main (D-066, D-100)
+# a function declared in an aspect is used by its main
 ** spec: semantics/aspects.md#declarations-of-an-aspect
 primary aspect b10_aspect_function is
   process main is

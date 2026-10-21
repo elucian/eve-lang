@@ -1,4 +1,4 @@
-# a generator can be a member of a class; a comprehension collects its values (D-067)
+# a generator can be a member of a class; a comprehension collects its values
 ** spec: syntax/declarations.md#generators-level-5
 primary aspect e69_generator_method is
   class Bag = {items: ()Integer} <: Object is

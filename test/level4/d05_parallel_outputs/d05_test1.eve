@@ -1,4 +1,4 @@
-# variation 1 of d05: start inside if, inputs by value, a declaration local to the group (D-140)
+# variation 1 of d05: start inside if, inputs by value, a declaration local to the group
 ** spec: semantics/multitasking.md#data-rules
 primary aspect d05_test1 is
   process main is

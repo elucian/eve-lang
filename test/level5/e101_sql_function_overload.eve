@@ -1,4 +1,4 @@
-# a sql function can not be overloaded: SQL finds a function by its name (D-166)
+# a sql function can not be overloaded: SQL finds a function by its name
 ** spec: library/database.md#sql-functions
 primary aspect e101_sql_function_overload is
   sql function twice(x: Integer) => (@result: Integer) is

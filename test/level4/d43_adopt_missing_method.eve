@@ -1,4 +1,4 @@
-# an adopt block must write every method that the trait requires (CLS-15, D-202)
+# an adopt block must write every method that the trait requires (CLS-15)
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d43_adopt_missing_method is
   trait Describable is

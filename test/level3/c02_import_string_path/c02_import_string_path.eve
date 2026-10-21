@@ -1,4 +1,4 @@
-# Import with a path written as a string (D-072)
+# Import with a path written as a string
 primary aspect c02_import_string_path is
   from "lib" use (greeting);
 

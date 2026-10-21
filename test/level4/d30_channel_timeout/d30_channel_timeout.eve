@@ -1,4 +1,4 @@
-# a wait on a channel longer than $timeout raises TimeoutError in that task (D-081, D-141)
+# a wait on a channel longer than $timeout raises TimeoutError in that task
 ** spec: semantics/multitasking.md#channels
 primary aspect d30_channel_timeout is
   process main is

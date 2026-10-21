@@ -1,4 +1,4 @@
-# list: literal, index, append, remove, capture, delete, builder, deconstruct (D-058 to D-060, D-077, D-079, D-096)
+# list: literal, index, append, remove, capture, delete, builder, deconstruct
 ** spec: syntax/expressions.md#literals-and-builders, syntax/statements.md#let
 primary aspect a17_list is
   process main is

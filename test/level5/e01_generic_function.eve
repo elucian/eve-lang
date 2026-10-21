@@ -1,4 +1,4 @@
-# a generic function has a list of types before its parameters; the call infers the types or writes them (D-148)
+# a generic function has a list of types before its parameters; the call infers the types or writes them
 ** spec: syntax/declarations.md#generic-subprograms
 primary aspect e01_generic_function is
   function largest(:T <: Comparable)(items: ()T) => (@result: T) is

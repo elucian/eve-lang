@@ -10,7 +10,7 @@ Notation: `=` defines, `,` follows, `|` chooses, `[ ]` is optional, `{ }` repeat
 file        = script ;
 script      = aspect | module ;                                (* module: level 3 *)
 aspect      = [ kind ] , "aspect" , name , "is" , { member } , "end" , name , ";" ;
-kind        = "exclusive" | "concurrent" | "primary" ;         (* without a kind word the aspect is exclusive (D-130) *)
+kind        = "exclusive" | "concurrent" | "primary" ;         (* without a kind word the aspect is exclusive *)
 member      = declaration | process ;
 process     = "process" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
               { declaration | statement } ,
@@ -20,7 +20,7 @@ recover     = "recover" , { statement } ;
 finalize    = "finalize" , { statement } ;
 ```
 
-An aspect has a process named `main`, the entry point, and may have other processes, which are private (`../semantics/aspects.md`, D-179). The grammar does not check that `main` exists, nor that a primary aspect is never applied or started: the checker does (`declarations.md#scripts`). A file has no `#!` line and no statement outside a process, a function, a procedure or a method (D-179). `end name;` repeats the name of the header.
+An aspect has a process named `main`, the entry point, and may have other processes, which are private (`../semantics/aspects.md`). The grammar does not check that `main` exists, nor that a primary aspect is never applied or started: the checker does (`declarations.md#scripts`). A file has no `#!` line and no statement outside a process, a function, a procedure or a method. `end name;` repeats the name of the header.
 
 ## Modules and imports (level 3)
 
@@ -30,7 +30,7 @@ module      = [ "managed" | "direct" ] , "module" , name , "is" ,
               [ "initialize" , { statement } ] ,
               [ "recover" , { statement } ] ,
               [ "finalize" , { statement } ] ,
-              "end" , name , ";" ;                                (* modules.md; D-068, D-085, D-126; without a safety word the module is direct (D-129) *)
+              "end" , name , ";" ;                                (* modules.md; without a safety word the module is direct *)
 export      = "export" , "(" , exported , { "," , exported } , ")" , ";" ;
 exported    = name , [ "!" ] ;                                    (* a function that ends with ! is exported with the ! *)
 import      = "from" , path , "use" , "(" , import-item , { "," , import-item } , ")" , ";" ;
@@ -49,9 +49,9 @@ unary       = await-call ;                                        (* adds to una
 primary     = duration | name-path , [ "!" ] , type-args ;                  (* adds to primary: 30s, Channel(:Integer)(capacity: 10) *)
 
 parallel-block = [ label , ":" ] , "parallel" , [ "on" , "error" , "cancel" ] , [ "within" , expression ] ,
-              { declaration } , "do" , { statement } , "done" , [ label ] , ";" ;   (* multitasking.md, D-140 *)
+              { declaration } , "do" , { statement } , "done" , [ label ] , ";" ;   (* multitasking.md *)
 start-stmt  = "start" , { name , "/" } , name , "(" , [ arguments ] , ")" ;         (* only in the do region of a group *)
-async-sub   = "async" , ( function | procedure ) ;                (* D-104, D-143 *)
+async-sub   = "async" , ( function | procedure ) ;
 spawn-stmt  = "spawn" , name-path , "(" , [ arguments ] , ")" ;   (* only in the do region of a job; an async procedure *)
 await-call  = "await" , name-path , "(" , [ arguments ] , ")" ;
 wait-stmt   = "wait" , expression ;                                (* wait 10ms; *)
@@ -64,11 +64,11 @@ type-args   = "(" , ":" , type , { "," , ":" , type } , ")" ;
 
 ```ebnf
 declaration = trait ;                                             (* adds to declaration *)
-class-member = [ visibility ] , partial-method ;                  (* adds to class-member: an abstract class (D-145) *)
+class-member = [ visibility ] , partial-method ;                  (* adds to class-member: an abstract class *)
 
 trait       = "trait" , name , [ type-params ] , "is" , { trait-member } , "end" , name , ";" ;
 trait-member = partial-method | method ;                          (* every method of a trait is public *)
-declaration = adopt ;                                             (* adds to declaration: a type adopts a trait outside its declaration (D-202) *)
+declaration = adopt ;                                             (* adds to declaration: a type adopts a trait outside its declaration *)
 adopt       = "adopt" , name , "for" , type , "is" , { method } , "end" , "adopt" , ";" ;   (* the methods are extension methods of the type; they write every required method of the trait *)
 partial-method = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , ";" ;
 ```
@@ -95,7 +95,7 @@ apply-stmt  = "apply" , { name , "/" } , name-path , type-args , "(" , [ argumen
 
 ```ebnf
 file        = macro ;                                           (* adds to file *)
-macro       = { top-level } , primary-aspect , { top-level } ;   (* at least one other top-level; exactly one primary aspect (D-152, D-180) *)
+macro       = { top-level } , primary-aspect , { top-level } ;   (* at least one other top-level; exactly one primary aspect *)
 primary-aspect = "primary" , "aspect" , name , "is" , { member } , "end" , name , ";" ;
 top-level   = declaration | aspect ;
 ```
@@ -129,24 +129,24 @@ table-clause = "key" , "(" , names , ")" , ";"
 simple       = … | commit-stmt | rollback-stmt ;                    (* adds to simple; only in the do region of a job *)
 commit-stmt  = "commit" ;
 rollback-stmt = "rollback" ;                                         (* both take the suffix: rollback if dry_run; *)
-update-block = "update" , name-path , "do" , { statement } , "done" , ";" ;     (* only for a record; the names of its fields are in scope, D-158 *)
+update-block = "update" , name-path , "do" , { statement } , "done" , ";" ;     (* only for a record; the names of its fields are in scope *)
 retry-stmt   = "retry" , [ "after" , duration ] ;                    (* replaces "retry" in recover: retry after 2s if $error.attempt < 5; *)
 function     = "sql" , "function" , name , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
-               { declaration | statement } , "return" , ";" ;       (* adds to function: a SQL function in Eve, no "!", no type list (D-166) *)
+               { declaration | statement } , "return" , ";" ;       (* adds to function: a SQL function in Eve, no "!", no type list *)
 declaration  = … | external ;                                        (* adds to declaration *)
 module-external = "external" , ( "function" , name , "(" , [ parameters ] , ")" , "=>" , results
-                              | "procedure" , name , "(" , [ parameters ] , ")" ) , ";" ;   (* in a module: a signature, the machine has the body; name may be a reserved word (D-189, tests c29 to c31) *)
+                              | "procedure" , name , "(" , [ parameters ] , ")" ) , ";" ;   (* in a module: a signature, the machine has the body; name may be a reserved word (, tests c29 to c31) *)
 external     = "external" , ( "procedure" , name , [ "(" , [ parameters ] , ")" ]
                             | "function" , name , "!" , "(" , [ parameters ] , ")" , "=>" , results ) ,
-               "in" , string , [ "as" , string ] , ";" ;             (* a native stored procedure of a connection (D-166, Q-043e) *)
+               "in" , string , [ "as" , string ] , ";" ;             (* a native stored procedure of a connection *)
 ```
 
-`table`, `commit`, `rollback`, `update`, `after`, `sql` (only before `function`), `external` and the words of the clauses (`key`, `generated`, `version`, `column`, `reference`, `read`, `only`, `temporary`, `cached`) are contextual (D-116): each is a keyword only in the position shown, and stays a free name elsewhere, so a field called `key` or `version` is still allowed. Meaning: `../library/database.md`. A table that has no `end` is the short form `table countries: Country in "sales";`.
+`table`, `commit`, `rollback`, `update`, `after`, `sql` (only before `function`), `external` and the words of the clauses (`key`, `generated`, `version`, `column`, `reference`, `read`, `only`, `temporary`, `cached`) are contextual: each is a keyword only in the position shown, and stays a free name elsewhere, so a field called `key` or `version` is still allowed. Meaning: `../library/database.md`. A table that has no `end` is the short form `table countries: Country in "sales";`.
 
 ## Declarations
 
 ```ebnf
-declaration = variable | constant | alias | function | procedure | class | method | import ;   (* a method outside a class is an extension method (D-086) *)
+declaration = variable | constant | alias | function | procedure | class | method | import ;   (* a method outside a class is an extension method *)
 
 variable    = "new" , init-list , ";" ;
 init-list   = binding , { "," , binding } , [ type-hint ]
@@ -156,7 +156,7 @@ init-list   = binding , { "," , binding } , [ type-hint ]
             | name , "<-" , expression                          (* capture: the first element, see statements.md *)
             | names , type-hint ;                               (* no value: the zero value of the type *)
 binding     = var-name , ( "=" | ":=" ) , expression ;
-var-name    = name , [ "!" ] | "self" , "." , name ;                 (* name! only when the value is a function (D-117); self is reserved *)                       (* new self.x := v; creates an attribute inside a class *)
+var-name    = name , [ "!" ] | "self" , "." , name ;                 (* name! only when the value is a function ; self is reserved *)                       (* new self.x := v; creates an attribute inside a class *)
 const-binding = ( name | sysname ) , ( "=" | ":=" ) , expression ;   (* set $epsilon = 0.5; *)
 pattern-list = pattern , { "," , pattern } ;
 type-hint   = ":" , type ;
@@ -165,9 +165,9 @@ constant    = "set" , ( const-binding , { "," , const-binding } | "(" , names , 
 alias       = "def" , name , "=" , name-path , ";" ;
 
 procedure   = "procedure" , name , [ "(" , [ parameters ] , ")" ] , "is" ,
-              { declaration | statement } , [ recover ] , "return" , ";" ;   (* no result, never "!" (D-100, D-101); recover: D-192 *)
+              { declaration | statement } , [ recover ] , "return" , ";" ;   (* no result, never "!" ; recover: *)
 function    = "function" , name , [ "!" ] , "(" , [ parameters ] , ")" , "=>" , results , "is" ,
-              { declaration | statement } , [ recover ] , "return" , ";" ;   (* recover: D-192 *)
+              { declaration | statement } , [ recover ] , "return" , ";" ;   (* recover: *)
 results     = "(" , result , { "," , result } , ")" ;
 result      = [ "@" ] , name , [ "!" ] , ":" , type ;           (* a result of a non-deterministic kind may be named name! *)
 parameters  = parameter , { "," , parameter } ;
@@ -175,22 +175,22 @@ parameter   = [ "*" | "@" ] , name , [ ( "=" | ":=" ) , expression ] , [ type-hi
 
 class       = "class" , name , [ type-params ] ,
               [ "=" , class-shape ] , "<:" , supers , ( ";" | "is" , { class-member } , "end" , name , ";" ) ;
-                                                                          (* without a shape: class SageInteger <: Atomic(:Integer); (D-132) *)
-                                                                          (* the superclass is mandatory (Q-029) *)
+                                                                          (* without a shape: class SageInteger <: Atomic(:Integer); *)
+                                                                          (* the superclass is mandatory *)
 class-shape = "{" , members , "}"                                         (* attributes: {x, y: Real} *)
             | "{" , ordinal-value , { "," , ordinal-value } , "}"        (* ordinal: {Red, Green} <: Ordinal *)
             | "(" , expression , ".." , expression , ")" , [ "(" , expression , ")" ]   (* range: (0..1)(0.1) <: Range *)
-            | "(" , [ parameters ] , ")" , [ ":" , type ] ;              (* function type: (p1, p2: Integer): Integer <: Function; there are no procedure types (D-101) *)
-type-params = "(" , ":" , type-param , { "," , ":" , type-param } , ")" ;   (* class Box(:T), class Sorted(:T <: Comparable) (D-145) *)
+            | "(" , [ parameters ] , ")" , [ ":" , type ] ;              (* function type: (p1, p2: Integer): Integer <: Function; there are no procedure types *)
+type-params = "(" , ":" , type-param , { "," , ":" , type-param } , ")" ;   (* class Box(:T), class Sorted(:T <: Comparable) *)
 type-param  = name , [ "<:" , type ] ;
-supers      = type | "(" , type , { "," , type } , ")" ;                  (* one class, then traits: <: (Object, Printable) (D-145) *)
+supers      = type | "(" , type , { "," , type } , ")" ;                  (* one class, then traits: <: (Object, Printable) *)
 ordinal-value = name , [ ":" , integer ] ;
 members     = attribute , { "," , attribute } ;
 attribute   = names , type-hint ;
 names       = name , { "," , name } ;
-class-member = [ visibility ] , ( method | constructor | destructor ) | constant ;   (* a constant of the class, read as Class.NAME (D-202) *)
+class-member = [ visibility ] , ( method | constructor | destructor ) | constant ;   (* a constant of the class, read as Class.NAME *)
 visibility  = "public" | "protected" | "private" ;
-method      = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body , [ recover ] ;   (* recover: D-192; a constructor, a generator and a lambda have none *)
+method      = "method" , name , "(" , "@self" , [ ":" , type ] , { "," , parameter } , ")" , [ "=>" , results ] , "is" , body , [ recover ] ;   (* recover:; a constructor, a generator and a lambda have none *)
 constructor = "constructor" , "(" , [ parameters ] , ")" , "=>" , "(" , "@self" , ")" , "is" , body ;
 destructor  = "destructor" , "(" , "@self" , ")" , "is" , body ;
 body        = { declaration | statement } , "return" , ";" ;
@@ -199,10 +199,10 @@ body        = { declaration | statement } , "return" , ";" ;
 ## Types
 
 ```ebnf
-type        = name-path , [ "(" , ":" , type , { "," , type } , ")" ]      (* Integer, Vector(:Real), Atomic(:Integer) (D-132) *)
+type        = name-path , [ "(" , ":" , type , { "," , type } , ")" ]      (* Integer, Vector(:Real), Atomic(:Integer) *)
             | "[" , [ dimension , { "," , dimension } ] , "]" , type          (* array: []Integer, [10]Integer, matrix: [2, 2]Integer *)
-            | "(" , ")" , type                                                 (* list: ()Integer (D-117) *)
-            | "{" , "}" , type                                                 (* DataSet: {}Integer (D-117) *)
+            | "(" , ")" , type                                                 (* list: ()Integer *)
+            | "{" , "}" , type                                                 (* DataSet: {}Integer *)
             | "{" , ":" , "}" , "(" , type , "," , type , ")"                  (* DataMap: {:}(String, Integer) *)
             | "{" , type , { "|" , type } , "}"                                (* variant: {Real | Integer} *)
             | "(" , expression , ".." , expression , ")" , [ "(" , expression , ")" ]   (* range type *)
@@ -218,7 +218,7 @@ simple      = let-stmt | defer-stmt | call-stmt | apply-stmt | expect-stmt | rai
             | retry-stmt | "resume" | "abort" | exit-stmt | "panic" | "stop" ;
 exit-stmt   = ( "exit" | "over" ) , [ expression ] ;                            (* the number is the exit code of the program, 0 or 6 to 125: errors.md#ending-the-process (G-2) *)
 let-stmt    = "let" , target , modifier , ( expression | "new" , names ) ;      (* let lst -> new f;  the explicit capture *)
-defer-stmt  = "defer" , simple ;                                                (* registers a statement for the end of the subprogram (D-117) *)
+defer-stmt  = "defer" , simple ;                                                (* registers a statement for the end of the subprogram *)
 modifier    = ":=" | "::" | "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "<+" | "+>" | "<<" | ">>" | "->" | "<-" ;
 target      = ( name-path | sysname ) , { "[" , index-list , "]" } | "_" ;   (* a system variable is a target too; a constant one is a run-time error *)
 call-stmt   = name-path , [ "!" ] , [ "(" , [ arguments ] , ")" | arguments ]     (* print x;  save(data);  foo; *)
@@ -252,13 +252,13 @@ pattern     = name | "(" , pattern , { "," , pattern } , ")" | "(" , name , ":" 
 label       = name ;
 ```
 
-`if` after a simple statement is the conditional suffix: `break if c;`. It is not allowed after `done` or after `expect`. A `match`, `while` or `for` that has a label closes with `done label;`; one without a label closes with `done;` (D-034).
+`if` after a simple statement is the conditional suffix: `break if c;`. It is not allowed after `done` or after `expect`. A `match`, `while` or `for` that has a label closes with `done label;`; one without a label closes with `done;`.
 
 ## Expressions
 
 ```ebnf
 expression  = lambda | conditional ;
-lambda      = "(" , [ parameters ] , ")" , "=>" , expression ;           (* (x) => (x * 2); level 2, D-109 *)
+lambda      = "(" , [ parameters ] , ")" , "=>" , expression ;           (* (x) => (x * 2); level 2 *)
 conditional = or-expr , [ "if" , or-expr , "else" , conditional ] ;
 or-expr     = xor-expr , { "or" , xor-expr } ;
 xor-expr    = and-expr , { "xor" , and-expr } ;
@@ -269,11 +269,11 @@ inter       = shift , { "&&" , shift } ;
 shift       = range , { ( "<<" | ">>" ) , range } ;
 range       = sum , [ range-op , ( sum | "?" ) ] | "?" , range-op , sum ;                      (* "?" is the open end: (0..?), (?..0) *)
 range-op    = ".." | "..<" | ">.." | ">..<" | "+-" | "><" ;
-sum         = product , { ( "+" | "-" | "<+" | "+>" ) , product } ;      (* "<+" and "+>" as expressions return a new list (D-117) *)
+sum         = product , { ( "+" | "-" | "<+" | "+>" ) , product } ;      (* "<+" and "+>" as expressions return a new list *)
 product     = power , { ( "*" | "/" | "%" ) , power } ;
-power       = unary , [ "^" , power ] ;                    (* right to left; the unary minus applies first: -2 ^ 2 is 4 (Q-030) *)
+power       = unary , [ "^" , power ] ;                    (* right to left; the unary minus applies first: -2 ^ 2 is 4 *)
 unary       = ( "-" | "not" ) , unary | postfix ;
-postfix     = primary , { "." , ( name | "job" | "done" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;   (* no call on a lambda (D-147); .done is the flag of a generator object (level 5) *)
+postfix     = primary , { "." , ( name | "job" | "done" ) | "(" , [ arguments ] , ")" | "[" , index-list , "]" } ;   (* no call on a lambda ; .done is the flag of a generator object (level 5) *)
 index-list  = index , { "," , index } ;
 index       = expression | "*" ;                                               (* a range slices, "*" is a whole dimension *)
 primary     = number | rune | string | text | name-path , [ "!" ] | sysname | "(" , expression , ")"
@@ -289,4 +289,4 @@ generator   = pattern , "in" , expression ;
 name-path   = ( name | "self" ) , { "." , name } ;                          (* self is reserved: it names the current object only *)
 ```
 
-The postfix `(…)` after a range is the step of the range: `(0..10)(2)`. `(x)` is a grouping; the list of one element is `(x,)`. A bracket after a value is an index or a slice, never a range (D-022, D-023).
+The postfix `(…)` after a range is the step of the range: `(0..10)(2)`. `(x)` is a grouping; the list of one element is `(x,)`. A bracket after a value is an index or a slice, never a range.

@@ -1,4 +1,4 @@
-# pure: a managed module has constants and functions that read nothing that changes (D-129)
+# pure: a managed module has constants and functions that read nothing that changes
 managed module pure is
   export (FACTOR, twice);
 

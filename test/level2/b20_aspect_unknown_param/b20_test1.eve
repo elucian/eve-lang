@@ -1,4 +1,4 @@
-# variation 1 of b20: the right name of the optional parameter (D-133)
+# variation 1 of b20: the right name of the optional parameter
 ** spec: syntax/statements.md#apply
 primary aspect b20_test1 is
   process main is

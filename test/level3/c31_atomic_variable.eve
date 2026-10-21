@@ -1,4 +1,4 @@
-# Atomic(:T) is a library class: a variable is declared :Atomic(:Integer) and used like an Integer (D-132)
+# Atomic(:T) is a library class: a variable is declared:Atomic(:Integer) and used like an Integer
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect c31_atomic_variable is
   process main is

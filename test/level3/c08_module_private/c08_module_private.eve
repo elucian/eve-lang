@@ -1,4 +1,4 @@
-# a member that a module does not export can't be used outside it (D-068, D-085, Q-022 b)
+# a member that a module does not export can't be used outside it ( b)
 primary aspect c08_module_private is
   from lib use (counter);
 
@@ -10,6 +10,6 @@ end c08_module_private;
 {
   "syntax_error": true,
   "exit": 65,
-  "note": "reading a private member is a check-time error, nothing runs (Q-022 b)"
+  "note": "reading a private member is a check-time error, nothing runs ( b)"
 }
 */

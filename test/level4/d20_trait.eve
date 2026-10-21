@@ -1,4 +1,4 @@
-# a class adopts a trait: it writes the required method and gets the provided one (D-145)
+# a class adopts a trait: it writes the required method and gets the provided one
 ** spec: syntax/declarations.md#traits-and-generic-classes
 primary aspect d20_trait is
   trait Describable is

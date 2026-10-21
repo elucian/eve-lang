@@ -1,4 +1,4 @@
-# a variant type holds one of the listed types and takes the type of the value assigned (from demo/variant_type.eve and demo/variant_params.eve, D-099)
+# a variant type holds one of the listed types and takes the type of the value assigned (from demo/variant_type.eve and demo/variant_params.eve)
 ** spec: semantics/types.md#composite-types
 primary aspect b41_variant_params is
 

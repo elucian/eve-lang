@@ -1,4 +1,4 @@
-# collection op scalar: the operator applies to every element (D-118)
+# collection op scalar: the operator applies to every element
 ** spec: syntax/expressions.md#operators-on-collections, syntax/statements.md#let
 primary aspect a83_bulk_scalar is
   process main is

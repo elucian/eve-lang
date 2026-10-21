@@ -1,4 +1,4 @@
-# a concurrent aspect can not call an unsafe member, also by a bare name from m(*) (D-129)
+# a concurrent aspect can not call an unsafe member, also by a bare name from m(*)
 ** spec: semantics/modules.md#managed-and-direct-modules
 primary aspect d03_concurrent_bare_call is
   process main is

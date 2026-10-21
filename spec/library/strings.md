@@ -1,6 +1,6 @@
 # String functions
 
-Status: **draft**, level 6 (D-189), found missing by the standard library (`backlog/library-gaps.md` G-7). Written in the VM, in Zig (hot and simple). Tests: `test/level1/a86_string_slice`, `a87_string_functions`. The tutorial (`strings.html`) lists `split`, `length`, `find`, `count` and `replace` as wanted and leaves the inventory to the library specification; this page is that inventory for level 6. The regular-expression forms wait for the module `regex` (planned) and Q-066.
+Status: **draft**, level 6, found missing by the standard library. Written in the VM, in Zig (hot and simple). The tutorial (`strings.html`) lists `split`, `length`, `find`, `count` and `replace` as wanted and leaves the inventory to the library specification; this page is that inventory for level 6. The regular-expression forms wait for the module `regex` (planned) and.
 
 A `String` is a sequence of runes, indexed from 1 (`semantics/types.md`). A function is called on a value, `s.trim()`, and gives a new string; a string is never changed in place.
 
@@ -26,4 +26,4 @@ A `String` is a sequence of runes, indexed from 1 (`semantics/types.md`). A func
 
 ## Regular expressions
 
-The operator `=~` is the match test. The functions above do not read their argument as a pattern, even when it begins with `/`; the search and replacement by pattern are `regex.find`, `regex.replace` and `regex.count` of the module `regex` (S11, planned), so that a path such as `"/data"` is plain text in `starts_with`. This differs from the sentence of the tutorial that gives `find(pattern: Regex)`; the choice is Q-066.
+The operator `=~` is the match test. The functions above do not read their argument as a pattern, even when it begins with `/`; the search and replacement by pattern are `regex.find`, `regex.replace` and `regex.count` of the module `regex` (S11, planned), so that a path such as `"/data"` is plain text in `starts_with`. This differs from the sentence of the tutorial that gives `find(pattern: Regex)`; the choice is.

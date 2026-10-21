@@ -1,4 +1,4 @@
-# an aspect may have a second process: a private one, called by its own main (D-179, it was an error with D-066)
+# an aspect may have a second process: a private one, called by its own main (it was an error with)
 ** spec: semantics/aspects.md#what-an-aspect-is
 primary aspect b24_aspect_second_process is
   process main is
