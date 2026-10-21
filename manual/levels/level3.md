@@ -242,12 +242,35 @@ Stage: **drafted**.
 
 Project root `$EVE_HOME`, `asp/`, `lib/`, `data/`, `web/` (templates), `out/`, `$EVE_LIB`, `$EVE_LIB_PATH`.
 
-*Partial:* `asp/`, `lib/`, `out/` and `EVE_LIB_PATH` from the environment work; the variables are not readable from a script; `data/` and `web/` wait for level 5.
+*Partial:* `asp/`, `lib/`, `out/` and `EVE_LIB_PATH` from the environment work; the variables are readable from a script (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`); `data/` and `web/` wait for level 5.
 
 ## Missing
 
-- The project variables are not readable from a script.
 - `data/` and `web/` folders.
+
+An example that runs, and what it prints:
+
+```eve
+# the project variables $EVE_HOME, $EVE_LIB, $EVE_LIB_PATH, $EVE_CORE_DB and $EVE_OUT are Strings with the defaults of the table
+primary aspect a97_eve_variables is
+  process main is
+    expect type($EVE_HOME) is String;
+    print $EVE_LIB;
+    print "[{$EVE_LIB_PATH}]";
+    print $EVE_CORE_DB;
+    print $EVE_OUT;
+    print $EVE_HOME.ends_with("level1");
+  return;
+end a97_eve_variables;
+```
+
+```text
+lib
+[]
+db/local.db
+out
+True
+```
 
 ## F-TLS-02 REPL
 

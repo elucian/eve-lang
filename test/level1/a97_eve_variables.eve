@@ -1,0 +1,17 @@
+# the project variables $EVE_HOME, $EVE_LIB, $EVE_LIB_PATH, $EVE_CORE_DB and $EVE_OUT are Strings with the defaults of the table
+** spec: semantics/variables.md#system-variables
+primary aspect a97_eve_variables is
+  process main is
+    expect type($EVE_HOME) is String;
+    print $EVE_LIB;
+    print "[{$EVE_LIB_PATH}]";
+    print $EVE_CORE_DB;
+    print $EVE_OUT;
+    print $EVE_HOME.ends_with("level1");
+  return;
+end a97_eve_variables;
+/*@expect
+{
+  "stdout": ["lib", "[]", "db/local.db", "out", "True"]
+}
+*/

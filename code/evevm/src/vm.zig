@@ -18,6 +18,7 @@ const ast = @import("evecm").ast;
 const parser = @import("evecp").parser;
 const project = @import("evecp").project;
 const interp = @import("interp.zig");
+const sysvars = @import("interp/sysvars.zig");
 const debugger = @import("debugger.zig");
 
 /// How many times `cancelAll` was called.
@@ -223,6 +224,8 @@ pub const Session = struct {
         machine.modules = &self.modules;
         machine.io = self.io; // threads, locks and clocks of the tasks (level 4)
         machine.defineOsPwd() catch {};
+        const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
+        sysvars.define(machine, if (cut) |i| self.path[0..i] else ".") catch {};
         self.machine = machine;
         self.steps = 0;
         self.line = 0;

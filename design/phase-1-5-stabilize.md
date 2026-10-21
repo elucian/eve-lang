@@ -41,9 +41,10 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 - **Tests:** `read` with piped input (`"args"`/stdin key in the runner if needed); `Error` and `Warning` construction, `warn`.
 - **State (2026-10-21):** `read(@v, prompt)` done (test `a96_read_line`, runner key `"stdin"`, spec `syntax/statements.md#calls`; end of input raises `$err_io`, Q-069). Blocked on the author: the draft files and the classes `Error`/`Warning`, `warn`, `raise(code, message)` (Q-070). Next step: S15.11.
 
-### S15.11 Command line and variables `[ ]` (M)
+### S15.11 Command line and variables `[~]` (M)
 - **Features:** F-STR-05, F-STR-07. **Missing:** `-p`/`--param` mapped to `main` parameters and `eve script.eve -h` from `** @param` comments; the `$EVE_*` variables (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`) readable from a script.
 - **Tests:** a script with parameters, the generated help, each `$EVE_*` variable.
+- **State (2026-10-21):** the `$EVE_*` variables done (test `a97_eve_variables`; `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`; TD-60). Blocked on the author: the forms of `-p` and `-h` (Q-071).
 
 ### S15.12 Core semantics pages `[ ]` (M)
 - **Feature:** F-SPEC-03. **Missing pages in `spec/semantics/`:** scopes, topology, collections and objects. Write them from the tests and the tutorial; each rule gets an anchor that a test already names.
