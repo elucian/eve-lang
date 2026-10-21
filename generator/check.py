@@ -106,6 +106,10 @@ def run(root=ROOT, verbose=False):
         for f in lv["features"]:
             if f["status"] == "done" and f["id"] not in covered:
                 warnings.append("%s: done, and no test names it" % f["id"])
+            if f["status"] in ("partial", "open") and lv["id"] in ("level1", "level2", "level3", "level4", "level5"):
+                page = root / "spec" / "features" / f["doc"]
+                if not page.is_file() or not re.search(r"^## Missing\n\n- ", read_text(page), re.M):
+                    errors.append("%s: %s, and its page has no '## Missing' list" % (f["id"], f["status"]))
     check_isolation(root, errors)
     if not specindex.run(root, check=True):
         errors.append("spec/spec.json is out of date (evegen index)")

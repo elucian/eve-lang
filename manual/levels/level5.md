@@ -44,11 +44,22 @@ Connect, parameterized query as a stream, execute, transactions, bulk load. *Spe
 
 *Partial (2026-10-11):* `database.connect` of a `sqlite://` connection in `eve.cfg`, `script`, `execute!`, `query!(:T)`, `query_one!(:T)`, `close`, a job as a transaction (commit at `done`, rollback on error), `csv.read!(:T)` and `json.write` (`.json` array, `.jsonl` lines); results are lists, not streams; no `table`, ORM, `load!`, `commit;` or other drivers.
 
+## Missing
+
+- Results are lists, not streams.
+- `table`, ORM, `load!` (bulk load), drivers other than SQLite, and the rest of `database.md`.
+
 ## F-DAT-03 ETL pipeline model
 
 Stage: **drafted**.
 
 Extract, transform, load with jobs and aspects; dead-letter output; the pattern taught in the tutorial. *Specified and taught (2026-10-10):*, `etl.html`. *State (2026-10-20):* a local ETL runs, a bad row goes to the rejects with a limit, streams have `map`, `filter` and the like; the pipeline stages with back-pressure over a database and the lineage report (F-DAT-06) are not done.
+
+## Missing
+
+- Pipeline stages with back-pressure over a database.
+- The lineage and run report (F-DAT-06).
+- A test: ETL from CSV to SQLite with a report that matches the row counts.
 
 ## F-DAT-04 Checkpoints and restart
 
@@ -56,11 +67,20 @@ Stage: **drafted**.
 
 Resume a failed pipeline at the last committed batch. *Specified (2026-10-10):* checkpoints in the target database, `commit;` in a job. *State:* `commit;` with a checkpoint is tested; restart of a killed load from its checkpoint is not tested yet.
 
+## Missing
+
+- Restart of a killed load from its checkpoint: a test that kills the process and starts it again, 100,000 rows, same result as an uninterrupted load.
+
 ## F-DAT-05 Columnar tables
 
 Stage: **drafted**.
 
 `Table` type with typed columns, Arrow-compatible. *State:* the `Memory` table with typed columns and the column batches of evedb exist; Arrow compatibility does not.
+
+## Missing
+
+- Arrow compatibility (backlog).
+- The in-memory `Memory` table is a separate item of the collections work.
 
 ## F-DAT-06 Data lineage and run reports
 
@@ -68,11 +88,20 @@ Stage: **planned**.
 
 Inputs, outputs, row counts, durations per job and aspect.
 
+## Missing
+
+- Inputs, outputs, row counts, durations per job and aspect, stored in the core database.
+
 ## F-DAT-08 The Eve database
 
 Stage: **planned**.
 
 The core database: one per project in its `db/` folder (default `local.db`, name set in `eve.cfg`, system variable `$EVE_CORE_DB`), SQLite embedded (3.54.0, compiled into the VM from the amalgamation; DuckDB is not in the VM: it is the separate test database `evedb`, F-DAT-12), for checkpoints, run history, lineage and metadata, never ETL data (staging and the cache are `evedb` databases).
+
+## Missing
+
+- The core database `db/local.db` and `$EVE_CORE_DB`.
+- Checkpoints, run history, lineage and metadata tables.
 
 ## F-DAT-09 Database admin commands
 
@@ -80,11 +109,20 @@ Stage: **planned**.
 
 `db list`, `db add`, `db test`, `db info`, `db tables`, `db describe`, `db sql`, `db create`, `db backup`, `db restore`, `db export`, `db import`, `db compact`, `db runs`. *Specified (2026-10-10):* the list in, with `db create-table`, `db prepare`, `db activate`, `db reindex`, `db cache`.
 
+## Missing
+
+- The `db` commands of `database.md#admin-commands`.
+- A command test on a temporary project.
+
 ## F-DAT-10 Schema migrations
 
 Stage: **planned**.
 
 Numbered SQL scripts in `db/migrations/<name>/`, applied by `db migrate` and recorded in the Eve database.
+
+## Missing
+
+- Numbered scripts in `db/migrations/<name>/` and `db migrate`, recorded in the core database.
 
 ## F-DAT-11 Record-table mapping
 
@@ -100,6 +138,10 @@ An Eve function marked `sql function` is registered on every SQLite and DuckDB c
 
 *Partial (2026-10-12):* SQLite done; DuckDB waits for the VM to load it.
 
+## Missing
+
+- DuckDB: waits for the VM to load it (phase 7).
+
 ## F-DAT-14 Stored procedures
 
 Stage: **drafted**.
@@ -108,11 +150,20 @@ Native procedures in `sql/` called through `external` signatures; Eve procedures
 
 *Partial (2026-10-12):* a module of `proc/` is imported and its `sql function`s registered, `eve db proc list`. Not yet: `external` at run time (no database with stored procedures in the tests), `proc reload`, `db.call`.
 
+## Missing
+
+- `external` at run time against a database with stored procedures (PostgreSQL).
+- `proc reload` and `db.call`.
+
 ## F-DOC-02 Tutorial, data client part
 
 Stage: **planned**.
 
 Files, formats, streams, HTTP client, ETL pipelines.
+
+## Missing
+
+- The tutorial for files, formats, streams, HTTP client and ETL pipelines: written last in the order of the work.
 
 ## F-LIB-04 Files and paths
 
@@ -120,17 +171,32 @@ Stage: **drafted**.
 
 `fs` and `path` modules, text and bytes, line streams, globbing. *State:* `fs` files, folders and lines work; a `path` module, bytes and globbing are not done.
 
+## Missing
+
+- A `path` module (`path` is an undefined name).
+- Bytes and globbing (`fs.glob` does not exist).
+
 ## F-LIB-05 Data formats
 
 Stage: **drafted**.
 
 JSON and CSV read/write, decode into records; later XML, Parquet. *State:* JSON, JSON lines, CSV (options, rejects, encodings) and fixed-width text work; XML and Parquet are not done.
 
+## Missing
+
+- The write side of every format; round trip tests.
+- XML and Parquet move to the backlog unless the author asks.
+
 ## F-LIB-06 Time and dates
 
 Stage: **drafted**.
 
 `now`, parse, format, zones, durations.
+
+## Missing
+
+- Parse and format with zones: `time.parse` rejects ISO 8601 text such as `2020-01-02T00:00:00Z`.
+- Durations.
 
 An example that runs, and what it prints:
 
@@ -165,6 +231,11 @@ Stage: **drafted**.
 
 *Partial (2026-10-18):* module `os` with `run!` (no shell), `env!`, `hostname!`, `pid!`, `platform`.
 
+## Missing
+
+- Pipes and `call` beyond `run!`; streaming output of `run!`.
+- `os.platform` is not a member of `os` although names it.
+
 An example that runs, and what it prints:
 
 ```eve
@@ -195,6 +266,11 @@ Stage: **drafted**.
 
 A `Secret` type and `secret.get` from environment, file or vault. *Specified (2026-10-10):*.
 
+## Missing
+
+- `secret.get` from a file (environment works, the value is masked when printed); a vault is later.
+- A test that a `Secret` never prints its value.
+
 An example that runs, and what it prints:
 
 ```eve
@@ -218,6 +294,10 @@ token: ***
 Stage: **planned**.
 
 Gzip, zip, stream codecs (manifest).
+
+## Missing
+
+- Gzip read, write and stream; zip.
 
 ## F-LNG-12 Generators
 
@@ -269,6 +349,11 @@ Stage: **drafted**.
 
 Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid.
 
+## Missing
+
+- `Date`, `Time`, `Duration`, `Bytes`, `Uuid`, `Rational` are undefined names today.
+- Zones on `Instant`/`DateTime`; one test per type and per conversion.
+
 An example that runs, and what it prints:
 
 ```eve
@@ -298,6 +383,11 @@ price: 19.99
 Stage: **drafted**.
 
 Typed records for rows, JSON objects and messages; `T?`. *State:* records, `null` in plain fields and printing of `null` are tested; the full optional type is in.
+
+## Missing
+
+- The full optional type `T?`: non-null checks at compile time.
+- The cases of `data-language.md` as tests.
 
 An example that runs, and what it prints:
 
@@ -415,6 +505,11 @@ Stage: **planned**.
 
 Requests, headers, JSON bodies, time-outs, TLS.
 
+## Missing
+
+- Requests, headers, JSON bodies, time-outs over `net`; `http` is an undefined name.
+- TLS waits for a decision in phase 6/7.
+
 ## F-STR-09 Eve macro (hybrid script)
 
 Stage: **validated**.
@@ -510,6 +605,11 @@ Stage: **planned**.
 
 Hashed and sorted maps, sets, ropes for Text.
 
+## Missing
+
+- Hashed and sorted maps, sets, ropes for text.
+- The benchmarks `p1c` and `p1d` improve or hold.
+
 ## F-VM-11 One `eve`, its source in modules
 
 Stage: **drafted**.
@@ -517,3 +617,8 @@ Stage: **drafted**.
 The modules `evecm`, `evecp`, `evevm`, `evedb`, `eveux` and `cmd` with one build; one binary whose first word chooses the part, `eve vm`, `cp`, `db`, `ux`; the serving machine as one process.
 
 *Partial (2026-10-13):* the modules `evecm`, `evecp`, `evevm`, `evedb` and `cmd` exist in one root build (arrows checked by the build); the values and the heap are in `evecm`; the database layer is `evedb` behind the interfaces `Host` and `Data`; the configuration and the wire are cut from `server.zig`; not yet: the cut of the machine and of `cli.zig`, the native calling convention, `eveux` and `evetx` in the root build, the part words.
+
+## Missing
+
+- The cut of the machine and of `cli.zig`, the native calling convention.
+- `eveux` and `evetx` in the root build; the part words `eve vm`, `cp`, `db`, `ux`.

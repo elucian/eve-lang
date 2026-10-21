@@ -28,6 +28,11 @@ Stage: **planned**.
 
 Structured logs, job events, run reports, trace ids.
 
+## Missing
+
+- Structured logs, job events, run reports, trace ids (shared with F-DAT-06).
+- A log file test per record kind.
+
 ## F-LIB-12 Testing module `test`
 
 Stage: **validated**.
@@ -41,6 +46,11 @@ Stage: **drafted**.
 `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable`. Moved from Version 0.2 to Level 4.
 
 *Partial:* traits, abstract classes, generic classes with erased type arguments and the library traits work; a constraint is not checked yet, generic functions wait for Version 0.4.
+
+## Missing
+
+- The constraint `(:T <: Comparable)` is not checked: a violation must be a compile error, exit 65.
+- Generic functions wait for Version 0.4 (backlog).
 
 An example that runs, and what it prints:
 
@@ -83,6 +93,11 @@ Stage: **drafted**.
 
 *Partial:* `for` on a channel, `batch`, `split`.
 
+## Missing
+
+- Stream operators owned by level 5: `map`, `filter`, `merge`, `window`, `parallel(n)` on generators, files and queries.
+- The level 4 part (`for` on a channel, `batch`, `split`) is done.
+
 ## F-LNG-18 `Atomic(:T)`
 
 Stage: **drafted**.
@@ -90,6 +105,11 @@ Stage: **drafted**.
 A class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; `class Name <: Atomic(:T)`.
 
 *Partial:* the declaration and the check of managed modules work, the value is a plain value; the operations (`add`, `get!`, `swap!`) need threads.
+
+## Missing
+
+- `add`, `get!`, `swap!` on real threads; the value is a plain value today.
+- A counter under parallel tasks gives the same total at every run (`--repeat 5`).
 
 ## F-MTK-01 Parallel aspects
 
@@ -106,6 +126,11 @@ Stage: **drafted**.
 `$cores`, M:N, a waiting aspect gives its core away.
 
 *Partial:* stage A, one core with a baton (task.zig): a waiting task gives the core away; `$cores` and `$max_parallel` wait for stage B.
+
+## Missing
+
+- Stage B: several cores, `$cores`, `$max_parallel` (`$cores` is undefined today).
+- `--repeat 20` of every level 4 test.
 
 ## F-MTK-03 Channels
 
@@ -171,17 +196,32 @@ Stage: **drafted**.
 
 *Partial:* generators are level 5 (F-LNG-12).
 
+## Missing
+
+- Bring `semantics/multitasking.md` up to the code.
+- Generators are level 5 (F-LNG-12).
+
 ## F-TLS-04 Debugger
 
 Stage: **drafted**.
 
 Debug mode, `halt` breakpoints, step, print variables, reports (`manual/usage.md`).
 
+## Missing
+
+- The remaining debugger commands of `manual/usage.md`.
+- A test per command.
+
 ## F-TLS-08 Formatter and linter
 
 Stage: **planned**.
 
 `eve fmt`, `eve lint`.
+
+## Missing
+
+- `eve fmt`: layout rules from `lexical.md`; idempotence on every file of `test/`.
+- `eve lint`: unused names.
 
 ## F-TLS-09 Editor support
 
@@ -191,6 +231,11 @@ Syntax colors for VS Code and GitHub, then a language server.
 
 *Partial:* tutorial highlighters `eve1.js`, `eve3.js`.
 
+## Missing
+
+- Syntax colors for VS Code and GitHub.
+- The language server is not part of level 4 (backlog).
+
 ## F-VM-05 Region memory
 
 Stage: **drafted**.
@@ -198,3 +243,8 @@ Stage: **drafted**.
 Arena per aspect call, job and request; long-lived heap for modules and channels.
 
 *Partial:* the values are reference counted and freed at the safe points of their region (statement, pass of a loop, `done`), a tracing collector frees cycles at `done`, scratch memory per statement; nothing is freed while tasks run; benchmarks peak at 4.4 to 6.6 MB (`p4a_parallel_sum` 39 MB). Open: an arena per task.
+
+## Missing
+
+- An arena per task, so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB).
+- `EVE_GC_VERIFY=1` clean on levels 4 and 5.

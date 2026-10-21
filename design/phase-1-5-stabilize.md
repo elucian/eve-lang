@@ -20,9 +20,10 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 
 ## Stage 0 — The base (do first)
 
-### S15.0 Status audit `[ ]` (M)
+### S15.0 Status audit `[x]` (M)
 - **Change:** for each of the 40 `partial` or `open` features of levels 1 to 5, list the missing behaviors as items in the page of the feature (`spec/features/levelN/F-XXX-nn.md`, a "Missing" list). Set `done` where nothing is missing. Each item that is a behavior gets a failing test in the steps below.
 - **Gate:** `python generator/evegen.py check -v` shows every `partial` feature with a "Missing" list; no `done` feature without a test.
+- **Result (2026-10-21):** 47 features (not 40) are `partial` or `open` in levels 1 to 5; each page has a `## Missing` list, and `evegen check` fails when one is absent (levels 1 to 5). No feature of levels 1 to 5 was set to `done`: every one still has a missing item. Checked by running a probe script: `read`, `sort`, `$EVE_*`, `$cores`, `-p`, `Date`, `Duration`, `Uuid`, `Bytes`, `path`, `http`, `gzip` are undefined; `s[a..b]`, `upper`, `trim`, `replace`, `secret.get` (environment) and `time.now!` work, `time.parse` rejects ISO 8601, `os.platform` is not a member. The 18 warnings (`done` without a test) are all in the `all` level (tools and VM), outside this phase.
 
 ### S15.1 Safety net `[ ]` (S)
 - **Change:** CI runs `zig build test`, `runtest.py all --both`, `tagcheck.py` and `evegen check` on every push (Windows and Linux; `.github/workflows/ci.yml` exists, check it runs); find the flaky unit test (the binary run with `--listen`, review R2-VM-R01); make `python script/runtest.py all` print one summary line with the tracking-file diff.

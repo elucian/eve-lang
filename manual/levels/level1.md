@@ -34,6 +34,11 @@ Stage: **drafted**.
 
 *Partial:* `print`, `write`, `log_err` and `log_wrn` (run log), `error` and `warning` (standard error) work; `read` is missing; `io.eve` is a draft.
 
+## Missing
+
+- `read`: a line from standard input, with an end-of-input value.
+- `lib/sys/io.eve` is a draft the VM does not load: load it, or remove it and state in the library page that the names are built in.
+
 An example that runs, and what it prints:
 
 ```eve
@@ -58,6 +63,11 @@ Stage: **drafted**.
 `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, code constants.
 
 *Partial:* `raise`, `expect`, `assert` and the `$err_` constants are in the interpreter; `exception.eve` is a draft that is not loaded.
+
+## Missing
+
+- `lib/sys/exception.eve` is a draft the VM does not load: same decision as `io.eve`.
+- `Error` and `Warning` construction and `warn` have no test.
 
 ## F-LIB-13 DataMap methods
 
@@ -415,6 +425,11 @@ Types, scopes, control flow, jobs and `recover`, topology, collections and objec
 
 *Partial:* `semantics/` has variables, types, control, errors, aspects, modules and data-types (a proposal); scopes, topology and collections are missing.
 
+## Missing
+
+- Pages in: scopes, topology, collections and objects.
+- Every `** spec:` line of the level 1 tests resolves to an anchor.
+
 ## F-STR-05 Command-line parameters of a script
 
 Stage: **drafted**.
@@ -423,6 +438,11 @@ Stage: **drafted**.
 
 *Partial:* the arguments after the script name go to `process main`; `-p` and the generated help are not implemented.
 
+## Missing
+
+- `-p`/`--param name=value` mapped to the parameters of `process main`: today `eve script.eve -p n=3` answers `unknown option -p`.
+- `eve script.eve -h` builds the help from the `** @param` comments.
+
 ## F-STR-07 System variables
 
 Stage: **drafted**.
@@ -430,6 +450,11 @@ Stage: **drafted**.
 The register (`$error`, environment names such as `$HOME`, `$epsilon`, `$err_`/`$wrn_` constants).
 
 *Partial:* `$error`, `$epsilon`, `$OS_PWD`, the `$err_`/`$wrn_` constants and every environment name `$NAME` (a String, read when used) work; `$EVE_*` are undefined.
+
+## Missing
+
+- `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB` are undefined names in a script.
+- One test per `$EVE_*` variable.
 
 An example that runs, and what it prints:
 
