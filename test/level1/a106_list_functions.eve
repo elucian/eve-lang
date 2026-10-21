@@ -1,0 +1,69 @@
+# list functions: sort, reverse, sum, min, max, contains, index_of, unique, take, drop, zip, map, filter, reduce, any, all (lists.md)
+** spec: library/lists.md#functions
+primary aspect a106_list_functions is
+  function by_length(s :String) => (@r :Integer) is
+    let r := s.length();
+  return;
+  function double(x :Integer) => (@r :Integer) is
+    let r := x * 2;
+  return;
+  function is_even(x :Integer) => (@r :Logic) is
+    let r := x % 2 == 0;
+  return;
+  function add(a, b :Integer) => (@r :Integer) is
+    let r := a + b;
+  return;
+
+  process main is
+    new xs := (3, 1, 2, 3);
+    expect xs.sort() == (1, 2, 3, 3);
+    expect xs == (3, 1, 2, 3);                         ** the receiver is not changed
+    expect xs.sort(descending: True) == (3, 3, 2, 1);
+    expect ("bb", "a", "ccc").sort() == ("a", "bb", "ccc");
+    expect ("bb", "a", "ccc").sort(by: by_length) == ("a", "bb", "ccc");
+    expect ("bb", "a", "ccc").sort(by: by_length, descending: True) == ("ccc", "bb", "a");
+    expect ("bb", "cc", "a", "dd").sort(by: by_length) == ("a", "bb", "cc", "dd");     ** stable
+    expect (2.5, 1, 2).sort() == (1, 2, 2.5);
+    expect [3, 1, 2].sort() == [1, 2, 3];              ** an array gives an array
+    expect {3, 1, 2}.sort(descending: True) == (3, 2, 1);
+    expect xs.reverse() == (3, 2, 1, 3);
+    expect ().reverse() == ();
+    expect xs.sum() == 9;
+    expect ().sum() == 0;
+    expect (1, 2.5).sum() == 3.5;
+    expect (1.5d, 2).sum() == 3.5d;
+    expect xs.min() == 1;
+    expect xs.max() == 3;
+    expect ("b", "a").min() == "a";
+    expect xs.contains(2);
+    expect not xs.contains(7);
+    expect xs.index_of(3) == 1;
+    expect xs.index_of(2) == 3;
+    expect xs.index_of(9) == 0;
+    expect xs.unique() == (3, 1, 2);
+    expect xs.take(2) == (3, 1);
+    expect xs.take(0) == ();
+    expect xs.take(10) == xs;
+    expect xs.drop(3) == (3,);
+    expect xs.drop(10) == ();
+    expect (1, 2, 3).zip(("a", "b")) == ((1, "a"), (2, "b"));
+    expect xs.map(double) == (6, 2, 4, 6);
+    expect xs.map((x) => (x + 1)) == (4, 2, 3, 4);
+    expect xs.filter(is_even) == (2,);
+    expect xs.reduce(0, add) == 9;
+    expect xs.reduce(100, (a, b) => (a - b)) == 91;
+    expect ().reduce(7, add) == 7;
+    expect xs.any(is_even);
+    expect not (1, 3).any(is_even);
+    expect (2, 4).all(is_even);
+    expect not xs.all(is_even);
+    expect ().all(is_even);
+    expect not ().any(is_even);
+    print xs.sort(descending: True);
+  return;
+end a106_list_functions;
+/*@expect
+{
+  "stdout": ["(3,3,2,1)"]
+}
+*/

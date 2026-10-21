@@ -1,0 +1,82 @@
+# list functions with a wrong argument or a wrong element are the error $err_argument (17); each case is caught by a function with a recover region
+** spec: library/lists.md#functions
+primary aspect a107_list_errors is
+  function double(x :Integer) => (@r :Integer) is
+    let r := x * 2;
+  return;
+
+  function min_of_empty() => (@r :Integer) is
+    new e := ();
+    new x := e.min();
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function max_of_empty() => (@r :Integer) is
+    new e := ();
+    new x := e.max();
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function sort_mixed() => (@r :Integer) is
+    new x := (1, "a").sort();
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function sum_of_texts() => (@r :Integer) is
+    new x := ("a", "b").sum();
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function take_negative() => (@r :Integer) is
+    new x := (1, 2).take(-1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function map_not_a_function() => (@r :Integer) is
+    new x := (1, 2).map(5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function zip_not_a_list() => (@r :Integer) is
+    new x := (1, 2).zip(5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function sort_unknown_argument() => (@r :Integer) is
+    new x := (1, 2).sort(up: True);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function min_of_numbers() => (@r :Integer) is
+    new x := (2, 1).min();
+    let r := x;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    expect min_of_empty() == $err_argument;
+    expect max_of_empty() == $err_argument;
+    expect sort_mixed() == $err_argument;
+    expect sum_of_texts() == $err_argument;
+    expect take_negative() == $err_argument;
+    expect map_not_a_function() == $err_argument;
+    expect zip_not_a_list() == $err_argument;
+    expect sort_unknown_argument() == $err_argument;
+    expect min_of_numbers() == 1;
+    print $err_argument;
+  return;
+end a107_list_errors;
+/*@expect
+{
+  "stdout": ["17"]
+}
+*/

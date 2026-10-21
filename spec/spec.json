@@ -104,6 +104,9 @@
     [2, "classes", 7, "Classes"],
     [2, "functions", 16, "Functions"]
    ]},
+  {"path": "library/lists.md", "title": "List functions", "status": "draft", "summary": "The functions of a List ( ), an Array [ ] and, where it makes sense, a DataSet { }. A function is called on a value, xs.sort(). A function never changes the list it is called on: it gives a new value,", "lines": 38, "bytes": 3041, "features": [], "sections": [
+    [2, "functions", 9, "Functions"]
+   ]},
   {"path": "library/machine.md", "title": "The Eve machine: parts, doors, local and remote", "status": "draft", "summary": "eve is one program, with one version. Its first word chooses a part:", "lines": 221, "bytes": 27836, "features": ["F-NET-02", "F-NET-08"], "sections": [
     [2, "the-parts-of-eve", 5, "The parts of `eve`"],
     [2, "the-machine", 20, "The machine"],
@@ -120,6 +123,9 @@
     [2, "users-and-login-level-6", 204, "Users and login (level 6)"],
     [2, "not-yet", 218, "Not yet"]
    ]},
+  {"path": "library/maps.md", "title": "Map functions", "status": "draft", "summary": "The functions of a DataMap {k: v}. A function never changes the map it is called on. The functions has, get, keys, values and delete are described with the type ([types.md](../semantics/types.md#datam", "lines": 19, "bytes": 860, "features": [], "sections": [
+    [2, "functions", 7, "Functions"]
+   ]},
   {"path": "library/net.md", "title": "The module `net`", "status": "draft", "summary": "TCP for Eve code: a client connection and a listening server, as text. The module is the base of rpc, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a h", "lines": 54, "bytes": 3475, "features": ["F-NET-02", "F-NET-10"], "sections": [
     [2, "functions", 28, "Functions"],
     [2, "waiting", 39, "Waiting"],
@@ -127,6 +133,12 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 52, "bytes": 2670, "features": [], "sections": [
+    [2, "built-in-no-import", 13, "Built in (no import)"],
+    [2, "modules-written-in-zig-libsys", 23, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 36, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 49, "Libraries to come"]
+   ]},
   {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 62, "bytes": 4691, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
@@ -141,10 +153,10 @@
     [2, "service", 29, "`service`"]
    ]},
   {"path": "library/rpc.md", "title": "The module `rpc`", "status": "draft", "summary": "JSON-RPC 2.0 messages as text, one message per line. The module builds and reads messages and dispatches a request to a table of handlers; it does not own a socket (the lines travel on a connection of", "lines": 24, "bytes": 1638, "features": [], "sections": []},
-  {"path": "library/strings.md", "title": "String functions", "status": "draft", "summary": "A String is a sequence of runes, indexed from 1 (semantics/types.md). A function is called on a value, s.trim(), and gives a new string; a string is never changed in place.", "lines": 30, "bytes": 2505, "features": [], "sections": [
+  {"path": "library/strings.md", "title": "String functions", "status": "draft", "summary": "A String is a sequence of runes, indexed from 1 (semantics/types.md). A function is called on a value, s.trim(), and gives a new string; a string is never changed in place.", "lines": 35, "bytes": 3155, "features": [], "sections": [
     [2, "slice", 7, "Slice"],
     [2, "functions", 11, "Functions"],
-    [2, "regular-expressions", 27, "Regular expressions"]
+    [2, "regular-expressions", 32, "Regular expressions"]
    ]},
   {"path": "library/test.md", "title": "The module `test`", "status": "draft", "summary": "A small module for the tests that a user writes in Eve. Each check prints one line, ok <name> or FAIL <name> (with the two values for equal), counts it, and goes on; summary prints the totals and rais", "lines": 42, "bytes": 2248, "features": ["F-LIB-12"], "sections": [
     [2, "what-it-is", 5, "What it is"],

@@ -241,7 +241,7 @@ Decisions (`D-nnn`) are settled; questions (`Q-nnn`) wait for the author. When a
 - Q-069 `read` at the end of input (answered 2026-10-21 → D-210)
 - Q-070 The draft files `lib/sys/io.eve` and `exception.eve`, `Error`, `Warning`, `warn`, `raise(code, message)` (answered 2026-10-21 → D-211)
 - Q-071 Named parameters `-p` and the generated help `-h` of a script (answered 2026-10-21 → D-212)
-- Q-072 to Q-077 The libraries of S15.30: layout, global names, types, random, order, reference standards (2026-10-21; text in `design/design-libraries.md` section 0.6)
+- Q-072 to Q-077 The libraries of S15.30: layout, global names, types, random, order, reference standards (answered 2026-10-21 → D-214)
 
 ## D-153 Release policy: release notes in `manual/releases/`, the manual updated at every release (2026-10-10)
 Author decision. Every release creates its **release notes** in `manual/releases/vX.Y.Z.md` and **updates the manual**. (1) The notes give each feature its code `F-<area>-<nn>` and one of three stages: `design` (decided or proposed in writing, nothing built), `drafted` (spec or tests written, implementation missing or partial), `validated` (implemented and tested, `✓ done`). The stage is read from the row of the feature in `spec/features/`, never written by hand. (2) The manual (`manual/README.md`) has a paragraph about the **progress** (tests per level, features per stage) and the **performance** achieved (benchmarks against the previous release and against Python), with a link to `test/bmark/README.md`. (3) The manual has **usable links** to `spec/`, the tutorial and the readme files of `test/`: relative links with the exact case for the files of this repository (the test folders hold `readme.md`), and the published pages `https://sagecode.org/projects/eve/…` for the tutorial, which is git-ignored here. (4) A tagged release is a record: its notes are never edited again. Tools: `script/relnotes.py` (generates the notes from `design/template/release-notes.md`, the progress and links of the manual; `--check` verifies the links and the TODOs), `script/release.py` (bumps the version). Policy and the steps of a release: `design/release.md`. Replaces the `implemented.md` of step M7.7 (`design/phase-7-manual.md`).
@@ -279,4 +279,13 @@ Read as rules: (1) the header and all the cycles of a `while`, `for` or `loop` s
 
 ## Q-072 to Q-077 The libraries of step S15.30 (2026-10-21)
 The plan of the libraries (a folder library next to `sys/`, the order core, math, stats, time, text, business, engineering, data, ids, and the recipe of one library step) is `design/design-libraries.md` section 0. Questions: Q-072 layout of a large library (`lib/<domain>/` imported with `from lib/math use (trig)`); Q-073 which basic functions stay global (`abs`, `min`, `max`, `sqrt`, `pow`) and which are `math.`; Q-074 the types `Rational`, `Complex`, `Quantity` as language types or as library classes; Q-075 a seeded generator for `random`; Q-076 the order of the libraries and which comes third; Q-077 whether the pages follow ISO 80000, ISO 4217 and the spreadsheet names of the financial functions. Each has a proposal in the section; the author answers in place there or here.
+
+## D-214 Answers to Q-072 to Q-077: the layout and the rules of the libraries (2026-10-21)
+Author decision (2026-10-21), in `design/design-libraries.md` section 0.6:
+- **Q-072:** yes, sub-folders for domain and sub-domain: `lib/math/trig` and so on, imported by path.
+- **Q-073:** "Only `math.`": `abs`, `min`, `max`, `sqrt`, `pow` and the other functions of mathematics are functions of the module `math`, not global names. The global functions that exist stay (`floor`, `ceiling`, `round`, `type`).
+- **Q-074:** `Rational`, `Quantity` and `Complex` are types of the language (not library classes).
+- **Q-075:** a seeded generator and an unseeded one. With the seed the output is reproducible; without it the value can not be predicted but its type can. A test states an unpredictable value with a type in braces: `{Integer}`, `{String}`, `{Any}` for any value (a feature of the test runner to build with the library `random`, step L2).
+- **Q-076:** the order of the libraries is accepted (L1 core, L2 math, L3 stats, L4 time, L5 text, L6 business, L7 engineering, L8 data, L9 ids).
+- **Q-077:** yes, the pages follow the standards: ISO 80000 (units and quantities), ISO 4217 (currency codes, mandatory for financial pipelines), and the names and arguments of Excel and OpenDocument for the financial functions (`NPV`, `IRR`, `PMT`).
 

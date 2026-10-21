@@ -39,14 +39,12 @@ Stage: **drafted**.
 
 `split`, `join`, `format`, `parse`, `floor`, `round`, sort, search.
 
-*Partial:* `split`, `join`, `length`, `count`, `find`, `contains`, `trim`, `upper`, `lower`, `replace`, `parse`, `floor`, `ceiling` and `round` work; `abs`, `min`, `max` and `sqrt` are not defined (an earlier text said they work), and neither are `sort`, `reverse`, `sum` or search on a list.
+*Partial:* strings (`split`, `join`, `length`, `find`, `contains`, `trim`, `upper`, `lower` for Latin, Greek and Cyrillic letters, `replace`, `reverse`, `repeat`, `pad_start`, `pad_end`, `lines`), lists (`sort`, `reverse`, `sum`, `min`, `max`, `contains`, `index_of`, `unique`, `take`, `drop`, `zip`, `map`, `filter`, `reduce`, `any`, `all`) and maps (`merge`, `invert`) are done; `floor`, `ceiling`, `round` and `parse` work. The functions of mathematics are the module `math` (library step L2).
 
 ## Missing
 
-- `abs`, `min`, `max`, `sqrt` and the other functions of mathematics.
-- `sort`, `reverse`, `sum`, `min`, `max` and search on lists: `sort` is an undefined name.
-- Unicode `upper`, `lower`, `trim`, `replace`: the ASCII cases and the slice `s[a..b]` work, the Unicode cases need a test.
-- A test for every function the page lists.
+- The module `math`: `abs`, `min`, `max`, `sqrt`, `pow`, trigonometry, logarithms and the rest (library step L2).
+- `format` of text and numbers.
 
 ## F-LNG-10 Classes
 
@@ -180,12 +178,11 @@ Stage: **drafted**.
 
 Built-ins and standard modules as signatures.
 
-*Partial:* `library/atomic.md`.
+*Partial:* an index (`library/README.md`) and pages for the built-in names, strings, lists, maps, atomic, config, crypto, http, net, os, route, rpc, test and the database; a function is on a page only when a test calls it.
 
 ## Missing
 
-- Library pages in: strings, math, collections, time, files (see the folder for what exists).
-- Each page lists only functions that have a test.
+- Pages for `math`, `stats`, time and calendar, text, business, engineering and data (library steps L2 to L8), and for `fs`, `csv`, `json`, `txt`, `time` and `secret` (today the generated reference of `eve --doc`).
 
 ## F-STR-01 Modules and imports
 

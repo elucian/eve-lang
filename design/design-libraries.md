@@ -4,7 +4,7 @@ Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of le
 
 ## 0. Plan of step S15.30: the libraries, one at a time (2026-10-21, for the author's review)
 
-Status: **proposal**. Nothing below is built. The author reviews the steps; then one library is done at a time, each with the same recipe (section 0.5). The rest of this file (sections 1 to 16) is the earlier plan of the system and standard library for level 6; where the two disagree, this section wins after the review.
+Status: **accepted by the author 2026-10-21 (D-214)**; L0 and L1 are built, the others wait. One library is done at a time, each with the same recipe (section 0.5). The rest of this file (sections 1 to 16) is the earlier plan of the system and standard library for level 6; where the two disagree, this section wins after the review.
 
 ### 0.1 Where we stand (audit, 2026-10-21, probed on the machine)
 
@@ -33,8 +33,8 @@ A folder library is imported by its path, as every library path already is (`fro
 
 | Step | Library | Content (proposed) | Needs |
 |---|---|---|---|
-| L0 | audit and corrections | correct the false claims of the feature pages; one page for each existing module; the registry of section 3 | nothing |
-| L1 | **core**: strings, lists, maps | finish `strings.md` (Unicode case, `reverse`, `repeat`, `pad_start`, `pad_end`, `format`); lists: `sort`, `reverse`, `sum`, `min`, `max`, `index_of`, `unique`, `zip`, `take`, `drop`, `any`, `all`; maps: `merge`, `invert`; `sort` by key and with a comparator | nothing |
+| L0 **done** | audit and corrections | correct the false claims of the feature pages; one page for each existing module; the registry of section 3 | nothing |
+| L1 **done** | **core**: strings, lists, maps | finish `strings.md` (Unicode case, `reverse`, `repeat`, `pad_start`, `pad_end`, `format`); lists: `sort`, `reverse`, `sum`, `min`, `max`, `index_of`, `unique`, `zip`, `take`, `drop`, `any`, `all`; maps: `merge`, `invert`; `sort` by key and with a comparator | nothing |
 | L2 | **math**, folder `lib/math/` | `basic` (`abs`, `min`, `max`, `sign`, `clamp`, `pow`, `sqrt`, `cbrt`, `hypot`, integer division, `gcd`, `lcm`, `divmod`), `trig` (`sin` … `atan2`, degrees), `explog` (`exp`, `log`, `log2`, `log10`), `constants` (`pi`, `e`, `tau`), `numtheory` (`is_prime`, `factors`, `mod_pow`), `linear` (vectors, matrices: `dot`, `cross`, `transpose`, `det`, `inverse`, `solve`), `complex`, `rational`, `random` (seeded generator, `!` functions) | Real and Integer; `Rational` and `Complex` types are a question (0.6) |
 | L3 | **stats**, folder `lib/stats/` | `describe` (`mean`, `median`, `mode`, `variance`, `stddev`, `quantile`, `range`, `skew`, `kurtosis`), `correlate` (covariance, Pearson, Spearman), `regress` (least squares, linear and polynomial), `distrib` (normal, binomial, Poisson, uniform: pdf, cdf, inverse), `sample` (with and without replacement, bootstrap), `histogram`, `moving` (moving average, exponential) | L1, L2 |
 | L4 | **time and calendar**, `lib/time/` | `Date`, `Time`, `Duration`, zones, parse and format ISO 8601 and patterns, business days, holidays by calendar, periods (month end, quarter) | the types of S15.50 |
@@ -66,14 +66,36 @@ Each library is a step of its own: it can be built, tested and used without the 
 5. **Gate:** `zig build test`, `runtest.py all --both`, `bctest.py`, `evegen check`, `bmark.py --check` for a hot path, the Linux gate.
 6. **Close:** the feature status, the step marked in `phase-1-5-stabilize.md`, tech debt recorded.
 
-### 0.6 Questions for the author (Q-072 to Q-077)
+### 0.6 Questions for the author (Q-072 to Q-077, answered 2026-10-21 → D-214)
 
-- **Q-072 Layout.** Is `lib/<domain>/` (a folder next to `sys/`, imported with `from lib/math use (trig)`) the shape you want for a large library? Or one flat module per file with a prefix (`math_trig.eve`)?
-- **Q-073 Where the basic functions live.** `abs`, `min`, `max`, `sqrt` are promised by the feature page as global names like `floor`. Keep a small global set (`abs`, `min`, `max`, `sqrt`, `pow`) and put the rest in `math.`; or only `math.`?
+- **Q-072 Layout.** Is `lib/<domain>/` (a folder next to `sys/`, imported with `from lib/math use (trig)`) the shape you want for a large library? Or one flat module per file with a prefix (`math_trig.eve`)? 
+**answer** yes, subfolders for domain/subdomains: lib/math/trig etc 
+- **Q-073 Where the basic functions live.** `abs`, `min`, `max`, `sqrt` are promised by the feature page as global names like `floor`. Keep a small global set (`abs`, `min`, `max`, `sqrt`, `pow`) and put the rest in `math.`; or only `math.`? 
+**answer** Only math.
 - **Q-074 Types.** Does Eve get the types `Rational` and `Complex` (the lexical page already names `Rational`), and a `Quantity` type for units (L7)? Or are they classes of the libraries (`math.Complex`, `eng.Quantity`) written in Eve?
+**answer** Rational and Quantity are types, Complex are all types.
+
 - **Q-075 Random.** A seeded generator in Eve (`random.next!()`, reproducible in a test) or the operating system source? Proposal: both; the seed makes a test deterministic.
+**answer** Agree, a seaded generator and one that is not seaded, If user use unseaded generator, the output can't be predicted but data type can be predicted. Use {type} notation to specify a = {Integer} for example or a = {String} or {Any} for any value.
+
 - **Q-076 Order.** Is the order L1 core, L2 math, L3 stats, L4 time, L5 text, L6 business, L7 engineering, L8 data, L9 ids the one you want? Which library is the first one for you after L1 and L2?
+**answer** yes good
+
 - **Q-077 Reference sources.** For statistics, finance and units, may the pages follow a published standard (ISO 80000 for units and quantities, ISO 4217 for currency codes, Excel/ODF names for the financial functions `NPV`, `IRR`, `PMT`), so a user finds the name they know?
+**answer**
+Yes. Adopting established standards for EVE’s standard library design maximizes discoverability and reduces cognitive load for data-centric developers.
+
+Units and Quantities (ISO 80000): Adhering to ISO 80000 ensures unambiguous unit symbols, scaling prefixes, and dimensional consistency across ETL data transformations.
+
+Currency Codes (ISO 4217): Using standard three-letter currency codes (USD, EUR, RON) is mandatory for financial data pipelines and multi-currency ledger processing.
+
+Financial Functions (NPV, IRR, PMT): Following Excel and OpenDocument Format (ODF) naming and argument conventions aligns with existing enterprise modeling expectations, allowing analysts to map formulas directly without learning proprietary nomenclature.
+
+### 0.7 State (2026-10-21)
+
+- **L0.** The false claim of the feature page F-LIB-03 is corrected; `spec/library/README.md` is the index of the libraries; `python script/libcoverage.py` lists the members of every module and the number of test files that call each (`--missing`: 10 of 80 members have no test: `http.read_request!`, `respond`, `reason`; `route.add`, `status`, `find`, `dispatch`; `service.handle`; `fs.read_bytes!`; `json.valid`); the registry of section 3 already exists (`natives` in `dlib.zig`, checked by `script/libcheck.py`).
+- **L1.** `spec/library/lists.md` (sort, reverse, sum, min, max, contains, index_of, unique, take, drop, zip, map, filter, reduce, any, all), `maps.md` (merge, invert) and the additions of `strings.md` (reverse, repeat, pad_start, pad_end, lines, Unicode upper and lower for Latin-1, Latin Extended-A, Greek and Cyrillic); code in `code/evevm/src/interp/corelib.zig`; tests a106 to a109. A function never changes its receiver.
+- **Next.** L2 mathematics (`lib/math/`: Q-073 says only `math.`; `Rational`, `Quantity` and `Complex` are types of the language, a language feature with its own tests), together with the placeholders `{Integer}`, `{String}`, `{Any}` in the expected output of the test runner for the library `random`.
 
 ## 1. Principles
 

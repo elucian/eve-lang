@@ -15,6 +15,7 @@ const data = interp.data;
 const overload = interp.overload;
 const decimal = interp.decimal;
 const dlib = interp.dlib;
+const corelib = @import("corelib.zig");
 const console = @import("console.zig");
 const netlib = interp.netlib;
 const instant = interp.instant;
@@ -303,6 +304,10 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
         const ty = m.kids[0].kids[0].ty orelse continue;
         if (eql(u8, ty.text, Interp.typeName(recv))) return it.invoke(try it.newFunc(m, it.unit), recv, args);
     };
+    // the core library: more functions of a String, a List and a DataMap (spec/library/lists.md, maps.md, strings.md)
+    if (recv == .str) if (try corelib.stringMore(it, recv.str, name, args)) |v| return v;
+    if (recv == .list or recv == .set) if (try corelib.listMethod(it, recv, name, args)) |v| return v;
+    if (recv == .map) if (try corelib.mapMore(it, recv.map, name, args)) |v| return v;
     return it.fail("{s} has no method '{s}'", .{ Interp.typeName(recv), name });
 }
 
@@ -499,11 +504,7 @@ fn stringFunction(it: *Interp, s: []const u8, name: []const u8, args: []const *c
         if (eql(u8, name, "trim")) return try it.newStr(std.mem.trim(u8, s, &white));
         if (eql(u8, name, "trim_start")) return try it.newStr(std.mem.trimStart(u8, s, &white));
         if (eql(u8, name, "trim_end")) return try it.newStr(std.mem.trimEnd(u8, s, &white));
-        if (eql(u8, name, "upper") or eql(u8, name, "lower")) {
-            const out = try it.t.alloc(u8, s.len);
-            for (s, 0..) |c, i| out[i] = if (name[0] == 'u') std.ascii.toUpper(c) else std.ascii.toLower(c);
-            return try it.newStr(out);
-        }
+        if (eql(u8, name, "upper") or eql(u8, name, "lower")) return try corelib.caseMapped(it, s, name[0] == 'u');
         return null;
     }
     const one = eql(u8, name, "starts_with") or eql(u8, name, "ends_with") or eql(u8, name, "contains") or eql(u8, name, "find");

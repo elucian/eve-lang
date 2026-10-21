@@ -1,0 +1,49 @@
+# string functions of the core library: reverse, repeat, pad_start, pad_end, lines, upper and lower beyond ASCII (strings.md)
+** spec: library/strings.md#functions
+primary aspect a109_string_more is
+  function repeat_negative() => (@r :Integer) is
+    new x := "a".repeat(-1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function pad_two_runes() => (@r :Integer) is
+    new x := "a".pad_start(5, "ab");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    expect "abc".reverse() == "cba";
+    expect "".reverse() == "";
+    expect "añb".reverse() == "bña";
+    expect "ab".repeat(3) == "ababab";
+    expect "ab".repeat(0) == "";
+    expect "7".pad_start(3, "0") == "007";
+    expect "7".pad_start(3) == "  7";
+    expect "abcd".pad_start(3, "0") == "abcd";
+    expect "ab".pad_end(5, ".") == "ab...";
+    expect "é".pad_end(3, "*") == "é**";
+    expect "a\nb\r\nc\n".lines() == ("a", "b", "c");
+    expect "".lines() == ();
+    expect "a\n\nb".lines() == ("a", "", "b");
+    expect "straße".upper() == "STRAßE";
+    expect "ÀÉÎÕÜ".lower() == "àéîõü";
+    expect "àéîõüÿ".upper() == "ÀÉÎÕÜŸ";
+    expect "ĀāĂăŁł".upper() == "ĀĀĂĂŁŁ";
+    expect "ΑΒΓ αβγ ςά".lower() == "αβγ αβγ ςά";
+    expect "αβγ ςά".upper() == "ΑΒΓ ΣΆ";
+    expect "ПРИВЕТ мир".lower() == "привет мир";
+    expect "привет Ёж".upper() == "ПРИВЕТ ЁЖ";
+    expect "Eve 2026!".upper() == "EVE 2026!";
+    expect repeat_negative() == $err_argument;
+    expect pad_two_runes() == $err_argument;
+    print "Ünï".upper();
+  return;
+end a109_string_more;
+/*@expect
+{
+  "stdout": ["ÜNÏ"]
+}
+*/

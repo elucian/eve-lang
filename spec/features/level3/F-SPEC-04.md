@@ -2,9 +2,8 @@
 
 Built-ins and standard modules as signatures (`spec/library/`).
 
-*Partial:* `library/atomic.md`.
+*Partial:* an index (`library/README.md`) and pages for the built-in names, strings, lists, maps, atomic, config, crypto, http, net, os, route, rpc, test and the database; a function is on a page only when a test calls it.
 
 ## Missing
 
-- Library pages in `spec/library/`: strings, math, collections, time, files (see the folder for what exists).
-- Each page lists only functions that have a test.
+- Pages for `math`, `stats`, time and calendar, text, business, engineering and data (library steps L2 to L8), and for `fs`, `csv`, `json`, `txt`, `time` and `secret` (today the generated reference of `eve --doc`).

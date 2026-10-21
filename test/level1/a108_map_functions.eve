@@ -1,0 +1,48 @@
+# map functions: merge and invert give a new map and never change the receiver (maps.md)
+** spec: library/maps.md#functions
+primary aspect a108_map_functions is
+  function invert_duplicate() => (@r :Integer) is
+    new x := {"a": 1, "b": 1}.invert();
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function invert_list_value() => (@r :Integer) is
+    new x := {"a": (1, 2)}.invert();
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function merge_not_a_map() => (@r :Integer) is
+    new x := {"a": 1}.merge(5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new a := {"x": 1, "y": 2};
+    new b := {"y": 20, "z": 30};
+    new m := a.merge(b);
+    expect m["x"] == 1;
+    expect m["y"] == 20;
+    expect m["z"] == 30;
+    expect m.count() == 3;
+    expect a["y"] == 2;                    ** the receiver is not changed
+    expect b.count() == 2;
+    expect a.merge({:}).count() == 2;
+    new inv := {"a": 1, "b": 2}.invert();
+    expect inv[1] == "a";
+    expect inv[2] == "b";
+    expect {1: "one"}.invert()["one"] == 1;
+    expect invert_duplicate() == $err_argument;
+    expect invert_list_value() == $err_argument;
+    expect merge_not_a_map() == $err_argument;
+    print m;
+  return;
+end a108_map_functions;
+/*@expect
+{
+  "stdout": ["{\"x\":1,\"y\":20,\"z\":30}"]
+}
+*/
