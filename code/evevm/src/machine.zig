@@ -4,6 +4,7 @@
 //! run the methods of the machine API (`vm.ping`, `vm.stat`, `vm.run`, `vm.stop`, and on the lasting doors the
 //! sessions, `vm.shell` and `vm.cancel`).
 const std = @import("std");
+const builtin = @import("builtin");
 const Io = std.Io;
 const net = Io.net;
 const vm = @import("vm.zig");
@@ -432,6 +433,7 @@ pub fn serve(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, ipc: 
     }
     if (http) {
         // Windows lets a second socket bind a port that is already listening, so the bind is not a lock: ask the port
+        // (and only Linux asks for SO_REUSEADDR: the port of a stopped machine is free again at once)
         if (httpCall(io, gpa, cfg.http_host, cfg.http_port, message(gpa, "vm.ping", null)) != null) {
             try out.print("eve: already running (http {s}:{d})\n", .{ cfg.http_host, cfg.http_port });
             if (ipc) Io.Dir.deleteFileAbsolute(io, m.socket) catch {};
@@ -442,7 +444,7 @@ pub fn serve(io: Io, gpa: std.mem.Allocator, out: *Io.Writer, cfg: Config, ipc: 
             try out.print("eve: http_host is not an address: {s}\n", .{cfg.http_host});
             return exit_usage;
         };
-        m.http_server = addr.listen(io, .{}) catch |e| {
+        m.http_server = addr.listen(io, .{ .reuse_address = builtin.os.tag != .windows }) catch |e| {
             if (ipc) Io.Dir.deleteFileAbsolute(io, m.socket) catch {};
             try out.print("eve: cannot serve http on {s}:{d}: {s}\n", .{ cfg.http_host, cfg.http_port, @errorName(e) });
             return if (e == error.AddressInUse) exit_running else exit_unavailable;
