@@ -21,45 +21,30 @@ Features: F-WEB-01 to F-WEB-04, F-VM-07, F-VM-09, F-DOC-03 (web part), the serve
 - Templates as separate files, as literals in Eve code, or both: Q-027 below.
 - Which Eve code may run in a browser: pure functions only, or aspects with limited capabilities?
 
-- Q-027 Templates [open]
 - D-154 eveux, the RAD Workbench, is written in Eve: the final test of the language, in level 7
 
-## Q-027 Templates (2026-10-06)
+## Q-027 Templates (2026-10-06, answered 2026-10-21 → D-209)
 The page templates.html teaches string templates (today) and proposes HTML templates: files `.htmt` or literals, `{expr}` escaped by context (text, attribute, URL, script), the type `HTML`, components as functions that return `HTML`, the module `html` with `html.render` and `html.write`. Questions: files, literals or both? The extension and the module name? Loops and conditions inside a template (`{for o in orders}`)? Is `HTML` required by the functions that send a page?
 
 **Answer:**
+Template files contain simple HTML and {var} can inject in it a whole HTML fragmend, if var is a HTML fragment it can represent a table for example. No need for complexity. `{for o in orders}` is not a feature I want. Embeded templates are Text type. That is a literal. In text literals we have {} that is same kind of template. 
 
-## Q-028 Networking and protocols (2026-10-06)
+
+## Q-028 Networking and protocols (2026-10-06, answered 2026-10-21 → D-208)
 
 Moved from level 7 on 2026-10-08: the Eve Wire Protocol, sockets and the server are level 6 (F-NET-02 to F-NET-06, draft feature 3); the HTTP client is level 5 (F-NET-01).
 
 The pages networking.html and protocols.html collect ideas that are not designed: the layers (names, connection, protocol, data), the type `Url`, the module `net` and `http`, capabilities in the project file, `Secret`, the Eve Wire Protocol (frames HELLO, APPLY, RESULT, ERROR, BATCH, CREDIT, CANCEL, PING, CLOSE; CBOR payloads; resume by batch number), HTTP/1.1 and HTTP/2, WebSocket for browsers. Questions: do sockets exist in the language or only protocols? Is EWP wanted, or only HTTP with JSON? Which level takes the HTTP client (3) and which the server (6)? Names of the error classes of the network?
 
 **Answer:**
+Yes, HTTP client should be Level5 and Server Level6. Follow the design and improve or test to confirm the specification & implementation.
+
 
 ## Q-047 Eve RAD Workbench (eveux): program, toolkit and the commands it needs from the machine (answered in part: D-154, D-155)
 
-Author request (2026-10-10): a full RAD workbench in the folder `code/eveux/`, in plain JavaScript and plain CSS with a Zig web toolkit, presented in phase 6 of the tutorial: menu, login form, user registration, admin user, database object tree, code editor, command window, file dialog to load and import files, job scheduler and browser, log inspector "similar to Jenkins or better", direct SQL from the command line with the result in a WYSIWYG grid, Help and About with the version, syntax colors for HTML, JSON, XML, Eve and SQL, scripts run from the command line, step-by-step run, variable inspector and watch window. Design: [code/eveux/README.md](../../code/eveux/README.md); tutorial: eveux.html; features F-TLS-19 to F-TLS-22.
+Author request (2026-10-10): a full RAD workbench in the folder `code/eveux/` Design: [design/components/eveux/README.md](../components/eveux/README.md); tutorial: eveux.html; features F-TLS-19 to F-TLS-22.
 
-Proposals, each with its question in the design file:
-
-- (1) a separate Zig program `bin/eveux.exe` on port 8046 that talks to Eve machines on their command port, not a folder served by `eve serve`;
-
-- (2) plain JavaScript modules with JSDoc types and no build step, not TypeScript compiled by `tsc`;
-
-- (3) a *watched run* on the line protocol of the command port, so output, logs and debugger events stream to the Workbench before EWP exists;
-
-- (4) our own toolkit `modules/zweb/` on `std.http`, shared with `eve serve` and evedb;
-
-- (5) new machine commands for files (`files`, `read`, `save`, `delete`);
-
-- (6) SQL that changes data runs in a transaction with Commit and Rollback buttons;
-
-- (7) `let` on a variable while halted in debug mode;
-
-- (8) stepping one parallel task holds the others. New debugger commands of the machine, so that the REPL and `eve -c` get them too: `step into`, `step out`, `break <file>:<line> [if <condition>]`, `locals`, `stack` (F-TLS-04).
-
-  **Answer:** (2026-10-10, in part) "We use Eve to build eveux as ultimate test of Eve capability and a stress test. Therefore is in level 7 that is actually last level. Zig is used for making a full capable eve virtual machine evevm that can handle from a local instance multiple remote evevm machines." Proposals (1) and (4) fall away: eveux is an Eve project run by the local machine, with no Zig program and no Zig toolkit of its own (D-154); the login to remote machines is D-155. The other proposals stay open, as questions 1 to 10 of `code/eveux/README.md`.
+  **Answer:** (2026-10-10, in part) "We use Eve to build eveux as ultimate test of Eve capability and a stress test. Details in: `code/eveux/README.md`.
 
 ## evedb: the enterprise Eve machine with DuckDB (decisions and questions moved from level 6 on 2026-10-20)
 
@@ -140,3 +125,12 @@ Read as rules:
 - (5) **D-199 and Q-068** (the answers about the editors, the license, the server in `bin/`, the protocol module) moved to level 7 with the other evedb entries. The author's notes on them (quoted): D-199: It looks like the drivers are actually components used by evevm and evedb, should be moved into evecm then? If they are eve code, no, if they are zig or c code, yes.
 
 - (6) **Explained where it is used:** `drivers/duckdb/README.md` (status paragraph), `spec/library/database.md` (the two driver paragraphs say level 7), `test/level7/readme.md`, TD-52.
+
+## D-208 Answer to Q-028: the HTTP client is level 5, the server level 6 (2026-10-21)
+Author decision (2026-10-21): "Yes, HTTP client should be Level 5 and Server Level 6. Follow the design and improve or test to confirm the specification & implementation." This is how the features already stand (F-NET-01 in level 5; the machine and its HTTP door in level 6; the evedb server of D-204 in level 7). Work: step S15.52 builds the client and tests it against the local test server; step S6.x of `phase-6-machine.md` confirms the server against the spec. The Eve Wire Protocol frames (HELLO, APPLY, RESULT, BATCH, ...) and WebSocket stay as designed in `spec/library/rpc.md` and `net.md`; nothing new is decided about them.
+
+## D-209 Answer to Q-027: a template is a text with `{var}`, no loops (2026-10-21)
+Author decision (2026-10-21): "Template files contain simple HTML and {var} can inject in it a whole HTML fragment, if var is a HTML fragment it can represent a table for example. No need for complexity. `{for o in orders}` is not a feature I want. Embedded templates are Text type. That is a literal. In text literals we have {} that is the same kind of template."
+
+Read as rules: (1) a template file is a plain text file (HTML) with `{name}` holes; a template literal in Eve code is an ordinary text literal, whose `{expr}` holes already exist, so a template is a `Text`; (2) a value may be a whole fragment (a table built before and inserted); (3) no loops and no conditions inside a template: the program builds the fragment in Eve and inserts it; (4) there is no separate language, no `.htmt` syntax, no component functions and no type `HTML` unless a later decision asks for them. Open for level 7 (`phase-7-web.md`): whether `{x}` escapes text by default and how a fragment is marked as already safe; the author has not said.
+

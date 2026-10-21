@@ -73,6 +73,20 @@ Author answer, confirms the proposal of D-182. Refines D-182.
 - So the chain of levels (D-179) reads: a primary or exclusive aspect at the top, exclusive aspects below it, concurrent aspects as the leaves of the work.
 - Open consequences, asked in Q-061: where a parallel group may be written, and whether a concurrent aspect can start its own private processes in a group (the example of `design/design-unified-aspect.md`).
 
-## Q-061 The details of D-183: parallel groups and the levels (2026-10-14)
+## Q-061 The details of D-183: parallel groups and the levels (2026-10-14, answered 2026-10-21 → D-206)
 Because a concurrent aspect is called only from a primary or an exclusive aspect, the three levels of D-179 are: level 1 the aspect run by a command (primary, or exclusive for a test); level 2 an exclusive aspect; level 3 a concurrent aspect. (a) Where may a parallel group be written? Recommended: in a primary aspect and in an exclusive aspect (they start concurrent aspects); in a concurrent aspect only to start its own private processes (rule 1, thread-safe names). Other: only in a primary aspect. (b) The limit of D-140 (a group of level 2 starts at most 2 aspects, none in a loop): keep it for a group in an exclusive aspect of level 2; a group in the primary aspect has no limit but `$max_parallel`. (c) May a concurrent aspect apply an exclusive aspect? Recommended: no, a concurrent aspect calls no aspect: it is a leaf of the work.
 **Answer:**
+Ok, parallel aspects can be called from primary aspects only. That is the rule, exclusive aspects can not start parallel processes at all, concurent aspects can have parallel private named processes.
+
+## D-206 Answer to Q-061: only the primary aspect starts concurrent aspects (2026-10-21)
+Author decision (2026-10-21): "parallel aspects can be called from primary aspects only. That is the rule, exclusive aspects can not start parallel processes at all, concurrent aspects can have parallel private named processes."
+
+Read as rules (they replace the consequences of D-183 that let an exclusive aspect call a concurrent one):
+- A **concurrent aspect** is called (`apply` or `start`, alone or in a parallel group) only from a **primary** aspect. A command does not run it; an exclusive aspect and another concurrent aspect do not call it: each is a compile error.
+- An **exclusive aspect** starts nothing in parallel: no `parallel` group, no `start`. It is serial from end to end.
+- A **concurrent aspect** may start its own **private named processes** in parallel (rule 1 of D-183: they use only thread-safe names).
+- The level chain of D-179 reads: the primary aspect on top and the only one that fans out; exclusive aspects are serial helpers; concurrent aspects are the leaves of the work, each with private parallel processes if it wants.
+- The limit of D-140 (a group starts at most 2 aspects, none in a loop) belonged to a group in an exclusive aspect, which no longer exists; a group in the primary aspect is limited by `$max_parallel` only.
+
+**Not done yet:** the spec (`semantics/multitasking.md`, `semantics/aspects.md`: the error `a concurrent aspect is called from a primary or an exclusive aspect`), the checker and the tests d39, d40 and the others of level 4 follow this rule in step S15.41 (`design/phase-1-5-stabilize.md`), first as failing tests.
+

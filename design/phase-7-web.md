@@ -11,7 +11,7 @@ Where the work stands: two tests pass (`g01`, `g02`, evedb columnar); `drivers/d
 - **Gate:** a page that prints `Hello World!` from a `.eve` file; the report in `design/`.
 
 ### S7.1 Questions `[!]` (S, the author)
-- Q-027 (templates: the `HTML` type and template files) and Q-048 (login) before S7.3 and S7.6.
+- Q-027 is answered (D-209: a template is a `Text` with `{var}`, no loops, no `HTML` type unless asked later); Q-048 (login) before S7.6.
 
 ## Stage 1 — Database server products
 
@@ -22,7 +22,7 @@ Where the work stands: two tests pass (`g01`, `g02`, evedb columnar); `drivers/d
 ## Stage 2 — The Eve Web Portal (server side)
 
 ### S7.3 HTML templates `[ ]` (M)
-- **Feature:** F-WEB-01. **Change (needs Q-027):** the `HTML` type, context-aware escaping (text, attribute, URL, script), template files with components.
+- **Feature:** F-WEB-01. **Change (D-209):** template files (plain HTML with `{var}` holes) read as `Text`, the same `{}` holes as a text literal, a fragment inserted as a value, no loops or conditions. Open for the author: default escaping of `{x}` and how a fragment is marked safe.
 - **Tests:** an injection test per context (`<script>` in a name is escaped); a page rendered from a template equals the expected HTML byte for byte.
 
 ### S7.4 Process supervision `[ ]` (M)

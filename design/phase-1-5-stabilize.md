@@ -31,8 +31,9 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 - **State (2026-10-21):** the Linux gate exists: `python script/wsl-gate.py` (WSL, Ubuntu 24.04, Zig and Node installed in the home folder, the committed HEAD cloned to `~/eve-gate`, the steps of `ci.yml`, log in `temp/output-linux/gate.log`); `--quick` skips the unit tests. It found and fixed five Linux defects: `hostname!` buffer size, `libduckdb.so` not installed next to `evedb` (rpath `$ORIGIN`), the HTTP door without `SO_REUSEADDR` (a restart failed with `AddressInUse`), the tests starting `eve`/`python` by name (the runner now puts the machine under test first on PATH and makes a `python` link), the generator ordering paths by case on Linux; plus `bctest.py` rewriting the tracking file in CI (`--no-update`). `ci.yml` also builds `evedb`. Local gate green on both systems: Windows (unit tests, `all --both` 440, `bctest.py`) and Linux (all steps). GitHub run ff256b1 is green on Windows and Ubuntu; `continue-on-error` for Ubuntu is removed.
 **TODO** detailed instructions to resolve the issues.
 
-### S15.2 Open questions that block levels 1 to 5 `[!]` (S, the author)
-- Close or answer, in this order: Q-061 (parallel groups, level 4), Q-065 (an error caught inside Eve code, level 1 to 3), Q-027 (templates, used by level 7), Q-028 (networking, used by phase 6). `python script/plan.py status` lists the rest; each unanswered question stays open and the dependent step is skipped.
+### S15.2 Open questions that block levels 1 to 5 `[x]` (S, the author)
+- **Answered 2026-10-21:** Q-061 → D-206 (only the primary aspect starts concurrent aspects; an exclusive aspect starts nothing in parallel; a concurrent aspect may have private parallel processes), Q-065 → D-207 (option (a), a `recover` region in a function, procedure and method: already built, tests b55 to b58), Q-027 → D-209 (a template is a `Text` with `{var}`, no loops), Q-028 → D-208 (HTTP client level 5, server level 6).
+- **Still open for the author** (they do not block a step, each step that depends on one says so): Q-069 (`read` at the end of input), Q-070 (the draft files `io.eve`, `exception.eve`, the classes `Error`/`Warning`), Q-071 (`-p` and `-h` of a script). `python script/plan.py status` lists the others.
 
 ## Level 1 — one script
 
@@ -63,7 +64,7 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 - **Tests:** one per function; each page lists only functions that have a test.
 
 ### S15.31 Typed exceptions and static checks `[ ]` (M)
-- **Features:** F-LNG-15, F-LNG-16. **Missing:** error classes with fields, `recover` by type, exit-code mapping; the type checks of `check.zig` (argument types, return types, assignment) before the run, exit 65.
+- **Features:** F-LNG-15, F-LNG-16. **Missing:** error classes with fields, `recover` by type, exit-code mapping (`recover` in a function, procedure and method is built: D-207); the type checks of `check.zig` (argument types, return types, assignment) before the run, exit 65.
 - **Tests:** negative tests (`"syntax_error"`/exit 65) for each check; positive tests for the recover by type.
 
 ### S15.32 Projects, loader, `external` `[ ]` (M)
@@ -81,7 +82,7 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 - **Tests:** constraint violated (exit 65); an atomic counter under parallel tasks gives the same total at every run (`--repeat 5`).
 
 ### S15.41 Scheduler and memory `[ ]` (L)
-- **Features:** F-MTK-02, F-VM-05, F-SPEC-05. **Missing:** stage B of the scheduler (`$cores`, `$max_parallel`, several cores); an arena per task so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB); the multitasking spec brought up to the code (Q-061 answer).
+- **Features:** F-MTK-02, F-VM-05, F-SPEC-05. **Missing:** stage B of the scheduler (`$cores`, `$max_parallel`, several cores); an arena per task so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB); the multitasking spec, the checker and the tests brought to the rule of D-206 (first failing tests: an exclusive aspect with a `parallel` group or a `start` is a compile error; a concurrent aspect called from an exclusive aspect is a compile error; tests d39, d40 and the level 4 tests that break the rule are rewritten; the limit of D-140 goes away).
 - **Gate:** `--repeat 20` of every `test/level4` test; `bmark.py --check` (no benchmark more than 10% slower); `EVE_GC_VERIFY=1` on levels 4 and 5.
 
 ### S15.42 Observability and tools `[ ]` (M)
@@ -127,4 +128,4 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 
 ## Order and dependencies
 
-S15.0 → S15.1 → levels 1, 2, 3 (S15.10 to S15.33) → level 4 (S15.40 to S15.42, after Q-061) → level 5 (S15.50 to S15.64). Inside level 5: types (S15.50) before formats (S15.51); the Eve database (S15.60) before lineage (S15.62) and admin (S15.63). Steps of different levels that touch different files can run in parallel; the libraries (S15.30, S15.51, S15.52) share the `lib/` and `syslib.zig` files, so do them one after the other.
+S15.0 → S15.1 → levels 1, 2, 3 (S15.10 to S15.33) → level 4 (S15.40 to S15.42) → level 5 (S15.50 to S15.64). Inside level 5: types (S15.50) before formats (S15.51); the Eve database (S15.60) before lineage (S15.62) and admin (S15.63). Steps of different levels that touch different files can run in parallel; the libraries (S15.30, S15.51, S15.52) share the `lib/` and `syslib.zig` files, so do them one after the other.

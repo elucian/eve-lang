@@ -17,7 +17,7 @@ Where the work stands: the machine runs with two doors (IPC and HTTP), `POST /rp
 ## Stage 1 — The specification of the network
 
 ### S6.2 Network semantics and the Eve Wire Protocol `[ ]` (L)
-- **Features:** F-SPEC-06, F-NET-03. **Change:** write `spec/protocol/` (framing, flow control, resumable streams, errors, versions) from what `drivers/duckdb/protocol/` and the machine API already speak, so the spec follows the code and the tests; then bring the machine's own use of it in line. Q-028 (networking) must be answered first.
+- **Features:** F-SPEC-06, F-NET-03. **Change:** write `spec/protocol/` (framing, flow control, resumable streams, errors, versions) from what `drivers/duckdb/protocol/` and the machine API already speak, so the spec follows the code and the tests; then bring the machine's own use of it in line. Q-028 is answered (D-208): the client is level 5, the server level 6; follow the design and confirm it with tests.
 - **Gate:** each frame kind has a spec anchor and a test (`"client"` tests against a running machine).
 
 ## Stage 2 — The machine

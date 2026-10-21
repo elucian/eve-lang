@@ -24,8 +24,8 @@ Decisions: **D-083** (below): one machine and one mode, `-x`, `-c`, `-rem`, `-u`
 - Is the remote scheduler part of version 0.5, or later?
 - Does `deploy` exist as a command of its own, or is uploading every file of a project with `-u` enough?
 
-- Q-028 Networking and protocols [open]
-- Q-050, Q-052, Q-053 and Q-054 (evetx) moved on 2026-10-20 to `code/evetx/design/questions.md`; read them there (`python script/plan.py show Q-053` finds them)
+- Q-028 Networking and protocols (answered 2026-10-21 → D-208, the question is in level7.md)
+- Q-050, Q-052, Q-053 and Q-054 (evetx) moved on 2026-10-20 to `design/components/evetx/design/questions.md`; read them there (`python script/plan.py show Q-053` finds them)
 - Q-047 Eve RAD Workbench (eveux): program, toolkit and the commands it needs from the machine (answered in part: D-154, D-155) [open]
 - D-155 One local machine, many remote machines: a login per machine, single sign-on, the keyring of the system
 - Q-048 Machine login: the details of D-155 [open]
@@ -79,7 +79,7 @@ Proposals in `design/design-service.md` §15, for the author:
 **Answer:**
 So many alternatives. We keep the credential in eve client SQLLight, password checksum. evevm and evedb will do this job. To spin a service user must provide os credentials, user can start evedb like a normal eve machine and manage credentials. We create command set: -a --admin superuser, eve enter admin mode, in this mode it can ask a set of commands like: create user <username>/<password>, alter user <username>/<password>, remove user <username>. Later we add more fields about users that will be stored secured in SQLLight and managed remote using a management form in user interface.  
 
-## Q-065 Catching an error inside Eve code (2026-10-18)
+## Q-065 Catching an error inside Eve code (2026-10-18, answered 2026-10-21 → D-207)
 
 The standard library found that `recover` exists only at the end of a process (and aspect), so a function can not catch an error (`backlog/library-gaps.md` G-4). A server must turn the error of a handler into an error answer and go on. Options, for the author to choose (the syntax is the author's):
 
@@ -87,9 +87,6 @@ The standard library found that `recover` exists only at the end of a process (a
 - (b) a `try` form for a block or an expression: `try … recover … done;`.
 - (c) no change in the language: every handler is an **aspect** (an aspect recovers its own error, D-072), run with `apply`; `rpc.dispatch` and the routes then take aspects, not lambdas.
 - (d) a native `call_safe(f, args)` in the library that gives a result record with the error (no syntax).
-
-**Model's lean:** (c) for level 6, because it needs nothing new and matches how a service script is designed (one aspect per group of routes); (a) later if functions need it.
-
 **Answer:**
 I agree with (a). Any subprogram like a process can have a recover region. A function, procedure or method can have a recover region.
 
@@ -139,3 +136,7 @@ Read as rules:
 - (7) **Levels.** `eve` with a user and the GUI clients, evetx (`-tx`) and eveux (`-ux`), are developed at **level 6**; the features F-TLS-19 to F-TLS-22 and F-TLS-31 (eveux) moved from level 7 to level 6 in `spec/features/`. **Level 7 is all about the server** (evedb, D-203 and D-204, and the portal). This changes the level of D-154 and D-193 for eveux.
 
 Not done by this decision: the code of `-u`/`-a` and the dialogs (a plan entry and a failing test first, D-194), and the tests of level 6 for them.
+
+## D-207 Answer to Q-065: a function, a procedure and a method can have a `recover` region (2026-10-21)
+Author decision (2026-10-21): option (a). "Any subprogram like a process can have a recover region. A function, procedure or method can have a recover region." No `try`, no `call_safe`. **Already built and specified** before the answer: `semantics/errors.md#recover-in-a-function-procedure-or-method` and the tests b55 to b58 (`recover` in a function, the result after `recover`, the error that propagates, `retry` refused). Nothing to do in step S15.31 for this question; the library gap G-4 is closed.
+
