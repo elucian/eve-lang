@@ -15,6 +15,7 @@ const data = interp.data;
 const overload = interp.overload;
 const decimal = interp.decimal;
 const dlib = interp.dlib;
+const console = @import("console.zig");
 const netlib = interp.netlib;
 const instant = interp.instant;
 const Heap = interp.Heap;
@@ -90,6 +91,8 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
         });
         return .nil;
     }
+    if (callee.tag == .name and std.mem.eql(u8, callee.text, "read") and it.scope.find("read") == null)
+        return console.read(it, args);
     if (callee.tag == .name and std.mem.eql(u8, callee.text, "type") and it.scope.find("type") == null) {
         if (args.len != 1) return it.fail("type() takes one argument", .{});
         const arg = try it.eval(args[0]);

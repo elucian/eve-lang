@@ -297,7 +297,7 @@
     [2, "statements", 213, "Statements"],
     [2, "expressions", 257, "Expressions"]
    ]},
-  {"path": "syntax/statements.md", "title": "Statements", "status": "draft", "summary": "A statement ends with ; and may span lines. A group of statements is a block, indented by 2 spaces. A simple statement may end with the condition suffix if expression: break if c;, raise \"bad\" if n < ", "lines": 84, "bytes": 6885, "features": [], "sections": [
+  {"path": "syntax/statements.md", "title": "Statements", "status": "draft", "summary": "A statement ends with ; and may span lines. A group of statements is a block, indented by 2 spaces. A simple statement may end with the condition suffix if expression: break if c;, raise \"bad\" if n < ", "lines": 84, "bytes": 7181, "features": [], "sections": [
     [2, "statements-that-bind-a-value", 7, "Statements that bind a value"],
     [3, "new", 11, "`new`"],
     [3, "let", 26, "`let`"],

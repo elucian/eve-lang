@@ -50,7 +50,7 @@ Creates a constant at script level; see declarations.
 
 A procedure is called as a statement, with or without parentheses when it has no arguments: `save(data);`, `foo;`, `print x;`. A function may be called as a statement only through `let f(x);`, which drops the result. A bare call of a class is not a statement.
 
-`print` and `write` take a list of expressions. `print (1, 2, 3)` writes `1,2,3` and a new line; the named argument `sep:` changes the separator: `print (1, 2, 3, sep: " ");` writes `1 2 3`. `sep` goes between arguments only: a list given as one argument prints as a list, `(1,2,3)`. `write` adds no separator and no new line; `print;` alone ends the line. `read(@v, prompt)` reads a line.
+`print` and `write` take a list of expressions. `print (1, 2, 3)` writes `1,2,3` and a new line; the named argument `sep:` changes the separator: `print (1, 2, 3, sep: " ");` writes `1 2 3`. `sep` goes between arguments only: a list given as one argument prints as a list, `(1,2,3)`. `write` adds no separator and no new line; `print;` alone ends the line. `read(@v, prompt)` writes the prompt (optional), reads one line from the standard input without its line end and stores it as a String in the variable `v`, which must exist and not be a constant; at the end of the input it raises the error `$err_io` (22). The standard input of a script is empty when nothing is piped in a test.
 
 ## `expect` and `assert`
 

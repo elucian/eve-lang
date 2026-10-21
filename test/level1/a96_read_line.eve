@@ -1,0 +1,22 @@
+# read(@v, prompt) reads a line from the standard input into v; at the end of input it raises the error $err_io
+** spec: syntax/statements.md#calls
+primary aspect a96_read_line is
+  process main is
+    new name := "";
+    read(@name, "name: ");
+    print "hello {name}";
+    new rest := "";
+    read(@rest);
+    print "[{rest}]";
+    read(@rest);
+    print "[{rest}]";
+    recover
+      print "end of input: {$error.code}";
+  return;
+end a96_read_line;
+/*@expect
+{
+  "stdin": ["Eve", "second line"],
+  "stdout": ["name: hello Eve", "[second line]", "end of input: 22"]
+}
+*/

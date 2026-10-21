@@ -46,6 +46,7 @@ Other folders are not tests. The expectation keys, all optional:
   "stdout"     the exact expected output: a string, or a list of lines (line
                endings and trailing white space at the end are ignored)
   "contains"   a list of strings that must all appear in the output
+  "stdin"      the standard input of the script: a string, or a list of lines (default: empty, never the terminal)
   "stderr"     a list of strings that must all appear in the error output
   "files"      project tests: {"out/report.txt": "text" or [lines]}: each file must exist
                after the run with this content (line endings and trailing white space ignored).
@@ -369,8 +370,14 @@ def run_test(eve, test, timeout):
         else:
             # the tests of test/bytecode run on the bytecode machine, all the others on the tree walker
             env = dict(os.environ, EVE_ENGINE="bc") if level_of(test) == "bytecode" else None
+            feed = exp.get("stdin")
+            if feed is not None:
+                text = chr(10).join(feed) + chr(10) if isinstance(feed, list) else feed
+                feed = {"input": text.encode("utf-8")}
+            else:
+                feed = {"stdin": subprocess.DEVNULL}
             p = subprocess.run([eve, *eve_args(test, exp)], cwd=test_cwd(test), capture_output=True,
-                               timeout=timeout, env=env)
+                               timeout=timeout, env=env, **feed)
     except subprocess.TimeoutExpired as e:
         res.update(verdict="ERROR", reason=f"timeout after {timeout}s",
                    stdout=(e.stdout or b"").decode("utf-8", "replace"))

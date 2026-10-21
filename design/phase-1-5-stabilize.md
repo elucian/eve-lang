@@ -36,9 +36,10 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 
 ## Level 1 — one script
 
-### S15.10 Console and exceptions `[ ]` (M)
+### S15.10 Console and exceptions `[~]` (M)
 - **Features:** F-LIB-01, F-LIB-02. **Missing:** `read` (a line from standard input, with an end-of-input value); `exception.eve` and `io.eve` are drafts the VM does not load: either load them or remove them and say in the spec that the names are built in.
 - **Tests:** `read` with piped input (`"args"`/stdin key in the runner if needed); `Error` and `Warning` construction, `warn`.
+- **State (2026-10-21):** `read(@v, prompt)` done (test `a96_read_line`, runner key `"stdin"`, spec `syntax/statements.md#calls`; end of input raises `$err_io`, Q-069). Blocked on the author: the draft files and the classes `Error`/`Warning`, `warn`, `raise(code, message)` (Q-070). Next step: S15.11.
 
 ### S15.11 Command line and variables `[ ]` (M)
 - **Features:** F-STR-05, F-STR-07. **Missing:** `-p`/`--param` mapped to `main` parameters and `eve script.eve -h` from `** @param` comments; the `$EVE_*` variables (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`) readable from a script.
