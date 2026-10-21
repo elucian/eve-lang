@@ -32,6 +32,8 @@ jobs:
         run: zig build test --summary all
       - name: ReleaseSafe build
         run: zig build -Doptimize=ReleaseSafe -p temp/rel
+      - name: evedb build (DuckDB server, used by the level 6 and 7 tests)
+        run: cd drivers/duckdb && zig build -Doptimize=ReleaseSafe -p ../../temp/rel
       - name: conformance tests on both engines and bytecode tests
         shell: bash
         run: |

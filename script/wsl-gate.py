@@ -57,6 +57,7 @@ echo "commit $(git log --oneline -1)"
 mkdir -p temp/output-linux
 [ "$QUICK" = 1 ] || run "unit tests" zig build test --summary all
 run "ReleaseSafe build" zig build -Doptimize=ReleaseSafe -p temp/rel
+run "evedb build (DuckDB server)" bash -c "cd drivers/duckdb && zig build -Doptimize=ReleaseSafe -p ../../temp/rel"
 EXE=temp/rel/bin/eve
 run "conformance tests on both engines" python3 script/runtest.py all --both --eve "$EXE" -q
 run "bytecode tests" python3 script/bctest.py --eve "$EXE"

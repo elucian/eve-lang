@@ -65,6 +65,12 @@ pub fn build(b: *std.Build) void {
         b.getInstallStep().dependOn(&dll.step);
     }
 
+    if (os == .linux) {
+        // The prebuilt library goes next to evedb, and evedb looks for it there.
+        exe.root_module.addRPathSpecial("$ORIGIN");
+        b.getInstallStep().dependOn(&b.addInstallFileWithDir(duckdb_dep.path("libduckdb.so"), .bin, "libduckdb.so").step);
+    }
+
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
     b.step("run", "Run evedb").dependOn(&run_cmd.step);
