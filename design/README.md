@@ -9,7 +9,9 @@ What is not here: the language is in `spec/` (with its features, `spec/features/
 | Path | Holds |
 |---|---|
 | `README.md` | this plan: the focus, the rules |
-| `phase-8-architecture.md` | the open steps of the architecture refactor (the only phase file left; earlier phases are done and live in the git history) |
+| `phase-1-5-stabilize.md` | the plan to close levels 1 to 5: the rule of a step, stage 0 (audit, CI), the steps by level |
+| `phase-6-machine.md`, `phase-7-web.md` | the plans for level 6 (machine, server, clients) and level 7 (web) |
+| `phase-8-architecture.md` | the open steps of the architecture refactor |
 | `design-*.md` | the designs of the parts of Eve (service, packages, databases, libraries, drivers, bytecode, project layout, the AI context) |
 | `dev-guide.md` | the full development guide that `CLAUDE.md` points to |
 | `release.md` | the release policy and the steps of a release |
@@ -34,7 +36,7 @@ Do not read the logs whole.
 | `python script/plan.py feature F-NET-02` | a feature: level, status, summary, page |
 | `python script/plan.py archive [--keep K]` | moves settled entries from the live files to `decision/index.md`, keeping the last K per file (default 8) |
 
-A step of `phase-8-architecture.md` is `[ ]` open, `[~]` in progress, `[x]` done (with the date and a one-line result), `[!]` blocked on a decision of the author, `[-]` dropped (with a reason). Never delete a step. A step that needs a decision gets a question in the `decision/levelN.md` of its level.
+A step of a `phase-*.md` file is `[ ]` open, `[~]` in progress, `[x]` done (with the date and a one-line result), `[!]` blocked on a decision of the author, `[-]` dropped (with a reason). Never delete a step. A step that needs a decision gets a question in the `decision/levelN.md` of its level.
 
 ## Current focus (2026-10-18)
 
