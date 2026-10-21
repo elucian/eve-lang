@@ -63,9 +63,10 @@ DT-63. If a variable is created with new in internal scope it can hide the exter
 
 ## Level 3 — modules and classes
 
-### S15.30 Library basics `[ ]` (M)
+### S15.30 Library basics `[~]` (L, split into steps L0 to L9)
 - **Features:** F-LIB-03, F-DOC-05, F-SPEC-04. **Missing:** `sort` and search on lists; the String gaps G-7 and TD-25 (slices `s[a..b]`, Unicode `upper`, `lower`, `trim`, `replace`); the other built-ins named in the spec; `eve --doc` for every standard module; one library page per module in `spec/library/` (strings, math, collections are missing).
 - **Tests:** one per function; each page lists only functions that have a test.
+- **Plan (2026-10-21, for review):** `design/design-libraries.md` section 0: L0 audit and corrections, L1 core (strings, lists, maps), L2 math, L3 stats, L4 time and calendar, L5 text and encoding, L6 business, L7 engineering, L8 data, L9 ids and compression; each library is one step with the recipe of section 0.5 (page first, failing tests, code, docs, gate). Questions Q-072 to Q-077 wait for the author. Nothing is built until the author has reviewed the steps; then one library at a time.
 **agree** Document the libraries and finalize the design of libraries: design-libraries.md, if a library is large and has many aspects like math it can be a folder side by side with sys. Design a sofisticated library for general purpose data, math, bussines, statistics, engineering, no graphics or games yet.
 
 ### S15.31 Typed exceptions and static checks `[ ]` (M)

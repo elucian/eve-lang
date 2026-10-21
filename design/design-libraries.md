@@ -2,6 +2,79 @@
 
 Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of level 6. Nothing here is decided: the choices that need the author are collected in section 9 (Q-064). Related: `tutorial/syslib.html`, `lib/README.md`, D-053, D-132, D-145, Q-024 (`design/decision/level5.md`), `spec/library/`, `design/components/eveux/README.md` §2 and §4, `design/design-service.md`.
 
+## 0. Plan of step S15.30: the libraries, one at a time (2026-10-21, for the author's review)
+
+Status: **proposal**. Nothing below is built. The author reviews the steps; then one library is done at a time, each with the same recipe (section 0.5). The rest of this file (sections 1 to 16) is the earlier plan of the system and standard library for level 6; where the two disagree, this section wins after the review.
+
+### 0.1 Where we stand (audit, 2026-10-21, probed on the machine)
+
+| Area | Works | Missing |
+|---|---|---|
+| strings | `split`, `join`, `length`, `count`, `find`, `contains`, `starts_with`, `ends_with`, `trim`, `trim_start`, `trim_end`, `upper`, `lower` (ASCII), `replace`, slice `s[a..b]`, `=~` | Unicode case mapping, `reverse`, `pad`, `repeat`, `format`; `parse`/`compare` only partly |
+| numbers | `+ - * / % ^`, `floor`, `ceiling`, `round`, `parse`, `decimal`, `real` | **`abs`, `min`, `max`, `sqrt` are undefined names** (the feature page said they work), integer division, `pow`, `sin`, `cos`, `log`, `exp` and every other function of mathematics, constants |
+| lists and maps | `count`, `delete`, `join`, `in`, `batch`, `split`, builders; maps: `has`, `get`, `keys`, `values`, `delete` | **`sort`, `reverse`, `sum`, `min`, `max`, search on a list, `contains` on a list**, `unique`, `group_by`, zip |
+| time | `time.now!`, a few formats | `time.parse` rejects ISO 8601; `Date`, `Time`, `Duration` types (S15.50) |
+| modules in Zig (`lib/sys/`) | `fs`, `csv`, `json`, `txt`, `time`, `os`, `net`, `secret`, `crypto`, `database`, `checkpoint` (signature files, documented by `eve --doc`) | `path`, globbing, bytes, gzip, XML, http client (S15.51, S15.52) |
+| modules in Eve (`lib/`) | `config`, `http`, `route`, `rpc`, `service`, `test` | nothing for data, mathematics, statistics, business, engineering |
+
+### 0.2 Layout proposal
+
+```
+lib/
+  sys/            the signature files of the modules written in Zig (primitives: files, sockets, clock, hashes)
+  <name>.eve      a small standard module in Eve: config, http, route, rpc, service, test, ...
+  <domain>/       a large library, one folder, many modules: lib/math/, lib/stats/, lib/finance/, lib/eng/, lib/data/
+spec/library/<name>.md    the page of a library: only functions that have a test
+```
+
+A folder library is imported by its path, as every library path already is (`from lib/math use (trig, linear);`). One module is one file, the file name is the module name; a module calls its siblings by name. A folder has a `README.md` (not a module) that lists the modules in one line each. The standard library is searched first (`modules.md`). **Rule of thumb** (kept from section 2): a function that needs the operating system, C, bytes or a loop over many values is written in Zig behind an `external` signature; policy, composition and formulas are written in Eve, where they also test the language. **Out of scope for now:** graphics, games, sound.
+
+### 0.3 The libraries, in the order of work
+
+| Step | Library | Content (proposed) | Needs |
+|---|---|---|---|
+| L0 | audit and corrections | correct the false claims of the feature pages; one page for each existing module; the registry of section 3 | nothing |
+| L1 | **core**: strings, lists, maps | finish `strings.md` (Unicode case, `reverse`, `repeat`, `pad_start`, `pad_end`, `format`); lists: `sort`, `reverse`, `sum`, `min`, `max`, `index_of`, `unique`, `zip`, `take`, `drop`, `any`, `all`; maps: `merge`, `invert`; `sort` by key and with a comparator | nothing |
+| L2 | **math**, folder `lib/math/` | `basic` (`abs`, `min`, `max`, `sign`, `clamp`, `pow`, `sqrt`, `cbrt`, `hypot`, integer division, `gcd`, `lcm`, `divmod`), `trig` (`sin` … `atan2`, degrees), `explog` (`exp`, `log`, `log2`, `log10`), `constants` (`pi`, `e`, `tau`), `numtheory` (`is_prime`, `factors`, `mod_pow`), `linear` (vectors, matrices: `dot`, `cross`, `transpose`, `det`, `inverse`, `solve`), `complex`, `rational`, `random` (seeded generator, `!` functions) | Real and Integer; `Rational` and `Complex` types are a question (0.6) |
+| L3 | **stats**, folder `lib/stats/` | `describe` (`mean`, `median`, `mode`, `variance`, `stddev`, `quantile`, `range`, `skew`, `kurtosis`), `correlate` (covariance, Pearson, Spearman), `regress` (least squares, linear and polynomial), `distrib` (normal, binomial, Poisson, uniform: pdf, cdf, inverse), `sample` (with and without replacement, bootstrap), `histogram`, `moving` (moving average, exponential) | L1, L2 |
+| L4 | **time and calendar**, `lib/time/` | `Date`, `Time`, `Duration`, zones, parse and format ISO 8601 and patterns, business days, holidays by calendar, periods (month end, quarter) | the types of S15.50 |
+| L5 | **text and encoding**, `lib/text/` | `regex` (find, replace, split, groups), `unicode` (normalize, case, width), `encode` (`base64`, `hex`, `url`), `slug`, `template` (D-209: `{var}` into a file text), `diff` | L1 |
+| L6 | **business**, `lib/finance/` | `money` (`Decimal` rounding modes: half-even, half-up; currency codes; allocation without losing a cent), `percent` (change, margin, markup), `interest` (simple and compound), `loan` (annuity, amortization schedule), `invest` (NPV, IRR, payback, future value), `tax` (brackets, VAT), `depreciation`, `invoice` (lines, totals, rounding by line or by total) | L1, L4, `Decimal` |
+| L7 | **engineering**, `lib/eng/` | `units` (a quantity is a number with a unit; conversion tables for length, mass, time, temperature, pressure, energy, power; checked arithmetic), `constants` (CODATA), `numeric` (root finding: bisection and Newton; integration: trapezoid and Simpson; differential equations: Euler and Runge-Kutta; interpolation), `signal` (convolution, a plain DFT), `geometry` (points, lines, polygons: area, distance, intersection), `electric` (Ohm, impedance) | L2, L3 |
+| L8 | **data**, `lib/data/` | `table` helpers over `Table` and records (`group_by`, `join`, `pivot`, `window`, `dedupe`, `fill`), `csvtools` (schema inference, profile), `quality` (null counts, ranges, duplicates), `stream` combinators (`map`, `filter`, `merge`, `window`, `parallel(n)`: level 5) | L1, L3, S15.50, S15.62 |
+| L9 | **ids and compression** | `uuid`, `hash` helpers, `gzip`, `zip` (S15.51) | S15.51 |
+
+Each library is a step of its own: it can be built, tested and used without the ones after it. L1 and L2 come first because the language cannot yet do `sort` or `sqrt`, and every later library needs them.
+
+### 0.4 Rules for every library
+
+1. **Page first.** `spec/library/<name>.md` (a folder library: `spec/library/<domain>/<module>.md`) lists the functions with signature, meaning, errors and one example. A function is on the page only when a test runs it.
+2. **Failing test first.** `test/levelN/` with `** spec:` and the `features` field; the level is the level of the language the library needs (`sort` and `sqrt` level 1 to 3, `Date` level 5).
+3. **Names.** Core functions on a value are methods (`xs.sort()`, `s.upper()`); a function of mathematics that takes plain numbers is a module function (`math.sqrt(x)`); the four functions already global (`floor`, `ceiling`, `round`, `type`) stay global; a function with a side effect or a possible different answer ends with `!` (`random.next!()`).
+4. **Numbers.** A function works on `Integer`, `Real` and `Decimal` unless its page says otherwise; money uses `Decimal` only and never converts to `Real`; the result type is on the page.
+5. **Errors.** A wrong argument is `$err_argument`, a result out of range `$err_overflow`, a division by zero `$err_divide`, a domain error (`sqrt(-1)`, `log(0)`) `$err_argument` with a message; no function returns `NaN` silently.
+6. **Documentation.** Every public member has a `**` comment, so `eve --doc` writes its page; the library README lists the modules; the manual page of the library is generated.
+7. **Performance.** A function on a hot path (sort, sum, statistics over a million values) is written in Zig; a benchmark with its Python twin is added for each data library (rule of section 7).
+8. **Compatibility.** A released function keeps its meaning (section 7, point 8).
+
+### 0.5 The recipe of one library step
+
+1. **Design (author reviews):** the page in `spec/library/`, with the list of functions and the open questions; the feature entry in `spec/features/`.
+2. **Tests:** failing tests for every function and every error.
+3. **Code:** Zig primitive or Eve module; the registry entry (section 3).
+4. **Docs and tags:** `**` comments, `@spec` and `@feature` tags, `eve --doc` output, the library README line.
+5. **Gate:** `zig build test`, `runtest.py all --both`, `bctest.py`, `evegen check`, `bmark.py --check` for a hot path, the Linux gate.
+6. **Close:** the feature status, the step marked in `phase-1-5-stabilize.md`, tech debt recorded.
+
+### 0.6 Questions for the author (Q-072 to Q-077)
+
+- **Q-072 Layout.** Is `lib/<domain>/` (a folder next to `sys/`, imported with `from lib/math use (trig)`) the shape you want for a large library? Or one flat module per file with a prefix (`math_trig.eve`)?
+- **Q-073 Where the basic functions live.** `abs`, `min`, `max`, `sqrt` are promised by the feature page as global names like `floor`. Keep a small global set (`abs`, `min`, `max`, `sqrt`, `pow`) and put the rest in `math.`; or only `math.`?
+- **Q-074 Types.** Does Eve get the types `Rational` and `Complex` (the lexical page already names `Rational`), and a `Quantity` type for units (L7)? Or are they classes of the libraries (`math.Complex`, `eng.Quantity`) written in Eve?
+- **Q-075 Random.** A seeded generator in Eve (`random.next!()`, reproducible in a test) or the operating system source? Proposal: both; the seed makes a test deterministic.
+- **Q-076 Order.** Is the order L1 core, L2 math, L3 stats, L4 time, L5 text, L6 business, L7 engineering, L8 data, L9 ids the one you want? Which library is the first one for you after L1 and L2?
+- **Q-077 Reference sources.** For statistics, finance and units, may the pages follow a published standard (ISO 80000 for units and quantities, ISO 4217 for currency codes, Excel/ODF names for the financial functions `NPV`, `IRR`, `PMT`), so a user finds the name they know?
+
 ## 1. Principles
 
 - **Performance first, purity second.** A function is written in Zig when it is on a hot path, calls C or the operating system, or needs a secret to stay out of Eve values. Eve is used where it is fast enough, or where writing it in Eve teaches us something about the language.
