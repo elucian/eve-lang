@@ -40,7 +40,7 @@ jobs:
           exe=temp/rel/bin/eve
           if [ "$RUNNER_OS" = "Windows" ]; then exe=temp/rel/bin/eve.exe; fi
           python script/runtest.py all --both --eve "$exe"
-          python script/bctest.py --eve "$exe"
+          python script/bctest.py --no-update --eve "$exe"
       - name: tags, features and links
         run: |
           python script/tagcheck.py

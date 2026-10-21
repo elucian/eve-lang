@@ -30,6 +30,7 @@ def main():
     ap.add_argument('--eve', default=os.path.join(ROOT, 'bin', 'eve.exe'))
     ap.add_argument('--update', action='store_true')
     ap.add_argument('--listings', action='store_true', help='only the golden listings, do not run the programs')
+    ap.add_argument('--no-update', action='store_true', help='do not update the tracking file of the bytecode tests (CI)')
     a = ap.parse_args()
     bad = 0
     miss = undocumented()
@@ -55,7 +56,7 @@ def main():
             print('FAIL  ' + rel + ('' if want is not None else '  (no golden listing: run with --update)'))
     print('bytecode listings: %s' % ('%d differ' % bad if bad else 'all equal'))
     if not a.update and not a.listings:
-        run = subprocess.run([sys.executable, os.path.join(ROOT, 'script', 'runtest.py'), 'bytecode', '--eve', os.path.abspath(a.eve), '-q'], cwd=ROOT)
+        run = subprocess.run([sys.executable, os.path.join(ROOT, 'script', 'runtest.py'), 'bytecode', '--eve', os.path.abspath(a.eve), '-q'] + (['--no-update'] if a.no_update else []), cwd=ROOT)
         bad += run.returncode != 0
     sys.exit(1 if bad else 0)
 

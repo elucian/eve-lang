@@ -60,7 +60,7 @@ run "ReleaseSafe build" zig build -Doptimize=ReleaseSafe -p temp/rel
 run "evedb build (DuckDB server)" bash -c "cd drivers/duckdb && zig build -Doptimize=ReleaseSafe -p ../../temp/rel"
 EXE=temp/rel/bin/eve
 run "conformance tests on both engines" python3 script/runtest.py all --both --eve "$EXE" -q
-run "bytecode tests" python3 script/bctest.py --eve "$EXE"
+run "bytecode tests" python3 script/bctest.py --no-update --eve "$EXE"
 run "tags" python3 script/tagcheck.py
 run "features and links" python3 generator/evegen.py check
 run "release notes" python3 script/relnotes.py --check
