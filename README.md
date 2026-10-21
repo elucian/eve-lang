@@ -44,7 +44,7 @@ We use 2 licenses:
 
 ### Eve components: Business Source License 1.1
 
-The code of every component in [`code/`](code/README.md) (the virtual machine, the compiler, the common part, the `eve` command, the user interfaces and the web portal) and of every database driver in [`drivers/`](drivers/README.md) is under one license, the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [code/LICENSE](code/LICENSE).
+The code of every component in [`code/`](design/components/README.md) (the virtual machine, the compiler, the common part, the `eve` command, the user interfaces and the web portal) and of every database driver in [`drivers/`](drivers/README.md) is under one license, the Business Source License 1.1. On 2 October 2030 it becomes Apache License 2.0. Full text: [code/LICENSE](code/LICENSE).
 
 ### Everything else: CC BY-NC-SA 4.0
 

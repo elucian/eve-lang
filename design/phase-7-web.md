@@ -2,7 +2,7 @@
 
 > Written 2026-10-20. Starts after `phase-6-machine.md` stage S6.6 (authentication) for the parts that serve users; the spike S7.0 and the database items may start earlier. Level 7 is the server side of the web: the Eve Web Portal (`code/evewp/`, design only), the browser runtime, and the DuckDB test database. The rule of a step, the sizes and the common gate are those of `phase-1-5-stabilize.md`; tests go in `test/level7/`.
 
-Where the work stands: two tests pass (`g01`, `g02`, evedb columnar); `drivers/duckdb/` is the DuckDB server (D-203, D-204); `project init` and `new` are done; everything else is design (`code/evewp/README.md`). The review (R2-L7-R01) asks for a go or no-go before any web work.
+Where the work stands: two tests pass (`g01`, `g02`, evedb columnar); `drivers/duckdb/` is the DuckDB server (D-203, D-204); `project init` and `new` are done; everything else is design (`design/components/evewp/README.md`). The review (R2-L7-R01) asks for a go or no-go before any web work.
 
 ## Stage 0 — Decide
 

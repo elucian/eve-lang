@@ -1,6 +1,8 @@
 # eveux: the Eve native workbench
 
-Status: **design with a first draft of the code**, 2026-10-18 (revision 2). `eveux` is the **graphical development environment of Eve**: a native desktop program written in Zig on the GUI library [dvui](https://github.com/david-vanderson/dvui), for Windows first and later Linux and macOS. It is an **independent tool**, like `evetx`: it is **not part of the language specification** (the machine API it uses is specified in `spec/library/machine.md`), and it has its own design folder, [design/](design/), with the drawings. The production web layer is `evewp` (`code/evewp/README.md`); the old browser Workbench design is kept in `design/archive/workbench-design.md`.
+Code: [`code/eveux/`](../../../code/eveux/). This folder holds the design, the notes and the user documents of the component; the code folder holds only code.
+
+Status: **design with a first draft of the code**, 2026-10-18 (revision 2). `eveux` is the **graphical development environment of Eve**: a native desktop program written in Zig on the GUI library [dvui](https://github.com/david-vanderson/dvui), for Windows first and later Linux and macOS. It is an **independent tool**, like `evetx`: it is **not part of the language specification** (the machine API it uses is specified in `spec/library/machine.md`), and it has its own design folder, [design/](design), with the drawings. The production web layer is `evewp` (`design/components/evewp/README.md`); the old browser Workbench design is kept in `design/archive/workbench-design.md`.
 
 ## 1. What eveux is
 
@@ -59,7 +61,7 @@ The window follows the layout of evetx with more panels. Drawings (`design/gen_s
 
 ![architecture](design/design-architecture.svg)
 
-The other drawings are in [design/](design/). Keys and menus: one table (`src/view/actions.zig`, to write) holds menu items, shortcuts and the command palette (Ctrl+Shift+P); F5 run, F6 check, F9 breakpoint, F10 over, F11 into, Shift+F11 out, Ctrl+B explorer, Ctrl+` console, Ctrl+Shift+F find in files.
+The other drawings are in [design/](design). Keys and menus: one table (`src/view/actions.zig`, to write) holds menu items, shortcuts and the command palette (Ctrl+Shift+P); F5 run, F6 check, F9 breakpoint, F10 over, F11 into, Shift+F11 out, Ctrl+B explorer, Ctrl+` console, Ctrl+Shift+F find in files.
 
 ## 4. Architecture
 
@@ -147,7 +149,7 @@ The terminal client already solved the parts that have no screen. Surveyed 2026-
 code/eveux/
   README.md  build.zig  build.zig.zon       this design; the build (dvui v0.5.0, module `ide`)
   design/
-    gen_svg.py  *.svg                       the drawings (python code/eveux/design/gen_svg.py)
+    gen_svg.py  *.svg                       the drawings (python design/components/eveux/design/gen_svg.py)
     notes/                                  design-ideas.md (the author), elaboration.md, dvui.md
   src/
     main.zig                                the dvui app: window, frame loop            (draft)

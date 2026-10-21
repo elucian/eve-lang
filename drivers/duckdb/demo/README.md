@@ -2,7 +2,7 @@
 
 evedb (DuckDB inside) answers as a PostgreSQL server on port 5432; the Eve machine of this folder connects to it with the Eve driver for PostgreSQL (`postgres://` in `eve.cfg`); a web page of the machine sends Eve scripts that read and write through that connection. Design: `../README.md` sections 5A, 5B and 9.
 
-The page stands in for the database tab of **eveux**, which is designed (`code/eveux/README.md`) and not built: eveux will be a project written in Eve served by the machine, and this page is the smallest such page, one HTML file that calls the machine's `vm.run`.
+The page stands in for the database tab of **eveux**, which is designed (`design/components/eveux/README.md`) and not built: eveux will be a project written in Eve served by the machine, and this page is the smallest such page, one HTML file that calls the machine's `vm.run`.
 
 ## Run it
 

@@ -1,8 +1,8 @@
 # eveux, second design: a native GUI in Zig with dvui
 
-> **Update 2026-10-18.** This analysis became the base of `code/eveux/README.md`: the author moved the browser Workbench to **evewp** (the Eve Web Portal, a production web server and a web framework in Eve, `code/evewp/README.md`) and made `eveux` the native Zig client. So the conflict with D-154 of section 7 is resolved by the move: the final test of Eve is evewp (option 2a for eveux, with the language test kept in evewp). The comparison table and the spike (sections 6, 9) stay valid; the facts of section 2 are corrected below: the source of v0.5.0 has a tree, tabs, docking and a completion widget (found by reading `src/widgets`), but no undo and redo in the text entry. Also found: fetching dvui needs symbolic links on Windows (Developer Mode), see `code/eveux/README.md` section 12.
+> **Update 2026-10-18.** This analysis became the base of `design/components/eveux/README.md`: the author moved the browser Workbench to **evewp** (the Eve Web Portal, a production web server and a web framework in Eve, `design/components/evewp/README.md`) and made `eveux` the native Zig client. So the conflict with D-154 of section 7 is resolved by the move: the final test of Eve is evewp (option 2a for eveux, with the language test kept in evewp). The comparison table and the spike (sections 6, 9) stay valid; the facts of section 2 are corrected below: the source of v0.5.0 has a tree, tabs, docking and a completion widget (found by reading `src/widgets`), but no undo and redo in the text entry. Also found: fetching dvui needs symbolic links on Windows (Developer Mode), see `design/components/eveux/README.md` section 12.
 
-Status: **proposal for comparison**, 2026-10-18. It is the second design of eveux, next to the first one (`code/eveux/README.md` with `code/eveux/design/notes/elaboration.md`: a browser Workbench written in Eve, D-154). **Nothing in `spec/`, the tutorial, the plan or the code was changed for it.** The facts about dvui come from its public repository (links at the end); what I could not confirm from there is marked *to verify* and is the content of the spike in section 9.
+Status: **proposal for comparison**, 2026-10-18. It is the second design of eveux, next to the first one (`design/components/eveux/README.md` with `design/components/eveux/design/notes/elaboration.md`: a browser Workbench written in Eve, D-154). **Nothing in `spec/`, the tutorial, the plan or the code was changed for it.** The facts about dvui come from its public repository (links at the end); what I could not confirm from there is marked *to verify* and is the content of the spike in section 9.
 
 ## 1. The idea
 
@@ -56,7 +56,7 @@ What does not stay: D-154 says eveux is written in Eve as the final test of the 
 
 ## 4. Screen and widgets
 
-The screen of `code/eveux/README.md` §5 (menu bar, explorer, tabbed editor, bottom panel, debug side bar, status bar) carries over. What dvui gives and what must be built:
+The screen of `design/components/eveux/README.md` §5 (menu bar, explorer, tabbed editor, bottom panel, debug side bar, status bar) carries over. What dvui gives and what must be built:
 
 | Part | dvui | To build |
 |---|---|---|

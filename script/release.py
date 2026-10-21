@@ -6,7 +6,7 @@ Usage: python script/release.py [patch|minor|major|X.Y.Z] [--dry-run]
 The current version is read from the root build.zig.zon (`.version`), the one place of the version (D-167). The default bump is
 patch. These labels are rewritten, keeping each file's line endings:
   build.zig.zon           .version = "X.Y.Z",   (shown by `eve -v`)
-  code/evevm/README.md         Version: **X.Y.Z**
+  design/components/evevm/README.md         Version: **X.Y.Z**
   README.md               Version <strong>X.Y.Z</strong>
 Then it runs `zig build -p .` and `zig build test` in the root. It does not commit or tag.
 This is step 2 of a release; the other steps (tests, benchmarks, feature map, release notes with
@@ -22,7 +22,7 @@ V = r"\d+\.\d+\.\d+"
 # (file, regex with the version in group 2, replacement template with {} for the version)
 LABELS = [
     ("build.zig.zon", rf'(\.version = ")({V})(")'),
-    ("code/evevm/README.md", rf"(Version: \*\*)({V})(\*\*)"),
+    ("design/components/evevm/README.md", rf"(Version: \*\*)({V})(\*\*)"),
     ("README.md", rf"(Version <strong>)({V})(</strong>)"),
 ]
 

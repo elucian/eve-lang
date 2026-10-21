@@ -28,7 +28,7 @@ python generator/evegen.py status [level]                features and tests in a
 - `test/<suite>/<suite>.json` for the levels and the special suites (`smoke`, `bytecode`, `scaffold`): written by `script/runtest.py`. A test names the features it checks in `features`. The schema is `spec/schema/tests.schema.json`.
 - `spec/lexical/*.json`: keywords, operators and delimiters.
 - `test/bmark/history.json` and the `** perf:` lines of `test/bmark/*.eve`: the benchmarks.
-- `code/<component>/doc/` and `drivers/<name>/doc/`: the user documents of the components, copied into the manual.
+- `design/components/<component>/doc/` and `drivers/<name>/doc/`: the user documents of the components, copied into the manual.
 
 ## What it writes
 

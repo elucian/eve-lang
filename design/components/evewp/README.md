@@ -1,6 +1,8 @@
 # evewp: the Eve Web Portal
 
-Status: **design for review**, first draft 2026-10-18. Nothing is built. It replaces the browser Workbench as the level 7 project (the old design is kept in workbench-design.md); the idea notes of the author are in [wp-design-ideas.md](wp-design-ideas.md). The development tool is now the native `eveux` (see `code/eveux/README.md`).
+There is no code yet: `code/evewp/` does not exist. This folder holds the design.
+
+Status: **design for review**, first draft 2026-10-18. Nothing is built. It replaces the browser Workbench as the level 7 project (the old design is kept in workbench-design.md); the idea notes of the author are in [wp-design-ideas.md](wp-design-ideas.md). The development tool is now the native `eveux` (see `design/components/eveux/README.md`).
 
 ## 1. What evewp is
 
@@ -27,7 +29,7 @@ What evewp is **not**: not an editor or an IDE (that is `eveux`, `evetx`); not a
 | `eveux` | Zig (dvui) | native graphical client of the machine (development) | developer's computer |
 | **`evewp`** | **Eve** | **production edge, host and monitor; the web framework** | **servers** |
 
-Development flows left to right: edit and test with `eveux` or `evetx`, deploy (`code/eveux/design/notes/elaboration.md` §5), and the application runs under `evewp`. The deploy target of that design is an application folder of evewp.
+Development flows left to right: edit and test with `eveux` or `evetx`, deploy (`design/components/eveux/design/notes/elaboration.md` §5), and the application runs under `evewp`. The deploy target of that design is an application folder of evewp.
 
 ## 3. Architecture
 
@@ -105,7 +107,7 @@ The library work already done covers the base: `net`, `http`, `route`, `service`
 
 **Life of an application.** `deployed` → `starting` → `healthy` → (`degraded` | `stopped` | `crashed`) → `restarting`. The host starts the machine, waits for the health path, switches the edge to it, and only then stops the old process (the old version keeps answering the requests it has). A crash restarts with a growing delay and gives up after a number of failures (`failed`, an alert). `stop`, `start`, `restart` and `rollback` are commands of the dashboard and of the machine API.
 
-**Deploy.** `eveux` or `eve --upload` sends a bundle with a manifest (`code/eveux/design/notes/elaboration.md` §5); evewp checks it with the compiler under the rules of the application, writes `versions/N`, and activates it atomically (`current`). A rollback activates an older number, with no upload. Database migrations are not run by a deploy; the plan lists them.
+**Deploy.** `eveux` or `eve --upload` sends a bundle with a manifest (`design/components/eveux/design/notes/elaboration.md` §5); evewp checks it with the compiler under the rules of the application, writes `versions/N`, and activates it atomically (`current`). A rollback activates an older number, with no upload. Database migrations are not run by a deploy; the plan lists them.
 
 ## 6. Monitoring
 

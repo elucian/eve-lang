@@ -1,8 +1,8 @@
 # eveux: elaboration of the design ideas
 
-> **Update 2026-10-18.** Written for the browser Workbench. Since then eveux is the **native** client (`code/eveux/README.md`) and the web side is **evewp** (`code/evewp/README.md`). The server side of this file (source control, deploy with manifest and versions, the machine messages of section 6, the backends of section 9, the silent rule) stands unchanged. Where it says "browser", "WebSocket to the page" or "one-time key", read: the native window on the stdio door.
+> **Update 2026-10-18.** Written for the browser Workbench. Since then eveux is the **native** client (`design/components/eveux/README.md`) and the web side is **evewp** (`design/components/evewp/README.md`). The server side of this file (source control, deploy with manifest and versions, the machine messages of section 6, the backends of section 9, the silent rule) stands unchanged. Where it says "browser", "WebSocket to the page" or "one-time key", read: the native window on the stdio door.
 
-Status: **proposal for confirmation**, 2026-10-18, revised the same day after the author's corrections of `design-ideas.md` (eve is the server; eveux and evetx are the clients; evedb is the backend of the server). It elaborates `code/eveux/design-ideas.md` and checks every idea against the design that exists (`code/eveux/README.md`, `design/design-service.md` §7, §15 to §17, `spec/library/machine.md`, `design/design-packages.md`, D-154, D-155, D-160, D-162 to D-165, D-171, D-172, D-185 to D-189). **Nothing in `spec/`, the tutorial or the code was changed for it.** After the answers of section 10, the accepted parts move into `code/eveux/README.md` and the plan.
+Status: **proposal for confirmation**, 2026-10-18, revised the same day after the author's corrections of `design-ideas.md` (eve is the server; eveux and evetx are the clients; evedb is the backend of the server). It elaborates `design/components/eveux/design-ideas.md` and checks every idea against the design that exists (`design/components/eveux/README.md`, `design/design-service.md` §7, §15 to §17, `spec/library/machine.md`, `design/design-packages.md`, D-154, D-155, D-160, D-162 to D-165, D-171, D-172, D-185 to D-189). **Nothing in `spec/`, the tutorial or the code was changed for it.** After the answers of section 10, the accepted parts move into `design/components/eveux/README.md` and the plan.
 
 ## 1. The ideas, in one paragraph
 
@@ -156,14 +156,14 @@ What option A adds to the plan (new, small, not started): `evedb` gets a **manag
 
 ## 10. What would change when confirmed (not done)
 
-- `code/eveux/README.md`: add *Source control* (§4 here) and *Deployment* (§5) sections; rewrite §4 "Architecture" as the two-tier picture with the local machine named; add the silent rule to §6.1; add the new messages of §6 to §4.1; add SSH as a kind of connection in §6; mark the questions answered.
+- `design/components/eveux/README.md`: add *Source control* (§4 here) and *Deployment* (§5) sections; rewrite §4 "Architecture" as the two-tier picture with the local machine named; add the silent rule to §6.1; add the new messages of §6 to §4.1; add SSH as a kind of connection in §6; mark the questions answered.
 - `spec/features/`: new features **F-TLS-31 eveux source control** and **F-NET-10 deploy (plan, apply, versions, rollback)**; the messages `fs.*`, `job.*`, `log.*`, `db.tree`, `db.describe`, `db.sample` added to F-NET-08.
 - `design/design-service.md` §7 and §16: the deploy steps (manifest, diff, staging, check, activate, versions) replace the one line "Deploy".
 - `spec/library/machine.md`: the new methods, when they are built (level 6 for `deploy.*`, `fs.*`, `log.*`, `db.tree`; level 7 for the rest).
 - `design/design-libraries.md`: `fs` watch/stat/glob and `os.run!` streaming and time-out move from debt to the milestones M4/M6.
 - Tests: `test/level6` (deploy design/apply between two machines on localhost, `fs.*`, `log.tail`), `test/level7` (the Git panel against a temporary repository).
 - `spec/features/` and `drivers/duckdb/README.md`: F-DAT-12 gets the managed mode (option A of section 9); `design/design-packages.md` (D-164) names the supervisor of the database part.
-- `code/eveux/README.md` section 7 (explorer): label each connection with its engine (SQLite, evedb).
+- `design/components/eveux/README.md` section 7 (explorer): label each connection with its engine (SQLite, evedb).
 
 ## 11. Questions for the author
 

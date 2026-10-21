@@ -1,6 +1,6 @@
-"""Writes the SVG drawings of eveux into code/eveux/design/ (design for review, 2026-10-18).
+"""Writes the SVG drawings of eveux into design/components/eveux/design/ (design for review, 2026-10-18).
 
-Run from the repository root:  python code/eveux/design/gen_svg.py
+Run from the repository root:  python design/components/eveux/design/gen_svg.py
 The drawings are of a native window (dvui), 1400 x 860 pixels; the colors are those of the evetx drawings so the two
 tools share one theme. Change a drawing here and run the script again, or edit an SVG by hand.
 """
@@ -114,7 +114,7 @@ class Svg:
                 '<path d="M0,0 L8,4 L0,8 z" fill="#8fa3b8"/></marker>'
                 '<filter id="sh" x="-5%" y="-5%" width="110%" height="115%">'
                 '<feDropShadow dx="3" dy="4" stdDeviation="3" flood-opacity="0.5"/></filter></defs>\n')
-        open(f'code/eveux/design/{name}', 'w', encoding='utf-8', newline='').write(head + '\n'.join(self.p) + '\n</svg>\n')
+        open(f'design/components/eveux/design/{name}', 'w', encoding='utf-8', newline='').write(head + '\n'.join(self.p) + '\n</svg>\n')
 
 
 # ------------------------------------------------------------------ the common window
@@ -872,4 +872,4 @@ def arch_screen():
 if __name__ == '__main__':
     main_screen(); debug_screen(); md_screen(); html_screen(); image_screen(); media_screen(); db_screen(); sql_screen()
     structure_screen(); git_screen(); deploy_screen(); new_screen(); menu_screen(); dialogs_screen(); arch_screen(); toolbar_screen()
-    print('16 drawings written to code/eveux/design/')
+    print('16 drawings written to design/components/eveux/design/')

@@ -11,7 +11,7 @@ Notes of the author kept from the review list of level 6:
 
 ## Q-050 evetx, a terminal UI over libvaxis for the projects of many machines (2026-10-13, open)
 
-Author request (2026-10-13): "create evetx a full TUI using zig binding to existing library libvaxis. This will enable project management and schedule management for one or more remote eve machines … a full-screen TUI using zig binding to existing library libvaxis. This will enable project management and schedule management for one or more remote eve machines … prepare the plan implementation for level6". Changed by the author the same day: "Move schedule to eveux. Eve ux manage runs, evetx can run for debug purpose and test." Design: `code/evetx/README.md`; plan: `design/design-packages.md` revision 6, step B6. Proposals, for the author:
+Author request (2026-10-13): "create evetx a full TUI using zig binding to existing library libvaxis. This will enable project management and schedule management for one or more remote eve machines … a full-screen TUI using zig binding to existing library libvaxis. This will enable project management and schedule management for one or more remote eve machines … prepare the plan implementation for level6". Changed by the author the same day: "Move schedule to eveux. Eve ux manage runs, evetx can run for debug purpose and test." Design: `design/components/evetx/README.md`; plan: `design/design-packages.md` revision 6, step B6. Proposals, for the author:
 
 - (1) libvaxis is already a Zig library, so there is no binding to write: it is a package dependency of the module `evetx` only;
 
@@ -53,7 +53,7 @@ Ok, eveux and evetx will have user login dialog. eve will have -u --user, and -a
 
 Proposals and questions for the author, from the design of D-173.
 
-- **(a) Size.** An editor, a debugger and a database browser are three programs in one. Is all of it level 6 (version 0.0.6) with the split, the bytecode and the machine API, or does the first release of evetx have the file tree, the editor, run, the bottom panel, the machines and the upload (steps T0 to T5) and the debugger and the database tabs (T6, T7) follow in the next version? Proposal: order the work as in `code/evetx/README.md` §8 so that each step is usable alone, and decide at T5 whether T6 and T7 stay in 0.0.6.
+- **(a) Size.** An editor, a debugger and a database browser are three programs in one. Is all of it level 6 (version 0.0.6) with the split, the bytecode and the machine API, or does the first release of evetx have the file tree, the editor, run, the bottom panel, the machines and the upload (steps T0 to T5) and the debugger and the database tabs (T6, T7) follow in the next version? Proposal: order the work as in `design/components/evetx/README.md` §8 so that each step is usable alone, and decide at T5 whether T6 and T7 stay in 0.0.6.
 
 - **(b) The debugger of the machine** (F-TLS-04) is open: today `halt` breakpoints and `vm.suspend` and `vm.resume` exist, nothing sets a breakpoint by file and line, steps into or out, or evaluates in the paused frame. Proposal: add to the machine API, after B2: set and clear a breakpoint by file and line, step into, step out, continue (the `vm.resume`), the paused place, evaluation in the paused frame, and the two streams of a run (stdout, stderr); the names are the author's to choose. These are also what `eveux` needs (F-TLS-22), so one API serves both.
 

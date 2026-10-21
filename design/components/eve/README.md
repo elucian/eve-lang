@@ -1,5 +1,7 @@
 # eve: the command
 
+Code: [`code/eve/`](../../../code/eve/). This folder holds the design, the notes and the user documents of the component; the code folder holds only code.
+
 The only place that imports every module (design/design-packages.md §3). Nothing else lives here.
 
 | File | Holds |

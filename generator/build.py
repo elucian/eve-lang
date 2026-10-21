@@ -51,7 +51,7 @@ def pages(root):
 def copies(root):
     """-> [(source folder, relative target in the manual)]: the user documents of each component and driver."""
     found = []
-    for base, prefix in ((root / "code", ""), (root / "drivers", "drivers/")):
+    for base, prefix in ((root / "design" / "components", ""), (root / "drivers", "drivers/")):
         if base.is_dir():
             for d in sorted(base.iterdir()):
                 if (d / "doc").is_dir():

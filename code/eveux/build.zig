@@ -1,5 +1,5 @@
 //! @eve-module eveux build: the native workbench, a Zig program on dvui (see README.md, design/)
-//! @spec code/eveux/README.md#7-the-code
+//! @spec design/components/eveux/README.md#7-the-code
 //! @decision D-193
 //! Build from code/eveux/: `zig build -p ../..` installs `bin/eveux.exe`; `-Dbackend=dx11|sdl3` chooses the window backend.
 const std = @import("std");

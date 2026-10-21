@@ -46,7 +46,7 @@ build_part() {
     duckdb | evedb) stop_eve; (cd drivers/duckdb && zig build -p ../..) ;;
     evetx) stop_eve; (cd code/evetx && zig build -p ../..) ;;
     eveux) stop_eve; (cd code/eveux && zig build -p ../..) ;;
-    evewp) echo "build evewp: there is no build yet, evewp is a design (code/evewp/README.md)" >&2; return 1 ;;
+    evewp) echo "build evewp: there is no build yet, evewp is a design (design/components/evewp/README.md)" >&2; return 1 ;;
     manual) build_manual ;;
     *) echo "build: unknown part '$1' (eve evevm evecp duckdb evetx eveux all manual)" >&2; return 1 ;;
   esac

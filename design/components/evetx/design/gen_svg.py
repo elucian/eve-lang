@@ -1,6 +1,6 @@
-"""Writes the SVG drawings of evetx into code/evetx/design/ (design for review, 2026-10-13, revision 3).
+"""Writes the SVG drawings of evetx into design/components/evetx/design/ (design for review, 2026-10-13, revision 3).
 
-Run from the repository root:  python code/evetx/design/gen_svg.py
+Run from the repository root:  python design/components/evetx/design/gen_svg.py
 """
 import re
 import calendar
@@ -322,7 +322,7 @@ def main_screen():
            find='total', replace='sum', find_hot=False, tree_find='sal', tree_hot=True)
     editor_code(s, CODE, bps=(7,))
     console(s, CONSOLE_MAIN, 'run sales_load.eve', note='↑ 24 lines')
-    s.save('code/evetx/design/design.svg')
+    s.save('design/components/evetx/design/design.svg')
 
 
 # ------------------------------------------------------------------ 2. paused at a breakpoint, Watch
@@ -346,7 +346,7 @@ def debug_screen():
         s.text(bx + 620, y, c, DIM)
     s.text(bx + 10, by + 48 + 5 * 20 + 6, '+ add expression (Enter)      Del removes the selected one', DIM, size=12)
     s.text(bx + 10, by + bh - 10, 'values come from vm.inspect of the paused session (F-TLS-04, vm.suspend / vm.resume)', '#4b5866', size=11)
-    s.save('code/evetx/design/design-debug.svg')
+    s.save('design/components/evetx/design/design-debug.svg')
 
 
 # ------------------------------------------------------------------ 3. Breaks tab
@@ -373,7 +373,7 @@ def breaks_screen():
     s.button(bx + 130, by + bh - 40, 130, 'Remove all', 'plain')
     s.button(bx + 270, by + bh - 40, 110, 'Go to', 'hot')
     s.text(bx + 400, by + bh - 22, 'Space switches on or off · Del removes · double click / Enter jumps', DIM, size=12)
-    s.save('code/evetx/design/design-breaks.svg')
+    s.save('design/components/evetx/design/design-breaks.svg')
 
 
 # ------------------------------------------------------------------ 4. database: table list
@@ -401,7 +401,7 @@ def db_tables_screen():
     s.button(bx + 416, by + bh - 44, 150, 'N  New table…', 'plain')
     s.text(bx + 590, by + bh - 26, 'Search filters tables. Structure: a dialog.', DIM, size=12)
     console(s, [('eve:> db describe orders', None), ('orders: 9 columns, 1,204 rows, primary key id', None)], '')
-    s.save('code/evetx/design/design-db.svg')
+    s.save('design/components/evetx/design/design-db.svg')
 
 
 # ------------------------------------------------------------------ 5. table data tab
@@ -443,7 +443,7 @@ def db_data_screen():
     s.text(bx + 12, by + bh - 10, 'search: every column · * stands for any text · a number matches by number (id, quantity, amount) · PgUp/PgDn page · s sort', DIM, size=12)
     goto_popup(s, 'Go to record', '1050', 'Enter: record number or id; Esc closes')
     console(s, [('eve:> db query "select * from orders where status like \'op%n\'"', None), ('3 rows', None)], '')
-    s.save('code/evetx/design/design-data.svg')
+    s.save('design/components/evetx/design/design-data.svg')
 
 
 def goto_screen():
@@ -453,7 +453,7 @@ def goto_screen():
     editor_code(s, CODE, bps=(7,), hot=11)
     goto_popup(s, 'Go to line', '11', 'Enter jumps to the line (1 to 14); Esc closes')
     console(s, CONSOLE_MAIN[:6], '')
-    s.save('code/evetx/design/design-goto.svg')
+    s.save('design/components/evetx/design/design-goto.svg')
 
 
 def filecard_screen():
@@ -475,7 +475,7 @@ def filecard_screen():
     for i, t in enumerate(('logo.png · PNG · 48 KB', 'intro.mp4 · MP4 · 12 MB', 'a.zip · archive · 2 MB')):
         s.text(bx + 716, by + 72 + i * 18, t, DIM, size=12)
     console(s, CONSOLE_MAIN[:4], '')
-    s.save('code/evetx/design/design-filecard.svg')
+    s.save('design/components/evetx/design/design-filecard.svg')
 
 
 # ------------------------------------------------------------------ 6. structure grid (type list open) and 7. calendar
@@ -548,7 +548,7 @@ def structure_screen():
         s.text(cx + 10, y + 16, t, '#ffffff' if t.startswith('DECIMAL') else TXT)
     s.text(cx + 204, cy + 110, 'The list is the types of the engine of this file', DIM, size=11)
     s.text(cx + 204, cy + 124, '(SQLite or DuckDB); ↑↓ Enter chooses, Esc closes.', DIM, size=11)
-    s.save('code/evetx/design/design-structure.svg')
+    s.save('design/components/evetx/design/design-structure.svg')
 
 
 def calendar_screen():
@@ -578,7 +578,7 @@ def calendar_screen():
     s.field(px + 60, py + 216, 100, '09:30:00', 22)
     s.button(px + 14, py + 250, 70, 'Today', 'plain', 24); s.button(px + 92, py + 250, 60, 'Now', 'plain', 24)
     s.button(px + 160, py + 250, 60, 'Clear', 'plain', 24); s.button(px + 228, py + 250, 60, 'OK', 'ok', 24)
-    s.save('code/evetx/design/design-calendar.svg')
+    s.save('design/components/evetx/design/design-calendar.svg')
 
 
 # ------------------------------------------------------------------ 8. main menu
@@ -620,7 +620,7 @@ def menu_screen():
             s.text(x0 + 24, y + 15, label, '#ffffff' if label == 'Save As…' else TXT)
             s.text(x0 + w - 14, y + 15, key, '#ffffff' if label == 'Save As…' else DIM, anchor='end')
             y += 20
-    s.save('code/evetx/design/design-menu.svg')
+    s.save('design/components/evetx/design/design-menu.svg')
 
 
 # ------------------------------------------------------------------ 9. help dialog
@@ -647,7 +647,7 @@ def help_screen():
                 s.text(col + 6, y + 26 + i * 18, it, TXT, size=12)
             y += 26 + len(items) * 18 + 22
     s.text(dx + 20, dy + dh - 16, 'Where the terminal cannot tell a key (Ctrl+Enter, Ctrl+/), F10 opens the menu and F12 the help.', DIM, size=11)
-    s.save('code/evetx/design/design-help.svg')
+    s.save('design/components/evetx/design/design-help.svg')
 
 
 # ------------------------------------------------------------------ 10. dialogs and data flow
@@ -709,10 +709,10 @@ def dialogs():
                            'Ctrl+←/→ next machine', 'Ctrl+↑/↓ command history', 'F5 run · F8 continue · F9 breakpoint',
                            'F11 step into · Shift+F11 step out', 'Shift+F5 stop · Ctrl+O project · Ctrl+U upload')):
         s.text(914, 506 + i * 18, t, TXT, size=12)
-    s.save('code/evetx/design/design-dialogs.svg')
+    s.save('design/components/evetx/design/design-dialogs.svg')
 
 
 if __name__ == '__main__':
     main_screen(); debug_screen(); breaks_screen(); db_tables_screen(); db_data_screen()
     structure_screen(); calendar_screen(); menu_screen(); help_screen(); goto_screen(); filecard_screen(); dialogs()
-    print('12 drawings written to code/evetx/design/')
+    print('12 drawings written to design/components/evetx/design/')

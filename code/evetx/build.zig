@@ -31,11 +31,11 @@ pub fn build(b: *std.Build) void {
         }),
     });
     // @eve-impl the texts of the help windows (Shortcuts, Manual, Tutorial), embedded as `help_<name>`
-    // @see code/evetx/doc/shortcuts.txt
-    // the texts live in code/evetx/doc/ (the doc of the component); script/genmanual.py copies that folder into manual/evetx/
+    // @see design/components/evetx/doc/shortcuts.txt
+    // the texts live in design/components/evetx/doc/ (the doc of the component); generator/evegen.py copies that folder into manual/evetx/
     for ([_][]const u8{ "shortcuts", "manual", "tutorial" }) |name| {
         exe.root_module.addAnonymousImport(b.fmt("help_{s}", .{name}), .{
-            .root_source_file = b.path(b.fmt("doc/{s}.txt", .{name})),
+            .root_source_file = b.path(b.fmt("../../design/components/evetx/doc/{s}.txt", .{name})),
         });
     }
     // the version of Eve is written once, in the root build.zig.zon; the About dialog shows it

@@ -1,5 +1,7 @@
 # evecp: the compiler
 
+Code: [`code/evecp/`](../../../code/evecp/). This folder holds the design, the notes and the user documents of the component; the code folder holds only code.
+
 Reads source text and gives a checked syntax tree (design/design-packages.md §3). It imports `evecm` only: it knows nothing of the interpreter or the databases.
 
 | File | Holds |

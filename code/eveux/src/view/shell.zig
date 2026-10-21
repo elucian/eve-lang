@@ -1,5 +1,5 @@
 //! @eve-module shell: the layout of the window: menu bar, explorer, tabs, editor area, side bar, bottom panel, status bar
-//! @spec code/eveux/README.md#3-the-screen
+//! @spec design/components/eveux/README.md#3-the-screen
 //! @feature F-TLS-19
 //! @decision D-193
 //! DRAFT, not compiled yet (dvui cannot be fetched on the author's Windows without Developer Mode, README section 12). The

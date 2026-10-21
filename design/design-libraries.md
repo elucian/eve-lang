@@ -1,6 +1,6 @@
 # Plan: the system library and the standard library (level 6)
 
-Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of level 6. Nothing here is decided: the choices that need the author are collected in section 9 (Q-064). Related: `tutorial/syslib.html`, `lib/README.md`, D-053, D-132, D-145, Q-024 (`design/decision/level5.md`), `spec/library/`, `code/eveux/README.md` §2 and §4, `design/design-service.md`.
+Status: **answered by the author 2026-10-18 (D-189)**; M5 and S9 moved out of level 6. Nothing here is decided: the choices that need the author are collected in section 9 (Q-064). Related: `tutorial/syslib.html`, `lib/README.md`, D-053, D-132, D-145, Q-024 (`design/decision/level5.md`), `spec/library/`, `design/components/eveux/README.md` §2 and §4, `design/design-service.md`.
 
 ## 1. Principles
 

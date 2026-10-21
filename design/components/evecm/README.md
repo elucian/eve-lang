@@ -1,5 +1,7 @@
 # evecm: the common part
 
+Code: [`code/evecm/`](../../../code/evecm/). This folder holds the design, the notes and the user documents of the component; the code folder holds only code.
+
 The leaf of the module graph (design/design-packages.md §3). It imports `std` and the build options only, and it holds Zig code only, never data. Every other part uses it.
 
 | File | Holds |

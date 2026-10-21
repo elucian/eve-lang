@@ -1,5 +1,5 @@
 //! @eve-module lang: the language of a tab and the colored spans of a line
-//! @spec code/eveux/README.md#7-the-code
+//! @spec design/components/eveux/README.md#7-the-code
 //! @feature F-TLS-19
 //! @decision D-193
 //! @tests zig test --dep ide -Mroot=src/editor/lang.zig -Mide=../evecm/src/ide.zig (from code/eveux/)

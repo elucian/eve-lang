@@ -1,5 +1,5 @@
 //! @eve-module app: the state of the window: the project, the open tabs, the machine, the settings
-//! @spec code/eveux/README.md#7-the-code
+//! @spec design/components/eveux/README.md#7-the-code
 //! @feature F-TLS-19
 //! @decision D-193
 //! Plain data and small operations; nothing here draws. The frame function reads `App` and the views draw from it.

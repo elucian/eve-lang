@@ -18,7 +18,7 @@ import json, re, sys, glob, os
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 PLAN = os.path.join(ROOT, 'design')
 DEC = os.path.join(PLAN, 'decision')
-EXTRA = [os.path.join(os.path.dirname(PLAN), 'code', 'evetx', 'design', 'questions.md')]  # questions kept with a component
+EXTRA = [os.path.join(os.path.dirname(PLAN), 'design', 'components', 'evetx', 'design', 'questions.md')]  # questions kept with a component
 HEAD = re.compile(r'^## ((?:D|Q)-\d+)\b(.*)$')
 MARK_BEGIN, MARK_END = '<!-- index:begin -->', '<!-- index:end -->'
 WITH_INDEX = False  # the active files hold only what is current; `list` prints every id

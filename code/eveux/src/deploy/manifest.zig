@@ -1,5 +1,5 @@
 //! @eve-module manifest: the list of files of a bundle and the diff against another list
-//! @spec code/eveux/design/notes/elaboration.md#5-deployment
+//! @spec design/components/eveux/design/notes/elaboration.md#5-deployment
 //! @feature F-NET-10
 //! @decision D-193
 //! @tests zig test src/deploy/manifest.zig (from code/eveux/)

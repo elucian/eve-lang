@@ -47,8 +47,8 @@ The common gate: `zig build test` in the root and in the parts the stage touches
 - **Gate:** `zig test` of the logic files and `zig build -p ../..` in `code/eveux` (needs Developer Mode, TD-31); the common gate.
 
 ### S8.10 Documents and tidy-up `[ ]`
-Done so far: `manual/drivers/duckdb/` (from `drivers/duckdb/doc/`), `drivers/README.md`, `code/README.md`.
-- **Missing:** **a manual page for each client driver** (D-200): `sqlite://`, `postgres://`, `evedb://`, in `code/evevm/doc/drivers/` (the folder does not exist yet), copied to `manual/drivers/` by `generator/evegen.py`; `design/design-packages.md` (module table, arrows, the note on D-163); the dist README template (the programs in `bin/`); Q-068 closed into a decision.
+Done so far: `manual/drivers/duckdb/` (from `drivers/duckdb/doc/`), `drivers/README.md`, `design/components/README.md`.
+- **Missing:** **a manual page for each client driver** (D-200): `sqlite://`, `postgres://`, `evedb://`, in `design/components/evevm/doc/drivers/` (the folder does not exist yet), copied to `manual/drivers/` by `generator/evegen.py`; `design/design-packages.md` (module table, arrows, the note on D-163); the dist README template (the programs in `bin/`); Q-068 closed into a decision.
 - **Gate:** `python script/mdlinks.py check manual`, `python generator/evegen.py check` and `python script/relnotes.py --check` are clean; `./run.sh dist`; the common gate.
 
 ### S8.10a DuckDB embedded in `evedb.exe` `[ ]`

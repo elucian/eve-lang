@@ -1,5 +1,5 @@
 //! @eve-module main: entry of eveux; one window, one frame function
-//! @spec code/eveux/README.md
+//! @spec design/components/eveux/README.md
 //! @feature F-TLS-19
 //! @decision D-193
 const std = @import("std");

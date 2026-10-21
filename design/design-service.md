@@ -481,7 +481,7 @@ eve:> select local
 - **Ctrl+Up, Ctrl+Down** show the previous and the next command issued, to edit and send again.
 - **`help`** shows the commands that make sense for the selected machine: on a remote one, not the local file and check commands.
 - **Tab** on a remote machine completes the stored procedures and the code on the server (D-172 point 7), not the local files.
-- The REPL is started by `eve`; the terminal UI by `eve -tx` (screen: `code/evetx/design/design.svg`), the web UI by `eve -ux` (D-172).
+- The REPL is started by `eve`; the terminal UI by `eve -tx` (screen: `design/components/evetx/design/design.svg`), the web UI by `eve -ux` (D-172).
 - A program that was not uploaded cannot be run on a remote machine.
 
 ## 17. Service mode: `eve -s` (D-185, 2026-10-17)

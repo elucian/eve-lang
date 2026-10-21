@@ -4,7 +4,7 @@
 //! @decision D-165, D-193
 //! The transport is `ide.link.Link` (code/evecm/src/ide/link.zig, as in evetx): a child `eve --stdio`, one JSON message a line, `vm.output` notifications.
 //! This file only holds names, so a message is searched in one place; the methods marked (new) are the proposals of
-//! code/eveux/design/notes/elaboration.md section 6 and do not exist in the machine yet.
+//! design/components/eveux/design/notes/elaboration.md section 6 and do not exist in the machine yet.
 pub const vm = struct {
     pub const ping = "vm.ping";
     pub const stat = "vm.stat";

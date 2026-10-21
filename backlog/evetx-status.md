@@ -1,6 +1,6 @@
 # evetx: status for level 6
 
-The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29). Marks: `[x]` done, `[ ]` to do, `[-]` dropped. The features in full are in [README.md](../code/evetx/README.md) §11. Last update: 2026-10-16.
+The state of the work on evetx, the terminal IDE (F-TLS-24, F-TLS-27 to F-TLS-29). Marks: `[x]` done, `[ ]` to do, `[-]` dropped. The features in full are in [README.md](../design/components/evetx/README.md) §11. Last update: 2026-10-16.
 
 ## Plan steps (README.md §8)
 

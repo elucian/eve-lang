@@ -17,12 +17,12 @@ manual/
     README.md          the list of releases (block GEN:releases, script/relnotes.py)
     vX.Y.Z.md          the notes of each release (generated parts + hand-written parts; policy: design/release.md)
   code/evevm/ code/evecp/ code/evecm/ drivers/duckdb/ code/evetx/ code/eveux/ code/evewp/
-                       GENERATED: a copy of code/<component>/doc/ (generator/evegen.py); edit the original, never the copy
+                       GENERATED: a copy of design/components/<component>/doc/ (generator/evegen.py); edit the original, never the copy
 ```
 
 The templates of the generated pages are in `generator/templates/`, the one of the release notes in `design/template/release-notes.md`. A page is made from its template when it is missing; afterwards only its `GEN` blocks are written again, and the text around them is kept, so the introduction of a page is edited in the page itself.
 
-**Links in a component doc.** The files of `code/<component>/doc/` are written for their place in the manual, `manual/<component>/`: a link to another page of the manual is `../usage.md`, `../features.md`, `../evedb/README.md`. In the source folder these links look broken (`mdlinks.py check evevm` reports them); check them in the copy: `python generator/evegen.py manual && python script/mdlinks.py check manual`.
+**Links in a component doc.** The files of `design/components/<component>/doc/` are written for their place in the manual, `manual/<component>/`: a link to another page of the manual is `../usage.md`, `../features.md`, `../evedb/README.md`. In the source folder these links look broken (`mdlinks.py check evevm` reports them); check them in the copy: `python generator/evegen.py manual && python script/mdlinks.py check manual`.
 
 ## Commands
 

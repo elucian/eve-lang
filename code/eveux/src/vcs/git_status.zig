@@ -1,5 +1,5 @@
 //! @eve-module git_status: the output of `git status --porcelain=v1 -b` as a list of changed files
-//! @spec code/eveux/design/notes/elaboration.md#4-the-local-tier-files-source-control-preferences
+//! @spec design/components/eveux/design/notes/elaboration.md#4-the-local-tier-files-source-control-preferences
 //! @feature F-TLS-31
 //! @decision D-193
 //! @tests zig test src/vcs/git_status.zig (from code/eveux/)

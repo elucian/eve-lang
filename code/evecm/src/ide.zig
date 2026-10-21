@@ -1,5 +1,5 @@
 //! @eve-module ide: what the two editors of Eve share (evetx on the terminal, eveux in a window), with no screen library
-//! @spec code/eveux/README.md#6-reuse-from-evetx
+//! @spec design/components/eveux/README.md#6-reuse-from-evetx
 //! @decision D-193
 //! @tests code/evecm/src/ide.zig (zig build test)
 //! The files below import `std` and each other only. A file that needs a screen type (vaxis, dvui) stays in its program.
