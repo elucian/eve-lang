@@ -6,7 +6,7 @@ Status: **draft**. This file is the register of the system variables of Eve: eve
 
 - A system variable starts with the sigil `$`. It is static and public, shared by the whole process, and needs no module qualifier.
 - **Environment.** Every OS environment variable `NAME` is visible as `$NAME`. It is a `String`.
-- **Configuration.** A configuration file (`.cfg`) of the aspect run by a command sets system variables as `$key = value` lines with Eve literals and `#` comments. That aspect can also set one with `set $name = value;` (example: `$EVE_ASP`).
+- **Configuration.** A configuration file (`.cfg`), given to a run with `-e file.cfg` or `--setup file.cfg` or loaded by the REPL command `setup file.cfg`, sets system variables as `$key = value` lines. A value is an Integer, a Real (`2.5`), a Logic (`True`, `False`) or a String in double quotes (a backslash escapes a quote, a backslash, `n` or `t`); a line may end with a `#` comment, and a line that starts with `#` or is blank is ignored. The variables are read-only in the script. A file that is missing (exit 66) or has a bad line (exit 65, the message names the file and the line) stops the run before it starts. The machine files `eve.cfg` and `evedb.cfg` have another format (`key = value`, see the machine page). That aspect can also set one with `set $name = value;` (example: `$EVE_ASP`).
 - **Library.** A library module declares the system variables it provides with `external set $name: Type;`, like `$error` in `code/evevm/lib/exception.eve`.
 - **Naming.** Capital names (`$EVE_OUT`) are environment and configuration values; lowercase names (`$error`) are objects of the runtime and of the library. Error and warning codes are the constants `$err_name` and `$wrn_name`.
 

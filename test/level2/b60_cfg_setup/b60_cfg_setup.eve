@@ -1,0 +1,17 @@
+# -e file.cfg sets system variables: lines $name = literal, # comments, an Integer, a Real, a Logic and a String
+** spec: semantics/variables.md#system-variables
+primary aspect b60_cfg_setup is
+  process main is
+    print $port + 1;
+    print $db_path;
+    print $ratio * 2.0;
+    print $verbose;
+    print $greeting;
+  return;
+end b60_cfg_setup;
+/*@expect
+{
+  "args": ["-e", "test.cfg"],
+  "stdout": ["8081", "data/test.db", "5", "True", "say \"hi\"\tnow"]
+}
+*/

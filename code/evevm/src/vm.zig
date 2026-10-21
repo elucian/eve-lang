@@ -20,6 +20,7 @@ const project = @import("evecp").project;
 const interp = @import("interp.zig");
 const sysvars = @import("interp/sysvars.zig");
 const debugger = @import("debugger.zig");
+const settings = @import("settings.zig");
 
 /// How many times `cancelAll` was called.
 pub var cancel_generation: std.atomic.Value(usize) = .init(0);
@@ -79,6 +80,8 @@ pub const Session = struct {
     machine: ?*interp.Interp = null,
     /// The command-line arguments after the script name (the arguments of `process main`).
     script_args: []const []const u8 = &.{},
+    /// `-e file.cfg`: the settings that become `$` variables of the run (settings.zig); checked by the caller before `run`.
+    config_file: ?[]const u8 = null,
     outcome: ?interp.Outcome = null,
 
     /// The text of `summary.log`, one line per `status` or `log`.
@@ -226,6 +229,10 @@ pub const Session = struct {
         machine.defineOsPwd() catch {};
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         sysvars.define(machine, if (cut) |i| self.path[0..i] else ".") catch {};
+        if (self.config_file) |cf| {
+            var why: []const u8 = "";
+            if (settings.load(self.io, self.mem(), cf, &why)) |entries| settings.define(machine, entries) catch {} else |_| {}
+        }
         self.machine = machine;
         self.steps = 0;
         self.line = 0;

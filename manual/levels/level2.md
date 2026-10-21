@@ -8,7 +8,7 @@ A script becomes a project: functions, procedures, lambdas and closures, and asp
 |---|---|---|
 | [`F-LNG-09`](#f-lng-09-functions-and-methods) | Functions and methods | validated |
 | [`F-STR-02`](#f-str-02-aspects-serial) | Aspects (serial) | validated |
-| [`F-STR-06`](#f-str-06-configuration-files) | Configuration files | drafted |
+| [`F-STR-06`](#f-str-06-configuration-files) | Configuration files | validated |
 
 ## F-LNG-09 Functions and methods
 
@@ -76,14 +76,8 @@ second: 2
 
 ## F-STR-06 Configuration files
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `.cfg` with `$key = value`, loaded with `-s`.
 
-*Partial:* `-s` is accepted by the command line, the `setup` command is a stub.
-
-## Missing
-
-- `setup` command is a stub.
-- `-s`/`-e file.cfg` load `$key = value` files; end-of-line comments, sections and escapes in values.
-- A project test that sets a port and a database path through a `.cfg`.
+*Done:* `-e file.cfg`, `--setup file.cfg` and the REPL command `setup` load the file (`$key = value` lines, `#` comments); `-s` is accepted by the command line.

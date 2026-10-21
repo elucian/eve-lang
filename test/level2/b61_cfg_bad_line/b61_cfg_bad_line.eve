@@ -1,0 +1,14 @@
+# a configuration file with a bad line stops the run before it starts: exit 65 and the line
+** spec: semantics/variables.md#system-variables
+primary aspect b61_cfg_bad_line is
+  process main is
+    print "never";
+  return;
+end b61_cfg_bad_line;
+/*@expect
+{
+  "args": ["-e", "test.cfg"],
+  "exit": 65,
+  "stdout": ["setup: test.cfg:2: a setting starts with $: $name = value"]
+}
+*/

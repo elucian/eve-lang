@@ -16,14 +16,14 @@ Each level has a page of its own, with every feature described and an example th
 | Level | Validated | Drafted | Planned | Total |
 |---|---|---|---|---|
 | Level 1 | 14 | 5 | 0 | 19 |
-| Level 2 | 2 | 1 | 0 | 3 |
+| Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 5 | 8 | 1 | 14 |
 | Level 4 | 5 | 8 | 2 | 15 |
 | Level 5 | 7 | 14 | 8 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **46** | **49** | **49** | **144** |
+| **All** | **47** | **48** | **49** | **144** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -63,7 +63,7 @@ A script becomes a project: functions, procedures, lambdas and closures, and asp
 |---|---|---|---|
 | `F-LNG-09` | Functions and methods | validated | Pure functions, ! functions, procedures, @ parameters, defaults, varargs, named arguments, lambdas, closures, recursion. |
 | `F-STR-02` | Aspects (serial) | validated | apply, state per call, @ outputs, named and spread arguments, errors and over/panic across apply, exclusive by default, concurrent kind. |
-| `F-STR-06` | Configuration files | drafted | .cfg with $key = value, loaded with -s. |
+| `F-STR-06` | Configuration files | validated | .cfg with $key = value, loaded with -s. |
 
 ### [Level 3: Modules and classes](levels/level3.md)
 

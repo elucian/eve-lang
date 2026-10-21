@@ -248,7 +248,7 @@
     [2, "strings", 73, "Strings"],
     [2, "zero-values-and-optional-types", 79, "Zero values and optional types"]
    ]},
-  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 86, "bytes": 7400, "features": [], "sections": [
+  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 86, "bytes": 7960, "features": [], "sections": [
     [2, "rules", 5, "Rules"],
     [2, "runtime-objects", 15, "Runtime objects"],
     [2, "environment-and-folders", 25, "Environment and folders"],

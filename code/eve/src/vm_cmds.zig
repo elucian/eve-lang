@@ -7,6 +7,7 @@ const ast = @import("evecm").ast;
 const vm = @import("evevm").vm;
 const client = @import("evevm").client;
 const daemon = @import("evevm").daemon;
+const settings = @import("evevm").settings;
 const channel = @import("evevm").channel;
 const screen = @import("evevm").screen;
 const tui = @import("evevm").tui;
@@ -143,6 +144,8 @@ pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     s.quiet = true;
     s.capture = false;
     s.script_args = args[1..];
+    if (ctx.config) |cf| if (!try checkConfig(ctx, cf)) return;
+    s.config_file = ctx.config;
     try s.load(args[0]);
     if (s.arena == null) {
         ctx.status = s.status;
@@ -167,6 +170,36 @@ pub fn cmdDebug(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     }
 }
 
+// @eve-fn setup
+// @spec spec/semantics/variables.md#system-variables
+// @test b60_cfg_setup
+/// `setup [file.cfg]`: check the configuration file and keep it for the next runs; the settings become `$` variables of a script.
+/// Without a file it reloads the file that was set before (`-e file.cfg`).
+pub fn cmdSetup(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    const path: []const u8 = if (args.len > 0) args[0] else ctx.config orelse {
+        try ctx.out.writeAll("setup: file name missing\n");
+        ctx.status = exit_usage;
+        return;
+    };
+    if (!try checkConfig(ctx, path)) return;
+    ctx.config = ctx.gpa.dupe(u8, path) catch return error.WriteFailed;
+    ctx.status = 0;
+    try ctx.out.print("setup: {s} loaded\n", .{path});
+}
+
+/// Check the file of `-e`/`setup` before a run: false (and a message, `ctx.status`) when it is missing or has a bad line.
+fn checkConfig(ctx: *Context, path: []const u8) Io.Writer.Error!bool {
+    var arena = std.heap.ArenaAllocator.init(ctx.gpa);
+    defer arena.deinit();
+    var why: []const u8 = "";
+    _ = settings.load(ctx.io, arena.allocator(), path, &why) catch |e| {
+        try ctx.out.print("setup: {s}\n", .{if (e == error.Failed) why else "out of memory"});
+        ctx.status = if (std.mem.startsWith(u8, why, "cannot read")) context.exit_no_input else context.exit_syntax;
+        return false;
+    };
+    return true;
+}
+
 /// `execute`: parse the script (as `check` does) and, only if it is correct, run its main process.
 pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     const s = try session(ctx);
@@ -178,6 +211,8 @@ pub fn cmdExecute(ctx: *Context, args: []const []const u8) Io.Writer.Error!void 
     s.quiet = true;
     s.capture = false;
     s.script_args = args[1..];
+    if (ctx.config) |cf| if (!try checkConfig(ctx, cf)) return;
+    s.config_file = ctx.config;
     try s.load(args[0]);
     if (s.arena == null) {
         ctx.status = s.status;

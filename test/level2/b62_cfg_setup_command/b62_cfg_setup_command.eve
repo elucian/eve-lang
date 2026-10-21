@@ -1,0 +1,14 @@
+# the REPL command setup checks a configuration file and keeps it for the next runs; a missing file is reported
+** spec: semantics/variables.md#system-variables
+primary aspect b62_cfg_setup_command is
+  process main is
+    print "unused";
+  return;
+end b62_cfg_setup_command;
+/*@expect
+{
+  "command": [],
+  "stdin": ["setup test.cfg", "setup nofile.cfg", "quit"],
+  "contains": ["setup: test.cfg loaded", "setup: cannot read nofile.cfg"]
+}
+*/

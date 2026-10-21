@@ -65,7 +65,7 @@ pub const commands = [_]Command{
     .{ .name = "report", .summary = "report the system state", .run = vm_cmds.viaSession("report") },
     .{ .name = "stop", .summary = "stop the doors (ipc and http) and the scripts; the prompt stays", .run = vm_cmds.cmdStop },
     .{ .name = "clear", .summary = "clear the upper part of the screen (the output); the command line stays", .run = ui_cmds.cmdClear },
-    .{ .name = "setup", .summary = "load the configuration file", .file = ".cfg", .run = stub("setup") },
+    .{ .name = "setup", .summary = "load the configuration file", .file = ".cfg", .run = vm_cmds.cmdSetup },
     .{ .name = "help", .summary = "display this menu", .run = ui_cmds.cmdHelp },
     .{ .name = "shell", .summary = "shell <command> (or !<command>): run a command of the system here; the prompt stays in eve", .run = vm_cmds.cmdShell },
     .{ .name = "quit", .summary = "exit from the REPL", .run = ui_cmds.cmdQuit },

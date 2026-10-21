@@ -53,9 +53,10 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 
 ## Level 2 — a project
 
-### S15.20 Configuration files `[ ]` (S)
+### S15.20 Configuration files `[x]` (S)
 - **Feature:** F-STR-06. **Missing:** the `setup` command is a stub; `-s`/`-e file.cfg` load `$key = value` files (TD-26: end-of-line comments, sections, escapes in values).
 - **Tests:** a project test that sets a port and a database path through a `.cfg`.
+- **State (2026-10-21):** done. `-e`/`--setup file.cfg` and the REPL command `setup` load `$key = value` lines (Integer, Real, Logic, String with escapes, `#` comments, also at the end of a line) as read-only `$` variables; a missing file exits 66, a bad line 65. Tests b60 to b62, F-STR-06 is `done`. Sections were never specified and are not built (TD-26 is about the Eve library `config.parse` of the machine files, a different format).
 
 ## Level 3 — modules and classes
 

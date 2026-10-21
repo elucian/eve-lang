@@ -7,6 +7,6 @@
  "features": [
   {"id": "F-LNG-09", "name": "Functions and methods", "status": "done", "summary": "Pure functions, ! functions, procedures, @ parameters, defaults, varargs, named arguments, lambdas, closures, recursion.", "doc": "level2/F-LNG-09.md"},
   {"id": "F-STR-02", "name": "Aspects (serial)", "status": "done", "summary": "apply, state per call, @ outputs, named and spread arguments, errors and over/panic across apply, exclusive by default, concurrent kind.", "doc": "level2/F-STR-02.md"},
-  {"id": "F-STR-06", "name": "Configuration files", "status": "partial", "summary": ".cfg with $key = value, loaded with -s.", "doc": "level2/F-STR-06.md"}
+  {"id": "F-STR-06", "name": "Configuration files", "status": "done", "summary": ".cfg with $key = value, loaded with -s.", "doc": "level2/F-STR-06.md"}
  ]
 }
