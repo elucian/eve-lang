@@ -145,7 +145,7 @@ pub fn osModule(it: *Interp, name: []const u8, _: []const *const Node, args: []c
         return try it.newStr(std.mem.span(got));
     }
     if (eql(u8, name, "hostname!")) {
-        var buf: [256]u8 = undefined;
+        var buf: [std.posix.HOST_NAME_MAX]u8 = undefined;
         if (builtin.os.tag == .windows) {
             const z = std.c.getenv("COMPUTERNAME") orelse return try it.newStr("localhost");
             return try it.newStr(std.mem.span(z));

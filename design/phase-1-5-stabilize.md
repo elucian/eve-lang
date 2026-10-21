@@ -29,6 +29,7 @@ Sizes: S is a day or less, M a few days, L a week or more (guesses, not measurem
 - **Change:** CI runs `zig build test`, `runtest.py all --both`, `tagcheck.py` and `evegen check` on every push (Windows and Linux; `.github/workflows/ci.yml` exists, check it runs); find the flaky unit test (the binary run with `--listen`, review R2-VM-R01); make `python script/runtest.py all` print one summary line with the tracking-file diff.
 - **Gate:** a pushed commit shows a green run on both systems.
 - **State (2026-10-21):** done locally: `ci.yml` runs `runtest.py all --both`; the flaky test was a false alarm (R2-VM-R01, TD-49); `runtest.py` prints a `tracking:` line with the status changes. Local gate green (unit tests, `all --both` 440 pass, `bctest.py`, tagcheck, relnotes, mdlinks). Open: the last run on GitHub (commit 9b9d8f6) failed on both systems (Ubuntu at the unit tests, Windows at the conformance step); the logs need a login, and the local commits are not pushed. Push, read the run, fix, repeat until green on Windows.
+**TODO** detailed instructions to resolve the issues.
 
 ### S15.2 Open questions that block levels 1 to 5 `[!]` (S, the author)
 - Close or answer, in this order: Q-061 (parallel groups, level 4), Q-065 (an error caught inside Eve code, level 1 to 3), Q-027 (templates, used by level 7), Q-028 (networking, used by phase 6). `python script/plan.py status` lists the rest; each unanswered question stays open and the dependent step is skipped.
