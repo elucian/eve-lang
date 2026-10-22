@@ -12,8 +12,8 @@
 #   ./run.sh 1                all tests of level1 (also: level1, 2, 3, all)
 #   ./run.sh a01              one test (b01 is in level2, and so on); a prefix runs all matches
 #   ./run.sh bump [minor]     bump the version label (patch by default), build and test (script/release.py)
-#   ./run.sh dist             build the Windows distribution in dist/ and its zip (script/dist.py)
-#   ./run.sh release          publish the zip of dist/ as the GitHub release of the version (gh; script/publish.py)
+#   ./run.sh dist [linux]     build the Windows and Linux distributions in dist/ and their archives (script/dist.py)
+#   ./run.sh release          publish the archives of dist/ as the GitHub release of the version (gh; --prerelease; script/publish.py)
 #   ./run.sh check 1          dry run: only check the syntax of level1 (eve --check), no execution
 #   ./run.sh -q 1             options go to script/runtest.py
 #   ./run.sh eve <args>       bin/eve with the arguments; also evevm, evecp, evedb, eveux, evewp:
