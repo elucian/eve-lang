@@ -7,16 +7,16 @@ How fast `eve` runs, measured with the ReleaseSafe build on one machine. Compare
 The total time of the benchmarks of each level of the language, against their twins in Python.
 
 <!-- GEN:summary -->
-Run of 2026-10-19 17:49, version 0.0.7, `eve.exe` 4.0 MB.
+Run of 2026-10-21 21:45, version 0.0.8, `eve.exe` 4.1 MB.
 
 | Benchmarks | Eve | Python | Eve / Python |
 |---|---|---|---|
-| Level 1 | 138 ms | 202 ms | 0.7x |
-| Level 2 | 91 ms | 112 ms | 0.8x |
-| Level 3 | 141 ms | 128 ms | 1.1x |
-| Level 4 | 550 ms | 697 ms | 0.8x |
-| Level 5 | 80 ms | 136 ms | 0.6x |
-| Level 6 | 2297 ms | 11313 ms | 0.2x |
+| Level 1 | 248 ms | 313 ms | 0.8x |
+| Level 2 | 165 ms | 190 ms | 0.9x |
+| Level 3 | 322 ms | 202 ms | 1.6x |
+| Level 4 | 930 ms | 1394 ms | 0.7x |
+| Level 5 | 131 ms | 240 ms | 0.5x |
+| Level 6 | 2467 ms | - | - |
 <!-- /GEN:summary -->
 
 ## Benchmarks
@@ -56,27 +56,27 @@ The median time of several runs of each benchmark and of its Python twin, and th
 <!-- GEN:results -->
 | Benchmark | Eve | Python | Eve / Python | Peak memory |
 |---|---|---|---|---|
-| `p1a_arith` | 64 ms | 66 ms | 1.0x | 5.9 MB |
-| `p1b_calls` | 41 ms | 47 ms | 0.9x | 6.0 MB |
-| `p1c_collections` | 19 ms | 38 ms | 0.5x | 8.0 MB |
-| `p1d_strings` | 16 ms | 51 ms | 0.3x | 6.3 MB |
-| `p2a_aspects` | 11 ms | 31 ms | 0.4x | 5.9 MB |
-| `p2b_closures` | 36 ms | 40 ms | 0.9x | 7.4 MB |
-| `p2c_procedures` | 43 ms | 42 ms | 1.0x | 6.0 MB |
-| `p3a_modules` | 58 ms | 43 ms | 1.4x | 6.0 MB |
-| `p3b_objects` | 54 ms | 44 ms | 1.2x | 6.1 MB |
-| `p3c_module_state` | 29 ms | 42 ms | 0.7x | 6.0 MB |
-| `p4a_parallel_sum` | 111 ms | 84 ms | 1.3x | 40.3 MB |
-| `p4b_channel` | 61 ms | 230 ms | 0.3x | 6.1 MB |
-| `p4c_groups` | 134 ms | 147 ms | 0.9x | 8.2 MB |
-| `p4d_tasks` | 131 ms | 143 ms | 0.9x | 8.0 MB |
-| `p4e_garbage` | 113 ms | 93 ms | 1.2x | 6.0 MB |
-| `p5a_sql_function` | 80 ms | 136 ms | 0.6x | 9.2 MB |
-| `p6a_evedb_store` | 812 ms | 2124 ms | 0.4x | 56.2 MB |
-| `p6b_evedb_load` | 345 ms | 7795 ms | 0.0x | 16.5 MB |
-| `p6c_pg_records` | 190 ms | 329 ms | 0.6x | 81.7 MB |
-| `p6d_olap_groupby` | 666 ms | 624 ms | 1.1x | 6.1 MB |
-| `p6e_http_requests` | 283 ms | 441 ms | 0.6x | 51.8 MB |
+| `p1a_arith` | 108 ms | 95 ms | 1.1x | 6.1 MB |
+| `p1b_calls` | 86 ms | 54 ms | 1.6x | 6.2 MB |
+| `p1c_collections` | 30 ms | 60 ms | 0.5x | 8.2 MB |
+| `p1d_strings` | 24 ms | 104 ms | 0.2x | 6.5 MB |
+| `p2a_aspects` | 18 ms | 57 ms | 0.3x | 6.1 MB |
+| `p2b_closures` | 68 ms | 66 ms | 1.0x | 7.6 MB |
+| `p2c_procedures` | 80 ms | 67 ms | 1.2x | 6.2 MB |
+| `p3a_modules` | 162 ms | 74 ms | 2.2x | 6.2 MB |
+| `p3b_objects` | 98 ms | 61 ms | 1.6x | 6.3 MB |
+| `p3c_module_state` | 62 ms | 68 ms | 0.9x | 6.2 MB |
+| `p4a_parallel_sum` | 194 ms | 156 ms | 1.2x | 47.4 MB |
+| `p4b_channel` | 95 ms | 353 ms | 0.3x | 6.3 MB |
+| `p4c_groups` | 242 ms | 386 ms | 0.6x | 8.4 MB |
+| `p4d_tasks` | 218 ms | 313 ms | 0.7x | 8.3 MB |
+| `p4e_garbage` | 181 ms | 186 ms | 1.0x | 6.2 MB |
+| `p5a_sql_function` | 131 ms | 240 ms | 0.5x | 9.4 MB |
+| `p6a_evedb_store` | 826 ms | - | - | 56.3 MB |
+| `p6b_evedb_load` | 337 ms | - | - | 16.7 MB |
+| `p6c_pg_records` | 229 ms | - | - | 81.9 MB |
+| `p6d_olap_groupby` | 625 ms | - | - | 6.3 MB |
+| `p6e_http_requests` | 449 ms | 986 ms | 0.5x | 52.0 MB |
 <!-- /GEN:results -->
 
 ## By version
@@ -87,4 +87,5 @@ The last saved run of each version; the set of benchmarks grows with the version
 | Version | Date | Benchmarks | Eve total | Python total | Eve / Python |
 |---|---|---|---|---|---|
 | 0.0.7 | 2026-10-19 | 21 | 3297 ms | 12590 ms | 0.3x |
+| 0.0.8 | 2026-10-21 | 21 | 4263 ms | 3325 ms | 1.3x |
 <!-- /GEN:history -->

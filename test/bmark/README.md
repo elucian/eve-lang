@@ -63,32 +63,32 @@ The latest saved ReleaseSafe run, median time of the whole process (start-up inc
 | Benchmark | Eve | BCode | Python | EVE/PT | Mem |
 |---|---|---|---|---|---|
 | **Level 1** | | | | | |
-| `p1a_arith` | 64 ms | 26 ms | 66 ms | 1.0x | 5.9 MB |
-| `p1b_calls` | 41 ms | 16 ms | 47 ms | 0.9x | 6.0 MB |
-| `p1c_collections` | 19 ms | 23 ms | 38 ms | 0.5x | 8.0 MB |
-| `p1d_strings` | 16 ms | 15 ms | 51 ms | 0.3x | 6.3 MB |
+| `p1a_arith` | 108 ms | 43 ms | 95 ms | 1.1x | 6.1 MB |
+| `p1b_calls` | 86 ms | 30 ms | 54 ms | 1.6x | 6.2 MB |
+| `p1c_collections` | 30 ms | 20 ms | 60 ms | 0.5x | 8.2 MB |
+| `p1d_strings` | 24 ms | 26 ms | 104 ms | 0.2x | 6.5 MB |
 | **Level 2** | | | | | |
-| `p2a_aspects` | 11 ms | 12 ms | 31 ms | 0.4x | 5.9 MB |
-| `p2b_closures` | 36 ms | 38 ms | 40 ms | 0.9x | 7.4 MB |
-| `p2c_procedures` | 43 ms | 43 ms | 42 ms | 1.0x | 6.0 MB |
+| `p2a_aspects` | 18 ms | 19 ms | 57 ms | 0.3x | 6.1 MB |
+| `p2b_closures` | 68 ms | 67 ms | 66 ms | 1.0x | 7.6 MB |
+| `p2c_procedures` | 80 ms | 111 ms | 67 ms | 1.2x | 6.2 MB |
 | **Level 3** | | | | | |
-| `p3a_modules` | 58 ms | 56 ms | 43 ms | 1.4x | 6.0 MB |
-| `p3b_objects` | 54 ms | 52 ms | 44 ms | 1.2x | 6.1 MB |
-| `p3c_module_state` | 29 ms | 30 ms | 42 ms | 0.7x | 6.0 MB |
+| `p3a_modules` | 162 ms | 109 ms | 74 ms | 2.2x | 6.2 MB |
+| `p3b_objects` | 98 ms | 117 ms | 61 ms | 1.6x | 6.3 MB |
+| `p3c_module_state` | 62 ms | 57 ms | 68 ms | 0.9x | 6.2 MB |
 | **Level 4** | | | | | |
-| `p4a_parallel_sum` | 111 ms | 110 ms | 84 ms | 1.3x | 40.3 MB |
-| `p4b_channel` | 61 ms | 60 ms | 230 ms | 0.3x | 6.1 MB |
-| `p4c_groups` | 134 ms | 135 ms | 147 ms | 0.9x | 8.2 MB |
-| `p4d_tasks` | 131 ms | 131 ms | 143 ms | 0.9x | 8.0 MB |
-| `p4e_garbage` | 113 ms | 135 ms | 93 ms | 1.2x | 6.0 MB |
+| `p4a_parallel_sum` | 194 ms | 181 ms | 156 ms | 1.2x | 47.4 MB |
+| `p4b_channel` | 95 ms | 134 ms | 353 ms | 0.3x | 6.3 MB |
+| `p4c_groups` | 242 ms | 251 ms | 386 ms | 0.6x | 8.4 MB |
+| `p4d_tasks` | 218 ms | 218 ms | 313 ms | 0.7x | 8.3 MB |
+| `p4e_garbage` | 181 ms | 111 ms | 186 ms | 1.0x | 6.2 MB |
 | **Level 5** | | | | | |
-| `p5a_sql_function` | 80 ms | 78 ms | 136 ms | 0.6x | 9.2 MB |
+| `p5a_sql_function` | 131 ms | 148 ms | 240 ms | 0.5x | 9.4 MB |
 | **Level 6** | | | | | |
-| `p6a_evedb_store` | 812 ms | 802 ms | 2124 ms | 0.4x | 56.2 MB |
-| `p6b_evedb_load` | 345 ms | 332 ms | 7795 ms | 0.0x | 16.5 MB |
-| `p6c_pg_records` | 190 ms | 181 ms | 329 ms | 0.6x | 81.7 MB |
-| `p6d_olap_groupby` | 666 ms | 653 ms | 624 ms | 1.1x | 6.1 MB |
-| `p6e_http_requests` | 283 ms | 274 ms | 441 ms | 0.6x | 51.8 MB |
+| `p6a_evedb_store` | 826 ms | 769 ms | - | - | 56.3 MB |
+| `p6b_evedb_load` | 337 ms | 325 ms | - | - | 16.7 MB |
+| `p6c_pg_records` | 229 ms | 259 ms | - | - | 81.9 MB |
+| `p6d_olap_groupby` | 625 ms | 907 ms | - | - | 6.3 MB |
+| `p6e_http_requests` | 449 ms | 502 ms | 986 ms | 0.5x | 52.0 MB |
 | **Level 7** | | | | | |
 | planned | | | | | |
 <!-- results:end -->
@@ -98,18 +98,18 @@ The latest saved ReleaseSafe run, median time of the whole process (start-up inc
 The size of each program is saved with every run. A version that grows `eve` by more than 10% gets a sentence in the notes. The change is against the previous run of the same build.
 
 <!-- size:begin -->
-| Version | 0.0.7 | 0.0.7 |
+| Version | 0.0.7 | 0.0.8 |
 |---|---|---|
-| Date | 2026-10-19 | 2026-10-19 |
+| Date | 2026-10-19 | 2026-10-21 |
 | Build | ReleaseSafe | ReleaseSafe |
-| Commit | 320a228 | b3019cb |
-| eve | 4,000 KB | 4,055 KB |
-| evevm | 4,000 KB | 4,055 KB |
+| Commit | b3019cb | 43003a9 |
+| eve | 4,055 KB | 4,199 KB |
+| evevm | 4,055 KB | 4,199 KB |
 | evecp | 1,210 KB | 1,210 KB |
 | evetx | 2,198 KB | 2,198 KB |
 | eveux | 9,088 KB | 9,088 KB |
 | evedb | 1,264 KB | 1,264 KB |
-| eve change | -0.0% | +1.4% |
+| eve change | - | +3.6% |
 <!-- size:end -->
 
 ## History
@@ -130,6 +130,8 @@ Each saved run adds a paragraph to the notes (what changed in the VM, faster or 
 
 **0.0.7 (2026-10-19), BCode column.** `bmark.py --both` runs each benchmark on the tree walker and on the bytecode machine, refuses a run whose outputs differ, and saves both. Only the constructs of stage B5.2 are native, so most benchmarks equal the tree walker; where the bridge is used it costs: `p1c_collections` 18.6 to 23.2 ms, `p4e_garbage` 113 to 135 ms, `p2a_aspects` 11.4 to 12.2 ms. `p1a_arith` 64 to 26 ms and `p1b_calls` 41 to 16 ms. The run is the first with `Mem` and `EVE/PT` as column names. Level 6 is 20% above the earlier row (evedb on this load), BCode equal to Eve there.
 
+**0.0.8 (2026-10-21), first alpha release, a loaded machine.** The saved run is 55% to 177% slower than the last 0.0.7 run (levels 1 to 5), but the code is not: the machine was busy (CPU 71% from other programs during the run). A side by side run under the same load, the ReleaseSafe build of b3019cb (the last saved 0.0.7 run) against 0.0.8, each with the benchmarks of its own commit, 7 runs alternated, median: `p1a_arith` 103.2 against 103.9 ms, `p1b_calls` 65.6 against 68.8, `p1c_collections` 26.6 against 26.1, `p2b_closures` 58.8 against 61.8, `p3a_modules` 89.7 against 90.7, `p4a_parallel_sum` 178.1 against 181.9: 0.0.8 is 0% to 5% slower, inside the noise, after D-213 (one scope per loop) and the built-in library of step L1. Level 6 (`evedb`, PostgreSQL, HTTP) moved by -6% to +59%, the same load. `eve.exe` is 4,199 KB (+3.6%, the library functions in corelib.zig). Compare the next release with a run on a quiet machine, not with this one.
+
 ### Totals per run
 
 The sum of the median times of the benchmarks of each level. A dash means the level was not measured in that run.
@@ -137,6 +139,6 @@ The sum of the median times of the benchmarks of each level. A dash means the le
 <!-- runs:begin -->
 | Version | Date | Level 1 | Level 2 | Level 3 | Level 4 | Level 5 | Level 6 |
 |---|---|---|---|---|---|---|---|
-| 0.0.7 | 2026-10-19 | 148 ms | 97 ms | 154 ms | 678 ms | 106 ms | 1920 ms |
 | 0.0.7 | 2026-10-19 | 138 ms | 91 ms | 141 ms | 550 ms | 80 ms | 2297 ms |
+| 0.0.8 | 2026-10-21 | 248 ms | 165 ms | 322 ms | 930 ms | 131 ms | 2467 ms |
 <!-- runs:end -->

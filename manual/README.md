@@ -30,17 +30,17 @@ A distribution holds `bin/` (the programs and `duckdb.dll`), `lib/` (the standar
 Written by the release tooling at every release, never by hand.
 
 <!-- GEN:progress (script/relnotes.py) -->
-State of the working tree on 2026-10-20, version 0.0.7, not a release; last release: no release notes yet.
+Progress at release 0.0.8 (2026-10-21); full record: [release notes 0.0.8](releases/v0.0.8.md).
 
-**Tests.** 436 of 441 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
+**Tests.** 458 of 458 conformance and smoke tests pass (the last run of each suite; [summary](tests.md)):
 
 | Tests | Total | Pass | % |
 |---|---|---|---|
-| Level 1 | 76 | 74 | 97% |
-| Level 2 | 78 | 77 | 98% |
+| Level 1 | 90 | 90 | 100% |
+| Level 2 | 81 | 81 | 100% |
 | Level 3 | 62 | 62 | 100% |
 | Level 4 | 50 | 50 | 100% |
-| Level 5 | 117 | 115 | 98% |
+| Level 5 | 117 | 117 | 100% |
 | Level 6 | 14 | 14 | 100% |
 | Level 7 | 2 | 2 | 100% |
 | Smoke | 21 | 21 | 100% |
@@ -51,26 +51,26 @@ State of the working tree on 2026-10-20, version 0.0.7, not a release; last rele
 
 | Level | Validated | Drafted | Design | Planned | Total |
 |---|---|---|---|---|---|
-| Level 1 | 14 | 5 | 0 | 0 | 19 |
-| Level 2 | 2 | 1 | 0 | 0 | 3 |
+| Level 1 | 17 | 2 | 0 | 0 | 19 |
+| Level 2 | 3 | 0 | 0 | 0 | 3 |
 | Level 3 | 5 | 8 | 0 | 1 | 14 |
 | Level 4 | 5 | 8 | 0 | 2 | 15 |
 | Level 5 | 7 | 14 | 0 | 8 | 29 |
 | Level 6 | 0 | 6 | 0 | 23 | 29 |
 | Level 7 | 0 | 2 | 0 | 8 | 10 |
 | All levels | 13 | 5 | 0 | 7 | 25 |
-| **All** | **46** | **49** | **0** | **49** | **144** |
+| **All** | **50** | **45** | **0** | **49** | **144** |
 
-**Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-19 17:49 (commit `b3019cb`), against the twins in Python and against nothing (first run). Every benchmark: [performance report](performance.md).
+**Performance.** Total median time of the benchmarks of each level, ReleaseSafe build, run of 2026-10-21 21:45 (commit `43003a9`), against the twins in Python and against version 0.0.7 (2026-10-19). Every benchmark: [performance report](performance.md).
 
 | Benchmarks | Eve | Python | Eve / Python | Change |
 |---|---|---|---|---|
-| Level 1 | 138 ms | 202 ms | 0.7x | - |
-| Level 2 | 91 ms | 112 ms | 0.8x | - |
-| Level 3 | 141 ms | 128 ms | 1.1x | - |
-| Level 4 | 550 ms | 697 ms | 0.8x | - |
-| Level 5 | 80 ms | 136 ms | 0.6x | - |
-| Level 6 | 2297 ms | 11313 ms | 0.2x | - |
+| Level 1 | 248 ms | 313 ms | 0.8x | +79% (slower) |
+| Level 2 | 165 ms | 190 ms | 0.9x | +82% (slower) |
+| Level 3 | 322 ms | 202 ms | 1.6x | +128% (slower) |
+| Level 4 | 930 ms | 1394 ms | 0.7x | +69% (slower) |
+| Level 5 | 131 ms | 240 ms | 0.5x | +64% (slower) |
+| Level 6 | 2467 ms | - | - | +7% (slower) |
 <!-- /GEN:progress -->
 
 ## Links

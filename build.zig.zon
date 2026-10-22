@@ -2,7 +2,7 @@
     // The package of Eve: the command `eve` (code/eve/, which imports evecm, evecp and evevm) is built from here,
     // and the one version of everything is written once, below (D-167).
     .name = .eve,
-    .version = "0.0.7",
+    .version = "0.0.8",
     .fingerprint = 0xf5e09b7eca5ed987, // Changing this has security and trust implications.
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
