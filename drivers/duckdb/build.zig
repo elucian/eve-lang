@@ -47,9 +47,15 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
-    // The prebuilt library: the import library duckdb.lib on Windows, libduckdb.so / .dylib elsewhere.
-    exe.root_module.addLibraryPath(duckdb_dep.path(""));
-    exe.root_module.linkSystemLibrary("duckdb", .{});
+    // The prebuilt library: the import library duckdb.lib on Windows, libduckdb.so / .dylib elsewhere. On Linux the file is
+    // linked by path: a library search by name from a Windows host hands ld.lld a Windows path it cannot open.
+    switch (os) {
+        .linux => exe.root_module.addObjectFile(duckdb_dep.path("libduckdb.so")),
+        else => {
+            exe.root_module.addLibraryPath(duckdb_dep.path(""));
+            exe.root_module.linkSystemLibrary("duckdb", .{});
+        },
+    }
     const stop = b.addSystemCommand(&.{ "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File" });
     stop.addFileArg(b.path("../../script/stop_eve.ps1"));
     stop.addArg("-Bin");

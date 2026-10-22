@@ -24,11 +24,11 @@ code/<component>/                       design/components/<component>/
   assets/     optional (evetx: themes)
 ```
 
-`code/README.md` lists the components and the license. Every component but `eve` is a Zig package: its `build.zig` exposes the module and runs its unit tests (`cd code/evecm && zig build test`), its `build.zig.zon` names the packages it imports, and the root `build.zig.zon` lists `evecm`, `evecp` and `evevm`; the root `build.zig` makes the command `eve` from them (the version of Eve is written once, in the root `build.zig.zon`, and passed to the packages as the option `version`). `evecp`, `evetx` and `eveux` also build a program of their own. `evewp` has no code yet, so it has only a design folder. Tools that write code (`script/genidekeywords.py` writes `evecm/src/ide/keywords.zig`) are in `script/`.
+`code/README.md` lists the components and the license. Every component is a Zig package: its `build.zig` exposes the module (or, for `eve`, the command) and runs its unit tests (`cd code/evecm && zig build test`), and its `build.zig.zon` names the packages it imports; the root `build.zig.zon` lists only `eve`, whose `code/eve/build.zig` makes the command from `evecm`, `evecp` and `evevm`, and the root `build.zig` forwards its steps to it (the version of Eve is written once, in the root `build.zig.zon`, and passed to the packages as the option `version`). `evecp`, `evetx` and `eveux` also build a program of their own. `evewp` has no code yet, so it has only a design folder. Tools that write code (`script/genidekeywords.py` writes `evecm/src/ide/keywords.zig`) are in `script/`.
 
 ## How they depend on each other
 
-The modules of `eve` are built by the root `build.zig`; an arrow is an import, and a module that is not listed cannot be imported:
+The modules of `eve` are built by `code/eve/build.zig`; an arrow is an import, and a module that is not listed cannot be imported:
 
 ```
 eve ──► evevm ──► evecp ──► evecm

@@ -38,7 +38,7 @@ stop_eve() {
     *) pkill -f "$root/bin/" 2>/dev/null; true ;;
   esac
 }
-# one part of `build`: a zig build of its own folder (eve and evevm are steps of the root build.zig)
+# one part of `build`: a zig build of its own folder (eve and evevm are steps of code/eve/build.zig, forwarded by the root build.zig)
 build_part() {
   case "$1" in
     eve | evevm) stop_eve; zig build "$1" -p . ;;

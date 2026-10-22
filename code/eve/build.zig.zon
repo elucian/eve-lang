@@ -1,0 +1,16 @@
+.{
+    .name = .eve,
+    .version = "0.0.1",
+    .fingerprint = 0xf5e09b7eed39976d, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .evecm = .{ .path = "../evecm" },
+        .evecp = .{ .path = "../evecp" },
+        .evevm = .{ .path = "../evevm" },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
