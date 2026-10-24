@@ -1,0 +1,66 @@
+# DateTime and Zone fields: written and read back by csv and json in the canonical text (the offset, not the region); a bad value is a read error
+** spec: semantics/data-types.md#canonical-form-and-round-trip
+primary aspect e136_datetime_io is
+  class Event = {id: Integer, at: DateTime, where: Zone} <: Record;
+
+  process main is
+    new rows := Table(:Event)();
+    new a := {id: 1, at: time.at_zone(Instant.parse("2026-07-01T12:00:00Z"), "Europe/Bucharest"), where: time.zone("Europe/Bucharest")} :Event;
+    new b := {id: 2, at: time.at_zone(Instant.parse("2026-01-15T14:30:05.25Z"), "+05:30"), where: time.zone("+05:30")} :Event;
+    new c := {id: 3, at: time.at_zone(Instant.epoch, "Z"), where: time.zone("Z")} :Event;
+    let rows <+ a;
+    let rows <+ b;
+    let rows <+ c;
+    csv.write("out/events.csv", rows);
+    for e in csv.read!(:Event)("out/events.csv") do
+      print "{e.id} {e.at} {e.where}";
+      expect e.at is DateTime;
+      expect e.where is Zone;
+    done;
+    json.write("out/events.json", rows);
+    for e in json.read!(:Event)("out/events.json") do
+      print "{e.id} {e.at}";
+    done;
+    fs.write("out/bad.csv", "id,at,where\n4,2026-07-01T12:00:00Z,Z\n5,not a time,Z\n");
+    check();
+    print "done";
+  return;
+
+  procedure check() is
+    for e in csv.read!(:Event)("out/bad.csv") do
+      print "{e.id} {e.at}";
+    done;
+  recover
+    print "error {$error.code}";
+  return;
+end e136_datetime_io;
+/*@expect
+{
+  "stdout": [
+    "1 2026-07-01T15:00:00+03:00 Europe/Bucharest",
+    "2 2026-01-15T20:00:05.25+05:30 +05:30",
+    "3 1970-01-01T00:00:00Z Z",
+    "1 2026-07-01T15:00:00+03:00",
+    "2 2026-01-15T20:00:05.25+05:30",
+    "3 1970-01-01T00:00:00Z",
+    "4 2026-07-01T12:00:00Z",
+    "error 56",
+    "done"
+  ],
+  "files": {
+    "out/events.csv": [
+      "id,at,where",
+      "1,2026-07-01T15:00:00+03:00,Europe/Bucharest",
+      "2,2026-01-15T20:00:05.25+05:30,+05:30",
+      "3,1970-01-01T00:00:00Z,Z"
+    ],
+    "out/events.json": [
+      "[",
+      "{\"id\":1,\"at\":\"2026-07-01T15:00:00+03:00\",\"where\":\"Europe/Bucharest\"},",
+      "{\"id\":2,\"at\":\"2026-01-15T20:00:05.25+05:30\",\"where\":\"+05:30\"},",
+      "{\"id\":3,\"at\":\"1970-01-01T00:00:00Z\",\"where\":\"Z\"}",
+      "]"
+    ]
+  }
+}
+*/

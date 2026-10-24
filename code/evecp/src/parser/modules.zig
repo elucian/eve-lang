@@ -63,6 +63,7 @@ pub fn importDecl(p: *Parser) Error!*const Node {
         if (!p.acceptSym("/")) break;
         try path.append(p.a, '/');
     }
+    if (p.isWord("export")) return reexportDecl(p, kw, path.items);
     try p.expectWord("use");
     try p.expectSym("(");
     var picks: std.ArrayList(*const Node) = .empty;
@@ -89,8 +90,39 @@ pub fn importDecl(p: *Parser) Error!*const Node {
         if (!p.acceptSym(",")) break;
     }
     try p.expectSym(")");
+    if (p.acceptWord("alias")) {
+        // `use (*) alias x`: the merged modules of the folder under one prefix
+        if (picks.items.len != 1 or !std.mem.eql(u8, picks.items[0].text, "*")) return p.fail("'alias' follows `use (*)` and nothing else", .{});
+        const a = try p.expectName("an alias");
+        @constCast(picks.items[0]).kids = try p.a.dupe(*const Node, &.{try p.mk(.name, a, a.text, &.{})});
+    }
     try p.expectSym(";");
     return p.mk(.import_decl, kw, path.items, picks.items);
+}
+
+// @spec spec/semantics/modules.md#re-export
+// @feature F-STR-01
+// @tests test/level3/c43_module_reexport
+/// `from sub export (*);` or `from sub export (a, b);` in a module: the module re-exports names of its submodule `sub`
+/// (the file `sub.eve` in the folder named like the module). An `export_decl` whose text is `sub`; the linker rewrites it.
+fn reexportDecl(p: *Parser, kw: lexer.Token, sub: []const u8) Error!*const Node {
+    if (std.mem.indexOfScalar(u8, sub, '/') != null) return p.fail("'from … export' takes one submodule name, not a path", .{});
+    try p.expectWord("export");
+    try p.expectSym("(");
+    var names: std.ArrayList(*const Node) = .empty;
+    while (true) {
+        const t = p.peek();
+        if (p.acceptSym("*")) {
+            try names.append(p.a, try p.mk(.name, t, "*", &.{}));
+        } else {
+            const n = try p.expectName("a member name");
+            try names.append(p.a, try p.mk(.name, n, n.text, &.{}));
+        }
+        if (!p.acceptSym(",")) break;
+    }
+    try p.expectSym(")");
+    try p.expectSym(";");
+    return p.mk(.export_decl, kw, sub, names.items);
 }
 
 /// `export (a, b!);`: the public members of a module (D-085).

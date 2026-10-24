@@ -9,6 +9,10 @@
 const std = @import("std");
 const ast = @import("ast.zig");
 const decimal = @import("decimal.zig");
+const rational = @import("rational.zig");
+const complex = @import("complex.zig");
+const duration = @import("duration.zig");
+const calendar = @import("calendar.zig");
 const heap = @import("heap.zig");
 const Obj = heap.Obj;
 const Node = ast.Node;
@@ -31,6 +35,20 @@ pub const Value = union(enum) {
     float: f64,
     /// A Decimal: an integer and a scale, exact (decimal.zig).
     dec: decimal.Dec,
+    /// A Rational: a fraction in lowest terms, exact (rational.zig).
+    rat: rational.Rat,
+    /// A Complex: a real and an imaginary part, two f64 (complex.zig).
+    cpx: complex.Cpx,
+    /// A Duration: a signed count of microseconds (duration.zig).
+    dur: i64,
+    /// A Date: days since 1970-01-01 (calendar.zig).
+    date: i32,
+    /// A Time of the day: microseconds since midnight (calendar.zig).
+    time: i64,
+    /// A Zone: the id of a time zone (0 is Z, an id with the top bit set is a fixed offset, any other is an entry of the zone registry of the machine).
+    zone: u32,
+    /// A DateTime: an instant (microseconds since the epoch) seen in a zone.
+    dtm: Dtm,
     /// An Instant: microseconds since 1970-01-01T00:00:00Z (instant.zig).
     instant: i64,
     /// A Symbol: one Unicode code point.
@@ -135,7 +153,8 @@ pub fn adopts(cls: ?*Class, name: []const u8) bool {
 }
 
 /// A function, method or lambda together with the scope it was created in.
-pub const Func = struct { hdr: Obj = .{ .kind = .func }, node: *const Node, closure: *Scope };
+/// `fast`: 0 not looked at yet, 1 no fast path, else the code of a native function that `invokeWith` calls without a scope (dlib.fastResolve).
+pub const Func = struct { hdr: Obj = .{ .kind = .func }, node: *const Node, closure: *Scope, fast: u32 = 0 };
 
 /// An integer range with both ends included; `(1..<5)` is stored as 1 to 4.
 pub const Range = struct { hdr: Obj = .{ .kind = .range }, lo: i64, hi: i64, step: i64 = 1, sym: bool = false };
@@ -145,6 +164,9 @@ pub const Domain = struct { hdr: Obj = .{ .kind = .domain }, lo: ?f64 = null, hi
 
 /// A variable. It is a separate struct so that a by-reference parameter can share it.
 /// `decl` is the `new` or `set` statement that made the variable: the same statement run again in the same scope is an error (loops).
+/// The payload of a DateTime: the instant and the zone in which it is seen.
+pub const Dtm = struct { us: i64, zone: u32 };
+
 pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false, decl: ?*const anyopaque = null };
 pub const Binding = struct { name: []const u8, v: *Var };
 // @eve-impl comparison of two variable names: the length and the first byte decide almost every mismatch without a call
@@ -228,6 +250,13 @@ pub fn typeName(v: Value) []const u8 {
         .real => "Real",
         .float => "Float",
         .dec => "Decimal",
+        .rat => "Rational",
+        .cpx => "Complex",
+        .dur => "Duration",
+        .date => "Date",
+        .time => "Time",
+        .zone => "Zone",
+        .dtm => "DateTime",
         .instant => "Instant",
         .sym => "Rune",
         .str => "String",
@@ -260,6 +289,32 @@ pub fn realOf(v: Value) ?f64 {
         .int, .nat, .byte, .short, .huge => |n| @floatFromInt(n),
         .real, .float => |r| r,
         .dec => |d| decimal.toF64(d),
+        .rat => |q| rational.toF64(q),
+        else => null,
+    };
+}
+
+/// A length of time in milliseconds for a function that waits: an `Integer` (the old form, milliseconds) or a `Duration` (rounded up to the millisecond).
+pub fn msOf(v: Value) ?i64 {
+    return switch (v) {
+        .dur => |us| @divTrunc(us + (if (us > 0) @as(i64, 999) else 0), 1000),
+        else => if (isInt(v)) intOf(v) else null,
+    };
+}
+
+/// The value as a Complex: a Complex itself, an integer, a Real or a Rational (a Decimal is refused).
+pub fn cpxOf(v: Value) ?complex.Cpx {
+    return switch (v) {
+        .cpx => |z| z,
+        else => if (realOf(v)) |x| (if (v == .dec) null else complex.fromReal(x)) else null,
+    };
+}
+
+/// The value as a Rational: a Rational itself, or an integer.
+pub fn ratOf(v: Value) ?rational.Rat {
+    return switch (v) {
+        .rat => |q| q,
+        .int, .nat, .byte, .short, .huge => |n| rational.fromInt(n),
         else => null,
     };
 }
@@ -277,6 +332,18 @@ pub fn decOf(v: Value) ?decimal.Dec {
 pub fn eq(a: Value, b: Value) bool {
     if (isInt(a) and isInt(b)) return intOf(a) == intOf(b);
     if (a == .dec or b == .dec) if (decOf(a)) |x| if (decOf(b)) |y| return decimal.order(x, y) == .eq;
+    if (a == .dur or b == .dur) return a == .dur and b == .dur and a.dur == b.dur;
+    if (a == .date or b == .date) return a == .date and b == .date and a.date == b.date;
+    if (a == .time or b == .time) return a == .time and b == .time and a.time == b.time;
+    if (a == .cpx or b == .cpx) if (cpxOf(a)) |x| if (cpxOf(b)) |y| return complex.eql(x, y);
+    if (a == .rat or b == .rat) if (ratOf(a)) |x| if (ratOf(b)) |y| return x.n == y.n and x.d == y.d;
+    if (a == .dtm or b == .dtm) {
+        // a DateTime is the same moment as another DateTime or an Instant, whatever the zone (time.md#the-types)
+        const x: i64 = if (a == .dtm) a.dtm.us else if (a == .instant) a.instant else return false;
+        const y: i64 = if (b == .dtm) b.dtm.us else if (b == .instant) b.instant else return false;
+        return x == y;
+    }
+    if (a == .zone or b == .zone) return a == .zone and b == .zone and a.zone == b.zone;
     if (a == .instant) return b == .instant and a.instant == b.instant;
     if (realOf(a)) |x| if (realOf(b)) |y| return x == y;
     switch (a) {
@@ -349,7 +416,7 @@ pub fn textual(v: Value) bool {
 /// A scalar is a single value: a number, a boolean, a symbol or a string (never a collection).
 pub fn isScalar(v: Value) bool {
     return switch (v) {
-        .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .sym, .str => true,
+        .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .rat, .cpx, .dur, .date, .time, .zone, .dtm, .sym, .str => true,
         else => false,
     };
 }

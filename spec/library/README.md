@@ -19,6 +19,10 @@ A folder library is imported by its path, `from lib/math/trig use (…)`. A func
 | lists | [lists.md](lists.md) | the functions of a `List`, an `Array` and a `DataSet` |
 | maps | [maps.md](maps.md) | the functions of a `DataMap` |
 | atomic | [atomic.md](atomic.md) | `Atomic(:T)` |
+| math | [math.md](math.md) | `lib/math/`: `basic`, `explog`, `trig`, `constants`, `numtheory`, `linear`, `random`, `rational`, `complex` |
+| time and dates | [time.md](time.md) | `Date`, `Time`, `DateTime`, `Duration`, `Zone` and the module `time` (draft) |
+| bytes and ids | [bytes.md](bytes.md) | `Bytes` and `Uuid` (draft) |
+| meta database | [meta.md](meta.md) | reference data embedded in the machine: time zones (`zone`, `meta`), `database.connect("meta")` (draft) |
 
 ## Modules written in Zig (`lib/sys/`)
 
@@ -26,7 +30,7 @@ A folder library is imported by its path, `from lib/math/trig use (…)`. A func
 |---|---|---|
 | `fs` | the generated reference `lib/doc/fs.md` | F-LIB-04 |
 | `csv`, `json`, `txt` | [data-language.md](data-language.md), `lib/doc/` | F-LIB-05 |
-| `time` | `lib/doc/time.md` | F-LIB-06 |
+| `time` | [time.md](time.md), `lib/doc/time.md` | F-LIB-06 |
 | `os` | [os.md](os.md) | F-LIB-07 |
 | `secret` | [data-language.md](data-language.md#secrets) | F-LIB-08 |
 | `crypto` | [crypto.md](crypto.md) | F-LIB-10 |

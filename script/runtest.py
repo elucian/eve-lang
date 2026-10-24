@@ -45,6 +45,8 @@ Other folders are not tests. The expectation keys, all optional:
                the test is only its home and its expectations
   "stdout"     the exact expected output: a string, or a list of lines (line
                endings and trailing white space at the end are ignored)
+               A line may hold the placeholders {Integer}, {Real}, {Logic}, {String}, {Any}: any value of that type
+               (for a generator that is not seeded, library random).
   "contains"   a list of strings that must all appear in the output
   "stdin"      the standard input of the script: a string, or a list of lines (default: empty, never the terminal)
   "stderr"     a list of strings that must all appear in the error output
@@ -256,6 +258,40 @@ def norm(text):
     return text.replace("\r\n", "\n").rstrip()
 
 
+PLACEHOLDERS = {
+    "Integer": r"-?\d+",
+    "Real": r"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?",
+    "Logic": r"True|False",
+    "String": r".*",
+    "Any": r".*",
+}
+
+
+PLACEHOLDER_RE = re.compile(r"\{(?:" + "|".join(PLACEHOLDERS) + r")\}")
+
+
+def same_output(actual, expected):
+    """Equal text, or equal line by line when a line of `expected` holds a placeholder {Integer}, {Real}, {Logic}, {String}
+    or {Any}: the value of an unseeded generator is not known, its type is (library random)."""
+    actual, expected = norm(actual), norm(expected)
+    if actual == expected:
+        return True
+    pat = re.compile(r"\{(" + "|".join(PLACEHOLDERS) + r")\}")
+    if not pat.search(expected):
+        return False
+    a, e = actual.split("\n"), expected.split("\n")
+    if len(a) != len(e):
+        return False
+    for got, want in zip(a, e):
+        if got == want:
+            continue
+        parts = pat.split(want)  # text, name, text, name, ...
+        rx = "".join(re.escape(x) if k % 2 == 0 else PLACEHOLDERS[x] for k, x in enumerate(parts))
+        if not re.fullmatch(rx, got):
+            return False
+    return True
+
+
 def prints_output(test):
     """True when the source has a print or write statement (comments ignored)."""
     with open(test, encoding="utf-8", errors="replace") as f:
@@ -392,7 +428,7 @@ def run_test(eve, test, timeout):
     problems = []
     if p.returncode != exp["exit"]:
         problems.append(f"exit code {p.returncode}, expected {exp['exit']}")
-    if "stdout" in exp and norm(res["stdout"]) != norm(exp["stdout"]):
+    if "stdout" in exp and not same_output(res["stdout"], exp["stdout"]):
         problems.append("stdout differs")
     for text in exp.get("contains", []):
         if text not in res["stdout"]:
@@ -585,7 +621,8 @@ def run_both(eve, test, timeout):
     else:
         if bc["exit"] != tree["exit"]:
             problems.append(f"exit codes differ: tree {tree['exit']}, bytecode {bc['exit']}")
-        if bc["stdout"] != tree["stdout"]:
+        # both engines passed the expectation; with a placeholder {Type} the two outputs may differ in the value
+        if bc["stdout"] != tree["stdout"] and not PLACEHOLDER_RE.search(str(tree["expect"].get("stdout", ""))):
             problems.append("the output differs")
         if norm(bc["stderr"]) != norm(tree["stderr"]):
             problems.append("the error output differs")

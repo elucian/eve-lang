@@ -1,0 +1,40 @@
+# the meta database as a read only SQL database: database.connect("meta") needs no eve.cfg; joins with the tables of the user's own data; a write is refused
+** spec: library/meta.md#sql
+primary aspect e132_meta_sql is
+  class Name = {name: String} <: Record;
+  class Count = {n: Integer} <: Record;
+  class Zone = {name: String, abbr: String, utoff: Integer} <: Record;
+  class Info = {value: String} <: Record;
+
+  function write_code(db :Connection) => (@r :Integer) is
+    new n := db.execute!("insert into zone (name) values ('Mars/Base')");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new meta := database.connect("meta");
+    new names := meta.query!(:Name)("select z.name as name from zone z where z.country = ? order by z.name", "RO");
+    print names.count(), names[1].name;
+    new c := meta.query_one!(:Count)("select count(*) as n from zone");
+    print c.n;
+    new l := meta.query_one!(:Count)("select count(*) as n from zone where link_of is not null");
+    print l.n;
+    new i := meta.query_one!(:Info)("select value from meta_info where name = 'tzdata'");
+    print i.value;
+    new rows := meta.query!(:Zone)("select z.name as name, t.abbr as abbr, t.utoff as utoff from zone z join zone_type t on t.zone = z.id where z.name = 'Asia/Kolkata' order by t.idx limit 2");
+    print rows.count(), rows[1].utoff;
+    expect names.count() == 1;
+    expect names[1].name == "Europe/Bucharest";
+    expect c.n == 598;
+    expect l.n == 253;
+    expect write_code(meta) <> 0;
+    meta.close();
+  return;
+end e132_meta_sql;
+/*@expect
+{
+  "stdout": ["1,Europe/Bucharest", "598", "253", "2026e", "2,21208"]
+}
+*/

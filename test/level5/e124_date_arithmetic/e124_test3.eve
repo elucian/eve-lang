@@ -1,0 +1,14 @@
+# variation of e124: a Time plus a plain number: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e124_test3 is
+  process main is
+    new t :Time;
+    print t + 5;
+  return;
+end e124_test3;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

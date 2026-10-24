@@ -1,0 +1,16 @@
+# math library: an unseeded generator gives values of known type, written as {Type} in the expected output (math.md)
+** spec: library/math.md#module-random
+primary aspect a115_math_random_unseeded is
+  from lib/math use (random);
+
+  process main is
+    print random.integer!(1, 100);
+    print random.next!();
+    print random.choice!(("a", "b", "c")).length() > 0;
+  return;
+end a115_math_random_unseeded;
+/*@expect
+{
+  "stdout": ["{Integer}", "{Real}", "True"]
+}
+*/

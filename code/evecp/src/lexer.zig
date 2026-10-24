@@ -122,7 +122,17 @@ const Lexer = struct {
             return;
         }
         lx.digits();
-        // a duration (D-144): an integer followed at once by `ms`, `s`, `m` or `h`: `10ms`, `30s`
+        // a Rational literal: digits, a backslash, digits: `3\4` (types.md#rational)
+        if (lx.at(0) == '\\' and std.ascii.isDigit(lx.at(1))) {
+            lx.pos += 1;
+            lx.digits();
+            return;
+        }
+        // a duration (D-144, D-221): an integer followed at once by `us`, `ms`, `s`, `m` or `h`: `10ms`, `30s`
+        if (lx.at(0) == 'u' and lx.at(1) == 's' and !isIdentChar(lx.at(2))) {
+            lx.pos += 2;
+            return;
+        }
         if (lx.at(0) == 'm' and lx.at(1) == 's' and !isIdentChar(lx.at(2))) {
             lx.pos += 2;
             return;
@@ -223,6 +233,26 @@ const Lexer = struct {
             lx.pos += 2;
             while (std.ascii.isHex(lx.at(0))) lx.pos += 1;
             return lx.token(.char, start, line, column);
+        }
+        // an imaginary literal: `i` and a number, `i99`, `i2.5`, `i1e3`, not followed by a name character and not a member name after a dot
+        if (c == 'i' and std.ascii.isDigit(lx.at(1)) and !(start > 0 and lx.src[start - 1] == '.')) {
+            var j: usize = 1;
+            while (std.ascii.isDigit(lx.at(j))) j += 1;
+            if (lx.at(j) == '.' and std.ascii.isDigit(lx.at(j + 1))) {
+                j += 1;
+                while (std.ascii.isDigit(lx.at(j))) j += 1;
+            }
+            if (lx.at(j) == 'e' or lx.at(j) == 'E') {
+                const sign: usize = if (lx.at(j + 1) == '+' or lx.at(j + 1) == '-') 1 else 0;
+                if (std.ascii.isDigit(lx.at(j + 1 + sign))) {
+                    j += 1 + sign;
+                    while (std.ascii.isDigit(lx.at(j))) j += 1;
+                }
+            }
+            if (!isIdentChar(lx.at(j))) {
+                lx.pos += j;
+                return lx.token(.number, start, line, column);
+            }
         }
         if (isIdentStart(c) or (c == '$' and isIdentStart(lx.at(1)))) {
             lx.pos += 1;

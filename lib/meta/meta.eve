@@ -1,0 +1,9 @@
+** The meta database itself: which releases of the sources are in it (M0.1, D-222).
+** @spec spec/library/meta.md#metainfo  @feature F-LIB-06  @decision D-222  @tests test/level5/e129_meta_zone
+module meta is
+  export (info);
+
+  ** An entry of the table meta_info: "schema", "tzdata" (the release of the IANA database, such as 2026e), "zones", "zone_links", "builder". An unknown name is $err_key.
+  external function info(name: String) => (@result: String);
+
+end meta;

@@ -1,0 +1,58 @@
+# the module time: now!, seconds, millis, micros, sleep; Duration.parse; wait and within accept a Duration (and the old integer of milliseconds)
+** spec: library/time.md#the-module-time
+primary aspect e122_time_module is
+  function code_of_parse() => (@r :Integer) is
+    new d := Duration.parse("soon");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_year() => (@r :Integer) is
+    new d := Duration.parse("P1Y");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_sleep_type() => (@r :Integer) is
+    time.sleep(5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    expect time.seconds(1500ms) == 1.5;
+    expect time.seconds(0s) == 0;
+    expect time.millis(2s) == 2000;
+    expect time.millis(-2500us) == -2;
+    expect time.micros(5ms) == 5000;
+    expect Duration.parse("1h30m") == 90m;
+    expect Duration.parse("PT1H30M") == 90m;
+    expect Duration.parse("90m") == 90m;
+    expect Duration.parse("250ms") == 250ms;
+    expect Duration.parse("PT0.25S") == 250ms;
+    expect Duration.parse("-PT5S") == -5s;
+    expect Duration.parse("P1DT2H") == 26h;
+    expect Duration.parse(" 5s ") == 5s;
+    expect code_of_parse() == $err_parse;
+    expect code_of_year() == $err_parse;
+    expect code_of_sleep_type() == $err_argument;
+    new t0 := time.now!();
+    time.sleep(30ms);
+    new dt := time.now!() - t0;
+    expect dt >= 25ms;
+    expect dt < 5s;
+    expect time.now!() >= t0;
+    new w0 := time.now!();
+    wait 30ms;
+    wait 1;
+    expect time.now!() - w0 >= 25ms;
+    print time.seconds(90s), time.millis(1h), time.micros(1s);
+    print Duration.parse("1m30s");
+  return;
+end e122_time_module;
+/*@expect
+{
+  "stdout": ["90,3600000,1000000", "PT1M30S"]
+}
+*/

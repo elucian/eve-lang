@@ -34,7 +34,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"floor"},   .{"ceiling"}, .{"round"},  .{"abs"},     .{"min"},     .{"max"},     .{"sqrt"},
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
-    .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Ordinal"}, .{"Function"},
+    .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Duration"}, .{"Date"}, .{"Time"}, .{"Zone"}, .{"DateTime"}, .{"Ordinal"}, .{"Function"},
     .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"read"}, .{"error"}, .{"warning"}, .{"Atomic"},
     .{"Channel"}, .{"Duration"}, .{"database"}, .{"csv"}, .{"json"}, .{"Instant"}, .{"Secret"}, .{"Table"}, .{"time"}, .{"txt"}, .{"fs"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
 });
@@ -145,6 +145,9 @@ const Checker = struct {
         c.expected = null; // only the expression that the context names uses it, not what is inside
         switch (n.tag) {
             .num => {
+                if (n.text.len > 1 and n.text[0] == 'i') return "Complex";
+                if (@import("evecm").duration.parseLiteral(n.text) != null) return "Duration";
+                if (std.mem.indexOfScalar(u8, n.text, 0x5c) != null) return "Rational";
                 if (isDecimalLiteral(n.text)) return "Decimal";
                 for (n.text) |ch| if (ch == '.') return "Real";
                 for (n.text) |ch| if (std.ascii.isAlphabetic(ch)) return null;
@@ -232,8 +235,78 @@ const Checker = struct {
         if ((isType(lt, "Decimal") and isType(rt, "Real")) or (isType(lt, "Real") and isType(rt, "Decimal"))) {
             return c.fail(n, "operator {s} does not apply to {s} and {s}: a Decimal and a Real are never mixed, convert one explicitly (D-080)", .{ op, lt.?, rt.? });
         }
+        // Date and Time (time.md#operators)
+        if (isType(lt, "Date") or isType(rt, "Date") or isType(lt, "Time") or isType(rt, "Time")) {
+            const plus = std.mem.eql(u8, op, "+");
+            const minus = std.mem.eql(u8, op, "-");
+            if (isType(lt, "Date") and isType(rt, "Integer") and (plus or minus)) return "Date";
+            if (isType(lt, "Integer") and isType(rt, "Date") and plus) return "Date";
+            if (isType(lt, "Date") and isType(rt, "Date") and minus) return "Integer";
+            if (isType(lt, "Time") and isType(rt, "Duration") and (plus or minus)) return "Time";
+            if (isType(lt, "Duration") and isType(rt, "Time") and plus) return "Time";
+            if (isType(lt, "Time") and isType(rt, "Time") and minus) return "Duration";
+            const is_cmp = std.mem.eql(u8, op, "==") or std.mem.eql(u8, op, "<>") or std.mem.eql(u8, op, "<") or std.mem.eql(u8, op, ">") or std.mem.eql(u8, op, "<=") or std.mem.eql(u8, op, ">=") or std.mem.eql(u8, op, "in") or std.mem.eql(u8, op, "is") or std.mem.eql(u8, op, "is not") or std.mem.eql(u8, op, "and") or std.mem.eql(u8, op, "or") or std.mem.eql(u8, op, "not in");
+            if (!is_cmp and lt != null and rt != null) {
+                return c.fail(n, "operator {s} does not apply to {s} and {s} (spec/library/time.md#operators)", .{ op, lt.?, rt.? });
+            }
+            if (is_cmp and !(std.mem.eql(u8, op, "is") or std.mem.eql(u8, op, "is not") or std.mem.eql(u8, op, "in") or std.mem.eql(u8, op, "not in") or std.mem.eql(u8, op, "and") or std.mem.eql(u8, op, "or")) and lt != null and rt != null and !std.mem.eql(u8, lt.?, rt.?)) {
+                return c.fail(n, "cannot compare {s} with {s} (spec/library/time.md#operators)", .{ lt.?, rt.? });
+            }
+        }
+        // DateTime and Zone (time.md#operators)
+        if (isType(lt, "DateTime") or isType(rt, "DateTime") or isType(lt, "Zone") or isType(rt, "Zone")) {
+            const plus = std.mem.eql(u8, op, "+");
+            const minus = std.mem.eql(u8, op, "-");
+            if (isType(lt, "DateTime") and isType(rt, "Duration") and (plus or minus)) return "DateTime";
+            if (isType(lt, "Duration") and isType(rt, "DateTime") and plus) return "DateTime";
+            if ((isType(lt, "DateTime") or isType(lt, "Instant")) and (isType(rt, "DateTime") or isType(rt, "Instant")) and minus) return "Duration";
+            const same_ok = std.mem.eql(u8, op, "==") or std.mem.eql(u8, op, "<>");
+            const order_ok = std.mem.eql(u8, op, "<") or std.mem.eql(u8, op, ">") or std.mem.eql(u8, op, "<=") or std.mem.eql(u8, op, ">=");
+            const other_ok = std.mem.eql(u8, op, "in") or std.mem.eql(u8, op, "not in") or std.mem.eql(u8, op, "is") or std.mem.eql(u8, op, "is not") or std.mem.eql(u8, op, "and") or std.mem.eql(u8, op, "or");
+            const l_moment = isType(lt, "DateTime") or isType(lt, "Instant");
+            const r_moment = isType(rt, "DateTime") or isType(rt, "Instant");
+            if (lt != null and rt != null and !other_ok) {
+                if (same_ok and ((l_moment and r_moment) or std.mem.eql(u8, lt.?, rt.?))) return "Logic";
+                if (order_ok and l_moment and r_moment) return "Logic";
+                return c.fail(n, "operator {s} does not apply to {s} and {s} (spec/library/time.md#operators)", .{ op, lt.?, rt.? });
+            }
+        }
+        // Duration and Instant (time.md#operators): the combinations that mean something; any other with a Duration is a compile error
+        if (isType(lt, "Duration") or isType(rt, "Duration") or ((isType(lt, "Instant") or isType(rt, "Instant")) and (std.mem.eql(u8, op, "+") or std.mem.eql(u8, op, "-")))) {
+            const l_dur = isType(lt, "Duration");
+            const r_dur = isType(rt, "Duration");
+            const plus = std.mem.eql(u8, op, "+") or std.mem.eql(u8, op, "-");
+            if (l_dur and r_dur and plus) return "Duration";
+            if (l_dur and r_dur and std.mem.eql(u8, op, "/")) return "Real";
+            if (l_dur and isType(rt, "Integer") and (std.mem.eql(u8, op, "*") or std.mem.eql(u8, op, "/"))) return "Duration";
+            if (isType(lt, "Integer") and r_dur and std.mem.eql(u8, op, "*")) return "Duration";
+            if (isType(lt, "Instant") and r_dur and plus) return "Instant";
+            if (l_dur and isType(rt, "Instant") and std.mem.eql(u8, op, "+")) return "Instant";
+            if (isType(lt, "Instant") and isType(rt, "Instant") and std.mem.eql(u8, op, "-")) return "Duration";
+            const is_cmp = std.mem.eql(u8, op, "==") or std.mem.eql(u8, op, "<>") or std.mem.eql(u8, op, "<") or std.mem.eql(u8, op, ">") or std.mem.eql(u8, op, "<=") or std.mem.eql(u8, op, ">=") or std.mem.eql(u8, op, "in") or std.mem.eql(u8, op, "is") or std.mem.eql(u8, op, "is not") or std.mem.eql(u8, op, "and") or std.mem.eql(u8, op, "or");
+            if (!is_cmp and (l_dur or r_dur) and lt != null and rt != null) {
+                return c.fail(n, "operator {s} does not apply to {s} and {s} (spec/library/time.md#operators)", .{ op, lt.?, rt.? });
+            }
+        }
+        // a Complex is never mixed with a Decimal, and has no order (types.md#complex)
+        if ((isType(lt, "Complex") and isType(rt, "Decimal")) or (isType(lt, "Decimal") and isType(rt, "Complex"))) {
+            return c.fail(n, "operator {s} does not apply to {s} and {s}: a Complex and a Decimal are never mixed, convert one explicitly", .{ op, lt.?, rt.? });
+        }
+        if ((isType(lt, "Complex") or isType(rt, "Complex")) and (std.mem.eql(u8, op, "<") or std.mem.eql(u8, op, ">") or std.mem.eql(u8, op, "<=") or std.mem.eql(u8, op, ">="))) {
+            return c.fail(n, "a Complex has no order: operator {s} does not apply", .{op});
+        }
+        // a Rational and a Decimal are never mixed either (types.md#rational)
+        if ((isType(lt, "Decimal") and isType(rt, "Rational")) or (isType(lt, "Rational") and isType(rt, "Decimal"))) {
+            return c.fail(n, "operator {s} does not apply to {s} and {s}: a Rational and a Decimal are never mixed, convert one explicitly", .{ op, lt.?, rt.? });
+        }
         const cmp = [_][]const u8{ "==", "<>", "<", ">", "<=", ">=", "=~", "and", "or", "xor", "in", "not in", "is", "is not" };
         for (cmp) |o| if (std.mem.eql(u8, op, o)) return "Logic";
+        // a Complex with any other number is a Complex
+        if (isType(lt, "Complex") and (isType(rt, "Complex") or isType(rt, "Integer") or isType(rt, "Real") or isType(rt, "Rational"))) return "Complex";
+        if (isType(rt, "Complex") and (isType(lt, "Integer") or isType(lt, "Real") or isType(lt, "Rational"))) return "Complex";
+        // a Rational with a Rational or an Integer stays a Rational; with a Real it is a Real (types.md#rational)
+        if ((isType(lt, "Rational") and (isType(rt, "Rational") or isType(rt, "Integer"))) or (isType(lt, "Integer") and isType(rt, "Rational"))) return "Rational";
+        if ((isType(lt, "Rational") and isType(rt, "Real")) or (isType(lt, "Real") and isType(rt, "Rational"))) return "Real";
         // a Decimal with a Decimal or an Integer stays a Decimal
         if ((isType(lt, "Decimal") and (isType(rt, "Decimal") or isType(rt, "Integer"))) or (isType(lt, "Integer") and isType(rt, "Decimal"))) return "Decimal";
         if (isNumeric(lt) and isNumeric(rt)) {
@@ -795,7 +868,10 @@ const Checker = struct {
                 },
                 .import_decl => for (m.kids) |item| {
                     const alias = item.kids[0];
-                    if (item.public or std.mem.eql(u8, item.text, "*")) {
+                    if (std.mem.eql(u8, item.text, "*")) {
+                        try c.declare(item, if (alias.tag == .name) alias.text else ast.folderName(m.text), .{ .kind = .variable });
+                        if (alias.tag != .name) c.open_names = true;
+                    } else if (item.public or std.mem.eql(u8, item.text, "*")) {
                         c.open_names = true;
                     } else {
                         const bound = if (alias.tag == .name) alias.text else item.text;

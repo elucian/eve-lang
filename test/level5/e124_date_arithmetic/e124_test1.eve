@@ -1,0 +1,14 @@
+# variation of e124: two Dates cannot be added: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e124_test1 is
+  process main is
+    new d :Date;
+    print d + d;
+  return;
+end e124_test1;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

@@ -1,0 +1,102 @@
+# the library zone over the meta database: exists, canonical, offset, abbreviation, is_dst, names; the entries of meta.info; errors
+** spec: library/meta.md#zone
+primary aspect e129_meta_zone is
+  from lib/meta use (zone, meta);
+
+  function code_of_unknown() => (@r :Integer) is
+    new x := zone.offset("Mars/Base", Instant.epoch);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_type() => (@r :Integer) is
+    new x := zone.exists(5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_instant() => (@r :Integer) is
+    new x := zone.offset("UTC", 5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_info() => (@r :Integer) is
+    new x := meta.info("nothing");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new summer := Instant.parse("2026-07-01T12:00:00Z");
+    new winter := Instant.parse("2026-01-15T12:00:00Z");
+    expect zone.exists("Europe/Bucharest");
+    expect zone.exists("UTC");
+    expect zone.exists("Asia/Calcutta");
+    expect not zone.exists("Mars/Base");
+    expect not zone.exists("europe/bucharest");
+    expect not zone.exists("");
+    expect zone.canonical("Asia/Calcutta") == "Asia/Kolkata";
+    expect zone.canonical("Asia/Kolkata") == "Asia/Kolkata";
+    expect zone.canonical("US/Eastern") == "America/New_York";
+    expect zone.canonical("Europe/Bucharest") == "Europe/Bucharest";
+    expect zone.offset("UTC", summer) == 0s;
+    expect zone.offset("Europe/Bucharest", winter) == 2h;
+    expect zone.offset("Europe/Bucharest", summer) == 3h;
+    expect zone.offset("America/New_York", winter) == -5h;
+    expect zone.offset("America/New_York", summer) == -4h;
+    expect zone.offset("Asia/Kolkata", summer) == 5h + 30m;
+    expect zone.offset("Asia/Kathmandu", summer) == 5h + 45m;
+    expect zone.offset("Asia/Tokyo", winter) == 9h;
+    expect zone.offset("Australia/Lord_Howe", winter) == 11h;   ** January is summer in the south
+    expect zone.offset("Australia/Lord_Howe", summer) == 10h + 30m;
+    expect zone.offset("Asia/Calcutta", summer) == zone.offset("Asia/Kolkata", summer);
+    expect zone.offset("Europe/Dublin", summer) == 1h;
+    expect zone.offset("Europe/Dublin", winter) == 0s;
+    expect zone.abbreviation("Europe/Bucharest", winter) == "EET";
+    expect zone.abbreviation("Europe/Bucharest", summer) == "EEST";
+    expect zone.abbreviation("America/New_York", summer) == "EDT";
+    expect zone.abbreviation("Asia/Kolkata", summer) == "IST";
+    expect zone.abbreviation("Asia/Tehran", summer) == "+0330";
+    expect zone.abbreviation("UTC", summer) == "UTC";
+    expect zone.is_dst("Europe/Bucharest", summer);
+    expect not zone.is_dst("Europe/Bucharest", winter);
+    expect zone.is_dst("America/New_York", summer);
+    expect not zone.is_dst("Asia/Tokyo", summer);
+    expect not zone.is_dst("UTC", summer);
+    expect zone.offset("Europe/Bucharest", Instant.parse("2026-03-29T00:59:59Z")) == 2h;
+    expect zone.offset("Europe/Bucharest", Instant.parse("2026-03-29T01:00:00Z")) == 3h;
+    expect zone.offset("Europe/Bucharest", Instant.parse("2026-10-25T00:59:59Z")) == 3h;
+    expect zone.offset("Europe/Bucharest", Instant.parse("2026-10-25T01:00:00Z")) == 2h;
+    expect zone.offset("America/New_York", Instant.parse("2026-03-08T06:59:59Z")) == -5h;
+    expect zone.offset("America/New_York", Instant.parse("2026-03-08T07:00:00Z")) == -4h;
+    expect zone.offset("Europe/Bucharest", Instant.parse("2090-01-01T00:00:00Z")) == 2h;
+    expect zone.offset("Europe/Bucharest", Instant.parse("2090-07-01T00:00:00Z")) == 3h;
+    expect zone.offset("Europe/Bucharest", Instant.parse("1850-01-01T00:00:00Z")) == 1h + 44m + 24s;
+    expect zone.offset("Pacific/Apia", Instant.parse("2011-12-29T12:00:00Z")) == -10h;
+    expect zone.offset("Pacific/Apia", Instant.parse("2011-12-30T12:00:00Z")) == 14h;
+    expect zone.names().length() == 598;
+    expect zone.names()[1] == "Africa/Abidjan";
+    expect zone.names().contains("Europe/Bucharest");
+    expect zone.names().contains("Asia/Calcutta");
+    expect zone.names().sort() == zone.names();
+    expect meta.info("tzdata") == "2026e";
+    expect meta.info("schema") == "2";
+    expect meta.info("zones") == "345";
+    expect meta.info("zone_links") == "253";
+    expect meta.info("countries") == "249";
+    expect meta.info("cldr") == "49.0.0";
+    expect code_of_unknown() == $err_argument;
+    expect code_of_type() == $err_argument;
+    expect code_of_instant() == $err_argument;
+    expect code_of_info() == $err_key;
+    print zone.offset("Europe/Bucharest", summer), zone.abbreviation("Europe/Bucharest", summer);
+    print meta.info("tzdata");
+  return;
+end e129_meta_zone;
+/*@expect
+{
+  "stdout": ["PT3H,EEST", "2026e"]
+}
+*/

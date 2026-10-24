@@ -13,6 +13,12 @@ pub const chunk = @import("chunk.zig");
 
 /// The `Decimal` type (exact numbers).
 pub const decimal = @import("decimal.zig");
+pub const rational = @import("rational.zig");
+pub const complex = @import("complex.zig");
+pub const duration = @import("duration.zig");
+pub const calendar = @import("calendar.zig");
+pub const timefmt = @import("timefmt.zig");
+pub const zone = @import("zone.zig");
 
 /// The `Instant` type and the calendar.
 pub const instant = @import("instant.zig");
@@ -52,6 +58,12 @@ test {
     _ = op;
     _ = chunk;
     _ = decimal;
+    _ = rational;
+    _ = complex;
+    _ = duration;
+    _ = calendar;
+    _ = timefmt;
+    _ = zone;
     _ = instant;
     _ = nfc;
     _ = value;

@@ -29,6 +29,12 @@ What each one measures (the `** perf:` line of the file).
 | `p1b_calls` | function calls, recursion (`fib(20)`), parameter binding |
 | `p1c_collections` | list appends and iteration (60,000 elements), DataMap and DataSet |
 | `p1d_strings` | string appends, placeholders, regular expression matches |
+| `p1e_rational` | exact fractions (`Rational`): a telescoping sum of 200,000 fractions, 20,000 runs of Newton's square root of 2 in fractions, 100,000 comparisons; the twin uses Python's `fractions.Fraction` |
+| `p1f_complex` | complex numbers (`Complex`): the Mandelbrot iteration `z * z + c` on a grid of 70 by 40 points, up to 100 iterations; the twin uses Python's `complex` |
+| `p1g_dates` | dates (`Date`): for 40,000 consecutive days the year, month, day, weekday and ISO week, `add_months` and a difference of days; the twin uses Python's `datetime.date` |
+| `p1h_time_format` | patterns: 20,000 dates written as dd/MM/yyyy and read back, 20,000 instants written as ISO text with milliseconds; the twin uses `strftime` and `strptime` |
+| `p1i_zone_offsets` | time zones: `zone.offset` for 60,000 instants (1900 to 2100) in three zones, read from the meta database; the twin uses `zoneinfo` |
+| `p1j_datetime` | `DateTime`: 60,000 instants seen in America/New_York with the hour, the day and the offset, and `time.make` for every 20th; the twin uses `zoneinfo` |
 | **Level 2** | |
 | `p2a_aspects` | 5,000 `apply` of an aspect with two inputs and one output (a new scope and a new boot for each call) |
 | `p2b_closures` | a closure called 50,000 times, a lambda called 50,000 times, a function that makes closures 2,000 times |
@@ -142,3 +148,18 @@ The sum of the median times of the benchmarks of each level. A dash means the le
 | 0.0.7 | 2026-10-19 | 138 ms | 91 ms | 141 ms | 550 ms | 80 ms | 2297 ms |
 | 0.0.8 | 2026-10-21 | 248 ms | 165 ms | 322 ms | 930 ms | 131 ms | 2467 ms |
 <!-- runs:end -->
+
+## Rational speed (2026-10-24, F-LNG-30)
+
+Exact fractions are as cheap as floats in the VM, because the work is two 64-bit multiplications and a GCD of 64-bit numbers (`code/evecm/src/rational.zig`): addition takes the GCD of the denominators first (Knuth 4.5.1), multiplication reduces across before it multiplies, so a result in lowest terms comes without a second reduction and the products stay inside 128 bits.
+
+| Measure | Result |
+|---|---|
+| Native, one addition or division of fractions (Zig, ReleaseFast) | about 25 ns (a `Real` addition is 1 ns) |
+| `p1e_rational` (about 1.3 million operations on the bytecode machine) | 80 to 120 ms; the same loops on `Real` take 150 to 235 ms in the same session: the interpreter dispatch costs more than the fraction |
+| `p1e_rational` against Python `fractions.Fraction` | 0.07x to 0.1x: 10 to 15 times faster |
+| Before the GCD-first addition (one 128-bit GCD per operation) | 860 ns per addition: 35 times slower |
+
+Run `python script/bmark.py --level 1` to repeat it. The correctness side is `test/level3/c46` to `c49` (literals, 100 laws, Farey counts, harmonic numbers up to the overflow at n = 47, Bernoulli numbers B20 and B30, 300 sorted fractions: all checked against Python's `fractions`) and the 200,000 random operations of the unit test `random operands agree with the plain formula` in `rational.zig`.
+
+**Complex (2026-10-24, F-LNG-31).** `p1f_complex` runs at about 1.3x the time of CPython's built-in `complex` (110 ms against 84 ms); the loop `z = z * z + c` alone costs 1.35x the same loop on `Real`. Most of the time is the call `math.abs(z)` of a library module in the loop condition (TD-71), not the arithmetic.

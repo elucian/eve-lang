@@ -1,0 +1,48 @@
+** Vectors and matrices as lists of numbers and lists of lists (L2b).
+** @spec spec/library/math.md#module-linear  @feature F-LIB-03  @decision D-214  @tests test/level1/a113_math_linear
+module linear is
+  export (dot, cross, norm, scale, add, subtract, transpose, matmul, matvec, identity, trace, det, inverse, solve);
+
+  ** Dot product of two vectors of the same length.
+  external function dot(a: List, b: List) => (@result: Real);
+
+  ** Cross product of two vectors of 3 elements.
+  external function cross(a: List, b: List) => (@result: List);
+
+  ** Euclidean length of a vector.
+  external function norm(v: List) => (@result: Real);
+
+  ** A vector or a matrix with every element multiplied by k.
+  external function scale(x: List, k: {Real | Integer | Decimal}) => (@result: List);
+
+  ** Element-wise sum of two vectors or of two matrices of the same shape.
+  external function add(a: List, b: List) => (@result: List);
+
+  ** Element-wise difference of two vectors or of two matrices of the same shape.
+  external function subtract(a: List, b: List) => (@result: List);
+
+  ** Rows become columns.
+  external function transpose(m: List) => (@result: List);
+
+  ** Matrix product; the columns of a equal the rows of b.
+  external function matmul(a: List, b: List) => (@result: List);
+
+  ** Matrix times vector.
+  external function matvec(m: List, v: List) => (@result: List);
+
+  ** The identity matrix of size n.
+  external function identity(n: Integer) => (@result: List);
+
+  ** Sum of the diagonal of a square matrix.
+  external function trace(m: List) => (@result: Real);
+
+  ** Determinant of a square matrix.
+  external function det(m: List) => (@result: Real);
+
+  ** Inverse of a square matrix; a singular matrix is $err_argument.
+  external function inverse(m: List) => (@result: List);
+
+  ** The vector x with a * x = b; a singular matrix is $err_argument.
+  external function solve(a: List, b: List) => (@result: List);
+
+end linear;

@@ -1,0 +1,18 @@
+** Exponential and logarithms (L2).
+** @spec spec/library/math.md#module-explog  @feature F-LIB-03  @decision D-214  @tests test/level1/a110_math_basic
+module explog is
+  export (exp, log, log2, log10);
+
+  ** e to the power x.
+  external function exp(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Natural logarithm; x <= 0 is $err_argument.
+  external function log(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Logarithm of base 2.
+  external function log2(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Logarithm of base 10.
+  external function log10(x: {Real | Integer | Decimal}) => (@result: Real);
+
+end explog;

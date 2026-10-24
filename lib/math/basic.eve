@@ -1,0 +1,48 @@
+** Absolute value, powers, roots, integer division, gcd (L2).
+** @spec spec/library/math.md#module-basic  @feature F-LIB-03  @decision D-214  @tests test/level1/a110_math_basic
+module basic is
+  export (abs, sign, min, max, clamp, pow, sqrt, cbrt, hypot, div, mod, divmod, gcd, lcm);
+
+  ** The absolute value, of the type of x.
+  external function abs(x: {Real | Integer | Decimal}) => (@result: {Real | Integer | Decimal});
+
+  ** -1, 0 or 1.
+  external function sign(x: {Real | Integer | Decimal}) => (@result: Integer);
+
+  ** The smaller of two numbers.
+  external function min(a: {Real | Integer | Decimal}, b: {Real | Integer | Decimal}) => (@result: {Real | Integer | Decimal});
+
+  ** The larger of two numbers.
+  external function max(a: {Real | Integer | Decimal}, b: {Real | Integer | Decimal}) => (@result: {Real | Integer | Decimal});
+
+  ** x limited to low .. high.
+  external function clamp(x: {Real | Integer | Decimal}, low: {Real | Integer | Decimal}, high: {Real | Integer | Decimal}) => (@result: {Real | Integer | Decimal});
+
+  ** x to the power n; a negative n gives a Real.
+  external function pow(x: {Real | Integer | Decimal}, n: {Real | Integer | Decimal}) => (@result: {Real | Integer | Decimal});
+
+  ** Square root; a negative x is $err_argument.
+  external function sqrt(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Cube root.
+  external function cbrt(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** sqrt(x*x + y*y).
+  external function hypot(x: {Real | Integer | Decimal}, y: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Integer division rounded toward minus infinity.
+  external function div(a: Integer, b: Integer) => (@result: Integer);
+
+  ** Remainder with the sign of b.
+  external function mod(a: Integer, b: Integer) => (@result: Integer);
+
+  ** (div, mod) as a list of two.
+  external function divmod(a: Integer, b: Integer) => (@result: List);
+
+  ** Greatest common divisor.
+  external function gcd(a: Integer, b: Integer) => (@result: Integer);
+
+  ** Least common multiple.
+  external function lcm(a: Integer, b: Integer) => (@result: Integer);
+
+end basic;

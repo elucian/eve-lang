@@ -1,0 +1,22 @@
+process main  (function 0, 4 registers, 0 parameters)
+     0  line 14   loadk    r1 k0    ; duration 60000000 us
+     1  line 14   loadk    r2 k0    ; duration 60000000 us
+     2  line 14   eq       r0 r1 r2
+     3  line 14   expect   r0
+     4  line 14   safe    
+     5  line 15   loadk    r2 k1    ; duration 5400000000 us
+     6  line 15   loadk    r3 k2    ; duration 3600000000 us
+     7  line 15   sub      r1 r2 r3
+     8  line 15   loadk    r2 k3    ; duration 1800000000 us
+     9  line 15   eq       r0 r1 r2
+    10  line 15   expect   r0
+    11  line 15   safe    
+    12  line 16   evalx    r1 x0    ; tree walker: call
+    13  line 16   loadk    r2 k4    ; duration 2500000 us
+    14  line 16   eq       r0 r1 r2
+    15  line 16   expect   r0
+    16  line 16   safe    
+    17  line 17   evalx    r0 x1    ; tree walker: call
+    18  line 17   print    r0 x1 print
+    19  line 17   safe    
+    20  line 13   halt    

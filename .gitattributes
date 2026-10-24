@@ -37,13 +37,15 @@ LICENSE    text eol=lf
 *.svg      filter=lfs diff=lfs merge=lfs -text
 # DuckDB databases (evedb) in Git LFS: one file per database, binary, often large.
 *.duckdb   filter=lfs diff=lfs merge=lfs -text
+# SQLite databases in Git LFS (D-222): the reference data lib/meta/meta.db, which is embedded in eve.exe, and the databases of the tests.
+# A build needs the real file, not the pointer: `git lfs pull` after a clone (the build stops with a message when it finds a pointer).
+*.db       filter=lfs diff=lfs merge=lfs -text
 
 # Binary files: no line-ending change, no text diff.
 *.exe      binary
 *.dll      binary
 *.pdb      binary
 *.evb      binary
-*.db       binary
 *.sqlite   binary
 *.png      binary
 *.jpg      binary

@@ -105,6 +105,15 @@ const Linker = struct {
         return list.items;
     }
 
+    /// Is `name` a submodule that the module `m` re-exports (`from name export (…)`)?
+    fn isSubmodule(m: *const Node, name: []const u8) bool {
+        for (m.kids) |d| {
+            if (d.tag != .import_decl) continue;
+            for (d.kids) |item| if (item.is_external and std.mem.eql(u8, item.text, name)) return true;
+        }
+        return false;
+    }
+
     /// Is `name` one of `names`?
     fn isListed(names: []const []const u8, name: []const u8) bool {
         for (names) |n| if (std.mem.eql(u8, n, name)) return true;
@@ -174,6 +183,8 @@ const Linker = struct {
         for (l.lib_path) |lp| {
             try cands.append(l.a, try l.join("{s}/{s}/{s}.eve", .{ lp, path, name }));
             try cands.append(l.a, try l.join("{s}/{s}.eve", .{ lp, name }));
+            // a folder library: `from lib/math use (trig)` is lp/math/trig.eve (D-214)
+            if (std.mem.startsWith(u8, path, "lib/")) try cands.append(l.a, try l.join("{s}/{s}/{s}.eve", .{ lp, path["lib/".len..], name }));
             try cands.append(l.a, try l.join("{s}/{s}/{s}.eve", .{ lp, name, name }));
         }
         var file: []const u8 = "";
@@ -194,7 +205,9 @@ const Linker = struct {
         if (!std.mem.eql(u8, tree.text, name)) {
             return l.fail(at, "the file '{s}' declares the module '{s}': the names must be equal", .{ file, tree.text });
         }
+        const reexported = try l.reexports(tree, path, name);
         for (try l.exportsOf(tree)) |nm| {
+            if (isListed(reexported, nm)) continue;
             switch (memberKind(tree, nm)) {
                 .shared => {},
                 .variable => return l.fail(tree, "the module '{s}' exports the variable '{s}': a module has no public variables (D-068)", .{ name, nm }),
@@ -210,6 +223,52 @@ const Linker = struct {
         return tree;
     }
 
+    // @spec spec/semantics/modules.md#re-export
+    // @feature F-STR-01
+    // @tests test/level3/c43_module_reexport
+    /// Rewrite the `from sub export (…)` declarations of the module `tree` (file `name.eve` imported by `path`): the submodule
+    /// is `path/name/sub.eve`; the declaration becomes an `export` of the real names plus an import `sub(*)`. Returns the re-exported names.
+    fn reexports(l: *Linker, tree: *const Node, path: []const u8, name: []const u8) Error![]const []const u8 {
+        var names: std.ArrayList([]const u8) = .empty;
+        var kids: std.ArrayList(*const Node) = .empty;
+        try kids.appendSlice(l.a, tree.kids);
+        const subpath = try l.join("{s}/{s}", .{ path, name });
+        for (tree.kids) |k| {
+            if (k.tag != .export_decl or k.text.len == 0) continue;
+            const sm = (try l.loadModule(k, subpath, k.text)) orelse
+                return l.fail(k, "the submodule '{s}' is not in the folder '{s}'", .{ k.text, subpath });
+            const sub_exports = try l.exportsOf(sm);
+            var picked: std.ArrayList(*const Node) = .empty;
+            for (k.kids) |nm| {
+                if (std.mem.eql(u8, nm.text, "*")) {
+                    for (sub_exports) |e| try picked.append(l.a, try l.node(.name, k, e));
+                } else if (isListed(sub_exports, nm.text)) {
+                    try picked.append(l.a, nm);
+                } else return l.fail(nm, "the submodule '{s}' does not export '{s}'", .{ k.text, nm.text });
+            }
+            for (picked.items) |nm| try names.append(l.a, nm.text);
+            const item = try l.node(.import_item, k, k.text);
+            @constCast(item).public = true;
+            @constCast(item).is_external = true; // marks a re-exported submodule: `parent.sub.name` reaches it
+            // a list of names, not `*`: the names that are not listed are not the parent's, so they are not checked for clashes
+            @constCast(item).is_async = !(k.kids.len == 1 and std.mem.eql(u8, k.kids[0].text, "*"));
+            @constCast(item).kids = try l.a.dupe(*const Node, &.{&ast.none});
+            const decl = try l.node(.import_decl, k, subpath);
+            @constCast(decl).kids = try l.a.dupe(*const Node, &.{item});
+            try kids.append(l.a, decl);
+            @constCast(k).text = "";
+            @constCast(k).kids = picked.items;
+        }
+        if (names.items.len > 0) @constCast(tree).kids = kids.items;
+        return names.items;
+    }
+
+    fn node(l: *Linker, tag: ast.Tag, at: *const Node, text: []const u8) Error!*Node {
+        const n = try l.a.create(Node);
+        n.* = .{ .tag = tag, .line = at.line, .col = at.col, .text = text };
+        return n;
+    }
+
     /// Load every module of the folder of `path`, for `use (*)`; the key `path|*` holds them all.
     fn loadFolder(l: *Linker, at: *const Node, path: []const u8) Error!void {
         const folder = try l.folderOf(path);
@@ -222,6 +281,12 @@ const Linker = struct {
             const stem = entry.name[0 .. entry.name.len - 4];
             if (try l.loadModule(at, path, try l.join("{s}", .{stem}))) |m| try all.append(l.a, m);
         }
+        // the order of the folder is not fixed: by name, so "the first import wins" is the same on every machine
+        std.mem.sort(*const Node, all.items, {}, struct {
+            fn less(_: void, a: *const Node, b: *const Node) bool {
+                return std.mem.lessThan(u8, a.text, b.text);
+            }
+        }.less);
         const block = try l.a.create(Node);
         block.* = .{ .tag = .block, .line = at.line, .col = at.col, .kids = all.items };
         try l.modules.put(l.a, try l.join("{s}|*", .{path}), block);
@@ -239,21 +304,50 @@ const Linker = struct {
                     try l.loadFolder(item, decl.text);
                     const set = l.modules.get(try l.join("{s}|*", .{decl.text})) orelse continue;
                     for (set.kids) |m| try l.merge(item, &seen, m);
+                    try l.mergedModule(item, decl.text, set);
                 } else if (try l.loadModule(item, decl.text, item.text)) |m| {
-                    if (item.public) try l.merge(item, &seen, m);
+                    if (item.public and !item.is_async) try l.merge(item, &seen, m);
                 }
             }
         }
     }
 
-    /// Check that the names of the module `m` do not collide with those of the modules already merged.
+    // @spec spec/semantics/modules.md#import
+    // @feature F-STR-01
+    // @tests test/level3/c44_import_alias_all
+    /// `use (*) alias x`: one module `x` that holds the bare names of every module of the folder and exports all of them;
+    /// the key is `path|*as|x`. The VM loads it like any module.
+    fn mergedModule(l: *Linker, item: *const Node, path: []const u8, set: *const Node) Error!void {
+        const alias = if (item.kids[0].tag == .name) item.kids[0].text else ast.folderName(path);
+        var names: std.ArrayList(*const Node) = .empty;
+        for (set.kids) |m| for (try l.exportsOf(m)) |e| try names.append(l.a, try l.node(.name, item, e));
+        const star = try l.node(.import_item, item, "*");
+        @constCast(star).kids = try l.a.dupe(*const Node, &.{&ast.none});
+        @constCast(star).is_external = true; // the bare names only: no merged module of its own
+        const imp = try l.node(.import_decl, item, path);
+        @constCast(imp).kids = try l.a.dupe(*const Node, &.{star});
+        const exp = try l.node(.export_decl, item, "");
+        @constCast(exp).kids = names.items;
+        const mod = try l.node(.module, item, alias);
+        @constCast(mod).kids = try l.a.dupe(*const Node, &.{ imp, exp });
+        try l.modules.put(l.a, try l.join("{s}|*as|{s}", .{ path, alias }), mod);
+    }
+
+    // @spec spec/semantics/modules.md#import
+    /// A warning on stderr; the program still runs (there is no warning list in `Diag` yet, TD-67).
+    fn warn(l: *Linker, comptime code: []const u8, at: *const Node, comptime fmt: []const u8, args: anytype) void {
+        const file = if (l.where.*.len > 0) l.where.* else "script";
+        std.debug.print("{s}:{d}:{d}: warning " ++ code ++ ": " ++ fmt ++ "\n", .{ file, at.line, at.col } ++ args);
+    }
+
+    /// Warn for the names of the module `m` that an earlier module already gives (the first wins), and remember `m`.
     fn merge(l: *Linker, at: *const Node, seen: *std.ArrayList(*const Node), m: *const Node) Error!void {
         const mine = try l.exportsOf(m);
         for (seen.items) |other| {
             if (other == m) return;
             for (try l.exportsOf(other)) |nm| {
                 if (isListed(mine, nm)) {
-                    return l.fail(at, "the name '{s}' comes from the modules '{s}' and '{s}': list the modules one by one (modules.md)", .{ nm, other.text, m.text });
+                    l.warn("$wrn_hidden", at, "the name '{s}' comes from the modules '{s}' and '{s}': the first import wins, '{s}' of '{s}' is hidden", .{ nm, other.text, m.text, nm, m.text });
                 }
             }
         }
@@ -265,10 +359,11 @@ const Linker = struct {
         for (tree.kids) |decl| {
             if (decl.tag != .import_decl) continue;
             for (decl.kids) |item| {
-                if (item.public or std.mem.eql(u8, item.text, "*")) continue;
-                const bound = if (item.kids[0].tag == .name) item.kids[0].text else item.text;
+                const star = std.mem.eql(u8, item.text, "*");
+                if (item.public) continue;
+                const bound = if (item.kids[0].tag == .name) item.kids[0].text else if (star) ast.folderName(decl.text) else item.text;
                 if (!std.mem.eql(u8, bound, name)) continue;
-                const key = std.fmt.allocPrint(l.a, "{s}|{s}", .{ decl.text, item.text }) catch return null;
+                const key = (if (star) std.fmt.allocPrint(l.a, "{s}|*as|{s}", .{ decl.text, bound }) else std.fmt.allocPrint(l.a, "{s}|{s}", .{ decl.text, item.text })) catch return null;
                 return l.modules.get(key);
             }
         }
@@ -285,7 +380,7 @@ const Linker = struct {
         }
         if (n.tag == .field and n.kids[0].tag == .name) {
             if (l.moduleOf(tree, n.kids[0].text)) |m| {
-                if (!isListed(try l.exportsOf(m), n.text)) {
+                if (!isListed(try l.exportsOf(m), n.text) and !isSubmodule(m, n.text)) {
                     return l.fail(n, "'{s}' is not exported by the module '{s}'", .{ n.text, m.text });
                 }
             }
@@ -336,6 +431,7 @@ const Linker = struct {
             if (decl.tag != .import_decl) continue;
             for (decl.kids) |item| {
                 if (std.mem.eql(u8, item.text, "*")) {
+                    if (item.kids[0].tag == .name) continue;
                     const key = std.fmt.allocPrint(l.a, "{s}|*", .{decl.text}) catch return null;
                     const set = l.modules.get(key) orelse continue;
                     for (set.kids) |m| if (exportsName(m, name)) return m;

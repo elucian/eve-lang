@@ -1,0 +1,14 @@
+# variation of e133: a DateTime plus a plain number: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e133_test1 is
+  process main is
+    new d :DateTime;
+    print d + 5;
+  return;
+end e133_test1;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

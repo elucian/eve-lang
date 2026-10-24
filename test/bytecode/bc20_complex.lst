@@ -1,0 +1,37 @@
+process main  (function 0, 6 registers, 0 parameters)
+     0  line 14   loadi    r3 1
+     1  line 14   loadk    r4 k0    ; (i2 imaginary, real 0)
+     2  line 14   add      r2 r3 r4
+     3  line 14   loadi    r4 3
+     4  line 14   loadk    r5 k1    ; (i1 imaginary, real 0)
+     5  line 14   sub      r3 r4 r5
+     6  line 14   mul      r1 r2 r3
+     7  line 14   loadi    r3 5
+     8  line 14   loadk    r4 k2    ; (i5 imaginary, real 0)
+     9  line 14   add      r2 r3 r4
+    10  line 14   eq       r0 r1 r2
+    11  line 14   expect   r0
+    12  line 14   safe    
+    13  line 15   loadk    r2 k1    ; (i1 imaginary, real 0)
+    14  line 15   loadk    r3 k1    ; (i1 imaginary, real 0)
+    15  line 15   mul      r1 r2 r3
+    16  line 15   loadi    r3 1
+    17  line 15   neg      r2 r3
+    18  line 15   eq       r0 r1 r2
+    19  line 15   expect   r0
+    20  line 15   safe    
+    21  line 16   evalx    r1 x0    ; tree walker: call
+    22  line 16   loadi    r2 1
+    23  line 16   eq       r0 r1 r2
+    24  line 16   expect   r0
+    25  line 16   safe    
+    26  line 17   loadi    r2 1
+    27  line 17   loadk    r3 k0    ; (i2 imaginary, real 0)
+    28  line 17   add      r1 r2 r3
+    29  line 17   loadi    r3 3
+    30  line 17   loadk    r4 k1    ; (i1 imaginary, real 0)
+    31  line 17   sub      r2 r3 r4
+    32  line 17   add      r0 r1 r2
+    33  line 17   print    r0 x1 print
+    34  line 17   safe    
+    35  line 13   halt    

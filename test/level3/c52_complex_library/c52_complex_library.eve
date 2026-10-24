@@ -1,0 +1,102 @@
+# library math, module complex: of, real_part, imag_part, modulus, argument, conjugate, from_polar, exp, log, sqrt, pow, is_real; abs of a Complex. Expected values from Python's cmath
+** spec: library/math.md#module-complex
+primary aspect c52_complex_library is
+  from lib use (math);
+
+  function close(a :Complex, b :Complex) => (@r :Logic) is
+    let r := math.modulus(a - b) < 1.0e-12;
+  return;
+  function code_of_log() => (@r :Integer) is
+    new x := math.complex.log(0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_polar() => (@r :Integer) is
+    new x := math.from_polar(-1, 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_pow() => (@r :Integer) is
+    new x := math.complex.pow(0, i1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_type() => (@r :Integer) is
+    new x := math.modulus("3");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_decimal() => (@r :Integer) is
+    new d := 1.5d;
+    new x := math.modulus(d);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    expect math.complex.of(3, 4) == (3 + i4);
+    expect math.complex.of(1\2, 0.5) == (0.5 + i0.5);
+    expect math.real_part(3 + i4) == 3;
+    expect math.imag_part(3 + i4) == 4;
+    expect math.real_part(7) == 7;
+    expect math.imag_part(7) == 0;
+    expect math.modulus(3 + i4) == 5;
+    expect math.modulus(-5) == 5;
+    expect math.modulus(1\2) == 0.5;
+    expect math.abs(3 + i4) == 5;
+    expect math.abs(-3 + i4) == 5;
+    expect math.abs(-7) == 7;
+    expect math.modulus(1.0e200 + i1.0e200) > 1.4e200;
+    expect math.argument(1 + i1) == 0.7853981633974483;
+    expect math.argument(-1 + i0) == 3.141592653589793;
+    expect math.argument(0 - i1) == -1.5707963267948966;
+    expect math.argument(0) == 0;
+    expect math.conjugate(3 + i4) == (3 - i4);
+    expect math.conjugate(5) == 5;
+    expect math.is_real(5 + i0);
+    expect math.is_real(2);
+    expect not math.is_real(1 + i1);
+    expect close(math.from_polar(2, math.pi / 2), (0 + i2));
+    expect close(math.from_polar(1, math.pi), -1);
+    expect math.from_polar(0, 1) == 0;
+    expect math.from_polar(3, 0) == 3;
+    expect close(math.complex.exp(0), 1);
+    expect close(math.complex.exp(1 + i2), (-1.1312043837568135 + i2.4717266720048188));
+    expect close(math.complex.exp(math.pi * i1), -1);
+    expect close(math.complex.log(3 + i4), (1.6094379124341003 + i0.9272952180016122));
+    expect close(math.complex.log(-1), (0 + i3.141592653589793));
+    expect close(math.complex.log(math.complex.exp(0.5 + i0.25)), (0.5 + i0.25));
+    expect close(math.complex.sqrt(-4), (0 + i2));
+    expect close(math.complex.sqrt(3 + i4), (2 + i1));
+    expect close(math.complex.sqrt(-3 - i4), (1 - i2));
+    expect close(math.complex.sqrt(9), 3);
+    expect close(math.complex.sqrt(i2), (1 + i1));
+    expect math.complex.sqrt(0) == 0;
+    expect close(math.complex.pow(2, 0.5), 1.4142135623730951);
+    expect close(math.complex.pow(1 + i2, 0.5 + i1), (0.1042330549168707 + i0.48309593926990946));
+    expect close(math.complex.pow(i1, i1), 0.20787957635076193);
+    expect math.complex.pow(0, 0) == 1;
+    expect math.complex.pow(0, 2) == 0;
+    expect close(math.complex.pow(3 + i4, 2), (-7 + i24));
+    expect code_of_log() == $err_argument;
+    expect code_of_polar() == $err_argument;
+    expect code_of_pow() == $err_divide;
+    expect code_of_type() == $err_argument;
+    expect code_of_decimal() == $err_argument;
+    print math.complex.sqrt(-4);
+    print math.complex.sqrt(3 + i4);
+    print math.conjugate(1 + i1);
+    print math.argument(-1 + i0);
+    print math.modulus(3 + i4);
+  return;
+end c52_complex_library;
+/*@expect
+{
+  "stdout": ["(0 + i2)", "(2 + i1)", "(1 - i1)", "3.141592653589793", "5"]
+}
+*/

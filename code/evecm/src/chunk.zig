@@ -14,7 +14,7 @@ const ast = @import("ast.zig");
 pub const Inst = op.Inst;
 
 /// A constant of the program.
-pub const Const = union(enum) { int: i64, real: f64, str: []const u8 };
+pub const Const = union(enum) { int: i64, real: f64, str: []const u8, rat: [2]i64, cpx: [2]f64, dur: i64 };
 
 pub const no_result: u8 = 255;
 
@@ -80,6 +80,9 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                         .int => |v| try w.print("    ; {d}", .{v}),
                         .real => |v| try w.print("    ; {d}", .{v}),
                         .str => |v| try w.print("    ; \"{s}\"", .{v}),
+                        .dur => |v| try w.print("    ; duration {d} us", .{v}),
+                        .cpx => |v| try w.print("    ; (i{d} imaginary, real {d})", .{ v[1], v[0] }),
+                        .rat => |v| try w.print("    ; {d}\\{d}", .{ v[0], v[1] }),
                     }
                 },
                 .loadg => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),

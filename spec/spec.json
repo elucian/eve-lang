@@ -14,7 +14,7 @@
     [2, "sources-of-the-rules", 34, "Sources of the rules"],
     [2, "change-log", 38, "Change log"]
    ]},
-  {"path": "lexical/lexical.md", "title": "Lexical Structure", "status": "draft", "summary": "Words in this document: must and must not mark a requirement for every implementation; may marks a free choice. A rule marked (proposed) is not yet decided by the author; it is listed in [Open points]", "lines": 264, "bytes": 19538, "features": [], "sections": [
+  {"path": "lexical/lexical.md", "title": "Lexical Structure", "status": "draft", "summary": "Words in this document: must and must not mark a requirement for every implementation; may marks a free choice. A rule marked (proposed) is not yet decided by the author; it is listed in [Open points]", "lines": 268, "bytes": 20151, "features": [], "sections": [
     [2, "source-text", 7, "Source text"],
     [2, "tokens", 17, "Tokens"],
     [2, "file-header", 38, "File header"],
@@ -25,15 +25,16 @@
     [2, "literals", 121, "Literals"],
     [3, "integer-and-natural", 123, "Integer and Natural"],
     [3, "real", 136, "Real"],
-    [3, "rational", 146, "Rational"],
-    [3, "rune", 150, "Rune"],
-    [3, "string", 159, "String"],
-    [3, "constants", 206, "Constants"],
-    [3, "collection-delimiters", 210, "Collection delimiters"],
-    [2, "operators-and-punctuation", 222, "Operators and punctuation"],
-    [2, "layout", 243, "Layout"],
-    [2, "lexical-errors", 252, "Lexical errors"],
-    [2, "open-points", 256, "Open points"]
+    [3, "imaginary", 146, "Imaginary"],
+    [3, "rational", 150, "Rational"],
+    [3, "rune", 154, "Rune"],
+    [3, "string", 163, "String"],
+    [3, "constants", 210, "Constants"],
+    [3, "collection-delimiters", 214, "Collection delimiters"],
+    [2, "operators-and-punctuation", 226, "Operators and punctuation"],
+    [2, "layout", 247, "Layout"],
+    [2, "lexical-errors", 256, "Lexical errors"],
+    [2, "open-points", 260, "Open points"]
    ]},
   {"path": "library/atomic.md", "title": "Atomic", "status": "draft", "summary": "Atomic(:T) is a class of the standard library. It wraps the atomic of the machine (the virtual machine is written in Zig, and the class is a wrapper of the Zig atomic): each operation on the value is ", "lines": 40, "bytes": 2219, "features": ["F-SPEC-04"], "sections": [
     [2, "what-it-is", 5, "What it is"],
@@ -44,6 +45,10 @@
   {"path": "library/builtins.md", "title": "Built-in names", "status": "draft", "summary": "These names need no import and no library file: the virtual machine provides them. A later version may write some of them in a library module that the machine loads on its own; the names and the rules", "lines": 24, "bytes": 1693, "features": ["F-LIB-01", "F-LIB-02"], "sections": [
     [2, "output-input-and-logs", 7, "Output, input and logs"],
     [2, "errors", 21, "Errors"]
+   ]},
+  {"path": "library/bytes.md", "title": "Bytes and Uuid", "status": "draft", "summary": "Bytes is an immutable sequence of bytes. It is not text: it is not checked as UTF-8, it has no rune and no case. It is what a file read in binary, the body of an HTTP response, a hash, a key and a BLO", "lines": 58, "bytes": 4079, "features": [], "sections": [
+    [2, "bytes", 5, "Bytes"],
+    [2, "uuid", 30, "Uuid"]
    ]},
   {"path": "library/config.md", "title": "The module `config`", "status": "draft", "summary": "Reads the key = value files of the machine (eve.cfg, evedb.cfg, eve.env; format in [machine.md](machine.md#configuration)) into a DataMap.", "lines": 28, "bytes": 1352, "features": [], "sections": [
     [2, "format", 13, "Format"],
@@ -104,7 +109,7 @@
     [2, "classes", 7, "Classes"],
     [2, "functions", 16, "Functions"]
    ]},
-  {"path": "library/lists.md", "title": "List functions", "status": "draft", "summary": "The functions of a List ( ), an Array [ ] and, where it makes sense, a DataSet { }. A function is called on a value, xs.sort(). A function never changes the list it is called on: it gives a new value,", "lines": 38, "bytes": 3041, "features": [], "sections": [
+  {"path": "library/lists.md", "title": "List functions", "status": "draft", "summary": "The functions of a List ( ), an Array [ ] and, where it makes sense, a DataSet { }. A function is called on a value, xs.sort(). A function never changes the list it is called on: it gives a new value,", "lines": 38, "bytes": 3117, "features": [], "sections": [
     [2, "functions", 9, "Functions"]
    ]},
   {"path": "library/machine.md", "title": "The Eve machine: parts, doors, local and remote", "status": "draft", "summary": "eve is one program, with one version. Its first word chooses a part:", "lines": 221, "bytes": 27836, "features": ["F-NET-02", "F-NET-08"], "sections": [
@@ -126,6 +131,26 @@
   {"path": "library/maps.md", "title": "Map functions", "status": "draft", "summary": "The functions of a DataMap {k: v}. A function never changes the map it is called on. The functions has, get, keys, values and delete are described with the type ([types.md](../semantics/types.md#datam", "lines": 19, "bytes": 860, "features": [], "sections": [
     [2, "functions", 7, "Functions"]
    ]},
+  {"path": "library/math.md", "title": "Library math", "status": "draft", "summary": "The mathematics of plain numbers. Every function is a function of a module, math.sqrt(x), never a global name. The functions are grouped in modules of the folder lib/math/, imported by path: from lib/", "lines": 175, "bytes": 11468, "features": ["F-LNG-30", "F-LNG-31"], "sections": [
+    [2, "module-basic", 9, "Module basic"],
+    [2, "module-explog", 26, "Module explog"],
+    [2, "module-trig", 35, "Module trig"],
+    [2, "module-constants", 47, "Module constants"],
+    [2, "module-numtheory", 51, "Module numtheory"],
+    [2, "module-linear", 67, "Module linear"],
+    [2, "module-random", 94, "Module random"],
+    [2, "module-rational", 116, "Module rational"],
+    [2, "module-complex", 140, "Module complex"],
+    [2, "later-sub-steps-not-in-this-page", 166, "Later sub-steps (not in this page)"],
+    [2, "rules-of-import-and-conversion", 170, "Rules of import and conversion"]
+   ]},
+  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 73, "bytes": 6978, "features": [], "sections": [
+    [2, "the-file", 7, "The file"],
+    [2, "metainfo", 18, "meta.info"],
+    [2, "zone", 27, "zone"],
+    [3, "how-the-tables-are-used", 49, "How the tables are used"],
+    [2, "sql", 53, "sql"]
+   ]},
   {"path": "library/net.md", "title": "The module `net`", "status": "draft", "summary": "TCP for Eve code: a client connection and a listening server, as text. The module is the base of rpc, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a h", "lines": 54, "bytes": 3475, "features": ["F-NET-02", "F-NET-10"], "sections": [
     [2, "functions", 28, "Functions"],
     [2, "waiting", 39, "Waiting"],
@@ -133,11 +158,11 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 52, "bytes": 2670, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 56, "bytes": 3164, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 23, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 36, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 49, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 27, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 40, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 53, "Libraries to come"]
    ]},
   {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 62, "bytes": 4691, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
@@ -162,6 +187,15 @@
     [2, "what-it-is", 5, "What it is"],
     [2, "members", 23, "Members"],
     [2, "rules", 37, "Rules"]
+   ]},
+  {"path": "library/time.md", "title": "Time and dates", "status": "draft", "summary": "The types of time and the module time. Instant and time.now!() exist today ([data-language.md](data-language.md#data-types)); this page adds Date, Time, DateTime and Duration, the zones, the operators", "lines": 149, "bytes": 15977, "features": [], "sections": [
+    [2, "the-types", 7, "The types"],
+    [2, "literals", 20, "Literals"],
+    [2, "operators", 24, "Operators"],
+    [2, "the-module-time", 43, "The module `time`"],
+    [2, "patterns", 70, "Patterns"],
+    [2, "zones", 111, "Zones"],
+    [2, "errors", 134, "Errors"]
    ]},
   {"path": "README.md", "title": "Eve Language Specification", "status": "", "summary": "This folder holds the normative specification of Eve: the reference any Eve compiler or interpreter must follow. This specification is self-contained: it needs nothing outside this folder to be unders", "lines": 68, "bytes": 3925, "features": [], "sections": [
     [2, "why-markdown--json", 7, "Why Markdown + JSON"],
@@ -225,7 +259,7 @@
     [2, "etl-the-cycle", 154, "ETL: the cycle"],
     [2, "open-points", 208, "Open points"]
    ]},
-  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 137, "bytes": 11703, "features": ["F-STR-11", "F-STR-12"], "sections": [
+  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 148, "bytes": 13012, "features": ["F-STR-11", "F-STR-12"], "sections": [
     [2, "errors", 5, "Errors"],
     [2, "process", 11, "Process"],
     [3, "recover", 15, "`recover`"],
@@ -234,20 +268,22 @@
     [2, "ending-the-process", 60, "Ending the process"],
     [2, "where-an-error-is-reported", 80, "Where an error is reported"],
     [2, "error-codes", 84, "Error codes"],
-    [2, "open-points", 134, "Open points"]
+    [3, "warnings-of-the-compiler", 135, "Warnings of the compiler"],
+    [2, "open-points", 143, "Open points"]
    ]},
-  {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 114, "bytes": 11047, "features": ["F-LNG-22"], "sections": [
+  {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 129, "bytes": 12833, "features": ["F-LNG-22"], "sections": [
     [2, "what-a-module-is", 5, "What a module is"],
     [2, "what-a-module-may-contain", 32, "What a module may contain"],
     [2, "members", 36, "Members"],
     [2, "life-cycle", 52, "Life cycle"],
     [2, "import", 60, "Import"],
-    [2, "managed-and-direct-modules", 85, "Managed and direct modules"],
-    [2, "libraries", 99, "Libraries"],
-    [2, "extension-methods", 103, "Extension methods"],
-    [2, "open-points", 107, "Open points"]
+    [2, "re-export", 87, "Re-export"],
+    [2, "managed-and-direct-modules", 100, "Managed and direct modules"],
+    [2, "libraries", 114, "Libraries"],
+    [2, "extension-methods", 118, "Extension methods"],
+    [2, "open-points", 122, "Open points"]
    ]},
-  {"path": "semantics/multitasking.md", "title": "Multitasking: parallel groups, channels and tasks", "status": "draft", "summary": "Eve has two ways to do several things at once. A parallel group starts aspects on several cores. A job with tasks runs asynchronous subprograms on one core, taking turns while they wait. Channels conn", "lines": 199, "bytes": 15034, "features": ["F-SPEC-05"], "sections": [
+  {"path": "semantics/multitasking.md", "title": "Multitasking: parallel groups, channels and tasks", "status": "draft", "summary": "Eve has two ways to do several things at once. A parallel group starts aspects on several cores. A job with tasks runs asynchronous subprograms on one core, taking turns while they wait. Channels conn", "lines": 199, "bytes": 15190, "features": ["F-SPEC-05"], "sections": [
     [2, "parallel-groups", 14, "Parallel groups"],
     [3, "where-a-group-is-allowed", 30, "Where a group is allowed"],
     [3, "what-can-be-started", 44, "What can be started"],
@@ -279,13 +315,15 @@
     [2, "who-calls-and-who-sees", 16, "Who calls and who sees"],
     [2, "where-a-module-is-searched", 24, "Where a module is searched"]
    ]},
-  {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 95, "bytes": 6207, "features": ["F-LIB-13"], "sections": [
+  {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 118, "bytes": 10034, "features": ["F-LIB-13", "F-LNG-30", "F-LNG-31"], "sections": [
     [2, "native-and-primitive-types", 7, "Native and primitive types"],
-    [2, "conversions", 30, "Conversions"],
-    [2, "composite-types", 36, "Composite types"],
-    [3, "datamap-methods", 59, "DataMap methods"],
-    [2, "strings", 73, "Strings"],
-    [2, "zero-values-and-optional-types", 79, "Zero values and optional types"]
+    [2, "rational", 33, "Rational"],
+    [2, "complex", 43, "Complex"],
+    [2, "conversions", 52, "Conversions"],
+    [2, "composite-types", 58, "Composite types"],
+    [3, "datamap-methods", 81, "DataMap methods"],
+    [2, "strings", 95, "Strings"],
+    [2, "zero-values-and-optional-types", 101, "Zero values and optional types"]
    ]},
   {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 86, "bytes": 7960, "features": [], "sections": [
     [2, "rules", 5, "Rules"],
@@ -313,28 +351,28 @@
     [2, "eve-macro-level-5", 239, "Eve macro (level 5)"],
     [2, "imports-and-modules-level-3", 292, "Imports and modules (level 3)"]
    ]},
-  {"path": "syntax/expressions.md", "title": "Expressions", "status": "draft", "summary": "An expression has a value and a type. Round parentheses group: (x) is the value of x, not a list; the list of one element is (x,). The type of an expression is inferred.", "lines": 97, "bytes": 8256, "features": [], "sections": [
+  {"path": "syntax/expressions.md", "title": "Expressions", "status": "draft", "summary": "An expression has a value and a type. Round parentheses group: (x) is the value of x, not a list; the list of one element is (x,). The type of an expression is inferred.", "lines": 99, "bytes": 8550, "features": [], "sections": [
     [2, "precedence", 7, "Precedence"],
     [2, "arithmetic", 32, "Arithmetic"],
-    [2, "comparison-and-logic", 40, "Comparison and logic"],
-    [2, "ranges", 48, "Ranges"],
-    [2, "index-slice-member", 62, "Index, slice, member"],
-    [2, "literals-and-builders", 73, "Literals and builders"],
-    [2, "operators-on-collections", 80, "Operators on collections"]
+    [2, "comparison-and-logic", 42, "Comparison and logic"],
+    [2, "ranges", 50, "Ranges"],
+    [2, "index-slice-member", 64, "Index, slice, member"],
+    [2, "literals-and-builders", 75, "Literals and builders"],
+    [2, "operators-on-collections", 82, "Operators on collections"]
    ]},
-  {"path": "syntax/grammar.md", "title": "Grammar", "status": "draft", "summary": "Notation: = defines, , follows, | chooses, [ ] is optional, { } repeats zero or more times, ( ) groups, \"…\" is a keyword or a symbol token, ( … ) is a note. Every statement ends with ;. Layout (2 spac", "lines": 293, "bytes": 22496, "features": ["F-SPEC-02"], "sections": [
+  {"path": "syntax/grammar.md", "title": "Grammar", "status": "draft", "summary": "Notation: = defines, , follows, | chooses, [ ] is optional, { } repeats zero or more times, ( ) groups, \"…\" is a keyword or a symbol token, ( … ) is a note. Every statement ends with ;. Layout (2 spac", "lines": 294, "bytes": 22757, "features": ["F-SPEC-02"], "sections": [
     [2, "script", 7, "Script"],
     [2, "modules-and-imports-level-3", 25, "Modules and imports (level 3)"],
-    [2, "parallel-processing-level-4", 42, "Parallel processing (level 4)"],
-    [2, "traits-and-generic-classes-level-4", 63, "Traits and generic classes (level 4)"],
-    [2, "generic-subprograms-and-overloading-level-5", 78, "Generic subprograms and overloading (level 5)"],
-    [2, "eve-macro-level-5", 94, "Eve macro (level 5)"],
-    [2, "generators-level-5", 105, "Generators (level 5)"],
-    [2, "database-declarations-and-statements-level-5", 115, "Database declarations and statements (level 5)"],
-    [2, "declarations", 146, "Declarations"],
-    [2, "types", 199, "Types"],
-    [2, "statements", 213, "Statements"],
-    [2, "expressions", 257, "Expressions"]
+    [2, "parallel-processing-level-4", 43, "Parallel processing (level 4)"],
+    [2, "traits-and-generic-classes-level-4", 64, "Traits and generic classes (level 4)"],
+    [2, "generic-subprograms-and-overloading-level-5", 79, "Generic subprograms and overloading (level 5)"],
+    [2, "eve-macro-level-5", 95, "Eve macro (level 5)"],
+    [2, "generators-level-5", 106, "Generators (level 5)"],
+    [2, "database-declarations-and-statements-level-5", 116, "Database declarations and statements (level 5)"],
+    [2, "declarations", 147, "Declarations"],
+    [2, "types", 200, "Types"],
+    [2, "statements", 214, "Statements"],
+    [2, "expressions", 258, "Expressions"]
    ]},
   {"path": "syntax/statements.md", "title": "Statements", "status": "draft", "summary": "A statement ends with ; and may span lines. A group of statements is a block, indented by 2 spaces. A simple statement may end with the condition suffix if expression: break if c;, raise \"bad\" if n < ", "lines": 84, "bytes": 7181, "features": [], "sections": [
     [2, "statements-that-bind-a-value", 7, "Statements that bind a value"],
@@ -356,7 +394,7 @@
  "featureFiles": [
   {"path": "features/level1.json", "id": "level1", "name": "The language of a single script", "features": ["F-LIB-01", "F-LIB-02", "F-LIB-13", "F-LNG-01", "F-LNG-02", "F-LNG-03", "F-LNG-04", "F-LNG-05", "F-LNG-06", "F-LNG-07", "F-LNG-08", "F-SPEC-01", "F-SPEC-02", "F-SPEC-03", "F-STR-05", "F-STR-07", "F-STR-12", "F-VM-01", "F-VM-02"]},
   {"path": "features/level2.json", "id": "level2", "name": "A project: subprograms and aspects", "features": ["F-LNG-09", "F-STR-02", "F-STR-06"]},
-  {"path": "features/level3.json", "id": "level3", "name": "Modules and classes", "features": ["F-DOC-05", "F-LIB-03", "F-LNG-10", "F-LNG-15", "F-LNG-16", "F-LNG-19", "F-LNG-22", "F-SPEC-04", "F-STR-01", "F-STR-03", "F-STR-04", "F-TLS-02", "F-TLS-03", "F-VM-03"]},
+  {"path": "features/level3.json", "id": "level3", "name": "Modules and classes", "features": ["F-DOC-05", "F-LIB-03", "F-LNG-10", "F-LNG-15", "F-LNG-16", "F-LNG-19", "F-LNG-30", "F-LNG-31", "F-LNG-22", "F-SPEC-04", "F-STR-01", "F-STR-03", "F-STR-04", "F-TLS-02", "F-TLS-03", "F-VM-03"]},
   {"path": "features/level4.json", "id": "level4", "name": "Parallel processing", "features": ["F-LIB-11", "F-LIB-12", "F-LNG-11", "F-LNG-17", "F-LNG-18", "F-MTK-01", "F-MTK-02", "F-MTK-03", "F-MTK-04", "F-MTK-05", "F-SPEC-05", "F-TLS-04", "F-TLS-08", "F-TLS-09", "F-VM-05"]},
   {"path": "features/level5.json", "id": "level5", "name": "Data and database", "features": ["F-DAT-01", "F-DAT-03", "F-DAT-04", "F-DAT-05", "F-DAT-06", "F-DAT-08", "F-DAT-09", "F-DAT-10", "F-DAT-11", "F-DAT-13", "F-DAT-14", "F-DOC-02", "F-LIB-04", "F-LIB-05", "F-LIB-06", "F-LIB-07", "F-LIB-08", "F-LIB-09", "F-LNG-12", "F-LNG-13", "F-LNG-14", "F-LNG-20", "F-LNG-21", "F-NET-01", "F-STR-09", "F-STR-10", "F-STR-11", "F-VM-06", "F-VM-11"]},
   {"path": "features/level6.json", "id": "level6", "name": "The Eve machine and the server", "features": ["F-DAT-15", "F-DOC-03", "F-LIB-10", "F-NET-02", "F-NET-03", "F-NET-04", "F-NET-05", "F-NET-06", "F-NET-07", "F-NET-08", "F-NET-09", "F-NET-10", "F-SPEC-06", "F-STR-08", "F-TLS-12", "F-TLS-13", "F-TLS-14", "F-TLS-15", "F-TLS-19", "F-TLS-20", "F-TLS-21", "F-TLS-22", "F-TLS-24", "F-TLS-26", "F-TLS-27", "F-TLS-28", "F-TLS-29", "F-TLS-30", "F-TLS-31"]},

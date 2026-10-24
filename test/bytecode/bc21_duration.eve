@@ -1,0 +1,24 @@
+# Duration literals are constants of the chunk (loadk) and their arithmetic runs on the machine
+primary aspect bc21_duration is
+  function total(n :Integer) => (@r :Duration) is
+    new d := 0s;
+    new k := 1;
+    while k <= n do
+      let d := d + 250ms * k;
+      let k += 1;
+    done;
+    let r := d;
+  return;
+
+  process main is
+    expect 1m == 60s;
+    expect 90m - 1h == 30m;
+    expect total(4) == 2500ms;
+    print total(10);
+  return;
+end bc21_duration;
+/*@expect
+{
+  "stdout": ["PT13.75S"]
+}
+*/

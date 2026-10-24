@@ -1,0 +1,26 @@
+# level 1 performance: dates, the calendar
+** perf: Date arithmetic: for 40,000 consecutive days the year, month, day, weekday and ISO week, add_months and a difference of days
+primary aspect p1g_dates is
+  process main is
+    new first := time.date(2000, 1, 1);
+    new d := first;
+    new e := first;
+    new chk := 0;
+    new saturdays := 0;
+    for i in (0..39999) do
+      let d := first + i;
+      let chk += d.year() + d.month() + d.day() + d.weekday() + d.iso_week();
+      let e := time.add_months(d, 5);
+      let chk += e - d;
+      if d.weekday() == 6 do
+        let saturdays += 1;
+      done;
+    done;
+    print "{chk},{saturdays}";
+  return;
+end p1g_dates;
+/*@expect
+{
+  "stdout": ["90368395,5715"]
+}
+*/

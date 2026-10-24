@@ -158,8 +158,8 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         .spawn_stmt => try it.spawnTask(n),
         .wait_stmt => {
             const v = try it.eval(n.kids[0]);
-            if (!Interp.isInt(v)) return it.fail("wait takes a duration: wait 10ms;", .{});
-            try it.waitFor(Interp.intOf(v));
+            const ms = Interp.msOf(v) orelse return it.fail("wait takes a duration: wait 10ms;", .{});
+            try it.waitFor(ms);
         },
         .process => {},
         else => return it.fail("cannot execute a {s}", .{@tagName(n.tag)}),
@@ -388,6 +388,14 @@ pub fn coerce(v: Value, ty: ?*const Node) Value {
                 if (Interp.isInt(v)) if (decimal.fromInt(Interp.intOf(v))) |d| return .{ .dec = d };
                 return Interp.coerceLike(.{ .dec = .{ .m = 0, .scale = 0 } }, v);
             },
+            .complex => {
+                if (Interp.cpxOf(v)) |z| return .{ .cpx = z };
+                return v;
+            },
+            .rational => {
+                if (Interp.isInt(v)) return .{ .rat = interp.rational.fromInt(Interp.intOf(v)) };
+                return v;
+            },
             .integer => {
                 if (v == .real or v == .float) return .{ .int = @intFromFloat(Interp.realOf(v).?) };
                 return v;
@@ -396,6 +404,7 @@ pub fn coerce(v: Value, ty: ?*const Node) Value {
         }
     }
     if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Real") and Interp.isInt(v)) return .{ .real = @floatFromInt(Interp.intOf(v)) };
+    if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Rational") and Interp.isInt(v)) return .{ .rat = interp.rational.fromInt(Interp.intOf(v)) };
     if (t.kids.len == 0 and std.mem.eql(u8, t.text, "Decimal") and Interp.isInt(v)) {
         if (decimal.fromInt(Interp.intOf(v))) |d| return .{ .dec = d };
     }
@@ -604,6 +613,9 @@ pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
 /// operator that uses it will say so.
 pub fn coerceLike(cur: Value, v: Value) Value {
     if (cur == .real and v == .dec) return .{ .real = decimal.toF64(v.dec) };
+    if (cur == .real and v == .rat) return .{ .real = interp.rational.toF64(v.rat) };
+    if (cur == .cpx and v != .cpx) if (Interp.cpxOf(v)) |z| return .{ .cpx = z };
+    if (cur == .rat and Interp.isInt(v)) return .{ .rat = interp.rational.fromInt(Interp.intOf(v)) };
     if (cur == .dec and (v == .real or v == .float)) {
         if (decimal.fromF64(Interp.realOf(v).?)) |d| return .{ .dec = d };
     }

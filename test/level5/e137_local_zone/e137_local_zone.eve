@@ -1,0 +1,30 @@
+# the zone of the machine and today: whatever the machine is, the answers fit each other
+** spec: library/time.md#zones
+primary aspect e137_local_zone is
+  process main is
+    new z := time.local_zone!();
+    expect z is Zone;
+    new now := time.now!();
+    new here := time.at_zone(now, z);
+    expect here == now;
+    expect time.zone_of(here) == z;
+    new offset := time.offset_of(here);
+    expect offset >= -18h;
+    expect offset <= 18h;
+    new today := time.today!();
+    expect today == time.date_of(here);
+    expect time.today!(z) == today;
+    new utc := time.today!("UTC");
+    expect utc - today <= 1;
+    expect today - utc <= 1;
+    expect time.today!("Pacific/Kiritimati") - time.today!("Pacific/Pago_Pago") >= 1;
+    expect time.today!("Pacific/Kiritimati") - time.today!("Pacific/Pago_Pago") <= 2;
+    expect time.today!("+14:00") == time.date_of(time.at_zone(now, "+14:00"));
+    print "ok";
+  return;
+end e137_local_zone;
+/*@expect
+{
+  "stdout": ["ok"]
+}
+*/

@@ -1,0 +1,79 @@
+# math library: basic, explog, numtheory, and the one module math (math.md)
+** spec: library/math.md#module-basic
+primary aspect a110_math_basic is
+  from lib/math use (basic, explog, numtheory);
+  from lib use (math);
+
+  function code_of_sqrt() => (@r :Integer) is
+    new x := basic.sqrt(-1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_div() => (@r :Integer) is
+    new x := basic.div(1, 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_log() => (@r :Integer) is
+    new x := explog.log(0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_pow() => (@r :Integer) is
+    new x := basic.pow(2, 64);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    expect basic.abs(-5) == 5;
+    expect basic.abs(-2.5) == 2.5;
+    expect basic.sign(-9) == -1;
+    expect basic.sign(0) == 0;
+    expect basic.sign(3.5) == 1;
+    expect basic.min(3, 7) == 3;
+    expect basic.max(3, 7) == 7;
+    expect basic.clamp(15, 0, 10) == 10;
+    expect basic.clamp(-1, 0, 10) == 0;
+    expect basic.clamp(4, 0, 10) == 4;
+    expect basic.pow(2, 10) == 1024;
+    expect basic.pow(2, -1) == 0.5;
+    expect basic.sqrt(16) == 4.0;
+    expect basic.cbrt(-27) == -3.0;
+    expect basic.hypot(3, 4) == 5.0;
+    expect basic.div(-7, 2) == -4;
+    expect basic.mod(-7, 2) == 1;
+    expect basic.mod(7, -2) == -1;
+    expect basic.divmod(-7, 2) == (-4, 1);
+    expect basic.gcd(12, -18) == 6;
+    expect basic.lcm(4, 6) == 12;
+    expect math.sqrt(81) == 9.0;
+    expect math.gcd(8, 12) == 4;
+    expect math.pi > 3.14159;
+    expect math.degrees(math.pi) == 180.0;
+    expect explog.exp(0) == 1.0;
+    expect explog.log(1) == 0.0;
+    expect explog.log2(8) == 3.0;
+    expect explog.log10(1000) == 3.0;
+    expect numtheory.is_prime(97);
+    expect not numtheory.is_prime(1);
+    expect not numtheory.is_prime(91);
+    expect numtheory.factors(12) == (2, 2, 3);
+    expect numtheory.factors(97).sum() == 97;
+    expect numtheory.mod_pow(2, 10, 1000) == 24;
+    expect code_of_sqrt() == $err_argument;
+    expect code_of_div() == $err_divide;
+    expect code_of_log() == $err_argument;
+    expect code_of_pow() == $err_overflow;
+    print basic.divmod(-7, 2);
+  return;
+end a110_math_basic;
+/*@expect
+{
+  "stdout": ["(-4,1)"]
+}
+*/

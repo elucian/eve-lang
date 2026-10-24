@@ -1,0 +1,8 @@
+# beta: one exported function
+module beta is
+  export (two);
+
+  function two() => (@result: Integer) is
+    let result := 2;
+  return;
+end beta;

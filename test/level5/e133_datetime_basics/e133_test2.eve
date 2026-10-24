@@ -1,0 +1,15 @@
+# variation of e133: two DateTimes cannot be added: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e133_test2 is
+  process main is
+    new d :DateTime;
+    new e :DateTime;
+    print d + e;
+  return;
+end e133_test2;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

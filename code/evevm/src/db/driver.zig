@@ -57,6 +57,8 @@ const schemes = blk: {
 pub fn connect(it: Host, args: []const *const Node) Signal!Value {
     if (args.len != 1) return it.fail("database.connect takes the name of a connection", .{});
     const name = try it.text(try it.eval(args[0]));
+    // the reference data embedded in the machine, read only; no eve.cfg needed (spec/library/meta.md#sql)
+    if (std.mem.eql(u8, name, "meta")) return table[0].connect(it, name, "meta:");
     const io = it.io() orelse return it.fail("database.connect: no input/output handle", .{});
     const cfg = Io.Dir.cwd().readFileAlloc(io, "eve.cfg", it.temp(), .limited(1 << 20)) catch
         return it.failWith(value.err_file, "database.connect: eve.cfg not found in the project folder", .{});

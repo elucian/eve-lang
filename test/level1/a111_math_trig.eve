@@ -1,0 +1,30 @@
+# math library: trigonometry (math.md)
+** spec: library/math.md#module-trig
+primary aspect a111_math_trig is
+  from lib/math use (trig);
+
+  function code_of_asin() => (@r :Integer) is
+    new x := trig.asin(2);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    expect trig.sin(0) == 0.0;
+    expect trig.cos(0) == 1.0;
+    expect trig.atan2(0, 0) == 0.0;
+    expect trig.degrees(trig.atan2(1, 1)) == 45.0;
+    expect trig.radians(180) > 3.14159;
+    expect trig.radians(180) < 3.1416;
+    expect trig.asin(1) > 1.5707;
+    expect trig.tanh(0) == 0.0;
+    expect code_of_asin() == $err_argument;
+    print trig.degrees(trig.atan2(1, 1));
+  return;
+end a111_math_trig;
+/*@expect
+{
+  "stdout": ["45"]
+}
+*/

@@ -17,15 +17,37 @@ Eve is gradually typed: a declaration may give a type (`:Integer`) or leave it t
 | `Real` | f64, IEEE-754 double | `3.14`, `5r` | `0.0` |
 | `Float` | f32, IEEE-754 single | `1.5f` | `0.0` |
 | `Decimal` | exact base 10 | `12.50d` | `0d` |
+| `Rational` | exact fraction, two i64 in lowest terms | `3\4` | `0` (`0\1`) |
+| `Complex` | two f64: real part and imaginary part | `(10 + i99)` | `(0 + i0)` |
+| `Date`, `Time`, `Duration` | a day, a time of the day, a length of time ([../library/time.md](../library/time.md)) | none, made by `time.date(...)`; `30s` for a `Duration` | `1970-01-01`, `00:00:00`, `0s` |
 | `Rune` | one Unicode code point (32 bits, up to U+10FFFF) | `'a'`, `U+0061` | `''` (`nil`) |
 | `String` | immutable UTF-8 text | `"text"` | `""` |
 | `Text` | mutable text | `"""…"""`, `<text>…</text>` | `""""""` |
 | `Null` | the type of `null` | `null` | |
 
 - A decimal literal without a point is an Integer (never negative: `-5` is the operator `-` on `5`); with a point a Real. A suffix (`b w n z r f d`) gives another type; hexadecimal literals take no suffix. Native types `u8 … u64`, `i8 … i64`, `f32`, `f64` are reserved for core libraries.
-- A real literal may have an exponent (`1.5e3`, `2e-3`): it is always a Real. `"1,000,000"z` is a number: a string followed by a type suffix. `Rational` (`3\4`) and `Complex` are not in version 1.
+- A real literal may have an exponent (`1.5e3`, `2e-3`): it is always a Real. `"1,000,000"z` is a number: a string followed by a type suffix. `Rational` (`3\4`) and `Complex` (`(10 + i99)`) are described below.
 - `nil` is the empty rune `''`, a value of `Rune`. `Null` is a type and `null` its only value; no object exists, nothing is allocated. `0`, `""`, `''`, `()`, `[]`, `{}` are values, not null. A variable without a value gets the zero value of its type, never `null`. A variable that may be null has an optional type, `T?`.
 - Names are case sensitive: `Null` and `null` are different names.
+
+## Rational
+
+A `Rational` is an exact fraction: a numerator and a denominator of 64 bits, kept in lowest terms with a positive denominator, so `2\6 == 1\3` and the sign is on the numerator. The literal is digits, a backslash and digits: `3\4`; a negative fraction is the operator `-` on the literal (`-3\4`). A denominator of zero in a literal (`1\0`) is the error `$err_divide` (12) when the literal is evaluated.
+
+- **Printing.** `1\3 + 1\6` prints `1\2`; a whole value prints as the integer (`6\3` prints `2`). `type(x)` is `Rational`.
+- **Operators.** `+ - * /` and `^` with a whole exponent are exact. An `Integer` in the other operand is converted (`1\3 + 1` is `4\3`); `/` of two Rationals is a Rational, `/` of two Integers stays a `Real` (`9 / 3` is `3.0`; write `9\1 / 3` or `9\3` for a fraction). With a `Real` or a `Float` the result is a `Real`. With a `Decimal` it is the error `$err_argument` (17): money never meets a fraction by accident. `%` is not defined.
+- **Comparison.** `== != < <= > >=` are exact, also between a Rational and an Integer; with a `Real` the Rational is converted to a `Real` first.
+- **Limits.** A numerator or a denominator that does not fit in 64 bits after reduction is `$err_overflow` (13); there is no silent rounding. The intermediate products are computed in 128 bits, so a result that fits is never lost.
+- **Declaration.** `new x = 5 :Rational;` converts the Integer; the zero value is `0`. `floor`, `ceiling` and `round` give an `Integer` (`round` takes halves away from zero). The library module `rational` ([../library/math.md](../library/math.md#module-rational)) builds fractions from a `Real` or a text and takes them apart.
+
+## Complex
+
+A `Complex` is a number with a real part and an imaginary part, two `Real` (f64). There is one new literal, the **imaginary literal**: the letter `i` and a number written together, `i99`, `i2.5`, `i1e3`, a pure imaginary number (`0 + 99i`). A complex number is an expression that adds a real number and an imaginary one, written in parentheses by custom: `(10 + i99)`. `i1` is the imaginary unit. A name such as `i1` or `i99` is therefore never a variable: write `n1` or `idx` instead; `i` and `index` are names as before.
+
+- **Printing.** The form of the literal: `(10 + i99)`, `(3 - i4)`, `(0.5 + i1)`; a whole part prints without a point. `type(z)` is `Complex`.
+- **Operators.** `+ - * /` and `^` work on a Complex and on a Complex with an `Integer`, a `Real`, a `Float` or a `Rational` (the plain number is a Complex with an imaginary part of zero). `^` with a whole exponent is repeated multiplication (exact for whole parts, `(1 + i1) ^ 4` is `(-4 + i0)`); any other exponent is `exp(b * log(a))`. Dividing by zero is `$err_divide` (12); a result that is not finite (an overflow of a part) is `$err_overflow` (13). With a `Decimal` the operators give the error `$err_argument` (17), at compile time when the types are known.
+- **Comparison.** `==` and `<>` compare the two parts exactly. A Complex has no order: `< <= > >=` are a compile error, or `cannot compare` at run time.
+- **Declaration.** `new z :Complex;` starts at `(0 + i0)`; `new z = 2 :Complex;` converts a real number. The module `complex` ([../library/math.md](../library/math.md#module-complex)) takes numbers apart and has the functions: modulus, argument, conjugate, polar form, `exp`, `log`, `sqrt`, `pow`. `abs(z)` of module `basic` is the modulus.
 
 ## Conversions
 
@@ -88,7 +110,8 @@ The types of the files that a program loads and parses (`JSON`, `CSV`, `TXT`, `X
 | `Rune` | `nil` (`''`) |
 | `Logic` | `False` |
 | an ordinal | its first value |
-| `Time`, `Duration` | 0 milliseconds |
+| `Time` | `00:00:00` |
+| `Duration` | `0s` (printed `PT0S`) |
 | `String`, `Text` | `""` |
 | `List`, `Array`, `DataSet`, `DataMap` | `()`, `[]`, `{}`, `{:}`; an array with a fixed size holds the zero value of its element type in every place |
 | an object or a record | every attribute holds its zero value |

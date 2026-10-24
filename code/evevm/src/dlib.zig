@@ -19,6 +19,14 @@ const nfc = @import("evecm").nfc;
 const Heap = @import("evecm").heap.Heap;
 const syslib = @import("syslib.zig");
 const netlib = @import("netlib.zig");
+const mathlib = @import("mathlib.zig");
+const timelib = @import("timelib.zig");
+const metalib = @import("metalib.zig");
+const evecm = @import("evecm");
+const linearlib = @import("linearlib.zig");
+const rationallib = @import("rationallib.zig");
+const complexlib = @import("complexlib.zig");
+const randomlib = @import("randomlib.zig");
 
 const Node = ast.Node;
 const Interp = interp.Interp;
@@ -103,12 +111,51 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "txt", txtModule },
     .{ "fs", fsModule },
     .{ "checkpoint", checkpointModule },
-    .{ "time", timeModule },
+    .{ "time", timelib.timeModule },
     .{ "secret", secretModule },
     .{ "crypto", syslib.cryptoModule },
     .{ "os", syslib.osModule },
     .{ "net", netlib.netModule },
+    .{ "basic", mathlib.mathModule },
+    .{ "explog", mathlib.mathModule },
+    .{ "trig", mathlib.mathModule },
+    .{ "numtheory", mathlib.mathModule },
+    .{ "linear", linearlib.linearModule },
+    .{ "rational", rationallib.rationalModule },
+    .{ "complex", complexlib.complexModule },
+    .{ "zone", metalib.zoneModule },
+    .{ "meta", metalib.metaModule },
+    .{ "random", randomlib.randomModule },
 });
+
+// @eve-impl the fast path of a call of a pure numeric library function: no scope, no names, the values go straight to the function
+// @spec spec/library/registry.md#modules-of-the-system-library-at-level-6
+// @feature F-LIB-03
+// @perf hot
+// @invariant the code is 65536 * family + id of the function (family 1 mathlib, 2 rationallib, 3 complexlib, 4 timelib, 5 metalib); a code below 2 is never returned
+pub fn fastResolve(module: []const u8, name: []const u8) ?u32 {
+    const eql = std.mem.eql;
+    if (eql(u8, module, "basic") or eql(u8, module, "explog") or eql(u8, module, "trig") or eql(u8, module, "numtheory")) {
+        return if (mathlib.fastId(name)) |id| @as(u32, 65536) + id else null;
+    }
+    if (eql(u8, module, "rational")) return if (rationallib.fastId(name)) |id| 2 * @as(u32, 65536) + id else null;
+    if (eql(u8, module, "complex")) return if (complexlib.fastId(name)) |id| 3 * @as(u32, 65536) + id else null;
+    if (eql(u8, module, "time")) return if (timelib.fastId(name)) |id| 4 * @as(u32, 65536) + id else null;
+    if (eql(u8, module, "zone")) return if (metalib.fastId(name)) |id| 5 * @as(u32, 65536) + id else null;
+    return null;
+}
+
+// @perf hot
+pub fn fastCall(it: *Interp, code: u32, args: []const Value) Signal!Value {
+    const id: u16 = @intCast(code & 0xffff);
+    return switch (code >> 16) {
+        1 => mathlib.fastCall(it, id, args),
+        2 => rationallib.fastCall(it, id, args),
+        4 => timelib.fastCall(it, id, args),
+        5 => metalib.fastCall(it, id, args),
+        else => complexlib.fastCall(it, id, args),
+    };
+}
 
 // @eve-impl entry point of every `module.name(...)` call on a prelude type
 // @feature F-LIB-01
@@ -238,18 +285,6 @@ fn fsModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const
 // @spec spec/library/database.md
 fn checkpointModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
     return try db.orm.checkpointCall(it.host(), name, targs, args);
-}
-
-// @eve-fn time.now!
-// @spec spec/library/registry.md#registry-rules (rule 3: a name that gives another value at each call ends with `!`)
-// @decision D-087
-fn timeModule(it: *Interp, name: []const u8, _: []const *const Node, _: []const *const Node) Signal!?Value {
-    if (std.mem.eql(u8, name, "now")) return it.fail("time.now is not deterministic: write time.now!() (D-087)", .{});
-    if (std.mem.eql(u8, name, "now!")) {
-        const io = it.io orelse return it.fail("time.now!: no input/output handle", .{});
-        return .{ .instant = @intCast(@divFloor(Io.Timestamp.now(io, .real).toNanoseconds(), 1000)) };
-    }
-    return null;
 }
 
 // @eve-fn secret.get
@@ -566,6 +601,41 @@ fn fromField(it: *Interp, f: data.Field, m: *const Node, reason: *[]const u8) Si
             return null;
         };
         return .{ .dec = d };
+    }
+    if (eql(u8, ty, "Date")) {
+        const days = evecm.calendar.parseDate(f.text) orelse {
+            reason.* = try std.fmt.allocPrint(it.t, "'{s}' is not a Date: {s}", .{ m.text, f.text });
+            return null;
+        };
+        return .{ .date = days };
+    }
+    if (eql(u8, ty, "Time")) {
+        const us = evecm.calendar.parseTime(f.text) orelse {
+            reason.* = try std.fmt.allocPrint(it.t, "'{s}' is not a Time: {s}", .{ m.text, f.text });
+            return null;
+        };
+        return .{ .time = us };
+    }
+    if (eql(u8, ty, "Duration")) {
+        const us = evecm.duration.parse(f.text) orelse {
+            reason.* = try std.fmt.allocPrint(it.t, "'{s}' is not a Duration: {s}", .{ m.text, f.text });
+            return null;
+        };
+        return .{ .dur = us };
+    }
+    if (eql(u8, ty, "DateTime")) {
+        const v = timelib.parseDateTimeIso(it, f.text) catch {
+            reason.* = try std.fmt.allocPrint(it.t, "'{s}' is not a DateTime: {s}", .{ m.text, f.text });
+            return null;
+        };
+        return v;
+    }
+    if (eql(u8, ty, "Zone")) {
+        const zid = (metalib.zoneIdOf(it, f.text) catch null) orelse {
+            reason.* = try std.fmt.allocPrint(it.t, "'{s}' is not a Zone: {s}", .{ m.text, f.text });
+            return null;
+        };
+        return .{ .zone = zid };
     }
     if (eql(u8, ty, "Instant")) {
         const us = instant.parse(f.text) orelse {
@@ -1001,6 +1071,26 @@ pub fn jsonValue(it: *Interp, w: *Io.Writer, v: Value) Signal!void {
         .int, .nat, .byte, .short, .huge => |n| w.print("{d}", .{n}) catch return error.OutOfMemory,
         .real, .float => |x| w.print("{d}", .{x}) catch return error.OutOfMemory,
         .dec => |d| decimal.write(w, d) catch return error.OutOfMemory,
+        .zone, .dtm => {
+            w.writeByte('"') catch return error.OutOfMemory;
+            var nb: [8]u8 = undefined;
+            switch (v) {
+                .zone => |id| w.writeAll(metalib.zoneName(id, &nb)) catch return error.OutOfMemory,
+                .dtm => |d| timelib.writeDateTime(w, d) catch return error.OutOfMemory,
+                else => unreachable,
+            }
+            w.writeByte('"') catch return error.OutOfMemory;
+        },
+        .date, .time, .dur => {
+            w.writeByte('"') catch return error.OutOfMemory;
+            switch (v) {
+                .date => |days| evecm.calendar.writeDate(w, days) catch return error.OutOfMemory,
+                .time => |us| evecm.calendar.writeTime(w, us) catch return error.OutOfMemory,
+                .dur => |us| evecm.duration.write(w, us) catch return error.OutOfMemory,
+                else => unreachable,
+            }
+            w.writeByte('"') catch return error.OutOfMemory;
+        },
         .instant => |us| {
             w.writeByte('"') catch return error.OutOfMemory;
             instant.write(w, us) catch return error.OutOfMemory;

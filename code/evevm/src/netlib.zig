@@ -274,7 +274,8 @@ pub fn call(it: *Interp, o: *Object, name: []const u8, args: []const *const Node
         return .nil;
     }
     if (eql(u8, name, "set_timeout")) {
-        const ms = try intArg(it, args, 0, name);
+        if (args.len < 1) return it.failWith(err_argument, "set_timeout: argument 1 is missing", .{});
+        const ms = Interp.msOf(try it.eval(args[0])) orelse return it.failWith(err_argument, "set_timeout: argument 1 is a number of milliseconds or a Duration", .{});
         if (ms < 0) return it.failWith(err_argument, "set_timeout: a time-out of 0 or more milliseconds", .{});
         c.timeout_ms = ms;
         return .nil;

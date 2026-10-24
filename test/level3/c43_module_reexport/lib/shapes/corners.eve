@@ -1,0 +1,10 @@
+module corners is
+  export (corners, hidden_corners);
+
+  function corners() => (@result: Integer) is
+    let result := 4;
+  return;
+  function hidden_corners() => (@result: Integer) is
+    let result := 0;
+  return;
+end corners;

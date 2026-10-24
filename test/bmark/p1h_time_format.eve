@@ -1,0 +1,31 @@
+# level 1 performance: formatting and reading dates by patterns
+** perf: time.format and time.parse: 20,000 dates written as dd/MM/yyyy and read back, 20,000 instants written as ISO text with milliseconds
+primary aspect p1h_time_format is
+  process main is
+    new first := time.date(2000, 1, 1);
+    new d := first;
+    new back := first;
+    new text := "";
+    new chk := 0;
+    for i in (0..19999) do
+      let d := first + i;
+      let text := time.format(d, "dd/MM/yyyy");
+      let back := time.parse(text, "dd/MM/yyyy");
+      let chk += back - first;
+    done;
+    new t0 := Instant.parse("2026-01-01T00:00:00Z");
+    new t := t0;
+    new total := 0;
+    for i in (0..19999) do
+      let t := t0 + 1500ms * i;
+      let text := time.format(t, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+      let total += text.length();
+    done;
+    print "{chk},{total}";
+  return;
+end p1h_time_format;
+/*@expect
+{
+  "stdout": ["199990000,480000"]
+}
+*/

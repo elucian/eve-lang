@@ -1,0 +1,13 @@
+# variation of c51: a Complex has no order: a compile error, exit 65
+** spec: semantics/types.md#complex
+primary aspect c51_test1 is
+  process main is
+    print (1 + i1) < (2 + i2);
+  return;
+end c51_test1;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

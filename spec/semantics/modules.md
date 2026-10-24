@@ -64,6 +64,7 @@ from lib use (counter);              ** members as counter.name
 from "lib" use (counter as c);       ** members as c.name
 from lib use (counter(*));           ** the exported names of counter, without a prefix
 from lib use (*);                    ** every module of the folder, the names merged
+from lib use (*) alias m;            ** the same names, written m.name
 ```
 
 | Form | Brings in |
@@ -71,16 +72,30 @@ from lib use (*);                    ** every module of the folder, the names me
 | `use (m)` | the module `m`; members as `m.name` (c01, c02) |
 | `use (m as x)` | the module under the name `x`; members as `x.name` (c03) |
 | `use (m(*))` | the exported members of `m` as bare names (c04) |
-| `use (*)` | every module of the folder, namespaces merged (c05) |
+| `use (*)` | every module of the folder, namespaces merged: bare names, and also the name of the folder as a prefix (`from lib/math use (*)` gives `sqrt(x)` and `math.sqrt(x)`; c05, c45) |
+| `use (*) alias x` | every module of the folder merged under the one name `x`; members as `x.name`, no bare names; the folder name is not a prefix (c44) |
 
 - **The path** is written in two ways: folder names joined by `/` (`lib`, `lib/db`, `$EVE_LIB/db`) or a string expression (`"lib"`, `$root_path/"lib"`). Both are the same import (c01, c02).
 - **Relative and absolute.** A path that does **not** start with `/` is relative to `$EVE_HOME`, the home of the project (by default the folder of the aspect run by the command), also in an import written inside a module or an aspect: `lib` is `$EVE_HOME/lib`. A path that starts with `/` is absolute: `/test/eve1/lib`. The same rule holds for each folder of `$EVE_LIB_PATH`.
 - **Where a module is searched.** When the import gives no path, in this order: the standard library (`io`, `exception`; `print` comes from `io`); the folder `$EVE_LIB`, the `lib` folder of the project (its local library); then each folder of `$EVE_LIB_PATH`, the external modules installed outside the project, for example `/eve/modules/<module_name>`, placed there from GitHub with `npm install`. These folders can be several and in different places.
 - **Position.** An import is a declaration: it may stand anywhere in the scope of an aspect or a module, before or after the code that uses it.
-- **Conflicts.** `use (*)` and `use (m(*))` merge names. If two modules give the same name, the import fails with a compile error that lists the modules one by one; no name is chosen silently ( a).
+- **Conflicts.** `use (*)`, `use (*) alias x` and `use (m(*))` merge names. If two modules give the same name, **the first import wins** and the second name stays hidden, with a warning on stderr that names both modules; the program runs (c18, c44). The modules of a folder are taken in the order of their file names. A module that is imported with its prefix (`m.name`) is never hidden.
 - **Private members.** Reading a member that is not exported is a compile error at check time, exit 65: nothing runs ( b, c08).
 - **A module not found** is the error `$err_module` (code 30, `Module {name} not found in {library}`), raised at the import, before the process starts. Nobody can recover it, so the program ends with exit code 4 and the message on stderr (c25).
 - **Circular imports** are possible: a module that is being loaded is not loaded again (`tutorial/modules.html`).
+
+## Re-export
+
+A module can be the **specification module** of a folder: the file `lib/math.eve` and the folder `lib/math/` have the same name, and the folder holds the submodules. The parent re-exports the names of its submodules:
+
+```eve
+module math is
+  from basic export (*);               ** every exported name of lib/math/basic.eve
+  from trig export (sin, cos);         ** only these names of lib/math/trig.eve
+end math;
+```
+
+`from lib use (math)` then gives `math.sqrt` and `math.sin`, and the submodules as members: `math.basic.sqrt` (c45); a re-exported name that is also the name of a submodule means the name (`math.trig` is the function when `trig` exports `trig`); `from lib/math use (basic)` gives `basic.sqrt`. The submodule is the file `sub.eve` in the folder named like the parent module, next to the parent's import path (`lib/math/basic.eve` for the parent `lib/math.eve`). A name listed after `export` that the submodule does not export, or a submodule that is not in the folder, is a compile error (exit 65); a re-exported name that collides with another name of the parent follows the rules of conflicts above. The parent may also declare and export members of its own. `from … export` is written only in a module (c43).
 
 ## Managed and direct modules
 

@@ -1,0 +1,53 @@
+# the type Rational: the literal 3\4, lowest terms, sign, printing, type, zero value, equality
+** spec: semantics/types.md#rational
+primary aspect c46_rational_literal is
+  function divide_by_zero() => (@r :Integer) is
+    new x := 1\0;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function declared() => (@r :Rational) is
+    new z :Rational;
+    let r := z;
+  return;
+
+  process main is
+    expect 3\4 == 3\4;
+    expect 2\6 == 1\3;
+    expect 10\5 == 2;
+    expect 0\7 == 0;
+    expect 0\7 == 0\1;
+    expect 1\3 <> 1\4;
+    expect type(1\3) == Rational;
+    expect 1\3 is Rational;
+    expect not (3 is Rational);
+    expect -1\2 == 0 - 1\2;
+    expect -(1\2) == -1\2;
+    expect 6\8 == 3\4;
+    expect 600\800 == 3\4;
+    expect 1\1000000000 > 0;
+    expect declared() == 0;
+    expect divide_by_zero() == $err_divide;
+    new a = 7 :Rational;
+    expect a == 7\1;
+    expect type(a) == Rational;
+    new h := 3\4;
+    new s := 1\3 + 1\6;
+    new w := 6\3;
+    new text := "{h} and {s} and {w}";
+    expect text == "3\\4 and 1\\2 and 2";
+    print 3\4;
+    print 6\8;
+    print 4\2;
+    print -5\10;
+    print 0\5;
+    print "{h}";
+    print (1\2, 2\3);
+  return;
+end c46_rational_literal;
+/*@expect
+{
+  "stdout": ["3\\4", "3\\4", "2", "-1\\2", "0", "3\\4", "1\\2,2\\3"]
+}
+*/

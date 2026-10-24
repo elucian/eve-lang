@@ -1,0 +1,112 @@
+# DateTime: the letters X, VV and z, a zone in parse, DateTime.parse of the ISO forms, Zone.parse, the placeholders, the errors
+** spec: library/time.md#patterns
+primary aspect e134_datetime_patterns is
+  function code_of(text :String, pattern :String) => (@r :Integer) is
+    new x := DateTime.parse(text, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_zone(text :String, pattern :String, z :String) => (@r :Integer) is
+    new x := DateTime.parse(text, pattern, z);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_iso(text :String) => (@r :Integer) is
+    new x := DateTime.parse(text);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_zone_parse(text :String) => (@r :Integer) is
+    new x := Zone.parse(text);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_format(v :Instant, pattern :String) => (@r :Integer) is
+    new x := time.format(v, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new dt := time.at_zone(Instant.parse("2026-07-01T12:00:00Z"), "Europe/Bucharest");
+    new ny := time.at_zone(Instant.parse("2026-01-15T14:30:05.25Z"), "America/New_York");
+    expect dt.format("yyyy-MM-dd HH:mm") == "2026-07-01 15:00";
+    expect dt.format("XXX") == "+03:00";
+    expect dt.format("XX") == "+0300";
+    expect dt.format("X") == "+03";
+    expect dt.format("VV") == "Europe/Bucharest";
+    expect dt.format("z") == "EEST";
+    expect dt.format("yyyy-MM-dd'T'HH:mm:ssXXX'['VV']'") == "2026-07-01T15:00:00+03:00[Europe/Bucharest]";
+    expect ny.format("yyyy-MM-dd HH:mm:ss.SS XXX z") == "2026-01-15 09:30:05.25 -05:00 EST";
+    expect time.at_zone(Instant.parse("2026-07-01T12:00:00Z"), "Asia/Kolkata").format("XXX X XX") == "+05:30 +0530 +0530";
+    expect time.at_zone(Instant.parse("2026-07-01T12:00:00Z"), "Z").format("XXX z VV") == "Z Z Z";
+    expect time.at_zone(Instant.parse("2026-07-01T12:00:00Z"), "UTC").format("XXX VV z") == "Z UTC UTC";
+    expect time.at_zone(Instant.parse("2026-07-01T12:00:00Z"), "+05:30").format("VV z") == "+05:30 +05:30";
+    expect Instant.parse("2026-07-01T12:00:00Z").format("XXX") == "Z";
+    expect "{dt % dd.MM.yyyy HH:mm XXX}" == "01.07.2026 15:00 +03:00";
+    expect "{ny % EEEE, MMMM d, yyyy h:mm a}" == "Thursday, January 15, 2026 9:30 AM";
+    expect DateTime.parse("2026-07-01T15:00:00+03:00") == dt;
+    expect DateTime.parse("2026-07-01 15:00:00+03:00") == dt;
+    expect DateTime.parse("2026-07-01T12:00:00Z") == dt;
+    expect DateTime.parse("2026-07-01T12:00:00.5Z") == dt + 500ms;
+    expect "{DateTime.parse("2026-07-01T15:00:00+03:00")}" == "2026-07-01T15:00:00+03:00";
+    expect "{DateTime.parse("2026-07-01T12:00:00Z")}" == "2026-07-01T12:00:00Z";
+    expect "{DateTime.parse("2026-07-01T15:00:00+03:00[Europe/Bucharest]")}" == "2026-07-01T15:00:00+03:00";
+    expect time.zone_of(DateTime.parse("2026-07-01T15:00:00+03:00[Europe/Bucharest]")) == time.zone("Europe/Bucharest");
+    expect time.zone_of(DateTime.parse("2026-07-01T15:00:00+03:00")) == time.zone("+03:00");
+    expect time.zone_of(DateTime.parse("2026-07-01T12:00:00Z")) == time.zone("Z");
+    expect DateTime.parse("2026-07-01 15:00 Europe/Bucharest", "yyyy-MM-dd HH:mm VV") == dt;
+    expect time.zone_of(DateTime.parse("2026-07-01 15:00 Europe/Bucharest", "yyyy-MM-dd HH:mm VV")) == time.zone("Europe/Bucharest");
+    expect DateTime.parse("01/07/2026 15:00", "dd/MM/yyyy HH:mm", "Europe/Bucharest") == dt;
+    expect DateTime.parse("01/07/2026 15:00", "dd/MM/yyyy HH:mm", time.zone("Europe/Bucharest")) == dt;
+    expect time.parse("01/07/2026 15:00", "dd/MM/yyyy HH:mm", "Europe/Bucharest") == dt;
+    expect type(time.parse("01/07/2026 15:00", "dd/MM/yyyy HH:mm", "Europe/Bucharest")) == DateTime;
+    expect DateTime.parse("2026-07-01 15:00 +03:00", "yyyy-MM-dd HH:mm XXX") == dt;
+    expect time.zone_of(DateTime.parse("2026-07-01 15:00 +03:00", "yyyy-MM-dd HH:mm XXX")) == time.zone("+03:00");
+    expect type(time.parse("2026-07-01 15:00 +03:00", "yyyy-MM-dd HH:mm XXX")) == Instant;
+    expect DateTime.parse("2026-07-01 15:00 +03:00 Europe/Bucharest", "yyyy-MM-dd HH:mm XXX VV") == dt;
+    expect "{DateTime.parse("25/10/2026 03:30", "dd/MM/yyyy HH:mm", "Europe/Bucharest")}" == "2026-10-25T03:30:00+03:00";
+    expect "{DateTime.parse("25/10/2026 03:30 +02:00", "dd/MM/yyyy HH:mm XXX", "Europe/Bucharest")}" == "2026-10-25T03:30:00+02:00";
+    expect Zone.parse("Europe/Bucharest") == time.zone("Europe/Bucharest");
+    expect Zone.parse(" +05:30 ") == time.zone("+05:30");
+    expect Zone.parse("Z") == time.zone("Z");
+    expect code_of("2026-07-01 15:00", "yyyy-MM-dd HH:mm") == $err_argument;
+    expect code_of("2026-07-01", "yyyy-MM-dd") == $err_argument;
+    expect code_of("15:00", "HH:mm") == $err_argument;
+    expect code_of("2026-07-01 15:00 Mars/Base", "yyyy-MM-dd HH:mm VV") == $err_parse;
+    expect code_of("2026-07-01 15:00 +04:00 Europe/Bucharest", "yyyy-MM-dd HH:mm XXX VV") == $err_parse;
+    expect code_of("2026-07-01 15:00 +25:00", "yyyy-MM-dd HH:mm XXX") == $err_parse;
+    expect code_of("2026-07-01 15:00 EEST", "yyyy-MM-dd HH:mm z") == $err_argument;
+    expect code_of("2026-03-29 03:30 Europe/Bucharest", "yyyy-MM-dd HH:mm VV") == $err_parse;
+    expect code_of_zone("29/03/2026 03:30", "dd/MM/yyyy HH:mm", "Europe/Bucharest") == $err_parse;
+    expect code_of_zone("29/03/2026 04:30", "dd/MM/yyyy HH:mm", "Europe/Bucharest") == 0;
+    expect code_of_zone("29/03/2026", "dd/MM/yyyy", "Europe/Bucharest") == $err_argument;
+    expect code_of_zone("01/07/2026 15:00", "dd/MM/yyyy HH:mm", "Mars/Base") == $err_argument;
+    expect code_of_iso("2026-07-01T15:00:00") == $err_parse;
+    expect code_of_iso("2026-07-01") == $err_parse;
+    expect code_of_iso("2026-07-01T15:00:00+25:00") == $err_parse;
+    expect code_of_iso("2026-07-01T15:00:00+04:00[Europe/Bucharest]") == $err_parse;
+    expect code_of_iso("2026-07-01T15:00:00+03:00[Mars/Base]") == $err_parse;
+    expect code_of_iso("2026-02-30T15:00:00Z") == $err_parse;
+    expect code_of_iso("2026-07-01T15:00:00+03:00") == 0;
+    expect code_of_zone_parse("Mars/Base") == $err_parse;
+    expect code_of_zone_parse("+25:00") == $err_parse;
+    expect code_of_zone_parse("Z") == 0;
+    expect code_of_format(Instant.epoch, "VV") == $err_argument;
+    expect code_of_format(Instant.epoch, "z") == $err_argument;
+    expect code_of_format(Instant.epoch, "XXX") == 0;
+    print dt.format("EEE, d MMM yyyy HH:mm:ss XXX (VV, z)");
+    print DateTime.parse("2026-07-01T15:00:00+03:00[Europe/Bucharest]");
+    print DateTime.parse("01/07/2026 15:00", "dd/MM/yyyy HH:mm", "America/New_York");
+  return;
+end e134_datetime_patterns;
+/*@expect
+{
+  "stdout": ["Wed, 1 Jul 2026 15:00:00 +03:00 (Europe/Bucharest, EEST)", "2026-07-01T15:00:00+03:00", "2026-07-01T15:00:00-04:00"]
+}
+*/

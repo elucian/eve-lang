@@ -1,0 +1,15 @@
+** Mathematical constants as Real values (L2).
+** @spec spec/library/math.md#module-constants  @feature F-LIB-03  @tests test/level1/a112_math_constants
+module constants is
+  export (pi, e, tau);
+
+  ** The ratio of a circle's circumference to its diameter.
+  set pi = 3.141592653589793 :Real;
+
+  ** The base of the natural logarithm.
+  set e = 2.718281828459045 :Real;
+
+  ** Two times pi: the full turn in radians.
+  set tau = 6.283185307179586 :Real;
+
+end constants;

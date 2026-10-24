@@ -1,0 +1,15 @@
+# variation of e124: a Date and a Time are not compared: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e124_test2 is
+  process main is
+    new d :Date;
+    new t :Time;
+    print d < t;
+  return;
+end e124_test2;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

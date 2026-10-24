@@ -23,13 +23,6 @@ Features: F-WEB-01 to F-WEB-04, F-VM-07, F-VM-09, F-DOC-03 (web part), the serve
 
 - D-154 eveux, the RAD Workbench, is written in Eve: the final test of the language, in level 7
 
-## Q-027 Templates (2026-10-06, answered 2026-10-21 → D-209)
-The page templates.html teaches string templates (today) and proposes HTML templates: files `.htmt` or literals, `{expr}` escaped by context (text, attribute, URL, script), the type `HTML`, components as functions that return `HTML`, the module `html` with `html.render` and `html.write`. Questions: files, literals or both? The extension and the module name? Loops and conditions inside a template (`{for o in orders}`)? Is `HTML` required by the functions that send a page?
-
-**Answer:**
-Template files contain simple HTML and {var} can inject in it a whole HTML fragmend, if var is a HTML fragment it can represent a table for example. No need for complexity. `{for o in orders}` is not a feature I want. Embeded templates are Text type. That is a literal. In text literals we have {} that is same kind of template. 
-
-
 ## Q-028 Networking and protocols (2026-10-06, answered 2026-10-21 → D-208)
 
 Moved from level 7 on 2026-10-08: the Eve Wire Protocol, sockets and the server are level 6 (F-NET-02 to F-NET-06, draft feature 3); the HTTP client is level 5 (F-NET-01).
@@ -38,7 +31,6 @@ The pages networking.html and protocols.html collect ideas that are not designed
 
 **Answer:**
 Yes, HTTP client should be Level5 and Server Level6. Follow the design and improve or test to confirm the specification & implementation.
-
 
 ## Q-047 Eve RAD Workbench (eveux): program, toolkit and the commands it needs from the machine (answered in part: D-154, D-155)
 
@@ -133,4 +125,3 @@ Author decision (2026-10-21): "Yes, HTTP client should be Level 5 and Server Lev
 Author decision (2026-10-21): "Template files contain simple HTML and {var} can inject in it a whole HTML fragment, if var is a HTML fragment it can represent a table for example. No need for complexity. `{for o in orders}` is not a feature I want. Embedded templates are Text type. That is a literal. In text literals we have {} that is the same kind of template."
 
 Read as rules: (1) a template file is a plain text file (HTML) with `{name}` holes; a template literal in Eve code is an ordinary text literal, whose `{expr}` holes already exist, so a template is a `Text`; (2) a value may be a whole fragment (a table built before and inserted); (3) no loops and no conditions inside a template: the program builds the fragment in Eve and inserts it; (4) there is no separate language, no `.htmt` syntax, no component functions and no type `HTML` unless a later decision asks for them. Open for level 7 (`phase-7-web.md`): whether `{x}` escapes text by default and how a fragment is marked as already safe; the author has not said.
-

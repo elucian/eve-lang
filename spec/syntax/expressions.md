@@ -33,7 +33,9 @@ The relations do not chain: `a < b < c` is a compile error; write `a < b and b <
 
 - `+ - * % ^` on two Integers give an Integer; with a Real the result is Real. `/` always gives a Real (`9 / 3` is `3.0`); `new x = a / b:Integer;` converts it. Integer overflow is an error.
 - `%` is the remainder, with the sign of the left operand. `^` is the power; `**` is a comment.
-- Division or remainder by zero is an error with code 4, also for `Real` and `Float`: there is no infinity and no NaN. A `Rational` with a zero denominator, `1\0`, is not supported.
+- Division or remainder by zero is an error with code 4, also for `Real` and `Float`: there is no infinity and no NaN. A `Rational` with a zero denominator, `1\0`, is the error `$err_divide`.
+- With a `Rational` (`3\4`) `+ - * /` and `^` with a whole exponent are exact; see [types.md](../semantics/types.md#rational).
+- With a `Complex` (`(10 + i99)`) `+ - * /` and `^` work on complex and real numbers; a Complex has no order; see [types.md](../semantics/types.md#complex).
 - `+` on two strings concatenates. `+` between a string and a number is a compile-time type error; `s <+ 1` appends the number as text.
 - `*` between a string and an Integer replicates the string: `"ab" * 3` is `"ababab"`.
 

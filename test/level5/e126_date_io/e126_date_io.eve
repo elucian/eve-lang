@@ -1,0 +1,61 @@
+# Date, Time and Duration fields: written and read back by csv and json, canonical text, a bad value is a read error
+** spec: semantics/data-types.md#canonical-form-and-round-trip
+primary aspect e126_date_io is
+  class Visit = {id: Integer, day: Date, at: Time, stay: Duration, seen: Instant} <: Record;
+
+  process main is
+    new rows := Table(:Visit)();
+    new a := {id: 1, day: time.date(2026, 10, 24), at: time.clock(8, 30, 0), stay: 90m, seen: Instant.parse("2026-10-24T08:30:00Z")} :Visit;
+    new b := {id: 2, day: time.date(1, 1, 1), at: time.clock(23, 59, 59, 250000), stay: 250ms, seen: Instant.epoch} :Visit;
+    let rows <+ a;
+    let rows <+ b;
+    csv.write("out/visits.csv", rows);
+    for v in csv.read!(:Visit)("out/visits.csv") do
+      print "{v.id} {v.day} {v.at} {v.stay} {v.seen}";
+      expect v.day is Date;
+      expect v.at is Time;
+      expect v.stay is Duration;
+    done;
+    json.write("out/visits.json", rows);
+    for v in json.read!(:Visit)("out/visits.json") do
+      print "{v.id} {v.day} {v.at} {v.stay}";
+    done;
+    fs.write("out/short.csv", "id,day,at,stay,seen\n3,2026-02-28,08:30,PT1M30S,2026-01-01T00:00:00Z\n4,2026-02-28,9:00:00,1h,2026-01-01T00:00:00Z\n");
+    recover_read();
+    print "done";
+  return;
+
+  procedure recover_read() is
+    for v in csv.read!(:Visit)("out/short.csv") do
+      print "{v.id} {v.day} {v.at} {v.stay}";
+    done;
+  recover
+    print "error {$error.code}";
+  return;
+end e126_date_io;
+/*@expect
+{
+  "stdout": [
+    "1 2026-10-24 08:30:00 PT1H30M 2026-10-24T08:30:00Z",
+    "2 0001-01-01 23:59:59.25 PT0.25S 1970-01-01T00:00:00Z",
+    "1 2026-10-24 08:30:00 PT1H30M",
+    "2 0001-01-01 23:59:59.25 PT0.25S",
+    "3 2026-02-28 08:30:00 PT1M30S",
+    "error 56",
+    "done"
+  ],
+  "files": {
+    "out/visits.csv": [
+      "id,day,at,stay,seen",
+      "1,2026-10-24,08:30:00,PT1H30M,2026-10-24T08:30:00Z",
+      "2,0001-01-01,23:59:59.25,PT0.25S,1970-01-01T00:00:00Z"
+    ],
+    "out/visits.json": [
+      "[",
+      "{\"id\":1,\"day\":\"2026-10-24\",\"at\":\"08:30:00\",\"stay\":\"PT1H30M\",\"seen\":\"2026-10-24T08:30:00Z\"},",
+      "{\"id\":2,\"day\":\"0001-01-01\",\"at\":\"23:59:59.25\",\"stay\":\"PT0.25S\",\"seen\":\"1970-01-01T00:00:00Z\"}",
+      "]"
+    ]
+  }
+}
+*/

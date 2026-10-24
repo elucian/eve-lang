@@ -29,7 +29,7 @@ const Frame = struct {
 /// True for the values that live outside the heap: a register that holds one can be overwritten without a count.
 inline fn heapless(v: Value) bool {
     return switch (v) {
-        .nil, .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .instant, .sym => true,
+        .nil, .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .rat, .cpx, .dur, .date, .time, .zone, .dtm, .instant, .sym => true,
         else => false,
     };
 }
@@ -245,6 +245,9 @@ fn execute(it: *Interp, c: *const chunk.Chunk, entry: u32) Signal!void {
             .loadk => put(it, &regs[i.a], switch (c.consts[i.bx()]) {
                 .int => |v| Value{ .int = v },
                 .real => |v| Value{ .real = v },
+                .rat => |v| Value{ .rat = .{ .n = v[0], .d = v[1] } },
+                .cpx => |v| Value{ .cpx = .{ .re = v[0], .im = v[1] } },
+                .dur => |v| Value{ .dur = v },
                 .str => |s| blk: {
                     it.line = c.lines[at];
                     break :blk try it.staticStr(s);

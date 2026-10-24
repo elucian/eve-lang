@@ -111,6 +111,17 @@ pub fn moduleMember(it: *Interp, m: *Module, name: []const u8) Signal!Value {
             listed = true;
         };
     }
+    if (!listed) {
+        // a re-exported submodule: `math.basic` is the module `basic` (modules.md#re-export)
+        const known = it.modules orelse return it.fail("'{s}' is not exported by the module '{s}'", .{ name, m.name });
+        for (m.node.kids) |d| {
+            if (d.tag != .import_decl) continue;
+            for (d.kids) |item| if (item.is_external and std.mem.eql(u8, item.text, name)) {
+                const key = try std.fmt.allocPrint(it.a, "{s}|{s}", .{ d.text, name });
+                if (known.get(key)) |node| return .{ .module = try it.instantiate(node) };
+            };
+        }
+    }
     if (!listed) return it.fail("'{s}' is not exported by the module '{s}'", .{ name, m.name });
     const cell = m.scope.find(name) orelse return it.fail("the module '{s}' has no member '{s}'", .{ m.name, name });
     return cell.value;
@@ -175,7 +186,10 @@ pub fn noneNode(it: *Interp) *const Node {
 pub fn bindBare(it: *Interp, m: *Module) Signal!void {
     for (m.node.kids) |k| {
         if (k.tag != .export_decl) continue;
-        for (k.kids) |nm| if (m.scope.find(nm.text)) |cell| try it.bind(nm.text, cell);
+        for (k.kids) |nm| if (m.scope.find(nm.text)) |cell| {
+            // the first import wins: a name already bound in this scope stays (modules.md#import)
+            for (it.scope.binds.items) |b| if (std.mem.eql(u8, b.name, nm.text)) break else {} else try it.bind(nm.text, cell);
+        };
     }
 }
 
@@ -187,6 +201,15 @@ pub fn execImport(it: *Interp, decl: *const Node) Signal!void {
         if (std.mem.eql(u8, item.text, "*")) {
             const key = try std.fmt.allocPrint(it.a, "{s}|*", .{decl.text});
             const set = known.get(key) orelse return it.failWith(30, "Module * not found in {s}", .{decl.text});
+            if (item.is_external) {
+                for (set.kids) |mn| try it.bindBare(try it.instantiate(mn));
+                continue;
+            }
+            const alias = if (item.kids[0].tag == .name) item.kids[0].text else ast.folderName(decl.text);
+            const akey = try std.fmt.allocPrint(it.a, "{s}|*as|{s}", .{ decl.text, alias });
+            const merged = known.get(akey) orelse return it.failWith(30, "Module * not found in {s}", .{decl.text});
+            try it.define(alias, .{ .module = try it.instantiate(merged) }, true);
+            if (item.kids[0].tag == .name) continue;
             for (set.kids) |mn| try it.bindBare(try it.instantiate(mn));
             continue;
         }

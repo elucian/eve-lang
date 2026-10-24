@@ -1,0 +1,15 @@
+# variation 1 of c43: a name that the parent lists but the submodule does not export is a compile error
+** spec: semantics/modules.md#re-export
+primary aspect c43_test1 is
+  from lib use (shapes);
+
+  process main is
+    print shapes.hidden_corners();
+  return;
+end c43_test1;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

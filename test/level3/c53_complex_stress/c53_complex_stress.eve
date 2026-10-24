@@ -1,0 +1,119 @@
+# the type Complex under load: a Mandelbrot grid, roots of unity, a discrete Fourier transform, De Moivre, Gaussian integers; the totals come from Python's complex numbers
+** spec: semantics/types.md#complex
+primary aspect c53_complex_stress is
+  from lib use (math);
+
+  function mandelbrot(c :Complex, limit :Integer) => (@r :Integer) is
+    new z := (0 + i0);
+    new n := 0;
+    while n < limit and math.abs(z) <= 2 do
+      let z := z * z + c;
+      let n += 1;
+    done;
+    let r := n;
+  return;
+
+  function close(a :Complex, b :Complex) => (@r :Logic) is
+    let r := math.modulus(a - b) < 1.0e-9;
+  return;
+
+  process main is
+    new total := 0;
+    new c := (0 + i0);
+    for yi in (0..10) do
+      for xi in (0..20) do
+        let c := (-2 + xi * 0.15) + i1 * (-1 + yi * 0.2);
+        let total += mandelbrot(c, 50);
+      done;
+    done;
+    expect total == 3800;
+    expect mandelbrot(-0.5 + i0.5, 50) == 50;
+    expect mandelbrot(1 + i1, 50) == 2;
+    expect mandelbrot(0 + i0, 50) == 50;
+
+    new sum := (0 + i0);
+    new w := (0 + i0);
+    new ok := True;
+    for k in (0..11) do
+      let w := math.from_polar(1, 2 * math.pi * k / 12);
+      let sum := sum + w;
+      if not close(w ^ 12, 1) do
+        let ok := False;
+      done;
+      if math.abs(math.modulus(w) - 1) > 1.0e-12 do
+        let ok := False;
+      done;
+    done;
+    expect ok;
+    expect math.modulus(sum) < 1.0e-12;
+
+    new theta := 0.3;
+    new rot := math.from_polar(1, theta);
+    new direct := (0 + i0);
+    new n := 0;
+    new demoivre := True;
+    for n in (1..20) do
+      let direct := math.from_polar(1, n * theta);
+      if not close(rot ^ n, direct) do
+        let demoivre := False;
+      done;
+    done;
+    expect demoivre;
+
+    new signal := (1, 2, 3, 4, 0, -1, -2, -3);
+    new spectrum := ();
+    new acc := (0 + i0);
+    for k in (0..7) do
+      let acc := (0 + i0);
+      for t in (0..7) do
+        let acc := acc + signal[t + 1] * math.from_polar(1, -2 * math.pi * k * t / 8);
+      done;
+      let spectrum <+ acc;
+    done;
+    expect close(spectrum[1], 4);
+    expect close(spectrum[2], (-1.8284271247461903 - i12.071067811865476));
+    expect close(spectrum[3], 0);
+    expect close(spectrum[4], (3.8284271247461903 - i2.0710678118654755));
+    expect close(spectrum[5], 0);
+    expect close(spectrum[6], (3.8284271247461903 + i2.0710678118654755));
+    expect close(spectrum[7], 0);
+    expect close(spectrum[8], (-1.8284271247461903 + i12.071067811865476));
+    new energy := 0.0;
+    new time_energy := 0.0;
+    for k in (1..8) do
+      let energy := energy + math.modulus(spectrum[k]) ^ 2;
+    done;
+    for t in (1..8) do
+      let time_energy := time_energy + signal[t] ^ 2;
+    done;
+    expect math.abs(energy - 8 * time_energy) < 1.0e-9;
+
+    new g := (1 + i0);
+    for k in (1..40) do
+      let g := g * (1 + i1) / (1 + i1);
+    done;
+    expect close(g, 1);
+    new gauss := (1 + i0);
+    for k in (1..16) do
+      let gauss := gauss * (1 + i1);
+    done;
+    expect gauss == 256;
+    expect (2 + i3) * (2 - i3) == 13;
+    expect (5 + i0) / (2 + i1) == (2 - i1);
+
+    new b := 2;
+    new cc := 5;
+    new disc := math.complex.sqrt(b * b - 4 * cc);
+    new root1 := (-b + disc) / 2;
+    new root2 := (-b - disc) / 2;
+    expect root1 == (-1 + i2);
+    expect root2 == (-1 - i2);
+    expect root1 * root2 == 5;
+    print total, gauss, root1;
+  return;
+end c53_complex_stress;
+/*@expect
+{
+  "stdout": ["3800,(256 + i0),(-1 + i2)"]
+}
+*/

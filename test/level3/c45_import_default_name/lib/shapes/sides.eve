@@ -1,0 +1,9 @@
+module sides is
+  export (square_sides, SIDES);
+
+  set SIDES = 4 :Integer;
+
+  function square_sides() => (@result: Integer) is
+    let result := SIDES;
+  return;
+end sides;

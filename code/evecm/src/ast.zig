@@ -213,13 +213,13 @@ pub fn opOf(text: []const u8) Op {
 }
 
 /// The built-in type a `type` node names, set by the parser so that the interpreter does not compare type names; `other` is any other name.
-pub const TypeKind = enum(u8) { none, integer, short, byte, natural, real, float, logic, decimal, instant, string, symbol, rune, dataset, datamap, other };
+pub const TypeKind = enum(u8) { none, integer, short, byte, natural, real, float, logic, decimal, rational, complex, duration, date, time, zone, datetime, instant, string, symbol, rune, dataset, datamap, other };
 
 /// The `TypeKind` of the exact text of a type.
 pub fn typeKindOf(text: []const u8) TypeKind {
     const map = std.StaticStringMap(TypeKind).initComptime(.{
         .{ "Integer", .integer }, .{ "Short", .short },     .{ "Byte", .byte },       .{ "Natural", .natural },
-        .{ "Real", .real },       .{ "Float", .float },     .{ "Logic", .logic },     .{ "Decimal", .decimal },
+        .{ "Real", .real },       .{ "Float", .float },     .{ "Logic", .logic },     .{ "Decimal", .decimal }, .{ "Rational", .rational }, .{ "Complex", .complex }, .{ "Duration", .duration }, .{ "Date", .date }, .{ "Time", .time }, .{ "Zone", .zone }, .{ "DateTime", .datetime },
         .{ "Instant", .instant }, .{ "String", .string },   .{ "Symbol", .symbol },   .{ "Rune", .rune },
         .{ "DataSet", .dataset }, .{ "DataMap", .datamap },
     });
@@ -227,7 +227,13 @@ pub fn typeKindOf(text: []const u8) TypeKind {
 }
 
 /// What the parser could convert of a number literal: a plain integer or a plain real; the rest is read at run time.
-pub const LitKind = enum(u8) { none, int, real };
+pub const LitKind = enum(u8) { none, int, real, rat, imag, dur };
+
+/// A Rational literal `n\d` already in lowest terms, in the 64 bits of `lit_bits`: the numerator in the low 32 bits, the denominator in the high 32.
+pub fn packRat(n: u32, d: u32) u64 {
+    return (@as(u64, d) << 32) | n;
+}
+
 
 pub const Aspects = std.StringHashMapUnmanaged(*const Node);
 
@@ -280,6 +286,14 @@ pub fn fileOf(n: *const Node) []const u8 {
 }
 
 pub const none: Node = .{ .tag = .none };
+
+// @spec spec/semantics/modules.md#import
+// @feature F-STR-01
+/// The name a folder import `from lib/math use (*)` gives to the merged modules: the last folder of the path (`math`).
+pub fn folderName(path: []const u8) []const u8 {
+    const cut = std.mem.lastIndexOfScalar(u8, path, '/');
+    return if (cut) |i| path[i + 1 ..] else path;
+}
 
 /// Write the tree as indented text, one node per line: `tag text @line`. `max_depth` cuts the output.
 pub fn dump(w: *Io.Writer, n: *const Node, depth: usize, max_depth: usize) Io.Writer.Error!void {

@@ -1,0 +1,18 @@
+# math library: constants exported with set (math.md)
+** spec: library/math.md#module-constants
+primary aspect a112_math_constants is
+  from lib/math use (constants, trig);
+
+  process main is
+    expect constants.pi > 3.14159;
+    expect constants.pi < 3.1416;
+    expect constants.tau == 2 * constants.pi;
+    expect trig.degrees(constants.pi) == 180.0;
+    print constants.e;
+  return;
+end a112_math_constants;
+/*@expect
+{
+  "stdout": ["2.718281828459045"]
+}
+*/

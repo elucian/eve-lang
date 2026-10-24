@@ -1,0 +1,17 @@
+** The mathematics library: the specification module of the folder lib/math/. It re-exports `basic`, `explog`, `trig`, `numtheory` and `constants`, so `from lib use (math)` gives `math.sqrt`, `math.sin`, `math.pi`.
+** @spec spec/library/math.md#rules-of-import-and-conversion  @feature F-LIB-03  @tests test/level1/a110_math_basic
+module math is
+  from basic export (*);
+  from explog export (*);
+  from trig export (*);
+  from numtheory export (*);
+  from constants export (*);
+  from linear export (*);
+  from random export (*);
+  from rational export (*);
+  from complex export (real_part, imag_part, modulus, argument, conjugate, from_polar, is_real);
+  from linear export (*);
+  from random export (*);
+  from linear export (*);
+  from random export (*);
+end math;

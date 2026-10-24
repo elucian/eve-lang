@@ -17,13 +17,13 @@ Each level has a page of its own, with every feature described and an example th
 |---|---|---|---|---|
 | Level 1 | 17 | 2 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
-| Level 3 | 5 | 8 | 1 | 14 |
+| Level 3 | 5 | 10 | 1 | 16 |
 | Level 4 | 5 | 8 | 2 | 15 |
 | Level 5 | 7 | 14 | 8 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **50** | **45** | **49** | **144** |
+| **All** | **50** | **47** | **49** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -77,6 +77,8 @@ Programs in several files: modules and imports, local libraries, managed and dir
 | `F-LNG-15` | Typed exceptions | drafted | Error classes with fields, recover by type, exit-code mapping. |
 | `F-LNG-16` | Static checks | drafted | Name resolution, arity, visibility and type errors before the run (exit 65). |
 | `F-LNG-19` | Managed and direct modules | validated | managed module / direct module (default), per-member thread safety proved by the compiler, a concurrent aspect calls only safe members. |
+| `F-LNG-30` | Rational numbers | drafted | The type Rational: the literal 3\4, exact arithmetic and comparison, the library module rational. |
+| `F-LNG-31` | Complex numbers | drafted | The type Complex: the imaginary literal i99, (10 + i99), exact comparison without order, the library module complex. |
 | `F-LNG-22` | External routines and errors of modules | validated | An external routine of a module whose name is that of a native module (os, fs, crypto,...) is bound to the native of the same name; an error raised in a module names the file of the module and the... |
 | `F-SPEC-04` | Library specification | drafted | Built-ins and standard modules as signatures. |
 | `F-STR-01` | Modules and imports | validated | module, from … use (…), aliases, m,, singletons, initialize/recover/finalize, export, private members, circular imports, $err_module. |

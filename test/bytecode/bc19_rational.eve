@@ -1,0 +1,24 @@
+# Rational literals are constants of the chunk (loadk) and the arithmetic of fractions runs on the machine without the tree walker
+primary aspect bc19_rational is
+  function third_sum(n :Integer) => (@r :Rational) is
+    new total := 0\1;
+    new k := 1;
+    while k <= n do
+      let total := total + 1\1 / (k * (k + 1));
+      let k += 1;
+    done;
+    let r := total;
+  return;
+
+  process main is
+    expect 2\6 == 1\3;
+    expect 1\2 + 1\3 == 5\6;
+    expect third_sum(1000) == 1000\1001;
+    print third_sum(10);
+  return;
+end bc19_rational;
+/*@expect
+{
+  "stdout": ["10\\11"]
+}
+*/

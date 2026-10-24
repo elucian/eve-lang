@@ -195,8 +195,10 @@ Stage: **drafted**.
 
 ## Missing
 
-- Parse and format with zones: `time.parse` rejects ISO 8601 text such as `2020-01-02T00:00:00Z`.
-- Durations.
+- Built: the zone data (M0.1) and the values `Zone` and `DateTime`, the conversion of local time, the zone letters of the patterns, `local_zone!` and `today!(zone)` (D2).
+- The zone of the machine on Windows is a fixed offset (TD-79).
+- Built: patterns for `Date`, `Time` and `Instant` (D3: `format`, `parse`, placeholders), including ISO 8601 text with an offset: `time.parse("2020-01-02T00:00:00Z", "yyyy-MM-dd'T'HH:mm:ssX")`.
+- Built: durations (D0), dates and times of the day (D1: calendar, fields, month arithmetic, ISO weeks).
 
 An example that runs, and what it prints:
 
@@ -351,8 +353,8 @@ Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid.
 
 ## Missing
 
-- `Date`, `Time`, `Duration`, `Bytes`, `Uuid`, `Rational` are undefined names today.
-- Zones on `Instant`/`DateTime`; one test per type and per conversion.
+- Built: `Duration` (D0), `Date` and `Time` (D1), `Zone` and `DateTime` (D2), `Rational`, `Complex`. `Bytes` and `Uuid` are undefined names today (steps D4, D5).
+- One test per type and per conversion (the SQL columns of `Date`, `Time`, `Duration`, `DateTime` and `Zone` are written and read for SQLite only: TD-74).
 
 An example that runs, and what it prints:
 

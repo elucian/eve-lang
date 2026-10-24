@@ -4,7 +4,7 @@
  "kind": "level",
  "title": "Level 7: The web",
  "tests": [
-  {"id": "g01", "name": "g01_pg_driver", "title": "the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (drivers/duckdb/README.md 5A, 5B)", "features": ["F-DAT-12"], "status": "PASS", "runs": 6, "failures": 0, "checks": 0, "last": "2026-10-21 21:42", "mtime": 1792519512, "reason": ""},
-  {"id": "g02", "name": "g02_evedb_columnar", "title": "the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables", "features": ["F-DAT-12"], "status": "PASS", "runs": 6, "failures": 0, "checks": 0, "last": "2026-10-21 21:42", "mtime": 1792544667, "reason": ""}
+  {"id": "g01", "name": "g01_pg_driver", "title": "the Eve driver for PostgreSQL: a remote connection to evedb on its PostgreSQL port, md5 login (drivers/duckdb/README.md 5A, 5B)", "features": ["F-DAT-12"], "status": "PASS", "runs": 15, "failures": 0, "checks": 0, "last": "2026-10-24 16:11", "mtime": 1792519512, "reason": ""},
+  {"id": "g02", "name": "g02_evedb_columnar", "title": "the native driver evedb://: typed parameters, records, a job, and the column batches of Memory tables", "features": ["F-DAT-12"], "status": "PASS", "runs": 15, "failures": 0, "checks": 0, "last": "2026-10-24 16:11", "mtime": 1792544667, "reason": ""}
  ]
 }

@@ -1,0 +1,30 @@
+** A random generator, seeded or not (L2c).
+** @spec spec/library/math.md#module-random  @feature F-LIB-03  @decision D-214  @tests test/level1/a114_math_random
+module random is
+  export (seed, next!, integer!, real!, normal!, choice!, shuffle!, sample!);
+
+  ** Make the generator reproducible: the same seed gives the same numbers.
+  external procedure seed(seed: Integer);
+
+  ** A Real from 0 up to, not including, 1.
+  external function next!() => (@result: Real);
+
+  ** A whole number from low to high, both included.
+  external function integer!(low: Integer, high: Integer) => (@result: Integer);
+
+  ** A Real from low up to, not including, high.
+  external function real!(low: {Real | Integer | Decimal}, high: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** A number of the normal distribution.
+  external function normal!(mean: {Real | Integer | Decimal}, deviation: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** One element of a list; an empty list is $err_argument.
+  external function choice!(xs: List) => (@result: Any);
+
+  ** A new list with the elements in random order.
+  external function shuffle!(xs: List) => (@result: List);
+
+  ** n different elements of a list, without replacement.
+  external function sample!(xs: List, n: Integer) => (@result: List);
+
+end random;

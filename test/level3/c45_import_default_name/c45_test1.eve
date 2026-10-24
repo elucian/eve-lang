@@ -1,0 +1,15 @@
+# variation 1 of c45: the submodules of a parent module are members of it: shapes.sides.square_sides()
+** spec: semantics/modules.md#re-export
+primary aspect c45_test1 is
+  from lib use (shapes);
+
+  process main is
+    expect shapes.sides.square_sides() == 4;
+    print shapes.sides.SIDES;
+  return;
+end c45_test1;
+/*@expect
+{
+  "stdout": ["4"]
+}
+*/

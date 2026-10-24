@@ -1,10 +1,120 @@
-** The clock (D-087, D-168, D-189). Signature file: the body is native, in code/evevm/src/dlib.zig (timeModule).
-** @spec spec/library/registry.md  @feature F-LIB-06  @decision D-087  @tests test/level5
+** The clock and the length of time (D-087, D-168, D-189, D-221). Signature file: the body is native, in code/evevm/src/timelib.zig.
+** @spec spec/library/time.md  @feature F-LIB-06  @decision D-221  @tests test/level5/e122_time_module
 module time is
-  export (now!);
-
+  export (now!, seconds, millis, micros, sleep, today!, date, clock, year, month, day, hour, minute, second, micro, weekday, day_of_year, iso_week, iso_year, add_months, add_years, start_of, end_of_month, days_in_month, is_leap, months_between, years_between, format, parse, zone, at_zone, make, date_of, time_of, instant_of, zone_of, offset_of, local_zone!);
 
   ** The current instant. It gives another value at each call, so the name ends with `!`.
   external function now!() => (@result: Instant);
+
+  ** The length of a Duration in seconds, as a Real.
+  external function seconds(d: Duration) => (@result: Real);
+
+  ** The length of a Duration in whole milliseconds, toward zero.
+  external function millis(d: Duration) => (@result: Integer);
+
+  ** The length of a Duration in whole microseconds.
+  external function micros(d: Duration) => (@result: Integer);
+
+  ** Wait for a Duration; the other tasks run meanwhile.
+  external procedure sleep(d: Duration);
+
+  ** Today's date in the zone of the machine, or in the zone given.
+  external function today!(z: {Zone | String}) => (@result: Date);
+
+  ** The zone of the machine: the region named by the TZ variable or by /etc/localtime when the database knows it, else the offset in force now as a fixed zone.
+  external function local_zone!() => (@result: Zone);
+
+  ** The date of a year, a month and a day; a date that does not exist is $err_argument.
+  external function date(y: Integer, m: Integer, d: Integer) => (@result: Date);
+
+  ** The time of the day from hour, minute, second and microsecond.
+  external function clock(h: Integer, m: Integer, s: Integer, micro: Integer) => (@result: Time);
+
+  ** The year of a Date.
+  external function year(d: Date) => (@result: Integer);
+
+  ** The month of a Date, 1 to 12.
+  external function month(d: Date) => (@result: Integer);
+
+  ** The day of the month of a Date.
+  external function day(d: Date) => (@result: Integer);
+
+  ** The hour of a Time, 0 to 23.
+  external function hour(t: Time) => (@result: Integer);
+
+  ** The minute of a Time.
+  external function minute(t: Time) => (@result: Integer);
+
+  ** The second of a Time.
+  external function second(t: Time) => (@result: Integer);
+
+  ** The microseconds of a Time after the second.
+  external function micro(t: Time) => (@result: Integer);
+
+  ** The day of the week, 1 for Monday to 7 for Sunday (ISO 8601).
+  external function weekday(d: Date) => (@result: Integer);
+
+  ** The day of the year, 1 to 366.
+  external function day_of_year(d: Date) => (@result: Integer);
+
+  ** The ISO 8601 week number, 1 to 53.
+  external function iso_week(d: Date) => (@result: Integer);
+
+  ** The year of the ISO week (the first days of January can belong to the last week of the year before).
+  external function iso_year(d: Date) => (@result: Integer);
+
+  ** n months later (earlier when negative); the day is kept or cut to the end of the month.
+  external function add_months(d: Date, n: Integer) => (@result: Date);
+
+  ** n years later; 29 February becomes 28 February in a year that is not a leap year.
+  external function add_years(d: Date, n: Integer) => (@result: Date);
+
+  ** A Date or a Time cut to the start of a unit: "year", "quarter", "month", "week" (Monday), "day" for a Date; "hour", "minute", "second", "day" for a Time.
+  external function start_of(x: {Date | Time}, unit: String) => (@result: {Date | Time});
+
+  ** The last day of the month of a Date.
+  external function end_of_month(d: Date) => (@result: Date);
+
+  ** The number of days of a month of a year.
+  external function days_in_month(y: Integer, m: Integer) => (@result: Integer);
+
+  ** Is the year a leap year.
+  external function is_leap(y: Integer) => (@result: Logic);
+
+  ** Whole months from the first Date to the second (negative when the second is earlier).
+  external function months_between(a: Date, b: Date) => (@result: Integer);
+
+  ** Whole years from the first Date to the second.
+  external function years_between(a: Date, b: Date) => (@result: Integer);
+
+  ** The text of a Date, a Time or an Instant (in UTC) by a pattern of letters: yyyy MM dd HH mm ss SSS EEE MMM a XXX, text in single quotes.
+  external function format(x: {Date | Time | Instant}, pattern: String) => (@result: String);
+
+  ** Read a text by a pattern: a Date, a Time, or an Instant when the pattern has a date, a time and an offset (XXX).
+  external function parse(text: String, pattern: String) => (@result: {Date | Time | Instant});
+
+  ** A time zone from a name of the IANA database ("Europe/Bucharest"), "Z" or an offset ("+03:00", "-0530"); anything else is $err_argument.
+  external function zone(text: String) => (@result: Zone);
+
+  ** The same moment seen in a zone: a DateTime.
+  external function at_zone(x: {Instant | DateTime}, z: {Zone | String}) => (@result: DateTime);
+
+  ** The DateTime of a local date and time in a zone. A time the clock skips (summer time starts) is $err_argument; a time it shows twice (summer time ends) is the first.
+  external function make(d: Date, t: Time, z: {Zone | String}) => (@result: DateTime);
+
+  ** The local date of a DateTime.
+  external function date_of(x: DateTime) => (@result: Date);
+
+  ** The local time of the day of a DateTime.
+  external function time_of(x: DateTime) => (@result: Time);
+
+  ** The Instant of a DateTime.
+  external function instant_of(x: DateTime) => (@result: Instant);
+
+  ** The zone of a DateTime.
+  external function zone_of(x: DateTime) => (@result: Zone);
+
+  ** The offset from UTC that a DateTime has, as a Duration.
+  external function offset_of(x: DateTime) => (@result: Duration);
 
 end time;

@@ -1,0 +1,25 @@
+# level 1 performance: DateTime, an instant seen in a zone
+** perf: time.at_zone and the wall-clock fields: 60,000 instants (one every 1,000 seconds from 2020) seen in America/New_York, with the hour, the day, the offset, and time.make for every 20th
+primary aspect p1j_datetime is
+  process main is
+    new base := Instant.parse("2020-01-01T00:00:00Z");
+    new z := time.zone("America/New_York");
+    new dt := time.at_zone(base, z);
+    new chk := 0;
+    new made := base;
+    for k in (0..59999) do
+      let dt := time.at_zone(base + 1000s * k, z);
+      let chk += dt.hour() + dt.day() + time.millis(time.offset_of(dt)) / 1000;
+      if k % 20 == 0 do
+        let made := time.instant_of(time.make(time.date_of(dt), time.time_of(dt), z));
+        let chk += time.millis(made - dt) / 1000;
+      done;
+    done;
+    print chk;
+  return;
+end p1j_datetime;
+/*@expect
+{
+  "stdout": ["-930343738"]
+}
+*/

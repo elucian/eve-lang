@@ -1,0 +1,24 @@
+** The time zones of the IANA database, read from the meta database that is embedded in the Eve machine (M0.1, D-222). The zone data is the release named in `meta.info`; a zone is a name such as "Europe/Bucharest".
+** @spec spec/library/meta.md#zone  @feature F-LIB-06  @decision D-222  @tests test/level5/e129_meta_zone
+module zone is
+  export (exists, canonical, offset, abbreviation, is_dst, names);
+
+  ** Is the name a time zone of the database (a link such as "Asia/Calcutta" counts).
+  external function exists(name: String) => (@result: Logic);
+
+  ** The name of the zone a link points to: "Asia/Calcutta" gives "Asia/Kolkata"; a zone gives itself.
+  external function canonical(name: String) => (@result: String);
+
+  ** The offset from UTC that the zone has at an instant, as a Duration (daylight time included).
+  external function offset(name: String, at: Instant) => (@result: Duration);
+
+  ** The abbreviation the zone uses at an instant: "EET", "EEST", "+0330".
+  external function abbreviation(name: String, at: Instant) => (@result: String);
+
+  ** Is daylight saving time in force in the zone at an instant.
+  external function is_dst(name: String, at: Instant) => (@result: Logic);
+
+  ** Every name of the database, zones and links, in order.
+  external function names() => (@result: List);
+
+end zone;

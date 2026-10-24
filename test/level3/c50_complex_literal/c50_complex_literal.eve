@@ -1,0 +1,57 @@
+# the type Complex: the imaginary literal i99, a complex number as a sum in parentheses, equality, printing, type, zero value
+** spec: semantics/types.md#complex
+primary aspect c50_complex_literal is
+  function declared() => (@r :Complex) is
+    new z :Complex;
+    let r := z;
+  return;
+  function converted() => (@r :Complex) is
+    new z = 2 :Complex;
+    let r := z;
+  return;
+  function names_like_i() => (@r :Integer) is
+    new i := 5;
+    new ix := 6;
+    new i9x := 7;
+    let r := i + ix + i9x;
+  return;
+
+  process main is
+    new z := (10 + i99);
+    expect z == (10 + i99);
+    expect z == 10 + i99;
+    expect z <> (10 + i98);
+    expect (1 + i0) == 1;
+    expect 2 == (2 + i0);
+    expect i0 == 0;
+    expect i1 * i1 == -1;
+    expect i2 == (0 + i2);
+    expect i2.5 == (0 + i2.5);
+    expect i1e2 == i100;
+    expect i1e-1 == i0.1;
+    expect type(z) == Complex;
+    expect z is Complex;
+    expect not (1 is Complex);
+    expect not (1.5 is Complex);
+    expect declared() == 0;
+    expect converted() == (2 + i0);
+    expect -(3 + i4) == (-3 - i4);
+    expect -i1 == (0 - i1);
+    expect names_like_i() == 18;
+    new text := "{z} and {-z}";
+    expect text == "(10 + i99) and (-10 - i99)";
+    print z;
+    print (3 - i4);
+    print i1;
+    print -i2;
+    print (0.5 + i1.5);
+    print 7 + i0;
+    print "{z}";
+    print (z, 1);
+  return;
+end c50_complex_literal;
+/*@expect
+{
+  "stdout": ["(10 + i99)", "(3 - i4)", "(0 + i1)", "(0 - i2)", "(0.5 + i1.5)", "(7 + i0)", "(10 + i99)", "(10 + i99),1"]
+}
+*/

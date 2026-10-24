@@ -1,0 +1,115 @@
+# the type Rational under load: laws on a grid, Farey sequences, harmonic numbers to the overflow, Bernoulli numbers, continued fractions, sorting; the expected values come from Python's fractions
+** spec: semantics/types.md#rational
+primary aspect c49_rational_stress is
+  from lib use (math);
+
+  function harmonic_overflow_at() => (@r :Integer) is
+    new h := 0\1;
+    new n := 0;
+    while n < 100 do
+      let n += 1;
+      let h := h + 1\1 / n;
+    done;
+    let r := 0;
+  recover
+    let r := n;
+  return;
+
+  ** the number of fractions between left and right, both excluded, with a denominator of at most limit (Stern-Brocot)
+  function between(left :Rational, right :Rational, limit :Integer) => (@r :Integer) is
+    new m := math.mediant(left, right);
+    if math.denominator(m) > limit do
+      let r := 0;
+    else
+      let r := 1 + between(left, m, limit) + between(m, right, limit);
+    done;
+  return;
+
+  process main is
+    new vals := (0\1, 1\2, -1\3, 2\5, 7\3, -5\7, 3, 1\11);
+    new checked := 0;
+    for a in vals do
+      for b in vals do
+        expect a + b == b + a;
+        expect a * b == b * a;
+        expect a - b == -(b - a);
+        expect (a + b) - b == a;
+        if b <> 0 do
+          expect (a / b) * b == a;
+          expect (a * b) / b == a;
+        done;
+        for c in vals do
+          expect (a + b) + c == a + (b + c);
+          expect (a * b) * c == a * (b * c);
+          expect a * (b + c) == a * b + a * c;
+          expect not (a < b and b < c) or a < c;
+          let checked += 1;
+        done;
+      done;
+    done;
+    expect checked == 512;
+
+    new h := 0\1;
+    for n in (1..30) do
+      let h := h + 1\1 / n;
+    done;
+    expect h == 9304682830147\2329089562800;
+    expect harmonic_overflow_at() == 47;
+
+    expect 2 + between(0\1, 1\1, 50) == 775;
+    expect 2 + between(0\1, 1\1, 100) == 3045;
+
+    new a := (0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1, 0\1);
+    new b20 := 0\1;
+    new b30 := 0\1;
+    new t := 0;
+    new j := 0;
+    for m in (0..30) do
+      let a[m + 1] := 1\1 / (m + 1);
+      for t in (1..m) do
+        let j := m + 1 - t;
+        let a[j] := j * (a[j] - a[j + 1]);
+      done;
+      if m == 20 do
+        let b20 := a[1];
+      done;
+      if m == 30 do
+        let b30 := a[1];
+      done;
+    done;
+    expect b20 == -174611\330;
+    expect b30 == 8615841276005\14322;
+
+    new x := 12345;
+    new xs := ();
+    new num := 0;
+    new den := 0;
+    for i in (1..300) do
+      let x := (x * 1103515245 + 12345) % 2147483648;
+      let num := x % 97 + 1;
+      let x := (x * 1103515245 + 12345) % 2147483648;
+      let den := x % 89 + 1;
+      let xs <+ 1\1 * num / den;
+    done;
+    new ys := xs.sort();
+    expect ys.length() == 300;
+    expect ys.min() == 1\55;
+    expect ys.max() == 33;
+    expect ys[1] == 1\55;
+    expect ys[151] == 25\23;
+    expect ys[300] == 33;
+    new ordered := True;
+    for i in (2..300) do
+      if ys[i - 1] > ys[i] do
+        let ordered := False;
+      done;
+    done;
+    expect ordered;
+    print checked, b20, b30, ys[151];
+  return;
+end c49_rational_stress;
+/*@expect
+{
+  "stdout": ["512,-174611\\330,8615841276005\\14322,25\\23"]
+}
+*/

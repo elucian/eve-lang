@@ -1,0 +1,128 @@
+# Date and Time: + - with days and Durations, the clock that wraps, add_months, add_years, start_of, months_between, sorting
+** spec: library/time.md#operators
+primary aspect e124_date_arithmetic is
+  function code_of_overflow() => (@r :Integer) is
+    new d := time.date(9999, 12, 31);
+    new x := d + 1;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_underflow() => (@r :Integer) is
+    new d := time.date(1, 1, 1);
+    new x := d - 1;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_months() => (@r :Integer) is
+    new d := time.date(9999, 12, 1);
+    new x := time.add_months(d, 1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_unit() => (@r :Integer) is
+    new d := time.date(2026, 10, 24);
+    new x := d.start_of("fortnight");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_time_unit() => (@r :Integer) is
+    new t := time.clock(8, 30, 0);
+    new x := t.start_of("month");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new d := time.date(2026, 10, 24);
+    expect d + 7 == time.date(2026, 10, 31);
+    expect d + 8 == time.date(2026, 11, 1);
+    expect 7 + d == time.date(2026, 10, 31);
+    expect d - 24 == time.date(2026, 9, 30);
+    expect d + 0 == d;
+    expect d + 365 == time.date(2027, 10, 24);
+    expect time.date(2024, 2, 28) + 1 == time.date(2024, 2, 29);
+    expect time.date(2026, 2, 28) + 1 == time.date(2026, 3, 1);
+    expect d - time.date(2026, 10, 1) == 23;
+    expect time.date(2026, 10, 1) - d == -23;
+    expect d - d == 0;
+    expect time.date(2027, 1, 1) - time.date(2026, 1, 1) == 365;
+    expect time.date(2029, 1, 1) - time.date(2028, 1, 1) == 366;
+    expect time.date(2026, 1, 1) - time.date(1970, 1, 1) == 20454;
+    expect type(d + 1) == Date;
+    expect type(d - d) == Integer;
+    new e := d;
+    let e += 10;
+    expect e == time.date(2026, 11, 3);
+    let e -= 10;
+    expect e == d;
+    expect time.add_months(time.date(2026, 1, 31), 1) == time.date(2026, 2, 28);
+    expect time.add_months(time.date(2028, 1, 31), 1) == time.date(2028, 2, 29);
+    expect time.add_months(time.date(2026, 1, 31), -1) == time.date(2025, 12, 31);
+    expect time.add_months(time.date(2026, 3, 31), -1) == time.date(2026, 2, 28);
+    expect time.add_months(time.date(2026, 1, 15), 12) == time.date(2027, 1, 15);
+    expect time.add_months(time.date(2026, 1, 15), 0) == time.date(2026, 1, 15);
+    expect time.add_months(time.date(2026, 11, 30), 3) == time.date(2027, 2, 28);
+    expect time.date(2026, 1, 31).add_months(13) == time.date(2027, 2, 28);
+    expect time.add_years(time.date(2024, 2, 29), 1) == time.date(2025, 2, 28);
+    expect time.add_years(time.date(2024, 2, 29), 4) == time.date(2028, 2, 29);
+    expect time.add_years(time.date(2026, 6, 15), -10) == time.date(2016, 6, 15);
+    expect d.start_of("year") == time.date(2026, 1, 1);
+    expect d.start_of("quarter") == time.date(2026, 10, 1);
+    expect time.date(2026, 5, 31).start_of("quarter") == time.date(2026, 4, 1);
+    expect d.start_of("month") == time.date(2026, 10, 1);
+    expect d.start_of("week") == time.date(2026, 10, 19);
+    expect time.date(2026, 10, 19).start_of("week") == time.date(2026, 10, 19);
+    expect time.date(2026, 10, 25).start_of("week") == time.date(2026, 10, 19);
+    expect d.start_of("day") == d;
+    expect time.months_between(time.date(2026, 1, 31), time.date(2026, 2, 28)) == 1;
+    expect time.months_between(time.date(2026, 1, 15), time.date(2026, 2, 14)) == 0;
+    expect time.months_between(time.date(2026, 1, 15), time.date(2026, 2, 15)) == 1;
+    expect time.months_between(time.date(2026, 2, 28), time.date(2026, 1, 31)) == -1;
+    expect time.months_between(time.date(2024, 3, 1), time.date(2026, 3, 1)) == 24;
+    expect time.months_between(d, d) == 0;
+    expect time.years_between(time.date(2000, 2, 29), time.date(2026, 2, 27)) == 25;
+    expect time.years_between(time.date(2000, 2, 29), time.date(2026, 2, 28)) == 26;
+    expect time.years_between(time.date(2000, 2, 29), time.date(2026, 3, 1)) == 26;
+    expect time.years_between(time.date(2026, 3, 1), time.date(2000, 2, 29)) == -26;
+    new dates := (time.date(2026, 10, 24), time.date(1999, 12, 31), time.date(2000, 1, 1), time.date(2026, 1, 1));
+    expect dates.sort() == (time.date(1999, 12, 31), time.date(2000, 1, 1), time.date(2026, 1, 1), time.date(2026, 10, 24));
+    expect dates.min() == time.date(1999, 12, 31);
+    expect dates.max() == time.date(2026, 10, 24);
+    new t := time.clock(8, 30, 0);
+    expect t + 90m == time.clock(10, 0, 0);
+    expect t - 9h == time.clock(23, 30, 0);
+    expect time.clock(23, 30, 0) + 1h == time.clock(0, 30, 0);
+    expect time.clock(0, 0, 0) - 1s == time.clock(23, 59, 59);
+    expect t + 24h == t;
+    expect t + 49h == time.clock(9, 30, 0);
+    expect t - 25h == time.clock(7, 30, 0);
+    expect 1h + t == time.clock(9, 30, 0);
+    expect t - time.clock(7, 0, 0) == 90m;
+    expect time.clock(7, 0, 0) - t == -90m;
+    expect t - t == 0s;
+    expect type(t + 1h) == Time;
+    expect type(t - t) == Duration;
+    expect t.start_of("hour") == time.clock(8, 0, 0);
+    expect time.clock(8, 30, 15, 500).start_of("minute") == time.clock(8, 30, 0);
+    expect time.clock(8, 30, 15, 500).start_of("second") == time.clock(8, 30, 15);
+    expect t.start_of("day") == time.clock(0, 0, 0);
+    expect code_of_overflow() == $err_overflow;
+    expect code_of_underflow() == $err_overflow;
+    expect code_of_months() == $err_overflow;
+    expect code_of_unit() == $err_argument;
+    expect code_of_time_unit() == $err_argument;
+    print d + 7, d - 24, d - time.date(2026, 1, 1);
+    print t + 90m, t - 9h;
+    print dates.sort();
+  return;
+end e124_date_arithmetic;
+/*@expect
+{
+  "stdout": ["2026-10-31,2026-09-30,296", "10:00:00,23:30:00", "(1999-12-31,2000-01-01,2026-01-01,2026-10-24)"]
+}
+*/

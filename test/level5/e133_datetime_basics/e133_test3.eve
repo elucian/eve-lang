@@ -1,0 +1,14 @@
+# variation of e133: a Zone has no arithmetic: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e133_test3 is
+  process main is
+    new z :Zone;
+    print z + 1;
+  return;
+end e133_test3;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

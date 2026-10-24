@@ -1,0 +1,31 @@
+# level 1 performance: complex numbers, the Mandelbrot set
+** perf: Complex arithmetic: the Mandelbrot iteration z = z * z + c on a grid of 70 by 40 points, up to 100 iterations each
+primary aspect p1f_complex is
+  from lib use (math);
+
+  process main is
+    new total := 0;
+    new c := (0 + i0);
+    new z := (0 + i0);
+    new n := 0;
+    for yi in (0..39) do
+      for xi in (0..69) do
+        let c := (-2.0 + xi * 0.04) + i1 * (-1.0 + yi * 0.05);
+        let z := (0 + i0);
+        let n := 0;
+        while n < 100 and math.abs(z) <= 2 do
+          let z := z * z + c;
+          let n += 1;
+        done;
+        let total += n;
+      done;
+    done;
+    expect total == 91897;
+    print total;
+  return;
+end p1f_complex;
+/*@expect
+{
+  "stdout": ["91897"]
+}
+*/

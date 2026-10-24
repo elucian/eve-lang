@@ -1,0 +1,15 @@
+** Primes, factors and modular power (L2).
+** @spec spec/library/math.md#module-numtheory  @feature F-LIB-03  @decision D-214  @tests test/level1/a110_math_basic
+module numtheory is
+  export (is_prime, factors, mod_pow);
+
+  ** Is n a prime number.
+  external function is_prime(n: Integer) => (@result: Logic);
+
+  ** Prime factors in ascending order with repeats.
+  external function factors(n: Integer) => (@result: List);
+
+  ** base to exp modulo m.
+  external function mod_pow(base: Integer, exp: Integer, m: Integer) => (@result: Integer);
+
+end numtheory;

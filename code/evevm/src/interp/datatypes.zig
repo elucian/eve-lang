@@ -22,6 +22,8 @@ const Class = interp.Class;
 const Arg = interp.Arg;
 const err_key = interp.err_key;
 const err_divide = interp.err_divide;
+const rational = interp.rational;
+const err_argument = interp.err_argument;
 const err_convert = interp.err_convert;
 
 // ---- Decimal, Instant, Secret (spec/library/data-language.md) ---------------------------------------
@@ -43,6 +45,155 @@ pub fn decimalOp(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
 }
 
 /// A Decimal from a Real read in a column: the shortest text that gives the same number.
+// @eve-impl arithmetic with a Rational: exact with a Rational or an Integer, a Real with a Real or a Float; a Decimal is refused
+// @spec spec/semantics/types.md#rational
+// @feature F-LNG-30
+// @perf hot
+pub fn ratOp(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
+    const eql = std.mem.eql;
+    if (l == .dec or r == .dec) return it.failWith(err_argument, "a Rational and a Decimal do not mix: convert one of them", .{});
+    if (l == .real or l == .float or r == .real or r == .float) {
+        const x = Interp.realOf(l) orelse return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+        const y = Interp.realOf(r) orelse return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+        if (eql(u8, op, "+")) return .{ .real = x + y };
+        if (eql(u8, op, "-")) return .{ .real = x - y };
+        if (eql(u8, op, "*")) return .{ .real = x * y };
+        if (eql(u8, op, "/")) {
+            if (y == 0) return it.failWith(err_divide, "Division by zero", .{});
+            return .{ .real = x / y };
+        }
+        if (eql(u8, op, "^")) return .{ .real = std.math.pow(f64, x, y) };
+        return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+    }
+    const x = Interp.ratOf(l) orelse return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+    const y = Interp.ratOf(r) orelse return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+    if (op.len == 1) switch (op[0]) {
+        '+' => return .{ .rat = rational.add(x, y) orelse return it.overflow() },
+        '-' => return .{ .rat = rational.sub(x, y) orelse return it.overflow() },
+        '*' => return .{ .rat = rational.mul(x, y) orelse return it.overflow() },
+        '/' => {
+            if (y.n == 0) return it.failWith(err_divide, "Division by zero", .{});
+            return .{ .rat = rational.div(x, y) orelse return it.overflow() };
+        },
+        '^' => {
+            if (y.d != 1) return it.failWith(err_argument, "a Rational is raised to a whole power", .{});
+            if (x.n == 0 and y.n < 0) return it.failWith(err_divide, "Division by zero", .{});
+            return .{ .rat = rational.pow(x, y.n) orelse return it.overflow() };
+        },
+        else => {},
+    };
+    return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+}
+
+// @eve-impl arithmetic with a Complex: the other operand is an Integer, a Real, a Float, a Rational or a Complex; a Decimal is refused; no ordering
+// @spec spec/semantics/types.md#complex
+// @feature F-LNG-31
+// @perf hot
+pub fn cpxOp(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
+    const c = interp.complex;
+    if (l == .dec or r == .dec) return it.failWith(err_argument, "a Complex and a Decimal do not mix: convert one of them", .{});
+    const x = Interp.cpxOf(l) orelse return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+    const y = Interp.cpxOf(r) orelse return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+    var z: c.Cpx = undefined;
+    if (op.len == 1 and op[0] == '+') {
+        z = c.add(x, y);
+    } else if (op.len == 1 and op[0] == '-') {
+        z = c.sub(x, y);
+    } else if (op.len == 1 and op[0] == '*') {
+        z = c.mul(x, y);
+    } else if (op.len == 1 and op[0] == '/') {
+        if (y.re == 0 and y.im == 0) return it.failWith(err_divide, "Division by zero", .{});
+        z = c.div(x, y);
+    } else if (op.len == 1 and op[0] == '^') {
+        if (y.im == 0 and y.re == @floor(y.re) and @abs(y.re) <= 1.0e9) {
+            if (x.re == 0 and x.im == 0 and y.re < 0) return it.failWith(err_divide, "Division by zero", .{});
+            z = c.powInt(x, @intFromFloat(y.re));
+        } else {
+            if (x.re == 0 and x.im == 0 and !(y.re > 0 and y.im == 0)) return it.failWith(err_argument, "zero to a power that is not a positive real number", .{});
+            z = c.pow(x, y);
+        }
+    } else return it.fail("operator {s} does not apply to {s} and {s}", .{ op, Interp.typeName(l), Interp.typeName(r) });
+    if (!c.finite(z)) return it.overflow();
+    return .{ .cpx = z };
+}
+
+/// A Date plus a number of days, or null when the result is outside year 1 to 9999.
+fn dateAdd(it: *Interp, days: i32, n: i64) ?i32 {
+    _ = it;
+    const r = @as(i64, days) + n;
+    if (r < interp.calendar.min_days or r > interp.calendar.max_days) return null;
+    return @intCast(r);
+}
+
+// @eve-impl arithmetic of Duration and Instant: Duration with Duration, Duration with an Integer, Instant with a Duration, Instant minus Instant
+// @spec spec/library/time.md#operators
+// @feature F-LNG-13
+pub fn timeOp(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
+    const bad = "operator {s} does not apply to {s} and {s}";
+    if (op.len != 1) return it.fail(bad, .{ op, Interp.typeName(l), Interp.typeName(r) });
+    const c = op[0];
+    if (l == .dur and r == .dur) {
+        switch (c) {
+            '+' => return .{ .dur = std.math.add(i64, l.dur, r.dur) catch return it.overflow() },
+            '-' => return .{ .dur = std.math.sub(i64, l.dur, r.dur) catch return it.overflow() },
+            '/' => {
+                if (r.dur == 0) return it.failWith(err_divide, "Division by zero", .{});
+                return .{ .real = @as(f64, @floatFromInt(l.dur)) / @as(f64, @floatFromInt(r.dur)) };
+            },
+            else => {},
+        }
+    } else if (l == .date and Interp.isInt(r) and (c == '+' or c == '-')) {
+        const n = if (c == '+') Interp.intOf(r) else (std.math.negate(Interp.intOf(r)) catch return it.overflow());
+        return .{ .date = dateAdd(it, l.date, n) orelse return it.overflow() };
+    } else if (Interp.isInt(l) and r == .date and c == '+') {
+        return .{ .date = dateAdd(it, r.date, Interp.intOf(l)) orelse return it.overflow() };
+    } else if (l == .date and r == .date and c == '-') {
+        return .{ .int = @as(i64, l.date) - r.date };
+    } else if (l == .time and r == .dur and (c == '+' or c == '-')) {
+        // the clock wraps round: 23:30 + 1h is 00:30
+        const day = interp.calendar.us_per_day;
+        const delta = @mod(r.dur, day);
+        const sum = if (c == '+') l.time + delta else l.time - delta;
+        return .{ .time = @mod(sum, day) };
+    } else if (l == .dur and r == .time and c == '+') {
+        return .{ .time = @mod(r.time + @mod(l.dur, interp.calendar.us_per_day), interp.calendar.us_per_day) };
+    } else if (l == .time and r == .time and c == '-') {
+        return .{ .dur = l.time - r.time };
+    } else if (l == .dur and Interp.isInt(r)) {
+        const k = Interp.intOf(r);
+        switch (c) {
+            '*' => return .{ .dur = std.math.mul(i64, l.dur, k) catch return it.overflow() },
+            '/' => {
+                if (k == 0) return it.failWith(err_divide, "Division by zero", .{});
+                return .{ .dur = @divTrunc(l.dur, k) };
+            },
+            else => {},
+        }
+    } else if (Interp.isInt(l) and r == .dur and c == '*') {
+        return .{ .dur = std.math.mul(i64, r.dur, Interp.intOf(l)) catch return it.overflow() };
+    } else if (l == .dtm and r == .dur and (c == '+' or c == '-')) {
+        const us = if (c == '+') std.math.add(i64, l.dtm.us, r.dur) else std.math.sub(i64, l.dtm.us, r.dur);
+        return .{ .dtm = .{ .us = us catch return it.overflow(), .zone = l.dtm.zone } };
+    } else if (l == .dur and r == .dtm and c == '+') {
+        return .{ .dtm = .{ .us = std.math.add(i64, r.dtm.us, l.dur) catch return it.overflow(), .zone = r.dtm.zone } };
+    } else if ((l == .dtm or l == .instant) and (r == .dtm or r == .instant) and c == '-') {
+        const a: i64 = if (l == .dtm) l.dtm.us else l.instant;
+        const b: i64 = if (r == .dtm) r.dtm.us else r.instant;
+        return .{ .dur = std.math.sub(i64, a, b) catch return it.overflow() };
+    } else if (l == .instant and r == .dur) {
+        switch (c) {
+            '+' => return .{ .instant = std.math.add(i64, l.instant, r.dur) catch return it.overflow() },
+            '-' => return .{ .instant = std.math.sub(i64, l.instant, r.dur) catch return it.overflow() },
+            else => {},
+        }
+    } else if (l == .dur and r == .instant and c == '+') {
+        return .{ .instant = std.math.add(i64, r.instant, l.dur) catch return it.overflow() };
+    } else if (l == .instant and r == .instant and c == '-') {
+        return .{ .dur = std.math.sub(i64, l.instant, r.instant) catch return it.overflow() };
+    }
+    return it.fail(bad, .{ op, Interp.typeName(l), Interp.typeName(r) });
+}
+
 pub fn decFromReal(it: *Interp, x: f64) Signal!decimal.Dec {
     return decimal.fromF64(x) orelse it.overflow();
 }
@@ -55,6 +206,18 @@ pub fn fromSqlText(it: *Interp, raw: []const u8, m: *const Node) Signal!Value {
     }
     if (std.mem.eql(u8, ty, "Instant")) {
         return .{ .instant = instant.parse(raw) orelse return it.failWith(err_convert, "DatabaseError: '{s}' is not an Instant for '{s}'", .{ raw, m.text }) };
+    }
+    if (std.mem.eql(u8, ty, "Date")) {
+        return .{ .date = interp.calendar.parseDate(raw) orelse return it.failWith(err_convert, "DatabaseError: '{s}' is not a Date for '{s}'", .{ raw, m.text }) };
+    }
+    if (std.mem.eql(u8, ty, "DateTime")) {
+        return @import("../timelib.zig").parseDateTimeIso(it, raw) catch return it.failWith(err_convert, "DatabaseError: '{s}' is not a DateTime for '{s}'", .{ raw, m.text });
+    }
+    if (std.mem.eql(u8, ty, "Time")) {
+        return .{ .time = interp.calendar.parseTime(raw) orelse return it.failWith(err_convert, "DatabaseError: '{s}' is not a Time for '{s}'", .{ raw, m.text }) };
+    }
+    if (std.mem.eql(u8, ty, "Duration")) {
+        return .{ .dur = interp.duration.parse(raw) orelse return it.failWith(err_convert, "DatabaseError: '{s}' is not a Duration for '{s}'", .{ raw, m.text }) };
     }
     return it.newStr(raw);
 }

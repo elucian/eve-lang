@@ -1,0 +1,8 @@
+# alpha: one exported function
+module alpha is
+  export (one);
+
+  function one() => (@result: Integer) is
+    let result := 1;
+  return;
+end alpha;

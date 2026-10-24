@@ -1,0 +1,133 @@
+# the types Date and Time: made by functions, fields, text, parse, zero value, comparison, errors
+** spec: library/time.md#the-types
+primary aspect e123_date_basics is
+  function declared_date() => (@r :Date) is
+    new z :Date;
+    let r := z;
+  return;
+  function declared_time() => (@r :Time) is
+    new z :Time;
+    let r := z;
+  return;
+  function code_of_date(y :Integer, m :Integer, d :Integer) => (@r :Integer) is
+    new x := time.date(y, m, d);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_clock(h :Integer, m :Integer, s :Integer) => (@r :Integer) is
+    new x := time.clock(h, m, s);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_parse_date(text :String) => (@r :Integer) is
+    new x := Date.parse(text);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_parse_time(text :String) => (@r :Integer) is
+    new x := Time.parse(text);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_field() => (@r :Integer) is
+    new t := time.clock(1, 2, 3);
+    new x := time.year(t);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new d := time.date(2026, 10, 24);
+    expect d == Date.parse("2026-10-24");
+    expect d.year() == 2026;
+    expect d.month() == 10;
+    expect d.day() == 24;
+    expect time.year(d) == 2026;
+    expect d.weekday() == 6;
+    expect d.day_of_year() == 297;
+    expect d.iso_week() == 43;
+    expect d.iso_year() == 2026;
+    expect time.date(1970, 1, 1).weekday() == 4;
+    expect time.date(2024, 12, 30).iso_week() == 1;
+    expect time.date(2024, 12, 30).iso_year() == 2025;
+    expect time.date(2021, 1, 3).iso_week() == 53;
+    expect time.date(2021, 1, 3).iso_year() == 2020;
+    expect time.date(2000, 2, 29).day_of_year() == 60;
+    expect time.date(2024, 12, 31).day_of_year() == 366;
+    expect type(d) == Date;
+    expect d is Date;
+    expect not (d is Time);
+    expect not (5 is Date);
+    expect declared_date() == time.date(1970, 1, 1);
+    expect declared_time() == time.clock(0, 0, 0);
+    expect time.date(2026, 10, 24) < time.date(2026, 10, 25);
+    expect time.date(2026, 10, 24) <= time.date(2026, 10, 24);
+    expect time.date(1, 1, 1) < time.date(1970, 1, 1);
+    expect time.date(9999, 12, 31) > time.date(2026, 1, 1);
+    expect time.date(2026, 10, 24) <> time.date(2026, 10, 23);
+    expect time.is_leap(2000);
+    expect time.is_leap(2024);
+    expect not time.is_leap(1900);
+    expect not time.is_leap(2100);
+    expect time.days_in_month(2024, 2) == 29;
+    expect time.days_in_month(2026, 2) == 28;
+    expect time.days_in_month(2026, 4) == 30;
+    expect time.days_in_month(2026, 12) == 31;
+    expect d.end_of_month() == time.date(2026, 10, 31);
+    expect time.date(2024, 2, 10).end_of_month() == time.date(2024, 2, 29);
+    new t := time.clock(8, 30, 15, 250000);
+    expect t.hour() == 8;
+    expect t.minute() == 30;
+    expect t.second() == 15;
+    expect t.micro() == 250000;
+    expect t == Time.parse("08:30:15.25");
+    expect time.clock(23, 59, 59, 999999) > time.clock(0, 0, 0);
+    expect time.clock(0, 0, 0) == Time.parse("00:00");
+    expect type(t) == Time;
+    expect t is Time;
+    expect code_of_date(2026, 2, 30) == $err_argument;
+    expect code_of_date(1900, 2, 29) == $err_argument;
+    expect code_of_date(2026, 13, 1) == $err_argument;
+    expect code_of_date(2026, 0, 1) == $err_argument;
+    expect code_of_date(0, 1, 1) == $err_argument;
+    expect code_of_date(10000, 1, 1) == $err_argument;
+    expect code_of_date(2026, 4, 31) == $err_argument;
+    expect code_of_date(2000, 2, 29) == 0;
+    expect code_of_clock(24, 0, 0) == $err_argument;
+    expect code_of_clock(0, 60, 0) == $err_argument;
+    expect code_of_clock(0, 0, 60) == $err_argument;
+    expect code_of_clock(-1, 0, 0) == $err_argument;
+    expect code_of_clock(23, 59, 59) == 0;
+    expect code_of_parse_date("2026-02-30") == $err_parse;
+    expect code_of_parse_date("2026-1-24") == $err_parse;
+    expect code_of_parse_date("20261024") == $err_parse;
+    expect code_of_parse_date("24/10/2026") == $err_parse;
+    expect code_of_parse_date("") == $err_parse;
+    expect code_of_parse_date("2026-10-24") == 0;
+    expect code_of_parse_time("24:00:00") == $err_parse;
+    expect code_of_parse_time("8:30") == $err_parse;
+    expect code_of_parse_time("08:30:00.1234567") == $err_parse;
+    expect code_of_parse_time("noon") == $err_parse;
+    expect code_of_parse_time("08:30") == 0;
+    expect code_of_field() == $err_argument;
+    new text := "{d} at {t}";
+    expect text == "2026-10-24 at 08:30:15.25";
+    print d;
+    print time.date(1, 1, 1), time.date(9999, 12, 31);
+    print t;
+    print time.clock(8, 30, 0);
+    print time.clock(8, 30, 0, 123);
+    print time.clock(23, 59, 59, 999999);
+    print time.clock(0, 0, 0);
+  return;
+end e123_date_basics;
+/*@expect
+{
+  "stdout": ["2026-10-24", "0001-01-01,9999-12-31", "08:30:15.25", "08:30:00", "08:30:00.000123", "23:59:59.999999", "00:00:00"]
+}
+*/

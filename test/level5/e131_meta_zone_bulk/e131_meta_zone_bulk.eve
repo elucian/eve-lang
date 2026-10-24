@@ -1,0 +1,34 @@
+# the zones of the meta database against Python's zoneinfo for 240000 instants (1900 to 2100): the sum of the offsets of 20000 instants in each of 12 zones
+** spec: library/meta.md#zone
+primary aspect e131_meta_zone_bulk is
+  from lib/meta use (zone);
+
+  process main is
+    new names := ("Europe/Bucharest", "America/New_York", "Australia/Lord_Howe", "Asia/Kolkata", "America/Sao_Paulo", "Pacific/Apia", "Europe/Dublin", "Africa/Casablanca", "America/Santiago", "Asia/Tehran", "Pacific/Chatham", "Antarctica/Troll");
+    new sums := (167148288, -321602400, 751642200, 397026480, -211198924, -44492728, 36302715, 4954280, -271146375, 257154408, 931564800, 39448800);
+    new bad := 0;
+    new x := 0;
+    new t := Instant.epoch;
+    new total := 0;
+    for z in (1..12) do
+      let x := 123456789;
+      let total := 0;
+      for k in (1..20000) do
+        let x := (x * 1103515245 + 12345) % 2147483648;
+        let t := Instant.epoch + 1s * (-2208988800 + (x * 2939) % 6311520000);
+        let total += time.millis(zone.offset(names[z], t)) / 1000;
+      done;
+      if total <> sums[z] do
+        print "differs: {names[z]}: {total} expected {sums[z]}";
+        let bad += 1;
+      done;
+    done;
+    expect bad == 0;
+    print 240000 - bad * 20000;
+  return;
+end e131_meta_zone_bulk;
+/*@expect
+{
+  "stdout": ["240000"]
+}
+*/

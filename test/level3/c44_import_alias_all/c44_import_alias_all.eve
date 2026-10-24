@@ -1,0 +1,15 @@
+# use (*) alias x: every module of the folder merged under one prefix
+** spec: semantics/modules.md#import
+primary aspect c44_import_alias_all is
+  from lib use (*) alias m;
+
+  process main is
+    expect m.one() + m.two() == 3;
+    print m.one() + m.two();
+  return;
+end c44_import_alias_all;
+/*@expect
+{
+  "stdout": ["3"]
+}
+*/

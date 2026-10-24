@@ -1,0 +1,75 @@
+# the type Duration: + - * / with Duration and Integer, Instant plus and minus a Duration, Instant minus Instant, errors
+** spec: library/time.md#operators
+primary aspect e121_duration_arithmetic is
+  function code_of_div() => (@r :Integer) is
+    new d := 5s;
+    new k := 0;
+    new x := d / k;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_div_duration() => (@r :Integer) is
+    new d := 5s;
+    new z := 0s;
+    new x := d / z;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_overflow() => (@r :Integer) is
+    new d := 2562047788h;
+    new x := d * 2;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  process main is
+    expect 30s + 15s == 45s;
+    expect 1h - 10m == 50m;
+    expect 10s - 1m == -50s;
+    expect 5s * 3 == 15s;
+    expect 3 * 5s == 15s;
+    expect 15s / 3 == 5s;
+    expect 1s / 3 == 333333us;
+    expect -1s / 3 == -333333us;
+    expect 1h / 30m == 2;
+    expect 1m / 4s == 15;
+    expect 1s / 4s == 0.25;
+    expect type(1s / 4s) == Real;
+    expect type(1h * 2) == Duration;
+    expect (5s + 5s) * 2 - 10s == 10s;
+    expect 5s * 0 == 0s;
+    new total := 0s;
+    for k in (1..100) do
+      let total := total + 1s * k;
+    done;
+    expect total == 5050s;
+    new t := Instant.parse("2026-10-24T08:30:00Z");
+    expect t + 90m == Instant.parse("2026-10-24T10:00:00Z");
+    expect t - 30m == Instant.parse("2026-10-24T08:00:00Z");
+    expect 90m + t == t + 90m;
+    expect (t + 90m) - t == 90m;
+    expect t - (t + 90m) == -90m;
+    expect t - t == 0s;
+    expect type(t - t) == Duration;
+    expect type(t + 1s) == Instant;
+    expect (t + 1s) > t;
+    expect t + 500ms - t == 500ms;
+    expect Instant.parse("2026-10-24T08:30:00.5Z") - t == 500ms;
+    new u := t;
+    let u += 1m;
+    expect u - t == 1m;
+    expect code_of_div() == $err_divide;
+    expect code_of_div_duration() == $err_divide;
+    expect code_of_overflow() == $err_overflow;
+    print 1h / 3;
+    print t + 36h;
+    print Instant.parse("2026-10-25T00:00:00Z") - t;
+  return;
+end e121_duration_arithmetic;
+/*@expect
+{
+  "stdout": ["PT20M", "2026-10-25T20:30:00Z", "PT15H30M"]
+}
+*/

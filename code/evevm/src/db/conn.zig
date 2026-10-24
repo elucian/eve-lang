@@ -37,6 +37,8 @@ pub fn recordClass(it: Host, targs: []const *const Node, what: []const u8) Signa
     return v.class;
 }
 
+const metalib = @import("../metalib.zig");
+
 pub const isOptional = ast.isOptional;
 pub const baseType = ast.baseType;
 
@@ -46,6 +48,16 @@ pub fn openConnection(it: Host, name: []const u8) Signal!usize {
     const b = state(it);
     if (b.conn_names.get(name)) |idx| {
         if (b.dbs.items[idx].handle != null) return idx;
+    }
+    if (std.mem.eql(u8, name, "meta")) {
+        // the meta database: the embedded file, a connection of its own, read only (D-222)
+        const mdb = try it.arena().create(sqlite.Db);
+        mdb.* = sqlite.Db.openImage(try metalib.image(it.it)) catch return it.failWith(err_io, "DatabaseError: the meta database can not be opened", .{});
+        try b.dbs.append(it.arena(), mdb);
+        try b.tx.append(it.arena(), false);
+        const midx = b.dbs.items.len - 1;
+        try b.conn_names.put(it.arena(), "meta", midx);
+        return midx;
     }
     const io = it.io() orelse return it.fail("database.connect: no input/output handle", .{});
     const cfg = Io.Dir.cwd().readFileAlloc(io, "eve.cfg", it.temp(), .limited(1 << 20)) catch
@@ -163,7 +175,7 @@ pub fn bindAll(it: Host, db: *sqlite.Db, st: *sqlite.Stmt, params: []const Value
             .bool => |x| st.bindInt(k, @intFromBool(x)),
             .int, .nat, .byte, .short, .huge => |n| st.bindInt(k, n),
             .real, .float => |x| st.bindReal(k, x),
-            .dec, .instant => st.bindText(k, try it.text(p)),
+            .dec, .instant, .date, .time, .dur, .zone, .dtm => st.bindText(k, try it.text(p)),
             .str => |s| st.bindText(k, s),
             else => return it.fail("SQL parameter {d}: a {s} can not be bound", .{ i, value.typeName(p) }),
         };

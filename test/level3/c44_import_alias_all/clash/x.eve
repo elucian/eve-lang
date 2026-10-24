@@ -1,0 +1,7 @@
+module x is
+  export (same);
+
+  function same() => (@result: Integer) is
+    let result := 1;
+  return;
+end x;

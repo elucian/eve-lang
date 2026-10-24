@@ -1,0 +1,58 @@
+process main  (function 0, 4 registers, 0 parameters)
+     0  line 16   evalx    r2 x0    ; tree walker: call
+     1  line 16   loadi    r3 7
+     2  line 16   add      r1 r2 r3
+     3  line 16   evalx    r2 x1    ; tree walker: call
+     4  line 16   eq       r0 r1 r2
+     5  line 16   expect   r0
+     6  line 16   safe    
+     7  line 17   evalx    r2 x2    ; tree walker: call
+     8  line 17   loadk    r3 k0    ; duration 3600000000 us
+     9  line 17   add      r1 r2 r3
+    10  line 17   evalx    r2 x3    ; tree walker: call
+    11  line 17   eq       r0 r1 r2
+    12  line 17   expect   r0
+    13  line 17   safe    
+    14  line 18   loadi    r3 2026
+    15  line 18   callf    r2 f1 args 1    ; saturdays
+    16  line 18   move     r1 r2
+    17  line 18   loadi    r2 52
+    18  line 18   eq       r0 r1 r2
+    19  line 18   expect   r0
+    20  line 18   safe    
+    21  line 19   loadi    r3 2028
+    22  line 19   callf    r2 f1 args 1    ; saturdays
+    23  line 19   move     r1 r2
+    24  line 19   loadi    r2 53
+    25  line 19   eq       r0 r1 r2
+    26  line 19   expect   r0
+    27  line 19   safe    
+    28  line 20   loadi    r2 2027
+    29  line 20   callf    r1 f1 args 1    ; saturdays
+    30  line 20   move     r0 r1
+    31  line 20   evalx    r2 x4    ; tree walker: call
+    32  line 20   evalx    r3 x5    ; tree walker: call
+    33  line 20   sub      r1 r2 r3
+    34  line 20   print    r0 x2 print
+    35  line 20   safe    
+    36  line 15   halt    
+function saturdays  (function 1, 7 registers, 1 parameters)
+     0  line 3    loadi    r1 0
+     1  line 4    evalx    r2 x6    ; tree walker: call
+     2  line 5    loadi    r3 0
+     3  line 6    evalx    r5 x7    ; tree walker: call
+     4  line 6    eq       r4 r5 r0
+     5  line 6    jf       r4 -> 16
+     6  line 7    evalx    r5 x8    ; tree walker: call
+     7  line 7    loadi    r6 6
+     8  line 7    eq       r4 r5 r6
+     9  line 7    jf       r4 -> 12
+    10  line 8    loadi    r4 1
+    11  line 8    augment  r3 r4 add
+    12  line 10   loadi    r5 1
+    13  line 10   add      r4 r2 r5
+    14  line 10   setlike  r2 r4
+    15  line 6    jmp      -> 3
+    16  line 12   move     r4 r3
+    17  line 12   setlike  r1 r4
+    18  line 3    ret      r1 value

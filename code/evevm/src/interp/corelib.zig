@@ -42,9 +42,9 @@ pub fn listMethod(it: *Interp, recv: Value, name: []const u8, arg_nodes: []const
         },
         .sum => {
             try expectArgs(it, name, args, 0);
-            var acc: Value = .{ .int = 0 };
+            var acc: Value = if (items.len > 0 and items[0] == .dur) .{ .dur = 0 } else .{ .int = 0 };
             for (items) |x| {
-                if (!Interp.isInt(x) and x != .real and x != .float and x != .dec) return it.failWith(err_argument, "sum needs numbers, found {s}", .{Interp.typeName(x)});
+                if (!Interp.isInt(x) and x != .real and x != .float and x != .dec and x != .rat and x != .dur) return it.failWith(err_argument, "sum needs numbers, found {s}", .{Interp.typeName(x)});
                 acc = try it.applyOp(.add, "+", acc, x);
             }
             return acc;
@@ -131,12 +131,12 @@ pub fn listMethod(it: *Interp, recv: Value, name: []const u8, arg_nodes: []const
 }
 
 fn isNumber(v: Value) bool {
-    return Interp.isInt(v) or v == .real or v == .float or v == .dec;
+    return Interp.isInt(v) or v == .real or v == .float or v == .dec or v == .rat;
 }
 
 /// Order two elements; elements of different families (a number and a text) are `$err_argument`, not a comparison.
 fn compare(it: *Interp, a: Value, b: Value) Signal!std.math.Order {
-    const same_family = (isNumber(a) and isNumber(b)) or (a == .str and b == .str) or (a == .sym and b == .sym) or (a == .instant and b == .instant);
+    const same_family = (isNumber(a) and isNumber(b)) or (a == .dur and b == .dur) or (a == .date and b == .date) or ((a == .dtm or a == .instant) and (b == .dtm or b == .instant)) or (a == .time and b == .time) or (a == .str and b == .str) or (a == .sym and b == .sym) or (a == .instant and b == .instant);
     if (!same_family) return it.failWith(err_argument, "cannot compare {s} with {s}", .{ Interp.typeName(a), Interp.typeName(b) });
     return it.order(a, b);
 }

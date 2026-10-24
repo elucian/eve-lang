@@ -1,0 +1,154 @@
+# time.format and time.parse: the letters, quoted text, the placeholders {d % pattern}, the typed Date.parse(text, pattern), and the errors
+** spec: library/time.md#patterns
+primary aspect e127_time_patterns is
+  function code_of(f :Integer, text :String, pattern :String) => (@r :Integer) is
+    let r := 0;
+    if f == 1 do
+      let r := parse_code(text, pattern);
+    done;
+    if f == 2 do
+      let r := date_code(text, pattern);
+    done;
+    if f == 3 do
+      let r := instant_code(text, pattern);
+    done;
+  return;
+  function parse_code(text :String, pattern :String) => (@r :Integer) is
+    new x := time.parse(text, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function date_code(text :String, pattern :String) => (@r :Integer) is
+    new x := Date.parse(text, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function instant_code(text :String, pattern :String) => (@r :Integer) is
+    new x := Instant.parse(text, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function fmt_code(v :Date, pattern :String) => (@r :Integer) is
+    new x := time.format(v, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function fmt_time_code(v :Time, pattern :String) => (@r :Integer) is
+    new x := time.format(v, pattern);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new d := time.date(2026, 10, 24);
+    new t := time.clock(8, 5, 7, 123456);
+    new i := Instant.parse("2026-10-24T08:05:07.123456Z");
+    expect time.format(d, "yyyy-MM-dd") == "2026-10-24";
+    expect time.format(d, "dd/MM/yyyy") == "24/10/2026";
+    expect time.format(d, "d.M.yy") == "24.10.26";
+    expect time.format(time.date(2026, 3, 5), "d.M.yy") == "5.3.26";
+    expect time.format(time.date(2026, 3, 5), "dd.MM.yyyy") == "05.03.2026";
+    expect time.format(d, "EEE, d MMM yyyy") == "Sat, 24 Oct 2026";
+    expect time.format(d, "EEEE d MMMM yyyy") == "Saturday 24 October 2026";
+    expect time.format(d, "yyyyMMdd") == "20261024";
+    expect time.format(d, "D") == "297";
+    expect time.format(d, "DDD") == "297";
+    expect time.format(time.date(2026, 1, 5), "DDD") == "005";
+    expect time.format(d, "'week' w, 'quarter' Q") == "week 43, quarter 4";
+    expect time.format(time.date(1, 1, 1), "yyyy-MM-dd") == "0001-01-01";
+    expect time.format(time.date(9999, 12, 31), "yyyy") == "9999";
+    expect time.format(d, "yyyy 'it''s' MM") == "2026 it's 10";
+    expect time.format(d, "yyyy-MM-dd'T'") == "2026-10-24T";
+    expect time.format(d, "") == "";
+    expect time.format(t, "HH:mm:ss") == "08:05:07";
+    expect time.format(t, "H:m:s") == "8:5:7";
+    expect time.format(t, "HH:mm:ss.SSS") == "08:05:07.123";
+    expect time.format(t, "HH:mm:ss.SSSSSS") == "08:05:07.123456";
+    expect time.format(t, "ss.S") == "07.1";
+    expect time.format(t, "h:mm a") == "8:05 AM";
+    expect time.format(time.clock(0, 0, 0), "h:mm a") == "12:00 AM";
+    expect time.format(time.clock(12, 30, 0), "h:mm a") == "12:30 PM";
+    expect time.format(time.clock(23, 59, 59), "hh:mm:ss a") == "11:59:59 PM";
+    expect time.format(i, "yyyy-MM-dd'T'HH:mm:ssXXX") == "2026-10-24T08:05:07Z";
+    expect time.format(i, "yyyy-MM-dd HH:mm") == "2026-10-24 08:05";
+    expect time.format(Instant.epoch, "yyyy-MM-dd HH:mm:ss") == "1970-01-01 00:00:00";
+    expect d.format("yyyy") == "2026";
+    expect t.format("HH") == "08";
+    expect i.format("yyyy") == "2026";
+    expect "{d % dd.MM.yyyy}" == "24.10.2026";
+    expect "{t % HH:mm}" == "08:05";
+    expect "{i % yyyyMMdd}" == "20261024";
+    expect "{d}" == "2026-10-24";
+    expect time.parse("2026-10-24", "yyyy-MM-dd") == d;
+    expect time.parse("24/10/2026", "dd/MM/yyyy") == d;
+    expect time.parse("5.3.26", "d.M.yy") == time.date(2026, 3, 5);
+    expect time.parse("1.1.70", "d.M.yy") == time.date(1970, 1, 1);
+    expect time.parse("31.12.69", "d.M.yy") == time.date(2069, 12, 31);
+    expect time.parse("20261024", "yyyyMMdd") == d;
+    expect time.parse("Sat, 24 Oct 2026", "EEE, d MMM yyyy") == d;
+    expect time.parse("saturday 24 OCTOBER 2026", "EEEE d MMMM yyyy") == d;
+    expect time.parse("2026-297", "yyyy-DDD") == d;
+    expect time.parse("2024-366", "yyyy-DDD") == time.date(2024, 12, 31);
+    expect time.parse("08:05:07", "HH:mm:ss") == time.clock(8, 5, 7);
+    expect time.parse("8:05 PM", "h:mm a") == time.clock(20, 5, 0);
+    expect time.parse("12:00 AM", "h:mm a") == time.clock(0, 0, 0);
+    expect time.parse("12:30 pm", "h:mm a") == time.clock(12, 30, 0);
+    expect time.parse("08:05:07.5", "HH:mm:ss.S") == time.clock(8, 5, 7, 500000);
+    expect time.parse("08:05:07.123456", "HH:mm:ss.SSSSSS") == t;
+    expect time.parse("23:59", "HH:mm") == time.clock(23, 59, 0);
+    expect time.parse("2026-10-24 08:05:07Z", "yyyy-MM-dd HH:mm:ssX") == Instant.parse("2026-10-24T08:05:07Z");
+    expect time.parse("2026-10-24 11:05:07+03:00", "yyyy-MM-dd HH:mm:ssXXX") == Instant.parse("2026-10-24T08:05:07Z");
+    expect time.parse("2026-10-24 11:05:07+03", "yyyy-MM-dd HH:mm:ssX") == Instant.parse("2026-10-24T08:05:07Z");
+    expect time.parse("2026-10-24 11:35:07+0330", "yyyy-MM-dd HH:mm:ssXX") == Instant.parse("2026-10-24T08:05:07Z");
+    expect time.parse("2026-10-24 03:05:07-05:00", "yyyy-MM-dd HH:mm:ssXXX") == Instant.parse("2026-10-24T08:05:07Z");
+    expect time.parse("2026-10-24T08:05:07.123456Z", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX") == i;
+    expect Date.parse("24.10.2026", "dd.MM.yyyy") == d;
+    expect Time.parse("8:05", "H:mm") == time.clock(8, 5, 0);
+    expect Instant.parse("20261024 080507Z", "yyyyMMdd HHmmssX") == Instant.parse("2026-10-24T08:05:07Z");
+    expect type(time.parse("24.10.2026", "dd.MM.yyyy")) == Date;
+    expect type(time.parse("08:05", "HH:mm")) == Time;
+    expect type(time.parse("2026-10-24 08:05Z", "yyyy-MM-dd HH:mmX")) == Instant;
+    expect fmt_code(d, "yyyy-Z") == $err_argument;
+    expect fmt_code(d, "'open") == $err_argument;
+    expect fmt_code(d, "yyyyyyyyyy") == $err_argument;
+    expect fmt_code(d, "HH") == $err_argument;
+    expect fmt_code(d, "XXX") == $err_argument;
+    expect fmt_code(d, "yyyy") == 0;
+    expect fmt_time_code(t, "yyyy") == $err_argument;
+    expect fmt_time_code(t, "HH") == 0;
+    expect code_of(1, "2026-02-30", "yyyy-MM-dd") == $err_parse;
+    expect code_of(1, "2026-1-24", "yyyy-MM-dd") == $err_parse;
+    expect code_of(1, "2026-10-24 x", "yyyy-MM-dd") == $err_parse;
+    expect code_of(1, "26-10-24", "yyyy-MM-dd") == $err_parse;
+    expect code_of(1, "24 Ocx 2026", "d MMM yyyy") == $err_parse;
+    expect code_of(1, "Mon, 24 Oct 2026", "EEE, d MMM yyyy") == $err_parse;
+    expect code_of(1, "24:00", "HH:mm") == $err_parse;
+    expect code_of(1, "13:00 PM", "h:mm a") == $err_parse;
+    expect code_of(1, "08:05 XM", "hh:mm a") == $err_parse;
+    expect code_of(1, "2026-366", "yyyy-DDD") == $err_parse;
+    expect code_of(1, "2026-10-24 11:05:07+19:00", "yyyy-MM-dd HH:mm:ssXXX") == $err_parse;
+    expect code_of(1, "2026-10-24 11:05:07", "yyyy-MM-dd HH:mm:ss") == $err_argument;
+    expect code_of(1, "08", "hh") == $err_argument;
+    expect code_of(1, "5", "d") == $err_argument;
+    expect code_of(1, "2026", "yyyy") == $err_argument;
+    expect code_of(1, "x", "ww") == $err_parse;
+    expect code_of(1, "12", "ww") == $err_argument;
+    expect code_of(1, "2026-10-24", "yyyy-MM-dd Z") == $err_argument;
+    expect code_of(2, "24.10.2026 08:05", "dd.MM.yyyy HH:mm") == $err_argument;
+    expect code_of(2, "08:05", "HH:mm") == $err_argument;
+    expect code_of(3, "2026-10-24 08:05", "yyyy-MM-dd HH:mm") == $err_argument;
+    print time.format(d, "EEEE, d MMMM yyyy");
+    print time.format(i, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    print time.parse("12/31/99", "MM/dd/yy"), time.parse("11:59 PM", "hh:mm a");
+  return;
+end e127_time_patterns;
+/*@expect
+{
+  "stdout": ["Saturday, 24 October 2026", "2026-10-24T08:05:07.123Z", "1999-12-31,23:59:00"]
+}
+*/

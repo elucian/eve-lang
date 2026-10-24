@@ -8,6 +8,8 @@
 const std = @import("std");
 const Io = std.Io;
 const interp = @import("../interp.zig");
+const timelib = @import("../timelib.zig");
+const metalib = @import("../metalib.zig");
 const Interp = interp.Interp;
 const data = interp.data;
 const decimal = interp.decimal;
@@ -42,6 +44,40 @@ pub fn show(it: *Interp, buf: *std.ArrayList(u8), v: Value, quoted: bool) Signal
         .dec => |d| {
             var aw: Io.Writer.Allocating = .init(it.t);
             decimal.write(&aw.writer, d) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
+        .zone => |id| {
+            var nb: [8]u8 = undefined;
+            try buf.appendSlice(it.t, metalib.zoneName(id, &nb));
+        },
+        .dtm => |d| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            timelib.writeDateTime(&aw.writer, d) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
+        .date => |days| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            interp.calendar.writeDate(&aw.writer, days) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
+        .time => |us| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            interp.calendar.writeTime(&aw.writer, us) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
+        .dur => |us| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            interp.duration.write(&aw.writer, us) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
+        .cpx => |z| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            interp.complex.write(&aw.writer, z) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
+        .rat => |q| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            interp.rational.write(&aw.writer, q) catch return error.OutOfMemory;
             try buf.appendSlice(it.t, aw.written());
         },
         .instant => |us| {
@@ -132,6 +168,8 @@ pub fn isAlign(c: u8) bool {
 
 /// Apply the format `spec` (the text after the `:`) of `\s{}`, `\#{}` or `\b{}` to `v`.
 pub fn format(it: *Interp, letter: u8, spec: []const u8, v: Value) Signal![]const u8 {
+    // a Date, a Time or an Instant: the text after `%` is a pattern, `{d % yyyy-MM-dd}` (spec/library/time.md#patterns)
+    if ((v == .date or v == .time or v == .instant or v == .dtm) and spec.len > 0) return timelib.formatText(it, v, spec);
     var buf: std.ArrayList(u8) = .empty;
     if (v == .bool or letter == 'b') {
         const b = v == .bool and v.bool;

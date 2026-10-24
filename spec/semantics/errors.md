@@ -130,7 +130,18 @@ Warnings do not stop the process; `.warn(code, message)` reports them.
 | `$wrn_deprecated` | 5 | `{name} is deprecated, use {other}` |
 | `$wrn_truncate` | 6 | `Value {value} truncated to {type}` |
 | `$wrn_unused` | 7 | `{name} is declared but never used` |
+| `$wrn_hidden` | 8 | `The name {name} of {module} is hidden by {other}: the first import wins` |
+
+### Warnings of the compiler
+
+A warning of the compiler is written on the error output before the program runs, as `file:line:column: warning $wrn_name: message`, and does not change the exit code. Every warning has a constant `$wrn_name` with a code, so a tool can count and filter them. The list grows with the features; a new warning takes the next code and a row here. Proposed names for the next ones are in the table of the open points.
+
+| Constant | Raised when | Test |
+|---|---|---|
+| `$wrn_hidden` | two imports merged by `use (*)` or `use (m(*))` give the same name; the second stays hidden ([modules.md](modules.md#import)) | c18, c44 |
 
 ## Open points
+
+Names proposed for the warnings of the compiler, not yet raised (each needs a feature entry and a test first): `$wrn_unused` for an import, a variable or a parameter never used (code 7, exists as a constant); `$wrn_shadow` for a name that hides one of an outer scope; `$wrn_unreachable` for a statement after `return` or `abort`; `$wrn_deprecated` for a use of a library member marked deprecated (code 5); `$wrn_precision` for a `Real` converted to a `Decimal` or the other way in an assignment; `$wrn_implicit_null` for a variable read before it is assigned.
 
 `raise` with a code and the Exception module (PRC-08, PRC-09).

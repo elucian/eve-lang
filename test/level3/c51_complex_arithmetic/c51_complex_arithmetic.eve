@@ -1,0 +1,82 @@
+# the type Complex: + - * / ^ with Complex, Integer, Real and Rational; no order; errors. Expected values from Python's complex numbers
+** spec: semantics/types.md#complex
+primary aspect c51_complex_arithmetic is
+  from lib use (math);
+
+  function code_of_div() => (@r :Integer) is
+    new z := (1 + i1);
+    new x := z / (0 + i0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_zero_power() => (@r :Integer) is
+    new z := (0 + i0);
+    new x := z ^ -1;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_overflow() => (@r :Integer) is
+    new z := (1.0e200 + i1.0e200);
+    new x := z * z;
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function close(a :Complex, b :Complex) => (@r :Logic) is
+    let r := math.modulus(a - b) < 1.0e-12;
+  return;
+
+  process main is
+    expect (1 + i2) + (3 - i1) == (4 + i1);
+    expect (1 + i2) - (3 - i1) == (-2 + i3);
+    expect (1 + i2) * (3 - i1) == (5 + i5);
+    expect (2 + i3) * (2 - i3) == 13;
+    expect i1 * i1 == -1;
+    expect (3 + i4) * (3 - i4) == 25;
+    expect close((3 + i4) / (1 + i2), (2.2 - i0.4));
+    expect close(((1 + i2) * (3 - i1)) / (3 - i1), (1 + i2));
+    expect (1 + i1) ^ 2 == i2;
+    expect (1 + i1) ^ 4 == -4;
+    expect (1 + i1) ^ 8 == 16;
+    expect (3 + i4) ^ 2 == (-7 + i24);
+    expect (2 + i0) ^ 10 == 1024;
+    expect (1 + i1) ^ 0 == 1;
+    expect close((1 + i2) ^ -2, (-0.12 - i0.16));
+    expect close((1 + i2) ^ (0.5 + i1), (0.1042330549168707 + i0.48309593926990946));
+    expect (1 + i2) + 1 == (2 + i2);
+    expect 1 + (1 + i2) == (2 + i2);
+    expect (1 + i2) * 2 == (2 + i4);
+    expect 2 * (1 + i2) == (2 + i4);
+    expect (1 + i2) - 1 == i2;
+    expect 1 - (1 + i2) == -i2;
+    expect (1 + i2) + 0.5 == (1.5 + i2);
+    expect (1 + i2) * 1\2 == (0.5 + i1);
+    expect 1\2 + i1 == (0.5 + i1);
+    expect (4 + i2) / 2 == (2 + i1);
+    expect 4 / (0 + i2) == -i2;
+    expect type((1 + i2) + 1) == Complex;
+    expect type(1\2 + i1) == Complex;
+    expect (1 + i1) == (1 + i1);
+    expect not ((1 + i1) == (1 + i2));
+    new z := (0 + i0);
+    let z += 1;
+    let z *= (1 + i1);
+    let z -= i1;
+    let z /= 2;
+    expect z == (0.5 + i0);
+    expect code_of_div() == $err_divide;
+    expect code_of_zero_power() == $err_divide;
+    expect code_of_overflow() == $err_overflow;
+    print (1 + i2) * (3 - i1);
+    print (3 + i4) / (1 + i2);
+    print (1 + i1) ^ 8;
+    print i1 ^ 3;
+  return;
+end c51_complex_arithmetic;
+/*@expect
+{
+  "stdout": ["(5 + i5)", "(2.2 - i0.4)", "(16 + i0)", "(0 - i1)"]
+}
+*/

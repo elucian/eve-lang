@@ -1,0 +1,15 @@
+# variation of e133: a DateTime and a Date are not compared: a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e133_test4 is
+  process main is
+    new d :DateTime;
+    new t :Date;
+    print d < t;
+  return;
+end e133_test4;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

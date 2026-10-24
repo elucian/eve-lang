@@ -1,0 +1,14 @@
+# variation 1 of c44: two modules of the folder export the same name: the first (by file name) wins, the second is hidden, with a warning
+** spec: semantics/modules.md#import
+primary aspect c44_test1 is
+  from clash use (*) alias m;
+
+  process main is
+    print m.same();
+  return;
+end c44_test1;
+/*@expect
+{
+  "stdout": ["1"]
+}
+*/

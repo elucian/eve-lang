@@ -31,9 +31,25 @@ pub fn number(it: *Interp, n: *const Node) Signal!Value {
     switch (n.lit_kind) {
         .int => return .{ .int = @bitCast(n.lit_bits) },
         .real => return .{ .real = @bitCast(n.lit_bits) },
+        .rat => return .{ .rat = .{ .n = @intCast(n.lit_bits & 0xffffffff), .d = @intCast(n.lit_bits >> 32) } },
+        .imag => return .{ .cpx = .{ .re = 0, .im = @bitCast(n.lit_bits) } },
+        .dur => return .{ .dur = @bitCast(n.lit_bits) },
         .none => {},
     }
-    if (Interp.durationMs(n.text)) |ms| return .{ .int = ms };
+    if (interp.duration.parseLiteral(n.text)) |us| return .{ .dur = us };
+    // an imaginary literal `i99`, `i2.5` (types.md#complex)
+    if (n.text.len > 1 and n.text[0] == 'i') {
+        const im = std.fmt.parseFloat(f64, n.text[1..]) catch return it.fail("bad number {s}", .{n.text});
+        return .{ .cpx = .{ .re = 0, .im = im } };
+    }
+    // a Rational literal `3\4` (types.md#rational)
+    if (std.mem.indexOfScalar(u8, n.text, '\\') != null) {
+        const q = interp.rational.parse(n.text) orelse {
+            if (std.mem.endsWith(u8, n.text, "\\0")) return it.failWith(err_divide, "Division by zero in the Rational literal {s}", .{n.text});
+            return it.overflow();
+        };
+        return .{ .rat = q };
+    }
     var buf: [64]u8 = undefined;
     var len: usize = 0;
     var digits_text = n.text;
@@ -158,6 +174,9 @@ pub fn negate(it: *Interp, v: Value) Signal!Value {
         .huge => |x| .{ .huge = -x },
         .real, .float => |x| .{ .real = -x },
         .dec => |d| .{ .dec = decimal.neg(d) orelse return it.overflow() },
+        .rat => |q| .{ .rat = interp.rational.neg(q) orelse return it.overflow() },
+        .cpx => |z| .{ .cpx = interp.complex.neg(z) },
+        .dur => |us| .{ .dur = std.math.negate(us) catch return it.overflow() },
         else => it.fail("cannot negate {s}", .{Interp.typeName(v)}),
     };
 }
@@ -300,8 +319,128 @@ pub fn applyOp(it: *Interp, o: ast.Op, op: []const u8, l: Value, r: Value) Signa
             .mul => return .{ .real = l.real * r.real },
             else => {},
         }
+    } else if (l == .instant or l == .dur or l == .date or l == .time) {
+        // @perf hot
+        // Instant, Duration, Date and Time without the operator text: the same results as `timeOp` and `order` (time.md#operators)
+        if (timeFast(o, l, r)) |v| return v;
+    } else if (l == .cpx and r == .cpx) {
+        // @perf hot
+        const c = interp.complex;
+        switch (o) {
+            .add => return .{ .cpx = c.add(l.cpx, r.cpx) },
+            .sub => return .{ .cpx = c.sub(l.cpx, r.cpx) },
+            .mul => {
+                const z = c.mul(l.cpx, r.cpx);
+                if (c.finite(z)) return .{ .cpx = z };
+            },
+            .eq => return .{ .bool = c.eql(l.cpx, r.cpx) },
+            .ne => return .{ .bool = !c.eql(l.cpx, r.cpx) },
+            else => {},
+        }
+    } else if (l == .rat or r == .rat) {
+        // @perf hot
+        // exact fractions without the operator text: the same results as `ratOp` (types.md#rational)
+        if (Interp.ratOf(l)) |x| if (Interp.ratOf(r)) |y| {
+            const q = interp.rational;
+            switch (o) {
+                .add => return .{ .rat = q.add(x, y) orelse return it.overflow() },
+                .sub => return .{ .rat = q.sub(x, y) orelse return it.overflow() },
+                .mul => return .{ .rat = q.mul(x, y) orelse return it.overflow() },
+                .div => if (y.n != 0) return .{ .rat = q.div(x, y) orelse return it.overflow() },
+                .eq => return .{ .bool = x.n == y.n and x.d == y.d },
+                .ne => return .{ .bool = x.n != y.n or x.d != y.d },
+                .lt => return .{ .bool = q.order(x, y) == .lt },
+                .gt => return .{ .bool = q.order(x, y) == .gt },
+                .le => return .{ .bool = q.order(x, y) != .gt },
+                .ge => return .{ .bool = q.order(x, y) != .lt },
+                else => {},
+            }
+        };
     }
     return it.apply(op, l, r);
+}
+
+// @eve-impl the common cases of the operators on times; null when the general path must decide (a mix, an overflow, a zero divisor)
+// @spec spec/library/time.md#operators
+fn timeFast(o: ast.Op, l: Value, r: Value) ?Value {
+    switch (l) {
+        .instant => |a| switch (r) {
+            .dur => |b| switch (o) {
+                .add => return .{ .instant = std.math.add(i64, a, b) catch return null },
+                .sub => return .{ .instant = std.math.sub(i64, a, b) catch return null },
+                else => {},
+            },
+            .instant => |b| switch (o) {
+                .sub => return .{ .dur = std.math.sub(i64, a, b) catch return null },
+                .eq => return .{ .bool = a == b },
+                .ne => return .{ .bool = a != b },
+                .lt => return .{ .bool = a < b },
+                .gt => return .{ .bool = a > b },
+                .le => return .{ .bool = a <= b },
+                .ge => return .{ .bool = a >= b },
+                else => {},
+            },
+            else => {},
+        },
+        .dur => |a| switch (r) {
+            .dur => |b| switch (o) {
+                .add => return .{ .dur = std.math.add(i64, a, b) catch return null },
+                .sub => return .{ .dur = std.math.sub(i64, a, b) catch return null },
+                .eq => return .{ .bool = a == b },
+                .ne => return .{ .bool = a != b },
+                .lt => return .{ .bool = a < b },
+                .gt => return .{ .bool = a > b },
+                .le => return .{ .bool = a <= b },
+                .ge => return .{ .bool = a >= b },
+                else => {},
+            },
+            .int => |k| switch (o) {
+                .mul => return .{ .dur = std.math.mul(i64, a, k) catch return null },
+                else => {},
+            },
+            .instant => |b| if (o == .add) return .{ .instant = std.math.add(i64, b, a) catch return null },
+            else => {},
+        },
+        .date => |a| switch (r) {
+            .int => |k| switch (o) {
+                .add => return dateIn(@as(i64, a) + k),
+                .sub => return dateIn(@as(i64, a) - k),
+                else => {},
+            },
+            .date => |b| switch (o) {
+                .sub => return .{ .int = @as(i64, a) - b },
+                .eq => return .{ .bool = a == b },
+                .ne => return .{ .bool = a != b },
+                .lt => return .{ .bool = a < b },
+                .gt => return .{ .bool = a > b },
+                .le => return .{ .bool = a <= b },
+                .ge => return .{ .bool = a >= b },
+                else => {},
+            },
+            else => {},
+        },
+        .time => |a| switch (r) {
+            .time => |b| switch (o) {
+                .sub => return .{ .dur = a - b },
+                .eq => return .{ .bool = a == b },
+                .ne => return .{ .bool = a != b },
+                .lt => return .{ .bool = a < b },
+                .gt => return .{ .bool = a > b },
+                .le => return .{ .bool = a <= b },
+                .ge => return .{ .bool = a >= b },
+                else => {},
+            },
+            else => {},
+        },
+        else => {},
+    }
+    if (l == .int and r == .dur and o == .mul) return .{ .dur = std.math.mul(i64, r.dur, l.int) catch return null };
+    return null;
+}
+
+fn dateIn(days: i64) ?Value {
+    if (days < interp.calendar.min_days or days > interp.calendar.max_days) return null;
+    return .{ .date = @intCast(days) };
 }
 
 /// Apply a binary operator to two values.
@@ -357,6 +496,9 @@ pub fn apply(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
     }
     if (eql(u8, op, "><")) return it.product(l, r);
     if (eql(u8, op, "/") and l == .str and r == .str) return .{ .str = try it.persist(try dlib.joinPath(it, l.str, r.str)) }; // the operator / joins paths
+    if (l == .dur or r == .dur or l == .date or r == .date or l == .time or r == .time or l == .dtm or r == .dtm or ((l == .instant or r == .instant) and op.len == 1 and (op[0] == '+' or op[0] == '-'))) return it.timeOp(op, l, r);
+    if (l == .cpx or r == .cpx) return it.cpxOp(op, l, r);
+    if (l == .rat or r == .rat) return it.ratOp(op, l, r);
     if (l == .dec or r == .dec) return it.decimalOp(op, l, r);
     // numbers
     if (Interp.realOf(l) == null or Interp.realOf(r) == null) {

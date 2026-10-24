@@ -1,0 +1,68 @@
+# math library: random generator, seeded and not seeded (math.md)
+** spec: library/math.md#module-random
+primary aspect a114_math_random is
+  from lib/math use (random);
+
+  function code_range() => (@r :Integer) is
+    new x := random.integer!(5, 1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_empty() => (@r :Integer) is
+    new x := random.choice!(());
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_sample() => (@r :Integer) is
+    new x := random.sample!((1, 2), 3);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  function same_after_seed() => (@r :Logic) is
+    random.seed(2026);
+    new a := random.next!();
+    new b := random.integer!(1, 1000);
+    random.seed(2026);
+    let r := a == random.next!() and b == random.integer!(1, 1000);
+  return;
+
+  process main is
+    expect same_after_seed();
+    random.seed(1);
+    new unit_ok := True;
+    new dice_ok := True;
+    new i := 0;
+    new x := 0.0;
+    new d := 0;
+    while i < 200 do
+      let x := random.next!();
+      let unit_ok := unit_ok and x >= 0 and x < 1;
+      let d := random.integer!(1, 6);
+      let dice_ok := dice_ok and d >= 1 and d <= 6;
+      let i := i + 1;
+    done;
+    expect unit_ok;
+    expect dice_ok;
+    expect random.integer!(7, 7) == 7;
+    expect random.shuffle!((1, 2, 3, 4, 5)).sort() == (1, 2, 3, 4, 5);
+    expect random.sample!((1, 2, 3), 0) == ();
+    expect random.choice!((9,)) == 9;
+    expect random.real!(2, 3) >= 2;
+    expect code_range() == $err_argument;
+    expect code_empty() == $err_argument;
+    expect code_sample() == $err_argument;
+    random.seed(7);
+    print random.integer!(1, 1);
+    print random.next!() < 1;
+    print random.normal!(0, 1) < 1000;
+  return;
+end a114_math_random;
+/*@expect
+{
+  "stdout": ["1", "True", "True"]
+}
+*/

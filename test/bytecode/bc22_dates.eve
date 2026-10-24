@@ -1,0 +1,27 @@
+# Date and Time values run on the machine: functions of the module time, + and - with days and Durations, comparison
+primary aspect bc22_dates is
+  function saturdays(year :Integer) => (@r :Integer) is
+    new d := time.date(year, 1, 1);
+    new n := 0;
+    while d.year() == year do
+      if d.weekday() == 6 do
+        let n += 1;
+      done;
+      let d := d + 1;
+    done;
+    let r := n;
+  return;
+
+  process main is
+    expect time.date(2026, 10, 24) + 7 == time.date(2026, 10, 31);
+    expect time.clock(23, 30, 0) + 1h == time.clock(0, 30, 0);
+    expect saturdays(2026) == 52;
+    expect saturdays(2028) == 53;
+    print saturdays(2027), time.date(2026, 10, 24) - time.date(2026, 1, 1);
+  return;
+end bc22_dates;
+/*@expect
+{
+  "stdout": ["52,296"]
+}
+*/

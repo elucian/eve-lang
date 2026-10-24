@@ -143,9 +143,13 @@ A real literal has digits on both sides of the point: `0.5`, `9.9`. `1.` and `.5
 
 **Exponent.** A real literal may end with an exponent: `1.5e3`, `2e-3`, `2E5` (`e` or `E`, an optional sign, digits). A literal with an exponent is always a `Real` (a double). The digit separator `_` is not accepted (`1_000` is a lexical error). A large number is written as a string followed at once by a type suffix: `"1,000,000"z`, `"12,500.75"d`; the commas are digit separators, and the suffix makes it a number literal, not a string.
 
+### Imaginary
+
+An imaginary literal is the letter `i` followed at once by a number: `i99`, `i2.5`, `i1e-3`. It is the number `i` times the value, a `Complex` with a real part of zero ([types.md](../semantics/types.md#complex)). The letter and the digits are one token, so `i99` is never a name; `i9x` and `ix` are names, and a member `a.i5` after a point is a name too. A Complex is written as a sum in parentheses: `(10 + i99)`.
+
 ### Rational
 
-`3\4` is a `Rational` and is not part of levels 1 to 6: an implementation reports it as not supported.
+`3\4` is a `Rational`: digits, a backslash and digits, with no space ([types.md](../semantics/types.md#rational)). `1\0` is the error `$err_divide` when it is evaluated. A fraction with a sign, a hexadecimal numerator or a suffix is not a literal: `-3\4` is the operator `-` on `3\4`.
 
 ### Rune
 

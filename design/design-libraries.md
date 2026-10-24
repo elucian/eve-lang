@@ -95,7 +95,8 @@ Financial Functions (NPV, IRR, PMT): Following Excel and OpenDocument Format (OD
 
 - **L0.** The false claim of the feature page F-LIB-03 is corrected; `spec/library/README.md` is the index of the libraries; `python script/libcoverage.py` lists the members of every module and the number of test files that call each (`--missing`: 10 of 80 members have no test: `http.read_request!`, `respond`, `reason`; `route.add`, `status`, `find`, `dispatch`; `service.handle`; `fs.read_bytes!`; `json.valid`); the registry of section 3 already exists (`natives` in `dlib.zig`, checked by `script/libcheck.py`).
 - **L1.** `spec/library/lists.md` (sort, reverse, sum, min, max, contains, index_of, unique, take, drop, zip, map, filter, reduce, any, all), `maps.md` (merge, invert) and the additions of `strings.md` (reverse, repeat, pad_start, pad_end, lines, Unicode upper and lower for Latin-1, Latin Extended-A, Greek and Cyrillic); code in `code/evevm/src/interp/corelib.zig`; tests a106 to a109. A function never changes its receiver.
-- **Next.** L2 mathematics (`lib/math/`: Q-073 says only `math.`; `Rational`, `Quantity` and `Complex` are types of the language, a language feature with its own tests), together with the placeholders `{Integer}`, `{String}`, `{Any}` in the expected output of the test runner for the library `random`.
+- **L2 (2026-10-24), done.** `spec/library/math.md`; code in `mathlib.zig`, `linearlib.zig`, `randomlib.zig`, `rationallib.zig`, `complexlib.zig` (the types in `code/evecm/src/rational.zig` and `complex.zig`); signatures in `lib/math/*.eve`; the specification module `lib/math.eve` re-exports them (D-215). Open questions answered on the way: D-215 to D-220.
+- **Next.** L3 statistics (`lib/stats/`): the page first, for review.
 
 ## 1. Principles
 

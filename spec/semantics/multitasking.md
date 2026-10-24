@@ -177,7 +177,7 @@ Each is a compile error (exit 65). The message holds the text of the second colu
 
 ## Durations
 
-A duration literal is an integer followed at once by a unit: `ms`, `s`, `m`, `h` (`10ms`, `30s`, `2m`, `1h`). Its type is `Duration`. Level 4 uses durations in `within`, `wait duration;` and `$timeout`; their arithmetic and the time types are level 5.
+A duration literal is an integer followed at once by a unit: `us`, `ms`, `s`, `m`, `h` (`10ms`, `30s`, `2m`, `1h`). Its type is `Duration`, a count of microseconds, printed in ISO 8601 (`PT30S`). Level 4 uses durations in `within`, `wait duration;` and `$timeout`; an `Integer` of milliseconds is still accepted there. The arithmetic and the other time types are in [../library/time.md](../library/time.md).
 
 ## Determinism
 

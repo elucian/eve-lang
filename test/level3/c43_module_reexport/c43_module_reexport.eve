@@ -1,0 +1,18 @@
+# from sub export (*): the parent module re-exports the exported names of a submodule of its folder
+** spec: semantics/modules.md#re-export
+primary aspect c43_module_reexport is
+  from lib use (shapes);
+
+  process main is
+    expect shapes.name() == "shapes";
+    expect shapes.square_sides() == 4;
+    expect shapes.SIDES == 4;
+    expect shapes.corners() == 4;
+    print shapes.square_sides() + shapes.corners();
+  return;
+end c43_module_reexport;
+/*@expect
+{
+  "stdout": ["8"]
+}
+*/

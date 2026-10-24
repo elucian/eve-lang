@@ -80,7 +80,10 @@ One line per decision (D) or answered question (Q) that left the live files `lev
 - D-064 Matrix and tensor indexes: [x, y] is [x][y] (2026-10-03)
 - D-065 demo/ is temporary (2026-10-03)
 - D-069 Methods page; Multitasking after Classes (2026-10-03)
+- Q-069 read at the end of input (2026-10-21)
 - D-070 Default values of parameters (2026-10-03)
+- Q-070 The draft files io.eve and exception.eve (2026-10-21)
+- Q-071 Named parameters -p and the generated help -h of a script (2026-10-21)
 - D-074 Loop tested at the end: loop … do … repeat [while c];; skip (2026-10-04)
 - D-075 Mission, role of the tutorial, demos kept (2026-10-04) *(demos: replaced by D-099, demo/ retired)*
 - D-076 new declares, let executes, a class call constructs (2026-10-04)
@@ -120,6 +123,12 @@ One line per decision (D) or answered question (Q) that left the live files `lev
 - D-118 A scalar operator applies to every element of a List or Array (2026-10-08)
 - D-120 A placeholder holds a name or any literal; its quotes are not escaped (2026-10-08)
 - D-121 Simple expressions in placeholders (2026-10-08)
+- D-153 Release policy: release notes in manual/releases/, the manual updated at every release (2026-10-10)
+- D-161 then is removed from match and the loops (2026-10-11)
+- D-210 Answer to Q-069: read(prompt) gives String?, null at the end of the input (2026-10-21)
+- D-211 Answer to Q-070: no draft files; the names are built in at level 1, the library may take them later (2026-10-21)
+- D-212 Answer to Q-071: -p name=value and the help made from ** @param (2026-10-21)
+- D-213 A loop has one scope: a new in the body fails at the second cycle (2026-10-21)
 
 ## Level 2: project
 
@@ -254,6 +263,7 @@ One line per decision (D) or answered question (Q) that left the live files `lev
 
 ## Level 7: web
 
+- Q-027 Templates (2026-10-06, answered 2026-10-21 → D-209)
 - Q-062 The details of D-185: the REPL with a configuration file, the foreground form, privileges and the event log, evedb as a service (2026-10-17)
 - D-154 eveux, the RAD Workbench, is written in Eve: the final test of the language, in level 7 (2026-10-10)
 - D-185 Service mode: eve -s, the machine without a user interface, a Windows service or a Linux daemon; evedb detailed design and version 0.1 (2026-10-17)

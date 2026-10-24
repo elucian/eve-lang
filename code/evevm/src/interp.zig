@@ -18,6 +18,10 @@ pub const task = @import("task.zig");
 pub const data = @import("evecm").data;
 pub const overload = @import("evecp").overload;
 pub const decimal = @import("evecm").decimal;
+pub const rational = @import("evecm").rational;
+pub const complex = @import("evecm").complex;
+pub const duration = @import("evecm").duration;
+pub const calendar = @import("evecm").calendar;
 pub const dlib = @import("dlib.zig");
 pub const netlib = @import("netlib.zig");
 pub const instant = @import("evecm").instant;
@@ -357,7 +361,7 @@ pub const Interp = struct {
         try it.define("Null", .nil, true);
         try it.define("null", .nil, true);
         try it.define("nil", .{ .sym = 0 }, true);
-        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "os", "net", "Listener", "Socket" };
+        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "os", "net", "Listener", "Socket" };
         for (types) |t| try it.define(t, .{ .typ = t }, true);
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the
@@ -373,7 +377,7 @@ pub const Interp = struct {
             .{ "$err_database", 50 }, .{ "$err_connection", 51 }, .{ "$err_constraint", 52 }, .{ "$err_conflict", 53 },
             .{ "$err_mapping", 54 },  .{ "$err_commit", 55 },   .{ "$err_format", 56 },  .{ "$err_http", 57 },
             .{ "$err_batch", 58 },    .{ "$err_sql", 59 },
-            .{ "$wrn_deprecated", 5 }, .{ "$wrn_truncate", 6 }, .{ "$wrn_unused", 7 },
+            .{ "$wrn_deprecated", 5 }, .{ "$wrn_truncate", 6 }, .{ "$wrn_unused", 7 }, .{ "$wrn_hidden", 8 },
         };
         for (codes) |c| try it.define(c[0], .{ .int = c[1] }, true);
         if (b.object_class == null) {
@@ -618,6 +622,9 @@ pub const Interp = struct {
     pub const realOf = value.realOf;
 
     pub const decOf = value.decOf;
+    pub const ratOf = value.ratOf;
+    pub const cpxOf = value.cpxOf;
+    pub const msOf = value.msOf;
 
     pub fn truth(it: *Interp, v: Value) Signal!bool {
         return switch (v) {
@@ -630,7 +637,16 @@ pub const Interp = struct {
     pub fn order(it: *Interp, a: Value, b: Value) Signal!std.math.Order {
         if (isInt(a) and isInt(b)) return std.math.order(intOf(a), intOf(b));
         if (a == .dec or b == .dec) if (decOf(a)) |x| if (decOf(b)) |y| return decimal.order(x, y);
+        if (a == .dur and b == .dur) return std.math.order(a.dur, b.dur);
+        if (a == .date and b == .date) return std.math.order(a.date, b.date);
+        if (a == .time and b == .time) return std.math.order(a.time, b.time);
+        if (a == .rat or b == .rat) if (ratOf(a)) |x| if (ratOf(b)) |y| return rational.order(x, y);
         if (a == .instant and b == .instant) return std.math.order(a.instant, b.instant);
+        if ((a == .dtm or a == .instant) and (b == .dtm or b == .instant)) {
+            const x: i64 = if (a == .dtm) a.dtm.us else a.instant;
+            const y: i64 = if (b == .dtm) b.dtm.us else b.instant;
+            return std.math.order(x, y);
+        }
         if (realOf(a)) |x| if (realOf(b)) |y| return std.math.order(x, y);
         if (a == .str and b == .str) return std.mem.order(u8, a.str, b.str);
         if (a == .sym and b == .sym) return std.math.order(a.sym, b.sym);
@@ -927,6 +943,10 @@ pub const Interp = struct {
     // ---- Decimal, Instant, Secret (spec/library/data-language.md) ---------------------------------------
     // (in interp/datatypes.zig)
     pub const decimalOp = part_datatypes.decimalOp;
+    pub const ratOp = part_datatypes.ratOp;
+    pub const fastCodeOf = part_calls.fastCodeOf;
+    pub const cpxOp = part_datatypes.cpxOp;
+    pub const timeOp = part_datatypes.timeOp;
     pub const decFromReal = part_datatypes.decFromReal;
     pub const fromSqlText = part_datatypes.fromSqlText;
     pub const makeSecret = part_datatypes.makeSecret;
@@ -977,9 +997,9 @@ test "regular expressions" {
 // @decision D-142
 // @decision D-144
 test "durations are milliseconds, split and batch cut a list" {
-    try std.testing.expectEqual(@as(?i64, 30_000), Interp.durationMs("30s"));
-    try std.testing.expectEqual(@as(?i64, 10), Interp.durationMs("10ms"));
-    try std.testing.expectEqual(@as(?i64, null), Interp.durationMs("42"));
+    try std.testing.expectEqual(@as(?i64, 30_000_000), duration.parseLiteral("30s"));
+    try std.testing.expectEqual(@as(?i64, 10_000), duration.parseLiteral("10ms"));
+    try std.testing.expectEqual(@as(?i64, null), duration.parseLiteral("42"));
     var buf: [256]u8 = undefined;
     const r = try runSource("primary aspect t is\n  process main is\n    new l := (1, 2, 3, 4, 5);\n    print l.split(2);\n    print l.batch(2);\n  return;\nend t;\n", &buf);
     try std.testing.expectEqualStrings("((1,2,3),(4,5))\n((1,2),(3,4),(5))\n", r.out);
@@ -998,5 +1018,6 @@ test "a loop frees what each pass makes" {
     _ = it.run(root);
     try std.testing.expectEqualStrings("20000\n", w.buffered());
     try std.testing.expect(it.h.stats.made > 20_000);
-    try std.testing.expect(it.h.stats.live < 100);
+    // what stays alive is the pinned names of the prelude (a Var each: types, modules, error codes) and the scopes, not the 20,000 values of the loop
+    try std.testing.expect(it.h.stats.live < 150);
 }

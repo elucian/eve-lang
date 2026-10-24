@@ -28,7 +28,7 @@ pub const Choice = union(enum) {
 };
 
 const primitives = std.StaticStringMap(void).initComptime(.{
-    .{"Integer"}, .{"Natural"}, .{"Real"}, .{"Float"},  .{"Decimal"}, .{"Byte"},   .{"Short"},
+    .{"Integer"}, .{"Natural"}, .{"Real"}, .{"Float"},  .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Byte"},   .{"Short"},
     .{"Huge"},    .{"String"},  .{"Text"}, .{"Logic"},  .{"Symbol"},  .{"Rune"},
 });
 
@@ -56,7 +56,7 @@ fn fit(param: ?*const Node, arg: ?[]const u8, tparams: []const *const Node) ?u32
     const a_prim = primitives.has(a);
     if (t_prim and a_prim) {
         const eql = std.mem.eql;
-        if (eql(u8, a, "Integer") and (eql(u8, t, "Real") or eql(u8, t, "Float") or eql(u8, t, "Decimal") or eql(u8, t, "Huge"))) return 2;
+        if (eql(u8, a, "Integer") and (eql(u8, t, "Real") or eql(u8, t, "Float") or eql(u8, t, "Decimal") or eql(u8, t, "Rational") or eql(u8, t, "Complex") or eql(u8, t, "Huge"))) return 2;
         if (eql(u8, a, "Natural") and (eql(u8, t, "Integer") or eql(u8, t, "Real") or eql(u8, t, "Huge"))) return 2;
         if (eql(u8, a, "Rune") and eql(u8, t, "Symbol")) return 3;
         if (eql(u8, a, "Symbol") and eql(u8, t, "Rune")) return 3;

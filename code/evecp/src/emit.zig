@@ -95,6 +95,9 @@ const Emitter = struct {
                 .int => |v| if (c == .int and c.int == v) return @intCast(i),
                 .real => |v| if (c == .real and @as(u64, @bitCast(c.real)) == @as(u64, @bitCast(v))) return @intCast(i),
                 .str => |v| if (c == .str and std.mem.eql(u8, v, c.str)) return @intCast(i),
+                .cpx => |v| if (c == .cpx and @as(u64, @bitCast(c.cpx[0])) == @as(u64, @bitCast(v[0])) and @as(u64, @bitCast(c.cpx[1])) == @as(u64, @bitCast(v[1]))) return @intCast(i),
+                .dur => |v| if (c == .dur and c.dur == v) return @intCast(i),
+                .rat => |v| if (c == .rat and c.rat[0] == v[0] and c.rat[1] == v[1]) return @intCast(i),
             }
         }
         try e.consts.append(e.a, c);
@@ -138,6 +141,9 @@ const Emitter = struct {
                     } else _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .int = v })), line);
                 },
                 .real => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .real = @bitCast(n.lit_bits) })), line),
+                .rat => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .rat = .{ @as(i64, @intCast(n.lit_bits & 0xffffffff)), @as(i64, @intCast(n.lit_bits >> 32)) } })), line),
+                .imag => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .cpx = .{ 0, @as(f64, @bitCast(n.lit_bits)) } })), line),
+                .dur => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .dur = @bitCast(n.lit_bits) })), line),
                 .none => try e.bridgeExpr(n, dst),
             },
             .str => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .str = n.text })), line),

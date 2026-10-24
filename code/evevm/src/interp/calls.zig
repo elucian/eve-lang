@@ -8,6 +8,8 @@
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
 const interp = @import("../interp.zig");
+const timelib = @import("../timelib.zig");
+const metalib = @import("../metalib.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
 const task = interp.task;
@@ -58,7 +60,14 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
         it.scope.find(callee.text) == null)
     {
         const eql = std.mem.eql;
-        const x = Interp.realOf(try it.eval(args[0])) orelse return it.fail("{s}() needs a number", .{callee.text});
+        const arg = try it.eval(args[0]);
+        if (arg == .rat) {
+            const q = arg.rat;
+            if (eql(u8, callee.text, "floor")) return .{ .int = interp.rational.floor(q) };
+            if (eql(u8, callee.text, "ceiling")) return .{ .int = interp.rational.ceiling(q) };
+            return .{ .int = interp.rational.round(q) };
+        }
+        const x = Interp.realOf(arg) orelse return it.fail("{s}() needs a number", .{callee.text});
         if (eql(u8, callee.text, "floor")) return .{ .int = @intFromFloat(@floor(x)) };
         if (eql(u8, callee.text, "ceiling")) return .{ .int = @intFromFloat(@ceil(x)) };
         if (eql(u8, callee.text, "round")) return .{ .int = @intFromFloat(@round(x)) };
@@ -250,6 +259,43 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
             .gt => 1,
         } };
     }
+    if (recv == .typ and eql(u8, name, "parse") and args.len >= 2 and args.len <= 3 and (eql(u8, recv.typ, "Date") or eql(u8, recv.typ, "Time") or eql(u8, recv.typ, "Instant") or eql(u8, recv.typ, "DateTime"))) {
+        const txt = try it.text(try it.eval(args[0]));
+        const pat = try it.text(try it.eval(args[1]));
+        var zid: ?u32 = null;
+        if (args.len == 3) {
+            const zv = try it.eval(args[2]);
+            zid = switch (zv) {
+                .zone => |z| z,
+                .str => |zs| (try metalib.zoneIdOf(it, zs)) orelse return it.failWith(err_argument, "{s}.parse: '{s}' is not a time zone", .{ recv.typ, zs }),
+                else => return it.failWith(err_argument, "{s}.parse: argument 3 is a Zone or its name", .{recv.typ}),
+            };
+        }
+        return timelib.parseText(it, txt, pat, recv.typ, zid);
+    }
+    if (recv == .typ and eql(u8, recv.typ, "DateTime") and eql(u8, name, "parse") and args.len == 1) return timelib.parseDateTimeIso(it, try it.text(try it.eval(args[0])));
+    if (recv == .typ and eql(u8, recv.typ, "Zone") and eql(u8, name, "parse") and args.len == 1) {
+        const zs = try it.text(try it.eval(args[0]));
+        return .{ .zone = (try metalib.zoneIdOf(it, std.mem.trim(u8, zs, " "))) orelse return it.failWith(err_parse, "Cannot parse '{s}' as a Zone: a name of the IANA database, Z, or an offset such as +03:00", .{zs}) };
+    }
+    if ((recv == .instant or recv == .dtm) and eql(u8, name, "format")) if (try timelib.method(it, recv, name, args)) |v| return v;
+    if (recv == .typ and eql(u8, recv.typ, "Date") and eql(u8, name, "parse") and args.len == 1) {
+        const txt = try it.text(try it.eval(args[0]));
+        const days = interp.calendar.parseDate(std.mem.trim(u8, txt, " ")) orelse return it.failWith(err_parse, "Cannot parse '{s}' as a Date: expected 2026-10-24", .{txt});
+        return .{ .date = days };
+    }
+    if (recv == .typ and eql(u8, recv.typ, "Time") and eql(u8, name, "parse") and args.len == 1) {
+        const txt = try it.text(try it.eval(args[0]));
+        const us = interp.calendar.parseTime(std.mem.trim(u8, txt, " ")) orelse return it.failWith(err_parse, "Cannot parse '{s}' as a Time: expected 08:30:00", .{txt});
+        return .{ .time = us };
+    }
+    // the functions of the module `time` as methods of a Date or a Time: `d.year()`, `d.add_months(1)`
+    if (recv == .date or recv == .time or recv == .dtm) if (try timelib.method(it, recv, name, args)) |v| return v;
+    if (recv == .typ and eql(u8, recv.typ, "Duration") and eql(u8, name, "parse") and args.len == 1) {
+        const txt = try it.text(try it.eval(args[0]));
+        const us = interp.duration.parse(txt) orelse return it.failWith(err_parse, "Cannot parse '{s}' as a Duration: expected PT1H30M or 1h30m", .{txt});
+        return .{ .dur = us };
+    }
     if (recv == .typ and eql(u8, recv.typ, "Instant") and eql(u8, name, "parse") and args.len == 1) {
         const txt = try it.text(try it.eval(args[0]));
         const us = instant.parse(txt) orelse return it.failWith(err_parse, "Cannot parse '{s}' as an Instant: expected 2026-10-10T08:00:00Z", .{txt});
@@ -404,8 +450,31 @@ pub fn invoke(it: *Interp, f: *Func, recv: ?Value, arg_nodes: []const *const Nod
     return it.invokeWith(f, recv, args);
 }
 
+/// The fast code of an `external` routine of a library module, or 1 when it has none.
+pub fn fastCodeOf(it: *Interp, f: *Func) u32 {
+    var mods = it.base().loaded.valueIterator();
+    while (mods.next()) |m| if (m.*.scope == f.closure) return dlib.fastResolve(m.*.name, f.node.text) orelse 1;
+    return 1;
+}
+
 /// Call a function, method or lambda with arguments already evaluated.
 pub fn invokeWith(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {
+    // @perf hot
+    // @eve-impl a pure numeric library function (math, rational, complex) is called with the values, without a scope (TD-71)
+    if (f.node.is_external and f.fast != 1) {
+        if (f.fast == 0) {
+            f.fast = it.fastCodeOf(f);
+        }
+        if (f.fast > 1 and recv == null and args.len <= 4 and args.len == f.node.kids[0].kids.len) {
+            var vals: [4]Value = undefined;
+            var plain = true;
+            for (args, 0..) |a, i| {
+                if (a.name.len != 0 or a.ref != null) plain = false;
+                vals[i] = a.value;
+            }
+            if (plain) return dlib.fastCall(it, f.fast, vals[0..args.len]);
+        }
+    }
     // a call of a generator does not run its body: it makes the generator object (D-067)
     if (f.node.tag == .generator) return it.makeGenerator(f, recv, args);
     return it.runRoutine(f, recv, args);
@@ -600,6 +669,13 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
         .real, .float => return .{ .real = 0 },
         .logic => return .{ .bool = false },
         .decimal => return .{ .dec = .{ .scale = 0, .m = 0 } },
+        .rational => return .{ .rat = interp.rational.fromInt(0) },
+        .complex => return .{ .cpx = .{ .re = 0, .im = 0 } },
+        .duration => return .{ .dur = 0 },
+        .date => return .{ .date = 0 },
+        .zone => return .{ .zone = 0 },
+        .datetime => return .{ .dtm = .{ .us = 0, .zone = 0 } },
+        .time => return .{ .time = 0 },
         .instant => return .{ .instant = 0 },
         .string => return it.staticStr(""),
         .symbol, .rune => return .{ .sym = 0 },
@@ -613,6 +689,7 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
     if (eql(u8, t.text, "Real") or eql(u8, t.text, "Float")) return .{ .real = 0 };
     if (eql(u8, t.text, "Logic")) return .{ .bool = false };
     if (eql(u8, t.text, "Decimal")) return .{ .dec = .{ .scale = 0, .m = 0 } };
+    if (eql(u8, t.text, "Rational")) return .{ .rat = interp.rational.fromInt(0) };
     if (eql(u8, t.text, "Instant")) return .{ .instant = 0 };
     if (eql(u8, t.text, "String")) return it.staticStr("");
     if (eql(u8, t.text, "Symbol") or eql(u8, t.text, "Rune")) return .{ .sym = 0 };

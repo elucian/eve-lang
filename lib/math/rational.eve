@@ -1,0 +1,39 @@
+** Exact fractions: build, take apart and convert the type Rational (L2d). The literal `3\4` and the operators are part of the language.
+** @spec spec/library/math.md#module-rational  @feature F-LNG-30  @decision D-214  @tests test/level3/c48_rational_library
+module rational is
+  export (of, numerator, denominator, reciprocal, truncate, is_whole, to_real, from_real, parse, mediant, continued);
+
+  ** The fraction n over d in lowest terms; d = 0 is $err_divide.
+  external function of(n: Integer, d: Integer) => (@result: Rational);
+
+  ** The numerator of a fraction in lowest terms (it carries the sign).
+  external function numerator(r: {Rational | Integer}) => (@result: Integer);
+
+  ** The denominator of a fraction in lowest terms (always positive).
+  external function denominator(r: {Rational | Integer}) => (@result: Integer);
+
+  ** One over r; zero is $err_divide.
+  external function reciprocal(r: {Rational | Integer}) => (@result: Rational);
+
+  ** The whole part, rounded toward zero.
+  external function truncate(r: {Rational | Integer}) => (@result: Integer);
+
+  ** Is the denominator 1.
+  external function is_whole(r: {Rational | Integer}) => (@result: Logic);
+
+  ** The nearest Real.
+  external function to_real(r: {Rational | Integer}) => (@result: Real);
+
+  ** The simplest fraction nearest to x whose denominator is at most max_den (continued fractions).
+  external function from_real(x: {Real | Integer}, max_den: Integer) => (@result: Rational);
+
+  ** Read a text such as "3\4", "-7" or "6\8".
+  external function parse(text: String) => (@result: Rational);
+
+  ** The mediant (a.n + b.n) over (a.d + b.d): the Farey neighbour between two fractions.
+  external function mediant(a: {Rational | Integer}, b: {Rational | Integer}) => (@result: Rational);
+
+  ** The terms of the continued fraction of r: 355\113 is (3, 7, 16).
+  external function continued(r: {Rational | Integer}) => (@result: List);
+
+end rational;

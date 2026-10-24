@@ -1,0 +1,67 @@
+# the schema of the meta database: continents, countries with a continent, zones with a country; the foreign keys hold and the data fits the sources
+** spec: library/meta.md#sql
+primary aspect e138_meta_schema is
+  class Count = {n: Integer} <: Record;
+  class Text = {value: String} <: Record;
+  class Code = {code: String, name: String} <: Record;
+  class Country = {code: String, alpha3: String, numeric: String, name: String, continent: String} <: Record;
+
+  function bad_insert(db :Connection, sql :String) => (@r :Integer) is
+    new n := db.execute!(sql);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new meta := database.connect("meta");
+    new k := meta.query!(:Code)("select code, name from continent order by code");
+    expect k.count() == 7;
+    expect k[1].code == "AF";
+    expect k[2].name == "Antarctica";
+    expect k[5].name == "North America";
+    expect k[7].code == "SA";
+    new c := meta.query_one!(:Count)("select count(*) as n from country");
+    expect c.n == 249;
+    new ro := meta.query_one!(:Country)("select code, alpha3, numeric, name, continent from country where code = 'RO'");
+    expect ro.alpha3 == "ROU";
+    expect ro.numeric == "642";
+    expect ro.name == "Romania";
+    expect ro.continent == "EU";
+    new us := meta.query_one!(:Country)("select code, alpha3, numeric, name, continent from country where code = 'US'");
+    expect us.name == "United States";
+    expect us.continent == "NA";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'AQ'").value == "AN";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'TR'").value == "AS";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'RU'").value == "EU";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'BR'").value == "SA";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'AU'").value == "OC";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'EG'").value == "AF";
+    expect meta.query_one!(:Text)("select continent as value from country where code = 'GL'").value == "NA";
+    expect meta.query_one!(:Count)("select count(*) as n from country where continent not in (select code from continent)").n == 0;
+    expect meta.query_one!(:Count)("select count(distinct alpha3) as n from country").n == 249;
+    expect meta.query_one!(:Count)("select count(distinct numeric) as n from country").n == 249;
+    expect meta.query_one!(:Count)("select count(*) as n from zone where country is not null and country not in (select code from country)").n == 0;
+    expect meta.query_one!(:Count)("select count(*) as n from zone where country is not null").n == 418;
+    expect meta.query_one!(:Count)("select count(*) as n from zone where country is null").n == 180;
+    expect meta.query_one!(:Count)("select count(*) as n from zone where link_of is not null and link_of not in (select id from zone)").n == 0;
+    expect meta.query_one!(:Count)("select count(*) as n from zone z join zone t on t.id = z.link_of where t.link_of is not null").n == 0;
+    expect meta.query_one!(:Text)("select c.name as value from zone z join country c on c.code = z.country where z.name = 'Europe/Bucharest'").value == "Romania";
+    expect meta.query_one!(:Text)("select k.name as value from zone z join country c on c.code = z.country join continent k on k.code = c.continent where z.name = 'Asia/Tokyo'").value == "Asia";
+    expect meta.query_one!(:Count)("select count(*) as n from zone where country = 'US'").n == 29;
+    expect meta.query_one!(:Count)("select count(*) as n from zone where country = 'RO'").n == 1;
+    expect meta.query_one!(:Count)("select count(*) as n from zone where country is null and name in ('UTC', 'EST5EDT', 'US/Eastern', 'Etc/GMT+5')").n == 4;
+    expect meta.query_one!(:Count)("select count(*) as n from country where code not in (select country from zone where country is not null)").n == 2;
+    expect bad_insert(meta, "insert into continent values ('XX', 'Nowhere')") <> 0;
+    expect bad_insert(meta, "update zone set country = 'ZZ' where id = 1") <> 0;
+    new r := meta.query!(:Code)("select code, name from country where continent = 'OC' order by code limit 3");
+    print r.count(), r[1].code, r[1].name;
+    print ro.name, ro.continent;
+    meta.close();
+  return;
+end e138_meta_schema;
+/*@expect
+{
+  "stdout": ["3,AS,American Samoa", "Romania,EU"]
+}
+*/

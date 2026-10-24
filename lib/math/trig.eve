@@ -1,0 +1,42 @@
+** Trigonometric and hyperbolic functions, angles in radians (L2).
+** @spec spec/library/math.md#module-trig  @feature F-LIB-03  @decision D-214  @tests test/level1/a110_math_basic
+module trig is
+  export (sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, radians, degrees, atan2);
+
+  ** Sine.
+  external function sin(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Cosine.
+  external function cos(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Tangent.
+  external function tan(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Arc sine; x outside -1 .. 1 is $err_argument.
+  external function asin(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Arc cosine; x outside -1 .. 1 is $err_argument.
+  external function acos(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Arc tangent.
+  external function atan(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Hyperbolic sine.
+  external function sinh(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Hyperbolic cosine.
+  external function cosh(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Hyperbolic tangent.
+  external function tanh(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Degrees to radians.
+  external function radians(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Radians to degrees.
+  external function degrees(x: {Real | Integer | Decimal}) => (@result: Real);
+
+  ** Angle of the point (x, y).
+  external function atan2(y: {Real | Integer | Decimal}, x: {Real | Integer | Decimal}) => (@result: Real);
+
+end trig;

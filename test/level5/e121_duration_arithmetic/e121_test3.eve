@@ -1,0 +1,13 @@
+# variation of e101: a Duration times a Real is a compile error, exit 65
+** spec: library/time.md#operators
+primary aspect e121_test3 is
+  process main is
+    print 5s * 1.5;
+  return;
+end e121_test3;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

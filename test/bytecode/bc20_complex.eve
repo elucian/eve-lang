@@ -1,0 +1,24 @@
+# Imaginary literals are constants of the chunk (loadk) and the arithmetic of complex numbers runs on the machine
+primary aspect bc20_complex is
+  function square_times(c :Complex, times :Integer) => (@r :Complex) is
+    new z := c;
+    new n := 0;
+    while n < times do
+      let z := z * z;
+      let n += 1;
+    done;
+    let r := z;
+  return;
+
+  process main is
+    expect (1 + i2) * (3 - i1) == (5 + i5);
+    expect i1 * i1 == -1;
+    expect square_times(i1, 2) == 1;
+    print (1 + i2) + (3 - i1);
+  return;
+end bc20_complex;
+/*@expect
+{
+  "stdout": ["(4 + i1)"]
+}
+*/

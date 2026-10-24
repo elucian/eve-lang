@@ -1,0 +1,17 @@
+# use (*) gives bare names and also the folder name as a prefix: from lib/shapes use (*) -> shapes.name
+** spec: semantics/modules.md#import
+primary aspect c45_import_default_name is
+  from lib/shapes use (*);
+
+  process main is
+    expect square_sides() == 4;
+    expect shapes.square_sides() == 4;
+    expect shapes.SIDES == shapes.square_sides();
+    print shapes.corners() + corners();
+  return;
+end c45_import_default_name;
+/*@expect
+{
+  "stdout": ["8"]
+}
+*/

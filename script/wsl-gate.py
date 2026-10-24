@@ -51,6 +51,9 @@ if [ ! -d "$WORK/.git" ]; then git clone -q "$SRC" "$WORK" || exit 1; fi
 cd "$WORK" || exit 1
 git fetch -q "$SRC" "$SHA" && git checkout -q -f "$SHA" || { echo "FAIL: checkout $SHA"; exit 1; }
 git clean -fdxq -e zig-pkg -e .zig-cache -e temp/rel
+# the *.db files are in Git LFS (D-222): lib/meta/meta.db is embedded in eve.exe and must be the real file
+if command -v git-lfs >/dev/null 2>&1; then git lfs install --local >/dev/null 2>&1; git lfs pull >/dev/null 2>&1; fi
+if [ -f lib/meta/meta.db ] && head -c 40 lib/meta/meta.db | grep -q "git-lfs"; then echo "FAIL: lib/meta/meta.db is a Git LFS pointer; install git-lfs in WSL (sudo apt install git-lfs) and run the gate again"; exit 1; fi
 echo "commit $(git log --oneline -1)"
 [ "$SETUP" = 1 ] && { echo "setup done"; exit 0; }
 

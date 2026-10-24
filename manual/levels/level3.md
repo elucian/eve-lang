@@ -12,6 +12,8 @@ Programs in several files: modules and imports, local libraries, managed and dir
 | [`F-LNG-15`](#f-lng-15-typed-exceptions) | Typed exceptions | drafted |
 | [`F-LNG-16`](#f-lng-16-static-checks) | Static checks | drafted |
 | [`F-LNG-19`](#f-lng-19-managed-and-direct-modules) | Managed and direct modules | validated |
+| [`F-LNG-30`](#f-lng-30-rational-numbers) | Rational numbers | drafted |
+| [`F-LNG-31`](#f-lng-31-complex-numbers) | Complex numbers | drafted |
 | [`F-LNG-22`](#f-lng-22-external-routines-and-errors-of-modules) | External routines and errors of modules | validated |
 | [`F-SPEC-04`](#f-spec-04-library-specification) | Library specification | drafted |
 | [`F-STR-01`](#f-str-01-modules-and-imports) | Modules and imports | validated |
@@ -45,6 +47,39 @@ Stage: **drafted**.
 
 - The module `math`: `abs`, `min`, `max`, `sqrt`, `pow`, trigonometry, logarithms and the rest (library step L2).
 - `format` of text and numbers.
+
+An example that runs, and what it prints:
+
+```eve
+# math library: trigonometry (math.md)
+primary aspect a111_math_trig is
+  from lib/math use (trig);
+
+  function code_of_asin => (@r:Integer) is
+    new x:= trig.asin(2);
+    let r:= 0;
+  recover
+    let r:= $error.code;
+  return;
+
+  process main is
+    expect trig.sin(0) == 0.0;
+    expect trig.cos(0) == 1.0;
+    expect trig.atan2(0, 0) == 0.0;
+    expect trig.degrees(trig.atan2(1, 1)) == 45.0;
+    expect trig.radians(180) > 3.14159;
+    expect trig.radians(180) < 3.1416;
+    expect trig.asin(1) > 1.5707;
+    expect trig.tanh(0) == 0.0;
+    expect code_of_asin == $err_argument;
+    print trig.degrees(trig.atan2(1, 1));
+  return;
+end a111_math_trig;
+```
+
+```text
+45
+```
 
 ## F-LNG-10 Classes
 
@@ -144,6 +179,28 @@ end c31_atomic_variable;
 ```text
 safe_integer = 5, ready = False
 ```
+
+## F-LNG-30 Rational numbers
+
+Stage: **drafted**.
+
+The type `Rational`: the literal `3\4`, exact `+ - * /` and `^`, exact comparison, printing, and the library module `rational`. Two 64-bit integers in lowest terms; an overflow is `$err_overflow`, never a rounding. Speed: the benchmark `p1e_rational` compares it with Python's `fractions` (10 to 15 times faster).
+
+## Missing
+
+- The data edges: JSON and CSV output, SQL parameters and columns, command-line parameters and the checkpoint store (TD-68).
+- `%` and a fractional power are errors; fractions beyond 64 bits are `$err_overflow` (TD-69).
+
+## F-LNG-31 Complex numbers
+
+Stage: **drafted**.
+
+The type `Complex`: the imaginary literal `i99`, a complex number written as a sum `(10 + i99)`, `+ - * /` and `^`, equality without order, printing, and the library module `complex`. Two f64; a division by zero is `$err_divide`, a result out of range `$err_overflow`.
+
+## Missing
+
+- The data edges: JSON and CSV output, SQL parameters and columns, command-line parameters and the checkpoint store (TD-70).
+- Functions of a complex argument in `trig` (`sin`, `cos`,...) and the roots of a polynomial.
 
 ## F-LNG-22 External routines and errors of modules
 

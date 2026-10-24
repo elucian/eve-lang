@@ -29,6 +29,22 @@ pub const Db = struct {
         return db;
     }
 
+    // @decision D-222
+    /// Open a database that lives in memory, read only: `image` is a whole database file and is not copied, so it must stay alive as long as the connection (the meta database).
+    pub fn openImage(image: []const u8) Error!Db {
+        var handle: ?*c.sqlite3 = null;
+        if (c.sqlite3_open_v2(":memory:", &handle, c.SQLITE_OPEN_READWRITE | c.SQLITE_OPEN_MEMORY, null) != c.SQLITE_OK) {
+            _ = c.sqlite3_close(handle);
+            return error.Open;
+        }
+        const rc = c.sqlite3_deserialize(handle, "main", @constCast(image.ptr), @intCast(image.len), @intCast(image.len), c.SQLITE_DESERIALIZE_READONLY);
+        if (rc != c.SQLITE_OK) {
+            _ = c.sqlite3_close(handle);
+            return error.Open;
+        }
+        return .{ .handle = handle };
+    }
+
     // @decision D-184
     /// Set the PRAGMAs of the query engine on a `:memory:` database (`open` does it).
     pub fn tuneMemory(self: *Db) void {

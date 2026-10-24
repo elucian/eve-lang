@@ -1,15 +1,15 @@
-# use (m(*)) merges the names: two modules that export the same name are a compile error ( a)
+# use (m(*)) merges the names: two modules that export the same name: the first import wins, the second is hidden, with a warning
 ** spec: semantics/modules.md#import
 primary aspect c18_module_conflict is
-  from lib use (one(*), two(*));      ** compile error: 'value' comes from two modules
+  from lib use (one(*), two(*));      ** warning: 'value' of two is hidden
 
   process main is
-    print "never";
+    expect $wrn_hidden == 8;
+    print value();
   return;
 end c18_module_conflict;
 /*@expect
 {
-  "syntax_error": true,
-  "exit": 65
+  "stdout": ["1"]
 }
 */

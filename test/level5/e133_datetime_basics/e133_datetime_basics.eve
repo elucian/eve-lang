@@ -1,0 +1,151 @@
+# the types Zone and DateTime: time.zone, at_zone, make (a gap, a time shown twice), the fields, + and - with a Duration, equality across zones, add_months and start_of in a zone, the zero values
+** spec: library/time.md#zones
+primary aspect e133_datetime_basics is
+  from lib/meta use (zone);
+
+  function code_of_zone(text :String) => (@r :Integer) is
+    new z := time.zone(text);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_make(d :Date, t :Time, name :String) => (@r :Integer) is
+    new x := time.make(d, t, name);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_type() => (@r :Integer) is
+    new x := time.at_zone(5, "UTC");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function declared_zone() => (@r :Zone) is
+    new z :Zone;
+    let r := z;
+  return;
+  function declared_datetime() => (@r :DateTime) is
+    new z :DateTime;
+    let r := z;
+  return;
+
+  process main is
+    new bu := time.zone("Europe/Bucharest");
+    new t := Instant.parse("2026-07-01T12:00:00Z");
+    new dt := time.at_zone(t, bu);
+    expect bu == time.zone("Europe/Bucharest");
+    expect time.zone("Z") == time.zone("+00:00");
+    expect time.zone("+03:00") == time.zone("+0300");
+    expect time.zone("+03:00") == time.zone("+03");
+    expect time.zone("+03:00") <> time.zone("+04:00");
+    expect type(bu) == Zone;
+    expect bu is Zone;
+    expect dt is DateTime;
+    expect type(dt) == DateTime;
+    expect not (t is DateTime);
+    expect "{bu}" == "Europe/Bucharest";
+    expect "{time.zone("+05:30")}" == "+05:30";
+    expect "{time.zone("-0330")}" == "-03:30";
+    expect "{time.zone("Z")}" == "Z";
+    expect "{dt}" == "2026-07-01T15:00:00+03:00";
+    expect "{time.at_zone(t, "Z")}" == "2026-07-01T12:00:00Z";
+    expect "{time.at_zone(t, "Asia/Kolkata")}" == "2026-07-01T17:30:00+05:30";
+    expect "{time.at_zone(t, "America/St_Johns")}" == "2026-07-01T09:30:00-02:30";
+    expect "{time.at_zone(t + 500ms, "UTC")}" == "2026-07-01T12:00:00.5Z";
+    expect dt.year() == 2026;
+    expect dt.month() == 7;
+    expect dt.day() == 1;
+    expect dt.hour() == 15;
+    expect dt.minute() == 0;
+    expect dt.weekday() == 3;
+    expect dt.day_of_year() == 182;
+    expect time.date_of(dt) == time.date(2026, 7, 1);
+    expect time.time_of(dt) == time.clock(15, 0, 0);
+    expect time.instant_of(dt) == t;
+    expect time.zone_of(dt) == bu;
+    expect time.offset_of(dt) == 3h;
+    expect time.offset_of(time.at_zone(t, "Asia/Kathmandu")) == 5h + 45m;
+    expect time.at_zone(dt, "UTC") == dt;
+    expect dt == t;
+    expect t == dt;
+    expect dt == time.at_zone(t, "America/New_York");
+    expect dt <> time.at_zone(t + 1s, bu);
+    expect time.at_zone(t + 1s, bu) > dt;
+    expect dt < time.at_zone(t + 1s, "America/New_York");
+    expect dt <= t;
+    expect dt + 90m == time.at_zone(t + 90m, bu);
+    expect 90m + dt == dt + 90m;
+    expect dt - 90m == time.at_zone(t - 90m, bu);
+    expect time.zone_of(dt + 1h) == bu;
+    expect (dt + 1h) - dt == 1h;
+    expect dt - (dt + 1h) == -1h;
+    expect dt - t == 0s;
+    expect t - dt == 0s;
+    expect time.at_zone(t + 2h, "Asia/Tokyo") - dt == 2h;
+    expect type(dt - dt) == Duration;
+    expect type(dt + 1s) == DateTime;
+    expect declared_zone() == time.zone("Z");
+    expect declared_datetime() == Instant.epoch;
+    expect "{declared_datetime()}" == "1970-01-01T00:00:00Z";
+    expect "{declared_zone()}" == "Z";
+    expect time.make(time.date(2026, 7, 1), time.clock(15, 0, 0), bu) == dt;
+    expect time.make(time.date(2026, 7, 1), time.clock(15, 0, 0), "Europe/Bucharest") == dt;
+    expect time.make(time.date(2026, 1, 15), time.clock(9, 30, 0), "America/New_York") == Instant.parse("2026-01-15T14:30:00Z");
+    expect time.make(time.date(2026, 7, 15), time.clock(9, 30, 0), "America/New_York") == Instant.parse("2026-07-15T13:30:00Z");
+    expect time.make(time.date(2026, 7, 1), time.clock(12, 0, 0), "+05:30") == Instant.parse("2026-07-01T06:30:00Z");
+    expect "{time.make(time.date(2026, 3, 29), time.clock(4, 30, 0), "Europe/Bucharest")}" == "2026-03-29T04:30:00+03:00";
+    expect "{time.make(time.date(2026, 3, 29), time.clock(2, 59, 59), "Europe/Bucharest")}" == "2026-03-29T02:59:59+02:00";
+    expect "{time.make(time.date(2026, 10, 25), time.clock(3, 30, 0), "Europe/Bucharest")}" == "2026-10-25T03:30:00+03:00";
+    expect "{time.make(time.date(2026, 10, 25), time.clock(4, 0, 0), "Europe/Bucharest")}" == "2026-10-25T04:00:00+02:00";
+    expect "{time.make(time.date(2011, 12, 31), time.clock(12, 0, 0), "Pacific/Apia")}" == "2011-12-31T12:00:00+14:00";
+    expect "{time.make(time.date(2011, 12, 29), time.clock(12, 0, 0), "Pacific/Apia")}" == "2011-12-29T12:00:00-10:00";
+    expect code_of_make(time.date(2026, 3, 29), time.clock(3, 0, 0), "Europe/Bucharest") == $err_argument;
+    expect code_of_make(time.date(2026, 3, 29), time.clock(3, 59, 59), "Europe/Bucharest") == $err_argument;
+    expect code_of_make(time.date(2011, 12, 30), time.clock(12, 0, 0), "Pacific/Apia") == $err_argument;
+    expect code_of_make(time.date(2026, 3, 8), time.clock(2, 30, 0), "America/New_York") == $err_argument;
+    expect code_of_make(time.date(2026, 3, 29), time.clock(4, 0, 0), "Europe/Bucharest") == 0;
+    expect code_of_make(time.date(2026, 7, 1), time.clock(3, 0, 0), "Mars/Base") == $err_argument;
+    expect code_of_zone("Mars/Base") == $err_argument;
+    expect code_of_zone("+25:00") == $err_argument;
+    expect code_of_zone("+19:00") == $err_argument;
+    expect code_of_zone("europe/bucharest") == $err_argument;
+    expect code_of_zone("") == $err_argument;
+    expect code_of_zone("+18:00") == 0;
+    expect code_of_zone("Z") == 0;
+    expect code_of_type() == $err_argument;
+    new ny := time.at_zone(Instant.parse("2026-01-31T15:00:00Z"), "America/New_York");
+    expect "{ny}" == "2026-01-31T10:00:00-05:00";
+    expect "{time.add_months(ny, 1)}" == "2026-02-28T10:00:00-05:00";
+    expect "{time.add_months(ny, 5)}" == "2026-06-30T10:00:00-04:00";
+    expect "{ny.add_months(-1)}" == "2025-12-31T10:00:00-05:00";
+    expect "{time.add_years(ny, 1)}" == "2027-01-31T10:00:00-05:00";
+    expect "{ny.start_of("day")}" == "2026-01-31T00:00:00-05:00";
+    expect "{ny.start_of("month")}" == "2026-01-01T00:00:00-05:00";
+    expect "{ny.start_of("hour")}" == "2026-01-31T10:00:00-05:00";
+    expect "{time.add_months(time.make(time.date(2026, 2, 8), time.clock(2, 30, 0), "America/New_York"), 1)}" == "2026-03-08T03:30:00-04:00";
+    expect "{time.make(time.date(2026, 3, 8), time.clock(12, 0, 0), "America/New_York").start_of("day")}" == "2026-03-08T00:00:00-05:00";
+    expect (time.make(time.date(2026, 3, 9), time.clock(0, 0, 0), "America/New_York") - time.make(time.date(2026, 3, 8), time.clock(0, 0, 0), "America/New_York")) == 23h;
+    expect (time.make(time.date(2026, 11, 2), time.clock(0, 0, 0), "America/New_York") - time.make(time.date(2026, 11, 1), time.clock(0, 0, 0), "America/New_York")) == 25h;
+    expect zone.offset(bu, t) == 3h;
+    expect zone.offset(bu, dt) == 3h;
+    expect zone.abbreviation(bu, t) == "EEST";
+    expect zone.is_dst(bu, t);
+    expect zone.canonical(time.zone("Asia/Calcutta")) == "Asia/Kolkata";
+    expect zone.abbreviation(time.zone("+05:30"), t) == "+05:30";
+    expect zone.offset(time.zone("+05:30"), t) == 5h + 30m;
+    new many := (dt + 3h, dt, dt + 1h);
+    expect many.sort() == (dt, dt + 1h, dt + 3h);
+    expect many.min() == dt;
+    expect many.max() == dt + 3h;
+    print dt;
+    print time.at_zone(t, "America/New_York");
+    print time.make(time.date(2026, 10, 25), time.clock(3, 30, 0), bu);
+    print time.zone_of(dt), time.offset_of(dt);
+  return;
+end e133_datetime_basics;
+/*@expect
+{
+  "stdout": ["2026-07-01T15:00:00+03:00", "2026-07-01T08:00:00-04:00", "2026-10-25T03:30:00+03:00", "Europe/Bucharest,PT3H"]
+}
+*/

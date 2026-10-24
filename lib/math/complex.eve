@@ -1,0 +1,42 @@
+** Complex numbers: build, take apart and compute with the type Complex (L2e). The literal `(10 + i99)` and the operators are part of the language. The names that clash with `basic`, `explog` or `rational` (`of`, `exp`, `log`, `sqrt`, `pow`) are reached as `math.complex.sqrt(z)`.
+** @spec spec/library/math.md#module-complex  @feature F-LNG-31  @decision D-214  @tests test/level3/c52_complex_library
+module complex is
+  export (of, real_part, imag_part, modulus, argument, conjugate, from_polar, exp, log, sqrt, pow, is_real);
+
+  ** The complex number re + i im from two real numbers.
+  external function of(re: {Real | Integer | Rational}, im: {Real | Integer | Rational}) => (@result: Complex);
+
+  ** The real part.
+  external function real_part(z: {Complex | Real | Integer | Rational}) => (@result: Real);
+
+  ** The imaginary part.
+  external function imag_part(z: {Complex | Real | Integer | Rational}) => (@result: Real);
+
+  ** The modulus (absolute value) sqrt(re*re + im*im).
+  external function modulus(z: {Complex | Real | Integer | Rational}) => (@result: Real);
+
+  ** The argument, the angle in radians in (-pi, pi]; 0 for zero.
+  external function argument(z: {Complex | Real | Integer | Rational}) => (@result: Real);
+
+  ** The conjugate re - i im.
+  external function conjugate(z: {Complex | Real | Integer | Rational}) => (@result: Complex);
+
+  ** The number with the given modulus and angle in radians; a negative modulus is $err_argument.
+  external function from_polar(modulus: {Real | Integer | Rational}, angle: {Real | Integer | Rational}) => (@result: Complex);
+
+  ** e to the power z.
+  external function exp(z: {Complex | Real | Integer | Rational}) => (@result: Complex);
+
+  ** The principal natural logarithm; zero is $err_argument.
+  external function log(z: {Complex | Real | Integer | Rational}) => (@result: Complex);
+
+  ** The principal square root (real part not negative): sqrt(-4) is (0 + i2).
+  external function sqrt(z: {Complex | Real | Integer | Rational}) => (@result: Complex);
+
+  ** a to the power b; zero to a power that is not a positive real is $err_divide (0 to the 0 is 1).
+  external function pow(a: {Complex | Real | Integer | Rational}, b: {Complex | Real | Integer | Rational}) => (@result: Complex);
+
+  ** Is the imaginary part zero.
+  external function is_real(z: {Complex | Real | Integer | Rational}) => (@result: Logic);
+
+end complex;

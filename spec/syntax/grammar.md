@@ -26,14 +26,15 @@ An aspect has a process named `main`, the entry point, and may have other proces
 
 ```ebnf
 module      = [ "managed" | "direct" ] , "module" , name , "is" ,
-              { export | declaration } ,
+              { export | reexport | declaration } ,
               [ "initialize" , { statement } ] ,
               [ "recover" , { statement } ] ,
               [ "finalize" , { statement } ] ,
               "end" , name , ";" ;                                (* modules.md; without a safety word the module is direct *)
 export      = "export" , "(" , exported , { "," , exported } , ")" , ";" ;
 exported    = name , [ "!" ] ;                                    (* a function that ends with ! is exported with the ! *)
-import      = "from" , path , "use" , "(" , import-item , { "," , import-item } , ")" , ";" ;
+reexport    = "from" , name , "export" , "(" , ( "*" | exported , { "," , exported } ) , ")" , ";" ;   (* in a module: names of the submodule `name.eve` in the folder named like the module *)
+import      = "from" , path , "use" , "(" , import-item , { "," , import-item } , ")" , [ "alias" , name ] , ";" ;   (* alias only after `(*)` alone *)
 path        = string | segment , { "/" , segment } ;              (* from lib use (m); from "lib" use (m); from $EVE_LIB/db use (m); *)
 segment     = name | sysname ;
 import-item = "*" | name , [ "as" , name | "(" , "*" , ")" ] ;    (* a module, an alias, all public names, or every module of the folder *)

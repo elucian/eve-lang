@@ -1,0 +1,13 @@
+# variation 1 of c47: a Rational and a Decimal are never mixed: a compile error, exit 65
+** spec: semantics/types.md#rational
+primary aspect c47_test1 is
+  process main is
+    print 1\2 + 1.5d;
+  return;
+end c47_test1;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65
+}
+*/

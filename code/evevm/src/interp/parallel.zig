@@ -114,7 +114,7 @@ pub fn blockOn(it: *Interp, wait: task.Wait, ch: *Channel, since: *?i64) Signal!
 // @decision D-081
 /// The longest wait on a channel, in milliseconds.
 pub fn timeoutMs(it: *Interp) i64 {
-    if (it.scope.find("$timeout")) |v| if (Interp.isInt(v.value) and Interp.intOf(v.value) > 0) return Interp.intOf(v.value);
+    if (it.scope.find("$timeout")) |v| if (Interp.msOf(v.value)) |ms| if (ms > 0) return ms;
     return 60_000;
 }
 
@@ -431,8 +431,7 @@ pub fn parallelGroup(it: *Interp, n: *const Node) Signal!void {
     var limit: i64 = 0;
     if (n.kids[2].tag != .none) {
         const d = try it.eval(n.kids[2]);
-        if (!Interp.isInt(d)) return it.fail("within takes a duration: within 30s", .{});
-        limit = Interp.intOf(d);
+        limit = Interp.msOf(d) orelse return it.fail("within takes a duration: within 30s", .{});
         deadline = s.now() + limit;
     }
     const members = try it.a.create(std.ArrayList(*Started));

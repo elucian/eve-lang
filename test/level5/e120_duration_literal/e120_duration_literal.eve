@@ -1,0 +1,54 @@
+# the type Duration: the literals 5us 250ms 30s 2m 1h, equality and order, the ISO text, the zero value, a list of durations
+** spec: library/time.md#the-types
+primary aspect e120_duration_literal is
+  function declared() => (@r :Duration) is
+    new z :Duration;
+    let r := z;
+  return;
+
+  process main is
+    expect 1s == 1000ms;
+    expect 1m == 60s;
+    expect 1h == 60m;
+    expect 1h == 3600s;
+    expect 1ms == 1000us;
+    expect 90m == 1h + 30m;
+    expect 0s == 0ms;
+    expect 0s == 0us;
+    expect 250ms < 1s;
+    expect 2h > 119m;
+    expect 1m <= 60s;
+    expect 1m >= 60s;
+    expect 5s <> 6s;
+    expect type(5s) == Duration;
+    expect 5s is Duration;
+    expect not (5 is Duration);
+    expect not (5000 is Duration);
+    expect declared() == 0s;
+    expect -5s == 0s - 5s;
+    expect -(1h) < 0s;
+    expect type(5d) == Decimal;
+    new xs := (30m, 5s, 2h, 250ms);
+    expect xs.sort() == (250ms, 5s, 30m, 2h);
+    expect xs.min() == 250ms;
+    expect xs.max() == 2h;
+    expect xs.sum() == 2h + 30m + 5s + 250ms;
+    new a := 90m;
+    new text := "{a} and {-a} and {250ms}";
+    expect text == "PT1H30M and -PT1H30M and PT0.25S";
+    print 90m;
+    print 30s + 250ms;
+    print 5us;
+    print 1h;
+    print 0s;
+    print -2m;
+    print 100h;
+    print 61s;
+    print 1m + 1us;
+  return;
+end e120_duration_literal;
+/*@expect
+{
+  "stdout": ["PT1H30M", "PT30.25S", "PT0.000005S", "PT1H", "PT0S", "-PT2M", "PT100H", "PT1M1S", "PT1M0.000001S"]
+}
+*/

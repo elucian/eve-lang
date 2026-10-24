@@ -1,0 +1,10 @@
+# shapes: a parent module that re-exports the modules of the folder shapes/
+module shapes is
+  from sides export (*);
+  from corners export (corners);
+  export (name);
+
+  function name() => (@result: String) is
+    let result := "shapes";
+  return;
+end shapes;

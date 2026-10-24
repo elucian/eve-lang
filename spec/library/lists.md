@@ -14,7 +14,7 @@ An argument that is a function (`map`, `filter`, `reduce`, `any`, `all`, `by:`) 
 | `sort(by: f)` | list | ordered by the key `f(x)` of each element |
 | `sort(descending: True)` | list | in descending order; `by:` and `descending:` can be given together |
 | `reverse()` | list | the elements in the opposite order |
-| `sum()` | number | the sum; `0` for an empty list; an `Integer` sum that does not fit is `$err_overflow`; `Integer` and `Decimal` give a `Decimal`, a `Real` makes the sum a `Real` |
+| `sum()` | number | the sum; `0` for an empty list; an `Integer` sum that does not fit is `$err_overflow`; `Integer` and `Decimal` give a `Decimal`, a `Real` makes the sum a `Real`, a `Rational` makes it a `Rational` (exact; an overflow is `$err_overflow`) |
 | `min()`, `max()` | element | the smallest or the largest; an empty list is an error |
 | `contains(x)` | `Logic` | is an element equal to `x` (the test of `==`) |
 | `index_of(x)` | `Integer` | the index of the first element equal to `x`, counted from 1; `0` when there is none |
