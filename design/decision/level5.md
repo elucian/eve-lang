@@ -131,3 +131,5 @@ Author's answer to Q-109: the optimization level is the command line option `-O 
 ## D-227 implementation (2026-10-25)
 Built: `-O n` and `--optimization n` (0 to 10; a bad value is exit 64), `optimization = n` in `eve.cfg`, the implicit level 1, and the read only `$optimization`; the level is set before any run. The level is read from `eve.cfg` also by `eve -x` (the only file that `-x` reads). Tests e155 (four variants) and the parse test of `code/eve/src/cli.zig`.
 
+## D-226 implementation (2026-10-25)
+Built: the tables of a run come from the imports of `lib/meta` and the hints `** @meta require(...)` (`code/evecm/src/meta_need.zig`); the copy into a memory connection copies the schema of the file and the rows of the tables needed, parents first; at level 5 and above the copy runs in a background thread (joined at the first use); below 5 it runs at the first use. Tests e156 (levels) and e157 (hints, imports, unknown table). Not built: the zone functions in Eve and the pruning of the Zig code (R2, R3), which wait for the decision on how the Zig date code calls the zone lookups; the SQL door copies every table (TD-89).

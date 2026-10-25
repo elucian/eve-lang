@@ -1,0 +1,15 @@
+# require(*) gives every table, and the SQL door of the meta database reads the release of the zone data
+** spec: library/meta.md#loading-the-tables
+** @meta require(*)
+from lib/meta use (meta);
+primary aspect e157_test3 is
+  process main is
+    print meta.info("tzdata");
+  return;
+end e157_test3;
+/*@expect
+{
+  "command": ["-O", "5", "-x", "e157_test3.eve"],
+  "stdout": ["2026e"]
+}
+*/

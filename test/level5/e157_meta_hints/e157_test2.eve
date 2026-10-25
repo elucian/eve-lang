@@ -1,0 +1,16 @@
+# a hint that names a table that does not exist is a compile error, and the script does not run
+** spec: library/meta.md#loading-the-tables
+** @meta require(zone, nosuch)
+primary aspect e157_test2 is
+  process main is
+    print "not reached";
+  return;
+end e157_test2;
+/*@expect
+{
+  "command": ["-O", "5", "-x", "e157_test2.eve"],
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["unknown table nosuch"]
+}
+*/

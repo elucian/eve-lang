@@ -12,6 +12,8 @@ pub const op = @import("op.zig");
 pub const chunk = @import("chunk.zig");
 /// The optimization level of a run (`-O`, `optimization` in eve.cfg; D-227).
 pub const optimization = @import("optimization.zig");
+/// The tables of the meta database that a run needs (D-226).
+pub const meta_need = @import("meta_need.zig");
 
 /// The `Decimal` type (exact numbers).
 pub const decimal = @import("decimal.zig");
@@ -66,6 +68,7 @@ test {
     _ = complex;
     _ = duration;
     _ = bytes;
+    _ = meta_need;
     _ = uuid;
     _ = calendar;
     _ = timefmt;

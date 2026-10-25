@@ -1,15 +1,16 @@
-//! @eve-module metalib: the meta database (reference data embedded in eve.exe) and the natives of the library `zone`
+//! @eve-module metalib: the meta database (reference data read from disk, D-225) and the natives of the library `zone`
 //! @spec spec/library/meta.md
 //! @feature F-LIB-06
 //! @decision D-222
 //! @tests test/level5/e129_meta_zone, test/level5/e130_meta_zone_table
-//! lib/meta/meta.db is a SQLite file (tools/meta/build_meta.py) embedded as it is and opened read only without a copy on first use; `EVE_META_DB`, a path, replaces it with a newer file. Zones are read once into memory (evecm zone.zig); a lookup is a binary search.
+//! lib/meta/meta.db is a SQLite file (tools/meta/build_meta.py) read from disk: the tables a run needs are copied into a memory connection (D-226); `EVE_META_DB`, a path, replaces it with a newer file. Zones are read once into memory (evecm zone.zig); a lookup is a binary search.
 const std = @import("std");
 const Io = std.Io;
 const ast = @import("evecm").ast;
 const zonelib = @import("evecm").zone;
 const interp = @import("interp.zig");
 const sqlite = @import("db/sqlite.zig");
+const meta_need = @import("evecm").meta_need;
 
 const Node = ast.Node;
 const Interp = interp.Interp;
@@ -18,19 +19,28 @@ const Signal = interp.Signal;
 const err_argument = interp.err_argument;
 
 // The database stays on disk (D-225): `EVE_META_DB`, else `lib/meta/meta.db` in the `lib` folder beside the program.
-// At optimization level 5 and above a background thread reads it when the run starts (D-226); a first use before the end waits for it.
+// A run copies only the tables it needs (D-226, meta_need.zig) from the file into a connection in memory: at optimization
+// level 5 and above a background thread makes that copy when the run starts, and a use that comes before its end waits for it;
+// below 5, and for a table that was not copied, the copy is made at the first use.
 const file_name = "meta/meta.db";
 
-/// The file read by the background thread: its bytes, or the message of the failure.
+/// The tables of the zone core and of `meta.info`: what every zone lookup reads.
+const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u8, 1) << 3) & ~(@as(u8, 1) << 4) };
+
+/// The copy made by the background thread: its connection, the tables in it, or the message of its failure.
+var prepared: ?sqlite.Db = null;
+var prepared_mask: u8 = 0;
+var prepared_failure: ?[]const u8 = null;
 var loader: ?std.Thread = null;
-var loaded: ?[]const u8 = null;
-var load_failure: ?[]const u8 = null;
+/// The file the copies come from, found once.
+var file_path: ?[]const u8 = null;
 
 const alloc = std.heap.page_allocator;
 
-// @invariant `state` is read and written only with `lock` held; after the first open `db` is a read only connection that is never closed
+// @invariant `db`, `loaded_mask` and `file_path` are read and written only with `lock` held; the connection is never closed, and the thread's copy is taken over under the lock after its join
 var lock: std.atomic.Value(bool) = .init(false);
 var db: ?sqlite.Db = null;
+var loaded_mask: u8 = 0;
 var zones: std.StringHashMapUnmanaged(*Entry) = .empty;
 
 const Entry = struct { zone: zonelib.Zone, name: []const u8, canonical: []const u8, id: u32 = 0 };
@@ -125,13 +135,7 @@ fn release() void {
     lock.store(false, .release);
 }
 
-var image_cache: ?[]const u8 = null;
-
-// @eve-impl the meta database is read from disk: `EVE_META_DB`, else `<prefix>/lib/meta/meta.db` beside the program, else `lib/meta/meta.db` of the working folder (D-225)
-// @spec spec/library/meta.md#the-file
-// @feature F-LIB-06
-// @test test/level5/e156_optimization_zone
-/// The path of the meta database file, as the first candidate that exists; null when none does.
+/// The path of the meta database file: `EVE_META_DB`, else `lib/meta/meta.db` beside the program (`<prefix>/lib`), else in the working folder.
 fn findFile(io: Io) ?[]const u8 {
     if (std.c.getenv("EVE_META_DB")) |p| return std.mem.span(p);
     const exe_dir = std.process.executableDirPathAlloc(io, alloc) catch return null;
@@ -140,53 +144,133 @@ fn findFile(io: Io) ?[]const u8 {
     return "lib/" ++ file_name;
 }
 
-/// Reads the file; the result is its bytes, or the message of the failure (a Git LFS pointer or a missing file).
-fn readImage(io: Io) struct { bytes: ?[]const u8, failure: ?[]const u8 } {
-    const path = findFile(io) orelse return .{ .bytes = null, .failure = "meta database not found: lib/meta/meta.db is missing (see spec/library/meta.md)" };
-    const bytes = Io.Dir.cwd().readFileAlloc(io, path, alloc, .limited(1 << 30)) catch |e|
-        return .{ .bytes = null, .failure = std.fmt.allocPrint(alloc, "meta database: cannot read {s}: {s}", .{ path, @errorName(e) }) catch "meta database: cannot read the file" };
-    if (std.mem.startsWith(u8, bytes, "version https://git-lfs")) {
-        return .{ .bytes = null, .failure = "lib/meta/meta.db is a Git LFS pointer, not the database: run `git lfs pull` (D-222)" };
+/// Refuses a Git LFS pointer (a few lines of text where the database should be) and a file that is not there.
+fn checkFile(io: Io, path: []const u8) ?[]const u8 {
+    const st = Io.Dir.cwd().statFile(io, path, .{}) catch return "meta database not found: lib/meta/meta.db is missing (see spec/library/meta.md)";
+    if (st.size < 1024) {
+        const head = Io.Dir.cwd().readFileAlloc(io, path, alloc, .limited(1024)) catch return "meta database: cannot read the file";
+        if (std.mem.startsWith(u8, head, "version https://git-lfs")) return "lib/meta/meta.db is a Git LFS pointer, not the database: run `git lfs pull` (D-222)";
     }
-    return .{ .bytes = bytes, .failure = null };
+    return null;
 }
 
-fn loadWorker(io: Io) void {
-    const got = readImage(io);
-    loaded = got.bytes;
-    load_failure = got.failure;
+/// Creates in `d` the table `name` and its indexes, with the statements of the file (keys, checks, unique columns); the rows come after.
+fn copySchema(d: *sqlite.Db, name: []const u8) !void {
+    const query = try std.fmt.allocPrintSentinel(alloc, "SELECT type, sql FROM src.sqlite_master WHERE tbl_name = ?1 AND sql IS NOT NULL ORDER BY type DESC", .{}, 0);
+    var q = try d.prepare(query);
+    defer q.finalize();
+    try q.bindText(1, name);
+    while (try q.step()) {
+        const is_table = std.mem.eql(u8, q.columnText(0), "table");
+        const sql = try alloc.dupe(u8, q.columnText(1));
+        // the same statement, in the memory connection: `main.` in front of the name
+        const made = if (is_table) blk: {
+            if (!std.mem.startsWith(u8, sql, "CREATE TABLE ")) return error.Exec;
+            break :blk try std.fmt.allocPrint(alloc, "CREATE TABLE main.{s}", .{sql["CREATE TABLE ".len..]});
+        } else blk: {
+            const at = (std.mem.indexOf(u8, sql, "INDEX ") orelse return error.Exec) + "INDEX ".len;
+            break :blk try std.fmt.allocPrint(alloc, "{s}main.{s}", .{ sql[0..at], sql[at..] });
+        };
+        try d.exec(try std.fmt.allocPrintSentinel(alloc, "{s}", .{made}, 0));
+    }
 }
 
-/// Starts the background read of the meta database when the optimization level is 5 or more (D-226); below 5 the file is read at the first use.
-pub fn prepare(io: Io, level: u8) void {
-    if (level < 5 or loader != null or image_cache != null) return;
-    loader = std.Thread.spawn(.{}, loadWorker, .{io}) catch null;
+/// Copies one table of the file into `d`: its schema, then its rows.
+fn copyTable(d: *sqlite.Db, name: []const u8) !void {
+    try copySchema(d, name);
+    try d.exec(try std.fmt.allocPrintSentinel(alloc, "INSERT INTO main.{s} SELECT * FROM src.{s}", .{ name, name }, 0));
 }
 
-/// The bytes of the meta database: the background read when it was started (waited for here), else the file read now. Kept for the life of the process; a connection to it must not outlive these bytes, which never move.
-pub fn image(it: *Interp) Signal![]const u8 {
-    if (image_cache) |b| return b;
+/// Copies the tables of `mask` from the file at `path` into `d`, which must be a memory database; the file is attached only for the copy.
+/// The parents of a table come first (a foreign key is checked on the insert), and a table that needs a parent takes it too.
+fn copyTables(d: *sqlite.Db, path: []const u8, mask: u8) !void {
+    // the connection is read only for the SQL door (D-222): writes are allowed only while the tables are copied
+    try d.exec("PRAGMA query_only = OFF");
+    defer d.exec("PRAGMA query_only = ON") catch {};
+    const attach = try std.fmt.allocPrintSentinel(alloc, "ATTACH '{s}' AS src", .{path}, 0);
+    try d.exec(attach);
+    defer d.exec("DETACH src") catch {};
+    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "meta_info" };
+    var want = mask;
+    if (want & bitOf("zone") != 0) want |= bitOf("country") | bitOf("continent");
+    if (want & bitOf("country") != 0) want |= bitOf("continent");
+    for (order) |name| {
+        if (want & bitOf(name) == 0) continue;
+        try copyTable(d, name);
+    }
+}
+
+fn bitOf(name: []const u8) u8 {
+    return @as(u8, 1) << @intCast(meta_need.indexOf(name).?);
+}
+
+/// Reads the file in a background thread at optimization level 5 and above (D-226); the copy waits for the join in `connect`.
+fn prepareWorker(io: Io, want: meta_need.Need) void {
+    const path = findFile(io) orelse {
+        prepared_failure = "meta database not found: lib/meta/meta.db is missing (see spec/library/meta.md)";
+        return;
+    };
+    if (checkFile(io, path)) |why| {
+        prepared_failure = why;
+        return;
+    }
+    var d = sqlite.Db.open(":memory:") catch {
+        prepared_failure = "meta database: cannot open a memory connection";
+        return;
+    };
+    copyTables(&d, path, want.mask) catch {
+        d.close();
+        prepared_failure = "meta database: cannot copy the tables of the file";
+        return;
+    };
+    file_path = path;
+    prepared = d;
+    prepared_mask = want.mask;
+}
+
+/// Starts the background copy of the tables a run needs when the optimization level is 5 or more (D-226). Below 5 nothing starts: the copy is made at the first use.
+pub fn prepare(io: Io, level: u8, want: meta_need.Need) void {
+    if (level < 5 or want.isEmpty() or loader != null or db != null) return;
+    loader = std.Thread.spawn(.{}, prepareWorker, .{ io, want }) catch null;
+}
+
+/// The connection of the library with the tables `want` copied in: the background copy taken over (after its join), or the file opened now.
+/// Copies a table that is not in the connection yet. The caller holds the lock.
+fn connect(it: *Interp, want: meta_need.Need) Signal!*sqlite.Db {
     if (loader) |t| {
         t.join();
         loader = null;
-    } else {
+        if (prepared) |p| {
+            db = p;
+            loaded_mask = prepared_mask;
+            prepared = null;
+        }
+    }
+    if (db == null) {
         const io = it.io orelse return it.fail("meta: no input/output handle", .{});
-        const got = readImage(io);
-        loaded = got.bytes;
-        load_failure = got.failure;
+        const path = findFile(io) orelse return it.failWith(interp.err_file, "meta database not found: lib/meta/meta.db is missing (see spec/library/meta.md)", .{});
+        if (checkFile(io, path)) |why| return it.failWith(interp.err_file, "{s}", .{why});
+        db = sqlite.Db.open(":memory:") catch return it.failWith(interp.err_io, "meta: the memory connection can not be opened", .{});
+        file_path = path;
     }
-    if (loaded) |b| {
-        image_cache = b;
-        return b;
+    const missing = want.mask & ~loaded_mask;
+    if (missing != 0) {
+        copyTables(&db.?, file_path.?, missing) catch |e| return it.failWith(interp.err_io, "meta: the tables can not be copied from the file: {s}: {s}", .{ @errorName(e), db.?.errorMessage() });
+        loaded_mask |= missing;
     }
-    return it.failWith(interp.err_file, "{s}", .{load_failure orelse "meta database: unknown failure"});
+    return &db.?;
 }
 
-/// The connection of the library (zones, `meta.info`), opened on first use; the caller holds the lock.
+/// The connection that `database.connect("meta")` gives: every table, since a SQL statement may name any of them.
+pub fn connection(it: *Interp) Signal!*sqlite.Db {
+    acquire();
+    defer release();
+    return connect(it, meta_need.Need.all);
+}
+
+/// The connection of the zone lookups and of `meta.info`; the caller holds the lock.
 fn open(it: *Interp) Signal!*sqlite.Db {
-    if (db) |*d| return d;
-    db = sqlite.Db.openImage(try image(it)) catch return it.failWith(interp.err_io, "meta: the meta database can not be opened", .{});
-    return &db.?;
+    return connect(it, zone_core);
 }
 
 fn dup(s: []const u8) std.mem.Allocator.Error![]const u8 {
@@ -355,9 +439,7 @@ pub fn metaModule(it: *Interp, name: []const u8, _: []const *const Node, arg_nod
 }
 
 test "spec: meta.md#the-file the database file opens and holds the zones" {
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "lib/meta/meta.db", std.testing.allocator, .limited(1 << 30));
-    defer std.testing.allocator.free(bytes);
-    var d = try sqlite.Db.openImage(bytes);
+    var d = try sqlite.Db.open("lib/meta/meta.db");
     defer d.close();
     var q = try d.prepare("select count(*), (select value from meta_info where name = 'tzdata') from zone");
     defer q.finalize();
@@ -367,9 +449,7 @@ test "spec: meta.md#the-file the database file opens and holds the zones" {
 }
 
 test "spec: meta.md#zone a link shares the data of its zone" {
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "lib/meta/meta.db", std.testing.allocator, .limited(1 << 30));
-    defer std.testing.allocator.free(bytes);
-    var d = try sqlite.Db.openImage(bytes);
+    var d = try sqlite.Db.open("lib/meta/meta.db");
     defer d.close();
     var q = try d.prepare("select count(*) from zone l join zone z on z.id = l.link_of where l.name = 'Asia/Calcutta' and z.name = 'Asia/Kolkata'");
     defer q.finalize();

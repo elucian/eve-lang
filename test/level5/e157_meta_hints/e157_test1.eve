@@ -1,0 +1,14 @@
+# the same script at the lowest level: the tables are copied at the first use
+** spec: library/meta.md#loading-the-tables
+** @meta require(zone)
+primary aspect e157_test1 is
+  process main is
+    print time.at_zone(Instant.parse("2026-07-01T07:00:00Z"), time.zone("Europe/Bucharest"));
+  return;
+end e157_test1;
+/*@expect
+{
+  "command": ["-x", "e157_test1.eve"],
+  "stdout": ["2026-07-01T10:00:00+03:00"]
+}
+*/

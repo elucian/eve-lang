@@ -79,6 +79,8 @@ pub const Session = struct {
     aspects: ast.Aspects = .empty,
     /// The modules that the imports of the script reach, read and checked by `parse` (project.zig).
     modules: ast.Modules = .empty,
+    /// The tables of the meta database that the run needs: the hints of the script and the modules of lib/meta (D-226).
+    meta_need: evecm.meta_need.Need = .{},
     parse_failed: bool = false,
     machine: ?*interp.Interp = null,
     /// The command-line arguments after the script name (the arguments of `process main`).
@@ -166,6 +168,15 @@ pub const Session = struct {
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         const dir = if (cut) |i| self.path[0..i] else ".";
         try project.link(self.mem(), self.io, dir, tree, &self.diag, &self.bad_path, &self.aspects, &self.modules, project.env_lib_path);
+        // the tables of the meta database that the run needs (D-226): the `@meta require` hints, and the modules of lib/meta
+        var bad: evecm.meta_need.Bad = .{};
+        var need = evecm.meta_need.ofHints(self.src, &bad) catch {
+            self.diag.set(bad.line, 1, "unknown table {s} in @meta require (see spec/library/meta.md#loading-the-tables)", .{bad.name});
+            return error.Syntax;
+        };
+        var names = self.modules.keyIterator();
+        while (names.next()) |name| need = need.merge(evecm.meta_need.ofModule(name.*));
+        self.meta_need = need;
         return tree;
     }
 
@@ -237,7 +248,7 @@ pub const Session = struct {
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         sysvars.define(machine, if (cut) |i| self.path[0..i] else ".") catch {};
         // the background read of the meta database at optimization level 5 and above (D-226)
-        metalib.prepare(self.io, evecm.optimization.level);
+        metalib.prepare(self.io, evecm.optimization.level, self.meta_need);
         if (self.config_file) |cf| {
             var why: []const u8 = "";
             if (settings.load(self.io, self.mem(), cf, &why)) |entries| settings.define(machine, entries) catch {} else |_| {}

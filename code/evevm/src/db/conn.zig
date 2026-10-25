@@ -50,9 +50,9 @@ pub fn openConnection(it: Host, name: []const u8) Signal!usize {
         if (b.dbs.items[idx].handle != null) return idx;
     }
     if (std.mem.eql(u8, name, "meta")) {
-        // the meta database: the embedded file, a connection of its own, read only (D-222)
+        // the meta database: the connection of the library, with every table copied in (D-222, D-225)
         const mdb = try it.arena().create(sqlite.Db);
-        mdb.* = sqlite.Db.openImage(try metalib.image(it.it)) catch return it.failWith(err_io, "DatabaseError: the meta database can not be opened", .{});
+        mdb.* = (try metalib.connection(it.it)).*;
         try b.dbs.append(it.arena(), mdb);
         try b.tx.append(it.arena(), false);
         const midx = b.dbs.items.len - 1;

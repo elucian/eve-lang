@@ -1,0 +1,14 @@
+# no hint: the import of lib/meta gives the tables that its module reads, and the module works at level 5 and at level 0
+** spec: library/meta.md#loading-the-tables
+from lib/meta use (meta);
+primary aspect e157_test4 is
+  process main is
+    print meta.info("tzdata");
+  return;
+end e157_test4;
+/*@expect
+{
+  "command": ["-O", "5", "-x", "e157_test4.eve"],
+  "stdout": ["2026e"]
+}
+*/

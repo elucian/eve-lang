@@ -70,3 +70,18 @@ new cc := meta.query!(:Name)("select c.name as name from country c join continen
 | `zone_transition` | `zone` (foreign key), `at` (UTC seconds since 1970), `idx` | the type that starts at `at`; before the first one the type 0 applies |
 
 A link has a row in `zone` and none in `zone_type` and `zone_transition`: its data is that of `link_of`. The foreign keys are real: `pragma foreign_key_check` on the file gives no row, and the builder refuses to write a file that fails it. The zones of a country are `select name from zone where country = 'RO'`; its continent is `select k.name from country c join continent k on k.code = c.continent where c.code = 'RO'`.
+
+## Loading the tables
+
+A run copies into its connection only the tables it needs, from the file on disk. The tables are `zone`, `zone_type`, `zone_transition`, `country`, `continent` and `meta_info`.
+
+| Source of the need | Tables |
+|---|---|
+| `from lib/meta use (zone)` (any module of `lib/meta`) | the tables the module reads: `zone` takes `zone`, `zone_type`, `zone_transition`; `meta` takes `meta_info`; `country` takes `country` and `continent` |
+| a hint `** @meta require(zone, country)` in a comment of the script | the named tables |
+| a hint `** @meta require(*)` | every table |
+
+A hint that names a table that does not exist is a compile error (exit 65): `unknown table <name> in @meta require`. A parent is copied with its child: `zone` takes `country` and `continent`, `country` takes `continent`.
+
+At optimization level 5 and above (variables.md#optimization-level) the copy starts in a background thread when the run starts, when the script has a need; a use that comes before its end waits for it. Below 5 nothing starts, and the copy is made at the first use. A table that a use needs and that was not copied is copied at that use. `database.connect("meta")` gives every table. The connection is read only once copied. The zone functions themselves are still native code (their move to the language is a later step).
+

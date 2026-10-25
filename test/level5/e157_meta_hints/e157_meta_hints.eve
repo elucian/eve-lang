@@ -1,0 +1,14 @@
+# a hint names the tables of the meta database that the script needs; at optimization level 5 they are copied in the background at the start, and the zone functions give the same answers
+** spec: library/meta.md#loading-the-tables
+** @meta require(zone)
+primary aspect e157_meta_hints is
+  process main is
+    print time.at_zone(Instant.parse("2026-07-01T07:00:00Z"), time.zone("Europe/Bucharest"));
+  return;
+end e157_meta_hints;
+/*@expect
+{
+  "command": ["-O", "5", "-x", "e157_meta_hints.eve"],
+  "stdout": ["2026-07-01T10:00:00+03:00"]
+}
+*/
