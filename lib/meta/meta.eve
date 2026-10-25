@@ -1,9 +1,20 @@
-** The meta database itself: which releases of the sources are in it (M0.1, D-222).
-** @spec spec/library/meta.md#metainfo  @feature F-LIB-06  @decision D-222  @tests test/level5/e129_meta_zone
+** The meta database itself: which releases of the sources are in it (D-229: Eve code over the table meta_info).
+** @spec spec/library/meta.md#metainfo  @feature F-LIB-06  @decision D-229  @tests test/level5/e129_meta_zone
 module meta is
   export (info);
 
+  class Entry = {value: String} <: Record;
+
   ** An entry of the table meta_info: "schema", "tzdata" (the release of the IANA database, such as 2026e), "zones", "zone_links", "builder". An unknown name is $err_key.
-  external function info(name: String) => (@result: String);
+  function info(name: String) => (@result: String) is
+    new db := database.connect("meta");
+    new rows := db.query!(:Entry)("select value from meta_info where name = ?", name);
+    for r in rows do
+      let result := r.value;
+    done;
+    if rows.count() == 0 do
+      raise (11, "meta.info: there is no entry '" + name + "'");
+    done;
+  return;
 
 end meta;

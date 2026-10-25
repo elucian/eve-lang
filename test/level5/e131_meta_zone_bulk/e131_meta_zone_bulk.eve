@@ -1,4 +1,4 @@
-# the zones of the meta database against Python's zoneinfo for 240000 instants (1900 to 2100): the sum of the offsets of 20000 instants in each of 12 zones
+# the zones of the meta database against Python's zoneinfo (the time limit is 120 s: the zone door is Eve code, 30 times slower than the former native code, TD-91) for 240000 instants (1900 to 2100): the sum of the offsets of 20000 instants in each of 12 zones
 ** spec: library/meta.md#zone
 primary aspect e131_meta_zone_bulk is
   from lib/meta use (zone);
@@ -29,6 +29,7 @@ primary aspect e131_meta_zone_bulk is
 end e131_meta_zone_bulk;
 /*@expect
 {
+  "timeout": 120,
   "stdout": ["240000"]
 }
 */

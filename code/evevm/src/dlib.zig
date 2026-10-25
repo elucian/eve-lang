@@ -129,8 +129,6 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "linear", linearlib.linearModule },
     .{ "rational", rationallib.rationalModule },
     .{ "complex", complexlib.complexModule },
-    .{ "zone", metalib.zoneModule },
-    .{ "meta", metalib.metaModule },
     .{ "random", randomlib.randomModule },
 });
 
@@ -147,7 +145,6 @@ pub fn fastResolve(module: []const u8, name: []const u8) ?u32 {
     if (eql(u8, module, "rational")) return if (rationallib.fastId(name)) |id| 2 * @as(u32, 65536) + id else null;
     if (eql(u8, module, "complex")) return if (complexlib.fastId(name)) |id| 3 * @as(u32, 65536) + id else null;
     if (eql(u8, module, "time")) return if (timelib.fastId(name)) |id| 4 * @as(u32, 65536) + id else null;
-    if (eql(u8, module, "zone")) return if (metalib.fastId(name)) |id| 5 * @as(u32, 65536) + id else null;
     return null;
 }
 
@@ -158,7 +155,6 @@ pub fn fastCall(it: *Interp, code: u32, args: []const Value) Signal!Value {
         1 => mathlib.fastCall(it, id, args),
         2 => rationallib.fastCall(it, id, args),
         4 => timelib.fastCall(it, id, args),
-        5 => metalib.fastCall(it, id, args),
         else => complexlib.fastCall(it, id, args),
     };
 }

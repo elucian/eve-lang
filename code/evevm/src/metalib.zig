@@ -1,4 +1,4 @@
-//! @eve-module metalib: the meta database (reference data read from disk, D-225) and the natives of the library `zone`
+//! @eve-module metalib: the meta database connection (reference data read from disk, D-225); the library `zone` and `meta` are Eve code (D-229)
 //! @spec spec/library/meta.md
 //! @feature F-LIB-06
 //! @decision D-222
@@ -183,7 +183,7 @@ fn copyTable(d: *sqlite.Db, name: []const u8) !void {
 
 /// Copies the tables of `mask` from the file at `path` into `d`, which must be a memory database; the file is attached only for the copy.
 /// The parents of a table come first (a foreign key is checked on the insert), and a table that needs a parent takes it too.
-fn copyTables(d: *sqlite.Db, path: []const u8, mask: u8) !void {
+fn copyTables(d: *sqlite.Db, path: []const u8, mask: u8) !u8 {
     // the connection is read only for the SQL door (D-222): writes are allowed only while the tables are copied
     try d.exec("PRAGMA query_only = OFF");
     defer d.exec("PRAGMA query_only = ON") catch {};
@@ -198,6 +198,8 @@ fn copyTables(d: *sqlite.Db, path: []const u8, mask: u8) !void {
         if (want & bitOf(name) == 0) continue;
         try copyTable(d, name);
     }
+    // the tables that are in `d` now: the parents come with their children
+    return want;
 }
 
 fn bitOf(name: []const u8) u8 {
@@ -218,14 +220,14 @@ fn prepareWorker(io: Io, want: meta_need.Need) void {
         prepared_failure = "meta database: cannot open a memory connection";
         return;
     };
-    copyTables(&d, path, want.mask) catch {
+    const copied = copyTables(&d, path, want.mask) catch {
         d.close();
         prepared_failure = "meta database: cannot copy the tables of the file";
         return;
     };
     file_path = path;
     prepared = d;
-    prepared_mask = want.mask;
+    prepared_mask = copied;
 }
 
 /// Starts the background copy of the tables a run needs when the optimization level is 5 or more (D-226). Below 5 nothing starts: the copy is made at the first use.
@@ -255,8 +257,8 @@ fn connect(it: *Interp, want: meta_need.Need) Signal!*sqlite.Db {
     }
     const missing = want.mask & ~loaded_mask;
     if (missing != 0) {
-        copyTables(&db.?, file_path.?, missing) catch |e| return it.failWith(interp.err_io, "meta: the tables can not be copied from the file: {s}: {s}", .{ @errorName(e), db.?.errorMessage() });
-        loaded_mask |= missing;
+        const copied = copyTables(&db.?, file_path.?, missing) catch |e| return it.failWith(interp.err_io, "meta: the tables can not be copied from the file: {s}: {s}", .{ @errorName(e), db.?.errorMessage() });
+        loaded_mask |= copied;
     }
     return &db.?;
 }
@@ -329,113 +331,6 @@ fn load(it: *Interp, name: []const u8) Signal!?*Entry {
     e.id = register(e);
     try zones.put(alloc, key, e);
     return e;
-}
-
-const Fn = enum { exists, canonical, offset, abbreviation, is_dst, names };
-
-fn zoneArg(it: *Interp, args: []const Value, what: []const u8) Signal![]const u8 {
-    if (args.len < 1 or args[0] != .str) return it.failWith(err_argument, "zone.{s}: argument 1 is the name of a zone, a String", .{what});
-    return args[0].str;
-}
-
-fn instantArg(it: *Interp, args: []const Value, what: []const u8) Signal!i64 {
-    if (args.len >= 2 and args[1] == .dtm) return @divFloor(args[1].dtm.us, 1_000_000);
-    if (args.len < 2 or args[1] != .instant) return it.failWith(err_argument, "zone.{s}: argument 2 is an Instant or a DateTime", .{what});
-    return @divFloor(args[1].instant, 1_000_000);
-}
-
-fn compute(it: *Interp, f: Fn, args: []const Value) Signal!?Value {
-    const n = @tagName(f);
-    switch (f) {
-        .names => {
-            acquire();
-            defer release();
-            const d = try open(it);
-            var q = d.prepare("select name from zone order by name") catch return it.failWith(interp.err_io, "meta: bad query", .{});
-            defer q.finalize();
-            var out: std.ArrayList(Value) = .empty;
-            defer out.deinit(it.a);
-            while (q.step() catch return it.failWith(interp.err_io, "meta: query failed", .{})) try out.append(it.a, try it.newStr(q.columnText(0)));
-            return .{ .list = try it.newList(out.items, false) };
-        },
-        else => {},
-    }
-    if (args.len >= 1 and args[0] == .zone) {
-        // a Zone value: no name to look up (the data of a region is already in memory)
-        const id = args[0].zone;
-        var nb: [8]u8 = undefined;
-        switch (f) {
-            .exists => return .{ .bool = true },
-            .canonical => return try it.newStr(if (isFixed(id)) zoneName(id, &nb) else slots[id - 1].?.canonical),
-            .offset, .abbreviation, .is_dst => {
-                const l = localAt(id, try instantArg(it, args, n));
-                return switch (f) {
-                    .offset => .{ .dur = @as(i64, l.utoff) * 1_000_000 },
-                    .abbreviation => try it.newStr(if (l.abbr.len > 0) l.abbr else zoneName(id, &nb)),
-                    else => .{ .bool = l.isdst },
-                };
-            },
-            .names => unreachable,
-        }
-    }
-    const name = try zoneArg(it, args, n);
-    acquire();
-    defer release();
-    const entry = (try load(it, name)) orelse {
-        if (f == .exists) return .{ .bool = false };
-        return it.failWith(err_argument, "zone.{s}: '{s}' is not a time zone of the IANA database", .{ n, name });
-    };
-    switch (f) {
-        .exists => return .{ .bool = true },
-        .canonical => return try it.newStr(entry.canonical),
-        .offset, .abbreviation, .is_dst => {
-            // the lock is held for the lookup only; the zone data never changes
-            const l = zonelib.lookup(&entry.zone, try instantArg(it, args, n));
-            return switch (f) {
-                .offset => .{ .dur = @as(i64, l.utoff) * 1_000_000 },
-                .abbreviation => try it.newStr(l.abbr),
-                else => .{ .bool = l.isdst },
-            };
-        },
-        .names => unreachable,
-    }
-}
-
-pub fn fastId(name: []const u8) ?u16 {
-    const f = std.meta.stringToEnum(Fn, name) orelse return null;
-    return @intFromEnum(f);
-}
-
-// @perf hot
-pub fn fastCall(it: *Interp, id: u16, args: []const Value) Signal!Value {
-    return (try compute(it, @enumFromInt(id), args)) orelse .nil;
-}
-
-/// The entry of `dlib.natives`: evaluates the argument nodes, then computes.
-pub fn zoneModule(it: *Interp, name: []const u8, _: []const *const Node, arg_nodes: []const *const Node) Signal!?Value {
-    const f = std.meta.stringToEnum(Fn, name) orelse return null;
-    var buf: [4]Value = undefined;
-    if (arg_nodes.len > buf.len) return it.failWith(err_argument, "zone.{s}: too many arguments", .{name});
-    for (arg_nodes, 0..) |nd, i| buf[i] = try it.eval(nd);
-    return compute(it, f, buf[0..arg_nodes.len]);
-}
-
-// @eve-fn meta.info
-// @spec spec/library/meta.md#metainfo
-/// The entry of the module `meta`: `meta.info(name)` is a row of the table `meta_info` (the schema, the releases of the sources).
-pub fn metaModule(it: *Interp, name: []const u8, _: []const *const Node, arg_nodes: []const *const Node) Signal!?Value {
-    if (!std.mem.eql(u8, name, "info")) return null;
-    if (arg_nodes.len != 1) return it.failWith(err_argument, "meta.info takes the name of an entry", .{});
-    const key = try it.eval(arg_nodes[0]);
-    if (key != .str) return it.failWith(err_argument, "meta.info: argument 1 is a String", .{});
-    acquire();
-    defer release();
-    const d = try open(it);
-    var q = d.prepare("select value from meta_info where name = ?") catch return it.failWith(interp.err_io, "meta: bad query", .{});
-    defer q.finalize();
-    q.bindText(1, key.str) catch return error.OutOfMemory;
-    if (!(q.step() catch return it.failWith(interp.err_io, "meta: query failed", .{}))) return it.failWith(interp.err_key, "meta.info: there is no entry '{s}'", .{key.str});
-    return try it.newStr(q.columnText(0));
 }
 
 test "spec: meta.md#the-file the database file opens and holds the zones" {

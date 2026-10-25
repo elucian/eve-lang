@@ -1,24 +1,223 @@
-** The time zones of the IANA database, read from the meta database that is embedded in the Eve machine (M0.1, D-222). The zone data is the release named in `meta.info`; a zone is a name such as "Europe/Bucharest".
-** @spec spec/library/meta.md#zone  @feature F-LIB-06  @decision D-222  @tests test/level5/e129_meta_zone
+** The time zones of the IANA database, from the meta database (lib/meta/meta.db): Eve code over its tables (D-229). A zone is a name such as "Europe/Bucharest" or a Zone value; a link such as "Asia/Calcutta" has the data of its zone. The rows that a run reads are kept in memory by the module (zones, spans of transitions, rules).
+** @spec spec/library/meta.md#zone  @feature F-LIB-06  @decision D-229  @tests test/level5/e129_meta_zone
 module zone is
+  from lib/meta use (rule);
   export (exists, canonical, offset, abbreviation, is_dst, names);
 
+  class Found = {target: Integer, canonical: String, rule: String?} <: Record;
+  class Change = {at: Integer, idx: Integer} <: Record;
+  class Kind = {utoff: Integer, isdst: Integer, abbr: String} <: Record;
+  class Name = {name: String} <: Record;
+
+  new found_cache := {:};
+  new rule_cache := {:};
+  new transition_cache := {:};
+  new kind_cache := {:};
+
+  ** A fixed offset written as a zone name ("Z", "+05:30", "-03"): [is a fixed offset, seconds east of UTC]. A zone of the database is never such a name.
+  function fixed_of(text: String) => (@result: List) is
+    let result := [False, 0];
+    if text == "Z" do
+      let result := [True, 0];
+      exit;
+    done;
+    if text.length() >= 3 and (text[1..1] == "+" or text[1..1] == "-") do
+      new sign := 1;
+      if text[1..1] == "-" do
+        let sign := -1;
+      done;
+      new h := Integer.parse(text[2..3]);
+      new m := 0;
+      if text.length() >= 6 do
+        let m := Integer.parse(text[5..6]);
+      done;
+      let result := [True, sign * (h * 3600 + m * 60)];
+    done;
+  return;
+
+  ** The name of a zone argument: a String, or a Zone value (its name); anything else is $err_argument.
+  function name_of(who: String, x: Any) => (@result: String) is
+    if x is String do
+      let result := x;
+    done;
+    if x is Zone do
+      let result := "{x}";
+    done;
+    if not (x is String) and not (x is Zone) do
+      raise (17, who + ": a zone is named by a String or is a Zone value");
+    done;
+  return;
+
+  ** The seconds since the epoch of an instant argument: an Instant, or a DateTime (its instant); anything else is $err_argument.
+  function seconds_of(who: String, at: Any) => (@result: Integer) is
+    if at is DateTime do
+      let at := time.instant_of(at);
+    done;
+    if not (at is Instant) do
+      raise (17, who + ": the instant is an Instant or a DateTime");
+    done;
+    let result := floor((at - Instant.epoch) / 1s);
+  return;
+
+  ** The zone of a name: the zone whose data it has (itself, or the zone a link points to), with the rule that follows its last transition; null when the name is not a zone.
+  function found(name: String) => (@result: Found?) is
+    if found_cache.has(name) do
+      let result := found_cache[name];
+      exit;
+    done;
+    new db := database.connect("meta");
+    new rows := db.query!(:Found)("select c.id as target, c.name as canonical, c.rule as rule from zone z join zone c on c.id = coalesce(z.link_of, z.id) where z.name = ?", name);
+    for r in rows do
+      let result := r;
+      let found_cache[name] := r;
+    done;
+  return;
+
+  ** The parsed rule of a zone (cached per zone).
+  function rule_of(f: Found) => (@result: List) is
+    if rule_cache.has(f.target) do
+      let result := rule_cache[f.target];
+      exit;
+    done;
+    let result := rule.parse(f.rule);
+    let rule_cache[f.target] := result;
+  return;
+
+  ** The transitions of a zone as [instant, type index] pairs in order (cached per zone).
+  function transitions_of(target: Integer) => (@result: List) is
+    if transition_cache.has(target) do
+      let result := transition_cache[target];
+      exit;
+    done;
+    new db := database.connect("meta");
+    new rows := db.query!(:Change)("select at, idx from zone_transition where zone = ? order by at", target);
+    let result := ([r.at, r.idx] | r in rows);
+    let transition_cache[target] := result;
+  return;
+
+  ** The types of a zone: [offset in seconds, is daylight time, abbreviation] by type index plus one (cached per zone).
+  function kinds_of(target: Integer) => (@result: List) is
+    if kind_cache.has(target) do
+      let result := kind_cache[target];
+      exit;
+    done;
+    new db := database.connect("meta");
+    new rows := db.query!(:Kind)("select utoff, isdst, abbr from zone_type where zone = ? order by idx", target);
+    let result := (r | r in rows);
+    let kind_cache[target] := result;
+  return;
+
+  ** The local time of a zone at a number of seconds since 1970-01-01T00:00:00Z: [offset in seconds, is daylight time, abbreviation]. The transitions come first; after the last one, the rule of the zone decides.
+  function local(f: Found, t: Integer) => (@result: List) is
+    new tr := transitions_of(f.target);
+    new n := tr.count();
+    new kinds := kinds_of(f.target);
+    if n == 0 do
+      if f.rule <> null do
+        let result := rule.local_at(rule_of(f), t);
+        exit;
+      done;
+      let result := [kinds[1].utoff, kinds[1].isdst == 1, kinds[1].abbr];
+      exit;
+    done;
+    if t < tr[1][1] do
+      let result := [kinds[1].utoff, kinds[1].isdst == 1, kinds[1].abbr];
+      exit;
+    done;
+    if f.rule <> null and t >= tr[n][1] do
+      let result := rule.local_at(rule_of(f), t);
+      exit;
+    done;
+    ** the last transition at or before t: a binary search over the pairs
+    new lo := 1;
+    new hi := n;
+    new mid := 1;
+    while hi > lo do
+      let mid := rule.div(lo + hi + 1, 2);
+      if tr[mid][1] <= t do
+        let lo := mid;
+      done;
+      if tr[mid][1] > t do
+        let hi := mid - 1;
+      done;
+    done;
+    new k := kinds[tr[lo][2] + 1];
+    let result := [k.utoff, k.isdst == 1, k.abbr];
+  return;
+
   ** Is the name a time zone of the database (a link such as "Asia/Calcutta" counts).
-  external function exists(name: String) => (@result: Logic);
+  function exists(name: Any) => (@result: Logic) is
+    new who := name_of("zone.exists", name);
+    let result := fixed_of(who)[1] or found(who) <> null;
+  return;
 
   ** The name of the zone a link points to: "Asia/Calcutta" gives "Asia/Kolkata"; a zone gives itself.
-  external function canonical(name: String) => (@result: String);
+  function canonical(name: Any) => (@result: String) is
+    new who := name_of("zone.canonical", name);
+    if fixed_of(who)[1] do
+      let result := who;
+      exit;
+    done;
+    new f := found(who);
+    if f == null do
+      raise (17, "zone.canonical: '" + who + "' is not a time zone of the IANA database");
+    done;
+    let result := f.canonical;
+  return;
 
   ** The offset from UTC that the zone has at an instant, as a Duration (daylight time included).
-  external function offset(name: String, at: Instant) => (@result: Duration);
+  function offset(name: Any, at: Any) => (@result: Duration) is
+    new who := name_of("zone.offset", name);
+    new fx := fixed_of(who);
+    if fx[1] do
+      let result := fx[2] * 1s;
+      exit;
+    done;
+    new f := found(who);
+    if f == null do
+      raise (17, "zone.offset: '" + who + "' is not a time zone of the IANA database");
+    done;
+    new l := local(f, seconds_of("zone.offset", at));
+    let result := l[1] * 1s;
+  return;
 
   ** The abbreviation the zone uses at an instant: "EET", "EEST", "+0330".
-  external function abbreviation(name: String, at: Instant) => (@result: String);
+  function abbreviation(name: Any, at: Any) => (@result: String) is
+    new who := name_of("zone.abbreviation", name);
+    new fx := fixed_of(who);
+    if fx[1] do
+      let result := who;
+      exit;
+    done;
+    new f := found(who);
+    if f == null do
+      raise (17, "zone.abbreviation: '" + who + "' is not a time zone of the IANA database");
+    done;
+    new l := local(f, seconds_of("zone.abbreviation", at));
+    let result := l[3];
+  return;
 
   ** Is daylight saving time in force in the zone at an instant.
-  external function is_dst(name: String, at: Instant) => (@result: Logic);
+  function is_dst(name: Any, at: Any) => (@result: Logic) is
+    new who := name_of("zone.is_dst", name);
+    new fx := fixed_of(who);
+    if fx[1] do
+      let result := False;
+      exit;
+    done;
+    new f := found(who);
+    if f == null do
+      raise (17, "zone.is_dst: '" + who + "' is not a time zone of the IANA database");
+    done;
+    new l := local(f, seconds_of("zone.is_dst", at));
+    let result := l[2];
+  return;
 
   ** Every name of the database, zones and links, in order.
-  external function names() => (@result: List);
+  function names() => (@result: List) is
+    new db := database.connect("meta");
+    new rows := db.query!(:Name)("select name from zone order by name");
+    let result := (r.name | r in rows);
+  return;
 
 end zone;
