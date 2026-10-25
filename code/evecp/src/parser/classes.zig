@@ -26,7 +26,7 @@ pub fn class(p: *Parser) Error!*const Node {
     const kw = p.peek();
     try p.expectWord("class");
     const name = try p.expectName("a class name");
-    try p.typeParams();
+    const type_params = try p.typeList();
     // `class Name = {members} <: Parent` or, with no attribute of its own, `class Name <: Parent` (D-132)
     const shaped = p.acceptSym("=");
     if (!shaped and !p.isSym("<:")) return p.fail("expected '=' or '<:' after the class name", .{});
@@ -74,6 +74,7 @@ pub fn class(p: *Parser) Error!*const Node {
     if (p.acceptSym(";")) {
         const bare = try p.mk(.class, kw, name.text, kids.items);
         bare.extra = traits.items;
+        if (type_params.kids.len > 0) @constCast(bare).ty = type_params;
         return bare;
     }
     try p.expectWord("is");
@@ -111,6 +112,8 @@ pub fn class(p: *Parser) Error!*const Node {
     try p.expectSym(";");
     const node = try p.mk(.class, kw, name.text, kids.items);
     node.extra = traits.items;
+    // the type parameters of a generic class, with their constraints (`class Sorted(:T <: Comparable)`), for the checker (D-148)
+    if (type_params.kids.len > 0) @constCast(node).ty = type_params;
     return node;
 }
 

@@ -343,7 +343,7 @@
     [2, "optimization-level", 76, "Optimization level"],
     [2, "open-points", 88, "Open points"]
    ]},
-  {"path": "syntax/declarations.md", "title": "Declarations", "status": "draft", "summary": "A script is a file. It holds an aspect, or a module, or (level 5) an Eve macro. A file has no #! line.", "lines": 295, "bytes": 32843, "features": [], "sections": [
+  {"path": "syntax/declarations.md", "title": "Declarations", "status": "draft", "summary": "A script is a file. It holds an aspect, or a module, or (level 5) an Eve macro. A file has no #! line.", "lines": 295, "bytes": 33295, "features": [], "sections": [
     [2, "scripts", 5, "Scripts"],
     [3, "headers", 20, "Headers"],
     [3, "process", 24, "Process"],

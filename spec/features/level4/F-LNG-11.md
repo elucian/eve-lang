@@ -2,9 +2,8 @@
 
 `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable`. Moved from Version 0.2 to Level 4.
 
-*Partial:* traits, abstract classes, generic classes with erased type arguments and the library traits work; a constraint is not checked yet, generic functions wait for Version 0.4.
+*Done:* traits, abstract classes, generic classes and generic subprograms with erased type arguments, the constraint `(:T <: Comparable)` checked at compile time (written or inferred type argument, generic class: tests e58, d44, d45) and the library traits work.
 
 ## Missing
 
-- The constraint `(:T <: Comparable)` is not checked: a violation must be a compile error, exit 65.
-- Generic functions wait for Version 0.4 (backlog).
+Nothing.

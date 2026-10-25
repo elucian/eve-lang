@@ -18,12 +18,12 @@ Each level has a page of its own, with every feature described and an example th
 | Level 1 | 18 | 1 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 5 | 10 | 1 | 16 |
-| Level 4 | 5 | 8 | 2 | 15 |
+| Level 4 | 6 | 7 | 2 | 15 |
 | Level 5 | 9 | 13 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **53** | **45** | **48** | **146** |
+| **All** | **54** | **44** | **48** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -96,7 +96,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 |---|---|---|---|
 | `F-LIB-11` | Logging and observability | planned | Structured logs, job events, run reports, trace ids. |
 | `F-LIB-12` | Testing module `test` | validated | Checks that print ok/FAIL, counters, summary that raises. |
-| `F-LNG-11` | Traits, abstract classes, generics | drafted | trait, required methods, abstract classes, class Name(:T) with Box(:Integer)(5), constraints (:T <: Comparable), library traits Iterable, Stream, Comparable, Printable. |
+| `F-LNG-11` | Traits, abstract classes, generics | validated | trait, required methods, abstract classes, class Name(:T) with Box(:Integer)(5), constraints (:T <: Comparable), library traits Iterable, Stream, Comparable, Printable. |
 | `F-LNG-17` | Stream type | drafted | Stream(:T) <: Iterable(:T), read by for with back-pressure; at level 4 Channel(:T) is the stream, and lists get batch(n) and split(k). |
 | `F-LNG-18` | `Atomic(:T)` | drafted | A class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; class Name <: Atomic(:T). |
 | `F-MTK-01` | Parallel aspects | validated | parallel … do start … done, barrier, data rules, errors as a job. |

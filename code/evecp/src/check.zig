@@ -457,6 +457,7 @@ const Checker = struct {
                     }
                 }
                 const arg_ty = try c.expr(a);
+                if (single) |t| if (callee.tag == .name and t.kids[1].kids.len > 0 and param_ty != null) try c.inferredConstraint(a, arg_ty, param_ty.?, t);
                 // a value of a basic type given to a parameter of another basic type (F-LNG-16)
                 if (clash(param_ty, arg_ty)) return c.fail(a, "argument {d} of {s} is {s}, but the parameter is {s}", .{ i + 1, callee.text, arg_ty.?, param_ty.? });
                 try infos.append(c.a, .{ .ty = arg_ty });
@@ -648,11 +649,34 @@ const Checker = struct {
 
     /// The written types of `largest(:Point)(...)` must adopt the constraints of the declaration (D-145, D-148).
     fn constraints(c: *Checker, callee: *const Node, target: *const Node) Error!void {
-        for (target.kids[1].kids, 0..) |tp, i| {
+        // a generic class keeps its type parameters in `ty`, a subprogram in its second kid
+        const params_list: []const *const Node = if (target.tag == .class) (if (target.ty) |t| t.kids else &.{}) else target.kids[1].kids;
+        for (params_list, 0..) |tp, i| {
             const want = tp.ty orelse continue;
             if (i >= callee.kids.len) break;
             const given = callee.kids[i].text;
             if (!c.adopts(given, want.text)) return c.fail(callee, "{s} does not adopt {s}, the constraint of {s} in {s} (D-148)", .{ given, want.text, tp.text, target.text });
+        }
+    }
+
+    // @eve-impl a call without a type list: the class of an argument given to a parameter `T` (or an element of a list literal given to `()T`) must adopt the constraint of `T`
+    // @spec spec/syntax/declarations.md#generic-subprograms
+    // @test d44_generic_inferred_constraint
+    fn inferredConstraint(c: *Checker, a: *const Node, arg_ty: ?[]const u8, param_ty: []const u8, target: *const Node) Error!void {
+        for (target.kids[1].kids) |tp| {
+            const want = tp.ty orelse continue;
+            var given: ?[]const u8 = null;
+            if (std.mem.eql(u8, param_ty, tp.text)) {
+                given = arg_ty;
+            } else if (param_ty.len == tp.text.len + 2 and (std.mem.startsWith(u8, param_ty, "()") or std.mem.startsWith(u8, param_ty, "[]")) and
+                std.mem.endsWith(u8, param_ty, tp.text) and (a.tag == .list or a.tag == .array) and a.kids.len > 0)
+            {
+                given = try c.expr(a.kids[0]);
+            }
+            const g = given orelse continue;
+            // only the classes of the program are judged here: a basic type adopts the library traits, anything else is left to the run
+            if (!c.classes.contains(g)) continue;
+            if (!c.adopts(g, want.text)) return c.fail(a, "{s} does not adopt {s}, the constraint of {s} in {s} (D-148)", .{ g, want.text, tp.text, target.text });
         }
     }
 

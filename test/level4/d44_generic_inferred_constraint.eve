@@ -1,0 +1,24 @@
+# a call without a type list is checked against the constraint too: a list of Points given to largest(:T <: Comparable) is a compile error
+** spec: syntax/declarations.md#generic-subprograms
+primary aspect d44_generic_inferred_constraint is
+  class Point = {x: Integer, y: Integer} <: Object;
+
+  function largest(:T <: Comparable)(items: ()T) => (@result: T) is
+    let result := items[1];
+  return;
+
+  process main is
+    print largest((3, 9));
+    new p := Point(x: 1, y: 2);
+    print largest((p, p));
+  return;
+end d44_generic_inferred_constraint;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "Point does not adopt Comparable"
+  ]
+}
+*/

@@ -7,7 +7,7 @@
  "features": [
   {"id": "F-LIB-11", "name": "Logging and observability", "status": "open", "summary": "Structured logs, job events, run reports, trace ids.", "doc": "level4/F-LIB-11.md"},
   {"id": "F-LIB-12", "name": "Testing module `test`", "status": "done", "summary": "Checks that print ok/FAIL, counters, summary that raises.", "doc": "level4/F-LIB-12.md", "spec": ["library/test.md"]},
-  {"id": "F-LNG-11", "name": "Traits, abstract classes, generics", "status": "partial", "summary": "trait, required methods, abstract classes, class Name(:T) with Box(:Integer)(5), constraints (:T <: Comparable), library traits Iterable, Stream, Comparable, Printable.", "doc": "level4/F-LNG-11.md"},
+  {"id": "F-LNG-11", "name": "Traits, abstract classes, generics", "status": "done", "summary": "trait, required methods, abstract classes, class Name(:T) with Box(:Integer)(5), constraints (:T <: Comparable), library traits Iterable, Stream, Comparable, Printable.", "doc": "level4/F-LNG-11.md"},
   {"id": "F-LNG-17", "name": "Stream type", "status": "partial", "summary": "Stream(:T) <: Iterable(:T), read by for with back-pressure; at level 4 Channel(:T) is the stream, and lists get batch(n) and split(k).", "doc": "level4/F-LNG-17.md"},
   {"id": "F-LNG-18", "name": "`Atomic(:T)`", "status": "partial", "summary": "A class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; class Name <: Atomic(:T).", "doc": "level4/F-LNG-18.md"},
   {"id": "F-MTK-01", "name": "Parallel aspects", "status": "done", "summary": "parallel … do start … done, barrier, data rules, errors as a job.", "doc": "level4/F-MTK-01.md"},

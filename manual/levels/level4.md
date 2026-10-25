@@ -8,7 +8,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 |---|---|---|
 | [`F-LIB-11`](#f-lib-11-logging-and-observability) | Logging and observability | planned |
 | [`F-LIB-12`](#f-lib-12-testing-module-test) | Testing module `test` | validated |
-| [`F-LNG-11`](#f-lng-11-traits-abstract-classes-generics) | Traits, abstract classes, generics | drafted |
+| [`F-LNG-11`](#f-lng-11-traits-abstract-classes-generics) | Traits, abstract classes, generics | validated |
 | [`F-LNG-17`](#f-lng-17-stream-type) | Stream type | drafted |
 | [`F-LNG-18`](#f-lng-18-atomict) | `Atomic(:T)` | drafted |
 | [`F-MTK-01`](#f-mtk-01-parallel-aspects) | Parallel aspects | validated |
@@ -41,16 +41,15 @@ Checks that print `ok`/`FAIL`, counters, `summary` that raises (`lib/test.eve`).
 
 ## F-LNG-11 Traits, abstract classes, generics
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `trait`, required methods, abstract classes, `class Name(:T)` with `Box(:Integer)(5)`, constraints `(:T <: Comparable)`, library traits `Iterable`, `Stream`, `Comparable`, `Printable`. Moved from Version 0.2 to Level 4.
 
-*Partial:* traits, abstract classes, generic classes with erased type arguments and the library traits work; a constraint is not checked yet, generic functions wait for Version 0.4.
+*Done:* traits, abstract classes, generic classes and generic subprograms with erased type arguments, the constraint `(:T <: Comparable)` checked at compile time (written or inferred type argument, generic class: tests e58, d44, d45) and the library traits work.
 
 ## Missing
 
-- The constraint `(:T <: Comparable)` is not checked: a violation must be a compile error, exit 65.
-- Generic functions wait for Version 0.4 (backlog).
+Nothing.
 
 An example that runs, and what it prints:
 

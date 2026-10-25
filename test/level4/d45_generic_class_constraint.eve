@@ -1,0 +1,22 @@
+# the type argument of a generic class must adopt the constraint of its parameter: Sorted(:Point) is a compile error
+** spec: syntax/declarations.md#traits-and-generic-classes
+primary aspect d45_generic_class_constraint is
+  class Point = {x: Integer, y: Integer} <: Object;
+  class Sorted(:T <: Comparable) = {item: T} <: Object;
+
+  process main is
+    new ok := Sorted(:Integer)(5);
+    print ok.item;
+    new p := Point(x: 1, y: 2);
+    new bad := Sorted(:Point)(p);
+  return;
+end d45_generic_class_constraint;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "Point does not adopt Comparable"
+  ]
+}
+*/
