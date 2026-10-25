@@ -7,11 +7,11 @@
 const std = @import("std");
 
 /// The tables of the meta database that a script can use, in the order of their bits.
-pub const tables = [_][]const u8{ "zone", "zone_type", "zone_transition", "country", "continent", "meta_info" };
+pub const tables = [_][]const u8{ "zone", "zone_type", "zone_transition", "country", "continent", "meta_info", "zone_kind", "zone_span" };
 
 /// A set of tables of the meta database, one bit per table of `tables`.
 pub const Need = struct {
-    mask: u8 = 0,
+    mask: u16 = 0,
 
     pub const all: Need = .{ .mask = (1 << tables.len) - 1 };
 
@@ -20,7 +20,7 @@ pub const Need = struct {
     }
 
     pub fn has(self: Need, index: usize) bool {
-        return self.mask & (@as(u8, 1) << @intCast(index)) != 0;
+        return self.mask & (@as(u16, 1) << @intCast(index)) != 0;
     }
 
     pub fn merge(a: Need, b: Need) Need {
@@ -44,7 +44,7 @@ pub fn ofModule(path: []const u8) Need {
     rest = rest[1..];
     const dot = std.mem.indexOfScalar(u8, rest, '.') orelse rest.len;
     const name = rest[0..dot];
-    if (std.mem.eql(u8, name, "zone")) return ofNames(&.{ "zone", "zone_type", "zone_transition" });
+    if (std.mem.eql(u8, name, "zone")) return ofNames(&.{ "zone", "zone_type", "zone_transition", "zone_kind", "zone_span" });
     if (std.mem.eql(u8, name, "meta")) return ofNames(&.{"meta_info"});
     if (std.mem.eql(u8, name, "country")) return ofNames(&.{ "country", "continent" });
     return .{};
@@ -52,7 +52,7 @@ pub fn ofModule(path: []const u8) Need {
 
 fn ofNames(names: []const []const u8) Need {
     var n: Need = .{};
-    for (names) |name| n.mask |= @as(u8, 1) << @intCast(indexOf(name).?);
+    for (names) |name| n.mask |= @as(u16, 1) << @intCast(indexOf(name).?);
     return n;
 }
 
@@ -86,7 +86,7 @@ pub fn ofHints(src: []const u8, bad: *Bad) error{UnknownTable}!Need {
                 bad.* = .{ .line = line_no, .name = name };
                 return error.UnknownTable;
             };
-            need.mask |= @as(u8, 1) << @intCast(index);
+            need.mask |= @as(u16, 1) << @intCast(index);
         }
     }
     return need;

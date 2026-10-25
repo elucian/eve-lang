@@ -2,7 +2,7 @@
 //! @spec spec/library/meta.md
 //! @feature F-LIB-06
 //! @decision D-222
-//! @tests test/level5/e129_meta_zone, test/level5/e130_meta_zone_table
+//! @tests test/level5/e129_meta_zone, test/level5/e130_meta_zone_table, test/level5/e162_zone_spans
 //! lib/meta/meta.db is a SQLite file (tools/meta/build_meta.py) read from disk: the tables a run needs are copied into a memory connection (D-226); `EVE_META_DB`, a path, replaces it with a newer file. Zones are read once into memory (evecm zone.zig); a lookup is a binary search.
 const std = @import("std");
 const Io = std.Io;
@@ -10,6 +10,7 @@ const ast = @import("evecm").ast;
 const interp = @import("interp.zig");
 const sqlite = @import("db/sqlite.zig");
 const meta_need = @import("evecm").meta_need;
+const zonespans = @import("zonespans.zig");
 
 const Node = ast.Node;
 const Interp = interp.Interp;
@@ -24,11 +25,11 @@ const err_argument = interp.err_argument;
 const file_name = "meta/meta.db";
 
 /// The tables of the zone core and of `meta.info`: what every zone lookup reads.
-const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u8, 1) << 3) & ~(@as(u8, 1) << 4) };
+const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) };
 
 /// The copy made by the background thread: its connection, the tables in it, or the message of its failure.
 var prepared: ?sqlite.Db = null;
-var prepared_mask: u8 = 0;
+var prepared_mask: u16 = 0;
 var prepared_failure: ?[]const u8 = null;
 var loader: ?std.Thread = null;
 /// The file the copies come from, found once.
@@ -39,10 +40,12 @@ const alloc = std.heap.page_allocator;
 // @invariant `db`, `loaded_mask` and `file_path` are read and written only with `lock` held; the connection is never closed, and the thread's copy is taken over under the lock after its join
 var lock: std.atomic.Value(bool) = .init(false);
 var db: ?sqlite.Db = null;
-var loaded_mask: u8 = 0;
+var loaded_mask: u16 = 0;
 var zones: std.StringHashMapUnmanaged(*Entry) = .empty;
 
-const Entry = struct { name: []const u8, id: u32 = 0 };
+/// `db_id` is the id of the name in the spans (zonespans.zig): 0 until asked, `no_db_id` when the spans have no such name.
+const Entry = struct { name: []const u8, id: u32 = 0, db_id: u32 = 0 };
+const no_db_id: u32 = std.math.maxInt(u32);
 
 /// The local time of a zone at an instant, and the instants of a local time: the answers of the zone module (D-229).
 pub const Local = struct { utoff: i32, isdst: bool, abbr: []const u8 };
@@ -79,16 +82,66 @@ pub fn fixedOffset(id: u32) i32 {
     return if (id == 0) 0 else @as(i32, @intCast(id & 0x7fff_ffff)) - 65536;
 }
 
-/// Calls a function of the zone module (`lib/meta/zone.eve`, a hidden import when the script uses zones, D-230) with the arguments.
-fn zoneCall(it: *Interp, name: []const u8, args: []const Value) Signal!Value {
+/// The functions of the zone module found for the run `owner`: a module lives to the end of its run, so the lookup by name is made once per thread and run.
+// @invariant `owner` is the root interpreter of the run; a function value stays valid while the run lives (the module scope is pinned)
+const ZoneFns = struct { owner: ?*const Interp = null, local_at: ?*interp.Func = null, resolve_local: ?*interp.Func = null, exists: ?*interp.Func = null };
+threadlocal var zone_fns: ZoneFns = .{};
+
+fn zoneFn(it: *Interp, name: []const u8) Signal!*interp.Func {
+    const owner = it.base();
+    if (zone_fns.owner != owner) zone_fns = .{ .owner = owner };
+    const slot: *?*interp.Func = if (std.mem.eql(u8, name, "local_at")) &zone_fns.local_at else if (std.mem.eql(u8, name, "resolve_local")) &zone_fns.resolve_local else &zone_fns.exists;
+    if (slot.*) |f| return f;
     const known = it.modules orelse return it.fail("the time zones: no module table", .{});
     const node = known.get("lib/meta|zone") orelse return it.fail("the time zones need the module lib/meta/zone (a hidden import, D-230)", .{});
     const m = try it.instantiate(node);
     const f = try it.moduleMember(m, name);
     if (f != .func) return it.fail("zone.{s} is not a function", .{name});
+    slot.* = f.func;
+    return f.func;
+}
+
+/// Calls a function of the zone module (`lib/meta/zone.eve`, a hidden import when the script uses zones, D-230) with the arguments.
+fn zoneCall(it: *Interp, name: []const u8, args: []const Value) Signal!Value {
+    const f = try zoneFn(it, name);
     var call_args: [4]interp.Arg = undefined;
     for (args, 0..) |a, k| call_args[k] = .{ .value = a };
-    return it.invokeWith(f.func, null, call_args[0..args.len]);
+    return it.invokeWith(f, null, call_args[0..args.len]);
+}
+
+// The spans of the zones, read once from the meta database (zonespans.zig, design/design-zone-speed.md): a lookup that they answer does not call Eve.
+// @invariant `span_tables` is written once, with the lock held, after the tables are complete; `span_state` is 0 (not tried), 1 (loaded) or 2 (no spans: every lookup goes to the Eve code)
+var span_tables: ?*const zonespans.Tables = null;
+var span_state: std.atomic.Value(u8) = .init(0);
+
+/// The spans, loaded at the first lookup; null when they can not be used (`EVE_ZONE_SLOW` set, or the tables are missing): then the Eve code answers.
+// @feature F-LIB-06
+// @decision D-229
+// @see code/evevm/src/zonespans.zig:Tables
+fn spans(it: *Interp) ?*const zonespans.Tables {
+    switch (span_state.load(.acquire)) {
+        1 => return span_tables,
+        2 => return null,
+        else => {},
+    }
+    acquire();
+    defer release();
+    if (span_state.load(.acquire) != 0) return span_tables;
+    var loaded: ?*const zonespans.Tables = null;
+    if (std.c.getenv("EVE_ZONE_SLOW") == null) {
+        if (connect(it, zone_core)) |conn| {
+            loaded = zonespans.load(alloc, conn) catch null;
+        } else |_| {}
+    }
+    span_tables = loaded;
+    span_state.store(if (loaded == null) 2 else 1, .release);
+    return loaded;
+}
+
+/// The id of the entry in the spans; null when there are none for it.
+fn spanId(t: *const zonespans.Tables, e: *Entry) ?u32 {
+    if (e.db_id == 0) e.db_id = t.idOf(e.name) orelse no_db_id;
+    return if (e.db_id == no_db_id) null else e.db_id;
 }
 
 /// The local time of a zone value at the UTC instant `t` (seconds). A fixed offset has no abbreviation: it is "".
@@ -98,7 +151,9 @@ fn zoneCall(it: *Interp, name: []const u8, args: []const Value) Signal!Value {
 // @decision D-229
 pub fn localAt(it: *Interp, id: u32, t: i64) Signal!Local {
     if (isFixed(id)) return .{ .utoff = fixedOffset(id), .isdst = false, .abbr = "" };
-    const got = try zoneCall(it, "local_at", &.{ try it.newStr(slots[id - 1].?.name), .{ .int = t } });
+    const e = slots[id - 1].?;
+    if (spans(it)) |tables| if (spanId(tables, e)) |zid| if (tables.local(zid, t)) |l| return .{ .utoff = l.utoff, .isdst = l.isdst, .abbr = l.abbr };
+    const got = try zoneCall(it, "local_at", &.{ try it.newStr(e.name), .{ .int = t } });
     const items = got.list.elems();
     return .{ .utoff = @intCast(Interp.intOf(items[0])), .isdst = items[1].bool, .abbr = try it.text(items[2]) };
 }
@@ -106,12 +161,39 @@ pub fn localAt(it: *Interp, id: u32, t: i64) Signal!Local {
 /// The instants of a local time (seconds since 1970-01-01T00:00:00 local) in a zone value.
 pub fn resolveLocal(it: *Interp, id: u32, local: i64) Signal!Resolve {
     if (isFixed(id)) return .{ .one = local - fixedOffset(id) };
-    const got = try zoneCall(it, "resolve_local", &.{ try it.newStr(slots[id - 1].?.name), .{ .int = local } });
+    const e = slots[id - 1].?;
+    if (spans(it)) |tables| if (spanId(tables, e)) |zid| if (tables.resolve(zid, local)) |r| return switch (r) {
+        .one => |v| .{ .one = v },
+        .two => |v| .{ .two = .{ .first = v.first, .second = v.second } },
+        .gap => |v| .{ .gap = .{ .before = v.before, .after = v.after } },
+    };
+    const got = try zoneCall(it, "resolve_local", &.{ try it.newStr(e.name), .{ .int = local } });
     const items = got.list.elems();
     return switch (Interp.intOf(items[0])) {
         1 => .{ .one = Interp.intOf(items[1]) },
         2 => .{ .two = .{ .first = Interp.intOf(items[1]), .second = Interp.intOf(items[2]) } },
         else => .{ .gap = .{ .before = @intCast(Interp.intOf(items[1])), .after = @intCast(Interp.intOf(items[2])) } },
+    };
+}
+
+/// The externals of `lib/meta/zone.eve` that read the spans: the answer is null when the spans have none (a fixed offset written as a name, a name that is not in the database, an instant beyond the horizon), and the Eve code goes on.
+const SpanFn = enum { span_offset, span_dst, span_abbr };
+
+pub fn fastId(name: []const u8) ?u16 {
+    const f = std.meta.stringToEnum(SpanFn, name) orelse return null;
+    return @intFromEnum(f);
+}
+
+// @perf hot
+// @eve-impl zone.span_offset, zone.span_dst, zone.span_abbr (arguments: the name of the zone, the UTC second)
+pub fn fastCall(it: *Interp, id: u16, args: []const Value) Signal!Value {
+    const tables = spans(it) orelse return .nil;
+    const zid = tables.idOf(try it.text(args[0])) orelse return .nil;
+    const l = tables.local(zid, Interp.intOf(args[1])) orelse return .nil;
+    return switch (@as(SpanFn, @enumFromInt(id))) {
+        .span_offset => .{ .int = l.utoff },
+        .span_dst => .{ .bool = l.isdst },
+        .span_abbr => try it.newStr(l.abbr),
     };
 }
 
@@ -156,8 +238,8 @@ pub fn zoneIdOf(it: *Interp, text: []const u8) Signal!?u32 {
     const known = zones.get(text);
     release();
     if (known) |e| return e.id;
-    const exists = try zoneCall(it, "exists", &.{try it.newStr(text)});
-    if (!exists.bool) return null;
+    const exists = if (spans(it)) |tables| tables.idOf(text) != null else (try zoneCall(it, "exists", &.{try it.newStr(text)})).bool;
+    if (!exists) return null;
     const e = try alloc.create(Entry);
     e.* = .{ .name = try dup(text) };
     acquire();
@@ -223,14 +305,14 @@ fn copyTable(d: *sqlite.Db, name: []const u8) !void {
 
 /// Copies the tables of `mask` from the file at `path` into `d`, which must be a memory database; the file is attached only for the copy.
 /// The parents of a table come first (a foreign key is checked on the insert), and a table that needs a parent takes it too.
-fn copyTables(d: *sqlite.Db, path: []const u8, mask: u8) !u8 {
+fn copyTables(d: *sqlite.Db, path: []const u8, mask: u16) !u16 {
     // the connection is read only for the SQL door (D-222): writes are allowed only while the tables are copied
     try d.exec("PRAGMA query_only = OFF");
     defer d.exec("PRAGMA query_only = ON") catch {};
     const attach = try std.fmt.allocPrintSentinel(alloc, "ATTACH '{s}' AS src", .{path}, 0);
     try d.exec(attach);
     defer d.exec("DETACH src") catch {};
-    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "meta_info" };
+    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "zone_kind", "zone_span", "meta_info" };
     var want = mask;
     if (want & bitOf("zone") != 0) want |= bitOf("country") | bitOf("continent");
     if (want & bitOf("country") != 0) want |= bitOf("continent");
@@ -242,8 +324,8 @@ fn copyTables(d: *sqlite.Db, path: []const u8, mask: u8) !u8 {
     return want;
 }
 
-fn bitOf(name: []const u8) u8 {
-    return @as(u8, 1) << @intCast(meta_need.indexOf(name).?);
+fn bitOf(name: []const u8) u16 {
+    return @as(u16, 1) << @intCast(meta_need.indexOf(name).?);
 }
 
 /// Reads the file in a background thread at optimization level 5 and above (D-226); the copy waits for the join in `connect`.

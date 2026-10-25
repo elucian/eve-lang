@@ -17,7 +17,7 @@ The Eve machine carries a small read only database of **reference data** that do
 
 ## meta.info
 
-`meta.info(name)` gives an entry of the table `meta_info` as a `String`: `schema` (the version of the tables, `2`), `tzdata` (the release of the IANA database, such as `2026e`), `cldr` (the release of Unicode CLDR, `49.0.0`), `zones` (345 time zones), `zone_links` (253 other names), `countries` (249), `builder`. An unknown name is the error `$err_key` (11).
+`meta.info(name)` gives an entry of the table `meta_info` as a `String`: `schema` (the version of the tables, `3`), `tzdata` (the release of the IANA database, such as `2026e`), `cldr` (the release of Unicode CLDR, `49.0.0`), `zones` (345 time zones), `zone_links` (253 other names), `countries` (249), `builder`. An unknown name is the error `$err_key` (11).
 
 ```eve
 from lib/meta use (meta);
@@ -64,12 +64,14 @@ new cc := meta.query!(:Name)("select c.name as name from country c join continen
 
 | Table | Columns | Rules |
 |---|---|---|
-| `meta_info` | `name`, `value` | the version of the schema (`2`) and of every source: `tzdata`, `cldr` |
+| `meta_info` | `name`, `value` | the version of the schema (`3`) and of every source: `tzdata`, `cldr` |
 | `continent` | `code` (two letters), `name` | seven rows: `AF` Africa, `AN` Antarctica, `AS` Asia, `EU` Europe, `NA` North America, `OC` Oceania, `SA` South America |
 | `country` | `code` (ISO 3166-1 alpha-2), `alpha3`, `numeric` (three digits, as text), `name` (English, CLDR), `continent` | the 249 codes officially assigned; `continent` is a foreign key to `continent`; the continent of a country is the region of the CLDR containment tree that holds it (so Turkey, Cyprus and Georgia are in Asia, Russia in Europe, Greenland in North America, Bouvet Island in South America); Antarctica is its own continent |
 | `zone` | `id`, `name`, `link_of`, `country`, `position`, `note`, `rule` | a name of the time zone database. `link_of` is a foreign key to the zone a link points to. `country` is a foreign key to `country`: the place that the file `zone.tab` of the database gives to the name, null for the names that are no place (`UTC`, `EST5EDT`, `Etc/GMT+5`, `US/Eastern`). `position` is ISO 6709 (`+4426+02606`), `note` tells which part of the country when it has several zones. `rule` is the POSIX text of the future; empty when the zone has none |
 | `zone_type` | `zone` (foreign key), `idx`, `utoff` (seconds), `isdst` (0 or 1), `abbr` | the kinds of local time of a zone |
 | `zone_transition` | `zone` (foreign key), `at` (UTC seconds since 1970), `idx` | the type that starts at `at`; before the first one the type 0 applies |
+| `zone_kind` | `id` (from 1), `utoff` (seconds), `isdst` (0 or 1), `abbr` | each distinct kind of local time once; derived from the types and the rules of the zones |
+| `zone_span` | `zone` (foreign key), `at` (UTC seconds, the first row of a zone is the start of time), `kind` (key of `zone_kind`) | the kind in force from `at` to the `at` of the next row; derived from the transitions and from the POSIX rule of the zone, year by year to 2100; `kind` 0 on the row at 2100 of a zone that has daylight time: from there on the rule decides |
 
 A link has a row in `zone` and none in `zone_type` and `zone_transition`: its data is that of `link_of`. The foreign keys are real: `pragma foreign_key_check` on the file gives no row, and the builder refuses to write a file that fails it. The zones of a country are `select name from zone where country = 'RO'`; its continent is `select k.name from country c join continent k on k.code = c.continent where c.code = 'RO'`.
 

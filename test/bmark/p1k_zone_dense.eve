@@ -1,0 +1,22 @@
+# level 1 performance: the offset of a time zone at consecutive instants, from the meta database
+** perf: zone.offset for 20,000 consecutive seconds from 2024-03-31T00:00:00Z (the daylight change of Europe/Bucharest falls inside) in three zones: Europe/Bucharest, America/New_York and Australia/Lord_Howe
+primary aspect p1k_zone_dense is
+  from lib/meta use (zone);
+
+  process main is
+    new names := ("Europe/Bucharest", "America/New_York", "Australia/Lord_Howe");
+    new total := 0;
+    new base := Instant.parse("2024-03-31T00:00:00Z");
+    for z in (1..3) do
+      for k in (0..19999) do
+        let total += time.millis(zone.offset(names[z], base + 1s * k)) / 1000;
+      done;
+    done;
+    print total;
+  return;
+end p1k_zone_dense;
+/*@expect
+{
+  "stdout": ["707040000"]
+}
+*/

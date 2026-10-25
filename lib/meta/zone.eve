@@ -14,6 +14,11 @@ module zone is
   new transition_cache := {:};
   new kind_cache := {:};
 
+  ** The local time of the spans in memory (code/evevm/src/zonespans.zig, read from the tables zone_span and zone_kind): the offset, daylight flag and abbreviation of a zone name at a number of seconds since the epoch; null when the spans have no answer (a fixed offset, a name that is not in the database, an instant beyond the horizon of 2100), then the code below decides.
+  external function span_offset(name: String, at: Integer) => (@result: Integer?);
+  external function span_dst(name: String, at: Integer) => (@result: Logic?);
+  external function span_abbr(name: String, at: Integer) => (@result: String?);
+
   ** A fixed offset written as a zone name ("Z", "+05:30", "-03"): [is a fixed offset, seconds east of UTC]. A zone of the database is never such a name.
   function fixed_of(text: String) => (@result: List) is
     let result := [False, 0];
@@ -171,6 +176,11 @@ module zone is
   ** The offset from UTC that the zone has at an instant, as a Duration (daylight time included).
   function offset(name: Any, at: Any) => (@result: Duration) is
     new who := name_of("zone.offset", name);
+    new q := span_offset(who, seconds_of("zone.offset", at));
+    if q <> null do
+      let result := q * 1s;
+      exit;
+    done;
     new fx := fixed_of(who);
     if fx[1] do
       let result := fx[2] * 1s;
@@ -187,6 +197,11 @@ module zone is
   ** The abbreviation the zone uses at an instant: "EET", "EEST", "+0330".
   function abbreviation(name: Any, at: Any) => (@result: String) is
     new who := name_of("zone.abbreviation", name);
+    new q := span_abbr(who, seconds_of("zone.abbreviation", at));
+    if q <> null do
+      let result := q;
+      exit;
+    done;
     new fx := fixed_of(who);
     if fx[1] do
       let result := who;
@@ -203,6 +218,11 @@ module zone is
   ** Is daylight saving time in force in the zone at an instant.
   function is_dst(name: Any, at: Any) => (@result: Logic) is
     new who := name_of("zone.is_dst", name);
+    new q := span_dst(who, seconds_of("zone.is_dst", at));
+    if q <> null do
+      let result := q;
+      exit;
+    done;
     new fx := fixed_of(who);
     if fx[1] do
       let result := False;

@@ -144,13 +144,13 @@
     [2, "later-sub-steps-not-in-this-page", 166, "Later sub-steps (not in this page)"],
     [2, "rules-of-import-and-conversion", 170, "Rules of import and conversion"]
    ]},
-  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 90, "bytes": 9271, "features": [], "sections": [
+  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 92, "bytes": 9813, "features": [], "sections": [
     [2, "the-file", 7, "The file"],
     [2, "metainfo", 18, "meta.info"],
     [2, "zone", 27, "zone"],
     [3, "how-the-tables-are-used", 51, "How the tables are used"],
     [2, "sql", 55, "sql"],
-    [2, "loading-the-tables", 76, "Loading the tables"]
+    [2, "loading-the-tables", 78, "Loading the tables"]
    ]},
   {"path": "library/net.md", "title": "The module `net`", "status": "draft", "summary": "TCP for Eve code: a client connection and a listening server, as text. The module is the base of rpc, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a h", "lines": 54, "bytes": 3475, "features": ["F-NET-02", "F-NET-10"], "sections": [
     [2, "functions", 28, "Functions"],

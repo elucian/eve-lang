@@ -10,7 +10,7 @@ The sources (all permissive licences):
   cldr-core    Unicode CLDR as JSON (Unicode licence): supplemental/territoryContainment.json, codeMappings.json
   cldr-names   CLDR localenames (the same licence): main/en/territories.json
 
-The file is deterministic: the same sources give the same bytes. Schema version 2 (D-223); a table or a column that was released is never
+The file is deterministic: the same sources give the same bytes. Schema version 3 (D-223; version 3 adds zone_kind and zone_span); a table or a column that was released is never
 changed, new data comes as new tables or columns:
 
   meta_info(name, value)                   the schema version, the sources and their releases
@@ -20,10 +20,15 @@ changed, new data comes as new tables or columns:
                                            zone.tab gives to the name (null for the names that are no place: UTC, EST5EDT, Etc/GMT+5, US/Eastern)
   zone_type(zone, idx, utoff, isdst, abbr) the kinds of local time of a zone (TZif types)
   zone_transition(zone, at, idx)           the instants (UTC seconds) where a zone changes to the type idx; before the first one: the type 0
+  zone_kind(id, utoff, isdst, abbr)        derived (tools/meta/zone_spans.py): each kind of local time once
+  zone_span(zone, at, kind)                derived: the spans of a zone in order, transitions then the POSIX rule to the year 2100; kind 0 at the horizon: the rule decides
 """
 import argparse, io, json, os, sqlite3, struct, sys, tarfile, urllib.request, zipfile
 
-SCHEMA_VERSION = 2
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import zone_spans
+
+SCHEMA_VERSION = 3
 TZDATA_VERSION = '2026.5'
 CLDR_VERSION = '49.0.0'
 
@@ -157,6 +162,7 @@ create table zone_transition (
   primary key (zone, at)
 ) without rowid;
 """
+SCHEMA += zone_spans.SCHEMA
 
 
 def build(tzdata, cldr_core, cldr_names, out):
@@ -180,6 +186,7 @@ def build(tzdata, cldr_core, cldr_names, out):
 
     # time zones
     ids = {}
+    span_rows = []
     for name in sorted(zones):
         data = open(os.path.join(zoneinfo, *name.split('/')), 'rb').read()
         trans, types, footer = parse_tzif(data)
@@ -188,6 +195,7 @@ def build(tzdata, cldr_core, cldr_names, out):
         ids[name] = zid
         db.executemany('insert into zone_type values (?, ?, ?, ?, ?)', [(zid, i, u, d, a) for i, (u, d, a) in enumerate(types)])
         db.executemany('insert into zone_transition values (?, ?, ?)', [(zid, at, idx) for at, idx in trans])
+        span_rows.append((zid, trans, types, footer))
     target_of = {name: target for target, name in links}
     for target, name in sorted(links, key=lambda l: l[1]):
         t = target
@@ -196,6 +204,9 @@ def build(tzdata, cldr_core, cldr_names, out):
         if t not in ids:
             raise SystemExit('link %s -> %s: no zone %s' % (name, target, t))
         db.execute('insert into zone (name, link_of) values (?, ?)', (name, ids[t]))
+    nkinds, nspans, spans = zone_spans.write(db, span_rows)
+    checked = zone_spans.check({n: spans[i] for n, i in ids.items()})
+    print('zone_span: %d kinds, %d spans; %s' % (nkinds, nspans, ('%d instants agree with zoneinfo' % checked) if checked >= 0 else 'zoneinfo has no data: not checked'))
     # the place of a name: zone.tab (country, position, name, note); every name of zone.tab is a zone or a link of the database
     placed = 0
     for country, position, name, note in read_tab(os.path.join(zoneinfo, 'zone.tab'), 4):
@@ -209,6 +220,7 @@ def build(tzdata, cldr_core, cldr_names, out):
         ('cldr', load_json(os.path.join(cldr_core, 'package.json'))['version']),
         ('zones', str(len(zones))),
         ('zone_links', str(len(links))),
+        ('span_horizon', str(zone_spans.SPAN_HORIZON)),
         ('countries', str(len(iso))),
         ('builder', 'tools/meta/build_meta.py'),
     ])

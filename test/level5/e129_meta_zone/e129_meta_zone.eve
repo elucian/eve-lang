@@ -82,7 +82,7 @@ primary aspect e129_meta_zone is
     expect zone.names().contains("Asia/Calcutta");
     expect zone.names().sort() == zone.names();
     expect meta.info("tzdata") == "2026e";
-    expect meta.info("schema") == "2";
+    expect meta.info("schema") == "3";
     expect meta.info("zones") == "345";
     expect meta.info("zone_links") == "253";
     expect meta.info("countries") == "249";

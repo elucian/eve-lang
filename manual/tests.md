@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-556 of 556 tests pass; last run 2026-10-25 13:19.
+556 of 557 tests pass; last run 2026-10-25 14:34.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
@@ -13,17 +13,19 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Level 2 | 81 | 81 | 0 | 100% | 2026-10-25 |
 | Level 3 | 81 | 81 | 0 | 100% | 2026-10-25 |
 | Level 4 | 50 | 50 | 0 | 100% | 2026-10-25 |
-| Level 5 | 186 | 186 | 0 | 100% | 2026-10-25 |
+| Level 5 | 187 | 186 | 1 | 99% | 2026-10-25 |
 | Level 6 | 14 | 14 | 0 | 100% | 2026-10-25 |
 | Level 7 | 2 | 2 | 0 | 100% | 2026-10-25 |
 | Smoke | 21 | 21 | 0 | 100% | 2026-10-25 |
 | Bytecode | 24 | 24 | 0 | 100% | 2026-10-25 |
 | Scaffold | 1 | 1 | 0 | 100% | 2026-10-20 |
-| **All** | **556** | **556** | **0** | **100%** |  |
+| **All** | **557** | **556** | **1** | **99%** |  |
 <!-- /GEN:summary -->
 
 ## Tests that do not pass
 
 <!-- GEN:failing -->
-None: every test of the last run passes.
+| Suite | Test | Status | What it tests | Reason |
+|---|---|---|---|---|
+| Level 5 | `e129_meta_zone` | FAIL | the library zone over the meta database: exists, canonical, offset, abbreviation, is_dst, names; the entries of meta.info; errors | exit code 2, expected 0; stdout differs |
 <!-- /GEN:failing -->

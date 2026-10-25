@@ -1,0 +1,61 @@
+# the spans of the zones in memory against the Eve code: every day of 1999, 2024 and 2090 at four local times (gaps and repeated hours included) in 20 zones with daylight time and with odd changes; the expected sums were made by the Eve code alone (EVE_ZONE_SLOW=1)
+** spec: library/meta.md#zone
+primary aspect e162_zone_spans is
+  function made(d: Date, t: Time, z: Zone) => (@r: Integer) is
+    new dt := time.make(d, t, z);
+    let r := time.millis(time.instant_of(dt) - Instant.epoch);
+  recover
+    let r := -$error.code;
+  return;
+
+  process main is
+    new names := ("Europe/Bucharest", "America/New_York", "Australia/Lord_Howe", "Europe/Dublin", "America/Santiago", "Asia/Tehran", "Africa/Casablanca", "America/Havana", "Pacific/Apia", "Asia/Gaza", "Australia/Sydney", "America/Sao_Paulo", "Asia/Tokyo", "Europe/London", "Pacific/Chatham", "America/St_Johns", "Antarctica/Troll", "Asia/Kolkata", "Pacific/Kiritimati", "America/Nuuk");
+    new hours := (0, 1, 2, 3);
+    new y := 1999;
+    new sum := 0;
+    new z := time.zone("UTC");
+    new d := time.date(2000, 1, 1);
+    for name in names do
+      let z := time.zone(name);
+      let sum := 0;
+      for yy in (0..2) do
+        let y := (1999, 2024, 2090)[yy + 1];
+        for m in (1..12) do
+          for day in (1..time.days_in_month(y, m)) do
+            let d := time.date(y, m, day);
+            for h in hours do
+              let sum := (sum * 31 + made(d, time.clock(h, 30, 0, 0), z)) % 1000000007;
+            done;
+          done;
+        done;
+      done;
+      print name + " {sum}";
+    done;
+  return;
+end e162_zone_spans;
+/*@expect
+{
+  "stdout": [
+    "Europe/Bucharest 58900278",
+    "America/New_York 229112869",
+    "Australia/Lord_Howe 453592493",
+    "Europe/Dublin 690286235",
+    "America/Santiago 362383314",
+    "Asia/Tehran 168167614",
+    "Africa/Casablanca 434552859",
+    "America/Havana 929517324",
+    "Pacific/Apia 125725534",
+    "Asia/Gaza 325728318",
+    "Australia/Sydney 890783295",
+    "America/Sao_Paulo 849709471",
+    "Asia/Tokyo 565854201",
+    "Europe/London 690286235",
+    "Pacific/Chatham 866576430",
+    "America/St_Johns 34871114",
+    "Antarctica/Troll 859190711",
+    "Asia/Kolkata 97995457",
+    "Pacific/Kiritimati 519938116",
+    "America/Nuuk 426261234"
+  ]
+}
+*/
