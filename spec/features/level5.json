@@ -22,7 +22,7 @@
   {"id": "F-LIB-06", "name": "Time and dates", "status": "partial", "summary": "now, parse, format, zones, durations.", "doc": "level5/F-LIB-06.md"},
   {"id": "F-LIB-07", "name": "Shell commands", "status": "partial", "summary": "call with pipes, and a safe run(cmd, args, cwd).", "doc": "level5/F-LIB-07.md", "spec": ["library/os.md"]},
   {"id": "F-LIB-08", "name": "Secrets", "status": "partial", "summary": "A Secret type and secret.get from environment, file or vault.", "doc": "level5/F-LIB-08.md", "spec": ["library/data-language.md#secrets"]},
-  {"id": "F-LIB-09", "name": "Compression and archives", "status": "open", "summary": "Gzip, zip, stream codecs (manifest).", "doc": "level5/F-LIB-09.md"},
+  {"id": "F-LIB-09", "name": "Compression and archives", "status": "partial", "summary": "Gzip, zip, stream codecs (manifest).", "doc": "level5/F-LIB-09.md"},
   {"id": "F-LNG-12", "name": "Generators", "status": "done", "summary": "Methods with yield, Generator(:T), use in for and builders.", "doc": "level5/F-LNG-12.md"},
   {"id": "F-LNG-13", "name": "Data types for ETL", "status": "partial", "summary": "Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid.", "doc": "level5/F-LNG-13.md"},
   {"id": "F-LNG-14", "name": "Record types and optional values", "status": "partial", "summary": "Typed records for rows, JSON objects and messages; T?. State: records, null in plain fields and printing of null are tested; the full optional type is in spec/library/data-language.md.", "doc": "level5/F-LNG-14.md", "spec": ["library/data-language.md"]},

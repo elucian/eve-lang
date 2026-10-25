@@ -51,7 +51,7 @@ One module `fs` holds files, folders and paths (not two modules `fs` and `path`)
 | `fs.read!(path)`, `fs.read_bytes!(path)` | the whole text (`String`) or content (`Bytes`) of a file; a read carries `!` |
 | `fs.lines!(path, encoding: …)` | the lines as a `Stream(:String)`, read by blocks |
 | `fs.write(path, text)`, `fs.append(path, text)`, `fs.write_bytes(path, bytes)` | write; no result, no `!` |
-| `fs.list!(dir)`, `fs.glob!(pattern)` | the names in a folder, a pattern like `in/*.csv`; sorted by name in the byte order of UTF-8, so a run gives the same order on every system (`fs.list!` today, test e84; `fs.glob!` when it is written) |
+| `fs.list!(dir)`, `fs.glob!(pattern)` | the names in a folder, a pattern like `in/*.csv`; `*` is any run of characters and `?` one character, inside one segment of the path; a plain name is given when it exists; sorted by name in the byte order of UTF-8, so a run gives the same order on every system (`fs.list!` test e84, `fs.glob!` test e151) |
 | `fs.exists!(path)`, `fs.size!(path)`, `fs.remove(path)`, `fs.move(from, to)`, `fs.make_dir(path)` | the usual operations |
 | `fs.join(a, b)`, `a / b`, `fs.name(p)`, `fs.parent(p)`, `fs.extension(p)` | path functions, pure, no I/O |
 
@@ -87,7 +87,7 @@ A `Secret` is a value that never appears in a log, a trace or an error message (
 
 ## Compression
 
-A gzip reader in level 5: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!`, and `gzip.open!(path)` gives a `Stream(:Bytes)`. Zip and writers are level 6.
+A gzip reader in level 5: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!` (test e152); a file that is not gzip is `$err_format`. *Not built yet:* `gzip.open!(path)` as a `Stream(:Bytes)` (it waits for the streams of Bytes, TD-83). Zip and writers are level 6.
 
 ## System library modules
 

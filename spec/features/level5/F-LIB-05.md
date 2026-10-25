@@ -4,5 +4,5 @@ JSON and CSV read/write, decode into records; later XML, Parquet. *State:* JSON,
 
 ## Missing
 
-- The write side of every format; round trip tests.
+- Built: round trips of CSV and JSON records (e153). Not checked in this step: the write side of TXT.
 - XML and Parquet move to the backlog unless the author asks.

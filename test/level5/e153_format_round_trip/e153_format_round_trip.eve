@@ -1,0 +1,27 @@
+# records written as CSV and as JSON are read back equal: the same rows, the same values, in the same order (data-language.md#files-and-paths)
+** spec: library/data-language.md#files-and-paths
+primary aspect e153_format_round_trip is
+  class Item = {name: String, qty: Integer} is
+  end Item;
+
+  process main is
+    fs.make_dir("out");
+    new rows := (Item(name: "a", qty: 1), Item(name: "b, c", qty: 2));
+    csv.write("out/rows.csv", rows);
+    json.write("out/rows.json", rows);
+    new from_csv := csv.read!(:Item)("out/rows.csv");
+    new from_json := json.read!(:Item)("out/rows.json");
+    for r in from_csv do print "{r.name}|{r.qty}"; done;
+    for r in from_json do print "{r.name}|{r.qty}"; done;
+  return;
+end e153_format_round_trip;
+/*@expect
+{
+  "stdout": [
+    "a|1",
+    "b, c|2",
+    "a|1",
+    "b, c|2"
+  ]
+}
+*/

@@ -19,11 +19,11 @@ Each level has a page of its own, with every feature described and an example th
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 5 | 10 | 1 | 16 |
 | Level 4 | 5 | 8 | 2 | 15 |
-| Level 5 | 7 | 14 | 8 | 29 |
+| Level 5 | 7 | 15 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **50** | **47** | **49** | **146** |
+| **All** | **50** | **48** | **48** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -133,7 +133,7 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | `F-LIB-06` | Time and dates | drafted | now, parse, format, zones, durations. |
 | `F-LIB-07` | Shell commands | drafted | call with pipes, and a safe run(cmd, args, cwd). |
 | `F-LIB-08` | Secrets | drafted | A Secret type and secret.get from environment, file or vault. |
-| `F-LIB-09` | Compression and archives | planned | Gzip, zip, stream codecs (manifest). |
+| `F-LIB-09` | Compression and archives | drafted | Gzip, zip, stream codecs (manifest). |
 | `F-LNG-12` | Generators | validated | Methods with yield, Generator(:T), use in for and builders. |
 | `F-LNG-13` | Data types for ETL | drafted | Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid. |
 | `F-LNG-14` | Record types and optional values | drafted | Typed records for rows, JSON objects and messages; T?. State: records, null in plain fields and printing of null are tested; the full optional type is in spec/library/data-language.md. |

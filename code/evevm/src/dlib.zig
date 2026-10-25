@@ -32,6 +32,8 @@ const Node = ast.Node;
 const Interp = interp.Interp;
 const bytesfn = @import("interp/bytesfn.zig");
 const uuidlib = @import("uuidlib.zig");
+const globlib = @import("globlib.zig");
+const gziplib = @import("gziplib.zig");
 const Value = interp.Value;
 const Class = interp.Class;
 const Object = interp.Object;
@@ -400,6 +402,17 @@ fn decodeBytes(it: *Interp, bytes_in: []const u8, encoding_opt: ?[]const u8, inv
 }
 
 /// Read a whole file into memory of the run; a missing file is the error `$err_file`.
+// @eve-impl the readers of csv, json, txt and fs.lines! inflate a `.gz` path (data-language.md#compression)
+// @spec spec/library/data-language.md#compression
+// @feature F-LIB-09
+// @test test/level5/e152_gzip_readers
+/// The content of a data file: the bytes, or the inflated bytes when the path ends in .gz.
+fn readData(it: *Interp, path: []const u8) Signal![]const u8 {
+    const raw = try readFile(it, path);
+    if (!gziplib.isGzPath(path)) return raw;
+    return (try gziplib.gunzip(it.a, raw)) orelse it.failWith(err_format, "cannot read {s}: the file is not gzip", .{path});
+}
+
 pub fn readFile(it: *Interp, path: []const u8) Signal![]const u8 {
     const io = it.io orelse return it.fail("no input/output handle", .{});
     return Io.Dir.cwd().readFileAlloc(io, path, it.a, .limited(1 << 30)) catch |e| switch (e) {
@@ -487,7 +500,7 @@ fn openLines(it: *Interp, args: []const *const Node) Signal!Value {
     if (args.len < 1) return it.fail("fs.lines! takes a path", .{});
     const path = try it.text(try it.eval(args[0]));
     const opts = try options(it, args[1..], "fs.lines!");
-    const bytes = try readFile(it, path);
+    const bytes = try readData(it, path);
     const text = try decodeBytes(it, bytes, try optText(it, opts, "encoding"), try optText(it, opts, "invalid") orelse "error", "text", path);
     try noMoreOptions(it, opts, "fs.lines!");
     return newStream(it, .{ .kind = .lines, .path = path, .text = text });
@@ -532,7 +545,7 @@ fn openRecords(it: *Interp, kind: Kind, targs: []const *const Node, args: []cons
         if (!Interp.isInt(m) or Interp.intOf(m) < 0) return it.failWith(err_argument, "{s}: max_rejects is a whole number", .{what});
         st.max_rejects = @intCast(Interp.intOf(m));
     }
-    const text = try decodeBytes(it, try readFile(it, path), encoding, invalid, format, path);
+    const text = try decodeBytes(it, try readData(it, path), encoding, invalid, format, path);
     switch (kind) {
         .csv => {
             const sep_text = try optText(it, opts, "sep") orelse ",";
@@ -1223,6 +1236,12 @@ fn fsCall(it: *Interp, name: []const u8, args: []const *const Node) Signal!?Valu
             else => return it.failWith(err_io, "cannot move {s}: {s}", .{ from, @errorName(e) }),
         };
         return .nil;
+    }
+    if (eql(u8, name, "glob!")) {
+        const pattern = try pathArg(it, args, 0, "fs.glob!");
+        const out = try it.newList(&.{}, false);
+        for (try globlib.glob(it, pattern)) |n| try it.listAppend(out, try it.newStr(n));
+        return .{ .list = out };
     }
     if (eql(u8, name, "list!")) {
         const path = try pathArg(it, args, 0, "fs.list!");

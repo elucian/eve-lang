@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-524 of 528 tests pass; last run 2026-10-25 08:31.
+525 of 531 tests pass; last run 2026-10-25 08:42.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
@@ -13,13 +13,13 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Level 2 | 81 | 81 | 0 | 100% | 2026-10-24 |
 | Level 3 | 80 | 80 | 0 | 100% | 2026-10-24 |
 | Level 4 | 50 | 50 | 0 | 100% | 2026-10-24 |
-| Level 5 | 159 | 155 | 4 | 97% | 2026-10-25 |
+| Level 5 | 162 | 156 | 6 | 96% | 2026-10-25 |
 | Level 6 | 14 | 14 | 0 | 100% | 2026-10-24 |
 | Level 7 | 2 | 2 | 0 | 100% | 2026-10-24 |
 | Smoke | 21 | 21 | 0 | 100% | 2026-10-24 |
 | Bytecode | 24 | 24 | 0 | 100% | 2026-10-25 |
 | Scaffold | 1 | 1 | 0 | 100% | 2026-10-20 |
-| **All** | **528** | **524** | **4** | **99%** |  |
+| **All** | **531** | **525** | **6** | **98%** |  |
 <!-- /GEN:summary -->
 
 ## Tests that do not pass
@@ -31,4 +31,6 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Level 5 | `e143_uuid_errors` | FAIL | Uuid errors: a text that is not a Uuid, bytes of another length, the time of a version other than 7, a namespace that is not a Uuid | exit code 65, expected 0; stdout differs |
 | Level 5 | `e144_uuid_v7_time` | FAIL | a version 7 Uuid carries the time it was made: a later one sorts after an earlier one, and its instant is the moment of the call | exit code 65, expected 0; stdout differs |
 | Level 5 | `e146_optional_narrow` | FAIL | a test against null narrows the optional name inside the block: its type is the plain one there; a test with and narrows the right side | stdout differs |
+| Level 5 | `e151_fs_glob` | FAIL | fs.glob!: a pattern of names, `*` and `?` inside one segment of a path, sorted by name in the byte order; a folder that does not exist gives no name (data-language.md#files-and-paths) | exit code 4, expected 0; stdout differs |
+| Level 5 | `e152_gzip_readers` | FAIL | the readers of csv, json, txt and fs.lines! decompress a path that ends in.gz; a file that is not gzip is $err_format (data-language.md#compression) | stdout differs |
 <!-- /GEN:failing -->

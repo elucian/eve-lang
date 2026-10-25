@@ -23,7 +23,7 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | [`F-LIB-06`](#f-lib-06-time-and-dates) | Time and dates | drafted |
 | [`F-LIB-07`](#f-lib-07-shell-commands) | Shell commands | drafted |
 | [`F-LIB-08`](#f-lib-08-secrets) | Secrets | drafted |
-| [`F-LIB-09`](#f-lib-09-compression-and-archives) | Compression and archives | planned |
+| [`F-LIB-09`](#f-lib-09-compression-and-archives) | Compression and archives | drafted |
 | [`F-LNG-12`](#f-lng-12-generators) | Generators | validated |
 | [`F-LNG-13`](#f-lng-13-data-types-for-etl) | Data types for ETL | drafted |
 | [`F-LNG-14`](#f-lng-14-record-types-and-optional-values) | Record types and optional values | drafted |
@@ -169,13 +169,11 @@ Files, formats, streams, HTTP client, ETL pipelines.
 
 Stage: **drafted**.
 
-`fs` and `path` modules, text and bytes, line streams, globbing. *State:* `fs` files, folders and lines work; a `path` module, bytes and globbing are not done.
+`fs` module (files, folders, paths, lines, globbing), text and bytes. *State:* `fs` files, folders, lines, the path functions and globbing work (e151); the path functions are in `fs`, not in a `path` module (data-language.md#files-and-paths).
 
 ## Missing
 
-- A `path` module (`path` is an undefined name).
-- Globbing (`fs.glob` does not exist).
-- Built: `Bytes` and `fs.read_bytes!` (D4). The Bytes of the formats (`gzip`, `zip`, the streams of `Stream(:Bytes)`) are not.
+- Built: `Bytes` and `fs.read_bytes!` (D4). Not yet: `gzip.open!` as a `Stream(:Bytes)` (TD-88) and the line streams of Bytes (TD-83).
 
 ## F-LIB-05 Data formats
 
@@ -185,7 +183,7 @@ JSON and CSV read/write, decode into records; later XML, Parquet. *State:* JSON,
 
 ## Missing
 
-- The write side of every format; round trip tests.
+- Built: round trips of CSV and JSON records (e153). Not checked in this step: the write side of TXT.
 - XML and Parquet move to the backlog unless the author asks.
 
 ## F-LIB-06 Time and dates
@@ -294,13 +292,14 @@ token: ***
 
 ## F-LIB-09 Compression and archives
 
-Stage: **planned**.
+Stage: **drafted**.
 
-Gzip, zip, stream codecs (manifest).
+Gzip, zip, stream codecs (manifest). *State:* the gzip reader of `csv`, `json`, `txt` and `fs.lines!` works for a path that ends in `.gz` (test e152).
 
 ## Missing
 
-- Gzip read, write and stream; zip.
+- `gzip.open!` as a `Stream(:Bytes)`: the streams of Bytes are not built (TD-88).
+- Zip and the gzip writers: level 6 in `data-language.md`.
 
 ## F-LNG-12 Generators
 

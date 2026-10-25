@@ -1,0 +1,29 @@
+# fs.glob!: a pattern of names, `*` and `?` inside one segment of a path, sorted by name in the byte order; a folder that does not exist gives no name (data-language.md#files-and-paths)
+** spec: library/data-language.md#files-and-paths
+primary aspect e151_fs_glob is
+  process main is
+    fs.make_dir("out/in/deep");
+    fs.write("out/in/b.csv", "x");
+    fs.write("out/in/a.csv", "x");
+    fs.write("out/in/c.txt", "x");
+    fs.write("out/in/deep/d.csv", "x");
+    print fs.glob!("out/in/*.csv");
+    print fs.glob!("out/in/?.txt");
+    print fs.glob!("out/*/deep/*.csv");
+    print fs.glob!("out/in/a.csv");
+    print fs.glob!("out/in/zz.csv");
+    print fs.glob!("out/none/*.csv");
+  return;
+end e151_fs_glob;
+/*@expect
+{
+  "stdout": [
+    "(\"out/in/a.csv\",\"out/in/b.csv\")",
+    "(\"out/in/c.txt\")",
+    "(\"out/in/deep/d.csv\")",
+    "(\"out/in/a.csv\")",
+    "()",
+    "()"
+  ]
+}
+*/

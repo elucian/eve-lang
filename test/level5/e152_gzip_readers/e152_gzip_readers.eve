@@ -1,0 +1,37 @@
+# the readers of csv, json, txt and fs.lines! decompress a path that ends in .gz; a file that is not gzip is $err_format (data-language.md#compression)
+** spec: library/data-language.md#compression
+primary aspect e152_gzip_readers is
+  class Item = {name: String, qty: Integer} is
+  end Item;
+
+  process main is
+    for r in csv.read!(:Item)("data.csv.gz") do
+      print "{r.name} {r.qty}";
+    done;
+    for r in json.read!(:Item)("data.json.gz") do
+      print "json {r.name} {r.qty}";
+    done;
+    for line in fs.lines!("notes.txt.gz") do
+      print line;
+    done;
+    fs.make_dir("out");
+    fs.write_bytes("out/bad.csv.gz", Bytes.from_hex("00112233"));
+    print csv.read!(:Item)("out/bad.csv.gz");
+    print "not reached";
+  recover
+    print "error {$error.code}";
+  return;
+end e152_gzip_readers;
+/*@expect
+{
+  "stdout": [
+    "a 1",
+    "b 2",
+    "json a 1",
+    "json b 2",
+    "first line",
+    "second line",
+    "error 56"
+  ]
+}
+*/
