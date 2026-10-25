@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-556 of 557 tests pass; last run 2026-10-25 14:34.
+556 of 557 tests pass; last run 2026-10-25 14:41.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
@@ -27,5 +27,5 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 <!-- GEN:failing -->
 | Suite | Test | Status | What it tests | Reason |
 |---|---|---|---|---|
-| Level 5 | `e129_meta_zone` | FAIL | the library zone over the meta database: exists, canonical, offset, abbreviation, is_dst, names; the entries of meta.info; errors | exit code 2, expected 0; stdout differs |
+| Level 5 | `e132_meta_sql` | FAIL | the meta database as a read only SQL database: database.connect("meta") needs no eve.cfg; joins with the tables of the user's own data; a write is refused | exit code 4, expected 0 |
 <!-- /GEN:failing -->

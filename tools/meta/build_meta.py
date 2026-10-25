@@ -3,12 +3,13 @@
 
   python tools/meta/build_meta.py --fetch temp/meta-src            download the sources into the folder, then build
   python tools/meta/build_meta.py --src temp/meta-src              build from sources already there
-  python tools/meta/build_meta.py --tzdata DIR --cldr-core DIR --cldr-names DIR [--out FILE]
+  python tools/meta/build_meta.py --tzdata DIR --cldr-core DIR --cldr-names DIR --cldr-bcp47 DIR [--out FILE]
 
 The sources (all permissive licences):
   tzdata       the IANA time zone database, as the Python package `tzdata` (public domain): zoneinfo/tzdata.zi, zone.tab, iso3166.tab, the TZif files
   cldr-core    Unicode CLDR as JSON (Unicode licence): supplemental/territoryContainment.json, codeMappings.json
   cldr-names   CLDR localenames (the same licence): main/en/territories.json
+  cldr-bcp47   CLDR keywords (the same licence): bcp47/timezone.json, the short ids of the time zones (zone.cldr)
 
 The file is deterministic: the same sources give the same bytes. Schema version 3 (D-223; version 3 adds zone_kind and zone_span); a table or a column that was released is never
 changed, new data comes as new tables or columns:
@@ -16,7 +17,7 @@ changed, new data comes as new tables or columns:
   meta_info(name, value)                   the schema version, the sources and their releases
   continent(code, name)                    seven rows: AF AN AS EU NA OC SA
   country(code, alpha3, numeric, name, continent)    the 249 officially assigned ISO 3166-1 codes; the names and the continents are CLDR's
-  zone(id, name, link_of, country, position, note, rule)    a name of the time zone database; a link points to its zone; country is the place
+  zone(id, name, link_of, country, position, note, rule, cldr)    a name of the time zone database; a link points to its zone; country is the place
                                            zone.tab gives to the name (null for the names that are no place: UTC, EST5EDT, Etc/GMT+5, US/Eastern)
   zone_type(zone, idx, utoff, isdst, abbr) the kinds of local time of a zone (TZif types)
   zone_transition(zone, at, idx)           the instants (UTC seconds) where a zone changes to the type idx; before the first one: the type 0
@@ -144,8 +145,10 @@ create table zone (
   country text references country(code),
   position text,
   note text,
-  rule text not null default ''
+  rule text not null default '',
+  cldr text
 );
+create index zone_by_cldr on zone (cldr);
 create index zone_by_country on zone (country);
 create table zone_type (
   zone integer not null references zone(id),
@@ -165,7 +168,7 @@ create table zone_transition (
 SCHEMA += zone_spans.SCHEMA
 
 
-def build(tzdata, cldr_core, cldr_names, out):
+def build(tzdata, cldr_core, cldr_names, cldr_bcp47, out):
     zoneinfo = os.path.join(tzdata, 'zoneinfo')
     zones, links, release = read_zi(os.path.join(zoneinfo, 'tzdata.zi'))
     if os.path.exists(out):
@@ -207,6 +210,14 @@ def build(tzdata, cldr_core, cldr_names, out):
     nkinds, nspans, spans = zone_spans.write(db, span_rows)
     checked = zone_spans.check({n: spans[i] for n, i in ids.items()})
     print('zone_span: %d kinds, %d spans; %s' % (nkinds, nspans, ('%d instants agree with zoneinfo' % checked) if checked >= 0 else 'zoneinfo has no data: not checked'))
+    # the short id of CLDR (bcp47/timezone.json): "robuh" for Europe/Bucharest; every alias that the database has gets it (several names, one id)
+    short = 0
+    for key, v in load_json(os.path.join(cldr_bcp47, 'bcp47', 'timezone.json'))['keyword']['u']['tz'].items():
+        if key.startswith('_') or not isinstance(v, dict):
+            continue
+        for alias in v.get('_alias', '').split():
+            short += db.execute('update zone set cldr = ? where name = ?', (key, alias)).rowcount
+    print('zone.cldr: %d names have a short id' % short)
     # the place of a name: zone.tab (country, position, name, note); every name of zone.tab is a zone or a link of the database
     placed = 0
     for country, position, name, note in read_tab(os.path.join(zoneinfo, 'zone.tab'), 4):
@@ -243,7 +254,7 @@ def fetch(dest):
         with zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(url).read())) as z:
             z.extractall(dest)
     folders = [tz]
-    for pkg in ('cldr-core', 'cldr-localenames-modern'):
+    for pkg in ('cldr-core', 'cldr-localenames-modern', 'cldr-bcp47'):
         d = os.path.join(dest, pkg)
         if not os.path.isdir(d):
             blob = urllib.request.urlopen('https://registry.npmjs.org/%s/-/%s-%s.tgz' % (pkg, pkg, CLDR_VERSION)).read()
@@ -263,18 +274,19 @@ def main():
     ap.add_argument('--tzdata')
     ap.add_argument('--cldr-core')
     ap.add_argument('--cldr-names')
+    ap.add_argument('--cldr-bcp47')
     ap.add_argument('--out', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'lib', 'meta', 'meta.db'))
     a = ap.parse_args()
     if a.fetch:
-        tz, core, names = fetch(a.fetch)
+        tz, core, names, bcp = fetch(a.fetch)
     elif a.src:
-        tz, core, names = (os.path.join(a.src, 'tzdata'), os.path.join(a.src, 'cldr-core'), os.path.join(a.src, 'cldr-localenames-modern'))
-    elif a.tzdata and a.cldr_core and a.cldr_names:
-        tz, core, names = a.tzdata, a.cldr_core, a.cldr_names
+        tz, core, names, bcp = (os.path.join(a.src, 'tzdata'), os.path.join(a.src, 'cldr-core'), os.path.join(a.src, 'cldr-localenames-modern'), os.path.join(a.src, 'cldr-bcp47'))
+    elif a.tzdata and a.cldr_core and a.cldr_names and a.cldr_bcp47:
+        tz, core, names, bcp = a.tzdata, a.cldr_core, a.cldr_names, a.cldr_bcp47
     else:
-        ap.error('give --fetch DIR, --src DIR, or --tzdata, --cldr-core and --cldr-names')
+        ap.error('give --fetch DIR, --src DIR, or --tzdata, --cldr-core, --cldr-names and --cldr-bcp47')
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    release, nz, nl, nc, placed = build(tz, core, names, a.out)
+    release, nz, nl, nc, placed = build(tz, core, names, bcp, a.out)
     print('tzdata %s: %d zones, %d links, %d placed in a country; %d countries -> %s (%d bytes)' % (release, nz, nl, placed, nc, a.out, os.path.getsize(a.out)))
 
 

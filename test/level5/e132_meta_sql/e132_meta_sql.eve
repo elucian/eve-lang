@@ -27,6 +27,8 @@ primary aspect e132_meta_sql is
     print rows.count(), rows[1].utoff;
     expect names.count() == 1;
     expect names[1].name == "Europe/Bucharest";
+    new cl := meta.query_one!(:Info)("select group_concat(distinct cldr) as value from zone where name in ('Europe/Bucharest', 'Asia/Calcutta', 'Asia/Kolkata')");
+    expect cl.value == "inccu,robuh" or cl.value == "robuh,inccu";
     expect c.n == 598;
     expect l.n == 253;
     expect write_code(meta) <> 0;
