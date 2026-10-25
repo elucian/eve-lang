@@ -766,6 +766,62 @@ pub var env_lib_path: []const []const u8 = &.{};
 
 /// Link the aspect that is run: read every aspect it calls into `aspects`. On an error returns `error.Syntax`,
 /// fills `diag`, and sets `where` to the aspect file when the problem is inside it (else "").
+/// A module of the standard library that a script may use without importing it (D-230): its import path (`lib`, `lib/meta`) and its name.
+pub const LibModule = struct { path: []const u8, name: []const u8 };
+
+/// The modules of the standard library: the files of each library path (a `lib` folder) and of its folders, other than `sys`
+/// (the natives, no files of Eve) and `doc`. The first one of a name is the module of that name.
+pub fn libraryModules(a: std.mem.Allocator, io: Io, lib_path: []const []const u8) Error![]LibModule {
+    var out: std.ArrayList(LibModule) = .empty;
+    for (lib_path) |root| {
+        // each library path is a `lib` folder: `{lp}/name.eve` is `lib/name`, `{lp}/sub/name.eve` is `lib/sub/name` (folderOf, loadModule)
+        const lib_dir = root;
+        var dir = Io.Dir.cwd().openDir(io, lib_dir, .{ .iterate = true }) catch continue;
+        defer dir.close(io);
+        var entries = dir.iterate();
+        while (entries.next(io) catch null) |entry| {
+            if (entry.kind == .file and std.mem.endsWith(u8, entry.name, ".eve")) {
+                try addLibModule(a, &out, "lib", try a.dupe(u8, entry.name));
+            } else if (entry.kind == .directory and !std.mem.eql(u8, entry.name, "sys") and !std.mem.eql(u8, entry.name, "doc")) {
+                const sub_path = try std.fmt.allocPrint(a, "{s}/{s}", .{ lib_dir, entry.name });
+                var sub = Io.Dir.cwd().openDir(io, sub_path, .{ .iterate = true }) catch continue;
+                defer sub.close(io);
+                var files = sub.iterate();
+                while (files.next(io) catch null) |f| {
+                    if (f.kind == .file and std.mem.endsWith(u8, f.name, ".eve")) {
+                        try addLibModule(a, &out, try std.fmt.allocPrint(a, "lib/{s}", .{entry.name}), try a.dupe(u8, f.name));
+                    }
+                }
+            }
+        }
+    }
+    return out.items;
+}
+
+fn addLibModule(a: std.mem.Allocator, out: *std.ArrayList(LibModule), path: []const u8, file: []const u8) Error!void {
+    const name = file[0 .. file.len - ".eve".len];
+    for (out.items) |m| if (std.mem.eql(u8, m.name, name)) return;
+    try out.append(a, .{ .path = path, .name = name });
+}
+
+/// The tree of a script with an import of each library module it uses without one (D-230): the imports come first, so the
+/// linker reads them as the user's own `from path use (name);` lines, and the module is bound as if the user had written it.
+pub fn addHiddenImports(a: std.mem.Allocator, tree: *const Node, uses: []const LibModule) Error!*const Node {
+    var decls: std.ArrayList(*const Node) = .empty;
+    for (uses) |m| {
+        const item = try a.create(Node);
+        item.* = .{ .tag = .import_item, .text = m.name, .kids = try a.dupe(*const Node, &.{&ast.none}) };
+        const decl = try a.create(Node);
+        decl.* = .{ .tag = .import_decl, .text = m.path, .kids = try a.dupe(*const Node, &.{item}) };
+        try decls.append(a, decl);
+    }
+    try decls.appendSlice(a, tree.kids);
+    const root = try a.create(Node);
+    root.* = tree.*;
+    root.kids = decls.items;
+    return root;
+}
+
 pub fn link(
     a: std.mem.Allocator,
     io: Io,

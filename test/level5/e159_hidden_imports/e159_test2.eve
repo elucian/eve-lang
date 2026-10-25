@@ -1,0 +1,14 @@
+# a name that is not a library module is still an undefined name: a compile error
+** spec: semantics/modules.md#hidden-imports
+primary aspect e159_test2 is
+  process main is
+    print nosuch.exists("x");
+  return;
+end e159_test2;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["undefined name 'nosuch'"]
+}
+*/

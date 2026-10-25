@@ -272,7 +272,7 @@
     [3, "warnings-of-the-compiler", 135, "Warnings of the compiler"],
     [2, "open-points", 143, "Open points"]
    ]},
-  {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 129, "bytes": 12833, "features": ["F-LNG-22"], "sections": [
+  {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 142, "bytes": 13611, "features": ["F-LNG-22"], "sections": [
     [2, "what-a-module-is", 5, "What a module is"],
     [2, "what-a-module-may-contain", 32, "What a module may contain"],
     [2, "members", 36, "Members"],
@@ -282,7 +282,8 @@
     [2, "managed-and-direct-modules", 100, "Managed and direct modules"],
     [2, "libraries", 114, "Libraries"],
     [2, "extension-methods", 118, "Extension methods"],
-    [2, "open-points", 122, "Open points"]
+    [2, "open-points", 122, "Open points"],
+    [2, "hidden-imports", 130, "Hidden imports"]
    ]},
   {"path": "semantics/multitasking.md", "title": "Multitasking: parallel groups, channels and tasks", "status": "draft", "summary": "Eve has two ways to do several things at once. A parallel group starts aspects on several cores. A job with tasks runs asynchronous subprograms on one core, taking turns while they wait. Channels conn", "lines": 199, "bytes": 15190, "features": ["F-SPEC-05"], "sections": [
     [2, "parallel-groups", 14, "Parallel groups"],

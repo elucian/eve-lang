@@ -164,7 +164,23 @@ pub const Session = struct {
 
     /// Parse the script and, for a root aspect, read the aspects it applies and match every `apply`.
     fn build(self: *Session) parser.Error!*const ast.Node {
-        const tree = try parser.parse(self.mem(), self.src, &self.diag);
+        // the library modules that a script may use without an import (D-230): the checker notes the uses, and the imports are added here
+        const library = try project.libraryModules(self.mem(), self.io, project.env_lib_path);
+        var library_names: std.ArrayList([]const u8) = .empty;
+        for (library) |m| try library_names.append(self.mem(), m.name);
+        self.diag.library = library_names.items;
+        self.diag.uses_len = 0;
+        var tree = try parser.parse(self.mem(), self.src, &self.diag);
+        if (self.diag.uses_len > 0) {
+            var hidden: std.ArrayList(project.LibModule) = .empty;
+            for (self.diag.uses[0..self.diag.uses_len]) |use| {
+                for (library) |m| if (std.mem.eql(u8, m.name, use.name)) {
+                    try hidden.append(self.mem(), m);
+                    break;
+                };
+            }
+            tree = try project.addHiddenImports(self.mem(), tree, hidden.items);
+        }
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         const dir = if (cut) |i| self.path[0..i] else ".";
         try project.link(self.mem(), self.io, dir, tree, &self.diag, &self.bad_path, &self.aspects, &self.modules, project.env_lib_path);

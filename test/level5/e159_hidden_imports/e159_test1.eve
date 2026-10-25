@@ -1,0 +1,13 @@
+# a variable with the name of a library module is the variable: no import is added for it
+** spec: semantics/modules.md#hidden-imports
+primary aspect e159_test1 is
+  process main is
+    new zone := 5;
+    print zone + 1;
+  return;
+end e159_test1;
+/*@expect
+{
+  "stdout": ["6"]
+}
+*/

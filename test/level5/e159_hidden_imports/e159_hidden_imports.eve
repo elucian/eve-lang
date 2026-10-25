@@ -1,0 +1,15 @@
+# a library module used without an import: the compiler adds the import, as if the script had written it
+** spec: semantics/modules.md#hidden-imports
+primary aspect e159_hidden_imports is
+  process main is
+    print zone.exists("Europe/Bucharest");
+    print meta.info("tzdata");
+    print math.sqrt(16);
+    print random.integer!(7, 7);
+  return;
+end e159_hidden_imports;
+/*@expect
+{
+  "stdout": ["True", "2026e", "4", "7"]
+}
+*/

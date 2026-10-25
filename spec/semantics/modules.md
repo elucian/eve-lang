@@ -126,3 +126,16 @@ A `method` declared outside a class, with `@self` of the class, extends the clas
 3. **Version and manifest** of a library (later).
 4. **Exported extension methods:** a class exported with its extensions, or the extensions imported by name *(c09 shows the first form is enough)*.
 5. **Generators** are declared in a module and exported like a function; they wait for the data language, level 5 (draft 1 in `decision_level5.md`).
+
+## Hidden imports
+
+A module of the standard library that a script uses without importing it is imported by the compiler, as if the script had written `from lib use (name);` (for a module of `lib/meta`, `from lib/meta use (name);`). The user code works without the import line: `zone.exists("Europe/Bucharest")`, `meta.info("tzdata")`, `math.sqrt(16)`.
+
+| Case | Result |
+|---|---|
+| a library module name used as `name.member` and not declared in the script | the module is imported |
+| the name is declared in the script (a variable, a parameter, a function) | the declaration is used; no import |
+| a name that is not a library module | `undefined name` (exit 65) |
+
+The import is the same as a written one: the module is read, checked and bound like the user's own import.
+

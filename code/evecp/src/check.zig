@@ -106,6 +106,11 @@ const Checker = struct {
         if (c.lookup(name)) |info| return info;
         if (builtins.has(name)) return .{ .kind = .builtin };
         if (c.open_names) return .{ .kind = .variable };
+        // a library module used without its import: the compiler adds the import (D-230, project.addHiddenImports)
+        if (c.diag.isLibrary(name)) {
+            c.diag.addUse(name, at.line, at.col);
+            return .{ .kind = .builtin };
+        }
         return c.fail(at, "undefined name '{s}'", .{name});
     }
 

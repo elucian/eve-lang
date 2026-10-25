@@ -25,6 +25,27 @@ pub const Diag = struct {
     col: u32 = 0,
     buf: [160]u8 = undefined,
     len: usize = 0,
+    /// The names of the library modules that a script may use without importing them (D-230), set before the parse.
+    library: []const []const u8 = &.{},
+    /// The uses of those names that the checker met: a name and its place (D-230). A name is listed once.
+    uses: [32]Use = undefined,
+    uses_len: usize = 0,
+
+    pub const Use = struct { name: []const u8, line: u32, col: u32 };
+
+    /// Is `name` a library module of the standard library (one that may be used without an import)?
+    pub fn isLibrary(d: *const Diag, name: []const u8) bool {
+        for (d.library) |n| if (std.mem.eql(u8, n, name)) return true;
+        return false;
+    }
+
+    /// Notes a use of a library module that is not imported; a use of the same name is listed once.
+    pub fn addUse(d: *Diag, name: []const u8, line: u32, col: u32) void {
+        for (d.uses[0..d.uses_len]) |u| if (std.mem.eql(u8, u.name, name)) return;
+        if (d.uses_len == d.uses.len) return;
+        d.uses[d.uses_len] = .{ .name = name, .line = line, .col = col };
+        d.uses_len += 1;
+    }
 
     pub fn set(d: *Diag, line: u32, col: u32, comptime fmt: []const u8, args: anytype) void {
         d.line = line;
