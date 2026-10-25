@@ -1,0 +1,38 @@
+# the POSIX rule of a zone after its last transition, evaluated in Eve: the local time of a rule at instants of the years after the stored transitions (America/Santiago, Sydney, Dublin, Lord Howe, ...)
+** spec: library/meta.md#zone
+** @meta require(zone)
+from lib/meta use (rule);
+primary aspect e158_meta_rule is
+  process main is
+    print rule.local_at(rule.parse("EST5EDT,M3.2.0,M11.1.0"), 2845202458);
+    print rule.local_at(rule.parse("EST5EDT,M3.2.0,M11.1.0"), 2334207803);
+    print rule.local_at(rule.parse("EET-2EEST,M3.5.0/3,M10.5.0/4"), 2385331677);
+    print rule.local_at(rule.parse("EET-2EEST,M3.5.0/3,M10.5.0/4"), 2323047561);
+    print rule.local_at(rule.parse("AEST-10AEDT,M10.1.0,M4.1.0/3"), 3034369997);
+    print rule.local_at(rule.parse("AEST-10AEDT,M10.1.0,M4.1.0/3"), 2417892863);
+    print rule.local_at(rule.parse("IST-1GMT0,M10.5.0,M3.5.0/1"), 3347062283);
+    print rule.local_at(rule.parse("IST-1GMT0,M10.5.0,M3.5.0/1"), 3143872195);
+    print rule.local_at(rule.parse("<-04>4<-03>,M9.1.6/24,M4.1.6/24"), 2685120998);
+    print rule.local_at(rule.parse("<-04>4<-03>,M9.1.6/24,M4.1.6/24"), 3410677013);
+    print rule.local_at(rule.parse("<+00>0"), 3201445848);
+    print rule.local_at(rule.parse("<+00>0"), 2851553412);
+  return;
+end e158_meta_rule;
+/*@expect
+{
+  "stdout": [
+    "[-18000,False,\"EST\"]",
+    "[-18000,False,\"EST\"]",
+    "[10800,True,\"EEST\"]",
+    "[10800,True,\"EEST\"]",
+    "[39600,True,\"AEDT\"]",
+    "[36000,False,\"AEST\"]",
+    "[0,True,\"GMT\"]",
+    "[3600,False,\"IST\"]",
+    "[-10800,True,\"-03\"]",
+    "[-10800,True,\"-03\"]",
+    "[0,False,\"+00\"]",
+    "[0,False,\"+00\"]"
+  ]
+}
+*/

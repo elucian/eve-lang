@@ -1,0 +1,242 @@
+** The rule of a zone after its last transition, in Eve: the POSIX form of the TZ database ("EET-2EEST,M3.5.0/3,M10.5.0/4") (D-229).
+** @spec spec/library/meta.md#zone  @feature F-LIB-06  @decision D-229  @tests test/level5/e158_meta_rule
+module rule is
+  export (div, days, year_of, weekday, parse, local_at);
+
+  ** a divided by b, rounded down (the division of Eve gives a Real)
+  function div(a: Integer, b: Integer) => (@result: Integer) is
+    let result := floor(a / b);
+  return;
+
+  ** Is y a leap year.
+  function leap(y: Integer) => (@result: Logic) is
+    let result := (y % 4 == 0 and y % 100 <> 0) or y % 400 == 0;
+  return;
+
+  ** Days since 1970-01-01 of a civil date (proleptic Gregorian; Howard Hinnant's algorithm).
+  function days(y: Integer, m: Integer, d: Integer) => (@result: Integer) is
+    new yy := y;
+    new mp := m + 9;
+    if m <= 2 do
+      let yy := y - 1;
+    done;
+    if m > 2 do
+      let mp := m - 3;
+    done;
+    new era := div(yy, 400);
+    new yoe := yy - era * 400;
+    new doy := div(153 * mp + 2, 5) + d - 1;
+    new doe := yoe * 365 + div(yoe, 4) - div(yoe, 100) + doy;
+    let result := era * 146097 + doe - 719468;
+  return;
+
+  ** The year of a day number.
+  function year_of(z0: Integer) => (@result: Integer) is
+    new z := z0 + 719468;
+    new era := div(z, 146097);
+    new doe := z - era * 146097;
+    new yoe := div(doe - div(doe, 1460) + div(doe, 36524) - div(doe, 146096), 365);
+    new doy := doe - (365 * yoe + div(yoe, 4) - div(yoe, 100));
+    new mp := div(5 * doy + 2, 153);
+    new m := mp + 3;
+    if mp >= 10 do
+      let m := mp - 9;
+    done;
+    let result := yoe + era * 400;
+    if m <= 2 do
+      let result := result + 1;
+    done;
+  return;
+
+  ** The weekday of a day number: 0 is Sunday, 6 is Saturday.
+  function weekday(z: Integer) => (@result: Integer) is
+    let result := (z + 4) % 7;
+  return;
+
+  ** The day number that a change names in a year. A change is [kind, a, b, c, seconds]: kind 1 is Mm.w.d (a, b, c = m, w, d), kind 2 is Jn (a = n, 1 to 365, no leap day), kind 3 is n (a = n, 0 to 365).
+  function day_of(ch: List, y: Integer) => (@result: Integer) is
+    new jan1 := days(y, 1, 1);
+    let result := jan1;
+    if ch[1] == 2 do
+      let result := jan1 + ch[2] - 1;
+      if leap(y) and ch[2] >= 60 do
+        let result := result + 1;
+      done;
+    done;
+    if ch[1] == 3 do
+      let result := jan1 + ch[2];
+    done;
+    if ch[1] == 1 do
+      new first := days(y, ch[2], 1);
+      new next := days(y + 1, 1, 1);
+      if ch[2] < 12 do
+        let next := days(y, ch[2] + 1, 1);
+      done;
+      new dim := next - first;
+      new day := first + (ch[4] - weekday(first)) % 7 + 7 * (ch[3] - 1);
+      while day >= first + dim do
+        let day := day - 7;
+      done;
+      let result := day;
+    done;
+  return;
+
+  ** The seconds of a time text at position i of s: [+-]hh[:mm[:ss]]; gives [seconds, the position after it].
+  function time_at(s: String, i: Integer) => (@result: List) is
+    new sign := 1;
+    new p := i;
+    if s[p..p] == "-" do
+      let sign := -1;
+      let p := p + 1;
+    done;
+    if s[p..p] == "+" do
+      let p := p + 1;
+    done;
+    new secs := 0;
+    new group := 0;
+    new k := 0;
+    while p <= s.length() and "0123456789:".contains(s[p..p]) do
+      if s[p..p] == ":" do
+        let secs := secs + group * weight(k);
+        let group := 0;
+        let k := k + 1;
+      done;
+      if s[p..p] <> ":" do
+        let group := group * 10 + Integer.parse(s[p..p]);
+      done;
+      let p := p + 1;
+    done;
+    let secs := secs + group * weight(k);
+    let result := [sign * secs, p];
+  return;
+
+  ** The weight in seconds of the k-th group of a time text: hours, minutes, seconds.
+  function weight(k: Integer) => (@result: Integer) is
+    let result := 1;
+    if k == 0 do
+      let result := 3600;
+    done;
+    if k == 1 do
+      let result := 60;
+    done;
+  return;
+
+  ** The end position of a zone name at position i of s: letters, or the text between < and >. Gives the position after it.
+  function name_at(s: String, i: Integer) => (@result: Integer) is
+    new p := i;
+    if s[p..p] == "<" do
+      while s[p..p] <> ">" do
+        let p := p + 1;
+      done;
+      let p := p + 1;
+    done;
+    if s[p..p] <> "<" do
+      while p <= s.length() and s[p..p] >= "A" and s[p..p] <> "+" and s[p..p] <> "-" and s[p..p] <> "," do
+        let p := p + 1;
+      done;
+    done;
+    let result := p;
+  return;
+
+  ** One change of a rule: "M3.5.0/3", "J60", "10/2", as [kind, a, b, c, seconds, the position after it].
+  function change_at(s: String, i: Integer) => (@result: List) is
+    new p := i;
+    new kind := 3;
+    new a := 0;
+    new b := 0;
+    new c := 0;
+    if s[p..p] == "M" do
+      let kind := 1;
+      let p := p + 1;
+      while s[p..p] <> "." do
+        let a := a * 10 + Integer.parse(s[p..p]);
+        let p := p + 1;
+      done;
+      let p := p + 1;
+      while s[p..p] <> "." do
+        let b := b * 10 + Integer.parse(s[p..p]);
+        let p := p + 1;
+      done;
+      let p := p + 1;
+      while p <= s.length() and s[p..p] <> "/" and s[p..p] <> "," do
+        let c := c * 10 + Integer.parse(s[p..p]);
+        let p := p + 1;
+      done;
+    done;
+    if p <= s.length() and s[p..p] == "J" do
+      let kind := 2;
+      let p := p + 1;
+    done;
+    if kind <> 1 do
+      while p <= s.length() and s[p..p] <> "/" and s[p..p] <> "," do
+        let a := a * 10 + Integer.parse(s[p..p]);
+        let p := p + 1;
+      done;
+    done;
+    new secs := 7200;
+    if p <= s.length() and s[p..p] == "/" do
+      new r := time_at(s, p + 1);
+      let secs := r[1];
+      let p := r[2];
+    done;
+    let result := [kind, a, b, c, secs, p];
+  return;
+
+  ** A zone name without its angle brackets: "<-03>" is "-03".
+  function bare(name: String) => (@result: String) is
+    let result := name;
+    if name.length() > 2 and name[1..1] == "<" do
+      let result := name[2..name.length() - 1];
+    done;
+  return;
+
+  ** Reads a POSIX rule text: [standard name, standard offset (east of UTC, seconds), daylight name, daylight offset, start change, end change]. A text with no daylight part has no changes.
+  function parse(text: String) => (@result: List) is
+    new p := 1;
+    new e := name_at(text, p);
+    new std_name := bare(text[p..e - 1]);
+    let p := e;
+    new t := time_at(text, p);
+    new std_off := -t[1];
+    let p := t[2];
+    if p > text.length() do
+      let result := [std_name, std_off, "", 0, [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]];
+      exit;
+    done;
+    new e2 := name_at(text, p);
+    new dst_name := bare(text[p..e2 - 1]);
+    let p := e2;
+    new dst_off := std_off + 3600;
+    if text[p..p] <> "," do
+      new t2 := time_at(text, p);
+      let dst_off := -t2[1];
+      let p := t2[2];
+    done;
+    let p := p + 1;
+    new on_change := change_at(text, p);
+    let p := on_change[6];
+    let p := p + 1;
+    new off_change := change_at(text, p);
+    let result := [std_name, std_off, dst_name, dst_off, on_change, off_change];
+  return;
+
+  ** The local time of a rule at the UTC instant t (seconds): [utoff, is daylight time, abbreviation].
+  function local_at(r: List, t: Integer) => (@result: List) is
+    if r[3] == "" do
+      let result := [r[2], False, r[1]];
+      exit;
+    done;
+    new local_days := div(t + r[2], 86400);
+    new y := year_of(local_days);
+    new s := day_of(r[5], y) * 86400 + r[5][5] - r[2];
+    new e := day_of(r[6], y) * 86400 + r[6][5] - r[4];
+    new inside := t >= s and t < e;
+    if s >= e do
+      let inside := t >= s or t < e;
+    done;
+    let result := [r[2], False, r[1]];
+    if inside do
+      let result := [r[4], True, r[3]];
+    done;
+  return;
+end rule;

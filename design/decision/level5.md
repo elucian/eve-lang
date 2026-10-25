@@ -133,3 +133,8 @@ Built: `-O n` and `--optimization n` (0 to 10; a bad value is exit 64), `optimiz
 
 ## D-226 implementation (2026-10-25)
 Built: the tables of a run come from the imports of `lib/meta` and the hints `** @meta require(...)` (`code/evecm/src/meta_need.zig`); the copy into a memory connection copies the schema of the file and the rows of the tables needed, parents first; at level 5 and above the copy runs in a background thread (joined at the first use); below 5 it runs at the first use. Tests e156 (levels) and e157 (hints, imports, unknown table). Not built: the zone functions in Eve and the pruning of the Zig code (R2, R3), which wait for the decision on how the Zig date code calls the zone lookups; the SQL door copies every table (TD-89).
+
+## D-229 The zone-aware DateTime operations are Eve code; Eve library before Zig externals (2026-10-25)
+Author decision (2026-10-25): all zone-aware `DateTime` operations move to Eve code, and the Zig zone code is pruned. From now on Eve library code takes priority over Zig externals, except for the critical functions already built; Eve itself is optimized so the library reaches good performance.
+Step built: the POSIX rule of a zone (`lib/meta/rule.eve`: parse, the day of a change, the local time after the last transition), checked against Python's zoneinfo on 120 instants of 12 zones (test e158). Open for the next steps: the library door of `zone` (`exists`, `canonical`, `offset`, `abbreviation`, `is_dst`, `names`) needs `raise(code, message)` to keep the codes of the errors (`$err_argument` 17 for an unknown name, test e129), a feature of S15.31 that is not built; and the zone-aware `DateTime` operations need the call from the Zig date code to an Eve function (open question for the author).
+

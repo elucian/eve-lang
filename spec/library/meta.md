@@ -26,6 +26,8 @@ print meta.info("tzdata");     ** 2026e
 
 ## zone
 
+After its last stored transition a zone follows its rule (the POSIX form of the TZ database, read from the table `zone`); the rule is evaluated by the module `rule` of `lib/meta`, which is Eve code.
+
 The module `zone` (`from lib/meta use (zone);`) answers questions about the time zones by name. A name is as in the IANA database (`Europe/Bucharest`, `America/New_York`, `UTC`); the names are case sensitive. 598 names: 345 zones and 253 links, which are other names of a zone (`Asia/Calcutta` is `Asia/Kolkata`). The rules include the history: before the standard time of a place its local mean time (Bucharest was `+01:44:24` in 1850), the days that were skipped, daylight saving time of the past, and the rule of the future after the last change that is known (summer time goes on by the rule of the zone to the year 9999).
 
 | Function | Result | Meaning |
