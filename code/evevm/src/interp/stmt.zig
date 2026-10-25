@@ -261,6 +261,7 @@ pub fn raise(it: *Interp, n: *const Node) Signal {
         .object => |o| {
             const code: u8 = if (Interp.fieldOf(o, "code")) |c| @intCast(@max(1, @min(255, Interp.intOf(c)))) else err_raise;
             const msg = if (Interp.fieldOf(o, "message")) |m| (it.text(m) catch "") else "";
+            it.pending_fields = o;
             return it.failWith(code, "{s}", .{msg});
         },
         else => {},

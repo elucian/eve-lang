@@ -135,3 +135,17 @@ The narrowing lasts only inside its block: after the block the name may be null 
 `x ?? d` is the default of an optional value: `x` when it is not `null`, else `d`. It binds looser than `or`, groups to the right (`null ?? 0 ?? 9` is `0`), and `d` is evaluated only when `x` is `null`. Its type is the plain type of `x`.
 
 A narrowing for `while` loops and for arguments of a `T` parameter is not checked yet (TD-87).
+
+## Static checks
+
+Before the run the checker refuses a value of one basic type given where another basic type is declared (exit 65, `syntax_error`). The basic types are `String` (and `Text`), `Logic`, the numbers, `Duration`, `Date`, `Time`, `DateTime`, `Instant`, `Bytes`, `Uuid` and `Zone`. The numbers convert to each other, so an `Integer` may be given to a `Real` parameter.
+
+| Where | Example | Message |
+|---|---|---|
+| an assignment to a declared variable | `new n = 0 :Integer; let n := "text";` | `n is Integer, and the value is String` |
+| an argument of a function or procedure | `twice("four")` for `x: Integer` | `argument 1 of twice is String, but the parameter is Integer` |
+| a result (the `@result` of a function) | `let result := "text";` for `=> (@result: Integer)` | `result is Integer, and the value is String` |
+| a declaration with a value | `new n = "text" :Integer;` | `n is Integer, and the value is String` |
+
+A class, a list, an optional type (`T?`, see `#narrowing-and-the-default`) and a name without a known type are not checked by this rule.
+

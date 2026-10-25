@@ -27,6 +27,11 @@ pub fn errorObject(it: *Interp) Signal!Value {
     try it.setField(o, "code", .{ .int = r.code });
     try it.setField(o, "job", try it.newStr(r.job));
     try it.setField(o, "line", .{ .int = r.line });
+    // the fields of a raised object are read from `$error` too; the record's own fields keep their names (F-LNG-15)
+    if (r.fields) |src| for (src.fields.items) |f| {
+        if (std.mem.eql(u8, f.name, "message") or std.mem.eql(u8, f.name, "code") or std.mem.eql(u8, f.name, "job") or std.mem.eql(u8, f.name, "line")) continue;
+        try it.setField(o, f.name, f.val);
+    };
     if (r.errors) |list| {
         try it.setField(o, "errors", .{ .list = list });
         try it.setField(o, "cancelled", .{ .int = r.cancelled });

@@ -145,3 +145,8 @@ A warning of the compiler is written on the error output before the program runs
 Names proposed for the warnings of the compiler, not yet raised (each needs a feature entry and a test first): `$wrn_unused` for an import, a variable or a parameter never used (code 7, exists as a constant); `$wrn_shadow` for a name that hides one of an outer scope; `$wrn_unreachable` for a statement after `return` or `abort`; `$wrn_deprecated` for a use of a library member marked deprecated (code 5); `$wrn_precision` for a `Real` converted to a `Decimal` or the other way in an assignment; `$wrn_implicit_null` for a variable read before it is assigned.
 
 `raise` with a code and the Exception module (PRC-08, PRC-09).
+
+### Error objects with fields
+
+`raise` of an object (`raise Failure(code: 21, message: "bad", detail: "disk");`) makes the error with the `code` and the `message` of the object (`$err_raise`, 4, when it has no code). In `recover` the fields of the object are read from `$error` as well: `$error.detail` is `"disk"`. The fields `code`, `message`, `job` and `line` keep the values of the error. An error that is not recovered prints its message and exits with code 4.
+

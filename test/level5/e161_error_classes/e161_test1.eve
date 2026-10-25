@@ -1,0 +1,17 @@
+# an object of a class raised and not recovered: the process exits with code 4 and the error is printed with its message (F-LNG-15)
+** spec: semantics/errors.md#errors
+primary aspect e161_test1 is
+  class Failure = {code: Integer, message: String} is
+  end Failure;
+
+  process main is
+    raise Failure(code: 22, message: "uncaught");
+  return;
+end e161_test1;
+/*@expect
+{
+  "exit": 4,
+  "stdout": [],
+  "stderr": ["uncaught"]
+}
+*/

@@ -1,0 +1,19 @@
+# an object of a class raised with raise: its code and message are the error, and its own fields are read from $error in recover (F-LNG-15)
+** spec: semantics/errors.md#errors
+primary aspect e161_error_classes is
+  class Failure = {code: Integer, message: String, detail: String} is
+  end Failure;
+
+  process main is
+    print "start";
+    raise Failure(code: 21, message: "bad", detail: "disk");
+    print "not reached";
+  recover
+    print "error {$error.code} {$error.message} {$error.detail}";
+  return;
+end e161_error_classes;
+/*@expect
+{
+  "stdout": ["start", "error 21 bad disk"]
+}
+*/

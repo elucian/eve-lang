@@ -1,0 +1,16 @@
+# a value of a basic type can not be assigned to a declared variable of another basic type: a compile error before the run (F-LNG-16)
+** spec: semantics/types.md#static-checks
+primary aspect e160_static_types is
+  process main is
+    new n :Integer;
+    let n := "text";
+    print n;
+  return;
+end e160_static_types;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["n is Integer, and the value is String"]
+}
+*/

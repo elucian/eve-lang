@@ -1,0 +1,20 @@
+# the allowed conversions: numbers of any kind go to numbers, and a String and a Text are the same kind of value
+** spec: semantics/types.md#static-checks
+primary aspect e160_test4 is
+  function twice(x: Real) => (@result: Real) is
+    let result := x * 2;
+  return;
+  process main is
+    new n = 3 :Integer;
+    let n := 7;
+    print twice(n);
+    new s = "text" :String;
+    let s := "more";
+    print s;
+  return;
+end e160_test4;
+/*@expect
+{
+  "stdout": ["14", "more"]
+}
+*/

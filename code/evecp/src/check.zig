@@ -448,11 +448,18 @@ const Checker = struct {
             if (a.tag == .pair and a.kids[0].tag == .name) {
                 try infos.append(c.a, .{ .name = a.kids[0].text, .ty = try c.expr(a.kids[1]) });
             } else {
+                var param_ty: ?[]const u8 = null;
                 if (single) |t| {
                     const plist = t.kids[0].kids;
-                    if (i < plist.len and plist[i].tag != .vararg_param) c.expected = if (plist[i].ty) |pt| pt.text else null;
+                    if (i < plist.len and plist[i].tag != .vararg_param) {
+                        c.expected = if (plist[i].ty) |pt| pt.text else null;
+                        param_ty = c.expected;
+                    }
                 }
-                try infos.append(c.a, .{ .ty = try c.expr(a) });
+                const arg_ty = try c.expr(a);
+                // a value of a basic type given to a parameter of another basic type (F-LNG-16)
+                if (clash(param_ty, arg_ty)) return c.fail(a, "argument {d} of {s} is {s}, but the parameter is {s}", .{ i + 1, callee.text, arg_ty.?, param_ty.? });
+                try infos.append(c.a, .{ .ty = arg_ty });
             }
             if (infos.items[infos.items.len - 1].ty == null) all_known = false;
         }
@@ -547,6 +554,36 @@ const Checker = struct {
 
     // @decision D-106
     /// The arguments of a call to `routine`: positional first, a late mandatory parameter by name.
+    /// The basic types of the language: a value of one of them can not be given where another one of them is declared (F-LNG-16).
+    fn basicType(name: []const u8) bool {
+        const basic = [_][]const u8{ "String", "Text", "Logic", "Integer", "Natural", "Real", "Decimal", "Byte", "Short", "Huge", "Float", "Duration", "Date", "Time", "DateTime", "Instant", "Bytes", "Uuid", "Zone" };
+        for (basic) |b| if (std.mem.eql(u8, name, b)) return true;
+        return false;
+    }
+
+    fn numericType(name: []const u8) bool {
+        const numeric = [_][]const u8{ "Integer", "Natural", "Real", "Decimal", "Byte", "Short", "Huge", "Float" };
+        for (numeric) |b| if (std.mem.eql(u8, name, b)) return true;
+        return false;
+    }
+
+    /// Does a value of type `value` clash with the declared type `target`: both are basic types and they are not the same
+    /// family (the numbers convert to each other; a String and a Text are the same; an optional type is not checked here).
+    fn clash(target: ?[]const u8, value: ?[]const u8) bool {
+        const t = target orelse return false;
+        const v = value orelse return false;
+        if (std.mem.eql(u8, t, v)) return false;
+        if (t[t.len - 1] == '?' or v[v.len - 1] == '?') return false;
+        if (numericType(t) and numericType(v)) return false;
+        const text_family = (std.mem.eql(u8, t, "String") or std.mem.eql(u8, t, "Text")) and (std.mem.eql(u8, v, "String") or std.mem.eql(u8, v, "Text"));
+        if (text_family) return false;
+        return basicType(t) and basicType(v);
+    }
+
+    fn hint_text(s: *const Node) ?[]const u8 {
+        return if (s.ty) |t| t.text else null;
+    }
+
     fn order(c: *Checker, n: *const Node, target: *const Node, args: []const *const Node) Error!void {
         const plist = target.kids[0].kids;
         var seen_optional = false;
@@ -639,7 +676,7 @@ const Checker = struct {
     fn params(c: *Checker, list: *const Node) Error!void {
         for (list.kids) |prm| {
             const ty: ?[]const u8 = if (prm.ty) |t| t.text else null;
-            try c.declare(prm, prm.text, .{ .kind = .param, .ty = ty });
+            try c.declare(prm, prm.text, .{ .kind = .param, .ty = ty, .declared = ty != null });
         }
     }
 
@@ -659,7 +696,7 @@ const Checker = struct {
             if (c.frames.items[c.frames.items.len - 1].names.contains(res.text)) continue; // `(@self)` repeats the parameter
             const ty: ?[]const u8 = if (res.ty) |t| t.text else null;
             // `self` of a method or a constructor has the type of its class
-            try c.declare(res, res.text, .{ .kind = .variable, .ty = if (std.mem.eql(u8, res.text, "self")) class_name else ty });
+            try c.declare(res, res.text, .{ .kind = .variable, .ty = if (std.mem.eql(u8, res.text, "self")) class_name else ty, .declared = ty != null });
         }
         if ((r.tag == .method or r.tag == .destructor) and r.kids[0].kids.len > 0 and r.kids[0].kids[0].ty == null) {
             // a method inside a class: `@self` without a type is an object of that class
@@ -707,6 +744,10 @@ const Checker = struct {
                     c.expected = target_info.ty;
                 };
                 const value_ty = try c.expr(value);
+                // `let x := value` gives a value of another basic type to a declared variable (F-LNG-16)
+                if (std.mem.eql(u8, s.text, ":=") and s.kids[0].tag == .name) if (c.lookup(s.kids[0].text)) |decl_info| {
+                    if (decl_info.declared and clash(decl_info.ty, value_ty)) return c.fail(s, "{s} is {s}, and the value is {s}", .{ s.kids[0].text, decl_info.ty.?, value_ty.? });
+                };
                 c.allow_abstract = false;
                 // `let n := null` gives null to a plain type; a `T?` value does so too (types.md#narrowing-and-the-default)
                 if (std.mem.eql(u8, s.text, ":=") and s.kids[0].tag == .name) if (c.lookup(s.kids[0].text)) |ti| {
@@ -881,6 +922,7 @@ const Checker = struct {
         const hint: ?[]const u8 = if (s.ty) |t| t.text else null;
         c.expected = hint;
         if (s.kids[1].tag != .none) vt = try c.expr(s.kids[1]);
+        if (clash(hint_text(s), vt)) return c.fail(s, "{s} is {s}, and the value is {s}", .{ s.kids[0].kids[0].text, hint_text(s).?, vt.? });
         c.expected = null;
         const targets = s.kids[0].kids;
         for (targets) |t| {

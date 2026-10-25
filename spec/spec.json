@@ -260,7 +260,7 @@
     [2, "etl-the-cycle", 154, "ETL: the cycle"],
     [2, "open-points", 208, "Open points"]
    ]},
-  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 148, "bytes": 13012, "features": ["F-STR-11", "F-STR-12"], "sections": [
+  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 153, "bytes": 13480, "features": ["F-STR-11", "F-STR-12"], "sections": [
     [2, "errors", 5, "Errors"],
     [2, "process", 11, "Process"],
     [3, "recover", 15, "`recover`"],
@@ -270,7 +270,8 @@
     [2, "where-an-error-is-reported", 80, "Where an error is reported"],
     [2, "error-codes", 84, "Error codes"],
     [3, "warnings-of-the-compiler", 135, "Warnings of the compiler"],
-    [2, "open-points", 143, "Open points"]
+    [2, "open-points", 143, "Open points"],
+    [3, "error-objects-with-fields", 149, "Error objects with fields"]
    ]},
   {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 142, "bytes": 13611, "features": ["F-LNG-22"], "sections": [
     [2, "what-a-module-is", 5, "What a module is"],
@@ -317,7 +318,7 @@
     [2, "who-calls-and-who-sees", 16, "Who calls and who sees"],
     [2, "where-a-module-is-searched", 24, "Where a module is searched"]
    ]},
-  {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 138, "bytes": 11574, "features": ["F-LIB-13", "F-LNG-30", "F-LNG-31"], "sections": [
+  {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 152, "bytes": 12651, "features": ["F-LIB-13", "F-LNG-30", "F-LNG-31"], "sections": [
     [2, "native-and-primitive-types", 7, "Native and primitive types"],
     [2, "rational", 33, "Rational"],
     [2, "complex", 43, "Complex"],
@@ -326,7 +327,8 @@
     [3, "datamap-methods", 81, "DataMap methods"],
     [2, "strings", 95, "Strings"],
     [2, "zero-values-and-optional-types", 101, "Zero values and optional types"],
-    [2, "narrowing-and-the-default", 119, "Narrowing and the default"]
+    [2, "narrowing-and-the-default", 119, "Narrowing and the default"],
+    [2, "static-checks", 139, "Static checks"]
    ]},
   {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 98, "bytes": 8949, "features": [], "sections": [
     [2, "rules", 5, "Rules"],

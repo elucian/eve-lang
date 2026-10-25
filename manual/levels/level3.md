@@ -133,11 +133,12 @@ Stage: **drafted**.
 
 Error classes with fields, `recover` by type, exit-code mapping.
 
-*Partial:* `$error` with code, message, line and job, the codes `$err_*`, exit codes 1 to 4; `exception.eve` is a draft that the VM does not load.
+*State:* `$error` with code, message, line and job, the codes `$err_*`, exit codes 1 to 4; an object of a class raised with `raise` gives its code and message, and its fields are read from `$error` in `recover` (`errors.md#error-objects-with-fields`, tests e161). `exception.eve` is a draft that the VM does not load.
 
 ## Missing
 
-- Error classes with fields, `recover` by type, mapping of a class to an exit code.
+- `recover` by type: the syntax is not decided yet.
+- Mapping of a class to an exit code: the policy is not decided yet.
 - `exception.eve` is not loaded.
 
 ## F-LNG-16 Static checks
@@ -146,12 +147,11 @@ Stage: **drafted**.
 
 Name resolution, arity, visibility and type errors before the run (exit 65).
 
-*Partial:* undefined names, constants, `apply` arguments, exports, free statements in modules, managed modules and concurrent aspects (`check.zig`, `project.zig`); the type checks are few.
+*State:* undefined names, constants, `apply` arguments, exports, free statements in modules, managed modules, concurrent aspects (`check.zig`, `project.zig`), and the type checks of a basic type given where another basic type is declared: an assignment, an argument, a result, a declaration (`types.md#static-checks`, tests e160).
 
 ## Missing
 
-- Type checks before the run, exit 65: argument types, return types, assignment.
-- A negative test for each check.
+- The type checks of the classes, the lists and the optional types before the run (the optional type is checked at run time by the narrowing rules of `types.md`).
 
 ## F-LNG-19 Managed and direct modules
 

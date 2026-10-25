@@ -1,0 +1,17 @@
+# an argument of a basic type does not fit the parameter of another basic type: a compile error before the run (F-LNG-16)
+** spec: semantics/types.md#static-checks
+primary aspect e160_test1 is
+  function twice(x: Integer) => (@result: Integer) is
+    let result := x * 2;
+  return;
+  process main is
+    print twice("four");
+  return;
+end e160_test1;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["argument 1 of twice is String, but the parameter is Integer"]
+}
+*/

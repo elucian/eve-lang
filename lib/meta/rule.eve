@@ -234,9 +234,10 @@ module rule is
     if s >= e do
       let inside := t >= s or t < e;
     done;
-    let result := [r[2], False, r[1]];
     if inside do
       let result := [r[4], True, r[3]];
+    else
+      let result := [r[2], False, r[1]];
     done;
   return;
 end rule;

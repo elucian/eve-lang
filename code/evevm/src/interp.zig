@@ -242,6 +242,8 @@ pub const Interp = struct {
     /// The label named by the `break` or `skip` that is unwinding; empty for the innermost loop.
     jump_label: []const u8 = "",
     reports: std.ArrayList(Report) = .empty,
+    /// The object that the `raise` being run gives: the next report keeps its fields (F-LNG-15).
+    pending_fields: ?*value.Object = null,
     /// The error being handled (`$error`).
     err_code: u8 = err_raise,
     /// The scope of the last process that ran: kept so the introspection can list its variables.
@@ -400,9 +402,16 @@ pub const Interp = struct {
     }
 
     /// Raise an error whose message is already made (the database layer formats its own).
+    /// The object of the raise being run, taken once by the report it makes.
+    fn takeFields(it: *Interp) ?*value.Object {
+        const f = it.pending_fields;
+        it.pending_fields = null;
+        return f;
+    }
+
     pub fn failMsg(it: *Interp, code: u8, msg: []const u8) Signal {
         const trace = try it.traceText();
-        it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace, .file = if (it.frames.items.len > 0) it.frames.items[it.frames.items.len - 1].file else "" }) catch return error.OutOfMemory;
+        it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace, .fields = it.takeFields(), .file = if (it.frames.items.len > 0) it.frames.items[it.frames.items.len - 1].file else "" }) catch return error.OutOfMemory;
         it.err_code = code;
         return error.Raise;
     }

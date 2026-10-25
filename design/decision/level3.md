@@ -60,3 +60,10 @@ The design of the library `lib/stats/` is in `design/design-libraries.md` sectio
 - **Q-103 Random sampling.** Proposal: `sample.draw(xs, n, replace)` and `sample.bootstrap(xs, rounds)` take the generator as the last optional argument; without it they use the seeded generator of `math.random` in its unseeded form, so a test gives the same result with a seed (Q-075).
 - **Q-104 Histogram.** Proposal: `histogram.bins(xs, count)` gives a list of records with `low`, `high` and `count`; the bins are equal width from the minimum to the maximum; the last bin is closed on the right.
 - **Q-105 Spearman ties.** Proposal: tied values get their average rank (the usual rule); no question unless the author wants another rule.
+
+## Q-111 and Q-112 Typed exceptions: `recover` by class, and the exit code of a class (2026-10-25)
+- **Q-111 `recover` by type.** Proposal: a `recover` region names the classes it handles, for example `recover FormatError` before its statements, with `$error` the object raised; a `recover` without a class handles every error as now. Which syntax do you want, and may the classes be the user's own classes (`class Failure = {...}`) as well as the built-in error classes of `errors.md`?
+- **Q-112 Exit code of a class.** Proposal: an error that is not recovered exits with code 4 as now, unless its class says otherwise: a field `exit: n` in the class declaration (0 or from 6 to 125, the codes that `over n;` may use). Which form do you want?
+
+Status: the object of a class raised with `raise` already gives its code and message, and its fields are read from `$error` (tests e161). The two questions above are open.
+

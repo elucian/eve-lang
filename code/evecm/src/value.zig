@@ -214,6 +214,8 @@ pub const Report = struct {
     errors: ?*List = null,
     /// A ParallelError: how many tasks `on error cancel` stopped.
     cancelled: i64 = 0,
+    /// The object that was raised (`raise Failure(...)`): its fields are read from `$error` (F-LNG-15).
+    fields: ?*Object = null,
     /// A ParallelError: one line per failed task, printed under the error when nobody recovers it.
     details: []const u8 = "",
 };
