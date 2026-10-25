@@ -1,0 +1,36 @@
+# a test against null narrows the optional name inside the block: its type is the plain one there; a test with and narrows the right side
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e146_optional_narrow is
+  function size(t: String?) => (@result: Integer) is
+    if t == null do
+      exit;
+    done;
+    let result := t.length();
+  return;
+
+  process main is
+    new s :String?;
+    if s <> null do
+      print s.length();
+    done;
+    let s := "abc";
+    if s <> null do
+      print s.length();
+    done;
+    if s <> null and s.length() > 2 do
+      print "long";
+    done;
+    print size(s);
+    print size(null);
+  return;
+end e146_optional_narrow;
+/*@expect
+{
+  "stdout": [
+    "3",
+    "long",
+    "3",
+    "0"
+  ]
+}
+*/

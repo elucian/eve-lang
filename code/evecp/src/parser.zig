@@ -206,6 +206,7 @@ pub const Parser = struct {
     pub const routineOf = routines_m.routineOf;
     // ------------------------------------------------------------ parser/expr.zig
     pub const expr = expr_m.expr;
+    pub const nullishExpr = expr_m.nullishExpr;
     pub const orExpr = expr_m.orExpr;
     pub const xorExpr = expr_m.xorExpr;
     pub const andExpr = expr_m.andExpr;

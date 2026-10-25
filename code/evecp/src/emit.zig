@@ -236,6 +236,8 @@ const Emitter = struct {
         const line = n.line;
         const mark = e.free;
         defer e.free = mark;
+        // `??` runs its right side only when the left is null: the tree walker keeps that rule (types.md#narrowing-and-the-default)
+        if (std.mem.eql(u8, n.text, "??")) return e.bridgeExpr(n, dst);
         if (std.mem.eql(u8, n.text, "and") or std.mem.eql(u8, n.text, "or")) {
             // short circuit: the left value decides, as a Logic
             // a temporary holds the value: `dst` may be a variable that the right side reads

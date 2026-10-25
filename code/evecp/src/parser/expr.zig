@@ -15,13 +15,24 @@ const consts = @import("consts.zig");
 const reserved = consts.reserved;
 
 pub fn expr(p: *Parser) Error!*const Node {
-    var l = try p.orExpr();
+    var l = try p.nullishExpr();
     while (p.isSym("<+") or p.isSym("+>") or p.isSym("<-") or p.isSym("->")) {
         const t = p.advance();
         const r = try p.orExpr();
         l = try p.mk(.bin, t, t.text, &.{ l, r });
     }
     return l;
+}
+
+// @eve-impl `x ?? d`: the default of an optional value; it groups to the right and binds looser than `or` (types.md#narrowing-and-the-default)
+// @spec spec/semantics/types.md#narrowing-and-the-default
+// @feature F-LNG-14
+// @test test/level5/e145_optional_default
+pub fn nullishExpr(p: *Parser) Error!*const Node {
+    const l = try p.orExpr();
+    if (!p.isSym("??")) return l;
+    const t = p.advance();
+    return p.mk(.bin, t, "??", &.{ l, try p.nullishExpr() });
 }
 
 pub fn orExpr(p: *Parser) Error!*const Node {

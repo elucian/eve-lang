@@ -19,10 +19,12 @@ pub const Diag = lexer.Diag;
 pub const Error = lexer.Error;
 
 const overload = @import("overload.zig");
+const nullable = @import("nullable.zig");
 
 const Kind = enum { variable, constant, function, procedure, class, param, builtin };
 
-const Info = struct { kind: Kind, ty: ?[]const u8 = null, node: ?*const Node = null };
+/// `declared`: the type was written in the declaration (`new n :Integer`), not inferred from the value.
+const Info = struct { kind: Kind, ty: ?[]const u8 = null, node: ?*const Node = null, declared: bool = false };
 
 const Frame = struct {
     names: std.StringHashMapUnmanaged(Info) = .empty,
@@ -66,6 +68,8 @@ const Checker = struct {
     /// The type the context asks for the expression about to be checked: a type hint, the type of the target
     /// of `let`, the type of a parameter. Only a call reads it, to choose among overloads by the result (D-149).
     expected: ?[]const u8 = null,
+    /// The names that a test against null narrows to their plain type in the code being checked (types.md#narrowing-and-the-default).
+    narrowed: std.ArrayList([]const u8) = .empty,
 
     fn fail(c: *Checker, n: *const Node, comptime fmt: []const u8, args: anytype) Error {
         c.diag.set(n.line, n.col, fmt, args);
@@ -106,6 +110,30 @@ const Checker = struct {
     }
 
     /// Is `n` the name `secret` used as the library module and not declared as anything else?
+    fn isNarrowed(c: *Checker, name: []const u8) bool {
+        for (c.narrowed.items) |x| if (std.mem.eql(u8, x, name)) return true;
+        return false;
+    }
+
+    // @eve-impl a name tested against null is plain in the code of its test (types.md#narrowing-and-the-default)
+    // @spec spec/semantics/types.md#narrowing-and-the-default
+    // @feature F-LNG-14
+    // @test test/level5/e146_optional_narrow
+    fn narrow(c: *Checker, name: []const u8) Error!void {
+        try c.narrowed.append(c.a, name);
+    }
+
+    // @eve-impl a value that may be null is an error where a plain value is needed, until a test narrows it
+    // @spec spec/semantics/types.md#narrowing-and-the-default
+    // @feature F-LNG-14
+    // @test test/level5/e147_optional_arith_error
+    // @test test/level5/e148_optional_method_error
+    // @test test/level5/e149_optional_scope_error
+    fn plainUse(c: *Checker, n: *const Node, ty: ?[]const u8) Error!void {
+        if (n.tag != .name or !nullable.isOptional(ty) or c.isNarrowed(n.text)) return;
+        return c.fail(n, "{s} may be null: test it first (if {s} <> null do ... done;) or give a default with ?? (types.md#narrowing-and-the-default)", .{ n.text, n.text });
+    }
+
     fn isSecretModule(c: *Checker, n: *const Node) bool {
         if (n.tag != .name) return false;
         // @eve-impl names of native modules that are also common variable names: a module only when no variable of that name is in scope
@@ -223,7 +251,16 @@ const Checker = struct {
         const op = n.text;
         // `x =~ b +- t`: the right side is a tolerance, checked as a range
         const lt = try c.expr(n.kids[0]);
+        // `x <> null and x.length() > 2`: the right side sees x as plain (types.md#narrowing-and-the-default)
+        const mark = c.narrowed.items.len;
+        defer c.narrowed.shrinkRetainingCapacity(mark);
+        if (std.mem.eql(u8, op, "and")) if (nullable.nullTest(n.kids[0])) |t| if (t.not_null) try c.narrow(t.name);
         const rt = try c.expr(n.kids[1]);
+        if (std.mem.eql(u8, op, "??")) return if (nullable.isOptional(lt)) nullable.plainOf(lt) else lt;
+        if (nullable.needsPlain(op)) {
+            try c.plainUse(n.kids[0], lt);
+            try c.plainUse(n.kids[1], rt);
+        }
         if (std.mem.eql(u8, op, "+") and ((isString(lt) and isNumeric(rt)) or (isNumeric(lt) and isString(rt)))) {
             return c.fail(n, "'+' does not add a string and a number: use '<+' to append a number as text", .{});
         }
@@ -354,6 +391,8 @@ const Checker = struct {
     fn callExpecting(c: *Checker, n: *const Node, as_statement: bool, exp: ?[]const u8) Error!?[]const u8 {
         const callee = n.kids[0];
         const args = n.kids[1..];
+        // `s.length()` on a `String?` needs a test first (types.md#narrowing-and-the-default)
+        if (callee.tag == .field and callee.kids[0].tag == .name) if (c.lookup(callee.kids[0].text)) |recv| try c.plainUse(callee.kids[0], recv.ty);
         var result: ?[]const u8 = null;
         var overloaded: ?[]const *const Node = null;
         var single: ?*const Node = null;
@@ -634,7 +673,15 @@ const Checker = struct {
 
     fn block(c: *Checker, b: *const Node) Error!void {
         if (b.tag == .none) return;
-        for (b.kids) |s| try c.statement(s);
+        const mark = c.narrowed.items.len;
+        defer c.narrowed.shrinkRetainingCapacity(mark);
+        for (b.kids) |s| {
+            try c.statement(s);
+            // `if x == null do exit; done;`: the rest of the block sees x as plain
+            if (s.tag == .if_ and s.kids.len == 2) if (nullable.nullTest(s.kids[0])) |t| {
+                if (!t.not_null and nullable.endsWithExit(s.kids[1])) try c.narrow(t.name);
+            };
+        }
     }
 
     /// The name at the root of an assignment target: `a`, `a[i]`, `a.x`, `a.x[i]`.
@@ -654,8 +701,15 @@ const Checker = struct {
                 if (s.kids[0].tag == .name) if (c.lookup(s.kids[0].text)) |target_info| {
                     c.expected = target_info.ty;
                 };
-                _ = try c.expr(value);
+                const value_ty = try c.expr(value);
                 c.allow_abstract = false;
+                // `let n := null` gives null to a plain type; a `T?` value does so too (types.md#narrowing-and-the-default)
+                if (std.mem.eql(u8, s.text, ":=") and s.kids[0].tag == .name) if (c.lookup(s.kids[0].text)) |ti| {
+                    if (ti.declared and ti.ty != null and !nullable.isOptional(ti.ty)) {
+                        if (value.tag == .name and std.mem.eql(u8, value.text, "null")) return c.fail(s, "{s} is not optional: null can not be given to a plain {s}; declare it as {s}? to allow null", .{ s.kids[0].text, ti.ty.?, ti.ty.? });
+                        try c.plainUse(value, value_ty);
+                    }
+                };
                 const target = s.kids[0];
                 if (std.mem.eql(u8, s.text, "+>")) {
                     _ = try c.expr(target); // `let x +> lst;`: the left side is the element
@@ -733,10 +787,18 @@ const Checker = struct {
             },
             .block => try c.block(s),
             .if_ => {
+                // `if x <> null do` narrows x in its block; in the branches after `if x == null` x is plain
+                const mark = c.narrowed.items.len;
+                defer c.narrowed.shrinkRetainingCapacity(mark);
                 var i: usize = 0;
                 while (i + 1 < s.kids.len) : (i += 2) {
                     _ = try c.expr(s.kids[i]);
+                    const test_ = nullable.nullTest(s.kids[i]);
+                    const body_mark = c.narrowed.items.len;
+                    if (test_) |t| if (t.not_null) try c.narrow(t.name);
                     try c.block(s.kids[i + 1]);
+                    c.narrowed.shrinkRetainingCapacity(body_mark);
+                    if (test_) |t| if (!t.not_null) try c.narrow(t.name);
                 }
                 if (s.kids.len % 2 == 1) try c.block(s.kids[s.kids.len - 1]);
             },
@@ -820,7 +882,7 @@ const Checker = struct {
             switch (t.tag) {
                 .name => {
                     const ty = hint orelse (if (targets.len == 1 and !std.mem.eql(u8, s.text, "::")) vt else if (targets.len == 1) vt else null);
-                    try c.declare(t, t.text, .{ .kind = if (s.tag == .set) .constant else .variable, .ty = ty });
+                    try c.declare(t, t.text, .{ .kind = if (s.tag == .set) .constant else .variable, .ty = ty, .declared = hint != null });
                 },
                 .star => if (t.text.len > 0) try c.declare(t, t.text, .{ .kind = .variable }),
                 .field => {

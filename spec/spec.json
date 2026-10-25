@@ -315,7 +315,7 @@
     [2, "who-calls-and-who-sees", 16, "Who calls and who sees"],
     [2, "where-a-module-is-searched", 24, "Where a module is searched"]
    ]},
-  {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 118, "bytes": 10034, "features": ["F-LIB-13", "F-LNG-30", "F-LNG-31"], "sections": [
+  {"path": "semantics/types.md", "title": "Types", "status": "draft", "summary": "Eve is gradually typed: a declaration may give a type (:Integer) or leave it to inference. The type of a variable never changes, except a variant (below). A native type is used only by core libraries;", "lines": 138, "bytes": 11574, "features": ["F-LIB-13", "F-LNG-30", "F-LNG-31"], "sections": [
     [2, "native-and-primitive-types", 7, "Native and primitive types"],
     [2, "rational", 33, "Rational"],
     [2, "complex", 43, "Complex"],
@@ -323,7 +323,8 @@
     [2, "composite-types", 58, "Composite types"],
     [3, "datamap-methods", 81, "DataMap methods"],
     [2, "strings", 95, "Strings"],
-    [2, "zero-values-and-optional-types", 101, "Zero values and optional types"]
+    [2, "zero-values-and-optional-types", 101, "Zero values and optional types"],
+    [2, "narrowing-and-the-default", 119, "Narrowing and the default"]
    ]},
   {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 86, "bytes": 7960, "features": [], "sections": [
     [2, "rules", 5, "Rules"],

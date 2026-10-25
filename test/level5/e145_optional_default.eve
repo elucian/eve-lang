@@ -1,0 +1,26 @@
+# x ?? d is x when x is not null, else d; it groups to the right, and d is not run when x is not null
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e145_optional_default is
+  process main is
+    new a :String?;
+    print a ?? "fallback";
+    let a := "text";
+    print a ?? "fallback";
+    new n :Integer?;
+    print (n ?? 7) + 1;
+    print null ?? 0 ?? 9;
+    let n := 5;
+    print n ?? (1 / 0);
+  return;
+end e145_optional_default;
+/*@expect
+{
+  "stdout": [
+    "fallback",
+    "text",
+    "8",
+    "0",
+    "5"
+  ]
+}
+*/

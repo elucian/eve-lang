@@ -1,0 +1,17 @@
+# a value that may be null is not an operand of + until a test narrows it: compile error
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e147_optional_arith_error is
+  process main is
+    new n :Integer?;
+    print n + 1;
+  return;
+end e147_optional_arith_error;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "may be null"
+  ]
+}
+*/

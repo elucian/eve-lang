@@ -258,6 +258,12 @@ pub fn mapPut(it: *Interp, m: *Map, key: Value, val: Value) Signal!void {
 
 pub fn binary(it: *Interp, n: *const Node) Signal!Value {
     const op = n.text;
+    // `x ?? d`: d is evaluated only when x is null (types.md#narrowing-and-the-default)
+    if (std.mem.eql(u8, op, "??")) {
+        const x = try it.eval(n.kids[0]);
+        if (x != .nil) return x;
+        return it.eval(n.kids[1]);
+    }
     if (std.mem.eql(u8, op, "and")) {
         if (!try it.truth(try it.eval(n.kids[0]))) return .{ .bool = false };
         return .{ .bool = try it.truth(try it.eval(n.kids[1])) };

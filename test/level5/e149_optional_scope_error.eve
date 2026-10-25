@@ -1,0 +1,21 @@
+# the narrowing of a test lasts only inside its block: after the block the value may be null again
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e149_optional_scope_error is
+  process main is
+    new s :String?;
+    let s := "abc";
+    if s <> null do
+      print s.length();
+    done;
+    print s.length();
+  return;
+end e149_optional_scope_error;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "may be null"
+  ]
+}
+*/

@@ -1,0 +1,18 @@
+# null is not a value of a plain type: a variable of a plain type can not be given null
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e150_null_to_plain_error is
+  process main is
+    new n :Integer;
+    let n := null;
+    print n;
+  return;
+end e150_null_to_plain_error;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "is not optional"
+  ]
+}
+*/

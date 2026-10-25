@@ -1,0 +1,17 @@
+# a method called on a value that may be null is a compile error until the value is tested
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e148_optional_method_error is
+  process main is
+    new s :String?;
+    print s.length();
+  return;
+end e148_optional_method_error;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "may be null"
+  ]
+}
+*/

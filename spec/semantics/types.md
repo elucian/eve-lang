@@ -115,3 +115,23 @@ The types of the files that a program loads and parses (`JSON`, `CSV`, `TXT`, `X
 | `String`, `Text` | `""` |
 | `List`, `Array`, `DataSet`, `DataMap` | `()`, `[]`, `{}`, `{:}`; an array with a fixed size holds the zero value of its element type in every place |
 | an object or a record | every attribute holds its zero value |
+
+## Narrowing and the default
+
+A value of an optional type `T?` may be `null`, and a plain `T` never is. The checker (before the run, exit 65) keeps the two apart:
+
+| Rule | Example | Error |
+|---|---|---|
+| a `T?` name is not an operand of `+ - * / % ^` or an order (`< > <= >=`) until it is tested | `new n :Integer?; print n + 1;` | `n may be null` |
+| a method called on a `T?` name needs a test first | `new s :String?; print s.length();` | `s may be null` |
+| a plain type never takes `null` | `new n :Integer; let n := null;` | `n is not optional` |
+| a test against null narrows the name to its plain type in the block it guards | `if s <> null do print s.length(); done;` | none |
+| the right side of `and` sees the name as plain after `s <> null` | `if s <> null and s.length() > 2 do ... done;` | none |
+| the branches after `if s == null` see the name as plain | `if s == null do ... else print s.length(); done;` | none |
+| after `if s == null do exit; done;` the rest of the block sees the name as plain | | none |
+
+The narrowing lasts only inside its block: after the block the name may be null again. Equality and inequality with `null` need no test (`n == null` is allowed on any value).
+
+`x ?? d` is the default of an optional value: `x` when it is not `null`, else `d`. It binds looser than `or`, groups to the right (`null ?? 0 ?? 9` is `0`), and `d` is evaluated only when `x` is `null`. Its type is the plain type of `x`.
+
+A narrowing for `while` loops and for arguments of a `T` parameter is not checked yet (TD-87).
