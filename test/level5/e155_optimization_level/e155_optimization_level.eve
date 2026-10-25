@@ -1,0 +1,13 @@
+# the optimization level is the command line option -O: the script reads it as $optimization and can not change it
+** spec: semantics/variables.md#system-variables
+primary aspect e155_optimization_level is
+  process main is
+    print $optimization;
+  return;
+end e155_optimization_level;
+/*@expect
+{
+  "command": ["-O", "10", "-x", "e155_optimization_level.eve"],
+  "stdout": ["10"]
+}
+*/

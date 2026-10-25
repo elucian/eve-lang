@@ -1,0 +1,14 @@
+# the level is a whole number from 0 to 10: another number is a usage error (exit 64) and the script does not run
+** spec: semantics/variables.md#system-variables
+primary aspect e155_test2 is
+  process main is
+    print "not reached";
+  return;
+end e155_test2;
+/*@expect
+{
+  "command": ["-O", "11", "-x", "e155_test2.eve"],
+  "exit": 64,
+  "stdout": []
+}
+*/

@@ -8,6 +8,7 @@ const std = @import("std");
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const Signal = interp.Signal;
+const evecm = @import("evecm");
 
 // @eve-impl `$EVE_*`: the operating system variable of the same name wins, then the default of the table
 // @spec spec/semantics/variables.md#system-variables
@@ -23,6 +24,8 @@ pub fn define(it: *Interp, script_dir: []const u8) Signal!void {
     try set(it, "EVE_LIB_PATH", "");
     try set(it, "EVE_OUT", "out");
     try set(it, "EVE_CORE_DB", coreDbName(it, home));
+    // `$optimization`: the level of the run, read only (D-227)
+    try it.define("$optimization", .{ .int = evecm.optimization.level }, true);
 }
 
 fn set(it: *Interp, name: []const u8, default: []const u8) Signal!void {

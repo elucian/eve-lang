@@ -10,6 +10,8 @@ pub const ast = @import("ast.zig");
 pub const op = @import("op.zig");
 /// The compiled form of a program.
 pub const chunk = @import("chunk.zig");
+/// The optimization level of a run (`-O`, `optimization` in eve.cfg; D-227).
+pub const optimization = @import("optimization.zig");
 
 /// The `Decimal` type (exact numbers).
 pub const decimal = @import("decimal.zig");

@@ -88,12 +88,17 @@ pub fn main(init: std.process.Init) !void {
             error.MissingValue => std.debug.print("eve: option {s} needs a value\n", .{bad}),
             error.UnknownOption => std.debug.print("eve: unknown option {s}\n", .{bad}),
             error.BadWord => std.debug.print("eve: {s}: expected start, stop, restart or status after --listen or --serve\n", .{bad}),
+            error.BadOptimization => std.debug.print("eve: -O takes a whole number from 0 to 10, not {s}\n", .{bad}),
             error.ServiceAlone => std.debug.print("eve: -s starts the service and takes only a configuration file; to load a configuration for a script or a command use -e file.cfg\n", .{}),
             error.OutOfMemory => return err,
         }
         std.debug.print("Try 'eve --help'.\n", .{});
         std.process.exit(cli.exit_usage);
     };
+
+    // the optimization level: `-O` first, then eve.cfg, then the implicit level 1 (D-227); set before any run
+    const optimization_cfg = evecm.config.readConfig(init.io, arena, opts.config orelse "eve.cfg");
+    evecm.optimization.level = opts.optimization orelse (if (optimization_cfg) |c| c.optimization else null) orelse evecm.optimization.default_level;
 
     if (opts.engine) |name| {
         if (std.mem.eql(u8, name, "bc") or std.mem.eql(u8, name, "bytecode")) {
@@ -145,7 +150,7 @@ pub fn main(init: std.process.Init) !void {
     // `--stdio`: the machine of one client on the standard input and output; nothing else of `main` runs
     if (opts.stdio) std.process.exit(try evevm.channel.serveStdio(init.io, arena, opts.config orelse "eve.cfg", init.environ_map.get("EVE_LOG") != null));
     // The machine options (`--listen`, `--serve`, `-loc`, `-rem`): a result means they handled the command. Without them
-    // nothing here runs: `eve -x file.eve` reads no `eve.cfg` and asks no door, it executes the script at once.
+    // nothing here runs: `eve -x file.eve` asks no door and executes the script at once (it reads `eve.cfg` only for the optimization level, D-227).
     // @decision D-185
     if (opts.service) {
         var errbuf: [512]u8 = undefined;

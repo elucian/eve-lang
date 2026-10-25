@@ -82,8 +82,37 @@ code/evevm/src/metalib.zig      open (embedded or override), prepared statements
 ## 8. Questions for the author (all answered 2026-10-24 → D-222; Q-094: not compressed, `*.db` in Git LFS)
 
 - **Q-091 Direction.** One embedded read-only SQLite file `meta.db`, readable as the database `meta` and through the modules `lib/meta/`, with an optional override file. Agreed?
+**answer** I never say embeded. It will just be used from where it is. The compiler will not hold data or databases. I recommend to use Eve code that depend on /lib/meta and do not create Zig code that depend on /lib/meta. Even if is low efficiency Eve will be optimized to deliver maximum performance using in memory tables. We use Eve modules for these special functions and it must be imported by Eve code to work in production.
 - **Q-092 Sources.** IANA tzdata, Unicode CLDR and libphonenumber (all permissive), built by a script that stays in the repository and whose output is committed. Agreed? Or generate the file at build time (then the build needs Python)?
+**answer** We can have multiple scripts in /tools/meta that will add or modify the database with evolutions from one version to next. We version the database ing git using LFS
 - **Q-093 Content of version 1.** The tables of section 4. Add now, or in later versions: public holidays by country (a big and political table: proposal later), units of measure (L7), media types and ports (small, proposal later)?
+**answer** agree, add public holidays, measurement units, media types, ports. The table can grow with the library.
 - **Q-094 Size.** Embedded as compressed bytes and unpacked on first use (smaller executable, about 10 ms at the first use) or uncompressed (zero copy)? The proposal is compressed.
+**answer** not embedded, it will be delivered as is in /lib/meta folder and used from disk, cashed in "memory" tables at first use using Eve code.
 - **Q-095 Folder.** `lib/meta/` as in your idea, with the generated file inside it, and the builder in `tools/meta/`. Agreed?
+**answer** agree
 - **Q-096 Order.** M0.1 (zones) first, then D2 on top of it, then M0.2 and M0.3. Agreed?
+**answer** agree
+
+## 9. Storage and code of the time zones (D-225, 2026-10-25)
+
+The author's answers, decided in D-225: the file stays on disk at run time and is read in memory on a background thread; the time-zone functions are Eve code over the tables, and the Zig code of the zones is pruned.
+
+| Step | Content | Gate |
+|---|---|---|
+| R0 | measure the zone path as it is: `p1i_zone_offsets`, `p1j_datetime`, the test e131 timing (baseline in `test/bmark/history.json`, a run on the same machine) | the numbers before the change |
+| R1 | storage: no `@embedFile`; the file read from `lib/meta/meta.db` (or `EVE_META_DB`) by a background thread started at the first use of the machine; a use that comes before the end of the load waits for it; a missing file is an error with the path and the message of the LFS pointer | tests e129 to e132 pass unchanged; a test with a missing file (exit code and message) |
+| R2 | the zone functions in Eve: `lib/meta/zone.eve` (and the module `meta`) over the tables with the queries of the database layer, the transitions loaded into memory tables at first use (D-184 `Memory`) | the zone tests e129 to e137 pass unchanged on both engines |
+| R3 | prune the Zig: `zone.zig` (keep only what the calendar needs, if anything), the zone parts of `metalib.zig` and `timelib.zig`; the `zone` values of the interpreter keep their ids | the full suite; `bmark.py --check`; the size of `eve.exe` in the bmark report |
+| R4 | the spec (`spec/library/meta.md`, the file rules: on disk, the thread) follows the code | `evegen check` |
+
+Open for the author: the threshold of the speed of R2 (the Eve path against the Zig path measured in R0: a slower factor the author accepts, for example 2 times), and whether the thread also starts for scripts that never use a zone.
+
+## 10. Questions for the author on the loading (D-226)
+
+- **Q-106 Hint syntax.** `** @meta require(zone, country)` and `** @meta require(*)`, read by the compiler like `** @param`? Or another form?
+- **Q-107 Tables from imports.** Does an import of a module of `lib/meta/` (for example `from lib/meta use (zone);`) need no hint, the compiler taking the tables the module uses? Proposed: yes; a hint adds tables used by SQL that the script writes itself.
+- **Q-108 Levels 0 to 4 and 5.** Below 5 the file is not loaded in memory: is it read per use from disk, or is the zone path then a compile error? And is level 5 loaded or not?
+- **Q-109 Where `$optimization` is set.** In `eve.cfg`, on the command line (`-O 10`), in the script, or in several of them with the last one winning?
+- **Q-110 Small tables in Zig.** Which tables are small enough for a Zig jump table (proposed: none until a benchmark shows a need)?
+

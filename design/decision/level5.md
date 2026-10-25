@@ -100,3 +100,34 @@ Author's correction (2026-10-24): the first schema (D-222, M0.1) was not sound: 
 
 ## D-224 Gzip and zip are level 5 (2026-10-25)
 Author decision (2026-10-25): the gzip writer and zip are level 5, as the plan of S15.51 says; the spec of `spec/library/data-language.md#compression` moves them from level 6 to level 5 and states their API as proposed until built. Built before the decision: the gzip reader and `gzip.open!` (tests e152, e154).
+
+## D-225 The meta database stays on disk; the time-zone functions are Eve code (2026-10-25)
+Author decision (2026-10-25), answers to Q-091 and Q-094, superseding the embedding part of D-222 and the storage rule of Q-091:
+1. **On disk at run time.** `lib/meta/meta.db` is not embedded in `eve.exe`. The program reads it in memory on a separate thread, started at the first need of the machine: the load is prepared in the background, and a first use that comes before the load ends waits for it. The file is opened read only, as now (`sqlite3_deserialize` from the bytes read).
+2. **The time-zone functions are written in Eve code** over the tables of the file (`lib/meta/`), and the Zig code that holds them is pruned: `code/evecm/src/zone.zig` and the zone parts of `code/evevm/src/metalib.zig` and `timelib.zig`. The Zig code that stays is the calendar (`calendar.zig`, `timefmt.zig`, the `Date`, `Time` and `Instant` values) and the file access.
+Consequences: the build no longer needs the file (the LFS check moves to the start of the program, with the same message); a distribution ships `lib/meta/meta.db`; the speed of the zone functions is measured before and after (D-196): the migration is a refactor and an optimization of the Eve path must hold the benchmarks `p1i_zone_offsets` and `p1j_datetime` (author's threshold to be set, see the plan).
+Q-096 (agreed) keeps M0.2 and M0.3 after the change of storage: they are written as Eve modules from the start.
+
+## D-226 Loading of the meta database: per script, from the compiler; the optimization level (2026-10-25)
+Author decision (2026-10-25), refining D-225:
+1. **Architecture first.** No speed limit is set for the Eve path of the zone functions: the best is done within the architecture; the speed is not a gate for R2 and R3 (the benchmarks are still measured and recorded).
+2. **The compiler decides what is loaded.** After reading a script, the compiler knows the modules it imports, and the background load brings in only the tables those modules need, not the whole file. A script can add the tables it needs with a hint in a comment, `** @meta require(zone, country)` or `** @meta require(*)` (all tables), read by the compiler like the `** @param` lines.
+3. **No data in Zig,** except very small tables that are on a critical path and may be coded as a jump table in Zig; this is a choice made by the optimization level.
+4. **The optimization level** is the configuration parameter `$optimization` (0 to 10). Higher levels mean more compilation time and less execution time: low levels suit small, quick scripts, high levels suit large projects that run on a server for a long time. Bands, as the author wrote them: levels below 5 do not load the database in memory; levels above 5 (up to 10) load the required tables in memory.
+
+Open points, to be answered before R1 (see the questions in section 10 of the design):
+- the exact hint syntax (`** @meta require(...)`, or another form) and whether `require(*)` is the only way to ask for everything;
+- the level 5 itself (loaded or not), and what the levels 0 to 4 do instead (read per use from the file, or no load at all);
+- where `$optimization` is set: in `eve.cfg`, on the command line (`-O 10`), or in the script;
+- whether the tables used through an import of a module of `lib/meta/` need no hint (proposed: the compiler derives them from the import).
+
+## D-227 Answers to Q-106 to Q-110: the hint, the imports, the levels, `-O`, the small tables (2026-10-25)
+Author's answer to Q-109: the optimization level is the command line option `-O n`, which has priority over the configuration file (`optimization = n` in `eve.cfg`); the script can not set it; the implicit level is 1, the lowest. Small tables: the author assumes fewer than 42 records is small. The other answers are the best guesses of the agent, to be reviewed by the author:
+- **Q-106 hint:** `** @meta require(zone, country)` and `** @meta require(*)`, read by the compiler like `** @param`.
+- **Q-107 imports:** an import of a module of `lib/meta/` needs no hint: the compiler takes the tables that module uses; a hint adds the tables that the script queries itself.
+- **Q-108 levels:** levels 0 to 4 do not load the tables in memory: each use reads the rows it needs from the file; level 5 and above (5 to 10) load the required tables in a background thread at the start of the script (level 5 counts as loaded, the band is `>= 5`).
+- **Q-110 small tables:** a table of fewer than 42 rows may be a jump table in Zig, chosen by the builder and used only on the critical path; all other tables stay in the file.
+
+## D-227 implementation (2026-10-25)
+Built: `-O n` and `--optimization n` (0 to 10; a bad value is exit 64), `optimization = n` in `eve.cfg`, the implicit level 1, and the read only `$optimization`; the level is set before any run. The level is read from `eve.cfg` also by `eve -x` (the only file that `-x` reads). Tests e155 (four variants) and the parse test of `code/eve/src/cli.zig`.
+

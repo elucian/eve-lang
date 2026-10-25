@@ -73,6 +73,18 @@ Names written with `$` in the pages that are not system variables. They stay out
 | `$Type`, `$ExceptionType` | | placeholder for an `$err_name` constant in `raise ($Type, "m")` |
 | `$line` | examples | a shell variable inside a shell command string |
 
+## Optimization level
+
+The optimization level of a run is a whole number from 0 to 10. Higher levels spend more time compiling and less time running: a low level suits a small, quick script, a high level a large project that runs for a long time on a server. The implicit level is 1, the lowest.
+
+| Source | Rule |
+|---|---|
+| `-O n` on the command line (`--optimization n`) | the level; it has priority over the configuration file |
+| `optimization = n` in `eve.cfg` | the level when the command line does not give one |
+| the script | can not set it: `$optimization` is read only |
+
+A value that is not a whole number from 0 to 10 is a usage error (exit 64). The script reads the level as `$optimization`, an `Integer`, and the level decides what the machine does with the meta database (`lib/meta/`, the tables that the script needs are loaded in memory at levels 5 to 10; below 5 they are read from the file when used). The loading rules are in the library pages when they are built.
+
 ## Open points
 
 Questions for the author; answers become decisions and update the tables.

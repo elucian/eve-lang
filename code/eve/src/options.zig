@@ -1,7 +1,8 @@
 //! The command line: the options, the part words `vm`, `cp`, `db`, `ux` (D-163) and the command words.
 //! Part of the `eve` command (cli.zig holds the table of the commands and the REPL loop).
 const std = @import("std");
-const version = @import("evecm").version;
+const evecm = @import("evecm");
+const version = evecm.version;
 const parser = @import("evecp").parser;
 const vm = @import("evevm").vm;
 const client = @import("evevm").client;
@@ -22,6 +23,8 @@ pub const Options = struct {
     script_help: bool = false,
     /// `--engine tree|bc`.
     engine: ?[]const u8 = null,
+    /// `-O n` (or `--optimization n`): the optimization level, 0 to 10 (D-227); null when not given.
+    optimization: ?u8 = null,
     /// `-x`: execute the script in this process (implies the `execute` command); it never looks for a machine.
     execute: bool = false,
     /// Command chosen with `--<command>` or implied by a script path.
@@ -62,7 +65,7 @@ pub fn isAddress(text: []const u8) bool {
     return text.len > 0 and text[0] != '-' and !std.mem.endsWith(u8, text, ".eve");
 }
 
-pub const ParseError = error{ MissingValue, UnknownOption, BadWord, ServiceAlone, OutOfMemory };
+pub const ParseError = error{ MissingValue, UnknownOption, BadWord, ServiceAlone, BadOptimization, OutOfMemory };
 
 /// The first word of the command line may name a part of `eve` (D-163): `vm` (the runtime) and `cp` (the compiler)
 /// select what the options already do, `cp project` is `--project`, `ux` (the UI) is `--serve`, `db` (the database
@@ -120,7 +123,7 @@ pub fn commandWord(gpa: std.mem.Allocator, argv: []const []const u8) ParseError!
             // the service: a configuration file may follow
             if (i + 1 < argv.len and isConfig(argv[i + 1])) i += 1;
         } else if (std.mem.eql(u8, a, "-e") or std.mem.eql(u8, a, "--setup") or std.mem.eql(u8, a, "-m") or std.mem.eql(u8, a, "--engine") or
-            std.mem.eql(u8, a, "-p") or std.mem.eql(u8, a, "--param"))
+            std.mem.eql(u8, a, "-p") or std.mem.eql(u8, a, "--param") or std.mem.eql(u8, a, "-O") or std.mem.eql(u8, a, "--optimization"))
         {
             i += 1;
         } else if (std.mem.eql(u8, a, "-loc") and i + 1 < argv.len and isPort(argv[i + 1])) {
@@ -198,6 +201,17 @@ pub fn parseArgs(
                 i += 1;
                 o.config = line[i];
             }
+        } else if (std.mem.eql(u8, a, "-O") or std.mem.eql(u8, a, "--optimization")) {
+            // `-O n`: the optimization level, a whole number from 0 to 10 (D-227); it has priority over eve.cfg, not the script
+            i += 1;
+            if (i >= line.len) {
+                bad.* = a;
+                return error.MissingValue;
+            }
+            o.optimization = evecm.optimization.parseLevel(line[i]) orelse {
+                bad.* = line[i];
+                return error.BadOptimization;
+            };
         } else if (std.mem.eql(u8, a, "--engine")) {
             // `--engine tree|bc`: the tree walker (the default) or the bytecode machine (design/design-bytecode.md, D-201)
             i += 1;

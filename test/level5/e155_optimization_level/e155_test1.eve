@@ -1,0 +1,13 @@
+# without -O the level is 1, the lowest
+** spec: semantics/variables.md#system-variables
+primary aspect e155_test1 is
+  process main is
+    print $optimization;
+  return;
+end e155_test1;
+/*@expect
+{
+  "command": ["-x", "e155_test1.eve"],
+  "stdout": ["1"]
+}
+*/

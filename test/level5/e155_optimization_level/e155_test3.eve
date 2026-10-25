@@ -1,0 +1,14 @@
+# $optimization is read only in the script: a script can not set the level
+** spec: semantics/variables.md#system-variables
+primary aspect e155_test3 is
+  process main is
+    let $optimization := 5;
+  return;
+end e155_test3;
+/*@expect
+{
+  "command": ["-O", "10", "-x", "e155_test3.eve"],
+  "exit": 4,
+  "stdout": []
+}
+*/

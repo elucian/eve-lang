@@ -3,6 +3,7 @@
 //! (spec/library/machine.md). Part of evecm: the runtime, the database layer and the user
 //! interface all read the same file in the same way.
 const std = @import("std");
+const optimization = @import("optimization.zig");
 const Io = std.Io;
 
 /// Exit codes of the machine (spec/library/machine.md): nobody answers / a machine already runs.
@@ -25,6 +26,8 @@ pub const Config = struct {
     remote: ?[]const u8 = null,
     /// Width of the help table and texts in characters (`eve_width`; 100 when it is not set).
     eve_width: usize = 100,
+    /// The optimization level (`optimization = n`, D-227); null when the file does not set it.
+    optimization: ?u8 = null,
 };
 
 /// Read the configuration file; a missing file gives the defaults.
@@ -48,6 +51,7 @@ pub fn parseConfig(bytes: []const u8) Config {
         const key = std.mem.trim(u8, line[0..eq], " \t");
         const value = std.mem.trim(u8, std.mem.trim(u8, line[eq + 1 ..], " \t"), "\"");
         if (std.mem.eql(u8, key, "domain")) cfg.domain = value;
+        if (std.mem.eql(u8, key, "optimization")) cfg.optimization = optimization.parseLevel(value);
         if (std.mem.eql(u8, key, "ipc_port")) cfg.ipc_port = std.fmt.parseInt(u16, value, 10) catch cfg.ipc_port;
         if (std.mem.eql(u8, key, "http_port")) cfg.http_port = std.fmt.parseInt(u16, value, 10) catch cfg.http_port;
         if (std.mem.eql(u8, key, "http_host")) cfg.http_host = value;

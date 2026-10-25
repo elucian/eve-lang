@@ -257,6 +257,18 @@ test "options of the machine: --listen, --serve, -loc, -rem" {
 }
 
 // @decision D-169
+test "spec: variables.md#optimization-level -O is a whole number from 0 to 10, and the implicit level is absent" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var bad: []const u8 = "";
+    const o = try cmdline.parseArgs(arena.allocator(), &.{ "-O", "10", "-x", "a.eve" }, &bad);
+    try std.testing.expectEqual(@as(?u8, 10), o.optimization);
+    const none = try cmdline.parseArgs(arena.allocator(), &.{ "-x", "a.eve" }, &bad);
+    try std.testing.expectEqual(@as(?u8, null), none.optimization);
+    try std.testing.expectError(error.BadOptimization, cmdline.parseArgs(arena.allocator(), &.{ "-O", "11", "-x", "a.eve" }, &bad));
+    try std.testing.expectEqualStrings("11", bad);
+}
+
 test "-x alone touches no machine; the old names are refused" {
     var arena: std.heap.ArenaAllocator = .init(std.testing.allocator);
     defer arena.deinit();
