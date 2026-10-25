@@ -47,7 +47,7 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | `crypto`, `os` | F-LIB-10, F-LIB-07 | implemented (M2, 2026-10-18) | [crypto.md](crypto.md), [os.md](os.md) |
 | string functions (`trim`, `find`, `replace`, slice, ...) | F-LIB-03 | implemented (2026-10-18, G-7) | [strings.md](strings.md) |
 | `regex` | F-LIB-03 | planned (M6) | to write |
-| `gzip` (module; the readers already inflate `.gz`) | F-LIB-09 | postponed (TD-24) | |
+| `gzip` (module: `gzip.open!` built; the readers inflate `.gz`; `gzip.write` and `zip` are level 5, not built) | F-LIB-09 | partial (TD-24, TD-88) | [data-language.md](data-language.md#compression) |
 | `net` | F-NET-02 | implemented (M3, 2026-10-19): TCP, `listen`, `accept!`, time-outs | [net.md](net.md) |
 | `ws`, `ewp` | F-NET-02, F-NET-03 | planned (M4) | to write |
 | `keyring`, `oidc`, `auth` | F-NET-07 | **set aside**: the login is a user and a password checked against the SQLite of the machine, see [machine.md](machine.md#users-and-login-level-6) | |

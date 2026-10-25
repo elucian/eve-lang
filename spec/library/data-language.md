@@ -17,7 +17,8 @@ Status: **draft**, level 5. This page lists the types and the modules that the d
 | Secrets, module `secret` | 0.4 | below |
 | Shell by argument list, module `os` | 0.4 | below |
 | Compression: gzip reader | 0.4 | below |
-| Compression: zip, writers; `XML` | 0.5 | |
+| Compression: gzip writer, zip | 0.4 | below |
+| `XML` | 0.5 | |
 
 ## Generators
 
@@ -87,7 +88,11 @@ A `Secret` is a value that never appears in a log, a trace or an error message (
 
 ## Compression
 
-A gzip reader in level 5: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!` (test e152); a file that is not gzip is `$err_format`. `gzip.open!(path)` gives the content as a `Stream(:Bytes)` in chunks of 64 KiB (test e154); the content is inflated in memory when the file is opened. Zip and writers are level 6 in this text (the plan of S15.51 puts the gzip writer and zip in level 5: open question, see the plan).
+Gzip and zip are level 5.
+
+- **Gzip read (built).** A path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!` (test e152); a file that is not gzip is `$err_format`. `gzip.open!(path)` gives the content as a `Stream(:Bytes)` in chunks of 64 KiB (test e154); the content is inflated in memory when the file is opened.
+- **Gzip write (proposed, not built).** `gzip.write(path, data)` writes `data`, a `String` or `Bytes`, as a gzip file; the writers of `csv`, `json` and `txt` compress a path that ends in `.gz` on the fly, as the readers inflate it.
+- **Zip (proposed, not built).** A zip archive with deflated entries and no Zip64: an archive over 4 GB or with more than 65,535 entries is `$err_argument`. `zip.write(path, entries)` writes a `DataMap` of entry name to `String` or `Bytes`, the entries in the order of their names; `zip.list!(path)` gives the names of the entries, sorted; `zip.read!(path, name)` gives one entry as `Bytes`, and a missing name is `$err_file`. An archive that is not zip is `$err_format`.
 
 ## System library modules
 
