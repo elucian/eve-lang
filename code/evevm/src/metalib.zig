@@ -25,7 +25,7 @@ const err_argument = interp.err_argument;
 const file_name = "meta/meta.db";
 
 /// The tables of the zone core and of `meta.info`: what every zone lookup reads.
-const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) };
+const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) & ~(@as(u16, 1) << 6) & ~(@as(u16, 1) << 7) };
 
 /// The copy made by the background thread: its connection, the tables in it, or the message of its failure.
 var prepared: ?sqlite.Db = null;
@@ -129,13 +129,26 @@ fn spans(it: *Interp) ?*const zonespans.Tables {
     if (span_state.load(.acquire) != 0) return span_tables;
     var loaded: ?*const zonespans.Tables = null;
     if (std.c.getenv("EVE_ZONE_SLOW") == null) {
-        if (connect(it, zone_core)) |conn| {
-            loaded = zonespans.load(alloc, conn) catch null;
-        } else |_| {}
+        loaded = loadSpans(it);
     }
     span_tables = loaded;
     span_state.store(if (loaded == null) 2 else 1, .release);
     return loaded;
+}
+
+/// Reads the spans straight from the file with a connection of their own: the copy of the tables into memory (for the SQL door and the Eve path) is not needed for them. The caller holds the lock.
+fn loadSpans(it: *Interp) ?*const zonespans.Tables {
+    const io = it.io orelse return null;
+    if (file_path == null) {
+        const path = findFile(io) orelse return null;
+        if (checkFile(io, path) != null) return null;
+        file_path = path;
+    }
+    const path = std.fmt.allocPrintSentinel(alloc, "{s}", .{file_path.?}, 0) catch return null;
+    defer alloc.free(path);
+    var conn = sqlite.Db.open(path) catch return null;
+    defer conn.close();
+    return zonespans.load(alloc, &conn) catch null;
 }
 
 /// The id of the entry in the spans; null when there are none for it.
@@ -185,13 +198,22 @@ pub fn fastId(name: []const u8) ?u16 {
 }
 
 // @perf hot
-// @eve-impl zone.span_offset, zone.span_dst, zone.span_abbr (arguments: the name of the zone, the UTC second)
+// @eve-impl zone.span_offset, zone.span_dst, zone.span_abbr (arguments: a zone name or a Zone value, an Instant or a DateTime)
 pub fn fastCall(it: *Interp, id: u16, args: []const Value) Signal!Value {
     const tables = spans(it) orelse return .nil;
-    const zid = tables.idOf(try it.text(args[0])) orelse return .nil;
-    const l = tables.local(zid, Interp.intOf(args[1])) orelse return .nil;
+    const zid = switch (args[0]) {
+        .str => |name| tables.idOf(name) orelse return .nil,
+        .zone => |z| if (isFixed(z)) return .nil else spanId(tables, slots[z - 1].?) orelse return .nil,
+        else => return .nil,
+    };
+    const us: i64 = switch (args[1]) {
+        .instant => |v| v,
+        .dtm => |v| v.us,
+        else => return .nil,
+    };
+    const l = tables.local(zid, @divFloor(us, 1_000_000)) orelse return .nil;
     return switch (@as(SpanFn, @enumFromInt(id))) {
-        .span_offset => .{ .int = l.utoff },
+        .span_offset => .{ .dur = @as(i64, l.utoff) * 1_000_000 },
         .span_dst => .{ .bool = l.isdst },
         .span_abbr => try it.newStr(l.abbr),
     };

@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-556 of 557 tests pass; last run 2026-10-25 14:41.
+556 of 557 tests pass; last run 2026-10-25 14:49.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|

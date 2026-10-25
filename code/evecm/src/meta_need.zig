@@ -44,7 +44,7 @@ pub fn ofModule(path: []const u8) Need {
     rest = rest[1..];
     const dot = std.mem.indexOfScalar(u8, rest, '.') orelse rest.len;
     const name = rest[0..dot];
-    if (std.mem.eql(u8, name, "zone")) return ofNames(&.{ "zone", "zone_type", "zone_transition", "zone_kind", "zone_span" });
+    if (std.mem.eql(u8, name, "zone")) return ofNames(&.{ "zone", "zone_type", "zone_transition" });
     if (std.mem.eql(u8, name, "meta")) return ofNames(&.{"meta_info"});
     if (std.mem.eql(u8, name, "country")) return ofNames(&.{ "country", "continent" });
     return .{};
